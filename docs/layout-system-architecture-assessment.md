@@ -7,8 +7,9 @@ assessment* and has now **absorbed the former `deferred-layout-OVERVIEW.md`** (t
 verification gauntlet, the gotchas, and the maximal SCHEDULE/APPLY invariant + lint `[F]` all live here now (§6), and
 that doc is retired to a one-line pointer.
 
-**State assessed.** Fizzygum master **`c2aec3bf`** (HEAD, 2026-07-01). **This revision overturns the previous one's
-central conclusion.** At `c5ae7697` (2026-06-30) the doc reported the re-fit **seam** as *irreducible* and its deletion
+**State assessed.** Fizzygum master **`cee6939f`** (HEAD, 2026-07-16; the bulk of §2–§5 was grounded at `c2aec3bf`,
+2026-07-01, and re-grounded for the 2026-07-16 arcs — see the second revision block below). **The 2026-07-01 revision
+overturned the previous one's central conclusion.** At `c5ae7697` (2026-06-30) the doc reported the re-fit **seam** as *irreducible* and its deletion
 as *proven-infeasible* ("arc closed", `838ff6e9`). On **2026-07-01 the seam was deleted** — via a mechanism that was
 *not* on the falsified list: a **settle-time up-edge** in the settle loop. After each chain-top settles, the loop re-fits
 its size-tracking container from the just-settled, *final* geometry (`Widget._reFitMyTrackingContainerAfterSettle`,
@@ -25,10 +26,28 @@ With the seam gone, the rest fell in sequence (all 2026-07-01): **Stage 6** reti
 scroll-follow** was made single-pass (suite-wide re-visits 372 → 0 — root cause: `Point.floor` clamping to ≥0 capped
 the scroll); the **window content-negotiation** stack re-visits were eliminated (9 → 3, the window settling non-deferred
 stack content synchronously in its own arrange); the last **3 window re-visits** (nested-window first-placement) were
-chased and proven irreducible; and the dead `_batchingLayoutSettling` batch primitive was deleted. **So the engine is
-now: pure `measure` → non-notifying `arrange` → settle-time up-edge → bounded, near-single-pass convergence under a
-never-fire assert.** §2–§5 are updated throughout; the pre-`c5ae7697` re-grounding changelog (four waves) is dropped as
-git-recoverable meta.
+chased and proven irreducible; and the dead `_batchingLayoutSettling` batch primitive was deleted. §2–§5 are updated
+throughout; the pre-`c5ae7697` re-grounding changelog (four waves) is dropped as git-recoverable meta.
+
+**Re-grounded 2026-07-16 at `cee6939f`** — one day, four arcs, ending with the **ordered down-walk §4.4 BUILT and the
+per-class composite-relay layer fully deleted** (`docs/ordered-downwalk-stage-b-plan.md` is the complete record: §8 =
+B1–B3, §10 = the schedule-valve arc, §11 = N4, the campaign closer):
+- **INV-2 unified, then dissolved.** The 8 hand-copied self-protecting `_applyExtent` overrides became ONE declared
+  base hook + a lint (Stage A, `db6f19b4`); the synchronous hook was then retired for a deferred **schedule-valve**
+  in `Widget._applyExtent` (§10); and finally N4 deleted the whole declaration layer — `_placesChildrenInLayout`,
+  `_compositeChildrenBuilt`, the exempt markers, `check-composite-relay.js`. Composite interiors are now healed by
+  the ENGINE on every route, with no per-class capability: the ordered walk, the per-child frame-changed injection
+  (§2.3), and the structural valve (`children.length != 0`).
+- **The settle loop is the ordered down-walk** (Stage B2): two-flag dirtiness steers a parent-before-child descent
+  from dirty roots; the work-list survives as the enqueue-dedup + termination oracle; a fallback drains the
+  parent-pointer-only attachment class (the basement); a stuck-round tripwire throws loudly (§2.3, rewritten).
+- **Arrange idempotence is now THE load-bearing invariant** — every extra engine re-lay must be a no-op at the
+  fixpoint. Its oracle is the **staleness census** (`fg census`, §6.4/§6.5: post-order force-re-lay over an app
+  battery, 0 movers over ~1,500 targets), which caught two real arrange defects the old synchronous hook had been
+  masking (§10) — fixed at the ARRANGE, never by re-adding machinery.
+**So the engine is now: pure `measure` → non-notifying, idempotent `arrange` → ordered down-walk settle with
+engine-guaranteed child re-lay → settle-time up-edge → bounded, near-single-pass convergence under a never-fire
+assert.**
 
 **Lineage (why the engine looks like this).** Five campaigns shaped it in turn, each visible in the sections it
 authored: **deferred-layout** (public setters self-settle; the until-loop settle engine — §2.2/§2.3); **end-of-cycle
@@ -301,28 +320,45 @@ Two caveats keep the mental model exact:
   campaign has now driven the *careless* end-of-cycle set to **zero**, guarded by a hard-fail gate (§2.7). §2.7 develops
   the categories, the detection toolkit, and the coalescing API it produced.)
 
-### 2.3 The settle engine: invalidate **up**, re-layout **down**, iterate to a fixed point
+### 2.3 The settle engine: invalidate **up**, walk **down** in order, iterate to a fixed point
 
 The flush primitive `recalculateLayouts` (`WorldWdgt.coffee` ~:911) is a thin re-entrancy guard that wraps
-`_recalculateLayoutsBody` (~:939) — and *that* body is the whole engine:
+`_recalculateLayoutsBody` — and *that* body is the whole engine. **Since Stage B2 (2026-07-16,
+`ordered-downwalk-stage-b-plan.md` §8) the drain is an ORDERED DOWN-WALK**, replacing the old
+pop-a-dirty-entry / climb-to-chain-top discovery (set-equivalent by the relayset oracle; byte-exact by the
+order-independent-fixpoint property, §2.6):
 
 ```
-until widgetsThatMaybeChangedLayout is empty:           (~:948)
-   pop valid widgets off the tail
-   take a dirty widget; walk UP parents while the parent is also dirty   (~:987)
-       (stop at a valid parent, or at a freefloating boundary  ~:988)    → "top of a broken chain"
-   tryThisWidget._reLayout()       (~:997 — lays out that subtree top-down, marking each node valid)
+until widgetsThatMaybeChangedLayout is empty:                        (~:1126)
+   SWEEP the settled entries (whole-list filter)                      (~:1131)
+   DERIVE the dirtiness flags + the dirty ROOTS fresh from the
+       still-invalid entries, climbing CURRENT parent pointers        (~:1154)
+   for each root: __downWalkLayout(root)                              (~:1163)
+       — parent-BEFORE-child descent along hasDirtyDescendant flags,
+         settling each layoutIsValid==false node (__reLayoutOneSettleNode)
+   FALLBACK: any entry still invalid — the parent-pointer-only
+       attachment class (a parent set without children membership,
+       e.g. the basement) — gets the old climb-to-chain-top treatment (~:1177)
+   STUCK TRIPWIRE: a zero-progress round console.errors + throws
+       DOWNWALK_UNREACHABLE_CHAINTOP (wired into the runners' gate)   (~:1191)
 ```
+
+Per settled node, `__reLayoutOneSettleNode` does: `_reLayout` → the settle-time up-edge iff the node's own frame
+changed → and the **frame-changed child injection** (Stage B3, ungated by N4): every VALID child's frame is
+snapshotted before the re-lay, and any child the arrange moved or resized is recursively re-laid — **the engine
+guarantees every arrange-moved child a re-lay**, with no per-class declaration (the `_placesChildrenInLayout`
+capability that briefly gated this is deleted; a moved leaf's re-visit is a no-op via the equal-extent guard). The
+flags STEER the descent; the work-list remains the enqueue-dedup structure and the termination oracle (a mid-walk
+enqueue lands there and is picked up by the next round's sweep-and-derive).
 
 Two facts make this a *fixed-point* loop, not a fixed *number* of passes:
 
-1. **Invalidation climbs up; layout flows down.** `_invalidateLayout` (`Widget.coffee` ~:3898) pushes the
-   widget + marks it invalid (via the shared `__markForRelayout` atom ~:3894), then recurses to `@parent`
-   (~:3952) — short-circuiting iff the triggering child is freefloating (the single freefloating-skip now lives in
-   one place, the param guard ~:3906) — so one deep change
-   enqueues the whole ancestor chain, and the loop then does a single top-down `_reLayout` from the topmost
-   dirty ancestor. **In the common case a localized change is "climb up once, lay out down once" — effectively
-   one top-down arrange.** `_reLayout` ends in `_markLayoutAsFixed()` (~:4377), popping the node.
+1. **Invalidation climbs up; layout flows down — now in guaranteed parent-before-child order.** `_invalidateLayout`
+   pushes the widget + marks it invalid (via the shared `__markForRelayout` atom), then recurses to `@parent` —
+   short-circuiting iff the triggering child is freefloating — so one deep change enqueues the whole ancestor chain;
+   the walk then descends once from the dirty root. **In the common case a localized change is "climb up once, walk
+   down once" — one top-down arrange, by construction.** `_reLayout` ends in `_markLayoutAsFixed()`, and the next
+   round's sweep drops the entry.
 2. **A `_reLayout` can re-dirty something *outside* the subtree it just settled** — via the **settle-time up-edge**
    (this is what *replaced* the notify-by-mutation seam, deleted 2026-07-01). After the loop `_reLayout`s a chain-top,
    it calls `_reFitMyTrackingContainerAfterSettle` (`Widget.coffee` ~:1635) — which, *iff the chain-top's frame
@@ -373,18 +409,29 @@ every other writer fails loudly.** The two sides:
   tripwire — a freefloating teardown was historically a silent no-op and must stay one even mid-pass.)
 - **The sanctioned mid-pass writers all route through the atom** (push + mark-invalid, NO climb, NO throw — the climb
   is exactly what must not happen mid-pass, since it would re-dirty already-settled ancestors indiscriminately). The
-  census is short — three:
+  census is short — five (the first three original; 4–5 added by the 2026-07-16 schedule-valve/N4 arcs, both through
+  the shared phase-valve `_scheduleRelayoutRespectingPhase`, whose in-pass arm IS the atom):
   1. the **settle-time up-edge** (`_reFitMyTrackingContainerAfterSettle` → `_reFitContainer`'s in-pass arm) — the
      loop's own cross-container re-fit, fact 2 above (this is also how a caret pass that scrolled its panel re-enqueues
      that panel);
   2. the **caret's inert-receiver self-schedule** (§2.1): `_invalidateLayout`'s inert branch sits *before* the
      mid-pass throw, so the caret may re-enqueue itself during a pass; its `_reLayout` also simply *stays* dirty until
      its containers stop moving — which re-dirties nothing else, it just isn't popped yet;
-  3. the **collapse phase-valve** (`_collapseNoSettle` / `_unCollapseNoSettle`, `Widget.coffee` ~:2088/~:2114 —
+  3. the **collapse phase-valve** (`_collapseNoSettle` / `_unCollapseNoSettle` —
      `if world._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()`): an arrange that decides
      collapse *by width* (`WindowWdgt._positionAndResizeChildren`, `HorizontalMenuPanelWdgt._reLayoutSelf`)
      legitimately flips a child's collapsed state mid-pass, and the valve routes the re-layout that schedules onto the
-     no-climb path where the bare verb would throw.
+     no-climb path where the bare verb would throw;
+  4. the **composite schedule-valve** in `Widget._applyExtent` (rule [E]'s ONE named exemption, checked by
+     check-layering.js): a real extent commit on a widget WITH children schedules that widget's own re-lay — in-pass
+     the same flush's next round heals its interior, off-pass the wrapping settle does. Self-only, convergent (the
+     re-lay's own re-commit hits the equal-extent top guard), never runs feature code synchronously
+     (`ordered-downwalk-stage-b-plan.md` §10/§11);
+  5. the **scroll-panel commit-seam schedule** (`ScrollPanelWdgt._positionAndResizeChildren`): after committing a new
+     contents frame via the non-notifying twin, a contents with ITS OWN arrange (`implementsDeferredLayout`) gets its
+     full re-lay scheduled — the gate is deliberately NOT `children.length`: this arrange is also reached OFF-settle
+     by the sanctioned synchronous content-change endpoints and the drag-to-scroll step, and a wider gate pushed every
+     plain-panel contents onto the end-of-cycle flush (34 careless pushes, caught by the capstone — §11).
 
 The loop is *built* to absorb exactly this: the until-loop is a **live drain, not a snapshot walk** — work enqueued
 mid-pass is consumed by the same flush, which is what makes it a fixed-point iteration rather than a single sweep. What
@@ -474,10 +521,14 @@ early byte-exactly; can't reorder — a content-before-container climb-block bre
 
 So convergence is now **bounded and near-single-pass**: the *waste* is gone, and the handful of real re-visits
 (nested-window first-placement + the aspect-locked cycles) are proven essential — the assert never fires. It is no
-longer "empirical-and-capped" in the old sense. It is still, honestly, a *verified* property of the current constraint
-set rather than a *structural* guarantee of a single topological pass; making it the latter would need the ordered
-down-walk §4.4 sketches — a far larger re-architecture, not currently justified given the near-single-pass resting
-point.
+longer "empirical-and-capped" in the old sense. *(This paragraph originally continued: "making it a structural
+guarantee would need the ordered down-walk §4.4 sketches — a far larger re-architecture, not currently justified."
+**The down-walk has since been BUILT — 2026-07-16, §4.4/`ordered-downwalk-stage-b-plan.md` — so the traversal half of
+the structural guarantee now exists**: parent-before-child order and the engine-guaranteed child re-lay are
+structural facts, not verified properties. What keeps single-pass convergence a* verified *rather than* structural
+*property is now only the MEASURE side: the §2.5 proportional model's genuine width↔height cycles, the
+first-placement measurability gap, and the one surviving applied read-back — i.e. exactly the §2.5 sizing-model
+unification, a possible future design-first arc (not currently planned).)*
 
 ### 2.7 The end-of-cycle flush: what survives it, the categories, and coalescing
 
@@ -946,22 +997,26 @@ one bit on the node and flips `hasDirtyDescendant` up the chain (O(depth) markin
 roots-with-dirty-descendants go on the work-list), and the loop walks *down* from those roots. It also makes the
 "freefloating child laid out twice" sub-optimality (§4.5) disappear naturally. Determinism-sensitive.
 
-**A remaining *optimization* — no longer a seam prerequisite (the seam is already deleted).** §4.4 is the
-efficiency/cleanliness layer: O(1) enqueues, and it makes the "freefloating child laid out twice" sub-optimality (§4.5)
-disappear. The convergence-arc endgame once tested the two-flag's invalidation-time propagation as a *seam replacement*
-and falsified it (an off-pass climb fires at scheduling time, before the content's geometry is applied) — but the seam
-was ultimately deleted by the **settle-time up-edge** instead (§4.1), which is post-application and needs no two-flag.
-So §4.4 no longer has a seam to enable; it stands purely on its own merits — a cleaner, cheaper settle loop (walk
-*down* from dirty roots instead of pop-tail + walk-up), byte-identical, determinism-gated. **It is the leading item in
-the optimizations plan** (`docs/layout-optimizations-and-oo-cleanup-plan.md`). Staged in
-`proper-layouts-4.4-ordered-downwalk-plan.md`, whose §8 is the (now-superseded) pre-deletion closure.
+**✅ BUILT — 2026-07-16, and it went further than this sketch.** The full record is
+`docs/ordered-downwalk-stage-b-plan.md` (§8 = B1 two-flag scaffold + B2 root-down visitation + B3 the frame-changed
+child injection; §10 = the schedule-valve that retired the synchronous INV-2 hook; §11 = N4, which ungated the
+engine and deleted the per-class declaration layer). What shipped beyond the efficiency sketch above: the walk is
+not just a cheaper drain — it carries an **engine guarantee** (every arrange-moved child gets a re-lay, via the
+per-child frame snapshot in `__reLayoutOneSettleNode`), which killed the shipping bypass-staleness class (§2.3) and
+made the whole per-class composite-relay capability deletable. Two structure notes the sketch missed, learned the
+hard way (stage-b plan §8-B2): the dirtiness flags must be DERIVED per round from the still-invalid work-list
+entries (incremental enqueue-time bookkeeping broke mid-walk enqueues), and a FALLBACK must drain the
+parent-pointer-only attachment class (a parent set without children membership — the basement) that a
+children-array walk cannot reach. Historical staging: `proper-layouts-4.4-ordered-downwalk-plan.md`, whose §8 is the
+(superseded) pre-deletion closure.
 
-### 4.5 Quick win — the freefloating walk-up TODO (`WorldWdgt.coffee` ~:985–997)
+### 4.5 Quick win — the freefloating walk-up TODO — **SUBSUMED by the down-walk (2026-07-16)**
 
-The code itself flags that the walk-up stops at the *first valid* parent rather than the *topmost invalid* one,
-so a freefloating child can be laid out twice (first with a stale parent size). Stopping at the
-last-invalid-on-the-way-up is a small, local fix that removes redundant double-layout. Optimization, not
-correctness; soak it (anything in this loop is cadence-sensitive).
+The concern was: the old walk-up stopped at the *first valid* parent rather than the *topmost invalid* one, so a
+freefloating child could be laid out twice (first with a stale parent size). The B2 ordered walk lays parents
+strictly BEFORE children, so the double-layout class is gone by construction for everything the walk reaches; only
+the fallback path (the tiny parent-pointer-only remainder, §2.3) retains the old climb semantics, where the
+sub-optimality is harmless (idempotent re-visit at worst).
 
 ### 4.6 Minor — flush-count hygiene in multi-mutation handlers
 
@@ -1147,7 +1202,18 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    nested-window **first-placement** (a container cannot measure a child whose content has never been placed —
    `contentNeverSetInPlaceYet`, §2.6), and (b) an **aspect-locked width↔height cycle**, which you must break with
    `elasticity 0` (rule 5), not iterate through. If your new layout needs a third reason to re-visit, that is a design
-   smell — stop and reconsider (or bring it to the ordered-down-walk discussion, §4.4).
+   smell — stop and reconsider (the ordered down-walk §4.4 is BUILT: a third re-visit reason usually means your
+   arrange is not idempotent or reads half-applied state).
+
+   **Corollary (N4, 2026-07-16): your arrange must be IDEMPOTENT, and you declare NOTHING for it.** The engine
+   re-lays your widget whenever an arrange moves/resizes it (the §2.3 child injection) and schedules your re-lay
+   whenever a raw resize commits your frame while you have children (the schedule-valve) — there is no
+   `_placesChildrenInLayout`-style capability to declare and no lint to satisfy (both deleted, stage-b plan §11). In
+   exchange, a re-run of your `_reLayout` at the converged frame MUST move nothing: place children from your OWN
+   committed frame, size-then-position (the ColorPicker case), and re-run any base tail your arrange depends on
+   after you change your own frame (the stack corner-tail case) — both worked cases in stage-b plan §10. The oracle
+   is the **staleness census** (`fg census`, §6.4): post-order force-re-lay over the app battery; ANY mover is a
+   bug in that widget's arrange, to be fixed AT the arrange.
 
 3. **Obey the tiers — the FLOWRULE is enforced, not advisory.** Three tiers, and mixing them throws (§2.2):
    - **Public setters self-settle.** Shape a public geometry/structural mutator as `@_settleLayoutsAfter =>
@@ -1181,10 +1247,12 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    `elasticity 0` (`getWidthInStack = min(wEl, availW)`), making the content convergence-independent without touching
    the proportion model (§2.5). Do *not* try to iterate the cycle to a fixpoint.
 
-6. **Adding a method to base `Widget` is inspector-safe; deleting one recaptures the inspector test.** A new capability
-   on `Widget` costs zero recaptures. *Deleting* an inspector-visible `Widget` method shifts the member list and
-   recaptures `macroDuplicatedInspectorDrivesCopiedTargetOnly` (benign, pre-authorised — recapture dpr1+2). Prefer a
-   **capability query** (a `foo?()` the answering subclass defines) over an `instanceof`/`isWindow`-style type test
+6. **Adding OR deleting an inspector-visible base `Widget` member churns the inspector test — benign,
+   pre-authorised.** *(This rule originally claimed adding was recapture-free; the INV-2 Stage-A arc falsified that
+   empirically — adding 3 base members churned the member list exactly like a deletion.)* Either direction shifts
+   the click-anchored member-list scroll and recaptures `macroDuplicatedInspectorDrivesCopiedTargetOnly` (dpr1+2;
+   verify the diff is list-offset-only, then recapture — additions and deletions in the same arc can CANCEL). Prefer
+   a **capability query** (a `foo?()` the answering subclass defines) over an `instanceof`/`isWindow`-style type test
    (the type-test-elimination campaign removed those).
 
 ### 6.2 The maximal SCHEDULE/APPLY invariant (what "correct" means, precisely) — lint `[F]`
@@ -1239,6 +1307,12 @@ The build **fails** on any of these; read the failing rule's message, it names t
 - **The two boundary gates** (siblings of the suite): the **end-of-cycle capstone** (`run-capstone-gate.sh` — no
   careless off-settle push survives to the flush, §2.7) and the **paint-readonly gate** (`run-paint-readonly-gate.sh` —
   paint schedules no layout, §2.1). Both self-test and hard-fail.
+- **The staleness census** (`fg census`, = `Fizzygum-tests/scripts/staleness-census.js`) — **the arrange-idempotence
+  oracle, mandatory for any arrange/engine change since N4** (rule 2's corollary): boots the production build, opens
+  the app battery (incl. both slides apps) + the basement, resizes every window narrow/wide, then post-order over
+  every widget forces `_reLayout(bounds)` at the CURRENT frame and diffs subtree geometry. ANY mover = a
+  non-idempotent or stale arrange (~1,500 targets, expected movers: **zero**). It found ToolPanelWdgt's column-wrap,
+  the Basement bypass staleness, and the two defects the old synchronous hook masked (stage-b plan §3/§10).
 - **The re-visit detector** (for measuring convergence) — a throwaway `__seen = new Set()` reset each
   `_recalculateLayoutsBody` call, logging when a widget is processed a 2nd+ time in one flush. This is how the caret
   (372) and window (9) re-visits were measured; it is the tool for confirming a new layout is single-pass. Related
@@ -1254,6 +1328,7 @@ browsers, and gates on real exit codes:
 ./fg build            # build + all static gates (expect "0 violations" + "done!!!")
 ./fg suite            # full suite, dpr1 (add nothing; it's the default)
 ./fg gauntlet         # build + dpr1 + dpr2 + webkit + apps + tiernaming + settle  (the standard gate)
+./fg census           # the arrange-idempotence oracle (§6.4) — 0 movers or it fails
 ./fg test <name>      # one macro test
 ./fg recapture <name> # recapture a benign inspector/reference shift
 ```

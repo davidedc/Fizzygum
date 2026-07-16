@@ -145,10 +145,11 @@ check-layering rule **[P]** (§4); the plain `_settleLayoutsAfter` stays the *th
 A size-tracking container (a window fitting its stack, a scroll frame fitting its content) must re-fit when the
 content it tracks changes size. This *was* a notify-by-mutation **seam** — the content's mutator announced up to the
 container mid-arrange — and it was **DELETED 2026-07-01** (the endgame's "proven irreducible" verdict was
-over-general). It is replaced by a **settle-time up-edge** in the settle loop: after the loop `_reLayout`s a
-chain-top, it calls `_reFitMyTrackingContainerAfterSettle`, which — *iff the chain-top's frame actually changed* —
+over-general). It is replaced by a **settle-time up-edge** in the settle loop: after the loop `_reLayout`s a settle
+node (a chain-top pre-2026-07-16; every walk-visited node since the ordered down-walk, assessment §2.3), it calls
+`_reFitMyTrackingContainerAfterSettle`, which — *iff that node's frame actually changed* —
 re-fits the container through the **retained** `_reFitContainer(container)` phase-valve → in-pass `__markForRelayout`
-/ off-pass `_invalidateLayout` → container `_reLayoutChildren`. Because the container reads the chain-top's *final*,
+/ off-pass `_invalidateLayout` → container `_reLayoutChildren`. Because the container reads the node's *final*,
 just-settled geometry (not a half-applied mid-arrange value), it re-fits correctly in one visit — a bounded O(depth)
 up-walk, no per-mutation notification (§2.3; assessment §4.1). The layout-**property** dependency (a freefloating
 child's stack align / elasticity / base-width) instead flows through the **uniform dirty-tree**: `_invalidateLayout`

@@ -1,5 +1,12 @@
 # Plan — §4.4 the ORDERED down-walk that deletes the re-fit seam (the convergence-arc finale)
 
+> **SUPERSEDED (2026-07-16): the ordered down-walk was BUILT — as an engine upgrade, not a seam deletion.**
+> This plan's framing (down-walk *as seam replacement*) stays falsified exactly as §8 records; the seam was later
+> deleted by the settle-time up-edge instead (2026-07-01), and the down-walk was then built on its own merits by
+> **`ordered-downwalk-stage-b-plan.md`** (2026-07-16: §8 = B1–B3 two-flag walk + engine-guaranteed child re-lay;
+> §10 = the schedule-valve; §11 = N4, deleting the per-class composite-relay capability entirely). This doc remains
+> the historical record of the falsified seam-replacement attempt.
+
 > **STATUS (2026-06-29, UPDATED end-of-session). ⛔ ARC CLOSED — STOP-and-BANK. The seam-deletion paths are
 > FALSIFIED (see §8); the capstone-green Stage 3 is the resting point.** A feasibility session (owner-approved: probe
 > before committing) ran runtime-only reverse-probes for BOTH the local off-pass climb (D1) AND the ordered-traversal
