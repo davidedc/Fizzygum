@@ -144,12 +144,19 @@ class PanelWdgt extends Widget
     position = @position().add new Point posx, posy
 
     @_addNoSettle aWdgt
-    # Container re-fit DEFERS to the cycle: aWdgt sits directly in a non-text-wrapping ScrollPanel's contents (me),
-    # so when the settle loop lays aWdgt out it then re-fits the enclosing ScrollPanel via the ORDERED settle-time
-    # re-fit (_reFitMyTrackingContainerAfterSettle, §4.3 -- successor to the deleted geom seam), whose _reLayout
-    # re-fits it on the next doOneCycle. So the old ad-hoc synchronous @parent._reLayoutChildren() here is redundant
-    # and removed. (fam 2 verify-and-drop -- deferred-layout-residuals-audit.md)
     aWdgt._applyMoveTo position
+    # The fam-2 verify-and-drop that removed the ad-hoc synchronous @parent._reLayoutChildren() here
+    # ("the settle-time re-fit will do it when the settle loop lays aWdgt out" --
+    # deferred-layout-residuals-audit.md) was FALSIFIED for this seam (ordered-downwalk plan §9-N2,
+    # 2026-07-16): the settle-time up-edge is gated on the laid widget's FRAME having CHANGED, and a
+    # scattered widget settles AT the frame the move above just applied -- so the enclosing scroll
+    # panel's children-merge re-fit (its _positionAndResizeChildren contents-frame commit) never ran.
+    # Concretely: the basement's contents stayed viewport-sized while a scattered wide widget stuck
+    # out past its edge, unreachable by scrolling, until an unrelated re-arrange healed it (the
+    # staleness census's residual one-step mover). So SCHEDULE the panel's re-fit explicitly, via
+    # the same capability-guarded re-fit verb the drop/remove seams above use -- deferred through
+    # the phase-valve (rides the caller's settle / the next flush), never synchronous.
+    @_reFitContainer @parent
 
 
   detachesWhenDragged: ->

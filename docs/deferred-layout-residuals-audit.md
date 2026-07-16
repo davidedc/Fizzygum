@@ -207,6 +207,12 @@ loop (freeze-class risk) for ZERO reward (full record: `softwrap-deferred-layout
 family 5 is **LEFT SYNCHRONOUS**, like the borderline handlers (a) families 1/6/7. The one open code item — the
 `PanelWdgt.childRemoved` + `addInPseudoRandomPosition` verify-and-drop slice — was **CLOSED 2026-06-22** (childRemoved →
 deferred 2-state seam; addInPseudoRandomPosition's redundant re-fit dropped; full gauntlet incl. 20-min soak green —
-`deferred-layout-OVERVIEW.md` §5). **Nothing further to do** — every off-settle synchronous re-fit trigger now defers,
+`deferred-layout-OVERVIEW.md` §5). **⚠ The addInPseudoRandomPosition half was PARTLY FALSIFIED 2026-07-16** (ordered-
+downwalk plan §9-N2): the dropped re-fit was NOT fully redundant — the settle-time up-edge it deferred to is gated on
+the laid widget's FRAME having CHANGED, and a scattered widget settles at exactly the frame the scatter applied, so the
+enclosing scroll panel's contents-frame merge never re-ran (the basement's scattered items sat beyond the contents
+frame, unreachable by scrolling; the gauntlet stayed green because no SystemTest renders that state — the staleness
+CENSUS caught it). Re-fixed with a DEFERRED schedule (`_reFitContainer @parent` at the scatter seam), not by restoring
+the synchronous call. **Nothing further to do** — every off-settle synchronous re-fit trigger now defers,
 and every synchronous relayout that can defer without cost does. **The boundary is now AUDITABLE + build-gated: see
 `deferred-layout-OVERVIEW.md` §11 — the SCHEDULE/APPLY classifier, the irreducibility PROOF 1/2, and lint [F].**
