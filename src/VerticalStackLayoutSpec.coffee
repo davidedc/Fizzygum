@@ -26,6 +26,8 @@ class VerticalStackLayoutSpec
   #   exactly the distinction the old model encoded in the captured wEl/wStk ratio
   #   (ratio 1 ≡ track, ratio < 1 ≡ scaled-keep). An EXPLICIT grow (the fixed/aspect
   #   classes' 0, a menu edit, a constructor arg) always wins over the derivation.
+  #   (The aspect CONTRACT — pure measure + role-appropriate grow — is documented at
+  #   KeepsRatioWhenInVerticalStackMixin, D6.)
   desiredWidth: nil
   grow: nil
   alignment: 'left'

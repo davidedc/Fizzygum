@@ -729,6 +729,47 @@ converged states under each rule):
 - **Rule C (hug once, never on re-mount):** keep the hug at TRUE first construction, skip
   it on RE-arms (uncollapse/content re-mount). Kills only the re-mount transient (1 of 3);
   keeps construction ones; smallest visual delta (uncollapse keeps the pre-collapse frame).
+
+### §9.8 — U4 execution log (2026-07-17; owner grant: commit on green gates, pause on major decisions)
+
+- **U4-2 — §9.7-Q implemented (B2+D)**, committed `833fb396` (2 files: WindowWdgt + this
+  doc). Gates: build + presuite (250/250 byte-identical, paint 0) + full-suite P2 (8
+  flushes, ZERO construction width ping-pongs — all residuals named up-edges) + 1-round
+  torture 4/4. Details in §9.7-Q's outcome block.
+- **U4-3 — the U1-deferred vocabulary renames**, committed `0721f468` / tests `6127d6860`
+  (7+2 files). setElasticity→setGrow SPLIT HONESTLY (public setGrow takes the model's 0..1;
+  the prompt's 0..100 knob goes through the new setGrowFromPercent adapter);
+  setWidthOfElementWhenAdded→setDesiredWidth; elasticityPopout/baseWidthPopout→
+  growPopout/desiredWidthPopout (quoted registrations updated);
+  rememberInitialDimensions→captureInitialPlacement (both spec classes + 2 arrange callers
+  + the ONE out-of-repo caller, macroSimpleDocumentCanAddIndentedParagraph's fixture
+  re-anchor). Menu labels/prompt titles UNCHANGED (product wording, pixel-asserted);
+  alignment setters + getWidthInStack keep their names (U0 decision / still accurate).
+  Gates: build (syntax+stink) + presuite byte-identical. Zero recaptures.
+- **U4-4 — D6 closed: DOCUMENTATION, LINT CONSCIOUSLY NOT BUILT.** The firing profile ran
+  first (a suite-wide capture census: every captureInitialPlacement logged with element
+  class + resulting grow — `.scratch/capture-census-prelude.js`, verbose-run aggregation).
+  The lint candidate "aspect measure with grow ≠ 0" would fire on exactly THREE in-tree
+  contexts, all sanctioned: (1) AnalogClockWdgt stack-captured grow=1 — the DESIGNED
+  oversize trample (wider-than-column ⇒ column-track), U1 §9.5; (2)+(3)
+  PlotWithAxesWdgt/Example3DPlotWdgt as WINDOW CONTENT grow=1 — fill-and-follow-ratio is
+  the correct window-content shape (the window's height follows the ratio through the pure
+  measure). Zero true positives exist: the cycle premise (width↔height→width) died with
+  the proportional model, the pure-measure campaign, and §9.7-Q (a stack never derives
+  width from child heights; a container-owned window never self-resizes to content). THE
+  ASPECT CONTRACT is now documented at KeepsRatioWhenInVerticalStackMixin (the measure
+  home) with a cross-ref from the spec's grow field comment: pure width→height measure +
+  role-appropriate grow (stack element ⇒ explicit 0, trample-exempt; window content ⇒ 1).
+- **U4-5 — the P2 counter PROMOTED to a standing gate.** `scripts/revisit-gate.js` (tests
+  repo) + `scripts/audit-preludes/revisit-prelude.js` (the .scratch prelude, committed
+  as-is) + `scripts/revisit-baseline.json`. Asserts the (test → sorted flush-signature
+  multiset) profile — Class:count entries with instance ids stripped; flush indices and
+  instance numbers deliberately NOT asserted (cadence-cosmetic). Baseline = the post-§9.7-Q
+  profile: 8 tests / 8 flushes, ALL named up-edges (2 window-height singles + 5
+  TransformFrame slot-tracks + 1 scroll-uncollapse pair). Self-validated both ways: OK
+  against the B2+D audit dir; exits 1 with exactly the 2 expected drifts against the
+  pre-rule U3 dir. Both a NEW and a VANISHED signature fail — improvements are baked in
+  consciously via --write-baseline + a commit. Local fg wiring: `fg revisits`.
 Sequencing: settle §9.7-Q BEFORE promoting the P2 gate (its expected profile depends on the
 rule); if B or C, supersede the §6 U3-C entry with an "owner-decided rule" annotation rather
 than deleting it (the falsification stays true — the change is now INTENDED behaviour).

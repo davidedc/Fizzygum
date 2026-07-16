@@ -1,3 +1,20 @@
+# THE ASPECT CONTRACT (D6, sizing-model unification U4 — docs/sizing-model-unification-plan.md §9.8):
+# aspect/fixed content participates in vertical sizing through exactly two ingredients —
+#   1. a PURE width→height measure (preferredExtentForWidth; this mixin's is the ratio one,
+#      the clock/spreadsheet/holder/composite-icon have their own square/grid twins), and
+#   2. a grow POLICY chosen by placement role:
+#      - as a STACK ELEMENT that should stay size-stable: an EXPLICIT grow 0 in
+#        initialiseDefaultVerticalStackLayoutSpec (the clock/icon/spreadsheet trio) — the
+#        capture's oversize trample (wider-than-column ⇒ grow 1, column-tracking) is the
+#        one designed exception and survives the pin;
+#      - as WINDOW CONTENT that should fill: grow 1 is CORRECT — the window's height follows
+#        the ratio through the measure (the plots ship this way).
+# No cycle is possible either way since the ordered down-walk + pure measures + the §9.7-Q
+# width rule: a vertical stack never derives its width from child heights, and a
+# container-owned window never self-resizes to its content. The U4 firing profile
+# (suite-wide capture census) confirmed every in-tree grow≠0-with-aspect-measure capture is
+# one of the two sanctioned shapes above, so the once-planned lint is consciously NOT built
+# (a gate that can only flag by-design states is noise).
 KeepsRatioWhenInVerticalStackMixin =
   # class properties here:
   # none
