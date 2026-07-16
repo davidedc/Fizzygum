@@ -1,12 +1,15 @@
 # Ordered down-walk — the Stage-B plan (authored 2026-07-16, to be executed COLD, owner-gated)
 
-**Status: B1–B3 EXECUTED + PUSHED 2026-07-16 (Fizzygum `b88102ee` / tests `9f2ac0cb3`) — §8 is the
-execution log, §9 the next steps. §9 N1/N2/N3 RESOLVED same day (see their bullets). The B4
-SCHEDULE-VALVE RETIREMENT ARC then EXECUTED the same day — §10 is its execution log: the Stage-A
-synchronous hook is DEAD, the settle engine is the sole healer of composite interiors (valve +
-injection + walk), with relayset UNION IDENTICAL vs the pre-arc build and zero reference changes.
-REMAINING = §9-N4 only (drop the injection's capability gate → delete `_placesChildrenInLayout` +
-the lint + the 5 remaining markers; the census/A-B is now the idempotence instrument it needs).**
+**Status: CAMPAIGN CLOSED 2026-07-16. B1–B3 EXECUTED + PUSHED (Fizzygum `b88102ee` / tests
+`9f2ac0cb3`) — §8 is the execution log, §9 the next steps. §9 N1/N2/N3 RESOLVED same day (see their
+bullets). The B4 SCHEDULE-VALVE RETIREMENT ARC EXECUTED the same day — §10 is its execution log: the
+Stage-A synchronous hook is DEAD, the settle engine is the sole healer of composite interiors (valve
++ injection + walk). §9-N4 THEN EXECUTED the same day — §11 is its execution log: the engine is
+UNGATED (injection watches EVERY valid child; the valve + the V1 seam gate on STRUCTURAL facts) and
+the whole declaration mechanism is DELETED — `_placesChildrenInLayout`, `_compositeChildrenBuilt`,
+the 5 exempt markers, check-composite-relay.js + its build wiring. One engine, one healing
+mechanism, zero capability declarations, zero markers, one lint fewer. NOTHING REMAINS of this
+plan's ambition.**
 The sections below §0–§7 are the original plan, kept verbatim as authored (deviations called out
 in §8).
 
@@ -429,6 +432,10 @@ Ordered by recommended sequence; each is independently shippable and separately 
   becomes load-bearing (N2's class!) — so N2 must land FIRST, and an idempotence sweep (staleness
   census extended to force-re-lay EVERY widget class in place) is the prerequisite gate. Payoff:
   `_placesChildrenInLayout` shrinks back to a Stage-A-hook-only concern, simplifying B4.
+  **✅ RESOLVED 2026-07-16 — executed post-B4 as the campaign closer; §11 is the execution log**
+  (the injection watches every valid child; the valve gates on `children.length != 0`; the V1
+  ScrollPanel seam gates on `implementsDeferredLayout` — the capstone falsified `children.length`
+  THERE; the capability + guard + lint + markers are all deleted).
 - **Standing protocol for all of the above** (§5, amended this arc): per-stage gate = `fg build` +
   `fg presuite` + 1-round torture; arc close = `fg gauntlet` + 3-round torture; equivalence oracle =
   per-test UNION relay-sets (never per-flush sequences); census for behaviour stages. Probes live in
@@ -514,7 +521,130 @@ Staged V1→V4, each stage byte-exact-gated with the hook still live until V3 fl
 ### What died / what stays
 - DIED: `_reLayoutMyChildrenAfterImmediateResize` (base + 3 overrides) — the synchronous composite
   re-lay mechanism, Stage A's hook.
-- STAYS: `_placesChildrenInLayout` + check-composite-relay.js + `_compositeChildrenBuilt` — they
-  now gate the valve and the B3 injection. N4 (drop the injection's capability gate → delete the
-  capability + lint + the 5 remaining markers) is the remaining §9 item; under the valve the
-  census/A-B is a per-class idempotence detector, which is exactly N4's prerequisite instrument.
+- STAYS *(as of this arc's close)*: `_placesChildrenInLayout` + check-composite-relay.js +
+  `_compositeChildrenBuilt` — they now gate the valve and the B3 injection. N4 (drop the
+  injection's capability gate → delete the capability + lint + the 5 remaining markers) is the
+  remaining §9 item; under the valve the census/A-B is a per-class idempotence detector, which is
+  exactly N4's prerequisite instrument. **(N4 executed later the same day — §11. None of these
+  survive it.)**
+
+## §11 — Execution log: N4, the capability deletion (2026-07-16, the campaign closer)
+
+The last §9 item: the settle engine's child re-lay is now UNGATED and the whole declaration
+mechanism is DELETED — `_placesChildrenInLayout` (base + 26 declarations),
+`_compositeChildrenBuilt` (base + 6 ctor guards), the 5 remaining
+`immediate-resize-relay-exempt` markers, and `buildSystem/check-composite-relay.js` + its
+`build_it_please.sh` wiring. One engine, one healing mechanism, zero capability declarations,
+zero markers, one lint fewer. 38 files, +60/−515.
+
+### Design — decided on a firing profile, not on theory
+Three sites referenced the capability: (a) the B3 injection's watched-children filter
+(`WorldWdgt.__reLayoutOneSettleNode`), (b) the schedule-valve's composite branch
+(`Widget._applyExtent`), (c) the V1 ScrollPanel declared-contents schedule. A
+ZERO-BEHAVIOR-CHANGE counting prelude (`.scratch/n4-firing-probe-prelude.js`, aggregated by
+`.scratch/n4-profile-report.js`) measured, on the pre-N4 build over the full 250-test dpr1
+suite, what each candidate replacement would fire on:
+
+- INJECTION, watch-ALL: 17,112 settle-node re-lays snapshot 28,736 children (~1.7/node —
+  trivial); watch-ALL adds ~6,800 re-lays/suite (~27/test), almost all LEAVES whose re-visit
+  is a PROVABLE no-op (a VALID child has no pending desired*, so a no-arg `_reLayout` re-lays
+  at the CURRENT frame and the equal-extent top guard eats it). The theorized CaretWdgt hazard
+  (its `_reLayout` carries scroll-follow side effects) measured ZERO occurrences. Bonus: the
+  profile surfaced real UNDECLARED composites arrange-moved with children (SliderWdgt 420,
+  PanelWdgt 412, SpreadsheetWdgt 13, PatchProgrammingWdgt 10…) that now get the guarantee.
+- VALVE, structural gate (`@children.length != 0`): +1,360 schedules/suite, only 31
+  bare-off-pass — near-today flush composition.
+- VALVE, ungated: +12,000 MORE schedules, 2,287 bare-off-pass — dominated by orphan ctor flows
+  (SpreadsheetWdgt grid cells 924, menu separator RectangleWdgts 880) and CaretWdgt 142 (raw
+  `_applyHeight` in editing events). A childless widget's COMPLETE heal is `_reLayoutSelf`,
+  which `_applyExtentBase` fires on every real commit — so ungated buys zero healing, and its
+  only marginal coverage (the caret) is its only concrete risk.
+
+DECISION: injection watch-ALL (every VALID child; the `layoutIsValid` filter stays — a
+pending-desired widget is invalid, so a forced no-arg re-lay can never fight the arrange);
+valve gates on `@children.length != 0`. The owner-pre-flagged fork (structural vs none)
+dissolved under measurement — structural dominates on every axis but "philosophical
+uniformity".
+
+### FALSIFIED FIRST CUT — the V1 seam gate must be `implementsDeferredLayout`, NOT `children.length`
+The first gauntlet's CAPSTONE leg (the valve's watchdog, catching its second falsification
+this campaign) failed with 34 careless end-of-cycle pushes across 10 scroll tests, every one a
+PanelWdgt + ScrollPanelWdgt/ListWdgt PAIR (the climbing `_invalidateLayout` signature). Stack
+capture (`.scratch/n4-eoc-stack-prelude.js` — the production careless gate wrapped onto
+`_invalidateLayout`, emitting over the LAYOUTAUDIT rails) attributed 100% of them to the V1
+commit seam in `_positionAndResizeChildren`, which is reached OFF-SETTLE by two sanctioned
+synchronous callers — the public content-change endpoints (`add`/`addMany` →
+`_reLayoutChildren`) and the drag-to-scroll `step` function. The old declared gate was inert
+for the plain-PanelWdgt contents of every ordinary scroll panel; `children.length` made every
+such call push the contents onto the end-of-cycle flush. All suite legs stayed byte-exact (the
+flush heals before paint) — ONLY the capstone saw it. FIX at the seam: gate on
+`@contents.implementsDeferredLayout()` — schedule only a contents whose CLASS has its own
+arrange (ToolPanelWdgt, stacks); a base-`_reLayout` contents gets nothing from a full re-lay
+beyond the `_reLayoutSelf` the commit already fired, and its settle path is covered by the
+watch-ALL injection. (Non-seam enqueue residue checked: only the caret's sanctioned in-event
+`_requestScrollFollow` — drained by `_settleScrollFollow`, never rides the flush — and 6
+pre-existing TTF `_addNoSettle` cases.) The after-side relayset trace was REDONE on the fixed
+build.
+
+### Why the six `_compositeChildrenBuilt` guards die with the capability
+All six (WidgetHolderWithCaption, ColorPicker, GenericCompositeIcon abstract-false,
+GenericShortcutIcon, GenericObjectIcon, PlotWithAxes) protected the same scenario: the OLD
+SYNCHRONOUS hook running mid-ctor with children missing. Under the schedule-valve that is
+STRUCTURALLY impossible: builders run inside a settle window (or pre-world), a nested public
+setter on an under-construction ORPHAN defers rather than flushes, so a scheduled re-lay can
+only run at the window-closing flush — after the builder completed and every child exists.
+Belt-and-braces: every verified builder `_applyExtent`s its placeholder BEFORE the first child
+add (WidgetHolder / ColorPicker / ShortcutIcon / ObjectIcon checked in-tree), so the
+structural valve gate is inert at that moment anyway; PlotWithAxes never placeholder-applies
+in its own builder at all (its guard covered the mixin's Path-B applies — in-pass, benign
+self-enqueue).
+
+### What changed (the whole edit set)
+- `WorldWdgt.__reLayoutOneSettleNode`: watch filter `c._placesChildrenInLayout?() and
+  c.layoutIsValid` → `c.layoutIsValid`.
+- `Widget._applyExtent`: `if @_placesChildrenInLayout() and @_compositeChildrenBuilt()` →
+  `if @children.length != 0`; base `_placesChildrenInLayout` + `_compositeChildrenBuilt`
+  DELETED; the valve comment rewritten (structural rationale + profile numbers).
+- `ScrollPanelWdgt._positionAndResizeChildren` commit seam: `if
+  @contents._placesChildrenInLayout()` → `if @contents.implementsDeferredLayout()` (see the
+  falsification above).
+- 26 class declarations + their §9-N3/INV-2 rationale blocks deleted (script-swept, git-diff
+  reviewed); 6 `_compositeChildrenBuilt` overrides deleted; 5 exempt marker lines deleted
+  (Caret, LabelButton, VideoControlsPane, VideoPlayer, TTF — TTF's own `_applyExtent` override
+  IS still its mechanism and stays).
+- `check-composite-relay.js` deleted + its `build_it_please.sh` wiring block; rule [E]'s named
+  `Widget._applyExtent` exemption in check-layering.js unchanged (it keys on class+method, not
+  the gate).
+
+### Gates (all on the final build unless noted)
+- build green (syntax + layering 0 violations; the composite-relay gate is gone).
+- presuite: dpr1 250/250 + paint audit PASS after ONE benign recapture —
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the SAME test that caught V3's base-method
+  count change): net −2 base methods shift the inspector member-list scroll anchored at the
+  macro's `alpha` click; diff-page verified the semantic content identical (alpha 0.25/0.6,
+  ref == act), only the list offset moved. 4 screenshots recaptured (img2/img3 × dpr1/dpr2).
+- staleness census: 0 movers / 1310; **battery gap found and fixed** — the census's
+  'SlidesApp' entry never resolved (`no such class`, silently skipped), so slides flows were
+  uncovered; now opens `SimpleSlideApp` + `SampleSlideApp` (1310 → 1506 targets incl. the
+  visible slide-maker tool palette, opened AND resized): **0 movers / 1506** re-stamped on the
+  final build.
+- relayset A/B vs `a7d8fdf4` (shared clone, FIZZYGUM_ALLOW_STALE_BUILD=1 before-trace; the
+  before leg fails the one recaptured inspector test by construction — harmless, the audit
+  rides failures): 250 tests, 865 extra re-laid ids (the expected watch-ALL adds), and ONE
+  residual subset "violation" — `MenuItemWdgt#514/#515` in the recaptured inspector test are
+  widgets that DON'T EXIST post-N4 (the deleted base methods' own member-list rows; the new
+  run's MenuItemWdgt counter tops out exactly 2 lower). Check instance-counter tops before
+  suspecting a lost heal. (An earlier `ToolPanelWdgt#1` violation was the `children.length`
+  seam cut and disappeared with the `implementsDeferredLayout` fix.)
+- gauntlet 9/9 — dpr1/dpr2/webkit/apps/paint/tiernaming/settle/CAPSTONE/refs all PASS.
+- danger-config torture: 1-round per stage green; 3-round at close 12/12 green.
+- OPS trap found on the way: the raw `build_it_please.sh` ABORTS but EXITS 0 when the umbrella
+  directory is not literally named `Fizzygum-all` — the first baseline clone at
+  `/tmp/n4-baseline/Fizzygum` "built" green while writing NOTHING, and the before-trace
+  silently ran against the NEW build (a vacuous A/B — caught because the expected 1-test
+  failure was missing and `latest/index.html`'s mtime hadn't moved). The clone umbrella must
+  be `<anything>/Fizzygum-all/Fizzygum`; ALWAYS verify the baseline artifact (mtime + a
+  deleted-symbol grep) before the before-trace.
+- Instruments retired: `.scratch/staleness-census-neutralized.js` (it forced declarations that
+  no longer exist — the counterfactual is now meaningless; the census itself IS the
+  idempotence sweep).
