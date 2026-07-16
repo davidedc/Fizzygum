@@ -79,6 +79,7 @@ const TEXT_SETTERS = ['setText', 'setFontSize', 'setFontName', 'toggleShowBlanks
 const TEXT_SETTER_CALL = new RegExp('[@.]\\s*(' + TEXT_SETTERS.join('|') + ')\\b');
 const RECALC_CALL = /[@.]\s*recalculateLayouts\b/;            // @recalculateLayouts / world.recalculateLayouts
 const INVALIDATE_CALL = /[@.]\s*_invalidateLayout\b/;         // @_invalidateLayout / x._invalidateLayout
+const VALVE_CALL = /[@.]\s*_scheduleRelayoutRespectingPhase\b/;  // the phase-valve — [E]-banned in immediate mutators except the ONE sanctioned Widget._applyExtent composite valve
 // [F] a CONTAINER-refit apply CALL (excludes _reLayoutSelf — see the [F] rule note by the check below). The
 // trailing (?!\?) skips the `?._reLayoutChildren?` EXISTENCE-CHECK guards (e.g. `return unless @parent?._reLayoutChildren?`)
 // — those test for the method, they don't apply it; a real apply is `()`-called or paren-less-arg-called, never `?`-tested.
@@ -583,6 +584,16 @@ function checkFile(file, violations, gCtx, warnings) {
     }
     if (isImmediateMutator(method) && invalidate) {
       violations.push(`[E] immediate mutator ${method}() calls _invalidateLayout() — an apply/commit corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`);
+    }
+    // [E] schedule-valve containment (B4 hook retirement, ordered-downwalk plan §9-N1, 2026-07-16):
+    // the phase-valve is [E]-banned in immediate mutators exactly like _invalidateLayout, with ONE
+    // sanctioned exception — the composite SCHEDULE-VALVE line in Widget._applyExtent (self-only
+    // enqueue, phase-correct, convergent via the equal-extent top guard; see that method's comment).
+    // Any other immediate mutator reaching the valve is a new mutator-schedules seam: bring it here
+    // for explicit sanctioning, don't just call it.
+    if (isImmediateMutator(method) && VALVE_CALL.test(code) &&
+        !(selfClass === 'Widget' && method === '_applyExtent')) {
+      violations.push(`[E] immediate mutator ${method}() calls _scheduleRelayoutRespectingPhase() — the ONE sanctioned schedule-valve lives in Widget._applyExtent (ordered-downwalk plan §9-N1); an apply/commit corner must not schedule  — ${at}`);
     }
     // [J] settle-neutral callbacks (layering/naming convention §3/§4): a notification HOOK (_reactTo* / _before*)
     // must NOT open a settle -- the gesture/structural DISPATCHER owns the single _settleLayoutsAfter; the hook is

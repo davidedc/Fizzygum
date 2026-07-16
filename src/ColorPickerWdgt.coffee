@@ -48,9 +48,9 @@ class ColorPickerWdgt extends Widget
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
 
-  # Construction-order guard for the composite-child re-lay (the WidgetHolderWithCaptionWdgt
+  # Construction-order guard for the composite-child schedule (the WidgetHolderWithCaptionWdgt
   # pattern): my ctor _applyExtents 80x80 BEFORE _buildAndConnectChildren, so the immediate-resize
-  # hook must stay inert until my palettes/feedback exist (the trailing _invalidateLayout/settle
+  # valve must stay inert until my palettes/feedback exist (the trailing _invalidateLayout/settle
   # lays them out once, when they all do).
   _compositeChildrenBuilt: ->
     @feedback?
@@ -64,7 +64,7 @@ class ColorPickerWdgt extends Widget
   # ARRANGE move/resize me without my _reLayout running?" -- yes: I am desktop-creatable and droppable into windows/stacks,
   # so I can sit bypass-sized (_applyExtentBase) with my children laid for the OLD frame. Declaring
   # puts me under the settle engine's frame-changed child re-lay (__reLayoutOneSettleNode injection)
-  # and the base Widget._applyExtent immediate-resize hook.
+  # and the base Widget._applyExtent immediate-resize SCHEDULE (the phase-valve).
   _placesChildrenInLayout: ->
     true
 
@@ -95,10 +95,15 @@ class ColorPickerWdgt extends Widget
     @grayPalette._applyMoveTo @colorPalette.bottomLeft()
     @grayPalette._applyExtent new Point @width(), Math.round(@height() * 0.0625)
 
+    # SIZE feedback FIRST, then centre it from its NEW dims (schedule-valve arc V3, 2026-07-16):
+    # the old move-then-resize order centred it with the STALE size, leaving the first pass after
+    # any frame change off-centre by half the size delta -- a per-pass NON-IDEMPOTENCE the retired
+    # synchronous hook's extra re-lay passes used to converge away (the census's force-re-lay
+    # caught it the moment the valve made one pass the norm).
+    @feedback._applyExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
     x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
     y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
     @feedback._applyMoveTo new Point x, y
-    @feedback._applyExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
 
     world.maybeEnableTrackChanges()
     @fullChanged()

@@ -85,6 +85,12 @@ class SimpleVerticalStackPanelWdgt extends Widget
   _reLayout: (newBoundsForThisLayout) ->
     super
     @_reLayoutChildren()
+    # (schedule-valve arc V3, 2026-07-16) my arrange above may have re-committed my own HEIGHT (the
+    # tight-hug), AFTER super's corner-internal tail already placed my handle overlays -- re-place
+    # them at the FINAL frame (idempotent when the hug was a no-op). The retired synchronous hook
+    # masked this ordering by running the arrange inside super's self-extent-apply, so the hug used
+    # to land before the corner tail.
+    @_reLayoutCornerInternalChildren()
 
   implementsDeferredLayout: ->
     false
@@ -310,16 +316,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
     # unconditional cache-break (Tier D, 2026-07-02).
     @_applyExtentBase new Point @width(), newHeight
 
-  # Self-protecting resize (INV-2, unified 2026-07-16): my _reLayoutChildren places my stack
-  # children, so the base Widget._applyExtent re-fits them when an immediate resize commits my
-  # frame -- the sanctioned immediate-mutator APPLY: synchronous, single-container, TERMINAL,
-  # exactly like TextWdgt._applyExtent -> @_reLayoutSelf (task #17); check-layering.js rule [E]
-  # forbids the SCHEDULE (no _invalidateLayout), not this APPLY. WindowWdgt + the other stacks
-  # inherit this declaration (replaces this class's hand-copied _applyExtent override).
+  # Self-protecting resize (INV-2 unified 2026-07-16; hook RETIRED for the schedule-valve the same
+  # day -- ordered-downwalk plan §9-N1): my _reLayoutChildren places my stack children, so an
+  # immediate resize SCHEDULES my re-lay through the base Widget._applyExtent valve (the engine
+  # heals my interior; the old synchronous terminal-_reLayoutChildren override is gone -- my full
+  # _reLayout ends in _reLayoutChildren anyway). WindowWdgt + the other stacks inherit this
+  # declaration (replaces this class's hand-copied _applyExtent override).
   _placesChildrenInLayout: ->
     true
-
-  # tracking container: the immediate-resize re-fit is the terminal _reLayoutChildren
-  # (-> _positionAndResizeChildren, which does not climb to my parent), not a full self re-lay.
-  _reLayoutMyChildrenAfterImmediateResize: (aPoint) ->
-    @_reLayoutChildren()

@@ -104,19 +104,25 @@ class StretchableCanvasWdgt extends CanvasWdgt
   _placesChildrenInLayout: ->
     true
 
-  # my one extra step vs the default: recreate the paint buffers at the new size BEFORE the
-  # re-lay. Sized from aPoint -- the RAW requested extent, exactly what the old override used
-  # (post-commit @extent() may differ: __commitExtent rounds + min-clamps). The buffers used to
-  # be recreated BEFORE the frame commit; nothing between commit and hook touches them
-  # (_applyExtentBase = commit + changed + the base no-op _reLayoutSelf; painting happens at
-  # frame render), byte-exact-gated.
-  _reLayoutMyChildrenAfterImmediateResize: (aPoint) ->
-    if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
-      @_createNewBehindTheScenesBuffer aPoint
-
-    @_createNewFrontFacingBuffer aPoint
-
-    @_reLayout @bounds
+  # (schedule-valve arc V2, 2026-07-16 -- absorbs the old _reLayoutMyChildrenAfterImmediateResize
+  # override) Reconcile my paint buffers to the COMMITTED extent. _applyExtentBase calls
+  # _reLayoutSelf on every real extent commit, so this now covers EVERY resize route -- the
+  # polymorphic apply, an engine re-lay, and the override-BYPASSING arrange path the old
+  # immediate-resize hook could not see. Guarded on the front buffer's physical size vs my extent
+  # (the CanvasWdgt/BackBufferMixin buffer-dims idiom), so a re-lay at an unchanged frame never
+  # touches the buffers. The behind-the-scenes buffer -- the user's PAINTING -- is deliberately
+  # kept once anything is painted: the blit scaling (extentWhenCanvasGotDirty in
+  # _createRefreshOrGetBackBuffer / getContextForPainting) maps the old-size painting onto the new
+  # frame; recreating it would erase the strokes. Sized from the committed @extent() (the old hook
+  # used the RAW requested extent; they differ only under __commitExtent's round/min-clamp, where
+  # buffer==frame is the correct invariant), byte-exact-gated.
+  _reLayoutSelf: ->
+    super
+    targetPhysicalExtent = @extent().scaleBy ceilPixelRatio
+    unless @backBuffer? and @backBuffer.width == targetPhysicalExtent.x and @backBuffer.height == targetPhysicalExtent.y
+      if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
+        @_createNewBehindTheScenesBuffer @extent()
+      @_createNewFrontFacingBuffer @extent()
 
 
   getContextForPainting: ->

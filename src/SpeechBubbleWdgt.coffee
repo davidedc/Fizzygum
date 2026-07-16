@@ -56,7 +56,7 @@ class SpeechBubbleWdgt extends Widget
   # ARRANGE move/resize me without my _reLayout running?" -- yes: I sit as a StretchablePanel element (dashboards/slides),
   # so I can sit bypass-sized (_applyExtentBase) with my children laid for the OLD frame. Declaring
   # puts me under the settle engine's frame-changed child re-lay (__reLayoutOneSettleNode injection)
-  # and the base Widget._applyExtent immediate-resize hook.
+  # and the base Widget._applyExtent immediate-resize SCHEDULE (the phase-valve).
   _placesChildrenInLayout: ->
     true
 

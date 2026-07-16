@@ -2122,18 +2122,25 @@ class Widget extends TreeNode
 
   # Widget accessing - dimensional changes requiring a complete redraw
   # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / SliderWdgt / ListWdgt /
-  # StretchableEditableWdgt / TrackingTransformFrameWdgt specialize it for their own, non-composite reasons).
-  # The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE body per behaviour, two
-  # names for dispatch; the bare twin is the override-BYPASSING base apply the top-down arrange uses) PLUS the
-  # unified composite-child re-lay: a composite whose _reLayout places its own children declares that via the
-  # _placesChildrenInLayout capability below, and gets them re-laid HERE when an immediate resize commits its
-  # frame. That is the INV-2 self-protecting-resize idiom
-  # (docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md), hand-copied as 8 per-class
-  # _applyExtent overrides until 2026-07-16, when the 9th forgotten copy (WidgetHolderWithCaptionWdgt -- the
-  # oversized-Basement-icon regression) proved the opt-in unenforceable; now the composite DECLARES and the
-  # base APPLIES, and buildSystem/check-composite-relay.js makes forgetting a build failure. This stays the
-  # sanctioned terminal in-place re-fit APPLY (rule [E] forbids the SCHEDULE, not this): synchronous,
-  # single-container, never climbs, never _invalidateLayout. Nothing notifies: the notify-by-mutation seam
+  # StretchableEditableWdgt / TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
+  # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
+  # body per behaviour, two names for dispatch; the bare twin is the override-BYPASSING base apply the
+  # top-down arrange uses) PLUS the SCHEDULE-VALVE (B4 hook retirement, ordered-downwalk plan §9-N1,
+  # 2026-07-16): a composite whose _reLayout places its own children declares that via the
+  # _placesChildrenInLayout capability below, and an immediate resize SCHEDULES its re-lay through the
+  # phase-valve -- in-pass the same flush's next round heals it, off-pass the wrapping settle / the
+  # end-of-cycle flush does, always before the next paint. This RETIRES the Stage-A SYNCHRONOUS hook
+  # (_reLayoutMyChildrenAfterImmediateResize -- itself the unification of the INV-2 self-protecting-resize
+  # idiom, docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md, whose 9th forgotten
+  # hand-copy proved the opt-in unenforceable): the settle ENGINE is now the one healer of composite
+  # interiors on every route -- the ordered walk, the B3 frame-changed injection (the bypass path), and
+  # this valve (the immediate path). check-composite-relay.js still makes forgetting to declare a build
+  # failure. Scheduling from an apply is the DELIBERATE, SANCTIONED exception to rule [E]'s schedule ban
+  # (check-layering.js names exactly this line): the valve enqueues SELF only (no climb in-pass),
+  # converges (a re-lay's own re-commit hits the equal-extent top guard, so no re-enqueue), and never
+  # runs feature code synchronously. Mid-re-lay self-applies (base _reLayout applies its own new extent
+  # through HERE) self-enqueue benignly: _reLayout / __reLayoutOneSettleNode marks the widget valid right
+  # after, and the next round's sweep drops the entry. Nothing notifies: the notify-by-mutation seam
   # was deleted 2026-07-01 (the settle-time up-edge does any container re-fit), and the historical *AndNotify
   # names were renamed away 2026-07-02 (Tier B -- this method WAS _applyExtentAndNotify). Ordering is
   # load-bearing: _applyExtentBase COMMITS first, so when the composite's _reLayout re-commits its own frame
@@ -2143,30 +2150,24 @@ class Widget extends TreeNode
       return
     @_applyExtentBase aPoint
     if @_placesChildrenInLayout() and @_compositeChildrenBuilt()
-      @_reLayoutMyChildrenAfterImmediateResize aPoint
+      @_scheduleRelayoutRespectingPhase()
 
-  # Capability query (assessment §6.1 rule 6): "my _reLayout places my own children -- re-lay them when an
-  # immediate resize commits my frame". Composites answer true, possibly by inheritance (WindowWdgt through
+  # Capability query (assessment §6.1 rule 6): "my _reLayout places my own children -- schedule my re-lay
+  # when an immediate resize commits my frame (the valve above), and watch my frame under the settle
+  # engine's B3 injection". Composites answer true, possibly by inheritance (WindowWdgt through
   # SimpleVerticalStackPanelWdgt; the icon subclasses through GenericCompositeIconWdgt). Enforced by
   # check-composite-relay.js: a _reLayout-overriding class must declare this or carry an explicit
   # immediate-resize-relay-exempt marker.
   _placesChildrenInLayout: ->
     false
 
-  # Construction-order guard for the composite-child re-lay: a composite that _applyExtents a placeholder
+  # Construction-order guard for the composite-child schedule: a composite that _applyExtents a placeholder
   # size from _buildAndConnectChildrenNoSettle BEFORE its last child is built answers false then (the
   # trailing _invalidateLayout/settle lays the children out once, when they all exist). Base: any children
-  # are always "built".
+  # are always "built". (Under the schedule-valve a premature enqueue would heal at the build-tail settle
+  # anyway -- the guard is kept as cheap ctor hygiene, and N4 revisits it.)
   _compositeChildrenBuilt: ->
     true
-
-  # HOW a declaring composite re-lays its children on an immediate resize: default = the full self re-lay at
-  # the just-committed frame. Size-tracking containers override to the terminal @_reLayoutChildren();
-  # StretchableCanvasWdgt prepends its back-buffer recreation. Receives the RAW requested extent (pre
-  # round/min-clamp -- __commitExtent may commit something slightly else) because StretchableCanvasWdgt
-  # sizes its buffers from exactly that value.
-  _reLayoutMyChildrenAfterImmediateResize: (aPoint) ->
-    @_reLayout @bounds
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -2348,10 +2349,14 @@ class Widget extends TreeNode
     return unless container?._reLayoutChildren?
     container._scheduleRelayoutRespectingPhase()
 
-  # The PHASE-VALVE, shared by the re-fit seam (_reFitContainer) and the collapse/unCollapse
-  # cores: schedule MY re-layout correctly in EITHER phase. In-pass, enqueue just me with the
-  # no-climb atom (a bare _invalidateLayout THROWS mid-pass; the directly-affected widget needs
-  # no climb); off-pass, take the canonical climbing _invalidateLayout.
+  # The PHASE-VALVE, shared by the re-fit seam (_reFitContainer, which also serves the
+  # scatter-into-scroll-contents seam), the collapse/unCollapse cores, the composite
+  # SCHEDULE-VALVE in _applyExtent (B4 hook retirement, ordered-downwalk plan §9-N1 -- the ONE
+  # rule-[E]-sanctioned immediate-mutator caller, named in check-layering.js), and the scroll
+  # panel arrange's declared-contents schedule: schedule MY re-layout correctly in EITHER phase.
+  # In-pass, enqueue just me with the no-climb atom (a bare _invalidateLayout THROWS mid-pass; the
+  # directly-affected widget needs no climb); off-pass, take the canonical climbing
+  # _invalidateLayout.
   _scheduleRelayoutRespectingPhase: ->
     if world?._recalculatingLayouts
       @__markForRelayout()
@@ -4993,9 +4998,20 @@ class Widget extends TreeNode
 
     # if I just did my layout, also do the layout
     # of all children that have position/size depending on mine
+    @_reLayoutCornerInternalChildren()
+
+  # Re-place my corner/edge-internal children (the handle overlays) against my CURRENT frame --
+  # they live-read my bounds. Base _reLayout's tail (above) runs this after the main placement;
+  # an arrange that re-commits its OWN frame AFTER that tail (the vertical stack's tight-hug,
+  # which runs in the stack's _reLayout tail after super) must run it AGAIN at the final frame,
+  # else the overlays sit placed for the pre-hug frame (schedule-valve arc V3, 2026-07-16: the
+  # retired synchronous hook masked exactly this by running the arrange inside super's own
+  # self-extent-apply, so the hug landed BEFORE this loop). Idempotent when the frame is stable.
+  _reLayoutCornerInternalChildren: ->
     allCornerLayoutedChildren = @children.filter (m) -> LayoutSpec.isCornerOrEdgeInternal m.layoutSpec
     for w in allCornerLayoutedChildren
       w._reLayout()
+    return
 
 
   # »>> this part is excluded from the fizzygum homepage build

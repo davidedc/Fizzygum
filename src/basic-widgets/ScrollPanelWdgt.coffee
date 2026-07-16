@@ -270,26 +270,30 @@ class ScrollPanelWdgt extends PanelWdgt
     @add aWdgt
 
 
-  # Self-protecting resize (INV-2, unified 2026-07-16): the base Widget._applyExtent runs the
-  # hook below when an immediate resize commits my frame -- the sanctioned immediate-mutator
-  # APPLY, like TextWdgt._applyExtent -> @_reLayoutSelf (task #17); check-layering.js rule [E]
-  # forbids the SCHEDULE (no _invalidateLayout), not this APPLY. ListWdgt + the other scroll
-  # panels inherit this declaration (replaces this class's hand-copied _applyExtent override).
+  # Self-protecting resize (INV-2 unified 2026-07-16; hook RETIRED for the schedule-valve the same
+  # day -- ordered-downwalk plan §9-N1): an immediate resize SCHEDULES my re-lay through the base
+  # Widget._applyExtent valve; my _reLayout (super + _reLayoutChildren, with the V1 absorption of
+  # the old hook's contents normalization into _positionAndResizeChildren) then re-fits contents +
+  # scrollbars, whichever route ran it. ListWdgt + the other scroll panels inherit this
+  # declaration (replaces this class's hand-copied _applyExtent override).
   _placesChildrenInLayout: ->
     true
 
-  # tracking container: move+size my @contents to the new viewport, then the terminal re-fit
-  # (_reLayoutChildren -> _positionAndResizeChildren + _reLayoutScrollbars, neither climbs to
-  # my parent). The contents MOVE ran pre-commit in the old _applyExtent override; an extent
-  # commit never changes my origin, so post-commit @position() is identical (byte-exact-gated).
-  # aPoint = the RAW requested extent, exactly what the old override handed @contents._applyExtent.
-  # TODO (pre-existing): this contents move/size seems like it should be in a _reLayout function
-  # rather than here.
-  _reLayoutMyChildrenAfterImmediateResize: (aPoint) ->
-    if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
+  # SCROLL-POSITION POLICY, not a child re-lay (schedule-valve arc V1, 2026-07-16 — absorbs the old
+  # _reLayoutMyChildrenAfterImmediateResize override, whose re-lay half is now the base default /
+  # the engine's job): a REAL immediate resize of a text-wrapping panel re-pins its contents to my
+  # origin (the shipped reset-scroll-on-resize behaviour), while a re-lay at an unchanged frame
+  # must never touch the scroll position. The pin lives AT the resize event because only the event
+  # knows the delta — a scheduled/settle re-lay enters _reLayout with the extent already committed,
+  # so an extent-delta gate inside _reLayout structurally cannot see an immediate resize. Pinning
+  # BEFORE super is byte-equal to the old post-commit pin (an extent commit never changes my
+  # origin); the arrange that follows (via the resize re-lay) then anchors and clamps off the
+  # pinned position, same order as the old hook (pin → size → arrange). Wrapping-STACK contents
+  # are excluded exactly as before (the arrange's clamp manages their position).
+  _applyExtent: (aPoint) ->
+    if !aPoint.equals(@extent()) and @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
       @contents._applyMoveTo @position()
-    @contents._applyExtent aPoint
-    @_reLayoutChildren()
+    super aPoint
 
 
   # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to
@@ -364,6 +368,18 @@ class ScrollPanelWdgt extends PanelWdgt
     totalPadding = 2*padding
 
     if @contents instanceof SimpleVerticalStackPanelWdgt
+      # (schedule-valve V1) the old immediate-resize hook pre-set the stack to the viewport extent
+      # (polymorphic contents._applyExtent) BEFORE the arrange ran; with the hook retired the arrange
+      # normalizes the tracked WIDTH itself -- a WIDTH-CONSTRAINING stack's width is MY contract (it
+      # tracks the viewport; macroWindowCellsInConstrainedScrollStackReflow regressed without this),
+      # its height falls out of the merge-commit below. A FREE-width stack
+      # (constrainContentWidth false) OWNS its width -- the whole point of the horizontal scrollbar
+      # -- so normalizing it would valve-schedule a re-grow every arrange and ping-pong onto the
+      # end-of-cycle flush (the capstone gate caught exactly that on
+      # macroFreeWidthScrollStackShowsHorizontalScrollbar). Width-only: nothing between here and
+      # the commit reads the stack's height.
+      if @contents.constrainContentWidth and @contents.width() != @width()
+        @contents._applyWidth @width()
       # arrange the content stack's children; I OWN its frame regardless (I size it from the §4.1 pure
       # measure -- subBounds -> the frame commit below), and the stack's terminal self-resize notifies nobody
       # (the notify-by-mutation seam is deleted; its parentWillSizeMe don't-notify-my-sizer parameter went
@@ -379,7 +395,12 @@ class ScrollPanelWdgt extends PanelWdgt
           # vertical slider below. We RESPECT the mode (a non-text child or a
           # FIT_TEXT_TO_BOX widget is skipped).
           widget.softWrap = true
-          textWidth = @contents.width() - totalPadding
+          # (schedule-valve V1) wrap width derives from MY viewport, not @contents.width(): the two are
+          # equal at the fixpoint (the merge-commit below pins contents width to mine for wrap panels),
+          # but mid-transient — my frame just resized, contents not yet re-committed — only @width() is
+          # current. The old immediate-resize hook pre-set contents to the viewport precisely to feed
+          # this read; deriving from @width() removes that dependency.
+          textWidth = @width() - totalPadding
           widget._applyWidth textWidth
           # (Phase C, proper-layouts) We only RE-WRAP the text child here (_applyWidth -> height = wrapped
           # line count); paint + the caret's synchronous @wrappedLines read need that committed, and the new
@@ -409,7 +430,8 @@ class ScrollPanelWdgt extends PanelWdgt
       if @contents instanceof SimpleVerticalStackPanelWdgt
         subBounds = @contents.subWidgetsMergedPreferredBounds(@contents.width())?.ceil()
       else
-        subBounds = @contents.subWidgetsMergedPreferredBounds(@contents.width() - totalPadding)?.ceil()
+        # (schedule-valve V1) same viewport-derived width as the re-wrap above — see that comment.
+        subBounds = @contents.subWidgetsMergedPreferredBounds(@width() - totalPadding)?.ceil()
     else
       subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
@@ -460,6 +482,15 @@ class ScrollPanelWdgt extends PanelWdgt
       # the content; the seam only delivered a confirm pass that the §4.1 measure already makes a no-op.
       @contents._commitBounds newBounds
       @contents._reLayoutSelf()
+      # (schedule-valve V1) a DECLARED contents places its own children in its _reLayout (ToolPanelWdgt
+      # wraps its buttons -- the 2026-07-16 census-day bug, healed until now by the retired hook's
+      # polymorphic contents._applyExtent chain); committing its new frame via the non-notifying twin
+      # re-fits only its SELF layer, so schedule its full re-lay through the phase-valve -- in-pass the
+      # same flush's next round heals it, off-pass the wrapping settle does. The engine heals the
+      # interior; this arrange never re-lays it synchronously. (Also covers the WindowWdgt early-settle
+      # route, where the later engine re-visit sees no frame delta for the injection to act on.)
+      if @contents._placesChildrenInLayout()
+        @contents._scheduleRelayoutRespectingPhase()
 
     # you'd think that if @contents.boundingBox().equals newBounds
     # then we don't need to check if the contents are "in good view"
