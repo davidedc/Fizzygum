@@ -62,6 +62,28 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
+  # Self-protecting resize (INV-2): I am a composite whose icon + caption are placed by my
+  # _reLayout, but I can be sized with the raw _applyExtent core (e.g. BasementOpenerWdgt's ctor
+  # does `@_applyExtent new Point 75, 75` after super() built me at 95x95; Widget._createReferenceNoSettle
+  # does the same to a document shortcut). A raw apply neither re-lays my children NOR invalidates
+  # layout, so without this the icon slot + caption stay at 95-based geometry and overflow the 75x75
+  # holder -- the 2026-07 oversized-Basement-icon regression. Same idiom + recursion-safety as
+  # GenericCompositeIconWdgt._applyExtent (my sibling composite): _reLayout applies my bounds FIRST,
+  # so its own _applyBounds->_applyExtent hits the equal-extent early-return below. The
+  # _compositeChildrenBuilt guard skips the re-layout during construction (the `@_applyExtent 95x95`
+  # in _buildAndConnectChildrenNoSettle runs BEFORE @label is built; the trailing _invalidateLayout
+  # /settle lays the children out then).
+  _applyExtent: (extent) ->
+    if extent.equals @extent()
+      return
+    super
+    if @_compositeChildrenBuilt()
+      @_reLayout @bounds
+
+  # both composite children (icon + caption) exist (see _applyExtent's guard note)
+  _compositeChildrenBuilt: ->
+    @icon? and @label?
+
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
