@@ -1,6 +1,10 @@
 # Ordered down-walk — the Stage-B plan (authored 2026-07-16, to be executed COLD, owner-gated)
 
-**Status: PLAN. No code.** This refreshes the §4.4 ordered-down-walk direction for the post-seam,
+**Status: B1–B3 EXECUTED + PUSHED 2026-07-16 (Fizzygum `b88102ee` / tests `9f2ac0cb3`) — §8 is the
+execution log, §9 the next steps. B4 = open owner decision.** The sections below §0–§7 are the
+original plan, kept verbatim as authored (deviations are called out in §8).
+
+This refreshes the §4.4 ordered-down-walk direction for the post-seam,
 post-INV-2-unification world, with NEW production evidence (§3) that the down-walk fixes a real,
 shipping staleness class nothing else covers. It supersedes the *staging* sections of
 `proper-layouts-4.4-ordered-downwalk-plan.md` (whose §8 verdict was about the now-moot SEAM deletion,
@@ -305,3 +309,45 @@ heals those synchronously. Options for the review:
 - **(b) Delete the hook, rely on attach-time settles:** construction flows settle when attached,
   but the raw-path sites that read geometry between a raw resize and the next settle would regress;
   needs a dedicated raw-path audit + likely recaptures. Not attempted.
+
+## §9 — Next steps (authored at arc close 2026-07-16, with the session's hard-won knowledge)
+
+Ordered by recommended sequence; each is independently shippable and separately gated.
+
+- **N1 — B4 decision (owner, ~zero code either way).** Recommendation: **keep** the Stage-A
+  immediate-resize hook + `check-composite-relay.js` lint. The `_placesChildrenInLayout` capability
+  now does double duty (immediate raw path via the hook; settle path via the B3 injection), and the
+  lint's declare-or-mark pressure directly feeds engine coverage. If deletion is still wanted:
+  prerequisite is a RAW-PATH AUDIT (grep every `_applyExtent`/`_applyMoveTo` call outside settles —
+  ctors, `_createReferenceNoSettle` — and prove each site's composite either flushes before the next
+  paint or cannot host a declared composite), then expect recaptures. Not worth it unless the hook
+  obstructs something.
+- **N2 — the residual census mover: scroll-panel CONTENTS fit non-idempotence (its own mini-arc,
+  NOT engine work).** Evidence (§8-B3): forcing `ScrollPanelWdgt._reLayout` on the basement's panel
+  re-sizes its contents PanelWdgt ONE step (591→900 wide open-flow / 476→557 tall census-battery)
+  then stable — a POLICY CLASH between whoever sized contents to the viewport width and the
+  arrange's content-width fixpoint. Pre-existing (present before any Stage-B code; the old baseline's
+  "2 cascade artifacts" read was WRONG — only the Handle was cascade). Plan of attack: instrument
+  who last sizes `sp.contents` in the open-basement flow (probe-basement-relay-trace.js is the
+  template), name the two policies, decide the correct one with the owner, fix at the policy home
+  (likely `_positionAndResizeChildren`/`_reLayoutChildren` disagreement), gate = census 0 movers +
+  the full §5 protocol. ⚠ scroll-thumb pixels CAN change (vBar proportion) → possible recaptures.
+- **N3 — exempt-marker audit under B3 semantics (cheap, mechanical, census-gated).** The 22
+  remaining `immediate-resize-relay-exempt` markers were justified by Stage-A-era reasoning ("no
+  polymorphic raw `_applyExtent` receiver"). B3 changed the question to "can an ARRANGE move/resize
+  this class without re-laying it?" — true for ANY non-tracking stack element / window content.
+  Audit each marked class: if it can sit bypass-sized (stack child, window content), convert marker
+  → declaration (one line, engine-backed, BasementWdgt is the worked example). Extend the census
+  battery to cover each converted class's flow (the battery is a sample, not proof — §3 note).
+- **N4 (optional, bigger) — drop the capability gate from the B3 injection.** Watch ALL children,
+  not just `_placesChildrenInLayout` ones: the engine would then guarantee EVERY arrange-moved child
+  a re-lay, making declarations (and N3) moot for the settle path entirely. Cost: a per-re-lay
+  snapshot of every child + extra idempotent re-lays; risk: any non-idempotent arrange anywhere
+  becomes load-bearing (N2's class!) — so N2 must land FIRST, and an idempotence sweep (staleness
+  census extended to force-re-lay EVERY widget class in place) is the prerequisite gate. Payoff:
+  `_placesChildrenInLayout` shrinks back to a Stage-A-hook-only concern, simplifying B4.
+- **Standing protocol for all of the above** (§5, amended this arc): per-stage gate = `fg build` +
+  `fg presuite` + 1-round torture; arc close = `fg gauntlet` + 3-round torture; equivalence oracle =
+  per-test UNION relay-sets (never per-flush sequences); census for behaviour stages. Probes live in
+  `Fizzygum-tests/.scratch/` (relayset-prelude/diff, stage-b-torture.sh, probe-basement-relay-trace,
+  boot-spin-stack, staleness-census).
