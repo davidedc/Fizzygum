@@ -95,7 +95,10 @@ if [ ! -d ../../Fizzygum-all ]; then
   echo      - Fizzygum-tests
   echo      - Fizzygum-website
   echo
-  exit
+  # exit NON-ZERO: a bare `exit` here returned the last echo's 0, so an aborted build read as
+  # SUCCESS — a baseline clone under a mis-named umbrella "built" green while writing NOTHING
+  # and an A/B ran vacuously against the wrong build (ordered-downwalk plan §11, 2026-07-16).
+  exit 1
 fi
 
 if [ ! -d ../Fizzygum-builds ]; then
@@ -111,14 +114,14 @@ fi
 if ! command -v terser &> /dev/null
 then
     echo "Terser could not be found, please see https://www.npmjs.com/package/terser"
-    exit
+    exit 1
 fi
 
 if ! command -v coffee &> /dev/null
 then
     echo "CoffeeScript could not be found, please install it using:"
     echo "npm install --global coffeescript"
-    exit
+    exit 1
 fi
 
 # node runs the build-time syntax gate (buildSystem/check-coffee-syntax.js).
@@ -126,7 +129,7 @@ if ! $noSyntaxCheck && ! command -v node &> /dev/null
 then
     echo "Node.js could not be found; it is needed for the CoffeeScript syntax gate."
     echo "Install Node, or re-run with --noSyntaxCheck to skip the gate."
-    exit
+    exit 1
 fi
 
 echo coffeescript version -------------
@@ -167,7 +170,7 @@ if $keepTestsDirectoryAsIs ; then
     echo You asked to keep the tests but there
     echo is no tests directory
     echo
-    exit
+    exit 1
   else
     # delete everything in $BUILD_PATH/js apart from the $BUILD_PATH/js/tests directory
     find $BUILD_PATH/js/ -maxdepth 1 ! -path $BUILD_PATH/js/ -not -name "tests" -exec rm -r {} \;
@@ -184,7 +187,7 @@ if $keepPreviousPrivateVideos ; then
     echo You asked to keep the private videos but there
     echo is such directory
     echo
-    exit
+    exit 1
   else
     # delete everything in $BUILD_PATH/videos apart from the $BUILD_PATH/videos/Fizzygum-videos-private directory
     find $BUILD_PATH/videos -maxdepth 1 ! -path $BUILD_PATH/videos -not -name "Fizzygum-videos-private" -exec rm -r {} \;
