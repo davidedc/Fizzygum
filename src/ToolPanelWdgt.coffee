@@ -77,7 +77,16 @@ class ToolPanelWdgt extends PanelWdgt
 
       @_invalidateLayout()
 
-  # immediate-resize-relay-exempt: LATENT-FINDING(2026-07-16): SimpleDocumentWdgt/StretchableEditableWdgt._reLayout raw-resize me WITHOUT a re-lay and my arrangement WRAPS by width, so stale children are possible -- pre-existing, suite-invisible; declaring true = behaviour change, deferred as a follow-on (INV-2 unification plan)
+  # Self-protecting resize (INV-2, declared 2026-07-16 as a BUG FIX, not code motion): my
+  # _reLayout WRAPS my tool buttons by the available width, and I live as a ScrollPanelWdgt's
+  # @contents -- which the scroll panel's immediate-resize hook sizes with the polymorphic
+  # @contents._applyExtent. Without this declaration that resize never re-wrapped me: the
+  # staleness-census oracle (2026-07-16) caught my buttons still stacked in a COLUMN wrapped
+  # for a ~40px-wide panel inside a 610px-wide frame after a toolbar-window resize. Declaring
+  # routes that resize through the base's child re-lay, so the buttons re-wrap.
+  _placesChildrenInLayout: ->
+    true
+
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
