@@ -53,10 +53,21 @@ class VerticalStackLayoutSpec
       @desiredWidth = elementWidthWithoutSpacing
       @grow ?= if elementWidthWithoutSpacing >= availableWidthInStack then 1 else 0
 
+  # TOTAL, including BEFORE the capture has run (U2): an outer container may measure a
+  # subtree whose specs are not yet captured (e.g. a window's content stack measured during
+  # the window's own first placement -- the recursion the deleted contentNeverSetInPlaceYet
+  # measure guard used to cut off). An uncaptured spec answers with the SAME derivation the
+  # capture will apply -- desired from the element's natural width (fill if no element is
+  # bound yet), grow keep-vs-track from the same >= relationship -- so a pre-capture measure
+  # approximates the post-capture answer instead of NaN-ing (the old model divided by the
+  # uncaptured wStk snapshot here).
   getWidthInStack: (availableWidthOverride) ->
     availableWidthInStack = availableWidthOverride ? @stack.availableWidthForContents()
 
-    width = @desiredWidth + @grow * (availableWidthInStack - @desiredWidth)
+    desired = @desiredWidth ? Math.min availableWidthInStack, (@element?.widthWithoutSpacing?() ? availableWidthInStack)
+    grow = @grow ? (if desired >= availableWidthInStack then 1 else 0)
+
+    width = desired + grow * (availableWidthInStack - desired)
     width = Math.round width
 
     return Math.min width, availableWidthInStack

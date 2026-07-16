@@ -562,3 +562,56 @@ Both recaptured (dpr 1+2) after review. Ops note: the first re-build tripped the
 basic-widgets/TextWdgt, IconWdgt, spreadsheet/SpreadsheetWdgt, apps/AnalogClockWdgt) + this
 plan doc's §9.5; Fizzygum-tests — the 2-test reference swap (dpr 1+2). The P2 prelude stays
 in `.scratch/` (gitignored) until U4 ships it as a standing gate.
+*(Committed + pushed same day on owner approval: Fizzygum `3aa5e1c6`, tests `8abf7e03c`.)*
+
+### §9.6 — U2 execution log (2026-07-16, same day; owner said "Go U2" with the U1 commit)
+
+**U2-A — `contentNeverSetInPlaceYet` DELETED (the D3 payoff).** The flag's two jobs replaced
+per the §9.2 (b)-route design:
+- *Measure guard (Job 1)* → gone. `getWidthInStack` is now TOTAL including pre-capture: an
+  uncaptured spec answers with the SAME derivation the capture will apply (desired from the
+  element's natural width — `element` is now bound at spec INIT, not just at capture, for
+  exactly this; fill when no element bound; grow from the same >= relationship). The window's
+  `preferredExtentForWidth` pre-capture branch MIRRORS the arrange's first-placement
+  negotiation purely — via the new shared `_negotiatedContentWidth(availW)` (ONE home for the
+  sentinel → width mapping, measure + arrange, §6.1-rule-1 style) — so an outer container
+  measuring a window mid-construction sees the extent the window will actually take, not the
+  garbage pre-negotiation extent the old guard reported.
+- *Arrange branch selector (Job 2)* → the CONTENT-owned spec-keyed one-shot:
+  `firstPlacement = !spec.desiredWidth?` (computed before the capture latches; used by both
+  the width and height branches); `rememberInitialDimensions` is itself the latch;
+  `_addNoSettle` re-arms it on every content (re)mount (`spec.desiredWidth = nil` — parity
+  with the old set-true site, covering content carrying a spec from a prior life).
+  The declaration and all six flag sites are deleted.
+  **Gate: the full suite came out 250/250 BYTE-IDENTICAL, 0 geometry violations.**
+
+**U2-B — the early-settle exclusion REFINED, steady-state nested-window re-visits RETIRED.**
+Post-U2-A a window resizes its own width ONLY in the first-placement branch, so
+`_reLayoutMayResizeOwnWidth` now DERIVES from the one-shot state
+(`!@contents?.layoutSpecDetails?.desiredWidth?`): a CAPTURED window is height-only under
+re-lay — exactly a stack — and is early-settled single-pass by an outer window's arrange; an
+uncaptured (first-placement) window keeps the documented protection (the historical
+collapse-to-aspect-width divergence). **Gate: suite again 250/250 BYTE-IDENTICAL; P2 re-visit
+flushes 14 → 9:** `macroWindowsNestedCollapsingUncollapsing` 6 → 1 (all four steady-state
+uncollapse flushes GONE, companion Handle/Box/String/text churn gone), the clock-construction
+test's flushes slimmed to the two WindowWdgts (the AnalogClock aspect re-visit GONE).
+**Remaining: 3 flushes (2 tests) of pure first-placement construction negotiation** — the
+outer's Path-B sizing of an uncaptured inner window reads a stale height (Path B on a
+non-deferred container applies width without arranging), the inner then settles and re-visits
+the outer once. Killing these runs through the `ScrollPanelWdgt.implementsDeferredLayout` pin
+(whether a window-as-content Path-B call may arrange synchronously) — deliberately DEFERRED
+to U3, which owns the pin (§2.3); two falsified shapes live in that neighborhood (§6). Plus
+the TTF slot-tracking (5) and scroll-uncollapse (1) up-edges, unchanged by design.
+
+**U2 closing gates (2026-07-16, final U2 build; zero recaptures needed — the whole stage was
+byte-identical):** `fg gauntlet` 9/9 — dpr1(109s) dpr2(114s) webkit(112s) apps(70s) paint(117s)
+tiernaming(130s) settle(130s) **capstone(131s — the off-settle-schedule watchdog, the leg most
+sensitive to U2-B's early-settle change)** refs(30s), total 266s · `fg census` 0 movers / 1506
+targets · 1-round stage-b torture 4/4 danger configs · P2 14 → 9 flushes (§ above).
+
+**U2 deliverable (uncommitted, owner review):** Fizzygum src — 3 files (WindowWdgt,
+VerticalStackLayoutSpec, basic-widgets/Widget) + this §9.6. No test changes.
+**NEXT: U3** — scroll content + the D4/D5 protocol work + the `implementsDeferredLayout` pin
+resolved or re-pinned; the 3 remaining first-placement re-visits are its measurable target
+(alongside `subWidgetsMergedFullBounds`'s reclassification and true measures for the five
+Path-B containers).

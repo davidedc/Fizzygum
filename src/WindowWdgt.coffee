@@ -26,7 +26,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   padding: nil
   contents: nil
   titlebarBackground: nil
-  contentNeverSetInPlaceYet: true
   defaultContents: nil
   reInflating: false
 
@@ -72,19 +71,45 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
 
+  # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
+  # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
+  # and the arrange's first-placement branch: they MUST agree (assessment §6.1 rule 1), or a
+  # parent measuring this window mid-construction diverges from what the window's own arrange
+  # then applies -- that divergence (the old flag guard reported the CURRENT, pre-negotiation
+  # extent) was the root of the nested-window settle re-visits. availW = the window width the
+  # caller proposes (the arrange passes its own current width).
+  _negotiatedContentWidth: (availW) ->
+    spec = @contents.layoutSpecDetails
+    if spec.preferredStartingWidth == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
+      @contents.width()
+    else if spec.preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
+      availW - 2 * @padding
+    else
+      spec.preferredStartingWidth
+
   preferredExtentForWidth: (availW) ->
-    # No content-derived measure yet -- this window is mid FIRST content-placement
-    # (contentNeverSetInPlaceYet), so its own / nested content specs may be uninitialised (their
-    # getWidthInStack would divide-by-zero to a NaN measure). Report the current extent, mirroring
-    # the arrange's own construction-transient branch. This is what keeps a NESTED window's measure
-    # finite when an outer window recurses into it DURING the inner window's construction.
-    if @contentNeverSetInPlaceYet then return new Point (availW ? @width()), @height()
     if @contents? and !@contents.collapsed
       spec = @contents.layoutSpecDetails
-      # A content transiently WITHOUT its layoutSpec (mid drop/delete) has no derivable measure either --
+      # A content transiently WITHOUT its layoutSpec (mid drop/delete) has no derivable measure --
       # keep the measure total and report the current extent.
       if !spec? then return new Point (availW ? @width()), @height()
       chrome = @_chromeHeight spec
+      if !spec.desiredWidth?
+        # FIRST placement hasn't run yet -- the spec capture is the one-shot latch (U2; this
+        # branch replaced the deleted contentNeverSetInPlaceYet guard). Mirror the arrange's
+        # first-placement negotiation PURELY, so an outer container measuring this window
+        # DURING construction already sees the extent the window's own arrange will take --
+        # not the garbage pre-negotiation extent the old guard reported. The recursion into
+        # the content's measure is safe pre-capture: getWidthInStack is total (U2).
+        if spec.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
+          desiredHeight = @contents.height()
+          if !@recursivelyAttachedAsFreeFloating()
+            desiredHeight = Math.min desiredHeight, @height() - chrome
+        else if spec.preferredStartingHeight == WindowContentLayoutSpec.DONT_MIND
+          desiredHeight = Math.round @height() - chrome
+        else
+          desiredHeight = @contents.preferredExtentForWidth(@_negotiatedContentWidth(availW ? @width())).y
+        return new Point (availW ? @width()), desiredHeight + chrome
       if @contentsRecursivelyCanSetHeightFreely()
         desiredHeight = Math.round @height() - chrome
       else
@@ -287,27 +312,29 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # (no _reLayoutChildren override: SimpleVerticalStackPanelWdgt's is already `@_positionAndResizeChildren()`,
   # and that dispatches to the window's own override below -- which is what re-fits chrome + content.)
 
-  # A window fits its OWN width to its content (fit-to-content in BOTH axes), unlike a plain stack whose
-  # width its container sets. So re-laying a window synchronously while its CONTAINER is mid-arrange
-  # re-negotiates that width and diverges from the window's normal, independent settle -- an outer window's
-  # early settle of an inner window collapses the inner window to its content's aspect width. This capability
-  # tells a size-tracking container NOT to settle a window-as-content early: its content-negotiation re-visit
-  # is a GENUINE width<->height convergence, correctly handled by the settle loop's post-settle re-fit, not by
-  # the single-pass early-settle in SimpleVerticalStackPanelWdgt/WindowWdgt._positionAndResizeChildren. Absent
-  # (undefined via ?()) on a stack, whose synchronous re-lay keeps its container-assigned width.
+  # A window fits its OWN width to its content -- but ONLY in the FIRST-PLACEMENT branch of its
+  # arrange (the steady-state branch re-fits height alone, exactly like a stack). So this
+  # capability -- "re-laying me synchronously while my container is mid-arrange may re-negotiate
+  # my width, diverging from my normal independent settle" (the historical failure: an outer
+  # window's early settle collapsed an inner window to its content's aspect width) -- now DERIVES
+  # from the content's one-shot state (U2-B): TRUE only while the content spec is uncaptured
+  # (first placement pending); a CAPTURED window is height-only under re-lay and safe to
+  # early-settle single-pass in WindowWdgt._positionAndResizeChildren, which is what retires the
+  # steady-state nested-window settle re-visits. Absent (undefined via ?()) on a stack, whose
+  # synchronous re-lay keeps its container-assigned width.
   _reLayoutMayResizeOwnWidth: ->
-    true
+    !@contents?.layoutSpecDetails?.desiredWidth?
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
 
   # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle and
   # SimpleVerticalStackPanelWdgt.add/_addNoSettle). Folds in the window's content bookkeeping (title,
-  # @contents swap, contentNeverSetInPlaceYet, spec init) so the build/teardown chain
+  # @contents swap, spec init + first-placement re-arm) so the build/teardown chain
   # (_buildAndConnectChildrenNoSettle) adds chrome + content WITHOUT flushing layouts: super threads
-  # down through SimpleVerticalStackPanelWdgt._addNoSettle to Widget._addNoSettle, all non-settling. Note the
-  # content branch sets contentNeverSetInPlaceYet -- @_addNoSettle @contents (vs the bare base _addNoSettle)
-  # is exactly what keeps @stack wired by the deferred re-fit.
+  # down through SimpleVerticalStackPanelWdgt._addNoSettle to Widget._addNoSettle, all non-settling.
+  # @_addNoSettle @contents (vs the bare base _addNoSettle) is exactly what keeps @stack wired by the
+  # deferred re-fit.
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
     layoutSpec = opts.layoutSpec
@@ -315,7 +342,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     notContent = opts.notContent
     # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
     unless notContent or aWdgt.isLayoutInert?()
-      @contentNeverSetInPlaceYet = true
       titleToBeSet = aWdgt.colloquialName()
       if titleToBeSet == "window"
         titleToBeSet = "window with another " + titleToBeSet
@@ -332,6 +358,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # Init the content's WindowContentLayoutSpec up-front -- the pre-fit used to do this implicitly
       # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
       aWdgt.initialiseDefaultWindowContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof WindowContentLayoutSpec
+      # (U2) re-arm the first-placement ONE-SHOT for this mount: content (re)mounted into a
+      # window re-negotiates its placement. The old model re-ran rememberInitialDimensions via
+      # the contentNeverSetInPlaceYet flag; the CAPTURE is now itself the latch, so un-latch it
+      # (a fresh spec is already unlatched; this covers content carrying a spec from a prior life).
+      aWdgt.layoutSpecDetails.desiredWidth = nil
       super aWdgt, position: position, layoutSpec: LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped: beingDropped
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
@@ -605,20 +636,19 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         @contents.initialiseDefaultWindowContentLayoutSpec()
         @contents._setLayoutSpec LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
 
-      if @contentNeverSetInPlaceYet
-        # in this case the contents has just been added
+      # (U2) the first-placement ONE-SHOT is CONTENT-owned: an uncaptured spec (desiredWidth
+      # unset -- fresh init above, or re-armed on content (re)mount in _addNoSettle) selects
+      # the negotiation branch ONCE; rememberInitialDimensions below is itself the latch.
+      # This replaced the window-level contentNeverSetInPlaceYet boolean (decl + set + two
+      # branch selectors + clear, all deleted). Computed BEFORE the capture latches, and used
+      # by BOTH the width branch here and the height branch below.
+      firstPlacement = !@contents.layoutSpecDetails.desiredWidth?
 
-        if @contents.layoutSpecDetails.preferredStartingWidth == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
-          recommendedElementWidth = @contents.width()
-          if @recursivelyAttachedAsFreeFloating()
-            windowWidth = recommendedElementWidth + @padding * 2
-          else
-            windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
-          @_applyExtentBase new Point windowWidth, @height()
-        else if @contents.layoutSpecDetails.preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
-          recommendedElementWidth = @width()  - 2 * @padding
-        else
-          recommendedElementWidth = @contents.layoutSpecDetails.preferredStartingWidth
+      if firstPlacement
+        # in this case the contents has just been added
+        recommendedElementWidth = @_negotiatedContentWidth @width()
+        if @contents.layoutSpecDetails.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
+          # THIS_ONE_I_HAVE_NOW / an explicit px: the WINDOW resizes to the content's width
           if @recursivelyAttachedAsFreeFloating()
             windowWidth = recommendedElementWidth + @padding * 2
           else
@@ -635,7 +665,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       partOfHeightUsedUp = @_chromeHeight @contents.layoutSpecDetails
 
       # this re-layouts each widget to fit the width.
-      if @contentNeverSetInPlaceYet
+      if firstPlacement
         # in this case the contents has just been added
         if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           desiredHeight = @contents.height()
@@ -651,7 +681,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           # Path B: the sizing HANDS its resulting height back -- no read-back of @contents.height().
           desiredHeight = @contents._setWidthSizeHeightAccordingly recommendedElementWidth
 
-        @contentNeverSetInPlaceYet = false
+        # (no flag clear -- rememberInitialDimensions above latched the one-shot)
       else
         # the content was already there
         # Path B: take the resulting height from the sizing call, not a read-back of @contents.height().

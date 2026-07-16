@@ -310,6 +310,10 @@ class Widget extends TreeNode
 
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
+    # bind the element NOW (the capture re-binds it later): a PRE-capture measure's
+    # total-fallback (getWidthInStack, U2) derives its answer from the element's
+    # natural width, so it needs the back-ref before the first arrange runs.
+    @layoutSpecDetails.element = @
 
   initialiseDefaultVerticalStackLayoutSpec: ->
     # use the existing VerticalStackLayoutSpec (if it's there)
@@ -318,6 +322,8 @@ class Widget extends TreeNode
       # (a full-width add tracks the stack, a narrower add keeps its size — D2-def,
       # docs/sizing-model-unification-plan.md §9.1/§9.5)
       @layoutSpecDetails = new VerticalStackLayoutSpec
+      # element bound now for the pre-capture measure fallback (see the window-content twin above)
+      @layoutSpecDetails.element = @
 
   mouseClickRight: ->
     # you could bring up what you right-click,
