@@ -216,6 +216,11 @@ session. Torture is required iff **I4, I5 or I10** ran (cache / arrange / `_reLa
    :17) and every widget's constructor-set `minimumExtent` is the tiny `(5,5)` (`Widget.coffee` :338). A future
    measure returning a fractional or sub-minimum height diverges the stack's own measure from its merged-bounds
    measure AND from the child geometry its arrange actually commits — the F5 fragile-mirror class, one level up.
+   (2026-07-16) The POSITION-side analog of this fact — arrange producers committing *fractional* `@bounds` — is
+   now ENFORCED integer + hard-gated (`Widget._assertBoundsWellFormed` → `NON_INTEGER_GEOMETRY` fails the suite;
+   `docs/fractional-widget-bounds-investigation-plan.md`). That guard checks the *committed* `@bounds`, so it does
+   NOT close THIS divergence: the stack's internal measure SUM still uses the un-rounded `measured.y` while the
+   child commits a rounded extent — the fragile mirror is orthogonal to placement and remains convention-only.
 6. **14 files carry a comment instructing the one-cadence-lag REGRESSION.** The exact pair
    `# TODO shouldn't be calling this _applyBounds from here,` / `# rather use super` sits above the apply-bounds-
    first line in 14 `_reLayout` overrides (`grep -rln "shouldn't be calling this _applyBounds" src` →

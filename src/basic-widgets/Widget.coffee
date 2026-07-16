@@ -776,7 +776,7 @@ class Widget extends TreeNode
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
-      @_assertBoundsFinite "_applyBounds"
+      @_assertBoundsWellFormed "_applyBounds"
       @__breakMoveResizeCaches()
       @changed()
 
@@ -901,7 +901,7 @@ class Widget extends TreeNode
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
-      @_assertBoundsFinite "_commitBounds"
+      @_assertBoundsWellFormed "_commitBounds"
       @__breakMoveResizeCaches()
 
     @__commitExtent newBounds.extent()
@@ -1875,7 +1875,7 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     @fullChanged()
     @bounds = @bounds.translateBy delta
-    @_assertBoundsFinite "_applyMoveByBase"   # move ROOT: children inherit this (finite) delta via __commitMoveBy, so the root check covers the subtree
+    @_assertBoundsWellFormed "_applyMoveByBase"   # move ROOT: children inherit this (finite) delta via __commitMoveBy, so the root check covers the subtree
     @children.forEach (child) ->
       child.__commitMoveBy delta
     return true
@@ -2181,11 +2181,19 @@ class Widget extends TreeNode
   # hooks, deleted in the same arc: a per-accessor check there was too hot AND would false-positive on the
   # legitimate fractional values that flow through those accessors; the never-legitimate non-finite case is
   # better caught once, HERE, at the bounds-commit source with the owning widget in hand.)
-  _assertBoundsFinite: (where) ->
+  _assertBoundsWellFormed: (where) ->
     o = @bounds.origin
     c = @bounds.corner
     unless isFinite(o.x) and isFinite(o.y) and isFinite(c.x) and isFinite(c.y)
       console.error "NON_FINITE_GEOMETRY: #{@constructor.name} committed non-finite @bounds #{@bounds} via #{where}\n" + (new Error()).stack
+    else unless Number.isInteger(o.x) and Number.isInteger(o.y) and Number.isInteger(c.x) and Number.isInteger(c.y)
+      # INTEGER-PLACEMENT gate (Layer A): a widget is PLACED and SIZED in integer pixels; only Layer B (desired
+      # geometry, kept in @desiredPosition / @desiredExtent) and Layer C (internal content rendering) are
+      # fractional. The arrange-apply path no longer rounds for callers (the DELIBERATE-since-2015 "round at the
+      # producer, assert here" contract, whose debugIfFloats assertion was silently stubbed to a no-op in 2018 and
+      # this restores). Like NON_FINITE, wired into the headless runners' fail-gate. See
+      # docs/fractional-widget-bounds-investigation-plan.md + docs/integer-pixel-placement-and-sizing.md.
+      console.error "NON_INTEGER_GEOMETRY: #{@constructor.name} committed fractional @bounds #{@bounds} via #{where}\n" + (new Error()).stack
 
   __commitExtent: (aPoint) ->
     aPoint = aPoint.round()
@@ -2197,7 +2205,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
     if @bounds.equals newBounds then return false
     @bounds = newBounds
-    @_assertBoundsFinite "__commitExtent"
+    @_assertBoundsWellFormed "__commitExtent"
     @__breakMoveResizeCaches()
     return true
 
@@ -2335,7 +2343,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
     return if @bounds.equals newBounds
     @bounds = newBounds
-    @_assertBoundsFinite "__commitWidth"
+    @_assertBoundsWellFormed "__commitWidth"
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
@@ -2374,7 +2382,7 @@ class Widget extends TreeNode
     newBounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
     return if @bounds.equals newBounds
     @bounds = newBounds
-    @_assertBoundsFinite "__commitHeight"
+    @_assertBoundsWellFormed "__commitHeight"
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
@@ -4791,7 +4799,10 @@ class Widget extends TreeNode
       if @parent
         xDim = @parent.width()
         yDim = @parent.height()
-        minDim = Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
+        # Integer placement (Layer A): minDim is a proportional (fractional) size used for BOTH this widget's
+        # extent AND its right/bottom-anchored position below (parent.right() - minDim); round it once so both
+        # commit integer @bounds. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+        minDim = Math.round Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
 
         @__commitExtent new Point minDim, minDim
 
@@ -4891,12 +4902,19 @@ class Widget extends TreeNode
       childLeft = newBoundsForThisLayout.left()
       for C in @children
         if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
+        # Integer placement (Layer A): childWidthFor() is a proportional (fractional) width, so round each
+        # child's left/right BOUNDARY to commit an integer @bounds -- but carry the EXACT running position
+        # (childRight, not the rounded width) forward, so the children still telescope to the available width
+        # with no accumulated rounding drift and adjacent children share the one rounded boundary.
+        # NB rounding here shifts the divider-drag reproportion onto a different (still deterministic) trajectory
+        # -- macroStackDividerReproportionsCells was recaptured for it. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+        childRight = childLeft + childWidthFor(C)
         childBounds = new Rectangle \
-          childLeft,
+          Math.round(childLeft),
           newBoundsForThisLayout.top(),
-          childLeft + childWidthFor(C),
+          Math.round(childRight),
           newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-        childLeft += childBounds.width()
+        childLeft = childRight
         if childLeft > newBoundsForThisLayout.right() + 5
           console.error "horizontal stack distribution overflowed its allocated width by " + (childLeft - newBoundsForThisLayout.right())
         C._reLayout childBounds

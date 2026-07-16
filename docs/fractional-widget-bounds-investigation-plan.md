@@ -1,9 +1,49 @@
 # Fractional widget `@bounds` — investigation + (maybe) enforcement plan
 
-**Status:** DEFERRED / not started. Authored 2026-07-15 at the tail of the plot-uncollapse-crash arc
-(Fizzygum `cc4c01d4` mixin fix + `Widget._assertBoundsFinite` guard; `fbc2a3a4` `debugIfFloats` removal).
-This doc is self-contained: it embeds the finding, the throwaway probe, the exact data, and the open
-questions, so it can be picked up cold.
+**Status:** ✅ RESOLVED 2026-07-15 (Option B — enforce integer placement everywhere, then hard-gate it).
+Authored 2026-07-15 at the tail of the plot-uncollapse-crash arc (Fizzygum `cc4c01d4` mixin fix +
+`Widget._assertBoundsFinite` guard; `fbc2a3a4` `debugIfFloats` removal). The original investigation body
+(finding, probe, data, open questions, options) is preserved below for provenance; the outcome is here.
+
+---
+
+## RESOLUTION (2026-07-15)
+
+**Q1 (adverse effects of the pre-existing fractional bounds): NONE** — byte-exact suite, no crash; the
+blit path double-rounds and the back-buffer blit rounds, so fractional origins were invisible on screen.
+**Q2 (deliberate?): YES** — the arrange-apply path was designed in 2015 to *trust pre-rounded input and
+assert it* (via `debugIfFloats → debugger`); that assertion was silently stubbed to a no-op in 2018 and
+deleted in 2026, so the invariant lapsed unenforced for ~8 years (git archaeology: `52998cc0`, `0148f87f`).
+No prior session had audited the apply path; the invariant doc `integer-pixel-placement-and-sizing.md`
+over-claimed enforcement it didn't have (now corrected).
+
+**What shipped (Option B): round at each PRODUCER, then a permanent hard-gate.** Owner steer: fix each
+container's arrange individually (NOT a blunt chokepoint in `_applyMoveByBase`); use the guard's stacks to
+find producers, fix at the upmost sensible layer. Producers rounded:
+- `AxisWdgt` — tick/label positions (`tickHeight` stays a fractional MEASURE; positions round).
+- `SimpleVerticalStackPanelWdgt` — child `targetPos` (running `stackHeight` stays EXACT → no drift).
+- `SliderButtonWdgt.nonFloatDragging` — plane-local target (inverse-island mapping is fractional).
+- `Widget._reLayout` horizontal-stack distribution — round each child BOUNDARY, carry EXACT running position.
+- `Widget._reLayout` corner-internal — round `minDim` (used for extent AND right/bottom-anchored position).
+- `LabelButtonWdgt` / `MenuHeader` — round `@center()`-based label centring (odd-extent `.5`).
+- `ConsoleWdgt` — round the shared `/2` button width.
+
+**Guard:** `Widget._assertBoundsWellFormed` (renamed from `_assertBoundsFinite`, which checked finiteness
+only) now also `console.error`s `NON_INTEGER_GEOMETRY` on a fractional applied `@bounds`, wired into BOTH
+headless runners' fail-gate (like `NON_FINITE`). Suite-wide count: **0**.
+
+**Verification:** full gauntlet GREEN — dpr1 / dpr2 / WebKit / apps / paint / tiernaming / settle / capstone
+/ refs all PASS, `geometry-violations: 0`. **11 tests recaptured** (2 plots + 2 edit-mode + 5 horizontal-stack
+churned at dpr1; + `macroLayoutBasicProportions` + `macroSampleSlideEditViewToggle` churned only at dpr2).
+
+**⚠ CASE-LAW — the divider-drag reproportion is sub-pixel-sensitive.** Rounding the horizontal-stack cell
+bounds is byte-identical for STATIC layouts but shifts `macroStackDividerReproportionsCells` by **37–57px**:
+the reproportion applies micro-moves gated on a float-equality check (`prev == newone` in
+`StackElementsSizeAdjustingWdgt.nonFloatDragging`), and rounding nudges the trajectory onto a *different but
+still deterministic* path (WebKit + dpr2 confirm cross-engine determinism). This is the owner's "fractional
+carries division precision" hypothesis, realized — but the owner chose integers-only + recapture over an
+exception. If you touch the horizontal-stack arrange or the reproportion, expect this test to move and
+recapture it; do NOT chase the ≤1px→large amplification as a bug.
 
 ---
 

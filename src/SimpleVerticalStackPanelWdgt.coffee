@@ -284,7 +284,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
       # the base translate. Unifying onto either name is a REPAINT-PATH change (e.g. a
       # clipping leaf panel would gain the override), not a free cleanup -- see the
       # twin-collapse verdict on Widget._applyMoveBy.
-      targetPos = new Point leftPosition, @top() + verticalPadding + stackHeight
+      # Integer placement (Layer A): the running stackHeight / centred leftPosition are kept EXACT (fractional
+      # child heights sum without accumulating rounding error), but the child's committed @bounds origin must be
+      # integer -- round only at placement. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+      targetPos = (new Point leftPosition, @top() + verticalPadding + stackHeight).round()
       if widget._reLayoutChildren?
         widget._applyMoveTo targetPos
       else

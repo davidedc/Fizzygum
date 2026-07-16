@@ -53,15 +53,28 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   `Widget.calculateKeyValues` (`:1815`) rounds the visible area and multiplies by
   `ceilPixelRatio`, so `al/at/sl/st/w/h` (the drawImage/fillRect args) are integer device
   pixels.
-- **`debugIfFloats`** (`Point.coffee` / `Rectangle.coffee`, called at
-  `Widget.coffee:1345,1349`) documents the invariant "bounds are integer here". It is
-  **currently a no-op stub** (`debugIfFloats: -> return`), so it *marks intent* rather than
-  enforcing — the rounding above is what actually enforces. (Flip it to a throw locally if
-  you suspect a stray fractional-bounds path.)
+- **The arrange-APPLY path rounds AT THE PRODUCER.** `_moveToNoSettle` / `__commitExtent` above are
+  the *desired-geometry* funnel; a container arranging children BYPASSES it, applying a computed
+  target straight through `_applyMoveTo` / `_reLayout` (which deliberately do **not** re-round —
+  the 2015 contract was "round once at the source, assert on apply"). So each arrange producer that
+  computes a *fractional* target (`parentDim * fraction`, `height/n` tick spacing, `center()` on an
+  odd extent, corner-internal `minDim`, the horizontal-stack distribution) rounds its own
+  point/bounds — carrying an EXACT running accumulator where one exists (the horizontal stack) so
+  proportions still telescope without drift. See `docs/fractional-widget-bounds-investigation-plan.md`.
+- **The always-on guard `Widget._assertBoundsWellFormed`** (finite + integer; formerly `_assertBoundsFinite`,
+  when it checked finiteness only — called from every bounds-commit leaf —
+  `__commitExtent`/`__commitWidth`/`__commitHeight`, `_applyMoveByBase`, `_applyBounds`,
+  `_commitBounds`) `console.error`s `NON_FINITE_GEOMETRY` (NaN/Infinity) **and** `NON_INTEGER_GEOMETRY`
+  (fractional applied bounds); **both are wired into the headless runners' fail-gate**, so a
+  fractional `@bounds` FAILS the suite even when the pixels happen to match. It replaced the
+  `debugIfFloats` hooks — a real integer assertion 2015→2018, silently stubbed to a no-op in 2018,
+  and deleted in 2026 (`fbc2a3a4`) — restoring the enforcement that had lapsed for ~8 years.
 
-Empirically confirmed: instrumenting `AnalogClockWdgt`'s paint during the scrolling-clocks
-SystemTest logged `@position()` and the device CTM on every frame — position always integer,
-CTM identity (`a1 b0 c0 d1 e0 f0`). No widget is placed at a fractional device position.
+Empirically confirmed: with the guard hard-gated, a full 249-test suite run (native + SWCanvas,
+dpr 1 & 2, plus WebKit) reports **zero** `NON_INTEGER_GEOMETRY` — every widget's applied `@bounds`
+is integer. (The earlier evidence was narrower: instrumenting `AnalogClockWdgt`'s paint logged
+`@position()` always integer with an identity CTM — true, but it only exercised the desired funnel,
+not the arrange-apply path, which is how the ~2018→2025 fractional-placement gap went unnoticed.)
 
 ## 3. Fractional geometry "on the side" (Layer B)
 
