@@ -688,6 +688,36 @@ danger configs · P2 = the 9-flush shape-1 profile (3 construction-transient win
 **U3 deliverable (uncommitted, owner review):** Fizzygum src — 8 files (the five container
 measures, WindowWdgt, ScrollPanelWdgt pin re-pin + D4 site, basic-widgets/Widget
 preferredExtent + D4) + this §9.7; Fizzygum-tests — the 1-test inspector reference swap
-(base-method churn, dpr 1+2). **NEXT: U4** — cleanup + D6 formalization + ship P2 as a
-standing gate; the construction-transient residual stays documented (§6) unless the owner
-wants the product-rule conversation (who owns a newborn window's width).
+(base-method churn, dpr 1+2). *(Committed `8f0924c6` / tests `c9d9aa001`, pushed.)*
+**NEXT: U4** — cleanup + D6 formalization + ship P2 as a standing gate + **the
+newborn-window width RULE (§9.7-Q below, owner-requested into U4 scope 2026-07-16)** —
+decide the rule FIRST, then bake the P2 gate's expected profile against it.
+
+### §9.7-Q — the U4 product decision: who owns a newborn window's width?
+
+The 3 residual re-visit flushes all trace to ONE ambiguity: when a window is (re)mounted
+around content (construction, content swap, uncollapse re-inflation), TWO parties claim its
+width — the window's hug (snug around content, THIS/px sentinels) and its container's
+steady policy (usually fill). Today the hug applies first and the container re-widens where
+it re-fits — one extra settle pass per (re)mount — EXCEPT in the nested-collapse flows,
+where no container re-fit follows an uncollapse and the HUG IS the converged, user-visible
+frame (that's the U3-C falsification, §6). Options for the owner, to be presented WITH
+side-by-side visual evidence (diffpage-style renders of the affected flows, chiefly
+`macroWindowsNestedCollapsingUncollapsing` + `macroWindowWithAClockInAWindowConstructionTwo`
+converged states under each rule):
+- **Rule A (today):** container-owned windows hug at (re)mount, containers re-widen where
+  they re-fit. Keeps the current look everywhere; keeps the 3 one-time transients.
+- **Rule B (container owns):** a container-owned window (window content / stack element —
+  OWN `layoutSpec`, NOT `recursivelyAttachedAsFreeFloating()`, which answers for the island)
+  never self-resizes width; desktop (free-floating) windows still hug. PROVEN to kill the
+  window re-visit pairs (P2 9→8, pairs→singles, suite green EXCEPT nested-collapse) — the
+  visible change: an uncollapsed nested window stays container-wide instead of snapping snug
+  around its content. Implementation = the reverted U3-C shape-2 diff (own-layoutSpec
+  predicate at the arrange hug + the preferredExtent mirror; described exactly in §6) + a
+  recapture of the affected nested-window tests.
+- **Rule C (hug once, never on re-mount):** keep the hug at TRUE first construction, skip
+  it on RE-arms (uncollapse/content re-mount). Kills only the re-mount transient (1 of 3);
+  keeps construction ones; smallest visual delta (uncollapse keeps the pre-collapse frame).
+Sequencing: settle §9.7-Q BEFORE promoting the P2 gate (its expected profile depends on the
+rule); if B or C, supersede the §6 U3-C entry with an "owner-decided rule" annotation rather
+than deleting it (the falsification stays true — the change is now INTENDED behaviour).
