@@ -314,7 +314,10 @@ class Widget extends TreeNode
   initialiseDefaultVerticalStackLayoutSpec: ->
     # use the existing VerticalStackLayoutSpec (if it's there)
     unless @layoutSpecDetails instanceof VerticalStackLayoutSpec
-      @layoutSpecDetails = new VerticalStackLayoutSpec 1
+      # no grow arg: UNDECIDED — the capture derives it from the add-time relationship
+      # (a full-width add tracks the stack, a narrower add keeps its size — D2-def,
+      # docs/sizing-model-unification-plan.md §9.1/§9.5)
+      @layoutSpecDetails = new VerticalStackLayoutSpec
 
   mouseClickRight: ->
     # you could bring up what you right-click,

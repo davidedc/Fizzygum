@@ -473,3 +473,92 @@ campaign a numeric convergence gauge with a classified baseline.
    review of every stack/window/list-surface test that changes + full recapture of the reviewed
    set. Falsification exit: if the distribution semantics fight the suite beyond
    recapture-and-review, STOP and re-frame on D1(b′) for that surface.
+
+### §9.5 — U1 execution log (2026-07-16, started same day; plan doc committed `94133c94`)
+
+**Two DESIGN REFINEMENTS forced by asserted tests during implementation (they SHARPEN D2-def;
+flag to owner at the end-of-arc review):**
+
+1. **The grow default is DERIVED AT CAPTURE, not a blunt ctor 0.** Two committed tests pull in
+   opposite directions: `macroDocumentPreservesDroppedWidgetSizes` ASSERTS dropped widgets keep
+   their drop width (breaks under blanket grow 1 — they'd jump to full width at drop), while
+   `macroSimpleDocumentCanAddIndentedParagraph`'s shipped paragraphs are added at full stack
+   width and MUST keep tracking the stack to rewrap (breaks under blanket ctor grow 0). Today's
+   ratio model encodes both in the captured wEl/wStk ratio (ratio 1 ≡ track, ratio < 1 ≡
+   scaled-keep). The reshape keeps exactly that information without the history: `grow: nil` =
+   UNDECIDED; `rememberInitialDimensions` derives it from the add-time relationship — a
+   full-width-or-wider add ⇒ grow 1 (track; the wider case tramples an explicit grow, as the
+   old model's forced elasticity 1 did), a narrower add ⇒ grow 0 (keep, = D2-def) — while an
+   EXPLICIT grow (the aspect trio's 0, a ctor arg, a menu edit) survives the derivation
+   (`?=`). This keeps the clock-in-a-hugged-window fixed (explicit 0 at exactly-equal width —
+   a `>=` trample would have broken the D6 trio) AND document text tracking (derived 1 at
+   equal width).
+2. **Wrapping text declares itself fill-class (explicit grow 1 by TYPE).** The first suite run
+   (only 2/250 tests changed — see below) surfaced that the add-time derivation is a WEAK proxy
+   for a TYPE distinction: a wrapping paragraph DROPPED narrower than its column derived grow 0
+   and froze — killing the re-wrap-on-resize affordance that
+   `macroStackPanelLooseWhenEmptyTightWhenFilled` image_3 ASSERTS (an §8.7 capability, so
+   recapturing it away was not an option). A wrapping text's box tracking its column is what
+   wrapping MEANS — so `TextWdgt.initialiseDefaultVerticalStackLayoutSpec` (covers
+   SimplePlainTextWdgt; NOT StringWdgt, a sibling-lineage single-line label) creates its stack
+   spec with an EXPLICIT grow 1 when FIT_BOX_TO_TEXT (a FIT_TEXT_TO_BOX text keeps its box and
+   the base derivation) — the same class-owned-explicit-grow pattern as the fixed/aspect trio's
+   0. Known delta: a dropped paragraph now fills its column AT DROP (old: kept drop width until
+   the first container resize) — document-like and sanctioned.
+
+3. **A base-width menu edit PINS grow to 0.** Under the grow model a desired width is moot at
+   grow 1 (the element fills regardless), so without the pin the menu's "base width…" knob
+   would silently do nothing on a fill-class element — an affordance regression
+   (`macroSimpleDocumentCanAddIndentedParagraph` uses base-width 300 to narrow a full-width
+   paragraph). `_setWidthOfElementWhenAddedNoSettle` therefore sets desired AND grow = 0
+   ("I want THIS width"); elasticity can be raised again afterwards — the knobs stay
+   independent edits. Only in-tree caller is the menu popout, so nothing else re-routes.
+
+**Code shape:** `VerticalStackLayoutSpec` reshaped (desiredWidth/grow/alignment;
+`widthOfStackWhenAdded` + the proportional formula DELETED; formula = round(min(availW,
+desired + grow·(availW−desired))); setter/method NAMES kept — menu plumbing + one macro
+fixture address them by name; renames = U4). `WindowContentLayoutSpec` follows (DONT_MIND ⇒
+desired=availW, grow=1; ctor arg renamed grow, all in-tree callers pass explicit 0/1).
+`initialiseDefaultVerticalStackLayoutSpec` passes NO arg (undecided ⇒ derived). The aspect
+trio's direct field writes → `.grow = 0`. Sweep clean: zero stale field reads;
+`widthOfStackWhenAdded` survives only in two explanatory comments.
+
+**Suite impact + visual review (the U1 headline): 2 changed tests out of 250** — every other
+window/scroll/toolbar/document/nested-window surface came out BYTE-IDENTICAL (0 geometry
+violations, 3 full-suite runs). The census-table prediction held: the deltas concentrate
+exactly where the ratio curve was load-bearing. Reviewed pair-by-pair in `fg diffpage`
+(dpr 1+2):
+- `macroDocumentScrollsMixedTextAndClocks` — the small clocks no longer ratio-GROW when the
+  document is widened (they keep their added size; the oversize clock still column-tracks,
+  identical to before). NOTE: the test's WRITTEN intent ("getWidthInStack returns that
+  remembered width CLAMPED to the current content-column width") describes the NEW behaviour
+  better than the old one (the old ratio-scaling grew small clocks BEYOND their remembered
+  width). img4/img5 deltas are scrollbar-thumb-only (content height shifted); img6 is the
+  clock reflow.
+- `macroStackPanelLooseWhenEmptyTightWhenFilled` — the dropped paragraph now fills its column
+  AT DROP (refinement 2) and still re-wraps on the handle-resize (image_3's asserted
+  affordance, verified in the diff pair); the detached text keeps its full-column width
+  (a few px wider wrap in img2/img4).
+Both recaptured (dpr 1+2) after review. Ops note: the first re-build tripped the STINK gate
+(+1 `instanceof` from the TextWdgt override's duplicated guard) — resolved by the cleaner
+`super` + `grow ?= 1` shape rather than a baseline bump.
+
+**Closing gates (2026-07-16, all on the final U1 build + recaptured refs):**
+- `fg presuite` — dpr1 250/250 PASS (69s) + paint-truthfulness 0 offenders of 250 (104s).
+- `fg census` — 0 movers / 1506 targets, battery complete (22 flows): arrange idempotence
+  holds under the new model.
+- **P2 re-run: profile IDENTICAL to the U0 baseline** — same 14 re-visit flushes, same 8
+  tests, same widget classes (flush indices drifted ±1–2 in two tests, cosmetic). Exactly the
+  U1 target: the width POLICY swapped with ZERO convergence-behaviour change; the
+  nested-window family stays for U2, the TTF slot-tracking up-edge stays by design.
+- 1-round stage-b torture — 4/4 danger configs ok (dpr2-fastest-s8 / dpr2-fast-s8 /
+  dpr1-fastest-s8 / dpr2-fastest-s4), no RECALC_NONCONVERGENCE, no
+  DOWNWALK_UNREACHABLE_CHAINTOP.
+- WebKit cross-engine leg on the new references (the recapture-crash-frame safeguard):
+  250/250 PASS, 0 geometry violations (1.2 min).
+
+**U1 uncommitted deliverable (owner end-of-arc review):** Fizzygum src — 7 files
+(VerticalStackLayoutSpec, WindowContentLayoutSpec, basic-widgets/Widget,
+basic-widgets/TextWdgt, IconWdgt, spreadsheet/SpreadsheetWdgt, apps/AnalogClockWdgt) + this
+plan doc's §9.5; Fizzygum-tests — the 2-test reference swap (dpr 1+2). The P2 prelude stays
+in `.scratch/` (gitignored) until U4 ships it as a standing gate.

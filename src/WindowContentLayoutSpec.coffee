@@ -51,11 +51,13 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
 
   rememberInitialDimensions: (@element, @stack) ->
     super
-    
+
     availableWidthInStack = @stack.availableWidthForContents()
     if @preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
-      @widthOfElementWhenAdded = availableWidthInStack
-      @elasticity = 1
+      @desiredWidth = availableWidthInStack
+      @grow = 1
 
-  constructor: (@preferredStartingWidth, @preferredStartingHeight, elasticity) ->
-    super elasticity
+  # NB every in-tree caller passes a grow explicitly (0 or 1) — an explicit grow survives
+  # the capture's derivation (see VerticalStackLayoutSpec.rememberInitialDimensions).
+  constructor: (@preferredStartingWidth, @preferredStartingHeight, grow) ->
+    super grow

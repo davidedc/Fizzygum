@@ -99,7 +99,7 @@ class SpreadsheetWdgt extends Widget
 
   colloquialName: -> "spreadsheet"
 
-  # FIXED size (elasticity 0): the grid keeps its own size as window content — it does NOT stretch
+  # FIXED size (grow 0): the grid keeps its own size as window content — it does NOT stretch
   # to fill a larger window. Two payoffs: the window content settles in ONE cycle (no multi-cycle
   # stretch convergence, so a screenshot taken right after open is already the fixed point — a
   # deterministic capture), and the grid is never resized under its own paint. The AnalogClockWdgt
@@ -107,7 +107,7 @@ class SpreadsheetWdgt extends Widget
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
-    @layoutSpecDetails.elasticity = 0
+    @layoutSpecDetails.grow = 0
 
   preferredExtentForWidth: (availW) ->
     new Point @_gridWidth(), @_gridHeight()

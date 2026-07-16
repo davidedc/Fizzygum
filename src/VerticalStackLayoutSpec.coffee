@@ -7,33 +7,56 @@ class VerticalStackLayoutSpec
   stack: nil
   element: nil
 
-  widthOfStackWhenAdded: nil
-  widthOfElementWhenAdded: nil
-  elasticity: 1
+  # ONE constraint-box sizing model (sizing-model unification U1 — docs/sizing-model-unification-plan.md):
+  #
+  #   width in stack = round( min( availW, desiredWidth + grow * (availW - desiredWidth) ) )
+  #
+  # - desiredWidth: the element's width WISH — captured from its natural width at placement
+  #   (an initialisation default, user-editable via the "base width..." menu entry), NOT
+  #   load-bearing history: nothing samples the container's PAST width. (The old proportional
+  #   model — width = wEl + elasticity*(availW*wEl/wStk - wEl) — divided by an add-time
+  #   widthOfStackWhenAdded snapshot, which made layout depend on history and whose
+  #   uninitialised nil was the NaN that forced WindowWdgt.contentNeverSetInPlaceYet's
+  #   measure guard.)
+  # - grow: the 0..1 share of the EXTRA space (availW - desiredWidth) the element takes.
+  #   0 = keep the desired width (fixed); 1 = fill the row / track the stack width. The
+  #   "elasticity..." menu knob edits it on a 0..100 scale. nil = NOT DECIDED YET: the
+  #   capture below derives it from the add-time relationship (an element placed at/above
+  #   the stack width is fill-class and tracks; a narrower one keeps its size — D2-def),
+  #   exactly the distinction the old model encoded in the captured wEl/wStk ratio
+  #   (ratio 1 ≡ track, ratio < 1 ≡ scaled-keep). An EXPLICIT grow (the fixed/aspect
+  #   classes' 0, a menu edit, a constructor arg) always wins over the derivation.
+  desiredWidth: nil
+  grow: nil
   alignment: 'left'
 
-  constructor: (@elasticity = 1) ->
+  constructor: (@grow = nil) ->
     return nil
 
+  # Capture the spec's initial desiredWidth from the element's natural width at THIS
+  # placement — re-run at every (re)placement, exactly the old rememberInitialDimensions
+  # timing (the arrange initialises every spec before asking). Also binds @element/@stack
+  # for the no-arg getWidthInStack. An element WIDER than the available width is clamped
+  # and FORCED fill-class (grow 1, trampling an explicit grow — the old model forced
+  # elasticity 1 the same way); at or below it, an undecided grow is DERIVED (see the
+  # field comment above) and an explicit grow is preserved (the aspect trio's 0 keeps a
+  # clock added at exactly the hugged window width fixed).
   rememberInitialDimensions: (@element, @stack) ->
-    
+
     availableWidthInStack = @stack.availableWidthForContents()
     elementWidthWithoutSpacing = @element.widthWithoutSpacing()
-    
-    if elementWidthWithoutSpacing > availableWidthInStack
-      @widthOfElementWhenAdded = availableWidthInStack
-      @elasticity = 1
-    else
-      @widthOfElementWhenAdded = elementWidthWithoutSpacing
 
-    @widthOfStackWhenAdded = availableWidthInStack
+    if elementWidthWithoutSpacing > availableWidthInStack
+      @desiredWidth = availableWidthInStack
+      @grow = 1
+    else
+      @desiredWidth = elementWidthWithoutSpacing
+      @grow ?= if elementWidthWithoutSpacing >= availableWidthInStack then 1 else 0
 
   getWidthInStack: (availableWidthOverride) ->
     availableWidthInStack = availableWidthOverride ? @stack.availableWidthForContents()
-    proportionalWidth = availableWidthInStack * @widthOfElementWhenAdded / @widthOfStackWhenAdded
-    differenceWithFixedWidth = proportionalWidth - @widthOfElementWhenAdded
-    
-    width = @widthOfElementWhenAdded + @elasticity * differenceWithFixedWidth
+
+    width = @desiredWidth + @grow * (availableWidthInStack - @desiredWidth)
     width = Math.round width
 
     return Math.min width, availableWidthInStack
@@ -64,6 +87,9 @@ class VerticalStackLayoutSpec
   # seam (a freefloating child's invalidate climbs THROUGH the freefloating boundary to its size-tracking
   # container off-pass). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it still just
   # defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
+  # NB the setter NAMES (setElasticity / setWidthOfElementWhenAdded) predate the U1 model swap and are KEPT
+  # for now — menu plumbing and macros address them by name; renaming is U4 cleanup
+  # (docs/sizing-model-unification-plan.md §9.4).
   # thin-wrap-exempt: the spec is NOT a Widget, so each setter settles on @element (the stack element), not @
   # -- the thin-wrap gate's canonical form anchors _settleLayoutsAfter on @ (a self-settle). This is the same
   # canonical thin wrap, just delegated to @element. (All 5 setters below are exempt for this reason.)
@@ -89,7 +115,7 @@ class VerticalStackLayoutSpec
     @element.prompt menuItem.parent.title + "\nelasticity:",
       @,
       "setElasticity",
-      (@elasticity * 100).toString(),
+      ((@grow ? 1) * 100).toString(),
       nil,
       0,
       100,
@@ -107,15 +133,15 @@ class VerticalStackLayoutSpec
     elasticity = Number(elasticity)
 
     elasticity = elasticity/100
-    unless @elasticity == elasticity
-      @elasticity = elasticity
+    unless @grow == elasticity
+      @grow = elasticity
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   baseWidthPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nbase width:",
       @,
       "setWidthOfElementWhenAdded",
-      @widthOfElementWhenAdded.toString(),
+      @desiredWidth.toString(),
       nil,
       10,
       1000,
@@ -124,6 +150,11 @@ class VerticalStackLayoutSpec
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded) ->
     @element._settleLayoutsAfter => @_setWidthOfElementWhenAddedNoSettle widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded
+  # An explicit base-width edit PINS the element (grow 0): "I want THIS width" — under the grow
+  # model a desired width is moot at grow 1 (the element fills regardless), so without the pin
+  # the menu's base-width knob would silently do nothing on a fill-class element (the old
+  # proportional model re-anchored the ratio instead, so the knob always bit). The user can
+  # raise elasticity again afterwards — the knobs stay independent edits.
   _setWidthOfElementWhenAddedNoSettle: (widthOfElementWhenAddedOrWidgetGivingWidthOfElementWhenAdded, widgetGivingWidthOfElementWhenAdded) ->
     if widgetGivingWidthOfElementWhenAdded?.getValue?
       widthOfElementWhenAdded = widgetGivingWidthOfElementWhenAdded.getValue()
@@ -133,7 +164,7 @@ class VerticalStackLayoutSpec
     widthOfElementWhenAdded = Math.round(widthOfElementWhenAdded)
 
     if widthOfElementWhenAdded
-      unless @widthOfElementWhenAdded == widthOfElementWhenAdded
-        @widthOfElementWhenAdded = widthOfElementWhenAdded
+      unless @desiredWidth == widthOfElementWhenAdded and @grow == 0
+        @desiredWidth = widthOfElementWhenAdded
+        @grow = 0
         @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
-

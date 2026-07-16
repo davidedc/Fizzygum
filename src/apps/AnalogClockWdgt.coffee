@@ -32,14 +32,15 @@ class AnalogClockWdgt extends Widget
   initialiseDefaultWindowContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
-    # FIXED (elasticity 0): the clock keeps its own square size as window content; it does NOT
+    # FIXED (grow 0): the clock keeps its own square size as window content; it does NOT
     # stretch to fill a larger (e.g. nested) window. This makes its width CONVERGENCE-INDEPENDENT:
-    # at elasticity 0, getWidthInStack = wEl + 0*(availW*wEl/widthOfStackWhenAdded - wEl) =
-    # min(wEl, availW) -- the widthOfStackWhenAdded term is multiplied out, so the clock no longer
-    # depends on the stack width sampled at RECORD time (which, for a clock nested in a
-    # window-in-window, was the ancestor-cascade-converged width and drove the deferred-layout
-    # runaway). The clock's square aspect is preserved by _setWidthSizeHeightAccordingly.
-    @layoutSpecDetails.elasticity = 0
+    # at grow 0, getWidthInStack = min(desiredWidth, availW) -- no term samples the stack width,
+    # so the clock never depends on a container width sampled at capture time (under the old
+    # proportional model that sample -- widthOfStackWhenAdded -- was, for a clock nested in a
+    # window-in-window, the ancestor-cascade-converged width and drove the deferred-layout
+    # runaway; U1 deleted that snapshot from the model entirely). The clock's square aspect is
+    # preserved by _setWidthSizeHeightAccordingly.
+    @layoutSpecDetails.grow = 0
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_applyExtent new Point newWidth, newWidth

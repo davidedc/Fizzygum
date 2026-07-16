@@ -343,6 +343,21 @@ class TextWdgt extends StringWdgt
     measuredHeight = tuple[0].length * Math.ceil @fontHeight @originallySetFontSize
     return new Point measuredWidth, measuredHeight
 
+  # Wrapping text is FILL-CLASS in a stack BY TYPE: its box tracks the column and the text
+  # re-wraps to it -- that is what wrapping MEANS -- so a FIT_BOX_TO_TEXT text gets an
+  # EXPLICIT grow 1 instead of the base add-time derivation (which would freeze a paragraph
+  # dropped narrower than the column at its drop width, killing the re-wrap-on-resize
+  # affordance -- asserted by macroStackPanelLooseWhenEmptyTightWhenFilled image_3). The
+  # class-owned-explicit-grow pattern mirrors the fixed/aspect trio's grow 0 (IconWdgt /
+  # SpreadsheetWdgt / AnalogClockWdgt). A FIT_TEXT_TO_BOX text keeps its box (see the
+  # measure above), so it keeps the base derivation; so does a spec that already carries a
+  # decided grow (a prior placement's derivation or a user's elasticity edit) -- the ?= only
+  # fills UNDECIDED. (U1 -- sizing-model unification §9.5.)
+  initialiseDefaultVerticalStackLayoutSpec: ->
+    super
+    if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
+      @layoutSpecDetails.grow ?= 1
+
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
   # is it going to be? How is the text broken down
