@@ -790,6 +790,16 @@ class Widget extends TreeNode
   preferredExtentForWidth: (availW) ->
     new Point (availW ? @width()), @height()
 
+  # (U3-C, sizing-model unification) The no-input sibling of preferredExtentForWidth: "the
+  # extent I would take given my druthers" -- PURE. For a plain widget that IS its applied
+  # extent (identical to the THIS_ONE_I_HAVE_NOW sentinel's old raw width()/height() reads,
+  # byte-for-byte). A widget whose own pending first placement will CHANGE its extent
+  # (WindowWdgt pre-capture) overrides this with the extent that placement will produce, so a
+  # container placing it mid-construction sizes to its FINAL extent in one shot instead of a
+  # stale transient (the last first-placement settle re-visits died here).
+  preferredExtent: ->
+    @extent()
+
   # note that using this one, the children
   # widgets attached as floating don't move
   _applyBounds: (newBounds) ->
@@ -1125,6 +1135,15 @@ class Widget extends TreeNode
     @boundingBox().intersect @SLOWclipThrough()
 
   # for PanelWdgt scrolling support
+  # (D4, sizing-model unification U3-A) THE ONE NAMED STATE-READ of the layout system --
+  # reclassified, kept. Single consumer: ScrollPanelWdgt's NON-content-sizing (folder /
+  # toolbar) frame-fit branch. Its children there are USER-PLACED free-floating widgets:
+  # their positions are genuine STATE (not derivable from any spec or measure -- §4.1 proved
+  # a measure pass alone could not replace this read), and that arrange never mutates them
+  # first, so this is a read of STABLE applied geometry -- NOT the mutate-then-read-back
+  # impurity the pure-measure campaign retires (cf. preferredExtentForWidth's rule: reading
+  # applied geometry is allowed when nothing just mutated it). Lint note: any NEW caller of
+  # this method should justify itself against subWidgetsMergedPreferredBounds (below) first.
   subWidgetsMergedFullBounds: ->
     result = nil
     if @children.length

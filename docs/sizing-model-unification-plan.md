@@ -239,6 +239,16 @@ building it) applies to every D-decision with a gate-shaped alternative.
   proven 16→18 nested-scroll Path-A trap.
 - **The `wEl/wStk` stack fraction** was judged IRREDUCIBLE *within the proportional model*
   (deferred-layout campaign) — this plan changes the frame (D1), it does not retry the reduction.
+- **(U3-C, 2026-07-16) Suppressing the first-placement width HUG for container-owned
+  windows** (predicate = own `layoutSpec`, after the `recursivelyAttachedAsFreeFloating()`
+  island-vs-own bug was found and fixed): killed the inner-window re-visits (P2 pairs →
+  singles) BUT regressed `macroWindowsNestedCollapsingUncollapsing` — the hug is
+  LOAD-BEARING in nested-collapse flows (an uncollapse with no outer re-fit following keeps
+  the hugged frame as the CONVERGED state). The shrink→re-widen transient re-visit and the
+  converged hug come from the SAME code path; they cannot be separated by suppressing the
+  path. Also falsified alongside it: measure-ahead alone (truthful `preferredExtent` consumed
+  by the THIS sentinels) does NOT remove the re-visits — the trigger is the re-arm → hug →
+  container-reassert cycle, not a stale measure. WTRACE evidence in §9.7.
 
 ## §7 — Symbol map
 
@@ -611,7 +621,73 @@ targets · 1-round stage-b torture 4/4 danger configs · P2 14 → 9 flushes (§
 
 **U2 deliverable (uncommitted, owner review):** Fizzygum src — 3 files (WindowWdgt,
 VerticalStackLayoutSpec, basic-widgets/Widget) + this §9.6. No test changes.
+*(Committed same day on "commit and continue": `8af93858`; unpushed.)*
 **NEXT: U3** — scroll content + the D4/D5 protocol work + the `implementsDeferredLayout` pin
 resolved or re-pinned; the 3 remaining first-placement re-visits are its measurable target
 (alongside `subWidgetsMergedFullBounds`'s reclassification and true measures for the five
 Path-B containers).
+
+### §9.7 — U3 execution log (2026-07-16, same day; "commit and continue")
+
+- **U3-A (D4 APPLIED):** `subWidgetsMergedFullBounds` documented as THE ONE NAMED STATE-READ
+  (Widget + the ScrollPanelWdgt folder/toolbar consumer site), with the lint note that any new
+  caller must justify itself against `subWidgetsMergedPreferredBounds` first.
+- **U3-B (D5 measures):** all five measure-less Path-B containers gained true
+  `preferredExtentForWidth` twins mirroring their `_setWidthSizeHeightAccordingly` —
+  WidgetHolderWithCaption (square), GenericCompositeIcon (square), StretchableWidgetContainer
+  (ratio-locked with content — the mutation's lazy `@ratio` init is DERIVED locally, no write;
+  width-invariant empty), Example3DPlot (ratio-locked when pinned), StretchableEditable
+  (container-ratio-locked when not freely-editable). A parent's measure of these containers is
+  now correct OFF the fixed point too. **Gate: suite 250/250 BYTE-IDENTICAL.**
+- **U3-C (the last first-placement re-visits):** the sanctioned measure-ahead route (§6 named
+  it the only unexplored one, unblocked by U2's totality): new PURE `preferredExtent()` — "the
+  extent I would take given my druthers" — base = applied extent (byte-identical to the old
+  raw width()/height() reads for plain content); `WindowWdgt` overrides it pre-capture with
+  the extent its own first placement will produce (negotiation width + padding + the
+  not-freefloating clamp; height = the pre-capture measure at that width). The THIS-sentinel
+  reads (both in `_negotiatedContentWidth` and the two height branches, measure + arrange) go
+  through it — so an outer window places an inner window at its FINAL extent in one shot; the
+  inner's own arrange confirms instead of diverging, and the injection never re-visits.
+  Nested-window recursion terminates at plain content. KNOWN churn: a new base Widget method
+  churns exactly `macroDuplicatedInspectorDrivesCopiedTargetOnly`'s rendered member list (the
+  probed one-test method-churn set) — benign recapture per the standing rule.
+- **The pin (§2.3 obligation): RE-PINNED** with refreshed rationale at
+  `ScrollPanelWdgt.implementsDeferredLayout` — U1/U2/U3-B leave both read-site rationales
+  intact; (B) is now the D4-reclassified named state-read. Full re-examination = U4.
+- Ops note: the pin-comment edit was made MID-CHAIN (against the standing rule) — the P2 leg
+  correctly aborted on the stale-build guard and was re-run after a rebuild; the suite leg had
+  already booted its build and was unaffected.
+
+**U3-C outcome — the re-visit target CLOSES AS FALSIFIED-DOCUMENTED (2 shapes, stop-rule):**
+- Shape 1 (measure-ahead): `preferredExtent()` consumed by the THIS sentinels — suite
+  byte-identical (modulo the KNOWN one-test base-method inspector churn, benign-recaptured),
+  but P2 unchanged (9): the re-visits are NOT stale-measure-driven. KEPT on its own merits
+  (truthful pre-capture measures; measure/arrange in lockstep via `_negotiatedContentWidth`).
+- WTRACE diagnosis (the per-visit bounds trace, `.scratch/revisit-trace-prelude.js`): each
+  residual flush is a RE-ARM → the inner window's first-placement width HUG (shrink) → the
+  outer's steady re-fit RE-WIDENING it to the spec width — a pure ping-pong whose converged
+  frame usually doesn't depend on the transient. The first cut of shape 2 was a no-op due to
+  the `recursivelyAttachedAsFreeFloating()` island-vs-own-attachment bug (a nested window IS
+  recursively-freefloating).
+- Shape 2 (hug suppression for container-owned windows, correct own-`layoutSpec` predicate):
+  P2 9 → 8 and the WindowWdgt pairs reduced to singles — but
+  `macroWindowsNestedCollapsingUncollapsing` REGRESSED: in nested-collapse flows the hug IS
+  the converged state (no outer re-fit follows an uncollapse there). REVERTED to the shape-1
+  state; falsification recorded in §6. The 3 construction-transient flushes (2 tests) stay,
+  now precisely understood: they are the engine correctly healing a REAL transient geometry
+  disagreement, not a defect — §8.6's success criterion is met in spirit (steady state is
+  clean; these fire only on content (re)mount events).
+
+**U3 closing gates (2026-07-16, final U3 build = the shape-1 state):** `fg gauntlet` 9/9 —
+dpr1(109s) dpr2(114s) **webkit(112s — the post-recapture safeguard leg, over the recaptured
+inspector reference)** apps(70s) paint(108s) tiernaming(125s) settle(120s) capstone(120s)
+refs(20s), total 258s · `fg census` 0 movers / 1506 targets · 1-round stage-b torture 4/4
+danger configs · P2 = the 9-flush shape-1 profile (3 construction-transient window flushes +
+5 TTF slot-tracking + 1 scroll-uncollapse up-edges).
+
+**U3 deliverable (uncommitted, owner review):** Fizzygum src — 8 files (the five container
+measures, WindowWdgt, ScrollPanelWdgt pin re-pin + D4 site, basic-widgets/Widget
+preferredExtent + D4) + this §9.7; Fizzygum-tests — the 1-test inspector reference swap
+(base-method churn, dpr 1+2). **NEXT: U4** — cleanup + D6 formalization + ship P2 as a
+standing gate; the construction-transient residual stays documented (§6) unless the owner
+wants the product-rule conversation (who owns a newborn window's width).

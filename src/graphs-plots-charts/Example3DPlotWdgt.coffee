@@ -113,6 +113,15 @@ class Example3DPlotWdgt extends Widget
       @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
     else
       super
+
+  # §4.1 pure measure (sizing-model unification U3-B): mirrors _setWidthSizeHeightAccordingly
+  # above -- ratio-locked while a ratio is pinned, base width-invariant otherwise. No mutation,
+  # no seam.
+  preferredExtentForWidth: (availW) ->
+    if @ratio?
+      new Point availW, Math.round(availW / @ratio)
+    else
+      super
   # -----------------------------------------------------------------
 
   step: ->

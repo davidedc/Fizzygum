@@ -81,11 +81,36 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _negotiatedContentWidth: (availW) ->
     spec = @contents.layoutSpecDetails
     if spec.preferredStartingWidth == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
-      @contents.width()
+      # (U3-C) "the size I have now" through the content's preferredExtent, not its raw
+      # width(): identical for plain content (base preferredExtent IS the applied extent),
+      # but content whose OWN first placement is pending (a nested window) answers with the
+      # extent that placement will produce -- so this window places it at its FINAL size in
+      # one shot and the settle loop's injection never has to re-visit us.
+      @contents.preferredExtent().x
     else if spec.preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
       availW - 2 * @padding
     else
       spec.preferredStartingWidth
+
+  # (U3-C) A window whose first placement is PENDING (content spec uncaptured) answers
+  # preferredExtent with the extent that placement will produce -- the PURE mirror of the
+  # arrange's first-placement branch (width: the negotiation + padding + the not-freefloating
+  # clamp; height: the pre-capture measure at that width, which mirrors the height sentinels).
+  # A collapsed-content or captured (steady-state) window IS its applied extent, like any
+  # plain widget. Recursion (a window in a window in ...) terminates at plain content.
+  preferredExtent: ->
+    spec = @contents?.layoutSpecDetails
+    if !spec? or spec.desiredWidth? or @contents.collapsed then return @extent()
+    recommendedElementWidth = @_negotiatedContentWidth @width()
+    if spec.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
+      # the width hug, mirroring the arrange's first-placement branch exactly (incl. the
+      # not-recursively-freefloating min-clamp -- keep the two in lockstep)
+      windowWidth = recommendedElementWidth + 2 * @padding
+      if !@recursivelyAttachedAsFreeFloating()
+        windowWidth = Math.min @width(), windowWidth
+    else
+      windowWidth = @width()
+    new Point windowWidth, @preferredExtentForWidth(windowWidth).y
 
   preferredExtentForWidth: (availW) ->
     if @contents? and !@contents.collapsed
@@ -102,7 +127,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         # not the garbage pre-negotiation extent the old guard reported. The recursion into
         # the content's measure is safe pre-capture: getWidthInStack is total (U2).
         if spec.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
-          desiredHeight = @contents.height()
+          # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
+          desiredHeight = @contents.preferredExtent().y
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - chrome
         else if spec.preferredStartingHeight == WindowContentLayoutSpec.DONT_MIND
@@ -648,7 +674,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         # in this case the contents has just been added
         recommendedElementWidth = @_negotiatedContentWidth @width()
         if @contents.layoutSpecDetails.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
-          # THIS_ONE_I_HAVE_NOW / an explicit px: the WINDOW resizes to the content's width
+          # THIS_ONE_I_HAVE_NOW / an explicit px: the WINDOW resizes to the content's width.
+          # ⚠ do NOT re-attempt suppressing this hug for container-owned windows (the U3-C
+          # falsified shape, plan §6/§9.7): the hug produces the shrink->re-widen settle
+          # re-visit on nested-window construction, BUT it is LOAD-BEARING in the
+          # nested-collapse flows -- an uncollapse with no outer re-fit following keeps the
+          # hugged frame as the CONVERGED state (macroWindowsNestedCollapsingUncollapsing
+          # regressed under the suppression, own-layoutSpec predicate and all).
           if @recursivelyAttachedAsFreeFloating()
             windowWidth = recommendedElementWidth + @padding * 2
           else
@@ -668,7 +700,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       if firstPlacement
         # in this case the contents has just been added
         if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
-          desiredHeight = @contents.height()
+          # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
+          desiredHeight = @contents.preferredExtent().y
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
           @contents._applyWidth recommendedElementWidth

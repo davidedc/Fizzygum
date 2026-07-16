@@ -29,3 +29,8 @@ class GenericCompositeIconWdgt extends Widget
     @_applyExtent new Point newWidth, newWidth
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
+
+  # §4.1 pure measure (sizing-model unification U3-B): the composite icon is SQUARE under
+  # width-sizing (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
+  preferredExtentForWidth: (availW) ->
+    new Point availW, availW

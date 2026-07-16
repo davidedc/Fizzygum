@@ -329,6 +329,10 @@ class ScrollPanelWdgt extends PanelWdgt
   # would shrink a NESTED scroll panel's reported content size and regress nested-scroll
   # (the proven 16->18 Path-A trap). We pin it to false so the _reLayout drives the re-fit
   # while our merged-bounds/resize classification stays exactly as before we had a _reLayout.
+  # RE-PINNED at sizing-model unification U3 (2026-07-16, plan par.9.7): the model swap (U1),
+  # the flag deletion (U2) and the container true-measures (U3-B) all leave BOTH read sites'
+  # rationales intact -- (B) is now the D4-reclassified ONE named state-read, whose
+  # child-classification fork this pin feeds. Full re-examination deferred to U4.
   implementsDeferredLayout: ->
     false
 
@@ -424,6 +428,8 @@ class ScrollPanelWdgt extends PanelWdgt
         # (schedule-valve V1) same viewport-derived width as the re-wrap above — see that comment.
         subBounds = @contents.subWidgetsMergedPreferredBounds(@width() - totalPadding)?.ceil()
     else
+      # (D4, U3-A) the ONE named state-read: user-placed free-floating children's positions
+      # are state, and nothing above mutated them -- see subWidgetsMergedFullBounds's comment.
       subBounds = @contents.subWidgetsMergedFullBounds()?.ceil()
     if subBounds
 

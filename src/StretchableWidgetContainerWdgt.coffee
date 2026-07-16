@@ -94,6 +94,17 @@ class StretchableWidgetContainerWdgt extends Widget
       @_applyExtent new Point newWidth, @height()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
+  # §4.1 pure measure (sizing-model unification U3-B): mirrors _setWidthSizeHeightAccordingly
+  # above -- ratio-locked while holding content, width-invariant when empty. When the sizing
+  # hasn't lazily initialised @ratio yet, the SAME value is DERIVED locally with NO write --
+  # a measure must not take the mutation's lazy-init side effect (@ratio + canSetHeightFreely).
+  preferredExtentForWidth: (availW) ->
+    if (@childrenNotHandlesNorCarets @contents).length != 0
+      ratio = @ratio ? (@width() / @height())
+      new Point availW, Math.round(availW / ratio)
+    else
+      new Point availW, @height()
+
 
 
   _reLayout: (newBoundsForThisLayout) ->

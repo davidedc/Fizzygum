@@ -62,6 +62,13 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @_reLayout()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
+  # §4.1 pure measure (sizing-model unification U3-B): the holder is SQUARE under width-sizing
+  # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam -- gives a parent's
+  # measure of this container the real answer even OFF the fixed point (it used to fall back
+  # to the base width-invariant measure, correct only at the fixed point).
+  preferredExtentForWidth: (availW) ->
+    new Point availW, availW
+
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

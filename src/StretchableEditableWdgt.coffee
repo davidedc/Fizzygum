@@ -183,6 +183,15 @@ class StretchableEditableWdgt extends Widget
     @_applyExtent new Point newWidth, Math.round(newWidth / @stretchableWidgetContainer.ratio)
     @height()
 
+  # §4.1 pure measure (sizing-model unification U3-B): mirrors _setWidthSizeHeightAccordingly
+  # above -- the slide is ratio-locked to its container's ratio when NOT freely-editable,
+  # base width-invariant otherwise. No mutation, no seam.
+  preferredExtentForWidth: (availW) ->
+    if @layoutSpecDetails?.canSetHeightFreely then return super
+    if !@stretchableWidgetContainer? then return super
+    if !@stretchableWidgetContainer.ratio? then return super
+    new Point availW, Math.round(availW / @stretchableWidgetContainer.ratio)
+
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
