@@ -92,6 +92,24 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       spec.preferredStartingWidth
 
+  # (§9.7-Q, owner-decided 2026-07-17) THE width a first placement hands the content, as a
+  # pure function of MY OWN attachment -- ONE home for the arrange's first-placement branch
+  # and the measure's pre-capture branch (§6.1 rule 1, same contract as _negotiatedContentWidth):
+  # - my own attachment is FREE-FLOATING (a desktop window): the content gets the width it
+  #   asked for (the sentinel negotiation above) and the window HUGS it -- unchanged.
+  # - I am CONTAINER-OWNED (window content / stack element): THE CONTAINER OWNS MY WIDTH.
+  #   I never self-resize to the content, and the content gets the same container-derived
+  #   width a captured window would hand it (getWidthInStack is total pre-capture, U2) --
+  #   a container-owned window sizes like a captured one FROM BIRTH. This deletes the
+  #   first-placement shrink->re-widen width ping-pong structurally (suite-verified
+  #   byte-identical: every suite-covered hug of a container-owned window was anyway
+  #   reasserted to exactly this width by its container's re-fit).
+  _firstPlacementContentWidth: (availW) ->
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+      @_negotiatedContentWidth availW
+    else
+      @contents.layoutSpecDetails.getWidthInStack availW - 2 * @padding
+
   # (U3-C) A window whose first placement is PENDING (content spec uncaptured) answers
   # preferredExtent with the extent that placement will produce -- the PURE mirror of the
   # arrange's first-placement branch (width: the negotiation + padding + the not-freefloating
@@ -101,14 +119,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   preferredExtent: ->
     spec = @contents?.layoutSpecDetails
     if !spec? or spec.desiredWidth? or @contents.collapsed then return @extent()
-    recommendedElementWidth = @_negotiatedContentWidth @width()
-    if spec.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
-      # the width hug, mirroring the arrange's first-placement branch exactly (incl. the
-      # not-recursively-freefloating min-clamp -- keep the two in lockstep)
-      windowWidth = recommendedElementWidth + 2 * @padding
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and spec.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
+      # the width hug (DESKTOP windows only -- §9.7-Q, same own-layoutSpec predicate as the
+      # arrange's first-placement branch, incl. the not-recursively-freefloating min-clamp;
+      # keep the two in lockstep)
+      windowWidth = @_negotiatedContentWidth(@width()) + 2 * @padding
       if !@recursivelyAttachedAsFreeFloating()
         windowWidth = Math.min @width(), windowWidth
     else
+      # container-owned (or DONT_MIND): the width stays what the container hands me
       windowWidth = @width()
     new Point windowWidth, @preferredExtentForWidth(windowWidth).y
 
@@ -134,7 +153,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         else if spec.preferredStartingHeight == WindowContentLayoutSpec.DONT_MIND
           desiredHeight = Math.round @height() - chrome
         else
-          desiredHeight = @contents.preferredExtentForWidth(@_negotiatedContentWidth(availW ? @width())).y
+          # (§9.7-Q) through the shared first-placement width -- container-owned windows
+          # measure at the container-derived width, desktop windows at the negotiated one,
+          # exactly as the arrange will apply (lockstep via _firstPlacementContentWidth).
+          desiredHeight = @contents.preferredExtentForWidth(@_firstPlacementContentWidth(availW ? @width())).y
         return new Point (availW ? @width()), desiredHeight + chrome
       if @contentsRecursivelyCanSetHeightFreely()
         desiredHeight = Math.round @height() - chrome
@@ -376,6 +398,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # re-title through the NON-settling label core: _addNoSettle already runs inside the
       # add's settle, so the title change rides that flush instead of opening a nested one.
       @label._setTextNoSettle titleToBeSet
+      # (§9.7-Q, owner-decided 2026-07-17) a chrome rebuild (_buildAndConnectChildrenNoSettle,
+      # reached from _reactToChildDropped / _resetToDefaultContents) re-adds the widget that
+      # is ALREADY my content. That is bookkeeping, not a re-mount: the placement it would
+      # re-negotiate was just negotiated in the same flush, so re-arming for it only produced
+      # a duplicate first-placement pass (one settle re-visit per drop, probe-verified).
+      isSameContentRemount = aWdgt == @contents
       @removeChild @contents
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
@@ -387,8 +415,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # (U2) re-arm the first-placement ONE-SHOT for this mount: content (re)mounted into a
       # window re-negotiates its placement. The old model re-ran rememberInitialDimensions via
       # the contentNeverSetInPlaceYet flag; the CAPTURE is now itself the latch, so un-latch it
-      # (a fresh spec is already unlatched; this covers content carrying a spec from a prior life).
-      aWdgt.layoutSpecDetails.desiredWidth = nil
+      # (a fresh spec is already unlatched; this covers content carrying a spec from a prior
+      # life) -- but NOT for a same-widget chrome-rebuild re-add (§9.7-Q above): the standing
+      # capture is exactly the placement this mount already has.
+      aWdgt.layoutSpecDetails.desiredWidth = nil unless isSameContentRemount
       super aWdgt, position: position, layoutSpec: LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped: beingDropped
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
@@ -672,15 +702,18 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       if firstPlacement
         # in this case the contents has just been added
-        recommendedElementWidth = @_negotiatedContentWidth @width()
-        if @contents.layoutSpecDetails.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
-          # THIS_ONE_I_HAVE_NOW / an explicit px: the WINDOW resizes to the content's width.
-          # ⚠ do NOT re-attempt suppressing this hug for container-owned windows (the U3-C
-          # falsified shape, plan §6/§9.7): the hug produces the shrink->re-widen settle
-          # re-visit on nested-window construction, BUT it is LOAD-BEARING in the
-          # nested-collapse flows -- an uncollapse with no outer re-fit following keeps the
-          # hugged frame as the CONVERGED state (macroWindowsNestedCollapsingUncollapsing
-          # regressed under the suppression, own-layoutSpec predicate and all).
+        recommendedElementWidth = @_firstPlacementContentWidth @width()
+        if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and @contents.layoutSpecDetails.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
+          # THIS_ONE_I_HAVE_NOW / an explicit px on a DESKTOP window: the WINDOW resizes
+          # (hugs) to the content's width. A CONTAINER-OWNED window never self-resizes its
+          # width -- the container owns it (§9.7-Q, owner-decided 2026-07-17; the predicate
+          # is MY OWN layoutSpec, NOT recursivelyAttachedAsFreeFloating(), which answers for
+          # the ISLAND -- a window nested in a desktop window IS recursively-freefloating).
+          # ⚠ suppressing the hug ALONE (still handing the content the negotiated width) is
+          # the U3-C falsified shape (plan §6): the content freezes at a width its window
+          # never converges to (stale applied-vs-spec, clipped text). The sound form is the
+          # PAIRED rule in _firstPlacementContentWidth: no hug AND the container-derived
+          # content width, so window and content agree from birth.
           if @recursivelyAttachedAsFreeFloating()
             windowWidth = recommendedElementWidth + @padding * 2
           else

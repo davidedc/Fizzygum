@@ -249,6 +249,17 @@ building it) applies to every D-decision with a gate-shaped alternative.
   path. Also falsified alongside it: measure-ahead alone (truthful `preferredExtent` consumed
   by the THIS sentinels) does NOT remove the re-visits — the trigger is the re-arm → hug →
   container-reassert cycle, not a stale measure. WTRACE evidence in §9.7.
+  **⇄ OWNER-DECIDED RULE (§9.7-Q, 2026-07-17) — superseded, with the falsification INTACT
+  and re-diagnosed:** the U4 evidence pass (§9.7-Q outcome) pinned the regression precisely —
+  it was NOT an uncollapse frame but the drop-assembly converged frame (image_1), and the
+  break is suppressing the hug while STILL handing the content the NEGOTIATED width: the
+  content freezes at a width its window never converges to (stale applied-vs-spec, text
+  clipped both sides — nothing re-arranges the window again once the hug is gone). Shape 2
+  as implemented stays falsified; the owner-picked rule B2 differs from it by exactly one
+  ingredient — the content of a container-owned window gets the CONTAINER-derived width
+  (`getWidthInStack`, total pre-capture) instead of the negotiated one, so window and
+  content agree from birth. Suite-verified byte-identical (250/250). Do not re-attempt
+  hug-suppression WITHOUT the paired content-width rule.
 
 ## §7 — Symbol map
 
@@ -721,3 +732,37 @@ converged states under each rule):
 Sequencing: settle §9.7-Q BEFORE promoting the P2 gate (its expected profile depends on the
 rule); if B or C, supersede the §6 U3-C entry with an "owner-decided rule" annotation rather
 than deleting it (the falsification stays true — the change is now INTENDED behaviour).
+
+**§9.7-Q OUTCOME (2026-07-17, U4; owner picked B2 + D):**
+- **Probe finding first (corrects this section's attribution):** a runtime wrapper on
+  `WindowWdgt._addNoSettle` (`Fizzygum-tests/.scratch/rearm-probe.js`) showed ALL 3 residual
+  transients fire on DROP-into-window flows and NONE on collapse/uncollapse. Every drop
+  mounts content TWICE: the real `add()` (fresh spec ⇒ genuine first placement), then
+  `_reactToChildDropped → _buildAndConnectChildrenNoSettle → _addNoSettle @contents` — the
+  chrome rebuild re-adds the widget that is ALREADY the window's content, and that
+  bookkeeping re-add re-armed the captured spec (probe: `prior=captured:250/280`). The
+  "uncollapse re-inflation" wording above was a mis-attribution.
+- **Five variants measured solo** (full 250-test dpr1 suite + P2 each; tree restored to HEAD
+  between): **A** (today) = reference, 3 construction flushes. **B** (the reverted shape-2
+  diff, verbatim) = the ONLY variant with a pixel change: nested image_1 REGRESSED (the §6
+  annotation above — clipped text, stale applied-vs-spec frozen); P2 2 (outer-only).
+  **C** (skip-hug-on-re-arm marker on the spec) = byte-identical, P2 2 — DOMINATED by D
+  (same outcome, adds state). **D** (same-widget chrome-rebuild re-add does NOT re-arm; no
+  marker) = byte-identical, P2 2. **B2** (sound container-owns: no self-resize AND the
+  content gets the container-derived width — `getWidthInStack` is total pre-capture, U2) =
+  byte-identical, width ping-pong structurally gone; residuals are outer HEIGHT up-edges
+  (nested 2 / clock 1, all `WindowWdgt#1:2` singles).
+- **Decision: B2 + D** (D is rule-orthogonal — an artifact deletion that composes with
+  either width answer). Product statement: a CONTAINER-OWNED window (own `layoutSpec` ≠
+  FREEFLOATING) sizes like a captured window FROM BIRTH — the container owns its width; the
+  hug remains the DESKTOP-window behaviour. Byte-identical today because every suite-covered
+  hug of a container-owned window was already reasserted to exactly the container width.
+- **Implementation:** shared `WindowWdgt._firstPlacementContentWidth(availW)` (own-layoutSpec
+  dispatch: free-floating ⇒ `_negotiatedContentWidth`, container-owned ⇒ pre-capture
+  `getWidthInStack(availW − 2·padding)`) consumed by the arrange's first-placement branch
+  AND the measure's pre-capture explicit-px height branch (lockstep, §6.1 rule 1); the
+  arrange hug + its `preferredExtent` mirror gated on own `layoutSpec ==
+  ATTACHEDAS_FREEFLOATING`; `_addNoSettle` computes `isSameContentRemount = aWdgt ==
+  @contents` before the content swap and skips the re-arm for it. Evidence artifacts:
+  the A-vs-B diffpage (`Fizzygum-tests/.scratch/q-ruleB-page/`), the rendered comparison
+  (session scratchpad `q-evidence/`), per-variant suite logs `/tmp/fg-suite-rule{B,C,D,B2}.log`.
