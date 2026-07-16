@@ -1,8 +1,11 @@
 # Ordered down-walk — the Stage-B plan (authored 2026-07-16, to be executed COLD, owner-gated)
 
 **Status: B1–B3 EXECUTED + PUSHED 2026-07-16 (Fizzygum `b88102ee` / tests `9f2ac0cb3`) — §8 is the
-execution log, §9 the next steps. B4 = open owner decision.** The sections below §0–§7 are the
-original plan, kept verbatim as authored (deviations are called out in §8).
+execution log, §9 the next steps. §9 N1/N2/N3 RESOLVED same day (see their bullets): N1 = owner
+chose RETIRE-via-SCHEDULE-VALVE (audit falsified cheap deletion; design + prerequisites in the N1
+bullet); N2 = scatter-seam fix landed (census 0 movers); N3 = 16 markers → declarations. NEXT =
+the B4 schedule-valve retirement arc (N2 prerequisite now met; largely subsumes N4).** The
+sections below §0–§7 are the original plan, kept verbatim as authored (deviations called out in §8).
 
 This refreshes the §4.4 ordered-down-walk direction for the post-seam,
 post-INV-2-unification world, with NEW production evidence (§3) that the down-walk fixes a real,
@@ -314,7 +317,7 @@ heals those synchronously. Options for the review:
 
 Ordered by recommended sequence; each is independently shippable and separately gated.
 
-- **N1 — B4 decision (owner, ~zero code either way).** Recommendation: **keep** the Stage-A
+- **N1 — B4 decision (owner, ~zero code either way).** Recommendation was: **keep** the Stage-A
   immediate-resize hook + `check-composite-relay.js` lint. The `_placesChildrenInLayout` capability
   now does double duty (immediate raw path via the hook; settle path via the B3 injection), and the
   lint's declare-or-mark pressure directly feeds engine coverage. If deletion is still wanted:
@@ -322,6 +325,42 @@ Ordered by recommended sequence; each is independently shippable and separately 
   ctors, `_createReferenceNoSettle` — and prove each site's composite either flushes before the next
   paint or cannot host a declared composite), then expect recaptures. Not worth it unless the hook
   obstructs something.
+  **DECIDED 2026-07-16 (owner): RETIRE — but via the SCHEDULE-VALVE redesign, sequenced AFTER N2**
+  (decision trail: keep was recommended → owner chose retire → the raw-path audit FALSIFIED cheap
+  deletion → owner confirmed retire-as-redesign-after-N2). **N2 landed later the same day, so the
+  prerequisite is MET — this retirement arc is now unblocked and is the plan's NEXT work item.**
+  The audit's findings, so the future arc executes cold:
+  - **Closure**: 27 classes answer `_placesChildrenInLayout` true (10 declarers + inheritors:
+    WindowWdgt/FolderWindowWdgt/TemplatesWindowWdgt via the stack; ListWdgt + 3 scroll-panel
+    subclasses via ScrollPanelWdgt; the icon/shortcut family via WidgetHolderWithCaptionWdgt and
+    GenericCompositeIconWdgt). 233 `_applyExtent` call sites in-tree.
+  - **Why naive deletion regresses (4 verified classes):** (1) Path B
+    (`_setWidthSizeHeightAccordingly` = `_applyWidth` → polymorphic `_applyExtent` → HOOK) runs the
+    hook MID-ARRANGE and the caller consumes the returned height — the B3 injection fires too late
+    (post-`_reLayout`); only the 3 `implementsDeferredLayout` classes (stack / scroll panel / TTF)
+    get an explicit in-Path-B `@_reLayout()`. (2) TrackingTransformFrameWdgt (exempt marker) relies
+    on the hook firing on its forwarded CONTENT (`TrackingTransformFrameWdgt.coffee` ~:94 comment)
+    — a GRANDCHILD of the arrange's settle node, structurally invisible to the injection's
+    direct-children window. (3) `StretchableCanvasWdgt._reLayoutMyChildrenAfterImmediateResize`
+    is where paint buffers get recreated at the new size (unconditional recreation in `_reLayout`
+    would erase the user's painting — FizzyPaint regression class #4a). (4) Raw sites heal only by
+    settle-nesting context: `_createReferenceNoSettle` (`Widget.coffee` ~:2958, 95→75 post-ctor-
+    settle + freefloating skip = nothing re-lays it, the shipped BasementOpenerWdgt/D1 bug class);
+    ~40 builder sites (apps / creator buttons / WidgetFactory) on closure receivers.
+  - **What retirement buys:** kills the arrange-path DOUBLE re-lay (hook mid-arrange + B3
+    injection post-arrange, idempotent/pixel-neutral, perf-only), ~30 lines, 3 overrides, 1 lint.
+  - **The sanctioned shape — SCHEDULE-VALVE:** replace the hook's synchronous re-lay with
+    `_scheduleRelayoutRespectingPhase()` (in-pass → `__markForRelayout`, same-flush next round
+    heals it; off-pass → `_invalidateLayout`, end-of-cycle flush heals before paint). Receiver-side,
+    so it also closes the TTF grandchild hole. Prerequisites/costs: **N2 lands FIRST** (every extra
+    re-lay makes arrange idempotence load-bearing — same prerequisite as N4, which this largely
+    subsumes); layering rule [E] ("apply never schedules") deliberately amended in
+    check-layering.js; equivalence oracle degrades to old-⊆-new UNION + byte-exact pixels;
+    StretchableCanvasWdgt buffer recreation moves behind an extent-delta guard in its re-lay;
+    ScrollPanelWdgt's contents-move TODO (`ScrollPanelWdgt.coffee` ~:286) absorbed into its
+    `_reLayout` first; Path-B height-read-back verified per declarer (non-deferred declarers'
+    heights must be interior-independent — spot-checked true for icons/holders/stretchables, verify
+    on execution).
 - **N2 — the residual census mover: scroll-panel CONTENTS fit non-idempotence (its own mini-arc,
   NOT engine work).** Evidence (§8-B3): forcing `ScrollPanelWdgt._reLayout` on the basement's panel
   re-sizes its contents PanelWdgt ONE step (591→900 wide open-flow / 476→557 tall census-battery)
@@ -332,6 +371,26 @@ Ordered by recommended sequence; each is independently shippable and separately 
   template), name the two policies, decide the correct one with the owner, fix at the policy home
   (likely `_positionAndResizeChildren`/`_reLayoutChildren` disagreement), gate = census 0 movers +
   the full §5 protocol. ⚠ scroll-thumb pixels CAN change (vBar proportion) → possible recaptures.
+  **✅ RESOLVED 2026-07-16 — one line at the scatter seam; the "two policies" framing was WRONG in
+  an instructive way.** Writer-tagged probe (`.scratch/probe-n2-contents-writers.js`, tags every
+  bounds-commit on the basement sp's contents with the policy method active at commit time) showed
+  the two policies CONVERGE fine — every hook viewport-set is merge-corrected by the arrange in the
+  same call (4× set→fix pairs in the open flow). The staleness enters AFTER the last arrange: lost
+  widgets scattered into `sp.contents` via `PanelWdgt._addInPseudoRandomPositionNoSettle` (both
+  callers: the close/lost re-home chain and `BasementOpenerWdgt`'s drop) never re-ran sp's merge.
+  ROOT CAUSE: the fam-2 verify-and-drop (deferred-layout-residuals-audit.md, 2026-06-22) removed
+  the seam's synchronous container re-fit claiming the settle-time up-edge covers it — FALSIFIED:
+  the up-edge is gated on the laid widget's FRAME having CHANGED, and a scattered widget settles AT
+  the frame the scatter just applied. User-visible: items beyond the contents edge were UNREACHABLE
+  BY SCROLLING until an unrelated re-arrange healed them. FIX: `@_reFitContainer @parent` at the
+  scatter seam (deferred, phase-valved; the parked-basement enqueue settles via the B2 fallback,
+  exactly as designed). First cut used `instanceof ScrollPanelWdgt` and tripped the stink gate —
+  `_reFitContainer` is the idiom the sibling drop/remove seams already use. Probe after: boot state
+  heals while parked; the open flow's scheduled sp re-lay rides the same flush through the engine;
+  census force = ZERO writes (idempotent). Gates: census **0 movers** (extended battery, 1282
+  targets), gauntlet 9/9 byte-exact (zero recaptures — the scroll-thumb warning above did not
+  materialize), combined 3-round torture at close. The residuals-audit doc closure paragraph now
+  records the falsification.
 - **N3 — exempt-marker audit under B3 semantics (cheap, mechanical, census-gated).** The 22
   remaining `immediate-resize-relay-exempt` markers were justified by Stage-A-era reasoning ("no
   polymorphic raw `_applyExtent` receiver"). B3 changed the question to "can an ARRANGE move/resize
@@ -339,6 +398,27 @@ Ordered by recommended sequence; each is independently shippable and separately 
   Audit each marked class: if it can sit bypass-sized (stack child, window content), convert marker
   → declaration (one line, engine-backed, BasementWdgt is the worked example). Extend the census
   battery to cover each converted class's flow (the battery is a sample, not proof — §3 note).
+  **✅ RESOLVED 2026-07-16 — 16 of 21 markers CONVERTED to declarations; 5 stay.** Converted:
+  window-content classes (ScriptWdgt, ErrorsLogViewerWdgt, CodePromptWdgt, ConsoleWdgt,
+  InspectorWdgt, FridgeMagnetsWdgt, PatchNodeWdgt base — subclasses inherit, SimpleDocumentWdgt,
+  VideoPlayerWithRecommendationsWdgt), stack/stretchable elements (SimpleLinkWdgt,
+  SpeechBubbleWdgt), desktop-creatable droppables (ButtonWdgt — subclasses inherit,
+  SwitchButtonWdgt, ColorPickerWdgt, FanoutWdgt, AxisWdgt). KEPT: CaretWdgt (childless overlay),
+  LabelButtonWdgt (self-only re-lay), VideoControlsPaneWdgt + VideoPlayerWdgt (internal children —
+  the parent's `_reLayout` always drives them), TrackingTransformFrameWdgt (its own `_applyExtent`
+  override IS the mechanism). Ctor-order sweep (the WidgetHolderWithCaption trap): only
+  ColorPickerWdgt raw-resizes pre-build → gained `_compositeChildrenBuilt: -> @feedback?`.
+  Census battery EXTENDED with 11 window-host flows (inspector/console/errors-log/script/
+  fridge-magnets/code-prompt/patch-node/fanout/axis/color-picker/toggle-button), 509 → ~1300
+  targets. **A/B counterfactual** (`.scratch/staleness-census-neutralized.js` forces the 16
+  declarations false in-page): declared = 0 movers; neutralized = 1 mover, ColorPickerWdgt —
+  PROOF that conversion is load-bearing; the other 15 are mechanically-justified insurance.
+  Mechanism note (WindowWdgt ~:630-676): Path-B'd deferred-layout contents get an explicit
+  `_reLayout()` regardless of declaration; contents hit via the `_applyWidth`/`_applyHeight`
+  branches (starting-height / `contentsRecursivelyCanSetHeightFreely`) are healed ONLY by the
+  declaration — the basement's original staleness route, and ColorPicker's. Gates: build green
+  (check-composite-relay accepted all 16), census 0 movers, gauntlet 9/9 byte-exact with ZERO
+  recaptures, combined 3-round torture at close.
 - **N4 (optional, bigger) — drop the capability gate from the B3 injection.** Watch ALL children,
   not just `_placesChildrenInLayout` ones: the engine would then guarantee EVERY arrange-moved child
   a re-lay, making declarations (and N3) moot for the settle path entirely. Cost: a per-re-lay
