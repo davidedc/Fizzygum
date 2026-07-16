@@ -1,11 +1,14 @@
 # Ordered down-walk — the Stage-B plan (authored 2026-07-16, to be executed COLD, owner-gated)
 
 **Status: B1–B3 EXECUTED + PUSHED 2026-07-16 (Fizzygum `b88102ee` / tests `9f2ac0cb3`) — §8 is the
-execution log, §9 the next steps. §9 N1/N2/N3 RESOLVED same day (see their bullets): N1 = owner
-chose RETIRE-via-SCHEDULE-VALVE (audit falsified cheap deletion; design + prerequisites in the N1
-bullet); N2 = scatter-seam fix landed (census 0 movers); N3 = 16 markers → declarations. NEXT =
-the B4 schedule-valve retirement arc (N2 prerequisite now met; largely subsumes N4).** The
-sections below §0–§7 are the original plan, kept verbatim as authored (deviations called out in §8).
+execution log, §9 the next steps. §9 N1/N2/N3 RESOLVED same day (see their bullets). The B4
+SCHEDULE-VALVE RETIREMENT ARC then EXECUTED the same day — §10 is its execution log: the Stage-A
+synchronous hook is DEAD, the settle engine is the sole healer of composite interiors (valve +
+injection + walk), with relayset UNION IDENTICAL vs the pre-arc build and zero reference changes.
+REMAINING = §9-N4 only (drop the injection's capability gate → delete `_placesChildrenInLayout` +
+the lint + the 5 remaining markers; the census/A-B is now the idempotence instrument it needs).**
+The sections below §0–§7 are the original plan, kept verbatim as authored (deviations called out
+in §8).
 
 This refreshes the §4.4 ordered-down-walk direction for the post-seam,
 post-INV-2-unification world, with NEW production evidence (§3) that the down-walk fixes a real,
@@ -431,3 +434,87 @@ Ordered by recommended sequence; each is independently shippable and separately 
   per-test UNION relay-sets (never per-flush sequences); census for behaviour stages. Probes live in
   `Fizzygum-tests/.scratch/` (relayset-prelude/diff, stage-b-torture.sh, probe-basement-relay-trace,
   boot-spin-stack, staleness-census).
+
+## §10 — Execution log: the B4 SCHEDULE-VALVE retirement arc (2026-07-16, same session as §9 N1–N3)
+
+Staged V1→V4, each stage byte-exact-gated with the hook still live until V3 flipped the base.
+
+### V1 — ScrollPanelWdgt absorption (its hook override dies; its _reLayout becomes self-sufficient)
+- `_positionAndResizeChildren`: the two text-wrap width reads derive from `@width()` (the viewport),
+  not `@contents.width()` — equal at the fixpoint, but only `@width()` is current mid-transient
+  (the old hook's viewport pre-set existed to feed those reads).
+- Stack branch: the arrange normalizes a WIDTH-CONSTRAINING stack's tracked width itself
+  (`constrainContentWidth` gate — see the capstone falsification below). FOUND BY THE GATE: the
+  first cut omitted the normalization entirely → `macroWindowCellsInConstrainedScrollStackReflow`
+  failed deterministically; the second cut applied it UNGATED → the capstone gate caught a
+  valve-schedule ping-pong on `macroFreeWidthScrollStackShowsHorizontalScrollbar` (a FREE-width
+  stack OWNS its width; normalizing it re-grows every arrange and rides the end-of-cycle flush —
+  4 careless pushes). Both cuts corrected; both tests pass.
+- Commit seam: after the arrange's `_commitBounds` + `_reLayoutSelf()`, a DECLARED contents is
+  scheduled through the phase-valve (ToolPanelWdgt's re-wrap relied on the retired hook's
+  polymorphic chain — found statically; also covers the WindowWdgt early-settle route, where the
+  engine's later idempotent re-visit shows the injection no frame delta).
+- The contents-MOVE (reset-scroll-on-resize, wrapping non-stack panels) is RESIZE-EVENT behaviour,
+  not arrange behaviour: moved to a small `_applyExtent` scroll-policy override (pin BEFORE super
+  == the old post-commit pin; an extent commit never moves the origin). A settle re-lay at an
+  unchanged frame must never touch the scroll position — an extent-delta gate inside _reLayout
+  structurally cannot see an immediate resize (the extent is committed before entry).
+
+### V2 — StretchableCanvasWdgt buffer relocation (its hook override dies)
+- Buffer reconciliation moved to `_reLayoutSelf` — `_applyExtentBase` calls it on EVERY real extent
+  commit, so it now also covers the bypass route the hook could not see (a small coverage FIX).
+  Delta-guarded on the front buffer's physical size (the CanvasWdgt/BackBufferMixin dims idiom);
+  the behind-the-scenes buffer (the user's PAINTING) is kept once painted, exactly as before.
+  Sized from the COMMITTED extent (the RAW extent differs only under round/min-clamp, where
+  buffer==frame is the correct invariant).
+
+### V3 — the valve swap
+- `Widget._applyExtent`'s composite branch: synchronous `_reLayoutMyChildrenAfterImmediateResize`
+  → `_scheduleRelayoutRespectingPhase()`. The base hook method and the last override (the stack's
+  terminal-_reLayoutChildren) DELETED. Mid-re-lay self-applies self-enqueue benignly (the entry is
+  marked valid right after and dropped by the next sweep — verified live).
+- rule [E] AMENDED in check-layering.js: the phase-valve is now banned in immediate mutators
+  exactly like `_invalidateLayout`, with the ONE named sanctioned exemption = this valve line.
+- **The retired hook had been MASKING two pre-existing arrange defects — both exposed by the
+  gates, both diagnosed with the in-page OLD-SEMANTICS SHIM (`.scratch/old-valve-shim-prelude.js`
+  restores the synchronous hook on the current build: a failing test that PASSES under the shim
+  isolates hook timing as the cause), both fixed AT THE ARRANGE (the standing idempotence
+  direction):**
+  1. `SimpleVerticalStackPanelWdgt`: super's corner-internal tail placed the HANDLE OVERLAYS
+     against the PRE-tight-hug frame; the hook used to land the hug early by accident (it ran the
+     arrange inside super's self-extent-apply). FIX: base tail extracted as
+     `_reLayoutCornerInternalChildren`; the stack's tail re-runs it after the hug. (A handle-place
+     probe first ruled out a valve re-enqueue loop — the observed frame "creep" was one step per
+     FLUSH: the drag gesture's pointer deceleration.)
+  2. `ColorPickerWdgt` (census mover, feedback child off by half the size delta): its _reLayout
+     CENTERED the feedback swatch from its STALE size, then resized it — per-pass non-idempotent,
+     historically converged by the hook's extra synchronous passes
+     (`.scratch/probe-colorpicker-valve.js`: a forced re-lay at the SAME frame moved the feedback).
+     FIX: size first, centre from the new dims. Probe after: idempotent.
+- `macroDuplicatedInspectorDrivesCopiedTargetOnly` failed mid-V3 and STILL failed under the shim ⇒
+  not timing: the deleted base method removed one member-list line (the benign sub-row scroll churn
+  class, in reverse). After the stack fix ADDED `_reLayoutCornerInternalChildren`, the count
+  restored and the recapture came back BYTE-IDENTICAL — **zero reference changes for the arc**.
+
+### V4 — arc close oracles
+- **Relayset A/B vs the pre-arc build `5afc9bef`** (shared clone + symlinked siblings — never
+  `git stash`; before-trace under the documented `FIZZYGUM_ALLOW_STALE_BUILD=1` override):
+  per-test re-laid-SET **UNION IDENTICAL 250/250, zero subset violations, zero extras** — the
+  valve re-lays exactly the same widgets, at engine-scheduled moments
+  (`.scratch/relayset-subset-check.py`).
+- Census 0 movers / 1310 (after the picker fix); **the neutralized-declarations counterfactual now
+  breaks 15 window-host flows (vs 1 pre-arc)** — the declared capability is fully load-bearing:
+  the engine is the sole healer of composite interiors on every route (walk, injection, valve).
+- Suite byte-exact dpr1/dpr2/webkit; presuite green per stage; 1-round torture per stage.
+- Final (post free-width fix): gauntlet 9/9 incl. the capstone leg (its careless-push audit is what
+  caught the free-width ping-pong); 3-round danger-config torture 12/12; census 0 movers / 1310;
+  neutralized A/B 14 movers across 13 classes; relayset UNION IDENTICAL 250/250 vs `5afc9bef`,
+  0 subset violations, 0 extras.
+
+### What died / what stays
+- DIED: `_reLayoutMyChildrenAfterImmediateResize` (base + 3 overrides) — the synchronous composite
+  re-lay mechanism, Stage A's hook.
+- STAYS: `_placesChildrenInLayout` + check-composite-relay.js + `_compositeChildrenBuilt` — they
+  now gate the valve and the B3 injection. N4 (drop the injection's capability gate → delete the
+  capability + lint + the 5 remaining markers) is the remaining §9 item; under the valve the
+  census/A-B is a per-class idempotence detector, which is exactly N4's prerequisite instrument.
