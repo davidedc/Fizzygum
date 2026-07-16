@@ -168,7 +168,18 @@ class BasementWdgt extends BoxWdgt
       @showAllWidgets()
 
 
-  # immediate-resize-relay-exempt: no polymorphic raw _applyExtent receiver of this class (2026-07-16 census); containers size me via the settle-driven _reLayout handing bounds, or the override-BYPASSING _applyExtentBase (deliberately outside this mechanism)
+  # (ordered down-walk Stage B3, 2026-07-16 — replaces the census-day exempt marker, whose
+  # rationale said the bypass sizing was "deliberately outside this mechanism": Stage B3 is exactly
+  # the mechanism that brings it inside.) My _reLayout PLACES my children (scrollPanel geometry,
+  # the toggle row), and I live as a NON-tracking stack element sized via the override-BYPASSING
+  # _applyExtentBase — nothing used to re-lay my interior after the stack resized me, leaving the
+  # scrollPanel ~100px stale after the basement opened (the staleness census's one real mover, the
+  # motivating instance of the whole Stage-B arc). Declaring makes the settle engine's
+  # frame-changed child re-lay (__reLayoutOneSettleNode) re-run my layout whenever an arrange
+  # moves or resizes me.
+  _placesChildrenInLayout: ->
+    true
+
   _reLayout: (newBoundsForThisLayout) ->
 
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout

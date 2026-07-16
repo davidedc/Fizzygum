@@ -49,6 +49,10 @@ class Widget extends TreeNode
     # §4.4 island buffer cache source-lane fields: ephemeral per-frame paint state (a widget ref +
     # a virtual rect), consumed at flesh-out — never persist them (a snapshot must not pin an island).
     "_islandBufferSourceIsland", "_islandBufferSourceVirtualRect"
+    # flush-scoped settle-engine bookkeeping (ordered down-walk Stage B1): the flag mirrors the
+    # work-list's lifecycle and is cleared when the drain completes, so persisting it would only
+    # bake a stale own-property into saved files (a restored flag has no matching work-list entry).
+    "hasDirtyDescendant"
   ]
 
   appearance: nil
@@ -261,6 +265,15 @@ class Widget extends TreeNode
   dstBrokenRect: nil
 
   layoutIsValid: true
+  # (ordered down-walk Stage B2 — docs/ordered-downwalk-stage-b-plan.md) FLUSH-LOCAL dirty-path
+  # flag: true while I am a still-invalid work-list entry or an ancestor of one, steering the
+  # settle engine's root-down walk (WorldWdgt.__downWalkLayout descends only through flagged
+  # nodes). Derived FRESH each settle round from the work-list itself
+  # (__flagHasDirtyDescendantUpwards, called only by _recalculateLayoutsBody's derivation — never
+  # at enqueue/attach time), and cleared wholesale when the flush completes (recalculateLayouts'
+  # finally, via world._dirtyDescendantFlagged). Outside a flush every flag is false — which is why
+  # it must stay in @serializationTransients even though its resting own-value is false.
+  hasDirtyDescendant: false
   layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
   layoutSpecDetails: nil
 
@@ -4561,6 +4574,24 @@ class Widget extends TreeNode
   __markForRelayout: ->
     if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
+
+  # (ordered down-walk Stage B2) Flag me AND my ancestors as lying on a dirty path, stopping at the
+  # first already-flagged node — above it the chain is already flagged, so a derivation batch over
+  # the whole work-list costs O(total distinct chain nodes), the same order as the old drain's
+  # climbs. Called ONLY by the settle engine's per-round derivation
+  # (WorldWdgt._recalculateLayoutsBody), never at enqueue/attach time: the flags are FLUSH-LOCAL
+  # scratch (parent pointers cannot change mid-flush, so a derived chain stays true for the whole
+  # flush; outside a flush every flag is false). Every node flagged here is recorded on
+  # world._dirtyDescendantFlagged so recalculateLayouts' finally can clear exactly the flagged set.
+  # Pure bookkeeping: never schedules layout.
+  __flagHasDirtyDescendantUpwards: ->
+    return unless world?
+    ancestor = @
+    while ancestor? and not ancestor.hasDirtyDescendant
+      ancestor.hasDirtyDescendant = true
+      world._dirtyDescendantFlagged.push ancestor
+      ancestor = ancestor.parent
+    return
 
   _invalidateLayout: (triggeringChild = nil) ->
     # FREEFLOATING-skip -- THE single home of the rule: a freefloating child's add/remove/resize

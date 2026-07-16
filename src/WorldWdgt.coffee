@@ -375,6 +375,15 @@ class WorldWdgt extends PanelWdgt
   widgetsWithMaybeChangedPaintBounds: []
   widgetsWithMaybeChangedFullPaintBounds: []
   widgetsThatMaybeChangedLayout: []
+  # (ordered down-walk Stage B1) the nodes currently flagged hasDirtyDescendant, recorded by
+  # Widget.__flagHasDirtyDescendantUpwards as it sets each flag, so the flush that drains
+  # widgetsThatMaybeChangedLayout can clear exactly the flagged set (recalculateLayouts' finally).
+  # The two lists share one lifecycle: dirt appears -> both grow; drain completes -> both empty.
+  _dirtyDescendantFlagged: []
+  # (ordered down-walk Stage B2) re-lays performed by the current flush's down-walk; reset at each
+  # _recalculateLayoutsBody entry. Feeds the RECALC_NONCONVERGENCE never-fire assert and the
+  # zero-progress stuck-detection (DOWNWALK_UNREACHABLE_CHAINTOP).
+  _downWalkRelaidCount: 0
 
   # self-settling public geometry API (prototype 2026-06-19): re-entrancy guards.
   # _inLayoutMutation is set while a public geometry setter is running its
@@ -1060,105 +1069,224 @@ class WorldWdgt extends PanelWdgt
       @_recalculateLayoutsBody()
     finally
       @_recalculatingLayouts = false
+      # (ordered down-walk Stage B1) the hasDirtyDescendant flags mirror the work-list: once the
+      # drain has emptied it no widget is pending, so no flag may survive (a stale true would
+      # weaken the reachability audit and, come Stage B2, cause spurious walk visits). Clear
+      # exactly the flagged set. If the body THREW with work still pending (RECALC_NONCONVERGENCE)
+      # keep the flags — those widgets still need to be reachable on the next flush. This clearing
+      # also covers resetWorld: the teardown rides a settle, so its flush lands here with the
+      # work-list drained, leaving both structures empty for the next test (no state leak).
+      if @widgetsThatMaybeChangedLayout.length == 0
+        for w in @_dirtyDescendantFlagged
+          w.hasDirtyDescendant = false
+        @_dirtyDescendantFlagged = []
 
+  # (ordered down-walk Stage B2, 2026-07-16 -- docs/ordered-downwalk-stage-b-plan.md §4-B2) The
+  # settle is now a ROOT-DOWN VISITATION of the dirty tree. The old shape (pop the work-list from
+  # the tail; on an invalid entry CLIMB to the top-most invalid ancestor; _reLayout that chain-top)
+  # discovered dirt bottom-up; this shape discovers it top-down along the hasDirtyDescendant flags
+  # the Stage-B1 scaffold maintains (audit-verified suite-wide before any behaviour read them).
+  # Equivalence to the old drain, piece by piece:
+  #   - CLIMB-TO-TOPMOST-INVALID (Opt-2, 2026-07-02: a freefloating widget may be sized FROM its
+  #     parent, so a dirty parent must lay out FIRST or the child settles against a stale size and
+  #     again after -- a wasted double-lay): subsumed by parent-first order. The walk arrives from
+  #     above, so a dirty ancestor is ALWAYS re-laid before its dirty descendants; the chain-top
+  #     concept disappears because every visit IS its own chain-top.
+  #   - POP-VALID: the walk re-lays only layoutIsValid==false nodes, so a child healed by its
+  #     parent's arrange is skipped exactly like the old lazy tail-pop; the work-list sweep below
+  #     drops the settled entries each round.
+  #   - PROCESSING ORDER across disjoint subtrees changes (old: work-list LIFO; new: tree order,
+  #     roots in work-list encounter order) -- byte-exact because the settled layout is an
+  #     order-independent fixpoint (verified: reversing the loop's processing order was 165/165 at
+  #     dpr1/dpr2/webkit), re-verified for this rewrite by the per-test re-laid-SET trace
+  #     (relayset-prelude/diff, union identical over the full suite) plus the full §5 protocol.
+  #   - The WORK-LIST stays -- deliberately, and not only as a trace: it is the enqueue-dedup
+  #     structure (__markForRelayout's layoutIsValid flip) AND the loop-termination oracle. The
+  #     flags STEER the descent; the work-list decides when the flush is done. A mid-walk enqueue
+  #     (the settle-time re-fit's in-pass arm, the caret scroll-follow) lands in the work-list and
+  #     re-flags its chain, and the next round's walk picks it up.
+  #   - The settle-time up-edge (_reFitMyTrackingContainerAfterSettle) and the per-_reLayout error
+  #     containment move unchanged into __downWalkLayout, applied at every walk re-lay exactly as
+  #     they applied at every chain-top.
   _recalculateLayoutsBody: ->
 
-    # DEFENSIVE ASSERTION -- NOT a convergence budget. (proper-layouts Stage 6, 2026-07-01.)
-    # This loop is a work-list DRAIN: each _reLayout() marks its chain-top valid (so it is popped),
-    # and _reFitMyTrackingContainerAfterSettle re-fits the chain-top's size-tracking container as a
-    # bounded O(depth) up-walk. Instrumenting the FULL suite (dpr1 + dpr2) measured a peak of 428
-    # iterations in one flush -- but that was 427 DISTINCT widgets with ZERO re-visits (one big tree
-    # settled at once, a pure drain). The only residual iteration is a small, bounded size-negotiation
-    # cycle for constrained NESTED containers (measured peak: 10 re-visits of a 5-widget
-    # Window -> VerticalStack -> ScrollPanel chain in macroWindowCellsInConstrainedScrollStackReflow) --
-    # so the loop still CONVERGES (fast + bounded) rather than strictly draining. The old
-    # recalcIterationsCap masked a possible non-convergence SILENTLY (log + abandon the work-list +
-    # ship a broken layout); that suppression is DELETED. What remains is a pure never-fire assertion
-    # at a generous-but-finite bound: if the drain ever fails to TERMINATE it is a BUG (a real
-    # non-terminating layout cycle), so THROW loudly rather than freeze the tab or silently ship
-    # broken layout. (Per-_reLayout errors are a different path, handled by the catch below.)
-    layoutIterationsSanityLimit = 100000
-    recalcIterations = 0
+    # DEFENSIVE ASSERTION -- NOT a convergence budget. (proper-layouts Stage 6, 2026-07-01; counter
+    # moved to the walk's re-lay site in Stage B2, same RECALC_NONCONVERGENCE token.) Instrumenting
+    # the FULL suite (dpr1 + dpr2) measured a peak of 428 re-lays in one flush -- 427 DISTINCT
+    # widgets with ZERO re-visits (one big tree settling at once); the only residual iteration is a
+    # small, bounded size-negotiation cycle for constrained NESTED containers (measured peak: 10
+    # re-visits, down to 2 after the up-edge's no-op skip). The old recalcIterationsCap masked a
+    # possible non-convergence SILENTLY (log + abandon the work-list + ship a broken layout); that
+    # suppression is DELETED. What remains is a pure never-fire assertion at a generous-but-finite
+    # bound: if the settle ever fails to TERMINATE it is a BUG (a real non-terminating layout
+    # cycle), so THROW loudly rather than freeze the tab or silently ship broken layout.
+    # (Per-_reLayout errors are a different path, handled inside __downWalkLayout.)
+    @_downWalkRelaidCount = 0
 
     until @widgetsThatMaybeChangedLayout.length == 0
-      recalcIterations++
-      if recalcIterations > layoutIterationsSanityLimit
-        # Never fires in normal operation (peak measured 428, bound 100000). Reaching here means a real
-        # non-terminating layout cycle. console.error first (keeps the RECALC_NONCONVERGENCE token the
-        # determinism torture greps for), then THROW so it surfaces loudly instead of being tolerated.
-        console.error "RECALC_NONCONVERGENCE: recalculateLayouts did not terminate after " + layoutIterationsSanityLimit + " iterations. Last widget: " + (tryThisWidget?.constructor?.name) + " spec=" + (tryThisWidget?.layoutSpec)
-        throw new Error "Fizzygum: RECALC_NONCONVERGENCE -- recalculateLayouts did not terminate after " + layoutIterationsSanityLimit + " iterations (a non-terminating layout cycle). Last widget: " + (tryThisWidget?.constructor?.name)
-      # starting from the last element,
-      # find the first Widget which has a broken layout,
-      # (and pop out of the queue all the Widgets we encounter
-      # on the way that have a valid layout)
-      loop
-        tryThisWidget = @widgetsThatMaybeChangedLayout[@widgetsThatMaybeChangedLayout.length - 1]
-        if tryThisWidget.layoutIsValid
-          @widgetsThatMaybeChangedLayout.pop()
-          if @widgetsThatMaybeChangedLayout.length == 0
-            return
-        else
-          break
+      # SWEEP the settled entries (the old loop's lazy tail-pop, as a whole-list filter): what
+      # remains is the still-invalid set this round must reach. NB the REPLACED array: mid-walk
+      # enqueues push through world.widgetsThatMaybeChangedLayout (a property read at push time),
+      # so they land on the new array and are seen by the next round's sweep.
+      stillInvalid = []
+      for w in @widgetsThatMaybeChangedLayout
+        stillInvalid.push w unless w.layoutIsValid
+      @widgetsThatMaybeChangedLayout = stillInvalid
+      break if stillInvalid.length == 0
 
-      # now that you have a Widget with a broken layout, go up the chain of broken layouts as much
-      # as possible: climb to the TOP-MOST invalid widget -- on the way up, stop at the LAST widget
-      # with an invalid layout (parent valid or absent), NOT at the first freefloating boundary.
-      # (Opt-2, 2026-07-02 -- implements the long-standing TODO that used to live here.) A
-      # freefloating widget may be sized/positioned FROM its parent (e.g. a StretchablePanel's
-      # fractional children), so the parent must lay out FIRST and the freefloating child settle
-      # AFTER. The old `tryThisWidget.isFreeFloating()` early-break made the freefloating child the
-      # chain-top, so it was laid out first against the parent's STALE size and then AGAIN once the
-      # parent settled -- a wasted double-layout. Climbing past it lays the parent out first; the
-      # freefloating child then settles once, correctly. (This does NOT pull the freefloating child
-      # into the parent's own _reLayout -- the freefloating-skip in _invalidateLayout keeps that
-      # boundary; the climb only matters when the parent is ALSO invalid from its own source, and the
-      # freefloating child still settles as its own chain-top on a later iteration, now against the
-      # parent's FINAL size.) Byte-exact: the settled layout is an order-independent fixpoint
-      # (verified -- reversing the loop's processing order is 165/165 at dpr1/dpr2/webkit), so laying
-      # the parent out first only removes a redundant pass, it does not change the result.
-      while tryThisWidget.parent? and not tryThisWidget.parent.layoutIsValid
-        tryThisWidget = tryThisWidget.parent
+      # DERIVE the dirtiness flags + the dirty roots FRESH from the still-invalid entries, by
+      # climbing the CURRENT parent pointers -- flush-time truth. This is deliberately NOT
+      # incremental enqueue-time bookkeeping (the first Stage-B2 cut maintained the flags in
+      # __markForRelayout/__add and CLEARED them during the descent -- which broke the flagging
+      # atom's stop-at-first-flagged short-circuit for mid-walk enqueues: propagation stopped at a
+      # stale flag below the walk's cleared frontier, the upper chain stayed unflagged, the next
+      # round could not descend to the entry, and the settle threw with the work-list non-empty).
+      # Deriving per round flags every still-invalid entry INCLUSIVE (the atom starts at self), so
+      # the walk below reaches every entry whose ancestor chain is traversable through the children
+      # arrays -- the parent-pointer-only attachments it cannot see are settled by the FALLBACK
+      # after the walks (see below). Parent pointers are STABLE
+      # inside a flush (public add/remove self-settles and would throw on re-entry; the FLOWRULE
+      # throw bars mid-pass scheduling), so flags accumulated across rounds stay correct and the
+      # stop-at-first-flagged short-circuit is sound; recalculateLayouts' finally clears the whole
+      # flagged set once the flush completes. Roots (the world, the hand, orphan roots -- an
+      # off-world under-construction subtree settles here too, cf. PanelWdgt._reactToChildRemoved)
+      # are collected in work-list encounter order, so root order is deterministic.
+      dirtyRoots = []
+      for w in stillInvalid
+        w.__flagHasDirtyDescendantUpwards()
+        r = w
+        r = r.parent while r.parent?
+        dirtyRoots.push r if dirtyRoots.indexOf(r) == -1
 
-      try
-        # so now you have a "top" element up a chain
-        # of widgets with broken layout. Go do a
-        # _reLayout on it, so it might fix a bunch of those
-        # on the chain (but not all)
-        # (proper-layouts §4.3, 2026-07-01) ORDERED settle-time re-fit: now that this chain-top has SETTLED, re-fit
-        # its size-tracking container so the container tracks the just-settled geometry. This REPLACES the deleted
-        # mutation-time geometry seam (_announceGeometryChangeToContainer): because the content is fully settled when
-        # this fires, the container reads its FINAL geometry and re-fits correctly in one visit -- no per-mutation
-        # notification, and no convergence iteration from a container reading half-applied content. The method gates
-        # on the parent being a tracking container (_reLayoutChildren?), so a non-tracking parent is a no-op.
-        #
-        # (proper-layouts Stage 6, 2026-07-01) NO-OP EARLY RETURN: only re-fit the container if this _reLayout
-        # actually CHANGED my frame (position OR extent). A size-tracking container fits itself to its content's
-        # FRAME, so if my frame is identical before and after I settle, re-fitting the container is provably a
-        # no-op. This was the dominant residual "re-visit": a chain-top re-enqueued only to be re-laid to the same
-        # box (e.g. a scroll panel 362x204 -> 362x204 after its content settled unchanged). Skipping it removes
-        # those wasted passes. Sound either way I am sized: if I am fit-to-content my frame moves WITH my content,
-        # so a real content change IS caught here; if I am fixed-size my container fits my fixed frame regardless
-        # of my subtree -- so an unchanged frame always means my container's fit is unchanged. Measured byte-exact
-        # across dpr1 / dpr2 / webkit + determinism torture; suite-wide peak re-visits dropped from 10 to 2 (the
-        # residual 2 being the genuine one-round bidirectional negotiation: top-down size, then bottom-up re-fit).
-        preL = tryThisWidget.left(); preT = tryThisWidget.top(); preW = tryThisWidget.width(); preH = tryThisWidget.height()
-        tryThisWidget._reLayout()
-        myFrameChanged = tryThisWidget.left() != preL or tryThisWidget.top() != preT or tryThisWidget.width() != preW or tryThisWidget.height() != preH
-        tryThisWidget._reFitMyTrackingContainerAfterSettle() if myFrameChanged
-      catch err
-        # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
-        # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:
-        #   - createErrorConsole uses public, self-flushing setters -> it would re-enter
-        #     recalculateLayouts and throw BEFORE @errorConsole is assigned (masking the real error);
-        #   - even _softResetWorld is unsafe here (its hand.drop -> target.add can flush too).
-        # And because the throwing _reLayout() never reached its trailing _markLayoutAsFixed(),
-        # tryThisWidget is still layoutIsValid==false, so unless we settle it here this until-loop
-        # would spin forever. So: settle + ban the offender (both layout-clean), then defer the
-        # softReset + reporting to the next cycle's drain, outside the flush. (task #18)
-        tryThisWidget._markLayoutAsFixed()   # it threw before doing this itself; do it now so the loop converges
-        tryThisWidget.__hide()          # ban from paint -- silent: nils caches only, no _invalidateLayout/flush
-        @layoutErrorsToReport.push err
+      progressAtRoundStart = @_downWalkRelaidCount
+
+      for r in dirtyRoots
+        @__downWalkLayout r
+
+      # FALLBACK — the PARENT-POINTER-ONLY attachment class (found the hard way, 2026-07-16: the
+      # first derive-per-round cut spun at 100% CPU during the harness boot). The derivation climbs
+      # PARENT pointers, but the walk descends CHILDREN arrays — a widget attached by parent
+      # pointer WITHOUT membership in its parent's children (the basement is the documented
+      # example: "not attached to the world tree so it's not in the children") is flaggable but
+      # structurally unreachable from any root, so a walk-only round made zero progress and the
+      # outer until-loop never terminated. Any entry still invalid after the walks gets EXACTLY
+      # the old drain's treatment — climb to the top-most contiguously-invalid ancestor, settle
+      # that chain-top — which never touches children arrays, so it reaches this class the same
+      # way the old engine always did. Set-equivalence is preserved by construction: this IS the
+      # old per-entry processing, applied to the (normally tiny) remainder the walk cannot see.
+      for w in stillInvalid
+        continue if w.layoutIsValid
+        chainTop = w
+        while chainTop.parent? and not chainTop.parent.layoutIsValid
+          chainTop = chainTop.parent
+        @__reLayoutOneSettleNode chainTop
+
+      # STUCK TRIPWIRE, reinstated. The first cut removed it as "structurally impossible" and the
+      # impossibility proof was falsified within the hour (the parent-pointer-only class above) —
+      # the failure mode without it is a SILENT infinite spin pegging the tab, strictly worse than
+      # a loud throw. With the fallback in place a zero-progress round should be truly unreachable
+      # (every still-invalid entry is either walked or fallback-settled); if it ever fires anyway,
+      # console.error the greppable token (wired into the headless runners' fail-gate like
+      # NON_INTEGER_GEOMETRY) and throw out of the flush.
+      if @_downWalkRelaidCount == progressAtRoundStart
+        console.error "DOWNWALK_UNREACHABLE_CHAINTOP: settle round made no progress with " + stillInvalid.length + " still-invalid widget(s); first: " + (stillInvalid[0]?.constructor?.name) + " spec=" + (stillInvalid[0]?.layoutSpec)
+        throw new Error "Fizzygum: DOWNWALK_UNREACHABLE_CHAINTOP -- settle round made no progress with " + stillInvalid.length + " still-invalid widget(s); first: " + (stillInvalid[0]?.constructor?.name)
+    return
+
+  # (ordered down-walk Stage B2) ONE parent-first visitation of the dirty tree below (and including)
+  # `node`. Re-lays exactly the layoutIsValid==false nodes it reaches; descends ONLY along the
+  # Stage-B1 dirtiness flags, so a clean subtree costs nothing.
+  __downWalkLayout: (node) ->
+    unless node.layoutIsValid
+      @__reLayoutOneSettleNode node
+    # descend along the FLAGS ONLY -- the walk must not clear them (the per-round derivation in
+    # _recalculateLayoutsBody owns their lifecycle; clearing mid-descent is exactly what broke the
+    # first cut, see the derivation comment). Flags mark the still-invalid work-list entries and
+    # their ancestor chains INCLUSIVE, so flags-only descent reaches every entry whose chain is
+    # traversable through the children arrays; the parent-pointer-only attachments (a parent set
+    # without children membership, e.g. the basement) are unreachable HERE by construction and are
+    # settled by the fallback in _recalculateLayoutsBody instead. Deliberately NOT
+    # `child.layoutIsValid == false` as a descent arm: a stale-invalid widget with NO work-list
+    # entry (e.g. copied dirt -- a duplicate can clone layoutIsValid own-props) was invisible to
+    # the old engine unless an entry's climb passed through it, and the walk must not start healing
+    # a population the old engine ignored while the acceptance bar is set-equivalence.
+    for child in node.children
+      if child.hasDirtyDescendant
+        @__downWalkLayout child
+    return
+
+  # (ordered down-walk Stage B2) settle ONE node: the old drain's per-chain-top processing --
+  # snapshot frame, _reLayout, settle-time up-edge when the frame changed, minimal error
+  # containment -- shared verbatim by the walk and by the unreachable-entry fallback.
+  __reLayoutOneSettleNode: (node) ->
+    try
+      # (proper-layouts §4.3, 2026-07-01) ORDERED settle-time re-fit: now that this widget has
+      # SETTLED, re-fit its size-tracking container so the container tracks the just-settled
+      # geometry. This REPLACES the deleted mutation-time geometry seam
+      # (_announceGeometryChangeToContainer): because the content is fully settled when this
+      # fires, the container reads its FINAL geometry and re-fits correctly in one visit -- no
+      # per-mutation notification, and no convergence iteration from a container reading
+      # half-applied content. The method gates on the parent being a tracking container
+      # (_reLayoutChildren?), so a non-tracking parent is a no-op.
+      #
+      # (proper-layouts Stage 6, 2026-07-01) NO-OP EARLY RETURN: only re-fit the container if this
+      # _reLayout actually CHANGED my frame (position OR extent). A size-tracking container fits
+      # itself to its content's FRAME, so if my frame is identical before and after I settle,
+      # re-fitting the container is provably a no-op. Sound either way I am sized: if I am
+      # fit-to-content my frame moves WITH my content, so a real content change IS caught here; if
+      # I am fixed-size my container fits my fixed frame regardless of my subtree -- so an
+      # unchanged frame always means my container's fit is unchanged. Measured byte-exact across
+      # dpr1 / dpr2 / webkit + determinism torture when introduced; carried unchanged into the
+      # down-walk (applied at every walk re-lay exactly as at every old chain-top).
+      # (ordered down-walk Stage B3 — THE PAYOFF, docs/ordered-downwalk-stage-b-plan.md §4-B3) the
+      # ENGINE now guarantees what the per-class INV-2 idiom could not: a child-placing composite
+      # whose frame my arrange is about to move or resize gets its OWN layout re-run afterwards.
+      # This kills the bypass staleness class — SimpleVerticalStackPanelWdgt (and any arrange)
+      # sizes a non-tracking child via the override-BYPASSING _applyExtentBase/_applyMoveToBase and
+      # never calls the child's _reLayout: a leaf heals (the base fires _reLayoutSelf) but a
+      # composite that places ITS children inside _reLayout stayed stale — the census's shipping
+      # BasementWdgt instance (scrollPanel ~100px short after the basement opens). The predicate is
+      # PER-CHILD frame delta (not my own frame delta, which the plan sketched): a divider drag
+      # redistributes children while MY frame stays put, so gating on me would miss it. Snapshot
+      # only the _placesChildrenInLayout children (the Stage-A capability names exactly the classes
+      # whose _reLayout places children); skip already-invalid ones (the walk/fallback settles them
+      # this flush anyway). Re-laying a CONVERGED child is idempotent (the order-independent
+      # fixpoint), so extra visits are pixel-neutral; a STALE one heals — the deliberate behaviour
+      # fix. Runs through this same method recursively, so heals cascade, the up-edge applies
+      # (no-op unless the child's OWN _reLayout moved its frame — an arrange-placed child re-applies
+      # the same frame), the error containment applies, and the RECALC counter bounds it.
+      watchedChildren = nil
+      for c in node.children when c._placesChildrenInLayout?() and c.layoutIsValid
+        (watchedChildren ?= []).push [c, c.left(), c.top(), c.width(), c.height()]
+      preL = node.left(); preT = node.top(); preW = node.width(); preH = node.height()
+      node._reLayout()
+      myFrameChanged = node.left() != preL or node.top() != preT or node.width() != preW or node.height() != preH
+      node._reFitMyTrackingContainerAfterSettle() if myFrameChanged
+      if watchedChildren?
+        for [c, cLeft, cTop, cWidth, cHeight] in watchedChildren
+          if c.layoutIsValid and (c.left() != cLeft or c.top() != cTop or c.width() != cWidth or c.height() != cHeight)
+            @__reLayoutOneSettleNode c
+    catch err
+      # We are INSIDE the recalculateLayouts flush here (_recalculatingLayouts is true), so this
+      # block must do the ABSOLUTE MINIMUM and stay strictly non-flushing / non-invalidating:
+      #   - createErrorConsole uses public, self-flushing setters -> it would re-enter
+      #     recalculateLayouts and throw BEFORE @errorConsole is assigned (masking the real error);
+      #   - even _softResetWorld is unsafe here (its hand.drop -> target.add can flush too).
+      # And because the throwing _reLayout() never reached its trailing _markLayoutAsFixed(),
+      # node is still layoutIsValid==false, so unless we settle it here the outer until-loop
+      # would spin (and the stuck-detection would fire on a genuine _reLayout bug's error). So:
+      # settle + ban the offender (both layout-clean), then defer the softReset + reporting to the
+      # next cycle's drain, outside the flush. (task #18)
+      node._markLayoutAsFixed()   # it threw before doing this itself; do it now so the settle converges
+      node.__hide()          # ban from paint -- silent: nils caches only, no _invalidateLayout/flush
+      @layoutErrorsToReport.push err
+    # the never-fire termination assert (see _recalculateLayoutsBody's header comment). Counted
+    # OUTSIDE the try: this throw must propagate out of the flush, never be swallowed by the
+    # per-_reLayout containment above.
+    @_downWalkRelaidCount++
+    if @_downWalkRelaidCount > 100000
+      console.error "RECALC_NONCONVERGENCE: recalculateLayouts did not terminate after 100000 re-lays. Last widget: " + (node.constructor?.name) + " spec=" + node.layoutSpec
+      throw new Error "Fizzygum: RECALC_NONCONVERGENCE -- recalculateLayouts did not terminate after 100000 re-lays (a non-terminating layout cycle). Last widget: " + (node.constructor?.name)
 
 
   clearPaintBoundsMaybeChangedFlags: ->
