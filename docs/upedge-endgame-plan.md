@@ -220,4 +220,144 @@ PERMANENT — sizing plan §9.8 U4-6, do not touch) · the gate triplet
 
 ## §9 — Execution log
 
-*(empty — V0 starts here)*
+### V0 — the design assessment (2026-07-17, build @ `bc000008`; no behaviour change). ALL FIVE DECISIONS CLOSED.
+
+**Instruments** (all `Fizzygum-tests/.scratch/`, gitignored): `upedge-trace-prelude.js` — the U3-C
+trace prelude extended with (a) OBJECT-KEYED serial ids (`~sN`, WeakMap) because `uniqueIDString`
+COLLIDES (see E2), (b) a MECHANISM TAG per depth-0 visit (`walk` / `up-edge armedBy=<id>` /
+`child-heal parent=<id>` / `sched via=<stack>` — wrapping `_reFitMyTrackingContainerAfterSettle`,
+`__reLayoutOneSettleNode` nesting, `_scheduleRelayoutRespectingPhase`, `__markForRelayout`),
+(c) per-visit parent+root ids, (d) the WindowWdgt exclusion-predicate snapshot
+`{fp coll mrw civ}` (first-placement pending / contents collapsed / `_reLayoutMayResizeOwnWidth` /
+contents layoutIsValid), (e) the E4 `RIPROBE` wrap (below), (f) collision-proof `REVISIT2` lines
+for EVERY flush suite-wide. Runner `run-upedge-traces.sh` (8 single-test runs) + one full-suite
+audit over the AUDIT_PRELUDE rails (250/250 PASSED).
+
+**The per-flush mechanism table** (single-test WTRACE, cross-checked by the full-suite audit):
+
+| # | Test (flush) | Trace (abridged) | Mechanism |
+|---|---|---|---|
+| 1 | DropIntoRotatedStretchablePanel (i=85) | TTF#1[walk] `=` → SWC#1[walk] 300×300→420×420 → SP#1[child-heal] `=` → **TTF#1[up-edge armedBy=SWC#1]** re-hug | island slot-track up-edge |
+| 2 | DropIntoTiltedStackInsertsAtVisualSlot (i=108) | TTF#1[walk] `=` → stack#2[walk] h+35 → 2 rect child-heals `=` → **TTF#1[up-edge armedBy=stack#2]** re-hug | same |
+| 3 | DropKeepsHandOrientation (i=153) | TTF#2[walk] `=` → Rect#5[walk] 70×46→130×90 → **TTF#2[up-edge armedBy=Rect#5]** re-hug | same (leaf content) |
+| 4 | ExplicitIslandFixedVsTrackingResize (i=40) | identical shape to #3 | same |
+| 5 | TransformFrameSlotTracksContentResize (i=38) | identical shape to #3 | same |
+| 6 | ScrollPanel…ClosingWindow | **NO re-visit exists** under collision-proof ids | GATE FALSE POSITIVE (E2) |
+| 7 | WindowsNestedCollapsingUncollapsing (i=175) | outer[walk `{fp=false civ=false}`] `=` → inner[walk `{fp=true mrw=true}`] h+11 → content/handle heals `=` → **outer[up-edge armedBy=inner]** h+11 | FIRST-PLACEMENT nested window: the §6 P2-exclusion residual |
+| 8 | WindowWithAClockInAWindowConstructionTwo (i=181) | same shape, inner h−97 (clock dictates), outer h−97 | same |
+
+All up-edge tags are OBJECT-keyed (the armed widget is the very object re-visited), so families
+1 and 3 are proven genuine same-object re-visits; the tag design worked in anger.
+
+**E1 — island slot-track: CONVERTIBLE, shape P2 (sync-settle-in-arrange).** All 5 are ONE
+mechanism regardless of flow (drop or resize) and content kind (composite or leaf): parent-before-
+child walk visits the island first, the re-hug no-ops on the content's STALE bounds (`=` in every
+trace), the free-floating content then settles itself (consuming its own pending state — the
+island hands it nothing), and its up-edge re-arms the island for the real re-hug. P1 does NOT
+apply (the slot needs the content's settled BOUNDS — position included — which no pure measure
+reports). The P2 form: in `TrackingTransformFrameWdgt._reLayout`, between `super` and
+`@_reLayoutChildren()`, synchronously settle a pending content —
+`content._reLayout() if content? and !content.layoutIsValid and !content._reLayoutMayResizeOwnWidth?()`.
+Gate notes: do NOT copy the window's `implementsDeferredLayout` exclusion — there it means "Path B
+already settled deferred content"; the island drives NO sizing protocol, and content #1
+(StretchableWidgetContainerWdgt, own `_reLayout`, no pin) is deferred-classified, so copying the
+exclusion would miss flush 1. Do NOT gate on `transformSpec.isIdentity()` — the sync-settle
+extends the TRACKING capability (which hugs at identity too — flush 4's island), not the §5a
+transparency family; the DORMANT GUARANTEE (identity ⇒ super on the four transparency overrides)
+is untouched. Keep the `_reLayoutMayResizeOwnWidth?()` exclusion for a hypothetical window-as-
+island-content (none in the suite; costs nothing; keeps §6 respected). Predicted gate drift:
+all 5 `TrackingTransformFrameWdgt:2` signatures vanish.
+
+**E2 — scroll-uncollapse pair: GATE INSTRUMENT FALSE POSITIVE — there is no re-visit.** With
+object-serial ids the flush disappears entirely (single-test AND full-suite). Anatomy: the
+basement is OFF-TREE and SURVIVES `resetWorld` (only `.empty()`'d, WorldWdgt:2363-2366) while
+`fullDestroyChildren` RESETS the per-class `lastBuiltInstanceNumericID` — so the basement
+viewer's boot-era ScrollPanelWdgt/PanelWdgt/SliderWdgt keep pre-reset instance numbers that a
+test's widgets are RE-ISSUED. `Widget.close()` re-homes the closed figure into the basement
+(Widget.coffee:517 `_addLostWidgetNoSettle`), so the close-window flush settles BOTH the
+window-side pair (at desktop coords) and the basement trio (at basement-local coords) — five
+distinct objects, each visited ONCE, counted as `PanelWdgt:2;ScrollPanelWdgt:2` by uniqueIDString.
+FIX (instrument-only): key the committed `revisit-prelude.js` flush map on the WIDGET OBJECT
+(the map is per-flush, so object keys are exact); baseline entry 6 is then DELETED. Collisions
+can only INFLATE counts, never mask a genuine re-visit (same object ⇒ same id regardless), so
+the fix is strictly de-noising. Full-suite audit confirms: exactly 7 genuine re-visit flushes
+suite-wide, all in the other 7 baseline tests — nothing new surfaces, nothing else vanishes.
+
+**E3 — window height re-fit: CONVERTIBLE, shape P2 — by NARROWING the stale exclusion.** Both
+flushes are FIRST-PLACEMENT flushes of a nested (container-owned) inner window — NOT collapse-time
+(the collapsing test's re-visit is its construction flush; predicate snapshots prove it:
+inner `{fp=true mrw=true civ=true}`, outer `{fp=false civ=false}`). Mechanism: the outer's
+steady-state arrange reaches the WindowWdgt:766 sync-settle gate, which excludes the inner via
+`_reLayoutMayResizeOwnWidth` (true while the inner's content spec is uncaptured); the inner then
+settles on its own walk turn (first placement: capture + content-dictated height), and its frame
+delta re-arms the outer. Measure-ahead CANNOT elide the second visit: the engine's up-edge is
+gated on the CHILD's frame delta, so even an outer that fitted the final height in visit 1 gets
+re-visited (as a no-op) — the count stays 2. The REAL fix is that the exclusion is OVER-BROAD
+post-§9.7-Q: `_reLayoutMayResizeOwnWidth: -> !@contents?.layoutSpecDetails?.desiredWidth?`
+answers true for ANY pre-capture window, but under rule B2+D a CONTAINER-OWNED window NEVER
+self-resizes width — only an own-freefloating one hugs (WindowWdgt:706's own-layoutSpec gate).
+Narrow it to `@layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and !@contents?.layoutSpecDetails?.desiredWidth?`
+and the container-owned inner early-settles inside the outer's arrange exactly like a stack
+content (the landed P2 precedent `1f035581`); the §6 width caution is preserved verbatim for the
+only class it was ever real for (desktop windows mid-hug). Predicted gate drift: both
+`WindowWdgt:2` signatures vanish. (With E1+E3 both landed the baseline is EMPTY.)
+
+**E4 — `reInflating`: LOAD-BEARING today; derive is FALSIFIED; recommend RESTRUCTURE to an
+explicit parameter (fallback: sanction-with-rename).** The RIPROBE wrap (momentarily clear the
+flag, re-ask the original predicate, restore — pure observation) over the FULL suite: **13 FLIP
+events across 7 collapse/uncollapse tests** (`actual=false without=true` — with the flag the
+arrange takes the content-dictated-height branch; without it, it would stretch the content to
+`@height() − chrome` mid-re-inflation), plus 5 inert `call-during` events (nested-window
+recursion — the outer's flag is never the deciding term, WindowWdgt:310 branch). So the term
+still decides branches: plain deletion is OFF the table. (a) DERIVE is statically falsified:
+the candidate fields `extentWhenCollapsed`/`widthWhenUnCollapsed`/`contentsExtentWhenCollapsed`
+are NEVER cleared (read on every subsequent un/collapse), so field-nil-ness would leave the
+"mode" permanently on after the first collapse. (b) RESTRUCTURE: the flag's true lifetime is
+exactly ONE synchronous call (`_reactToChildUnCollapsed`'s `@_reLayoutChildren()`), and the
+reader is only ever the SAME window's arrange — a textbook argument-passed-through-instance-state.
+Thread it as a real parameter instead: the hook calls `@_positionAndResizeChildren true`
+(it IS the window's `_reLayoutChildren` dispatch target, and the hook is already
+layout-apply-sanctioned), `_positionAndResizeChildren (duringReInflation = false)` passes it to
+`contentsRecursivelyCanSetHeightFreely (duringReInflation = false)` whose term becomes
+`!duringReInflation`; every other caller (the :161 measure, the :310 recursion) passes nothing.
+Instance flag DELETED; behaviour identical by construction; the last convergence-adjacent
+boolean falls, per the proper-layouts standing direction. (c) SANCTION (keep + rename to e.g.
+`_unCollapseReFitInFlight` + doc block) remains the zero-risk fallback if the owner prefers not
+to touch arrange signatures. `reInflating` origin: `597435e6` (2018-01-31) — it predates the
+modern engine by 8 years; fam-4's "must stay synchronous" verdict is untouched by all candidates.
+
+**E5 — gate vocabulary: identity fix MANDATORY (it IS the E2 fix); tagging into the failure
+REPORT only, not the baseline format.** The trace prelude's tags proved their worth in anger
+(they exposed the collision and attributed every mechanism), but if V1 lands E1+E3 the baseline
+is EMPTY and there is nothing to label; keep `revisit-baseline.json` as plain `Class:count`
+multisets and instead have `revisit-gate.js`'s FAILURE output remind the reader of the
+mechanism-tagged trace prelude (`.scratch/upedge-trace-prelude.js`) as the diagnosis tool. If
+the owner instead closes E1/E3 as by-design, THEN bake `Class:2(up-edge)` tags into the baseline
+(the committed prelude gains the object-keyed up-edge arm tracking this trace validated).
+
+**Proposed V1 (owner gate pending — order: smallest/safest first):**
+1. **V1-a (instrument):** `revisit-prelude.js` object-keyed counting + delete baseline entry 6
+   (tests repo only; zero behaviour change; `fg revisits` re-baselined consciously).
+2. **V1-b (1-line):** narrow `_reLayoutMayResizeOwnWidth` (E3) — baseline −2 (`WindowWdgt:2` ×2).
+3. **V1-c:** the TTF sync-settle (E1) — baseline −5; baseline now EMPTY.
+4. **V1-d:** the E4 restructure (reInflating → `duringReInflation` parameter, flag deleted).
+Each step: `fg build` + `fg presuite` + `fg revisits` (drift must equal the predicted signature
+exactly) + 1-round torture; baseline+code in the SAME commit. Stop-rule §6 stands: 2 falsified
+shapes on one flush ⇒ by-design close. Arc close per §5.
+
+### V1 — execution (owner gate PASSED 2026-07-17: all four steps; E4 = restructure-to-parameter;
+### E5 = report-only tags)
+
+**V1-a ✅ LANDED** (tests `c1c6a2f75`): `revisit-prelude.js` counts by widget OBJECT (collision
+warning documented in its header); baseline entry 6 deleted (7 entries remain); the
+mechanism-tagged diagnosis prelude PROMOTED to committed
+`scripts/audit-preludes/revisit-trace-prelude.js` (RIPROBE stripped — one-arc probe) and
+`revisit-gate.js`'s failure output now points at it (the E5 report-only vocabulary).
+Verified: full `fg revisits` green on the fixed prelude + 7-entry baseline.
+
+**V1-b ✅ LANDED — `_reLayoutMayResizeOwnWidth` narrowed to own-FF** (WindowWdgt): predicate
+gains `@layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and`, comment rewritten with the B2+D
+rationale. Gates ALL GREEN: build + presuite (250/250 byte-exact); `fg revisits` drift ==
+EXACTLY the two predicted vanished `WindowWdgt:2` signatures (nothing else); baseline → 5
+entries, re-checked green via `--audit-dir`; 1-round torture rc=0, both engine tokens absent.
+A first-placement nested window now settles inside its outer's arrange — one visit each.

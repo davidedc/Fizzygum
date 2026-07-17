@@ -361,17 +361,24 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # and that dispatches to the window's own override below -- which is what re-fits chrome + content.)
 
   # A window fits its OWN width to its content -- but ONLY in the FIRST-PLACEMENT branch of its
-  # arrange (the steady-state branch re-fits height alone, exactly like a stack). So this
+  # arrange (the steady-state branch re-fits height alone, exactly like a stack), and -- post
+  # §9.7-Q (rule B2+D, owner-decided 2026-07-17) -- ONLY when the window is itself attached
+  # FREE-FLOATING: a CONTAINER-OWNED window never self-resizes its width (its container owns it,
+  # see the first-placement branch's own-layoutSpec gate in _positionAndResizeChildren). So this
   # capability -- "re-laying me synchronously while my container is mid-arrange may re-negotiate
   # my width, diverging from my normal independent settle" (the historical failure: an outer
-  # window's early settle collapsed an inner window to its content's aspect width) -- now DERIVES
-  # from the content's one-shot state (U2-B): TRUE only while the content spec is uncaptured
-  # (first placement pending); a CAPTURED window is height-only under re-lay and safe to
-  # early-settle single-pass in WindowWdgt._positionAndResizeChildren, which is what retires the
-  # steady-state nested-window settle re-visits. Absent (undefined via ?()) on a stack, whose
-  # synchronous re-lay keeps its container-assigned width.
+  # window's early settle collapsed an inner window to its content's aspect width) -- DERIVES
+  # from BOTH one-shot states: TRUE only while the content spec is uncaptured (first placement
+  # pending, U2-B) AND my own attachment is free-floating (the only case whose first placement
+  # touches my width). A captured window is height-only under re-lay; so is a container-owned
+  # window even pre-capture -- both safe to early-settle single-pass in
+  # WindowWdgt._positionAndResizeChildren. Narrowing the pre-capture term to own-FF is what
+  # retires the LAST nested-window settle re-visits: a first-placement inner window now settles
+  # inside its outer's arrange instead of on its own later turn + an up-edge re-visit of the
+  # outer (up-edge endgame V1-b, docs/upedge-endgame-plan.md §9). Absent (undefined via ?()) on
+  # a stack, whose synchronous re-lay keeps its container-assigned width.
   _reLayoutMayResizeOwnWidth: ->
-    !@contents?.layoutSpecDetails?.desiredWidth?
+    @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and !@contents?.layoutSpecDetails?.desiredWidth?
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
