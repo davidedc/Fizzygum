@@ -27,7 +27,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   contents: nil
   titlebarBackground: nil
   defaultContents: nil
-  reInflating: false
 
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
@@ -296,7 +295,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   editButtonInBarPressed: ->
     @contents?.editButtonPressedFromWindowBar?()
 
-  contentsRecursivelyCanSetHeightFreely: ->
+  # duringReInflation: true ONLY for the one synchronous re-fit inside _reactToChildUnCollapsed --
+  # during re-inflation the content must KEEP its just-restored extent (the content-dictated-height
+  # branch) instead of being stretched to a mid-restore window height. This used to be the
+  # @reInflating instance flag (born 597435e6, 2018) -- an argument passed through instance state
+  # because the arrange had no parameter channel; now it IS an argument (up-edge endgame V1-d,
+  # docs/upedge-endgame-plan.md §9-E4: the probe measured 13 real branch flips across 7 collapse
+  # tests, so the term is load-bearing; deriving it from the stored collapse-extent fields is
+  # falsified -- they are never cleared). Every other caller (the preferredExtentForWidth measure,
+  # the nested-window recursion below) takes the default false, exactly the value the flag had
+  # outside the hook.
+  contentsRecursivelyCanSetHeightFreely: (duringReInflation = false) ->
     # was `!(@contents instanceof WindowWdgt)` (type-test-elimination campaign)
     if !@contents.isWindow?()
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
@@ -306,7 +315,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # = false in its ctor; keying off the mode generalizes it to any contained
       # TextWdgt (a non-text content has no fittingSpec, so this is a no-op for it).
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then return false
-      return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isInCollapsedSubtree()) and !@reInflating
+      return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isInCollapsedSubtree()) and !duringReInflation
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
   recursivelyAttachedAsFreeFloating: ->
@@ -472,14 +481,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
-      @reInflating = true
       @_applyExtent @extentWhenCollapsed
       @contents._applyExtent @contentsExtentWhenCollapsed
       if @widthWhenUnCollapsed?
         @_applyWidth @widthWhenUnCollapsed
-      # layout-apply-sanctioned: uncollapse re-fit, reInflating-coupled (must stay synchronous, residuals-audit fam 4)
-      @_reLayoutChildren()
-      @reInflating = false
+      # layout-apply-sanctioned: uncollapse re-fit (must stay synchronous, residuals-audit fam 4).
+      # duringReInflation=true -- the content keeps its just-restored extent; see
+      # contentsRecursivelyCanSetHeightFreely. (Direct arrange call: _reLayoutChildren is exactly
+      # this dispatch, and only THIS caller carries the mode.)
+      @_positionAndResizeChildren true
       @_rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
       @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
@@ -672,7 +682,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
   # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
   # should this just be the _reLayout function? Why do we need this extra one?
-  _positionAndResizeChildren: ->
+  # duringReInflation: passed true ONLY by _reactToChildUnCollapsed's synchronous re-fit -- see
+  # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
+  _positionAndResizeChildren: (duringReInflation = false) ->
 
     closeIconSize = WindowWdgt.CLOSE_ICON_SIZE
 
@@ -774,7 +786,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
           @contents._reLayout()
           desiredHeight = @contents.height()
 
-        if @contentsRecursivelyCanSetHeightFreely()
+        if @contentsRecursivelyCanSetHeightFreely duringReInflation
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents._applyHeight desiredHeight
 

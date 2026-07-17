@@ -371,4 +371,22 @@ signatures (nothing else); **baseline → EMPTY** (`{}`), re-checked green via `
 `revisit-gate.js`'s header rewritten to the empty-baseline steady state (every former entry's
 retirement rationale documented in place — the V2 "rationale next to the baseline"
 deliverable); 1-round torture rc=0, both engine tokens absent. THE SETTLE ENGINE NOW VISITS
-EVERY WIDGET AT MOST ONCE PER FLUSH, SUITE-WIDE.
+EVERY WIDGET AT MOST ONCE PER FLUSH, SUITE-WIDE. (Fizzygum `b2e09a59` / tests `f8a94c334`.)
+
+**V1-d ✅ LANDED — `reInflating` → explicit `duringReInflation` parameter** (E4-b as owner-picked):
+the instance flag (2018) is DELETED; `_reactToChildUnCollapsed` calls
+`@_positionAndResizeChildren true` (the one caller that carries the mode), the arrange threads
+`duringReInflation` (default false) into `contentsRecursivelyCanSetHeightFreely`, whose term is
+now `!duringReInflation`; the measure and the nested-window recursion take the default. The last
+convergence-adjacent boolean in the layout engine falls (the 2 world phase flags remain, verdicted
+load-bearing 2026-07-01). Gates ALL GREEN: build + presuite (250/250 byte-exact — behaviour
+identical by construction and by pixels); `fg revisits` green (the EMPTY baseline holds);
+1-round torture rc=0, tokens absent. Deserialized pre-change worlds may carry an orphan
+`reInflating` own-prop; nothing reads it.
+
+**Tooling follow-on (owner-directed mid-arc): `fg revisits` is now a GAUNTLET WAVE-B LEG** (local
+umbrella tooling, uncommitted by design): `run_leg revisits` = one dpr1 suite pass under the
+counting prelude at `FG_GATE_SHARDS`, wave B = paint ∥ tiernaming ∥ settle ∥ capstone ∥ revisits
+∥ refs, serial escape hatch + usage + umbrella CLAUDE.md updated. With the baseline EMPTY the
+leg's assertion is "ANY re-visit anywhere = regression", enforced at every commit point; presuite
+deliberately unchanged (the failure class is pixel-neutral — commit-point tier suffices).
