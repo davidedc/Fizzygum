@@ -96,15 +96,56 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ✅ **world / hand identity** — `ButtonWdgt:129`, `HandleWdgt:48`, `ActivePointerWdgt.grab` (refuse to grab the world), `Widget` grabsToParentWhenDragged/rootForFocus/lock-menu-label (`@parent == world`) + `isBeingFloatDragged`/`breakNumberOfRawMovesAndResizesCaches` (`== world.hand`). All `instanceof WorldWdgt`/`instanceof ActivePointerWdgt` → `== world`/`== world.hand` (established idiom: cf. PopUpWdgt, TreeNode).
 - ✅ **isWindow base-default reconciliation** — DELETED `Widget.isWindow: -> false` (Arc-1's God-class base default); `isWindow` now lives ONLY on `WindowWdgt` (`-> true`), every site dispatching via `?()`. Converted all 5 usage sites: the 2 callers (`Widget.close` → `!@isWindow?() and @parent?.isWindow?()`; the close-vs-delete menu → `@isWindow?()`) + the 3 remaining raw `instanceof WindowWdgt` (`WidgetCreatorAndSmartPlacerOnClickMixin`, `WindowWdgt.contentsRecursivelyCanSetHeightFreely`, `WindowWdgt.recursivelyAttachedAsFreeFloating`). `instanceof WindowWdgt` is now fully gone from src behaviour code. Chose `?()` over a behaviour-move because it NET-REMOVES a method from Widget (a behaviour-move would still add a base method). Benign recapture of `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the documented Widget-method-deletion inspector shift — the vanished isWindow row).
 
-### ⏳ Phase ε — study (Phase-6-entangled; defer)
-Scroll-structure topology (`_amIDirectlyInsideScrollPanelWdgt`/`…NonTextWrapping…` and the Panel/Slider-in-ScrollPanel
-drag-policy sites) and lock-to-panels (`Widget.coffee:~2706/3213`) — these dissolve under the God-class split; convert
-via a parent capability-query only if the split doesn't reach them first. ScrollPanel content-type layout
-(`ScrollPanelWdgt.coffee:240/324/358`) — polymorphic content hook; layout-determinism-sensitive. Also `PanelWdgt:78`
-(`(m instanceof SimplePlainTextWdgt) and m.isEditable` — the single editable wrapping-text child of a panel inside a
-scroll panel, for a click-to-place-caret forward): narrower than the StringWdgt-family `isTextEntryField`, so a
-faithful conversion needs a SimplePlainTextWdgt-specific query (cosmetic) — LEAVE-candidate; revisit with the
-scroll-panel-content hook.
+### ⏳ Phase ε — the scroll-topology set (ARC SPEC, re-verified + made executable-cold 2026-07-17; supersedes the 2026-06-22 study stub)
+
+**Premise correction (2026-07-17):** the stub deferred this on "dissolves under the God-class split" — that split is
+NOT scheduled and three engine campaigns have since landed (proper-layouts, INV-2/down-walk, sizing-model unification,
+up-edge endgame). Phase ε now stands on its own merits: convert what a faithful capability/identity query genuinely
+improves, LEAVE what concrete-class topology states most clearly (this campaign's own bar — see the LEAVE section).
+The deliverable is a verdict per cluster, not a mandatory conversion count.
+
+**The verified census (2026-07-17 @ `d0286fb2` — 24 `instanceof` sites, 8 files; re-grep at arc start, the tree moves):**
+
+- **Cluster A — the two topology helpers** (`Widget.coffee:3585` `_amIDirectlyInsideScrollPanelWdgt` — 3 instanceof:
+  parent Panel-or-Stack AND grandparent ScrollPanel AND NOT ListWdgt — and `:3593` the NonTextWrapping refinement).
+  7 callers: WindowWdgt collapse/uncollapse hooks ×2 (`:480/:495`), the settle-time up-edge (`Widget:2333`
+  `_reFitMyTrackingContainerAfterSettle` — LOAD-BEARING, up-edge endgame arc), SimplePlainTextWdgt:81, CaretWdgt:303,
+  Widget:3531. The helpers ARE the campaign-preferred shape already (one named query, `instanceof` centralised);
+  candidate = convert their INSIDES to capabilities (`isScrollFrame?()` on ScrollPanelWdgt + a
+  scroll-contents-panel capability, with the ListWdgt EXCLUSION preserved — it is LOAD-BEARING, a ListWdgt is-a
+  ScrollPanelWdgt that must NOT count) or LEAVE as the two concrete-topology chokepoints.
+- **Cluster B — drag/menu policy on parent identity** (`ToolPanelWdgt:117`, `SliderWdgt:267`
+  (`ScrollPanelWdgt or PromptWdgt`), `PanelWdgt:86/:167/:177`, `ScrollPanelWdgt:145` (`parent instanceof ListWdgt`),
+  `Widget:3537` + `:4061` (the lock-to-panels menu pair; `:4061` = `PanelWdgt and !ScrollPanelWdgt`)). Per-site set
+  mapping MANDATORY (the 5c trap — the sets genuinely differ site to site; cf. overlay-chrome).
+- **Cluster C — hierarchy-scaffold** (`Widget:3965-3967` `getHierarchyMenuWidgets`: 3 parent-aware structural
+  pairings / 6 instanceof over OVERLAPPING hierarchies — ScrollPanel is-a Panel). A faithful de-instanceof needs ~6
+  mutually-checking child+parent capabilities and the parent check must stay call-time dynamic (a stored flag
+  diverges under re-parenting). STRONG LEAVE-candidate; the stub already leaned this way.
+- **Cluster D — ScrollPanel content-type layout hooks** (`ScrollPanelWdgt:285/:372/:390/:429-430/:432` — contents
+  is-a stack / text-wrapping panel branches inside `_positionAndResizeChildren` + the `isContentSizing` self-tests).
+  ⚠ LAYOUT-DETERMINISM-SENSITIVE: these pick arrange branches; any conversion must be byte-identical under the full
+  gauntlet (now incl. the `revisits`+`census` legs) — a polymorphic content hook (e.g.
+  `contentsMeasuresOwnWidth?()`-style capabilities on the content classes) is the candidate shape; the self
+  `instanceof SimplePlainText/StackScroll` pair (`:429-430`) could become a class-level `isContentSizing` override.
+- **Cluster E — slider internals** (`SliderButtonWdgt:31/:71` parent is-a SliderWdgt; `SliderWdgt:267` also in B).
+  Small; identity-of-role (`@parent == the slider that owns me`) may be truer than a capability.
+- **Cluster F — singletons/leaves**: `PanelWdgt:92` (`SimplePlainTextWdgt and isEditable` click-to-caret forward —
+  LEAVE-candidate, a narrower-than-`isTextEntryField` one-class predicate is cosmetic); `Widget:3918`
+  (`ScrollPanelWdgt and takesOverAndMergesChildrensMenus` — the boolean already discriminates; candidate = drop the
+  instanceof, keep the field test, IF no non-scroll class defines the field); `Widget:695` (`instanceof HandleWdgt`
+  find-handle, the split-out δ leftover); `SimpleDocumentWdgt:110` (structural doc-assembly check — LEAVE-candidate);
+  `MacroToolkit:619` (harness locator — LEAVE per the standing rule).
+
+**Staging** (the up-edge-endgame template): **ε-V0** — fresh grep census + per-cluster verdict (CONVERT with the
+named shape / LEAVE with rationale written into the LEAVE section below) + OWNER GATE on the map, no behaviour
+change. **ε-V1** — sanctioned conversions one cluster at a time, each: implement → `fg build` + `fg presuite` →
+byte-identical expected (a pixel diff falsifies the shape; the known-benign inspector rule applies only if a Widget
+BASE member is added — prefer per-class capabilities, which don't churn) → commit. **ε-V2** — close: LEAVE list +
+"documentation to keep in sync" updated, full `fg gauntlet` (11 legs incl. revisits+census).
+**Verification**: the byte-exact suite IS the faithfulness oracle (every site is behaviour-selection); cluster D
+additionally gets the settle/capstone/revisits legs' scrutiny for free at close. Stop-rule: 2 falsified shapes on
+one cluster ⇒ it closes as LEAVE.
 
 ## LEAVE (concrete class is clearest — do NOT convert)
 Generic class-param tree utils (`TreeNode.parentThatIsA/siblingBeforeMeIsA/siblingAfterMeIsA`); serialization/
