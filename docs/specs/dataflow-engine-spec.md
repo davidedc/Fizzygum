@@ -37,6 +37,13 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
 - **STILL DEFERRED** — the `firesPerEvent` PER-EVENT synchronous mini-pass (§4 / §13): the per-wire flag rides
   the edge record, but delivery POOLS regardless (the two are screen-indistinguishable; §13 open point).
   `true` is stored against the day the scoped mini-pass lands.
+- **OPTIONAL FOLLOW-ONS (fleshed out 2026-07-06, UNSCHEDULED — plan §3-F):** F1 scroll + viewport
+  materialise/recycle (supersedes §9.1's scroll-panel hosting with a sheet-owned view origin) · F2 selection
+  border + overlay editor into the `CellWdgt` · F3 the "operate ➜" cell menu (§9.5) · F4 drag-and-drop desktop
+  widgets into cells (the §9.1 "kind-of-entry metadata", as a persistent `widgetEntry`) · F5 headers-as-widgets
+  + cell-owned grid chrome (owner direction 2026-07-17 — the §9.1 grid's headers become selectable widgets and
+  the sheet's own paint approaches empty). F1–F4 are cold-executable in the plan; F5 is a recorded direction
+  still to be fleshed out; none is scheduled.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming

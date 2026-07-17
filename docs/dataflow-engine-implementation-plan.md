@@ -9,7 +9,9 @@ strings in `src`/`buildSystem` are 4 references to the historical doc *filename*
 `docs/coalescing-measurement.md` (legitimate; leave them).
 
 **Read the status ledger below before doing anything: execute the FIRST phase whose box is
-unchecked, then update the ledger in the same commit that completes the phase.**
+unchecked, then update the ledger in the same commit that completes the phase. (Exception:
+the `F*` boxes under "Optional follow-ons" are NOT scheduled work — they are fleshed-out
+options, and one is started only when the owner explicitly names it.)**
 
 ## Status ledger
 
@@ -27,6 +29,18 @@ unchecked, then update the ledger in the same commit that completes the phase.**
 - [x] Phase 6d — token retirement
 - [x] Phase 7 — docs closeout
 - [x] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
+
+**Optional follow-ons** (F1–F4 fleshed out in §3-F 2026-07-06, every anchor re-verified +
+corrected 2026-07-17 at tree `61080871`; F5 recorded 2026-07-17 as DIRECTION ONLY;
+UNSCHEDULED — owner-initiated only):
+
+- [ ] F1 — scroll: logical sheet > viewport; wheel + keyboard scroll; viewport materialise/recycle
+- [ ] F2 — selection border + overlay editor fully into the `CellWdgt` (view self-containment)
+- [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby cell)
+- [ ] F4 — drag-and-drop desktop widgets into cells (widget-entry cells) — was gated on the
+      drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ now unblocked
+- [ ] F5 — headers-as-widgets + cell-owned grid chrome (owner direction 2026-07-17; NOT yet
+      fleshed to a cold-executable spec — design it first, see §3-F)
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
 with the previous one unverified. **Phase 8 is a planned follow-on** (owner direction 2026-07-05):
@@ -188,7 +202,8 @@ review, with file:line receipts)*
 
 Tests-repo deliverables (full tier) are listed per phase below: new `SystemTest_macro*`
 suites, serialization-rig fixtures + EXPECTATIONS rows (2c/3/4), the `DETERMINISM.md`
-update (5), and the 6c recapture set.
+update (5), and the 6c recapture set. (The optional follow-ons F1–F4 carry their own
+touch-lists + test inventories inline in §3-F.)
 
 ---
 
@@ -655,7 +670,7 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   bound by the compiler's existing `for own name of FormulaHelpers` scan. (A static is also exempt
   from the dead-method gate's instance-method header regex — no reference needed.)
 - **"operate ➜" cell menu: DEFERRED** (the plan marked it optional). Meta-introspection UI, not part
-  of the value protocol; recorded here as not-done. Can land any later phase.
+  of the value protocol; recorded here as not-done. Fleshed out as follow-on **F3 (§3-F)**.
 - **SystemTests (captured SWCanvas dpr1+dpr2, webkit-verified via the gauntlet, eyeballed):**
   `SpreadsheetColorCell` — A1=`new Color 255,0,0` (swatch), B1=`A1.lighter()`, C1=`A1.darker()`,
   D1=`mix A1, B1` (four red-family swatches, image_1); `exportedValue` `@text`-arm assertion; edit
@@ -744,7 +759,8 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
 - **Interactivity IN wired per Scenario A** (`setTargetAndActionWithOnesPickedFromMenu nil, nil, socket,
   "cellInput"`; signature verified — first two args ignored, no `_cellInputConnector` so it routes to
   the plain public `cellInput` = no settle). The wire fires once at mount (`reactToTargetConnection`),
-  costing one extra pooled pass — accepted. Drag-and-DROP of desktop widgets into cells DEFERRED.
+  costing one extra pooled pass — accepted. Drag-and-DROP of desktop widgets into cells DEFERRED —
+  fleshed out as follow-on **F4 (§3-F)**.
 - **Serialized surface changed → both serialization legs run + green.** Rig `sheet` fixture grew F1 =
   a slider cell; new `spreadsheet.roundtrip.sockets` (2 rich cells = 2 sockets, round-trips) +
   `spreadsheet.roundtrip.sliderRetain` (drag→77, save, load, assert 77 survived) checks; old
@@ -1214,9 +1230,9 @@ share one mechanism.
 recompute counts, reference propagation) carry over unchanged; the grid's PIXELS change (widget
 backgrounds/borders/spacing), so most spreadsheet screenshots recapture — routine, webkit-verified,
 listed in the commit. Scroll + a real grid layout (the deferred `ScrollPanelWdgt`, 2a) may land
-here or in a sub-phase. Update `src/spreadsheet/CLAUDE.md` (the design north star flips from
-"painted chrome, widgetized contents" to "widgetized viewport over a sparse model") and root
-`CLAUDE.md`. Full §0 phase-close battery.
+here or in a sub-phase — fleshed out as follow-on **F1 (§3-F)**. Update `src/spreadsheet/CLAUDE.md`
+(the design north star flips from "painted chrome, widgetized contents" to "widgetized viewport
+over a sparse model") and root `CLAUDE.md`. Full §0 phase-close battery.
 
 **Landed** ✅ (committed, NOT pushed — Fizzygum + tests lockstep; SHAs in the memory note + git log,
 this plan edit riding the Fizzygum commit). NEW `CellWdgt.coffee`
@@ -1245,11 +1261,445 @@ children, both ways; D1/F1 host, A1 doesn't). Moving selection-border + the edit
 marginal gain, so v1 stops at the byte-identical widgetisation. Gauntlet dpr1/dpr2/webkit 181/0 + apps +
 tiernaming/settle/capstone (careless=0); `fg homepage` BOOT OK; serialization same-page + file legs green.
 No new SystemTest (byte-identical, no new user-facing interaction; the rig's `grid` check + the existing
-SliderCell/ColorCell/Duplicate tests witness the widgetisation).
+SliderCell/ColorCell/Duplicate tests witness the widgetisation). The deferred follow-ons named
+here are now fleshed out in §3-F: scroll/viewport-recycle = **F1**, selection-border + editor
+into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §4 Cross-cutting rules (every phase)
+## §3-F Optional follow-ons (F1–F4 fleshed out 2026-07-06, cold-executable; F5 recorded 2026-07-17, direction only; UNSCHEDULED)
+
+The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
+sub-phase specs so a cold session can pick one up without re-deriving — plus F5, a recorded
+owner direction that must be fleshed out before anyone starts it. **None is scheduled**:
+start one only when the owner names it. Ground rules for all of them:
+
+- **Each F-item = one mini-phase** under the §0 cadence (inner loop per commit; the FULL
+  phase-close battery + BOTH serialization legs at its close — every one of them touches the
+  serialized surface or the rendered grid) and the §4 rules (naming through NOMENCLATURE,
+  gates, docs-in-the-same-commit, deviations recorded here). **Since 2026-07-17 the gauntlet
+  also enforces two standing layout gates** any F-work must keep green: `fg revisits` (the
+  settle-engine re-visit baseline is EMPTY — every widget visited AT MOST ONCE per flush,
+  suite-wide; ANY re-visit anywhere = regression) and `fg census` (arrange idempotence). The
+  NoSettle-core discipline specced below is exactly what complies — public entries open ONE
+  settle (`_settleLayoutsAfter`, Widget ~835), cores never settle.
+- **Re-verify every anchor before relying on it** (the Phase-0 discipline). The original
+  2026-07-06 receipts (tree `996f5d45`) predated the drag-embed arc, which has since
+  COMPLETED (pushed 2026-07-13); **every anchor below was re-verified 2026-07-17 (tree
+  `61080871`) and corrected inline where it had drifted** — among the drift: Widget grew to
+  ~5100 lines, several methods gained `_` prefixes in the public/private call-separation arc
+  (`078d67d4`), and `ScrollPanelWdgt`/`ActivePointerWdgt` moved under the drag-embed arc.
+  They will drift again — grep the named symbol.
+- **Sequencing:** F1 first among these (F2 assumes its shape but can also run standalone);
+  F2 immediately after F1 (or folded into F1's commit series); F3 independent, any time;
+  F4's gate — the drag-embed arc — is COMPLETE, so F4 is unblocked (its receipts were
+  re-verified post-arc). **F5 is direction only** and must be fleshed out first; if the owner
+  wants F5, decide it BEFORE starting F1/F2 — it reshapes the same paint code F1 offsets and
+  F2 relocates (see F5), and it supersedes perf item C2's shape
+  (`docs/interactive-render-perf-A-C-plan.md` §3.2).
+- The arc's §6 Definition-of-done is CLOSED and stays closed — each F-item carries its own
+  done-when list; the ledger's F-boxes track them.
+
+### F1 — scroll: logical sheet > viewport; wheel + keyboard; viewport materialise/recycle
+
+**Goal.** The sheet's LOGICAL grid becomes larger than the viewport (v1 bounds: 26 columns
+A–Z × 100 rows — constants, still far under the address grammar's ZZ9999 ceiling); the user
+scrolls by wheel and by keyboard scroll-follow; the viewport materialises/recycles `CellWdgt`s
+so live-widget count stays viewport-bounded — the Phase-8 promise ("an off-screen cell is a
+live node with no widget") made real. **Byte-identity constraint: at view origin (0,0) the
+sheet renders pixel-for-pixel as today** — zero recaptures expected; all new pixels live in
+new tests.
+
+**Design (decided).**
+- **Sheet-owned view origin, NOT a `ScrollPanelWdgt`** (extends the 2a direct-paint deviation;
+  spec §9.1's scroll-panel hosting stays superseded). Why: (a) frozen headers — headers must
+  not scroll, but a scroll panel scrolls its whole contents, so headers would need a second
+  chrome layer + clip coordination; (b) the origin-(0,0) byte-identity above — a scroll panel
+  brings scrollbar chrome that recaptures every spreadsheet screenshot; (c) the sheet wants
+  CELL-QUANTIZED scrolling (whole rows/cols), which `scrollY`'s pixel model doesn't give.
+  `ScrollPanelWdgt` integration + painted scroll-position indicators stay BANKED (revisit if
+  the sheet ever needs pixel-smooth scroll or draggable thumbs).
+- **State:** `viewOriginCol: 0` / `viewOriginRow: 0` as PROTOTYPE defaults (the 6a
+  own-only-when-set idiom: an unscrolled sheet serializes byte-for-byte as before, and a
+  pre-F1 snapshot deserializes to origin 0 through the prototype since deserialize skips the
+  constructor). They are DOCUMENT state (a saved scrolled sheet restores scrolled) — do NOT
+  add them to `@serializationTransients` (SpreadsheetWdgt ~52). New constants `sheetCols: 26`,
+  `sheetRows: 100`; `numCols`/`numRows` (~59–60) keep meaning the VIEWPORT — document that in
+  the geometry-constants comment.
+- **The viewport reconcile (the materialise/recycle):** every origin change runs a new
+  `_reconcileViewportNoSettle`:
+  1. every visible address (origin … origin+viewport) has a `CellWdgt` positioned at the
+     viewport rect of (address − origin) — create missing ones via the `_buildGridNoSettle`
+     idiom (~129; make it viewport-relative and share it), then route the record's CURRENT
+     value in via `_reconcileCellNoSettle` (~429) — an off-screen record kept recomputing, so
+     a scrolled-in cell is instantly correct, no catch-up;
+  2. a cell leaving the viewport: if it hosts a WIRED value-widget (branch 1 — the record's
+     value IS that widget), it is EXEMPT from recycling — `__hide()` it in place (Widget
+     ~2814; repaint-level, no layout settle, callable from NoSettle cores). Its hosted widget
+     must keep riding the tree: that is what makes save/load of an OFF-screen widget-valued
+     cell keep its runtime state — the §13 retain-and-remount rule extended to scroll, exactly
+     as Phase 8 promised. Everything else (scalar / presenter / empty) `_fullDestroyNoSettle`s
+     — a presenter is DERIVED and rebuilds from the record on re-entry (spec §9.4);
+  3. a hidden rich cell re-entering: `show()` + reposition + reconcile.
+  **Invariant (assert in the class header):** exactly one VISIBLE `CellWdgt` per on-screen
+  address + exactly one HIDDEN `CellWdgt` per off-screen widget-VALUED cell + nothing else;
+  `@_cells` indexes both (delete recycled entries).
+  *(Alternative considered and rejected: re-BIND a fixed pool of 84 `CellWdgt`s to new
+  addresses — a re-bound cell would have to detach its hosted value-widget from the tree,
+  losing off-screen widget state on save. Create/destroy is bounded by the viewport per scroll
+  step; a reuse pool remains a later optimisation that doesn't change semantics.)*
+- **Branch-1 reconcile with NO cell widget** (the off-viewport guard at ~432): when the value
+  is a WIDGET and no `CellWdgt` exists (a formula committed to an off-screen cell yields
+  `new SliderWdgt`), CREATE a hidden one right there and host into it — otherwise the widget
+  mounts nowhere and is lost on save (the guard's current early-return becomes the
+  scalar/presenter path only).
+- **Paint:** `_paintGrid` (~168) offsets header text by the origin (`colToLetters(viewOriginCol
+  + col)`, row numbers `viewOriginRow + row + 1`) and draws the selection stroke only when the
+  selection is inside the viewport, at `(selected − origin)`. At origin 0 every offset is the
+  identity — the byte-identity constraint verified by the existing references.
+- **Hit-test / selection:** `_cellAtLocal` (~255) keeps returning VIEWPORT coords;
+  `mouseClickLeft` maps to sheet-space (`origin + viewport coords`). `@selectedCol/Row` are
+  sheet-space (at origin 0 that is what they already are). Arrows
+  (`_processKeyWhileSelectingNoSettle` ~303) clamp to `sheetCols`/`sheetRows` and then
+  SCROLL-FOLLOW: if the selection left the viewport, shift the origin minimally to re-include
+  it + reconcile + `changed()`.
+- **Wheel:** implement `wheel:` on the sheet (`ActivePointerWdgt.processWheel` ~942 routes to
+  the first wheel-implementing widget on the climb from the cursor hit — `CellWdgt` must NOT
+  implement it; model `ScrollPanelWdgt.wheel` ~836). Quantize to WHOLE rows/cols from the
+  event delta via `WorldWdgt.preferencesAndSettings.wheelScaleY` (defined
+  `PreferencesAndSettings.coffee:44`, value 1; sole consumer `ScrollPanelWdgt` ~886 — heed the
+  `invertWheelY` pref applied just above it, ~859). Sign convention (verified 2026-07-17):
+  POSITIVE deltaY scrolls content DOWN (`scrollY` ~592 does `newY = ct + steps` on
+  `@contents.top()`; also documented on `MacroToolkit.wheelOn_InputEvents`) — still re-confirm
+  at implementation. A wheel event is a PUBLIC entry: wrap in `_settleLayoutsAfter` (the
+  `mouseClickLeft` shape). Implement the at-limit `escalateEvent 'wheel'` chain from day one
+  (the ~883/~892 idiom), so a sheet inside a future scroll panel doesn't swallow its wheel.
+- **Editing:** an in-progress edit COMMITS before any scroll (wheel or scroll-follow) — the
+  click-away-commits precedent (~245) — so the overlay editor never has to move mid-edit;
+  `_editCol/_editRow` stay sheet-space and `_isCellBeingEdited` (~472) is address-based
+  already.
+- **Restore:** `_reindexCellsNoSettle` (~509) adopts whatever cells rode the snapshot (visible
+  + hidden rich), then runs `_reconcileViewportNoSettle` for the RESTORED origin instead of the
+  bare `_buildGridNoSettle` — the invariant is re-established whatever mix the snapshot
+  carried.
+
+**Touch-list.** `src/spreadsheet/SpreadsheetWdgt.coffee` (constants + origin defaults; header
+comment; `_buildGridNoSettle` → viewport-relative; new `_reconcileViewportNoSettle` +
+`_scrollByNoSettle` + scroll-follow; `_paintGrid` offsets; `mouseClickLeft` mapping; `wheel`;
+`_reindexCellsNoSettle`; `_reconcileCellNoSettle` branch-1 no-cell case), `CellWdgt` untouched
+structurally (hide/show ride the Widget family). Docs, same commits: `src/spreadsheet/CLAUDE.md`
+(the north-star scroll paragraph flips from future to present; the viewport invariant; the
+commit-before-scroll rule) and NOMENCLATURE's spreadsheet table registers **viewport / view
+origin** and **materialise / recycle** as terms of art (§4 rule 8).
+
+**Tests.** `SystemTest_macroSpreadsheetScrollWheel` (commit values beyond the viewport, wheel
+down: headers shift, the far value shows; wheel back: byte-exact original),
+`SystemTest_macroSpreadsheetScrollKeyboardFollow` (arrow past the viewport edge → origin
+follows; assert origin+selection via `evaluateString`),
+`SystemTest_macroSpreadsheetScrollRichCellRetain` (slider in A1 dragged to a value → scroll it
+out → assert `hostedWidgetAt` survives hidden + a dependent ref still reads it → scroll back:
+same identity, same value). Rig: extend the sheet fixture to save SCROLLED with an off-viewport
+widget-valued cell — EXPECTATIONS rows for (a) origin round-trips, (b) the off-screen widget's
+state survives (the hidden-cell path), (c) the cell-count invariant (visible + hidden-rich,
+both ways). Wheel synthesis: use the first-class L2 verb `MacroToolkit.wheelOn_InputEvents`
+(`src/macros/MacroToolkit.coffee` ~544, added with the drag-embed arc) — it positions the
+pointer with a queued move, then queues a real `WheelInputEvent`; positive deltaY scrolls
+content DOWN; follow with `yield "waitNoInputsOngoing"`.
+
+**Done when:** origin-0 references all pass UNCHANGED (zero recaptures); the three new tests +
+rig rows green dpr1/dpr2/webkit; both serialization legs green; invariant documented; ledger
+F1 checked.
+
+**Risks / deferred.** Scrollbar/indicator chrome (banked with the ScrollPanelWdgt option);
+column resize still out of scope; the wheel-sign and wheelScale conventions are VERIFY items;
+`processWheel`'s climb means a hosted value-widget that ever implements `wheel` would swallow
+the sheet's scroll over that cell — accepted (same as any nested scroll surface; the escalate
+chain is the general answer).
+
+### F2 — selection border + overlay editor fully into the `CellWdgt`
+
+**Goal.** Complete the Phase-8 view story: a `CellWdgt` renders ALL of its cell's view state —
+its selection ring and its overlay editor, not just its value. OWNERSHIP does not move: the
+sheet keeps the model, the single-cell selection state, and the whole keyboard/buffer editing
+machinery (sole-receiver doctrine, 2b) — only RENDERING and MOUNTING move into the cell.
+
+**Why (recorded honestly — this is cosmetic-architectural).** (a) Under F1 the ring and the
+editor ride their cell through scrolls for free, instead of via sheet-paint offset math and the
+commit-before-scroll rule for the editor; (b) inspecting a cell shows its complete view state;
+(c) F4's drop-candidate highlight and the selection compose on the same widget. Phase 8
+deferred it because it forces recaptures for that marginal gain — the budget is now explicit
+below. Schedule with F1 (right after, same battery) or fold into F1's commit series.
+
+**Design (decided).**
+- **Selection ring.** The sheet's `_paintGrid` DROPS its selection stroke (~226–231); the cell
+  strokes its own ring in `paintIntoAreaOrBlitFromBackBuffer` (CellWdgt ~85) when the sheet
+  says so — new PUBLIC query `SpreadsheetWdgt.isSelectedAddress (address)` (a col/row compare;
+  cells never reach into `@selectedCol/Row` directly). **Pixel decision, made now:** the
+  sheet-drawn stroke (`strokeRect sx+1.5, sy+1.5, w−2, h−2`, lineWidth 2) SPILLS half a pixel
+  past the cell's right/bottom edges (the stroke band runs to `x+w+0.5`), which the cell's own
+  clip would crop — do NOT chase byte-identity by out-clipping tricks; draw the ring fully
+  inside (`strokeRect 2, 2, w−4, h−4` cell-local, lineWidth 2 → band [1,3]) and RECAPTURE the
+  spreadsheet reference set (every `SystemTest_macroSpreadsheet*` shows a selection — the
+  whole family, 11 tests as of 2026-07-17; each webkit-verified per §0). Z-order stays effectively
+  unchanged: today the ring (sheet's own paint) renders below every cell's content; a
+  cell-drawn ring still renders below that cell's hosted child and doesn't overlap its text
+  (text starts at x 4). VERIFY the analysis by frame-dump comparison at dpr1+dpr2 BEFORE
+  recapturing (no-conclusions-before-evidence).
+- **Editor into the cell.** `_mountEditorNoSettle` (~364) delegates to the editing cell — new
+  `CellWdgt` members `_mountEditorNoSettle(bufferText)` / `_updateEditorTextNoSettle` /
+  `_teardownEditorNoSettle`, holding the `StringWdgt` as `@_editorWdgt` (a CHILD of the cell,
+  same absolute rect as today so no pixel change from the move itself). The sheet keeps
+  `@_editing/@_editBuffer/@_editCol/@_editRow` + `processKeyDown`; `_isCellBeingEdited` (~472)
+  RETIRES — the cell suppresses its own scalar paint when `@_editorWdgt?`.
+- **Restore hygiene:** a snapshot can be taken MID-EDIT; today `_reindexCellsNoSettle` destroys
+  stray non-cell children of the SHEET (~516–521) — the stray editor is now a CELL child, so
+  the cell's restore path drops any child that is neither its `hostedWidget` nor re-adopted
+  (add `_editorWdgt` to `CellWdgt.@serializationTransients` ~42, and a one-line sweep in the
+  re-index adoption loop).
+
+**Touch-list.** `SpreadsheetWdgt` (`_paintGrid` selection block removed; `isSelectedAddress`
+new; editor lifecycle delegating; `_isCellBeingEdited` deleted), `CellWdgt` (ring paint +
+editor mount/update/teardown + transients + stray-editor sweep), `src/spreadsheet/CLAUDE.md`
+(the Phase-8 "selection + editing stay sheet-driven (v1)" paragraph rewritten to the new
+split: sheet owns state, cell renders it).
+
+**Tests.** No new behavior ⇒ no new SystemTest; extend `SystemTest_macroSpreadsheetSelection`
+with an `isSelectedAddress` assertion (`evaluateString`). Rig: one new EXPECTATIONS row — a
+MID-EDIT snapshot restores to a settled, non-editing sheet with no stray editor child (extend
+the fixture to snapshot while editing). The recapture list above, each webkit-verified.
+
+**Done when:** the recaptured set is listed + webkit-verified; suite + both legs green; the
+mid-edit rig row green; ledger F2 checked.
+
+### F3 — the "operate ➜" cell menu (spec §9.5, deferred in Phase 3)
+
+**Goal.** Right-click a cell whose value has an operation algebra → an "operate ➜" submenu
+lists the value class's zero-required-arg methods; picking one writes `<addr>.<method>()` as
+the formula of a nearby empty cell, commits it, and selects it. The algebra stays METHODS on
+the value classes (spec §9.5); the menu is introspection + text generation only.
+
+**Design (decided).**
+- **Entry point:** `CellWdgt.addWidgetSpecificMenuEntries (widgetOpeningThePopUp, menu)` — the
+  standard hook (Widget ~4098, reached via `mouseClickRight` Widget ~328 → the hand's
+  `openContextMenuAtPointer` `ActivePointerWdgt` ~129 → `buildContextMenu` ~3906 →
+  `buildWidgetContextMenu` ~4107; right-clicking a cell already opens the CELL's own context
+  menu, since Phase 8 made cells real widgets). The entry appears only when the cell's record
+  value is OPERABLE (below); it opens a submenu of method names (menu-building model: the 6a
+  controller menus + `ControllerMixin.openTargetSelector`'s `MenuWdgt` construction, incl. its
+  addMenuItem extra-argument idiom at ControllerMixin ~24 for passing the method name to the
+  action).
+- **Which methods (the meta question, decided): REFLECT, filter, allow a curation override.**
+  Enumerate `Object.getOwnPropertyNames(value.constructor.prototype)` filtered to: functions;
+  not `_`-prefixed; `fn.length is 0` (CoffeeScript default-args don't count toward `length`,
+  so `lighter`/`darker` qualify while `mixed(p, other)` is excluded — zero-required-arg methods
+  are exactly the ones callable without inventing arguments); and not in a small structural
+  DENYLIST kept in ONE place with a header comment (`constructor`, `toString`, `equals`,
+  `cellPresenter`, `getEmptyObjectOfSameTypeAsThisOne`, the serialization/copy protocol names —
+  seed it by READING Color's prototype and tune until the Color list is exactly the algebra:
+  expect `lighter`, `darker`. Verified 2026-07-17: with exactly that denylist, reflection over
+  Color's prototype yields `lighter` + `darker` and NOTHING else — `bluerBy`,
+  `channelDistanceTo`, `mixed` all take required args). A class-side `@operateMenuNames` static array WINS when defined
+  — the curation escape hatch for a future noisy value class. Reflection (not curation) is the
+  default because it honours spec §9.5's live-extensibility: a method injected via the class
+  inspector appears on the next right-click with no registration.
+- **Operable:** `value?` and not a `SheetError` and not a `Widget` and `typeof value is
+  "object"` — primitives (numbers/strings) are deliberately excluded in v1 (their prototypes
+  are all-native noise); record that in the CLAUDE.md.
+- **Target cell:** the first EMPTY cell scanning RIGHT from the operand in its row (within the
+  logical bounds — F1's `sheetCols` if landed, else `numCols`), else the first empty scanning
+  DOWN the operand's column; if none, an `inform` no-op message (the `SliderWdgt.showValue`
+  idiom, ~211: `@inform @value` — note it is the Widget-inherited `@inform`, not
+  `world.inform`). Add the scan as `SheetModel.firstEmptyAddressAfter` (address algebra belongs to the
+  model). Then exactly the editor's commit path: `FormulaCompiler.commit target, text` +
+  `world.dataflow.markStale target` + select the target + `changed()`.
+- **Settle discipline:** the action mutates no geometry (commit + markStale + selection are
+  paint-level; the drain owns any recompute settle) — expect NO settle wrapper; if
+  check-layering disagrees, follow its guidance and record the deviation.
+- **Errors are values:** a written formula that turns out wrong at runtime yields `#ERR` in the
+  target cell — no extra validation machinery (spec §9.6 does the work).
+
+**Touch-list.** `CellWdgt` (`addWidgetSpecificMenuEntries`, the submenu builder, the
+`operateWriteFormula` action, the denylist constant), `SheetModel`
+(`firstEmptyAddressAfter`), docs: `src/spreadsheet/CLAUDE.md` §9.5 section grows the menu
+story; the spec's §9.5 gets a "landed (F3)" note at close.
+
+**Tests.** `SystemTest_macroSpreadsheetOperateMenu` — A1 = `new Color 255, 0, 0`; right-click
+A1's cell (the 6a toggle test is the drive-a-real-context-menu precedent), operate ➜ lighter;
+assert B1's source is `"A1.lighter()"` (`evaluateString`) + the two-swatch screenshot; then
+edit A1 → B1 recolours (reactivity through a menu-written formula). Recaptures: none expected
+— no existing test right-clicks a cell (verified by grep 2026-07-17; re-verify at
+implementation). Serialization legs:
+run them (cheap) though the persistent surface should be unchanged.
+
+**Done when:** the Color menu lists exactly the algebra; the new test green dpr1/dpr2/webkit;
+no recaptures (or each justified); ledger F3 checked.
+
+**Risks.** Reflection noise on future value classes (mitigated: filter + denylist +
+`@operateMenuNames` override); the `addMenuItem` extra-arg convention must be re-verified at
+the call site; multi-argument operations (`mixed`) stay OUT of the menu by construction — a
+future argument-prompting flow is banked, not specced.
+
+### F4 — drag-and-drop desktop widgets into cells (widget-entry cells)
+
+**Goal.** The spec-§9.1 cell record's "kind-of-entry metadata" finally materialises: a cell's
+content can be ENTERED by dropping a desktop widget into it, not only by typing a formula that
+CONSTRUCTS one. The dropped widget becomes the cell's value — hosted, wired, referenced through
+`exportedValue` — and survives save/load/duplicate. Grabbing it back out empties the cell. This
+was deferred at Phase 4 ("Drag-and-DROP of desktop widgets into cells DEFERRED").
+
+**Hard sequencing constraint — SATISFIED: the drag-embed arc COMPLETED (pushed 2026-07-13)**
+(`docs/drag-embed-implementation-plan.md`; its Phase 3 flipped the release rules and Phases
+3–6 churned `ActivePointerWdgt` + the drop-driving tests — the receipts below were
+re-verified POST-arc, 2026-07-17, and the hook-chain shape survived unchanged). F4 needs NO
+dwell machinery of its own: cells accept only PLAIN payloads, the instant-accept class
+(drag-embed spec §4, the owner-approved payload-class rule; the plain-payload else-branch in
+`drop` ~442–450 resolves the target with no dwell) — and post-arc, cells inherit the
+candidate-highlight visuals during drags for free (any `wantsDropOfChild`-true widget is a
+"willing" candidate — spec §4 tier table).
+
+**Design (decided).**
+- **Accept gate:** `CellWdgt.wantsDropOfChild: (aWdgt) -> not aWdgt.requiresDeliberateEmbedding()`
+  — accepts plain payloads, refuses window payloads (the capability landed on the Widget base
+  with drag-embed Phase 2 — `requiresDeliberateEmbedding` base-false at Widget ~3717, base
+  `wantsDropOfChild` at ~3703; a 68×20 cell is no place for a window). An override,
+  not `enableDrops()` — the boolean flag can't discriminate payloads. The hand's climb
+  (`dropTargetFor`, `ActivePointerWdgt` ~172) then resolves the CELL as the innermost acceptor
+  — note the climb passes the payload's `_dropPolicyProxy()`, which answers
+  `requiresDeliberateEmbedding` by the payload's real class. Ancestor-drops can't
+  occur (the carried widget rides the hand, outside the tree).
+- **Adoption:** `CellWdgt._reactToChildDropped: (droppedWdgt, activePointerWdgt) ->` — the
+  drop's single-settle recipient hook (`ActivePointerWdgt.drop` ~394–538:
+  `_beforeChildDropped` ~464 → `add` ~498 → `_settleLayoutsAfter =>
+  _reactToChildDropped / _reactToBeingDropped` ~536–538; the block comment ~528–535 REQUIRES
+  overrides to work through NoSettle cores — cores-call-cores). Body:
+  re-host through the existing lane — the dropped widget is ALREADY a child post-`add`, so
+  either make `hostNoSettle` (~112) tolerate an already-child widget or add a thin
+  `_adoptDroppedWidgetNoSettle` that skips the re-add; decide at implementation, record which.
+  Then `wireValueWidget droppedWdgt` (~134), then the MODEL update:
+  `record = @_sheetWidget.model.getOrCreateCellAt @address`, then
+  `FormulaCompiler.commit record, ""` (clears any old formula's compiledFn AND drops its
+  edges through the normal path), then `record.widgetEntry = droppedWdgt` +
+  `world.dataflow.markStale record`.
+- **Model — the entry-kind field:** `SheetCellRecord` gains PERSISTENT `widgetEntry: nil`
+  (prototype default, own-only-when-set — the 6a idiom; NOT in `@serializationTransients` ~44).
+  It serializes as an in-structure `$r` reference to the widget, which rides the tree as the
+  cell's hosted child; `DeepCopierMixin` remaps it to the copy — both copy mechanisms free,
+  spec §2's rationale working again. Semantics:
+  - `dataflowRecompute` (~56): `return @_cacheValue @widgetEntry if @widgetEntry?` FIRST — a
+    widget-entry cell has no formula; the branch-1 reconcile RETAINS the mounted instance
+    (identity match), refs flow through `exportedCellValue` (~81) unchanged.
+  - **Entry lifecycle is owned by the GESTURES, never by `FormulaCompiler.commit`** (which
+    stays pure source machinery and does not read or write `widgetEntry`). Set by: the drop
+    (above; it also clears `@source`). Cleared by: a USER edit-commit on the cell — the
+    sheet's `_commitEditNoSettle` clears the entry (typed content of ANY kind, including
+    blank, replaces the dropped widget, which is destroyed with the unhost, exactly like a
+    formula-widget class change today; alternative considered: eject to the world instead of
+    destroying — rejected for v1 scope, record in `src/spreadsheet/CLAUDE.md` beside the
+    delete semantics) — and by the drag-OUT below. The restore path (`_recommitAllCells` →
+    `commit(cell, cell.source)`; renamed `recommitAllCells`→`_recommitAllCells` in the
+    call-separation arc) therefore PRESERVES the entry with no special-casing: a
+    blank source compiles to nothing, declares no edges, and the recompute's entry-first
+    branch re-presents the restored widget.
+- **Drag-OUT (the symmetric gesture):** `CellWdgt._reactToChildGrabbed: (grabbedWdgt) ->` (runs
+  inside the grab's settle — invoked at `ActivePointerWdgt` ~382, inside `grab:` ~304): when
+  `grabbedWdgt is @hostedWidget` AND
+  the record's `widgetEntry` is that widget — clear both, un-wire (clear the widget's
+  `@target`/`@action` + drop its wire edge: the 6b outgoing-edge removal is now
+  ENGINE-PRIVATE — `_removeOutgoingEdgesOf`, `_`-prefixed in the call-separation arc — so from
+  outside the engine use the public node-death API `world.dataflow.removeAllEdgesOf widget`,
+  equivalent here since a value-widget has no incoming edges; VERIFY whether
+  a bare target-clear idiom already exists, grep before inventing), `markStale record` →
+  dependents see `nil` next drain. The widget rides the hand and lands wherever dropped.
+  Guard on `widgetEntry` identity: grabbing a PRESENTER swatch out (possible today, pre-F4)
+  keeps its current behavior (the next reconcile rebuilds the presenter — derived state).
+- **Formula-made widget cells are untouched:** a `new SliderWdgt` formula cell keeps its
+  Phase-4 semantics (source persists, widget retained by class match). The two kinds coexist;
+  `widgetEntry` wins at recompute because it is checked first.
+
+**Touch-list.** `CellWdgt` (`wantsDropOfChild`, `_reactToChildDropped`,
+`_reactToChildGrabbed`, the adopt/re-host decision), `SheetCellRecord` (`widgetEntry` default +
+recompute branch + header PERSISTENT/DERIVED table update), `FormulaCompiler` (entry-clearing
++ entry-preserving commit paths), `src/spreadsheet/CLAUDE.md` (entry kinds: formula vs
+widget-entry; drag-out; the replace-destroys decision), NOMENCLATURE spreadsheet table:
+register **widget entry** (§4 rule 8); spec §9.1 gets a "kind-of-entry landed (F4)" note at
+close.
+
+**Tests.** `SystemTest_macroSpreadsheetDropWidgetIntoCell` — build a desktop `SliderWdgt` via
+`evaluateString`, macro-drag it onto B2 (plain payload → instant accept; post-drag-embed the
+mid-drag candidate highlight simply bakes into the references); assert `hostedWidgetAt "B2"`
+is it, then C2 = `B2 * 2` reacts to dragging the slider IN the cell.
+`SystemTest_macroSpreadsheetDragWidgetOutOfCell` — grab it back out; assert the cell is empty
+and the dependent went `nil`-driven (assert the exact painted result). Rig: EXPECTATIONS rows
+— a widget-entry cell round-trips (entry + dragged position + wiring), and duplicate-sheet
+independence holds for it (drag the original's slider; the copy's value stays). Serialization
+legs MANDATORY (persistent surface changed). Recaptures: none expected — no existing macro
+drops onto a sheet (verified by grep 2026-07-17; re-verify at implementation).
+
+**Done when:** drop-in + drag-out + round-trip + duplicate-independence all green
+dpr1/dpr2/webkit; both legs green; entry-kind docs landed; ledger F4 checked.
+
+**Risks.** The `hostNoSettle` already-a-child subtlety (decided at implementation, recorded);
+grabbability of a WIRED slider out of a cell is unverified (its thumb-drag is a value gesture,
+not a grab — if the slider body proves ungrabbable in practice, drag-out still serves other
+payloads and a cell-menu "eject" affordance is the banked fallback; record findings). The
+drag-embed arc closed WITHOUT changing the drop-hook signatures (re-verified 2026-07-17:
+`_beforeChildDropped` / `_reactToChildDropped` / `_reactToBeingDropped` /
+`_reactToChildGrabbed` all keep the shapes used above).
+
+### F5 — headers become widgets; the grid chrome migrates into the cells (DIRECTION ONLY)
+
+**Status: recorded owner direction (2026-07-17) — NOT yet fleshed to a cold-executable spec.
+Unlike F1–F4, this section must be designed, receipted, and pixel-evidenced before anyone
+starts it. Recording it here so the direction and its interactions aren't re-derived.**
+
+**The direction (owner, 2026-07-17).** Anything selectable/clickable should be a Widget. The
+column-header cells (one day: click to select the whole column) and the row-number header
+cells (select the row) should therefore become widgets, exactly as the data cells did in
+Phase 8. And once they are, the owner posits the gridline chrome could be painted by the cell
+widgets themselves (each cell drawing its own edges), leaving the sheet's own paint
+essentially EMPTY — the sheet becomes a pure container + model owner; every visible thing is
+a widget. This is the Phase-8 flip taken to its end state; Phase 8's "data cells only" scope
+note anticipated it ("headers-as-widgets would be a purely additive later step" —
+`src/spreadsheet/CLAUDE.md`).
+
+**Interactions (why this is recorded next to F1–F4).**
+- **F1:** F1-as-specced offsets the PAINTED header text by the view origin inside
+  `_paintGrid`. Under F5, header widgets would instead ride the viewport reconcile
+  (materialise/recycle like data cells, frozen against their own axis). Landing F5 first (or
+  together) avoids building the header paint-offset machinery twice; F1-first is still fine —
+  that code is small and would be subsumed.
+- **F2:** the same direction in miniature — F2's ring/editor move is a strict subset of F5's
+  "a cell renders ALL its own pixels". If F5 is wanted, schedule F2 with/after it.
+- **C2 (perf plan `docs/interactive-render-perf-A-C-plan.md` §3.2):** F5 DISSOLVES the
+  C2-as-specced sheet-level static-chrome back-buffer — with the chrome in widgets there is
+  no sheet-drawn layer left to cache. The caching story becomes per-widget back-buffers:
+  header text back-buffers the way `TextWdgt`/`StringWdgt` already do (the 99.9%-hit
+  `world.cacheForImmutableBackBuffers`), and identical empty cells collapse toward shared
+  cached bitmaps through that same content-addressed world cache. That structurally delivers
+  C2's win — the measured hot spot IS the header text re-render. Decide F5 before scoping C2.
+- **Widget count:** +numCols +numRows (+1 corner) header widgets — viewport-bounded, trivial
+  next to the 84 data cells.
+
+**Design questions to resolve at flesh-out (recorded now, unanswered).**
+1. **Gridline edge ownership.** Interior lines sit ON cell boundaries at half-pixel offsets
+   (a stroke at `x+0.5` rasterises into pixel column `x`). A "each cell paints its own top +
+   left edges" convention covers interior lines — but the grid's bottom/right OUTER border
+   lines rasterise one pixel PAST the last cells' rects (outside their clip), and the sheet's
+   outer 0.5-offset border likewise. So either a sliver of sheet paint remains (outer border
+   only — "essentially empty", not empty), or edge cells paint 1px outside their bounds
+   (clip story must be checked), or the geometry changes (recaptures). Decide with pixel
+   receipts, not by argument.
+2. **Byte-identity budget.** Axis-aligned 1px opaque lines + text at integer offsets are the
+   FP-ROBUST case (the C1 lesson's safe side), and same-colour overdraw of a shared line is
+   idempotent — so byte-identity at origin (0,0) is PLAUSIBLE but must be frame-dump-verified
+   before assuming (no-conclusions-before-evidence). The selection ring is already budgeted
+   in F2 (draw-inside + recapture).
+3. **Header SELECTION semantics are out of scope** for the widgetisation itself: land
+   clickable header widgets first (no new selection model); column/row selection is its own
+   later item with its own spec (multi-cell selection touches editing, refs, paint).
+4. **Perf shape:** today the sheet strokes all gridlines once per repaint; distributing the
+   same strokes across 84+ cells is neutral at best UNLESS the cells back-buffer — so F5
+   should land WITH the per-widget caching story above (the C2 successor), not before it.
 
 1. **Naming:** every new identifier passes `NOMENCLATURE.md`. In particular: no "settle",
    "invalidate", "dirty", "coalesced", "announce", "volatile" in dataflow code; "source"

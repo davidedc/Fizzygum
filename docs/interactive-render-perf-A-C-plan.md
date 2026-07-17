@@ -1,7 +1,10 @@
 # Interactive-render perf plan — A (SWCanvas full-cover canvas-wide fast path) + C (static-face back-buffering)
 
 **Status**: Item **A LANDED 2026-07-09** (SWCanvas `60ba1a3..cf5eea8`, Fizzygum pin
-bumped to `cf5eea8`). Items **C1/C2 NOT STARTED**. Self-contained / cold-runnable.
+bumped to `cf5eea8`). Item **C1 LANDED 2026-07-09** (§3.1 landed box — 6 refs recaptured,
+owner-approved). Item **C2 NOT STARTED** — ⚠ scope it only AFTER the 2026-07-17 owner
+direction "headers-as-widgets + cell-owned grid chrome" (spreadsheet follow-on F5) is
+decided; F5 supersedes C2's shape — see §3.2. Self-contained / cold-runnable.
 **Provenance**: the 2026-07-08 interactive-profiling investigation (see
 `docs/profiling/prof-interactive.js` + `docs/profiling/README.md`; memory
 `fizzygum-runtime-backend-swcanvas`). Follows the S3/W1/W2 wins in
@@ -16,8 +19,10 @@ bumped to `cf5eea8`). Items **C1/C2 NOT STARTED**. Self-contained / cold-runnabl
   (branch `main`). Fizzygum pins it via `vendor/swcanvas.pin`. Current heads at authoring time:
   **SWCanvas `60ba1a3` (main), Fizzygum `c3140883` (master), pin=`60ba1a3`.**
 - **Byte-identical gate for SWCanvas changes**: `./fg gauntlet` from the umbrella root
-  (`/Users/davidedellacasa/code/Fizzygum-all`) — build + dpr1/dpr2/webkit 196/196 + apps +
-  paint + gates — MUST stay green with **zero reference churn**. Plus SWCanvas's own 218
+  (`/Users/davidedellacasa/code/Fizzygum-all`) — build + dpr1/dpr2/webkit full suites (196
+  tests at authoring, 250 as of 2026-07-17 — counts grow) + apps + paint + gates (which since
+  2026-07-17 include `fg revisits`, the EMPTY settle-re-visit baseline, and `fg census`,
+  arrange idempotence) — MUST stay green with **zero reference churn**. Plus SWCanvas's own 218
   visual tests (`npm test` in the SWCanvas repo). NEVER recapture references for a perf item.
 - **Re-vendor flow** (SWCanvas→Fizzygum): edit SWCanvas `src/` → `npm run build:prod` +
   `npm test` (218) → commit+push SWCanvas `main` → in Fizzygum
@@ -28,7 +33,8 @@ bumped to `cf5eea8`). Items **C1/C2 NOT STARTED**. Self-contained / cold-runnabl
   `git commit -F <file>` messages — backticks in `-m` corrupt — and wait). Run straight
   through verifying; ONE end-of-arc review. Evidence before conclusions. When staging,
   EXCLUDE pre-existing not-mine files (SWCanvas `plans/clipping-optimization.md` + `AGENTS.md`;
-  Fizzygum untracked `docs/dataflow-*`, `docs/specs/dataflow-*`, `docs/profiling/`, etc.).
+  in Fizzygum check `git status` first — e.g. the in-flight uncommitted §3-F edits to
+  `docs/dataflow-*`/`docs/specs/dataflow-*` as of 2026-07-17).
 
 ## 1. The measured problem
 
@@ -175,7 +181,7 @@ allocation + Pass-1 build + second iteration per glyph, ×128/frame.
 repainted by others dragging over it, AND (b) redraws a STATIC sub-part directly each paint,
 wastes that sub-part's render every frame. Fizzygum already has the machinery: `BackBufferMixin`
 (`src/mixins/BackBufferMixin.coffee`) + `world.cacheForImmutableBackBuffers` +
-`createRefreshOrGetBackBuffer` (see `TextWdgt.coffee:470`, which caches at 99.9%). The fix is to
+`_createRefreshOrGetBackBuffer` (see `TextWdgt.coffee` ~459, which caches at 99.9%). The fix is to
 render the static sub-part into a cached back buffer once and blit it, drawing only the dynamic
 part on top.
 
@@ -257,9 +263,25 @@ SystemTests** (Fizzygum-tests) — they MUST stay pixel-identical.
 reconcile that rebuilds cells — see `src/spreadsheet/CLAUDE.md`). Land C1 first as the pattern,
 then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwhile.
 
+⚠⚠ **Owner direction 2026-07-17 reshapes C2 — decide it BEFORE scoping** (recorded as
+follow-on **F5** in `docs/dataflow-engine-implementation-plan.md` §3-F): anything
+selectable/clickable should be a widget — the header cells become widgets (toward future
+column/row selection), and the gridline chrome migrates into the cell widgets, leaving the
+sheet's own paint ~empty. Under F5 there is NO sheet-drawn static layer left for this item to
+back-buffer; the caching story becomes per-widget back-buffers instead — header text
+back-buffers the way `TextWdgt`/`StringWdgt` already do (the 99.9%-hit
+`world.cacheForImmutableBackBuffers`), and identical empty cells collapse toward shared
+cached bitmaps through the same content-addressed world cache. That structurally delivers
+this item's win, since the measured hot spot IS the header-text re-render (§1). So: if F5 is
+scheduled, C2-as-specced is SUPERSEDED (fold the §3.3 verification into F5); only if F5 is
+declined/deferred does the sheet-level chrome buffer above remain the plan. (Independently,
+the "keyed by (visible range, scroll offset, …)" cache key above already anticipates
+spreadsheet follow-on F1's scroll — under F1-without-F5, keep that key.)
+
 ### 3.3 Verification (C)
 
-- Full `./fg gauntlet` (dpr1/dpr2/webkit 196/196) + `./fg homepage` green, **zero reference
+- Full `./fg gauntlet` (all three engine legs, full suite + the standing gates incl.
+  `fg revisits`/`fg census`) + `./fg homepage` green, **zero reference
   churn** — the clock + spreadsheet SystemTests prove pixel-identity. If a legitimately-benign
   inspector member-list recapture is needed for a refactor, that's allowed per owner pref
   `byte-identical-not-sacred-for-benign-inspector-recapture` — but face/grid pixels must not move.
@@ -277,7 +299,10 @@ then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwh
 2. **C1** (clock face back-buffer) — ✅ **DONE 2026-07-09** (Fizzygum-only; NOT byte-identical —
    6 SystemTests recaptured, owner-approved; see §3.1 landed box). Established the pattern AND the
    sharp lesson below.
-3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1. ⚠ **Heed the C1 lesson**:
+3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1. ⚠ **FIRST reconcile with
+   the 2026-07-17 owner direction** (spreadsheet follow-on F5, headers-as-widgets +
+   cell-owned chrome — §3.2 ⚠⚠ box): F5 supersedes the sheet-level buffer if scheduled.
+   ⚠ **Heed the C1 lesson**:
    back-buffering a directly-drawn widget is NOT automatically byte-identical, even at integer
    positions. Relocating a draw into an origin buffer changes the float CTM (position no longer baked
    in), so any content whose rasterisation is FP-sensitive near pixel boundaries — rotated/scaled
