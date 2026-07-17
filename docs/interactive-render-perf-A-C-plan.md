@@ -33,8 +33,7 @@ follow-up rides F5, measurement-driven — see §3.2 ⚠⚠ box. Self-contained 
   `git commit -F <file>` messages — backticks in `-m` corrupt — and wait). Run straight
   through verifying; ONE end-of-arc review. Evidence before conclusions. When staging,
   EXCLUDE pre-existing not-mine files (SWCanvas `plans/clipping-optimization.md` + `AGENTS.md`;
-  in Fizzygum check `git status` first — e.g. the in-flight uncommitted §3-F edits to
-  `docs/dataflow-*`/`docs/specs/dataflow-*` as of 2026-07-17).
+  in Fizzygum check `git status` first for any not-yours modified/untracked files).
 
 ## 1. The measured problem
 

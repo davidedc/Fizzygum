@@ -1240,7 +1240,8 @@ here or in a sub-phase — fleshed out as follow-on **F1 (§3-F)**. Update `src/
 (the design north star flips from "painted chrome, widgetized contents" to "widgetized viewport
 over a sparse model") and root `CLAUDE.md`. Full §0 phase-close battery.
 
-**Landed** ✅ (committed, NOT pushed — Fizzygum + tests lockstep; SHAs in the memory note + git log,
+**Landed** ✅ (committed Fizzygum + tests lockstep — and long since pushed; the "NOT pushed"
+this box originally recorded was its as-landed state. SHAs in the memory note + git log,
 this plan edit riding the Fizzygum commit). NEW `CellWdgt.coffee`
 = the Phase-4 `CellSocketWdgt` RENAMED + GENERALISED to every visible cell: it keeps the host/wire/
 `cellInput` two-way boundary and ADDS scalar-text paint (branch 3, `showScalarNoSettle` +
