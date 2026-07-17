@@ -54,6 +54,10 @@ sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 
       census 0/1528, zero recaptures of existing references)
 - [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
       cell) — independent, any time
+- [ ] F6 — resizable viewport with PARTIAL EDGE CELLS (window resize shows more of the
+      logical sheet) — plan AUTHORED 2026-07-17 with the owner-ratified decisions baked in
+      (partial edge cells / backdrop beyond the last column / default open size unchanged /
+      logical 26×100 stays); owner-initiated, like every F-box
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
 with the previous one unverified. **Phase 8 is a planned follow-on** (owner direction 2026-07-05):
@@ -1281,7 +1285,7 @@ into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ + F4 ✅ LANDED 2026-07-17; only F3 remains, cold-executable)
+## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ + F4 ✅ LANDED 2026-07-17; F3 + F6 remain, both cold-executable)
 
 The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
 sub-phase specs so a cold session can pick one up without re-deriving — plus F5
@@ -1933,6 +1937,151 @@ Restore of PRE-F5 snapshots (no chrome in the tree) and POST-F5 snapshots (chrom
 must both land in the destroy-derived-then-rebuild path — the rig proves both. Inspector
 member-list churn is a non-risk (no existing test inspects the sheet or a cell — verified
 2026-07-17).
+
+### F6 — resizable viewport: window resize shows more of the sheet (partial edge cells)
+
+> **AUTHORED 2026-07-17 (post-F4), no code. Owner-ratified decisions (2026-07-17), baked in
+> below: (1) PARTIAL EDGE CELLS — the last visible column/row may be partially visible,
+> clipped; (2) when the window grows past the whole logical grid, BACKDROP shows beyond the
+> last column/row (no max-size cap); (3) the DEFAULT open size stays exactly today's —
+> the default-size render must stay byte-identical, zero recaptures; (4) the logical sheet
+> stays `sheetCols`×`sheetRows` = 26×100.**
+
+**The UX oddity this fixes (owner, 2026-07-17, with screenshot).** Resizing the sheet's
+window today: height is CLAMPED, and extra width shows empty backdrop right of the grid —
+because the sheet declares itself FIXED-size window content
+(`initialiseDefaultWindowContentLayoutSpec` sets `canSetHeightFreely = false`, `grow = 0`;
+`preferredExtentForWidth` / `_setWidthSizeHeightAccordingly` always answer the fixed
+`_gridWidth()`×`_gridHeight()` — the AnalogClockWdgt pattern, chosen in Phase 2a for
+one-cycle settle determinism, pre-scroll). The expectation is a real spreadsheet's: a bigger
+window shows MORE of the sheet. F1 made this cheap: the viewport reconcile
+(`_reconcileViewportNoSettle`) already materialises/recycles cells for an arbitrary viewport
+rectangle parameterized by ORIGIN — F6 parameterizes it by SIZE too.
+
+**Baseline (tree `93ffa63b`, F4 close — grep every symbol before relying on it, they
+drift).** `SpreadsheetWdgt`: geometry constants `headerColWidth 34 / headerRowHeight 20 /
+colWidth 68 / rowHeight 20 / numCols 6 / numRows 14 / sheetCols 26 / sheetRows 100`;
+`viewOriginCol/Row` prototype-default 0 (document state); `_buildChromeNoSettle` (panel +
+slot-keyed headers "kind:index", idempotent); `_materialiseCellNoSettle(address, slotCol,
+slotRow)`; `_reconcileViewportNoSettle` (pass 1 place/hide/recycle indexed cells, pass 2
+materialise+route missing visible addresses; the hidden-rich-cell exemption with the
+restore-nil disjunct); `_scrollByNoSettle` clamps to `sheetCols−numCols` /
+`sheetRows−numRows`; `_scrollToShowSelectionNoSettle` (minimal include);
+`_startEditNoSettle` scroll-follows first; `wheel` (per-axis at-limit escalation against the
+same clamps); `_cellAtLocal` (viewport coords, bounds-checked against
+`_gridWidth()/_gridHeight()`); `_cellRectLocal(slotCol, slotRow)`. `SheetCellsPanelWdgt`
+clips at bounds (PanelWdgt's ClippingAtRectangularBoundsMixin) but currently never crops;
+headers are DIRECT sheet children, OUTSIDE the panel (frozen); every grid widget paints its
+own top+left edges (crossing rule) and each widget's own paint clips to its OWN rect. The
+default grid is exact: 442×300 content = 34+6·68 × 20+14·20 (no residual pixels).
+
+**Design (decided).**
+- **The viewport becomes DERIVED from the sheet's applied extent — never stored.** Retire
+  the `numCols`/`numRows` prototype constants (a constant that lies is worse than a method)
+  in favour of TWO derivation pairs, and route every current consumer to the right one:
+  - `_viewportColsPartial: -> Math.max 1, Math.min @sheetCols, Math.ceil((@width() - @headerColWidth) / @colWidth)`
+    (and `_viewportRowsPartial` likewise with height/rowHeight) — CEIL: a partially-visible
+    column/row counts as on-screen. Consumers: viewport MEMBERSHIP (reconcile pass 1's
+    slot-range test + pass 2's materialise loops) and the header-chrome build/trim.
+  - `_viewportColsFull: -> Math.max 1, Math.min @sheetCols, Math.floor((@width() - @headerColWidth) / @colWidth)`
+    (and `_viewportRowsFull`) — FLOOR: consumers are the SCROLL CLAMPS
+    (`_scrollByNoSettle`: max origin = `sheetCols − _viewportColsFull()`), the `wheel`
+    at-limit conditions (same expressions), and `_scrollToShowSelectionNoSettle`'s
+    right/bottom-edge conditions (the selection must end up FULLY visible — this is also
+    what makes `_startEditNoSettle`'s follow put the overlay editor on a fully-visible
+    cell, never a clipped one). At the max origin every remaining column is fully visible
+    and residual pixels show backdrop — decision (2) falls out for free, at ANY size.
+  - At the default size ceil == floor == 6/14 exactly (no residual pixels — see Baseline),
+    so every derivation answers today's constants and decision (3) holds structurally.
+  - PURITY: the derivations read APPLIED geometry (`@width()/@height()`) — legal at their
+    call sites (reconcile/clamps run inside settles AFTER the extent is committed;
+    cf. the pure-measure rule "reading applied geometry is allowed when nothing just
+    mutated it"). They must NOT be called from `preferredExtentForWidth` (pure measure).
+  - `_gridWidth()/_gridHeight()` retire too — `_cellAtLocal` bounds-checks against
+    `@width()/@height()`; a click on a PARTIAL cell selects it (v1: NO auto-scroll on
+    click — arrows/edit follow, clicks don't; record any deviation here).
+- **Layout-spec flip:** `canSetHeightFreely = true`, `grow = 1` (fill-class content) in
+  `initialiseDefaultWindowContentLayoutSpec`; `getMinimumExtent` = headers + one cell
+  (102×40). `preferredExtentForWidth` and `_setWidthSizeHeightAccordingly` change to the
+  fill-content protocol — **V1-verify: read 1–2 EXISTING grow-1, free-height window
+  contents and mirror their exact preferred/min/width-grant shape** (candidates: whatever
+  `docs/layout-*` names as fill-class; TextWdgt is the fill-class-by-type precedent from
+  the sizing-model arc). Respect the sizing-model rules (§9.7-Q B2+D: the container owns a
+  container-owned window's width from birth; grow derivation at capture) — land THROUGH
+  them, not around them.
+- **The resize seam (V2-verify — the highest-risk integration point):** when the window
+  grants the sheet a new extent, the sheet must re-derive: panel extent/position, header
+  set (build missing slots / destroy surplus — extend `_buildChromeNoSettle` with a TRIM
+  pass over `@_headerCells`, same idempotent keying), and the cell viewport
+  (`_reconcileViewportNoSettle` — already size-agnostic once its loops read the partial
+  derivations). WHERE this runs: the sheet grows a children-arranging layout tier
+  (`_positionAndResizeChildren` or `_reLayoutSelf` — decide by READING `Widget._reLayout`'s
+  structure + one existing container that derives child geometry from its own bounds, and
+  record which; bounds-first discipline: own bounds are applied BEFORE children — the
+  inspector-doLayout case-law). It must be IDEMPOTENT (the `fg census` arrange-twice gate),
+  visited at most once per flush (`fg revisits` EMPTY baseline), all `_apply*`/NoSettle
+  cores, and must preserve the move-follow behaviour the freefloating children get today
+  (deriving every child position from `@position()` inside the arranger subsumes
+  float-follow — verify a window DRAG still carries the grid, byte-identically).
+- **Clipping (V3-verify):** partial cells stick past the panel's right/bottom edge and the
+  panel clip crops them — the F5 "standing guard" finally load-bearing. But partial-column
+  HEADERS are direct sheet children, OUTSIDE the panel, and would paint past the sheet's
+  edge unclipped. Give the SHEET `clipsAtRectangularBounds` (one clip for everything)
+  — V3 verifies: (a) byte-identity at the default size (the clip crops nothing when
+  everything fits — but a clipping widget changes clippedThroughBounds/broken-rect/shadow
+  paths, so PROVE it with the full suite, not by argument; note `firstParentOwningMyShadow`
+  stops at clipping widgets — grid children carry no shadows, verify nothing else in the
+  window does); (b) the clipped-partial look at a non-quantized size (eyeball via
+  `fg diffpage` or the new test's reference).
+- **Default window size pinning (V4-verify):** with grow-1 content the default window
+  extent must still yield EXACTLY today's 442×300 content so the initial render is
+  byte-identical. Find where the launched window's default size comes from today
+  (`SpreadsheetApp.buildWindow` → `world.openWindowWith` sizing off the content's preferred
+  extent) and pin it explicitly if the flip changes it. The HARD gate for decisions (3):
+  the entire existing 255-test suite passes UNCHANGED — zero recaptures.
+- **What does NOT change:** the reconcile core + the viewport invariant + the
+  hidden-rich-cell exemption (membership just reads the partial derivations); wheel and
+  keyboard semantics; serialization — NOTHING new serializes (the viewport derives from
+  bounds, which are already document state; a pre-F6 snapshot's fixed bounds restore to a
+  6×14 viewport through the same derivations); `sheetCols/sheetRows` and `viewOriginCol/
+  Row` untouched.
+
+**Touch-list.** `SpreadsheetWdgt` (spec flip + min extent; the four derivations + constant
+retirement; chrome trim; the resize/children-arrange seam; clamp/follow/at-limit/hit-test
+consumer routing; clip flag), `SheetCellsPanelWdgt` (comment: clip now load-bearing),
+`SpreadsheetApp` (default-size pin if V4 needs it), `src/spreadsheet/CLAUDE.md` (the F1
+section's "fixed viewport" language + the panel bullet + a new F6 paragraph), NOMENCLATURE
+(register **partial edge cell**; amend **viewport / view origin** to "derived from extent"
+— §4 rule 8, at land time), spec §9.1 note; tests repo: the new test(s) + rig rows below.
+
+**Tests.** `SystemTest_macroSpreadsheetResizeViewport`: open at default (screenshot =
+byte-identical baseline vs a fresh sheet — proves (3) in-test), drag the window resizer out
+by a NON-cell-multiple delta (`dragWindowResizerTo_InputEvents` — the window-chrome verb)
+→ assert more cells/headers via the derivations (`evaluateString`), screenshot the partial
+edge column/row look; wheel-scroll in the enlarged state (clamps use full-counts — assert
+max-origin backdrop); resize back to the exact original corner → `assertScreenshotsIdentical`
+with the baseline (integer placement makes the round-trip exact). Consider a second test or
+a step for a RICH cell partially visible (a slider clipped mid-body). Park the pointer
+(corner header) before every byte-compared shot; expect resize-path dpr2 sensitivity (the
+divider-drag sub-pixel case-law) — if dpr2 flakes, quantize the DRAG destination, never the
+framework. Rig EXPECTATIONS rows: (a) a RESIZED sheet round-trips (apply a bigger extent +
+settle, serialize/deserialize → derivations answer the bigger viewport, census invariant
+holds, origin preserved); (b) pre-F6-shaped snapshot (default bounds) restores to 6×14.
+Both serialization legs MANDATORY (restore paths change even though the serialized surface
+doesn't).
+
+**Done when:** the whole pre-F6 suite green with ZERO recaptures (the default-size identity
+— decisions 3); new test(s) + rig rows green dpr1/dpr2/webkit; both legs green; `fg
+revisits` baseline still EMPTY + `fg census` green (the new arranger is settle-clean and
+idempotent); docs + NOMENCLATURE landed; ledger F6 checked.
+
+**Risks.** The children-arrange seam vs float-follow (V2 — read before writing); the
+fill-content protocol purity (V1 — `preferredExtentForWidth` must stay pure, never read
+applied geometry); the sheet-level clip's side effects (V3 — prove byte-identity, don't
+argue it); default-size pinning (V4); dpr2 resize determinism (case-law above); window
+min-extent machinery vs `getMinimumExtent` (verify the consumer). Sequencing: independent
+of F3; touches the same `SpreadsheetWdgt` surface as everything else — do not run
+concurrently with another spreadsheet arc.
 
 ---
 
