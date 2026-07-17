@@ -6,6 +6,11 @@ class ToolPanelWdgt extends PanelWdgt
   externalPadding: 10
   thumbnailSize: 30
 
+  # my enclosing scroll frame borrows my colloquial name (type-test-elimination ε; see
+  # ScrollPanelWdgt.colloquialName)
+  scrollPanelColloquialName: ->
+    "toolbar"
+
   # ONE settle over the whole bundle; each core's _invalidateLayout is deduped by
   # layoutIsValid, so N adds still cost one flush.
   addMany: (widgetsToBeAdded) ->

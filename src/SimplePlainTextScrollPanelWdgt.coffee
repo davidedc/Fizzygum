@@ -57,6 +57,11 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
   colloquialName: ->
     return "text"
 
+  # always content-sizing, wrap on or off (type-test-elimination ε; see
+  # ScrollPanelWdgt.isContentSizing)
+  isContentSizing: ->
+    true
+
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.DONT_MIND , WindowContentLayoutSpec.DONT_MIND, 1
 

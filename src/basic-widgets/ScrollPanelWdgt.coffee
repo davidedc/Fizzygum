@@ -74,17 +74,16 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutScrollbars()
 
   wantsDropOfChild: (aWdgt) ->
-    if @contents instanceof FolderPanelWdgt
-      return false
+    # the CONTENTS vetoes raw drops into its frame (a folder's contents are managed by the
+    # folder-window machinery) — capability via ?(), was `@contents instanceof FolderPanelWdgt`
+    # (type-test-elimination ε)
+    return false if @contents?.vetoesScrollPanelDrops?()
     return @_acceptsDrops
 
   colloquialName: ->
-    if @contents instanceof FolderPanelWdgt
-      "folder"
-    else if @contents instanceof ToolPanelWdgt
-      "toolbar"
-    else
-      "scrollable panel"
+    # the CONTENTS names the construct ("folder"/"toolbar") — capability via ?(), was two
+    # `@contents instanceof` tests (type-test-elimination ε)
+    @contents?.scrollPanelColloquialName?() ? "scrollable panel"
 
   adjustContentsBasedOnHBar: (num) ->
     @contents._applyMoveTo new Point @left() - num, @contents.position().y
@@ -139,6 +138,14 @@ class ScrollPanelWdgt extends PanelWdgt
   # (type-test-elimination ε).
   childrenCanLockToMe: ->
     false
+
+  # Am I a content-sizing scroll frame — one whose content frame derives from a PURE measure
+  # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? The two dedicated
+  # subclasses (SimplePlainTextScrollPanelWdgt / SimpleVerticalStackScrollPanelWdgt) always
+  # are; a plain frame is when text-wrapping. Class-level query, was two self-instanceof
+  # tests at the arrange site (type-test-elimination ε).
+  isContentSizing: ->
+    @isTextLineWrapping
 
   _reLayoutScrollbars: ->
     # (proper-layouts Phase D, 2026-06-28) This used to set @_adjustingContentsBounds (save/restore) SOLELY so
@@ -444,9 +451,8 @@ class ScrollPanelWdgt extends PanelWdgt
     # probe 0/1429 converged mismatches). The stack measures at its own width (it subtracts its own padding);
     # a bare text panel measures its children at the scroll-padding-inset width (== the _applyWidth re-wrap
     # above). The else-branch (folder / toolbar) is NOT a content-sizing target and keeps the applied read-back.
-    isContentSizing = @isTextLineWrapping or
-     (@ instanceof SimplePlainTextScrollPanelWdgt) or
-     (@ instanceof SimpleVerticalStackScrollPanelWdgt)
+    # class-level query, was two self-instanceof tests here (type-test-elimination ε)
+    isContentSizing = @isContentSizing()
     if isContentSizing
       if @contents instanceof SimpleVerticalStackPanelWdgt
         subBounds = @contents.subWidgetsMergedPreferredBounds(@contents.width())?.ceil()

@@ -24,6 +24,17 @@ class FolderPanelWdgt extends PanelWdgt
   @augmentWith KeepIconicDesktopSystemLinksBackMixin, @name
   @augmentWith CreateShortcutOfDroppedItemsMixin, @name
 
+  # I manage my contents through the folder machinery (shortcut-creation on drop, grid
+  # positioning), so my enclosing scroll frame must refuse RAW drops — it asks via ?()
+  # (type-test-elimination ε; see ScrollPanelWdgt.wantsDropOfChild).
+  vetoesScrollPanelDrops: ->
+    true
+
+  # ...and it borrows my colloquial name (type-test-elimination ε; see
+  # ScrollPanelWdgt.colloquialName).
+  scrollPanelColloquialName: ->
+    "folder"
+
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()

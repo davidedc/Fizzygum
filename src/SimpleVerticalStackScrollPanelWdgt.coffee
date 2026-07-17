@@ -21,6 +21,11 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
   colloquialName: ->
     "stack"
 
+  # always content-sizing, wrap on or off (type-test-elimination ε; see
+  # ScrollPanelWdgt.isContentSizing)
+  isContentSizing: ->
+    true
+
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "move all inside"
