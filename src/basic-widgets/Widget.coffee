@@ -3543,7 +3543,14 @@ class Widget extends TreeNode
       # and not inside a Panel.
       # So, for example, when this widget is attached to another widget
       # attached to the world (because then it should remain solid
-      # with the parent)
+      # with the parent) — UNLESS the parent DECLARES this child detachable
+      # (wantsDetachOfChild, a parent-side opt-in query like wantsDropOfChild): a
+      # non-panel HOST whose child is a payload, not a part. First client: the spreadsheet
+      # widget-entry cell (F4) — its hosted payload must float-drag back out exactly as it
+      # would out of a panel, and without this the grab climbs to the window and the payload
+      # is ungrabbable. No other class defines the query, so everywhere else this is inert.
+      if @parent.wantsDetachOfChild? @
+        return false
       return true
 
     # doesn't have a parent

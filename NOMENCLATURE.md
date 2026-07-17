@@ -92,6 +92,7 @@ equal-value cutoff terminate a cascade instead. Do not reintroduce the retired t
 | **the crossing rule** | per widget, the grid-coloured edge strokes BEFORE the dark (`headerBorderColor`) edge, so dark wins every crossing pixel — the per-widget re-statement of the old "gridlines first, darker borders last" global order (F5 receipt A; byte-identical) |
 | **viewport / view origin** | the fixed `numCols`×`numRows` window of materialised cells over the `sheetCols`×`sheetRows` LOGICAL sheet; the origin (`viewOriginCol/Row`, sheet-space, cell-quantized) is the viewport's top-left address — DOCUMENT state, prototype-default 0 (F1) |
 | **materialise / recycle** | the viewport reconcile's two moves (F1): create + route a `CellWdgt` for an address entering the viewport / destroy one leaving it — EXCEPT a widget-VALUED cell, which `__hide`s in place so its hosted widget's runtime state keeps riding the tree (the hidden-rich-cell exemption, spec §13 extended to scroll) |
+| **widget entry (`widgetEntry`)** | the F4 entry kind: a desktop widget DROPPED into a cell IS the cell's value (persistent `$r` field on `SheetCellRecord`, prototype-default nil; blank source; recompute checks it FIRST). Lifecycle owned by the GESTURES (drop sets; edit-commit and drag-out clear), never by `FormulaCompiler.commit` |
 
 ## Contested words — explicit rulings
 

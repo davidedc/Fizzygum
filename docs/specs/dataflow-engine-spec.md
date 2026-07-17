@@ -46,7 +46,9 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
   widget" bullet is the shipped form. **F1 scroll LANDED 2026-07-17 too** (sheet-owned `viewOriginCol/Row`
   over a 26×100 logical sheet, wheel + keyboard scroll-follow, viewport materialise/recycle with the
   hidden-rich-cell exemption — §13 retain-and-remount extended to scroll; origin-0 render byte-identical,
-  zero recaptures). F4/F3 remain cold-executable in the plan; F4 next.
+  zero recaptures). **And F4 widget-entry cells LANDED 2026-07-17** (the §9.1 kind-of-entry metadata as
+  the persistent `widgetEntry`: drop a desktop widget INTO a cell / drag it back out — see the §9.1
+  note). Only F3 (the "operate ➜" menu) remains, cold-executable in the plan.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
@@ -247,7 +249,10 @@ client's:
 - Columns lettered, rows numbered. **Sparse model**: a dictionary keyed `"A1"`; a cell
   record holds `{source, kind-of-entry metadata}` plus derived state
   `{compiledFn, value, presenter}` (derived state is rebuildable, never serialized —
-  same philosophy as the engine index).
+  same philosophy as the engine index). *(The kind-of-entry metadata LANDED as F4's
+  persistent `widgetEntry`, 2026-07-17: a dropped desktop widget IS the cell's value — blank
+  source, recompute entry-first, lifecycle owned by the drop / edit-commit / drag-out
+  gestures; plan §3-F F4.)*
 - **Painted chrome, widgetized contents** *(as originally designed; SUPERSEDED by Phase 8 — see next
   bullet)*: the sheet widget's appearance paints gridlines, headers, and plain text/number values
   directly; a live child widget (the **socket**) exists only for cells that hold/present rich widgets

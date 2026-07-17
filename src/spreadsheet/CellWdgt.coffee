@@ -43,6 +43,13 @@ class CellWdgt extends Widget
   # re-index destroys any stray editor child) are rebuilt on restore.
   @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarText", "_scalarIsError", "_editorWdgt"]
 
+  # a cell is GRID CHROME, solid with its panel — never rippable out by a drag (F4 close of a
+  # latent F5 hole: when the cells moved into the SheetCellsPanelWdgt, the default
+  # isLockingToPanels false silently made every cell float-draggable out of the grid;
+  # pre-F5 sheet-parented cells were solid via the plain-Widget parent rule). A prototype
+  # default — never an own property, so nothing serializes.
+  isLockingToPanels: true
+
   constructor: (address) ->
     super()
     @address = address         # which cell (col/row via the model); stable across save/load
@@ -122,7 +129,9 @@ class CellWdgt extends Widget
 
   # ── presentation: host a widget filling this cell (the sheet's _addNoSettle + _apply* idiom) ──
   # NoSettle: called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
-  # (DataflowEngine._drainOnePass). Any previously-hosted widget (or painted scalar) is dropped first.
+  # (DataflowEngine._drainOnePass), and from the drop hook (F4) — it TOLERATES a widget that is
+  # already my child (the drop's target.add ran first): _addNoSettle's __add is a safe
+  # remove-then-append self-re-add. Any previously-hosted widget (or painted scalar) is dropped first.
   # The hosted widget is inset by the gridline so the cell's borders/selection stay visible around it
   # (the CellSocketWdgt inset, now applied here since the cell fills the whole cell rect).
   hostNoSettle: (widget) ->
@@ -141,6 +150,69 @@ class CellWdgt extends Widget
     @hostedWidget = nil
     @presentedValue = nil
     old?._fullDestroyNoSettle()
+    return
+
+  # ── F4 widget-entry: drop a desktop widget INTO the cell / grab it back OUT ───────────────
+
+  # Accept gate for the hand's drop climb (ActivePointerWdgt.dropTargetFor resolves the CELL as
+  # the innermost acceptor; the climb passes the payload's _dropPolicyProxy, which answers by
+  # its real class): PLAIN payloads embed instantly (the drag-embed payload-class rule), WINDOW
+  # payloads are refused — a 68x20 cell is no place for a window, and the cells panel + sheet
+  # above refuse too, so a window drop falls through to the desktop. An override, not
+  # enableDrops(): the boolean flag can't discriminate payloads.
+  wantsDropOfChild: (aWdgt) ->
+    not aWdgt.requiresDeliberateEmbedding()
+
+  # The drag-out enabler (the parent-side opt-in Widget.grabsToParentWhenDragged consults in
+  # its solid-with-parent branch — the wantsDropOfChild-style query family): ONLY my hosted
+  # payload is loose — verified empirically at implementation that without this NO payload is
+  # grabbable out of a cell (the generic solid-with-parent rule climbs the grab to the window;
+  # the plan's "slider-only" risk framing was falsified — the blocker was class-independent).
+  # The overlay editor and any other child stay solid with the cell. A loose PRESENTER is
+  # fine: grabbing a swatch out just makes the next reconcile rebuild the derived presenter.
+  wantsDetachOfChild: (aWdgt) ->
+    aWdgt is @hostedWidget
+
+  # The drop's recipient hook (runs inside ActivePointerWdgt.drop's single settle — all NoSettle
+  # cores here, the cores-call-cores discipline its block comment requires). The dropped widget
+  # is ALREADY my child (target.add ran); hostNoSettle tolerates that — its _addNoSettle
+  # re-add is a safe remove-then-append self-re-add (__add) — and re-places it at the cell rect
+  # with the standard host inset. Then the MODEL: the ENTRY kind is set by this gesture
+  # (FormulaCompiler.commit stays pure source machinery): blank-commit first — clears any old
+  # formula's compiledFn AND its edges through the normal path — then record the entry and mark
+  # stale; the drain's recompute takes the entry-first branch and RETAINS the mounted instance.
+  _reactToChildDropped: (droppedWdgt, activePointerWdgt) ->
+    return unless @_sheetWidget?
+    @hostNoSettle droppedWdgt
+    @wireValueWidget droppedWdgt
+    record = @_sheetWidget.model.getOrCreateCellAt @address
+    FormulaCompiler.commit record, ""
+    record.widgetEntry = droppedWdgt
+    world.dataflow?.markStale record
+    return
+
+  # The symmetric gesture (runs inside the grab's settle, ActivePointerWdgt.grab): grabbing the
+  # ENTRY widget back out empties the cell — clear the entry, un-wire (bare field-clear; no
+  # un-wire idiom exists in ControllerMixin — verified 2026-07-17 — and the engine edge dies via
+  # the PUBLIC node-death API, equivalent for a value-widget, which has no incoming edges), and
+  # let the widget ride the hand. ⚠ the cached record.value is still this widget — clear it
+  # through the normal blank-commit path, or the next recompute's branch-1 reconcile would
+  # RE-HOST the widget right off the hand. Guarded on widgetEntry identity: grabbing a PRESENTER
+  # swatch out (possible pre-F4 too) keeps its old behavior — the next reconcile rebuilds the
+  # derived presenter.
+  _reactToChildGrabbed: (grabbedWdgt) ->
+    return unless @_sheetWidget?
+    record = @_sheetWidget.model.cellAt @address
+    return unless record? and record.widgetEntry? and grabbedWdgt is record.widgetEntry
+    @hostedWidget = nil if @hostedWidget is grabbedWdgt
+    @presentedValue = nil
+    record.widgetEntry = nil
+    grabbedWdgt.target = nil
+    grabbedWdgt.action = nil
+    world.dataflow?.removeAllEdgesOf grabbedWdgt
+    FormulaCompiler.commit record, ""
+    world.dataflow?.markStale record
+    @changed()
     return
 
   # ── interaction: wire an interactive value-widget to fire into this cell ──────────────────

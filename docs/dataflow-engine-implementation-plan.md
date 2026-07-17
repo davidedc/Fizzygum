@@ -46,9 +46,12 @@ sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 
       scrolled-round-trip rig rows, both serialization legs green; close gauntlet 11/11 in
       396s — dpr1/dpr2/webkit 253/253, REVISITS baseline still EMPTY, census 0/1528, refs
       1570 consistent with one serial-retry load-flake on the refs leg)
-- [ ] F4 — drag-and-drop desktop widgets into cells (widget-entry cells) — was gated on the
-      drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ unblocked; NEXT (lands after F1
-      per the owner-ratified sequencing)
+- [x] F4 — drag-and-drop desktop widgets into cells (widget-entry cells) — **LANDED
+      2026-07-17** (see the F4 section's landing banner: the drag-out re-host trap, the NEW
+      `wantsDetachOfChild` seam, the latent F5 cell-draggability hole closed; 2 new
+      SystemTests dpr1+dpr2, suite 255; 2 new rig rows, both serialization legs green; close
+      gauntlet 11/11 in 275s — dpr1/dpr2/webkit 255/255, REVISITS baseline still EMPTY,
+      census 0/1528, zero recaptures of existing references)
 - [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
       cell) — independent, any time
 
@@ -1278,7 +1281,7 @@ into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ LANDED 2026-07-17; F4/F3 cold-executable, F4 next)
+## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ + F4 ✅ LANDED 2026-07-17; only F3 remains, cold-executable)
 
 The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
 sub-phase specs so a cold session can pick one up without re-deriving — plus F5
@@ -1605,6 +1608,42 @@ the call site; multi-argument operations (`mixed`) stay OUT of the menu by const
 future argument-prompting flow is banked, not specced.
 
 ### F4 — drag-and-drop desktop widgets into cells (widget-entry cells)
+
+> **✅ LANDED 2026-07-17 (same day as F1). As specced, with these as-built findings —**
+> - **The adopt/re-host decision:** `hostNoSettle` tolerates the already-a-child dropped
+>   widget as-is (`_addNoSettle`'s `__add` is a safe remove-then-append self-re-add) — no
+>   thin adapter needed; the drop hook calls it directly.
+> - **⚠⚠ The drag-out RE-HOST trap:** clearing `widgetEntry` alone is NOT enough — the
+>   record's cached `@value` is still the grabbed widget, and the next recompute's
+>   no-compiledFn route (`_cacheValue @value`) would take the branch-1 reconcile and RE-HOST
+>   the widget right off the hand. The grab hook clears the cached value through the normal
+>   blank-commit path (`FormulaCompiler.commit record, ""`).
+> - **⚠⚠ The "grabbability of a wired slider" risk was MIS-FRAMED — no payload of ANY class
+>   was grabbable out of a cell:** `Widget.grabsToParentWhenDragged`'s generic
+>   solid-with-parent branch (parent = a plain Widget) climbs the grab to the window, so the
+>   fallback "drag-out still serves other payloads" was falsified. Landed a NEW parent-side
+>   opt-in seam: **`wantsDetachOfChild(aWdgt)`** (the `wantsDropOfChild`-style query family),
+>   consulted by that branch; only `CellWdgt` defines it — true exactly for its
+>   `hostedWidget` (editor + other children stay solid) — inert everywhere else. The slider
+>   IS grabbable by its track with the seam in place (its thumb stays a value gesture).
+> - **A LATENT F5 HOLE found + closed by the same investigation:** moving the cells into the
+>   `SheetCellsPanelWdgt` had silently made every CELL float-draggable out of the grid
+>   (panel children are loose under the default `isLockingToPanels` false; pre-F5
+>   sheet-parented cells were solid). `CellWdgt.isLockingToPanels: true` — grid chrome is
+>   never rippable; a prototype default, nothing serializes.
+> - Un-wiring on drag-out is a bare `@target`/`@action` field-clear (no un-wire idiom exists
+>   in ControllerMixin — verified) + the public `world.dataflow.removeAllEdgesOf` (equivalent
+>   for a value-widget: no incoming edges); the REPLACE path needs no explicit un-wiring —
+>   `Widget._destroyNoSettle` already drops a destroyed widget's engine edges.
+> - The [D] macro lint bans `_applyMoveTo` in macro fixtures — position via
+>   `world.add widget, position` (the rig's form).
+> **Verification:** presuite — all 253 pre-existing tests green with ZERO reference changes
+> (the seam + the lock are invisible; no existing macro drops onto a sheet); 2 new
+> SystemTests (DropWidgetIntoCell / DragWidgetOutOfCell) captured dpr1+dpr2 → suite 255;
+> 2 new rig rows (`spreadsheet.roundtrip.widgetEntry` incl. wiring + dragged value;
+> `spreadsheet.duplicate.widgetEntryIndependence`) green on BOTH serialization legs; close
+> gauntlet 11/11 GREEN in 275s (dpr1/dpr2/webkit 255/255, apps, paint, tiernaming, settle,
+> capstone, refs, REVISITS baseline still EMPTY, census 0/1528).
 
 **Goal.** The spec-§9.1 cell record's "kind-of-entry metadata" finally materialises: a cell's
 content can be ENTERED by dropping a desktop widget into it, not only by typing a formula that

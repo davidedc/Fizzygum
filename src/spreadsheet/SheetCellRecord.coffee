@@ -4,8 +4,17 @@
 # behaviour, never geometry.
 #
 # ── PERSISTENT vs DERIVED state ──────────────────────────────────────────────────────────────
-# Persistent (serialized): {@sheet, @address, @source}. @source IS the cell's CoffeeScript
-# ("everything is CoffeeScript", spec §9.2 — `42`, `"total"`, `A1 * 2` are all just source).
+# Persistent (serialized): {@sheet, @address, @source, @widgetEntry}. @source IS the cell's
+# CoffeeScript ("everything is CoffeeScript", spec §9.2 — `42`, `"total"`, `A1 * 2` are all just
+# source). @widgetEntry (F4) is the OTHER kind of entry: a desktop widget DROPPED into the cell
+# IS the cell's value — no formula (source stays blank). Prototype default nil, own-only-when-set
+# (the 6a idiom: a formula cell serializes byte-for-byte as before); when set it serializes as an
+# in-structure $r reference to the widget, which rides the tree as the cell's hosted child, and
+# DeepCopierMixin remaps it to the copy — save AND duplicate free (spec §2). Its LIFECYCLE is
+# owned by the GESTURES, never by FormulaCompiler.commit (pure source machinery): SET by the drop
+# (CellWdgt._reactToChildDropped), CLEARED by a user edit-commit on the cell
+# (SpreadsheetWdgt._commitEditNoSettle — typed content of any kind replaces the widget) and by
+# the drag-out (CellWdgt._reactToChildGrabbed).
 # Derived (rebuilt on load/duplicate, NEVER serialized — declared in @serializationTransients):
 #   @compiledFn   the once-compiled formula function (FormulaCompiler.commit)
 #   @boundNames   the identifier names bound as its parameters (cell refs / helpers / later time)
@@ -43,6 +52,11 @@ class SheetCellRecord
 
   @serializationTransients: ["compiledFn", "boundNames", "value", "errorFlag"]
 
+  # F4 widget-entry kind (see the header): a DROPPED desktop widget as the cell's value.
+  # PERSISTENT (deliberately NOT in @serializationTransients) but a PROTOTYPE default — only a
+  # cell that actually received a drop carries the own property.
+  widgetEntry: nil
+
   # @sheet is the owning SheetModel ("the sheet the cell belongs to"); @sheet.sheetWidget is the
   # SpreadsheetWdgt that paints it and serves as the formula scope (@ inside a formula).
   constructor: (@sheet, @address, @source = "") ->
@@ -54,6 +68,11 @@ class SheetCellRecord
   # ── dataflow node protocol ───────────────────────────────────────────────────────────────
 
   dataflowRecompute: ->
+    # F4 widget-entry FIRST: a dropped widget IS the value — no formula runs, and the branch-1
+    # reconcile RETAINS the mounted instance (identity match). Checked before everything so the
+    # entry kind wins over any leftover compiled state (there is none by construction: the drop
+    # blank-commits the source).
+    return @_cacheValue @widgetEntry if @widgetEntry?
     # A blank, syntax-errored or loop-rejected cell has no compiled function: its @value is already
     # resolved (nil, or a SheetError set by FormulaCompiler.commit). Route it through _cacheValue
     # anyway so the socket reconcile drops any widget the cell used to show (e.g. blanking a Color).

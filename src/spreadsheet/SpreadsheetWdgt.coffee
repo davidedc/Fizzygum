@@ -560,6 +560,12 @@ class SpreadsheetWdgt extends Widget
   _commitEditNoSettle: ->
     return unless @_editing
     cell = @model.getOrCreateCellAt @model.addressFor @_editCol, @_editRow
+    # F4: typed content of ANY kind — including blank — REPLACES a dropped widget-entry (the
+    # gestures own the entry lifecycle, commit stays pure source machinery). The ex-entry
+    # widget is destroyed by the drain's reconcile (the unhost), its engine edges by
+    # Widget._destroyNoSettle. (Eject-to-world instead of destroying was considered and
+    # rejected for v1 — see src/spreadsheet/CLAUDE.md.)
+    cell.widgetEntry = nil if cell.widgetEntry?
     FormulaCompiler.commit cell, @_editBuffer
     world.dataflow.markStale cell
     @_teardownEditorNoSettle()
