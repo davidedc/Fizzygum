@@ -283,7 +283,9 @@ session. Torture is required iff **I4, I5 or I10** ran (cache / arrange / `_reLa
 preceded by a default — `widthINeedToFitContentIn = @width()` on its own line before `if @parent?`, keeping the
 `instanceof ScrollPanelWdgt` branch byte-identical (the type-test is X8-banked; do NOT touch it). Behaviour is
 identical for every live call (no caller passes bounds; no parentless caller exists) — this closes both
-landmines. *Gate:* build + suite.
+landmines. *Gate:* build + suite. *(Superseded note, 2026-07-17: the type-test-elimination Phase ε later
+converted that instanceof to the `@parent?.widthContentsMustFitWithin?()` capability — byte-identical, see
+`type-test-elimination-plan.md`; the I2 landmine fixes themselves are unaffected.)*
 
 ### I3 — `moveWithin` → the canonical public/core lattice with ONE clamp home — small-medium
 **⟢ RE-SCOPED 2026-07-03 (owner-directed): NOT a deletion.** The original spec deleted the dead deferred twin;
@@ -2120,6 +2122,8 @@ unbuilt. Re-measure only if a future layout makes the second visit's guards miss
   Leave.
 - **`ScrollPanelWdgt._applyExtent`'s `@contents._applyExtent aPoint` (contents frame := viewport extent) + its
   `isTextLineWrapping and !(@contents instanceof …)` fork** — long-standing shape flagged by its own TODO; any
-  change is behaviour-change territory entangled with the scroll-topology ε set (X7/X8). Leave.
+  change is behaviour-change territory entangled with the scroll-topology ε set (X7/X8). Leave. *(ε executed
+  2026-07-17: this fork is one of the D-core arrange branches whose owner-gated verdict was LEAVE — the frame owns
+  its contents' frame, `@contents` is constructor-dynamic; see `type-test-elimination-plan.md`'s LEAVE section.)*
 - **`Widget.sourceChanged`'s `@_reLayoutSelf?()` existence-check** (base `_reLayoutSelf` always exists) — trivial.
   Leave.
