@@ -3,10 +3,11 @@
 #   1. a PURE width→height measure (preferredExtentForWidth; this mixin's is the ratio one,
 #      the clock/spreadsheet/holder/composite-icon have their own square/grid twins), and
 #   2. a grow POLICY chosen by placement role:
-#      - as a STACK ELEMENT that should stay size-stable: an EXPLICIT grow 0 in
-#        initialiseDefaultVerticalStackLayoutSpec (the clock/icon/spreadsheet trio) — the
-#        capture's oversize trample (wider-than-column ⇒ grow 1, column-tracking) is the
-#        one designed exception and survives the pin;
+#      - as CONTENT that should stay size-stable: an EXPLICIT grow 0 declared in the
+#        content's initialiseDefaultWindowContentLayoutSpec override (the clock and
+#        IconWdgt; the spreadsheet is a grow-1 fill since F6) — the capture's oversize
+#        trample (wider-than-column ⇒ grow 1, column-tracking) is the one designed
+#        exception and survives the pin;
 #      - as WINDOW CONTENT that should fill: grow 1 is CORRECT — the window's height follows
 #        the ratio through the measure (the plots ship this way).
 # No cycle is possible either way since the ordered down-walk + pure measures + the §9.7-Q
