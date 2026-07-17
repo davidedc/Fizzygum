@@ -31,16 +31,19 @@ options, and one is started only when the owner explicitly names it.)**
 - [x] Phase 8 — widgetise the grid (one CellWdgt per VISIBLE cell; viewport-bounded) — follow-on
 
 **Optional follow-ons** (F1–F4 fleshed out in §3-F 2026-07-06, every anchor re-verified +
-corrected 2026-07-17 at tree `61080871`; F5 recorded 2026-07-17 as DIRECTION ONLY;
-UNSCHEDULED — owner-initiated only):
+corrected 2026-07-17 at tree `61080871`; F5 fleshed out with pixel receipts 2026-07-17;
+sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 retired into F5):
 
-- [ ] F1 — scroll: logical sheet > viewport; wheel + keyboard scroll; viewport materialise/recycle
+- [ ] F5 — headers-as-widgets + cell-owned grid chrome; **F2 executes inside F5's commit
+      series** (F5 evidence B) — SCHEDULED FIRST
 - [ ] F2 — selection border + overlay editor fully into the `CellWdgt` (view self-containment)
-- [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby cell)
+      — folded into F5, checked together with it
+- [ ] F1 — scroll: logical sheet > viewport; wheel + keyboard scroll; viewport
+      materialise/recycle (header-offset paint design superseded by F5's header widgets)
 - [ ] F4 — drag-and-drop desktop widgets into cells (widget-entry cells) — was gated on the
-      drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ now unblocked
-- [ ] F5 — headers-as-widgets + cell-owned grid chrome (owner direction 2026-07-17; NOT yet
-      fleshed to a cold-executable spec — design it first, see §3-F)
+      drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ unblocked; land after F1
+- [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
+      cell) — independent, any time
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
 with the previous one unverified. **Phase 8 is a planned follow-on** (owner direction 2026-07-05):
@@ -1267,12 +1270,13 @@ into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §3-F Optional follow-ons (F1–F4 fleshed out 2026-07-06, cold-executable; F5 recorded 2026-07-17, direction only; UNSCHEDULED)
+## §3-F Optional follow-ons (F1–F4 fleshed out 2026-07-06; F5 fleshed out 2026-07-17 — ALL cold-executable; F5+F2 SCHEDULED first, owner-ratified 2026-07-17)
 
 The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
-sub-phase specs so a cold session can pick one up without re-deriving — plus F5, a recorded
-owner direction that must be fleshed out before anyone starts it. **None is scheduled**:
-start one only when the owner names it. Ground rules for all of them:
+sub-phase specs so a cold session can pick one up without re-deriving — plus F5
+(headers-as-widgets + cell-owned chrome), owner-directed and fleshed out with pixel
+receipts on 2026-07-17. **Owner-ratified sequencing (2026-07-17): F5 (with F2 folded in) →
+F1 → F4 → F3; perf item C2 is retired into F5.** Ground rules for all of them:
 
 - **Each F-item = one mini-phase** under the §0 cadence (inner loop per commit; the FULL
   phase-close battery + BOTH serialization legs at its close — every one of them touches the
@@ -1290,17 +1294,25 @@ start one only when the owner names it. Ground rules for all of them:
   ~5100 lines, several methods gained `_` prefixes in the public/private call-separation arc
   (`078d67d4`), and `ScrollPanelWdgt`/`ActivePointerWdgt` moved under the drag-embed arc.
   They will drift again — grep the named symbol.
-- **Sequencing:** F1 first among these (F2 assumes its shape but can also run standalone);
-  F2 immediately after F1 (or folded into F1's commit series); F3 independent, any time;
-  F4's gate — the drag-embed arc — is COMPLETE, so F4 is unblocked (its receipts were
-  re-verified post-arc). **F5 is direction only** and must be fleshed out first; if the owner
-  wants F5, decide it BEFORE starting F1/F2 — it reshapes the same paint code F1 offsets and
-  F2 relocates (see F5), and it supersedes perf item C2's shape
-  (`docs/interactive-render-perf-A-C-plan.md` §3.2).
+- **Sequencing (owner-ratified 2026-07-17): F5 FIRST, with F2 executing inside F5's commit
+  series** (F5's evidence B makes the ring move mandatory for determinism, and F2's recapture
+  budget is the one pixel change); **then F1** (its header paint-offset design is superseded
+  by F5's header widgets — the F1 section notes this inline); **then F4** (unblocked — the
+  drag-embed arc is complete, receipts re-verified post-arc; landing it after F1 touches the
+  `_reconcileCellNoSettle` branch-1 seam once); **F3 independent, any time.** Perf item C2
+  (`docs/interactive-render-perf-A-C-plan.md` §3.2) is RETIRED INTO F5.
 - The arc's §6 Definition-of-done is CLOSED and stays closed — each F-item carries its own
   done-when list; the ledger's F-boxes track them.
 
 ### F1 — scroll: logical sheet > viewport; wheel + keyboard; viewport materialise/recycle
+
+> **2026-07-17: F1 now runs AFTER F5** (owner-ratified sequencing). Under F5 the header text
+> lives in header WIDGETS, so the `_paintGrid` header-offset bullets below are superseded:
+> the reconcile offsets/recycles the header widgets instead (column headers horizontally,
+> row headers vertically, frozen against the other axis; they are direct sheet children,
+> outside the cells container, so the container's scroll clip never touches them). The rest
+> of this section — origin state, reconcile, hit-test mapping, wheel, editing, restore —
+> stands as written.
 
 **Goal.** The sheet's LOGICAL grid becomes larger than the viewport (v1 bounds: 26 columns
 A–Z × 100 rows — constants, still far under the address grammar's ZZ9999 ceiling); the user
@@ -1417,6 +1429,12 @@ the sheet's scroll over that cell — accepted (same as any nested scroll surfac
 chain is the general answer).
 
 ### F2 — selection border + overlay editor fully into the `CellWdgt`
+
+> **2026-07-17: F2 EXECUTES INSIDE F5's commit series** — F5's evidence B shows the ring
+> cannot stay sheet-drawn once cells stroke their own edges (the ring's 2px bands half-cover
+> the edge pixels; child edges painting after the sheet flip the blends, 91 px at dpr1), so
+> the inside-ring move below is mandatory there, not optional. This section remains the spec
+> for that part; its recapture budget is F5's one pixel change. The ledger checks F2 with F5.
 
 **Goal.** Complete the Phase-8 view story: a `CellWdgt` renders ALL of its cell's view state —
 its selection ring and its overlay editor, not just its value. OWNERSHIP does not move: the
@@ -1646,72 +1664,168 @@ drag-embed arc closed WITHOUT changing the drop-hook signatures (re-verified 202
 `_beforeChildDropped` / `_reactToChildDropped` / `_reactToBeingDropped` /
 `_reactToChildGrabbed` all keep the shapes used above).
 
-### F5 — headers become widgets; the grid chrome migrates into the cells (DIRECTION ONLY)
+### F5 — headers become widgets; the grid chrome migrates into the cells (+ F2 folded in)
 
-**Status: recorded owner direction (2026-07-17) — NOT yet fleshed to a cold-executable spec.
-Unlike F1–F4, this section must be designed, receipted, and pixel-evidenced before anyone
-starts it. Recording it here so the direction and its interactions aren't re-derived.**
+**Status: FLESHED OUT 2026-07-17 — cold-executable; scheduled FIRST among the follow-ons
+(owner ratified the F5-first sequencing 2026-07-17). F2 executes as part of F5's commit
+series (evidence below makes it mandatory, not optional). Pixel evidence: three SWCanvas
+probes + a ground-truth read of the real `macroSpreadsheetOpenGrid` dpr1 reference
+(methodology + numbers inline below; probe scripts were session scratch —
+`Fizzygum-tests/.scratch/f5-gridline-probe.js` / `f5-groundtruth-probe*.js`, gitignored,
+trivially re-derivable from the geometry stated here).**
 
 **The direction (owner, 2026-07-17).** Anything selectable/clickable should be a Widget. The
 column-header cells (one day: click to select the whole column) and the row-number header
 cells (select the row) should therefore become widgets, exactly as the data cells did in
-Phase 8. And once they are, the owner posits the gridline chrome could be painted by the cell
-widgets themselves (each cell drawing its own edges), leaving the sheet's own paint
-essentially EMPTY — the sheet becomes a pure container + model owner; every visible thing is
-a widget. This is the Phase-8 flip taken to its end state; Phase 8's "data cells only" scope
-note anticipated it ("headers-as-widgets would be a purely additive later step" —
-`src/spreadsheet/CLAUDE.md`).
+Phase 8. And once they are, the gridline chrome is painted by the cell widgets themselves
+(each drawing its own edges), leaving the sheet's own paint EMPTY — the sheet becomes a pure
+container + model owner; every visible thing is a widget. The cells attach into a dedicated
+container subclass; residual border drawing, if any, is that container's job, live-stroked,
+never back-buffered. This is the Phase-8 flip taken to its end state; Phase 8's "data cells
+only" scope note anticipated it ("headers-as-widgets would be a purely additive later step"
+— `src/spreadsheet/CLAUDE.md`).
 
-**Interactions (why this is recorded next to F1–F4).**
-- **F1:** F1-as-specced offsets the PAINTED header text by the view origin inside
-  `_paintGrid`. Under F5, header widgets would instead ride the viewport reconcile
-  (materialise/recycle like data cells, frozen against their own axis). Landing F5 first (or
-  together) avoids building the header paint-offset machinery twice; F1-first is still fine —
-  that code is small and would be subsumed.
-- **F2:** the same direction in miniature — F2's ring/editor move is a strict subset of F5's
-  "a cell renders ALL its own pixels". If F5 is wanted, schedule F2 with/after it.
-- **C2 (perf plan `docs/interactive-render-perf-A-C-plan.md` §3.2):** F5 DISSOLVES the
-  C2-as-specced sheet-level static-chrome back-buffer — with the chrome in widgets there is
-  no sheet-drawn layer left to cache. The caching story becomes per-widget back-buffers:
-  header text back-buffers the way `TextWdgt`/`StringWdgt` already do (the 99.9%-hit
-  `world.cacheForImmutableBackBuffers`), and identical empty cells collapse toward shared
-  cached bitmaps through that same content-addressed world cache. That structurally delivers
-  C2's win — the measured hot spot IS the header text re-render. Decide F5 before scoping C2.
-- **Widget count:** +numCols +numRows (+1 corner) header widgets — viewport-bounded, trivial
-  next to the 84 data cells.
+**Pixel evidence (2026-07-17, all against the exact `_paintGrid` geometry: headerColWidth 34,
+headerRowHeight 20, colWidth 68, rowHeight 20, 6×14, gw 442, gh 300).**
+- **(A) Segmentation is byte-identical — with ONE ordering rule.** A 442×300 SWCanvas replica
+  of today's paint (full-length gridlines + the 4 darker border/separator lines, drawn in
+  today's order) vs the F5 form (every widget — corner, 6 column headers, 14 row headers,
+  84 data cells — stroking only its OWN top+left edge segments): **BYTE-IDENTICAL at dpr1 and
+  dpr2**, but ONLY when each widget strokes its grid-coloured edge BEFORE its dark edge. A
+  naive left-then-top order diverged at 26 px (dpr1): the crossing pixels of the dark
+  verticals (x 0.5 / 34.5) with grid horizontals — today's paint draws ALL gridlines first
+  and the darker lines LAST, so dark wins every crossing. **THE CROSSING RULE: per widget,
+  grid-coloured edges first, dark edges last.** (In-world ground truth: local (0,40) and
+  (34,40) are rgb(150,150,150) in the real reference.)
+- **(B) The selection ring forces the F2 fold.** Same replica with the selected-A1 ring:
+  today (lines, then ring) vs F5-without-F2 (sheet paints ring, then the child cells stroke
+  their edges on top) differs at **91 px dpr1 / 348 px dpr2** — the ring's 2px bands
+  half-cover the edge pixel rows/columns, and opaque child edges then replace the blend.
+  F5 without moving the ring is NOT byte-identical, and the moved ring is exactly F2's
+  already-budgeted inside-ring (`strokeRect 2, 2, w−4, h−4` cell-local — band [1,3), which
+  touches NO edge pixel, so draw order becomes irrelevant and the pixels are stable). Hence:
+  **F2's ring + editor move execute inside F5's commit series; the F2 section above is the
+  spec for that part, including its ~11-test recapture budget.**
+- **(C) There is NO visible right/bottom outer border today.** The `col <= numCols` /
+  `row <= numRows` stroke loops draw their LAST line at gw+0.5 / gh+0.5, which rasterises
+  into pixel column gw / row gh — one past the widget's last own pixel — and the sheet's
+  own-bounds clip crops it entirely (probe: fully clipped; ground truth: the reference's
+  last column/row contain line colours ONLY at crossings, and cols 440–442 / rows 298–300
+  sample as backdrop). **The container therefore paints NOTHING in v1** — byte-identity
+  demands it. The owner's "cheap two live strokes" is the mechanism held in reserve IF a
+  visible right/bottom border is ever wanted (a deliberate, recaptured pixel change).
+- **Backgrounds (ground truth).** Cell interiors are **rgb(248,248,248)** — the sheet paints
+  `@backgroundColor` (the Widget default), NOT its `@color` (which is set to `Color.WHITE`
+  and unused by the custom paint). Header strips are 236 over that. Fill ownership under F5:
+  opaque axis-aligned rects tiling disjoint regions compose byte-identically in any order.
 
-**Design questions to resolve at flesh-out (recorded now; Q1 and Q4 carry owner direction
-2026-07-17, still to be pixel-receipted).**
-1. **Gridline edge ownership — owner direction 2026-07-17.** Interior lines sit ON cell
-   boundaries at half-pixel offsets (a stroke at `x+0.5` rasterises into pixel column `x`).
-   A "each cell paints its own top + left edges" convention covers interior lines — but the
-   grid's bottom/right OUTER border lines rasterise one pixel PAST the last cells' rects
-   (outside their clip). **Owner's answer: the cells all attach into a dedicated SUBCLASS of
-   the container widget (base class picked at flesh-out — whichever container fits), and THAT
-   container draws the two residual outer lines itself, LIVE (no back-buffer — two
-   axis-aligned 1px strokes are cheap, memory-free, and skip the C1 FP-CTM risk entirely).**
-   So the end state is: cells + header widgets paint their own top/left edges, the grid
-   container paints the residual bottom/right pair — "essentially empty" sheet paint, with
-   the residual named and homed. Still to receipt at flesh-out: the container's base class,
-   whether headers live in the container or beside it on the sheet, and the frame-dump proof
-   of byte-identity (Q2).
-2. **Byte-identity budget.** Axis-aligned 1px opaque lines + text at integer offsets are the
-   FP-ROBUST case (the C1 lesson's safe side), and same-colour overdraw of a shared line is
-   idempotent — so byte-identity at origin (0,0) is PLAUSIBLE but must be frame-dump-verified
-   before assuming (no-conclusions-before-evidence). The selection ring is already budgeted
-   in F2 (draw-inside + recapture).
-3. **Header SELECTION semantics are out of scope** for the widgetisation itself: land
-   clickable header widgets first (no new selection model); column/row selection is its own
-   later item with its own spec (multi-cell selection touches editing, refs, paint).
-4. **Perf shape — owner direction 2026-07-17: STROKES stay live, back-buffers are for TEXT.**
-   Axis-aligned 1px strokes (the container's residual pair AND the per-cell edges) are cheap
-   to draw every repaint; buffering them buys little, costs memory (84+ small canvases), and
-   re-imports the C1 FP-CTM byte-identity risk for nothing. The measured hot spot (perf plan
-   §1) is the header TEXT re-render — under F5 that lands in header widgets, which cache text
-   the way `TextWdgt`/`StringWdgt` already do (the existing 99.9%-hit
-   `world.cacheForImmutableBackBuffers`); `CellWdgt` scalar-text caching stays a later,
-   measurement-driven option. If the busy-drag path regresses from the extra per-cell paint
-   calls, re-measure with `prof-interactive.js` before reaching for buffers.
+**Design (decided; receipts above).**
+- **Two new classes**, both in `src/spreadsheet/` (already globbed by `build.py` — no
+  manifest change):
+  - **`SheetHeaderCellWdgt`** — one class for all 21 header cells, `kind` ∈ column / row /
+    corner (+ its 0-based index). Paints: its 236 fill, its top+left edges (crossing rule),
+    and its label — `model.colToLetters(index)` / `"" + (index + 1)` / blank — in
+    `headerTextColor`, 12px Arial, at local `(4, height − 6)`: exactly today's header-text
+    offsets and exactly the `CellWdgt` scalar-paint precedent (Phase 8 proved this text move
+    is byte-exact). Text back-buffering is NOT added in v1 — the label paints live like
+    `CellWdgt` scalars do; the perf follow-up (below) is measurement-driven.
+  - **`SheetCellsPanelWdgt extends PanelWdgt`** (owner direction: a subclass of the
+    container class; `PanelWdgt` is the canonical container and its
+    `ClippingAtRectangularBoundsMixin` clipping is exactly what F1's scroll viewport wants,
+    dormant until then). It spans the DATA region (34,20)–(442,300) sheet-local and hosts
+    the 84 `CellWdgt`s. Its `RectangularAppearance` fill IS the data-region background:
+    `@color` = the sheet's `@backgroundColor` value (rgb 248 — READ from the sheet, one
+    authority, never duplicated), `@strokeColor` nil. v1 neutralisations, each verified at
+    implementation: `wantsDropOfChild -> false` (cells tile it completely, but be explicit —
+    F4 targets CELLS), editing amenities off (`providesAmenitiesForEditing`), and confirm it
+    neither intercepts the click escalation cell → container → sheet (`mouseClickLeft` must
+    still reach the sheet's selection handler) nor paints rounded/stroked chrome. It paints
+    NO residual border (receipt C: none is visible today); the owner's cheap-live-strokes
+    slot stays reserved for the day a visible right/bottom border is wanted.
+- **Edge ownership:** every widget — data cells, header cells, corner — strokes its own TOP
+  and LEFT edges, spanning exactly its own width/height. Colour: left edge DARK
+  (`headerBorderColor`) iff its boundary sits at sheet-local x ∈ {0, headerColWidth}, top
+  edge DARK iff y ∈ {0, headerRowHeight}, else `gridlineColor`. **Crossing rule (receipt A):
+  the grid-coloured edge is stroked BEFORE the dark edge, per widget.** Nobody strokes
+  right/bottom.
+- **`CellWdgt` paint restructure:** no fill (stays transparent — the container's 248 shows
+  through, as the sheet's did), stroke edges ALWAYS (before the hosted-widget / no-scalar
+  early-returns), then the F2 ring when `@_sheetWidget.isSelectedAddress @address` (inside
+  form, `strokeRect 2, 2, w−4, h−4`, lineWidth 2 — the ONE recaptured pixel change), then
+  scalar text as today. Hosted widgets/presenters unchanged (children paint above).
+- **F2 executes here** (the F2 section above is the spec for this part): the ring as above
+  (the sheet's selection block dies with `_paintGrid` itself; new PUBLIC
+  `SpreadsheetWdgt.isSelectedAddress`), the editor mount/update/teardown move to `CellWdgt`
+  (`@_editorWdgt`, serialization transient + re-index sweep), `_isCellBeingEdited` retires.
+- **Sheet paint goes EMPTY:** `_paintGrid` DELETED; the sheet's
+  `paintIntoAreaOrBlitFromBackBuffer` override is deleted too and `@color`/background set so
+  the base paints nothing (the tiling children ARE the pixels — the CanvasGlassTopWdgt nil
+  idiom; decide the exact nil-vs-empty-override form at implementation and record it here).
+  Geometry constants stay on the sheet (the single authority); `_buildGridNoSettle` grows to
+  build container + headers + cells (idempotent, address/kind-keyed, the same
+  skip-if-present discipline).
+- **Serialization/restore:** the container + header widgets ride snapshots as ordinary
+  children. `_reindexCellsNoSettle` adopts `CellWdgt`s (walking through the container),
+  DESTROYS all derived chrome (headers, corner, container — after re-homing the cells) and
+  rebuilds it via `_buildGridNoSettle`: ONE path serves pre-F5 snapshots (no chrome present)
+  and post-F5 snapshots (chrome present, rebuilt) with no double-grid. Both serialization
+  legs MANDATORY; the rig's `sheet` fixture EXPECTATIONS rows update (children census:
+  84 cells → 84 cells-in-container + 21 headers + 1 container).
+- **Header SELECTION semantics stay OUT of scope** — F5 lands clickable, inspectable header
+  widgets with today's behaviour (clicks escalate to the sheet exactly as cell clicks do);
+  column/row selection is its own later spec (it touches editing, refs, and paint).
+- **Perf follow-up (measurement-driven, NOT in v1):** if `prof-interactive.js --sw --text`
+  still shows the header labels hot after F5, give `SheetHeaderCellWdgt` (and optionally
+  `CellWdgt` scalars) the `TextWdgt`-style immutable text cache. STROKES stay live always
+  (owner 2026-07-17): cheap, memory-free, no FP-CTM risk.
+- **NOMENCLATURE registrations (§4 rule 8):** header cell / cells panel / edge ownership
+  (top+left) / the crossing rule. Docs in the same commits: `src/spreadsheet/CLAUDE.md`
+  (north star becomes "the sheet paints NOTHING; every visible thing is a widget"; the
+  Phase-8 "data cells only" scope note superseded by F5), spec §9.1 note.
+
+**Interactions.**
+- **F1:** its `_paintGrid` header-offset design is SUPERSEDED — post-F5, F1 scroll-offsets
+  the header WIDGETS through the viewport reconcile (column headers recycle horizontally,
+  row headers vertically, each frozen against the other axis; keep headers DIRECT sheet
+  children, OUTSIDE the cells container, precisely so the container's future scroll clip
+  never clips the frozen headers). F1's cell materialise/recycle is untouched.
+- **C2 (perf plan §3.2): RETIRED INTO F5** — receipt C removed the last sheet-drawn layer a
+  chrome buffer could cache; the text hot-spot lands in header widgets (cache = the perf
+  follow-up above). Recorded in the perf plan's §3.2 ⚠⚠ box + §4 ledger.
+- **Widget count:** +21 header widgets + 1 container — viewport-bounded, trivial next to
+  the 84 cells.
+
+**Touch-list.** `SpreadsheetWdgt` (paint override + `_paintGrid` deleted;
+`isSelectedAddress` new; `_buildGridNoSettle` builds chrome; `_reindexCellsNoSettle` chrome
+rebuild + editor sweep; editor lifecycle delegates to the cell; `_isCellBeingEdited`
+deleted), `CellWdgt` (edges + ring + editor members + transients), NEW `SheetHeaderCellWdgt`,
+NEW `SheetCellsPanelWdgt`, `src/spreadsheet/CLAUDE.md`, NOMENCLATURE, spec §9.1 note; tests
+repo: the ring recaptures + rig EXPECTATIONS + the assertion extension below.
+
+**Tests.** No new pixels EXCEPT the budgeted F2 ring recapture (the
+`SystemTest_macroSpreadsheet*` family — 11 tests as of 2026-07-17, each webkit-verified per
+§0). Extend `SystemTest_macroSpreadsheetSelection` with `evaluateString` assertions:
+`isSelectedAddress` truth, a header-widget census (21 `SheetHeaderCellWdgt`s), and the
+container hosting exactly 84 cells. Rig: the F2 mid-edit-snapshot row + the updated
+children-census rows. Both serialization legs. `fg revisits` (the chrome builds through
+NoSettle cores in the constructor — the DegreesConverter orphan idiom — so the EMPTY
+baseline must hold) + `fg census` green.
+
+**Done when:** gauntlet green with ONLY the 11 ring recaptures (webkit-verified, listed in
+the commit); revisit baseline still EMPTY; census green; both serialization legs + updated
+rig rows green; docs + NOMENCLATURE landed; ledger F5 AND F2 checked together.
+
+**Risks.** `PanelWdgt` baggage (drops / editing amenities / click interception / appearance
+chrome) — neutralised by the v1 overrides above, each VERIFIED at implementation, with plain
+`Widget` + one fillRect as the recorded fallback base if the appearance can't be made
+pixel-flat. Restore of PRE-F5 snapshots (no chrome in the tree) and POST-F5 snapshots
+(chrome present) must both land in the destroy-derived-then-rebuild path — the rig proves
+both. Inspector member-list churn is a non-risk (no existing test inspects the sheet or a
+cell — verified 2026-07-17).
+
+---
+
+## §4 Cross-cutting rules (every phase)
 
 1. **Naming:** every new identifier passes `NOMENCLATURE.md`. In particular: no "settle",
    "invalidate", "dirty", "coalesced", "announce", "volatile" in dataflow code; "source"

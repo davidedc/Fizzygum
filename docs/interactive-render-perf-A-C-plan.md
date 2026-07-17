@@ -2,9 +2,9 @@
 
 **Status**: Item **A LANDED 2026-07-09** (SWCanvas `60ba1a3..cf5eea8`, Fizzygum pin
 bumped to `cf5eea8`). Item **C1 LANDED 2026-07-09** (§3.1 landed box — 6 refs recaptured,
-owner-approved). Item **C2 NOT STARTED** — ⚠ scope it only AFTER the 2026-07-17 owner
-direction "headers-as-widgets + cell-owned grid chrome" (spreadsheet follow-on F5) is
-decided; F5 supersedes C2's shape — see §3.2. Self-contained / cold-runnable.
+owner-approved). Item **C2 RETIRED INTO spreadsheet follow-on F5 (owner-ratified
+2026-07-17)** — F5's widgetisation removes the sheet-drawn chrome layer; the text-cache
+follow-up rides F5, measurement-driven — see §3.2 ⚠⚠ box. Self-contained / cold-runnable.
 **Provenance**: the 2026-07-08 interactive-profiling investigation (see
 `docs/profiling/prof-interactive.js` + `docs/profiling/README.md`; memory
 `fizzygum-runtime-backend-swcanvas`). Follows the S3/W1/W2 wins in
@@ -263,23 +263,22 @@ SystemTests** (Fizzygum-tests) — they MUST stay pixel-identical.
 reconcile that rebuilds cells — see `src/spreadsheet/CLAUDE.md`). Land C1 first as the pattern,
 then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwhile.
 
-⚠⚠ **Owner direction 2026-07-17 reshapes C2 — decide it BEFORE scoping** (recorded as
-follow-on **F5** in `docs/dataflow-engine-implementation-plan.md` §3-F): anything
-selectable/clickable should be a widget — the header cells become widgets (toward future
-column/row selection), and the gridline chrome migrates into the cell widgets, leaving the
-sheet's own paint ~empty (owner refinement, same day: the cells attach into a dedicated
-container SUBCLASS that draws the two residual bottom/right outer lines itself, LIVE). Under
-F5 there is NO sheet-drawn static layer left for this item to back-buffer, and per the owner
-the gridline STROKES stay live everywhere — axis-aligned 1px strokes are cheap, buffering
-them costs memory and re-imports the C1 FP-CTM risk. Caching is reserved for TEXT: header
-widgets cache the way `TextWdgt`/`StringWdgt` already do (the 99.9%-hit
-`world.cacheForImmutableBackBuffers`); `CellWdgt` scalar text stays a later,
-measurement-driven option. That structurally delivers this item's win, since the measured
-hot spot IS the header-text re-render (§1). So: if F5 is
-scheduled, C2-as-specced is SUPERSEDED (fold the §3.3 verification into F5); only if F5 is
-declined/deferred does the sheet-level chrome buffer above remain the plan. (Independently,
-the "keyed by (visible range, scroll offset, …)" cache key above already anticipates
-spreadsheet follow-on F1's scroll — under F1-without-F5, keep that key.)
+⚠⚠ **C2 is RETIRED INTO spreadsheet follow-on F5 (owner-ratified 2026-07-17; F5 is fleshed
+out with pixel receipts and scheduled FIRST in `docs/dataflow-engine-implementation-plan.md`
+§3-F — the chrome-buffer design above is SUPERSEDED and kept only as record).** Under F5 the
+header cells become widgets and the gridline chrome migrates into the cell widgets (each
+strokes its own top+left edges; the cells sit in a dedicated `PanelWdgt` subclass whose fill
+is the data-region background), leaving the sheet's own paint EMPTY — and F5's probe C
+established there is no visible right/bottom border today (the outermost strokes are
+clipped away), so nothing sheet-drawn remains for this item to cache. Gridline STROKES stay
+live everywhere (owner 2026-07-17): axis-aligned 1px strokes are cheap; buffering them costs
+memory and re-imports the C1 FP-CTM risk. Caching is reserved for TEXT and rides F5 as its
+measurement-driven follow-up: if `prof-interactive.js --sw --text` still shows the header
+labels hot post-F5, the header widgets take the `TextWdgt`-style immutable cache (the
+99.9%-hit `world.cacheForImmutableBackBuffers`); `CellWdgt` scalar text likewise only if
+measured. That is this item's win delivered structurally — the measured hot spot IS the
+header-text re-render (§1). Re-measure after F5 lands and record the numbers in the §8
+ledger of `docs/runtime-performance-optimization-plan.md`.
 
 ### 3.3 Verification (C)
 
@@ -302,10 +301,10 @@ spreadsheet follow-on F1's scroll — under F1-without-F5, keep that key.)
 2. **C1** (clock face back-buffer) — ✅ **DONE 2026-07-09** (Fizzygum-only; NOT byte-identical —
    6 SystemTests recaptured, owner-approved; see §3.1 landed box). Established the pattern AND the
    sharp lesson below.
-3. **C2** (spreadsheet grid back-buffer) — larger; scope after C1. ⚠ **FIRST reconcile with
-   the 2026-07-17 owner direction** (spreadsheet follow-on F5, headers-as-widgets +
-   cell-owned chrome — §3.2 ⚠⚠ box): F5 supersedes the sheet-level buffer if scheduled.
-   ⚠ **Heed the C1 lesson**:
+3. **C2** (spreadsheet grid back-buffer) — **RETIRED INTO spreadsheet follow-on F5
+   (owner-ratified 2026-07-17; §3.2 ⚠⚠ box)**: F5's widgetisation removes the sheet-drawn
+   chrome layer entirely; the text-cache follow-up rides F5, measurement-driven. The
+   paragraphs below stay as record of the superseded design. ⚠ **Heed the C1 lesson**:
    back-buffering a directly-drawn widget is NOT automatically byte-identical, even at integer
    positions. Relocating a draw into an origin buffer changes the float CTM (position no longer baked
    in), so any content whose rasterisation is FP-sensitive near pixel boundaries — rotated/scaled

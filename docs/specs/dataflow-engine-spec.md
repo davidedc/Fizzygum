@@ -42,8 +42,8 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
   border + overlay editor into the `CellWdgt` · F3 the "operate ➜" cell menu (§9.5) · F4 drag-and-drop desktop
   widgets into cells (the §9.1 "kind-of-entry metadata", as a persistent `widgetEntry`) · F5 headers-as-widgets
   + cell-owned grid chrome (owner direction 2026-07-17 — the §9.1 grid's headers become selectable widgets and
-  the sheet's own paint approaches empty). F1–F4 are cold-executable in the plan; F5 is a recorded direction
-  still to be fleshed out; none is scheduled.
+  the sheet's own paint goes EMPTY). All five are cold-executable in the plan; sequencing owner-ratified
+  2026-07-17: F5 (with F2 folded in) → F1 → F4 → F3.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
