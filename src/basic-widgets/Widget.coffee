@@ -691,8 +691,10 @@ class Widget extends TreeNode
     # TODO unclear if we should rather have handles subscribe to the parent
     # layout change ??? What if there are multiple handles or they are
     # nested deeper?
+    # only HandleWdgt defines updateVisibility, so the ?-existence filter is exactly the old
+    # `m instanceof HandleWdgt` (type-test-elimination ε — the keep-links-back precedent)
     isThereAnHandle = @firstChildSuchThat (m) ->
-      m instanceof HandleWdgt
+      m.updateVisibility?
     isThereAnHandle?.updateVisibility()
 
 
@@ -3914,8 +3916,13 @@ class Widget extends TreeNode
     # merge some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
     # a ScrollPanelWdgt).
+    # the FIELD is the single truth (Widget default false; SimplePlainTextScrollPanelWdgt sets
+    # it true) — the `instanceof ScrollPanelWdgt` qualifier is dropped, and the one non-scroll
+    # writer (SimplePlainTextPanelWdgt's dead constructor write) deleted with it; old saved
+    # documents are normalized at load (type-test-elimination ε; see
+    # SimplePlainTextPanelWdgt._afterDeserialization)
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
-      (m instanceof ScrollPanelWdgt) and m.takesOverAndMergesChildrensMenus
+      m.takesOverAndMergesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
       widgetToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
