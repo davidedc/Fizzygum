@@ -13,21 +13,15 @@ class VerticalStackLayoutSpec
   #
   # - desiredWidth: the element's width WISH — captured from its natural width at placement
   #   (an initialisation default, user-editable via the "base width..." menu entry), NOT
-  #   load-bearing history: nothing samples the container's PAST width. (The old proportional
-  #   model — width = wEl + elasticity*(availW*wEl/wStk - wEl) — divided by an add-time
-  #   widthOfStackWhenAdded snapshot, which made layout depend on history and whose
-  #   uninitialised nil was the NaN that forced WindowWdgt.contentNeverSetInPlaceYet's
-  #   measure guard.)
+  #   load-bearing history: nothing samples the container's PAST width.
   # - grow: the 0..1 share of the EXTRA space (availW - desiredWidth) the element takes.
   #   0 = keep the desired width (fixed); 1 = fill the row / track the stack width. The
   #   "elasticity..." menu knob edits it on a 0..100 scale. nil = NOT DECIDED YET: the
   #   capture below derives it from the add-time relationship (an element placed at/above
-  #   the stack width is fill-class and tracks; a narrower one keeps its size — D2-def),
-  #   exactly the distinction the old model encoded in the captured wEl/wStk ratio
-  #   (ratio 1 ≡ track, ratio < 1 ≡ scaled-keep). An EXPLICIT grow (the fixed/aspect
-  #   classes' 0, a menu edit, a constructor arg) always wins over the derivation.
-  #   (The aspect CONTRACT — pure measure + role-appropriate grow — is documented at
-  #   KeepsRatioWhenInVerticalStackMixin, D6.)
+  #   the stack width is fill-class and tracks; a narrower one keeps its size — D2-def). An
+  #   EXPLICIT grow (the fixed/aspect classes' 0, a menu edit, a constructor arg) always wins
+  #   over the derivation. (The aspect CONTRACT — pure measure + role-appropriate grow — is
+  #   documented at KeepsRatioWhenInVerticalStackMixin, D6.)
   desiredWidth: nil
   grow: nil
   alignment: 'left'

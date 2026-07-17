@@ -296,15 +296,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @contents?.editButtonPressedFromWindowBar?()
 
   # duringReInflation: true ONLY for the one synchronous re-fit inside _reactToChildUnCollapsed --
-  # during re-inflation the content must KEEP its just-restored extent (the content-dictated-height
-  # branch) instead of being stretched to a mid-restore window height. This used to be the
-  # @reInflating instance flag (born 597435e6, 2018) -- an argument passed through instance state
-  # because the arrange had no parameter channel; now it IS an argument (up-edge endgame V1-d,
-  # docs/archive/upedge-endgame-plan.md §9-E4: the probe measured 13 real branch flips across 7 collapse
-  # tests, so the term is load-bearing; deriving it from the stored collapse-extent fields is
-  # falsified -- they are never cleared). Every other caller (the preferredExtentForWidth measure,
-  # the nested-window recursion below) takes the default false, exactly the value the flag had
-  # outside the hook.
+  # the content must KEEP its just-restored extent instead of being stretched to a mid-restore
+  # window height; every other caller (incl. the preferredExtentForWidth measure) takes the
+  # default false. History/rationale: docs/archive/upedge-endgame-plan.md §9-E4.
   contentsRecursivelyCanSetHeightFreely: (duringReInflation = false) ->
     # was `!(@contents instanceof WindowWdgt)` (type-test-elimination campaign)
     if !@contents.isWindow?()
@@ -681,7 +675,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
   # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
-  # should this just be the _reLayout function? Why do we need this extra one?
   # duringReInflation: passed true ONLY by _reactToChildUnCollapsed's synchronous re-fit -- see
   # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
   _positionAndResizeChildren: (duringReInflation = false) ->
@@ -713,14 +706,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       # (U2) the first-placement ONE-SHOT is CONTENT-owned: an uncaptured spec (desiredWidth
       # unset -- fresh init above, or re-armed on content (re)mount in _addNoSettle) selects
-      # the negotiation branch ONCE; captureInitialPlacement below is itself the latch.
-      # This replaced the window-level contentNeverSetInPlaceYet boolean (decl + set + two
-      # branch selectors + clear, all deleted). Computed BEFORE the capture latches, and used
-      # by BOTH the width branch here and the height branch below.
+      # the negotiation branch ONCE; captureInitialPlacement below is itself the latch. Computed
+      # BEFORE the capture latches, and used by BOTH the width branch here and the height branch below.
       firstPlacement = !@contents.layoutSpecDetails.desiredWidth?
 
       if firstPlacement
-        # in this case the contents has just been added
         recommendedElementWidth = @_firstPlacementContentWidth @width()
         if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and @contents.layoutSpecDetails.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
           # THIS_ONE_I_HAVE_NOW / an explicit px on a DESKTOP window: the WINDOW resizes
@@ -743,14 +733,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
 
       else
-        # the content was already there
         recommendedElementWidth = @contents.layoutSpecDetails.getWidthInStack()
 
       partOfHeightUsedUp = @_chromeHeight @contents.layoutSpecDetails
 
       # this re-layouts each widget to fit the width.
       if firstPlacement
-        # in this case the contents has just been added
         if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
           desiredHeight = @contents.preferredExtent().y
@@ -768,7 +756,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
         # (no flag clear -- captureInitialPlacement above latched the one-shot)
       else
-        # the content was already there
         # Path B: take the resulting height from the sizing call, not a read-back of @contents.height().
         desiredHeight = @contents._setWidthSizeHeightAccordingly recommendedElementWidth
 

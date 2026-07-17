@@ -1,7 +1,7 @@
 class ScrollPanelWdgt extends PanelWdgt
 
   autoScrollTrigger: nil
-  hasVelocity: true # dto.
+  hasVelocity: true
   padding: 0 # around the scrollable area
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
@@ -148,18 +148,12 @@ class ScrollPanelWdgt extends PanelWdgt
     @isTextLineWrapping
 
   _reLayoutScrollbars: ->
-    # (proper-layouts Phase D, 2026-06-28) This used to set @_adjustingContentsBounds (save/restore) SOLELY so
-    # the cross-method seam check in Widget._reFitContainer suppressed the bars' raw resizes below from
-    # re-fitting ME (the panel). That check was deleted in Phase D, so the save/restore was inert and is gone
-    # too. (proper-layouts Phase E, 2026-06-28) The @_adjustingContentsBounds field is now fully DELETED: its
-    # last use -- the _positionAndResizeChildren re-entrancy guard -- was retired by the arrange applying its
-    # own geometry through the override-bypassing _applyExtentBase (the interim _resizeOwn*SkippingChildRelayout
-    # helpers were inlined away in Tier D, 2026-07-02).
-    # (§4.2 Stage 3, 2026-06-29) The bars below now apply their geometry via the NON-notifying arrange twins
-    # (_applyExtentBase / _applyMoveToBase) so they no longer fire the re-fit seam back at ME: the bars
-    # are chrome I own and place from my own size, never affecting my content-fit, so the seam's self-re-enqueue
-    # (the capstone's Pattern C) was a pure redundant confirm pass. (The whole notify-by-mutation seam has since
-    # been DELETED -- 2026-07-01, replaced by the settle-time up-edge -- so no mutator fires anything anymore.)
+    # §4.2 Stage 3 (structural arrange): the bars below apply their geometry via the NON-notifying
+    # arrange twins (_applyExtentBase / _applyMoveToBase), not the notifying setters -- they are
+    # chrome I own and place from my own size, never affecting my content-fit, so notifying would
+    # only trigger a redundant confirm pass. The @_adjustingContentsBounds save/restore this used to
+    # need is gone along with the notify-by-mutation seam it guarded against.
+    # See docs/archive/proper-layouts-4.2-structural-arrange-plan.md.
 
     # one typically has both scrollbars in view, plus a resizer
     # in bottom right corner, so adjust the width/height of the
@@ -170,32 +164,17 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @changed()
 
-    # this check is to see whether the bar actually belongs to this
-    # ScrollPanel. The reason why the bar could belong to another
-    # ScrollPanel is the following: the bar could have been detached
-    # from a ScrollPanel A. The ScrollPanel A (which is still fully
-    # working albeit detached) is then duplicated into
-    # a ScrollPanel B. What happens is that because the bar is not
-    # a child of A (rather, it's only referenced as a property),
-    # the duplication mechanism does not duplicate the bar and it does
-    # not update the reference to it. This is correct because one cannot
-    # just change all the references to other objects that are not children
-    # , a good example being the targets, i.e. if you duplicate a colorPicker
-    # which targets a Widget you want the duplication of the colorPicker to
-    # still change color of that same Widget.
-    # So: the ScrollPanel B could still reference the scrollbar
-    # detached from A and that causes a problem because changes to B would
-    # change the dimensions and hiding/unhiding of the scrollbar.
-    # So here we avoid that by actually checking what the scrollbar is
-    # attached to.
+    # this check is to see whether the bar actually belongs to this ScrollPanel: a bar can survive
+    # detached from its original ScrollPanel A (it's referenced as a property, not a child, so
+    # duplicating A into B does not retarget or duplicate the bar), leaving B referencing A's bar. We
+    # guard on the bar's own `target` before touching it so a stray duplicate never resizes/hides a
+    # scrollbar that belongs to a different panel.
     if @hBar.target == @
       if @contents.width() >= @width() + 1
         @hBar.show()
-        # §4.2 Stage 3: my scrollbars are chrome I OWN and place -- pure followers of my own width/height, never
-        # affecting my content-fit (subBounds reads @contents' children, not my bars). So size/position them via
-        # the NON-notifying twins; the old _applyWidth/_applyMoveTo fired the re-fit seam back at ME (the
-        # capstone's Pattern C self-re-enqueue), a redundant confirm pass. (_applyExtentBase == _applyWidth/Height
-        # minus the seam; preserves height/width by passing the current other axis.)
+        # chrome I own and place -- apply via the non-notifying twin as above (see the method-top
+        # comment). _applyExtentBase == _applyWidth/Height minus the seam; preserves height/width by
+        # passing the current other axis.
         @hBar._applyExtentBase new Point(hWidth, @hBar.height())  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
@@ -248,22 +227,19 @@ class ScrollPanelWdgt extends PanelWdgt
       @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen
       # Intentional synchronous APPLY (not an off-settle trigger to defer): add / addMany /
       # showResizeAndMoveHandlesAndLayoutAdjusters are public content-change ENDPOINTS, idempotent
-      # with this panel's own _reLayout ('super; @_reLayoutChildren') so the cycle re-fits identically;
-      # the inline call just keeps geometry current within the calling public method. Distinct from
-      # the seam sites (raw-mutator / gesture triggers), which DO defer. (deferred-layout-residuals-audit.md)
-      # Deferring this re-fit through a batch settler was PROBED 2026-06-22 (OVERVIEW §11 Phase-4) and
-      # REJECTED: it deterministically diverges nested-scroll content/thumb geometry (3 frames of
-      # macroNestedScrollPanelsRouteWheel + macroDocumentScrollsMixedTextAndClocks) for ZERO gain -- the
-      # synchronous re-fit's re-read of APPLIED geometry is load-bearing (OVERVIEW §11 PROOF 2). Leave synchronous.
+      # with this panel's own _reLayout ('super; @_reLayoutChildren'), distinct from the seam sites
+      # (raw-mutator / gesture triggers), which DO defer -- see
+      # docs/archive/deferred-layout-residuals-audit.md. Deferring this re-fit was tried and rejected
+      # (diverges nested-scroll geometry for zero gain) -- see
+      # docs/archive/layout-system-architecture-assessment.md, "Do not revisit (already falsified)".
       # layout-apply-sanctioned: public content-change endpoint, idempotent w/ _reLayout (OVERVIEW §11 PROOF 2)
       @_reLayoutChildren()
 
-  # see SimpleSlideWdgt for performance improvements
-  # of this over the non-
   # thin-wrap-exempt: SYNCHRONOUS content-change endpoint -- @contents.addMany + immediate @_reLayoutChildren
-  # (re-reading APPLIED geometry is load-bearing; deferring it diverges nested-scroll geometry, exactly as for
-  # add() -- OVERVIEW §11 PROOF 2). The _addManyNoSettle twin below is the non-settling core for in-flush callers
-  # (createToolsPanel), NOT a settle the public form should route through.
+  # (re-reading APPLIED geometry is load-bearing; deferring it diverges nested-scroll geometry, exactly as
+  # for add() -- see docs/archive/layout-system-architecture-assessment.md, "Do not revisit"). The
+  # _addManyNoSettle twin below is the non-settling core for in-flush callers (createToolsPanel), NOT a
+  # settle the public form should route through.
   addMany: (widgetsToBeAdded) ->
     @contents.addMany widgetsToBeAdded
     @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
@@ -312,12 +288,12 @@ class ScrollPanelWdgt extends PanelWdgt
     super aPoint
 
 
-  # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to
-  # the cycle. These are dispatched from ActivePointerWdgt.drop/grab AFTER a self-settling add, so
-  # they run OUTSIDE any layout pass -- the else arm (invalidate self; my _reLayout is
-  # 'super; @_reLayoutChildren', so the cycle re-fits me identically) is what runs. The in-pass
-  # arm keeps the synchronous re-fit (the pre-existing behaviour) for safety. (No recalc-enqueue arm:
-  # unlike the seams, these are never dispatched mid-pass. See deferred-layout-residuals-audit.md fam 2.)
+  # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to the
+  # cycle via _reFitContainer -> _scheduleRelayoutRespectingPhase. These are dispatched from
+  # ActivePointerWdgt.drop/grab AFTER a self-settling add, so they always run OUTSIDE any layout pass --
+  # the off-pass arm (invalidate self; my _reLayout is 'super; @_reLayoutChildren', so the cycle re-fits
+  # me identically) is what runs. The in-pass arm (a no-climb enqueue, for a caller that DOES fire
+  # mid-pass) is never exercised here. See deferred-layout-residuals-audit.md fam 2.
   _reactToChildDropped: ->
     @_reFitContainer()
 
@@ -350,21 +326,11 @@ class ScrollPanelWdgt extends PanelWdgt
   # implementsDeferredLayout is `@_reLayout != Widget::_reLayout`, so the _reLayout above would
   # otherwise flip it true and change TWO read sites: (A) _setWidthSizeHeightAccordingly
   # (invalidate-on-resize) and, the load-bearing one, (B) subWidgetsMergedFullBounds -- a
-  # deferred-layout child contributes only its viewport rect, not its scrolled subtree, which
-  # would shrink a NESTED scroll panel's reported content size and regress nested-scroll
-  # (the proven 16->18 Path-A trap). We pin it to false so the _reLayout drives the re-fit
-  # while our merged-bounds/resize classification stays exactly as before we had a _reLayout.
-  # RE-PINNED at sizing-model unification U3 (2026-07-16, plan par.9.7): the model swap (U1),
-  # the flag deletion (U2) and the container true-measures (U3-B) all leave BOTH read sites'
-  # rationales intact -- (B) is now the D4-reclassified ONE named state-read, whose
-  # child-classification fork this pin feeds.
-  # U4 RE-EXAMINATION (2026-07-17, plan par.9.8): CLOSED, the pin is PERMANENT. Checked
-  # against the par.9.7-Q width rule and the U4 state: (A) Path-B classification unchanged
-  # (the rule changed WINDOW first-placement policy, not the width-application mechanism);
-  # (B) the named state-read's viewport-vs-subtree fork is exactly what keeps nested scroll
-  # content sized correctly (the proven 16->18 un-pin trap, plan par.6); the V1 seam's gate
-  # reads this too and a ScrollPanel-as-@contents construct still does not exist in-tree.
-  # Un-pinning stays falsified prior art; do not retry without a driving defect.
+  # deferred-layout child contributes only its viewport rect, not its scrolled subtree, which would
+  # shrink a NESTED scroll panel's reported content size and regress nested-scroll (the proven 16->18
+  # Path-A trap). We pin it PERMANENTLY to false, re-examined and reconfirmed through the sizing-model
+  # unification arc (U3/U4): do not un-pin without a driving defect. See
+  # docs/archive/sizing-model-unification-plan.md.
   implementsDeferredLayout: ->
     false
 
@@ -468,27 +434,16 @@ class ScrollPanelWdgt extends PanelWdgt
       if @contents.externalPadding?
         subBounds = subBounds.expandBy @contents.externalPadding
 
-      # in case of a SimpleVerticalStackScrollPanelWdgt then we really
-      # want to make sure that we don't stretch the view and the stack
-      # after the end of the contents (this can happen for example
-      # when you are completely scrolled to the bottom and remove a long
-      # chunk of text at the bottom: you don't want the extra vacant space
-      # to be in view, you want to shrink all that part up and reposition the
-      # stack so you actually see a bottom that has something in it)
-      # So we first size the stack according to the minimum area of the
-      # components in it, then we add the minimum space needed to fill
-      # the viewport, so we never end up with empty space filling the stack
-      # beyond the height of the viewport.
+      # For a content-sizing stack/text panel: never stretch the view past the end of @contents (e.g.
+      # after deleting text while scrolled to the bottom -- we don't want to reveal vacant space, we
+      # want to shrink up and keep the bottom in view). So size first to the components' minimum area,
+      # then grow only enough to fill the viewport.
       if isContentSizing
         newBounds = subBounds.expandBy(padding).ceil()
 
-        # ok so this is tricky: say that you have a document with
-        # ONLY a centered icon in it.
-        # If you don't add this line, the subBounds will start at the
-        # origin of the icon, which is NOT aligned to the left of the
-        # viewport. So what will happen is that the panel will be moved
-        # so its left will coincide with the left of the viewport.
-        # So the icon will appear non-centered.
+        # Anchor to the viewport's own left/top even when subBounds starts elsewhere (e.g. a single
+        # centered icon) -- otherwise merging bounds that start off-origin would shift the panel so
+        # the icon's left aligns with the viewport's left, un-centering it.
         newBounds = newBounds.merge new Rectangle @contents.left(), @contents.top(), @contents.left() + @width(), @contents.top() + 1
 
         if newBounds.height() < @height()
@@ -527,13 +482,9 @@ class ScrollPanelWdgt extends PanelWdgt
       if @contents.implementsDeferredLayout()
         @contents._scheduleRelayoutRespectingPhase()
 
-    # you'd think that if @contents.boundingBox().equals newBounds
-    # then we don't need to check if the contents are "in good view"
-    # but actually for example a stack resizes itself automatically when the
-    # elements are resized (in the foreach loop above),
-    # so we need anyways to do this check and fix the view if the
-    # case. The good news is that it's a cheap check to do in case
-    # there is nothing to do.
+    # Always run this check even when @contents.boundingBox() already equals newBounds: a stack can
+    # resize itself in the foreach loop above without changing the outer frame, so the view can still
+    # need fixing. Cheap to check when there's nothing to do.
     @keepContentsInScrollPanelWdgt()
 
   # §4.2 Stage 3 (structural arrange): the position clamp keeping my content snug against my viewport edges. I
@@ -558,14 +509,8 @@ class ScrollPanelWdgt extends PanelWdgt
     newX = cl + steps
     newX = r - cw  if newX + cw < r
     newX = l  if newX > l
-    # return true if any movement of
-    # the scrollbar button is
-    # actually happening, otherwise
-    # false. We use this to figure
-    # out in some places whether
-    # we need to trigger a bunch of
-    # updates of the content and scrollbars
-    # or not.
+    # Return true iff the content actually moved -- callers use this to decide whether to trigger the
+    # content/scrollbar update.
     if newX isnt cl
       @contents._moveLeftSideTo newX
       return true
@@ -600,30 +545,17 @@ class ScrollPanelWdgt extends PanelWdgt
     # prevents content to be scrolled to the Panel's
     # bottom if the content is otherwise empty
     newY = t  if newY > t
-    # return true if any movement of
-    # the scrollbar button is
-    # actually happening, otherwise
-    # false. We use this to figure
-    # out in some places whether
-    # we need to trigger a bunch of
-    # updates of the content and scrollbars
-    # or not.
+    # Return true iff the content actually moved -- callers use this to decide whether to trigger the
+    # content/scrollbar update.
     if newY isnt ct
       @contents._moveTopSideTo newY
       return true
     else
       return false
   
-  # Sometimes you can scroll the contents of a ScrollPanel
-  # by floatDragging its contents. This is particularly
-  # useful in touch devices.
-  # You can test this also in non-touch mode
-  # by anchoring a ScrollPanel to something
-  # non-draggable such as a color palette (can't drag it
-  # because user can drag on it to pick a color).
-  # Then you chuck a long text into the ScrollPanel and
-  # drag the Panel (on the side of the text, where there is no
-  # text) and you should see the ScrollPanel scrolling.
+  # Float-dragging a ScrollPanel's contents scrolls it (particularly useful on touch devices); the same
+  # gesture works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
+  # scroll panel anchored to a non-draggable background, such as a color palette).
   mouseDownLeft: (pos) ->
 
     return nil  unless @isScrollingByfloatDragging
@@ -643,13 +575,9 @@ class ScrollPanelWdgt extends PanelWdgt
       everFloatDragged ||= world.hand.isThisPointerFloatDraggingSomething()
       if world.hand.mouseButton and
         !world.hand.isThisPointerFloatDraggingSomething() and
-        # if the Widget at hand is float draggable then
-        # we are probably about to detach it, so
-        # we shouldn't move anything, because user might
-        # just float-drag the widget as soon as the threshold is
-        # reached, and we don't want to scroll until that happens
-        # that would be strange because it would be giving the
-        # wrong cue to the user, we just want to hold steady
+        # a float-draggable widget under the hand is probably about to be detached, so hold steady
+        # instead of scrolling -- scrolling now would give the wrong cue right before the float-drag
+        # threshold is reached
         !world.hand.wdgtToGrab?.detachesWhenDragged() and
         # per-frame samples of the hand are SCREEN-plane; map each into MY plane at the read
         # site (the raw-pointer lint enforces exactly this shape), so the containment gate
@@ -968,11 +896,8 @@ class ScrollPanelWdgt extends PanelWdgt
     @dragsDropsAndEditingEnabled = false
 
     @contents._disableDragsDropsAndEditingNoSettle @
-    # ELIMINATE (end-of-cycle-flush-drawdown): the "disable editing" menu action used to schedule an OFF-SETTLE
-    # re-fit here (@_invalidateLayout) -- a careless end-of-cycle push (it reaches the flush from the menu trigger,
-    # outside any settle; the suite-wide production audit flagged exactly this site). A disable-probe proved it
-    # REDUNDANT: disabling changes appearance + drop-handling, not this panel's settled geometry, and the cascade's
-    # @contents._disableDragsDropsAndEditingNoSettle above already did its synchronous work, so the deferred re-fit changed
-    # nothing -- removing it is byte-identical (full gauntlet incl. the 12 panel-locking apps) and clears the
-    # macroLockedDocumentRejectsDrop record. (Was `@_invalidateLayout()`.)
+    # ELIMINATE (end-of-cycle-flush-drawdown): a disable-probe proved the deferred re-fit that used to
+    # live here redundant -- disabling only changes appearance/drop-handling, and the cascade's
+    # @contents._disableDragsDropsAndEditingNoSettle above already did the synchronous work. See
+    # docs/archive/end-of-cycle-flush-inventory.md. (Was `@_invalidateLayout()`.)
 

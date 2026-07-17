@@ -8,7 +8,6 @@ class CaretWdgt extends BlinkerWdgt
   currentCaretFontSize: nil
 
   constructor: (@target) ->
-    # additional properties:
     @slot = @target.text.length
     super()
 
@@ -159,8 +158,7 @@ class CaretWdgt extends BlinkerWdgt
     @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
 
   _gotoSlotNoSettle: (slot, becauseOfMouseClick) ->
-    # check that slot is within the allowed boundaries of
-    # of zero and text length.
+    # clamp slot to [0, text length].
     length = @target.text.length
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
 
@@ -432,35 +430,11 @@ class CaretWdgt extends BlinkerWdgt
     # numbers and "-" and "." as input
     if not @target.isNumeric or not isNaN(parseFloat(key)) or key in ["-", "."]
       
-      # we push the state here before the change, then again
-      # after the change. This seems redundant, however
-      # it's needed because:
-      #
-      # 1) in case we are about to insert something that
-      #    replaces a selection, then it's actually
-      #    important to save the state before the selection
-      #    is touched so that the user can go back to it
-      # 2) in case of edit "far" from the previous edit,
-      #    this is going to be very very useful because
-      #    it's much *much* more natural
-      #    for the user to undo up to the position BEFORE an
-      #    edit. If you don't save that position before the
-      #    edit, you jump directly to the end of the edit before,
-      #    it's actually quite puzzling.
-      #    It's nominally "functional" to only jump to text changes,
-      #    but it's quite unnatural, it's not how undos work
-      #    in real editors.
-      #
-      # In the "normal" case of continuous typing this
-      # would be indeed redundant, HOWEVER we avoid such
-      # redundancy, because the sequences of:
-      #
-      #         position, text, position, text, ...
-      #
-      # actually are saved without the "position"
-      # changes (there is a check in "pushUndoState" that if there
-      # is only a change position of one then that state is not
-      # pushed)
+      # Pushed before AND after the change (not redundant): (1) before, so an insert that replaces a
+      # selection saves state pre-selection-touch, letting undo return the user there; (2) before, so
+      # undo lands on the position BEFORE an edit rather than jumping to the end of the prior edit,
+      # matching real-editor undo semantics. In continuous typing this doesn't spam history:
+      # pushUndoState dedupes a state that is only a position change of one from the previous state.
 
       @target.pushUndoState? @slot
 
