@@ -168,8 +168,7 @@ class ScrollPanelWdgt extends PanelWdgt
     hWidth = @width() - spaceToLeaveOnOneSide
     vHeight = @height() - spaceToLeaveOnOneSide
 
-    unless @parent instanceof ListWdgt
-      @changed()
+    @changed()
 
     # this check is to see whether the bar actually belongs to this
     # ScrollPanel. The reason why the bar could belong to another
