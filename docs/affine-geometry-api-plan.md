@@ -41,6 +41,12 @@ A widget's geometry API is split into exactly two families, distinguishable BY N
 - **SCREEN family** (small, explicit): every name contains `screen` — today
   `localPointToScreen(p)` / `screenPointToMyPlane(p)`, plus the additions in §3. These return
   **post-transform screen-plane values, possibly fractional**.
+- **Parent-plane derived (one member, claimsSpace arc D2 2026-07-17):**
+  `TransformFrameWdgt.scrollOverflowBoundsInParentPlane()` — the island's claimed box ∪ its ink
+  hull, INTEGER and expressed in the PARENT plane. Deliberately in NEITHER family above: it is
+  not plane-local layout-box geometry (it reflects the transform) and not screen-family (no
+  ancestor-plane composition, never fractional). Sole consumer: the scroll frame's merge walk
+  (`Widget.subWidgetsMergedFullBounds`).
 
 **THE LAW: no method without "screen" in its name ever returns transformed geometry; no method
 with "screen" in its name ever returns plane-local geometry.** (Third axis, unchanged: logical vs

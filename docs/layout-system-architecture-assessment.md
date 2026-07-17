@@ -511,7 +511,18 @@ containers gained true `preferredExtentForWidth` twins (U3), and the newborn-win
 owner-decided) makes a container-owned window size like a captured one FROM BIRTH — the container owns its
 width; the hug is desktop-window behaviour. The one applied read-back (`subWidgetsMergedFullBounds`) is kept
 and RECLASSIFIED as the layout system's ONE named state-read (user-placed free-floating children — genuine
-state, D4). The aspect contract is documentation now, not a cycle-breaker (D6: pure measure +
+state, D4). (D2 scroll-reachability note, claimsSpace arc 2026-07-17: the walk now takes a transformed
+island's `scrollOverflowBoundsInParentPlane?()` — claimed box ∪ ink hull — instead of its slot-box
+fullBounds, seed included; still a read of stable applied geometry + a pure derived box, so the
+classification is unchanged.) A second datum on the two-philosophies axis (claimsSpace arc,
+owner ruling 2026-07-17): the framework's containers split into ASKING containers (measure-based
+flow — stacks — which ask a child how much space it takes) and DICTATING containers (the
+stretchable panel's fractional model, window content sizing — which impose geometry). A
+transformed island's `claimsSpace` mode gates ONLY the asking protocol (a coupled island
+answers the stack-protocol trio as a fixed figure reporting its claimed box) and scroll
+reachability; a dictating container's contents-stretch contract holds in EVERY mode —
+`TrackingTransformFrameWdgt._applyExtent` forwards to the content unconditionally. Space
+NEGOTIATION is moddable; participation in dictated sizing is not. The aspect contract is documentation now, not a cycle-breaker (D6: pure measure +
 role-appropriate grow; the cycle is structurally impossible — a stack never derives width from child heights,
 a container-owned window never self-resizes to content). The user-facing knobs survive unchanged (base
 width / elasticity / alignment — the D2 mapping). Storage stays split by design (widget fields h-side, spec
@@ -1288,6 +1299,14 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    then re-fits you after your content settles. Off-pass, a freefloating child's `_invalidateLayout` climbs THROUGH the
    freefloating boundary to a `_reLayoutChildren` parent (the uniform dirty-tree that replaced the property seam, §4.1).
    You do not — and must not — wire a manual notification.
+   Case law (claimsSpace arc, 2026-07-17): the climb-through serves a freefloating child of a DIRECT
+   tracking parent — it DROPS at a non-tracking intermediate (a scroll frame's `@contents` PanelWdgt
+   has no `_reLayoutChildren`, so nothing a freefloating child schedules ever reaches the frame). The
+   sanctioned alternative at a semantic point is the `_reFitContainer` intent verb with the explicit
+   `@parent.parent` folder-frame hop (the same hop `_reFitMyTrackingContainerAfterSettle` uses; the
+   §9-N2 basement-scatter seam and the island's transform-change reachability edge are the two landed
+   instances) — still not a manual notification: it records intent through the phase valve, gated on
+   the container's own capability.
 
 5. **Aspect content follows THE ASPECT CONTRACT (D6 — documented at `KeepsRatioWhenInVerticalStackMixin`).** A pure
    width→height measure (`preferredExtentForWidth`) + role-appropriate grow: a STACK element that should stay

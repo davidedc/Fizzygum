@@ -1643,6 +1643,18 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsMouseMovePressDragRelease_InputEvents (adj.localPointToScreen adj.center()), (from.add new Point dx, dy)` drives the
   non-float drag stream through the island's hit-testing; assert the resize DIRECTION (grew/shrank) rather than magnitudes (the
   adjuster's transfer function is nonlinear).
+- **claimsSpace-mode fixtures** (`macroTransformFrameFootprintDefaultSugarInStack`, `macroTransformFrameSlotScrollReachability`,
+  `macroTransformFrameSweepScrollSpinStable`; re-points in `macroTransformFrameFootprintReflow`/`macroTransformFrameSweepReserve`/
+  `macroRotateChildInsideStretchablePanelThenResize`): **'footprint' is the DEFAULT claimsSpace** (owner decision D1 2026-07-17) — a
+  test whose subject is a NON-default mode must PIN it, either in the constructor (`new TransformFrameWdgt content,
+  new TransformSpec(deg, 1, nil, "slot")`) or right after a sugar materialize (`w.setRotationDegrees 30` then
+  `w.parent.setClaimsSpace "slot"`). Testing the DEFAULT'S reach = drive the property sugar on a plain stack element with NOTHING
+  set (the tracking island must read 'footprint' — assert `pic.parent.transformSpec.claimsSpace`). Scroll-reachability fixtures (D2)
+  use a PLAIN freshly-built free-floating `ScrollPanelWdgt` (`panel.add island`; NEVER the basement — complected) sized so the
+  rotated ink pokes past the viewport while the slot box stays inside: assert the vBar visibility rule
+  (`panel.contents.height() >= panel.height() + 1`), wheel to prove the ink reachable, and assert the rotate-back round-trip
+  byte-identical (`@assertScreenshotsIdentical`). Sweep spin-stability asserts EXACT integer equality of
+  `panel.contents.width()/height()` across angles.
 
 ## The verb-establishing pilots
 

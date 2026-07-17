@@ -41,6 +41,10 @@ class TransformFrameWdgt extends PanelWdgt
   # Phase 3 (§4.9): last claimed extent reported to the parent layout, for reflow-on-change
   # detection. nil for a 'slot' island (the default — never reflows).
   _lastClaimedExtent: nil
+  # D2 scroll reachability (claimsSpace arc): last claimed ∪ ink box handed to an enclosing
+  # scroll frame, for refit-on-change detection — the REACHABILITY twin of _lastClaimedExtent
+  # (claim → sibling layout; union → scroll extent: two questions, two memos, two edges).
+  _lastScrollOverflowBox: nil
   # Phase 4C (§6): true when this island was MATERIALIZED by the Widget-level property sugar
   # (widget.setRotationDegrees / setScaleFactor). Only a sugar-materialized island is auto-REMOVED
   # when its spec returns to identity (an explicitly-authored island stays, merely dormant). Serializes
@@ -80,6 +84,7 @@ class TransformFrameWdgt extends PanelWdgt
   # plain booleans. Merged up the chain by Serializer.transientsForClass -- this ADDS to Widget's list.
   @serializationTransients: [
     "_lastClaimedExtent"
+    "_lastScrollOverflowBox"
     "_islandBuffer"
     "_islandBufferSlotExtent"
     "_islandBufferDirtyRect"
@@ -122,8 +127,10 @@ class TransformFrameWdgt extends PanelWdgt
 
   # Self-settling (like the plain-widget sugar path), NOT the deferred setter: the halo protocol is a
   # polymorphic dispatch, not a per-event stream handler, so it must not textually call a *DeferredSettle
-  # (check-layering rule [O] — the allowlist is for the actual stream, nonFloatDragging). A per-drag
-  # self-settle is a no-op for a 'slot' island (the default, incl. every sugar island).
+  # (check-layering rule [O] — the allowlist is for the actual stream, nonFloatDragging). Since the D1
+  # default flip (claimsSpace arc, 2026-07-17) a sugar island claims 'footprint', so a halo drag
+  # inside a tracking container reflows the siblings PER DRAG EVENT (each settle re-reserves the
+  # rotated AABB) — the owner-accepted D1 implication; a 'slot' island's per-drag settle stays a no-op.
   rotationHalo_apply: (deg) ->
     @setRotation deg
 
@@ -190,6 +197,7 @@ class TransformFrameWdgt extends PanelWdgt
     @__breakMoveResizeCaches()
     @fullChanged()
     @_invalidateLayout()
+    @_reFitScrollFrameIfReachChangedNoSettle()
 
   # The immediate (no-settle) transform-change core: invalidates the version-keyed bounds caches
   # exactly as a move does (__breakMoveResizeCaches bumps WorldWdgt.geometryVersion), queues the
@@ -205,6 +213,7 @@ class TransformFrameWdgt extends PanelWdgt
     @__breakMoveResizeCaches()
     @fullChanged()
     @_reflowIfClaimChangedNoSettle()
+    @_reFitScrollFrameIfReachChangedNoSettle()
 
   # §3.6 lifecycle: release the cached buffer when the island is identity (the identity path never
   # reads it) or on any teardown. Cheap; keeps a de-tilted explicit island from pinning a big canvas.
@@ -251,6 +260,38 @@ class TransformFrameWdgt extends PanelWdgt
     return if @_lastClaimedExtent? and newClaim.equals @_lastClaimedExtent
     @_lastClaimedExtent = newClaim
     @_invalidateLayout()
+
+  # D2 scroll reachability (claimsSpace arc plan §4.1/F2): the REACHABILITY twin of the claim
+  # reflow above — when my claimed ∪ ink box changed, ask the enclosing NON-content-sizing
+  # scroll frame to re-fit its content frame, so my rotated ink stays reachable by scrolling in
+  # EVERY mode including 'slot' (whose claim never changes — the reported basement defect: ink
+  # poking out of the viewport grew no scrollbar). Deliberately NOT the climbing
+  # _invalidateLayout: a free-floating child's climb DROPS at the frame's non-tracking @contents
+  # PanelWdgt (Widget._invalidateLayout's freefloating gate), which is exactly why 'footprint'
+  # never reached the scroll frame either. _reFitContainer is the sanctioned phase-valved intent
+  # verb of the drop/remove/scatter seams, and the @parent.parent hop is the SAME folder-frame
+  # hop the settle-time up-edge uses (_reFitMyTrackingContainerAfterSettle) — it self-gates on
+  # _reLayoutChildren?, a no-op everywhere else. 'sweep' never fires on pure rotation (union =
+  # rotation-invariant square ∪ nested ink hull — see TransformSpec.scrollOverflowBoxFor), so a
+  # spinning sweep island keeps a perfectly still scrollbar. A stale memo (after a plain move —
+  # the move paths deliberately don't maintain it) can only FALSE-FIRE, never false-skip; the
+  # extra re-fit is idempotent recorded intent.
+  _reFitScrollFrameIfReachChangedNoSettle: ->
+    newBox = if @transformSpec.isIdentity() then @bounds else @transformSpec.scrollOverflowBoxFor @bounds
+    return if @_lastScrollOverflowBox? and newBox.equals @_lastScrollOverflowBox
+    @_lastScrollOverflowBox = newBox
+    @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+
+  # D2 (claimsSpace arc plan §4.1): my contribution to an enclosing scroll frame's content
+  # extent — claimed box ∪ ink hull in the PARENT plane (integer; deliberately neither the
+  # layout-box family, which stays the slot box, nor the screen family, which is
+  # fractional/global — docs/affine-geometry-api-plan.md). Per-class capability (`?()` dispatch,
+  # NO Widget base default — type-test-elimination convention); the ONE consumer is
+  # Widget.subWidgetsMergedFullBounds' merge walk. nil at identity, so the walk's stock
+  # fullBounds merge runs and an untransformed island stays byte-identical (dormant guarantee).
+  scrollOverflowBoundsInParentPlane: ->
+    return nil if @transformSpec.isIdentity()
+    @transformSpec.scrollOverflowBoxFor @bounds
 
   # what we report to the parent's arrange: a non-identity island claims a FIXED figure size (the
   # slot box / footprint AABB / sweep square, §4.9), independent of the offered width — measured,

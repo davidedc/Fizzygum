@@ -1146,10 +1146,17 @@ class Widget extends TreeNode
   # impurity the pure-measure campaign retires (cf. preferredExtentForWidth's rule: reading
   # applied geometry is allowed when nothing just mutated it). Lint note: any NEW caller of
   # this method should justify itself against subWidgetsMergedPreferredBounds (below) first.
+  # D2 scroll reachability (docs/claimsspace-footprint-default-and-scroll-reachability-plan.md):
+  # a child that answers scrollOverflowBoundsInParentPlane?() (a transformed island) contributes
+  # its claimed ∪ ink box INSTEAD of its stock bounds — its rotated overhang is §4.11 ink
+  # overflow, invisible to fullBounds (= the slot box), yet must stay reachable by scrolling.
+  # The SEED takes the same capability answer: a coupled island's union does not contain its
+  # (pixel-less, virtual) slot box, which must not inflate the frame. Still a read of stable
+  # applied geometry + a pure derived box — the D4/U3-A classification is unchanged.
   subWidgetsMergedFullBounds: ->
     result = nil
     if @children.length
-      result = @children[0].bounds
+      result = @children[0].scrollOverflowBoundsInParentPlane?() ? @children[0].bounds
       @children.forEach (child) ->
         # we exclude the HandleWdgts because they
         # mangle how the Panel inside ScrollPanelWdgts
@@ -1157,14 +1164,14 @@ class Widget extends TreeNode
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
         if !child.isLayoutInert?()
-          # if a widget implements deferred layout, then
-          # really we can't consider the sizes and positions
-          # of its children, so stick to the parent bounds
-          # only
-          if child.implementsDeferredLayout()
-            result = result.merge child.bounds
-          else
-            result = result.merge child.fullBounds()
+          contribution = child.scrollOverflowBoundsInParentPlane?()
+          if !contribution?
+            # if a widget implements deferred layout, then
+            # really we can't consider the sizes and positions
+            # of its children, so stick to the parent bounds
+            # only
+            contribution = if child.implementsDeferredLayout() then child.bounds else child.fullBounds()
+          result = result.merge contribution
     result
 
   # §4.1 Stage C (proper-layouts): the side-effect-free counterpart of subWidgetsMergedFullBounds above --
@@ -1823,7 +1830,12 @@ class Widget extends TreeNode
       relDeg = (((0 - degPlane) % 360) + 360) % 360
       island = new TrackingTransformFrameWdgt()
       island._materializedBySugar = true
-      island.transformSpec = new TransformSpec relDeg, 1 / sPlane
+      # explicit 'slot' (claimsSpace arc S2, owner decision 2026-07-17): a COMPENSATING wrapper is
+      # invisible look-correction plumbing (it exists so the payload does NOT appear to rotate at
+      # the drop moment), not a user-authored transform — it must never claim layout space in the
+      # tilted container it lands in. The 4C/4D-2a sugar islands, by contrast, FOLLOW the
+      # 'footprint' default (they carry a user-visible rotation — D1's mainstream case).
+      island.transformSpec = new TransformSpec relDeg, 1 / sPlane, nil, "slot"
       # slot = my bounds (I am on the hand, screen coords); the wrapper pivots on the slot centre so my
       # on-screen look is unchanged, and the 4D-1 block below places the wrapper by its visual centre.
       island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
@@ -1883,8 +1895,13 @@ class Widget extends TreeNode
   #      figure is non-identity. (The dissolve reparents into the ATTACHED parent — a settling layout
   #      mutation — which is why THIS is a non-NoSettle helper and the pick-out resolver stays NoSettle.)
   # Returns the figure to grab.
+  # DECLARED deferred settle (claimsSpace arc S2): step 1's Bug-F ancestor-fold calls the island's
+  # _set*NoSettle cores, whose claim reflow (_invalidateLayout) fires now that sugar figures
+  # default to 'footprint' — an off-settle push the caller's own grab settle carries (the drag's
+  # @grab, pickUpMenuAction's pickUp), exactly as step 1's contract above always stated. The
+  # declaration window makes that contract explicit to the end-of-cycle capstone audit.
   _resolvePickUpFigure: ->
-    figure = @_resolvePickOutFigureNoSettle()
+    figure = @_deferredSettleDeclare => @_resolvePickOutFigureNoSettle()
     if figure._materializedBySugar and figure.transformSpec?.isIdentity()
       # nosettle-sanctioned: called ONLY from event-stream contexts (the drag pipeline determineGrabs and
       # the menu pickUpMenuAction), never mid-pass, so the deliberate self-settling dissolve is correct —

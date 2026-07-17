@@ -30,11 +30,16 @@ class TransformSpec
   rotationDegrees: 0        # float, canonical (Phase 2: live)
   scale: 1                  # float > 0
   anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
-  # layout coupling (plan §4.9): 'slot' (paint-only, the default) / 'footprint' / 'sweep' —
-  # all three live since Phase 3 (see _claimedBoxFor below + TransformFrameWdgt.setClaimsSpace).
-  claimsSpace: "slot"
+  # layout coupling (plan §4.9): 'footprint' (THE DEFAULT — owner decision D1, 2026-07-17,
+  # docs/claimsspace-footprint-default-and-scroll-reachability-plan.md) / 'slot' (paint-only) /
+  # 'sweep'. Defaults serve the DOCUMENT author: a rotated image in a document must not overlap
+  # the text below it; expert authors who need paint-only rotation ('slot') or a spin-stable
+  # reserve ('sweep') set the mode themselves. ('slot' was the default through Phase 3 — the
+  # "paint-only Lively firewall" — inverted into an opt-in by D1.) All three modes live since
+  # Phase 3 (see _claimedBoxFor below + TransformFrameWdgt.setClaimsSpace).
+  claimsSpace: "footprint"
 
-  constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "slot") ->
+  constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "footprint") ->
     # Phase 2: rotation is live — for a non-zero angle the matrix trig comes from the shared
     # deterministic DetTrig port (see _cosSin), so rotated composites are cross-engine identical.
     if @scale <= 0
@@ -77,6 +82,25 @@ class TransformSpec
   # commits to P + slotOffset (plan §4.9: claimed box = extent AND offset).
   slotOffsetWithinClaim: (slotBounds) ->
     slotBounds.topLeft().subtract @_claimedBoxFor(slotBounds).topLeft()
+
+  # D2 scroll reachability (docs/claimsspace-footprint-default-and-scroll-reachability-plan.md):
+  # the box a scroll frame must make reachable = claimed box ∪ the ink's integer hull, in the
+  # slot box's own (parent-plane) coordinates. LAYOUT and REACHABILITY answer different
+  # questions ('slot' claims nothing from siblings yet its rotated ink must still be
+  # scrollable-to), so this deliberately does NOT reuse _claimedBoxFor alone. The ink term is
+  # the UNPADDED exact mapped AABB floor/ceil'd — NOT mapRect's damage-padded twin: exact
+  # corners lie within the sweep circle, so their hull nests inside the sweep square at EVERY
+  # angle (spin-stable extent, sweep's whole promise), while the damage pad would poke 1px past
+  # it at corner-aligned angles. Reachability tracks GEOMETRIC ink (CSS scrollable overflow
+  # draws the same line); the <1px AA bleed stays a damage-path concern. BOTH terms are
+  # load-bearing: under 'slot' the claim (= slot box) never contains the rotated ink (the
+  # reported basement defect), and ink alone would drop the claim ('slot' still occupies its
+  # slot; 'sweep' reserves its square — at 90° a mapped AABB contains neither). For
+  # 'footprint' the claim ⊇ ink hull, so the union degenerates to the claim.
+  scrollOverflowBoxFor: (slotBounds) ->
+    ink = @mapRectExact slotBounds, slotBounds
+    inkHull = new Rectangle (Math.floor ink.left()), (Math.floor ink.top()), (Math.ceil ink.right()), (Math.ceil ink.bottom())
+    @_claimedBoxFor(slotBounds).merge inkHull
 
   # circumscribed square for 'sweep' (§4.3): radius r = max over slot-box corners of the SCALED
   # distance to the anchor; the integer AABB of the circle of radius r centred on the anchor.

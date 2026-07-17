@@ -301,7 +301,7 @@ it is also a candidate for deletion in `docs/accidental-complexity-reduction-pla
 
 - **Transform spec** (`TransformSpec`, new small class): scalars `rotationDegrees` (float,
   canonical), `scale` (float > 0), `anchor` (default: center of the slot box; else a `Point`
-  in slot coordinates), `claimsSpace` (`'slot' | 'footprint' | 'sweep'`, default `'slot'`).
+  in slot coordinates), `claimsSpace` (`'slot' | 'footprint' | 'sweep'`, default `'footprint'` since D1 2026-07-17 — was `'slot'` through Phase 3, see §4.9).
   Matrix is derived, never stored as truth (§1.2 D3).
 - **`TransformFrameWdgt`** (the island): a widget that owns exactly one content subtree and a
   `TransformSpec`. Its own `bounds` (integer, axis-aligned, absolute — unchanged Fizzygum
@@ -536,9 +536,38 @@ claim?* — plus one invalidation rule. The transform machinery is identical acr
 
 | mode | extent reported to parent layout | layout dirtied on transform change? | intended use |
 |---|---|---|---|
-| `'slot'` (default) | untransformed slot box | **never** (damage only) | animation, decoration — CSS semantics; the document under a spinning title stays rock-still |
-| `'footprint'` | corner-mapped integer AABB of the slot box (§4.3) | yes — like a resize, one settle per change | statically rotated figures the text should flow around; exact & stable at 90° multiples (Flutter `RotatedBox` equivalent) |
+| `'slot'` | untransformed slot box | **never** (damage only) | animation, decoration — the document under a spinning title stays rock-still (paint-only; was the default through Phase 3) |
+| `'footprint'` **(default — D1, 2026-07-17)** | corner-mapped integer AABB of the slot box (§4.3) | yes — like a resize, one settle per change | statically rotated figures the text should flow around; exact & stable at 90° multiples (Flutter `RotatedBox` equivalent) |
 | `'sweep'` | anchor-aware circumscribed square (§4.3) | once, on entering the mode / changing anchor·extent | continuous spinners inside layouts — reserve the swept circle, then never reflow |
+
+- **D1 (owner decision 2026-07-17, `docs/claimsspace-footprint-default-and-scroll-reachability-plan.md`):
+  `'footprint'` is the DEFAULT.** Defaults serve the document author: a rotated image in a
+  document (documents are stacks) must not overlap the text below it, with no hand-set mode.
+  The tax moves to expert authors — a spinner class sets `'sweep'` (or `'slot'`) itself. The
+  original Phase-1–3 rationale for a `'slot'` default ("CSS semantics — transforms never move
+  siblings"; the paint-only Lively firewall) stands as dated history: it shaped the Phase 1–3
+  test design, and the firewall behaviour survives as an opt-in (the Phase-3 firewall macro now
+  PINS `'slot'`). Implication accepted with eyes open: a halo drag inside a tracking container
+  reflows siblings per drag event; sugar/pick-out islands FOLLOW the default (they carry a
+  user-visible rotation — the mainstream case), while the Bug-F COMPENSATING wrapper pins
+  `'slot'` (invisible look-correction plumbing never claims space). The tracking island's STACK
+  PROTOCOL trio (`preferredExtentForWidth`/`_setWidthSizeHeightAccordingly`/`getMinimumExtent`)
+  is MODE-GATED since S2: transparent forward under `'slot'` only; a coupled tracking island
+  answers a measure-based flow container as a fixed figure exactly like the base explicit
+  island. `_applyExtent` is deliberately NOT gated (owner ruling, same day): a DICTATING
+  container (stretchable-panel fractions, window content sizing) owns its children's geometry —
+  its contents-stretch contract holds in every mode; claimsSpace governs space negotiation and
+  scroll reachability, never participation in a dictating container's sizing.
+- **D2 (owner decision 2026-07-17, same plan): scroll extent tracks REACHABILITY in ALL modes.**
+  A widget's contribution to a scroll frame's content extent = its claimed box ∪ its visible
+  ink footprint (`TransformSpec.scrollOverflowBoxFor`, consumed via the
+  `scrollOverflowBoundsInParentPlane` capability in `Widget.subWidgetsMergedFullBounds`).
+  Sibling layout and scrolling answer different questions: `'slot'` claims nothing from
+  siblings, yet its rotated ink must stay scrollable-to (CSS draws the same line — transforms
+  never move siblings, but scrollable overflow includes the transformed box). Sweep stays
+  spin-stable (claim ⊇ the unpadded ink hull at every angle); a `'slot'` widget spinning near a
+  scroll edge pulses the extent with the angle (accepted — browsers behave the same; the cure
+  is `'sweep'`).
 
 - The knob is **per-widget**, a field of `TransformSpec` — it must travel and serialize with
   the widget (drag a rotated plot to another document ⇒ same behavior). Containers never
@@ -583,6 +612,12 @@ the `rebuildDerivedValue` stamp — `@serializationTransients` alone is NOT suff
 `rebuildDerivedValue` in `src/` for the pattern). Content subtree serializes unchanged (it is
 ordinary widgets in ordinary coordinates). Follow
 `docs/serialization-duplication-reference.md` for where ser/deser details are documented.
+Old-doc note (claimsSpace arc V0 probe, 2026-07-17): `claimsSpace` is a constructor-assigned
+own property, so every serialized spec carries it EXPLICITLY and restores over any later class
+default (the Deserializer assigns stored fields onto an `Object.create` shell). A record saved
+BEFORE Phase 3 added the scalar has no key and follows the CURRENT default on restore —
+accepted deliberately (owner 2026-07-17: no saved documents exist to keep compatible; no
+normalization shim is built).
 
 ### 4.11 Plane purity: the island's two faces (fresh-eyes CORRECTNESS finding — read before Phase 1)
 
@@ -2640,7 +2675,7 @@ path `clip` (native trivially; SWCanvas `Transform2D` `swcanvas.js:1088`, `Polyg
 
 ### 10.8 Interaction with layouts (all couplings)
 
-Behavior: §4.9 — `'slot'` (default; layout never learns), `'footprint'` (one settle per
+Behavior: §4.9 — `'slot'` (layout never learns; was the default until D1 2026-07-17), `'footprint'` (the default; one settle per
 change, exact at 90° multiples), `'sweep'` (one settle on entry). All three supported
 simultaneously in one container; the knob is per-widget on the `TransformSpec`, serializes
 and travels with the widget.

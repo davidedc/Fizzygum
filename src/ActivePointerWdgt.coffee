@@ -459,7 +459,12 @@ class ActivePointerWdgt extends Widget
       # identity sugar island that _unwrapIfIdentitySugarNoSettle then dissolves AFTER target.add (below). Off
       # any sugar figure, or into an identity plane (target == world, or a plain container), returns wdgtToDrop
       # unchanged ⇒ byte-identical dormant.
-      wdgtToDrop = wdgtToDrop._reExpressFigureForPlaneOfNoSettle target
+      # DECLARED deferred settle (claimsSpace arc S2): the re-spec's _set*NoSettle cores fire the
+      # island's claim reflow (_invalidateLayout) now that sugar figures default to 'footprint' —
+      # an off-settle push whose settle target.add below carries, exactly as this seam's contract
+      # always stated ("the drop's target.add carries the settle"). The declaration window makes
+      # that contract explicit to the end-of-cycle capstone audit instead of implicit.
+      wdgtToDrop = wdgtToDrop._deferredSettleDeclare => wdgtToDrop._reExpressFigureForPlaneOfNoSettle target
 
       target._beforeChildDropped? wdgtToDrop
 

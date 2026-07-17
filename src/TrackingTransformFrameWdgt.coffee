@@ -53,8 +53,11 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # Re-fit my slot to my single content child's bounds. The up-edge enqueues me only AFTER the content
   # has fully settled, so content.bounds is final — a ONE-PASS idempotent arrange (rule 2/3): slot ←
   # child bounds is naturally idempotent, uses NO public setter and NO _invalidateLayout (FLOWRULE forbids
-  # scheduling layout mid-pass), and does not climb. A hugging island is 'slot' claimsSpace (the paint-
-  # only firewall), so the slot change needs no parent reflow; _refreshIslandBuffer rebuilds the buffer
+  # scheduling layout mid-pass), and does not climb. A parent re-fit for the slot change needs no
+  # wiring HERE in any mode: a re-hug that changes the slot is a FRAME change, so the engine's
+  # frame-change up-edge re-fits my container, which re-reads my claim (derived from the slot) —
+  # for 'slot' islands that re-fit is a no-op by construction (claim == slot ⊆ what the parent
+  # already fit). _refreshIslandBuffer rebuilds the buffer
   # from @bounds every composite, so it grows to the new slot and the content no longer clips. Setting
   # @bounds directly is the established island slot-set idiom (wrapContent / _materializeSugarIslandNoSettle
   # both do it) — _applyExtent would no-op here (the fixed-figure _applyExtentBase override early-returns).
@@ -95,6 +98,10 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
       @transformSpec.anchor = nil
     @__breakMoveResizeCaches()
     @_lastClaimedExtent = nil
+    # D2: the re-hug moved/resized the slot, so the reachability memo is stale too. Just nil it
+    # (pure bookkeeping — legal mid-pass): the scroll frame's re-fit for a slot change rides the
+    # engine's frame-change up-edge, and the next transform change recomputes the memo fresh.
+    @_lastScrollOverflowBox = nil
     @fullChanged()
 
   # ---------------------------------------------------------------------------
@@ -116,6 +123,26 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # compensating wrappers); the base fixed-figure TransformFrameWdgt keeps §4.9 unchanged, so an
   # authored explicit island in a stack stays a fixed figure (SystemTest_macroExplicitIslandFixed-
   # VsTrackingResize pins that distinction — it drives the CONTENT→SLOT direction, unaffected here).
+  #
+  # MODE GATE (claimsSpace arc S2, owner decision D1 2026-07-17 + owner correction same day):
+  # the gate applies to the STACK PROTOCOL TRIO ONLY — preferredExtentForWidth /
+  # _setWidthSizeHeightAccordingly / getMinimumExtent, the measure-based flow-container methods
+  # that ASK a child how much space it takes. Under 'slot' they forward transparently (the
+  # pre-D1 behaviour, byte-identical); under a COUPLED mode ('footprint', now the default /
+  # 'sweep') the island answers as a FIXED FIGURE exactly like the base explicit island: measure
+  # reports the CLAIMED extent of the current (content-hugged) slot box, the stack advances by
+  # the returned claimed height, and the base _applyMoveToBase parks the slot at claimedOrigin +
+  # slotOffset. Without this the transparency family bypassed the claim machinery and the D1
+  # flip would never reach the mainstream case (a halo-rotated image in a document IS a sugar =
+  # tracking island).
+  # _applyExtent is DELIBERATELY NOT gated (owner correction): a DICTATING container
+  # (stretchable panel fractions, window content sizing) owns its children's geometry — its
+  # "contents stretch" contract holds in every mode; claimsSpace governs space NEGOTIATION and
+  # scroll reachability, never participation in a dictating container's sizing.
+  # The CONTENT→SLOT tracking direction (_reLayout sync-settle + the _reLayoutChildren re-hug)
+  # stays for ALL modes — hugging and claiming compose: the claim is DERIVED from the slot box,
+  # and a re-hug that changes the slot is a frame change, so the engine's frame-change up-edge
+  # re-fits the parent (no new wiring).
   # ---------------------------------------------------------------------------
   _soleContent: ->
     @childrenNotHandlesNorCarets()?[0]
@@ -136,6 +163,12 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   _applyExtent: (aPoint) ->
     content = @_soleContent()
     return super aPoint if @transformSpec.isIdentity() or !content?
+    # DELIBERATELY NOT mode-gated (owner correction, claimsSpace arc S2 2026-07-17): _applyExtent
+    # is how a DICTATING container (the stretchable panel's fractional model, a window sizing its
+    # content) imposes a size — that container OWNS its children's geometry, and its contract
+    # ("contents stretch") holds in EVERY claimsSpace mode. claimsSpace governs space NEGOTIATION
+    # (the measure-based stack protocol — the three gated methods below) and scroll reachability,
+    # never a child's participation in a dictating container's sizing.
     return if aPoint.equals @extent()
     content._applyExtent aPoint
     @_reLayoutChildren true    # ARRANGE-driven re-fit: nil the anchor so the render stays glued to the slot (F1)
@@ -150,17 +183,27 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   _setWidthSizeHeightAccordingly: (newWidth) ->
     content = @_soleContent()
     return super newWidth if @transformSpec.isIdentity() or !content?
+    if @transformSpec.claimsSpace != "slot"
+      # coupled (MODE GATE above): FIXED FIGURE — report the CLAIMED height, touch nothing.
+      # A stack advances its row cursor by the RETURNED height for container-classified
+      # (_reLayoutChildren?) children, so this is where the reserved AABB/sweep height comes
+      # from; the slot box is then parked at claimedOrigin + slotOffset by the base
+      # _applyMoveToBase override. Width is fixed-figure too: the offered width is ignored,
+      # exactly as the base island's measure ignores availW.
+      return (@transformSpec.claimedExtentFor @bounds).y
     resultingHeight = content._setWidthSizeHeightAccordingly newWidth
     @_reLayoutChildren true    # ARRANGE-driven re-fit: nil the anchor so the render stays glued to the slot (F1)
     resultingHeight
 
   # Keep MEASURE and ARRANGE coherent: report what my content would take at the offered width (the
-  # arrange sizes it exactly so, via _setWidthSizeHeightAccordingly above). Bypassing the base's
-  # @_lastClaimedExtent reflow memo is safe — it is read only by _reflowIfClaimChangedNoSettle, gated on
-  # claimsSpace != 'slot', and every sugar/compensating island is 'slot' (the paint-only firewall).
+  # arrange sizes it exactly so, via _setWidthSizeHeightAccordingly above). This transparent
+  # forward is 'slot'-only (MODE GATE above): a COUPLED island measures via super — the base's
+  # claim-reporting preferredExtentForWidth, which also maintains the @_lastClaimedExtent reflow
+  # memo (read by _reflowIfClaimChangedNoSettle, itself gated on claimsSpace != 'slot' — so the
+  # 'slot' forward's memo bypass here stays safe).
   preferredExtentForWidth: (availW) ->
     content = @_soleContent()
-    return super availW if @transformSpec.isIdentity() or !content?
+    return super availW if @transformSpec.isIdentity() or !content? or @transformSpec.claimsSpace != "slot"
     content.preferredExtentForWidth availW
 
   # The stack min-clamps a child's measured extent to its getMinimumExtent (SimpleVerticalStackPanelWdgt.
@@ -171,5 +214,5 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # perturb my own slot commits.
   getMinimumExtent: ->
     content = @_soleContent()
-    return super() if @transformSpec.isIdentity() or !content?
+    return super() if @transformSpec.isIdentity() or !content? or @transformSpec.claimsSpace != "slot"
     content.getMinimumExtent()
