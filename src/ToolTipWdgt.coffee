@@ -29,8 +29,10 @@ class ToolTipWdgt extends Widget
     # let's check that the item that the
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
-    # do nothing.
-    if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint world.hand.position()
+    # do nothing. The hand is SCREEN-plane and bounds are PLANE-local — map the point into
+    # the widget's plane so the containment holds for tilted widgets too (off any island the
+    # mapping returns the same point; the raw-pointer lint's same-line shape).
+    if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint (widgetInvokingThis.screenPointToMyPlane world.hand.position())
       theBubble = new @ contents, widgetInvokingThis
       theBubble.openAt widgetInvokingThis.topRight()
 

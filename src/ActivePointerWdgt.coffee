@@ -631,7 +631,11 @@ class ActivePointerWdgt extends Widget
   # stay in SCREEN space (they compare successive @position()s and must share one plane). NB
   # a handler that RE-EMITS the received position as SCREEN coords (open-a-menu-at-point) would
   # misplace for island-inner content; none do in the current suite (menus open at the hand) —
-  # audit as such a case arises.
+  # audit as such a case arises. The RECEIVER side of this convention is ENFORCED by the
+  # build-time raw-pointer gate (buildSystem/check-raw-pointer-reads.js, 2026-07-17): a handler
+  # body must consume this mapped argument — or map its own per-frame samples at the read site
+  # — never the raw world.hand.position() (the tilted-selection bug class: correct aligned,
+  # wrong-cell tilted).
   _pointerPositionInPlaneOf: (w) ->
     w.screenPointToMyPlane @position()
 

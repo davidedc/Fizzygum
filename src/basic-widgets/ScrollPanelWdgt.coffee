@@ -651,9 +651,14 @@ class ScrollPanelWdgt extends PanelWdgt
         # that would be strange because it would be giving the
         # wrong cue to the user, we just want to hold steady
         !world.hand.wdgtToGrab?.detachesWhenDragged() and
-        @boundsContainPoint(world.hand.position())
+        # per-frame samples of the hand are SCREEN-plane; map each into MY plane at the read
+        # site (the raw-pointer lint enforces exactly this shape), so the containment gate
+        # compares like planes and the deltas below are in-plane — a tilted panel drag-scrolls
+        # along its own axes. Off any island the mapping returns the same point (dormant
+        # byte-identical). The press point (oldPos = the handler's `pos`) arrives pre-mapped.
+        @boundsContainPoint(@screenPointToMyPlane world.hand.position())
           wasScrollDragging = true
-          newPos = world.hand.position()
+          newPos = @screenPointToMyPlane world.hand.position()
           if @hBar.visibleBasedOnIsVisibleProperty() and
           !@hBar.isInCollapsedSubtree()
             deltaX = newPos.x - oldPos.x
@@ -694,7 +699,9 @@ class ScrollPanelWdgt extends PanelWdgt
           @boundsContainPoint(oldPos)
         if wasScrollDragging or collapsedScrollDrag
           wasScrollDragging = false
-          releasePos = world.hand.position()
+          # plane-mapped like the per-frame samples above — the flush's release-minus-press
+          # total must be computed between points of the SAME plane
+          releasePos = @screenPointToMyPlane world.hand.position()
           if @boundsContainPoint releasePos
             if @hBar.visibleBasedOnIsVisibleProperty() and
             !@hBar.isInCollapsedSubtree()

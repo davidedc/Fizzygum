@@ -459,17 +459,23 @@ class SpreadsheetWdgt extends Widget
 
   # ── selection: pointer + keyboard ───────────────────────────────────────────────────────
 
-  # click a cell -> select it and take keyboard focus. Reading world.hand.position() (absolute)
-  # and subtracting @position() (absolute top-left) gives the local offset regardless of window
-  # nesting; _cellAtLocal answers VIEWPORT coords, which the view origin maps to sheet-space
-  # (@selectedCol/Row are sheet-space — at origin 0 the two coincide, F1). A click elsewhere
-  # COMMITS an in-progress edit first (click-away commits). PUBLIC event entry: it opens the ONE
-  # layout settle for its work (the mount/teardown of the overlay editor happens through
-  # NoSettle cores below — the layering discipline, like world.edit).
-  mouseClickLeft: ->
+  # click a cell -> select it and take keyboard focus. The dispatcher hands every click
+  # handler the pointer position ALREADY inverse-mapped into the receiver's plane
+  # (ActivePointerWdgt._pointerPositionInPlaneOf — the affine 4A convention; off any island it
+  # IS the raw hand position, and the cell→panel→sheet escalation forwards it verbatim within
+  # the one island plane), so subtracting @position() (plane-local top-left) gives the local
+  # offset regardless of window nesting AND of tilt. ⚠ never re-read world.hand.position()
+  # here — that is the SCREEN-plane point, and mixing it with plane geometry selects the wrong
+  # cell under a tilt (the 2026-07-17 tilted-selection bug; the raw-pointer lint now bans it in
+  # handler bodies). _cellAtLocal answers VIEWPORT coords, which the view origin maps to
+  # sheet-space (@selectedCol/Row are sheet-space — at origin 0 the two coincide, F1). A click
+  # elsewhere COMMITS an in-progress edit first (click-away commits). PUBLIC event entry: it
+  # opens the ONE layout settle for its work (the mount/teardown of the overlay editor happens
+  # through NoSettle cores below — the layering discipline, like world.edit).
+  mouseClickLeft: (pos) ->
     @_settleLayoutsAfter =>
       @_commitEditNoSettle() if @_editing
-      localPos = world.hand.position().subtract @position()
+      localPos = pos.subtract @position()
       cell = @_cellAtLocal localPos
       if cell?
         @selectedCol = @viewOriginCol + cell.col

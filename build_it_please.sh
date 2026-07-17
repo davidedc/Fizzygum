@@ -480,6 +480,27 @@ if ! $noSyntaxCheck ; then
   echo "... relayout-repaints check OK"
 fi
 
+# --- build-time RAW-POINTER-READS gate ------------------------------------------------
+# Enforces that a pointer-event HANDLER body never consumes the raw SCREEN-plane pointer
+# (`world.hand.position()`) unmapped: since affine Phase 4A the dispatcher hands every handler a
+# position already inverse-mapped into the receiver's plane, and mixing the raw point with
+# plane-local geometry works aligned but silently breaks TILTED (the 2026-07-17 spreadsheet
+# tilted-selection bug). Per-frame sampling is allowed only mapped at the read site
+# (`screenPointToMyPlane` on the same line — the drag-scroll idiom). Genuine exceptions carry a
+# per-method `# raw-screen-pointer-sanctioned: <reason>` marker. (buildSystem/
+# check-raw-pointer-reads.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
+# gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+if ! $noSyntaxCheck ; then
+  echo "checking pointer handlers consume the plane-mapped pointer (raw-pointer gate) ..."
+  node ./buildSystem/check-raw-pointer-reads.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: raw-pointer-reads gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... raw-pointer-reads check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with
