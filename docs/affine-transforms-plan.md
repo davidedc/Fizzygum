@@ -930,7 +930,7 @@ unchanged.
 ### Phase 3 — layout coupling (`claimsSpace`)
 
 > **PHASE 3 (2026-07-09) — COMPLETE + VERIFIED + COMMITTED (Fizzygum `707f9720`, Fizzygum-tests
-> `0d720b550`; NOT pushed).** `'footprint'` and `'sweep'` are wired; the paint-only `'slot'` firewall holds.
+> `0d720b550`; both verified ON ORIGIN 2026-07-17 — the original "NOT pushed" note here went stale).** `'footprint'` and `'sweep'` are wired; the paint-only `'slot'` firewall holds.
 > IMPLEMENTATION (all gated so the blast radius is contained — no existing test has an island in a
 > stack, and everything keys off `!isIdentity()` / `claimsSpace != 'slot'`):
 > - `TransformSpec` — `setClaimsSpace`; `_claimedBoxFor`/`claimedExtentFor` (the box/extent the
