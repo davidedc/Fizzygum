@@ -86,9 +86,11 @@ to zero. The earlier revision's lasting caveat — that the residual re-fit **se
 which let the convergence cap retire to a **never-fire assert** (Stage 6). What remained beneath that assert — the
 nested-window first-placement re-visits and the aspect-locked width↔height cycles — was then dissolved at the root by
 the **sizing-model unification** (2026-07-16/17, §2.5 ⇄ block): ONE constraint-box model everywhere, total pre-capture
-measures, and the container-owned window width rule take the construction re-visits to **zero**; the only re-visits
-left suite-wide are named bottom-up up-edges, asserted by a standing gate (`fg revisits`). So accidental complexity is
-now paid down with lints, a determinism soak, and hard-fail gates; what remains is essential.
+measures, and the container-owned window width rule take the construction re-visits to **zero**; the **up-edge
+endgame** (2026-07-17, `docs/upedge-endgame-plan.md`) then retired the residual up-edge re-visits at the root too —
+the settle engine now visits every widget **at most once per flush, suite-wide**, and the standing gate
+(`fg revisits`) asserts an **empty** baseline. So accidental complexity is now paid down with lints, a determinism
+soak, and hard-fail gates; what remains is essential.
 
 ---
 
@@ -559,10 +561,12 @@ with the model (one constraint box everywhere; the aspect contract is documentat
 with totality (`getWidthInStack` answers pre-capture; `contentNeverSetInPlaceYet` deleted; a window's
 `preferredExtent` is truthful mid-construction) plus the §9.7-Q width rule (a container-owned window never
 self-resizes — the place-then-re-fit ping-pong is structurally impossible); the applied read-back is the ONE named
-state-read (D4), reading genuine user-placed state, not layout feedback. The suite-wide re-visit profile is now ZERO
-outside named bottom-up up-edges (2 window-height re-fits + 5 TransformFrame slot-tracks + 1 scroll-uncollapse), and
-that profile is a STANDING GATE — `Fizzygum-tests/scripts/revisit-gate.js` (`fg revisits`) asserts the
-(test → flush class-multiset) baseline; any new re-visit signature fails the build loudly.
+state-read (D4), reading genuine user-placed state, not layout feedback. The suite-wide re-visit profile is now
+**ZERO — the baseline is EMPTY** (up-edge endgame V1, 2026-07-17, `docs/upedge-endgame-plan.md` §9: the
+nested-window first-placement pair fell to the narrowed `_reLayoutMayResizeOwnWidth`, the five TransformFrame
+slot-tracks to the island's content sync-settle, and the scroll-uncollapse entry was a counting collision, never a
+re-visit), and that profile is a STANDING GATE — `Fizzygum-tests/scripts/revisit-gate.js` (`fg revisits`) asserts
+the (test → flush class-multiset) baseline; any re-visit signature at all now fails the build loudly.
 
 ### 2.7 The end-of-cycle flush: what survives it, the categories, and coalescing
 
@@ -1235,15 +1239,18 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    the tiers (rule 3): the **settle-time up-edge** (`_reFitMyTrackingContainerAfterSettle`, §2.3) re-fits a
    size-tracking container *after* its content settles, reading final geometry, once. **Do NOT add a mutation-driven
    container notification** — the notify-by-mutation seam was deleted in 2026-07-01 precisely so nothing re-dirties a
-   container mid-arrange (§4.1). A **second** visit is legitimate *only* as a named bottom-up **up-edge**
-   (container-fits-content after the content settles: the window-height re-fit, the TransformFrame slot-track, the
-   scroll-uncollapse re-fit — the exact allowed set is the committed `fg revisits` baseline,
-   `Fizzygum-tests/scripts/revisit-baseline.json`). The two old "proven-irreducible" second-pass cases are GONE
-   (sizing-model unification, §2.5/§2.6 ⇄ blocks): first-placement measures are total (the flag is deleted; a
-   container-owned window never self-resizes width), and width↔height cycles are structurally impossible under the
-   constraint model. If your new layout adds a re-visit, the `fg revisits` gate fails loudly — that is a design smell:
-   your arrange is either not idempotent, reads half-applied state, or is a genuinely new up-edge that must be argued
-   into the baseline consciously (--write-baseline + a commit).
+   container mid-arrange (§4.1). Since the up-edge endgame (2026-07-17, `docs/upedge-endgame-plan.md` §9) the
+   committed `fg revisits` baseline (`Fizzygum-tests/scripts/revisit-baseline.json`) is **EMPTY** — every widget is
+   visited AT MOST ONCE per flush, suite-wide. Even the up-edge's re-visits are gone at the root: a container whose
+   content is still pending when the walk reaches it SETTLES that content synchronously inside its own visit (the
+   sync-settle-in-arrange shape — WindowWdgt's Path-B block and TrackingTransformFrameWdgt._reLayout are the two
+   landed instances), so the settle-time up-edge finds nothing left to re-arm. The two old "proven-irreducible"
+   second-pass cases are GONE (sizing-model unification, §2.5/§2.6 ⇄ blocks): first-placement measures are total
+   (the flag is deleted; a container-owned window never self-resizes width), and width↔height cycles are
+   structurally impossible under the constraint model. If your new layout adds ANY re-visit, the `fg revisits` gate
+   fails loudly — that is a design smell: your arrange is either not idempotent, reads half-applied state, or is a
+   genuinely new up-edge that must be argued into the baseline consciously (--write-baseline + a commit; the gate's
+   failure output names the mechanism-tagged trace prelude for diagnosis).
 
    **Corollary (N4, 2026-07-16): your arrange must be IDEMPOTENT, and you declare NOTHING for it.** The engine
    re-lays your widget whenever an arrange moves/resizes it (the §2.3 child injection) and schedules your re-lay

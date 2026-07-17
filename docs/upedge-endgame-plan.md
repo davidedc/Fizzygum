@@ -384,9 +384,39 @@ identical by construction and by pixels); `fg revisits` green (the EMPTY baselin
 1-round torture rc=0, tokens absent. Deserialized pre-change worlds may carry an orphan
 `reInflating` own-prop; nothing reads it.
 
-**Tooling follow-on (owner-directed mid-arc): `fg revisits` is now a GAUNTLET WAVE-B LEG** (local
-umbrella tooling, uncommitted by design): `run_leg revisits` = one dpr1 suite pass under the
-counting prelude at `FG_GATE_SHARDS`, wave B = paint ∥ tiernaming ∥ settle ∥ capstone ∥ revisits
-∥ refs, serial escape hatch + usage + umbrella CLAUDE.md updated. With the baseline EMPTY the
-leg's assertion is "ANY re-visit anywhere = regression", enforced at every commit point; presuite
-deliberately unchanged (the failure class is pixel-neutral — commit-point tier suffices).
+**Tooling follow-on (owner-directed mid-arc): `fg revisits` AND `fg census` are now GAUNTLET
+WAVE-B LEGS** (local umbrella tooling, uncommitted by design): `run_leg revisits` = one dpr1
+suite pass under the counting prelude at `FG_GATE_SHARDS`; `run_leg census` = the ~10s
+single-evaluate idempotence oracle (its old "~90-120s" annotation was stale — measured ~9s,
+fg comments corrected); wave B = paint ∥ tiernaming ∥ settle ∥ capstone ∥ revisits ∥ refs ∥
+census, serial escape hatch + usage + umbrella CLAUDE.md updated. With the baseline EMPTY the
+revisits leg's assertion is "ANY re-visit anywhere = regression"; both invariants are now
+enforced at every commit point instead of by plan discipline. Presuite deliberately unchanged
+(the failure classes are pixel-neutral — commit-point tier suffices). First in-wave exercise:
+revisits PASSED in the arc-close gauntlet (120s, total 257s — no wall-clock regression);
+census validated in the final close gauntlet below.
+
+### V2 — ARC CLOSED (2026-07-17). All §8 success criteria met.
+
+Arc-close gates ALL GREEN on the final state:
+- **Gauntlet ×2**: 10/10 legs (257s), then — after the tooling follow-on — 11/11 legs (259s)
+  incl. BOTH new wave-B legs: `revisits` 120s, `census` 8s in-wave. No wall-clock regression.
+- **Census**: 0 movers / 1506 targets, 22/22 battery flows (also standalone in the close chain;
+  its "~2 min" fg annotation was stale — measured ~9s, single-evaluate design — corrected).
+- **`fg revisits`**: green on the EMPTY baseline (standalone in the V1-d chain + as a gauntlet
+  leg twice).
+- **3-round torture**: 12/12 configs, RECALC_NONCONVERGENCE / DOWNWALK_UNREACHABLE_CHAINTOP
+  absent everywhere.
+- Zero pixel changes anywhere in the arc (every step byte-exact at dpr1; gauntlet re-verified
+  dpr2 + webkit; no inspector churn — the deleted `reInflating` member was WindowWdgt-level,
+  outside the Widget-base churn set, confirmed empirically).
+
+§8 scorecard: (1) every baseline flush verdicted — 7 converted byte-identically, 1 exposed as
+an instrument false positive; (2) `reInflating` deleted via the parameter restructure;
+(3) E5 recorded — report-only vocabulary, object-keyed identity, committed trace prelude;
+(4) `fg revisits` green at close on the final (empty) baseline; (5) all §5 gates green, zero
+unexplained pixel changes; (6) this log + the assessment's §1/§2.6/rule-2 updates.
+
+Commits (local at close, push pending owner review): Fizzygum `452c0ecd` (V1-b) → `b2e09a59`
+(V1-c) → `eee409c4` (V1-d) → the V2 docs close; tests `c1c6a2f75` (V1-a) → `2560d1f83` (V1-b)
+→ `f8a94c334` (V1-c). Umbrella tooling (fg + CLAUDE.md) updated in place, uncommitted by design.
