@@ -13,10 +13,15 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   subclass; `slot: nil` ⇒ a fresh window per launch, multiple sheets allowed). `buildWindow`
   wraps a `SpreadsheetWdgt` in a window via `world.openWindowWith`. Registered at the WorldWdgt
   boot site into the desktop "examples" folder.
-- `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1): it paints
+- `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1/F6): it paints
   NOTHING (nil appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
-  `SheetHeaderCellWdgt` / `CellWdgt` below). It materialises the widget chrome
-  (`_buildChromeNoSettle`) + the 6×14 VIEWPORT of cells over the 26×100 LOGICAL sheet
+  `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
+  `ClippingAtRectangularBoundsMixin`, cropping partial-edge headers; the panel crops partial
+  cells). It materialises the widget chrome
+  (`_buildChromeNoSettle` — sized with the sheet, headers built/trimmed to the visible
+  counts) + the VIEWPORT of cells over the 26×100 LOGICAL sheet — the viewport DERIVES from
+  the sheet's extent (F6: default 6×14, partial edge cells at a non-quantized granted size;
+  the `_reLayout` arrange re-derives chrome + viewport on every resize)
   (`_reconcileViewportNoSettle` — F1 scroll: sheet-owned `viewOriginCol/Row`, wheel +
   keyboard scroll-follow, the viewport invariant below), reconciles each cell's value into its
   widget (`_reconcileCellNoSettle`), owns the single-cell selection (SHEET-space; cells render
@@ -28,9 +33,10 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   region and hosting the `CellWdgt`s (owner direction: cells attach into a container
   subclass). Nil appearance (the sheet never painted a data background — the backdrop shows
   through, as always); clicks escalate through it to the sheet; drops/lock-menu/editing
-  amenities neutralised; its inherited bounds-clipping is the viewport's standing GUARD (F1's
-  cell-quantized reconcile keeps every visible cell tiling it exactly, so it never actually
-  crops). Paints no residual border (the old outermost right/bottom strokes were clipped
+  amenities neutralised; its inherited bounds-clipping is LOAD-BEARING since F6 (it crops the
+  PARTIAL edge cells a non-cell-quantized window size leaves at the right/bottom; pre-F6 it
+  was only a standing guard — F1's cell-quantized reconcile kept every visible cell tiling it
+  exactly). Paints no residual border (the old outermost right/bottom strokes were clipped
   invisible — F5 receipt C).
 - `SheetHeaderCellWdgt.coffee` (F5) — one widget per HEADER cell (kind column/row/corner + its
   index; 21 in all, direct sheet children, OUTSIDE the panel so a future scroll clip never
@@ -333,7 +339,8 @@ widget fills the data background (the backdrop shows through, as it always did).
   (own-only-when-scrolled — an unscrolled sheet serializes byte-for-byte as pre-F1; a pre-F1
   snapshot restores to origin 0 through the prototype) and DOCUMENT state (a saved scrolled
   sheet restores scrolled — NOT transients). Logical bounds `sheetCols`×`sheetRows` (26×100);
-  `numCols`/`numRows` still mean the VIEWPORT.
+  the viewport is extent-DERIVED since F6 (the old `numCols`/`numRows` constants are retired
+  — `defaultViewportCols/Rows` only size the default open extent).
 - **THE VIEWPORT INVARIANT** (re-established by `_reconcileViewportNoSettle` on every origin
   change and on restore): exactly one VISIBLE `CellWdgt` per on-screen address at the viewport
   rect of (address − origin); exactly one HIDDEN `CellWdgt` per OFF-screen widget-VALUED cell
@@ -355,6 +362,40 @@ widget fills the data background (the backdrop shows through, as it always did).
   from origin + slot at paint time (relabel-in-place).
 - **Origin-0 byte-identity.** At view origin (0,0) every offset is the identity — the whole
   pre-F1 reference set passes unchanged (zero recaptures; all new pixels live in new tests).
+
+## F6 decisions (resizable viewport, partial edge cells — landed 2026-07-17; details in plan §3-F)
+
+- **The viewport DERIVES from the sheet's applied extent — never stored.** The `numCols`/
+  `numRows` constants are RETIRED into two derivation pairs: `_viewportCols/RowsPartial`
+  (ceil — a partial column/row counts as on-screen; feeds membership and, origin-clamped via
+  `_visibleCols/Rows`, the materialise loops / header build/trim / hit-test) and
+  `_viewportCols/RowsFull` (floor — scroll clamps, wheel at-limit, scroll-follow: the
+  selection and the overlay editor always land on FULLY-visible cells). At the max origin
+  every remaining column/row is fully visible and residual pixels are BACKDROP (owner
+  decision 2); the origin clamp on the visible counts is the landing deviation — without it
+  the partial count would address a column PAST the sheet edge there. `defaultViewportCols/
+  Rows` (6×14) only size the default open extent.
+- **FILL-class window content by DELETION**: the pre-F6 fixed-size overrides died; the
+  default `WindowContentLayoutSpec` (grow 1, `canSetHeightFreely` true) + the BASE Widget
+  sizing protocol are exactly right. The default open size is PINNED by `SpreadsheetApp`
+  (window 452×336 − 36 chrome = 442×300 content — the pre-F6 on-screen window was ALWAYS
+  452×336: the fixed content overrode the old passed 334, so the pin changes no pixel).
+- **The resize seam is a `_reLayout` override** (the `StretchableWidgetContainerWdgt`
+  precedent: bounds-first `_applyBounds`, then `_buildChromeNoSettle` +
+  `_reconcileViewportNoSettle` re-derive everything from the just-applied frame, then
+  `super`) — NOT `_positionAndResizeChildren`, which is a stack-family dispatch the
+  plain-Widget `_reLayout` never calls. Reached via `_applyExtent`'s schedule-valve in the
+  same flush the window grants the extent; idempotent (census), at most one visit per flush
+  (revisits). Every child places ABSOLUTELY from the sheet's frame, which subsumes
+  float-follow on the arrange path; scroll re-runs the chrome ensure/trim (header validity
+  is origin-dependent near the sheet edge).
+- **One clip for everything**: the sheet augments `ClippingAtRectangularBoundsMixin` (crops
+  the partial HEADERS, which live outside the panel); the panel's inherited clip crops the
+  partial CELLS — both byte-invisible at the default size (suite-proven). The sheet gains
+  `minimumExtent` = headers + one cell (102×40).
+- **Nothing new serializes**: the viewport derives from `@bounds` (already document state) —
+  a resized sheet round-trips through its bounds; a pre-F6 default-bounds snapshot restores
+  to 6×14 through the same derivations.
 
 ## Phase 2a decisions / deviations (recorded also in the plan)
 

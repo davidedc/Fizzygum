@@ -16,5 +16,12 @@ class SpreadsheetApp extends IconicDesktopSystemWindowedApp
   buildIcon: -> new GenericShortcutIconWdgt new TypewriterIconWdgt
 
   buildWindow: ->
-    # window sized to fit the fixed grid (6×14) plus the title-bar/padding chrome (~34px tall)
-    world.openWindowWith (new SpreadsheetWdgt), (new Point 452, 334), (new Point 120, 90)
+    # THE default-size pin (F6 V4): with fill-class sheet content the passed window extent is
+    # AUTHORITATIVE, and 452×336 grants the content exactly 442×300 — the default 6×14 grid —
+    # through the window's 36px chrome (titlebar 26 + 2×5 padding; width 452 − 2×5 padding =
+    # 442). Pre-F6 the FIXED content DICTATED the window height: the old passed 334 was
+    # overwritten to 336 by the content-driven arrange every pass, so the on-screen window was
+    # always 452×336 — this pin preserves that exact render, byte-for-byte (the F6 hard gate:
+    # the whole pre-F6 suite, zero recaptures). A resize from here shows MORE of the 26×100
+    # logical sheet (partial edge cells; backdrop past the sheet edge).
+    world.openWindowWith (new SpreadsheetWdgt), (new Point 452, 336), (new Point 120, 90)

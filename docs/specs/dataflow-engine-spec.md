@@ -48,7 +48,11 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
   hidden-rich-cell exemption — §13 retain-and-remount extended to scroll; origin-0 render byte-identical,
   zero recaptures). **And F4 widget-entry cells LANDED 2026-07-17** (the §9.1 kind-of-entry metadata as
   the persistent `widgetEntry`: drop a desktop widget INTO a cell / drag it back out — see the §9.1
-  note). Only F3 (the "operate ➜" menu) remains, cold-executable in the plan.
+  note). **And F6 resizable viewport LANDED 2026-07-17** (owner-initiated, plan §3-F F6: the viewport
+  DERIVES from the window-granted extent — a bigger window shows more of the logical sheet with
+  PARTIAL edge cells, backdrop past the sheet edge, the default open size byte-identical; scroll
+  clamps/follow use full-cell counts so the overlay editor never mounts on a clipped cell).
+  Only F3 (the "operate ➜" menu) remains, cold-executable in the plan.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
@@ -269,7 +273,7 @@ client's:
 - **Everything a widget; the sheet paints NOTHING** *(F5, landed 2026-07-17 — the shipped form; plan
   §3-F receipts)*: the headers become `SheetHeaderCellWdgt`s (toward future column/row selection), the
   data cells live in a transparent `SheetCellsPanelWdgt` (a `PanelWdgt` subclass; its bounds-clipping
-  is the F1 viewport's standing guard — cell-quantized scroll never actually crops), and every widget
+  crops F6's partial edge cells — pre-F6 it was only the F1 viewport's standing guard), and every widget
   paints its own fill/edges/label/value — the selection
   ring is the selected `CellWdgt`'s own paint (drawn fully inside; the one recaptured pixel change),
   the overlay editor is the editing cell's child (F2), and the sheet keeps model/selection

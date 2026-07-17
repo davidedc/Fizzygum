@@ -54,10 +54,15 @@ sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 
       census 0/1528, zero recaptures of existing references)
 - [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
       cell) — independent, any time
-- [ ] F6 — resizable viewport with PARTIAL EDGE CELLS (window resize shows more of the
-      logical sheet) — plan AUTHORED 2026-07-17 with the owner-ratified decisions baked in
-      (partial edge cells / backdrop beyond the last column / default open size unchanged /
-      logical 26×100 stays); owner-initiated, like every F-box
+- [x] F6 — resizable viewport with PARTIAL EDGE CELLS (window resize shows more of the
+      logical sheet) — **LANDED 2026-07-17, same day as authoring** (see the F6 section's
+      landing banner: the flip is a DELETION — base Widget protocol + default spec were
+      already the fill-content protocol; `_reLayout` arrange seam per the
+      StretchableWidgetContainerWdgt precedent; sheet-level clip mixin; the 452×336 pin;
+      the origin-clamped visible-counts landing deviation; presuite 255/255 with ZERO
+      reference changes = the decision-3 hard gate; 1 new SystemTest dpr1+dpr2 with the
+      exact-corner round trip byte-identical BY HASH, suite 256; 2 new rig rows; close
+      gauntlet numbers in the banner)
 
 Each phase = one or more commits, independently green and revertable. Do not start a phase
 with the previous one unverified. **Phase 8 is a planned follow-on** (owner direction 2026-07-05):
@@ -1285,7 +1290,7 @@ into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ + F4 ✅ LANDED 2026-07-17; F3 + F6 remain, both cold-executable)
+## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ + F4 ✅ + F6 ✅ LANDED 2026-07-17; only F3 remains, cold-executable)
 
 The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
 sub-phase specs so a cold session can pick one up without re-deriving — plus F5
@@ -1946,6 +1951,65 @@ member-list churn is a non-risk (no existing test inspects the sheet or a cell �
 > last column/row (no max-size cap); (3) the DEFAULT open size stays exactly today's —
 > the default-size render must stay byte-identical, zero recaptures; (4) the logical sheet
 > stays `sheetCols`×`sheetRows` = 26×100.**
+
+> **✅ LANDED 2026-07-17 (same day as authoring). As specced, with these as-built findings —**
+>
+> - **V1 resolved: the layout-spec "flip" is a DELETION.** The default
+>   `WindowContentLayoutSpec` is already grow 1 + `canSetHeightFreely` true, and the BASE
+>   Widget protocol is exactly the fill-content protocol (`_setWidthSizeHeightAccordingly` =
+>   apply width + hand height back; `preferredExtent` = applied extent, which feeds the
+>   first-placement hug with the sheet's default extent). The sheet's three overrides died
+>   (`initialiseDefaultWindowContentLayoutSpec` / `preferredExtentForWidth` /
+>   `_setWidthSizeHeightAccordingly`, with `_gridWidth/_gridHeight`); no new sizing code.
+> - **V2 resolved: the seam is a `_reLayout` override** (bounds-first `_applyBounds`, then
+>   `_buildChromeNoSettle` + `_reconcileViewportNoSettle` re-derive everything from the
+>   just-applied frame, then `super`) — the `StretchableWidgetContainerWdgt` precedent. NOT
+>   `_positionAndResizeChildren`: that is a stack-family dispatch (via `_reLayoutChildren`)
+>   the plain-Widget `_reLayout` never calls. Reached through `_applyExtent`'s schedule-valve
+>   in the same flush the window grants the extent; absolute placement of every child from
+>   the sheet's frame subsumes float-follow on the arrange path.
+> - **V3 resolved: the sheet augments `ClippingAtRectangularBoundsMixin`** (the PanelWdgt
+>   form) — a bare `clipsAtRectangularBounds` flag clips only GEOMETRY (hit-tests / dirty
+>   rects); the PIXEL crop lives in the mixin's paint traversal. Byte-identity at the default
+>   size proven by the whole suite, not argued.
+> - **V4 resolved: the pin is `SpreadsheetApp` passing 452×336** — and the old passed 334 was
+>   DEAD: the pre-F6 fixed content dictated window height, overwriting 334 to 336 on every
+>   arrange, so the on-screen window was ALWAYS 452×336. With fill content the passed extent
+>   becomes authoritative: 336 − 36 chrome = 300, 452 − 2×5 padding = 442 — exactly the 6×14
+>   grid, pixel-for-pixel.
+> - **LANDING DEVIATION — the origin clamp on the visible counts** (`_visibleCols/Rows` =
+>   partial clamped to `sheetCols/Rows − viewOrigin`): at the max origin with residual
+>   pixels (partial == full + 1 there) the specced bare-partial derivation would
+>   materialise/label a column PAST the sheet edge. Consumers: the header build/trim, the
+>   materialise loops, the hit-test (pass-1 membership is unaffected — an indexed address is
+>   in-sheet by construction). Corollary: header VALIDITY is origin-dependent near the sheet
+>   edge, so `_scrollByNoSettle` re-runs the idempotent chrome ensure/trim (a no-op at the
+>   default size, where the counts are origin-invariant).
+> - The sheet gains `minimumExtent` = headers + one cell (102×40, derived from the
+>   constants; an OWN field — the Widget ctor's own 5,5 would shadow a prototype default). A
+>   pre-F6 snapshot restores its saved 5,5: harmless, the derivations' `Math.max 1` floor
+>   degrades gracefully.
+> - **Test-authoring case-law** (also in the new test's provenance): the harness world
+>   canvas is 960×440 and the app opens the window with its bottom edge 14px above the
+>   world's bottom — growing from there pushes the resizer OFF-CANVAS, where the world clip
+>   makes it unhittable (empty `clippedThroughBounds`) and the drag silently no-ops. The
+>   test repositions the window to 20,10 (plain no-dwell title-bar drag) before growing.
+>   The recapture STUCK-STATE canary fires on this test BY DESIGN (4 shots, 3 distinct
+>   frames — image_1 == image_4 IS the round-trip proof), same as the F1 wheel test.
+>
+> **Verification:** presuite 255/255 dpr1 with ZERO reference changes (the decision-3 hard
+> gate — the spec flip + clip mixin + arrange seam + V4 pin are pixel-invisible at the
+> default size); `SystemTest_macroSpreadsheetResizeViewport` captured dpr1+dpr2 and
+> verify-matched, with the exact-corner round trip byte-identical BY HASH (image_1 and
+> image_4 share the same dataHash at BOTH densities) — suite 256; rig rows
+> `spreadsheet.roundtrip.resizedViewport` + `.resizedViewportEdge` green on BOTH
+> serialization legs, values exactly as designed (dims 10x17/9x16, census 170+1 restored at
+> origin 0,5; max-wheel clamp 84 with 160+1 — the origin-clamped bound at work), and `.grid`
+> re-grounded through the derivations; close gauntlet 11/11 GREEN in 290s, no retries —
+> dpr1/dpr2/webkit 256/256 (the webkit leg green over the new refs = the recapture canary's
+> confirmation), zero geometry violations, paint 0 offenders, REVISITS baseline still EMPTY
+> (the new arranger is settle-clean, at most one visit per flush), census 0 movers / 1623
+> targets (the arranger is arrange-twice idempotent), refs consistent.
 
 **The UX oddity this fixes (owner, 2026-07-17, with screenshot).** Resizing the sheet's
 window today: height is CLAMPED, and extra width shows empty backdrop right of the grid —

@@ -1,7 +1,8 @@
 # SheetCellsPanelWdgt — the spreadsheet's DATA-CELL container (plan §3-F F5, owner direction
 # 2026-07-17: "the cells attach into a subclass of the container widget"). Spans the data
-# region (right of the row-number header column, below the column-letter header row) and hosts
-# the sheet's 84 CellWdgt children; the frozen header cells are deliberately OUTSIDE it
+# region (right of the row-number header column, below the column-letter header row — sized
+# with the sheet since F6) and hosts
+# the sheet's CellWdgt children (84 at the default 6×14 viewport); the frozen header cells are deliberately OUTSIDE it
 # (direct sheet children), so the PanelWdgt clip below can never touch them.
 #
 # It is TRANSPARENT (nil @appearance — the CellWdgt idiom): the sheet NEVER painted a data
@@ -20,12 +21,14 @@
 # drawn — the cheap-live-strokes slot here is reserved for the day a visible border is WANTED
 # (a deliberate, recaptured pixel change).
 #
-# The PanelWdgt clipping (ClippingAtRectangularBoundsMixin, active at my bounds) is the
-# viewport's standing GUARD: F1's CELL-QUANTIZED scroll reconcile keeps every visible cell
-# tiling me exactly (an off-viewport cell is hidden or destroyed, never partially outside), so
-# the clip crops nothing in practice — it exists so no future placement bug can ever paint a
-# cell outside the data region. The frozen headers are direct sheet children, outside me,
-# untouchable by it.
+# The PanelWdgt clipping (ClippingAtRectangularBoundsMixin, active at my bounds) is
+# LOAD-BEARING since F6: a window whose granted extent is not cell-quantized leaves the last
+# visible column/row PARTIAL — those cells stick past my right/bottom edge and this clip is
+# what crops them to the data region. (Pre-F6 it was only a standing guard: F1's
+# CELL-QUANTIZED scroll reconcile kept every visible cell tiling me exactly, so it cropped
+# nothing.) The frozen headers are direct sheet children, outside me, untouchable by it —
+# their partial-edge crop is the SHEET's own clip (F6: SpreadsheetWdgt augments the same
+# mixin).
 #
 # v1 neutralisations of PanelWdgt behaviour — each preserves today's cells-parented-to-the-
 # sheet semantics exactly (receipts in the F5 plan section):

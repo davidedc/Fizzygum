@@ -1,6 +1,8 @@
 # SpreadsheetWdgt — the spreadsheet's grid (spec docs/specs/dataflow-engine-spec.md §9.1; Phase 8
 # "widgetise the grid" + follow-on F5 "the sheet paints NOTHING"). Every visible thing is a real
-# child widget: the 84 data cells (CellWdgt, one per cell of the fixed 6×14 viewport — each the
+# child widget: the data cells (CellWdgt, one per cell of the viewport — 6×14 at the default
+# open size, DERIVED from the sheet's extent since F6: a bigger window shows more cells, the
+# last column/row possibly partial — each the
 # VIEW of its SheetCellRecord) live inside a SheetCellsPanelWdgt whose fill is the data-region
 # background; the 21 header cells (SheetHeaderCellWdgt: column letters, row numbers, the corner)
 # are direct children, kept OUTSIDE the panel so a future scroll clip can never touch the frozen
@@ -23,9 +25,11 @@
 # the cell's CellWdgt repaints — the engine's FIRST live client. This widget is also the formula SCOPE
 # (`@` inside a formula is this SpreadsheetWdgt: full world access, no sandbox — spec §9.2).
 #
-# SCOPE + DEVIATIONS (recorded in the plan's Phase-2a/2b/8 + §3-F F1 notes):
-#   - SCROLL (F1): the LOGICAL sheet (sheetCols×sheetRows, 26×100) is larger than the fixed
-#     6×14 viewport; the sheet owns its view origin (viewOriginCol/Row — cell-quantized, never
+# SCOPE + DEVIATIONS (recorded in the plan's Phase-2a/2b/8 + §3-F F1/F6 notes):
+#   - SCROLL (F1) + RESIZE (F6): the LOGICAL sheet (sheetCols×sheetRows, 26×100) is larger
+#     than the viewport (DERIVED from the sheet's extent since F6 — default 6×14, partial
+#     edge cells when the granted extent isn't cell-quantized, backdrop past the sheet edge);
+#     the sheet owns its view origin (viewOriginCol/Row — cell-quantized, never
 #     sub-cell) and scrolls by WHEEL (the `wheel` entry below, with the ScrollPanelWdgt-style
 #     at-limit escalation) and by KEYBOARD scroll-follow (arrows past the viewport edge shift
 #     the origin minimally). Deliberately NOT a ScrollPanelWdgt: frozen headers, the origin-0
@@ -58,6 +62,14 @@
 
 class SpreadsheetWdgt extends Widget
 
+  # F6: the sheet CLIPS at its bounds — ONE clip for everything. Partial edge cells stick
+  # past the cells panel's right/bottom edge and the panel's own clip crops them; but
+  # partial-column/row HEADERS are direct sheet children OUTSIDE the panel (frozen), and
+  # without a sheet-level clip they would paint past the sheet's edge into the window. At
+  # the default size the clip crops nothing (chrome + cells tile the sheet rect exactly) —
+  # byte-identity proven by the whole pre-F6 suite, not argued.
+  @augmentWith ClippingAtRectangularBoundsMixin, @name
+
   # transient UI state (rebuilt by interaction or from the tree, never document data): the
   # in-progress edit is dropped from a snapshot (a mid-edit save restores to a settled,
   # not-editing sheet; the editor WIDGET lives on the editing cell, whose re-index sweep drops
@@ -72,16 +84,20 @@ class SpreadsheetWdgt extends Widget
   # @model / @selected* ARE document state and serialize normally.
   @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_cells", "_cellsPanel", "_headerCells"]
 
-  # fixed grid geometry (no column resize in v1). numCols/numRows are the VIEWPORT — how many
-  # cell widgets are materialised + visible at once (the sheet's rendered size never changes);
-  # sheetCols/sheetRows are the LOGICAL sheet the viewport scrolls over (F1 — still far under
-  # the address grammar's ZZ9999 ceiling).
+  # fixed grid geometry (no column resize in v1). The VIEWPORT — how many cell widgets are
+  # materialised + visible at once — is DERIVED from the sheet's applied extent (F6, the
+  # _viewportCols/Rows* derivations below): a bigger window shows MORE of the sheet, the last
+  # visible column/row possibly PARTIAL (clipped). defaultViewportCols/Rows only size the
+  # DEFAULT fresh-sheet extent (_defaultExtent — the exact 6×14 grid, the pre-F6 fixed
+  # viewport, preserved byte-for-byte as the open size). sheetCols/sheetRows are the LOGICAL
+  # sheet the viewport scrolls over (F1 — still far under the address grammar's ZZ9999
+  # ceiling).
   headerColWidth: 34     # the left row-number header column
   headerRowHeight: 20    # the top column-letter header row
   colWidth: 68
   rowHeight: 20
-  numCols: 6             # viewport columns
-  numRows: 14            # viewport rows
+  defaultViewportCols: 6   # the default open size's viewport columns…
+  defaultViewportRows: 14  # …and rows (⇒ the 442×300 default content extent)
   sheetCols: 26          # logical columns A..Z
   sheetRows: 100         # logical rows 1..100
 
@@ -119,7 +135,7 @@ class SpreadsheetWdgt extends Widget
     @_editCol = nil
     @_editRow = nil
     # cell index (spec §9.3/§9.4 classify→present): address → its CellWdgt. Every VISIBLE cell has one
-    # (the 6×14 viewport, materialised by _reconcileViewportNoSettle below — plus one HIDDEN one per
+    # (the viewport, materialised by _reconcileViewportNoSettle below — plus one HIDDEN one per
     # off-viewport widget-VALUED cell, F1); each renders its own value —
     # a hosted value-widget (branch 1) / presenter (branch 2) / painted scalar text (branch 3). TRANSIENT
     # (the CellWdgts themselves ride the tree as children; this index is rebuilt from them on restore by
@@ -130,7 +146,13 @@ class SpreadsheetWdgt extends Widget
     # constants on restore (_reindexCellsNoSettle), never adopted from a snapshot.
     @_cellsPanel = nil
     @_headerCells = new Map
-    @_applyExtent new Point @_gridWidth(), @_gridHeight()
+    # headers + one cell — the smallest extent at which the viewport derivations still answer
+    # a 1×1 viewport (F6; the __commitExtent leaf enforces this floor on every commit). An
+    # OWN field, set after super: the Widget constructor sets its own 5,5, so a prototype
+    # default here would be shadowed. (A pre-F6 snapshot restores its saved 5,5 — harmless:
+    # the derivations' Math.max 1 floor degrades gracefully below one cell.)
+    @minimumExtent = new Point (@headerColWidth + @colWidth), (@headerRowHeight + @rowHeight)
+    @_applyExtent @_defaultExtent()
     # materialise the widget chrome, then the viewport's grid of cell widgets (NoSettle: the
     # enclosing openWindowWith settles once — the DegreesConverterApp orphan-construction idiom;
     # a deserialize/duplicate skips the constructor and restores/copies the cells instead, which
@@ -141,49 +163,87 @@ class SpreadsheetWdgt extends Widget
 
   colloquialName: -> "spreadsheet"
 
-  # FIXED size (grow 0): the grid keeps its own size as window content — it does NOT stretch
-  # to fill a larger window. Two payoffs: the window content settles in ONE cycle (no multi-cycle
-  # stretch convergence, so a screenshot taken right after open is already the fixed point — a
-  # deterministic capture), and the grid is never resized under its own paint. The AnalogClockWdgt
-  # pattern. (Scroll for a grid larger than the window is the deferred ScrollPanelWdgt work.)
-  initialiseDefaultWindowContentLayoutSpec: ->
-    super
-    @layoutSpecDetails.canSetHeightFreely = false
-    @layoutSpecDetails.grow = 0
+  # FILL-class window content (F6 — this DELETED the pre-F6 fixed-size overrides: the
+  # initialiseDefaultWindowContentLayoutSpec grow-0/height-frozen flip, the fixed
+  # preferredExtentForWidth and _setWidthSizeHeightAccordingly, and _gridWidth/_gridHeight).
+  # The sheet now takes whatever extent the window grants — the default
+  # WindowContentLayoutSpec is already grow 1 + canSetHeightFreely true, and the BASE Widget
+  # protocol is exactly the fill-content protocol (V1): _setWidthSizeHeightAccordingly
+  # applies the granted width and hands the height back, _applyHeight grants the free height,
+  # preferredExtent answers the applied extent (which feeds the first-placement window hug
+  # with _defaultExtent below). The viewport DERIVES from that extent; a resize re-derives
+  # chrome + viewport in _reLayout below. The default open size is pinned by SpreadsheetApp
+  # (V4: window 452×336 − 36 chrome = 442×300 content, the exact 6×14 grid — the whole
+  # pre-F6 reference set renders byte-identically). The pre-F6 AnalogClockWdgt fixed-size
+  # pattern (chosen in Phase 2a for one-cycle settle determinism) is retired: the arrange
+  # below is idempotent and settles in the same one pass.
 
-  preferredExtentForWidth: (availW) ->
-    new Point @_gridWidth(), @_gridHeight()
+  # the DEFAULT (fresh-sheet) extent: the exact default grid — the construction extent, and
+  # what the first-placement window hug reads back through the base preferredExtent.
+  _defaultExtent: ->
+    new Point (@headerColWidth + @defaultViewportCols * @colWidth),
+      (@headerRowHeight + @defaultViewportRows * @rowHeight)
 
-  _setWidthSizeHeightAccordingly: (newWidth) ->
-    @_applyExtent new Point @_gridWidth(), @_gridHeight()
-    @height()
+  # ── F6: the viewport DERIVES from the applied extent — never stored ──────────────────────
+  # TWO derivation pairs; every consumer routes to the right one:
+  #   PARTIAL (ceil) — a partially-visible column/row counts as ON-SCREEN. Consumers:
+  #     viewport MEMBERSHIP (the reconcile) and — via the origin-clamped _visibleCols/Rows
+  #     below — the materialise loops, the header-chrome build/trim, and the hit-test.
+  #   FULL (floor) — only WHOLE columns/rows count. Consumers: the SCROLL CLAMPS
+  #     (_scrollByNoSettle), the wheel at-limit conditions, and scroll-follow
+  #     (_scrollToShowSelectionNoSettle: the selection must end up FULLY visible, so the
+  #     overlay editor never mounts on a clipped cell). At the max origin every remaining
+  #     column is fully visible and residual pixels show BACKDROP (owner decision 2).
+  # At the default size ceil == floor == 6/14 exactly (no residual pixels), so every
+  # derivation answers the retired constants and the default render is byte-identical.
+  # PURITY: these read APPLIED geometry (@width()/@height()) — legal at their call sites
+  # (reconcile/clamps/arrange run after the extent is committed); they must never feed a
+  # pure measure (preferredExtentForWidth stays the untouched base).
+  _viewportColsPartial: -> Math.max 1, Math.min @sheetCols, Math.ceil((@width() - @headerColWidth) / @colWidth)
+  _viewportRowsPartial: -> Math.max 1, Math.min @sheetRows, Math.ceil((@height() - @headerRowHeight) / @rowHeight)
+  _viewportColsFull: -> Math.max 1, Math.min @sheetCols, Math.floor((@width() - @headerColWidth) / @colWidth)
+  _viewportRowsFull: -> Math.max 1, Math.min @sheetRows, Math.floor((@height() - @headerRowHeight) / @rowHeight)
 
-  _gridWidth:  -> @headerColWidth + @numCols * @colWidth
-  _gridHeight: -> @headerRowHeight + @numRows * @rowHeight
+  # the partial viewport clamped to the LOGICAL REMAINDER at the current origin — the bound
+  # the header build, the materialise loops and the hit-test share. Without the clamp, at the
+  # max origin with residual pixels (there partial == full + 1) the partial count would
+  # address a column/row PAST the sheet edge — those pixels are backdrop, not a 27th column.
+  # (Found at implementation — recorded as an F6 landing deviation in the plan. For the
+  # reconcile's pass-1 MEMBERSHIP test the clamp is a no-op — an indexed cell's address is
+  # inside the logical sheet by construction — so one bound serves both passes.)
+  _visibleCols: -> Math.min @_viewportColsPartial(), @sheetCols - @viewOriginCol
+  _visibleRows: -> Math.min @_viewportRowsPartial(), @sheetRows - @viewOriginRow
 
   # ── the widgetised grid: panel + headers + one CellWdgt per visible cell (Phase 8 + F5/F1) ───
 
-  # Materialise the sheet's WIDGET CHROME: the SheetCellsPanelWdgt spanning the data region and
-  # the 21 SheetHeaderCellWdgts (corner + column letters + row numbers; direct children, OUTSIDE
-  # the panel so the panel's scroll clip never touches the frozen headers). Headers are keyed by
+  # Materialise + RE-DERIVE the sheet's WIDGET CHROME from the current frame: the
+  # SheetCellsPanelWdgt spanning the data region (extent follows the sheet's, F6) and one
+  # SheetHeaderCellWdgt per VISIBLE column/row + the corner (direct children, OUTSIDE the
+  # panel so the panel's scroll clip never touches the frozen headers). Headers are keyed by
   # viewport SLOT ("kind:index" — their LABELS derive from origin+slot at paint time, so a
-  # scroll relabels them in place, F1; cell-quantized scroll means they never move). Also
-  # re-homes every already-indexed cell into the (fresh) panel — on the restore path the adopted
-  # cells (visible AND hidden rich, F1) hang as direct children after the rescue, and the old
-  # panel is gone. The CELLS themselves are materialised by _reconcileViewportNoSettle (F1 split
-  # this out of the old _buildGridNoSettle: cells follow the view origin, chrome doesn't).
-  # Freefloating children float-follow the sheet if it later moves (base _reLayout
-  # _applyMoveTo). IDEMPOTENT: every piece is keyed (panel field / "kind:index") and only built
-  # when missing — never a double grid. NoSettle: runs from the constructor before the sheet is
-  # placed (the enclosing openWindowWith owns the one settle) and inside the re-index's
-  # enclosing settle on restore/duplicate.
+  # scroll relabels them in place, F1; cell-quantized scroll means they never move). The
+  # header COUNT is _visibleCols/Rows (F6): a resize builds/destroys the difference, and near
+  # the sheet edge the count is ORIGIN-dependent too (no header over backdrop) — hence
+  # _scrollByNoSettle re-runs this. Every piece is (re)PLACED absolutely from @position()
+  # each pass (the _apply* equal-guards make the steady state free), which is what lets the
+  # F6 _reLayout below subsume float-follow. Also re-homes every already-indexed cell into
+  # the (fresh) panel — on the restore path the adopted cells (visible AND hidden rich, F1)
+  # hang as direct children after the rescue, and the old panel is gone. The CELLS themselves
+  # are materialised by _reconcileViewportNoSettle (F1 split this out of the old
+  # _buildGridNoSettle: cells follow the view origin, chrome doesn't). IDEMPOTENT: every
+  # piece is keyed (panel field / "kind:index") and only built when missing — never a double
+  # grid. NoSettle: runs from the constructor before the sheet is placed (the enclosing
+  # openWindowWith owns the one settle), inside the re-index's enclosing settle on
+  # restore/duplicate, inside scroll's settle, and from the _reLayout arrange.
   _buildChromeNoSettle: ->
     unless @_cellsPanel?
       panel = new SheetCellsPanelWdgt
       @_addNoSettle panel
-      panel._applyExtent new Point (@numCols * @colWidth), (@numRows * @rowHeight)
-      panel._applyMoveTo @position().add new Point @headerColWidth, @headerRowHeight
       @_cellsPanel = panel
+    # the data region spans from the headers to my bottom-right corner (F6 — pre-F6 this was
+    # the fixed grid size, set once at build)
+    @_cellsPanel._applyExtent new Point (@width() - @headerColWidth), (@height() - @headerRowHeight)
+    @_cellsPanel._applyMoveTo @position().add new Point @headerColWidth, @headerRowHeight
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
     buildHeader = (kind, index, x, y, w, h) =>
@@ -192,19 +252,31 @@ class SpreadsheetWdgt extends Widget
         header = new SheetHeaderCellWdgt kind, index
         header.attachSheet this
         @_addNoSettle header
-        header._applyExtent new Point w, h
-        header._applyMoveTo @position().add new Point x, y
         @_headerCells.set key, header
+      header = @_headerCells.get key
+      header._applyExtent new Point w, h
+      header._applyMoveTo @position().add new Point x, y
       return
+    visibleCols = @_visibleCols()
+    visibleRows = @_visibleRows()
     buildHeader "corner", nil, 0, 0, @headerColWidth, @headerRowHeight
     col = 0
-    while col < @numCols
+    while col < visibleCols
       buildHeader "column", col, (@headerColWidth + col * @colWidth), 0, @colWidth, @headerRowHeight
       col += 1
     row = 0
-    while row < @numRows
+    while row < visibleRows
       buildHeader "row", row, 0, (@headerRowHeight + row * @rowHeight), @headerColWidth, @rowHeight
       row += 1
+    # TRIM (F6): headers beyond the current viewport (the window shrank, or the origin
+    # reached the sheet edge and the ex-partial slot is backdrop now) are DERIVED chrome —
+    # destroy them; a later grow rebuilds by key.
+    @_headerCells.forEach (header, key) =>
+      [kind, indexText] = key.split ":"
+      index = parseInt indexText, 10
+      if (kind is "column" and index >= visibleCols) or (kind is "row" and index >= visibleRows)
+        header._fullDestroyNoSettle()
+        @_headerCells.delete key
     return
 
   # Create + index + place ONE CellWdgt for `address` at viewport slot (slotCol, slotRow) —
@@ -240,11 +312,17 @@ class SpreadsheetWdgt extends Widget
   # NoSettle core: runs inside the settle its public caller (wheel / processKeyDown / the
   # constructor's enclosing openWindowWith / the restore gesture) owns.
   _reconcileViewportNoSettle: ->
+    # ONE bound for membership AND the materialise loops (F6): the origin-clamped visible
+    # counts. For pass-1 membership the origin clamp is a no-op (an indexed cell's address is
+    # inside the logical sheet by construction), so this is the plan's PARTIAL derivation
+    # there — a partially-visible cell counts as on-screen.
+    visibleCols = @_visibleCols()
+    visibleRows = @_visibleRows()
     @_cells.forEach (cellWdgt, address) =>
       colRow = @model.colRowFor address
       slotCol = colRow.col - @viewOriginCol
       slotRow = colRow.row - @viewOriginRow
-      if slotCol >= 0 and slotCol < @numCols and slotRow >= 0 and slotRow < @numRows
+      if slotCol >= 0 and slotCol < visibleCols and slotRow >= 0 and slotRow < visibleRows
         cellWdgt.show() unless cellWdgt.isVisible
         rect = @_cellRectLocal slotCol, slotRow
         cellWdgt._applyMoveTo @position().add new Point rect.x, rect.y
@@ -263,9 +341,9 @@ class SpreadsheetWdgt extends Widget
           cellWdgt._fullDestroyNoSettle()
           @_cells.delete address
     slotRow = 0
-    while slotRow < @numRows
+    while slotRow < visibleRows
       slotCol = 0
-      while slotCol < @numCols
+      while slotCol < visibleCols
         address = @model.addressFor (@viewOriginCol + slotCol), (@viewOriginRow + slotRow)
         unless @_cells.has address
           @_materialiseCellNoSettle address, slotCol, slotRow
@@ -275,16 +353,45 @@ class SpreadsheetWdgt extends Widget
       slotRow += 1
     return
 
+  # ── F6: the resize seam — the sheet's own children-arrange ───────────────────────────────
+  # The window grants the sheet its extent (grow-1 width through the base
+  # _setWidthSizeHeightAccordingly, free height through _applyHeight); _applyExtent's
+  # schedule-valve then enqueues me (I have children) and the settle engine re-lays me HERE,
+  # in the same flush, at final geometry. Bounds FIRST (the InspectorWdgt case-law, enforced
+  # by check-relayout-bounds-first.js), then the whole chrome + viewport re-derive from the
+  # just-applied frame — every child placed ABSOLUTELY from @position()/@width()/@height(),
+  # which subsumes float-follow for any move that arrives here (a plain move that doesn't
+  # goes through _applyMoveBy's subtree translate as always; a hidden rich cell's notional
+  # off-screen rect is left stale — never painted/hit, re-placed on scroll-in). IDEMPOTENT
+  # (the census arrange-twice gate) and visited at most once per flush (the revisits gate).
+  # The seam is _reLayout — NOT _positionAndResizeChildren, which is a stack-family dispatch
+  # (via _reLayoutChildren) that the plain-Widget _reLayout never calls; the container
+  # precedent mirrored here is StretchableWidgetContainerWdgt._reLayout (bounds-first +
+  # derive-children-from-own-frame + trailing super). V2 finding, recorded in the plan.
+  _reLayout: (newBoundsForThisLayout) ->
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+    if @_handleCollapsedStateShouldWeReturn() then return
+    @_applyBounds newBoundsForThisLayout
+    @_buildChromeNoSettle()
+    @_reconcileViewportNoSettle()
+    # super: the move/extent re-applies no-op via the equal-guards (bounds already applied);
+    # corner-internal children (handles) re-place; _markLayoutAsFixed.
+    super
+
   # Shift the view origin by whole columns/rows (cell-quantized — the sheet never scrolls
   # sub-cell), clamped to the logical sheet, then reconcile the viewport and repaint (one
   # sheet-level changed() covers the moved cells and the relabelled frozen headers — the
   # sheet's own rect contains them all).
   _scrollByNoSettle: (colDelta, rowDelta) ->
-    newCol = Math.min (@sheetCols - @numCols), Math.max 0, @viewOriginCol + colDelta
-    newRow = Math.min (@sheetRows - @numRows), Math.max 0, @viewOriginRow + rowDelta
+    newCol = Math.min (@sheetCols - @_viewportColsFull()), Math.max 0, @viewOriginCol + colDelta
+    newRow = Math.min (@sheetRows - @_viewportRowsFull()), Math.max 0, @viewOriginRow + rowDelta
     return if newCol is @viewOriginCol and newRow is @viewOriginRow
     @viewOriginCol = newCol
     @viewOriginRow = newRow
+    # header VALIDITY is origin-dependent post-F6 (near the sheet edge a partial slot
+    # gains/loses its column — no header over backdrop), so re-run the idempotent chrome
+    # ensure/trim. At the default size the count is origin-invariant: a pure no-op pre-resize.
+    @_buildChromeNoSettle()
     @_reconcileViewportNoSettle()
     @changed()
     return
@@ -293,12 +400,16 @@ class SpreadsheetWdgt extends Widget
   # the viewport (Excel-style). A no-op while the selection is visible — in particular the
   # whole pre-F1 behaviour (origin 0, everything in view) reproduces exactly.
   _scrollToShowSelectionNoSettle: ->
+    # FULL counts (F6): the selection must end up FULLY visible — never on a clipped partial
+    # edge cell (this is also what keeps the overlay editor off clipped cells).
+    colsFull = @_viewportColsFull()
+    rowsFull = @_viewportRowsFull()
     colDelta = 0
     rowDelta = 0
     colDelta = @selectedCol - @viewOriginCol if @selectedCol < @viewOriginCol
-    colDelta = @selectedCol - (@viewOriginCol + @numCols - 1) if @selectedCol > @viewOriginCol + @numCols - 1
+    colDelta = @selectedCol - (@viewOriginCol + colsFull - 1) if @selectedCol > @viewOriginCol + colsFull - 1
     rowDelta = @selectedRow - @viewOriginRow if @selectedRow < @viewOriginRow
-    rowDelta = @selectedRow - (@viewOriginRow + @numRows - 1) if @selectedRow > @viewOriginRow + @numRows - 1
+    rowDelta = @selectedRow - (@viewOriginRow + rowsFull - 1) if @selectedRow > @viewOriginRow + rowsFull - 1
     @_scrollByNoSettle colDelta, rowDelta if colDelta isnt 0 or rowDelta isnt 0
     return
 
@@ -404,14 +515,15 @@ class SpreadsheetWdgt extends Widget
       steps = Math.max 1, Math.round((Math.abs(y) * WorldWdgt.preferencesAndSettings.wheelScaleY) / @rowHeight)
       delta = if y > 0 then -steps else steps
       # already at the travel limit in the requested direction ⇒ this axis escalates
-      if (delta < 0 and @viewOriginRow <= 0) or (delta > 0 and @viewOriginRow >= @sheetRows - @numRows)
+      # (FULL counts, F6 — the same expressions as _scrollByNoSettle's clamps)
+      if (delta < 0 and @viewOriginRow <= 0) or (delta > 0 and @viewOriginRow >= @sheetRows - @_viewportRowsFull())
         escalate = true
       else
         rowDelta = delta
     if x isnt 0
       steps = Math.max 1, Math.round((Math.abs(x) * WorldWdgt.preferencesAndSettings.wheelScaleX) / @colWidth)
       delta = if x > 0 then -steps else steps
-      if (delta < 0 and @viewOriginCol <= 0) or (delta > 0 and @viewOriginCol >= @sheetCols - @numCols)
+      if (delta < 0 and @viewOriginCol <= 0) or (delta > 0 and @viewOriginCol >= @sheetCols - @_viewportColsFull())
         escalate = true
       else
         colDelta = delta
@@ -427,10 +539,13 @@ class SpreadsheetWdgt extends Widget
     x = localPos.x
     y = localPos.y
     return nil if x < @headerColWidth or y < @headerRowHeight
-    return nil if x >= @_gridWidth() or y >= @_gridHeight()
+    return nil if x >= @width() or y >= @height()
     col = Math.floor (x - @headerColWidth) / @colWidth
     row = Math.floor (y - @headerRowHeight) / @rowHeight
-    return nil if col < 0 or col >= @numCols or row < 0 or row >= @numRows
+    # backdrop past the last visible/logical column-row is NOT a cell (F6). A click on a
+    # PARTIAL edge cell selects it — v1: NO auto-scroll on click (arrows/edit follow, clicks
+    # don't; the plan's recorded deviation-point, no deviation taken).
+    return nil if col < 0 or col >= @_visibleCols() or row < 0 or row >= @_visibleRows()
     {col: col, row: row}
 
   # single-sheet keyboard focus: the sheet the user is typing into is the ONLY sheet receiving
