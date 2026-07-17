@@ -74,6 +74,22 @@ class PanelWdgt extends Widget
     return alpha
 
 
+  # The panel-side scroll-topology chokepoint (mirror of Widget._amIDirectlyInsideScrollPanelWdgt,
+  # which asks the same question from a CONTENT widget's viewpoint): is my parent a scroll frame —
+  # i.e. am I the panel it clips and scrolls? ONE place tests the class; the three policy callers
+  # (click-to-caret forward, detach refusal, grab-to-parent) read as intent.
+  # (type-test-elimination ε: LEAVE-with-cleanup — see the plan's LEAVE section.)
+  _amITheContentsPanelOfAScrollPanelWdgt: ->
+    @parent? and @parent instanceof ScrollPanelWdgt
+
+  # Do my direct children get the "lock to panel/desktop" menu toggle? Panels are lockable
+  # surfaces (the world included); a scroll frame opts OUT — its direct children are chrome,
+  # while children INSIDE the scrolled contents get the toggle from their own PanelWdgt parent.
+  # Capability, was `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
+  # at the lock-menu site (type-test-elimination ε).
+  childrenCanLockToMe: ->
+    true
+
   mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForeground()
 
@@ -83,7 +99,7 @@ class PanelWdgt extends Widget
     # TODO the focusing and placing of the caret at the end of
     # the text should happen via API rather than via spoofing
     # a mouse event?
-    if @parent? and @parent instanceof ScrollPanelWdgt
+    if @_amITheContentsPanelOfAScrollPanelWdgt()
       # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @children.filter (m) ->
         m != world.caret
@@ -164,7 +180,7 @@ class PanelWdgt extends Widget
 
       # otherwise you could detach a Frame contained in a
       # ScrollPanelWdgt which is very strange
-      if @parent instanceof ScrollPanelWdgt
+      if @_amITheContentsPanelOfAScrollPanelWdgt()
         return false
 
       return super
@@ -174,7 +190,7 @@ class PanelWdgt extends Widget
 
       # otherwise you could detach a Frame contained in a
       # ScrollPanelWdgt which is very strange
-      if @parent instanceof ScrollPanelWdgt
+      if @_amITheContentsPanelOfAScrollPanelWdgt()
         if @parent.canScrollByDraggingBackground and @parent.anyScrollBarShowing()
           return false
         else

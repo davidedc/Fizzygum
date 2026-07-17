@@ -70,6 +70,12 @@ class PromptWdgt extends MenuWdgt
       slider.action = "takeSliderValue"
       @_addNoSettle slider
 
+  # My input slider's track press jump-drags its button, like a scroll frame's scrollbars do —
+  # SliderWdgt.mouseDownLeft asks its parent via ?(); see ScrollPanelWdgt.sliderTrackPressJumpsButton
+  # (type-test-elimination ε).
+  sliderTrackPressJumpsButton: ->
+    true
+
   takeSliderValue: (num) ->
     @_settleLayoutsAfter => @_takeSliderValueNoSettle num
 

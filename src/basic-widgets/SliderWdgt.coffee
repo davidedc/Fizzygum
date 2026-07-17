@@ -264,7 +264,10 @@ class SliderWdgt extends CircleBoxWdgt
     @_reLayoutSelfAndButton()
   
   mouseDownLeft: (pos) ->
-    if @button.parent == @ and ((@parent instanceof ScrollPanelWdgt) or (@parent instanceof PromptWdgt))
+    # jump-drag policy is the OWNING CONTEXT's (scroll frame / prompt) — capability via ?(),
+    # was `(parent instanceof ScrollPanelWdgt) or (parent instanceof PromptWdgt)`
+    # (type-test-elimination ε)
+    if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
       world.hand.nonFloatDragWdgtFarAwayToHere @button, pos
       # in an ideal world when a widget moves under the pointer
       # it gets all the right events like mouseEnter etc.

@@ -112,12 +112,9 @@ class ToolPanelWdgt extends PanelWdgt
     # BUT we want the toolpanel to never scroll horizontally
     # (only vertically), i.e. we want it to fit the contents
     # of the scroll panel parent
-    widthINeedToFitContentIn = @width()
-    if @parent?
-      if @parent instanceof ScrollPanelWdgt
-        widthINeedToFitContentIn = @parent.width()
-      else
-        widthINeedToFitContentIn = @width()
+    # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
+    # frame answers the question; any other parent (or no parent) leaves my own width.
+    widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
 
     for w in childrenNotHandlesNorCarets
 

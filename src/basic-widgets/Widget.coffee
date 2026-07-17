@@ -4058,7 +4058,9 @@ class Widget extends TreeNode
       menu.addMenuItem "test menu ➜", menusHelper, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"
       menu.addLine()
 
-    if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
+    # capability, was `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
+    # (type-test-elimination ε) — see PanelWdgt.childrenCanLockToMe
+    if @parent?.childrenCanLockToMe?()
       if @parent == world
         whereToOrFrom = "desktop"
       else

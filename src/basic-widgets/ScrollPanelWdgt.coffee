@@ -121,6 +121,25 @@ class ScrollPanelWdgt extends PanelWdgt
       return true
     return false
 
+  # The width my @contents must lay itself out within: my viewport width. Asked via ?() by
+  # content that wraps to its container (ToolPanelWdgt's row-wrap). Capability, was
+  # `parent instanceof ScrollPanelWdgt` at the caller (type-test-elimination ε).
+  widthContentsMustFitWithin: ->
+    @width()
+
+  # Pressing a slider's TRACK jump-drags the button to the press point when the slider is
+  # chrome its parent owns (my scrollbars) — SliderWdgt.mouseDownLeft asks its parent via ?().
+  # PromptWdgt gives its input slider the same policy. Capability, was
+  # `(parent instanceof ScrollPanelWdgt) or (parent instanceof PromptWdgt)` (type-test-elimination ε).
+  sliderTrackPressJumpsButton: ->
+    true
+
+  # My direct children are chrome (contents panel + scrollbars), not user-lockable content —
+  # opt OUT of the "lock to panel" menu toggle; see PanelWdgt.childrenCanLockToMe
+  # (type-test-elimination ε).
+  childrenCanLockToMe: ->
+    false
+
   _reLayoutScrollbars: ->
     # (proper-layouts Phase D, 2026-06-28) This used to set @_adjustingContentsBounds (save/restore) SOLELY so
     # the cross-method seam check in Widget._reFitContainer suppressed the bars' raw resizes below from
