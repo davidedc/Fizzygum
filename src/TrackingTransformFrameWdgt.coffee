@@ -25,8 +25,26 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # _reLayout does not flip the (@_reLayout != Widget::_reLayout) classification — the SAME reason
   # SimpleVerticalStackPanelWdgt / ScrollPanelWdgt pin it — keeping subWidgetsMergedFullBounds and the
   # resize classification exactly as the base fixed-figure island's.
+  #
+  # (up-edge endgame V1-c, docs/upedge-endgame-plan.md §9) SYNC-SETTLE a PENDING content before the
+  # re-hug — the landed window→stack P2 shape (WindowWdgt._positionAndResizeChildren): parent-before-
+  # child order walks ME before my free-floating content, so without this the re-hug no-ops on the
+  # content's STALE bounds and the content's own later settle re-arms me through the settle-time
+  # up-edge — a wasted visit + a second one, per drop/resize gesture. Settling the content HERE is
+  # the SAME _reLayout() the settle loop would run on its own turn one round later, with identical
+  # inputs (I hand my content nothing — it consumes only its own pending state), so it is
+  # byte-identical; the re-hug then reads FINAL bounds in my one visit. Deliberately NOT gated on
+  # implementsDeferredLayout (unlike the window's Path B, which uses it to mean "already settled
+  # through another channel" — I drive no sizing protocol, and a deferred-classified content like
+  # StretchableWidgetContainerWdgt needs this exactly as a leaf does) and NOT gated on transform
+  # state (this extends the TRACKING capability, which hugs at identity too — the authored explicit
+  # island; the §5a DORMANT GUARANTEE governs the transparency overrides below, not this). The
+  # _reLayoutMayResizeOwnWidth exclusion is kept verbatim (the §6 early-settle width caution).
   _reLayout: (newBoundsForThisLayout) ->
     super
+    content = @_soleContent()
+    if content? and !content.layoutIsValid and !content._reLayoutMayResizeOwnWidth?()
+      content._reLayout()
     @_reLayoutChildren()
 
   implementsDeferredLayout: ->

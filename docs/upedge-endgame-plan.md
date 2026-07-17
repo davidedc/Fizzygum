@@ -361,3 +361,14 @@ rationale. Gates ALL GREEN: build + presuite (250/250 byte-exact); `fg revisits`
 EXACTLY the two predicted vanished `WindowWdgt:2` signatures (nothing else); baseline → 5
 entries, re-checked green via `--audit-dir`; 1-round torture rc=0, both engine tokens absent.
 A first-placement nested window now settles inside its outer's arrange — one visit each.
+(Fizzygum `452c0ecd` / tests `2560d1f83`.)
+
+**V1-c ✅ LANDED — the TTF sync-settle** (TrackingTransformFrameWdgt._reLayout: settle a pending content
+between `super` and the re-hug; the two V0 gate notes — no implementsDeferredLayout gate, no
+transform-state gate — are the comment). Gates: build + presuite green (250/250 byte-exact);
+`fg revisits` drift == EXACTLY the five predicted vanished `TrackingTransformFrameWdgt:2`
+signatures (nothing else); **baseline → EMPTY** (`{}`), re-checked green via `--audit-dir`;
+`revisit-gate.js`'s header rewritten to the empty-baseline steady state (every former entry's
+retirement rationale documented in place — the V2 "rationale next to the baseline"
+deliverable); 1-round torture rc=0, both engine tokens absent. THE SETTLE ENGINE NOW VISITS
+EVERY WIDGET AT MOST ONCE PER FLUSH, SUITE-WIDE.
