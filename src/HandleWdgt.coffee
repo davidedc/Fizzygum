@@ -28,10 +28,9 @@ class HandleWdgt extends Widget
   # here and ATTACHED by whoever adds me: `someWidget.add handle` (self-settling, the standard discrete
   # attach) or `someWidget._addNoSettle handle` (deferred, inside a builder's own settle). defaultLayoutSpec
   # WhenAddedTo (below) makes me corner-attach to whatever real widget I am added to -- so the caller writes
-  # the uniform `target.add handle`, no layoutSpec and no target-passed-twice. (end-of-cycle CONVERT: a
-  # standalone attach now self-settles -- placed by its OWN flush -- instead of the old off-settle constructor
-  # side-effect that rode the shared per-frame end-of-cycle flush. @target + the padding-aware @inset are now
-  # set in _reactToBeingAdded, once the destination -- which IS the target -- is known.)
+  # the uniform `target.add handle`, no layoutSpec and no target-passed-twice; @target + the padding-aware
+  # @inset are set in _reactToBeingAdded once the destination -- which IS the target -- is known (history:
+  # see docs/archive/end-of-cycle-flush-final-records-plan.md).
   constructor: (@type = "resizeBothDimensionsHandle") ->
     # default inset; recomputed against the real target's padding in _reactToBeingAdded when I corner-attach
     @inset = new Point 2, 2
@@ -367,13 +366,7 @@ class HandleWdgt extends Widget
       choices.forEach (each) =>
         menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", @, 'makeHandleSolidWithParentWidget', arg1: each, representsAWidget: true
     else
-      # the ideal would be to not show the
-      # "attach" menu entry at all but for the
-      # time being it's quite costly to
-      # find the eligible widgets to attach
-      # to, so for now let's just calculate
-      # this list if the user invokes the
-      # command, and if there are no good
-      # widgets then show some kind of message.
+      # Not pre-computed: finding eligible widgets is costly, so the list is calculated lazily
+      # here, on menu-open; if none are found, show a message instead of hiding the entry.
       menu = new MenuWdgt @, target: @, title: "no widgets to attach to"
     menu.popUpAtHand() if choices.length

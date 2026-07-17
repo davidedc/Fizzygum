@@ -9,7 +9,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   constructor: ->
     super()
     @noticesTransparentClick = true
-    #@setColor Color.LIME
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
@@ -27,7 +26,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # form, not approached by an empirical gain.
   #
   # WHY a closed form exists. A divider can only bite in _reLayout's THIRD width regime ("more space
-  # than needed or desired", Widget.coffee:4874-4896) -- regimes 1 and 2 hand out width from min/desired
+  # than needed or desired", Widget.coffee:4983-5008) -- regimes 1 and 2 hand out width from min/desired
   # alone, so max widths are INERT there. In that regime each stack cell gets
   #     w_C = des_C + extraSpace * (max_C - des_C) / maxMargin
   # with, over the holder's stack children, D = Σ des (getRecursiveDesiredDim), sumMax = Σ max
@@ -41,15 +40,8 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   #     delta = (T - @parent.left() - A) * maxMargin / extraSpace - B
   # The per-move gain is just maxMargin/extraSpace.
   #
-  # WHAT THIS REPLACED (~2015): an empirical fudge,
-  #     deltaX = Δscreen.x * biggestMaxOfTheTwo^1.07 * 500 / (@parent.width() * 700) * (totalMax/biggestMaxOfTheTwo)
-  # i.e. a gain of totalMax/@parent.width() scaled by 0.714 * biggest^0.07 -- constants fitted so that
-  # product lands near 1 for the mid-range demo stacks (biggest ~220 => ~1.04), which is why it worked
-  # at all. It was ~1.8x too fast for a stack holding a LayoutSpacerWdgt (whose max is ~1e6), its gain
-  # DRIFTED mid-drag (biggestMaxOfTheTwo is re-read each move, and the maxes are exactly what the drag
-  # changes), and totalMax summed ALL @parent.children -- including non-stack ones like the holder's
-  # HandleWdgt. Measured against the pointer on an in-bounds 150px drag: max 44px / mean 7.4px error,
-  # now 0.00px at every step.
+  # WHAT THIS REPLACED (~2015): a hand-fitted empirical gain constant that drifted mid-drag and blew up
+  # around large max widths (measured max 44px / mean 7.4px error on a 150px drag; the closed form above is 0.00px).
   #
   # WHY ABSOLUTE, NOT INCREMENTAL. The old code integrated deltaDragFromPreviousCall, so every move
   # rejected or halved at a limit discarded that mouse travel FOREVER: drag past the bound and back and

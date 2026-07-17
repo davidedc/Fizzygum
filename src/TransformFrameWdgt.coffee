@@ -1,45 +1,17 @@
-# TransformFrameWdgt — the "island" that makes a widget subtree rotatable / scalable.
-#
-# Part of the affine-transforms feature (see docs/plans/affine-transforms-plan.md, esp.
-# §4.1, §4.2, §4.4, §4.11). It is the Squeak/CSS-compositor primitive: an invisible
-# clipping frame that owns ONE content subtree and a TransformSpec. It rasterizes
-# its content UN-transformed into a back buffer and composites that buffer through
-# the transform (§4.2). Everything inside it uses ordinary absolute Fizzygum
-# coordinates as if the island were untransformed (the "virtual plane"); the
-# transform is applied only at composite time.
-#
-# COMPOSITE (plan §4.2) has three paths, picked by the spec:
-#  - identity  → stock invisible-clipping-panel blit (byte-identical to the bare children).
-#  - pure scale (rotation 0, scale ≠ 1) → the "scale-only fast path": an unequal-src/dst
-#    drawImage (axis-aligned, no setTransform, no ctx.clip; the damage clip is a plain rect
-#    intersection of the dst rect).
-#  - rotation (Phase 2) → render-straight-then-warp: set the context transform to
-#    (device × island matrix) and drawImage the buffer onto the slot box, under a MANDATORY
-#    real path clip to (damage ∩ screen footprint) — a transformed drawImage cannot express
-#    the broken-rect clip via src/dst rects, and a spill would paint over un-repainted front
-#    content (z-order corruption, §4.2). For a non-zero angle the matrix trig comes from the
-#    deterministic DetTrig port (cross-engine-identical, Phase 0a); SWCanvas samples nearest-
-#    neighbour (Phase 0f, accepted for v1).
-#
-# WHY it extends PanelWdgt: PanelWdgt already augments ClippingAtRectangularBounds-
-# Mixin, giving us a clipping frame whose bounds-recursion terminates at itself
-# (fullBounds/fullClippedBounds → its own bounds) and whose children are clipped to
-# its box. The island's own @bounds is the SLOT BOX (integer, axis-aligned,
-# absolute — unchanged Fizzygum geometry) that layout sees. We make the frame
-# itself invisible (@appearance = nil ⇒ both background and stroke paint no-op) so
-# an IDENTITY island is byte-for-byte just its children painted normally (the
-# identity-island pixel-identity gate).
-#
-# DORMANT GUARANTEE: when a spec is identity, EVERY override here falls back to the
-# stock PanelWdgt/Widget behaviour (super), so an identity island is a plain
-# invisible clipping panel and the whole feature adds zero behaviour on any hot
-# path when no non-identity island exists.
+# TransformFrameWdgt — the "island" that makes a widget subtree rotatable/scalable: an
+# invisible clipping frame (extends PanelWdgt for its ClippingAtRectangularBoundsMixin
+# terminal) that owns ONE content subtree + a TransformSpec, rasterizing content
+# UN-transformed into a back buffer and compositing it through the transform at paint time.
+# DORMANT GUARANTEE: at identity every override here falls back to stock super, so an
+# identity island is byte-for-byte its bare children (referenced elsewhere in this file as
+# "dormant guarantee"). Mental model + composite dispatch: docs/architecture/transforms.md §1, §8.
 
 class TransformFrameWdgt extends PanelWdgt
 
   transformSpec: nil
   # Phase 3 (§4.9): last claimed extent reported to the parent layout, for reflow-on-change
-  # detection. nil for a 'slot' island (the default — never reflows).
+  # detection. nil for a 'slot' island (paint-only, never reflows) -- 'footprint' is the
+  # default since the D1 flip (claimsSpace arc, 2026-07-17; TransformSpec.claimsSpace).
   _lastClaimedExtent: nil
   # D2 scroll reachability (claimsSpace arc): last claimed ∪ ink box handed to an enclosing
   # scroll frame, for refit-on-change detection — the REACHABILITY twin of _lastClaimedExtent
@@ -51,12 +23,9 @@ class TransformFrameWdgt extends PanelWdgt
   # as a plain boolean so a saved-then-reloaded sugar island stays sugar-removable.
   _materializedBySugar: false
 
-  # §4.4 island buffer cache (docs/archive/island-buffer-cache-plan.md): the content subtree, rasterised
-  # UN-transformed ONCE and KEPT across composites, so a transform-only change (rotation/scale step,
-  # island drag) re-warps it with ZERO re-rasterisation and a content change re-rasterises only the
-  # dirty sub-rect. All three are DERIVED render state (never truth) -> serializationTransients below;
-  # a deepCopy drops them (see _reactToBeingCopied). Active iff world.islandBufferCacheEnabled AND
-  # @cachesBuffer (both default ON) -- OFF path is byte-identical to the pre-cache rebuild-every-time.
+  # §4.4 island buffer cache: the fields below are DERIVED render state (never truth) ->
+  # serializationTransients below; a deepCopy drops them (see _reactToBeingCopied). Mechanism +
+  # rebuild/reuse/dirty-rect policy: docs/architecture/transforms.md §8.1.
   _islandBuffer: nil                 # the kept content canvas (physical pixels), or nil
   _islandBufferSlotExtent: nil       # Point: the slot extent the buffer was built at (the realloc key)
   _islandBufferDirtyRect: nil        # nil (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
@@ -67,21 +36,18 @@ class TransformFrameWdgt extends PanelWdgt
   # property WorldWdgt.islandBufferCacheEnabled.
   cachesBuffer: true
 
-  # §4.4 rect-list dirty coalescing (docs/archive/island-buffer-cache-rectlist-plan.md). A frame that damages
-  # several disjoint regions keeps them as SEPARATE dirty rects (rebuild only those) instead of one
-  # bounding box that spans them. These two constants are the cost ceiling that keeps the worst case ==
-  # v1's single-bbox behaviour: collapse the list to its bounding box once it grows past MAX_RECTS
-  # separate rects (N clipped subtree walks would then cost more than one), or once the rects already
-  # cover AREA_FRACTION of their bounding box (one bbox walk is as cheap). Tunable.
+  # §4.4 rect-list dirty coalescing: cost-ceiling tunables for the coalesced disjoint dirty-rect list
+  # (docs/archive/island-buffer-cache-rectlist-plan.md; mechanism: docs/architecture/transforms.md §8.1).
   @ISLAND_DIRTY_MAX_RECTS: 8
   @ISLAND_DIRTY_AREA_FRACTION: 0.75
 
-  # Serialization: _lastClaimedExtent is a pure reflow memo (re-derived on the next
-  # preferredExtentForWidth), NOT truth -- skip it so a restored island carries no stale claimed-extent
-  # Point. The three _islandBuffer* fields are DERIVED render state (a canvas + its cache keys) that a
-  # restored island rebuilds on first composite -- never persist a canvas. transformSpec (the only real
-  # serialized state) round-trips structurally as scalars, and _materializedBySugar / cachesBuffer as
-  # plain booleans. Merged up the chain by Serializer.transientsForClass -- this ADDS to Widget's list.
+  # Serialization: _lastClaimedExtent and _lastScrollOverflowBox are pure reflow/refit memos
+  # (re-derived on the next preferredExtentForWidth / _reFitScrollFrameIfReachChangedNoSettle), NOT
+  # truth -- skip them so a restored island carries no stale memo. The _islandBuffer* fields are
+  # DERIVED render state (a canvas + its cache keys) that a restored island rebuilds on first
+  # composite -- never persist a canvas. transformSpec (the only real serialized state) round-trips
+  # structurally as scalars, and _materializedBySugar / cachesBuffer as plain booleans. Merged up the
+  # chain by Serializer.transientsForClass -- this ADDS to Widget's list.
   @serializationTransients: [
     "_lastClaimedExtent"
     "_lastScrollOverflowBox"
@@ -104,11 +70,9 @@ class TransformFrameWdgt extends PanelWdgt
     # reaches the frame — the sole-content sugar-figure case — it continues up the parent
     # chain past it, like any other non-accepting widget).
     @_acceptsDrops = false
-    # The island is invisible PLUMBING and never claims a pointer hit itself — its
-    # CONTENT provides the clickable surface (the descent tests children first, then
-    # self). isTransparentAt → true + noticesTransparentClick false ⇒ the hit-test
-    # predicate never selects the island; a click on empty content falls through to
-    # what's behind, a click on opaque content lands on the content widget (§4.6).
+    # The island is invisible PLUMBING and never claims a pointer hit itself (isTransparentAt
+    # true + noticesTransparentClick false); its CONTENT provides the clickable surface. See
+    # docs/architecture/transforms.md §7.
     @noticesTransparentClick = false
     if contentWidget?
       @wrapContent contentWidget
@@ -236,14 +200,9 @@ class TransformFrameWdgt extends PanelWdgt
     @_dropIslandBuffer()
 
   # ---------------------------------------------------------------------------
-  # layout coupling (plan §4.9). A NON-IDENTITY island is a FIXED FIGURE for its
-  # parent's layout: it reports its CLAIMED box (slot box for 'slot'; footprint
-  # AABB / sweep square for the coupled modes) as a fixed extent, is never
-  # stretched, and offsets its slot box within the claimed box. An IDENTITY island
-  # falls through to super — byte-identically the bare wrapped widget, incl. in a
-  # stack (dormant guarantee). No Phase-1/2 test puts an island in a stack, so this
-  # changes nothing existing. Only the REFLOW-on-transform-change is further gated on
-  # claimsSpace != 'slot' — the paint-only Lively firewall.
+  # layout coupling (plan §4.9): a non-identity island is a FIXED FIGURE for its parent's
+  # layout (claimed box, never stretched); reflow-on-transform-change is gated on
+  # claimsSpace != 'slot' (paint-only Lively firewall). Mechanism: docs/architecture/transforms.md §5.1.
   # ---------------------------------------------------------------------------
   _claimsFixedFigure: ->
     !@transformSpec.isIdentity()
@@ -264,18 +223,16 @@ class TransformFrameWdgt extends PanelWdgt
   # D2 scroll reachability (claimsSpace arc plan §4.1/F2): the REACHABILITY twin of the claim
   # reflow above — when my claimed ∪ ink box changed, ask the enclosing NON-content-sizing
   # scroll frame to re-fit its content frame, so my rotated ink stays reachable by scrolling in
-  # EVERY mode including 'slot' (whose claim never changes — the reported basement defect: ink
-  # poking out of the viewport grew no scrollbar). Deliberately NOT the climbing
+  # EVERY mode including 'slot' (whose claim never changes). Deliberately NOT the climbing
   # _invalidateLayout: a free-floating child's climb DROPS at the frame's non-tracking @contents
-  # PanelWdgt (Widget._invalidateLayout's freefloating gate), which is exactly why 'footprint'
-  # never reached the scroll frame either. _reFitContainer is the sanctioned phase-valved intent
-  # verb of the drop/remove/scatter seams, and the @parent.parent hop is the SAME folder-frame
-  # hop the settle-time up-edge uses (_reFitMyTrackingContainerAfterSettle) — it self-gates on
-  # _reLayoutChildren?, a no-op everywhere else. 'sweep' never fires on pure rotation (union =
-  # rotation-invariant square ∪ nested ink hull — see TransformSpec.scrollOverflowBoxFor), so a
-  # spinning sweep island keeps a perfectly still scrollbar. A stale memo (after a plain move —
-  # the move paths deliberately don't maintain it) can only FALSE-FIRE, never false-skip; the
-  # extra re-fit is idempotent recorded intent.
+  # PanelWdgt (Widget._invalidateLayout's freefloating gate). _reFitContainer is the sanctioned
+  # phase-valved intent verb of the drop/remove/scatter seams, and the @parent.parent hop is the
+  # SAME folder-frame hop the settle-time up-edge uses (_reFitMyTrackingContainerAfterSettle) —
+  # it self-gates on _reLayoutChildren?, a no-op everywhere else. 'sweep' never fires on pure
+  # rotation (union = rotation-invariant square ∪ nested ink hull — see
+  # TransformSpec.scrollOverflowBoxFor), so a spinning sweep island keeps a perfectly still
+  # scrollbar. A stale memo (after a plain move — the move paths deliberately don't maintain it)
+  # can only FALSE-FIRE, never false-skip; the extra re-fit is idempotent recorded intent.
   _reFitScrollFrameIfReachChangedNoSettle: ->
     newBox = if @transformSpec.isIdentity() then @bounds else @transformSpec.scrollOverflowBoxFor @bounds
     return if @_lastScrollOverflowBox? and newBox.equals @_lastScrollOverflowBox
@@ -472,14 +429,9 @@ class TransformFrameWdgt extends PanelWdgt
     if !@_islandBufferCacheActive()
       return @_rasterizeIslandContent slot, physExtent, nil
 
-    # A full rebuild is forced by: no buffer yet; a slot EXTENT change (realloc); OR a stale text-back-
-    # buffer epoch. The last is the ⚠ async glyph-atlas invalidation: SWCanvas loads atlases
-    # asynchronously and text rasterises as placeholder BLOCKS until warm; when an atlas warms the
-    # immutable text-back-buffer cache is reset (WorldWdgt.immutableBackBufferGeneration bumps), and this
-    # buffer — a cache DOWNSTREAM of those text back buffers — must rebuild from the now-warm text or it
-    # would re-blit frozen block glyphs (the render changes with NO changed()/deposit event, so the
-    # event-driven dirty lane cannot see it). Native never loads an atlas ⇒ the epoch never bumps ⇒ zero
-    # effect. This is the one non-event invalidation the cache needs (docs plan §5/§6 "missed lane").
+    # A full rebuild is forced by: no buffer yet; a slot EXTENT change (realloc); OR a stale
+    # text-back-buffer epoch -- the one non-event async glyph-atlas invalidation the cache needs
+    # (native never loads an atlas, so this never fires there). See docs/architecture/transforms.md §8.1.
     slotExtent = slot.extent()
     if !@_islandBuffer? or !(@_islandBufferSlotExtent? and @_islandBufferSlotExtent.equals slotExtent) or @_islandBufferGeneration != WorldWdgt.immutableBackBufferGeneration
       @_islandBuffer = @_rasterizeIslandContent slot, physExtent, nil
@@ -603,19 +555,13 @@ class TransformFrameWdgt extends PanelWdgt
     aContext.drawImage buffer, sx, sy, sw, sh, dl, dt, dr - dl, db - dt
     aContext.restore()
 
-  # §4.2 general warp path (Phase 2 — rotation, and rotation+scale): render-straight-then-warp.
-  # The buffer holds the content un-transformed at device resolution; we set the context
-  # transform to (device × island matrix) and drawImage the buffer onto the SLOT BOX in that
-  # user space, so the rasteriser warps it in one pass (seam-free — §4.2 step 3). Because a
-  # transformed drawImage cannot express the broken-rect clip via src/dst rects, a REAL path
-  # clip to (damage ∩ screen footprint) is MANDATORY (§4.2): the warped quad would otherwise
-  # spill outside the damage rect and paint over front content not being repainted this cycle
-  # (z-order corruption). We COMPOSE onto the incoming CTM (`transform`, not `setTransform`) so
-  # the unified shadow pass' pre-applied offset translate is honoured — a warped faint copy at
-  # the shadow offset IS the correctly rotated shadow (§4.8), no quad-silhouette special case.
-  # On the normal pass the incoming CTM is identity, so this equals setTransform. SWCanvas
-  # samples nearest-neighbour (Phase 0f, accepted). v1 warps the WHOLE buffer under the clip
-  # (correctness-first, like _refreshIslandBuffer); the §4.2 sub-rect optimisation is banked.
+  # §4.2 general warp path (Phase 2 — rotation, and rotation+scale): render-straight-then-warp,
+  # composing onto the incoming CTM (transform, not setTransform) so the shadow pass' offset
+  # translate warps correctly for free. A REAL path clip to (damage ∩ screen footprint) is
+  # MANDATORY — a transformed drawImage can't express the broken-rect clip via src/dst rects, and
+  # a spill would paint over un-repainted front content (z-order corruption). Full mechanism,
+  # nearest-neighbour sampling, and the whole-buffer-warp v1 trade-off:
+  # docs/architecture/transforms.md §8, §9.
   _compositeTransformed: (aContext, clippingRectangle, appliedShadow, buffer) ->
     slot = @bounds
     footprint = @_screenFootprintForDamage()          # rotated slot-box AABB (logical, padded)
@@ -635,20 +581,10 @@ class TransformFrameWdgt extends PanelWdgt
     aContext.restore()
 
   # ---------------------------------------------------------------------------
-  # the island's TWO FACES for clipping / bounds (plan §4.11)
-  #  - to DESCENDANTS (clipThrough consumed via firstParentClippingAtBounds):
-  #    the SLOT BOX only — a plane-pure clip terminal (ancestor SCREEN clips do not
-  #    commute with the transform, so they are deliberately NOT intersected in here;
-  #    they are applied to inner damage AFTER mapping, in the flesh-out hook).
-  #  - to the OUTER WORLD (clippedThroughBounds / fullClippedBounds — what the parent
-  #    merges, what flesh-out reads when the island itself is queued, what the
-  #    hit-test AABB pre-filter sees): the SCREEN FOOTPRINT = mapRect(slot box) ∩ the
-  #    ancestor screen clip chain. Larger than the slot box when scaled up
-  #    ("ink overflow").
-  # fullClippedBounds / SLOWfullClippedBounds are inherited from
-  # ClippingAtRectangularBoundsMixin and delegate to clippedThroughBounds /
-  # SLOWclippedThroughBounds, so overriding those two (+ clipThrough) is sufficient.
-  # SLOW-oracle twins are overridden IN LOCKSTEP (doubleCheckCachedMethodsResults gate).
+  # the island's TWO FACES for clipping/bounds (plan §4.11); mechanism: docs/architecture/transforms.md §4.
+  # fullClippedBounds / SLOWfullClippedBounds are inherited from ClippingAtRectangularBoundsMixin and
+  # delegate to clippedThroughBounds / SLOWclippedThroughBounds, so overriding those two (+ clipThrough)
+  # is sufficient. SLOW-oracle twins are overridden IN LOCKSTEP (doubleCheckCachedMethodsResults gate).
   # ---------------------------------------------------------------------------
 
   # screen footprint of the slot box under the current spec (padded integer AABB).

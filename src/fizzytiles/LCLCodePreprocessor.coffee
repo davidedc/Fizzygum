@@ -187,7 +187,7 @@ class LCLCodePreprocessor
   ##
   ## doOnce statements which have a tick mark next to them
   ## are not run. This is achieved by replacing the line with
-  ## the "doOnce" with "if false" or "//" depending on whether
+  ## the "doOnce" with "if false" or "noOperation" depending on whether
   ## the doOnce is a multiline or an inline one, like so:
   ##
   ##      ✓doOnce
@@ -198,7 +198,7 @@ class LCLCodePreprocessor
   ##      if false
   ##        background 255
   ##        fill 255,0,0
-  ##      //doOnce ball
+  ##      noOperation
   ##
   ## @param {string} code    the code to re-write
   ##
@@ -287,13 +287,10 @@ class LCLCodePreprocessor
     elaboratedSourceByLine = undefined
     if code.includes "doOnce"
       
-      #alert("a doOnce is potentially executable")
       elaboratedSourceByLine = code.split("\n")
       
-      #alert('splitting: ' + elaboratedSourceByLine.length )
       for eachLine in [0...elaboratedSourceByLine.length]
         
-        #alert('iterating: ' + eachLine )
         
         # add the line number tracing instruction to inline case
         elaboratedSourceByLine[eachLine] =
@@ -304,7 +301,6 @@ class LCLCodePreprocessor
         # add the line number tracing instruction to multiline case
         if /(^|\s+)doOnce[ \t]*$/g.test(elaboratedSourceByLine[eachLine])
           
-          #alert('doOnce multiline!')
           elaboratedSourceByLine[eachLine] =
             elaboratedSourceByLine[eachLine].replace(
               /(^|\s+)doOnce[ \t]*$/g, "$11.times ->")
@@ -314,7 +310,6 @@ class LCLCodePreprocessor
               /^(\s*)(.*)$/g, "$1addDoOnce(" + eachLine + "); $2")
       code = elaboratedSourceByLine.join "\n"
     
-    #alert('soon after replacing doOnces'+code)
     return [code, error]
 
   doesProgramContainStringsOrComments: (code) ->
@@ -473,7 +468,7 @@ class LCLCodePreprocessor
       reasonOfBasicError = reasonOfBasicErrorMissing + " " + reasonOfBasicErrorUnbalanced
       return [undefined,reasonOfBasicError]
     
-    # no comments or strings were found, just return the same string
+    # no basic syntax errors found, just return the same string
     # that was passed
     return [code, error]
 
@@ -481,7 +476,6 @@ class LCLCodePreprocessor
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
-    #code = code.replace(/;[ ]+/gm, "; ")
     code = code.replace(/[ ];/gm, "; ")
     if @detailedDebug then console.log "normalise-1:\n" + code + " error: " + error
     code = code.replace(/;$/gm, "")
@@ -573,8 +567,6 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log "beautifyCode-15:\n" + code + " error: " + error
     code = code.replace(/\=([\w\d\(])/g, "= $1")
     if @detailedDebug then console.log "beautifyCode-16:\n" + code + " error: " + error
-    #code = code.replace(/\)([\t ]+\d)/g, ");$1")
-    #if @detailedDebug then console.log "beautifyCode-17:\n" + code + " error: " + error
     code = code.replace(/\)[\t ]*if/g, "); if")
     if @detailedDebug then console.log "beautifyCode-18:\n" + code + " error: " + error
     code = code.replace(/,[\t ]*->/gm, ", ->")
@@ -832,12 +824,12 @@ class LCLCodePreprocessor
   # first bring to intermediate form
   #   3.timesWithVariable -> (i) -> box i
   # then just to
-  #   3.times (i) -> box i
+  #   3.timesWithVariable (i) -> box i
   # which is then handled correctly by
   # coffeescript
   # note that the parentheses around the i
   # are needed!
-  #   3.times i -> box i
+  #   3.timesWithVariable i -> box i
   # is transformed by coffeescript in something
   # that doesn't make sense.
 
@@ -855,9 +847,8 @@ class LCLCodePreprocessor
 
     if @detailedDebug then console.log "transformTimesWithVariableSyntax-2\n" + code + " error: " + error
 
-    # now from intermediate form to the form with just "times"
+    # now from intermediate form to the final form
 
-    #code = code.replace(/\.timesWithVariable[\t ]*->[\t ]*/g, ".times ")
     code = code.replace(/\.timesWithVariable[\t ]*->[\t ]*/g, ".timesWithVariable ")
 
     if @detailedDebug then console.log "transformTimesWithVariableSyntax-3\n" + code + " error: " + error
@@ -1249,7 +1240,6 @@ class LCLCodePreprocessor
     rx = RegExp("([a-zA-Z\\d]+)([ \\t]*)=[ \\t]*<",'gm')
     while match = rx.exec code
       bracketsVariablesArray.push(match[1])
-      #@primitives.push(match[1])
       if @detailedDebug then console.log "findbracketsVariables-1 pushing " + match[1]
     if @detailedDebug then console.log "findbracketsVariables-2\n" + code + " error: " + error
 
@@ -1343,10 +1333,6 @@ class LCLCodePreprocessor
     code = code.replace(rx, "$1$2")
     if @detailedDebug then console.log "evaluateAllExpressions-4\n" + code + " error: " + error
 
-    #rx = RegExp("([^a-zA-Z0-9;>\\(])([ \\t]*)("+@allCommandsRegex+")([^a-zA-Z0-9])",'g')
-    #code = code.replace(rx, "$1;$2$3$4")
-    #code = code.replace(/[>][ ]*;/g, "> ")
-    #code = code.replace(/[=][ ]*;/g, "= ")
 
     return @normaliseCode(code, error)
 
@@ -1615,7 +1601,6 @@ class LCLCodePreprocessor
       code = code.replace(rx, "$1$2$4$5, →")
 
       if @detailedDebug then console.log "avoidLastArgumentInvocationOverflowing-1\n" + code + " error: " + error
-      #alert match2 + " num of expr " + numOfExpr + " code: " + code
 
     code = code.replace(/☆/g, ", ->")
     code = code.replace(/→/g, "->")

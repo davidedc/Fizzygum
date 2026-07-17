@@ -127,7 +127,6 @@ class AnalogClockWdgt extends Widget
      Automator.state == Automator.PLAYING
       @dateLastTicked = new Date 2011,10,30
 
-    #sec = @dateLastTicked.getSeconds()
     sec = @dateLastTicked.getSeconds() + @dateLastTicked.getMilliseconds()/1000
     min = @dateLastTicked.getMinutes()
     hr = @dateLastTicked.getHours()

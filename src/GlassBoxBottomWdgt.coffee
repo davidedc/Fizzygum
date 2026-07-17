@@ -25,7 +25,7 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
+    # subwidgets of this widget are within the
     # bounds of the parent Widget. This means that
     # if only the parent widget breaks its rectangle
     # then everything is OK.

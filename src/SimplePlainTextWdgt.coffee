@@ -95,32 +95,24 @@ class SimplePlainTextWdgt extends TextWdgt
   softWrapOn:  -> @setSoftWrap true
   softWrapOff: -> @setSoftWrap false
 
-  # Toggle soft-wrap for a text inside a scroll panel. The directions are
-  # deliberately ASYMMETRIC: wrap ON re-constrains the content to the viewport
-  # (inside setTextLineWrapping) and lets the layout re-wrap; wrap OFF must
-  # _reLayoutSelf the text to its NATURAL un-wrapped width so the panel scrolls
-  # horizontally -- because TextWdgt::_reLayoutSelf wraps to the current extent when
-  # @softWrap, but measures the full natural width when not.
+  # Toggle soft-wrap for a text inside a scroll panel. The directions are deliberately ASYMMETRIC: wrap ON
+  # re-constrains the content to the viewport (inside setTextLineWrapping) and lets the layout re-wrap; wrap
+  # OFF must _reLayoutSelf the text to its NATURAL un-wrapped width so the panel scrolls horizontally --
+  # because TextWdgt::_reLayoutSelf wraps to the current extent when @softWrap, but measures the full
+  # natural width when not.
   #
-  # This runs synchronously in a click handler and does IMMEDIATE layout work (the
-  # raw resize inside setTextLineWrapping + an explicit _reLayoutSelf) rather than the
-  # framework's deferred _invalidateLayout() pattern. This is INTERMEDIATE state, not
-  # an oversight: the deferred mechanism is half-built by construction (the geometry
-  # accessors read applied @bounds only, so handler-level raw geometry is a symptom of
-  # that incompleteness). Soft-wrap also has an EXTRA blocker: the content/text are
-  # ATTACHEDAS_FREEFLOATING (so _invalidateLayout() never climbs to the scroll panel)
-  # and the wrap geometry lives in _positionAndResizeChildren, off the _reLayout cycle.
-  # Completing the deferred model stays the goal -- see
-  # docs/archive/softwrap-deferred-layout-conversion-plan.md for the model finding, the
-  # obstacle map, and what a conversion would take.
-  # CONVERT (end-of-cycle-flush-drawdown): soft-wrap is a DISCRETE public toggle (softWrapOn / softWrapOff),
-  # so SELF-SETTLE it -- one layout flush per toggle, instead of a trailing container
-  # re-fit riding the per-frame end-of-cycle flush. Canonical
-  # public-wrapper / _NoSettle-core split: the public entry is JUST the settle, and ALL the work -- INCLUDING
-  # the already-in-this-state early return -- lives in the core, so the wrapper hides no pre-settle guard
-  # (check-layering rule [H] flags a return before a settle as an early-return that belongs in the core). The
-  # immediate raw work (setTextLineWrapping resize + the unwrap _reLayoutSelf) is unchanged; completing the
-  # DEFERRED model stays a separate goal (the comment block above + docs/archive/softwrap-deferred-layout-conversion-plan.md).
+  # This runs synchronously in a click handler with IMMEDIATE layout work (raw resize inside
+  # setTextLineWrapping + an explicit _reLayoutSelf) instead of the framework's deferred _invalidateLayout()
+  # pattern: the deferred mechanism is half-built (geometry accessors read applied @bounds only), and
+  # soft-wrap has an EXTRA blocker -- the content/text are ATTACHEDAS_FREEFLOATING (so _invalidateLayout()
+  # never climbs to the scroll panel) and the wrap geometry lives in _positionAndResizeChildren, off the
+  # _reLayout cycle. Completing the deferred model stays the goal -- see
+  # docs/archive/softwrap-deferred-layout-conversion-plan.md for the obstacle map and what a conversion
+  # would take.
+  #
+  # setSoftWrap SELF-SETTLES (one layout flush per toggle): the public wrapper is JUST the settle and ALL
+  # the work -- INCLUDING the already-in-this-state early return -- lives in the NoSettle core, so
+  # check-layering rule [H] (early-return-before-settle) sees no guard in the wrapper.
   setSoftWrap: (wrap) ->
     @_settleLayoutsAfter => @_setSoftWrapNoSettle wrap
 
@@ -140,7 +132,7 @@ class SimplePlainTextWdgt extends TextWdgt
     return
 
   # This is also invoked for example when you take a slider and set it to target this. The box re-flow on a
-  # text change is the inherited TextWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
+  # text change is the inherited StringWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
   setText: (theTextContent, stringFieldWidget) ->
     super theTextContent, stringFieldWidget
     # No trailing @updateTarget() here: super -> StringWdgt::_setTextNoSettle already fires it (StringWdgt

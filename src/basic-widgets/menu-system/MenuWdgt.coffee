@@ -56,7 +56,7 @@ class MenuWdgt extends PopUpWdgt
   _buildMenuLabelNoSettle: ->
     unless @isListContents
       if @title
-        # _createLabel is shared with the label-REBUILD path (title changes) — reuse, don't inline
+      # own method, not inlined, so a future title-change rebuild can reuse @_createLabel()
         @_createLabel()
         @_addNoSettle @label
 
@@ -142,16 +142,16 @@ class MenuWdgt extends PopUpWdgt
   # »>> this part is excluded from the fizzygum homepage build
 
   # this is used by the test system to check that the menu
-  # has the correct number of items. Note that we count the
-  # children, but we don't count the top label and we don't
-  # count the shadow.
+  # has the correct number of items: children minus the top
+  # label (a shadow lives in @shadowInfo, never a child, so
+  # there is nothing to exclude for it).
   testNumberOfItems: ->
     @testItems().length
 
   # this is used by the test system to check that the menu
-  # has the correct items. Note that we consider the
-  # children, but we don't consider the top label and we don't
-  # consider the shadow.
+  # has the correct items: the children minus the top label
+  # (a shadow lives in @shadowInfo, never a child, so there
+  # is nothing to exclude for it).
   testItems: ->
     items = []
     for item in @children
@@ -170,16 +170,7 @@ class MenuWdgt extends PopUpWdgt
     world.disableTrackChanges()
 
 
-    # we are going to re-build the
-    # children list from the @items.
-    # If the list of @items has changed, we
-    # make sure we destroy the children that
-    # are going away.
-    #for w in @children
-    #  if !@items.includes(w)
-    #    w.fullDestroy()
 
-    #@children = []
 
     unless @isListContents
       @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5

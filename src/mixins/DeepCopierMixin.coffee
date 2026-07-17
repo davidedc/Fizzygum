@@ -62,41 +62,19 @@ DeepCopierMixin =
         # TODO these following alignment methods should have a uniform
         # naming convention.
 
-        # if we deep-copied a widget, check whether the original
-        # was in data structures related to the broken rects
-        # mechanism, and if so, add the copy there too.
-        # (since we deep-copy all kinds of data structures,
-        # not just widgets, check if we have the relevant alignment
-        # method to invoke).
+        # align the copy to the broken-rects tracking too, if the original was in it (Note 2 above).
         if @alignCopiedWidgetToBrokenInfoDataStructures?
           @alignCopiedWidgetToBrokenInfoDataStructures cloneOfMe
 
-        # if we deep-copied a widget, check whether the original
-        # was in data structures related to stepping
-        # mechanism, and if so, add the copy there too.
-        # (since we deep-copy all kinds of data structures,
-        # not just widgets, check if we have the relevant alignment
-        # method to invoke).
+        # align the copy to the stepping-mechanism tracking too, if the original was in it (Note 2 above).
         if @alignCopiedWidgetToSteppingStructures?
           @alignCopiedWidgetToSteppingStructures cloneOfMe
 
-        # if we deep-copied a widget, check whether the original
-        # was in the data structure that keeps track of the
-        # widgets that reference other widgets,
-        # and if so, add the copy there too.
-        # (since we deep-copy all kinds of data structures,
-        # not just widgets, check if we have the relevant alignment
-        # method to invoke).
+        # align the copy to the cross-widget reference tracker too, if the original was in it (Note 2 above).
         if @alignCopiedWidgetToReferenceTracker?
           @alignCopiedWidgetToReferenceTracker cloneOfMe
 
-        # if we deep-copied a widget, check whether the original
-        # was in the data structure that keeps track of the
-        # widgets that want to receive keyboard events,
-        # and if so, add the copy there too.
-        # (since we deep-copy all kinds of data structures,
-        # not just widgets, check if we have the relevant alignment
-        # method to invoke).
+        # align the copy to the keyboard-events-receivers tracking too, if the original was in it (Note 2 above).
         if @alignCopiedWidgetToKeyboardEventsReceiversSet?
           @alignCopiedWidgetToKeyboardEventsReceiversSet cloneOfMe
 
@@ -178,7 +156,6 @@ DeepCopierMixin =
       # This is never run on Arrays because they
       # override deepCopy altogether
       getEmptyObjectOfSameTypeAsThisOne: ->
-        #alert "cloning a " + @constructor.name
         if typeof @ is "object"
           theClone = Object.create(@constructor::)
           # add to the instances tracking.

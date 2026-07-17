@@ -57,8 +57,6 @@ class ButtonWdgt extends Widget
     super()
     @defaultRejectDrags = true
 
-    #@color = Color.create 255, 152, 152
-    #@color = Color.WHITE
     @_buildAndConnectChildren()
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).

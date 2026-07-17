@@ -98,18 +98,11 @@ class StretchableCanvasWdgt extends CanvasWdgt
     @backBufferContext.useLogicalPixelsUntilRestore()
 
 
-  # (schedule-valve arc V2, 2026-07-16 -- absorbs the old _reLayoutMyChildrenAfterImmediateResize
-  # override) Reconcile my paint buffers to the COMMITTED extent. _applyExtentBase calls
-  # _reLayoutSelf on every real extent commit, so this now covers EVERY resize route -- the
-  # polymorphic apply, an engine re-lay, and the override-BYPASSING arrange path the old
-  # immediate-resize hook could not see. Guarded on the front buffer's physical size vs my extent
-  # (the CanvasWdgt/BackBufferMixin buffer-dims idiom), so a re-lay at an unchanged frame never
-  # touches the buffers. The behind-the-scenes buffer -- the user's PAINTING -- is deliberately
-  # kept once anything is painted: the blit scaling (extentWhenCanvasGotDirty in
-  # _createRefreshOrGetBackBuffer / getContextForPainting) maps the old-size painting onto the new
-  # frame; recreating it would erase the strokes. Sized from the committed @extent() (the old hook
-  # used the RAW requested extent; they differ only under __commitExtent's round/min-clamp, where
-  # buffer==frame is the correct invariant), byte-exact-gated.
+  # Reconcile my paint buffers to the COMMITTED extent on every real resize (the schedule-valve
+  # arc; see docs/archive/layout-system-architecture-assessment.md §10). Guarded on the front
+  # buffer's physical size vs my extent, so an unchanged-frame re-lay never touches the buffers.
+  # The behind-the-scenes buffer -- the user's PAINTING -- is deliberately kept once anything is
+  # painted: recreating it would erase the strokes.
   _reLayoutSelf: ->
     super
     targetPhysicalExtent = @extent().scaleBy ceilPixelRatio
@@ -159,16 +152,8 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
     contextForPainting = @getContextForPainting()
 
-    # OK now this needs an explanation: in a hi-dpi display we get
-    # a widget image that is 2x the logical size.
-    # BUT the position is indicated by the mouse which works in logical
-    # coordinates.
-    # SO we need to keep the positioning correctly scaled at 2x
-    # BUT draw on the canvas at 1x
-    # SO here we undo the 2x scaling, re-introduce it manually only
-    # for the positioning, then draw.
-    # Note that there could be another way, i.e. to pass the other arguments
-    # to "drawImage" to specify the bounding box.
+    # Hi-dpi: the widget image is 2x logical size, but pos (from the mouse) is logical.
+    # Undo the 2x scale here, then re-apply it explicitly just for the positioning below.
 
     @behindTheScenesBackBufferContext.scale 1/ceilPixelRatio, 1/ceilPixelRatio
     contextForPainting.drawImage image, pos.x * ceilPixelRatio, pos.y * ceilPixelRatio
@@ -193,7 +178,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
+    # subwidgets of this widget are within the
     # bounds of the parent Widget. This means that
     # if only the parent widget breaks its rectangle
     # then everything is OK.

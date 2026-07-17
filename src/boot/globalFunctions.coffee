@@ -118,82 +118,29 @@ boot = ->
 
   stillLoadingSources = true
 
-  # There are four separate but related questions related to scaling:
-  # -----------------------------------------------------------------
-  # 1) how do I know the physical measurement (e.g. actual inches)
-  #    of something I paint on screen (e.g. how to make a button
-  #    big enough for tapping)
-  # 2) how do I know the current zoom level of the browser
-  # 3) how do I make the fizzygum canvas not blurry
-  # 4) how do I make the fizzygum UI big enough for good readability
-  #    and touch input?
+  # Four related scaling questions: 1) physical size of a painted pixel (e.g. how
+  # big a button needs to be for tapping) 2) the browser's current zoom level
+  # 3) how to keep the canvas crisp, not blurry 4) how to size the UI big enough
+  # for readability/touch. Answers below.
 
-  # The answer to 1) is easy:
-  #   it can't be done with CSS or JS alone. Deal with it. Some screens
-  #   are more dense and report the same pixelRatio as normal ones.
-  #   Even iPad models have slightly different retina densities.
-  #   This is not exposed via CSS or JS in any way. We can put in place
-  #   _an interactive_ way to ask the user to tell us how far apart are
-  #    her fingers for example, so we can draw the UI well.
+  # 1) Physical pixel size is NOT knowable via CSS/JS -- different screens (even
+  # same-model iPads) report the same devicePixelRatio at different physical
+  # densities. The only fallback is an interactive finger-spacing-style prompt.
 
-  # The answer to 2) is:
-  #   There is no way to ONLY know the zoom level independently.
-  #   devicePixelRatio takes into account both the pixel density of the
-  #   display and the current zoom level of the browser.
+  # 2) The browser's zoom level can't be read independently either --
+  # devicePixelRatio conflates screen pixel density AND page zoom.
 
-  # Answer to 3):
-  #   Device pixel ratio reflects not only the pixel density on screen
-  #   (e.g. for retina displays and high-dpi displays), BUT ALSO the current
-  #   zoom level of the page. So for example many windows setups have a
-  #   default page zoom of 110% or 125% ... this means that on a
-  #   "standard-dpi" screen the devicePixelRatio would be 1.1 and
-  #   1.25 respectively.
-  #
-  #   So at 110% zoom level, the browser gives the canvas THE SAME LOGICAL PIXELS,
-  #   BUT it makes it physically bigger on the screen and it changes the
-  #   device pixel ratio. So if Fizzygum plays its cards well, it will give
-  #   more physical pixels to the canvas accordingly to the device pixel ratio,
-  #   and paint on that, keeping the canvas crisp even if it's larger than normal.
-  #
-  #   While in theory knowing the device pixel ratio would allow us to give the
-  #   canvas the exact amount of extra physical pixels and we could draw the
-  #   canvas crisply, it's impossible to deal simply and effectively with
-  #   non-integer pixel ratios, because, say, a 9-units large widget would
-  #   become 9.9 physical units which is difficult to draw sharply and clip
-  #   and pointer-test. So, logical 9-units would become 10 physical units...
-  #   and you see the kind of complications you'd get as you are trying to
-  #   make pixel-accurate clipping and drawing...
-  #
-  #   E.g. a logical 9-units widget would effectively paint contiguously next
-  #   to a widget to its right that has a logical 10-units displacement
-  #   (instead of leaving one empty pixel between the two).
-  #
-  #   Other forms of approximation (e.g. use ceil instead of round) would incur
-  #   in similar problems.
-  #
-  #   Especially clipping and pointer-testing would be prone to error because
-  #   they are done in logical coordinates where that complication is not
-  #   visible... so the problem is that the logical and physical coordinates
-  #   would be out-of-step in subtle ways.
-  #
-  #   Also for example a 5-unit widget would need rounding of its pixels, but
-  #   a 5+5 unit widget wouldn't (cause it would be precisely 11 physical pixels).
-  #
-  #   WHAT WE DO INSTEAD is the following: just ceil the devicePixelRatio and
-  #   use that. The canvas then has *more* pixels than needed, and will fill
-  #   its assigned area quite crisply in my experiments.
+  # 3) A non-integer pixel ratio breaks pixel-accurate clipping/pointer-testing:
+  # a logical N-unit widget would land on a fractional physical-pixel boundary
+  # (e.g. 9 units -> 9.9px), making adjacent widgets bleed together or gaps
+  # appear unpredictably; rounding/ceiling individual draws doesn't fix this
+  # because the logical<->physical mismatch is systemic, not per-widget.
+  # WHAT WE DO: ceil() devicePixelRatio (ceilPixelRatio, below) and paint at
+  # that integer ratio -- more physical pixels than strictly needed, but crisp.
 
-  # Answer to 4):
-  #   So our job in terms of this question consists of:
-  #     a) first and foremost, keep the drawing crisp because a blurry screen
-  #       is terrible - see answer to 3) AND
-  #     b) to find the "big enough" logical sizing of things (buttons,
-  #       thickness of lines etc).
-  #   As mentioned there is no way in CSS/JS to actually know the real-world
-  #   measurement of things. What you _can_ do though is some interactive tests
-  #   where the user can directly or indirectly tell a good size for things
-  #   (e.g. place index and middle finger attached to each other and tap in a space).
-  #   THEN our job is just to make the UI elements of the comfortable logical units.
+  # 4) Keep drawing crisp (answer 3) AND pick logical sizes (button/line
+  # thickness) generous enough for touch/readability -- unmeasurable directly,
+  # so this needs an interactive size-probe (see answer 1), not a formula.
 
   # --- SWCanvas software-rendering backend selection (optional) -------------
   #   ?sw=1   (or a preset window.FIZZYGUM_USE_SWCANVAS) routes every canvas made
@@ -250,55 +197,16 @@ boot = ->
   if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
     installSWCanvasExtensions()
 
-  # First loaded batch ----------------------------------------
-  #
-  # note that we assume that all the parts of this first batch
-  # can be loaded/"run" in any order.
-  # The only thing that is loaded already is fizzygum-boot.js
-  # which is this very file of globals.
-  #
-  # You could probably do the same loading here by
-  # plainly using script tags in the index file, however we do it
-  # here so the logic of all the loading is here.
-  #
-  # Note that it's important that none of the code in each
-  # of these entries of this batch uses the code of any
-  # of the other entries of this batch. E.g. the pre-compiled
-  # classes can't instantiate static or non-static properties
-  # with, say, the result of running the coffeescript compiler.
-  # (when you define a class, all static and nonstatic properties
-  #  are immediately initialised so for example doing
-  #
-  #    myCompiledCode: Coffeescript.compile(...)
-  #
-  # would run the compilation immediately during the class
-  # definition and would hence depend on Coffeescript being
-  # loaded already.)
-  #
-  # Note however that since the pre-compiled classes are pre-
-  # compiled in the correct dependency order, each class *can*
-  # initialise static/nonstatic properties with objects
-  # created from other classes (as long as we do the dependencies-
-  # finding correctly). So for example a Widget can
-  # initialise a "color" property doing something like
-  #
-  #   myCol: Color.create(...)
-  #
-  # An alternative way of doing things here would be
-  # to try to generate at build time a SINGLE big JS file
-  # that includes all these parts, and hence loading all in
-  # one go.
-  # However this wouldn't necessarily feel more performant,
-  # because really
-  #    1) anything loaded after createWorldAndStartStepping
-  #       happens in the background
-  #    2) all that is loaded before createWorldAndStartStepping
-  #       is: the pre-compiled code, and other test-related stuff,
-  #       and we don't care about test-related builds to load
-  #       a little slower
-  # (it could be better to load a few files in parallel
-  # and parse them ideally in parallel but I didn't measure
-  # that).
+  # First loaded batch: assumed independently loadable/runnable in any order
+  # (only fizzygum-boot.js -- this file -- is already loaded). None of these
+  # entries may depend on another entry's code at CLASS-DEFINITION time: static/
+  # non-static property initialisers run immediately when the class is defined,
+  # so e.g. myCompiledCode: Coffeescript.compile(...) would need CoffeeScript
+  # already loaded. Pre-compiled CLASSES, by contrast, load in dependency order,
+  # so they CAN initialise properties from other classes (e.g. myCol: Color.create(...)).
+  # A single bundled JS file was considered and rejected: pre-createWorldAndStartStepping
+  # loading is already just the pre-compiled code + test manifests, everything else
+  # loads in the background, so bundling wouldn't clearly help.
 
   # The case that we want to optimise is the pre-compiled case:
   # the pre-compiled pack should ideally only contain everything

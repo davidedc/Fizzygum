@@ -23,7 +23,6 @@
 class MacroToolkit
 
   msSinceLastExecutedMacroStep: nil
-  #macroVars: nil # a dedicated global space for macros. Unused so far.
   aMacroIsRunning: nil
   returnFromLastMacroStep: nil
   # latches the frame on which we forced a warm-atlas repaint before a macro
@@ -371,8 +370,8 @@ class MacroToolkit
     @syntheticEventsMouseUp_InputEvents whichButton, upAbs, true
 
   # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
-  # event's shiftKey flag set (the 4th boolean of Mouse{down,up}InputEvent — button, buttons, ctrlKey,
-  # shiftKey, altKey, metaKey, isFromAutomator, time). A click carrying shiftKey makes an editable
+  # event's shiftKey flag set (the 4th constructor parameter of Mouse{down,up}InputEvent — button, buttons,
+  # ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time). A click carrying shiftKey makes an editable
   # StringWdgt/TextWdgt EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
   # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
   syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -429,12 +428,10 @@ class MacroToolkit
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
     @syntheticEventsMouseDown_InputEvents whichButton, startTime + milliseconds + 100
 
-  # Click a fractional point [fx, fy] inside a widget — located either by a widget
-  # reference or by a text-description identifier [desc, occ, total]. The landing point
-  # is (left + round(width*fx), top + round(height*fy)) of the LIVE widget, so it
-  # follows the widget if it has moved/resized.
-  # Resolve a [widget | text-description identifier | Point] + an [fx, fy] fraction to an
-  # absolute world Point inside that widget. Shared by the fractional click/double/triple verbs.
+  # Resolve a [widget | text-description identifier | Point] + an [fx, fy] fraction to an absolute
+  # world Point inside that widget: (left + round(width*fx), top + round(height*fy)) of the LIVE widget,
+  # so it follows the widget if it has moved/resized. Shared by the fractional click/double/triple-click
+  # verbs (and any other verb that needs to aim at a point inside a widget).
   pointAtFractionOf: (widgetOrIdentifier, fraction) ->
     widget = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
       @findWidgetByTextDescription widgetOrIdentifier
@@ -681,9 +678,10 @@ class MacroToolkit
 
   # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
   # carries a suffix you should not depend on — e.g. the "attach..." target menu labels each candidate
-  # `<widget>.toString() + " ➜"`, so a RectangleWdgt reads "a RectangleWdgt#1 ➜" (an instance number +
-  # a trailing arrow). Match the stable head ("a RectangleWdgt") instead of the exact string, and only
-  # the intended target is hit even when the menu also lists the World and the widget's own handle.
+  # `<widget>.toString().replace("Wdgt","") + " ➜"`, so a RectangleWdgt reads "a Rectangle#1 ➜" (an
+  # instance number + a trailing arrow). Match the stable head ("a Rectangle") instead of the exact
+  # string, and only the intended target is hit even when the menu also lists the World and the widget's
+  # own handle.
   getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
     theMenu.topWdgtSuchThat (item) ->
       if item.labelString?
@@ -713,8 +711,9 @@ class MacroToolkit
 
   # Move to and click the menu item whose label STARTS WITH a prefix, in a menu you hold a reference to.
   # The prefix sibling of moveToItemOfMenuAndClick_InputEvents — for menus whose item labels carry a
-  # variable suffix (the "attach..."/"choose target:" menu labels each target `toString() + " ➜"`), match
-  # the stable class-name head so you pick the intended target rather than the first/Nth item.
+  # variable suffix (the "attach..."/"choose target:" menu labels each target
+  # `toString().replace("Wdgt","") + " ➜"`), match the stable Wdgt-stripped class-name head so you pick
+  # the intended target rather than the first/Nth item.
   moveToItemStartingWithOfMenuAndClick_InputEvents: (theMenu, thePrefix) ->
     theItem = @getTextMenuItemFromMenuByPrefix theMenu, thePrefix
     @moveToAndClick_InputEvents theItem
@@ -910,58 +909,13 @@ class MacroToolkit
   # navigation/assertion verbs aren't copied into every test. The verbs compose
   # the @..._InputEvents primitives defined above.
   standardMacroSubroutines: ->
-    # When does it make sense to generate events "just via functions" vs.
-    # needing a macro?
-    #
-    # A function is completely executed on the spot (i.e. right at the moment
-    # of invocation, within a specific world cycle). So it can generate events
-    # in the future (as those are put in the events queue), but since it's
-    # completely executed on the spot, it can't see the
-    # state of the world in the future. E.g. a function can generate
-    # several mouse actions in the future, but it can't check the
-    # existence/position of a menu item in the future.
-    #
-    # Conversely, a macro is executed in steps across multiple cycles,
-    # and can see the state of the world as it changes across cycles.
-    # E.g. a macro can open a menu, then check the existence and position
-    # of a menu item, then click on it.
-    #
-    # So, if one needs to generate events for the future and can do so
-    # "blindly" (e.g. a
-    # mouse drag/drop between two known position), then use a function
-    # (and not a macro). If, conversely, one needs to check the state
-    # of the world as the actions unfold, then use a macro.
-    #
-    # Note that behind the scenes the macros are implemented as generators,
-    # and the "cross-cycle" execution is done via yields/next()
-    #
-    # The implications:
-    #   * a macro can call functions, but functions can't call macros
-    #   * a macro should either call another macro or have a yield of some
-    #     sort. If it doesn't do either thing, something is off as it will
-    #     be executed one-shot in a single call (and single cycle)
-    #     so it should probably be a function.
-    #
-    # Examples of macros (potentially using functions):
-    #   - opening a menu of a widget AND clicking on one of its items
-    #   - opening inspector for a widget
-    #   - opening inspector for a widget, changing a method, then
-    #     clicking "save"
-    #   - scrolling via wheel till the end of a document (as it needs to
-    #     check status of scroll)
-    #
-    # Examples of functions:
-    #   - moving an icon to the bin
-    #   - closing the top window
-    #   - opening the menu of a widget (by moving on it and right-clicking)
-    #   - moving pointer to a specific entry of top menu and clicking it
-    #   - scrolling via vertical bar till the end of a document (no need to check
-    #     status, can just move the bar till the known end of its vertical extent)
-    #
-    # A macro should take care of "finishing" when the whole macro is executed
-    # i.e. with all the intended actions completed and no inputs remaining in
-    # the "future events" queue. Hence, the caller of a macro
-    # can assume that no further "waits" are needed after calling it.
+    # Function vs macro: a function executes fully within the CURRENT cycle, so it can push future events
+    # "blindly" but cannot observe how the world looks after they run; a macro is a generator that yields
+    # across cycles, so it CAN check world state between steps (open a menu, confirm an item exists, then
+    # click it). Implication: a macro may call functions, but a function cannot call a macro. A macro must
+    # call another macro or `yield` itself — one that does neither runs one-shot in a single cycle and
+    # should just be a function. A well-formed macro drains the input queue itself before returning, so
+    # its caller never needs an extra wait after calling it.
 
     macroSubroutines = new Set
 
@@ -998,11 +952,11 @@ class MacroToolkit
     # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
     # another widget. Right-click the controller -> "set target" (openTargetSelector) opens a
     # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
-    # OVERLAP the intended target), each labelled `target.toString() + " ➜"`; pick it by class-name PREFIX.
-    # That opens a "choose target property:" menu of the target's setters (e.g. "color"); pick the property.
-    # Afterwards, acting on the controller (clicking a palette, dragging a slider) calls
-    # target[setter](value). Each menu is captured fresh from getMostRecentlyOpenedMenu() right after it
-    # opens (every mouseUp clears world.freshlyCreatedPopUps).
+    # OVERLAP the intended target), each labelled `target.toString().replace("Wdgt","") + " ➜"`
+    # (Wdgt-stripped); pick it by class-name PREFIX. That opens a "choose target property:" menu of the
+    # target's setters (e.g. "color"); pick the property. Afterwards, acting on the controller (clicking
+    # a palette, dragging a slider) calls target[setter](value). Each menu is captured fresh from
+    # getMostRecentlyOpenedMenu() right after it opens (every mouseUp clears world.freshlyCreatedPopUps).
     macroSubroutines.add Macro.fromString """
       setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix = nil) ->
         @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"

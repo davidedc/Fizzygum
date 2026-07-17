@@ -131,25 +131,15 @@ class InspectorWdgt extends Widget
       else
         nil
   
-  # CONVERT (end-of-cycle-flush-drawdown): a live inspector rebuild -- a property add/rename/remove, or a
-  # show/hide toggle -- is a DISCRETE public mutation, so SELF-SETTLE it once, instead of the leading
-  # fullDestroyChildren's _destroyNoSettle riding the per-frame end-of-cycle flush. SINGLE tier over a
-  # non-settling core: the body's @add's are @_addNoSettle, so the multi-add rebuild does NOT re-enter the
-  # flush per child -- they invalidate, and the ONE _settleLayoutsAfter flush at the end re-fits the COMPLETE
-  # inspector. (No BATCH tier needed: the settle fires ONCE, AFTER the build, so there is no mid-build re-fit
-  # of a half-wired child -- the mid-build re-fit crash a batch settler would guard against can't arise here.) At CONSTRUCTION
-  # this is called last on an orphan -> _settleLayoutsAfter now SETTLES the orphan subtree synchronously
-  # (orphan-settledness), so `new InspectorWdgt` returns settled; the single flush still runs over the
-  # complete, fully-wired inspector.
+  # A live rebuild (property add/rename/remove or show/hide toggle) SELF-SETTLES ONCE around the
+  # non-settling @_addNoSettle core below -- see docs/archive/end-of-cycle-flush-drawdown-plan.md.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
 
-    # remove all submorhs i.e. panes and buttons
-    # THE ONES THAT ARE STILL
-    # subwidgets of the inspector. If they
-    # have been peeled away, they still live
+    # Remove all panes/buttons that are still our children (fullDestroyChildren walks @children
+    # only -- widgets already peeled away elsewhere are untouched and still live).
     @fullDestroyChildren()
 
     attribs = []
@@ -161,14 +151,11 @@ class InspectorWdgt extends Widget
     # (enumerable such as strings and un-enumerable such as functions)
     # of the whole prototype chain.
     #
-    #   a) some of these are DECLARED as part of the class that defines the object
-    #   and are proprietary to the object. These are shown RED
-    #
-    #   b) some of these are proprietary to the object but are initialised by
-    #   code higher in the prototype chain. These are shown GREEN
-    #
-    #   c) some of these are not proprietary, i.e. they belong to an object up
-    #   the chain of prototypes. These are shown BLUE
+    # filterProperties (below) colors these in two tiers, not three: GREEN when the property
+    # is declared directly on the object's own class (@target.constructor.prototype.hasOwnProperty
+    # is true); everything else -- inherited from a superclass, or stitched onto the instance with
+    # no class declaration -- stays the default BLUE. A RED tier existed before the 2017
+    # InspectorMorph2 refactor (commit 753d2c8f) and was never restored.
     #
     # TODO show the static methods and variables in yet another color.
     
@@ -197,7 +184,6 @@ class InspectorWdgt extends Widget
     # caches the own methods of the object
     if @markOwnershipOfProperties
       targetOwnMethods = Object.getOwnPropertyNames @target.constructor::
-      #alert targetOwnMethods
 
     if @target?
       goingUpTargetProtChain = @target.__proto__
@@ -282,19 +268,12 @@ class InspectorWdgt extends Widget
     )
     @list.disableDrops()
 
-    # we know that the content of this list in this pane is not going to need the
-    # step function, so we disable that from here by setting it to nil, which
-    # prevents the recursion to children. We could have disabled that from the
-    # constructor of MenuWdgt, but who knows, maybe someone might intend to use a MenuWdgt
-    # with some animated content? We know that in this specific case it won't need animation so
-    # we set that here. Note that the ListWdgt itself does require animation because of the
-    # scrollbars, but the MenuWdgt (which contains the actual list contents)
-    # in this context doesn't.
+    # @list.listContents (the MenuWdgt holding this list's items) never animates, so it's dropped
+    # from world.steppingWdgts here rather than in MenuWdgt's own constructor -- other MenuWdgt
+    # uses may want the step function. ListWdgt itself still steps (its scrollbars need it).
     world.steppingWdgts.delete @list.listContents
     @_addNoSettle @list
 
-    # we add a Widget alignment here because adjusting IDs whenever
-    # we add or remove methods is a pain...
 
 
     # details pane
@@ -491,15 +470,10 @@ class InspectorWdgt extends Widget
     @_applyMoveTo newBoundsForThisLayout.origin
     @_applyExtent newBoundsForThisLayout.extent()
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
+    # Disable broken-rect tracking while we lay out children manually: every inspector subwidget
+    # stays within the parent's own bounds, so the parent's broken rect covers them all (this
+    # optimization relies on that invariant). Anything attached that sticks out past our bounds
+    # is still painted/moved correctly.
     world.disableTrackChanges()
 
     headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))

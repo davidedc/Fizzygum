@@ -3,13 +3,13 @@
 # same shape as WindowWdgt / SimpleVerticalStackPanelWdgt / ScrollPanelWdgt each being a size-tracking
 # container: in this layout architecture the tracking-container capability is a CLASS, never a per-widget
 # flag (a freefloating child's _invalidateLayout climbs THROUGH to its parent iff the parent DEFINES
-# _reLayoutChildren — Widget:4039 — and that check is method existence, i.e. class identity).
+# _reLayoutChildren — the freefloating gate in Widget._invalidateLayout — a method-existence check, i.e. class identity).
 #
 # The base TransformFrameWdgt is a FIXED figure and deliberately does NOT define _reLayoutChildren, so a
 # coupled explicit island living inside a stack keeps the freefloating-skip and stays byte-identical
 # (Phases 1–3). This subclass DOES define it, so the settle loop's ordered up-edge
-# (_reFitMyTrackingContainerAfterSettle) re-fits it after its content settles (docs/layout-system-
-# architecture-assessment.md §6.1 rule 4). The property sugar (Widget._materializeSugarIslandNoSettle)
+# (_reFitMyTrackingContainerAfterSettle) re-fits it after its content settles (docs/architecture/layout.md
+# §3). The property sugar (Widget._materializeSugarIslandNoSettle)
 # materialises THIS class, so a rotated/scaled widget's slot GROWS with the widget instead of the buffer
 # clipping at the frozen footprint (affine transforms — rough edge R3, docs/plans/affine-transforms-plan.md §6,
 # the deferred 4A-2 item (b)).
@@ -178,8 +178,8 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # ITS OWN width→height policy (text wrap / clock square / ratio) and HAND BACK the resulting height —
   # in my plane that IS my slot height after the re-hug (the slot being content-coincident), = the
   # content height. EVERY _setWidthSizeHeightAccordingly override must return its height (the historical
-  # break point, Widget.coffee §720-727). Only the stack arrange calls this — never my own _reLayout —
-  # so no stale-extent guard is needed.
+  # break point — see Widget._setWidthSizeHeightAccordingly's contract comment). Only the stack arrange
+  # calls this — never my own _reLayout — so no stale-extent guard is needed.
   _setWidthSizeHeightAccordingly: (newWidth) ->
     content = @_soleContent()
     return super newWidth if @transformSpec.isIdentity() or !content?
@@ -210,7 +210,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # _childMeasuredExtentInStack); forward my content's minimum so measure and arrange clamp to the SAME
   # value (the arrange applies through content._applyExtent, whose __commitExtent clamps to the content's
   # own min). Dormant at identity/empty (super ⇒ @minimumExtent). My OWN __commitExtent reads the
-  # @minimumExtent FIELD directly (Widget.coffee:2103), not this getter, so overriding it here does not
+  # @minimumExtent FIELD directly (see Widget.__commitExtent), not this getter, so overriding it here does not
   # perturb my own slot commits.
   getMinimumExtent: ->
     content = @_soleContent()

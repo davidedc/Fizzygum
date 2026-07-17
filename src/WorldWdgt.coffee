@@ -1780,9 +1780,6 @@ class WorldWdgt extends PanelWdgt
     # TODO all these set modifications should be immutable...
     @steppingWdgts.forEach (eachSteppingWidget) =>
 
-      #if eachSteppingWidget.isBeingFloatDragged()
-      #  continue
-
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.
       millisBetweenSteps = Math.round(1000 / eachSteppingWidget.fps)

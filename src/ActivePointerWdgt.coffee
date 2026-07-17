@@ -111,10 +111,7 @@ class ActivePointerWdgt extends Widget
         #     the mouse after the first clicks
         #  b) the caret disappears as soon as a menu appears, so it
         #     would be confusing to select a caret.
-        # I drafted an alternative implementation where we manage
-        # those situations without being radical in this filtering-out
-        # but it was quite a bit more complicated.
-        # the caret is a world singleton; was `m not instanceof CaretWdgt` (type-test-elimination campaign)
+        # the caret is a world singleton.
         (m != world.caret) and
         # exclude EPHEMERAL overlays (highlight / pinout / drag affordances): reconciler-owned,
         # non-interactable by definition. The isEphemeral() capability replaces the two former
@@ -166,6 +163,7 @@ class ActivePointerWdgt extends Widget
   #   _reactToBeingGrabbed(oldParent) -> grabbedWdgt
   #   _reactToChildGrabbed(grabbedWdgt) -> oldParent
   #   wantsDropOfChild(wdgtToDrop) ->  newParent
+  #   _beforeChildDropped(wdgtToDrop) -> newParent
   #   _reactToBeingDropped(whereIn) -> droppedWdgt
   #   _reactToChildDropped(droppedWdgt, activePointerWdgt) -> newParent
   #
@@ -326,15 +324,9 @@ class ActivePointerWdgt extends Widget
         aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
         aWdgt._moveWithin world
       else if displacementDueToGrabDragThreshold?
-        # in this case keep some visual consistency and move
-        # the widget accordingly to where the grab started
-        # (remember: we actually grab a while after the user has
-        # pressed, because we want to see an actual significant move
-        # before we resolve that this is a grab)
-        # Don't fit the widget within the world because it often
-        # happens to pick up a widget that is partially outside the
-        # screen and it's no good to make it jump within the screen
-        # - I tried and it looks really strange -
+        # keep visual consistency: move the widget to where the grab started (we grab only after a
+        # significant move past the threshold). Don't fit within the world -- a widget picked up
+        # partially off-screen should stay there, not jump into view.
         aWdgt._applyMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
 
       @grabOrigin = aWdgt.situation()
@@ -345,28 +337,12 @@ class ActivePointerWdgt extends Widget
       # parent's _reactToChildGrabbed re-fit once (the drop's symmetric twin — see the comment there).
       @add aWdgt
       aWdgt._reactToBeingGrabbed? oldParent
-      # you must add the shadow
-      # after the widget has been added
-      # because "@add aWdgt" causes
-      # the widget to be painted potentially
-      # for the first time.
-      # The shadow needs the image of the
-      # widget to make the shadow, so
-      # this is why we add the shadow after
-      # the widget has been added.
-      # Note that Widgets can specify the look
-      # (i.e. offset blur and color)
-      # of their shadow (e.g. Menus have a particular one
-      # so they all seem to float at a particular height)
-      # but here when we grab widgets we
-      # specify a particular look for the shadow.
-      # This is a particularly "floaty" shadow
-      # which illustrates how things being dragged
-      # are above anything else.
+      # The shadow must be added after @add -- it needs the widget's painted image, which @add may
+      # produce for the first time. This grab shadow uses its own "floaty" look (offset/blur/color),
+      # distinct from a widget's own per-class shadow (e.g. Menus use a different one).
 
       aWdgt.addShadow new Point(6, 6), 0.1
       
-      #debugger
       @fullChanged()
       # Notify the old parent so it can re-fit itself (e.g. a ScrollPanelWdgt re-snugs its contents +
       # scrollbars when you take a widget out of it). A grab is one discrete re-parent gesture, so settle it
@@ -377,8 +353,7 @@ class ActivePointerWdgt extends Widget
       # Wdgt / ScrollPanelWdgt via _reFitContainer (a raw invalidate, no public setter), FridgeWdgt via
       # compileTiles -> FizzytilesCodeWdgt.showCompiledCode -> _setTextNoSettle (core) -- so nothing re-enters
       # the flush guard mid-pass; the single tier flushes ONCE and THROWS if a future override sneaks in a
-      # public setter (the wanted cores-call-cores discipline). (end-of-cycle-flush drawdown: _reactToChildGrabbed
-      # was ~7 records, all flushed here once now -- the grab/removal counterpart of the drop convert.)
+      # public setter (the wanted cores-call-cores discipline).
       @_settleLayoutsAfter => oldParent?._reactToChildGrabbed? aWdgt
 
   isThisPointerDraggingSomething: ->
@@ -415,8 +390,7 @@ class ActivePointerWdgt extends Widget
       if overReluctantOnly
         # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop, so the
         # payload lands on the WORLD at the release point (a plain move-over, NO offset). Applies to BOTH
-        # window and plain payloads. (Earlier drafts offset the landing and offered a land-and-offer pill;
-        # both were dropped 2026-07-06 — the payload just lands normally where it was released.)
+        # window and plain payloads.
         target = world
       else if dropPolicy.requiresDeliberateEmbedding()
         # WINDOW payload over an eager/willing candidate (or nothing): the internal/external gate is GONE
@@ -536,14 +510,11 @@ class ActivePointerWdgt extends Widget
       # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and immediate
       # mutators), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
       # THROWS if a future override sneaks in a public setter (the wanted cores-call-cores discipline -- the
-      # batch tier used to silently absorb that). (end-of-cycle-flush drawdown: the drop was the biggest
-      # residual, ~62 records, all flushed here once now.)
+      # batch tier used to silently absorb that).
       @_settleLayoutsAfter =>
         target._reactToChildDropped? wdgtToDrop, @
         wdgtToDrop._reactToBeingDropped? target
 
-    #else
-    #  alert "if you never see this alert then you can delete the test"
   
   # ActivePointerWdgt event dispatching:
   #
@@ -554,6 +525,7 @@ class ActivePointerWdgt extends Widget
   #   mouseClickLeft
   #   mouseClickRight
   #   mouseDoubleClick
+  #   mouseTripleClick
   #   mouseEnter
   #   mouseLeave
   #   mouseEnterfloatDragging
@@ -594,22 +566,10 @@ class ActivePointerWdgt extends Widget
        actionedWdgt.parent.editorContentPropertyChangerButton
         return
 
-      # there is a caret on the screen
-      # depending on what the user is clicking on,
-      # we might need to close an ongoing edit
-      # operation, which means deleting the
-      # caret and un-selecting anything that was selected.
-      #
-      # This check is because we don't want to interrupt
-      # an edit if the user is invoking/clicking on anything
-      # inside a menu regarding text that is being edited
-      # because the invoked function
-      # might do something with the selection
-      # (for example doSelection takes the current selection).
-      #
-      # In other words, if we are actioning on something that has
-      # the text as an ancestor, then don't stop the
-      # editing.
+      # There is a caret on the screen: depending on what the user clicked, we may need to close the
+      # ongoing edit (delete the caret, un-select). Don't interrupt editing if the click is inside the
+      # most-recently-created popup/menu belonging to the edited text (e.g. doSelection reads the
+      # current selection).
       if actionedWdgt isnt world.caret.target
         # user clicked on something other than what the
         # caret is attached to
@@ -702,8 +662,6 @@ class ActivePointerWdgt extends Widget
 
       if w[actualClick]?
         w[actualClick] @_pointerPositionInPlaneOf(w)
-      #w = w.parent  until w[actualClick]
-      #w[actualClick] @position()
   
   
    # note that the button param is not used,
@@ -817,16 +775,10 @@ class ActivePointerWdgt extends Widget
           if @tripleClick.isStale WorldWdgt.timeOfEventBeingProcessed, @doubleClickWindowMs
             @tripleClick.forget()
 
-          # also send tripleclick if the
-          # three clicks happen on the same widget
-          # Don't do anything if a double-click has
-          # just been invoked because you'd immediately
-          # fire a tripleClick
-          # This pargraph of code is basically the same
-          # as the previous one.
+          # also send tripleclick if the three clicks happen on the same widget. Don't fire it if a
+          # double-click was just invoked (same three-condition check as the double-click branch above).
           if !doubleClickInvocation
-            # same three conditions as double click. (The old inner `if @tripleClickWdgt == w`
-            # re-checked what `recognizes` already requires — a dead branch — so it's gone.)
+            # same three conditions as double click.
             if @mouseButton == "left" and
              @tripleClick.recognizes w, @position(), WorldWdgt.preferencesAndSettings.grabDragThreshold
               @tripleClick.forget()
@@ -880,14 +832,9 @@ class ActivePointerWdgt extends Widget
     # to a destroyed menu, etc.
     world.closePopUpsMarkedForClosure()
 
-    # remove menus that have requested
-    # to be removed when a click happens outside
-    # of their bounds OR the bounds of their
-    # children
-    #if expectedClick == "mouseClickLeft"
-    # collect all widgets up the hierarchy of
-    # the one the user clicked on.
-    # (including the one the user clicked on)
+    # remove menus that have requested to be removed when a click happens outside of their bounds OR
+    # the bounds of their children: collect all widgets up the hierarchy of the one the user clicked on
+    # (including the one the user clicked on).
     ascendingWdgts = w
     world.hierarchyOfClickedWdgts.clear()
     world.hierarchyOfClickedWdgts.add ascendingWdgts
@@ -895,16 +842,10 @@ class ActivePointerWdgt extends Widget
       ascendingWdgts = ascendingWdgts.parent
       world.hierarchyOfClickedWdgts.add ascendingWdgts
 
-    # remove menus that have requested
-    # to be removed when a click happens outside
-    # of their bounds OR the bounds of their
-    # children
-    #if expectedClick == "mouseClickLeft"
-    # collect all the menus up the hierarchy of
-    # the one the user clicked on.
-    # (including the one the user clicked on)
-    # note that the hierarchy of the menus is actually
-    # via the getParentPopUp method
+    # remove menus that have requested to be removed when a click happens outside of their bounds OR
+    # the bounds of their children: collect all the menus up the hierarchy of the one the user clicked
+    # on (including the one the user clicked on) -- note that the hierarchy of the menus is actually
+    # via the getParentPopUp method.
     firstParentThatIsAPopUp = w.firstParentThatIsAPopUp()
     if firstParentThatIsAPopUp?.hierarchyOfPopUps?
       world.hierarchyOfClickedMenus = firstParentThatIsAPopUp.hierarchyOfPopUps()
@@ -979,7 +920,6 @@ class ActivePointerWdgt extends Widget
     worldX = pageX - posInDocument.x
     worldY = pageY - posInDocument.y
 
-    #startProcessMouseMove = new Date().getTime()
     pos = new Point worldX, worldY
     @_applyMoveTo pos
 
@@ -1001,7 +941,7 @@ class ActivePointerWdgt extends Widget
     # 2 is what is used in Cuis
     
     topWdgt = @topWdgtUnderPointer()
-    # allParentsTopToButton makes more logical sense but
+    # allParentsTopToBottom makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set topWdgt.allParentsBottomToTop()
 
@@ -1078,10 +1018,10 @@ class ActivePointerWdgt extends Widget
           # dissolve an identity compensating sugar wrapper so the BARE content grabs. The whole two-step is
           # _resolvePickUpFigure, SHARED with the menu "pick up" entry point (pickUpMenuAction) so the two
           # cannot drift; its doc comment carries the full pick-out / Bug-F reasoning. Resolved HERE (once,
-          # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab (:1090)
-          # operate on the SAME figure. It does NOT set switcherooHappened (the fresh figure is already
-          # positioned to stay put, then follows the cursor via displacementDueToGrabDragThreshold — no
-          # centre-under-pointer snap).
+          # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab
+          # further down in this method operate on the SAME figure. It does NOT set switcherooHappened
+          # (the fresh figure is already positioned to stay put, then follows the cursor via
+          # displacementDueToGrabDragThreshold — no centre-under-pointer snap).
           @wdgtToGrab = @wdgtToGrab._resolvePickUpFigure()
           w = @wdgtToGrab
           @grab w, displacementDueToGrabDragThreshold, switcherooHappened
@@ -1121,8 +1061,6 @@ class ActivePointerWdgt extends Widget
             @_applyExtent @extent().subtract fb.extent().floorDivideBy 2
             @grab w
             @_applyMoveTo pos
-    #endProcessMouseMove = new Date().getTime()
-    #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove
 
 
     if @isThisPointerNonFloatDraggingSomething()
@@ -1149,7 +1087,7 @@ class ActivePointerWdgt extends Widget
   # (but OUTSIDE of the button), the (center of the) button
   # is immediately non-float dragged to where clicked.
   nonFloatDragWdgtFarAwayToHere: (wdgtFarAway, pos) ->
-    # allParentsTopToButton makes more logical sense but
+    # allParentsTopToBottom makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set wdgtFarAway.allParentsBottomToTop()
     @previousNonFloatDraggingPos = wdgtFarAway.center()
@@ -1183,7 +1121,7 @@ class ActivePointerWdgt extends Widget
   # are fine; the end-of-cycle capstone gate enforces this. See docs/archive/hover-resync-after-flush-plan.md.
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topWdgt = @topWdgtUnderPointer()
-    # allParentsTopToButton makes more logical sense but
+    # allParentsTopToBottom makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set topWdgt.allParentsBottomToTop()
     @dispatchEventsFollowingMouseMove mouseOverNew

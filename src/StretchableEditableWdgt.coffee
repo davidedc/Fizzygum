@@ -5,12 +5,8 @@ class StretchableEditableWdgt extends Widget
   toolsPanel: nil
   stretchableWidgetContainer: nil
 
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
+  # space between the container's edges and its internals. Often set to 0 since windows
+  # already add their own padding around contents.
   externalPadding: 0
   # the internal padding is the space between the internal
   # components. It doesn't necessarily need to be equal to the
@@ -50,24 +46,17 @@ class StretchableEditableWdgt extends Widget
   # _buildAndConnectChildrenNoSettle), so there is no public createToolsPanel to self-settle.
   _createToolsPanelNoSettle: ->
 
-  # NON-settling core (rule [S] convert, public/private call-separation plan T2): both callers are
-  # settle-neutral private code (_buildAndConnectChildrenNoSettle runs inside the ctor's one settle;
-  # _reactToChildPickedUp is a settle-neutral callback whose dispatcher owns the settle), so the old
-  # public @add-and-self-settle shape was a one-hop [G] evasion — _addNoSettle + the callers'
-  # _invalidateLayout carry the same semantics without opening a second flush.
-  # (The Dashboards/PatchProgramming/SimpleSlide overrides were byte-identical copies of this body
-  # and were DELETED in the same convert; ReconfigurablePaintWdgt keeps its genuinely different one.)
+  # NON-settling core: both callers are settle-neutral private code, so a public self-settling
+  # wrapper here would open a second flush. History: docs/archive/public-private-call-separation-plan.md (T2).
   _createNewStretchablePanelNoSettle: ->
     @stretchableWidgetContainer = new StretchableWidgetContainerWdgt
     @_addNoSettle @stretchableWidgetContainer
 
 
-  # Lays out the (optional) tools panel and the stretchable container. ONE shared body: the
-  # Dashboards / PatchProgramming / SimpleSlide overrides were byte-identical copies of each other
-  # and were hoisted here (2026-07-12); on this base ("Generic panel") @toolsPanel stays nil
-  # (empty _createToolsPanelNoSettle), so the toolsPanel arms reduce away and the container takes
-  # the full padded bounds — exactly the old base body. (ReconfigurablePaintWdgt keeps its own,
-  # genuinely different _reLayoutSelf — 4 tool buttons.)
+  # Lays out the (optional) tools panel + the stretchable container. ONE shared body: on this
+  # base ("Generic panel") @toolsPanel stays nil, so the toolsPanel arms below reduce away and
+  # the container takes the full padded bounds -- exactly the old per-subclass body each shared
+  # (ReconfigurablePaintWdgt keeps its own, genuinely different _reLayoutSelf -- 4 tool buttons).
   _reLayoutSelf: ->
     # here we are disabling all the broken
     # rectangles. The reason is that all the

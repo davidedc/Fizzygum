@@ -30,13 +30,8 @@ class TransformSpec
   rotationDegrees: 0        # float, canonical (Phase 2: live)
   scale: 1                  # float > 0
   anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
-  # layout coupling (plan §4.9): 'footprint' (THE DEFAULT — owner decision D1, 2026-07-17,
-  # docs/archive/claimsspace-footprint-default-and-scroll-reachability-plan.md) / 'slot' (paint-only) /
-  # 'sweep'. Defaults serve the DOCUMENT author: a rotated image in a document must not overlap
-  # the text below it; expert authors who need paint-only rotation ('slot') or a spin-stable
-  # reserve ('sweep') set the mode themselves. ('slot' was the default through Phase 3 — the
-  # "paint-only Lively firewall" — inverted into an opt-in by D1.) All three modes live since
-  # Phase 3 (see _claimedBoxFor below + TransformFrameWdgt.setClaimsSpace).
+  # layout coupling: 'footprint' (THE DEFAULT) / 'slot' (paint-only) / 'sweep' (spin-stable
+  # reserve) — mode rationale + D1 history: docs/architecture/transforms.md §5.1.
   claimsSpace: "footprint"
 
   constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "footprint") ->
@@ -57,15 +52,8 @@ class TransformSpec
   # TrackingTransformFrameWdgt._reLayoutChildren, the Bug-F move-level anchor-rides, the Bug-G
   # pick-up normalization) — no setter exists by design.
 
-  # ---- layout coupling (plan §4.9) — the extent this island CLAIMS from its parent's ----
-  #      layout, and where the slot box sits inside that claimed box.
-  #
-  # The claimed BOX in the slot box's own coordinate frame (before layout moves it):
-  #  'slot'      → the slot box itself (paint-only; parent reserves nothing extra).
-  #  'footprint' → the corner-mapped integer AABB of the transformed slot box (§4.3) — changes
-  #                with angle/scale, so the parent reflows on a transform change.
-  #  'sweep'     → the anchor-aware circumscribed square (§4.3) — depends on scale/extent/anchor
-  #                but NOT on angle, so a spinning figure reflows once then stays put.
+  # ---- layout coupling: the extent this island CLAIMS from its parent, and where the slot ----
+  #      box sits inside it — same three modes as claimsSpace above; see docs/architecture/transforms.md §5.1.
   _claimedBoxFor: (slotBounds) ->
     switch @claimsSpace
       when "footprint" then @mapRect slotBounds, slotBounds

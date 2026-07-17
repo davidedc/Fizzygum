@@ -42,13 +42,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    # The vertical stack just lays down
-    # the children in the exact sibling order, so all we have to do
-    # is to count up to the child at the same height, say it's
-    # child "n", then are going to add the new widget in position
-    # "n+1".
-    # (conveniently, "add" supports an argument to insert a widget
-    # in a specific order among the siblings.)
+    # The vertical stack lays children in sibling order, so inserting means counting up to the child
+    # at the same height and inserting after it -- add() takes a position argument for this.
     positionNumberAmongSiblings = nil
     if (childrenNotHandlesNorCarets.length > 0) and (positionOnScreen instanceof Point)
       positionNumberAmongSiblings = 0
@@ -233,17 +228,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
       elementHeight = nil   # set in the else-branch from the handed-forward resize result; see stackHeight += below
 
       if !@constrainContentWidth
-        # if the stack doesn't constrain the positions of the
-        # contents then it's much harder to right/left/center align
-        # things, because for example imagine this case: you
-        # remove an element from the stack. Now, something that was
-        # centered ends up defining the new bounds of the Stack.
-        # But hey, that shouldn't have happened because that element
-        # was centered, so it could not possibly define the bounds...
-        # So the determination of the bounds becomes rather more
-        # complex, we are skipping that for the time being: if a stack
-        # doesn't constrain the widths of the contents then everything in
-        # it looks left-aligned
+        # If the stack doesn't constrain child widths, alignment can't be honored consistently (e.g.
+        # removing an element could let a centered child define the new bounds) -- so when
+        # constrainContentWidth is false, everything is simply left-aligned.
         leftPosition = @left() + @padding
       else
         recommendedElementWidth = @_childWidthInStack widget, @availableWidthForContents()
@@ -292,7 +279,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
       # twin-collapse verdict on Widget._applyMoveBy.
       # Integer placement (Layer A): the running stackHeight / centred leftPosition are kept EXACT (fractional
       # child heights sum without accumulating rounding error), but the child's committed @bounds origin must be
-      # integer -- round only at placement. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
+      # integer -- round only at placement. docs/archive/fractional-widget-bounds-investigation-plan.md (Option B).
       targetPos = (new Point leftPosition, @top() + verticalPadding + stackHeight).round()
       if widget._reLayoutChildren?
         widget._applyMoveTo targetPos

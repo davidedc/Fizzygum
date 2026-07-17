@@ -10,7 +10,6 @@ class TextWdgt extends StringWdgt
   wrappedLines: []
   wrappedLineSlots: []
   softWrap: true
-  #emptyCharacter: '^'
 
   backgroundColor: nil
 
@@ -25,7 +24,6 @@ class TextWdgt extends StringWdgt
    @fontName = @justArialFontStack,
    @isBold = false,
    @isItalic = false,
-   #@isNumeric = false,
    @color,
    @backgroundColor = nil,
    @backgroundTransparency = nil
@@ -104,19 +102,10 @@ class TextWdgt extends StringWdgt
 
     for word in wordsOfThisParagraph
 
-      # TOKEN-LEVEL WRAPPING i.e.
-      # handling a single token that is too long.
-      # This works with the manual tests I've done so far
-      # BUT it brought up a logical error, because the
-      # following can happen: when the line wraps,
-      # it pushes down the lines. In doing so, the text
-      # might resize. In doing so, the line doesn't need
-      # to wrap anymore, and hence the text can enbiggen,
-      # and hence the line wraps...
-      # In other words there is no fixed point in the font
-      # size...
-      # So this can be done only if the textbox is
-      # constrained horizontally but not vertically...
+      # TOKEN-LEVEL WRAPPING (breaking a single too-long token) is not implemented:
+      # wrapping a token can shrink/grow the line, changing whether it still needs
+      # to wrap -- no fixed point in general. Only safe if the box is width-
+      # constrained but not height-constrained.
 
 
       if word is "\n"
@@ -190,20 +179,7 @@ class TextWdgt extends StringWdgt
 
       wordsOfThisParagraph = @getWordsOfParagraph eachParagraph
 
-      ## ////////////////////////////////////////////////////////////////
 
-      ## You want this method to be FAST because it would be done
-      ## a dozen times for each resize (while the painting is
-      ## only done once!)
-      ## you can have the words per paragraph, and cache all
-      ## operations below by paragraph (and font size and width),
-      ## the cache would return
-      ## two arrays "linesHit" and "lineslotsHit" AND the
-      ## "maxlinewidthHit" which you can
-      ## concatenate to the "running" ones
-      ## basically a) make two nested foreach, outer by paragraph and
-      ## inner by words.
-      ## Then cache the hell out of each loop.
 
       ## LATER FOR ANOTHER TIME IS TO MAKE THE PAINTING ALSO FAST.
       ## You'd also love to cache the bitmap of each paragraph
@@ -246,7 +222,6 @@ class TextWdgt extends StringWdgt
       cumulativeSlotAcrossText += slotsInParagraph
       wrappedLinesOfWholeText = wrappedLinesOfWholeText.concat wrappedLinesOfThisParagraph
       advancedWrappedLineSlotsOfThisParagraph =  wrappedLineSlotsOfThisParagraph.map (i) -> i + previousCumulativeSlotAcrossText
-      #alert "unadvanced wrappedLineSlotsOfThisParagraph: " + wrappedLineSlotsOfThisParagraph + " advanced: " + advancedWrappedLineSlotsOfThisParagraph
       wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat advancedWrappedLineSlotsOfThisParagraph
       maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
@@ -257,8 +232,6 @@ class TextWdgt extends StringWdgt
           return false
 
 
-    # here all paragraphs have been visited
-    #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
 
     if justCheckIfItFitsInThisExtent?
       world.cacheForTextWrappingData.set cacheKey, true
@@ -300,12 +273,6 @@ class TextWdgt extends StringWdgt
 
 
     
-    ## // this section only needs to be re-done when @text changes ////
-    # put all the text in an array, word by word
-    # >>> avoid to do this double-split, jus split by spacing and then
-    # you'll find and remove the newline in the running code
-    # below.
-    # put all the text in an array, word by word
 
     paragraphs = @getParagraphs text
 
@@ -316,16 +283,8 @@ class TextWdgt extends StringWdgt
     return textWrappingData
 
   # §4.1 PURE MEASURE (proper-layouts): the side-effect-free preferred extent of this
-  # wrapping text at an available width. It computes the wrapped layout WITHOUT committing
-  # it -- NO @bounds write, NO re-fit seam; only the benign width+font+text-keyed wrap memo
-  # is populated (the same entry the commit path hits). It generalises the horizontal-stack
-  # pure measure (getRecursive*Dim) to a width-DEPENDENT wrapped height, the gap §2.5/§4.1
-  # names. The round + min-extent clamp mirrors __commitExtent, so the measured height
-  # byte-matches what _reLayoutSelf commits when the box is later sized to availW (proven
-  # suite-wide: 4022 measure-vs-commit differentials, 0 mismatches). CONSUMED since §4.1
-  # Stage C by the vertical-stack / window / scroll arranges (leaf-child sizing + the
-  # content-frame measure via subWidgetsMergedPreferredBounds), which shed their
-  # mutate-then-read-back against it.
+  # wrapping text -- round+min-extent clamp MUST mirror __commitExtent (byte-matches the
+  # commit). Campaign history: docs/archive/proper-layouts-4.1-pure-measure-campaign-plan.md
   preferredExtentForWidth: (availW) ->
     # a non-growing text keeps its box (FIT_TEXT_TO_BOX scales/crops the text, it does not
     # size to it), so its preferred extent is simply its current extent.
@@ -368,8 +327,6 @@ class TextWdgt extends StringWdgt
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
-    # a changed() is already done in the
-    # super but adding it here as well for clarity
 
     return @heightOfPossiblyCroppedText
 
@@ -536,8 +493,6 @@ class TextWdgt extends StringWdgt
   # i.e. the row and the column where a particular character is.
   slotRowAndColumn: (slot) ->
 
-    #if !window.globCounter2? then window.globCounter2 = 0
-    #window.globCounter2++
 
     @reflowText()
     idx = 0
@@ -558,7 +513,8 @@ class TextWdgt extends StringWdgt
   # Answer the position (in pixels) of the given index ("slot")
   # where the caret should be placed.
   # This is in absolute world coordinates.
-  # This function assumes that the text is left-justified.
+  # Accounts for horizontal alignment via textHorizontalPosition (unlike
+  # StringWdgt.slotCoordinates, which is left-justified only).
   slotCoordinates: (slot) ->
     # PURE geometry (see StringWdgt.slotCoordinates): the overflow hand-off to the pop-out editor that used to
     # be a side effect here moved to an explicit event-time step (handOffToPopoutEditorIfOverflowing, from
@@ -575,7 +531,6 @@ class TextWdgt extends StringWdgt
 
     x = @left() + xOffset + textHorizontalPosition
     y = @top() + yOffset + textVerticalPosition
-    #alert "slotCoordinates slot:" + slot + " x,y: " + x + ", " + y
     new Point x, y
 
 
@@ -598,7 +553,8 @@ class TextWdgt extends StringWdgt
   
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
-  # This function assumes that the text is left-justified.
+  # Accounts for horizontal alignment (slotAtRow -> slotAtSingleLineString applies
+  # the textHorizontalPosition offset), not left-justified-only.
   slotAt: (aPoint) ->
 
     if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false

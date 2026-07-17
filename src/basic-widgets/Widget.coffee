@@ -2314,17 +2314,10 @@ class Widget extends TreeNode
       @_reLayoutSelf()
 
 
-  # (proper-layouts, PROPERTY sub-seam DELETED 2026-07-01) The old _announceLayoutPropertyChangeToContainer seam
-  # lived here: a freefloating content's layout-PROPERTY change (VerticalStackLayoutSpec alignment/elasticity/
-  # base-width, SimplePlainTextWdgt soft-wrap, StringWdgt contained-text edit, WindowWdgt collapse) explicitly
-  # re-fit its size-tracking container(s), because a freefloating child's _invalidateLayout does not climb. That
-  # dependency now flows through the UNIFORM dirty-tree instead: _invalidateLayout climbs THROUGH a freefloating
-  # boundary OFF-PASS when the parent is a size-tracking container (the "D1" branch below). The 9 call sites now
-  # invalidate the container directly -- BARE (@parent._invalidateLayout(), no freefloating triggeringChild, so a
-  # non-tracking intermediate parent doesn't drop it) for the freefloating-content callers, or @element._invalidateLayout()
-  # for stack-child callers. The GEOMETRY seam (the immediate-mutator half) is now ALSO DELETED (Stage 5,
-  # 2026-07-01): the settle loop re-fits a size-tracking container AFTER its content settles
-  # (_reFitMyTrackingContainerAfterSettle), so the mutators are pure and nothing notifies by mutation anymore.
+  # (proper-layouts, 2026-07-01) The notify-by-mutation seams that re-fit a freefloating content's
+  # size-tracking container (_announceLayoutPropertyChangeToContainer / _announceGeometryChangeToContainer)
+  # are DELETED -- that dependency now rides the uniform dirty-tree (the D1 climb-through in _invalidateLayout)
+  # and the settle-time re-fit below. See docs/archive/proper-layouts-geometry-seam-removal-plan.md.
 
   # (proper-layouts §4.3 / Stage 5, 2026-07-01) Re-fit MY size-tracking container now that I have SETTLED.
   # Called by the settle loop (WorldWdgt._recalculateLayoutsBody) right after my chain-top _reLayout completes --
@@ -3488,8 +3481,6 @@ class Widget extends TreeNode
       # This is necessary to avoid infinite loops with zero-width matches
       if m.index == regex.lastIndex
         regex.lastIndex++
-      # The result can be accessed through the `m`-variable.
-      #m.forEach (match, groupIndex) ->
       @injectProperty m[1],m[2]
   
   # Widget dragging (and dropping) /////////////////////////////////////////
@@ -4154,8 +4145,6 @@ class Widget extends TreeNode
     else
       padding = paddingOrWidgetGivingPadding
 
-    #if padding == 1
-    #  debugger
     if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
       @paddingTop = padding
       @paddingBottom = padding

@@ -34,11 +34,6 @@ class TreeNode
   # back-buffer — this unified recursive re-paint is the only shadow
   # mechanism (see Widget.coffee "How the shadow painting works").
   #
-  # This makes intuitive sense if you think for example
-  # at a textWidget being added to a box widget: it is
-  # added to the children list of the box widget, at the end,
-  # and it's painted on top (otherwise it wouldn't be visible).
-  #
   # Note that when you add a widget A to a widget B, it doesn't
   # mean that A is contained in B. The two potentially might
   # not even overlap.
@@ -115,8 +110,6 @@ class TreeNode
     # function calling a higher-level one.
   
   removeChild: (node) ->
-    # remove the array element from the
-    # array
     WorldWdgt.noteStructureChange()
     @children.remove node
     node.parent = nil
@@ -266,22 +259,11 @@ class TreeNode
     return collected
 
 
-  # A shorthand to run a function on all the internal/terminal nodes in the subtree
-  # starting at this node - including this node.
-  # Note that the function first runs on this node
-  # (which is, when painted, the very bottom-est widget of them all)
-  # and the proceeds by visiting the first child
-  # which is the most "bottom" of the children
-  # (i.e. when painted, the first child in the "children" array
-  # and its children are painted just above the parent node)
-  # and then recursively depth-first all its children
-  # and then the second - bottomest child and children etc.
-  # Also note that there is a more elegant implementation where
-  # we just use @allChildrenBottomToTop() but that would mean to create
-  # all the intermediary arrays with also all the unneeded node elements,
-  # there is no need for that.
-  # This is the simplest and cheapest way to visit all Widgets in
-  # a tree of widgets.
+  # A shorthand to run a function on all the internal/terminal nodes in the
+  # subtree starting at this node - including this node - depth-first, in
+  # paint order (this node first, then each child's own subtree, bottom
+  # child before top child). Cheaper than @allChildrenBottomToTop(): no
+  # intermediary arrays are built.
   forAllChildrenBottomToTop: (aFunction) ->
     aFunction.call nil, @
     if @children.length
@@ -308,19 +290,11 @@ class TreeNode
     else
       return [@]
   
-  # Return all "parent" nodes from this node up to the root (including both)
-  # Implementation commented-out below works but it's probably
-  # slower than the one given, because concat is slower than pushing just
-  # an array element, since concat does a shallow copy of both parts of
-  # the array...
-  #   allParentsTopToBottom: ->
-  #    # includes myself
-  #    result = [@]
-  #    if @parent?
-  #      result = result.concat(@parent.allParentsTopToBottom())
-  #    result
+  # Not implemented via concat (as a simpler version could): concat is
+  # slower than pushing an array element, since concat shallow-copies both
+  # parts of the array.
 
-  # Return all "parent" nodes from this note up to the root (including both)
+  # Return all "parent" nodes from this node up to the root (including both)
   allParentsTopToBottom: ->
     return @allParentsBottomToTop().reverse()
 
@@ -375,23 +349,11 @@ class TreeNode
     return false
 
   # »>> this part is excluded from the fizzygum homepage build
-  # The direct children of the parent of this node. (current node not included)
-  # never used in Fizzygum
-  # There is an alternative solution here below, in comment,
-  # but I believe to be slower because it requires applying a function to
-  # all the children. My version below just required an array copy, then
-  # finding an element and splicing it out. I didn't test it so I don't
-  # even know whether it works, but gut feeling...
-  #  siblings: ->
-  #    return []  unless @parent
-  #    @parent.children.filter (child) =>
-  #      child isnt @
-  #
-  # currently unused
+  # The direct children of the parent of this node (current node not included).
+  # Currently unused.
   siblings: ->
     return []  unless @parent
     siblings = @parent.children.slice()
-    # now remove myself
     siblings.remove @
     return siblings
 
@@ -510,9 +472,10 @@ class TreeNode
 
 
   
-  # returns the first parent (going up from this node) that is of a particular class
-  # (includes this particular node)
-  # This is a subcase of "parentThatIsAnyOf".
+  # returns the first parent (going up from this node, including this node)
+  # that is an instance of any of the given classes, as [theParent,
+  # theMatchedConstructor]. Accepts multiple classes via varargs — there is
+  # no separate "parentThatIsAnyOf" method, this already covers that case.
   parentThatIsA: (constructors...) ->
     # including myself
     for eachConstructor in constructors

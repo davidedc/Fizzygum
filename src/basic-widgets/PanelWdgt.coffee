@@ -118,19 +118,8 @@ class PanelWdgt extends Widget
 
   _reactToChildRemoved: (child) ->
     return unless @parent?
-    # Re-fit my enclosing container (@parent) -- but ONLY when this container is part of the LIVE layout.
-    # A removal inside a DETACHED subtree (root neither world nor hand) re-fits nothing observable and is
-    # deferred like every public mutator's off-world work (_settleLayoutsAfter's orphan early-return); the
-    # subtree re-lays-out when re-attached (a self-settling add re-fits top-down -- BasementOpenerWdgt wraps
-    # the off-world basement in a WindowWdgt and world.add-s it). Concretely the lost-widget re-home during a
-    # pop-up close (Widget._closeNoSettle -> basement.scrollPanel.contents._addInPseudoRandomPositionNoSettle
-    # -> _addNoSettle -> _reactToChildRemoved) fires here on the CLOSED basement's contents (root == BasementWdgt);
-    # without this its wasted re-fit rode the per-frame end-of-cycle flush (the PanelWdgt._reactToChildRemoved
-    # residual). The skip is SAFE specifically at this REMOVAL seam (the only detached case is the
-    # never-painted basement): a blanket orphan-skip in the shared _invalidateLayout instead breaks
-    # construction/detached-live layout, since orphan invalidates are generally load-bearing (every widget
-    # is parent-less, hence an orphan, while being built). Attached removals (closing a window) re-fit as
-    # before. (end-of-cycle-flush-drawdown -- ELIMINATE)
+    # Skip the re-fit when @isOrphan() -- SAFE ONLY at this REMOVAL seam (not a blanket rule: a shared
+    # orphan-skip in _invalidateLayout broke 63 tests). Attached removals re-fit as before -- see docs/archive/end-of-cycle-flush-endgame-plan.md.
     return if @isOrphan()
     @_reFitContainer @parent
 
@@ -161,17 +150,8 @@ class PanelWdgt extends Widget
 
     @_addNoSettle aWdgt
     aWdgt._applyMoveTo position
-    # The fam-2 verify-and-drop that removed the ad-hoc synchronous @parent._reLayoutChildren() here
-    # ("the settle-time re-fit will do it when the settle loop lays aWdgt out" --
-    # deferred-layout-residuals-audit.md) was FALSIFIED for this seam (ordered-downwalk plan §9-N2,
-    # 2026-07-16): the settle-time up-edge is gated on the laid widget's FRAME having CHANGED, and a
-    # scattered widget settles AT the frame the move above just applied -- so the enclosing scroll
-    # panel's children-merge re-fit (its _positionAndResizeChildren contents-frame commit) never ran.
-    # Concretely: the basement's contents stayed viewport-sized while a scattered wide widget stuck
-    # out past its edge, unreachable by scrolling, until an unrelated re-arrange healed it (the
-    # staleness census's residual one-step mover). So SCHEDULE the panel's re-fit explicitly, via
-    # the same capability-guarded re-fit verb the drop/remove seams above use -- deferred through
-    # the phase-valve (rides the caller's settle / the next flush), never synchronous.
+    # The settle-time up-edge alone does NOT cover this: it's gated on FRAME-CHANGE, and a scattered widget
+    # already settles AT the frame the move above applied -- the re-fit below must be scheduled explicitly. See docs/archive/ordered-downwalk-stage-b-plan.md (§9-N2).
     @_reFitContainer @parent
 
 

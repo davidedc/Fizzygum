@@ -9,8 +9,8 @@
 # If there is a chance that the text might span more
 # than one line (e.g. most button captions) then do
 # use a text widget instead.
-# It's like string widget BUT it fits any given size, so to
-# behave well in layouts.
+# It fits any given size (see the FITTING MODEL comment below), so it
+# behaves well in layouts.
 #
 # TODO Note that this class has problems with text that has multi-code characters, i.e. characters that for a cursor behave like a single character
 # (i.e. the cursor moves around them with one single arrow key press) BUT that, unintuitively, have .length property > 1 (e.g. "ä".length is 2)
@@ -69,9 +69,7 @@ class StringWdgt extends Widget
   startMark: nil
   endMark: nil
 
-  # see note above about Colors and shared objects
   markedTextColor: Color.WHITE
-  # see note above about Colors and shared objects
   markedBackgroundColor: Color.create 60, 60, 120
 
   horizontalAlignment: AlignmentSpecHorizontal.LEFT
@@ -210,9 +208,7 @@ class StringWdgt extends Widget
     @noticesTransparentClick = true
     @changed()
 
-  # this font height is too thin.
-  # tall characters such as ⎲█ƒ⎳À⎷ ⎸⎹ are cut
-  # but hey they look cut also in this text editor I'm using.
+  # This font height comes out thin: tall characters such as ⎲█ƒ⎳À⎷ ⎸⎹ get cut.
   fontHeight: (fontSize) ->
     minHeight = Math.max fontSize, WorldWdgt.preferencesAndSettings.minimumFontHeight
     Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
@@ -246,20 +242,11 @@ class StringWdgt extends Widget
        Math.abs(slot - lastUndoState.cursorPos) <= 1
         return
 
-    # when the user clicks around, we never want to
-    # store three consecutive non-trivial positional
-    # changes. We just want two: the initial and the last
-    # one. So check the last two pushes, and if they are
-    # positional then we discard the second one, then we are going
-    # to add the new one after this check.
-    # All this is because it's much *much* more natural
-    # for the user to undo up to the position BEFORE an
-    # edit. If you don't save that position before the
-    # edit, you jump directly to the end of the edit before,
-    # it's actually quite puzzling.
-    # It's nominally "functional" to only jump to text changes,
-    # but it's quite unnatural, it's not how undos work
-    # in real editors.
+    # We never want three consecutive positional-only undo states -- just the
+    # initial and the last. Check the last two pushes: if both are purely
+    # positional (same selection/text as each other and @), discard the
+    # second one before adding the new one below. This makes undo land on the
+    # position BEFORE an edit rather than jumping to the end of the prior one.
     if @undoHistory.length > 1
       lastUndoState = @undoHistory[@undoHistory.length - 1]
       beforeLastUndoState = @undoHistory[@undoHistory.length - 2]
@@ -285,11 +272,8 @@ class StringWdgt extends Widget
       @redoHistory.push poppedElement
     return poppedElement
 
-  # --- caret-editing-session state the caret collaborates on (oo-smells Phase 7a) ---
-  # These two used to be reached into directly by CaretWdgt (it wrote @target.undoHistory and
-  # @target.caretHorizPositionForVertMovement). The state belongs here -- the text widget owns
-  # its undo history's TextEditingState format and its remembered caret column -- so the caret
-  # now asks rather than pokes.
+  # Caret-editing-session state (undoHistory, caretHorizPositionForVertMovement) lives here so the
+  # caret asks rather than pokes; history: docs/archive/oo-smells-refactoring-backlog.md (Phase 7a).
 
   # The caret remembers the column it should land on during vertical (up/down) movement, so a
   # short line passed over on the way doesn't lose the original horizontal position. Read by
@@ -537,14 +521,6 @@ class StringWdgt extends Widget
             @doesTextFitInExtent fittingText, @originallySetFontSize
 
 
-      # if there is no more space
-      # for even a single line with the smallest character, then it means
-      # that just there is no more vertical space, this is really the
-      # end, then exit the loop, we have the biggest
-      # possible blurb that we can fit.
-      #if i != splitText.length - 1
-      #  if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
-      #    break
 
     # we either found the fitting blurb or we are in the
     # degenerate case where almost nothing fits
@@ -588,9 +564,6 @@ class StringWdgt extends Widget
     # it.
     cacheEntry = world.canvasContextForTextMeasurements.measureText(@eliminateInvisibleCharacter text).width
     world.cacheForTextMeasurements.set cacheKey, cacheEntry
-    #if cacheHit?
-    #  if cacheHit != cacheEntry
-    #    alert "problem with cache on: " + overrideFontSize + "-" + text + " hit is: " + cacheHit + " should be: " + cacheEntry
     return cacheEntry
 
   # this should be a 1-1 transformation.
@@ -621,8 +594,6 @@ class StringWdgt extends Widget
     # If it doesn't fit, then we either crop it or make the
     # font smaller.
     
-    #if !window.globCounter? then window.globCounter = 0
-    #window.globCounter++
 
     textToFit = @transformTextOneToOne @text
 
@@ -705,10 +676,10 @@ class StringWdgt extends Widget
 
     # paint the background so we have a better sense of
     # where the text is fitting into.
-    # paintRectangle here is passed logical pixels
-    # rather than actual pixels, contrary to how it's used
-    # most other places. This is because it's inside
-    # the scope of the "useLogicalPixelsUntilRestore()".
+    # This fillRect is passed logical pixels rather than actual pixels
+    # (contrary to most direct canvas calls elsewhere in the codebase).
+    # This is because it's inside the scope of the
+    # "useLogicalPixelsUntilRestore()".
     if @backgroundColor
       backBufferContext.save()
       backBufferContext.fillStyle = @backgroundColor.toString()
@@ -851,12 +822,8 @@ class StringWdgt extends Widget
   
   # StringWdgt measuring:
   slotCoordinates: (slot) ->
-    # PURE geometry: the position point of the given index ("slot"). The overflow hand-off that used to live
-    # here (when typing grew the text too big for a CROP field, stop inline editing and let the pop-out editor
-    # take over) was a SIDE EFFECT in a coordinate read -- illegal once the caret's scroll-follow settles INSIDE
-    # the layout flush (stopEditing/edit are public, self-settling, can't run mid-pass) and a latent paint-time
-    # hazard in drawSelection. It moved to an explicit event-time step, handOffToPopoutEditorIfOverflowing,
-    # invoked from the one place text can grow (CaretWdgt.insert). This read now has no side effect.
+    # PURE geometry: the position point of the given index ("slot") -- no side effects.
+    # (used to fire one here; moved to handOffToPopoutEditorIfOverflowing -- see docs/archive/layout-system-architecture-assessment.md.)
 
     # answer the position point of the given index ("slot")
     # where the caret should be placed
@@ -1189,7 +1156,7 @@ class StringWdgt extends Widget
   #   - pin fittingSpecWhenBoundsTooLarge = FLOAT  → never grow the font;
   #   - pin fittingSpecWhenBoundsTooSmall = SCALEDOWN → never ellipsise the text
   #     and never pop the "edit:" PromptWdgt (that is gated on == CROP, see
-  #     slotCoordinates) and, since the box ends up == the text, never shrink it;
+  #     handOffToPopoutEditorIfOverflowing) and, since the box ends up == the text, never shrink it;
   #   - measure the text at its set font size and resize the box to it.
   # With box == text the "bounds too small" branch is unreachable, so neither
   # cropping, the edit-prompt, nor any font scaling ever fires — i.e. it draws
@@ -1197,7 +1164,7 @@ class StringWdgt extends Widget
   # (TextWdgt overrides this with a multi-line, soft-wrap-off variant.)
   # PUBLIC self-settling entry for STANDALONE callers (a tick toggle on an open menu, a header/tooltip
   # build on an orphan). The IN-PASS / IN-SETTLE callers -- _createLabel (driven by _reLayoutSelf),
-  # _setTextNoSettle, setFontSize -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, because a single
+  # _setTextNoSettle, _setFontSizeNoSettle -- call _sizeToTextAndDisableFittingNoSettle DIRECTLY, because a single
   # self-settle reached mid-pass/mid-settle re-enters the flush guard and THROWS. That throw is the wanted
   # discipline (it surfaces a mis-routed caller); an absorbing batch settler would silently swallow it.
   # Returns @ (the core ends with @) so callers can chain -- several macros do
@@ -1230,8 +1197,7 @@ class StringWdgt extends Widget
   # / setFontName / toggleShowBlanks / toggleWeight / toggleItalic / toggleIsPassword).
   # A FIT_BOX_TO_TEXT widget re-flows its box to the new text measure (_reLayoutSelf)
   # and, ONLY if the box actually changed size, invalidates its tracking container so it
-  # re-fits (@parent._invalidateLayout, the uniform dirty-tree climb -- the "…ThenAnnounce" in
-  # the name is historical, from the deleted notify-by-mutation seam). An edit that leaves the
+  # re-fits (@parent._invalidateLayout, the uniform dirty-tree climb). An edit that leaves the
   # measure unchanged needs no redundant up-then-down container re-fit. For a bare StringWdgt the
   # base Widget::_reLayoutSelf is empty (box-to-text sizing lives in
   # TextWdgt::_reLayoutSelf), so the gated body is a no-op.
@@ -1406,16 +1372,13 @@ class StringWdgt extends Widget
       @editPopup()
       return nil
 
-  # When inline editing and the just-grown text no longer fits a CROP-overflow field, abandon inline editing
-  # and hand off to the pop-out editor (stopEditing tears down the inline caret; edit() then routes to
-  # editPopup() because the text no longer fits). Returns true if it handed off, so the caller stops -- the
-  # inline caret is gone. PURE PREDICATE + explicit transition, OFF the layout flush: this used to fire lazily
-  # and impurely as a side effect of slotCoordinates, which became illegal once the caret's scroll-follow
-  # settles inside the flush (stopEditing/edit are public/self-settling -- a mid-pass call throws the flow-rule)
-  # and was a latent paint-time hazard in drawSelection. CaretWdgt.insert (the one place editing can GROW the
-  # text -- typing and paste both route through it) calls this right after setText, at event time. Entering an
-  # edit on an already-overflowing field can't reach here: edit() sends it straight to editPopup(), so a field
-  # is only ever inline-edited while it fits, and the single way to exceed that is insert.
+  # When inline editing and the just-grown text no longer fits a CROP-overflow field, abandon inline
+  # editing and hand off to the pop-out editor (stopEditing tears down the inline caret; edit() then
+  # routes to editPopup() because the text no longer fits). Returns true if it handed off. PURE
+  # PREDICATE, OFF the layout flush: called from CaretWdgt.insert (the only place editing can GROW
+  # the text) right after setText, at event time -- edit() on an already-overflowing field goes
+  # straight to editPopup(), so insert is the only way to exceed CROP inline. History (why this
+  # moved off slotCoordinates): see docs/archive/layout-system-architecture-assessment.md.
   handOffToPopoutEditorIfOverflowing: ->
     return false unless @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
     return false if @textPossiblyCroppedToFit == @transformTextOneToOne @text

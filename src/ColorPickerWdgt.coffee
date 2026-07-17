@@ -3,15 +3,8 @@
 
 class ColorPickerWdgt extends Widget
 
-  # pattern: all the children should be declared here
-  # the reason is that when you duplicate a widget
-  # , the duplicated widget needs to have the handles
-  # that will be duplicated. If you don't list them
-  # here, then they need to be initialised in the
-  # constructor. But actually they might not be
-  # initialised in the constructor if a "lazy initialisation"
-  # approach is taken. So it's good practice
-  # to list them here so they can be duplicated either way.
+  # pattern: declare every child field here (not only set in the constructor) so
+  # DeepCopierMixin's duplication picks it up even under lazy initialisation.
   feedback: nil
   choice: nil
   colorPalette: nil
@@ -60,7 +53,7 @@ class ColorPickerWdgt extends Widget
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
-    # subwidgets of the inspector are within the
+    # subwidgets of this widget are within the
     # bounds of the parent Widget. This means that
     # if only the parent widget breaks its rectangle
     # then everything is OK.

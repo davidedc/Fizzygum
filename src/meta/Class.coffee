@@ -316,7 +316,6 @@ class Class
         constructorDeclaration = compileFGCode constructorDeclaration, true
 
       if window.srcLoadCompileDebugWrites then console.log "constructor declaration JS: " + constructorDeclaration
-      #if @name == "StringWdgt" then debugger
       JS_string_definitions += constructorDeclaration + "\n"
 
       # if you declare a constructor (i.e. a Function) like this then you don't
@@ -358,8 +357,6 @@ class Class
         if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
           if window.srcLoadCompileDebugWrites then console.log "building field " + fieldName + " ===== "
 
-          #if fieldName == "invalidateFullBoundsCache"
-          #  debugger
 
           fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
@@ -369,7 +366,6 @@ class Class
           fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + fieldDeclaration
 
           if window.srcLoadCompileDebugWrites then console.log "field declaration: " + fieldDeclaration
-          #if @name == "StringWdgt" then debugger
           JS_string_definitions += fieldDeclaration + "\n"
 
       JS_staticConstantsBuiltWithClassItself_definitions = ""
@@ -429,7 +425,6 @@ class Class
       @superclass.subClasses.add @
 
 
-    #if @name == "LCLCodePreprocessor" then debugger
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     window[@name].instances.forEach (eachInstance) =>
