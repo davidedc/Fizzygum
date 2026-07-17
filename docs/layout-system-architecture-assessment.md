@@ -83,9 +83,11 @@ paired with a **non-notifying single-pass arrange** (§4.2 Objective A) that dro
 to zero. The earlier revision's lasting caveat — that the residual re-fit **seam** was *irreducible* — was then
 **overturned (2026-07-01)**: the seam was **deleted** and replaced by a **settle-time up-edge** in the settle loop
 (re-fit each size-tracking container from its content's *final* geometry, once, after the content settles — §2.3/§4.1),
-which let the convergence cap retire to a **never-fire assert** (Stage 6). What remains beneath that assert is a small,
-bounded, *proven*-irreducible residual — nested-window first-placement re-visits (a container cannot measure an
-unplaced child) and the aspect-locked width↔height cycles (cycle-broken by `elasticity 0`). So accidental complexity is
+which let the convergence cap retire to a **never-fire assert** (Stage 6). What remained beneath that assert — the
+nested-window first-placement re-visits and the aspect-locked width↔height cycles — was then dissolved at the root by
+the **sizing-model unification** (2026-07-16/17, §2.5 ⇄ block): ONE constraint-box model everywhere, total pre-capture
+measures, and the container-owned window width rule take the construction re-visits to **zero**; the only re-visits
+left suite-wide are named bottom-up up-edges, asserted by a standing gate (`fg revisits`). So accidental complexity is
 now paid down with lints, a determinism soak, and hard-fail gates; what remains is essential.
 
 ---
@@ -436,8 +438,9 @@ every other writer fails loudly.** The two sides:
 The loop is *built* to absorb exactly this: the until-loop is a **live drain, not a snapshot walk** — work enqueued
 mid-pass is consumed by the same flush, which is what makes it a fixed-point iteration rather than a single sweep. What
 keeps the sanctioned re-dirtying from being open-ended is §2.6's convergence case: idempotent, non-notifying arranges
-(a settled container never re-dirties *itself*), the Stage-6 unchanged-frame skip on the up-edge, `elasticity 0` on the
-genuine width↔height cycles, and the never-fire assert converting a hypothetical residual cycle into a loud
+(a settled container never re-dirties *itself*), the Stage-6 unchanged-frame skip on the up-edge, the constraint-box
+sizing model (width↔height cycles are structurally impossible since the sizing-model unification — §2.5 ⇄ block; the
+aspect trio's explicit `grow 0` survives as a size-stability choice), and the never-fire assert converting a hypothetical residual cycle into a loud
 `RECALC_NONCONVERGENCE` throw. Even a **crashing** `_reLayout` cannot wedge or re-dirty the drain: the loop's catch
 force-marks the thrower `_markLayoutAsFixed` (it died before popping itself — without this the until-loop would spin on
 it forever), silently `__hide`s it (nils caches only — no invalidate, no flush), and defers the report to the next
@@ -520,8 +523,9 @@ seam made it irreducibly so. **The 2026-07-01 seam deletion changed that.** Term
 ending in `_markLayoutAsFixed`; each container arrange being an idempotent fixed point (Phase C — which let the campaign
 delete the `@_adjustingContentsBounds` re-entrancy boolean, §4.1) *and* non-notifying (§4.2 Objective A — a settled
 container never re-enqueues *itself*); the **settle-time up-edge** that replaced the seam (§2.3 — a container re-fits
-*once*, from its content's final geometry, after the content settles); manual cycle-breaking for the genuine
-width↔height cycles (`elasticity 0`); and a determinism torture soak. The empirical `recalcIterationsCap` is retired to
+*once*, from its content's final geometry, after the content settles); the constraint-box sizing model (width↔height
+cycles structurally impossible since the sizing-model unification — the ⇄ block below; formerly manual `elasticity 0`
+cycle-breaking); and a determinism torture soak. The empirical `recalcIterationsCap` is retired to
 a **never-fire assert** `layoutIterationsSanityLimit` (Stage 6, §2.3).
 
 What iterates beneath that assert is now tiny and *characterized*. A per-flush re-visit counter (instrumented +
@@ -968,10 +972,12 @@ proven-irreducible nested-window first-placement re-visits.
 
 So the honest bottom line is now the *opposite* of the previous revision's: not only is the *waste* gone (the read-back
 self-convergence, the suppression boolean, the arrange's self-re-enqueue), **the notification edge itself is gone**,
-restructured into the settle loop. What remains is a small proven-irreducible residual — nested-window first-placement
-(a container cannot measure an unplaced child, §2.6) and the aspect-locked width↔height cycle (irreducible in any
-single-pass system — CSS needs `aspect-ratio` rules, Flutter forbids unbounded-both-axes — cycle-broken here by
-`elasticity 0`).
+restructured into the settle loop. What remained after this arc — nested-window first-placement (a container could not
+measure an unplaced child, §2.6) and the aspect-locked width↔height cycle (irreducible in any single-pass system — CSS
+needs `aspect-ratio` rules, Flutter forbids unbounded-both-axes — cycle-broken here by `elasticity 0`) — was later
+dissolved at the root by the sizing-model unification (§2.5/§2.6 ⇄ blocks): measures are total, the cycle is
+structurally impossible under the constraint model, and the aspect contract (grow 0 + pure measure) is documentation,
+not a load-bearing convention.
 
 **Caret scroll-follow single-pass (`7370c25a`).** The dominant residual after Stage 6 was the caret — 372 re-visits/
 suite, the scroll-follow advancing partway per pass. Root cause: `Point.floor` clamps to ≥0 (`Math.max(⌊v⌋, 0)`); a
@@ -1181,7 +1187,8 @@ live under `src/basic-widgets/`; `TreeNode.coffee` is under `src/basic-data-stru
   applied directly via `_applyExtentBase` (the interim `_resizeOwn*SkippingChildRelayout` helpers, née
   `_applyOwnArrangedWidth/Height`, were inlined away — Tier D 2026-07-02) — the per-arrange
   `@_adjustingContentsBounds` re-entrancy guard that used to sit atop this method was DELETED in proper-layouts Phase E,
-  §4.1) · `VerticalStackLayoutSpec.getWidthInStack` ~:31 (elasticity field ~:12) · `ScrollPanelWdgt._reLayout` ~:302 /
+  §4.1) · `VerticalStackLayoutSpec.getWidthInStack` (the constraint-box formula; `desiredWidth`/`grow` fields — the
+  proportional formula + `widthOfStackWhenAdded` were deleted by the sizing-model unification) · `ScrollPanelWdgt._reLayout` ~:302 /
   `_reLayoutChildren` ~:288 / `_positionAndResizeChildren` ~:332 (pure-measure content frame
   `subWidgetsMergedPreferredBounds` ~:386/~:388, non-content-sizing fallback `subWidgetsMergedFullBounds` ~:390,
   non-notifying frame commit `_commitBounds` ~:437, `keepContentsInScrollPanelWdgt` clamp via `_applyMoveByBase`
@@ -1228,12 +1235,15 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    the tiers (rule 3): the **settle-time up-edge** (`_reFitMyTrackingContainerAfterSettle`, §2.3) re-fits a
    size-tracking container *after* its content settles, reading final geometry, once. **Do NOT add a mutation-driven
    container notification** — the notify-by-mutation seam was deleted in 2026-07-01 precisely so nothing re-dirties a
-   container mid-arrange (§4.1). A **second** pass is legitimate *only* for the two proven-irreducible cases: (a)
-   nested-window **first-placement** (a container cannot measure a child whose content has never been placed —
-   `contentNeverSetInPlaceYet`, §2.6), and (b) an **aspect-locked width↔height cycle**, which you must break with
-   `elasticity 0` (rule 5), not iterate through. If your new layout needs a third reason to re-visit, that is a design
-   smell — stop and reconsider (the ordered down-walk §4.4 is BUILT: a third re-visit reason usually means your
-   arrange is not idempotent or reads half-applied state).
+   container mid-arrange (§4.1). A **second** visit is legitimate *only* as a named bottom-up **up-edge**
+   (container-fits-content after the content settles: the window-height re-fit, the TransformFrame slot-track, the
+   scroll-uncollapse re-fit — the exact allowed set is the committed `fg revisits` baseline,
+   `Fizzygum-tests/scripts/revisit-baseline.json`). The two old "proven-irreducible" second-pass cases are GONE
+   (sizing-model unification, §2.5/§2.6 ⇄ blocks): first-placement measures are total (the flag is deleted; a
+   container-owned window never self-resizes width), and width↔height cycles are structurally impossible under the
+   constraint model. If your new layout adds a re-visit, the `fg revisits` gate fails loudly — that is a design smell:
+   your arrange is either not idempotent, reads half-applied state, or is a genuinely new up-edge that must be argued
+   into the baseline consciously (--write-baseline + a commit).
 
    **Corollary (N4, 2026-07-16): your arrange must be IDEMPOTENT, and you declare NOTHING for it.** The engine
    re-lays your widget whenever an arrange moves/resizes it (the §2.3 child injection) and schedules your re-lay
@@ -1272,10 +1282,14 @@ settle-time up-edge doing any container re-fit. Everything below is a corollary.
    freefloating boundary to a `_reLayoutChildren` parent (the uniform dirty-tree that replaced the property seam, §4.1).
    You do not — and must not — wire a manual notification.
 
-5. **Break real width↔height cycles with `elasticity 0`.** Aspect-locked content (a square clock, a ratio-keeper) whose
-   width depends on height depends on width is a genuine cycle. `getWidthInStack`'s proportional term multiplies out at
-   `elasticity 0` (`getWidthInStack = min(wEl, availW)`), making the content convergence-independent without touching
-   the proportion model (§2.5). Do *not* try to iterate the cycle to a fixpoint.
+5. **Aspect content follows THE ASPECT CONTRACT (D6 — documented at `KeepsRatioWhenInVerticalStackMixin`).** A pure
+   width→height measure (`preferredExtentForWidth`) + role-appropriate grow: a STACK element that should stay
+   size-stable declares an explicit `grow 0` in `initialiseDefaultVerticalStackLayoutSpec` (the clock/icon/spreadsheet
+   trio; the capture's oversize trample — wider-than-column ⇒ column-track — is the designed exception); WINDOW
+   content may fill (`grow 1`) — the window's height follows the ratio through the measure. *(This rule originally
+   prescribed `elasticity 0` as a CYCLE-BREAKER; since the sizing-model unification the cycle is structurally
+   impossible — a stack never derives width from child heights, a container-owned window never self-resizes to
+   content — so grow 0 is a size-stability choice, not a convergence necessity.)*
 
 6. **Adding OR deleting an inspector-visible base `Widget` member churns the inspector test — benign,
    pre-authorised.** *(This rule originally claimed adding was recapture-free; the INV-2 Stage-A arc falsified that
