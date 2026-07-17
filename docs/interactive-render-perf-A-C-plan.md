@@ -267,12 +267,15 @@ then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwh
 follow-on **F5** in `docs/dataflow-engine-implementation-plan.md` §3-F): anything
 selectable/clickable should be a widget — the header cells become widgets (toward future
 column/row selection), and the gridline chrome migrates into the cell widgets, leaving the
-sheet's own paint ~empty. Under F5 there is NO sheet-drawn static layer left for this item to
-back-buffer; the caching story becomes per-widget back-buffers instead — header text
-back-buffers the way `TextWdgt`/`StringWdgt` already do (the 99.9%-hit
-`world.cacheForImmutableBackBuffers`), and identical empty cells collapse toward shared
-cached bitmaps through the same content-addressed world cache. That structurally delivers
-this item's win, since the measured hot spot IS the header-text re-render (§1). So: if F5 is
+sheet's own paint ~empty (owner refinement, same day: the cells attach into a dedicated
+container SUBCLASS that draws the two residual bottom/right outer lines itself, LIVE). Under
+F5 there is NO sheet-drawn static layer left for this item to back-buffer, and per the owner
+the gridline STROKES stay live everywhere — axis-aligned 1px strokes are cheap, buffering
+them costs memory and re-imports the C1 FP-CTM risk. Caching is reserved for TEXT: header
+widgets cache the way `TextWdgt`/`StringWdgt` already do (the 99.9%-hit
+`world.cacheForImmutableBackBuffers`); `CellWdgt` scalar text stays a later,
+measurement-driven option. That structurally delivers this item's win, since the measured
+hot spot IS the header-text re-render (§1). So: if F5 is
 scheduled, C2-as-specced is SUPERSEDED (fold the §3.3 verification into F5); only if F5 is
 declined/deferred does the sheet-level chrome buffer above remain the plan. (Independently,
 the "keyed by (visible range, scroll offset, …)" cache key above already anticipates

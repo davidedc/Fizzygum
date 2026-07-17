@@ -1680,15 +1680,21 @@ note anticipated it ("headers-as-widgets would be a purely additive later step" 
 - **Widget count:** +numCols +numRows (+1 corner) header widgets — viewport-bounded, trivial
   next to the 84 data cells.
 
-**Design questions to resolve at flesh-out (recorded now, unanswered).**
-1. **Gridline edge ownership.** Interior lines sit ON cell boundaries at half-pixel offsets
-   (a stroke at `x+0.5` rasterises into pixel column `x`). A "each cell paints its own top +
-   left edges" convention covers interior lines — but the grid's bottom/right OUTER border
-   lines rasterise one pixel PAST the last cells' rects (outside their clip), and the sheet's
-   outer 0.5-offset border likewise. So either a sliver of sheet paint remains (outer border
-   only — "essentially empty", not empty), or edge cells paint 1px outside their bounds
-   (clip story must be checked), or the geometry changes (recaptures). Decide with pixel
-   receipts, not by argument.
+**Design questions to resolve at flesh-out (recorded now; Q1 and Q4 carry owner direction
+2026-07-17, still to be pixel-receipted).**
+1. **Gridline edge ownership — owner direction 2026-07-17.** Interior lines sit ON cell
+   boundaries at half-pixel offsets (a stroke at `x+0.5` rasterises into pixel column `x`).
+   A "each cell paints its own top + left edges" convention covers interior lines — but the
+   grid's bottom/right OUTER border lines rasterise one pixel PAST the last cells' rects
+   (outside their clip). **Owner's answer: the cells all attach into a dedicated SUBCLASS of
+   the container widget (base class picked at flesh-out — whichever container fits), and THAT
+   container draws the two residual outer lines itself, LIVE (no back-buffer — two
+   axis-aligned 1px strokes are cheap, memory-free, and skip the C1 FP-CTM risk entirely).**
+   So the end state is: cells + header widgets paint their own top/left edges, the grid
+   container paints the residual bottom/right pair — "essentially empty" sheet paint, with
+   the residual named and homed. Still to receipt at flesh-out: the container's base class,
+   whether headers live in the container or beside it on the sheet, and the frame-dump proof
+   of byte-identity (Q2).
 2. **Byte-identity budget.** Axis-aligned 1px opaque lines + text at integer offsets are the
    FP-ROBUST case (the C1 lesson's safe side), and same-colour overdraw of a shared line is
    idempotent — so byte-identity at origin (0,0) is PLAUSIBLE but must be frame-dump-verified
@@ -1697,9 +1703,15 @@ note anticipated it ("headers-as-widgets would be a purely additive later step" 
 3. **Header SELECTION semantics are out of scope** for the widgetisation itself: land
    clickable header widgets first (no new selection model); column/row selection is its own
    later item with its own spec (multi-cell selection touches editing, refs, paint).
-4. **Perf shape:** today the sheet strokes all gridlines once per repaint; distributing the
-   same strokes across 84+ cells is neutral at best UNLESS the cells back-buffer — so F5
-   should land WITH the per-widget caching story above (the C2 successor), not before it.
+4. **Perf shape — owner direction 2026-07-17: STROKES stay live, back-buffers are for TEXT.**
+   Axis-aligned 1px strokes (the container's residual pair AND the per-cell edges) are cheap
+   to draw every repaint; buffering them buys little, costs memory (84+ small canvases), and
+   re-imports the C1 FP-CTM byte-identity risk for nothing. The measured hot spot (perf plan
+   §1) is the header TEXT re-render — under F5 that lands in header widgets, which cache text
+   the way `TextWdgt`/`StringWdgt` already do (the existing 99.9%-hit
+   `world.cacheForImmutableBackBuffers`); `CellWdgt` scalar-text caching stays a later,
+   measurement-driven option. If the busy-drag path regresses from the extra per-cell paint
+   calls, re-measure with `prof-interactive.js` before reaching for buffers.
 
 1. **Naming:** every new identifier passes `NOMENCLATURE.md`. In particular: no "settle",
    "invalidate", "dirty", "coalesced", "announce", "volatile" in dataflow code; "source"
