@@ -5,6 +5,10 @@ B`, and its predicate twin `if x.isFoo?()`) across `src/`. It is the **codebase-
 Widget-scoped `widget-identity-decoupling-plan.md` (which it absorbs) and the true-polymorphism part of Phase 5
 in `oo-smells-refactoring-backlog.md`. Executable cold; grep symbols (line numbers drift).
 
+> **CAMPAIGN COMPLETE (2026-07-17).** Every cluster carries ✅ or a recorded LEAVE verdict; Phase ε — the last
+> open set — executed and closed (`a68677c6` → `0df1d796`). This doc remains the case-law record: the decision
+> framework, the LEAVE rationales, and the prior-art patterns govern any future type-test that appears.
+
 ## Why / the smell
 A type test that drives a branch is *missed polymorphism*: behaviour that varies by type should live on the
 type, so the caller names an intent and the right thing happens. Owner directive (2026-06-22): **clean/elegant
@@ -69,11 +73,11 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ✅ **desktop-icon family** — 3 `instanceof WidgetHolderWithCaptionWdgt` sites (`IconicDesktopSystemLinkWdgt.moveOnTopOfTopReference`, `WorldWdgt._reLayoutDesktop`, `GridPositioningOfAddedShortcutsMixin.add`) → `isDesktopIcon?()`/`participatesInIconGrid?()` on `WidgetHolderWithCaptionWdgt`. `participatesInIconGrid` overridden `-> false` on `BasementOpenerWdgt` (folds in `!(aWdgt instanceof BasementOpenerWdgt)` — the basement opener IS an icon but the desktop places it itself, not the grid). The `_reLayoutDesktop` furniture-singleton finds (`instanceof BasementOpenerWdgt/AnalogClockWdgt` at :1437/:1447) stay (LEAVE set). Byte-identical, zero recapture.
 - ✅ **shortcut-to-self** — `Widget.coffee:~2125` → `isShortcutTo?(w)` on `IconicDesktopSystemShortcutWdgt` (folds the `target == @` check in).
 - ✅ **menu detection** — `ActivePointerWdgt.coffee:89/388` → `isMenu?()` on `MenuWdgt` (inherited by Prompt/SaveShortcutPrompt). The `Wallpaper`/`StringWdgt` menu-tick sites are the separate γ notify-hook cluster.
-- ⏳ **hierarchy-scaffold** — `Widget.getHierarchyMenuWidgets:~3124` → MOVED TO ε. On inspection it is a compound of THREE parent-aware structural pairings (6 `instanceof`: `SimpleVerticalStackPanelWdgt`-in-`SimpleVerticalStackScrollPanelWdgt`, `PanelWdgt`-in-`ScrollPanelWdgt`, `ScrollPanelWdgt`-in-`FolderWindowWdgt`) over overlapping class hierarchies (ScrollPanel is-a Panel). A faithful full de-`instanceof` needs ~6 mutually-checking child+parent capabilities, and the parent check must stay call-time dynamic (a construction-time `isInternalScaffolding` flag would diverge under re-parenting). Same topology flavour as the ε scroll-structure set.
-- ✅ **handle-initiated geometry** — `Widget.coffee:~1343/1562` → `changeShouldRememberFractionalGeometry?()` on `HandleWdgt` (the `:608` find-handle site is separate, deferred).
+- — **hierarchy-scaffold** — `Widget.getHierarchyMenuWidgets:~3124` → moved to ε; **ε verdict 2026-07-17: LEAVE** (see the LEAVE section). On inspection it is a compound of THREE parent-aware structural pairings (6 `instanceof`: `SimpleVerticalStackPanelWdgt`-in-`SimpleVerticalStackScrollPanelWdgt`, `PanelWdgt`-in-`ScrollPanelWdgt`, `ScrollPanelWdgt`-in-`FolderWindowWdgt`) over overlapping class hierarchies (ScrollPanel is-a Panel). A faithful full de-`instanceof` needs ~6 mutually-checking child+parent capabilities, and the parent check must stay call-time dynamic (a construction-time `isInternalScaffolding` flag would diverge under re-parenting). Same topology flavour as the ε scroll-structure set.
+- ✅ **handle-initiated geometry** — `Widget.coffee:~1343/1562` → `changeShouldRememberFractionalGeometry?()` on `HandleWdgt` (the separate find-handle site landed in ε — filter on `m.updateVisibility?`).
 
 ### Phase α — capability reuse (per-site faithfulness; NOT a blanket reuse)
-- ✅ **overlay-chrome** — mapped PER SITE (the sets genuinely differ — the 5c trap): **{Caret,Handle}** (`WindowWdgt.add` content detection) → `isLayoutDecoration?()` (exact reuse); **{annotation,Handle} ×4** (`ScrollPanelWdgt`/`ToolPanelWdgt`/`HorizontalMenuPanelWdgt`/`StretchableWidgetContainerWdgt` add) → new `attachesToScrollFrameDirectly?()` on `ModifiedTextTriangleAnnotationWdgt`+`HandleWdgt`; **{Caret}-only ×3** (`ActivePointerWdgt`, `PanelWdgt`, `SimplePlainTextWdgt`) → `m != world.caret` (SINGLETON identity — the caret is created one-at-a-time and destroyed before replace, so for a child `instanceof CaretWdgt` ⟺ `== world.caret`; reusing `isLayoutDecoration` would have WRONGLY excluded Handle too); **{Highlighter,Caret}** (`Widget.add` world drop-shadow) → new negative `skipsAddShadowManagement?()` on `HighlighterWdgt`+`CaretWdgt`. All chrome classes have no subclasses → each capability is exact. Byte-identical, zero recapture. The {Handle}-only find-handle (`Widget.setLayoutSpec:~608`) stays deferred (ε); `MacroToolkit:576` stays (LEAVE — harness locator); the `Widget.add` `instanceof ToolTipWdgt` self-exclusion is a separate ToolTip concern (not chrome).
+- ✅ **overlay-chrome** — mapped PER SITE (the sets genuinely differ — the 5c trap): **{Caret,Handle}** (`WindowWdgt.add` content detection) → `isLayoutDecoration?()` (exact reuse); **{annotation,Handle} ×4** (`ScrollPanelWdgt`/`ToolPanelWdgt`/`HorizontalMenuPanelWdgt`/`StretchableWidgetContainerWdgt` add) → new `attachesToScrollFrameDirectly?()` on `ModifiedTextTriangleAnnotationWdgt`+`HandleWdgt`; **{Caret}-only ×3** (`ActivePointerWdgt`, `PanelWdgt`, `SimplePlainTextWdgt`) → `m != world.caret` (SINGLETON identity — the caret is created one-at-a-time and destroyed before replace, so for a child `instanceof CaretWdgt` ⟺ `== world.caret`; reusing `isLayoutDecoration` would have WRONGLY excluded Handle too); **{Highlighter,Caret}** (`Widget.add` world drop-shadow) → new negative `skipsAddShadowManagement?()` on `HighlighterWdgt`+`CaretWdgt`. All chrome classes have no subclasses → each capability is exact. Byte-identical, zero recapture. The {Handle}-only find-handle (`Widget.setLayoutSpec:~608`) landed in ε (filter on `m.updateVisibility?`); `MacroToolkit:576` stays (LEAVE — harness locator); the `Widget.add` `instanceof ToolTipWdgt` self-exclusion is a separate ToolTip concern (not chrome).
 - ✅ **dead commented-out instanceof** — deleted the dead `#if … instanceof` blocks: `WorldWdgt.checkARectWithHierarchy` (`instanceof SliderWdgt` debugger guard), `Widget` paint-bounds (the `instanceof MenuWdgt` containsPoint(10,10) debug guard + its 2 sibling dead debug guards, removed as one obviously-dead cluster), `MenuWdgt.maxWidthOfMenuEntries` (the `@parent instanceof PanelWdgt` / `scrollPanel instanceof ScrollPanelWdgt` width block). Comment-only; byte-identical.
 
 ### Phase γ — move-behaviour hooks
@@ -96,7 +100,7 @@ Status: ✅ done · ☐ todo · ⏳ study (Phase-6-entangled) · — leave. Re-g
 - ✅ **world / hand identity** — `ButtonWdgt:129`, `HandleWdgt:48`, `ActivePointerWdgt.grab` (refuse to grab the world), `Widget` grabsToParentWhenDragged/rootForFocus/lock-menu-label (`@parent == world`) + `isBeingFloatDragged`/`breakNumberOfRawMovesAndResizesCaches` (`== world.hand`). All `instanceof WorldWdgt`/`instanceof ActivePointerWdgt` → `== world`/`== world.hand` (established idiom: cf. PopUpWdgt, TreeNode).
 - ✅ **isWindow base-default reconciliation** — DELETED `Widget.isWindow: -> false` (Arc-1's God-class base default); `isWindow` now lives ONLY on `WindowWdgt` (`-> true`), every site dispatching via `?()`. Converted all 5 usage sites: the 2 callers (`Widget.close` → `!@isWindow?() and @parent?.isWindow?()`; the close-vs-delete menu → `@isWindow?()`) + the 3 remaining raw `instanceof WindowWdgt` (`WidgetCreatorAndSmartPlacerOnClickMixin`, `WindowWdgt.contentsRecursivelyCanSetHeightFreely`, `WindowWdgt.recursivelyAttachedAsFreeFloating`). `instanceof WindowWdgt` is now fully gone from src behaviour code. Chose `?()` over a behaviour-move because it NET-REMOVES a method from Widget (a behaviour-move would still add a base method). Benign recapture of `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the documented Widget-method-deletion inspector shift — the vanished isWindow row).
 
-### ⏳ Phase ε — the scroll-topology set (ARC SPEC, re-verified + made executable-cold 2026-07-17; supersedes the 2026-06-22 study stub)
+### ✅ Phase ε — the scroll-topology set (EXECUTED + CLOSED 2026-07-17; commits `a68677c6` → `0df1d796`)
 
 **Premise correction (2026-07-17):** the stub deferred this on "dissolves under the God-class split" — that split is
 NOT scheduled and three engine campaigns have since landed (proper-layouts, INV-2/down-walk, sizing-model unification,
@@ -137,15 +141,49 @@ The deliverable is a verdict per cluster, not a mandatory conversion count.
   find-handle, the split-out δ leftover); `SimpleDocumentWdgt:110` (structural doc-assembly check — LEAVE-candidate);
   `MacroToolkit:619` (harness locator — LEAVE per the standing rule).
 
-**Staging** (the up-edge-endgame template): **ε-V0** — fresh grep census + per-cluster verdict (CONVERT with the
-named shape / LEAVE with rationale written into the LEAVE section below) + OWNER GATE on the map, no behaviour
-change. **ε-V1** — sanctioned conversions one cluster at a time, each: implement → `fg build` + `fg presuite` →
-byte-identical expected (a pixel diff falsifies the shape; the known-benign inspector rule applies only if a Widget
-BASE member is added — prefer per-class capabilities, which don't churn) → commit. **ε-V2** — close: LEAVE list +
-"documentation to keep in sync" updated, full `fg gauntlet` (11 legs incl. revisits+census).
-**Verification**: the byte-exact suite IS the faithfulness oracle (every site is behaviour-selection); cluster D
-additionally gets the settle/capstone/revisits legs' scrutiny for free at close. Stop-rule: 2 falsified shapes on
-one cluster ⇒ it closes as LEAVE.
+**EXECUTION LOG (2026-07-17; staging ran as spec'd — V0 fresh census → owner gate → per-cluster V1 → V2 close).**
+The fresh V0 census @ `b601207d` confirmed all spec sites at unchanged lines AND surfaced 3 missed ε-scope sites
+(`ScrollPanelWdgt:77/:82/:84` contents-type dispatch — folded into cluster D — and `MenusHelper:80`, cluster-E
+flavour) plus out-of-ε leftovers (logged below). Owner gate sanctioned: the six core CONVERTs, F-3918
+field-as-truth, B-145 delete-if-dead, the PanelWdgt trio centralization; everything else LEAVE. Every V1 step:
+`fg presuite` 250/250 byte-exact at dpr1, 0 geometry violations, paint-truthful, zero recapture, no inspector churn.
+
+- ✅ **cluster B** `a68677c6` — ToolPanelWdgt row-wrap width → `widthContentsMustFitWithin?()` on ScrollPanelWdgt
+  (`-> @width()`, is-a exact); slider track-press jump-drag → `sliderTrackPressJumpsButton?()` on ScrollPanelWdgt +
+  PromptWdgt (exact: SaveShortcutPromptWdgt extends MenuWdgt, not PromptWdgt); lock-to-panels menu gate →
+  `childrenCanLockToMe?()` (`-> true` on the PanelWdgt family base, world included, matching "lock to desktop";
+  `-> false` on ScrollPanelWdgt — the ratio-constraint opt-out precedent); PanelWdgt trio (:86/:167/:177) →
+  centralized into `_amITheContentsPanelOfAScrollPanelWdgt` (LEAVE-with-cleanup; the ONE instanceof lives inside).
+- ✅ **cluster D, sanctioned subset** `d2e8b033` — the :429-430 self-tests → class-level `isContentSizing()`
+  (base `-> @isTextLineWrapping`; `-> true` on SimplePlainTextScrollPanelWdgt + SimpleVerticalStackScrollPanelWdgt —
+  the override is load-bearing for a plain-text frame with soft-wrap OFF); `wantsDropOfChild` folder veto →
+  `vetoesScrollPanelDrops?()` on FolderPanelWdgt (no subclasses = exact); `colloquialName` →
+  `scrollPanelColloquialName?()` on FolderPanelWdgt ("folder") / ToolPanelWdgt ("toolbar"), strings preserved
+  verbatim (drawn in menu/window labels).
+- ✅ **cluster F** `4e4a6ee7` — Widget find-handle → filter on `m.updateVisibility?` (HandleWdgt-only = exact, the
+  keep-links-back precedent). Widget menu-take-over → the FIELD is the single truth. ⚠⚠ the spec's convert-condition
+  was FALSIFIED in-tree — SimplePlainTextPanelWdgt's constructor ALSO wrote the flag — but the write was DEAD (both
+  reads were scroll-frame-scoped), so it was deleted with the instanceof; and because the Serializer stores own
+  enumerables and `allParentsTopToBottomSuchThat` matches NEAREST-first (self included), an OLD saved document's
+  restored flag would have made the text panel hijack its text's menu — a
+  `SimplePlainTextPanelWdgt._afterDeserialization` hook strips the stale own-property (faithfulness preserved for
+  old documents). Accepted disclosed edge: a runtime-flipped flag on any widget is now honored.
+- ✅ **dead guard deleted** `0df1d796` — ScrollPanelWdgt._reLayoutScrollbars' `unless @parent instanceof ListWdgt`
+  around `@changed()` (Morphic vintage, predates the ListWdgt rename): every list child-acquisition path (ctor
+  contents+bars, add/addMany → @contents, drops, attach → add, listContents build, serialization/duplication
+  reproduce topology) proves a ScrollPanel is never a list's DIRECT child, so the repaint already fired on every
+  reachable call.
+- **LEAVE verdicts** — written into the LEAVE section below: cluster A helper insides; cluster C scaffold;
+  cluster D core arrange branches; cluster E; Widget grabsToParentWhenDragged's full-family fall-through;
+  PanelWdgt's editable-plain-text click-forward filter; SimpleDocumentWdgt:110; MenusHelper:80; MacroToolkit:619.
+- **Out-of-ε observations** (fresh-census leftovers for the campaign backlog — NOT scroll-topology, no verdict
+  issued): `ActivePointerWdgt:587` (`actionedWdgt.parent instanceof SimpleButtonWdgt` policy site);
+  `SpreadsheetWdgt:274` (keyboard-receiver dedup) + `:517` (CellWdgt collection filter); `ToolTipWdgt:106`
+  (TextWdgt contents coercion); the `TransformFrameWdgt` island-detection family in Widget (deliberate affine-arc
+  design, not a smell); `WindowWdgt:430/:710` (WindowContentLayoutSpec value-object guards, standing-LEAVE flavour).
+
+**Post-arc state**: every remaining ε-scope `instanceof` carries a recorded LEAVE verdict; the two Widget topology
+helpers plus the new PanelWdgt chokepoint are the only places the scroll-topology classes are named as classes.
 
 ## LEAVE (concrete class is clearest — do NOT convert)
 Generic class-param tree utils (`TreeNode.parentThatIsA/siblingBeforeMeIsA/siblingAfterMeIsA`); serialization/
@@ -155,10 +193,40 @@ deserialization guards (`SliderWdgt` `@button instanceof SliderButtonWdgt`; `Dee
 `WorldWdgt._reLayoutDesktop` desktop-furniture singletons; `ToolTipWdgt:72` Widget|String|canvas coercion; all ~21
 `Point`/`Rectangle`/`Array`/`Color` guards.
 
+**ε verdicts (owner-gated 2026-07-17)** — each argued on its merits, evidence in the Phase ε log:
+- **The two Widget scroll-topology helper INSIDES** (`_amIDirectlyInsideScrollPanelWdgt` + the NonTextWrapping
+  refinement): the helpers ARE the campaign-preferred chokepoint shape — all 7 callers dispatch through named
+  queries. The de-instanceof alternative (identity `@parent.parent.contents == @parent` + a capability with a
+  ListWdgt opt-out) demands an equivalence proof over all reachable trees (`@contents` is constructor-dynamic)
+  for zero caller-visible gain. ⚠ the ListWdgt exclusion stays LOAD-BEARING (a list is-a scroll frame whose
+  contents are NOT user scroll-content).
+- **The PanelWdgt chokepoint's single instanceof** (`_amITheContentsPanelOfAScrollPanelWdgt`, minted by cluster B
+  as LEAVE-with-cleanup): three policies (click-to-caret forward, detach refusal, grab-to-parent) share one
+  structural premise; per-policy capabilities would mint three same-extension predicates (capability spam).
+- **Widget.grabsToParentWhenDragged's full-Panel-family fall-through**: scrollbars (direct children of scroll
+  frames) reach it and NEED the full family set — a scroll-frame opt-out demonstrably changes scrollbar drag.
+- **The hierarchy-scaffold triple pairing** (`Widget.getHierarchyMenuWidgets`): 6 instanceof over 3 parent-aware
+  pairings on OVERLAPPING hierarchies; the parent checks must stay call-time dynamic (a stored flag diverges
+  under re-parenting); a menu-redundancy filter is clearest as concrete topology.
+- **ScrollPanelWdgt's contents-type arrange/measure/pin branches** (`_positionAndResizeChildren` /
+  `_applyExtent`): the frame OWNS its contents' frame ("I OWN its frame regardless"); `@contents` is
+  constructor-dynamic so contents-tests don't reduce to frame-subclass dispatch; this is the
+  determinism-sensitive core three arcs stabilized — highest stop-rule risk, no clarity gain.
+- **SliderButtonWdgt:31/:71** (thumb-in-track drag policy): the truer-looking identity shape
+  (`@parent.button == @`) is FALSIFIED by the documented detach-then-duplicate state (ScrollPanelWdgt's
+  bar-belonging case law) — a class test keeps a non-owned button captive where identity would not; a `-> true`
+  capability on SliderWdgt is `isSlider` in disguise (the 5c cosmetic bar).
+- **PanelWdgt's editable-plain-text click-forward filter** (`instanceof SimplePlainTextWdgt and isEditable`):
+  deliberately narrower than `isTextEntryField` (split out of the entry-fields cluster for exactly this reason).
+- **SimpleDocumentWdgt:110**: a shape check of its OWN self-assembled startup content.
+- **MenusHelper:80** (`instanceof SliderButtonWdgt` recolor sweep): dev-menu debug utility, harness-locator flavour.
+
 ## Documentation & comments to keep in sync
-As each cluster lands, rewrite/remove the rationale comment tied to its sites (e.g. `CaretWdgt.coffee:95`,
-`WindowWdgt.coffee:180`, `Widget.coffee:2096/3364`, `ScrollPanelWdgt.coffee:302-303`,
-`SimpleVerticalStackPanelWdgt.coffee:76`, `ListWdgt.coffee:103`) and add a one-line breadcrumb at the new hook/query.
+As each cluster lands, rewrite/remove the rationale comment tied to its sites and add a one-line breadcrumb at the
+new hook/query. (The old anchor list here — `CaretWdgt.coffee:95`, `WindowWdgt.coffee:180`, `Widget.coffee:2096/3364`,
+`ScrollPanelWdgt.coffee:302-303`, `SimpleVerticalStackPanelWdgt.coffee:76`, `ListWdgt.coffee:103` — was verified
+stale at the ε close 2026-07-17: those comments were already rewritten by earlier campaigns or the lines drifted to
+unrelated code; every ε conversion carries its own breadcrumb at both the site and the new capability.)
 `widget-identity-decoupling-plan.md` is absorbed by this doc (see its header pointer);
 `oo-smells-refactoring-backlog.md` Phase 5/6 and `god-class-decomposition-plan.md` reference the capability-first
 override recorded here.
