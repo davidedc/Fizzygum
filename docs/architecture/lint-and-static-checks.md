@@ -137,11 +137,13 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   that lives **inline** next to the rule (a smell is a count, not a named set — no separate allowlist). Build FAILS when
   a stink EXCEEDS its baseline; when it drops below, tighten the baseline to lock the gain (the gate prints a reminder;
   `fg critique` resurfaces it). Baseline 0 = a HARD rule. Scans `src/` only (not the harness — a stink is a statement
-  about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines.
-  **Current stinks — seven, seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its target
-  `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then). Every baseline was MEASURED by the engine
-  that day and every stink spot-checked against its real hits; they are ratchets recording today's count, not verdicts —
-  driving any of them down is a future arc:
+  about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines — except a stink declaring
+  `scope: 'comments'`, which matches the COMMENT part of each line instead (the comment-hygiene ratchets).
+  **Current stinks — ten: seven seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its
+  target `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then) **plus three comment-hygiene
+  ratchets added at the 2026-07-17 comments cleanup**. Every baseline was MEASURED by the engine on its seeding day and
+  every stink spot-checked against its real hits; they are ratchets recording that day's count, not verdicts — driving
+  any of them down is a future arc:
 
   | stink | baseline | why |
   |---|---|---|
@@ -151,7 +153,10 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   | `wall-clock` | 19 | `Date.now()`/`new Date()` breaks event-stream determinism (DETERMINISM.md — recognition keys off EVENT timestamps) |
   | `timer` | 3 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
-  | `instanceof-type-test` | 105 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
+  | `instanceof-type-test` | 97 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`); tightened 105→97 at the comments cleanup |
+  | `comment-meta-edit` | 0 | HARD: a comment arguing with itself ("the below is actually correct", "to be clear,") is process residue — state the surviving constraint once |
+  | `comment-narration` | 106 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS |
+  | `commented-out-debug` | 0 | HARD: commented-out `alert(`/`debugger`/`console.log` is dead debug cruft — delete it; git remembers |
 
   ⚠ The engine's `stripComment` is a naive `#` cut that does **not** mask STRINGS, so e.g. `undefined-literal` counts
   `typeof x is 'undefined'`. That is ACCEPTED, not a bug: a ratchet measures REGRESSION, not an absolute. (Upgrading it

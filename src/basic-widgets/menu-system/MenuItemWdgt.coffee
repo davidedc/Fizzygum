@@ -100,11 +100,6 @@ class MenuItemWdgt extends LabelButtonWdgt
   # MenuItemWdgt events:
   mouseEnter: ->
 
-    # this could be a way to catch menu entries that should cause
-    # an highlighting but don't
-    #if @labelString.startsWith("a ") and !@representsAWidget
-    #  debugger
-
     if @representsAWidget
       if @argumentToAction1?
         # this first case handles when you pick a widget

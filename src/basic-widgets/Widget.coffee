@@ -1106,8 +1106,6 @@ class Widget extends TreeNode
     @children.forEach (child) ->
       if child.SLOWvisibleBasedOnIsVisibleProperty() and !child.SLOWisInCollapsedSubtree()
         result = result.merge child.SLOWfullClippedBounds()
-    #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
-    #  debugger
     result
 
   # Independent (de-circularized) re-derivations of the version-keyed clipThrough /

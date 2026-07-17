@@ -98,10 +98,6 @@ class IconAppearance extends Appearance
 
     aContext.useLogicalPixelsUntilRestore()
 
-    #widgetPosition = @widget.position()
-    #aContext.translate widgetPosition.x, widgetPosition.y
-    #debugger
-
     result = @calculateRectangleOfIcon()
 
 

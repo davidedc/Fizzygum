@@ -18,6 +18,13 @@
 // SHIPPED framework's idiom. Per-LINE regex over `#`-comment-stripped lines; there is no multi-line
 // matcher (an empty-catch stink would need one — plan §8.9).
 //
+// A stink may instead declare `scope: 'comments'` to match the COMMENT part of each line (from the
+// first `#` onward) rather than the code part — the comment-hygiene ratchets (2026-07-17 comments
+// cleanup) use this: comments must state present-tense constraints, not narrate history or carry
+// meta-edits/debug residue (history's home is docs/archive/ — see docs/README.md filing rules).
+// NB the naive `#` split means a `#` inside a string counts as a comment start here; accepted for
+// the same measures-regression-not-absolutes reason as above.
+//
 // (Historical: the original settle-batch-with-core stink was retired when its target,
 // _settleLayoutsAfterBatch, was deleted, leaving the table empty until the 2026-07-15 seeding.)
 
@@ -54,9 +61,19 @@ const STINKS = [
   { id: 'math-random', baseline: 5,
     why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
     re: /\bMath\.random\b/ },
-  { id: 'instanceof-type-test', baseline: 105,   // Pharo: ReBadMessageRule (isKindOf:)
+  { id: 'instanceof-type-test', baseline: 97,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     re: /\binstanceof\b/ },
+  // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).
+  { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
+    why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',
+    re: /\b(the (below|above) is|is actually (correct|right|fine|wrong)|to be clear,)\b/i },
+  { id: 'comment-narration', baseline: 106, scope: 'comments',
+    why: 'history narration ("used to", "previously", "no longer", "in the old model") belongs in docs/archive/ with a pointer, not inline — a comment states what IS',
+    re: /\b(used to\b|previously\b|no longer\b|in the old (model|way|code)\b)/i },
+  { id: 'commented-out-debug', baseline: 0, scope: 'comments',
+    why: 'commented-out alert/debugger/console.log is dead debug cruft — delete it; git remembers',
+    re: /^#\s*(alert\s*\(|debugger\b|console\.log\s*[\('"])/ },
 ];
 
 function walk(dir, acc) {
@@ -69,6 +86,7 @@ function walk(dir, acc) {
   return acc;
 }
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
+function commentPart(line) { const i = line.indexOf('#'); return i < 0 ? null : line.slice(i); }
 
 const files = walk(SRC, []);
 let over = 0;        // total occurrences ABOVE baseline (a build failure)
@@ -78,7 +96,8 @@ for (const stink of STINKS) {
   const hits = [];
   for (const p of files) {
     fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
-      if (stink.re.test(stripComment(line))) hits.push(`${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`);
+      const subject = stink.scope === 'comments' ? commentPart(line) : stripComment(line);
+      if (subject !== null && stink.re.test(subject)) hits.push(`${path.relative(SRC, p)}:${i + 1}: ${line.trim()}`);
     });
   }
   const n = hits.length;
