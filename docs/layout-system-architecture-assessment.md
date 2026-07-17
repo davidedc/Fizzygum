@@ -497,6 +497,22 @@ aspect-locked widget (a square clock in a window-in-window), width depends on he
 genuine cycle. The capstone's fix — give aspect content `elasticity 0` so the converged-width term multiplies
 out (the deferred-layout capstone record) — is exactly right: it **breaks the cycle** rather than iterating through it.
 
+**⇄ CAMPAIGN CLOSED (2026-07-16/17, `docs/sizing-model-unification-plan.md` — the arc this finding called
+for).** The split is GONE: `VerticalStackLayoutSpec` is now itself a constraint box (`desiredWidth` + `grow`
+0..1 + alignment; `width = round(min(availW, desired + grow·(availW−desired)))`), the proportional formula
+and its add-time `widthOfStackWhenAdded` snapshot are DELETED (U1), `getWidthInStack` is TOTAL pre-capture so
+measures never need placement (U2, which deleted `contentNeverSetInPlaceYet`), the five measure-less Path-B
+containers gained true `preferredExtentForWidth` twins (U3), and the newborn-window width rule (§9.7-Q,
+owner-decided) makes a container-owned window size like a captured one FROM BIRTH — the container owns its
+width; the hug is desktop-window behaviour. The one applied read-back (`subWidgetsMergedFullBounds`) is kept
+and RECLASSIFIED as the layout system's ONE named state-read (user-placed free-floating children — genuine
+state, D4). The aspect contract is documentation now, not a cycle-breaker (D6: pure measure +
+role-appropriate grow; the cycle is structurally impossible — a stack never derives width from child heights,
+a container-owned window never self-resizes to content). The user-facing knobs survive unchanged (base
+width / elasticity / alignment — the D2 mapping). Storage stays split by design (widget fields h-side, spec
+object v-side): the difference reflects ownership (per-widget knob vs per-placement state), and no reader
+spans the two.
+
 ### 2.6 Convergence is bounded and near-single-pass — the cap is a never-fire assert
 
 The previous revision titled this section *"empirical and capped, not structural"* and argued the notify-by-mutation
@@ -512,12 +528,15 @@ What iterates beneath that assert is now tiny and *characterized*. A per-flush r
 reverted) put the suite-wide residual at three sources, two since eliminated: the **caret scroll-follow** (372
 re-visits → **0**, §4.1); the **window→content re-fit over stack content** (6 → **0** — the window now settles its
 non-deferred stack content synchronously in its own arrange, so it fits in one pass); and **3** genuine survivors —
-nested-window **first-placement** re-visits. Those 3 are irreducible for a concrete reason: an outer window laid out
-before its inner window's content has been *first-placed* cannot measure the inner window
-(`WindowWdgt.preferredExtentForWidth` returns a stale extent while `contentNeverSetInPlaceYet` — the inner specs are
-uninitialised, and measuring would divide-by-zero to NaN), so it must place, then re-fit. They are one-time
-construction costs, not steady-state waste; three removal routes were falsified (can't measure ahead; can't settle
-early byte-exactly; can't reorder — a content-before-container climb-block breaks 9 load-bearing tests, §4.1).
+nested-window **first-placement** re-visits. Those 3 were irreducible for a concrete reason: an outer window laid out
+before its inner window's content has been *first-placed* could not measure the inner window
+(`WindowWdgt.preferredExtentForWidth` returned a stale extent while `contentNeverSetInPlaceYet` — the inner specs were
+uninitialised, and measuring would divide-by-zero to NaN), so it had to place, then re-fit. Three removal routes were
+falsified (can't measure ahead; can't settle early byte-exactly; can't reorder — a content-before-container
+climb-block breaks 9 load-bearing tests, §4.1). **⇄ The FOURTH route succeeded (sizing-model unification, 2026-07-17):
+root-cause decoupling** — the constraint model has no add-time state, so measures became TOTAL (the NaN and the flag
+died, U2), and the §9.7-Q width rule removed the place-then-re-fit width ping-pong structurally (a container-owned
+window never self-resizes width). The construction re-visits are now **0**.
 
 So convergence is now **bounded and near-single-pass**: the *waste* is gone, and the handful of real re-visits
 (nested-window first-placement + the aspect-locked cycles) are proven essential — the assert never fires. It is no
@@ -529,6 +548,17 @@ structural facts, not verified properties. What keeps single-pass convergence a*
 *property is now only the MEASURE side: the §2.5 proportional model's genuine width↔height cycles, the
 first-placement measurability gap, and the one surviving applied read-back — i.e. exactly the §2.5 sizing-model
 unification, a possible future design-first arc (not currently planned).)*
+
+**⇄ THE MEASURE SIDE IS NOW STRUCTURAL TOO (sizing-model unification U0–U4, 2026-07-16/17;
+`docs/sizing-model-unification-plan.md` §9).** The three listed gaps closed at the root: the proportional cycles died
+with the model (one constraint box everywhere; the aspect contract is documentation, D6); the measurability gap died
+with totality (`getWidthInStack` answers pre-capture; `contentNeverSetInPlaceYet` deleted; a window's
+`preferredExtent` is truthful mid-construction) plus the §9.7-Q width rule (a container-owned window never
+self-resizes — the place-then-re-fit ping-pong is structurally impossible); the applied read-back is the ONE named
+state-read (D4), reading genuine user-placed state, not layout feedback. The suite-wide re-visit profile is now ZERO
+outside named bottom-up up-edges (2 window-height re-fits + 5 TransformFrame slot-tracks + 1 scroll-uncollapse), and
+that profile is a STANDING GATE — `Fizzygum-tests/scripts/revisit-gate.js` (`fg revisits`) asserts the
+(test → flush class-multiset) baseline; any new re-visit signature fails the build loudly.
 
 ### 2.7 The end-of-cycle flush: what survives it, the categories, and coalescing
 

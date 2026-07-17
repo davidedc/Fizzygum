@@ -332,7 +332,14 @@ class ScrollPanelWdgt extends PanelWdgt
   # RE-PINNED at sizing-model unification U3 (2026-07-16, plan par.9.7): the model swap (U1),
   # the flag deletion (U2) and the container true-measures (U3-B) all leave BOTH read sites'
   # rationales intact -- (B) is now the D4-reclassified ONE named state-read, whose
-  # child-classification fork this pin feeds. Full re-examination deferred to U4.
+  # child-classification fork this pin feeds.
+  # U4 RE-EXAMINATION (2026-07-17, plan par.9.8): CLOSED, the pin is PERMANENT. Checked
+  # against the par.9.7-Q width rule and the U4 state: (A) Path-B classification unchanged
+  # (the rule changed WINDOW first-placement policy, not the width-application mechanism);
+  # (B) the named state-read's viewport-vs-subtree fork is exactly what keeps nested scroll
+  # content sized correctly (the proven 16->18 un-pin trap, plan par.6); the V1 seam's gate
+  # reads this too and a ScrollPanel-as-@contents construct still does not exist in-tree.
+  # Un-pinning stays falsified prior art; do not retry without a driving defect.
   implementsDeferredLayout: ->
     false
 

@@ -770,6 +770,53 @@ converged states under each rule):
   against the B2+D audit dir; exits 1 with exactly the 2 expected drifts against the
   pre-rule U3 dir. Both a NEW and a VANISHED signature fail — improvements are baked in
   consciously via --write-baseline + a commit. Local fg wiring: `fg revisits`.
+  *(U4-4 + U4-5 committed: Fizzygum `34f39df5`, tests `787bcb322`.)*
+- **U4-6 — the `implementsDeferredLayout` pin re-exam: CLOSED, pin PERMANENT.** Checked
+  design-first against the U4 state: read site (A) Path-B classification is untouched by
+  §9.7-Q (the rule changed window first-placement POLICY, not the width-application
+  mechanism); read site (B) is the D4 named state-read whose viewport-vs-subtree child
+  fork the pin feeds — exactly what keeps nested scroll content correctly sized (the
+  proven 16→18 un-pin trap, §6); the V1 seam's gate reads the same query and a
+  ScrollPanel-as-`@contents` construct still doesn't exist in-tree. Un-pinning stays
+  falsified prior art; the pin comment now carries the closing verdict (do not retry
+  without a driving defect).
+- **U4-7a — D1 storage sub-question: CLOSED as NOT WARRANTED.** The two sides share ONE
+  MODEL (constraint box) but the storage split reflects real ownership: the h-side's
+  min/desired/max+spreadability are per-WIDGET knobs on a small widget family (dividers,
+  spacers, adders); the v-side's spec object is per-PLACEMENT state owned by the
+  element↔container relationship (menu home, DeepCopier rider). No reader spans the two —
+  no code path reads "the sizing box" generically across attachment types — so a merge
+  would churn the h-stack machinery for zero behavioural or structural payoff. Findings
+  are questions, not a backlog (the census-triage case law).
+- **U4-7b — the §8 walk (the campaign's definition of done):**
+  1. ✅ ONE model everywhere vertical + horizontal; proportional formula + add-time
+     snapshot DELETED (U1; §9.7-Q extends the law to the window itself).
+  2. ✅ ONE measure protocol (`preferredExtentForWidth` on every width→height type, pure
+     `preferredExtent`, totality); mutate-then-READ gone — Path B survives only as the
+     arrange's APPLICATION step whose return value (not a read-back) hands the height.
+  3. ✅ `contentNeverSetInPlaceYet` DELETED (U2).
+  4. ✅ `subWidgetsMergedFullBounds` reclassified as THE ONE named state-read (U3-A/D4).
+  5. ✅ Aspect contract formalized as documentation (U4-4/D6); no cycle-breaking
+     convention needed — the cycle is structurally impossible now (the explicit grow 0
+     survives as a size-stability choice).
+  6. ✅ P2 reads ZERO outside named up-edges in steady state AND construction; the counter
+     ships as the standing `fg revisits` gate (U4-5).
+  7. ✅ Affordances survive: base-width / elasticity / alignment knobs unchanged
+     (labels kept, the base-width pin keeps the knob biting at grow 1 — asserted by
+     macroSimpleDocumentCanAddIndentedParagraph).
+- **U4-7c — assessment updated**: §2.5 carries the campaign-closed block (the split is
+  gone; what remains and why); §2.6 carries the measure-side-now-structural block + the
+  fourth-route-succeeded annotation on the old "three routes falsified" record.
+- **Arc-close gates (2026-07-17, final build — ALL GREEN): CAMPAIGN CLOSED.**
+  `fg gauntlet` 9/9 — dpr1(110s) dpr2(120s) webkit(113s) apps(71s) paint(115s)
+  tiernaming(125s) settle(125s) capstone(125s) refs(24s), total 264s · `fg census` 0
+  movers / 1506 targets · `fg revisits` (the new standing gate, on the final build)
+  profile == baseline · 3-round stage-b torture 12/12 danger configs. U4 commits:
+  `833fb396` (B2+D) · `0721f468`/tests `6127d6860` (renames) · `34f39df5`/tests
+  `787bcb322` (D6 + the standing gate) · the close commit (pin verdict + D1 close + §8
+  walk + assessment §2.5/§2.6). The §2.5 finding this plan was born from is resolved:
+  ONE constraint-box sizing model, structurally convergent on the traversal AND the
+  measure side, gated by `fg revisits`.
 Sequencing: settle §9.7-Q BEFORE promoting the P2 gate (its expected profile depends on the
 rule); if B or C, supersede the §6 U3-C entry with an "owner-decided rule" annotation rather
 than deleting it (the falsification stays true — the change is now INTENDED behaviour).
