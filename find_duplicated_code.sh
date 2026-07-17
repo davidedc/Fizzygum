@@ -25,7 +25,7 @@
 #                         reporter) — the token-efficient handoff to paste to an LLM
 #
 # PREREQUISITE: `npm install` once in Fizzygum/ (jscpd is a devDependency).
-# Tuning guide + gotchas (silent big-file skip!): docs/duplicated-code-detection.md
+# Tuning guide + gotchas (silent big-file skip!): docs/tooling/duplicated-code-detection.md
 # Like build_it_please.sh, no `set -e` — exit codes are checked explicitly.
 
 cd "$(dirname "$0")" || exit 2

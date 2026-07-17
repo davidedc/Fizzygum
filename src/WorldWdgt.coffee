@@ -81,7 +81,7 @@ class WorldWdgt extends PanelWdgt
   showRedraws: false
   doubleCheckCachedMethodsResults: false
 
-  # affine transforms (docs/affine-transforms-plan.md §4.5): set to the island
+  # affine transforms (docs/plans/affine-transforms-plan.md §4.5): set to the island
   # currently refreshing its buffer while its content subtree paints INTO that
   # buffer (not the world canvas), so those descendants still record their
   # (virtual) last-painted bounds for the flesh-out "source" cleanup rect. nil on
@@ -93,7 +93,7 @@ class WorldWdgt extends PanelWdgt
   # the ONE end-of-cycle settle (a gesture/stream draining many mutations per frame collapses N flushes into 1).
   # OFF: every *DeferredSettle call self-settles immediately (its NoSettle core under _settleLayoutsAfter, exactly like
   # the plain public setter), so we can A/B and MEASURE whether deferred settling is actually warranted for a given stream
-  # -- toggle at runtime (`world.deferredSettlingEnabled = false`) and re-run docs/coalescing-measurement.md. (Default
+  # -- toggle at runtime (`world.deferredSettlingEnabled = false`) and re-run docs/tooling/coalescing-measurement.md. (Default
   # ON keeps current behaviour: the *DeferredSettle calls are byte-identical to the _NoSettle cores they wrap.)
   deferredSettlingEnabled: true
 
@@ -213,20 +213,20 @@ class WorldWdgt extends PanelWdgt
     @visibilityVersion++
     @geometryVersion++
 
-  # Occlusion culling (docs/occlusion-culling-plan.md P2, Avenue A). CLASS property so it is
+  # Occlusion culling (docs/plans/occlusion-culling-plan.md P2, Avenue A). CLASS property so it is
   # untouched by world-snapshot serialization, and so a test / the profiler's --cull A/B and
   # DETERMINISM.md's "disable the mechanism" move can flip it globally. See
   # @fullPaintIntoAreaOrBlitFromBackBuffer / @_paintedFromFrontmostCoverer below.
   @occlusionCullingEnabled: true
 
-  # §4.4 island buffer cache (docs/island-buffer-cache-plan.md). CLASS property (untouched by
+  # §4.4 island buffer cache (docs/archive/island-buffer-cache-plan.md). CLASS property (untouched by
   # world-snapshot serialization; flippable by a test / the byte-identity A/B macro / the profiler's
   # --cache A/B). Default ON; a flip is pixel-invisible (the cache is byte-identical to rebuild-always
   # by construction, so it may simply drop caches). The per-island opt-out is
   # TransformFrameWdgt::cachesBuffer; the cache is active iff BOTH are on.
   @islandBufferCacheEnabled: true
 
-  # §4.4 rect-list dirty coalescing A/B (docs/island-buffer-cache-rectlist-plan.md). Default ON: a frame
+  # §4.4 rect-list dirty coalescing A/B (docs/archive/island-buffer-cache-rectlist-plan.md). Default ON: a frame
   # damaging several disjoint content regions rebuilds only those sub-rects. Flip OFF to force the v1
   # policy (collapse every deposit to one bounding box) — the instrument that proves the rect-list is
   # byte-identical to the bbox policy (macroIslandBufferCacheByteIdentity CASE 9) and measures the
@@ -241,7 +241,7 @@ class WorldWdgt extends PanelWdgt
   # downstream of those, so it must invalidate too (else a plain composite re-blits the frozen block
   # glyphs). This counter bumps on every immutable-cache reset (via resetImmutableBackBuffersCache
   # below); a TransformFrameWdgt full-rebuilds when its stored epoch is stale. Class property (survives
-  # world-snapshot serialization; matched to islandBufferCacheEnabled). See docs/island-buffer-cache-plan.md §6.
+  # world-snapshot serialization; matched to islandBufferCacheEnabled). See docs/archive/island-buffer-cache-plan.md §6.
   @immutableBackBufferGeneration: 0
 
   # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
@@ -746,7 +746,7 @@ class WorldWdgt extends PanelWdgt
     #    (which could contain a Widget being floatDragged)
     #    is painted on top of everything.
     #
-    # Occlusion culling (docs/occlusion-culling-plan.md P2): if some top-level opaque widget fully
+    # Occlusion culling (docs/plans/occlusion-culling-plan.md P2): if some top-level opaque widget fully
     # covers this broken rect, paint STARTING FROM it (skipping the desktop fill + every child behind
     # it, within this rect) instead of the full back-to-front super() pass. _paintedFromFrontmostCoverer
     # returns true iff it did that painting; otherwise we fall back to the normal super() path.
@@ -757,7 +757,7 @@ class WorldWdgt extends PanelWdgt
     # and it's not attached to the WorldWdgt.
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
-  # Occlusion culling (docs/occlusion-culling-plan.md P2, Avenue A -- a stateless per-rect pre-scan).
+  # Occlusion culling (docs/plans/occlusion-culling-plan.md P2, Avenue A -- a stateless per-rect pre-scan).
   # Reverse-scan world.children (the array is BACK-to-front, so reverse = front-to-back) for the
   # frontmost widget that provably paints a fully-opaque fill covering the WHOLE broken rect; if one
   # is found, paint only it and the widgets in front of it -- skipping the desktop self-paint and
@@ -1081,7 +1081,7 @@ class WorldWdgt extends PanelWdgt
           w.hasDirtyDescendant = false
         @_dirtyDescendantFlagged = []
 
-  # (ordered down-walk Stage B2, 2026-07-16 -- docs/ordered-downwalk-stage-b-plan.md §4-B2) The
+  # (ordered down-walk Stage B2, 2026-07-16 -- docs/archive/ordered-downwalk-stage-b-plan.md §4-B2) The
   # settle is now a ROOT-DOWN VISITATION of the dirty tree. The old shape (pop the work-list from
   # the tail; on an invalid entry CLIMB to the top-most invalid ancestor; _reLayout that chain-top)
   # discovered dirt bottom-up; this shape discovers it top-down along the hasDirtyDescendant flags
@@ -1238,7 +1238,7 @@ class WorldWdgt extends PanelWdgt
       # unchanged frame always means my container's fit is unchanged. Measured byte-exact across
       # dpr1 / dpr2 / webkit + determinism torture when introduced; carried unchanged into the
       # down-walk (applied at every walk re-lay exactly as at every old chain-top).
-      # (ordered down-walk Stage B3 — THE PAYOFF, docs/ordered-downwalk-stage-b-plan.md §4-B3) the
+      # (ordered down-walk Stage B3 — THE PAYOFF, docs/archive/ordered-downwalk-stage-b-plan.md §4-B3) the
       # ENGINE now guarantees what the per-class INV-2 idiom could not: a child-placing composite
       # whose frame my arrange is about to move or resize gets its OWN layout re-run afterwards.
       # This kills the bypass staleness class — SimpleVerticalStackPanelWdgt (and any arrange)
@@ -1740,7 +1740,7 @@ class WorldWdgt extends PanelWdgt
     # was still unapplied). Handlers fired here write paint-layer state and at most SELF-SETTLING
     # mutations (tooltip fullDestroy), so the world is settled again before updateBroken; a careless
     # (off-settle) push from a hover handler would be caught by the end-of-cycle capstone gate.
-    # See docs/hover-resync-after-flush-plan.md.
+    # See docs/archive/hover-resync-after-flush-plan.md.
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
 
     # (There is no caret scroll-follow step here any more: a caret MOVE settles its scroll-follow IN-PLACE,
@@ -2427,7 +2427,7 @@ class WorldWdgt extends PanelWdgt
     FileLoading.openFromFileDialog()
 
   # --- whole-world snapshot save/load (kind:"world") ---------------------------------------
-  # See docs/serialization-duplication-reference.md §11 and the plan §4.9. Serialization is a
+  # See docs/architecture/serialization-duplication-reference.md §11 and the plan §4.9. Serialization is a
   # PRODUCT feature — these ship in --homepage (no strip markers). The world is NOT saved as a
   # widget record (that would drag in its canvases/caches/hand/listener closures and crash the
   # walker, defect D8); Serializer.serializeWorld captures the desktop tree + off-tree basement

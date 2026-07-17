@@ -2,7 +2,7 @@
 'use strict';
 /*
  * check-layering.js — build-time flow-soundness gate for the self-settling public
- * geometry API (docs/deferred-layout-16-macro-breakages.md / the self-settling-API design).
+ * geometry API (docs/archive/deferred-layout-16-macro-breakages.md / the self-settling-API design).
  *
  * THE CONSTRAINTS (program-flow soundness, not state invariants)
  *   A) A LOW-LEVEL method (name starting raw / _ / __ , ending NoSettle, or one of
@@ -92,7 +92,7 @@ const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 // The settle TIERS that legitimately drive recalculateLayouts(): the frame (doOneCycle), the public-setter
 // flush (_settleLayoutsAfter), and the reactive-connection lane (_settleLayoutsAfterOrJoinEnclosingPass — it
 // OPENS a settle exactly like _settleLayoutsAfter when it is the first hop of a cascade; see rule [P] and
-// docs/connection-cascade-settle-fix-plan.md). Everything else is [A]/[B].
+// docs/archive/connection-cascade-settle-fix-plan.md). Everything else is [A]/[B].
 const RECALC_WHITELIST = new Set(['doOneCycle', '_settleLayoutsAfter', '_settleLayoutsAfterOrJoinEnclosingPass']);
 
 const isLowLevel = (name) =>
@@ -288,7 +288,7 @@ const APPLY_ANDNOTIFY_BANNED = /^_apply\w*AndNotify$/;  // [M] the retired _appl
 // rule [K] (a _apply*Base bypass twin must not fire _announce*). This closes the DEF side those two never covered.
 const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by-mutation container-seam shape
 
-// [O] the *DeferredSettle caller ALLOWLIST (Tier C, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §4).
+// [O] the *DeferredSettle caller ALLOWLIST (Tier C, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §4).
 // A *DeferredSettle entrypoint (_setMaxDimDeferredSettle / _setExtentDeferredSettle / _moveToDeferredSettle / _setWidthDeferredSettle /
 // _setHeightDeferredSettle -- all _-private, restricted to stream handlers) DEFERS its layout SETTLE to the ONE
 // end-of-cycle flush -- the field write is synchronous,
@@ -306,14 +306,14 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 const DEFERRED_SETTLE_CALL = /[@.]\s*(\w+DeferredSettle)\b/;
 const DEFERRED_SETTLE_CALLER_ALLOWLIST = new Set(['nonFloatDragging']);
 
-// [P] the connector-join caller rule (docs/connection-cascade-settle-fix-plan.md). _settleLayoutsAfterOrJoinEnclosingPass
+// [P] the connector-join caller rule (docs/archive/connection-cascade-settle-fix-plan.md). _settleLayoutsAfterOrJoinEnclosingPass
 // JOINS an enclosing settle's mutation window instead of throwing (it is the reactive-connection settle lane) -- sound
 // ONLY for a dedicated _<name>Connector entrypoint (which carries the connectionsCalculationToken cycle-guard whenever
 // its action can propagate onward; a sink connector like _setFontSizeConnector needs none). Any other caller must
 // use the self-settling _settleLayoutsAfter (which surfaces the flow violation) or a _<name>NoSettle core.
 const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
 
-// [Q] the connector-CALLER rule (docs/connection-cascade-settle-fix-plan.md §7e). A _<name>Connector entrypoint
+// [Q] the connector-CALLER rule (docs/archive/connection-cascade-settle-fix-plan.md §7e). A _<name>Connector entrypoint
 // JOINS an already-open layout pass instead of throwing the flow-violation guard (it IS the reactive-connection
 // settle lane -- see [P]); reaching one by a hard-coded @/.-textual call is a way to smuggle "a setText that never
 // throws" past that guard. The ONLY legitimate textual callers are the patch nodes' recalculateOutput renders (a
@@ -323,7 +323,7 @@ const JOIN_CALL = /[@.]\s*_settleLayoutsAfterOrJoinEnclosingPass\b/;
 const CONNECTOR_CALL = /[@.]\s*(_\w+Connector)\b/;
 const CONNECTOR_CALLER_ALLOWLIST = new Set(['recalculateOutput']);
 
-// [R] USERLAND-PUBLIC-API (Tier I, 2026-07-03, docs/layout-optimizations-and-oo-cleanup-plan.md §7 I12). MenusHelper
+// [R] USERLAND-PUBLIC-API (Tier I, 2026-07-03, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §7 I12). MenusHelper
 // is the STANDARD-USER-USE exemplar: it builds the windows/panels a user creates from the menus, so -- per the owner's
 // 2026-07-03 direction -- it must reach OTHER widgets through their PUBLIC API only, never their private _-underscore
 // internals. A menu placing+sizing a fresh window uses setBounds / moveTo / setExtent / moveWithin (the self-settling
@@ -514,7 +514,7 @@ function checkFile(file, violations, gCtx, warnings) {
             if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
             if (FRAGMENT_BANNED.test(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names. (layering/naming convention §4)  — ${rel}:${n + 1}`);
-            if (APPLY_ANDNOTIFY_BANNED.test(b.method)) violations.push(`[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`);
+            if (APPLY_ANDNOTIFY_BANNED.test(b.method)) violations.push(`[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`);
             // [N] retired notify-by-mutation container seam (see the SEAM_VERB_BANNED const above): the deleted _announce*ToContainer verbs must not return as a def.
             if (SEAM_VERB_BANNED.test(b.method)) violations.push(`[N] retired container-seam verb ${b.method}() — the notify-by-mutation re-fit seam (_announce*ToContainer) was deleted 2026-07-01 and replaced by the settle-time up-edge _reFitMyTrackingContainerAfterSettle; do NOT re-introduce a mutation-driven container notification (assessment §4.1 / §6 rulebook rule 2)  — ${rel}:${n + 1}`);
           }
@@ -825,9 +825,9 @@ function main() {
   if (violations.length) {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
-    console.error('\nSee docs/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
-    console.error('E: immediate geometry mutators (apply/commit corners + convenience movers) must not call _invalidateLayout) and docs/deferred-layout-16-macro-breakages.md (A/B/C).');
-    console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/deferred-layout-OVERVIEW.md §11.');
+    console.error('\nSee docs/archive/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
+    console.error('E: immediate geometry mutators (apply/commit corners + convenience movers) must not call _invalidateLayout) and docs/archive/deferred-layout-16-macro-breakages.md (A/B/C).');
+    console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/archive/deferred-layout-OVERVIEW.md §11.');
     console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming convention §1).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming convention §3).');

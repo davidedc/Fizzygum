@@ -1,6 +1,6 @@
 # FileSaving — save a Fizzygum serialization string to a downloaded file, over the
 # `file://` protocol (the normal way Fizzygum runs). See
-# docs/serialization-duplication-reference.md §10.
+# docs/architecture/serialization-duplication-reference.md §10.
 #
 # This is a PRODUCT feature and ships in ALL builds (including --homepage) — it carries no
 # homepage-strip markers and does NOT depend on the dev-only vendored FileSaver/JSZip (which

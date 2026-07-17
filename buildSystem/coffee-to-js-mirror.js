@@ -1,6 +1,6 @@
 // coffee-to-js-mirror.js — compile every src/**/*.coffee to a flat directory of plain-ES5
 // .js files, for tools that analyze JavaScript (currently: find_similar_code.sh's
-// structural-duplication scan via jsinspect; see docs/duplicated-code-detection.md).
+// structural-duplication scan via jsinspect; see docs/tooling/duplicated-code-detection.md).
 //
 // Usage:  node buildSystem/coffee-to-js-mirror.js <outDir> [srcRoot]   (run from the Fizzygum repo root)
 //         srcRoot defaults to this repo's src/; pass e.g. ../Fizzygum-tests/Automator-and-test-harness-src

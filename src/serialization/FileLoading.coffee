@@ -1,6 +1,6 @@
 # FileLoading — ingest a Fizzygum file (drag-dropped onto the desktop, or chosen through a
 # file dialog) and route it by the envelope's `kind` field, NEVER by the filename. See
-# docs/serialization-duplication-reference.md §10. A PRODUCT feature — ships in all builds.
+# docs/architecture/serialization-duplication-reference.md §10. A PRODUCT feature — ships in all builds.
 #
 # The single file extension is `*.fzw.json` (plain JSON inside); a `kind:"widget"` file
 # restores a detached widget attached at the drop point, a `kind:"world"` file loads a whole

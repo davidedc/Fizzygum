@@ -1,6 +1,6 @@
 # SourceEditsRegistry — a per-world log of in-world SOURCE edits, so a whole-world snapshot
 # can carry them and replay them on restore. Lives at world.sourceEditsRegistry. See
-# docs/serialization-duplication-reference.md §12.
+# docs/architecture/serialization-duplication-reference.md §12.
 #
 # TWO scopes of edit, captured at the two edit choke points:
 #   - "instance": a single widget's method rewritten via the property inspector

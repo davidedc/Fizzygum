@@ -1,5 +1,5 @@
 # Deserializer — rebuilds a widget graph from a Serializer envelope. See
-# docs/serialization-duplication-reference.md §9. Returns { widget, whenReady }: the widget
+# docs/architecture/serialization-duplication-reference.md §9. Returns { widget, whenReady }: the widget
 # is DETACHED (the caller attaches it — a menu action, drop handler, or snapshot loader);
 # whenReady is a promise that resolves once async assets (images, and canvases under the
 # SWCanvas backend, which decode via <img> onload) have finished decoding.

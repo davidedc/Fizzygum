@@ -930,7 +930,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # climb up to this scroll panel, and the wrap geometry lives in _positionAndResizeChildren
   # -- which the _reLayout cycle never reaches for a wrap toggle. Completing the
   # deferred model (and this case) is deliberate, sequenced work; see
-  # docs/softwrap-deferred-layout-conversion-plan.md for the model finding, the
+  # docs/archive/softwrap-deferred-layout-conversion-plan.md for the model finding, the
   # obstacle map, and what a conversion would take.
   setTextLineWrapping: (wraps) ->
     @isTextLineWrapping = wraps

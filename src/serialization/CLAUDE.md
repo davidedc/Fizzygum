@@ -8,6 +8,6 @@ The `Serializer` / `Deserializer` pair, the `SerializationError` type, the
 traversal contract shared with `DeepCopierMixin` duplication, the per-class protocol, the
 per-type handlers, and the file-I/O / `file://` capability map — lives in ONE place:**
 
-→ [`../../docs/serialization-duplication-reference.md`](../../docs/serialization-duplication-reference.md)
+→ [`../../docs/architecture/serialization-duplication-reference.md`](../../docs/architecture/serialization-duplication-reference.md)
 
 Do not duplicate that content here or in any other CLAUDE.md; this file is a pointer only.

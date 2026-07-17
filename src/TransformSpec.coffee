@@ -1,6 +1,6 @@
 # TransformSpec — the canonical (scalar) description of a widget's affine transform.
 #
-# Part of the affine-transforms feature (see docs/affine-transforms-plan.md). A
+# Part of the affine-transforms feature (see docs/plans/affine-transforms-plan.md). A
 # TransformSpec belongs to a TransformFrameWdgt ("island") and describes a
 # SIMILITUDE: uniform scale + rotation about an anchor point, applied when the
 # island composites its buffered content onto the screen.
@@ -31,7 +31,7 @@ class TransformSpec
   scale: 1                  # float > 0
   anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
   # layout coupling (plan §4.9): 'footprint' (THE DEFAULT — owner decision D1, 2026-07-17,
-  # docs/claimsspace-footprint-default-and-scroll-reachability-plan.md) / 'slot' (paint-only) /
+  # docs/archive/claimsspace-footprint-default-and-scroll-reachability-plan.md) / 'slot' (paint-only) /
   # 'sweep'. Defaults serve the DOCUMENT author: a rotated image in a document must not overlap
   # the text below it; expert authors who need paint-only rotation ('slot') or a spin-stable
   # reserve ('sweep') set the mode themselves. ('slot' was the default through Phase 3 — the
@@ -83,7 +83,7 @@ class TransformSpec
   slotOffsetWithinClaim: (slotBounds) ->
     slotBounds.topLeft().subtract @_claimedBoxFor(slotBounds).topLeft()
 
-  # D2 scroll reachability (docs/claimsspace-footprint-default-and-scroll-reachability-plan.md):
+  # D2 scroll reachability (docs/archive/claimsspace-footprint-default-and-scroll-reachability-plan.md):
   # the box a scroll frame must make reachable = claimed box ∪ the ink's integer hull, in the
   # slot box's own (parent-plane) coordinates. LAYOUT and REACHABILITY answer different
   # questions ('slot' claims nothing from siblings yet its rotated ink must still be
@@ -216,7 +216,7 @@ class TransformSpec
 
   # The EXACT, unpadded twin of _mapRectWithMatrix: the raw float min/max of the 4
   # transformed corners with NO floor/ceil and NO +1px pad. This is the SCREEN-family
-  # backing store (docs/affine-geometry-api-plan.md §3.1) — a screen-plane AABB is an
+  # backing store (docs/archive/affine-geometry-api-plan.md §3.1) — a screen-plane AABB is an
   # exact, possibly-FRACTIONAL query result; it must NEVER be fed to layout / moveTo
   # (which are integer, own-plane). Kept as a PARALLEL method rather than a shared
   # helper so mapRect's proven damage path (whose padding correctness is load-bearing,

@@ -54,7 +54,7 @@ Object::addInstanceProperties = (fromClass, obj) ->
 # by that string is always correct regardless of receiver — no invalidation needed).
 # Why: StringWdgt/TextWdgt rebuild their back-buffer cache keys on EVERY paint by
 # re-hashing the full label / wrapped-paragraph string, so the same short strings are
-# hashed every frame (O2, docs/runtime-performance-optimization-plan.md §5B; measured
+# hashed every frame (O2, docs/plans/runtime-performance-optimization-plan.md §5B; measured
 # 1.5–5.4% of a busy-desktop frame). Byte-identical — identical hash values, just not
 # recomputed. Only SHORT strings are cached (the repeated cache-key texts): large blobs
 # like canvas data-URLs (hashed once for a screenshot fingerprint, not per frame — see

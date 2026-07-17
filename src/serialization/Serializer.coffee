@@ -1,5 +1,5 @@
 # Serializer — turns a widget subtree (or a whole world) into a versioned, self-contained
-# JSON envelope. See docs/serialization-duplication-reference.md for the format spec (§3),
+# JSON envelope. See docs/architecture/serialization-duplication-reference.md for the format spec (§3),
 # the reference policy (§4), the transients/derived/function protocol (§5), the per-type
 # handlers (§6), the whole-world snapshot (§11), and how it shares per-class knowledge with
 # — but no mutable state with — the DeepCopierMixin duplication walker (§1).

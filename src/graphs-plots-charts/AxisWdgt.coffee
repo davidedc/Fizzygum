@@ -91,7 +91,7 @@ class AxisWdgt extends Widget
 
     # Integer placement (Layer A): tickHeight is a legitimately-fractional MEASURE (height/(numberOfTicks+1));
     # the tick + label POSITIONS derived from it must commit as integer @bounds, so round each placement point.
-    # The arrange-apply path no longer rounds for us -- see docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+    # The arrange-apply path no longer rounds for us -- see docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
     if height > width
       @majorDimLine._applyMoveTo (new Point @right() - 5, @top() + tickHeight).round()
       @majorDimLine._applyExtent new Point thickness, heightOfTheDrawnBar

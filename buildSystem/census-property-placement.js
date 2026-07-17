@@ -8,7 +8,7 @@
  * census-hierarchy-duplication.js (which asks the same "is this in the right place?" question about
  * METHODS) and of census-public-private-calls.js (its engine — the class model is reused from it).
  *
- * Pharo ancestry (carried over 2026-07-15, docs/lint-generic-rules-carryover-plan.md Phase 4):
+ * Pharo ancestry (carried over 2026-07-15, docs/archive/lint-generic-rules-carryover-plan.md Phase 4):
  *   ReInstVarInSubclassesRule    — the same instance variable declared in every subclass -> pull up
  *   ReVariableReferencedOnceRule — an ivar used in one method, assigned before read -> make it local
  *

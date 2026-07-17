@@ -1,6 +1,6 @@
 # TransformFrameWdgt — the "island" that makes a widget subtree rotatable / scalable.
 #
-# Part of the affine-transforms feature (see docs/affine-transforms-plan.md, esp.
+# Part of the affine-transforms feature (see docs/plans/affine-transforms-plan.md, esp.
 # §4.1, §4.2, §4.4, §4.11). It is the Squeak/CSS-compositor primitive: an invisible
 # clipping frame that owns ONE content subtree and a TransformSpec. It rasterizes
 # its content UN-transformed into a back buffer and composites that buffer through
@@ -51,7 +51,7 @@ class TransformFrameWdgt extends PanelWdgt
   # as a plain boolean so a saved-then-reloaded sugar island stays sugar-removable.
   _materializedBySugar: false
 
-  # §4.4 island buffer cache (docs/island-buffer-cache-plan.md): the content subtree, rasterised
+  # §4.4 island buffer cache (docs/archive/island-buffer-cache-plan.md): the content subtree, rasterised
   # UN-transformed ONCE and KEPT across composites, so a transform-only change (rotation/scale step,
   # island drag) re-warps it with ZERO re-rasterisation and a content change re-rasterises only the
   # dirty sub-rect. All three are DERIVED render state (never truth) -> serializationTransients below;
@@ -67,7 +67,7 @@ class TransformFrameWdgt extends PanelWdgt
   # property WorldWdgt.islandBufferCacheEnabled.
   cachesBuffer: true
 
-  # §4.4 rect-list dirty coalescing (docs/island-buffer-cache-rectlist-plan.md). A frame that damages
+  # §4.4 rect-list dirty coalescing (docs/archive/island-buffer-cache-rectlist-plan.md). A frame that damages
   # several disjoint regions keeps them as SEPARATE dirty rects (rebuild only those) instead of one
   # bounding box that spans them. These two constants are the cost ceiling that keeps the worst case ==
   # v1's single-bbox behaviour: collapse the list to its bounding box once it grows past MAX_RECTS
@@ -285,7 +285,7 @@ class TransformFrameWdgt extends PanelWdgt
   # D2 (claimsSpace arc plan §4.1): my contribution to an enclosing scroll frame's content
   # extent — claimed box ∪ ink hull in the PARENT plane (integer; deliberately neither the
   # layout-box family, which stays the slot box, nor the screen family, which is
-  # fractional/global — docs/affine-geometry-api-plan.md). Per-class capability (`?()` dispatch,
+  # fractional/global — docs/archive/affine-geometry-api-plan.md). Per-class capability (`?()` dispatch,
   # NO Widget base default — type-test-elimination convention); the ONE consumer is
   # Widget.subWidgetsMergedFullBounds' merge walk. nil at identity, so the walk's stock
   # fullBounds merge runs and an untransformed island stays byte-identical (dormant guarantee).
@@ -406,7 +406,7 @@ class TransformFrameWdgt extends PanelWdgt
   # §3.2 invalidation: record a content-dirty region (VIRTUAL coords, THIS island's plane) to be
   # re-rasterised at the next composite. v2 keeps a COALESCED DISJOINT rect-LIST (rects that touch are
   # merged), so a frame damaging several far-apart regions rebuilds only those instead of one bounding
-  # box that spans them (docs/island-buffer-cache-rectlist-plan.md §3.2). The "all" sentinel forces a
+  # box that spans them (docs/archive/island-buffer-cache-rectlist-plan.md §3.2). The "all" sentinel forces a
   # full rebuild and is sticky. Called ONLY from the §4.5 damage lanes (Widget.mapRectToScreen's
   # destination deposit + the flesh-out source lane) — never from a spec change (the §4.5 invariant: a
   # transform change damages the screen, not the buffer). Coverage invariant (§3.0): the list's union

@@ -33,7 +33,7 @@ class Widget extends TreeNode
   # Serialization: own properties the serializer must SKIP (frame timing + the
   # WorldWdgt.geometryVersion-keyed derived geometry caches — all re-derived on demand
   # after a restore). Merged up the class chain by Serializer.transientsForClass; a
-  # subclass ADDS to this list. See docs/serialization-duplication-reference.md §5.
+  # subclass ADDS to this list. See docs/architecture/serialization-duplication-reference.md §5.
   @serializationTransients: [
     "lastTime"
     # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
@@ -265,7 +265,7 @@ class Widget extends TreeNode
   dstBrokenRect: nil
 
   layoutIsValid: true
-  # (ordered down-walk Stage B2 — docs/ordered-downwalk-stage-b-plan.md) FLUSH-LOCAL dirty-path
+  # (ordered down-walk Stage B2 — docs/archive/ordered-downwalk-stage-b-plan.md) FLUSH-LOCAL dirty-path
   # flag: true while I am a still-invalid work-list entry or an ancestor of one, steering the
   # settle engine's root-down walk (WorldWdgt.__downWalkLayout descends only through flagged
   # nodes). Derived FRESH each settle round from the work-list itself
@@ -320,7 +320,7 @@ class Widget extends TreeNode
     unless @layoutSpecDetails instanceof VerticalStackLayoutSpec
       # no grow arg: UNDECIDED — the capture derives it from the add-time relationship
       # (a full-width add tracks the stack, a narrower add keeps its size — D2-def,
-      # docs/sizing-model-unification-plan.md §9.1/§9.5)
+      # docs/archive/sizing-model-unification-plan.md §9.1/§9.5)
       @layoutSpecDetails = new VerticalStackLayoutSpec
       # element bound now for the pre-capture measure fallback (see the window-content twin above)
       @layoutSpecDetails.element = @
@@ -764,12 +764,12 @@ class Widget extends TreeNode
   #    re-dirty the container in the SAME pass -> the until-loop never converges. So settle
   #    this child IN PLACE with a synchronous @_reLayout() (no invalidate, no climb), making
   #    the container's _reLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
-  #    the non-notifying _apply*Base twins. (See docs/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
+  #    the non-notifying _apply*Base twins. (See docs/archive/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
   # (WindowWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
   # geometry back to learn its new height -- that synchronous mutate-then-read-back is exactly what forces
   # the container re-fit to stay on the synchronous seam (it broke C1; see
-  # docs/softwrap-deferred-layout-conversion-plan.md §6b + docs/deferred-layout-OVERVIEW.md §5). Instead it
+  # docs/archive/softwrap-deferred-layout-conversion-plan.md §6b + docs/archive/deferred-layout-OVERVIEW.md §5). Instead it
   # HANDS the height forward: read once HERE, at the source, immediately after the synchronous mutation (so
   # byte-equal to the caller's old `child.height()`), and returned. EVERY override must likewise return its
   # resulting height (the 8 overrides are the historical break point -- keep them in sync).
@@ -824,14 +824,14 @@ class Widget extends TreeNode
   # A public geometry setter records the DESIRED change (@desired* + _invalidateLayout)
   # and then FLUSHES the layout (world.recalculateLayouts) before returning, so the
   # world's geometry is consistent between public calls -- the caller never needs a
-  # "settle"/yield. (See docs/deferred-layout-16-macro-breakages.md.) Re-entrancy is
+  # "settle"/yield. (See docs/archive/deferred-layout-16-macro-breakages.md.) Re-entrancy is
   # forbidden and THROWS: a public setter must not be called from within another
   # public setter (or a layout pass), which would flush more than once per logical
   # mutation. Calling several public setters in SEQUENCE is fine -- each completes,
   # flushing once, before the next begins.
   # The same wrapper also backs the public STRUCTURAL mutator add() (a tree
   # change re-fits layouts too), so it RETURNS the thunk's value -- those need to hand
-  # back the added widget (see docs/deferred-layout-refit-and-add-design.md, D3).
+  # back the added widget (see docs/archive/deferred-layout-refit-and-add-design.md, D3).
   _settleLayoutsAfter: (coreThunk) ->
     # early world bootstrap: the `world` singleton isn't wired up yet, so there's
     # nothing to flush to -- just record the desired change; the first frame settles it.
@@ -845,7 +845,7 @@ class Widget extends TreeNode
     #    when that enclosing operation's flush completes -- or, for a widget that stays detached, on its next
     #    public call / on attach. (isOrphan() is false for the world itself and for anything on the hand, so
     #    world.add / dragged-widget mutations are NOT orphans and fall through to the throw.) See
-    #    docs/orphan-settledness-plan.md and docs/deferred-layout-refit-and-add-design.md (D3).
+    #    docs/archive/orphan-settledness-plan.md and docs/archive/deferred-layout-refit-and-add-design.md (D3).
     #  - ATTACHED receiver -> THROW. A public geometry setter reached on an attached widget mid flush/pass is
     #    a flow-soundness violation: internal layout (_reLayout / _reLayoutSelf / ...) must use the immediate
     #    (geometry) mutators, never the public deferred API -- otherwise recalculateLayouts would re-enter.
@@ -858,7 +858,7 @@ class Widget extends TreeNode
       return coreThunk() if @isOrphan()
       throw new Error "Fizzygum: a public geometry setter was reached during a layout flush/pass -- internal layout code (_reLayout / _reLayoutSelf / ...) must use the immediate (geometry) mutators, not the public deferred API (see buildSystem/check-layering.js)."
     # NOT in a flush: settle NOW -- for ATTACHED widgets (always have) AND for ORPHANS (orphan-settledness,
-    # docs/orphan-settledness-plan.md): a public mutation leaves the receiver's OWN subtree settled on return,
+    # docs/archive/orphan-settledness-plan.md): a public mutation leaves the receiver's OWN subtree settled on return,
     # so there is no "is it settled here?" question for a detached/under-construction widget either.
     # recalculateLayouts lays out the orphan's queued invalidations, which are its own subtree (an orphan's
     # _invalidateLayout can't climb into the world -- it stops at parent==nil), so when the world is already
@@ -1146,7 +1146,7 @@ class Widget extends TreeNode
   # impurity the pure-measure campaign retires (cf. preferredExtentForWidth's rule: reading
   # applied geometry is allowed when nothing just mutated it). Lint note: any NEW caller of
   # this method should justify itself against subWidgetsMergedPreferredBounds (below) first.
-  # D2 scroll reachability (docs/claimsspace-footprint-default-and-scroll-reachability-plan.md):
+  # D2 scroll reachability (docs/archive/claimsspace-footprint-default-and-scroll-reachability-plan.md):
   # a child that answers scrollOverflowBoundsInParentPlane?() (a transformed island) contributes
   # its claimed ∪ ink box INSTEAD of its stock bounds — its rotated overhang is §4.11 ink
   # overflow, invisible to fullBounds (= the slot box), yet must stay reachable by scrolling.
@@ -1317,7 +1317,7 @@ class Widget extends TreeNode
 
     return result
 
-  # Affine transforms (docs/affine-transforms-plan.md §4.5): map a damage rect from
+  # Affine transforms (docs/plans/affine-transforms-plan.md §4.5): map a damage rect from
   # THIS widget's plane up to the SCREEN plane, through each ancestor
   # TransformFrameWdgt ("island") on my parent chain that currently has a
   # non-identity transform. A widget not inside any non-identity island — the
@@ -1408,7 +1408,7 @@ class Widget extends TreeNode
 
   # ---------------------------------------------------------------------------
   # PUBLIC GEOMETRY API UNDER TRANSFORMS — the two-vocabulary law.
-  # Canonical spec: docs/affine-geometry-api-plan.md (§1 is the normative text).
+  # Canonical spec: docs/archive/affine-geometry-api-plan.md (§1 is the normative text).
   #
   # THE LAW: a widget's geometry API is split into two families distinguishable BY NAME:
   #  - LAYOUT-BOX family (width/height/extent/bounds/boundingBox/position/center/left/…): the
@@ -2182,7 +2182,7 @@ class Widget extends TreeNode
   # suite run for zero healing, incl. 142 end-of-cycle CaretWdgt scroll-follow re-lays -- plan §11).
   # This valve RETIRED the Stage-A SYNCHRONOUS hook (_reLayoutMyChildrenAfterImmediateResize -- itself
   # the unification of the INV-2 self-protecting-resize idiom,
-  # docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md, whose 9th forgotten hand-copy
+  # docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md, whose 9th forgotten hand-copy
   # proved the opt-in unenforceable): the settle ENGINE is the one healer of composite interiors on
   # every route -- the ordered walk, the B3 frame-changed injection (the bypass path, also ungated by
   # N4), and this valve (the immediate path). A ctor that _applyExtents a placeholder size does so
@@ -2280,7 +2280,7 @@ class Widget extends TreeNode
       # fractional. The arrange-apply path no longer rounds for callers (the DELIBERATE-since-2015 "round at the
       # producer, assert here" contract, whose debugIfFloats assertion was silently stubbed to a no-op in 2018 and
       # this restores). Like NON_FINITE, wired into the headless runners' fail-gate. See
-      # docs/fractional-widget-bounds-investigation-plan.md + docs/integer-pixel-placement-and-sizing.md.
+      # docs/archive/fractional-widget-bounds-investigation-plan.md + docs/architecture/integer-pixel-placement-and-sizing.md.
       console.error "NON_INTEGER_GEOMETRY: #{@constructor.name} committed fractional @bounds #{@bounds} via #{where}\n" + (new Error()).stack
 
   __commitExtent: (aPoint) ->
@@ -2345,7 +2345,7 @@ class Widget extends TreeNode
   # (stack/window). _reFitContainer gates on _reLayoutChildren?, so a non-tracking parent is a no-op. OVERLAY
   # CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's content-bounds
   # (TreeNode.childrenNotHandlesNorCarets), so re-fitting for it would be pure waste -- skip it. (Capability
-  # `?()`, not a Widget base default -- type-test-elimination convention.) docs/proper-layouts-geometry-seam-removal-plan.md.
+  # `?()`, not a Widget base default -- type-test-elimination convention.) docs/archive/proper-layouts-geometry-seam-removal-plan.md.
   _reFitMyTrackingContainerAfterSettle: ->
     return if @isLayoutInert?()
     return unless @parent?
@@ -2380,7 +2380,7 @@ class Widget extends TreeNode
   # (Stage 5, 2026-07-01) The notify-by-mutation geometry seam the immediate mutators used to fire is fully DELETED:
   # its in-pass half is now the ordered settle-time re-fit above (_reFitMyTrackingContainerAfterSettle -- see that
   # method's comment for the mechanism + the reverse-probe record), its off-pass half the uniform dirty-tree (bare
-  # _invalidateLayout at the semantic points). docs/proper-layouts-geometry-seam-removal-plan.md.
+  # _invalidateLayout at the semantic points). docs/archive/proper-layouts-geometry-seam-removal-plan.md.
   _reFitContainer: (container = @) ->
     return unless container?._reLayoutChildren?
     container._scheduleRelayoutRespectingPhase()
@@ -2692,7 +2692,7 @@ class Widget extends TreeNode
       else if @_islandBufferSourceIsland?
         @_islandBufferSourceIsland = nil
 
-  # Occlusion culling (docs/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
+  # Occlusion culling (docs/plans/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
   # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or nil. It is the geometry both
   # avenues of the plan share (Avenue A scans it per broken rect; Avenue B would cache it).
   # CONSERVATIVE BY DESIGN: any uncertainty MUST yield nil -- a wrong (too-big) rect silently drops
@@ -2782,7 +2782,7 @@ class Widget extends TreeNode
     # draw the proper contents of the tree. Potentially, draw them faintly as shadow.
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       # Record last-painted bounds when drawing to the world canvas OR into a
-      # TransformFrameWdgt island buffer (docs/affine-transforms-plan.md §4.5): a
+      # TransformFrameWdgt island buffer (docs/plans/affine-transforms-plan.md §4.5): a
       # widget inside a non-identity island paints into the island's buffer (not the
       # world canvas), so without this its virtual last-painted snapshot would never
       # update and the flesh-out "source" (cleanup-of-old-position) rect would be
@@ -2870,7 +2870,7 @@ class Widget extends TreeNode
     # a layout pass that decides collapse by width (WindowWdgt._positionAndResizeChildren,
     # HorizontalMenuPanelWdgt._reLayoutSelf) -- may collapse a NOT-yet-collapsed child MID-PASS (e.g. the FIRST
     # layout of an under-construction window, now that orphan construction settles -- see
-    # docs/orphan-settledness-plan.md), so the re-layout the collapse schedules goes through the PHASE-VALVE
+    # docs/archive/orphan-settledness-plan.md), so the re-layout the collapse schedules goes through the PHASE-VALVE
     # (in-pass -> the no-climb __markForRelayout; off-pass -> _invalidateLayout), exactly like the re-fit seam
     # _reFitContainer -- never a bare _invalidateLayout, which THROWS mid-pass. The no-op-when-already-collapsed
     # guard still short-circuits the common repeat call.
@@ -2896,7 +2896,7 @@ class Widget extends TreeNode
     # mid-pass) AND why the re-layout goes through the PHASE-VALVE (in-pass -> the no-climb
     # __markForRelayout; off-pass -> _invalidateLayout): a bare _invalidateLayout THROWS mid-pass, which a
     # width-driven uncollapse during the FIRST layout of an under-construction window now hits (orphan
-    # construction settles -- see docs/orphan-settledness-plan.md), exactly symmetric to _collapseNoSettle.
+    # construction settles -- see docs/archive/orphan-settledness-plan.md), exactly symmetric to _collapseNoSettle.
     # Guard on @collapsed -- this widget's OWN collapse flag. The redundant `return if !@isInCollapsedSubtree()`
     # was REMOVED: isInCollapsedSubtree() is the RECURSIVE self-or-ancestor query, and once @collapsed is true
     # it necessarily returns true, so that second guard was DEAD code.
@@ -3193,7 +3193,7 @@ class Widget extends TreeNode
   # Widget accessing - structure //////////////////////////////////////////////
 
   # Hierarchy/bounds change methods come in tiers (see
-  # docs/layering-naming-convention.md): public self-settling setters at the top,
+  # docs/architecture/layering-naming-convention.md): public self-settling setters at the top,
   # then the `_<name>NoSettle` cores and the `_apply*`/`_apply*Base` corners the
   # re-layout routines use, down to the `__commit*` leaves that trigger no
   # orchestration. (The old "silent"/"raw" method families were renamed away
@@ -3238,7 +3238,7 @@ class Widget extends TreeNode
   # construction, or tear down / re-home from a private chain call _addNoSettle DIRECTLY (it does not
   # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
-  # removeShadow and the fractional step is skipped. See docs/deferred-layout-refit-and-add-design.md (D3).
+  # removeShadow and the fractional step is skipped. See docs/archive/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
@@ -3417,7 +3417,7 @@ class Widget extends TreeNode
   # prototype this replaced, serialize/deserialize SHIP in all builds (including --homepage):
   # they are a product feature, so they carry NO homepage-strip markers. Only the dev
   # "test menu" entries that drive them (serialiseToMemory etc., MenusHelper.testMenu) stay
-  # homepage-stripped. See docs/serialization-duplication-reference.md.
+  # homepage-stripped. See docs/architecture/serialization-duplication-reference.md.
   serialize: (opts) ->
     Serializer.serializeWidget @, opts
 
@@ -4625,7 +4625,7 @@ class Widget extends TreeNode
   # scroll-follow (an inert free-floating overlay, reached via _invalidateLayout's inert-receiver branch). NO CLIMB
   # (the ex-"NoClimb" suffix, dropped in the __ rename): this alone does NOT tell my container I changed -- a CONTENT widget must use
   # _invalidateLayout, which climbs. Only framework layout machinery calls this (the two methods above); feature code
-  # schedules via _invalidateLayout. (docs/unify-layout-enqueue-primitives-plan.md.)
+  # schedules via _invalidateLayout. (docs/archive/unify-layout-enqueue-primitives-plan.md.)
   __markForRelayout: ->
     if @layoutIsValid then world.widgetsThatMaybeChangedLayout.push @
     @layoutIsValid = false
@@ -4669,7 +4669,7 @@ class Widget extends TreeNode
     # into, and is excluded from every container's content-bounds (childrenNotHandlesNorCarets), so re-running its
     # _reLayout re-fits NOTHING above it. The climb, the flow-rule throw, and the careless-push audit below are
     # therefore all structurally INAPPLICABLE -- they PASS here, they are not silenced (the worry this resolves:
-    # docs/unify-layout-enqueue-primitives-plan.md §2). So enqueue just me, no climb. Gated on BOTH predicates so no
+    # docs/archive/unify-layout-enqueue-primitives-plan.md §2). So enqueue just me, no climb. Gated on BOTH predicates so no
     # content widget can slip onto the no-climb path -- a content widget's container genuinely needs the climb. (This
     # is the single home of the caret's self-schedule, reached via CaretWdgt._requestScrollFollow -> here; today only
     # the caret exercises it -- handles are moved by drag machinery through immediate mutators, never self-invalidate.)
@@ -4758,7 +4758,7 @@ class Widget extends TreeNode
   # is DECLARED here, the end-of-cycle audit can tell an intentional deferred-settle mutation from a public method that
   # carelessly forgot to self-settle. world.deferredSettlingEnabled is the A/B switch: ON (default) defers via the core;
   # OFF self-settles per call (like the plain setMaxDim), so we can MEASURE whether deferred settling is warranted for a
-  # given stream (docs/coalescing-measurement.md -- e.g. key-repeat rarely bursts enough to matter). Default ON =>
+  # given stream (docs/tooling/coalescing-measurement.md -- e.g. key-repeat rarely bursts enough to matter). Default ON =>
   # byte-identical to calling the _NoSettle core directly. BOTH branches reach the _setMaxDimNoSettle core directly
   # -- a _-private entrypoint must not call the public setMaxDim (it would reach UP into the self-flushing layer;
   # rules [A]/[G]).
@@ -4925,7 +4925,7 @@ class Widget extends TreeNode
         yDim = @parent.height()
         # Integer placement (Layer A): minDim is a proportional (fractional) size used for BOTH this widget's
         # extent AND its right/bottom-anchored position below (parent.right() - minDim); round it once so both
-        # commit integer @bounds. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+        # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
         minDim = Math.round Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
 
         @__commitExtent new Point minDim, minDim
@@ -5031,7 +5031,7 @@ class Widget extends TreeNode
         # (childRight, not the rounded width) forward, so the children still telescope to the available width
         # with no accumulated rounding drift and adjacent children share the one rounded boundary.
         # NB rounding here shifts the divider-drag reproportion onto a different (still deterministic) trajectory
-        # -- macroStackDividerReproportionsCells was recaptured for it. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+        # -- macroStackDividerReproportionsCells was recaptured for it. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
         childRight = childLeft + childWidthFor(C)
         childBounds = new Rectangle \
           Math.round(childLeft),

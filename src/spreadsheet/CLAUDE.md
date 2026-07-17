@@ -4,7 +4,7 @@ The **spreadsheet app** — the dataflow engine's first client (cells wired by n
 in CoffeeScript formulas). Normative design:
 **[`../../docs/specs/dataflow-engine-spec.md`](../../docs/specs/dataflow-engine-spec.md)** §9;
 build order + phase ledger:
-**[`../../docs/dataflow-engine-implementation-plan.md`](../../docs/dataflow-engine-implementation-plan.md)**.
+**[`../../docs/plans/dataflow-engine-implementation-plan.md`](../../docs/plans/dataflow-engine-implementation-plan.md)**.
 The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
 
 ## What's here (grows per phase)

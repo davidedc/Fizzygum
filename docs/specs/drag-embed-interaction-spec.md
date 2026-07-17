@@ -1,7 +1,7 @@
 # Drag-embed interaction spec — replacing the two-toggle window-drop gate with dwell-to-arm
 
 **Status: ✅ IMPLEMENTED (2026-07-06).** Built across the drag-embed arc's Phases 1–3, 3.5, 5, and 6 (Phase 4
-rejected); per-phase landed status + commit hashes live in `docs/drag-embed-implementation-plan.md`. Every
+rejected); per-phase landed status + commit hashes live in `docs/archive/drag-embed-implementation-plan.md`. Every
 file:line anchor below was verified at implementation time, but **line numbers drift — grep the named symbol.**
 
 **Deviations from this spec, as-built** (all owner-approved during execution; the plan's per-phase LANDED boxes
@@ -378,7 +378,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   (dragging a window across a big scroll panel must not scroll it).
 - **Serialization/migration**: `@internal` is currently real state (constructor arg, presumably serialized).
   On load of old snapshots: ignore the stored value, derive from parentage. VERIFY against
-  `docs/serialization-duplication-reference.md` for how retired props are handled.
+  `docs/architecture/serialization-duplication-reference.md` for how retired props are handled.
 - **Homepage build**: all of this is product code (no `if Automator?` guards needed except in any test-only
   instrumentation).
 
@@ -425,7 +425,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
 
 ## §14 — Open items
 
-**EXECUTION PLAN: `docs/drag-embed-implementation-plan.md`** (2026-07-06) — spikes S1-S3 + Phases 1-6, fresh
+**EXECUTION PLAN: `docs/archive/drag-embed-implementation-plan.md`** (2026-07-06) — spikes S1-S3 + Phases 1-6, fresh
 anchor table verified on `b91cd9b5`.
 
 - ~~NEEDS OWNER SIGN-OFF: the §4 payload-class rule~~ → **APPROVED 2026-07-05** (header decision 5). All

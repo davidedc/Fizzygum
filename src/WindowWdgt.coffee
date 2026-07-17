@@ -300,7 +300,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # branch) instead of being stretched to a mid-restore window height. This used to be the
   # @reInflating instance flag (born 597435e6, 2018) -- an argument passed through instance state
   # because the arrange had no parameter channel; now it IS an argument (up-edge endgame V1-d,
-  # docs/upedge-endgame-plan.md §9-E4: the probe measured 13 real branch flips across 7 collapse
+  # docs/archive/upedge-endgame-plan.md §9-E4: the probe measured 13 real branch flips across 7 collapse
   # tests, so the term is load-bearing; deriving it from the stored collapse-extent fields is
   # falsified -- they are never cleared). Every other caller (the preferredExtentForWidth measure,
   # the nested-window recursion below) takes the default false, exactly the value the flag had
@@ -384,7 +384,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # WindowWdgt._positionAndResizeChildren. Narrowing the pre-capture term to own-FF is what
   # retires the LAST nested-window settle re-visits: a first-placement inner window now settles
   # inside its outer's arrange instead of on its own later turn + an up-edge re-visit of the
-  # outer (up-edge endgame V1-b, docs/upedge-endgame-plan.md §9). Absent (undefined via ?()) on
+  # outer (up-edge endgame V1-b, docs/archive/upedge-endgame-plan.md §9). Absent (undefined via ?()) on
   # a stack, whose synchronous re-lay keeps its container-assigned width.
   _reLayoutMayResizeOwnWidth: ->
     @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and !@contents?.layoutSpecDetails?.desiredWidth?

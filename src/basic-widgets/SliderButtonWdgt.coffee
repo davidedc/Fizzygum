@@ -101,7 +101,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
       # Integer placement (Layer A): @offset is a plane-local position mapped through the (possibly rotated)
       # island's inverse transform, so it is fractional; the thumb's committed @bounds must be integer -- round
       # the target once, and hand the SAME rounded point to updateValue so the derived value stays consistent
-      # with what was applied. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+      # with what was applied. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
       newPosition = (new Point newX, newY).round()
       if !oldButtonPosition.equals newPosition
         @_applyMoveTo newPosition

@@ -1,4 +1,4 @@
-# THE ASPECT CONTRACT (D6, sizing-model unification U4 — docs/sizing-model-unification-plan.md §9.8):
+# THE ASPECT CONTRACT (D6, sizing-model unification U4 — docs/archive/sizing-model-unification-plan.md §9.8):
 # aspect/fixed content participates in vertical sizing through exactly two ingredients —
 #   1. a PURE width→height measure (preferredExtentForWidth; this mixin's is the ratio one,
 #      the clock/spreadsheet/holder/composite-icon have their own square/grid twins), and

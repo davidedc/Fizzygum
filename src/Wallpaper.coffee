@@ -27,7 +27,7 @@ class Wallpaper
   # and re-bound to the destination world's own wallpaper on restore. WellKnownObjects
   # matches it primarily by identity against world.wallpaper; this marker documents intent
   # and is the eventual replacement for keptByReferenceOnDeepCopy. See
-  # docs/serialization-duplication-reference.md §4a.
+  # docs/architecture/serialization-duplication-reference.md §4a.
   wellKnownKey: "wallpaper"
 
   constructor: ->

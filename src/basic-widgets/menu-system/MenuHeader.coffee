@@ -34,7 +34,7 @@ class MenuHeader extends BoxWdgt
   _applyWidth: (theWidth) ->
     super
     # Integer placement (Layer A): @center() is fractional when my extent is odd, so round the centred text
-    # position to commit an integer @bounds. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+    # position to commit an integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
     @text._applyMoveTo (@center().subtract @text.extent().floorDivideBy 2).round()
 
   mouseClickLeft: ->

@@ -12,7 +12,7 @@
  *     structural clones) — those find TEXTUAL/STRUCTURAL twins but know nothing about inheritance,
  *     so they can never say "this override is REMOVABLE". That is exactly this census's gap to fill.
  *
- * Pharo ancestry (carried over 2026-07-15, docs/lint-generic-rules-carryover-plan.md Phase 3):
+ * Pharo ancestry (carried over 2026-07-15, docs/archive/lint-generic-rules-carryover-plan.md Phase 3):
  *   ReEquivalentSuperclassMethodsRule — an override equivalent to what it would inherit adds nothing
  *   ReJustSendsSuperRule             — an override that only forwards to super
  *   ReLocalMethodsSameThanTraitRule  — a method identical to what the mixin already provides
@@ -48,7 +48,7 @@
  *
  * ── CASE LAW — deliberate seams that must NOT be "cleaned up" ───────────────────────────────────
  * The 2026-07 duplication-refactor arc (ledger: duplication-report/triage-report.md, gitignored;
- * conventions: docs/duplicated-code-detection.md) established that the `_apply*`/`_commit*` corner
+ * conventions: docs/tooling/duplicated-code-detection.md) established that the `_apply*`/`_commit*` corner
  * twins, the `*Base` override-bypass twins, and the mapRect twins are DELIBERATE same-class seams.
  * They are same-class SIBLINGS, not overrides, so they should not surface here at all — if one does,
  * classify it under the ledger's existing "deliberate seam" category rather than as removable.

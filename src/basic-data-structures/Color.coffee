@@ -263,6 +263,6 @@ class Color
   # there is nothing to clone field-by-field (the base recursivelyCloneContent then only
   # self-assigns @'s own primitives, a no-op). Serialization is separate now: it emits a
   # compact {class:"Color", rgba:[...]} record restored through @create — see
-  # src/serialization/ and docs/serialization-duplication-reference.md §6.
+  # src/serialization/ and docs/architecture/serialization-duplication-reference.md §6.
   getEmptyObjectOfSameTypeAsThisOne: ->
     return @

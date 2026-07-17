@@ -32,7 +32,7 @@
 #   locate findings via file (one class per file) + @method name.
 #
 # PREREQUISITE: `npm install` once in Fizzygum/ (jsinspect + coffeescript-v1 devDeps).
-# Docs: docs/duplicated-code-detection.md. No `set -e`; exit codes checked explicitly.
+# Docs: docs/tooling/duplicated-code-detection.md. No `set -e`; exit codes checked explicitly.
 
 cd "$(dirname "$0")" || exit 2
 

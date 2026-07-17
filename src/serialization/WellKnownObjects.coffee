@@ -1,7 +1,7 @@
 # WellKnownObjects — the two-way symbolic registry for the handful of collaborators
 # that exist (as a singleton) in EVERY Fizzygum world: the world itself, the hand, the
 # wallpaper, the widget factory, the basement, the preferences bag, and each windowed
-# app singleton. See docs/serialization-duplication-reference.md.
+# app singleton. See docs/architecture/serialization-duplication-reference.md.
 #
 # WHY: a serialized widget may legitimately point at one of these (a menu item targets
 # world.wallpaper; a button's target is `world`). Such a pointer leaves the serialized

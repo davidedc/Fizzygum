@@ -67,7 +67,7 @@
 # are serialized — a duplicated or restored wired structure needs no engine fix-up; the client
 # re-declares its edges. The engine is a world singleton, encoded symbolically as {"$wk":
 # "dataflow"} and re-bound on restore (WellKnownObjects — both keyFor AND resolve arms). See
-# docs/serialization-duplication-reference.md.
+# docs/architecture/serialization-duplication-reference.md.
 class DataflowEngine
 
   # world.dataflow is a per-world singleton; a duplicated structure that points at it must KEEP

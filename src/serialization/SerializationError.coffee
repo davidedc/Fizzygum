@@ -2,7 +2,7 @@
 # it meets a reference it cannot faithfully encode (an out-of-structure pointer that is
 # neither in the serialized subtree nor a well-known object), or a value it has no
 # handler for (e.g. an own function-valued property with no `_source` sibling and no
-# transient declaration). See docs/serialization-duplication-reference.md.
+# transient declaration). See docs/architecture/serialization-duplication-reference.md.
 #
 # It is DELIBERATELY a plain class (NOT `extends Error`): the boot-time dependency
 # finder (src/boot/dependencies-finding.coffee) treats an `extends X` target as a

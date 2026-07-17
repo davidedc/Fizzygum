@@ -17,7 +17,7 @@
 // This gate is deliberately built to have ZERO false positives at the cost of detection reach — a
 // false FAIL breaks the build on correct code, while a miss merely leaves a fault for the boot
 // smoke / SystemTests to catch. Same philosophy as the rejected transitive-[G] closure
-// (docs/lint-ratchet-static-checks-plan.md): soundness beats reach. That trade is implemented as a
+// (docs/archive/lint-ratchet-static-checks-plan.md): soundness beats reach. That trade is implemented as a
 // deliberate ASYMMETRY in how the two sides are masked — both err toward "fewer flags":
 //
 //   DEFS  are OVER-approximated: harvested with a naive (`#{`-aware) comment strip that KEEPS

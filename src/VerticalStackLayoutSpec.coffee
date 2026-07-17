@@ -7,7 +7,7 @@ class VerticalStackLayoutSpec
   stack: nil
   element: nil
 
-  # ONE constraint-box sizing model (sizing-model unification U1 — docs/sizing-model-unification-plan.md):
+  # ONE constraint-box sizing model (sizing-model unification U1 — docs/archive/sizing-model-unification-plan.md):
   #
   #   width in stack = round( min( availW, desiredWidth + grow * (availW - desiredWidth) ) )
   #

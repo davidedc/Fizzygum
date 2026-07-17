@@ -1180,7 +1180,7 @@ class ActivePointerWdgt extends Widget
   # opens/closes). It runs AFTER @recalculateLayouts() in WorldWdgt.doOneCycle, so it re-derives the
   # widgets-under-pointer set against SETTLED geometry (the same fixed point paint reads). Hover handlers
   # must not make a careless (off-settle) layout push -- self-settling mutations (e.g. a tooltip fullDestroy)
-  # are fine; the end-of-cycle capstone gate enforces this. See docs/hover-resync-after-flush-plan.md.
+  # are fine; the end-of-cycle capstone gate enforces this. See docs/archive/hover-resync-after-flush-plan.md.
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topWdgt = @topWdgtUnderPointer()
     # allParentsTopToButton makes more logical sense but

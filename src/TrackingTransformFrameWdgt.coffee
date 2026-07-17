@@ -11,7 +11,7 @@
 # (_reFitMyTrackingContainerAfterSettle) re-fits it after its content settles (docs/layout-system-
 # architecture-assessment.md §6.1 rule 4). The property sugar (Widget._materializeSugarIslandNoSettle)
 # materialises THIS class, so a rotated/scaled widget's slot GROWS with the widget instead of the buffer
-# clipping at the frozen footprint (affine transforms — rough edge R3, docs/affine-transforms-plan.md §6,
+# clipping at the frozen footprint (affine transforms — rough edge R3, docs/plans/affine-transforms-plan.md §6,
 # the deferred 4A-2 item (b)).
 #
 # @_materializedBySugar stays the ORTHOGONAL auto-remove-at-identity gate (inherited): a future
@@ -26,7 +26,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # SimpleVerticalStackPanelWdgt / ScrollPanelWdgt pin it — keeping subWidgetsMergedFullBounds and the
   # resize classification exactly as the base fixed-figure island's.
   #
-  # (up-edge endgame V1-c, docs/upedge-endgame-plan.md §9) SYNC-SETTLE a PENDING content before the
+  # (up-edge endgame V1-c, docs/archive/upedge-endgame-plan.md §9) SYNC-SETTLE a PENDING content before the
   # re-hug — the landed window→stack P2 shape (WindowWdgt._positionAndResizeChildren): parent-before-
   # child order walks ME before my free-floating content, so without this the re-hug no-ops on the
   # content's STALE bounds and the content's own later settle re-arms me through the settle-time
@@ -106,7 +106,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
 
   # ---------------------------------------------------------------------------
   # LAYOUT TRANSPARENCY — the FOURTH member of the sugar-island transparency family (hit /
-  # interaction / reparent / LAYOUT), docs/drop-into-rotated-container-layout-transparency-plan.md §5.
+  # interaction / reparent / LAYOUT), docs/archive/drop-into-rotated-container-layout-transparency-plan.md §5.
   # The invisible sugar/compensating island is plumbing, so a PARENT-DRIVEN sizing protocol must
   # pass THROUGH to my sole content — otherwise the base island's §4.9 FIXED-FIGURE policy blocks it
   # (TransformFrameWdgt._applyExtentBase early-returns; preferredExtentForWidth reports the frozen

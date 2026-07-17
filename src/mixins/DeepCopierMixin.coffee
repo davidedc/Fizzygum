@@ -7,7 +7,7 @@
 # duplication-only. The two still share per-class KNOWLEDGE (keptByReferenceOnDeepCopy /
 # the wellKnownKey markers, rebuildDerivedValue, the native-type clone handlers) but no
 # mutable state, so neither can regress the other. See
-# docs/serialization-duplication-reference.md.
+# docs/architecture/serialization-duplication-reference.md.
 
 DeepCopierMixin =
   # class properties here:

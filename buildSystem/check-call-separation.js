@@ -2,7 +2,7 @@
 'use strict';
 /*
  * check-call-separation.js — build gate for the public/private call-separation rules [S] and [U]
- * (docs/public-private-call-separation-plan.md; gate reference: docs/lint-and-static-checks.md §3/§4).
+ * (docs/archive/public-private-call-separation-plan.md; gate reference: docs/architecture/lint-and-static-checks.md §3/§4).
  * The MEASUREMENT lives in buildSystem/census-public-private-calls.js (one engine, two entry points:
  * that file's CLI reports, this gate enforces).
  *
@@ -117,7 +117,7 @@ for (const n of notes) console.log('[call-separation] NOTE — ' + n);
 if (problems.length) {
   console.error(`\n!!! call-separation gate FAILED:\n`);
   for (const p of problems) console.error('  ' + p);
-  console.error('\nRules [S]/[U] — docs/public-private-call-separation-plan.md; measurement: node ./buildSystem/census-public-private-calls.js');
+  console.error('\nRules [S]/[U] — docs/archive/public-private-call-separation-plan.md; measurement: node ./buildSystem/census-public-private-calls.js');
   process.exit(1);
 }
 console.log(`[call-separation] OK — [S] ${sSettling.length}/${BASELINE_S_SETTLING} settling + ${sEffectful.length}/${BASELINE_S_EFFECTFUL} effectful unsanctioned private->public-command sites (${sanctionedCount} sanctioned); [U] ${uMsg}.`);

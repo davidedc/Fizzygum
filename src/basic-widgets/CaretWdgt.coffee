@@ -200,7 +200,7 @@ class CaretWdgt extends BlinkerWdgt
   # free-floating + inert, so _invalidateLayout's INERT-RECEIVER branch enqueues it with the bare no-climb primitive
   # (__markForRelayout) and skips the climb / flow-rule throw / careless-push audit -- all of which are
   # structurally INAPPLICABLE to an overlay that has no parent layout to climb and no ancestor it can re-dirty
-  # (Widget._invalidateLayout; docs/unify-layout-enqueue-primitives-plan.md §2). This USED to open-code the bare
+  # (Widget._invalidateLayout; docs/archive/unify-layout-enqueue-primitives-plan.md §2). This USED to open-code the bare
   # push here to dodge that throw + audit (which fired because _invalidateLayout assumed a climbing content widget);
   # the inert branch now makes the canonical verb correct for the caret, so there is ONE scheduling verb, not two.
   # The schedule is correct in BOTH phases -- inside a pass the until-loop picks the caret up; off-pass the next

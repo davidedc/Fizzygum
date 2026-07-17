@@ -331,7 +331,7 @@ fi
 # Enforces "stinks": named smells ratcheted at a baseline COUNT. Each stink has its baseline inline in
 # buildSystem/check-stinks.js; the gate FAILS only when a stink EXCEEDS its baseline (a regression) --
 # mirroring the dead-method allowlist ratchet above -- and prints a "tighten me" note when one drops
-# BELOW. Seven are seeded (2026-07-15, docs/lint-generic-rules-carryover-plan.md Phase 2): debugger 36,
+# BELOW. Seven are seeded (2026-07-15, docs/archive/lint-generic-rules-carryover-plan.md Phase 2): debugger 36,
 # undefined 89, null 10, wall-clock 19, timer 3, Math.random 5, instanceof 105 -- the determinism and
 # nil-convention rules that were manual-only until then. Same --noSyntaxCheck escape hatch and explicit
 # $? check as the gates above; scans src/ only, so it runs for every build flavour (incl. --homepage).
@@ -420,7 +420,7 @@ if ! $noSyntaxCheck ; then
 fi
 
 # --- build-time CALL-SEPARATION gate ([S]/[U]) ----------------------------------------
-# Enforces the public/private call-separation ratchets (docs/public-private-call-separation-plan.md):
+# Enforces the public/private call-separation ratchets (docs/archive/public-private-call-separation-plan.md):
 # [S] a PRIVATE method must not @-self-call a public COMMAND (settling / effectful callee -- queries and
 # the changed/fullChanged react verbs stay free); [U] a public method referenced ONLY by @-self calls is
 # provably not external API and must be _-tier (deliberate end-user inspector/scripting API goes in

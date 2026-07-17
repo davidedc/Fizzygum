@@ -99,7 +99,7 @@ class ConsoleWdgt extends Widget
     textWidth = @width() - 2 * @externalPadding
     # Integer placement (Layer A): the two run-buttons share this width and are laid side by side, so a
     # fractional /2 makes the second button's origin (= first's right edge) fractional -- round it here so both
-    # commit integer @bounds. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+    # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
     buttonsWidth = Math.round (textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2
 
     if @tempPromptEntryField.parent == @

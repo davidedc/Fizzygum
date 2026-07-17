@@ -445,7 +445,7 @@ class MacroToolkit
   moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
 
-  # Affine transforms (docs/affine-transforms-plan.md §4.6): the SCREEN-plane point at
+  # Affine transforms (docs/plans/affine-transforms-plan.md §4.6): the SCREEN-plane point at
   # fractional position [fx,fy] inside a widget. pointAtFractionOf gives the point in the
   # widget's OWN plane; a widget inside a scaled/rotated TransformFrameWdgt ("island") lives in
   # that island's VIRTUAL plane, so its plane point must be mapped UP through each ancestor

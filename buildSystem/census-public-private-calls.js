@@ -3,7 +3,7 @@
 /*
  * census-public-private-calls.js — the public/private SELF-call census: an ANALYSIS CLI *and* the
  * measurement ENGINE behind the check-call-separation.js gate (rules [S]/[U] — see
- * docs/public-private-call-separation-plan.md; gate reference: docs/lint-and-static-checks.md).
+ * docs/archive/public-private-call-separation-plan.md; gate reference: docs/architecture/lint-and-static-checks.md).
  *
  * Two entry points, one engine:
  *   - CLI (this file run directly): human-readable report of the four censuses below.
@@ -57,7 +57,7 @@
  *     `@foo.bar` do not). Markers are read from the RAW line (they live in comments).
  *   - Effect/settle classification is a fixpoint over the @-SELF call graph only. NB this is NOT
  *     the rejected [G] transitive closure (that was BACKWARD reachability including `.`-member
- *     calls and `new` constructor hubs — ~500-710 false hits, docs/lint-and-static-checks.md §7);
+ *     calls and `new` constructor hubs — ~500-710 false hits, docs/architecture/lint-and-static-checks.md §7);
  *     forward closure restricted to @-self calls converges cleanly (2 SETTLING hits at baseline).
  *
  * KNOWN BLIND SPOTS (accepted; the census sizes and triages, the runtime throws stay the backstop):

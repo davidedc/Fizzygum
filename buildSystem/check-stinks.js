@@ -26,7 +26,7 @@ const path = require('path');
 
 const SRC = path.resolve(__dirname, '../src');
 
-// Seeded 2026-07-15 (docs/lint-generic-rules-carryover-plan.md Phase 2), carrying over the generic
+// Seeded 2026-07-15 (docs/archive/lint-generic-rules-carryover-plan.md Phase 2), carrying over the generic
 // cruft/idiom rules from Pharo's SmallLint/Renraku catalogue. Every baseline below was MEASURED by
 // this engine on the day (never estimated) and every stink was spot-checked against its real hits.
 // These are RATCHETS, not verdicts: each records today's count so the number can only fall. Driving

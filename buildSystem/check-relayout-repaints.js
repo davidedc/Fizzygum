@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // check-relayout-repaints.js — build lint for INVARIANT [INV-1] (2026-07 layout-regressions arc,
-// docs/done/layout-regressions-2026-07-icons-plots-editghosts-plan.md §2). Static sibling to the runtime
+// docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md §2). Static sibling to the runtime
 // paint-truthfulness capstone (Fizzygum-tests scripts/run-paint-audit.js). Mirrors
 // check-relayout-bounds-first.js (line scanner; exit 0 clean / 1 violation).
 //

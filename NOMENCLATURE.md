@@ -9,7 +9,7 @@ This file is the registry of who owns which word. **Rule: before naming a new me
 check this file. If the word is owned by another domain, qualify it or pick another word,
 and record the decision here.** Historical docs in `docs/` predating this file may use old
 vocabulary; they are records and are not retro-edited (see
-`docs/coalesced-nomenclature-rename-plan.md`).
+`docs/archive/coalesced-nomenclature-rename-plan.md`).
 
 ## Domain vocabularies
 

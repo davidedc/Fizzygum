@@ -20,7 +20,7 @@ class WidgetFactory
   keptByReferenceOnDeepCopy: true
 
   # Serialization: encoded symbolically as {"$wk":"widgetFactory"} and re-bound to the
-  # destination world's factory on restore. See docs/serialization-duplication-reference.md
+  # destination world's factory on restore. See docs/architecture/serialization-duplication-reference.md
   # §4a. (This whole file is homepage-excluded, so the marker is absent in homepage builds
   # -- where there is no factory to resolve anyway.)
   wellKnownKey: "widgetFactory"

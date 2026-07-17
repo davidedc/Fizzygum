@@ -19,7 +19,7 @@ class IconicDesktopSystemWindowedApp
 
   # Serialization: each app singleton is encoded symbolically as {"$wk":"app:<ClassName>"}
   # and re-resolved (in Phase 5, launched if absent) against the destination world. A
-  # method because the key is per-subclass. See docs/serialization-duplication-reference.md
+  # method because the key is per-subclass. See docs/architecture/serialization-duplication-reference.md
   # §4a.
   wellKnownKey: -> "app:" + @constructor.name
 

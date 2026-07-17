@@ -1,12 +1,12 @@
 # Dataflow engine & spreadsheet — design spec
 
 **Status:** **IMPLEMENTED** (Phases 0–7, 2026-07-06; + the Phase 8 view follow-on "widgetise the grid").
-The design shipped; the `docs/dataflow-engine-implementation-plan.md` status ledger + its per-phase
-"Landed" receipts are the build record, and `docs/dataflow-measurements.md` carries the measured
+The design shipped; the `docs/plans/dataflow-engine-implementation-plan.md` status ledger + its per-phase
+"Landed" receipts are the build record, and `docs/measurements/dataflow-measurements.md` carries the measured
 drain-convergence numbers (typical 1 pass, peak 2 for a sink-onto-source chain). Phase 8 is a
 VIEW-only refactor — the engine/model/value-protocol/serialization design below is untouched by it.
 **Vocabulary:** `NOMENCLATURE.md` (root) is normative for every term used here; the layout-side renames
-it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
+it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
 
 **Deviations decided during execution** (each recorded in its phase's commit message):
 - **2a** — direct-paint viewport, no `ScrollPanelWdgt` yet; fixed-size window content (elasticity 0) for a
@@ -21,7 +21,7 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
 - **6a** — `firesPerEvent` landed DARK (stored + menu-toggled; nothing read it yet).
 - **6b** — engine delivery behind an A/B switch (`world.dataflowWiresEnabled`, default OFF); the ECHO (a
   ported controller's onward-fire tail re-marking the node being applied) is suppressed via `@_applyingNode`
-  ⇒ a driven ring is 1 pass (measured — `docs/dataflow-measurements.md`).
+  ⇒ a driven ring is 1 pass (measured — `docs/measurements/dataflow-measurements.md`).
 - **6c** — `DataflowEngine.ensureWireEdge` makes "edges derive from `@target`/`@action`" TOTAL (covers wires
   set by DIRECT assignment — scrollbars, the prompt slider — not only menu-wired ones); the prompt slider's
   `edit()` action was made drain-safe via the standard `_*NoSettle` lattice (`WorldWdgt.edit`/`_editNoSettle`;
@@ -92,7 +92,7 @@ Node roles:
 mechanisms for free — duplication (`DeepCopierMixin` remaps in-structure object references
 and keeps external ones) and serialization (`src/serialization/` encodes in-structure
 references as `{"$r": n}` and world-singleton references as well-known keys `{"$wk": …}` —
-see `docs/serialization-duplication-reference.md`). A centrally-owned edge list would break
+see `docs/architecture/serialization-duplication-reference.md`). A centrally-owned edge list would break
 every duplication/save of a wired structure. Corollary: duplicating a circuit or a sheet
 needs no engine fix-up at all; the engine re-reads and re-indexes. This mirrors the existing
 house pattern of deriving load-order by scanning class sources
@@ -341,7 +341,7 @@ cell).
   shares instances; deep copy returns the same object; serialization emits a compact record
   restored through `create`) — mutation would corrupt colors world-wide. New value classes
   joining the algebra follow the same immutable pattern (with a compact serialized form per
-  `docs/serialization-duplication-reference.md`). Enforced by convention first; defensive
+  `docs/architecture/serialization-duplication-reference.md`). Enforced by convention first; defensive
   `deepCopy` on handoff is the documented fallback if it ever proves fragile.
 
 ### 9.6 Errors are values
@@ -369,7 +369,7 @@ stepping loop's existing skip-don't-catch-up stance).
 ## 11. Implementation order
 
 Detailed, cold-executable plan with phase ledger:
-**`docs/dataflow-engine-implementation-plan.md`**.
+**`docs/plans/dataflow-engine-implementation-plan.md`**.
 
 1. ~~Nomenclature plan executes~~ — done (the `*DeferredSettle` rename landed).
 2. Engine core + spreadsheet v1 (sparse grid, CS formulas, Color as the first non-scalar

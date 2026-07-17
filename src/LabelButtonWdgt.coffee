@@ -91,7 +91,7 @@ class LabelButtonWdgt extends ButtonWdgt
       @_createLabel()
     if @centered
       # Integer placement (Layer A): @center() is fractional when my extent is odd, so round the centred
-      # label position to commit an integer @bounds. docs/fractional-widget-bounds-investigation-plan.md (Path 2).
+      # label position to commit an integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
       @label._applyMoveTo (@center().subtract @label.extent().floorDivideBy 2).round()
 
   # a label button has no faceWidget; use the base Widget layout rather than

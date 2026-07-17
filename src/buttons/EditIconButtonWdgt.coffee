@@ -3,7 +3,7 @@
 
 class EditIconButtonWdgt extends IconButtonWdgt
 
-  # pencil<->eye edit-mode toggle with HOVER FEEDFORWARD (docs/pencil-eye-edit-mode-toggle-plan.md §8):
+  # pencil<->eye edit-mode toggle with HOVER FEEDFORWARD (docs/archive/pencil-eye-edit-mode-toggle-plan.md §8):
   #   1. MONOCHROME AT REST — the resting glyph is uncoloured (near-white on the gray bar)
   #      for BOTH modes; the SHAPE alone names the current mode (pencil = editing now,
   #      eye = viewing now). Drops the editing-yellow at rest.
