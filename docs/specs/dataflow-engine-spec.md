@@ -43,7 +43,10 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
   widgets into cells (the §9.1 "kind-of-entry metadata", as a persistent `widgetEntry`) · F5 headers-as-widgets
   + cell-owned grid chrome (owner direction 2026-07-17 — the §9.1 grid's headers become selectable widgets and
   the sheet's own paint goes EMPTY). **F5 (with F2 folded in) LANDED 2026-07-17** — §9.1's "everything a
-  widget" bullet is the shipped form; F1/F4/F3 remain cold-executable in the plan, sequenced F1 → F4 → F3.
+  widget" bullet is the shipped form. **F1 scroll LANDED 2026-07-17 too** (sheet-owned `viewOriginCol/Row`
+  over a 26×100 logical sheet, wheel + keyboard scroll-follow, viewport materialise/recycle with the
+  hidden-rich-cell exemption — §13 retain-and-remount extended to scroll; origin-0 render byte-identical,
+  zero recaptures). F4/F3 remain cold-executable in the plan; F4 next.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
@@ -254,13 +257,15 @@ client's:
   bullet)*: the sheet paints only the chrome (gridlines, headers, selection); every VISIBLE cell is a
   real `CellWdgt` child that renders its own value (painted scalar text, or a hosted value-widget /
   presenter). Widget count is bounded by the VIEWPORT, not the sparse model (an off-screen cell is a
-  live node with NO widget; scroll materialises/recycles the viewport's cells) — so this is NOT
+  live node with NO widget; scroll — F1, landed 2026-07-17 — materialises/recycles the viewport's
+  cells, hiding-not-destroying the widget-VALUED ones) — so this is NOT
   open-ended widget virtualization, just the standard bounded-viewport trick. The `CellWdgt` is the
   Phase-4 socket generalised to every cell.
 - **Everything a widget; the sheet paints NOTHING** *(F5, landed 2026-07-17 — the shipped form; plan
   §3-F receipts)*: the headers become `SheetHeaderCellWdgt`s (toward future column/row selection), the
-  data cells live in a transparent `SheetCellsPanelWdgt` (a `PanelWdgt` subclass; its clipping is
-  dormant until F1 scroll), and every widget paints its own fill/edges/label/value — the selection
+  data cells live in a transparent `SheetCellsPanelWdgt` (a `PanelWdgt` subclass; its bounds-clipping
+  is the F1 viewport's standing guard — cell-quantized scroll never actually crops), and every widget
+  paints its own fill/edges/label/value — the selection
   ring is the selected `CellWdgt`'s own paint (drawn fully inside; the one recaptured pixel change),
   the overlay editor is the editing cell's child (F2), and the sheet keeps model/selection
   state/keyboard + the shared edge-stroke helper. Pixel law: per-widget TOP+LEFT edge ownership; the

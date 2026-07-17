@@ -20,9 +20,12 @@
 # drawn — the cheap-live-strokes slot here is reserved for the day a visible border is WANTED
 # (a deliberate, recaptured pixel change).
 #
-# The PanelWdgt clipping (ClippingAtRectangularBoundsMixin) is DORMANT under the fixed 6×14
-# viewport (the cells tile this panel exactly) and becomes load-bearing when F1 scroll lands
-# (the scroll viewport clip).
+# The PanelWdgt clipping (ClippingAtRectangularBoundsMixin, active at my bounds) is the
+# viewport's standing GUARD: F1's CELL-QUANTIZED scroll reconcile keeps every visible cell
+# tiling me exactly (an off-viewport cell is hidden or destroyed, never partially outside), so
+# the clip crops nothing in practice — it exists so no future placement bug can ever paint a
+# cell outside the data region. The frozen headers are direct sheet children, outside me,
+# untouchable by it.
 #
 # v1 neutralisations of PanelWdgt behaviour — each preserves today's cells-parented-to-the-
 # sheet semantics exactly (receipts in the F5 plan section):

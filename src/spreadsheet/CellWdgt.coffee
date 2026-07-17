@@ -105,8 +105,11 @@ class CellWdgt extends Widget
       aContext.useLogicalPixelsUntilRestore()
       widgetPosition = @position()
       aContext.translate widgetPosition.x, widgetPosition.y
+      # dark edges sit on the header separators: the left edge of the viewport's FIRST visible
+      # column and the top edge of its FIRST visible row (viewport-relative, F1 — at origin 0
+      # that is sheet col/row 0, exactly the pre-scroll form)
       colRow = sheetWidget.model.colRowFor @address
-      sheetWidget.paintGridEdges aContext, @width(), @height(), (colRow?.col is 0), (colRow?.row is 0)
+      sheetWidget.paintGridEdges aContext, @width(), @height(), (colRow?.col is sheetWidget.viewOriginCol), (colRow?.row is sheetWidget.viewOriginRow)
       if sheetWidget.isSelectedAddress @address
         aContext.strokeStyle = sheetWidget.selectionColor.toString()
         aContext.lineWidth = 2

@@ -13,21 +13,25 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   subclass; `slot: nil` ⇒ a fresh window per launch, multiple sheets allowed). `buildWindow`
   wraps a `SpreadsheetWdgt` in a window via `world.openWindowWith`. Registered at the WorldWdgt
   boot site into the desktop "examples" folder.
-- `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-on F5): it paints NOTHING
-  (nil appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
-  `SheetHeaderCellWdgt` / `CellWdgt` below). It materialises the widget chrome + the fixed 6×14
-  grid (`_buildGridNoSettle`), reconciles each cell's value into its widget
-  (`_reconcileCellNoSettle`), owns the single-cell selection (cells render their own ring off
-  the PUBLIC `isSelectedAddress`) and the type-to-edit BUFFER + keys (the editor WIDGET lives
-  on the editing cell — F2), houses the shared edge-stroke helper `paintGridEdges` (the
-  edge-ownership colours + the crossing rule), owns `@model` and is the formula SCOPE (`@`
-  inside a formula is this widget).
+- `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1): it paints
+  NOTHING (nil appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
+  `SheetHeaderCellWdgt` / `CellWdgt` below). It materialises the widget chrome
+  (`_buildChromeNoSettle`) + the 6×14 VIEWPORT of cells over the 26×100 LOGICAL sheet
+  (`_reconcileViewportNoSettle` — F1 scroll: sheet-owned `viewOriginCol/Row`, wheel +
+  keyboard scroll-follow, the viewport invariant below), reconciles each cell's value into its
+  widget (`_reconcileCellNoSettle`), owns the single-cell selection (SHEET-space; cells render
+  their own ring off the PUBLIC `isSelectedAddress`) and the type-to-edit BUFFER + keys (the
+  editor WIDGET lives on the editing cell — F2; an edit COMMITS before any scroll), houses the
+  shared edge-stroke helper `paintGridEdges` (the edge-ownership colours + the crossing rule),
+  owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
 - `SheetCellsPanelWdgt.coffee` (F5) — the TRANSPARENT `PanelWdgt` subclass spanning the data
-  region and hosting the 84 `CellWdgt`s (owner direction: cells attach into a container
+  region and hosting the `CellWdgt`s (owner direction: cells attach into a container
   subclass). Nil appearance (the sheet never painted a data background — the backdrop shows
   through, as always); clicks escalate through it to the sheet; drops/lock-menu/editing
-  amenities neutralised; its inherited clipping is dormant until F1 scroll. Paints no residual
-  border (the old outermost right/bottom strokes were clipped invisible — F5 receipt C).
+  amenities neutralised; its inherited bounds-clipping is the viewport's standing GUARD (F1's
+  cell-quantized reconcile keeps every visible cell tiling it exactly, so it never actually
+  crops). Paints no residual border (the old outermost right/bottom strokes were clipped
+  invisible — F5 receipt C).
 - `SheetHeaderCellWdgt.coffee` (F5) — one widget per HEADER cell (kind column/row/corner + its
   index; 21 in all, direct sheet children, OUTSIDE the panel so a future scroll clip never
   touches the frozen headers). Paints its 236 strip fill, its own top+left edges, and its
@@ -207,8 +211,10 @@ header cells); the engine's edges are NOT serialized or deep-copied. On **restor
 `_recommitAllCells` — first `_reindexCellsNoSettle` (rescue the `CellWdgt`s out of the
 snapshot's chrome, DESTROY the derived chrome — panel, header cells — plus any stray such as
 a mid-edit overlay editor riding a cell, re-attach the cells' back-ref and re-index them,
-then `_buildGridNoSettle` to rebuild the chrome, re-home the cells into the fresh panel and
-fill any address the snapshot lacked; ONE path serves pre-F5 snapshots, whose cells are
+then `_buildChromeNoSettle` to rebuild the chrome + re-home the cells into the fresh panel,
+and `_reconcileViewportNoSettle` to re-establish the viewport invariant for the RESTORED view
+origin — visible cells re-placed at their slots, an off-viewport HIDDEN rich cell keeping its
+exemption, gaps filled; ONE path serves pre-F5 snapshots, whose cells are
 direct children, and post-F5 ones), then recommit every cell (rebuild `compiledFn`/`value`
 AND re-declare edges), mark all stale, one drain — so a restored/duplicated sheet re-declares
 its OWN edges, RETAINS its widget-valued cells' live widgets (class match) and REBUILDS its
@@ -238,7 +244,9 @@ only) → "widgetized viewport over painted chrome" (Phase 8, every visible DATA
 be a Widget — headers included, toward future column/row selection). Two invariants carried
 over: widget count stays bounded by the VIEWPORT, not the sparse model — an off-screen cell
 (Z99 in a formula) is a live dataflow node whose record recomputes with NO widget; scroll
-(follow-on F1) materialises/recycles the viewport's widgets. And the cell is the two-way
+(F1, landed 2026-07-17) materialises/recycles the viewport's widgets over the 26×100 logical
+sheet, with the hidden-rich-cell exemption keeping off-screen widget-VALUED cells' hosted
+widgets alive in the tree. And the cell is the two-way
 boundary adapter: it hosts the value/presenter widget and is the connection target
 interactive widget-sources (slider, picker, clock) fire into — each firing a `markStale` on
 the cell. Pixel law (F5 receipts, plan §3-F): every widget strokes its own TOP+LEFT edges;
@@ -257,11 +265,14 @@ widget fills the data background (the backdrop shows through, as it always did).
   text at cell-local `(4, h−6)`) and the 2px host inset, so the grid renders pixel-for-pixel as the
   old painted grid — the whole suite (dpr1/dpr2/webkit) + both serialization legs stayed green with NO
   reference change. The architecture changed; the pixels did not. (The plan had budgeted for recaptures.)
-- **Full grid materialised at construction; deserialize/duplicate adopt the snapshot's cells.** The
-  constructor builds all 6×14 `CellWdgt`s (`_buildGridNoSettle`, freefloating + absolute — they
-  float-follow the sheet). The deserialize/duplicate path SKIPS the constructor (`Object.create`), so
-  the restored/copied cells ride the snapshot and `_reindexCellsNoSettle` adopts them; `_buildGridNoSettle`
-  is idempotent (skips an already-indexed address) so it only fills a gap — never a double grid.
+- **Full viewport materialised at construction; deserialize/duplicate adopt the snapshot's cells.**
+  The constructor builds the chrome (`_buildChromeNoSettle`) + all 6×14 viewport `CellWdgt`s
+  (`_reconcileViewportNoSettle`; freefloating + absolute — they float-follow the sheet; F1 split
+  the old `_buildGridNoSettle` into these two: cells follow the view origin, chrome doesn't).
+  The deserialize/duplicate path SKIPS the constructor (`Object.create`), so the restored/copied
+  cells ride the snapshot and `_reindexCellsNoSettle` adopts them; both rebuild calls are
+  idempotent (keyed by field / "kind:index" / address) so they only fill gaps — never a double
+  grid.
 - **Selection + editing: the sheet owns the STATE, the cell renders it (F2, executed with
   F5).** Clicks on a cell escalate to the sheet's `mouseClickLeft` (cell → cells panel, whose
   `mouseClickLeft` deliberately escalates, → sheet), which hit-tests via `_cellAtLocal` and
@@ -275,12 +286,43 @@ widget fills the data background (the backdrop shows through, as it always did).
   antialiased bands get overdrawn — 91/348 px flip at dpr1/dpr2 — so sheet-drawn selection
   cannot survive the widgetisation.
 
+## F1 decisions (scroll — landed 2026-07-17; recorded also in plan §3-F)
+
+- **Sheet-owned view origin, NOT a `ScrollPanelWdgt`** (extends the 2a direct-paint deviation
+  permanently): frozen headers, the origin-0 byte-identity constraint, and CELL-QUANTIZED
+  steps don't fit the scroll panel's pixel model. `viewOriginCol/Row` are PROTOTYPE defaults
+  (own-only-when-scrolled — an unscrolled sheet serializes byte-for-byte as pre-F1; a pre-F1
+  snapshot restores to origin 0 through the prototype) and DOCUMENT state (a saved scrolled
+  sheet restores scrolled — NOT transients). Logical bounds `sheetCols`×`sheetRows` (26×100);
+  `numCols`/`numRows` still mean the VIEWPORT.
+- **THE VIEWPORT INVARIANT** (re-established by `_reconcileViewportNoSettle` on every origin
+  change and on restore): exactly one VISIBLE `CellWdgt` per on-screen address at the viewport
+  rect of (address − origin); exactly one HIDDEN `CellWdgt` per OFF-screen widget-VALUED cell
+  (the **hidden-rich-cell exemption**: it `__hide`s in place so its hosted widget's runtime
+  state keeps riding the tree and survives save/load — spec §13 retain-and-remount extended to
+  scroll; the exemption predicate is "the hosted widget IS the record's value, or the record's
+  value is still nil on the restore path"); nothing else. `@_cells` indexes both. A recompute
+  that turns a hidden cell's value non-widget recycles it on the spot
+  (`_reconcileCellNoSettle`); a widget value committed to a cell with NO widget materialises a
+  hidden one right there (widgets ride the TREE, not the model — losing the mount would lose
+  the widget on save).
+- **Wheel + keyboard scroll-follow.** `wheel:` on the sheet (the `ActivePointerWdgt.processWheel`
+  climb — cells and the panel deliberately don't implement it) follows the `ScrollPanelWdgt`
+  model (axis suppression, invertWheel* prefs, per-axis at-limit ESCALATION) but quantizes to
+  whole rows/cols; positive raw deltaY scrolls the view DOWN. Arrows clamp to the LOGICAL sheet
+  and scroll-follow minimally; starting an edit scroll-follows first (the selection can sit
+  off-viewport), and an in-progress edit COMMITS before any scroll (click-away-commits
+  precedent) — the overlay editor never moves mid-edit. Headers never move: their labels derive
+  from origin + slot at paint time (relabel-in-place).
+- **Origin-0 byte-identity.** At view origin (0,0) every offset is the identity — the whole
+  pre-F1 reference set passes unchanged (zero recaptures; all new pixels live in new tests).
+
 ## Phase 2a decisions / deviations (recorded also in the plan)
 
 - **Direct-paint, no `ScrollPanelWdgt` yet.** The spec hosts the grid in a `ScrollPanelWdgt`;
   v1 paints a fixed viewport that fits the window and defers scroll until the model exceeds it.
   The paint + hit-test math transplant into a scroll-child unchanged; sockets (2b/4) are
-  unaffected. Revisit when the sheet needs more cells than fit.
+  unaffected. (F1 later made "no `ScrollPanelWdgt`" permanent — see the F1 section above.)
 - **Text = 12px Arial.** SWCanvas ships bitmap atlases for Arial/Times/Courier only
   (`src/boot/extensions/SWCanvasElement-extensions.coffee`), so 12px Arial is the deterministic
   choice; left-aligned with a small pad in v1 (centering needs `measureText` — a later polish).

@@ -26,7 +26,7 @@ class SheetHeaderCellWdgt extends Widget
   constructor: (kind, index) ->
     super()
     @kind = kind        # "column" | "row" | "corner"
-    @index = index      # 0-based column/row index; nil for the corner
+    @index = index      # 0-based viewport SLOT index (the label = view origin + slot, F1); nil for the corner
     @_sheetWidget = nil
     # transparent by default — every visible pixel is painted explicitly below (the fill),
     # so there is no base-appearance paint to keep in sync
@@ -44,10 +44,13 @@ class SheetHeaderCellWdgt extends Widget
   # the sheet's old header text and CellWdgt's scalar text. No bold/italic.
   _headerFont: -> "12px Arial, sans-serif"
 
+  # @index is the viewport SLOT; the label derives from the sheet's view origin + slot at paint
+  # time (F1) — scrolling relabels the frozen headers in place (cell-quantized scroll means they
+  # never move; the sheet-level changed() repaints them). At origin 0 this is the identity.
   _labelText: ->
     switch @kind
-      when "column" then @_sheetWidget.model.colToLetters @index
-      when "row"    then "" + (@index + 1)
+      when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @index)
+      when "row"    then "" + (@_sheetWidget.viewOriginRow + @index + 1)
       else nil
 
   # F5 edge ownership: my LEFT edge is the DARK border colour when it sits on the sheet's

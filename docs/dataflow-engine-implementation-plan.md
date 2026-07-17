@@ -40,11 +40,15 @@ sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 
       webkit-verified)
 - [x] F2 — selection border + overlay editor fully into the `CellWdgt` (view
       self-containment) — executed inside F5's landing (F5 evidence B made it mandatory)
-- [ ] F1 — scroll: logical sheet > viewport; wheel + keyboard scroll; viewport
-      materialise/recycle (header-offset paint design superseded by F5's header widgets) —
-      NEXT per the owner-ratified sequencing
+- [x] F1 — scroll: logical sheet > viewport; wheel + keyboard scroll; viewport
+      materialise/recycle — **LANDED 2026-07-17** (see the F1 section's landing log; origin-0
+      byte-identity held — ZERO recaptures; 3 new SystemTests dpr1+dpr2, suite 253; 3 new
+      scrolled-round-trip rig rows, both serialization legs green; close gauntlet 11/11 in
+      396s — dpr1/dpr2/webkit 253/253, REVISITS baseline still EMPTY, census 0/1528, refs
+      1570 consistent with one serial-retry load-flake on the refs leg)
 - [ ] F4 — drag-and-drop desktop widgets into cells (widget-entry cells) — was gated on the
-      drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ unblocked; land after F1
+      drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ unblocked; NEXT (lands after F1
+      per the owner-ratified sequencing)
 - [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
       cell) — independent, any time
 
@@ -1274,7 +1278,7 @@ into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §3-F Optional follow-ons (F5+F2 ✅ LANDED 2026-07-17; F1/F4/F3 cold-executable, sequenced F1 → F4 → F3)
+## §3-F Optional follow-ons (F5+F2 ✅ + F1 ✅ LANDED 2026-07-17; F4/F3 cold-executable, F4 next)
 
 The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
 sub-phase specs so a cold session can pick one up without re-deriving — plus F5
@@ -1317,6 +1321,45 @@ F1 → F4 → F3; perf item C2 is retired into F5.** Ground rules for all of the
 > outside the cells container, so the container's scroll clip never touches them). The rest
 > of this section — origin state, reconcile, hit-test mapping, wheel, editing, restore —
 > stands as written.
+
+> **✅ LANDED 2026-07-17 (same day, post-F5). As specced, with these as-built deviations —**
+> - **The cell/chrome split:** instead of "make `_buildGridNoSettle` viewport-relative and
+>   share it", it SPLIT: `_buildChromeNoSettle` (panel + slot-keyed headers + re-home of
+>   indexed cells into a fresh panel) and `_reconcileViewportNoSettle` (ALL cell
+>   materialisation — the constructor now calls the pair, so construction, scroll and restore
+>   are one code path). Headers' "recycle" degenerated to RELABEL-IN-PLACE: cell-quantized
+>   scroll means header widgets never move — `_labelText` derives from origin + slot at paint
+>   time; `@index` is the SLOT.
+> - **⚠⚠ The exemption predicate needed a RESTORE disjunct.** At `_reindexCellsNoSettle` time
+>   the record's derived `@value` is still nil (a serialization transient — recommit + drain
+>   run AFTER the reconcile), so the specced "record's value IS the hosted widget" test alone
+>   would DESTROY every adopted hidden rich cell — losing exactly the state F1 promises to
+>   keep. Shipped predicate: `hostedWidget? and record? and (record.value is hostedWidget or
+>   not record.value?)` — safe because a snapshot only carries off-viewport cells for
+>   widget-valued records (the invariant at save time), and a live empty-valued cell never
+>   hosts (blank-commit reconciles the widget away in its own drain, before any scroll event).
+> - **The invariant holds continuously, not just at origin changes:** a recompute that turns a
+>   HIDDEN cell's value non-widget recycles it on the spot inside `_reconcileCellNoSettle`;
+>   the branch-1 no-cell mount births the hidden cell at its NOTIONAL off-screen slot rect
+>   (integer; `__hide` keeps it out of fullBounds/paint/hit-testing — verified against
+>   `preliminaryCheckNothingToDraw` + the `fullBounds` visibility filter).
+> - **`_startEditNoSettle` scroll-follows FIRST**: after a wheel the selection can sit
+>   off-viewport with NO CellWdgt; Enter/F2/type-to-edit jump the view back to the active
+>   cell (Excel behaviour) so the overlay editor always has a visible cell to mount on.
+> - **Wheel** is per-axis at-limit escalation exactly like `ScrollPanelWdgt` (one escalate
+>   call), keeps its destroy-temporary-handles opening move, and quantizes
+>   `max(1, round(|delta|·wheelScale/cellSize))` whole cells post-inversion.
+> - **Test case-law:** rows 1–14 are IN view at origin 0 — the RichCellRetain dependent had
+>   to live at A20 (slot 0,7 at origin 12), not A13 (the first authoring's 40-px diff); park
+>   the pointer (corner header) before every byte-compared screenshot (click-then-park).
+> **Verification:** origin-0 byte-identity HELD — presuite 250/250 dpr1, ZERO recaptures;
+> 3 new SystemTests (ScrollWheel / ScrollKeyboardFollow / ScrollRichCellRetain, each ending
+> in an in-test `assertScreenshotsIdentical` round-trip proof) captured dpr1+dpr2 → suite
+> 253; 3 new scrolled-round-trip rig rows (origin / hiddenRetain / cellCensus) green on BOTH
+> serialization legs; close gauntlet 11/11 GREEN (396s — dpr1/dpr2/webkit 253/253, paint,
+> tiernaming, settle, capstone, REVISITS baseline still EMPTY, census 0/1528, refs 1570
+> consistent; the refs leg needed its serial retry — the documented load-flake, not a hash
+> mismatch).
 
 **Goal.** The sheet's LOGICAL grid becomes larger than the viewport (v1 bounds: 26 columns
 A–Z × 100 rows — constants, still far under the address grammar's ZZ9999 ceiling); the user
