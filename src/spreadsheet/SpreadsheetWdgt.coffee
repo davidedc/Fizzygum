@@ -1,16 +1,21 @@
-# SpreadsheetWdgt — the spreadsheet's grid (spec docs/specs/dataflow-engine-spec.md §9.1, Phase 8
-# "widgetise the grid"). "Widgetized viewport over painted chrome": the widget's own paint draws only
-# the CHROME — the gridlines, the lettered column headers / numbered row headers, and the selection —
-# while every VISIBLE cell is a real child widget (a CellWdgt) that renders its own value (a scalar's
-# text, a hosted value-widget, or a presenter swatch). One CellWdgt per cell of the fixed 6×14 viewport
-# is materialised once (_buildGridNoSettle); each is the VIEW of its SheetCellRecord.
+# SpreadsheetWdgt — the spreadsheet's grid (spec docs/specs/dataflow-engine-spec.md §9.1; Phase 8
+# "widgetise the grid" + follow-on F5 "the sheet paints NOTHING"). Every visible thing is a real
+# child widget: the 84 data cells (CellWdgt, one per cell of the fixed 6×14 viewport — each the
+# VIEW of its SheetCellRecord) live inside a SheetCellsPanelWdgt whose fill is the data-region
+# background; the 21 header cells (SheetHeaderCellWdgt: column letters, row numbers, the corner)
+# are direct children, kept OUTSIDE the panel so a future scroll clip can never touch the frozen
+# headers. Each widget paints its own fill, its own TOP+LEFT grid edges (edge-ownership + the
+# crossing rule — see paintGridEdges), its own label/value, and — the selected cell — its own
+# selection ring. This widget has NO paint of its own (nil appearance): it is the model owner,
+# the formula scope, the keyboard receiver, and the geometry authority (the constants below).
 #
-# Widgetising the grid is owner direction (2026-07-05): full Fizzygum composability — a cell is a real,
-# inspectable, live-editable widget, not a paint artifact. Widget count is bounded by the VIEWPORT, not
-# the sparse model (an off-screen cell — Z99 in a formula — is still a live dataflow node whose record
-# recomputes with NO widget; scroll, a later sub-phase, materialises/recycles the viewport's CellWdgts).
-# The dataflow layer operates on RECORDS, never widgets, so correctness is independent of what is
-# materialised — Phases 1–7 (engine, model, value protocol, serialization) are UNTOUCHED by this phase.
+# Widgetising is owner direction (2026-07-05 cells; 2026-07-17 headers + chrome — plan §3-F F5,
+# with the byte-identity receipts): full Fizzygum composability — everything the user sees is a
+# real, inspectable, live-editable widget, not a paint artifact. Widget count is bounded by the
+# VIEWPORT, not the sparse model (an off-screen cell — Z99 in a formula — is still a live
+# dataflow node whose record recomputes with NO widget; scroll, follow-on F1, materialises/
+# recycles the viewport's widgets). The dataflow layer operates on RECORDS, never widgets, so
+# correctness is independent of what is materialised.
 #
 # The data lives in @model (a SheetModel, sparse Map keyed "A1"); each cell is a SheetCellRecord
 # — a dataflow NODE. Committing an edit compiles the source once (FormulaCompiler) and marks the
@@ -31,25 +36,28 @@
 #     as you type), and a live caret is a keyboard receiver that BLINKS (non-deterministic under a
 #     screenshot). The buffer gives exact, deterministic commit/cancel and keeps THIS widget the sole
 #     keyboard receiver throughout (no caret juggling). Rich editing (cursor, selection, multi-line)
-#     stays the deferred CodePromptWdgt path (spec §9.1). Folding the editor into the CellWdgt is a
-#     later sub-phase; for now the editing cell suppresses its own text (_isCellBeingEdited).
+#     stays the deferred CodePromptWdgt path (spec §9.1). The editor WIDGET lives on the editing
+#     CellWdgt (F2, executed with F5): this sheet keeps the buffer + the keys and delegates
+#     mount/update/teardown to the cell, which suppresses its own scalar text while it holds one.
 #
-# Chrome paint follows the AnalogClockWdgt model (paintIntoAreaOrBlitFromBackBuffer). Keyboard
-# selection + editing use the standard receiver path (world.keyboardEventsReceivers +
+# Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers +
 # processKeyDown), focus-on-click; never a DOM listener.
 
 class SpreadsheetWdgt extends Widget
 
-  # transient UI state (rebuilt by interaction, never document data): the in-progress edit and its
-  # live overlay editor are dropped from a snapshot (a mid-edit save restores to a settled,
-  # not-editing sheet). The cell INDEX (@_cells: address → CellWdgt) is transient too — but note the
-  # CellWdgts themselves are ordinary children and DO ride the tree, so a widget-valued cell's live
-  # widget (a dragged slider's position) survives save/load (spec §13 retain-and-remount). On restore
-  # the index is rebuilt from those cell children (_reindexCellsNoSettle → _recommitAllCells → drain →
-  # reconcile): a DERIVED presenter (a Color's swatch, spec §9.4 "one-way glass") is rebuilt from the
-  # value, a scalar repaints, a state-bearing value-widget is RETAINED. @model / @selected* ARE
-  # document state and serialize normally.
-  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_editor", "_cells"]
+  # transient UI state (rebuilt by interaction or from the tree, never document data): the
+  # in-progress edit is dropped from a snapshot (a mid-edit save restores to a settled,
+  # not-editing sheet; the editor WIDGET lives on the editing cell, whose re-index sweep drops
+  # it). The cell INDEX (@_cells: address → CellWdgt) and the CHROME handles (@_cellsPanel, the
+  # @_headerCells map) are transient too — but note the widgets themselves are ordinary children
+  # and DO ride the tree: a widget-valued cell's live widget (a dragged slider's position)
+  # survives save/load (spec §13 retain-and-remount), while the CHROME (panel + header cells) is
+  # DERIVED and is destroyed + rebuilt from the geometry constants on restore. On restore the
+  # index is rebuilt from the snapshot's cells (_reindexCellsNoSettle → _recommitAllCells →
+  # drain → reconcile): a DERIVED presenter (a Color's swatch, spec §9.4 "one-way glass") is
+  # rebuilt from the value, a scalar repaints, a state-bearing value-widget is RETAINED.
+  # @model / @selected* ARE document state and serialize normally.
+  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_cells", "_cellsPanel", "_headerCells"]
 
   # fixed grid geometry (no column resize in v1)
   headerColWidth: 34     # the left row-number header column
@@ -64,11 +72,13 @@ class SpreadsheetWdgt extends Widget
     # selection is a single cell (0-based col/row); v1 always has one selected
     @selectedCol = 0
     @selectedRow = 0
-    # the sparse data model — this widget paints it and is its formula scope (see FormulaCompiler)
+    # the sparse data model — this widget owns it and is its formula scope (see FormulaCompiler)
     @model = new SheetModel @
     # colours (immutable + LRU-cached via Color.create; computed once here, never at class
-    # scope — class-level Color statics would run at class-definition time, before Color loads)
-    @backgroundColorGrid = Color.WHITE
+    # scope — class-level Color statics would run at class-definition time, before Color loads).
+    # The child widgets read these — the sheet itself paints nothing (F5), and the data region
+    # has NO background of its own (the cells panel is transparent too): the backdrop under
+    # the sheet shows through, exactly as it always did.
     @headerFillColor = Color.create 236, 236, 236
     @gridlineColor = Color.create 198, 198, 198
     @headerBorderColor = Color.create 150, 150, 150
@@ -76,10 +86,9 @@ class SpreadsheetWdgt extends Widget
     @selectionColor = Color.create 40, 110, 210
     @valueTextColor = Color.create 30, 30, 30
     @errorTextColor = Color.create 200, 40, 40
-    # editing state (a live overlay editor is the only live child widget in v1 — the socket
-    # precursor, spec §9.1); nil / false until an edit begins
+    # editing state (the buffer + which cell; the editor WIDGET lives on the editing cell —
+    # F2/F5); nil / false until an edit begins
     @_editing = false
-    @_editor = nil
     @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
@@ -89,11 +98,16 @@ class SpreadsheetWdgt extends Widget
     # (the CellWdgts themselves ride the tree as children; this index is rebuilt from them on restore by
     # _reindexCellsNoSettle, and the drain reconciles each — see _reconcileCellNoSettle).
     @_cells = new Map
-    @setColor @backgroundColorGrid
+    # chrome handles (F5): the data-cells container and the header-cell index ("kind:index" →
+    # SheetHeaderCellWdgt). TRANSIENT + DERIVED: destroyed and rebuilt from the geometry
+    # constants on restore (_reindexCellsNoSettle), never adopted from a snapshot.
+    @_cellsPanel = nil
+    @_headerCells = new Map
     @_applyExtent new Point @_gridWidth(), @_gridHeight()
-    # materialise the fixed grid of cell widgets (NoSettle: the enclosing openWindowWith settles once —
-    # the DegreesConverterApp orphan-construction idiom; a deserialize/duplicate skips the constructor
-    # and restores/copies the cells instead, which _reindexCellsNoSettle then adopts — no double grid).
+    # materialise the widget chrome + the fixed grid of cell widgets (NoSettle: the enclosing
+    # openWindowWith settles once — the DegreesConverterApp orphan-construction idiom; a
+    # deserialize/duplicate skips the constructor and restores/copies the cells instead, which
+    # _reindexCellsNoSettle then adopts — no double grid).
     @_buildGridNoSettle()
     return
 
@@ -119,119 +133,110 @@ class SpreadsheetWdgt extends Widget
   _gridWidth:  -> @headerColWidth + @numCols * @colWidth
   _gridHeight: -> @headerRowHeight + @numRows * @rowHeight
 
-  # ── the widgetised grid: one CellWdgt per visible cell (Phase 8) ─────────────────────────────
+  # ── the widgetised grid: panel + headers + one CellWdgt per visible cell (Phase 8 + F5) ──────
 
-  # Materialise the fixed 6×14 grid of CellWdgts, one per cell, positioned at its cell rect (absolute,
-  # from @position() + the local rect — the CellSocketWdgt idiom, now for every cell). Freefloating
-  # children float-follow the sheet if it later moves (base _reLayout _applyMoveTo). NoSettle: run from
-  # the constructor before the sheet is placed (the enclosing openWindowWith owns the one settle) and
-  # never on the deserialize/duplicate path (those skip the constructor — CellWdgts ride the snapshot).
+  # Materialise the sheet's WIDGET CHROME and the fixed 6×14 grid of CellWdgts: the
+  # SheetCellsPanelWdgt spanning the data region (its fill = the data background, read from
+  # THIS sheet — one authority), the 21 SheetHeaderCellWdgts (corner + column letters + row
+  # numbers; direct children, OUTSIDE the panel so a future scroll clip never touches them),
+  # and the data cells, one per address, hosted INSIDE the panel at their cell rects (absolute,
+  # from @position() + the local rect — the CellSocketWdgt idiom). Freefloating children
+  # float-follow the sheet if it later moves (base _reLayout _applyMoveTo). IDEMPOTENT: every
+  # piece is keyed (panel field / "kind:index" / address) and only built when missing, so the
+  # restore re-index can destroy the derived chrome, adopt the snapshot's cells and call this
+  # to rebuild chrome + re-home the cells + fill gaps — never a double grid. NoSettle: runs
+  # from the constructor before the sheet is placed (the enclosing openWindowWith owns the one
+  # settle) and inside the re-index's enclosing settle on restore/duplicate.
   _buildGridNoSettle: ->
+    unless @_cellsPanel?
+      panel = new SheetCellsPanelWdgt
+      @_addNoSettle panel
+      panel._applyExtent new Point (@numCols * @colWidth), (@numRows * @rowHeight)
+      panel._applyMoveTo @position().add new Point @headerColWidth, @headerRowHeight
+      @_cellsPanel = panel
+    buildHeader = (kind, index, x, y, w, h) =>
+      key = kind + ":" + (index ? "")
+      unless @_headerCells.has key
+        header = new SheetHeaderCellWdgt kind, index
+        header.attachSheet this
+        @_addNoSettle header
+        header._applyExtent new Point w, h
+        header._applyMoveTo @position().add new Point x, y
+        @_headerCells.set key, header
+      return
+    buildHeader "corner", nil, 0, 0, @headerColWidth, @headerRowHeight
+    col = 0
+    while col < @numCols
+      buildHeader "column", col, (@headerColWidth + col * @colWidth), 0, @colWidth, @headerRowHeight
+      col += 1
+    row = 0
+    while row < @numRows
+      buildHeader "row", row, 0, (@headerRowHeight + row * @rowHeight), @headerColWidth, @rowHeight
+      row += 1
     row = 0
     while row < @numRows
       col = 0
       while col < @numCols
         address = @model.addressFor col, row
-        unless @_cells.has address     # idempotent: skip a cell already present (re-index fill-in)
+        unless @_cells.has address
           cell = new CellWdgt address
           cell.attachSheet this
-          @_addNoSettle cell
+          @_cellsPanel._addNoSettle cell
           rect = @_cellRectLocal col, row
           cell._applyExtent new Point rect.w, rect.h
           cell._applyMoveTo @position().add new Point rect.x, rect.y
           @_cells.set address, cell
+        else
+          # an adopted snapshot cell: re-home it into the (fresh) panel, keeping its geometry
+          cell = @_cells.get address
+          @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
         col += 1
       row += 1
     return
 
-  # ── painting (AnalogClockWdgt model) ────────────────────────────────────────────────────
+  # ── painting: the sheet paints NOTHING (F5) — only the shared edge-stroke helper lives here ──
+  # The sheet has a nil @appearance (the Widget default), so the base
+  # paintIntoAreaOrBlitFromBackBuffer paints nothing: the cells panel fills the data region,
+  # the header cells fill their strips, and every widget strokes its own top+left edges + its
+  # own text/value/ring. (The old one-pass _paintGrid died here — plan §3-F F5, byte-identical
+  # by the segmentation receipt, EXCEPT the selection ring which deliberately moved inside the
+  # cell, the budgeted F2 recapture.)
 
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-    [area, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
-      aContext.save()
-      aContext.clipToRectangle al, at, w, h
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @backgroundTransparency
-      @paintRectangle aContext, al, at, w, h, @backgroundColor
-      aContext.useLogicalPixelsUntilRestore()
-      widgetPosition = @position()
-      aContext.translate widgetPosition.x, widgetPosition.y
-      @_paintGrid aContext
-      aContext.restore()
-      @paintHighlight aContext, al, at, w, h
-
-  # everything here is in LOGICAL pixels relative to the widget's top-left (aContext translated)
-  _paintGrid: (aContext) ->
-    gw = @_gridWidth()
-    gh = @_gridHeight()
-
-    # header strip backgrounds (top row of letters, left column of numbers)
-    aContext.fillStyle = @headerFillColor.toString()
-    aContext.fillRect 0, 0, gw, @headerRowHeight
-    aContext.fillRect 0, 0, @headerColWidth, gh
-
-    # inner gridlines (crisp 1px on the half-pixel)
-    aContext.strokeStyle = @gridlineColor.toString()
+  # PUBLIC (F5): stroke a grid widget's OWN top+left edges into its local, already-translated
+  # coordinate space — the ONE home for the edge paint CellWdgt and SheetHeaderCellWdgt share
+  # (the sheet stays the colour + geometry authority). THE CROSSING RULE (F5 receipt A): the
+  # grid-coloured edge strokes BEFORE the dark edge, so dark wins every crossing pixel exactly
+  # as the old one-pass paint's "gridlines first, darker borders last" order did —
+  # byte-identical, proven at dpr1+dpr2. Left edge = a vertical at x 0.5 (rasterises into the
+  # widget's FIRST pixel column); top edge = a horizontal at y 0.5. Nobody strokes
+  # right/bottom: the old outermost strokes at gw+0.5/gh+0.5 rasterised one pixel past the
+  # sheet and were clipped invisible (F5 receipt C) — drawing them now WOULD change pixels.
+  paintGridEdges: (aContext, width, height, leftIsDark, topIsDark) ->
     aContext.lineWidth = 1
-    col = 0
-    while col <= @numCols
-      x = @headerColWidth + col * @colWidth
+    strokeLeftEdge = =>
+      aContext.strokeStyle = (if leftIsDark then @headerBorderColor else @gridlineColor).toString()
       aContext.beginPath()
-      aContext.moveTo x + 0.5, 0
-      aContext.lineTo x + 0.5, gh
+      aContext.moveTo 0.5, 0
+      aContext.lineTo 0.5, height
       aContext.stroke()
-      col += 1
-    row = 0
-    while row <= @numRows
-      y = @headerRowHeight + row * @rowHeight
+    strokeTopEdge = =>
+      aContext.strokeStyle = (if topIsDark then @headerBorderColor else @gridlineColor).toString()
       aContext.beginPath()
-      aContext.moveTo 0, y + 0.5
-      aContext.lineTo gw, y + 0.5
+      aContext.moveTo 0, 0.5
+      aContext.lineTo width, 0.5
       aContext.stroke()
-      row += 1
+    if leftIsDark and not topIsDark
+      strokeTopEdge()
+      strokeLeftEdge()
+    else
+      strokeLeftEdge()
+      strokeTopEdge()
+    return
 
-    # a slightly darker border around the whole grid + under/right-of the headers
-    aContext.strokeStyle = @headerBorderColor.toString()
-    aContext.beginPath()
-    aContext.moveTo 0.5, 0 ; aContext.lineTo 0.5, gh                       # left edge
-    aContext.moveTo 0, 0.5 ; aContext.lineTo gw, 0.5                       # top edge
-    aContext.moveTo @headerColWidth + 0.5, 0 ; aContext.lineTo @headerColWidth + 0.5, gh  # right of number header
-    aContext.moveTo 0, @headerRowHeight + 0.5 ; aContext.lineTo gw, @headerRowHeight + 0.5 # under letter header
-    aContext.stroke()
-
-    # header text
-    aContext.fillStyle = @headerTextColor.toString()
-    aContext.font = @_gridFont()
-    col = 0
-    while col < @numCols
-      x = @headerColWidth + col * @colWidth + 4
-      aContext.fillText @model.colToLetters(col), x, @headerRowHeight - 6
-      col += 1
-    row = 0
-    while row < @numRows
-      y = @headerRowHeight + row * @rowHeight + @rowHeight - 6
-      aContext.fillText ("" + (row + 1)), 4, y
-      row += 1
-
-    # committed cell VALUES are no longer painted here (Phase 8): each visible cell's CellWdgt child
-    # renders its own value — a painted scalar (CellWdgt.paintIntoAreaOrBlitFromBackBuffer), a hosted
-    # value-widget (branch 1) or a presenter swatch (branch 2). Children paint AFTER this chrome, so
-    # values land on top of the gridlines. The sheet paints only chrome (headers/gridlines/selection).
-
-    # selection rectangle (drawn last, on top)
-    if @selectedCol? and @selectedRow?
-      sx = @headerColWidth + @selectedCol * @colWidth
-      sy = @headerRowHeight + @selectedRow * @rowHeight
-      aContext.strokeStyle = @selectionColor.toString()
-      aContext.lineWidth = 2
-      aContext.strokeRect sx + 1.5, sy + 1.5, @colWidth - 2, @rowHeight - 2
-
-  # 12px Arial — the SWCanvas-deterministic band (see header). No bold/italic.
-  _gridFont: -> "12px Arial, sans-serif"
+  # PUBLIC (F2/F5): is `address` the currently-selected cell? The cells ask this to render
+  # their own selection ring — they never reach into @selectedCol/@selectedRow directly.
+  isSelectedAddress: (address) ->
+    @selectedCol? and @selectedRow? and (address is @model.addressFor @selectedCol, @selectedRow)
 
   # ── selection: pointer + keyboard ───────────────────────────────────────────────────────
 
@@ -358,24 +363,21 @@ class SpreadsheetWdgt extends Widget
     @_mountEditorNoSettle()
     return
 
-  # a plain StringWdgt shows the buffer over the editing cell. isEditable false: THIS widget owns
-  # the keys (no caret is ever mounted on it), so it is a passive display driven by @_editBuffer.
-  # A freefloating child positioned at the cell's absolute rect (the _addNoSettle + _apply* idiom).
+  # the editor WIDGET lives on the editing CELL (F2, executed with F5): this sheet keeps the
+  # buffer + the keys and delegates mount/update/teardown — the cell holds the StringWdgt and
+  # suppresses its own scalar text while it does (its complete view state in one widget).
   _mountEditorNoSettle: ->
-    rect = @_cellRectLocal @_editCol, @_editRow
-    editor = new StringWdgt @_editBuffer, 12
-    editor.color = @valueTextColor
-    editor.isEditable = false
-    @_addNoSettle editor
-    editor._applyExtent new Point rect.w, rect.h
-    editor._applyMoveTo @position().add new Point rect.x, rect.y
-    @_editor = editor
-    editor.changed()
+    @_editingCellWdgt()?._mountEditorNoSettle @_editBuffer
     return
 
   _updateEditorTextNoSettle: ->
-    @_editor?._setTextNoSettle @_editBuffer
+    @_editingCellWdgt()?._updateEditorTextNoSettle @_editBuffer
     return
+
+  # the CellWdgt of the cell being edited, or nil when not editing
+  _editingCellWdgt: ->
+    return nil unless @_editCol? and @_editRow?
+    @_cells.get @model.addressFor @_editCol, @_editRow
 
   # commit: compile the source ONCE (FormulaCompiler) and mark the cell stale; the once-per-cycle
   # dataflow drain (this same doOneCycle) recomputes the value and the grid repaints.
@@ -393,13 +395,12 @@ class SpreadsheetWdgt extends Widget
     return
 
   _teardownEditorNoSettle: ->
-    editor = @_editor
+    editingCell = @_editingCellWdgt()
     @_editing = false
-    @_editor = nil
     @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
-    editor?._fullDestroyNoSettle()
+    editingCell?._teardownEditorNoSettle()
     @changed()
     return
 
@@ -466,12 +467,6 @@ class SpreadsheetWdgt extends Widget
     world.dataflow?.markStale cell if cell?
     return
 
-  # true while `address` is the cell the user is editing — its CellWdgt suppresses its own scalar paint
-  # so the overlay editor (which sits over the cell) is the sole thing shown (no doubled text). Folding
-  # the editor into the CellWdgt is a later sub-phase; this keeps the two visually exclusive meanwhile.
-  _isCellBeingEdited: (address) ->
-    @_editing and @_editCol? and @_editRow? and (address is @model.addressFor @_editCol, @_editRow)
-
   # PUBLIC: the live widget a cell currently hosts — its value-widget (branch 1, a slider) or
   # presenter (branch 2, a swatch), or nil for a scalar / empty cell. The public reach into a
   # mounted cell widget (a macro drags `sheet.hostedWidgetAt "A1"`, never the private cell index).
@@ -495,30 +490,45 @@ class SpreadsheetWdgt extends Widget
     @model.forEachCell (cell) -> world.dataflow?.markStale cell
     return
 
-  # After restore/duplicate the transient @_cells index is empty, but the CellWdgts rode the tree as
-  # this sheet's children (the constructor — which would have built them — is SKIPPED on the
-  # deserialize/duplicate path, so there is no double grid) — each carrying its @address and any hosted
-  # value/presenter widget (a restored slider keeps its dragged position, spec §13). Rebuild the
-  # address→cell index from them and re-attach the back-ref, so the recompute above RETAINS a
-  # widget-valued cell's restored widget (class match) rather than rebuilding it — a DERIVED presenter
-  # is rebuilt from the value (its churn-skip @presentedValue is nil after restore, which forces the
-  # rebuild), a scalar repaints, a state-bearing value-widget is kept. Then _buildGridNoSettle (which
-  # skips addresses already indexed) fills in any cell the snapshot lacked, so the full viewport grid
-  # invariant always holds. DESTROY any non-cell stray child (a mid-edit overlay editor that rode a
-  # subtree snapshot) and reset the transient edit state.
+  # After restore/duplicate the transient @_cells index + chrome handles are empty, but the
+  # widgets rode the tree (the constructor — which would have built them — is SKIPPED on the
+  # deserialize/duplicate path, so there is no double grid): the CellWdgts — each carrying its
+  # @address and any hosted value/presenter widget (a restored slider keeps its dragged
+  # position, spec §13) — inside the snapshot's cells panel (or as direct children in a pre-F5
+  # snapshot), plus the DERIVED chrome (panel + header cells), which is DESTROYED and rebuilt
+  # from the geometry constants — ONE path serves both snapshot generations. The cells are
+  # rescued out of the old chrome first, adopted + re-indexed (back-ref re-attached, so the
+  # recompute RETAINS a widget-valued cell's restored widget by class match — a DERIVED
+  # presenter is rebuilt from the value, a scalar repaints), and any stray CELL child that is
+  # not its hosted widget (a mid-edit overlay editor that rode a subtree snapshot) is
+  # destroyed. Then _buildGridNoSettle rebuilds the chrome, re-homes the adopted cells into
+  # the fresh panel and fills any address the snapshot lacked — the full viewport grid
+  # invariant always holds. The transient edit state resets.
   _reindexCellsNoSettle: ->
     @_editing = false
-    @_editor = nil
     @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
     @_cells = new Map
+    @_cellsPanel = nil
+    @_headerCells = new Map
+    # rescue the data cells out of any snapshot chrome, up to direct children
+    for child in @children.slice()
+      if child instanceof SheetCellsPanelWdgt
+        for inner in child.children.slice()
+          @_addNoSettle inner if inner instanceof CellWdgt
+    # destroy everything that isn't a data cell: old chrome (now empty of cells) + strays
+    for child in @children.slice()
+      child._fullDestroyNoSettle() unless child instanceof CellWdgt
+    # adopt + index the snapshot's cells; sweep their stray children (a mid-edit editor)
     for child in @children.slice()
       if child instanceof CellWdgt
         child.attachSheet this
+        child._editorWdgt = nil
+        for grand in child.children.slice()
+          grand._fullDestroyNoSettle() unless grand is child.hostedWidget
         @_cells.set child.address, child
-      else
-        child._fullDestroyNoSettle()
+    # rebuild chrome, re-home the adopted cells into the fresh panel, fill any gaps
     @_buildGridNoSettle()
     return
 
@@ -532,13 +542,12 @@ class SpreadsheetWdgt extends Widget
   _afterDeserialization: ->
     @_recommitAllCells()
 
-  # drop keyboard focus + any live editor when this sheet goes away, so a dead widget never
-  # receives keys (the editor child is also torn down by super's child destruction). Also perform
-  # NODE DEATH on every cell: drop its edges from the shared engine (the Phase-1 removeAllEdgesOf
-  # API) — a destroyed sheet's cells are gone, so leaving their edges would leak and could
-  # ghost-recompute.
+  # drop keyboard focus when this sheet goes away, so a dead widget never receives keys (the
+  # whole widget subtree — panel, headers, cells, any live editor on a cell — is torn down by
+  # super's child destruction). Also perform NODE DEATH on every cell: drop its edges from the
+  # shared engine (the Phase-1 removeAllEdgesOf API) — a destroyed sheet's cells are gone, so
+  # leaving their edges would leak and could ghost-recompute.
   destroy: ->
-    @_editor = nil
     world?.keyboardEventsReceivers?.delete @
     @model?.forEachCell (cell) -> world.dataflow?.removeAllEdgesOf cell
     super()

@@ -34,12 +34,15 @@ options, and one is started only when the owner explicitly names it.)**
 corrected 2026-07-17 at tree `61080871`; F5 fleshed out with pixel receipts 2026-07-17;
 sequencing owner-ratified 2026-07-17: **F5(+F2) → F1 → F4 → F3**, perf C2 retired into F5):
 
-- [ ] F5 — headers-as-widgets + cell-owned grid chrome; **F2 executes inside F5's commit
-      series** (F5 evidence B) — SCHEDULED FIRST
-- [ ] F2 — selection border + overlay editor fully into the `CellWdgt` (view self-containment)
-      — folded into F5, checked together with it
+- [x] F5 — headers-as-widgets + cell-owned grid chrome; the sheet paints NOTHING — **LANDED
+      2026-07-17** (see the F5 section's landing log; gauntlet 11/11, revisits baseline still
+      EMPTY, census green, both serialization legs green, 11-test ring recapture
+      webkit-verified)
+- [x] F2 — selection border + overlay editor fully into the `CellWdgt` (view
+      self-containment) — executed inside F5's landing (F5 evidence B made it mandatory)
 - [ ] F1 — scroll: logical sheet > viewport; wheel + keyboard scroll; viewport
-      materialise/recycle (header-offset paint design superseded by F5's header widgets)
+      materialise/recycle (header-offset paint design superseded by F5's header widgets) —
+      NEXT per the owner-ratified sequencing
 - [ ] F4 — drag-and-drop desktop widgets into cells (widget-entry cells) — was gated on the
       drag-embed arc, which COMPLETED (pushed 2026-07-13) ⇒ unblocked; land after F1
 - [ ] F3 — the "operate ➜" cell menu (value-class method introspection → formula in a nearby
@@ -1270,7 +1273,7 @@ into the cell (the 8.2/8.3 deferral) = **F2**.
 
 ---
 
-## §3-F Optional follow-ons (F1–F4 fleshed out 2026-07-06; F5 fleshed out 2026-07-17 — ALL cold-executable; F5+F2 SCHEDULED first, owner-ratified 2026-07-17)
+## §3-F Optional follow-ons (F5+F2 ✅ LANDED 2026-07-17; F1/F4/F3 cold-executable, sequenced F1 → F4 → F3)
 
 The four items Phases 2a/3/4/8 recorded as optional/deferred, promoted here to executable
 sub-phase specs so a cold session can pick one up without re-deriving — plus F5
@@ -1666,13 +1669,25 @@ drag-embed arc closed WITHOUT changing the drop-hook signatures (re-verified 202
 
 ### F5 — headers become widgets; the grid chrome migrates into the cells (+ F2 folded in)
 
-**Status: FLESHED OUT 2026-07-17 — cold-executable; scheduled FIRST among the follow-ons
-(owner ratified the F5-first sequencing 2026-07-17). F2 executes as part of F5's commit
-series (evidence below makes it mandatory, not optional). Pixel evidence: three SWCanvas
-probes + a ground-truth read of the real `macroSpreadsheetOpenGrid` dpr1 reference
-(methodology + numbers inline below; probe scripts were session scratch —
-`Fizzygum-tests/.scratch/f5-gridline-probe.js` / `f5-groundtruth-probe*.js`, gitignored,
-trivially re-derivable from the geometry stated here).**
+**Status: ✅ LANDED 2026-07-17, same day as the flesh-out (F2 executed inside it — both
+ledger boxes checked together). Landing log: NEW `SheetHeaderCellWdgt` +
+`SheetCellsPanelWdgt`, `CellWdgt` edges+ring+editor, `SpreadsheetWdgt` paint DELETED +
+chrome build/re-index + editor delegation + PUBLIC `isSelectedAddress`/`paintGridEdges`.
+Verified pre-recapture: the ENTIRE pixel diff vs the old references was 332 px, all inside
+the selected cell A1's rect (the budgeted F2 ring change; bbox-checked) — headers,
+gridlines, text byte-identical as receipts A/C predicted. One design claim FALSIFIED at
+implementation (the backgrounds bullet below, corrected in place): the cells panel is
+TRANSPARENT, not filled. Close gates: `fg gauntlet` 11/11 in 276s (dpr1+dpr2+webkit 250/250
+— every recaptured frame webkit-verified — apps, paint, tiernaming/settle/capstone, refs,
+REVISITS baseline still EMPTY, census); both serialization legs green over the updated rig
+(F5 chrome census + the NEW `spreadsheet.roundtrip.midEditClean` row); the 11-test
+`macroSpreadsheet*` family recaptured dpr1+dpr2 (the ring); `fg diffpage` review page
+generated pre-recapture. Docs landed in the same commits: `src/spreadsheet/CLAUDE.md`,
+NOMENCLATURE (header cell / cells panel / edge ownership / crossing rule), spec §9.1
+(F5 = the shipped form). Pixel evidence below: three SWCanvas probes + a ground-truth read
+of the real `macroSpreadsheetOpenGrid` dpr1 reference (methodology + numbers inline; probe
+scripts were session scratch — `Fizzygum-tests/.scratch/f5-*.js`, gitignored, trivially
+re-derivable from the geometry stated here).**
 
 **The direction (owner, 2026-07-17).** Anything selectable/clickable should be a Widget. The
 column-header cells (one day: click to select the whole column) and the row-number header
@@ -1714,10 +1729,20 @@ headerRowHeight 20, colWidth 68, rowHeight 20, 6×14, gw 442, gh 300).**
   sample as backdrop). **The container therefore paints NOTHING in v1** — byte-identity
   demands it. The owner's "cheap two live strokes" is the mechanism held in reserve IF a
   visible right/bottom border is ever wanted (a deliberate, recaptured pixel change).
-- **Backgrounds (ground truth).** Cell interiors are **rgb(248,248,248)** — the sheet paints
-  `@backgroundColor` (the Widget default), NOT its `@color` (which is set to `Color.WHITE`
-  and unused by the custom paint). Header strips are 236 over that. Fill ownership under F5:
-  opaque axis-aligned rects tiling disjoint regions compose byte-identically in any order.
+- **Backgrounds — the flesh-out's first reading was FALSIFIED at implementation
+  (2026-07-17, same day).** The flesh-out read "cell interiors are rgb(248)" as "the sheet
+  paints `@backgroundColor` (a Widget default of 248)". WRONG: `Widget.backgroundColor`
+  defaults to **nil** (Widget ~107), so the old paint's background rect was a NO-OP — the
+  sheet's data region has ALWAYS been transparent, and the 248 in the reference is the
+  WINDOW's content backdrop showing through. (The wrong reading shipped briefly as
+  `panel.color = @backgroundColor` = nil, which `RectangularAppearance` cannot render —
+  `color.toString()` threw on every repaint, the error console popped in every spreadsheet
+  test, and its own layout tripped the NON_INTEGER_GEOMETRY gate; the whole family failed
+  loudly.) Correct model: the cells panel is TRANSPARENT (nil `@appearance` — the CellWdgt
+  idiom; that also kills the inherited inset stroke), the backdrop keeps showing through the
+  data region, and the ONLY fill any widget paints is the header cells' 236 strip fill
+  (which WAS sheet-painted). Verified: post-fix, the full diff vs the old reference is 332 px,
+  ALL inside the selected cell A1's rect — the budgeted ring change and nothing else.
 
 **Design (decided; receipts above).**
 - **Two new classes**, both in `src/spreadsheet/` (already globbed by `build.py` — no
@@ -1733,26 +1758,29 @@ headerRowHeight 20, colWidth 68, rowHeight 20, 6×14, gw 442, gh 300).**
     container class; `PanelWdgt` is the canonical container and its
     `ClippingAtRectangularBoundsMixin` clipping is exactly what F1's scroll viewport wants,
     dormant until then). It spans the DATA region (34,20)–(442,300) sheet-local and hosts
-    the 84 `CellWdgt`s. Its `RectangularAppearance` fill IS the data-region background:
-    `@color` = the sheet's `@backgroundColor` value (rgb 248 — READ from the sheet, one
-    authority, never duplicated), `@strokeColor` nil. v1 neutralisations, each verified at
-    implementation: `wantsDropOfChild -> false` (cells tile it completely, but be explicit —
-    F4 targets CELLS), editing amenities off (`providesAmenitiesForEditing`), and confirm it
-    neither intercepts the click escalation cell → container → sheet (`mouseClickLeft` must
-    still reach the sheet's selection handler) nor paints rounded/stroked chrome. It paints
-    NO residual border (receipt C: none is visible today); the owner's cheap-live-strokes
-    slot stays reserved for the day a visible right/bottom border is wanted.
+    the 84 `CellWdgt`s. It is TRANSPARENT — nil `@appearance`, the CellWdgt idiom — because
+    the sheet never painted a data background (see the falsified-backgrounds receipt above):
+    the backdrop under the sheet keeps showing through, and the nil appearance also kills
+    the inherited inset stroke that would have overdrawn the cells' edge pixels. v1
+    neutralisations, each verified at implementation: `mouseClickLeft` ESCALATES (PanelWdgt's
+    own would `bringToForeground` and stop, swallowing the click before the sheet's selection
+    handler — verified in source), `wantsDropOfChild -> false` (cells tile it completely, but
+    be explicit — F4 targets CELLS), `childrenCanLockToMe -> false` (cells must not gain the
+    lock-to-panel menu toggle they lacked when sheet-parented), editing amenities off
+    (`providesAmenitiesForEditing: false`). It paints NO residual border (receipt C: none is
+    visible today); the owner's cheap-live-strokes slot stays reserved for the day a visible
+    right/bottom border is wanted.
 - **Edge ownership:** every widget — data cells, header cells, corner — strokes its own TOP
   and LEFT edges, spanning exactly its own width/height. Colour: left edge DARK
   (`headerBorderColor`) iff its boundary sits at sheet-local x ∈ {0, headerColWidth}, top
   edge DARK iff y ∈ {0, headerRowHeight}, else `gridlineColor`. **Crossing rule (receipt A):
   the grid-coloured edge is stroked BEFORE the dark edge, per widget.** Nobody strokes
   right/bottom.
-- **`CellWdgt` paint restructure:** no fill (stays transparent — the container's 248 shows
-  through, as the sheet's did), stroke edges ALWAYS (before the hosted-widget / no-scalar
-  early-returns), then the F2 ring when `@_sheetWidget.isSelectedAddress @address` (inside
-  form, `strokeRect 2, 2, w−4, h−4`, lineWidth 2 — the ONE recaptured pixel change), then
-  scalar text as today. Hosted widgets/presenters unchanged (children paint above).
+- **`CellWdgt` paint restructure:** no fill (stays transparent — the backdrop under the
+  sheet shows through, as it always did), stroke edges ALWAYS (before the hosted-widget /
+  no-scalar early-returns), then the F2 ring when `@_sheetWidget.isSelectedAddress @address`
+  (inside form, `strokeRect 2, 2, w−4, h−4`, lineWidth 2 — the ONE recaptured pixel change),
+  then scalar text as today. Hosted widgets/presenters unchanged (children paint above).
 - **F2 executes here** (the F2 section above is the spec for this part): the ring as above
   (the sheet's selection block dies with `_paintGrid` itself; new PUBLIC
   `SpreadsheetWdgt.isSelectedAddress`), the editor mount/update/teardown move to `CellWdgt`
@@ -1816,12 +1844,12 @@ the commit); revisit baseline still EMPTY; census green; both serialization legs
 rig rows green; docs + NOMENCLATURE landed; ledger F5 AND F2 checked together.
 
 **Risks.** `PanelWdgt` baggage (drops / editing amenities / click interception / appearance
-chrome) — neutralised by the v1 overrides above, each VERIFIED at implementation, with plain
-`Widget` + one fillRect as the recorded fallback base if the appearance can't be made
-pixel-flat. Restore of PRE-F5 snapshots (no chrome in the tree) and POST-F5 snapshots
-(chrome present) must both land in the destroy-derived-then-rebuild path — the rig proves
-both. Inspector member-list churn is a non-risk (no existing test inspects the sheet or a
-cell — verified 2026-07-17).
+chrome) — neutralised by the v1 overrides above, each VERIFIED at implementation (the
+appearance question resolved itself: nil appearance, since the panel is transparent).
+Restore of PRE-F5 snapshots (no chrome in the tree) and POST-F5 snapshots (chrome present)
+must both land in the destroy-derived-then-rebuild path — the rig proves both. Inspector
+member-list churn is a non-risk (no existing test inspects the sheet or a cell — verified
+2026-07-17).
 
 ---
 

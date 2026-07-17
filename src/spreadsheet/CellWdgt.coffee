@@ -9,8 +9,9 @@
 #   branch 1 — the value IS a Widget (a `new SliderWdgt`) → HOST it live (hostNoSettle) + wire it.
 #   branch 2 — the value answers cellPresenter() (a Color → a swatch) → host that presenter.
 #   branch 3 — a scalar / error / nil → PAINT its toString() text directly (moved here off the
-#              sheet's old _paintGrid value loop; the cell is transparent, so the sheet's gridline
-#              chrome shows through — "widgetized viewport over painted chrome").
+#              sheet's old _paintGrid value loop in Phase 8; since F5 the cell ALSO paints its
+#              own top+left grid edges and — when selected — its own ring: every visible pixel
+#              belongs to a widget, the sheet paints nothing).
 #
 # Why one widget per visible cell (owner direction 2026-07-05): full Fizzygum composability — every
 # cell the user sees is a real, inspectable, live-editable widget, not a paint artifact. Widget count
@@ -37,9 +38,10 @@
 
 class CellWdgt extends Widget
 
-  # @address + @hostedWidget serialize; the back-ref, churn-skip value and derived scalar text are
-  # rebuilt on restore (by the re-index + the next recompute).
-  @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarText", "_scalarIsError"]
+  # @address + @hostedWidget serialize; the back-ref, churn-skip value, derived scalar text and
+  # the overlay editor (a mid-edit snapshot restores to a settled, not-editing sheet — the
+  # re-index destroys any stray editor child) are rebuilt on restore.
+  @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarText", "_scalarIsError", "_editorWdgt"]
 
   constructor: (address) ->
     super()
@@ -49,9 +51,11 @@ class CellWdgt extends Widget
     @_sheetWidget = nil        # back-ref to the owning SpreadsheetWdgt (set by attachSheet)
     @_scalarText = nil         # branch-3 painted text (a scalar/error toString), or nil when empty/hosting
     @_scalarIsError = false    # true when @_scalarText is a SheetError badge (paint in the error colour)
-    # transparent: the sheet paints the cell chrome (gridlines/headers/selection); the cell only paints
-    # its scalar text or HOSTS a widget, so the cell's white background shows through a hosted widget's
-    # transparent parts (a slider's track). (The CanvasGlassTopWdgt idiom — a nil colour paints nothing.)
+    @_editorWdgt = nil         # the mounted overlay editor while THIS cell is being edited (F2/F5), or nil
+    # transparent: the cells panel under me fills the data background; I paint my own grid
+    # edges + selection ring + scalar text (F5 — "the sheet paints nothing"), so the panel's
+    # background shows through a hosted widget's transparent parts (a slider's track).
+    # (The CanvasGlassTopWdgt idiom — a nil colour paints nothing.)
     @color = nil
 
   colloquialName: -> "cell"
@@ -77,19 +81,21 @@ class CellWdgt extends Widget
   # sheet's header/value font. No bold/italic.
   _cellFont: -> "12px Arial, sans-serif"
 
-  # Paint the scalar text at the cell's own top-left, at the SAME local offsets the sheet's _paintGrid
-  # used (x 4, baseline height-6), so a scalar cell's glyphs land where they did before widgetisation.
-  # A hosted widget (branch 1/2) paints ITSELF (it is a child), so we skip; an empty cell paints
-  # nothing. Clipped to the cell, so an over-long value no longer bleeds into the next column (a v1
-  # improvement — test values are short, so no visible change). Follows the AnalogClockWdgt paint model.
+  # Paint this cell's OWN pixels (F5 — every visible thing is a widget; the sheet paints
+  # nothing): my top+left grid edges (ALWAYS — even when hosting/editing/empty; the F5
+  # edge-ownership convention, colours + crossing rule in SpreadsheetWdgt.paintGridEdges),
+  # then my selection ring when I am the selected cell (F2: drawn fully INSIDE — band [1,3),
+  # touching no edge pixel, under my hosted child since children paint after me, never
+  # overlapping my text which starts at x 4), then my scalar text (branch 3) at the SAME
+  # local offsets the old sheet paint used (x 4, baseline height−6). The text is suppressed
+  # while a widget is hosted (it paints itself) or while my overlay editor is mounted (the
+  # editor shows the buffer instead — no doubled text). Clipped to the cell. Follows the
+  # AnalogClockWdgt paint model.
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     if @preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
-    return if @hostedWidget?
-    return unless @_scalarText?
     sheetWidget = @_sheetWidget
     return unless sheetWidget?
-    return if sheetWidget._isCellBeingEdited @address    # the overlay editor shows instead — no doubled text
     [area, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
@@ -99,9 +105,16 @@ class CellWdgt extends Widget
       aContext.useLogicalPixelsUntilRestore()
       widgetPosition = @position()
       aContext.translate widgetPosition.x, widgetPosition.y
-      aContext.font = @_cellFont()
-      aContext.fillStyle = (if @_scalarIsError then sheetWidget.errorTextColor else sheetWidget.valueTextColor).toString()
-      aContext.fillText @_scalarText, 4, @height() - 6
+      colRow = sheetWidget.model.colRowFor @address
+      sheetWidget.paintGridEdges aContext, @width(), @height(), (colRow?.col is 0), (colRow?.row is 0)
+      if sheetWidget.isSelectedAddress @address
+        aContext.strokeStyle = sheetWidget.selectionColor.toString()
+        aContext.lineWidth = 2
+        aContext.strokeRect 2, 2, @width() - 4, @height() - 4
+      if not @hostedWidget? and @_scalarText? and not @_editorWdgt?
+        aContext.font = @_cellFont()
+        aContext.fillStyle = (if @_scalarIsError then sheetWidget.errorTextColor else sheetWidget.valueTextColor).toString()
+        aContext.fillText @_scalarText, 4, @height() - 6
       aContext.restore()
 
   # ── presentation: host a widget filling this cell (the sheet's _addNoSettle + _apply* idiom) ──
@@ -140,4 +153,33 @@ class CellWdgt extends Widget
   # settle is opened here; the drain owns any settle).
   cellInput: (value, argumentToAction) ->
     @_sheetWidget?._markCellStaleFromHostedWidgetNoSettle @address
+    return
+
+  # ── the overlay editor (F2, executed with F5): the SHEET owns the buffer + the keys; this
+  # cell owns the editor WIDGET — its complete view state in one place. All NoSettle cores:
+  # called from the sheet's edit lifecycle, inside the ONE settle its public event entries
+  # (processKeyDown / mouseClickLeft) open. The editor is a passive StringWdgt display driven
+  # by the sheet's buffer (isEditable false — the sheet stays the sole keyboard receiver, no
+  # caret is ever mounted), a child of THIS cell at exactly the cell's rect — the same
+  # absolute rect the old sheet-child editor used, so the move itself changed no pixels.
+  _mountEditorNoSettle: (bufferText) ->
+    editor = new StringWdgt bufferText, 12
+    editor.color = @_sheetWidget.valueTextColor
+    editor.isEditable = false
+    @_addNoSettle editor
+    editor._applyExtent @extent()
+    editor._applyMoveTo @position()
+    @_editorWdgt = editor
+    editor.changed()
+    return
+
+  _updateEditorTextNoSettle: (bufferText) ->
+    @_editorWdgt?._setTextNoSettle bufferText
+    return
+
+  _teardownEditorNoSettle: ->
+    editor = @_editorWdgt
+    @_editorWdgt = nil
+    editor?._fullDestroyNoSettle()
+    @changed()
     return

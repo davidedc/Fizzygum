@@ -42,8 +42,8 @@ it depended on landed in `docs/coalesced-nomenclature-rename-plan.md`.
   border + overlay editor into the `CellWdgt` · F3 the "operate ➜" cell menu (§9.5) · F4 drag-and-drop desktop
   widgets into cells (the §9.1 "kind-of-entry metadata", as a persistent `widgetEntry`) · F5 headers-as-widgets
   + cell-owned grid chrome (owner direction 2026-07-17 — the §9.1 grid's headers become selectable widgets and
-  the sheet's own paint goes EMPTY). All five are cold-executable in the plan; sequencing owner-ratified
-  2026-07-17: F5 (with F2 folded in) → F1 → F4 → F3.
+  the sheet's own paint goes EMPTY). **F5 (with F2 folded in) LANDED 2026-07-17** — §9.1's "everything a
+  widget" bullet is the shipped form; F1/F4/F3 remain cold-executable in the plan, sequenced F1 → F4 → F3.
 
 This spec defines ONE dataflow engine that serves two clients: the existing
 **patch-programming** circuits (widgets wired by connections) and the upcoming
@@ -250,12 +250,22 @@ client's:
   directly; a live child widget (the **socket**) exists only for cells that hold/present rich widgets
   or are currently selected/being edited. This sidesteps the framework's lack of widget virtualization
   (paint is already clipped; layout and memory stay bounded). Hosted in a `ScrollPanelWdgt`.
-- **Widgetized viewport over painted chrome** *(Phase 8, the shipped form)*: the sheet paints only the
-  chrome (gridlines, headers, selection); every VISIBLE cell is a real `CellWdgt` child that renders
-  its own value (painted scalar text, or a hosted value-widget / presenter). Widget count is bounded by
-  the VIEWPORT, not the sparse model (an off-screen cell is a live node with NO widget; scroll
-  materialises/recycles the viewport's cells) — so this is NOT open-ended widget virtualization, just
-  the standard bounded-viewport trick. The `CellWdgt` is the Phase-4 socket generalised to every cell.
+- **Widgetized viewport over painted chrome** *(Phase 8; itself SUPERSEDED by F5 — see next
+  bullet)*: the sheet paints only the chrome (gridlines, headers, selection); every VISIBLE cell is a
+  real `CellWdgt` child that renders its own value (painted scalar text, or a hosted value-widget /
+  presenter). Widget count is bounded by the VIEWPORT, not the sparse model (an off-screen cell is a
+  live node with NO widget; scroll materialises/recycles the viewport's cells) — so this is NOT
+  open-ended widget virtualization, just the standard bounded-viewport trick. The `CellWdgt` is the
+  Phase-4 socket generalised to every cell.
+- **Everything a widget; the sheet paints NOTHING** *(F5, landed 2026-07-17 — the shipped form; plan
+  §3-F receipts)*: the headers become `SheetHeaderCellWdgt`s (toward future column/row selection), the
+  data cells live in a transparent `SheetCellsPanelWdgt` (a `PanelWdgt` subclass; its clipping is
+  dormant until F1 scroll), and every widget paints its own fill/edges/label/value — the selection
+  ring is the selected `CellWdgt`'s own paint (drawn fully inside; the one recaptured pixel change),
+  the overlay editor is the editing cell's child (F2), and the sheet keeps model/selection
+  state/keyboard + the shared edge-stroke helper. Pixel law: per-widget TOP+LEFT edge ownership; the
+  grid-coloured edge strokes before the dark edge (dark wins crossings); nobody strokes right/bottom;
+  no data-background fill (the backdrop shows through, as always).
 - Layout discipline: the `StretchablePanelWdgt` pattern — immediate `_apply*` mutators
   inside `_reLayout`, bulk child moves inside `disableTrackChanges()` …
   `maybeEnableTrackChanges()` + one `fullChanged()`.

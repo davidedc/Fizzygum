@@ -85,7 +85,11 @@ equal-value cutoff terminate a cascade instead. Do not reintroduce the retired t
 | **cell / formula / commit** | a grid slot; its CoffeeScript source; the moment an edit is accepted |
 | **exported value** | the principal value a widget offers to references (`exportedValue()`) |
 | **presenter / `cellPresenter`** | the widget chosen to display a value; one-way glass |
-| **cell widget (`CellWdgt`)** | the per-VISIBLE-cell widget: renders the value (painted scalar / hosted value-widget / presenter) + is the connection target (`cellInput`). Phase 8 generalised the Phase-4 **socket** (`CellSocketWdgt`, one per RICH cell) into this |
+| **cell widget (`CellWdgt`)** | the per-VISIBLE-cell widget: renders the value (painted scalar / hosted value-widget / presenter), its own grid edges + selection ring + overlay editor (F2/F5), + is the connection target (`cellInput`). Phase 8 generalised the Phase-4 **socket** (`CellSocketWdgt`, one per RICH cell) into this |
+| **header cell (`SheetHeaderCellWdgt`)** | the per-header-cell widget (kind column / row / corner): paints its strip fill, its own edges, its letter/number label (F5). DERIVED chrome — rebuilt on restore, never adopted |
+| **cells panel (`SheetCellsPanelWdgt`)** | the transparent `PanelWdgt` subclass spanning the data region and hosting the `CellWdgt`s (F5); its clipping is dormant until F1 scroll |
+| **edge ownership (top+left)** | every grid widget strokes its OWN top + left edge segments, nobody strokes right/bottom (F5; the old outermost strokes were clipped invisible) |
+| **the crossing rule** | per widget, the grid-coloured edge strokes BEFORE the dark (`headerBorderColor`) edge, so dark wins every crossing pixel — the per-widget re-statement of the old "gridlines first, darker borders last" global order (F5 receipt A; byte-identical) |
 
 ## Contested words — explicit rulings
 

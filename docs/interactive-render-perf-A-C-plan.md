@@ -267,8 +267,10 @@ then scope C2 carefully. Item A independently reduces C2's per-glyph cost meanwh
 out with pixel receipts and scheduled FIRST in `docs/dataflow-engine-implementation-plan.md`
 §3-F — the chrome-buffer design above is SUPERSEDED and kept only as record).** Under F5 the
 header cells become widgets and the gridline chrome migrates into the cell widgets (each
-strokes its own top+left edges; the cells sit in a dedicated `PanelWdgt` subclass whose fill
-is the data-region background), leaving the sheet's own paint EMPTY — and F5's probe C
+strokes its own top+left edges; the cells sit in a dedicated TRANSPARENT `PanelWdgt`
+subclass — the sheet never painted a data background, its `@backgroundColor` was the nil
+Widget default, so the window backdrop shows through exactly as before), leaving the
+sheet's own paint EMPTY — and F5's probe C
 established there is no visible right/bottom border today (the outermost strokes are
 clipped away), so nothing sheet-drawn remains for this item to cache. Gridline STROKES stay
 live everywhere (owner 2026-07-17): axis-aligned 1px strokes are cheap; buffering them costs
