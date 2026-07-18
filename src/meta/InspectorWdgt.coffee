@@ -268,9 +268,8 @@ class InspectorWdgt extends Widget
     )
     @list.disableDrops()
 
-    # @list.listContents (the MenuWdgt holding this list's items) never animates, so it's dropped
-    # from world.steppingWdgts here rather than in MenuWdgt's own constructor -- other MenuWdgt
-    # uses may want the step function. ListWdgt itself still steps (its scrollbars need it).
+    # @list.listContents (the MenuRowsPanelWdgt holding this list's items) never animates, so it's
+    # dropped from world.steppingWdgts here. ListWdgt itself still steps (its scrollbars need it).
     world.steppingWdgts.delete @list.listContents
     @_addNoSettle @list
 

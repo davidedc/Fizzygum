@@ -2163,7 +2163,7 @@ class Widget extends TreeNode
   getMinimumExtent: ->
     @minimumExtent
 
-  setMinimumExtent: (@minimumExtent) ->
+  _setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
   # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / SliderWdgt / ListWdgt /

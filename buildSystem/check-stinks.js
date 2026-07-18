@@ -61,7 +61,7 @@ const STINKS = [
   { id: 'math-random', baseline: 5,
     why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
     re: /\bMath\.random\b/ },
-  { id: 'instanceof-type-test', baseline: 97,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17)
+  { id: 'instanceof-type-test', baseline: 95,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     re: /\binstanceof\b/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).

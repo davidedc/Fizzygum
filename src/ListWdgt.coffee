@@ -3,7 +3,7 @@ class ListWdgt extends ScrollPanelWdgt
   elements: nil
   labelGetter: nil
   format: nil
-  listContents: nil # a MenuWdgt with the contents of the list
+  listContents: nil # a MenuRowsPanelWdgt with the contents of the list
   selected: nil # actual element currently selected
   active: nil # menu item representing the selected element
   action: nil
@@ -62,7 +62,9 @@ class ListWdgt extends ScrollPanelWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    @listContents = new MenuWdgt @, isListContents: true, target: @, killOutside: false, killOnTriggers: false
+    # a MenuRowsPanelWdgt: the pure row-stack, NOT a pop-up menu -- a List holds
+    # rows, not a (crippled) menu. No killOutside/killOnTriggers (not a pop-up).
+    @listContents = new MenuRowsPanelWdgt target: @
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
     world.disableTrackChanges()

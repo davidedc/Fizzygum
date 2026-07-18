@@ -7,7 +7,6 @@ class MenuWdgt extends PopUpWdgt
   environment: nil
   fontSize: nil
   label: nil
-  isListContents: false
 
   # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's menuAtPointer filter + the
   # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other pop-ups. True here,
@@ -17,28 +16,21 @@ class MenuWdgt extends PopUpWdgt
     true
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
-  # (P5 arg-object conversion). Defaults match the old positional signature: isListContents
-  # false; killOutside / killOnTriggers true; target / title / environment / fontSize nil.
+  # (P5 arg-object conversion). Defaults match the old positional signature: killOutside /
+  # killOnTriggers true; target / title / environment / fontSize nil.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
-    @isListContents = opts.isListContents ? false
     @target = opts.target
     @killThisPopUpIfClickOutsideDescendants = opts.killOutside ? true
     @killThisPopUpIfClickOnDescendantsTriggers = opts.killOnTriggers ? true
     @title = opts.title
     @environment = opts.environment
     @fontSize = opts.fontSize
-    if !@isListContents
-      if @killThisPopUpIfClickOutsideDescendants
-        @onClickOutsideMeOrAnyOfMyChildren "close"
+    if @killThisPopUpIfClickOutsideDescendants
+      @onClickOutsideMeOrAnyOfMyChildren "close"
     super @widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
-
-
-    if @isListContents
-      world.freshlyCreatedPopUps.delete @
-      world.openPopUps.delete @
 
     @_buildMenuLabel()
 
@@ -54,11 +46,10 @@ class MenuWdgt extends PopUpWdgt
     @_settleLayoutsAfter => @_buildMenuLabelNoSettle()
 
   _buildMenuLabelNoSettle: ->
-    unless @isListContents
-      if @title
-      # own method, not inlined, so a future title-change rebuild can reuse @_createLabel()
-        @_createLabel()
-        @_addNoSettle @label
+    if @title
+    # own method, not inlined, so a future title-change rebuild can reuse @_createLabel()
+      @_createLabel()
+      @_addNoSettle @label
 
   colloquialName: ->
     if @title
@@ -72,11 +63,7 @@ class MenuWdgt extends PopUpWdgt
 
 
   createLine: (height = 1) ->
-    item = new RectangleWdgt
-    item.setMinimumExtent new Point 5,1
-    item.color = Color.create 230,230,230
-    item._applyHeight height + 2
-    item
+    new DividerWdgt height
 
   addLine: (height) ->
     item = @createLine height
@@ -115,9 +102,9 @@ class MenuWdgt extends PopUpWdgt
     # while looping over it
     destroyNextLines = false
     for item in @children.slice()
-      if destroyNextLines and item instanceof RectangleWdgt
+      if destroyNextLines and item.isDivider?()
         item.fullDestroy()
-      if item instanceof RectangleWdgt
+      if item.isDivider?()
         destroyNextLines = true
         continue
       else
@@ -172,19 +159,17 @@ class MenuWdgt extends PopUpWdgt
 
 
 
-    unless @isListContents
-      @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
+    @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
     @color = Color.create 238, 238, 238
     @__commitExtent new Point 0, 0
     y = @top()
     x = @left() + 2
 
-    unless @isListContents
-      if @title
-        @label._applyMoveTo @position().add 2
-        y = @label.bottom()
-      else
-        y = @top()
+    if @title
+      @label._applyMoveTo @position().add 2
+      y = @label.bottom()
+    else
+      y = @top()
     y += 1
 
     # public-call-sanctioned: removeShadow is the public shadow API (the pop-up shadow policy also

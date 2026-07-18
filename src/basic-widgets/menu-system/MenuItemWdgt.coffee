@@ -138,5 +138,8 @@ class MenuItemWdgt extends LabelButtonWdgt
     super
 
   isListItem: ->
-    return @parent.isListContents  if @parent
+    # true when my container selects rows on click (a MenuRowsPanelWdgt used as a
+    # ListWdgt's contents) rather than triggering them (a MenuWdgt). Dispatched via
+    # ?() so a plain menu, which does not answer it, reads falsy.
+    return @parent.selectsItemsOnClick?()  if @parent
     false
