@@ -44,6 +44,19 @@ class PromptWdgt extends PopUpWdgt
   isMenu: ->
     true
 
+  # Like MenuWdgt, I draw NOTHING myself -- my rowsPanel draws the box -- so I am
+  # transparent EVERYWHERE and hit-testing must fall THROUGH me to my panel (and, at my
+  # transparent rounded corners / padding, on through to whatever is behind me). Without
+  # this the base Widget.isTransparentAt returns `undefined` for an appearance-less widget,
+  # which `not undefined` treats as OPAQUE. See MenuWdgt.isTransparentAt and container-
+  # regularization §5.6: fixing the BASE instead regressed ~70 tests (most appearance-less
+  # widgets rely on the opaque default), so it stays a per-class override. Owner-accepted the
+  # one visible consequence (a resting pointer over a prompt corner now hover-highlights the
+  # widget behind, e.g. macroSaveAsPromptAboveTiltedWindow's close button -- consciously
+  # recaptured 2026-07-19).
+  isTransparentAt: (aPoint) ->
+    true
+
   colloquialName: ->
     if @msg then "\"" + @msg + "\" prompt" else "prompt"
 

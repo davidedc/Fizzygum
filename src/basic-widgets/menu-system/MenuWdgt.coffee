@@ -5,13 +5,15 @@
 # draws the single titled box and lays out the rows; this pop-up draws nothing but
 # its shadow and hugs the panel's size.
 #
-# Because the opener composes a menu's ITEMS after construction (addMenuItem /
-# addLine, each re-laying the panel), the menu must FOLLOW its growing panel — so
-# it is a size-tracking container (it defines _reLayoutChildren), and the settle
-# loop re-fits it to the panel's final extent via the up-edge
-# (_reFitMyTrackingContainerAfterSettle), exactly like the stack / scroll / window
-# containers. The row API is DELEGATED to the panel so the ~380 `menu.addMenuItem`
-# call sites and the MacroToolkit test hooks are untouched.
+# The opener composes a menu's ITEMS after construction (addMenuItem / addLine) and
+# then pops it up, so the menu is ALWAYS fully built before it is shown. It therefore
+# lays its panel out + hugs it exactly ONCE, at popUp (see _reactToBeingAdded ->
+# _layOutAndHugRowsPanel) — it is deliberately NOT a size-tracking container: it does
+# NOT define _reLayoutChildren, so its re-layouts are stable base no-ops. (An earlier
+# size-tracking design that re-drove the panel on every settle shifted the menu ±1px
+# and un-hovered the item under the pointer — §5.2d.) The row API is DELEGATED to the
+# panel so the ~380 `menu.addMenuItem` call sites and the MacroToolkit test hooks are
+# untouched.
 
 class MenuWdgt extends PopUpWdgt
 

@@ -22,11 +22,14 @@ four real regressions surfaced (see §8), each a consequence of inserting the pa
 items; the load-bearing fixes are `_reactToBeingAdded`-drives-the-panel-layout, `isTransparentAt → true`,
 lay-out-ONCE (not a size-tracking container), and two `menu.children[N]`→`menu.rowsPanel.children[N]`
 production sites.** **§5.4 LANDED 2026-07-18** (docs-only F non-merge ruling recorded in `layering-naming-convention.md` §6;
-scorecard F → DONE). REMAINING (all fleshed out below, executable cold): **§5.6** (isTransparentAt base
-fix — the parked design cleanup), **§5.5** (regression tests for the wallpaper/fonts tick paths — closes the
-coverage gap §5.2d exposed), **§5.2e** (re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` —
-hardest, do last, OK to leave unfinished). Suggested order = 5.6 → 5.5 → 5.2e (safe/quick wins first,
-hardest last).**
+scorecard F → DONE). **§5.6 LANDED as (b) 2026-07-19**: base fix (a) rejected (regressed ~70 tests — appearance-
+less widgets rely on the opaque default), so kept per-class + added `PromptWdgt.isTransparentAt: -> true`; owner
+eyeballed + accepted its one visible effect (a stray hover-highlight through the prompt corner in
+`macroSaveAsPromptAboveTiltedWindow` image_2) and it was consciously recaptured (see §5.6 OUTCOME). REMAINING
+(fleshed out below, executable cold):
+**§5.5** (regression tests for the wallpaper/fonts tick paths — closes the coverage gap §5.2d exposed),
+**§5.2e** (re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, do last, OK to leave
+unfinished). Suggested order = 5.5 → 5.2e.**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -362,7 +365,26 @@ sanity-check the tick visuals in the morning. To PROVE the guard bites, temporar
 (`menu.rowsPanel.children`→`menu.children`), confirm the new test FAILS, then restore. VERIFY: `fg gauntlet`
 11/11 with the two new tests in the suite.
 
-### 5.6 `isTransparentAt`: fix the base, drop the `MenuWdgt` override, make `PromptWdgt` consistent. *Design cleanup (the parked discussion).*
+### 5.6 `isTransparentAt`: fix the base, drop the `MenuWdgt` override, make `PromptWdgt` consistent. *Design cleanup (the parked discussion).* — ✅ LANDED as (b) 2026-07-19 (base fix (a) rejected; owner-approved the prompt override + recapture)
+
+**OUTCOME (2026-07-19):**
+- **(a) base fix REJECTED — it regressed the gauntlet by ~70 tests.** `Widget.isTransparentAt … else true` +
+  deleting the `MenuWdgt` override made EVERY appearance-less widget transparent; ~70 tests (menus, inspectors,
+  spreadsheets, sliders) rely on the opaque default to catch clicks over their bounds, so clicks fell THROUGH.
+  The base's undefined-means-opaque is load-bearing for far more widgets than the box-drawing ones — it stays
+  per-class. (The base method keeps its original body.)
+- **(b) LANDED — added `PromptWdgt.isTransparentAt: -> true`** (the `MenuWdgt` override is already baseline from
+  §5.2d, so this is the whole code delta). Its one visible consequence: after the close-button click in
+  `macroSaveAsPromptAboveTiltedWindow`, the pointer rests over the prompt's transparent top-left rounded corner,
+  so `topWdgtUnderPointer` falls THROUGH onto the tilted window's close button behind, which renders a red
+  hover-highlight that was not there before (image_2 only; the value-assertions and image_1 are unchanged).
+  Diffpage: dpr1 = 39 px @ (294,119); dpr2 = 189 px @ (587,238); maxΔ 245 — small, localized, hit-testing-driven.
+  **The owner eyeballed it and accepted it** ("quite OK … a little distracting but not too noisy"), so
+  `macroSaveAsPromptAboveTiltedWindow` was **consciously recaptured** (dpr1+2) with that approval as the reason.
+- Fixes the same latent bug `MenuWdgt` had (an appearance-less pop-up wrongly opaque at its transparent corners),
+  now dormant no more on prompts. Change surface: Fizzygum 1 mod (`PromptWdgt`); Fizzygum-tests 1 recapture.
+
+**Original plan (for reference — (a) falsified, (b) landed):**
 §5.2d added `MenuWdgt.isTransparentAt: -> true` because the menu draws nothing (its panel draws the box) and
 `Widget.isTransparentAt` returns `@appearance?.isTransparentAt aPoint` = `undefined` for an appearance-less
 widget, which `not undefined` treats as OPAQUE — so the menu's transparent rounded corners intercepted clicks
