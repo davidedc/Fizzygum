@@ -21,11 +21,12 @@ menu-overlap corners — eyeballed via `fg diffpage`, 0 major-change). **⚠⚠ 
 four real regressions surfaced (see §8), each a consequence of inserting the panel BETWEEN the menu and its
 items; the load-bearing fixes are `_reactToBeingAdded`-drives-the-panel-layout, `isTransparentAt → true`,
 lay-out-ONCE (not a size-tracking container), and two `menu.children[N]`→`menu.rowsPanel.children[N]`
-production sites.** REMAINING (all fleshed out below, executable cold): **§5.4** (docs-only F non-merge ruling
-— do first), **§5.6** (isTransparentAt base fix — the parked design cleanup), **§5.5** (regression tests for
-the wallpaper/fonts tick paths — closes the coverage gap §5.2d exposed), **§5.2e** (re-base
-`MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, do last, OK to leave unfinished). Suggested
-order = 5.4 → 5.6 → 5.5 → 5.2e (safe/quick wins first, hardest last).**
+production sites.** **§5.4 LANDED 2026-07-18** (docs-only F non-merge ruling recorded in `layering-naming-convention.md` §6;
+scorecard F → DONE). REMAINING (all fleshed out below, executable cold): **§5.6** (isTransparentAt base
+fix — the parked design cleanup), **§5.5** (regression tests for the wallpaper/fonts tick paths — closes the
+coverage gap §5.2d exposed), **§5.2e** (re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` —
+hardest, do last, OK to leave unfinished). Suggested order = 5.6 → 5.5 → 5.2e (safe/quick wins first,
+hardest last).**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -157,13 +158,13 @@ borderless box. **Latent bug:** any stray `RectangleWdgt` in a menu is treated a
 | C | A List holds **anything** and **NOT** a Menu | **DONE (§5.2b/c)** | `ListWdgt` builds `new MenuRowsPanelWdgt(selectsItemsOnClick:true)`, never a `MenuWdgt`; `isListContents` retired |
 | D | Menu items richer than a bare label | **DONE** | `MenuItemSpec` label may be `Widget`/`Canvas`/`[icon,string]` |
 | E | Prompt = a Menu with no title; menu-ness via a Mixin; per-value-type subclasses | **DONE (§5.3)** | `PromptWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; per-type `Text`/`Number`/`ColorPromptWdgt`; `pickColor` folded; menu-ness via the pop-up, not the menu class |
-| F | One general container that becomes a window/pinnable-window | **NOT DONE — recommend NON-merge (§5.4)** | roles split: `PanelWdgt`/`WindowWdgt`/`PopUpWdgt`/`StretchableWidgetContainerWdgt` |
+| F | One general container that becomes a window/pinnable-window | **DONE (§5.4) — deliberate NON-merge, ruling recorded** | roles split + named in `docs/architecture/layering-naming-convention.md` §6: `PanelWdgt`(clip)/`PopUpWdgt`(pin/shadow)/`WindowWdgt`(chrome, skin derived from parentage)/`StretchableWidgetContainerWdgt` |
 | G | A `MenuTitle` class | **DONE** | `MenuHeader` (`extends BoxWdgt`) |
 | H | A `DividerMorph` class | **DONE (§5.1)** | `DividerWdgt extends RectangleWdgt`; `isDivider?()` role query replaced `instanceof RectangleWdgt` |
 | I | List hugs content / fits any area | **DONE (elsewhere)** | sizing-model-unification arc |
 
-**Open work = only the ruling on F (§5.4, a deliberate NON-merge) + the optional §5.2e stack re-base.**
-A/B/C/D/E/G/H/I are all DONE.
+**F ruled DONE 2026-07-18 (§5.4, a deliberate NON-merge — recorded in `layering-naming-convention.md` §6).**
+A/B/C/D/E/F/G/H/I are all DONE. Only the OPTIONAL §5.2e stack re-base remains (leaving it unfinished is fine).
 
 ---
 
@@ -325,7 +326,7 @@ pixels shift, do NOT recapture unattended (no one to eyeball) — leave §5.2e U
   `macroCanMoveAndResizeColorPaletteWdgt`, `macroSpreadsheetColorCell`), the slider tests
   (`macroSlider*`, `macroLonelySlider*`). Byte-identical or conscious recapture.
 
-### 5.4 [F] Rule on "one container that becomes a window/pinnable-window" — a deliberate NON-merge. *Docs-only; do FIRST (trivial, safe).*
+### 5.4 [F] Rule on "one container that becomes a window/pinnable-window" — a deliberate NON-merge. *Docs-only; do FIRST (trivial, safe).* — ✅ LANDED 2026-07-18
 Record *why not* rather than building it: `PanelWdgt` is the general clipping container; `WindowWdgt`'s
 internal/external skin is already **derived from parentage** (drag-embed arc) so "becomes a window when
 embedded" is already automatic; `PopUpWdgt` already provides pinnable/transient behaviour (and IS, after

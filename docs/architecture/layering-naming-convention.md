@@ -294,7 +294,33 @@ have installed on every test (a coverage gap fails the gate, so a silent miss ca
 
 ---
 
-## 6. Scope & non-goals
+## 6. Container roles — deliberately NOT one mega-container
+
+The same "the name encodes the role" principle governs the CONTAINER classes, and it settles a standing
+proposal. The 2017 ZombieKernel "V2" diagram (row **F** of the container-regularization scorecard,
+`docs/plans/container-regularization-plan.md` §3.7) floated **one general container that becomes a
+window / pinnable-window** via a mode flag. Fizzygum deliberately does **NOT** merge them — the roles are
+kept distinct, each named for what it is:
+
+- **`PanelWdgt`** — the general **clipping container**. No transient/pin behaviour, no chrome.
+- **`PopUpWdgt`** — `Panel` + **transient / pin / drop-shadow**. After the container arc (§5.2/§5.3 of the
+  plan) this is the SINGLE shared home of pop-up behaviour: `MenuWdgt` and `PromptWdgt` (with its
+  per-value-type subclasses) each **compose** a `MenuRowsPanelWdgt` for their rows and **extend**
+  `PopUpWdgt` for their menu-ness, instead of re-implementing pop-up / pin / close.
+- **`WindowWdgt`** (the `FrameWdgt`-to-be) — `Panel` + **chrome / identity**; its internal-vs-external skin
+  is DERIVED from parentage (the drag-embed arc), so "becomes a window when embedded" is already automatic —
+  there is no mode flag and no manual switch.
+- **`StretchableWidgetContainerWdgt`** — the stretchable-panel role.
+
+A single mode-flagged mega-container would re-introduce exactly the per-mode special-casing this whole arc
+REMOVED (the byzantine `isListContents` flag was that same anti-pattern one level down — a container role
+smuggled in as a boolean). The regularity win is **naming the relationship between the container roles**, not
+collapsing them into one flag-driven class. (Re-open only on an explicit owner request → a separate design
+spike, flagged not dropped.)
+
+---
+
+## 7. Scope & non-goals
 - **SAFE under method renames:** the dependency-finder (scans `extends`/`@augmentWith`/`new`, not method names) and
   serialization (`DeepCopierMixin` copies data, not method names) are unaffected.
 - **Naming + tier-reclassification only — no behaviour change.** Pixels stay identical except inspector member lists
