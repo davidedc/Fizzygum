@@ -21,7 +21,11 @@ menu-overlap corners — eyeballed via `fg diffpage`, 0 major-change). **⚠⚠ 
 four real regressions surfaced (see §8), each a consequence of inserting the panel BETWEEN the menu and its
 items; the load-bearing fixes are `_reactToBeingAdded`-drives-the-panel-layout, `isTransparentAt → true`,
 lay-out-ONCE (not a size-tracking container), and two `menu.children[N]`→`menu.rowsPanel.children[N]`
-production sites.** REMAINING: owner-gated §5.2e/§5.4.**
+production sites.** REMAINING (all fleshed out below, executable cold): **§5.4** (docs-only F non-merge ruling
+— do first), **§5.6** (isTransparentAt base fix — the parked design cleanup), **§5.5** (regression tests for
+the wallpaper/fonts tick paths — closes the coverage gap §5.2d exposed), **§5.2e** (re-base
+`MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, do last, OK to leave unfinished). Suggested
+order = 5.4 → 5.6 → 5.5 → 5.2e (safe/quick wins first, hardest last).**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -274,10 +278,33 @@ Plus two PRODUCTION `menu.children[N]`-index sites (feature code reaching items 
 These are the ONLY two such sites in the tree (grep-confirmed); NO test covered either — verify by hand /
 headless probe.
 
-**5.2e — (follow-on, optional) Re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt`.**
-Replace the lifted hand-layout with the canonical hug/grow stack (+ a width-equalization override). The
-"right" end state (one vertical-stack engine), but it shifts settle timing (`_reLayoutChildren` appears) →
-keep `fg revisits`/`fg census` at zero. Only after 5.2d is stable.
+**5.2e — (follow-on) Re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt`. THE HARDEST remaining
+step — do it LAST; leaving it unfinished is fine (the arc is complete without it).**
+Today `MenuRowsPanelWdgt extends Widget` and hand-lays its rows in `_reLayoutSelf` (position each non-`@label`
+row top-to-bottom under the optional MenuHeader, then `adjustWidthsOfMenuEntries` equalizes every row to the
+widest via `menuEntryPreferredWidth?()`, then `__commitExtent fullBounds+2`). §5.2e replaces that lifted
+hand-layout with the canonical vertical-stack engine so ONE stack engine serves the whole tree.
+GOAL: `MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt`, KEEPING (a) the optional title header
+(MenuHeader at child 0 + corner radius when `@title`); (b) width-equalization — menus/lists want every row
+STRETCHED to the widest so highlights span the full row, which a plain stack does NOT do; (c) the
+`selectsItemsOnClick` knob; (d) the delegated row API + `hiddenFromHierarchyMenu?()`; (e)
+`sliderTrackPressJumpsButton?()`.
+⚠⚠ SETTLE-MODEL CHANGE — this is EXACTLY what §5.2d's abandoned size-tracking design tripped on. A
+`SimpleVerticalStackPanelWdgt` lays out in `_reLayoutChildren` (it IS a size-tracking container), whereas
+today's panel self-lays in `_reLayoutSelf`. Consequences to trace and fix:
+  - `MenuWdgt._layOutAndHugRowsPanel` currently calls `@rowsPanel._reLayoutSelf()` at popUp. A stack sizes in
+    `_reLayoutChildren` → hand-drive THAT (trace `SimpleVerticalStackPanelWdgt._reLayoutChildren` /
+    `_positionAndResizeChildren` and call whatever actually places the rows + hugs). Same for `ListWdgt`,
+    which calls `@listContents._reLayoutSelf()` at build (ListWdgt.coffee ~:103).
+  - `fg revisits` (baseline 0) and `fg census` (0 movers) MUST stay at zero. A stack's `_reLayoutChildren`
+    plus the settle-time up-edge can add a re-visit; if it does, that is a REGRESSION to fix at the arrange,
+    not a baseline to bake.
+  - width-equalization: a stack sizes each child to its own preferred width and hugs the widest for its OWN
+    width, but leaves the rows their own width. Add a `_positionAndResizeChildren` (or grow/fill) override
+    that widens every row to the stack width AFTER the stack sizes itself.
+VERIFY: full `fg gauntlet` 11/11 over the §7 menu/list/prompt/inspector surface. **AIM BYTE-IDENTICAL.** If
+pixels shift, do NOT recapture unattended (no one to eyeball) — leave §5.2e UNCOMMITTED and hand the
+`fg diffpage` to the owner. STOP after two falsified shapes (owner standing rule).
 
 ### 5.3 [E] Regularize the prompt family. *Uses the 5.2a row-stack.* — ✅ LANDED 2026-07-18
 1. **Menu-ness via `PopUpWdgt`, not inheritance.** Re-base `PromptWdgt` off **`PopUpWdgt`** (the behaviour)
@@ -298,14 +325,61 @@ keep `fg revisits`/`fg census` at zero. Only after 5.2d is stable.
   `macroCanMoveAndResizeColorPaletteWdgt`, `macroSpreadsheetColorCell`), the slider tests
   (`macroSlider*`, `macroLonelySlider*`). Byte-identical or conscious recapture.
 
-### 5.4 [F] Rule on "one container that becomes a window/pinnable-window" — a deliberate NON-merge.
+### 5.4 [F] Rule on "one container that becomes a window/pinnable-window" — a deliberate NON-merge. *Docs-only; do FIRST (trivial, safe).*
 Record *why not* rather than building it: `PanelWdgt` is the general clipping container; `WindowWdgt`'s
 internal/external skin is already **derived from parentage** (drag-embed arc) so "becomes a window when
-embedded" is already automatic; `PopUpWdgt` already provides pinnable/transient behaviour (and becomes the
-single shared home of it after 5.2/5.3). A mode-flagged mega-container would re-introduce exactly the
-special-casing this arc removes. The regularity win is **naming the relationship** (Panel = container,
-PopUp = +transient/pin, Window/Frame = +chrome/identity) in the program's P0 principles doc — not collapsing
-them. *(Owner may overrule → then it's a separate design spike, flagged not dropped.)*
+embedded" is already automatic; `PopUpWdgt` already provides pinnable/transient behaviour (and IS, after
+§5.2/§5.3, the single shared home of it). A mode-flagged mega-container would re-introduce exactly the
+special-casing this arc removes. The regularity win is **naming the relationship** — not collapsing them.
+EXECUTE (no code): add a short subsection **"Container roles — deliberately NOT one mega-container"** to
+`docs/architecture/layering-naming-convention.md` stating: **Panel** = general clipping container; **PopUp**
+= Panel + transient/pin/shadow (the single shared home after §5.2/§5.3); **Window/Frame** = + chrome/identity;
+a mode-flagged mega-container would re-introduce the special-casing this whole arc removed. Then flip
+scorecard row **F → DONE (§5.4)** in §3.7 and mark this section ✅. No build/gauntlet (docs-only) — `git diff`
+review + commit. *(Owner may overrule → separate design spike, flagged not dropped.)*
+
+### 5.5 Regression tests for the `menu.rowsPanel.children[N]` contract. *New — closes the coverage gap §5.2d exposed.*
+§5.2d's two production crashes (`Wallpaper` + `StringWdgt` reaching `menu.children[N]` for item labels) sailed
+through the ENTIRE gauntlet because **no macro exercises a menu's tick-update path**. Add coverage so a future
+menu-structure change (e.g. §5.2e) cannot silently re-break them. Author with the `/author-macro-test` skill
+in `Fizzygum-tests`.
+1. **`macroWallpaperMenuTickTracksSelection`** — right-click the desktop → click "wallpapers" in the world
+   menu → the Wallpapers submenu opens with 7 pattern rows, the CURRENT pattern **ticked** (a ✓ prefix on its
+   label). `image_1`: the menu with its tick. Then click a DIFFERENT pattern row, re-open the wallpapers
+   submenu, `image_2`: the tick has MOVED to the new pattern. The screenshots ARE the assertion (tick
+   position); merely opening the menu also guards the `undefined … menu.children[1].label` crash.
+   Facts: world-menu item `menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu"` (`WorldWdgt` ~:2550);
+   `Wallpaper.wallpapersMenu` (`src/Wallpaper.coffee`) builds a 7-row "Wallpaps" menu + `updatePatternsMenuEntriesTicks`
+   (which reads `menu.rowsPanel.children[1..7].label`). Reach rows via `@getMostRecentlyOpenedMenu()` + the
+   toolkit item-by-prefix helpers (`moveToItemStartingWithOfMenuAndClick_InputEvents`).
+2. **`macroFontsMenuTickTracksSelection`** — same shape for a `StringWdgt` Fonts menu (`StringWdgt` ~:985
+   `fontsMenu` → 9 font rows + `updateFontsMenuEntriesTicks` reading `menu.rowsPanel.children[1..9].label`);
+   the current font is ticked, picking another moves the tick. Reuse an existing string-widget fixture if handy.
+CAPTURE references (`node scripts/capture-macro-test-references.js <name> --dprs=1,2`), confirm both tests
+PASS, and **because this is unattended, SendUserFile the captured `image_1`/`image_2`** so the owner can
+sanity-check the tick visuals in the morning. To PROVE the guard bites, temporarily revert one fix
+(`menu.rowsPanel.children`→`menu.children`), confirm the new test FAILS, then restore. VERIFY: `fg gauntlet`
+11/11 with the two new tests in the suite.
+
+### 5.6 `isTransparentAt`: fix the base, drop the `MenuWdgt` override, make `PromptWdgt` consistent. *Design cleanup (the parked discussion).*
+§5.2d added `MenuWdgt.isTransparentAt: -> true` because the menu draws nothing (its panel draws the box) and
+`Widget.isTransparentAt` returns `@appearance?.isTransparentAt aPoint` = `undefined` for an appearance-less
+widget, which `not undefined` treats as OPAQUE — so the menu's transparent rounded corners intercepted clicks
+meant for a widget BEHIND it (dropping an item's hover-highlight while its submenu was open). The override is
+correct but per-class; the REAL bug is the base's undefined-means-opaque, and `PromptWdgt` (also draws nothing,
+composes a panel) has the identical latent bug, untested.
+DO, in order:
+  (a) **PRIMARY — fix the base:** `Widget.isTransparentAt: (aPoint) -> if @appearance? then @appearance.isTransparentAt aPoint else true`
+      (appearance-less ⇒ draws nothing ⇒ transparent everywhere). Then DELETE `MenuWdgt.isTransparentAt` (now
+      redundant). Run the FULL `fg gauntlet`. This touches hit-testing for EVERY appearance-less widget
+      (menus, prompts, pop-ups, alpha-0 scroll frames…), so the risk is a click that used to land ON such a
+      widget now falling THROUGH it. The gauntlet exercises thousands of clicks; **if it stays 11/11, ship (a).**
+  (b) **FALLBACK if (a) regresses the gauntlet:** revert the base change, KEEP `MenuWdgt.isTransparentAt: -> true`,
+      and add the SAME override to `PromptWdgt` (consistency + fixes its dormant bug). Optionally make
+      MenuWdgt's self-documenting by delegating to the panel: `isTransparentAt: (p) -> @rowsPanel.isTransparentAt p`.
+VERIFY: `fg gauntlet` 11/11. This is HIT-TESTING, not layout (census/revisits unaffected); byte-identical
+expected (the change only alters fall-through at points that were already visually transparent). Watch the
+click/hover pixel tests.
 
 ---
 
