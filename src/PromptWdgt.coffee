@@ -1,108 +1,93 @@
-class PromptWdgt extends MenuWdgt
+# A prompt is a pop-up that asks for one value and reports it back via a callback.
+# It shares the MENU BEHAVIOUR (transient, closes on click-outside, pinnable,
+# shadowed) through PopUpWdgt — it is NOT a MenuWdgt — and it borrows the menu
+# LOOK/LAYOUT by composing a titled MenuRowsPanelWdgt (the message as its title,
+# then the value editor, a divider, and the "Ok"/"Close" rows). The pop-up wraps
+# that single panel and hugs its size.
+#
+# Per-value-type subclasses fill in only the editor row:
+#   TextPromptWdgt   — a StringFieldWdgt.
+#   NumberPromptWdgt — a numeric StringFieldWdgt + a SliderWdgt.
+#   ColorPromptWdgt  — a ColorPickerWdgt (the folded Widget.pickColor).
+# SaveShortcutPromptWdgt re-bases here too, swapping the button row.
 
-  # pattern: all the children should be declared here
-  # the reason is that when you duplicate a widget
-  # , the duplicated widget needs to have the handles
-  # that will be duplicated. If you don't list them
-  # here, then they need to be initialised in the
-  # constructor. But actually they might not be
-  # initialised in the constructor if a "lazy initialisation"
-  # approach is taken. So it's good practice
-  # to list them here so they can be duplicated either way.
+class PromptWdgt extends PopUpWdgt
+
+  # pattern: children declared here so a duplicate has the handles to remap
+  # (whether they are set in the constructor or lazily).
   #feedback: nil
   #choice: nil
   #colorPalette: nil
   #grayPalette: nil
 
+  target: nil
+  msg: nil
+  callback: nil
+  defaultContents: nil
+  intendedWidth: nil
+  # the titled MenuRowsPanelWdgt that is this pop-up's whole visible body.
+  rowsPanel: nil
+  # this pop-up's title bar: the MenuHeader the rows-panel builds from @msg,
+  # surfaced here so `prompt.label` reaches it the same way `menu.label` reaches a
+  # menu's header (the drag/pin-by-header idiom the menu tests share). Storage
+  # lives on the panel; this is the same instance, so `.center()` tracks it live.
+  label: nil
+  # the value editor for the text-bearing prompts (Text / Number / SaveShortcut);
+  # kept under this conventional name because Widget.prompt and the macro tests
+  # reach it as `<prompt>.tempPromptEntryField`.
   tempPromptEntryField: nil
 
-  constructor: (widgetOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
-    @ceilingNum, @isRounded) ->
+  # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does, so
+  # the three isMenu? sites (ActivePointerWdgt's click-outside menu dismissal,
+  # Wallpaper / StringWdgt tick refresh) treat it exactly as the old
+  # `PromptWdgt extends MenuWdgt` did.
+  isMenu: ->
+    true
 
-    isNumeric = true  if @ceilingNum
-    # built BEFORE super on purpose: it is PASSED to super as the menu's environment-slot arg
-    @tempPromptEntryField = new StringFieldWdgt(
-      @defaultContents or "",
-      @intendedWidth or 100,
-      WorldWdgt.preferencesAndSettings.prompterFontSize,
-      WorldWdgt.preferencesAndSettings.prompterFontName,
-      false,
-      false,
-      isNumeric)
+  colloquialName: ->
+    if @msg then "\"" + @msg + "\" prompt" else "prompt"
 
-    super widgetOpeningThePopUp, target: @target, title: (@msg or ""), environment: @tempPromptEntryField
-
-    @_buildAndConnectChildren()
-    @addLine 2
-
-    @addMenuItem "Ok", @target, @callback
-    # we name the button "Close" instead of "Cancel"
-    # because we are not undoing any change we made
-    # that would be rather difficult in case of
-    # multiple prompts being pinned down and changing
-    # the property concurrently
-    @addMenuItem "Close", @, "close"
-
-    @_reLayoutSelf()
+  constructor: (widgetOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth) ->
+    super widgetOpeningThePopUp
+    @onClickOutsideMeOrAnyOfMyChildren "close"
+    # NOTE: subclasses call @_buildAndConnectChildren() from their OWN constructor,
+    # after super() has bound their extra params (e.g. NumberPromptWdgt's ceiling):
+    # CoffeeScript binds a subclass's ctor params only AFTER super(), so building
+    # here would dispatch into the subclass editor hook too early (same reason
+    # MenuWdgt keeps its label build out of a virtual _buildAndConnectChildren).
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    @_addNoSettle @tempPromptEntryField
-    # the old bare `@__add` ran the child's calculateAndUpdateExtent (StringFieldWdgt's measures
-    # the text and applies width >= minTextWidth — the menu's width derives from it via
-    # menuEntryPreferredWidth); _addNoSettle skips it, so run it explicitly.
-    @tempPromptEntryField.calculateAndUpdateExtent()
-    if @ceilingNum or WorldWdgt.preferencesAndSettings.useSliderForInput
-      slider = new SliderWdgt(
-        @floorNum or 0,
-        @ceilingNum,
-        parseFloat(@defaultContents),
-        Math.floor((@ceilingNum - @floorNum) / 4))
-      slider.alpha = 1
-      slider.color = Color.create 225, 225, 225
-      slider.button.setColorScheme Color.create 60, 60, 60
-      slider.__commitHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
-      slider.target = @
-      slider.argumentToAction = @
-      slider.action = "takeSliderValue"
-      @_addNoSettle slider
+    @rowsPanel = new MenuRowsPanelWdgt target: @target, title: (@msg or "")
+    @_buildAndAddValueEditorInto @rowsPanel
+    @_addButtonsInto @rowsPanel
+    # lay the panel out at my origin, then hug it — the down-walk settles parent
+    # before child, so I size to the panel's freshly-laid-out extent HERE (as
+    # ListWdgt lays out its listContents at build) rather than reading it mid-pass.
+    @rowsPanel.__commitMoveTo @position()
+    @rowsPanel._reLayoutSelf()
+    @_addNoSettle @rowsPanel
+    @_applyExtent @rowsPanel.extent()
+    # surface the panel's title header as my own .label (the drag/pin-by-header handle).
+    @label = @rowsPanel.label
 
-  # My input slider's track press jump-drags its button, like a scroll frame's scrollbars do —
-  # SliderWdgt.mouseDownLeft asks its parent via ?(); see ScrollPanelWdgt.sliderTrackPressJumpsButton
-  # (type-test-elimination ε).
-  sliderTrackPressJumpsButton: ->
-    true
+  # Subclass hook: build the type-specific editor and add it to the panel. The
+  # editor also becomes the panel's `environment` (the button rows resolve their
+  # widgetEnv from it, mirroring the old MenuWdgt environment-slot arg).
+  _buildAndAddValueEditorInto: (panel) ->
 
-  takeSliderValue: (num) ->
-    @_settleLayoutsAfter => @_takeSliderValueNoSettle num
-
-  # The reactive-CONNECTOR entrypoint (check-layering [P]): the dataflow engine delivers the prompt slider's wire
-  # HERE (its @action is "takeSliderValue", so _applyWireValue / _fireConnection resolve `_<action>Connector`
-  # first). It JOINS the drain's enclosing settle instead of opening its own, so the mid-drain _editNoSettle in the
-  # core below is legal (edit() is public/self-settling -- illegal mid-flush, Widget:824). Same NoSettle core as the
-  # public takeSliderValue above -- the setFontSize / _setFontSizeConnector pattern. NO connectionsCalculation
-  # Token guard: this is a pure SINK (it never calls updateTarget), so a circuit cannot cycle through it; the
-  # dispatch's extra (argumentToAction, token) arguments are simply ignored, exactly as the public entry ignores them.
-  _takeSliderValueConnector: (num) ->
-    @_settleLayoutsAfterOrJoinEnclosingPass => @_takeSliderValueNoSettle num
-
-  _takeSliderValueNoSettle: (num) ->
-    @tempPromptEntryField.changed()
-    # the field's inner text is a StringWdgt. Use _setTextNoSettle
-    # -- which re-runs _synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
-    # value -- instead of poking .text + _reLayoutSelf (StringWdgt has no _reLayoutSelf that refits).
-    # Otherwise _editNoSettle below sees a stale cropped text and defers to the "edit:" prompt.
-    @tempPromptEntryField.text._setTextNoSettle Math.round(num).toString()
-    @tempPromptEntryField.text.changed()
-    @tempPromptEntryField.text._editNoSettle()
-
-  # (a vestigial `_reLayoutSelf: -> super(); @buildSubwidgets()` override with an EMPTY
-  # buildSubwidgets hook was deleted 2026-07-12 — a layout pass dispatching to an overridable
-  # public builder is the structure-mutation-inside-a-pass shape the flow rules exist to prevent,
-  # and the hook had no implementor. public/private call-separation plan T2.)
+  # The everyday button row: a divider then "Ok" (fires the caller's callback on
+  # the target) and "Close" (dismisses this prompt). SaveShortcutPromptWdgt
+  # overrides with its own three buttons and no leading divider.
+  _addButtonsInto: (panel) ->
+    panel.addLine 2
+    panel.addMenuItem "Ok", @target, @callback
+    # we name the button "Close" instead of "Cancel" because we are not undoing
+    # any change we made -- that would be difficult with multiple prompts pinned
+    # down and changing the property concurrently.
+    panel.addMenuItem "Close", @, "close"
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
-  

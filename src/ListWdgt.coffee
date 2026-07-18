@@ -63,8 +63,10 @@ class ListWdgt extends ScrollPanelWdgt
 
   _buildAndConnectChildrenNoSettle: ->
     # a MenuRowsPanelWdgt: the pure row-stack, NOT a pop-up menu -- a List holds
-    # rows, not a (crippled) menu. No killOutside/killOnTriggers (not a pop-up).
-    @listContents = new MenuRowsPanelWdgt target: @
+    # rows, not a (crippled) menu. No killOutside/killOnTriggers (not a pop-up),
+    # no title (a plain square body), and selectsItemsOnClick so a click SELECTS
+    # a row rather than triggering it.
+    @listContents = new MenuRowsPanelWdgt target: @, selectsItemsOnClick: true
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
     world.disableTrackChanges()

@@ -69,15 +69,15 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 - [ ] §4.3: fold the creator zoo (CreatorButton/WidgetFactory/MenusHelper "new X") onto the two primitives — second wave
 - [ ] §4.4: (bank) templates as first-class editable objects
 
-### `plans/container-regularization-plan.md` — IN PROGRESS; the List/Menu untie is LANDED (green)
-AUTHORED+FLESHED 2026-07-18; de-byzantinate Menu/List/Prompt/Divider. Key finding: menu-ness already lives in `PopUpWdgt`, so the untie is a LAYOUT extraction, not a behaviour one. **§5.1 + §5.2a–c LANDED 2026-07-18 (gauntlet 11/11, byte-identical bar 1 benign inspector recapture); `instanceof` baseline ratcheted 97→95.** Remaining: §5.3 (prompt family) + owner-gated tail. Order (ascending pixel-risk): 5.1 → 5.2a → 5.3 → 5.2b → 5.2c → (5.2d/e) → 5.4.
+### `plans/container-regularization-plan.md` — IN PROGRESS; List/Menu untie + prompt family LANDED (green)
+AUTHORED+FLESHED 2026-07-18; de-byzantinate Menu/List/Prompt/Divider. Key finding: menu-ness already lives in `PopUpWdgt`, so the untie is a LAYOUT extraction, not a behaviour one. **§5.1 + §5.2a–c LANDED 2026-07-18 (gauntlet 11/11, byte-identical bar 1 benign inspector recapture); `instanceof` baseline ratcheted 97→95. §5.3 (prompt family) LANDED 2026-07-18 — full re-base off `PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; gauntlet 11/11 incl. revisits+census, byte-identical bar 1 conscious save-as recapture + 1 test-structure edit.** Remaining: owner-gated tail (§5.2d/§5.2e/§5.4) — §5.2d is now a clean drop-in (the shared titled-rows body is built) that also kills a temporary `_reLayoutSelf` duplication.
 - [x] §5.1 [H]: extract `DividerWdgt` (retire inline-`RectangleWdgt` dividers) — DONE, byte-identical; `isDivider` role query
 - [x] §5.2a: extract `MenuRowsPanelWdgt` (byte-preserving row-stack lift) — DONE (landed with 5.2b)
 - [x] §5.2b [C]: `ListWdgt` uses `MenuRowsPanelWdgt` not `MenuWdgt`; `isListItem` → `selectsItemsOnClick?()` — DONE, byte-identical (Inspector green, zero recapture)
 - [x] §5.2c: retire the `isListContents` flag (no readers left after 5.2b) — DONE, byte-identical
-- [ ] §5.2d [B]: (Phase 2, owner-gated) recompose `MenuWdgt` = `PopUpWdgt` + [`MenuHeader` + rows-panel]
+- [x] §5.3 [E]: prompt family — `PromptWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; `Text/Number/ColorPromptWdgt`; `pickColor` folded; `SaveShortcutPromptWdgt` re-homed; `SelectPromptWdgt` BANKED (font selectors are editor-integrated menus, not value prompts) — DONE, green (1 conscious save-as recapture + 1 popover test-structure edit)
+- [ ] §5.2d [B]: (Phase 2, owner-gated) recompose `MenuWdgt` = `PopUpWdgt` + [`MenuHeader` + rows-panel] — now a clean drop-in onto the §5.3 shared body; kills the temporary `MenuWdgt`/`MenuRowsPanelWdgt` `_reLayoutSelf` duplication
 - [ ] §5.2e: (follow-on) re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` (watch `fg revisits`/`census`)
-- [ ] §5.3 [E]: prompt family — re-base off `PopUpWdgt` + `Text/Number/Color/SelectPromptWdgt`; fold `pickColor` + `SaveShortcutPromptWdgt`
 - [ ] §5.4 [F]: record the deliberate NON-merge of the "one container becomes a window" idea (owner may overrule)
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)

@@ -1,8 +1,19 @@
 # Container regularization — de-byzantinate Menu / List / Prompt / Divider
 
-**STATUS: IN PROGRESS 2026-07-18 — §5.1 + §5.2a–c LANDED (the List/Menu/Divider untie; gauntlet 11/11,
-byte-identical bar 1 benign inspector recapture; `instanceof` baseline ratcheted 97→95). REMAINING:
-§5.3 (prompt family) + owner-gated tail (§5.2d/§5.2e/§5.4). Owner banked the untie as a milestone before §5.3.**
+**STATUS: IN PROGRESS 2026-07-18 — §5.1 + §5.2a–c + §5.3 LANDED. §5.1/§5.2a–c = the List/Menu/Divider
+untie (gauntlet 11/11, byte-identical bar 1 benign inspector recapture; `instanceof` baseline 97→95;
+committed `44493b78`+`7733d214`, tests `38e25bcce`). §5.3 = the prompt family re-based OFF `MenuWdgt`:
+`PromptWdgt extends PopUpWdgt` composing ONE titled `MenuRowsPanelWdgt` (generalized in this step with a
+`title` opt → titled body + a `selectsItemsOnClick` ctor opt, default false=trigger, `ListWdgt` passes true),
+per-type `TextPromptWdgt`/`NumberPromptWdgt`/`ColorPromptWdgt` (the last folds `Widget.pickColor`),
+`SaveShortcutPromptWdgt` re-homed onto the base, `Widget.prompt` dispatches Text/Number on `ceilingNum`.
+SelectPromptWdgt BANKED (font selectors are editor-integrated menus, not value prompts); `inform` left as a
+message menu. Gauntlet 11/11 green incl. revisits+census; byte-identical bar 1 conscious save-as recapture
+(its `_applyWidth 150` hack → invisible sub-pixel width churn) + 1 test-structure edit (the popover test found
+its slider at `prompt.rowsPanel.children`, not `prompt.children`). REMAINING: owner-gated tail
+(§5.2d/§5.2e/§5.4). NOTE for §5.2d: §5.3 already built the shared titled-rows body, so §5.2d ("recompose
+MenuWdgt onto it") is now a clean drop-in that ALSO removes the temporary `_reLayoutSelf` header-layout
+duplication between `MenuWdgt` and `MenuRowsPanelWdgt`, and makes menu+prompt symmetric.**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -133,7 +144,7 @@ borderless box. **Latent bug:** any stray `RectangleWdgt` in a menu is treated a
 | B | Menu = title + a list (not self-laying) | **NOT DONE** | `MenuWdgt._reLayoutSelf` self-lays a row-stack |
 | C | A List holds **anything** and **NOT** a Menu | **NOT DONE** | `ListWdgt` builds `new MenuWdgt(isListContents:true)` of rows |
 | D | Menu items richer than a bare label | **DONE** | `MenuItemSpec` label may be `Widget`/`Canvas`/`[icon,string]` |
-| E | Prompt = a Menu with no title; menu-ness via a Mixin; per-value-type subclasses | **NOT DONE** | `PromptWdgt extends MenuWdgt` **with** a title; text+number in one class; colour ad-hoc; no per-type family |
+| E | Prompt = a Menu with no title; menu-ness via a Mixin; per-value-type subclasses | **DONE (§5.3)** | `PromptWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; per-type `Text`/`Number`/`ColorPromptWdgt`; `pickColor` folded; menu-ness via the pop-up, not the menu class |
 | F | One general container that becomes a window/pinnable-window | **NOT DONE — recommend NON-merge (§5.4)** | roles split: `PanelWdgt`/`WindowWdgt`/`PopUpWdgt`/`StretchableWidgetContainerWdgt` |
 | G | A `MenuTitle` class | **DONE** | `MenuHeader` (`extends BoxWdgt`) |
 | H | A `DividerMorph` class | **NOT DONE** | inline `RectangleWdgt` + `instanceof RectangleWdgt` |
@@ -225,13 +236,21 @@ The full diagram realization: `MenuWdgt` stops self-laying and instead composes 
 touches `testItems`/`testNumberOfItems` (rows move one level deeper), submenu logic, and hover-highlight
 (`macroHierarchyMenuHoverHighlightsExactSubtree`) → **larger recapture**. Gate hard; land alone. Owner
 decides whether to take Phase 2 or stop after 5.2c (the core oddity is already gone at 5.2c).
+**Post-§5.3 note:** §5.3 already generalized `MenuRowsPanelWdgt` into the shared titled-rows body (the
+`title`-opt path builds the `MenuHeader` + corner radius; the pop-up wrapper owns the shadow) and proved a
+`PopUpWdgt`-wraps-one-titled-panel composition byte-identical (Prompt). So 5.2d is now: point `MenuWdgt` at
+`new MenuRowsPanelWdgt title:…`, surface `@label = @rowsPanel.label` (the drag/pin-by-header handle the menu
+tests share — the exact move Prompt already makes), and delete `MenuWdgt`'s own `_reLayoutSelf`/`_buildMenuLabel`/
+row helpers (now duplicated in the panel). The `.label`-surfacing + `sliderTrackPressJumpsButton`-on-panel
+patterns are proven; the residual risk is purely the menu-test recapture (rows one level deeper for
+`testItems`, submenu parentage, hover-highlight).
 
 **5.2e — (follow-on, optional) Re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt`.**
 Replace the lifted hand-layout with the canonical hug/grow stack (+ a width-equalization override). The
 "right" end state (one vertical-stack engine), but it shifts settle timing (`_reLayoutChildren` appears) →
 keep `fg revisits`/`fg census` at zero. Only after 5.2d is stable.
 
-### 5.3 [E] Regularize the prompt family. *Uses the 5.2a row-stack.*
+### 5.3 [E] Regularize the prompt family. *Uses the 5.2a row-stack.* — ✅ LANDED 2026-07-18
 1. **Menu-ness via `PopUpWdgt`, not inheritance.** Re-base `PromptWdgt` off **`PopUpWdgt`** (the behaviour)
    composing a `MenuRowsPanelWdgt` (title + value-editor + Ok/Close), instead of `extends MenuWdgt`. This is
    the note's "prompts are Menus only via a Mixin" — realized as "prompts share the pop-up behaviour, not the

@@ -1,19 +1,25 @@
-class SaveShortcutPromptWdgt extends MenuWdgt
+# The "save as..." prompt: a text field for the shortcut name over a
+# "Don't save" / "Cancel" / "Ok" button row. A member of the prompt family (it
+# shares PromptWdgt's PopUpWdgt behaviour + composed titled rows-panel); it only
+# swaps in its own three buttons (no leading divider) and edits the field at once.
 
-  # bad hack to set the prompt to a
-  # decent width
-  # TODO this widget has to be re-made using
-  # vertical stack layout anyways
+class SaveShortcutPromptWdgt extends PromptWdgt
+
+  # the trailing spaces pad the title so the prompt opens at a decent width.
   msg: " save as...         "
 
-  tempPromptEntryField: nil
+  wdgtWhereReferenceWillGo: nil
 
   constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
-
     if !@defaultContents
       @defaultContents = world.untitledNamingService.getNextUntitledShortcutName()
+    super widgetOpeningThePopUp, @msg, @target, nil, @defaultContents, @intendedWidth
+    @_buildAndConnectChildren()
+    @rowsPanel._applyWidth 150
+    @_applyExtent @rowsPanel.extent()
+    @tempPromptEntryField.text.edit()
 
-    # built BEFORE super on purpose: it is PASSED to super as the menu's environment-slot arg
+  _buildAndAddValueEditorInto: (panel) ->
     @tempPromptEntryField = new StringFieldWdgt(
       @defaultContents,
       150,
@@ -21,38 +27,20 @@ class SaveShortcutPromptWdgt extends MenuWdgt
       WorldWdgt.preferencesAndSettings.prompterFontName,
       false,
       false,
-      false
-    )
-
-    super widgetOpeningThePopUp, target: @target, title: @msg, environment: @tempPromptEntryField
-
-    @_buildAndConnectChildren()
-
-    @addMenuItem "Don't save", @target, "destroy"
-    # "Cancel" here just dismisses this prompt, but the target
-    # wdgt remains open
-    @addMenuItem "Cancel", @, "close"
-    @addMenuItem "Ok", @, "createReferenceAndClose"
-
-    @_reLayoutSelf()
-    @_applyWidth 150
-    @tempPromptEntryField.text.edit()
-
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
-
-  _buildAndConnectChildrenNoSettle: ->
-    @_addNoSettle @tempPromptEntryField
-    # the old bare `@__add` ran the child's calculateAndUpdateExtent (StringFieldWdgt's measures
-    # the text and applies width >= minTextWidth); _addNoSettle skips it, so run it explicitly.
+      false)
+    panel.environment = @tempPromptEntryField
+    panel._addNoSettle @tempPromptEntryField
+    # _addNoSettle skips calculateAndUpdateExtent (which measures the text and
+    # applies width >= minTextWidth); run it explicitly.
     @tempPromptEntryField.calculateAndUpdateExtent()
 
-  # (a vestigial `_reLayoutSelf: -> super(); @buildSubwidgets()` override with an EMPTY
-  # buildSubwidgets hook was deleted 2026-07-12, exactly as in PromptWdgt — see the note there.)
+  # save-as has its own three buttons and no leading divider (unlike the base row).
+  _addButtonsInto: (panel) ->
+    panel.addMenuItem "Don't save", @target, "destroy"
+    # "Cancel" here just dismisses this prompt, but the target wdgt remains open.
+    panel.addMenuItem "Cancel", @, "close"
+    panel.addMenuItem "Ok", @, "createReferenceAndClose"
 
-  _reactToBeingAdded: (whereTo, beingDropped) ->
-  
   createReferenceAndClose: ->
     @target.createReferenceAndClose @tempPromptEntryField.text.text, @wdgtWhereReferenceWillGo
     @close()

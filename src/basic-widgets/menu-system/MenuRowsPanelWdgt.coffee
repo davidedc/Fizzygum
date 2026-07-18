@@ -1,9 +1,19 @@
 # A self-laying vertical stack of rows (menu items, dividers, and small editors
-# like sliders / colour-pickers / string fields), WITHOUT any menu-ness: no
-# pop-up membership, no title header, no click-outside-to-close, no corner
-# radius, no shadow. It is the pure LAYOUT half of a menu, split from the pop-up
-# behaviour (which lives in PopUpWdgt), so a ListWdgt can own a row-stack directly
-# instead of borrowing a whole pop-up menu it has to cripple.
+# like sliders / colour-pickers / string fields) — the pure LAYOUT half of a
+# menu, split from the pop-up behaviour (which lives in PopUpWdgt). It carries no
+# menu-ness of its own: no pop-up membership, no click-outside-to-close, no
+# shadow. What a wrapping PopUpWdgt (a MenuWdgt or a PromptWdgt) owns is the
+# transient/pin behaviour + shadow; what a ListWdgt owns is the surrounding
+# scroll frame. Either way the visible body — box, optional title header, and the
+# rows — is drawn HERE.
+#
+# Two knobs shape a panel to its client:
+#  - `title`: when given, the panel draws a rounded titled body (a MenuHeader row
+#    at the top, corner radius) — the shape a menu / prompt wants. Omitted, the
+#    panel is a plain square row-stack — the shape a ListWdgt's contents want.
+#  - `selectsItemsOnClick`: true makes each MenuItemWdgt SELECT on click (a list),
+#    false makes it TRIGGER (a menu / prompt's Ok-Close). MenuItemWdgt.isListItem
+#    dispatches on it via ?(); default false so a plain menu reads falsy.
 #
 # Rows answer menuEntryPreferredWidth() (MenuItemWdgt / StringFieldWdgt /
 # ColorPickerWdgt / SliderWdgt) so every row is widened to the panel's widest;
@@ -12,30 +22,57 @@
 # it defines no _reLayoutChildren. Rows are added by the owner after construction
 # (addMenuItem / addLine), matching MenuWdgt's compose-after-build protocol.
 #
-# The look is a plain menu body: MenuAppearance (a plain BoxyAppearance), the menu
-# stroke colour, and a 238-grey fill committed each layout. Base is Widget (not
-# PanelWdgt): the panel does not clip — the ListWdgt's scroll frame does — and the
-# menu whose row-stack this is was never a panel.
+# Base is Widget (not PanelWdgt): the panel does not clip — a ListWdgt's scroll
+# frame does — and the menu whose row-stack this is was never a panel.
 
 class MenuRowsPanelWdgt extends Widget
 
   target: nil
   environment: nil
   fontSize: nil
+  title: nil
+  label: nil
+  _selectsItemsOnClick: false
 
   constructor: (opts = {}) ->
     super()
     @target = opts.target
     @environment = opts.environment
     @fontSize = opts.fontSize
+    @title = opts.title
+    @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
     @appearance = new MenuAppearance @
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
+    @_buildMenuLabel()
 
-  # Role query: rows in THIS panel are list entries (click selects, not triggers).
-  # MenuItemWdgt.isListItem dispatches on it via ?(), so a plain MenuWdgt (which
-  # does not answer it) reads false.
+  # Role query: rows in a select-on-click panel are list entries; elsewhere they
+  # trigger. MenuItemWdgt.isListItem dispatches on it via ?(), so a plain MenuWdgt
+  # (which does not answer it) reads false.
   selectsItemsOnClick: ->
+    @_selectsItemsOnClick
+
+  # My input slider's track press jump-drags its button, like a scroll frame's
+  # scrollbars do — SliderWdgt.mouseDownLeft asks its parent via ?(); see
+  # ScrollPanelWdgt.sliderTrackPressJumpsButton (type-test-elimination ε).
+  sliderTrackPressJumpsButton: ->
     true
+
+  # Build the title header (when titled) via the NoSettle core, settling ONCE at
+  # the end (orphan-settledness: `new X` returns settled). Only the HEADER is
+  # ctor-built: the ROWS are composed by the owner after construction
+  # (addMenuItem / addLine). Distinct name from `_buildAndConnectChildren` for
+  # the same reason MenuWdgt states: a subclass binds its ctor params only after
+  # super(), so a virtual builder called from a base ctor would dispatch too early.
+  _buildMenuLabel: ->
+    @_settleLayoutsAfter => @_buildMenuLabelNoSettle()
+
+  _buildMenuLabelNoSettle: ->
+    if @title
+      @_createLabel()
+      @_addNoSettle @label
+
+  _createLabel: ->
+    @label = new MenuHeader @title
 
   createLine: (height = 1) ->
     new DividerWdgt height
@@ -95,15 +132,17 @@ class MenuRowsPanelWdgt extends Widget
 
   # »>> this part is excluded from the fizzygum homepage build
 
-  # used by the test system to check the row count / rows (there is no header row
-  # to exclude, and a shadow lives in @shadowInfo, never a child).
+  # used by the test system to check the row count / rows: children minus the top
+  # title header (a shadow lives in @shadowInfo, never a child, so there is
+  # nothing to exclude for it).
   testNumberOfItems: ->
     @testItems().length
 
   testItems: ->
     items = []
     for item in @children
-      items.push item
+      if item != @label
+        items.push item
     items
 
   # this part is excluded from the fizzygum homepage build <<«
@@ -115,12 +154,21 @@ class MenuRowsPanelWdgt extends Widget
     # rects and then issue a fullChanged() at the end.
     world.disableTrackChanges()
 
+    if @title
+      @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
     @color = Color.create 238, 238, 238
     @__commitExtent new Point 0, 0
-    y = @top() + 1
+
+    if @title
+      @label._applyMoveTo @position().add 2
+      y = @label.bottom()
+    else
+      y = @top()
+    y += 1
     x = @left() + 2
 
     for item in @children
+      if item == @label then continue
       item._applyMoveTo new Point x, y
       y = y + item.height()
 
@@ -135,10 +183,12 @@ class MenuRowsPanelWdgt extends Widget
     w = 0
     # Each row that contributes a width answers menuEntryPreferredWidth()
     # (MenuItemWdgt / StringFieldWdgt / ColorPickerWdgt / SliderWdgt define it);
-    # divider lines don't, and are skipped.
+    # divider lines and the title header don't, and are skipped.
     @children.forEach (item) ->
       if item.menuEntryPreferredWidth?
         w = Math.max w, item.menuEntryPreferredWidth()
+    if @label
+      w = Math.max w, @label.width()
     w
 
   # makes all the rows of this panel the right width.

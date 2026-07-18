@@ -3851,8 +3851,13 @@ class Widget extends TreeNode
   prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
 
-    prompt = new PromptWdgt(@, msg, target, callback, defaultContents, width, floorNum,
-    ceilingNum, isRounded)
+    # dispatch on the numeric ceiling (the old slider condition): a numeric
+    # prompt gets the slider, a plain one is text-only.
+    if ceilingNum? or WorldWdgt.preferencesAndSettings.useSliderForInput
+      prompt = new NumberPromptWdgt(@, msg, target, callback, defaultContents, width, floorNum,
+      ceilingNum, isRounded)
+    else
+      prompt = new TextPromptWdgt(@, msg, target, callback, defaultContents, width)
 
     prompt.popUpAtHand()
     prompt.tempPromptEntryField.text.edit()
@@ -3867,20 +3872,8 @@ class Widget extends TreeNode
 
   
   pickColor: (msg, callback, defaultContents) ->
-    colorPicker = new ColorPickerWdgt defaultContents
-    menu = new MenuWdgt @, target: @, title: (msg or ""), environment: colorPicker
-    menu.__add colorPicker
-    menu.addLine 2
-
-    menu.addMenuItem "Ok", @, callback
-    # we name the button "Close" instead of "Cancel"
-    # because we are not undoing any change we made
-    # that would be rather difficult in case of
-    # multiple prompts being pinned down and changing
-    # the property concurrently
-    menu.addMenuItem "Close", menu, "close"
-
-    menu.popUpAtHand()
+    colorPrompt = new ColorPromptWdgt @, msg, @, callback, defaultContents
+    colorPrompt.popUpAtHand()
 
   inspect: ->
     @spawnInspector @
