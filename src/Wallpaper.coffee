@@ -91,10 +91,14 @@ class Wallpaper
       when @pattern7
         pattern7Tick = tick
 
-    menu.children[1].label.setText pattern1Tick + @pattern1
-    menu.children[2].label.setText pattern2Tick + @pattern2
-    menu.children[3].label.setText pattern3Tick + @pattern3
-    menu.children[4].label.setText pattern4Tick + @pattern4
-    menu.children[5].label.setText pattern5Tick + @pattern5
-    menu.children[6].label.setText pattern6Tick + @pattern6
-    menu.children[7].label.setText pattern7Tick + @pattern7
+    # the rows live in the menu's rowsPanel now (index 0 is the title header, 1..7
+    # the pattern items) -- the same order the menu's own children had before it
+    # composed the panel.
+    rows = menu.rowsPanel.children
+    rows[1].label.setText pattern1Tick + @pattern1
+    rows[2].label.setText pattern2Tick + @pattern2
+    rows[3].label.setText pattern3Tick + @pattern3
+    rows[4].label.setText pattern4Tick + @pattern4
+    rows[5].label.setText pattern5Tick + @pattern5
+    rows[6].label.setText pattern6Tick + @pattern6
+    rows[7].label.setText pattern7Tick + @pattern7

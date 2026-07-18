@@ -10,10 +10,18 @@ per-type `TextPromptWdgt`/`NumberPromptWdgt`/`ColorPromptWdgt` (the last folds `
 SelectPromptWdgt BANKED (font selectors are editor-integrated menus, not value prompts); `inform` left as a
 message menu. Gauntlet 11/11 green incl. revisits+census; byte-identical bar 1 conscious save-as recapture
 (its `_applyWidth 150` hack → invisible sub-pixel width churn) + 1 test-structure edit (the popover test found
-its slider at `prompt.rowsPanel.children`, not `prompt.children`). REMAINING: owner-gated tail
-(§5.2d/§5.2e/§5.4). NOTE for §5.2d: §5.3 already built the shared titled-rows body, so §5.2d ("recompose
-MenuWdgt onto it") is now a clean drop-in that ALSO removes the temporary `_reLayoutSelf` header-layout
-duplication between `MenuWdgt` and `MenuRowsPanelWdgt`, and makes menu+prompt symmetric.**
+its slider at `prompt.rowsPanel.children`, not `prompt.children`). §5.2d = `MenuWdgt` recomposed off its
+self-laid row-stack: `extends PopUpWdgt` composing ONE free-floating `MenuRowsPanelWdgt` (title/target/
+environment/fontSize), row API DELEGATED (addMenuItem/prependMenuItem/addLine/prependLine/removeMenuItem/
+removeConsecutiveLines/testItems/testNumberOfItems), `@label = @rowsPanel.label`, and its own
+`_reLayoutSelf`/`maxWidthOfMenuEntries`/`adjustWidthsOfMenuEntries`/`createLine`/`createMenuItem`/
+`_buildMenuLabel` DELETED (net −55 lines). Gauntlet 11/11 green incl. revisits (0 up-edge re-visits) +
+census (0 movers/1623 targets); 8 menu tests consciously recaptured (invisible rounded-corner-stroke AA at
+menu-overlap corners — eyeballed via `fg diffpage`, 0 major-change). **⚠⚠ §5.2d was NOT a clean drop-in —
+four real regressions surfaced (see §8), each a consequence of inserting the panel BETWEEN the menu and its
+items; the load-bearing fixes are `_reactToBeingAdded`-drives-the-panel-layout, `isTransparentAt → true`,
+lay-out-ONCE (not a size-tracking container), and two `menu.children[N]`→`menu.rowsPanel.children[N]`
+production sites.** REMAINING: owner-gated §5.2e/§5.4.**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -141,16 +149,17 @@ borderless box. **Latent bug:** any stray `RectangleWdgt` in a menu is treated a
 | # | Diagram proposal | Verdict | Evidence |
 |---|---|---|---|
 | A | Menu holds no hardwired child-type whitelist | **DONE** | duck-typed `menuEntryPreferredWidth?()`/`unselect?()` |
-| B | Menu = title + a list (not self-laying) | **NOT DONE** | `MenuWdgt._reLayoutSelf` self-lays a row-stack |
-| C | A List holds **anything** and **NOT** a Menu | **NOT DONE** | `ListWdgt` builds `new MenuWdgt(isListContents:true)` of rows |
+| B | Menu = title + a list (not self-laying) | **DONE (§5.2d)** | `MenuWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; the menu draws nothing, the panel lays out the rows |
+| C | A List holds **anything** and **NOT** a Menu | **DONE (§5.2b/c)** | `ListWdgt` builds `new MenuRowsPanelWdgt(selectsItemsOnClick:true)`, never a `MenuWdgt`; `isListContents` retired |
 | D | Menu items richer than a bare label | **DONE** | `MenuItemSpec` label may be `Widget`/`Canvas`/`[icon,string]` |
 | E | Prompt = a Menu with no title; menu-ness via a Mixin; per-value-type subclasses | **DONE (§5.3)** | `PromptWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; per-type `Text`/`Number`/`ColorPromptWdgt`; `pickColor` folded; menu-ness via the pop-up, not the menu class |
 | F | One general container that becomes a window/pinnable-window | **NOT DONE — recommend NON-merge (§5.4)** | roles split: `PanelWdgt`/`WindowWdgt`/`PopUpWdgt`/`StretchableWidgetContainerWdgt` |
 | G | A `MenuTitle` class | **DONE** | `MenuHeader` (`extends BoxWdgt`) |
-| H | A `DividerMorph` class | **NOT DONE** | inline `RectangleWdgt` + `instanceof RectangleWdgt` |
+| H | A `DividerMorph` class | **DONE (§5.1)** | `DividerWdgt extends RectangleWdgt`; `isDivider?()` role query replaced `instanceof RectangleWdgt` |
 | I | List hugs content / fits any area | **DONE (elsewhere)** | sizing-model-unification arc |
 
-**Open work = B, C, E, H, and a ruling on F.** A/D/G/I are done; the plan says so rather than re-proposing.
+**Open work = only the ruling on F (§5.4, a deliberate NON-merge) + the optional §5.2e stack re-base.**
+A/B/C/D/E/G/H/I are all DONE.
 
 ---
 
@@ -231,19 +240,39 @@ Remove the field and every branch it guards from `MenuWdgt` (the label-skip, the
 readers left. **Verify:** `fg gauntlet` (menus now always build their title/pop-up membership — confirm no
 menu test regressed).
 
-**5.2d — (Phase 2, owner-gated) Recompose `MenuWdgt` as `PopUpWdgt` + [`MenuHeader` + `MenuRowsPanelWdgt`].**
-The full diagram realization: `MenuWdgt` stops self-laying and instead composes a title + a rows-panel. This
-touches `testItems`/`testNumberOfItems` (rows move one level deeper), submenu logic, and hover-highlight
-(`macroHierarchyMenuHoverHighlightsExactSubtree`) → **larger recapture**. Gate hard; land alone. Owner
-decides whether to take Phase 2 or stop after 5.2c (the core oddity is already gone at 5.2c).
-**Post-§5.3 note:** §5.3 already generalized `MenuRowsPanelWdgt` into the shared titled-rows body (the
-`title`-opt path builds the `MenuHeader` + corner radius; the pop-up wrapper owns the shadow) and proved a
-`PopUpWdgt`-wraps-one-titled-panel composition byte-identical (Prompt). So 5.2d is now: point `MenuWdgt` at
-`new MenuRowsPanelWdgt title:…`, surface `@label = @rowsPanel.label` (the drag/pin-by-header handle the menu
-tests share — the exact move Prompt already makes), and delete `MenuWdgt`'s own `_reLayoutSelf`/`_buildMenuLabel`/
-row helpers (now duplicated in the panel). The `.label`-surfacing + `sliderTrackPressJumpsButton`-on-panel
-patterns are proven; the residual risk is purely the menu-test recapture (rows one level deeper for
-`testItems`, submenu parentage, hover-highlight).
+**5.2d — Recompose `MenuWdgt` as `PopUpWdgt` composing a titled `MenuRowsPanelWdgt`. ✅ LANDED 2026-07-18.**
+`MenuWdgt extends PopUpWdgt`, builds ONE free-floating `MenuRowsPanelWdgt(title/target/environment/fontSize)`,
+DELEGATES the row API to it, surfaces `@label = @rowsPanel.label`, and deletes its own `_reLayoutSelf`/
+`maxWidthOfMenuEntries`/`adjustWidthsOfMenuEntries`/`createLine`/`createMenuItem`/`_buildMenuLabel` (net −55
+lines; the panel already carries them). Gauntlet **11/11 incl. revisits (0) + census (0 movers/1623)**; 8 menu
+tests consciously recaptured (invisible corner-stroke AA, eyeballed via `fg diffpage`).
+
+**⚠⚠ NOT the clean drop-in the Post-§5.3 note predicted.** Inserting the panel BETWEEN the menu and its
+items broke four things the direct-child structure hid — all four are the load-bearing lessons (see §8):
+1. **The panel never lays its rows out.** `addMenuItem` routes through the RAW `__add` (no invalidate, no
+   settle); the old self-laying menu got away with it because its OWN `_reLayoutSelf` fired at popUp (via base
+   `Widget._reactToBeingAdded → @_reLayoutSelf()`). Fix: `MenuWdgt._reactToBeingAdded` DRIVES
+   `@rowsPanel._reLayoutSelf()` + hugs via `_applyExtentBase` (method `_layOutAndHugRowsPanel`). Without it
+   menus render EMPTY (66 failures, fractional geometry cascading everywhere a menu opens).
+2. **Lay out ONCE, do NOT be a size-tracking container.** The first fix made the menu a `_reLayoutChildren`
+   container that re-drove the panel on every settle → a **±1px menu-position oscillation** (caught by
+   `fg census`/`fg revisits`). Menus are ALWAYS fully composed BEFORE popUp, so the panel never changes
+   post-popUp — lay out once at `_reactToBeingAdded`, no `_reLayout`/`_reLayoutChildren` override, and
+   re-layouts are stable base no-ops (exactly the old menu's model).
+3. **The menu draws NOTHING → it must be `isTransparentAt → true`.** With `MenuAppearance` removed (the panel
+   draws the box), `Widget.isTransparentAt` returns `undefined`, and `not undefined === true` treats the menu
+   as OPAQUE everywhere — so its transparent rounded corners INTERCEPTED clicks meant for a menu BEHIND it,
+   dropping the hover-highlight of the item whose submenu was open. (Latent-identical in `PromptWdgt`;
+   untested there. The real base bug is `undefined`-means-opaque.)
+4. **`popUpCenteredAtHand` + build-time hug.** Do NOT hug at build: the old menu centred inform on a ~0
+   pre-layout extent (top-left at hand); a build hug offsets by half the real size and mis-places it. Leave
+   the menu at zero extent until popUp lays it out.
+
+Plus two PRODUCTION `menu.children[N]`-index sites (feature code reaching items as direct children):
+`Wallpaper.updatePatternsMenuEntriesTicks` and `StringWdgt.updateFontsMenuEntriesTicks` → `menu.rowsPanel.children[N]`
+(index-preserving; the owner hit the wallpaper one as `undefined is not an object at menu.children[1].label`).
+These are the ONLY two such sites in the tree (grep-confirmed); NO test covered either — verify by hand /
+headless probe.
 
 **5.2e — (follow-on, optional) Re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt`.**
 Replace the lifted hand-layout with the canonical hug/grow stack (+ a width-equalization override). The

@@ -3972,12 +3972,15 @@ class Widget extends TreeNode
         #   inside a ScrollPanelWdgt
         # * also leave out ScrollPanelWdgt when
         #   inside a FolderWindowWdgt
+        # * also leave out a MenuRowsPanelWdgt (the internal body of a menu /
+        #   prompt / list -- it answers hiddenFromHierarchyMenu?())
         # ...because they would be redundant - there is no need for the
         # user to know or have access to the internal structure of
         # those constructs
         if (!((each instanceof SimpleVerticalStackPanelWdgt) and (each.parent instanceof SimpleVerticalStackScrollPanelWdgt))) and
          (!((each instanceof PanelWdgt) and (each.parent instanceof ScrollPanelWdgt))) and
-         (!((each instanceof ScrollPanelWdgt) and (each.parent instanceof FolderWindowWdgt)))
+         (!((each instanceof ScrollPanelWdgt) and (each.parent instanceof FolderWindowWdgt))) and
+         (!each.hiddenFromHierarchyMenu?())
           hierarchyMenuWidgets.push each
 
     hierarchyMenuWidgets

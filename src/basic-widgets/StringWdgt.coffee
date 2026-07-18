@@ -949,7 +949,7 @@ class StringWdgt extends Widget
 
   # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters. From a font menu it
   # ALSO re-ticks the sibling menu items, but updateFontsMenuEntriesTicks does that through the
-  # NON-settling label core (menu.children[i].label._setTextNoSettle), so it does NOT nest another
+  # NON-settling label core (menu.rowsPanel.children[i].label._setTextNoSettle), so it does NOT nest another
   # settling setter -- the menu items' re-fit rides this single settle (or popUpAtHand's, when the menu
   # is still being built on the hand).
   setFontName: (menuItem, ignored2, theNewFontName) ->
@@ -986,7 +986,7 @@ class StringWdgt extends Widget
 
     menu.popUpAtHand()
 
-  # [ fontStackPropertyName, menuLabel ] rows in fonts-menu order (menu.children[1..9]);
+  # [ fontStackPropertyName, menuLabel ] rows in fonts-menu order (menu.rowsPanel.children[1..9]);
   # drives updateFontsMenuEntriesTicks below. Kept a simple literal for the fragment-compile
   # gate. NB the index-7 label "Treby" intentionally differs from its trebuFontStack prop name.
   @FONT_STACK_MENU_ENTRIES: [
@@ -1009,9 +1009,12 @@ class StringWdgt extends Widget
   # from other menus or other means (e.g. API)...
   updateFontsMenuEntriesTicks: (menu) ->
     # tick the single entry whose font stack equals the current @fontName, untick the rest.
+    # the rows live in the menu's rowsPanel now (index 0 is the title header, 1..9 the font
+    # items) -- the same order the menu's own children had before it composed the panel.
+    rows = menu.rowsPanel.children
     for [ fontStackProperty, menuLabel ], i in StringWdgt.FONT_STACK_MENU_ENTRIES
       tickMark = if @fontName == @[fontStackProperty] then tick else untick
-      menu.children[i + 1].label._setTextNoSettle tickMark + menuLabel
+      rows[i + 1].label._setTextNoSettle tickMark + menuLabel
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

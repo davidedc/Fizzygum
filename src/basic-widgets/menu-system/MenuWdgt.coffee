@@ -1,4 +1,17 @@
-# MenuWdgts is a Pop-up with basically a vertical stack of buttons
+# A MenuWdgt is a pop-up that shows a vertical stack of rows (menu items,
+# dividers, and small editors). It gets its menu BEHAVIOUR (transient, closes on
+# click-outside, pinnable, shadowed) from PopUpWdgt, and its menu LOOK/LAYOUT by
+# composing a titled MenuRowsPanelWdgt — the same split PromptWdgt uses. The panel
+# draws the single titled box and lays out the rows; this pop-up draws nothing but
+# its shadow and hugs the panel's size.
+#
+# Because the opener composes a menu's ITEMS after construction (addMenuItem /
+# addLine, each re-laying the panel), the menu must FOLLOW its growing panel — so
+# it is a size-tracking container (it defines _reLayoutChildren), and the settle
+# loop re-fits it to the panel's final extent via the up-edge
+# (_reFitMyTrackingContainerAfterSettle), exactly like the stack / scroll / window
+# containers. The row API is DELEGATED to the panel so the ~380 `menu.addMenuItem`
+# call sites and the MacroToolkit test hooks are untouched.
 
 class MenuWdgt extends PopUpWdgt
 
@@ -6,6 +19,12 @@ class MenuWdgt extends PopUpWdgt
   title: nil
   environment: nil
   fontSize: nil
+  # the titled MenuRowsPanelWdgt that is this menu's whole visible body (box,
+  # title header, and the rows). Free-floating, so it co-moves with me.
+  rowsPanel: nil
+  # my title bar: the MenuHeader the rows-panel builds from @title, surfaced here
+  # so `menu.label` reaches it (the drag/pin-by-header idiom the menu tests share).
+  # Same instance as @rowsPanel.label, so `.center()` tracks it live.
   label: nil
 
   # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's menuAtPointer filter + the
@@ -13,6 +32,19 @@ class MenuWdgt extends PopUpWdgt
   # inherited by PromptWdgt/SaveShortcutPromptWdgt (mirroring the instanceof); dispatched via ?() (nothing
   # on Widget). Parallels isWindow. (type-test-elimination campaign)
   isMenu: ->
+    true
+
+  # I draw NOTHING myself -- my rowsPanel draws the box (and my shadow is my only
+  # paint). So I am transparent EVERYWHERE: hit-testing must fall THROUGH me to my
+  # panel (which is opaque where the box is, so topWdgtSuchThat finds it first) and,
+  # where the panel does not cover (its rounded corners / the padding), on through to
+  # whatever is behind me. Without this, Widget.isTransparentAt returns `undefined`
+  # for an appearance-less widget, which `not undefined` treats as OPAQUE -- so my
+  # transparent corners would intercept a click meant for a menu BEHIND me (a submenu
+  # popped over a parent menu stopped the parent's item from staying hover-highlighted).
+  # The MenuAppearance the old self-laying menu carried reported this correctly; the
+  # panel now carries it, and I must report transparent to match.
+  isTransparentAt: (aPoint) ->
     true
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
@@ -29,27 +61,27 @@ class MenuWdgt extends PopUpWdgt
       @onClickOutsideMeOrAnyOfMyChildren "close"
     super @widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
     @isLockingToPanels = false
-    @appearance = new MenuAppearance @
-    @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
 
-    @_buildMenuLabel()
+    @_buildAndConnectChildren()
 
-  # Build the label via the NoSettle core, settling ONCE at the end (orphan-settledness:
-  # `new MenuWdgt` returns settled). Only the LABEL is ctor-built: a menu's ITEMS are composed
-  # by the opener after construction (addMenuItem/addLine), and it lays itself out at popup.
-  # The name is deliberately DISTINCT from `_buildAndConnectChildren` — same reason as
-  # ScrollPanelWdgt._buildScrollFrame: MenuWdgt is a base whose subclasses (PromptWdgt,
-  # SaveShortcutPromptWdgt) build their own children, and CoffeeScript binds a subclass's
-  # constructor params only AFTER super(), so a virtual `_buildAndConnectChildren` called
-  # from THIS base constructor would dispatch into the subclass's core too early.
-  _buildMenuLabel: ->
-    @_settleLayoutsAfter => @_buildMenuLabelNoSettle()
+  # Build the composed body via the NoSettle core, settling ONCE at the end
+  # (orphan-settledness: `new MenuWdgt` returns settled). Only the PANEL is
+  # ctor-built (empty but for its title header): a menu's ITEMS are composed by
+  # the opener after construction (addMenuItem/addLine) and land in the panel; the
+  # menu lays the panel out + hugs it at popUp (see _reactToBeingAdded).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
-  _buildMenuLabelNoSettle: ->
-    if @title
-    # own method, not inlined, so a future title-change rebuild can reuse @_createLabel()
-      @_createLabel()
-      @_addNoSettle @label
+  _buildAndConnectChildrenNoSettle: ->
+    @rowsPanel = new MenuRowsPanelWdgt target: @target, title: @title, environment: @environment, fontSize: @fontSize
+    @_addNoSettle @rowsPanel
+    # DELIBERATELY do NOT lay out / hug here: like the old self-laying menu, I stay
+    # at my default (zero) extent until popUp lays me out (via _reactToBeingAdded).
+    # This matters for popUpCenteredAtHand (inform), which offsets by @extent()/2 --
+    # a zero pre-layout extent centres my TOP-LEFT at the hand, byte-identical to the
+    # old menu; a build-time hug would offset by half the real size and mis-place it.
+    # surface the panel's title header as my own .label (the drag/pin-by-header handle).
+    @label = @rowsPanel.label
 
   colloquialName: ->
     if @title
@@ -61,168 +93,63 @@ class MenuWdgt extends PopUpWdgt
     @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.canSetHeightFreely = false
 
+  # Lay my rows-panel out at my origin and hug its extent. A menu's ITEMS are added
+  # by the opener via the RAW __add (addMenuItem -> panel.__add), which does NOT
+  # invalidate or trigger layout -- so the panel never re-lays-out its rows on its
+  # own. I drive its _reLayoutSelf() here (it lays its rows out + self-sizes via
+  # immediate mutators, FLOWRULE-safe) and hug its final extent via the non-notifying
+  # _applyExtentBase twin. Like the old self-laying menu, this runs ONCE at popUp
+  # (via _reactToBeingAdded), NOT on every settle: a menu is always fully composed
+  # BEFORE popUp (every addMenuItem / removeConsecutiveLines caller builds the whole
+  # menu, then pops it up), so a stable one-shot layout reproduces the old menu's
+  # behaviour EXACTLY and avoids the re-fit churn a size-tracking container adds
+  # (an on-every-settle re-drive shifted the menu ±1px, un-hovering the item under
+  # the pointer). The panel is free-floating, so it co-moves with me if I am later
+  # dragged or clamped on-screen.
+  _layOutAndHugRowsPanel: ->
+    return unless @rowsPanel?
+    @rowsPanel.__commitMoveTo @position()
+    @rowsPanel._reLayoutSelf()
+    @_applyExtentBase @rowsPanel.extent()
 
-  createLine: (height = 1) ->
-    new DividerWdgt height
+  # Lay out at ADD time -- the menu's layout trigger. The opener builds a menu, adds
+  # its items (raw __add, no settle), then popUpAtHand; popUp attaches me to the
+  # world, firing this -- exactly as the base Widget._reactToBeingAdded -> @_reLayoutSelf
+  # laid the old self-laying menu's rows out at popUp. Also fires on re-parenting (a
+  # pinned menu dropped into a panel), re-laying at the new origin.
+  _reactToBeingAdded: (whereTo, beingDropped) ->
+    @_layOutAndHugRowsPanel()
+
+  # ===== row API -- delegated to the rows-panel =====
+  # The opener composes a menu by calling these on the MENU (dozens of MenusHelper
+  # / addWidgetSpecificMenuEntries sites); the rows themselves live in the panel.
 
   addLine: (height) ->
-    item = @createLine height
-    @__add item
+    @rowsPanel.addLine height
 
   prependLine: (height) ->
-    item = @createLine height
-    @__add item,nil,0
-  
-  _createLabel: ->
-    @label = new MenuHeader @title
+    @rowsPanel.prependLine height
 
-  # Builds a MenuItemWdgt from a MenuItemSpec (the per-item fields) and this
-  # menu's context: the font (this menu's @fontSize, or the global default) and
-  # -- note the historical mapping -- this menu's @target as the item's
-  # "environment" and this menu's @environment as the item's widgetEnv. The
-  # spec's named fields replace what used to be a 17-argument positional call
-  # carrying a per-argument trailing comment on every line.
-  createMenuItem: (menuItemSpec) ->
-    item = new MenuItemWdgt menuItemSpec, (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize), WorldWdgt.preferencesAndSettings.menuFontName, false, @target, @environment
-    if !@environment?
-      item.dataSourceWidgetForTarget = item
-      item.widgetEnv = @target
-
-    item
-
-  removeMenuItem: (label) ->
-    item = @firstChildSuchThat (m) ->
-      m.label? and m.label.text == label
-    if item?
-      item.fullDestroy()
-
-  removeConsecutiveLines: ->
-    # have to copy the array with slice()
-    # because we are removing items from it
-    # while looping over it
-    destroyNextLines = false
-    for item in @children.slice()
-      if destroyNextLines and item.isDivider?()
-        item.fullDestroy()
-      if item.isDivider?()
-        destroyNextLines = true
-        continue
-      else
-        destroyNextLines = false
-
-  # Public menu-row API (P5 arg-object conversion): label / target / action are the three
-  # everyday positional arguments; anything else — closesUnpinnedPopUps, toolTip, color, bold,
-  # italic, doubleClickAction, arg1, arg2, representsAWidget — rides an opts object. The spec's
-  # own constructor defaults (closes-unpinned true; bold/italic/representsAWidget false) fill
-  # any opt the caller omits, so the old defaults are reproduced exactly.
   addMenuItem: (label, target, action, opts = {}) ->
-    @__add @createMenuItem @_menuItemSpecFrom label, target, action, opts
+    @rowsPanel.addMenuItem label, target, action, opts
 
   prependMenuItem: (label, target, action, opts = {}) ->
-    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), nil, 0
+    @rowsPanel.prependMenuItem label, target, action, opts
 
-  _menuItemSpecFrom: (label, target, action, opts) ->
-    new MenuItemSpec label, opts.closesUnpinnedPopUps, target, action,
-      opts.toolTip, opts.color, opts.bold, opts.italic,
-      opts.doubleClickAction, opts.arg1, opts.arg2, opts.representsAWidget
+  removeMenuItem: (label) ->
+    @rowsPanel.removeMenuItem label
+
+  removeConsecutiveLines: ->
+    @rowsPanel.removeConsecutiveLines()
 
   # »>> this part is excluded from the fizzygum homepage build
 
-  # this is used by the test system to check that the menu
-  # has the correct number of items: children minus the top
-  # label (a shadow lives in @shadowInfo, never a child, so
-  # there is nothing to exclude for it).
+  # test-system hooks: the menu's row count / rows live in the panel now, so
+  # forward (MacroToolkit reaches these on the menu -- checkNumberOfItemsInMenu).
   testNumberOfItems: ->
-    @testItems().length
+    @rowsPanel.testNumberOfItems()
 
-  # this is used by the test system to check that the menu
-  # has the correct items: the children minus the top label
-  # (a shadow lives in @shadowInfo, never a child, so there
-  # is nothing to exclude for it).
   testItems: ->
-    items = []
-    for item in @children
-      if item != @label
-        items.push item
-    items
+    @rowsPanel.testItems()
 
   # this part is excluded from the fizzygum homepage build <<«
-
-  _reLayoutSelf: ->
-    super()
-
-    # no point in breaking a rectangle for each menu entry,
-    # let's hold on the broken rects and then issue
-    # a fullChanged() at the end.
-    world.disableTrackChanges()
-
-
-
-
-    @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
-    @color = Color.create 238, 238, 238
-    @__commitExtent new Point 0, 0
-    y = @top()
-    x = @left() + 2
-
-    if @title
-      @label._applyMoveTo @position().add 2
-      y = @label.bottom()
-    else
-      y = @top()
-    y += 1
-
-    # public-call-sanctioned: removeShadow is the public shadow API (the pop-up shadow policy also
-    # drives it) — this pass re-baselines the menu's shadow before re-laying out; pre-existing design.
-    @removeShadow()
-
-    # note that menus can contain:
-    # strings, colorpickers,
-    # sliders, menuItems (which are buttons)
-    # and divider lines.
-    for item in @children
-      if item == @label then continue
-      item._applyMoveTo new Point x, y
-      y = y + item.height()
-  
-    @adjustWidthsOfMenuEntries()
-    fb = @fullBounds()
-    # add some padding to the right and bottom of the menu
-    @__commitExtent fb.extent().add 2
-    world.maybeEnableTrackChanges()
-    @fullChanged()
-  
-  maxWidthOfMenuEntries: ->
-    w = 0
-    # Each entry that contributes a width answers menuEntryPreferredWidth()
-    # (MenuItemWdgt / StringFieldWdgt / ColorPickerWdgt / SliderWdgt define it);
-    # divider lines and the header don't, and are skipped -- exactly the set the
-    # old `instanceof` chain matched.
-    @children.forEach (item) ->
-      if item.menuEntryPreferredWidth?
-        w = Math.max w, item.menuEntryPreferredWidth()
-
-    if @label
-      w = Math.max w, @label.width()
-    w
-  
-  # makes all the elements of this menu the
-  # right width.
-  adjustWidthsOfMenuEntries: ->
-    w = @maxWidthOfMenuEntries()
-    world.disableTrackChanges()
-    @children.forEach (item) =>
-      item._applyWidth w
-    world.maybeEnableTrackChanges()
-
-  
-  unselectAllItems: ->
-    # only menu items carry a selection state; each resets its own (was
-    # `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
-    @children.forEach (item) ->
-      item.unselect?()
-
-    @changed()
-
-
-

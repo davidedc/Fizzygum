@@ -76,7 +76,7 @@ AUTHORED+FLESHED 2026-07-18; de-byzantinate Menu/List/Prompt/Divider. Key findin
 - [x] §5.2b [C]: `ListWdgt` uses `MenuRowsPanelWdgt` not `MenuWdgt`; `isListItem` → `selectsItemsOnClick?()` — DONE, byte-identical (Inspector green, zero recapture)
 - [x] §5.2c: retire the `isListContents` flag (no readers left after 5.2b) — DONE, byte-identical
 - [x] §5.3 [E]: prompt family — `PromptWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; `Text/Number/ColorPromptWdgt`; `pickColor` folded; `SaveShortcutPromptWdgt` re-homed; `SelectPromptWdgt` BANKED (font selectors are editor-integrated menus, not value prompts) — DONE, green (1 conscious save-as recapture + 1 popover test-structure edit)
-- [ ] §5.2d [B]: (Phase 2, owner-gated) recompose `MenuWdgt` = `PopUpWdgt` + [`MenuHeader` + rows-panel] — now a clean drop-in onto the §5.3 shared body; kills the temporary `MenuWdgt`/`MenuRowsPanelWdgt` `_reLayoutSelf` duplication
+- [x] §5.2d [B]: recompose `MenuWdgt` = `PopUpWdgt` composing a titled `MenuRowsPanelWdgt` — DONE 2026-07-18 (gauntlet 11/11 incl. revisits(0)+census(0); net −55 lines; 8 menu tests recaptured — invisible corner AA). ⚠⚠ NOT a clean drop-in: 4 real regressions from the extra panel layer (empty-render, ±1px oscillation, transparent-corner hover, inform centering) + 2 `menu.children[N]`→`menu.rowsPanel.children[N]` production sites — see plan §5.2d
 - [ ] §5.2e: (follow-on) re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` (watch `fg revisits`/`census`)
 - [ ] §5.4 [F]: record the deliberate NON-merge of the "one container becomes a window" idea (owner may overrule)
 

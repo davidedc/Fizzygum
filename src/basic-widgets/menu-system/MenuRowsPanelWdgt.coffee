@@ -51,6 +51,14 @@ class MenuRowsPanelWdgt extends Widget
   selectsItemsOnClick: ->
     @_selectsItemsOnClick
 
+  # I am the internal body of a menu / prompt / list -- an implementation detail,
+  # not a widget the user picks. Stay OUT of the ancestor hierarchy-disambiguation
+  # menu (Widget.getHierarchyMenuWidgets), like a stack inside a stack-scroll-panel
+  # or a PanelWdgt inside a ScrollPanelWdgt. Capability ?() at the call site, so no
+  # instanceof there (type-test-elimination convention).
+  hiddenFromHierarchyMenu: ->
+    true
+
   # My input slider's track press jump-drags its button, like a scroll frame's
   # scrollbars do — SliderWdgt.mouseDownLeft asks its parent via ?(); see
   # ScrollPanelWdgt.sliderTrackPressJumpsButton (type-test-elimination ε).
