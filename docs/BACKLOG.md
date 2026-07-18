@@ -45,6 +45,48 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §5 Phase 0: S1 FizzyPaint round-trip spike + S2 hand-built prototype — not yet run
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
+### `plans/onion-widget-composition-plan.md` — "The Frame model"
+AUTHORED+REVISED 2026-07-18, design-stage, owner-gated; naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowWdgt`) → App=launcher. Intrinsic-framing principle LOCKED (D1–D5). Correctness-first — no churn deferrals.
+- [ ] §5.A: `WindowWdgt` → `FrameWdgt` (rename + de-inherit vertical-stack → compose bar + content-container + toolbar-slot)
+- [ ] §5.B: split fused content classes into naked `Simple*` payload + framed `Document/Image/Slide/Dashboard/Spreadsheet Wdgt`
+- [ ] §5.C: one shared `ToolbarWdgt` (dock top/side/float) in the frame's stable toolbar-slot; dedupe the embedded build
+- [ ] §5.D: unify PAINT onto the focus model (S1 spike gates the build) + one editing-focus indicator (caret + tool-head)
+- [ ] §5.E: uniform `add(startingContent)` contents protocol + read-only-as-capability (info-widgets smell)
+- [ ] §5 P0: `architecture/regularity-principles.md` — state the house law once (cheap, do first)
+- [ ] §6 D6/D7/D8 open: `Simple*` vs `Basic*` prefix; `TitleWdgt` role shape; caret gated by edit mode?
+
+### `plans/graph-edges-and-lifecycle-plan.md`
+AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; unify containment/target/reference edges; GC = reachability over their union. Supersedes the reference plan's link-rename + GC.
+- [ ] §4.1: reference link `@target` → `referencedWidget` (reference ≠ dataflow target)
+- [ ] §4.2: name the 3 edges as one vocabulary; reuse the dataflow index for target edges
+- [ ] §4.3: one incremental whole-graph collector (containment ∪ target ∪ reference) — second wave
+- [ ] §4.4: (bank) record that reference-counting is NOT the mechanism
+
+### `plans/creation-and-templates-plan.md`
+AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a-template (Factory) | run-an-assembler (ScriptRunner); App = a Factory over an empty framed `*Wdgt` in edit mode. Supersedes the reference plan's launcher/Factory.
+- [ ] §4.1: name `FactoryWdgt`/`ScriptRunnerWdgt` (use `isTemplate` + `DeepCopierMixin`)
+- [ ] §4.2: redefine "App" as a Factory over an empty framed `*Wdgt` in edit mode
+- [ ] §4.3: fold the creator zoo (CreatorButton/WidgetFactory/MenusHelper "new X") onto the two primitives — second wave
+- [ ] §4.4: (bank) templates as first-class editable objects
+
+### `plans/container-regularization-plan.md` — IN PROGRESS; the List/Menu untie is LANDED (green)
+AUTHORED+FLESHED 2026-07-18; de-byzantinate Menu/List/Prompt/Divider. Key finding: menu-ness already lives in `PopUpWdgt`, so the untie is a LAYOUT extraction, not a behaviour one. **§5.1 + §5.2a–c LANDED 2026-07-18 (gauntlet 11/11, byte-identical bar 1 benign inspector recapture); `instanceof` baseline ratcheted 97→95.** Remaining: §5.3 (prompt family) + owner-gated tail. Order (ascending pixel-risk): 5.1 → 5.2a → 5.3 → 5.2b → 5.2c → (5.2d/e) → 5.4.
+- [x] §5.1 [H]: extract `DividerWdgt` (retire inline-`RectangleWdgt` dividers) — DONE, byte-identical; `isDivider` role query
+- [x] §5.2a: extract `MenuRowsPanelWdgt` (byte-preserving row-stack lift) — DONE (landed with 5.2b)
+- [x] §5.2b [C]: `ListWdgt` uses `MenuRowsPanelWdgt` not `MenuWdgt`; `isListItem` → `selectsItemsOnClick?()` — DONE, byte-identical (Inspector green, zero recapture)
+- [x] §5.2c: retire the `isListContents` flag (no readers left after 5.2b) — DONE, byte-identical
+- [ ] §5.2d [B]: (Phase 2, owner-gated) recompose `MenuWdgt` = `PopUpWdgt` + [`MenuHeader` + rows-panel]
+- [ ] §5.2e: (follow-on) re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` (watch `fg revisits`/`census`)
+- [ ] §5.3 [E]: prompt family — re-base off `PopUpWdgt` + `Text/Number/Color/SelectPromptWdgt`; fold `pickColor` + `SaveShortcutPromptWdgt`
+- [ ] §5.4 [F]: record the deliberate NON-merge of the "one container becomes a window" idea (owner may overrule)
+
+### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
+AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
+- [ ] §4.1: clean `Reference*` UI family (retire the verbose `IconicDesktopSystem*` prefix)
+- [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
+- [ ] §4.3: RecentlyClosed vs Trash — one store / two views first (second wave)
+- [ ] §4.4: duplicate vs duplicate-contents for references (second wave)
+
 ## Residual / parked items (owning doc archived)
 
 - [ ] `archive/accidental-complexity-reduction-plan.md` P5 Family 4 note: optional [U] gate baseline tighten 150→148
