@@ -1,3 +1,10 @@
+# ⚠ PAINT-ONLY LEGACY BASE (Frame-model plan §5.B): every other subclass
+# re-based onto the framed-citizen family (GenericPanelWdgt + SlideWdgt /
+# DashboardWdgt / PatchProgrammingWdgt extends FrameWdgt) and the Generic
+# panel product is the GenericPanelWdgt citizen. ReconfigurablePaintWdgt alone
+# still needs this editor middle layer -- its tool column is construction-bound
+# to its own overlay canvas (the §5.C paint QUARANTINE). Phase D-1 rebinds
+# paint to the focus model and DELETES this class with the quarantine.
 class StretchableEditableWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name

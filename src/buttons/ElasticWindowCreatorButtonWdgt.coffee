@@ -7,11 +7,10 @@ class ElasticWindowCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new ElasticWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    genericPanel = new StretchableEditableWdgt
-    switcherooWm = new FrameWdgt genericPanel
-    switcherooWm.setTitleWithoutPrependedContentName "elastic panel"
-    switcherooWm._applyExtent new Point 200, 200
+    genericPanel = new GenericPanelWdgt
+    genericPanel.setTitleWithoutPrependedContentName "elastic panel"
+    genericPanel._applyExtent new Point 200, 200
 
-    return switcherooWm
+    return genericPanel
 
 

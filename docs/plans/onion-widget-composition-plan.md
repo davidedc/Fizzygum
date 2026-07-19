@@ -588,6 +588,27 @@ zero).**
   `GenericPanelApp` opens `GenericPanelWdgt`. Fallout kind: near-zero test surface (§3.3a: 1
   `SimpleSlideWdgt` file, 2 `StretchableEditableWdgt` files, 0 labels for slide/dash/patch) + the ratio
   behaviours (slide-keeps-ratio-in-window/stack) re-verified by the existing window/stack suite.
+  **✅ LANDED 2026-07-19 — 263/263, ZERO recaptures. Design refinement from execution:
+  `GenericPanelWdgt` is BOTH the Generic-panel citizen AND the family base (Slide/Dashboard/Patch extend
+  it) — the same two-role shape `StretchableEditableWdgt` had, so the shared close/reset/title machinery
+  has one home. The citizen declares `providesAmenitiesForEditing`; the container does NOT (the B1 gate
+  reads the citizen). ⚠⚠ EXECUTION CASE LAW (two red rounds, both root-caused from evidence):
+  (1) **the container's legacy `canSetHeightFreely` writers were `?.`-no-ops in the window era** (they
+  targeted a nil/stack spec; the retired editor's un-overridden FrameContentLayoutSpec — default free —
+  governed the window). As direct frame content they suddenly ACTED and ratio-LOCKED every citizen
+  window's height (diffpage evidence: reference letterboxes in a free-height window, divergent render
+  pulls content up). The faithful port = the editor's seams one level down: NO
+  `initialiseDefaultFrameContentLayoutSpec` override, the free-spec early-out at the TOP of
+  `_setWidthSizeHeightAccordingly` AND `preferredExtentForWidth` (measure/mutator lockstep), and
+  crystallization writes guarded by the NEW `FrameContentLayoutSpec.isFrameContentSpec?()` capability
+  query (the isFrame idiom — the stink gate rejects new bare `instanceof`). Ratio-lock arrives ONLY via
+  the holder-frame stack-drop hook, crystallization stays drop-driven (`StretchablePanelWdgt.setRatio`).
+  (2) **macros reach the dissolved middle layer by FIELD PATH, not just by constructor/label** — two
+  tests died as in-suite UNCAUGHT ERRORS (`…stretchableWidgetContainer.ratio`/`.contents` on undefined;
+  byte-clean when run alone, "zero failed screenshots = uncaught error" signature, shard STALLED and
+  wedged the paint leg's timeout) — every structural dissolution must grep the tests repo for the OLD
+  FIELD NAMES (`stretchableWidgetContainer`, `simpleDocumentScrollPanel`) too. ⚠ tests live IN the
+  build: a tests-repo macro fix needs a FULL rebuild before the headless suite sees it.**
 - **B5 — the spreadsheet split.** Grid `git mv` → `SimpleSpreadsheetWdgt`; new thin
   `SpreadsheetWdgt extends FrameWdgt` citizen (payload = the grid; no toolbar variant exists — slot stays
   empty; `providesAmenitiesForEditing` NOT declared: the grid manages its own editing, the frame shows no

@@ -15,9 +15,9 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
   buildIcon: -> new GenericShortcutIconWdgt new DashboardsIconWdgt
 
   buildWindow: ->
-    slideWdgt = new DashboardsWdgt
+    slideWdgt = new DashboardWdgt
 
-    container = slideWdgt.stretchableWidgetContainer.contents
+    container = slideWdgt.contents.contents
     container._applyExtent new Point 725,556
 
     scatterPlot = new FrameWdgt new PlotWithAxesWdgt(new ExampleScatterPlotWdgt)
@@ -110,20 +110,19 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
 
     slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"
 
-    wm = new FrameWdgt slideWdgt
-    wm._applyMoveTo new Point 114, 10
-    wm._applyExtent new Point 596, 592
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Sample dashboard"
+    slideWdgt._applyMoveTo new Point 114, 10
+    slideWdgt._applyExtent new Point 596, 592
+    world.add slideWdgt
+    slideWdgt.setTitleWithoutPrependedContentName "Sample dashboard"
 
 
     slideWdgt.disableDragsDropsAndEditing()
-    
+
     # if we don't do this, the window would ask to save content
     # when closed. Just close it instead.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    slideWdgt.closeFromContainerFrame = (containerWindow) ->
-      containerWindow.close()
+    slideWdgt.closeFromFrameBar = ->
+      @close()
 
-    return wm
+    return slideWdgt

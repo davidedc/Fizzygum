@@ -60,9 +60,8 @@ class MenusHelper
     reconfPaint = new ReconfigurablePaintWdgt
     world.openFrameWith reconfPaint, (new Point 460, 400), world.hand.position()
 
-  createSimpleSlideWdgt: ->
-    simpleSlide = new SimpleSlideWdgt
-    world.openFrameWith simpleSlide, (new Point 460, 400), world.hand.position()
+  createSlideWdgt: ->
+    world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
@@ -738,7 +737,7 @@ class MenusHelper
     menu.addMenuItem "stretchable panel", menusHelper, "createStretchablePanel"
     menu.addMenuItem "tools panel", menusHelper, "createToolsPanel"
     menu.addMenuItem "horiz. menu panel", menusHelper, "createHorizontalMenuPanelPanel"
-    menu.addMenuItem "Simple slide", menusHelper, "createSimpleSlideWdgt"
+    menu.addMenuItem "Simple slide", menusHelper, "createSlideWdgt"
     menu.addMenuItem "patch programming ➜", menusHelper, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "graphs ➜", menusHelper, "popUpGraphsMenu", closesUnpinnedPopUps: false, toolTip: "graphs"
     menu.addMenuItem "support docs ➜", menusHelper, "popUpSupportDocsMenu", closesUnpinnedPopUps: false, toolTip: "support docs"

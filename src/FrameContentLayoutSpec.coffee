@@ -49,6 +49,13 @@ class FrameContentLayoutSpec extends VerticalStackLayoutSpec
 
   resizerCanOverlapContents: true
 
+  # Capability query (the isFrame?() idiom): lets a content widget ask "am I
+  # laid out as FRAME content right now?" without naming this class -- no base
+  # default, dispatched via ?(), a non-frame-content spec answers undefined.
+  # Consumer: StretchableWidgetContainerWdgt's crystallization write-guards
+  # (§5.B -- ratio crystallization must not height-lock a frame-content spec).
+  isFrameContentSpec: -> true
+
   captureInitialPlacement: (@element, @stack) ->
     super
 

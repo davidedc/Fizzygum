@@ -15,9 +15,9 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
   buildIcon: -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
 
   buildWindow: ->
-    slideWdgt = new SimpleSlideWdgt
+    slideWdgt = new SlideWdgt
 
-    container = slideWdgt.stretchableWidgetContainer.contents
+    container = slideWdgt.contents.contents
     container._applyExtent new Point 575,454
 
     windowWithScrollingPanel = new FrameWdgt new ScrollPanelWdgt
@@ -63,11 +63,10 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     wikiLink._rememberFractionalSituationInHoldingPanel()
 
 
-    wm = new FrameWdgt slideWdgt
-    wm._applyMoveTo new Point 114, 10
-    wm._applyExtent new Point 596, 592
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Sample slide"
+    slideWdgt._applyMoveTo new Point 114, 10
+    slideWdgt._applyExtent new Point 596, 592
+    world.add slideWdgt
+    slideWdgt.setTitleWithoutPrependedContentName "Sample slide"
 
     slideWdgt.disableDragsDropsAndEditing()
 
@@ -84,7 +83,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     # when closed. Just close it instead.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    slideWdgt.closeFromContainerFrame = (containerWindow) ->
-      containerWindow.close()
+    slideWdgt.closeFromFrameBar = ->
+      @close()
 
-    return wm
+    return slideWdgt

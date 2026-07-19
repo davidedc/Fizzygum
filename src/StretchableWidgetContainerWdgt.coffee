@@ -43,8 +43,16 @@ class StretchableWidgetContainerWdgt extends Widget
     else
       @contents.add aWdgt, position, layoutSpec, beingDropped
 
+  # Crystallizing a ratio pins canSetHeightFreely ONLY on a STACK spec (§5.B):
+  # as a framed CITIZEN's direct content my FrameContentLayoutSpec stays FREE
+  # (the window keeps its user-dragged size, content letterboxes) exactly as
+  # the retired editor era behaved -- the ratio-LOCK of the holding frame
+  # arrives only through the holder-frame stack-drop hook (_constrainToRatio
+  # below), never from mere content crystallization. (Pre-§5.B these writes
+  # hit a nil/stack spec anyway -- the editor's own spec governed the window.)
   setRatio: (@ratio) ->
-    @layoutSpecDetails?.canSetHeightFreely = false
+    unless @layoutSpecDetails?.isFrameContentSpec?()
+      @layoutSpecDetails?.canSetHeightFreely = false
 
   resetRatio: ->
     if @ratio?
@@ -56,9 +64,58 @@ class StretchableWidgetContainerWdgt extends Widget
   colloquialName: ->
     "stretchable panel"
 
-  initialiseDefaultFrameContentLayoutSpec: ->
-    super
-    @layoutSpecDetails.canSetHeightFreely = !@ratio?
+  # ===== holder-frame ratio hooks (§5.B) =====
+  # Were KeepsRatioWhenInVerticalStackMixin's, applied to the retired editor
+  # middle layer -- which only RELAYED my own ratio machinery. As a framed
+  # citizen's direct content I answer the frame's dropped/grabbed
+  # notifications myself. (Hand-written, NOT the mixin: augmenting it here
+  # would clobber my own content-aware _setWidthSizeHeightAccordingly /
+  # preferredExtentForWidth pair with its blind current-aspect versions.)
+  _reactToHolderFrameDropped: (whereIn) ->
+    if whereIn?.imposesRatioConstraintOnDroppedChildren?()
+      @_constrainToRatio()
+
+  _reactToHolderFrameGrabbed: (whereFrom) ->
+    if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
+      @_freeFromRatioConstraints()
+
+  _constrainToRatio: ->
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = false
+      # force a resize, so the holder frame takes the right ratio. The height
+      # of 0 is ignored -- _setWidthSizeHeightAccordingly calculates it.
+      if @ratio?
+        @_applyExtent new Point @width(), 0
+
+  _freeFromRatioConstraints: ->
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = true
+
+      availableHeight = world.height() - 20
+      if @parent.height() > availableHeight
+        @parent._applyExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+        @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
+        @parent._moveWithin world
+
+  # Smart-placement protocol (WidgetCreatorAndSmartPlacerOnClickMixin routes a
+  # creator-button click to a frame's CONTENT -- for the §5.B container
+  # citizens that content is me; the retired editor's version centred in me
+  # anyway).
+  acceptsSmartPlacedWidgets: ->
+    @dragsDropsAndEditingEnabled
+
+  smartPlace: (widgetToBePlaced, creator) ->
+    widgetToBePlaced._applyMoveTo @center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
+    @add widgetToBePlaced
+    widgetToBePlaced._rememberFractionalSituationInHoldingPanel()
+    @bringToForeground()
+    creator.bringToForeground()
+
+  # (§5.B) NO initialiseDefaultFrameContentLayoutSpec override: as a framed
+  # citizen's content the spec keeps the base default canSetHeightFreely=true
+  # -- free window sizing, like the retired editor's un-overridden spec. The
+  # old `= !@ratio?` pin here dated from the ANCIENT direct-content era and
+  # encoded the ratio-locked-window behaviour the editor era replaced.
 
 
   widthWithoutSpacing: ->
@@ -82,23 +139,35 @@ class StretchableWidgetContainerWdgt extends Widget
     if @ratio?
       @_applyExtent new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
 
+  # (§5.B) The retired editor's early-out, one level down: a FREE frame-content
+  # spec (canSetHeightFreely -- the base default; false only after a
+  # holder-frame stack-drop constrains it) sizes width-only via super, so a
+  # desktop citizen window keeps its dragged height and letterboxes. A stack
+  # spec / nil spec answers undefined here and falls to the ratio body --
+  # bare-container-in-a-stack behaviour unchanged.
   _setWidthSizeHeightAccordingly: (newWidth) ->
+    if @layoutSpecDetails?.canSetHeightFreely
+      return super  # Path B: propagate the resulting height. See Widget._setWidthSizeHeightAccordingly.
+
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     if childrenNotHandlesNorCarets.length != 0
       if !@ratio?
         @ratio = @width() / @height()
-        @layoutSpecDetails?.canSetHeightFreely = false
+        unless @layoutSpecDetails?.isFrameContentSpec?()
+          @layoutSpecDetails?.canSetHeightFreely = false
       @_applyExtent new Point newWidth, Math.round(newWidth/@ratio)
     else
       @_applyExtent new Point newWidth, @height()
     @height()  # Path B: hand the resulting height back. See Widget._setWidthSizeHeightAccordingly.
 
   # §4.1 pure measure (sizing-model unification U3-B): mirrors _setWidthSizeHeightAccordingly
-  # above -- ratio-locked while holding content, width-invariant when empty. When the sizing
-  # hasn't lazily initialised @ratio yet, the SAME value is DERIVED locally with NO write --
-  # a measure must not take the mutation's lazy-init side effect (@ratio + canSetHeightFreely).
+  # above -- the free-spec early-out, then ratio-locked while holding content,
+  # width-invariant when empty. When the sizing hasn't lazily initialised @ratio yet, the
+  # SAME value is DERIVED locally with NO write -- a measure must not take the mutation's
+  # lazy-init side effect (@ratio + canSetHeightFreely).
   preferredExtentForWidth: (availW) ->
+    if @layoutSpecDetails?.canSetHeightFreely then return super
     if (@childrenNotHandlesNorCarets @contents).length != 0
       ratio = @ratio ? (@width() / @height())
       new Point availW, Math.round(availW / ratio)

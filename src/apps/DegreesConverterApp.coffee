@@ -19,7 +19,7 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     yCorrection = 50
     patchProgrammingWdgt = new PatchProgrammingWdgt
 
-    container = patchProgrammingWdgt.stretchableWidgetContainer.contents
+    container = patchProgrammingWdgt.contents.contents
     container._applyExtent new Point 584,552
 
     # Build this orphan window tree settle-free: `container` is part of the not-yet-attached
@@ -88,17 +88,16 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
 
     #@inform (@position().subtract @parent.position()) + " " +  @extent()
 
-    wm = new FrameWdgt patchProgrammingWdgt
-    wm._applyMoveTo new Point 114, 10
-    wm._applyExtent new Point 596, 592
+    patchProgrammingWdgt._applyMoveTo new Point 114, 10
+    patchProgrammingWdgt._applyExtent new Point 596, 592
     # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core -- the
     # disable/enable-editing family convert), so calling it BEFORE or AFTER world.add is equally legal: the delicate
     # "must precede world.add" ordering that once made this the lone witness of that method's careless tail has
     # DISSOLVED (the tail rides the wrapper's own flush now, on orphan or attached alike). Order kept as-is, unchanged.
     patchProgrammingWdgt.disableDragsDropsAndEditing()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "°C ↔ °F converter"
-    
+    world.add patchProgrammingWdgt
+    patchProgrammingWdgt.setTitleWithoutPrependedContentName "°C ↔ °F converter"
+
     cText.isEditable = true
     fText.isEditable = true
 
@@ -106,7 +105,7 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     # when closed. Just close it instead.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    patchProgrammingWdgt.closeFromContainerFrame = (containerWindow) ->
-      containerWindow.close()
+    patchProgrammingWdgt.closeFromFrameBar = ->
+      @close()
 
-    return wm
+    return patchProgrammingWdgt

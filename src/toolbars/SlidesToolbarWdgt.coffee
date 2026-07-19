@@ -1,5 +1,5 @@
-# The slide-authoring palette, shared by SimpleSlideWdgt (the Slides Maker's
-# own tool column) and SlidesToolbarCreatorButtonWdgt (the button that pops the
+# The slide-authoring palette, shared by SlideWdgt (the Slides Maker's docked
+# toolbar) and SlidesToolbarCreatorButtonWdgt (the button that pops the
 # same palette in a window) -- one `new SlidesToolbarWdgt` at each site. The
 # extraction precedent the whole ToolbarWdgt family follows: construction,
 # batching and the born-locked rule all live on the ToolbarWdgt base.
