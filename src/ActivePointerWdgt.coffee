@@ -240,7 +240,7 @@ class ActivePointerWdgt extends Widget
   # pre-paint). Candidate/reluctant OUTLINE rides the Phase-1 highlight style channel; the ring / label /
   # lock badge ride WorldWdgt.addDragAffordanceWidgets. Non-interactable visuals only — the §8 pill is Phase 4.
   _declareDragEmbedEphemerals: (payload) ->
-    isWindow = payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: window affordances for a tilted window too
+    isFrame = payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: window affordances for a tilted window too
 
     # 1. candidate (accent) or reluctant (neutral) outline via the highlight style channel
     outlineTarget = @dragEmbedCandidate ? @dragEmbedReluctant
@@ -257,7 +257,7 @@ class ActivePointerWdgt extends Widget
     affordanceTop = payload.bottom() + 6
 
     # 2. charging ring — window payload, over a candidate, not yet armed
-    if isWindow and @dragEmbedCandidate? and not @dragEmbedArmed
+    if isFrame and @dragEmbedCandidate? and not @dragEmbedArmed
       world.dragEmbedChargeRingDeclared =
         centerPoint: new Point(payload.left() + 12, affordanceTop + 11)
         lingerOriginEventTime: @dragEmbedLingerOriginEventTime
@@ -266,7 +266,7 @@ class ActivePointerWdgt extends Widget
       world.dragEmbedChargeRingDeclared = nil
 
     # 3. armed label — window payload, armed
-    if isWindow and @dragEmbedArmed and @dragEmbedCandidate?
+    if isFrame and @dragEmbedArmed and @dragEmbedCandidate?
       candidateTitle = @_dragEmbedCandidateTitle()   # hoisted out of the string so the ref is visible
       world.dragEmbedLabelDeclared =
         point: new Point(payload.left(), affordanceTop)
@@ -506,7 +506,7 @@ class ActivePointerWdgt extends Widget
       # change used to DEFER to end-of-cycle. A drop is one discrete re-parent gesture, so settle them HERE:
       # consistent on return, not on the next doOneCycle. SINGLE settle (_settleLayoutsAfter): every
       # _reactToChildDropped / _reactToBeingDropped override re-homes / rebuilds / re-fits through the NON-settling cores
-      # (WindowWdgt._buildAndConnectChildrenNoSettle, _fullDestroyNoSettle, _addNoSettle / _addInPseudoRandom
+      # (FrameWdgt._buildAndConnectChildrenNoSettle, _fullDestroyNoSettle, _addNoSettle / _addInPseudoRandom
       # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and immediate
       # mutators), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
       # THROWS if a future override sneaks in a public setter (the wanted cores-call-cores discipline -- the

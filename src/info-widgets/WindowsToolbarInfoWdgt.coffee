@@ -1,6 +1,6 @@
 class WindowsToolbarInfoWdgt extends SimpleDocumentWdgt
 
-  # NB returns the WindowWdgt: WindowsToolbarCreatorButtonWdgt captures it (readmeWindow) to reposition it.
+  # NB returns the FrameWdgt: WindowsToolbarCreatorButtonWdgt captures it (readmeWindow) to reposition it.
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_windowsToolbar_created
       return nil

@@ -37,7 +37,7 @@ class SimpleDocumentWdgt extends Widget
   # Patch-programming / Drawings / Super-toolbar / Windows). It lays out the common frame — the icon +
   # centred title + divider header, then the per-subclass body via the `buildBody sdspw` callback, then the
   # window footer (place centred, set the window title, lock editing, set the once-only `world[flagName]`,
-  # monkey-patch close-to-destroy, position next to nextToThisWidget) — and RETURNS the WindowWdgt
+  # monkey-patch close-to-destroy, position next to nextToThisWidget) — and RETURNS the FrameWdgt
   # (WindowsToolbarInfoWdgt's caller captures it; the other callers discard it). Each subclass's thin
   # @createNextTo keeps its own once-only guard FIRST (so nothing is built on a repeat call) and constructs
   # `simpleDocument` + `iconWidget` itself (so every `new X` literal stays in the subclass file for the
@@ -65,7 +65,7 @@ class SimpleDocumentWdgt extends Widget
 
     buildBody sdspw
 
-    wm = new WindowWdgt simpleDocument
+    wm = new FrameWdgt simpleDocument
     wm._applyExtent new Point 365, 405
     wm._moveFullCenterTo world.center()
     world.add wm
@@ -79,7 +79,7 @@ class SimpleDocumentWdgt extends Widget
     # it once.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+    simpleDocument.closeFromContainerFrame = (containerWindow) ->
       containerWindow.destroy()
 
     wm._moveToSideOf nextToThisWidget
@@ -111,7 +111,7 @@ class SimpleDocumentWdgt extends Widget
       @simpleDocumentScrollPanel.contents.children[0].text == @startingText
     )
 
-  closeFromContainerWindow: (containerWindow) ->
+  closeFromContainerFrame: (containerWindow) ->
 
     if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt containerWindow
       # there is no real contents to save

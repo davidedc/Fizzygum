@@ -14,9 +14,9 @@
 # still works for catch discrimination.
 #
 # Fields:
-#   rootDescription — the serialization root, e.g. "WindowWdgt#1"
+#   rootDescription — the serialization root, e.g. "FrameWdgt#1"
 #   path            — the property path from the root to the offending reference, e.g.
-#                     "WindowWdgt#1 → .contents (SliderWdgt#5) → .target"
+#                     "FrameWdgt#1 → .contents (SliderWdgt#5) → .target"
 #   offender        — a description of the thing that could not be encoded, e.g.
 #                     "StringWdgt#9, which is outside the serialized structure and not a
 #                      well-known object"

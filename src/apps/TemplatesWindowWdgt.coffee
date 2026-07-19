@@ -1,7 +1,7 @@
 # TemplatesWindowWdgt -- builds the editor's "useful snippets" templates window:
 # a SimpleDocumentScrollPanelWdgt pre-filled with one of every document building
 # block (headings, paragraphs, a quote, links, spacers, dividers, the special-
-# characters paragraph) turned into draggable templates, wrapped in a WindowWdgt.
+# characters paragraph) turned into draggable templates, wrapped in a FrameWdgt.
 # Lifted verbatim out of MenusHelper.createNewTemplatesWindow as a per-app
 # window-builder class -- the *.create() factory pattern also used by
 # WelcomeMessageInfoWdgt: the heavy builder becomes a
@@ -10,7 +10,7 @@
 # reached from the toolbars), so it is NOT homepage-excluded. OO-backlog Phase 6
 # step 6c.1.
 
-class TemplatesWindowWdgt extends WindowWdgt
+class TemplatesWindowWdgt extends FrameWdgt
 
   @create: ->
     sdspw = new SimpleDocumentScrollPanelWdgt
@@ -126,7 +126,7 @@ class TemplatesWindowWdgt extends WindowWdgt
 
     sdspw.makeAllContentIntoTemplates()
 
-    wm = new WindowWdgt sdspw
+    wm = new FrameWdgt sdspw
     wm.setExtent new Point 370, 335
     wm.setTitleWithoutPrependedContentName "useful snippets"
 

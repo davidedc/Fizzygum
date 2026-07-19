@@ -97,8 +97,8 @@ class SliderWdgt extends CircleBoxWdgt
     super
     @_reLayoutChildren()
     
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
+  initialiseDefaultFrameContentLayoutSpec: ->
+    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.resizerCanOverlapContents = false
 
   

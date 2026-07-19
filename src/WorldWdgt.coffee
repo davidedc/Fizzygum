@@ -572,7 +572,7 @@ class WorldWdgt extends PanelWdgt
 
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
-    wm = new WindowWdgt errorsLogViewerWdgt
+    wm = new FrameWdgt errorsLogViewerWdgt
     wm.setExtent new Point 460, 400
     @add wm
 
@@ -1604,7 +1604,7 @@ class WorldWdgt extends PanelWdgt
 
   # »>> this part is only needed for VideoPlayer
   draftRunVideoPlayer: ->
-      videoPlayer = new WindowWdgt new VideoPlayerWithRecommendationsWdgt
+      videoPlayer = new FrameWdgt new VideoPlayerWithRecommendationsWdgt
       world.add videoPlayer
       videoPlayer.setExtent new Point 934, 896
       # it would be -28 instead of zero here below, but the system doesn't allow
@@ -2622,8 +2622,8 @@ class WorldWdgt extends PanelWdgt
   # the windowed sibling of `create`. Returns the window. The single home for the
   # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
   # inspector/console/prompt spawners). Titled / _applyExtent windows build directly.
-  openWindowWith: (contentWidget, extent, position) ->
-    wm = new WindowWdgt contentWidget
+  openFrameWith: (contentWidget, extent, position) ->
+    wm = new FrameWdgt contentWidget
     wm.setExtent extent
     wm._applyMoveTo position
     wm._moveWithin @

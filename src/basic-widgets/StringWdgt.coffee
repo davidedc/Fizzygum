@@ -1214,7 +1214,7 @@ class StringWdgt extends Widget
   # is a box-hugs-text chrome label, notify any connection target, and re-fit if contained-text
   # -- WITHOUT settling layouts. The public setText wraps this in its single self-settler; callers
   # that must set text WITHOUT opening a settle -- because they run INSIDE another settle or a
-  # LAYOUT PASS -- call this directly ("cores call cores"): structural re-titles (WindowWdgt.
+  # LAYOUT PASS -- call this directly ("cores call cores"): structural re-titles (FrameWdgt.
   # _addNoSettle / _setEmptyWindowLabelNoSettle), layout code (AxisWdgt._reLayout's tick labels),
   # menu re-ticking (updateFontsMenuEntriesTicks), per-frame updates (the video time labels). The
   # change rides the enclosing settle / the frame's recalculateLayouts. The stringFieldWidget
@@ -1251,7 +1251,7 @@ class StringWdgt extends Widget
   # It is thin-wrap-exempt only because it does arg-decoding FIRST (the stringFieldWidget unwrap), so it
   # is not the BARE canonical wrap. Single is SAFE here because the one
   # flow that used to reach setText MID-PASS -- a window RE-TITLING its label from inside an add's settle
-  # -- now calls @_setTextNoSettle DIRECTLY (see WindowWdgt._addNoSettle), so NO flow reaches setText
+  # -- now calls @_setTextNoSettle DIRECTLY (see FrameWdgt._addNoSettle), so NO flow reaches setText
   # under a layout pass anymore (VERIFIED: full suite green with the single settler). The single settler's
   # flow-violation throw stays as the NET: if some future caller (e.g. a connection's updateTarget
   # dynamically dispatching to setText) reaches it mid-pass, it SURFACES the violation rather than

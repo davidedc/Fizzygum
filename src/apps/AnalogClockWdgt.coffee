@@ -29,7 +29,7 @@ class AnalogClockWdgt extends Widget
   _resizeToWithoutSpacing: ->
     @_applyExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
-  initialiseDefaultWindowContentLayoutSpec: ->
+  initialiseDefaultFrameContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
     # FIXED (grow 0): the clock keeps its own square size as window content; it does NOT

@@ -37,7 +37,7 @@ class InspectorWdgt extends Widget
   saveTextWdgt: nil
 
   # opaque background appearance, painted ONLY while the inspector is
-  # free-floating (naked); dropped while it is WindowWdgt content (the
+  # free-floating (naked); dropped while it is FrameWdgt content (the
   # window supplies the background) — see the constructor + _setLayoutSpec
   inspectorBackgroundAppearance: nil
 
@@ -102,14 +102,14 @@ class InspectorWdgt extends Widget
     super()
 
     # A naked (chrome-less) inspector must establish its OWN usable extent.
-    # Without a WindowWdgt to size it, _reLayout would divide the Widget-default
+    # Without a FrameWdgt to size it, _reLayout would divide the Widget-default
     # ~50x40 across three panes and collapse them. The windowed path
     # (Widget::spawnInspector) overrides this via the window's setExtent, so
     # setting it here is windowed-pixel-neutral.
     @__commitExtent new Point 560, 410
 
     # When free-floating (naked on the desktop) the inspector paints its own
-    # opaque background; inside a WindowWdgt the window supplies it. The
+    # opaque background; inside a FrameWdgt the window supplies it. The
     # appearance is toggled off when the inspector becomes window content
     # (_setLayoutSpec, below) so the windowed render stays byte-identical.
     @color = Color.create 248, 248, 248
@@ -119,7 +119,7 @@ class InspectorWdgt extends Widget
     @_buildAndConnectChildren()
 
   # Paint our own opaque background ONLY when free-floating (naked); as
-  # WindowWdgt content the window provides it, so drop the appearance then
+  # FrameWdgt content the window provides it, so drop the appearance then
   # (keeping the windowed inspector byte-identical). This mirrors how the
   # @resizer HandleWdgt shows only when free-floating — both are driven off
   # the same layout-spec change in Widget::_setLayoutSpec.
@@ -316,13 +316,13 @@ class InspectorWdgt extends Widget
     @_addNoSettle @propertyHeaderString
 
     # The inspector's own resize handle. It is shown ONLY when the inspector
-    # is free-floating (naked on the desktop) and hidden when it is WindowWdgt
+    # is free-floating (naked on the desktop) and hidden when it is FrameWdgt
     # content (HandleWdgt::updateVisibility, driven by Widget::_setLayoutSpec),
     # so a naked inspector is self-resizable while a windowed one defers to the
     # window's resizer. Covered by
     # SystemTest_macroNakedInspectorRendersResizesAndEdits.
     # Attach the resizer, then record it -- @resizer stays nil during its own add (byte-identical to the old
-    # `@resizer = new HandleWdgt @`, whose in-constructor add ran while @resizer was still nil; see WindowWdgt).
+    # `@resizer = new HandleWdgt @`, whose in-constructor add ran while @resizer was still nil; see FrameWdgt).
     resizer = new HandleWdgt
     @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
     @resizer = resizer
@@ -351,7 +351,7 @@ class InspectorWdgt extends Widget
 
   openClassInspector: (ignored,ignored2,className) ->
     classInspector = new ClassInspectorWdgt window[className].prototype
-    world.openWindowWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   filterProperties: (targetOwnMethods)->
     if @markOwnershipOfProperties

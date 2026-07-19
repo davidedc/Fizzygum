@@ -24,7 +24,7 @@ class SwitchButtonWdgt extends Widget
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   # This REPLACES the old "defer the layout until attach" hack. A switch built INSIDE a callback (e.g.
-  # WindowWdgt._reactToChildDropped's chrome rebuild) runs in-flush, where the settle-tier's in-flush+orphan
+  # FrameWdgt._reactToChildDropped's chrome rebuild) runs in-flush, where the settle-tier's in-flush+orphan
   # AUTO-DEFER (Widget._settleLayoutsAfter: `return coreThunk() if @isOrphan()`) defers automatically -- so no
   # settle leaks into the settle-neutral callback. A top-level `new SwitchButtonWdgt` settles its own orphan.
   _buildAndConnectChildren: ->

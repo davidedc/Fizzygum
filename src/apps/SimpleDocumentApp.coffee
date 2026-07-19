@@ -5,5 +5,5 @@ class SimpleDocumentApp extends IconicDesktopSystemWindowedApp
 
   title: "Docs Maker"
   buildIcon:    -> new TypewriterIconWdgt
-  buildWindow:  -> world.openWindowWith (new SimpleDocumentWdgt), (new Point 370, 395), (new Point 170, 88)
+  buildWindow:  -> world.openFrameWith (new SimpleDocumentWdgt), (new Point 370, 395), (new Point 170, 88)
   windowOpened: (wm) -> SimpleDocumentInfoWdgt.createNextTo wm

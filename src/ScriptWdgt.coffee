@@ -50,13 +50,13 @@ class ScriptWdgt extends Widget
     new ScriptIconWdgt
 
   # As window content I yield a SPECIAL desktop reference -- a script shortcut that runs the
-  # script on double-click, not a plain window reference. WindowWdgt.createReference calls this
+  # script on double-click, not a plain window reference. FrameWdgt.createReference calls this
   # instead of testing `@contents instanceof ScriptWdgt`; other contents don't define it and
   # fall to the default reference. (type-test-elimination campaign)
-  specialWindowReferenceShortcut: (window, referenceName) ->
+  specialFrameReferenceShortcut: (window, referenceName) ->
     new IconicDesktopSystemScriptShortcutWdgt window, referenceName
 
-  closeFromContainerWindow: (containerWindow) ->
+  closeFromContainerFrame: (containerWindow) ->
     if !world.anyReferenceToWdgt containerWindow
       prompt = new SaveShortcutPromptWdgt @, containerWindow
       prompt.popUpAtHand()
@@ -116,7 +116,7 @@ class ScriptWdgt extends Widget
 
   saveScriptAndClose: ->
     @saveScript()
-    @closeFromContainerWindow @parent
+    @closeFromContainerFrame @parent
 
   doAll: ->
     @functionFromCompiledCode?.call world

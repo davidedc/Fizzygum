@@ -104,7 +104,7 @@ class TransformFrameWdgt extends PanelWdgt
     true
 
   # Bug-E fix (interaction transparency): PanelWdgt.mouseClickLeft raises on
-  # click (bringToForeground) -- a behavior the WRAPPED content never had (WindowWdgt's
+  # click (bringToForeground) -- a behavior the WRAPPED content never had (FrameWdgt's
   # click is escalate-only). The invisible wrapper must not add interaction behavior of
   # its own: revert to the Widget-base escalate-only click, so a click inside the island
   # behaves exactly as it would untransformed (e.g. a save-as prompt spawned by the close

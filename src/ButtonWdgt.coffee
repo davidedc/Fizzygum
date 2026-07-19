@@ -61,7 +61,7 @@ class ButtonWdgt extends Widget
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   # This REPLACES the old "defer the face's layout until attach" hack. The old fear -- "a settle in a
-  # constructor leaks into ANY callback that builds a button (e.g. WindowWdgt._reactToChildDropped's chrome
+  # constructor leaks into ANY callback that builds a button (e.g. FrameWdgt._reactToChildDropped's chrome
   # rebuild via new *IconButtonWdgt, which must stay settle-neutral)" -- no longer bites: a button built
   # INSIDE such a callback runs in-flush, where the settle-tier's in-flush+orphan AUTO-DEFER
   # (Widget._settleLayoutsAfter: `return coreThunk() if @isOrphan()`) defers automatically. So no settle

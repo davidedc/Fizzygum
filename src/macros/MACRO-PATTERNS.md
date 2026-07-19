@@ -299,7 +299,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", (new Point textM.left()+675, textM.top()+30)` —
   live-bounds deltas make the y-ignored proof explicit. The mode can stay on across BOTH drags (the handles follow the
   morph and appear in the shots, as the recording's did). Distinct from `macroNonWrappingTextResizesToContent` (box
-  follows CONTENT change, no user drag) and from the WINDOW-chrome resize tests (the same law through WindowWdgt). No
+  follows CONTENT change, no user drag) and from the WINDOW-chrome resize tests (the same law through FrameWdgt). No
   new verb.
 - **Edit a button's text label in place** (`macroEditButtonLabelText`): clicking a button TRIGGERS it, so call
   `button.label.edit()` DIRECTLY (`= world.edit label`, sets `world.caret`, no isEditable gate — the "edit" item's method),
@@ -412,7 +412,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`moveToItemContainingOfMenuAndClick_InputEvents` — for a leading decoration, e.g. `"soft wrap".tick()` renders "✓ soft wrap").
 - **Hierarchy menu (a non-world child)**: right-clicking a widget whose parent ≠ world opens the framework's ANCESTOR
   HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one "a X ➜" item per ancestor that has a menu (labels are
-  `toString().replace("Wdgt","")` so a WindowWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
+  `toString().replace("Wdgt","")` so a FrameWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
   to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector part, …).
 - **A merging scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelMergesChildMenu`): the inverse of the
   rule above. A `SimplePlainTextScrollPanelWdgt` sets `takesOverAndMergesChildrensMenus = true` (`SimplePlainTextScrollPanelWdgt.coffee:25`),
@@ -569,8 +569,8 @@ assertion a recapture after a regression silently stores two different hashes an
   per current state), `@dragWindowResizerTo_InputEvents win, (new Point win.right()+dx, win.bottom()+dy)` (`.resizer`, a
   bottom-right HandleWdgt, non-float drag → setExtent; use deltas off the live bounds).
 - **Resizing a window WHILE collapsed reverts on uncollapse** (`macroCollapsedWindowBarResizeRevertsOnUncollapse`): the
-  collapsed-bar follow-on to the chrome-button entry above. Collapsing a `WindowWdgt` SAVES its pre-collapse size —
-  `_beforeChildCollapsed`/`_reactToChildCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`WindowWdgt.coffee:208-232`) and shrink
+  collapsed-bar follow-on to the chrome-button entry above. Collapsing a `FrameWdgt` SAVES its pre-collapse size —
+  `_beforeChildCollapsed`/`_reactToChildCollapsed` store `@widthWhenUnCollapsed`/`@extentWhenCollapsed` (`FrameWdgt.coffee:208-232`) and shrink
   it to just its title bar at the SAME width; the `.resizer` stays present and draggable while collapsed (`_positionAndResizeChildren`
   repositions it unconditionally, `:536-537`), so `@dragWindowResizerTo_InputEvents` NARROWS the bar's width (height pinned to the bar,
   `:480-486`). But `_reactToChildUnCollapsed` (`:234-244`) does `_applyExtent @extentWhenCollapsed` then `_applyWidth @widthWhenUnCollapsed` (the
@@ -578,7 +578,7 @@ assertion a recapture after a regression silently stores two different hashes an
   round-trip REVERT for the EXPANDED size. But the COLLAPSED-bar size and the expanded size are tracked SEPARATELY, and the collapsed-bar
   size is STICKY: a later re-collapse returns the bar to its last resized (narrowed) width. So resizing while collapsed changes ONLY the
   collapsed-bar size (sticky across collapse cycles), never the expanded size. Reuse the empty-window fixture of
-  macroWindowsEmptyCollapsingUncollapsing (two `new WindowWdgt nil,nil,nil`; the second's `…,true` arg is now INERT — post-Phase-5 both are
+  macroWindowsEmptyCollapsingUncollapsing (two `new FrameWdgt nil,nil,nil`; the second's `…,true` arg is now INERT — post-Phase-5 both are
   external desktop windows, since internal-ness is derived from nesting, not the constructor arg) and run collapse → resize-narrow →
   uncollapse → RE-collapse → uncollapse IN THAT ORDER. Park the pointer on a clear spot (`@syntheticEventsMouseMove_InputEvents pt, "no
   button"`) before each shot so no collapse-button hover tooltip lands on a window. image_1 two full 300×300 windows → image_2 collapsed
@@ -587,8 +587,8 @@ assertion a recapture after a regression silently stores two different hashes an
   full again (== image_4). Distinct from macroWindowsEmptyResizing (resizes while EXPANDED, which persists). No new verb.
 - **Duplicating a COLLAPSED window keeps state, extent and content** (`macroDuplicatedCollapsedWindowKeepsStateAndContent`):
   the chrome-state axis of the duplicate family (menu duplicates: the born-pinned entry; composite duplicates keep wiring: the
-  slider/inspector entries). A collapsed `WindowWdgt` stores its pre-collapse geometry (`@widthWhenUnCollapsed` /
-  `@extentWhenCollapsed`, `WindowWdgt.coffee:208-232`) and keeps its adopted `@contents` attached — `fullCopy` deep-copies all
+  slider/inspector entries). A collapsed `FrameWdgt` stores its pre-collapse geometry (`@widthWhenUnCollapsed` /
+  `@extentWhenCollapsed`, `FrameWdgt.coffee:208-232`) and keeps its adopted `@contents` attached — `fullCopy` deep-copies all
   of it, so the duplicate is BORN COLLAPSED (same content-derived title) and uncollapsing the COPY restores the COPIED stored
   extent (the CONTENT-WRAPPED one — the window shrank around its rectangle on adoption) and reveals the copied content, leaving
   the original bar untouched. Reach "duplicate" through the ancestor HIERARCHY menu: a right-click on the bar lands on a chrome
@@ -601,7 +601,7 @@ assertion a recapture after a regression silently stores two different hashes an
   on the armed bit: armed → nests (`@dropTargetFor`); unarmed → lands on the WORLD at the release point; over a VIEW-MODE
   (reluctant) container → also lands on the WORLD at the release point (the container refuses; no offset, no pill — the
   offset-landing + land-and-offer pill were DROPPED 2026-07-06). The old
-  internal/external gate is GONE (`WindowWdgt.wantsToBeDropped` no longer decides nesting — Phase 5 derives `@internal`). **KEY
+  internal/external gate is GONE (`FrameWdgt.wantsToBeDropped` no longer decides nesting — Phase 5 derives `@internal`). **KEY
   DETERMINISM CONSTRAINT:** `MacroToolkit.queueInputEvent` SCALES `event.time` by `spanFactor`, so the arming linger MUST be a
   NON-SCALED numeric `yield N` (real wall-clock) — a scaled linger would arm at one speed but not another. To ARM: carry over
   the candidate (`win.pickUp()` + no-button `@syntheticEventsMouseMove_InputEvents`), `yield <past dwellToArmMs>`, then release
@@ -638,8 +638,8 @@ assertion a recapture after a regression silently stores two different hashes an
   target isn't its container). ⚠ Take every screenshot AFTER the settling `container.moveTo`, never the raw post-drag-release frame (the
   charging-ring invisible-alpha teardown residue can differ at dpr2 — same caveat as the DWELL-TO-ARM entry).
 - **Internal window dropped INTO a window → becomes its content** (`macroInternalWindowDroppedIntoWindowFits` /
-  `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `WindowWdgt.add`
-  (`:179`) re-parents it `ATTACHEDAS_WINDOW_CONTENT`, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
+  `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `FrameWdgt.add`
+  (`:179`) re-parents it `ATTACHEDAS_FRAME_CONTENT`, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
   OUTER window sizes itself to WRAP the content + chrome), relabelled "window with an internal window". Then
   `@dragWindowResizerTo_InputEvents` resizes the outer and the inner content stretches to fill (the resizer sits at the inner
   window's corner, `resizerCanOverlapContents`). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
@@ -647,9 +647,9 @@ assertion a recapture after a regression silently stores two different hashes an
   "Composing macros" in CLAUDE.md (one test owns the composite screenshot, the other reuses the fixture without re-shooting).
 - **Close an inner (nested) window → the outer survives and stays reusable** (`macroClosingInnerWindowKeepsOuter`): the lifecycle
   follow-on to the bullet above. Once an internal window is the outer window's `@contents`, `@closeWindow_InputEvents intWin`
-  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `_beforeChildClosed(child)` (`WindowWdgt.coffee:204`)
+  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `_beforeChildClosed(child)` (`FrameWdgt.coffee:204`)
   detects `child == @contents` and calls `resetToDefaultContents` (`:246`) — re-enabling drops and restoring the
-  `WindowContentsPlaceholderText` ("Drop a widget in here") + the "empty window" label. The outer window is NEVER closed and stays
+  `FrameContentsPlaceholderText` ("Drop a widget in here") + the "empty window" label. The outer window is NEVER closed and stays
   functional: a fresh `@dragWidgetTo_InputEvents clock2, extWin` is accepted as its new content (relabelled "analog clock"). Build via
   the shared `buildExternalAndFreeInternalWindow_Macro()` and put an `AnalogClockWdgt` in the inner window with `intWin.add (new
   AnalogClockWdgt)` BEFORE `dropInternalWindowIntoExternalWindow_InputEvents_Macro extWin, intWin`. Three checkpoints (nested → inner
@@ -662,7 +662,7 @@ assertion a recapture after a regression silently stores two different hashes an
   is bit-identical on every engine (measured: matches native V8 pixel-for-pixel across the whole suite — a drop-in). So a dynamic
   `AnalogClockWdgt` is safe as a screenshot fixture; no need to swap it for a static stand-in. (A brief detour DID swap the clock for a
   static box; that masked the symptom — the right fix was making the engine deterministic, not avoiding curves.)
-- **Window resizes to its content** (`macroWindowResizesToTextContent`): an empty `new WindowWdgt nil,nil,nil` adopts a dropped
+- **Window resizes to its content** (`macroWindowResizesToTextContent`): an empty `new FrameWdgt nil,nil,nil` adopts a dropped
   widget as content and a free-floating window sizes itself to WRAP it. Drop a wrapping `SimplePlainTextWdgt` via
   `@dragWidgetTo_InputEvents text, window`, then `text.setText longerString` ⇒ window grows, `shorterString` ⇒ shrinks. No caret
   editing — `setText` is enough. The content-driven converse of the handle-driven window resize.
@@ -693,24 +693,24 @@ assertion a recapture after a regression silently stores two different hashes an
   canvas's right edge — recover with the real user gesture, a TITLE-bar drag (`win.label.center()` + press-drag-release), not a
   programmatic move. No new verb.
 - **Window CONTENT resize — free vs fixed width** (`macroWindowContentResizesFreely` / `macroWindowContentKeepsFixedWidth`): a
-  dropped widget becomes `@contents`; on a window resize `WindowWdgt._positionAndResizeChildren` (`:384`) resizes it per its
-  `WindowContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxWdgt` has BOTH free → fills both dims; a
-  `SliderWdgt` keeps a FIXED width (`initialiseDefaultWindowContentLayoutSpec` makes width un-free) → stretches only in height,
+  dropped widget becomes `@contents`; on a window resize `FrameWdgt._positionAndResizeChildren` (`:384`) resizes it per its
+  `FrameContentLayoutSpec`'s `canSetWidthFreely`/`canSetHeightFreely`. A `CircleBoxWdgt` has BOTH free → fills both dims; a
+  `SliderWdgt` keeps a FIXED width (`initialiseDefaultFrameContentLayoutSpec` makes width un-free) → stretches only in height,
   centred. DROP GOTCHA: a CircleBoxWdgt drops fine with `@dragWidgetTo_InputEvents circle, win` (centre grab — no sub-widget),
   but a SliderWdgt must be dropped with `slider.pickUp()` + a no-button move + `@syntheticEventsMouseClick_InputEvents()`
   (`@dragWidgetTo_InputEvents` would grab the slider's CENTRE = its BUTTON at value 50, moving the button not the slider).
 - **Window CONTENT resize — aspect-CONSTRAINED (stays square)** (`macroClockInWindowKeepsSquareOnResize`): the third window-content
   case after free/fixed-width. An `AnalogClockWdgt` as window content keeps a SQUARE aspect at every window size — its
-  `initialiseDefaultWindowContentLayoutSpec` sets `canSetHeightFreely=false` (`AnalogClockWdgt.coffee:32`) and it overrides
+  `initialiseDefaultFrameContentLayoutSpec` sets `canSetHeightFreely=false` (`AnalogClockWdgt.coffee:32`) and it overrides
   `_setWidthSizeHeightAccordingly` to `@_applyExtent new Point newWidth, newWidth` (`:36`) so width drives an EQUAL height; so
-  `WindowWdgt._positionAndResizeChildren` sizes the content from the recommended WIDTH and SKIPS the free-height branch (`:466-468`, gated
-  on `contentsRecursivelyCanSetHeightFreely`). Build `new WindowWdgt nil,nil,nil` + `new AnalogClockWdgt` (self-sizes — no extent
+  `FrameWdgt._positionAndResizeChildren` sizes the content from the recommended WIDTH and SKIPS the free-height branch (`:466-468`, gated
+  on `contentsRecursivelyCanSetHeightFreely`). Build `new FrameWdgt nil,nil,nil` + `new AnalogClockWdgt` (self-sizes — no extent
   needed), drop the clock in with `@dragWidgetTo_InputEvents clock, win` (centre grab — no sub-widget), then
   `@dragWindowResizerTo_InputEvents win, …` OUT and IN — the clock stays circular/square both ways. Also the first DYNAMIC content
   (the clock, frozen during playback like the anchor test) inside a container.
 - **Dropping INTO a NESTED window — and the square constraint through TWO layers**
   (`macroWindowWithAClockInAWindowConstructionTwo`): a window's drop gate only closes once it has REAL content — the ctor
-  calls `disableDrops()` only when built WITH contents (`WindowWdgt.coffee:65-68`) and `_reactToChildDropped` does it on the first
+  calls `disableDrops()` only when built WITH contents (`FrameWdgt.coffee:65-68`) and `_reactToChildDropped` does it on the first
   real drop (`:264-268`) — so an internal window ALREADY adopted as an external window's content still ACCEPTS a drop while
   empty: `@dragWidgetTo_InputEvents clock, intWin` (the nested inner's centre is its placeholder) makes the clock the INNER
   window's content (the inner relabels "analog clock", the outer keeps "window with an internal window"), and the aspect
@@ -724,7 +724,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **NESTED collapse/uncollapse cascades through window layers — the full resize matrix** (`macroWindowsNestedCollapsingUncollapsing`):
   a window always WRAPS its content, so collapse state CASCADES through nesting. The switch collapses the window's CONTENT
   (`CollapseIconButtonWdgt.actOnClick` → `@parent.parent.contents.collapse()`), the window reacts via
-  `_beforeChildCollapsed`/`_reactToChildCollapsed`/`_reactToChildUnCollapsed` (`WindowWdgt.coffee:207-243`, store/restore extents) — with an
+  `_beforeChildCollapsed`/`_reactToChildCollapsed`/`_reactToChildUnCollapsed` (`FrameWdgt.coffee:207-243`, store/restore extents) — with an
   internal window AS the outer's content (wrapping lorem AS the inner's), collapsing the INNER drops the OUTER to bar-plus-bar.
   The test resizes the EXTERNAL window in ALL FOUR (outer × inner) collapse combinations, each followed by the complete,
   step-by-step uncollapsing (a reviewer-requested matrix; the recording itself resized in only two of the four). The two
@@ -844,7 +844,7 @@ assertion a recapture after a regression silently stores two different hashes an
   exactly reversible: the wheel-to-end after the toggle round trip is byte-identical to the pre-toggle end view (this
   macro reproduced its recording's reference pixels hash-for-hash at both densities). No new verb.
 - **A nested WINDOW's lifecycle re-syncs its scroll panel** (`macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`):
-  the window-lifecycle sibling of the two recompute entries above. A `WindowWdgt` nested INSIDE a ScrollPanelWdgt refreshes it:
+  the window-lifecycle sibling of the two recompute entries above. A `FrameWdgt` nested INSIDE a ScrollPanelWdgt refreshes it:
   `_reactToChildCollapsed`/`_reactToChildUnCollapsed` both END with `@_invalidateLayout()` — the uniform dirty-tree climb (plus a direct
   grandparent invalidate when directly inside a non-text-wrapping scroll panel; the old announce-up helper was deleted 2026-07-01) —
   and the panel's `_positionAndResizeChildren` + `_reLayoutScrollbars` then run at settle
@@ -1037,12 +1037,12 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Duplicate an INSPECTOR WINDOW → an independent second inspector (independent close)** (`macroDuplicatedInspectorsCloseIndependently`): the
   duplication trio's third case (after a plain widget and a menu item). The inspector is always windowed — inspect a string
   (`clickMenuItemOfWidget_InputEvents_Macro string, "inspect"`; demo string is the OLD `StringMorph`, so NO right-click drift) → an
-  `InspectorWdgt` in a `WindowWdgt`; find the window with `@findTopWidgetByClassNameOrClass WindowWdgt`. A window does not block
+  `InspectorWdgt` in a `FrameWdgt`; find the window with `@findTopWidgetByClassNameOrClass FrameWdgt`. A window does not block
   duplication: right-click its TITLE bar → ancestor hierarchy menu → `"a Window ➜"` → `"duplicate"` (= `fullCopy().pickUp()`, a DEEP copy)
   → carry + `@syntheticEventsMouseClick_InputEvents()` to drop (a test-local `duplicateWindowedWidget_InputEvents_Macro` DRYs this).
   The copy is a fully INDEPENDENT live inspector window. Close each via its WINDOW'S own button — `@closeWindow_InputEvents win` (the
-  inspector is now a `WindowWdgt`, so this DOES apply — the old naked-`buttonClose` path is gone). Disambiguate by object identity —
-  `win2 = (world.children.filter (w) -> (w instanceof WindowWdgt) and w isnt win1)[0]`. The two 560×410 windows don't fit fully side by
+  inspector is now a `FrameWdgt`, so this DOES apply — the old naked-`buttonClose` path is gone). Disambiguate by object identity —
+  `win2 = (world.children.filter (w) -> (w instanceof FrameWdgt) and w isnt win1)[0]`. The two 560×410 windows don't fit fully side by
   side in a 960-wide canvas — cascade them (offset, overlapping) with both close buttons visible. Closing one leaves the other untouched
   (two → one → only the string), proving duplicated inspector windows have independent lifecycles.
 - **Locking** (`macroLockToDesktopPreventsDrag` / `macroLockedCompositeWidgetPreventsDrag`):
@@ -1096,13 +1096,13 @@ assertion a recapture after a regression silently stores two different hashes an
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
 - **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentScrollPanelWdgt` can host
   the inspector window. KEY: a WINDOW nests into a container only after the DWELL-TO-ARM gesture (drag-embed spec §6) — there is no internal/external
-  gate any more (Phase 3 removed it; Phase 5 deleted the toggle button, and a window's skin is now DERIVED from parentage via `WindowWdgt.isInternal`).
+  gate any more (Phase 3 removed it; Phase 5 deleted the toggle button, and a window's skin is now DERIVED from parentage via `FrameWdgt.isInternal`).
   Drag the inspector window by its TITLE (a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) and linger past `dwellToArmMs`
   to embed; it becomes flowing content below the default text, kept at its own size and CLIPPED at the doc's right edge if oversized; dragged back out
   by its title it returns to a free-floating window. Its skin follows where it lives: boxy external on the desktop, flat internal once nested.
   (Re-authored from the old naked-inspector version; an earlier draft called `win.makeInternal()` before the gate was removed — the embed/release is the core law.)
 - **The NAKED (chrome-less) inspector renders, edits and self-resizes** (`macroNakedInspectorRendersResizesAndEdits`): a bare
-  `world.add new InspectorWdgt target` (no `WindowWdgt`) is now a first-class widget. When free-floating it paints its own opaque background
+  `world.add new InspectorWdgt target` (no `FrameWdgt`) is now a first-class widget. When free-floating it paints its own opaque background
   (`InspectorWdgt` sets a `RectangularAppearance`, dropped on becoming window content via `setLayoutSpec`, so the windowed path stays
   byte-identical) and shows its own `@resizer` HandleWdgt (`HandleWdgt.updateVisibility` shows it only when free-floating). Drive its resize
   by pressing THAT handle specifically — `@syntheticEventsMouseMovePressDragRelease_InputEvents insp.resizer.center(), dest` — NOT
@@ -1150,7 +1150,7 @@ assertion a recapture after a regression silently stores two different hashes an
   can't be dragged via the palette (image_1==image_2) while a background drag moves it (contrast). **LOCKED** (`panel.lockToPanels()` →
   `@isLockingToPanels=true`, `Widget.coffee:3714`): `grabsToParentWhenDragged` now returns true, the climb hits the unpickable world →
   `findFirstLooseWidget`=nil → no float-drag → the scroll-step runs → a background drag **SCROLLS** the contents (frame fixed, thumb moves).
-  **IN A WINDOW** (`win.add panel`): a `WindowWdgt` isn't a `PanelWdgt`, so the climb falls through to the Window (detaches) → a content drag
+  **IN A WINDOW** (`win.add panel`): a `FrameWdgt` isn't a `PanelWdgt`, so the climb falls through to the Window (detaches) → a content drag
   **MOVES THE WHOLE WINDOW** (a design wart — the title bar is the expected move handle). DRY: all three build the panel via the shared
   `buildOverflowingScrollPanelWithText_Macro(topLeft)` verb in `standardMacroSubroutines`. KEY: press a CLEAR background spot (right of the
   text, left of the scrollbar/handle), not a draggable child; in Automator PLAYING the grab threshold is skipped so even small drags grab.
@@ -1175,7 +1175,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the pointer ON the dropped handle, whose `mouseEnter` (`:233`) renders it in its bluish HIGHLIGHTED state — park the pointer
   on the empty desktop (a no-button move) before the screenshot to show the NORMAL white grip. No new verb.
 - **A pristine inspector window resizes via its resizer** (`macroResizingPristineInspector`): the `InspectorWdgt` is always
-  presented inside a `WindowWdgt`, and the WINDOW ships the bottom-right resizer. Inspect a string
+  presented inside a `FrameWdgt`, and the WINDOW ships the bottom-right resizer. Inspect a string
   (`bringUpInspector_InputEvents_Macro s` → an `InspectorWdgt` window), park it near the top-left (the 560×410 window only just
   fits the 960×440 canvas, so the resizer stays on-canvas), then SHRINK it via `@dragWindowResizerTo_InputEvents win, dest`
   (compute `dest` off `win.topLeft()` so it stays in bounds and doesn't extend the world's scrollable extent — the SWCanvas

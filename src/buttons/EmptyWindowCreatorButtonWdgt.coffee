@@ -5,7 +5,7 @@ class EmptyWindowCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new EmptyWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt()
+    switcherooWm = new FrameWdgt()
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm
 

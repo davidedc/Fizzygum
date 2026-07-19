@@ -53,16 +53,16 @@ class MenusHelper
   # »>> this part is excluded from the fizzygum homepage build
   createFridgeMagnets: ->
     fmm = new FridgeMagnetsWdgt
-    world.openWindowWith fmm, (new Point 570, 400), world.hand.position()
+    world.openFrameWith fmm, (new Point 570, 400), world.hand.position()
 
 
   createReconfigurablePaint: ->
     reconfPaint = new ReconfigurablePaintWdgt
-    world.openWindowWith reconfPaint, (new Point 460, 400), world.hand.position()
+    world.openFrameWith reconfPaint, (new Point 460, 400), world.hand.position()
 
   createSimpleSlideWdgt: ->
     simpleSlide = new SimpleSlideWdgt
-    world.openWindowWith simpleSlide, (new Point 460, 400), world.hand.position()
+    world.openFrameWith simpleSlide, (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
@@ -179,7 +179,7 @@ class MenusHelper
   # »>> this part is excluded from the fizzygum homepage build
   newScriptWindow: ->
     scriptWdgt = new ScriptWdgt
-    world.openWindowWith scriptWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith scriptWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
   # this part is excluded from the fizzygum homepage build <<«
 
   # »>> this part is excluded from the fizzygum homepage build
@@ -190,18 +190,18 @@ class MenusHelper
 
   createCalculatingPatchNode: ->
     calculatingPatchNodeWdgt = new CalculatingPatchNodeWdgt
-    world.openWindowWith calculatingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith calculatingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   createDiffingPatchNode: ->
     diffingPatchNodeWdgt = new DiffingPatchNodeWdgt
-    world.openWindowWith diffingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith diffingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   createSliderWithSmallestValueAtBottomEnd: ->
     world.create new SliderWdgt nil, nil, nil, nil, nil, true
 
   createRegexSubstitutionPatchNodeWdgt: ->
     regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt
-    world.openWindowWith regexSubstitutionPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith regexSubstitutionPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   throwAnError: ->
     throw new Error "you manually threw an error!"
@@ -213,11 +213,11 @@ class MenusHelper
 
   createToolsPanel: ->
     toolPanel = new ScrollPanelWdgt new ToolPanelWdgt
-    world.openWindowWith toolPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith toolPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
 
   createHorizontalMenuPanelPanel: ->
     horizontalMenuPanel = new HorizontalMenuPanelWdgt
-    world.openWindowWith horizontalMenuPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith horizontalMenuPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
 
 
   popUpMore1IconsMenu: (widgetOpeningThePopUp) ->
@@ -404,7 +404,7 @@ class MenusHelper
 
   createSimpleDocumentWdgt: ->
     simpleDocument = new SimpleDocumentWdgt
-    world.openWindowWith simpleDocument, (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith simpleDocument, (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
 
   createSimpleLinkWdgt: ->
     simpleLinkWdgt = new SimpleLinkWdgt
@@ -561,13 +561,13 @@ class MenusHelper
     menu.popUpAtHand()
 
   createEmptyInternalWindow: ->
-    wm = new WindowWdgt()
+    wm = new FrameWdgt()
     wm.moveTo world.hand.position()
     wm.moveWithin world
     world.add wm
 
   createEmptyWindow: ->
-    wm = new WindowWdgt()
+    wm = new FrameWdgt()
     wm.moveTo world.hand.position()
     wm.moveWithin world
     world.add wm

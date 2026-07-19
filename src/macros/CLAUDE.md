@@ -188,7 +188,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 - **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X ➜" per ancestor) — navigate by class-name
   prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
 - **Menu/target labels STRIP "Wdgt" from the class name** (`toString()/getTextDescription()` do `.replace("Wdgt","")`), so a
-  `WindowWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜`. Navigate hierarchy /
+  `FrameWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜`. Navigate hierarchy /
   "set target" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). `findTopWidgetByClassNameOrClass` and
   `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
 - **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
@@ -205,7 +205,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
   (the duplicate `spawnInspector2`/`inspect2` was removed in the inspect-consolidation arc — the "dev ➜ → inspect" item now
   routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
-  `WindowWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
+  `FrameWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
   target` paints its own opaque background (a `RectangularAppearance`, dropped when it becomes window content via
   `setLayoutSpec`, so the windowed render stays byte-identical) and shows its own `@resizer` HandleWdgt (visible only when
   free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
@@ -224,7 +224,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
   property editing is via the `add.../rename.../remove/save` footer buttons (`save` → `@target.injectProperty`); and
   to nest it into a document/panel, drag it by its title and linger past `dwellToArmMs` (the dwell-to-arm embed — there is no
-  internal/external gate any more; a window's skin is derived from its parentage, `WindowWdgt.isInternal`).
+  internal/external gate any more; a window's skin is derived from its parentage, `FrameWdgt.isInternal`).
 
 ## Composing macros (args, return values, DRY for code AND assets)
 

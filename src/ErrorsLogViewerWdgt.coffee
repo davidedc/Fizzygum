@@ -24,7 +24,7 @@ class ErrorsLogViewerWdgt extends Widget
   colloquialName: ->
     "Error log"
 
-  closeFromContainerWindow: (containerWindow) ->
+  closeFromContainerFrame: (containerWindow) ->
     @parent.hide()
 
   addText: (newLog) ->
@@ -76,7 +76,7 @@ class ErrorsLogViewerWdgt extends Widget
     @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
     @_addNoSettle @pauseToggle
 
-    @okButton = new SimpleButtonWdgt true, @, "closeFromContainerWindow", "ok"
+    @okButton = new SimpleButtonWdgt true, @, "closeFromContainerFrame", "ok"
     @_addNoSettle @okButton
 
     @_invalidateLayout()

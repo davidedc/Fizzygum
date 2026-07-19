@@ -72,7 +72,7 @@ class Example3DPlotWdgt extends Widget
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @_constrainToRatio()
 
-  _reactToHolderWindowDropped: (whereIn) ->
+  _reactToHolderFrameDropped: (whereIn) ->
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @_constrainToRatio()
 
@@ -88,7 +88,7 @@ class Example3DPlotWdgt extends Widget
       # calculate the height.
       @_applyExtent new Point @width(), 0
 
-  _reactToHolderWindowGrabbed: (whereFrom) ->
+  _reactToHolderFrameGrabbed: (whereFrom) ->
     if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
       @_freeFromRatioConstraints()
 

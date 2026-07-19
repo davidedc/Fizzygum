@@ -5,7 +5,7 @@ class BarPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new BarPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt new PlotWithAxesWdgt(new ExampleBarPlotWdgt)
+    switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleBarPlotWdgt)
     switcherooWm._applyExtent new Point 200, 200
 
     return switcherooWm

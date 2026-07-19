@@ -40,7 +40,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
     if @target.isOrphan()
       @target.unCollapse()
-      windowedBasementWdgt = new WindowWdgt @target
+      windowedBasementWdgt = new FrameWdgt @target
       world.add windowedBasementWdgt
       windowedBasementWdgt._applyExtent new Point 460, 400
       windowedBasementWdgt._applyMoveTo new Point 140, 90

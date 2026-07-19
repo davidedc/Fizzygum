@@ -92,13 +92,13 @@ class WidgetFactory
     world.create new ColorPaletteWdgt
   createNewGrayPaletteWdgtInWindow: ->
     gP = new GrayPaletteWdgt
-    wm = new WindowWdgt gP
+    wm = new FrameWdgt gP
     world.add wm
     wm._applyExtent new Point 130, 70
     wm._applyMoveTo world.hand.position().subtract new Point 50, 100
   createNewColorPaletteWdgtInWindow: ->
     cP = new ColorPaletteWdgt
-    wm = new WindowWdgt cP
+    wm = new FrameWdgt cP
     world.add wm
     wm._applyExtent new Point 130, 100
     wm._applyMoveTo world.hand.position().subtract new Point 50, 100

@@ -14,7 +14,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # A vertical stack constrains a dropped child to its width/height ratio, and frees that
   # constraint when the child is grabbed back out. These container capabilities replace the
   # `whereIn/whereFrom instanceof SimpleVerticalStackPanelWdgt` tests in the ratio mixin and
-  # Example3DPlotWdgt; WindowWdgt (a stack subclass) overrides the DROP one to false because
+  # Example3DPlotWdgt; FrameWdgt (a stack subclass) overrides the DROP one to false because
   # a window does NOT impose the ratio on its contents. (type-test-elimination campaign)
   imposesRatioConstraintOnDroppedChildren: ->
     true
@@ -28,7 +28,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
   # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
-  # (window-rebuild follow-up: lets WindowWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
+  # (window-rebuild follow-up: lets FrameWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
     layoutSpec = opts.layoutSpec ? LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -70,7 +70,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
   # ===== Phase 3b (Slice 2): re-fit on the _reLayout cycle =====
   # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
-  # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. Inherited by WindowWdgt.
+  # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. Inherited by FrameWdgt.
   # This is a fixed point ONLY because _positionAndResizeChildren sizes its (deferred-layout)
   # children via _setWidthSizeHeightAccordingly, which -- when called during a layout pass --
   # settles them in place (synchronous _reLayout, no invalidate-climb); see that method + the
@@ -110,7 +110,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
-  initialiseDefaultWindowContentLayoutSpec: ->
+  initialiseDefaultFrameContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
@@ -133,7 +133,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # _positionAndResizeChildren): the width my stack recommends for a child, and the left edge its
   # alignment puts it at. A child transiently without its layoutSpec (mid drop/delete) gets the raw
   # available width -- keeps the pure measures TOTAL (never throw), mirroring
-  # WindowWdgt.preferredExtentForWidth's guard; the arrange initialises every spec before asking.
+  # FrameWdgt.preferredExtentForWidth's guard; the arrange initialises every spec before asking.
   _childWidthInStack: (widget, availForContents) ->
     widget.layoutSpecDetails?.getWidthInStack(availForContents) ? availForContents
 
@@ -167,10 +167,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # preferredExtentForWidth (text wrap / clock square / ratio); a child without one (a plain widget
   # whose height is width-independent) falls back to its current height. NO mutation, NO seam --
   # this is the composable container measure a parent (the scroll panel, Stage C) will consume
-  # instead of the subWidgetsMergedFullBounds applied-bounds read-back. WindowWdgt overrides this
+  # instead of the subWidgetsMergedFullBounds applied-bounds read-back. FrameWdgt overrides this
   # with its real content+chrome measure (Stage D). Proven byte-exact suite-wide: 3252
   # measure-vs-committed-height differentials, 0 mismatches. CONSUMED by
-  # WindowWdgt.preferredExtentForWidth (a window recursing into its stack content) and by any
+  # FrameWdgt.preferredExtentForWidth (a window recursing into its stack content) and by any
   # enclosing stack/scroll measuring a nested stack.
   preferredExtentForWidth: (availW) ->
     availForContents = availW - 2 * @padding

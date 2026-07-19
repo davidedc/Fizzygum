@@ -31,7 +31,7 @@ class MenuWdgt extends PopUpWdgt
   # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's menuAtPointer filter + the
   # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other pop-ups. True here,
   # inherited by PromptWdgt/SaveShortcutPromptWdgt (mirroring the instanceof); dispatched via ?() (nothing
-  # on Widget). Parallels isWindow. (type-test-elimination campaign)
+  # on Widget). Parallels isFrame. (type-test-elimination campaign)
   isMenu: ->
     true
 
@@ -91,8 +91,8 @@ class MenuWdgt extends PopUpWdgt
     else
       return "menu"
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
+  initialiseDefaultFrameContentLayoutSpec: ->
+    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.canSetHeightFreely = false
 
   # Lay out at ADD time -- the menu's layout trigger. The opener builds a menu, adds

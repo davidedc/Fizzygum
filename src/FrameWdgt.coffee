@@ -11,7 +11,7 @@
 # TODO: this is such a special version of SimpleVerticalStackPanelWdgt
 # that really it seems like this extension is misleading...
 
-class WindowWdgt extends SimpleVerticalStackPanelWdgt
+class FrameWdgt extends SimpleVerticalStackPanelWdgt
 
   # TODO we already have the concept of "droplet" widget
   # so probably we should re-use that. The current drop
@@ -54,7 +54,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # Height of the titlebar strip: icon square + a padding above and below. (Rounding the
   # whole sum -- identical to every historical inline form for any integer @padding.)
   _titlebarHeight: ->
-    Math.round(WindowWdgt.CLOSE_ICON_SIZE + @padding + @padding)
+    Math.round(FrameWdgt.CLOSE_ICON_SIZE + @padding + @padding)
 
   # Window chrome height -- everything that is NOT content: the titlebar strip plus the
   # bottom margin, which depends on whether the resizer may overlap the contents. ONE home
@@ -79,14 +79,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # caller proposes (the arrange passes its own current width).
   _negotiatedContentWidth: (availW) ->
     spec = @contents.layoutSpecDetails
-    if spec.preferredStartingWidth == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
+    if spec.preferredStartingWidth == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
       # (U3-C) "the size I have now" through the content's preferredExtent, not its raw
       # width(): identical for plain content (base preferredExtent IS the applied extent),
       # but content whose OWN first placement is pending (a nested window) answers with the
       # extent that placement will produce -- so this window places it at its FINAL size in
       # one shot and the settle loop's injection never has to re-visit us.
       @contents.preferredExtent().x
-    else if spec.preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
+    else if spec.preferredStartingWidth == FrameContentLayoutSpec.DONT_MIND
       availW - 2 * @padding
     else
       spec.preferredStartingWidth
@@ -118,7 +118,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   preferredExtent: ->
     spec = @contents?.layoutSpecDetails
     if !spec? or spec.desiredWidth? or @contents.collapsed then return @extent()
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and spec.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and spec.preferredStartingWidth != FrameContentLayoutSpec.DONT_MIND
       # the width hug (DESKTOP windows only -- §9.7-Q, same own-layoutSpec predicate as the
       # arrange's first-placement branch, incl. the not-recursively-freefloating min-clamp;
       # keep the two in lockstep)
@@ -144,12 +144,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         # DURING construction already sees the extent the window's own arrange will take --
         # not the garbage pre-negotiation extent the old guard reported. The recursion into
         # the content's measure is safe pre-capture: getWidthInStack is total (U2).
-        if spec.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
+        if spec.preferredStartingHeight == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
           desiredHeight = @contents.preferredExtent().y
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - chrome
-        else if spec.preferredStartingHeight == WindowContentLayoutSpec.DONT_MIND
+        else if spec.preferredStartingHeight == FrameContentLayoutSpec.DONT_MIND
           desiredHeight = Math.round @height() - chrome
         else
           # (§9.7-Q) through the shared first-placement width -- container-owned windows
@@ -187,7 +187,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @strokeColor = Color.create 125,125,125
     @tight = true
 
-    @defaultContents = new WindowContentsPlaceholderText
+    @defaultContents = new FrameContentsPlaceholderText
     if !@contents?
       @contents = @defaultContents
 
@@ -211,7 +211,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # settled-after-new: SETTLE the default extent as the constructor's LAST act (was
     # @_applyExtent, which left a pending re-fit -- and, for default contents, the
-    # _setEmptyWindowLabelNoSettle label too -- so `new WindowWdgt` returned UNsettled). This flushes both.
+    # _setEmptyWindowLabelNoSettle label too -- so `new FrameWdgt` returned UNsettled). This flushes both.
     # Kept on the public setExtent rather than folded into _buildAndConnectChildrenNoSettle: that core is
     # SHARED with the rebuild-on-drop paths, which must NOT reset a user-resized window back to 300x300.
     @setExtent new Point 300, 300
@@ -233,9 +233,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
     # any other content falls to the default reference via super. The content type decides via
-    # specialWindowReferenceShortcut instead of `@contents instanceof ScriptWdgt`.
+    # specialFrameReferenceShortcut instead of `@contents instanceof ScriptWdgt`.
     # (type-test-elimination campaign)
-    widgetToAdd = @contents?.specialWindowReferenceShortcut?(@, referenceName)
+    widgetToAdd = @contents?.specialFrameReferenceShortcut?(@, referenceName)
     if widgetToAdd?
       # this "add" is going to try to position the reference
       # in some smart way (i.e. according to a grid)
@@ -280,28 +280,28 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       return @contents.representativeIcon()
 
-  closeFromWindowBar: ->
-    @contents?.closeFromContainerWindow @
+  closeFromFrameBar: ->
+    @contents?.closeFromContainerFrame @
 
   # The title-bar Close/Edit buttons announce their press here instead of testing
-  # `@parent instanceof WindowWdgt` themselves -- the window owns what its bar
+  # `@parent instanceof FrameWdgt` themselves -- the window owns what its bar
   # buttons mean. closeButtonInBarPressed mirrors the old button branch exactly (a
   # contents-bearing window closes from the bar, an empty one just closes); a
   # non-window container of a close button has no such method, so that button falls
   # back to Widget.close(). (type-test-elimination campaign)
   closeButtonInBarPressed: ->
-    if @contents? then @closeFromWindowBar() else @close()
+    if @contents? then @closeFromFrameBar() else @close()
 
   editButtonInBarPressed: ->
-    @contents?.editButtonPressedFromWindowBar?()
+    @contents?.editButtonPressedFromFrameBar?()
 
   # duringReInflation: true ONLY for the one synchronous re-fit inside _reactToChildUnCollapsed --
   # the content must KEEP its just-restored extent instead of being stretched to a mid-restore
   # window height; every other caller (incl. the preferredExtentForWidth measure) takes the
   # default false. History/rationale: docs/archive/upedge-endgame-plan.md §9-E4.
   contentsRecursivelyCanSetHeightFreely: (duringReInflation = false) ->
-    # was `!(@contents instanceof WindowWdgt)` (type-test-elimination campaign)
-    if !@contents.isWindow?()
+    # was `!(@contents instanceof FrameWdgt)` (type-test-elimination campaign)
+    if !@contents.isFrame?()
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
       # window must FOLLOW that height (shrinking when a widen re-wraps to fewer
       # lines), not stretch the content to fill a freely-dragged height. A
@@ -317,8 +317,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       return true
 
     if @parent?
-      # was `@parent instanceof WindowWdgt` (type-test-elimination campaign)
-      if @parent.isWindow?()
+      # was `@parent instanceof FrameWdgt` (type-test-elimination campaign)
+      if @parent.isFrame?()
         return @parent.recursivelyAttachedAsFreeFloating()
 
     return false
@@ -331,7 +331,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     return true
 
   # A window is a SimpleVerticalStackPanelWdgt but does NOT impose its ratio on dropped
-  # children (was the `!(whereIn instanceof WindowWdgt)` exclusion in the ratio mixin /
+  # children (was the `!(whereIn instanceof FrameWdgt)` exclusion in the ratio mixin /
   # Example3DPlotWdgt). It still RELEASES the constraint on grab, via the inherited default.
   # (type-test-elimination campaign)
   imposesRatioConstraintOnDroppedChildren: ->
@@ -348,11 +348,11 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @label._setTextNoSettle "empty window"
 
-  # Polymorphic replacement for `instanceof WindowWdgt`: lets Widget / the smart-placer
+  # Polymorphic replacement for `instanceof FrameWdgt`: lets Widget / the smart-placer
   # ask "are you a window?" without naming this subclass. Defined ONLY here -- there is NO
   # Widget base default (Widget is the God class under decomposition), so every call site
   # dispatches via `?()` and a non-window answers undefined (falsy). (type-test-elimination campaign)
-  isWindow: -> true
+  isFrame: -> true
 
   colloquialName: ->
     if @isInternal()
@@ -375,7 +375,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # pending, U2-B) AND my own attachment is free-floating (the only case whose first placement
   # touches my width). A captured window is height-only under re-lay; so is a container-owned
   # window even pre-capture -- both safe to early-settle single-pass in
-  # WindowWdgt._positionAndResizeChildren. Narrowing the pre-capture term to own-FF is what
+  # FrameWdgt._positionAndResizeChildren. Narrowing the pre-capture term to own-FF is what
   # retires the LAST nested-window settle re-visits: a first-placement inner window now settles
   # inside its outer's arrange instead of on its own later turn + an up-edge re-visit of the
   # outer (up-edge endgame V1-b, docs/archive/upedge-endgame-plan.md §9). Absent (undefined via ?()) on
@@ -419,9 +419,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
       # (super -> _addNoSettle invalidates the window; the inherited _reLayout runs @_reLayoutChildren on
       # the recalculateLayouts pass). The old synchronous pre-fit (@_reLayoutChildren here) is removed.
-      # Init the content's WindowContentLayoutSpec up-front -- the pre-fit used to do this implicitly
+      # Init the content's FrameContentLayoutSpec up-front -- the pre-fit used to do this implicitly
       # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
-      aWdgt.initialiseDefaultWindowContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof WindowContentLayoutSpec
+      aWdgt.initialiseDefaultFrameContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof FrameContentLayoutSpec
       # (U2) re-arm the first-placement ONE-SHOT for this mount: content (re)mounted into a
       # window re-negotiates its placement. The old model re-ran the capture via
       # the contentNeverSetInPlaceYet flag; the CAPTURE is now itself the latch, so un-latch it
@@ -429,7 +429,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       # life) -- but NOT for a same-widget chrome-rebuild re-add (§9.7-Q above): the standing
       # capture is exactly the placement this mount already has.
       aWdgt.layoutSpecDetails.desiredWidth = nil unless isSameContentRemount
-      super aWdgt, position: position, layoutSpec: LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped: beingDropped
+      super aWdgt, position: position, layoutSpec: LayoutSpec.ATTACHEDAS_FRAME_CONTENT, beingDropped: beingDropped
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
     @resizer?._moveInFrontOfSiblings()
@@ -506,10 +506,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   _reactToBeingDropped: (whereIn) ->
     super
-    @contents?._reactToHolderWindowDropped? whereIn
+    @contents?._reactToHolderFrameDropped? whereIn
 
   _reactToBeingGrabbed: (whereFrom) ->
-    @contents?._reactToHolderWindowGrabbed? whereFrom
+    @contents?._reactToHolderFrameGrabbed? whereFrom
 
   # The whole-window skin follows the window's nesting (isInternal, derived from parentage), so
   # re-apply it whenever the window lands in a new home: a container makes it internal (flat,
@@ -587,9 +587,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds every chrome widget AND the content through @_addNoSettle (the cores
-  # mirrored down WindowWdgt -> SimpleVerticalStackPanelWdgt -> Widget), so nothing self-settles per add
+  # mirrored down FrameWdgt -> SimpleVerticalStackPanelWdgt -> Widget), so nothing self-settles per add
   # and nothing re-fits the HALF-built window mid-loop -- the window's content bookkeeping rides along in
-  # WindowWdgt._addNoSettle. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
+  # FrameWdgt._addNoSettle. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor). Every rebuild path that
   # fires from inside an enclosing settle -- a child-lifecycle hook (_beforeChildDestroyed/Closed/PickedUp)
@@ -670,7 +670,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       else
         @showViewModeInBar()
 
-  # (no initialiseDefaultWindowContentLayoutSpec override: SimpleVerticalStackPanelWdgt's already ends
+  # (no initialiseDefaultFrameContentLayoutSpec override: SimpleVerticalStackPanelWdgt's already ends
   # with the same `@layoutSpecDetails.canSetHeightFreely = false`, so re-asserting it here was a no-op.)
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
@@ -679,7 +679,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
   _positionAndResizeChildren: (duringReInflation = false) ->
 
-    closeIconSize = WindowWdgt.CLOSE_ICON_SIZE
+    closeIconSize = FrameWdgt.CLOSE_ICON_SIZE
 
     # close button
     if @closeButton? and @closeButton.parent == @
@@ -696,13 +696,13 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     stackHeight = 0
 
     if @contents? and !@contents.collapsed
-      # Order-independent spec init: also (re)init when the content lacks a WindowContentLayoutSpec,
+      # Order-independent spec init: also (re)init when the content lacks a FrameContentLayoutSpec,
       # not only when its layoutSpec tag is unset. With the on-add pre-fit removed (deferred layout),
-      # super sets the layoutSpec tag to ATTACHEDAS_WINDOW_CONTENT BEFORE this deferred re-fit runs,
+      # super sets the layoutSpec tag to ATTACHEDAS_FRAME_CONTENT BEFORE this deferred re-fit runs,
       # so the old tag-only gate would skip init and this would deref an uninitialised/stack-typed spec.
-      if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_WINDOW_CONTENT or !(@contents.layoutSpecDetails instanceof WindowContentLayoutSpec)
-        @contents.initialiseDefaultWindowContentLayoutSpec()
-        @contents._setLayoutSpec LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
+      if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_FRAME_CONTENT or !(@contents.layoutSpecDetails instanceof FrameContentLayoutSpec)
+        @contents.initialiseDefaultFrameContentLayoutSpec()
+        @contents._setLayoutSpec LayoutSpec.ATTACHEDAS_FRAME_CONTENT
 
       # (U2) the first-placement ONE-SHOT is CONTENT-owned: an uncaptured spec (desiredWidth
       # unset -- fresh init above, or re-armed on content (re)mount in _addNoSettle) selects
@@ -712,7 +712,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       if firstPlacement
         recommendedElementWidth = @_firstPlacementContentWidth @width()
-        if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and @contents.layoutSpecDetails.preferredStartingWidth != WindowContentLayoutSpec.DONT_MIND
+        if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and @contents.layoutSpecDetails.preferredStartingWidth != FrameContentLayoutSpec.DONT_MIND
           # THIS_ONE_I_HAVE_NOW / an explicit px on a DESKTOP window: the WINDOW resizes
           # (hugs) to the content's width. A CONTAINER-OWNED window never self-resizes its
           # width -- the container owns it (§9.7-Q, owner-decided 2026-07-17; the predicate
@@ -739,14 +739,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       # this re-layouts each widget to fit the width.
       if firstPlacement
-        if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW
+        if @contents.layoutSpecDetails.preferredStartingHeight == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
           desiredHeight = @contents.preferredExtent().y
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
           @contents._applyWidth recommendedElementWidth
           @contents._applyHeight desiredHeight
-        else if @contents.layoutSpecDetails.preferredStartingHeight == WindowContentLayoutSpec.DONT_MIND
+        else if @contents.layoutSpecDetails.preferredStartingHeight == FrameContentLayoutSpec.DONT_MIND
           @contents._applyWidth recommendedElementWidth
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents._applyHeight desiredHeight
@@ -762,7 +762,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
         # (proper-layouts residual, 2026-07-01) Single-pass fit-to-content: settle a NON-deferred size-tracking
         # container content (a stack) NOW, synchronously, so I fit its FINAL height in THIS pass. Otherwise the
         # content settles independently LATER (as its own settle-loop chain-top) and its settle-time re-fit
-        # re-VISITS me to re-fit -- the residual WindowWdgt content-negotiation re-visits. This is the SAME
+        # re-VISITS me to re-fit -- the residual FrameWdgt content-negotiation re-visits. This is the SAME
         # _reLayout() the settle loop would call on the content's own turn, pulled one iteration earlier, so it
         # is byte-exact. _setWidthSizeHeightAccordingly already settles DEFERRED-layout content (a scroll panel);
         # a stack pins implementsDeferredLayout false, so we settle it here. EXCLUDES content that re-fits its OWN

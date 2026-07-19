@@ -10,12 +10,12 @@ class ToolbarCreatorButtonWdgt extends CreatorButtonWdgt
 
   # Shared window-building scaffold for the toolbar creator buttons: take a
   # ready-built, drops/edit-disabled tools panel (each subclass fills and locks
-  # its own), wrap it in a WindowWdgt, place it, add it to the world and size it
+  # its own), wrap it in a FrameWdgt, place it, add it to the world and size it
   # to the given extent. Returns the window.
   # NB PlotsToolbarCreatorButtonWdgt is deliberately NOT routed through here: it
   # sizes with the public setExtent BEFORE placing, a different op order.
   _buildToolWindow: (toolsPanel, extent) ->
-    switcherooWm = new WindowWdgt toolsPanel
+    switcherooWm = new FrameWdgt toolsPanel
     switcherooWm._applyMoveTo new Point 90, Math.floor((world.height()-192)/2)
     switcherooWm._moveWithin world
     world.add switcherooWm

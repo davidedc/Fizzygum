@@ -200,7 +200,7 @@ const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed 
 //     (The orphan guard + runtime throw remain the backstop for the `.add` member form and for
 //     construction-time add() on an orphan.)
 // (collapse / unCollapse USED to be excluded here -- they appeared in layout passes
-// [WindowWdgt._positionAndResizeChildren's editButton / internalExternalSwitchButton;
+// [FrameWdgt._positionAndResizeChildren's editButton / internalExternalSwitchButton;
 // HorizontalMenuPanelWdgt._reLayoutSelf]. The end-of-cycle-flush drawdown convert (2026-06-25) routed those
 // layout-pass call-sites to the idempotent _collapseNoSettle / _unCollapseNoSettle cores, so [G] now COVERS
 // collapse / unCollapse like any other wrapper -- the discrete-handler callers [Un/CollapseIconButtonWdgt,
@@ -250,8 +250,8 @@ const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-metho
 const GUARD_RETURN = /\breturn\b\s*(if\b|unless\b|$)/;
 
 // [L] the notification-callback NAME convention (layering/naming convention §3/§4), checked at the method DEF.
-// A callback uses the fully-derivable (perspective × phase) scheme _(reactTo|before)(Being|Child|HolderWindow)<Event>
-// (SELF = Being, CONTAINER = Child, third-party = HolderWindow; <Event> a PascalCase verb, optionally qualified
+// A callback uses the fully-derivable (perspective × phase) scheme _(reactTo|before)(Being|Child|HolderFrame)<Event>
+// (SELF = Being, CONTAINER = Child, third-party = HolderFrame; <Event> a PascalCase verb, optionally qualified
 // e.g. _reactToChildAddedInScrollPanel / _reactToBeingDroppedIntoFolder). Two static name checks:
 //   * any _reactTo*/_before* def MUST match CALLBACK_SHAPE and must NOT carry NoSettle -- a callback is a
 //     settle-neutral core by definition (the dispatcher owns the one settle, rule [J]); the NoSettle suffix is
@@ -259,10 +259,10 @@ const GUARD_RETURN = /\breturn\b\s*(if\b|unless\b|$)/;
 //   * the legacy callback fragments (childX / justBeen / iHaveBeen / aboutTo / prepareTo) are banned outright --
 //     the ⚑ rename batches (§9.7-2/3/4) retired them; the (now empty) ban keeps them retired.
 // The old _reactToDropOf / _reactToGrabOf "…Of" shape is caught by CALLBACK_SHAPE itself (DropOf/GrabOf is not a
-// Being/Child/HolderWindow event), so it needs no separate fragment. The gates (wantsToBe<Event>ed /
+// Being/Child/HolderFrame event), so it needs no separate fragment. The gates (wantsToBe<Event>ed /
 // wants<Event>OfChild) are PUBLIC positive bools, not _reactTo*/_before* hooks, so they are outside this rule.
 const CALLBACK_PREFIX = /^_(reactTo|before)/;
-const CALLBACK_SHAPE = /^_(reactTo|before)(Being|Child|HolderWindow)[A-Z]\w*$/;
+const CALLBACK_SHAPE = /^_(reactTo|before)(Being|Child|HolderFrame)[A-Z]\w*$/;
 const LEGACY_CALLBACK_FRAGMENT = /^(child[A-Z]|justBeen|iHaveBeen|aboutTo|prepareTo)/;
 
 // [M] terminology fragment-ban (layering/naming convention §4): the retired GEOMETRY/STRUCTURAL prefixes must not
@@ -509,9 +509,9 @@ function checkFile(file, violations, gCtx, warnings) {
           if (b.method) {
             if (CALLBACK_PREFIX.test(b.method)) {
               if (/NoSettle$/.test(b.method)) violations.push(`[L] callback ${b.method}() carries NoSettle — a notification callback is a settle-neutral core; the dispatcher owns the one settle, so drop the suffix (layering/naming convention §3)  — ${rel}:${n + 1}`);
-              else if (!CALLBACK_SHAPE.test(b.method)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderWindow)<Event> (layering/naming convention §3)  — ${rel}:${n + 1}`);
+              else if (!CALLBACK_SHAPE.test(b.method)) violations.push(`[L] malformed callback ${b.method}() — must match _(reactTo|before)(Being|Child|HolderFrame)<Event> (layering/naming convention §3)  — ${rel}:${n + 1}`);
             }
-            if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderWindow)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
+            if (LEGACY_CALLBACK_FRAGMENT.test(b.method)) violations.push(`[L] legacy callback fragment ${b.method}() — use the _(reactTo|before)(Being|Child|HolderFrame)<Event> scheme (layering/naming convention §3/§4)  — ${rel}:${n + 1}`);
             // [M] retired geometry/structural naming fragments (raw* / silent* / fullRaw — see consts above; raw-pixel accessors allowlisted).
             if (FRAGMENT_BANNED.test(b.method)) violations.push(`[M] retired naming fragment ${b.method}() — the raw*/silent*/fullRaw geometry+structural prefixes were eliminated (§6/§3d); use the _apply*/_commit*/__ tier names. (layering/naming convention §4)  — ${rel}:${n + 1}`);
             if (APPLY_ANDNOTIFY_BANNED.test(b.method)) violations.push(`[M] retired apply-notify suffix ${b.method}() — the _apply*AndNotify corners were renamed to the bare polymorphic _apply* (Tier B, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §3); "AndNotify" asserted a notify seam deleted 2026-07-01. Use _apply* (polymorphic) or _apply*Base (override-bypass twin). (layering/naming convention §4)  — ${rel}:${n + 1}`);
@@ -832,7 +832,7 @@ function main() {
     console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming convention §1).');
     console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming convention §3).');
     console.error('K: a 2x2 apply corner must match its name — a _apply*Base bypass twin must not fire the container re-fit seam nor dispatch to its polymorphic _apply* sibling; a _commit*AndNotify must not react (layering/naming convention §2).');
-    console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderWindow)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
+    console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderFrame)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
     console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
     console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
     console.error('O: a *DeferredSettle entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — DEFERRED_SETTLE_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');

@@ -636,16 +636,16 @@ class MacroToolkit
   openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
 
-  # Close a WindowWdgt by clicking the close button (the X) in its window bar. Every WindowWdgt builds
+  # Close a FrameWdgt by clicking the close button (the X) in its window bar. Every FrameWdgt builds
   # a `.closeButton` (a CloseIconButtonWdgt at its top-left); clicking it runs the button's actOnClick
-  # → the window's closeFromWindowBar()/close(). The reusable window-chrome pattern: get a window (by a
+  # → the window's closeFromFrameBar()/close(). The reusable window-chrome pattern: get a window (by a
   # kept reference, or by class + its `internal` flag) and close it through its real control button, as
   # a user would. Queues input events — follow with `yield "waitNoInputsOngoing"`.
   closeWindow_InputEvents: (windowWidget) ->
     @moveToAndClick_InputEvents windowWidget.closeButton
 
-  # Collapse or uncollapse a WindowWdgt by clicking the collapse/uncollapse control in its window bar.
-  # Every WindowWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonWdgt that toggles between a
+  # Collapse or uncollapse a FrameWdgt by clicking the collapse/uncollapse control in its window bar.
+  # Every FrameWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonWdgt that toggles between a
   # CollapseIconButtonWdgt and an UncollapseIconButtonWdgt): clicking it when expanded collapses the
   # window to just its bar (contents.collapse()), and clicking it again — the switch now shows the
   # uncollapse icon — restores it. So this one verb both collapses and uncollapses, depending on the
@@ -654,7 +654,7 @@ class MacroToolkit
   collapseOrUncollapseWindow_InputEvents: (windowWidget) ->
     @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
 
-  # Resize a WindowWdgt by dragging its resize handle to a destination. Every WindowWdgt builds a `.resizer`
+  # Resize a FrameWdgt by dragging its resize handle to a destination. Every FrameWdgt builds a `.resizer`
   # (a HandleWdgt laid out at its bottom-right corner); a NON-float press-drag-release on it resizes the
   # window (HandleWdgt.nonFloatDragging → setExtent on the window). The window-chrome sibling of close/
   # collapse: reach the window's OWN resize control by reference (vs hunting a HandleWdgt by coordinates —
@@ -988,11 +988,11 @@ class MacroToolkit
     # are scanned for reference-image names, so the per-test assertions stay in each test's main macro.
     macroSubroutines.add Macro.fromString """
       buildExternalAndFreeInternalWindow_Macro = ->
-        extWin = new WindowWdgt()
+        extWin = new FrameWdgt()
         extWin.setExtent new Point 290, 240
         extWin.moveTo new Point 75, 90
         world.add extWin
-        intWin = new WindowWdgt()
+        intWin = new FrameWdgt()
         intWin.setExtent new Point 250, 160
         intWin.moveTo new Point 600, 200
         world.add intWin

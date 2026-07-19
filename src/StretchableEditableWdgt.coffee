@@ -110,7 +110,7 @@ class StretchableEditableWdgt extends Widget
   hasStartingContentBeenChangedByUser: ->
     @stretchableWidgetContainer?.ratio?
 
-  closeFromContainerWindow: (containerWindow) ->
+  closeFromContainerFrame: (containerWindow) ->
 
     if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt containerWindow
       # there is no real contents to save

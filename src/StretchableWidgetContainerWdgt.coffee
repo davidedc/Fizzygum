@@ -56,7 +56,7 @@ class StretchableWidgetContainerWdgt extends Widget
   colloquialName: ->
     "stretchable panel"
 
-  initialiseDefaultWindowContentLayoutSpec: ->
+  initialiseDefaultFrameContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = !@ratio?
 

@@ -471,7 +471,7 @@ class ScrollPanelWdgt extends PanelWdgt
       # new frame via the non-notifying twin re-fits only its SELF layer, so schedule its full re-lay
       # through the phase-valve -- in-pass the same flush's next round heals it, off-pass the wrapping
       # settle does. The engine heals the interior; this arrange never re-lays it synchronously. (Also
-      # covers the WindowWdgt early-settle route, where the later engine re-visit sees no frame delta
+      # covers the FrameWdgt early-settle route, where the later engine re-visit sees no frame delta
       # for the injection to act on.) The gate is implementsDeferredLayout, NOT children.length: a
       # base-_reLayout contents (the plain PanelWdgt of every ordinary scroll panel) gets nothing from
       # a full re-lay beyond the _reLayoutSelf above, and this arrange is ALSO reached off-settle by

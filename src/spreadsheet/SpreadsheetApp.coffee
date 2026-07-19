@@ -24,4 +24,4 @@ class SpreadsheetApp extends IconicDesktopSystemWindowedApp
     # always 452×336 — this pin preserves that exact render, byte-for-byte (the F6 hard gate:
     # the whole pre-F6 suite, zero recaptures). A resize from here shows MORE of the 26×100
     # logical sheet (partial edge cells; backdrop past the sheet edge).
-    world.openWindowWith (new SpreadsheetWdgt), (new Point 452, 336), (new Point 120, 90)
+    world.openFrameWith (new SpreadsheetWdgt), (new Point 452, 336), (new Point 120, 90)

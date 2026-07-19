@@ -1,12 +1,12 @@
-# WindowContentLayoutSpec
+# FrameContentLayoutSpec
 
-class WindowContentLayoutSpec extends VerticalStackLayoutSpec
+class FrameContentLayoutSpec extends VerticalStackLayoutSpec
 
   @augmentWith DeepCopierMixin
 
   # Sentinel values for the constructor's preferredStartingWidth/Height, moved here
   # from the former PreferredSize marker class -- these two constants were used
-  # exclusively with WindowContentLayoutSpec (both as ctor args and in WindowWdgt's
+  # exclusively with FrameContentLayoutSpec (both as ctor args and in FrameWdgt's
   # comparisons). -1 = "keep the size I have now"; -2 = "I don't mind, size me".
   @THIS_ONE_I_HAVE_NOW: -1
   @DONT_MIND: -2
@@ -53,7 +53,7 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
     super
 
     availableWidthInStack = @stack.availableWidthForContents()
-    if @preferredStartingWidth == WindowContentLayoutSpec.DONT_MIND
+    if @preferredStartingWidth == FrameContentLayoutSpec.DONT_MIND
       @desiredWidth = availableWidthInStack
       @grow = 1
 

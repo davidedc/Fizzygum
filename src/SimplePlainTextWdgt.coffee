@@ -54,7 +54,7 @@ class SimplePlainTextWdgt extends TextWdgt
   tabInsertsSpaces: ->
     true
 
-  initialiseDefaultWindowContentLayoutSpec: ->
+  initialiseDefaultFrameContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
 

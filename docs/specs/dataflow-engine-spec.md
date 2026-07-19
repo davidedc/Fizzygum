@@ -249,7 +249,7 @@ client's:
 
 ### 9.1 Shell and grid
 - App shell: `IconicDesktopSystemWindowedApp` subclass + a content `*Wdgt` in a
-  `WindowWdgt` (the `DegreesConverterApp` shape).
+  `FrameWdgt` (the `DegreesConverterApp` shape).
 - Columns lettered, rows numbered. **Sparse model**: a dictionary keyed `"A1"`; a cell
   record holds `{source, kind-of-entry metadata}` plus derived state
   `{compiledFn, value, presenter}` (derived state is rebuildable, never serialized —

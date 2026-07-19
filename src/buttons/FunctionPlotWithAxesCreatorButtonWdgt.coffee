@@ -5,7 +5,7 @@ class FunctionPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new FunctionPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt)
+    switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt)
     switcherooWm._applyExtent new Point 200, 200
 
     return switcherooWm

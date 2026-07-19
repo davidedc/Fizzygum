@@ -1,7 +1,7 @@
 # ToolbarsApp -- the "Super Toolbar" launcher app: opens a fresh tools ScrollPanel (the
 # toolbar-creator buttons) + its info widget on each launch. IconicDesktopSystemWindowedApp
 # (Phase 6 6c.4). Building the toolbar-creator-button panel is its only bespoke step; the
-# window wrap is the shared world.openWindowWith.
+# window wrap is the shared world.openFrameWith.
 class ToolbarsApp extends IconicDesktopSystemWindowedApp
 
   title: "Super Toolbar"
@@ -22,6 +22,6 @@ class ToolbarsApp extends IconicDesktopSystemWindowedApp
     ]
 
     toolsPanel.disableDragsDropsAndEditing()
-    world.openWindowWith toolsPanel, (new Point 60, 261), (new Point 170, 170)
+    world.openFrameWith toolsPanel, (new Point 60, 261), (new Point 170, 170)
 
   windowOpened: (wm) -> ToolbarsInfoWdgt.createNextTo wm

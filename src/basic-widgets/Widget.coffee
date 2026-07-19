@@ -308,8 +308,8 @@ class Widget extends TreeNode
   positionFractionalInHoldingPanel: nil
   wasPositionedSlightlyOutsidePanel: false
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
+  initialiseDefaultFrameContentLayoutSpec: ->
+    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
     # bind the element NOW (the capture re-binds it later): a PRE-capture measure's
     # total-fallback (getWidthInStack, U2) derives its answer from the element's
     # natural width, so it needs the back-ref before the first arrange runs.
@@ -511,7 +511,7 @@ class Widget extends TreeNode
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
-    if !@isWindow?() and @parent?.isWindow?()
+    if !@isFrame?() and @parent?.isFrame?()
       # private chain: the core, not public close() -- we are already inside close()'s settle batch.
       @parent._closeNoSettle()
       return
@@ -527,15 +527,15 @@ class Widget extends TreeNode
     else
       world.inform "There is no\nbasement to go in!"
 
-  closeFromContainerWindow: (containerWindow) ->
+  closeFromContainerFrame: (containerWindow) ->
     containerWindow.close()
 
   # The window title-bar "edit" (pencil) button announces its press to the window's
-  # contents (WindowWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromWindowBar?()).
+  # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
   # The button is only shown when the contents set providesAmenitiesForEditing, which is set
   # ONLY by PanelWdgt / StretchableEditableWdgt / SimpleDocumentWdgt -- the exact three
   # classes that shared this body verbatim -- so it lives here on the base.
-  editButtonPressedFromWindowBar: ->
+  editButtonPressedFromFrameBar: ->
     if @dragsDropsAndEditingEnabled
       @disableDragsDropsAndEditing @
     else
@@ -775,7 +775,7 @@ class Widget extends TreeNode
   #    the container's _reLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
   #    the non-notifying _apply*Base twins. (See docs/archive/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
-  # (WindowWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
+  # (FrameWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
   # geometry back to learn its new height -- that synchronous mutate-then-read-back is exactly what forces
   # the container re-fit to stay on the synchronous seam (it broke C1; see
   # docs/archive/softwrap-deferred-layout-conversion-plan.md §6b + docs/archive/deferred-layout-OVERVIEW.md §5). Instead it
@@ -796,7 +796,7 @@ class Widget extends TreeNode
   # BASE default is for a widget whose height is INVARIANT under width (a plain box, an icon, a menu): its
   # height at any width is just its current height. Width->height-coupled widgets OVERRIDE it with their
   # real measure -- TextWdgt (wrapped-text height), SimpleVerticalStackPanelWdgt (Sigma of children's),
-  # WindowWdgt (content + chrome), AnalogClockWdgt / KeepsRatioWhenInVerticalStackMixin (aspect). Reading
+  # FrameWdgt (content + chrome), AnalogClockWdgt / KeepsRatioWhenInVerticalStackMixin (aspect). Reading
   # @height()/@width() here is allowed: those are STABLE applied geometry, NOT a mutate-then-read-back.
   preferredExtentForWidth: (availW) ->
     new Point (availW ? @width()), @height()
@@ -805,7 +805,7 @@ class Widget extends TreeNode
   # extent I would take given my druthers" -- PURE. For a plain widget that IS its applied
   # extent (identical to the THIS_ONE_I_HAVE_NOW sentinel's old raw width()/height() reads,
   # byte-for-byte). A widget whose own pending first placement will CHANGE its extent
-  # (WindowWdgt pre-capture) overrides this with the extent that placement will produce, so a
+  # (FrameWdgt pre-capture) overrides this with the extent that placement will produce, so a
   # container placing it mid-construction sizes to its FINAL extent in one shot instead of a
   # stale transient (the last first-placement settle re-visits died here).
   preferredExtent: ->
@@ -849,7 +849,7 @@ class Widget extends TreeNode
     # ALREADY inside a flush/pass?  Two cases, split by whether the receiver is part of the live world:
     #  - ORPHAN receiver -> DEFER (record the change, do NOT flush). This is the ONE remaining settle
     #    deferral, and it is framework-internal: a constructor that builds its innards (e.g. the icon
-    #    buttons WindowWdgt._buildAndConnectChildren makes) runs INSIDE the enclosing mutation's settle and
+    #    buttons FrameWdgt._buildAndConnectChildren makes) runs INSIDE the enclosing mutation's settle and
     #    adds to an orphan; it must not re-enter recalculateLayouts (which would throw). It settles for real
     #    when that enclosing operation's flush completes -- or, for a widget that stays detached, on its next
     #    public call / on attach. (isOrphan() is false for the world itself and for anything on the hand, so
@@ -1603,7 +1603,7 @@ class Widget extends TreeNode
     island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
     # HOME the (empty) island into MY former slot + spec FIRST, THEN reparent me into it. Order matters:
     # _addNoSettle fires the added widget's _reactToBeingAdded, and a widget whose appearance is DERIVED from
-    # its nesting (a WindowWdgt's internal/external skin, via isInternal looking THROUGH this _materializedBySugar
+    # its nesting (a FrameWdgt's internal/external skin, via isInternal looking THROUGH this _materializedBySugar
     # island to the real parent) must derive against the island's TRUE parent -- so the island has to be homed
     # before I move in. The reverse order derived my skin while the island was still a detached root (parent
     # nil), flipping a tilted window to the wrong skin. The final tree is identical either way (island ends at
@@ -1780,7 +1780,7 @@ class Widget extends TreeNode
   # The container I really live in, seen THROUGH my sole-content island(s) — my @parent off any island
   # wrap, or the figure's parent when I am tilted/scaled (sugar) or explicitly islanded. The ONE
   # look-through idiom for "where does this widget really belong" (§7.5 Bug A/B + latent 2 Option B): a
-  # widget's CLASSIFICATION must not be fooled by transform plumbing. WindowWdgt.isInternal
+  # widget's CLASSIFICATION must not be fooled by transform plumbing. FrameWdgt.isInternal
   # (internal/external skin) and BasementWdgt.holds (basement residency) both classify against THIS, so a
   # tilted or explicitly-islanded widget is judged by its real home, not the island.
   _parentThroughIslands: ->
@@ -2271,7 +2271,7 @@ class Widget extends TreeNode
   # NON_FINITE_GEOMETRY signature is what the boot-smoke / apps-launch gates and the SystemTest runners
   # fail on (see Fizzygum-tests). console.error, NOT throw -- non-fatal, so the guard never itself becomes
   # the crash it guards against. Born from the 2026-07-15 plot-uncollapse NaN
-  # (KeepsRatioWhenInVerticalStackMixin returned undefined -> WindowWdgt `stackHeight += undefined` -> NaN
+  # (KeepsRatioWhenInVerticalStackMixin returned undefined -> FrameWdgt `stackHeight += undefined` -> NaN
   # window height -> NaN dirty rect). (This supersedes the old dormant no-op Point/Rectangle `debugIfFloats`
   # hooks, deleted in the same arc: a per-accessor check there was too hot AND would false-positive on the
   # legitimate fractional values that flow through those accessors; the never-legitimate non-finite case is
@@ -2698,7 +2698,7 @@ class Widget extends TreeNode
   # CONSERVATIVE BY DESIGN: any uncertainty MUST yield nil -- a wrong (too-big) rect silently drops
   # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
   # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
-  # (e.g. WindowWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
+  # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
   opaqueCoveredRect: ->
     # (1) The paint must route through the plain appearance delegation. Widget::paintIntoAreaOrBlit-
     # FromBackBuffer just delegates to @appearance, but nine widget classes override it to draw
@@ -2867,7 +2867,7 @@ class Widget extends TreeNode
 
   _collapseNoSettle: ->
     # IDEMPOTENT -- the SOLE collapse guard (the public collapse() is a thin settle wrapper). A direct caller --
-    # a layout pass that decides collapse by width (WindowWdgt._positionAndResizeChildren,
+    # a layout pass that decides collapse by width (FrameWdgt._positionAndResizeChildren,
     # HorizontalMenuPanelWdgt._reLayoutSelf) -- may collapse a NOT-yet-collapsed child MID-PASS (e.g. the FIRST
     # layout of an under-construction window, now that orphan construction settles -- see
     # docs/archive/orphan-settledness-plan.md), so the re-layout the collapse schedules goes through the PHASE-VALVE
@@ -3726,7 +3726,7 @@ class Widget extends TreeNode
     return @_acceptsDrops
 
   # the SELF drop gate (public, pure, positive — layering/naming convention §3): the base default is
-  # "yes, droppable"; BasementOpenerWdgt overrides to refuse (the old WindowWdgt internal/external override
+  # "yes, droppable"; BasementOpenerWdgt overrides to refuse (the old FrameWdgt internal/external override
   # was replaced by the drag-embed dwell gate — see ActivePointerWdgt ~:1257). (ex-rejectsBeingDropped,
   # polarity-flipped; a base default is required so a widget with no override still defaults droppable.)
   wantsToBeDropped: ->
@@ -3734,8 +3734,8 @@ class Widget extends TreeNode
 
   # Drag-embed PAYLOAD CLASS (docs/specs/drag-embed-interaction-spec.md §4). A payload that
   # requiresDeliberateEmbedding must be ARMED by a dwell (spec §6) before a release embeds it into a
-  # receptive container; plain payloads embed instantly, as today. Base = plain (false); WindowWdgt
-  # overrides true. (Capability, not `isWindow` at call sites — type-test-elimination convention.)
+  # receptive container; plain payloads embed instantly, as today. Base = plain (false); FrameWdgt
+  # overrides true. (Capability, not `isFrame` at call sites — type-test-elimination convention.)
   requiresDeliberateEmbedding: ->
     return false
 
@@ -3876,7 +3876,7 @@ class Widget extends TreeNode
 
     prompt = new CodePromptWdgt(msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
-    world.openWindowWith prompt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith prompt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
 
   
@@ -3891,18 +3891,18 @@ class Widget extends TreeNode
   # the world menu and widget context-menu "inspect" items, the "dev -> inspect"
   # item (MenusHelper), and a text editor's "inspect selection". This is the
   # convenience wrapper that opens the inspector WINDOWED — its content fills a
-  # 560x410 WindowWdgt that supplies the chrome + background + resizer. The
+  # 560x410 FrameWdgt that supplies the chrome + background + resizer. The
   # InspectorWdgt also renders and resizes correctly on its OWN now
   # (`world.add new InspectorWdgt target`): when free-floating it paints its own
   # background and is resized via its @resizer handle. This wrapper stays the
   # default for the menu/inspect paths; the naked path is the additional mode.
   spawnInspector: (inspectee) ->
     inspector = new InspectorWdgt inspectee
-    world.openWindowWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   createConsole: ->
     inspector = new ConsoleWdgt @
-    world.openWindowWith inspector, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith inspector, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
 
   spawnNextTo: (widgetToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?
@@ -4098,7 +4098,7 @@ class Widget extends TreeNode
     if !world.isIndexPage
       menu.addMenuItem "hide", @, "hide"
 
-    if @isWindow?()
+    if @isFrame?()
       menu.addMenuItem "close", @, "close"
     else
       menu.addMenuItem "delete", @, "close"

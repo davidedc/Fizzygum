@@ -1,6 +1,6 @@
 # A TransformFrameWdgt that TRACKS its single content child's SIZE — a "hugging" island whose slot
 # (@bounds) follows the wrapped widget's bounds. This is a CAPABILITY VARIANT of the base island, the
-# same shape as WindowWdgt / SimpleVerticalStackPanelWdgt / ScrollPanelWdgt each being a size-tracking
+# same shape as FrameWdgt / SimpleVerticalStackPanelWdgt / ScrollPanelWdgt each being a size-tracking
 # container: in this layout architecture the tracking-container capability is a CLASS, never a per-widget
 # flag (a freefloating child's _invalidateLayout climbs THROUGH to its parent iff the parent DEFINES
 # _reLayoutChildren — the freefloating gate in Widget._invalidateLayout — a method-existence check, i.e. class identity).
@@ -27,7 +27,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # resize classification exactly as the base fixed-figure island's.
   #
   # (up-edge endgame V1-c, docs/archive/upedge-endgame-plan.md §9) SYNC-SETTLE a PENDING content before the
-  # re-hug — the landed window→stack P2 shape (WindowWdgt._positionAndResizeChildren): parent-before-
+  # re-hug — the landed window→stack P2 shape (FrameWdgt._positionAndResizeChildren): parent-before-
   # child order walks ME before my free-floating content, so without this the re-hug no-ops on the
   # content's STALE bounds and the content's own later settle re-arms me through the settle-time
   # up-edge — a wasted visit + a second one, per drop/resize gesture. Settling the content HERE is

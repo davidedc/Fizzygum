@@ -21,7 +21,7 @@ class BasementWdgt extends BoxWdgt
   colloquialName: ->
     "Basement"
 
-  closeFromContainerWindow: (containerWindow) ->
+  closeFromContainerFrame: (containerWindow) ->
     # remove ourselves from
     # the window
     @removeFromTree()
@@ -50,7 +50,7 @@ class BasementWdgt extends BoxWdgt
 
 
     # resizer -- attach, then record (@resizer stays nil during its own add; byte-identical to the old
-    # `@resizer = new HandleWdgt @` whose in-constructor add ran while @resizer was nil; see WindowWdgt).
+    # `@resizer = new HandleWdgt @` whose in-constructor add ran while @resizer was nil; see FrameWdgt).
     resizer = new HandleWdgt
     @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
     @resizer = resizer
@@ -145,7 +145,7 @@ class BasementWdgt extends BoxWdgt
   # is w currently sitting in the basement's contents? §7.5 Bug B (model a) + latent 2 (Option B): a
   # tilted/scaled or explicitly-islanded widget is re-homed to the basement AS ITS FIGURE (w.parent is then
   # the island, whose parent is the contents), so classify against w's REAL container through any
-  # sole-content island wrap -- the same look-through idiom WindowWdgt.isInternal uses -- else holds(w)
+  # sole-content island wrap -- the same look-through idiom FrameWdgt.isInternal uses -- else holds(w)
   # would go false while w is demonstrably in the basement.
   holds: (w) ->
     p = w._parentThroughIslands()

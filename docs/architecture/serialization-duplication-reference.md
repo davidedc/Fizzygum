@@ -107,7 +107,7 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
   "build": "…",                      // build stamp, informational
   "root": 0,                         // index into objects
   "objects": [
-    { "class": "WindowWdgt", "iid": 1, "memberships": [],
+    { "class": "FrameWdgt", "iid": 1, "memberships": [],
       "props": { "labelContent": "my window", "parent": null,
                  "children": {"$r": 3}, "color": {"$r": 7} } },
     { "class": "$Array",  "items": [ {"$r": 4}, {"$r": 5} ] },

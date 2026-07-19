@@ -20,7 +20,7 @@ class GenericCompositeIconWdgt extends Widget
   _resizeToWithoutSpacing: ->
     @_applyExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
-  initialiseDefaultWindowContentLayoutSpec: ->
+  initialiseDefaultFrameContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
 

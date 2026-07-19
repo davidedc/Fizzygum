@@ -11,7 +11,7 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
 
 - `SpreadsheetApp.coffee` — the desktop launcher/opener (`IconicDesktopSystemWindowedApp`
   subclass; `slot: nil` ⇒ a fresh window per launch, multiple sheets allowed). `buildWindow`
-  wraps a `SpreadsheetWdgt` in a window via `world.openWindowWith`. Registered at the WorldWdgt
+  wraps a `SpreadsheetWdgt` in a window via `world.openFrameWith`. Registered at the WorldWdgt
   boot site into the desktop "examples" folder.
 - `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1/F6): it paints
   NOTHING (nil appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
@@ -376,7 +376,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   the partial count would address a column PAST the sheet edge there. `defaultViewportCols/
   Rows` (6×14) only size the default open extent.
 - **FILL-class window content by DELETION**: the pre-F6 fixed-size overrides died; the
-  default `WindowContentLayoutSpec` (grow 1, `canSetHeightFreely` true) + the BASE Widget
+  default `FrameContentLayoutSpec` (grow 1, `canSetHeightFreely` true) + the BASE Widget
   sizing protocol are exactly right. The default open size is PINNED by `SpreadsheetApp`
   (window 452×336 − 36 chrome = 442×300 content — the pre-F6 on-screen window was ALWAYS
   452×336: the fixed content overrode the old passed 334, so the pin changes no pixel).

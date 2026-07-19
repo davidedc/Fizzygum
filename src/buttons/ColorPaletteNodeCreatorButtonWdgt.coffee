@@ -5,7 +5,7 @@ class ColorPaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWm = new WindowWdgt new ColorPaletteWdgt
+    switcherooWm = new FrameWdgt new ColorPaletteWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm
 

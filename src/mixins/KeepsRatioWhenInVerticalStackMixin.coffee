@@ -4,7 +4,7 @@
 #      the clock/spreadsheet/holder/composite-icon have their own square/grid twins), and
 #   2. a grow POLICY chosen by placement role:
 #      - as CONTENT that should stay size-stable: an EXPLICIT grow 0 declared in the
-#        content's initialiseDefaultWindowContentLayoutSpec override (the clock and
+#        content's initialiseDefaultFrameContentLayoutSpec override (the clock and
 #        IconWdgt; the spreadsheet is a grow-1 fill since F6) — the capture's oversize
 #        trample (wider-than-column ⇒ grow 1, column-tracking) is the one designed
 #        exception and survives the pin;
@@ -42,7 +42,7 @@ KeepsRatioWhenInVerticalStackMixin =
     preferredExtentForWidth: (availW) ->
       new Point availW, Math.round availW * (@height()/@width())
 
-    _reactToHolderWindowGrabbed: (whereFrom) ->
+    _reactToHolderFrameGrabbed: (whereFrom) ->
       # capability query replaces `whereFrom instanceof SimpleVerticalStackPanelWdgt`
       # (type-test-elimination campaign)
       if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
@@ -58,9 +58,9 @@ KeepsRatioWhenInVerticalStackMixin =
           @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
           @parent._moveWithin world
 
-    _reactToHolderWindowDropped: (whereIn) ->
+    _reactToHolderFrameDropped: (whereIn) ->
       # capability query replaces `(whereIn instanceof SimpleVerticalStackPanelWdgt) and
-      # !(whereIn instanceof WindowWdgt)` (type-test-elimination campaign)
+      # !(whereIn instanceof FrameWdgt)` (type-test-elimination campaign)
       if whereIn?.imposesRatioConstraintOnDroppedChildren?()
         @_constrainToRatio()
 

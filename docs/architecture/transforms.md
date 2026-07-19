@@ -399,7 +399,7 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
   (the content still references its island). The filename stays derived from the content.
 
 Related look-throughs: `_parentThroughIslands` (container-side, for classification like
-`WindowWdgt.isInternal` / basement residency) and `_dropPolicyProxy` (payload-side, so a tilted
+`FrameWdgt.isInternal` / basement residency) and `_dropPolicyProxy` (payload-side, so a tilted
 window is seen as a window by drop policy). Full serialization internals:
 `docs/architecture/serialization-duplication-reference.md`.
 

@@ -62,8 +62,8 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
   isContentSizing: ->
     true
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.DONT_MIND , WindowContentLayoutSpec.DONT_MIND, 1
+  initialiseDefaultFrameContentLayoutSpec: ->
+    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND , FrameContentLayoutSpec.DONT_MIND, 1
 
   checkIfTextContentWasModifiedFromTextAtStart: ->
     @textWdgt.checkIfTextContentWasModifiedFromTextAtStart()

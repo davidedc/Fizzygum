@@ -1,4 +1,4 @@
-class FolderWindowWdgt extends WindowWdgt
+class FolderWindowWdgt extends FrameWdgt
 
 
   constructor: (@labelContent, @closeButton, @contents, @internal = false) ->
@@ -9,7 +9,7 @@ class FolderWindowWdgt extends WindowWdgt
   representativeIcon: ->
     new GenericShortcutIconWdgt new FolderIconWdgt
 
-  closeFromWindowBar: ->
+  closeFromFrameBar: ->
     if !world.anyReferenceToWdgt @
       prompt = new SaveShortcutPromptWdgt @, @
       prompt.popUpAtHand()

@@ -1,4 +1,4 @@
-class WindowContentsPlaceholderText extends TextWdgt
+class FrameContentsPlaceholderText extends TextWdgt
 
   constructor: ->
 
@@ -10,6 +10,6 @@ class WindowContentsPlaceholderText extends TextWdgt
     @changed()
 
 
-  initialiseDefaultWindowContentLayoutSpec: ->
-    @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.DONT_MIND , WindowContentLayoutSpec.DONT_MIND, 1
+  initialiseDefaultFrameContentLayoutSpec: ->
+    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND , FrameContentLayoutSpec.DONT_MIND, 1
 

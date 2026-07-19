@@ -10,8 +10,8 @@ class CloseIconButtonWdgt extends IconButtonWdgt
 
   actOnClick: ->
     # Ask the container what its bar's close button does -- a window handles it
-    # (closeFromWindowBar or close, per its contents); any other container of a
-    # close button just closes. Was an `instanceof WindowWdgt` branch.
+    # (closeFromFrameBar or close, per its contents); any other container of a
+    # close button just closes. Was an `instanceof FrameWdgt` branch.
     # (type-test-elimination campaign)
     if @parent?
       if @parent.closeButtonInBarPressed?

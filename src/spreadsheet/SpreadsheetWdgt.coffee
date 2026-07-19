@@ -154,7 +154,7 @@ class SpreadsheetWdgt extends Widget
     @minimumExtent = new Point (@headerColWidth + @colWidth), (@headerRowHeight + @rowHeight)
     @_applyExtent @_defaultExtent()
     # materialise the widget chrome, then the viewport's grid of cell widgets (NoSettle: the
-    # enclosing openWindowWith settles once — the DegreesConverterApp orphan-construction idiom;
+    # enclosing openFrameWith settles once — the DegreesConverterApp orphan-construction idiom;
     # a deserialize/duplicate skips the constructor and restores/copies the cells instead, which
     # _reindexCellsNoSettle then adopts through the same two calls — no double grid).
     @_buildChromeNoSettle()
@@ -164,10 +164,10 @@ class SpreadsheetWdgt extends Widget
   colloquialName: -> "spreadsheet"
 
   # FILL-class window content (F6 — this DELETED the pre-F6 fixed-size overrides: the
-  # initialiseDefaultWindowContentLayoutSpec grow-0/height-frozen flip, the fixed
+  # initialiseDefaultFrameContentLayoutSpec grow-0/height-frozen flip, the fixed
   # preferredExtentForWidth and _setWidthSizeHeightAccordingly, and _gridWidth/_gridHeight).
   # The sheet now takes whatever extent the window grants — the default
-  # WindowContentLayoutSpec is already grow 1 + canSetHeightFreely true, and the BASE Widget
+  # FrameContentLayoutSpec is already grow 1 + canSetHeightFreely true, and the BASE Widget
   # protocol is exactly the fill-content protocol (V1): _setWidthSizeHeightAccordingly
   # applies the granted width and hands the height back, _applyHeight grants the free height,
   # preferredExtent answers the applied extent (which feeds the first-placement window hug
@@ -233,7 +233,7 @@ class SpreadsheetWdgt extends Widget
   # _buildGridNoSettle: cells follow the view origin, chrome doesn't). IDEMPOTENT: every
   # piece is keyed (panel field / "kind:index") and only built when missing — never a double
   # grid. NoSettle: runs from the constructor before the sheet is placed (the enclosing
-  # openWindowWith owns the one settle), inside the re-index's enclosing settle on
+  # openFrameWith owns the one settle), inside the re-index's enclosing settle on
   # restore/duplicate, inside scroll's settle, and from the _reLayout arrange.
   _buildChromeNoSettle: ->
     unless @_cellsPanel?
@@ -310,7 +310,7 @@ class SpreadsheetWdgt extends Widget
   #     CURRENT value routed in (an off-screen record kept recomputing, so a scrolled-in cell
   #     is instantly correct, no catch-up).
   # NoSettle core: runs inside the settle its public caller (wheel / processKeyDown / the
-  # constructor's enclosing openWindowWith / the restore gesture) owns.
+  # constructor's enclosing openFrameWith / the restore gesture) owns.
   _reconcileViewportNoSettle: ->
     # ONE bound for membership AND the materialise loops (F6): the origin-clamped visible
     # counts. For pass-1 membership the origin clamp is a no-op (an indexed cell's address is

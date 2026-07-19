@@ -17,7 +17,7 @@ class IconWdgt extends Widget
   _resizeToWithoutSpacing: ->
     @_applyExtent @appearance.calculateRectangleOfIcon().extent()
 
-  initialiseDefaultWindowContentLayoutSpec: ->
+  initialiseDefaultFrameContentLayoutSpec: ->
     super
     @layoutSpecDetails.canSetHeightFreely = false
     # FIXED (grow 0): an icon keeps its own natural size as window content rather than

@@ -201,7 +201,7 @@ Every notification is `(event × perspective × phase)`:
 | **pre-hook** — `_`, settle-neutral | `_beforeBeing<Event>ed(counterparty)` | `_beforeChild<Event>ed(child)` |
 | **post-hook** — `_`, settle-neutral | `_reactToBeing<Event>ed(counterparty)` | `_reactToChild<Event>ed(child)` |
 
-Plus the **third-perspective** hooks `_reactToHolderWindow<Event>(…)` (a widget reacting to its holder window's event).
+Plus the **third-perspective** hooks `_reactToHolderFrame<Event>(…)` (a widget reacting to its holder window's event).
 
 Rules:
 - **Tier = `_`** for every hook (an internal override protocol); **gates are public + pure + positive** (queried by
@@ -238,7 +238,7 @@ predicates, the markers, and the gate mechanics live in `docs/architecture/lint-
 | **[I]** `__` leaf no-orchestration (HARD-FAIL) | inside a `__` method, an `@`-self call to the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter → FAIL. A DENYLIST (§1), `@`-self-scoped; the runtime audit (§5) covers dynamic dispatch. |
 | **[J]** callback settle-neutrality (HARD-FAIL) | a `_reactTo*`/`_before*` hook calling `_settleLayoutsAfter` in its OWN body → FAIL (the dispatcher owns the one settle). *(Textual rule; a constructor reached via dynamic dispatch FROM a callback is the runtime audit's concern, §5.2 — which now PERMITS the orphan-construction case, since it auto-defers.)* |
 | **[K]** apply-2×2 name-consistency (HARD-FAIL) | the surviving statically-sound NEGATIVE (post-Tier-B, REACT × DISPATCH): a `_apply*Base` override-bypass twin must not fire the container re-fit seam nor DISPATCH to its polymorphic `_apply*` sibling (routing an arrange apply back through the override it exists to bypass); a `_commit*AndNotify` notify-only corner must not react (`changed`/`_reLayout*`). The old POSITIVE "every `*AndNotify` reaches the seam" is RETIRED with the seam (it was the runtime audit's job — §5). *(The anti-seam half is VACUOUS — the `_announce*` seam and the `_commit*AndNotify` corner were deleted 2026-07-01 — kept only as belt-and-braces beside rule [N]. Tier B (2026-07-02) renamed `_apply*AndNotify` → the bare polymorphic `_apply*` and re-derived this row under the truthful names; `AndNotify` now joins the [M] retired-fragment ban, §3.)* |
-| **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderWindow)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
+| **[L]** callback-shape (HARD-FAIL) | at each def, a `_reactTo*`/`_before*` name MUST match `_(reactTo\|before)(Being\|Child\|HolderFrame)<Event>` and carry no `NoSettle`; the legacy fragments (`childX` / `justBeen` / `iHaveBeen` / `aboutTo` / `prepareTo`) are banned outright. |
 | **[M]** retired-fragment ban (HARD-FAIL) | a method DEF named with a retired geometry/structural prefix — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw` → FAIL, unconditionally in src (the raw-PIXEL accessors `rawPixelInfo` / `rawPixelHash` / `rawRGBA` live in the tests-repo harness, which the gate never scans — the old allowlist for them never matched anything and was removed). `full[A-Z]` is NOT banned — `full*` remains a legitimate SUBTREE-AWARE vocabulary (`fullChanged` / `fullBounds` / `fullPaintInto` / …). |
 | **[N]** seam-verb DEF ban (HARD-FAIL) | a method DEF named `_announce…ToContainer` (`/^_announce\w*ToContainer$/`) → FAIL — the notify-by-mutation re-fit seam was deleted 2026-07-01 (§2.6) and replaced by the settle-time up-edge, so this bans reviving the retired announce-up verbs on the DEF side (the CALL side is already covered by the [I]/[K] denylists). Analogous to [M]'s retired-fragment ban. |
 | **[O]** `*Coalesced` caller allowlist (HARD-FAIL) | a `*Coalesced` entrypoint (`_setMaxDimCoalesced` / `_setExtentCoalesced` / `_moveToCoalesced` / `_setWidthCoalesced` / `_setHeightCoalesced`) DEFERS its layout SETTLE to the ONE end-of-cycle flush (the field write is synchronous; only the flush is deferred) — byte-identical, hence sound, ONLY for a per-event STREAM handler (drag/scroll/key burst) that never reads back the SETTLED layout mid-cycle. So a `[@.]…Coalesced` CALL from a method whose name is NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}` — both `HandleWdgt` and `StackElementsSizeAdjustingWdgt` name their drag handler that) → FAIL; a discrete/programmatic caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them). The `_coalescedDeclarationDepth`/`auditUndeclaredEndOfCycle` machinery enforces the CONVERSE (end-of-cycle mutations are *declared*), so this closes the caller side it does not cover. (Tier C, 2026-07-02.) |
@@ -281,7 +281,7 @@ the seam (`_announce*`) + the react steps across all classes, and:
 ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It catches an INDIRECT leak the
 static [J] cannot see (a callback → some method → an attached settle). **It PERMITS an ORPHAN-receiver
 `_settleLayoutsAfter` reached in a callback** (the all-constructors-settle campaign, 2026-06-30): that is a constructor
-settling its OWN orphan — e.g. the chrome buttons `WindowWdgt._reactToChildDropped → _buildAndConnectChildrenNoSettle →
+settling its OWN orphan — e.g. the chrome buttons `FrameWdgt._reactToChildDropped → _buildAndConnectChildrenNoSettle →
 new …IconButtonWdgt`, whose ctor calls the settling `@_buildAndConnectChildren()`. Such a call provably takes the
 in-flush+orphan auto-defer branch (`return coreThunk() if @isOrphan()`) — it records the change, never flushes/recurses
 — so flagging it was a false positive (the gate's old premise "a nested settle in a callback would re-enter/throw" is
@@ -307,7 +307,7 @@ kept distinct, each named for what it is:
   plan) this is the SINGLE shared home of pop-up behaviour: `MenuWdgt` and `PromptWdgt` (with its
   per-value-type subclasses) each **compose** a `MenuRowsPanelWdgt` for their rows and **extend**
   `PopUpWdgt` for their menu-ness, instead of re-implementing pop-up / pin / close.
-- **`WindowWdgt`** (the `FrameWdgt`-to-be) — `Panel` + **chrome / identity**; its internal-vs-external skin
+- **`FrameWdgt`** (the `FrameWdgt`-to-be) — `Panel` + **chrome / identity**; its internal-vs-external skin
   is DERIVED from parentage (the drag-embed arc), so "becomes a window when embedded" is already automatic —
   there is no mode flag and no manual switch.
 - **`StretchableWidgetContainerWdgt`** — the stretchable-panel role.

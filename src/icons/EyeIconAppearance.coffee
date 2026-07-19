@@ -1,5 +1,5 @@
 # The "view mode" eye shown in a window's title bar when its content has
-# editing disabled (see EditIconButtonWdgt / WindowWdgt.showViewModeInBar).
+# editing disabled (see EditIconButtonWdgt / FrameWdgt.showViewModeInBar).
 # Same single-fill idiom as PencilIconAppearance: the glyph takes the
 # widget's color, so the existing yellow/clear recoloring keeps working.
 

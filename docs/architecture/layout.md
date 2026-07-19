@@ -113,10 +113,10 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayout(newBounds)` | the per-node **arrange**: position self, apply own extent, place corner/edge-internal children, mark fixed, re-lay any child the arrange moved |
 | `_reLayoutSelf` | self-only heal hook (empty on base `Widget`); fired by `_applyExtentBase` when a widget's own extent commits |
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
-| `_positionAndResizeChildren` | the actual measure-and-place-children body (per container: `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`, `WindowWdgt`) |
+| `_positionAndResizeChildren` | the actual measure-and-place-children body (per container: `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`, `FrameWdgt`) |
 
 Only three classes define `_reLayoutChildren` — `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`,
-`TrackingTransformFrameWdgt` — plus `WindowWdgt`, which inherits it from `SimpleVerticalStackPanelWdgt`. Anything
+`TrackingTransformFrameWdgt` — plus `FrameWdgt`, which inherits it from `SimpleVerticalStackPanelWdgt`. Anything
 without it is not a size-tracking container, and the re-fit machinery (§3) is a no-op on it.
 
 ---
@@ -182,7 +182,7 @@ A container that must size itself to its content therefore cannot ask "how big w
 
 Every width→height widget defines a side-effect-free
 **`preferredExtentForWidth(availW) → Point`** — "what extent would I take at this width, without touching `@bounds`."
-It is overridden on `TextWdgt`, `SimpleVerticalStackPanelWdgt`, `WindowWdgt`, `AnalogClockWdgt`,
+It is overridden on `TextWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `AnalogClockWdgt`,
 `KeepsRatioWhenInVerticalStackMixin`, `TransformFrameWdgt` (and more); the base `Widget` default returns current
 height (width-invariant). A container measures its subtree with `Widget.subWidgetsMergedPreferredBounds` — the pure
 twin of the applied-bounds `subWidgetsMergedFullBounds`.
@@ -203,7 +203,7 @@ the shared `_getRecursiveStackDim` walker; the base `_reLayout` distributes unde
 max-margin grow). There is no add-time proportional state and no width↔height cycle.
 
 **hug vs grow.** `grow 0` is a size-stability choice (a size-stable window content declares it in its
-`initialiseDefaultWindowContentLayoutSpec` override — e.g. the clock and `IconWdgt`; the spreadsheet is a grow-1
+`initialiseDefaultFrameContentLayoutSpec` override — e.g. the clock and `IconWdgt`; the spreadsheet is a grow-1
 fill); `grow 1` fills. A
 container-owned window sizes like a captured one from birth — the container owns its width; the free desktop-window
 hug is desktop behaviour. The aspect contract (`KeepsRatioWhenInVerticalStackMixin`) is documentation now, not a

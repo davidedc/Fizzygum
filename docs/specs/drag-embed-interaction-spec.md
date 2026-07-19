@@ -10,7 +10,7 @@ carry the detail):
   A reluctant, or merely unarmed, release now just lands the payload on the world at the release point (§7). So
   decision 7's "one interactable element (the pill)" is moot — EVERY drag visual is now an ephemeral.
 - **Internal/external SWITCH BUTTON deleted; eject button never built; pencil↔eye glyph swap deferred** (Phase 5,
-  slimmed). A window's internal-ness is DERIVED from its parentage (`WindowWdgt.isInternal`) and the whole-window
+  slimmed). A window's internal-ness is DERIVED from its parentage (`FrameWdgt.isInternal`) and the whole-window
   skin (body + title bar) is re-derived on every re-parenting; the manual switch is deleted. Drag-OUT already
   ejects a nested window (Phase 3's rule flip), so there is no eject button. The pencil↔eye edit-mode glyph was
   cut from this arc and extracted to its own owner-requested follow-up plan (separate, not part of this spec).
@@ -80,15 +80,15 @@ how much the destination has to lose.
 
 | Mechanism | Where (2026-07-05) |
 |---|---|
-| Self drop-gate: `wantsToBeDropped()` → `@internal`; base default true | `WindowWdgt.coffee:256` · `Widget.coffee:2910` |
+| Self drop-gate: `wantsToBeDropped()` → `@internal`; base default true | `FrameWdgt.coffee:256` · `Widget.coffee:2910` |
 | Drop routing: if `!wantsToBeDropped()` → target forced to `world`, else climb | `ActivePointerWdgt.drop`, `ActivePointerWdgt.coffee:247-287` |
 | Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild` | `ActivePointerWdgt.dropTargetFor` `:154-158`, `topWdgtUnderPointer` `:87-110` |
 | Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) | `Widget.coffee:2904-2917` |
-| Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `WindowWdgt.editButtonInBarPressed` `:228` → `StretchableEditableWdgt.editButtonPressedFromWindowBar` `:111-115` |
+| Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameWdgt.editButtonInBarPressed` `:228` → `StretchableEditableWdgt.editButtonPressedFromFrameBar` `:111-115` |
 | Edit-off cascades a drops-lock into the slide's container + kills tools palette | `StretchableEditableWdgt._disableDragsDropsAndEditingNoSettle` `:172-192` |
-| Pencil state shown by color only | `WindowWdgt.makePencilYellow/makePencilClear` `:536-548` |
-| Internal/external switch + `makeInternal`/`makeExternal` (re-skin, unlock, reparent to world) | `WindowWdgt.coffee:177-202, 525-534` |
-| Windows accept drops only while EMPTY ("Drop a widget in here" placeholder) | `WindowWdgt.coffee:398` (enable) · `:421` (disable on child landed) · `WindowContentsPlaceholderText` |
+| Pencil state shown by color only | `FrameWdgt.makePencilYellow/makePencilClear` `:536-548` |
+| Internal/external switch + `makeInternal`/`makeExternal` (re-skin, unlock, reparent to world) | `FrameWdgt.coffee:177-202, 525-534` |
+| Windows accept drops only while EMPTY ("Drop a widget in here" placeholder) | `FrameWdgt.coffee:398` (enable) · `:421` (disable on child landed) · `FrameContentsPlaceholderText` |
 | Drag-hover hooks exist, dispatched every move, **implemented by nobody** | `dispatchEventsFollowingMouseMove`, `ActivePointerWdgt.coffee:933-963` (`mouseEnterfloatDragging`/`mouseLeavefloatDragging`) |
 | Grab origin recorded at grab (return-anchor candidate) | `ActivePointerWdgt.coffee:196` (`grabOrigin = aWdgt.situation()`) |
 | Existing dwell precedents: 500ms autoscroll (wall-clock — the documented anomaly, do NOT copy) · 300ms multi-click (event-time — the template) | `ScrollPanelWdgt.coffee:709` · `doubleClickWindowMs`, `ActivePointerWdgt.coffee:28` |
@@ -115,9 +115,9 @@ they show a lock cue, and a release near them lands the payload visibly OFFSET w
 ## §4 — Payload classes × destination tiers
 
 **Payload classes.**
-- **Window class** (deliberate-embed): any `WindowWdgt` (and subclasses). Protocol: a new predicate on Widget,
-  suggested `requiresDeliberateEmbedding()` — base returns false, `WindowWdgt` overrides true. (Do NOT key off
-  `isWindow` at call sites — capability, not type test, per the type-test-elimination convention.)
+- **Window class** (deliberate-embed): any `FrameWdgt` (and subclasses). Protocol: a new predicate on Widget,
+  suggested `requiresDeliberateEmbedding()` — base returns false, `FrameWdgt` overrides true. (Do NOT key off
+  `isFrame` at call sites — capability, not type test, per the type-test-elimination convention.)
 - **Plain class**: everything else (icons, text snippets, composites, sub-menus, clocks…). Behavior unchanged
   from today in every accept case.
 
@@ -125,7 +125,7 @@ they show a lock cue, and a release near them lands the payload visibly OFFSET w
 
 | Tier | Members | Window payload | Plain payload | Visual while hovered (drag in progress) |
 |---|---|---|---|---|
-| **Eager** | empty `WindowWdgt` (placeholder showing), `SimpleDropletWdgt`, `LayoutElementAdderOrDropletWdgt` | dwell-to-arm (no exception — empty windows are exactly where accidental window-nesting happens) | instant accept | bright invite highlight, immediate |
+| **Eager** | empty `FrameWdgt` (placeholder showing), `SimpleDropletWdgt`, `LayoutElementAdderOrDropletWdgt` | dwell-to-arm (no exception — empty windows are exactly where accidental window-nesting happens) | instant accept | bright invite highlight, immediate |
 | **Willing** | edit-mode `StretchableEditableWdgt` family (slides, dashboards, ReconfigurablePaint), edit-mode `SimpleDocumentWdgt`, edit-mode `PanelWdgt`/stacks/scroll panels (anything whose `wantsDropOfChild` is true) | dwell-to-arm | instant accept | candidate highlight; ring while charging (window payload only) |
 | **Reluctant** | the same widgets in VIEW mode (`providesAmenitiesForEditing` true, `dragsDropsAndEditingEnabled` false) | never accepts mid-drag → lock cue; land-and-offer on release (§8) | same | neutral outline + lock badge + eye pulses amber |
 | **Refusing** | inspector panes, plot glass, full windows' chrome, anything `_acceptsDrops` false without editing amenities | inert (no cue) | inert | none |
@@ -161,7 +161,7 @@ same climb `dropTargetFor` does at release, so move-time preview and release-tim
   widget while repositioning inside an armed slide WILL disarm; accepted simplicity — the always-visible
   highlight + label make the current candidate unambiguous, which is the actual safety property.
 - Special-case preserved: `BasementOpenerWdgt` keeps its `wantsToBeDropped`-style world-forcing; the base
-  `wantsToBeDropped` protocol survives for such widgets even though `WindowWdgt` stops overriding it.
+  `wantsToBeDropped` protocol survives for such widgets even though `FrameWdgt` stops overriding it.
 
 ## §6 — State machine + timing constants (window payloads; plain payloads skip CHARGING and are armed on entry)
 
@@ -293,7 +293,7 @@ intent, at zero cost to deliberate move-over users (who click next and never par
 ## §10 — Title-bar changes (Phase 5 as-built — SLIMMED)
 
 The internal/external switch button is DELETED outright (not repurposed). A window's internal-ness is now
-DERIVED from parentage (`WindowWdgt.isInternal` = "am I nested" = my parent is neither the world nor the hand),
+DERIVED from parentage (`FrameWdgt.isInternal` = "am I nested" = my parent is neither the world nor the hand),
 and the whole-window skin (body appearance + title-bar appearance/colors) FOLLOWS it automatically on every
 re-parenting (`_reactToBeingAdded` re-applies it, skipping the transient pick-up by the hand): drag a window into
 a container → flat internal skin; out to the desktop → boxy external skin. So the manual toggle has no job left.
@@ -307,7 +307,7 @@ byte-identical to the old stored-flag path, because the full skin re-derives to 
    `KeepsRatioWhenInVerticalStackMixin.holderWindowMadeIntoExternal`. **No eject button:** dragging a nested
    window OUT to the desktop already ejects it (Phase 3's rule flip — an unarmed release over the world detaches;
    sticky re-embed only keeps it nested when released over its own container). The `internal` /
-   `alwaysShowInternalExternalButton` constructor args (4th/5th at every `new WindowWdgt …, true, true` site)
+   `alwaysShowInternalExternalButton` constructor args (4th/5th at every `new FrameWdgt …, true, true` site)
    become INERT (retirement is a deferred sweep); deserialization ignores any stored `internal`.
 2. **Edit button (pencil) unchanged in kind, moved in place.** NO pencil↔eye glyph swap (owner cut it 2026-07-06);
    `makePencilYellow`/`makePencilClear` stay (yellow = editing, clear = view). With the switch gone, the pencil
@@ -329,7 +329,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 | Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the candidate's `clippedThroughBounds`; accent tone (suggest pencil-yellow family `248,188,58`, reduced alpha for willing / full for eager). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
 | Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; under `Automator.animationsPacingControl` follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
-| Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `WindowWdgt`/button rendering, and vanishes by undeclaration | Neutral gray outline on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |
+| Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | Neutral gray outline on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |
 | §9 teaching hint | **EPHEMERAL — text type.** Non-interactability is exactly right here: it is click-THROUGH (the next click acts on the world AND dismisses it — the pointer-down handler drops the declaration) | One line near the landing; no buttons, no timeout |
 | §8 land-and-offer pill | **NOT an ephemeral — it has buttons.** Interactability violates the ephemeral definition; it is a real transient widget of the menu family (menus already own dismiss-on-outside-click) | See §8 |
 | Refused-landing nudge | **Neither** — a transient movement of the real landed widget (2-frame quantized), not an overlay | OFFSET_LANDING_PX displacement (§7) |
@@ -441,4 +441,4 @@ anchor table verified on `b91cd9b5`.
   fill the gap-credit (spike S2 — THE critical empirical unknown, fallback pre-selected).
 - Deferred, deliberately: ghost/preview insertion (feedforward); "embed into…" menu verb; modifier-key
   dwell-skip accelerator; the size sanity check (§6); long-press-to-tear (rejected for now by owner decision 2);
-  retiring the `WindowWdgt` constructor's `internal`/`alwaysShowInternalExternalButton` args (follow-up sweep).
+  retiring the `FrameWdgt` constructor's `internal`/`alwaysShowInternalExternalButton` args (follow-up sweep).

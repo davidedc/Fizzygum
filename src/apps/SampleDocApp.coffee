@@ -33,7 +33,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw.addNormalParagraph "Text documents (or simply: docs) don't just contain text or images: they can embed any widget."
     sdspw.addNormalParagraph "For example, here is an interactive 3D plot:\n"
 
-    plot3D = new WindowWdgt new Example3DPlotWdgt
+    plot3D = new FrameWdgt new Example3DPlotWdgt
     plot3D._applyExtent new Point 400, 255
     # "_constrainToRatio" makes it so the plot in the doc gets taller
     # as the page is made wider
@@ -57,7 +57,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
     sdspw.addNormalParagraph "What else could be added? Anything! Scripts, maps, maps inside scrolling views, maps with graphs, slides, other docs, and on and on and on..."
 
-    wm = new WindowWdgt simpleDocument
+    wm = new FrameWdgt simpleDocument
     wm._applyExtent new Point 331, 545
     wm._applyMoveTo new Point 257, 110
     world.add wm
@@ -70,7 +70,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     # when closed. Just close it instead.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerWindow = (containerWindow) ->
+    simpleDocument.closeFromContainerFrame = (containerWindow) ->
       containerWindow.close()
 
     return wm
