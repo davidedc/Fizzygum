@@ -7,13 +7,10 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
     new PatchProgrammingIconWdgt
 
 
-  _createToolsPanelNoSettle: ->
-    # tools: the shared palette class (born locked -- see ToolbarWdgt), the SAME
-    # list the floating components palette summons (§5.C one-variant rule)
-    @toolsPanel = new PatchProgrammingToolbarWdgt
-    @_addNoSettle @toolsPanel
-    @dragsDropsAndEditingEnabled = true
-    @_invalidateLayout()
+  # the frame docks this variant in its toolbar-slot (Frame-model plan §5.C) --
+  # the SAME list the floating components palette summons (one-variant rule)
+  buildToolbar: ->
+    new PatchProgrammingToolbarWdgt
 
   # (_createNewStretchablePanelNoSettle is inherited from StretchableEditableWdgt — this class's
   # createNewStretchablePanel override was a byte-identical copy of the base and was deleted in the

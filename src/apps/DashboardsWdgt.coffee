@@ -7,12 +7,11 @@ class DashboardsWdgt extends StretchableEditableWdgt
     new DashboardsIconWdgt
 
 
-  _createToolsPanelNoSettle: ->
-    # tools: the shared palette class (born locked -- see ToolbarWdgt)
-    @toolsPanel = new DashboardsToolbarWdgt
-    @_addNoSettle @toolsPanel
-    @dragsDropsAndEditingEnabled = true
-    @_invalidateLayout()
+  # the frame docks this variant in its toolbar-slot (Frame-model plan §5.C);
+  # editing is on from birth (the Widget-level dragsDropsAndEditingEnabled
+  # default), so the frame starts the toolbar shown
+  buildToolbar: ->
+    new DashboardsToolbarWdgt
 
   # (_createNewStretchablePanelNoSettle is inherited from StretchableEditableWdgt — this class's
   # createNewStretchablePanel override was a byte-identical copy of the base and was deleted in the

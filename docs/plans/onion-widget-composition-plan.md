@@ -513,9 +513,31 @@ genuinely needs a container widget, B designs it with that consumer in hand.
 - **C2 — frame slot + TEXT migration.** All of C-ii on `FrameWdgt`; `SimpleDocumentWdgt` migrated.
   Fallout: document-editing tests (strip 35→40 + ToolPanel styling + hierarchy-menu rows over toolbar
   buttons — grep tests for old-chain label strings per A1 case law).
+  **⚠⚠ CENSUS CASE LAW from execution (two red census runs; applies to ANY scroll-panel CHROME child,
+  incl. C3's left-docks — both fixes are in and BOTH are needed):** (1) chrome is driven SYNCHRONOUSLY
+  via `_reLayout bounds` (the `@bar` drive) — a bare `_applyMoveTo`/`_applyExtent` drive commits the
+  viewport but re-fits nothing and no settle re-lay follows, so a frame-width change leaves the inner
+  grid at a stale wrap height (census mover: a 2-row 75px ToolPanel frame inside the 40px strip after
+  the battery's narrow→wide resize); (2) the base scroll-panel re-fit is MEASURE-THEN-COMMIT (it reads
+  the items' APPLIED bounds, commits the contents frame, only then re-places), so a re-WRAP converges
+  one pass late — `ToolbarWdgt._positionAndResizeChildren` re-places the grid at the applied viewport
+  width FIRST (one-pass fixed point).
+  **COVERAGE NOTE:** no suite test displays a SimpleDocumentWdgt edit-mode toolbar (the
+  macroSimpleDocument* family drives a bare `SimpleDocumentScrollPanelWdgt`), so the suite is
+  byte-green across C2 by GAP, not by proof — functional evidence = the apps smoke + a headless probe
+  (Docs opens with the docked strip; eye hides; pencil restores pixel-stably). A macro guard test for
+  the slot flip (the `macroDrawingsMakerReEnableEditing` byte-idempotence pattern) is follow-on work.
+  **✅ C2 LANDED 2026-07-19 — gauntlet 11/11, census 0 movers, zero recaptures, zero tests-repo
+  changes.**
 - **C3 — slides/dashboards/patch migration + paint quarantine.** `StretchableEditableWdgt` base arms die;
   paint self-contained. Fallout: slides/dashboards/patch editing tests (near-parity pixels), paint tests
   MUST stay byte-identical (`macroDrawingsMakerReEnableEditing` is the guard).
+  **✅ C3 LANDED 2026-07-19 — BYTE-IDENTICAL: gauntlet 11/11, zero recaptures (the frame's left dock
+  carves the same screen region the internal split used, so the covered slides/dashboards refs —
+  which DO show the tool column — matched exactly; the paint guard passed untouched). Execution
+  refinement: the deleted builders' `dragsDropsAndEditingEnabled = true` lines were REDUNDANT — the
+  Widget class default is already true, so no per-class field was added (a shadow field would churn
+  the doc-inspector test's member list for nothing).**
 - **C4 — docs/BACKLOG sync.** BACKLOG: undock context-menu entry (D9 tail); `right`/`bottom` dock
   arranges; `HorizontalMenuPanelWdgt` demo-only fate. Plan stamps.
 Gates per landing: `fg presuite`, diffpage + owner eyeball before ANY recapture; close each with

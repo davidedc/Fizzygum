@@ -1,11 +1,53 @@
 class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
+  # ⚠ QUARANTINE (Frame-model plan §5.C): paint's tool column is NOT a shared
+  # ToolbarWdgt variant -- its buttons inject code bound to THIS instance's
+  # @overlayCanvas at construction, so the whole toolsPanel lifecycle (field,
+  # build, enable-create, disable-teardown, the tool arms in _reLayoutSelf)
+  # lives HERE, self-contained, until phase D-1 rebinds paint to the focus
+  # pointer and dissolves it into a paint ToolbarWdgt in the frame's slot.
+  toolsPanel: nil
+
   overlayCanvas: nil
   pencilToolButton: nil
   brushToolButton: nil
   toothpasteToolButton: nil
   eraserToolButton: nil
   highlightedToolIconColor: Color.create 245, 126, 0
+
+  _buildAndConnectChildrenNoSettle: ->
+    super
+    @_createToolsPanelNoSettle()
+
+  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    @parent?.showEditModeInBar?()
+    @dragsDropsAndEditingEnabled = true
+    @_createToolsPanelNoSettle()
+    @stretchableWidgetContainer._enableDragsDropsAndEditingNoSettle @
+
+  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    @parent?.showViewModeInBar?()
+    @dragsDropsAndEditingEnabled = false
+    if @toolsPanel?
+      # DETACH-then-teardown (mirror of the enable sibling-reorder): unselectAll?() fires a synthetic
+      # w.toggle() whose escalation reaches SwitchButtonWdgt's SELF-SETTLING mouseClickLeft -- the
+      # transitive-settle blind spot (unselectAll's OWN body has no @_settleLayoutsAfter, so an
+      # own-body grep passes it, but it settles via toggle -> mouseClickLeft, same shape as
+      # stopEditing). removeFromTree FIRST orphans the toolsPanel subtree's root, so that settle
+      # DEFERS instead of throwing in this flush; the un-inject still lands (it targets the
+      # overlayCanvas, which stays attached in the stretchableWidgetContainer).
+      @toolsPanel.removeFromTree()
+      @toolsPanel.unselectAll?()
+      @toolsPanel._destroyNoSettle()
+      @toolsPanel = nil
+    @stretchableWidgetContainer._disableDragsDropsAndEditingNoSettle @
+    @_invalidateLayout()
 
 
   colloquialName: ->

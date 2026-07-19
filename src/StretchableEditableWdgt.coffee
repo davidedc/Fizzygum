@@ -2,7 +2,6 @@ class StretchableEditableWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
-  toolsPanel: nil
   stretchableWidgetContainer: nil
 
   # space between the container's edges and its internals. Often set to 0 since windows
@@ -41,11 +40,6 @@ class StretchableEditableWdgt extends Widget
     creator.bringToForeground()
 
 
-  # empty base -- subclasses (PatchProgramming/Dashboards/SimpleSlide/ReconfigurablePaint) override the core.
-  # A core (not a public wrapper): the only callers are cores (_enableDragsDropsAndEditingNoSettle,
-  # _buildAndConnectChildrenNoSettle), so there is no public createToolsPanel to self-settle.
-  _createToolsPanelNoSettle: ->
-
   # NON-settling core: both callers are settle-neutral private code, so a public self-settling
   # wrapper here would open a second flush. History: docs/archive/public-private-call-separation-plan.md (T2).
   _createNewStretchablePanelNoSettle: ->
@@ -53,10 +47,11 @@ class StretchableEditableWdgt extends Widget
     @_addNoSettle @stretchableWidgetContainer
 
 
-  # Lays out the (optional) tools panel + the stretchable container. ONE shared body: on this
-  # base ("Generic panel") @toolsPanel stays nil, so the toolsPanel arms below reduce away and
-  # the container takes the full padded bounds -- exactly the old per-subclass body each shared
-  # (ReconfigurablePaintWdgt keeps its own, genuinely different _reLayoutSelf -- 4 tool buttons).
+  # Lays out the stretchable container over the full padded bounds -- the
+  # editing toolbar lives in the enclosing frame's toolbar-slot (Frame-model
+  # plan §5.C), not in this panel. (ReconfigurablePaintWdgt keeps its own,
+  # genuinely different _reLayoutSelf -- its overlay-bound tool column stays
+  # local until phase D rebinds paint to the focus model.)
   _reLayoutSelf: ->
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -69,34 +64,9 @@ class StretchableEditableWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    labelBottom = @top() + @externalPadding
-
-    # tools -------------------------------
-
-    if @toolsPanel?.parent == @
-      @toolsPanel._applyMoveTo new Point @left() + @externalPadding, labelBottom
-      @toolsPanel._applyExtent new Point 95, @height() - 2 * @externalPadding
-
-
-    # stretchableWidgetContainer --------------------------
-
-    stretchableWidgetContainerWidth = @width() - 2*@externalPadding
-
-    if @dragsDropsAndEditingEnabled and @toolsPanel?
-      stretchableWidgetContainerWidth -= @toolsPanel.width() + @internalPadding
-
-    stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
-    if @dragsDropsAndEditingEnabled and @toolsPanel?
-      stretchableWidgetContainerLeft = @toolsPanel.right() + @internalPadding
-    else
-      stretchableWidgetContainerLeft = @left() + @externalPadding
-
     if @stretchableWidgetContainer.parent == @
-      @stretchableWidgetContainer._applyMoveTo new Point stretchableWidgetContainerLeft, labelBottom
-      @stretchableWidgetContainer._applyExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
-
-    # ----------------------------------------------
-
+      @stretchableWidgetContainer._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @stretchableWidgetContainer._applyExtent new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding
 
     world.maybeEnableTrackChanges()
     @fullChanged()
@@ -140,9 +110,9 @@ class StretchableEditableWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
+    # the frame shows the docked toolbar (and the pencil glyph) on this call
     @parent?.showEditModeInBar?()
     @dragsDropsAndEditingEnabled = true
-    @_createToolsPanelNoSettle()
     @stretchableWidgetContainer._enableDragsDropsAndEditingNoSettle @
 
 
@@ -191,32 +161,16 @@ class StretchableEditableWdgt extends Widget
       return
     @parent?.showViewModeInBar?()
     @dragsDropsAndEditingEnabled = false
-    if @toolsPanel?
-      # DETACH-then-teardown (mirror of the enable sibling-reorder). For ReconfigurablePaint's RadioButtonsHolder
-      # toolsPanel, unselectAll?() fires a synthetic w.toggle() whose escalation reaches SwitchButtonWdgt's
-      # SELF-SETTLING mouseClickLeft -- the SECOND transitive-settle blind spot (unselectAll's OWN body has no
-      # @_settleLayoutsAfter, so an own-body grep passes it, but it settles via toggle -> mouseClickLeft, same shape
-      # as stopEditing). removeFromTree FIRST orphans the toolsPanel subtree's root, so that settle DEFERS instead of
-      # throwing in this flush; the un-inject still lands (it targets the overlayCanvas, which stays attached in the
-      # stretchableWidgetContainer). Non-radio toolsPanels (ScrollPanel) have no unselectAll -- there the detach is
-      # just settle-neutral structural-removal-before-destroy (removeFromTree repaints the vacated region).
-      @toolsPanel.removeFromTree()
-      @toolsPanel.unselectAll?()
-      @toolsPanel._destroyNoSettle()
-      @toolsPanel = nil
     @stretchableWidgetContainer._disableDragsDropsAndEditingNoSettle @
     @_invalidateLayout()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  # Cores call cores: _createNewStretchablePanelNoSettle + _createToolsPanelNoSettle are both
-  # non-settling, flushed once here.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
 
     @_createNewStretchablePanelNoSettle()
-    @_createToolsPanelNoSettle()
 
     @_invalidateLayout()
 
