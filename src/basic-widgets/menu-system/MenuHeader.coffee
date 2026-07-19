@@ -41,11 +41,21 @@ class MenuHeader extends BoxWdgt
   menuEntryPreferredWidth: ->
     @text.width() + 2
 
-  _applyWidth: (theWidth) ->
-    super
+  # I am a size-tracking container of my one child: the centred title tracks my
+  # frame. Conforming to the engine's child contract (menu-row-conformance plan,
+  # Phase 2a) replaces the old bespoke `_applyWidth` re-centre hook: in a stack
+  # arrange the tracking branch sizes me via _setWidthSizeHeightAccordingly
+  # (virtual _applyWidth + synchronous _reLayout since I now defer), and any
+  # base _applyExtent resize schedules my _reLayout via the valve — both end
+  # HERE, the one chokepoint.
+  _reLayoutChildren: ->
     # Integer placement (Layer A): @center() is fractional when my extent is odd, so round the centred text
     # position to commit an integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
     @text._applyMoveTo (@center().subtract @text.extent().floorDivideBy 2).round()
+
+  _reLayout: (newBoundsForThisLayout) ->
+    super
+    @_reLayoutChildren()
 
   mouseClickLeft: ->
     super
