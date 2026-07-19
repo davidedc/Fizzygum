@@ -44,10 +44,23 @@ class StringFieldWdgt extends PanelWdgt
   # (menu-row-conformance plan, Phase 1).
   menuEntryPreferredWidth: -> @menuEntryNaturalWidth ?= @width()
 
-  _applyWidth: (newWidth)->
-    super
-    @text._applyWidth 300
+  # I am a size-tracking container of my one child: the inner text tracks my
+  # frame -- pinned at my origin +(5,2), at the generous fixed 300x18 (see the
+  # header comment: SCALEDOWN keeps StringWdgt.edit on its INLINE branch).
+  # Conforming to the engine's child contract (menu-row-conformance plan,
+  # Phase 2d) replaces the old bespoke `_applyWidth` hook (whose
+  # `@text._applyWidth 300` duplicated the 300 sizing _reLayoutSelf applies):
+  # a rows-panel arrange sizes me via _setWidthSizeHeightAccordingly (virtual
+  # _applyWidth + synchronous _reLayout since I now defer), and any base
+  # _applyExtent resize schedules my _reLayout via the valve -- both end HERE.
+  _reLayoutChildren: ->
+    return unless @text?
+    @text._applyMoveTo @position().add new Point 5,2
+    @text._applyExtent new Point 300, 18
 
+  _reLayout: (newBoundsForThisLayout) ->
+    super
+    @_reLayoutChildren()
 
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
@@ -73,8 +86,7 @@ class StringFieldWdgt extends PanelWdgt
       # _reactToBeingAdded -> _reLayoutSelf inside another mutation's settle -- so a
       # self-settle here would re-enter the flush guard and throw.
       @_addNoSettle @text
-    @text._applyMoveTo @position().add new Point 5,2
-    @text._applyExtent new Point 300, 18
+    @_reLayoutChildren()
     @__commitExtent new Point @width(), 18
 
   getValue: ->
