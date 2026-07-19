@@ -51,12 +51,14 @@ class ColorPickerWdgt extends Widget
     @feedback.color
   
 
-  _reLayout: (newBoundsForThisLayout) ->
-
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-
-    if @_handleCollapsedStateShouldWeReturn() then return
-
+  # The palette/feedback arrange from my applied frame — the engine's standard
+  # re-fit chokepoint (menu-row-conformance plan, Phase 2c: pure extraction from
+  # the custom _reLayout below, which now composes it the stack-pattern way).
+  # Declaring it also classifies me as the size-tracking container I am: a
+  # stack / rows-panel arrange sizes me via _setWidthSizeHeightAccordingly
+  # (virtual _applyWidth + synchronous _reLayout), re-arranging my innards in
+  # the same write instead of relying on a later valve-scheduled pass.
+  _reLayoutChildren: ->
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # subwidgets of this widget are within the
@@ -68,10 +70,6 @@ class ColorPickerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
     @colorPalette._applyMoveTo @position()
     @colorPalette._applyExtent new Point @width(), Math.round(@height() * 0.625)
 
@@ -90,6 +88,18 @@ class ColorPickerWdgt extends Widget
 
     world.maybeEnableTrackChanges()
     @fullChanged()
+
+  _reLayout: (newBoundsForThisLayout) ->
+
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+
+    if @_handleCollapsedStateShouldWeReturn() then return
+
+    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children are
+    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
+    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
+    @_applyBounds newBoundsForThisLayout
+    @_reLayoutChildren()
 
     super
     @_markLayoutAsFixed()
