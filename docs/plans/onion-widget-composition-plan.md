@@ -126,15 +126,32 @@ All paths under `Fizzygum/src/`. This is the substrate the migration transforms.
   `FrameWdgt` should **compose** those, not inherit a stack (composition-over-inheritance; §5.A).
   **The exact inherited surface (re-verified 2026-07-19) the de-inherit must reproduce or consciously
   replace:**
-  - **Rides from the stack:** `add`/`_addNoSettle` (the window's own `_addNoSettle` supers through the
-    stack's core — content bookkeeping + `notContent` chrome adds thread down it); `_reLayoutChildren`
-    (the stack's is `@_positionAndResizeChildren()`, which dispatches back into the *window's* override —
-    this inheritance is what marks the window a size-tracking container); `_reLayout`
-    (= `super; @_reLayoutChildren()`); `implementsDeferredLayout` **pinned false**;
-    `initialiseDefaultWindowContentLayoutSpec` (the window deliberately has no override — the stack's
-    ends with the same `canSetHeightFreely = false`); and the stack's `subWidgetsMergedPreferredBounds`
-    (a stack-walk pure measure over ALL children, chrome included — decide its `FrameWdgt` meaning
-    explicitly at de-inherit time, don't inherit-by-accident again).
+  - **Rides from the stack (FULL inventory, re-verified against the stack source pre-A2):**
+    `@augmentWith ClippingAtRectangularBoundsMixin` (frames CLIP at bounds, and the mixin's
+    `_applyMoveTo` scroll-optimization override is the frame's repaint path when a parent stack moves
+    it); class default `_acceptsDrops: true` (Widget's is **false** — a fresh empty frame accepts
+    drops through this); `releasesRatioConstraintOnGrabbedChildren -> true` (the ratio mixin queries
+    the HOLDER via `?()` on grab-out — undefined would silently stop releasing);
+    `add`/`_addNoSettle` (the frame's own `_addNoSettle` supers through the stack's core, which runs
+    `aWdgt._resizeToWithoutSpacing()` on every add; the positionOnScreen sibling-insert logic is dead
+    for frames — the frame's wrapper never forwards it); the membership-refit pair
+    `_reactToChildRemoved`/`_reactToChildDropped` (`return if
+    @parent?._reLayOutAfterContainedPanelChange?(); @_reFitContainer()` — Widget has NO base def; the
+    frame's own `_reactToChildDropped` reaches it via bare `super`); `_reLayoutChildren`
+    (= `@_positionAndResizeChildren()`, dispatching back into the frame's override — the
+    size-tracking marker); `_reLayout` (= `super; @_reLayoutChildren(); @_reLayoutCornerInternalChildren()`);
+    `implementsDeferredLayout` **pinned false**; `initialiseDefaultFrameContentLayoutSpec`
+    (= `super` + `canSetHeightFreely = false` — matters when a frame is another frame's content);
+    `availableWidthForContents` (**consumed by the specs**: `FrameContentLayoutSpec`/`VerticalStackLayoutSpec`
+    call `@stack.availableWidthForContents()`, and for frame content `@stack` IS the frame).
+  - **Inherited but DEAD for frames (verified):** the stack walkers — base `preferredExtentForWidth`,
+    `subWidgetsMergedPreferredBounds`, the `_childWidthInStack`/`_childLeftInStack`/
+    `_childMeasuredExtentInStack` trio, `interElementGap`, `constrainContentWidth`, the stack arrange —
+    their only external consumer is `ScrollPanelWdgt` on its `@contents`, guarded by
+    `instanceof SimpleVerticalStackPanelWdgt`, and a frame is never a scroll panel's contents. The
+    frame overrides the arrange and both its own measures. (The 3 `instanceof
+    SimpleVerticalStackPanelWdgt` sites are all scroll-contents guards — de-inheriting flips no live
+    answer.)
   - **Fully overridden, so inert for windows:** `_positionAndResizeChildren` (the window's own arrange),
     `preferredExtentForWidth` + `preferredExtent` (the window's own §4.1 pure measures). This is why the
     stack base's post-authoring conformance-arc additions (`interElementGap()`, the base
@@ -261,7 +278,28 @@ prefix `"a Window"` and crashed (`undefined.x` in moveToAndClick) until the stri
 label; a rename sweep must also grep the tests repo for `"a <OldClass-sans-Wdgt>"` label prefixes.
 (Tooling gotcha, same session: `fg recapture` takes ONE test name and silently ignores extras —
 recapture serially, one name per invocation, until fg grows an arg loop/guard.)
-**Remaining in A: A2 = de-inherit + compose, against the §3.1 inventory.**
+**Remaining in A: A2 = de-inherit + compose, against the §3.1 inventory — split for verifiability:**
+- **A2a — de-inherit by explicit contract (ambition: byte-identical).** `class FrameWdgt extends Widget`
+  + reproduce ONLY the live inventory (§3.1): the clipping augment, `_acceptsDrops: true`,
+  `releasesRatioConstraintOnGrabbedChildren`, `_resizeToWithoutSpacing()` at the top of the frame's
+  `_addNoSettle`, the membership-refit pair inlined (the bare `super` in the frame's
+  `_reactToChildDropped` must become the absorb-or-refit body — Widget has no base), stack-pattern
+  `_reLayoutChildren`/`_reLayout`/`implementsDeferredLayout false`,
+  `initialiseDefaultFrameContentLayoutSpec`, `availableWidthForContents`. Ctor `super nil, nil, 40, true`
+  → `super()` (the stack ctor's appearance/padding writes were overwritten by the frame ctor anyway).
+  The dead stack walkers fall back to Widget's base. Gates: build + presuite, then full gauntlet;
+  revisits/census must stay at their zero baselines (the frame keeps the exact same tracking/deferral
+  answers). Serialization shape: windows stop carrying `constrainContentWidth` — accepted, no compat
+  obligations. **✅ LANDED 2026-07-19 — byte-identical confirmed: gauntlet 11/11, zero recaptures,
+  revisits/census at zero.** (Execution note: the stinks gate rejects history-narrating comments
+  ("used to"/"no longer") — write de-inherit why-comments present-tense.)
+- **A2b — compose bar + content-container + stable toolbar-slot (design-first, separate landing).**
+  The real structural re-shape: a bar child (title/close/collapse/pencil-eye), a content-container
+  child with the toolbar-slot, `_positionAndResizeChildren` re-written over the composed parts. Sketch
+  the child structure + serialization migration + macro-contract preservation (`.label`,
+  `.closeButton`, `.contents` stay reachable as the same instances) in this section BEFORE cutting
+  code; expect conscious recapture. Its design intertwines with C (the slot's occupant) — author the
+  sketch with C's §5.C in view.
 
 ### B. Split fused content classes into naked payload + framed citizen
 Per §3.3: introduce `SimpleTextWdgt` (from `SimplePlainTextWdgt`; role `TitleWdgt`), `SimpleImageWdgt`

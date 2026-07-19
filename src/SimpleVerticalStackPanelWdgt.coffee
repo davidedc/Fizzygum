@@ -14,8 +14,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # A vertical stack constrains a dropped child to its width/height ratio, and frees that
   # constraint when the child is grabbed back out. These container capabilities replace the
   # `whereIn/whereFrom instanceof SimpleVerticalStackPanelWdgt` tests in the ratio mixin and
-  # Example3DPlotWdgt; FrameWdgt (a stack subclass) overrides the DROP one to false because
-  # a window does NOT impose the ratio on its contents. (type-test-elimination campaign)
+  # Example3DPlotWdgt; FrameWdgt declares its own pair (imposes false / releases true) --
+  # a frame does NOT impose the ratio on its contents. (type-test-elimination campaign)
   imposesRatioConstraintOnDroppedChildren: ->
     true
 
@@ -28,7 +28,6 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
   # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
-  # (window-rebuild follow-up: lets FrameWdgt._buildAndConnectChildrenNoSettle add chrome + content through cores.)
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
     layoutSpec = opts.layoutSpec ? LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -70,7 +69,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
   # ===== Phase 3b (Slice 2): re-fit on the _reLayout cycle =====
   # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
-  # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. Inherited by FrameWdgt.
+  # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. (FrameWdgt carries the
+  # same stack-pattern _reLayout of its own since the A2a de-inherit.)
   # This is a fixed point ONLY because _positionAndResizeChildren sizes its (deferred-layout)
   # children via _setWidthSizeHeightAccordingly, which -- when called during a layout pass --
   # settles them in place (synchronous _reLayout, no invalidate-climb); see that method + the
@@ -167,8 +167,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # preferredExtentForWidth (text wrap / clock square / ratio); a child without one (a plain widget
   # whose height is width-independent) falls back to its current height. NO mutation, NO seam --
   # this is the composable container measure a parent (the scroll panel, Stage C) will consume
-  # instead of the subWidgetsMergedFullBounds applied-bounds read-back. FrameWdgt overrides this
-  # with its real content+chrome measure (Stage D). Proven byte-exact suite-wide: 3252
+  # instead of the subWidgetsMergedFullBounds applied-bounds read-back. FrameWdgt (not a stack)
+  # has its own content+chrome measure (Stage D). Proven byte-exact suite-wide: 3252
   # measure-vs-committed-height differentials, 0 mismatches. CONSUMED by
   # FrameWdgt.preferredExtentForWidth (a window recursing into its stack content) and by any
   # enclosing stack/scroll measuring a nested stack.

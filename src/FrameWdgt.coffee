@@ -8,14 +8,21 @@
 # So I'm inclined to think that a window should do what the
 # StretchableWidgetContainerWdgt does...
 
-# TODO: this is such a special version of SimpleVerticalStackPanelWdgt
-# that really it seems like this extension is misleading...
+class FrameWdgt extends Widget
 
-class FrameWdgt extends SimpleVerticalStackPanelWdgt
+  # A frame's content can transiently stick out of the frame (mid width/height
+  # negotiation, mid drop), so clip at the bounds. The mixin also carries the
+  # _applyMoveTo scroll-optimization override -- the repaint path a parent stack
+  # takes when it moves this frame as a tracking-container child.
+  @augmentWith ClippingAtRectangularBoundsMixin, @name
 
   # TODO we already have the concept of "droplet" widget
   # so probably we should re-use that. The current drop
   # area management seems a little byzantine...
+
+  # An EMPTY frame accepts drops (Widget's class default is false); the
+  # ctor/reset/content paths then enable/disable per content state.
+  _acceptsDrops: true
 
   label: nil
   closeButton: nil
@@ -178,7 +185,7 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
   # (see isInternal) and the internal/external switch button is gone, so both were inert — neither
   # was ever bound to `@`, stored, or serialized.
   constructor: (@contents, opts = {}) ->
-    super nil, nil, 40, true
+    super()
     @labelContent = opts.labelContent ? "my window"
     @closeButton = opts.closeButton
 
@@ -330,12 +337,18 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
   requiresDeliberateEmbedding: ->
     return true
 
-  # A window is a SimpleVerticalStackPanelWdgt but does NOT impose its ratio on dropped
-  # children (was the `!(whereIn instanceof FrameWdgt)` exclusion in the ratio mixin /
-  # Example3DPlotWdgt). It still RELEASES the constraint on grab, via the inherited default.
-  # (type-test-elimination campaign)
+  # A frame does NOT impose its ratio on dropped children (was the
+  # `!(whereIn instanceof FrameWdgt)` exclusion in the ratio mixin /
+  # Example3DPlotWdgt) -- but it DOES release the constraint when a child is
+  # grabbed back out, exactly as a stack does. The ratio mixin queries the
+  # holder via ?(), so an absent release method would silently stop releasing.
+  # (type-test-elimination campaign; the release was inherited from the stack
+  # until the A2a de-inherit made it explicit.)
   imposesRatioConstraintOnDroppedChildren: ->
     false
+
+  releasesRatioConstraintOnGrabbedChildren: ->
+    true
 
   # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
   # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
@@ -360,8 +373,32 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
     else
       return "window"
 
-  # (no _reLayoutChildren override: SimpleVerticalStackPanelWdgt's is already `@_positionAndResizeChildren()`,
-  # and that dispatches to the window's own override below -- which is what re-fits chrome + content.)
+  # The re-fit chokepoint (the `_reLayoutChildren?` size-tracking marker keys off this
+  # definition): re-fit chrome + content via the frame's own arrange below.
+  _reLayoutChildren: ->
+    @_positionAndResizeChildren()
+
+  # Stack-pattern deferred re-fit (A2a: was inherited from the stack): super applies my
+  # own bounds first (bounds-first rule), then the arrange, then re-place the
+  # corner-internal overlays at the FINAL frame -- the arrange may have re-committed my
+  # own height after super's corner tail already placed them (idempotent when not).
+  _reLayout: (newBoundsForThisLayout) ->
+    super
+    @_reLayoutChildren()
+    @_reLayoutCornerInternalChildren()
+
+  # Pinned false, NOT derived: defining _reLayout above would flip the derived answer
+  # and mis-route the two read sites (_setWidthSizeHeightAccordingly's invalidate +
+  # subWidgetsMergedFullBounds) -- the same pin the stack carries.
+  implementsDeferredLayout: ->
+    false
+
+  # The width this frame offers its content -- consumed by the content's spec
+  # (FrameContentLayoutSpec / VerticalStackLayoutSpec call
+  # `@stack.availableWidthForContents()`, and for frame content that "@stack" IS
+  # this frame). (A2a: was inherited from the stack.)
+  availableWidthForContents: ->
+    @width() - 2 * @padding
 
   # A window fits its OWN width to its content -- but ONLY in the FIRST-PLACEMENT branch of its
   # arrange (the steady-state branch re-fits height alone, exactly like a stack), and -- post
@@ -386,18 +423,20 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
 
-  # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle and
-  # SimpleVerticalStackPanelWdgt.add/_addNoSettle). Folds in the window's content bookkeeping (title,
-  # @contents swap, spec init + first-placement re-arm) so the build/teardown chain
-  # (_buildAndConnectChildrenNoSettle) adds chrome + content WITHOUT flushing layouts: super threads
-  # down through SimpleVerticalStackPanelWdgt._addNoSettle to Widget._addNoSettle, all non-settling.
-  # @_addNoSettle @contents (vs the bare base _addNoSettle) is exactly what keeps @stack wired by the
-  # deferred re-fit.
+  # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle).
+  # Folds in the frame's content bookkeeping (title, @contents swap, spec init +
+  # first-placement re-arm) so the build/teardown chain (_buildAndConnectChildrenNoSettle)
+  # adds chrome + content WITHOUT flushing layouts: super reaches Widget._addNoSettle
+  # directly (A2a de-inherit), all non-settling. Adding @contents through THIS core (vs
+  # the bare base _addNoSettle) is exactly what keeps the content wired by the deferred re-fit.
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
     layoutSpec = opts.layoutSpec
     beingDropped = opts.beingDropped
     notContent = opts.notContent
+    # the polymorphic strip-spacing hook (a base no-op; some widget types override
+    # it) runs on every add, mirroring the stack's add core.
+    aWdgt._resizeToWithoutSpacing()
     # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
     unless notContent or aWdgt.isLayoutInert?()
       titleToBeSet = aWdgt.colloquialName()
@@ -433,6 +472,12 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
     @resizer?._moveInFrontOfSiblings()
+
+  # (A2a, was inherited from the stack) membership-change re-fit -- same
+  # absorb-or-refit contract as the inline in _reactToChildDropped below.
+  _reactToChildRemoved: (child) ->
+    return if @parent?._reLayOutAfterContainedPanelChange?()
+    @_reFitContainer()
 
   _beforeChildDestroyed: (child) ->
     if child == @contents
@@ -531,7 +576,11 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
 
   _reactToChildDropped: (theWidget) ->
     @contents = theWidget
-    super
+    # (A2a, was the stack super) membership-change re-fit: if my container absorbs the
+    # change (a scroll panel re-fits me + its scrollbars), skip my own re-fit; else it
+    # DEFERS to the cycle. My own bookkeeping below runs either way, as it always did.
+    unless @parent?._reLayOutAfterContainedPanelChange?()
+      @_reFitContainer()
     # public-call-sanctioned: disableDrops is the trivial public drop-acceptance setter (macro-visible
     # behaviour: an occupied window stops accepting drops) — settle-free, consciously reused here.
     @disableDrops()
@@ -670,8 +719,12 @@ class FrameWdgt extends SimpleVerticalStackPanelWdgt
       else
         @showViewModeInBar()
 
-  # (no initialiseDefaultFrameContentLayoutSpec override: SimpleVerticalStackPanelWdgt's already ends
-  # with the same `@layoutSpecDetails.canSetHeightFreely = false`, so re-asserting it here was a no-op.)
+  # (A2a, was inherited from the stack) when THIS frame is another frame's CONTENT (a
+  # window nested in a window), its spec pins canSetHeightFreely = false on top of the
+  # base init -- byte-what the stack's override did.
+  initialiseDefaultFrameContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
   # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
