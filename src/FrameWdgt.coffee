@@ -255,13 +255,7 @@ class FrameWdgt extends Widget
       @_setEmptyWindowLabelNoSettle()
     else
       @disableDrops()
-      # TODO there is a duplicate of this down below
-      titleToBeSet = @contents.colloquialName()
-      if titleToBeSet == "window"
-        titleToBeSet = "window with another " + titleToBeSet
-      if titleToBeSet == "internal window"
-        titleToBeSet = "window with an " + titleToBeSet
-      @label.setText titleToBeSet
+      @label.setText @_titleForContents @contents
 
     # settled-after-new: SETTLE the default extent as the constructor's LAST act (was
     # @_applyExtent, which left a pending re-fit -- and, for default contents, the
@@ -322,6 +316,18 @@ class FrameWdgt extends Widget
     p = @_parentThroughIslands()
     p? and p isnt world and p isnt world?.hand
 
+  # The window title a (re)mounted content yields -- ONE home for the ctor and
+  # _addNoSettle title sites. A framed CITIZEN (a FrameWdgt subclass that IS its
+  # kind -- Frame-model plan §5.B) overrides this to its own colloquialName: the
+  # kind names the window, not the generic payload inside it.
+  _titleForContents: (aWdgt) ->
+    titleToBeSet = aWdgt.colloquialName()
+    if titleToBeSet == "window"
+      titleToBeSet = "window with another " + titleToBeSet
+    if titleToBeSet == "internal window"
+      titleToBeSet = "window with an " + titleToBeSet
+    titleToBeSet
+
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
 
@@ -366,7 +372,7 @@ class FrameWdgt extends Widget
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
       # window must FOLLOW that height (shrinking when a widen re-wraps to fewer
       # lines), not stretch the content to fill a freely-dragged height. A
-      # SimplePlainTextWdgt already forces this via layoutSpecDetails.canSetHeightFreely
+      # SimpleTextWdgt already forces this via layoutSpecDetails.canSetHeightFreely
       # = false in its ctor; keying off the mode generalizes it to any contained
       # TextWdgt (a non-text content has no fittingSpec, so this is a no-op for it).
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then return false
@@ -495,14 +501,9 @@ class FrameWdgt extends Widget
     aWdgt._resizeToWithoutSpacing()
     # caret + handle are the layout decorations (was their two instanceof) (type-test-elimination campaign)
     unless notContent or aWdgt.isLayoutInert?()
-      titleToBeSet = aWdgt.colloquialName()
-      if titleToBeSet == "window"
-        titleToBeSet = "window with another " + titleToBeSet
-      if titleToBeSet == "internal window"
-        titleToBeSet = "window with an " + titleToBeSet
       # re-title through the NON-settling label core: _addNoSettle already runs inside the
       # add's settle, so the title change rides that flush instead of opening a nested one.
-      @label._setTextNoSettle titleToBeSet
+      @label._setTextNoSettle @_titleForContents aWdgt
       # (§9.7-Q, owner-decided 2026-07-17) a chrome rebuild (_buildAndConnectChildrenNoSettle,
       # reached from _reactToChildDropped / _resetToDefaultContents) re-adds the widget that
       # is ALREADY my content. That is bookkeeping, not a re-mount: the placement it would
@@ -702,11 +703,12 @@ class FrameWdgt extends Widget
 
     @_addNoSettle @contents
 
-    # the toolbar-slot occupant, declared BY the content (keep-if-exist like the
-    # bar pieces; the content-CHANGE points destroy it first so a new content
-    # gets its own variant). Born collapsed when the content is viewing.
+    # the toolbar-slot occupant (keep-if-exist like the bar pieces; the
+    # content-CHANGE points destroy it first so a new content gets its own
+    # variant). A framed CITIZEN declares its kind's variant itself (§5.B);
+    # a plain frame asks the content it wraps. Born collapsed when viewing.
     if !@toolbar?
-      @toolbar = @contents?.buildToolbar?()
+      @toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
       if @toolbar?
         @_addNoSettle @toolbar, notContent: true
         if !@contents.dragsDropsAndEditingEnabled
@@ -737,10 +739,36 @@ class FrameWdgt extends Widget
       @editButton?.showEyeGlyph()
       @toolbar?._collapseNoSettle()
 
+  # Frame-level edit-mode switch (§5.B): route through the PAYLOAD's own core --
+  # the payload owns the canonical dragsDropsAndEditingEnabled flag and its core
+  # does the recursive child locking/unlocking -- then flip my own bar (I am the
+  # bar owner; the payload's `@parent?.show*ModeInBar?()` notify reaches me too,
+  # idempotently). The Widget base core would act SHALLOWLY on @contents (one
+  # child level, no payload-specific propagation) and notify only @parent. My
+  # own flag mirrors the payload's so a frame nested as another frame's content
+  # keeps Widget.editButtonPressedFromFrameBar's toggle direction honest.
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+    @dragsDropsAndEditingEnabled = true
+    @contents?._enableDragsDropsAndEditingNoSettle @
+    @showEditModeInBar()
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+
+  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+    @dragsDropsAndEditingEnabled = false
+    @contents?._disableDragsDropsAndEditingNoSettle @
+    @showViewModeInBar()
+
   _createAndAddEditButton: ->
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —
     # content widgets drive them cross-object (`@parent?.showEditModeInBar?()`), so they stay public.
-    if @contents?.providesAmenitiesForEditing and !@editButton?
+    # A framed CITIZEN provides the amenities itself (its payload may be a plain
+    # Widget container, §5.B); a plain frame asks the content it wraps.
+    if (@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing) and !@editButton?
       @editButton = @bar._createAndAddEditButtonNoSettle()
 
       if @contents.dragsDropsAndEditingEnabled
@@ -847,7 +875,7 @@ class FrameWdgt extends Widget
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents._applyHeight desiredHeight
 
-      # contained text that has OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt,
+      # contained text that has OPTED INTO FIT_BOX_TO_TEXT (a SimpleTextWdgt,
       # or any bare TextWdgt put into that mode) fits its BOX to the TEXT: it wraps
       # to the width we set generically above and its height follows the wrapped
       # content. We RESPECT the mode rather than imposing it, so the empty-window

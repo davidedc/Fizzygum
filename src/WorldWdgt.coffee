@@ -2622,8 +2622,13 @@ class WorldWdgt extends PanelWdgt
   # the windowed sibling of `create`. Returns the window. The single home for the
   # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
   # inspector/console/prompt spawners). Titled / _applyExtent windows build directly.
+  # A framed CITIZEN (a FrameWdgt subclass that IS its own window -- Frame-model
+  # plan §5.B) passes through un-wrapped: it is sized and placed directly.
   openFrameWith: (contentWidget, extent, position) ->
-    wm = new FrameWdgt contentWidget
+    if contentWidget.isFrame?()
+      wm = contentWidget
+    else
+      wm = new FrameWdgt contentWidget
     wm.setExtent extent
     wm._applyMoveTo position
     wm._moveWithin @
