@@ -532,9 +532,9 @@ class Widget extends TreeNode
 
   # The window title-bar "edit" (pencil) button announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
-  # The button is only shown when the contents set providesAmenitiesForEditing, which is set
-  # ONLY by PanelWdgt / StretchableEditableWdgt / SimpleDocumentWdgt -- the exact three
-  # classes that shared this body verbatim -- so it lives here on the base.
+  # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt /
+  # StretchableEditableWdgt on contents, and by the framed citizens (DocumentWdgt, §5.B)
+  # on the frame itself -- so this shared press body lives here on the base.
   editButtonPressedFromFrameBar: ->
     if @dragsDropsAndEditingEnabled
       @disableDragsDropsAndEditing @
@@ -543,7 +543,7 @@ class Widget extends TreeNode
 
   # The shared "enable/disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt, StretchableEditableWdgt,
-  # SimpleDocumentWdgt, SimpleVerticalStackScrollPanelWdgt). The children list varies by
+  # SimpleVerticalStackScrollPanelWdgt). The children list varies by
   # container (the scroll panel sources it from @contents), so it is passed in.
   _addEditingLockMenuEntries: (menu, childrenNotHandlesNorCarets) ->
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0

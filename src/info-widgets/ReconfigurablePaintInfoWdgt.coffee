@@ -1,13 +1,13 @@
-class ReconfigurablePaintInfoWdgt extends SimpleDocumentWdgt
+class ReconfigurablePaintInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_drawingsMaker_created
       return
 
-    simpleDocument = new @
+    doc = new @
     iconWidget = new PaintBucketIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_drawingsMaker_created", simpleDocument, iconWidget, "Drawings Maker", "Drawings Maker info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_drawingsMaker_created", doc, iconWidget, "Drawings Maker", "Drawings Maker info", (sdspw) ->
 
       sdspw.addNormalParagraph "Simple paint app. But you can drop anything inside it (try with the clock) to 'use it as a stamp'."
 

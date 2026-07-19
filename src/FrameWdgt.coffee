@@ -601,6 +601,17 @@ class FrameWdgt extends Widget
     @toolbar?._destroyNoSettle()
     @toolbar = nil
 
+  # A framed CITIZEN's _resetToDefaultContents consults this flag (§5.B): a
+  # payload dying because the WHOLE frame is going away must NOT be replaced --
+  # a citizen constructs a FRESH payload per reset, and each fresh child
+  # re-enters the destroy-until-empty iteration, an unbounded rebuild-destroy
+  # loop. Set here at the subtree's destroy ENTRY so every teardown path
+  # (resetWorld's fullDestroyChildren, a direct fullDestroy, the basement)
+  # covers the whole recursion.
+  _fullDestroyNoSettle: ->
+    @_beingFullDestroyed = true
+    super
+
   _resetToDefaultContents: ->
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
     # cross-object code drive it) — settle-free, consciously reused here.

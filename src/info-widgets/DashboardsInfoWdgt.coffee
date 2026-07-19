@@ -1,13 +1,13 @@
-class DashboardsInfoWdgt extends SimpleDocumentWdgt
+class DashboardsInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_dashboardsMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new DashboardsIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_dashboardsMaker_created", simpleDocument, iconWidget, "Dashboards Maker", "Dashboards Maker info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_dashboardsMaker_created", doc, iconWidget, "Dashboards Maker", "Dashboards Maker info", (sdspw) ->
 
       sdspw.addNormalParagraph "Lets you arrange a choice of graphs/charts/plots/maps in any way you please. The visualisations can also be interactive (as in the 3D plot example, which you can drag to rotate) and/or calculated on the fly.\n\nOn the bar on the left you can find four example graphs and two example maps."
 

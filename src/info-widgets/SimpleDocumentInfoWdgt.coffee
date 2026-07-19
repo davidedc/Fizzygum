@@ -1,13 +1,13 @@
-class SimpleDocumentInfoWdgt extends SimpleDocumentWdgt
+class SimpleDocumentInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_docsMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new TypewriterIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_docsMaker_created", simpleDocument, iconWidget, "Docs Maker", "Docs Maker info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_docsMaker_created", doc, iconWidget, "Docs Maker", "Docs Maker info", (sdspw) ->
 
       sdspw.addNormalParagraph "A basic text editor. But you can drop anything inside it.\n\nNote that the Docs Maker works 'by paragraph': you can drag/drop paragraphs, and when you change the style the whole paragraph is affected.\n\nQuickest way to compose a document is to drag/drop snippets, which you can find by clicking the button that looks like this:"
 

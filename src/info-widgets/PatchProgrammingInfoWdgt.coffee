@@ -1,13 +1,13 @@
-class PatchProgrammingInfoWdgt extends SimpleDocumentWdgt
+class PatchProgrammingInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_patchProgramming_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new PatchProgrammingIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_patchProgramming_created", simpleDocument, iconWidget, "Patch Programming", "Patch Programming info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_patchProgramming_created", doc, iconWidget, "Patch Programming", "Patch Programming info", (sdspw) ->
 
       sdspw.addNormalParagraph "'Patch programming' is a type of visual programming where you simply connect together existing widgets. It's useful to make simple applications/utilities quickly."
       sdspw.addNormalParagraph "You can imagine the widgets being 'patched together' by imaginary wires."

@@ -14,11 +14,8 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
   buildIcon: -> new GenericShortcutIconWdgt new TypewriterIconWdgt
 
   buildWindow: ->
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw._applyMoveTo new Point 114, 10
-    sdspw._applyExtent new Point 365, 405
+    doc = new DocumentWdgt
+    sdspw = doc.contents
 
     startingContent = new SimpleTextWdgt(
       "Sample Doc",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -57,20 +54,24 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
     sdspw.addNormalParagraph "What else could be added? Anything! Scripts, maps, maps inside scrolling views, maps with graphs, slides, other docs, and on and on and on..."
 
-    wm = new FrameWdgt simpleDocument
-    wm._applyExtent new Point 331, 545
-    wm._applyMoveTo new Point 257, 110
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Sample text document"
+    doc._applyExtent new Point 331, 545
+    doc._applyMoveTo new Point 257, 110
+    world.add doc
+    doc.setTitleWithoutPrependedContentName "Sample text document"
 
-    simpleDocument.disableDragsDropsAndEditing()
+    doc.disableDragsDropsAndEditing()
 
-    
+
     # if we don't do this, the window would ask to save content
     # when closed. Just close it instead.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerFrame = (containerWindow) ->
-      containerWindow.close()
+    doc.closeFromFrameBar = ->
+      @close()
+
+    # return the WINDOW: the base stores it in world[@slot] for the
+    # bring-forward-on-relaunch path. (The old code fell off the end returning
+    # the monkey-patch closure, so the slot held a FUNCTION -- latent.)
+    return doc
 
     return wm

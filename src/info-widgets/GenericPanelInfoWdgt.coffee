@@ -1,13 +1,13 @@
-class GenericPanelInfoWdgt extends SimpleDocumentWdgt
+class GenericPanelInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_genericPanel_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new GenericPanelIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_genericPanel_created", simpleDocument, iconWidget, "Generic Panel", "Generic Panels info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_genericPanel_created", doc, iconWidget, "Generic Panel", "Generic Panels info", (sdspw) ->
 
       sdspw.addNormalParagraph "You can use this panel to temporarily hold widgets, or to put together any mix of widgets. It's just a more generic version of slides and dashboards."
       sdspw.addNormalParagraph "Once you are done editing, click the pencil icon on the window bar."

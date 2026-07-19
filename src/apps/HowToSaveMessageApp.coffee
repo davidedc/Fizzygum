@@ -15,11 +15,8 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
   buildIcon: -> new FloppyDiskIconWdgt
 
   buildWindow: ->
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw._applyMoveTo new Point 114, 10
-    sdspw._applyExtent new Point 365, 405
+    doc = new DocumentWdgt
+    sdspw = doc.contents
 
     startingContent = new FloppyDiskIconWdgt
     startingContent._applyExtent new Point 85, 85
@@ -70,20 +67,19 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
      "Proliferation of saving solutions done without our help could be detrimental to the Fizzygum platform (due to degraded experience on third party sites, incompatibilities between sites, migration issues, security issues, etc.), hence the Fizzygum team decided to withhold this functionality from public until we can package an open turn-key solution that minimises misuse and sub-par experiences."
 
 
-    wm = new FrameWdgt simpleDocument
-    wm._applyMoveTo new Point 114, 10
-    wm._applyExtent new Point 365, 447
-    world.add wm
-    wm._rememberFractionalSituationInHoldingPanel()
-    wm.setTitleWithoutPrependedContentName "How to save?"
+    doc._applyMoveTo new Point 114, 10
+    doc._applyExtent new Point 365, 447
+    world.add doc
+    doc._rememberFractionalSituationInHoldingPanel()
+    doc.setTitleWithoutPrependedContentName "How to save?"
 
-    simpleDocument.disableDragsDropsAndEditing()
+    doc.disableDragsDropsAndEditing()
 
     # if we don't do this, the window would ask to save content
     # when closed. Just close it instead.
     # TODO: should be done using a flag, we don't like
     # to inject code like this: the source is not tracked
-    simpleDocument.closeFromContainerFrame = (containerWindow) ->
-      containerWindow.close()
+    doc.closeFromFrameBar = ->
+      @close()
 
-    return wm
+    return doc

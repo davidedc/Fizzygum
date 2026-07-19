@@ -1,12 +1,12 @@
-class BasementInfoWdgt extends SimpleDocumentWdgt
+class BasementInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_basement_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new BasementIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_basement_created", simpleDocument, iconWidget, "Basement", "Basement info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_basement_created", doc, iconWidget, "Basement", "Basement info", (sdspw) ->
 
       sdspw.addNormalParagraph "Drag things in here to recycle them.\n\nClosed or invisible items also end up in here, and the items that can't be used again are automatically recycled."

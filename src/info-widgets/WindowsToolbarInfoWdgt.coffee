@@ -1,14 +1,14 @@
-class WindowsToolbarInfoWdgt extends SimpleDocumentWdgt
+class WindowsToolbarInfoWdgt extends DocumentWdgt
 
   # NB returns the FrameWdgt: WindowsToolbarCreatorButtonWdgt captures it (readmeWindow) to reposition it.
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_windowsToolbar_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new WindowsToolbarIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_windowsToolbar_created", simpleDocument, iconWidget, "Types of windows", "Windows info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_windowsToolbar_created", doc, iconWidget, "Types of windows", "Windows info", (sdspw) ->
 
       sdspw.addNormalParagraph "There are four main types of windows"
       sdspw.addBulletPoint "empty windows, with a target area where you can drop other items in"

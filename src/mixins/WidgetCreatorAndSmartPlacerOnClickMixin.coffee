@@ -19,7 +19,8 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         # accept a smart-placed widget, then let that content widget place it.
         # The contents-type branching that used to be here is now polymorphic:
         # acceptsSmartPlacedWidgets / smartPlace live on the content widgets
-        # (StretchableEditableWdgt + subclasses, SimpleDocumentWdgt).
+        # (StretchableEditableWdgt + subclasses, and a DocumentWdgt's
+        # SimpleDocumentScrollPanelWdgt payload -- §5.B).
         where = world.topmostChildSuchThat (w) ->
           # was `w instanceof FrameWdgt` (type-test-elimination campaign)
           w.isFrame?() and w.contents?.acceptsSmartPlacedWidgets?()

@@ -402,9 +402,8 @@ class MenusHelper
   createVideoPlayIconWdgt: ->
     world.create new VideoPlayIconWdgt
 
-  createSimpleDocumentWdgt: ->
-    simpleDocument = new SimpleDocumentWdgt
-    world.openFrameWith simpleDocument, (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
+  createDocumentWdgt: ->
+    world.openFrameWith (new DocumentWdgt), (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
 
   createSimpleLinkWdgt: ->
     simpleLinkWdgt = new SimpleLinkWdgt
@@ -656,7 +655,7 @@ class MenusHelper
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Document"
     menu.addMenuItem "simple document scrollpanel", menusHelper, "createSimpleDocumentScrollPanelWdgt"
-    menu.addMenuItem "simple document", menusHelper, "createSimpleDocumentWdgt"
+    menu.addMenuItem "simple document", menusHelper, "createDocumentWdgt"
     menu.popUpAtHand()
 
   popUpSimpleTextWdgtMenu: (widgetOpeningThePopUp) ->

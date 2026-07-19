@@ -8,6 +8,20 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
   colloquialName: ->
     "document"
 
+  # Smart-placement protocol (see WidgetCreatorAndSmartPlacerOnClickMixin):
+  # the placer routes a creator-button click to a frame's CONTENT --
+  # `where.contents.smartPlace` -- and for a DocumentWdgt that content is this
+  # panel: append the click-created widget and scroll it into view. (§5.B: was
+  # on the fused SimpleDocumentWdgt, which only relayed to this panel.)
+  acceptsSmartPlacedWidgets: ->
+    @dragsDropsAndEditingEnabled
+
+  smartPlace: (widgetToBePlaced, creator) ->
+    @add widgetToBePlaced
+    @scrollToBottom()
+    @bringToForeground()
+    creator.bringToForeground()
+
   getNormalParagraph: (text) ->
     paragraph = new SimpleTextWdgt(
       text,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)

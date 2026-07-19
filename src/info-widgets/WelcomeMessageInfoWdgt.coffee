@@ -1,11 +1,8 @@
-class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
+class WelcomeMessageInfoWdgt extends DocumentWdgt
 
   @create: ->
-    simpleDocument = new SimpleDocumentWdgt
-    sdspw = simpleDocument.simpleDocumentScrollPanel
-
-    sdspw._applyMoveTo new Point 114, 10
-    sdspw._applyExtent new Point 365, 405
+    doc = new DocumentWdgt
+    sdspw = doc.contents
 
     startingContent = new FizzygumLogoIconWdgt
     startingContent._applyExtent new Point 85, 85
@@ -114,12 +111,11 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
-    wm = new FrameWdgt simpleDocument
-    wm._applyExtent new Point 365, 405
-    wm._moveFullCenterTo world.center()
-    world.add wm
-    wm.setTitleWithoutPrependedContentName "Welcome"
+    doc._applyExtent new Point 365, 405
+    doc._moveFullCenterTo world.center()
+    world.add doc
+    doc.setTitleWithoutPrependedContentName "Welcome"
 
-    simpleDocument.disableDragsDropsAndEditing()
+    doc.disableDragsDropsAndEditing()
 
-    return wm
+    return doc

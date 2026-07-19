@@ -570,6 +570,18 @@ zero).**
   doc content LOSE the middle row (`"a SimpleDocument ▸"` vanishes; ~10 files use that exact label —
   re-aim per test), menu heights shrink where screenshotted; window pixels themselves ambition-identical
   (B-iii probe).
+  **✅ LANDED 2026-07-19 — PIXEL-IDENTICAL: presuite 263/263 + apps smoke ALL PASS, ZERO recaptures (the
+  guard test + SavedDocumentShortcutIcon passed against their OLD-structure references = the dissolution
+  witness; the ~10 "a SimpleDocument" label matches proved to be metadata PROSE — no live macro navigates
+  the dissolved row). Execution case law: (1) ⚠⚠ a citizen `_resetToDefaultContents` that CONSTRUCTS a
+  fresh payload must skip its own teardown — the destroy-until-empty iteration otherwise rebuilds forever
+  (renderer OOM, page CRASH in-suite, passes-alone; fixed by the `_beingFullDestroyed` flag set at
+  FrameWdgt._fullDestroyNoSettle, the subtree destroy ENTRY, + the citizen guard); (2) the layering gate
+  attributes a STATIC class-method's calls to the preceding INSTANCE method — order `@_buildInfoDocNextTo`
+  right after the ctor; (3) the call-separation gate catches protocol moves that leave a public verb
+  self-only (`scrollToBottom` → allowlisted as deliberate in-world API); (4) drive-by fix: SampleDocApp's
+  buildWindow returned the close-monkey-patch CLOSURE, so `world[@slot]` held a function — explicit
+  `return doc`.**
 - **B4 — the container-payload citizens.** `SlideWdgt`/`DashboardWdgt`/`PatchProgrammingWdgt`(re-base)/
   `GenericPanelWdgt`; container gains the two ratio hooks + smart-place + `providesAmenitiesForEditing:
   true`; `StretchableEditableWdgt` shrinks to paint's abstract parent (header-stamped: DELETED in D);

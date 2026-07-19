@@ -1,13 +1,13 @@
-class SimpleSlideInfoWdgt extends SimpleDocumentWdgt
+class SimpleSlideInfoWdgt extends DocumentWdgt
 
   @createNextTo: (nextToThisWidget) ->
     if world.infoDoc_slidesMaker_created
       return nil
 
-    simpleDocument = new SimpleDocumentWdgt
+    doc = new DocumentWdgt
     iconWidget = new SimpleSlideIconWdgt
 
-    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_slidesMaker_created", simpleDocument, iconWidget, "Slides Maker", "Slides Maker info", (sdspw) ->
+    @_buildInfoDocNextTo nextToThisWidget, "infoDoc_slidesMaker_created", doc, iconWidget, "Slides Maker", "Slides Maker info", (sdspw) ->
 
       sdspw.addNormalParagraph "Anything you drop inside the slide 'keeps proportion' when resized, which makes it handy to put pins on maps, add callouts, arrange text in custom layouts etc."
 
