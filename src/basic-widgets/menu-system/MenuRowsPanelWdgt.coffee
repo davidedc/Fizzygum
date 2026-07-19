@@ -223,6 +223,23 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
     super()
 
+  # HONEST pure measures (menu-row-conformance Phase 3): my width is
+  # CONTENT-driven — the hug the arrange above applies — not container-given,
+  # so the measures answer that same truth instead of the base's
+  # availW-distributing arithmetic: a measuring parent sees exactly the width
+  # the arrange will commit. Height rides the base measure AT the hug width
+  # (which _childWidthInStack then hands to every row, mirroring the arrange).
+  # The panel is a hug-class stack on BOTH axes — the base already hugs height
+  # (tight: true); these make the width story symmetric. (No consumer exists
+  # today — ListWdgt opts out of the scroll-stack refit — so this is model
+  # honesty for the next consumer, not a behaviour change.)
+  preferredExtentForWidth: (availW) ->
+    hugW = @maxWidthOfMenuEntries() + 2 * @padding
+    new Point hugW, (super hugW).y
+
+  subWidgetsMergedPreferredBounds: (availW) ->
+    super (@maxWidthOfMenuEntries() + 2 * @padding)
+
   # My preferred row width: the widest child's PURE content measure. Every row
   # kind that contributes a width answers menuEntryPreferredWidth() — MenuItemWdgt
   # / StringFieldWdgt / ColorPickerWdgt / SliderWdgt and (since the conformance
