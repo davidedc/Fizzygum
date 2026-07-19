@@ -15,7 +15,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     startingContent.layoutSpecDetails.setAlignmentToCenter()
 
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Welcome to Fizzygum",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 24
@@ -23,7 +23,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "version 1.1.12",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 9
@@ -39,7 +39,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
 
     sdspw.addSpacer()
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "What it can do for you",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
@@ -61,7 +61,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
 
     sdspw.addSpacer()
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "New here?",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
@@ -97,7 +97,7 @@ class WelcomeMessageInfoWdgt extends SimpleDocumentWdgt
 
     sdspw.addSpacer(2)
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Get in touch",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22

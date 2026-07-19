@@ -105,7 +105,7 @@ class PanelWdgt extends Widget
         m != world.caret
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
-          (m instanceof SimplePlainTextWdgt) and m.isEditable
+          (m instanceof SimpleTextWdgt) and m.isEditable
         item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
 
 

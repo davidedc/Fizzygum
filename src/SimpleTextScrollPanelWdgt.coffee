@@ -1,15 +1,15 @@
-# The SimplePlainTextScrollPanelWdgt allows you show/edit ONE
+# The SimpleTextScrollPanelWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or
 # other Widgets like the SimpleVerticalStackPanelWdgt/DocumentViewerOrEditor do.
 #
-# However, what the SimplePlainTextScrollPanelWdgt DOES
+# However, what the SimpleTextScrollPanelWdgt DOES
 # in respect to the SimpleVerticalStackPanelWdgt/DocumentViewerOrEditor is to
 # view/edit UNWRAPPED text, which is quite important for
 # code, since really code must have the option of an
 # unwrapped view.
 
-class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
+class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
 
   textWdgt: nil
   modifiedTextTriangleAnnotation: nil
@@ -27,7 +27,7 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     @contents.disableDrops()
     @isTextLineWrapping = wraps
     @color = Color.WHITE
-    @textWdgt = new SimplePlainTextWdgt(
+    @textWdgt = new SimpleTextWdgt(
       textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     @textWdgt.isEditable = true
     if !wraps

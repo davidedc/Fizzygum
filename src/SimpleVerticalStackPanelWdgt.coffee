@@ -272,7 +272,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
           widget._applyExtentBase measured
           elementHeight = measured.y
 
-        # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or a
+        # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimpleTextWdgt or a
         # bare TextWdgt put into that mode) fits its BOX to the TEXT: wrap to the
         # width set above, height follows the wrapped content. We RESPECT the mode
         # (so a FIT_TEXT_TO_BOX placeholder is left alone); reassert soft-wrap.

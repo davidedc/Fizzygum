@@ -52,7 +52,7 @@ class SimpleDocumentWdgt extends Widget
     iconWidget.layoutSpecDetails.setGrow 0
     iconWidget.layoutSpecDetails.setAlignmentToCenter()
 
-    titleWidget = new SimplePlainTextWdgt(
+    titleWidget = new SimpleTextWdgt(
       title,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     titleWidget.alignCenter()
     titleWidget.setFontSize 22
@@ -106,7 +106,7 @@ class SimpleDocumentWdgt extends Widget
   hasStartingContentBeenChangedByUser: ->
     !(
       @simpleDocumentScrollPanel.contents.children.length == 1 and
-      @simpleDocumentScrollPanel.contents.children[0] instanceof SimplePlainTextWdgt and
+      @simpleDocumentScrollPanel.contents.children[0] instanceof SimpleTextWdgt and
       @simpleDocumentScrollPanel.contents.children[0].text == @startingText
     )
 
@@ -143,7 +143,7 @@ class SimpleDocumentWdgt extends Widget
 
     @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       @startingText,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     @simpleDocumentScrollPanel.setContents startingContent, 5
     startingContent.isEditable = true

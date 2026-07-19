@@ -361,7 +361,7 @@ class TextWdgt extends StringWdgt
 
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
   # the contained-text engine — gated by the mode, so ANY TextWdgt used as window
-  # / panel / scroll content (not just a SimplePlainTextWdgt) re-wraps +
+  # / panel / scroll content (not just a SimpleTextWdgt) re-wraps +
   # auto-heights. It belongs in this LAYOUT pass, NOT in reflowText / the paint
   # path (_createRefreshOrGetBackBuffer must not change the extent — it only
   # recomputes the paint height).

@@ -1,4 +1,4 @@
-# TODO the SimplePlainTextPanelWdgt can't quite stand on its own,
+# TODO the SimpleTextPanelWdgt can't quite stand on its own,
 # it's really meant to be inside a ScrollPanel.
 #
 # The analogous VerticalStackPanel is better engineered,
@@ -6,9 +6,9 @@
 #
 # However, there really isn't a need for this widget
 # because it doesn't provide anything more than what the
-# SimplePlainText widget can already provide.
+# SimpleText widget can already provide.
 
-class SimplePlainTextPanelWdgt extends PanelWdgt
+class SimpleTextPanelWdgt extends PanelWdgt
 
   constructor: (
     @textAsString,
@@ -37,7 +37,7 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    ostmA = new SimplePlainTextWdgt(
+    ostmA = new SimpleTextWdgt(
       @textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     ostmA.isEditable = true
     if !@isTextLineWrapping

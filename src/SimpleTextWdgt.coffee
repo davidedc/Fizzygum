@@ -3,9 +3,9 @@
 # follows the wrapped content, which is what "normal" text editing / a text
 # document paragraph looks like. (A bare TextWdgt is FIT_TEXT_TO_BOX by default and
 # just blurts itself out across the screen; for one-off long text scroll it in a
-# SimplePlainTextScrollPanelWdgt.)
+# SimpleTextScrollPanelWdgt.)
 #
-# SimplePlainTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
+# SimpleTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
 # into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::_reLayoutSelf and the
 # FITTING MODEL comment in StringWdgt. The contained-reflow engine and the EDIT
 # triggers (re-flow the box then invalidate the container so it re-fits, on
@@ -18,12 +18,12 @@
 # scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
 # the dataflow plumbing (updateTarget + bang), and the panel-colour blend helpers.
 
-class SimplePlainTextWdgt extends TextWdgt
+class SimpleTextWdgt extends TextWdgt
 
   @augmentWith ControllerMixin
 
   constructor: (
-   @text = "SimplePlainText",
+   @text = "SimpleText",
    @originallySetFontSize = 12,
    @fontName = @justArialFontStack,
    @isBold = false,
@@ -50,7 +50,7 @@ class SimplePlainTextWdgt extends TextWdgt
     "text"
 
   # On Tab, this widget inserts two spaces instead of letting the target handle Tab
-  # (was `@target instanceof SimplePlainTextWdgt` in the caret). (type-test-elimination campaign)
+  # (was `@target instanceof SimpleTextWdgt` in the caret). (type-test-elimination campaign)
   tabInsertsSpaces: ->
     true
 

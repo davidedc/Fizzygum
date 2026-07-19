@@ -65,17 +65,17 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @regexEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @regexEntryField = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
     @regexEntryField.configureAsMonoTextPanel true
     @textWidget = @regexEntryField.textWdgt
     @_addNoSettle @regexEntryField
 
-    @substitutionTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @substitutionTextArea = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
     @substitutionTextArea.configureAsMonoTextPanel true
     @substitutionTextAreaText = @substitutionTextArea.textWdgt
     @_addNoSettle @substitutionTextArea
 
-    @outputTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @outputTextArea = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
     @outputTextArea.configureAsMonoTextPanel false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea

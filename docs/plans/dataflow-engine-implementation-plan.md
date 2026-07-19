@@ -898,7 +898,7 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   own-only-when-set idiom as `@target`/`@action` (SliderWdgt ~13). Only a user who TOGGLES a wire
   writes an own property that then serializes (correct: a saved per-event wire keeps its policy).
 - **The toggle rides the existing connection menu.** The 8 controllers that render "connect to ➜" /
-  "set target" (`SliderWdgt`, `StringWdgt`, `SimplePlainTextWdgt`, `PaletteWdgt`, and the four patch
+  "set target" (`SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, and the four patch
   nodes `CalculatingPatchNodeWdgt` / `DiffingPatchNodeWdgt` / `RegexSubstitutionPatchNodeWdgt` /
   `FanoutPinWdgt`) each call `@addFiresPerEventMenuEntry menu` right after that block — one shared
   helper, no duplicated toggle logic. Shown ONLY once a target is wired (`return unless @target?` —
@@ -1011,7 +1011,7 @@ byte-identical (every change is gated), so the whole suite runs legacy and stays
   gate = the §8 deadlock) + gain `dataflowRecompute: -> @recalculateOutput(); @output`. `setInput1..4` are
   UNCHANGED (no-token `_acceptsConnectionToken` mints+accepts; stores `@inputN`; the `updateTarget→markStale`
   is echo-suppressed while the engine applies the input). `bang` is force-fire: patch nodes free (updateTarget's
-  `fireBecauseBang`), plain controllers (Slider/SimplePlainText/Palette/FanoutPin) switch-gate `bang → markStale
+  `fireBecauseBang`), plain controllers (Slider/SimpleText/Palette/FanoutPin) switch-gate `bang → markStale
   @, true`. FanoutWdgt (homepage-excluded) re-fans to its pins as before; the pins carry the out-edges.
 - **Node death** — `Widget._destroyNoSettle` → `world.dataflow?.removeAllEdgesOf @` (switch-gated), so a
   destroyed connection-bearing widget drops its edges (leak + ghost recompute otherwise). Cells already did this.

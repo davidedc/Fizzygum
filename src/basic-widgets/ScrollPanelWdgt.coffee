@@ -141,7 +141,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
   # Am I a content-sizing scroll frame — one whose content frame derives from a PURE measure
   # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? The two dedicated
-  # subclasses (SimplePlainTextScrollPanelWdgt / SimpleVerticalStackScrollPanelWdgt) always
+  # subclasses (SimpleTextScrollPanelWdgt / SimpleVerticalStackScrollPanelWdgt) always
   # are; a plain frame is when text-wrapping. Class-level query, was two self-instanceof
   # tests at the arrange site (type-test-elimination ε).
   isContentSizing: ->
@@ -381,7 +381,7 @@ class ScrollPanelWdgt extends PanelWdgt
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (widget) =>
         if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-          # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimplePlainTextWdgt or
+          # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimpleTextWdgt or
           # a bare TextWdgt put into that mode) fits its BOX to the TEXT: reassert
           # soft-wrap, then feed it the width — _applyWidth re-lays-out the text to
           # that width (height = wrapped line count), and that new height drives the
@@ -845,7 +845,7 @@ class ScrollPanelWdgt extends PanelWdgt
       super
   
   # Set this scroll panel's text-line-wrapping state; turning wrapping ON fills
-  # the content to the panel's bounds. (Called by SimplePlainTextWdgt's soft-wrap
+  # the content to the panel's bounds. (Called by SimpleTextWdgt's soft-wrap
   # toggle, which used to write this flag + resize the content from outside.)
   #
   # The resize here is DELIBERATELY IMMEDIATE (raw geometry), not the framework's

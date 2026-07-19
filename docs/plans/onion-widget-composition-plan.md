@@ -551,6 +551,14 @@ zero).**
   positions to shift (measure translation, never eyeball; recapture consciously). The scroll-panel sibling
   classes (`SimplePlainTextScrollPanelWdgt`/`SimplePlainTextPanelWdgt`) rename in the same sweep
   (`SimpleTextScrollPanelWdgt`/`SimpleTextPanelWdgt`) — same-family, same-fallout-kind.
+  **✅ LANDED 2026-07-19 — presuite 263/263 after ONE conscious recapture (`macroScrollPanelMergesChildMenu`:
+  the delta = the menu TITLE "SimplePlainTextScrollPanel"→"SimpleTextScrollPanel" + the menu's hugged
+  width, all rows/positions identical — diffpage-verified). Sweep facts as measured: the whole-family
+  one-pass `SimplePlainText`→`SimpleText` replacement is collision-free; tests repo took 128 files incl.
+  TWO test-DIR renames (`macroSimplePlainTextScrollPanelUpdatesWell…`, `macroWrappingSimplePlainText
+  Resizes…`) whose name-embedding reference assets were git-mv'd depth-first; the harness audit prelude
+  (`scripts/end-of-cycle-audit/layout-audit-prelude.js`) carried ONE class-name string; archives/snapshot
+  docs deliberately NOT swept (verbatim historical records).**
 - **B3 — `DocumentWdgt`.** Dissolve `SimpleDocumentWdgt` per B-iii; re-point the 4 app/menu constructors +
   the 10 info-widget factories (they become `extends DocumentWdgt`; `_buildInfoDocNextTo` moves to
   `DocumentWdgt` as the static builder and DROPS its `new FrameWdgt simpleDocument` wrap — the doc IS the

@@ -69,7 +69,7 @@ class ScriptWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @savedScript, false, 5
+    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @savedScript, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.WHITE

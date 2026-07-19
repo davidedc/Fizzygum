@@ -17,7 +17,7 @@ class TemplatesWindowWdgt extends FrameWdgt
 
     sdspw._applyExtent new Point 365, 335
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Simply drag the items below into your document",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 18
@@ -34,16 +34,11 @@ class TemplatesWindowWdgt extends FrameWdgt
 
     sdspw.addDivider()
 
-    startingContent = new SimplePlainTextWdgt(
-      "Title",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontName nil, nil, startingContent.georgiaFontStack
-    startingContent.setFontSize 48
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    # the Title building block IS the TitleWdgt role (§5.B, D7) -- the style
+    # lives in the class, and a dragged-out copy carries the "a Title" identity
+    sdspw.add new TitleWdgt
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Section X",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
@@ -51,7 +46,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     startingContent.setFontSize 28
     sdspw.add startingContent
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Section X.X",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -60,7 +55,7 @@ class TemplatesWindowWdgt extends FrameWdgt
 
     sdspw.addNormalParagraph "Normal text."
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "“Be careful--with quotations, you can damn anything.”\n― André Malraux",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleItalic()
     startingContent.alignRight()
@@ -74,7 +69,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.addCodeBlock "a code block with\n  some example\n    code in here"
 
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Spacers:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
@@ -85,7 +80,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.addSpacer 2
     sdspw.addSpacer 3
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Divider line:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
@@ -94,7 +89,7 @@ class TemplatesWindowWdgt extends FrameWdgt
 
     sdspw.addDivider()
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Links:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
@@ -111,7 +106,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.add startingContent
     startingContent.layoutSpecDetails.setAlignmentToRight()
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Useful characters:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true

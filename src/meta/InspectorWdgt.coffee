@@ -276,7 +276,7 @@ class InspectorWdgt extends Widget
 
 
     # details pane
-    @detail = new SimplePlainTextScrollPanelWdgt "", false, 5
+    @detail = new SimpleTextScrollPanelWdgt "", false, 5
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.color = Color.WHITE

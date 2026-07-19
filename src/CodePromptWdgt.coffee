@@ -34,7 +34,7 @@ class CodePromptWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.WHITE

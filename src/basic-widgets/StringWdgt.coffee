@@ -101,7 +101,7 @@ class StringWdgt extends Widget
   #     it), wrap the text to it, the height follows the line count.
   #   - softWrap OFF → the box hugs the natural, un-wrapped text width (the
   #     "code view" / horizontal-scroll case).
-  # This is what makes a SimplePlainTextWdgt — and now ANY TextWdgt used as window
+  # This is what makes a SimpleTextWdgt — and now ANY TextWdgt used as window
   # / panel / scroll content — re-wrap and auto-grow/shrink its height. Two
   # sub-axes refine it (both stored + part of createBufferCacheKey):
   #   - fittingSpecBoxTightOrLoose: TIGHT (no padding — the only configuration any
@@ -131,7 +131,7 @@ class StringWdgt extends Widget
   # today's behaviour for every free-floating widget: FIT_TEXT_TO_BOX, so the
   # widget never resizes itself and the two fittingSpecWhenBounds* axes above are
   # what act. A contained TextWdgt opts into FIT_BOX_TO_TEXT (set by the window /
-  # panel / scroll layout sites, and by SimplePlainTextWdgt's ctor) to re-wrap +
+  # panel / scroll layout sites, and by SimpleTextWdgt's ctor) to re-wrap +
   # auto-height instead. The sub-axes are honoured by the FIT_BOX_TO_TEXT sizing
   # in TextWdgt::_reLayoutSelf and are part of createBufferCacheKey so a mode/sub-axis
   # change re-renders the cached back-buffer.
@@ -1141,7 +1141,7 @@ class StringWdgt extends Widget
     # scale-up/scale-down search is broken FOR this mode: the FIT_BOX_TO_TEXT
     # render leaks force every fit-measurement to @originallySetFontSize, so
     # searchLargestFittingFont sees "every candidate size fits" and returns the
-    # MAXIMUM (a giant font). SimplePlainTextWdgt sidesteps this because its ctor
+    # MAXIMUM (a giant font). SimpleTextWdgt sidesteps this because its ctor
     # pins fittingSpecWhenBoundsTooLarge = FLOAT (no scale-up search); a bare
     # TextWdgt defaults to SCALEUP, so the mode itself must force the set size.
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT

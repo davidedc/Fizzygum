@@ -9,7 +9,7 @@ class MenusHelper
 
   # Placeholder body text reused verbatim by the demo text-widget menu actions below, hoisted to two
   # constants so each string lives (and is edited) in one place. LOREM_LONG: 4 sites; LOREM_SHORT: 2 sites.
-  # (The one medium-length variant in createNewNonWrappingSimplePlainTextWdgtWithBackground is unique, so
+  # (The one medium-length variant in createNewNonWrappingSimpleTextWdgtWithBackground is unique, so
   # it stays inline.) Kept as the exact same "+"-concatenation the call sites used, so the value is identical.
   LOREM_LONG:
     "Lorem ipsum dolor sit amet, consectetur adipiscing " +
@@ -572,16 +572,16 @@ class MenusHelper
     wm.moveWithin world
     world.add wm
 
-  createNewWrappingSimplePlainTextWdgtWithBackground: ->
-    newWdgt = new SimplePlainTextWdgt(
+  createNewWrappingSimpleTextWdgtWithBackground: ->
+    newWdgt = new SimpleTextWdgt(
       @LOREM_LONG,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
 
     world.add newWdgt
     newWdgt.setBounds new Point(25, 40), new Point(500, 300)
 
-  createNewNonWrappingSimplePlainTextWdgtWithBackground: ->
-    newWdgt = new SimplePlainTextWdgt(
+  createNewNonWrappingSimpleTextWdgtWithBackground: ->
+    newWdgt = new SimpleTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -599,50 +599,50 @@ class MenusHelper
     world.add newWdgt
     newWdgt.setBounds new Point(540, 40), new Point(500, 300)
 
-  createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground: ->
-    @createNewWrappingSimplePlainTextWdgtWithBackground()
-    @createNewNonWrappingSimplePlainTextWdgtWithBackground()
+  createNewWrappingAndNonWrappingSimpleTextWdgtWithBackground: ->
+    @createNewWrappingSimpleTextWdgtWithBackground()
+    @createNewNonWrappingSimpleTextWdgtWithBackground()
 
-  createWrappingSimplePlainTextScrollPanelWdgt: ->
-    SfA = new SimplePlainTextScrollPanelWdgt(
+  createWrappingSimpleTextScrollPanelWdgt: ->
+    SfA = new SimpleTextScrollPanelWdgt(
       @LOREM_LONG,true, 10)
     world.add SfA
     SfA.setBounds new Point(20, 25), new Point(390, 305)
 
-  createNonWrappingSimplePlainTextScrollPanelWdgt: ->
-    SfB = new SimplePlainTextScrollPanelWdgt(
+  createNonWrappingSimpleTextScrollPanelWdgt: ->
+    SfB = new SimpleTextScrollPanelWdgt(
       @LOREM_SHORT,false, 10)
     world.add SfB
     SfB.setBounds new Point(430, 25), new Point(390, 305)
 
-  createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt: ->
-    @createWrappingSimplePlainTextScrollPanelWdgt()
-    @createNonWrappingSimplePlainTextScrollPanelWdgt()
+  createWrappingAndNonWrappingSimpleTextScrollPanelWdgt: ->
+    @createWrappingSimpleTextScrollPanelWdgt()
+    @createNonWrappingSimpleTextScrollPanelWdgt()
 
   # this is provided for completeness, however see the
-  # note in SimplePlainTextPanelWdgt about how this is
+  # note in SimpleTextPanelWdgt about how this is
   # incomplete and why this widget is not useful anyways
-  createWrappingSimplePlainTextPanelWdgt: ->
-    SfA = new SimplePlainTextPanelWdgt(
+  createWrappingSimpleTextPanelWdgt: ->
+    SfA = new SimpleTextPanelWdgt(
       @LOREM_LONG,true, 10)
     world.add SfA
     SfA.setBounds new Point(20, 25), new Point(390, 305)
 
   # this is provided for completeness, however see the
-  # note in SimplePlainTextPanelWdgt about how this is
+  # note in SimpleTextPanelWdgt about how this is
   # incomplete and why this widget is not useful anyways
-  createNonWrappingSimplePlainTextPanelWdgt: ->
-    SfB = new SimplePlainTextPanelWdgt(
+  createNonWrappingSimpleTextPanelWdgt: ->
+    SfB = new SimpleTextPanelWdgt(
       @LOREM_SHORT,false, 10)
     world.add SfB
     SfB.setBounds new Point(430, 25), new Point(390, 305)
 
   # this is provided for completeness, however see the
-  # note in SimplePlainTextPanelWdgt about how this is
+  # note in SimpleTextPanelWdgt about how this is
   # incomplete and why this widget is not useful anyways
-  createWrappingAndNonWrappingSimplePlainTextPanelWdgt: ->
-    @createWrappingSimplePlainTextPanelWdgt()
-    @createNonWrappingSimplePlainTextPanelWdgt()
+  createWrappingAndNonWrappingSimpleTextPanelWdgt: ->
+    @createWrappingSimpleTextPanelWdgt()
+    @createNonWrappingSimpleTextPanelWdgt()
 
 
   createSimpleDocumentScrollPanelWdgt: ->
@@ -659,17 +659,17 @@ class MenusHelper
     menu.addMenuItem "simple document", menusHelper, "createSimpleDocumentWdgt"
     menu.popUpAtHand()
 
-  popUpSimplePlainTextWdgtMenu: (widgetOpeningThePopUp) ->
+  popUpSimpleTextWdgtMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Simple plain text"
-    menu.addMenuItem "simple plain text wrapping", menusHelper, "createNewWrappingSimplePlainTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text not wrapping", menusHelper, "createNewNonWrappingSimplePlainTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text (wrapping / not wrapping)", menusHelper, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text panel wrapping", menusHelper, "createWrappingSimplePlainTextPanelWdgt"
-    menu.addMenuItem "simple plain text panel not wrapping", menusHelper, "createNonWrappingSimplePlainTextPanelWdgt"
-    menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", menusHelper, "createWrappingAndNonWrappingSimplePlainTextPanelWdgt"
-    menu.addMenuItem "simple plain text scrollpanel wrapping", menusHelper, "createWrappingSimplePlainTextScrollPanelWdgt"
-    menu.addMenuItem "simple plain text scrollpanel not wrapping", menusHelper, "createNonWrappingSimplePlainTextScrollPanelWdgt"
-    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", menusHelper, "createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text wrapping", menusHelper, "createNewWrappingSimpleTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text not wrapping", menusHelper, "createNewNonWrappingSimpleTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text (wrapping / not wrapping)", menusHelper, "createNewWrappingAndNonWrappingSimpleTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text panel wrapping", menusHelper, "createWrappingSimpleTextPanelWdgt"
+    menu.addMenuItem "simple plain text panel not wrapping", menusHelper, "createNonWrappingSimpleTextPanelWdgt"
+    menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", menusHelper, "createWrappingAndNonWrappingSimpleTextPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel wrapping", menusHelper, "createWrappingSimpleTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel not wrapping", menusHelper, "createNonWrappingSimpleTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", menusHelper, "createWrappingAndNonWrappingSimpleTextScrollPanelWdgt"
 
     menu.popUpAtHand()
 
@@ -749,7 +749,7 @@ class MenusHelper
   popUpSecondMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "others"
     menu.addMenuItem "icons ➜", menusHelper, "popUpIconsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
-    menu.addMenuItem "simple plain text ➜", menusHelper, "popUpSimplePlainTextWdgtMenu", closesUnpinnedPopUps: false, toolTip: "icons"
+    menu.addMenuItem "simple plain text ➜", menusHelper, "popUpSimpleTextWdgtMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "vertical stack ➜", menusHelper, "popUpVerticalStackMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "document ➜", menusHelper, "popUpDocumentMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "windows ➜", menusHelper, "popUpWindowsMenu", closesUnpinnedPopUps: false, toolTip: "icons"

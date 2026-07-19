@@ -20,7 +20,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw._applyMoveTo new Point 114, 10
     sdspw._applyExtent new Point 365, 405
 
-    startingContent = new SimplePlainTextWdgt(
+    startingContent = new SimpleTextWdgt(
       "Sample Doc",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22

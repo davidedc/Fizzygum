@@ -61,7 +61,7 @@ class ErrorsLogViewerWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField

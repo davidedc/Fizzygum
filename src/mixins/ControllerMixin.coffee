@@ -95,7 +95,7 @@ ControllerMixin =
         menu.addMenuItem (if @firesPerEvent then label.tick() else label), @, "toggleFiresPerEvent", toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
 
       # The shared "connect a target" menu block, appended identically by every
-      # controller (SliderWdgt, SimplePlainTextWdgt, PaletteWdgt, FanoutPinWdgt and
+      # controller (SliderWdgt, SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and
       # the patch nodes) right after its `super`: a divider, then the index-page
       # "connect to ➜" vs in-app "set target" item, then the firesPerEvent toggle.
       # The only thing that varied between sites was the property-kind word in the

@@ -7,7 +7,7 @@
 #  - FIT_BOX_TO_TEXT: the inverse — the widget resizes its OWN extent to hug its
 #    text. For contained multi-line text the width comes from the container and
 #    the height follows the wrapped content (height-adjusts-to-width); this is
-#    what makes a SimplePlainTextWdgt — and now ANY TextWdgt used as
+#    what makes a SimpleTextWdgt — and now ANY TextWdgt used as
 #    window / panel / scroll content — re-wrap and auto-grow/shrink its height.
 #    Wired into StringWdgt/TextWdgt reflowText + _reLayoutSelf + createBufferCacheKey.
 #

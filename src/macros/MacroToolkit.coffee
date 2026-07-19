@@ -891,7 +891,7 @@ class MacroToolkit
 
     slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "SimplePlainTextScrollPanelWdgt"
+    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "SimpleTextScrollPanelWdgt"
     textWidget = inspectorNaked.textWidget
 
     vBar = textScrollPane.vBar

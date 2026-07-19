@@ -33,7 +33,7 @@ class ConsoleWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt "", false, 5
+    @tempPromptEntryField = new SimpleTextScrollPanelWdgt "", false, 5
     @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField

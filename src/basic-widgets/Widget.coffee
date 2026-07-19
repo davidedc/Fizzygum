@@ -3940,11 +3940,11 @@ class Widget extends TreeNode
     # merge some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
     # a ScrollPanelWdgt).
-    # the FIELD is the single truth (Widget default false; SimplePlainTextScrollPanelWdgt sets
+    # the FIELD is the single truth (Widget default false; SimpleTextScrollPanelWdgt sets
     # it true) — the `instanceof ScrollPanelWdgt` qualifier is dropped, and the one non-scroll
-    # writer (SimplePlainTextPanelWdgt's dead constructor write) deleted with it; old saved
+    # writer (SimpleTextPanelWdgt's dead constructor write) deleted with it; old saved
     # documents are normalized at load (type-test-elimination ε; see
-    # SimplePlainTextPanelWdgt._afterDeserialization)
+    # SimpleTextPanelWdgt._afterDeserialization)
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
       m.takesOverAndMergesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
@@ -4497,9 +4497,9 @@ class Widget extends TreeNode
   
   allEntryFields: ->
     # an entry field is any editable StringWdgt-family widget. isTextEntryField (on StringWdgt,
-    # inherited by SimplePlainTextWdgt et al.) replaces the `instanceof StringWdgt or instanceof
-    # SimplePlainTextWdgt` test -- whose second clause was already redundant, since
-    # SimplePlainTextWdgt is-a StringWdgt. (type-test-elimination campaign)
+    # inherited by SimpleTextWdgt et al.) replaces the `instanceof StringWdgt or instanceof
+    # SimpleTextWdgt` test -- whose second clause was already redundant, since
+    # SimpleTextWdgt is-a StringWdgt. (type-test-elimination campaign)
     @collectAllChildrenBottomToTopSuchThat (each) ->
       each.isEditable and each.isTextEntryField?()
   

@@ -93,8 +93,8 @@ class CaretWdgt extends BlinkerWdgt
             if shiftKey
               return @target.backTab @target
             else
-              # SimplePlainTextWdgt inserts two spaces on Tab; every other target
-              # handles Tab itself (was `@target instanceof SimplePlainTextWdgt`).
+              # SimpleTextWdgt inserts two spaces on Tab; every other target
+              # handles Tab itself (was `@target instanceof SimpleTextWdgt`).
               # (type-test-elimination campaign)
               if @target.tabInsertsSpaces?()
                 @insert "  "
