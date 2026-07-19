@@ -20,15 +20,18 @@
 # dividers are DividerWdgt. Rows are added by the owner after construction
 # (addMenuItem / addLine), matching MenuWdgt's compose-after-build protocol.
 #
-# LAYOUT (§5.2e): the panel IS a SimpleVerticalStackPanelWdgt — the ONE vertical-
-# stack engine lays the rows out (the optional MenuHeader is just child 0, stacked
-# like any row). Menu-ness enters only through the base's own policy seams:
-#  - border 2 / gap 0: the stack's padding knob set tight, with the new
+# LAYOUT (§5.2e + the menu-row-conformance arc): the panel IS a
+# SimpleVerticalStackPanelWdgt — the ONE vertical-stack engine lays the rows out
+# (the optional MenuHeader is just child 0, stacked like any row). Menu-ness
+# enters only through the base's own policy seams:
+#  - border 2 / gap 0: the stack's padding knob set tight, with the
 #    interElementGap() policy at 0 so rows sit FLUSH inside the 2px border;
 #  - width: a menu SELF-sizes to its widest row (a general stack takes its width
-#    from its container) and then EQUALIZES — every row is stretched to the full
-#    row width so hover highlights span the menu. Both live in the
-#    _positionAndResizeChildren specialization below, around super().
+#    from its container) — the _positionAndResizeChildren specialization hugs the
+#    width, then super() distributes it; _childWidthInStack hands every row the
+#    full row width, so hover highlights span the menu. Each row kind arranges
+#    its own innards through the engine's standard chokepoints (conformance
+#    Phase 2), so no equalization post-pass exists.
 # Unlike a general stack the panel accepts no drops and imposes no width ratio
 # (suppressed below). It IS a size-tracking container now: membership changes
 # re-arrange it via the engine; the wrapping MenuWdgt / PromptWdgt absorbs those
@@ -195,29 +198,20 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
   # this part is excluded from the fizzygum homepage build <<«
 
-  # The stack arrange, specialized by menu POLICY around super() (§5.2e):
-  #  1. WIDTH: a menu SELF-sizes to its widest row + border (a general stack
-  #     takes its width from its container) — hug the width FIRST so super()
-  #     distributes exactly that.
-  #  2. super() stacks all children (header first, rows flush inside the 2px
-  #     border) at their natural widths and hugs my height.
-  #  3. EQUALIZE: stretch every row to the full row width so hover highlights
-  #     span the menu — a plain stack leaves a narrow row narrow. The stretch
-  #     goes through the VIRTUAL _applyWidth (not the arrange's base extent
-  #     apply) because several row types re-lay their innards there: a slider
-  #     re-lays its button, a string field its text, the MenuHeader re-centres
-  #     its title.
+  # The stack arrange, specialized by ONE menu policy: a menu SELF-sizes its
+  # width to its widest row + border (a general stack takes its width from its
+  # container) — hug the width FIRST so super() distributes exactly that.
+  # Row equalization needs no pass of its own: _childWidthInStack (below) hands
+  # every row the full row width, and each row kind arranges its own innards
+  # through the engine's standard chokepoints (menu-row-conformance Phase 2:
+  # header/slider/field track via _reLayoutChildren, the picker via its
+  # deferred _reLayout; items and dividers are true leaves), so BOTH engine
+  # branches emerge equalized. The interim §5.2e post-pass that re-stretched
+  # every row through the virtual _applyWidth — needed only to fire the row
+  # types' bespoke pre-conformance hooks — is gone (Phase 2e).
   _positionAndResizeChildren: ->
-    # no point in breaking a rectangle for each row; hold the broken rects and
-    # issue ONE fullChanged() at the end.
-    world.disableTrackChanges()
     @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
     super()
-    w = @availableWidthForContents()
-    @children.forEach (item) ->
-      item._applyWidth w
-    world.maybeEnableTrackChanges()
-    @fullChanged()
 
   # My preferred row width: the widest child's PURE content measure. Every row
   # kind that contributes a width answers menuEntryPreferredWidth() — MenuItemWdgt
