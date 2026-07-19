@@ -590,9 +590,9 @@ standing convention, already partly true; the frame model itself graduates there
 | D3 | "plain = manipulable citizen, not necessarily framed" | **ACCEPTED** — LOCKED (owner). |
 | D4 | Framing is intrinsic to the content type (not context) | **ACCEPTED** — LOCKED; "frame-on-demand" REJECTED. |
 | D5 | Correctness over churn | **ACCEPTED** — LOCKED; no churn-based deferrals; phasing = verifiability only. |
-| D6 | `Simple*` vs `Basic*` prefix | Open (lean `Simple*` — the established prefix; `basic-widgets/` folder makes `Basic*` read oddly). |
-| D7 | Naked-text class/role | `SimpleTextWdgt` + a `TitleWdgt` role — confirm whether `TitleWdgt` is a thin subclass or just a styled `SimpleTextWdgt`. |
-| D8 | Does text-entry (caret) get gated by edit mode inside a `DocumentWdgt`? | Open — recommend yes (view = published/locked; edit = caret + toolbar). |
+| D6 | `Simple*` vs `Basic*` prefix | **`Simple*`** — LOCKED (owner, 2026-07-19): the established prefix; `basic-widgets/` makes `Basic*` read oddly. |
+| D7 | Naked-text class/role | **`TitleWdgt` = a THIN SUBCLASS of `SimpleTextWdgt`** — LOCKED (owner, 2026-07-19): the name encodes the role (hierarchy label "a Title", serialization/drop identity, styling defaults in-class). |
+| D8 | Does text-entry (caret) get gated by edit mode inside a `DocumentWdgt`? | **YES** — LOCKED (owner, 2026-07-19): view = published/locked page, clicks summon no caret; the pencil flips into editing (caret + toolbar together). |
 | D9 | Toolbar dock side + ejection | **LOCKED** — one `ToolbarWdgt` variant per content type; `dockSide` a property (default text→top, paint→left); ejection possible via the Super Toolbar but **no dedicated eject affordance** (context-menu at most). |
 
 ---
