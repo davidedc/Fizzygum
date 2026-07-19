@@ -117,6 +117,17 @@ class SimpleVerticalStackPanelWdgt extends Widget
   availableWidthForContents: ->
     @width() - 2 * @padding
 
+  # The gap between two consecutive stacked elements. Historically the ONE
+  # @padding knob served as BOTH the border inset and the inter-element gap;
+  # they are distinct layout roles (CSS padding vs gap), so the gap is now its
+  # own policy method for a subclass to set apart — MenuRowsPanelWdgt stacks its
+  # rows FLUSH (gap 0) inside a 2px border. Default: the border padding,
+  # preserving every existing stack byte-identically. Mirrored in the three
+  # walkers (_positionAndResizeChildren / preferredExtentForWidth /
+  # subWidgetsMergedPreferredBounds) exactly like the _childWidthInStack trio.
+  interElementGap: ->
+    @padding
+
   # The per-child stack sizing POLICY, in ONE place for the three siblings that walk my children
   # (the pure measures preferredExtentForWidth / subWidgetsMergedPreferredBounds and the applying
   # _positionAndResizeChildren): the width my stack recommends for a child, and the left edge its
@@ -165,12 +176,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
     availForContents = availW - 2 * @padding
     children = @childrenNotHandlesNorCarets()
     totalHeight = 0
-    for widget in children
+    for widget, i in children
       if @constrainContentWidth
         childHeight = (@_childMeasuredExtentInStack widget, @_childWidthInStack widget, availForContents).y
       else
         childHeight = widget.height()
-      totalHeight += @padding + childHeight
+      # top border above the first element, inter-element gap above the rest (mirrors the arrange)
+      totalHeight += (if i == 0 then @padding else @interElementGap()) + childHeight
     totalHeight += @padding
     if !@tight or children.length == 0
       totalHeight = Math.max totalHeight, @height()
@@ -204,7 +216,8 @@ class SimpleVerticalStackPanelWdgt extends Widget
         h = widget.height()
         w = widget.width()
         left = @left() + @padding
-      top = @top() + (i + 1) * @padding + cumH
+      # border above the first element, gap above the rest (mirrors the arrange)
+      top = @top() + @padding + i * @interElementGap() + cumH
       r = new Rectangle left, top, left + w, top + h
       merged = if merged? then merged.merge r else r
       cumH += h
@@ -223,8 +236,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
         widget.layoutSpecDetails.captureInitialPlacement widget, @
         widget._setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
 
-    childrenNotHandlesNorCarets.forEach (widget) =>
-      verticalPadding += @padding
+    childrenNotHandlesNorCarets.forEach (widget, childIndex) =>
+      # top border above the first element, inter-element gap above the rest
+      verticalPadding += if childIndex == 0 then @padding else @interElementGap()
       elementHeight = nil   # set in the else-branch from the handed-forward resize result; see stackHeight += below
 
       if !@constrainContentWidth

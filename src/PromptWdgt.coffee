@@ -25,8 +25,8 @@ class PromptWdgt extends PopUpWdgt
   callback: nil
   defaultContents: nil
   intendedWidth: nil
-  # the titled MenuRowsPanelWdgt that is this pop-up's whole visible body.
-  rowsPanel: nil
+  # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
+  # shared with MenuWdgt, along with the lay-and-hug + membership absorber.)
   # this pop-up's title bar: the MenuHeader the rows-panel builds from @msg,
   # surfaced here so `prompt.label` reaches it the same way `menu.label` reaches a
   # menu's header (the drag/pin-by-header idiom the menu tests share). Storage
@@ -81,7 +81,7 @@ class PromptWdgt extends PopUpWdgt
     # before child, so I size to the panel's freshly-laid-out extent HERE (as
     # ListWdgt lays out its listContents at build) rather than reading it mid-pass.
     @rowsPanel.__commitMoveTo @position()
-    @rowsPanel._reLayoutSelf()
+    @rowsPanel._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
     @_addNoSettle @rowsPanel
     @_applyExtent @rowsPanel.extent()
     # surface the panel's title header as my own .label (the drag/pin-by-header handle).

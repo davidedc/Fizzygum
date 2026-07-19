@@ -1,6 +1,10 @@
 # Container regularization — de-byzantinate Menu / List / Prompt / Divider
 
-**STATUS: IN PROGRESS 2026-07-18 — §5.1 + §5.2a–c + §5.3 LANDED. §5.1/§5.2a–c = the List/Menu/Divider
+**STATUS: ✅ COMPLETE 2026-07-19 — ALL sections landed, §5.2e included (see its OUTCOME block).
+Residual wrinkles §5.2e deliberately left are owned by the follow-on
+[`menu-row-conformance-plan.md`](menu-row-conformance-plan.md) (authored 2026-07-19, not started).**
+
+**History of the run (kept verbatim): STATUS as of 2026-07-18 — §5.1 + §5.2a–c + §5.3 LANDED. §5.1/§5.2a–c = the List/Menu/Divider
 untie (gauntlet 11/11, byte-identical bar 1 benign inspector recapture; `instanceof` baseline 97→95;
 committed `44493b78`+`7733d214`, tests `38e25bcce`). §5.3 = the prompt family re-based OFF `MenuWdgt`:
 `PromptWdgt extends PopUpWdgt` composing ONE titled `MenuRowsPanelWdgt` (generalized in this step with a
@@ -28,8 +32,9 @@ eyeballed + accepted its one visible effect (a stray hover-highlight through the
 `macroSaveAsPromptAboveTiltedWindow` image_2) and it was consciously recaptured (see §5.6 OUTCOME).
 **§5.5 BOTH TICK TESTS LANDED + guard-proven 2026-07-19** (`macroWallpaperMenuTickTracksSelection` +
 `macroFontsMenuTickTracksSelection` cover both `menu.rowsPanel.children[N]` tick sites — Wallpaper and
-StringWdgt; see §5.5 OUTCOME). REMAINING (fleshed out below, executable cold): **§5.2e** (re-base
-`MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, OK to leave unfinished).**
+StringWdgt; see §5.5 OUTCOME). **§5.2e LANDED 2026-07-19** (the stack re-base — see its OUTCOME
+block; owner directive mid-execution: "Do The Right Thing", byte-identicality dropped in favour of
+clean architecture, 56-test conscious recapture).**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -167,7 +172,8 @@ borderless box. **Latent bug:** any stray `RectangleWdgt` in a menu is treated a
 | I | List hugs content / fits any area | **DONE (elsewhere)** | sizing-model-unification arc |
 
 **F ruled DONE 2026-07-18 (§5.4, a deliberate NON-merge — recorded in `layering-naming-convention.md` §6).**
-A/B/C/D/E/F/G/H/I are all DONE. Only the OPTIONAL §5.2e stack re-base remains (leaving it unfinished is fine).
+A/B/C/D/E/F/G/H/I are all DONE, and the §5.2e stack re-base LANDED 2026-07-19 — the arc is COMPLETE.
+Residual §5.2e wrinkles → the follow-on `menu-row-conformance-plan.md`.
 
 ---
 
@@ -282,8 +288,44 @@ Plus two PRODUCTION `menu.children[N]`-index sites (feature code reaching items 
 These are the ONLY two such sites in the tree (grep-confirmed); NO test covered either — verify by hand /
 headless probe.
 
-**5.2e — (follow-on) Re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt`. THE HARDEST remaining
-step — do it LAST; leaving it unfinished is fine (the arc is complete without it).**
+**5.2e — Re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt`. ✅ LANDED 2026-07-19.**
+
+**OUTCOME (2026-07-19).** Mid-execution the owner REDIRECTED: byte-identicality dropped — "I want to
+Do The Right Thing and use a clean architecture… let's deal with the tests churn fallout." The landed
+shape is therefore the CLEAN one, not the byte-preserving wholesale-override first attempted:
+- `MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt`; the stack engine lays the rows; the
+  MenuHeader is just child 0 (its hand-placement + loop-skips deleted). The hand-rolled
+  `_reLayoutSelf` / `adjustWidthsOfMenuEntries` / zero-extent→`fullBounds()+2` dance are GONE.
+- NEW base policy `SimpleVerticalStackPanelWdgt.interElementGap()` (default `@padding` — byte-identical
+  for every pre-existing stack; mirrored in the arrange + `preferredExtentForWidth` +
+  `subWidgetsMergedPreferredBounds`): border-inset and inter-row gap are now distinct roles. The panel
+  sets border 2 (`super nil, nil, 2`) / gap 0 → rows FLUSH inside a 2px border.
+- ONE arrange specialization on the panel: hug own width to `maxWidthOfMenuEntries()+2·padding` →
+  `super()` → post-pass stretching every row via the VIRTUAL `_applyWidth` (required: Slider/
+  StringField/MenuHeader re-lay innards in `_applyWidth`/`_applyExtent` overrides, and ColorPicker's
+  palettes ride the base `_applyExtent` schedule-valve — the base's override-bypassing leaf apply
+  cannot fire any of those). `_childWidthInStack` override hands every row the full width;
+  `_acceptsDrops false` + ratio-constraint queries false (a menu body is no drop target).
+- Shared home on `PopUpWdgt`: the `rowsPanel` field, `_layOutAndHugRowsPanel` (drives
+  `@rowsPanel._reLayoutChildren()` — the stack chokepoint — then hugs via `_applyExtentBase`), and a
+  `_reLayOutAfterContainedPanelChange` membership absorber (the designed seam ScrollPanelWdgt uses).
+  MenuWdgt/PromptWdgt inherit all three; menus keep the lay-once-at-popUp model (`_reactToBeingAdded`).
+  The absorber FIXED a latent hole: `removeMenuItem` on an open menu used to leave the pop-up frame +
+  shadow stale. The three drive sites (MenuWdgt/ListWdgt/PromptWdgt) now call `_reLayoutChildren()`.
+- EVIDENCE: `fg census` 0 movers/1623 (arrange is a fixed point — the §5.2d oscillation did NOT
+  reappear); `fg revisits` profile == the EMPTY baseline (re-checked via
+  `revisit-gate.js --audit-dir` since the gate aborts on a failing suite); 0 geometry violations.
+  Pixel delta (owner-eyeballed via `fg diffpage`, approved): titled menus 1px shorter (the old `+1`
+  header gap died), untitled panels' rows 1px lower (top inset 1→2), widths unchanged. 56 tests
+  consciously recaptured (54 enumerated by the dpr1 suite + 2 load-borderline extras), 56/56
+  verified; full gauntlet closed the arc (see commit).
+- RESIDUAL WRINKLES (deliberate, quarantined): the post-pass double-write; the four row types'
+  bespoke innard hooks (the root cause); the panel's width-flow inversion vs its inherited pure
+  measures; the `menuEntryPreferredWidth: -> @width()` no-shrink ratchet. ALL owned by
+  [`menu-row-conformance-plan.md`](menu-row-conformance-plan.md) (4 gated phases incl. a sanctioned
+  one-shot re-test of menu-as-tracking-container now that the arrange is a fixed point).
+
+*Original §5.2e spec (kept for the record — superseded by the OUTCOME above):*
 Today `MenuRowsPanelWdgt extends Widget` and hand-lays its rows in `_reLayoutSelf` (position each non-`@label`
 row top-to-bottom under the optional MenuHeader, then `adjustWidthsOfMenuEntries` equalizes every row to the
 widest via `menuEntryPreferredWidth?()`, then `__commitExtent fullBounds+2`). §5.2e replaces that lifted

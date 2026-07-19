@@ -26,12 +26,40 @@ class PopUpWdgt extends Widget
   # 2) they can appear unoccluded if the "parent widget" or "parent object"
   #    are in a widget that clips at its boundaries.
   widgetOpeningThePopUp: nil
+  # the MenuRowsPanelWdgt that is this pop-up's whole visible body (box, optional
+  # title header, and the rows) — both subclasses (MenuWdgt / PromptWdgt) build
+  # one and delegate/compose against it; the shared lay-and-hug + membership-
+  # change absorber below work off it. Free-floating, so it co-moves with me.
+  rowsPanel: nil
 
   constructor: (@widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
     super()
     @isLockingToPanels = false
     world.freshlyCreatedPopUps.add @
     world.openPopUps.add @
+
+  # Lay my rows-panel out at my origin and hug its extent. The panel is a
+  # vertical stack (§5.2e): its re-fit chokepoint _reLayoutChildren lays the rows
+  # out and self-sizes it via immediate mutators (FLOWRULE-safe); I then hug its
+  # final extent via the non-notifying _applyExtentBase twin. MenuWdgt drives
+  # this at popUp (_reactToBeingAdded); PromptWdgt lays inline at build. The
+  # panel is free-floating, so it co-moves with me if I am later dragged or
+  # clamped on-screen.
+  _layOutAndHugRowsPanel: ->
+    return unless @rowsPanel?
+    @rowsPanel.__commitMoveTo @position()
+    @rowsPanel._reLayoutChildren()
+    @_applyExtentBase @rowsPanel.extent()
+
+  # The designed membership-change seam (see the stack's _reactToChildRemoved /
+  # _reactToChildDropped): when my rows-panel's membership changes (e.g.
+  # removeMenuItem on an open menu), absorb it by re-laying the panel and
+  # re-hugging its extent NOW — I am not a size-tracking container, so without
+  # this the panel would re-fit itself at settle and leave my own frame (and
+  # shadow) stale at the old size.
+  _reLayOutAfterContainedPanelChange: ->
+    @_layOutAndHugRowsPanel()
+    true
 
   hierarchyOfPopUps: ->
     ascendingWdgts = @

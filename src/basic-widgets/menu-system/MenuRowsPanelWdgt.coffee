@@ -1,5 +1,5 @@
-# A self-laying vertical stack of rows (menu items, dividers, and small editors
-# like sliders / colour-pickers / string fields) — the pure LAYOUT half of a
+# A vertical stack of rows (menu items, dividers, and small editors like
+# sliders / colour-pickers / string fields) — the pure LAYOUT half of a
 # menu, split from the pop-up behaviour (which lives in PopUpWdgt). It carries no
 # menu-ness of its own: no pop-up membership, no click-outside-to-close, no
 # shadow. What a wrapping PopUpWdgt (a MenuWdgt or a PromptWdgt) owns is the
@@ -17,15 +17,24 @@
 #
 # Rows answer menuEntryPreferredWidth() (MenuItemWdgt / StringFieldWdgt /
 # ColorPickerWdgt / SliderWdgt) so every row is widened to the panel's widest;
-# dividers are DividerWdgt. The panel lays itself out in _reLayoutSelf (like the
-# menu does) — it hand-sizes to its rows, it is NOT a size-tracking container, so
-# it defines no _reLayoutChildren. Rows are added by the owner after construction
+# dividers are DividerWdgt. Rows are added by the owner after construction
 # (addMenuItem / addLine), matching MenuWdgt's compose-after-build protocol.
 #
-# Base is Widget (not PanelWdgt): the panel does not clip — a ListWdgt's scroll
-# frame does — and the menu whose row-stack this is was never a panel.
+# LAYOUT (§5.2e): the panel IS a SimpleVerticalStackPanelWdgt — the ONE vertical-
+# stack engine lays the rows out (the optional MenuHeader is just child 0, stacked
+# like any row). Menu-ness enters only through the base's own policy seams:
+#  - border 2 / gap 0: the stack's padding knob set tight, with the new
+#    interElementGap() policy at 0 so rows sit FLUSH inside the 2px border;
+#  - width: a menu SELF-sizes to its widest row (a general stack takes its width
+#    from its container) and then EQUALIZES — every row is stretched to the full
+#    row width so hover highlights span the menu. Both live in the
+#    _positionAndResizeChildren specialization below, around super().
+# Unlike a general stack the panel accepts no drops and imposes no width ratio
+# (suppressed below). It IS a size-tracking container now: membership changes
+# re-arrange it via the engine; the wrapping MenuWdgt / PromptWdgt absorbs those
+# through _reLayOutAfterContainedPanelChange (re-lay + re-hug), see PopUpWdgt.
 
-class MenuRowsPanelWdgt extends Widget
+class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
   target: nil
   environment: nil
@@ -33,17 +42,44 @@ class MenuRowsPanelWdgt extends Widget
   title: nil
   label: nil
   _selectsItemsOnClick: false
+  # A menu / list-contents row-stack is the internal body of a pop-up or scroll
+  # frame — it accepts no drops and imposes no width ratio on its rows, unlike a
+  # general SimpleVerticalStackPanelWdgt (which does both). Suppress the inherited
+  # container behaviours.
+  _acceptsDrops: false
+
+  imposesRatioConstraintOnDroppedChildren: ->
+    false
+
+  releasesRatioConstraintOnGrabbedChildren: ->
+    false
 
   constructor: (opts = {}) ->
-    super()
+    # padding 2 = the menu's tight border; rows stack FLUSH inside it (see
+    # interElementGap below). No extent/color through the base ctor — the look
+    # is set right here.
+    super nil, nil, 2
     @target = opts.target
     @environment = opts.environment
     @fontSize = opts.fontSize
     @title = opts.title
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
+    # replace the stack's RectangularAppearance: the panel draws the menu box
+    # (rounded when titled, stroked with the menu stroke).
     @appearance = new MenuAppearance @
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
+    @color = Color.create 238, 238, 238
+    if @title
+      @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
     @_buildMenuLabel()
+
+  colloquialName: ->
+    "menu rows"
+
+  # menu rows sit FLUSH (contiguous hover highlights); only the outer border
+  # keeps the 2px padding. See the base's interElementGap policy comment.
+  interElementGap: ->
+    0
 
   # Role query: rows in a select-on-click panel are list entries; elsewhere they
   # trigger. MenuItemWdgt.isListItem dispatches on it via ?(), so a plain MenuWdgt
@@ -77,7 +113,11 @@ class MenuRowsPanelWdgt extends Widget
   _buildMenuLabelNoSettle: ->
     if @title
       @_createLabel()
-      @_addNoSettle @label
+      # the RAW structural add, exactly like the rows (addMenuItem -> __add): the
+      # header is just child 0 of the stack, composed before the driver arranges;
+      # the stack's _addNoSettle insert-by-height + pre-resize protocol is for
+      # interactive drops, not for the menu's compose-after-build protocol.
+      @__add @label
 
   _createLabel: ->
     @label = new MenuHeader @title
@@ -155,35 +195,27 @@ class MenuRowsPanelWdgt extends Widget
 
   # this part is excluded from the fizzygum homepage build <<«
 
-  _reLayoutSelf: ->
-    super()
-
-    # no point in breaking a rectangle for each row, let's hold on the broken
-    # rects and then issue a fullChanged() at the end.
+  # The stack arrange, specialized by menu POLICY around super() (§5.2e):
+  #  1. WIDTH: a menu SELF-sizes to its widest row + border (a general stack
+  #     takes its width from its container) — hug the width FIRST so super()
+  #     distributes exactly that.
+  #  2. super() stacks all children (header first, rows flush inside the 2px
+  #     border) at their natural widths and hugs my height.
+  #  3. EQUALIZE: stretch every row to the full row width so hover highlights
+  #     span the menu — a plain stack leaves a narrow row narrow. The stretch
+  #     goes through the VIRTUAL _applyWidth (not the arrange's base extent
+  #     apply) because several row types re-lay their innards there: a slider
+  #     re-lays its button, a string field its text, the MenuHeader re-centres
+  #     its title.
+  _positionAndResizeChildren: ->
+    # no point in breaking a rectangle for each row; hold the broken rects and
+    # issue ONE fullChanged() at the end.
     world.disableTrackChanges()
-
-    if @title
-      @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
-    @color = Color.create 238, 238, 238
-    @__commitExtent new Point 0, 0
-
-    if @title
-      @label._applyMoveTo @position().add 2
-      y = @label.bottom()
-    else
-      y = @top()
-    y += 1
-    x = @left() + 2
-
-    for item in @children
-      if item == @label then continue
-      item._applyMoveTo new Point x, y
-      y = y + item.height()
-
-    @adjustWidthsOfMenuEntries()
-    fb = @fullBounds()
-    # add some padding to the right and bottom
-    @__commitExtent fb.extent().add 2
+    @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
+    super()
+    w = @availableWidthForContents()
+    @children.forEach (item) ->
+      item._applyWidth w
     world.maybeEnableTrackChanges()
     @fullChanged()
 
@@ -198,14 +230,6 @@ class MenuRowsPanelWdgt extends Widget
     if @label
       w = Math.max w, @label.width()
     w
-
-  # makes all the rows of this panel the right width.
-  adjustWidthsOfMenuEntries: ->
-    w = @maxWidthOfMenuEntries()
-    world.disableTrackChanges()
-    @children.forEach (item) =>
-      item._applyWidth w
-    world.maybeEnableTrackChanges()
 
   unselectAllItems: ->
     # only menu items carry a selection state; each resets its own.

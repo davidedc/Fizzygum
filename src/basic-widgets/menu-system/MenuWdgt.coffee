@@ -21,9 +21,8 @@ class MenuWdgt extends PopUpWdgt
   title: nil
   environment: nil
   fontSize: nil
-  # the titled MenuRowsPanelWdgt that is this menu's whole visible body (box,
-  # title header, and the rows). Free-floating, so it co-moves with me.
-  rowsPanel: nil
+  # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
+  # shared with PromptWdgt, along with the lay-and-hug + membership absorber.)
   # my title bar: the MenuHeader the rows-panel builds from @title, surfaced here
   # so `menu.label` reaches it (the drag/pin-by-header idiom the menu tests share).
   # Same instance as @rowsPanel.label, so `.center()` tracks it live.
@@ -95,30 +94,18 @@ class MenuWdgt extends PopUpWdgt
     @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.canSetHeightFreely = false
 
-  # Lay my rows-panel out at my origin and hug its extent. A menu's ITEMS are added
-  # by the opener via the RAW __add (addMenuItem -> panel.__add), which does NOT
-  # invalidate or trigger layout -- so the panel never re-lays-out its rows on its
-  # own. I drive its _reLayoutSelf() here (it lays its rows out + self-sizes via
-  # immediate mutators, FLOWRULE-safe) and hug its final extent via the non-notifying
-  # _applyExtentBase twin. Like the old self-laying menu, this runs ONCE at popUp
-  # (via _reactToBeingAdded), NOT on every settle: a menu is always fully composed
-  # BEFORE popUp (every addMenuItem / removeConsecutiveLines caller builds the whole
-  # menu, then pops it up), so a stable one-shot layout reproduces the old menu's
-  # behaviour EXACTLY and avoids the re-fit churn a size-tracking container adds
-  # (an on-every-settle re-drive shifted the menu ±1px, un-hovering the item under
-  # the pointer). The panel is free-floating, so it co-moves with me if I am later
-  # dragged or clamped on-screen.
-  _layOutAndHugRowsPanel: ->
-    return unless @rowsPanel?
-    @rowsPanel.__commitMoveTo @position()
-    @rowsPanel._reLayoutSelf()
-    @_applyExtentBase @rowsPanel.extent()
-
   # Lay out at ADD time -- the menu's layout trigger. The opener builds a menu, adds
-  # its items (raw __add, no settle), then popUpAtHand; popUp attaches me to the
-  # world, firing this -- exactly as the base Widget._reactToBeingAdded -> @_reLayoutSelf
-  # laid the old self-laying menu's rows out at popUp. Also fires on re-parenting (a
-  # pinned menu dropped into a panel), re-laying at the new origin.
+  # its items (raw __add, no settle -- so the panel never re-lays-out its rows on
+  # its own), then popUpAtHand; popUp attaches me to the world, firing this, which
+  # drives the shared PopUpWdgt._layOutAndHugRowsPanel -- exactly as the base
+  # Widget._reactToBeingAdded -> @_reLayoutSelf laid the old self-laying menu's
+  # rows out at popUp. This one-shot-at-popUp model stands because a menu is
+  # always fully composed BEFORE popUp; post-popUp membership changes are
+  # absorbed by the inherited _reLayOutAfterContainedPanelChange (re-lay +
+  # re-hug), NOT by making me a size-tracking container (an on-every-settle
+  # re-drive shifted the menu ±1px, un-hovering the item under the pointer --
+  # §5.2d). Also fires on re-parenting (a pinned menu dropped into a panel),
+  # re-laying at the new origin.
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_layOutAndHugRowsPanel()
 

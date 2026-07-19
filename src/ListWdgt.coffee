@@ -100,7 +100,7 @@ class ListWdgt extends ScrollPanelWdgt
 
     world.maybeEnableTrackChanges()
     @listContents.__commitMoveTo @contents.position()
-    @listContents._reLayoutSelf()
+    @listContents._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
 
     @contents._addNoSettle @listContents, layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
 
