@@ -5,17 +5,7 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorB
   createAppearance: -> new PatchProgrammingComponentsIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    toolsPanel.addMany [
-      new SliderNodeCreatorButtonWdgt
-      new ColorPaletteNodeCreatorButtonWdgt
-      new GrayscalePaletteNodeCreatorButtonWdgt
-      new CalculatingNodeCreatorButtonWdgt
-    ]
-
-    toolsPanel.disableDragsDropsAndEditing()
-
-    return @_buildToolWindow toolsPanel, new Point 61, 192
+    # the ONE patch-programming list (§5.C): this floating palette shares
+    # PatchProgrammingWdgt's docked one, incl. the text-box creator
+    @_buildToolWindow new PatchProgrammingToolbarWdgt, new Point 61, 192
 

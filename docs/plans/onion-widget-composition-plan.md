@@ -1,6 +1,9 @@
 # The Frame model — naked capability → manipulable citizen → App
 
-**STATUS: AUTHORED 2026-07-18, REVISED 2026-07-18, RE-VERIFIED 2026-07-19 — design-stage, NO code written yet. Owner-gated execution.**
+**STATUS: AUTHORED 2026-07-18, REVISED 2026-07-18, RE-VERIFIED 2026-07-19. EXECUTING: Phase A ✅ COMPLETE
+2026-07-19 (P0+A1 `03163312`/`c53055fd`, A2a `edd40eb1`, A2b `10aa3342`); §5.C execution design ADDED
+2026-07-19 (toolbar substrate re-verified against src @ `10aa3342` — §3.4's A1-drifted names corrected).
+Owner-gated execution.**
 This revision **supersedes** the earlier "three-ring onion" framing of this file: the middle "editor
 panel" ring is dissolved (the toolbar is a *slot inside the frame*, not a ring), and the naming/structure
 below were settled with the owner in a design dialogue on 2026-07-18. Class names verified against the
@@ -44,6 +47,10 @@ Two kinds of thing, plus one wrapper, plus one shared tool:
    │     └─ payload ─────── a Simple*Wdgt (or a flow of them)
    └──────────────────────────────────────────────────────────────────────────────────────
 ```
+
+(⚠ The "content-container" is a REGION of the frame's body, not a widget: the §5.C design rules out a
+physical intermediate child — the toolbar is a stable direct frame child and the payload stays `@contents`
+— see §5.C C-ii for the §5.2d-case-law argument.)
 
 ### 1.1 The keystone principle — framing is INTRINSIC to the content type
 
@@ -120,7 +127,7 @@ All paths under `Fizzygum/src/`. This is the substrate the migration transforms.
   **one** `contents` widget (laid out by `WindowContentLayoutSpec`). `isInternal()` is **derived from
   parentage**; the window/card skin is re-derived on every reparent (the old manual "make internal" toggle
   is already gone). `representativeIcon()` returns **the content's** icon.
-- `WorldWdgt.openWindowWith(contentWidget, extent, position)` is the single fresh-frame wrap.
+- `WorldWdgt.openFrameWith(contentWidget, extent, position)` is the single fresh-frame wrap (A1 name).
 - **⚠ Mis-inheritance to fix:** `WindowWdgt extends SimpleVerticalStackPanelWdgt` — its own header calls
   the extension "misleading." A frame *has* a bar + a content-container; it is not *a* vertical stack.
   `FrameWdgt` should **compose** those, not inherit a stack (composition-over-inheritance; §5.A).
@@ -193,13 +200,23 @@ Today the app "content" classes **fuse** payload + frame + toolbar. The target s
 - **External buttons:** the `EditorContentPropertyChangerButtonWdgt` family (`buttons/`, `extends IconWdgt`)
   — Bold/Italic/FormatAsCode/ChangeFont/±FontSize/Align — each `mouseClickLeft` feature-tests then calls the
   content API (`toggleWeight`/`setFontName`/`alignLeft`…) on the focus pointer.
-- **Floating toolbar:** `ToolbarCreatorButtonWdgt._buildToolWindow` builds a standalone `WindowWdgt` of
-  buttons; `TextToolbarCreatorButtonWdgt` fills the text one; **`ToolbarsApp`** is the "Super Toolbar".
-- **Embedded toolbar (the duplication to fix):** `SimpleDocumentWdgt._createToolsPanelNoSettle` and
-  `StretchableEditableWdgt.toolsPanel` build a toolbar *inside* the editor — a parallel construction to the
-  floating one.
+- **Floating toolbar:** `ToolbarCreatorButtonWdgt._buildToolWindow` builds a standalone `FrameWdgt` of
+  buttons (each creator hand-builds a `ScrollPanelWdgt(new ToolPanelWdgt)` and fills it);
+  `TextToolbarCreatorButtonWdgt` fills the text one; **`ToolbarsApp`** is the "Super Toolbar" (a palette
+  of the six creator buttons, itself a hand-built ScrollPanel(ToolPanel) wrapped via `openFrameWith`).
+- **Embedded toolbar (the duplication to fix — full five-site inventory, re-verified 2026-07-19):**
+  every editor owns a `toolsPanel` built by a `_createToolsPanelNoSettle` core — `SimpleDocumentWdgt`
+  (a `HorizontalMenuPanelWdgt` strip of the 9 text buttons + `TemplatesButtonWdgt`, docked top, height
+  35), `DashboardsWdgt` (ScrollPanel(ToolPanel) of 18 creators/icons, docked left, width 95),
+  `PatchProgrammingWdgt` (ScrollPanel(ToolPanel) of 5 node creators, left/95),
+  `SimpleSlideWdgt` (`new SlidesToolPanelWdgt` — the ONE already-extracted shared palette class, also
+  consumed by `SlidesToolbarCreatorButtonWdgt`; the §5.C precedent), `ReconfigurablePaintWdgt`
+  (a `RadioButtonsHolderWdgt` of 4 code-injecting tool toggles bound to `@overlayCanvas` — §3.5, phase
+  D's target, NOT a duplicated construction). The base `StretchableEditableWdgt._createToolsPanelNoSettle`
+  is empty; its `_reLayoutSelf` carries the shared left-dock arms.
 - **Editing is a capability:** `providesAmenitiesForEditing`, `enable/disableDragsDropsAndEditing`,
-  `editButtonPressedFromWindowBar`, `showEditModeInBar`/`showViewModeInBar`,
+  `editButtonPressedFromFrameBar` (A1 name; hoisted to the Widget BASE — the three editor classes
+  shared it verbatim), `showEditModeInBar`/`showViewModeInBar`,
   `coordinatesDragsDropsAndEditingForChildren`.
 
 ### 3.5 The caret + the paint gap (feeds §5.D)
@@ -351,7 +368,8 @@ recapture serially, one name per invocation, until fg grows an arg loop/guard.)
      (Widget.getHierarchyMenuWidgets): internal structure is not a user-facing target.
   **✅ A2b LANDED 2026-07-19 — byte-identical confirmed: gauntlet 11/11, zero recaptures,
   revisits/census at zero. PHASE A COMPLETE (A1 rename + A2a de-inherit + A2b bar composition).
-  NEXT: phase C (one ToolbarWdgt per content type + the content-container/toolbar-slot).**
+  NEXT: phase C (one ToolbarWdgt per content type + the toolbar-slot — execution design in §5.C; note the
+  content-container was refined from a widget to a body REGION there, C-ii).**
 
 ### B. Split fused content classes into naked payload + framed citizen
 Per §3.3: introduce `SimpleTextWdgt` (from `SimplePlainTextWdgt`; role `TitleWdgt`), `SimpleImageWdgt`
@@ -362,7 +380,7 @@ Per §3.3: introduce `SimpleTextWdgt` (from `SimplePlainTextWdgt`; role `TitleWd
 
 ### C. One `ToolbarWdgt` per content TYPE, docked-or-floating; one edit-mode toggle
 Make `ToolbarWdgt` the single shared toolbar construction (from `ToolPanelWdgt` + the floating
-`WindowWdgt`-of-buttons construction), with **one variant per content type** (text / paint / slide / …), not
+`FrameWdgt`-of-buttons construction), with **one variant per content type** (text / paint / slide / …), not
 per widget instance — the buttons duck-type onto the *focused* widget, so one text toolbar serves every text
 widget. A `FrameWdgt` docks the variant matching its content in its toolbar-slot; an editor's in-frame
 toolbar becomes a **docked instance of that one construction**, not a parallel build — deleting the
@@ -375,6 +393,135 @@ in both modes.
   reached by *deliberately summoning* one from the Super Toolbar (`ToolbarsApp`) — the "spans many widgets"
   path — not by an eject button on the frame. Undocking a frame's own toolbar into a float is at most a
   context-menu entry, never a bar button (don't spend UI space on it).
+
+**EXECUTION DESIGN (2026-07-19, substrate re-verified against src @ `10aa3342`; §3.4 holds the five-site
+embedded inventory + the six floating creators):**
+
+**C-i. The class: `ToolbarWdgt` + one subclass per palette (new folder `src/toolbars/`).**
+`class ToolbarWdgt extends ScrollPanelWdgt`, ctor `super new ToolPanelWdgt` then
+`@_buildAndConnectChildren()` — byte-for-byte the PROVEN `SlidesToolPanelWdgt` shape (extraction precedent,
+incl. the check-constructors-build contract and the `_addManyNoSettle` batch add, which `ScrollPanelWdgt`
+forwards to its contents). The base's build core is empty except that it ends
+`@_disableDragsDropsAndEditingNoSettle()` — every toolbar is born LOCKED (today each call site locks after
+filling; folding the lock into the build deletes those calls). Colloquial name stays "toolbar" for free
+(`ToolPanelWdgt.scrollPanelColloquialName`). Class knobs, one per variant:
+- `dockSide` — the D9 property, string, class default per variant. C implements `top` and `left` arrange
+  support (the two defaults in use); `right`/`bottom`/`float` are reserved values (BACKLOG).
+- `dockThickness` — the strip's cross-axis size when docked: text 40 (thumbnail 30 + 2×5 inner padding —
+  the variant overrides its inner panel's `externalPadding` from 10 to 5 so a one-row strip is honest
+  ToolPanel geometry; today's HorizontalMenuPanel strip is 35, so the doc toolbar grows 5px — conscious
+  recapture), left-dockers 95 (byte-parity with today's `StretchableEditableWdgt._reLayoutSelf` arm).
+
+Variants (each fills itself in `_buildAndConnectChildrenNoSettle` with literal `new X` adds):
+`TextToolbarWdgt` (the 9 text buttons + `TemplatesButtonWdgt` — ONE list; today the floating build lacks
+Templates, the embedded has it: unify to 10, a small feature-add to the floating one. `new
+ChangeFontButtonWdgt @` — the toolbar itself is the font-menu stash home; rename that ctor field from the
+now-wrong `simpleDocument` to `fontSelectionMenuHolder`), `SlidesToolbarWdgt` (git mv + re-base of
+`SlidesToolPanelWdgt` — it already IS this class in all but name/base), `DashboardsToolbarWdgt` (the
+18-item list), `PatchProgrammingToolbarWdgt` (ONE unified 5-item list — today embedded has 5, floating 4:
+the floating gains `TextBoxCreatorButtonWdgt`), `PlotsToolbarWdgt` (4 plots), `WindowsToolbarWdgt` (4
+window creators), `SuperToolbarWdgt` (the 6 toolbar-creator buttons — `ToolbarsApp.buildWindow` becomes
+`world.openFrameWith new SuperToolbarWdgt, …`). **Paint is deliberately NOT a C variant:** its
+RadioButtonsHolder toolbar is construction-bound to `@overlayCanvas` (§3.5) and becomes a `ToolbarWdgt`
+only when D-1 rebinds it to the focus pointer — C quarantines it (below).
+Focus-tracking: the base declares `excludedFromLastFocusTracking -> true` (today only
+`HorizontalMenuPanelWdgt` has it — clicking BETWEEN buttons must not steal
+`lastNonTextPropertyChangerButtonClickedOrDropped`; the floating toolbars lack it today, a latent
+focus-stealing bug this fixes for free).
+
+**C-ii. The frame slot — a stable DIRECT child; NO intermediate content-container widget.**
+Design refinement over the §1 diagram, argued from §5.2d case law: the diagram's "content-container" is a
+REGION of the frame's body, not a widget. Inserting a physical container between frame and content would
+re-break every parent-chain seam A2b just audited (the content's `@parent?.showEditModeInBar?()` climb,
+the spec's `@stack.availableWidthForContents()` binding, drop targeting, grab climbs, hierarchy menus) for
+zero consumers — and post-B the FrameWdgt subclass itself IS the container (the SimpleDocumentWdgt pattern
+hoisted). So: `@toolbar` is a direct frame child like `@bar`/`@resizer` (added `notContent: true`), and the
+"slot" is the frame field + the dock region its arrange carves out. If B's drag/drop-coordination fold-up
+genuinely needs a container widget, B designs it with that consumer in hand.
+- **Capability:** content declares its variant by building it — `buildToolbar: -> new TextToolbarWdgt` on
+  `SimpleDocumentWdgt` (etc.); no Widget base default, frame dispatches `@contents.buildToolbar?()`
+  (absent ⇒ no toolbar, slot stays empty: Generic panel, clock, folder windows all unaffected).
+- **Lifecycle** (mirrors the bar pieces + editButton exactly): built keep-if-exist in
+  `_buildAndConnectChildrenNoSettle`; destroyed at the two content-CHANGE points
+  (`_reactToChildDropped`, `_resetToDefaultContents`) so the next rebuild makes the new content's variant;
+  initial shown/hidden state reads `@contents.dragsDropsAndEditingEnabled` (the `_createAndAddEditButton`
+  pattern). Show/hide = `_unCollapseNoSettle`/`_collapseNoSettle` (present-in-both-modes rule §4:
+  show/hide, never add/remove), wired into the EXISTING mode protocol the content already drives:
+  `showEditModeInBar` also uncollapses the toolbar, `showViewModeInBar` collapses it. Window-collapse:
+  `_beforeChildCollapsed(child == @contents)` also collapses the toolbar; `_beforeChildUnCollapsed`
+  restores it per the content's edit state (the editButton's destroy/recreate lifecycle, minus the
+  destroy).
+- **Arrange + measure, in LOCKSTEP (§6.1 rule 1 — this is the phase's central risk):** top-dock shown ⇒
+  `_chromeHeight` gains `dockThickness + @padding` and the content's top inset moves below the strip;
+  left-dock shown ⇒ `availableWidthForContents` gains `− (dockThickness + @padding)` — the specs consume
+  it, so content width follows automatically. **Audit list — every inline `2 * @padding` width term in
+  FrameWdgt must route through the shared homes or gain the left-dock term:** `_negotiatedContentWidth`
+  (DONT_MIND branch), `_firstPlacementContentWidth` (the getWidthInStack arg), `preferredExtentForWidth`
+  (both branches), `preferredExtent` (the hug width), the arrange's hug branch
+  (`recommendedElementWidth + @padding * 2`) and its `leftPosition` centring line (centre within the
+  region RIGHT of a left-docked toolbar, not the frame width). Introduce `_chromeWidth()` (=
+  `@width() − availableWidthForContents()`) as the width sibling of `_chromeHeight` so measure and
+  arrange share one home. Toolbar placement: within the padded body — top: (`@left()+@padding`,
+  bar-bottom`+@padding`) × (availableWidth × 40); left: same origin × (95 × body height to the resizer
+  margin). Net pixels for left-dockers ≈ today's (the 95-column moves from inside the content widget to
+  the same screen region as a frame child).
+- **What it must NOT be (A2b case-law check, consciously inverted):** the toolbar is a real `PanelWdgt`
+  (via ScrollPanelWdgt) and KEEPS panel semantics — the grab climb must stop at its glass-box children
+  (template drag-out), it draws its own background (no `isTransparentAt` override — it sits inside the
+  padded body, clear of the frame's corner notches), and it APPEARS in hierarchy menus as "a toolbar"
+  (parity with today's floating toolbars; it is a user-facing target, unlike the bar). Grab-through
+  parity: clicking its background still climbs toolbar → frame → grab the window, same as today's
+  embedded strips (SimpleDocumentWdgt/StretchableEditableWdgt are plain Widgets, so the climb passed
+  through them identically).
+- **Smart-place needs NO frame change:** `WidgetCreatorAndSmartPlacerOnClickMixin` already routes via
+  `w.isFrame?() and w.contents?.acceptsSmartPlacedWidgets?()` → `where.contents.smartPlace` — it never
+  climbs from the button.
+- **Editors deleted down to payload + capability:** `SimpleDocumentWdgt` loses `toolsPanel`, its
+  `_createToolsPanelNoSettle`, its `_reLayout`'s toolbar arm (scroll panel takes the full body) and its
+  enable/disable create/destroy arms; `StretchableEditableWdgt` (base) loses the same (its
+  `_reLayoutSelf` toolsPanel arms die; the container takes the full padded bounds);
+  `Dashboards/SimpleSlide/PatchProgramming` keep only `buildToolbar`. ⚠ THE FLAG-HOME MOVE: today
+  `dragsDropsAndEditingEnabled = true` at construction is set INSIDE each `_createToolsPanelNoSettle` —
+  it becomes a class field default (`dragsDropsAndEditingEnabled: true`: an editor is born editing) on
+  the four editors; the base Generic panel stays view-born (its empty create never set it). ⚠ PAINT
+  QUARANTINE: `ReconfigurablePaintWdgt` keeps a LOCAL `toolsPanel` field + its own
+  `_createToolsPanelNoSettle` + its own `_reLayoutSelf` (already has one) — and the base's
+  disable-teardown block (removeFromTree/unselectAll/destroy — it exists FOR paint's radio holder) moves
+  INTO paint's own `_disableDragsDropsAndEditingNoSettle` override. D-1 dissolves the quarantine.
+  `HorizontalMenuPanelWdgt` loses its only editor use (stays: `MenusHelper.createHorizontalMenuPanelPanel`
+  demo).
+- **Intermediate-state ruling (pre-B, state to owner):** content grabbed OUT of its frame (a naked
+  `SimpleDocumentWdgt` on the desktop) has NO attached toolbar until re-framed — it can still be edited
+  via the focus pointer + a summoned floating toolbar. Under the keystone (§1.1) a naked editor is
+  exactly the state B abolishes; C accepts the gap rather than keeping a second content-owned toolbar
+  path alive. (No test reaches a naked editor's `toolsPanel` — sole test mention is paint's, quarantined.)
+
+**C-iii. Landing decomposition (bisectable; one fallout kind each):**
+- **C1 — construction + floating consumers.** New `src/toolbars/` classes; the six creator buttons +
+  `ToolbarsApp` consume them (bodies collapse to `@_buildToolWindow new XToolbarWdgt, extent`; Plots keeps
+  its documented odd op-order, consuming `new PlotsToolbarWdgt`); embedded dashboards/patch/slides
+  `_createToolsPanelNoSettle` bodies become `@toolsPanel = new XToolbarWdgt` (still content-owned).
+  Fallout: floating-toolbar pixels only (text +Templates, patch +TextBox; extents may need a nudge —
+  they scroll). Rename case law: grep tests for `SlidesToolPanelWdgt` identifiers + label lookup strings.
+  **✅ LANDED 2026-07-19 — byte-identical: gauntlet 11/11, zero recaptures, zero tests-repo changes (no
+  test opens the floating palettes, so even the +Templates/+TextBox list unifications were pixel-free in
+  the suite; the slides/dashboards embedded guards passed untouched). ⚠ EXECUTION GOTCHA (cost one red
+  presuite): `buildSystem/build.py`'s shippable-source globs are an EXPLICIT directory list — a new `src/`
+  directory ships NOTHING until listed there, the build exits 0 anyway, and the syntax gate consumes the
+  same list so it silently skips the dir too; the runtime symptom is `<NewClass> is not defined` at first
+  use. `src/toolbars/` is now listed; a shippable-vs-`find src` coverage check is a BACKLOG candidate.**
+- **C2 — frame slot + TEXT migration.** All of C-ii on `FrameWdgt`; `SimpleDocumentWdgt` migrated.
+  Fallout: document-editing tests (strip 35→40 + ToolPanel styling + hierarchy-menu rows over toolbar
+  buttons — grep tests for old-chain label strings per A1 case law).
+- **C3 — slides/dashboards/patch migration + paint quarantine.** `StretchableEditableWdgt` base arms die;
+  paint self-contained. Fallout: slides/dashboards/patch editing tests (near-parity pixels), paint tests
+  MUST stay byte-identical (`macroDrawingsMakerReEnableEditing` is the guard).
+- **C4 — docs/BACKLOG sync.** BACKLOG: undock context-menu entry (D9 tail); `right`/`bottom` dock
+  arranges; `HorizontalMenuPanelWdgt` demo-only fate. Plan stamps.
+Gates per landing: `fg presuite`, diffpage + owner eyeball before ANY recapture; close each with
+`fg gauntlet` — revisits/census MUST stay at zero (the new dock math must keep the arrange idempotent and
+the measures pure — no toolbar-extent read-back in a measure; `dockThickness` is a constant, never a
+laid-out size).
 
 ### D. Unify PAINT onto the focus model + unify the editing-focus indicators (folds in idea (d))
 1. **Paint like text.** Add a paint `ToolbarWdgt` whose buttons read the focus pointer, feature-test

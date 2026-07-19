@@ -212,6 +212,7 @@ def main():
     filenames = sorted(filenames + sorted(glob("src/info-widgets" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/meta" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/apps" + "/*.coffee")))
+    filenames = sorted(filenames + sorted(glob("src/toolbars" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
     filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))

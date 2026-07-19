@@ -4,11 +4,14 @@
 
 class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  simpleDocument: nil
+  # the object the font-selection menu is stashed on, so a re-click re-focuses
+  # the open menu instead of stacking a new one -- each home passes its own
+  # per-editor object (a toolbar, a document)
+  fontSelectionMenuHolder: nil
 
   iconToolTipMessage: "change font"
 
-  constructor: (@simpleDocument) ->
+  constructor: (@fontSelectionMenuHolder) ->
     super nil  # nil keeps @color = nil as before; icon line-colour set in createAppearance
 
   createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
@@ -16,9 +19,9 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   mouseClickLeft: ->
     # if there is already a font selection menu for the editor,
     # bring that one up, otherwise create one and remember that we created it
-    if @simpleDocument.fontSelectionMenu? and
-     !@simpleDocument.fontSelectionMenu.destroyed
-      @simpleDocument.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
+    if @fontSelectionMenuHolder.fontSelectionMenu? and
+     !@fontSelectionMenuHolder.fontSelectionMenu.destroyed
+      @fontSelectionMenuHolder.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
     else
       menu = new MenuWdgt @, target: @, title: "Fonts"
       menu.addMenuItem "Arial", @, "setFontName", arg1: "justArialFontStack"
@@ -37,7 +40,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       menu.forAllChildrenBottomToTop (eachDescendent) ->
         eachDescendent.editorContentPropertyChangerButton = true
 
-      @simpleDocument.fontSelectionMenu = menu
+      @fontSelectionMenuHolder.fontSelectionMenu = menu
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
     if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?

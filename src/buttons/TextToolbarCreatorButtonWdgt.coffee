@@ -5,22 +5,4 @@ class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
   createAppearance: -> new TextToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    toolsPanel.addMany [
-      new ChangeFontButtonWdgt @
-      new BoldButtonWdgt
-      new ItalicButtonWdgt
-      new FormatAsCodeButtonWdgt
-      new IncreaseFontSizeButtonWdgt
-      new DecreaseFontSizeButtonWdgt
-
-      new AlignLeftButtonWdgt
-      new AlignCenterButtonWdgt
-      new AlignRightButtonWdgt
-    ]
-
-    toolsPanel.disableDragsDropsAndEditing()
-
-    return @_buildToolWindow toolsPanel, new Point 130, 156
+    @_buildToolWindow new TextToolbarWdgt, new Point 130, 156

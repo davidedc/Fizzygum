@@ -8,10 +8,8 @@ class SimpleSlideWdgt extends StretchableEditableWdgt
 
 
   _createToolsPanelNoSettle: ->
-    # tools -------------------------------
-    @toolsPanel = new SlidesToolPanelWdgt
-
-    @toolsPanel._disableDragsDropsAndEditingNoSettle()
+    # tools: the shared palette class (born locked -- see ToolbarWdgt)
+    @toolsPanel = new SlidesToolbarWdgt
     @_addNoSettle @toolsPanel
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()

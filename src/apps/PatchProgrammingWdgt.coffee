@@ -8,19 +8,9 @@ class PatchProgrammingWdgt extends StretchableEditableWdgt
 
 
   _createToolsPanelNoSettle: ->
-    # tools -------------------------------
-    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    @toolsPanel._addManyNoSettle [
-      new TextBoxCreatorButtonWdgt
-      new SliderNodeCreatorButtonWdgt
-
-      new ColorPaletteNodeCreatorButtonWdgt
-      new GrayscalePaletteNodeCreatorButtonWdgt
-      new CalculatingNodeCreatorButtonWdgt
-    ]
-
-    @toolsPanel._disableDragsDropsAndEditingNoSettle()
+    # tools: the shared palette class (born locked -- see ToolbarWdgt), the SAME
+    # list the floating components palette summons (§5.C one-variant rule)
+    @toolsPanel = new PatchProgrammingToolbarWdgt
     @_addNoSettle @toolsPanel
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()

@@ -6,18 +6,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    toolsPanel.addMany [
-      new EmptyWindowCreatorButtonWdgt
-      new WindowWithPanelCreatorButtonWdgt
-      new WindowWithScrollPanelCreatorButtonWdgt
-      new ElasticWindowCreatorButtonWdgt
-    ]
-
-    toolsPanel.disableDragsDropsAndEditing()
-
-    switcherooWm = @_buildToolWindow toolsPanel, new Point 61, 192
+    switcherooWm = @_buildToolWindow new WindowsToolbarWdgt, new Point 61, 192
     readmeWindow = WindowsToolbarInfoWdgt.createNextTo switcherooWm
     readmeWindow?._applyMoveTo new Point 300, 200
     readmeWindow?._rememberFractionalSituationInHoldingPanel()

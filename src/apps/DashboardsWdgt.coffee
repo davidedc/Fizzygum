@@ -8,37 +8,8 @@ class DashboardsWdgt extends StretchableEditableWdgt
 
 
   _createToolsPanelNoSettle: ->
-    # tools -------------------------------
-    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    @toolsPanel._addManyNoSettle [
-      new TextBoxCreatorButtonWdgt
-      new ExternalLinkCreatorButtonWdgt
-
-      new ScatterPlotWithAxesCreatorButtonWdgt
-      new FunctionPlotWithAxesCreatorButtonWdgt
-      new BarPlotWithAxesCreatorButtonWdgt
-      new Plot3DCreatorButtonWdgt
-
-      new WorldMapCreatorButtonWdgt
-      new USAMapCreatorButtonWdgt
-      new MapPinIconWdgt
-
-      new SpeechBubbleWdgt
-
-      new ArrowNIconWdgt
-      new ArrowSIconWdgt
-      new ArrowWIconWdgt
-      new ArrowEIconWdgt
-      new ArrowNWIconWdgt
-      new ArrowNEIconWdgt
-      new ArrowSWIconWdgt
-      new ArrowSEIconWdgt
-    ]
-
-
-
-    @toolsPanel._disableDragsDropsAndEditingNoSettle()
+    # tools: the shared palette class (born locked -- see ToolbarWdgt)
+    @toolsPanel = new DashboardsToolbarWdgt
     @_addNoSettle @toolsPanel
     @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()

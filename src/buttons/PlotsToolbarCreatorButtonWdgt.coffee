@@ -6,18 +6,7 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt
-
-    toolsPanel.addMany [
-      new ScatterPlotWithAxesCreatorButtonWdgt
-      new FunctionPlotWithAxesCreatorButtonWdgt
-      new BarPlotWithAxesCreatorButtonWdgt
-      new Plot3DCreatorButtonWdgt
-    ]
-
-    toolsPanel.disableDragsDropsAndEditing()
-
-    switcherooWm = new FrameWdgt toolsPanel
+    switcherooWm = new FrameWdgt new PlotsToolbarWdgt
     switcherooWm.setExtent new Point 60, 192
     switcherooWm._applyMoveTo new Point 90, Math.floor((world.height()-192)/2)
     switcherooWm._moveWithin world
