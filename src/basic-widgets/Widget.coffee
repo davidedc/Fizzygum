@@ -2658,10 +2658,19 @@ class Widget extends TreeNode
     if aContext == world.worldCanvasContext and @isOrphan()
       return true
 
-    if aContext == world.worldCanvasContext and !@visibleBasedOnIsVisibleProperty()
+    # The two LIVE-TREE visibility gates apply when painting the world canvas
+    # OR a TransformFrameWdgt island buffer (a live-tree render through a
+    # transform island -- same idiom as the broken-rects recording below): a
+    # hidden or collapsed widget must not appear just because its ancestors are
+    # tilted. Conditioned (not unconditional) because SCRATCH renders --
+    # icon/thumbnail canvases painting detached widgets -- legitimately paint
+    # regardless of live-tree visibility. The orphan gate above stays
+    # world-canvas-only for the same reason (an island cannot contain orphans,
+    # a thumbnail render IS one).
+    if (aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?) and !@visibleBasedOnIsVisibleProperty()
       return true
 
-    if aContext == world.worldCanvasContext and @isInCollapsedSubtree()
+    if (aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?) and @isInCollapsedSubtree()
       return true
 
     return false
