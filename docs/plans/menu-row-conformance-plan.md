@@ -1,10 +1,19 @@
 # Menu-row conformance + hug-class stack — ironing out the §5.2e residual wrinkles
 
-> **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-> STATUS: AUTHORED 2026-07-19, no code written. Follow-on of the container-regularization
-> arc (`docs/plans/container-regularization-plan.md` §5.2e, landed 2026-07-19). Do NOT
-> start this plan until that arc's §5.2e commit has LANDED (recapture + gauntlet green +
-> pushed) — this plan edits the same files.
+> **STATUS: ✅ ARC COMPLETE 2026-07-19 (same day as authored).** Phases 1, 2a–2e and 3 ALL
+> LANDED + PUSHED (`11dbee31`→`daf46382`→`91fab1c8`→`7685dfce`→`645299dd`→`2ea6f06b`→
+> `1a806e9c`; one mid-2e falsification+revert `dc351521`→`c1392eb2`, see §1). Phase 4 RUN AND
+> FALSIFIED (#2) — the tracking-pop-up shape is permanently CLOSED; see its section + §8 for
+> the evidence and the only sanctioned re-frame. Every §5.2e wrinkle is eliminated at the
+> root: pure row measures, four conformant row types, no post-pass, honest hug-class
+> measures. The doc below is kept as the arc's record (original plan text unedited except
+> the two falsification notes).
+>
+> *(original header)* **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO
+> prior context.** STATUS: AUTHORED 2026-07-19, no code written. Follow-on of the
+> container-regularization arc (`docs/plans/container-regularization-plan.md` §5.2e, landed
+> 2026-07-19). Do NOT start this plan until that arc's §5.2e commit has LANDED (recapture +
+> gauntlet green + pushed) — this plan edits the same files.
 >
 > **MANDATE: complete elimination of the non-conformance, not deeper burial.** The four
 > §5.2e wrinkles (double-write arrange, hand-rolled-tracker row types, width-flow
@@ -377,6 +386,25 @@ Consumers today: NONE (ListWdgt is excluded from the scroll-stack refit via its
 byte-identical BY CONSTRUCTION and exists for model honesty + future consumers.
 
 ### Phase 4 — EXPERIMENT: menus/prompts as true tracking containers
+**⛔ RUN AND FALSIFIED 2026-07-19 (falsification #2) — the shape is CLOSED. Nothing committed
+(verdict read before commit; working tree reverted to `1a806e9c`). THE EVIDENCE, precisely:**
+NOT the §5.2d ±1px oscillation — census stayed 0 movers and no re-visit profile change was
+ever measured (the gates abort on a failing suite). ONE test failed all suite legs:
+`macroInspectorWorkAreaEvaluatesCoffeeScript`. The pixel evidence, measured (not eyeballed):
+the inform popup did NOT move — a horizontal-translation sweep over the changed rows has its
+MINIMUM residual at dx=0 — but its "Ok" row's HOVER-HIGHLIGHT state changed (rows spanning
+the full popup width differ in place; the owner identified it on sight). That is EXACTLY the
+§5.2d user-visible symptom class — "un-hovered the item under the pointer" — the same class
+`isTransparentAt -> true` fixed in §5.2d/§5.6, now re-surfaced by the tracking re-visit
+interfering with the pointer-hover pipeline. (A first-draft record here blamed a
+`popUpCenteredAtHand` half-width mis-placement; the dx sweep FALSIFIED that reading — kept as
+a warning that diff crops mislead and translation must be MEASURED.) Root interaction not
+fully diagnosed — deliberately: falsification #2 closes the shape, and a diagnosis would only
+serve a banned third attempt. Any future re-frame must FIRST explain the tracking↔hover
+interaction (see [[hover-resync-after-flush-swap]] memory: the hand re-checks hover after
+`recalculateLayouts` — an extra menu re-visit inside that window is the prime suspect).
+
+*The original experiment spec (kept for the record):*
 
 §5.2d FALSIFIED menu-as-tracking-container: "an on-every-settle re-drive shifted the
 menu ±1px, un-hovering the item under the pointer" (container-regularization-plan.md
@@ -450,10 +478,15 @@ failure costs one revert and buys a documented second falsification. Both are wi
 - **A `_applyChildSizeInStack` policy seam on the base** (panel overrides the APPLY):
   considered during §5.2e; rejected as speculative base surface once the post-pass
   (temporary) + this conformance arc (permanent) covered both horizons.
-- **Menu-as-tracking-container WITH the old hand arrange**: FALSIFIED 2026-07-18
-  (§5.2d, ±1px oscillation, caught by census/revisits). Phase 4 re-tests ONLY because
-  the §5.2e arrange changed the falsification's precondition; if Phase 4 fails, that
-  is falsification #2 — the shape is then permanently closed.
+- **Menu-as-tracking-container — PERMANENTLY CLOSED (two falsifications, different doors):**
+  #1 2026-07-18 (§5.2d): with the old non-idempotent hand arrange, an on-every-settle re-drive
+  oscillated the menu ±1px (census/revisits red). #2 2026-07-19 (this plan's Phase 4): with the
+  fixed-point arrange the oscillation was indeed gone (census 0), but the SAME user-visible
+  symptom class returned by another door — the inform's "Ok" row lost its hover highlight
+  (no translation: the dx-sweep's minimum residual is at 0;
+  `macroInspectorWorkAreaEvaluatesCoffeeScript`), i.e. the tracking re-visit interferes with
+  the pointer-hover pipeline. Do not attempt a third shape; any re-frame must FIRST explain
+  the tracking↔hover interaction (see the Phase 4 falsification note).
 - **`--no-build` capture shortcuts** during any recapture this plan needs: hard-banned
   (capture script refuses; see its header for the two audited incident classes).
 
