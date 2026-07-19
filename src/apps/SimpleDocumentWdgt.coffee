@@ -6,7 +6,6 @@
 class SimpleDocumentWdgt extends Widget
 
 
-  toolsPanel: nil
   defaultContents: nil
   textWidget: nil
 
@@ -123,20 +122,25 @@ class SimpleDocumentWdgt extends Widget
       containerWindow.close()
 
 
+  # The text-editing toolbar is FRAME-owned (Frame-model plan §5.C): the
+  # enclosing FrameWdgt builds this variant into its toolbar-slot and
+  # shows/hides it as this document's edit mode flips (via
+  # showEditModeInBar/showViewModeInBar, which this document already drives).
+  buildToolbar: ->
+    new TextToolbarWdgt
+
   # PUBLIC self-settling wrapper: build the whole subtree settle-free, then settle ONCE at the end
   # (orphan-settledness -- `new SimpleDocumentWdgt()` returns settled). Crucially the single flush runs
   # AFTER @simpleDocumentScrollPanel is wired, so _reLayout never reads it while still nil -- which is
   # exactly the crash this fixes: under the orphan-settles change an early add()/setContents() settle ran
-  # SimpleDocumentWdgt._reLayout with @simpleDocumentScrollPanel == nil (-> "reading 'parent'"). Every
-  # nested build inside the core (createToolsPanel's adds, the SimpleDocumentScrollPanelWdgt construction's
-  # setContents) runs INSIDE this settle and DEFERS as orphan-in-flush, so construction is O(1) flushes.
+  # SimpleDocumentWdgt._reLayout with @simpleDocumentScrollPanel == nil (-> "reading 'parent'"). The
+  # nested build inside the core (the SimpleDocumentScrollPanelWdgt construction's setContents) runs
+  # INSIDE this settle and DEFERS as orphan-in-flush, so construction is O(1) flushes.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
 
-
-    @_createToolsPanelNoSettle()
     @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt
 
     startingContent = new SimplePlainTextWdgt(
@@ -147,36 +151,6 @@ class SimpleDocumentWdgt extends Widget
 
     @_addNoSettle @simpleDocumentScrollPanel
 
-    @_invalidateLayout()
-
-  # NON-settling core (the only callers are cores: _enableDragsDropsAndEditingNoSettle / _buildAndConnectChildrenNoSettle).
-  # The @toolsPanel.add calls below run on the ORPHAN toolsPanel (before it is attached) and go through the PUBLIC add
-  # deliberately -- HorizontalMenuPanelWdgt.add wraps each item in a GlassBoxBottomWdgt, which _addNoSettle would bypass;
-  # on an orphan they defer, so they need no routing. Only the post-attach @toolsPanel disable + the @add of the panel
-  # itself route to cores.
-  _createToolsPanelNoSettle: ->
-    @toolsPanel = new HorizontalMenuPanelWdgt
-    @toolsPanel.strokeColor = nil
-    @toolsPanel._applyExtent new Point 300,10
-
-
-    @toolsPanel.add new ChangeFontButtonWdgt @
-    @toolsPanel.add new BoldButtonWdgt
-    @toolsPanel.add new ItalicButtonWdgt
-    @toolsPanel.add new FormatAsCodeButtonWdgt
-    @toolsPanel.add new IncreaseFontSizeButtonWdgt
-    @toolsPanel.add new DecreaseFontSizeButtonWdgt
-
-    @toolsPanel.add new AlignLeftButtonWdgt
-    @toolsPanel.add new AlignCenterButtonWdgt
-    @toolsPanel.add new AlignRightButtonWdgt
-
-    @toolsPanel.add new TemplatesButtonWdgt
-
-    @_addNoSettle @toolsPanel
-    @toolsPanel._disableDragsDropsAndEditingNoSettle()
-
-    @dragsDropsAndEditingEnabled = true
     @_invalidateLayout()
 
   # I coordinate drags/drops/editing for my scroll panel, which delegates its
@@ -192,9 +166,9 @@ class SimpleDocumentWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
+    # the frame shows the docked toolbar (and the pencil glyph) on this call
     @parent?.showEditModeInBar?()
     @dragsDropsAndEditingEnabled = true
-    @_createToolsPanelNoSettle()
     @simpleDocumentScrollPanel._enableDragsDropsAndEditingNoSettle @
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
@@ -205,8 +179,6 @@ class SimpleDocumentWdgt extends Widget
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.showViewModeInBar?()
-    @toolsPanel._destroyNoSettle()
-    @toolsPanel = nil
     @dragsDropsAndEditingEnabled = false
     @simpleDocumentScrollPanel._disableDragsDropsAndEditingNoSettle @
     @_invalidateLayout()
@@ -233,25 +205,11 @@ class SimpleDocumentWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    availableHeight = @height() - 2 * @externalPadding
-    simpleDocumentScrollPanelTop = @top() + @externalPadding
-    toolsPanelHeight = 0
-
-    if @dragsDropsAndEditingEnabled
-      toolsPanelHeight = 35
-      availableHeight -= @internalPadding
-      simpleDocumentScrollPanelTop += toolsPanelHeight + @internalPadding
-
-    simpleDocumentScrollPanelHeight = availableHeight - toolsPanelHeight
-
-
-    if @toolsPanel?.parent == @
-      @toolsPanel._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @toolsPanel._applyExtent new Point @width() - 2 * @externalPadding, toolsPanelHeight
-
+    # the scroll panel takes the whole padded body -- the text toolbar lives in
+    # the enclosing frame's toolbar-slot (§5.C), not in this document
     if @simpleDocumentScrollPanel.parent == @
-      @simpleDocumentScrollPanel._applyMoveTo new Point @left() + @externalPadding, simpleDocumentScrollPanelTop
-      @simpleDocumentScrollPanel._applyExtent new Point @width() - 2 * @externalPadding, simpleDocumentScrollPanelHeight
+      @simpleDocumentScrollPanel._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @simpleDocumentScrollPanel._applyExtent new Point @width() - 2 * @externalPadding, @height() - 2 * @externalPadding
 
 
     world.maybeEnableTrackChanges()

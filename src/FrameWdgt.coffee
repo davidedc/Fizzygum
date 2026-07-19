@@ -43,6 +43,12 @@ class FrameWdgt extends Widget
   padding: nil
   contents: nil
   defaultContents: nil
+  # the toolbar-slot's occupant (Frame-model plan §5.C): a ToolbarWdgt the
+  # CONTENT declares (@contents.buildToolbar?()), docked per its dockSide,
+  # STABLE across mode flips -- shown in edit mode, COLLAPSED (not removed) in
+  # view mode, so flipping the pencil never churns the tree. nil when the
+  # content declares none (plain content, the empty-window placeholder).
+  toolbar: nil
 
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
@@ -82,9 +88,41 @@ class FrameWdgt extends Widget
   # whole sum -- identical only while @padding is an integer.
   _chromeHeight: (spec) ->
     if spec.resizerCanOverlapContents
-      @_titlebarHeight() + 2 * @padding
+      @_titlebarHeight() + 2 * @padding + @_topDockThickness()
     else
-      @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize
+      @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize + @_topDockThickness()
+
+  # ===== the toolbar-slot's layout terms (§5.C) =====
+  # The docked toolbar occupies layout space exactly when it is HERE and SHOWN
+  # (view mode collapses it to a zero contribution). Pure reads -- the measures
+  # consume these, so they must never read a laid-out extent (dockThickness is
+  # a class constant on the toolbar).
+  _dockedToolbarShowing: ->
+    @toolbar? and @toolbar.parent == @ and !@toolbar.collapsed
+
+  # Vertical chrome a TOP-docked toolbar adds (strip + the gap to the content);
+  # 0 when hidden or docked elsewhere. Folded into _chromeHeight above.
+  _topDockThickness: ->
+    if @_dockedToolbarShowing() and @toolbar.dockSide == 'top'
+      @toolbar.dockThickness + @padding
+    else
+      0
+
+  # Horizontal chrome a LEFT-docked toolbar adds; 0 when hidden or docked
+  # elsewhere. Folded into _chromeWidth below.
+  _leftDockThickness: ->
+    if @_dockedToolbarShowing() and @toolbar.dockSide == 'left'
+      @toolbar.dockThickness + @padding
+    else
+      0
+
+  # Frame chrome WIDTH -- everything that is not content width: the side
+  # paddings plus a left-docked shown toolbar. The width sibling of
+  # _chromeHeight, and the ONE home the measures and the arrange both read
+  # (§6.1 rule 1): availableWidthForContents, the width negotiation and the
+  # first-placement hug all route through it.
+  _chromeWidth: ->
+    2 * @padding + @_leftDockThickness()
 
   # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
   # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
@@ -103,7 +141,7 @@ class FrameWdgt extends Widget
       # one shot and the settle loop's injection never has to re-visit us.
       @contents.preferredExtent().x
     else if spec.preferredStartingWidth == FrameContentLayoutSpec.DONT_MIND
-      availW - 2 * @padding
+      availW - @_chromeWidth()
     else
       spec.preferredStartingWidth
 
@@ -123,7 +161,7 @@ class FrameWdgt extends Widget
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
       @_negotiatedContentWidth availW
     else
-      @contents.layoutSpecDetails.getWidthInStack availW - 2 * @padding
+      @contents.layoutSpecDetails.getWidthInStack availW - @_chromeWidth()
 
   # (U3-C) A window whose first placement is PENDING (content spec uncaptured) answers
   # preferredExtent with the extent that placement will produce -- the PURE mirror of the
@@ -138,7 +176,7 @@ class FrameWdgt extends Widget
       # the width hug (DESKTOP windows only -- §9.7-Q, same own-layoutSpec predicate as the
       # arrange's first-placement branch, incl. the not-recursively-freefloating min-clamp;
       # keep the two in lockstep)
-      windowWidth = @_negotiatedContentWidth(@width()) + 2 * @padding
+      windowWidth = @_negotiatedContentWidth(@width()) + @_chromeWidth()
       if !@recursivelyAttachedAsFreeFloating()
         windowWidth = Math.min @width(), windowWidth
     else
@@ -176,7 +214,7 @@ class FrameWdgt extends Widget
       if @contentsRecursivelyCanSetHeightFreely()
         desiredHeight = Math.round @height() - chrome
       else
-        recommendedElementWidth = spec.getWidthInStack(availW - 2 * @padding)
+        recommendedElementWidth = spec.getWidthInStack(availW - @_chromeWidth())
         desiredHeight = @contents.preferredExtentForWidth(recommendedElementWidth).y
       return new Point availW, desiredHeight + chrome
     else if @contents?.collapsed
@@ -412,9 +450,11 @@ class FrameWdgt extends Widget
   # The width this frame offers its content -- consumed by the content's spec
   # (FrameContentLayoutSpec / VerticalStackLayoutSpec call
   # `@stack.availableWidthForContents()`, and for frame content that "@stack" IS
-  # this frame). (A2a: was inherited from the stack.)
+  # this frame). (A2a: was inherited from the stack.) Routed through
+  # _chromeWidth so a left-docked shown toolbar narrows the content everywhere
+  # the specs read it (§5.C).
   availableWidthForContents: ->
-    @width() - 2 * @padding
+    @width() - @_chromeWidth()
 
   # A window fits its OWN width to its content -- but ONLY in the FIRST-PLACEMENT branch of its
   # arrange (the steady-state branch re-fits height alone, exactly like a stack), and -- post
@@ -518,10 +558,15 @@ class FrameWdgt extends Widget
       # single-mutation tier. The enclosing collapse settle covers the re-layout.
       @bar._destroyEditButtonNoSettle()
       @editButton = nil
+      # a collapsed window is JUST its titlebar -- the docked toolbar hides with
+      # the content (restored per the content's mode on uncollapse below)
+      @toolbar?._collapseNoSettle()
 
   _beforeChildUnCollapsed: (child) ->
     if child == @contents
       @widthWhenCollapsed = @width()
+      if @contents.dragsDropsAndEditingEnabled
+        @toolbar?._unCollapseNoSettle()
 
     @_createAndAddEditButton()
 
@@ -549,10 +594,17 @@ class FrameWdgt extends Widget
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
       @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
+  # the content owns the slot's occupant, so a content CHANGE retires it -- the
+  # rebuild then makes the NEW content's variant (or none)
+  _destroyToolbarNoSettle: ->
+    @toolbar?._destroyNoSettle()
+    @toolbar = nil
+
   _resetToDefaultContents: ->
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
     # cross-object code drive it) — settle-free, consciously reused here.
     @enableDrops()
+    @_destroyToolbarNoSettle()
     @contents = @defaultContents
     # Reached only from a child-lifecycle hook (_beforeChildDestroyed/PickedUp/Closed). Rebuild through
     # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
@@ -591,6 +643,7 @@ class FrameWdgt extends Widget
       @changed()
 
   _reactToChildDropped: (theWidget) ->
+    @_destroyToolbarNoSettle()
     @contents = theWidget
     # (A2a, was the stack super) membership-change re-fit: if my container absorbs the
     # change (a scroll panel re-fits me + its scrollbars), skip my own re-fit; else it
@@ -649,6 +702,16 @@ class FrameWdgt extends Widget
 
     @_addNoSettle @contents
 
+    # the toolbar-slot occupant, declared BY the content (keep-if-exist like the
+    # bar pieces; the content-CHANGE points destroy it first so a new content
+    # gets its own variant). Born collapsed when the content is viewing.
+    if !@toolbar?
+      @toolbar = @contents?.buildToolbar?()
+      if @toolbar?
+        @_addNoSettle @toolbar, notContent: true
+        if !@contents.dragsDropsAndEditingEnabled
+          @toolbar._collapseNoSettle()
+
     if !@resizer?
       # Attach the resizer, then record it. @resizer stays nil DURING its own add so the
       # `@resizer?._moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
@@ -665,9 +728,14 @@ class FrameWdgt extends Widget
   # Driven from the enable/disable state-reflection callers, not from clicks.
   showEditModeInBar: ->
       @editButton?.showPencilGlyph()
+      # the toolbar-slot follows the mode: editing shows the docked toolbar.
+      # NoSettle core -- this protocol is driven from inside the content's
+      # enable/disable settle; the collapse cores invalidate, that flush covers it.
+      @toolbar?._unCollapseNoSettle()
 
   showViewModeInBar: ->
       @editButton?.showEyeGlyph()
+      @toolbar?._collapseNoSettle()
 
   _createAndAddEditButton: ->
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —
@@ -726,9 +794,9 @@ class FrameWdgt extends Widget
           # PAIRED rule in _firstPlacementContentWidth: no hug AND the container-derived
           # content width, so window and content agree from birth.
           if @recursivelyAttachedAsFreeFloating()
-            windowWidth = recommendedElementWidth + @padding * 2
+            windowWidth = recommendedElementWidth + @_chromeWidth()
           else
-            windowWidth = Math.min @width(), recommendedElementWidth + @padding * 2
+            windowWidth = Math.min @width(), recommendedElementWidth + @_chromeWidth()
           @_applyExtentBase new Point windowWidth, @height()
 
         @contents.layoutSpecDetails.captureInitialPlacement @contents, @
@@ -789,9 +857,12 @@ class FrameWdgt extends Widget
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
         @contents.softWrap = true
 
-      leftPosition = @left() + Math.floor (@width() - recommendedElementWidth) / 2
+      # centre the content in its REGION -- the frame width minus a left-docked
+      # shown toolbar (identical to the whole width when none is docked left)
+      contentRegionLeft = @left() + @_leftDockThickness()
+      leftPosition = contentRegionLeft + Math.floor (@width() - @_leftDockThickness() - recommendedElementWidth) / 2
 
-      @contents._applyMoveTo new Point leftPosition, @top() + (closeIconSize + @padding + @padding) + @padding
+      @contents._applyMoveTo new Point leftPosition, @top() + @_titlebarHeight() + @_topDockThickness() + @padding
       stackHeight += desiredHeight
 
     if @contents? and @contents.collapsed
@@ -809,6 +880,25 @@ class FrameWdgt extends Widget
       barBounds = new Rectangle @position()
       barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
       @bar._reLayout barBounds
+
+    # the toolbar-slot: place the docked toolbar in the padded body, under the
+    # bar -- TOP: a full-available-width strip the content then starts below;
+    # LEFT: a column sharing the content's vertical span (stackHeight is the
+    # content height this pass just derived). Driven SYNCHRONOUSLY via
+    # _reLayout bounds, the same drive as @bar above -- a scroll panel's
+    # _reLayout applies its own bounds THEN re-fits its contents+scrollbars, so
+    # a width change that re-wraps the tool grid converges IN THIS PASS. (A
+    # bare _applyMoveTo/_applyExtent drive commits the viewport but re-fits
+    # nothing, leaving the inner panel at a stale wrap height -- fg census
+    # caught exactly that: ToolPanel 75 tall inside the 40 strip after a
+    # narrow->wide window resize.)
+    if @_dockedToolbarShowing()
+      toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding
+      if @toolbar.dockSide == 'top'
+        toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @width() - 2 * @padding, @toolbar.dockThickness
+      else
+        toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
+      @toolbar._reLayout toolbarBounds
 
     # TODO there is *already* a way to make handles do the right thing, and that is
     # to have this sort of code in a _reLayout function, and calling super in there,

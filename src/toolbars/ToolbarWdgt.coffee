@@ -56,3 +56,15 @@ class ToolbarWdgt extends ScrollPanelWdgt
     # yields a copy), not editable content -- every home wants the drops/edits
     # lock, so the build applies it once instead of each call site.
     @_disableDragsDropsAndEditingNoSettle()
+
+  # A width change re-WRAPS the grid, and the base scroll-panel re-fit is
+  # measure-then-commit: it reads the items' APPLIED bounds, commits the
+  # contents frame from them, and only then re-places the items -- so wrapping
+  # at a NEW width converges one pass late, leaving a stale contents frame at
+  # the old wrap height (fg census caught it: a 2-row 75px grid frame inside
+  # the 40px docked strip after a narrow->wide frame resize). Re-place the
+  # items at my (already-applied) viewport width FIRST, so the base measures
+  # the CURRENT wrap and the whole re-fit is a one-pass fixed point.
+  _positionAndResizeChildren: ->
+    @contents._reLayout @contents.bounds
+    super
