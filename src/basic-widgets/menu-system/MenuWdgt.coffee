@@ -39,12 +39,13 @@ class MenuWdgt extends PopUpWdgt
   # paint). So I am transparent EVERYWHERE: hit-testing must fall THROUGH me to my
   # panel (which is opaque where the box is, so topWdgtSuchThat finds it first) and,
   # where the panel does not cover (its rounded corners / the padding), on through to
-  # whatever is behind me. Without this, Widget.isTransparentAt returns `undefined`
-  # for an appearance-less widget, which `not undefined` treats as OPAQUE -- so my
-  # transparent corners would intercept a click meant for a menu BEHIND me (a submenu
-  # popped over a parent menu stopped the parent's item from staying hover-highlighted).
-  # The MenuAppearance the old self-laying menu carried reported this correctly; the
-  # panel now carries it, and I must report transparent to match.
+  # whatever is behind me. Without this, the base answers OPAQUE (the explicit
+  # appearance-less default -- most appearance-less widgets are hit-targets, see
+  # Widget.isTransparentAt) -- so my transparent corners would intercept a click meant
+  # for a menu BEHIND me (a submenu popped over a parent menu stopped the parent's
+  # item from staying hover-highlighted). The MenuAppearance the old self-laying menu
+  # carried reported this correctly; the panel now carries it, and I must report
+  # transparent to match.
   isTransparentAt: (aPoint) ->
     true
 

@@ -91,10 +91,11 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # As a menu entry, prefer my (multi-line TextWdgt) label's width plus a little
   # padding. MenuWdgt.maxWidthOfMenuEntries calls this polymorphically rather
-  # than type-checking the entry. (The label is @children[0]; the guard catches
-  # a row somehow built without one.)
+  # than type-checking the entry. The label is @children[0]; a row somehow built
+  # without one is a BUG -- let the read throw loudly here. (This guard used to
+  # be a `debugger` statement: dead in production, a stealth breakpoint under
+  # devtools.)
   menuEntryPreferredWidth: ->
-    if !@children[0]? then debugger
     @children[0].width() + 8
 
   # MenuItemWdgt events:

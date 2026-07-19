@@ -47,13 +47,13 @@ class PromptWdgt extends PopUpWdgt
   # Like MenuWdgt, I draw NOTHING myself -- my rowsPanel draws the box -- so I am
   # transparent EVERYWHERE and hit-testing must fall THROUGH me to my panel (and, at my
   # transparent rounded corners / padding, on through to whatever is behind me). Without
-  # this the base Widget.isTransparentAt returns `undefined` for an appearance-less widget,
-  # which `not undefined` treats as OPAQUE. See MenuWdgt.isTransparentAt and container-
-  # regularization §5.6: fixing the BASE instead regressed ~70 tests (most appearance-less
-  # widgets rely on the opaque default), so it stays a per-class override. Owner-accepted the
-  # one visible consequence (a resting pointer over a prompt corner now hover-highlights the
-  # widget behind, e.g. macroSaveAsPromptAboveTiltedWindow's close button -- consciously
-  # recaptured 2026-07-19).
+  # this the base answers OPAQUE (the explicit appearance-less default -- most
+  # appearance-less widgets are hit-targets, see Widget.isTransparentAt; container-
+  # regularization §5.6 proved flipping the DEFAULT instead regresses ~70 tests, so
+  # transparency stays a per-class override). Owner-accepted the one visible consequence
+  # (a resting pointer over a prompt corner now hover-highlights the widget behind,
+  # e.g. macroSaveAsPromptAboveTiltedWindow's close button -- consciously recaptured
+  # 2026-07-19).
   isTransparentAt: (aPoint) ->
     true
 
@@ -103,4 +103,10 @@ class PromptWdgt extends PopUpWdgt
     # down and changing the property concurrently.
     panel.addMenuItem "Close", @, "close"
 
+  # Deliberately EMPTY: suppresses the base Widget._reactToBeingAdded -> @_reLayoutSelf
+  # add-time self-heal. A prompt's body is laid ONCE at build
+  # (_buildAndConnectChildrenNoSettle lays the panel and hugs it BEFORE popUp adds me),
+  # and the panel is free-floating so it co-moves on any later re-parenting (a pinned
+  # prompt dropped into a panel) -- nothing needs re-laying at add time. Contrast
+  # MenuWdgt, whose FIRST layout is deliberately driven from its _reactToBeingAdded.
   _reactToBeingAdded: (whereTo, beingDropped) ->

@@ -414,8 +414,17 @@ class Widget extends TreeNode
       goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
 
+  # Transparent-to-clicks test, consumed ONLY by ActivePointerWdgt.topWdgtUnderPointer
+  # (`noticesTransparentClick or not isTransparentAt(pos)`). The appearance answers
+  # for widgets that draw; an appearance-LESS widget is OPAQUE — explicitly (`? false`):
+  # most appearance-less widgets are hit-targets that must catch clicks, PROVEN when
+  # the opposite default ("appearance-less means transparent") was tried and regressed
+  # ~70 tests (container arc §5.6). The appearance-less widgets that genuinely ARE
+  # transparent overlays declare it per-class (MenuWdgt / PromptWdgt → true;
+  # TransformFrameWdgt delegates into its subtree). Before the `? false` this same
+  # behaviour rode an accident — `not undefined === true` at the consumer.
   isTransparentAt: (aPoint) ->
-    @appearance?.isTransparentAt aPoint
+    (@appearance?.isTransparentAt aPoint) ? false
 
   # useful for example when hovering over references
   # to widgets. Can only modify the rendering of a widget,
