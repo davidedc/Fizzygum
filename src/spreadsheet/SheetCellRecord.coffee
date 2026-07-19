@@ -13,7 +13,7 @@
 # DeepCopierMixin remaps it to the copy — save AND duplicate free (spec §2). Its LIFECYCLE is
 # owned by the GESTURES, never by FormulaCompiler.commit (pure source machinery): SET by the drop
 # (CellWdgt._reactToChildDropped), CLEARED by a user edit-commit on the cell
-# (SpreadsheetWdgt._commitEditNoSettle — typed content of any kind replaces the widget) and by
+# (SimpleSpreadsheetWdgt._commitEditNoSettle — typed content of any kind replaces the widget) and by
 # the drag-out (CellWdgt._reactToChildGrabbed).
 # Derived (rebuilt on load/duplicate, NEVER serialized — declared in @serializationTransients):
 #   @compiledFn   the once-compiled formula function (FormulaCompiler.commit)
@@ -58,7 +58,7 @@ class SheetCellRecord
   widgetEntry: nil
 
   # @sheet is the owning SheetModel ("the sheet the cell belongs to"); @sheet.sheetWidget is the
-  # SpreadsheetWdgt that paints it and serves as the formula scope (@ inside a formula).
+  # SimpleSpreadsheetWdgt that paints it and serves as the formula scope (@ inside a formula).
   constructor: (@sheet, @address, @source = "") ->
     @compiledFn = nil
     @boundNames = []

@@ -45,17 +45,18 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §5 Phase 0: S1 FizzyPaint round-trip spike + S2 hand-built prototype — not yet run
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
-### `plans/onion-widget-composition-plan.md` — "The Frame model" — EXECUTING (phases A + C ✅ 2026-07-19)
-Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowWdgt`) → App=launcher. Intrinsic-framing principle LOCKED (D1–D5). Correctness-first — no churn deferrals.
+### `plans/onion-widget-composition-plan.md` — "The Frame model" — EXECUTING (phases A + C + B ✅ 2026-07-19)
+Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowWdgt`) → App=launcher. Intrinsic-framing principle LOCKED (D1–D9). Correctness-first — no churn deferrals.
 - [x] §5 P0: `architecture/regularity-principles.md` — LANDED 2026-07-19
 - [x] §5.A: `WindowWdgt` → `FrameWdgt` rename + de-inherit + `FrameBarWdgt` bar composition — PHASE A COMPLETE 2026-07-19
-- [x] §5.C: one shared `ToolbarWdgt` per content type + the frame toolbar-slot — PHASE C COMPLETE 2026-07-19 (C1 `1e06b79f`, C2 `74322e1d`, C3 `3e8eecd6`); paint toolbar QUARANTINED in `ReconfigurablePaintWdgt` for §5.D
-- [ ] §5.C follow-ons: macro guard test for the doc toolbar-slot flip (the C2 COVERAGE GAP — no suite test shows a doc's edit-mode toolbar; the `macroDrawingsMakerReEnableEditing` byte-idempotence pattern); undock-to-float context-menu entry (D9 tail, never a bar button); `right`/`bottom` dock arranges (property values exist, arrange support doesn't); `HorizontalMenuPanelWdgt` now demo-only (MenusHelper) — fold or keep
+- [x] §5.C: one shared `ToolbarWdgt` per content type + the frame toolbar-slot — PHASE C COMPLETE 2026-07-19 (C1 `1e06b79f`, C2 `74322e1d`, C3 `3e8eecd6`); paint toolbar QUARANTINED in `ReconfigurablePaintWdgt` for §5.D; slot guard test landed (tests `24bfa3882`)
+- [x] §5.B: payload/citizen split — PHASE B COMPLETE 2026-07-19 (B1 `fe76f679` substrate, B2 `79eaaf9c` SimpleTextWdgt+TitleWdgt, B3 `4dcfbc4c` DocumentWdgt, B4 `19b13d9d` GenericPanelWdgt family, B5+B6 spreadsheet/image renames — execution design + case law in plan §5.B)
+- [ ] §5.C follow-ons: undock-to-float context-menu entry (D9 tail, never a bar button); `right`/`bottom` dock arranges (property values exist, arrange support doesn't); `HorizontalMenuPanelWdgt` now demo-only (MenusHelper) — fold or keep
+- [ ] §5.B follow-ons: `ImageWdgt` framed citizen lands WITH §5.D (its consumer — paint = image editing; §3.3a: `SimpleImageWdgt` has one construction site today, a button face); `DeckWdgt` = D2 reserved name, no substrate yet; creation-menu wording ("simple document", "Simple slide") kept as-is — rename to the citizen kinds is an owner call (label lookup strings + menu pixels)
 - [ ] build tooling: shippable-vs-`find src` coverage check — a new `src/` directory ships NOTHING until listed in `build.py`'s explicit glob list, the build exits 0, and the syntax gate consumes the same list (cost one red presuite in C1; runtime symptom `<NewClass> is not defined`)
-- [ ] §5.B: split fused content classes into naked `Simple*` payload + framed `Document/Image/Slide/Dashboard/Spreadsheet Wdgt`
-- [ ] §5.D: unify PAINT onto the focus model (S1 spike gates the build; dissolves the paint-toolbar quarantine) + one editing-focus indicator (caret + tool-head)
-- [ ] §5.E: uniform `add(startingContent)` contents protocol + read-only-as-capability (info-widgets smell)
-- [ ] §6 D6/D7/D8 open (gate §5.B): `Simple*` vs `Basic*` prefix; `TitleWdgt` role shape; caret gated by edit mode?
+- [ ] census blind spot (pre-existing, exposed then re-masked in B): an AS-BUILT (never-resized) sample-slide window's NYC scroll content panel sits one scrollbar-width short of its content hull until any resize converges it — the census battery resizes every window before the sweep, so the oracle never sees the as-built state (B4 briefly exposed it when citizens escaped the battery's old `/FrameWdgt/` name regex, now the polymorphic `isFrame()`); a truth-re-lay pass over AS-BUILT windows would be the honest extension
+- [ ] §5.D: unify PAINT onto the focus model (S1 spike gates the build; dissolves the paint-toolbar quarantine AND deletes `StretchableEditableWdgt`, paint's last abstract parent) + one editing-focus indicator (caret + tool-head)
+- [ ] §5.E: uniform `add(startingContent)` contents protocol + read-only-as-capability (the info-widgets are already just factories on `DocumentWdgt` — §3.3a)
 
 ### `plans/graph-edges-and-lifecycle-plan.md`
 AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; unify containment/target/reference edges; GC = reachability over their union. Supersedes the reference plan's link-rename + GC.

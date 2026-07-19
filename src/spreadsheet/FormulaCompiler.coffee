@@ -3,7 +3,7 @@
 # recomputes never re-compile). Stateless — exposed as class ("static") methods; there is nothing
 # to instantiate or serialize.
 #
-# commit(cell, newSource) is the single entry (called from the SpreadsheetWdgt commit path):
+# commit(cell, newSource) is the single entry (called from the SimpleSpreadsheetWdgt commit path):
 #   1. record @source;
 #   2. scan the source (comments + string literals stripped from a scan COPY) for the identifiers
 #      to bind as the formula's parameters — cell references (`A1`, which ALSO become the cell's
@@ -15,7 +15,7 @@
 #   4. on a compile failure the cell's value becomes a "SYNTAX" SheetError (spec §9.6) and it
 #      binds nothing.
 # Evaluation happens later in SheetCellRecord.dataflowRecompute via @compiledFn.apply(sheetScope,
-# boundValues); sheetScope (the formula's `@`) is the SpreadsheetWdgt — full world access, no
+# boundValues); sheetScope (the formula's `@`) is the SimpleSpreadsheetWdgt — full world access, no
 # sandbox (spec §9.2).
 
 class FormulaCompiler

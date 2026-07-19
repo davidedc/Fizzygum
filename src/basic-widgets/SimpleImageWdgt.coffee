@@ -23,7 +23,7 @@
 # So you wouldn't be able to deepCopy this class while the Image is loading then,
 # which also would be odd.
 
-class RasterImageWdgt extends CanvasWdgt
+class SimpleImageWdgt extends CanvasWdgt
 
   imagePath: nil
   imageLoaded: false

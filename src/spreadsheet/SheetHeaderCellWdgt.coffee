@@ -7,7 +7,7 @@
 #
 # DERIVED chrome: carries no document state (@kind/@index are construction facts re-derivable
 # from the sheet's geometry constants), so the restore/duplicate re-index DESTROYS and
-# REBUILDS header cells rather than adopting them (SpreadsheetWdgt._reindexCellsNoSettle).
+# REBUILDS header cells rather than adopting them (SimpleSpreadsheetWdgt._reindexCellsNoSettle).
 #
 # It paints everything it shows (the F5 "the sheet paints nothing" flip):
 #   - its header-strip fill (the sheet's headerFillColor — was the sheet's strip fillRects);

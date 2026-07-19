@@ -15,5 +15,5 @@ class VideoThumbnailWdgt extends SimpleRasterImageButtonWdgt
     super imagePath, target, action, @videoPath
   
   setThumbnailAndVideoPath: (thumbnailPath, videoPath) ->
-    @rasterImageWdgt.loadImage thumbnailPath
+    @imageWdgt.loadImage thumbnailPath
     @argumentToAction1 = videoPath

@@ -55,7 +55,7 @@ class CellWdgt extends Widget
     @address = address         # which cell (col/row via the model); stable across save/load
     @hostedWidget = nil        # the mounted value/presenter widget (this cell's rich child), or nil
     @presentedValue = nil      # branch-2 churn-skip: the value the current presenter reflects
-    @_sheetWidget = nil        # back-ref to the owning SpreadsheetWdgt (set by attachSheet)
+    @_sheetWidget = nil        # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
     @_scalarText = nil         # branch-3 painted text (a scalar/error toString), or nil when empty/hosting
     @_scalarIsError = false    # true when @_scalarText is a SheetError badge (paint in the error colour)
     @_editorWdgt = nil         # the mounted overlay editor while THIS cell is being edited (F2/F5), or nil
@@ -90,7 +90,7 @@ class CellWdgt extends Widget
 
   # Paint this cell's OWN pixels (F5 — every visible thing is a widget; the sheet paints
   # nothing): my top+left grid edges (ALWAYS — even when hosting/editing/empty; the F5
-  # edge-ownership convention, colours + crossing rule in SpreadsheetWdgt.paintGridEdges),
+  # edge-ownership convention, colours + crossing rule in SimpleSpreadsheetWdgt.paintGridEdges),
   # then my selection ring when I am the selected cell (F2: drawn fully INSIDE — band [1,3),
   # touching no edge pixel, under my hosted child since children paint after me, never
   # overlapping my text which starts at x 4), then my scalar text (branch 3) at the SAME

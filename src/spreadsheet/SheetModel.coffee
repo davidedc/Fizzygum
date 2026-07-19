@@ -1,5 +1,5 @@
 # SheetModel — the spreadsheet's SPARSE data model (spec docs/specs/dataflow-engine-spec.md
-# §9.1). A plain class (NOT a Widget): the SpreadsheetWdgt HAS-A one as @model, and holds a
+# §9.1). A plain class (NOT a Widget): the SimpleSpreadsheetWdgt HAS-A one as @model, and holds a
 # back-reference here as @sheetWidget (the "sheet" a cell belongs to == this model; the widget
 # that paints it == @sheetWidget). Cells are stored SPARSELY in a Map keyed by address string
 # ("A1") — only cells the user has touched exist, so an empty 1000×1000 sheet costs nothing.
@@ -32,7 +32,7 @@ class SheetModel
   # ── address algebra ────────────────────────────────────────────────────────────────────────
 
   # 0-based column index -> spreadsheet letters (0->A, 25->Z, 26->AA, …). Bijective with
-  # lettersToCol. (Same loop as SpreadsheetWdgt._colToLetters, centralised here now that the
+  # lettersToCol. (Same loop as SimpleSpreadsheetWdgt._colToLetters, centralised here now that the
   # model owns addressing; the widget delegates.)
   colToLetters: (col) ->
     s = ""

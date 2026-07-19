@@ -5,7 +5,7 @@
 class SimpleRasterImageButtonWdgt extends SimpleButtonWdgt
 
   imagePath: nil
-  rasterImageWdgt: nil
+  imageWdgt: nil
 
   constructor: (
       @imagePath,
@@ -16,12 +16,12 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonWdgt
 
     # additional properties:
 
-    @rasterImageWdgt = new RasterImageWdgt @imagePath
-    # TODO this is needed because RasterImageWdgt extends CanvasWdgt which extends PanelWdgt
+    @imageWdgt = new SimpleImageWdgt @imagePath
+    # TODO this is needed because SimpleImageWdgt extends CanvasWdgt which extends PanelWdgt
     # which actually implements the mouseClickLeft handler and doesn'e escalate it.
     # We hence hack this override to make it so the click is indeed escalated to the
     # parent i.e. the SimpleButtonWdgt.
-    @rasterImageWdgt.mouseClickLeft = (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+    @imageWdgt.mouseClickLeft = (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
       @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
-    super true, target, action, @rasterImageWdgt, nil, nil, nil, nil, argumentToAction1,nil,nil,2
+    super true, target, action, @imageWdgt, nil, nil, nil, nil, argumentToAction1,nil,nil,2

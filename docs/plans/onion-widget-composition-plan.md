@@ -5,8 +5,11 @@
 2026-07-19 (toolbar substrate re-verified against src @ `10aa3342` — §3.4's A1-drifted names corrected);
 Phase C ✅ COMPLETE 2026-07-19 (C1 `1e06b79f`, C2 `74322e1d`, C3 `3e8eecd6`, C4 `ab07bd95`, island fix
 `58fa177e`, D6/D7/D8 lock `c4cd9d46`; guard test Fizzygum-tests `24bfa3882`); §5.B execution design ADDED
-2026-07-19 (§3.3 substrate re-verified against src @ `c4cd9d46` — verified deltas recorded in §3.3a).
-Owner-gated execution.**
+2026-07-19 (§3.3 substrate re-verified against src @ `c4cd9d46` — verified deltas recorded in §3.3a);
+Phase B ✅ COMPLETE 2026-07-19 (B1 `fe76f679`, B2 `79eaaf9c`, B3 `4dcfbc4c`, B4 `19b13d9d`, B5+B6 in the
+closing commit — landing stamps + execution case law in §5.B B-iv). REMAINING: §5.D (paint-on-focus,
+dissolves the quarantine + deletes StretchableEditableWdgt + lands ImageWdgt) → §5.E (contents protocol +
+readOnly capability). Owner-gated execution.**
 This revision **supersedes** the earlier "three-ring onion" framing of this file: the middle "editor
 panel" ring is dissolved (the toolbar is a *slot inside the frame*, not a ring), and the naming/structure
 below were settled with the owner in a design dialogue on 2026-07-18. Class names verified against the
@@ -608,15 +611,28 @@ zero).**
   byte-clean when run alone, "zero failed screenshots = uncaught error" signature, shard STALLED and
   wedged the paint leg's timeout) — every structural dissolution must grep the tests repo for the OLD
   FIELD NAMES (`stretchableWidgetContainer`, `simpleDocumentScrollPanel`) too. ⚠ tests live IN the
-  build: a tests-repo macro fix needs a FULL rebuild before the headless suite sees it.**
+  build: a tests-repo macro fix needs a FULL rebuild before the headless suite sees it.
+  (3b — phase-close find) **HARNESS scripts name-test window-ness too:** the census battery found its
+  windows via `/FrameWdgt/.test(constructor.name)`, so the citizens ESCAPED it — one un-resized
+  as-built window then failed the sweep (a PRE-EXISTING as-built staleness the battery had always
+  masked; BACKLOG'd). Fixed to the polymorphic `isFrame()`; grep harness scripts for name-regex
+  window tests on every subclassing arc.**
 - **B5 — the spreadsheet split.** Grid `git mv` → `SimpleSpreadsheetWdgt`; new thin
   `SpreadsheetWdgt extends FrameWdgt` citizen (payload = the grid; no toolbar variant exists — slot stays
   empty; `providesAmenitiesForEditing` NOT declared: the grid manages its own editing, the frame shows no
   pencil — parity with today); `SpreadsheetApp` opens the citizen. Sweep the 36 test files' fixtures
   (mechanical, zero-pixel: same class, new name) + 1 `"a Spreadsheet"` label dir. Deferrable if the owner
   wants B closed earlier — nothing later depends on it.
+  **✅ LANDED 2026-07-19 (with B6, one verification): the citizen is TRULY thin (ctor + colloquialName +
+  title hook + reset — no amenities/no icon/no close override: the plain-wrapped era's window had no
+  pencil, titled from the grid's "spreadsheet", closed via the base flow, and the frame's icon dispatch
+  reaches the grid unchanged); `SpreadsheetApp`'s `new SpreadsheetWdgt` line is textually UNTOUCHED
+  (openFrameWith passthrough); tests = the blanket 36-file identifier sweep, zero label lookups (the "a
+  Spreadsheet" hit was metadata prose).**
 - **B6 — image rename + docs.** `git mv` `RasterImageWdgt`→`SimpleImageWdgt` (1 src site, 0 test refs);
   BACKLOG (ImageWdgt-in-D pointer, DeckWdgt reserved-name note); plan stamps + memory sync.
+  **✅ LANDED 2026-07-19: rename + the button's stale `rasterImageWdgt` field → `imageWdgt` (one
+  external reader, `VideoThumbnailWdgt.setThumbnailAndVideoPath`, updated with it).**
 
 **B-v. Owner decisions taken INTO this design (present before code):** (1) `ImageWdgt` deferred to D
 (§3.3a — deviation from the §3.3 table); (2) doc payload name kept (B-ii); (3) `TitleWdgt` initial style =

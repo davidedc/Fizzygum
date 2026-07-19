@@ -2712,7 +2712,7 @@ class Widget extends TreeNode
     # (1) The paint must route through the plain appearance delegation. Widget::paintIntoAreaOrBlit-
     # FromBackBuffer just delegates to @appearance, but nine widget classes override it to draw
     # arbitrary pixels (HandleWdgt, LayoutChromeWdgt, LabelButtonWdgt, PenWdgt, CellWdgt,
-    # SpreadsheetWdgt, AnalogClockWdgt, Example3DPlotWdgt, GraphsPlotsChartsWdgt) and BackBufferMixin
+    # SimpleSpreadsheetWdgt, AnalogClockWdgt, Example3DPlotWdgt, GraphsPlotsChartsWdgt) and BackBufferMixin
     # blits an offscreen buffer of unknown per-pixel opacity. This one prototype-identity check
     # excludes them ALL (it subsumes the back-buffer exclusion).
     return nil if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer

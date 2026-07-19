@@ -3,7 +3,8 @@
 # launcher title/icon and builds the window; the base owns createOpener + launch. `slot: nil`
 # ⇒ a FRESH window every launch (multiple sheets allowed — the sheet is NOT a world singleton).
 #
-# The window content is a SpreadsheetWdgt (the painted grid). See docs/specs/dataflow-engine-
+# Opens a SpreadsheetWdgt citizen (a FrameWdgt over the SimpleSpreadsheetWdgt
+# painted grid -- §5.B; openFrameWith passes the framed citizen through). See docs/specs/dataflow-engine-
 # spec.md §9.1 and src/spreadsheet/CLAUDE.md.
 
 class SpreadsheetApp extends IconicDesktopSystemWindowedApp

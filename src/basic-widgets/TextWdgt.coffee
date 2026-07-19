@@ -308,7 +308,7 @@ class TextWdgt extends StringWdgt
   # dropped narrower than the column at its drop width, killing the re-wrap-on-resize
   # affordance -- asserted by macroStackPanelLooseWhenEmptyTightWhenFilled image_3). The
   # class-owned-explicit-grow pattern mirrors the fixed/aspect trio's grow 0 (IconWdgt /
-  # SpreadsheetWdgt / AnalogClockWdgt). A FIT_TEXT_TO_BOX text keeps its box (see the
+  # SimpleSpreadsheetWdgt / AnalogClockWdgt). A FIT_TEXT_TO_BOX text keeps its box (see the
   # measure above), so it keeps the base derivation; so does a spec that already carries a
   # decided grow (a prior placement's derivation or a user's elasticity edit) -- the ?= only
   # fills UNDECIDED. (U1 -- sizing-model unification §9.5.)
