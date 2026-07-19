@@ -24,15 +24,24 @@ class FrameWdgt extends Widget
   # ctor/reset/content paths then enable/disable per content state.
   _acceptsDrops: true
 
+  # the title bar -- ONE child (FrameBarWdgt) owning the five title-strip
+  # pieces and the title half of the skin
+  bar: nil
+  # ALIASES into the bar's pieces: same instances, frame-side names -- these are
+  # load-bearing contracts (MacroToolkit + the macro tests reach win.label /
+  # win.closeButton / win.editButton / win.collapseUncollapseSwitchButton /
+  # win.titlebarBackground; FolderWindowWdgt supplies its own closeButton;
+  # showEditModeInBar drives @editButton). Kept in sync at the three mutation
+  # points: build, edit-button destroy on collapse, recreate on uncollapse.
   label: nil
   closeButton: nil
   editButton: nil
   collapseUncollapseSwitchButton: nil
+  titlebarBackground: nil
   labelContent: nil
   resizer: nil
   padding: nil
   contents: nil
-  titlebarBackground: nil
   defaultContents: nil
 
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
@@ -290,17 +299,24 @@ class FrameWdgt extends Widget
   closeFromFrameBar: ->
     @contents?.closeFromContainerFrame @
 
-  # The title-bar Close/Edit buttons announce their press here instead of testing
-  # `@parent instanceof FrameWdgt` themselves -- the window owns what its bar
-  # buttons mean. closeButtonInBarPressed mirrors the old button branch exactly (a
-  # contents-bearing window closes from the bar, an empty one just closes); a
-  # non-window container of a close button has no such method, so that button falls
-  # back to Widget.close(). (type-test-elimination campaign)
+  # The title-bar buttons announce their press to their holder (the bar, which
+  # forwards here) instead of testing `@parent instanceof FrameWdgt` themselves
+  # -- the frame owns what its bar buttons MEAN. closeButtonInBarPressed mirrors
+  # the old button branch exactly (a contents-bearing window closes from the
+  # bar, an empty one just closes); a non-bar container of a close button has no
+  # such method, so that button falls back to Widget.close().
+  # (type-test-elimination campaign; A2b routes the asks through FrameBarWdgt.)
   closeButtonInBarPressed: ->
     if @contents? then @closeFromFrameBar() else @close()
 
   editButtonInBarPressed: ->
     @contents?.editButtonPressedFromFrameBar?()
+
+  collapseButtonInBarPressed: ->
+    @contents.collapse()
+
+  uncollapseButtonInBarPressed: ->
+    @contents.unCollapse()
 
   # duringReInflation: true ONLY for the one synchronous re-fit inside _reactToChildUnCollapsed --
   # the content must KEEP its just-restored extent instead of being stretched to a mid-restore
@@ -497,10 +513,10 @@ class FrameWdgt extends Widget
       @contentsExtentWhenCollapsed = @contents.extent()
       @extentWhenCollapsed = @extent()
 
-      # tear down the bar buttons through the non-settling core: this hook fires inside collapse's
-      # settle, so the public self-settling destroy() would throw under the single-mutation tier. The
-      # enclosing collapse settle covers the re-layout.
-      @editButton?._destroyNoSettle()
+      # tear down the edit button through the bar's non-settling core: this hook fires inside
+      # collapse's settle, so the public self-settling destroy() would throw under the
+      # single-mutation tier. The enclosing collapse settle covers the re-layout.
+      @bar._destroyEditButtonNoSettle()
       @editButton = nil
 
   _beforeChildUnCollapsed: (child) ->
@@ -571,7 +587,7 @@ class FrameWdgt extends Widget
     super
     if whereTo isnt world?.hand
       @_deriveAndSetBodyAppearance()
-      @_setAppearanceAndColorOfTitleBackground()
+      @bar._setAppearanceAndColorOfTitleBackground()
       @changed()
 
   _reactToChildDropped: (theWidget) ->
@@ -590,7 +606,7 @@ class FrameWdgt extends Widget
     @_buildAndConnectChildrenNoSettle()
 
   # The window BODY appearance half of the internal/external skin (the title-bar half is
-  # _setAppearanceAndColorOfTitleBackground): flat RectangularAppearance when nested (internal),
+  # FrameBarWdgt._setAppearanceAndColorOfTitleBackground): flat RectangularAppearance when nested (internal),
   # boxy BoxyAppearance when free on the desktop (external). Derived from isInternal (parentage),
   # set at construction and re-derived on every re-parenting by _reactToBeingAdded.
   _deriveAndSetBodyAppearance: ->
@@ -599,46 +615,11 @@ class FrameWdgt extends Widget
     else
       @appearance = new BoxyAppearance @
 
-  _setAppearanceAndColorOfTitleBackground: ->
-    if @isInternal()
-      @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
-    else
-      @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
-
-    if @isInternal()
-      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.internalWindowBarBackgroundColor
-      @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.internalWindowBarStrokeColor
-    else
-      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.externalWindowBarBackgroundColor
-      @titlebarBackground.strokeColor = WorldWdgt.preferencesAndSettings.externalWindowBarStrokeColor
-
-
-  _buildTitlebarBackground: ->
-    if @titlebarBackground?
-      # tear down through the non-settling core: this runs inside _buildAndConnectChildren's settle, so
-      # the public self-settling fullDestroy() would throw under the single-mutation tier. The enclosing
-      # rebuild settle covers the re-layout.
-      @titlebarBackground._fullDestroyNoSettle()
-
-    # TODO we should really just instantiate a Widget,
-    # and give it the shape, there is no reason to create
-    # the dedicated shape widget and then change the appearance
-    # as the window changes from internal to external and vice versa
-    # HOWEVER a bunch of tests would fail if I do the proper
-    # thing so we are doing this for the time being.
-    if @isInternal()
-      @titlebarBackground = new RectangleWdgt
-    else
-      @titlebarBackground = new BoxWdgt
-
-    @_setAppearanceAndColorOfTitleBackground()
-    @_addNoSettle @titlebarBackground, notContent: true
-  
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
-  # core is non-settling: it adds every chrome widget AND the content through @_addNoSettle (the cores
-  # mirrored down FrameWdgt -> SimpleVerticalStackPanelWdgt -> Widget), so nothing self-settles per add
-  # and nothing re-fits the HALF-built window mid-loop -- the window's content bookkeeping rides along in
-  # FrameWdgt._addNoSettle. The single settle runs AFTER the core, when @stack is wired: O(1) relayouts.
+  # core is non-settling: it adds the bar (whose pieces build through the bar's own non-settling
+  # core) AND the content through @_addNoSettle, so nothing self-settles per add and nothing
+  # re-fits the HALF-built window mid-loop -- the window's content bookkeeping rides along in
+  # FrameWdgt._addNoSettle. The single settle runs AFTER the core: O(1) relayouts.
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor). Every rebuild path that
   # fires from inside an enclosing settle -- a child-lifecycle hook (_beforeChildDestroyed/Closed/PickedUp)
@@ -651,37 +632,18 @@ class FrameWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
 
-    if !@titlebarBackground?
-      @_buildTitlebarBackground()
-
-    # label -- tear down through the non-settling core (inside the rebuild's settle; see _buildTitlebarBackground)
-    @label?._fullDestroyNoSettle()
-    @label = new StringWdgt @labelContent, WorldWdgt.preferencesAndSettings.titleBarTextFontSize
-
-    # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
-    # safari's rendering of bright text on dark background is atrocious
-    # so we have to force bold style in the window bars
-    if /^((?!chrome|android).)*safari/i.test navigator.userAgent
-      @label.isBold = true
-    else
-      @label.isBold = WorldWdgt.preferencesAndSettings.titleBarBoldText
-
-    @label.color = Color.WHITE
-    @_addNoSettle @label, notContent: true
-
-    # upper-left button, often a close button
-    # but it can be anything
-    if !@closeButton?
-      @closeButton = new CloseIconButtonWdgt
-    @_addNoSettle @closeButton, notContent: true
-
-
-    if !@collapseUncollapseSwitchButton?
-      collapseButton = new CollapseIconButtonWdgt
-      uncollapseButton = new UncollapseIconButtonWdgt
-      @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
-    @_addNoSettle @collapseUncollapseSwitchButton, notContent: true
-
+    if !@bar?
+      @bar = new FrameBarWdgt @
+      @_addNoSettle @bar, notContent: true
+    # the bar builds/keeps its pieces (label rebuilt every time, the rest
+    # keep-if-exist); @closeButton is the ctor-supplied one on the first build
+    # (FolderWindowWdgt injects its own), then the alias of the bar's.
+    @bar._buildAndConnectPiecesNoSettle @labelContent, @closeButton
+    # re-point the aliases at the (possibly fresh) pieces -- see the field block.
+    @titlebarBackground = @bar.titlebarBackground
+    @label = @bar.label
+    @closeButton = @bar.closeButton
+    @collapseUncollapseSwitchButton = @bar.collapseUncollapseSwitchButton
 
     @_createAndAddEditButton()
 
@@ -711,8 +673,7 @@ class FrameWdgt extends Widget
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —
     # content widgets drive them cross-object (`@parent?.showEditModeInBar?()`), so they stay public.
     if @contents?.providesAmenitiesForEditing and !@editButton?
-      @editButton = new EditIconButtonWdgt @
-      @_addNoSettle @editButton, notContent: true
+      @editButton = @bar._createAndAddEditButtonNoSettle()
 
       if @contents.dragsDropsAndEditingEnabled
         @showEditModeInBar()
@@ -733,18 +694,6 @@ class FrameWdgt extends Widget
   _positionAndResizeChildren: (duringReInflation = false) ->
 
     closeIconSize = FrameWdgt.CLOSE_ICON_SIZE
-
-    # close button
-    if @closeButton? and @closeButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding, @top() + @padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @closeButton._reLayout buttonBounds
-
-    # collapse/uncollapse button
-    if @collapseUncollapseSwitchButton? and @collapseUncollapseSwitchButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + closeIconSize + 2 * @padding, @top() + @padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @collapseUncollapseSwitchButton._reLayout buttonBounds
 
     stackHeight = 0
 
@@ -853,41 +802,13 @@ class FrameWdgt extends Widget
 
     @_applyExtentBase new Point @width(), newHeight
 
-    @titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
-    @titlebarBackground._applyMoveTo @position().add new Point 1,1
-    # TODO this looks better:
-    #@titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 4,4
-    #@titlebarBackground._applyMoveTo @position().add new Point 2,2
-
-    # NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching the
-    # self-settling wrapper would re-enter the flush. The cores are idempotent, so an already-correct
-    # button is a no-op exactly as the public guards made it. (check-layering [G])
-    # The edit button is now the rightmost title-bar button (the internal/external switch that used to
-    # sit to its right is gone), so it collapses at the tighter width the switch used to.
-    if @width() < 3 * (closeIconSize + @padding) + @padding
-      @editButton?._collapseNoSettle()
-    else
-      @editButton?._unCollapseNoSettle()
-
-    # label
-    if @label? and @label.parent == @
-      labelLeft = @left() + @padding + 2 * (closeIconSize + @padding)
-      labelTop = @top() + @padding
-      labelRight = @right() - @padding
-      if @editButton? and !@editButton.isInCollapsedSubtree()
-        labelRight -= 1 * (closeIconSize + @padding)
-      labelWidth = labelRight - labelLeft
-
-      labelBounds = new Rectangle new Point labelLeft, labelTop
-      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldWdgt.preferencesAndSettings.titleBarTextHeight
-      @label._applyBounds labelBounds
-
-    # edit button -- now the sole right-hand title-bar button (the internal/external switch that
-    # used to occupy the rightmost slot is gone), so it takes that rightmost slot.
-    if @editButton? and !@editButton.isInCollapsedSubtree() and @editButton.parent == @
-      buttonBounds = new Rectangle new Point @right() - 1 * (closeIconSize + @padding), @top() + @padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @editButton._reLayout buttonBounds
+    # the title strip: hand the bar its bounds (my top strip at the FINAL width --
+    # the first-placement hug above may have just re-committed it); the bar's own
+    # arrange places the five pieces at the same absolute pixels the flat chrome had.
+    if @bar? and @bar.parent == @
+      barBounds = new Rectangle @position()
+      barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
+      @bar._reLayout barBounds
 
     # TODO there is *already* a way to make handles do the right thing, and that is
     # to have this sort of code in a _reLayout function, and calling super in there,

@@ -8,4 +8,7 @@ class UncollapseIconButtonWdgt extends IconButtonWdgt
   createAppearance: -> new UncollapseIconAppearance @
 
   actOnClick: ->
-    @parent.parent.contents.unCollapse()
+    # my parent is the collapse/uncollapse SwitchButtonWdgt; ITS parent is the
+    # bar, which answers the press protocol (and forwards to the frame -- the
+    # frame owns what its bar buttons mean).
+    @parent.parent.uncollapseButtonInBarPressed?()

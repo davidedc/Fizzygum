@@ -293,13 +293,65 @@ recapture serially, one name per invocation, until fg grows an arg loop/guard.)
   obligations. **✅ LANDED 2026-07-19 — byte-identical confirmed: gauntlet 11/11, zero recaptures,
   revisits/census at zero.** (Execution note: the stinks gate rejects history-narrating comments
   ("used to"/"no longer") — write de-inherit why-comments present-tense.)
-- **A2b — compose bar + content-container + stable toolbar-slot (design-first, separate landing).**
-  The real structural re-shape: a bar child (title/close/collapse/pencil-eye), a content-container
-  child with the toolbar-slot, `_positionAndResizeChildren` re-written over the composed parts. Sketch
-  the child structure + serialization migration + macro-contract preservation (`.label`,
-  `.closeButton`, `.contents` stay reachable as the same instances) in this section BEFORE cutting
-  code; expect conscious recapture. Its design intertwines with C (the slot's occupant) — author the
-  sketch with C's §5.C in view.
+- **A2b — compose the BAR (`FrameBarWdgt`); the content-container + toolbar-slot land WITH phase C.**
+  Decomposition refined after a full seam audit (2026-07-19): the content-container's real jobs — the
+  toolbar-slot's occupant and the drags/drops/editing coordination folded up from
+  `StretchableEditableWdgt` — both arrive in C/B, so inserting an empty container now would be
+  structure-without-a-consumer AND a §5.2d-class parent-chain break (drop targets, content lifecycle
+  hooks, spec binding) paid twice. The BAR, by contrast, has its consumer today: one child that owns
+  the five title-strip pieces and the window/card skin's title half.
+  **Seam audit verdict (the migration's full break-list — everything else is field-reads):**
+  - NO positional `children[N]` indexing of a window's chrome exists anywhere, src or tests; every
+    external reach (MacroToolkit + ~20 macros) is `win.<field>` → **keep `label`/`closeButton`/
+    `editButton`/`collapseUncollapseSwitchButton`/`titlebarBackground` as ALIAS fields on the frame**,
+    synced at the three mutation points (build, edit-button destroy on collapse, recreate on
+    uncollapse).
+  - **Press seams** (the icon-button family deliberately targets ITSELF and asks `@parent` at press
+    time — ctor comment in `IconButtonWdgt`): `CloseIconButtonWdgt` asks
+    `@parent.closeButtonInBarPressed?()` (else `.close()`); `EditIconButtonWdgt` asks
+    `@parent.editButtonInBarPressed?()`; `Collapse/UncollapseIconButtonWdgt` hard-code
+    `@parent.parent.contents.collapse()/unCollapse()` (2-hop, window-bar-only constructions). Fix:
+    the BAR answers the four-message protocol and forwards to its frame; the frame keeps
+    `close/editButtonInBarPressed` and gains `collapse/uncollapseButtonInBarPressed`
+    (`-> @contents.collapse()/unCollapse()` — the frame owns what its bar buttons mean); the two
+    collapse buttons change to `@parent.parent.<x>ButtonInBarPressed?()` (parent.parent = the bar).
+    Non-bar `CloseIconButtonWdgt` uses (PointerWdgt, MenusHelper) keep the `.close()` fallback.
+  - **⚠ Drag-by-titlebar constraint:** the grab climb (`findFirstLooseWidget`) stops at a child whose
+    parent is a `PanelWdgt` — so `FrameBarWdgt` MUST be a plain non-`PanelWdgt` `Widget` with
+    `grabsToParentWhenDragged()` true (the inherited default), or dragging by label /
+    titlebarBackground grabs the label instead of the window.
+  - The resizer stays a direct frame child (`@target` add-bound). Button colors are all
+    self-contained (no parent skin reads). Content→frame protocol (`showEditModeInBar` etc.) reads
+    the frame's alias — unaffected.
+  **Shape:** `FrameBarWdgt extends Widget`, appearance-less (titlebarBackground draws; explicit-opaque
+  default makes the strip a hit-target whose clicks escalate to the frame), holds a bound `@frame`,
+  owns piece construction (`_buildAndConnectPiecesNoSettle`, honoring a caller-supplied closeButton —
+  FolderWindowWdgt), the strip arrange (the block moved out of the frame's
+  `_positionAndResizeChildren`: background inset (1,1)/(−2,−2), close at padding, switch at
+  icon+2·padding, label between, edit rightmost with the narrow-width collapse rule), and the
+  title-half skin (`_setAppearanceAndColorOfTitleBackground`, `_buildTitlebarBackground`).
+  Stack-pattern `_reLayout` (= super + arrange) + `implementsDeferredLayout` pinned false, driven
+  synchronously by the frame's arrange as `@bar._reLayout barBounds` (barBounds = top strip at
+  `_titlebarHeight()`), exactly as the frame drives its buttons' `_reLayout` today. Paint/hit order
+  preserved (bar first, then contents, then resizer). Measure (`_titlebarHeight`/`_chromeHeight`)
+  stays on the frame. Serialization: the new child serializes structurally; no compat obligations.
+  **Ambition: byte-identical** (same absolute pixel placement, bar draws nothing); gates = presuite,
+  then full gauntlet with revisits/census at zero.
+  **Two seam finds from execution (both fixed with existing case-law shapes):**
+  1. **The bar must be `isTransparentAt -> true`** (the §5.6 Menu/Prompt pattern, NOT an opaque
+     hit-target as first designed): an appearance-less opaque bar covers the frame's transparent
+     rounded-corner notches, intercepting hits the frame's own appearance reports transparent —
+     caught by `macroDesktopShortcutIcons`, whose folder window spawns at the click point and whose
+     shortcut icon then wrongly lost its pointer-under (pressed) state. Transparent-everywhere
+     restores the exact pre-bar hit surface (pieces opaque, border → frame body, notch → behind).
+  2. **The bar must answer `hiddenFromHierarchyMenu -> true`** — the right-click
+     hierarchy/disambiguation menu lists the clicked widget's ancestor chain, and the bar would
+     appear as a new "a title bar ➜" row (shifting every row below, and re-aiming macros that
+     navigate by row position). The exclusion hook already exists for `MenuRowsPanelWdgt`
+     (Widget.getHierarchyMenuWidgets): internal structure is not a user-facing target.
+  **✅ A2b LANDED 2026-07-19 — byte-identical confirmed: gauntlet 11/11, zero recaptures,
+  revisits/census at zero. PHASE A COMPLETE (A1 rename + A2a de-inherit + A2b bar composition).
+  NEXT: phase C (one ToolbarWdgt per content type + the content-container/toolbar-slot).**
 
 ### B. Split fused content classes into naked payload + framed citizen
 Per §3.3: introduce `SimpleTextWdgt` (from `SimplePlainTextWdgt`; role `TitleWdgt`), `SimpleImageWdgt`
