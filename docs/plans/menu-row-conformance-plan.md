@@ -31,7 +31,12 @@ only through the base's policy seams:
 - `interElementGap()` — new base policy method (default `@padding`, byte-identical for
   every pre-existing stack), overridden to `0` on the panel: rows sit FLUSH inside a
   2px border (`super nil, nil, 2` in the panel ctor).
-- `_childWidthInStack` override → every row is handed the full available width.
+- ~~`_childWidthInStack` override → every row is handed the full available width.~~
+  **⚠⚠ FALSIFIED at Phase 2e's first landing (2026-07-19, reverted `dc351521`→`c1392eb2`): this
+  override NEVER existed in the landed §5.2e** — equalization lived ENTIRELY in the post-pass, and
+  deleting the post-pass alone left rows at their narrow spec widths (7 gauntlet legs red). The
+  corrected 2e adds the override + deletes the post-pass TOGETHER. Every other §1 citation was
+  re-verified live; this one had been carried from the §5.2e design notes instead of the code.
 - ONE arrange specialization on the panel (quoted in §1.4 below): hug own width to
   widest row → `super()` → post-pass stretching every row via the VIRTUAL `_applyWidth`.
 - `PopUpWdgt` gained the shared `rowsPanel` field, `_layOutAndHugRowsPanel`, and a
@@ -342,8 +347,10 @@ not one-size — §1.3 shows three starting patterns):
 - **2e Delete the panel's post-pass** (the `w = …; @children.forEach …` lines in
   §1.4's quote) — every child now takes the tracking branch (2a–2d) or is a true leaf
   (`MenuItemWdgt` — label-only, base `_applyWidth` has no override; `DividerWdgt` —
-  a stretched rectangle), and both branches already emerge at the full row width from
-  the `_childWidthInStack` override. Also delete the now-unneeded
+  a stretched rectangle). **AND add the `_childWidthInStack -> availForContents`
+  width-policy override in the SAME step** — it did not exist (see the §1 falsification
+  note): without it the engine sizes rows at their narrow spec widths and the deletion
+  alone reds out 7 gauntlet legs. Also delete the now-unneeded
   `world.disableTrackChanges()` bracket IF the remaining body is just hug+super
   (super's own applies handle repaint; verify no paint-audit regression).
 
