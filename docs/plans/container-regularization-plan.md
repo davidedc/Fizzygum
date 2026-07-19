@@ -26,9 +26,9 @@ scorecard F → DONE). **§5.6 LANDED as (b) 2026-07-19**: base fix (a) rejected
 less widgets rely on the opaque default), so kept per-class + added `PromptWdgt.isTransparentAt: -> true`; owner
 eyeballed + accepted its one visible effect (a stray hover-highlight through the prompt corner in
 `macroSaveAsPromptAboveTiltedWindow` image_2) and it was consciously recaptured (see §5.6 OUTCOME).
-**§5.5 WALLPAPER TEST LANDED + guard-proven 2026-07-19** (`macroWallpaperMenuTickTracksSelection` covers the
-`menu.rowsPanel.children[N]` tick path; the sibling fonts test is DEFERRED — the Wallpaper test already guards
-the bug class; see §5.5 OUTCOME). REMAINING (fleshed out below, executable cold): **§5.2e** (re-base
+**§5.5 BOTH TICK TESTS LANDED + guard-proven 2026-07-19** (`macroWallpaperMenuTickTracksSelection` +
+`macroFontsMenuTickTracksSelection` cover both `menu.rowsPanel.children[N]` tick sites — Wallpaper and
+StringWdgt; see §5.5 OUTCOME). REMAINING (fleshed out below, executable cold): **§5.2e** (re-base
 `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, OK to leave unfinished).**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
@@ -342,7 +342,7 @@ a mode-flagged mega-container would re-introduce the special-casing this whole a
 scorecard row **F → DONE (§5.4)** in §3.7 and mark this section ✅. No build/gauntlet (docs-only) — `git diff`
 review + commit. *(Owner may overrule → separate design spike, flagged not dropped.)*
 
-### 5.5 Regression tests for the `menu.rowsPanel.children[N]` contract. *New — closes the coverage gap §5.2d exposed.* — ✅ WALLPAPER TEST LANDED 2026-07-19 (guard-proven); ⏸ FONTS TEST DEFERRED
+### 5.5 Regression tests for the `menu.rowsPanel.children[N]` contract. *New — closes the coverage gap §5.2d exposed.* — ✅ BOTH TICK TESTS LANDED 2026-07-19
 
 **OUTCOME (2026-07-19):**
 - **`macroWallpaperMenuTickTracksSelection` LANDED + GUARD-PROVEN.** Opens the world > Wallpapers sub-menu
@@ -353,18 +353,17 @@ review + commit. *(Owner may overrule → separate design spike, flagged not dro
   (`undefined … `), confirming it is not a vacuous pass — then restored. This ALSO structurally guards the
   §5.2e menu re-base: any change that alters the menu's child structure re-breaks the tick path and this test
   catches it.
-- **`macroFontsMenuTickTracksSelection` DEFERRED** (follow-up — the Wallpaper test already guards the
-  `menu.rowsPanel.children[N]` bug CLASS). Diagnosis from three capture attempts + two headless probes: the
-  StringWdgt fonts menu itself is fine (`str.buildContextMenu()` returns the own-menu with a working "font ➜"
-  item when the String's parent is world, isDevMode true, all `topWdgtSuchThat` locators find it in a direct
-  probe). Two dead-ends fixed along the way (a phantom "a String ➜" hierarchy hop that does not exist for a
-  world-child; and the "➜" arrow being transliterated to "->" in the macro-source build round-trip, so a
-  literal-arrow match never fires — matched arrow-free instead). But even arrow-free, the MACRO's
-  input-pipeline right-click on a directly-added `StringWdgt` does not surface the item (same
-  `reading 'x'` = locator-returned-undefined, before image_1) — i.e. the pipeline right-click is not opening
-  the own-context-menu the direct `buildContextMenu()` call produces. Resolving that needs a WATCHED session
-  (observe what menu the right-click actually opens); past this run's two-falsification budget. TODO owning
-  section: this §5.5.
+- **`macroFontsMenuTickTracksSelection` LANDED** (guards the StringWdgt fonts-menu tick path — the second
+  `menu.rowsPanel.children[N]` site, `updateFontsMenuEntriesTicks`, that the wallpaper test does not touch).
+  Add a String to the desktop; right-click it (parent is world → `buildContextMenu` returns its own menu
+  directly, no hierarchy hop); click "font ➜" → the Fonts sub-menu opens with the default "Arial" ticked
+  (image_1); pick "Georgia"; re-open → the tick moved to "Georgia" and the String re-renders in Georgia
+  (image_2). The three earlier capture failures were STALE-BUILD artifacts of rapid iteration (a clean
+  verified `fg build` first, then capture, passed deterministically across dpr1/dpr2 + the full gauntlet).
+  ⚠ Two gotchas that DID bite: (1) for a world-child there is NO "a String ➜" hierarchy hop — the right-click
+  opens the own context menu directly; (2) the "➜" arrow is transliterated to "->" in the macro-source build
+  round-trip, so the locator must match ARROW-FREE (`startsWith "font"` and not `"font size..."`); NO existing
+  test matches an arrow in macro source.
 
 **Original plan (for reference — wallpaper done, fonts deferred):**
 §5.2d's two production crashes (`Wallpaper` + `StringWdgt` reaching `menu.children[N]` for item labels) sailed
