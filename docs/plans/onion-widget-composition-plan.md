@@ -1,13 +1,18 @@
 # The Frame model — naked capability → manipulable citizen → App
 
-**STATUS: AUTHORED 2026-07-18, REVISED 2026-07-18 — design-stage, NO code written yet. Owner-gated execution.**
+**STATUS: AUTHORED 2026-07-18, REVISED 2026-07-18, RE-VERIFIED 2026-07-19 — design-stage, NO code written yet. Owner-gated execution.**
 This revision **supersedes** the earlier "three-ring onion" framing of this file: the middle "editor
 panel" ring is dissolved (the toolbar is a *slot inside the frame*, not a ring), and the naming/structure
 below were settled with the owner in a design dialogue on 2026-07-18. Class names verified against the
-working tree on 2026-07-18; anchor on **symbol names**, not line numbers.
+working tree on 2026-07-18 and **re-verified 2026-07-19 against src @ `72560224`** (after the
+container-regularization §5.2e + menu-row-conformance arcs landed): every §3 citation still holds; the
+only weave-in was the precise stack-inheritance inventory in §3.1. Anchor on **symbol names**, not line
+numbers.
 
 Self-contained: embeds the load-bearing current-state facts so it runs cold. Part of one program with
-[`container-regularization-plan.md`](container-regularization-plan.md),
+[`container-regularization-plan.md`](container-regularization-plan.md) (**✅ COMPLETE 2026-07-19**, incl.
+its [`menu-row-conformance-plan.md`](menu-row-conformance-plan.md) follow-on — the menu system is now a
+genuine stack client),
 [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md),
 [`creation-and-templates-plan.md`](creation-and-templates-plan.md), and
 [`reference-widgets-plan.md`](reference-widgets-plan.md). Shared north star: orthogonalisation,
@@ -119,6 +124,29 @@ All paths under `Fizzygum/src/`. This is the substrate the migration transforms.
 - **⚠ Mis-inheritance to fix:** `WindowWdgt extends SimpleVerticalStackPanelWdgt` — its own header calls
   the extension "misleading." A frame *has* a bar + a content-container; it is not *a* vertical stack.
   `FrameWdgt` should **compose** those, not inherit a stack (composition-over-inheritance; §5.A).
+  **The exact inherited surface (re-verified 2026-07-19) the de-inherit must reproduce or consciously
+  replace:**
+  - **Rides from the stack:** `add`/`_addNoSettle` (the window's own `_addNoSettle` supers through the
+    stack's core — content bookkeeping + `notContent` chrome adds thread down it); `_reLayoutChildren`
+    (the stack's is `@_positionAndResizeChildren()`, which dispatches back into the *window's* override —
+    this inheritance is what marks the window a size-tracking container); `_reLayout`
+    (= `super; @_reLayoutChildren()`); `implementsDeferredLayout` **pinned false**;
+    `initialiseDefaultWindowContentLayoutSpec` (the window deliberately has no override — the stack's
+    ends with the same `canSetHeightFreely = false`); and the stack's `subWidgetsMergedPreferredBounds`
+    (a stack-walk pure measure over ALL children, chrome included — decide its `FrameWdgt` meaning
+    explicitly at de-inherit time, don't inherit-by-accident again).
+  - **Fully overridden, so inert for windows:** `_positionAndResizeChildren` (the window's own arrange),
+    `preferredExtentForWidth` + `preferredExtent` (the window's own §4.1 pure measures). This is why the
+    stack base's post-authoring conformance-arc additions (`interElementGap()`, the base
+    `preferredExtentForWidth`) change nothing for windows — they are consumed only by the stack walkers
+    the window overrides.
+  - **Ctor quirk:** `super nil, nil, 40, true` hands the stack `padding = 40`, immediately overwritten by
+    `@padding = 5` — the super args are effectively noise; only `@constrainContentWidth = true` survives.
+  - **Contrast (worked precedent):** `MenuRowsPanelWdgt` (container arc §5.2e, landed 2026-07-19) is what
+    a *genuine* stack client looks like — it keeps the stack's arrange/measures and overrides only the
+    small policy hooks (`interElementGap`, `_childWidthInStack`, hug width). `WindowWdgt` overrides the
+    arrange and measures wholesale — the inheritance buys it only the tracking/deferral plumbing, which is
+    exactly the part composition can supply.
 
 ### 3.2 The "frame + toolbar-slot" pattern already exists (as `StretchableEditableWdgt`)
 `StretchableEditableWdgt` (`StretchableEditableWdgt.coffee`, "Generic panel") composes a
@@ -211,6 +239,30 @@ content-container (with a stable toolbar-slot) instead. Keep the window/card ski
 and `representativeIcon = content's icon`. `openWindowWith` → a `FrameWdgt` wrap. This is a central,
 serialized, colloquial-name-drawn class → recapture expected and accepted.
 
+**A1 (rename sweep) — ✅ LANDED 2026-07-19.** The class family (`WindowWdgt`→`FrameWdgt`,
+`WindowContentLayoutSpec`→`FrameContentLayoutSpec`, `WindowContentsPlaceholderText`→
+`FrameContentsPlaceholderText`, files `git mv`'d) plus the whole window-named frame protocol
+(`isFrame`, `openFrameWith`, `initialiseDefaultFrameContentLayoutSpec`, `ATTACHEDAS_FRAME_CONTENT`,
+`editButtonPressedFromFrameBar`, `closeFromFrameBar`, `closeFromContainerFrame` — incl. its
+string-dispatched button action in `ErrorsLogViewerWdgt` — `specialFrameReferenceShortcut`,
+`_reactToHolderFrameDropped/Grabbed`), swept 1:1 across src (137 refs), the tests repo (348 refs), and
+the layering gate's callback grammar (`(Being|Child|HolderWindow)`→`HolderFrame` — the gate encodes the
+convention and caught its own coupling on the first build). **Deliberately NOT renamed:** user-facing
+"window"/"internal window" strings (skin vocabulary — stays until the card-skin work); the window-skin
+subclasses/creators (`TemplatesWindowWdgt`, `FolderWindowWdgt`, `*WindowCreatorButton*`, icon
+appearances — Phase B/C); the `buildWindow` app hook (creation arc). Churn (all owner-eyeballed):
+3 tests recaptured — 2 inspector tests (the clock's method list draws the renamed
+`initialiseDefault…` name) + `macroDuplicateComplexWidgetRidesHand` (the duplicated window rides the
+hand 5px left: the hierarchy menu hugs its widest entry, and "a Frame ▸" is narrower than
+"a Window ▸", so the duplicate-click lands left — MEASURED pure translation dx=−5 dy=0, residual
+133/130500). **⚠ Case law for phases B/C (mass class renames): class-derived MENU LABELS are consumed
+by macro LOOKUP STRINGS too** — 3 duplication macros navigated the hierarchy menu by the literal
+prefix `"a Window"` and crashed (`undefined.x` in moveToAndClick) until the strings followed the
+label; a rename sweep must also grep the tests repo for `"a <OldClass-sans-Wdgt>"` label prefixes.
+(Tooling gotcha, same session: `fg recapture` takes ONE test name and silently ignores extras —
+recapture serially, one name per invocation, until fg grows an arg loop/guard.)
+**Remaining in A: A2 = de-inherit + compose, against the §3.1 inventory.**
+
 ### B. Split fused content classes into naked payload + framed citizen
 Per §3.3: introduce `SimpleTextWdgt` (from `SimplePlainTextWdgt`; role `TitleWdgt`), `SimpleImageWdgt`
 (from `RasterImageWdgt`), and the framed citizens `DocumentWdgt`/`ImageWdgt`/`SlideWdgt`/`DashboardWdgt`/
@@ -299,7 +351,9 @@ standing convention, already partly true; the frame model itself graduates there
   up-notify seam (banned, rule [N]).
 
 ## 8. Cross-links
-- Program siblings: [`container-regularization-plan.md`](container-regularization-plan.md),
+- Program siblings: [`container-regularization-plan.md`](container-regularization-plan.md) (✅ COMPLETE
+  2026-07-19) + its follow-on [`menu-row-conformance-plan.md`](menu-row-conformance-plan.md) (✅ COMPLETE
+  2026-07-19 — the §5.2e stack-client precedent cited in §3.1),
   [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md),
   [`creation-and-templates-plan.md`](creation-and-templates-plan.md),
   [`reference-widgets-plan.md`](reference-widgets-plan.md).
