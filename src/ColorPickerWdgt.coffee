@@ -9,6 +9,9 @@ class ColorPickerWdgt extends Widget
   choice: nil
   colorPalette: nil
   grayPalette: nil
+  # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
+  # that method); declared so DeepCopierMixin duplication carries it.
+  menuEntryNaturalWidth: nil
 
   constructor: ( @choice = Color.WHITE ) ->
     super()
@@ -20,9 +23,12 @@ class ColorPickerWdgt extends Widget
   colloquialName: ->
     "color picker"
 
-  # As a menu entry, prefer my own current width (MenuWdgt.maxWidthOfMenuEntries
-  # calls this polymorphically instead of type-checking the entry).
-  menuEntryPreferredWidth: -> @width()
+  # As a menu entry, prefer the width I was BUILT at (the ctor's design extent,
+  # or whatever a builder resized me to), frozen at the first ask — byte-what
+  # the old `@width()` read-back answered at the rows-panel's first arrange,
+  # but immune to the post-stretch no-shrink ratchet (menu-row-conformance
+  # plan, Phase 1).
+  menuEntryPreferredWidth: -> @menuEntryNaturalWidth ?= @width()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   # (Was `buildSubwidgets`, an ad-hoc one-hop indirection that hid the ctor child-building from the

@@ -19,6 +19,9 @@ class StringFieldWdgt extends PanelWdgt
   isNumeric: nil
   text: nil
   isEditable: true
+  # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
+  # that method); declared so DeepCopierMixin duplication carries it.
+  menuEntryNaturalWidth: nil
 
   constructor: (
       @defaultContents = "",
@@ -32,9 +35,14 @@ class StringFieldWdgt extends PanelWdgt
     super()
     @color = Color.WHITE
 
-  # As a menu entry, prefer my own current width (MenuWdgt.maxWidthOfMenuEntries
-  # calls this polymorphically instead of type-checking the entry).
-  menuEntryPreferredWidth: -> @width()
+  # As a menu entry, answer my natural width as DERIVED in
+  # calculateAndUpdateExtent (max(minTextWidth, text width) — every prompt
+  # builder runs it right after adding me). The `?=` arm only covers a field
+  # built without that derivation: freeze the as-built width at the first ask.
+  # Either way the answer is stretch-immune — the old `@width()` read-back
+  # reported the post-stretch width forever, the no-shrink ratchet
+  # (menu-row-conformance plan, Phase 1).
+  menuEntryPreferredWidth: -> @menuEntryNaturalWidth ?= @width()
 
   _applyWidth: (newWidth)->
     super
@@ -46,7 +54,11 @@ class StringFieldWdgt extends PanelWdgt
     # note: StringWdgt takes isHeaderLine as its 6th arg, so isNumeric is the 7th
     text = new StringWdgt txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
     text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
-    @_applyWidth Math.max @minTextWidth, text.width()
+    # THIS is the field's natural-width derivation — capture it for
+    # menuEntryPreferredWidth at the source rather than reading applied
+    # geometry back later (menu-row-conformance plan, Phase 1).
+    @menuEntryNaturalWidth = Math.max @minTextWidth, text.width()
+    @_applyWidth @menuEntryNaturalWidth
 
   _reLayoutSelf: ->
     super()

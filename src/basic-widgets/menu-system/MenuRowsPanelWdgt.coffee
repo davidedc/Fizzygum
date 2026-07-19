@@ -219,16 +219,18 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     world.maybeEnableTrackChanges()
     @fullChanged()
 
+  # My preferred row width: the widest child's PURE content measure. Every row
+  # kind that contributes a width answers menuEntryPreferredWidth() — MenuItemWdgt
+  # / StringFieldWdgt / ColorPickerWdgt / SliderWdgt and (since the conformance
+  # arc's Phase 1) the MenuHeader too, so the walk is uniform; divider lines
+  # don't answer and are skipped. All the measures are stretch-immune (frozen or
+  # content-derived), so re-arranges can legitimately SHRINK the hug — the old
+  # `@label.width()` read-back special case ratcheted the width up forever.
   maxWidthOfMenuEntries: ->
     w = 0
-    # Each row that contributes a width answers menuEntryPreferredWidth()
-    # (MenuItemWdgt / StringFieldWdgt / ColorPickerWdgt / SliderWdgt define it);
-    # divider lines and the title header don't, and are skipped.
     @children.forEach (item) ->
       if item.menuEntryPreferredWidth?
         w = Math.max w, item.menuEntryPreferredWidth()
-    if @label
-      w = Math.max w, @label.width()
     w
 
   unselectAllItems: ->

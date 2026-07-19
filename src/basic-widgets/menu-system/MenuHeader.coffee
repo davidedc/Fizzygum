@@ -31,6 +31,16 @@ class MenuHeader extends BoxWdgt
     @text._sizeToTextAndDisableFittingNoSettle()
     @_applyExtent @text.extent().add 2
 
+  # As a menu entry, my natural width is my title text + the 2px the build
+  # formula adds (_buildAndConnectChildrenNoSettle's `@text.extent().add 2`) —
+  # a PURE content measure: the rows-panel's post-stretch widens ME, never my
+  # @text, so this stays the natural width forever. Lets the panel's
+  # maxWidthOfMenuEntries treat the header uniformly (no @label special case)
+  # and lets a menu NARROW again on row removal (menu-row-conformance plan,
+  # Phase 1).
+  menuEntryPreferredWidth: ->
+    @text.width() + 2
+
   _applyWidth: (theWidth) ->
     super
     # Integer placement (Layer A): @center() is fractional when my extent is odd, so round the centred text

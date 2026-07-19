@@ -20,6 +20,9 @@ class SliderWdgt extends CircleBoxWdgt
   offset: nil
   button: nil
   argumentToAction: nil
+  # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
+  # that method); declared so DeepCopierMixin duplication carries it.
+  menuEntryNaturalWidth: nil
 
   smallestValueIsAtBottomEnd: false
 
@@ -52,9 +55,14 @@ class SliderWdgt extends CircleBoxWdgt
   colloquialName: ->
     "slider"
 
-  # As a menu entry, prefer my own current width (MenuWdgt.maxWidthOfMenuEntries
-  # calls this polymorphically instead of type-checking the entry).
-  menuEntryPreferredWidth: -> @width()
+  # As a menu entry, prefer the width I was BUILT at, frozen at the first ask
+  # (a slider is a stretch control with no intrinsic content width, so its
+  # natural width IS its as-built width). The first ask happens at the rows-
+  # panel's first arrange — byte-what the old `@width()` read-back answered —
+  # but freezing kills the no-shrink ratchet: after the panel stretches me to
+  # the widest row, later asks kept reporting the STRETCHED width, so a menu
+  # could never narrow again (menu-row-conformance plan, Phase 1).
+  menuEntryPreferredWidth: -> @menuEntryNaturalWidth ?= @width()
 
 
   initialiseDefaultVerticalStackLayoutSpec: ->
