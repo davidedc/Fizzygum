@@ -74,21 +74,28 @@ class SliderWdgt extends CircleBoxWdgt
     @_reLayoutSelfAndButton()
 
   # Re-lay-out me and my thumb, then repaint -- the couplet every value/geometry change
-  # ends with. The button guard covers deserialization, where @button can still be a
-  # string reference (see unitSize).
+  # ends with.
   _reLayoutSelfAndButton: ->
     @_reLayoutSelf()
-    if @button? and @button instanceof SliderButtonWdgt
-      @button._reLayoutSelf()
+    @_reLayoutChildren()
     @changed()
 
-  _applyExtent: (aPoint) ->
-    unless aPoint.equals @extent()
-      super aPoint
-      # my backing store had just been updated
-      # in the call of super, now
-      # it's the time of the button
+  # I am a size-tracking container of my one child: the thumb tracks my frame
+  # (its position is derived from my value + my track geometry). Conforming to
+  # the engine's child contract (menu-row-conformance plan, Phase 2b) replaces
+  # the old bespoke `_applyExtent` re-lay hook: in a stack/rows-panel arrange
+  # the tracking branch sizes me via _setWidthSizeHeightAccordingly (virtual
+  # _applyWidth + synchronous _reLayout since I now defer), and any base
+  # _applyExtent resize schedules my _reLayout via the valve -- both end HERE.
+  # The button guard covers deserialization, where @button can still be a
+  # string reference (see unitSize).
+  _reLayoutChildren: ->
+    if @button? and @button instanceof SliderButtonWdgt
       @button._reLayoutSelf()
+
+  _reLayout: (newBoundsForThisLayout) ->
+    super
+    @_reLayoutChildren()
     
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW , WindowContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
