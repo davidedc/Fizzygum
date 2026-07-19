@@ -25,11 +25,11 @@ production sites.** **§5.4 LANDED 2026-07-18** (docs-only F non-merge ruling re
 scorecard F → DONE). **§5.6 LANDED as (b) 2026-07-19**: base fix (a) rejected (regressed ~70 tests — appearance-
 less widgets rely on the opaque default), so kept per-class + added `PromptWdgt.isTransparentAt: -> true`; owner
 eyeballed + accepted its one visible effect (a stray hover-highlight through the prompt corner in
-`macroSaveAsPromptAboveTiltedWindow` image_2) and it was consciously recaptured (see §5.6 OUTCOME). REMAINING
-(fleshed out below, executable cold):
-**§5.5** (regression tests for the wallpaper/fonts tick paths — closes the coverage gap §5.2d exposed),
-**§5.2e** (re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, do last, OK to leave
-unfinished). Suggested order = 5.5 → 5.2e.**
+`macroSaveAsPromptAboveTiltedWindow` image_2) and it was consciously recaptured (see §5.6 OUTCOME).
+**§5.5 WALLPAPER TEST LANDED + guard-proven 2026-07-19** (`macroWallpaperMenuTickTracksSelection` covers the
+`menu.rowsPanel.children[N]` tick path; the sibling fonts test is DEFERRED — the Wallpaper test already guards
+the bug class; see §5.5 OUTCOME). REMAINING (fleshed out below, executable cold): **§5.2e** (re-base
+`MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — hardest, OK to leave unfinished).**
 This is the FIRST of the five-plan program the owner chose to start.
 Current-state facts were verified against the working tree on 2026-07-18 by reading the actual sources.
 Anchor on the **class/method names** below; line numbers are hints and drift.
@@ -342,7 +342,31 @@ a mode-flagged mega-container would re-introduce the special-casing this whole a
 scorecard row **F → DONE (§5.4)** in §3.7 and mark this section ✅. No build/gauntlet (docs-only) — `git diff`
 review + commit. *(Owner may overrule → separate design spike, flagged not dropped.)*
 
-### 5.5 Regression tests for the `menu.rowsPanel.children[N]` contract. *New — closes the coverage gap §5.2d exposed.*
+### 5.5 Regression tests for the `menu.rowsPanel.children[N]` contract. *New — closes the coverage gap §5.2d exposed.* — ✅ WALLPAPER TEST LANDED 2026-07-19 (guard-proven); ⏸ FONTS TEST DEFERRED
+
+**OUTCOME (2026-07-19):**
+- **`macroWallpaperMenuTickTracksSelection` LANDED + GUARD-PROVEN.** Opens the world > Wallpapers sub-menu
+  (default "plain" ticked, image_1), picks "circles", re-opens (tick moved to "circles" + the desktop repaints
+  the pattern, image_2). Merely opening the sub-menu runs `Wallpaper.updatePatternsMenuEntriesTicks` →
+  `menu.rowsPanel.children[1..7].label` (the crash path). Captured dpr1+2; owner sent the visuals to eyeball.
+  **Guard-proven:** temporarily reverting `Wallpaper.coffee` to `menu.children[N]` makes the test crash+fail
+  (`undefined … `), confirming it is not a vacuous pass — then restored. This ALSO structurally guards the
+  §5.2e menu re-base: any change that alters the menu's child structure re-breaks the tick path and this test
+  catches it.
+- **`macroFontsMenuTickTracksSelection` DEFERRED** (follow-up — the Wallpaper test already guards the
+  `menu.rowsPanel.children[N]` bug CLASS). Diagnosis from three capture attempts + two headless probes: the
+  StringWdgt fonts menu itself is fine (`str.buildContextMenu()` returns the own-menu with a working "font ➜"
+  item when the String's parent is world, isDevMode true, all `topWdgtSuchThat` locators find it in a direct
+  probe). Two dead-ends fixed along the way (a phantom "a String ➜" hierarchy hop that does not exist for a
+  world-child; and the "➜" arrow being transliterated to "->" in the macro-source build round-trip, so a
+  literal-arrow match never fires — matched arrow-free instead). But even arrow-free, the MACRO's
+  input-pipeline right-click on a directly-added `StringWdgt` does not surface the item (same
+  `reading 'x'` = locator-returned-undefined, before image_1) — i.e. the pipeline right-click is not opening
+  the own-context-menu the direct `buildContextMenu()` call produces. Resolving that needs a WATCHED session
+  (observe what menu the right-click actually opens); past this run's two-falsification budget. TODO owning
+  section: this §5.5.
+
+**Original plan (for reference — wallpaper done, fonts deferred):**
 §5.2d's two production crashes (`Wallpaper` + `StringWdgt` reaching `menu.children[N]` for item labels) sailed
 through the ENTIRE gauntlet because **no macro exercises a menu's tick-update path**. Add coverage so a future
 menu-structure change (e.g. §5.2e) cannot silently re-break them. Author with the `/author-macro-test` skill
