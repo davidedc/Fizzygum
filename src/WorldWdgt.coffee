@@ -2366,6 +2366,14 @@ class WorldWdgt extends PanelWdgt
     # public-call-sanctioned: setColor is the polymorphic public color API (heavily driven by
     # macros/user code); the world reset runs outside any pass, so the react inside is harmless.
     @setColor Color.create 205, 205, 205
+    # ...and the DESKTOP WALLPAPER pattern, for the same reason: it is a world-level global (held on
+    # @wallpaper, NOT in the widget tree, so fullDestroyChildren above does not touch it), so a test
+    # that changes it — e.g. macroWallpaperMenuTickTracksSelection picking "circles" — would otherwise
+    # leak the pattern into the NEXT test in the same headless process, rendering its desktop background
+    # wrong. Reset to the boot default (pattern1 = "plain"); a no-op for the tests that never change it.
+    # menuItem = nil so no open menu's ticks are touched. Mirrors the setColor reset above.
+    if @wallpaper?
+      @wallpaper.setPattern nil, nil, @wallpaper.pattern1
     # make sure thw window is scrolled to top
     # so we can see the test results while tests
     # are running.
