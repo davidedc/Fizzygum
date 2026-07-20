@@ -340,6 +340,15 @@ class FrameWdgt extends Widget
     else
       return @contents.representativeIcon()
 
+  # paintingOverlay() capability chain (§5.D): a paint toolbar resolving its
+  # injection target at press time asks the frame, which asks its content
+  # (container -> canvas -> glass). Frames over non-paintable content answer
+  # nil through the ?. -- and a FLOATING paint toolbar's own frame answers nil
+  # too (its content IS the toolbar), which is what routes the floating press
+  # to the focus pointer instead (PaintToolbarWdgt.resolveInjectionTarget).
+  paintingOverlay: ->
+    @contents?.paintingOverlay?()
+
   closeFromFrameBar: ->
     @contents?.closeFromContainerFrame @
 
@@ -745,10 +754,16 @@ class FrameWdgt extends Widget
       # NoSettle core -- this protocol is driven from inside the content's
       # enable/disable settle; the collapse cores invalidate, that flush covers it.
       @toolbar?._unCollapseNoSettle()
+      # a mode-reactive toolbar (PaintToolbarWdgt re-arms/disarms its tools,
+      # §5.D) rides the SAME protocol; the hooks transition-guard themselves
+      # because this reflector is idempotently re-driven (e.g. the edit-button
+      # recreate on window uncollapse).
+      @toolbar?.reactToEditModeInFrame?()
 
   showViewModeInBar: ->
       @editButton?.showEyeGlyph()
       @toolbar?._collapseNoSettle()
+      @toolbar?.reactToViewModeInFrame?()
 
   # Frame-level edit-mode switch (§5.B): route through the PAYLOAD's own core --
   # the payload owns the canonical dragsDropsAndEditingEnabled flag and its core

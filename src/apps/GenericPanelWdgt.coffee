@@ -15,7 +15,13 @@ class GenericPanelWdgt extends FrameWdgt
   providesAmenitiesForEditing: true
 
   constructor: ->
-    super new StretchableWidgetContainerWdgt
+    super @_makeStartingPayload()
+
+  # the family's payload hook (the DocumentWdgt shape): the ctor AND the reset
+  # below build through it, so a subclass with a richer apparatus (ImageWdgt's
+  # canvas + glass) overrides ONE method.
+  _makeStartingPayload: ->
+    new StretchableWidgetContainerWdgt
 
   colloquialName: ->
     "Generic panel"
@@ -54,5 +60,5 @@ class GenericPanelWdgt extends FrameWdgt
   _resetToDefaultContents: ->
     return if @_beingFullDestroyed
     @_destroyToolbarNoSettle()
-    @contents = new StretchableWidgetContainerWdgt
+    @contents = @_makeStartingPayload()
     @_buildAndConnectChildrenNoSettle()

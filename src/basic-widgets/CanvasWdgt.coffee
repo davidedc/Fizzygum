@@ -17,6 +17,12 @@ class CanvasWdgt extends PanelWdgt
   # subclasses, mirroring the instanceof. (type-test-elimination campaign)
   acceptsPenDrawing: ->
     true
+
+  # paintingOverlay() capability chain (§5.D): the glass a paint tool's
+  # press-time injection targets. A canvas answers its glass-top child if it
+  # carries one (an ImageWdgt's main canvas does), else nil.
+  paintingOverlay: ->
+    @firstChildSuchThat (eachChild) -> eachChild.isPaintingOverlay?()
   
   _reactToBeingAdded: (whereTo, beingDropped) ->
 

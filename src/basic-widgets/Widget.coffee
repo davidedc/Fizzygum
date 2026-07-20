@@ -532,8 +532,8 @@ class Widget extends TreeNode
 
   # The window title-bar "edit" (pencil) button announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
-  # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt /
-  # StretchableEditableWdgt on contents, and by the framed citizens (DocumentWdgt, §5.B)
+  # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt
+  # on contents, and by the framed citizens (DocumentWdgt, GenericPanelWdgt, §5.B)
   # on the frame itself -- so this shared press body lives here on the base.
   editButtonPressedFromFrameBar: ->
     if @dragsDropsAndEditingEnabled
@@ -542,7 +542,7 @@ class Widget extends TreeNode
       @enableDragsDropsAndEditing @
 
   # The shared "enable/disable editing" lock menu entry appended by the content-locking
-  # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt, StretchableEditableWdgt,
+  # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
   # SimpleVerticalStackScrollPanelWdgt). The children list varies by
   # container (the scroll panel sources it from @contents), so it is passed in.
   _addEditingLockMenuEntries: (menu, childrenNotHandlesNorCarets) ->
@@ -2176,7 +2176,7 @@ class Widget extends TreeNode
 
   # Widget accessing - dimensional changes requiring a complete redraw
   # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / SliderWdgt / ListWdgt /
-  # StretchableEditableWdgt / TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
+  # StretchableWidgetContainerWdgt / TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
   # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
   # body per behaviour, two names for dispatch; the bare twin is the override-BYPASSING base apply the
   # top-down arrange uses) PLUS the SCHEDULE-VALVE (B4 hook retirement §9-N1, gate made STRUCTURAL by
@@ -3766,8 +3766,8 @@ class Widget extends TreeNode
     else
       @_applyMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
     # the DISPATCHER owns the callback's settle (rule [J] — the _reactToChildGrabbed twin in
-    # ActivePointerWdgt.grab): the hook is a settle-neutral core (StretchableEditableWdgt rebuilds its
-    # panel through _createNewStretchablePanelNoSettle + _invalidateLayout), and this single settle
+    # ActivePointerWdgt.grab): the hook is a settle-neutral core (a framed citizen rebuilds its
+    # payload through _resetToDefaultContents, GenericPanelWdgt), and this single settle
     # flushes it at the gesture — consistent on return, not riding the end-of-cycle flush. grab's own
     # settles above are already closed (dotted .grab — not a [T] subject pairing), so this opens
     # cleanly outside any pass.

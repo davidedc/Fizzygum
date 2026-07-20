@@ -1,5 +1,9 @@
 # like a SimpleRectangularButtonWdgt but it contains code that can be
-# injected into another widget
+# injected into another widget. The TARGET is resolved at PRESS time by the
+# button's owner (Frame-model plan §5.D: the paint toolbar resolves the
+# painting overlay of the frame it is docked in, or of the focused widget --
+# so one toolbar serves any image, replacing the construction-bound target
+# this button used to carry).
 
 class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWdgt
 
@@ -9,10 +13,9 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   #    we just hold the Function then we lose the CS source
 
   sourceCodeToBeInjected: ""
-  wdgtWhereToInject: nil
   wdgtToBeNotifiedForNewCode: nil
 
-  constructor: (@wdgtToBeNotifiedForNewCode, @wdgtWhereToInject, face) ->
+  constructor: (@wdgtToBeNotifiedForNewCode, face) ->
     super true, @, 'injectCodeIntoTarget', face
     @strokeColor = Color.BLACK
     @setColor Color.create 150, 150, 150
@@ -21,9 +24,11 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   editInjectableSource: ->
     @textPrompt "Code", @, "modifyCodeToBeInjected", @sourceCodeToBeInjected
 
-  # this happens when pressed, the source code is injected
+  # this happens when pressed, the source code is injected into the target the
+  # owner resolves NOW (nil = nothing paintable in reach: the press is a
+  # visual-only selection change)
   injectCodeIntoTarget: ->
-    @wdgtWhereToInject.injectProperties @sourceCodeToBeInjected
+    @wdgtToBeNotifiedForNewCode.resolveInjectionTarget?()?.injectProperties @sourceCodeToBeInjected
 
   modifyCodeToBeInjected: (unused,textWidget) ->
     @sourceCodeToBeInjected = textWidget.text

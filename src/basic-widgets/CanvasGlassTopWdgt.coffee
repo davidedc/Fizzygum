@@ -3,6 +3,16 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   underlyingCanvasWdgt: nil
   defaultRejectDrags: true
 
+  # paintingOverlay() capability chain (§5.D): I AM the injection target --
+  # the focused widget after a click on the paint surface is me (I notice
+  # transparent clicks over the whole canvas), and the tools' handlers live
+  # on me, painting through @underlyingCanvasWdgt.
+  isPaintingOverlay: ->
+    true
+
+  paintingOverlay: ->
+    @
+
   constructor: ->
     super
     @color = nil

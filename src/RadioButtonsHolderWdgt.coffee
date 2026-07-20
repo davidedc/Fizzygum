@@ -19,10 +19,3 @@ class RadioButtonsHolderWdgt extends Widget
   whichButtonSelected: ->
     @firstChildSuchThat (w) =>
       w.isSelected()
-
-  unselectAll: ->
-    if @allowsRadioButtonsToBeAllDisabled
-      for w in @children
-        if w.isSelected()
-          w.toggle()
-    return null

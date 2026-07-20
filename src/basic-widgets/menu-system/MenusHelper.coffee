@@ -56,9 +56,8 @@ class MenusHelper
     world.openFrameWith fmm, (new Point 570, 400), world.hand.position()
 
 
-  createReconfigurablePaint: ->
-    reconfPaint = new ReconfigurablePaintWdgt
-    world.openFrameWith reconfPaint, (new Point 460, 400), world.hand.position()
+  createImageWdgt: ->
+    world.openFrameWith (new ImageWdgt), (new Point 460, 400), world.hand.position()
 
   createSlideWdgt: ->
     world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
@@ -755,7 +754,7 @@ class MenusHelper
     menu.addMenuItem "analog clock", menusHelper, "analogClock"
     menu.addMenuItem "dev tools ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "fizzytiles", menusHelper, "createFridgeMagnets"
-    menu.addMenuItem "fizzypaint", menusHelper, "createReconfigurablePaint"
+    menu.addMenuItem "fizzypaint", menusHelper, "createImageWdgt"
     menu.addMenuItem "simple button", menusHelper, "createSimpleButton"
     menu.addMenuItem "switch button", menusHelper, "createSwitchButtonWdgt"
     menu.addMenuItem "clipping box", menusHelper, "createNewClippingBoxWdgt"

@@ -64,6 +64,11 @@ class StretchableWidgetContainerWdgt extends Widget
   colloquialName: ->
     "stretchable panel"
 
+  # paintingOverlay() capability chain (§5.D): delegate to my content -- for an
+  # ImageWdgt's payload that is the paintable canvas, which answers its glass.
+  paintingOverlay: ->
+    @contents?.paintingOverlay?()
+
   # ===== holder-frame ratio hooks (§5.B) =====
   # Were KeepsRatioWhenInVerticalStackMixin's, applied to the retired editor
   # middle layer -- which only RELAYED my own ratio machinery. As a framed

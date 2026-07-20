@@ -7,9 +7,12 @@ Phase C ✅ COMPLETE 2026-07-19 (C1 `1e06b79f`, C2 `74322e1d`, C3 `3e8eecd6`, C4
 `58fa177e`, D6/D7/D8 lock `c4cd9d46`; guard test Fizzygum-tests `24bfa3882`); §5.B execution design ADDED
 2026-07-19 (§3.3 substrate re-verified against src @ `c4cd9d46` — verified deltas recorded in §3.3a);
 Phase B ✅ COMPLETE 2026-07-19 (B1 `fe76f679`, B2 `79eaaf9c`, B3 `4dcfbc4c`, B4 `19b13d9d`, B5+B6 in the
-closing commit — landing stamps + execution case law in §5.B B-iv). REMAINING: §5.D (paint-on-focus,
-dissolves the quarantine + deletes StretchableEditableWdgt + lands ImageWdgt) → §5.E (contents protocol +
-readOnly capability). Owner-gated execution.**
+closing commit — landing stamps + execution case law in §5.B B-iv); §5.D D-1 ✅ COMPLETE 2026-07-20
+(owner ratified D10–D14; S1 spike ALL PASS — evidence in D-iii; D1b landed BYTE-IDENTICAL, gauntlet
+11/11, zero recaptures — landing stamp + case law in D-iv: ImageWdgt + PaintToolbarWdgt + press-time
+paintingOverlay() resolution + ancestry focus exclusion; ReconfigurablePaintWdgt and
+StretchableEditableWdgt DELETED). REMAINING: §5.D D-2 (one editing-focus model — its OWN design pass)
+→ §5.E (contents protocol + readOnly capability). Owner-gated execution.**
 This revision **supersedes** the earlier "three-ring onion" framing of this file: the middle "editor
 panel" ring is dissolved (the toolbar is a *slot inside the frame*, not a ring), and the naming/structure
 below were settled with the owner in a design dialogue on 2026-07-18. Class names verified against the
@@ -807,16 +810,206 @@ the measures pure — no toolbar-extent read-back in a measure; `dockThickness` 
 laid-out size).
 
 ### D. Unify PAINT onto the focus model + unify the editing-focus indicators (folds in idea (d))
-1. **Paint like text.** Add a paint `ToolbarWdgt` whose buttons read the focus pointer, feature-test
-   `acceptsPenDrawing()`/`getContextForPainting()`, and paint into the focused `ImageWdgt`'s canvas —
-   replacing the construction-bound `@overlayCanvas` wiring. Spike first (S1) against a free-standing
-   `ImageWdgt` to confirm byte-safety; consume the **mapped `pos`** (transform rule).
+1. **Paint like text.** Add a paint toolbar whose tools bind to the image being edited at PRESS time
+   (not at construction), so any paint toolbar can serve any image — replacing the construction-bound
+   `@overlayCanvas` wiring. Spike first (S1) to confirm byte-safety; consume the **mapped `pos`**
+   (transform rule). Lands `ImageWdgt`; deletes `StretchableEditableWdgt` + the §5.C paint quarantine.
 2. **One editing-focus model.** The text **caret** and the paint **tool-head** are both world-level,
    layout-inert, transient overlays marking "where editing happens" — unify them under one focus
    abstraction (a focused object + an indicator + a selection), with the shared `ToolbarWdgt` binding to the
    focus pointer. This subsumes `world.caret`, `lastNonTextPropertyChangerButtonClickedOrDropped`, paint's
    overlay-bound tool, and `StringWdgt.selection` into one story. (The note's "tool-heads follow the same
    pattern as the Caret.")
+
+**EXECUTION DESIGN for D-1 (2026-07-20; substrate re-verified against src @ `1a15e034`). D-2 is
+deliberately NOT designed here — it gets its own design pass after D-1 lands (D-iv last bullet).**
+
+**D-i. Verified substrate deltas (2026-07-20) — facts that shape this design:**
+1. **The tool sources already consume the MAPPED `pos`.** The pointer's move dispatch maps per-receiver
+   (`newWdgt.mouseMove?(newWdgt.screenPointToMyPlane(@position()), @mouseButton)` — the §6-affine R1
+   comment sits on the site), so the transform rule holds by construction; S1 still proves it under a
+   tilted island (evidence, not assumption).
+2. **Clicking the paint surface focuses the GLASS.** The overlay `CanvasGlassTopWdgt`
+   (`noticesTransparentClick = true`) is the top widget over the whole canvas, so after any content click
+   `world.lastNonTextPropertyChangerButtonClickedOrDropped` = the glass, never the canvas/container.
+   Press-time resolution must accept glass-or-descendant and resolve to the apparatus.
+3. **The focus pointer is STICKY** — cleared only at `_softResetWorld`, NOT on stop-editing (§3.4's
+   "reset on stop-editing" has drifted). A freshly-opened image is NOT focused until clicked.
+4. **The view-mode stroke gate IS the un-inject.** The injected handlers check only
+   `world.hand.isThisPointerDraggingSomething()`; view mode paints nothing today only because the disable
+   teardown `unselectAll`s (each selected toggle injects its `mouseMove = -> return` no-op) before
+   destroying the panel. Any design that keeps the toolbar alive across mode flips must keep an
+   equivalent disarm.
+5. **Tool state does NOT survive a mode flip today**: re-enable rebuilds the panel and auto-selects
+   pencil (`@pencilToolButton.toggle()` inside `_createToolsPanelNoSettle`). The
+   `macroDrawingsMakerReEnableEditing` image_0==image_2 idempotence assert RELIES on this re-arm.
+6. **Today's tool-column geometry maps exactly onto a left dock.** The RadioButtonsHolder sits at
+   content-left, width 103 (2·internalPadding 5 + button 93), full content height (externalPadding 0),
+   buttons 93×55 stacked at 5px gaps; the container starts at column-right + 5. A left dock with
+   `dockThickness: 103` places both the strip and the container at IDENTICAL x/extents (the frame's
+   padding-5 body = today's content region). Byte-parity is therefore PLAUSIBLE — claimed only by
+   suite + diffpage evidence, never analytically (DETERMINISM.md §3f).
+7. **`hasStartingContentBeenChangedByUser` for paint IS ratio-crystallization**: the first
+   `getContextForPainting` call does `@parent.setRatio` — exactly the `@contents?.ratio?` check
+   `GenericPanelWdgt` already carries. The close policy inherits wholesale.
+8. **Measured churn surface**: the ONLY test refs are the two paint guards
+   (`macroDrawingsMakerReEnableEditing`, `macroEditModeTogglePencilEyeGlyph`) — both construct
+   `new ReconfigurablePaintWdgt`, navigate the hierarchy menu by the `"a ReconfigurablePaint"` prefix,
+   and read `win.editButton` (a frame field — survives). Zero other identifier/field/label hits in
+   tests; harness scripts clean; docs: one mention in `docs/specs/drag-embed-interaction-spec.md`.
+9. **`CodeInjectingSimpleRectangularButtonWdgt` has NO consumer outside paint** — its binding contract
+   is free to change.
+10. **`KeepsRatioWhenInVerticalStackMixin` SURVIVES** the `StretchableEditableWdgt` deletion (IconWdgt +
+    the plot widgets still augment with it).
+11. **The §3.3 table's "payload = `SimpleImageWdgt`" does not match substrate.** The paintable apparatus
+    is `StretchableWidgetContainerWdgt(StretchableCanvasWdgt)` + glass; `SimpleImageWdgt` (the bitmap
+    loader) has ONE consumer (a button face) and no content flow. D-1 builds `ImageWdgt` over the PAINT
+    apparatus; merging the bitmap loader in (load an image file into a paintable canvas) is deferred
+    with a BACKLOG line — structure-without-a-consumer, and the stamp drop-flow already imports pixels
+    (`StretchableCanvasWdgt._reactToChildDropped` → `_paintImage`).
+12. **The citizen's hierarchy row will read `"a Image ▸"`** — `Widget.toString` is the literal
+    `"a " + <class sans Wdgt>`; article quirk noted, D2's name is locked.
+
+**D-ii. The design — press-time focus binding; the citizen; the toolbar.**
+Central choice: **D-1 keeps INJECTION as the arming mechanism** — proven, serialization-carrying (the
+glass's `mouseMove_source` → `{"$src"}` rides a saved drawing), live-editable (`EditableMarkWdgt`) — and
+changes only WHO RESOLVES THE TARGET, AND WHEN: construction-bound `@overlayCanvas` → press-time
+resolution. A world-level tool-object/tool-head abstraction is deliberately NOT built in D-1: that is
+D-2's design space, and per-image armed-handler state leaves nothing world-level for D-2 to unwind.
+1. **`ImageWdgt extends GenericPanelWdgt`** (`src/apps/`, the D2 name):
+   - `GenericPanelWdgt` gains the **`_makeStartingPayload` hook** (the DocumentWdgt shape): ctor becomes
+     `super @_makeStartingPayload()`, `_resetToDefaultContents` uses it. Base returns
+     `new StretchableWidgetContainerWdgt` — Slide/Dashboard/Patch unchanged, zero-pixel refactor.
+   - ImageWdgt's `_makeStartingPayload`: the container over `new StretchableCanvasWdgt` with
+     `disableDrops()` (parity), the glass wired (`underlyingCanvasWdgt`, `noticesTransparentClick`,
+     drops disabled) and added to the canvas, the clear-on-leave `mouseLeave` injection moved verbatim,
+     and the PENCIL source injected at build — **born armed**, replacing today's construction-time
+     `toggle()` (D-i #5 parity without firing a button action).
+   - Per-kind declarations: `colloquialName "Drawings Maker"` (D14), `representativeIcon
+     PaintBucketIconWdgt`, `buildToolbar: -> new PaintToolbarWdgt`. Close / reset-guard / title /
+     changed-check: INHERITED from `GenericPanelWdgt` (D-i #7); `providesAmenitiesForEditing` likewise.
+2. **`PaintToolbarWdgt`** (`src/toolbars/`): the RADIO-TOOL palette. **NOT a `ToolbarWdgt` subclass**
+   (owner decision D10): its items are stateful radio TOGGLES with editable-mark annotations, not
+   drag-out creator thumbnails — forcing them into the ScrollPanel(ToolPanel) grid would demand new
+   radio-capable thumbnail machinery AND churn proven pixels for no semantic gain. Shape:
+   `extends RadioButtonsHolderWdgt`, conforming to the slot's DUCK contract (`dockSide: 'left'`,
+   `dockThickness: 103`, the collapse cores, `_reLayout`, `excludedFromLastFocusTracking -> true`):
+   builds the 4 ToggleButton pairs + EditableMarks verbatim from `_createToolsPanelNoSettle` (minus the
+   `@overlayCanvas` ctor binding), arranges its own buttons (93×55 stacked at internalPadding 5 —
+   bounds-first, idempotent, integer), keeps `isToolPressed` / `newCodeToInjectFromButton` (the
+   notified party becomes the toolbar), and shows pencil selected at build via `_setToggleState`
+   (display only — the ARM lives in the payload build, D-ii 1).
+   - **Mode flip** (the slot protocol collapses/uncollapses it): `_collapseNoSettle` also DISARMS;
+     `_unCollapseNoSettle` also RE-ARMS pencil (D-i #4/#5 — preserves the guard's idempotence).
+     ⚠ **Neither may fire button actions**: `unselectAll()`'s `toggle()` escalation reaches
+     SwitchButtonWdgt's SELF-SETTLING `mouseClickLeft` — the transitive-settle trap that forced paint's
+     DETACH-then-teardown dance, and these cores run on an ATTACHED toolbar inside the content's
+     enable/disable flush. Disarm/re-arm = **inject the target source directly** (`injectProperties` is
+     settle-free) **+ `_setToggleState`** (display, no fire) — eliminating the trap instead of dancing
+     around it.
+3. **Press-time target resolution** (owner decision D11): a NEW capability chain **`paintingOverlay()`**
+   — the glass returns itself; `CanvasWdgt` returns its glass child if any; the container and
+   `FrameWdgt` delegate to `@contents` (nil-safe `?()` everywhere; absent ⇒ not paintable). The
+   injecting button resolves at press: **docked → the enclosing frame's `paintingOverlay()`** (a docked
+   toolbar is THIS image's chrome — deterministic, and covers the fresh-open-no-click case given
+   born-armed); **floating → `world.lastNonTextPropertyChangerButtonClickedOrDropped?.
+   paintingOverlay?()`** (glass-or-descendant resolves, D-i #2; not paintable ⇒ the press is a
+   visual-only radio flip — the text-toolbar's no-focused-target no-op, same UX contract).
+   `CodeInjectingSimpleRectangularButtonWdgt`'s ctor swaps the `wdgtWhereToInject` arg for a
+   toolbar-supplied resolver (paint is its only consumer, D-i #9).
+4. **What DISSOLVES** (member-by-member): ctor payload → `_makeStartingPayload`; the whole `toolsPanel`
+   lifecycle (field, build, enable-create, disable-teardown, `_reLayoutSelf` tool arms) → the frame
+   slot + `PaintToolbarWdgt`; the enable/disable overrides → the §5.B frame-level route + the
+   container's relays + the toolbar's collapse cores; `_reLayoutSelf` → the frame arrange + the
+   toolbar's own; `colloquialName`/`representativeIcon` → the citizen; `closeFromContainerFrame`/
+   `hasStartingContentBeenChangedByUser` → inherited; smart-place → the container already owns it
+   (§5.B). **`ReconfigurablePaintWdgt` deleted; `StretchableEditableWdgt` DELETED** (paint was its last
+   subclass; the mixin survives, D-i #10). Consumers re-pointed: `FizzyPaintApp.buildWindow` /
+   `MenusHelper.createReconfigurablePaint` → `new ImageWdgt` (the openFrameWith passthrough keeps the
+   line shape); `ReconfigurablePaintInfoWdgt` keeps its name (it's the INFO DOC about the app), only
+   its `colloquialName`-adjacent prose mentions move if any.
+5. **Serialization**: mechanism unchanged (the glass carries `mouseMove_source`/`mouseLeave_source`
+   exactly as today); no compat obligations in either direction.
+
+**D-iii. S1 spike — the gate BEFORE any landing** (probe in `Fizzygum-tests/.scratch/`, reusing
+`scripts/lib/headless-boot`; evidence recorded HERE before D1b starts):
+1. **Focus premise**: click the canvas of an open paint window; assert the focus pointer holds the
+   GLASS (D-i #2).
+2. **Rebind byte-safety**: twin paint windows; A strokes via today's construction-bound injection; B
+   gets the same tool source injected via the press-time resolution path; drive identical synthesized
+   stroke sequences over both; assert the two canvases' pixel hashes EQUAL.
+3. **Transform rule**: tilt one image under a `TransformFrameWdgt` island, stroke through the mapped
+   dispatch; assert strokes land at plane-local coordinates (D-i #1 as evidence, not assumption).
+
+**✅ S1 RAN 2026-07-20 — ALL THREE PARTS PASS** (probe `Fizzygum-tests/.scratch/spike-paint-focus.js`,
+real CDP input against the built world @ `1a15e034`):
+1. a click over the paint surface leaves the focus pointer on the GLASS (`CanvasGlassTopWdgt`,
+   `underlyingCanvasWdgt` present) — premise CONFIRMED;
+2. construction-armed vs focus-pointer-re-armed twins driven with identical stroke sequences produce
+   BYTE-IDENTICAL painting buffers (behind-the-scenes AND front, plus equal crystallized ratios);
+3. strokes through a 30°-rotated sugar island (`setRotationDegrees` on the window →
+   `TrackingTransformFrameWdgt`) land AT the plane-local targets, and the naive unmapped landing spot
+   (30px away) stays clean — the R1 mapped dispatch is load-bearing, not incidental.
+Two probe-mechanics facts worth keeping (they shaped the probe, not the design): the pointer SUPPRESSES
+the mouseMove at the exact button-down point ("only if actually moved"), so a stroke's first painted
+point is the first move AFTER the down — macro authors take note; and `mouseOverNew` = top widget +
+ANCESTORS, so every ancestor's `mouseMove?` fires too (the glass being top is what matters).
+
+**D-iv. Landing decomposition** (per-landing gates = `fg presuite`, diffpage + owner eyeball before ANY
+recapture; phase-close = full `fg gauntlet`, revisits/census at zero):
+- **D1a — the S1 spike** (no src changes; evidence into D-iii).
+- **D1b — rebind + citizen + dissolution** (one landing — the pieces only work together):
+  `GenericPanelWdgt._makeStartingPayload` hoist; `PaintToolbarWdgt`; `ImageWdgt`; delete
+  `ReconfigurablePaintWdgt` + `StretchableEditableWdgt`; re-point the consumers; tests: the two guards'
+  fixtures → `new ImageWdgt` + hierarchy-label re-aim (`"a ReconfigurablePaint"` → the citizen row),
+  old-field-name grep repeated at execution (B case law #3). Ambition byte-identical (D-i #6) — judged
+  by suite + diffpage, never argued (§3f).
+  **✅ LANDED 2026-07-20 — BYTE-IDENTICAL: 263/263 + gauntlet 11/11 (dpr1/dpr2/webkit/apps/paint/
+  tiernaming/settle/capstone/refs/revisits/census), ZERO recaptures — both paint guards passed against
+  their OLD references (the D-i #6 left-dock geometry argument held), and the hierarchy drill re-aim
+  (`"a StretchableWidgetContainer"` — the lock entry lives on the CONTAINER post-dissolution) reproduced
+  image_0 exactly. Design refinements + case law from execution:**
+  1. **Focus-steal by chrome LEAVES (probed, then fixed by ANCESTRY):** clicking a tool button leaves
+     the focus pointer on the button's icon FACE (`Pencil2IconWdgt`), the column background on the
+     holder — the dispatch's self-only `excludedFromLastFocusTracking?()` check cannot cover a composed
+     subtree, so the floating-toolbar resolution would read a stolen pointer. Fixed at the pointer's TWO
+     set sites via `ActivePointerWdgt._excludedFromLastFocusTrackingByAncestry(w)` (walks
+     w→ancestors) — which also closes the same latent hole for the C toolbars' scrollbars/inner panels.
+  2. **⚠⚠ NEW inspector case law: a Widget BASE METHOD add churns the inherited-members inspector
+     test.** The ancestry query's first home was `Widget` — and `macroDuplicatedInspectorDrivesCopied
+     TargetOnly` (the ONE test that flips `inherited: on`, methods shown by default) failed: the
+     rectangle's member list grew one row, shifting the pane rows around `alpha` (diffpage-confirmed;
+     behaviour intact). The "methods don't churn the inspector, fields do" rule holds only for
+     own-members panels. Fix ON MERITS: the walk moved to `ActivePointerWdgt` (private — the pointer
+     owns the focus-tracking policy; widgets declare only the per-class opt-out), restoring
+     byte-identity with no recapture.
+  3. **Gate rounds absorbed (one each):** dead-methods caught `RadioButtonsHolderWdgt.unselectAll`
+     (DELETED — its only caller was the retired toggle-firing teardown; the non-firing disarm replaced
+     it); call-separation [S] wanted `ToggleButtonWdgt.setToggleState` as the public-wrap-over-
+     `_setToggleState`-core (VideoPlayPauseToggle self-calls the core); call-separation [U] caught
+     `removeFromTree` newly self-only → allowlisted as deliberate in-world API (the B3 `scrollToBottom`
+     precedent — the retired paint teardown was its lone cross-object caller).
+  4. **The stale-build guard earned its keep:** a comment-only src edit DURING the first gauntlet run
+     made the tree newer than the build — every wave-B leg refused to run vacuously. Full re-run
+     against the final tree; never touch src (even comments) while any leg is running.
+- **D1c — docs/BACKLOG sync**: the drag-embed spec mention; BACKLOG lines: load-image-file flow
+  (D-i #11), the `"a Image"` article quirk (D-i #12), the D-2 pointer; plan stamps + memory sync.
+- **D-2 — one editing-focus model**: its OWN design pass after D-1 lands (unify `world.caret` + the
+  focus pointer + per-image armed tool + `StringWdgt.selection` under one focus abstraction with
+  indicator overlays; gates on `Fizzygum-tests/DETERMINISM.md` §5 for every input/caret path).
+
+**D-v. Owner decisions to ratify (present BEFORE code):**
+- **D10 — toolbar construction**: `PaintToolbarWdgt` = the radio-holder construction conforming to the
+  slot's duck contract, NOT a `ToolbarWdgt` subclass (D-ii 2). Alternative: full ToolbarWdgt
+  conformance = new radio-thumbnail machinery + conscious recapture of both paint guards.
+- **D11 — press resolution order**: docked-acts-on-own-frame, floating-follows-focus (D-ii 3).
+  Alternative: focus-only everywhere (the C-model purist reading) — leaves a docked toolbar dead until
+  the image's first click.
+- **D12 — injection stays the arming mechanism in D-1**; the world-level tool object is D-2's call.
+- **D13 — `ImageWdgt` is built over the paint apparatus**; `SimpleImageWdgt` stays a sibling payload
+  until a load-image-file consumer exists (deviation from the §3.3 table, argued in D-i #11).
+- **D14 — `colloquialName` stays "Drawings Maker"** in D-1 (window title + save-shortcut parity; kind
+  vocabulary can follow later without structural change).
 
 ### E. Uniform contents protocol + read-only-as-capability
 - Content enters a `FrameWdgt` uniformly via `add(startingContent)` (+ a `defaultContents` placeholder),

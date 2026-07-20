@@ -492,7 +492,9 @@ class ActivePointerWdgt extends Widget
       # when you click the buttons, sometimes you end up
       # clicking between the buttons, and so the "proper"
       # widget "loses focus" so to speak. So avoiding that here.
-      if !(wdgtToDrop.excludedFromLastFocusTracking?())
+      # (By ANCESTRY, §5.D: a drop into an excluded subtree must not steal
+      # focus either -- same rule as the click site.)
+      if !(@_excludedFromLastFocusTrackingByAncestry wdgtToDrop)
         world.lastNonTextPropertyChangerButtonClickedOrDropped = wdgtToDrop
 
       @children = []
@@ -792,7 +794,10 @@ class ActivePointerWdgt extends Widget
 
           # fire the click, sending info on whether this was part
           # of a double/triple click
-          if !w.editorContentPropertyChangerButton and !(w.excludedFromLastFocusTracking?())
+          # ANCESTRY-aware (§5.D): the top widget at a click on composed chrome
+          # is a LEAF of it (a tool button's icon face, a toolbar scrollbar),
+          # so the exclusion must honor the whole opted-out subtree.
+          if !w.editorContentPropertyChangerButton and !(@_excludedFromLastFocusTrackingByAncestry w)
             world.lastNonTextPropertyChangerButtonClickedOrDropped = w
           w[expectedClick] @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
 
@@ -1112,6 +1117,24 @@ class ActivePointerWdgt extends Widget
     # SWCanvas cycle drains the down+up together, so no held-button frame ever
     # interposes to absorb the enter. Resolving it here is cadence/density-independent.
     @dispatchEventsFollowingMouseMove mouseOverNew
+
+  # The focus-tracking exclusion policy (§5.D): a click/drop must not move the
+  # editor focus pointer (world.lastNonTextPropertyChangerButtonClickedOrDropped)
+  # when the hit widget OR ANY ANCESTOR opted out via
+  # excludedFromLastFocusTracking. Ancestry matters because the top widget at a
+  # click on composed chrome is a LEAF of it -- a paint tool click lands on the
+  # button's icon FACE, a toolbar scroll on the scrollbar -- and a self-only
+  # check let every such leaf silently steal the focus the press then needed
+  # (probed, not assumed). Lives HERE, not on Widget: the pointer owns the
+  # focus-tracking policy (widgets declare only the per-class opt-out), and a
+  # Widget-level helper would churn the inherited-members inspector list.
+  _excludedFromLastFocusTrackingByAncestry: (aWdgt) ->
+    ancestorOrHit = aWdgt
+    while ancestorOrHit?
+      if ancestorOrHit.excludedFromLastFocusTracking?()
+        return true
+      ancestorOrHit = ancestorOrHit.parent
+    false
 
   # Per-cycle hover re-sync for widgets that MOVED under a STATIONARY pointer (pointer MOTION is handled
   # per-event inside _playQueuedEvents; this catches stepping animations, event-driven relayouts, teleports,

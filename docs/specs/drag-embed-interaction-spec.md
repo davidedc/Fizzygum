@@ -84,8 +84,8 @@ how much the destination has to lose.
 | Drop routing: if `!wantsToBeDropped()` → target forced to `world`, else climb | `ActivePointerWdgt.drop`, `ActivePointerWdgt.coffee:247-287` |
 | Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild` | `ActivePointerWdgt.dropTargetFor` `:154-158`, `topWdgtUnderPointer` `:87-110` |
 | Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) | `Widget.coffee:2904-2917` |
-| Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameWdgt.editButtonInBarPressed` `:228` → `StretchableEditableWdgt.editButtonPressedFromFrameBar` `:111-115` |
-| Edit-off cascades a drops-lock into the slide's container + kills tools palette | `StretchableEditableWdgt._disableDragsDropsAndEditingNoSettle` `:172-192` |
+| Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameBarWdgt` → `FrameWdgt.editButtonInBarPressed` → the content's base `Widget.editButtonPressedFromFrameBar` (the fused editor middle layer dissolved — Frame-model §5.B/§5.D) |
+| Edit-off cascades a drops-lock into the citizen's container + hides the docked toolbar | `StretchableWidgetContainerWdgt._disableDragsDropsAndEditingNoSettle` → `FrameWdgt.showViewModeInBar` (toolbar-slot collapse) |
 | Pencil state shown by color only | `FrameWdgt.makePencilYellow/makePencilClear` `:536-548` |
 | Internal/external switch + `makeInternal`/`makeExternal` (re-skin, unlock, reparent to world) | `FrameWdgt.coffee:177-202, 525-534` |
 | Windows accept drops only while EMPTY ("Drop a widget in here" placeholder) | `FrameWdgt.coffee:398` (enable) · `:421` (disable on child landed) · `FrameContentsPlaceholderText` |
@@ -126,7 +126,7 @@ they show a lock cue, and a release near them lands the payload visibly OFFSET w
 | Tier | Members | Window payload | Plain payload | Visual while hovered (drag in progress) |
 |---|---|---|---|---|
 | **Eager** | empty `FrameWdgt` (placeholder showing), `SimpleDropletWdgt`, `LayoutElementAdderOrDropletWdgt` | dwell-to-arm (no exception — empty windows are exactly where accidental window-nesting happens) | instant accept | bright invite highlight, immediate |
-| **Willing** | edit-mode `StretchableEditableWdgt` family (slides, dashboards, ReconfigurablePaint), edit-mode `SimpleDocumentWdgt`, edit-mode `PanelWdgt`/stacks/scroll panels (anything whose `wantsDropOfChild` is true) | dwell-to-arm | instant accept | candidate highlight; ring while charging (window payload only) |
+| **Willing** | edit-mode framed-citizen containers (slides, dashboards, patch, the Drawings Maker `ImageWdgt` — their `StretchableWidgetContainerWdgt` payload), edit-mode `DocumentWdgt` scroll panel, edit-mode `PanelWdgt`/stacks/scroll panels (anything whose `wantsDropOfChild` is true) | dwell-to-arm | instant accept | candidate highlight; ring while charging (window payload only) |
 | **Reluctant** | the same widgets in VIEW mode (`providesAmenitiesForEditing` true, `dragsDropsAndEditingEnabled` false) | never accepts mid-drag → lock cue; land-and-offer on release (§8) | same | neutral outline + lock badge + eye pulses amber |
 | **Refusing** | inspector panes, plot glass, full windows' chrome, anything `_acceptsDrops` false without editing amenities | inert (no cue) | inert | none |
 

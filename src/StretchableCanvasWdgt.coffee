@@ -141,7 +141,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
   _paintImage: (pos, image) ->
     # public-call-sanctioned: getContextForPainting is public canvas API — user-facing injected
-    # live-code calls it (ReconfigurablePaintWdgt's injectProperty heredocs), so it stays public.
+    # live-code calls it (PaintToolbarWdgt's tool sources), so it stays public.
 
     extent = @extent()
     if !@backBuffer?
