@@ -8,8 +8,8 @@ class DecreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   createAppearance: -> new DecreaseFontSizeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   mouseClickLeft: ->
-    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.originallySetFontSize?
-      widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
+    if world.editorFocusWdgt?.originallySetFontSize?
+      widgetClickedLast = world.editorFocusWdgt
       if widgetClickedLast.originallySetFontSize > 90
         widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize - 10
       else if widgetClickedLast.originallySetFontSize > 80

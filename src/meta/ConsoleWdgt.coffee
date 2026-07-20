@@ -42,7 +42,9 @@ class ConsoleWdgt extends Widget
     # NOTE that you can also "doAll" or "doSelection" via
     # the context menu entries in the text panel!
     @runSelectionButton = new SimpleButtonWdgt true, @, "doSelection", "run selection"
-    @runSelectionButton.editorContentPropertyChangerButton = true
+    # editor chrome: "run selection" reads the current text selection, so its
+    # press must not steal the focus pointer or end the edit (§5.D D2a).
+    @runSelectionButton.actsAsEditorChrome = true
     @_addNoSettle @runSelectionButton
 
     @runAllButton = new SimpleButtonWdgt true, @, "doAll", "run all"

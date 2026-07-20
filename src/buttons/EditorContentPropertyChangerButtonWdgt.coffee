@@ -1,11 +1,11 @@
 # Base for the editor's "content property changer" buttons — the little icon
 # buttons in the text-editing toolbar (bold, italic, the alignment trio, font,
 # font-size, format-as-code, templates) that act on the LAST widget the user
-# clicked or dropped (world.lastNonTextPropertyChangerButtonClickedOrDropped).
+# clicked or dropped (world.editorFocusWdgt).
 #
 # They share: the highlightable hover/press colouring + parent-stainer mixins,
-# the grey hover/press/normal colour scheme, and the two flags that mark them
-# as editor-content changers. A subclass supplies only its icon
+# the grey hover/press/normal colour scheme, the thumbnail-actionability flag
+# and the editor-chrome exclusion below. A subclass supplies only its icon
 # (createAppearance), its tooltip (iconToolTipMessage), and its mouseClickLeft.
 #
 # All of them are icon-shaped, hence the IconWdgt base. (Bold/Italic and the
@@ -22,7 +22,15 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   color_normal: Color.create 230, 230, 230
 
   actionableAsThumbnail: true
-  editorContentPropertyChangerButton: true
+
+  # Editor CHROME (Frame-model plan §5.D D2a): pressing me acts ON the editor
+  # focus, so the press must neither steal the focus pointer nor end the
+  # ongoing edit (the caret reads the selection my action needs). Honored BY
+  # ANCESTRY at ActivePointerWdgt's focus-set sites and its caret-survival
+  # policy — one capability for both, declared here for buttons standing
+  # outside a toolbar (inside one, the toolbar's own declaration covers them).
+  excludedFromEditorFocusTracking: ->
+    true
 
   iconToolTipMessage: nil
 

@@ -11,8 +11,11 @@ closing commit — landing stamps + execution case law in §5.B B-iv); §5.D D-1
 (owner ratified D10–D14; S1 spike ALL PASS — evidence in D-iii; D1b landed BYTE-IDENTICAL, gauntlet
 11/11, zero recaptures — landing stamp + case law in D-iv: ImageWdgt + PaintToolbarWdgt + press-time
 paintingOverlay() resolution + ancestry focus exclusion; ReconfigurablePaintWdgt and
-StretchableEditableWdgt DELETED). REMAINING: §5.D D-2 (one editing-focus model — its OWN design pass)
-→ §5.E (contents protocol + readOnly capability). Owner-gated execution.**
+StretchableEditableWdgt DELETED); §5.D D-2 ✅ COMPLETE 2026-07-20 (substrate re-verified against src
+@ `c68a63cb` — deltas in D-2-i; the mandated four-way focus abstraction FALSIFIED as
+structure-without-a-consumer, D15–D17 ratified; landed the focus-POLICY unification D2a–D2c
+BYTE-IDENTICAL — gauntlet 11/11, revisits 0, census 0, zero recaptures; landing stamp + case law in
+D-2-v). REMAINING: §5.E (contents protocol + readOnly capability). Owner-gated execution.**
 This revision **supersedes** the earlier "three-ring onion" framing of this file: the middle "editor
 panel" ring is dissolved (the toolbar is a *slot inside the frame*, not a ring), and the naming/structure
 below were settled with the owner in a design dialogue on 2026-07-18. Class names verified against the
@@ -239,9 +242,14 @@ CHANGE how B lands (each woven into the §5.B design):
   no caret. B PRESERVES this path; no new mechanism is needed.
 
 ### 3.4 The external-toolbar editing model already exists (for text)
-- **Focus pointer:** `WorldWdgt.lastNonTextPropertyChangerButtonClickedOrDropped`, set on every content
-  click/drop by `ActivePointerWdgt`, reset on stop-editing. Toolbar buttons + `excludedFromLastFocusTracking`
-  opt-outs don't steal it.
+- **Focus pointer:** `WorldWdgt.editorFocusWdgt` (renamed from
+  `lastNonTextPropertyChangerButtonClickedOrDropped` in D2c), set on every content click/drop by
+  `ActivePointerWdgt`; STICKY — cleared at `_softResetWorld` and (D2b) when the focused widget is
+  destroyed, NOT on stop-editing (the original "reset on stop-editing" claim was drift). Editor
+  chrome (toolbars, text/creator buttons, the font menu) opts out via the ONE ancestry-honored
+  `excludedFromEditorFocusTracking` capability (D2a unified the former
+  `editorContentPropertyChangerButton` field into it), so a click on chrome neither steals the
+  pointer nor ends the edit.
 - **External buttons:** the `EditorContentPropertyChangerButtonWdgt` family (`buttons/`, `extends IconWdgt`)
   — Bold/Italic/FormatAsCode/ChangeFont/±FontSize/Align — each `mouseClickLeft` feature-tests then calls the
   content API (`toggleWeight`/`setFontName`/`alignLeft`…) on the focus pointer.
@@ -266,8 +274,11 @@ CHANGE how B lands (each woven into the §5.B design):
 
 ### 3.5 The caret + the paint gap (feeds §5.D)
 - **Caret:** `CaretWdgt` (`basic-widgets/CaretWdgt.coffee`, `extends BlinkerWdgt`) is a **single world-level
-  overlay** (`world.caret`) re-pointed at whatever text is being edited (`world.edit`/`stopEditing`, sole
-  member of `world.keyboardEventsReceivers`); `isLayoutInert`, excluded from bounds/hit-test.
+  overlay** (`world.caret`) torn-down-and-rebuilt per edit session at whatever text is being edited
+  (`world.edit`/`stopEditing`); `isLayoutInert`, excluded from bounds/hit-test. It is one of THREE
+  `world.keyboardEventsReceivers` member kinds (the "sole member" claim was drift, corrected D-2-i #1):
+  the caret (session-scoped), `SimpleSpreadsheetWdgt` (its own exclusive-among-sheets discipline), and
+  `VideoPlayerWdgt` (a permanent member).
 - **Paint is NOT on the focus model:** `ReconfigurablePaintWdgt._createToolsPanelNoSettle` binds
   `CodeInjectingSimpleRectangularButtonWdgt`s to **this app's own `@overlayCanvas`** at construction; the
   tools can't act on an arbitrary focused image. The API to fix it exists (`CanvasWdgt.acceptsPenDrawing()`,
@@ -997,6 +1008,8 @@ recapture; phase-close = full `fg gauntlet`, revisits/census at zero):
 - **D-2 — one editing-focus model**: its OWN design pass after D-1 lands (unify `world.caret` + the
   focus pointer + per-image armed tool + `StringWdgt.selection` under one focus abstraction with
   indicator overlays; gates on `Fizzygum-tests/DETERMINISM.md` §5 for every input/caret path).
+  **→ Design pass RUN 2026-07-20: the four-way abstraction was found structure-without-a-consumer;
+  the honest scope is the focus-POLICY unification — see D-2-i…D-2-iv below.**
 
 **D-v. Owner decisions to ratify (present BEFORE code):**
 - **D10 — toolbar construction**: `PaintToolbarWdgt` = the radio-holder construction conforming to the
@@ -1010,6 +1023,179 @@ recapture; phase-close = full `fg gauntlet`, revisits/census at zero):
   until a load-image-file consumer exists (deviation from the §3.3 table, argued in D-i #11).
 - **D14 — `colloquialName` stays "Drawings Maker"** in D-1 (window title + save-shortcut parity; kind
   vocabulary can follow later without structural change).
+
+**EXECUTION DESIGN for D-2 (2026-07-20; substrate re-verified against src @ `c68a63cb`). The design
+pass was mandated open-endedly ("one focus abstraction"); the re-validation FALSIFIED the mandate's
+premise and the honest scope is smaller — the argument is D-2-ii, the scope D-2-iii.**
+
+**D-2-i. Verified substrate deltas (2026-07-20) — facts that decide this design:**
+1. **§3.5's "sole member of `world.keyboardEventsReceivers`" is DRIFTED.** The Set has THREE member
+   kinds: the caret (edit-session-scoped, added/removed only at `world.edit`/`stopEditing`);
+   `SimpleSpreadsheetWdgt` (`_takeKeyboardFocus`: self-adds on interaction and deletes OTHER sheets —
+   its own exclusive-focus discipline, deliberate per its comment, "full multi-sheet focus deferred";
+   self-removes on destroy); `VideoPlayerWdgt` (adds itself at CONSTRUCTION, permanent; space =
+   play/pause gated on `isInForeground()`). Serialization records membership (`"keyboardReceiver"`,
+   Serializer:269/Deserializer:111). The spreadsheet is a THIRD editing-focus system, fully
+   self-contained (own cell cursor + selection painted internally).
+2. **The caret is not an "indicator" — it is the text edit-mode PROCESSOR.** `CaretWdgt` is torn down
+   and RE-CREATED per session (never re-pointed), added as a child of the TARGET'S PARENT (not the
+   world — "world-level" only in the singleton sense); it owns keystroke dispatch (nav/insert/delete/
+   undo/clipboard/numeric gating/pop-out handoff), the slot, and a deeply settle-disciplined
+   scroll-follow (`_requestScrollFollow`/`_reLayout` — the file's comments are load-bearing case law).
+   ~47 `world.caret` consumer sites across 9 files; ~12 tests screenshot it, 19 caret/selection test
+   dirs total.
+3. **Selection is per-widget for PAINTING reasons.** `startMark`/`endMark` live on `StringWdgt` and the
+   selected range is drawn by the widget's own text-drawing path; edit-session-scoped (`stopEditing`
+   clears it); clipboard events reach it via `world.caret.target.selection()` (Cut/Copy/Paste input
+   events). Nothing reads a selection except through the caret's target.
+4. **Post-D-1 paint has NO world-level focus state to unify.** The armed tool is per-image injected
+   glass handlers (serialization-carrying, live-editable); the visual feedback (the red hover square)
+   is drawn BY the handler on the glass's back buffer — there is no tool-head WIDGET. Arming is NOT
+   exclusive: every `ImageWdgt` is born armed, many images are paintable simultaneously, a docked
+   toolbar acts on its own frame (D11). Paint focus ≠ text focus structurally: text editing is
+   exclusive (one caret), paint editing is per-image-concurrent.
+5. **TWO parallel chrome-exclusion mechanisms exist, expressing ONE declaration ("I am editor
+   chrome"):**
+   - `editorContentPropertyChangerButton` — a FIELD, checked SELF-ONLY, consumed at (a) the click
+     focus-set site (`ActivePointerWdgt` ~:800) and (b) the caret-survival policy
+     `stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere` (self + a hand-rolled 2-hop
+     parent-of check); hand-STAMPED onto descendants by `ChangeFontButtonWdgt` (the
+     `eachDescendent.editorContentPropertyChangerButton = true` loop over its font menu — the same
+     self-only disease D-1's ancestry fix cured for the other flag) and onto
+     `ConsoleWdgt.runSelectionButton`. Class-field homes: `EditorContentPropertyChangerButtonWdgt`,
+     `CreatorButtonWdgt`.
+   - `excludedFromLastFocusTracking?()` — a METHOD, ANCESTRY-walked at the pointer's two set sites
+     (D-1's `_excludedFromLastFocusTrackingByAncestry`); declared by `ToolbarWdgt`,
+     `PaintToolbarWdgt`, `HorizontalMenuPanelWdgt`.
+   The click site checks BOTH; the drop site only the ancestry walk (asymmetric). The caret-survival
+   policy ALSO has a popup-ancestry branch (`mostRecentlyCreatedPopUp.isAncestorOf actionedWdgt`)
+   which already covers menus for caret survival — the font-menu stamping exists for the focus-SET
+   site only.
+6. **Dangling-focus hole (verified):** `Widget._destroyNoSettle` deletes the dying widget from
+   `keyboardEventsReceivers` but NOT from `world.lastNonTextPropertyChangerButtonClickedOrDropped`
+   (its own TODO comment acknowledges exactly this leak class) — destroying the focused content
+   leaves the register dangling, and the text buttons' feature-tests then silently act on a detached
+   widget. The register is cleared only at `_softResetWorld` (error recovery).
+7. **Churn surface: ZERO tests-repo identifier hits** for all three names
+   (`lastNonTextPropertyChangerButtonClickedOrDropped`, `editorContentPropertyChangerButton`,
+   `excludedFromLastFocusTracking`); no serialization surface (the register is never serialized).
+   Exposure is purely BEHAVIORAL: the caret/selection tests, `macroTextWdgtFillModesWeightAndPaste
+   OverSelection` (focus-pointer-driven Bold), `macroFontsMenuTickTracksSelection` (the stamped font
+   menu), the two paint guards.
+8. `world.lastEditedText` is WorldWdgt-internal (previous-target register for selection clearing on
+   target switch) — no external consumers, no D-2 surface.
+
+**D-2-ii. The finding — the four-way unification is structure-without-a-consumer; the honest D-2 is
+the focus-POLICY unification.** The mandate imagined caret + paint tool-head as two world-level
+overlays wanting one abstraction. D-1's ratified landing (D12) dissolved the paint half: per-image
+armed handlers leave NOTHING world-level to unify, and the provenance note's "tool-heads follow the
+same pattern as the Caret" is satisfied in substance — the glass feedback IS paint's caret-analogue
+(transient, at the pointer, marking where editing happens), per-image rather than singleton because
+paint focus is genuinely NOT exclusive (D-2-i #4). Building a `FocusWdgt`/world tool object now
+would re-architect a just-landed byte-identical mechanism, break the serialization-carrying property
+of injected handlers, and stand an abstraction over exactly ONE real client (text) — the §5.C/§5.B
+structure-lands-WITH-its-consumer case law, third application. The caret cannot be reduced to an
+indicator (D-2-i #2); selection stays on the widget for painting reasons (D-2-i #3); the receivers
+Set has three self-consistent disciplines and no failing consumer (D-2-i #1). **What text and paint
+now GENUINELY share is the focus-pointer POLICY layer — and there the substrate shows real disease:
+two parallel exclusion mechanisms (one with hand-stamped descendants), an asymmetric click/drop
+guard, and a dangling-pointer-on-destroy hole (D-2-i #5/#6). Fixing that layer IS the "one focus
+model" this codebase actually needs.** (Re-open trigger, recorded so the closure is honest: a SECOND
+focus client — e.g. a visible focus indicator, or a new content type wanting exclusive editing
+focus — would revive the abstraction question WITH a consumer in hand.)
+
+**D-2-iii. The design (three landings, bisectable; one fallout kind each):**
+- **D2a — ONE chrome-exclusion capability.** `excludedFromLastFocusTracking` becomes the single
+  "editor chrome" declaration; the `editorContentPropertyChangerButton` FIELD DIES:
+  - `EditorContentPropertyChangerButtonWdgt` + `CreatorButtonWdgt` declare the method (their buttons
+    remain excluded when standing OUTSIDE a toolbar; inside one, the toolbar's own declaration
+    already covers them by ancestry);
+  - the click focus-set site drops its field special-case → BOTH set sites become the one symmetric
+    ancestry check;
+  - the caret-survival policy consults the SAME ancestry walk (replacing its self-check + 2-hop
+    parent-of check); its popup-ancestry branch stays untouched;
+  - `ChangeFontButtonWdgt`'s descendant-stamping loop dies — the font menu opts out at its ROOT
+    (mechanism at execution: the menu answers the method off an instance flag set at creation);
+    `ConsoleWdgt.runSelectionButton` converts one-line.
+  - **Behavior delta to ratify (D17):** clicking editor chrome that is NOT a button (a toolbar's
+    background/scrollbar, the paint column) today KILLS the caret while (post-D-1) not stealing the
+    focus pointer; under the unified capability it PRESERVES the caret — the editing session
+    survives any interaction with editor chrome. This is the model's intent (chrome interaction ≠
+    leaving the edit) but it is feel-able. Expected test exposure: none (no macro clicks toolbar
+    background mid-edit — verify at execution, diffpage anything that moves).
+  - ⚠ inspector exposure: this adds a METHOD to (and deletes a FIELD from) the two button bases —
+    grep which classes the inspector tests display before landing (B4/D-1 case law: fields churn
+    own-members panels, methods churn the one inherited-on test; neither is expected to inspect a
+    button class — verify, don't assume).
+- **D2b — destroy-time focus hygiene.** `Widget._destroyNoSettle` clears the focus register when the
+  dying widget IS the focus (one line beside its `keyboardEventsReceivers.delete` — subtree coverage
+  falls out of the per-widget destroy walk). Byte-identical ambition (no live path reads a dangling
+  register in the suite); closes D-2-i #6.
+- **D2c — the honest NAME (D16).** `lastNonTextPropertyChangerButtonClickedOrDropped` →
+  **`editorFocusWdgt`** (proposed): the name should encode the ROLE (the content the editor chrome
+  acts on), not the setting mechanism. ~30 src sites + comments; ZERO tests-repo sites; no
+  serialization; zero pixels. The ancestry helper renames with it
+  (`_excludedFromEditorFocusTrackingByAncestry`), and `excludedFromLastFocusTracking` itself becomes
+  `excludedFromEditorFocusTracking` (same sweep, 6 declaration sites). Plan-text corrections ride
+  along: §3.4's "reset on stop-editing" (already recorded drifted, D-i #3) and §3.5's "sole member"
+  (D-2-i #1).
+- **NOT in scope** (each with its argument in D-2-ii): a `FocusWdgt`/world tool object; caret
+  re-architecture; moving `StringWdgt.selection`; restructuring `keyboardEventsReceivers` (document
+  the three member kinds where §3.5 is corrected; unify only when a consumer arrives); a VISIBLE
+  focus indicator (real UX idea — today nothing shows which content a floating toolbar will act
+  on — but it is new owner-taste-gated UI: BACKLOG line, lands with a consumer).
+- **Determinism:** all three landings are event-time policy reads/writes — no timers, no
+  frame/cycle-count dependence, no paint-time state (`DETERMINISM.md` §5 clean by construction); the
+  ancestry walk is tree-depth-bounded, the same cost class D-1 already pays per click/drop.
+- **Gates:** per landing `fg presuite`; phase close `fg gauntlet` with revisits/census at zero.
+  Ambition: D2b/D2c byte-identical; D2a byte-identical except the D17 delta's (expected-empty) test
+  exposure.
+
+**D-2-iv. Owner decisions to ratify (present BEFORE code):**
+- **D15 — descoping ratification**: D-2 = the focus-policy unification (D2a–c); the four-way
+  abstraction is CLOSED as structure-without-a-consumer with the argument + re-open trigger recorded
+  (D-2-ii). Alternative: build the world-level focus object anyway — rejected above on three
+  grounds, restated for the record: no second client, re-architects D-1's landed shape, breaks
+  serialization-carrying handlers. **→ RATIFIED 2026-07-20 (owner "go ahead").**
+- **D16 — the register's new name**: `editorFocusWdgt` proposed (alternatives: `contentInFocus`,
+  `editTargetWdgt`; or keep the old name = D2c dropped, D2a/D2b still stand). **→ RATIFIED 2026-07-20:
+  `editorFocusWdgt`.**
+- **D17 — the D2a caret-survival delta** (chrome clicks preserve the caret): ratify, or gate D2a to
+  the focus-SET sites only (keeping the old field alive for the caret-survival policy — two
+  mechanisms remain, which defeats the landing's point; named as the fallback, not recommended).
+  **→ RATIFIED 2026-07-20 (chrome clicks preserve the caret); test exposure proved EMPTY at
+  landing.**
+
+**D-2-v. Landing (2026-07-20, three bisectable landings on the D-1 base @ `c68a63cb`):**
+- **D2a — one chrome-exclusion capability.** The `editorContentPropertyChangerButton` FIELD retired;
+  `excludedFromEditorFocusTracking` (renamed in D2c) is the single editor-chrome declaration —
+  `EditorContentPropertyChangerButtonWdgt` + `CreatorButtonWdgt` declare it `true`; `MenuWdgt` and
+  `SimpleButtonWdgt` answer it off an `actsAsEditorChrome` instance flag (the font menu opts in at
+  its ROOT — the `ChangeFontButtonWdgt` descendant-stamping loop is GONE; `ConsoleWdgt.runSelection
+  Button` opts in directly). Both `ActivePointerWdgt` consumers (the click focus-set site and the
+  caret-survival policy `stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere`) now use the ONE
+  ancestry walk — the D17 delta lives here (a click on non-button chrome preserves the caret).
+  ✅ presuite 263/263, 0 paint offenders, zero recaptures.
+- **D2b — destroy-time focus hygiene.** `Widget._destroyNoSettle` clears the register when the dying
+  widget is-or-is-ancestor-of the focus (beside the existing caret-subtree stop-edit check; ancestry
+  form covers a single-widget destroy that only orphans its children). Closes the dangling-focus
+  hole (the method's own TODO). ✅ byte-identical.
+- **D2c — the honest name.** `lastNonTextPropertyChangerButtonClickedOrDropped` → `editorFocusWdgt`;
+  `excludedFromLastFocusTracking` → `excludedFromEditorFocusTracking` (the ancestry helper folds in
+  by substring: `_excludedFromEditorFocusTrackingByAncestry`). 18 src files, ZERO tests-repo, no
+  serialization, zero pixels; §3.4/§3.5 drift corrected in the same pass. ✅ byte-identical.
+- **Deferred with a consumer (BACKLOG):** a VISIBLE editor-focus indicator (nothing shows which
+  content a floating toolbar will act on) — new owner-taste UI, lands with its consumer; and the
+  four-way `FocusWdgt` abstraction stays CLOSED until a second focus client appears (D-2-ii re-open
+  trigger).
+- **Case law:** (1) a MenuWdgt/SimpleButtonWdgt method add is inspector-safe (the ONE inherited-on
+  test inspects a Rectangle, which descends from neither) — unlike a Widget base-method add (D-1
+  case law); single-consumer capability helpers live on the narrowest honest class. (2) The
+  substring fold (`excludedFromLastFocusTracking` ⊂ `_excludedFromLastFocusTrackingByAncestry`)
+  makes the ancestry-helper rename ride the method rename — two sed tokens, not three. (3) fish
+  word-splitting mangles a `$FILES` list and `grep -rlZ | xargs -0`; `find src -name '*.coffee'
+  -exec perl … {} +` is the robust batch form (verify no de-indent with a paired -/+ whitespace-only
+  diff scan afterwards — perl-on-.coffee is the standing hazard).
 
 ### E. Uniform contents protocol + read-only-as-capability
 - Content enters a `FrameWdgt` uniformly via `add(startingContent)` (+ a `defaultContents` placeholder),

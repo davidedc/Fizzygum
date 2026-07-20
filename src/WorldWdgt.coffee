@@ -334,7 +334,7 @@ class WorldWdgt extends PanelWdgt
   # then it highlights in some manner and ends up in this list)
   # and then operations can be performed on the whole list
   # of widgets.
-  lastNonTextPropertyChangerButtonClickedOrDropped: nil
+  editorFocusWdgt: nil
 
   wallpaper: nil
 
@@ -2324,7 +2324,7 @@ class WorldWdgt extends PanelWdgt
     @hand.mouseOverList.clear()
     @hand.nonFloatDraggedWdgt = nil
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
-    @lastNonTextPropertyChangerButtonClickedOrDropped = nil
+    @editorFocusWdgt = nil
 
   # »>> this part is excluded from the fizzygum homepage build
   # resetWorld self-settles like any public API method: it is a SEQUENCE of two self-settling

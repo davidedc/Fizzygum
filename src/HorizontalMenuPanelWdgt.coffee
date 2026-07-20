@@ -18,7 +18,7 @@ class HorizontalMenuPanelWdgt extends PanelWdgt
   # Role query (replaces `w instanceof HorizontalMenuPanelWdgt` exclusions in ActivePointerWdgt): the
   # global menu bar is NOT recorded as the "last clicked/dropped" content widget. True here only;
   # dispatched via ?() (nothing on Widget). (type-test-elimination campaign)
-  excludedFromLastFocusTracking: ->
+  excludedFromEditorFocusTracking: ->
     true
 
   add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->

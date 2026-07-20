@@ -35,6 +35,16 @@ class MenuWdgt extends PopUpWdgt
   isMenu: ->
     true
 
+  # Editor CHROME (Frame-model plan §5.D D2a): a menu acting ON the editor focus
+  # (the font-selection menu — its items apply a font to the focused text)
+  # opts in here so a click on any of its items neither steals the focus
+  # pointer nor ends the ongoing edit. Ancestry-honored, so the ROOT menu
+  # answering is enough — no per-descendant stamping (the ChangeFontButtonWdgt
+  # loop this replaced). Default nil ⇒ ordinary menus are unaffected.
+  actsAsEditorChrome: false
+  excludedFromEditorFocusTracking: ->
+    @actsAsEditorChrome
+
   # I draw NOTHING myself -- my rowsPanel draws the box (and my shadow is my only
   # paint). So I am transparent EVERYWHERE: hit-testing must fall THROUGH me to my
   # panel (which is opaque where the box is, so topWdgtSuchThat finds it first) and,

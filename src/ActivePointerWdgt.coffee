@@ -494,8 +494,8 @@ class ActivePointerWdgt extends Widget
       # widget "loses focus" so to speak. So avoiding that here.
       # (By ANCESTRY, §5.D: a drop into an excluded subtree must not steal
       # focus either -- same rule as the click site.)
-      if !(@_excludedFromLastFocusTrackingByAncestry wdgtToDrop)
-        world.lastNonTextPropertyChangerButtonClickedOrDropped = wdgtToDrop
+      if !(@_excludedFromEditorFocusTrackingByAncestry wdgtToDrop)
+        world.editorFocusWdgt = wdgtToDrop
 
       @children = []
       @_applyExtent new Point
@@ -551,21 +551,13 @@ class ActivePointerWdgt extends Widget
   stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere: (actionedWdgt) ->
     if world.caret?
 
-      # some actioning widgets rely on the
-      # caret, for example to change the properties
-      # of text (e.g. make it bold)
-      if actionedWdgt.editorContentPropertyChangerButton? and actionedWdgt.editorContentPropertyChangerButton
-        return
-
-      # if you click anything directly inside a button that has
-      # "editorContentPropertyChangerButton" set, then do nothing
-      # This is needed because you might "down" on the label of the
-      # button and you don't want to stopEditing in that case
-      # either...
-      if actionedWdgt.parent? and
-       (actionedWdgt.parent instanceof SimpleButtonWdgt) and
-       actionedWdgt.parent.editorContentPropertyChangerButton? and
-       actionedWdgt.parent.editorContentPropertyChangerButton
+      # editor CHROME keeps the caret alive (§5.D D2a): interacting with the
+      # editing apparatus (a text button, a font-menu item, a toolbar, the
+      # Console's run-selection — whose action READS the current selection) is
+      # not leaving the edit. ONE ancestry-walked capability covers them all,
+      # including a click that lands on a button's LABEL/icon face (the former
+      # self + hand-rolled parent-of check the field needed).
+      if @_excludedFromEditorFocusTrackingByAncestry actionedWdgt
         return
 
       # There is a caret on the screen: depending on what the user clicked, we may need to close the
@@ -795,10 +787,12 @@ class ActivePointerWdgt extends Widget
           # fire the click, sending info on whether this was part
           # of a double/triple click
           # ANCESTRY-aware (§5.D): the top widget at a click on composed chrome
-          # is a LEAF of it (a tool button's icon face, a toolbar scrollbar),
-          # so the exclusion must honor the whole opted-out subtree.
-          if !w.editorContentPropertyChangerButton and !(@_excludedFromLastFocusTrackingByAncestry w)
-            world.lastNonTextPropertyChangerButtonClickedOrDropped = w
+          # is a LEAF of it (a tool button's icon face, a toolbar scrollbar, a
+          # text button, a font-menu item), so the ONE editor-chrome capability
+          # is honored over the whole opted-out subtree (D2a folded the former
+          # editorContentPropertyChangerButton field into this same walk).
+          if !(@_excludedFromEditorFocusTrackingByAncestry w)
+            world.editorFocusWdgt = w
           w[expectedClick] @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
 
           # now send the double/triple clicks
@@ -1119,19 +1113,19 @@ class ActivePointerWdgt extends Widget
     @dispatchEventsFollowingMouseMove mouseOverNew
 
   # The focus-tracking exclusion policy (§5.D): a click/drop must not move the
-  # editor focus pointer (world.lastNonTextPropertyChangerButtonClickedOrDropped)
+  # editor focus pointer (world.editorFocusWdgt)
   # when the hit widget OR ANY ANCESTOR opted out via
-  # excludedFromLastFocusTracking. Ancestry matters because the top widget at a
+  # excludedFromEditorFocusTracking. Ancestry matters because the top widget at a
   # click on composed chrome is a LEAF of it -- a paint tool click lands on the
   # button's icon FACE, a toolbar scroll on the scrollbar -- and a self-only
   # check let every such leaf silently steal the focus the press then needed
   # (probed, not assumed). Lives HERE, not on Widget: the pointer owns the
   # focus-tracking policy (widgets declare only the per-class opt-out), and a
   # Widget-level helper would churn the inherited-members inspector list.
-  _excludedFromLastFocusTrackingByAncestry: (aWdgt) ->
+  _excludedFromEditorFocusTrackingByAncestry: (aWdgt) ->
     ancestorOrHit = aWdgt
     while ancestorOrHit?
-      if ancestorOrHit.excludedFromLastFocusTracking?()
+      if ancestorOrHit.excludedFromEditorFocusTracking?()
         return true
       ancestorOrHit = ancestorOrHit.parent
     false

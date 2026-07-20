@@ -4,7 +4,7 @@
 # stateful radio TOGGLES with editable-mark annotations, not drag-out creator
 # thumbnails, so it keeps the proven RadioButtonsHolderWdgt construction and
 # conforms to the frame slot's duck contract instead (dockSide / dockThickness /
-# the collapse cores / _reLayout / excludedFromLastFocusTracking).
+# the collapse cores / _reLayout / excludedFromEditorFocusTracking).
 #
 # The tools inject their handler source into a painting overlay resolved at
 # PRESS time (resolveInjectionTarget below) -- any paint toolbar can serve any
@@ -351,10 +351,10 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   # Clicking anywhere INSIDE the toolbar (buttons, their icon faces, the column
   # background, the edit-marks) must not steal the editor focus pointer from
   # the image being edited -- honored by ANCESTRY at the pointer's set sites
-  # (ActivePointerWdgt._excludedFromLastFocusTrackingByAncestry, §5.D: the top
+  # (ActivePointerWdgt._excludedFromEditorFocusTrackingByAncestry, §5.D: the top
   # widget at a tool click is the icon FACE, so a self-only check cannot cover
   # a subtree).
-  excludedFromLastFocusTracking: ->
+  excludedFromEditorFocusTracking: ->
     true
 
   # ===== press-time target resolution (§5.D D-ii 3, owner decision D11) =====
@@ -365,7 +365,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   # (glass / canvas / container / frame); nil = nothing paintable, the press
   # is a visual-only radio flip (the text-toolbar no-op contract).
   resolveInjectionTarget: ->
-    @parent?.paintingOverlay?() ? world.lastNonTextPropertyChangerButtonClickedOrDropped?.paintingOverlay?()
+    @parent?.paintingOverlay?() ? world.editorFocusWdgt?.paintingOverlay?()
 
   # ===== the frame's mode protocol (driven by FrameWdgt.showEdit/ViewModeInBar) =====
   # Transition-guarded on @_armed because the show*ModeInBar protocol is

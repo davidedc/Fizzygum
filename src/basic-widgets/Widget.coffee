@@ -613,6 +613,16 @@ class Widget extends TreeNode
       if @isAncestorOf world.caret.target
         world._stopEditingNoSettle()
 
+    # Editor-focus hygiene (Frame-model plan §5.D D2b): if the widget the editor
+    # chrome acts on (the focus register) is in the dying subtree, clear it -- a
+    # dangling register let a text button silently format a detached widget (the
+    # TODO below flagged exactly this leak class). Ancestor-or-self, mirroring
+    # the caret check above, so a single-widget destroy (which orphans its
+    # children rather than destroying them) still covers a focused descendant.
+    focusWdgt = world.editorFocusWdgt
+    if focusWdgt? and (focusWdgt == @ or @isAncestorOf focusWdgt)
+      world.editorFocusWdgt = nil
+
     # remove callback when user clicks outside
     # me or any of my children
     @onClickOutsideMeOrAnyOfMyChildren nil

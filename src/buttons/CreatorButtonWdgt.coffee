@@ -9,7 +9,14 @@ class CreatorButtonWdgt extends Widget
   color_normal: Color.create 230, 230, 230
 
   actionableAsThumbnail: true
-  editorContentPropertyChangerButton: true
+
+  # Editor CHROME (Frame-model plan §5.D D2a): a creator button acts on the
+  # editor focus (smart-place into the focused content), so its press must not
+  # steal the focus pointer nor end the ongoing edit. Ancestry-honored at
+  # ActivePointerWdgt's focus-set sites + caret-survival policy — the one
+  # capability, for a creator standing outside a toolbar.
+  excludedFromEditorFocusTracking: ->
+    true
 
   iconToolTipMessage: nil
 

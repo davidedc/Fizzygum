@@ -36,13 +36,15 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
       menu.popUp @position().subtract(new Point 80,0), world
 
-      menu.editorContentPropertyChangerButton = true
-      menu.forAllChildrenBottomToTop (eachDescendent) ->
-        eachDescendent.editorContentPropertyChangerButton = true
+      # editor CHROME: applying a font must act on the focused text without
+      # stealing the focus pointer or ending the edit (§5.D D2a). The menu
+      # opts in at its ROOT — ancestry covers every item, so the former
+      # per-descendant stamping loop is gone.
+      menu.actsAsEditorChrome = true
 
       @fontSelectionMenuHolder.fontSelectionMenu = menu
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
-    if world.lastNonTextPropertyChangerButtonClickedOrDropped?.setFontName?
-      widgetClickedLast = world.lastNonTextPropertyChangerButtonClickedOrDropped
+    if world.editorFocusWdgt?.setFontName?
+      widgetClickedLast = world.editorFocusWdgt
       widgetClickedLast.setFontName(nil, ignored2, widgetClickedLast[theNewFontName])

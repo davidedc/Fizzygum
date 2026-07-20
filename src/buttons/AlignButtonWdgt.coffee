@@ -9,7 +9,7 @@ class AlignButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   layoutAlignSetterMethod: nil  # e.g. "setAlignmentToLeft"
 
   mouseClickLeft: ->
-    lastClicked = world.lastNonTextPropertyChangerButtonClickedOrDropped
+    lastClicked = world.editorFocusWdgt
     if lastClicked?[@alignDirectMethod]?
       lastClicked[@alignDirectMethod]()
     else if lastClicked?

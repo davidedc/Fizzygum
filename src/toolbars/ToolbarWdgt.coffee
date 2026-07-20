@@ -29,10 +29,10 @@ class ToolbarWdgt extends ScrollPanelWdgt
     @_buildAndConnectChildren()
 
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
-  # editor focus pointer (world.lastNonTextPropertyChangerButtonClickedOrDropped)
+  # editor focus pointer (world.editorFocusWdgt)
   # from the widget being edited -- the same opt-out HorizontalMenuPanelWdgt
   # declares.
-  excludedFromLastFocusTracking: ->
+  excludedFromEditorFocusTracking: ->
     true
 
   # Subclass hook: the palette's item list. Keep every entry a literal `new X`
