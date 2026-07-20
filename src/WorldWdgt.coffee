@@ -280,6 +280,12 @@ class WorldWdgt extends PanelWdgt
   dragEmbedLabelWdgt: nil
   dragEmbedLockBadgeWdgt: nil
 
+  # --- editor-focus indicator overlay (§5.D D-3) --------------------------------------------------
+  # The single ephemeral outline framing the widget currently being EDITED. PULL model: computed each
+  # cycle from editorFocusWdgt + the edit-mode predicate (addEditorFocusIndicatorWidget), never pushed,
+  # so it can't drift. nil = none this cycle.
+  editorFocusIndicatorWdgt: nil
+
   steppingWdgts: new Set
 
   # scroll panels whose post-release MOMENTUM glide is still running
@@ -1601,6 +1607,60 @@ class WorldWdgt extends PanelWdgt
       @dragEmbedLockBadgeWdgt.fullDestroy()
       @dragEmbedLockBadgeWdgt = nil
 
+  # The widget currently being EDITED (§5.D D-3, decision D18), or nil. editorFocusWdgt is the sticky
+  # focus POINTER (the last content clicked/dropped); "being edited" narrows that to an ACTIVE editing
+  # session so the indicator frames "you are editing THIS", not the pointer at rest:
+  #   TEXT     — a caret is up editing exactly this focus widget. They coincide: the click that sets
+  #              editorFocusWdgt = w dispatches to w, whose text handler calls world.edit @ (= w).
+  #   CITIZEN  — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
+  #              (dragsDropsAndEditingEnabled). Fires only when the focus leaf IS the panel — a text
+  #              leaf inside it has no amenities, so it goes through the caret branch instead.
+  # Stale-pointer guarded (belt to D2b's destroy-time clear): the target must still be attached here.
+  _widgetBeingEdited: ->
+    focus = @editorFocusWdgt
+    return nil unless focus?
+    # Never frame the desktop itself: a click on empty desktop sets editorFocusWdgt = world (the world
+    # is not editor-focus-excluded), and the world is a PanelWdgt with editing enabled, so the citizen
+    # branch below would otherwise outline the WHOLE screen. The world is never a "widget being edited".
+    return nil if focus is @
+    return nil unless focus.root() is @
+    if @caret? and @caret.target is focus
+      return focus
+    if focus.providesAmenitiesForEditing and focus.dragsDropsAndEditingEnabled
+      return focus
+    nil
+
+  # Reconcile the SINGLE editor-focus indicator overlay to _widgetBeingEdited() -- a thin teal outline
+  # (D19) framing the widget being edited, created/re-homed/destroyed once per cycle just before paint,
+  # the same declare-and-reconcile shape as addHighlightingWidgets. It is an EPHEMERAL, layout-inert
+  # HighlighterWdgt, so it never disturbs a size-tracking container's content bounds. PULL, not push
+  # (D-3-iii): the target is recomputed here, never wired into the focus-set sites, so it can't drift.
+  # docs/plans/onion-widget-composition-plan.md §5.D D-3.
+  addEditorFocusIndicatorWidget: ->
+    target = @_widgetBeingEdited()
+
+    unless target?
+      if @editorFocusIndicatorWdgt?
+        @editorFocusIndicatorWdgt.fullDestroy()
+        @editorFocusIndicatorWdgt = nil
+      return
+
+    unless @editorFocusIndicatorWdgt?
+      @editorFocusIndicatorWdgt = new HighlighterWdgt
+      @editorFocusIndicatorWdgt.applyHighlightStyle HighlighterWdgt.editorFocusOutlineStyle()
+      @editorFocusIndicatorWdgt.wdgtThisWdgtIsHighlighting = nil
+
+    indicator = @editorFocusIndicatorWdgt
+    # Re-home + re-bounds only on a real change (a retarget, or the target's paint bounds moving) --
+    # keeping the overlay in the TARGET'S PLANE (innermost enclosing non-identity island) so it warps +
+    # clips with the target for free; a target off any island resolves to the world (byte-identical
+    # dormant). Mirrors addHighlightingWidgets; the same-target, same-bounds cycle touches nothing.
+    if indicator.wdgtThisWdgtIsHighlighting isnt target or target.hasMaybeChangedPaintBounds()
+      indicator.wdgtThisWdgtIsHighlighting = target
+      desiredParent = target._enclosingNonIdentityIsland() ? @
+      desiredParent.add indicator  if indicator.parent isnt desiredParent
+      indicator._applyBounds target.clippedThroughBounds()
+
 
   # »>> this part is only needed for VideoPlayer
   draftRunVideoPlayer: ->
@@ -1759,6 +1819,7 @@ class WorldWdgt extends PanelWdgt
     @addPinoutingWidgets()
     # this part is excluded from the fizzygum homepage build <<«
     @addHighlightingWidgets()
+    @addEditorFocusIndicatorWidget()
     @addDragAffordanceWidgets()
 
     # here is where the repainting on screen happens
@@ -2357,6 +2418,11 @@ class WorldWdgt extends PanelWdgt
     @widgetsToBePinouted.clear()
     @currentPinoutingWidgets.clear()
     @widgetsBeingPinouted.clear()
+    # the editor-focus indicator overlay is world-level state NOT held as tracked-tree bookkeeping: the
+    # WIDGET is destroyed by fullDestroyChildren above (it is a world/island descendant), so just drop
+    # the dangling ref -- same rationale as the highlight sets. editorFocusWdgt itself is cleared in
+    # _softResetWorld, so the PULL reconciler would compute nil next cycle regardless.
+    @editorFocusIndicatorWdgt = nil
     # the "basementWdgt" is not attached to the
     # world tree so it's not in the children,
     # so we need to clean up separately

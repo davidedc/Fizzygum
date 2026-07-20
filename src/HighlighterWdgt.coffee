@@ -52,6 +52,11 @@ class HighlighterWdgt extends RectangleWdgt
   @candidateOutlineStyle: -> {form: "outline", color: Color.create(248, 188, 58, 1), alpha: 1}
   @reluctantOutlineStyle: -> {form: "outline", color: Color.create(140, 140, 140, 1), alpha: 1}
 
+  # Editor-focus indicator (§5.D D-3): the THIRD distinct outline colour (hover = blue FILL, drag
+  # candidate = pencil-yellow OUTLINE, reluctant = gray OUTLINE — all taken). A calm teal accent frames
+  # the widget currently being EDITED (WorldWdgt.addEditorFocusIndicatorWidget). Colour owner-eyeballed.
+  @editorFocusOutlineStyle: -> {form: "outline", color: Color.create(38, 166, 154, 1), alpha: 1}
+
   applyHighlightStyle: (style) ->
     if style.form is "outline"
       # transparent fill + a coloured stroke border (the built-in RectangularAppearance.paintStroke,

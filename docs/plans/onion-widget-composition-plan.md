@@ -1205,6 +1205,127 @@ focus — would revive the abstraction question WITH a consumer in hand.)
   -exec perl … {} +` is the robust batch form (verify no de-indent with a paired -/+ whitespace-only
   diff scan afterwards — perl-on-.coffee is the standing hazard).
 
+### D-3 — visible editor-focus indicator (✅ LANDED 2026-07-20; the D-2 re-open trigger, resolved)
+
+**Problem.** Nothing on screen shows WHICH content a floating toolbar will act on. Post-D-2 the target is
+`world.editorFocusWdgt` (the sticky focus pointer, set on every content click/drop), and the toolbar
+buttons feature-test + act on it — but a user with several editable widgets and a floating text/paint
+toolbar has no cue which one Bold/Italic/a paint stroke will hit. The BACKLOG carried this as the D-2
+"re-open trigger": a visible indicator would be the FIRST real second consumer of the focus model, so the
+design must re-evaluate whether it justifies the world-level `FocusWdgt` abstraction D-2 closed.
+
+**D-3-i. Verified substrate (2026-07-20, src @ `99ff86ce`).**
+1. **The reusable overlay machinery already exists and is deterministic.** `HighlighterWdgt`
+   (`extends RectangleWdgt`, `_ephemeralOverlay: true` ⇒ hit-excluded / shadow-free / snapshot-excluded,
+   `isLayoutInert`) supports an `{form:"outline", color, alpha}` style (`applyHighlightStyle`) — a coloured
+   border, transparent fill. `WorldWdgt.addHighlightingWidgets` (called in `doOneCycle` at ~:1761, just
+   before paint) is a DECLARE-AND-RECONCILE: producers put `target → styleDescriptor` into the PERSISTENT
+   `world.widgetsToBeHighlighted` Map (mutated on events, NOT per-cycle-cleared — only `_resetWorldNoSettle`
+   clears it), and the reconciler builds/moves/destroys one HighlighterWdgt per target, PARENTING it into
+   the target's `_enclosingNonIdentityIsland()` so it warps+clips under affine islands and sits at
+   `clippedThroughBounds()`. Deterministic (pure function of the declared Map + settled geometry; no timers).
+2. **Precedent for a dedicated channel:** `addDragAffordanceWidgets` (charging ring / armed label / lock
+   badge) is a SEPARATE reconciler off dedicated `dragEmbed*Declared` fields — the model for a focus
+   indicator that must not collide with hover-highlights in the shared Map.
+3. **Existing style vocabulary (avoid clashes):** hover = blue FILL wash (`Widget` ~:2607,
+   `HighlighterWdgt.fillStyle(Color.BLUE, 50)`); drag candidate = pencil-yellow OUTLINE, reluctant = gray
+   OUTLINE (`@candidateOutlineStyle`/`@reluctantOutlineStyle`). A focus outline needs a THIRD, distinct
+   colour.
+4. **Focus target maintenance:** `world.editorFocusWdgt` set at ActivePointerWdgt's two set sites
+   (ancestry-excluded), cleared at `_softResetWorld` + (D2b) when the focused widget's subtree is destroyed.
+   So a per-cycle PULL reconciler reading `editorFocusWdgt` needs no new producer wiring.
+
+**D-3-ii. The D-2 ruling (resolved).** The indicator consumes ONLY `world.editorFocusWdgt` — the focus
+POINTER, which D-2 already unified. It needs neither the caret (text-insertion point, a finer granularity)
+nor `StringWdgt.selection` nor paint's armed handlers. So the "second consumer" arrives and consumes
+exactly the one thing D-2 unified, CONFIRMING that ruling rather than overturning it: the four-way
+`FocusWdgt` abstraction stays CLOSED; the indicator is a thin visualization LAYER on the focus pointer, a
+peer of the caret via the shared ephemeral-overlay mechanism (`_ephemeralOverlay`/`isLayoutInert`), not via
+a new base class. (This is the honest outcome of the re-open trigger: examined WITH a consumer, the
+unification still isn't warranted — the consumer only needs the pointer.)
+
+**D-3-iii. The design (minimal, rides the proven pattern).**
+- A dedicated per-cycle reconciler `WorldWdgt.addEditorFocusIndicatorWidget` (called in `doOneCycle` right
+  after `addHighlightingWidgets`), off a computed target — NOT wired into the focus-set sites (PULL, not
+  push), so it stays stateless and can't drift from `editorFocusWdgt`.
+- **Indicate-target each cycle** = `world.editorFocusWdgt` WHEN it is in EDIT MODE (D18 = ratified
+  edit-mode trigger, below), AND the target is still a live, attached, on-screen editable widget (guard
+  against a stale pointer — belt to D2b's suspenders); else nil. ⚠ **The "in edit mode" predicate is the
+  one thing to pin precisely at execution:** for TEXT it is a live caret whose `world.caret.target` is
+  within `editorFocusWdgt`'s subtree (or `editorFocusWdgt` itself); for the framed citizens it is
+  `editorFocusWdgt.dragsDropsAndEditingEnabled` (or its content's) — i.e. the pencil is engaged. The
+  cleanest single form is likely "`editorFocusWdgt` (or a descendant) is currently being edited": a caret
+  present + targeting it, OR its edit-mode flag true. Verify against the caret/enable-disable machinery at
+  execution (§3.5 / §5.B) and choose the narrowest correct predicate. NOTE: when a text caret is up the
+  caret ALSO marks the spot — the indicator adds the whole-widget FRAME around it (owner chose this: a
+  clear "you are editing THIS" boundary, scoped to editing, not to the sticky pointer at rest).
+- Reconcile ONE overlay (a `HighlighterWdgt` with a focus OUTLINE style, or a trivial
+  `EditorFocusIndicatorWdgt extends HighlighterWdgt` if a distinct class reads better): create when target
+  and none exists; re-`_applyBounds`+re-parent when the target changed; `fullDestroy` when target is nil —
+  byte-for-byte the `addHighlightingWidgets` body, island-parenting included.
+- **Determinism:** reconciled from settled state just before paint, pure function of `editorFocusWdgt` +
+  the trigger predicate + geometry; no timers, no frame-count. Gates on `DETERMINISM.md` §5 like the
+  existing reconcilers. ⚠ The indicator IS a new painted overlay, so any test that has BOTH a floating
+  toolbar (per the trigger) AND focused content gains a border → conscious recaptures; measure the set at
+  execution (expected small — few tests summon a floating toolbar), diffpage + owner eyeball before each.
+
+**D-3-iv. Owner-taste decisions — RATIFIED 2026-07-20:**
+- **D18 — TRIGGER = EDIT MODE.** The indicator shows on `editorFocusWdgt` only while it is actively being
+  EDITED (a caret up on it, or its edit-mode flag engaged) — NOT tied to floating-toolbar presence, and
+  NOT always-on. So it frames "you are editing THIS", scoped to editing sessions; at rest (sticky pointer,
+  nothing being edited) it is invisible. (Owner picked this over the floating-toolbar trigger — cleaner
+  semantic, and it means the predicate reads the caret/edit-mode state, D-3-iii.)
+- **D19 — APPEARANCE = thin distinct-colour OUTLINE.** A thin coloured border (HighlighterWdgt outline
+  form), in a THIRD distinct colour (hover=blue-fill, drag=yellow/gray-outline already taken) — proposed a
+  calm accent (soft teal/green) at alpha 1; final colour is an execution detail, owner-eyeballed at the
+  recapture step.
+- **D20 — SPECIFICITY = ANY focused widget.** Show on whatever is in edit-focus regardless of whether a
+  present toolbar could act on it — one code path, no per-toolbar capability coupling. (A user editing an
+  image with a text toolbar open still sees the image framed; focus ≠ what a given toolbar edits, and that
+  is fine / honest.)
+
+**D-3-v. Landing (2026-07-20; one landing on the D-2/E base @ `99ff86ce`).** As-built:
+- **HighlighterWdgt** — `@editorFocusOutlineStyle: -> {form:"outline", color: Color.create(38,166,154,1),
+  alpha:1}` (D19 = the THIRD distinct colour, a calm teal; hover=blue-fill, drag=yellow/gray-outline were
+  taken). Reuses the existing `applyHighlightStyle` outline form; no new class was needed.
+- **WorldWdgt** — a single-slot field `editorFocusIndicatorWdgt: nil`; the predicate `_widgetBeingEdited()`;
+  the reconciler `addEditorFocusIndicatorWidget()` (called in `doOneCycle` right after
+  `addHighlightingWidgets`, mirroring that body incl. island-parenting via `_enclosingNonIdentityIsland` at
+  `clippedThroughBounds()`, re-homing/re-bounding only on a real change — same-target/same-bounds cycle
+  touches nothing); a reset nil-out in `_resetWorldNoSettle` (the WIDGET dies with `fullDestroyChildren`,
+  this drops the dangling ref, same rationale as the highlight sets).
+- **public-api-allowlist.txt** — `addEditorFocusIndicatorWidget` (peer of `addDragAffordanceWidgets`: a
+  self-only-called reconciler that drives public `add`/`fullDestroy`, so rule [A]/[G] forbid the `_`-form
+  and the call-separation [U] gate needs the allowlist entry).
+- **The pinned predicate** (the "one thing to pin" ⚠, resolved): `editorFocusWdgt` is the LEAF clicked (the
+  click that sets it dispatches to that same leaf, whose text handler calls `world.edit @`), so —
+  - TEXT branch (precise): `@caret? and @caret.target is editorFocusWdgt` → frame it. Verified: exactly the
+    active-editing signal; a directly-built text leaf has `providesAmenitiesForEditing` falsy so it never
+    also trips the citizen branch.
+  - CITIZEN branch: `focus.providesAmenitiesForEditing and focus.dragsDropsAndEditingEnabled` → frame it.
+  - **World-guard (load-bearing):** `return nil if focus is @`. A click on empty desktop sets
+    `editorFocusWdgt = world` (the world is NOT editor-focus-excluded) AND the world is a PanelWdgt with
+    BOTH flags true, so without this guard the citizen branch would outline the WHOLE screen. The probe
+    confirmed the world genuinely has both flags. This also cleaned 13 world-framing tests out of the
+    footprint (57 unguarded → 44 guarded).
+- **⚖ OWNER RULING (2026-07-20): KEEP BOTH branches (D18 as ratified).** The measured footprint splits into
+  ~23 text-caret recaptures (precise "you are editing THIS text" — looks exactly right) and ~21 citizen
+  recaptures where a merely DROPPED/CLICKED editable panel is framed, because `dragsDropsAndEditingEnabled`
+  DEFAULTS true — there is no finer "actively editing" signal for citizens than the mode flag (the caret is
+  that signal for text). Presented both flavors (diffpages: the clean Lorem-box frame vs. the "stack"
+  window's framed content panel + a dropped blue rect); owner chose the broad, literal-D18 behavior over a
+  caret-only subset. **Do-not-re-litigate:** the caret-only alternative was offered and declined; re-open
+  only if the citizen breadth later reads as noise in real use.
+- **Determinism:** paint-truthfulness gate PASSED (0 offenders — the ephemeral overlay is snapshot-excluded);
+  the overlay is `isLayoutInert`, so `revisits`/`census` stay zero — the closing gauntlet is GREEN on all
+  11 legs (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone/refs/revisits/census, 2026-07-20).
+- **Footprint:** 44 existing tests recaptured (conscious, owner-eyeballed behavior) + 1 new guard test.
+- **Guard test:** `SystemTest_macroEditorFocusIndicatorTracksEditedWidget` — two editable TextWdgts; click
+  alpha (image_0: teal frame + caret on alpha), click bravo (image_1: frame RETARGETS to bravo), click empty
+  desktop (image_2: frame GONE — stopEditing + world-guard). Proves tracking + the D18 trigger + the guard.
+  (The plan's earlier floating-toolbar guard-test sketch was superseded by D18: the trigger is edit mode,
+  not toolbar presence, so the test drives edit mode directly.)
+
 ### E. Uniform contents protocol + read-only-as-capability
 - Content enters a `FrameWdgt` uniformly via `add(startingContent)` (+ a `defaultContents` placeholder),
   retiring special `setContents(x, N)` inits (the *IconicDesktopSystem…AppLauncher* note).
