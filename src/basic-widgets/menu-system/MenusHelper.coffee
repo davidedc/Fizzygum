@@ -546,8 +546,8 @@ class MenusHelper
     menu.addMenuItem "basement shortcut", menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", (new FizzyPaintApp), "createOpener"
-    menu.addMenuItem "Simple doc launcher", (new SimpleDocumentApp), "createOpener"
-    menu.addMenuItem "Simple slide launcher", (new SimpleSlideApp), "createOpener"
+    menu.addMenuItem "document launcher", (new SimpleDocumentApp), "createOpener"
+    menu.addMenuItem "slide launcher", (new SimpleSlideApp), "createOpener"
     menu.addMenuItem "Link", menusHelper, "createSimpleLinkWdgt"
     menu.addMenuItem "Video link", menusHelper, "createSimpleVideoLinkWdgt"
     menu.popUpAtHand()
@@ -648,7 +648,7 @@ class MenusHelper
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Document"
     menu.addMenuItem "simple document scrollpanel", menusHelper, "createSimpleDocumentScrollPanelWdgt"
-    menu.addMenuItem "simple document", menusHelper, "createDocumentWdgt"
+    menu.addMenuItem "document", menusHelper, "createDocumentWdgt"
     menu.popUpAtHand()
 
   popUpSimpleTextWdgtMenu: (widgetOpeningThePopUp) ->
@@ -730,7 +730,7 @@ class MenusHelper
     menu.addMenuItem "throw an error", menusHelper, "throwAnError"
     menu.addMenuItem "stretchable panel", menusHelper, "createStretchablePanel"
     menu.addMenuItem "tools panel", menusHelper, "createToolsPanel"
-    menu.addMenuItem "Simple slide", menusHelper, "createSlideWdgt"
+    menu.addMenuItem "slide", menusHelper, "createSlideWdgt"
     menu.addMenuItem "patch programming ➜", menusHelper, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "graphs ➜", menusHelper, "popUpGraphsMenu", closesUnpinnedPopUps: false, toolTip: "graphs"
     menu.addMenuItem "support docs ➜", menusHelper, "popUpSupportDocsMenu", closesUnpinnedPopUps: false, toolTip: "support docs"

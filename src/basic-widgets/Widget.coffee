@@ -492,12 +492,13 @@ class Widget extends TreeNode
   
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
   toString: ->
-    firstPart = "a "
-
     if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
-      return firstPart + @widgetClassString()
+      name = @widgetClassString()
     else
-      return firstPart + @uniqueIDString()
+      name = @uniqueIDString()
+    # "an" before a vowel-initial name, else "a" (e.g. "an Image", "a Rectangle")
+    firstPart = if name[0]?.toLowerCase() in ["a", "e", "i", "o", "u"] then "an " else "a "
+    firstPart + name
 
   close: ->
     # SELF-SETTLE (single-mutation tier). _closeNoSettle re-homes me to the basement through the NON-settling
