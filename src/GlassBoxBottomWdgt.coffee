@@ -14,8 +14,8 @@ class GlassBoxBottomWdgt extends BoxWdgt
     @strokeColor = Color.create 196,195,196
     @setAlphaScaled 50
 
-  # Role query (replaces the `aWdgt instanceof GlassBoxBottomWdgt` wrap-idempotency guards in
-  # ToolPanelWdgt/HorizontalMenuPanelWdgt.add): "am I already a glass-box template wrapper?" -- true
+  # Role query (replaces the `aWdgt instanceof GlassBoxBottomWdgt` wrap-idempotency guard in
+  # ToolPanelWdgt.add): "am I already a glass-box template wrapper?" -- true
   # here only, so a widget is never wrapped twice. Dispatched via ?() (nothing on Widget).
   # (type-test-elimination campaign)
   isGlassBoxWrapper: ->

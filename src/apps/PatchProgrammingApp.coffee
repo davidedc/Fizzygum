@@ -5,4 +5,4 @@ class PatchProgrammingApp extends IconicDesktopSystemWindowedApp
   title: "Patch progr."
   buildIcon:    -> new PatchProgrammingIconWdgt
   buildWindow:  -> world.openFrameWith (new PatchProgrammingWdgt), (new Point 460, 400), world.hand.position()
-  windowOpened: (wm) -> PatchProgrammingInfoWdgt.createNextTo wm
+  windowOpened: (wm) -> InfoDocs.createNextTo "patchProgramming", wm

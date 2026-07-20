@@ -213,11 +213,6 @@ class MenusHelper
     toolPanel = new ScrollPanelWdgt new ToolPanelWdgt
     world.openFrameWith toolPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
 
-  createHorizontalMenuPanelPanel: ->
-    horizontalMenuPanel = new HorizontalMenuPanelWdgt
-    world.openFrameWith horizontalMenuPanel, (new Point 200, 400), world.hand.position().subtract(new Point 50, 100)
-
-
   popUpMore1IconsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "More Icons 1"
     menu.addMenuItem "Pencil 1 icon", menusHelper, "createPencil1IconWdgt"
@@ -735,7 +730,6 @@ class MenusHelper
     menu.addMenuItem "throw an error", menusHelper, "throwAnError"
     menu.addMenuItem "stretchable panel", menusHelper, "createStretchablePanel"
     menu.addMenuItem "tools panel", menusHelper, "createToolsPanel"
-    menu.addMenuItem "horiz. menu panel", menusHelper, "createHorizontalMenuPanelPanel"
     menu.addMenuItem "Simple slide", menusHelper, "createSlideWdgt"
     menu.addMenuItem "patch programming ➜", menusHelper, "popUpPatchProgrammingMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "graphs ➜", menusHelper, "popUpGraphsMenu", closesUnpinnedPopUps: false, toolTip: "graphs"

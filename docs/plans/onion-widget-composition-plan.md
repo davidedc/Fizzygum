@@ -945,7 +945,8 @@ D-2's design space, and per-image armed-handler state leaves nothing world-level
    subclass; the mixin survives, D-i #10). Consumers re-pointed: `FizzyPaintApp.buildWindow` /
    `MenusHelper.createReconfigurablePaint` → `new ImageWdgt` (the openFrameWith passthrough keeps the
    line shape); `ReconfigurablePaintInfoWdgt` keeps its name (it's the INFO DOC about the app), only
-   its `colloquialName`-adjacent prose mentions move if any.
+   its `colloquialName`-adjacent prose mentions move if any. (Superseded 2026-07-20 by §5.E E3: that
+   info-widget was later collapsed into the `InfoDocs` registry as the `drawingsMaker` entry.)
 5. **Serialization**: mechanism unchanged (the glass carries `mouseMove_source`/`mouseLeave_source`
    exactly as today); no compat obligations in either direction.
 
@@ -1334,7 +1335,9 @@ zero; ambition byte-identical → zero recaptures expected):**
   it folded into a later duplication sweep). **→ RATIFIED 2026-07-20 (owner "go with recommendation"):
   E2 is the §5.E deliverable; threads 1 + read-only-inheritance CLOSED as delivered.**
 - **E-D19 — E1 (no-pencil `readOnly`)**: defer to BACKLOG (recommended, the D8/test argument), or
-  build it now for the info-docs only. **→ RATIFIED 2026-07-20: DEFERRED to BACKLOG.**
+  build it now for the info-docs only. **→ RATIFIED 2026-07-20: DEFERRED to BACKLOG; then ⛔ REJECTED
+  OUTRIGHT 2026-07-20 (owner): a locked-view-mode capability contradicts Fizzygum's direct-manipulation
+  spirit — everything stays pencil-editable. Will NOT be built; do not re-propose.**
 - **E-D20 — the field's shape**: a 3-value string policy `closeFromFrameBarPolicy` (recommended, one
   field, extensible) vs two booleans (`discardOnClose`/`destroyOnClose`) — or a different name.
   **→ RATIFIED 2026-07-20: 3-value `closeFromFrameBarPolicy`.**

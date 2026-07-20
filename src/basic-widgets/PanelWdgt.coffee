@@ -31,7 +31,7 @@ class PanelWdgt extends Widget
   # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at screen point
   # `posOnScreen` land? Returns the sibling insertion index (bumped one past a child whose right half holds
   # the point), or nil when the point is over no child — callers then fall back to appending at the end.
-  # Pure computation; shared verbatim by HorizontalMenuPanelWdgt.add and ToolPanelWdgt._addNoSettle.
+  # Pure computation; used verbatim by ToolPanelWdgt._addNoSettle.
   _findDropSlot: (posOnScreen, children) ->
     return nil unless posOnScreen? and children.length > 0
     positionNumberAmongSiblings = 0

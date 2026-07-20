@@ -29,9 +29,7 @@ class ToolbarWdgt extends ScrollPanelWdgt
     @_buildAndConnectChildren()
 
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
-  # editor focus pointer (world.editorFocusWdgt)
-  # from the widget being edited -- the same opt-out HorizontalMenuPanelWdgt
-  # declares.
+  # editor focus pointer (world.editorFocusWdgt) from the widget being edited.
   excludedFromEditorFocusTracking: ->
     true
 

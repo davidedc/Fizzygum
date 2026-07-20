@@ -19,8 +19,8 @@ class MenuItemWdgt extends LabelButtonWdgt
     @actionableAsThumbnail = true
 
   # In a glass box I am sized to my (variable-width) text, not laid out as a square
-  # thumbnail like other contents -- the glass-box layout in GlassBoxBottomWdgt /
-  # HorizontalMenuPanelWdgt keys off this instead of `instanceof MenuItemWdgt`.
+  # thumbnail like other contents -- the glass-box layout in GlassBoxBottomWdgt
+  # keys off this instead of `instanceof MenuItemWdgt`.
   # (type-test-elimination campaign)
   isTextSizedGlassBoxItem: ->
     true
@@ -80,14 +80,6 @@ class MenuItemWdgt extends LabelButtonWdgt
       @label.text = @label.text.toggleTick()
       @label.sizeToTextAndDisableFitting()
       @label.changed()
-
-  shrinkToTextSize: ->
-    # '5' is to add some padding between
-    # the text and the button edge
-    @_applyWidth @widthOfLabel() + 5
-
-  widthOfLabel: ->
-    @label.width()
 
   # As a menu entry, prefer my (multi-line TextWdgt) label's width plus a little
   # padding. MenuWdgt.maxWidthOfMenuEntries calls this polymorphically rather

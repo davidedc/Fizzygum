@@ -12,4 +12,4 @@ class ToolbarsApp extends IconicDesktopSystemWindowedApp
   buildWindow: ->
     world.openFrameWith new SuperToolbarWdgt, (new Point 60, 261), (new Point 170, 170)
 
-  windowOpened: (wm) -> ToolbarsInfoWdgt.createNextTo wm
+  windowOpened: (wm) -> InfoDocs.createNextTo "superToolbar", wm

@@ -6,4 +6,4 @@ class DashboardsApp extends IconicDesktopSystemWindowedApp
   title: "Dashboards"
   buildIcon:    -> new DashboardsIconWdgt
   buildWindow:  -> world.openFrameWith (new DashboardWdgt), (new Point 460, 400), world.hand.position()
-  windowOpened: (wm) -> DashboardsInfoWdgt.createNextTo wm
+  windowOpened: (wm) -> InfoDocs.createNextTo "dashboards", wm

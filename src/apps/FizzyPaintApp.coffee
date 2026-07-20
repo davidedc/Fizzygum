@@ -8,4 +8,4 @@ class FizzyPaintApp extends IconicDesktopSystemWindowedApp
   title: "Draw"
   buildIcon:    -> new PaintBucketIconWdgt
   buildWindow:  -> world.openFrameWith (new ImageWdgt), (new Point 460, 400), (new Point 174, 114)
-  windowOpened: (wm) -> ReconfigurablePaintInfoWdgt.createNextTo wm
+  windowOpened: (wm) -> InfoDocs.createNextTo "drawingsMaker", wm

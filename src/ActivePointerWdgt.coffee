@@ -468,7 +468,7 @@ class ActivePointerWdgt extends Widget
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
 
       # Affine transforms §7.13: the 6th add arg is consumed by the stack/menu panels
-      # (SimpleVerticalStackPanelWdgt / ToolPanelWdgt / HorizontalMenuPanelWdgt) to derive a
+      # (SimpleVerticalStackPanelWdgt / ToolPanelWdgt) to derive a
       # child-INSERT index by comparing against their children's PLANE-LOCAL spans — for a target
       # inside a non-identity island the raw screen point picks the wrong slot (a 180°-tilted stack
       # inverts the visual order, so a drop on the first child inserted after the last). Same gate +

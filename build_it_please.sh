@@ -266,6 +266,29 @@ if ! $noSyntaxCheck ; then
   echo "... CoffeeScript syntax OK"
 fi
 
+# --- build-time SHIPPABLE-COVERAGE gate (every src/ dir with .coffee files must ship) --
+# build.py's shipped-file list (~lines 191-233) is a hand-maintained sequence of
+# glob("src/<dir>/*.coffee") calls, one per directory. A NEW src/ subdirectory ships NOTHING
+# until a matching glob() line is added by hand -- the build still exits 0, and the syntax
+# gate above (which reads the same --list-shippable set) silently skips the new dir too; the
+# only symptom is a runtime `<NewClass> is not defined`. This gate diffs "every .coffee file
+# that actually exists under src/" against build.py's own --list-shippable output and fails
+# loudly on any survivor (allowlisting the two legitimate exceptions: src/video-player/, which
+# ships only behind --includeVideoPlayer, and src/boot/, which build_it_please.sh compiles
+# directly and build.py never globs at all -- see buildSystem/check-shippable-coverage.js for
+# the full rationale). We pass "${args[@]}" so it checks exactly the flags THIS build uses.
+# Same --noSyntaxCheck escape hatch and explicit $? check as the syntax gate above.
+if ! $noSyntaxCheck ; then
+  echo "checking shippable-source coverage of all src/ directories ..."
+  node ./buildSystem/check-shippable-coverage.js "${args[@]}"
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: shippable-coverage check failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... shippable-source coverage OK"
+fi
+
 # --- build-time layering / flow-soundness gate (self-settling public geometry API) -----
 # Enforces the call-graph layering the self-settling API relies on. A low-level method (raw*/silent*/
 # fullRaw*/_*, a *NoSettle core, or the _reLayout* / _positionAndResizeChildren / _reLayoutScrollbars

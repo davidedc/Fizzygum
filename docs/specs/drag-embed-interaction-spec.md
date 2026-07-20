@@ -137,7 +137,7 @@ predicate); reluctant = the §5 climb found no acceptor but passed a widget with
 **Owner decision 4 lands here:** dashboards default to edit-ON. Concretely: the dashboard construction path
 stops calling `disableDragsDropsAndEditing()` at build time (grep `SampleDashboardApp` — the call is in its
 window-assembly tail, ~`SampleDashboardApp.coffee:113-120`), while `SampleSlideApp.coffee:73` and
-`SimpleSlideInfoWdgt.coffee:56` keep theirs (slides/docs still open in view mode).
+`InfoDocs._buildInfoDocNextTo` (the shared info-doc builder) keep theirs (slides/docs still open in view mode).
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)
 

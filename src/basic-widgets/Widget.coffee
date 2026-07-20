@@ -2886,8 +2886,8 @@ class Widget extends TreeNode
 
   _collapseNoSettle: ->
     # IDEMPOTENT -- the SOLE collapse guard (the public collapse() is a thin settle wrapper). A direct caller --
-    # a layout pass that decides collapse by width (FrameWdgt._positionAndResizeChildren,
-    # HorizontalMenuPanelWdgt._reLayoutSelf) -- may collapse a NOT-yet-collapsed child MID-PASS (e.g. the FIRST
+    # a layout pass that decides collapse by width (FrameWdgt._positionAndResizeChildren)
+    # -- may collapse a NOT-yet-collapsed child MID-PASS (e.g. the FIRST
     # layout of an under-construction window, now that orphan construction settles -- see
     # docs/archive/orphan-settledness-plan.md), so the re-layout the collapse schedules goes through the PHASE-VALVE
     # (in-pass -> the no-climb __markForRelayout; off-pass -> _invalidateLayout), exactly like the re-fit seam
