@@ -349,8 +349,45 @@ class FrameWdgt extends Widget
   paintingOverlay: ->
     @contents?.paintingOverlay?()
 
+  # The close-from-bar POLICY (Frame-model plan §5.E E2): a tracked field replaces
+  # the per-instance `closeFromFrameBar = -> …` monkey-patches the sample/info
+  # factories used to inject (DocumentWdgt._buildInfoDocNextTo's own TODO:
+  # "should be done using a flag ... the source is not tracked"). 'saveOrAsk'
+  # (default) runs the per-kind hook below; 'close'/'destroy' are the one-shot
+  # sample/info behaviours -- a property, not injected code.
+  closeFromFrameBarPolicy: 'saveOrAsk'
+
   closeFromFrameBar: ->
+    switch @closeFromFrameBarPolicy
+      when 'close' then @close()
+      when 'destroy' then @destroy()
+      else @_closeFromFrameBarWhenSaveOrAsk()
+
+  # The 'saveOrAsk' hook. Base = a plain frame lets its CONTENT decide how to
+  # close (ScriptWdgt/ErrorsLogViewer/BasementWdgt/generic windows, via
+  # Widget.closeFromContainerFrame); the document/panel citizens override this
+  # with @_saveOrAskThenCloseCitizen, and FolderWindowWdgt with its own variant.
+  _closeFromFrameBarWhenSaveOrAsk: ->
     @contents?.closeFromContainerFrame @
+
+  # Shared save-or-ask-then-close for the document/panel citizens (§5.E E2: the
+  # body was duplicated verbatim on DocumentWdgt + GenericPanelWdgt). Template
+  # method: it calls the per-kind @hasStartingContentBeenChangedByUser(). No real
+  # contents to save -> fullDestroy; else the save prompt; else just close.
+  _saveOrAskThenCloseCitizen: ->
+    # public-call-sanctioned + nosettle-sanctioned: this IS the close-from-bar
+    # action (a top-level bar-button event handler); @fullDestroy / @close are the
+    # public self-settling close verbs it legitimately triggers -- exactly as the
+    # public closeFromFrameBar it was extracted from did (this dedup only moved the
+    # shared body down a level). Reaching the NoSettle cores would leave the world
+    # unsettled after a top-level bar press.
+    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt @
+      @fullDestroy()
+    else if !world.anyReferenceToWdgt @
+      prompt = new SaveShortcutPromptWdgt @, @
+      prompt.popUpAtHand()
+    else
+      @close()
 
   # The title-bar buttons announce their press to their holder (the bar, which
   # forwards here) instead of testing `@parent instanceof FrameWdgt` themselves

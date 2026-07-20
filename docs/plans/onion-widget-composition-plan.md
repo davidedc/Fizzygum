@@ -15,7 +15,14 @@ StretchableEditableWdgt DELETED); §5.D D-2 ✅ COMPLETE 2026-07-20 (substrate r
 @ `c68a63cb` — deltas in D-2-i; the mandated four-way focus abstraction FALSIFIED as
 structure-without-a-consumer, D15–D17 ratified; landed the focus-POLICY unification D2a–D2c
 BYTE-IDENTICAL — gauntlet 11/11, revisits 0, census 0, zero recaptures; landing stamp + case law in
-D-2-v). REMAINING: §5.E (contents protocol + readOnly capability). Owner-gated execution.**
+D-2-v). §5.E execution design ADDED 2026-07-20 (substrate re-verified @ `ccaefd44` — deltas in E-i;
+like D-2 most of §5.E is ALREADY DELIVERED by A/B/D: thread 1 uniform-content-entry done, the
+read-only INHERITANCE smell removed by B; honest deliverable = E2 close-policy-as-tracked-field
+resolving the code's own monkey-patch TODO; E1 no-pencil readOnly deferred per the LOCKED-D8 argument;
+E-D18–E-D20 ratified). §5.E ✅ COMPLETE 2026-07-20 (E2 close-policy-as-tracked-field landed
+BYTE-IDENTICAL — gauntlet 11/11, revisits 0, census 0, zero recaptures; landing + case law in E-vi;
+E1 no-pencil readOnly + the info-widget factory collapse DEFERRED to BACKLOG). **⇒ THE FRAME-MODEL
+FLAGSHIP ARC (phases A · C · B · D · E) IS COMPLETE.** Follow-ons all owner-gated on the BACKLOG.**
 This revision **supersedes** the earlier "three-ring onion" framing of this file: the middle "editor
 panel" ring is dissolved (the toolbar is a *slot inside the frame*, not a ring), and the naming/structure
 below were settled with the owner in a design dialogue on 2026-07-18. Class names verified against the
@@ -1202,6 +1209,135 @@ focus — would revive the abstraction question WITH a consumer in hand.)
   retiring special `setContents(x, N)` inits (the *IconicDesktopSystem…AppLauncher* note).
 - Replace `info-widgets/* extends SimpleDocumentWdgt` with a **`readOnly` capability** on `DocumentWdgt`
   (the "why do info widgets extend simple document" smell) — read-only-ness is a property, not a subtype.
+
+**EXECUTION DESIGN for E (2026-07-20; substrate re-verified against src @ `ccaefd44`). Like D-2, the
+re-validation finds most of §5.E ALREADY DELIVERED by phases A/B/D; the honest residue is one concrete
+cleanup the code itself asks for (E2). The argument is E-ii, the scope E-iii.**
+
+**E-i. Verified substrate deltas (2026-07-20) — what A/B/D already delivered vs this section's
+pre-phase text:**
+1. **Thread 1 (uniform contents protocol) is MOOT.** There is NO `FrameWdgt.setContents(x, N)` — `grep
+   'setContents:' src` finds ONE definition, on `ScrollPanelWdgt` (`setContents: (aWdgt, extraPadding
+   = 0)`), the scroll panel's own single-content API. Content already enters a `FrameWdgt` uniformly:
+   the ctor takes the payload (`super @_makeStartingPayload()` for a citizen; `super contentWidget`
+   for a plain frame) or `WorldWdgt.openFrameWith`, and the `defaultContents` placeholder EXISTS
+   (`@defaultContents = new FrameContentsPlaceholderText`; `@contents = @defaultContents` when none
+   given — FrameWdgt ctor). The 6 `setContents` call sites are all `scrollPanel.setContents(startingContent,
+   5)` — seeding a scroll panel's single content with padding, not a frame init. (`defaultContents` as
+   a word is also an unrelated Prompt ctor param.) So there is no special init to retire; A/B delivered
+   the uniform-content-entry protocol.
+2. **Thread 2's subtyping smell is MOOT (B removed it).** The 10 `info-widgets/*` are `extends
+   DocumentWdgt` PURELY to host a static factory (`@create`/`@createNextTo`); 8 share
+   `DocumentWdgt._buildInfoDocNextTo`, Welcome + one other are bespoke `@create`. They add ZERO
+   instance overrides — namespace-only inheritance (the `TemplatesWindowWdgt` shape). "read-only-ness
+   is an inheritance" is already false.
+3. **Read-only today is a runtime call, and the pencil STAYS — correctly, per D8.** Read-only = a
+   build-time `disableDragsDropsAndEditing()` (8 sites: the 8 info-docs via `_buildInfoDocNextTo` +
+   Welcome + `SampleDoc`/`SampleSlide`/`SampleDashboard`/`DegreesConverter`/`HowToSave`). That shows
+   the EYE but KEEPS the `editButton` (the citizen has `providesAmenitiesForEditing: true`), so these
+   windows are re-editable via the pencil. Under **D8 (LOCKED: view mode HAS a pencil to flip into
+   editing)** that is CORRECT for the editable samples — and `SystemTest_macroSampleSlideEditView
+   Toggle` ASSERTS a sample slide toggles edit↔view. A "no-pencil `readOnly`" would BREAK that model
+   for samples.
+4. **The real residual smell: the close policy is MONKEY-PATCHED per instance.** `closeFromFrameBar`
+   is overwritten by instance-method injection at 6 sites — **5× `-> @close()`** (`SampleDoc`,
+   `HowToSave`, `DegreesConverter`, `SampleDashboard`, `SampleSlide` — skip the save-prompt) and **1×
+   `-> @destroy()`** (`DocumentWdgt._buildInfoDocNextTo`, i.e. the 8 info-docs — discard outright).
+   `DocumentWdgt`'s site carries the explicit TODO: *"should be done using a flag, we don't like to
+   inject code like this: the source is not tracked."* Same untracked-instance-injection anti-pattern
+   D2 just cleaned elsewhere.
+5. **The close-policy homes already exist AND are duplicated.** Three `closeFromFrameBar` defs:
+   `FrameWdgt` (base: `@contents?.closeFromContainerFrame @`), `DocumentWdgt`, and `GenericPanelWdgt`
+   — the latter two carry a BYTE-IDENTICAL save-or-destroy body (a B-era duplication). A tracked flag
+   consulted by a base method both retires the monkey-patches AND dedups the twin bodies.
+
+**E-ii. The finding — §5.E is substantially delivered by A/B/D; the honest deliverable is E2.** The
+section imagined two big changes; the re-validation shows the first is done (uniform content entry,
+`defaultContents` placeholder, no `setContents(x,N)`) and the second's stated smell — read-only as an
+INHERITANCE — was removed by B (the info-widgets are factories now). The provenance concerns ("why do
+info widgets extend simple document"; "read-only-ness shouldn't be an inheritance") are ANSWERED. What
+remains real is the close-policy monkey-patch the code's own TODO flags (E-i #4): an untracked
+instance-method injection that should be a tracked property — squarely the *IconicDesktopSystem…App
+Launcher* note's "a property, not injected code." A *no-pencil* `readOnly` capability is a DIFFERENT,
+unrequested change that conflicts with the LOCKED D8 model for the editable samples (E-i #3, test-
+asserted) — deferred, not built (E1).
+
+**E-iii. The design:**
+- **E2 (the deliverable) — close-from-frame-bar policy as a tracked capability.** ⚠ CORRECTED design
+  (the base `FrameWdgt.closeFromFrameBar` does NOT save-or-ask — it DELEGATES to the content:
+  `@contents?.closeFromContainerFrame @`, the live plain-frame path for `ScriptWdgt`/`ErrorsLogViewer`/
+  `BasementWdgt`/generic windows whose content's `closeFromContainerFrame` decides. Only the citizens
+  override with save-or-ask. So the base default must NOT become save-or-ask). Shape:
+  - Introduce ONE FrameWdgt field `closeFromFrameBarPolicy` (`'saveOrAsk'` default / `'close'` /
+    `'destroy'`; churn-free — no inspector test inspects a FrameWdgt's own members: they inspect
+    Rectangle/AnalogClock/Inspector/String/SimpleDocumentScrollPanel).
+  - `FrameWdgt.closeFromFrameBar` becomes a policy DISPATCH: `'close'` → `@close()`, `'destroy'` →
+    `@destroy()`, else → `@_closeFromFrameBarWhenSaveOrAsk()`.
+  - `FrameWdgt._closeFromFrameBarWhenSaveOrAsk` (the `'saveOrAsk'` hook, base) KEEPS the current
+    plain-frame behaviour `@contents?.closeFromContainerFrame @` — plain frames byte-unchanged.
+  - The twin citizen bodies dedup onto `FrameWdgt._saveOrAskThenCloseCitizen` (the 3-branch:
+    `fullDestroy` if nothing worth saving / else `SaveShortcutPromptWdgt @, @` / else `@close()` —
+    template-method: it calls the per-kind `@hasStartingContentBeenChangedByUser()`, defined on
+    Document + GenericPanel). `DocumentWdgt` + `GenericPanelWdgt` replace their `closeFromFrameBar`
+    with a one-line `_closeFromFrameBarWhenSaveOrAsk: -> @_saveOrAskThenCloseCitizen()`.
+  - `FolderWindowWdgt`'s own 2-branch variant (no changed-check) likewise renames
+    `closeFromFrameBar` → `_closeFromFrameBarWhenSaveOrAsk`, routing through the one dispatch (folders
+    never set a non-default policy).
+  - The 6 monkey-patch sites become a one-line field SET (`doc.closeFromFrameBarPolicy = 'close'` ×5;
+    `= 'destroy'` ×1 in `_buildInfoDocNextTo`), resolving that method's TODO.
+  Ambition BYTE-IDENTICAL: the close BEHAVIOUR per click is unchanged (mechanism swap only); no window
+  a test screenshots changes a pixel, and `macroSampleSlideEditViewToggle` drives the edit/view
+  TOGGLE, not close.
+- **E1 (deferred → BACKLOG) — a no-pencil `readOnly` capability.** Argued against for now: the
+  inheritance smell is already gone (B); D8's view-mode-with-pencil is the correct, test-asserted
+  model for the editable samples; suppressing the pencil is unrequested UX that would wrongly lock
+  them. IF the owner later wants genuinely-locked reference pages (info-docs only, never samples),
+  that is a small owner-gated UI addition — a `readOnly` flag that gates `_createAndAddEditButton`
+  (`… and !@readOnly`) and opens in view mode — landing with that decision, not speculatively.
+- **E3 (note, no action) — the 10 namespace-only info-widget factories stay.** Each holds its `new X`
+  literals in-file for the regex dependency finder (§0 build model); collapsing them into a data-driven
+  registry would hide those edges from the finder. Accepted as factories, not a defect (the
+  `TemplatesWindowWdgt` precedent).
+- **Thread 1 (contents protocol) — CLOSED as delivered by A/B** (recorded so §5.E is not re-opened
+  blind).
+
+**E-iv. Landing (one landing; gates = `fg presuite`, close = `fg gauntlet` with revisits/census at
+zero; ambition byte-identical → zero recaptures expected):**
+- **E2a — the close-policy field + base dispatch + the two dedups + the 6 call-site conversions.**
+  Fallout kind: none expected (behaviour-preserving); the guard is the apps smoke + any close-driving
+  macro. If a `call-separation`/`stinks` gate flags the base method shape, apply the D2/B case-law
+  fixes. No tests-repo surface anticipated (the sample apps are built from src; grep the tests repo
+  for `closeFromFrameBar`/`closeFromContainerFrame` field reaches at execution per B case law #2).
+
+**E-vi. Landing (2026-07-20, one landing on the D-2 base @ `ccaefd44`):**
+- **E2a — close-from-frame-bar policy as a tracked capability.** `FrameWdgt.closeFromFrameBarPolicy`
+  (`'saveOrAsk'` default / `'close'` / `'destroy'`) + `closeFromFrameBar` DISPATCH; the `'saveOrAsk'`
+  hook `_closeFromFrameBarWhenSaveOrAsk` keeps the plain-frame delegate-to-contents base; the twin
+  citizen bodies dedup onto `FrameWdgt._saveOrAskThenCloseCitizen` (`DocumentWdgt`/`GenericPanelWdgt`
+  now one-line hook overrides); `FolderWindowWdgt`'s 2-branch variant routes through the same hook;
+  the 6 monkey-patches → a one-line field SET (5× `'close'`, 1× `'destroy'` in `_buildInfoDocNextTo`,
+  resolving its TODO). ✅ BYTE-IDENTICAL: presuite 263/263 + gauntlet 11/11 (revisits 0, census 0),
+  ZERO recaptures.
+- **Case law:** the extracted low-level close hooks self-settle via the public close verbs (as their
+  public origin did), tripping BOTH the layering `[G]` gate (`# nosettle-sanctioned`) and the
+  call-separation `[S]` gate (`# public-call-sanctioned`) — a low-level→public-self-settling call
+  needs BOTH markers, and each must sit INSIDE the method body (the census/gate binds a marker to the
+  method whose body contains it — a marker in the doc-comment ABOVE the signature is not counted).
+- **Deferred (BACKLOG):** E1 no-pencil `readOnly` capability; the 10 info-widget factories stay as
+  namespace-only static factories (dep-finder `new X` literals); thread 1 (contents protocol) closed
+  as delivered by A/B.
+
+**E-v. Owner decisions to ratify (present BEFORE code):**
+- **E-D18 — scope**: §5.E = E2 (close-policy capability); thread 1 CLOSED as delivered by A/B; the
+  read-only INHERITANCE smell CLOSED as removed by B. Alternative: close §5.E entirely as
+  substantially-delivered and BACKLOG E2 as a standalone cleanup (E2 is small — the owner may prefer
+  it folded into a later duplication sweep). **→ RATIFIED 2026-07-20 (owner "go with recommendation"):
+  E2 is the §5.E deliverable; threads 1 + read-only-inheritance CLOSED as delivered.**
+- **E-D19 — E1 (no-pencil `readOnly`)**: defer to BACKLOG (recommended, the D8/test argument), or
+  build it now for the info-docs only. **→ RATIFIED 2026-07-20: DEFERRED to BACKLOG.**
+- **E-D20 — the field's shape**: a 3-value string policy `closeFromFrameBarPolicy` (recommended, one
+  field, extensible) vs two booleans (`discardOnClose`/`destroyOnClose`) — or a different name.
+  **→ RATIFIED 2026-07-20: 3-value `closeFromFrameBarPolicy`.**
 
 ### Suggested phase order (verifiability, not churn-avoidance)
 1. **A** (FrameWdgt rename+compose) — everything else names it.

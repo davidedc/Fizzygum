@@ -58,11 +58,10 @@ class DocumentWdgt extends FrameWdgt
     doc.disableDragsDropsAndEditing()
     world[flagName] = true
 
-    # one-shot window: close destroys instead of asking to save.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    doc.closeFromFrameBar = ->
-      @destroy()
+    # one-shot info window: closing destroys it outright (no save prompt) --
+    # the tracked close policy (§5.E E2), replacing the untracked instance-method
+    # injection this once was.
+    doc.closeFromFrameBarPolicy = 'destroy'
 
     doc._moveToSideOf nextToThisWidget
     doc._rememberFractionalSituationInHoldingPanel()
@@ -103,18 +102,11 @@ class DocumentWdgt extends FrameWdgt
       @contents.contents.children[0].text == @startingText
     )
 
-  # The save-or-destroy close policy (was the fused class's
-  # closeFromContainerFrame). The citizen IS the window, so the save prompt
-  # takes it in both roles -- the FolderWindowWdgt shape.
-  closeFromFrameBar: ->
-    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt @
-      # there is no real contents to save
-      @fullDestroy()
-    else if !world.anyReferenceToWdgt @
-      prompt = new SaveShortcutPromptWdgt @, @
-      prompt.popUpAtHand()
-    else
-      @close()
+  # The save-or-destroy close policy (§5.E E2: the shared body lives on
+  # FrameWdgt now; this is the citizen's 'saveOrAsk' hook). The citizen IS the
+  # window, so the save prompt takes it in both roles -- the FolderWindowWdgt shape.
+  _closeFromFrameBarWhenSaveOrAsk: ->
+    @_saveOrAskThenCloseCitizen()
 
   # A citizen never falls back to the empty-window placeholder: losing the
   # payload (picked up / destroyed / closed) rebuilds a FRESH one of my kind.

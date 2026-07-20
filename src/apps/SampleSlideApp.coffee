@@ -79,11 +79,9 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     pinOffsetInScrolledContent = mapPin.position().subtract windowWithScrollingPanel.contents.contents.position()
     windowWithScrollingPanel.contents.scrollTo pinOffsetInScrolledContent.subtract new Point 89, 23
     
-    # if we don't do this, the window would ask to save content
-    # when closed. Just close it instead.
-    # TODO: should be done using a flag, we don't like
-    # to inject code like this: the source is not tracked
-    slideWdgt.closeFromFrameBar = ->
-      @close()
+    # closing just closes (no save prompt) -- a sample window isn't worth
+    # saving. The tracked close policy (§5.E E2), replacing the untracked
+    # instance-method injection this once was.
+    slideWdgt.closeFromFrameBarPolicy = 'close'
 
     return slideWdgt

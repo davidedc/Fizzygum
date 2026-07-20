@@ -39,18 +39,11 @@ class GenericPanelWdgt extends FrameWdgt
   hasStartingContentBeenChangedByUser: ->
     @contents?.ratio?
 
-  # The save-or-destroy close policy (was the retired editor's
-  # closeFromContainerFrame). The citizen IS the window, so the save prompt
-  # takes it in both roles -- the FolderWindowWdgt shape.
-  closeFromFrameBar: ->
-    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt @
-      # there is no real contents to save
-      @fullDestroy()
-    else if !world.anyReferenceToWdgt @
-      prompt = new SaveShortcutPromptWdgt @, @
-      prompt.popUpAtHand()
-    else
-      @close()
+  # The save-or-destroy close policy (§5.E E2: the shared body lives on
+  # FrameWdgt now; this is the citizen's 'saveOrAsk' hook). The citizen IS the
+  # window, so the save prompt takes it in both roles -- the FolderWindowWdgt shape.
+  _closeFromFrameBarWhenSaveOrAsk: ->
+    @_saveOrAskThenCloseCitizen()
 
   # A citizen never falls back to the empty-window placeholder: losing the
   # payload rebuilds a FRESH container (was the retired editor's

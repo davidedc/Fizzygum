@@ -9,7 +9,12 @@ class FolderWindowWdgt extends FrameWdgt
   representativeIcon: ->
     new GenericShortcutIconWdgt new FolderIconWdgt
 
-  closeFromFrameBar: ->
+  # A folder always has real content, so no "nothing to save" branch (§5.E E2:
+  # the 'saveOrAsk' hook, routed through FrameWdgt.closeFromFrameBar's dispatch).
+  _closeFromFrameBarWhenSaveOrAsk: ->
+    # public-call-sanctioned + nosettle-sanctioned: this IS the close-from-bar
+    # action; @close is the public self-settling close verb it legitimately
+    # triggers (as the public closeFromFrameBar it replaced did).
     if !world.anyReferenceToWdgt @
       prompt = new SaveShortcutPromptWdgt @, @
       prompt.popUpAtHand()
