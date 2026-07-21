@@ -81,6 +81,17 @@ class SizeAwareIconAppearance extends IconAppearance
       rowW = w - k + rw
       ctx.fillRect x + r0, y + j, rowW, 1 if rowW > 0
 
+  # a rounded-rect PANEL: light halo envelope (expanded o), ink round-rect,
+  # light interior inset by the border thickness tb. The corner radius tracks
+  # each inset, so all four corners carry the same quantized ring -- uniform
+  # by construction. Shared by the shortcut-arrow badge and the slide-card
+  # family (GenericPanel, and the other icons drawn on IconAppearance's
+  # _paintSlideOutline/_paintSlideCard shape as they convert).
+  _pxPanel: (ctx, x, y, w, h, r, tb, o, ink, light) ->
+    @_pxRoundRect ctx, x - o, y - o, w + 2 * o, h + 2 * o, r + o, light
+    @_pxRoundRect ctx, x, y, w, h, r, ink
+    @_pxRoundRect ctx, x + tb, y + tb, w - 2 * tb, h - 2 * tb, Math.max(0, r - tb), light
+
   # a filled round-rect with quarter-circle corners of radius r, as integer row
   # runs: the top/bottom r rows get per-row insets from the circle equation,
   # the middle is one solid rect

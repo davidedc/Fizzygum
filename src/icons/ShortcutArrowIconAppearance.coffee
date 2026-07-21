@@ -46,9 +46,7 @@ class ShortcutArrowIconAppearance extends SizeAwareIconAppearance
     # standard line unit
     tb = 2 * t
     r = Math.max tb, Math.round iS * @BADGE_RADIUS
-    @_pxRoundRect ctx, ix - o, iy - o, iS + 2 * o, iS + 2 * o, r + o, halo
-    @_pxRoundRect ctx, ix, iy, iS, iS, r, ink
-    @_pxRoundRect ctx, ix + tb, iy + tb, iS - 2 * tb, iS - 2 * tb, Math.max(0, r - tb), halo
+    @_pxPanel ctx, ix, iy, iS, iS, r, tb, o, ink, halo
 
     # ---- the swoosh arrow; from 24px up the whole glyph grows 15% about the
     # badge center (the base proportions read small once there is room)

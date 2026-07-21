@@ -2,9 +2,9 @@
 
 **Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
 2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
-vector track (§5b): **LIVE and rolling** — 4 icons landed (Typewriter, Folder,
-ShortcutArrow, and the hybrid Toolbars/super-toolbar) + the `SizeAwareIconAppearance`
-base; further conversions proceed one icon at a time via the local skill
+vector track (§5b): **LIVE and rolling** — 5 icons landed (Typewriter, Folder,
+ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel) + the
+`SizeAwareIconAppearance` base (now incl. the reusable `_pxPanel` slide-card panel); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
@@ -565,6 +565,35 @@ squares tiering hollow-ring → dot → nothing. New lessons:
     the BUILD, not src — build first and the old renders are gone (recovery costs two
     extra builds: park the new file, `git checkout --` the old one, rebuild, dump,
     restore, rebuild).
+
+**5th conversion LANDED (2026-07-21)**: `GenericPanelIconAppearance` — the rounded
+slide-card panel + two floating mini toolbars. The panel ships as the base's reusable
+**`_pxPanel`** (halo + ink + interior round-rects, corner radius tracking each inset →
+all four corners identical by construction, fixing the old uneven bezier corners);
+`ShortcutArrowIconAppearance`'s badge was refactored onto it, golden-master verified
+(all 120 renders of the 4 prior icons byte-identical). The same primitive is the
+landing zone for SimpleSlide / Dashboards / PatchProgramming (the
+`_paintSlideOutline`/`_paintSlideCard` family). The mini toolbars are LOCAL (owner:
+thinner/smaller than the super-toolbar's column, not worth sharing) and introduced a
+third line unit `td = round(S/64)` for the tool-box rings. New lessons:
+
+19. **Sibling elements need shared metrics and explicit separation.** The two toolbars
+    read as one family only when they paint at ONE column width (a pre-pass takes the
+    MIN of their shrink-fits — this also killed a hollow-vs-dot style mismatch), and
+    at tiny sizes clamp cascades squeeze siblings into each other: thread each
+    element's painted extent to the next one's clearance clamp (paint-order
+    dependency), and prefer keeping the design's element COUNT by shrinking width
+    before dropping members (the 4-vs-3 box asymmetry is design).
+20. **Clamps come in hard and soft tiers, and every owner complaint becomes a
+    standing sweep assertion.** Soft clearances (the extra `o` before a border, the
+    2o visual gap) may give at degenerate sizes; hard ones (border ink, a sibling's
+    ink, the corner-arc region `px + r` when punching an edge) never — drop the
+    element instead of painting an overlap. Each review note this arc (right-border
+    gap, equal widths, corner-arc clearance, white-title-line clearance) is now a
+    sweep invariant, incl. a global "no pure-white pixel 4-adjacent to ink" check
+    (valid because the light color is 244,243,244 — pure white exists only in title
+    lines). The white-line clearance fix was back-ported to the already-landed
+    Toolbars icon, which shared the flaw.
 
 ## §6 Phases
 

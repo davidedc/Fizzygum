@@ -203,8 +203,10 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
     ctx.fillRect x + xL + t, y + yT + t, iw, hH
     ctx.fillStyle = @_iconColorString()
     ctx.fillRect x + xL + t, y + yT + t + hH, iw, tc
-    if hH >= 3 * tc
-      lw = Math.round iw * @HEADER_LINE_W
+    # the white line keeps >=1px of gray on every side (clearance is a
+    # spec: rounding can otherwise land its end on the column's ink)
+    lw = Math.min Math.round(iw * @HEADER_LINE_W), iw - 2
+    if hH >= 3 * tc and lw >= 1
       ctx.fillStyle = Color.WHITE.toString()
       ctx.fillRect x + xL + t + Math.round((iw - lw) / 2),
         y + yT + t + Math.round((hH - tc) / 2), lw, tc
