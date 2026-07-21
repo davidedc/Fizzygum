@@ -1,7 +1,12 @@
 # Pixel icons — replace vector IconAppearance files with ASCII index-mask bitmaps
 
-**Status**: PLAN ONLY. AUTHORED 2026-07-18. NOT STARTED. Written to be executed COLD by an
-LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
+**Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
+2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
+vector track (§5b): **LIVE and rolling** — 4 icons landed (Typewriter, Folder,
+ShortcutArrow, and the hybrid Toolbars/super-toolbar) + the `SizeAwareIconAppearance`
+base; further conversions proceed one icon at a time via the local skill
+`/convert-icon-size-aware` and append lessons to §5b without touching this plan's
+phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
 method name / quoted code is authoritative; grep it fresh before trusting a line number.**
 
@@ -535,6 +540,31 @@ carriage→base ink flood-fill sweep (structural invariant). Final shipped const
 `t = round(S/32)`, `tc(keys) = round(S/45)`, `CHASSIS_MARGIN 0.05`/side. References
 recaptured via `scripts/recapture.js --auto --dprs=1,2` (2 tests:
 `macroDesktopShortcutIcons`, `macroSavedDocumentShortcutIcon`).
+
+**4th conversion LANDED (2026-07-21) — the first HYBRID**: `ToolbarsIconAppearance`
+(the super-toolbar: flexing arms + cape + a stacked toolbar column). Owner-directed
+split: the cape and arms KEEP the original fractional bezier artwork (big fills and
+thick strokes render fine under non-AA), while the toolbar column — 1px-in-design-space
+strokes that scale to ~half a device pixel at the real display sizes (launcher 60px,
+info-doc 85px) and drop out or dash under SWCanvas — is redrawn in integer device
+pixels: border `t`, dividers/rings/header-line on the lighter `tc`, gray header band
+with white title line, the design's 5 compartments reduced by clearance rule, tool-box
+squares tiering hollow-ring → dot → nothing. New lessons:
+
+17. **Hybrid conversions are a legitimate shape.** When part of an icon is already
+    non-AA-friendly (big fills, thick strokes), keep that part as fractional bezier
+    artwork inside `_paintSizeAware` (translate + scale to the design space) and redraw
+    ONLY the sub-pixel line work as integer pixels. Two rules make it sound: every KEPT
+    stroke gets clamped to at least one device pixel
+    (`ctx.lineWidth = Math.max designWidth, 1 / sc`), and the byte-identity gate scopes
+    to the integer-painted region — the region's own halo fill overpaints any bezier
+    spill, so the column rect `[xL−o, yT−o, Wc+2o, H+2o]` stays byte-identical
+    native≡SW while the whole image diverges (by design, and that's fine: identity is
+    the verification gate, not the objective).
+18. **Dump the OLD ladder BEFORE the first build of the new class.** The probe renders
+    the BUILD, not src — build first and the old renders are gone (recovery costs two
+    extra builds: park the new file, `git checkout --` the old one, rebuild, dump,
+    restore, rebuild).
 
 ## §6 Phases
 
