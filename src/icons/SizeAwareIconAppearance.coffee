@@ -92,6 +92,25 @@ class SizeAwareIconAppearance extends IconAppearance
     @_pxRoundRect ctx, x, y, w, h, r, ink
     @_pxRoundRect ctx, x + tb, y + tb, w - 2 * tb, h - 2 * tb, Math.max(0, r - tb), light
 
+  # the slide-card panel itself: the landscape rounded card of the family's
+  # original 100-space drawings (ink rect 9..92 x 20..80, ~6-unit corner),
+  # scaled to the glyph square S and painted through _pxPanel with border t.
+  # Returns [px, py, pw, ph, r] -- the card's ink rect and corner radius --
+  # for callers that lay out against it.
+  SLIDE_CARD_L: 0.09
+  SLIDE_CARD_T: 0.20
+  SLIDE_CARD_R: 0.92
+  SLIDE_CARD_B: 0.80
+  SLIDE_CARD_RADIUS: 0.06
+  _pxSlideCard: (ctx, x, y, S, t, o, ink, light) ->
+    px = x + Math.round S * @SLIDE_CARD_L
+    py = y + Math.round S * @SLIDE_CARD_T
+    pw = Math.round(S * @SLIDE_CARD_R) - Math.round(S * @SLIDE_CARD_L)
+    ph = Math.round(S * @SLIDE_CARD_B) - Math.round(S * @SLIDE_CARD_T)
+    r = Math.max t, Math.round(S * @SLIDE_CARD_RADIUS)
+    @_pxPanel ctx, px, py, pw, ph, r, t, o, ink, light
+    [px, py, pw, ph, r]
+
   # a filled round-rect with quarter-circle corners of radius r, as integer row
   # runs: the top/bottom r rows get per-row insets from the circle equation,
   # the middle is one solid rect

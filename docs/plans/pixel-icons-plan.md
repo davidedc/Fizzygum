@@ -2,9 +2,10 @@
 
 **Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
 2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
-vector track (§5b): **LIVE and rolling** — 5 icons landed (Typewriter, Folder,
-ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel) + the
-`SizeAwareIconAppearance` base (now incl. the reusable `_pxPanel` slide-card panel); further conversions proceed one icon at a time via the local skill
+vector track (§5b): **LIVE and rolling** — 6 icons landed (Typewriter, Folder,
+ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming) + the
+`SizeAwareIconAppearance` base (now incl. the reusable `_pxPanel` rounded panel and the
+family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
@@ -576,6 +577,20 @@ landing zone for SimpleSlide / Dashboards / PatchProgramming (the
 `_paintSlideOutline`/`_paintSlideCard` family). The mini toolbars are LOCAL (owner:
 thinner/smaller than the super-toolbar's column, not worth sharing) and introduced a
 third line unit `td = round(S/64)` for the tool-box rings. New lessons:
+
+**6th conversion LANDED (2026-07-21)**: `PatchProgrammingIconAppearance` — the family
+slide card + the patch motif (quantized ring node, border-idiom square node, a `t`
+wire meeting each node's outer wall exactly; the old wire crossed INTO both nodes).
+The card geometry hoisted into the base as **`_pxSlideCard`** (fractions + radius +
+`_pxPanel`, returns the ink rect); GenericPanel refactored onto it, golden-master
+verified (150 renders byte-identical). New lessons: (21) **a 1px-wall quantized ring
+4-disconnects into arcs below k = 6** (and steps diagonally at every size) — hollow
+circles gate on `k − 2t ≥ 2 AND k ≥ 6`, and structural flood-fill sweeps must be
+**8-connected** for curved ink (the wire still meets nodes 4-connectedly; a real gap
+still fails). (22) **Nodes/content need explicit clearance clamps against the card
+ring** — rounding parks content ON the border at some sizes (the 17px circle), the
+same bug class as the toolbar backings; the sweep guards it via a
+border-contamination check on the flood.
 
 19. **Sibling elements need shared metrics and explicit separation.** The two toolbars
     read as one family only when they paint at ONE column width (a pre-pass takes the

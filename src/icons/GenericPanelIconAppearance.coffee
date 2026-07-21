@@ -15,12 +15,8 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
   preferredSize: new Point 100, 100
 
   # ---- proportions, fractions of the glyph square (numbers from the
-  # original 100-space drawing) ----------------------------------------------
-  PANEL_L: 0.09       # panel ink rect (9..92 x 20..80)
-  PANEL_T: 0.20
-  PANEL_R: 0.92
-  PANEL_B: 0.80
-  PANEL_RADIUS: 0.06  # the design's ~6-unit corner, fraction of S
+  # original 100-space drawing; the panel itself is the base's shared
+  # slide card) ---------------------------------------------------------------
   # the two mini toolbars: [frame left, frame top, design box count, hangs
   # below the panel]. The 4-vs-3 length asymmetry is part of the design --
   # box count only drops when even a shrunk column can't fit
@@ -50,12 +46,7 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
     u.o = u.t                           # halo/envelope thickness
 
     # the landscape rounded card
-    px = x + Math.round S * @PANEL_L
-    py = y + Math.round S * @PANEL_T
-    pw = Math.round(S * @PANEL_R) - Math.round(S * @PANEL_L)
-    ph = Math.round(S * @PANEL_B) - Math.round(S * @PANEL_T)
-    r = Math.max u.t, Math.round(S * @PANEL_RADIUS)
-    @_pxPanel ctx, px, py, pw, ph, r, u.t, u.o, u.ink, u.light
+    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, u.t, u.o, u.ink, u.light
 
     # a toolbar's light backing may punch the panel's TOP border (right
     # toolbar) and BOTTOM border (left toolbar) -- that's the design -- but
