@@ -151,6 +151,10 @@ Archived docs are immutable history — the current-state truth lives in
 - **`island-buffer-cache-plan.md`** — COMPLETE. Completes the affine-transforms island buffer cache so transform-only changes never re-rasterize content; measured 1.40x.
   - ⚖ async glyph-atlas freeze — SWCanvas-only race, needs an epoch bump; native unaffected
 - **`island-buffer-cache-rectlist-plan.md`** — COMPLETE. Upgrades the island buffer cache's single dirty rect to a disjoint rect-list so multi-region damage rebuilds only touched sub-rects.
+- **`selection-overlay-unification-plan.md`** — COMPLETE + LANDED (2026-07-21). Replaces the world-attached HighlighterWdgt editor-focus indicator with a per-widget PAINT-TIME selection overlay (`Widget._drawSelectionOverlay`, drawn after the subtree, clipped to the widget's visible footprint), folding the spreadsheet cell ring into one mechanism; hover hook `paintHighlight`→`_drawHighlightOverlay`.
+  - ⚖ the overlay respects a widget's OWN clipping — a selected widget overflowing its clipping island shows only its VISIBLE edges; an open-bottomed frame there is CORRECT, not a bug (the old world-child indicator drew the full frame only because it escaped clipping)
+  - ⚖ the frame is TRANSIENT editor-focus state — it breaks byte-identity round-trip tests that screenshot two same-document points with different selection (deselect before such shots); a dropped item in an editing container is SELECTED (D21)
+  - ⚖ "flakes only in the parallel suite" ≠ determinism bug — confirm with single-process runs + heavy-cycle injection first; here it was stale refs (dpr1-only footprint) + boot-storm infra flakes, not nondeterminism
 - **`swcanvas-invisible-pixel-hash-nondeterminism-plan.md`** — PARKED. Investigates a raw-pixel-hash test failure with zero visible PNG difference; the diagnosed A=0 mechanism was disproven and the plan parked.
   - ⚖ Diagnosis tell — pixel-identical PNGs with differing hashes means THIS bug class
   - ⚖ Do not backfill references on the strength of the now-contradicted A=0 hypothesis

@@ -1,3 +1,6 @@
+> **ARCHIVED — ✅ COMPLETE + LANDED (2026-07-21).** Implemented and gauntlet-green; commits Fizzygum `9a673549` + Fizzygum-tests `0b6acc769` (master). The world-attached HighlighterWdgt editor-focus indicator is REPLACED by a per-widget paint-time selection overlay (`Widget._drawSelectionOverlay`, drawn after the subtree, clipped to the widget's visible footprint); §5.D D-3/D21 world-child indicator superseded. The hover hook `paintHighlight` was renamed `_drawHighlightOverlay`. Chrome is excluded via `excludedFromEditorFocusTracking`; the spreadsheet cell keeps its own inline ring.
+> Historical record + case law; do not execute — the body below still reads "no code written" as authored. Index: `docs/archive/INDEX.md`.
+
 # Selection-overlay unification — draw the editor-focus selection as a per-widget PAINT-TIME overlay
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
