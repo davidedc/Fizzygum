@@ -41,4 +41,4 @@ class DragChargingRingAppearance extends Appearance
 
     aContext.restore()
 
-    @paintHighlight aContext, al, at, w, h
+    @_drawHighlightOverlay aContext, al, at, w, h

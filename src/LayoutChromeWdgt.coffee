@@ -15,6 +15,13 @@ class LayoutChromeWdgt extends Widget
 
   thisSpacerIsTransparent: false
 
+  # Layout-editing CHROME (the spacer, the element adder/droplet, the stack-size adjuster / divider) is
+  # never editor content (§5.D D-3/D21). Clicking or dragging one to reshape a layout must NOT make it
+  # world.editorFocusWdgt -- otherwise the editor-focus SELECTION overlay frames the chrome (it sits inside
+  # the edited container's editing-amenity subtree, so the D21 walk would reach it). Same exemption as the
+  # frame-bar chrome / handles / scrollbars; honored by ancestry at ActivePointerWdgt's focus-set sites.
+  excludedFromEditorFocusTracking: -> true
+
   # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
@@ -54,12 +61,12 @@ class LayoutChromeWdgt extends Widget
 
     aContext.restore()
 
-    # paintHighlight is usually made to work with
+    # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels
     # rather than logical pixels, so it's generally used
     # outside the effect of the scaling because
     # of the ceilPixelRatio (i.e. after the restore)
-    @paintHighlight aContext, al, at, w, h
+    @_drawHighlightOverlay aContext, al, at, w, h
 
   # The drawing tail: runs in logical pixels with the origin already translated
   # to the widget position. Default: the affordance drawn (with a darker drop

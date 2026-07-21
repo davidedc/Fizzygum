@@ -431,8 +431,37 @@ class Widget extends TreeNode
   # so any highlighting is only visible in the measure that
   # the widget is visible (as opposed to HighlighterWdgt being
   # used to highlight a widget)
-  paintHighlight: (aContext, al, at, w, h) ->
-    @appearance?.paintHighlight aContext, al, at, w, h
+  _drawHighlightOverlay: (aContext, al, at, w, h) ->
+    @appearance?._drawHighlightOverlay aContext, al, at, w, h
+
+  # Selection overlay (selection-overlay-unification arc, supersedes the §5.D D-3/D21 world-attached
+  # HighlighterWdgt). The editor-focus selection is a per-widget decoration drawn ON TOP of the selected
+  # widget -- NOT a separate world/island widget -- so it rides that widget's own z-order (a click that
+  # brings the window to the front can't bury it, the old bug) and is never baked into any cached buffer.
+  # It is drawn AFTER my whole subtree (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow),
+  # so a CONTAINER's frame sits on top of its children too (own-content-level would let the children hide
+  # it). Both halves are overridable so every widget decides WHETHER it is selected and HOW that looks;
+  # the default frames the editor-selected widget (WorldWdgt._widgetBeingEdited, cached once per cycle)
+  # with a calm teal outline. (The spreadsheet cell's blue ring is a separate MODEL selection drawn inline
+  # -- CellWdgt.paintIntoAreaOrBlitFromBackBuffer -- since a cell is never the editor-focus widget.)
+  _showsSelectionOverlay: ->
+    world?.isEditorSelected @
+  _drawSelectionOverlay: (aContext, al, at, w, h) ->
+    # the teal outline the old editor-focus HighlighterWdgt drew (D19, Color 38,166,154): a 1px stroke on my
+    # own screen footprint, half-pixel-inset for a crisp line (see RectangularAppearance.paintStroke), clipped
+    # to my visible rect so a partially-scrolled widget is not outlined past its clip.
+    aContext.save()
+    aContext.beginPath()
+    aContext.rect Math.round(al), Math.round(at), Math.round(w), Math.round(h)
+    aContext.clip()
+    aContext.globalAlpha = 1
+    aContext.lineWidth = 1
+    aContext.strokeStyle = Color.create(38, 166, 154, 1).toString()
+    aContext.strokeRect (Math.round(@left() * ceilPixelRatio) + 0.5),
+      (Math.round(@top() * ceilPixelRatio) + 0.5),
+      (Math.round(@width() * ceilPixelRatio) - 1),
+      (Math.round(@height() * ceilPixelRatio) - 1)
+    aContext.restore()
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
@@ -2844,6 +2873,21 @@ class Widget extends TreeNode
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
+    @_paintEditorSelectionOverlayIfSelected aContext, clippingRectangle, appliedShadow
+
+  # The editor-focus SELECTION overlay, drawn AFTER my whole subtree so a CONTAINER's frame sits on top of
+  # its children (at own-content level the children would hide it, leaving only a partial frame). Called as
+  # the widget-type's LAST paint step: here, at the tail of the base content-paint; a clipping panel calls
+  # it instead at the tail of its fullPaintIntoAreaOrBlitFromBackBuffer (after its border re-draw, which
+  # itself runs after the children). TransformFrameWdgt's non-identity island renders children into its
+  # buffer where each draws its own, so a rotated island's selected content warps for free. Never in the
+  # shadow pass, and only for the ONE selected widget (an O(1) check), so calculateKeyValues costs nothing
+  # on the common path.
+  _paintEditorSelectionOverlayIfSelected: (aContext, clippingRectangle, appliedShadow) ->
+    return if appliedShadow? or !@_showsSelectionOverlay()
+    [area, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
+    return unless area? and area.isNotEmpty() and w >= 1 and h >= 1
+    @_drawSelectionOverlay aContext, al, at, w, h
 
   # ... when you want to hide something
   # but you don't want to generate any

@@ -9,7 +9,7 @@ class RectangularAppearance extends Appearance
           return false
     return true
 
-  # paintHighlight can work in two patterns:
+  # _drawHighlightOverlay can work in two patterns:
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
   #    "useLogicalPixelsUntilRestore()", or
@@ -23,7 +23,7 @@ class RectangularAppearance extends Appearance
   # so any highlighting is only visible in the measure that
   # the widget is visible (as opposed to HighlighterWdgt being
   # used to highlight a widget)
-  paintHighlight: (aContext, al, at, w, h) ->
+  _drawHighlightOverlay: (aContext, al, at, w, h) ->
     return
     
     #if !@widget.highlighted
@@ -102,12 +102,12 @@ class RectangularAppearance extends Appearance
 
     aContext.restore()
 
-    # paintHighlight is usually made to work with
+    # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels
     # rather than logical pixels, so it's generally used
     # outside the effect of the scaling because
     # of the ceilPixelRatio
-    @paintHighlight aContext, al, at, w, h
+    @_drawHighlightOverlay aContext, al, at, w, h
 
   paintStroke: (aContext, clippingRectangle) ->
 

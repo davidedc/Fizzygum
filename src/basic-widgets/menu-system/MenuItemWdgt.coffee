@@ -18,6 +18,13 @@ class MenuItemWdgt extends LabelButtonWdgt
     super menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, menuItemSpec.target, menuItemSpec.action, (menuItemSpec.label or "close"), fontSize, fontStyle, centered, environment, widgetEnv, menuItemSpec.toolTipMessage, menuItemSpec.color, menuItemSpec.bold, menuItemSpec.italic, menuItemSpec.doubleClickAction, menuItemSpec.argumentToAction1, menuItemSpec.argumentToAction2, menuItemSpec.representsAWidget
     @actionableAsThumbnail = true
 
+  # As a menu/list ROW I am the selectable UNIT (and I stretch FULL-WIDTH in a list), but a click lands on
+  # my tight LABEL child. So the editor-focus selection frame must hug ME, not the label's text bounds
+  # (owner: a tight-text highlight is visual noise). WorldWdgt._widgetBeingEdited resolves a selected
+  # descendant (my label) up to me through this. Capability, not an `instanceof MenuItemWdgt` type-test
+  # (type-test-elimination convention — the same reason my glass-box sizing uses a capability, above).
+  absorbsDescendantEditorSelection: -> true
+
   # In a glass box I am sized to my (variable-width) text, not laid out as a square
   # thumbnail like other contents -- the glass-box layout in GlassBoxBottomWdgt
   # keys off this instead of `instanceof MenuItemWdgt`.

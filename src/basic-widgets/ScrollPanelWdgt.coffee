@@ -10,6 +10,13 @@ class ScrollPanelWdgt extends PanelWdgt
   vBar: nil
   hBar: nil
 
+  # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
+  # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay) or content (a dropped
+  # value control → framable). Only my actual bars match, so a content slider dropped into my content stays
+  # framable. See SliderWdgt.excludedFromEditorFocusTracking.
+  isMyScrollBar: (aWdgt) ->
+    aWdgt is @vBar or aWdgt is @hBar
+
   # there are several ways in which we allow
   # scrolling when a ScrollPanel is scrollable
   # (i.e. the scrollbars are showing).

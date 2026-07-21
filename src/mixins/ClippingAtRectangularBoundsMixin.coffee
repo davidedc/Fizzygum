@@ -110,6 +110,10 @@ ClippingAtRectangularBoundsMixin =
             if !@paintStroke?
               debugger
             @paintStroke aContext, clippingRectangle
+            # editor-focus SELECTION overlay LAST -- after my own border re-draw above, else that border
+            # (drawn to survive the children painting over it) would in turn paint over my selection frame.
+            # (Base Widget draws it at the tail of its content-paint; a clipping panel needs it here.)
+            @_paintEditorSelectionOverlayIfSelected aContext, clippingRectangle, appliedShadow
 
       
       _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->

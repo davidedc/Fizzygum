@@ -14,7 +14,7 @@ class Appearance
 
   isTransparentAt: (aPoint) ->
 
-  # paintHighlight can work in two patterns:
+  # _drawHighlightOverlay can work in two patterns:
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
   #    "useLogicalPixelsUntilRestore()", or
@@ -28,7 +28,7 @@ class Appearance
   # so any highlighting is only visible in the measure that
   # the widget is visible (as opposed to HighlighterWdgt being
   # used to highlight a widget)
-  paintHighlight: (aContext, al, at, w, h) ->
+  _drawHighlightOverlay: (aContext, al, at, w, h) ->
 
 
   # Shared paint preamble for the appearance paint methods: bail (nil) if there is nothing to draw, else return

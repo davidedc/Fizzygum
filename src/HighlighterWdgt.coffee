@@ -52,10 +52,10 @@ class HighlighterWdgt extends RectangleWdgt
   @candidateOutlineStyle: -> {form: "outline", color: Color.create(248, 188, 58, 1), alpha: 1}
   @reluctantOutlineStyle: -> {form: "outline", color: Color.create(140, 140, 140, 1), alpha: 1}
 
-  # Editor-focus indicator (§5.D D-3): the THIRD distinct outline colour (hover = blue FILL, drag
-  # candidate = pencil-yellow OUTLINE, reluctant = gray OUTLINE — all taken). A calm teal accent frames
-  # the widget currently being EDITED (WorldWdgt.addEditorFocusIndicatorWidget). Colour owner-eyeballed.
-  @editorFocusOutlineStyle: -> {form: "outline", color: Color.create(38, 166, 154, 1), alpha: 1}
+  # NOTE: the editor-focus indicator (§5.D D-3/D21) NO LONGER uses a HighlighterWdgt. It is now a per-widget
+  # PAINT-TIME selection overlay drawn on top of the selected widget's own content (Widget._drawSelectionOverlay,
+  # teal Color 38,166,154) -- see the selection-overlay-unification arc. The removed @editorFocusOutlineStyle
+  # descriptor lived here.
 
   applyHighlightStyle: (style) ->
     if style.form is "outline"

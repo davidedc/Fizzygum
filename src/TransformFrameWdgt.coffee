@@ -8,6 +8,13 @@
 
 class TransformFrameWdgt extends PanelWdgt
 
+  # I am a structural transform WRAPPER around ONE content subtree, never editor content myself: when a
+  # MOVE of a tilted widget makes ME world.editorFocusWdgt, the editor-focus selection must frame my
+  # CONTENT (which draws its frame WARPED inside my island buffer), not ME (my own @bounds are un-rotated,
+  # so framing me draws an axis-aligned box that ignores the tilt). WorldWdgt._widgetBeingEdited resolves
+  # through this to my content. Capability, not an `instanceof` type-test (type-test-elimination convention).
+  resolvesEditorSelectionToContent: -> true
+
   transformSpec: nil
   # Phase 3 (§4.9): last claimed extent reported to the parent layout, for reflow-on-change
   # detection. nil for a 'slot' island (paint-only, never reflows) -- 'footprint' is the

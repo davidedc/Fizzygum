@@ -4,6 +4,12 @@
 
 class SliderButtonWdgt extends CircleBoxWdgt
 
+  # The slider knob is CHROME -- the interactive handle of a slider/scrollbar, never editor content.
+  # Dragging or clicking it must NOT make it world.editorFocusWdgt: framing the little knob is pure visual
+  # noise (there is nothing a user acts on about the knob itself). Same exemption as the other affordances
+  # (handles, scrollbars, layout chrome); honored by ancestry at ActivePointerWdgt's focus-set sites.
+  excludedFromEditorFocusTracking: -> true
+
   highlightColor: Color.create 110, 110, 110
   pressColor: Color.create 100, 100, 100
   normalColor: Color.BLACK

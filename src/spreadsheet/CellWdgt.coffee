@@ -117,6 +117,11 @@ class CellWdgt extends Widget
       # that is sheet col/row 0, exactly the pre-scroll form)
       colRow = sheetWidget.model.colRowFor @address
       sheetWidget.paintGridEdges aContext, @width(), @height(), (colRow?.col is sheetWidget.viewOriginCol), (colRow?.row is sheetWidget.viewOriginRow)
+      # my MODEL selection ring (F5 receipt B): drawn INLINE here, in my own logical-pixel scope, fully
+      # INSIDE me (band [1,3), under my hosted child). This is a distinct concern from the editor-focus
+      # SELECTION overlay (Widget._drawSelectionOverlay): a cell is never world.editorFocusWdgt (clicks
+      # escalate to the sheet; SheetCellsPanelWdgt opts its cells out of the editor-selection walk), so the
+      # generic teal overlay never fires for me -- I own my selection look, the sheet owns the state.
       if sheetWidget.isSelectedAddress @address
         aContext.strokeStyle = sheetWidget.selectionColor.toString()
         aContext.lineWidth = 2

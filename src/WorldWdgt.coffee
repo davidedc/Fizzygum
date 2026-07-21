@@ -280,11 +280,14 @@ class WorldWdgt extends PanelWdgt
   dragEmbedLabelWdgt: nil
   dragEmbedLockBadgeWdgt: nil
 
-  # --- editor-focus indicator overlay (§5.D D-3) --------------------------------------------------
-  # The single ephemeral outline framing the widget currently being EDITED. PULL model: computed each
-  # cycle from editorFocusWdgt + the edit-mode predicate (addEditorFocusIndicatorWidget), never pushed,
-  # so it can't drift. nil = none this cycle.
-  editorFocusIndicatorWdgt: nil
+  # --- editor-focus selection (§5.D D-3/D21; selection-overlay-unification arc) --------------------
+  # The widget generically SELECTED for editing this cycle, or nil. PULL model: recomputed each cycle from
+  # editorFocusWdgt + the edit-mode predicate (_updateEditorSelectionOverlay), so it can't drift. The
+  # selection is drawn as a per-widget PAINT-TIME overlay (Widget._drawSelectionOverlay) on top of the
+  # selected widget's own content, NOT a separate world-attached widget -- so it rides that widget's own
+  # z-order + back-buffer for free. This is a once-per-cycle cache; the per-widget paint reads it via the
+  # O(1) _isEditorSelected identity check (never the tree-walking _widgetBeingEdited).
+  _editorSelectedWidget: nil
 
   steppingWdgts: new Set
 
@@ -1607,14 +1610,19 @@ class WorldWdgt extends PanelWdgt
       @dragEmbedLockBadgeWdgt.fullDestroy()
       @dragEmbedLockBadgeWdgt = nil
 
-  # The widget currently being EDITED (§5.D D-3, decision D18), or nil. editorFocusWdgt is the sticky
-  # focus POINTER (the last content clicked/dropped); "being edited" narrows that to an ACTIVE editing
-  # session so the indicator frames "you are editing THIS", not the pointer at rest:
-  #   TEXT     — a caret is up editing exactly this focus widget. They coincide: the click that sets
-  #              editorFocusWdgt = w dispatches to w, whose text handler calls world.edit @ (= w).
-  #   CITIZEN  — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
-  #              (dragsDropsAndEditingEnabled). Fires only when the focus leaf IS the panel — a text
-  #              leaf inside it has no amenities, so it goes through the caret branch instead.
+  # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or nil. editorFocusWdgt
+  # is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a SELECTED
+  # op-target within an active editing context, so the indicator frames "this is what an op will act on":
+  #   TEXT      — a caret is up editing exactly this focus widget. They coincide: the click that sets
+  #               editorFocusWdgt = w dispatches to w, whose text handler calls world.edit @ (= w).
+  #   CITIZEN   — a pencil-capable widget (providesAmenitiesForEditing) with the pencil engaged
+  #               (dragsDropsAndEditingEnabled). Fires when the focus leaf IS the panel — a text leaf
+  #               inside it has no amenities, so it goes through the caret branch instead.
+  #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
+  #     ITEM      or image dropped into a document: it has no "edit mode" of its own, but ops (alignment,
+  #               …) target it, so it shows the same outline. Its nearest editing-amenities ANCESTOR
+  #               (excluding the world) must be in edit mode — a bare selection on the desktop is NOT
+  #               framed (the world is an editable panel but is not an "editor" holding selected items).
   # Stale-pointer guarded (belt to D2b's destroy-time clear): the target must still be attached here.
   _widgetBeingEdited: ->
     focus = @editorFocusWdgt
@@ -1624,42 +1632,68 @@ class WorldWdgt extends PanelWdgt
     # branch below would otherwise outline the WHOLE screen. The world is never a "widget being edited".
     return nil if focus is @
     return nil unless focus.root() is @
+    # A transform ISLAND (the sugar wrapper setRotationDegrees / setScaleFactor materialises, or an explicit
+    # TransformFrameWdgt) is structural chrome around content -- never editor content ITSELF. A MOVE of a
+    # tilted widget makes the island the focus (a click INTO the content focuses the content directly), and
+    # the island is a PanelWdgt with editing enabled, so the citizen branch below would frame the ISLAND --
+    # drawing an AXIS-ALIGNED box around the island's own (un-rotated) bounds (the rotation lives in its
+    # transformSpec, not its @bounds). Resolve to the wrapped CONTENT instead: it draws its frame WARPED
+    # inside the island buffer, so a tilted editor is framed exactly like the non-tilted one. Loop for
+    # nested islands (rotate-then-scale can wrap twice); an empty wrapper resolves to nil.
+    while focus.resolvesEditorSelectionToContent?()
+      focus = focus.childrenNotHandlesNorCarets()?[0]
+      return nil unless focus?
+    # A menu/list ROW (MenuItemWdgt) is the selectable UNIT, and it is FULL-WIDTH in its list; but a click
+    # lands on its tight LABEL child (the deepest widget). Resolve the label up to the row so the selection
+    # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
+    if focus.parent?.absorbsDescendantEditorSelection?()
+      focus = focus.parent
     if @caret? and @caret.target is focus
       return focus
     if focus.providesAmenitiesForEditing and focus.dragsDropsAndEditingEnabled
       return focus
+    # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.
+    # Walk to the nearest container that has an OPINION on editing amenities, stopping BEFORE the world
+    # (a desktop selection is not "in an editor"):
+    #   amenities === true  → frame focus, but only if the pencil is engaged (view mode ⇒ no indicator).
+    #   amenities === false → STOP, no frame: a container that EXPLICITLY opts out manages its own
+    #                         selection UI (a spreadsheet's cell grid draws its own cell highlight), so a
+    #                         second outline would just be clutter.
+    #   undefined (no opinion, the Widget default) → keep walking up.
+    container = focus.parent
+    while container? and container isnt @
+      if container.providesAmenitiesForEditing is true
+        return (if container.dragsDropsAndEditingEnabled then focus else nil)
+      if container.providesAmenitiesForEditing is false
+        return nil
+      container = container.parent
     nil
 
-  # Reconcile the SINGLE editor-focus indicator overlay to _widgetBeingEdited() -- a thin teal outline
-  # (D19) framing the widget being edited, created/re-homed/destroyed once per cycle just before paint,
-  # the same declare-and-reconcile shape as addHighlightingWidgets. It is an EPHEMERAL, layout-inert
-  # HighlighterWdgt, so it never disturbs a size-tracking container's content bounds. PULL, not push
-  # (D-3-iii): the target is recomputed here, never wired into the focus-set sites, so it can't drift.
-  # docs/plans/onion-widget-composition-plan.md §5.D D-3.
-  addEditorFocusIndicatorWidget: ->
+  # Recompute, once per cycle just before paint, which widget is generically SELECTED for editing
+  # (_widgetBeingEdited, §5.D D-3/D21) and cache it for the per-widget paint-time selection overlay
+  # (Widget._drawSelectionOverlay). On a CHANGE (retarget, or on/off) invalidate BOTH the old and new
+  # widgets so their paint (hence the after-subtree overlay draw) re-runs and the broken-rect repaint
+  # clears the old outline / draws the new one -- the selection-change invalidation the old HighlighterWdgt
+  # used to get from its own changed()/fullDestroy(). A MOVING target needs no handling here: moving a widget already
+  # invalidates it, so its overlay follows for free (unlike the old reconciler, which had to re-bounds).
+  # PULL, not push (D-3-iii): the target is recomputed here, never wired into the focus-set sites. Same
+  # doOneCycle slot the old addEditorFocusIndicatorWidget reconciler ran in.
+  _updateEditorSelectionOverlay: ->
     target = @_widgetBeingEdited()
+    return if target is @_editorSelectedWidget
+    previous = @_editorSelectedWidget
+    @_editorSelectedWidget = target
+    # only invalidate a still-attached previous widget: a destroyed one already invalidated its region on
+    # fullDestroy, and changed() on a detached widget can't reach the broken-rect list anyway.
+    previous.changed() if previous? and previous.root() is @
+    target?.changed()
 
-    unless target?
-      if @editorFocusIndicatorWdgt?
-        @editorFocusIndicatorWdgt.fullDestroy()
-        @editorFocusIndicatorWdgt = nil
-      return
-
-    unless @editorFocusIndicatorWdgt?
-      @editorFocusIndicatorWdgt = new HighlighterWdgt
-      @editorFocusIndicatorWdgt.applyHighlightStyle HighlighterWdgt.editorFocusOutlineStyle()
-      @editorFocusIndicatorWdgt.wdgtThisWdgtIsHighlighting = nil
-
-    indicator = @editorFocusIndicatorWdgt
-    # Re-home + re-bounds only on a real change (a retarget, or the target's paint bounds moving) --
-    # keeping the overlay in the TARGET'S PLANE (innermost enclosing non-identity island) so it warps +
-    # clips with the target for free; a target off any island resolves to the world (byte-identical
-    # dormant). Mirrors addHighlightingWidgets; the same-target, same-bounds cycle touches nothing.
-    if indicator.wdgtThisWdgtIsHighlighting isnt target or target.hasMaybeChangedPaintBounds()
-      indicator.wdgtThisWdgtIsHighlighting = target
-      desiredParent = target._enclosingNonIdentityIsland() ? @
-      desiredParent.add indicator  if indicator.parent isnt desiredParent
-      indicator._applyBounds target.clippedThroughBounds()
+  # Is w the widget generically selected for editing this cycle? PUBLIC query (called cross-object from
+  # any widget's Widget._showsSelectionOverlay, like the spreadsheet's public isSelectedAddress): an O(1)
+  # identity check against the once-per-cycle cache, so the per-widget paint never walks the tree (that is
+  # _widgetBeingEdited, run once above).
+  isEditorSelected: (w) ->
+    w is @_editorSelectedWidget
 
 
   # »>> this part is only needed for VideoPlayer
@@ -1819,7 +1853,7 @@ class WorldWdgt extends PanelWdgt
     @addPinoutingWidgets()
     # this part is excluded from the fizzygum homepage build <<«
     @addHighlightingWidgets()
-    @addEditorFocusIndicatorWidget()
+    @_updateEditorSelectionOverlay()
     @addDragAffordanceWidgets()
 
     # here is where the repainting on screen happens
@@ -2418,11 +2452,11 @@ class WorldWdgt extends PanelWdgt
     @widgetsToBePinouted.clear()
     @currentPinoutingWidgets.clear()
     @widgetsBeingPinouted.clear()
-    # the editor-focus indicator overlay is world-level state NOT held as tracked-tree bookkeeping: the
-    # WIDGET is destroyed by fullDestroyChildren above (it is a world/island descendant), so just drop
-    # the dangling ref -- same rationale as the highlight sets. editorFocusWdgt itself is cleared in
-    # _softResetWorld, so the PULL reconciler would compute nil next cycle regardless.
-    @editorFocusIndicatorWdgt = nil
+    # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
+    # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
+    # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
+    # regardless; the selected widget's own repaint clears its overlay.
+    @_editorSelectedWidget = nil
     # the "basementWdgt" is not attached to the
     # world tree so it's not in the children,
     # so we need to clean up separately

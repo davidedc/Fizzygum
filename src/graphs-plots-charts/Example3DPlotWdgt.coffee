@@ -207,12 +207,12 @@ class Example3DPlotWdgt extends Widget
 
     aContext.restore()
 
-    # paintHighlight here is made to work with
+    # _drawHighlightOverlay here is made to work with
     # al, at, w, h which are actual pixels
     # rather than logical pixels, this is why
     # it's called outside the effect of the scaling
     # (after the restore).
-    @paintHighlight aContext, al, at, w, h
+    @_drawHighlightOverlay aContext, al, at, w, h
 
   mouseMove: (pos, mouseButton) ->
     if world.hand.isThisPointerDraggingSomething() then return

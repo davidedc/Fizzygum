@@ -37,6 +37,14 @@ class FrameBarWdgt extends Widget
   colloquialName: ->
     "title bar"
 
+  # The title bar and all its pieces (titlebarBackground / label / the chrome buttons) are frame CHROME,
+  # never editor content (§5.D D-3/D21). Clicking the title must NOT make the hit piece world.editorFocusWdgt
+  # -- otherwise the editor-focus SELECTION overlay frames the title (it sits inside the frame's
+  # editing-amenity subtree, so the D21 walk would reach it). Declared on the bar so it covers every piece
+  # BY ANCESTRY at ActivePointerWdgt's focus-set sites (the pieces are my children; the buttons also exclude
+  # themselves via IconButtonWdgt).
+  excludedFromEditorFocusTracking: -> true
+
   # I draw NOTHING myself -- my titlebarBackground piece draws the strip -- so I am
   # transparent EVERYWHERE and hit-testing must fall THROUGH me: to my pieces (opaque
   # where the strip is drawn), to the frame body at the 1px border the background

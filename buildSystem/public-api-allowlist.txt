@@ -31,7 +31,6 @@ addText             # ErrorsLogViewerWdgt log-append verb; its body drives the p
 updatePatternsMenuEntriesTicks  # Wallpaper menu-tick refresher; drives public .setText on its menu entries — rule [A] forbids the _-form
 createErrorConsole        # WorldWdgt error-path builder; drives public setExtent/moveTo/add — rules [A]/[G] forbid the _-form
 addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives public add/fullDestroy/setWidth — [A]/[G] forbid the _-form
-addEditorFocusIndicatorWidget  # WorldWdgt editor-focus indicator reconciler (§5.D D-3); peer of addDragAffordanceWidgets, drives public add/fullDestroy — [A]/[G] forbid the _-form
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
 bringUpTarget             # IconicDesktopSystemShortcut shared "open the referenced target" ritual; drives public show/spawnNextTo/setTitle on other widgets — [A]/[G] forbid the _-form

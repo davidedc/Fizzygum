@@ -24,6 +24,13 @@ class HandleWdgt extends Widget
   changeShouldRememberFractionalGeometry: ->
     true
 
+  # Resize / move / rotate handles are CHROME, never editor content (§5.D D-3/D21). Clicking or dragging a
+  # handle to reshape a widget must NOT make the handle world.editorFocusWdgt -- otherwise the editor-focus
+  # SELECTION overlay frames the HANDLE (it sits inside the reshaped widget's editing-amenity frame, so the
+  # D21 walk would reach it). Same exemption as the frame-bar chrome (IconButtonWdgt / FrameBarWdgt);
+  # honored by ancestry at ActivePointerWdgt's focus-set sites.
+  excludedFromEditorFocusTracking: -> true
+
   # I am NOT given a target to attach to, and I do NOT attach myself. Like every other widget I am built
   # here and ATTACHED by whoever adds me: `someWidget.add handle` (self-settling, the standard discrete
   # attach) or `someWidget._addNoSettle handle` (deferred, inside a builder's own settle). defaultLayoutSpec
@@ -145,12 +152,12 @@ class HandleWdgt extends Widget
 
     aContext.restore()
 
-    # paintHighlight is usually made to work with
+    # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels
     # rather than logical pixels, so it's generally used
     # outside the effect of the scaling because
     # of the ceilPixelRatio (i.e. after the restore)
-    @paintHighlight aContext, al, at, w, h
+    @_drawHighlightOverlay aContext, al, at, w, h
 
   drawArrow: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
     context.beginPath()

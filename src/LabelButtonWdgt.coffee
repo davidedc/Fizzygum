@@ -164,7 +164,7 @@ class LabelButtonWdgt extends ButtonWdgt
       true, # push and pop the context
       appliedShadow
 
-    @paintHighlight aContext, al, at, w, h
+    @_drawHighlightOverlay aContext, al, at, w, h
 
   # a copied label button usually wants to un-highlight itself (e.g. when you
   # duplicate by clicking a "duplicate" button INSIDE it).

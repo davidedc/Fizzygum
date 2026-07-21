@@ -20,6 +20,16 @@ class IconButtonWdgt extends ButtonWdgt
   iconHoverColor: Color.create 255, 153, 0
   iconToolTipMessage: nil
 
+  # Frame-bar chrome, never editor content (§5.D D-3/D21 correction 1). This whole family IS the window
+  # chrome (close / collapse / uncollapse / edit — the only IconButtonWdgt subclasses). Clicking the
+  # eye/pencil to toggle a frame's edit mode, or collapsing/closing it, must NOT set world.editorFocusWdgt
+  # to the button (the SELECTED-ITEM overlay would then frame the button, since it sits inside an
+  # editing-amenity frame) NOR end the ongoing content edit -- exactly the editor-chrome exemption
+  # SimpleButtonWdgt gives its opt-in `actsAsEditorChrome` buttons, but unconditional here because every
+  # icon button in this family is chrome. Honored by ancestry at ActivePointerWdgt's focus-set + caret
+  # sites, so it also covers a click landing on the icon's shape.
+  excludedFromEditorFocusTracking: -> true
+
   constructor: (@target) ->
     # can't set the parent as the target directly because this widget might
     # not have a parent yet, so the button targets ITSELF and routes the
