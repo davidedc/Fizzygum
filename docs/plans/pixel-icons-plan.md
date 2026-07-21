@@ -2,10 +2,10 @@
 
 **Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
 2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
-vector track (§5b): **LIVE and rolling** — 6 icons landed (Typewriter, Folder,
-ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming) + the
-`SizeAwareIconAppearance` base (now incl. the reusable `_pxPanel` rounded panel and the
-family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
+vector track (§5b): **LIVE and rolling** — 7 icons landed (Typewriter, Folder,
+ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming,
+SimpleSlide) + the `SizeAwareIconAppearance` base (now incl. the reusable `_pxPanel`
+rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
@@ -591,6 +591,18 @@ still fails). (22) **Nodes/content need explicit clearance clamps against the ca
 ring** — rounding parks content ON the border at some sizes (the 17px circle), the
 same bug class as the toolbar backings; the sweep guards it via a
 border-contamination check on the flood.
+
+**7th conversion LANDED (2026-07-21)**: `SimpleSlideIconAppearance` (SlidesMaker) —
+the family slide card + slide content on `tc`: two text columns whose rows are
+computed ONCE and dropped as a unit (min-pitch rule), keeping cross-column alignment;
+and a rising 3-bar chart on one baseline. New lesson: (23) **degrade an identity
+feature by dropping members, never by flattening** — the card-top clamp at tiny sizes
+squeezed all three bars to equal heights (the sweep's own strictly-rising invariant
+caught it); heights now derive right-to-left with strict decrease and a bar that
+can't stay ≥1 tall and strictly shorter DROPS, survivors compacting left. Corollary
+of lessons 19/20; the "rise" is to a chart what the 4-vs-3 asymmetry is to the
+toolbars. Sweep = `scan-simpleslide.js` (rows exact-`tc` and aligned, bars rising on
+one baseline, interior-clearance guard rows/cols, whole-image byte gate).
 
 19. **Sibling elements need shared metrics and explicit separation.** The two toolbars
     read as one family only when they paint at ONE column width (a pre-pass takes the
