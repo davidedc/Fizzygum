@@ -511,6 +511,22 @@ choice per icon. The shared drawing vocabulary (`_pxBorder`, `_pxDiscRows`/`_pxD
 `SizeAwareIconAppearance` base once a second icon converts — do the extraction THEN, not
 speculatively.
 
+**2nd + 3rd conversions LANDED (2026-07-21, same day)**: `FolderIconAppearance` (uniform
+`t` borders — the old fractional line-work rounded differently per edge under non-AA —
+swept: five measured lines = t at every size 14–130) and `ShortcutArrowIconAppearance`
+(rounded-badge ring 2t + the alias swoosh: scanline head, angle-parameterized stamped tail
+tapering to a 1px point; at ≤24px an exact 45° right-triangle head with a straight
+perpendicular shaft joining the hypotenuse's midpoint, clearance-clamped off the ring).
+The planned base-class extraction happened on schedule: **`SizeAwareIconAppearance`** now
+owns the paint-entry boilerplate + the `_px*` vocabulary (incl. new `_pxRoundRect`
+row-span round-rect); the typewriter was slimmed onto it, golden-master byte-verified.
+New lessons: (14) **per-COLUMN sampling of a curve degenerates at small sizes** (few
+columns → flat "curl" feet); parameterize by angle/arc-length and stamp instead. (15) At
+small sizes prefer **axis-aligned and exact-45° geometry** — free angles read as messy
+jaggies; equal-leg triangles step exactly 1px/row. (16) **Clearance is a spec, not an
+accident**: clamp glyph extents to keep ≥1px of light from surrounding frames; touching
+reads as a defect.
+
 **The verification kit that closed the arc** (adaptable per icon; typewriter versions under
 `Fizzygum-tests/.scratch/icon-crispness/`, templates in the `/convert-icon-size-aware`
 skill): (a) ladder byte-identity native≡SWCanvas at 9 size/dpr configs after EVERY edit;

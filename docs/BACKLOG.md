@@ -35,8 +35,7 @@ P0-P3 (Avenue A) LANDED 2026-07-09; P4/P5/P5b/P5c OWNER-GATED, not started.
 
 ### `plans/pixel-icons-plan.md`
 AUTHORED 2026-07-18, NOT STARTED; replace ~79 vector `*IconAppearance` files with ASCII index-mask pixel icons (16/32/48 all supported, per-icon subset by usage cohort, coverage-rule variant selection; maps/gradients/logo-with-text stay vector); ⛔ two owner gates (P0 aesthetic, P4 mass recapture).
-- [ ] §5 pre-step: owner re-judges the convert list against the crispness-audit tiers (`measurements/vector-icon-crispness-audit-2026-07-19.md` §7) — per icon now a THREE-way choice: keep-vector / pixel-grid / size-aware redraw (§5b, PROVEN + landed for Typewriter 2026-07-21; process = local skill `/convert-icon-size-aware`)
-- [ ] §5b follow-up: on the SECOND size-aware conversion, extract the shared `SizeAwareIconAppearance` base (planned extraction, not speculative)
+- [ ] §5 pre-step: owner re-judges the convert list against the crispness-audit tiers (`measurements/vector-icon-crispness-audit-2026-07-19.md` §7) — per icon now a THREE-way choice: keep-vector / pixel-grid / size-aware redraw (§5b; LANDED for Typewriter + Folder + ShortcutArrow 2026-07-21 on the shared `SizeAwareIconAppearance` base; process = local skill `/convert-icon-size-aware`)
 - [ ] P0: spike (`PixelIconAppearance` + hand-converted Heart) + native≡SWCanvas byte-identity evidence + ⛔ owner aesthetic sign-off
 - [ ] P1: rasterizer/parser hardening (variants, crop, literal palette entries)
 - [ ] P2: sentinel-supersample authoring tool + all-icon draft contact sheet

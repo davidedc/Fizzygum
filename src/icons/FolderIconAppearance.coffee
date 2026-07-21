@@ -1,76 +1,60 @@
-class FolderIconAppearance extends IconAppearance
+class FolderIconAppearance extends SizeAwareIconAppearance
 
+  # SIZE-AWARE folder (2026-07-21, converted with /convert-icon-size-aware; the
+  # reference implementation and idiom docs are TypewriterIconAppearance and
+  # docs/plans/pixel-icons-plan.md §5b). The old fixed-100-space version drew
+  # its line-work at ~2.45 design units, fractional at every real display size
+  # — on the non-AA backend different edges of the same path rounded to
+  # different widths (thin top/left and tab lines, owner-reported). Here every
+  # border is exactly t device pixels by construction, at every size.
+
+  # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
-  specificationSize: new Point 100, 100
 
-  paintFunction: (context) ->
-    # Color Declarations
-    iconColorString = @_iconColorString()
-    outlineColorString = @_outlineColorString()
-    # outline Drawing
-    context.beginPath()
-    context.moveTo 89.18, 21.7
-    context.lineTo 44.61, 21.7
-    context.lineTo 44.61, 19.44
-    context.bezierCurveTo 44.61, 15.33, 40, 12, 36.11, 12
-    context.lineTo 12.5, 12
-    context.bezierCurveTo 9, 12, 4, 14.89, 4, 19
-    context.lineTo 4, 79.24
-    context.bezierCurveTo 4, 83.53, 6.5, 87, 10.82, 87
-    context.lineTo 89.18, 87
-    context.bezierCurveTo 93.5, 87, 97, 83.53, 97, 79.24
-    context.lineTo 97, 29.45
-    context.bezierCurveTo 97, 25.17, 93.5, 21.7, 89.18, 21.7
-    context.closePath()
-    context.fillStyle = outlineColorString
-    context.fill()
-    # folder Drawing
-    context.beginPath()
-    context.moveTo 87.57, 24.63
-    context.lineTo 42.23, 24.63
-    context.lineTo 42.23, 21.63
-    context.lineTo 42.23, 21.63
-    context.bezierCurveTo 42.23, 17.84, 39.16, 14.77, 35.37, 14.77
-    context.lineTo 12.85, 14.77
-    context.lineTo 12.86, 14.77
-    context.bezierCurveTo 9.07, 14.77, 6, 17.84, 6, 21.63
-    context.lineTo 6, 31.2
-    context.bezierCurveTo 6, 31.29, 6, 31.38, 6, 31.51
-    context.bezierCurveTo 6, 31.64, 6, 31.69, 6, 31.78
-    context.lineTo 6, 77.68
-    context.lineTo 6, 77.68
-    context.bezierCurveTo 6, 81.63, 9.2, 84.83, 13.15, 84.83
-    context.lineTo 87.57, 84.83
-    context.lineTo 87.57, 84.83
-    context.bezierCurveTo 91.52, 84.83, 94.72, 81.63, 94.72, 77.68
-    context.lineTo 94.72, 31.77
-    context.lineTo 94.72, 31.78
-    context.bezierCurveTo 94.72, 27.83, 91.52, 24.63, 87.57, 24.63
-    context.closePath()
-    context.moveTo 12.85, 17.27
-    context.lineTo 35.37, 17.27
-    context.lineTo 35.36, 17.27
-    context.bezierCurveTo 37.8, 17.27, 39.77, 19.24, 39.77, 21.68
-    context.lineTo 39.77, 24.67
-    context.lineTo 8.45, 24.67
-    context.lineTo 8.45, 21.67
-    context.lineTo 8.45, 21.68
-    context.bezierCurveTo 8.45, 19.24, 10.42, 17.27, 12.86, 17.27
-    context.lineTo 12.85, 17.27
-    context.closePath()
-    context.moveTo 92.26, 77.68
-    context.lineTo 92.26, 77.67
-    context.bezierCurveTo 92.26, 80.27, 90.16, 82.37, 87.56, 82.37
-    context.lineTo 13.14, 82.37
-    context.lineTo 13.15, 82.37
-    context.bezierCurveTo 10.55, 82.37, 8.45, 80.27, 8.45, 77.67
-    context.lineTo 8.45, 27.08
-    context.lineTo 87.57, 27.08
-    context.lineTo 87.56, 27.08
-    context.bezierCurveTo 90.16, 27.08, 92.26, 29.18, 92.26, 31.78
-    context.lineTo 92.26, 77.67
-    context.lineTo 92.26, 77.68
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
+  # ---- proportions, fractions of the inner square --------------------------
+  SIDE_MARGIN: 0.05   # glyph left/right inset
+  TAB_TOP:     0.13   # where the tab starts
+  BODY_TOP:    0.25   # where the body starts (= the tab's height budget)
+  BOTTOM_UP:   0.14   # bottom margin (the folder is wider than tall)
+  TAB_WIDTH:   0.34
+  CORNER:      0.05   # body corner radius (the tab uses half)
 
+  _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    S = Math.min wDev, hDev
+    return if S < 6
+
+    t = Math.max 1, Math.round S / 32          # the line unit
+    o = t                                      # halo/envelope thickness
+    x = x0 + Math.floor (wDev - S) / 2
+    y = y0 + Math.floor (hDev - S) / 2
+    ix = x + o
+    iy = y + o
+    iS = S - 2 * o
+
+    ink = @_iconColorString()
+    halo = @_outlineColorString()
+
+    m = Math.round iS * @SIDE_MARGIN
+    gx = ix + m                                # glyph x-range (symmetric)
+    gw = iS - 2 * m
+    bodyTop = iy + Math.round iS * @BODY_TOP
+    tabTop = Math.min iy + Math.round(iS * @TAB_TOP), bodyTop - 2 * t
+    bottom = iy + iS - Math.round iS * @BOTTOM_UP
+    tabW = Math.min gw, Math.round(iS * @TAB_WIDTH)
+    r = Math.max t, Math.round iS * @CORNER    # body corner radius
+    rTab = Math.max 1, Math.round r / 2
+
+    # ---- halos first (lesson 13: light must never be drawn over sibling ink;
+    # painting every envelope before any ink makes that impossible)
+    @_pxRoundRect ctx, gx - o, bodyTop - o, gw + 2 * o, (bottom - bodyTop) + 2 * o, r + o, halo
+    @_pxRoundRect ctx, gx - o, tabTop - o, tabW + 2 * o, (bodyTop - tabTop) + 2 * o, rTab + o, halo
+
+    # ---- the tab: its own bordered box; the parts reaching below bodyTop are
+    # deliberately overpainted by the body, so only its top corners round
+    @_pxRoundRect ctx, gx, tabTop, tabW, (bodyTop - tabTop) + r + t, rTab, ink
+    @_pxRoundRect ctx, gx + t, tabTop + t, tabW - 2 * t, (bodyTop - tabTop) + r, Math.max(0, rTab - t), halo
+
+    # ---- the body: bordered box over the tab's lower reaches; its top edge is
+    # the full-width line the tab visibly sits on (as in the original)
+    @_pxRoundRect ctx, gx, bodyTop, gw, bottom - bodyTop, r, ink
+    @_pxRoundRect ctx, gx + t, bodyTop + t, gw - 2 * t, (bottom - bodyTop) - 2 * t, Math.max(0, r - t), halo
