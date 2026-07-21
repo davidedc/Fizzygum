@@ -3,15 +3,20 @@ class TypewriterIconAppearance extends IconAppearance
   # SIZE-AWARE icon (2026-07-21, the first of its kind). The old version was a
   # fixed 100-unit vector drawing (2-unit document lines filled at half-integer
   # offsets, eleven lineWidth-2.5 key strokes) that the icon pipeline scaled
-  # arbitrarily, so no stroke ever landed on the pixel grid — the "mushy on
-  # native / ragged on SWCanvas" case study of
-  # docs/measurements/vector-icon-crispness-audit-2026-07-19.md.
+  # arbitrarily, so no stroke ever landed on the pixel grid — the case study of
+  # docs/measurements/vector-icon-crispness-audit-2026-07-19.md: ragged and
+  # uneven under SWCanvas's non-AA rendering, its thin details washing out at
+  # small sizes.
   #
   # This version never draws in design space at all: it reads its ACTUAL size
-  # in device pixels and computes integer-pixel geometry from that budget, so
-  # every edge lands on the device-pixel grid and the rendering is
-  # byte-identical between the native and SWCanvas backends at every size and
-  # dpr (verified). Conversion lessons + process: docs/plans/pixel-icons-plan.md §5b.
+  # in device pixels and computes integer-pixel geometry from that budget.
+  # THE POINT: the non-AA backend renders it cleanly at every size — no ragged
+  # or uneven strokes, no dropouts — because the icon is smart about how it
+  # uses its space and aligns integer-width strokes to the grid per size. The
+  # same discipline makes the HTML5-canvas render neater too (AA itself was
+  # never a defect). Useful side effect, kept as a verification gate rather
+  # than being a goal: both backends render it byte-identically at every size
+  # and dpr. Conversion lessons + process: docs/plans/pixel-icons-plan.md §5b.
   #
   # The drawing idiom (a vocabulary for future size-aware icons):
   #   - two line units: t = round(S/32) for paper/document-lines/chassis/knobs,

@@ -434,11 +434,21 @@ through ~8 review iterations; the conversion process is packaged as the local sk
 `/convert-icon-size-aware` (umbrella `.claude/skills/`, uncommitted workspace tooling — the
 in-repo record is this section + the reference implementation itself).
 
+**The objective, stated precisely (owner, 2026-07-21)**: make the NON-AA backend's render
+look good at every size — no ragged/uneven strokes, no dropouts — by having the icon use
+its space intelligently and align integer-width strokes to the grid per size; the same
+discipline also makes the HTML5-canvas (AA) render neater. It is NOT about making the two
+backends render identically, and NOT about "correcting" native AA — AA is not a defect,
+just AA. Cross-backend byte-identity falls out as a side effect and is kept purely as a
+cheap verification invariant.
+
 **Lessons learned (each verified empirically on the typewriter):**
 
-1. **Native≡SWCanvas byte-identity is real and total** for integer axis-aligned fillRects:
-   verified at {16,24,32,48,64,95,128}px × dpr{1,2} after every iteration. This
-   pre-validates this plan's P0 hypothesis (§3.3) — the P0 spike can cite it.
+1. **Cross-backend byte-identity falls out for free** with integer axis-aligned fillRects
+   (verified at {16,24,32,48,64,95,128}px × dpr{1,2} after every iteration) and makes an
+   excellent cheap regression gate — a DIFFER means something non-integer was drawn. A
+   side effect, not the objective (see the statement above). It also pre-validates this
+   plan's P0 expectation (§3.3) — the P0 spike can cite it.
 2. **Anchor to the widget origin, never the dirty rect** (`al/at` shift under partial
    repaints); widget bounds are integer logical px (placement policy) so
    `left()*ceilPixelRatio` is an exact device integer.
