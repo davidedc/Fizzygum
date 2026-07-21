@@ -2,10 +2,11 @@
 
 **Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
 2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
-vector track (§5b): **LIVE and rolling** — 7 icons landed (Typewriter, Folder,
+vector track (§5b): **LIVE and rolling** — 8 icons landed (Typewriter, Folder,
 ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming,
-SimpleSlide) + the `SizeAwareIconAppearance` base (now incl. the reusable `_pxPanel`
-rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
+SimpleSlide, Dashboards — the ENTIRE slide-card family, retiring IconAppearance's
+legacy bezier `_paintSlideOutline`/`_paintSlideCard`) + the `SizeAwareIconAppearance`
+base (incl. the reusable `_pxPanel` rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
@@ -603,6 +604,26 @@ can't stay ≥1 tall and strictly shorter DROPS, survivors compacting left. Coro
 of lessons 19/20; the "rise" is to a chart what the 4-vs-3 asymmetry is to the
 toolbars. Sweep = `scan-simpleslide.js` (rows exact-`tc` and aligned, bars rising on
 one baseline, interior-clearance guard rows/cols, whole-image byte gate).
+
+**8th conversion LANDED (2026-07-21)**: `DashboardsIconAppearance` — the family slide
+card + four quadrant mini-charts (scatter with collision-dropping dots, stamped zigzag
+line, bar chart standing on its extended axis, and 3D AXES whose sub-pixel letter
+labels render as dots at the quadrant box's edges, separated from the shortened axis
+tips and box-bounded to the other plots' footprint). This conversion RETIRED
+IconAppearance's legacy bezier `_paintSlideOutline`/`_paintSlideCard` — the
+dead-method gate itself flagged them the moment their last user converted (the gate
+doubles as a campaign-progress detector). Owner refinements as invariants: every
+x-axis extends to its content's right edge (`axisShort` asserts); the 3D labels are
+flood-DISCONNECTED from their axes yet inside the quadrant box; SimpleSlide's right
+column aligns its row ends to its chart's right edge (same-batch back-port). New
+lessons: (24) **verification output must announce its own truncation** — the sweep's
+30-line print cap silently hid that failures ran to 30px, misreading as
+"small-sizes-only"; caps now print "(N more)". (25) **when N one-pixel elements can't
+coexist, simplify WHOLESALE, not per element** — below 20px the quadrants become four
+solid tiles (swept: every size 14–19 broke some element invariant, 20+ none); and
+cross-quadrant safety generalizes lesson 19's threading: each painter returns its
+extent (q1Bot/q2Bot/q3Right) for the next one's clamps, in paint order. Sweep =
+`scan-dashboards.js`.
 
 19. **Sibling elements need shared metrics and explicit separation.** The two toolbars
     read as one family only when they paint at ONE column width (a pre-pass takes the

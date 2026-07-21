@@ -47,8 +47,8 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
     lx1 = Math.max x + Math.round(S * @COL1_X), cxMin
     lx2 = Math.max x + Math.round(S * @COL2_X), cxMin
 
-    yB = @_paintBarChart ctx, y, S, tc, lx2, cxMax, py, t, ink, light
-    @_paintTextRows ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, ink
+    [yB, chartRight] = @_paintBarChart ctx, y, S, tc, lx2, cxMax, py, t, ink, light
+    @_paintTextRows ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight, ink
 
   # the rising bar chart: uniform-width bars (walls tc, hollow when the
   # hole keeps 1px, solid below) sharing one baseline, left-anchored on the
@@ -57,7 +57,9 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
   # bar that can't stay both >=1 tall and strictly shorter DROPS and the
   # survivors compact left -- the rise is the chart's identity, so at tiny
   # sizes fewer still-rising bars beat a flattened row. A bar that would
-  # cross the clearance box is dropped too. Returns the baseline.
+  # cross the clearance box is dropped too. Returns the baseline and the
+  # chart's right edge (nil when no bar fit) -- the right column's text
+  # rows align their ends to it.
   _paintBarChart: (ctx, y, S, tc, lx2, cxMax, py, t, ink, light) ->
     yB = y + Math.round S * @BAR_BASE
     bw = Math.max 1, Math.round S * @BAR_W
@@ -70,22 +72,26 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
       break if h < 1
       hs.unshift h
       hNext = h
+    chartRight = nil
     for h, i in hs
       bx = lx2 + i * (bw + gap)
       break if bx + bw - 1 > cxMax
+      chartRight = bx + bw - 1
       ctx.fillStyle = ink
       ctx.fillRect bx, yB - h, bw, h
       if bw - 2 * tc >= 2 and h - 2 * tc >= 2
         ctx.fillStyle = light
         ctx.fillRect bx + tc, yB - h + tc, bw - 2 * tc, h - 2 * tc
-    yB
+    [yB, chartRight]
 
   # the text rows, computed ONCE and shared by both columns so surviving
   # rows stay aligned across them: a row that can't keep 1px of light from
   # the previous one is dropped (min-pitch rule); the right column draws
-  # its subset only below the chart's baseline
-  _paintTextRows: (ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, ink) ->
+  # its subset only below the chart's baseline, and its rows end exactly
+  # at the chart's right edge (the two right edges read as one margin)
+  _paintTextRows: (ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight, ink) ->
     len = Math.round S * @LINE_LEN
+    len2 = if chartRight? then chartRight - lx2 + 1 else Math.min(len, cxMax - lx2 + 1)
     ctx.fillStyle = ink
     prevY = -99
     for f, i in @LINE_YS
@@ -94,4 +100,4 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
       prevY = yy
       ctx.fillRect lx1, yy, Math.min(len, cxMax - lx1 + 1), tc
       if i >= @COL2_FROM_ROW and yy > yB
-        ctx.fillRect lx2, yy, Math.min(len, cxMax - lx2 + 1), tc
+        ctx.fillRect lx2, yy, len2, tc

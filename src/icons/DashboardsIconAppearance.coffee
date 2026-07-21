@@ -1,211 +1,218 @@
-class DashboardsIconAppearance extends IconAppearance
+class DashboardsIconAppearance extends SizeAwareIconAppearance
 
+  # SIZE-AWARE dashboards icon (2026-07-21, converted with
+  # /convert-icon-size-aware; idiom docs: docs/plans/pixel-icons-plan.md §5b):
+  # the family's shared slide-card panel holding four quadrant mini-charts --
+  # a scatter plot, a zigzag line chart, a bar chart and a small node graph.
+  # All content is integer runs: axes on the hairline td unit (the old
+  # 1.2-design-unit fills), data ink on tc, dots as small squares. The old
+  # drawing's sub-pixel letter glyphs at the graph's spoke ends (0.4 design
+  # units -- under half a device pixel even at 128px) become end DOTS. Fully
+  # integer-painted, so the whole image is byte-identical across backends.
+
+  # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
-  specificationSize: new Point 100, 100
 
-  paintFunction: (context) ->
-    #// Color Declarations
-    iconColorString = @_iconColorString()
-    outlineColorString = @_outlineColorString()
+  # ---- proportions, fractions of the glyph square (numbers from the
+  # original 100-space drawing) ----------------------------------------------
+  # per-quadrant L-axes: [corner x, top y, right x, bottom y]
+  Q1_AXES: [0.22, 0.27, 0.46, 0.48]   # scatter, top-left
+  Q2_AXES: [0.56, 0.27, 0.794, 0.48]  # line chart, top-right
+  Q3_AXES: [0.22, 0.53, 0.46, 0.74]   # bar chart, bottom-left
+  SCATTER_DOTS: [[0.365, 0.315], [0.285, 0.415], [0.285, 0.305], [0.325, 0.365],
+    [0.385, 0.365], [0.445, 0.345], [0.445, 0.295]]
+  DOT_K: 0.03
+  ZIGZAG: [[0.615, 0.435], [0.665, 0.345], [0.715, 0.385], [0.79, 0.28]]
+  BARS: [[0.26, 0.07], [0.32, 0.05], [0.37, 0.07], [0.43, 0.15]]  # [x, height]
+  BAR_W: 0.035
+  GRAPH_C: [0.69, 0.645]              # 3D axes, bottom-right: the origin
+  GRAPH_B: 0.72                       # the glyph's bottom -- a touch higher
+                                      #   than the plots' 0.74 (the design's
+                                      #   letters end at 72)
 
-    #// Group 6
-    #// outline Drawing
-    @_paintSlideOutline context, outlineColorString
-    #// slide border Drawing
-    @_paintSlideCard context, iconColorString
-    #// Group 7
-    #// Group
-    #// Bezier Drawing
-    context.beginPath()
-    context.moveTo 22, 27
-    context.lineTo 23.2, 27
-    context.lineTo 23.2, 46.8
-    context.lineTo 46, 46.8
-    context.lineTo 46, 48
-    context.lineTo 22, 48
-    context.lineTo 22, 27
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Group 2
-    #// Oval Drawing
-    @oval context, 35, 30, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 2 Drawing
-    @oval context, 27, 40, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 3 Drawing
-    @oval context, 27, 29, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 10 Drawing
-    @oval context, 31, 35, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 11 Drawing
-    @oval context, 37, 35, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 12 Drawing
-    @oval context, 43, 33, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Oval 13 Drawing
-    @oval context, 43, 28, 3, 3
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Group 5
-    #// Bezier 4 Drawing
-    context.beginPath()
-    context.moveTo 56, 27
-    context.lineTo 57.17, 27
-    context.lineTo 57.17, 46.8
-    context.lineTo 79.41, 46.8
-    context.lineTo 79.41, 48
-    context.lineTo 56, 48
-    context.lineTo 56, 27
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Bezier 2 Drawing
-    context.save()
-    context.translate 60.06, 23.23
-    context.beginPath()
-    context.moveTo 1.4, 20.37
-    context.lineTo 0, 19.37
-    context.lineTo 3.13, 13.52
-    context.bezierCurveTo 4.45, 10.81, 5.8, 9.61, 7.17, 9.91
-    context.bezierCurveTo 8.06, 10.11, 11.22, 15.04, 12.2, 13.83
-    context.bezierCurveTo 12.63, 13.77, 17.52, 4, 17.52, 4
-    context.lineTo 18.94, 4.89
-    context.bezierCurveTo 18.94, 4.89, 14.09, 14.19, 13.71, 14.8
-    context.bezierCurveTo 13.25, 15.39, 12.76, 15.74, 12.09, 15.71
-    context.bezierCurveTo 11.32, 15.77, 10.62, 15.52, 9.55, 14.58
-    context.bezierCurveTo 8.49, 13.64, 7.55, 12.27, 6.63, 12.1
-    context.bezierCurveTo 5.71, 11.93, 4.97, 13.58, 4.44, 14.5
-    context.lineTo 1.4, 20.37
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    context.restore()
-    #// Group 3
-    #// Rectangle 3 Drawing
-    context.beginPath()
-    context.rect 43, 55, 3, 15
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Rectangle 4 Drawing
-    context.beginPath()
-    context.rect 37, 63, 4, 7
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Rectangle 5 Drawing
-    context.beginPath()
-    context.rect 32, 65, 3, 5
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Rectangle 6 Drawing
-    context.beginPath()
-    context.rect 26, 63, 4, 7
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Bezier 3 Drawing
-    context.beginPath()
-    context.moveTo 22, 53
-    context.lineTo 23.2, 53
-    context.lineTo 23.2, 72.8
-    context.lineTo 46, 72.8
-    context.lineTo 46, 74
-    context.lineTo 22, 74
-    context.lineTo 22, 53
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Group 4
-    #// Bezier 5 Drawing
-    context.beginPath()
-    context.moveTo 69.37, 64.35
-    context.lineTo 69.37, 57.47
-    context.bezierCurveTo 69.37, 57.26, 69.2, 57.1, 69, 57.1
-    context.bezierCurveTo 68.8, 57.1, 68.63, 57.26, 68.63, 57.47
-    context.lineTo 68.63, 64.36
-    context.lineTo 62.18, 69.09
-    context.bezierCurveTo 62.02, 69.21, 61.98, 69.44, 62.1, 69.61
-    context.bezierCurveTo 62.22, 69.78, 62.45, 69.82, 62.62, 69.7
-    context.lineTo 69.01, 65.01
-    context.lineTo 75.76, 69.7
-    context.bezierCurveTo 75.82, 69.74, 75.89, 69.76, 75.97, 69.76
-    context.bezierCurveTo 76.09, 69.76, 76.2, 69.71, 76.27, 69.6
-    context.bezierCurveTo 76.39, 69.43, 76.35, 69.2, 76.18, 69.08
-    context.lineTo 69.37, 64.35
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Bezier 6 Drawing
-    context.beginPath()
-    context.moveTo 68.63, 54.64
-    context.lineTo 68.63, 55.61
-    context.bezierCurveTo 68.63, 55.81, 68.8, 55.98, 69, 55.98
-    context.bezierCurveTo 69.2, 55.98, 69.37, 55.81, 69.37, 55.61
-    context.lineTo 69.37, 54.64
-    context.lineTo 70.36, 53.63
-    context.bezierCurveTo 70.5, 53.49, 70.5, 53.25, 70.36, 53.11
-    context.bezierCurveTo 70.22, 52.96, 69.99, 52.96, 69.84, 53.11
-    context.lineTo 69, 53.96
-    context.lineTo 68.16, 53.11
-    context.bezierCurveTo 68.02, 52.96, 67.79, 52.96, 67.64, 53.11
-    context.bezierCurveTo 67.5, 53.26, 67.5, 53.49, 67.64, 53.64
-    context.lineTo 68.63, 54.64
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Bezier 7 Drawing
-    context.beginPath()
-    context.moveTo 79.05, 70.51
-    context.lineTo 79.89, 69.66
-    context.bezierCurveTo 80.03, 69.51, 80.03, 69.28, 79.89, 69.13
-    context.bezierCurveTo 79.75, 68.99, 79.52, 68.99, 79.37, 69.13
-    context.lineTo 78.53, 69.98
-    context.lineTo 77.7, 69.13
-    context.bezierCurveTo 77.55, 68.99, 77.32, 68.99, 77.18, 69.13
-    context.bezierCurveTo 77.04, 69.28, 77.04, 69.51, 77.18, 69.66
-    context.lineTo 78.02, 70.51
-    context.lineTo 77.18, 71.36
-    context.bezierCurveTo 77.04, 71.51, 77.04, 71.74, 77.18, 71.89
-    context.bezierCurveTo 77.25, 71.96, 77.34, 72, 77.43, 72
-    context.bezierCurveTo 77.53, 72, 77.62, 71.96, 77.7, 71.89
-    context.lineTo 78.53, 71.04
-    context.lineTo 79.37, 71.89
-    context.bezierCurveTo 79.45, 71.96, 79.54, 72, 79.63, 72
-    context.bezierCurveTo 79.73, 72, 79.82, 71.96, 79.9, 71.89
-    context.bezierCurveTo 80.04, 71.75, 80.04, 71.51, 79.9, 71.37
-    context.lineTo 79.05, 70.51
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
-    #// Bezier 8 Drawing
-    context.beginPath()
-    context.moveTo 60.9, 69.53
-    context.bezierCurveTo 60.94, 69.44, 60.94, 69.34, 60.9, 69.25
-    context.bezierCurveTo 60.87, 69.16, 60.79, 69.09, 60.71, 69.05
-    context.bezierCurveTo 60.66, 69.03, 60.61, 69.02, 60.57, 69.02
-    context.lineTo 58.37, 69.02
-    context.bezierCurveTo 58.17, 69.02, 58, 69.19, 58, 69.39
-    context.bezierCurveTo 58, 69.6, 58.17, 69.76, 58.37, 69.76
-    context.lineTo 59.68, 69.76
-    context.lineTo 58.11, 71.36
-    context.bezierCurveTo 58.08, 71.4, 58.05, 71.44, 58.03, 71.49
-    context.bezierCurveTo 57.99, 71.58, 57.99, 71.68, 58.03, 71.77
-    context.bezierCurveTo 58.07, 71.86, 58.14, 71.93, 58.23, 71.97
-    context.bezierCurveTo 58.27, 71.99, 58.32, 72, 58.37, 72
-    context.lineTo 60.57, 72
-    context.bezierCurveTo 60.77, 72, 60.93, 71.83, 60.93, 71.63
-    context.bezierCurveTo 60.93, 71.42, 60.77, 71.25, 60.57, 71.25
-    context.lineTo 59.25, 71.25
-    context.lineTo 60.82, 69.66
-    context.bezierCurveTo 60.86, 69.62, 60.89, 69.58, 60.9, 69.53
-    context.closePath()
-    context.fillStyle = iconColorString
-    context.fill()
+  _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+    S = Math.min wDev, hDev
+    return if S < 10
+    # center the square glyph box in the widget box
+    x = x0 + Math.floor (wDev - S) / 2
+    y = y0 + Math.floor (hDev - S) / 2
+
+    t = Math.max 1, Math.round S / 32   # structural unit: the card border
+    tc = Math.max 1, Math.round S / 45  # data ink: zigzag line
+    td = Math.max 1, Math.round S / 64  # hairline: axes, graph spokes
+    o = t
+    ink = @_iconColorString()
+    light = @_outlineColorString()
+
+    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o, ink, light
+
+    # the content clearance box: >=1px of light inside the card ring; every
+    # coordinate below goes through these clamps (the bottom quadrants sit
+    # right at the clearance edge at some sizes)
+    cxMin = px + t + 1
+    cxMax = px + pw - t - 2
+    cyMin = py + t + 1
+    cyMax = py + ph - t - 2
+    m =
+      S: S, t: t, tc: tc, td: td, ink: ink, light: light
+      cxMin: cxMin, cxMax: cxMax, cyMin: cyMin, cyMax: cyMax
+      fx: (f) => Math.min Math.max(x + Math.round(S * f), cxMin), cxMax
+      fy: (f) => Math.min Math.max(y + Math.round(S * f), cyMin), cyMax
+      # clamp a k-sized square's TOP-LEFT so the whole square stays in the
+      # content box (a center-derived rect otherwise escapes the center
+      # clamp by k>>1)
+      dotX: (cx2, k) => Math.min Math.max(cx2 - (k >> 1), cxMin), cxMax - k + 1
+      dotY: (cy2, k) => Math.min Math.max(cy2 - (k >> 1), cyMin), cyMax - k + 1
+
+    # under 20px the four real mini-charts -- a dozen one-pixel elements in
+    # a ~10x7 interior -- collide into soup (swept: every size 14..19 broke
+    # some element invariant, 20+ none); the honest miniature is four solid
+    # chart TILES in the quadrant footprints
+    if S < 20
+      @_paintChartTiles ctx, m
+      return
+
+    ctx.fillStyle = ink
+    q1Bot = @_paintScatter ctx, m
+    q2Bot = @_paintLineChart ctx, m
+    q3Right = @_paintBars ctx, m, q1Bot
+    @_paintNodeGraph ctx, m, q2Bot, q3Right
+
+  # the under-20px miniature: solid tiles on the quadrant footprints,
+  # kept apart by explicit >=1px gaps; tiles that can't fit drop
+  _paintChartTiles: (ctx, m) ->
+    ctx.fillStyle = m.ink
+    x1 = m.fx 0.22
+    r1 = m.fx 0.46
+    x2 = Math.max m.fx(0.56), r1 + 2
+    r2 = m.fx 0.794
+    yT = m.fy 0.27
+    yM = m.fy 0.48
+    yB2 = Math.max m.fy(0.53), yM + 2
+    yBot = m.fy 0.74
+    ctx.fillRect x1, yT, r1 - x1 + 1, yM - yT + 1
+    ctx.fillRect x2, yT, r2 - x2 + 1, yM - yT + 1 if r2 >= x2
+    if yBot >= yB2
+      ctx.fillRect x1, yB2, r1 - x1 + 1, yBot - yB2 + 1
+      ctx.fillRect x2, yB2, r2 - x2 + 1, yBot - yB2 + 1 if r2 >= x2
+
+  # a td-thick L: vertical axis down into a horizontal axis, sharing the
+  # corner; the horizontal arm runs through axEnd INCLUSIVE -- callers
+  # extend it to their content's right edge, so the axis always reaches
+  # the end of the graph
+  _paintAxes: (ctx, m, ax, ayTop, axEnd, ayBot) ->
+    ctx.fillStyle = m.ink
+    ctx.fillRect ax, ayTop, m.td, ayBot - ayTop
+    ctx.fillRect ax, ayBot - m.td, axEnd - ax + 1, m.td
+
+  # squares stamped along a straight segment, w thick (diagonal steps are
+  # fine -- 8-connected, like any quantized arc)
+  _stampSegment: (ctx, x1, y1, x2, y2, w) ->
+    n = Math.max Math.abs(x2 - x1), Math.abs(y2 - y1), 1
+    for i in [0..n]
+      f = i / n
+      ctx.fillRect Math.round(x1 + (x2 - x1) * f - w / 2),
+        Math.round(y1 + (y2 - y1) * f - w / 2), w, w
+
+  # top-left: scatter dots + L-axes extended under them; a dot that can't
+  # keep 1px of light from an already-placed dot is dropped (they'd read
+  # as one blob)
+  _paintScatter: (ctx, m) ->
+    [ax, ayTop, axRight, ayBot] = [m.fx(@Q1_AXES[0]), m.fy(@Q1_AXES[1]),
+      m.fx(@Q1_AXES[2]), m.fy(@Q1_AXES[3])]
+    k = Math.max 2, Math.round m.S * @DOT_K
+    placed = []
+    for [fdx, fdy] in @SCATTER_DOTS
+      dx = Math.max m.dotX(m.fx(fdx), k), ax + m.td + 1
+      dy = Math.min m.dotY(m.fy(fdy), k), ayBot - m.td - 1 - k
+      continue if placed.some ([ox, oy]) -> Math.abs(ox - dx) <= k and Math.abs(oy - dy) <= k
+      placed.push [dx, dy]
+    axEnd = axRight
+    for [dx2] in placed
+      axEnd = Math.max axEnd, dx2 + k - 1
+    @_paintAxes ctx, m, ax, ayTop, axEnd, ayBot
+    ctx.fillStyle = m.ink
+    for [dx2, dy2] in placed
+      ctx.fillRect dx2, dy2, k, k
+    ayBot
+
+  # top-right: L-axes + the zigzag data line, stamped tc thick; vertices
+  # keep 1px of light off both axes
+  _paintLineChart: (ctx, m) ->
+    [ax, ayTop, axRight, ayBot] = [m.fx(@Q2_AXES[0]), m.fy(@Q2_AXES[1]),
+      m.fx(@Q2_AXES[2]), m.fy(@Q2_AXES[3])]
+    # stamp-safe vertex clamps: a stamped square extends ceil(tc/2) beyond
+    # its vertex, so the vertex must sit that far inside every bound
+    vs = for [fvx, fvy] in @ZIGZAG
+      [Math.min(Math.max(m.fx(fvx), ax + m.td + 1 + (m.tc >> 1)), m.cxMax - (m.tc >> 1)),
+       Math.min(Math.max(m.fy(fvy), m.cyMin + Math.ceil(m.tc / 2)), ayBot - m.td - 2 - (m.tc >> 1))]
+    axEnd = Math.max axRight, Math.round(vs[vs.length - 1][0] - m.tc / 2) + m.tc - 1
+    @_paintAxes ctx, m, ax, ayTop, axEnd, ayBot
+    ctx.fillStyle = m.ink
+    for i in [1...vs.length]
+      @_stampSegment ctx, vs[i - 1][0], vs[i - 1][1], vs[i][0], vs[i][1], m.tc
+    ayBot
+
+  # bottom-left: L-axes + solid bars standing on the horizontal axis; the
+  # quadrant's top clamps below the scatter quadrant (their fractions
+  # round onto each other at small sizes), and a bar that can't keep 1px
+  # of light from the previous one is dropped
+  _paintBars: (ctx, m, q1Bot) ->
+    ax = m.fx @Q3_AXES[0]
+    ayTop = Math.max m.fy(@Q3_AXES[1]), q1Bot + 1
+    axRight = m.fx @Q3_AXES[2]
+    ayBot = Math.max m.fy(@Q3_AXES[3]), ayTop + 2 * m.td
+    bw = Math.max 1, Math.round m.S * @BAR_W
+    prevRight = ax + m.td
+    bars = []
+    for [fbx, fh] in @BARS
+      bx = Math.max m.fx(fbx), prevRight + 2   # >=1px of light between bars
+      h = Math.max 1, Math.round m.S * fh
+      top = Math.max ayBot - m.td - h, ayTop
+      continue if bx + bw - 1 > axRight
+      prevRight = bx + bw - 1
+      bars.push [bx, top]
+    axEnd = Math.max axRight, prevRight
+    @_paintAxes ctx, m, ax, ayTop, axEnd, ayBot
+    ctx.fillStyle = m.ink
+    for [bx, top] in bars
+      ctx.fillRect bx, top, bw, ayBot - m.td - top
+    axEnd
+
+  # bottom-right: 3D AXES -- three td spokes (X, Y, Z) radiating from the
+  # origin. The original's tiny letter labels (sub-pixel at every real
+  # size) render as dots sitting AT the quadrant box's edges -- top center,
+  # bottom-left and bottom-right corners, where the letters sit in the
+  # design -- and each axis stops 1px + a stamp-half short of its label:
+  # separated (connected they'd read as part of the axis) but near, and
+  # the WHOLE glyph stays inside the same footprint as the other three
+  # plots. A spoke with no room for a separated label draws bare to the
+  # box edge instead.
+  _paintNodeGraph: (ctx, m, q2Bot, q3Right) ->
+    k = Math.max 2, Math.round m.S * 0.02
+    hs = Math.ceil m.td / 2
+    # the quadrant box: Q2's width, clamped clear of both neighbours; the
+    # bottom sits at the glyph's own, slightly higher line
+    qL = Math.max m.fx(@Q2_AXES[0]), q3Right + 2
+    qR = m.fx @Q2_AXES[2]
+    qT = Math.max m.fy(@Q3_AXES[1]), q2Bot + 1
+    qB = m.fy @GRAPH_B
+    cx = m.fx @GRAPH_C[0]
+    cy = Math.max m.fy(@GRAPH_C[1]), qT + hs
+    ctx.fillStyle = m.ink
+    # per spoke: [label x, label y, axis tip x, axis tip y], then the bare
+    # box-edge endpoint used when the label can't fit separated
+    spokes = [
+      [cx - (k >> 1), qT, cx, qT + k + 1 + hs]
+      [qL, qB - k + 1, qL + k + 1 + hs, qB - k - hs]
+      [qR - k + 1, qB - k + 1, qR - k - hs, qB - k - hs]
+    ]
+    bare = [[cx, qT], [qL, qB], [qR, qB]]
+    for [lx, ly, tipX, tipY], i in spokes
+      outward = if i is 0 then tipY < cy \
+        else tipY > cy and (if i is 1 then tipX < cx else tipX > cx)
+      if outward
+        @_stampSegment ctx, cx, cy, tipX, tipY, m.td
+        ctx.fillRect lx, ly, k, k
+      else
+        @_stampSegment ctx, cx, cy, bare[i][0], bare[i][1], m.td
