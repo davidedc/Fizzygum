@@ -2,7 +2,6 @@ class BinWdgt extends BoxWdgt
 
   # panes:
   scrollPanel: nil
-  resizer: nil
   emptyBinButton: nil
 
   constructor: ->
@@ -11,6 +10,10 @@ class BinWdgt extends BoxWdgt
     @__commitExtent new Point 340, 270
     @color = Color.create 60, 60, 60
     @padding = 5
+    # I only ever appear as a window's content (BinOpenerWdgt always wraps me in a
+    # FrameWdgt), and I am a VIEW, not a fixed-proportion artifact: fill the window
+    # on both axes and track its resizes (like PaletteWdgt / the text scroll panels).
+    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND, FrameContentLayoutSpec.DONT_MIND, 1
     @_buildAndConnectChildren()
 
   colloquialName: ->
@@ -40,13 +43,6 @@ class BinWdgt extends BoxWdgt
 
     @emptyBinButton = new SimpleButtonWdgt true, @, "emptyBinRequested", "Empty bin"
     @_addNoSettle @emptyBinButton
-
-
-    # resizer -- attach, then record (@resizer stays nil during its own add; byte-identical to the old
-    # `@resizer = new HandleWdgt @` whose in-constructor add ran while @resizer was nil; see FrameWdgt).
-    resizer = new HandleWdgt
-    @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
-    @resizer = resizer
 
     @_invalidateLayout()
 
@@ -133,6 +129,10 @@ class BinWdgt extends BoxWdgt
         w.hide()
       else
         w.show()
+    # hidden children are excluded from the scroll fit (subWidgetsMergedFullBounds),
+    # so a visibility flip changes the content frame: re-fit through the phase-safe
+    # valve (this callback also runs inside add/settle batches).
+    @_reFitContainer @scrollPanel
 
   # Button action (button-action strings stay public and un-underscored). Empty bin is
   # the framework's only bulk-destructive user action, so it confirms through an
@@ -204,7 +204,7 @@ class BinWdgt extends BoxWdgt
     x = @scrollPanel.left()
     y = @scrollPanel.bottom() + @cornerRadius
     h = WorldWdgt.preferencesAndSettings.handleSize
-    w = @scrollPanel.width() - h - @cornerRadius
+    w = @scrollPanel.width()
     @emptyBinButton._reLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
     world.maybeEnableTrackChanges()
 

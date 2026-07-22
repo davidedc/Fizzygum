@@ -269,8 +269,10 @@ class ScrollPanelWdgt extends PanelWdgt
   
   setContents: (aWdgt, extraPadding = 0) ->
     @extraPadding = extraPadding
-    # there should never be a shadow but one never knows...
-    @contents.closeChildren()
+    # the outgoing contents is construction scaffold (every caller replaces a
+    # just-built default with the real content) -- destroy it outright: closing
+    # it instead would file unreferenced debris into the bin on every panel build.
+    @contents.fullDestroyChildren()
     @contents._applyMoveTo @position()
 
     aWdgt._applyMoveTo @position().add @padding + @extraPadding

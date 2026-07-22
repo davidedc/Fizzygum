@@ -1226,23 +1226,24 @@ class Widget extends TreeNode
   # applied geometry + a pure derived box — the D4/U3-A classification is unchanged.
   subWidgetsMergedFullBounds: ->
     result = nil
-    if @children.length
-      result = @children[0].scrollOverflowBoundsInParentPlane?() ? @children[0].bounds
-      @children.forEach (child) ->
-        # we exclude the HandleWdgts because they
-        # mangle how the Panel inside ScrollPanelWdgts
-        # calculate their size when they are resized
-        # (remember that the resizing handle of ScrollPanelWdgts
-        # actually end up in the Panel inside them.)
-        if !child.isLayoutInert?()
-          contribution = child.scrollOverflowBoundsInParentPlane?()
-          if !contribution?
-            # if a widget implements deferred layout, then
-            # really we can't consider the sizes and positions
-            # of its children, so stick to the parent bounds
-            # only
-            contribution = if child.implementsDeferredLayout() then child.bounds else child.fullBounds()
-          result = result.merge contribution
+    @children.forEach (child) ->
+      # we exclude the HandleWdgts because they
+      # mangle how the Panel inside ScrollPanelWdgts
+      # calculate their size when they are resized
+      # (remember that the resizing handle of ScrollPanelWdgts
+      # actually end up in the Panel inside them.)
+      # We also exclude HIDDEN children: the scroll range exists to REACH
+      # content, and an invisible child can't be reached -- e.g. the bin's
+      # parked (reachable, hidden) residents must not stretch its scrollbars.
+      if !child.isLayoutInert?() and child.isVisible
+        contribution = child.scrollOverflowBoundsInParentPlane?()
+        if !contribution?
+          # if a widget implements deferred layout, then
+          # really we can't consider the sizes and positions
+          # of its children, so stick to the parent bounds
+          # only
+          contribution = if child.implementsDeferredLayout() then child.bounds else child.fullBounds()
+        result = if result? then result.merge contribution else contribution
     result
 
   # §4.1 Stage C (proper-layouts): the side-effect-free counterpart of subWidgetsMergedFullBounds above --
