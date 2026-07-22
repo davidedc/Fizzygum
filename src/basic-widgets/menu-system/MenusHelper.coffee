@@ -783,5 +783,5 @@ class MenusHelper
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add readmeLauncher
-    readmeLauncher.setExtent new Point 75, 75
+    readmeLauncher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 

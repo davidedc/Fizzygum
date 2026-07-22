@@ -11,7 +11,6 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   constructor: ->
     super "Basement", new GenericShortcutIconWdgt new BasementIconWdgt
     @target = world.basementWdgt
-    @_applyExtent new Point 75, 75
 
   # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
   # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the

@@ -645,7 +645,7 @@ class WorldWdgt extends PanelWdgt
     # (FridgeMagnetsApp and the whole fizzytiles family ship only in the full build)
     (new FridgeMagnetsApp).createOpener()
     # this part is excluded from the fizzygum homepage build <<«
-    exampleDocsFolder = @makeFolder nil, nil, "examples"
+    exampleDocsFolder = @makeFolder nil, nil, "Examples"
     (new DegreesConverterApp).createOpener exampleDocsFolder
     (new SampleSlideApp).createOpener exampleDocsFolder
     (new SampleDashboardApp).createOpener exampleDocsFolder
@@ -2032,7 +2032,9 @@ class WorldWdgt extends PanelWdgt
         if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
           basementOpenerWdgt._moveWithin @
       else
-        basementOpenerWdgt._applyMoveTo @bottomRight().subtract (new Point 75, 75).add @desktopSidesPadding
+        # anchored desktopSidesPadding px inside the corner, by its own extent
+        # (was a hardcoded `new Point 75, 75`, the old standard icon extent)
+        basementOpenerWdgt._applyMoveTo @bottomRight().subtract basementOpenerWdgt.extent().add @desktopSidesPadding
 
     analogClockWdgt = @firstChildSuchThat (w) ->
       w instanceof AnalogClockWdgt

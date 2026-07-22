@@ -4,6 +4,10 @@ class FolderWindowWdgt extends FrameWdgt
   constructor: (@labelContent, @closeButton, @contents, @internal = false) ->
     @contents = new ScrollPanelWdgt new FolderPanelWdgt
     super @contents, labelContent: "", closeButton: @closeButton
+    # wide enough for a 3-column icon grid at the desktop-icon pitch
+    # (3 × 105 + the grid's edge padding + window chrome); overrides the
+    # generic 300×300 FrameWdgt default, which clips the third column
+    @setExtent new Point 340, 300
 
 
   representativeIcon: ->
@@ -37,6 +41,6 @@ class FolderWindowWdgt extends FrameWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     whichFolderPanelToAddTo.add widgetToAdd
-    widgetToAdd.setExtent new Point 75, 75
+    widgetToAdd.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
     @bringToForeground()
 

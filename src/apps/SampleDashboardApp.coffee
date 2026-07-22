@@ -9,7 +9,7 @@
 
 class SampleDashboardApp extends IconicDesktopSystemWindowedApp
 
-  title: "sample dashb"
+  title: "Sample dashboard"
   slot:  "sampleDashboardWindow"
 
   buildIcon: -> new GenericShortcutIconWdgt new DashboardsIconWdgt

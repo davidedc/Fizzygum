@@ -9,7 +9,7 @@
 
 class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
-  title: "sample slide"
+  title: "Sample slide"
   slot:  "sampleSlideWindow"
 
   buildIcon: -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt

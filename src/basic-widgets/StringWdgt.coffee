@@ -684,6 +684,33 @@ class StringWdgt extends Widget
         @width() - widthOfText - @_outlineHaloMargin()
 
 
+  # Draw ONE complete line of text at (x, y): when hasDarkOutline, first stamp
+  # the black halo copies, then the line itself in @color. This is the ONE home
+  # of the outline — StringWdgt's single-line paint and TextWdgt's
+  # wrapped-lines loop both draw every line through here.
+  #
+  # The halo is TWO 8-neighbourhood rings of black copies (plus the centre
+  # one): the ±1.5 ring gives the halo its reach under native AA; the ±1 ring
+  # is made of exact integer translates, which SWCanvas's round-to-integer
+  # glyph placement preserves symmetrically, guaranteeing every white pixel
+  # a contour there too — ±1.5 alone rounds lopsided under SWCanvas
+  # (JS round-half-up: +1.5 → +2 but -1.5 → -1), which speckled the halo.
+  _drawTextLine: (backBufferContext, line, x, y) ->
+    if @hasDarkOutline
+      backBufferContext.fillStyle = Color.BLACK.toString()
+      backBufferContext.fillText line, x+0, y+0
+      for r in [1, 1.5]
+        backBufferContext.fillText line, x+r, y+0
+        backBufferContext.fillText line, x-r, y+0
+        backBufferContext.fillText line, x+0, y+r
+        backBufferContext.fillText line, x+r, y+r
+        backBufferContext.fillText line, x-r, y+r
+        backBufferContext.fillText line, x+0, y-r
+        backBufferContext.fillText line, x+r, y-r
+        backBufferContext.fillText line, x-r, y-r
+    backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillText line, x, y
+
   # Shared by StringWdgt and TextWdgt (which extends StringWdgt): set the text
   # font/alignment on the freshly-created back-buffer context and, if a background
   # colour is set, fill it. Operates entirely within the caller's
@@ -782,32 +809,13 @@ class StringWdgt extends Widget
     textVerticalPosition = @textVerticalPosition(@fontHeight @fittingFontSize) + @fontHeight(@fittingFontSize)
     textHorizontalPosition = @textHorizontalPosition widthOfText
 
-    # NB: no SHADOW is baked into this buffer. hasDarkOutline below is an OUTLINE
-    # (offset black glyph copies, for legibility against busy backgrounds), NOT a
-    # shadow. A text widget's shadow is the unified widget drop-shadow (see
-    # Widget.coffee "How the shadow painting works" + addShadow); a per-glyph
-    # shadowOffset/shadowColor route is deliberately not used here.
-    if @hasDarkOutline
-      backBufferContext.fillStyle = Color.BLACK.toString()
-      # TWO 8-neighbourhood rings of black copies (plus the centre one):
-      # the ±1.5 ring gives the halo its reach under native AA; the ±1 ring is
-      # made of exact integer translates, which SWCanvas's round-to-integer
-      # glyph placement preserves symmetrically, guaranteeing every white pixel
-      # a contour there too — ±1.5 alone rounds lopsided under SWCanvas
-      # (JS round-half-up: +1.5 → +2 but -1.5 → -1), which speckled the halo.
-      backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0
-      for r in [1, 1.5]
-        backBufferContext.fillText text, textHorizontalPosition+r, textVerticalPosition+0
-        backBufferContext.fillText text, textHorizontalPosition-r, textVerticalPosition+0
-        backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+r
-        backBufferContext.fillText text, textHorizontalPosition+r, textVerticalPosition+r
-        backBufferContext.fillText text, textHorizontalPosition-r, textVerticalPosition+r
-        backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition-r
-        backBufferContext.fillText text, textHorizontalPosition+r, textVerticalPosition-r
-        backBufferContext.fillText text, textHorizontalPosition-r, textVerticalPosition-r
-
-    backBufferContext.fillStyle = @color.toString()
-    backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
+    # NB: no SHADOW is baked into this buffer. hasDarkOutline (honoured inside
+    # _drawTextLine) is an OUTLINE (offset black glyph copies, for legibility
+    # against busy backgrounds), NOT a shadow. A text widget's shadow is the
+    # unified widget drop-shadow (see Widget.coffee "How the shadow painting
+    # works" + addShadow); a per-glyph shadowOffset/shadowColor route is
+    # deliberately not used here.
+    @_drawTextLine backBufferContext, text, textHorizontalPosition, textVerticalPosition
 
     # header line
     if @isHeaderLine

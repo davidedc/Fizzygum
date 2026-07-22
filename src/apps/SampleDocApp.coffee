@@ -8,7 +8,7 @@
 
 class SampleDocApp extends IconicDesktopSystemWindowedApp
 
-  title: "sample doc"
+  title: "Sample doc"
   slot:  "sampleDocWindow"
 
   buildIcon: -> new GenericShortcutIconWdgt new TypewriterIconWdgt

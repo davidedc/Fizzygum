@@ -263,7 +263,11 @@ class TextWdgt extends StringWdgt
       # widthOverride lets the pure measure (preferredExtentForWidth, §4.1 proper-layouts)
       # wrap at an EXPLICIT available width instead of the applied @width(). Without it this
       # is the unchanged commit path: an undefined override falls through to @width().
-      widgetWidth = widthOverride ? @width()
+      # The halo margin is reserved on each side of every wrapped line — the ONE
+      # seam through which BOTH the fit check (doesTextFitInExtent) and the
+      # render wrap (reflowText) get their width, mirroring the base class's
+      # horizontal-only reservation in doesTextFitInExtent.
+      widgetWidth = (widthOverride ? @width()) - 2 * @_outlineHaloMargin()
     else
       widgetWidth = Number.MAX_VALUE
 
@@ -450,18 +454,14 @@ class TextWdgt extends StringWdgt
 
     textVerticalPosition = @textVerticalPosition contentHeight
 
-    # now draw the actual text
-    backBufferContext.fillStyle = @color.toString()
+    # now draw the actual text, line by line through the shared
+    # _drawTextLine (which honours hasDarkOutline). The per-line x comes from
+    # the base textHorizontalPosition — the same function the caret/selection
+    # math (slotCoordinates) uses, and the carrier of the halo-margin inset.
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText nil, line)
-      x = switch @horizontalAlignment
-        when AlignmentSpecHorizontal.RIGHT
-          @width() - width
-        when AlignmentSpecHorizontal.CENTER
-          (@width() - width) / 2
-        else # 'left'
-          0
+      x = @textHorizontalPosition width
       y = (i + 1) * Math.ceil @fontHeight @fittingFontSize
       i++
 
@@ -469,7 +469,7 @@ class TextWdgt extends StringWdgt
       # to draw the text, as it's supposed to be, well, invisible.
       # Unfortunately some fonts do draw it, so we indeed have to eliminate
       # it.
-      backBufferContext.fillText (@eliminateInvisibleCharacter line), x, y + textVerticalPosition
+      @_drawTextLine backBufferContext, (@eliminateInvisibleCharacter line), x, y + textVerticalPosition
 
       # header line
       # NB the same-named locals mean slightly different things here than in the

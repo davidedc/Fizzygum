@@ -288,7 +288,7 @@ class FrameWdgt extends Widget
       # this "add" is going to try to position the reference
       # in some smart way (i.e. according to a grid)
       placeToDropItIn.add widgetToAdd
-      widgetToAdd.setExtent new Point 75, 75
+      widgetToAdd.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
       @bringToForeground()
     else
       super

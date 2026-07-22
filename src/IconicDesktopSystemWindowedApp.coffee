@@ -39,12 +39,12 @@ class IconicDesktopSystemWindowedApp
     launcher.toolTipMessage = @toolTip if @toolTip?
     if inWhichFolder?
       # in-folder opener: size first, then add into the folder
-      launcher.setExtent new Point 75, 75
+      launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
       inWhichFolder.contents.contents.add launcher
     else
       # desktop launcher: add first (smart grid placement), then size
       world.add launcher
-      launcher.setExtent new Point 75, 75
+      launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 
   launch: ->
     if @slot?
