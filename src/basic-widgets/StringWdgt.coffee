@@ -577,6 +577,16 @@ class StringWdgt extends Widget
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
+  # hasDarkOutline halo: the offset black glyph copies extend up to 1.5px
+  # (plus AA spill) beyond the glyph ink on every side. This margin is reserved
+  # in fitting (doesTextFitInExtent), in the text position (textHorizontal/
+  # VerticalPosition — shared by paint AND caret/selection math, so both shift
+  # together), in the tight text-sized buffer and in the box-hugs-text measure,
+  # so the halo never clips at the buffer edge or at the widget bounds (the
+  # back buffer blits clipped to the widget box).
+  _outlineHaloMargin: ->
+    if @hasDarkOutline then 2 else 0
+
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if !@measureText?
       debugger
@@ -584,7 +594,14 @@ class StringWdgt extends Widget
       return true
     extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), @fontHeight(overrideFontSize)
 
-    return extentOccupiedByText.le @extent()
+    # reserve the halo margin HORIZONTALLY only: measured width is the glyphs'
+    # actual advance (ink reaches it), but fontHeight is the full em box, whose
+    # internal leading already keeps glyph ink at least a halo's width away from
+    # the top/bottom edges. Reserving it vertically too would make a short box
+    # (the 15px icon-label band) reject its set font outright — and CROP can
+    # only shorten text, never height, so the label would crop away to nothing.
+    haloMargin = @_outlineHaloMargin()
+    return extentOccupiedByText.le @extent().subtract new Point 2*haloMargin, 0
 
   fitToExtent: ->
     # this if is just to check if the text fits in the
@@ -645,23 +662,26 @@ class StringWdgt extends Widget
     @fittingSpecBoxTightOrLoose  + "-" +
     @fittingSpecBoxWhichDimensionAdjusts
 
+  # TOP/LEFT inset by the halo margin; CENTER needs no explicit inset because
+  # fitting reserves 2×margin horizontally, so the centring slack is ≥ margin;
+  # MIDDLE relies on the em box's internal leading (see doesTextFitInExtent).
   textVerticalPosition: (heightOfText) ->
     switch @verticalAlignment
       when AlignmentSpecVertical.TOP
-        0
+        @_outlineHaloMargin()
       when AlignmentSpecVertical.MIDDLE
         (@height() - heightOfText)/2
       when AlignmentSpecVertical.BOTTOM
-        @height() - heightOfText
+        @height() - heightOfText - @_outlineHaloMargin()
 
   textHorizontalPosition: (widthOfText) ->
     switch @horizontalAlignment
       when AlignmentSpecHorizontal.LEFT
-        0
+        @_outlineHaloMargin()
       when AlignmentSpecHorizontal.CENTER
         @width()/2 - widthOfText/2
       when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText
+        @width() - widthOfText - @_outlineHaloMargin()
 
 
   # Shared by StringWdgt and TextWdgt (which extends StringWdgt): set the text
@@ -749,8 +769,8 @@ class StringWdgt extends Widget
       width = @width()
       height = @height()
     else
-      width = widthOfText
-      height = heightOfText
+      width = widthOfText + 2 * @_outlineHaloMargin()
+      height = heightOfText + 2 * @_outlineHaloMargin()
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
 
@@ -769,15 +789,22 @@ class StringWdgt extends Widget
     # shadowOffset/shadowColor route is deliberately not used here.
     if @hasDarkOutline
       backBufferContext.fillStyle = Color.BLACK.toString()
+      # TWO 8-neighbourhood rings of black copies (plus the centre one):
+      # the ±1.5 ring gives the halo its reach under native AA; the ±1 ring is
+      # made of exact integer translates, which SWCanvas's round-to-integer
+      # glyph placement preserves symmetrically, guaranteeing every white pixel
+      # a contour there too — ±1.5 alone rounds lopsided under SWCanvas
+      # (JS round-half-up: +1.5 → +2 but -1.5 → -1), which speckled the halo.
       backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0
-      backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition+0
-      backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition+0
-      backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+1.5
-      backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition+1.5
-      backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition+1.5
-      backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition-1.5
-      backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition-1.5
-      backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition-1.5
+      for r in [1, 1.5]
+        backBufferContext.fillText text, textHorizontalPosition+r, textVerticalPosition+0
+        backBufferContext.fillText text, textHorizontalPosition-r, textVerticalPosition+0
+        backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+r
+        backBufferContext.fillText text, textHorizontalPosition+r, textVerticalPosition+r
+        backBufferContext.fillText text, textHorizontalPosition-r, textVerticalPosition+r
+        backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition-r
+        backBufferContext.fillText text, textHorizontalPosition+r, textVerticalPosition-r
+        backBufferContext.fillText text, textHorizontalPosition-r, textVerticalPosition-r
 
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
@@ -1185,7 +1212,8 @@ class StringWdgt extends Widget
     measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max (Math.ceil measuredWidth), 1
     heightOfText = @fontHeight @originallySetFontSize
-    @__commitExtent new Point widthOfText, heightOfText
+    haloMargin = @_outlineHaloMargin()
+    @__commitExtent new Point widthOfText + 2*haloMargin, heightOfText + 2*haloMargin
     # public-call-sanctioned: reflowText is public text API — macros call it directly
     # (macroBoxTransparencyAndColorChanging), so it stays public; consciously reused by this core.
     @reflowText()
