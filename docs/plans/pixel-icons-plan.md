@@ -2,11 +2,12 @@
 
 **Status**: two tracks. The BITMAP (ASCII index-mask) track: PLAN ONLY — AUTHORED
 2026-07-18, phases P0–P6 NOT STARTED, gated on the §5 owner re-judge. The SIZE-AWARE
-vector track (§5b): **LIVE and rolling** — 8 icons landed (Typewriter, Folder,
+vector track (§5b): **LIVE and rolling** — 9 icons landed (Typewriter, Folder,
 ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming,
 SimpleSlide, Dashboards — the ENTIRE slide-card family, retiring IconAppearance's
-legacy bezier `_paintSlideOutline`/`_paintSlideCard`) + the `SizeAwareIconAppearance`
-base (incl. the reusable `_pxPanel` rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
+legacy bezier `_paintSlideOutline`/`_paintSlideCard` — and the owner-redesigned
+Basement bin) + the `SizeAwareIconAppearance` base (incl. the reusable `_pxPanel`
+rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
 away. Every `file:line` was verified against source on 2026-07-18; **line numbers drift — the
@@ -624,6 +625,21 @@ solid tiles (swept: every size 14–19 broke some element invariant, 20+ none); 
 cross-quadrant safety generalizes lesson 19's threading: each painter returns its
 extent (q1Bot/q2Bot/q3Right) for the next one's clamps, in paint order. Sweep =
 `scan-dashboards.js`.
+
+**9th icon LANDED (2026-07-22) — the first REDESIGN**: `BasementIconAppearance` — the
+old house-with-stairs drawing replaced (owner request, from a reference sketch) by a
+simple BIN: handle, overhanging lid, tapered body, three ridges. Light line art:
+outlines on tc, ridges on td, tapered walls exactly tc at every row (outer and inner
+trapezoids share one taper). New lessons: (26) **derive an icon's real display size
+from the FULL layout chain, not from the holder's extent** — the desktop's 95×95
+shortcut holder gives 20% to the caption and squares the rest: the icon paints at
+76px (the preview had claimed 95); the probe ladder now carries 76. (27) **an
+owner-approved look at the flagship size becomes a UNIT FLOOR** — the 2px outline
+weight of the 76px rendering is held down to 20px via
+`tc = S >= 20 ? max(2, round(S/45)) : 1`; and **adjacent outlined shapes share ONE
+line** — the handle is bottomless, closed by the lid's own top border (a drawn bottom
+doubles the line and reads as a thicker band). Sweep = `scan-bin.js` (per-row wall
+exactness on the taper, junction singleness, ridge separation, byte gate).
 
 19. **Sibling elements need shared metrics and explicit separation.** The two toolbars
     read as one family only when they paint at ONE column width (a pre-pass takes the
