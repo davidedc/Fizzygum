@@ -289,7 +289,6 @@ class FrameWdgt extends Widget
       # in some smart way (i.e. according to a grid)
       placeToDropItIn.add widgetToAdd
       widgetToAdd.setExtent new Point 75, 75
-      widgetToAdd.fullChanged()
       @bringToForeground()
     else
       super

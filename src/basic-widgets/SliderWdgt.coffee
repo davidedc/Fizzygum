@@ -242,18 +242,14 @@ class SliderWdgt extends CircleBoxWdgt
     if value? then @value = value
     if size? then @size = size
     @_reLayoutSelf()
-    
+
     @button._reLayoutSelf()
-    
-    # if the parent is the same as the target
-    # then issue a fullChanged on the parent.
-    # It's likely to be duplicate, which doesn't
-    # matter, but it will consolidate the updates
-    # of the scrollbars too
-    if @parent != @target
-      @changed()
-    else
-      @parent.fullChanged()
+
+    # self + thumb: the re-lays above move/resize the button through
+    # non-notifying tiers. The caller covers its own repaint (a scroll
+    # frame's adjustScrollBars starts with its own changed()) — a widget
+    # invalidates only itself (widget-citizenship contract point 2).
+    @fullChanged()
   
   setStart: (numOrWidgetGivingNum) ->
 

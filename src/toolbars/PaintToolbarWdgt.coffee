@@ -65,7 +65,6 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               contextMain.fillStyle = Color.BLACK.toString()
               contextMain.rect(-2,-2,4,4)
               contextMain.fill()
-              @underlyingCanvasWdgt.changed()
 
           else
               context.strokeStyle=Color.RED.toString()
@@ -154,9 +153,6 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               contextMain.rect 6, 24, 6, 6
               contextMain.rect 0, 42, 6, 6
               contextMain.fill()
-
-
-              @underlyingCanvasWdgt.changed()
 
           else
               context.strokeStyle=Color.GREEN.toString()
@@ -300,9 +296,6 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
                   @paintBrush contextMain
                   contextMain.restore()
 
-
-              @underlyingCanvasWdgt.changed()
-
           else
               context.strokeStyle=Color.GREEN.toString()
           context.rect(-5,-5,10,10)
@@ -335,7 +328,6 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               contextMain.fillStyle = Color.WHITE.toString()
               contextMain.rect(-5,-5,10,10)
               contextMain.fill()
-              @underlyingCanvasWdgt.changed()
 
           else
               context.strokeStyle=Color.GREEN.toString()

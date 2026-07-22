@@ -38,6 +38,5 @@ class FolderWindowWdgt extends FrameWdgt
     # in some smart way (i.e. according to a grid)
     whichFolderPanelToAddTo.add widgetToAdd
     widgetToAdd.setExtent new Point 75, 75
-    widgetToAdd.fullChanged()
     @bringToForeground()
 

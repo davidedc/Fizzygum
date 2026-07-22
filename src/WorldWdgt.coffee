@@ -1685,7 +1685,10 @@ class WorldWdgt extends PanelWdgt
     @_editorSelectedWidget = target
     # only invalidate a still-attached previous widget: a destroyed one already invalidated its region on
     # fullDestroy, and changed() on a detached widget can't reach the broken-rect list anyway.
+    # cross-invalidation-sanctioned: selection-overlay reconciler — PULL model (D-3-iii), no
+    # method ever runs on the old/new target in which it could self-invalidate
     previous.changed() if previous? and previous.root() is @
+    # cross-invalidation-sanctioned: selection-overlay reconciler (see above)
     target?.changed()
 
   # Is w the widget generically selected for editing this cycle? PUBLIC query (called cross-object from

@@ -256,7 +256,6 @@ class InspectorWdgt extends Widget
       inspector._applyMoveTo world.hand.position()
       inspector._moveWithin world
       world.add inspector
-      inspector.changed()
 
     @list = new ListWdgt(
       @, # target

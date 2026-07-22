@@ -55,7 +55,9 @@ class FileLoading
         world.add widget
         widget._applyMoveTo dropPoint if dropPoint?
         widget._rememberFractionalSituationInHoldingPanel?()
-        # a repaint once any async image/canvas assets have decoded
+        # cross-invalidation-sanctioned: load orchestration — a deferred repaint once async
+        # image/canvas assets have decoded; the deserializer restores fields directly, so
+        # there is no receiver-side method seam for this
         result.whenReady?.then? -> widget.fullChanged?()
       when "world"
         if world.loadWorldSnapshot?

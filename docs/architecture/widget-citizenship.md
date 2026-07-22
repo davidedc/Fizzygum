@@ -63,9 +63,18 @@ citizen:
    processes included — and serialization ships the same closure to disk. A widget that
    quietly depends on state parked elsewhere breaks both.
 2. **It draws itself** — through its pluggable `*Appearance`, never by reaching into another
-   widget's rendering. A widget invalidates only itself (`changed()` /`fullChanged()`); it
-   never calls `changed()` *on another widget* — if A's action affects B, B marks itself
-   changed in the method A invoked on it.
+   widget's rendering. A widget invalidates only itself (`changed()` /`fullChanged()`): if
+   A's action affects B, B marks itself changed in the method A invoked on it. Two sanctioned
+   exception families, each carrying an explicit `# cross-invalidation-sanctioned: <reason>`
+   marker and gated by `buildSystem/check-invalidation-receivers.js` (see
+   [`lint-and-static-checks.md`](lint-and-static-checks.md)): (a) *dispatcher plumbing* — the
+   structural movers (`Widget._addNoSettle`, `ActivePointerWdgt.drop`, `bringToForeground`,
+   the shadow walk-up `fullChangedIncludingShadowOwner`) and the world's selection-overlay
+   reconciler invalidate the widget being moved/retargeted, because the mechanism runs there
+   and the widget has no method of its own in which to do it; (b) *own-sub-part* — an owner
+   invalidates a part it just mutated through a deliberately non-invalidating NoSettle tier.
+   The shared singletons (`world`, `world.caret`, `world.hand`) are global orchestration
+   surfaces, not peers, and may be invalidated from anywhere without a marker.
 3. **It handles its own input**, and exposes its affordances uniformly: the right-click menu
    is the universal front door (edit, inspect, resize, attach, duplicate…), so every widget
    is automatically editable and inspectable without any per-widget tooling.

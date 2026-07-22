@@ -786,5 +786,4 @@ class MenusHelper
     # in some smart way (i.e. according to a grid)
     world.add readmeLauncher
     readmeLauncher.setExtent new Point 75, 75
-    readmeLauncher.fullChanged()
 

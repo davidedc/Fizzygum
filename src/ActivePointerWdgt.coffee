@@ -487,6 +487,8 @@ class ActivePointerWdgt extends Widget
       # unchanged (the wrapper survives).
       if wdgtToDrop._materializedBySugar
         wdgtToDrop = wdgtToDrop._unwrapIfIdentitySugar()
+      # cross-invalidation-sanctioned: drop dispatcher — the hand invalidates the widget
+      # being dropped (structural-move orchestration, like _addNoSettle's)
       wdgtToDrop.fullChanged()
 
       # when you click the buttons, sometimes you end up

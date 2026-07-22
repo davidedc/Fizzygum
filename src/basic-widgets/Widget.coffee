@@ -3038,7 +3038,6 @@ class Widget extends TreeNode
     @parent.add widgetToAdd, myPosition
     widgetToAdd.moveTo @position()
     widgetToAdd.setExtent new Point 150, 20
-    widgetToAdd.fullChanged()
     @removeFromTree()
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -3071,7 +3070,6 @@ class Widget extends TreeNode
     # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
     widgetToAdd._applyExtent new Point 75, 75
-    widgetToAdd.fullChanged()
     # public-call-sanctioned: bringToForeground is the heavily-public z-order verb (macros/user
     # code drive it) — settle-free, consciously reused by this core.
     @bringToForeground()
@@ -3260,6 +3258,8 @@ class Widget extends TreeNode
   fullChangedIncludingShadowOwner: ->
     firstParentOwningMyShadow = @firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
+      # cross-invalidation-sanctioned: shadow plumbing — the repaint must start from the
+      # ancestor OWNING my shadow, or its stale shadow stays on screen
       firstParentOwningMyShadow.fullChanged()
     else
       @fullChanged()
@@ -3368,6 +3368,8 @@ class Widget extends TreeNode
     # as the old `if layoutSpec != FREEFLOATING` guard, now centralized in _invalidateLayout.
     @_invalidateLayout(aWdgt)
 
+    # cross-invalidation-sanctioned: structural-move dispatcher — the add orchestration
+    # invalidates the widget being re-homed (its own tiers run non-notifying here)
     aWdgt.fullChanged()
     @__add aWdgt, true, position
     aWdgt._reactToBeingAdded @, beingDropped
@@ -3767,6 +3769,8 @@ class Widget extends TreeNode
 
   bringToForeground: ->
     @rootForFocus()?.moveAsLastChild()
+    # cross-invalidation-sanctioned: z-order structural verb — invalidates the focus-root
+    # it just raised (the moved widget), same dispatcher shape as _addNoSettle's
     @rootForFocus()?.fullChanged()
 
 

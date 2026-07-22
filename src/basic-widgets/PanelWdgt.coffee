@@ -55,13 +55,14 @@ class PanelWdgt extends Widget
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
     aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor
     # keep in sync the value of the container scrollPanel
-    # if there is one. Note that the container scrollPanel
-    # is actually not painted.
+    # if there is one. A bare field sync: the container scrollPanel
+    # is never painted (alpha 0, mimics the contained panel's values),
+    # so there is nothing of it to invalidate — my own super's changed()
+    # already covers every visible recoloured pixel.
     if @scrollPanel
       if @scrollPanel.color?.equals aColor
         return
       @scrollPanel.color = aColor
-      @scrollPanel.changed()
 
     return aColor
 

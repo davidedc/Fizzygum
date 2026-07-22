@@ -147,7 +147,6 @@ class CellWdgt extends Widget
     inset = 2
     widget._applyExtent @extent().subtract new Point 2 * inset, 2 * inset
     widget._applyMoveTo @position().add new Point inset, inset
-    widget.changed()
     return
 
   _unhostNoSettle: ->
@@ -250,7 +249,6 @@ class CellWdgt extends Widget
     editor._applyExtent @extent()
     editor._applyMoveTo @position()
     @_editorWdgt = editor
-    editor.changed()
     return
 
   _updateEditorTextNoSettle: (bufferText) ->

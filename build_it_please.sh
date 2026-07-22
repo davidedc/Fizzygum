@@ -311,6 +311,25 @@ if ! $noSyntaxCheck ; then
   echo "... layering OK"
 fi
 
+# --- build-time INVALIDATION-RECEIVERS gate -------------------------------------------
+# Enforces widget-citizenship contract point 2: invalidation is SELF-invalidation — a widget
+# never calls changed()/fullChanged() on another widget (if A's action affects B, B marks
+# itself changed in the method A invoked on it). Allowed receivers: @ (self) and the shared
+# singletons world / world.caret / world.hand; genuine dispatcher plumbing (the structural
+# add/drop/z-order movers, the selection-overlay reconciler, …) carries an explicit
+# `# cross-invalidation-sanctioned: <reason>` marker. (buildSystem/check-invalidation-receivers.js
+# -- same --noSyntaxCheck escape hatch and explicit $? check as the gates around it.)
+if ! $noSyntaxCheck ; then
+  echo "checking invalidation receivers (self-invalidation contract) ..."
+  node ./buildSystem/check-invalidation-receivers.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: invalidation-receivers gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... invalidation-receivers check OK"
+fi
+
 # --- build-time DEAD-METHOD gate ------------------------------------------------------
 # Flags methods DEFINED in src but referenced NOWHERE (src + tests + harness) -- catches
 # dead code like the addRaw / fullRawMoveCenterTo deletions. A baseline of known-dead methods

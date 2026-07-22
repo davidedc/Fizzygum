@@ -68,7 +68,6 @@ class PointerWdgt extends BoxWdgt
     myPosition = @positionAmongSiblings()
     @parent.add @target, myPosition
     @target.moveTo @position()
-    @target.fullChanged()
     @close()
 
   closeThis: ->

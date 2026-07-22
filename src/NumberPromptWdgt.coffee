@@ -55,11 +55,14 @@ class NumberPromptWdgt extends PromptWdgt
     @_settleLayoutsAfterOrJoinEnclosingPass => @_takeSliderValueNoSettle num
 
   _takeSliderValueNoSettle: (num) ->
+    # cross-invalidation-sanctioned: own sub-part — the entry field is mutated below through
+    # non-invalidating NoSettle tiers, so its owner marks it (old pixels) here
     @tempPromptEntryField.changed()
     # the field's inner text is a StringWdgt. Use _setTextNoSettle
     # -- which re-runs _synchroniseTextAndActualText so textPossiblyCroppedToFit tracks the new
     # value -- instead of poking .text + _reLayoutSelf (StringWdgt has no _reLayoutSelf that refits).
     # Otherwise _editNoSettle below sees a stale cropped text and defers to the "edit:" prompt.
     @tempPromptEntryField.text._setTextNoSettle Math.round(num).toString()
+    # cross-invalidation-sanctioned: own sub-part — _setTextNoSettle above is non-invalidating
     @tempPromptEntryField.text.changed()
     @tempPromptEntryField.text._editNoSettle()
