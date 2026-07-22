@@ -92,7 +92,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
 
   step: ->
     @_renderScene()
-    @changed()
+    @_changed()
 
   # Animation clock: event time under the Automator (deterministic screenshots),
   # wall clock when live (smooth animation). Mirrors the multi-click event-time

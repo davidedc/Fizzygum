@@ -234,7 +234,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

@@ -166,13 +166,13 @@ class TransformFrameWdgt extends PanelWdgt
     @transformSpec.claimsSpace = mode   # set the canonical scalar directly
     @_lastClaimedExtent = nil
     @__breakMoveResizeCaches()
-    @fullChanged()
+    @_fullChanged()
     @_invalidateLayout()
     @_reFitScrollFrameIfReachChangedNoSettle()
 
   # The immediate (no-settle) transform-change core: invalidates the version-keyed bounds caches
   # exactly as a move does (__breakMoveResizeCaches bumps WorldWdgt.geometryVersion), queues the
-  # new footprint via fullChanged() (the OLD footprint is the last-painted snapshot the flesh-out
+  # new footprint via _fullChanged() (the OLD footprint is the last-painted snapshot the flesh-out
   # lane reads as the "source" rect), and — for a coupled island — invalidates the parent's layout.
   _transformChangedNoSettle: ->
     # §4.5 invariant (buffer cache): a transform change damages the SCREEN (old ∪ new footprint),
@@ -182,7 +182,7 @@ class TransformFrameWdgt extends PanelWdgt
     # entirely, so drop it (else a window-sized canvas would linger on a de-tilted explicit island).
     @_dropIslandBufferIfIdentity()
     @__breakMoveResizeCaches()
-    @fullChanged()
+    @_fullChanged()
     @_reflowIfClaimChangedNoSettle()
     @_reFitScrollFrameIfReachChangedNoSettle()
 

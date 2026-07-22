@@ -24,4 +24,4 @@ class BoxWdgt extends Widget
       newRadius = parseFloat radius
       if !isNaN newRadius
         @cornerRadius = Math.max newRadius, 0
-    @changed()
+    @_changed()

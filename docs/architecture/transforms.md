@@ -325,7 +325,7 @@ dirty sub-rect. Fields on `TransformFrameWdgt` (all **derived render state**, li
 when `_islandBufferGeneration != WorldWdgt.immutableBackBufferGeneration` — the **async glyph-
 atlas invalidation**: SWCanvas warms text atlases asynchronously, and when one warms the immutable
 text-back-buffer epoch bumps, so this downstream cache must rebuild from the now-warm text (a
-render change with no `changed()` event — the one non-event invalidation the cache needs; native
+render change with no `_changed()` event — the one non-event invalidation the cache needs; native
 never loads an atlas, so the epoch never bumps). The cache is active only when both the global
 kill-switch (`WorldWdgt.islandBufferCacheEnabled`) and the per-island opt-in (`cachesBuffer`) are
 on; the OFF path is byte-identical to the pre-cache rebuild-every-time.

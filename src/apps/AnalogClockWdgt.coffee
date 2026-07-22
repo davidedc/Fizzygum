@@ -118,7 +118,7 @@ class AnalogClockWdgt extends Widget
 
   step: ->
     @dateLastTicked = WorldWdgt.dateOfCurrentCycleStart
-    @changed()
+    @_changed()
 
   _calculateHandsAngles: ->
 

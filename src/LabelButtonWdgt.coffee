@@ -175,17 +175,17 @@ class LabelButtonWdgt extends ButtonWdgt
 
   mouseEnter: ->
     @state = @STATE_HIGHLIGHTED
-    @changed()
+    @_changed()
     @startCountdownForBubbleHelp @toolTipMessage  if @toolTipMessage
 
   mouseLeave: ->
     @state = @STATE_NORMAL
-    @changed()
+    @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
   mouseDownLeft: (pos) ->
     @state = @STATE_PRESSED
-    @changed()
+    @_changed()
     # replicate Widget.mouseDownLeft inline (bringToForeground + escalate) rather
     # than calling super: ButtonWdgt's HighlightableMixin mouseDownLeft would run
     # _updateColor, clobbering @color (our normal fill).
@@ -200,7 +200,7 @@ class LabelButtonWdgt extends ButtonWdgt
   mouseClickLeft: ->
     @bringToForeground()
     @state = @STATE_HIGHLIGHTED
-    @changed()
+    @_changed()
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
     @trigger()

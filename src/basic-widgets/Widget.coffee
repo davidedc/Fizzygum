@@ -54,7 +54,7 @@ class Widget extends TreeNode
     # bake a stale own-property into saved files (a restored flag has no matching work-list entry).
     "hasDirtyDescendant"
     # per-frame broken-rect damage bookkeeping — every field pairs with world-level per-flush
-    # state that is never serialized: the changed()/fullChanged() dedupe flags mirror membership
+    # state that is never serialized: the _changed()/_fullChanged() dedupe flags mirror membership
     # in world.widgetsWithMaybeChanged(Full)PaintBounds, the *WhenLastPainted footprints and the
     # src/dst indices are consumed by the flesh-out. A restored `true` dedupe flag has no matching
     # work-list entry, so it would permanently SUPPRESS damage reporting on the restored widget
@@ -669,7 +669,7 @@ class Widget extends TreeNode
 
     if @parent?
       previousParent = @parent
-      @fullChangedIncludingShadowOwner()
+      @_fullChangedIncludingShadowOwner()
 
       previousParent.removeChild @
       if previousParent._reactToChildRemoved?
@@ -871,7 +871,7 @@ class Widget extends TreeNode
       @bounds = @bounds.translateTo newBounds.origin
       @_assertBoundsWellFormed "_applyBounds"
       @__breakMoveResizeCaches()
-      @changed()
+      @_changed()
 
     @_applyExtent newBounds.extent()
 
@@ -1280,7 +1280,7 @@ class Widget extends TreeNode
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
   # find the smallest broken rectangle created by
-  # a fullChanged(), which means that really we
+  # a _fullChanged(), which means that really we
   # are interested in what's visible on screen so
   # we do take into account orphanage and
   # visibility.
@@ -1316,7 +1316,7 @@ class Widget extends TreeNode
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
   # find the smallest broken rectangle created by
-  # a changed(), which means that really we
+  # a _changed(), which means that really we
   # are interested in what's visible on screen so
   # we do take into account orphanage and
   # visibility.
@@ -1973,7 +1973,7 @@ class Widget extends TreeNode
   # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveByBase. The "AndNotify"
   # suffix is historical -- but this twin is NOT collapsible into _applyMoveByBase (2026-07-01 twin-collapse verdict):
   # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization and the
-  # ActivePointerWdgt float-drag OVERRIDES (which repaint via @changed, not @fullChanged), whereas bare _applyMoveByBase
+  # ActivePointerWdgt float-drag OVERRIDES (which repaint via @_changed, not @_fullChanged), whereas bare _applyMoveByBase
   # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveByBase
   # would route arrange moves through them on clipping panels and change their dirty regions -- so the two names are a
   # genuine dispatch distinction, not redundant twins. (Only the truly-redundant SILENT-commit twins collapsed in that
@@ -1990,7 +1990,7 @@ class Widget extends TreeNode
   _applyMoveByBase: (delta) ->
     return false if delta.isZero()
     @__breakMoveResizeCaches()
-    @fullChanged()
+    @_fullChanged()
     @bounds = @bounds.translateBy delta
     @_assertBoundsWellFormed "_applyMoveByBase"   # move ROOT: children inherit this (finite) delta via __commitMoveBy, so the root check covers the subtree
     @children.forEach (child) ->
@@ -2354,7 +2354,7 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     return true
 
-  # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @changed repaint + @_reLayoutSelf. THE
+  # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @_changed repaint + @_reLayoutSelf. THE
   # single body of the extent-apply pair -- the polymorphic _applyExtent base is a pure pass-through to
   # this. A container arranging a child top-down uses this to apply the child's measured extent while BYPASSING
   # the child's own _applyExtent override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height
@@ -2367,7 +2367,7 @@ class Widget extends TreeNode
       # guard -- so a round/min-clamp no-op commit no longer bumps the clipped-bounds cache version key
       # (misses cost recompute, never values -- the Tier-D D4 discipline).
       @__commitExtent aPoint
-      @changed()
+      @_changed()
       @_reLayoutSelf()
 
 
@@ -2539,7 +2539,7 @@ class Widget extends TreeNode
         return
 
       @color = aColor
-      @changed()
+      @_changed()
         
     return aColor
   
@@ -2554,7 +2554,7 @@ class Widget extends TreeNode
         return
 
       @backgroundColor = aColor
-      @changed()
+      @_changed()
 
     return aColor
 
@@ -2644,13 +2644,13 @@ class Widget extends TreeNode
       # declare into the highlight style channel (target -> style descriptor) with the legacy
       # translucent-blue fill — the only style today; the drag arc (Phase 2+) adds outline styles.
       world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle(Color.BLUE, 50)
-      @changed()
+      @_changed()
 
   turnOffHighlight: ->
     if @highlighted
       @highlighted = false
       world.widgetsToBeHighlighted.delete @
-      @changed()
+      @_changed()
 
 
   # paintRectangle can work in two patterns:
@@ -2732,7 +2732,7 @@ class Widget extends TreeNode
       # attached and being painted), NOT the raw virtual rect. fleshOut(Full)Broken erases the "source"
       # (where-I-was) rect from these; if it re-mapped a stored VIRTUAL rect at flush time instead, a widget
       # DETACHED between paint and flush — a close/destroy (_destroyNoSettle / _closeNoSettle issue
-      # fullChanged() then sever @parent, re-homing me to the basement) — would map through a nil/basement
+      # _fullChanged() then sever @parent, re-homing me to the basement) — would map through a nil/basement
       # chain (an identity) and erase the WRONG (un-transformed) rect, leaving the rotated on-screen footprint
       # stale (owner bug: closing a tilted converter's inner window). mapRectToScreen returns the SAME rect
       # off any island ⇒ byte-identical dormant. (Field names kept; they now hold the screen-plane footprint.)
@@ -2914,7 +2914,7 @@ class Widget extends TreeNode
 
     @__hide()
 
-    @fullChangedIncludingShadowOwner()
+    @_fullChangedIncludingShadowOwner()
 
 
   show: ->
@@ -2925,12 +2925,12 @@ class Widget extends TreeNode
     @isVisible = true
     WorldWdgt.noteVisibilityOrCollapseChange()
 
-    @fullChangedIncludingShadowOwner()
+    @_fullChangedIncludingShadowOwner()
   
   toggleVisibility: ->
     @isVisible = not @isVisible
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @fullChanged()
+    @_fullChanged()
 
   # SELF-SETTLE (single-mutation tier). _beforeChildCollapsed now tears down the bar buttons through the
   # NON-settling core (_destroyNoSettle), and _reactToChildCollapsed re-fits via immediate mutators + _reFitContainer, so
@@ -2953,7 +2953,7 @@ class Widget extends TreeNode
     @collapsed = true
     WorldWdgt.noteVisibilityOrCollapseChange()
     @_scheduleRelayoutRespectingPhase()
-    @fullChanged()
+    @_fullChanged()
     @parent?._reactToChildCollapsed? @
 
   # SELF-SETTLE (single-mutation tier). _beforeChildUnCollapsed re-creates the bar buttons through the
@@ -2979,7 +2979,7 @@ class Widget extends TreeNode
     @collapsed = false
     WorldWdgt.noteVisibilityOrCollapseChange()
     @_scheduleRelayoutRespectingPhase()
-    @fullChanged()
+    @_fullChanged()
     @parent?._reactToChildUnCollapsed? @
 
   
@@ -3023,7 +3023,7 @@ class Widget extends TreeNode
     @__breakMoveResizeCaches()
     WorldWdgt.noteStructureChange()
     @parent.removeChild @
-    @fullChanged()
+    @_fullChanged()
 
   colloquialName: ->
     "generic widget"
@@ -3182,7 +3182,7 @@ class Widget extends TreeNode
   # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
     @__addShadow offset, alpha
-    @fullChanged()
+    @_fullChanged()
 
   __addShadow: (offset, alpha) ->
     @shadowInfo = new ShadowInfo offset, alpha
@@ -3193,12 +3193,12 @@ class Widget extends TreeNode
   removeShadow: ->
     if @hasShadow()
       @shadowInfo = nil
-      @fullChanged()
+      @_fullChanged()
   
   
   
   # Widget updating ///////////////////////////////////////////////////////////////
-  changed: ->
+  _changed: ->
     # tests should all pass even if you don't
     # use the world.trackChanges flag, perhaps things
     # should just be a bit slower (but probably not
@@ -3209,13 +3209,11 @@ class Widget extends TreeNode
     # I tested this was OK in December 2017
     if world.trackChanges[world.trackChanges.length - 1]
 
-      # if the widget is attached to a hand then
-      # there is also a shadow to change, so we
-      # change everything that is attached
-      # to the hand, which means we issue a
-      # fullChanged()
+      # if the widget is attached to a hand then there is also a shadow to
+      # change, so the whole carried composite must repaint — the hand
+      # invalidates itself in this public notification
       if @isBeingFloatDragged()
-        world.hand.fullChanged()
+        world.hand.noteCarriedWidgetChanged()
         return
 
       # you could check directly if it's in the array
@@ -3243,7 +3241,7 @@ class Widget extends TreeNode
   
   # See comment on the fullPaintBoundsMaybeChanged
   # property above for more info.
-  fullChanged: ->
+  _fullChanged: ->
     # (on the trackChanges flag see the note in `changed` above)
     if world.trackChanges[world.trackChanges.length - 1]
       # check if we already issued a fullChanged on this widget
@@ -3254,15 +3252,15 @@ class Widget extends TreeNode
   # fullChanged, but shadow-aware: if I contribute to an ancestor's shadow, the repaint
   # must start from the first parent OWNING that shadow (breaking only my own rect would
   # leave its stale shadow on screen), so walk up to it. Used by the structural verbs
-  # (destroy/hide/show/add); many other bare @fullChanged sites could arguably use this too.
-  fullChangedIncludingShadowOwner: ->
+  # (destroy/hide/show/add); many other bare @_fullChanged sites could arguably use this too.
+  _fullChangedIncludingShadowOwner: ->
     firstParentOwningMyShadow = @firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
       # cross-invalidation-sanctioned: shadow plumbing — the repaint must start from the
       # ancestor OWNING my shadow, or its stale shadow stays on screen
-      firstParentOwningMyShadow.fullChanged()
+      firstParentOwningMyShadow._fullChanged()
     else
-      @fullChanged()
+      @_fullChanged()
   
   # Widget accessing - structure //////////////////////////////////////////////
 
@@ -3360,7 +3358,7 @@ class Widget extends TreeNode
     # container is invalidated AFTER _setLayoutSpec, further down, also via the param.)
     aWdgt.parent?._invalidateLayout(aWdgt)
 
-    aWdgt.fullChangedIncludingShadowOwner()
+    aWdgt._fullChangedIncludingShadowOwner()
 
     aWdgt._setLayoutSpec layoutSpec
     # NEW-container invalidate via the param: _setLayoutSpec above set aWdgt.layoutSpec to the NEW
@@ -3370,7 +3368,7 @@ class Widget extends TreeNode
 
     # cross-invalidation-sanctioned: structural-move dispatcher — the add orchestration
     # invalidates the widget being re-homed (its own tiers run non-notifying here)
-    aWdgt.fullChanged()
+    aWdgt._fullChanged()
     @__add aWdgt, true, position
     aWdgt._reactToBeingAdded @, beingDropped
     if previousParent?._reactToChildRemoved?
@@ -3388,7 +3386,7 @@ class Widget extends TreeNode
 
   sourceChanged: ->
     @_reLayoutSelf?()
-    @changed?()
+    @_changed?()
 
   # this is done before the updating of the
   # backing store in some widgets that
@@ -3762,7 +3760,7 @@ class Widget extends TreeNode
 
   _moveInFrontOfSiblings: ->
     @moveAsLastChild()
-    @fullChanged()
+    @_fullChanged()
 
   isInForeground: ->
     @rootForFocus()?.isLastChild()
@@ -3771,7 +3769,7 @@ class Widget extends TreeNode
     @rootForFocus()?.moveAsLastChild()
     # cross-invalidation-sanctioned: z-order structural verb — invalidates the focus-root
     # it just raised (the moved widget), same dispatcher shape as _addNoSettle's
-    @rootForFocus()?.fullChanged()
+    @rootForFocus()?._fullChanged()
 
 
   # note that "propagateKillPopUps" doesn't necessarily
@@ -4231,7 +4229,7 @@ class Widget extends TreeNode
       @paddingBottom = padding
       @paddingLeft = padding
       @paddingRight = padding
-      @changed()
+      @_changed()
 
     return padding
 
@@ -4244,7 +4242,7 @@ class Widget extends TreeNode
     if padding
       unless @paddingTop == padding
         @paddingTop = padding
-        @changed()
+        @_changed()
 
     return padding
 
@@ -4257,7 +4255,7 @@ class Widget extends TreeNode
     if padding
       unless @paddingBottom == padding
         @paddingBottom = padding
-        @changed()
+        @_changed()
 
     return padding
 
@@ -4270,7 +4268,7 @@ class Widget extends TreeNode
     if padding
       unless @paddingLeft == padding
         @paddingLeft = padding
-        @changed()
+        @_changed()
 
     return padding
 
@@ -4283,7 +4281,7 @@ class Widget extends TreeNode
     if padding
       unless @paddingRight == padding
         @paddingRight = padding
-        @changed()
+        @_changed()
 
     return padding
   # this part is excluded from the fizzygum homepage build <<«
@@ -4298,7 +4296,7 @@ class Widget extends TreeNode
       alpha = @calculateAlphaScaled alpha
       unless @alpha == alpha
         @alpha = alpha
-        @changed()
+        @_changed()
 
     return alpha
 
@@ -4628,7 +4626,7 @@ class Widget extends TreeNode
     JSCode = compileFGCode codeSource, true
     result = eval JSCode
     @_reLayoutSelf()
-    @changed()
+    @_changed()
   
   
 
@@ -4760,7 +4758,7 @@ class Widget extends TreeNode
     if world?._recalculatingLayouts
       throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- an immediate geometry mutator (an _apply*/_commit*/__commit* corner or _move*/_set* convenience) must not schedule layout (task #17)"
     # DEBUG (WorldWdgt.auditPaintTimeLayoutScheduling, default off): PAINT must be READ-ONLY. healingRectangles-
-    # Phase is true only inside updateBroken's paint pass; reaching here then means a widget SCHEDULED layout while
+    # Phase is true only inside _updateBroken's paint pass; reaching here then means a widget SCHEDULED layout while
     # being painted -- crossing the render/layout boundary. Record its ctor for the per-frame paint-schedules log.
     # (The caret's paint-time scroll-follow, the original such offender, was moved to a post-flush pre-paint step.)
     if world?.healingRectanglesPhase and world.auditPaintTimeLayoutScheduling and not @isOrphan()

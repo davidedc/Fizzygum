@@ -105,7 +105,7 @@ class TreeNode
     @parent.children.push @
     @parent._reactToChildMovedToFront? @
     # whoever invoked this should probably
-    # do a fullChanged() we don't do it
+    # do a _fullChanged() we don't do it
     # here because it seems like a lower-level
     # function calling a higher-level one.
   

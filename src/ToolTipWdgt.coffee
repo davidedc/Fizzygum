@@ -58,7 +58,7 @@ class ToolTipWdgt extends Widget
     @_moveWithin world
     world.add @
     @addShadow()
-    @fullChanged()
+    @_fullChanged()
     world.destroyToolTips()
     world.toolTipsList.add @
     

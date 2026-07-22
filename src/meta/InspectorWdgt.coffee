@@ -545,7 +545,7 @@ class InspectorWdgt extends Widget
     @saveButton._reLayout buttonBounds
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

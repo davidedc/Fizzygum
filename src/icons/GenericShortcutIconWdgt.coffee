@@ -65,7 +65,7 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

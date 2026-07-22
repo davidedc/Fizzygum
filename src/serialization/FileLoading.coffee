@@ -58,7 +58,7 @@ class FileLoading
         # cross-invalidation-sanctioned: load orchestration — a deferred repaint once async
         # image/canvas assets have decoded; the deserializer restores fields directly, so
         # there is no receiver-side method seam for this
-        result.whenReady?.then? -> widget.fullChanged?()
+        result.whenReady?.then? -> widget._fullChanged?()
       when "world"
         if world.loadWorldSnapshot?
           world.loadWorldSnapshot envelope

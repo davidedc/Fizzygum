@@ -217,4 +217,4 @@ ClippingAtRectangularBoundsMixin =
         @__breakMoveResizeCaches()
         @children.forEach (child) ->
           child.__commitMoveBy delta
-        @changed()
+        @_changed()

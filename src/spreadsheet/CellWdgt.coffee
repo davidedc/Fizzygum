@@ -81,7 +81,7 @@ class CellWdgt extends Widget
     @_unhostNoSettle() if @hostedWidget?
     @_scalarText = if text? and text != "" then text else nil
     @_scalarIsError = isError is true
-    @changed()
+    @_changed()
     return
 
   # 12px Arial — the SWCanvas-deterministic band (Arial/Times/Courier atlases only); matches the
@@ -216,7 +216,7 @@ class CellWdgt extends Widget
     world.dataflow?.removeAllEdgesOf grabbedWdgt
     FormulaCompiler.commit record, ""
     world.dataflow?.markStale record
-    @changed()
+    @_changed()
     return
 
   # ── interaction: wire an interactive value-widget to fire into this cell ──────────────────
@@ -259,5 +259,5 @@ class CellWdgt extends Widget
     editor = @_editorWdgt
     @_editorWdgt = nil
     editor?._fullDestroyNoSettle()
-    @changed()
+    @_changed()
     return

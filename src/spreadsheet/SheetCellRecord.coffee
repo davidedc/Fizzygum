@@ -116,8 +116,8 @@ class SheetCellRecord
   # layout settle (DataflowEngine._drainOnePass wraps the pass), so the reconcile is a NoSettle core.
   # Then RETURN the EXPORTED form — the engine's cutoff compares old vs returned (NOMENCLATURE: dataflow
   # "caches/recomputes", it does not "settle"). Repaint is the VIEW's business, not this record's:
-  # every reconcile branch self-invalidates (the sheet's own changed() on host, the cell's own
-  # changed() in showScalarNoSettle) — a broken rect, never a relayout.
+  # every reconcile branch self-invalidates (the sheet's own _changed() on host, the cell's own
+  # _changed() in showScalarNoSettle) — a broken rect, never a relayout.
   _cacheValue: (v) ->
     sheetWidget = @sheet.sheetWidget
     @value     = if sheetWidget? then (sheetWidget._reconcileCellNoSettle this, v) else v

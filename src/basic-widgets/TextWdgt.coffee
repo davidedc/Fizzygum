@@ -398,7 +398,7 @@ class TextWdgt extends StringWdgt
     # (the padding amount is a look-and-decide per the FITTING MODEL design).
     @__commitExtent new Point width, height
 
-    @changed()
+    @_changed()
 
   # a FIT_BOX_TO_TEXT widget re-wraps + re-heights to the new measure whenever its
   # extent is set by the layout (a container resize feeds it the width). Gated by
@@ -425,8 +425,7 @@ class TextWdgt extends StringWdgt
       # is the same as the one being shown now. If
       # not, then we mark the caret as broken.
       if @backBuffer != cacheHit[0]
-        if world.caret?
-          world.caret.changed()
+        world.caret?.noteTextChanged()
       return cacheHit
 
     contentHeight = @reflowText()
@@ -438,9 +437,8 @@ class TextWdgt extends StringWdgt
       contentHeight = @wrappedLines.length *  Math.ceil @fontHeight @originallySetFontSize
 
     # if we are calculating a new buffer then
-    # for sure we have to mark the caret as broken
-    if world.caret?
-      world.caret.changed()
+    # for sure the caret has to be notified
+    world.caret?.noteTextChanged()
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions()
     backBufferContext = backBuffer.getContext "2d"
@@ -595,7 +593,7 @@ class TextWdgt extends StringWdgt
 
   toggleSoftWrap: ->
     @softWrap = not @softWrap
-    @changed()
+    @_changed()
     world.stopEditing()
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
@@ -618,15 +616,15 @@ class TextWdgt extends StringWdgt
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @changed()
+    @_changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
-    @changed()
+    @_changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
-    @changed()
+    @_changed()
   
   # text widget evaluation. This menu is placed as the
   # "overridingContextMenu" in the Inspector panes, where
@@ -661,8 +659,8 @@ class TextWdgt extends StringWdgt
     # alignments other than the top-left
     # ones is complex. So during editing
     # we might change the alignment, hence
-    # ths method here with @changed()
-    @changed()
+    # ths method here with @_changed()
+    @_changed()
     return super
 
   selectAllAndEdit: ->

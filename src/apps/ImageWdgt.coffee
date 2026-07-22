@@ -54,7 +54,7 @@ class ImageWdgt extends GenericPanelWdgt
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * ceilPixelRatio, @height() * ceilPixelRatio
-            @changed()
+            @_changed()
     """
 
     # born ARMED with the pencil (parity with the retired editor, whose build

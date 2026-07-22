@@ -32,7 +32,7 @@ class DragChargingRingWdgt extends Widget
     @emptyColor  = Color.create 180, 180, 180, 0.55
 
   # Reposition at the cursor and recompute the fill from ELAPSED time. Called every cycle the ring is
-  # declared. @changed() only on a quantised step change (paint stays read-only); bounds re-applied
+  # declared. @_changed() only on a quantised step change (paint stays read-only); bounds re-applied
   # only when the cursor actually moved (no spurious dirties during a still hold).
   updateChargeDeclaration: (decl) ->
     @lingerOriginEventTime = decl.lingerOriginEventTime
@@ -45,7 +45,7 @@ class DragChargingRingWdgt extends Widget
     newStep = Math.max 0, Math.min(@ringSteps, Math.floor(@_elapsedForCharge() / dwellMs * @ringSteps))
     if newStep isnt @chargeStep
       @chargeStep = newStep
-      @changed()
+      @_changed()
 
   # Elapsed ms from the linger origin. Event-time (deterministic) under the harness, wall-time in
   # production — the analog-clock precedent (AnalogClockWdgt._calculateHandsAngles).

@@ -118,7 +118,7 @@ class PatchNodeWdgt extends Widget
     @_layOutNodeContents()
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

@@ -259,4 +259,4 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     @children.forEach (item) ->
       item.unselect?()
 
-    @changed()
+    @_changed()

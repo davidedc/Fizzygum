@@ -70,7 +70,7 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
 
   step: ->
     @_paintNewFrame()
-    @changed()
+    @_changed()
 
   # draw the frame on black background such that it's fully contained
   # within the bounding box of the canvas, maintaining the aspect ratio

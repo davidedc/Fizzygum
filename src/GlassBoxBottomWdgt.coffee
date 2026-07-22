@@ -60,4 +60,4 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()

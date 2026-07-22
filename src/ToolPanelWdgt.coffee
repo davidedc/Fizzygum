@@ -141,7 +141,7 @@ class ToolPanelWdgt extends PanelWdgt
       numberOfEntries++
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

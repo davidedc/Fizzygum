@@ -328,7 +328,7 @@ nothing uses it. Zero behavior change; the drain early-returns on an empty stale
      interleaved recompute+apply (world-level `_settleLayoutsAfter`; if `check-layering`
      objects to the cross-object call, add a sanctioned wrapper on `WorldWdgt` and record
      the deviation) which every `_<action>Connector` application then joins;
-     `changed()`-only sinks are settle-free. Wrap each node's recompute in try/catch: on
+     `_changed()`-only sinks are settle-free. Wrap each node's recompute in try/catch: on
      throw, record the error AS the node's value if the node supports it
      (`dataflowNoteError?`), never leave it stale, stash the exception for the error
      console outside the drain (model: layout's `layoutErrorsToReport`).
@@ -416,7 +416,7 @@ per rules 7/8:
 
 New `src/spreadsheet/` directory (+ `build.py` glob line, same commit). All widgets follow
 the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk moves inside
-`world.disableTrackChanges()` … `world.maybeEnableTrackChanges()` + one `fullChanged()`
+`world.disableTrackChanges()` … `world.maybeEnableTrackChanges()` + one `_fullChanged()`
 (model: `StretchablePanelWdgt._reLayout`). Seed `src/spreadsheet/CLAUDE.md` in the 2a
 commit (shell + painted-grid model + socket philosophy) and grow it in 2b/2c/4 — subsystem
 docs are a per-phase deliverable, not a Phase 7 chore.
@@ -434,7 +434,7 @@ docs are a per-phase deliverable, not a Phase 7 chore.
   chrome layer — decide during 2a; simplest v1: headers painted by `SpreadsheetWdgt` itself
   outside the scroll frame), the selection rectangle, and (from 2b) cell value text.
   Fixed default column width / row height; column resize is NOT in v1.
-- Selection: `mouseClickLeft` → cell coordinate math → repaint via `changed()`. Keyboard
+- Selection: `mouseClickLeft` → cell coordinate math → repaint via `_changed()`. Keyboard
   arrows move selection — the standard path (§1.17): register in
   `world.keyboardEventsReceivers` (add on focus/selection, delete on blur — the caret's
   add/delete at WorldWdgt ~2330/~2378 is the model) and implement `processKeyDown`;
@@ -814,7 +814,7 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   in `src/spreadsheet/CLAUDE.md` + the engine header. Formulas NEVER call `Date`
   (spec §6/§10); the scanner bindings `seconds` / `frame` become edges to the sources
   plus bound parameters carrying the pulled values.
-- Perf discipline (spec §9.7): a tick that only changes painted text = `changed()` on the
+- Perf discipline (spec §9.7): a tick that only changes painted text = `_changed()` on the
   grid pane region; NO `_invalidateLayout` on the tick path — assert this by reading the
   code path, and measure: with one `seconds` cell, `lastDrainRecomputeCount` per second
   must equal the dependent count.
@@ -857,7 +857,7 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   behave — two cycles in the same wall second pull the same integer, so the cutoff stops propagation until
   the second ticks. Formulas NEVER read the wall clock (spec §6/§10).
 - **Perf (spec §9.7) — ticks repaint, never re-layout.** Asserted by reading the path: a tick recompute
-  goes `SheetCellRecord._cacheValue` → `changed()` + the socket reconcile; a scalar takes the text branch
+  goes `SheetCellRecord._cacheValue` → `_changed()` + the socket reconcile; a scalar takes the text branch
   (no widget, no `_invalidateLayout`). Cost is linear in the subgraph (`lastDrainRecomputeCount`). A `frame`
   cell defeats the drain's empty-pool early return every cycle BY DESIGN (it IS per-frame).
 - **Serialization: surface UNCHANGED, verified.** `steppingWdgts` is serialized PER-WIDGET (a marker on
@@ -1433,7 +1433,7 @@ new tests.
   sheet-space (at origin 0 that is what they already are). Arrows
   (`_processKeyWhileSelectingNoSettle` ~303) clamp to `sheetCols`/`sheetRows` and then
   SCROLL-FOLLOW: if the selection left the viewport, shift the origin minimally to re-include
-  it + reconcile + `changed()`.
+  it + reconcile + `_changed()`.
 - **Wheel:** implement `wheel:` on the sheet (`ActivePointerWdgt.processWheel` ~942 routes to
   the first wheel-implementing widget on the climb from the cursor hit — `CellWdgt` must NOT
   implement it; model `ScrollPanelWdgt.wheel` ~836). Quantize to WHOLE rows/cols from the
@@ -1588,7 +1588,7 @@ the value classes (spec §9.5); the menu is introspection + text generation only
   idiom, ~211: `@inform @value` — note it is the Widget-inherited `@inform`, not
   `world.inform`). Add the scan as `SheetModel.firstEmptyAddressAfter` (address algebra belongs to the
   model). Then exactly the editor's commit path: `FormulaCompiler.commit target, text` +
-  `world.dataflow.markStale target` + select the target + `changed()`.
+  `world.dataflow.markStale target` + select the target + `_changed()`.
 - **Settle discipline:** the action mutates no geometry (commit + markStale + selection are
   paint-level; the drain owns any recompute settle) — expect NO settle wrapper; if
   check-layering disagrees, follow its guidance and record the deviation.

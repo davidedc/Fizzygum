@@ -116,10 +116,10 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # handing out my painting context means my pixels are about to be
     # mutated, so self-invalidate here — the one seam every painter goes
     # through (the injected tool sources, _paintImage). Callers must not
-    # reach back with a changed() of their own (widget-citizenship point 2);
+    # reach back with a _changed() of their own (widget-citizenship point 2);
     # marking before the strokes land is equivalent to after, since broken
     # rects are fleshed out at end-of-cycle flush from last-painted + current bounds.
-    @changed()
+    @_changed()
     # only set ratio with the first paint operation
     # the following ones don't change it
     if @parent?.setRatio? and !@parent.ratio?
@@ -206,7 +206,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

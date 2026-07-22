@@ -54,7 +54,7 @@ class EditIconButtonWdgt extends IconButtonWdgt
     # public-call-sanctioned: mirrors HighlightableMixin._updateColor (which this overrides) — setColor is the
     # pure paint-colour setter (sets @color + changed, no layout settle), here driving the per-state glyph colour.
     @setColor previewColor
-    @changed()   # explicit: setColor early-returns when the colour is unchanged, but the GLYPH may still have swapped
+    @_changed()   # explicit: setColor early-returns when the colour is unchanged, but the GLYPH may still have swapped
 
   # Immediate action tooltip: the base delay is 500ms; on THIS button the
   # bubble explains what a click does, so we want it to land with the hover preview — show

@@ -380,7 +380,7 @@ class SimpleSpreadsheetWdgt extends Widget
 
   # Shift the view origin by whole columns/rows (cell-quantized — the sheet never scrolls
   # sub-cell), clamped to the logical sheet, then reconcile the viewport and repaint (one
-  # sheet-level changed() covers the moved cells and the relabelled frozen headers — the
+  # sheet-level _changed() covers the moved cells and the relabelled frozen headers — the
   # sheet's own rect contains them all).
   _scrollByNoSettle: (colDelta, rowDelta) ->
     newCol = Math.min (@sheetCols - @_viewportColsFull()), Math.max 0, @viewOriginCol + colDelta
@@ -393,7 +393,7 @@ class SimpleSpreadsheetWdgt extends Widget
     # ensure/trim. At the default size the count is origin-invariant: a pure no-op pre-resize.
     @_buildChromeNoSettle()
     @_reconcileViewportNoSettle()
-    @changed()
+    @_changed()
     return
 
   # F1 keyboard scroll-follow: shift the view origin MINIMALLY so the selected cell is inside
@@ -481,7 +481,7 @@ class SimpleSpreadsheetWdgt extends Widget
         @selectedCol = @viewOriginCol + cell.col
         @selectedRow = @viewOriginRow + cell.row
         @_takeKeyboardFocus()
-        @changed()
+        @_changed()
     return
 
   # F1 scroll: the sheet is a wheel surface (ActivePointerWdgt.processWheel climbs from the
@@ -617,7 +617,7 @@ class SimpleSpreadsheetWdgt extends Widget
         return
     if moved
       @_scrollToShowSelectionNoSettle()
-      @changed()
+      @_changed()
       return
     @_startEditNoSettle key if @_isPrintable key, ctrlKey, metaKey
     return
@@ -704,7 +704,7 @@ class SimpleSpreadsheetWdgt extends Widget
     @_editCol = nil
     @_editRow = nil
     editingCell?._teardownEditorNoSettle()
-    @changed()
+    @_changed()
     return
 
   # ── cell reconcile: classify → present into the cell's CellWdgt (spec §9.3/§9.4) ─────────────
@@ -759,7 +759,7 @@ class SimpleSpreadsheetWdgt extends Widget
         return cellWdgt.hostedWidget               # RETAIN (drag/restore keep the live instance)
       cellWdgt.hostNoSettle value
       cellWdgt.wireValueWidget value
-      @changed()
+      @_changed()
       return value
     # branch 2 — a value that presents as a widget
     if value? and typeof value.cellPresenter is "function"
@@ -768,7 +768,7 @@ class SimpleSpreadsheetWdgt extends Widget
       if presenter?
         cellWdgt.hostNoSettle presenter
         cellWdgt.presentedValue = value
-        @changed()
+        @_changed()
         return value
       # a value class may answer cellPresenter yet decline (nil) → fall through to branch 3
     # branch 3 — scalar / error / nil: the cell paints the text (dropping any hosted widget)

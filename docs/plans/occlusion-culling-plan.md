@@ -282,7 +282,7 @@ suggests (`ClippingAtRectangularBoundsMixin.coffee:156`), made precise.
   alpha/color/backgroundColor/cornerRadius/padding change, **appearance swap** (a re-parented
   window flips Rectangular↔Boxy, `WindowWdgt.coffee:411-435` — easy to miss because it is not a
   geometry or colour change), re-parenting (which changes `clippedThroughBounds` and z-order),
-  and show/hide. Hook these off the existing `changed()` /
+  and show/hide. Hook these off the existing `_changed()` /
   layout / add-remove paths rather than rebuilding per frame. Z-order key: for top-level widgets
   it's the `world.children` index; nested coverers need the ancestor chain's order (defer to a
   later phase — start with top-level coverers only, same as Avenue A's simple start).

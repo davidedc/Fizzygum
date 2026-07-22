@@ -57,7 +57,9 @@ class Wallpaper
       return
 
     @patternName = thePatternName
-    world.changed()
+    # the world repaints its backdrop itself in this public notification (its
+    # DesktopAppearance reads my patternName)
+    world.noteWallpaperChanged()
 
     # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
     if menuItem?.parent? and menuItem.parent.isMenu?()

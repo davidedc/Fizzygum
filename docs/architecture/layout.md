@@ -327,14 +327,14 @@ answering subclass defines) over an `instanceof`/type test. Full gate list, pred
 Layout settle computes **geometry only**. It does not paint. Repaint is a separate *broken-rectangles* (dirty-region)
 loop:
 
-- `Widget.changed()` invalidates just this widget's rectangle; `Widget.fullChanged()` invalidates it plus its subtree.
+- `Widget._changed()` invalidates just this widget's rectangle; `Widget._fullChanged()` invalidates it plus its subtree.
 - `WorldWdgt.updateBroken()` repaints the accumulated dirty rectangles once per frame, at the tail of `doOneCycle`,
   against already-settled geometry.
 - Widgets opting into `BackBufferMixin` (`src/mixins/BackBufferMixin.coffee`) cache themselves to an offscreen canvas;
   pluggable `*Appearance` objects do the drawing. (Integer placement is *necessary but not sufficient* for a back
   buffer to be byte-identical to a direct draw — see the integer-placement doc.)
 
-The clean separation is the point: an immediate geometry mutator repaints (`@changed`) but schedules **no** layout;
+The clean separation is the point: an immediate geometry mutator repaints (`@_changed`) but schedules **no** layout;
 the settle loop moves geometry but paints nothing; paint reads settled geometry but schedules nothing. Each stage
 touches exactly one of {values, geometry, pixels}, in that order, per frame.
 

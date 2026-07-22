@@ -164,7 +164,7 @@ _reLayoutSelfAndButton: ->                    # value/geometry-change couplet (K
   @_reLayoutSelf()
   if @button? and @button instanceof SliderButtonWdgt
     @button._reLayoutSelf()
-  @changed()
+  @_changed()
 ```
 No `_reLayout` override ⇒ deferred = false. `_reactToBeingAdded -> @_reLayoutSelfAndButton()`.
 
@@ -236,7 +236,7 @@ _positionAndResizeChildren: ->
   @children.forEach (item) ->
     item._applyWidth w                        # ← the double-write / post-pass
   world.maybeEnableTrackChanges()
-  @fullChanged()
+  @_fullChanged()
 ```
 The post-pass exists ONLY because the leaf branch's `_applyExtentBase` cannot fire the
 four types' bespoke hooks (§1.3). Every row already RECEIVES the full width from the
@@ -336,7 +336,7 @@ not one-size — §1.3 shows three starting patterns):
   SliderButtonWdgt then @button._reLayoutSelf()`;
   `_reLayout: (nb) -> super; @_reLayoutChildren()`; DELETE the `_applyExtent`
   override; `_reLayoutSelfAndButton` STAYS (value-change couplet) but its body can
-  now be `@_reLayoutSelf(); @_reLayoutChildren(); @changed()`. ⚠ sliders live in
+  now be `@_reLayoutSelf(); @_reLayoutChildren(); @_changed()`. ⚠ sliders live in
   document stacks + windows + popovers: the discriminator flip (§1.2) re-routes them
   in EVERY stack. Aim byte-identical; the suite's slider tests
   (`macroSlider*`, `macroLonelySlider*`, `macroMovingSlidersSideways…`,

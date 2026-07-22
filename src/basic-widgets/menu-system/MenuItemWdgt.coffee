@@ -83,12 +83,12 @@ class MenuItemWdgt extends LabelButtonWdgt
       # ticked/unticked label at a stale width; re-measure and re-size instead.
       @label.sizeToTextAndDisableFitting()
       # cross-invalidation-sanctioned: own sub-part — the label's text was poked directly above
-      @label.changed()
+      @label._changed()
     else if @label.text.isUnticked()
       @label.text = @label.text.toggleTick()
       @label.sizeToTextAndDisableFitting()
       # cross-invalidation-sanctioned: own sub-part — the label's text was poked directly above
-      @label.changed()
+      @label._changed()
 
   # As a menu entry, prefer my (multi-line TextWdgt) label's width plus a little
   # padding. MenuWdgt.maxWidthOfMenuEntries calls this polymorphically rather
@@ -113,7 +113,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       widgetToBeHighlighted.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
-      @changed()
+      @_changed()
     if @toolTipMessage
       @startCountdownForBubbleHelp @toolTipMessage
 
@@ -129,7 +129,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       widgetToBeHighlighted.turnOffHighlight()
     unless @isListItem()
       @state = @STATE_NORMAL
-      @changed()
+      @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
   mouseDownLeft: (pos) ->

@@ -98,7 +98,7 @@ class CanvasWdgt extends PanelWdgt
     # we leave the context with the correct scaling.
     # ALWAYS leave the context with the correct pixel scaling.
     @backBufferContext.useLogicalPixelsUntilRestore()
-    @changed()
+    @_changed()
 
   # TODO id: DRAW_LINE_SHOULD_BE_IN_TURTLE_NOT_IN_CANVAS date: 3-May-2023
   drawLine: (start, dest, lineWidth, color) ->
@@ -116,5 +116,5 @@ class CanvasWdgt extends PanelWdgt
     context.moveTo from.x, from.y
     context.lineTo to.x, to.y
     context.stroke()
-    @changed()
+    @_changed()
   

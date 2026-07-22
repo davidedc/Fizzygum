@@ -192,7 +192,7 @@ the affected section before proceeding.
 
 ### 3.2 Paint: broken-rect repaint; rect-intersection clipping; back buffers blitted axis-aligned
 
-- Damage: `changed()` (`Widget.coffee:2369`) / `fullChanged()` (`:2414`) queue the widget on
+- Damage: `_changed()` (`Widget.coffee:2369`) / `_fullChanged()` (`:2414`) queue the widget on
   `world.widgetsWithMaybeChangedPaintBounds` / `...FullPaintBounds`; rects are computed later
   as `clippedThroughBounds()` (`:1196`) / `fullClippedBounds()` (`:1160`), both intersected
   with `clipThrough()` (`:1223`) which walks up to `firstParentClippingAtBounds`, else world.
@@ -431,7 +431,7 @@ Implementation shape and ordering (verified against the flesh-out code, fresh-ey
   reallocated).
 - **⚠ HOW `oldFootprint ∪ newFootprint` is achieved (do NOT "fix" this):** the implementation does
   NOT push two explicit rects. `_transformChangedNoSettle` (`TransformFrameWdgt.coffee`) queues a single
-  `fullChanged()`; the OLD footprint rides the **last-painted-snapshot lane**
+  `_fullChanged()`; the OLD footprint rides the **last-painted-snapshot lane**
   (`fullClippedBoundsWhenLastPainted`, frozen in screen coords at paint time by
   `recordDrawnAreaForNextBrokenRects`) as the flesh-out SOURCE rect, and the NEW footprint is the current
   bounds as the DESTINATION rect. This equivalence is now **trace-proven** (2026-07-10, §7.5 Bug C forensics),
@@ -861,7 +861,7 @@ Steps:
    overrides per §4.11 INCLUDING the SLOW twins** (`SLOWclipThrough`,
    `SLOWclippedThroughBounds`, `SLOWfullClippedBounds`) — run at least one suite leg with
    `world.doubleCheckCachedMethodsResults` enabled to exercise the coherence gate against the
-   new overrides. Spec mutation = `WorldWdgt.geometryVersion++` + `fullChanged()` + break the
+   new overrides. Spec mutation = `WorldWdgt.geometryVersion++` + `_fullChanged()` + break the
    chain-flag caches (same invalidation family as a move — bump sites precedent:
    `Widget.coffee:1304`, `WorldWdgt.coffee:203,207`).
 3. Damage hook per §4.5 (`mapRectToScreen` + BOTH flesh-out lanes, source AND destination
@@ -1899,10 +1899,10 @@ See §7. None of these block declaring the feature shipped.
    `cachesBuffer`; new fields ⇒ serializationTransients + `_reactToBeingCopied` drop (copy-coherence). Gate:
    ZERO reference changes bar the pre-authorized inspector recapture (2 new `_islandBufferSource*` Widget
    fields). ⚠ **The one non-event invalidation:** SWCanvas loads glyph atlases ASYNC, so text rasterises as
-   blocks until warm with NO changed()/deposit — the island buffer (a cache downstream of the text back
+   blocks until warm with NO _changed()/deposit — the island buffer (a cache downstream of the text back
    buffers) invalidates off the immutable text-back-buffer cache RESET, which now bumps
    `WorldWdgt.immutableBackBufferGeneration` (the buffer full-rebuilds when its epoch is stale). Banked
-   lesson: an island-cached render that changes across composites without a changed() (async resource load)
+   lesson: an island-cached render that changes across composites without a _changed() (async resource load)
    must invalidate off the SAME signal that reloads the upstream cache, NOT a liveness flag whose transition
    races the re-render (an `anyTextDirty()` gate fixed Chrome but flipped WebKit). ⚠ The "identity
    blit==replay" / "tiling stays raster-under-warp" guards belong to §7.1/§7.2 (vector-replay), NOT here.
@@ -2125,11 +2125,11 @@ pinned-anchor interplay line).**
   the macro was at fault — each demand of evidence was correct, and each successive framing was too pessimistic.
 - **Root cause (evidence, not inference): a PHASE ERROR in the audit, not a broken-rect bug and not test hygiene.**
   Paint is frame-cadenced BY DESIGN: a public mutator self-settles LAYOUT (geometry converges on return via
-  `recalculateLayouts`), but `changed()`/`fullChanged()` only QUEUE damage rects — pixels update once per frame when
+  `recalculateLayouts`), but `_changed()`/`_fullChanged()` only QUEUE damage rects — pixels update once per frame when
   `doOneCycle` reaches `updateBroken()`. So a settled world with queued-but-unpainted damage is the NORMAL mid-frame
   state every mutation passes through, NOT something a macro must clean up. `AutomatorPlayer.checkPaintTruthfulness`
   fingerprinted the live canvas at `stopTestPlaying` — which can land INSIDE the frame (after the last mutation,
-  before that frame's paint) — then did `fullChanged()+updateBroken()` and compared. When the last mutation was still
+  before that frame's paint) — then did `_fullChanged()+updateBroken()` and compared. When the last mutation was still
   mid-frame, the audit's own repaint painted it ⇒ before≠after ⇒ FALSE ghost. `takeScreenshot` never had this
   problem: it force-settles via `readyForMacroScreenshot` first. The screenshot path encoded "complete the frame
   before observing pixels"; the audit path forgot it. Proven with a minimal control (`SystemTest_macroGateFixVerify`,
@@ -2453,21 +2453,21 @@ pinned-anchor interplay line).**
   cancels the affine translation. Reuse `screenPointToMyPlane`; don't add an `inverseMapVector`.
 - **Damage-on-detach erases the un-transformed slot** (bug fix 2026-07-10, Fizzygum `86d3ee5e`) — closing/
   destroying (or reparenting-OUT) an island-interior widget left stale pixels in its rotated footprint:
-  `_closeNoSettle`/`_destroyNoSettle` call `fullChanged()` while attached, then sever `@parent`; the erase-rect
+  `_closeNoSettle`/`_destroyNoSettle` call `_fullChanged()` while attached, then sever `@parent`; the erase-rect
   is computed LATER in `fleshOut(Full)Broken` via `mapRectToScreen(...WhenLastPainted)`, which walks the
   now-severed chain → identity → erases only the un-transformed slot. FIX: `recordDrawnAreaForNextBrokenRects`
   now freezes the SCREEN footprint at PAINT time (`mapRectToScreen` while attached); `fleshOutBroken`/
   `fleshOutFullBroken` use it directly (byte-identical dormant + attached-island). Owner-reported via a tilted
   DegreesConverterApp inner-window close.
 - **⚠ A SCREENSHOT MACRO CANNOT CATCH BROKEN-RECT STALENESS** (bug fix 2026-07-10) — `readyForMacroScreenshot`
-  (`MacroToolkit:227`) forces `world.fullChanged()` (a full repaint) before EVERY capture, erasing incremental
+  (`MacroToolkit:227`) forces `world._fullChanged()` (a full repaint) before EVERY capture, erasing incremental
   broken-rect staleness. To test a broken-rect bug: read the INCREMENTAL canvas pixels right after the gesture
-  (`world.worldCanvasContext.getImageData`, NO `takeScreenshot`), then `world.fullChanged()` + settle and read
+  (`world.worldCanvasContext.getImageData`, NO `takeScreenshot`), then `world._fullChanged()` + settle and read
   again, and assert 0 RGB-differing pixels (assertion-only, no references) — proven by
   `macroClosingRotatedIslandChildClearsFootprint` (diff 0 fixed / 5257 un-fixed). Use the EMPTY harness world
   (no animated clock) so the fixed-build diff is exactly 0.
 - **⚠ PAINT IS FRAME-CADENCED; the paint audit OBSERVES POST-FRAME STATE by construction** (2026-07-10, §7.5 Bug
-  C). A public mutator self-settles LAYOUT, but `changed()`/`fullChanged()` only QUEUE damage — pixels land once
+  C). A public mutator self-settles LAYOUT, but `_changed()`/`_fullChanged()` only QUEUE damage — pixels land once
   per frame at `updateBroken()`. So pending paint at macro end is the NORMAL mid-frame state, NOT an offender, and
   a macro needs NO knowledge of paint (no trailing `yield` "to settle the canvas"). The suite-wide
   **paint-truthfulness audit** (`AutomatorPlayer.checkPaintTruthfulness`, run at `stopTestPlaying` when
@@ -2519,7 +2519,7 @@ pinned-anchor interplay line).**
   re-rasterises only the dirty sub-rect. **Measured (minified sw=1, 460×400 text window, 90 × 1°): 1.40×
   per step** (the eliminated re-rasterisation; the SW warp still dominates, so the win is bounded by the
   raster fraction). ⚠ One non-event invalidation was required: SWCanvas loads glyph atlases async (text
-  rasterises as block glyphs until warm, no changed() event), so the buffer invalidates off the immutable
+  rasterises as block glyphs until warm, no _changed() event), so the buffer invalidates off the immutable
   text-back-buffer cache RESET (`WorldWdgt.immutableBackBufferGeneration`) — the same signal that re-renders
   the warm text — else a pre-atlas block-glyph render would freeze into the buffer.
 - SW warp throughput: estimate 3–10× per painted pixel vs. axis blit (Phase 0c measures).
@@ -2697,7 +2697,7 @@ and travels with the widget.
 
 ### 10.9 Step-animating a transformation
 
-Per step, `'slot'` mode: setter updates the scalar → `geometryVersion++` + `fullChanged()`
+Per step, `'slot'` mode: setter updates the scalar → `geometryVersion++` + `_fullChanged()`
 (cost identical to a `moveBy` of the same widget — the version-keyed caches already absorb
 exactly this every frame of any drag today, `Widget.coffee:1304` precedent) → damage
 `oldFootprint ∪ newFootprint` → one clipped, transformed `drawImage`. NO layout, NO text

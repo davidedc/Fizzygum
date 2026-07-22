@@ -343,7 +343,7 @@ class ActivePointerWdgt extends Widget
 
       aWdgt.addShadow new Point(6, 6), 0.1
       
-      @fullChanged()
+      @_fullChanged()
       # Notify the old parent so it can re-fit itself (e.g. a ScrollPanelWdgt re-snugs its contents +
       # scrollbars when you take a widget out of it). A grab is one discrete re-parent gesture, so settle it
       # HERE -- consistent on return, not on the next doOneCycle. This is the SYMMETRIC twin of the drop
@@ -361,6 +361,13 @@ class ActivePointerWdgt extends Widget
 
   isThisPointerFloatDraggingSomething: ->
     if @children.length > 0 then true else false
+
+  # PUBLIC notification — a widget I am float-dragging changed. I carry the widget plus its
+  # drop-shadow as one composite, so the whole carried assembly must repaint together. I
+  # invalidate MYSELF here, in the method the carried widget's _changed() invokes on me
+  # (widget-citizenship point 2) — widgets never reach into my _fullChanged().
+  noteCarriedWidgetChanged: ->
+    @_fullChanged()
 
   isThisPointerNonFloatDraggingSomething: ->
     return @nonFloatDraggedWdgt?
@@ -423,11 +430,11 @@ class ActivePointerWdgt extends Widget
         else
           target = @dropTargetFor wdgtToDrop
 
-      @fullChanged()
+      @_fullChanged()
 
       # Affine transforms 4D-2b (§6): a dropped SUGAR FIGURE is re-spec'd RELATIVE to the destination plane, so
       # a rotated/scaled figure dropped INTO a rotated container composites to its original absolute look
-      # instead of double-applying the plane transform on top of its own spec. Runs AFTER @fullChanged (which
+      # instead of double-applying the plane transform on top of its own spec. Runs AFTER @_fullChanged (which
       # damages the hand's CURRENT footprint) but BEFORE the 4D-1 position map / target.add / _beforeChildDropped
       # so all of them see the re-spec'd figure; when the relative similitude is identity the figure becomes an
       # identity sugar island that _unwrapIfIdentitySugarNoSettle then dissolves AFTER target.add (below). Off
@@ -489,7 +496,7 @@ class ActivePointerWdgt extends Widget
         wdgtToDrop = wdgtToDrop._unwrapIfIdentitySugar()
       # cross-invalidation-sanctioned: drop dispatcher — the hand invalidates the widget
       # being dropped (structural-move orchestration, like _addNoSettle's)
-      wdgtToDrop.fullChanged()
+      wdgtToDrop._fullChanged()
 
       # when you click the buttons, sometimes you end up
       # clicking between the buttons, and so the "proper"
@@ -910,7 +917,7 @@ class ActivePointerWdgt extends Widget
     @__breakMoveResizeCaches()
     super delta
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
   processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
 

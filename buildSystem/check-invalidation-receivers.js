@@ -3,18 +3,28 @@
 // Mirrors check-raw-pointer-reads.js (line scanner; exit 0 clean / 1 violation).
 //
 // THE RULE (docs/architecture/widget-citizenship.md, contract point 2). A widget invalidates
-// only itself: `@changed()` / `@fullChanged()`. If A's action affects B's pixels, B marks
-// itself changed inside the method A invoked on it — A never reaches over with
-// `B.changed()`. The 2026-07-22 audit found the reaching-over form was almost always either
+// only itself: `@_changed()` / `@_fullChanged()` — PRIVATE since the 2026-07-22 phase-2
+// rename (invalidation is not exposed as API anywhere; the only external callers are the
+// test ORACLES, sanctioned by name). The paint executor `_updateBroken` (the world's
+// once-per-cycle broken-rect flush) is in the same private family and gated here too — only
+// the world's own cycle runs it; the harness paint audit is its one sanctioned outside caller.
+// If A's action affects B's pixels, B marks itself changed inside
+// the method A invoked on it — A never reaches over with `B._changed()`. The pattern below
+// also matches the pre-rename public spellings so a legacy-name call cannot slip back in.
+// The 2026-07-22 audit found the reaching-over form was almost always either
 // (a) REDUNDANT — the structural dispatcher (`_addNoSettle`, `drop`) already fullChanges the
 // widget being moved, and broken rects are fleshed out at end-of-cycle flush from
 // last-painted + current bounds, so one mark per cycle covers every same-cycle mutation — or
 // (b) a missing receiver-side self-invalidation (e.g. `getContextForPainting` now marks its
 // own canvas).
 //
-// ALLOWED RECEIVERS, no marker needed: `@` (self — no dot, never matches here), and the
-// shared orchestration singletons `world`, `world.caret`, `world.hand` (+ the boot-time
-// `window.world` form): they are global surfaces, not peers.
+// ALLOWED RECEIVER: `@` (self) only — a self-call is dotless and never matches here. The
+// shared singletons are NOT exempt (since the 2026-07-22 phase-1 internalization): a widget
+// that needs the world/caret/hand to repaint calls an intent-named PUBLIC method on it
+// (WorldWdgt.noteWallpaperChanged / resetImmutableBackBuffersCache, CaretWdgt.noteTextChanged,
+// ActivePointerWdgt.noteCarriedWidgetChanged) and the singleton invalidates ITSELF inside it.
+// There is deliberately NO general-purpose public repaint verb (owner decision 2026-07-22 —
+// the old "restore display" menu entry was removed with it).
 //
 // EXEMPTION: a `# cross-invalidation-sanctioned: <reason>` marker (non-empty reason) on the
 // SAME line or the comment line(s) directly above. Sanctioned today: the structural-move
@@ -30,10 +40,10 @@ const fs = require('fs');
 const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
-const CALL = /\.(changed|fullChanged)\??\(/g;
+const CALL = /\.(_?changed|_?fullChanged|_?updateBroken)\??\(/g;
 const EXEMPT = /#\s*cross-invalidation-sanctioned:\s*\S/;
 const RECEIVER_CHARS = /[\w$@?.()\[\]]/;
-const ALLOWED = new Set(['world', 'world.caret', 'world.hand', 'window.world']);
+const ALLOWED = new Set([]);   // no receiver is exempt — see the header
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;

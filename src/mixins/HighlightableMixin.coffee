@@ -28,7 +28,7 @@ HighlightableMixin =
           when @STATE_PRESSED
             @color_pressed
 
-        @changed()
+        @_changed()
       
       mouseEnter: ->
         @state = @STATE_HIGHLIGHTED

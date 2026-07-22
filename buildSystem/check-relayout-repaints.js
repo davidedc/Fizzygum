@@ -5,9 +5,9 @@
 // check-relayout-bounds-first.js (line scanner; exit 0 clean / 1 violation).
 //
 // THE RULE ([INV-1]). A `_reLayoutSelf` that opens a change-tracking-suppression frame with
-// `world.disableTrackChanges()` MUST issue a covering `@fullChanged()` (or `world.fullChanged()`)
+// `world.disableTrackChanges()` MUST issue a covering `@_fullChanged()` (or `world._fullChanged()`)
 // AFTER its LAST `world.maybeEnableTrackChanges()` — i.e. once the outermost tracking frame has
-// actually re-armed. Inside a still-open (nested) suppression frame `fullChanged` is a no-op DROPPED
+// actually re-armed. Inside a still-open (nested) suppression frame `_fullChanged` is a no-op DROPPED
 // by design, so a repaint issued before the matching `maybeEnableTrackChanges` is silently lost. When
 // a `_reLayoutSelf` applies geometry raw (`@_applyMoveTo`/`@_applyExtent`, whose public-setter
 // equivalents used to mark the moved region), dropping that covering repaint leaves a stale / "ghost"
@@ -20,7 +20,7 @@
 // *orchestrator* override, by contrast, ends by delegating to `super` (base `Widget::_reLayout`,
 // which re-applies its own bounds and positions stack/corner children) — a structurally different
 // tail — so this line scanner deliberately does NOT flag `_reLayout` bodies (they would false-positive
-// on the super-delegation, and the base issues no blanket `@fullChanged()`). Both the empirically
+// on the super-delegation, and the base issues no blanket `@_fullChanged()`). Both the empirically
 // observed D2 bug class (5 bodies) and the [INV-1] precedent are `_reLayoutSelf`; anything the static
 // shape cannot reach is covered by the runtime paint-truthfulness audit
 // (Fizzygum-tests/scripts/run-paint-audit.js, a `fg gauntlet` gate). Only `_reLayoutSelf` bodies that
@@ -40,7 +40,7 @@ const HEADER  = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;          // 2-space-inden
 const EXEMPT  = /#\s*relayout-repaint-exempt:\s*\S/;            // marker WITH a non-empty reason
 const DISABLE = /\bdisableTrackChanges\b/;                      // opens a change-suppression frame
 const ENABLE  = /\bmaybeEnableTrackChanges\b/;                  // re-arms the outermost frame
-const REPAINT = /\bfullChanged\s*\(/;                           // the covering repaint (@ or world.)
+const REPAINT = /\b_?fullChanged\s*\(/;                           // the covering repaint (@ or world.)
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -88,9 +88,9 @@ for (const p of walk(SRC, [])) {
 
 console.log(`[relayout-repaints] ${checked} suppress+covering-repaint + ${noSuppress} no-suppression + ${deferredEnable} deferred-enable + ${exempt} exempt _reLayoutSelf override(s) checked.`);
 if (violations.length) {
-  console.error(`\n[relayout-repaints] FAIL -- ${violations.length} _reLayoutSelf override(s) suppress change-tracking but issue NO covering fullChanged() after re-enabling it (a raw-applied move would leave a stale/ghost region -- [INV-1] / the 2026-07 D2 bug class):`);
+  console.error(`\n[relayout-repaints] FAIL -- ${violations.length} _reLayoutSelf override(s) suppress change-tracking but issue NO covering _fullChanged() after re-enabling it (a raw-applied move would leave a stale/ghost region -- [INV-1] / the 2026-07 D2 bug class):`);
   for (const v of violations) {
-    console.error(`  ${v.cls}.${v.name}  (${v.file}:${v.line}) -- last maybeEnableTrackChanges at line ${v.enableLine}, no fullChanged() after it`);
+    console.error(`  ${v.cls}.${v.name}  (${v.file}:${v.line}) -- last maybeEnableTrackChanges at line ${v.enableLine}, no _fullChanged() after it`);
   }
   console.error('\nFIX: add a covering repaint immediately after the re-enable -- e.g.:');
   console.error('       world.maybeEnableTrackChanges()');
@@ -99,5 +99,5 @@ if (violations.length) {
   console.error('Or add  # relayout-repaint-exempt: <reason>  directly above the method header.');
   process.exit(1);
 }
-console.log('[relayout-repaints] OK -- every tracking-suppressing _reLayoutSelf issues its covering fullChanged() after re-enable ([INV-1]).');
+console.log('[relayout-repaints] OK -- every tracking-suppressing _reLayoutSelf issues its covering _fullChanged() after re-enable ([INV-1]).');
 process.exit(0);

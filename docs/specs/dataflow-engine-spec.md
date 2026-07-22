@@ -166,7 +166,7 @@ updateBroken                ← paint
    settle-tier whitelist) — so the engine opens ONE settle around each pass's
    interleaved recompute+apply and every connector application joins it: the same
    first-hop-owns-the-settle shape today's event cascades use, transplanted to the
-   drain. Pure repaint sinks (`changed()`-only) need no settle; residual layout dirt
+   drain. Pure repaint sinks (`_changed()`-only) need no settle; residual layout dirt
    still lands in the `recalculateLayouts` that follows.
 
 ## 5. Re-entrancy during the drain
@@ -282,7 +282,7 @@ client's:
   no data-background fill (the backdrop shows through, as always).
 - Layout discipline: the `StretchablePanelWdgt` pattern — immediate `_apply*` mutators
   inside `_reLayout`, bulk child moves inside `disableTrackChanges()` …
-  `maybeEnableTrackChanges()` + one `fullChanged()`.
+  `maybeEnableTrackChanges()` + one `_fullChanged()`.
 - **No structural row/column insertion/deletion in v1** (named references break under it;
   reference-rewriting is a known scope sink, deliberately deferred).
 
@@ -352,7 +352,7 @@ and propagate error values. Stack-trace detail goes to the error console outside
 ### 9.7 Ticking cells: performance provisos
 Per-second cells are trivially cheap. Per-frame (`frame`) cells are supported with three
 normative constraints: (1) compiled-formula caching (§9.2); (2) **ticks repaint, never
-re-layout** — fixed cell geometry, `changed()` not `_invalidateLayout`; (3) cost is linear
+re-layout** — fixed cell geometry, `_changed()` not `_invalidateLayout`; (3) cost is linear
 in the affected subgraph — instrument it, and on overrun skip to the next frame (the
 stepping loop's existing skip-don't-catch-up stance).
 

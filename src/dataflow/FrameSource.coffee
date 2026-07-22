@@ -13,9 +13,9 @@
 # ceases to exist (spec §6).
 #
 # ── PERF PROVISO (spec §9.7) ─────────────────────────────────────────────────────────────────
-# A per-frame cell that only changes painted text costs a `changed()` on that cell's region, NEVER a
+# A per-frame cell that only changes painted text costs a `_changed()` on that cell's region, NEVER a
 # re-layout (fixed cell geometry): the reconcile's scalar branch self-invalidates the cell
-# (CellWdgt.showScalarNoSettle's own changed()) — no _invalidateLayout on the tick path. Cost
+# (CellWdgt.showScalarNoSettle's own _changed()) — no _invalidateLayout on the tick path. Cost
 # is linear in the affected subgraph (the engine instruments lastDrainRecomputeCount).
 #
 # ── PULLED SHAPE: A NUMBER — WorldWdgt.frameCount ────────────────────────────────────────────

@@ -206,7 +206,7 @@ class StringWdgt extends Widget
 
     # override inherited properties:
     @noticesTransparentClick = true
-    @changed()
+    @_changed()
 
   # This font height comes out thin: tall characters such as ⎲█ƒ⎳À⎷ ⎸⎹ get cut.
   fontHeight: (fontSize) ->
@@ -292,12 +292,12 @@ class StringWdgt extends Widget
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
       @horizontalAlignment = newAlignment
-      @changed()
+      @_changed()
 
   setVerticalAlignment: (newAlignment) ->
     if @verticalAlignment != newAlignment
       @verticalAlignment = newAlignment
-      @changed()
+      @_changed()
 
   alignLeft: ->
     @setHorizontalAlignment AlignmentSpecHorizontal.LEFT
@@ -619,7 +619,7 @@ class StringWdgt extends Widget
   _setFittingFontSize: (theValue) ->
     if @fittingFontSize != theValue
       @fittingFontSize = theValue
-      @changed()
+      @_changed()
 
   createBufferCacheKey: ->
     @extent().toString() + "-" +
@@ -719,17 +719,15 @@ class StringWdgt extends Widget
       # is the same as the one being shown now. If
       # not, then we mark the caret as broken.
       if @backBuffer != cacheHit[0]
-        if world.caret?
-          world.caret.changed()
+        world.caret?.noteTextChanged()
       return cacheHit
 
     # public-call-sanctioned: reflowText is macro-called public text API (see _sizeToTextAndDisableFittingNoSettle).
     @reflowText()
 
     # if we are calculating a new buffer then
-    # for sure we have to mark the caret as broken
-    if world.caret?
-      world.caret.changed()
+    # for sure the caret has to be notified
+    world.caret?.noteTextChanged()
 
     text = @textPossiblyCroppedToFit
     # Initialize my surface property.
@@ -961,7 +959,7 @@ class StringWdgt extends Widget
   _setFontNameNoSettle: (menuItem, ignored2, theNewFontName) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName
-      @changed()
+      @_changed()
 
       # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
       if menuItem?.parent? and menuItem.parent.isMenu?()
@@ -1085,48 +1083,47 @@ class StringWdgt extends Widget
 
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
-    @changed()
+    @_changed()
     world.stopEditing()
 
   togglefittingSpecWhenBoundsTooLarge: ->
     world.stopEditing()
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
-    @changed()
+    @_changed()
 
   
   toggleShowBlanks: ->
     @_settleLayoutsAfter =>
       @isShowingBlanks = not @isShowingBlanks
-      @changed()
+      @_changed()
       @_reflowContainedTextThenInvalidateLayout()
 
   toggleWeight: ->
     @_settleLayoutsAfter =>
       @isBold = not @isBold
-      @changed()
+      @_changed()
       @_reflowContainedTextThenInvalidateLayout()
 
   toggleItalic: ->
     @_settleLayoutsAfter =>
       @isItalic = not @isItalic
-      @changed()
+      @_changed()
       @_reflowContainedTextThenInvalidateLayout()
 
   toggleHeaderLine: ->
     @isHeaderLine = not @isHeaderLine
-    @changed()
+    @_changed()
   
   toggleIsPassword: ->
     world.stopEditing()
     @_settleLayoutsAfter =>
       @isPassword = not @isPassword
-      @changed()
+      @_changed()
       @_reflowContainedTextThenInvalidateLayout()
 
-  changed: ->
+  _changed: ->
     super
-    if world.caret?
-      world.caret.changed()
+    world.caret?.noteTextChanged()
   
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
@@ -1240,7 +1237,7 @@ class StringWdgt extends Widget
         # _setTextNoSettle always runs inside an enclosing settle → the NoSettle core (the public
         # self-settling wrapper would re-enter the flush guard and throw).
         @_sizeToTextAndDisableFittingNoSettle()
-      @changed()
+      @_changed()
     @updateTarget()
     @_reflowContainedTextThenInvalidateLayout()
 
@@ -1308,7 +1305,7 @@ class StringWdgt extends Widget
       if @autoSizeBoxToText
         # this core always runs in-settle (the public setFontSize / _setFontSizeConnector each wrap it) → the NoSettle sibling.
         @_sizeToTextAndDisableFittingNoSettle()
-      @changed()
+      @_changed()
     @_reflowContainedTextThenInvalidateLayout()
 
   setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
@@ -1414,16 +1411,16 @@ class StringWdgt extends Widget
       return
     @startMark = nil
     @endMark = nil
-    @changed()
+    @_changed()
 
   _setEndMark: (slot) ->
     @endMark = slot
-    @changed()
+    @_changed()
   
   selectBetween: (start, end) ->
     @startMark = Math.min start, end
     @endMark = Math.max start, end
-    @changed()
+    @_changed()
   
   deleteSelection: ->
     start = Math.min @startMark, @endMark
@@ -1433,20 +1430,20 @@ class StringWdgt extends Widget
   selectAll: ->
     @startMark = 0
     @endMark = @textPossiblyCroppedToFit.length
-    @changed()
+    @_changed()
 
   # used when shift-clicking somewhere when there is
   # no selection ongoing
   startSelectionUpToSlot: (previousCaretSlot, slotToExtendTo) ->
     @startMark = previousCaretSlot
     @endMark = slotToExtendTo
-    @changed()
+    @_changed()
 
   # used when shift-clicking somewhere when there is
   # already a selection ongoing
   extendSelectionUpToSlot: (slotToExtendTo) ->
     @endMark = slotToExtendTo
-    @changed()
+    @_changed()
 
   # Caret-driven selection (shift + arrow / Home / End): anchor a fresh selection at slot if none
   # is ongoing, otherwise move the moving end to slot. Distinct from the shift-CLICK pair above
@@ -1536,7 +1533,7 @@ class StringWdgt extends Widget
         newMark = @slotAt pos
         if newMark isnt @endMark
           @endMark = newMark
-          @changed()
+          @_changed()
       else
         @_disableSelecting()
   

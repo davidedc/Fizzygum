@@ -111,7 +111,7 @@ class FanoutWdgt extends Widget
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

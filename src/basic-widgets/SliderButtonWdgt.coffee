@@ -120,25 +120,25 @@ class SliderButtonWdgt extends CircleBoxWdgt
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
       @color = @normalColor
-      @changed()
+      @_changed()
 
   _setHighlightedColor: ->
     if @state != @STATE_HIGHLIGHTED
       @state = @STATE_HIGHLIGHTED
       @color = @highlightColor
-      @changed()
+      @_changed()
 
   _setNormalColor: ->
     if @state != @STATE_NORMAL
       @state = @STATE_NORMAL
       @color = @normalColor
-      @changed()
+      @_changed()
 
   setPressedColor: ->
     if @state != @STATE_PRESSED
       @state = @STATE_PRESSED
       @color = @pressColor
-      @changed()
+      @_changed()
 
   mouseMove: ->
     # remember that a drag can start a few pixels after the

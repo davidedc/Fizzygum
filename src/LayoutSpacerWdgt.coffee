@@ -11,13 +11,13 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
   makeSpacersTransparent: ->
     if !@thisSpacerIsTransparent
       @thisSpacerIsTransparent = true
-      @changed()
+      @_changed()
     super
 
   makeSpacersOpaque: ->
     if @thisSpacerIsTransparent
       @thisSpacerIsTransparent = false
-      @changed()
+      @_changed()
     super
 
   # paintIntoAreaOrBlitFromBackBuffer is inherited from LayoutChromeWdgt; this

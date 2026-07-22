@@ -174,7 +174,8 @@ const isImmediateMutator = (name) =>
 // legitimately uses the low-level API).
 const MACROS_DIR = path.join(__dirname, '..', '..', 'Fizzygum-tests', 'tests');
 const MACRO_VERBS_FILE = path.join(SRC, 'macros', 'MacroToolkit.coffee');
-const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;  // renamed geometry mutators + the ex-silent* structural leaves (__hide/__addShadow/__add) are now _-prefixed (caught by _[A-Za-z]); raw* = the pixel API, still macro-forbidden. (the dead fullRaw\w* and silent\w* arms were dropped with the §6-5 / §3d renames.)
+const MACRO_FORBIDDEN_CALL = /[@.]\s*(_[A-Za-z]\w*|raw[A-Z]\w*)\b/;
+const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemption marker, reason required  // renamed geometry mutators + the ex-silent* structural leaves (__hide/__addShadow/__add) are now _-prefixed (caught by _[A-Za-z]); raw* = the pixel API, still macro-forbidden. (the dead fullRaw\w* and silent\w* arms were dropped with the §6-5 / §3d renames.)
 
 // [G] the STRUCTURAL self-settling-wrapper rule (the deferred-layout "cores call cores" discipline,
 // made static). [A] above forbids a low-level method from DIRECTLY calling the 5 geometry setters /
@@ -760,6 +761,7 @@ function checkMacroFile(file, violations, heredocOnly) {
   const rel = path.relative(path.join(__dirname, '..', '..'), file);
   const lines = fs.readFileSync(file, 'utf8').split('\n');
   let inHeredoc = false;
+  let pendingSanction = false;   // armed by a MACRO_SANCTION comment line, consumed by the next code line
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
     if (heredocOnly) {
@@ -769,11 +771,20 @@ function checkMacroFile(file, violations, heredocOnly) {
       }
       if (/^\s*"""\s*$/.test(raw)) { inHeredoc = false; continue; }  // lone closing """
     }
+    // [D] sanction marker: `# macro-private-call-sanctioned: <reason>` (non-empty reason) on the
+    // same line or the comment line directly above exempts ONE call site — for the test ORACLES
+    // whose very purpose is the private call (e.g. world._fullChanged() as the ground-truth
+    // full-repaint reference the incremental canvas is asserted against). Everything else stays
+    // forbidden: a macro drives the world through the PUBLIC API.
+    if (/^\s*#/.test(raw)) { if (MACRO_SANCTION.test(raw)) pendingSanction = true; continue; }
+    const lineSanctioned = pendingSanction || MACRO_SANCTION.test(raw);
+    if (raw.trim() !== '') pendingSanction = false;
     const hash = raw.indexOf('#');
     const code = hash >= 0 ? raw.slice(0, hash) : raw;
     const m = code.match(MACRO_FORBIDDEN_CALL);
-    if (m) violations.push(`[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
-      + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo)`);
+    if (m && !lineSanctioned) violations.push(`[D] macro calls private/low-level .${m[1]}() — ${rel}:${n + 1} `
+      + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo; `
+      + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`);
   }
 }
 

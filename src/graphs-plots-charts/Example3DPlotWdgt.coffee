@@ -163,7 +163,7 @@ class Example3DPlotWdgt extends Widget
       @planeGrid.vertexIndexes.push @vertices.length - 1
 
 
-    @changed()
+    @_changed()
 
   # This method only paints this very widget's "image",
   # it doesn't descend the children

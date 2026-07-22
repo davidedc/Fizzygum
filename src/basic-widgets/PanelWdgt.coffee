@@ -57,7 +57,7 @@ class PanelWdgt extends Widget
     # keep in sync the value of the container scrollPanel
     # if there is one. A bare field sync: the container scrollPanel
     # is never painted (alpha 0, mimics the contained panel's values),
-    # so there is nothing of it to invalidate — my own super's changed()
+    # so there is nothing of it to invalidate — my own super's _changed()
     # already covers every visible recoloured pixel.
     if @scrollPanel
       if @scrollPanel.color?.equals aColor

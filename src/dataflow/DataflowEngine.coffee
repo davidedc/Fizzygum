@@ -311,7 +311,7 @@ class DataflowEngine
     snapshotSet = new Set seeds
     # ONE settle around the whole pass (spec §4.2 item 5 / §1.14): every _<action>Connector
     # sink application JOINS this window (world._inLayoutMutation), so the pass settles ONCE;
-    # changed()-only sinks add nothing to it. Wrapping the recompute here also makes a
+    # _changed()-only sinks add nothing to it. Wrapping the recompute here also makes a
     # geometry-mutating recompute throw (the purity law, spec §9.5) instead of misbehaving.
     world._settleLayoutsAfter => @_walkOrderedPass ordered, snapshotSet, forcedSet
     return

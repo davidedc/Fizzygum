@@ -189,4 +189,4 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()

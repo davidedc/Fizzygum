@@ -101,7 +101,7 @@ class SimpleImageWdgt extends CanvasWdgt
   # something like that.
   step: ->
     @_paintImageOnBackBuffer()
-    @changed()
+    @_changed()
     world.steppingWdgts.delete @
 
   # TODO You should override isTransparentAt much much more extensively, because

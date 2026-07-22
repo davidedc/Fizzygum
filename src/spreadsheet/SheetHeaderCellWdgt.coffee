@@ -46,7 +46,7 @@ class SheetHeaderCellWdgt extends Widget
 
   # @index is the viewport SLOT; the label derives from the sheet's view origin + slot at paint
   # time (F1) — scrolling relabels the frozen headers in place (cell-quantized scroll means they
-  # never move; the sheet-level changed() repaints them). At origin 0 this is the identity.
+  # never move; the sheet-level _changed() repaints them). At origin 0 this is the identity.
   _labelText: ->
     switch @kind
       when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @index)

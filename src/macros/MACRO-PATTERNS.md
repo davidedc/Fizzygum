@@ -1547,7 +1547,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A widget is painted correctly the INSTANT it is picked up** (`macroPanelPaintedOkAsSoonAsPickedUp`): the grab path produces a complete,
   correct first frame WHILE the morph is held — synchronously, no settle. `ActivePointerWdgt.grab` does `@add aWdgt` (which FORCES the
   morph's first paint — its comment: "the shadow needs the image of the widget"), then `addShadow new Point(6,6),0.1` (the floaty drag
-  shadow — larger+fainter than the at-rest (4,4)α0.2 desktop shadow), then `fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
+  shadow — larger+fainter than the at-rest (4,4)α0.2 desktop shadow), then `_fullChanged()`. A `PanelWdgt` (cream fill + dark 1px stroke via
   `RectangularAppearance`, painted synchronously; `defaultPanels*`, `PreferencesAndSettings.coffee:122-123`) overrides nothing in the grab
   path, so its held frame is deterministic — no timer/animation/frame-race, and axis-aligned chrome (no trig → immune to the cross-engine
   `Math.sin/cos` issue). Build `new PanelWdgt` + `_applyExtent` + `world.add` + `_applyMoveTo` (equivalent to the demo "panel" item, since

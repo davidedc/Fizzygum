@@ -211,7 +211,7 @@ class MacroToolkit
   # Macro's pump): decide, across cycles, when the canvas is safe to capture
   # deterministically. Native: capture immediately. SWCanvas: wait until glyph
   # atlases have loaded (no text dirty), then force ONE warm-atlas repaint into
-  # the software surface and wait a single doOneCycle for updateBroken (which
+  # the software surface and wait a single doOneCycle for _updateBroken (which
   # runs AFTER progressOnMacroSteps) to flush it — so the captured pixels are
   # identical run-to-run. This is the single SWCanvas screenshot settle gate.
   readyForMacroScreenshot: ->
@@ -222,10 +222,10 @@ class MacroToolkit
     if world.anyTextDirty()
       return false
     if !@macroScreenshotWarmRepaintFrame?
-      # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch, so a
-      # rotated/scaled island buffer (a further cache downstream) rebuilds from warm text before capture (§4.4).
+      # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch (so a
+      # rotated/scaled island buffer — a further cache downstream — rebuilds from warm text before
+      # capture, §4.4) AND repaints the world — the warm-atlas repaint this gate needs, done world-side.
       world.resetImmutableBackBuffersCache?()
-      world.fullChanged()
       @macroScreenshotWarmRepaintFrame = WorldWdgt.frameCount
       return false
     if WorldWdgt.frameCount <= @macroScreenshotWarmRepaintFrame

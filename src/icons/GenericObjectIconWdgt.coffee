@@ -67,7 +67,7 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

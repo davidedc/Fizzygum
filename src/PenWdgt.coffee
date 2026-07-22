@@ -101,7 +101,7 @@ class PenWdgt extends Widget
   # PenWdgt access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
-    @changed()
+    @_changed()
     
   
   # PenWdgt turtle ops:

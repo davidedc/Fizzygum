@@ -102,7 +102,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     # (pure bookkeeping — legal mid-pass): the scroll frame's re-fit for a slot change rides the
     # engine's frame-change up-edge, and the next transform change recomputes the memo fresh.
     @_lastScrollOverflowBox = nil
-    @fullChanged()
+    @_fullChanged()
 
   # ---------------------------------------------------------------------------
   # LAYOUT TRANSPARENCY — the FOURTH member of the sugar-island transparency family (hit /

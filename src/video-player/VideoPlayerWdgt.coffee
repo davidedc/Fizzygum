@@ -99,4 +99,4 @@ class VideoPlayerWdgt extends Widget
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()

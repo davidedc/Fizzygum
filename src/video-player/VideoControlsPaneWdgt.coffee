@@ -97,4 +97,4 @@ class VideoControlsPaneWdgt extends RectangleWdgt
     @durationTimeLabel._reLayout durationTimeLabelBounds
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()

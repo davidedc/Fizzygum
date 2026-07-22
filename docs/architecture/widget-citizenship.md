@@ -63,18 +63,28 @@ citizen:
    processes included — and serialization ships the same closure to disk. A widget that
    quietly depends on state parked elsewhere breaks both.
 2. **It draws itself** — through its pluggable `*Appearance`, never by reaching into another
-   widget's rendering. A widget invalidates only itself (`changed()` /`fullChanged()`): if
+   widget's rendering. A widget invalidates only itself (`_changed()` /`_fullChanged()`): if
    A's action affects B, B marks itself changed in the method A invoked on it. Two sanctioned
    exception families, each carrying an explicit `# cross-invalidation-sanctioned: <reason>`
    marker and gated by `buildSystem/check-invalidation-receivers.js` (see
    [`lint-and-static-checks.md`](lint-and-static-checks.md)): (a) *dispatcher plumbing* — the
    structural movers (`Widget._addNoSettle`, `ActivePointerWdgt.drop`, `bringToForeground`,
-   the shadow walk-up `fullChangedIncludingShadowOwner`) and the world's selection-overlay
+   the shadow walk-up `_fullChangedIncludingShadowOwner`) and the world's selection-overlay
    reconciler invalidate the widget being moved/retargeted, because the mechanism runs there
    and the widget has no method of its own in which to do it; (b) *own-sub-part* — an owner
    invalidates a part it just mutated through a deliberately non-invalidating NoSettle tier.
-   The shared singletons (`world`, `world.caret`, `world.hand`) are global orchestration
-   surfaces, not peers, and may be invalidated from anywhere without a marker.
+   No receiver is otherwise exempt — not even the shared singletons: a widget that needs the
+   world/caret/hand to repaint calls an intent-named PUBLIC method on it and the singleton
+   invalidates itself inside (`WorldWdgt.noteWallpaperChanged` /
+   `resetImmutableBackBuffersCache`, `CaretWdgt.noteTextChanged`,
+   `ActivePointerWdgt.noteCarriedWidgetChanged`). And invalidation is PRIVATE (the 2026-07-22
+   rename): `_changed`/`_fullChanged` are not exposed as API anywhere, and there is
+   deliberately NO general-purpose repaint verb (the old "restore display" menu entry was
+   removed with the rename — owner decision). The paint executor `_updateBroken` (the world's
+   once-per-cycle broken-rect flush) is private under the same rule. The only external callers
+   are the test oracles that force a ground-truth full repaint
+   (`world._fullChanged()` + `world._updateBroken()`), each under an explained sanction marker
+   (see `check-layering.js` rule [D] and the harness paint audit's in-file sanction).
 3. **It handles its own input**, and exposes its affordances uniformly: the right-click menu
    is the universal front door (edit, inspect, resize, attach, duplicate…), so every widget
    is automatically editable and inspectable without any per-widget tooling.

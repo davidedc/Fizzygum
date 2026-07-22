@@ -107,7 +107,7 @@ class WorldWdgt extends PanelWdgt
   _undeclaredEndOfCyclePushes: nil
 
   # PAINT must be READ-ONLY: the cycle PROCESSES EVENTS (fixing layouts step by step) -> FIXES the deferred-settle
-  # layouts (recalculateLayouts) -> PAINTS (updateBroken), with NO layout work at paint. auditPaintTimeLayout-
+  # layouts (recalculateLayouts) -> PAINTS (_updateBroken), with NO layout work at paint. auditPaintTimeLayout-
   # Scheduling (DEBUG, default off) turns on the check that LOGS every layout (re-)schedule reached DURING the
   # paint pass (healingRectanglesPhase true) -- i.e. a widget that scheduled layout while being painted, crossing
   # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved off paint
@@ -245,11 +245,22 @@ class WorldWdgt extends PanelWdgt
   @immutableBackBufferGeneration: 0
 
   # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
-  # downstream island buffers rebuild from the now-warm text. Callers: swCanvasScheduleTextRefresh (atlas
-  # warm, real usage) and the macro screenshot gate (readyForMacroScreenshot).
+  # downstream island buffers rebuild from the now-warm text, AND repaints everything — dropping the
+  # cache means every text-bearing pixel on screen may be stale, so the full repaint is intrinsic to
+  # the reset, not the caller's business (widget-citizenship point 2: I invalidate myself). Callers:
+  # swCanvasScheduleTextRefresh (atlas warm, real usage) and the macro screenshot gate
+  # (readyForMacroScreenshot).
   resetImmutableBackBuffersCache: ->
     @cacheForImmutableBackBuffers?.reset?()
     WorldWdgt.immutableBackBufferGeneration++
+    @_fullChanged()
+
+  # PUBLIC notification — the wallpaper (world.wallpaper, my delegated collaborator) changed its
+  # pattern. My DesktopAppearance paints the backdrop by reading world.wallpaper, so a pattern
+  # change means my own pixels are stale. I invalidate MYSELF here, in the method the wallpaper
+  # invokes on me (widget-citizenship point 2) — the wallpaper never reaches into my _changed().
+  noteWallpaperChanged: ->
+    @_changed()
 
   broken: nil
   duplicatedBrokenRectsTracker: nil
@@ -480,7 +491,7 @@ class WorldWdgt extends PanelWdgt
     # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
     # SWCanvas backend all rendering goes to a separate software render canvas
     # (@worldRenderCanvas), whose pixels are blitted onto the DOM canvas once per
-    # painted frame (see updateBroken / blitRenderCanvasToDOM). When the flag is
+    # painted frame (see _updateBroken / blitRenderCanvasToDOM). When the flag is
     # off, the render canvas IS the DOM canvas and there is no blit, so behaviour
     # is identical to before.
     if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
@@ -511,7 +522,7 @@ class WorldWdgt extends PanelWdgt
 
     @inputEventsQueue = new InputEventsQueue
 
-    @changed()
+    @_changed()
 
   # Memoised absolute position of the world canvas within the document.
   # Reading offsetLeft/offsetTop/offsetParent forces a synchronous style+layout
@@ -577,7 +588,7 @@ class WorldWdgt extends PanelWdgt
 
     @wallpaper.setPattern nil, nil, "dots"
 
-    @changed()
+    @_changed()
 
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
@@ -835,7 +846,7 @@ class WorldWdgt extends PanelWdgt
       @broken.push theRect
     @duplicatedBrokenRectsTracker[theRect.toString()] = true
 
-  # two live call sites (_fleshOutBroken / fleshOutFullBroken), but Chrome's code-coverage
+  # two live call sites (_fleshOutBroken / _fleshOutFullBroken), but Chrome's code-coverage
   # tool showed it never firing at runtime
   # TODO investigate and see whether this is needed
   _mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
@@ -929,8 +940,8 @@ class WorldWdgt extends PanelWdgt
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
           sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
-      # §4.4 island buffer cache — source (old-position) lane (see fleshOutFullBroken). Consumed by
-      # whichever lane runs first (fleshOutFullBroken is called before _fleshOutBroken); the field is
+      # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullBroken). Consumed by
+      # whichever lane runs first (_fleshOutFullBroken is called before _fleshOutBroken); the field is
       # nil'd on consumption so this second lane is a no-op when the full lane already handled it.
       if brokenWidget._islandBufferSourceIsland?
         brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
@@ -967,7 +978,7 @@ class WorldWdgt extends PanelWdgt
 
     
 
-  fleshOutFullBroken: ->
+  _fleshOutFullBroken: ->
     sourceBroken = nil
     destinationBroken = nil
 
@@ -1314,13 +1325,13 @@ class WorldWdgt extends PanelWdgt
   maybeEnableTrackChanges: ->
     @trackChanges.pop()
 
-  updateBroken: ->
+  _updateBroken: ->
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
     @numberOfMergedSourceAndDestination = 0
 
-    @fleshOutFullBroken()
+    @_fleshOutFullBroken()
     @_fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenWidget()
     @cleanupSrcAndDestRectsOfWidgets()
@@ -1352,6 +1363,9 @@ class WorldWdgt extends PanelWdgt
         return
       if rect.isNotEmpty()
         try
+          # public-call-sanctioned: fullPaintIntoAreaOrBlitFromBackBuffer is the polymorphic
+          # paint recursion (parent paints child through it, tree-wide) — it stays public;
+          # the paint executor here is simply its top-level entry.
           @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
         catch err
           @resetWorldCanvasContext()
@@ -1674,7 +1688,7 @@ class WorldWdgt extends PanelWdgt
   # (Widget._drawSelectionOverlay). On a CHANGE (retarget, or on/off) invalidate BOTH the old and new
   # widgets so their paint (hence the after-subtree overlay draw) re-runs and the broken-rect repaint
   # clears the old outline / draws the new one -- the selection-change invalidation the old HighlighterWdgt
-  # used to get from its own changed()/fullDestroy(). A MOVING target needs no handling here: moving a widget already
+  # used to get from its own _changed()/fullDestroy(). A MOVING target needs no handling here: moving a widget already
   # invalidates it, so its overlay follows for free (unlike the old reconciler, which had to re-bounds).
   # PULL, not push (D-3-iii): the target is recomputed here, never wired into the focus-set sites. Same
   # doOneCycle slot the old addEditorFocusIndicatorWidget reconciler ran in.
@@ -1684,12 +1698,12 @@ class WorldWdgt extends PanelWdgt
     previous = @_editorSelectedWidget
     @_editorSelectedWidget = target
     # only invalidate a still-attached previous widget: a destroyed one already invalidated its region on
-    # fullDestroy, and changed() on a detached widget can't reach the broken-rect list anyway.
+    # fullDestroy, and _changed() on a detached widget can't reach the broken-rect list anyway.
     # cross-invalidation-sanctioned: selection-overlay reconciler — PULL model (D-3-iii), no
     # method ever runs on the old/new target in which it could self-invalidate
-    previous.changed() if previous? and previous.root() is @
+    previous._changed() if previous? and previous.root() is @
     # cross-invalidation-sanctioned: selection-overlay reconciler (see above)
-    target?.changed()
+    target?._changed()
 
   # Is w the widget generically selected for editing this cycle? PUBLIC query (called cross-object from
   # any widget's Widget._showsSelectionOverlay, like the spreadsheet's public isSelectedAddress): an O(1)
@@ -1835,7 +1849,7 @@ class WorldWdgt extends PanelWdgt
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
     # a painted frame (pre-swap it read pre-flush bounds, one stage too early; deferred-settle drag geometry
     # was still unapplied). Handlers fired here write paint-layer state and at most SELF-SETTLING
-    # mutations (tooltip fullDestroy), so the world is settled again before updateBroken; a careless
+    # mutations (tooltip fullDestroy), so the world is settled again before _updateBroken; a careless
     # (off-settle) push from a hover handler would be caught by the end-of-cycle capstone gate.
     # See docs/archive/hover-resync-after-flush-plan.md.
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
@@ -1860,7 +1874,7 @@ class WorldWdgt extends PanelWdgt
     @addDragAffordanceWidgets()
 
     # here is where the repainting on screen happens
-    @updateBroken()
+    @_updateBroken()
 
     WorldWdgt.frameCount++
 
@@ -1984,7 +1998,7 @@ class WorldWdgt extends PanelWdgt
     clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft
 
     if (@worldCanvas.width isnt clientWidth) or (@worldCanvas.height isnt clientHeight)
-      @fullChanged()
+      @_fullChanged()
       @worldCanvas.width = (clientWidth * ceilPixelRatio)
       @worldCanvas.style.width = clientWidth + "px"
       @worldCanvas.height = (clientHeight * ceilPixelRatio)
@@ -2438,7 +2452,7 @@ class WorldWdgt extends PanelWdgt
     @_settleLayoutsAfter => @_resetWorldNoSettle()
 
   _resetWorldNoSettle: ->
-    @changed() # redraw the whole screen
+    @_changed() # redraw the whole screen
     @fullDestroyChildren()
     # EPHEMERAL-OVERLAY bookkeeping is world-level state NOT held in the widget tree, so
     # fullDestroyChildren above (which destroys the reconciled highlighter/pinout WIDGETS as world
@@ -2639,12 +2653,12 @@ class WorldWdgt extends PanelWdgt
     #    this makes the loaded world's edit history authoritative), then repaint now and again
     #    once any async image/canvas assets have decoded.
     @sourceEditsRegistry = restoredRegistry
-    result.whenReady?.then? => @fullChanged()
-    @fullChanged()
+    result.whenReady?.then? => @_fullChanged()
+    @_fullChanged()
     return
 
   # NoSettle teardown core for a snapshot load (mirrors _resetWorldNoSettle but product-safe:
-  # no @changed/scrollTop/setColor — the loader re-establishes those). fullDestroyChildren is
+  # no @_changed/scrollTop/setColor — the loader re-establishes those). fullDestroyChildren is
   # itself a NoSettle-level op that ALSO zeroes every per-class lastBuiltInstanceNumericID,
   # giving the clean id space the restored iids need. Called only inside loadWorldSnapshot's
   # settle wrap above.
@@ -2678,7 +2692,6 @@ class WorldWdgt extends PanelWdgt
       menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
       menu.addMenuItem "test menu ➜", menusHelper, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"
       menu.addLine()
-      menu.addMenuItem "restore display", @, "changed", toolTip: "redraw the\nscreen once"
       menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
       menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
       menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"

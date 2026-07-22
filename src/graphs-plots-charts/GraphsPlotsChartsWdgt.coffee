@@ -25,7 +25,7 @@ class GraphsPlotsChartsWdgt extends Widget
   # plot supplies only its own @fps and _renderingHelper — the shared ctor adds them to steppingWdgts.)
   step: ->
     @graphNumber++ unless @_animationFrozenForDeterministicReplay()
-    @changed()
+    @_changed()
 
 
   # This method only paints this very widget's "image",

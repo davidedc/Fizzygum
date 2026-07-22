@@ -73,7 +73,7 @@ class StretchablePanelWdgt extends PanelWdgt
 
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
     super
     @_markLayoutAsFixed()

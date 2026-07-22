@@ -70,7 +70,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               context.strokeStyle=Color.RED.toString()
               context.rect(-2,-2,4,4)
               context.stroke()
-          @changed()
+          @_changed()
       """
 
   @BRUSH_TOOL_SOURCE: """
@@ -158,7 +158,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               context.strokeStyle=Color.GREEN.toString()
           context.rect(-5,-5,10,10)
           context.stroke()
-          @changed()
+          @_changed()
       """
 
   @TOOTHPASTE_TOOL_SOURCE: """
@@ -300,7 +300,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               context.strokeStyle=Color.GREEN.toString()
           context.rect(-5,-5,10,10)
           context.stroke()
-          @changed()
+          @_changed()
       """
 
   @ERASER_TOOL_SOURCE: """
@@ -333,7 +333,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
               context.strokeStyle=Color.GREEN.toString()
           context.rect(-5,-5,10,10)
           context.stroke()
-          @changed()
+          @_changed()
       """
 
   constructor: ->

@@ -198,7 +198,7 @@ class PopUpWdgt extends Widget
     # P.S. this is the thing that causes the MenuWdgt buffer
     # to be painted after the creation.
     @addShadow()
-    @fullChanged()
+    @_fullChanged()
 
   destroy: ->
     super()

@@ -169,7 +169,7 @@ class ScrollPanelWdgt extends PanelWdgt
     hWidth = @width() - spaceToLeaveOnOneSide
     vHeight = @height() - spaceToLeaveOnOneSide
 
-    @changed()
+    @_changed()
 
     # this check is to see whether the bar actually belongs to this ScrollPanel: a bar can survive
     # detached from its original ScrollPanel A (it's referenced as a property, not a child, so

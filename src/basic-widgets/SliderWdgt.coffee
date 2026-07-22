@@ -87,7 +87,7 @@ class SliderWdgt extends CircleBoxWdgt
   _reLayoutSelfAndButton: ->
     @_reLayoutSelf()
     @_reLayoutChildren()
-    @changed()
+    @_changed()
 
   # I am a size-tracking container of my one child: the thumb tracks my frame
   # (its position is derived from my value + my track geometry). Conforming to
@@ -247,9 +247,9 @@ class SliderWdgt extends CircleBoxWdgt
 
     # self + thumb: the re-lays above move/resize the button through
     # non-notifying tiers. The caller covers its own repaint (a scroll
-    # frame's adjustScrollBars starts with its own changed()) — a widget
+    # frame's adjustScrollBars starts with its own _changed()) — a widget
     # invalidates only itself (widget-citizenship contract point 2).
-    @fullChanged()
+    @_fullChanged()
   
   setStart: (numOrWidgetGivingNum) ->
 

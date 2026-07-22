@@ -7,7 +7,7 @@
 #
 # These widgets are transparently/automatically added/removed by the
 # addHighlightingWidgets function in doOneCycle
-# just before the @updateBroken() call.
+# just before the @_updateBroken() call.
 #
 # That addHighlightingWidgets function tries to be smart so to just
 # add/modify/remove the HighlighterWdgts that

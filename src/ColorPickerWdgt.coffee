@@ -87,7 +87,7 @@ class ColorPickerWdgt extends Widget
     @feedback._applyMoveTo new Point x, y
 
     world.maybeEnableTrackChanges()
-    @fullChanged()
+    @_fullChanged()
 
   _reLayout: (newBoundsForThisLayout) ->
 

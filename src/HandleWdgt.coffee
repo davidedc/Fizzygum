@@ -350,11 +350,11 @@ class HandleWdgt extends Widget
   # HandleWdgt events:
   mouseEnter: ->
     @state = @STATE_HIGHLIGHTED
-    @changed()
+    @_changed()
   
   mouseLeave: ->
     @state = @STATE_NORMAL
-    @changed()
+    @_changed()
 
   # Menu action ("attach..." -> choose target): corner-attach this handle to the chosen widget. A discrete
   # user action, so it goes through the public self-settling add() -- the corner placement comes from default

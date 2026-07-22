@@ -7,7 +7,7 @@ class FrameContentsPlaceholderText extends TextWdgt
     @alignCenter()
     @alignMiddle()
     @fittingSpecWhenBoundsTooLarge = false
-    @changed()
+    @_changed()
 
 
   initialiseDefaultFrameContentLayoutSpec: ->

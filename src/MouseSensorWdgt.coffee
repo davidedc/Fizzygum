@@ -18,7 +18,7 @@ class MouseSensorWdgt extends BoxWdgt
     if Automator? and Automator.animationsPacingControl
       if Automator.state == Automator.PLAYING
         @alpha = 0.6
-        @changed()
+        @_changed()
         return
 
     unless @isTouched
@@ -33,7 +33,7 @@ class MouseSensorWdgt extends BoxWdgt
           @alpha = 0
           @step = nil
           world.steppingWdgts.delete @
-        @changed()
+        @_changed()
       world.steppingWdgts.add @
   
   unTouch: ->

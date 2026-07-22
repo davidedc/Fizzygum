@@ -459,7 +459,7 @@ class FrameWdgt extends Widget
   # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
   # inside a close/destroy settle, so the enclosing settle flushes it -- a self-settling setText
   # would open a nested settle mid-pass. (The label is FIT_TEXT_TO_BOX, so the text swap changes
-  # no geometry anyway; @changed() in the core repaints it.)
+  # no geometry anyway; @_changed() in the core repaints it.)
   _setEmptyWindowLabelNoSettle: ->
     if @isInternal()
       @label._setTextNoSettle "empty internal window"
@@ -697,7 +697,7 @@ class FrameWdgt extends Widget
     if whereTo isnt world?.hand
       @_deriveAndSetBodyAppearance()
       @bar._setAppearanceAndColorOfTitleBackground()
-      @changed()
+      @_changed()
 
   _reactToChildDropped: (theWidget) ->
     @_destroyToolbarNoSettle()

@@ -51,7 +51,7 @@ const BASELINE_S_EFFECTFUL = 0;    // HARD since T3 (2026-07-12): 81 at rule bir
 
 // ---- [U] baselines (RATCHET — fails only on a NEW self-only public method, like dead-methods) ----
 const BASELINE_U_EFFECTFUL = 0;    // HARD since T5 (2026-07-12): 92 at rule birth -> 76 (T2/T3) -> 0 (T5: 53 renames + 23 allowlisted; owner triage in plan App-F)
-const BASELINE_U_QUERY = 148;      // 152 at rule birth; T2 deleted the vestigial buildSubwidgets hooks; T5's renames took 1 more off; tightened 150 -> 148 on 2026-07-15 to lock in a gain a later arc had already banked (fg critique surfaced it)
+const BASELINE_U_QUERY = 147;      // 152 at rule birth; T2 deleted the vestigial buildSubwidgets hooks; T5's renames took 1 more off; tightened 150 -> 148 on 2026-07-15 to lock in a gain a later arc had already banked (fg critique surfaced it); 148 -> 147 on 2026-07-22 with the invalidation-privacy rename (the changed family left the public-query census)
 const ALLOWLIST = path.resolve(__dirname, 'public-api-allowlist.txt');
 
 function readAllowlist() {

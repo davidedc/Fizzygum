@@ -42,7 +42,7 @@ fragment.
 
 ### 2.1 Why a 2×2
 An immediate geometry **apply** that REACTS is split by **two independent booleans**:
-- **REACT** — `changed()` repaint + `_reLayoutSelf()` (extent) / children-translate (move). `commit<Geom>` = no react,
+- **REACT** — `_changed()` repaint + `_reLayoutSelf()` (extent) / children-translate (move). `commit<Geom>` = no react,
   `apply<Geom>` = react.
 - **DISPATCH** — is this the **polymorphic** entry (the override dispatch point a subclass specializes), or the
   override-**BYPASS** base the top-down arrange uses to place a child WITHOUT re-entering its subclass apply-override?
@@ -80,7 +80,7 @@ listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
 > `_commitExtentAndNotify` → the `__commitExtent` leaf; `_commitBoundsAndNotify` + the silent bounds twin → one
 > **`_commitBounds`** — ¹ a silent origin+extent commit, leaf-like but single-`_` because it composes the extent leaf.)
 > The *move* twins did **NOT** collapse: polymorphic `_applyMoveBy` is the dispatch point for the
-> ClippingAtRectangularBoundsMixin / ActivePointerWdgt move overrides (they repaint via `@changed`, not `@fullChanged`),
+> ClippingAtRectangularBoundsMixin / ActivePointerWdgt move overrides (they repaint via `@_changed`, not `@_fullChanged`),
 > whereas `_applyMoveByBase` is the uniform base translate the arrange needs for leaf children — a genuine dispatch
 > distinction, not a redundant twin. See `layout-optimizations-and-oo-cleanup-plan.md` §3.
 
@@ -100,7 +100,7 @@ Each is a true bottom (satisfies §1 / rule [I]):
   `WorldWdgt` move/resize counter bump; NOT orchestration, and those bounds caches are LIVE — do not delete them);
 - the relayout-enqueue atom `__markForRelayout` (the no-climb enqueue);
 - the structural leaves `__hide`, `__addShadow`, `__add` — the no-side-effect cores their public siblings
-  (`hide` / `addShadow` / `add`) wrap with a `fullChanged()` repaint; the depth chain is e.g. `add → _addNoSettle → __add`.
+  (`hide` / `addShadow` / `add`) wrap with a `_fullChanged()` repaint; the depth chain is e.g. `add → _addNoSettle → __add`.
 
 ### 2.5 The settle tier (orthogonal)
 `_settleLayoutsAfter` (single-mutation flush) is the SETTLE axis — the mechanism the `*NoSettle` cores are named
