@@ -138,9 +138,6 @@ class MenusHelper
     world.create new EraserIconWdgt
 
 
-  createTrashcanIconWdgt: ->
-    world.create new TrashcanIconWdgt
-
   createShortcutArrowIconWdgt: ->
     world.create new ShortcutArrowIconWdgt
 
@@ -156,8 +153,8 @@ class MenusHelper
   createFolderIconWdgt: ->
     world.create new FolderIconWdgt
 
-  createBasementIconWdgt: ->
-    world.create new BasementIconWdgt
+  createBinIconWdgt: ->
+    world.create new BinIconWdgt
 
   createWidgetIconWdgt: ->
     world.create new WidgetIconWdgt
@@ -171,8 +168,8 @@ class MenusHelper
   # this part is excluded from the fizzygum homepage build <<«
 
 
-  basementIconAndText: ->
-    world.add new BasementOpenerWdgt
+  binIconAndText: ->
+    world.add new BinOpenerWdgt
 
   # »>> this part is excluded from the fizzygum homepage build
   newScriptWindow: ->
@@ -220,13 +217,12 @@ class MenusHelper
     menu.addMenuItem "Brush icon", menusHelper, "createBrushIconWdgt"
     menu.addMenuItem "Toothpaste icon", menusHelper, "createToothpasteIconWdgt"
     menu.addMenuItem "Eraser icon", menusHelper, "createEraserIconWdgt"
-    menu.addMenuItem "Trashcan icon", menusHelper, "createTrashcanIconWdgt"
     menu.addMenuItem "Shortcut arrow icon", menusHelper, "createShortcutArrowIconWdgt"
     menu.addMenuItem "Raster pic icon", menusHelper, "createRasterPicIconWdgt"
     menu.addMenuItem "Paint bucket icon", menusHelper, "createPaintBucketIconWdgt"
     menu.addMenuItem "Object icon", menusHelper, "createObjectIconWdgt"
     menu.addMenuItem "Folder icon", menusHelper, "createFolderIconWdgt"
-    menu.addMenuItem "Basement icon", menusHelper, "createBasementIconWdgt"
+    menu.addMenuItem "Bin icon", menusHelper, "createBinIconWdgt"
     menu.addMenuItem "Widget icon", menusHelper, "createWidgetIconWdgt"
     menu.popUpAtHand()
 
@@ -542,7 +538,7 @@ class MenusHelper
 
   popUpShortcutsAndScriptsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Shortcuts & Scripts"
-    menu.addMenuItem "basement shortcut", menusHelper, "basementIconAndText"
+    menu.addMenuItem "bin shortcut", menusHelper, "binIconAndText"
     menu.addMenuItem "new script", menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", (new FizzyPaintApp), "createOpener"
     menu.addMenuItem "document launcher", (new SimpleDocumentApp), "createOpener"

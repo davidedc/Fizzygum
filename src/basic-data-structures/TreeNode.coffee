@@ -125,7 +125,7 @@ class TreeNode
     if @parent?
       if @parent.gcSessionId == newGcSessionId
         return
-      if @isDirectlyInBasement()
+      if @isDirectlyInBin()
         return
       @parent.markItAndItsParentsAsReachable newGcSessionId
   
@@ -137,27 +137,27 @@ class TreeNode
       return false
     return true
 
-  # check if the widget is on its own in the basement
+  # check if the widget is on its own in the bin
   # (rather than being part of a widget that is in the
-  # basement)
-  isDirectlyInBasement: ->
-    @parent?.parent?.parent == world.basementWdgt
+  # bin)
+  isDirectlyInBin: ->
+    @parent?.parent?.parent == world.binWdgt
 
-  # check if it's in the basement on its own or
+  # check if it's in the bin on its own or
   # as part of another widget.
-  isInBasement: ->
+  isInBin: ->
     thereCouldBeOne = @allParentsBottomToTopSuchThat (eachWdgt) ->
-      eachWdgt == world.basementWdgt
+      eachWdgt == world.binWdgt
     return thereCouldBeOne.length == 1
 
-  isInBasementButReachable: (newGcSessionId) ->
+  isInBinButReachable: (newGcSessionId) ->
     if @gcSessionId == newGcSessionId
       return true
     if @parent.gcSessionId == newGcSessionId
       return true
-    if @parent == world.basementWdgt
+    if @parent == world.binWdgt
       return false
-    return @parent.isInBasementButReachable newGcSessionId
+    return @parent.isInBinButReachable newGcSessionId
 
 
   # TreeNode functions:

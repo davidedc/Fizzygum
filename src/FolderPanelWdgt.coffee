@@ -5,14 +5,14 @@
 #    (including, but not limited to, other desktop system links that refer
 #    to widgets and folders).
 # 3) has extra logic such that any widget dropped in it "becomes"
-#    a reference to such widget, and the widget is moved to the basement.
+#    a reference to such widget, and the widget is moved to the bin.
 #    The reason for this is that the actual "rest" place where
-#    general widgets should be is in the basement.
+#    general widgets should be is in the bin.
 #    The simulated "file system" (i.e. shortcuts and folders) is just a
-#    network of pointers to stuff that "rests" in the basement and is
+#    network of pointers to stuff that "rests" in the bin and is
 #    pulled in/out of it as the user works with them.
 #
-# Note that the panel of the Basement IS NOT a FolderPanelWdgt
+# Note that the panel of the Bin IS NOT a FolderPanelWdgt
 # because it doesn't need any of these behaviours.
 #
 # Also, the desktop IS NOT a FolderPanelWdgt because it

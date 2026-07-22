@@ -309,7 +309,7 @@ class FrameWdgt extends Widget
     # container the window was nested into. Classify against my REAL container (through any sugar wrap):
     # tilting an EXTERNAL window keeps it external (true parent still world), a tilted INTERNAL window keeps
     # it internal (true parent still the real container). The look-through idiom is shared with
-    # BasementWdgt.holds (§7.5 Bug A/B) -- one _parentThroughIslands, not a bespoke check per site.
+    # BinWdgt.holds (§7.5 Bug A/B) -- one _parentThroughIslands, not a bespoke check per site.
     # Option B (latent 2): the look-through also climbs EXPLICIT sole-content islands, so an
     # explicitly-islanded window on the desktop reads EXTERNAL (its real home is the world).
     p = @_parentThroughIslands()
@@ -363,7 +363,7 @@ class FrameWdgt extends Widget
       else @_closeFromFrameBarWhenSaveOrAsk()
 
   # The 'saveOrAsk' hook. Base = a plain frame lets its CONTENT decide how to
-  # close (ScriptWdgt/ErrorsLogViewer/BasementWdgt/generic windows, via
+  # close (ScriptWdgt/ErrorsLogViewer/BinWdgt/generic windows, via
   # Widget.closeFromContainerFrame); the document/panel citizens override this
   # with @_saveOrAskThenCloseCitizen, and FolderWindowWdgt with its own variant.
   _closeFromFrameBarWhenSaveOrAsk: ->
@@ -651,7 +651,7 @@ class FrameWdgt extends Widget
   # a citizen constructs a FRESH payload per reset, and each fresh child
   # re-enters the destroy-until-empty iteration, an unbounded rebuild-destroy
   # loop. Set here at the subtree's destroy ENTRY so every teardown path
-  # (resetWorld's fullDestroyChildren, a direct fullDestroy, the basement)
+  # (resetWorld's fullDestroyChildren, a direct fullDestroy, the bin)
   # covers the whole recursion.
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true

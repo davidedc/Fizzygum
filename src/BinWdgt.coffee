@@ -1,14 +1,9 @@
-class BasementWdgt extends BoxWdgt
+class BinWdgt extends BoxWdgt
 
   # panes:
   scrollPanel: nil
   resizer: nil
-
-  # only the TOGGLE is a field: it owns its own on/off buttons (SwitchButtonWdgt keeps them in
-  # @buttons), so parking a second reference to each here was redundant state.
-  hideUsedWdgtsToggle: nil
-
-  showingLostItemsOnly: false
+  emptyBinButton: nil
 
   constructor: ->
     super()
@@ -19,7 +14,7 @@ class BasementWdgt extends BoxWdgt
     @_buildAndConnectChildren()
 
   colloquialName: ->
-    "Basement"
+    "Bin"
 
   closeFromContainerFrame: (containerWindow) ->
     # remove ourselves from
@@ -43,10 +38,8 @@ class BasementWdgt extends BoxWdgt
     @scrollPanel = new ScrollPanelWdgt
     @_addNoSettle @scrollPanel
 
-    hideUsedWdgtsOnButton = new SimpleButtonWdgt true, @, "showAllWidgets", "☒ only show lost items"
-    hideUsedWdgtsOffButton = new SimpleButtonWdgt true, @, "hideUsedWidgets", "☐ only show lost items"
-    @hideUsedWdgtsToggle = new ToggleButtonWdgt hideUsedWdgtsOffButton, hideUsedWdgtsOnButton, 0
-    @_addNoSettle @hideUsedWdgtsToggle
+    @emptyBinButton = new SimpleButtonWdgt true, @, "emptyBinRequested", "Empty bin"
+    @_addNoSettle @emptyBinButton
 
 
     # resizer -- attach, then record (@resizer stays nil during its own add; byte-identical to the old
@@ -59,7 +52,7 @@ class BasementWdgt extends BoxWdgt
 
 
   # this is a very basic garbage collection mechanism
-  # we basically try to find out which items in the basement
+  # we basically try to find out which items in the bin
   # are still referenced somehow and which aren't
   # it's based on the idea that "referencing" widgets
   # are kept in a list, and we can just scan those and mark
@@ -68,31 +61,41 @@ class BasementWdgt extends BoxWdgt
     world.incrementalGcSessionId++
     newGcSessionId = world.incrementalGcSessionId
 
-    # precondition: the BasementWdgt is on the desktop.
+    # precondition: the BinWdgt is on the desktop.
     # first, take all orphan references and mark them as visited so we
     # get them out of the way immediately. They are unreachable by
-    # definition (remember, the BasementWdgt is on screen, so they
-    # are not even in the basement!) and
+    # definition (remember, the BinWdgt is on screen, so they
+    # are not even in the bin!) and
     # so they don't make their target reachable.
     for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
       if eachReferencingWdgt.isOrphan()
         eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     # then, take all remaining references, filter OUT the ones in the
-    # basement (so: get the non-orphan non-basement references, which means
-    # they are reachable from the desktop without going via the basement)
+    # bin (so: get the non-orphan non-bin references, which means
+    # they are reachable from the desktop without going via the bin)
     # and for each:
     #  - mark what they reach (and their parents) as reachable
-    #     (note that what they reach MIGHT be in the basement)
+    #     (note that what they reach MIGHT be in the bin)
     #  - mark them as visited so we don't visit again
     for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
       if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
-        if !eachReferencingWdgt.isInBasement()
+        if !eachReferencingWdgt.isInBin()
           eachReferencingWdgt.target.markItAndItsParentsAsReachable newGcSessionId
           eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
+    # system furniture parked in the bin is reachable through WORLD FIELDS, not
+    # through the shortcut tracker: the app singletons (world[slot], revived by their
+    # desktop launchers) and the editor templates window (revived by TemplatesButtonWdgt).
+    # Without this they'd classify as lost -- and be shown in, and destroyable from, the
+    # lost-items view. Marked before the fixpoint below so references held INSIDE this
+    # furniture propagate reachability like any other reachable bin resident.
+    for slot in Serializer.WORLD_APP_SLOTS
+      world[slot]?.markItAndItsParentsAsReachable newGcSessionId
+    world.simpleEditorTemplates?.markItAndItsParentsAsReachable newGcSessionId
+
     # then, take all remaining references (which by exclusion at this point
-    # must be the references the basement) and,
+    # must be the references the bin) and,
     # if they are reachable, then we have to mark what they reference
     # as reachable.
     # How do we know if they are reachable?
@@ -109,63 +112,69 @@ class BasementWdgt extends BoxWdgt
       newReachableReferencesUncovered = false
       for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
         if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
-          if eachReferencingWdgt.isInBasementButReachable newGcSessionId
+          if eachReferencingWdgt.isInBinButReachable newGcSessionId
             newReachableReferencesUncovered = true
             eachReferencingWdgt.target.markItAndItsParentsAsReachable newGcSessionId
             eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     return newGcSessionId
 
-  hideUsedWidgets: ->
-    @showingLostItemsOnly = true
-
+  # The bin's one view: LOST items only. Anything reachable -- through a shortcut chain
+  # or a world field (doGC) -- is parked infrastructure (the simulated disk), not junk,
+  # so it is hidden; what stays visible is exactly what "Empty bin" would destroy.
+  # Symmetric on purpose: an item whose last reference died while it sat hidden must
+  # re-surface at the next refresh. Public: the opener refreshes the view at every
+  # open (references can die while the bin is closed), and the child-add callback
+  # below re-applies it as things land.
+  refreshLostOnlyView: ->
     newGcSessionId = @doGC()
-
-    # now we have an idea of which children in the basement
-    # are reachable and which aren't
-    referencedChildren = new Set
-
     for w in @scrollPanel.contents.children
-      if w.isInBasementButReachable newGcSessionId
-        referencedChildren.add w
+      if w.isInBinButReachable newGcSessionId
+        w.hide()
+      else
+        w.show()
 
-    referencedChildren.forEach (w) =>
-      w.hide()
+  # Button action (button-action strings stay public and un-underscored). Empty bin is
+  # the framework's only bulk-destructive user action, so it confirms through an
+  # in-world menu first; the menu is transient, so dismissal destroys it.
+  emptyBinRequested: ->
+    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good."
+    menu.addMenuItem "Yes, empty it", @, "emptyBin"
+    menu.addMenuItem "Cancel"
+    menu.popUpCenteredAtHand world
 
-  showAllWidgets: ->
-    @showingLostItemsOnly = false
-    for w in @scrollPanel.contents.children
-      w.show()
+  # Destroy every LOST item. The lost set comes from ONE doGC, then we destroy -- never
+  # recompute mid-loop: destroying a binned shortcut can make its target newly lost, and
+  # THIS session's set already classifies that target correctly (unreachable then ==
+  # lost then: binning the last link binned the document, the semantics the confirm
+  # warns about). Reachable (parked) residents are untouched. doGC's on-screen
+  # precondition holds: the button lives in the open bin window.
+  emptyBin: ->
+    newGcSessionId = @doGC()
+    lostOnes = (w for w in @scrollPanel.contents.children when !w.isInBinButReachable newGcSessionId)
+    for w in lostOnes
+      w.fullDestroy()
 
-  # a closed/lost widget is scattered into the basement's contents. A core itself: called only from
+  # a closed/lost widget is scattered into the bin's contents. A core itself: called only from
   # close()'s private chain (_closeNoSettle) and invoking a core, with no settle (the close batch settles).
   _addLostWidgetNoSettle: (w) ->
     @scrollPanel.contents._addInPseudoRandomPositionNoSettle w
 
-  # is w currently sitting in the basement's contents? §7.5 Bug B (model a) + latent 2 (Option B): a
-  # tilted/scaled or explicitly-islanded widget is re-homed to the basement AS ITS FIGURE (w.parent is then
+  # is w currently sitting in the bin's contents? §7.5 Bug B (model a) + latent 2 (Option B): a
+  # tilted/scaled or explicitly-islanded widget is re-homed to the bin AS ITS FIGURE (w.parent is then
   # the island, whose parent is the contents), so classify against w's REAL container through any
   # sole-content island wrap -- the same look-through idiom FrameWdgt.isInternal uses -- else holds(w)
-  # would go false while w is demonstrably in the basement.
+  # would go false while w is demonstrably in the bin.
   holds: (w) ->
     p = w._parentThroughIslands()
     p? and p == @scrollPanel.contents
 
   # if a child has been added to the scrollPanel,
   # the scrollPanel checks its parent to see if it
-  # has this callback. We use this callback because
-  # we want to make
-  # sure that the "only show lost items"
-  # filter is respected. Just re-invoke the
-  # methods that calculate the visibility
+  # has this callback: re-apply the lost-only filter
+  # so the new arrival is classified right away.
   _reactToChildAddedInScrollPanel: (child) ->
-    # public-call-sanctioned: hideUsedWidgets/showAllWidgets are this widget's own BUTTON-ACTION
-    # surface (the SimpleButtonWdgt dispatch strings in the ctor) — a de-facto public command
-    # surface, so they stay public; this callback consciously reuses them to re-apply the filter.
-    if @showingLostItemsOnly
-      @hideUsedWidgets()
-    else
-      @showAllWidgets()
+    @refreshLostOnlyView()
 
 
   _reLayout: (newBoundsForThisLayout) ->
@@ -191,12 +200,12 @@ class BasementWdgt extends BoxWdgt
     h = b - y
     @scrollPanel._applyBounds (new Point x, y), new Point w, h
 
-    # hideUsedWdgts toggle button
+    # Empty bin button
     x = @scrollPanel.left()
     y = @scrollPanel.bottom() + @cornerRadius
     h = WorldWdgt.preferencesAndSettings.handleSize
     w = @scrollPanel.width() - h - @cornerRadius
-    @hideUsedWdgtsToggle._reLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
+    @emptyBinButton._reLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
     world.maybeEnableTrackChanges()
 
     super

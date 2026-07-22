@@ -1,4 +1,4 @@
-# The one-shot "*Info" documents (Basement / Dashboards Maker / Generic Panel /
+# The one-shot "*Info" documents (Bin / Dashboards Maker / Generic Panel /
 # Patch Programming / Drawings Maker / Docs Maker / Slides Maker / Super
 # Toolbar / Windows) collapsed into ONE registry of build closures (Option A
 # "closure table"), keyed by app. Each app's launcher calls
@@ -14,12 +14,12 @@
 class InfoDocs
 
   @REGISTRY:
-    basement:
-      flag:        "infoDoc_basement_created"
-      title:       "Basement"
-      windowTitle: "Basement info"
+    bin:
+      flag:        "infoDoc_bin_created"
+      title:       "Bin"
+      windowTitle: "Bin info"
       build: (sdspw) ->
-        sdspw.addNormalParagraph "Drag things in here to recycle them.\n\nClosed or invisible items also end up in here, and the items that can't be used again are automatically recycled."
+        sdspw.addNormalParagraph "Drag things in here to throw them away.\n\nItems you close without saving a link to also land in here. Documents you did save live behind their link icons and are not shown.\n\n\"Empty bin\" destroys everything shown, for good."
 
     dashboards:
       flag:        "infoDoc_dashboardsMaker_created"
@@ -164,7 +164,7 @@ class InfoDocs
 
   # the per-doc ICON is a literal `new X` so the dep finder sees it:
   @_iconFor:
-    basement:         -> new BasementIconWdgt
+    bin:         -> new BinIconWdgt
     dashboards:       -> new DashboardsIconWdgt
     genericPanel:     -> new GenericPanelIconWdgt
     patchProgramming: -> new PatchProgrammingIconWdgt

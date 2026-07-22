@@ -1,4 +1,4 @@
-class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
+class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
   @augmentWith HighlightableMixin, @name
 
@@ -9,12 +9,12 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
   _acceptsDrops: true
 
   constructor: ->
-    super "Basement", new GenericShortcutIconWdgt new BasementIconWdgt
-    @target = world.basementWdgt
+    super "Bin", new GenericShortcutIconWdgt new BinIconWdgt
+    @target = world.binWdgt
 
   # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
   # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the
-  # `!(aWdgt instanceof BasementOpenerWdgt)` exclusion). (type-test-elimination campaign)
+  # `!(aWdgt instanceof BinOpenerWdgt)` exclusion). (type-test-elimination campaign)
   participatesInIconGrid: ->
     false
 
@@ -39,16 +39,20 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
     if @target.isOrphan()
       @target.unCollapse()
-      windowedBasementWdgt = new FrameWdgt @target
-      world.add windowedBasementWdgt
-      windowedBasementWdgt._applyBounds (new Point 140, 90), new Point 460, 400
-      windowedBasementWdgt._rememberFractionalSituationInHoldingPanel()
-      InfoDocs.createNextTo "basement", windowedBasementWdgt
+      windowedBinWdgt = new FrameWdgt @target
+      world.add windowedBinWdgt
+      windowedBinWdgt._applyBounds (new Point 140, 90), new Point 460, 400
+      windowedBinWdgt._rememberFractionalSituationInHoldingPanel()
+      InfoDocs.createNextTo "bin", windowedBinWdgt
     else
-      # if the basement is not an orphan, then it's
+      # if the bin is not an orphan, then it's
       # visible somewhere and it's in a window
       @target.parent.spawnNextTo @
       @target.parent._rememberFractionalSituationInHoldingPanel()
+
+    # references can die while the bin is closed (and doGC classifies chains through the
+    # bin correctly only while it is ON-screen), so the view is refreshed at every open.
+    @target.refreshLostOnlyView()
 
 
   # Runs inside the drop's single settle, so add through the non-settling core.

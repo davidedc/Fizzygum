@@ -326,7 +326,7 @@ class WorldWdgt extends PanelWdgt
   anyScrollMomentumOngoing: ->
     @wdgtsWithOngoingScrollMomentum.size > 0
 
-  basementWdgt: nil
+  binWdgt: nil
 
   # since the shadow is just a "rendering" effect
   # there is no widget for it, we need to just clean up
@@ -633,7 +633,7 @@ class WorldWdgt extends PanelWdgt
     # TODO find a way to put this back
     # menusHelper.createWelcomeMessageWindowAndShortcut()
     (new HowToSaveMessageApp).createOpener()
-    menusHelper.basementIconAndText()
+    menusHelper.binIconAndText()
     (new SimpleDocumentApp).createOpener()
     (new FizzyPaintApp).createOpener()
     (new SimpleSlideApp).createOpener()
@@ -747,8 +747,10 @@ class WorldWdgt extends PanelWdgt
   # thin-wrap-exempt: NOT the canonical wrap over its _NoSettle twin -- the two are PARALLEL closers, not
   # wrapper/core. This one closes each marked popup via the self-settling close() (correct for the top-level
   # "pin" menu-click path, MenuHeader -> pinPopUp); the twin closes via _closeNoSettle for the drop path
-  # (PopUpWdgt._reactToBeingDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's per-popup
-  # settle exactly (vs collapsing to one settle, which could shift size-dependent basement re-home spots).
+  # (PopUpWdgt._reactToBeingDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's
+  # per-popup settle exactly (vs collapsing to one settle). Only UNPINNED pop-ups ever enter the marked
+  # set (propagateKillPopUps gates on the kill flags), so each drained close lands on
+  # PopUpWdgt._closeNoSettle's destroy branch.
   closePopUpsMarkedForClosure: ->
     @popUpsMarkedForClosure.forEach (eachWidget) =>
       eachWidget.close()
@@ -1198,7 +1200,7 @@ class WorldWdgt extends PanelWdgt
       # FALLBACK — the PARENT-POINTER-ONLY attachment class (found the hard way, 2026-07-16: the
       # first derive-per-round cut spun at 100% CPU during the harness boot). The derivation climbs
       # PARENT pointers, but the walk descends CHILDREN arrays — a widget attached by parent
-      # pointer WITHOUT membership in its parent's children (the basement is the documented
+      # pointer WITHOUT membership in its parent's children (the bin is the documented
       # example: "not attached to the world tree so it's not in the children") is flaggable but
       # structurally unreachable from any root, so a walk-only round made zero progress and the
       # outer until-loop never terminated. Any entry still invalid after the walks gets EXACTLY
@@ -1236,7 +1238,7 @@ class WorldWdgt extends PanelWdgt
     # first cut, see the derivation comment). Flags mark the still-invalid work-list entries and
     # their ancestor chains INCLUSIVE, so flags-only descent reaches every entry whose chain is
     # traversable through the children arrays; the parent-pointer-only attachments (a parent set
-    # without children membership, e.g. the basement) are unreachable HERE by construction and are
+    # without children membership, e.g. the bin) are unreachable HERE by construction and are
     # settled by the fallback in _recalculateLayoutsBody instead. Deliberately NOT
     # `child.layoutIsValid == false` as a descent arm: a stale-invalid widget with NO work-list
     # entry (e.g. copied dirt -- a duplicate can clone layoutIsValid own-props) was invisible to
@@ -1277,7 +1279,7 @@ class WorldWdgt extends PanelWdgt
       # sizes a non-tracking child via the override-BYPASSING _applyExtentBase/_applyMoveToBase and
       # never calls the child's _reLayout: a leaf heals (the base fires _reLayoutSelf) but a
       # composite that places ITS children inside _reLayout stayed stale — the census's shipping
-      # BasementWdgt instance (scrollPanel ~100px short after the basement opens). The predicate is
+      # BinWdgt instance (scrollPanel ~100px short after the bin opens). The predicate is
       # PER-CHILD frame delta (not my own frame delta, which the plan sketched): a divider drag
       # redistributes children while MY frame stays put, so gating on me would miss it. Snapshot
       # EVERY valid child (§9-N4, 2026-07-16: the _placesChildrenInLayout capability gate is GONE —
@@ -2024,17 +2026,17 @@ class WorldWdgt extends PanelWdgt
 
 
   _reLayoutDesktop: ->
-    basementOpenerWdgt = @firstChildSuchThat (w) ->
-      w instanceof BasementOpenerWdgt
-    if basementOpenerWdgt?
-      if basementOpenerWdgt.userMovedThisFromComputedPosition
-        basementOpenerWdgt._moveInDesktopToFractionalPosition()
-        if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
-          basementOpenerWdgt._moveWithin @
+    binOpenerWdgt = @firstChildSuchThat (w) ->
+      w instanceof BinOpenerWdgt
+    if binOpenerWdgt?
+      if binOpenerWdgt.userMovedThisFromComputedPosition
+        binOpenerWdgt._moveInDesktopToFractionalPosition()
+        if !binOpenerWdgt.wasPositionedSlightlyOutsidePanel
+          binOpenerWdgt._moveWithin @
       else
         # anchored desktopSidesPadding px inside the corner, by its own extent
         # (was a hardcoded `new Point 75, 75`, the old standard icon extent)
-        basementOpenerWdgt._applyMoveTo @bottomRight().subtract basementOpenerWdgt.extent().add @desktopSidesPadding
+        binOpenerWdgt._applyMoveTo @bottomRight().subtract binOpenerWdgt.extent().add @desktopSidesPadding
 
     analogClockWdgt = @firstChildSuchThat (w) ->
       w instanceof AnalogClockWdgt
@@ -2047,10 +2049,10 @@ class WorldWdgt extends PanelWdgt
         analogClockWdgt._applyMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
-      # reposition the non-icon desktop children (the basement opener and clock are handled
+      # reposition the non-icon desktop children (the bin opener and clock are handled
       # above); !child.isDesktopIcon?() replaces `!(child instanceof WidgetHolderWithCaptionWdgt)`
       # (type-test-elimination campaign)
-      if child != basementOpenerWdgt and child != analogClockWdgt and !child.isDesktopIcon?()
+      if child != binOpenerWdgt and child != analogClockWdgt and !child.isDesktopIcon?()
         if child.positionFractionalInHoldingPanel?
           child._moveInDesktopToFractionalPosition()
         if !child.wasPositionedSlightlyOutsidePanel
@@ -2488,10 +2490,10 @@ class WorldWdgt extends PanelWdgt
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
     # regardless; the selected widget's own repaint clears its overlay.
     @_editorSelectedWidget = nil
-    # the "basementWdgt" is not attached to the
+    # the "binWdgt" is not attached to the
     # world tree so it's not in the children,
     # so we need to clean up separately
-    @basementWdgt?.empty()
+    @binWdgt?.empty()
     # some tests might change the background
     # color of the world so let's reset it.
     # public-call-sanctioned: setColor is the polymorphic public color API (heavily driven by
@@ -2547,8 +2549,9 @@ class WorldWdgt extends PanelWdgt
     # "toolTipsList" keeps the widgets to be deleted upon
     # the next mouse click, or whenever another temporary Widget decides
     # that it needs to remove them.
-    # Note that we actually destroy toolTipsList because we are not expecting
-    # anybody to revive them once they are gone (as opposed to menus)
+    # Tooltips are destroyed outright: nothing revives a dismissed tooltip.
+    # (Dismissed unpinned pop-ups die the same way -- PopUpWdgt._closeNoSettle's
+    # dismissal policy.)
 
     @toolTipsList.forEach (tooltip) =>
       unless tooltip.boundsContainPoint @position()
@@ -2566,7 +2569,7 @@ class WorldWdgt extends PanelWdgt
   # See docs/architecture/serialization-duplication-reference.md §11 and the plan §4.9. Serialization is a
   # PRODUCT feature — these ship in --homepage (no strip markers). The world is NOT saved as a
   # widget record (that would drag in its canvases/caches/hand/listener closures and crash the
-  # walker, defect D8); Serializer.serializeWorld captures the desktop tree + off-tree basement
+  # walker, defect D8); Serializer.serializeWorld captures the desktop tree + off-tree bin
   # + app-slot windows into the object table, and the genuine world state into a `world` section.
 
   serializeWorldSnapshot: (opts = {}) ->
@@ -2641,11 +2644,11 @@ class WorldWdgt extends PanelWdgt
     if section.untitledNamingCounters? and @untitledNamingService?
       @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
       @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
-    # 6. swap in the restored (self-contained, off-tree) basement so every $r pointer at it
-    #    (the basement opener's target, ...) stays consistent, and re-bind the app-slot /
+    # 6. swap in the restored (self-contained, off-tree) bin so every $r pointer at it
+    #    (the bin opener's target, ...) stays consistent, and re-bind the app-slot /
     #    templates windows (orphaned-but-revivable — NOT re-attached to the desktop here).
-    restoredBasement = resolve section.basement
-    @basementWdgt = restoredBasement if restoredBasement?
+    restoredBin = resolve section.bin
+    @binWdgt = restoredBin if restoredBin?
     @[slot] = resolve(refVal) for own slot, refVal of (section.appSlots or {})
     @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
     # 7. attach the desktop children in ONE settle batch, via the base _addNoSettle so the
@@ -2678,7 +2681,7 @@ class WorldWdgt extends PanelWdgt
   # settle wrap above.
   _teardownForSnapshotLoadNoSettle: ->
     @fullDestroyChildren()
-    @basementWdgt?.empty()
+    @binWdgt?.empty()
     @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
     @simpleEditorTemplates = nil
 
@@ -2919,8 +2922,8 @@ class WorldWdgt extends PanelWdgt
 
   anyReferenceToWdgt: (whichWdgt) ->
     # go through all the references and check whether they reference
-    # the wanted widget. Note that the reference could be unreachable
-    # in the basement, or even in the trash
+    # the wanted widget. Note that the reference could itself be
+    # unreachable (e.g. sitting in the bin)
     for eachReferencingWdgt from @widgetsReferencingOtherWidgets
       if eachReferencingWdgt.target == whichWdgt
         return true

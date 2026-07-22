@@ -358,7 +358,7 @@ createWorldAndStartStepping = ->
     window.menusHelper = new MenusHelper
     world.removeSpinnerAndFakeDesktop()
 
-    world.basementWdgt = new BasementWdgt
+    world.binWdgt = new BinWdgt
 
     #ProfilingDataCollector.enableProfiling()
     #ProfilingDataCollector.enableBrokenRectsProfiling()

@@ -117,7 +117,7 @@ class Deserializer
 
     # ---- Pass 5: deliver ----
     # `shells` is exposed so the world-snapshot loader can resolve its `world` section's
-    # {"$r"} references (children, basement, app slots, preferences) against the same table.
+    # {"$r"} references (children, bin, app slots, preferences) against the same table.
     whenReady = if asyncPromises.length then Promise.all(asyncPromises) else Promise.resolve()
     { widget: shells[envelope.root], whenReady: whenReady, shells: shells }
 

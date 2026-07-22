@@ -160,7 +160,7 @@ same climb `dropTargetFor` does at release, so move-time preview and release-tim
   no escalation-outward — one rule everywhere, learnable in one encounter. Transiently crossing a nested willing
   widget while repositioning inside an armed slide WILL disarm; accepted simplicity — the always-visible
   highlight + label make the current candidate unambiguous, which is the actual safety property.
-- Special-case preserved: `BasementOpenerWdgt` keeps its `wantsToBeDropped`-style world-forcing; the base
+- Special-case preserved: `BinOpenerWdgt` keeps its `wantsToBeDropped`-style world-forcing; the base
   `wantsToBeDropped` protocol survives for such widgets even though `FrameWdgt` stops overriding it.
 
 ## §6 — State machine + timing constants (window payloads; plain payloads skip CHARGING and are armed on entry)
@@ -342,7 +342,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
 - **Hook point**: candidate resolution + state machine live off `dispatchEventsFollowingMouseMove`
   (`ActivePointerWdgt.coffee:933-963`); the hit-test already runs there every move, so the added cost is the
   short parent-climb. `drop()` (`:247`) loses the `wantsToBeDropped`→world forcing branch for windows (keeps it
-  for `BasementOpenerWdgt`-style widgets) and gains the ARMED/unarmed branch.
+  for `BinOpenerWdgt`-style widgets) and gains the ARMED/unarmed branch.
 - **Sticky re-embed (§7 exception, Phase 3.5): identify the window's OWN container by the pre-grab parent, not
   the live parent.** While float-dragging, the payload's `.parent` is the HAND (`grab()` reparents it to the
   hand via `@add`), so `wdgtToDrop.parent` at drop time is useless for "is this the same container it came

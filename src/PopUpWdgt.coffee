@@ -204,7 +204,20 @@ class PopUpWdgt extends Widget
     super()
     world.openPopUps.delete @
 
-  close: ->
-    super()
+  # Dismissal policy: a PINNED pop-up is desktop furniture -- closing it is the ordinary
+  # widget close (re-homed to the bin, revivable like any widget). An UNPINNED
+  # pop-up is mid-gesture UI (menus, prompts, informs): dismissal destroys it outright,
+  # like tooltips -- it is rebuilt fresh by its opener every time, so warehousing it
+  # would only grow the bin and every world snapshot.
+  # Either way I leave the open set here, in the core: the public close() is the
+  # inherited canonical wrap, and the NoSettle drain reaches me directly.
+  # Idempotent (return if @destroyed): a stale widgetOpeningThePopUp chain can re-mark
+  # an already-dismissed pop-up; the destroy branch explicitly no-ops on it.
+  _closeNoSettle: ->
+    return if @destroyed
     world.openPopUps.delete @
+    if @isPopUpPinned()
+      super
+    else
+      @_fullDestroyNoSettle()
 

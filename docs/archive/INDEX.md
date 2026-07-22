@@ -200,6 +200,10 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## Features & apps
 
+- **`basement-to-bin-plan.md`** — COMPLETE (executed same day, 2026-07-22). Basement→Bin conversion: unpinned pop-ups DESTROY on dismissal (one `PopUpWdgt._closeNoSettle` override covers all four paths), doGC marks world-slot furniture reachable, permanent lost-only view + confirmed Empty bin, full Bin rename (classes/files/keys, both repos), TrashcanIconWdgt deleted.
+  - ⚖ the thin-wrap gate forced the cleaner shape: `PopUpWdgt.close` DELETED, `openPopUps` bookkeeping moved into the `_closeNoSettle` core (also fixed the NoSettle-drain leak)
+  - ⚖ the lost-only filter must be SYMMETRIC (re-show lost) once permanent — with the toggle gone, an item going lost while hidden had no other path back to visible
+  - ⚖ Phase-2 `show()` companions in the SAME commit as the oracle fix (hidden-furniture landmine); owner declined the dev-mode show-all escape hatch (deleted outright)
 - **`drag-embed-implementation-plan.md`** — COMPLETE. Implements dwell-to-arm drag-embed UX: destination edit-mode gate, 450ms dwell arming, offset landing, derived internal/external.
   - ⚖ Phase 4 pill+hint UX BUILT then OWNER-REJECTED — replaced by plain land-at-release, no popup
   - ⚖ S2 gap-credit mechanic FALSIFIED by real-mouse test — revised to elapsed event-time + ring feedback

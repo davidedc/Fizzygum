@@ -1,7 +1,7 @@
-class BasementIconAppearance extends SizeAwareIconAppearance
+class BinIconAppearance extends SizeAwareIconAppearance
 
-  # SIZE-AWARE basement icon (2026-07-22, owner-redesigned from a reference
-  # drawing): the basement is where discarded widgets go, and its icon is
+  # SIZE-AWARE bin icon (2026-07-22, owner-redesigned from a reference
+  # drawing): the bin is where discarded widgets go, and its icon is
   # now a simple BIN -- a small handle over a wider lid over a gently
   # tapered body with three inner ridges. Light line art: outlines on the
   # tc unit, ridges on the hairline td (the reference is thin uniform

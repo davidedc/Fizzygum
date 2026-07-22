@@ -1,6 +1,6 @@
 # WellKnownObjects — the two-way symbolic registry for the handful of collaborators
 # that exist (as a singleton) in EVERY Fizzygum world: the world itself, the hand, the
-# wallpaper, the widget factory, the basement, the preferences bag, and each windowed
+# wallpaper, the widget factory, the bin, the preferences bag, and each windowed
 # app singleton. See docs/architecture/serialization-duplication-reference.md.
 #
 # WHY: a serialized widget may legitimately point at one of these (a menu item targets
@@ -12,7 +12,7 @@
 # destroying bare "$EXTERNAL" token (DeepCopierMixin) into a reconstructable link.
 #
 # DESIGN — LAZY, NOT SNAPSHOTTED. Rather than eagerly populating a key→object map at
-# world boot (which is boot-order-fragile: the basement and apps are built after the
+# world boot (which is boot-order-fragile: the bin and apps are built after the
 # world), keys are resolved against the LIVE `world` on demand. This is not merely
 # simpler — it is exactly what a cross-session restore needs: the same key must bind to
 # the NEW session's singletons, not to a stale map captured when the file was written.
@@ -32,7 +32,7 @@ class WellKnownObjects
       return "wallpaper"     if obj is world.wallpaper
       return "widgetFactory" if obj is world.widgetFactory
       return "dataflow"      if obj is world.dataflow
-      return "basement"      if obj is world.basementWdgt
+      return "bin"      if obj is world.binWdgt
     return "preferences"     if obj is WorldWdgt.preferencesAndSettings
     # general fallback: a class-declared marker (data string or computed method),
     # e.g. app singletons expose `wellKnownKey: -> "app:" + @constructor.name`.
@@ -51,7 +51,7 @@ class WellKnownObjects
       when "wallpaper"     then world?.wallpaper
       when "widgetFactory" then world?.widgetFactory
       when "dataflow"      then world?.dataflow
-      when "basement"      then world?.basementWdgt
+      when "bin"      then world?.binWdgt
       when "preferences"   then WorldWdgt.preferencesAndSettings
       else
         if key.indexOf("app:") is 0

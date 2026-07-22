@@ -83,7 +83,7 @@ class Serializer
   # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
   # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
   # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
-  # children, the off-tree basement, the non-nil app-slot windows, the templates window — are
+  # children, the off-tree bin, the non-nil app-slot windows, the templates window — are
   # walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
   # widget and the caret are dropped by construction (they live outside the snapshot roots);
   # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
@@ -99,10 +99,10 @@ class Serializer
     # recreates ephemerals from live state after a restore.
     snapshotChildren = (child for child in (theWorld.children or []) when not (child.isEphemeral?() or child.isTransientPopUp?()))
     # snapshot roots (deduped by the widgetSet Set below); an app-slot window may also be a
-    # desktop child, an orphan in the basement, or off-tree — all are captured here.
+    # desktop child, an orphan in the bin, or off-tree — all are captured here.
     roots = []
     roots.push child for child in snapshotChildren
-    roots.push theWorld.basementWdgt if theWorld.basementWdgt?
+    roots.push theWorld.binWdgt if theWorld.binWdgt?
     for slot in Serializer.WORLD_APP_SLOTS
       slotWindow = theWorld[slot]
       roots.push slotWindow if slotWindow? and not slotWindow.destroyed
@@ -146,7 +146,7 @@ class Serializer
     section.appSlots = appSlots
     if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
       section.simpleEditorTemplates = ref theWorld.simpleEditorTemplates, "the world → .simpleEditorTemplates"
-    section.basement = ref(theWorld.basementWdgt, "the world → .basementWdgt") if theWorld.basementWdgt?
+    section.bin = ref(theWorld.binWdgt, "the world → .binWdgt") if theWorld.binWdgt?
     # preferences: a FORCED data record. refFor would give {"$wk":"preferences"} (the
     # symbolic link that a widget-in-tree uses); here we need the actual values, restored
     # onto the static bag on load.

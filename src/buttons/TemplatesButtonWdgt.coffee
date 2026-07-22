@@ -17,7 +17,10 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       if world.simpleEditorTemplates.destroyed or !world.simpleEditorTemplates.parent?
         templatesWindow = TemplatesWindowWdgt.create()
         @positionTemplatesWindowAndRegisterIt templatesWindow
-      else if world.basementWdgt.holds world.simpleEditorTemplates
+      else if world.binWdgt.holds world.simpleEditorTemplates
+        # the bin view shows LOST items only, so a parked (reachable)
+        # resident like this window is hidden -- un-hide on the way out
+        world.simpleEditorTemplates.show()
         world.add world.simpleEditorTemplates
         @bringTemplatesWindowIntoView()
       else if !world.simpleEditorTemplates.destroyed and world.simpleEditorTemplates.parent == world

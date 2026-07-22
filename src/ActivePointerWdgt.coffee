@@ -423,7 +423,7 @@ class ActivePointerWdgt extends Widget
       else
         # Plain payload, not over a view-mode-only target: unchanged accept behavior. Base
         # wantsToBeDropped is true (instant embed over an eager/willing target via the climb);
-        # BasementOpenerWdgt keeps its override that forces itself onto the world. (dropPolicy = the payload's
+        # BinOpenerWdgt keeps its override that forces itself onto the world. (dropPolicy = the payload's
         # real class through any sugar wrapper, §6 4D-2b.)
         if not dropPolicy.wantsToBeDropped()
           target = world
@@ -1180,7 +1180,7 @@ class ActivePointerWdgt extends Widget
         # big panel must not scroll it — the mouse wheel is the explicit, first-class way to reach an
         # off-view insertion point mid-drag (§6.1). Plain payloads keep edge-auto-scroll. (Was
         # `wantsToBeDropped()` — the old internal/external gate; the flip to the payload-class capability
-        # is the drag-embed rule change, and it also drops the BasementOpenerWdgt special-case here.)
+        # is the drag-embed rule change, and it also drops the BinOpenerWdgt special-case here.)
         # §6 4D-2b: a tilted WINDOW rides the hand as a sugar wrapper, so classify through the payload-policy
         # proxy — a rotated window must not edge-auto-scroll either. The GEOMETRY arg below keeps the figure.
         if not widgetBeingFloatDragged._dropPolicyProxy().requiresDeliberateEmbedding()

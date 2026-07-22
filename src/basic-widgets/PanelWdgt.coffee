@@ -125,7 +125,7 @@ class PanelWdgt extends Widget
     @_reFitContainer @parent
 
   _reactToChildAdded: (child) ->
-    # the BasementWdgt has a filter that can
+    # the BinWdgt has a filter that can
     # show/hide the contents of this pane
     # based on whether they are reachable or
     # not. So let's notify it.
@@ -137,7 +137,7 @@ class PanelWdgt extends Widget
   # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
-  # NON-settling: every caller (a drop into the basement via BasementOpenerWdgt._reactToChildDropped, the
+  # NON-settling: every caller (a drop into the bin via BinOpenerWdgt._reactToChildDropped, the
   # close/lost re-home chain) runs inside an enclosing settle, so this must not re-enter the settle tier
   # through a public add. (The public self-settling wrapper was removed when its last caller -- the drop --
   # went cores-only; nothing needs a standalone settling entry here.)

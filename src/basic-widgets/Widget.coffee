@@ -540,7 +540,7 @@ class Widget extends TreeNode
     firstPart + name
 
   close: ->
-    # SELF-SETTLE (single-mutation tier). _closeNoSettle re-homes me to the basement through the NON-settling
+    # SELF-SETTLE (single-mutation tier). _closeNoSettle re-homes me to the bin through the NON-settling
     # core _addLostWidgetNoSettle (-> _addInPseudoRandomPositionNoSettle -> _addNoSettle) and recurses
     # @parent._closeNoSettle(), so it reaches no public setter. Anchored on @ (the canonical wrap): I'm
     # attached at entry so the orphan guard passes, then the global flush re-lays-out my parent.
@@ -558,14 +558,14 @@ class Widget extends TreeNode
 
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?._beforeChildClosed? @
-    if world.basementWdgt?
+    if world.binWdgt?
       # §7.5 Bug B (model a) + latent 2 (Option B): re-home the whole FIGURE, not just me -- if I am the
       # sole content of an island (sugar OR explicit), the island IS my transform, so sending only me to
-      # the basement would strand the empty island and drop my transform. Only the re-homing TARGET
+      # the bin would strand the empty island and drop my transform. Only the re-homing TARGET
       # changes; my own close bookkeeping above still runs on me. Off any island this is me (byte-identical).
-      world.basementWdgt._addLostWidgetNoSettle @_enclosingIslandFigure()
+      world.binWdgt._addLostWidgetNoSettle @_enclosingIslandFigure()
     else
-      world.inform "There is no\nbasement to go in!"
+      world.inform "There is no\nbin to go in!"
 
   closeFromContainerFrame: (containerWindow) ->
     containerWindow.close()
@@ -729,7 +729,7 @@ class Widget extends TreeNode
     # Bulk teardown through the non-settling core, NOT the public self-settling fullDestroy(): looping
     # the public method would self-settle once PER child (O(children) flushes), and -- with fullDestroy
     # on the single-mutation tier -- each immediate settle re-fits a half-emptied container. Callers
-    # (resetWorld / Inspector rebuild / video panes / basement) are reset/rebuild contexts that settle
+    # (resetWorld / Inspector rebuild / video panes / bin) are reset/rebuild contexts that settle
     # once afterwards (or redraw an empty container), so no per-child flush is wanted.
     until @children.length == 0
       @children[0]._fullDestroyNoSettle()
@@ -1823,7 +1823,7 @@ class Widget extends TreeNode
     nil
 
   # Affine transforms (§7.5 Bug B + latent 2, Option B): the outermost island of which I am (transitively)
-  # the SOLE content — sugar or explicit — i.e. the whole "figure" that a RE-HOME (close-to-basement,
+  # the SOLE content — sugar or explicit — i.e. the whole "figure" that a RE-HOME (close-to-bin,
   # reopen, a future "send to desktop") must move AS A UNIT so its rotation/scale travels with it — or ME
   # when I am not island-wrapped. This is the re-home SIBLING of the pick-OUT verb
   # _resolvePickOutFigureNoSettle (4D-2a): pick-OUT may EXTRACT a sub-part onto the hand; re-home never
@@ -1845,7 +1845,7 @@ class Widget extends TreeNode
   # wrap, or the figure's parent when I am tilted/scaled (sugar) or explicitly islanded. The ONE
   # look-through idiom for "where does this widget really belong" (§7.5 Bug A/B + latent 2 Option B): a
   # widget's CLASSIFICATION must not be fooled by transform plumbing. FrameWdgt.isInternal
-  # (internal/external skin) and BasementWdgt.holds (basement residency) both classify against THIS, so a
+  # (internal/external skin) and BinWdgt.holds (bin residency) both classify against THIS, so a
   # tilted or explicitly-islanded widget is judged by its real home, not the island.
   _parentThroughIslands: ->
     @_enclosingIslandFigure().parent
@@ -2746,7 +2746,7 @@ class Widget extends TreeNode
       # attached and being painted), NOT the raw virtual rect. fleshOut(Full)Broken erases the "source"
       # (where-I-was) rect from these; if it re-mapped a stored VIRTUAL rect at flush time instead, a widget
       # DETACHED between paint and flush — a close/destroy (_destroyNoSettle / _closeNoSettle issue
-      # _fullChanged() then sever @parent, re-homing me to the basement) — would map through a nil/basement
+      # _fullChanged() then sever @parent, re-homing me to the bin) — would map through a nil/bin
       # chain (an identity) and erase the WRONG (un-transformed) rect, leaving the rotated on-screen footprint
       # stale (owner bug: closing a tilted converter's inner window). mapRectToScreen returns the SAME rect
       # off any island ⇒ byte-identical dormant. (Field names kept; they now hold the screen-plane footprint.)
@@ -3812,7 +3812,7 @@ class Widget extends TreeNode
     return @_acceptsDrops
 
   # the SELF drop gate (public, pure, positive — layering/naming convention §3): the base default is
-  # "yes, droppable"; BasementOpenerWdgt overrides to refuse (the old FrameWdgt internal/external override
+  # "yes, droppable"; BinOpenerWdgt overrides to refuse (the old FrameWdgt internal/external override
   # was replaced by the drag-embed dwell gate — see ActivePointerWdgt ~:1257). (ex-rejectsBeingDropped,
   # polarity-flipped; a base default is required so a widget with no override still defaults droppable.)
   wantsToBeDropped: ->

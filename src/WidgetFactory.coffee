@@ -147,7 +147,7 @@ class WidgetFactory
   createNewPenWdgt: ->
     world.create new PenWdgt
   underTheCarpet: ->
-    newWdgt = new BasementWdgt
+    newWdgt = new BinWdgt
     world.create newWdgt
 
   setupTestScreen1: ->
