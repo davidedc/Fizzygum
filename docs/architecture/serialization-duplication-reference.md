@@ -229,6 +229,8 @@ class Widget extends TreeNode
 | Class | Transients | Why |
 |---|---|---|
 | `Widget` | `lastTime`; the geometry caches `cachedFullBounds`/`checkFullBoundsCache`, `cachedFullClippedBounds`/`checkFullClippedBoundsCache`, `cachedVisibleBasedOnIsVisibleProperty`/`checkVisibleBasedOnIsVisiblePropertyCache`, `cachedClippedThroughBounds`/`checkClippedThroughBoundsCache`, `cachedClipThrough`/`checkClipThroughCache`, `cachedIsInCollapsedSubtree`/`checkIsInCollapsedSubtreeCache`, `childrenBoundsUpdatedAt` | frame timing + `WorldWdgt.geometryVersion`-keyed derived caches; re-derived on demand after restore |
+| `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcBrokenRect`, `dstBrokenRect` | per-frame broken-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `changed()`/`fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
+| `PopUpWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 
 (Further seeds — `ScrollPanelWdgt.@step`, patch nodes' `functionFromCompiledCode`,
@@ -322,8 +324,11 @@ D8. So the world's genuine state goes into an explicit, greppable **`world` enve
 and only the SNAPSHOT ROOTS are walked into the object table. This is why the world needs no
 `@serializationTransients` at all — its transient surface is simply never visited.
 
-**Snapshot roots** (a settled world — the hand-held transient, open menus, and the caret are
-dropped by construction): the desktop `world.children`, the off-tree `world.basementWdgt`
+**Snapshot roots** (a settled world — the hand-held transient and the caret are dropped by
+construction; EPHEMERAL overlays and open UNPINNED pop-ups/menus are world children, so the
+children filter drops them explicitly — the very menu whose item triggers the save is still
+attached, and already marked for closure, while the save runs; pinned pop-ups are desktop
+furniture and stay): the desktop `world.children`, the off-tree `world.basementWdgt`
 subtree, each non-nil app-slot window (`Serializer.WORLD_APP_SLOTS` — may be orphaned-but-
 revivable), and `world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).

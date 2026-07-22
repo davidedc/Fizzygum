@@ -53,6 +53,16 @@ class Widget extends TreeNode
     # work-list's lifecycle and is cleared when the drain completes, so persisting it would only
     # bake a stale own-property into saved files (a restored flag has no matching work-list entry).
     "hasDirtyDescendant"
+    # per-frame broken-rect damage bookkeeping — every field pairs with world-level per-flush
+    # state that is never serialized: the changed()/fullChanged() dedupe flags mirror membership
+    # in world.widgetsWithMaybeChanged(Full)PaintBounds, the *WhenLastPainted footprints and the
+    # src/dst indices are consumed by the flesh-out. A restored `true` dedupe flag has no matching
+    # work-list entry, so it would permanently SUPPRESS damage reporting on the restored widget
+    # (the menu a world snapshot was saved from came back leaving repaint artifacts when moved —
+    # the triggering click's bringToForeground marks the menu dirty right before the save runs).
+    "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged"
+    "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
+    "srcBrokenRect", "dstBrokenRect"
   ]
 
   appearance: nil

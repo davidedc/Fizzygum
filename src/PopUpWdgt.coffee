@@ -13,6 +13,11 @@ class PopUpWdgt extends Widget
   killThisPopUpIfClickOnDescendantsTriggers: true
   killThisPopUpIfClickOutsideDescendants: true
   isPopUpMarkedForClosure: false
+  # the closure mark pairs with the world.popUpsMarkedForClosure set (never serialized), so it
+  # must not persist — a triggering menu-item click marks its menu BEFORE running the action,
+  # so e.g. a menu-driven save would otherwise bake the mark into the file. (__add also clears
+  # it on attach, but the file should not carry it in the first place.)
+  @serializationTransients: ["isPopUpMarkedForClosure"]
   # the widgetOpeningThePopUp is only useful to get the "parent" pop-up.
   # the "parent" pop-up is the menu that this menu is attached to,
   # but we need this extra property because it's not the
@@ -86,6 +91,14 @@ class PopUpWdgt extends Widget
   # from existing flags?
   isPopUpPinned: ->
     return !(@killThisPopUpIfClickOnDescendantsTriggers or @killThisPopUpIfClickOutsideDescendants)
+
+  # Role query for the world snapshot (Serializer.serializeWorld): an UNPINNED pop-up is
+  # mid-gesture UI — it auto-closes on the next outside click / item trigger (indeed the very
+  # menu-item click that starts a "save world snapshot…" has already marked its menu for
+  # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PINNED pop-up
+  # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
+  isTransientPopUp: ->
+    not @isPopUpPinned()
 
   getParentPopUp: ->
     if @isPopUpPinned()

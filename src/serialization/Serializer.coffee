@@ -84,15 +84,20 @@ class Serializer
   # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
   # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
   # children, the off-tree basement, the non-nil app-slot windows, the templates window — are
-  # walked into the object table. A snapshot restores a SETTLED world (§1), so mid-gesture
-  # transients (the hand-held widget, open menus, the caret) are dropped by construction.
+  # walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
+  # widget and the caret are dropped by construction (they live outside the snapshot roots);
+  # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
   @serializeWorld: (theWorld, opts = {}) ->
     # EPHEMERAL overlays (live highlight / pinout / drag-affordance widgets) are reconciler-owned
-    # transient world children — never part of the persisted desktop. Exclude them up front so they
-    # ride NEITHER the snapshot-roots walk NOR the explicit `section.children` list below (with
-    # onExternal:"capture" a section.children ref would otherwise pull an excluded overlay back into
-    # the object table). The reconciler recreates them from live state after a restore.
-    snapshotChildren = (child for child in (theWorld.children or []) when not child.isEphemeral?())
+    # transient world children — never part of the persisted desktop. TRANSIENT (unpinned)
+    # POP-UPS are mid-gesture UI: the very menu whose item triggers "save world snapshot…" is
+    # still attached (and already marked for closure) while the save runs, so without this
+    # filter it gets baked into the file and restores as a zombie. Pinned pop-ups are desktop
+    # furniture and stay. Exclude both up front so they ride NEITHER the snapshot-roots walk NOR
+    # the explicit `section.children` list below (with onExternal:"capture" a section.children
+    # ref would otherwise pull an excluded child back into the object table). The reconciler
+    # recreates ephemerals from live state after a restore.
+    snapshotChildren = (child for child in (theWorld.children or []) when not (child.isEphemeral?() or child.isTransientPopUp?()))
     # snapshot roots (deduped by the widgetSet Set below); an app-slot window may also be a
     # desktop child, an orphan in the basement, or off-tree — all are captured here.
     roots = []
@@ -268,6 +273,10 @@ class Serializer
       m.push "stepping"         if world.steppingWdgts?.has widget
       m.push "keyboardReceiver" if world.keyboardEventsReceivers?.has widget
       m.push "referenceTracker" if world.widgetsReferencingOtherWidgets?.has widget
+      # a serialized pop-up is a PINNED one (transient pop-ups never reach a world snapshot);
+      # its openPopUps membership must ride along or the restored world loses track of it
+      # (mostRecentlyCreatedPopUp / the lazy orphan pruning consult this set).
+      m.push "openPopUp"        if world.openPopUps?.has widget
       m
 
     populateRecord = (record, obj, path) ->

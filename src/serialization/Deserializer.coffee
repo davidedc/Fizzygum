@@ -110,6 +110,7 @@ class Deserializer
             when "stepping"         then world.steppingWdgts?.add shell
             when "keyboardReceiver" then world.keyboardEventsReceivers?.add shell
             when "referenceTracker" then world.widgetsReferencingOtherWidgets?.add shell
+            when "openPopUp"        then world.openPopUps?.add shell
     # (d) per-class post-restore hook (absorbs ad-hoc deserialization guards)
     for shell in shells
       shell._afterDeserialization?() if shell instanceof Widget
