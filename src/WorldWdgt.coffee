@@ -255,6 +255,20 @@ class WorldWdgt extends PanelWdgt
     WorldWdgt.immutableBackBufferGeneration++
     @_fullChanged()
 
+  # PUBLIC notification — a widget currently marked in my broken-bookkeeping lists was
+  # deep-copied: the copy must inherit the mark (it will paint this cycle exactly where the
+  # original would). I mutate MY OWN lists here, in the method the widget's deep-copy hook
+  # (Widget.alignCopiedWidgetToBrokenInfoDataStructures) invokes on me — widgets never push
+  # onto my lists directly (widget-citizenship point 2).
+  noteWidgetCopied: (originalWidget, copiedWidget) ->
+    if @widgetsWithMaybeChangedPaintBounds.includes(originalWidget) and
+     !@widgetsWithMaybeChangedPaintBounds.includes(copiedWidget)
+      @widgetsWithMaybeChangedPaintBounds.push copiedWidget
+
+    if @widgetsWithMaybeChangedFullPaintBounds.includes(originalWidget) and
+     !@widgetsWithMaybeChangedFullPaintBounds.includes(copiedWidget)
+      @widgetsWithMaybeChangedFullPaintBounds.push copiedWidget
+
   # PUBLIC notification — the wallpaper (world.wallpaper, my delegated collaborator) changed its
   # pattern. My DesktopAppearance paints the backdrop by reading world.wallpaper, so a pattern
   # change means my own pixels are stale. I invalidate MYSELF here, in the method the wallpaper
@@ -861,7 +875,7 @@ class WorldWdgt extends PanelWdgt
       @_pushBrokenRect brokenWidget, destinationBroken, false
 
 
-  checkARectWithHierarchy: (aRect, brokenWidget, isSrc) ->
+  _checkARectWithHierarchy: (aRect, brokenWidget, isSrc) ->
     brokenWidgetAncestor = brokenWidget
 
     while brokenWidgetAncestor.parent?
@@ -895,24 +909,24 @@ class WorldWdgt extends PanelWdgt
           brokenWidgetAncestor.dstBrokenRect = nil
 
 
-  rectAlreadyIncludedInParentBrokenWidget: ->
+  _rectAlreadyIncludedInParentBrokenWidget: ->
     for brokenWidget in @widgetsWithMaybeChangedPaintBounds
         if brokenWidget.srcBrokenRect?
           aRect = @broken[brokenWidget.srcBrokenRect]
-          @checkARectWithHierarchy aRect, brokenWidget, true
+          @_checkARectWithHierarchy aRect, brokenWidget, true
         if brokenWidget.dstBrokenRect?
           aRect = @broken[brokenWidget.dstBrokenRect]
-          @checkARectWithHierarchy aRect, brokenWidget, false
+          @_checkARectWithHierarchy aRect, brokenWidget, false
 
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
         if brokenWidget.srcBrokenRect?
           aRect = @broken[brokenWidget.srcBrokenRect]
-          @checkARectWithHierarchy aRect, brokenWidget
+          @_checkARectWithHierarchy aRect, brokenWidget
         if brokenWidget.dstBrokenRect?
           aRect = @broken[brokenWidget.dstBrokenRect]
-          @checkARectWithHierarchy aRect, brokenWidget
+          @_checkARectWithHierarchy aRect, brokenWidget
 
-  cleanupSrcAndDestRectsOfWidgets: ->
+  _cleanupSrcAndDestRectsOfWidgets: ->
     for brokenWidget in @widgetsWithMaybeChangedPaintBounds
       brokenWidget.srcBrokenRect = nil
       brokenWidget.dstBrokenRect = nil
@@ -1025,7 +1039,7 @@ class WorldWdgt extends PanelWdgt
 
 
   # »>> this part is excluded from the fizzygum homepage build
-  showBrokenRects: (aContext) ->
+  _showBrokenRects: (aContext) ->
     aContext.save()
     aContext.globalAlpha = 0.5
     aContext.useLogicalPixelsUntilRestore()
@@ -1333,8 +1347,8 @@ class WorldWdgt extends PanelWdgt
 
     @_fleshOutFullBroken()
     @_fleshOutBroken()
-    @rectAlreadyIncludedInParentBrokenWidget()
-    @cleanupSrcAndDestRectsOfWidgets()
+    @_rectAlreadyIncludedInParentBrokenWidget()
+    @_cleanupSrcAndDestRectsOfWidgets()
 
     @clearPaintBoundsMaybeChangedFlags()
     @clearFullPaintBoundsMaybeChangedFlags()
@@ -1385,7 +1399,7 @@ class WorldWdgt extends PanelWdgt
       @_findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
 
     if @showRedraws
-      @showBrokenRects @worldCanvasContext
+      @_showBrokenRects @worldCanvasContext
 
     # Under the SWCanvas backend, everything above painted into the software
     # render surface; lift it onto the DOM <canvas id="world"> so it becomes

@@ -75,7 +75,8 @@ citizen:
    invalidates a part it just mutated through a deliberately non-invalidating NoSettle tier.
    No receiver is otherwise exempt — not even the shared singletons: a widget that needs the
    world/caret/hand to repaint calls an intent-named PUBLIC method on it and the singleton
-   invalidates itself inside (`WorldWdgt.noteWallpaperChanged` /
+   invalidates itself — or mutates its own bookkeeping — inside
+   (`WorldWdgt.noteWallpaperChanged` / `noteWidgetCopied` /
    `resetImmutableBackBuffersCache`, `CaretWdgt.noteTextChanged`,
    `ActivePointerWdgt.noteCarriedWidgetChanged`). And invalidation is PRIVATE (the 2026-07-22
    rename): `_changed`/`_fullChanged` are not exposed as API anywhere, and there is

@@ -21,8 +21,9 @@
 // ALLOWED RECEIVER: `@` (self) only — a self-call is dotless and never matches here. The
 // shared singletons are NOT exempt (since the 2026-07-22 phase-1 internalization): a widget
 // that needs the world/caret/hand to repaint calls an intent-named PUBLIC method on it
-// (WorldWdgt.noteWallpaperChanged / resetImmutableBackBuffersCache, CaretWdgt.noteTextChanged,
-// ActivePointerWdgt.noteCarriedWidgetChanged) and the singleton invalidates ITSELF inside it.
+// (WorldWdgt.noteWallpaperChanged / noteWidgetCopied / resetImmutableBackBuffersCache,
+// CaretWdgt.noteTextChanged, ActivePointerWdgt.noteCarriedWidgetChanged) and the singleton
+// invalidates ITSELF / mutates ITS OWN bookkeeping inside it.
 // There is deliberately NO general-purpose public repaint verb (owner decision 2026-07-22 —
 // the old "restore display" menu entry was removed with it).
 //

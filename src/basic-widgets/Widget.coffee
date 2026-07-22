@@ -3452,13 +3452,10 @@ class Widget extends TreeNode
   # data structures related to broken widgets, then
   # we have to add the copy too.
   alignCopiedWidgetToBrokenInfoDataStructures: (copiedWidget) ->
-    if world.widgetsWithMaybeChangedPaintBounds.includes(@) and
-     !world.widgetsWithMaybeChangedPaintBounds.includes(copiedWidget)
-      world.widgetsWithMaybeChangedPaintBounds.push copiedWidget
-
-    if world.widgetsWithMaybeChangedFullPaintBounds.includes(@) and
-     !world.widgetsWithMaybeChangedFullPaintBounds.includes(copiedWidget)
-      world.widgetsWithMaybeChangedFullPaintBounds.push copiedWidget
+    # the world owns its broken-bookkeeping lists — it inherits the mark onto the
+    # copy itself in this public notification (widget-citizenship point 2); this
+    # deep-copy hook used to push onto world.widgetsWithMaybeChanged* directly
+    world.noteWidgetCopied @, copiedWidget
 
   # in case we copy a widget, if the original was in some
   # stepping structures, then we have to add the copy too.
