@@ -22,8 +22,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
     windowWithScrollingPanel = new FrameWdgt new ScrollPanelWdgt
     windowWithScrollingPanel.setTitleWithoutPrependedContentName "New York City"
-    windowWithScrollingPanel._applyMoveTo container.position().add new Point 28, 43
-    windowWithScrollingPanel._applyExtent new Point 322, 268
+    windowWithScrollingPanel._applyBounds (container.position().add new Point 28, 43), new Point 322, 268
     container.add windowWithScrollingPanel
     windowWithScrollingPanel._rememberFractionalSituationInHoldingPanel()
 
@@ -51,20 +50,17 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     mapCaption.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     mapCaption.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
 
-    mapCaption._applyMoveTo container.position().add new Point 366, 40
-    mapCaption._applyExtent new Point 176, 387
+    mapCaption._applyBounds (container.position().add new Point 366, 40), new Point 176, 387
     container.add mapCaption
     mapCaption._rememberFractionalSituationInHoldingPanel()
 
     wikiLink = new SimpleLinkWdgt "New York City Wikipedia page", "https://en.wikipedia.org/wiki/New_York_City"
-    wikiLink._applyMoveTo container.position().add new Point 110, 348
-    wikiLink._applyExtent new Point 250, 50
+    wikiLink._applyBounds (container.position().add new Point 110, 348), new Point 250, 50
     container.add wikiLink
     wikiLink._rememberFractionalSituationInHoldingPanel()
 
 
-    slideWdgt._applyMoveTo new Point 114, 10
-    slideWdgt._applyExtent new Point 596, 592
+    slideWdgt._applyBounds (new Point 114, 10), new Point 596, 592
     world.add slideWdgt
     slideWdgt.setTitleWithoutPrependedContentName "Sample slide"
 

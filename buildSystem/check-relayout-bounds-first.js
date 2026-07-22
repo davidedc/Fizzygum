@@ -9,10 +9,10 @@
 // accessor -- @left() @right() @top() @bottom() @width() @height() @position() @topLeft() @topRight()
 // @bottomLeft() @bottomRight() @center(), or a bare @bounds read -- must be PRECEDED, in the same method,
 // by a SELF-bounds application:
-//     @_applyBounds <newBounds>              -- the common form (base Widget re-commits idempotently via super)
+//     @_applyGrantedBounds <newBounds>              -- the common form (base Widget re-commits idempotently via super)
 //   | @_applyMoveTo … AND @_applyExtent …    -- position + size, the InspectorWdgt form
 //   | super / super <newBounds> / Widget::_reLayout.call …   -- base applies bounds, the super-at-TOP form
-// The `@_` prefix is what distinguishes a SELF apply from a child apply (`child._applyBounds` does NOT count).
+// The `@_` prefix is what distinguishes a SELF apply from a child apply (`child._applyGrantedBounds` does NOT count).
 //
 // A `_reLayout` that positions children from the `newBoundsForThisLayout` PARAM (never from @-geometry) --
 // or that positions no children at all -- has no own-geometry read and passes trivially (the video-player
@@ -23,7 +23,7 @@
 // EXEMPTION: a `# relayout-bounds-first-exempt: <reason>` marker (non-empty reason) in the comment block
 // directly above the `_reLayout` header. The base `Widget::_reLayout` (the applier itself) is skipped.
 //
-// Reference FIXED shapes: FanoutWdgt._reLayout (@_applyBounds near the top) and InspectorWdgt._reLayout
+// Reference FIXED shapes: FanoutWdgt._reLayout (@_applyGrantedBounds near the top) and InspectorWdgt._reLayout
 // (@_applyMoveTo + @_applyExtent near the top). This is the DEF-side companion to that fix arc.
 
 const fs = require('fs');
@@ -35,7 +35,7 @@ const EXEMPT = /#\s*relayout-bounds-first-exempt:\s*\S/;     // marker WITH a no
 // own-geometry accessor reads that indicate positioning children against MY (about-to-change) frame:
 const GEOM = /@(?:left|right|top|bottom|width|height|position|topLeft|topRight|bottomLeft|bottomRight|center)\(\)|@bounds\b(?!\s*=)/;
 // SELF-bounds applications -- the `@_` prefix distinguishes self from a `child.apply`:
-const APPLY_BOUNDS = /@_applyBounds\b/;
+const APPLY_BOUNDS = /@_apply(Granted)?Bounds\b/;   // granted (arrange frame-commit) OR the setBounds twin — both commit own bounds
 const APPLY_MOVE   = /@_applyMoveTo\b/;
 const APPLY_EXTENT = /@_applyExtent\b/;
 const SUPER        = /\bsuper\b|Widget::_reLayout\b/;
@@ -99,7 +99,7 @@ if (violations.length) {
   }
   console.error('\nFIX: apply own bounds FIRST -- e.g. right after the collapse guard:');
   console.error('       newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout');
-  console.error('       @_applyBounds newBoundsForThisLayout');
+  console.error('       @_applyGrantedBounds newBoundsForThisLayout');
   console.error('     (see FanoutWdgt._reLayout / InspectorWdgt._reLayout for the fixed shapes; the trailing super re-commits idempotently).');
   console.error('Or add  # relayout-bounds-first-exempt: <reason>  directly above the _reLayout header.');
   process.exit(1);

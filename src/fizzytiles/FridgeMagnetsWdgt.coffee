@@ -113,7 +113,7 @@ class FridgeMagnetsWdgt extends Widget
     # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
     # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -137,41 +137,33 @@ class FridgeMagnetsWdgt extends Widget
     magnetsBoxLeft = @left() + @externalPadding + eachPaneWidth + @internalPadding
 
     if @fridge.parent == @
-      @fridge._applyMoveTo new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding
-      @fridge._applyExtent new Point eachPaneWidth, fridgeHeight
+      @fridge._applyBounds (new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding), new Point eachPaneWidth, fridgeHeight
 
     if @liveCodeLangOutputHeader.parent == @
-      @liveCodeLangOutputHeader._applyMoveTo new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding
-      @liveCodeLangOutputHeader._applyExtent new Point eachPaneWidth, 15
+      @liveCodeLangOutputHeader._applyBounds (new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding), new Point eachPaneWidth, 15
 
     # codeOutput
     if @codeOutput.parent == @
-      @codeOutput._applyMoveTo new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding
-      @codeOutput._applyExtent new Point fridgeWidth, fridgeHeight
+      @codeOutput._applyBounds (new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding), new Point fridgeWidth, fridgeHeight
 
     if @dragTheTilesHereHeader.parent == @
-      @dragTheTilesHereHeader._applyMoveTo new Point magnetsBoxLeft, @top() + @externalPadding
-      @dragTheTilesHereHeader._applyExtent new Point eachPaneWidth, 15
+      @dragTheTilesHereHeader._applyBounds (new Point magnetsBoxLeft, @top() + @externalPadding), new Point eachPaneWidth, 15
 
     if @tilesBinHeader.parent == @
-      @tilesBinHeader._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tilesBinHeader._applyExtent new Point eachPaneWidth, 15
+      @tilesBinHeader._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point eachPaneWidth, 15
 
     # magnets box
     magnetsBoxHeight = @height() - 2 * @externalPadding - 15 - @internalPadding
     if @magnetsBox.parent == @
-      @magnetsBox._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding
-      @magnetsBox._applyExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
+      @magnetsBox._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding), new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     # visual output
     visualOutputLeft = @codeOutput.right() + @internalPadding
     if @visualOutput.parent == @
-      @visualOutput._applyMoveTo new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding
-      @visualOutput._applyExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
+      @visualOutput._applyBounds (new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding), new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     if @outputAnimationHeader.parent == @
-      @outputAnimationHeader._applyMoveTo new Point visualOutputLeft, @top() + @externalPadding
-      @outputAnimationHeader._applyExtent new Point eachPaneWidth, 15
+      @outputAnimationHeader._applyBounds (new Point visualOutputLeft, @top() + @externalPadding), new Point eachPaneWidth, 15
 
 
     # sample magnets -------------------------------

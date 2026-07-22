@@ -71,7 +71,7 @@ class SpeechBubbleWdgt extends Widget
 
     # adjust my layout -- apply BOTH position and size up front (was _applyWidth + _applyHeight,
     # which left the origin stale, so @position() below lagged one cadence on a move)
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # adjust layout of my contents
     @contentsWidget._reLayout (

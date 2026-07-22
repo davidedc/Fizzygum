@@ -211,8 +211,7 @@ class FrameBarWdgt extends Widget
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @collapseUncollapseSwitchButton._reLayout buttonBounds
 
-    @titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * padding).subtract new Point 2,2
-    @titlebarBackground._applyMoveTo @position().add new Point 1,1
+    @titlebarBackground._applyBounds (@position().add new Point 1,1), (new Point @width(), closeIconSize + 2 * padding).subtract new Point 2,2
     # TODO this looks better:
     #@titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * padding).subtract new Point 4,4
     #@titlebarBackground._applyMoveTo @position().add new Point 2,2
@@ -238,7 +237,7 @@ class FrameBarWdgt extends Widget
 
       labelBounds = new Rectangle new Point labelLeft, labelTop
       labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldWdgt.preferencesAndSettings.titleBarTextHeight
-      @label._applyBounds labelBounds
+      @label._applyGrantedBounds labelBounds
 
     # edit button -- the sole right-hand title-bar button, in the rightmost slot.
     if @editButton? and !@editButton.isInCollapsedSubtree() and @editButton.parent == @

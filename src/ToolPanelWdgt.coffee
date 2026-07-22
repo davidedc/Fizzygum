@@ -91,7 +91,7 @@ class ToolPanelWdgt extends PanelWdgt
     # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
     # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

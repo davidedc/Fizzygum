@@ -1261,7 +1261,7 @@ unification still isn't warranted — the consumer only needs the pointer.)
   clear "you are editing THIS" boundary, scoped to editing, not to the sticky pointer at rest).
 - Reconcile ONE overlay (a `HighlighterWdgt` with a focus OUTLINE style, or a trivial
   `EditorFocusIndicatorWdgt extends HighlighterWdgt` if a distinct class reads better): create when target
-  and none exists; re-`_applyBounds`+re-parent when the target changed; `fullDestroy` when target is nil —
+  and none exists; re-`_applyGrantedBounds`+re-parent when the target changed; `fullDestroy` when target is nil —
   byte-for-byte the `addHighlightingWidgets` body, island-parenting included.
 - **Determinism:** reconciled from settled state just before paint, pure function of `editorFocusWdgt` +
   the trigger predicate + geometry; no timers, no frame-count. Gates on `DETERMINISM.md` §5 like the

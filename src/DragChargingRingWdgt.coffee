@@ -39,7 +39,7 @@ class DragChargingRingWdgt extends Widget
     @lingerOriginWallTime = decl.lingerOriginWallTime
     c = decl.centerPoint
     unless @_lastRingCenter? and @_lastRingCenter.equals c
-      @_applyBounds new Rectangle(c.x - 11, c.y - 11, c.x + 11, c.y + 11)
+      @_applyGrantedBounds new Rectangle(c.x - 11, c.y - 11, c.x + 11, c.y + 11)
       @_lastRingCenter = c
     dwellMs = WorldWdgt.preferencesAndSettings.dwellToArmMs
     newStep = Math.max 0, Math.min(@ringSteps, Math.floor(@_elapsedForCharge() / dwellMs * @ringSteps))

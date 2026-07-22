@@ -92,7 +92,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     if @isFreeFloating()
       newWdgt = new Widget
       @parent.add newWdgt
-      newWdgt._applyBounds @boundingBox()
+      newWdgt._applyGrantedBounds @boundingBox()
       newWdgt.add @, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       newWdgt.showAdders()
 

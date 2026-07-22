@@ -29,7 +29,7 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
     # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -58,12 +58,10 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     # square centered in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyExtent (new Point squareDim*50/100, squareDim*50/100).round()
-    @icon._applyMoveTo (centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()
+    @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
 
 
-    @objectIcon._applyExtent (new Point squareDim, squareDim).round()
-    @objectIcon._applyMoveTo p0
+    @objectIcon._applyBounds p0, (new Point squareDim, squareDim).round()
 
 
     world.maybeEnableTrackChanges()

@@ -62,7 +62,7 @@ class AxisWdgt extends Widget
     # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
     # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -93,11 +93,9 @@ class AxisWdgt extends Widget
     # the tick + label POSITIONS derived from it must commit as integer @bounds, so round each placement point.
     # The arrange-apply path no longer rounds for us -- see docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
     if height > width
-      @majorDimLine._applyMoveTo (new Point @right() - 5, @top() + tickHeight).round()
-      @majorDimLine._applyExtent new Point thickness, heightOfTheDrawnBar
+      @majorDimLine._applyBounds ((new Point @right() - 5, @top() + tickHeight).round()), new Point thickness, heightOfTheDrawnBar
     else
-      @majorDimLine._applyMoveTo (new Point @left() + tickHeight, @top() + 5).round()
-      @majorDimLine._applyExtent new Point heightOfTheDrawnBar, thickness
+      @majorDimLine._applyBounds ((new Point @left() + tickHeight, @top() + 5).round()), new Point heightOfTheDrawnBar, thickness
 
     # _reLayout runs INSIDE the layout pass (recalculateLayouts), so the tick labels are positioned
     # AND texted through the non-settling APIs (_applyExtent / _applyMoveTo / _setTextNoSettle) -- a

@@ -83,7 +83,7 @@ class ConsoleWdgt extends Widget
     # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
     # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -105,8 +105,7 @@ class ConsoleWdgt extends Widget
     buttonsWidth = Math.round (textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField._applyExtent new Point textWidth, textHeight
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight
 
 
     # buttons -------------------------------

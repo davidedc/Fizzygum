@@ -145,8 +145,7 @@ class CellWdgt extends Widget
     @hostedWidget = widget
     @_addNoSettle widget
     inset = 2
-    widget._applyExtent @extent().subtract new Point 2 * inset, 2 * inset
-    widget._applyMoveTo @position().add new Point inset, inset
+    widget._applyBounds (@position().add new Point inset, inset), @extent().subtract new Point 2 * inset, 2 * inset
     return
 
   _unhostNoSettle: ->
@@ -246,8 +245,7 @@ class CellWdgt extends Widget
     editor.color = @_sheetWidget.valueTextColor
     editor.isEditable = false
     @_addNoSettle editor
-    editor._applyExtent @extent()
-    editor._applyMoveTo @position()
+    editor._applyBounds @position(), @extent()
     @_editorWdgt = editor
     return
 

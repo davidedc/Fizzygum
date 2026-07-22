@@ -107,7 +107,7 @@ class PatchNodeWdgt extends Widget
     # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
     # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # Disable broken-rectangle tracking while the children are repositioned: every subwidget is within my
     # own bounds, so my single broken rectangle already covers them. (Anything a subwidget sticks out past

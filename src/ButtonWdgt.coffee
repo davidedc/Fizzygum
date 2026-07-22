@@ -86,14 +86,14 @@ class ButtonWdgt extends Widget
     # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
     # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # TODO can we use the more standard way i.e.
     # calculate the bounds and pass them as args in the _reLayout method
     # of the faceWidget?
 
     if @faceWidget?.parent == @
-      @faceWidget._applyBounds newBoundsForThisLayout.insetBy @padding
+      @faceWidget._applyGrantedBounds newBoundsForThisLayout.insetBy @padding
 
     super
     @_markLayoutAsFixed()

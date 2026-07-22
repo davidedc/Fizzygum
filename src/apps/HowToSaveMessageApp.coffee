@@ -67,8 +67,7 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
      "Proliferation of saving solutions done without our help could be detrimental to the Fizzygum platform (due to degraded experience on third party sites, incompatibilities between sites, migration issues, security issues, etc.), hence the Fizzygum team decided to withhold this functionality from public until we can package an open turn-key solution that minimises misuse and sub-par experiences."
 
 
-    doc._applyMoveTo new Point 114, 10
-    doc._applyExtent new Point 365, 447
+    doc._applyBounds (new Point 114, 10), new Point 365, 447
     world.add doc
     doc._rememberFractionalSituationInHoldingPanel()
     doc.setTitleWithoutPrependedContentName "How to save?"

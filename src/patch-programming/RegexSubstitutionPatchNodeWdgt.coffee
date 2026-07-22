@@ -92,13 +92,10 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
     text3Height = Math.round(availableHeight * 2/4)
 
     if @regexEntryField.parent == @
-      @regexEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @regexEntryField._applyExtent new Point @width() - 2 * @externalPadding, text1Height
+      @regexEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, text1Height
 
     if @substitutionTextArea.parent == @
-      @substitutionTextArea._applyMoveTo new Point @left() + @externalPadding, @regexEntryField.bottom() + @internalPadding
-      @substitutionTextArea._applyExtent new Point @width() - 2 * @externalPadding, text2Height
+      @substitutionTextArea._applyBounds (new Point @left() + @externalPadding, @regexEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, text2Height
 
     if @outputTextArea.parent == @
-      @outputTextArea._applyMoveTo new Point @left() + @externalPadding, @substitutionTextArea.bottom() + @internalPadding
-      @outputTextArea._applyExtent new Point @width() - 2 * @externalPadding, text3Height
+      @outputTextArea._applyBounds (new Point @left() + @externalPadding, @substitutionTextArea.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, text3Height

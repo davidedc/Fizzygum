@@ -242,8 +242,7 @@ class SimpleSpreadsheetWdgt extends Widget
       @_cellsPanel = panel
     # the data region spans from the headers to my bottom-right corner (F6 — pre-F6 this was
     # the fixed grid size, set once at build)
-    @_cellsPanel._applyExtent new Point (@width() - @headerColWidth), (@height() - @headerRowHeight)
-    @_cellsPanel._applyMoveTo @position().add new Point @headerColWidth, @headerRowHeight
+    @_cellsPanel._applyBounds (@position().add new Point @headerColWidth, @headerRowHeight), new Point (@width() - @headerColWidth), (@height() - @headerRowHeight)
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
     buildHeader = (kind, index, x, y, w, h) =>
@@ -254,8 +253,7 @@ class SimpleSpreadsheetWdgt extends Widget
         @_addNoSettle header
         @_headerCells.set key, header
       header = @_headerCells.get key
-      header._applyExtent new Point w, h
-      header._applyMoveTo @position().add new Point x, y
+      header._applyBounds (@position().add new Point x, y), new Point w, h
       return
     visibleCols = @_visibleCols()
     visibleRows = @_visibleRows()
@@ -289,8 +287,7 @@ class SimpleSpreadsheetWdgt extends Widget
     cell.attachSheet this
     @_cellsPanel._addNoSettle cell
     rect = @_cellRectLocal slotCol, slotRow
-    cell._applyExtent new Point rect.w, rect.h
-    cell._applyMoveTo @position().add new Point rect.x, rect.y
+    cell._applyBounds (@position().add new Point rect.x, rect.y), new Point rect.w, rect.h
     @_cells.set address, cell
     cell
 
@@ -371,7 +368,7 @@ class SimpleSpreadsheetWdgt extends Widget
   _reLayout: (newBoundsForThisLayout) ->
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
     if @_handleCollapsedStateShouldWeReturn() then return
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
     @_buildChromeNoSettle()
     @_reconcileViewportNoSettle()
     # super: the move/extent re-applies no-op via the equal-guards (bounds already applied);

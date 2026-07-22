@@ -59,7 +59,7 @@ any corner that REACTS is `_`, because `changed`/`_reLayout*` are orchestration 
 |---|---|---|
 | **leaf** (`__`, no react) | `__commitExtent` · `__commitWidth` · `__commitHeight` | `__commitMoveBy` · `__commitMoveTo` |
 | **silent commit** (`_`, no react) | `_commitBounds`¹ | *(n/a — a move always repaints)* |
-| **apply — polymorphic** (`_`, reacts, DISPATCH point) | `_applyExtent` · `_applyBounds` · `_applyWidth` · `_applyHeight` | `_applyMoveBy` · `_applyMoveTo` |
+| **apply — polymorphic** (`_`, reacts, DISPATCH point) | `_applyExtent` · `_applyGrantedBounds` · `_applyWidth` · `_applyHeight` | `_applyMoveBy` · `_applyMoveTo` |
 | **apply — bypass** (`_`, reacts, override-BYPASS base) | `_applyExtentBase` | `_applyMoveByBase` · `_applyMoveToBase` |
 | **public** | `setExtent` · `setBounds` · `setWidth` · `setHeight` | `moveTo` · `moveWithin` |
 

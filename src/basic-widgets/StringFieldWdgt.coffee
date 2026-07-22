@@ -55,8 +55,7 @@ class StringFieldWdgt extends PanelWdgt
   # _applyExtent resize schedules my _reLayout via the valve -- both end HERE.
   _reLayoutChildren: ->
     return unless @text?
-    @text._applyMoveTo @position().add new Point 5,2
-    @text._applyExtent new Point 300, 18
+    @text._applyBounds (@position().add new Point 5,2), new Point 300, 18
 
   _reLayout: (newBoundsForThisLayout) ->
     super

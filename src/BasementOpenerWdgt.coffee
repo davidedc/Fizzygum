@@ -42,8 +42,7 @@ class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
       @target.unCollapse()
       windowedBasementWdgt = new FrameWdgt @target
       world.add windowedBasementWdgt
-      windowedBasementWdgt._applyExtent new Point 460, 400
-      windowedBasementWdgt._applyMoveTo new Point 140, 90
+      windowedBasementWdgt._applyBounds (new Point 140, 90), new Point 460, 400
       windowedBasementWdgt._rememberFractionalSituationInHoldingPanel()
       InfoDocs.createNextTo "basement", windowedBasementWdgt
     else

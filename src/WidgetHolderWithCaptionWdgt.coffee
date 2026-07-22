@@ -78,7 +78,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
     # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -106,10 +106,8 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # on the left edge of the square inscribed in the widget
     p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyExtent (new Point squareDim, squareDim*8/10).round()
-    @icon._applyMoveTo p0.round()
-    @label._applyExtent (new Point squareDim, squareDim*2/10).round()
-    @label._applyMoveTo (p0.add new Point 0, squareDim*8/10).round()
+    @icon._applyBounds p0.round(), (new Point squareDim, squareDim*8/10).round()
+    @label._applyBounds ((p0.add new Point 0, squareDim*8/10).round()), (new Point squareDim, squareDim*2/10).round()
 
 
     world.maybeEnableTrackChanges()

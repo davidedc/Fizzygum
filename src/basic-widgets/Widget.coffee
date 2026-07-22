@@ -861,15 +861,29 @@ class Widget extends TreeNode
   preferredExtent: ->
     @extent()
 
-  # note that using this one, the children
-  # widgets attached as floating don't move
-  _applyBounds: (newBounds) ->
+  # The apply-tier twin of setBounds — same two call shapes (aRectangle | aPosition, anExtent):
+  # place AND size in ONE immediate call. The move is subtree-FOLLOWING (_applyMoveTo — children
+  # ride along, like every unmarked move verb): the one-shot for the ubiquitous construction
+  # idiom `w._applyMoveTo p; w._applyExtent e`. CONTRAST _applyGrantedBounds below, the arrange
+  # engine's frame-commit, whose translate deliberately does NOT carry children.
+  _applyBounds: (aRectangleOrPosition, extent = nil) ->
+    aRectangle = if extent? then aRectangleOrPosition.extent extent else aRectangleOrPosition
+    # deliberately NOT re-fusable into a self-call: this IS the one-shot the pairs fuse into
+    @_applyMoveTo aRectangle.origin
+    @_applyExtent aRectangle.extent()
+
+  # The ARRANGE engine's frame-commit (the bounds-first rule: a _reLayout override applies the
+  # bounds the layout pass GRANTED it before its first own-geometry read — enforced by
+  # buildSystem/check-relayout-bounds-first.js). The translate deliberately does NOT carry
+  # children: the widget's own arrange places them from the new frame right after, and
+  # float-followers ride the float-follow machinery — auto-following here would double-move them.
+  _applyGrantedBounds: (newBounds) ->
     if @bounds.equals newBounds
       return
 
     unless @bounds.origin.equals newBounds.origin
       @bounds = @bounds.translateTo newBounds.origin
-      @_assertBoundsWellFormed "_applyBounds"
+      @_assertBoundsWellFormed "_applyGrantedBounds"
       @__breakMoveResizeCaches()
       @_changed()
 
@@ -986,7 +1000,7 @@ class Widget extends TreeNode
   # Silently commit my bounds (origin + extent): translate my origin, then commit my extent via the __commitExtent
   # leaf -- NO repaint, NO self-relayout. Used for construction-time sizing and by the top-down arrange (a container
   # sizing my frame already knows my new bounds, so no repaint/relayout is owed here).
-  # (Collapsed 2026-07-01) The old "non-notifying twin" _applyBounds and this method became byte-identical once the
+  # (Collapsed 2026-07-01) The old "non-notifying twin" _applyGrantedBounds and this method became byte-identical once the
   # re-fit seam was deleted -- both are just a silent origin+extent commit -- so they are ONE method now (_commitBounds).
   _commitBounds: (newBounds) ->
     if @bounds.equals newBounds
@@ -1977,7 +1991,7 @@ class Widget extends TreeNode
   # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveByBase
   # would route arrange moves through them on clipping panels and change their dirty regions -- so the two names are a
   # genuine dispatch distinction, not redundant twins. (Only the truly-redundant SILENT-commit twins collapsed in that
-  # pass: _commitExtentAndNotify folded into the __commitExtent leaf, _commitBoundsAndNotify + _applyBounds into _commitBounds.)
+  # pass: _commitExtentAndNotify folded into the __commitExtent leaf, _commitBoundsAndNotify + _applyGrantedBounds into _commitBounds.)
   _applyMoveBy: (delta) ->
     @_applyMoveByBase delta
 
@@ -2177,7 +2191,7 @@ class Widget extends TreeNode
 
     # "bake" the "deferred" size and position
     # into the current size and position
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # Clamp me inside aWdgt via the ONE clamp home, then bake the move (immediate twin).
     # Net translation is identical to the old per-axis _applyMoveBy quartet (per-axis,
@@ -3036,8 +3050,7 @@ class Widget extends TreeNode
     myPosition = @positionAmongSiblings()
     widgetToAdd = new PointerWdgt @
     @parent.add widgetToAdd, myPosition
-    widgetToAdd.moveTo @position()
-    widgetToAdd.setExtent new Point 150, 20
+    widgetToAdd.setBounds @position(), new Point 150, 20
     @removeFromTree()
   # this part is excluded from the fizzygum homepage build <<«
 
@@ -4980,7 +4993,7 @@ class Widget extends TreeNode
     # contained TextWdgt qualifies (a non-text widget has no fittingSpec, so it
     # falls through to the else).
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-      @_applyBounds newBoundsForThisLayout
+      @_applyGrantedBounds newBoundsForThisLayout
     else
       @_applyExtent newBoundsForThisLayout.extent()
 

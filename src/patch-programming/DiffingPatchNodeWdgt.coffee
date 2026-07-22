@@ -67,8 +67,7 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
     textHeight = @height() - 2 * @externalPadding
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField._applyExtent new Point @width() - 2 * @externalPadding, textHeight
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, textHeight
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>

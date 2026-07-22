@@ -465,8 +465,7 @@ class InspectorWdgt extends Widget
     # flake). Applying the bounds here makes the child layout read the FINAL extent, so the
     # render is identical regardless of cadence. `super` re-applies the same bounds (idempotent).
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-    @_applyMoveTo newBoundsForThisLayout.origin
-    @_applyExtent newBoundsForThisLayout.extent()
+    @_applyBounds newBoundsForThisLayout.origin, newBoundsForThisLayout.extent()
 
     # Disable broken-rect tracking while we lay out children manually: every inspector subwidget
     # stays within the parent's own bounds, so the parent's broken rect covers them all (this
@@ -503,8 +502,7 @@ class InspectorWdgt extends Widget
     @classesButtons.reverse()
     @layoutLastLabelInHierarchy Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2 * @internalPadding + justAcounter)
 
-    @hierarchyBackgroundPanel._applyMoveTo new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding
-    @hierarchyBackgroundPanel._applyExtent new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
+    @hierarchyBackgroundPanel._applyBounds (new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
 
     headerBounds = new Rectangle new Point @left() + @externalPadding , @hierarchyBackgroundPanel.bottom()+ @internalPadding
     headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
@@ -518,13 +516,11 @@ class InspectorWdgt extends Widget
     # list
     listHeight = (@bottom() - @externalPadding - @internalPadding - 15) - (@showMethodsToggle.bottom() + @internalPadding)
     if @list.parent == @
-      @list._applyMoveTo new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding
-      @list._applyExtent new Point listWidth, listHeight
+      @list._applyBounds (new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding), new Point listWidth, listHeight
 
     # detail
     if @detail.parent == @
-      @detail._applyMoveTo new Point @list.right() + @internalPadding, @list.top()
-      @detail._applyExtent (new Point detailWidth, listHeight).round()
+      @detail._applyBounds (new Point @list.right() + @internalPadding, @list.top()), (new Point detailWidth, listHeight).round()
 
     widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
 
@@ -573,12 +569,10 @@ class InspectorWdgt extends Widget
 
   layoutLastLabelInHierarchy: (posx, posy) ->
     if @lastLabelInHierarchy.parent == @
-      @lastLabelInHierarchy._applyMoveTo new Point posx, posy
-      @lastLabelInHierarchy._applyExtent new Point 150, 15
+      @lastLabelInHierarchy._applyBounds (new Point posx, posy), new Point 150, 15
 
     if @lastArrowInHierarchy.parent == @
-      @lastArrowInHierarchy._applyMoveTo new Point posx - 15, posy
-      @lastArrowInHierarchy._applyExtent new Point 15, 15
+      @lastArrowInHierarchy._applyBounds (new Point posx - 15, posy), new Point 15, 15
 
 
   notifyInstancesOfSourceChange: (propertiesArray)->

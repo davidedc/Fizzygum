@@ -28,7 +28,6 @@ setProgram          # LCLProgramRunner programming API
 processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 processTripleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 addText             # ErrorsLogViewerWdgt log-append verb; its body drives the public .setText on the text pane — rule [A] forbids the _-form
-updatePatternsMenuEntriesTicks  # Wallpaper menu-tick refresher; drives public .setText on its menu entries — rule [A] forbids the _-form
 createErrorConsole        # WorldWdgt error-path builder; drives public setExtent/moveTo/add — rules [A]/[G] forbid the _-form
 addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives public add/fullDestroy/setWidth — [A]/[G] forbid the _-form
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form

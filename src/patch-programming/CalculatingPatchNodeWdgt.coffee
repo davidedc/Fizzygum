@@ -89,17 +89,13 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     textBottom = @top() + @externalPadding + 15 + @internalPadding + text1Height
 
     if @formulaTextBoxLabel.parent == @
-      @formulaTextBoxLabel._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @formulaTextBoxLabel._applyExtent new Point @width() - 2 * @externalPadding, 15
+      @formulaTextBoxLabel._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, 15
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding
-      @tempPromptEntryField._applyExtent new Point @width() - 2 * @externalPadding, text1Height
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding + 15 + @internalPadding), new Point @width() - 2 * @externalPadding, text1Height
 
     if @outputTextBoxLabel.parent == @
-      @outputTextBoxLabel._applyMoveTo new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
-      @outputTextBoxLabel._applyExtent new Point @width() - 2 * @externalPadding, 15
+      @outputTextBoxLabel._applyBounds (new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, 15
 
     if @outputTextArea.parent == @
-      @outputTextArea._applyMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding + 15 + @internalPadding
-      @outputTextArea._applyExtent new Point @width() - 2 * @externalPadding, text2Height
+      @outputTextArea._applyBounds (new Point @left() + @externalPadding, textBottom + @internalPadding + 15 + @internalPadding), new Point @width() - 2 * @externalPadding, text2Height

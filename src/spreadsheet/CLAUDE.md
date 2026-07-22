@@ -381,7 +381,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   (window 452×336 − 36 chrome = 442×300 content — the pre-F6 on-screen window was ALWAYS
   452×336: the fixed content overrode the old passed 334, so the pin changes no pixel).
 - **The resize seam is a `_reLayout` override** (the `StretchableWidgetContainerWdgt`
-  precedent: bounds-first `_applyBounds`, then `_buildChromeNoSettle` +
+  precedent: bounds-first `_applyGrantedBounds`, then `_buildChromeNoSettle` +
   `_reconcileViewportNoSettle` re-derive everything from the just-applied frame, then
   `super`) — NOT `_positionAndResizeChildren`, which is a stack-family dispatch the
   plain-Widget `_reLayout` never calls. Reached via `_applyExtent`'s schedule-valve in the

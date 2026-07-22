@@ -69,7 +69,7 @@ class SimpleLinkWdgt extends Widget
     # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
     # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -89,16 +89,13 @@ class SimpleLinkWdgt extends Widget
     squareSize = Math.min @width(), @height() - 2 * @externalPadding
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField._applyExtent new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
 
     if @outputTextArea.parent == @
-      @outputTextArea._applyMoveTo new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding
-      @outputTextArea._applyExtent new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
+      @outputTextArea._applyBounds (new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
 
     if @externalLinkIcon.parent == @
-      @externalLinkIcon._applyMoveTo new Point @right() - @externalPadding - squareSize, @top() + @externalPadding
-      @externalLinkIcon._applyExtent new Point squareSize, squareSize
+      @externalLinkIcon._applyBounds (new Point @right() - @externalPadding - squareSize, @top() + @externalPadding), new Point squareSize, squareSize
 
 
     world.maybeEnableTrackChanges()

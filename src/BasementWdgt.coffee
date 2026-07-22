@@ -177,7 +177,7 @@ class BasementWdgt extends BoxWdgt
     # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
     # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
 
     world.disableTrackChanges()
 
@@ -189,8 +189,7 @@ class BasementWdgt extends BoxWdgt
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - WorldWdgt.preferencesAndSettings.handleSize
     h = b - y
-    @scrollPanel._applyMoveTo new Point x, y
-    @scrollPanel._applyExtent new Point w, h
+    @scrollPanel._applyBounds (new Point x, y), new Point w, h
 
     # hideUsedWdgts toggle button
     x = @scrollPanel.left()

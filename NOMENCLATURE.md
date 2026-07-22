@@ -31,7 +31,7 @@ The deferred-layout system: `_reLayout`, `recalculateLayouts`, settle tiers.
 |---|---|
 | **broken (rects)** | invalidated screen regions (`pushBrokenRect`, `updateBroken`) |
 | **dirty** | canvas/backbuffer/text-measure invalidation (`extentWhenCanvasGotDirty`, `anyTextDirty`). NOT used by dataflow. |
-| **changed / fullChanged** | widget repaint invalidation verbs |
+| **_changed / _fullChanged** | widget repaint invalidation verbs (PRIVATE — see widget-citizenship point 2) |
 
 ### Input & stepping domain
 | Term | Meaning |

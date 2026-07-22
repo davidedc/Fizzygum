@@ -493,8 +493,7 @@ class MenusHelper
     world.add svsspw
     # public setters on the ATTACHED panel self-settle in place (was _applyMoveTo/_applyExtent, whose raw
     # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
-    svsspw.moveTo new Point 430, 25
-    svsspw.setExtent new Point 370, 325
+    svsspw.setBounds (new Point 430, 25), new Point 370, 325
 
   createSimpleVerticalStackPanelWdgtAndScrollPanel: ->
     @createSimpleVerticalStackPanelWdgt()
@@ -642,8 +641,7 @@ class MenusHelper
     world.add sdspw
     # public setters on the ATTACHED panel self-settle in place (was _applyMoveTo/_applyExtent, whose raw
     # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
-    sdspw.moveTo new Point 35, 30
-    sdspw.setExtent new Point 370, 325
+    sdspw.setBounds (new Point 35, 30), new Point 370, 325
 
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Document"

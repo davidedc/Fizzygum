@@ -94,14 +94,12 @@ class WidgetFactory
     gP = new GrayPaletteWdgt
     wm = new FrameWdgt gP
     world.add wm
-    wm._applyExtent new Point 130, 70
-    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
+    wm._applyBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 70
   createNewColorPaletteWdgtInWindow: ->
     cP = new ColorPaletteWdgt
     wm = new FrameWdgt cP
     world.add wm
-    wm._applyExtent new Point 130, 100
-    wm._applyMoveTo world.hand.position().subtract new Point 50, 100
+    wm._applyBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 100
   createNewColorPickerWdgt: ->
     world.create new ColorPickerWdgt
   createNewSensorDemo: ->
@@ -113,36 +111,31 @@ class WidgetFactory
     world.create newWdgt
   createNewAnimationDemo: ->
     foo = new BouncerWdgt
-    foo._applyMoveTo new Point 50, 20
-    foo._applyExtent new Point 300, 200
+    foo._applyBounds (new Point 50, 20), new Point 300, 200
     foo.alpha = 0.9
     foo.speed = 3
     bar = new BouncerWdgt
     bar.setColor Color.create 50, 50, 50
-    bar._applyMoveTo new Point 80, 80
-    bar._applyExtent new Point 80, 250
+    bar._applyBounds (new Point 80, 80), new Point 80, 250
     bar.type = "horizontal"
     bar.direction = "right"
     bar.alpha = 0.9
     bar.speed = 5
     baz = new BouncerWdgt
     baz.setColor Color.create 20, 20, 20
-    baz._applyMoveTo new Point 90, 140
-    baz._applyExtent new Point 40, 30
+    baz._applyBounds (new Point 90, 140), new Point 40, 30
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
     garply = new BouncerWdgt
     garply.setColor Color.create 200, 20, 20
-    garply._applyMoveTo new Point 90, 140
-    garply._applyExtent new Point 20, 20
+    garply._applyBounds (new Point 90, 140), new Point 20, 20
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
     fred = new BouncerWdgt
     fred.setColor Color.create 20, 200, 20
-    fred._applyMoveTo new Point 120, 140
-    fred._applyExtent new Point 20, 20
+    fred._applyBounds (new Point 120, 140), new Point 20, 20
     fred.type = "vertical"
     fred.direction = "down"
     fred.speed = 4
@@ -163,8 +156,7 @@ class WidgetFactory
 
     for i in [0..5]
       lmHolder = new RectangleWdgt
-      lmHolder.setExtent new Point 10 + i*10,10 + i*10
-      lmHolder.moveTo new Point 10 + 60 * i, 10 + 50 * 0
+      lmHolder.setBounds (new Point 10 + 60 * i, 10 + 50 * 0), new Point 10 + i*10,10 + i*10
 
       world.add lmHolder
 

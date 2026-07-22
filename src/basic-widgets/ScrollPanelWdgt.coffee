@@ -870,8 +870,7 @@ class ScrollPanelWdgt extends PanelWdgt
   setTextLineWrapping: (wraps) ->
     @isTextLineWrapping = wraps
     if wraps
-      @contents._applyMoveTo @position()
-      @contents._applyExtent @extent()
+      @contents._applyBounds @position(), @extent()
 
   enableDragsDropsAndEditing: (triggeringWidget) ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget

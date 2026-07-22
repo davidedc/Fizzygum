@@ -194,7 +194,7 @@ menuEntryPreferredWidth: -> @width()          # ← ratchet (natural = ctor's 80
 constructor: -> ... @_applyExtent new Point 80, 80 ...
 _reLayout: (newBoundsForThisLayout) ->        # full bounds-first custom _reLayout:
   ...                                         #   applies own bounds, arranges the
-  @_applyBounds newBoundsForThisLayout        #   palettes/feedback from the frame,
+  @_applyGrantedBounds newBoundsForThisLayout        #   palettes/feedback from the frame,
   @colorPalette._applyMoveTo @position() ...  #   idempotent since the V3 fix
   ...
   super
@@ -342,7 +342,7 @@ not one-size — §1.3 shows three starting patterns):
   (`macroSlider*`, `macroLonelySlider*`, `macroMovingSlidersSideways…`,
   `macroPopoverStaysOpenWhenSliderDraggedOut`) are the canary set.
 - **2c ColorPickerWdgt**: extract the arrange lines of its custom `_reLayout` (palette
-  moves/extents + feedback, between `@_applyBounds` and `world.maybeEnableTrackChanges`)
+  moves/extents + feedback, between `@_applyGrantedBounds` and `world.maybeEnableTrackChanges`)
   into `_reLayoutChildren: ->`; `_reLayout` keeps its bounds-first shape and calls it
   (mirroring the stack's own composition). Deferred already true ⇒
   `_setWidthSizeHeightAccordingly` now re-fits it SYNCHRONOUSLY in stack arranges —

@@ -612,8 +612,7 @@ class WorldWdgt extends PanelWdgt
 
 
     @errorConsole = wm
-    @errorConsole.moveTo new Point 190,10
-    @errorConsole.setExtent new Point 550,415
+    @errorConsole.setBounds (new Point 190,10), new Point 550,415
     @errorConsole.hide()
 
   removeSpinnerAndFakeDesktop: ->
@@ -628,8 +627,7 @@ class WorldWdgt extends PanelWdgt
     @_makePrettier()
 
     acm = new AnalogClockWdgt
-    acm._applyExtent new Point 80, 80
-    acm._applyMoveTo new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding
+    acm._applyBounds (new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding), new Point 80, 80
     @add acm
 
     # TODO find a way to put this back

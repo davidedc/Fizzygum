@@ -54,8 +54,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
     sdspw.addNormalParagraph "What else could be added? Anything! Scripts, maps, maps inside scrolling views, maps with graphs, slides, other docs, and on and on and on..."
 
-    doc._applyExtent new Point 331, 545
-    doc._applyMoveTo new Point 257, 110
+    doc._applyBounds (new Point 257, 110), new Point 331, 545
     world.add doc
     doc.setTitleWithoutPrependedContentName "Sample text document"
 

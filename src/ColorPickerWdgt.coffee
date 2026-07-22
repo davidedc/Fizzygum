@@ -70,11 +70,9 @@ class ColorPickerWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    @colorPalette._applyMoveTo @position()
-    @colorPalette._applyExtent new Point @width(), Math.round(@height() * 0.625)
+    @colorPalette._applyBounds @position(), new Point @width(), Math.round(@height() * 0.625)
 
-    @grayPalette._applyMoveTo @colorPalette.bottomLeft()
-    @grayPalette._applyExtent new Point @width(), Math.round(@height() * 0.0625)
+    @grayPalette._applyBounds @colorPalette.bottomLeft(), new Point @width(), Math.round(@height() * 0.0625)
 
     # SIZE feedback FIRST, then centre it from its NEW dims (schedule-valve arc V3, 2026-07-16):
     # the old move-then-resize order centred it with the STALE size, leaving the first pass after
@@ -98,7 +96,7 @@ class ColorPickerWdgt extends Widget
     # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children are
     # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyBounds newBoundsForThisLayout
+    @_applyGrantedBounds newBoundsForThisLayout
     @_reLayoutChildren()
 
     super

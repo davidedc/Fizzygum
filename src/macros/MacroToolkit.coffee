@@ -989,12 +989,10 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       buildExternalAndFreeInternalWindow_Macro = ->
         extWin = new FrameWdgt()
-        extWin.setExtent new Point 290, 240
-        extWin.moveTo new Point 75, 90
+        extWin.setBounds (new Point 75, 90), new Point 290, 240
         world.add extWin
         intWin = new FrameWdgt()
-        intWin.setExtent new Point 250, 160
-        intWin.moveTo new Point 600, 200
+        intWin.setBounds (new Point 600, 200), new Point 250, 160
         world.add intWin
         yield "waitNoInputsOngoing"
         return [extWin, intWin]
@@ -1048,8 +1046,7 @@ class MacroToolkit
         # attach first, so the public setExtent/setWidth/moveTo SELF-SETTLE and apply in place.
         panel = new ScrollPanelWdgt
         world.add panel
-        panel.setExtent new Point 270, 200
-        panel.moveTo topLeftPoint
+        panel.setBounds topLeftPoint, new Point 270, 200
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."
         # a bare TextWdgt SELF-SIZES as contained text: put it in
         # FIT_BOX_TO_TEXT and it wraps to its own width and grows its HEIGHT to the

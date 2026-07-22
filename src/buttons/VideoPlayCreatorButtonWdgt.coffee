@@ -11,6 +11,5 @@ class VideoPlayCreatorButtonWdgt extends ExternalLinkCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
     switcheroo = new SimpleVideoLinkWdgt
-    switcheroo._applyMoveTo @position()
-    switcheroo._applyExtent new Point 330, 65
+    switcheroo._applyBounds @position(), new Point 330, 65
     return switcheroo

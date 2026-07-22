@@ -63,7 +63,7 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   proportions still telescope without drift. See `docs/archive/fractional-widget-bounds-investigation-plan.md`.
 - **The always-on guard `Widget._assertBoundsWellFormed`** (finite + integer; formerly `_assertBoundsFinite`,
   when it checked finiteness only — called from every bounds-commit leaf —
-  `__commitExtent`/`__commitWidth`/`__commitHeight`, `_applyMoveByBase`, `_applyBounds`,
+  `__commitExtent`/`__commitWidth`/`__commitHeight`, `_applyMoveByBase`, `_applyGrantedBounds`,
   `_commitBounds`) `console.error`s `NON_FINITE_GEOMETRY` (NaN/Infinity) **and** `NON_INTEGER_GEOMETRY`
   (fractional applied bounds); **both are wired into the headless runners' fail-gate**, so a
   fractional `@bounds` FAILS the suite even when the pixels happen to match. It replaced the
