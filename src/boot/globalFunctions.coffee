@@ -216,7 +216,7 @@ boot = ->
     # coffeescript could nominally be loaded later
     # if it wasn't for the fact that the paint tool needs it
     # (see comment later to see where you can load it)
-    loadJSFilePromise "js/libs/coffee-script_2.0.3.js"
+    loadJSFilePromise "js/libs/fizzygum-coffeescript-min.js"
   ]
 
   if BUILDFLAG_LOAD_TESTS or (window.location.href.includes "generatePreCompiled")

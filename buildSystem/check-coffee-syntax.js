@@ -60,7 +60,7 @@ const fs = require('fs');
 const { execFileSync } = require('child_process');
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
-const COMPILER = path.join(__dirname, '..', 'auxiliary files', 'CoffeeScript', 'coffee-script_2.0.3.js');
+const COMPILER = path.join(__dirname, '..', 'auxiliary files', 'CoffeeScript', 'fizzygum-coffeescript-min.js');
 
 function fail(msg) { console.error('check-coffee-syntax: ' + msg); process.exit(2); }
 

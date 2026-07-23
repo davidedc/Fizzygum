@@ -71,17 +71,26 @@ while the gauntlet stays green**, with a defined stop condition (§6 Phase 4).
   relies on). **This filename is git-tracked**; restore any experiment with
   `git -C Fizzygum checkout -- "auxiliary files/CoffeeScript/coffee-script_2.0.3.js"`.
 
-**The two — and only two — places the vendored file is referenced** (grep
-`coffee-script_2.0.3` under `Fizzygum/`):
+**THREE places reference the vendored file** ⚠ (this plan originally said "two — and only
+two" and BOTH earlier §12 entries + the memory note repeated it — they MISSED the runtime
+boot loader, ref 3 below. Corrected 2026-07-23 during vendoring, caught by a fresh
+`grep -rn` across the whole repo. Lesson: grep the WHOLE tree, not just build scripts.):
 1. `Fizzygum/build_it_please.sh` (~line 733):
-   `cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/`
+   `cp auxiliary\ files/CoffeeScript/<vendored>.js $BUILD_PATH/js/libs/`
    → copies it into the build output the browser loads via `<script>`.
 2. `Fizzygum/buildSystem/check-coffee-syntax.js` (~line 63):
-   `const COMPILER = path.join(__dirname, '..', 'auxiliary files', 'CoffeeScript', 'coffee-script_2.0.3.js');`
+   `const COMPILER = path.join(__dirname, '..', 'auxiliary files', 'CoffeeScript', '<vendored>.js');`
    → the build-time syntax gate `require()`s it and drives every source through the
    **real** `src/meta/Class.coffee`/`Mixin.coffee` fragmenting compiler, exactly as the
    browser does. **Reuse this file as a test harness** (see §7) — it is the faithful
    "does the whole corpus compile + what JS does it emit" oracle.
+3. `Fizzygum/src/boot/globalFunctions.coffee` (~line 219):
+   `loadJSFilePromise "js/libs/<vendored>.js"` → the RUNTIME boot loader that actually
+   pulls the compiler into the running world. Miss this and the built world can't compile
+   its sources at boot.
+
+(As of 2026-07-23 the vendored file was renamed `coffee-script_2.0.3.js` →
+`fizzygum-coffeescript-min.js` and all three refs repointed.)
 
 **How the runtime uses it (the whole contract):**
 - `Fizzygum/src/boot/loading-and-compiling-coffeescript-sources.coffee` (~line 88):
@@ -422,3 +431,165 @@ Then:
 > after a swap and leave a clean `git status`. Do NOT commit without explicit owner
 > approval. Do NOT use the modern ESM bundle, do NOT keep Babel-ES5, do NOT strip on the
 > keyword list without the gates (§9).
+
+---
+
+## §12 Progress log (append-only; newest first)
+
+### 2026-07-23 (latest) — productionized as its own package `fizzygum-coffeescript-min`
+
+Owner chose: **own repo + own npm package** (mirroring `coffeescript-cognitive-complexity`),
+NOT a CoffeeScript git-branch. Reasoning: our cuts are on the *compiled* lib (a real branch
+needs the harder src+jison route for ~no benefit); we're deliberately frozen on 2.0.3 for
+byte-identity to the gauntlet refs (tracking upstream is an anti-goal); a branch is heavyweight
+for shipping one bundle. Separation: the **package** is the versioned recipe + pre-built artifact;
+**Fizzygum keeps vendoring** the built output (respects its no-runtime-npm, saved-to-disk build).
+
+Created `Fizzygum-all/fizzygum-coffeescript-min/` (umbrella sibling; `git init`, 16 files staged,
+NOT committed): `build.js` (recipe — reads `coffeescript@2.0.3` devDep lib, applies `patched/`,
+bundles UMD via terser API, no global tools), `patched/{coffeescript,nodes,lexer,helpers}.js`
+(the cut4 modules, each documents its cut), `verify.js` (fork ≡ stock 2.0.3 over `test/corpus/`),
+`dist/coffeescript.js` (208,604 b = cut4 + ~50 b license banner) + `dist/coffeescript.full.js`,
+README (cut manifest + provenance), MIT LICENSE (CoffeeScript derivative attribution). Scripts:
+`build`/`verify`/`test`/`prepublishOnly`. `main` = dist min; `files` ships dist+patched+recipe.
+
+**Verified:** `npm run build` + `npm run verify` OK; **authoritative Fizzygum-corpus byte-diff of
+`dist/coffeescript.js` = IDENTICAL over all 4901 fragments**; **full gauntlet on the exact dist
+artifact CLEAN GREEN (4m35s).** (Package dist min differs from scratch cut4 only by terser-version
+drift + banner — the corpus byte-diff is the authority, and it's empty.)
+
+**Outward steps (owner-approved, executed 2026-07-23):**
+1. ✅ initial commit `fizzygum-coffeescript-min` @ `482ee03`.
+2. ✅ GitHub repo live + pushed: https://github.com/davidedc/fizzygum-coffeescript-min (main @ 482ee03).
+3. ✅ publish PREPPED — `npm publish --dry-run` green (prepublishOnly = build+verify; 14-file tarball,
+   221 KB). **Owner runs the real `npm publish` (2FA), as with the CC tool.**
+4. ✅ Fizzygum vendoring — vendored file **renamed** `coffee-script_2.0.3.js` →
+   `fizzygum-coffeescript-min.js`; **3 refs repointed** (see §2 — build cp, syntax-gate COMPILER,
+   AND the boot loader the plan had missed); provenance `README.md` added next to it; two tangential
+   doc mentions updated. `fg build` OK; full gauntlet running/GREEN. Fizzygum commit pending owner OK.
+
+
+### 2026-07-23 (later) — OWNER PIVOT: re-base the fork on 2.0.3 and cut THAT
+
+**Owner decision** (after the reframe below): since sub-257 KB is infeasible on a 2.7.0
+base, **re-base the minimal fork on CoffeeScript 2.0.3** — the currently-shipping vendored
+compiler — and cut *it* down. 2.0.3 has a much smaller core (`nodes.js` 215 KB vs 2.7.0's
+327 KB; `parser.js` 115 KB vs 192 KB) and, crucially, **byte-identity to 2.0.3 = zero
+behavioral change against the existing gauntlet references** (which were captured under
+2.0.3). So the byte-diff reference for this arc is the **stock vendored 2.0.3 blob**
+(`/tmp/frags-vend203.txt` = its fragment output over all 487 sources).
+
+**2.0.3 source:** `npm i coffeescript@2.0.3` into scratch `cs203/` (gitignored). Its lib
+layout + compile-path require graph are structurally identical to 2.7.0 (same 8 modules),
+so the same bundler applies (`--lib` points at the 2.0.3 lib). The vendored blob is the
+stock **full browser bundle, Babel-ES5** (has `_typeof`/`_get` helpers, `text/coffeescript`,
+`btoa`, `sourceMap`, `define.amd`).
+
+**Bundler now takes** `--lib <dir>` `--pkg <file>` `--patch <dir>` (per-module edited
+copies; stock modules stay pristine) `--drop <names>` (exclude a module entirely). Patched
+modules live in scratch `patched/`.
+
+**Results (all byte-identical to stock 2.0.3 over 4901 fragments; minified bytes):**
+| step | bytes | Δ vs shipping 257,123 | what |
+|---|---|---|---|
+| shipping vendored 2.0.3 (full, Babel-ES5) | 257,123 | — | baseline to beat |
+| **baseline** (compile-path only, modern JS) | 220,639 | **−14.2%** | drops Babel-ES5 + all CLI/browser/repl/register/cake/command/optparse modules. **Full gauntlet GREEN (4m34s).** |
+| **cut1** — sourcemap family | 216,359 | −16.0% | `patched/coffeescript.js` (removed `require('./sourcemap')`, base64encode, sources/sourceMaps, map-building in `compile()`, inlineMap/sourceMap/transpile return branches, getSourceMap, formatSourcePosition, `Error.prepareStackTrace`) + `--drop sourcemap`. None affect emitted `js`. |
+| **cut2** — + module-declaration | 212,311 | **−17.4%** | `patched/nodes.js` excises the contiguous `//### Import and Export` block (ModuleDeclaration/Import*/Export*, ~245 lines) — only referenced by import/export grammar reductions, which never fire for Fizzygum. **Full gauntlet GREEN (4m29s).** |
+| **cut3** — + JSX (lexer) | 210,711 | −18.0% | `patched/lexer.js` removes `csxToken()` (the ~94-line CSX tokenizer) from the consume chain + its 3 exclusive regexes (`CSX_IDENTIFIER`/`INSIDE_CSX`/`CSX_INTERPOLATION`). `csxToken` only fires on `<` beginning a CSX tag; Fizzygum's `<` (comparison) always fell through to the operator path, so removal is a no-op for its output. **Full gauntlet GREEN (serial-retry clean; warn was a self-induced CPU-contention flake).** |
+| **cut4** — + coverage-driven exotica | 208,554 | **−18.9%** | Bucket A (see below): CSX codegen (`compileCSX`/`compileCSXAttributes` in `patched/nodes.js`), Literate (`invertLiterate`/`isLiterate`), `baseFileName`, `checkShebangLine` (in `patched/helpers.js` + `patched/coffeescript.js`). **Full gauntlet CLEAN GREEN (4m35s, no flakes).** ← current best, awaiting owner vendor/commit. |
+
+### Phase 2 — empirical dead-code coverage (the owner's 2017 DevTools tip, automated)
+Ran **V8 coverage** (`NODE_V8_COVERAGE`) over the whole-corpus compile (dump-fragments,
+unminified cut3, all 487 sources → 4901 fragments), analyzed with `analyze-coverage.js`:
+**560 compiler functions, 105 DEAD (count 0), ~42.7 KB unmin.** Triaged into 3 buckets —
+DEAD ≠ safe-to-cut:
+- **A — exotic / not-Fizzygum's-use-case (CUT in cut4):** CSX codegen, Literate, baseFileName,
+  shebang. Unambiguous non-language tooling. ~2.2 KB min.
+- **B — ESSENTIAL, keep (dead only because the corpus compiles cleanly):** `syntaxErrorToString`
+  (1481b), `updateSyntaxError`, `throwSyntaxError`, `parser.yy.parseError`,
+  `nameWhitespaceCharacter`, the `error()` methods. These fire on ANY syntax error (live console
+  editing, a future typo). Cutting them makes errors crash cryptically. **DO NOT CUT.**
+- **C — real language features, unused-in-corpus but USABLE (owner decision; NOT cut):**
+  `compileDestructuring` (6906b) + `compileObjectDestruct` (4976b) [destructuring assignment],
+  `compileSplice`, `compilePower`/`compileModulo`/`compileSpecialMath` (`**`/`%%`), `generateDo`
+  (`do ->`), unicode-codepoint escapes, `_extends`/`objectWithoutKeys` utility emitters. ~15 KB min
+  potential, but removing them strips language capability — a future Fizzygum source using them
+  would miscompile/crash confusingly (the byte-diff gate only protects the CURRENT corpus).
+  **Recommend KEEP** unless the owner wants a hard-frozen dialect.
+
+Tooling: `analyze-coverage.js <covDir> <unmin-bundle>` ranks dead functions by size.
+
+Recipe for cut4 (the complete cut):
+`node build-min-coffee.js --lib cs203/.../lib/coffeescript --patch patched --drop sourcemap --out out/fizzygum-cs203-cut4`
+`patched/` = edited copies of `coffeescript.js` (sourcemap+shebang), `nodes.js` (module-decl+CSX),
+`lexer.js` (CSX tokenizer), `helpers.js` (literate+baseFileName).
+
+**Owner's 2017 list — coverage:** ✅ XHR/Runscripts/load/run/Btoa/prepareStackTrace
+(browser excluded + base64/prepareStackTrace removed) · ✅ cake · ✅ CLI/Basefilename
+(command/optparse excluded) · ✅ repl/register · ✅ Sourcemap/Linemap/Base64 · ✅ Module
+declaration · ✅ **CSX/JSX** (csxToken removed — the safe bulk) · ⚠ Checkshebangline (still in
+compile, trivial ~0.4 KB) · ⚠ Literate (invertLiterate/isLiterate still in helpers/lexer, tiny).
+
+**Net at cut4: 257,123 → 208,554 = −48,569 bytes (−18.9%), byte-identical to stock 2.0.3 over
+all 4901 fragments.** `parser.js` (~95 KB min) + `nodes.js` core (~80 KB min) dominate the
+remaining floor; the only further material lever is Bucket C (language features, ~15 KB min) —
+NOT recommended — and anything past that needs jison regen. **Status after cut4: awaiting the
+final gauntlet, then owner decision to vendor+commit** (name the artifact, repoint the 2 refs
+in `build_it_please.sh`+`check-coffee-syntax.js`, check in the `build-min-coffee.js` recipe +
+`patched/` + `cs203` provenance, archive this plan). Tree left clean after each gauntlet
+(vendored 2.0.3 restored via `git checkout`).
+
+### 2026-07-23 — Phase 0 DONE (green), + a mandate-reframing size finding
+
+**Scratch tooling** (all under `Fizzygum-tests/.scratch/mincoffee/`, gitignored):
+- `build-min-coffee.js` — the reproducible bundler. Assembles the compile-path lib
+  modules into a self-contained **UMD** (sets `window.CoffeeScript`, also Node-`require`-
+  able) via a ~30-line require-registry, then `terser --compress --mangle --ecma 2020`.
+  **No external bundler, no Babel-ES5.** `--out <base>` picks the output basename.
+- `dump-fragments.js` — the **byte-identity oracle** (patched `check-coffee-syntax.js`;
+  env `CC_COMPILER`/`CC_REPO`/`CC_OUT`, captures every `compileFGCode` fragment).
+
+**Structural finding — the compile path is only 8 modules.** `coffeescript.js` (the entry;
+`index.js` is bypassed — it's the Node wrapper that pulls `fs`/`vm`/`path`/`@babel`)
+requires only `{lexer, parser, helpers, sourcemap, nodes}`; `lexer→{rewriter,helpers}`,
+`nodes→{scope,lexer,helpers}`, `rewriter→helpers`, plus `package.json` (VERSION). **Zero
+node built-ins on the compile path; the only external dep — `jison` — is in `grammar.js`,
+which is BUILD-TIME (generates `parser.js`) and never loaded at runtime.** ⇒ **The plan's
+Phase 1 "exclude whole dead modules" (cake/command/optparse/repl/register/browser) is
+already banked** — those modules are never required by the compile path, so they were
+never in the bundle. The only compile-path module whose *functionality* is dead under
+`{bare:true}` is `sourcemap.js` (still `require`d by `coffeescript.js`; a Phase-3 in-module
+strip, ~1.7 KB min).
+
+**Phase 0 gates — ALL GREEN:**
+- Byte-identity oracle: stock-2.7.0-lib vs my FULL bundle vs my MIN bundle → **all three
+  emit byte-for-byte identical JS** across 487 files / **4901 fragments** / 0 errors
+  (67,519-line dumps, empty `diff`). Terser perturbed nothing (full==min).
+- Build with the bundle vendored: **OK** (syntax gate `require`d it, compiled all sources +
+  530 test files, 0 errors, all build gates pass).
+- **Full 13-leg `fg gauntlet`: GREEN, 4m37s** — `dpr1 dpr2 webkit apps paint tiernaming
+  settle capstone refs revisits census serialization storage` all PASS.
+
+**Sizes (minified, terser --ecma 2020):**
+| bundle | bytes | note |
+|---|---|---|
+| stock 2.7.0 legacy (Babel-ES5) | 530,111 | what stock ships |
+| **my baseline min (8 modules, modern JS)** | **342,886** | byte-identical, gauntlet-green |
+| vendored 2.0.3 (the old target to beat) | 257,123 | a much older, smaller language |
+| per-module: `parser.js` | 155,750 | generated jison table — data, minifies poorly |
+| per-module: `nodes.js` | 129,351 | AST codegen — needed for features Fizzygum uses |
+| **parser + nodes = irreducible floor** | **285,101** | **already > the whole 2.0.3 bundle** |
+
+**⚠ MANDATE REFRAME (decision for the owner).** The §1 target "materially below the 2.0.3
+~257 KB" is **infeasible on a 2.7.0 base**: `parser.js`+`nodes.js` alone minify to **278 KB
+> 257 KB**. 2.0.3 is smaller only because it's a fundamentally older/smaller language
+(pre-JSX/import feature growth). The Babel-ES5 removal + whole-module exclusion wins are
+already banked in the 335 KB baseline (exactly as §8 predicted). To go materially lower
+needs the **"true fork"** (§6 alt): clone `jashkenas/coffeescript@2.7.0`, strip
+JSX/import/literate from `src/grammar.coffee`+`src/lexer.coffee`+`src/nodes.coffee`,
+**regenerate `parser.js` via jison**, rebuild — high effort, real byte-diff risk, bounded/
+uncertain payoff (the JSX+import share of the 278 KB floor). **PAUSED here for owner
+direction: (A) ship the gated ~335 KB modern bundle as-is [recommended], (B) do the
+small sourcemap strip only (~3 KB), or (C) attempt the true-fork to chase sub-257 KB.**
+Tree restored to clean (vendored 2.0.3 back); baseline bundle + tooling live in scratch.

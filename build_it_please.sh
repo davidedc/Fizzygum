@@ -730,7 +730,7 @@ cp src/index.html $BUILD_PATH/
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
 cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
-cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js $BUILD_PATH/js/libs/
+cp auxiliary\ files/CoffeeScript/fizzygum-coffeescript-min.js $BUILD_PATH/js/libs/
 # (twgl-full.js removed: fizzytiles now software-renders through SW3D, not WebGL)
 
 # code that can be loaded after a pre-compiled world has started

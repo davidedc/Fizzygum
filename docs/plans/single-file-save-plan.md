@@ -48,8 +48,8 @@ The built page is *already* 99% of a single-file app:
 - **Nothing anywhere uses `fetch`/XHR.** All runtime loading is `<script>` injection
   (`loadJSFilePromise`, `src/boot/globalFunctions.coffee:42-64`) or `new Image()` — because the
   page must run over `file://`. Inlining is therefore a *natural fit*, not a retrofit.
-- **Total native-canvas no-tests payload ≈ 3.12 MB**: boot bundle 316 KB + CoffeeScript compiler
-  (`js/libs/coffee-script_2.0.3.js`, 257,123 B) + source batches (`sources_batch_0..13.js`,
+- **Total native-canvas no-tests payload ≈ 3.07 MB**: boot bundle 316 KB + CoffeeScript compiler
+  (`js/libs/fizzygum-coffeescript-min.js`, 208,604 B) + source batches (`sources_batch_0..13.js`,
   2,489,628 B) + `Class_coffeSource.js`/`Mixin_coffeSource.js` (28,621 B) + three small boot
   helpers (~8 KB) + `pre-compiled.js` stub (257 B).
 - **The booted page retains everything needed to regenerate its own code, in memory:**
