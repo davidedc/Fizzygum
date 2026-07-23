@@ -132,6 +132,9 @@ into things its author never anticipated (mashups). The tools pass their own tes
 inspectors (`InspectorWdgt`, `ClassInspectorWdgt`) are themselves assemblies of ordinary
 widgets, and can in turn be manipulated, inspected, and recomposed.
 
+The acid test is expanded into per-facet admission criteria for candidate widgets/apps
+in [`app-fit-criteria.md`](app-fit-criteria.md).
+
 ## Worked examples
 
 - **`SimpleTextWdgt` + `TextToolbarWdgt`** — the tiering in action: the Simple widget owns

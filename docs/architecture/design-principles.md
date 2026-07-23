@@ -115,6 +115,8 @@ change. The cheap, encouraged path to safety is social, not structural: work on 
 ## Where these principles bind
 
 - The per-widget obligations they imply: [`widget-citizenship.md`](widget-citizenship.md).
+- The admission question — which candidate widgets/apps fit this world at all:
+  [`app-fit-criteria.md`](app-fit-criteria.md).
 - The code-regularity law (separate fused axes; the name encodes the role):
   [`regularity-principles.md`](regularity-principles.md).
 - The mechanics that keep liveness honest — settle tiers, notification grid, integer

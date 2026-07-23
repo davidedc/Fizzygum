@@ -15,8 +15,9 @@ Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/
 - [ ] §7.8: SWCanvas bilinear drawImage (separate repo; v1 uses nearest-neighbor)
 
 ### `plans/dataflow-engine-implementation-plan.md`
-Phases 0-8 plus F1/F2/F4/F5/F6 all LANDED; only F3 ('operate ➜' cell menu) remains, independent, any time.
+Phases 0-8 plus F1/F2/F4/F5/F6 all LANDED; remaining = F3 ('operate ➜' cell menu) + the deferred `firesPerEvent` delivery lane.
 - [ ] F3: 'operate ➜' cell menu — value-class method introspection into a formula
+- [ ] `specs/dataflow-engine-spec.md` §4/§13: `firesPerEvent` per-event mini-pass DELIVERY — the per-wire flag, menu toggle, and edge-record plumbing are landed, but delivery still POOLS (deferral note in `DataflowEngine.markStale`); blocked on §13's downstream-scoping fine print (per-wire vs per-source). Prerequisite for non-coalescing event wires (bang counts, note-on-style events — see `architecture/app-fit-criteria.md` facet 9)
 
 ### `plans/livecodelang-cleanup-and-extensions-plan.md`
 AUTHORED 2026-07-07, NOT STARTED; owner-initiated execution only.
