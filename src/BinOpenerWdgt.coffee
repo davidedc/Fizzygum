@@ -43,7 +43,6 @@ class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
       world.add windowedBinWdgt
       windowedBinWdgt._applyBounds (new Point 140, 90), new Point 460, 400
       windowedBinWdgt._rememberFractionalSituationInHoldingPanel()
-      InfoDocs.createNextTo "bin", windowedBinWdgt
     else
       # if the bin is not an orphan, then it's
       # visible somewhere and it's in a window

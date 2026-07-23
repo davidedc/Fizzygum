@@ -1246,10 +1246,14 @@ class Widget extends TreeNode
       # calculate their size when they are resized
       # (remember that the resizing handle of ScrollPanelWdgts
       # actually end up in the Panel inside them.)
-      # We also exclude HIDDEN children: the scroll range exists to REACH
-      # content, and an invisible child can't be reached -- e.g. the bin's
-      # parked (reachable, hidden) residents must not stretch its scrollbars.
-      if !child.isLayoutInert?() and child.isVisible
+      # HIDDEN children are deliberately NOT excluded (owner ruling, 2026-07-23,
+      # reverting a short-lived bin-era filter): visibility is a PAINT/INPUT
+      # toggle, never a layout input -- an invisible widget keeps its seat, its
+      # extent and its scroll contribution, ghost-like. To take a widget out of
+      # a layout, take it out of the tree. (Making the fit visibility-dependent
+      # would also hand the auto-hiding scrollbars a feedback loop: hiding a
+      # bar changing the fit that decides whether the bar shows.)
+      if !child.isLayoutInert?()
         contribution = child.scrollOverflowBoundsInParentPlane?()
         if !contribution?
           # if a widget implements deferred layout, then
@@ -1265,8 +1269,10 @@ class Widget extends TreeNode
   # measure (min-extent-clamped, as __commitExtent applies on commit) instead of its just-mutated applied
   # extent, at the child's current position. A scroll panel consumes this to size its content frame WITHOUT
   # first resizing my children and reading the result back -- the mutate-then-read-back the re-fit seam exists
-  # for (assessment §2.4). Seeded IDENTICALLY to subWidgetsMergedFullBounds (child[0] even if inert) so a
-  # leading inert child contributes the same; byte-identical to it at the fixed point, where measured extent
+  # for (assessment §2.4). KEEPS the historical child[0] seed (contributes even if inert) that
+  # subWidgetsMergedFullBounds dropped in its 2026-07-22 rewrite -- re-aligning this one would shift real
+  # content-sizing measurements, so the divergence is deliberate; visibility-blind like it (and fullBounds).
+  # Byte-identical to the applied fit at the fixed point, where measured extent
   # == applied extent (Stage-C probe: 0/1429 converged mismatches). childMeasureWidth = the width to measure
   # each child at (the caller subtracts its own padding). SimpleVerticalStackPanelWdgt overrides this to also
   # derive child POSITIONS from measures (its children's positions are layout-derived, not stable state).

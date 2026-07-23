@@ -1,15 +1,25 @@
-class BinWdgt extends BoxWdgt
+# A window-content citizen in the ErrorsLogViewerWdgt/InspectorWdgt mould: a plain
+# Widget with no background of its own (the wrapping FrameWdgt paints it), a main
+# pane filling the body, and a 15-high bottom button row that reserves the
+# sizing-handle corner.
+class BinWdgt extends Widget
 
   # panes:
   scrollPanel: nil
   emptyBinButton: nil
 
-  constructor: ->
-    super()
+  externalPadding: 0
+  internalPadding: 5
 
-    @__commitExtent new Point 340, 270
-    @color = Color.create 60, 60, 60
-    @padding = 5
+  # the Empty-bin button's natural width -- kept until the window gets too
+  # narrow for it (see _reLayout)
+  emptyBinButtonWidth: 100
+
+  constructor: ->
+    # a naked (chrome-less) bin must establish its OWN usable extent (the
+    # InspectorWdgt idiom); the windowed path (BinOpenerWdgt) overrides this
+    # via the window's bounds.
+    super new Point 340, 270
     # I only ever appear as a window's content (BinOpenerWdgt always wraps me in a
     # FrameWdgt), and I am a VIEW, not a fixed-proportion artifact: fill the window
     # on both axes and track its resizes (like PaletteWdgt / the text scroll panels).
@@ -41,6 +51,12 @@ class BinWdgt extends BoxWdgt
   _buildAndConnectChildrenNoSettle: ->
 
     @scrollPanel = new ScrollPanelWdgt
+    # a white content pane, like the inspector's list/detail panes and the text
+    # panels (orphan-construction field writes; PanelWdgt.setColor keeps the
+    # pair in sync from then on). Drops stay ENABLED: dropping things into the
+    # open bin is how you throw them away.
+    @scrollPanel.color = Color.WHITE
+    @scrollPanel.contents.color = Color.WHITE
     @_addNoSettle @scrollPanel
 
     @emptyBinButton = new SimpleButtonWdgt true, @, "emptyBinRequested", "Empty bin"
@@ -109,24 +125,34 @@ class BinWdgt extends BoxWdgt
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
+    # here we are disabling all the broken
+    # rectangles. The reason is that all the
+    # subwidgets of this widget are within the
+    # bounds of the parent Widget. This means that
+    # if only the parent widget breaks its rectangle
+    # then everything is OK.
     world.disableTrackChanges()
 
-    x = @left() + @cornerRadius
+    # the main pane fills the body above the button row (the
+    # ErrorsLogViewerWdgt scheme: the row's height is the handleSize band)
+    mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+    mainPaneBottom = @top() + @externalPadding + mainPaneHeight
 
-    # scrollPanel
-    y = @top() + 2
-    w = @width() - @cornerRadius
-    w -= @cornerRadius
-    b = @bottom() - (2 * @cornerRadius) - WorldWdgt.preferencesAndSettings.handleSize
-    h = b - y
-    @scrollPanel._applyBounds (new Point x, y), new Point w, h
+    if @scrollPanel.parent == @
+      @scrollPanel._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainPaneHeight
 
-    # Empty bin button
-    x = @scrollPanel.left()
-    y = @scrollPanel.bottom() + @cornerRadius
-    h = WorldWdgt.preferencesAndSettings.handleSize
-    w = @scrollPanel.width()
-    @emptyBinButton._reLayout (new Rectangle  0,0,w,h).translateBy new Point x, y
+    # the Empty-bin button sits at the LEFT of the bottom row (owner-placed:
+    # destructive action away from the sizing-handle corner) at its NATURAL
+    # width -- it shrinks only when the window gets narrower than natural
+    # width + padding + the sizing handle (both always spared). Integer by
+    # construction: a constant clamped by integer geometry.
+    if @emptyBinButton.parent == @
+      rowWidth = @width() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+      buttonWidth = Math.max 0, Math.min @emptyBinButtonWidth, rowWidth
+      buttonBounds = new Rectangle new Point @left() + @externalPadding, mainPaneBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonWidth, 15
+      @emptyBinButton._reLayout buttonBounds
+
     world.maybeEnableTrackChanges()
 
     super

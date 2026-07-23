@@ -244,6 +244,17 @@ class FrameWdgt extends Widget
     @defaultContents = new FrameContentsPlaceholderText
     if !@contents?
       @contents = @defaultContents
+    else if @contents.layoutSpecDetails instanceof FrameContentLayoutSpec
+      # (U2 re-arm, constructor edition) ctor-supplied content may be a VETERAN
+      # of a previous windowed life (the bin: closed with its window destroyed,
+      # then re-wrapped fresh at the next open), carrying a spec still LATCHED
+      # and still BOUND (@stack) to the dead window -- widths would then be
+      # granted from the dead frame's frozen geometry (the reopened-bin bug,
+      # 2026-07-23). Un-latch exactly as the public add does for a cross-window
+      # remount (see add's isSameContentRemount note): this mount's first
+      # placement then re-captures and re-binds. A fresh spec is already
+      # unlatched, so this is a no-op for the universal fresh-content case.
+      @contents.layoutSpecDetails.desiredWidth = nil
 
     @padding = 5
     # TODO this looks better:
