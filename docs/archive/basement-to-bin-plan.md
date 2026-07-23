@@ -1,3 +1,9 @@
+> **ARCHIVED — ✅ EXECUTED IN FULL + CLOSED (2026-07-22, same day it was authored).** All five phases
+> landed and gated: `BasementWdgt` renamed to `BinWdgt` (+ `BinOpenerWdgt`/`BinIcon*`/`world.binWdgt`/
+> `isInBin*`/`R.binCount`, both repos patched together); the all-items view deleted outright (no
+> dev-mode escape hatch); `TrashcanIconWdgt` + appearance removed.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Basement → Bin conversion
 
 **STATUS: EXECUTED IN FULL + CLOSED 2026-07-22 (same day it was authored).** All five phases

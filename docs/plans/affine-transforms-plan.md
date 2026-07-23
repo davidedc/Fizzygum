@@ -1669,8 +1669,7 @@ generalized to relative re-expression [this brief].)*
 > status is mirrored into the memory topic `affine-transforms-plan-authored.md`. Across the whole arc the ONLY
 > recaptures were the sanctioned 4C inspector member-list (benign, image_1 byte-identical, re-captured each
 > time a Widget method was added) + the intended §7.5 Bug-D R3-macro image (resize no longer re-centres). What
-> REMAINS is exclusively the BANKED §7.10–7.13 follow-ons (Phase 5) + Bug B's 2 known-latents (basement
-> GC-filter look-through; explicit-island empty frame) — none are shipping blockers; each is its own future,
+> REMAINS is exclusively the BANKED §7.10–7.13 follow-ons (Phase 5) — none are shipping blockers; each is its own future,
 > owner-gated plan. Owner decides the push of the whole (unpushed) arc.
 
 - Run the full `fg gauntlet` (dpr1/dpr2/webkit + apps/paint/tiernaming/settle/capstone) and
@@ -1925,7 +1924,7 @@ against the actual `DegreesConverterApp` window in `index.html?sw=1` (scratch `i
 
 **STATUS (2026-07-10): BUG A ✅ FIXED + COMMITTED. BUG B ✅ FIXED (model a "move the figure", generic — see
 its section). BUG C ❌ was NOT A BUG (an audit-phase error, fixed in the gate).** Two audit follow-ons are
-recorded KNOWN-LATENT under Bug B (the basement "only show lost items" GC filter; explicit-island empty frame).
+recorded KNOWN-LATENT under Bug B (the basement "only show lost items" GC filter; explicit-island empty frame) -- both since RESOLVED (see the 2026-07-12 residuals-sweep banner at the top of this file).
 
 **STATUS UPDATE (2026-07-11): two NEW owner-reported bugs, D (collapse moves the tilted title bar) and
 E (save-as prompt buried under the tilted window) — both ROOT-CAUSED by probes and their fixes PROTOTYPED

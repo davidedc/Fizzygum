@@ -36,13 +36,13 @@ carry fractions.
 
 Rounding happens at the geometry-commit points, not scattered through callers:
 
-- **Position** — `Widget._moveToNoSettle` (`src/basic-widgets/Widget.coffee:1365`):
+- **Position** — `Widget._moveToNoSettle` (`src/basic-widgets/Widget.coffee`):
   ```coffee
   aPoint = aPoint.round()
   newX = Math.max aPoint.x, 0
   newY = Math.max aPoint.y, 0
   ```
-- **Size** — `Widget.__commitExtent` (`src/basic-widgets/Widget.coffee:1556`):
+- **Size** — `Widget.__commitExtent` (`src/basic-widgets/Widget.coffee`):
   ```coffee
   aPoint = aPoint.round()
   ```
@@ -50,7 +50,7 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   `_applyWidth` / `_applyHeight` / `setExtent` all funnel through it), so *every* size
   change is rounded.
 - **The device blit coordinates** derived from bounds are integer too:
-  `Widget.calculateKeyValues` (`:1815`) rounds the visible area and multiplies by
+  `Widget.calculateKeyValues` rounds the visible area and multiplies by
   `ceilPixelRatio`, so `al/at/sl/st/w/h` (the drawImage/fillRect args) are integer device
   pixels.
 - **The arrange-APPLY path rounds AT THE PRODUCER.** `_moveToNoSettle` / `__commitExtent` above are
@@ -70,7 +70,7 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   `debugIfFloats` hooks — a real integer assertion 2015→2018, silently stubbed to a no-op in 2018,
   and deleted in 2026 (`fbc2a3a4`) — restoring the enforcement that had lapsed for ~8 years.
 
-Empirically confirmed: with the guard hard-gated, a full 249-test suite run (native + SWCanvas,
+Empirically confirmed: with the guard hard-gated, a full suite run (native + SWCanvas,
 dpr 1 & 2, plus WebKit) reports **zero** `NON_INTEGER_GEOMETRY` — every widget's applied `@bounds`
 is integer. (The earlier evidence was narrower: instrumenting `AnalogClockWdgt`'s paint logged
 `@position()` always integer with an identity CTM — true, but it only exercised the desired funnel,
@@ -81,9 +81,9 @@ not the arrange-apply path, which is how the ~2018→2025 fractional-placement g
 The framework deliberately keeps the *fractional* intent even though it applies integers.
 The canonical case is a child inside a **stretchable panel**: its applied position is
 rounded, but its *fractional position relative to the holding panel* is remembered
-(`Widget._moveToNoSettle:1379-1392` → `@positionFractionalInHoldingPanel`), so that when the
+(`Widget._moveToNoSettle` → `@positionFractionalInHoldingPanel`), so that when the
 panel is later resized, the child is repositioned from the exact fraction rather than
-drifting off the accumulated rounding. The comment at `Widget.coffee:1372-1378` spells this
+drifting off the accumulated rounding. The comment on `Widget._moveToNoSettle` spells this
 out. Same idea for `@desiredPosition` / `@desiredExtent`: layout records what it wants; the
 mutator rounds what it commits.
 

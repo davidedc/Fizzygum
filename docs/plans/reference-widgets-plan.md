@@ -60,7 +60,7 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
 
 - **Builds on arc (b):** references point via `referencedWidget`; reachability/GC is the 3-edge collector —
   do **not** re-implement GC here.
-- **⚠ World-level reference/basement state is test-sensitive** — survives `ResetWorld`, prior
+- **⚠ World-level reference/bin/shelf state is test-sensitive** — survives `ResetWorld`, prior
   gate-false-positive case-law (`docs/archive/upedge-endgame-plan.md`); keep teardown honest.
 - **Reparent/close take the figure** — `_enclosingIslandFigure()` (as `Widget.close` already does).
 - **Close/minimise ride the notification grid** — reuse `Closed`/`Collapsed`/`Removed`/`Destroyed` hooks; a
@@ -108,7 +108,7 @@ arc-(b) edge model — a "duplicate-contents" is a copy that follows containment
 | R3 | RecentlyClosed vs Trash | **One store, two views** first; split later only if warranted. |
 
 ## 6. Risks & non-goals
-- **Test-state leaks** (world-level reference/basement state surviving `ResetWorld`) — top risk.
+- **Test-state leaks** (world-level reference/bin/shelf state surviving `ResetWorld`) — top risk.
 - **Recapture** for new bars/areas — expected, accepted.
 - **Non-goals:** the edge model + GC (arc (b)); the launcher/Factory mechanism (arc (c)).
 

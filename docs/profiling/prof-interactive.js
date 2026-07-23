@@ -11,12 +11,12 @@
  *   - COVERED: park a large window fully over the AnalogClock window, then hold ~180
  *     input-free frames while the clock keeps animating — the occlusion-culling sweet
  *     spot (small broken rects fully inside a fully-covering opaque window; see
- *     docs/occlusion-culling-plan.md §6). Judge this phase by MEAN + fire-rate, not
+ *     docs/plans/occlusion-culling-plan.md §6). Judge this phase by MEAN + fire-rate, not
  *     median (its frames are mostly cheap no-ops).
  * Runs once per --wallpaper so plain-vs-dots is an A/B control (confirms the W1/W2
  * pattern fix in-situ and isolates any wallpaper-independent per-frame cost).
  *
- * Occlusion-culling A/B (docs/occlusion-culling-plan.md §6): --cull=on|off|both flips
+ * Occlusion-culling A/B (docs/plans/occlusion-culling-plan.md §6): --cull=on|off|both flips
  * WorldWdgt.occlusionCullingEnabled after boot and re-runs the identical scripted
  * phases — the SAME-BUILD flag A/B is the authoritative before/after (the flag-off
  * path is the untouched super() path). Pin --wallpaper=plain for cull A/Bs (one axis
@@ -52,7 +52,7 @@ const COVERED_FRAMES = parseInt(opt('covered-frames', '180'), 10);
 const VW = 1280, VH = 900;
 const wallpapers = opt('wallpaper', '') ? [opt('wallpaper', '')] : ['plain', 'dots'];
 const PHASES = ['drag', 'draw', 'covered'];
-// Occlusion-culling axis (docs/occlusion-culling-plan.md §6): both → on & off; on/off → that leg;
+// Occlusion-culling axis (docs/plans/occlusion-culling-plan.md §6): both → on & off; on/off → that leg;
 // unset → a single run at the build's default (flag untouched).
 const cullArg = opt('cull', '');
 const cullConfigs = cullArg === 'both' ? ['on', 'off'] : (cullArg ? [cullArg] : [null]);
@@ -201,7 +201,7 @@ async function drawPhase(page){
   }
   await page.mouse.up(); await sleep(60);
 }
-// COVERED phase (docs/occlusion-culling-plan.md §6): the default desktop clock is a BARE 80x80
+// COVERED phase (docs/plans/occlusion-culling-plan.md §6): the default desktop clock is a BARE 80x80
 // AnalogClockWdgt in the top-right corner (WorldWdgt.createDesktop, added FIRST so every app window
 // is already in front of it in z-order). Reposition the largest window over it via the public move
 // API, then hold input-free frames: the clock keeps animating (face back-buffered post-C1, hands

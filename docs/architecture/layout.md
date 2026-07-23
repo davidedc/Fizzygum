@@ -115,9 +115,11 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
 | `_positionAndResizeChildren` | the actual measure-and-place-children body (per container: `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`, `FrameWdgt`) |
 
-Only three classes define `_reLayoutChildren` — `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`,
-`TrackingTransformFrameWdgt` — plus `FrameWdgt`, which inherits it from `SimpleVerticalStackPanelWdgt`. Anything
-without it is not a size-tracking container, and the re-fit machinery (§3) is a no-op on it.
+`_reLayoutChildren` is defined by every size-tracking container and nothing else: the stack and
+scroll panels, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its
+own) plus its title bar, and the size-tracking menu-row
+widgets (slider / string-field / colour-picker / menu-header). Anything without it is not a
+size-tracking container, and the re-fit machinery (§3) is a no-op on it.
 
 ---
 

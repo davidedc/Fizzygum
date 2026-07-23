@@ -6,7 +6,7 @@ vector track (§5b): **LIVE and rolling** — 9 icons landed (Typewriter, Folder
 ShortcutArrow, the hybrid Toolbars/super-toolbar, GenericPanel, PatchProgramming,
 SimpleSlide, Dashboards — the ENTIRE slide-card family, retiring IconAppearance's
 legacy bezier `_paintSlideOutline`/`_paintSlideCard` — and the owner-redesigned
-Basement bin) + the `SizeAwareIconAppearance` base (incl. the reusable `_pxPanel`
+Bin) + the `SizeAwareIconAppearance` base (incl. the reusable `_pxPanel`
 rounded panel and the family `_pxSlideCard`); further conversions proceed one icon at a time via the local skill
 `/convert-icon-size-aware` and append lessons to §5b without touching this plan's
 phases. Written to be executed COLD by an LLM/engineer with ZERO prior context — everything needed is embedded here or one named-doc hop
@@ -626,7 +626,7 @@ cross-quadrant safety generalizes lesson 19's threading: each painter returns it
 extent (q1Bot/q2Bot/q3Right) for the next one's clamps, in paint order. Sweep =
 `scan-dashboards.js`.
 
-**9th icon LANDED (2026-07-22) — the first REDESIGN**: `BasementIconAppearance` — the
+**9th icon LANDED (2026-07-22) — the first REDESIGN**: `BinIconAppearance` — the
 old house-with-stairs drawing replaced (owner request, from a reference sketch) by a
 simple BIN: handle, overhanging lid, tapered body, three ridges. Light line art:
 outlines on tc, ridges on td, tapered walls exactly tc at every row (outer and inner

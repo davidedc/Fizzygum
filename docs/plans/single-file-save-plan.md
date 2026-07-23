@@ -72,7 +72,7 @@ The built page is *already* 99% of a single-file app:
     `Serializer.serializeWorld` → versioned JSON envelope
     `{format:"fizzygum", formatVersion:1, kind:"world", objects:[…], world:{…}}`;
     the `world` section carries `children/desktopColor/alpha/wallpaperPatternName/appSlots/`
-    `basement/preferences/idCounters/sourceEdits/…` (`src/serialization/Serializer.coffee:118-153`).
+    `bin/shelf/preferences/idCounters/sourceEdits/…` (`src/serialization/Serializer.coffee:118-153`).
     `savedAt` is stamped **only if `opts.savedAt` is passed** — keep it OFF for deterministic
     generation-comparison tests.
   - In-system source edits ARE captured (`world.sourceEdits`, `SourceEditsRegistry`) and replayed
@@ -81,7 +81,7 @@ The built page is *already* 99% of a single-file app:
   - `WorldWdgt::loadWorldSnapshot(envelopeOrString, opts)` (`WorldWdgt.coffee:2256`) is the
     restore orchestrator: product-safe teardown (`_teardownForSnapshotLoadNoSettle`, :2335 — built
     from primitives that SHIP in `--homepage`, unlike `resetWorld`), id-counter restore, class-edit
-    replay, `Deserializer.deserialize`, app-slot/basement re-bind, one-settle child attach,
+    replay, `Deserializer.deserialize`, app-slot/bin/shelf re-bind, one-settle child attach,
     colour/wallpaper, repaint + **`result.whenReady`** second repaint once async `$Image`/`$Canvas`
     data-URLs have decoded (:2326). **It `window.confirm`s unless `opts.skipConfirm`** (:2261-2263)
     — the boot path must pass `skipConfirm: true`.
@@ -229,8 +229,8 @@ Two small, surgical branches on `window.FIZZYGUM_SINGLE_FILE`:
    exists → parse it and `world.loadWorldSnapshot envelope, {skipConfirm: true}`; else
    `world.createDesktop()` as today.
    - `loadWorldSnapshot` on the *empty* just-constructed world: its teardown
-     (`fullDestroyChildren` + `basementWdgt?.empty()` + slot nils) is safe on an empty world —
-     `basementWdgt` exists by then (created at `globalFunctions.coffee:422`, before this seam).
+     (`fullDestroyChildren` + `binWdgt?.empty()` + `shelfWdgt?.empty()` + slot nils) is safe on an empty world —
+     `binWdgt` / `shelfWdgt` exist by then (created at `globalFunctions.coffee:361-362`, before this seam).
      **Verify this explicitly in Phase 2** (it is expected-safe, not yet demonstrated).
    - Spinner UX: `removeSpinnerAndFakeDesktop()` currently runs before this seam (:420); in
      single-file mode prefer removing the spinner after `result.whenReady` resolves (images/canvas

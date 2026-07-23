@@ -67,7 +67,7 @@ per edge (children serialized structurally; dataflow index derived; reference ed
   Automator the clock is **event time**, never wall-clock; a cross-frame collector must be a pure function
   of the three edge sets and make progress in bounded chunks (`Fizzygum-tests/DETERMINISM.md`).
 - **⚠ World-level edge state is test-sensitive.** `world.widgetsReferencingOtherWidgets` is a world-level
-  `Set`; the Basement **survives `ResetWorld`** and has prior gate-false-positive case-law
+  `Set`; the bin and shelf **survive `ResetWorld`** and have prior gate-false-positive case-law
   (`docs/archive/upedge-endgame-plan.md`); an un-cleared world-level Set is the classic
   "passes-alone-but-mis-renders-in-suite" leak (memory: *resetWorld state leak between tests*). Keep
   teardown/`resetWorld` honest for any new edge index.

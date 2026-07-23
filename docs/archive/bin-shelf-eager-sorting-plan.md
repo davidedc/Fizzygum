@@ -1,3 +1,9 @@
+> **ARCHIVED — ✅ ALL FIVE PHASES IMPLEMENTED (2026-07-23, as-built record).** The single `BasementWdgt`
+> store is split into `world.binWdgt` (lost widgets) + `world.shelfWdgt` (reachable widgets), eagerly
+> classified by the new `StorageSorter` collaborator (`world.storageSorter`); see the arc's commit for
+> the diff.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Bin/Shelf split with eager sorting
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**

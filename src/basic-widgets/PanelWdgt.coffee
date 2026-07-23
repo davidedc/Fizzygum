@@ -130,10 +130,12 @@ class PanelWdgt extends Widget
     @_reFitContainer @parent
 
   _reactToChildAdded: (child) ->
-    # the BinWdgt has a filter that can
-    # show/hide the contents of this pane
-    # based on whether they are reachable or
-    # not. So let's notify it.
+    # notify the scroll panel's holder -- e.g. the bin listens, because an add
+    # here can flip a widget's storage membership (reachable vs lost) whether
+    # windowed or not. Mark-only; the eager StorageSorter drains once per world
+    # cycle, re-filing anything reachable to the shelf and anything lost to the
+    # bin. Symmetric to the removal relay in _reactToChildRemoved above.
+    # (see docs/archive/bin-shelf-eager-sorting-plan.md)
     if @parent?
       if @parent.parent?
         if @parent.parent._reactToChildAddedInScrollPanel?

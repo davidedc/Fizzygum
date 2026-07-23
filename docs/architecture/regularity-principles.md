@@ -32,12 +32,11 @@ two-step, and new code is expected to follow it from the start:
   identity — a window flips `BoxyAppearance`/`RectangularAppearance` on (un)nesting without
   changing class.
 
-## The frame-model addition (in flight)
+## The frame model — content vs chrome
 
-The same law applied to content vs chrome — being built by
-[`../plans/onion-widget-composition-plan.md`](../plans/onion-widget-composition-plan.md); the
-vocabulary below is the convention for all new code, and graduates to built truth as that plan
-lands:
+The same law applies to content vs chrome (the frame model, see
+[`../plans/onion-widget-composition-plan.md`](../plans/onion-widget-composition-plan.md)). The
+vocabulary below is the convention for all new code:
 
 - **`Simple*Wdgt` — naked capability.** Data plus a self-mutation API, no chrome; a payload.
 - **Plain `*Wdgt` — manipulable citizen.** A first-class thing you can directly edit, move,

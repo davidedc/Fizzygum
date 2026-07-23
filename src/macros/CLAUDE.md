@@ -218,7 +218,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   the detail fitting) for a deterministic resize shot. Find the inspector with `@findTopWidgetByClassNameOrClass
   InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
   **"dev → console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "run all" button → `doAll`, runs the text with
-  `@`=the console's target); its detail pane is a `SimplePlainTextWdgt` (a `TextWdgt`) — a synthetic right-click
+  `@`=the console's target); its detail pane is a `SimpleTextWdgt` (a `TextWdgt`) — a synthetic right-click
   can't open its "do all"/context menu, it defaults to NON-wrapping (call `detailText.softWrapOn()` to wrap), and
   it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
   `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);

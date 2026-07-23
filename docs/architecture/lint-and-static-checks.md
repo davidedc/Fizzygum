@@ -105,8 +105,8 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   each source the faithful way. Catches PARSE errors only; for load-order/runtime faults boot the build
   (`./build_and_smoke.sh`). **DO NOT "simplify" it to a whole-file compile.**
 - **invalidation-receivers (`check-invalidation-receivers.js`).** Enforces widget-citizenship contract point 2 after the
-  2026-07-22 audit fixed the 17 feature-code deviations it found (37 cross-receiver sites total: 15 category-C fixed, 2
-  redundant own-sub-part deleted, 9 singleton-allowed, 11 sanctioned). The redundancy argument the fixes rest on: broken
+  2026-07-22 audit fixed the 17 feature-code deviations it found (37 cross-receiver sites total: 15 category-C fixed, 4
+  redundant own-sub-part deleted, 9 singleton-allowed, 9 sanctioned). The redundancy argument the fixes rest on: broken
   rects are fleshed out at the END-of-cycle flush — source from `*clippedBoundsWhenLastPainted` (recorded at paint time),
   destination from current bounds read at flush — so ONE `_fullChanged()` anywhere in the cycle (e.g. the one inside
   `_addNoSettle`) covers every same-cycle geometry mutation, and a trailing `w._fullChanged()` after `add w` +
@@ -438,8 +438,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   `@add` is unambiguous (self == Widget.add) and IS rule [G]'s `SELF_ADD_CALL`. The runtime throw backstops the member
   form and construction-time `add()` on an orphan.
 - **`collapse`/`unCollapse` are now COVERED by [G]** (they were once in `WRAPPER_EXCLUDED`). They appeared in layout
-  passes (`FrameWdgt._positionAndResizeChildren`'s editButton/internalExternalSwitchButton;
-  `HorizontalMenuPanelWdgt._reLayoutSelf`); the end-of-cycle-flush drawdown convert routed those call-sites to the
+  passes (`FrameWdgt._positionAndResizeChildren`'s editButton/internalExternalSwitchButton); the end-of-cycle-flush drawdown convert routed those call-sites to the
   idempotent `_collapseNoSettle`/`_unCollapseNoSettle` cores, so they were removed from `WRAPPER_EXCLUDED` and [G] now
   guards them like any other wrapper. `WRAPPER_EXCLUDED` now holds only `add` (the `Point#add`-ambiguous member form, above).
 - **The TRANSITIVE closure of [G] was prototyped and REJECTED as intractable — DO NOT re-attempt.** A name-based

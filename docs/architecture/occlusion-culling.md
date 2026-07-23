@@ -52,7 +52,7 @@ window flips Rectangular↔Boxy):
 1. **Plain appearance-delegation paint route** —
    `@paintIntoAreaOrBlitFromBackBuffer is Widget::paintIntoAreaOrBlitFromBackBuffer`. Nine widget
    classes override paint to draw arbitrary pixels (`HandleWdgt`, `LayoutChromeWdgt`,
-   `LabelButtonWdgt`, `PenWdgt`, `CellWdgt`, `SpreadsheetWdgt`, `AnalogClockWdgt`,
+   `LabelButtonWdgt`, `PenWdgt`, `CellWdgt`, `SheetHeaderCellWdgt`, `AnalogClockWdgt`,
    `Example3DPlotWdgt`, `GraphsPlotsChartsWdgt`), and `BackBufferMixin` blits an offscreen buffer
    of unknown per-pixel opacity. This one prototype-identity check excludes them all.
 2. **Not ephemeral** (`not @isEphemeral()`) — highlights / drag affordances are translucent
@@ -99,7 +99,7 @@ full-depth pass. This holds even for the coverer's own drop shadow: all painting
 `dirtyPart`, and the coverer's fill (which contains `dirtyPart + 1px`) overpaints its own
 pre-content shadow. The only way to be wrong is to *over-claim* a covered rect, and every gate in
 §2a guards against that by yielding `nil` / a smaller rect on any doubt. The byte-exact SystemTest
-suite (196 tests × dpr1/dpr2/WebKit) is the proof; it also empirically covers the paint-record
+suite (265 tests × dpr1/dpr2/WebKit) is the proof; it also empirically covers the paint-record
 skip.
 
 ## 4. The control flag

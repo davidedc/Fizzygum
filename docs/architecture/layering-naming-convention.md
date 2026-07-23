@@ -59,13 +59,16 @@ any corner that REACTS is `_`, because `changed`/`_reLayout*` are orchestration 
 |---|---|---|
 | **leaf** (`__`, no react) | `__commitExtent` · `__commitWidth` · `__commitHeight` | `__commitMoveBy` · `__commitMoveTo` |
 | **silent commit** (`_`, no react) | `_commitBounds`¹ | *(n/a — a move always repaints)* |
-| **apply — polymorphic** (`_`, reacts, DISPATCH point) | `_applyExtent` · `_applyGrantedBounds` · `_applyWidth` · `_applyHeight` | `_applyMoveBy` · `_applyMoveTo` |
+| **apply — polymorphic** (`_`, reacts, DISPATCH point) | `_applyExtent` · `_applyBounds` · `_applyGrantedBounds` · `_applyWidth` · `_applyHeight` | `_applyMoveBy` · `_applyMoveTo` |
 | **apply — bypass** (`_`, reacts, override-BYPASS base) | `_applyExtentBase` | `_applyMoveByBase` · `_applyMoveToBase` |
 | **public** | `setExtent` · `setBounds` · `setWidth` · `setHeight` | `moveTo` · `moveWithin` |
 
 Only extent / moveBy / moveTo carry a `*Base` bypass twin — those are the corners with live subclass overrides the
 top-down arrange must skip (extent: the stretchables / stack / scroll / text / slider / list; move: the clipping mixin
-+ float-drag). Bounds / width / height are polymorphic-only (no override to bypass). (`moveWithin` is a public
++ float-drag). Bounds / width / height are polymorphic-only (no override to bypass). The bounds corner has two
+apply forms: `_applyBounds` — `setBounds`'s twin, a subtree-FOLLOWING place+size one-shot for the ubiquitous
+`_applyMoveTo p; _applyExtent e` idiom — and `_applyGrantedBounds`, the arrange engine's frame-commit whose
+translate deliberately does NOT carry children (the widget re-places them from the new frame right after). (`moveWithin` is a public
 CONVENIENCE that delegates to the one-settle `moveTo`, so it is deliberately NOT in the gate's `PUBLIC_SETTERS` —
 listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
 
@@ -307,7 +310,7 @@ kept distinct, each named for what it is:
   plan) this is the SINGLE shared home of pop-up behaviour: `MenuWdgt` and `PromptWdgt` (with its
   per-value-type subclasses) each **compose** a `MenuRowsPanelWdgt` for their rows and **extend**
   `PopUpWdgt` for their menu-ness, instead of re-implementing pop-up / pin / close.
-- **`FrameWdgt`** (the `FrameWdgt`-to-be) — `Panel` + **chrome / identity**; its internal-vs-external skin
+- **`FrameWdgt`** — `Panel` + **chrome / identity**; its internal-vs-external skin
   is DERIVED from parentage (the drag-embed arc), so "becomes a window when embedded" is already automatic —
   there is no mode flag and no manual switch.
 - **`StretchableWidgetContainerWdgt`** — the stretchable-panel role.
