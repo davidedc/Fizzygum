@@ -25,6 +25,10 @@ class ScriptWdgt extends Widget
   saveButton: nil
 
   savedScript: nil
+  # the saved script COMPILED -- a derived Function (@savedScript is the truth),
+  # never serialized: an own function property has no editable source and would
+  # crash the serializer; doAll recompiles it on demand after a restore.
+  @serializationTransients: ["functionFromCompiledCode"]
   functionFromCompiledCode: nil
 
   # the external padding is the space between the edges
@@ -119,6 +123,9 @@ class ScriptWdgt extends Widget
     @closeFromContainerFrame @parent
 
   doAll: ->
+    # transient (see above): recompile from the saved source after a restore
+    if !@functionFromCompiledCode? and @savedScript
+      @functionFromCompiledCode = new Function compileFGCode @savedScript, true
     @functionFromCompiledCode?.call world
 
   tryIt: ->

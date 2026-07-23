@@ -3,6 +3,13 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   # shared dataflow-node behaviour (dataflow protocol, connect-to-target menu, setter menus, _reLayout
   # scaffold, padding, and the input1/input2/output/textWidget preamble) lives on PatchNodeWdgt.
 
+  # the user formula COMPILED -- a derived Function (the formula TEXT is the truth,
+  # and recalculateOutput re-derives this from it on every recompute), so it is
+  # never serialized: an own function property has no editable source and would
+  # crash the serializer; the restored node recompiles at its first recalculation.
+  @serializationTransients: ["functionFromCompiledCode"]
+  functionFromCompiledCode: nil
+
   tempPromptEntryField: nil
   defaultFormulaBoxContents: nil
 

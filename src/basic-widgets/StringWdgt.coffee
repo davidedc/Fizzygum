@@ -41,6 +41,13 @@ class StringWdgt extends Widget
   hasDarkOutline: false
   isHeaderLine: nil
   isEditable: false
+  # may the user drag-select my text? (see enableSelecting). A serializable MODE
+  # consumed by the prototype mouseDownLeft/mouseMove handlers -- NOT a pair of
+  # instance-assigned handler functions, which selection long was: an own function
+  # property has no editable source, so any selecting-enabled text in a snapshot's
+  # graph (every document, text panel, patch-programming pane...) crashed
+  # serializeWorldSnapshot.
+  isSelectable: false
   # if "isNumeric", it rejects all inputs
   # other than numbers and "-" and "."
   isNumeric: nil
@@ -1556,29 +1563,38 @@ class StringWdgt extends Widget
       @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9
   
   enableSelecting: ->
-    @mouseDownLeft = (pos) ->
-      @clearSelection()
-      if @isEditable and !@grabsToParentWhenDragged()
-        @edit()
-        world.caret.gotoPos pos
-        @startMark = @slotAt pos
-        @endMark = @startMark
-    
-    @mouseMove = (pos) ->
-      if @isEditable and @currentlySelecting()
-        newMark = @slotAt pos
-        if newMark isnt @endMark
-          @endMark = newMark
-          @_changed()
-      else
-        @_disableSelecting()
-  
+    @isSelectable = true
+
+  mouseDownLeft: (pos) ->
+    if !@isSelectable
+      super pos
+      return
+    @clearSelection()
+    if @isEditable and !@grabsToParentWhenDragged()
+      @edit()
+      world.caret.gotoPos pos
+      @startMark = @slotAt pos
+      @endMark = @startMark
+
+  # When not selectable this must stay equivalent to HAVING NO mouseMove handler:
+  # both dispatch sites (ActivePointerWdgt) are bare optional calls with no
+  # else-branch, so the no-op return is byte-identical to the event going
+  # undelivered.
+  mouseMove: (pos) ->
+    if !@isSelectable
+      return
+    if @isEditable and @currentlySelecting()
+      newMark = @slotAt pos
+      if newMark isnt @endMark
+        @endMark = newMark
+        @_changed()
+    else
+      @_disableSelecting()
+
   _disableSelecting: ->
     # public-call-sanctioned: clearSelection is the public text-selection API (see _setTextNoSettle).
-    # re-establish the original definition of the method
     @clearSelection()
-    @mouseDownLeft = StringWdgt::mouseDownLeft
-    delete @mouseMove
+    @isSelectable = false
 
 
   

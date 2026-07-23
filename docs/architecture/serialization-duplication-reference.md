@@ -232,10 +232,20 @@ class Widget extends TreeNode
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcBrokenRect`, `dstBrokenRect` | per-frame broken-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `PopUpWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
+| `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
+| `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
 
-(Further seeds — `ScrollPanelWdgt.@step`, patch nodes' `functionFromCompiledCode`,
-`RasterImageWdgt` onload bookkeeping, `WorldWdgt`'s ~25 transient Sets/queues/caches — are
-added as Phases 2/5 consume them.)
+(Further seeds — `ScrollPanelWdgt.@step`, `RasterImageWdgt` onload bookkeeping,
+`WorldWdgt`'s ~25 transient Sets/queues/caches — are added as Phases 2/5 consume them.)
+
+**Instance-assigned handler functions are BANNED as a state idiom** (2026-07-23): a mode a
+widget can be in must be a serializable FIELD consumed by prototype methods, never a pair
+of own function properties installed by an `enable*` call. The one historical case —
+`StringWdgt.enableSelecting`'s own `mouseDownLeft`/`mouseMove` closures, which crashed
+every snapshot containing a document, text panel, or patch-programming pane — is now the
+serializable `isSelectable` flag. (`injectProperty` remains the sanctioned path for
+USER-authored instance methods: it stores the `<name>_source` sibling that serializes as
+`{"$src": …}`.)
 
 ---
 
