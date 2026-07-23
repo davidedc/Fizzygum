@@ -30,6 +30,10 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
 
     super @title, @icon
     world.widgetsReferencingOtherWidgets.add @
+    # NB at this instant I am still an orphan (my attach follows in the same
+    # gesture) -- which is exactly why the mark below is mark-only and the sort
+    # drains at end-of-cycle, never per-event.
+    world.noteStorageMembershipMayHaveChanged()
 
   # Capability query (replaces `w instanceof IconicDesktopSystemShortcutWdgt and w.target == X` in
   # Widget.createReference): "am I a shortcut pointing at `widget`?" -- folds the target check in.
@@ -45,12 +49,21 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   isDesktopShortcut: ->
     true
 
-  destroy: ->
+  # Bookkeeping lives in the CORE, not the public destroy() wrapper: bulk paths
+  # (fullDestroy / fullDestroyChildren / teardown) recurse core-to-core and
+  # never touch the public wrapper -- an override there leaked every
+  # bulk-destroyed shortcut into the tracker (latent for years; the Tier A
+  # storage audit made it loud, 2026-07-23).
+  _destroyNoSettle: ->
     super
     world.widgetsReferencingOtherWidgets.delete @
+    # my death may orphan my target (its document falls to the bin) -- mark for
+    # the end-of-cycle sort; O(1), so bulk teardown storms stay cheap.
+    world.noteStorageMembershipMayHaveChanged()
 
   alignCopiedWidgetToReferenceTracker: (cloneOfMe) ->
     world.widgetsReferencingOtherWidgets.add cloneOfMe
+    world.noteStorageMembershipMayHaveChanged()
 
   # The shared "bring the referenced target up onto the desktop" ritual, used verbatim by
   # the Document/Folder click handlers and the Script "edit script" action: guard against a
@@ -66,25 +79,18 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
       @inform "The referenced item is\nalready open and containing\nwhat you just clicked on!"
       return
 
-    # the bin view shows LOST items only, so a parked (reachable)
-    # target is hidden -- un-hide on the way out
-    @target.show()
-
     whatToBringUp = @target.findRootForGrab()
     # things like draggable graphs have no root for grab,
-    # however since they are in the bin "directly" on their own
-    # it's OK to bring those up (as opposed to things
-    # that are part of other widgets that are in the bin,
+    # however since they rest in storage (the shelf, or the bin)
+    # "directly" on their own it's OK to bring those up (as opposed
+    # to things that are part of other widgets resting in storage,
     # in that case you'd tear it off an existing widget and it
     # would probably be a bad thing)
-    if !whatToBringUp? and @target.isDirectlyInBin()
+    if !whatToBringUp? and (@target.isDirectlyInBin() or @target.isDirectlyInShelf())
       whatToBringUp = @target
     if !whatToBringUp?
       @inform "The referenced item does exist\nhowever it's part of something\nthat can't be grabbed!"
     else
-      # let's make SURE what we are bringing up is
-      # visible
-      whatToBringUp.show()
       whatToBringUp.spawnNextTo @, world
       whatToBringUp._rememberFractionalSituationInHoldingPanel()
       whatToBringUp.setTitle? @label.text

@@ -1,7 +1,7 @@
 # WellKnownObjects — the two-way symbolic registry for the handful of collaborators
 # that exist (as a singleton) in EVERY Fizzygum world: the world itself, the hand, the
-# wallpaper, the widget factory, the bin, the preferences bag, and each windowed
-# app singleton. See docs/architecture/serialization-duplication-reference.md.
+# wallpaper, the widget factory, the bin, the shelf, the preferences bag, and each
+# windowed app singleton. See docs/architecture/serialization-duplication-reference.md.
 #
 # WHY: a serialized widget may legitimately point at one of these (a menu item targets
 # world.wallpaper; a button's target is `world`). Such a pointer leaves the serialized
@@ -33,6 +33,7 @@ class WellKnownObjects
       return "widgetFactory" if obj is world.widgetFactory
       return "dataflow"      if obj is world.dataflow
       return "bin"      if obj is world.binWdgt
+      return "shelf"    if obj is world.shelfWdgt
     return "preferences"     if obj is WorldWdgt.preferencesAndSettings
     # general fallback: a class-declared marker (data string or computed method),
     # e.g. app singletons expose `wellKnownKey: -> "app:" + @constructor.name`.
@@ -52,6 +53,7 @@ class WellKnownObjects
       when "widgetFactory" then world?.widgetFactory
       when "dataflow"      then world?.dataflow
       when "bin"      then world?.binWdgt
+      when "shelf"    then world?.shelfWdgt
       when "preferences"   then WorldWdgt.preferencesAndSettings
       else
         if key.indexOf("app:") is 0

@@ -327,6 +327,7 @@ class WorldWdgt extends PanelWdgt
     @wdgtsWithOngoingScrollMomentum.size > 0
 
   binWdgt: nil
+  shelfWdgt: nil
 
   # since the shadow is just a "rendering" effect
   # there is no widget for it, we need to just clean up
@@ -501,6 +502,12 @@ class WorldWdgt extends PanelWdgt
     # UNGUARDED, unlike the dev-only @widgetFactory. It drains once per cycle in doOneCycle,
     # between value-settling (its own) and geometry-settling (recalculateLayouts).
     @dataflow = new DataflowEngine
+
+    # world.storageSorter — the eager bin/shelf sorter (StorageSorter): keeps the
+    # standing storage invariant (shelf = reachable, bin = lost) by draining a
+    # marked pending sort once per cycle in doOneCycle, right after dataflow.
+    # A shipped product collaborator, constructed unguarded like @dataflow.
+    @storageSorter = new StorageSorter
 
     # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
     # SWCanvas backend all rendering goes to a separate software render canvas
@@ -1858,6 +1865,14 @@ class WorldWdgt extends PanelWdgt
     # class). The coupling is ONE-WAY: dataflow may dirty layout; layout must never mark dataflow
     # stale. Dark-cheap — early-returns on an empty stale pool.
     @dataflow.recalculateDataflow()
+    # Drain the pending storage sort (bin/shelf eager sorting, StorageSorter):
+    # reachability events mark, this station classifies ONCE and moves misplaced
+    # residents between the bin and the shelf. AFTER dataflow (unrelated pools),
+    # BEFORE recalculateLayouts: a move may dirty real layout when a bin window
+    # is open, and that must feed THIS frame's geometry settle (the
+    # recalculateDataflow station precedent above). Dark-cheap when nothing is
+    # pending.
+    @storageSorter.drainPendingSort()
     @recalculateLayouts()
     # Hover re-sync AFTER the flush: re-derive the widgets-under-(stationary)-pointer set against the
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
@@ -2466,6 +2481,13 @@ class WorldWdgt extends PanelWdgt
   resetWorld: ->
     @_softResetWorld()
     @_settleLayoutsAfter => @_resetWorldNoSettle()
+    # Tier A storage audit at the test-teardown seam (no session id ->
+    # structural checks only): the world is consistent again here -- containers
+    # emptied, the tracker self-emptied via the shortcut destroy hooks -- so a
+    # violation now is residue the just-finished test left behind (e.g. a
+    # tracker unregister leak). Private chain: the audit core, sanctioned
+    # cross-object like the other NoSettle-core calls.
+    @storageSorter._auditStorageNoSettle()
 
   _resetWorldNoSettle: ->
     @_changed() # redraw the whole screen
@@ -2490,10 +2512,11 @@ class WorldWdgt extends PanelWdgt
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
     # regardless; the selected widget's own repaint clears its overlay.
     @_editorSelectedWidget = nil
-    # the "binWdgt" is not attached to the
-    # world tree so it's not in the children,
-    # so we need to clean up separately
+    # the storage containers (bin, shelf) are not attached
+    # to the world tree so they're not in the children,
+    # so we need to clean them up separately
     @binWdgt?.empty()
+    @shelfWdgt?.empty()
     # some tests might change the background
     # color of the world so let's reset it.
     # public-call-sanctioned: setColor is the polymorphic public color API (heavily driven by
@@ -2644,11 +2667,14 @@ class WorldWdgt extends PanelWdgt
     if section.untitledNamingCounters? and @untitledNamingService?
       @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
       @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
-    # 6. swap in the restored (self-contained, off-tree) bin so every $r pointer at it
-    #    (the bin opener's target, ...) stays consistent, and re-bind the app-slot /
-    #    templates windows (orphaned-but-revivable — NOT re-attached to the desktop here).
+    # 6. swap in the restored (self-contained, off-tree) storage containers so every $r
+    #    pointer at them (the bin opener's target, ...) stays consistent, and re-bind the
+    #    app-slot / templates windows (orphaned-but-revivable — NOT re-attached to the
+    #    desktop here).
     restoredBin = resolve section.bin
     @binWdgt = restoredBin if restoredBin?
+    restoredShelf = resolve section.shelf
+    @shelfWdgt = restoredShelf if restoredShelf?
     @[slot] = resolve(refVal) for own slot, refVal of (section.appSlots or {})
     @simpleEditorTemplates = resolve(section.simpleEditorTemplates) if section.simpleEditorTemplates?
     # 7. attach the desktop children in ONE settle batch, via the base _addNoSettle so the
@@ -2672,6 +2698,10 @@ class WorldWdgt extends PanelWdgt
     @sourceEditsRegistry = restoredRegistry
     result.whenReady?.then? => @_fullChanged()
     @_fullChanged()
+    # restore completion: storage membership was rebuilt wholesale -- mark for
+    # the next cycle's sort (a snapshot saved with the sort still pending is
+    # legitimate: each resident serialized wherever it rested, and re-sorts here).
+    @noteStorageMembershipMayHaveChanged()
     return
 
   # NoSettle teardown core for a snapshot load (mirrors _resetWorldNoSettle but product-safe:
@@ -2682,6 +2712,7 @@ class WorldWdgt extends PanelWdgt
   _teardownForSnapshotLoadNoSettle: ->
     @fullDestroyChildren()
     @binWdgt?.empty()
+    @shelfWdgt?.empty()
     @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
     @simpleEditorTemplates = nil
 
@@ -2919,6 +2950,15 @@ class WorldWdgt extends PanelWdgt
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = nil
     @worldCanvas.focus()
+
+  # Chokepoint mark for the eager storage sort (StorageSorter): called after
+  # any event that may change which storage container a widget belongs in --
+  # the reference tracker's mutations, close filing, arrivals into/departures
+  # from an open bin window, app-slot writes, snapshot restore. Mark-only and
+  # O(1), so it is safe inside bulk destroy storms; the sort itself drains once
+  # per cycle in doOneCycle.
+  noteStorageMembershipMayHaveChanged: ->
+    @storageSorter.noteMembershipMayHaveChanged()
 
   anyReferenceToWdgt: (whichWdgt) ->
     # go through all the references and check whether they reference

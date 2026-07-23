@@ -5,11 +5,12 @@
 #    (including, but not limited to, other desktop system links that refer
 #    to widgets and folders).
 # 3) has extra logic such that any widget dropped in it "becomes"
-#    a reference to such widget, and the widget is moved to the bin.
+#    a reference to such widget, and the widget is moved to storage
+#    (the SHELF: referenced, so the eager storage sort keeps it there).
 #    The reason for this is that the actual "rest" place where
-#    general widgets should be is in the bin.
+#    general widgets should be is a storage container, not a panel.
 #    The simulated "file system" (i.e. shortcuts and folders) is just a
-#    network of pointers to stuff that "rests" in the bin and is
+#    network of pointers to stuff that "rests" on the shelf and is
 #    pulled in/out of it as the user works with them.
 #
 # Note that the panel of the Bin IS NOT a FolderPanelWdgt

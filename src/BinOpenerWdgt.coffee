@@ -50,10 +50,6 @@ class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
       @target.parent.spawnNextTo @
       @target.parent._rememberFractionalSituationInHoldingPanel()
 
-    # references can die while the bin is closed (and doGC classifies chains through the
-    # bin correctly only while it is ON-screen), so the view is refreshed at every open.
-    @target.refreshLostOnlyView()
-
 
   # Runs inside the drop's single settle, so add through the non-settling core.
   _reactToChildDropped: (droppedWidget) ->

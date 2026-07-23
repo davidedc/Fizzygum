@@ -359,6 +359,7 @@ createWorldAndStartStepping = ->
     world.removeSpinnerAndFakeDesktop()
 
     world.binWdgt = new BinWdgt
+    world.shelfWdgt = new ShelfWdgt
 
     #ProfilingDataCollector.enableProfiling()
     #ProfilingDataCollector.enableBrokenRectsProfiling()

@@ -56,9 +56,6 @@ class IconicDesktopSystemWindowedApp
         # FIGURE, not the bare window (moving an island-resident window by SCREEN coords would be a plane
         # mismatch, 4A-2). Off any island the figure is the window itself ⇒ byte-identical to the pre-Bug-B path.
         figure = existingWindow._enclosingIslandFigure()
-        # the bin view shows LOST items only, so a parked (reachable)
-        # resident like me is hidden -- un-hide on the way out
-        figure.show()
         world.add figure
         figure.bringToForeground()
         figure._applyMoveTo world.hand.position().add new Point 100, -50
@@ -66,5 +63,8 @@ class IconicDesktopSystemWindowedApp
         figure._rememberFractionalSituationInHoldingPanel()
         return
       world[@slot] = @buildWindow()
+      # an app-slot write is a reachability chokepoint (the slot is what the
+      # classifier's furniture marking reads) -- mark for the storage sort
+      world.noteStorageMembershipMayHaveChanged()
     else
       @windowOpened @buildWindow()

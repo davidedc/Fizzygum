@@ -167,8 +167,8 @@ classification. Transient fields (§5) never reach classification at all.
 `src/serialization/WellKnownObjects.coffee` is a two-way symbolic registry for the
 singletons present in every world: `world`, `hand`, `wallpaper`, `widgetFactory`,
 `dataflow` (the `DataflowEngine` — a shipped product collaborator; its edge index is
-derived/disposable and never serialized), `bin`, `preferences`, and `app:<ClassName>`
-per windowed-app singleton.
+derived/disposable and never serialized), `bin`, `shelf`, `preferences`, and
+`app:<ClassName>` per windowed-app singleton.
 
 - `WellKnownObjects.keyFor(obj)` → symbolic key or `nil`.
 - `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `nil`
@@ -328,9 +328,13 @@ and only the SNAPSHOT ROOTS are walked into the object table. This is why the wo
 construction; EPHEMERAL overlays and open UNPINNED pop-ups/menus are world children, so the
 children filter drops them explicitly — the very menu whose item triggers the save is still
 attached, and already marked for closure, while the save runs; pinned pop-ups are desktop
-furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt`
-subtree, each non-nil app-slot window (`Serializer.WORLD_APP_SLOTS` — may be orphaned-but-
-revivable), and `world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
+furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` and
+`world.shelfWdgt` subtrees (the two STORAGE containers — the eager storage sort keeps the
+shelf holding the reachable residents and the bin the lost ones, `StorageSorter`; a snapshot
+taken with a sort still pending is legitimate — each resident serializes wherever it rests
+and re-sorts on the first cycle after load), each non-nil app-slot window
+(`Serializer.WORLD_APP_SLOTS` — may be orphaned-but-revivable), and
+`world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).
 
 **`onExternalPointer: "capture"`** (world default, vs `"throw"` for widgets): an off-tree
@@ -343,7 +347,7 @@ unserializable value still raises the rich `SerializationError`.
 (`[{$r}…]`), `desktopColor` (`{$r}`), `alpha`, `isDevMode`, `wallpaperPatternName`,
 `numberOfIconsOnDesktop`, `infoDocFlags` (the `world.infoDoc_*_created` own booleans),
 `untitledNamingCounters`, `appSlots` (`{slot:{$r}}`), `simpleEditorTemplates` (`{$r}`),
-`bin` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
+`bin` (`{$r}`), `shelf` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
 `{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
 the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 `lastBuiltInstanceNumericID`, `WorldWdgt`/zeros skipped), and `sourceEdits` (§12).
@@ -353,17 +357,19 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 1. Confirm (a file/menu load warns it replaces the desktop AND can run code — §4.12; the rig /
    a macro pass `skipConfirm`).
 2. **Product-safe teardown** — `_teardownForSnapshotLoadNoSettle` (`fullDestroyChildren` +
-   `binWdgt.empty` + nil the slots), NOT the homepage-stripped `resetWorld` /
-   `_resetWorldNoSettle`. `fullDestroyChildren` also zeroes every per-class
+   `binWdgt.empty` + `shelfWdgt.empty` + nil the slots), NOT the homepage-stripped
+   `resetWorld` / `_resetWorldNoSettle`. `fullDestroyChildren` also zeroes every per-class
    `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.
 3. Restore `idCounters` **before** deserializing (so `registerThisInstance` sees the right
    high-water marks), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
    returns `shells` so the loader resolves the `world` section's `{$r}` refs).
 4. Restore the static `preferences` bag; apply the scalars (isDevMode/alpha/infoDoc/naming/
    icon-count) to the LIVE world; **swap** in the restored (self-contained, off-tree)
-   `binWdgt` so every `{$r}` pointer at it (the bin opener's target, …) stays
-   consistent; re-bind the app-slot / templates windows (orphaned-but-revivable — not
-   re-attached to the desktop).
+   `binWdgt` and `shelfWdgt` so every `{$r}` pointer at them (the bin opener's target, …)
+   stays consistent; re-bind the app-slot / templates windows (orphaned-but-revivable — not
+   re-attached to the desktop). Restore completion marks the storage sort pending
+   (`noteStorageMembershipMayHaveChanged`), so a mid-pending snapshot re-sorts on the first
+   cycle.
 5. Attach the desktop children in ONE settle batch via the base `_addNoSettle` (the grid mixin
    overrides only `add`, so `_addNoSettle` does NOT re-place them — restored positions are
    preserved); then `setColor` + `wallpaper.setPattern` (sequential self-settling public ops);

@@ -41,6 +41,13 @@ class Widget extends TreeNode
     # re-renders it on its first paint.
     "backBuffer", "backBufferContext"
     "cachedFullBounds", "checkFullBoundsCache", "childrenBoundsUpdatedAt"
+    # the root() cache (TreeNode) — the ONE cache pair that was missing here: a STALE
+    # cachedRoot can point into a subtree destroyed since the last structure change
+    # (root() itself never reads it stale — it checks structureVersion — but the
+    # serializer walks the raw field), so capture-mode world snapshots pulled dead
+    # subtrees in and crashed on their unserializable handler functions (found by the
+    # bin/shelf probe's mid-sort snapshot check, 2026-07-23). Recomputed on demand.
+    "cachedRoot", "checkRootCache"
     "cachedFullClippedBounds", "checkFullClippedBoundsCache"
     "cachedVisibleBasedOnIsVisibleProperty", "checkVisibleBasedOnIsVisiblePropertyCache"
     "cachedClippedThroughBounds", "checkClippedThroughBoundsCache"
@@ -546,24 +553,31 @@ class Widget extends TreeNode
     # attached at entry so the orphan guard passes, then the global flush re-lays-out my parent.
     @_settleLayoutsAfter => @_closeNoSettle()
 
-  _closeNoSettle: ->
+  # restingContainer: which storage container the closed figure comes to rest
+  # in -- nil = the bin (the generic close verdict; the end-of-cycle storage
+  # sort re-files anything reachable to the shelf that same cycle). The
+  # save-close path passes the shelf directly: the reference demonstrably
+  # exists, so filing there just skips the bin hop the sort would fix up.
+  _closeNoSettle: (restingContainer = nil) ->
 
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
     # leave the parent one as is
     if !@isFrame?() and @parent?.isFrame?()
       # private chain: the core, not public close() -- we are already inside close()'s settle batch.
-      @parent._closeNoSettle()
+      @parent._closeNoSettle restingContainer
       return
 
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     @parent?._beforeChildClosed? @
-    if world.binWdgt?
+    restingContainer ?= world.binWdgt
+    if restingContainer?
       # §7.5 Bug B (model a) + latent 2 (Option B): re-home the whole FIGURE, not just me -- if I am the
       # sole content of an island (sugar OR explicit), the island IS my transform, so sending only me to
       # the bin would strand the empty island and drop my transform. Only the re-homing TARGET
       # changes; my own close bookkeeping above still runs on me. Off any island this is me (byte-identical).
-      world.binWdgt._addLostWidgetNoSettle @_enclosingIslandFigure()
+      restingContainer._addRestingWidgetNoSettle @_enclosingIslandFigure()
+      world.noteStorageMembershipMayHaveChanged()
     else
       world.inform "There is no\nbin to go in!"
 
@@ -3095,7 +3109,9 @@ class Widget extends TreeNode
 
   _createReferenceAndCloseNoSettle: (referenceName, placeToDropItIn = world) ->
     @_createReferenceNoSettle referenceName, placeToDropItIn
-    @_closeNoSettle()
+    # the reference just created (or already existing -- the create dedups)
+    # keeps me reachable, so file straight to the SHELF
+    @_closeNoSettle world.shelfWdgt
 
   # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7

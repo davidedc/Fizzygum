@@ -19,7 +19,7 @@ class InfoDocs
       title:       "Bin"
       windowTitle: "Bin info"
       build: (sdspw) ->
-        sdspw.addNormalParagraph "Drag things in here to throw them away.\n\nItems you close without saving a link to also land in here. Documents you did save live behind their link icons and are not shown.\n\n\"Empty bin\" destroys everything shown, for good."
+        sdspw.addNormalParagraph "Drag things in here to throw them away.\n\nItems you close without saving a link to also land in here. Documents you did save rest on a shelf behind their link icons, never in the bin.\n\n\"Empty bin\" destroys everything in it, for good."
 
     dashboards:
       flag:        "infoDoc_dashboardsMaker_created"

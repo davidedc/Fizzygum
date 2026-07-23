@@ -103,6 +103,7 @@ class Serializer
     roots = []
     roots.push child for child in snapshotChildren
     roots.push theWorld.binWdgt if theWorld.binWdgt?
+    roots.push theWorld.shelfWdgt if theWorld.shelfWdgt?
     for slot in Serializer.WORLD_APP_SLOTS
       slotWindow = theWorld[slot]
       roots.push slotWindow if slotWindow? and not slotWindow.destroyed
@@ -147,6 +148,7 @@ class Serializer
     if theWorld.simpleEditorTemplates? and not theWorld.simpleEditorTemplates.destroyed
       section.simpleEditorTemplates = ref theWorld.simpleEditorTemplates, "the world → .simpleEditorTemplates"
     section.bin = ref(theWorld.binWdgt, "the world → .binWdgt") if theWorld.binWdgt?
+    section.shelf = ref(theWorld.shelfWdgt, "the world → .shelfWdgt") if theWorld.shelfWdgt?
     # preferences: a FORCED data record. refFor would give {"$wk":"preferences"} (the
     # symbolic link that a widget-in-tree uses); here we need the actual values, restored
     # onto the static bag on load.

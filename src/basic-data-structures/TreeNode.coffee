@@ -125,7 +125,9 @@ class TreeNode
     if @parent?
       if @parent.gcSessionId == newGcSessionId
         return
-      if @isDirectlyInBin()
+      # stop at a storage container's boundary: marking a resident
+      # reachable must never mark the bin/shelf themselves
+      if @isDirectlyInBin() or @isDirectlyInShelf()
         return
       @parent.markItAndItsParentsAsReachable newGcSessionId
   
@@ -143,21 +145,31 @@ class TreeNode
   isDirectlyInBin: ->
     @parent?.parent?.parent == world.binWdgt
 
-  # check if it's in the bin on its own or
-  # as part of another widget.
-  isInBin: ->
+  # check if the widget rests on the shelf on its own (the shelf holds its
+  # residents DIRECTLY -- a bare, never-viewed panel; no scrollPanel/contents
+  # sandwich like the bin's)
+  isDirectlyInShelf: ->
+    @parent == world.shelfWdgt
+
+  # STORAGE = the bin or the shelf: the two off-tree resting containers. The
+  # storage-aware classifier (StorageSorter pass 1) keys off this -- an orphan
+  # tracker member resting in storage is a potential relay, not unreachable junk.
+  isInStorage: ->
     thereCouldBeOne = @allParentsBottomToTopSuchThat (eachWdgt) ->
-      eachWdgt == world.binWdgt
+      eachWdgt == world.binWdgt or eachWdgt == world.shelfWdgt
     return thereCouldBeOne.length == 1
 
-  isInBinButReachable: (newGcSessionId) ->
+  # was this storage resident marked reachable by the given classification
+  # session (itself, or through a marked ancestor)? Same climb for both
+  # containers: boundary = either container.
+  isInStorageButReachable: (newGcSessionId) ->
     if @gcSessionId == newGcSessionId
       return true
     if @parent.gcSessionId == newGcSessionId
       return true
-    if @parent == world.binWdgt
+    if @parent == world.binWdgt or @parent == world.shelfWdgt
       return false
-    return @parent.isInBinButReachable newGcSessionId
+    return @parent.isInStorageButReachable newGcSessionId
 
 
   # TreeNode functions:

@@ -118,6 +118,11 @@ class PanelWdgt extends Widget
     @_reFitContainer @parent
 
   _reactToChildRemoved: (child) ->
+    # notify the scroll panel's holder FIRST -- the guards below return early
+    # for orphan-rooted panels, and e.g. the bin listens (a pickup out of its
+    # open window changes storage membership) whether windowed or not.
+    # Symmetric to the _reactToChildAddedInScrollPanel relay in _reactToChildAdded.
+    @parent?.parent?._reactToChildRemovedInScrollPanel? child
     return unless @parent?
     # Skip the re-fit when @isOrphan() -- SAFE ONLY at this REMOVAL seam (not a blanket rule: a shared
     # orphan-skip in _invalidateLayout broke 63 tests). Attached removals re-fit as before -- see docs/archive/end-of-cycle-flush-endgame-plan.md.
