@@ -1,5 +1,14 @@
 # Minimal Fizzygum-only CoffeeScript runtime compiler — PLAN
 
+> **STATUS: COMPLETE + SHIPPED (2026-07-23). ARCHIVED — immutable history.** Delivered as the
+> standalone package **`fizzygum-coffeescript-min@1.0.0`** (npm + https://github.com/davidedc/fizzygum-coffeescript-min)
+> and vendored into Fizzygum (commit `fc9750b5`, file `auxiliary files/CoffeeScript/fizzygum-coffeescript-min.js`).
+> Final artifact **208,604 B (−18.9% vs stock 2.0.3)**, byte-identical emitted JS over all 4901
+> corpus fragments + full `fg gauntlet` green. Note the mid-arc **owner pivot from 2.7.0 to 2.0.3**
+> (§12) — the 2.7.0 mandate in §1/§5 is superseded; the actual delivery is the 2.0.3 fork. See §12
+> for the full landing record and case law. Current-state truth now lives in the provenance
+> `README.md` beside the vendored file + the package repo.
+
 > **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 > Everything needed is embedded inline or one named-doc hop away. Do not assume the
 > executing session shares any prior conversation. Line numbers drift — the quoted

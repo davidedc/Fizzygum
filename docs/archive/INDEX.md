@@ -222,6 +222,14 @@ Archived docs are immutable history — the current-state truth lives in
   - ⚖ Duplication (DeepCopierMixin) kept fully untouched/pixel-identical while building the new serializer
   - ⚖ Any out-of-subtree pointer not a well-known singleton = a path-carrying error at serialize time
 
+## Build & toolchain
+
+- **`minimal-coffeescript-runtime-compiler-plan.md`** — COMPLETE + SHIPPED (2026-07-23). Forks the vendored in-browser CoffeeScript compiler down to a minimal compile-only build; shipped as the npm/GitHub package `fizzygum-coffeescript-min@1.0.0` and vendored into Fizzygum (`fc9750b5`, `auxiliary files/CoffeeScript/fizzygum-coffeescript-min.js`). Final 208,604 B (−18.9% vs stock 2.0.3), byte-identical emitted JS over all 4901 corpus fragments + full gauntlet green.
+  - ⚖ sub-257 KB is INFEASIBLE on a 2.7.0 base (parser+nodes core alone = 278 KB > the whole 257 KB 2.0.3 bundle) — re-based on 2.0.3 (owner pivot), whose smaller core is the point; the §1/§5 2.7.0 mandate is superseded by §12
+  - ⚖ "DEAD in V8 coverage" ≠ safe to cut — the error-reporting path is dead only because the corpus compiles clean yet fires on live-edit typos (KEEP); real language features unused-in-corpus stay usable (KEEP); only exotic tooling (sourcemap/JSX/import-export/literate/shebang/baseFileName) was cut
+  - ⚖ the vendored file has THREE refs, not two — the plan AND memory undercounted, missing the runtime boot loader (`src/boot/globalFunctions.coffee`); grep the WHOLE tree before a rename, not just the build scripts
+  - ⚖ byte-identity to STOCK 2.0.3 (not 2.7.0) is what keeps the pixel-exact gauntlet refs valid — the fork is frozen on 2.0.3; tracking upstream is an anti-goal, which is why it's an own-package derivative, not a CoffeeScript branch
+
 ## Process & workflow
 
 - **`dev-workflow-optimization-plan.md`** — COMPLETE. Post-transcript-audit plan to parallelize the gauntlet, shard the paint audit, and add fg lint/status/recapture-inspector tooling.
