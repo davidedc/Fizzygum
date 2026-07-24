@@ -135,7 +135,8 @@ One sanctioned out sidesteps even the event lane: **control-voltage flattening**
 encode events as scalar transitions (a gate pin going 0→1), the analog-synth trick;
 keeps pooled semantics, accepts coalescing losses. An idea that stays scalar wires
 natively today; one that needs per-event delivery inherits the deferred `firesPerEvent`
-implementation as a prerequisite.
+implementation as a prerequisite (the owning arc for that lane, cold edges, and buffer
+payloads: [`../plans/wire-vocabulary-extensions-plan.md`](../plans/wire-vocabulary-extensions-plan.md)).
 
 ## C. Liveness, state, and the house physics
 

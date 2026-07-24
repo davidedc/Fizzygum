@@ -15,9 +15,15 @@ Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/
 - [ ] §7.8: SWCanvas bilinear drawImage (separate repo; v1 uses nearest-neighbor)
 
 ### `plans/dataflow-engine-implementation-plan.md`
-Phases 0-8 plus F1/F2/F4/F5/F6 all LANDED; remaining = F3 ('operate ➜' cell menu) + the deferred `firesPerEvent` delivery lane.
+Phases 0-8 plus F1/F2/F4/F5/F6 all LANDED; remaining = F3 ('operate ➜' cell menu); the deferred `firesPerEvent` delivery lane is owned by `plans/wire-vocabulary-extensions-plan.md` W1.
 - [ ] F3: 'operate ➜' cell menu — value-class method introspection into a formula
-- [ ] `specs/dataflow-engine-spec.md` §4/§13: `firesPerEvent` per-event mini-pass DELIVERY — the per-wire flag, menu toggle, and edge-record plumbing are landed, but delivery still POOLS (deferral note in `DataflowEngine.markStale`); blocked on §13's downstream-scoping fine print (per-wire vs per-source). Prerequisite for non-coalescing event wires (bang counts, note-on-style events — see `architecture/app-fit-criteria.md` facet 9)
+
+### `plans/wire-vocabulary-extensions-plan.md`
+AUTHORED 2026-07-24, NOT STARTED, owner-gated; land the reserved wire semantics (per-event delivery, cold edges, buffer payloads) + record the deadline law. Demand side: `architecture/app-fit-criteria.md` facet 9.
+- [ ] W1: `firesPerEvent` per-event mini-pass DELIVERY (spec §4/§13) — flag/menu/edge records landed, delivery still POOLS (`DataflowEngine.markStale` deferral note); resolve D1–D5 (scoping, settle, pool hygiene, re-entrancy, determinism); acceptance = CounterPatchNodeWdgt + t1–t3
+- [ ] W2: cold edges (spec §8, attribute carried, zero readers) + cold-then-hot structured-event idiom; riders: Diffing `setInput2` bug, written-never-read `setInput*IsConnected` flags, plain/`Hot` setter-pair rationalization
+- [ ] W3: buffer payloads as current values — immutable `BufferValue` handle (identity/generation equality), `bufferSetters()` fourth table; spikes S1 (serializer has NO typed-array arm today) + S2 (DeepCopy policy)
+- [ ] W4: the deadline law — signal-rate stays below the floor; lands into spec/architecture as residue when W1–W3 land
 
 ### `plans/livecodelang-cleanup-and-extensions-plan.md`
 AUTHORED 2026-07-07, NOT STARTED; owner-initiated execution only.
