@@ -48,16 +48,21 @@
 #   - Cell text is 12px Arial (SWCanvas ships Arial/Times/Courier atlases only —
 #     src/boot/extensions/SWCanvasElement-extensions.coffee), left-aligned; centring is later polish.
 #     Each CellWdgt now clips to its own rect, so an over-long value no longer bleeds sideways.
-#   - EDITING (2b) drives a plain edit BUFFER from this widget's own processKeyDown (append /
-#     Backspace / Enter-commits / Escape-cancels) and mirrors it into a live overlay StringWdgt over
-#     the editing cell. This is a deliberate deviation from reusing the caret: the framework provides
-#     NO built-in "Enter commits / Escape reverts" (no accept/cancel handlers exist; text live-updates
-#     as you type), and a live caret is a keyboard receiver that BLINKS (non-deterministic under a
-#     screenshot). The buffer gives exact, deterministic commit/cancel and keeps THIS widget the sole
-#     keyboard receiver throughout (no caret juggling). Rich editing (cursor, selection, multi-line)
-#     stays the deferred CodePromptWdgt path (spec §9.1). The editor WIDGET lives on the editing
-#     CellWdgt (F2, executed with F5): this sheet keeps the buffer + the keys and delegates
-#     mount/update/teardown to the cell, which suppresses its own scalar text while it holds one.
+#   - EDITING is STANDARD CARET editing (the 2026-07-24 standard-caret arc, replacing 2b's
+#     buffer-driven v1): the editing cell mounts a real editable overlay StringWdgt
+#     (isEditable + alwaysEditsInline, at the resting scalar-text inset) and the sheet
+#     enters it via world._editNoSettle — the standard CaretWdgt does ALL the text work
+#     (typing, click-positioning, arrows, selection). The sheet keeps the EDIT STATE and the
+#     grid semantics: type-to-edit replace / Enter / F2 / double-click-at-slot start an
+#     edit; Enter commits and Escape reverts via the caret's accept/cancel escalations
+#     (fired from the editor, landing on the CellWdgt, forwarded to acceptCellEdit /
+#     cancelCellEdit); acting elsewhere commits (the pointer funnel accepts, wheel commits
+#     before scrolling, and a DANGLING edit — a caret torn down by a path that fires no
+#     escalation — self-heals by committing on the sheet's next key/click). While the caret
+#     edit is live this widget's processKeyDown IGNORES keys (the caret owns them; the
+#     receivers-Set dispatch snapshot in KeydownInputEvent keeps the edit-starting key from
+#     double-delivering into the fresh caret); Tab is swallowed at the cell. Multi-line
+#     editing stays the deferred CodePromptWdgt path (spec §9.1).
 #
 # Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers +
 # processKeyDown), focus-on-click; never a DOM listener.
@@ -84,7 +89,7 @@ class SimpleSpreadsheetWdgt extends Widget
   # drain → reconcile): a DERIVED presenter (a Color's swatch, spec §9.4 "one-way glass") is
   # rebuilt from the value, a scalar repaints, a state-bearing value-widget is RETAINED.
   # @model / @selected* ARE document state and serialize normally.
-  @serializationTransients: ["_editing", "_editBuffer", "_editCol", "_editRow", "_cells", "_cellsPanel", "_headerCells"]
+  @serializationTransients: ["_editing", "_editCol", "_editRow", "_cells", "_cellsPanel", "_headerCells"]
 
   # fixed grid geometry (no column resize in v1). The VIEWPORT — how many cell widgets are
   # materialised + visible at once — is DERIVED from the sheet's applied extent (F6, the
@@ -130,10 +135,9 @@ class SimpleSpreadsheetWdgt extends Widget
     @selectionColor = Color.create 40, 110, 210
     @valueTextColor = Color.create 30, 30, 30
     @errorTextColor = Color.create 200, 40, 40
-    # editing state (the buffer + which cell; the editor WIDGET lives on the editing cell —
-    # F2/F5); nil / false until an edit begins
+    # editing state (which cell is being edited; the editor WIDGET lives on the editing
+    # cell, and the standard caret types straight into it); nil / false until an edit begins
     @_editing = false
-    @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
     # cell index (spec §9.3/§9.4 classify→present): address → its CellWdgt. Every VISIBLE cell has one
@@ -583,17 +587,28 @@ class SimpleSpreadsheetWdgt extends Widget
   _isPrintable: (key, ctrlKey, metaKey) ->
     key? and key.length is 1 and not ctrlKey and not metaKey
 
-  # standard keyboard path (§1.17): this widget is the sole keyboard receiver in BOTH selection
-  # and editing modes (no caret — see the header). PUBLIC event entry: it opens the ONE settle;
-  # the mode handlers + edit lifecycle below are NoSettle cores (mount/teardown of the overlay
-  # editor mutate the tree, so they run inside this settle — the layering discipline).
+  # standard keyboard path (§1.17): in SELECTION mode this widget drives the grid keys
+  # (arrows / Enter / F2 / type-to-edit); while a cell edit is LIVE the CARET owns every key
+  # (this sheet stays a registered receiver — dispatch visits it first — so it must NOT
+  # double-handle; Enter/Escape come back through the cell's accept/cancel handlers, and the
+  # editor swallows Tab via the cell). PUBLIC event entry: it opens the ONE settle; the mode
+  # handler + edit lifecycle below are NoSettle cores (mount/teardown of the overlay editor
+  # mutate the tree, so they run inside this settle — the layering discipline).
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     @_settleLayoutsAfter =>
       if @_editing
-        @_processKeyWhileEditingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
-      else
-        @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
+        return if @_isCaretEditLive()
+        # a DANGLING edit — the caret was torn down by a path that fires no accept/cancel
+        # (a mid-edit grab, a subtree teardown) — self-heals: commit what was typed, then
+        # handle this key normally in selection mode (click-away-commits semantics).
+        @_commitEditNoSettle()
+      @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
     return
+
+  # is the standard caret currently editing THIS sheet's mounted cell editor? (read-only
+  # predicate; the caret is world chrome, so this is a world read, not a layout mutation)
+  _isCaretEditLive: ->
+    world.caret? and world.caret.target? and world.caret.target is @_editingCellWdgt()?._editorWdgt
 
   # selection mode: arrows move the single-cell selection over the LOGICAL sheet (clamped to
   # sheetCols/sheetRows — F1) and scroll-follow (past a viewport edge the origin shifts
@@ -624,26 +639,7 @@ class SimpleSpreadsheetWdgt extends Widget
     @_startEditNoSettle key if @_isPrintable key, ctrlKey, metaKey
     return
 
-  # editing mode: Enter commits, Escape cancels, Backspace deletes the last char, a printable key
-  # appends. Arrows / navigation are ignored in v1 (no in-text cursor — the deferred rich path).
-  _processKeyWhileEditingNoSettle: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
-    switch key
-      when "Enter"
-        @_commitEditNoSettle()
-        return
-      when "Escape"
-        @_cancelEditNoSettle()
-        return
-      when "Backspace"
-        @_editBuffer = @_editBuffer.slice 0, -1
-        @_updateEditorTextNoSettle()
-        return
-    if @_isPrintable key, ctrlKey, metaKey
-      @_editBuffer += key
-      @_updateEditorTextNoSettle()
-    return
-
-  # ── editing: the buffer + its live overlay editor (the socket precursor) ──────────────────
+  # ── editing: the edit lifecycle + its live overlay editor (the socket precursor) ──────────
   # All NoSettle: they run inside the ONE settle opened by the public event entry above.
 
   _currentCellSource: ->
@@ -658,19 +654,22 @@ class SimpleSpreadsheetWdgt extends Widget
     @_editing = true
     @_editCol = @selectedCol
     @_editRow = @selectedRow
-    @_editBuffer = seedText ? ""
-    @_mountEditorNoSettle()
+    @_mountEditorNoSettle seedText ? ""
+    # enter the STANDARD caret edit on the just-mounted editor (the NoSettle twin — we are
+    # inside this event's settle): the caret mounts as a child of the editing CELL
+    # (world.edit parents it into the editor's parent) with its slot at the text end —
+    # right for both a type-to-edit seed char and an Enter/F2 edit-of-existing-source.
+    # The dispatch snapshot (KeydownInputEvent) guarantees this new caret does NOT also
+    # receive the very key that started the edit.
+    editor = @_editingCellWdgt()?._editorWdgt
+    world._editNoSettle editor if editor?
     return
 
   # the editor WIDGET lives on the editing CELL (F2, executed with F5): this sheet keeps the
-  # buffer + the keys and delegates mount/update/teardown — the cell holds the StringWdgt and
-  # suppresses its own scalar text while it does (its complete view state in one widget).
-  _mountEditorNoSettle: ->
-    @_editingCellWdgt()?._mountEditorNoSettle @_editBuffer
-    return
-
-  _updateEditorTextNoSettle: ->
-    @_editingCellWdgt()?._updateEditorTextNoSettle @_editBuffer
+  # edit STATE (which cell, commit/cancel) and delegates mount/teardown — the cell holds the
+  # StringWdgt the caret types into and suppresses its own scalar text while it does.
+  _mountEditorNoSettle: (seedText) ->
+    @_editingCellWdgt()?._mountEditorNoSettle seedText
     return
 
   # the CellWdgt of the cell being edited, or nil when not editing
@@ -679,9 +678,17 @@ class SimpleSpreadsheetWdgt extends Widget
     @_cells.get @model.addressFor @_editCol, @_editRow
 
   # commit: compile the source ONCE (FormulaCompiler) and mark the cell stale; the once-per-cycle
-  # dataflow drain (this same doOneCycle) recomputes the value and the grid repaints.
+  # dataflow drain (this same doOneCycle) recomputes the value and the grid repaints. The
+  # source is what the user typed = the editor widget's TEXT (the caret typed straight into
+  # it; there is no separate buffer). A blank text is a legitimate commit (it EMPTIES the
+  # cell); an UNREACHABLE editor (its cell vanished under the edit — not a known path, the
+  # edit commits before any scroll) must NOT masquerade as one: abandon instead of blanking.
   _commitEditNoSettle: ->
     return unless @_editing
+    source = @_editingCellWdgt()?._editorWdgt?.text
+    unless source?
+      @_teardownEditorNoSettle()
+      return
     cell = @model.getOrCreateCellAt @model.addressFor @_editCol, @_editRow
     # F4: typed content of ANY kind — including blank — REPLACES a dropped widget-entry (the
     # gestures own the entry lifecycle, commit stays pure source machinery). The ex-entry
@@ -689,7 +696,7 @@ class SimpleSpreadsheetWdgt extends Widget
     # Widget._destroyNoSettle. (Eject-to-world instead of destroying was considered and
     # rejected for v1 — see src/spreadsheet/CLAUDE.md.)
     cell.widgetEntry = nil if cell.widgetEntry?
-    FormulaCompiler.commit cell, @_editBuffer
+    FormulaCompiler.commit cell, source
     world.dataflow.markStale cell
     @_teardownEditorNoSettle()
     return
@@ -699,10 +706,52 @@ class SimpleSpreadsheetWdgt extends Widget
     @_teardownEditorNoSettle()
     return
 
+  # PUBLIC event entry (standard-caret editing): DOUBLE-CLICKING a cell edits its existing
+  # source with the caret AT THE CLICKED SLOT (Excel-style; the click-on-already-selected
+  # variant was considered and left out — double-click is the standard gesture). The cell
+  # forwards its dispatcher-passed plane-mapped pos verbatim (cell/panel/sheet share one
+  # island plane — the 4A convention; never world.hand.position(), the raw-pointer gate
+  # bans it). Opens the ONE settle for the select + edit mount; the caret's move to the
+  # clicked slot is the caret's own PUBLIC self-settling gotoSlot — a discrete event-time
+  # entry exactly like a click on any editing text — so it runs AFTER this settle.
+  startEditAtPointer: (address, pos) ->
+    colRow = @model.colRowFor address
+    return unless colRow?
+    @_settleLayoutsAfter =>
+      @_commitEditNoSettle() if @_editing
+      @selectedCol = colRow.col
+      @selectedRow = colRow.row
+      @_takeKeyboardFocus()
+      @_startEditNoSettle @_currentCellSource()
+      @_changed()
+    editor = @_editingCellWdgt()?._editorWdgt
+    world.caret.gotoSlot editor.slotAt pos if editor? and world.caret?
+    return
+
+  # PUBLIC (standard-caret editing): the editing cell's accept/cancel handlers forward here
+  # — the caret's escalation fires at event time OUTSIDE any settle (world.stopEditing
+  # already self-settled the caret teardown inside CaretWdgt.accept/cancel), so these open
+  # the ONE settle for the commit/cancel work, exactly like processKeyDown / mouseClickLeft.
+  # Guarded: an accept escalated by an unrelated nested editable text is a no-op.
+  acceptCellEdit: ->
+    return unless @_editing
+    @_settleLayoutsAfter => @_commitEditNoSettle()
+    return
+
+  cancelCellEdit: ->
+    return unless @_editing
+    @_settleLayoutsAfter => @_cancelEditNoSettle()
+    return
+
   _teardownEditorNoSettle: ->
     editingCell = @_editingCellWdgt()
+    # a caret still LIVE on the mounted editor (a commit reached from the wheel-scroll
+    # commit-before-scroll or the dangling-edit self-heal — not from the caret's own
+    # accept/cancel, which tear the caret down first) must die WITH the editor: the caret
+    # is the CELL's child, not the editor's, so destroying the editor alone would orphan
+    # the caret targeting a dead widget (its paint-time re-sync reads the target).
+    world._stopEditingNoSettle() if @_isCaretEditLive()
     @_editing = false
-    @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
     editingCell?._teardownEditorNoSettle()
@@ -834,7 +883,6 @@ class SimpleSpreadsheetWdgt extends Widget
   # and every on-screen gap fills. The transient edit state resets.
   _reindexCellsNoSettle: ->
     @_editing = false
-    @_editBuffer = ""
     @_editCol = nil
     @_editRow = nil
     @_cells = new Map

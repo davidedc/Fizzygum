@@ -25,8 +25,10 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   (`_reconcileViewportNoSettle` — F1 scroll: sheet-owned `viewOriginCol/Row`, wheel +
   keyboard scroll-follow, the viewport invariant below), reconciles each cell's value into its
   widget (`_reconcileCellNoSettle`), owns the single-cell selection (SHEET-space; cells render
-  their own ring off the PUBLIC `isSelectedAddress`) and the type-to-edit BUFFER + keys (the
-  editor WIDGET lives on the editing cell — F2; an edit COMMITS before any scroll), houses the
+  their own ring off the PUBLIC `isSelectedAddress`) and the EDIT STATE (standard-caret
+  editing — the editor WIDGET lives on the editing cell and the standard `CaretWdgt` does the
+  text work; the sheet starts edits from its keys/gestures, receives commit/cancel through
+  `acceptCellEdit`/`cancelCellEdit`, and an edit COMMITS before any scroll), houses the
   shared edge-stroke helper `paintGridEdges` (the edge-ownership colours + the crossing rule),
   owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
 - `SheetCellsPanelWdgt.coffee` (F5) — the TRANSPARENT `PanelWdgt` subclass spanning the data
@@ -72,9 +74,12 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   view state: its own top+left GRID EDGES (always — the F5 edge-ownership convention, via the
   sheet's `paintGridEdges`), its own SELECTION RING when it is the selected cell (F2 — the
   inside form, off the sheet's public `isSelectedAddress`), its OVERLAY EDITOR while being
-  edited (F2 — `_mountEditorNoSettle`/`_updateEditorTextNoSettle`/`_teardownEditorNoSettle`
-  hold the passive `StringWdgt` as `@_editorWdgt`, a transient child; the sheet keeps the
-  buffer + keys), and whichever value form the cell holds (spec §9.4 classify → present): a
+  edited (`_mountEditorNoSettle`/`_teardownEditorNoSettle` hold an EDITABLE `StringWdgt` as
+  `@_editorWdgt`, a transient child the standard caret types into; the cell's
+  `accept`/`cancel` handlers receive the caret's escalations and forward to the sheet, its
+  `mouseDoubleClick` starts an edit at the clicked slot, and `nextTab`/`previousTab` swallow
+  Tab so an edit never hops to another entry field), and whichever value form the cell holds
+  (spec §9.4 classify → present): a
   hosted value-widget (branch 1, a `new SliderWdgt`), a hosted presenter (branch 2, a Color →
   a swatch), or its scalar text as a passive `StringWdgt` CHILD (branch 3,
   `showScalarNoSettle` — the editor's exact configuration, box-inset (+4, +2) to the exact
@@ -329,7 +334,8 @@ widget fills the data background (the backdrop shows through, as it always did).
 - **Selection + editing: the sheet owns the STATE, the cell renders it (F2, executed with
   F5).** Clicks on a cell escalate to the sheet's `mouseClickLeft` (cell → cells panel, whose
   `mouseClickLeft` deliberately escalates, → sheet), which hit-tests via `_cellAtLocal` and
-  keeps `@selectedCol/Row` + the whole keyboard/buffer machinery (sole-receiver doctrine).
+  keeps `@selectedCol/Row` + the selection-mode keys (the editing-mode keys belong to the
+  standard caret since the standard-caret arc — see the editing model in the 2b section).
   RENDERING lives in the cell: the ring paints off the sheet's public `isSelectedAddress`
   (drawn fully INSIDE the cell, `strokeRect 2,2,w−4,h−4` — the ONE deliberate pixel change of
   the F5 landing, the whole `macroSpreadsheet*` family recaptured), and the overlay editor is
@@ -421,21 +427,39 @@ widget fills the data background (the backdrop shows through, as it always did).
 
 ## Phase 2b decisions / deviations (recorded also in the plan)
 
-- **Buffer-driven overlay editor, NO caret** (deviation from "reuse the caret"). The framework
-  provides no built-in "Enter commits / Escape reverts" — no `accept`/`cancel` handlers exist
-  (only `CaretWdgt` escalates them, to nobody), and a live caret is a keyboard receiver that
-  BLINKS (non-deterministic under a screenshot). So `SpreadsheetWdgt` stays the SOLE keyboard
-  receiver in both selection and editing modes and drives its own edit BUFFER (append / Backspace
-  / Enter-commits / Escape-cancels), mirroring it into a live overlay `StringWdgt`. This gives
-  exact, deterministic commit/cancel and needs no caret juggling. The edit-in-progress
-  AFFORDANCE (2026-07-24) is the editor's steady end-of-text bar
-  (`StringWdgt.showsEndOfTextBar` — drawn in the back buffer, a pure function of the buffer:
-  deterministic, never blinks), and the editor mounts at the SAME (4,2) box inset as the
-  resting scalar-text child so starting/committing an edit never shifts the glyphs (pinned by
-  `SystemTest_macroSpreadsheetEditCaretBar`). Rich editing (cursor,
-  selection, multi-line) stays the deferred `CodePromptWdgt` path (spec §9.1). The overlay is the
+- **Buffer-driven overlay editor, NO caret** (deviation from "reuse the caret") —
+  **SUPERSEDED by the standard-caret arc (2026-07-24; see the editing model below).** The 2b
+  rationale was that no `accept`/`cancel` handlers existed (only `CaretWdgt` escalated them,
+  to nobody — and, it turned out, the escalation fired AFTER the caret's own destroy
+  unparented it, so it could never deliver) and that a live caret blinks under a screenshot
+  (in fact the caret is pinned ALWAYS-VISIBLE under the Automator's animations pacing —
+  which is why carets appear deterministically in committed references). So 2b's sheet
+  drove a private edit buffer as sole keyboard receiver, latterly with a steady
+  end-of-text-bar affordance. The standard-caret arc deleted the buffer, the bar
+  (`showsEndOfTextBar` died with its only consumer), and the sheet's editing-mode key
+  handling — the caret's accept/cancel escalations (fixed to fire from the TARGET) now
+  carry Enter/Escape to the cell. The overlay is the
   first live child widget = the socket precursor (Phase 4 generalises "mount a live widget at a
   cell rect").
+- **The editing model (standard-caret arc, 2026-07-24 —
+  `docs/plans/spreadsheet-standard-caret-editing-plan.md`):** the editing cell's overlay
+  `StringWdgt` is EDITABLE (`isEditable`, `alwaysEditsInline` — an over-long text stays
+  inline-ellipsised, never the pop-out "edit:" prompt) and the sheet enters it via
+  `world._editNoSettle` inside the edit-start settle, so the standard `CaretWdgt` — a cell
+  child, since `world.edit` parents the caret into the editor's parent — does all typing /
+  click-positioning / arrows / selection. Entry gestures: type-to-edit REPLACE (a printable
+  key seeds a fresh editor), Enter/F2 edit the existing source (caret at end), double-click
+  edits with the caret AT THE CLICKED SLOT (`startEditAtPointer`; the non-editable
+  scalar-text child escalates `mouseDoubleClick` to the cell). Exit: Enter COMMITS and
+  Escape REVERTS via the caret's accept/cancel escalations (editor → cell → sheet's
+  `acceptCellEdit`/`cancelCellEdit`); acting elsewhere COMMITS (the pointer's click-away
+  funnel calls `caret.accept()`, the wheel commits before scrolling — tearing down a
+  still-live caret in the same settle — and a DANGLING edit self-heals by committing on
+  the sheet's next key/click). While the edit is live the sheet's `processKeyDown` ignores
+  keys (`_isCaretEditLive`); the edit-starting key never double-delivers into the fresh
+  caret because `KeydownInputEvent` dispatches over a SNAPSHOT of the receivers Set; Tab
+  is swallowed at the cell (`nextTab`/`previousTab` — commit-and-advance is a later
+  variant). Multi-line editing stays the deferred `CodePromptWdgt` path (spec §9.1).
 - **Settle discipline:** the mount/teardown of the overlay editor mutates the tree, so the ONE
   layout settle is opened at the PUBLIC event entries (`processKeyDown` / `mouseClickLeft`, like
   `world.edit`) and every edit-lifecycle helper is a `*NoSettle` core using `_addNoSettle` /

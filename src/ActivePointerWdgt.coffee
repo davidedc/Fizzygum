@@ -575,18 +575,23 @@ class ActivePointerWdgt extends Widget
       # current selection).
       if actionedWdgt isnt world.caret.target
         # user clicked on something other than what the
-        # caret is attached to
+        # caret is attached to: ending an edit by acting elsewhere ACCEPTS it (caret.accept =
+        # stopEditing + an "accept" escalation from the target). For an ordinary text field
+        # this is byte-identical to the old bare stopEditing (its text is already live and
+        # nothing on its chain implements accept); for an editor whose accept COMMITS — the
+        # spreadsheet cell editor — this is what makes click-away-commits reach outside the
+        # sheet too.
         mostRecentlyCreatedPopUp = world.mostRecentlyCreatedPopUp()
         if mostRecentlyCreatedPopUp?
           unless mostRecentlyCreatedPopUp.isAncestorOf actionedWdgt
             # only dismiss editing if the actionedWdgt the user
             # clicked on is not part of a menu.
-            world.stopEditing()
+            world.caret.accept()
         # there is no menu at all, in which case
         # we know there was an editing operation going
         # on that we need to stop
         else
-          world.stopEditing()
+          world.caret.accept()
 
 
   # Affine transforms (§4.6, Phase 4A): the pointer position expressed in the RECEIVER

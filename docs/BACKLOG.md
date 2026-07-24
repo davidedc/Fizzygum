@@ -53,12 +53,11 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §8/top banner: S2 Tier 2, S6b, F1 (precompiled test-harness boot) still unlanded
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 
-### `plans/spreadsheet-standard-caret-editing-plan.md`
-AUTHORED 2026-07-24 (owner-directed, follows the scalar-text-as-StringWdgt-child conversion); NOT started — likely a fresh-session arc.
-- [ ] §5 P1: caret-based edit lifecycle (isEditable editor + world.edit + accept/cancel handlers — the escalation plumbing already exists, see the plan's critical reframe)
-- [ ] §5 P2: entry gestures (type-to-edit replace; double-click/click-on-selected → caret at clicked slot)
-- [ ] §5 P3: delete the F2 buffer machinery + CLAUDE.md/spec truth-sync (incl. the stale "caret blinks" claim)
-- [ ] §5 P4: reshape macroSpreadsheetEditCaretBar → caret-based pin; serialization-rig midEditClean re-check
+### ~~`plans/spreadsheet-standard-caret-editing-plan.md`~~ → `archive/`
+EXECUTED IN FULL + gauntlet-green 2026-07-24 (same-day author→execute); archived with the
+per-phase STATUS BOX ledger. Deliberate residuals (variants, not debts): click-on-already-
+selected as an edit gesture; Excel-style Tab commit-and-advance; drag-select inside the
+editor (blocked by cell solidity — see the archive INDEX ⚖ bullets).
 
 ### `plans/single-file-save-plan.md`
 AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0 spikes S1/S2

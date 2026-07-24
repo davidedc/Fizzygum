@@ -254,25 +254,25 @@ class CellWdgt extends Widget
     @_sheetWidget?._markCellStaleFromHostedWidgetNoSettle @address
     return
 
-  # ── the overlay editor (F2, executed with F5): the SHEET owns the buffer + the keys; this
-  # cell owns the editor WIDGET — its complete view state in one place. All NoSettle cores:
-  # called from the sheet's edit lifecycle, inside the ONE settle its public event entries
-  # (processKeyDown / mouseClickLeft) open. The editor is a passive StringWdgt display driven
-  # by the sheet's buffer (isEditable false — the sheet stays the sole keyboard receiver, no
-  # caret is ever mounted), a child of THIS cell at exactly the cell's rect — the same
-  # absolute rect the old sheet-child editor used, so the move itself changed no pixels.
-  _mountEditorNoSettle: (bufferText) ->
-    # the editor shows the buffer, so the resting scalar-text child hides for the edit's
-    # duration (damage-free __hide — adding the editor repaints the same rect); teardown
-    # reveals it again, which also serves the Escape-cancel path (no reconcile runs there)
+  # ── the overlay editor (F2, reshaped by the standard-caret arc): this cell owns the
+  # editor WIDGET — a real editable StringWdgt the sheet enters via world._editNoSettle, so
+  # the standard CaretWdgt does the typing/click-positioning/selection work; the sheet keeps
+  # the edit STATE (which cell, commit/cancel) and receives the outcome through my
+  # accept/cancel handlers below. All NoSettle cores: called from the sheet's edit
+  # lifecycle, inside the ONE settle its public event entries (processKeyDown /
+  # mouseClickLeft) open. A child of THIS cell at exactly the cell's rect.
+  _mountEditorNoSettle: (seedText) ->
+    # the editor replaces the resting scalar-text child visually for the edit's duration
+    # (damage-free __hide — adding the editor repaints the same rect); teardown reveals it
+    # again, which also serves the Escape-cancel path (no reconcile runs there)
     @_scalarTextWdgt?.__hide()
-    editor = new StringWdgt bufferText, 12
+    editor = new StringWdgt seedText, 12
     editor.color = @_sheetWidget.valueTextColor
-    editor.isEditable = false
-    # the steady end-of-text bar is the edit-in-progress affordance (a live CaretWdgt is a
-    # keyboard receiver — the sheet must stay sole receiver; the bar is deterministic, no
-    # blink, and tracks the buffer through the editor's own text re-render)
-    editor.showsEndOfTextBar = true
+    editor.isEditable = true
+    # an edit never leaves the cell for the pop-out "edit:" prompt — a pop-out would bypass
+    # the cell's commit semantics; an over-long text stays inline-ellipsised with the caret
+    # clamping at the cell edge (see the StringWdgt field comment)
+    editor.alwaysEditsInline = true
     @_addNoSettle editor
     # the SAME (4,2) box inset as the resting scalar-text child, so the text does not
     # shift when editing starts/ends — resting and editing glyphs sit at identical positions
@@ -280,9 +280,39 @@ class CellWdgt extends Widget
     @_editorWdgt = editor
     return
 
-  _updateEditorTextNoSettle: (bufferText) ->
-    @_editorWdgt?._setTextNoSettle bufferText
+  # ── standard-caret editing: the caret targets my editor child, and its accept (Enter /
+  # action-elsewhere) and cancel (Escape) escalations fire FROM the editor (see
+  # CaretWdgt.accept — the caret itself is already destroyed and unparented at escalation
+  # time), so they land here first on the climb. Forward to the sheet, which owns the edit
+  # state; the sheet guards with `return unless @_editing`, so an accept escalated by an
+  # UNRELATED editable text nested in my hosted widget (a dropped widget carrying entry
+  # fields) is a harmless no-op.
+  accept: ->
+    @_sheetWidget?.acceptCellEdit()
     return
+
+  cancel: ->
+    @_sheetWidget?.cancelCellEdit()
+    return
+
+  # DOUBLE-CLICK enters an edit of my cell's existing source with the caret at the clicked
+  # slot (Excel-style). Reached directly (a click on my empty area) or by the escalation
+  # from my non-editable scalar-text child (StringWdgt.mouseDoubleClick's else branch); the
+  # dispatcher's pos is already plane-mapped and my child/panel/sheet share the one island
+  # plane, so it forwards verbatim (the 4A convention).
+  mouseDoubleClick: (pos) ->
+    @_sheetWidget?.startEditAtPointer @address, pos
+    return
+
+  # Tab must not LEAVE a cell edit: Widget.tab's climb would otherwise reach
+  # WorldWdgt.nextTab and hop the caret to an arbitrary entry field elsewhere in the world
+  # WITHOUT committing. Swallowed at the cell; Excel-style commit-and-advance-the-selection
+  # is a deliberate later variant.
+  nextTab: (editField) ->
+    nil
+
+  previousTab: (editField) ->
+    nil
 
   _teardownEditorNoSettle: ->
     editor = @_editorWdgt

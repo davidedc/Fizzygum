@@ -12,7 +12,14 @@ it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
 - **2a** — direct-paint viewport, no `ScrollPanelWdgt` yet; fixed-size window content (elasticity 0) for a
   one-cycle settle (determinism).
 - **2b** — a buffer-driven overlay editor, NO caret (deterministic Enter-commits / Escape-cancels; the
-  framework provides no accept/cancel handlers, and a live caret blinks under a screenshot).
+  framework provided no accept/cancel handlers, and the caret was believed to blink under a screenshot).
+  **SUPERSEDED 2026-07-24 (the standard-caret arc,
+  `docs/plans/spreadsheet-standard-caret-editing-plan.md`): cell editing now IS the standard
+  `CaretWdgt` on an editable in-cell editor** — type-to-edit replace / Enter / F2 / double-click-at-slot
+  enter it; Enter commits and Escape reverts via the caret's accept/cancel escalations landing on the
+  `CellWdgt`; acting elsewhere commits. (The 2b fears resolved: accept/cancel escalations were made
+  deliverable — they fire from the target now — and the caret is pinned always-visible under the
+  Automator, so screenshots stay deterministic.)
 - **3** — the value-class algebra lives as METHODS on the value classes (`Color.mixed` / `lighter` /
   `darker`); `FormulaHelpers` is a thin free-function veneer.
 - **4** — `CellSocketWdgt` + RETAIN-AND-REMOUNT: a widget-VALUED cell keeps its live widget across

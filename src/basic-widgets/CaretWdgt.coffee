@@ -398,15 +398,23 @@ class CaretWdgt extends BlinkerWdgt
   
   # CaretWdgt editing.
 
-  # User presses enter on a stringWidget
+  # User presses enter on a stringWidget (or clicks/actions away from the edit — the
+  # pointer's action-elsewhere funnel accepts too). The escalation climbs from the TARGET,
+  # not from me: stopEditing destroys me and nils my @parent, so an escalation from the
+  # caret could never deliver (it climbed from nil — nobody ever received these events
+  # until the spreadsheet cell became the first consumer). The target is still parented
+  # at this moment, so accept/cancel reach ITS parent chain — for a spreadsheet cell
+  # editor that is cell → cells panel → sheet.
   accept: ->
+    target = @target
     world.stopEditing()
-    @escalateEvent "accept", nil
-  
+    target.escalateEvent "accept", nil
+
   # User presses ESC
   cancel: ->
+    target = @target
     world.stopEditing()
-    @escalateEvent 'cancel', nil
+    target.escalateEvent 'cancel', nil
 
   # User presses CTRL-Z or CMD-Z, potentially with shift
   undo: (shiftKey) ->

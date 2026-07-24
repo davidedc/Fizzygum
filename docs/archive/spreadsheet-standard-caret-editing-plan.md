@@ -1,5 +1,13 @@
 # Spreadsheet standard-caret cell editing — design + execution plan
 
+**STATUS: COMPLETE — EXECUTED IN FULL 2026-07-24 (same day it was authored). All phases
+S1 + P1–P4 landed; closing gauntlet green (13 legs incl. dpr1/dpr2/webkit + both
+serialization rigs). See the STATUS BOX ledger below for the per-phase record, including
+the two S1 findings that CORRECTED the reframe (the accept/cancel escalation was dead as
+written — fire-order — and the caret does blink live but is pinned always-visible under
+the harness). Current-state truth: `src/spreadsheet/CLAUDE.md` (the editing-model
+section) + the dataflow spec's superseded-2b note.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-07-24 (same day as the scalar-text-as-StringWdgt-child conversion, Fizzygum
 `71f07d24` / tests `554964964` — both pushed; execute on top of those or later).
@@ -139,6 +147,123 @@ child, period").
   destroys both (caret is a cell child here! verify `isCaret`-family exclusions in
   `childrenNotHandlesNorCarets` don't hide it from the sweep — grep) — update `midEditClean`
   only if its child-count expectation shifts.
+
+## STATUS BOX (execution ledger — updated per phase)
+
+- **S1 spike: DONE 2026-07-24** (`Fizzygum-tests/.scratch/caret-cell-edit-spike.js` +
+  `tab-live-set-probe.js`, throwaway). Findings, superseding parts of the reframe:
+  1. ✅ The parenting fact HOLDS: `world._editNoSettle(editorWdgt)` inside the sheet's settle
+     mounts the caret AS A CELL CHILD targeting the editor, correctly placed; typing inserts.
+  2. ❌ **Reframe #1 CORRECTED: the accept/cancel escalation is DEAD as written.**
+     `CaretWdgt.accept` runs `world.stopEditing()` FIRST, which destroys the caret and nils
+     its `@parent` — the subsequent `@escalateEvent` climbs from nil and delivers to nobody
+     (empirical: cell handler never fired). This is consistent with the old 2b note
+     ("only CaretWdgt escalates them, to nobody"). Fix (P1, minimal + first-consumer-only):
+     capture `target = @target`, stopEditing, then `target.escalateEvent` — the TARGET is
+     still parented at that moment, so the climb reaches the cell. Not a STOP-condition:
+     the architecture supports the arc; only the fire-order needed the 3-line correction.
+  3. ✅ **R1 mid-dispatch double delivery is REAL** (`KeydownInputEvent` iterates the LIVE
+     Set): a caret created during the sheet's `processKeyDown` receives the SAME key
+     (seeded 'a' → "aa"; Enter-to-edit instantly self-tears-down). Fix: dispatch over a
+     SNAPSHOT (`Array.from`) in KeydownInputEvent/KeyupInputEvent. Evidence this is a
+     framework REPAIR, not a workaround: ONE Tab press today runaway-hops text-field focus
+     (probe: 21 hops / 20 caret creations bailed by a guard — `switchTextFieldFocus` swaps
+     carets mid-dispatch and each new caret receives the same Tab).
+  4. ✅ Click-away teardown (`processMouseDown` →
+     `stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere` → `world.stopEditing()`) fires
+     NO escalation → sheet left "editing" with a dead caret. Fix (P1): route that funnel
+     through `world.caret.accept()` (click-away ACCEPTS — no-op change outside the
+     spreadsheet, accept has no other consumer) + a sheet-side self-heal (a dangling edit
+     commits on the next key/click).
+  5. ✅ Overflow under a caret: the CROP hand-off pops out an editor window at ~8 chars
+     mid-typing. With the hand-off suppressed the inline edit survives cleanly (caret clamps
+     at the cell edge, display ellipsises, no repaint errors). Fix (P1): a StringWdgt
+     prototype flag `alwaysEditsInline` (default false; the cell editor sets true) consulted
+     by `edit`/`_editNoSettle`/`handOffToPopoutEditorIfOverflowing`.
+  6. ✅ R3: entering via `world._editNoSettle` directly never pops out, even on long text.
+  7. `reactToKeystroke` has NO implementors on the cell chain — the caret's per-key
+     escalation lands nowhere; no surprise listeners.
+  8. ⚠ Reframe #2 nuance: the caret DOES blink in live use (`BlinkerWdgt.step`, 2 fps) but
+     is pinned ALWAYS-VISIBLE under the Automator (`animationsPacingControl`, state ≠ IDLE)
+     — which is why carets in committed references are deterministic. P3's doc rewrite must
+     say "pinned visible under the harness", not "never blinks".
+  9. Tab mid-edit would today climb to `WorldWdgt.nextTab` and hop the caret to a random
+     entry field WITHOUT committing → P1 swallows Tab at the cell (`nextTab`/`previousTab`
+     no-ops on CellWdgt; Excel-style cell-advance stays a later variant).
+- **P1: DONE 2026-07-24.** Landed (framework): KeydownInputEvent/KeyupInputEvent dispatch
+  over a SNAPSHOT of the receivers Set; CaretWdgt.accept/cancel escalate from the captured
+  TARGET after stopEditing (the escalation was dead as written — S1 finding 2);
+  ActivePointerWdgt's click-away funnel calls `world.caret.accept()` (click-away ACCEPTS —
+  byte-identical outside the sheet, accept had no other consumer); StringWdgt gains
+  `alwaysEditsInline` (prototype default false) consulted by edit/_editNoSettle/
+  handOffToPopoutEditorIfOverflowing. Landed (spreadsheet): the cell editor mounts
+  `isEditable=true` + `alwaysEditsInline=true` (no more end-of-text bar);
+  `_startEditNoSettle` enters `world._editNoSettle(editor)`; sheet's `processKeyDown`
+  ignores keys while `_isCaretEditLive()` and SELF-HEALS a dangling edit (commit) before
+  selection-mode handling; `CellWdgt.accept/cancel` forward to new public
+  `acceptCellEdit`/`cancelCellEdit` (settle-opening); `CellWdgt.nextTab/previousTab`
+  swallow Tab; `_teardownEditorNoSettle` kills a still-live caret (wheel commit-before-
+  scroll path) via `world._stopEditingNoSettle()`; the dead-method gate forced the P3
+  deletions of `_processKeyWhileEditingNoSettle` + both `_updateEditorTextNoSettle`
+  forward into P1. Verified: 18/18 functional probe (`.scratch/caret-p1-verify.js` —
+  type-to-edit seeds once, caret nav + mid-string insert, Enter-commit → model,
+  Escape-revert, click-away commit via the pointer funnel, Tab swallowed, 16-char
+  overflow stays inline, wheel commit leaves no orphan caret, selection arrows intact,
+  plain StringWdgt editing regression-free). `fg presuite`: paint PASS; dpr1 = 5 fails,
+  ALL diffpage-eyeballed + classified: EditCaretBar (bar→real caret, the designed change
+  — reshaped in P4), StringWdgtInlineTypingRefitsUnderFittingModes (the ref had BAKED IN
+  a double-delivered duplicate glyph — 'klmm' — from the live-Set bug; the fix's render
+  is the correctly-typed run → recapture), 3 inspector tests (member list gained the
+  `alwaysEditsInline` row — the standard benign churn). Recaptures DEFERRED to one gated
+  `fg recapture` batch in P4 (after the test reshape) so the full-suite gate runs once.
+- **P2: DONE 2026-07-24.** Type-to-edit replace + Enter/F2 edit-existing landed FREE with
+  P1 (the seed path + caret-at-end were already the mount's shape). New: DOUBLE-CLICK
+  enters an edit with the caret at the clicked slot — `StringWdgt.mouseDoubleClick` gains
+  the dispatcher's pos param and ESCALATES when not editable (mirror of mouseClickLeft's
+  else-escalate; the only other implementor, ButtonWdgt, guards on `doubleClickAction`,
+  so button-label double-clicks change from dead zone to the button's own action),
+  `CellWdgt.mouseDoubleClick` forwards to the sheet's new PUBLIC `startEditAtPointer`
+  (select + edit inside the settle; the caret's `gotoSlot(editor.slotAt pos)` after it —
+  the caret's own self-settling entry). DECIDED: click-on-already-selected variant left
+  out (double-click is the standard); drag-SELECT inside the editor is NOT free (the
+  editor is solid with its cell — `wantsDetachOfChild` false → `grabsToParentWhenDragged`
+  true → a down+drag is the window-drag gesture) and stays out of scope; click-to-place,
+  shift-click extend, double-click word-select all work. Verified: 7/7 gesture probe
+  (`.scratch/caret-p2-verify.js` — double-click at slot via the scalar-child escalation,
+  word-select, shift-click extend, empty-cell double-click at slot 0, switch-cell
+  commit-then-edit). `fg presuite`: paint PASS; dpr1 = the SAME 5 documented fails as P1,
+  nothing new.
+- **P3: DONE 2026-07-24.** Deleted: `@_editBuffer` entirely (ctor, transients list, start /
+  teardown / re-index writes; the seed now flows as a parameter into
+  `_mountEditorNoSettle(seedText)`); `StringWdgt.showsEndOfTextBar` + its cache-key term,
+  width reservation and bar paint (its only consumer died with P1 — pixel-neutral, nobody
+  set it anymore). `_commitEditNoSettle` reads the editor's text as THE source (blank text
+  = a legitimate emptying commit; an UNREACHABLE editor abandons instead of blanking).
+  (`_processKeyWhileEditingNoSettle` + both `_updateEditorTextNoSettle` had already been
+  deleted in P1 — the dead-method gate forced them forward.) Docs rewritten: the sheet's
+  header EDITING paragraph; `src/spreadsheet/CLAUDE.md` (What's-here sheet + cell bullets,
+  Phase-8 selection/editing bullet, the 2b bullet marked SUPERSEDED with the corrected
+  history — incl. the blink claim: the caret is pinned always-visible under the Automator,
+  not blink-free — plus a new standard-caret editing-model section); spec 2b deviation
+  bullet marked SUPERSEDED. `fg presuite`: paint PASS; dpr1 = the SAME 5 documented fails
+  (EditCaretBar's value assert on the deleted flag now fails too — reshaped in P4; the
+  inspector diffs became a row SWAP: `alwaysEditsInline` in, `showsEndOfTextBar` out).
+- **P4: DONE 2026-07-24.** Serialization rigs green FIRST (both: roundtrip-headless 90
+  checks incl. `midEditClean` — the mid-edit snapshot now carries the EDITABLE editor +
+  the CARET as cell children, serializes without crash, restores settled/not-editing with
+  exactly the scalar child; the re-index sweep uses raw `children`, not the caret-excluding
+  walk, and `Widget._destroyNoSettle` removes a swept caret shell from
+  `keyboardEventsReceivers` — verified in src; file-roundtrip 7 checks). Test reshaped:
+  `git mv` → `SystemTest_macroSpreadsheetEditCaret`, old bar references dropped, macro
+  rewritten to 4 images / 5 beats (mid-edit REAL caret + inset alignment; ArrowLeft+type =
+  MID-string insertion '1257' caret between 5 and 7; Escape-revert leaves A1 uncommitted;
+  Enter-commit glyph-identity; double-click at [0.1,0.5] of the scalar child re-enters
+  with the caret at the clicked slot < end) — all value asserts PASSED on the first
+  reference-less run; one macro-rule-[D] sanction comment was demanded by the layering
+  gate. Gated `fg recapture` batch (the 4 churned tests + the new one):
+  **✅ RECAPTURE COMPLETE — full suite GREEN at dpr1 AND dpr2.** New references
+  eyeball-verified (image_2 shows 125|7, image_4 shows 1|27). Visualisation page emitted.
+  BACKLOG section checked off; the perf plan's pin-test pointer annotated with the rename.
 
 ## §0.5 Cold-execution protocol
 

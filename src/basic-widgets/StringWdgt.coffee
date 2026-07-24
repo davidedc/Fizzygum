@@ -68,13 +68,15 @@ class StringWdgt extends Widget
   # need this.
   autoSizeBoxToText: false
 
-  # A steady 1px bar after the last glyph — the EDIT-IN-PROGRESS affordance for a
-  # buffer-driven passive editor (the spreadsheet's overlay editor: the SHEET owns the
-  # keyboard + buffer, this widget only displays it, so a live CaretWdgt — a keyboard
-  # receiver — cannot be mounted; see SimpleSpreadsheetWdgt's F2 editing model). Drawn
-  # into the back buffer, so it is a pure function of the text (deterministic — it
-  # NEVER blinks) and tracks every buffer change through the normal cache-key miss.
-  showsEndOfTextBar: false
+  # When true, this widget NEVER hands its edit off to the pop-out "edit:" prompt: entering
+  # an edit stays inline even when the text is already ellipsised (edit/_editNoSettle skip
+  # their CROP branch), and GROWING past the box mid-edit keeps the inline caret
+  # (handOffToPopoutEditorIfOverflowing declines) — the display simply stays ellipsised,
+  # with the caret clamping at the box edge. For editors that live INSIDE a fixed-geometry
+  # host whose commit semantics a pop-out would bypass (the spreadsheet cell editor: Enter
+  # must commit to the CELL, a prompt window has no such wiring). A plain boolean, so a
+  # mid-edit snapshot carries it harmlessly.
+  alwaysEditsInline: false
 
   # startMark and endMark contain the slot of the
   # slot first selected IN TIME, not "in space".
@@ -661,7 +663,6 @@ class StringWdgt extends Widget
     @buildCanvasFontProperty() + "-" +
     @hasDarkOutline + "-" +
     @isHeaderLine + "-" +
-    @showsEndOfTextBar + "-" +
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
@@ -814,8 +815,6 @@ class StringWdgt extends Widget
     else
       width = widthOfText + 2 * @_outlineHaloMargin()
       height = heightOfText + 2 * @_outlineHaloMargin()
-      # room for the end-of-text bar (drawn 1px past the last glyph, +1px slack)
-      width += 3 if @showsEndOfTextBar
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
 
@@ -843,13 +842,6 @@ class StringWdgt extends Widget
 
 
     @drawSelection backBufferContext
-
-    # the steady end-of-text bar (see the showsEndOfTextBar field comment): 1px past the
-    # last glyph, clamped into the buffer; slightly shorter than the em box. Rounded x —
-    # measured text widths are fractional and a fractional fillRect would AA-soften the bar.
-    if @showsEndOfTextBar
-      backBufferContext.fillStyle = @color.toString()
-      backBufferContext.fillRect (Math.min (Math.round textHorizontalPosition + widthOfText + 1), width - 2), (textVerticalPosition - heightOfText + 2), 1, heightOfText - 3
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
@@ -1413,7 +1405,7 @@ class StringWdgt extends Widget
   # flag -- not the bare @_settleLayoutsAfter => @_editNoSettle wrap. Its NoSettle sibling _editNoSettle below
   # mirrors the branch, routing the inline case to world._editNoSettle (the drain-safe caret core).
   edit: ->
-    if @textPossiblyCroppedToFit == @transformTextOneToOne @text
+    if @alwaysEditsInline or @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world.edit @
       return true
     else
@@ -1426,7 +1418,7 @@ class StringWdgt extends Widget
   # overflow branch hands off to editPopup exactly as edit does (not reached for a short prompt value, which
   # fits inline).
   _editNoSettle: ->
-    if @textPossiblyCroppedToFit == @transformTextOneToOne @text
+    if @alwaysEditsInline or @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world._editNoSettle @
       return true
     else
@@ -1441,6 +1433,7 @@ class StringWdgt extends Widget
   # straight to editPopup(), so insert is the only way to exceed CROP inline. History (why this
   # moved off slotCoordinates): see docs/archive/layout-system-architecture-assessment.md.
   handOffToPopoutEditorIfOverflowing: ->
+    return false if @alwaysEditsInline
     return false unless @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
     return false if @textPossiblyCroppedToFit == @transformTextOneToOne @text
     world.stopEditing()
@@ -1523,7 +1516,11 @@ class StringWdgt extends Widget
     if @startMark == @endMark
       @clearSelection()
 
-  mouseDoubleClick: ->
+  # An EDITABLE string word-selects around the caret; a non-editable one escalates (the
+  # same else-escalate mouseClickLeft has always had), so a double-click on a passive label
+  # reaches the first ancestor that wants it — e.g. a spreadsheet cell's scalar-text child
+  # escalating to the CellWdgt, which starts a caret edit at the clicked slot.
+  mouseDoubleClick: (pos) ->
     if @isEditable
       previousCaretSlot = world.caret?.slot
 
@@ -1541,6 +1538,8 @@ class StringWdgt extends Widget
 
       @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
       world.caret?.gotoSlot (previousCaretSlot + extendRight)
+    else
+      @escalateEvent "mouseDoubleClick", pos
 
   mouseTripleClick: ->
     if @isEditable

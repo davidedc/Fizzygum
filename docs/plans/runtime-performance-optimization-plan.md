@@ -727,7 +727,9 @@ its text widget; the check asserts identity, stronger than the old zero-children
 Edit-mode UX follow-up (owner-reported): `StringWdgt.showsEndOfTextBar` (dormant; a steady
 deterministic end-of-text bar drawn in the back buffer) + the editor mounted at the same (4,2)
 inset — 3 benign inspector recaptures + new pinning test `macroSpreadsheetEditCaretBar`
-(suite 265→266); details in the measurement doc's final-shape section.
+(suite 265→266; the bar + test were superseded the same day by the standard-caret arc —
+the test is reshaped as `macroSpreadsheetEditCaret`); details in the measurement doc's
+final-shape section.
 
 ---
 
