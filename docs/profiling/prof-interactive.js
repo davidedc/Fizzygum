@@ -90,20 +90,50 @@ async function installCWC(page){
 }
 async function dumpCWC(page){ return await page.evaluate(()=>window.__cwc); }
 // Instrument text: how many strings render per drag frame, and are they repeats
-// (→ back buffers NOT being reused) or one-offs. Also count TextWdgt back-buffer
-// cache hits vs rebuilds.
+// (→ back buffers NOT being reused) or one-offs. Also tally StringWdgt/TextWdgt
+// back-buffer rebuilds per phase + class (via the private _createRefreshOrGetBackBuffer —
+// the public name died in the public/private call-separation arc), naming the rebuilt
+// strings, and watch the immutable-buffer LRU (capacity/occupancy/evictions) — a
+// size pinned at capacity + evictions during a phase = cache THRASH, not cold misses.
+// A miss is detected structurally: the rebuild path .set()s the LRU, so within one
+// wrapped call either size grew or an eviction fired at capacity.
 async function installText(page){
   await page.evaluate(()=>{
-    window.__txt={renders:0, byStr:{}, bbHit:0, bbMiss:0};
+    window.__txt={renders:0, byStr:{}, byStrPhase:{}, byPhaseRenders:{}, stacks:{}, byPhase:{}, cache:{capacity:0, sizeStart:0, sizeEnd:0, evictions:0}};
     const BT=(window.SWCanvas&&SWCanvas.fonts&&SWCanvas.fonts._raw&&SWCanvas.fonts._raw.BitmapText);
     if(BT&&BT.drawTextFromAtlas){ const o=BT.drawTextFromAtlas.bind(BT);
-      BT.drawTextFromAtlas=function(ctx,text,...r){ window.__txt.renders++; const k=String(text).slice(0,24); window.__txt.byStr[k]=(window.__txt.byStr[k]||0)+1; return o(ctx,text,...r); }; }
-    if(typeof TextWdgt!=='undefined' && TextWdgt.prototype.createRefreshOrGetBackBuffer){
-      const o=TextWdgt.prototype.createRefreshOrGetBackBuffer;
-      TextWdgt.prototype.createRefreshOrGetBackBuffer=function(){ const hit=world.cacheForImmutableBackBuffers.get(this.createBufferCacheKey()); if(hit)window.__txt.bbHit++; else window.__txt.bbMiss++; return o.apply(this,arguments); }; }
+      BT.drawTextFromAtlas=function(ctx,text,...r){ window.__txt.renders++; const k=String(text).slice(0,24); window.__txt.byStr[k]=(window.__txt.byStr[k]||0)+1;
+        const ph=window.__phase; window.__txt.byPhaseRenders[ph]=(window.__txt.byPhaseRenders[ph]||0)+1;
+        const bp=(window.__txt.byStrPhase[ph]=window.__txt.byStrPhase[ph]||{}); bp[k]=(bp[k]||0)+1;
+        // one sampled stack per PROVEN-HOT string (30th render — boot one-offs never get here);
+        // names the widget/appearance re-rendering it per frame (framework frames keep
+        // real names even in the minified build)
+        if(window.__txt.byStr[k]===30 && Object.keys(window.__txt.stacks).length<12){
+          try{ window.__txt.stacks[k]=(new Error()).stack.split('\n').slice(2,10).map(s=>s.trim().replace(/\s+\(.*\)$/,'').replace(/^at /,'')).join(' <- '); }catch(e){}
+        }
+        return o(ctx,text,...r); }; }
+    const cache = world.cacheForImmutableBackBuffers;
+    if(cache){ window.__txt.cache.capacity=cache.capacity; window.__txt.cache.sizeStart=cache.size;
+      const oRem = cache.remove.bind(cache);
+      cache.remove = function(k){ window.__txt.cache.evictions++; return oRem(k); }; }
+    const wrapBB=(klassName)=>{ const K=window[klassName];
+      if(!K||!K.prototype._createRefreshOrGetBackBuffer) return;
+      const o=K.prototype._createRefreshOrGetBackBuffer;
+      K.prototype._createRefreshOrGetBackBuffer=function(){
+        const before = cache ? cache.size : 0; const evBefore = window.__txt.cache.evictions;
+        const r = o.apply(this,arguments);
+        const missed = cache ? (cache.size !== before || window.__txt.cache.evictions !== evBefore) : false;
+        const ph=window.__phase, cls=this.constructor.name;
+        const b=(window.__txt.byPhase[ph]=window.__txt.byPhase[ph]||{});
+        const c=(b[cls]=b[cls]||{calls:0,rebuilds:0,rebuiltStrs:{}});
+        c.calls++;
+        if(missed){ c.rebuilds++; const k=String(this.text!=null?this.text:'').slice(0,24); c.rebuiltStrs[k]=(c.rebuiltStrs[k]||0)+1; }
+        return r; };
+    };
+    wrapBB('StringWdgt'); wrapBB('TextWdgt');
   });
 }
-async function dumpText(page){ return await page.evaluate(()=>window.__txt); }
+async function dumpText(page){ return await page.evaluate(()=>{ const c=world.cacheForImmutableBackBuffers; if(c&&window.__txt) window.__txt.cache.sizeEnd=c.size; return window.__txt; }); }
 // Apply the occlusion-culling flag after boot. Returns the applied state string:
 // 'on'/'off' if the feature exists, 'n/a' on a pre-feature build (flag absent).
 async function applyCull(page, cull){
@@ -144,12 +174,16 @@ async function openAllApps(page){
     return {opened,errs};
   });
 }
-async function setWallpaper(page,wp){ await page.evaluate(w=>{ world.wallpaper.patternName=w; world.changed(); },wp); }
+// setPattern is the wallpaper's public menu-action setter (menu-arg signature: pattern name 3rd);
+// it invalidates the world itself via noteWallpaperChanged — world._changed() is private.
+async function setWallpaper(page,wp){ await page.evaluate(w=>{ world.wallpaper.setPattern(null,null,w); },wp); }
 
 // topmost window grab point (titlebar), in CSS px (dpr=ceilPixelRatio=1 in this build)
+// Window detection is the polymorphic isFrame?() capability (WindowWdgt became FrameWdgt
+// 2026-07-19; a bare class-name test would throw on current builds).
 async function topWindowGrab(page){
   return await page.evaluate(()=>{
-    const wins=(world.children||[]).filter(c=>c instanceof WindowWdgt && c.bounds);
+    const wins=(world.children||[]).filter(c=>typeof c.isFrame==='function' && c.isFrame() && c.bounds);
     if(!wins.length) return null;
     const w=wins[wins.length-1]; const b=w.bounds;
     return { x: Math.round(b.left()+Math.min(90,(b.right()-b.left())/2)), y: Math.round(b.top()+10),
@@ -161,9 +195,13 @@ async function topWindowGrab(page){
 // out of the timing-sensitive path.
 async function fizzyPaintCanvasArea(page){
   return await page.evaluate(()=>{
-    const wins=(world.children||[]).filter(c=>c instanceof WindowWdgt && c.bounds);
+    const wins=(world.children||[]).filter(c=>typeof c.isFrame==='function' && c.isFrame() && c.bounds);
     const isPaint=(w)=>/Paint|Drawing/i.test(w.constructor.name) || (w.label && /paint|drawing/i.test(w.label.text||''));
-    const w=wins.filter(isPaint).pop() || wins.pop();
+    // prefer the app window over its companion "... info" document (which also matches
+    // the name test and, opening later, would win a bare .pop())
+    const isInfo=(w)=>/info/i.test((w.label&&w.label.text)||w.constructor.name);
+    const paints=wins.filter(isPaint);
+    const w=paints.filter(x=>!isInfo(x)).pop() || paints.pop() || wins.pop();
     if(!w) return null; const b=w.bounds;
     return { cx: Math.round((b.left()+b.right())/2), cy: Math.round(b.top()+ (b.bottom()-b.top())*0.6),
              halfW: Math.round((b.right()-b.left())*0.30), halfH: Math.round((b.bottom()-b.top())*0.22),
@@ -211,7 +249,7 @@ async function coveredPhase(page){
     const clk = (world.children||[]).find(c=> typeof AnalogClockWdgt!=='undefined' && c instanceof AnalogClockWdgt && c.bounds);
     if(!clk) return {err:'no bare AnalogClockWdgt on the desktop'};
     const cb = clk.bounds;
-    const wins = (world.children||[]).filter(c=>c instanceof WindowWdgt && c.bounds);
+    const wins = (world.children||[]).filter(c=>typeof c.isFrame==='function' && c.isFrame() && c.bounds);
     const cov = wins.sort((a,b)=>(b.bounds.width()*b.bounds.height())-(a.bounds.width()*a.bounds.height()))[0];
     if(!cov) return {err:'no coverer window'};
     const covW = cov.bounds.width(), covH = cov.bounds.height();
@@ -219,7 +257,6 @@ async function coveredPhase(page){
     const newRight = Math.min(VW, cb.right() + margin);
     const newLeft = Math.max(0, Math.round(newRight - covW));
     cov.moveTo(new Point(newLeft, 0));           // pin top-right over the corner clock; top=0 covers its y
-    world.changed();
     const nb = cov.bounds, inset = 5;            // Boxy inscribed box = bounds inset radius(4)+1
     return {
       covTitle:(cov.label&&cov.label.text)||cov.constructor.name, covW:Math.round(covW), covH:Math.round(covH),
@@ -306,10 +343,26 @@ async function runOne(browser, wp, cull){
   } }
   if(flag('text')){ for(const r of results){ if(!r.txt) continue; const t=r.txt;
     const top=Object.entries(t.byStr).sort((a,b)=>b[1]-a[1]).slice(0,12);
-    console.log(`\n=== text rendering [${r.wp}] over the whole run ===`);
-    console.log(`  BitmapText.drawTextFromAtlas calls: ${t.renders}   TextWdgt back-buffer: ${t.bbHit} hits / ${t.bbMiss} rebuilds`);
+    console.log(`\n=== text rendering [${label(r)}] over the whole run ===`);
+    console.log(`  BitmapText.drawTextFromAtlas calls: ${t.renders}`);
+    const c=t.cache||{};
+    console.log(`  immutable-buffer LRU: capacity ${c.capacity}, size ${c.sizeStart}→${c.sizeEnd}, evictions ${c.evictions}${c.evictions&&c.sizeEnd>=c.capacity?'  ⚠ AT CAPACITY + EVICTING = THRASH':''}`);
+    for(const [ph,classes] of Object.entries(t.byPhase||{})){
+      for(const [cls,s] of Object.entries(classes)){
+        const topR=Object.entries(s.rebuiltStrs).sort((a,b)=>b[1]-a[1]).slice(0,6)
+          .map(([k,n])=>`${n}× "${k}"`).join('  ');
+        console.log(`  ${ph.padEnd(8)} ${cls.padEnd(11)} paints ${String(s.calls).padStart(6)}   rebuilds ${String(s.rebuilds).padStart(6)}${s.rebuilds?`   top rebuilt: ${topR}`:''}`);
+      } }
+    console.log(`  renders by phase: ${JSON.stringify(t.byPhaseRenders||{})}`);
+    for(const [ph,strs] of Object.entries(t.byStrPhase||{})){
+      const tp=Object.entries(strs).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,n])=>`${n}× "${k}"`).join('  ');
+      console.log(`    ${ph.padEnd(8)} top: ${tp}`);
+    }
     console.log(`  most-repeated strings (count × "text"):`);
-    for(const [s,c] of top) console.log(`    ${String(c).padStart(5)} × "${s}"`);
+    for(const [s,c2] of top) console.log(`    ${String(c2).padStart(5)} × "${s}"`);
+    const stacks=Object.entries(t.stacks||{});
+    console.log(`  sampled render stacks (${stacks.length} hot strings, captured at 30th render):`);
+    for(const [s,st] of stacks) console.log(`    "${s}" :: ${st}`);
   } }
   const wpBoth = wallpapers.length===2 && cullConfigs.length===1 && cullConfigs[0]===null;
   if(wpBoth){

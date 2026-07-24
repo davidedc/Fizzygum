@@ -46,9 +46,9 @@ AUTHORED 2026-07-18, NOT STARTED; replace ~79 vector `*IconAppearance` files wit
 - [ ] P6 (banked): dot-mode at large scale; in-system pixel editor; dead vector-helper prune (⚠ FanoutPin uses `_paintRoundedSquareBadge`)
 
 ### `plans/runtime-performance-optimization-plan.md`
-H1/Arc2-4/W1-W2/A/C1/O1/O2 landed; NEXT = O3 (per-widget occlusion) + O4 (drawImage attribution)
+H1/Arc2-4/W1-W2/A/C1/O1/O2 landed; O4 attribution DONE 2026-07-24; NEXT = O4a (owner-gated) + O3
 - [ ] §5B O3: per-widget/descend occlusion (plan P4/P5) — large, owner-gated
-- [ ] §5B O4: reduce _drawImageInternal blits — needs targeted attribution profiling first
+- [ ] §5B O4a: cache spreadsheet cell/header text pixels (CellWdgt/SheetHeaderCellWdgt direct fillText = 73% of drag _drawImageInternal) — attribution + falsified hypotheses in `measurements/drawimage-blit-attribution-2026-07-24.md`; O4b (SWCanvas glyph-run batching) only if still hot after O4a
 - [ ] §8/top banner: S2 Tier 2, S6b, F1 (precompiled test-harness boot) still unlanded
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 

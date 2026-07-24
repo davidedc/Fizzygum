@@ -37,6 +37,11 @@ Requires: a FULL normal build (`cd Fizzygum && ./build_it_please.sh`) and Puppet
   "busy" percentages are the numbers to compare across runs (the suite is vsync-paced).
 - **`prof-groups.js <prefix> <segments.json>`** — sums self time over named SWCanvas
   subsystem groups (drawImage pipeline, clip-mask build/read, span fill, blend+color, …).
+- **`prof-attribute.js <file.cpuprofile> --fn=<name>`** — attributes ONE named function's
+  self time by caller chain (immediate caller / nearest framework call site / engine-entry
+  route, e.g. "via drawTextFromAtlas"), using `segments.json` for the engine/framework
+  boundary. Use a shadow-build profile. Built for the §5B O4 blit attribution
+  (`../measurements/drawimage-blit-attribution-2026-07-24.md`), generic over any function.
 - **`mk-shadow-build.sh [outdir]`** — assembles the unminified shadow build (real function
   names in profiles). The minified real build is preferred for counters/wall-clock;
   the shadow build for profiles.
@@ -111,6 +116,11 @@ node prof-groups.js /tmp/fizzygum-profiling/prof-sw1-dpr1 /tmp/fizzygum-profilin
 ```
 
 Notes / gotchas learned during the campaign:
+- **Instruments rot when src renames land.** The 2026-07-24 O4 session found `prof-interactive.js`
+  silently broken four ways (3× `instanceof WindowWdgt` post-FrameWdgt-rename, `world.changed()`
+  post-privatization, a `--text` wrap on the deleted public `createRefreshOrGetBackBuffer` name,
+  and the draw phase picking the "… info" window). A dead wrap reports zeros that read as
+  "nothing happening" — smoke-check each enabled instrument reports non-zero before trusting it.
 - Run profile runs SERIALLY (CPU contention distorts sampling); counter runs may overlap
   (`FIZZYGUM_KEEP_STALE_BROWSERS=1` on all but the first, or they pkill each other's browser).
 - The native backend (`--sw=0`) does NOT run headless — the first test never completes
