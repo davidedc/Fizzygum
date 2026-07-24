@@ -99,3 +99,89 @@ Sanity anchor: minified drag median 27.9–29.2 ms across the three count runs �
 
 Raw artifacts: `/tmp/fizzygum-profiling/o4.plain.{drag,draw,covered}.cpuprofile` +
 `o4-minified-counts*.log` (session-local; regenerate with the commands above).
+
+---
+
+## ⚠ CORRECTION + O4a results (same day, after landing the fix)
+
+O4a went through TWO same-day shapes, both byte-identical, only the second committed:
+first a cached-raster blit (a `cellTextBufferFor` helper on the sheet — its byte-identity
+spike-proven at dpr1+dpr2 via `Fizzygum-tests/.scratch/probe-o4a-text-buffer.js`, whose one
+dpr2 scare was the probe's own unbalanced save/restore: `useLogicalPixelsUntilRestore` does
+NOT save, the caller must — then gauntlet-proven 13/13 with zero reference changes); then,
+on the owner's uniformity decision ("scalar text is a StringWdgt child, period"), the FINAL
+shape — see the section below — which deleted the raster helper again. The interim shape's
+A/B FALSIFIED part of the attribution above — recorded here so the wrong number doesn't
+propagate:
+
+- **The headline "73% of drag `_drawImageInternal` = spreadsheet direct-fillText" conflated
+  TWO phenomena sharing one chain shape.** After O4a, the minified per-phase render counts
+  collapse exactly as predicted — **drag 964→42, draw 3209→48, covered 774→2** (the survivors
+  are the desktop logo's fillText + 2 legitimate rebuilds) — yet the shadow drag profile
+  STILL shows ~74% of `_drawImageInternal` under the fillText route, while draw/covered show
+  ~0% in BOTH runs. The 73–74% shadow share is therefore dominated by the **one-time
+  glyph-atlas warm-up rebuild storms** (each atlas arrival resets
+  `cacheForImmutableBackBuffers`, rebuilding every visible text widget): on the ~3× slower
+  shadow build the warm-up stretches into the FIRST profiled phase (drag). The real
+  steady-state spreadsheet stream existed (the minified counts prove it) but is the smaller
+  of the two contributions.
+- **Corrected steady-state model:** `_drawImageInternal` ≈ 7% of busy in text-quiet phases,
+  split ~72% normal-pass / ~28% shadow-pass back-buffer blits. The per-frame direct-text
+  waste is now eliminated by construction; its dpr1 wall-clock value was **within run noise**
+  (drag median 29.3 vs 27.9–29.2 before) — the O1 pattern again: a correct-form fix, not a
+  big lever.
+- **Consequences for the ranked directions:** **O4b (SWCanvas glyph-run batching) loses its
+  urgency** — the steady-state glyph stream is now just the logo; do not build it on these
+  numbers. **O4c (shadow pass ~27% of blit time, every phase) stands** as the remaining real
+  observation. **NEW (banked observation): the boot/atlas-warm rebuild storm** (~1,030 text
+  rebuilds per reset, one reset per atlas arrival, batched) is a BOOT-time cost, not a
+  frame-time cost — only worth attention if boot feel ever matters.
+- **Methodology lessons (add to O1's):** (1) on a shadow build, the first profiled phase
+  inherits warm-up transients — warm up longer or profile a later phase before trusting it;
+  (2) a caller-chain attribution whose middle frames are `(anonymous)` can conflate distinct
+  phenomena — corroborate with per-phase counts on the minified build before naming a
+  culprit.
+
+O4a artifacts: `/tmp/fizzygum-profiling/o4a-after-counts.log`,
+`o4a.plain.{drag,draw,covered}.cpuprofile` (session-local).
+
+---
+
+## Final shape (same day): scalar text is a StringWdgt child, period
+
+Owner design decision on reviewing O4a: rather than a bespoke cached-raster paint, the
+spreadsheet's text becomes REAL WIDGETS — completing the sheet's own F5 "everything visible
+is a widget" north star. As landed:
+
+- `CellWdgt` presents branch-3 scalar/error text as a passive `StringWdgt` child (the overlay
+  editor's exact configuration: `isEditable` false, fontSize 12); `SheetHeaderCellWdgt` holds
+  its label the same way, relabelled in place on scroll via `_setTextNoSettle`'s no-change
+  guard from the sheet's chrome ensure. The interim `cellTextBufferFor` raster helper is
+  DELETED — StringWdgt's standard immutable back buffers now provide the caching for free.
+- **Byte-identical anyway — zero recaptures.** The first build shifted every label to
+  StringWdgt's natural TOP/LEFT placement (measured off the failing screenshots: a pure
+  (−4, −2) translation of pixel-identical glyph rasters — 18 spreadsheet tests red, every
+  VALUE assertion green). A **(+4, +2) inset of the child's box** restores the exact
+  pre-conversion text position: suite 265/265 ×3 engines, full gauntlet 13/13, no reference
+  changed. (The overlay editor keeps its full-cell placement, as always shipped.)
+- **One serialization-rig expectation updated** (`spreadsheet.roundtrip.midEditClean`): a
+  restored scalar cell now legitimately owns ONE child — the check now asserts that child IS
+  the scalar-text widget and no editor survived (stronger than the old zero-children form).
+- **The perf outcome carries over unchanged**: per-frame direct-text renders drag 42 /
+  draw 48 / covered 2 (vs 964/3209/774 before O4a — the survivors are the desktop logo),
+  LRU at 189/1000 with 0 evictions, frame medians within run noise (drag 29.9 ms).
+
+Artifact: `/tmp/fizzygum-profiling/stringwdgt-after-counts.log` (session-local).
+
+**Edit-mode UX follow-up (owner-reported, same day):** two gaps surfaced on review — no
+visual hint that an edit is in progress (the F2 buffer model deliberately mounts no
+`CaretWdgt`: a live caret is a keyboard receiver, and the sheet must stay sole receiver),
+and the editor's full-cell mount made text shift top-left vs resting. Fix: `StringWdgt`
+gained a dormant **`showsEndOfTextBar`** flag — a steady 1px bar after the last glyph, drawn
+into the back buffer (a pure function of the text: deterministic, never blinks, tracks every
+buffer change through the normal cache-key miss) — and the cell's editor now mounts at the
+**same (4,2) inset** as the resting child, so resting ≡ editing glyph positions exactly.
+Blast radius: 3 benign StringWdgt-inspector member-list recaptures (the new prototype field)
++ NEW pinning test `SystemTest_macroSpreadsheetEditCaretBar` (mid-edit screenshot with the
+bar + value-asserted position equality editor↔resting child). Suite 265→266; recapture gate
+COMPLETE; closing gauntlet 13/13.

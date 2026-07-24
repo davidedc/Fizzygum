@@ -7,8 +7,10 @@
 # background; the 21 header cells (SheetHeaderCellWdgt: column letters, row numbers, the corner)
 # are direct children, kept OUTSIDE the panel so a future scroll clip can never touch the frozen
 # headers. Each widget paints its own fill, its own TOP+LEFT grid edges (edge-ownership + the
-# crossing rule — see paintGridEdges), its own label/value, and — the selected cell — its own
-# selection ring. This widget has NO paint of its own (nil appearance): it is the model owner,
+# crossing rule — see paintGridEdges) and — the selected cell — its own selection ring; every
+# label/value is a CHILD widget (hosted value / presenter / passive StringWdgt text — "scalar
+# text is a StringWdgt child, period", owner direction 2026-07-24). This widget has NO paint
+# of its own (nil appearance): it is the model owner,
 # the formula scope, the keyboard receiver, and the geometry authority (the constants below).
 #
 # Widgetising is owner direction (2026-07-05 cells; 2026-07-17 headers + chrome — plan §3-F F5,
@@ -254,6 +256,9 @@ class SimpleSpreadsheetWdgt extends Widget
         @_headerCells.set key, header
       header = @_headerCells.get key
       header._applyBounds (@position().add new Point x, y), new Point w, h
+      # label child sync (create/retext/place) — every chrome-ensure path (build, scroll,
+      # resize, restore) funnels here, so the origin-derived labels stay current in place
+      header._syncLabelNoSettle()
       return
     visibleCols = @_visibleCols()
     visibleRows = @_visibleRows()
@@ -768,7 +773,8 @@ class SimpleSpreadsheetWdgt extends Widget
         @_changed()
         return value
       # a value class may answer cellPresenter yet decline (nil) → fall through to branch 3
-    # branch 3 — scalar / error / nil: the cell paints the text (dropping any hosted widget)
+    # branch 3 — scalar / error / nil: the cell presents the text via its scalar StringWdgt
+    # child (dropping any hosted widget)
     text = if value? then value.toString() else nil
     cellWdgt.showScalarNoSettle text, (value instanceof SheetError)
     value
@@ -847,6 +853,8 @@ class SimpleSpreadsheetWdgt extends Widget
       if child instanceof CellWdgt
         child.attachSheet this
         child._editorWdgt = nil
+        child._scalarTextWdgt = nil
+        child._scalarShowsError = false
         for grand in child.children.slice()
           grand._fullDestroyNoSettle() unless grand is child.hostedWidget
         @_cells.set child.address, child

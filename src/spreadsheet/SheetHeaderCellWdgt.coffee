@@ -9,13 +9,14 @@
 # from the sheet's geometry constants), so the restore/duplicate re-index DESTROYS and
 # REBUILDS header cells rather than adopting them (SimpleSpreadsheetWdgt._reindexCellsNoSettle).
 #
-# It paints everything it shows (the F5 "the sheet paints nothing" flip):
+# It paints its CHROME (the F5 "the sheet paints nothing" flip):
 #   - its header-strip fill (the sheet's headerFillColor — was the sheet's strip fillRects);
 #   - its own TOP + LEFT grid edges via the sheet's paintGridEdges (the F5 edge-ownership
-#     convention; the crossing rule lives there);
-#   - its label at local (4, height − 6) — the exact offsets the sheet's deleted _paintGrid
-#     used for header text, and the same ones CellWdgt uses for scalar text (the Phase-8
-#     precedent that proved this text relocation byte-exact).
+#     convention; the crossing rule lives there).
+# Its LABEL is a passive StringWdgt child ("scalar text is a StringWdgt child, period" —
+# owner direction 2026-07-24, same as CellWdgt's branch-3 text), kept in sync by
+# _syncLabelNoSettle from the sheet's chrome ensure (build/scroll/resize/restore all funnel
+# there); scrolling relabels in place through _setTextNoSettle's no-change guard.
 
 class SheetHeaderCellWdgt extends Widget
 
@@ -28,6 +29,7 @@ class SheetHeaderCellWdgt extends Widget
     @kind = kind        # "column" | "row" | "corner"
     @index = index      # 0-based viewport SLOT index (the label = view origin + slot, F1); nil for the corner
     @_sheetWidget = nil
+    @_labelWdgt = nil   # the label child (a passive StringWdgt); nil for the corner
     # transparent by default — every visible pixel is painted explicitly below (the fill),
     # so there is no base-appearance paint to keep in sync
     @color = nil
@@ -40,13 +42,9 @@ class SheetHeaderCellWdgt extends Widget
     @_sheetWidget = sheetWidget
     return
 
-  # 12px Arial — the SWCanvas-deterministic band (Arial/Times/Courier atlases only); matches
-  # the sheet's old header text and CellWdgt's scalar text. No bold/italic.
-  _headerFont: -> "12px Arial, sans-serif"
-
-  # @index is the viewport SLOT; the label derives from the sheet's view origin + slot at paint
-  # time (F1) — scrolling relabels the frozen headers in place (cell-quantized scroll means they
-  # never move; the sheet-level _changed() repaints them). At origin 0 this is the identity.
+  # @index is the viewport SLOT; the label derives from the sheet's view origin + slot at
+  # label-sync time (F1) — scrolling relabels the frozen headers in place (cell-quantized
+  # scroll means they never move). At origin 0 this is the identity.
   _labelText: ->
     switch @kind
       when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @index)
@@ -80,12 +78,29 @@ class SheetHeaderCellWdgt extends Widget
       # the header-strip fill, mine to paint now (was the sheet's two strip fillRects)
       aContext.fillStyle = sheetWidget.headerFillColor.toString()
       aContext.fillRect 0, 0, @width(), @height()
-      # my top+left grid edges (grid-coloured first, dark last — the crossing rule)
+      # my top+left grid edges (grid-coloured first, dark last — the crossing rule).
+      # My label is NOT painted here: it is my StringWdgt child (children paint after me).
       sheetWidget.paintGridEdges aContext, @width(), @height(), @_leftEdgeIsDark(), @_topEdgeIsDark()
-      # my label (blank for the corner)
-      label = @_labelText()
-      if label?
-        aContext.font = @_headerFont()
-        aContext.fillStyle = sheetWidget.headerTextColor.toString()
-        aContext.fillText label, 4, @height() - 6
       aContext.restore()
+
+  # Keep my label child in sync (create / retext / place) — called from the sheet's chrome
+  # ensure, whose build/scroll/resize/restore paths all funnel through buildHeader. The label
+  # is a passive StringWdgt (the CellWdgt scalar-text configuration); a scroll relabels in
+  # place through _setTextNoSettle's no-change guard. The corner has no label and never
+  # creates one. NoSettle: runs inside the chrome ensure's enclosing settle.
+  _syncLabelNoSettle: ->
+    label = @_labelText()
+    return unless label?
+    if @_labelWdgt?
+      @_labelWdgt._setTextNoSettle label
+    else
+      labelWdgt = new StringWdgt label, 12
+      labelWdgt.color = @_sheetWidget.headerTextColor
+      labelWdgt.isEditable = false
+      @_addNoSettle labelWdgt
+      @_labelWdgt = labelWdgt
+    # the (4,2) box inset places the TOP/LEFT-aligned glyphs at the exact position the
+    # pre-conversion painted label had (x 4, baseline height−6) — measured, a pure
+    # translation of identical glyph rasters (same idiom as CellWdgt's scalar child)
+    @_labelWdgt._applyBounds (@position().add new Point 4, 2), @extent().subtract new Point 4, 2
+    return

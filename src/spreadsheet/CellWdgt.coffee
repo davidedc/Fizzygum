@@ -8,10 +8,11 @@
 # and it is the two-way interaction boundary a hosted interactive value-widget fires into.
 #   branch 1 — the value IS a Widget (a `new SliderWdgt`) → HOST it live (hostNoSettle) + wire it.
 #   branch 2 — the value answers cellPresenter() (a Color → a swatch) → host that presenter.
-#   branch 3 — a scalar / error / nil → PAINT its toString() text directly (moved here off the
-#              sheet's old _paintGrid value loop in Phase 8; since F5 the cell ALSO paints its
-#              own top+left grid edges and — when selected — its own ring: every visible pixel
-#              belongs to a widget, the sheet paints nothing).
+#   branch 3 — a scalar / error / nil → present its toString() text as my passive StringWdgt
+#              CHILD ("scalar text is a StringWdgt child, period" — owner direction 2026-07-24,
+#              completing the F5 everything-is-a-widget story; the editor's exact configuration,
+#              so resting and editing text align). The cell still paints its own top+left grid
+#              edges and — when selected — its own ring (F5: the sheet paints nothing).
 #
 # Why one widget per visible cell (owner direction 2026-07-05): full Fizzygum composability — every
 # cell the user sees is a real, inspectable, live-editable widget, not a paint artifact. Widget count
@@ -38,10 +39,10 @@
 
 class CellWdgt extends Widget
 
-  # @address + @hostedWidget serialize; the back-ref, churn-skip value, derived scalar text and
-  # the overlay editor (a mid-edit snapshot restores to a settled, not-editing sheet — the
-  # re-index destroys any stray editor child) are rebuilt on restore.
-  @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarText", "_scalarIsError", "_editorWdgt"]
+  # @address + @hostedWidget serialize; the back-ref, churn-skip value, derived scalar-text
+  # child and the overlay editor (a mid-edit snapshot restores to a settled, not-editing
+  # sheet — the re-index destroys any stray non-hosted child) are rebuilt on restore.
+  @serializationTransients: ["_sheetWidget", "presentedValue", "_scalarTextWdgt", "_scalarShowsError", "_editorWdgt"]
 
   # a cell is GRID CHROME, solid with its panel — never rippable out by a drag (F4 close of a
   # latent F5 hole: when the cells moved into the SheetCellsPanelWdgt, the default
@@ -56,8 +57,8 @@ class CellWdgt extends Widget
     @hostedWidget = nil        # the mounted value/presenter widget (this cell's rich child), or nil
     @presentedValue = nil      # branch-2 churn-skip: the value the current presenter reflects
     @_sheetWidget = nil        # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
-    @_scalarText = nil         # branch-3 painted text (a scalar/error toString), or nil when empty/hosting
-    @_scalarIsError = false    # true when @_scalarText is a SheetError badge (paint in the error colour)
+    @_scalarTextWdgt = nil     # branch-3 text child (a passive StringWdgt), or nil when empty/hosting
+    @_scalarShowsError = false # true when the text child wears the error colour (SheetError badge)
     @_editorWdgt = nil         # the mounted overlay editor while THIS cell is being edited (F2/F5), or nil
     # transparent: the cells panel under me fills the data background; I paint my own grid
     # edges + selection ring + scalar text (F5 — "the sheet paints nothing"), so the panel's
@@ -73,31 +74,54 @@ class CellWdgt extends Widget
     @_sheetWidget = sheetWidget
     return
 
-  # ── branch 3: paint the scalar value's text (the sheet's old _paintGrid value loop lives here now) ──
-  # NoSettle: called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
-  # (DataflowEngine._drainOnePass). Drops any hosted widget first (a cell that was rich and became a
-  # scalar). `text` nil / "" clears the cell (an emptied cell paints nothing).
+  # ── branch 3: present the scalar value's text as my passive StringWdgt child ──────────────
+  # The editor's exact configuration (isEditable false, fontSize 12, full cell rect) so
+  # resting and editing text align; the pixels come from StringWdgt's standard immutable back
+  # buffers, so repeated labels share cached rasters world-wide. NoSettle: called from the
+  # sheet's reconcile, which runs inside the dataflow drain's layout settle
+  # (DataflowEngine._drainOnePass). Drops any hosted widget first (a cell that was rich and
+  # became a scalar). `text` nil / "" clears the cell (an emptied cell shows nothing).
+  # Churn-tolerant: a per-cycle recompute (a `frame` cell) funnels into _setTextNoSettle's own
+  # no-change guard; an error↔value colour flip (rare) rebuilds the child.
   showScalarNoSettle: (text, isError) ->
     @_unhostNoSettle() if @hostedWidget?
-    @_scalarText = if text? and text != "" then text else nil
-    @_scalarIsError = isError is true
-    @_changed()
+    scalarText = if text? and text != "" then text else nil
+    showsError = isError is true
+    if not scalarText?
+      if @_scalarTextWdgt?
+        @_scalarTextWdgt._fullDestroyNoSettle()
+        @_scalarTextWdgt = nil
+        @_changed()
+      return
+    if @_scalarTextWdgt? and @_scalarShowsError != showsError
+      @_scalarTextWdgt._fullDestroyNoSettle()
+      @_scalarTextWdgt = nil
+    if @_scalarTextWdgt?
+      @_scalarTextWdgt._setTextNoSettle scalarText
+    else
+      textWdgt = new StringWdgt scalarText, 12
+      textWdgt.color = if showsError then @_sheetWidget.errorTextColor else @_sheetWidget.valueTextColor
+      textWdgt.isEditable = false
+      @_addNoSettle textWdgt
+      # the (4,2) box inset places the child's TOP/LEFT-aligned glyphs at the exact position
+      # the pre-conversion painted text had (x 4, baseline height−6) — measured, a pure
+      # translation of identical glyph rasters, so the conversion changes no resting pixel
+      textWdgt._applyBounds (@position().add new Point 4, 2), @extent().subtract new Point 4, 2
+      @_scalarTextWdgt = textWdgt
+      @_scalarShowsError = showsError
+      # a commit's reconcile can land while my overlay editor is still mounted — the editor
+      # shows the buffer, so the fresh child starts hidden and teardown reveals it
+      textWdgt.__hide() if @_editorWdgt?
     return
-
-  # 12px Arial — the SWCanvas-deterministic band (Arial/Times/Courier atlases only); matches the
-  # sheet's header/value font. No bold/italic.
-  _cellFont: -> "12px Arial, sans-serif"
 
   # Paint this cell's OWN pixels (F5 — every visible thing is a widget; the sheet paints
   # nothing): my top+left grid edges (ALWAYS — even when hosting/editing/empty; the F5
   # edge-ownership convention, colours + crossing rule in SimpleSpreadsheetWdgt.paintGridEdges),
   # then my selection ring when I am the selected cell (F2: drawn fully INSIDE — band [1,3),
-  # touching no edge pixel, under my hosted child since children paint after me, never
-  # overlapping my text which starts at x 4), then my scalar text (branch 3) at the SAME
-  # local offsets the old sheet paint used (x 4, baseline height−6). The text is suppressed
-  # while a widget is hosted (it paints itself) or while my overlay editor is mounted (the
-  # editor shows the buffer instead — no doubled text). Clipped to the cell. Follows the
-  # AnalogClockWdgt paint model.
+  # touching no edge pixel, under my children since children paint after me — the scalar-text
+  # child included, exactly as the old painted text drew last). Clipped to the cell. Follows
+  # the AnalogClockWdgt paint model. My VALUE is not painted here: it is a child widget in
+  # every branch (hosted value / presenter / the branch-3 scalar-text StringWdgt).
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     if @preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
@@ -126,10 +150,6 @@ class CellWdgt extends Widget
         aContext.strokeStyle = sheetWidget.selectionColor.toString()
         aContext.lineWidth = 2
         aContext.strokeRect 2, 2, @width() - 4, @height() - 4
-      if not @hostedWidget? and @_scalarText? and not @_editorWdgt?
-        aContext.font = @_cellFont()
-        aContext.fillStyle = (if @_scalarIsError then sheetWidget.errorTextColor else sheetWidget.valueTextColor).toString()
-        aContext.fillText @_scalarText, 4, @height() - 6
       aContext.restore()
 
   # ── presentation: host a widget filling this cell (the sheet's _addNoSettle + _apply* idiom) ──
@@ -141,7 +161,8 @@ class CellWdgt extends Widget
   # (the CellSocketWdgt inset, now applied here since the cell fills the whole cell rect).
   hostNoSettle: (widget) ->
     @_unhostNoSettle()
-    @_scalarText = nil
+    @_scalarTextWdgt?._fullDestroyNoSettle()
+    @_scalarTextWdgt = nil
     @hostedWidget = widget
     @_addNoSettle widget
     inset = 2
@@ -241,11 +262,21 @@ class CellWdgt extends Widget
   # caret is ever mounted), a child of THIS cell at exactly the cell's rect — the same
   # absolute rect the old sheet-child editor used, so the move itself changed no pixels.
   _mountEditorNoSettle: (bufferText) ->
+    # the editor shows the buffer, so the resting scalar-text child hides for the edit's
+    # duration (damage-free __hide — adding the editor repaints the same rect); teardown
+    # reveals it again, which also serves the Escape-cancel path (no reconcile runs there)
+    @_scalarTextWdgt?.__hide()
     editor = new StringWdgt bufferText, 12
     editor.color = @_sheetWidget.valueTextColor
     editor.isEditable = false
+    # the steady end-of-text bar is the edit-in-progress affordance (a live CaretWdgt is a
+    # keyboard receiver — the sheet must stay sole receiver; the bar is deterministic, no
+    # blink, and tracks the buffer through the editor's own text re-render)
+    editor.showsEndOfTextBar = true
     @_addNoSettle editor
-    editor._applyBounds @position(), @extent()
+    # the SAME (4,2) box inset as the resting scalar-text child, so the text does not
+    # shift when editing starts/ends — resting and editing glyphs sit at identical positions
+    editor._applyBounds (@position().add new Point 4, 2), @extent().subtract new Point 4, 2
     @_editorWdgt = editor
     return
 
@@ -257,5 +288,6 @@ class CellWdgt extends Widget
     editor = @_editorWdgt
     @_editorWdgt = nil
     editor?._fullDestroyNoSettle()
+    @_scalarTextWdgt?.show()
     @_changed()
     return

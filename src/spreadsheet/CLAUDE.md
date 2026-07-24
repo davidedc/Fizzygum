@@ -40,8 +40,11 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   invisible — F5 receipt C).
 - `SheetHeaderCellWdgt.coffee` (F5) — one widget per HEADER cell (kind column/row/corner + its
   index; 21 in all, direct sheet children, OUTSIDE the panel so a future scroll clip never
-  touches the frozen headers). Paints its 236 strip fill, its own top+left edges, and its
-  letter/number label at the exact old offsets. DERIVED chrome: destroyed + rebuilt from the
+  touches the frozen headers). Paints its 236 strip fill and its own top+left edges; its
+  letter/number label is a passive `StringWdgt` CHILD ("scalar text is a StringWdgt child,
+  period" — owner direction 2026-07-24), kept in sync + relabelled in place on scroll by
+  `_syncLabelNoSettle` from the sheet's chrome ensure, box-inset (+4, +2) so the glyphs sit
+  at the exact pre-conversion offsets. DERIVED chrome: destroyed + rebuilt from the
   geometry constants on restore, never adopted. Clicks escalate to the sheet; column/row
   SELECTION semantics are a deliberate later arc.
 - `SheetModel.coffee` (2b) — the sparse data model: a Map keyed `"A1"` of `SheetCellRecord`s +
@@ -73,8 +76,11 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   hold the passive `StringWdgt` as `@_editorWdgt`, a transient child; the sheet keeps the
   buffer + keys), and whichever value form the cell holds (spec §9.4 classify → present): a
   hosted value-widget (branch 1, a `new SliderWdgt`), a hosted presenter (branch 2, a Color →
-  a swatch), or its own PAINTED scalar text (branch 3, `showScalarNoSettle`; suppressed while
-  hosting or editing). Transparent background — the backdrop under the sheet shows through.
+  a swatch), or its scalar text as a passive `StringWdgt` CHILD (branch 3,
+  `showScalarNoSettle` — the editor's exact configuration, box-inset (+4, +2) to the exact
+  pre-conversion text position; destroyed while hosting, hidden while editing; "scalar text
+  is a StringWdgt child, period" — owner direction 2026-07-24). Transparent background — the
+  backdrop under the sheet shows through.
   Two-way: presentation DOWN (`hostNoSettle` / `showScalarNoSettle`), interaction UP (an
   interactive value-widget is wired via `wireValueWidget` so its firings hit the cell's
   `cellInput` → `markStale` on the cell). Serializes its `@address` + hosted widget (so a
@@ -128,8 +134,9 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   `_reconcileCellNoSettle`, which routes the value into the cell's (always-present) `CellWdgt`: a value
   that answers `cellPresenter()` (a `Color` → a `RectangleWdgt` swatch) is hosted (branch 2); a value
   that IS a Widget is hosted live (branch 1 — see the Phase-4 section below); anything else the cell
-  PAINTS as `toString()` text (branch 3 — `showScalarNoSettle`; Phase 8 moved this off the sheet's old
-  value-paint loop). The reconcile runs INSIDE the drain's layout settle (`DataflowEngine._drainOnePass`
+  presents as `toString()` text in its scalar `StringWdgt` child (branch 3 —
+  `showScalarNoSettle`; Phase 8 moved this off the sheet's old value-paint loop as a direct
+  paint, the 2026-07-24 conversion made it a child widget). The reconcile runs INSIDE the drain's layout settle (`DataflowEngine._drainOnePass`
   wraps the pass), so every helper is a NoSettle core.
 - **Presenter lifecycle (spec §13 decision): REBUILD on value change, not reuse-and-update.** A
   branch-2 presenter is pure display with no interactive state to keep, so the sheet disposes the
@@ -281,7 +288,8 @@ duplicated sheet (which inherits receiver membership via the copier) doesn't edi
 
 **The sheet paints NOTHING; every visible thing is a widget.** The data cells (`CellWdgt`,
 inside the transparent `SheetCellsPanelWdgt`) and the header cells (`SheetHeaderCellWdgt`,
-direct children) each paint their own fill/edges/label/value/ring — the sheet is the model
+direct children) each paint their own fill/edges/ring and carry their label/value as CHILD
+widgets (hosted value / presenter / passive scalar-text `StringWdgt`) — the sheet is the model
 owner, formula scope, keyboard receiver and geometry authority, with a nil appearance. This
 completes the arc: "painted chrome, widgetized contents" (Phase 4, sockets for rich cells
 only) → "widgetized viewport over painted chrome" (Phase 8, every visible DATA cell a widget)
@@ -419,7 +427,12 @@ widget fills the data background (the backdrop shows through, as it always did).
   BLINKS (non-deterministic under a screenshot). So `SpreadsheetWdgt` stays the SOLE keyboard
   receiver in both selection and editing modes and drives its own edit BUFFER (append / Backspace
   / Enter-commits / Escape-cancels), mirroring it into a live overlay `StringWdgt`. This gives
-  exact, deterministic commit/cancel and needs no caret juggling. Rich editing (cursor,
+  exact, deterministic commit/cancel and needs no caret juggling. The edit-in-progress
+  AFFORDANCE (2026-07-24) is the editor's steady end-of-text bar
+  (`StringWdgt.showsEndOfTextBar` — drawn in the back buffer, a pure function of the buffer:
+  deterministic, never blinks), and the editor mounts at the SAME (4,2) box inset as the
+  resting scalar-text child so starting/committing an edit never shifts the glyphs (pinned by
+  `SystemTest_macroSpreadsheetEditCaretBar`). Rich editing (cursor,
   selection, multi-line) stays the deferred `CodePromptWdgt` path (spec §9.1). The overlay is the
   first live child widget = the socket precursor (Phase 4 generalises "mount a live widget at a
   cell rect").

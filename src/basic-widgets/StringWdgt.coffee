@@ -68,6 +68,14 @@ class StringWdgt extends Widget
   # need this.
   autoSizeBoxToText: false
 
+  # A steady 1px bar after the last glyph — the EDIT-IN-PROGRESS affordance for a
+  # buffer-driven passive editor (the spreadsheet's overlay editor: the SHEET owns the
+  # keyboard + buffer, this widget only displays it, so a live CaretWdgt — a keyboard
+  # receiver — cannot be mounted; see SimpleSpreadsheetWdgt's F2 editing model). Drawn
+  # into the back buffer, so it is a pure function of the text (deterministic — it
+  # NEVER blinks) and tracks every buffer change through the normal cache-key miss.
+  showsEndOfTextBar: false
+
   # startMark and endMark contain the slot of the
   # slot first selected IN TIME, not "in space".
   # i.e. startMark might be higher than endMark if
@@ -653,6 +661,7 @@ class StringWdgt extends Widget
     @buildCanvasFontProperty() + "-" +
     @hasDarkOutline + "-" +
     @isHeaderLine + "-" +
+    @showsEndOfTextBar + "-" +
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
     (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
@@ -805,6 +814,8 @@ class StringWdgt extends Widget
     else
       width = widthOfText + 2 * @_outlineHaloMargin()
       height = heightOfText + 2 * @_outlineHaloMargin()
+      # room for the end-of-text bar (drawn 1px past the last glyph, +1px slack)
+      width += 3 if @showsEndOfTextBar
 
     backBuffer = HTMLCanvasElement.createOfPhysicalDimensions (new Point width, height).scaleBy ceilPixelRatio
 
@@ -832,6 +843,13 @@ class StringWdgt extends Widget
 
 
     @drawSelection backBufferContext
+
+    # the steady end-of-text bar (see the showsEndOfTextBar field comment): 1px past the
+    # last glyph, clamped into the buffer; slightly shorter than the em box. Rounded x —
+    # measured text widths are fractional and a fractional fillRect would AA-soften the bar.
+    if @showsEndOfTextBar
+      backBufferContext.fillStyle = @color.toString()
+      backBufferContext.fillRect (Math.min (Math.round textHorizontalPosition + widthOfText + 1), width - 2), (textVerticalPosition - heightOfText + 2), 1, heightOfText - 3
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
