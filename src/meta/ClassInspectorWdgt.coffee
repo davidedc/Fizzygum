@@ -29,6 +29,28 @@ class ClassInspectorWdgt extends InspectorWdgt
     else
       @overrideInThisClassButton?.hide()
 
+  # Prototype-level truth for a FIELD: its recorded SOURCE, in boot order of
+  # authority -- a live class-scope override (`<name>_source`, kept by
+  # Class.applyMemberEdit for fields too), the class body's recorded source
+  # (chain walk, mirroring the function branch), then the mixin donor's (setting
+  # the donor attribution, so the save routes to the mixin and the override
+  # gesture is offered -- field parity with methods). nil when no source is
+  # recorded (the base then falls back to showing the VALUE).
+  _sourceForFieldMember: (selected) ->
+    if @target[selected + "_source"]?
+      return @target[selected + "_source"]
+    goingUpTargetProtChain = @target
+    while goingUpTargetProtChain?.constructor?.class?
+      theClass = goingUpTargetProtChain.constructor.class
+      if theClass.nonStaticPropertiesSources[selected]?
+        return theClass.nonStaticPropertiesSources[selected]
+      theMixinProvidingIt = @_mixinProvidingMember theClass, selected
+      if theMixinProvidingIt?
+        @currentPropertySourceMixin = theMixinProvidingIt
+        return theMixinProvidingIt.nonStaticPropertiesSources[selected]
+      goingUpTargetProtChain = goingUpTargetProtChain.__proto__
+    nil
+
   # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point).
   # The gap between the remove button and the save button, in the bottom row.
   _layoutOverrideInThisClassButton: ->
@@ -155,11 +177,11 @@ class ClassInspectorWdgt extends InspectorWdgt
 
     # a plain class-prototype member: the Class meta-object owns the edit mechanics
     # (Class.applyMemberEdit, the class twin of the mixin routing above -- super
-    # rewritten exactly as at boot, `<name>_source` kept for CoffeeScript editability)
+    # rewritten exactly as at boot, `<name>_source` kept for CoffeeScript editability).
+    # Log the CLASS-scope source edit -- method or field -- so a world snapshot can
+    # carry AND replay it (§12). Unlike an instance edit, nothing else records a
+    # prototype edit — @target is the class prototype, so this is the registry's
+    # essential case.
     @target.constructor.class.applyMemberEdit propertyName, txt
-    if Utils.isFunction @target[propertyName]
-      # log the CLASS-scope source edit so a world snapshot can carry AND replay it (§12).
-      # Unlike an instance edit, nothing else records a prototype edit — @target is the class
-      # prototype, so this is the registry's essential case.
-      world?.sourceEditsRegistry?.recordClassEdit? @target, propertyName, txt
+    world?.sourceEditsRegistry?.recordClassEdit? @target, propertyName, txt
     @notifyInstancesOfSourceChange([propertyName])

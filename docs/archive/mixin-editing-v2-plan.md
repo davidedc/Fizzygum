@@ -125,6 +125,22 @@ Show "from <Name>Mixin" when a mixin-donated member is selected.
 - The build-time syntax gate loads the REAL Mixin.coffee — no gate change needed.
 
 ### Residual discovered during T (out of scope, banked for a future arc)
+> **ADDENDUM: executed later the same day (2026-07-26), owner-directed.** Field parity
+> landed as described below: `ClassInspectorWdgt._sourceForFieldMember` (prototype-level
+> truth in boot order of authority; object inspectors keep showing instance VALUES),
+> `Class.applyMemberEdit` keeps `<name>_source` for every member kind, class-scope
+> registry records cover fields, and the plan's ORIGINAL `color_hover` T scenario became
+> implementable as `SystemTest_macroMixinFieldEditDonorAndOverride` (the field sibling).
+> The closing gauntlet then surfaced two real defects, both fixed in the same batch:
+> (1) mixin/class edits LEAK across suite tests — the parsed mixin store and consumer
+> prototypes outlive `resetWorld`, so the field test inherited the method sibling's
+> edited `mouseEnter` in-shard (passes-alone-fails-in-suite; reproduced with
+> `run-sequence-headless.js`); both mixin tests now RESTORE the pristine donor source
+> in their macro tail (MACRO-PATTERNS records the pattern as mandatory for any future
+> editing test); (2) `Widget.evaluateString` on a PROTOTYPE receiver stamps
+> widget-lifecycle fields as prototype own properties (ancient — the pre-v2 class-save
+> path always did it); `Class.applyMemberEdit` now compiles via the bare
+> global-assignment eval, the `Mixin.applyMemberEdit` shape.
 Donor attribution covers mixin METHODS only: `selectionFromList`'s mixin walk runs in the
 `Utils.isFunction` branch, so a mixin-donated FIELD (e.g. `color_hover`) shows its plain
 VALUE un-attributed — no donor label, no override button, and a save takes the plain

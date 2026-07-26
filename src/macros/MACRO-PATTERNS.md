@@ -1683,6 +1683,15 @@ assertion a recapture after a regression silently stores two different hashes an
   (`Mixin.applyMemberEdit` → every non-shadowing consumer class updates) and pops an `@inform` naming the mixin + consumer count;
   the override button keeps the edit on THIS class only (`overrideInThisClass` → `Class.applyMemberEdit`). Both popups dismiss via
   `@moveToItemOfTopMenuAndClick_InputEvents "Ok"` (an `@inform` is a menu with an Ok item, popped centered at the hand). No new verb.
+  The FIELD sibling **`macroMixinFieldEditDonorAndOverride`** runs the same flow on `color_hover` (a donated FIELD attributes in
+  the class inspector via `_sourceForFieldMember` — the detail shows the donor's recorded SOURCE, "Color.SILVER"); its hover proof
+  goes through the UNCHANGED state machinery (`mouseEnter` → `_updateColor` → `@color_hover`), so the fixture needs no method edit.
+  ⚠ BOTH tests RESTORE the donor's pristine source and lift the override in their macro TAIL (after the last shot, fixture-style
+  direct calls: capture `theMixin.nonStaticPropertiesSources[name]` at macro start; at the end `delete <Class>.prototype[name +
+  "_source"]` — lifting the live-override shadow guard — then `theMixin.applyMemberEdit name, orig`): a mixin/class edit mutates
+  the PARSED MIXIN STORE and consumer PROTOTYPES — state that outlives `resetWorld` and leaks into every later test in the shard
+  (the passes-alone-fails-in-suite class; reproduce/prove with `run-sequence-headless.js` on the two-test sequence). ANY future
+  test that edits a mixin or a class prototype must restore the same way.
 - **`macroCanMoveAndResizeColorPaletteWdgt`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
   then drag a corner handle; click empty desktop to exit before the screenshot.
 - **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentScrollPanelWdgt`

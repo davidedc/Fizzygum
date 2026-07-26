@@ -410,6 +410,13 @@ class InspectorWdgt extends Widget
           return theMixin
     nil
 
+  # the recorded SOURCE of a non-function member, or nil to show its VALUE. The
+  # class inspector overrides this with the prototype-level truth (live override /
+  # class body / mixin donor, setting the donor attribution); an OBJECT inspector
+  # keeps showing the instance's VALUE -- per-instance state is its own truth.
+  _sourceForFieldMember: (selected) ->
+    nil
+
   # the static twin of _mixinProvidingMember: the parsed Mixin donating class-side
   # member `selected` to `theClass` (nil when none does)
   _mixinProvidingStaticMember: (theClass, selected) ->
@@ -475,6 +482,8 @@ class InspectorWdgt extends Widget
 
       if mixinStaticSource?
         txt = mixinStaticSource
+      else if (fieldSource = @_sourceForFieldMember selected)?
+        txt = fieldSource
       else if !val?
         txt = "nil"
       else if Utils.isString val

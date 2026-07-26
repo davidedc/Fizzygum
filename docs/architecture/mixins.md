@@ -101,16 +101,25 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   consumers whose prototype carries a live class-scope override (`<name>_source`), so
   the boot-order override rule keeps holding for overrides born at edit time too. Edits
   log as scope-`"mixin"` records in `world.sourceEditsRegistry` and replay on world
-  restore (the reference doc §12). The attribution (and so the whole donor-editing
-  surface) covers mixin METHODS: a donated FIELD shows its plain value un-attributed
-  (field parity is banked — `docs/BACKLOG.md`), though `Mixin.applyMemberEdit` itself
-  handles fields fine when driven directly. The full editing vocabulary on top of that
-  core:
+  restore (the reference doc §12). The attribution covers methods AND fields: a
+  donated method attributes through the function-branch chain walk (both inspector
+  types), and a donated FIELD attributes in the CLASS inspector via
+  `ClassInspectorWdgt._sourceForFieldMember` — prototype-level truth, shown in boot
+  order of authority (live `<name>_source` override, class-body source, mixin donor's
+  source) — while an OBJECT inspector keeps showing the instance's VALUE (per-instance
+  state is its own truth). Both live-edit twins (`Mixin.applyMemberEdit` /
+  `Class.applyMemberEdit`) compile through a bare global-assignment eval — never
+  `Widget.evaluateString` against a prototype: its relayout/repaint tail treats the
+  receiver as a WIDGET and stamps widget-lifecycle fields onto the prototype as own
+  properties, polluting every later member listing of the class. The full editing
+  vocabulary on top of that core:
   - **"override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
-    save destination shown while a mixin-donated instance member is selected — keeps
-    the edited source as a live override on THAT class's prototype only (via
-    `Class.applyMemberEdit`, the class twin, which super-rewrites exactly as the boot
-    emit does), after which donor edits skip the class;
+    save destination shown while a mixin-donated instance member (method or field) is
+    selected — keeps the edited source as a live override on THAT class's prototype
+    only (via `Class.applyMemberEdit`, the class twin, which super-rewrites exactly as
+    the boot emit does and keeps `<name>_source` for EVERY member kind — the view's
+    attribution key and the donor-edit shadow guard), after which donor edits skip the
+    class;
   - a **"from `<Name>Mixin`" donor label** (`InspectorWdgt.mixinDonorLabel`) appears in
     the hierarchy row of BOTH inspector types while a mixin-donated member is selected;
   - **add/remove**: the class inspector's `add…` popout gains a destination step

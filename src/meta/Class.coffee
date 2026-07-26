@@ -107,18 +107,29 @@ class Class
 
   # ===== live member editing =====
   # The CLASS twin of Mixin.applyMemberEdit: rewrite ONE member on this class's
-  # prototype from CoffeeScript source. The super forms are rewritten exactly as
-  # the boot emit does (_equivalentforSuper), so an edited member keeps calling
-  # super; for functions the source is kept as the `<name>_source` sibling so the
-  # member stays editable as CoffeeScript. Callers: ClassInspectorWdgt (live save
-  # and the override-in-this-class gesture) and SourceEditsRegistry.replayClassEdits
-  # (world-snapshot restore). Throws on compile errors. Notifying instances is the
-  # CALLER's business -- the restore path replays before any instance exists.
+  # prototype from CoffeeScript source, with the SAME compile shape the mixin twin
+  # uses -- a bare global-assignment eval, NOT Widget.evaluateString: that method's
+  # relayout/repaint tail treats its receiver as a WIDGET, and run on a PROTOTYPE
+  # it stamps widget-lifecycle fields (cachedRoot, dstBrokenRect, ...) onto the
+  # prototype as own properties, polluting every later member listing of the class.
+  # (The compiled output may re-declare the CoffeeScript helper vars -- indexOf etc.
+  # -- at global scope; harmless, the globals already hold exactly those values.)
+  # The super forms are rewritten exactly as the boot emit does
+  # (_equivalentforSuper), so an edited member keeps calling super; the source is
+  # kept as the `<name>_source` sibling for EVERY member kind -- it is what keeps
+  # the member editable as CoffeeScript, what the class inspector's view attributes
+  # a field to, and what Mixin.applyMemberEdit's live-override shadow guard keys
+  # off. Callers: ClassInspectorWdgt (live save and the override-in-this-class
+  # gesture) and SourceEditsRegistry.replayClassEdits (world-snapshot restore).
+  # Throws on compile errors. Notifying instances is the CALLER's business -- the
+  # restore path replays before any instance exists.
   applyMemberEdit: (memberName, source) ->
     proto = window[@name].prototype
-    proto.evaluateString "@" + memberName + " = " + (@_equivalentforSuper memberName, source)
-    if Utils.isFunction proto[memberName]
-      proto[memberName + "_source"] = source
+    compiled = compileFGCode ("window.__fzEditedClassMember = " + (@_equivalentforSuper memberName, source)), true
+    eval.call window, compiled
+    proto[memberName] = window.__fzEditedClassMember
+    delete window.__fzEditedClassMember
+    proto[memberName + "_source"] = source
     return
 
   findIfItExtendsAnotherClass: (source) ->

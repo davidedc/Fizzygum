@@ -416,9 +416,10 @@ ones):
   ALSO ride serialization on their own: the widget carries a `<name>_source` string →
   `{"$src"}` → re-injected on restore (§5). The registry adds auditability.
 - **class** — `ClassInspectorWdgt.applyPropertyEdit` records `recordClassEdit(prototype, name,
-  txt)` (its `@target` is the class prototype — `new ClassInspectorWdgt window[className].prototype`).
-  This is the ESSENTIAL case: a prototype edit mutates the live class but leaves no other
-  serializable trace (§2.7).
+  txt)` (its `@target` is the class prototype — `new ClassInspectorWdgt window[className].prototype`)
+  for EVERY member kind, methods and fields alike (both apply via `Class.applyMemberEdit`, which
+  keeps the `<name>_source` sibling for both). This is the ESSENTIAL case: a prototype edit
+  mutates the live class but leaves no other serializable trace (§2.7).
 - **mixin** — the same `ClassInspectorWdgt.applyPropertyEdit`, when the selected member's
   source comes from a mixin (and the class body doesn't shadow it), routes the save to the
   DONOR — `Mixin.applyMemberEdit` recompiles the member (mixin super rewrite, function name
