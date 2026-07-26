@@ -7,6 +7,9 @@ class InspectorWdgt extends Widget
   # selectionFromList; consulted by ClassInspectorWdgt.applyPropertyEdit to route
   # a save to the DONOR mixin.
   currentPropertySourceMixin: nil
+  # true when the mixin-attributed selection is a CLASS-SIDE (static) member --
+  # the save then routes to Mixin.applyStaticEdit instead of applyMemberEdit
+  currentPropertySourceIsStatic: false
   markOwnershipOfProperties: true
   # panes:
   list: nil
@@ -27,6 +30,9 @@ class InspectorWdgt extends Widget
 
   lastLabelInHierarchy: nil
   lastArrowInHierarchy: nil
+  # "from <Name>Mixin" appended to the hierarchy row while a mixin-donated member
+  # is selected (the donor is provenance, like the class chain); empty otherwise
+  mixinDonorLabel: nil
 
   hierarchyBackgroundPanel: nil
 
@@ -220,6 +226,8 @@ class InspectorWdgt extends Widget
     @_addNoSettle @lastLabelInHierarchy
     @lastArrowInHierarchy = new AngledArrowUpLeftIconWdgt Color.BLACK
     @_addNoSettle @lastArrowInHierarchy
+    @mixinDonorLabel = new StringWdgt ""
+    @_addNoSettle @mixinDonorLabel
 
     showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
     showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
@@ -402,12 +410,24 @@ class InspectorWdgt extends Widget
           return theMixin
     nil
 
+  # the static twin of _mixinProvidingMember: the parsed Mixin donating class-side
+  # member `selected` to `theClass` (nil when none does)
+  _mixinProvidingStaticMember: (theClass, selected) ->
+    return nil unless theClass?.augmentedWith?
+    for mixinName in theClass.augmentedWith
+      for theMixin in Mixin.allMixines
+        if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
+           theMixin.staticPropertiesSources[selected]?
+          return theMixin
+    nil
+
   selectionFromList: (selected) ->
     if selected == undefined then return
 
     val = @target[selected]
     @currentProperty = val
     @currentPropertySourceMixin = nil
+    @currentPropertySourceIsStatic = false
 
     # functions should have a source somewhere
     # either in the object or in a superclass,
@@ -444,13 +464,25 @@ class InspectorWdgt extends Widget
       # this is for finding the static variables
       if val is undefined
         val = @target.constructor[selected]
-      
-      if !val?
+        # a static may be MIXIN-donated (augmentWith copies the literal's class-side
+        # keys onto each consumer constructor at boot): show the donor's recorded
+        # source and remember the attribution so a class-inspector save routes to it
+        theMixinProvidingIt = @_mixinProvidingStaticMember @target.constructor.class, selected
+        if theMixinProvidingIt?
+          @currentPropertySourceMixin = theMixinProvidingIt
+          @currentPropertySourceIsStatic = true
+          mixinStaticSource = theMixinProvidingIt.staticPropertiesSources[selected]
+
+      if mixinStaticSource?
+        txt = mixinStaticSource
+      else if !val?
         txt = "nil"
       else if Utils.isString val
         txt = '"'+val+'"'
       else
         txt = val.toString()
+
+    @mixinDonorLabel?.setText (if @currentPropertySourceMixin? then "from " + @currentPropertySourceMixin.name + "Mixin" else "")
 
     cnts = @detail.textWdgt
     cnts.setText txt
@@ -550,6 +582,8 @@ class InspectorWdgt extends Widget
     buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
     @saveButton._reLayout buttonBounds
 
+    @_layoutOverrideInThisClassButton()
+
     world.maybeEnableTrackChanges()
     @_fullChanged()
 
@@ -577,12 +611,20 @@ class InspectorWdgt extends Widget
     @showOwnPropsOnlyToggle._reLayout toggleBounds
 
 
+  # the class inspector places its "override in this class" button here (in the
+  # bottom row, left of the save button); the object inspector has none.
+  _layoutOverrideInThisClassButton: ->
+
   layoutLastLabelInHierarchy: (posx, posy) ->
     if @lastLabelInHierarchy.parent == @
       @lastLabelInHierarchy._applyBounds (new Point posx, posy), new Point 150, 15
 
     if @lastArrowInHierarchy.parent == @
       @lastArrowInHierarchy._applyBounds (new Point posx - 15, posy), new Point 15, 15
+
+    if @mixinDonorLabel?.parent == @
+      donorLabelLeft = posx + 150 + @internalPadding
+      @mixinDonorLabel._applyBounds (new Point donorLabelLeft, posy), new Point (Math.max 10, @right() - @externalPadding - donorLabelLeft), 15
 
 
   notifyInstancesOfSourceChange: (propertiesArray)->
@@ -623,9 +665,17 @@ class InspectorWdgt extends Widget
     if prop?
       if prop.getValue?
         prop = prop.getValue()
-      @target[prop] = nil
-      @_buildAndConnectChildren()
-      @notifyInstancesOfSourceChange([prop])
+      @_addNamedProperty prop
+
+  # the add core, past the prompt: the popout flow (addProperty) and the class
+  # inspector's destination menu both land here
+  _addNamedProperty: (prop) ->
+    @target[prop] = nil
+    # nosettle-sanctioned: gesture tail shared by two PUBLIC add actions (the popout
+    # Ok and the class inspector's destination menu), event-time only -- the rebuild
+    # is that gesture's single settle, exactly as when it was inlined in addProperty
+    @_buildAndConnectChildren()
+    @notifyInstancesOfSourceChange([prop])
   
   addPropertyPopout: ->
     @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)

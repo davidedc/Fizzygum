@@ -35,6 +35,8 @@
  *   - srcLoadCompileDebugWrites-> false       (Mixin.coffee:63 reads it BARE; must be
  *                                 falsy or debug paths run)
  *   - JSSourcesContainer       -> {content:''}(Class.coffee:414, Mixin.coffee:96)
+ *   - MixedClassKeywords       -> the real 3-entry list (Mixin's static parse pass
+ *                                 filters the DSL hooks out of the 2-space keys)
  *   - window (Proxy): seeded {classDefinitionAsJS:[], srcLoadCompileDebugWrites:false}
  *                     (Class.coffee reads window.srcLoadCompileDebugWrites WITH the
  *                     window. prefix); every other key returns a truthy stub so
@@ -95,10 +97,11 @@ try {
   const compileFGCode = (src, bare) => CoffeeScript.compile(src, { bare: bare });
 
   const factory = new Function(
-    'window', 'nil', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites',
+    'window', 'nil', 'compileFGCode', 'JSSourcesContainer', 'srcLoadCompileDebugWrites', 'MixedClassKeywords',
     classJS + '\n;\n' + mixinJS + '\n;\nreturn { Class: Class, Mixin: Mixin };'
   );
-  ({ Class, Mixin } = factory(windowProxy, undefined, compileFGCode, JSSourcesContainer, false));
+  ({ Class, Mixin } = factory(windowProxy, undefined, compileFGCode, JSSourcesContainer, false,
+    ['onceAddedClassProperties', 'included', 'consumerClassNames']));
   if (typeof Class !== 'function' || typeof Mixin !== 'function') {
     fail('failed to capture Class/Mixin constructors from the meta-compiler');
   }

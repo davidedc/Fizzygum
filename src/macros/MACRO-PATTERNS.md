@@ -1669,6 +1669,20 @@ assertion a recapture after a regression silently stores two different hashes an
   list sub-row scroll rendering leaves an invisible sub-pixel difference, so the round-trip is shown VISUALLY (re-select the same base
   property) rather than via `@assertScreenshotsIdentical`. (Re-authored when the old `InspectorMorph` was removed and the inspect path
   was made windowed; the old "edit..." menu became these direct buttons.)
+- **`macroMixinEditDonorAndOverride`** (authored new, 5 shots): LIVE MIXIN EDITING through the class inspector. Fixture: build the
+  class inspector DIRECTLY — `world.openFrameWith (new ClassInspectorWdgt SomeClass.prototype), (new Point 560, 410), pos` (the
+  `openClassInspector` shape) — and TARGET THE CLASS THAT DECLARES THE `@augmentWith` (here `ButtonWdgt`): the inspector hides
+  inherited members, so a SUBCLASS prototype's list carries no mixin-donated row at all — and the row-select helper's thumb-press
+  then degenerates into a window float-drag (the naked-inspector degenerate-vBar gotcha, windowed edition). A consumer instance
+  (a `SimpleButtonWdgt`, which INHERITS the injected member) on the desktop proves each edit took via its HOVER colour
+  (Highlightable's `mouseEnter` reads `color_hover`; park the pointer on the button with a no-button
+  `@syntheticEventsMouseMove_InputEvents` and screenshot the held hover — a plain `SimpleButtonWdgt` has no tooltip, so no timed
+  bubble). Selecting a mixin-donated row (the `selectInspectorRow` helper from the AddEditSave pilot works unchanged on a class
+  inspector) shows the donor label ("from `<Name>Mixin`", `InspectorWdgt.mixinDonorLabel`) and the "override in this class" button
+  (`ClassInspectorWdgt.overrideInThisClassButton`, left of save). A plain `saveButton` click routes to the DONOR
+  (`Mixin.applyMemberEdit` → every non-shadowing consumer class updates) and pops an `@inform` naming the mixin + consumer count;
+  the override button keeps the edit on THIS class only (`overrideInThisClass` → `Class.applyMemberEdit`). Both popups dismiss via
+  `@moveToItemOfTopMenuAndClick_InputEvents "Ok"` (an `@inform` is a menu with an Ok item, popped centered at the hand). No new verb.
 - **`macroCanMoveAndResizeColorPaletteWdgt`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
   then drag a corner handle; click empty desktop to exit before the screenshot.
 - **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentScrollPanelWdgt`

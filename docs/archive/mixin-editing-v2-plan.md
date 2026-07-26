@@ -1,11 +1,19 @@
 # Mixin editing v2 — plan (authored 2026-07-26; owner-approved scope: all 5 points)
 
-> **Status: ACTIVE, not started.** Self-contained: executable cold with zero session
-> context. Prerequisite state (ALL PUSHED 2026-07-26): the 5 misfiled mixins folded
-> (`194e252d`), DeepCopierMixin → `Duplicator` engine (`a70efe23`), and mixin editing
-> **v1** (`8fc41920`). Read `docs/architecture/mixins.md` §2 ("meta-system status") and
-> `docs/architecture/serialization-duplication-reference.md` §12 (three edit scopes)
-> BEFORE starting — they describe the as-built v1 this plan extends.
+> **Status: EXECUTED IN FULL + CLOSED 2026-07-26** — all 5 points (P1–P5) plus the
+> closing SystemTest (`SystemTest_macroMixinEditDonorAndOverride`) landed the same day
+> the plan was authored; full gauntlet green (13 legs), 35-check functional probe
+> green, the P2 donor-label churn (3 tests) recaptured via the gated recapture.
+> One residual banked: FIELD-parity for donor attribution (see "Residual discovered
+> during T" + `docs/BACKLOG.md`). As-built truth: `docs/architecture/mixins.md` §2 and
+> `docs/architecture/serialization-duplication-reference.md` §12.
+>
+> Original status box: ACTIVE, not started. Self-contained: executable cold with zero
+> session context. Prerequisite state (ALL PUSHED 2026-07-26): the 5 misfiled mixins
+> folded (`194e252d`), DeepCopierMixin → `Duplicator` engine (`a70efe23`), and mixin
+> editing **v1** (`8fc41920`). Read `docs/architecture/mixins.md` §2 ("meta-system
+> status") and `docs/architecture/serialization-duplication-reference.md` §12 (three
+> edit scopes) BEFORE starting — they describe the as-built v1 this plan extends.
 
 ## 0. The v1 baseline (what already works, and where)
 
@@ -115,6 +123,18 @@ Show "from <Name>Mixin" when a mixin-donated member is selected.
   super reaches the consumer's real superclass method (assert via a marker on a stub
   superclass in the probe page).
 - The build-time syntax gate loads the REAL Mixin.coffee — no gate change needed.
+
+### Residual discovered during T (out of scope, banked for a future arc)
+Donor attribution covers mixin METHODS only: `selectionFromList`'s mixin walk runs in the
+`Utils.isFunction` branch, so a mixin-donated FIELD (e.g. `color_hover`) shows its plain
+VALUE un-attributed — no donor label, no override button, and a save takes the plain
+class-edit path. Extending parity to fields needs real design: class-inspector field
+views would show SOURCES instead of values (object inspectors must keep showing the
+instance VALUE), `Class.applyMemberEdit` would need to keep `<name>_source` for
+non-functions (today functions only — it is both the view's attribution key and the
+live-override shadow guard), and the class-scope registry would need to record field
+edits. `Mixin.applyMemberEdit`/`removeMember` already handle fields — only the
+inspector's attribution/view layer is method-scoped. → `docs/BACKLOG.md`.
 
 ### T — SystemTest for the edit flow (after P1/P2 land)
 Macro: open a class inspector on a `ButtonWdgt` (Highlightable consumer), select

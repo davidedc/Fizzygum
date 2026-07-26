@@ -60,9 +60,9 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   `window[@[arguments.callee.name + '_class_injected_in']].__super__[...]`, resolved via
   a `<methodName>_class_injected_in` companion property that `addInstanceProperties`
   writes next to every injected function. Constraints that follow:
-  - only the bare `super` (forwards all arguments) and `super arg, …` forms are
-    rewritten; `super()` / `super(args)` are open TODOs (`Mixin.coffee`) — the class-side
-    rewriter (`Class._equivalentforSuper`) supports all four;
+  - all four super forms are rewritten — `super()`, bare `super` (forwards all
+    arguments), `super(args)`, `super arg, …` — mirroring the class-side rewriter
+    (`Class._equivalentforSuper`), with the same load-bearing rule order;
   - `arguments.callee` pins the compiled output to sloppy mode;
   - the rewrite rules are order-sensitive text substitutions — a bare `super` with a
     trailing inline comment silently dropped all arguments until hardened on 2026-07-02
@@ -97,9 +97,32 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   DONOR: `Mixin.applyMemberEdit` updates the recorded source, recompiles the member (the
   mixin super rewrite; the function's `.name` is restored so the fake-super companion
   lookup keeps working) and re-injects it into every consumer class recorded at
-  `augmentWith` time — skipping consumers whose class body shadows the member, so the
-  boot-order override rule keeps holding. Edits log as scope-`"mixin"` records in
-  `world.sourceEditsRegistry` and replay on world restore (the reference doc §12).
+  `augmentWith` time — skipping consumers whose class body shadows the member AND
+  consumers whose prototype carries a live class-scope override (`<name>_source`), so
+  the boot-order override rule keeps holding for overrides born at edit time too. Edits
+  log as scope-`"mixin"` records in `world.sourceEditsRegistry` and replay on world
+  restore (the reference doc §12). The attribution (and so the whole donor-editing
+  surface) covers mixin METHODS: a donated FIELD shows its plain value un-attributed
+  (field parity is banked — `docs/BACKLOG.md`), though `Mixin.applyMemberEdit` itself
+  handles fields fine when driven directly. The full editing vocabulary on top of that
+  core:
+  - **"override in this class"** (`ClassInspectorWdgt.overrideInThisClass`): a second
+    save destination shown while a mixin-donated instance member is selected — keeps
+    the edited source as a live override on THAT class's prototype only (via
+    `Class.applyMemberEdit`, the class twin, which super-rewrites exactly as the boot
+    emit does), after which donor edits skip the class;
+  - a **"from `<Name>Mixin`" donor label** (`InspectorWdgt.mixinDonorLabel`) appears in
+    the hierarchy row of BOTH inspector types while a mixin-donated member is selected;
+  - **add/remove**: the class inspector's `add…` popout gains a destination step
+    (class or any of its mixins — a mixin add is `applyMemberEdit` with a new name)
+    when the class declares augmentations, and `remove` on a mixin-donated member
+    routes to `Mixin.removeMember` (deletes member + fake-super companion from every
+    non-shadowing consumer; logged as a `deleted: true` registry record);
+  - **class-side statics**: the Mixin constructor parses the literal's 2-space keys
+    into `staticPropertiesSources` (DSL hooks excluded); the inspector attributes and
+    shows a donated static's source, and saves route to `Mixin.applyStaticEdit`
+    (re-copies onto every consumer CONSTRUCTOR, shadow-guarded by the consumer's own
+    class-side statics; registry records carry `static: true`).
 - **Build/boot cost** — mixin sources ship as escaped text and are batched identically
   to classes; in the `--homepage` precompiled image the compile/eval/super-rewrite is
   baked in and only the cheap regex field-split runs per boot. Negligible either way.
@@ -239,9 +262,7 @@ Costs of keeping (all real, all now bounded):
 - the mixin-DSL tax on every new static gate (paid for all current gates; the census
   class model now makes it reusable);
 - implicit override semantics (mitigated: `SHADOWS-MIXIN` census + recorded case law);
-- two unsynchronized mixin detectors (open, cheap to gate);
-- the `super()`/`super(args)` forms remain unsupported in mixin bodies (the live editor
-  rejects them with a message; the mixin files simply avoid them).
+- two unsynchronized mixin detectors (open, cheap to gate).
 
 Costs of removing (why it loses):
 - the four biggest genuine-MI mixins (Clipping/Controller/Highlightable/BackBuffer) need
@@ -261,15 +282,12 @@ Costs of removing (why it loses):
 ## 8. Proposed follow-ups (NOT scheduled; adopt via `BACKLOG.md` if picked up)
 
 (Executed 2026-07-26: the `CLAUDE.md`/`AGENTS.md` reword, the misfiled-five fold — §4/§6
-— and mixin source EDITING in the inspector — §2 "meta-system status".)
+— and the full mixin-editing arc — §2 "meta-system status": donor editing, the four-form
+super rewriter, the receiver-side "override in this class" gesture, the donor label,
+add/remove members, and class-side statics.)
 
 1. **Gate the detector pair**: assert `build.py`'s and the boot loader's mixin
    detectors classify every shipped file identically.
-2. Optional: `super()`/`super(args)` support in mixin bodies (the live editor and the
-   rewriter both reject/skip them today), or a syntax-gate error for them.
-3. Optional: a receiver-side "override in this class" gesture in the class inspector
-   (today a mixin-donated member's save edits the DONOR; a class-body shadow can only
-   come from source).
 
 ## Related docs
 

@@ -29,19 +29,22 @@ class Mixin
     # variable... and then at runtime here we use that variable to
     # implement super
 
-    # ORDER MATTERS -- see Class._equivalentforSuper for the full rationale. A bare `super` ending the
-    # line (tolerating trailing whitespace and/or an inline `#` comment, which is re-appended) forwards
-    # ALL arguments, and MUST run before the `super <arg>` rule below: otherwise a trailing space --
-    # before an inline comment, or as stray end-of-line whitespace -- is caught there as `.call this, `
-    # with no effective argument, SILENTLY dropping the forwarded arguments (the thin-slice-bug class).
+    # ORDER MATTERS -- the same four sequential text substitutions as
+    # Class._equivalentforSuper, in the same order (see there for the full rationale):
+    #  1. `super()`                    -> a no-argument super call.
+    #  2. bare `super` ENDING THE LINE -> forward ALL arguments (.apply(this, arguments)),
+    #     tolerating trailing whitespace and/or an inline `#` comment (re-appended). MUST
+    #     run before rule 4: a trailing space would otherwise be caught there as
+    #     `.call this, ` with NO effective argument, SILENTLY dropping the forwarded
+    #     arguments (the thin-slice-bug class).
+    #  3. `super(args)`                -> a call with those explicit args.
+    #  4. `super <args>`               -> a call with those space-separated args.
     mixinSuperBase = "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name]"
+    aString = aString.replace(/super\(\)/g, mixinSuperBase + ".call(this)")
     aString = aString.replace /super[ \t]*(#[^\n]*)?$/gm, (match, comment) ->
       mixinSuperBase + ".apply(this, arguments)" + (if comment then "  " + comment else "")
+    aString = aString.replace(/super\(/g, mixinSuperBase + ".call(this, ")
     aString = aString.replace(/super /g, mixinSuperBase + ".call this, ")
-
-    # TODO un-translated cases as of yet
-    # /super\(\)/g -> ...???...
-    # /super\(/g -> ...???...
 
   # Coffeescript adds some helper functions at the top of the compiled code:
   #
@@ -83,12 +86,8 @@ class Mixin
   # super rewrite, and re-inject it into every consumer class whose own class body
   # does not shadow the member (the class body won at boot -- augmentWith runs
   # before the class-body assignments -- and keeps winning). Returns the number of
-  # consumer classes updated. Throws on compile errors and on the super forms the
-  # mixin rewriter does not support.
+  # consumer classes updated. Throws on compile errors.
   applyMemberEdit: (memberName, source) ->
-    if /super\(/.test source
-      throw new Error "mixins only support the bare `super` and `super arg, ...` forms -- super() / super(args) cannot be compiled in a mixin"
-
     compiled = compileFGCode ("window.__fzEditedMixinMember = " + (@_equivalentforSuper source)), true
     compiled = @_removeHelperFunctions compiled
     eval.call window, compiled
@@ -107,11 +106,59 @@ class Mixin
     for className in @_consumerClassNames()
       theClass = window[className]
       continue unless theClass?
-      # SHADOW GUARD: skip a consumer whose class body defines this member itself
+      # SHADOW GUARD: skip a consumer whose class body defines this member itself...
       continue if theClass.class?.nonStaticPropertiesSources?[memberName]?
+      # ...or whose prototype carries a LIVE class-scope override (`<name>_source`,
+      # written by ClassInspectorWdgt's prototype edit / override gesture) -- the
+      # same boot-order rule, applied to overrides born at edit time
+      continue if Object.prototype.hasOwnProperty.call theClass.prototype, memberName + "_source"
       theClass::[memberName] = editedValue
       if typeof editedValue is "function"
         theClass::[memberName + "_class_injected_in"] = className
+      theClass.class?.notifyInstancesOfSourceChange? [memberName]
+      updated++
+    updated
+
+  # The class-side twin of applyMemberEdit: rewrite ONE static member on the donor
+  # and re-copy it onto every consumer CONSTRUCTOR whose own class body does not
+  # declare the same static (the boot-order rule, on the class side). No super
+  # rewrite: a mixin static belongs to no instance-method chain. Returns the
+  # number of consumer classes updated. Throws on compile errors.
+  applyStaticEdit: (memberName, source) ->
+    compiled = compileFGCode ("window.__fzEditedMixinMember = " + source), true
+    compiled = @_removeHelperFunctions compiled
+    eval.call window, compiled
+    editedValue = window.__fzEditedMixinMember
+    delete window.__fzEditedMixinMember
+
+    @staticPropertiesSources[memberName] = source
+
+    updated = 0
+    for className in @_consumerClassNames()
+      theClass = window[className]
+      continue unless theClass?
+      # SHADOW GUARD: skip a consumer whose class body declares this static itself
+      continue if theClass.class?.staticPropertiesSources?[memberName]?
+      theClass[memberName] = editedValue
+      theClass.class?.notifyInstancesOfSourceChange? [memberName]
+      updated++
+    updated
+
+  # Remove member `memberName` from this mixin: drop the recorded source and
+  # delete the injected member (+ its fake-super companion) from every consumer
+  # class -- except the shadowing ones (both guards, as applyMemberEdit), whose
+  # own member never came from the injection. Returns the number of consumer
+  # classes updated.
+  removeMember: (memberName) ->
+    delete @nonStaticPropertiesSources[memberName]
+    updated = 0
+    for className in @_consumerClassNames()
+      theClass = window[className]
+      continue unless theClass?
+      continue if theClass.class?.nonStaticPropertiesSources?[memberName]?
+      continue if Object.prototype.hasOwnProperty.call theClass.prototype, memberName + "_source"
+      delete theClass::[memberName]
+      delete theClass::[memberName + "_class_injected_in"]
       theClass.class?.notifyInstancesOfSourceChange? [memberName]
       updated++
     updated
@@ -155,6 +202,18 @@ class Mixin
           if srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
 
         @nonStaticPropertiesSources[m[1]] = m[2]
+
+    # class-side (static) members: the literal's 2-space keys, copied onto each
+    # consumer CONSTRUCTOR by augmentWith's for-loop -- minus the mixin DSL's own
+    # hooks (MixedClassKeywords). Parsed so the inspector's static leg can show
+    # and edit them (applyStaticEdit); the shipped mixins currently declare none.
+    staticSourceToBeParsed = source + "\n  $$$STOPTOKEN_LASTFIELD :"
+    staticRegex = /^  ([a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  ([a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
+    while (m = staticRegex.exec(staticSourceToBeParsed))?
+        if (m.index == staticRegex.lastIndex)
+            staticRegex.lastIndex++
+        continue if MixedClassKeywords.indexOf(m[1]) >= 0
+        @staticPropertiesSources[m[1]] = m[2]
 
     if generatePreCompiledJS or createMixin
       JS_string_definitions = compileFGCode (@_equivalentforSuper source), true

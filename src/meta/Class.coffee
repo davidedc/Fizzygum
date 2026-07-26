@@ -105,6 +105,22 @@ class Class
 
     return aString
 
+  # ===== live member editing =====
+  # The CLASS twin of Mixin.applyMemberEdit: rewrite ONE member on this class's
+  # prototype from CoffeeScript source. The super forms are rewritten exactly as
+  # the boot emit does (_equivalentforSuper), so an edited member keeps calling
+  # super; for functions the source is kept as the `<name>_source` sibling so the
+  # member stays editable as CoffeeScript. Callers: ClassInspectorWdgt (live save
+  # and the override-in-this-class gesture) and SourceEditsRegistry.replayClassEdits
+  # (world-snapshot restore). Throws on compile errors. Notifying instances is the
+  # CALLER's business -- the restore path replays before any instance exists.
+  applyMemberEdit: (memberName, source) ->
+    proto = window[@name].prototype
+    proto.evaluateString "@" + memberName + " = " + (@_equivalentforSuper memberName, source)
+    if Utils.isFunction proto[memberName]
+      proto[memberName + "_source"] = source
+    return
+
   findIfItExtendsAnotherClass: (source) ->
     # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m

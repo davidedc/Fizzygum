@@ -1,5 +1,9 @@
 class ClassInspectorWdgt extends InspectorWdgt
 
+  # the SECOND save destination for a mixin-donated member (see overrideInThisClass);
+  # laid out left of the save button, shown only while such a member is selected
+  overrideInThisClassButton: nil
+
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.constructor.class.notifyInstancesOfSourceChange propertiesArray
 
@@ -10,6 +14,93 @@ class ClassInspectorWdgt extends InspectorWdgt
     super
     @lastLabelInHierarchy._setTextNoSettle "this class"
     #@label.setText "class " + @target.constructor.name
+    @overrideInThisClassButton = new SimpleButtonWdgt true, @, "overrideInThisClass", "override in this class"
+    @_addNoSettle @overrideInThisClassButton
+    @overrideInThisClassButton.hide()
+
+  # a mixin-donated INSTANCE member gets the second save destination offered; any
+  # other selection hides it (a static's override would need a constructor-side
+  # assignment -- not offered). (Visibility is not a layout input: the button is
+  # laid out unconditionally in _layoutOverrideInThisClassButton.)
+  selectionFromList: (selected) ->
+    super
+    if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic
+      @overrideInThisClassButton?.show()
+    else
+      @overrideInThisClassButton?.hide()
+
+  # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point).
+  # The gap between the remove button and the save button, in the bottom row.
+  _layoutOverrideInThisClassButton: ->
+    buttonLeft = @removePropertyButton.right() + @internalPadding
+    buttonBounds = new Rectangle new Point buttonLeft, @bottom() - 15 - @externalPadding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (Math.max 10, @saveButton.left() - @internalPadding - buttonLeft), 15
+    @overrideInThisClassButton._reLayout buttonBounds
+
+  # Destination step past the add... prompt: a class that declares augmentations
+  # can receive the new member either on itself or on one of its mixins (a member
+  # added to a mixin appears on every non-shadowing consumer class and is logged
+  # for snapshot replay). An unaugmented class keeps the base single-step flow.
+  addProperty: (ignoringThis, widgetWithProperty) ->
+    augmentations = @target.constructor.class?.augmentedWith
+    if !augmentations? or augmentations.length is 0
+      super
+      return
+    prop = widgetWithProperty.text.text
+    if prop?.getValue?
+      prop = prop.getValue()
+    return unless prop
+    menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:"
+    menu.addMenuItem @target.constructor.name, @, "addPropertyToClass", arg1: prop
+    for eachMixinGlobalName in augmentations
+      menu.addMenuItem eachMixinGlobalName, @, "addPropertyToMixin", arg1: prop, arg2: eachMixinGlobalName
+    menu.popUpAtHand()
+
+  addPropertyToClass: (ignored, ignored2, prop) ->
+    @_addNamedProperty prop
+
+  addPropertyToMixin: (ignored, ignored2, prop, mixinGlobalName) ->
+    theMixin = Mixin.allMixines.find (m) -> m.name + "Mixin" is mixinGlobalName or m.name is mixinGlobalName
+    return unless theMixin?
+    theMixin.applyMemberEdit prop, "nil"
+    world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, prop, "nil"
+    @_buildAndConnectChildren()
+
+  # a mixin-donated INSTANCE member (not shadowed by this class) is removed from
+  # the DONOR: every non-shadowing consumer class loses it (Mixin.removeMember),
+  # and the removal is logged so a world snapshot replays it. A plain member (and
+  # a mixin static) keeps the base prototype-delete flow.
+  removeProperty: ->
+    if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic and @list.selected?
+      theMixin = @currentPropertySourceMixin
+      propertyName = @list.selected.labelString
+      updatedCount = theMixin.removeMember propertyName
+      world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, propertyName
+      @currentProperty = nil
+      @currentPropertySourceMixin = nil
+      @_buildAndConnectChildren()
+      @inform "removed from " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
+      return
+    super
+
+  # The second save destination for a mixin-donated member: instead of editing the
+  # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
+  # edited source as a live override on THIS class's prototype only. Dropping the
+  # mixin attribution first makes the plain save routing do exactly that -- and nil
+  # IS the true post-state: the prototype then carries `<name>_source`, which is
+  # what a re-selection would attribute the member to (and what applyMemberEdit's
+  # live-override shadow guard keys off), so future donor edits skip this class.
+  overrideInThisClass: ->
+    if !@list.selected? then return
+    return unless @currentPropertySourceMixin?
+    return if @currentPropertySourceIsStatic
+    theMixinName = @currentPropertySourceMixin.name
+    @currentPropertySourceMixin = nil
+    @overrideInThisClassButton.hide()
+    # the donor label follows the attribution: the member is class-owned now
+    @mixinDonorLabel?.setText ""
+    @save()
+    @inform "overridden in " + @target.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
 
   colloquialName: ->
     "Class Inspector (" + @target.constructor.name.replace("Wdgt", "") + ")"
@@ -50,22 +141,23 @@ class ClassInspectorWdgt extends InspectorWdgt
     if @currentPropertySourceMixin?
       theMixin = @currentPropertySourceMixin
       try
-        updatedCount = theMixin.applyMemberEdit propertyName, txt
+        if @currentPropertySourceIsStatic
+          updatedCount = theMixin.applyStaticEdit propertyName, txt
+        else
+          updatedCount = theMixin.applyMemberEdit propertyName, txt
       catch error
         @inform "mixin edit failed:\n" + error.message
         return
-      world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt
-      # (applyMemberEdit already ran notifyInstancesOfSourceChange per consumer class)
+      world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt, @currentPropertySourceIsStatic
+      # (the apply*Edit already ran notifyInstancesOfSourceChange per consumer class)
       @inform "saved to " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
       return
 
-    # this.target[propertyName] = evaluate txt
-    @target.evaluateString "@" + propertyName + " = " + txt
-    # if we are saving a function, we'd like to
-    # keep the source code so we can edit Coffeescript
-    # again.
+    # a plain class-prototype member: the Class meta-object owns the edit mechanics
+    # (Class.applyMemberEdit, the class twin of the mixin routing above -- super
+    # rewritten exactly as at boot, `<name>_source` kept for CoffeeScript editability)
+    @target.constructor.class.applyMemberEdit propertyName, txt
     if Utils.isFunction @target[propertyName]
-      @target[propertyName + "_source"] = txt
       # log the CLASS-scope source edit so a world snapshot can carry AND replay it (§12).
       # Unlike an instance edit, nothing else records a prototype edit — @target is the class
       # prototype, so this is the registry's essential case.

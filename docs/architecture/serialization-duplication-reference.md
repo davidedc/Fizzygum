@@ -424,7 +424,11 @@ ones):
   DONOR — `Mixin.applyMemberEdit` recompiles the member (mixin super rewrite, function name
   restored for the fake-super companion lookup) and re-injects it into every non-shadowing
   consumer class — and records `recordMixinEdit(mixinName, name, txt)`. Like a class edit,
-  a mixin edit leaves no other serializable trace.
+  a mixin edit leaves no other serializable trace. Two record variants share the scope:
+  a donated STATIC's edit records `static: true` (replayed via `Mixin.applyStaticEdit`,
+  which re-copies onto consumer constructors), and a member REMOVAL records
+  `deleted: true` (`recordMixinMemberRemoval`, replayed via `Mixin.removeMember`);
+  replay walks the records in order, so remove-then-re-add lands in its final state.
 
 **Restore** (`loadWorldSnapshot`): the registry is rebuilt from `world.sourceEdits`
 (`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
