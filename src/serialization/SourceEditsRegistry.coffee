@@ -42,6 +42,17 @@ class SourceEditsRegistry
       source: source
     return
 
+  # record a mixin-scope edit (from ClassInspectorWdgt.applyPropertyEdit's mixin
+  # routing; `mixinName` is the parsed Mixin's name, without the "Mixin" suffix).
+  recordMixinEdit: (mixinName, propertyName, source) ->
+    return unless mixinName? and propertyName?
+    @records.push
+      scope: "mixin"
+      mixinName: mixinName
+      propertyName: propertyName
+      source: source
+    return
+
   # the plain-JSON records embedded in a world snapshot (shallow copies, so a later live edit
   # can't mutate an already-serialized array; the fields are all primitives).
   serializableRecords: ->
@@ -61,6 +72,22 @@ class SourceEditsRegistry
         proto[r.propertyName + "_source"] = r.source if Utils.isFunction proto[r.propertyName]
       catch error
         console?.log "world snapshot: class-scope source edit " + r.className + "." + r.propertyName + " could not be replayed: " + error.message
+    return
+
+  # replay the MIXIN-scope edits: each re-runs Mixin.applyMemberEdit, which
+  # recompiles the member and re-injects it into every non-shadowing consumer
+  # class. Called by the snapshot restore BEFORE replayClassEdits -- the boot-order
+  # analogy: augmentWith runs before class-body assignments, so a class-scope edit
+  # of the same member keeps winning. A record whose mixin/member no longer
+  # compiles is logged, not fatal (same policy as replayClassEdits).
+  replayMixinEdits: ->
+    for r in @records when r.scope is "mixin"
+      theMixin = Mixin.allMixines.find (m) -> m.name is r.mixinName
+      continue unless theMixin?
+      try
+        theMixin.applyMemberEdit r.propertyName, r.source
+      catch error
+        console?.log "world snapshot: mixin-scope source edit " + r.mixinName + "." + r.propertyName + " could not be replayed: " + error.message
     return
 
   # rebuild a registry from the records embedded in a loaded snapshot.

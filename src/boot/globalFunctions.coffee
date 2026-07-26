@@ -30,7 +30,7 @@ stillLoadingSources = nil
 # because they have special meaning
 # (this comment from a stackOverflow answer from clyde
 # here: http://stackoverflow.com/a/8728164/1318347 )
-MixedClassKeywords = ['onceAddedClassProperties', 'included']
+MixedClassKeywords = ['onceAddedClassProperties', 'included', 'consumerClassNames']
 
 noOperation = ->
     nil

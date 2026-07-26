@@ -10,6 +10,10 @@
 Object::augmentWith = (obj, fromClass) ->
   for key, value of obj when key not in MixedClassKeywords
     @[key] = value
+  # record the consumer on the mixin literal (skipped by the copy loop above via
+  # MixedClassKeywords), so live mixin editing can re-inject an edited member into
+  # every consumer class -- see Mixin.applyMemberEdit.
+  (obj.consumerClassNames ?= []).push (fromClass or @name)
   obj.onceAddedClassProperties?.apply @, [fromClass]
   this
 

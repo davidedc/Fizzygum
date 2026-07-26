@@ -87,14 +87,19 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   keys off `^\w+Mixin\s*=` while the boot loader keys off
   `/^  onceAddedClassProperties:/m` (`loading-and-compiling-coffeescript-sources.coffee`).
   They agree today; nothing enforces that they keep agreeing (proposed gate, §8).
-- **Meta-system status: first-class for inspection since 2026-07-03.** The parsed
+- **Meta-system status: first-class for inspection AND editing.** The parsed
   `Mixin` instances register in `Mixin.allMixines` (create pass only — the build-time
   syntax gate's parse-only pass never registers), and
-  `InspectorWdgt._mixinSourceForMember` consults each class's `augmentedWith` list to
-  show a mixin method's REAL CoffeeScript source in the inspector (Tier H5, `b05f8d1e`;
-  crash guard `14014e44` — the prototype-walk used to throw on mixin methods under JSC).
-  Live-EDITING a mixin (round-trip source editing, as classes support via
-  `nonStaticPropertiesSources`) is still not wired — view is first-class, edit is not.
+  `InspectorWdgt._mixinProvidingMember` consults each class's `augmentedWith` list to
+  show a mixin method's REAL CoffeeScript source in the inspector (view since Tier H5,
+  `b05f8d1e`; crash guard `14014e44` — the prototype-walk used to throw on mixin methods
+  under JSC). Since 2026-07-26 the same attribution routes a CLASS-inspector save to the
+  DONOR: `Mixin.applyMemberEdit` updates the recorded source, recompiles the member (the
+  mixin super rewrite; the function's `.name` is restored so the fake-super companion
+  lookup keeps working) and re-injects it into every consumer class recorded at
+  `augmentWith` time — skipping consumers whose class body shadows the member, so the
+  boot-order override rule keeps holding. Edits log as scope-`"mixin"` records in
+  `world.sourceEditsRegistry` and replay on world restore (the reference doc §12).
 - **Build/boot cost** — mixin sources ship as escaped text and are batched identically
   to classes; in the `--homepage` precompiled image the compile/eval/super-rewrite is
   baked in and only the cheap regex field-split runs per boot. Negligible either way.
@@ -235,7 +240,8 @@ Costs of keeping (all real, all now bounded):
   class model now makes it reusable);
 - implicit override semantics (mitigated: `SHADOWS-MIXIN` census + recorded case law);
 - two unsynchronized mixin detectors (open, cheap to gate);
-- live-editing of mixin source still not wired (view-only first-class).
+- the `super()`/`super(args)` forms remain unsupported in mixin bodies (the live editor
+  rejects them with a message; the mixin files simply avoid them).
 
 Costs of removing (why it loses):
 - the four biggest genuine-MI mixins (Clipping/Controller/Highlightable/BackBuffer) need
@@ -254,15 +260,16 @@ Costs of removing (why it loses):
 
 ## 8. Proposed follow-ups (NOT scheduled; adopt via `BACKLOG.md` if picked up)
 
-(Items 1 and 2 of the original list — reword the `CLAUDE.md`/`AGENTS.md` "phased out"
-sentence, fold the misfiled mixins — were executed 2026-07-26; see §4 and §6.)
+(Executed 2026-07-26: the `CLAUDE.md`/`AGENTS.md` reword, the misfiled-five fold — §4/§6
+— and mixin source EDITING in the inspector — §2 "meta-system status".)
 
 1. **Gate the detector pair**: assert `build.py`'s and the boot loader's mixin
    detectors classify every shipped file identically.
-2. Optional, larger: wire mixin source EDITING in the inspector (H5 did view) — the
-   remaining first-class-ness gap, and the standing inspectability complaint against
-   the mechanism; `super()`/`super(args)` support or a syntax-gate error in mixin
-   bodies.
+2. Optional: `super()`/`super(args)` support in mixin bodies (the live editor and the
+   rewriter both reject/skip them today), or a syntax-gate error for them.
+3. Optional: a receiver-side "override in this class" gesture in the class inspector
+   (today a mixin-donated member's save edits the DONOR; a class-body shadow can only
+   come from source).
 
 ## Related docs
 

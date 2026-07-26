@@ -66,6 +66,56 @@ class Mixin
 
     return aString
 
+  # ===== live member editing =====
+  # The third edit scope, next to instance edits (Widget.injectProperty) and class
+  # edits (ClassInspectorWdgt.applyPropertyEdit): rewrite ONE injected member on the
+  # DONOR mixin and push the recompiled function to every consumer class, so the
+  # edit behaves as if the mixin had always said this. The inspector routes here
+  # when the selected member's source comes from a mixin (ClassInspectorWdgt).
+
+  # the classes this mixin is injected into -- recorded on the mixin LITERAL
+  # (window.<name>Mixin) by Object::augmentWith at injection time.
+  _consumerClassNames: ->
+    window[@name + "Mixin"]?.consumerClassNames or []
+
+  # Apply an edit to member `memberName`: update the recorded source (the same
+  # store the inspector's view reads), recompile the single member with the mixin
+  # super rewrite, and re-inject it into every consumer class whose own class body
+  # does not shadow the member (the class body won at boot -- augmentWith runs
+  # before the class-body assignments -- and keeps winning). Returns the number of
+  # consumer classes updated. Throws on compile errors and on the super forms the
+  # mixin rewriter does not support.
+  applyMemberEdit: (memberName, source) ->
+    if /super\(/.test source
+      throw new Error "mixins only support the bare `super` and `super arg, ...` forms -- super() / super(args) cannot be compiled in a mixin"
+
+    compiled = compileFGCode ("window.__fzEditedMixinMember = " + (@_equivalentforSuper source)), true
+    compiled = @_removeHelperFunctions compiled
+    eval.call window, compiled
+    editedValue = window.__fzEditedMixinMember
+    delete window.__fzEditedMixinMember
+    if typeof editedValue is "function"
+      # the fake-super rewrite resolves its target through
+      # `arguments.callee.name + "_class_injected_in"`: the object-literal form gave
+      # the original function the member's name, the standalone recompile does not --
+      # restore it.
+      Object.defineProperty editedValue, "name", { value: memberName, configurable: true }
+
+    @nonStaticPropertiesSources[memberName] = source
+
+    updated = 0
+    for className in @_consumerClassNames()
+      theClass = window[className]
+      continue unless theClass?
+      # SHADOW GUARD: skip a consumer whose class body defines this member itself
+      continue if theClass.class?.nonStaticPropertiesSources?[memberName]?
+      theClass::[memberName] = editedValue
+      if typeof editedValue is "function"
+        theClass::[memberName + "_class_injected_in"] = className
+      theClass.class?.notifyInstancesOfSourceChange? [memberName]
+      updated++
+    updated
+
   constructor: (source, generatePreCompiledJS, createMixin) ->
 
     @nonStaticPropertiesSources = {}

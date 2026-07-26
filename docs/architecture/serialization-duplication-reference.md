@@ -406,10 +406,10 @@ wallpaper): `serialization-roundtrip-headless.js`'s world leg.
 
 `SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in the WorldWdgt
 ctor; a PRODUCT collaborator — ships in `--homepage`). It logs in-world SOURCE edits so a
-whole-world snapshot can carry and replay them. Record: `{scope, className, uniqueID?,
-propertyName, source}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
+whole-world snapshot can carry and replay them. Record: `{scope, className|mixinName,
+uniqueID?, propertyName, source}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
 
-Two scopes, captured at the two edit choke points (function edits only — the `$src`-backed
+Three scopes, captured at the three edit choke points (function edits only — the `$src`-backed
 ones):
 
 - **instance** — `Widget.injectProperty` records `recordInstanceEdit(widget, name, txt)`. These
@@ -419,13 +419,20 @@ ones):
   txt)` (its `@target` is the class prototype — `new ClassInspectorWdgt window[className].prototype`).
   This is the ESSENTIAL case: a prototype edit mutates the live class but leaves no other
   serializable trace (§2.7).
+- **mixin** — the same `ClassInspectorWdgt.applyPropertyEdit`, when the selected member's
+  source comes from a mixin (and the class body doesn't shadow it), routes the save to the
+  DONOR — `Mixin.applyMemberEdit` recompiles the member (mixin super rewrite, function name
+  restored for the fake-super companion lookup) and re-injects it into every non-shadowing
+  consumer class — and records `recordMixinEdit(mixinName, name, txt)`. Like a class edit,
+  a mixin edit leaves no other serializable trace.
 
 **Restore** (`loadWorldSnapshot`): the registry is rebuilt from `world.sourceEdits`
-(`SourceEditsRegistry.fromRecords`) and its **class-scope edits are replayed BEFORE
-deserialization** (`replayClassEdits` — `prototype.evaluateString "@name = source"` + restore
-the `_source`), so a shell (`Object.create(prototype)`) already sees the edited method; a class
-edit that no longer compiles is logged, not fatal. Instance-scope edits ride the normal
-`{"$src"}` path on their own widget. The rebuilt registry is installed AFTER deserialize (so the
+(`SourceEditsRegistry.fromRecords`) and its **mixin- then class-scope edits are replayed
+BEFORE deserialization** (`replayMixinEdits` then `replayClassEdits` — mixin first, the
+boot-order analogy: `augmentWith` runs before class-body assignments, so a class-scope edit
+of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
+edited methods; an edit that no longer compiles is logged, not fatal. Instance-scope edits
+ride the normal `{"$src"}` path on their own widget. The rebuilt registry is installed AFTER deserialize (so the
 `$src` re-injections don't double-log into it). A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session: an `injectProperty` method
 edit and a `ClassInspectorWdgt` prototype edit both survive into a fresh page where the prototype

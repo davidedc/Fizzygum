@@ -2642,6 +2642,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     #     edits ride the normal {"$src"} path on their own widget. The rebuilt registry is
     #     installed AFTER deserialize (below), so the $src re-injections don't double-log into it.
     restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
+    restoredRegistry.replayMixinEdits()
     restoredRegistry.replayClassEdits()
     # 3. deserialize the object table (kind:"world" preserves each widget's iid).
     result = Deserializer.deserialize envelope

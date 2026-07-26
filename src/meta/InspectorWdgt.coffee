@@ -2,6 +2,11 @@ class InspectorWdgt extends Widget
 
   target: nil
   currentProperty: nil
+  # the parsed Mixin whose source the currently-selected member's view came from
+  # (nil when the source came from the instance or the class chain). Set by
+  # selectionFromList; consulted by ClassInspectorWdgt.applyPropertyEdit to route
+  # a save to the DONOR mixin.
+  currentPropertySourceMixin: nil
   markOwnershipOfProperties: true
   # panes:
   list: nil
@@ -380,19 +385,21 @@ class InspectorWdgt extends Widget
     else
       return nil
 
-  # The recorded CoffeeScript source of member `selected` if it is injected by one of `theClass`'s
-  # augmentedWith mixins, else nil. `augmentedWith` holds the mixin GLOBAL names ("ControllerMixin"); a parsed
-  # Mixin's @name is that minus the "Mixin" suffix ("Controller"), so match either form. Mixin.allMixines is
-  # the list of parsed Mixins (each carrying nonStaticPropertiesSources), populated at boot by Mixin's create
-  # pass. (Adds the mixin leg the class-chain walk in selectionFromList lacked -- so a mixin method shows real
-  # source instead of compiled JS.)
-  _mixinSourceForMember: (theClass, selected) ->
+  # The parsed Mixin that injects member `selected` into `theClass` (nil when no
+  # augmentedWith mixin carries it). `augmentedWith` holds the mixin GLOBAL names
+  # ("ControllerMixin"); a parsed Mixin's @name is that minus the "Mixin" suffix
+  # ("Controller"), so match either form. Mixin.allMixines is the list of parsed Mixins
+  # (each carrying nonStaticPropertiesSources), populated at boot by Mixin's create
+  # pass. This powers BOTH the view (a mixin method shows real source instead of
+  # compiled JS -- the mixin leg the class-chain walk in selectionFromList lacked) and
+  # the edit routing (ClassInspectorWdgt saves a mixin-donated member to the donor).
+  _mixinProvidingMember: (theClass, selected) ->
     return nil unless theClass.augmentedWith?
     for mixinName in theClass.augmentedWith
       for theMixin in Mixin.allMixines
         if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
            theMixin.nonStaticPropertiesSources[selected]?
-          return theMixin.nonStaticPropertiesSources[selected]
+          return theMixin
     nil
 
   selectionFromList: (selected) ->
@@ -400,6 +407,7 @@ class InspectorWdgt extends Widget
 
     val = @target[selected]
     @currentProperty = val
+    @currentPropertySourceMixin = nil
 
     # functions should have a source somewhere
     # either in the object or in a superclass,
@@ -423,10 +431,12 @@ class InspectorWdgt extends Widget
             break
           # The method may be MIXIN-injected (e.g. ControllerMixin._fireConnection) -- not recorded on any
           # class's nonStaticPropertiesSources, but on the parsed Mixin. Consult each mixin this class
-          # augmentsWith so the inspector shows real CoffeeScript instead of the compiled-JS toString() below.
-          mixinSource = @_mixinSourceForMember theClass, selected
-          if mixinSource?
-            val = mixinSource
+          # augmentsWith so the inspector shows real CoffeeScript instead of the compiled-JS toString()
+          # below; remember the donor so a class-inspector save routes the edit to it.
+          theMixinProvidingIt = @_mixinProvidingMember theClass, selected
+          if theMixinProvidingIt?
+            val = theMixinProvidingIt.nonStaticPropertiesSources[selected]
+            @currentPropertySourceMixin = theMixinProvidingIt
             break
           goingUpTargetProtChain = goingUpTargetProtChain.__proto__
       txt = val.toString()

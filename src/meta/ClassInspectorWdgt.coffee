@@ -42,6 +42,23 @@ class ClassInspectorWdgt extends InspectorWdgt
   # the class prototype (and keeps the source for functions so CoffeeScript
   # stays editable).
   applyPropertyEdit: (propertyName, txt) ->
+    # a mixin-donated member (not shadowed by this class's own body) edits the
+    # DONOR: the mixin recompiles it and re-injects it into every consumer class
+    # (Mixin.applyMemberEdit) -- the class inspector is prototype-level truth, and
+    # a mixin member's prototype-level truth is the mixin. Logged with scope
+    # "mixin" so a world snapshot carries and replays it (SourceEditsRegistry).
+    if @currentPropertySourceMixin?
+      theMixin = @currentPropertySourceMixin
+      try
+        updatedCount = theMixin.applyMemberEdit propertyName, txt
+      catch error
+        @inform "mixin edit failed:\n" + error.message
+        return
+      world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, propertyName, txt
+      # (applyMemberEdit already ran notifyInstancesOfSourceChange per consumer class)
+      @inform "saved to " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
+      return
+
     # this.target[propertyName] = evaluate txt
     @target.evaluateString "@" + propertyName + " = " + txt
     # if we are saving a function, we'd like to
