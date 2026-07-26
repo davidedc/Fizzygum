@@ -1,7 +1,5 @@
 class UpperRightTriangleWdgt extends Widget
 
-  @augmentWith CornerInternalHaloMixin, @name
-
   constructor: (parent = nil, @layoutSpec_cornerInternal_proportionOfParent = 4/8) ->
     super()
     @layoutSpec_cornerInternal_fixedSize = 0

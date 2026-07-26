@@ -1,8 +1,5 @@
 # The WorldWdgt takes over the canvas on the page
-class WorldWdgt extends PanelWdgt
-
-  @augmentWith GridPositioningOfAddedShortcutsMixin, @name
-  @augmentWith KeepIconicDesktopSystemLinksBackMixin, @name
+class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   # We need to add and remove
   # the event listeners so we are

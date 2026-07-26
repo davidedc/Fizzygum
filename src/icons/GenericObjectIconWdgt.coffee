@@ -1,11 +1,9 @@
 class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
-  @augmentWith ChildrenStainerMixin, @name
-
   objectIcon: nil
 
   # (ctor, the settling _buildAndConnectChildren wrapper, the square-sizing surface and the
-  # INV-2 self-protecting _applyExtent live in GenericCompositeIconWdgt)
+  # children-staining setColor live in GenericCompositeIconWdgt)
 
   _buildAndConnectChildrenNoSettle: ->
     @objectIcon = new ObjectIconWdgt

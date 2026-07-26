@@ -3109,7 +3109,7 @@ class Widget extends TreeNode
     @bringToForeground()
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
-  # (IconicDesktopSystemFolderShortcutWdgt / CreateShortcutOfDroppedItemsMixin, inside the drop's settle).
+  # (IconicDesktopSystemFolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
   createReferenceAndClose: (referenceName, placeToDropItIn = world) ->
     @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle referenceName, placeToDropItIn
 

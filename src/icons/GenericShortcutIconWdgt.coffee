@@ -1,11 +1,9 @@
 class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
 
-  @augmentWith ChildrenStainerMixin, @name
-
   referenceArrowIcon: nil
 
   # (ctor, the settling _buildAndConnectChildren wrapper, the square-sizing surface and the
-  # INV-2 self-protecting _applyExtent live in GenericCompositeIconWdgt)
+  # children-staining setColor live in GenericCompositeIconWdgt)
 
   _buildAndConnectChildrenNoSettle: ->
     if !@icon?

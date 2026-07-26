@@ -1,7 +1,8 @@
 # Mixins — mechanism, inventory, and the keep-vs-remove position
 
 > Written 2026-07-03 (three-agent sweep: per-mixin inventory, docs/git-history record,
-> tooling-coupling map), refreshed and re-verified against `src/` 2026-07-24. This doc is
+> tooling-coupling map), refreshed and re-verified against `src/` 2026-07-24; the five
+> misfiled mixins were folded into standard-OO homes 2026-07-26 (§4). This doc is
 > BOTH the evergreen reference for how the mixin mechanism works and the standing
 > position on keeping vs. removing it, with the evidence embedded (self-contained per
 > `docs/README.md`). The inventory table is dated; re-verify counts before relying on
@@ -27,7 +28,7 @@ line in `CLAUDE.md` — see §6):
   (This is the `docs/archive/god-class-decomposition-plan.md` carve-out, and it is what
   practice has consistently done — §6.)
 - **Single-consumer / single-subtree mixins are misfiled** — fold them into the consumer
-  or a shared base when touched (§8).
+  or a shared base (executed 2026-07-26 for all five then-misfiled ones, §4).
 - **A full-removal campaign is explicitly rejected** — the arithmetic in §5 and §7: it
   would trade ~57 one-line `@augmentWith` declarations for ~100+ forwarding stubs or
   hierarchy surgery across the paint/input/clipping/copy subsystems (the most
@@ -67,8 +68,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     trailing inline comment silently dropped all arguments until hardened on 2026-07-02
     (`cbb90457`, the "thin vertical slice" defect). The same hazard class exists for
     classes too; it is a cost of fragment-wise compilation, only partly a mixin cost.
-  - default parameter values don't survive the mixin field parser
-    (`GridPositioningOfAddedShortcutsMixin` carries the workaround TODO).
+  - default parameter values don't survive the mixin field parser (the workaround is
+    manual `if !param?` defaulting in the method body).
 - **Override semantics: the class body wins.** The boot emitter outputs the
   `augmentWith(...)` calls BEFORE the class's own prototype assignments
   (`Class.coffee` `for eachAugmentation in @augmentedWith`, ~:349), so a class-body
@@ -104,7 +105,7 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (verified 2026-07-24; 13 mixins, 941 L, 57 consumer files)
+## 3. Inventory (verified 2026-07-26; 8 mixins, 815 L, 48 consumer files)
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
@@ -114,23 +115,20 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
 | `HighlightableMixin` | 54 | 9 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `BinOpenerWdgt`, 2 desktop-link classes, 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 137 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `KeepsRatioWhenInVerticalStackMixin` | 75 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt` | unrelated leaves | no |
-| `GridPositioningOfAddedShortcutsMixin` | 37 | 2 — `FolderPanelWdgt`, `WorldWdgt` | same `PanelWdgt` subtree | yes |
-| `KeepIconicDesktopSystemLinksBackMixin` | 20 | 2 — same pair | same subtree | no |
-| `CreateShortcutOfDroppedItemsMixin` | 37 | 1 — `FolderPanelWdgt` | single consumer | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
-| `ChildrenStainerMixin` | 19 | 2 — `GenericObjectIconWdgt`, `GenericShortcutIconWdgt` | sibling leaves | yes |
-| `CornerInternalHaloMixin` | 13 | 2 — `UpperRightTriangleWdgt`, `ModifiedTextTriangleAnnotationWdgt` | data-only config bag | no |
 | `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
 
 (`ContainerMixin` — dead since birth, "TEMPORARY. JUST STARTED IT." — was deleted
-2026-07 in the accidental-complexity batch `3267b0dd`. `Mixin.allMixines` — formerly
+2026-07 in the accidental-complexity batch `3267b0dd`. The five misfiled mixins were
+folded into standard-OO homes 2026-07-26 — see §4. `Mixin.allMixines` — formerly
 dead scaffolding — became load-bearing for the inspector in Tier H5.)
 
 ## 4. Which of these are GENUINE multiple inheritance
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core):** `DeepCopierMixin` (Widget + unrelated data classes),
+- **Genuine (the keep-core — all 8 current mixins):** `DeepCopierMixin` (Widget +
+  unrelated data classes),
   `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
   patch-programming — and the home the dataflow engine deliberately built on),
   `HighlightableMixin` (input-hook state machine across ≥4 branches),
@@ -141,11 +139,24 @@ The test: consumers on unrelated branches AND behaviour that overrides framework
   panel clipping), `KeepsRatioWhenInVerticalStackMixin`,
   `WidgetCreatorAndSmartPlacerOnClickMixin`, `ParentStainerMixin` (barely — 2 unrelated
   leaves each).
-- **Misfiled (single consumer / single subtree / config bag)** — fold when touched, §8:
-  `CreateShortcutOfDroppedItemsMixin`, `GridPositioningOfAddedShortcutsMixin` +
-  `KeepIconicDesktopSystemLinksBackMixin` (both exactly {`FolderPanelWdgt`,`WorldWdgt`}),
-  `CornerInternalHaloMixin`, `ChildrenStainerMixin` (sibling leaves; folds free if the
-  generic icons ever share a base).
+- **Misfiled (single consumer / single subtree / config bag) — all five folded into
+  standard-OO homes 2026-07-26**, motivated by inspectability (a mixed-in member's
+  source is view-only in the inspector, and it is unclear whether to edit the donor or
+  the receiver; a class member is fully first-class). Where each went:
+  - `GridPositioningOfAddedShortcutsMixin` + `KeepIconicDesktopSystemLinksBackMixin`
+    (both exactly {`FolderPanelWdgt`,`WorldWdgt`}) → the shared base
+    `IconicDesktopSystemPanelWdgt extends PanelWdgt` (both consumers now extend it).
+    `WorldWdgt`'s former SHADOWS-MIXIN grid-field overrides are now ordinary base-class
+    shadowing; the deliberate no-super replacement of `PanelWdgt._reactToChildAdded`
+    (suppressing the scroll-panel-holder relay) is preserved and commented in place.
+  - `CreateShortcutOfDroppedItemsMixin` (single consumer) → folded into
+    `FolderPanelWdgt`; its fake `super` became a real class-side one.
+  - `ChildrenStainerMixin` (sibling leaves) → `setColor` folded into the pair's shared
+    base `GenericCompositeIconWdgt` (the base the frame-model era had already created).
+  - `CornerInternalHaloMixin` (config bag) → deleted outright: both consumers' ctors
+    already assign the `layoutSpec_cornerInternal_*` fields, and `isLockingToPanels:
+    false` duplicates the `Widget` prototype default — every injected value was shadowed
+    or redundant.
 
 ## 5. Could standard OO cover even the genuine cases? Yes — at these prices
 
@@ -183,14 +194,18 @@ recurring conversion costs regardless of shape.
 
 ## 6. The written record vs. executed practice
 
-- `CLAUDE.md` says "Mixins are being **phased out** in favour of plain-OO delegation."
-  The archived `god-class-decomposition-plan.md` states the real, narrower rule:
+- `CLAUDE.md`/`AGENTS.md` long said "Mixins are being **phased out** in favour of
+  plain-OO delegation"; both were reworded 2026-07-26 to the §1 policy. The archived
+  `god-class-decomposition-plan.md` states the real, narrower rule:
   delegation for what can be *delegated out*; mixins "remain available where a behaviour
   must be *injected into* the widget."
-- **In ~9.5 years of history, no mixin has ever been converted to delegation.** One was
+- **In ~9.5 years of history, no mixin was ever converted to delegation.** One was
   deleted (dead `ContainerMixin`, 2026-07). The delegation direction produced NEW
   collaborators (`MacroToolkit` → `Wallpaper` → `WidgetFactory` → `UntitledNamingService`
-  → `Serializer`/`Deserializer`) — it never dismantled a mixin.
+  → `Serializer`/`Deserializer`) — it never dismantled a mixin. The 2026-07-26 fold of
+  the five misfiled ones (§4) is the first conversion, and it went to *inheritance
+  homes* (fold into consumer / shared base), not delegation — consistent with the §1
+  policy, which reserves delegation for liftable responsibilities.
 - **New code keeps choosing mixins** (all July 2026): the spreadsheet subsystem
   (`SimpleSpreadsheetWdgt` → Clipping; `SheetModel`/`SheetCellRecord` → DeepCopier),
   the frame model (`FrameWdgt` → Clipping), transforms (`TransformSpec` → DeepCopier),
@@ -236,19 +251,15 @@ Costs of removing (why it loses):
 
 ## 8. Proposed follow-ups (NOT scheduled; adopt via `BACKLOG.md` if picked up)
 
-1. **Reword the `CLAUDE.md`/`AGENTS.md` "phased out" sentence** to the §1 policy — the
-   current wording keeps nudging readers (and agents) toward a conversion campaign the
-   project has implicitly declined. Cheapest, highest-leverage item.
-2. **Fold the misfiled four** opportunistically, when their files are next touched:
-   `CreateShortcutOfDroppedItems` → `FolderPanelWdgt` (its fake `super` becomes real);
-   `CornerInternalHalo` → plain field defaults in its 2 consumers; the desktop pair
-   (`GridPositioning…` + `KeepIconicDesktopSystemLinksBack…`) → a shared home for
-   {`FolderPanelWdgt`,`WorldWdgt`} (intermediate base, or `PanelWdgt` with the existing
-   capability guards — small design decision).
-3. **Gate the detector pair**: assert `build.py`'s and the boot loader's mixin
+(Items 1 and 2 of the original list — reword the `CLAUDE.md`/`AGENTS.md` "phased out"
+sentence, fold the misfiled mixins — were executed 2026-07-26; see §4 and §6.)
+
+1. **Gate the detector pair**: assert `build.py`'s and the boot loader's mixin
    detectors classify every shipped file identically.
-4. Optional, larger: wire mixin source EDITING in the inspector (H5 did view);
-   `super()`/`super(args)` support or a syntax-gate error in mixin bodies.
+2. Optional, larger: wire mixin source EDITING in the inspector (H5 did view) — the
+   remaining first-class-ness gap, and the standing inspectability complaint against
+   the mechanism; `super()`/`super(args)` support or a syntax-gate error in mixin
+   bodies.
 
 ## Related docs
 
