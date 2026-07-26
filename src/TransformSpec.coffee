@@ -24,7 +24,6 @@
 
 class TransformSpec
 
-  @augmentWith DeepCopierMixin
 
   # ---- canonical scalars (the ONLY serialized state) ----
   rotationDegrees: 0        # float, canonical (Phase 2: live)

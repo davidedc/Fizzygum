@@ -4,13 +4,13 @@
 class ColorPickerWdgt extends Widget
 
   # pattern: declare every child field here (not only set in the constructor) so
-  # DeepCopierMixin's duplication picks it up even under lazy initialisation.
+  # the Duplicator's walk picks it up even under lazy initialisation.
   feedback: nil
   choice: nil
   colorPalette: nil
   grayPalette: nil
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
-  # that method); declared so DeepCopierMixin duplication carries it.
+  # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: nil
 
   constructor: ( @choice = Color.WHITE ) ->

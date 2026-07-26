@@ -15,7 +15,6 @@ class SheetModel
   # duplicated sheet gets its OWN model, not a shared reference) — the same reason Color/Point
   # augment it. @cells (a Map) copies via Map::deepCopy; @sheetWidget maps to the copied widget
   # through the copier's identity tracking.
-  @augmentWith DeepCopierMixin
 
   # canonical cell-address shape: 1–2 uppercase letters + a 1-based row 1..9999. Kept in sync
   # with FormulaCompiler's in-source scan regex; `looksLikeCellRef` is the ANCHORED full-string

@@ -2,8 +2,6 @@
 
 class Color
 
-  @augmentWith DeepCopierMixin
-
   # "how can these constants be initialised when the Color class
   # is still being defined?" - you ask
   # Thanks for the question - there is a mechanism in Class
@@ -259,9 +257,9 @@ class Color
     swatch
 
   # Colors are immutable and cached (see @create): a deep COPY therefore returns the
-  # SAME object rather than cloning it, so getEmptyObjectOfSameTypeAsThisOne yields @ and
-  # there is nothing to clone field-by-field (the base recursivelyCloneContent then only
-  # self-assigns @'s own primitives, a no-op). Serialization is separate now: it emits a
+  # SAME object rather than cloning it. The Duplicator consults this per-class shell
+  # hook (Duplicator._shellFor), gets @ back, and its content-clone pass then only
+  # self-assigns @'s own primitives, a no-op. Serialization is separate: it emits a
   # compact {class:"Color", rgba:[...]} record restored through @create — see
   # src/serialization/ and docs/architecture/serialization-duplication-reference.md §6.
   getEmptyObjectOfSameTypeAsThisOne: ->

@@ -71,7 +71,7 @@
 class DataflowEngine
 
   # world.dataflow is a per-world singleton; a duplicated structure that points at it must KEEP
-  # THE REFERENCE, not clone the engine (DeepCopierMixin honours this flag, as it does for the
+  # THE REFERENCE, not clone the engine (the Duplicator honours this flag, as it does for the
   # widgetFactory). The index it holds is disposable and client-rebuilt anyway.
   keptByReferenceOnDeepCopy: true
 

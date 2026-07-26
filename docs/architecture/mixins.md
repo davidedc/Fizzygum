@@ -30,7 +30,7 @@ line in `CLAUDE.md` — see §6):
 - **Single-consumer / single-subtree mixins are misfiled** — fold them into the consumer
   or a shared base (executed 2026-07-26 for all five then-misfiled ones, §4).
 - **A full-removal campaign is explicitly rejected** — the arithmetic in §5 and §7: it
-  would trade ~57 one-line `@augmentWith` declarations for ~100+ forwarding stubs or
+  would trade the one-line `@augmentWith` declarations (31 consumer files) for ~100+ forwarding stubs or
   hierarchy surgery across the paint/input/clipping/copy subsystems (the most
   determinism-critical, screenshot-baked code), to delete ~350 lines of stable machinery
   whose worst failure mode (the regex `super` rewriter) survives in `Class.coffee`
@@ -77,9 +77,9 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   gate-visible: `census-hierarchy-duplication.js` reports `SHADOWS-MIXIN`, and the
   case law is recorded in `docs/architecture/lint-and-static-checks.md` (a "redundant"
   class-body default that actually exists to override its mixin — deleting it would have
-  turned the desktop icons near-white). Live sanctioned shadow: `Color` overrides
-  `getEmptyObjectOfSameTypeAsThisOne` / `recursivelyCloneContent` from `DeepCopierMixin`
-  (commented in `Color.coffee`).
+  turned the desktop icons near-white). (`Color`'s long-standing shadow of the
+  then-`DeepCopierMixin`'s shell method became an ordinary per-class hook when that mixin
+  was converted to the `Duplicator` engine — §5-C.)
 - **Load order** — `@augmentWith X` is one of the literal forms
   `src/boot/dependencies-finding.coffee` regex-scans (`REQUIRES_MIXIN`), creating the
   "mixin defined before its consumer" edge. Keep the literal form so the finder sees it.
@@ -105,11 +105,10 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (verified 2026-07-26; 8 mixins, 815 L, 48 consumer files)
+## 3. Inventory (verified 2026-07-26; 7 mixins, 642 L, 31 consumer files)
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `DeepCopierMixin` | 173 | 17 — `Widget` (global) + 16 incl. `Color`, `Point`, `Rectangle`, `Appearance`, `MenusHelper`, layout specs, `TransformSpec`, `SheetModel`, `SheetCellRecord` | Widget root + unrelated data classes | no |
 | `ClippingAtRectangularBoundsMixin` | 220 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
 | `ControllerMixin` | 112 | 7 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
 | `HighlightableMixin` | 54 | 9 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `BinOpenerWdgt`, 2 desktop-link classes, 2 icon-button classes | ≥4 branches | yes |
@@ -120,16 +119,16 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
 
 (`ContainerMixin` — dead since birth, "TEMPORARY. JUST STARTED IT." — was deleted
 2026-07 in the accidental-complexity batch `3267b0dd`. The five misfiled mixins were
-folded into standard-OO homes 2026-07-26 — see §4. `Mixin.allMixines` — formerly
+folded into standard-OO homes 2026-07-26 — see §4 — and `DeepCopierMixin` was converted
+to the `Duplicator` engine (`src/duplication/`) the same day, completing for duplication
+the engine inversion serialization got in July — see §5-C. `Mixin.allMixines` — formerly
 dead scaffolding — became load-bearing for the inspector in Tier H5.)
 
 ## 4. Which of these are GENUINE multiple inheritance
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 8 current mixins):** `DeepCopierMixin` (Widget +
-  unrelated data classes),
-  `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
+- **Genuine (the keep-core — all 7 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
   patch-programming — and the home the dataflow engine deliberately built on),
   `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BackBufferMixin` (paint-path override; load-bearing for the unified shadow mechanism
@@ -180,13 +179,16 @@ objects on the paint path). Three shapes, with costs:
   — the most determinism-critical code, where restructuring means screenshot-level
   re-verification for zero functional gain.
 - **C — invert to an external engine** (visitor). Right where the "mixin" is really one
-  algorithm plus per-class hooks. **Executed for serialization in July 2026**: the
-  `doSerialize` half of `DeepCopierMixin` was extracted into the plain
-  `Serializer`/`Deserializer` classes (`src/serialization/`), leaving the mixin
-  duplication-only (173 L, pixel-load-bearing, deliberately untouched — see
-  `docs/architecture/serialization-duplication-reference.md`). The remaining duplication
-  walker could in principle follow, but it is baked into SystemTest pixels and there is
-  no pressure.
+  algorithm plus per-class hooks. **Executed twice**: for serialization in July 2026 (the
+  `doSerialize` half of the then-`DeepCopierMixin` became the plain
+  `Serializer`/`Deserializer` classes, `src/serialization/`), and for duplication on
+  2026-07-26 — the remaining walker became the `Duplicator` engine
+  (`src/duplication/Duplicator.coffee`): one instance per copy run owns the identity
+  bookkeeping, the per-class hooks (`getEmptyObjectOfSameTypeAsThisOne`,
+  `rebuildDerivedValue`, `keptByReferenceOnDeepCopy`, `_reactToBeingCopied`) stay on the
+  classes, and the native-type detection both engines share lives in `NativeValueKinds`.
+  Byte-identical: full gauntlet, zero recaptures — see
+  `docs/architecture/serialization-duplication-reference.md`.
 
 State migration (mixin fields like `@target`/`@action` serialize as widget own-props)
 and by-name dispatch (menus invoke `openTargetSelector` on the widget) are the two
@@ -207,13 +209,13 @@ recurring conversion costs regardless of shape.
   homes* (fold into consumer / shared base), not delegation — consistent with the §1
   policy, which reserves delegation for liftable responsibilities.
 - **New code keeps choosing mixins** (all July 2026): the spreadsheet subsystem
-  (`SimpleSpreadsheetWdgt` → Clipping; `SheetModel`/`SheetCellRecord` → DeepCopier),
-  the frame model (`FrameWdgt` → Clipping), transforms (`TransformSpec` → DeepCopier),
+  (`SimpleSpreadsheetWdgt` → Clipping; `SheetModel`/`SheetCellRecord` → the then-DeepCopier),
+  the frame model (`FrameWdgt` → Clipping), transforms (`TransformSpec` → the then-DeepCopier),
   the patch-programming dedup (`PatchNodeWdgt` base → Controller). The dataflow-engine
   campaign made `ControllerMixin` the cohesive home of the whole wire-client protocol
   (`_fireConnection`, `firesPerEvent`, the shared connect-menu block) — and the dedup
   arcs moved shared menu code INTO it. `docs/plans/creation-and-templates-plan.md`
-  builds `FactoryWdgt` on `DeepCopierMixin`.
+  builds `FactoryWdgt` on the `Duplicator`.
 - Meanwhile the platform *invested in* mixins rather than removing them: inspector
   source recovery (Tier H5), the `SHADOWS-MIXIN` census, mixin-DSL awareness in
   `check-layering`, the hardened super-rewriter, and the retired connection-token
@@ -236,13 +238,14 @@ Costs of keeping (all real, all now bounded):
 - live-editing of mixin source still not wired (view-only first-class).
 
 Costs of removing (why it loses):
-- the five genuine-MI mixins need stub forests (≈100+ methods) or new `Widget`
+- the four biggest genuine-MI mixins (Clipping/Controller/Highlightable/BackBuffer) need
+  stub forests (≈100+ methods) or new `Widget`
   extension points on the paint/input/geometry hot paths — determinism-critical,
   behaviour-neutral churn of exactly the kind this project's case law banks rather than
   executes;
 - both escape hatches violate standing doctrine (shrink `Widget`; capability methods on
   the answering subclass, never a base default);
-- ~350 L of machinery deleted, ~941 L of behaviour merely relocated, net LOC likely UP;
+- ~350 L of machinery deleted, ~642 L of behaviour merely relocated, net LOC likely UP;
 - no active campaign is blocked by mixins (verified across all plan docs, twice —
   2026-07-03 and 2026-07-24);
 - the July evolution demonstrates the healthy equilibrium: delegate what delegates
@@ -263,7 +266,7 @@ sentence, fold the misfiled mixins — were executed 2026-07-26; see §4 and §6
 
 ## Related docs
 
-- `docs/architecture/serialization-duplication-reference.md` — DeepCopier traversal
+- `docs/architecture/serialization-duplication-reference.md` — the Duplicator traversal
   contract; the serializer split.
 - `docs/architecture/lint-and-static-checks.md` — the mixin-aware gates and censuses;
   the SHADOWS-MIXIN case law.

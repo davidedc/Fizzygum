@@ -6,8 +6,6 @@
 
 class PreferencesAndSettings
 
-  @augmentWith DeepCopierMixin
-
   @INPUT_MODE_MOUSE: 0
   @INPUT_MODE_TOUCH: 1
 

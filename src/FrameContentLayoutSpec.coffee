@@ -2,8 +2,6 @@
 
 class FrameContentLayoutSpec extends VerticalStackLayoutSpec
 
-  @augmentWith DeepCopierMixin
-
   # Sentinel values for the constructor's preferredStartingWidth/Height, moved here
   # from the former PreferredSize marker class -- these two constants were used
   # exclusively with FrameContentLayoutSpec (both as ctor args and in FrameWdgt's

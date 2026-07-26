@@ -1,7 +1,5 @@
 class Appearance
 
-  @augmentWith DeepCopierMixin
-
   widget: nil
   # the ownColorInsteadOfWidgetColor is used for buttons
   # with icons on a glass bottom: the glass bottom has

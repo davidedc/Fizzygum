@@ -3,8 +3,6 @@
 
 class Point
 
-  @augmentWith DeepCopierMixin
-
   x: nil
   y: nil
    

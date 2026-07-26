@@ -2,18 +2,6 @@
 # just create a class that extends this one, and has the extra
 # functionality that you want
 
-HTMLCanvasElement::deepCopy = (objOriginalsClonedAlready, objectClones, allWidgetsInStructure) ->
-  deepCopyWithIdentity @, objOriginalsClonedAlready, objectClones, =>
-    # width and height here are not the widget's,
-    # which would be in logical units and hence would need ceilPixelRatio
-    # correction,
-    # but in actual physical units i.e. the actual buffer size
-    cloneOfMe = HTMLCanvasElement.createOfPhysicalDimensions new Point @width, @height
-
-    ctx = cloneOfMe.getContext "2d"
-    ctx.drawImage @, 0, 0
-    cloneOfMe
-
 # HTMLCanvasElement.createOfPhysicalDimensions takes physical size, i.e. actual buffer pixels.
 # On non-retina displays, that's just the amount of logical pixels,
 # which are used for all other measures of widgets.

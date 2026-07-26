@@ -5,7 +5,7 @@ The `Serializer` / `Deserializer` pair, the `SerializationError` type, the
 (`FileSaving` / `FileLoading`), and the source-edits registry live here.
 
 **All serialization / deserialization / duplication documentation — the format spec, the
-traversal contract shared with `DeepCopierMixin` duplication, the per-class protocol, the
+traversal contract shared with `Duplicator` duplication (`src/duplication/`), the per-class protocol, the
 per-type handlers, and the file-I/O / `file://` capability map — lives in ONE place:**
 
 → [`../../docs/architecture/serialization-duplication-reference.md`](../../docs/architecture/serialization-duplication-reference.md)

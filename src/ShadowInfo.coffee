@@ -1,7 +1,5 @@
 class ShadowInfo
 
-  @augmentWith DeepCopierMixin
-
   offset: nil
   alpha: 0
 

@@ -2,7 +2,8 @@
 # JSON envelope. See docs/architecture/serialization-duplication-reference.md for the format spec (§3),
 # the reference policy (§4), the transients/derived/function protocol (§5), the per-type
 # handlers (§6), the whole-world snapshot (§11), and how it shares per-class knowledge with
-# — but no mutable state with — the DeepCopierMixin duplication walker (§1).
+# — but no mutable state with — the Duplicator duplication walker (src/duplication/, §1);
+# the native-type detection the two share lives in NativeValueKinds.
 #
 # It is side-effect-free and deterministic: it builds records DIRECTLY from the live graph
 # (it creates no shells, so it advances no ID counters and leaks no Class.instances entry),
@@ -283,39 +284,38 @@ class Serializer
 
     populateRecord = (record, obj, path) ->
       # --- native / special types: $-tagged records (user class names can't collide) ---
-      if Array.isArray obj
+      if NativeValueKinds.isArray obj
         record.class = "$Array"
         record.items = (refFor(obj[i], path + "[" + i + "]") for i in [0...obj.length])
         return
-      if obj instanceof Date
+      if NativeValueKinds.isDate obj
         record.class = "$Date"
         record.ms = obj.getTime()
         return
-      if obj instanceof HTMLImageElement
+      if NativeValueKinds.isImage obj
         record.class = "$Image"
         record.src = obj.src
         return
-      if (typeof obj.getContext is "function") and (typeof obj.toDataURL is "function")
-        # HTMLCanvasElement or SWCanvasElement — duck-typed so it catches BOTH backends
-        # (SWCanvasElement has no stable global to instanceof against).
+      if NativeValueKinds.isCanvasLike obj
+        # HTMLCanvasElement or SWCanvasElement (see NativeValueKinds)
         record.class = "$Canvas"
         record.w = obj.width
         record.h = obj.height
         record.data = obj.toDataURL "image/png"
         return
-      if (typeof HTMLVideoElement isnt "undefined") and obj instanceof HTMLVideoElement
+      if NativeValueKinds.isVideo obj
         record.class = "$Video"
         record.src = obj.src
         record.autoplay = obj.autoplay
         record.currentTime = obj.currentTime
         return
-      if obj instanceof Map
+      if NativeValueKinds.isMap obj
         record.class = "$Map"
         entries = []
         obj.forEach (v, k) -> entries.push [refFor(k, path + " (Map key)"), refFor(v, path + " (Map value)")]
         record.entries = entries
         return
-      if obj instanceof Set
+      if NativeValueKinds.isSet obj
         record.class = "$Set"
         items = []
         obj.forEach (x) -> items.push refFor(x, path + " (Set item)")

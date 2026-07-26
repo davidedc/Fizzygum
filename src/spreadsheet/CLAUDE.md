@@ -282,9 +282,9 @@ grid, but the deserialize/duplicate path SKIPS the constructor (`Object.create`)
 cells ride the snapshot and are adopted by the re-index — never a double grid.** (This replaced Phase 3's
 "sweep every derived child then rebuild" — the cell widget makes widget state survive, which the sweep
 destroyed.) This requires the plain data classes to be
-deep-copyable: `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `SheetError`
-`keptByReferenceOnDeepCopy` (immutable), and the general `Map::deepCopy`/`Set::deepCopy`
-(`src/boot/extensions/Map-extensions.coffee`). Derived fields are dropped on serialize
+deep-copyable: `SheetModel`/`SheetCellRecord` ride the `Duplicator`'s generic walk, `SheetError`
+declares `keptByReferenceOnDeepCopy` (immutable), and the `@cells` Map clones through the
+engine's own `Map`/`Set` handlers. Derived fields are dropped on serialize
 (`@serializationTransients`) and copied-then-overwritten on deep-copy. **Single-sheet keyboard
 focus:** `_takeKeyboardFocus` removes other sheets from `world.keyboardEventsReceivers` first, so a
 duplicated sheet (which inherits receiver membership via the copier) doesn't edit in lockstep.

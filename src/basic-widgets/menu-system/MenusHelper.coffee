@@ -5,8 +5,6 @@
 
 class MenusHelper
 
-  @augmentWith DeepCopierMixin
-
   # Placeholder body text reused verbatim by the demo text-widget menu actions below, hoisted to two
   # constants so each string lives (and is edited) in one place. LOREM_LONG: 4 sites; LOREM_SHORT: 2 sites.
   # (The one medium-length variant in createNewNonWrappingSimpleTextWdgtWithBackground is unique, so

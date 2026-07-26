@@ -11,7 +11,7 @@
 #     (e.g. to spawn the adjacent Info widget).
 # The launcher stores THIS object as its reflection target, and launchers are
 # deep-copyable desktop widgets, so this declares keptByReferenceOnDeepCopy: true
-# (DeepCopierMixin then keeps the per-app singleton by reference instead of cloning
+# (the Duplicator then keeps the per-app singleton by reference instead of cloning
 # it -- the same guardrail Wallpaper/WidgetFactory use). OO-backlog Phase 6 step 6c.
 class IconicDesktopSystemWindowedApp
 

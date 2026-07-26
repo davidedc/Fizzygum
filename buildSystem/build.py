@@ -229,6 +229,9 @@ def main():
     # serialization is a shipped product feature (only the dev "test menu" items are
     # stripped, via their own in-file markers). See serialization-deserialization-plan §8.1.
     filenames = sorted(filenames + sorted(glob("src/serialization" + "/*.coffee")))
+    # duplication engine (the Duplicator), the live-cloning sibling of serialization.
+    # NOT homepage-excluded: duplication is a shipped product feature.
+    filenames = sorted(filenames + sorted(glob("src/duplication" + "/*.coffee")))
     if args.includeVideoPlayer:
         filenames = sorted(filenames + sorted(glob("src/video-player" + "/*.coffee")))
 

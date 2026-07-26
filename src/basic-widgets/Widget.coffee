@@ -11,8 +11,6 @@
 
 class Widget extends TreeNode
 
-  @augmentWith DeepCopierMixin
-
   # we want to keep track of how many instances we have
   # of each Widget for a few reasons:
   # 1) it gives us an identifier for each Widget
@@ -3462,7 +3460,7 @@ class Widget extends TreeNode
   # subtree — so copying the CONTENT leaves the island out and the copy "resets" its transform.
   # _enclosingIslandFigure() resolves that island (or returns me off any island — the entire
   # un-transformed population, so this is byte-identical dormant there). The island's fullCopy deep-copies
-  # the transform for free (§1a: TransformSpec @augmentWith DeepCopierMixin). Offset the copy from the
+  # the transform for free (§1a: TransformSpec rides the Duplicator walk). Offset the copy from the
   # FIGURE's position; the island's _applyMoveTo rides a pinned anchor along (Bug-G), so a plain offset
   # move of the copied figure is anchor-safe.
   duplicateMenuAction: ->
@@ -3517,7 +3515,7 @@ class Widget extends TreeNode
       @inform "The item you are\ntrying to copy\nis dead!"
       return nil
     allWidgetsInStructure = @allChildrenBottomToTop()
-    copiedWidget = @deepCopy [], [], allWidgetsInStructure
+    copiedWidget = new Duplicator(allWidgetsInStructure).duplicate @
     return copiedWidget
 
   # Serialization — delegates to the src/serialization/ Serializer. Unlike the old dev-only

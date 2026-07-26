@@ -190,18 +190,8 @@ installSWCanvasExtensions = ->
       set: (value) ->
         originalFontSetter.call @, normalizeFontForSWCanvas value
 
-  # --- SWCanvasElement needs Fizzygum's HTMLCanvasElement deepCopy (it does not
-  #     inherit the native one). The body re-creates a clone via the factory
-  #     (which yields an SWCanvasElement here), drawImages this into it, and
-  #     serializes via @toDataURL() — all supported on SWCanvasElement.
-  swCanvasElementProto = Object.getPrototypeOf probeCanvas
-  if HTMLCanvasElement?
-    swCanvasElementProto.deepCopy = HTMLCanvasElement::deepCopy
-
-  # --- SWCanvas gradients need the nil-returning deepCopy too, so that the
-  #     DeepCopier can walk past them (gradients are re-created on demand).
-  if CanvasGradient?
-    swGradientProto = Object.getPrototypeOf swContext.createLinearGradient 0, 0, 1, 1
-    swGradientProto.deepCopy = CanvasGradient::deepCopy
+  # (duplication of SWCanvas canvases and gradients needs no prototype patches
+  # here: the Duplicator engine recognises both duck-typed — NativeValueKinds —
+  # and clones them through its own per-type handlers.)
 
   return

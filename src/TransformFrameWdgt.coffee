@@ -202,7 +202,7 @@ class TransformFrameWdgt extends PanelWdgt
   # clones the canvas into the copy (a DISTINCT canvas -- no sharing), but a copied island must not
   # silently reuse a snapshot (the fizzytiles rebuildDerivedValue lesson: transients alone don't
   # guarantee copy-coherence). Drop them on the CLONE so it rebuilds from its own content on first
-  # composite. Runs after recursivelyCloneContent (DeepCopierMixin), so it eagerly frees the clone.
+  # composite. Runs after the Duplicator's content-clone pass, so it eagerly frees the clone.
   _reactToBeingCopied: ->
     @_dropIslandBuffer()
 

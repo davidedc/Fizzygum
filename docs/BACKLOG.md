@@ -97,7 +97,7 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; unify containment/ta
 
 ### `plans/creation-and-templates-plan.md`
 AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a-template (Factory) | run-an-assembler (ScriptRunner); App = a Factory over an empty framed `*Wdgt` in edit mode. Supersedes the reference plan's launcher/Factory.
-- [ ] §4.1: name `FactoryWdgt`/`ScriptRunnerWdgt` (use `isTemplate` + `DeepCopierMixin`)
+- [ ] §4.1: name `FactoryWdgt`/`ScriptRunnerWdgt` (use `isTemplate` + the `Duplicator`)
 - [ ] §4.2: redefine "App" as a Factory over an empty framed `*Wdgt` in edit mode
 - [ ] §4.3: fold the creator zoo (CreatorButton/WidgetFactory/MenusHelper "new X") onto the two primitives — second wave
 - [ ] §4.4: (bank) templates as first-class editable objects

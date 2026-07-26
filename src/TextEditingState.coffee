@@ -1,7 +1,5 @@
 class TextEditingState
 
-  @augmentWith DeepCopierMixin
-
   selectionStart: nil
   selectionEnd: nil
   cursorPos: nil

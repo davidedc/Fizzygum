@@ -2,8 +2,6 @@
 
 class VerticalStackLayoutSpec
 
-  @augmentWith DeepCopierMixin
-
   stack: nil
   element: nil
 

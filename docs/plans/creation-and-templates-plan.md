@@ -51,7 +51,7 @@ Creation is scattered across at least five bespoke paths:
 
 Substrate that already supports the unification:
 - **`Widget.isTemplate`** exists (a pristine-object marker).
-- **`DeepCopierMixin`** is the one graph copier (`@augmentWith`) used for duplication + serialization — so
+- **The `Duplicator` engine (`src/duplication/`)** is the one graph copier used for duplication — so
   "duplicate a template" already has its engine.
 - **`Widget.fullCopy`** / the serialization pair produce a clean object graph.
 
@@ -63,7 +63,7 @@ launcher/creator/factory paths don't share a base; "App" isn't formally "a Facto
 
 ## 3. Architecture we MUST respect
 
-- **Duplication goes through `DeepCopierMixin`** (property-based graph copy, cycle-safe) + the
+- **Duplication goes through the `Duplicator` engine** (property-based graph copy, cycle-safe) + the
   `Serializer`/`Deserializer` pair; a template duplication is a `fullCopy` of a pristine object. A class
   with transient/derived fields must declare `@serializationTransients` and/or stamp `rebuildDerivedValue`
   (the two don't cover each other). See `docs/architecture/serialization-duplication-reference.md`.
@@ -81,7 +81,7 @@ launcher/creator/factory paths don't share a base; "App" isn't formally "a Facto
 ## 4. Proposals
 
 ### 4.1 Name the two creation primitives. *Contract first.*
-Introduce **`FactoryWdgt`** (duplicates a pristine `isTemplate` object via `DeepCopierMixin`) and
+Introduce **`FactoryWdgt`** (duplicates a pristine `isTemplate` object via the `Duplicator`) and
 **`ScriptRunnerWdgt`** (runs an assembler script) as the two sanctioned creation widgets — or as a shared
 `CreatorWdgt` base with those two modes. Both are **reference-family** widgets (they point at a
 template/script). Document the contract: *create = duplicate-template | run-assembler*.

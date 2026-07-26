@@ -9,7 +9,7 @@
 # an error either, because the same object exists in the destination world. The
 # serializer encodes it symbolically as `{"$wk": "<key>"}` and the deserializer re-binds
 # the key to the destination world's own singleton. This upgrades the old, information-
-# destroying bare "$EXTERNAL" token (DeepCopierMixin) into a reconstructable link.
+# destroying bare "$EXTERNAL" token into a reconstructable link.
 #
 # DESIGN — LAZY, NOT SNAPSHOTTED. Rather than eagerly populating a key→object map at
 # world boot (which is boot-order-fragile: the bin and apps are built after the

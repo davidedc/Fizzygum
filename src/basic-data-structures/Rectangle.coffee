@@ -34,7 +34,6 @@
 
 class Rectangle
 
-  @augmentWith DeepCopierMixin
 
   origin: nil # a Point
   corner: nil # a Point

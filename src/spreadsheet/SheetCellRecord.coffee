@@ -10,7 +10,7 @@
 # IS the cell's value — no formula (source stays blank). Prototype default nil, own-only-when-set
 # (the 6a idiom: a formula cell serializes byte-for-byte as before); when set it serializes as an
 # in-structure $r reference to the widget, which rides the tree as the cell's hosted child, and
-# DeepCopierMixin remaps it to the copy — save AND duplicate free (spec §2). Its LIFECYCLE is
+# the Duplicator remaps it to the copy — save AND duplicate free (spec §2). Its LIFECYCLE is
 # owned by the GESTURES, never by FormulaCompiler.commit (pure source machinery): SET by the drop
 # (CellWdgt._reactToChildDropped), CLEARED by a user edit-commit on the cell
 # (SimpleSpreadsheetWdgt._commitEditNoSettle — typed content of any kind replaces the widget) and by
@@ -48,7 +48,6 @@ class SheetCellRecord
   # the brief sharing is harmless; @boundNames (an array) copies via Array::deepCopy. On the
   # SERIALIZE side these four are dropped instead (@serializationTransients below), then rebuilt
   # the same way on restore.
-  @augmentWith DeepCopierMixin
 
   @serializationTransients: ["compiledFn", "boundNames", "value", "errorFlag"]
 

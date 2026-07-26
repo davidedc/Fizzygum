@@ -30,7 +30,7 @@ class SliderWdgt extends CircleBoxWdgt
   button: nil
   argumentToAction: nil
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
-  # that method); declared so DeepCopierMixin duplication carries it.
+  # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: nil
 
   smallestValueIsAtBottomEnd: false

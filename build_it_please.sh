@@ -608,16 +608,10 @@ printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Array-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/Map-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/Object-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/CanvasRenderingContext2D-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/CanvasGradient-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/SWCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
@@ -633,15 +627,6 @@ cat src/boot/extensions/String-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/extensions/HTMLCanvasElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-
-if $includeVideoPlayer ; then
-  printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-  cat src/boot/extensions/HTMLVideoElement-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-  cat src/boot/extensions/Image-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-fi
-
-printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat src/boot/extensions/Date-extensions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 # extensions -----------------------------------------------------
 

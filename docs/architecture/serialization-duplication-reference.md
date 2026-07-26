@@ -16,7 +16,8 @@ how the machinery works; the plan is the *build order*.
 > widget serialization round-trip is **LIVE and wired** — `Widget.serialize` →
 > `Serializer.serializeWidget` (the §3 envelope), `Widget.deserialize` / `world.deserialize`
 > → `Deserializer.deserialize`; the old `doSerialize=true` prototype and its dead trio are
-> deleted; duplication (`DeepCopierMixin`, `doSerialize`-free) is unchanged and pixel-verified.
+> deleted; duplication lives in the `Duplicator` engine (`src/duplication/`, converted from
+> the former `DeepCopierMixin` 2026-07-26, pixel-verified byte-identical).
 > Restored widgets are byte-identical to the originals (same-page AND cross-session). **File
 > save/load over `file://` (§10) is LIVE** — `Widget.saveToFile` / `FileSaving`, the
 > `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`. **The whole-world
@@ -33,20 +34,19 @@ how the machinery works; the plan is the *build order*.
 
 ---
 
-## 1. Two modes, one body of knowledge
+## 1. Two walkers, one body of knowledge
 
-Fizzygum has a single object-graph copier, `DeepCopierMixin`, historically used in two
-modes via a `doSerialize` flag:
+Fizzygum has two object-graph walkers over the same graph shapes:
 
-- **Duplication** (`doSerialize=false`) — **[LIVE], load-bearing.** `Widget.fullCopy` →
-  `deepCopy false, …`. Clones a widget subtree into live sibling widgets; the SystemTest
-  suite bakes its exact pixels in. **This mode is not being changed** by the serialization
-  arc, and must stay pixel-identical.
-- **Serialization** (`doSerialize=true`) — a **dev-only prototype**, being **replaced**.
-  `Widget.serialize` → `deepCopy true, …` emitted a fragile JSON-lines-with-comments
-  string with 13 spike-verified defects (see the plan §3). It is superseded by the new
-  `Serializer`/`Deserializer` pair; the `doSerialize` branches are deleted once that lands
-  (plan Phase 2).
+- **Duplication — the `Duplicator` engine (`src/duplication/Duplicator.coffee`),
+  [LIVE], load-bearing.** `Widget.fullCopy` → `new Duplicator(allWidgetsInStructure)
+  .duplicate @`. One engine instance per copy run carries the original→clone identity
+  map; it clones a widget subtree into live sibling widgets, and the SystemTest suite
+  bakes its exact pixels in. (Converted 2026-07-26 from the former `DeepCopierMixin` +
+  per-native-prototype `::deepCopy` extensions — same walk, one home, behaviour
+  byte-identical.)
+- **Serialization — the `Serializer`/`Deserializer` pair (`src/serialization/`)**: a
+  separate, side-effect-free record builder (it must not keep live pointers).
 
 The design decision (plan §4.6) is to **split the walkers but share the knowledge**: the
 duplication walker keeps its entangled clone-as-you-traverse behaviour (the SystemTests
@@ -58,7 +58,9 @@ share — and what this doc is the single source of truth for — is the per-cla
 - `@serializationTransients` (fields to skip) and `wellKnownKey` (symbolic singletons) —
   §5, §4; both consulted by duplication too;
 - the `rebuildDerivedValue(s)` derived-value protocol — §5;
-- the native-type handlers' logic (Array/Date/Image/Canvas/Video) — §6.
+- the native-type handlers' logic (Array/Date/Image/Canvas/Video) — §6 — and the
+  native-type DETECTION itself, factored into the one shared
+  `NativeValueKinds` (`src/serialization/NativeValueKinds.coffee`) both engines consult.
 
 Keeping this in one doc is what stops the two walkers from drifting silently.
 
@@ -66,13 +68,13 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 
 ## 2. The traversal contract (shared) — **[LIVE]**
 
-`src/mixins/DeepCopierMixin.coffee` walks an object graph cycle-safely:
+`src/duplication/Duplicator.coffee` walks an object graph cycle-safely:
 
 - Each non-primitive encountered gets one **table slot**; a re-encounter emits a back
   reference (duplication: the memoized clone; serialization: a reference token). This is
   what makes shared substructure and cycles round-trip uniformly — e.g. an array shared
   between two properties is copied once and referenced twice.
-- **`own` enumerable properties only** are walked (`recursivelyCloneContent`). Inherited
+- **`own` enumerable properties only** are walked (`Duplicator._cloneContentInto`). Inherited
   prototype methods/fields are not copied — the shell is created with
   `Object.create(Class.prototype)` so they come from the prototype.
 - A property whose value has a **`rebuildDerivedValue`** method is a *derived* value: it
@@ -208,10 +210,10 @@ class Widget extends TreeNode
   regenerate them ([Ph 3]).
   - ⚠ **The two mechanisms do NOT cover each other** (2026-07-08 SW3D-port incident, ~1 h):
     `@serializationTransients` is read by the FILE Serializer ONLY. The in-memory
-    **DeepCopier** skips a property iff its **VALUE** exposes `rebuildDerivedValue` — a
+    **Duplicator** skips a property iff its **VALUE** exposes `rebuildDerivedValue` — a
     property that is only listed in `@serializationTransients` still gets deep-copied, and
-    a runtime-only object there crashes `deepCopy` with
-    `this[property].deepCopy is not a function`. **Fix: stamp a no-op
+    a runtime-only object there crashes the copy on the Duplicator's closed-set guard
+    ("cannot duplicate a value of unrecognized type"). **Fix: stamp a no-op
     `rebuildDerivedValue` on the runtime-only object itself** (that both skips the copy
     and marks it derived); listing it in `@serializationTransients` as well is correct but
     not sufficient.
@@ -251,8 +253,10 @@ USER-authored instance methods: it stores the `<name>_source` sibling that seria
 
 ## 6. Per-type handlers — **[LIVE] (dup) / [Ph 2] (serialize encoders)**
 
-Native / special types the walker special-cases (in `boot/extensions/*-extensions.coffee`,
-mirrored onto SWCanvas in `SWCanvasElement-extensions.coffee`):
+Native / special types the walkers special-case (duplication: the `Duplicator`'s
+`_copy*` handlers; serialization: the `$`-tagged record encoders — both recognising
+types through the shared `NativeValueKinds`, which duck-types the canvas/gradient
+kinds so the SWCanvas variants are caught too):
 
 | Type | Serialize record ([Ph 2]) | Notes |
 |---|---|---|

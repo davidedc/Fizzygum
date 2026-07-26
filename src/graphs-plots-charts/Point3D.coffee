@@ -3,8 +3,6 @@
 
 class Point3D
 
-  @augmentWith DeepCopierMixin
-
   x: nil
   y: nil
   z: nil

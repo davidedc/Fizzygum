@@ -1255,8 +1255,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **An embedded "duplicate" button is self-replicating (copy-of-a-copy)** (`macroEmbeddedDuplicateButtonReduplicates`): a Panel's OWN
   context-menu "duplicate" item, picked up out of the menu and dropped INTO the panel, becomes an in-panel `MenuItemWdgt` (target = the panel,
   action `"duplicateMenuActionAndPickItUp"`, `Widget.coffee:3489`). Clicking it deep-copies the whole panel (`fullCopy().pickUp()`,
-  `Widget.coffee:2299`); the deep copier rewires the COPIED button's target to the cloned panel (`DeepCopierMixin` parallel originals/clones
-  arrays), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
+  `Widget.coffee:2299`); the deep copier rewires the COPIED button's target to the cloned panel (the `Duplicator`'s
+  original->clone identity map), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
   across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneWidget` idiom: `@openMenuOf_InputEvents panel` →
   `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
   hierarchy menu) → `"a MenuItem ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to

@@ -20,7 +20,7 @@ class Wallpaper
   # it is deep-copied (e.g. duplicating a menu whose item targets it), the copy must
   # KEEP THE REFERENCE, not clone the wallpaper -- otherwise the copy's picker would
   # set a dead clone's pattern instead of the desktop's. This flag tells
-  # DeepCopierMixin to keep the reference (the way it already keeps external Widgets).
+  # the Duplicator to keep the reference (the way it already keeps external Widgets).
   keptByReferenceOnDeepCopy: true
 
   # Serialization: this per-world singleton is encoded symbolically as {"$wk":"wallpaper"}

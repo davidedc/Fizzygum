@@ -20,7 +20,7 @@ class StringFieldWdgt extends PanelWdgt
   text: nil
   isEditable: true
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
-  # that method); declared so DeepCopierMixin duplication carries it.
+  # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: nil
 
   constructor: (
