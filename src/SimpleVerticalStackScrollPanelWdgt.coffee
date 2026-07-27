@@ -1,5 +1,7 @@
 class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
+  @augmentWith BubblesEditModeToCoordinatorMixin, @name
+
   constructor: (@isTextLineWrapping = true) ->
     VS = new SimpleVerticalStackPanelWdgt
 
@@ -34,30 +36,3 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     @_addEditingLockMenuEntries menu, childrenNotHandlesNorCarets
-
-  # Bubble enable/disable-editing up to my editing-coordinating parent if it is one
-  # (was `@parent instanceof SimpleDocumentWdgt`), otherwise do the local Widget work
-  # via super. Widget defines a base enableDragsDropsAndEditing, so a bare
-  # `@parent.enableDragsDropsAndEditing?()` would bubble to ANY parent -- the capability
-  # query keeps it to the coordinator. (type-test-elimination campaign)
-  # Only the CORES are overridden here: ScrollPanelWdgt's public enable/disableDragsDropsAndEditing
-  # wrappers are the canonical settle-wraps and dispatch straight back to these.
-  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if @dragsDropsAndEditingEnabled
-      return
-    @parent?.showEditModeInBar?()
-    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent._enableDragsDropsAndEditingNoSettle @
-    else
-      super @
-
-  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if !@dragsDropsAndEditingEnabled
-      return
-    @parent?.showViewModeInBar?()
-    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent._disableDragsDropsAndEditingNoSettle @
-    else
-      super @

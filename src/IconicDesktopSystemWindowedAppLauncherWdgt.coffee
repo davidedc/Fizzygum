@@ -1,12 +1,5 @@
 class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLinkWdgt
 
-  @augmentWith HighlightableMixin, @name
-
-  color_hover: Color.create 90, 90, 90
-  color_pressed: Color.GRAY
-  color_normal: Color.BLACK
-
-
   constructor: (@title, @icon, @target, @callback) ->
     if !@title?
       @title = @target.colloquialName()

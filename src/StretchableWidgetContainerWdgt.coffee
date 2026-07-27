@@ -12,6 +12,8 @@
 
 class StretchableWidgetContainerWdgt extends Widget
 
+  @augmentWith BubblesEditModeToCoordinatorMixin, @name
+
   ratio: nil
   contents: nil
 
@@ -73,9 +75,13 @@ class StretchableWidgetContainerWdgt extends Widget
   # Were KeepsRatioWhenInVerticalStackMixin's, applied to the retired editor
   # middle layer -- which only RELAYED my own ratio machinery. As a framed
   # citizen's direct content I answer the frame's dropped/grabbed
-  # notifications myself. (Hand-written, NOT the mixin: augmenting it here
-  # would clobber my own content-aware _setWidthSizeHeightAccordingly /
-  # preferredExtentForWidth pair with its blind current-aspect versions.)
+  # notifications myself. (Hand-written, NOT the mixin -- deliberately: my sizing
+  # pair is the PINNED @ratio variant (content-aware, super-fallback), not the
+  # mixin's current-aspect one, so augmenting would inject six members only to
+  # have four immediately shadowed by my class body -- legal under the boot-order
+  # rule (class body wins over injections), but a misleading "augments-yet-
+  # overrides-most-of-it" read. Only these two 3-line relays would survive;
+  # not worth it.)
   _reactToHolderFrameDropped: (whereIn) ->
     if whereIn?.imposesRatioConstraintOnDroppedChildren?()
       @_constrainToRatio()
@@ -253,28 +259,10 @@ class StretchableWidgetContainerWdgt extends Widget
   coordinatesDragsDropsAndEditingForChildren: ->
     true
 
+  # canonical settle-wraps; the bubbling cores they dispatch to are injected by
+  # BubblesEditModeToCoordinatorMixin
   enableDragsDropsAndEditing: (triggeringWidget) ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
 
-  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if @dragsDropsAndEditingEnabled
-      return
-    @parent?.showEditModeInBar?()
-    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent._enableDragsDropsAndEditingNoSettle @
-    else
-      super @
-
   disableDragsDropsAndEditing: (triggeringWidget) ->
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
-
-  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if !@dragsDropsAndEditingEnabled
-      return
-    @parent?.showViewModeInBar?()
-    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent._disableDragsDropsAndEditingNoSettle @
-    else
-      super @

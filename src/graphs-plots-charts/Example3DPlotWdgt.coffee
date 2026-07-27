@@ -66,6 +66,13 @@ class Example3DPlotWdgt extends Widget
   # The stack/window checks below ask the container capabilities
   # imposesRatioConstraintOnDroppedChildren / releasesRatioConstraintOnGrabbedChildren
   # rather than testing its class. (type-test-elimination campaign)
+  # Hand-written, NOT KeepsRatioWhenInVerticalStackMixin -- deliberately: this is
+  # the PINNED @ratio variant (captured at _constrainToRatio time, super-fallback
+  # when unpinned, vs the mixin's stateless current-aspect sizing), and it
+  # additionally wires the DIRECT drop/grab hooks (_reactToBeingDropped/
+  # _reactToBeingGrabbed) alongside the holder-frame pair. Augmenting would inject
+  # six members only to have four immediately shadowed by this class body -- legal
+  # (class body wins over injections) but a misleading read.
 
   _reactToBeingDropped: (whereIn) ->
     super

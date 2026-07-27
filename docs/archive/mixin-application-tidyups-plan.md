@@ -1,8 +1,16 @@
 # Mixin application tidy-ups (the inverse audit) — new edit-mode-bubbling mixin, Highlightable hoist, ratio-variant documentation
 
-> **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-> Status: ACTIVE, not started (authored 2026-07-26/27, owner-approved scope: all three
-> items). Everything needed is embedded inline or one named-doc hop away.
+> **Status: EXECUTED IN FULL 2026-07-27** (authored 2026-07-26/27, owner-approved scope:
+> all three items). Item A: `BubblesEditModeToCoordinatorMixin` created, three consumers
+> converted (verbatim-diff gate passed; presuite green, zero pixel churn). Item B:
+> `HighlightableMixin` + colour triple hoisted to `IconicDesktopSystemLinkWdgt` (3
+> augments → 1, 9 colour fields → 3; the census `color_*` PULL-UP families dissolved);
+> ONE benign one-digit ref churn — the mixin-edit test's save-confirmation popup counts
+> live consumers, 9 → 7 — verified via `fg diffpage`, gated recapture COMPLETE at
+> dpr 1+2. Item C: documentation landed as written (conversion stays falsified).
+> Close gate: full gauntlet 13/13 green (capstone parallel run hit the documented
+> CDP-launch infra flake, serial retry PASS). Written to be executed COLD; kept
+> verbatim below.
 
 **Mandate.** Complete the transformation each item names — land the new mixin, hoist the
 injection, correct the documentation — not a partial gesture. Item C is deliberately a

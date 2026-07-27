@@ -3,6 +3,8 @@
 
 class StretchablePanelWdgt extends PanelWdgt
 
+  @augmentWith BubblesEditModeToCoordinatorMixin, @name
+
   _reactToChildRemoved: (child) ->
     super
     if @parent?.setRatio? and @parent.ratio?
@@ -83,33 +85,10 @@ class StretchablePanelWdgt extends PanelWdgt
     super
     @_addEditingLockMenuEntries menu, @childrenNotHandlesNorCarets()
 
-  # Bubble enable/disable-editing up to my editing-coordinating parent if it is one
-  # (was `@parent instanceof StretchableWidgetContainerWdgt`), otherwise do the local
-  # Widget work via super -- the capability query keeps the bubble to the coordinator
-  # rather than to any parent (Widget has a base enableDragsDropsAndEditing).
-  # (type-test-elimination campaign)
+  # canonical settle-wraps; the bubbling cores they dispatch to are injected by
+  # BubblesEditModeToCoordinatorMixin
   enableDragsDropsAndEditing: (triggeringWidget) ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
 
-  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if @dragsDropsAndEditingEnabled
-      return
-    @parent?.showEditModeInBar?()
-    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent._enableDragsDropsAndEditingNoSettle @
-    else
-      super @
-
   disableDragsDropsAndEditing: (triggeringWidget) ->
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
-
-  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if !@dragsDropsAndEditingEnabled
-      return
-    @parent?.showViewModeInBar?()
-    if @parent? and @parent != triggeringWidget and @parent.coordinatesDragsDropsAndEditingForChildren?()
-      @parent._disableDragsDropsAndEditingNoSettle @
-    else
-      super @

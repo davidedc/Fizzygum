@@ -6,6 +6,12 @@
 
 class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
 
+  @augmentWith HighlightableMixin, @name
+
+  color_hover: Color.create 90, 90, 90
+  color_pressed: Color.GRAY
+  color_normal: Color.BLACK
+
   moveOnTopOfTopReference: ->
     # find the topmost OTHER desktop icon to layer myself just above it
     # (was `c instanceof WidgetHolderWithCaptionWdgt`). (type-test-elimination campaign)

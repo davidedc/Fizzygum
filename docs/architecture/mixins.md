@@ -142,15 +142,16 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (verified 2026-07-26; 7 mixins, 642 L, 31 consumer files)
+## 3. Inventory (verified 2026-07-27; 8 mixins, 686 L, 32 consumer files)
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
 | `ClippingAtRectangularBoundsMixin` | 220 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
 | `ControllerMixin` | 112 | 7 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
-| `HighlightableMixin` | 54 | 9 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `BinOpenerWdgt`, 2 desktop-link classes, 2 icon-button classes | ≥4 branches | yes |
+| `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `IconicDesktopSystemLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 137 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
-| `KeepsRatioWhenInVerticalStackMixin` | 75 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt` | unrelated leaves | no |
+| `KeepsRatioWhenInVerticalStackMixin` | 75 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
+| `BubblesEditModeToCoordinatorMixin` | 44 | 3 — `SimpleVerticalStackScrollPanelWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ScrollPanelWdgt`) | unrelated branches (ScrollPanel / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
 | `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
 
@@ -165,14 +166,16 @@ dead scaffolding — became load-bearing for the inspector in Tier H5.)
 
 The test: consumers on unrelated branches AND behaviour that overrides framework hooks.
 
-- **Genuine (the keep-core — all 7 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
+- **Genuine (the keep-core — all 8 current mixins):** `ControllerMixin` (the wire/dataflow client protocol across basic widgets and
   patch-programming — and the home the dataflow engine deliberately built on),
   `HighlightableMixin` (input-hook state machine across ≥4 branches),
   `BackBufferMixin` (paint-path override; load-bearing for the unified shadow mechanism
   — the blit at α is WHY a transparent text widget's shadow is its glyphs),
   `ClippingAtRectangularBoundsMixin` (overrides the geometry protocol — `fullBounds`,
   cache-invalidation super-chains; the `ClippingBoxWdgt` diamond: `BoxWdgt` painting +
-  panel clipping), `KeepsRatioWhenInVerticalStackMixin`,
+  panel clipping), `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
+  bubbling to a coordinating parent, across ScrollPanel/Panel/Widget branches),
+  `KeepsRatioWhenInVerticalStackMixin`,
   `WidgetCreatorAndSmartPlacerOnClickMixin`, `ParentStainerMixin` (barely — 2 unrelated
   leaves each).
 - **Misfiled (single consumer / single subtree / config bag) — all five folded into
