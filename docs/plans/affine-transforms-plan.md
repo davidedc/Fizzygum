@@ -242,8 +242,11 @@ per-widget or world zoom anywhere.
 `_paintedFromFrontmostCoverer` (`:724-752`) scans world children front-to-back testing
 `child.opaqueCoveredRect().containsRectangle(dirtyPart.expandBy 1)` — all AABBs.
 `Widget.opaqueCoveredRect` (`Widget.coffee:1937`) already returns `nil` for every
-BackBufferMixin widget and all custom painters (`:1944`), for alpha < 1, and for
-non-rectangular appearances. See `docs/architecture/occlusion-culling.md`.
+BackBufferMixin widget, for alpha < 1, and for non-rectangular appearances. (The nine
+former custom PAINTERS became per-class Appearance subclasses in the 2026-07-27
+Appearance-delegation arc — they now fall to the appearance-class switch's `else -> nil`,
+same conservative outcome, and the prototype-identity check excludes only BackBufferMixin.)
+See `docs/architecture/occlusion-culling.md`.
 **Consequence: a buffered island automatically returns nil — occlusion stays correct with
 zero changes, at the cost of no culling behind transformed widgets (banked recovery §7.3).**
 
@@ -1882,8 +1885,12 @@ See §7. None of these block declaring the feature shipped.
    as `'slot'`); build only on demonstrated need.
 7. **Appearance conversion to local-logical-coordinate drawing** (through the ctx matrix,
    legacy integer path kept as the identity fast path) — the prerequisite for widespread
-   vector-replay; bounded set: the rectangular family + the 9 custom painters (fact 3.5's
-   exclusion list enumerates them).
+   vector-replay; bounded set: the rectangular family + the nine per-class Appearance
+   subclasses that were the custom painters until the 2026-07-27 Appearance-delegation
+   arc (Handle/Pen/LabelButton/LayoutChrome/Cell/SheetHeaderCell/AnalogClock/
+   GraphsPlotsCharts/Example3DPlot — `docs/archive/cross-branch-duplication-refactors-plan.md`).
+   That arc already extracted every paint body onto an appearance object, so this item's
+   remaining work is purely the coordinate-space conversion inside each appearance.
 8. **Bilinear (fixed-point) sampling for SWCanvas transformed `drawImage`** — SWCanvas
    currently samples nearest-neighbor by design (`swcanvas.js:1837-1838`; Phase 0f). A
    fixed-point-weight bilinear path (weights quantized so results are integer-exact →
