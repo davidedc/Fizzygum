@@ -6,14 +6,14 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
     "Bar plot"
 
 
-  # paintIntoAreaOrBlitFromBackBuffer is inherited from GraphsPlotsChartsWdgt
-  # (the whole plot family shares the identical paint scaffold); this class
-  # supplies only its _renderingHelper below.
+  # The paint scaffold is GraphsPlotsChartsAppearance, inherited via
+  # GraphsPlotsChartsWdgt (the whole plot family shares it); this class
+  # supplies only its drawPlot tail below.
 
 
   # step() (advance @graphNumber, frozen under SystemTest replay) is inherited from GraphsPlotsChartsWdgt.
 
-  _renderingHelper: (context, color, appliedShadow) ->
+  drawPlot: (context, color, appliedShadow) ->
 
     @seed = @graphNumber
     circleRadius = 5

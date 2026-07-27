@@ -16,6 +16,7 @@ class Example3DPlotWdgt extends Widget
 
   constructor: ->
     super()
+    @appearance = new Example3DPlotAppearance @
     @defaultRejectDrags = true
     @isLockingToPanels = true
 
@@ -172,55 +173,6 @@ class Example3DPlotWdgt extends Widget
 
     @_changed()
 
-  # This method only paints this very widget's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this widget might paint something on the screen even if
-  # it's not a "leaf".
-  #
-  # NB: this is the SAME paint scaffold the plot family shares on
-  # GraphsPlotsChartsWdgt, but Example3DPlotWdgt extends Widget directly --
-  # reparenting it onto that base would also pull in that base's constructor +
-  # KeepsRatioWhenInVerticalStackMixin (a behaviour change), so this copy is
-  # kept deliberately rather than deduplicated.
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @backgroundTransparency
-
-    # paintRectangle here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called before the scaling.
-    @paintRectangle aContext, al, at, w, h, @backgroundColor
-    aContext.useLogicalPixelsUntilRestore()
-
-    widgetPosition = @position()
-    aContext.translate widgetPosition.x, widgetPosition.y
-
-    @_renderingHelper aContext, Color.WHITE, appliedShadow
-
-    aContext.restore()
-
-    # _drawHighlightOverlay here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called outside the effect of the scaling
-    # (after the restore).
-    @_drawHighlightOverlay aContext, al, at, w, h
-
   mouseMove: (pos, mouseButton) ->
     if world.hand.isThisPointerDraggingSomething() then return
     if mouseButton == 'left'
@@ -238,7 +190,9 @@ class Example3DPlotWdgt extends Widget
   mouseLeave: ->
     @autoRotate = true
 
-  _renderingHelper: (context, color, appliedShadow) ->
+  # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
+  # (the drawLayoutChrome / drawPlot family precedent)
+  drawPlot: (context, color, appliedShadow) ->
 
     height = @height()
     width = @width()

@@ -2793,11 +2793,11 @@ class Widget extends TreeNode
   # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
   opaqueCoveredRect: ->
     # (1) The paint must route through the plain appearance delegation. Widget::paintIntoAreaOrBlit-
-    # FromBackBuffer just delegates to @appearance, but nine widget classes override it to draw
-    # arbitrary pixels (HandleWdgt, LayoutChromeWdgt, LabelButtonWdgt, PenWdgt, CellWdgt,
-    # SheetHeaderCellWdgt, AnalogClockWdgt, Example3DPlotWdgt, GraphsPlotsChartsWdgt) and BackBufferMixin
-    # blits an offscreen buffer of unknown per-pixel opacity. This one prototype-identity check
-    # excludes them ALL (it subsumes the back-buffer exclusion).
+    # FromBackBuffer just delegates to @appearance (every widget class now routes through it — the
+    # former nine custom painters each moved their override into their own Appearance subclass, whose
+    # constructors fall to this switch's else -> nil), but BackBufferMixin still overrides it to blit
+    # an offscreen buffer of unknown per-pixel opacity. This prototype-identity check excludes its
+    # consumers.
     return nil if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
     # (2) ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
     return nil if @isEphemeral()

@@ -2,18 +2,13 @@
 # in the inspector so to get a compilation error
 # (e.g. unmatched parens) and click "save"
 
-class ErrorsLogViewerWdgt extends Widget
+class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
-  tempPromptEntryField: nil
   defaultContents: ""
-  textWidget: nil
 
   clearButton: nil
   pauseToggle: nil
   okButton: nil
-
-  externalPadding: 0
-  internalPadding: 5
 
   paused: false
 
@@ -55,16 +50,9 @@ class ErrorsLogViewerWdgt extends Widget
       @parent.bringToForeground()
 
 
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
-
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
-    @tempPromptEntryField.configureAsMonoTextPanel true
-    @textWidget = @tempPromptEntryField.textWdgt
-    @_addNoSettle @tempPromptEntryField
+    @_buildMonoCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
     @clearButton = new SimpleButtonWdgt true, @, "clearTextPane", "clear"
@@ -92,10 +80,6 @@ class ErrorsLogViewerWdgt extends Widget
 
   informTarget: ->
     @target[@callback].call @target, nil, @textWidget
-
-  notifyTargetAndClose: ->
-    @informTarget()
-    @close()
 
   _reLayout: (newBoundsForThisLayout) ->
 

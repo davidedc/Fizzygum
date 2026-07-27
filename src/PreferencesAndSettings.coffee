@@ -43,6 +43,21 @@ class PreferencesAndSettings
   invertWheelX: true
   invertWheelY: true
 
+  # Normalize raw wheel deltas: squelch the minor axis when the intention is clearly
+  # one-axis (prevents too much diagonal movement), then apply the invertWheelX/Y
+  # preferences. Returns the adjusted [x, y] pair; every wheel handler
+  # (ScrollPanelWdgt, SimpleSpreadsheetWdgt) routes its raw deltas through this.
+  normalizedWheelDeltas: (x, y) ->
+    if Math.abs(y) < Math.abs(x)
+      y = 0
+    if Math.abs(x) < Math.abs(y)
+      x = 0
+    if @invertWheelX
+      x *= -1
+    if @invertWheelY
+      y *= -1
+    [x, y]
+
   useSliderForInput: nil
   useVirtualKeyboard: nil
   isTouchDevice: nil

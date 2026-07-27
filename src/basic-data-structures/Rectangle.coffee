@@ -111,7 +111,16 @@ class Rectangle
   
   center: ->
     @origin.add @corner.subtract(@origin).floorDivideBy(2)
-  
+
+  # the largest square centred in me: side = min(width, height), same centre. The
+  # origin is fractional when the leftover space is odd — callers round when they
+  # commit widget bounds (integer-placement policy).
+  largestCenteredSquare: ->
+    side = Math.min @width(), @height()
+    l = @left() + (@width() - side) / 2
+    t = @top() + (@height() - side) / 2
+    new Rectangle l, t, l + side, t + side
+
   # »>> this part is excluded from the fizzygum homepage build
   # unused code
   corners: ->

@@ -16,10 +16,7 @@
 #   * a button invoking a proper method from a widget
 #   * an iconic link on the desktop... invoking a proper method from a widget
 
-class ScriptWdgt extends Widget
-
-  tempPromptEntryField: nil
-  textWidget: nil
+class ScriptWdgt extends CodeAreaWdgt
 
   runItButton: nil
   saveButton: nil
@@ -30,18 +27,6 @@ class ScriptWdgt extends Widget
   # crash the serializer; doAll recompiles it on demand after a restore.
   @serializationTransients: ["functionFromCompiledCode"]
   functionFromCompiledCode: nil
-
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
-  externalPadding: 0
-  # the internal padding is the space between the internal
-  # components. It doesn't necessarily need to be equal to the
-  # external padding
-  internalPadding: 5
 
   constructor: (@savedScript = "") ->
     super new Point 200,400
@@ -67,30 +52,9 @@ class ScriptWdgt extends Widget
     else
       containerWindow.close()
 
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
-
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @savedScript, false, 5
-    @tempPromptEntryField.disableDrops()
-    @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.color = Color.WHITE
-    @tempPromptEntryField.addModifiedContentIndicator()
-
-    # register this wdgt as one to be notified when the text
-    # changes/unchanges from "reference" content
-    # so we can enable/disable the "save" button
-    @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
-
-    @textWidget = @tempPromptEntryField.textWdgt
-    @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
-    @textWidget.isEditable = true
-    @textWidget.enableSelecting()
-
-    @_addNoSettle @tempPromptEntryField
+    @_buildEditableCodeAreaNoSettle @savedScript
 
     # buttons -------------------------------
     @runItButton = new SimpleButtonWdgt true, @, "tryIt", "try it"

@@ -60,6 +60,7 @@ class LabelButtonWdgt extends ButtonWdgt
 
     # the flat fill (ButtonWdgt defaults to white)
     @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor
+    @appearance = new LabelButtonAppearance @
 
     if @labelString?
       @_reLayoutSelf()
@@ -132,39 +133,6 @@ class LabelButtonWdgt extends ButtonWdgt
     if @centered
       @centered = false
       @_reLayoutSelf()
-
-  # This method only paints this very widget's "image"; it doesn't descend the
-  # children recursively (that's fullPaintIntoAreaOrBlitFromBackBuffer's job).
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
-    if !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
-      return nil
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    if appliedShadow?
-      color = Color.BLACK
-    else
-      color = switch @state
-        when @STATE_NORMAL
-          @color
-        when @STATE_HIGHLIGHTED
-          @highlightColor
-        when @STATE_PRESSED
-          @pressColor
-
-    # paintRectangle works in actual (not logical) pixels, outside the
-    # ceilPixelRatio scaling.
-    @paintRectangle \
-      aContext,
-      al, at, w, h,
-      color,
-      @alpha,
-      true, # push and pop the context
-      appliedShadow
-
-    @_drawHighlightOverlay aContext, al, at, w, h
 
   # a copied label button usually wants to un-highlight itself (e.g. when you
   # duplicate by clicking a "duplicate" button INSIDE it).

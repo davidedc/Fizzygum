@@ -82,20 +82,11 @@ class FanoutWdgt extends Widget
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    height = @height()
-    width = @width()
-
-    squareDim = Math.min width, height
-
-     # p0 is the origin, the origin being in the bottom-left corner
-    p0 = @topLeft()
-
-    # now the origin is in the middle of the widget
-    p0 = p0.add new Point width/2, height/2
-    
-    # now the origin is in the top left corner of the
-    # square centered in the widget
-    p0 = p0.subtract new Point squareDim/2, squareDim/2
+    # the largest square centred in my bounds: the fanout body fills it and the
+    # four pins sit at its edge midpoints
+    square = @boundingBox().largestCenteredSquare()
+    squareDim = square.width()
+    p0 = square.topLeft()
 
     pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
 

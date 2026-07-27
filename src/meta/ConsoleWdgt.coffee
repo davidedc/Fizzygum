@@ -1,24 +1,9 @@
-class ConsoleWdgt extends Widget
-
-  tempPromptEntryField: nil
-  textWidget: nil
+class ConsoleWdgt extends CodeAreaWdgt
 
   runSelectionButton: nil
   runAllButton: nil
 
   functionFromCompiledCode: nil
-
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
-  externalPadding: 0
-  # the internal padding is the space between the internal
-  # components. It doesn't necessarily need to be equal to the
-  # external padding
-  internalPadding: 5
 
   constructor: (@target) ->
     super new Point 200,400
@@ -27,16 +12,9 @@ class ConsoleWdgt extends Widget
   colloquialName: ->
     "Console for: " + @target.colloquialName().toLowerCase()
 
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
-
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimpleTextScrollPanelWdgt "", false, 5
-    @tempPromptEntryField.configureAsMonoTextPanel true
-    @textWidget = @tempPromptEntryField.textWdgt
-    @_addNoSettle @tempPromptEntryField
+    @_buildMonoCodeAreaNoSettle ""
 
     # "do" buttons -------------------------------
     # NOTE that you can also "doAll" or "doSelection" via

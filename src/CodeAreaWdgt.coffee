@@ -1,0 +1,69 @@
+# Shared base for the "code/text area + bottom action-button row" widget family:
+# ConsoleWdgt ("dev -> console"), ScriptWdgt (a standalone script on the desktop),
+# CodePromptWdgt (the code-entry popup) and ErrorsLogViewerWdgt (the error log).
+# It carries what is byte-identical across the family: the code-area fields + the
+# two paddings, the build settle-wrapper, the two code-area builder variants (the
+# EDITABLE white panel with modified-content tracking -- Script/CodePrompt -- and
+# the plain mono panel -- Console/ErrorsLog), and the notify-and-close commit
+# plumbing. Everything that differs per class stays on the subclass: the
+# constructor signature, the button row and what its actions DO, informTarget's
+# tail, and the _reLayout geometry (2 vs 3 buttons, row heights, damage handling
+# -- the four _reLayouts are deliberately NOT folded: a verbatim diff shows they
+# differ beyond the button fields).
+class CodeAreaWdgt extends Widget
+
+  tempPromptEntryField: nil
+  textWidget: nil
+
+  # the external padding is the space between the edges
+  # of the container and all of its internals. The reason
+  # you often set this to zero is because windows already put
+  # contents inside themselves with a little padding, so this
+  # external padding is not needed. Useful to keep it
+  # separate and know that it's working though.
+  externalPadding: 0
+  # the internal padding is the space between the internal
+  # components. It doesn't necessarily need to be equal to the
+  # external padding
+  internalPadding: 5
+
+  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
+  _buildAndConnectChildren: ->
+    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+
+  # the EDITABLE code-area variant (ScriptWdgt / CodePromptWdgt): white scroll panel,
+  # drops disabled, modified-content indicator, transparent mono editable text with
+  # selection enabled.
+  _buildEditableCodeAreaNoSettle: (initialText) ->
+    @tempPromptEntryField = new SimpleTextScrollPanelWdgt initialText, false, 5
+    @tempPromptEntryField.disableDrops()
+    @tempPromptEntryField.contents.disableDrops()
+    @tempPromptEntryField.color = Color.WHITE
+    @tempPromptEntryField.addModifiedContentIndicator()
+
+    # register this wdgt as one to be notified when the text
+    # changes/unchanges from "reference" content
+    # so we can enable/disable the "save" button
+    @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
+
+    @textWidget = @tempPromptEntryField.textWdgt
+    @textWidget.backgroundColor = Color.TRANSPARENT
+    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
+    @textWidget.isEditable = true
+    @textWidget.enableSelecting()
+
+    @_addNoSettle @tempPromptEntryField
+
+  # the plain mono-panel variant (ConsoleWdgt / ErrorsLogViewerWdgt)
+  _buildMonoCodeAreaNoSettle: (initialText) ->
+    @tempPromptEntryField = new SimpleTextScrollPanelWdgt initialText, false, 5
+    @tempPromptEntryField.configureAsMonoTextPanel true
+    @textWidget = @tempPromptEntryField.textWdgt
+    @_addNoSettle @tempPromptEntryField
+
+  # the commit plumbing shared by the prompt-shaped members of the family
+  # (CodePromptWdgt / ErrorsLogViewerWdgt): informTarget itself differs per class
+  # and stays on the subclass.
+  notifyTargetAndClose: ->
+    @informTarget()
+    @close()

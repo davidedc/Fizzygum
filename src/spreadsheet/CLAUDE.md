@@ -42,7 +42,8 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   invisible — F5 receipt C).
 - `SheetHeaderCellWdgt.coffee` (F5) — one widget per HEADER cell (kind column/row/corner + its
   index; 21 in all, direct sheet children, OUTSIDE the panel so a future scroll clip never
-  touches the frozen headers). Paints its 236 strip fill and its own top+left edges; its
+  touches the frozen headers). Paints (via its `SheetHeaderCellAppearance` — the header's
+  fill/edge painter and the dark-edge predicates) its 236 strip fill and its own top+left edges; its
   letter/number label is a passive `StringWdgt` CHILD ("scalar text is a StringWdgt child,
   period" — owner direction 2026-07-24), kept in sync + relabelled in place on scroll by
   `_syncLabelNoSettle` from the sheet's chrome ensure, box-inset (+4, +2) so the glyphs sit
@@ -72,7 +73,8 @@ The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
   helper (the compiler's scan + `SheetCellRecord._resolveBoundName` already resolve it).
 - `CellWdgt.coffee` (4/8/F5) — one VISIBLE cell, as a real widget, rendering ALL of its cell's
   view state: its own top+left GRID EDGES (always — the F5 edge-ownership convention, via the
-  sheet's `paintGridEdges`), its own SELECTION RING when it is the selected cell (F2 — the
+  sheet's `paintGridEdges`; the cell's own pixels — edges + ring — are painted by its
+  `CellAppearance`), its own SELECTION RING when it is the selected cell (F2 — the
   inside form, off the sheet's public `isSelectedAddress`), its OVERLAY EDITOR while being
   edited (`_mountEditorNoSettle`/`_teardownEditorNoSettle` hold an EDITABLE `StringWdgt` as
   `@_editorWdgt`, a transient child the standard caret types into; the cell's

@@ -510,16 +510,8 @@ class SimpleSpreadsheetWdgt extends Widget
     # if we don't destroy the resizing handles, they'll follow the contents being moved
     # (the ScrollPanelWdgt.wheel opening move — a hosted value-widget can have handles up)
     world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @
-    # prevent diagonal movement when the intention is clearly one axis (the ScrollPanelWdgt
-    # paragraph, verbatim semantics)
-    if Math.abs(y) < Math.abs(x)
-      y = 0
-    if Math.abs(x) < Math.abs(y)
-      x = 0
-    if WorldWdgt.preferencesAndSettings.invertWheelX
-      x *= -1
-    if WorldWdgt.preferencesAndSettings.invertWheelY
-      y *= -1
+    # squelch the minor axis + apply the invert preferences (shared with ScrollPanelWdgt)
+    [x, y] = WorldWdgt.preferencesAndSettings.normalizedWheelDeltas x, y
     colDelta = 0
     rowDelta = 0
     escalate = false

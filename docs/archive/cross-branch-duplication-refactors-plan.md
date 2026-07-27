@@ -1,10 +1,45 @@
 # Cross-branch duplication refactors (inverse-audit findings 4–6): paint→Appearance delegation, the code-runner base class, three small helper extractions
 
-> **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-> Status: ACTIVE, not started (authored 2026-07-26/27). Three INDEPENDENT tiers —
-> execute in any order, each gates separately; R1 is the big one. Sibling plan (execute
-> FIRST if both are pending, it touches two of the same files):
-> `docs/plans/mixin-application-tidyups-plan.md`.
+> **Status: EXECUTED 2026-07-27** (authored 2026-07-26/27; the sibling
+> `mixin-application-tidyups-plan.md` ran first, same day). As-built record:
+>
+> - **R1 — DONE, all nine** painters converted to per-class Appearance delegation
+>   (HandleAppearance, PenAppearance, LabelButtonAppearance, LayoutChromeAppearance,
+>   CellAppearance, SheetHeaderCellAppearance, AnalogClockAppearance,
+>   GraphsPlotsChartsAppearance, Example3DPlotAppearance), each gated green
+>   individually (build + probe + presuite). The `opaqueCoveredRect` comment updated.
+>   Two deviations, both principled: (a) subclass-polymorphic drawing TAILS stay on
+>   the widgets as PUBLIC protocol methods — the existing `drawLayoutChrome` precedent
+>   — so the plot family's private `_renderingHelper` was renamed `drawPlot` (3 concrete
+>   plots + Example3D; a cross-object private call from the appearance would bump the
+>   call-separation ratchet); (b) the clock keeps its 4 public `draw*Hand` methods +
+>   `_drawHand` + all state widget-side (the inspect-edit demo edits `drawSecondsHand`;
+>   the appearance computes into `@widget` fields). ONE churn class, verified benign
+>   via fg diffpage: the clock's inspector member list lost 6 rows (5 moved `_` helpers
+>   + the paint override) → gated recapture of `SystemTest_macroAnalogClockInspectEdit`
+>   and `SystemTest_macroNakedInspectorRendersResizesAndEdits`, COMPLETE at dpr 1+2.
+>   Every other conversion was zero-churn.
+> - **R2 — DONE as `CodeAreaWdgt`**, but the plan's "shared `_reLayout`" claim was
+>   FALSIFIED by the verbatim diff (the four bodies differ in button fields, 2-vs-3
+>   button geometry, row heights and `_fullChanged` presence) — the base carries only
+>   the byte-identical members: the shared fields (+padding comments), the
+>   `_buildAndConnectChildren` settle-wrapper, the TWO code-area builder variants
+>   (`_buildEditableCodeAreaNoSettle` — Script/CodePrompt; `_buildMonoCodeAreaNoSettle`
+>   — Console/ErrorsLog) and `notifyTargetAndClose`; the four `_reLayout`s stay
+>   per-class (their identical prologue is the bounds-first-gate shape and stays in
+>   place). `SimpleLinkWdgt` left out as anticipated (its tempPromptEntryField is a
+>   bare StringWdgt, a different animal).
+> - **R3 — 1 and 2 DONE** (`Rectangle.largestCenteredSquare()` consumed by
+>   GenericShortcutIconWdgt + FanoutWdgt; `PreferencesAndSettings.normalizedWheelDeltas`
+>   consumed by ScrollPanelWdgt + SimpleSpreadsheetWdgt). **3 = the sanctioned LEAVE
+>   outcome**: the pair's "pixel-alpha read" characterisation below is WRONG (falsified
+>   at execution — both bodies are verbatim copies of
+>   `RectangularAppearance.isTransparentAt` on two `BackBufferMixin`-painting
+>   `CanvasWdgt` subclasses); unifying via an assigned RectangularAppearance would leak
+>   its shape-specific menu entries, so both keep the copy with cross-reference
+>   comments naming the twin.
+> - Close gate: full gauntlet green (see archive INDEX). Original plan text kept
+>   verbatim below.
 
 **Mandate.** Each tier fully eliminates its duplication family by moving the behaviour
 to its RIGHT home — the Appearance seam (R1), a shared base class (R2), plain

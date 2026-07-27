@@ -39,20 +39,11 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    height = @height()
-    width = @width()
-
-    squareDim = Math.min width, height
-
-     # p0 is the origin, the origin being in the bottom-left corner
-    p0 = @topLeft()
-
-    # now the origin is in the middle of the widget
-    p0 = p0.add new Point width/2, height/2
-
-    # now the origin is in the top left corner of the
-    # square centered in the widget
-    p0 = p0.subtract new Point squareDim/2, squareDim/2
+    # the largest square centred in my bounds: the icon fills it, the little
+    # reference-arrow overlay sits in its bottom-left corner
+    square = @boundingBox().largestCenteredSquare()
+    squareDim = square.width()
+    p0 = square.topLeft()
 
     @icon._applyBounds p0.round(), (new Point squareDim, squareDim).round()
 

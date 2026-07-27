@@ -108,7 +108,10 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
   # is not very efficient. You should console.out whenever that happens and see if it
   # happens too often, and avoid that from happening.
   #
-  # TODO copied from RectangularAppearance, and there are other copies of this
+  # A widget-side copy of RectangularAppearance.isTransparentAt; its twin lives on
+  # SimpleImageWdgt. Deliberately NOT unified: both classes paint via
+  # BackBufferMixin (no appearance object), and assigning a RectangularAppearance
+  # just for hit-testing would also leak its shape-specific menu entries.
   isTransparentAt: (aPoint) ->
     if @boundingBoxTight().containsPoint aPoint
       return false

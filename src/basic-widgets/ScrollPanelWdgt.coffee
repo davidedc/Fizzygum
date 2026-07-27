@@ -788,20 +788,8 @@ class ScrollPanelWdgt extends PanelWdgt
 
     scrollbarJustChanged = false
 
-    # this paragraph prevents too much
-    # diagonal movement when the intention
-    # is clearly to just move vertically or
-    # horizontally. Doesn't need to be always
-    # the case though.
-    if Math.abs(y) < Math.abs(x)
-      y = 0
-    if Math.abs(x) < Math.abs(y)
-      x = 0
-
-    if WorldWdgt.preferencesAndSettings.invertWheelX
-      x *= -1
-    if WorldWdgt.preferencesAndSettings.invertWheelY
-      y *= -1
+    # squelch the minor axis + apply the invert preferences
+    [x, y] = WorldWdgt.preferencesAndSettings.normalizedWheelDeltas x, y
 
     if y != 0
       # TODO this escalation should also

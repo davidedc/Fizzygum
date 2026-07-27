@@ -7,6 +7,7 @@ class GraphsPlotsChartsWdgt extends Widget
 
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
+    @appearance = new GraphsPlotsChartsAppearance @
     @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
     world.steppingWdgts.add @
@@ -19,62 +20,14 @@ class GraphsPlotsChartsWdgt extends Widget
     Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
 
   # The example plots animate by advancing @graphNumber each step (each concrete plot's
-  # _renderingHelper seeds its RNG off @graphNumber). Freeze that advance under replay so the plot
+  # drawPlot tail seeds its RNG off @graphNumber). Freeze that advance under replay so the plot
   # renders a fixed frame. Subclasses that animate differently (Example3DPlotWdgt, via @currentAngle)
   # override step() but reuse the guard above. (@graphNumber is declared on this base; each concrete
-  # plot supplies only its own @fps and _renderingHelper — the shared ctor adds them to steppingWdgts.)
+  # plot supplies only its own @fps and drawPlot — the PUBLIC drawing tail
+  # GraphsPlotsChartsAppearance dispatches to — the shared ctor adds them to steppingWdgts.)
   step: ->
     @graphNumber++ unless @_animationFrozenForDeterministicReplay()
     @_changed()
-
-
-  # This method only paints this very widget's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this widget might paint something on the screen even if
-  # it's not a "leaf".
-  #
-  # The whole plot/chart family shares this identical paint scaffold; each
-  # concrete plot supplies only its _renderingHelper (the drawing tail) plus its
-  # backgroundColor / backgroundTransparency. (Example3DPlotWdgt keeps its own
-  # copy because it extends Widget directly, not this base.)
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @backgroundTransparency
-
-    # paintRectangle here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called before the scaling.
-    @paintRectangle aContext, al, at, w, h, @backgroundColor
-    aContext.useLogicalPixelsUntilRestore()
-
-    widgetPosition = @position()
-    aContext.translate widgetPosition.x, widgetPosition.y
-
-    @_renderingHelper aContext, Color.WHITE, appliedShadow
-
-    aContext.restore()
-
-    # _drawHighlightOverlay here is made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, this is why
-    # it's called outside the effect of the scaling
-    # (after the restore).
-    @_drawHighlightOverlay aContext, al, at, w, h
 
 
   # see https://stackoverflow.com/a/19303725

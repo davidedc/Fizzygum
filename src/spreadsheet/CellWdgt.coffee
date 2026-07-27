@@ -53,6 +53,7 @@ class CellWdgt extends Widget
 
   constructor: (address) ->
     super()
+    @appearance = new CellAppearance @
     @address = address         # which cell (col/row via the model); stable across save/load
     @hostedWidget = nil        # the mounted value/presenter widget (this cell's rich child), or nil
     @presentedValue = nil      # branch-2 churn-skip: the value the current presenter reflects
@@ -113,44 +114,6 @@ class CellWdgt extends Widget
       # shows the buffer, so the fresh child starts hidden and teardown reveals it
       textWdgt.__hide() if @_editorWdgt?
     return
-
-  # Paint this cell's OWN pixels (F5 — every visible thing is a widget; the sheet paints
-  # nothing): my top+left grid edges (ALWAYS — even when hosting/editing/empty; the F5
-  # edge-ownership convention, colours + crossing rule in SimpleSpreadsheetWdgt.paintGridEdges),
-  # then my selection ring when I am the selected cell (F2: drawn fully INSIDE — band [1,3),
-  # touching no edge pixel, under my children since children paint after me — the scalar-text
-  # child included, exactly as the old painted text drew last). Clipped to the cell. Follows
-  # the AnalogClockWdgt paint model. My VALUE is not painted here: it is a child widget in
-  # every branch (hosted value / presenter / the branch-3 scalar-text StringWdgt).
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-    sheetWidget = @_sheetWidget
-    return unless sheetWidget?
-    [area, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
-      aContext.save()
-      aContext.clipToRectangle al, at, w, h
-      aContext.useLogicalPixelsUntilRestore()
-      widgetPosition = @position()
-      aContext.translate widgetPosition.x, widgetPosition.y
-      # dark edges sit on the header separators: the left edge of the viewport's FIRST visible
-      # column and the top edge of its FIRST visible row (viewport-relative, F1 — at origin 0
-      # that is sheet col/row 0, exactly the pre-scroll form)
-      colRow = sheetWidget.model.colRowFor @address
-      sheetWidget.paintGridEdges aContext, @width(), @height(), (colRow?.col is sheetWidget.viewOriginCol), (colRow?.row is sheetWidget.viewOriginRow)
-      # my MODEL selection ring (F5 receipt B): drawn INLINE here, in my own logical-pixel scope, fully
-      # INSIDE me (band [1,3), under my hosted child). This is a distinct concern from the editor-focus
-      # SELECTION overlay (Widget._drawSelectionOverlay): a cell is never world.editorFocusWdgt (clicks
-      # escalate to the sheet; SheetCellsPanelWdgt opts its cells out of the editor-selection walk), so the
-      # generic teal overlay never fires for me -- I own my selection look, the sheet owns the state.
-      if sheetWidget.isSelectedAddress @address
-        aContext.strokeStyle = sheetWidget.selectionColor.toString()
-        aContext.lineWidth = 2
-        aContext.strokeRect 2, 2, @width() - 4, @height() - 4
-      aContext.restore()
 
   # ── presentation: host a widget filling this cell (the sheet's _addNoSettle + _apply* idiom) ──
   # NoSettle: called from the sheet's reconcile, which runs inside the dataflow drain's layout settle

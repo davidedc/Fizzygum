@@ -19,6 +19,7 @@ class PenWdgt extends Widget
   constructor: ->
     @penSize = WorldWdgt.preferencesAndSettings.handleSize * 4
     super()
+    @appearance = new PenAppearance @
     @_applyExtent new Point @penSize, @penSize
     # TODO we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
@@ -28,76 +29,6 @@ class PenWdgt extends Widget
     if !(whereTo.acceptsPenDrawing?())
       @inform "a pen will only\nwork on a canvas..."
 
-  # NOTE: here we are painting the turtle/pen,
-  # NOT what the turtle/pen is drawing!
-    
-  # This method only paints this very widget's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this widget might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = @alpha
-
-    aContext.useLogicalPixelsUntilRestore()
-    widgetPosition = @position()
-    aContext.translate widgetPosition.x, widgetPosition.y
-
-    direction = @heading
-    len = @width() / 2
-    start = @center().subtract(@position())
-
-    if @penPoint is "tip"
-      dest = start.distanceAngle(len * 0.75, direction - 180)
-      left = start.distanceAngle(len, direction + 195)
-      right = start.distanceAngle(len, direction - 195)
-    else # 'middle'
-      dest = start.distanceAngle(len * 0.75, direction)
-      left = start.distanceAngle(len * 0.33, direction + 230)
-      right = start.distanceAngle(len * 0.33, direction - 230)
-
-    aContext.fillStyle = @color.toString()
-    aContext.beginPath()
-
-    aContext.moveTo start.x, start.y
-    aContext.lineTo left.x, left.y
-    aContext.lineTo dest.x, dest.y
-    aContext.lineTo right.x, right.y
-
-    aContext.closePath()
-    aContext.strokeStyle = Color.WHITE.toString()
-    aContext.lineWidth = 3
-    aContext.stroke()
-    aContext.strokeStyle = Color.BLACK.toString()
-    aContext.lineWidth = 1
-    aContext.stroke()
-    aContext.fill()
-
-    aContext.restore()
-
-    # _drawHighlightOverlay is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    @_drawHighlightOverlay aContext, al, at, w, h
-
-  
-  
   # PenWdgt access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360

@@ -26,12 +26,13 @@ class SheetHeaderCellWdgt extends Widget
 
   constructor: (kind, index) ->
     super()
+    @appearance = new SheetHeaderCellAppearance @
     @kind = kind        # "column" | "row" | "corner"
     @index = index      # 0-based viewport SLOT index (the label = view origin + slot, F1); nil for the corner
     @_sheetWidget = nil
     @_labelWdgt = nil   # the label child (a passive StringWdgt); nil for the corner
-    # transparent by default — every visible pixel is painted explicitly below (the fill),
-    # so there is no base-appearance paint to keep in sync
+    # transparent by default — every visible pixel is painted explicitly by
+    # SheetHeaderCellAppearance (the fill), so there is no boxy/rectangular paint to keep in sync
     @color = nil
 
   colloquialName: ->
@@ -50,38 +51,6 @@ class SheetHeaderCellWdgt extends Widget
       when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @index)
       when "row"    then "" + (@_sheetWidget.viewOriginRow + @index + 1)
       else nil
-
-  # F5 edge ownership: my LEFT edge is the DARK border colour when it sits on the sheet's
-  # outer-left boundary (row headers, corner) or on the number-header separator (column 0);
-  # my TOP edge is dark on the outer-top boundary (column headers, corner) or on the
-  # under-letter-header separator (row 0). Everything else is the plain gridline colour.
-  _leftEdgeIsDark: ->
-    @kind is "row" or @kind is "corner" or (@kind is "column" and @index is 0)
-
-  _topEdgeIsDark: ->
-    @kind is "column" or @kind is "corner" or (@kind is "row" and @index is 0)
-
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-    sheetWidget = @_sheetWidget
-    return unless sheetWidget?
-    [area, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
-      aContext.save()
-      aContext.clipToRectangle al, at, w, h
-      aContext.useLogicalPixelsUntilRestore()
-      widgetPosition = @position()
-      aContext.translate widgetPosition.x, widgetPosition.y
-      # the header-strip fill, mine to paint now (was the sheet's two strip fillRects)
-      aContext.fillStyle = sheetWidget.headerFillColor.toString()
-      aContext.fillRect 0, 0, @width(), @height()
-      # my top+left grid edges (grid-coloured first, dark last — the crossing rule).
-      # My label is NOT painted here: it is my StringWdgt child (children paint after me).
-      sheetWidget.paintGridEdges aContext, @width(), @height(), @_leftEdgeIsDark(), @_topEdgeIsDark()
-      aContext.restore()
 
   # Keep my label child in sync (create / retext / place) — called from the sheet's chrome
   # ensure, whose build/scroll/resize/restore paths all funnel through buildHeader. The label
