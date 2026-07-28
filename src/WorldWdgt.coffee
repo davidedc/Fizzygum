@@ -2508,6 +2508,15 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @widgetsToBePinouted.clear()
     @currentPinoutingWidgets.clear()
     @widgetsBeingPinouted.clear()
+    # The "Untitled N" counters are per-WORLD by design (UntitledNamingService is built in the ctor and
+    # documented as resetting with each new world) — but resetWorld reuses the world object, so without
+    # this they SURVIVE into the next test in the same headless process. They are consumed just by
+    # OPENING a save prompt (SaveShortcutPromptWdgt seeds its default contents from
+    # getNextUntitledShortcutName), so one earlier prompt anywhere makes the next one render
+    # "Untitled 2" instead of "Untitled" — a rendered default name that depends on run history. That is
+    # what made macroSaveAsPromptAboveTiltedWindow fail at shards=1 (all 268 tests in one page) while
+    # passing at 2/4/8, where the consuming predecessor lands in a different shard: DETERMINISM.md §2d.
+    @untitledNamingService?.resetCounters()
     # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
     # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle

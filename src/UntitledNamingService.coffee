@@ -37,3 +37,11 @@ class UntitledNamingService
   # encapsulates a former raw `world.howManyUntitledShortcuts++` poke at the field.
   noteShortcutCreated: ->
     @howManyUntitledShortcuts++
+
+  # Back to a pristine world's numbering. The counters are per-world (see the class comment),
+  # and a new world gets a new service — but WorldWdgt.resetWorld REUSES the world object, so it
+  # calls this to complete the reset. Without it the counts leak into the next SystemTest in the
+  # same page and a default name renders as "Untitled 2" (DETERMINISM.md §2d).
+  resetCounters: ->
+    @howManyUntitledShortcuts = 0
+    @howManyUntitledFoldersShortcuts = 0

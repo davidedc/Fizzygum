@@ -2,9 +2,9 @@
 
 **STATUS (updated 2026-07-28, same day): FLAKE B — root-caused, FIXED, gated and PUSHED (§3.6).
 FLAKE A — still open; hypothesis A3 added (§2.6) and the deciding diagnostic landed; netting with
-`torture-headless.js`. FLAKE C (§2.7) — NEW, found by that net: a DETERMINISTIC `shards=1`-only
-failure, proven pre-existing on unmodified `master`, and invisible to every standing gate because
-none of them runs 1 shard.** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
+`torture-headless.js`. FLAKE C (§2.7) — **SOLVED**: a `resetWorld` state leak
+(`UntitledNamingService` counters) that made a default name render "Untitled 2"; it was invisible to
+every standing gate because none of them runs 1 shard (§2.7.2).** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
 ZERO prior context. Every fact below was verified against the working trees on 2026-07-28
 (Fizzygum `master`, Fizzygum-tests `master`, suite = 268 SystemTests). Line numbers WILL drift —
 **the quoted method/variable names and code snippets are authoritative; re-grep before trusting any
@@ -63,10 +63,10 @@ repeats it. Arc 2 landed green and is closed; these two are the residue.
 
 1. `/Users/davidedellacasa/code/Fizzygum-all/fg status` — confirm clean trees, note the suite count.
 2. Read this doc fully, then `Fizzygum-tests/DETERMINISM.md` §2c, §3a, §3e and §4 (the playbook).
-3. **Flake B (§3) is DONE** — read §3.6 for what it cost and what it taught. Of what remains,
-   **flake C (§2.7) is by far the more tractable**: it is 100% reproducible (`--shards=1`), is a
-   textbook `DETERMINISM.md` §2d state-leak shape, and bisects cheaply. Flake A (§2) is a burst-mode
-   3a-class race that resisted every forcing technique tried; do not start there.
+3. **Flakes B (§3) and C (§2.7) are DONE** — read §3.6 and §2.7.1 for what they cost and what they
+   taught (both contain a FALSIFIED-at-execution step worth reading before you trust a hypothesis).
+   **Only flake A (§2) remains**, and it is the hard one: a burst-mode 3a-class race that resisted
+   every forcing technique tried. Net it with `torture-headless.js` (§2.5); do not chase it.
 4. Every phase ends with its gate green (§5) before the next begins.
 5. **Never commit or push without explicit owner approval** (standing rule).
 6. Budget: assume gauntlet runs are ~5–6 min each and that confirming/refuting flake B costs
@@ -265,7 +265,7 @@ committed test.
 
 ---
 
-## §2.7 FLAKE C (NEW, found 2026-07-28 by the flake-A net) — a DETERMINISTIC `shards=1` failure
+## §2.7 FLAKE C — **SOLVED 2026-07-28** (found by the flake-A net; a DETERMINISTIC `shards=1` failure)
 
 `SystemTest_macroSaveAsPromptAboveTiltedWindow` fails **100% at every `shards=1` config** and
 passes at every other shard count. From the first 9 torture iterations:
@@ -306,6 +306,55 @@ to list predecessors, then bisect them.
 as an unreproducible low-frequency flake that did NOT reproduce under its exact in-suite prefix, and
 concludes "do NOT recapture it". The 100%-at-s1 result contradicts the "unreproducible" half. The
 "do not recapture" half still stands — recapturing would bake in whatever the leak produces.
+
+### 2.7.1 RESOLVED — the `UntitledNamingService` counters survive `resetWorld`
+
+**The pixels named it.** Neither existing runner could produce them (the suite runner has no
+`--dump-failures`; `run-sequence`, which dumps, cannot reproduce), so a ~40-line probe booted the REAL
+shard URL and read `world.automator.collectedFailureImages`. The delta was **46 pixels in one 11×15
+character cell**: reference `Untitled`, live `Untitled 2`. Not a rendering bug at all — the default
+document NAME.
+
+**Root cause.** `UntitledNamingService` (`world.untitledNamingService`) counts the "Untitled" names
+handed out. It is built in the `WorldWdgt` ctor and its own class comment calls the counters per-world
+— but `resetWorld` REUSES the world object and `_resetWorldNoSettle` never reset them. A number is
+consumed just by OPENING a save prompt (`SaveShortcutPromptWdgt` seeds `defaultContents` from
+`getNextUntitledShortcutName()`), so one earlier prompt anywhere in the page shifts every later
+default name. Shard count was the whole variable because it is a **predecessor-set** axis, not a load
+axis: at s1 all 268 tests share one page.
+
+**Fix** (reference-preserving — a fresh world SHOULD say `Untitled`; the leak was the defect):
+`UntitledNamingService.resetCounters()`, called from `_resetWorldNoSettle` beside the highlight/pinout
+set-clears whose comment already says *"resetWorld must reset ALL world state"*. Same product-safe
+path; the snapshot serializer, which legitimately persists these counters, is untouched.
+
+**Gates:** `--shards=1` **268/268** (was 6/6 failing); `fg gauntlet` 13/13 with `refs:PASS` (zero
+reference churn). The gauntlet's `paint` leg was `PASS-serial-only` — its in-wave failure was
+`audit ERROR: Cannot read properties of undefined (reading 'automator')` at 32 s during "probing test
+count", i.e. a boot-readiness race in the audit's own probe BEFORE any test ran, not a paint offender;
+the serial run checked all 268 with **0 offenders**. (`ReferenceError: boom is not defined` in that log
+is the deliberate `#ERR` spreadsheet fixture.)
+
+### 2.7.2 ⚠ Two findings bigger than the bug
+
+1. **The gates are blind at `shards=1`.** `fg gauntlet` runs 4 shards, `fg suite` 8. Nothing in the
+   routine loop runs 1. A fully deterministic failure therefore lived on `master` unseen; only
+   `torture-headless.js`, which rotates `--shards`, caught it.
+   ⛔ **OWNER DECISION 2026-07-28: NO s1 gate — too expensive (~6 min serial). Do not re-propose.**
+   The residual coverage is `torture-headless.js`, which rotates `--shards=1,2,4,8` and is the tool
+   that caught this one; run it when hunting, not on every commit.
+2. **`_resetWorldNoSettle` deserves an AUDIT, not another patch.** Its comment says it must reset ALL
+   world state, yet it has grown reactively — highlight sets, pinout sets, editor focus, now these
+   counters — each added after a leak was caught in the field. The 2026-07-10 `widgetsToBeHighlighted`
+   leak and this one are the same shape. Enumerate world-level mutable state and check it against that
+   teardown; expect more.
+
+⚖ **Method case law (this one cost real time — see DETERMINISM.md §2d's WITHDRAWN corollary).** The
+state-leak hypothesis was declared FALSIFIED mid-investigation because replaying all 268 tests through
+`run-sequence-headless.js` passed. That was wrong: `run-sequence` cannot reproduce this failure at all,
+so its green said nothing about the hypothesis. **A green from an instrument you have not seen
+reproduce the failure is not evidence of absence — confirm the tool reproduces before using its
+silence to rule anything out.**
 
 ---
 
