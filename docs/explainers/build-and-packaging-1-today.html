@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzygum build &amp; packaging — 1. Today</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;  --surface: #fcfcfb;
+    --ink:       #0b0b0b;  --ink-2:   #52514e;  --muted: #898781;
+    --hairline:  #e1e0d9;  --border:  rgba(11,11,11,0.10);
+    --s1: #2a78d6; /* blue   — SWCanvas / test-side          */
+    --s2: #eb6834; /* orange — native / product-side          */
+    --s3: #1baf7a; /* aqua   — SW3D / new mechanisms          */
+    --s4: #eda100; /* yellow — det-trig / auxiliary           */
+    --wash-s1: rgba(42,120,214,0.08);
+    --wash-s2: rgba(235,104,52,0.08);
+    --wash-s3: rgba(27,175,122,0.08);
+    --bad: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --wash-s1: rgba(57,135,229,0.14);
+      --wash-s2: rgba(217,89,38,0.14);
+      --wash-s3: rgba(25,158,112,0.14);
+      --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.7em; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.25em; margin: 2.2em 0 .5em; }
+  h3 { font-size: 1.05em; margin: 1.6em 0 .4em; }
+  p, li { color: var(--ink-2); }
+  strong { color: var(--ink); }
+  .kicker { color: var(--muted); font-size: .85em; letter-spacing: .06em; text-transform: uppercase; }
+  nav.series { font-size: .85em; color: var(--muted); margin-bottom: 28px; }
+  nav.series a { color: var(--s1); text-decoration: none; }
+  nav.series .here { color: var(--ink); font-weight: 600; }
+  figure { margin: 20px 0 28px; background: var(--surface); border: 1px solid var(--border);
+           border-radius: 10px; padding: 18px 18px 12px; overflow-x: auto; }
+  figcaption { font-size: .82em; color: var(--muted); margin-top: 10px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  code { background: var(--page); border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 5px; }
+  .callout { border-left: 3px solid var(--s1); background: var(--wash-s1);
+             padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; }
+  .callout.warn { border-left-color: var(--bad); background: none; border: 1px solid var(--border); border-left: 3px solid var(--bad); }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; color: var(--ink-2); }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; }
+  /* --- stacked horizontal bar --- */
+  .bar { display: flex; gap: 2px; height: 34px; border-radius: 5px; overflow: hidden; margin: 6px 0 2px; }
+  .bar div { min-width: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82em; color: var(--ink-2); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  /* --- timeline --- */
+  .timeline { display: flex; gap: 2px; align-items: stretch; margin: 6px 0; }
+  .timeline .step { padding: 8px 10px; font-size: .8em; line-height: 1.35; border-radius: 6px;
+                    border: 1px solid var(--border); background: var(--page); color: var(--ink-2); }
+  .timeline .step b { display: block; color: var(--ink); font-weight: 600; }
+  .arrowsep { align-self: center; color: var(--muted); padding: 0 2px; }
+  svg text { font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--ink-2); }
+  svg text.t { fill: var(--ink); font-weight: 600; }
+  svg text.m { fill: var(--muted); font-size: 11px; }
+  svg .box { fill: var(--page); stroke: var(--border); rx: 8; }
+  svg .flow { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#arr); }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Fizzygum · build &amp; packaging explainer</p>
+  <h1>1. How Fizzygum is built, loaded, and shipped today</h1>
+  <nav class="series"><span class="here">1 · Today</span> &nbsp;→&nbsp;
+    <a href="build-and-packaging-2-stages.html">2 · The four stages</a> &nbsp;→&nbsp;
+    <a href="build-and-packaging-3-examples.html">3 · Worked examples</a></nav>
+
+  <p>Fizzygum is a whole desktop-like environment drawn on a single HTML5
+  <code>&lt;canvas&gt;</code>. Everything you see — windows, menus, text, apps — is one
+  program painting one canvas. Two constraints shape everything on this page:
+  it must run by <strong>double-clicking a file</strong> (over <code>file://</code>, no server), and it must stay
+  <strong>live-editable from inside itself</strong> (you can open any class in an in-world inspector
+  and change its source while it runs).</p>
+
+  <h2>Three repos, one build</h2>
+  <p>The source lives in <code>Fizzygum/</code>, the test suite in <code>Fizzygum-tests/</code>, and the build
+  output in <code>Fizzygum-builds/latest/</code> — which is generated wholesale, never edited.
+  A full build takes about <strong>18&nbsp;seconds</strong>.</p>
+
+  <figure>
+    <svg viewBox="0 0 820 150" width="100%">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+      <rect class="box" x="10" y="18" width="200" height="44"/>
+      <text class="t" x="24" y="37">Fizzygum/src</text>
+      <text class="m" x="24" y="53">~470 CoffeeScript classes</text>
+      <rect class="box" x="10" y="88" width="200" height="44"/>
+      <text class="t" x="24" y="107">Fizzygum-tests/</text>
+      <text class="m" x="24" y="123">268 SystemTests + harness</text>
+      <rect class="box" x="300" y="52" width="190" height="46"/>
+      <text class="t" x="316" y="72">build (~18 s)</text>
+      <text class="m" x="316" y="88">build_it_please.sh + build.py</text>
+      <rect class="box" x="580" y="52" width="228" height="46"/>
+      <text class="t" x="596" y="72">Fizzygum-builds/latest/</text>
+      <text class="m" x="596" y="88">open index.html over file://</text>
+      <path class="flow" d="M212 40 C 260 40, 260 62, 298 66"/>
+      <path class="flow" d="M212 110 C 260 110, 260 88, 298 84"/>
+      <path class="flow" d="M492 75 L 578 75"/>
+    </svg>
+    <figcaption>The umbrella layout. The build reads two repos and regenerates the third.</figcaption>
+  </figure>
+
+  <h2>The unusual part: classes ship as <em>text</em></h2>
+  <p>There are no <code>import</code>s and no module system — every class is a global. The build does
+  <strong>not</strong> compile the 470 classes. It wraps each class's CoffeeScript <em>source code</em> into an
+  escaped JavaScript string, and the <strong>browser compiles everything at boot</strong> using a bundled
+  CoffeeScript compiler. Load order isn't declared anywhere; a boot script discovers it by
+  scanning the source text for <code>extends</code>, <code>@augmentWith</code>, and <code>new&nbsp;X</code>.</p>
+  <p>Why this odd design? Because the source being present <em>in the page</em> is what powers the
+  in-world class inspectors and live editing — and because over <code>file://</code> a page cannot
+  <code>fetch()</code> its own files, so everything loads by <code>&lt;script&gt;</code> injection, which strings
+  survive happily.</p>
+
+  <figure>
+    <div class="timeline">
+      <div class="step"><b>boot bundle</b>314 KB · one script tag</div><div class="arrowsep">→</div>
+      <div class="step"><b>compiler</b>208 KB CoffeeScript</div><div class="arrowsep">→</div>
+      <div class="step"><b>source batches</b>2.5 MB of class sources, as strings</div><div class="arrowsep">→</div>
+      <div class="step"><b>compile ~470 classes</b>in discovered dependency order (a few seconds, behind the spinner)</div><div class="arrowsep">→</div>
+      <div class="step" style="background:var(--wash-s3); border-color:var(--s3)"><b>world starts</b>everything is in memory</div>
+    </div>
+    <figcaption>Boot today (the default “dev” build). Nothing is optional: all apps, all
+    inspectors, all sources arrive before the desktop appears.</figcaption>
+  </figure>
+
+  <h2>What is inside the boot bundle?</h2>
+  <p>Here's the surprise: the boot bundle is 314 KB, and Fizzygum's own boot code is only
+  ~15 KB of it. The rest is <strong>SWCanvas</strong> — a complete software renderer — plus helpers:</p>
+
+  <figure>
+    <div class="bar" aria-label="Boot bundle composition, 314 KB total">
+      <div style="flex:263; background:var(--s1)" title="SWCanvas 263 KB"></div>
+      <div style="flex:22;  background:var(--s3)" title="SW3D 22 KB"></div>
+      <div style="flex:16;  background:var(--s4)" title="det-trig 16 KB"></div>
+      <div style="flex:15;  background:var(--s2)" title="boot JS 15 KB"></div>
+    </div>
+    <div class="legend">
+      <span><span class="chip" style="background:var(--s1)"></span>SWCanvas engine — 263 KB (2D rasterizer + BitmapText text engine + a small 3D core)</span>
+      <span><span class="chip" style="background:var(--s3)"></span>SW3D engine — 22 KB</span>
+      <span><span class="chip" style="background:var(--s4)"></span>deterministic trig — 16 KB</span>
+      <span><span class="chip" style="background:var(--s2)"></span>Fizzygum boot — 15 KB</span>
+    </div>
+    <figcaption>The boot bundle, to scale. Fizzygum's own boot logic is the thin orange sliver.</figcaption>
+  </figure>
+
+  <h3>Why is a whole software renderer in there?</h3>
+  <p>Fizzygum can paint through <strong>two renderers</strong>:</p>
+  <ul>
+    <li><strong>Native canvas</strong> — the browser's own 2D engine. Fast, what humans use.</li>
+    <li><strong>SWCanvas</strong> — a software renderer that computes every pixel itself, so output is
+      <em>byte-identical</em> on every machine and browser. That determinism is the foundation of the
+      test suite: all 268 SystemTests compare screenshots down to the exact pixel hash.
+      SWCanvas draws text with <strong>BitmapText</strong>, which needs <strong>90 MB of font atlas data</strong> —
+      copied into every build.</li>
+  </ul>
+  <p>Which renderer runs is decided <em>at runtime</em>, by a URL parameter: <code>?sw=1</code>. So today there is
+  <strong>one artifact carrying both engines</strong>, always — even though a given page ever uses one.</p>
+
+  <figure>
+    <svg viewBox="0 0 820 170" width="100%">
+      <rect class="box" x="290" y="14" width="240" height="52"/>
+      <text class="t" x="308" y="36">the one built page</text>
+      <text class="m" x="308" y="52">carries native + SWCanvas + fonts</text>
+      <text class="m" x="252" y="102">no ?sw param</text>
+      <text class="m" x="518" y="102">?sw=1</text>
+      <path class="flow" d="M355 68 C 320 90, 280 100, 240 118"/>
+      <path class="flow" d="M465 68 C 500 90, 540 100, 580 118"/>
+      <rect class="box" x="80" y="120" width="270" height="40" style="stroke:var(--s2)"/>
+      <text class="t" x="96" y="145">native canvas — humans</text>
+      <rect class="box" x="470" y="120" width="270" height="40" style="stroke:var(--s1)"/>
+      <text class="t" x="486" y="145">SWCanvas — tests (exact pixels)</text>
+    </svg>
+    <figcaption>One artifact, a runtime switch. The test suite hardcodes <code>?sw=1</code>; humans never type it.</figcaption>
+  </figure>
+
+  <p>There is one twist that matters later: the Fizzytiles app (the fridge-magnets live-coding
+  toy) renders 3D <em>in software</em> through SW3D — which sits on a tiny slice of SWCanvas
+  (~18 KB of its 263 KB). So even the pure-native experience needs that sliver. Today the
+  sliver is inseparable from the whole.</p>
+
+  <h2>The second flavour: <code>--homepage</code></h2>
+  <p>Besides the dev build there is one shipping flavour, born years ago for the public
+  homepage. It differs in three ways:</p>
+  <ol>
+    <li><strong>It strips code using in-file markers.</strong> 53 files carry a
+      “<span class="mono"># this file is excluded from the fizzygum homepage build</span>” comment and are dropped
+      whole; 58 marked <em>regions inside</em> shipped classes are cut out of the source text by regex.</li>
+    <li><strong>It boots instantly from a pre-compiled image.</strong> A special page mode compiles
+      everything, accumulates the compiled JS, and packages it as <code>pre-compiled.js</code> —
+      Fizzygum generating its own fast-boot image (a quine-like trick). Sources still load
+      afterwards, in the background, so inspectors keep working.</li>
+    <li><strong>Test machinery is dead-code-eliminated</strong> via <code>if Automator?</code> guards.</li>
+  </ol>
+
+  <p><strong>Why does this fork exist at all?</strong> The <em>old</em> test system recognised widgets by strings
+  and IDs, which froze the UI: menus could only ever grow, and they grew byzantine. At launch
+  time the pragmatic fix was a separately-designed homepage with the accretion stripped out.
+  The modern macro test system asks the live world where things are, so that constraint is
+  gone — but the fork and its markers remain.</p>
+
+  <h2>Where this creaks (audited 2026-07-28)</h2>
+  <table>
+    <tr><th>Finding</th><th>Consequence</th></tr>
+    <tr><td>The 314 KB bundle is ~85% renderer, shipped to every page — plus 90 MB of fonts
+      copied into every build — for an engine only tests use.</td>
+      <td>Product pages carry a test facility; the homepage deploy carries 90 MB it can never use.</td></tr>
+    <tr><td>The exclusion markers were never audited. ~14 of the 58 regions are actually
+      <strong>product code</strong>: core layout machinery, layout constants, public API.</td>
+      <td class="mono" style="color:var(--bad)">The homepage ships a truncated layout engine
+      and nil constants — a silent fork of behaviour.</td></tr>
+    <tr><td>The pre-compiled-image generator script only runs under WSL (it fishes a zip out of
+      the Windows Downloads folder).</td>
+      <td>On macOS it silently does nothing — homepage instant-boot has been inoperative,
+      masked by the compile-at-boot fallback.</td></tr>
+    <tr><td>Everything loads at boot: every app, every inspector, all sources — whether or not
+      this session will ever use them.</td>
+      <td>Boot does maximal work; there is no way to ship “just what this artifact needs”.</td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>Next:</strong> a four-stage plan turns each runtime switch and marker into a
+    build-time or load-time decision — and retires each old mechanism completely, stage by
+    stage. <a href="build-and-packaging-2-stages.html">Part 2: the four stages →</a>
+  </div>
+</main>
+</body>
+</html>

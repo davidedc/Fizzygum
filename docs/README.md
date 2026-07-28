@@ -14,6 +14,7 @@ bucket, chosen by what the file IS, not by topic:
 | `measurements/` | Point-in-time numbers: profiling results, inventories, catalogs, audits. Dated snapshots; never updated, superseded by new snapshots. | past |
 | `tooling/` | How-tos for dev tooling (duplication detection, audit tooling). | present |
 | `profiling/` | Profiling harness scripts + result sets. | — |
+| `explainers/` | Self-contained HTML visual walkthroughs for human readers with light context (diagrams, generic→specific). May describe a program's target state — each states which plan owns it; updated or retired when plans land. See `explainers/README.md`. | present + planned |
 
 Top-level files: `README.md` (this map) and `BACKLOG.md` (every open item across
 all arcs, each linking to the plan section that owns the detail).

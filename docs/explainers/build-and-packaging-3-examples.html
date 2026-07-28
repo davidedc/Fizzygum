@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzygum build &amp; packaging — 3. Worked examples</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;  --surface: #fcfcfb;
+    --ink:       #0b0b0b;  --ink-2:   #52514e;  --muted: #898781;
+    --hairline:  #e1e0d9;  --border:  rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --wash-s1: rgba(42,120,214,0.08);
+    --wash-s3: rgba(27,175,122,0.08);
+    --bad: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --wash-s1: rgba(57,135,229,0.14);
+      --wash-s3: rgba(25,158,112,0.14);
+      --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.7em; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.25em; margin: 2.4em 0 .5em; }
+  h2 .ex { color: var(--muted); font-weight: 500; }
+  p, li { color: var(--ink-2); }
+  strong { color: var(--ink); }
+  .kicker { color: var(--muted); font-size: .85em; letter-spacing: .06em; text-transform: uppercase; }
+  nav.series { font-size: .85em; color: var(--muted); margin-bottom: 28px; }
+  nav.series a { color: var(--s1); text-decoration: none; }
+  nav.series .here { color: var(--ink); font-weight: 600; }
+  figure { margin: 20px 0 26px; background: var(--surface); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px 12px; overflow-x: auto; }
+  figcaption { font-size: .82em; color: var(--muted); margin-top: 10px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  code { background: var(--page); border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: .85em; line-height: 1.5; color: var(--ink-2); }
+  .stage { display: grid; grid-template-columns: 118px 1fr; gap: 6px 14px; align-items: start;
+           font-size: .93em; margin: 6px 0; }
+  .stage .tag { color: var(--muted); font-size: .82em; padding-top: 2px; white-space: nowrap; }
+  .stage .tag b { color: var(--ink); font-weight: 600; }
+  /* boot timeline rows */
+  .trow { display: flex; gap: 2px; align-items: stretch; margin: 3px 0; }
+  .trow .seg { border-radius: 4px; padding: 4px 8px; font-size: .74em; line-height: 1.3;
+               color: var(--ink); border: 1px solid var(--border); background: var(--page);
+               white-space: nowrap; }
+  .seg.load  { border-color: var(--s1); }
+  .seg.comp  { border-color: var(--s4); }
+  .seg.world { background: var(--wash-s3); border-color: var(--s3); }
+  .tl-label { font-size: .8em; color: var(--muted); margin: 10px 0 2px; }
+  .callout { border-left: 3px solid var(--s1); background: var(--wash-s1);
+             padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline); color: var(--ink-2); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Fizzygum · build &amp; packaging explainer</p>
+  <h1>3. Worked examples, stage by stage</h1>
+  <nav class="series"><a href="build-and-packaging-1-today.html">1 · Today</a> &nbsp;→&nbsp;
+    <a href="build-and-packaging-2-stages.html">2 · The four stages</a> &nbsp;→&nbsp;
+    <span class="here">3 · Worked examples</span></nav>
+
+  <p>Six everyday scenarios, each traced through the stages. “Stage n” rows describe the world
+  <em>after</em> that stage has landed; rows are omitted where a stage changes nothing for that
+  scenario.</p>
+
+  <h2><span class="ex">Example A ·</span> Double-clicking <code>index.html</code></h2>
+
+  <div class="tl-label">Today — one maximal artifact:</div>
+  <div class="trow">
+    <div class="seg load">boot bundle 314 KB (85% renderer)</div>
+    <div class="seg load">compiler 208 KB</div>
+    <div class="seg load">sources 2.5 MB — every class</div>
+    <div class="seg comp">compile all ~470 classes (~seconds)</div>
+    <div class="seg world">world (everything resident)</div>
+  </div>
+
+  <div class="tl-label">After stage 1 — same flow, right-sized bundle:</div>
+  <div class="trow">
+    <div class="seg load">native bundle ~40 KB</div>
+    <div class="seg load">compiler 208 KB</div>
+    <div class="seg load">sources 2.5 MB</div>
+    <div class="seg comp">compile ~470 classes</div>
+    <div class="seg world">world</div>
+  </div>
+
+  <div class="tl-label">After stage 3 — core only; parts wait until used:</div>
+  <div class="trow">
+    <div class="seg load">native bundle ~40 KB</div>
+    <div class="seg load">compiler 208 KB</div>
+    <div class="seg load">core sources only</div>
+    <div class="seg comp">compile core classes</div>
+    <div class="seg world">world (parts load on demand)</div>
+  </div>
+
+  <div class="tl-label">Stage 4, a precompiled profile — instant boot:</div>
+  <div class="trow">
+    <div class="seg load">native bundle ~40 KB</div>
+    <div class="seg load">pre-compiled.js</div>
+    <div class="seg world">world — immediately</div>
+    <div class="seg load">sources arrive in the background (or lazily, or never — the profile decides)</div>
+  </div>
+  <figure style="padding:10px 18px"><figcaption>The same double-click, four eras. Note the dev
+  build (top rows) deliberately stays compile-at-boot: it keeps the 18 s build → refresh loop
+  with zero extra packaging steps.</figcaption></figure>
+
+  <h2><span class="ex">Example B ·</span> Launching Fizzytiles (the 3D fridge-magnets toy)</h2>
+  <div class="stage"><div class="tag"><b>Today</b></div><div>Its 10 classes compiled at boot like
+    everything else; the 3D engine rode in the 314 KB bundle whether or not you ever open a
+    fridge. Clicking the launcher just instantiates the app.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 1</b></div><div>The native page carries only the
+    ~23 KB 3D sliver (3D core + SW3D) instead of the whole 263 KB renderer. Behaviour identical.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 3</b></div><div>Fizzytiles is a <em>part</em>. The boot
+    payload contains none of it. Clicking the launcher runs:
+    <em>ensure part → inject 23 KB vendor + its sources → frame-paced compile → open</em> — sub-second,
+    once per session. A saved world containing a fridge loads the part automatically before
+    deserializing. The suite is unaffected: the harness page eager-loads all parts, so the
+    Fizzytiles SystemTests see exactly today's world.</div></div>
+
+  <h2><span class="ex">Example C ·</span> Running the test suite</h2>
+  <div class="stage"><div class="tag"><b>Today</b></div><div>The headless runners open the harness
+    page with <code>?sw=1</code>: every pixel is computed in software, so screenshots hash identically on
+    every machine and browser.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 1</b></div><div>The harness page <em>bakes</em> the SW
+    renderer in; the parameter is deleted. Same engine, same flags, same pixels — the stage's
+    acceptance gate is literally “zero reference-image churn”.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 2</b></div><div>Test menus and machinery arrive as
+    additive registrations from the harness instead of living inside product classes — the
+    world under test is the product world plus contributions. One menu-unification recapture
+    wave, then stable.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 3</b></div><div>Nothing changes, by rule: parts are
+    code, and code already persists across a whole test run today. The harness eager-loads all
+    parts at boot; <code>resetWorld()</code> between tests resets <em>state</em> (widgets, world collections) and
+    never unloads code — so there is no reload cost, and no new nondeterminism, in a
+    268-test sequence.</div></div>
+
+  <h2><span class="ex">Example D ·</span> Shipping the homepage</h2>
+  <div class="stage"><div class="tag"><b>Today</b></div><div>Build with <code>--homepage</code>: markers strip
+    53 files and 58 regions (including, it turns out, parts of the layout engine); the
+    precompiled image is generated by a WSL-only script — on macOS the step silently no-ops
+    and the homepage boots the slow way; 90 MB of fonts are copied in for a renderer the page
+    can't use.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 1</b></div><div>Homepage tree = native bundle only,
+    no fonts (−90 MB), and the precompiled image is generated by the cross-platform driver —
+    working, and verified by a gate that asserts the page really boots precompiled.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 2</b></div><div>The homepage is no longer a fork: same
+    world design, same (full!) layout engine, same menus — minus the test/demo contributions it
+    simply doesn't load. The marker mechanism is gone.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 4</b></div><div>“Homepage” is a 6-line manifest
+    (<span class="mono">parts: core · form: precompiled · sources: background</span>). The build script has no
+    homepage-specific code left.</div></div>
+
+  <h2><span class="ex">Example E ·</span> Packaging a custom artifact (“just the spreadsheet, instant boot”)</h2>
+  <div class="stage"><div class="tag"><b>Today</b></div><div>Not possible. There is exactly one
+    shipping flavour (homepage), its content chosen by markers scattered through the source.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 4</b></div><div>Write a manifest:</div></div>
+<pre>{ "name": "sheet-appliance",
+  "parts": ["core", "spreadsheet"],
+  "form": "precompiled",
+  "sources": "none",
+  "entries": ["index.html"] }</pre>
+  <p>The build emits a tree with only those parts, pre-compiled, no source strings, no
+  inspectors. What still ships: the CoffeeScript <strong>compiler</strong> — spreadsheet formulas <em>are</em>
+  CoffeeScript, and a saved sheet recompiles its cells on load. (This is why “eject the
+  compiler” is not a profile option: paint brushes, formulas, scripts, and saved-world
+  <code>$src</code> records all compile at runtime. The profile machinery knows this and refuses a
+  contradiction rather than shipping a broken artifact.)</p>
+
+  <h2><span class="ex">Example F ·</span> Saving the world as a single file (the TiddlyWiki move)</h2>
+  <p>A separate, already-locked plan gives Fizzygum a “save this whole world as one
+  <code>.html</code>” feature — code and world state in a single self-contained file that re-opens
+  into that world. The stages here make that artifact better without changing its plan:</p>
+  <div class="stage"><div class="tag"><b>Stage 1</b></div><div>The saved page embeds the ~40 KB
+    native bundle instead of carrying a hard-disabled 285 KB renderer (the option the
+    single-file plan had banked as “later” arrives for free).</div></div>
+  <div class="stage"><div class="tag"><b>Stage 3</b></div><div>The saved file embeds core plus
+    <em>exactly the parts the world had loaded</em> — the assembler enumerates the SourceVault, and a
+    snapshot can only reference classes whose part is loaded, so the file is self-consistent by
+    construction. A world that never opened Fizzytiles saves smaller.</div></div>
+  <div class="stage"><div class="tag"><b>Stage 4</b></div><div>A precompiled single-file page
+    (instant-boot appliance in one file) becomes the profile machinery applied to the
+    single-file assembler.</div></div>
+
+  <h2>The scorecard</h2>
+  <table>
+    <tr><th>Scenario</th><th>Today</th><th>End state</th></tr>
+    <tr><td>Product page boot payload</td><td>314 KB bundle + 2.5 MB sources, everything compiled up front</td>
+        <td>~40 KB bundle; core compiled; parts on demand; or instant precompiled boot</td></tr>
+    <tr><td>Renderer choice</td><td>runtime <code>?sw=1</code> on one maximal artifact</td>
+        <td>baked per entry page at build time</td></tr>
+    <tr><td>What's in a shipped build</td><td>markers scattered through source, one flavour</td>
+        <td>a manifest: parts × form × sources × entries</td></tr>
+    <tr><td>Homepage fidelity</td><td>a fork with a truncated layout engine</td>
+        <td>the same world, minus unloaded parts</td></tr>
+    <tr><td>Test suite</td><td>deterministic, byte-exact</td>
+        <td>unchanged — every stage gates on zero churn</td></tr>
+  </table>
+
+  <div class="callout">
+    The full engineering detail — decisions, gates, risks, and the census behind the
+    harmonization stage — lives in the plan docs in <code>docs/plans/</code>, filenames numbered
+    by execution order (a small extra arc 1, the test-serving link, precedes the four stages
+    told here): <span class="mono">build-arc-1-test-serving-link-plan.md</span>,
+    <span class="mono">build-arc-2-backend-split-precompile-plan.md</span>,
+    <span class="mono">build-arc-3-world-harmonization-plan.md</span>,
+    <span class="mono">build-arc-4-dynamic-parts-plan.md</span>,
+    <span class="mono">build-arc-5-packaging-profiles-plan.md</span>.
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzygum build &amp; packaging — 2. The four stages</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;  --surface: #fcfcfb;
+    --ink:       #0b0b0b;  --ink-2:   #52514e;  --muted: #898781;
+    --hairline:  #e1e0d9;  --border:  rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --wash-s1: rgba(42,120,214,0.08);
+    --wash-s3: rgba(27,175,122,0.08);
+    --bad: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --wash-s1: rgba(57,135,229,0.14);
+      --wash-s3: rgba(25,158,112,0.14);
+      --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.7em; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.25em; margin: 2.4em 0 .5em; }
+  h2 .stageno { color: var(--muted); font-weight: 500; }
+  p, li { color: var(--ink-2); }
+  strong { color: var(--ink); }
+  .kicker { color: var(--muted); font-size: .85em; letter-spacing: .06em; text-transform: uppercase; }
+  nav.series { font-size: .85em; color: var(--muted); margin-bottom: 28px; }
+  nav.series a { color: var(--s1); text-decoration: none; }
+  nav.series .here { color: var(--ink); font-weight: 600; }
+  figure { margin: 20px 0 28px; background: var(--surface); border: 1px solid var(--border);
+           border-radius: 10px; padding: 18px 18px 12px; overflow-x: auto; }
+  figcaption { font-size: .82em; color: var(--muted); margin-top: 10px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  code { background: var(--page); border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: .85em; line-height: 1.5; color: var(--ink-2); }
+  .callout { border-left: 3px solid var(--s1); background: var(--wash-s1);
+             padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; }
+  .doctrine { border: 1px solid var(--border); border-left: 3px solid var(--s3);
+              background: var(--wash-s3); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 18px 0; }
+  .enables { font-size: .9em; border: 1px dashed var(--hairline); border-radius: 8px; padding: 10px 14px; margin: 14px 0; }
+  .enables b { color: var(--s3); }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline); color: var(--ink-2); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; }
+  .bar { display: flex; gap: 2px; height: 26px; border-radius: 5px; overflow: hidden; margin: 4px 0 2px; }
+  .bar div { min-width: 3px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82em; color: var(--ink-2); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .barlabel { font-size: .8em; color: var(--muted); margin-top: 10px; }
+  del { color: var(--muted); }
+  svg text { font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--ink-2); }
+  svg text.t { fill: var(--ink); font-weight: 600; }
+  svg text.m { fill: var(--muted); font-size: 11px; }
+  svg .box { fill: var(--page); stroke: var(--border); rx: 8; }
+  svg .flow { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#arr2); }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Fizzygum · build &amp; packaging explainer</p>
+  <h1>2. The plan: four stages</h1>
+  <nav class="series"><a href="build-and-packaging-1-today.html">1 · Today</a> &nbsp;→&nbsp;
+    <span class="here">2 · The four stages</span> &nbsp;→&nbsp;
+    <a href="build-and-packaging-3-examples.html">3 · Worked examples</a></nav>
+
+  <p>The whole program is one idea applied four times: <strong>things that are properties of an
+  <em>artifact</em> stop being runtime switches and scattered markers, and become explicit
+  build-time or load-time decisions.</strong> Each stage also permanently deletes the old mechanism
+  it replaces — that's a rule, not a hope (see the doctrine below). Each stage has a full,
+  self-contained plan in <code>docs/plans/</code>; this page is the guided tour.</p>
+
+  <figure>
+    <svg viewBox="0 0 820 130" width="100%">
+      <defs><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+      <rect class="box" x="8"   y="20" width="185" height="62"/>
+      <text class="t" x="20" y="42">1 · Backend split</text>
+      <text class="m" x="20" y="58">retires: the ?sw=1 switch,</text>
+      <text class="m" x="20" y="72">the in-page precompile rig</text>
+      <rect class="box" x="215" y="20" width="185" height="62"/>
+      <text class="t" x="227" y="42">2 · One world</text>
+      <text class="m" x="227" y="58">retires: the »&gt;&gt; region</text>
+      <text class="m" x="227" y="72">markers (all 63)</text>
+      <rect class="box" x="422" y="20" width="185" height="62"/>
+      <text class="t" x="434" y="42">3 · Dynamic parts</text>
+      <text class="m" x="434" y="58">retires: _coffeSource globals,</text>
+      <text class="m" x="434" y="72">whole-file exclusion markers</text>
+      <rect class="box" x="629" y="20" width="185" height="62"/>
+      <text class="t" x="641" y="42">4 · Profiles</text>
+      <text class="m" x="641" y="58">retires: the hard-coded</text>
+      <text class="m" x="641" y="72">--homepage flavour</text>
+      <path class="flow" d="M195 51 L 213 51"/>
+      <path class="flow" d="M402 51 L 420 51"/>
+      <path class="flow" d="M609 51 L 627 51"/>
+    </svg>
+    <figcaption>The program. Each box is one arc with its own plan doc — and its own “what dies
+    here” list. (Plan filenames are numbered by execution order: a small extra arc runs first —
+    the test-serving link, <span class="mono">build-arc-1-…</span> — so these four stages are plans
+    <span class="mono">build-arc-2-…</span> through <span class="mono">build-arc-5-…</span>.)</figcaption>
+  </figure>
+
+  <div class="doctrine">
+    <strong>The completion doctrine.</strong> Progressive migrations tend to leave the old mechanism
+    alive “until the last site moves” — and then it never dies. Here the rule is: once a stage
+    starts retiring a mechanism, it <strong>finishes inside that stage</strong>. A build gate forbids
+    <em>new</em> uses of the old pattern from day one; the stage cannot close until the count of old
+    sites is <strong>zero</strong> and the machinery itself (regexes, scanners, scripts) is deleted.
+    Mixed old/new states are legal only <em>inside</em> an open stage, never between stages.
+  </div>
+
+  <h2><span class="stageno">Stage 1 ·</span> Backend split — the renderer becomes a property of the page</h2>
+  <p>One ~18 s build pass now produces <strong>one shared tree with two boot bundles</strong>, and each
+  entry page bakes in its renderer — the <code>?sw=1</code> parameter is deleted:</p>
+
+  <figure>
+    <svg viewBox="0 0 820 210" width="100%">
+      <rect class="box" x="290" y="10" width="240" height="40"/>
+      <text class="t" x="308" y="35">one build (~18 s), one tree</text>
+      <path class="flow" d="M340 52 C 300 70, 250 76, 210 88"/>
+      <path class="flow" d="M480 52 C 520 70, 570 76, 610 88"/>
+      <rect class="box" x="60" y="92" width="290" height="48" style="stroke:var(--s2)"/>
+      <text class="t" x="76" y="112">native bundle · ~40 KB</text>
+      <text class="m" x="76" y="128">boot + 3D core + SW3D — no text engine</text>
+      <rect class="box" x="470" y="92" width="290" height="48" style="stroke:var(--s1)"/>
+      <text class="t" x="486" y="112">SW bundle · 314 KB (as today)</text>
+      <text class="m" x="486" y="128">full SWCanvas + BitmapText + det-trig</text>
+      <path class="flow" d="M205 142 L 205 162"/>
+      <path class="flow" d="M560 142 C 545 155, 520 160, 505 166"/>
+      <path class="flow" d="M660 142 C 675 155, 700 160, 715 166"/>
+      <text class="t" x="130" y="185">index.html</text>
+      <text class="m" x="130" y="200">the product page</text>
+      <text class="t" x="420" y="185">index-sw.html</text>
+      <text class="m" x="420" y="200">interactive SW debugging</text>
+      <text class="t" x="660" y="185">…TestHarness.html</text>
+      <text class="m" x="660" y="200">the test suite's page</text>
+    </svg>
+    <figcaption>Each page presets its renderer before loading its bundle. The suite keeps its exact
+    engine and pixels — zero reference-image churn is the gate.</figcaption>
+  </figure>
+
+  <p>The native bundle can be small because SWCanvas's 3D primitives — all that Fizzytiles
+  needs — are architecturally separable: a new ~18 KB <span class="mono">swcanvas-3d-core</span> build target
+  of the SWCanvas library (plus SW3D at ~5 KB, minified).</p>
+
+  <div class="bar" aria-label="Native page payload before and after">
+    <div style="flex:263; background:var(--s1)"></div>
+    <div style="flex:22; background:var(--s3)"></div>
+    <div style="flex:16; background:var(--s4)"></div>
+    <div style="flex:15; background:var(--s2)"></div>
+  </div>
+  <div class="barlabel">index.html boot bundle today — 314 KB</div>
+  <div class="bar" style="width:12.7%" aria-label="After: 40 KB">
+    <div style="flex:18; background:var(--s1)"></div>
+    <div style="flex:5;  background:var(--s3)"></div>
+    <div style="flex:15; background:var(--s2)"></div>
+  </div>
+  <div class="barlabel">index.html boot bundle after stage 1 — ~40 KB (same scale)</div>
+  <div class="legend" style="margin-bottom:18px">
+    <span><span class="chip" style="background:var(--s1)"></span>SWCanvas (full → 3D core only)</span>
+    <span><span class="chip" style="background:var(--s3)"></span>SW3D</span>
+    <span><span class="chip" style="background:var(--s4)"></span>det-trig (SW bundle only)</span>
+    <span><span class="chip" style="background:var(--s2)"></span>Fizzygum boot</span>
+  </div>
+
+  <p>Stage 1 also <strong>externalizes the pre-compiled-image generator</strong>: the in-page
+  zip-and-download machinery is deleted; a small cross-platform Node driver boots the built
+  page headless, reads the accumulated compiled JS out of it, and writes
+  <code>pre-compiled.js</code> directly. (This also un-breaks precompiled builds on macOS — the old
+  driver only ever ran under WSL.) The 90 MB font copy stops shipping in homepage trees.</p>
+  <div class="enables"><b>Newly possible:</b> a product page whose boot payload is ~40 KB instead of
+  314 KB; a homepage deploy 90 MB lighter; precompiled builds that actually generate on this
+  machine; the single-file-save arc gets its “SWCanvas-free bundle” for free.</div>
+
+  <h2><span class="stageno">Stage 2 ·</span> One world — the homepage stops being a fork</h2>
+  <p>Today two world <em>designs</em> exist: the dev/test world (menus grown by accretion) and the
+  homepage world (a marker-stripped, reorganised fork). Stage 2 converges them into
+  <strong>one design</strong>, and every one of the 63 in-file region markers is re-homed and deleted:</p>
+
+  <figure>
+    <svg viewBox="0 0 820 190" width="100%">
+      <rect class="box" x="20" y="16" width="330" height="56"/>
+      <text class="t" x="36" y="38">dev/test world</text>
+      <text class="m" x="36" y="54">everything + accreted test menus</text>
+      <rect class="box" x="20" y="106" width="330" height="56"/>
+      <text class="t" x="36" y="128">homepage world (a fork)</text>
+      <text class="m" x="36" y="144">markers strip 58 regions + 53 files</text>
+      <path class="flow" d="M352 44 C 420 44, 430 70, 470 82"/>
+      <path class="flow" d="M352 134 C 420 134, 430 108, 470 96"/>
+      <rect class="box" x="474" y="60" width="330" height="86" style="stroke:var(--s3)"/>
+      <text class="t" x="490" y="82">ONE world design</text>
+      <text class="m" x="490" y="99">product code: promoted (unmarked)</text>
+      <text class="m" x="490" y="114">test machinery: lives in the tests repo,</text>
+      <text class="m" x="490" y="128">registers its menus additively when loaded</text>
+      <text class="m" x="490" y="142">demo content: extracted into its own classes</text>
+    </svg>
+    <figcaption>Convergence. Test/demo features stop being carved OUT of shipped classes and start
+    being added ONTO the one world by whoever loads them.</figcaption>
+  </figure>
+
+  <p>A 2026-07-28 census classified all 58 homepage regions: <strong>~17 turn out to be mis-marked
+  product code</strong> (including chunks of the layout engine — promoting them <em>fixes the homepage</em>),
+  ~28 are test/demo machinery to relocate or extract, ~11 are dead accretion to delete. The
+  markers and the three build-script regexes that process them are deleted at the end of the
+  stage; a gate keeps them dead. Menu unification (owner-designed, one recapture wave) closes
+  the stage.</p>
+  <div class="enables"><b>Newly possible:</b> the homepage runs the same layout engine and the same
+  menus as the world you develop in; “is this dev-only?” has one answer (where the code lives),
+  not a per-line marker; the latent homepage crashes (excluded classes used by shipping
+  widgets) are gone.</div>
+
+  <h2><span class="stageno">Stage 3 ·</span> Dynamic parts — code loads when it's needed</h2>
+  <p>The 470 classes get partitioned into a <strong>core</strong> plus named <strong>parts</strong> (pilot:
+  <code>fizzytiles</code>). A part is: its classes' sources, any vendor payload (for Fizzytiles, the
+  23 KB of 3D engine), and a manifest entry. Two supporting pieces:</p>
+  <ul>
+    <li><strong>SourceVault</strong> — one registry object replaces the ~470 <code>window.&lt;Name&gt;_coffeSource</code>
+      globals. Every source is stored with its part name; enumeration stops being a scan of
+      <code>window</code>.</li>
+    <li><strong>Derived dependencies</strong> — the same scanner that orders classes at boot is aggregated
+      per part at build time, so part→part <code>requires</code> are computed, never hand-written; a
+      cycle (or a hard reference from core into a part) fails the build.</li>
+  </ul>
+
+  <figure>
+    <svg viewBox="0 0 820 200" width="100%">
+      <text class="t" x="20" y="28">Launching Fizzytiles on a core-only page:</text>
+      <rect class="box" x="20"  y="46" width="150" height="40"/>
+      <text x="34" y="70">launcher clicked</text>
+      <rect class="box" x="210" y="46" width="180" height="40" style="stroke:var(--s3)"/>
+      <text x="224" y="63">ensure part loaded</text>
+      <text class="m" x="224" y="78">(+ its requires, in order)</text>
+      <rect class="box" x="430" y="46" width="170" height="40"/>
+      <text x="444" y="63">inject scripts</text>
+      <text class="m" x="444" y="78">vendor 23 KB + sources</text>
+      <rect class="box" x="640" y="46" width="160" height="40"/>
+      <text x="654" y="63">compile classes</text>
+      <text class="m" x="654" y="78">frame-paced, no jank</text>
+      <path class="flow" d="M172 66 L 208 66"/>
+      <path class="flow" d="M392 66 L 428 66"/>
+      <path class="flow" d="M602 66 L 638 66"/>
+      <path class="flow" d="M720 88 C 720 120, 500 132, 420 138"/>
+      <rect class="box" x="240" y="128" width="180" height="40" style="stroke:var(--s2)"/>
+      <text x="254" y="152">app opens</text>
+      <text class="m" x="330" y="152">sub-second</text>
+      <text class="m" x="20" y="152">Loaded parts stay loaded for</text>
+      <text class="m" x="20" y="167">the session; a second launch</text>
+      <text class="m" x="20" y="182">is instant.</text>
+    </svg>
+    <figcaption>The lazy path. The machinery underneath (script injection + frame-paced in-browser
+    compilation) is the same machinery homepage builds have used for years — now on demand.</figcaption>
+  </figure>
+
+  <p>Two rules keep this safe. <strong>Tests never lazy-load:</strong> the harness page eagerly loads every
+  part at boot, so the suite's timing and pixels are exactly today's (mid-test loading would
+  break determinism; the lazy path gets its own dedicated test). And <strong>saved worlds stay
+  self-sufficient:</strong> loading a snapshot that contains part widgets first loads those parts,
+  automatically.</p>
+  <div class="enables"><b>Newly possible:</b> a product page that boots only the core and grows on
+  demand; “experimental” is a part you don't ship rather than a marker; the whole-file
+  exclusion mechanism is replaced by the partition (and deleted); inspectors-as-a-part becomes
+  an option.</div>
+
+  <h2><span class="stageno">Stage 4 ·</span> Profiles — “a build flavour” becomes data</h2>
+  <p>After stage 3, any shipping flavour is fully describable by four choices. Stage 4 makes
+  that literal — a profile manifest:</p>
+
+<pre>{ "name":    "homepage",
+  "parts":   ["core"],           <span style="color:var(--muted)">// which parts ship</span>
+  "form":    "precompiled",      <span style="color:var(--muted)">// instant boot vs compile-at-boot</span>
+  "sources": "background",       <span style="color:var(--muted)">// eager | background | lazy | none</span>
+  "entries": ["index.html"] }</pre>
+
+  <table>
+    <tr><th>Profile</th><th>parts</th><th>form</th><th>sources</th><th>Who it's for</th></tr>
+    <tr><td><b>dev</b> (plain build)</td><td>all</td><td>compile-at-boot</td><td>eager</td><td>daily development — always fresh, 18 s rebuilds</td></tr>
+    <tr><td><b>homepage</b></td><td>core</td><td>precompiled</td><td>background</td><td>the public site — instant boot, inspectors still work</td></tr>
+    <tr><td><b>lean</b></td><td>chosen set</td><td>precompiled</td><td>none</td><td>appliance-style artifacts — no sources, no inspectors</td></tr>
+  </table>
+
+  <p style="margin-top:14px">The <code>--homepage</code> conditionals in the build script are deleted;
+  “homepage” is just the first manifest. One thing ships in <em>every</em> interactive profile: the
+  CoffeeScript <strong>compiler</strong> (208 KB). That's not nostalgia — FizzyPaint's brushes <em>are</em>
+  CoffeeScript source injected at click-time, spreadsheet formulas are CoffeeScript (loading a
+  saved sheet recompiles its cells), and saved worlds can carry user-injected methods. A
+  compiler-less Fizzygum would be a look-but-don't-touch kiosk.</p>
+  <div class="enables"><b>Newly possible:</b> “package a build with exactly what I want in it” is a
+  one-manifest job; the lean profile drops the 2.5 MB of sources and the inspectors for
+  appliance-style artifacts; the future single-file precompiled page reuses the same
+  machinery.</div>
+
+  <h2>What never changes</h2>
+  <ul>
+    <li>Everything still runs by double-clicking a file — every mechanism above is
+      <code>file://</code>-safe by construction (script injection, no fetch).</li>
+    <li>The dev build stays compile-at-boot and live-editable — sources in the page, inspectors
+      on everything.</li>
+    <li>The test suite keeps byte-exact determinism — every stage's gate includes “zero
+      unexplained pixel churn”.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Next:</strong> the same story told through concrete scenarios — what actually happens when
+    you double-click, launch, test, and ship at each stage.
+    <a href="build-and-packaging-3-examples.html">Part 3: worked examples →</a>
+  </div>
+</main>
+</body>
+</html>

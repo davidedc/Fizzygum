@@ -6,6 +6,15 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
+### The build-and-packaging program (`plans/build-arc-1…5-*.md`, authored 2026-07-28)
+Five plans, filenames numbered by execution order; program table + completion doctrine in
+`plans/build-arc-4-dynamic-parts-plan.md` §0.1/§0.2. NOT started.
+- [ ] Arc 1 `plans/build-arc-1-test-serving-link-plan.md` — tests served via symlink; retires the per-build copy, the flatten, `--keepTestsDirectoryAsIs`, build.py manifest generation, recapture's publish-rebuild
+- [ ] Arc 2 `plans/build-arc-2-backend-split-precompile-plan.md` — SW-full vs native+3D-core bundles per entry page; retires `?sw=1` + the WSL precompile rig (SWCanvas-repo work included)
+- [ ] Arc 3 `plans/build-arc-3-world-harmonization-plan.md` — one world design; retires all 63 `»>>` region markers + the three build.py region regexes (census embedded; ~17 sites are mis-marked PRODUCT code — homepage currently ships a truncated layout engine)
+- [ ] Arc 4 `plans/build-arc-4-dynamic-parts-plan.md` — SourceVault + partition + lazy loading (Fizzytiles pilot); retires `_coffeSource` globals + whole-file exclusion markers
+- [ ] Arc 5 `plans/build-arc-5-packaging-profiles-plan.md` — profile manifests; retires the hard-coded `--homepage` flavour (design-level; re-validate before execution)
+
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/7.8 items, design-first, owner-gated.
 - [ ] §7.1: transform policy engine (banked, not built)
