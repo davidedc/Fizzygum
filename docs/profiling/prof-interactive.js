@@ -44,7 +44,9 @@ const args = process.argv.slice(2);
 const opt = (k, d) => { const a = args.find(s => s.startsWith('--' + k + '=')); return a ? a.split('=').slice(1).join('=') : d; };
 const flag = (k) => args.includes('--' + k);
 const BUILD = path.resolve(opt('build', path.resolve(__dirname, '..', '..', '..', 'Fizzygum-builds', 'latest')));
-const URL = 'file://' + path.join(BUILD, 'index.html') + (flag('sw') ? '?sw=1' : '');
+// The rendering backend is a build-time property of the PAGE, so --sw picks a page:
+// index-sw.html renders through SWCanvas, index.html through the platform canvas.
+const URL = 'file://' + path.join(BUILD, flag('sw') ? 'index-sw.html' : 'index.html');
 const OUT = opt('out', '/tmp/fizzygum-profiling/interactive');
 const DRAG_FRAMES = parseInt(opt('drag-frames', '140'), 10);
 const DRAW_FRAMES = parseInt(opt('draw-frames', '80'), 10);

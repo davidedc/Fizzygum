@@ -28,7 +28,7 @@ source edits all survive into the next generation).
 | D4 | Where "save as single page" is available | **Every build.** The build embeds the boot-bundle and compiler texts as wrapped strings (~575 KB extra, §4.4), so the menu item works from the normal dev build too, not just from single-file pages. |
 | D5 | Save mechanism v1 | **Blob + `<a download>`** via the existing `FileSaving.saveStringAsFile` (universal, works over `file://` in all engines, Safari `data:` fallback already implemented). |
 | D6 | In-place overwrite (File System Access API) | **v2, owner-gated, Chromium-only** (§8.1). Verified to work even over `file://` — see §3.4. |
-| D7 | Assembly implementation | **ONE implementation, in CoffeeScript, in-world.** The build produces the artifact by booting the page headless and invoking the same in-world assembler (precedent: `?generatePreCompiled` / `buildSystem/generate-pre-compiled-file-via-browser.sh`). The shipped file is *generation 0 of the quine* — produced by the very code path every later save uses. No parallel Python assembler. |
+| D7 | Assembly implementation | **ONE implementation, in CoffeeScript, in-world.** The build produces the artifact by booting the page headless and invoking the same in-world assembler (precedent: `?generatePreCompiled` / `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js`). The shipped file is *generation 0 of the quine* — produced by the very code path every later save uses. No parallel Python assembler. |
 | D8 | Snapshot embedding format | **Inert JSON store block**, TiddlyWiki 5.2 style: `<script type="application/json" id="fizzygum-world-snapshot">` with `<` → `<` escaping; parsed with `JSON.parse` at boot (inert during HTML parse, cheaper than a JS literal, and structurally cannot execute). |
 | D9 | Base code vs in-system edits | **Base code payload stays pristine**; user's in-system class/instance source edits ride inside the snapshot as `world.sourceEdits` deltas and are replayed by the proven `SourceEditsRegistry` path at load. ("Baking" edits into the payload = possible later feature, out of scope.) |
 | D10 | Splash | Drop the fake-desktop splash PNG in single-file pages (it shows the *default* desktop, wrong before a custom world); keep the small spinner, inlined as a `data:` URI (~800 B). |
@@ -42,9 +42,15 @@ Non-goals (v1): tests inside the artifact; SWCanvas rendering; videos; precompil
 The built page is *already* 99% of a single-file app:
 
 - **`Fizzygum-builds/latest/index.html` is tiny**: one `<canvas id="world">`, two `<img>`s
-  (splash + spinner), an empty positioning div, ONE `<script src="js/fizzygum-boot-min.js">`
-  (316,251 B — of which ~285 KB is SWCanvas+SW3D+det-trig, ~15 KB actual boot JS), and an inline
-  `window.onload → boot()`. **No stylesheet, no fonts, no favicon, no charset meta** (see risk R2).
+  (splash + spinner), an empty positioning div, an inline `FIZZYGUM_USE_SWCANVAS` preset, ONE
+  `<script src="js/fizzygum-boot-native-min.js">`, and an inline `window.onload → boot()`.
+  **No stylesheet, no fonts, no favicon, no charset meta** (see risk R2).
+  ⚠ UPDATED by build arc 2 (backend split, 2026-07-28): the bundle this plan embeds is now
+  `fizzygum-boot-native-min.js` (**32 KB** — the ~14 KB SWCanvas 3D core + SW3D + ~15 KB boot JS),
+  not the old single 316 KB `fizzygum-boot-min.js`. That IS the "stripped SWCanvas variant" this
+  plan's D1/§7.2 banked on, already built and shipped — so the size argument gets ~10× better and
+  D1 needs no separate work. The SWCanvas bundle (`fizzygum-boot-sw-min.js`, ~314 KB) is a
+  different page's (`index-sw.html` / the test harness) and is not what a single-file save embeds.
 - **Nothing anywhere uses `fetch`/XHR.** All runtime loading is `<script>` injection
   (`loadJSFilePromise`, `src/boot/globalFunctions.coffee:42-64`) or `new Image()` — because the
   page must run over `file://`. Inlining is therefore a *natural fit*, not a retrofit.
@@ -57,10 +63,13 @@ The built page is *already* 99% of a single-file app:
     suffix-scanning `Object.keys(window)` — `src/boot/dependencies-finding.coffee:64-66` and
     `src/meta/SourceVault.coffee:49-57`);
   - the `CoffeeScript` compiler global (kept resident — the paint tool needs it);
-  - bonus: `window.JSSourcesContainer.content` accumulates every class's compiled JS
-    (`src/meta/Class.coffee:412`, `Mixin.coffee:112`) — this is what `?generatePreCompiled`
-    zips up (`src/boot/loading-and-compiling-coffeescript-sources.coffee:151-155`), **proving
-    in-browser self-reconstruction already works.**
+  - bonus: under `?generatePreCompiled`, `window.JSSourcesContainer.content` accumulates every
+    class's compiled JS (the guarded appends in `src/meta/Class.coffee` / `Mixin.coffee`) — this
+    is what the headless packaging driver reads back out and writes to disk, **proving
+    in-browser self-reconstruction already works.** (⚠ Build arc 2 GATED that accumulation on
+    the `?generatePreCompiled` mode: an ordinary boot no longer builds the string, so a
+    single-file assembler running in a normal session must not assume it is populated —
+    it can request the mode, or re-derive from the `_coffeSource` globals.)
 - **Load order is computed in-browser at boot** (`findLoadOrder()`, regex-scan + topological DFS,
   `dependencies-finding.coffee`) — no build-time manifest to carry.
 - **The source-string wrapper** (build.py:273):
@@ -285,10 +294,10 @@ gate until a test references it) — Phase 5's harness provides that reference.
    :535-564).
 2. **`--singleFile` flag**: after the normal build, boot the built page headless and invoke the
    assembler, writing `../Fizzygum-builds/latest/fizzygum-single.html` (D7). Precedent and
-   mechanics: `buildSystem/generate-pre-compiled-file-via-browser.sh` (headless Chrome +
-   `?generatePreCompiled`); implement as a sibling script driving a URL param or a
-   `page.evaluate`-invoked call, capturing the HTML string (do NOT go through the download path
-   headless — evaluate the assembler and write the string from node).
+   mechanics: `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js` (headless puppeteer +
+   `?generatePreCompiled`, `page.evaluate` the string out, write it from Node) — build arc 2
+   already did exactly this shape, so model the new script on it and put it in the same
+   directory (Node resolves `require('puppeteer')` from the SCRIPT's directory).
    Prerequisite: Puppeteer from `../Fizzygum-tests` (`npm i` there), same as `build_and_smoke.sh`.
 3. **Exotic-char guard**: build.py must FAIL LOUDLY if any source file contains any of the four
    substitution characters `＂ ⧹ ⤶ ＜` (both encoders assume they never occur in sources; today

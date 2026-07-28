@@ -73,7 +73,8 @@ function bucketOf(n) {
     const seg = segmentFor(cf.lineNumber + 1);
     return seg === 'FizzygumBoot' ? 'boot-bundle(compiler,boot)' : seg;
   }
-  if (cf.url && cf.url.includes('fizzygum-boot-min')) return 'boot-bundle-min(SW+boot)';
+  if (cf.url && cf.url.includes('fizzygum-boot-sw-min')) return 'boot-bundle-min(SW+boot)';
+  if (cf.url && cf.url.includes('fizzygum-boot-native-min')) return 'boot-bundle-min(3Dcore+boot)';
   if (cf.url) return 'other-url';
   const sm = scriptsMap[cf.scriptId];
   if (sm && sm.cls) {

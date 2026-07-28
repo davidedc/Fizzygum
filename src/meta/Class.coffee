@@ -431,7 +431,12 @@ class Class
 
       JS_string_definitions += JS_staticConstantsBuiltWithClassItself_definitions
 
-      JSSourcesContainer.content += JS_string_definitions + "\n"
+      # Accumulate ONLY for a caller that wants the pre-compiled image — the ?generatePreCompiled
+      # boot and the build-time syntax gate, both of which pass generatePreCompiledJS = true and
+      # read the string back. An ordinary boot compiles each class to CREATE it (createClass) and
+      # never reads this accumulator, so building it there would cost ~2.5 MB per boot for nothing.
+      if generatePreCompiledJS
+        JSSourcesContainer.content += JS_string_definitions + "\n"
 
       if createClass
         try

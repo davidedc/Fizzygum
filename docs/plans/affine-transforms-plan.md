@@ -2923,9 +2923,11 @@ covers the island's actual determinism surface.
 Located the port: **`Fizzygum/runtime-prelude/deterministic-trig.js`** (a faithful SunPro
 fdlibm port; 345 lines; `+−×÷`/`sqrt` only). It exposes `globalThis.DetTrig` = `{ sin, cos,
 tan, atan, atan2, asin, acos, install }` and, per its header, **does NOT auto-install** (so
-tests can compare against native). `build_it_please.sh:540-551` prepends it to
-`fizzygum-boot-min.js` and runs `DetTrig.install(Math)` BEFORE the SWCanvas engine, so
-SWCanvas's own `Math.cos/sin` calls become deterministic at runtime.
+tests can compare against native). `build_it_please.sh` prepends it to the SW boot bundle
+(`fizzygum-boot-sw-min.js`) and runs `DetTrig.install(Math)` BEFORE the SWCanvas engine, so
+SWCanvas's own `Math.cos/sin` calls become deterministic at runtime. (Build arc 2 dropped it from
+the NATIVE bundle: it exists for SWCanvas's cross-engine byte-exactness, and native pixels are not
+reference-matched. That is another reason §4.3 matrix code calls `DetTrig.*` explicitly.)
 
 Decision for §4.3 matrix code: **call `DetTrig.cos(θ)` / `DetTrig.sin(θ)` explicitly** — not
 raw `Math.*`. Rationale: (a) install-order-independent (correct even if some path runs before

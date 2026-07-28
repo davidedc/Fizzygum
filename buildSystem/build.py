@@ -14,8 +14,9 @@ This script performs only some of the steps of the build:
    dynamically by the environment, these other non-class files are loaded
    at start instead.
 
-3) Generates an index html file that also includes all the tests, which
-   are javascripts in a special directory
+3) Generates the entry pages (see ENTRY_PAGES) from the single page source,
+   each one presetting its rendering backend and loading the matching boot
+   bundle.
 
 """
 
@@ -27,20 +28,37 @@ import re
 import os
 import ntpath
 
-# to find the multiple js test files
-# recursively in the src/tests folder
-import fnmatch
-
 import argparse
 
 # GLOBALS
 FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee'
 
 
-DIRECTORY_WITH_TEST_FILES = "../Fizzygum-tests/tests/"
 INPUT_HTML_FILE = "src/index.html"
-OUTPUT_HTML_FILE_FOR_TESTS_RUNNING = "../Fizzygum-builds/latest/worldWithSystemTestHarness.html"
+OUTPUT_HTML_DIRECTORY = "../Fizzygum-builds/latest"
 DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE = "../Fizzygum-tests/Automator-and-test-harness-src"
+
+# The single placeholder in src/index.html that lets ONE page source serve every
+# entry page. It is replaced by the backend preset plus the matching boot-bundle
+# tag — in that order, because globalFunctions.coffee reads
+# window.FIZZYGUM_USE_SWCANVAS while the bundle executes.
+BOOT_SCRIPTS_PLACEHOLDER = "<!--FIZZYGUM_BOOT_SCRIPTS-->"
+
+# The entry pages, as (filename, renders through SWCanvas?).
+#
+# The rendering backend is a BUILD-TIME property of the page: each page presets
+# the flag and loads the bundle carrying exactly the engine it can use, so no
+# artifact ships an engine it will never call and there is no runtime switch.
+#   index.html                      native 2D + the SWCanvas 3D core (for SW3D)
+#   worldWithSystemTestHarness.html full SWCanvas — the deterministic test substrate
+#   index-sw.html                   full SWCanvas, no test harness (interactive SW)
+# The test harness is NOT switched on here: WorldWdgt/globalFunctions detect it
+# from the page's NAME, so these three differ only in the substituted lines.
+ENTRY_PAGES = [
+    ("index.html", False),
+    ("worldWithSystemTestHarness.html", True),
+    ("index-sw.html", True),
+]
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
@@ -81,31 +99,27 @@ parser.add_argument('--list-shippable', action='store_true')
 args = parser.parse_args()
 
 
-# this function *could* be used to take the "standard" index file
-# and manipulate it into a different "test-aware" html file.
-# However at this moment we just basically do a copy, because
-# the test html file can just snoop its name and act accordingly,
-# so there is no need to replace/customise anything.
-def generateHTMLFileForTestsRunning(testsDirectory, srcHTMLFile, destHTMLFile):
-    target =  ""
-
-    # put the tests inclusion in the right place
-
-    # 'src/index.html'
+# Writes one entry page from the single page source, substituting the backend
+# preset + boot-bundle tag for BOOT_SCRIPTS_PLACEHOLDER. Everything else about
+# the page (splash, canvas, onload -> boot()) is shared verbatim.
+def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas):
     with codecs.open(srcHTMLFile, "r", "utf-8") as f:
         content = f.read()
 
-    lines = content.split('\n')
+    if BOOT_SCRIPTS_PLACEHOLDER not in content:
+        raise SystemExit(
+            "build.py: " + srcHTMLFile + " has no " + BOOT_SCRIPTS_PLACEHOLDER +
+            " placeholder — an entry page without a backend preset would load one"
+            " engine and drive the other.")
 
-    src = "<!--include test scripts here-->"
+    bundleFileName = "fizzygum-boot-sw-min.js" if useSWCanvas else "fizzygum-boot-native-min.js"
+    bootScripts = (
+        '<script type="text/javascript">window.FIZZYGUM_USE_SWCANVAS = ' +
+        ("true" if useSWCanvas else "false") + ';</script>\n' +
+        '\t\t<script type="text/javascript" src="js/' + bundleFileName + '"></script>')
 
-    replacedContent = ""
-    for line in lines:
-        replacedContent = replacedContent + line.replace(src, target) + "\n"
-
-    # 'build/indexWithTests.html'
     with codecs.open(destHTMLFile, "w", "utf-8") as f:
-        f.write(replacedContent)
+        f.write(content.replace(BOOT_SCRIPTS_PLACEHOLDER, bootScripts))
 
 
 def main():
@@ -301,12 +315,16 @@ def main():
         f.write("numberOfSourceBatches = " + str(numberOfSourceBatches) + "\n")
 
 
-    # 4) a new HTML file is generated which also contains
-    # all the loading of the test files
-    generateHTMLFileForTestsRunning(
-            DIRECTORY_WITH_TEST_FILES,
-            INPUT_HTML_FILE,
-            OUTPUT_HTML_FILE_FOR_TESTS_RUNNING)
+    # 4) the entry pages, one per backend flavour (see ENTRY_PAGES). A --homepage
+    # build is native-only — no SWCanvas bundle is assembled for it and its font
+    # assets are not shipped — so it gets index.html alone.
+    for (pageFileName, useSWCanvas) in ENTRY_PAGES:
+        if args.homepage and useSWCanvas:
+            continue
+        generateEntryPage(
+                INPUT_HTML_FILE,
+                os.path.join(OUTPUT_HTML_DIRECTORY, pageFileName),
+                useSWCanvas)
 
 
 if __name__ == "__main__":

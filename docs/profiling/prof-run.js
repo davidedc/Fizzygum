@@ -6,7 +6,7 @@
  * workload counters via page-side instrumentation (prof-instrument.js).
  *
  * Usage:
- *   node prof-run.js --build=<dir> --sw=0|1 --dpr=1|2 [--tests=all|name,name]
+ *   node prof-run.js --build=<dir> --dpr=1|2 [--tests=all|name,name]
  *                    [--out=<prefix>] [--sample-us=300] [--profile] [--counters]
  *                    [--speed=fastest] [--timeout-mins=25]
  *
@@ -26,7 +26,6 @@ function flag(name, dflt) {
   return a.includes('=') ? a.split('=').slice(1).join('=') : true;
 }
 const BUILD = path.resolve(process.cwd(), flag('build', path.resolve(__dirname, '..', '..', '..', 'Fizzygum-builds', 'latest')));
-const SW = flag('sw', '1');
 const DPR = flag('dpr', '1');
 const SPEED = flag('speed', 'fastest');
 const TESTS = flag('tests', 'all');
@@ -36,9 +35,12 @@ const DO_PROFILE = !!flag('profile', false);
 const DO_COUNTERS = !!flag('counters', false);
 const TIMEOUT_MINS = parseFloat(flag('timeout-mins', '30'));
 
+// The harness page renders through SWCanvas — the backend is baked into each entry page
+// at build time, so there is no backend axis here: profiling a SystemTest run means
+// profiling SWCanvas. (That is also the backend the owner profiles; see README.md.)
 const HARNESS = path.join(BUILD, 'worldWithSystemTestHarness.html');
 if (!fs.existsSync(HARNESS)) { console.error('no harness at ' + HARNESS); process.exit(2); }
-const url = 'file://' + HARNESS + '?sw=' + SW + '&dpr=' + DPR + '&speed=' + SPEED + '&intro=0';
+const url = 'file://' + HARNESS + '?dpr=' + DPR + '&speed=' + SPEED + '&intro=0';
 
 const INSTRUMENT_SRC = fs.readFileSync(path.join(__dirname, 'prof-instrument.js'), 'utf8');
 
@@ -118,7 +120,7 @@ function pagePollStatus() {
 }
 
 (async () => {
-  const meta = { url, build: BUILD, sw: SW, dpr: DPR, speed: SPEED, tests: TESTS, sampleUs: SAMPLE_US, profile: DO_PROFILE, counters: DO_COUNTERS };
+  const meta = { url, build: BUILD, sw: '1', dpr: DPR, speed: SPEED, tests: TESTS, sampleUs: SAMPLE_US, profile: DO_PROFILE, counters: DO_COUNTERS };
   console.log('prof-run: ' + JSON.stringify(meta));
   const browser = await puppeteer.launch({
     headless: 'new',

@@ -12,7 +12,7 @@ with ZERO prior context. All facts verified against the working trees on 2026-07
 editing. **This is ARC 1 — the FIRST arc to execute — of the build-and-packaging
 program** (program table + completion doctrine: `build-arc-4-dynamic-parts-plan.md`
 §0.1/§0.2, binding here). It is independent of the later arcs; arc 2
-(`build-arc-2-backend-split-precompile-plan.md`) edits the same `build_it_please.sh` in
+(`archive/build-arc-2-backend-split-precompile-plan.md`, DONE 2026-07-28) edits the same `build_it_please.sh` in
 disjoint sections and runs AFTER this one completes.
 
 **MANDATE.** Tests stop being COPIED into every build. The build places ONE relative symlink
@@ -281,7 +281,7 @@ Program + doctrine: `build-arc-4-dynamic-parts-plan.md` §0.1/§0.2. Case law be
 memory `fizzygum-recapture-masks-crash-webkit-safeguard` (publish-rebuild era),
 the first-capture manifest trap (`fizzytiles-sw3d-port` memory, lesson 3),
 `build-cwd-stale-build-trap`. Probe: `Fizzygum-tests/.scratch/file-url-loading-probe.js`
-(results §2.4). Next arc: `build-arc-2-backend-split-precompile-plan.md`
+(results §2.4). Next arc: `build-arc-2-backend-split-precompile-plan.md` (DONE 2026-07-28)
 (shares `build_it_please.sh`; runs after this arc closes).
 
 

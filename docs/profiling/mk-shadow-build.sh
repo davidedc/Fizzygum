@@ -47,7 +47,7 @@ append_segment "SWCanvas" "$FIZ/vendor/swcanvas/swcanvas.js"
 append_segment "FizzygumBoot" "$LATEST/js/fizzygum-boot.js"
 echo "]" >> "$SEGJSON"
 
-sed 's|js/fizzygum-boot-min.js|profile-boot.js|' "$LATEST/worldWithSystemTestHarness.html" > "$OUT/worldWithSystemTestHarness.html"
+sed 's|js/fizzygum-boot-sw-min.js|profile-boot.js|' "$LATEST/worldWithSystemTestHarness.html" > "$OUT/worldWithSystemTestHarness.html"
 
 echo "shadow build ready: $OUT"
 cat "$SEGJSON"

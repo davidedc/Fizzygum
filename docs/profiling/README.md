@@ -21,7 +21,7 @@ Requires: a FULL normal build (`cd Fizzygum && ./build_it_please.sh`) and Puppet
     `--profile-boot` to profile the boot/compile phase instead.
   - `--counters`: canvas-workload counters via `prof-instrument.js` (`<out>.counters.json`).
   - always: `<out>.meta.json` (wall timings, per-test progress timestamps, final verdicts).
-  - key flags: `--build=<dir>` `--sw=0|1` `--dpr=1|2` `--sample-us=300` `--timeout-mins=30`.
+  - key flags: `--build=<dir>` `--dpr=1|2` `--sample-us=300` `--timeout-mins=30`.
 - **`prof-instrument.js`** — page-side wrapper installed before any page script. Counts —
   without changing any pixels — every clip()/save()/draw call on BOTH the native
   CanvasRenderingContext2D prototype and SWCanvas's compat context (trapped when
@@ -64,11 +64,12 @@ Requires: a FULL normal build (`cd Fizzygum && ./build_it_please.sh`) and Puppet
   (confirms the W1/W2 pattern fix in-situ and isolates any wallpaper-independent cost).
   Deterministic: fixed paths, no `Math.random`/`Date`. rAF drives the world loop headless
   (~60/s), so real mouse events + a `doOneCycle` timing wrapper give faithful frame costs.
-  - **⚠ Backend:** the production world (`index.html`) uses the browser's NATIVE canvas by
-    DEFAULT; the owner runs **`?sw=1`** (SWCanvas). **Pass `--sw`** or you profile the wrong
-    (native) backend. See `docs/profiling` note + the memory `fizzygum-runtime-backend-swcanvas`.
-  - **Flags:** `--wallpaper=plain|dots` (omit → runs both + prints the A/B) · `--sw` (append
-    `?sw=1`) · `--build=<dir>` (default `../../../Fizzygum-builds/latest`; for NAMED SWCanvas
+  - **⚠ Backend:** the backend is baked into the entry PAGE at build time. `index.html` is
+    the production world on the browser's NATIVE canvas; the owner runs SWCanvas. **Pass
+    `--sw`** (which boots `index-sw.html`) or you profile the wrong (native) backend. See
+    `docs/profiling` note + the memory `fizzygum-runtime-backend-swcanvas`.
+  - **Flags:** `--wallpaper=plain|dots` (omit → runs both + prints the A/B) · `--sw` (boot
+    `index-sw.html`) · `--build=<dir>` (default `../../../Fizzygum-builds/latest`; for NAMED SWCanvas
     frames point it at a shadow build — see below) · `--drag-frames=N` (140) · `--draw-frames=N`
     (80) · `--profile` (CDP V8 `.cpuprofile` per `<out>.<wallpaper>.<phase>.cpuprofile`) ·
     `--out=<prefix>` · `--cwc` (instrument SWCanvas canvas-wide compositing: call count,
@@ -76,7 +77,7 @@ Requires: a FULL normal build (`cd Fizzygum && ./build_it_please.sh`) and Puppet
     render count + most-repeated strings + `TextWdgt` back-buffer hit/rebuild tally).
   - **Named SWCanvas frames:** the minified build shows SWCanvas as `(anon)`. For a named
     breakdown, `bash mk-shadow-build.sh <dir>`, add a shadow `index.html`
-    (`sed 's|js/fizzygum-boot-min.js|profile-boot.js|' <latest>/index.html > <dir>/index.html`),
+    (`sed 's|js/fizzygum-boot-sw-min.js|profile-boot.js|' <latest>/index-sw.html > <dir>/index-sw.html`),
     then `--build=<dir> --profile`. Fizzygum framework methods keep real names either way
     (meta-compiled at boot); the shadow build inflates absolute ms ~3× so read **percentages**.
   - **Parse a `.cpuprofile` for top self-time** (inline; nodes[] + samples[] + timeDeltas[]):
@@ -89,7 +90,7 @@ Requires: a FULL normal build (`cd Fizzygum && ./build_it_please.sh`) and Puppet
 
 ## prof-run.js flag reference
 
-`--build=<dir>` harness dir (default `../../../Fizzygum-builds/latest`) · `--sw=0|1` ·
+`--build=<dir>` harness dir (default `../../../Fizzygum-builds/latest`) ·
 `--dpr=1|2` · `--speed=fastest` · `--tests=all|name[,name…]` (`SystemTest_` prefix optional) ·
 `--out=<prefix>` · `--counters` · `--profile` · `--sample-us=300` (500 for the longer dpr2
 runs keeps the profile file sane) · `--profile-boot` (profile navigation→ready instead of
@@ -105,10 +106,10 @@ cd Fizzygum/docs/profiling
 bash mk-shadow-build.sh /tmp/fizzygum-profiling/shadow-build
 
 # workload counters on the real build (full suite, sw dpr1):
-node prof-run.js --sw=1 --dpr=1 --tests=all --counters --out=/tmp/fizzygum-profiling/cnt-sw1-dpr1
+node prof-run.js --dpr=1 --tests=all --counters --out=/tmp/fizzygum-profiling/cnt-sw1-dpr1
 
 # CPU profile on the shadow build (start AFTER boot; 300µs sampling):
-node prof-run.js --build=/tmp/fizzygum-profiling/shadow-build --sw=1 --dpr=1 --tests=all \
+node prof-run.js --build=/tmp/fizzygum-profiling/shadow-build --dpr=1 --tests=all \
   --profile --out=/tmp/fizzygum-profiling/prof-sw1-dpr1
 node prof-aggregate.js /tmp/fizzygum-profiling/prof-sw1-dpr1 \
   --segments=/tmp/fizzygum-profiling/shadow-build/segments.json --top=40
@@ -123,9 +124,10 @@ Notes / gotchas learned during the campaign:
   "nothing happening" — smoke-check each enabled instrument reports non-zero before trusting it.
 - Run profile runs SERIALLY (CPU contention distorts sampling); counter runs may overlap
   (`FIZZYGUM_KEEP_STALE_BROWSERS=1` on all but the first, or they pkill each other's browser).
-- The native backend (`--sw=0`) does NOT run headless — the first test never completes
-  (references/settle gates are SWCanvas-oriented); don't wait on it. Framework-vs-SWCanvas
-  split comes from bucketing the sw=1 profile instead.
+- `prof-run.js` has NO backend axis: it drives `worldWithSystemTestHarness.html`, which IS the
+  SWCanvas page. (Nothing is lost — the native backend never ran a headless suite anyway: the
+  first test never completed, because the references/settle gates are SWCanvas-oriented.)
+  Framework-vs-SWCanvas split comes from bucketing that profile instead.
 - dpr1 suite wall time is FRAME-COUNT bound (~57fps): judge optimizations by busy-CPU delta,
   or run the A/B at dpr2 (CPU-bound; wall responds ~1:1).
 - All instrumented/profiled runs must still pass 190/190 — that's the proof the

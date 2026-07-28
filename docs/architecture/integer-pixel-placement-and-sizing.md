@@ -97,8 +97,8 @@ points in §2.
   does not render at sub-pixel precision — it only changes *which* integer pixels a shape
   covers, frame to frame. Integer placement gives stable, jitter-free motion; fractional
   placement would buy nothing but shimmer. (The native canvas backend *is* AA, so it would
-  render sub-pixel — but production defaults to native only for non-`?sw=1` users; the
-  owner and the test suite run SWCanvas.)
+  render sub-pixel — but that is `index.html`'s backend only; the owner runs `index-sw.html`
+  and the test suite runs the SWCanvas harness page.)
 - **The SystemTests assert byte-exact pixels.** Deterministic output requires geometry to be
   a pure function of the event stream + final integer bounds. See `Fizzygum-tests/DETERMINISM.md`.
 - **dpr-independence.** Integer *logical* bounds × `ceilPixelRatio` = integer *device* pixels

@@ -104,6 +104,6 @@ profile a common mechanism instead of two more bespoke flags.
 ## §7 References
 
 `build-arc-4-dynamic-parts-plan.md` §0.1/§0.2 (program + doctrine),
-`build-arc-3-world-harmonization-plan.md`, `build-arc-2-backend-split-precompile-plan.md`,
+`build-arc-3-world-harmonization-plan.md`, `archive/build-arc-2-backend-split-precompile-plan.md`,
 `archive/build-arc-1-test-serving-link-plan.md` (DONE), `single-file-save-plan.md` (§7.1 consumer), memory
 `backend-split-and-precompile-externalization.md` (compiler inventory, owner directions).

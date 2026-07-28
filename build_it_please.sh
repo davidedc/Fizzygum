@@ -131,8 +131,13 @@ coffee --version
 # "git clone && build" Just Works (needs GitHub access on the first build only).
 SWCANVAS_VENDOR=vendor/swcanvas
 SWCANVAS_PIN=vendor/swcanvas.pin
-if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.js" ] || [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
-  echo "SWCanvas bundle (incl. sw3d.js) missing — fetching from $SWCANVAS_PIN ..."
+# The 3D-core artifacts are part of the presence check too: a vendor tree that
+# predates that dist target would silently fail the native bundle's assembly, so
+# treat it as not-populated and re-fetch.
+if [ ! -f "$SWCANVAS_VENDOR/swcanvas.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.js" ] || \
+   [ ! -f "$SWCANVAS_VENDOR/swcanvas-3d-core.min.js" ] || [ ! -f "$SWCANVAS_VENDOR/sw3d.min.js" ] || \
+   [ ! -f "$SWCANVAS_VENDOR/VERSION" ]; then
+  echo "SWCanvas bundle (incl. sw3d.js + the 3D-core target) missing — fetching from $SWCANVAS_PIN ..."
   ./scripts/vendor-swcanvas.sh
 elif [ -f "$SWCANVAS_PIN" ]; then
   PINNED_SHA=$(tr -d '[:space:]' < "$SWCANVAS_PIN")
@@ -161,17 +166,12 @@ fi
 #     a stray link INSIDE the target).
 # Recursive / `find` operations on $BUILD_PATH/js/tests are banned in any spelling.
 #
-# remove_tests_link handles both shapes the path can take — the symlink of a normal build, and
-# the real directory of two empty manifest stubs a --homepage build leaves there (see the
-# scaffolding step). NEITHER branch can recurse: `rm -f` refuses a directory outright, and
-# `rmdir` refuses both a non-empty directory and a symlink. So no spelling here, even a wrong
-# one, can reach the real tests through the link.
+# The path only ever holds a SYMLINK (a tests-stripped build creates nothing there at all), so
+# this is one guarded `rm -f` — which refuses a directory outright and cannot recurse. No
+# spelling here, even a wrong one, can reach the real tests through the link.
 remove_tests_link() {
   if [ -L "$BUILD_PATH/js/tests" ]; then
     rm -f "$BUILD_PATH/js/tests"
-  elif [ -d "$BUILD_PATH/js/tests" ]; then
-    rm -f "$BUILD_PATH/js/tests/testsManifest.js" "$BUILD_PATH/js/tests/testsAssetsManifest.js"
-    rmdir "$BUILD_PATH/js/tests" 2>/dev/null
   fi
   return 0
 }
@@ -247,17 +247,12 @@ fi
 # Fizzygum-all/ then down into Fizzygum-tests/tests. Everything loads over file:// by
 # <script> injection, which follows the link happily on both engines the suite drives.
 # A --homepage / --notests build ships NO js/tests entry at all (see remove_tests_link above).
-if $homepage ; then
-  # --homepage strips the tests, but its pre-compile pass (further down) loads the page as
-  # ?generatePreCompiled, and THAT boot path still fetches the two manifests regardless of
-  # BUILDFLAG_LOAD_TESTS (src/boot/globalFunctions.coffee — arc 2 narrows the condition).
-  # Two EMPTY stubs in a REAL directory satisfy it; the homepage tail removes them again, so
-  # the shipped tree has no js/tests entry. Same shape as before the test-serving link, where
-  # build.py wrote exactly these two empty manifests for a homepage build.
-  mkdir -p $BUILD_PATH/js/tests
-  printf 'testsManifest = [];\n' > $BUILD_PATH/js/tests/testsManifest.js
-  printf 'testsAssetsManifest = [];\n' > $BUILD_PATH/js/tests/testsAssetsManifest.js
-elif ! $notests ; then
+if $homepage || $notests ; then
+  # No js/tests entry AT ALL in a tests-stripped tree. A --homepage build's pre-compile pass
+  # boots ?generatePreCompiled, and that boot loads no test machinery whatsoever (the load
+  # condition is plain BUILDFLAG_LOAD_TESTS — see globalFunctions.coffee), so it needs nothing here.
+  remove_tests_link
+else
   ln -sfn ../../../Fizzygum-tests/tests $BUILD_PATH/js/tests
   # The two manifests the booting world loads (js/tests/testsManifest.js +
   # testsAssetsManifest.js) are DERIVED from the tests/ tree and gitignored, so generate them
@@ -268,8 +263,6 @@ elif ! $notests ; then
   if [ -d ../Fizzygum-tests ] && command -v node &> /dev/null ; then
     node ../Fizzygum-tests/scripts/generate-tests-manifests.js --quiet || exit 1
   fi
-else
-  remove_tests_link
 fi
 
 # generate the Fizzygum coffee file in the delete_me directory
@@ -701,50 +694,78 @@ if [ "$?" != "0" ]; then
   exit 1
 fi
 
-# Prepend the vendored SWCanvas engine to the boot bundle so window.SWCanvas is
-# defined before boot() runs. The minified Fizzygum bundle thus contains the
-# SWCanvas engine code (mirroring swcanvas.min.js containing BitmapText); font
-# atlases are never embedded — they are loaded at runtime. SWCanvas is always
-# bundled and only *used* when the runtime flag (?sw=1) is on.
-echo "prepending the deterministic-trig shim + SWCanvas engine + SW3D to the boot bundle..."
-# DETERMINISM: install engine-independent sin/cos/tan/atan2/asin/acos (a pure-arithmetic fdlibm
-# port — only +,-,*,/ and sqrt, all IEEE-754-exact) over Math.* BEFORE anything renders, so
-# SWCanvas's rotate()/arc()/round-joins rasterize bit-identically on every JS engine. Without it
-# the platform Math transcendentals differ by ~1 ULP across engines (e.g. Safari's JavaScriptCore
-# vs Chrome's V8 disagree on ~10-20% of values), which shifts curved/rotated SWCanvas output a
-# pixel or two and breaks the exact SHA-256 reference match (axis-aligned, trig-free content is
-# unaffected). Measured: it matches native V8 pixel-for-pixel across the suite, so it is a drop-in.
-# See runtime-prelude/deterministic-trig.js and src/macros/MACRO-PATTERNS.md.
-# IMPORTANT: swcanvas.min.js ends with a "//# sourceMappingURL=..." line comment and no trailing
-# newline; the "\n;\n" separators terminate it and defend against ASI between each concatenated unit.
-cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-printf '\n;try { DetTrig.install(Math); } catch (e) {}\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-cat $SWCANVAS_VENDOR/swcanvas.min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-# SW3D — the software-3D userland engine (examples/sw3d.js), bundled UNMINIFIED
-# right after SWCanvas so window.SW3D exists at boot. It reads SWCanvas.Core.*
-# lazily (only inside makeEngine at render time), so loading it after SWCanvas
-# is sufficient. Ships in ALL builds (symmetric with SWCanvas-always-bundled);
-# fizzytiles software-renders through it, replacing the removed twgl WebGL demo.
-cat $SWCANVAS_VENDOR/sw3d.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-cat $BUILD_PATH/js/fizzygum-boot-min.js >> $BUILD_PATH/js/fizzygum-boot-min.js.tmp
-mv $BUILD_PATH/js/fizzygum-boot-min.js.tmp $BUILD_PATH/js/fizzygum-boot-min.js
-echo "... done prepending deterministic-trig + SWCanvas + SW3D"
+# ---- the two boot bundles ------------------------------------------------------------------
+#
+# The rendering backend is a BUILD-TIME property of the entry page, so the SAME minified boot JS
+# is fronted by two different engine preludes and each page (build.py's ENTRY_PAGES) loads the
+# one carrying the engine it can actually use. That way no artifact ships an engine it will never
+# call, and there is no runtime switch to get wrong. Both flavours come out of the ONE terser
+# pass above — the split is pure concatenation, which is why a second bundle costs ~1s.
+#
+#   fizzygum-boot-sw-min.js      det-trig + the FULL SWCanvas engine + SW3D + boot
+#                                -> worldWithSystemTestHarness.html, index-sw.html
+#   fizzygum-boot-native-min.js  the SWCanvas 3D CORE + SW3D + boot
+#                                -> index.html
+#
+# window.SWCanvas must exist before boot() runs, hence the prepend rather than a second <script>.
+# IMPORTANT: the minified vendor files end with a "//# sourceMappingURL=..." line comment and no
+# trailing newline; the "\n;\n" separators terminate it and defend against ASI between each unit.
+BOOT_MIN=$BUILD_PATH/js/fizzygum-boot-min.js
 
-# Copy the vendored SWCanvas font assets (metrics + positioning bundles, and
-# the wrapped atlas .js if vendored) so the SWCanvas text backend can load them
-# at runtime over file://. These are font DATA, never embedded in the bundle,
-# and only fetched when ?sw=1 is on. Populated by scripts/vendor-swcanvas-fonts.sh.
-if [ -d font-assets ]; then
+if ! $homepage ; then
+  echo "assembling the SW boot bundle (deterministic-trig + SWCanvas + SW3D + boot)..."
+  # DETERMINISM: install engine-independent sin/cos/tan/atan2/asin/acos (a pure-arithmetic fdlibm
+  # port — only +,-,*,/ and sqrt, all IEEE-754-exact) over Math.* BEFORE anything renders, so
+  # SWCanvas's rotate()/arc()/round-joins rasterize bit-identically on every JS engine. Without it
+  # the platform Math transcendentals differ by ~1 ULP across engines (e.g. Safari's JavaScriptCore
+  # vs Chrome's V8 disagree on ~10-20% of values), which shifts curved/rotated SWCanvas output a
+  # pixel or two and breaks the exact SHA-256 reference match (axis-aligned, trig-free content is
+  # unaffected). Measured: it matches native V8 pixel-for-pixel across the suite, so it is a drop-in.
+  # It rides ONLY on this bundle: it exists for SWCanvas's cross-engine byte-exactness, and the
+  # native page's pixels are not reference-matched.
+  # See runtime-prelude/deterministic-trig.js and src/macros/MACRO-PATTERNS.md.
+  cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  printf '\n;try { DetTrig.install(Math); } catch (e) {}\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  cat $SWCANVAS_VENDOR/swcanvas.min.js >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  # SW3D — the software-3D userland engine (examples/sw3d.js), bundled UNMINIFIED right after
+  # SWCanvas so window.SW3D exists at boot. It reads SWCanvas.Core.* lazily (only inside
+  # makeEngine at render time), so loading it after SWCanvas is sufficient.
+  cat $SWCANVAS_VENDOR/sw3d.js >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  cat $BOOT_MIN >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
+  echo "... done assembling the SW boot bundle"
+fi
+
+# The native page paints its 2D through the platform canvas, but fizzytiles still software-renders
+# its 3D — so it needs SW3D, which needs a sliver of SWCanvas (Surface + DepthBuffer + Texture3D +
+# Triangle3DOps). That sliver is SWCanvas's own subtractive dist target, ~14 KB instead of ~263 KB,
+# and it is pixel-identical to the full engine on the 3D path (SWCanvas's examples/3d-core-node.js
+# witness). No det-trig here (see above); SW3D is minified since nothing debugs through it here.
+echo "assembling the native boot bundle (SWCanvas 3D core + SW3D + boot)..."
+cat $SWCANVAS_VENDOR/swcanvas-3d-core.min.js > $BUILD_PATH/js/fizzygum-boot-native-min.js
+printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-native-min.js
+cat $SWCANVAS_VENDOR/sw3d.min.js >> $BUILD_PATH/js/fizzygum-boot-native-min.js
+printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-native-min.js
+cat $BOOT_MIN >> $BUILD_PATH/js/fizzygum-boot-native-min.js
+echo "... done assembling the native boot bundle"
+
+# The bare minified boot JS is an intermediate, never an entry page's bundle.
+rm $BOOT_MIN
+
+# Copy the vendored SWCanvas font assets (metrics + positioning bundles, and the wrapped atlas .js
+# if vendored) so the SWCanvas text backend can load them at runtime over file://. These are font
+# DATA, never embedded in a bundle. Only the SW pages can use them, so a --homepage tree (native
+# only) does not carry them — that is ~90 MB not deployed.
+# Populated by scripts/vendor-swcanvas-fonts.sh.
+if [ -d font-assets ] && ! $homepage ; then
   echo "copying SWCanvas font assets..."
   mkdir -p $BUILD_PATH/font-assets
   cp -R font-assets/* $BUILD_PATH/font-assets/
   echo "... done copying SWCanvas font assets"
 fi
 
-# copy the html files
-cp src/index.html $BUILD_PATH/
+# (the entry pages themselves are written by build.py from src/index.html — see its ENTRY_PAGES)
 
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
@@ -784,7 +805,10 @@ rm -rdf $SCRATCH_PATH
 echo "...done"
 
 if $homepage ; then
-  rm $BUILD_PATH/worldWithSystemTestHarness.html
+  # $BUILD_PATH is shared across build flavours and font-assets survives the cleanup section
+  # (unlike js/, icons/ and *.html, which are wiped), so a homepage build following a dev build
+  # would otherwise inherit ~90 MB of SWCanvas font data that no page here can load.
+  rm -rf $BUILD_PATH/font-assets
   rm $BUILD_PATH/icons/doubleClickLeft.png
   rm $BUILD_PATH/icons/middleButtonPressed.png
   rm $BUILD_PATH/icons/scrollUp.png
@@ -797,12 +821,17 @@ if $homepage ; then
   
   ls -d -1 $BUILD_PATH/js/coffeescript-sources/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
   
-  echo "generating the pre-compiled file via the browser. this might take a few seconds..."
-  . ./buildSystem/generate-pre-compiled-file-via-browser.sh
-
-  # the pre-compile pass above is done, so drop the two empty manifest stubs it needed: the
-  # shipped homepage tree carries no js/tests entry at all.
-  remove_tests_link
+  # Generate the pre-compiled image. It MUST happen here: after the per-class source files are
+  # pruned (the generating boot only needs sources_batch_* + Class/Mixin, kept above) and while
+  # js/pre-compiled.js is still the `window.preCompiled = false` stub — compile-at-boot is
+  # exactly the mode that builds the image. The driver lives in the tests repo because Node
+  # resolves require('puppeteer') from the SCRIPT's directory; the explicit cd in a subshell is
+  # what keeps that true regardless of this build's cwd.
+  echo "generating the pre-compiled file headlessly. this might take a few seconds..."
+  ( cd ../Fizzygum-tests && node scripts/generate-pre-compiled-headless.js ) || {
+    echo "!!!!!!!!!!! error: pre-compiled generation failed" 1>&2
+    exit 1
+  }
 
   rm $BUILD_PATH/js/libs/FileSaver.min.js
   rm $BUILD_PATH/js/libs/jszip.min.js

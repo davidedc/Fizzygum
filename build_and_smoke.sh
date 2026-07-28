@@ -18,12 +18,18 @@
 # always operate from the Fizzygum/ repo root (build_it_please.sh assumes this)
 cd "$(dirname "$0")" || exit 2
 
-# A tests-stripped build can't boot the SWCanvas leg cleanly (it lacks the test
-# harness/assets the SWCanvas smoke relies on); fall back to a native-only smoke.
+# A --homepage tree is native-only by construction (no SW bundle, no index-sw.html), so its
+# smoke runs in --homepage mode: native leg only, PLUS the production-tree assertions
+# (booted from the pre-compiled image, no SWCanvas-only payload left in the tree).
+# A --notests tree still has both pages but no test harness, so it just drops the SW leg.
 SMOKE_ARGS=""
 case " $* " in
-  *" --homepage "*|*" --notests "*)
-    echo "(tests-stripped build detected -> boot smoke runs native-only; SWCanvas needs a full build)"
+  *" --homepage "*)
+    echo "(homepage build detected -> boot smoke runs native-only + production-tree assertions)"
+    SMOKE_ARGS="--homepage"
+    ;;
+  *" --notests "*)
+    echo "(tests-stripped build detected -> boot smoke runs native-only)"
     SMOKE_ARGS="--native-only"
     ;;
 esac

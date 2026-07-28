@@ -1,7 +1,8 @@
 # Arc 2 · Backend split (SW-full vs native+3D-core bundles) + precompile-generation externalization
 
-**STATUS: PLAN ONLY — AUTHORED 2026-07-28. Written to be executed COLD by an LLM/engineer with
-ZERO prior context.** All facts below were verified against the working trees on 2026-07-28
+**STATUS: ✅ EXECUTED AND CLOSED 2026-07-28 — all three phases landed, `fg gauntlet` + `fg homepage`
+green, ZERO reference-image churn. As-built record, deviations and measured results: §12.**
+(Authored 2026-07-28; written to be executed COLD by an LLM/engineer with ZERO prior context.) All facts below were verified against the working trees on 2026-07-28
 (Fizzygum `master @ ae45e0ff`, suite = 268 SystemTests, SWCanvas repo `main`, dist commit
 `468c5f7`, vendored pin `df0b64c9…`). Line numbers WILL drift — the quoted method/class names and
 code snippets are authoritative; re-grep before trusting any `file:line`.
@@ -458,3 +459,89 @@ Authored 2026-07-28 from a live investigation session: measured build timing/siz
 append sites, `SWCanvasElement-extensions.coffee` (guard audit), SWCanvas `build.sh`/footer/
 vendor scripts; terser probes for the core subset; an Explore-agent inventory of every runtime
 compiler/source-string consumer. Owner locked D1/D2 in-session 2026-07-27/28.
+
+---
+
+## §12 Execution record (2026-07-28) — as-built, deviations, measured results
+
+Executed A → B → C in order, each gate green before the next. **Zero reference-image churn**
+across the whole arc (R2 held exactly): dpr1/dpr2/webkit passed 268/268 on every gauntlet.
+
+### Measured outcomes (vs the plan's estimates)
+
+| Fact | Plan | As built |
+|---|---|---|
+| 3D-core minified | 18,196 B | **13,756 B** (the plan's probe omitted `minify.sh`'s `IS_DEBUG=false` substitution + `drop_console`) |
+| `sw3d.min.js` | 5,118 B | 5,117 B |
+| Native page boot bundle | — | **31,898 B** (was 314,357 B — 9.8× smaller) |
+| SW boot bundle | — | 314,491 B (today's recipe, renamed) |
+| Pre-compiled image | — | 1,898,203 B raw → 1,069,344 B minified |
+| Accumulator on a NORMAL boot | ~2.5 MB wasted | **0 bytes** (measured in-page) |
+
+### Deviations and additions
+
+1. **ADDED — the 3D-core witness proves pixel-IDENTITY with the full bundle, not just "it runs".**
+   Before baking its spot-checks, the same scene was rendered through `dist/swcanvas.js`,
+   `dist/swcanvas-3d-core.js` and `dist/swcanvas-3d-core.min.js` and SHA-256'd over the whole
+   surface: all three identical. So R-2's mitigation is stronger than planned — the numbers in
+   `examples/3d-core-node.js` pin the core to full-bundle behaviour, not merely to its own past
+   self. The witness also exercises the MINIFIED core (what consumers actually ship), which the
+   plan did not ask for.
+2. **DEVIATION — build.py emits the pages CONDITIONALLY rather than the tail deleting them.**
+   §5.B.2/§5.B.4 said the homepage tail would `rm index-sw.html` and the SW bundle. Instead
+   `ENTRY_PAGES` is filtered on `args.homepage` and the SW bundle is never assembled for a
+   homepage build — one decision point instead of build-then-delete. The tail's existing
+   `rm worldWithSystemTestHarness.html` went away for the same reason. It DOES now
+   `rm -rf font-assets`, because `$BUILD_PATH` is shared across flavours and font-assets
+   survives the cleanup section (unlike `js/`, `icons/`, `*.html`), so a homepage build after a
+   dev build would otherwise inherit 90 MB.
+3. **DEVIATION — no native harness page, so `macro-page-lib.js`'s launch bar lost its backend
+   axis.** Its four links (HTML5/SWCanvas × dpr 1/2) became two (dpr 1/2). A native harness run
+   was never meaningful anyway — the references are SWCanvas-only, so those links produced
+   guaranteed failures.
+4. **ADDED — `prof-run.js` lost its `--sw` flag entirely.** It drives the harness page, which is
+   now SWCanvas by construction. Nothing was lost: the profiling README already recorded that
+   `--sw=0` never completed a headless suite. `prof-interactive.js` keeps `--sw`, repointed from
+   `index.html?sw=1` to `index-sw.html`.
+5. **EXTRA RETIREMENT — `buildSystem/configure-these-paths.sh` deleted too.** It held only the
+   WSL Chrome/Downloads paths and had exactly one consumer, the deleted generator script.
+6. **EXTRA RETIREMENT — arc 1's homepage manifest-stub scaffolding is gone**, as arc 1 §10(2)
+   anticipated ("arc 2 narrows the condition"). With `globalFunctions`'s load condition now plain
+   `BUILDFLAG_LOAD_TESTS`, the `?generatePreCompiled` boot fetches no test machinery, so a
+   homepage build writes no `js/tests` at all. `remove_tests_link` consequently lost its
+   real-directory branch and is now a single guarded `rm -f` on a symlink.
+7. **R4 CONFIRMED AND FIXED — the homepage precompile had indeed been inoperative on macOS.**
+   `fg homepage` now asserts `window.preCompiled === true` plus "no compile-at-boot log div",
+   and (R-6) that the tree carries none of `js/fizzygum-boot-sw-min.js`, `index-sw.html`,
+   `worldWithSystemTestHarness.html`, `font-assets`. Those live in
+   `smoke-boot-headless.js --homepage` (which implies `--native-only`), wired into both `fg`'s
+   homepage leg and `build_and_smoke.sh`.
+8. **⚠ FALSE ALARM WORTH RECORDING — a 4-leg gauntlet failure that was NOT this arc.** The first
+   Phase B gauntlet failed `settle`/`capstone`/`revisits`/`storage`, all on
+   `SystemTest_macroClosingRotatedIslandChildClearsFootprint`, and every serial retry reproduced
+   it — which looked like exactly the R-3 regression the plan warns about. It was not. Diagnosis
+   that settled it: the test passes ALONE (with and without the settle prelude), and the SAME
+   gate FAILS on a fully reverted, pre-change tree (baseline run 1.91 min → FAIL; arc-2 run
+   1.40 min → PASS — the slower run is the one that fails). It is the documented load-sensitive
+   incremental-repaint canary (`docs/archive/menu-slider-ctor-conversion-plan.md` P4 closeout
+   characterizes the same test as "the suite's most load-sensitive incremental-repaint
+   assertion"). A re-run on a quieter machine was green on all 13 legs. **Method note for the
+   next arc: do the revert-and-rebuild A/B early — reasoning about which code path "could"
+   matter cost far more than the ~8 minutes the A/B took.** (Reverting used `git diff` to a patch
+   + `git checkout` + `git apply`, never `git stash`, which is banned in these repos.)
+9. **The stink gate caught narrative comments.** Three of the new comments used "used to" /
+   "no longer" and tripped the `comment-*` ratchet; rewritten present-tense per the standing
+   convention. The gate did its job.
+
+### Final gates
+
+- `fg gauntlet` **EXIT=0** — 13/13 legs (`serialization` PASS-serial-only: a whole-world
+  pixel-parity hash flaked under parallel load and passed alone; `fg` absorbs that as a
+  load-flake warning).
+- `fg homepage` **EXIT=0**, including the new `preCompiled === true` + forbidden-files assertions
+  — the first time this has passed on macOS with a REAL generated image.
+- SWCanvas `npm test` 219/219; `dist/swcanvas.min.js` and `dist/swcanvas.js` byte-identical to
+  their pre-arc SHAs (only `swcanvas.min.js.map` churns, because `minify.sh` bakes its `mktemp`
+  path into `sources` — pre-existing, unrelated).
+- Native 3D proven in-page on `index.html`: SW3D renders a lit mesh through the core-only
+  bundle, with `SWCanvas.createCanvas`/`SWCanvas.fonts` absent (the 263 KB engine really is gone).

@@ -146,15 +146,6 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
 
   # final step, proceed with the boot sequence
   promiseChain.then ->
-
-    if window.location.href.includes "generatePreCompiled"
-      zip = new JSZip
-      zip.file 'pre-compiled.js', "window.preCompiled = true;\n\n" + window.JSSourcesContainer.content
-      zip.generateAsync(type: 'blob').then (content) ->
-        saveAs content, 'pre-compiled.zip'
-        return
-
-
     removeLogDiv()
 
   return promiseChain
@@ -169,6 +160,12 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
   if srcLoadCompileDebugWrites then t0 = performance.now()
   if srcLoadCompileDebugWrites then console.log "checking whether " + fileName + " is already in the system "
 
+  # Only a ?generatePreCompiled boot wants Class/Mixin to ACCUMULATE the JS they compile
+  # (window.JSSourcesContainer.content, which the external driver reads back out —
+  # ../Fizzygum-tests/scripts/generate-pre-compiled-headless.js). An ordinary boot compiles
+  # to CREATE the classes and never reads that string, so it must not build it.
+  generatePreCompiledJS = window.location.href.includes "generatePreCompiled"
+
   # loading via Class means that we register all the source
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
@@ -177,13 +174,13 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
       # source code
       widgetClass = new Class fileContents, false, false
     else
-      widgetClass = new Class fileContents, true, true
+      widgetClass = new Class fileContents, generatePreCompiledJS, true
   # Loaded Mixins here:
   else if /^  onceAddedClassProperties:/m.test fileContents
     if justIngestSources
       new Mixin fileContents, false, false
     else
-      new Mixin fileContents, true, true
+      new Mixin fileContents, generatePreCompiledJS, true
 
   if srcLoadCompileDebugWrites then console.log "compiling and evalling " + fileName + " from source code"
   emptyLogDiv()

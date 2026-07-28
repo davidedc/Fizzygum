@@ -276,7 +276,8 @@ are in **`MACRO-PATTERNS.md`**.
 
 - One-time: `npm i` (Puppeteer).
 - Run one headless: `node scripts/run-macro-test-headless.js SystemTest_<name> [--dpr=N]` (boots
-  `worldWithSystemTestHarness.html?sw=1&dpr=N`, prints `TEST PASSED` / `failureImages`). Add
+  `worldWithSystemTestHarness.html?dpr=N` — that page IS the SWCanvas page, the backend is baked in
+  at build time — prints `TEST PASSED` / `failureImages`). Add
   `--browser=webkit` to run the same test under Safari's engine (Playwright) as a scripted cross-engine
   determinism check — it reuses the existing references unchanged (SWCanvas + the build's deterministic-trig
   shim make pixels V8≡JSC identical); capture stays chrome-only. See `../../../Fizzygum-tests/CLAUDE.md`.

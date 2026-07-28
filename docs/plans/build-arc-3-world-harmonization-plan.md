@@ -6,7 +6,7 @@ with ZERO prior context. Facts verified against the working tree 2026-07-28 (Fiz
 — embedded; the census IS this plan's fact base). Line numbers drift; quoted symbols and
 snippets are authoritative. **This is ARC 3 of the build-and-packaging program** — program
 table + completion doctrine: `build-arc-4-dynamic-parts-plan.md` §0.1/§0.2 (binding here).
-Requires arc 2 (`build-arc-2-backend-split-precompile-plan.md`) landed; arc 4 (parts)
+Requires arc 2 (`archive/build-arc-2-backend-split-precompile-plan.md` — DONE 2026-07-28) landed; arc 4 (parts)
 follows this.
 
 **MANDATE.** Converge the homepage world and the dev/test world into ONE design, and retire the
@@ -271,7 +271,7 @@ count: `grep -rn "»>>" src --include='*.coffee' | wc -l` tracked in each phase'
 ## §9 References
 
 Program + doctrine: `build-arc-4-dynamic-parts-plan.md` §0.1/§0.2. Siblings:
-`build-arc-2-backend-split-precompile-plan.md`, `build-arc-5-packaging-profiles-plan.md`.
+`archive/build-arc-2-backend-split-precompile-plan.md`, `build-arc-5-packaging-profiles-plan.md`.
 Case law: `settle-tier-teardown-flip`, `resetworld-state-leak-between-tests`,
 `dead-code-gate-must-include-harness-src` (memory); mixin-fold verbatim-move rule. Census
 provenance: Explore-agent pass 2026-07-28, every region read and classified; recommendations

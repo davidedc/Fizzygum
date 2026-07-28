@@ -217,7 +217,10 @@ class Mixin
 
     if generatePreCompiledJS or createMixin
       JS_string_definitions = compileFGCode (@_equivalentforSuper source), true
-      JSSourcesContainer.content += JS_string_definitions + "\n"
+      # Accumulate ONLY for a caller that wants the pre-compiled image — see the twin comment in
+      # Class.coffee. A normal boot compiles to CREATE and never reads this string.
+      if generatePreCompiledJS
+        JSSourcesContainer.content += JS_string_definitions + "\n"
       if createMixin
         try
           eval.call window, JS_string_definitions
