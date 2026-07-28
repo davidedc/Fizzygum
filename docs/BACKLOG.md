@@ -8,8 +8,8 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ### The build-and-packaging program (`plans/build-arc-1…5-*.md`, authored 2026-07-28)
 Five plans, filenames numbered by execution order; program table + completion doctrine in
-`plans/build-arc-4-dynamic-parts-plan.md` §0.1/§0.2. NOT started.
-- [ ] Arc 1 `plans/build-arc-1-test-serving-link-plan.md` — tests served via symlink; retires the per-build copy, the flatten, `--keepTestsDirectoryAsIs`, build.py manifest generation, recapture's publish-rebuild
+`plans/build-arc-4-dynamic-parts-plan.md` §0.1/§0.2. Arc 1 DONE; arcs 2-5 not started.
+- [x] Arc 1 `archive/build-arc-1-test-serving-link-plan.md` — DONE 2026-07-28. Tests served via symlink; the per-build copy, the flatten, the keep-tests-directory build flag, build.py's manifest generation and capture/recapture's publish-rebuilds are all gone. (Plan §10 records two falsified facts: the `Fizzygum-builds` slimming was a no-op — `latest/` was never tracked — and `--homepage`'s pre-compile pass still needs two EMPTY manifests present.)
 - [ ] Arc 2 `plans/build-arc-2-backend-split-precompile-plan.md` — SW-full vs native+3D-core bundles per entry page; retires `?sw=1` + the WSL precompile rig (SWCanvas-repo work included)
 - [ ] Arc 3 `plans/build-arc-3-world-harmonization-plan.md` — one world design; retires all 63 `»>>` region markers + the three build.py region regexes (census embedded; ~17 sites are mis-marked PRODUCT code — homepage currently ships a truncated layout engine)
 - [ ] Arc 4 `plans/build-arc-4-dynamic-parts-plan.md` — SourceVault + partition + lazy loading (Fizzytiles pilot); retires `_coffeSource` globals + whole-file exclusion markers

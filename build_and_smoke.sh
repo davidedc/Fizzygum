@@ -8,7 +8,7 @@
 # no cloud CI. build_it_please.sh alone stays the fast inner-loop build; this is the
 # pre-commit-quality check.
 #
-# All args are forwarded to build_it_please.sh (e.g. --keepTestsDirectoryAsIs).
+# All args are forwarded to build_it_please.sh (e.g. --noSyntaxCheck).
 # PREREQUISITE for the smoke step: install Puppeteer once:
 #     cd ../Fizzygum-tests && npm i
 # (If Puppeteer is missing, the smoke step exits 2 and this gate fails with a hint.)

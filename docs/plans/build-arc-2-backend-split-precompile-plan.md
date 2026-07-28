@@ -437,7 +437,7 @@ never pipe an fg call through a filter when its exit code gates a decision.
 - `Fizzygum/CLAUDE.md` §Architecture (source-as-text, boot, SW3D bullet) — must be updated in
   Phase B/C (docs step).
 - **This is ARC 2 of the build-and-packaging program.** Sibling plans (authored 2026-07-28,
-  filenames numbered by execution order): arc 1 `build-arc-1-test-serving-link-plan.md`
+  filenames numbered by execution order): arc 1 `archive/build-arc-1-test-serving-link-plan.md` (DONE 2026-07-28)
   (replaces the per-build tests copy with a symlink; runs BEFORE this arc; shares
   `build_it_please.sh`, disjoint sections), arc 3 `build-arc-3-world-harmonization-plan.md`
   (one world design; retires the `»>>` region markers), arc 4

@@ -34,7 +34,7 @@ Plan filenames are numbered by EXECUTION ORDER (`build-arc-N-…`):
 
 | Arc | Plan doc | What it retires (wholly, in-arc) |
 |---|---|---|
-| 1. Test-serving link (small, independent — runs first) | `build-arc-1-test-serving-link-plan.md` | the per-build tests COPY + spinner; the flatten; `--keepTestsDirectoryAsIs`; build.py manifest generation; recapture's publish-rebuild |
+| 1. Test-serving link — **DONE 2026-07-28** | `archive/build-arc-1-test-serving-link-plan.md` | the per-build tests COPY + spinner; the flatten; `--keepTestsDirectoryAsIs`; build.py manifest generation; recapture's publish-rebuild |
 | 2. Backend split + precompile externalization | `build-arc-2-backend-split-precompile-plan.md` | runtime `?sw=1` switch; WSL precompile script + in-page JSZip/saveAs drain |
 | 3. World harmonization | `build-arc-3-world-harmonization-plan.md` | `»>>` region markers + `HOMEPAGE_EXCLUSION_PARTS` regex; homepage-vs-dev world-design divergence |
 | **4. Dynamic parts (THIS PLAN)** | `build-arc-4-dynamic-parts-plan.md` | `_coffeSource` window globals + suffix-scan; whole-file exclusion markers + `FILE_NOT_IN_FIZZYGUM_HOMEPAGE` regex |

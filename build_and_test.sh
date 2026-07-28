@@ -9,10 +9,10 @@
 # tests one at a time. The lighter relatives: build_and_smoke.sh = boot-only gate;
 # build_it_please.sh = bare build.
 #
-# A FULL build is REQUIRED — the headless suite needs the test harness + reference
-# assets a full build copies in — so --homepage / --notests are rejected here. Other
-# args are forwarded to build_it_please.sh (e.g. --keepTestsDirectoryAsIs to skip the
-# test recopy when you only changed framework source, --noSyntaxCheck).
+# A FULL build is REQUIRED — the headless suite needs the test harness, and the
+# js/tests link to the reference assets, that only a full build puts in place — so
+# --homepage / --notests are rejected here. Other args are forwarded to
+# build_it_please.sh (e.g. --noSyntaxCheck).
 # PREREQUISITE: install Puppeteer once: cd ../Fizzygum-tests && npm i
 #
 # Default browser is Chrome (Puppeteer). Set FIZZYGUM_TEST_BROWSER=webkit to instead run

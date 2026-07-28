@@ -1,6 +1,11 @@
 # Arc 1 · Test-serving link — replace the per-build tests COPY with a symlink; manifests move to the tests repo
 
-**STATUS: PLAN ONLY — AUTHORED 2026-07-28.** Written to be executed COLD by an LLM/engineer
+**STATUS: COMPLETE — EXECUTED 2026-07-28.** All three phases landed; gates green (full `fg gauntlet`
+13/13 legs with ZERO reference churn; `fg homepage` + `--notests` trees carry no `js/tests` entry; a
+gated `fg recapture` and a brand-new-test capture+verify both ran end-to-end with the build stamp
+untouched). Two plan facts were FALSIFIED at execution and are recorded in §10.
+
+Originally written to be executed COLD by an LLM/engineer
 with ZERO prior context. All facts verified against the working trees on 2026-07-28 (Fizzygum
 `master @ ae45e0ff`, Fizzygum-tests `master @ 9e69fb19e`, 268 SystemTests, 4,150 files in
 `Fizzygum-tests/tests/`). Line numbers drift — quoted code is authoritative; re-grep before
@@ -278,3 +283,54 @@ the first-capture manifest trap (`fizzytiles-sw3d-port` memory, lesson 3),
 `build-cwd-stale-build-trap`. Probe: `Fizzygum-tests/.scratch/file-url-loading-probe.js`
 (results §2.4). Next arc: `build-arc-2-backend-split-precompile-plan.md`
 (shares `build_it_please.sh`; runs after this arc closes).
+
+
+---
+
+## §10 Execution record (2026-07-28) — deviations and falsified facts
+
+Two plan assumptions did NOT survive contact, and one addition was needed:
+
+1. **⚠ FALSIFIED — L-D6 / Phase 2 "Fizzygum-builds slimming" was a NO-OP.** The plan assumed the
+   copied tests were committed and churning per build. They are not: `Fizzygum-builds`'s `master`
+   tracks exactly two files (`CLAUDE.md`, `readme.md`) and `latest/` is UNTRACKED, so there was
+   never any per-build git churn to remove and no symlink entry to commit. The only branch holding
+   `latest/js/tests` is `gh-pages`, whose last commit is from **2016** (legacy pre-macro test names)
+   — untouched, since rewriting a decade-old published site serves nothing this arc is for. Phase 2
+   therefore reduced to the close-out checklist.
+2. **⚠ MISSED BY THE PLAN — `--homepage` still needs the two manifests to EXIST during its
+   pre-compile pass.** `globalFunctions.coffee`'s load condition is
+   `BUILDFLAG_LOAD_TESTS or (href includes "generatePreCompiled")`, so the homepage build's
+   `?generatePreCompiled` boot fetches them even though tests are stripped. Before this arc,
+   build.py happened to write two EMPTY manifests for a homepage build and the tail deleted
+   `js/tests` afterwards. The build now reproduces that shape explicitly: a homepage build writes
+   two empty stubs into a REAL `js/tests` directory and `remove_tests_link` clears them after the
+   pass (its second branch), so the shipped tree still has no `js/tests` entry. (The pre-compile
+   script is WSL-only and a no-op on macOS, so this is latent here — but it would have broken the
+   WSL path silently. Arc 2 narrows the boot condition and retires the WSL rig.)
+3. **ADDED — the build generates the manifests too.** L-D3 said "`npm run manifests` for the
+   manual-browser flow", but since `BUILDFLAG_LOAD_TESTS` is build-wide, `index.html` — not just
+   the harness — fails to boot without them. So `build_it_please.sh` runs the generator once
+   (non-homepage/non-notests), which keeps "build, then open index.html" working with no extra
+   step. Anti-staleness is unaffected: it comes from every runner regenerating at startup.
+4. **ADDED — the manifest write is atomic and no-op-when-unchanged.** A gauntlet runs a dozen legs
+   at once, each regenerating at startup, while browsers read those same files live through the
+   link. A plain `writeFileSync` truncates-then-fills, so a page loading `testsManifest.js` at that
+   instant could read a partial file. `writeIfChanged` compares content first (so the common case
+   writes nothing at all) and otherwise writes a temp file beside it and `rename()`s over the
+   target. Verified with 20 concurrent regenerations: no torn file, no stray temp.
+5. **CONFIRMED — `rm -rf` on the link's PARENT is safe.** Not in the §0.2(4) matrix but relied on by
+   the build's `rm -rf $BUILD_PATH/js` cleanup: sandbox-measured, it removes the link without
+   descending, leaving the target intact. The build removes the link first anyway (defence in depth).
+6. **EXTRA RETIREMENT — `scripts/recompress-and-rebuild.sh` deleted.** Its entire reason for
+   existing ("recompress, then full-rebuild so the shrunk assets reach the running world") was the
+   copy. With the link the rebuild is pointless; the underlying
+   `scripts/recompress-swcanvas-references.js` is unchanged and directly runnable. No code called
+   the wrapper.
+7. **NOTE — capture on this machine renames references via `systemInfoHash`.** The gated recapture
+   proof produced byte-identical PNGs and an identical `dataHash`, but a different filename: the
+   committed references were captured on a 2560×1440 24-bit display and this run used the laptop's
+   1512×982 30-bit one, and `systemInfo` (screen size/colour depth) feeds `hashOfSystemInfo`. That
+   hash is metadata, never matched on, so nothing broke — but a recapture done on the "wrong"
+   display renames every file it touches. Unrelated to this arc; worth knowing before a mass
+   recapture. The proof's churn was reverted.

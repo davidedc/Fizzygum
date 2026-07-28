@@ -3,18 +3,13 @@
 # Examples:
 #   ./build_it_please --homepage
 #     leaves out all tests and removes experimental parts of the code
-#   ./build_it_please.sh --homepage --keepTestsDirectoryAsIs
-#     homepage build, but if there are any tests in the current build, it leaves them there,
-#     so you can do a full-test build much quicker later
 #   ./build_it_please --notests
 #     removes tests, leaves in experimental parts of the code
-#   ./build_it_please --keepTestsDirectoryAsIs
-#     leaves in experimental parts of the code, leaves the whole "tests" directory AS IS, which saves a loooot of time
-#   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos
-#     as before but also includes the video player and the videos
-#   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos; cp -R /Volumes/Seagate\ 5tb/Fizzygum-videos-private ../Fizzygum-builds/latest/videos
-#     as before but also includes the video player and the videos, and copies the private videos
-#   ./build_it_please.sh --keepTestsDirectoryAsIs --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos
+#   ./build_it_please.sh --includeVideoPlayer --includeVideos
+#     also includes the video player and the videos
+#   ./build_it_please.sh --includeVideoPlayer --includeVideos; cp -R /Volumes/Seagate\ 5tb/Fizzygum-videos-private ../Fizzygum-builds/latest/videos
+#     as before, and copies the private videos
+#   ./build_it_please.sh --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos
 #     as before but instead of copying the private videos, keep the existing ones (as these can take a long time to copy otherwise)
 #   ./build_it_please
 #     leaves in tests and experimental parts of the code
@@ -36,7 +31,6 @@ args=( "$@" )
 
 # we'll put the switches in these variables:
 homepage=false
-keepTestsDirectoryAsIs=false
 notests=false
 includeVideoPlayer=false
 includeVideos=false
@@ -49,10 +43,6 @@ while test $# -gt 0; do
   case "$1" in
     --homepage)
       homepage='true'
-      shift
-      ;;
-    --keepTestsDirectoryAsIs)
-      keepTestsDirectoryAsIs='true'
       shift
       ;;
     --includeVideoPlayer)
@@ -158,27 +148,45 @@ if [ ! -d $BUILD_PATH ]; then
 fi
 
 
+# ---- the test-serving link: the ONLY two operations allowed on $BUILD_PATH/js/tests ----
+#
+# $BUILD_PATH/js/tests is a relative SYMLINK to the sibling tests repo's tests/ directory
+# (created below), so the built world serves the tests where they actually live — no copy.
+# That makes the path DANGEROUS to spell casually: a trailing-slash `rm -rf $BUILD_PATH/js/tests/`
+# or a `find -L` over the build tree DELETES THE REAL TESTS through the link (measured), while
+# the slash-less form only removes the link. So this script contains exactly two operations on
+# that path, and nothing else may touch it:
+#   - remove_tests_link below;
+#   - the single `ln -sfn` that creates it (-n so a re-run REPLACES the link instead of writing
+#     a stray link INSIDE the target).
+# Recursive / `find` operations on $BUILD_PATH/js/tests are banned in any spelling.
+#
+# remove_tests_link handles both shapes the path can take — the symlink of a normal build, and
+# the real directory of two empty manifest stubs a --homepage build leaves there (see the
+# scaffolding step). NEITHER branch can recurse: `rm -f` refuses a directory outright, and
+# `rmdir` refuses both a non-empty directory and a symlink. So no spelling here, even a wrong
+# one, can reach the real tests through the link.
+remove_tests_link() {
+  if [ -L "$BUILD_PATH/js/tests" ]; then
+    rm -f "$BUILD_PATH/js/tests"
+  elif [ -d "$BUILD_PATH/js/tests" ]; then
+    rm -f "$BUILD_PATH/js/tests/testsManifest.js" "$BUILD_PATH/js/tests/testsAssetsManifest.js"
+    rmdir "$BUILD_PATH/js/tests" 2>/dev/null
+  fi
+  return 0
+}
+
 # ---------------------------------------- cleanup -------------------------------------------
 
 rm -rf $BUILD_PATH/*.html
 rm -rf $BUILD_PATH/icons
 
-if $keepTestsDirectoryAsIs ; then
-  if [ ! -d $BUILD_PATH/js/tests ]; then
-    echo
-    echo ----------- error -------------
-    echo You asked to keep the tests but there
-    echo is no tests directory
-    echo
-    exit 1
-  else
-    # delete everything in $BUILD_PATH/js apart from the $BUILD_PATH/js/tests directory
-    find $BUILD_PATH/js/ -maxdepth 1 ! -path $BUILD_PATH/js/ -not -name "tests" -exec rm -r {} \;
-  fi
-else
-  # remove the whole $BUILD_PATH/js directory
-  rm -rf $BUILD_PATH/js
-fi
+# Drop the link BEFORE wiping js/ — `rm -rf` on a directory CONTAINING a symlink removes the
+# link and never descends through it (verified), but removing it first means the recursive
+# delete never meets a symlink at all.
+remove_tests_link
+# remove the whole $BUILD_PATH/js directory
+rm -rf $BUILD_PATH/js
 
 if $keepPreviousPrivateVideos ; then
   if [ ! -d $BUILD_PATH/videos/Fizzygum-videos-private ]; then
@@ -233,9 +241,35 @@ if [ ! -d $SCRATCH_PATH ]; then
   mkdir $SCRATCH_PATH
 fi
 
-# make space for the test files
-if [ ! -d $BUILD_PATH/js/tests ]; then
-  mkdir $BUILD_PATH/js/tests
+# ---- serve the tests through a link instead of copying them in ----
+# $BUILD_PATH/js/tests -> the sibling tests repo's tests/ directory. RELATIVE (so the whole
+# umbrella can be moved/renamed), and from $BUILD_PATH/js that is three levels up to
+# Fizzygum-all/ then down into Fizzygum-tests/tests. Everything loads over file:// by
+# <script> injection, which follows the link happily on both engines the suite drives.
+# A --homepage / --notests build ships NO js/tests entry at all (see remove_tests_link above).
+if $homepage ; then
+  # --homepage strips the tests, but its pre-compile pass (further down) loads the page as
+  # ?generatePreCompiled, and THAT boot path still fetches the two manifests regardless of
+  # BUILDFLAG_LOAD_TESTS (src/boot/globalFunctions.coffee — arc 2 narrows the condition).
+  # Two EMPTY stubs in a REAL directory satisfy it; the homepage tail removes them again, so
+  # the shipped tree has no js/tests entry. Same shape as before the test-serving link, where
+  # build.py wrote exactly these two empty manifests for a homepage build.
+  mkdir -p $BUILD_PATH/js/tests
+  printf 'testsManifest = [];\n' > $BUILD_PATH/js/tests/testsManifest.js
+  printf 'testsAssetsManifest = [];\n' > $BUILD_PATH/js/tests/testsAssetsManifest.js
+elif ! $notests ; then
+  ln -sfn ../../../Fizzygum-tests/tests $BUILD_PATH/js/tests
+  # The two manifests the booting world loads (js/tests/testsManifest.js +
+  # testsAssetsManifest.js) are DERIVED from the tests/ tree and gitignored, so generate them
+  # here — that keeps "build, then open index.html in a browser" working with no extra step.
+  # Every headless runner and capture script ALSO regenerates them at startup, which is what
+  # makes a stale manifest impossible: a test added after this build is picked up with no
+  # rebuild. (This is deliberately NOT gated on --noSyntaxCheck; it is not a check.)
+  if [ -d ../Fizzygum-tests ] && command -v node &> /dev/null ; then
+    node ../Fizzygum-tests/scripts/generate-tests-manifests.js --quiet || exit 1
+  fi
+else
+  remove_tests_link
 fi
 
 # generate the Fizzygum coffee file in the delete_me directory
@@ -745,65 +779,6 @@ fi
 echo "... done copying icon files"
 
 
-if ! $notests && ! $homepage && ! $keepTestsDirectoryAsIs ; then
-
-  # read -p "Got in the notests area. Press any key to continue... " -n1 -s
-
-  # the tests files are copied from a directory
-  # where they are organised in a clean structure
-  # so we copy them with their structure first...
-  mkdir $BUILD_PATH/js/tests/assets
-  echo "copying all tests (this could take a minute)..."
-  cp -r ../Fizzygum-tests/tests/* $BUILD_PATH/js/tests/assets &
-
-  # ------  spinning wheel  -------
-  pid=$! # Process Id of the previous running command
-  spin='-\|/'
-  i=0
-  TOTAL_NUMBER_OF_FILES=$(ls -afq ../Fizzygum-tests/tests/ | wc -l)
-
-  while kill -0 $pid 2>/dev/null
-  do
-    i=$(( (i+1) %4 ))
-    CURRENT_NUMBER_OF_FILES=$(ls -afq $BUILD_PATH/js/tests/assets | wc -l)
-    printf "\r${spin:$i:1} %s / %s" $CURRENT_NUMBER_OF_FILES $TOTAL_NUMBER_OF_FILES
-    sleep 1
-  done
-  # ------  END OF spinning wheel  -------
-
-
-  echo "... done copying all tests"
-
-  # ...however, the system actually needs the "body"
-  # of the test (the one file with the commands)
-  # all into one directory.
-  # So we go through what we just copied and pick the
-  # test body files and move them all into one
-  # directory
-  echo "moving all tests body into the same directory..."
-  # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-  # The test-BODY files are the SystemTest_<name>.js metadata + ..._automationCommands.js;
-  # they are exactly the SystemTest_*.js files WITHOUT a "-dataHash" in the name. The
-  # reference-image files DO carry "-dataHash" and must be left under js/tests/assets/ for
-  # the next step to flatten there.
-  # NOTE: this used to match filenames ending in six NON-digits, which mis-filed any
-  # SWCanvas reference whose 64-hex SHA-256 ended in six hex letters (~0.28% of them) as a
-  # "body" file — moving it out of assets/ so the loader 404'd and the test falsely failed.
-  # The "-dataHash" discriminator is hash-format-agnostic and leaves the native set unchanged.
-  find $BUILD_PATH/js/tests -iname 'SystemTest_*.js' ! -iname '*-dataHash*' -exec mv {} $BUILD_PATH/js/tests \;
-  echo "...done"
-
-  # also all the assets are lumped-in into another directory
-  # this is because the path would otherwise be too long to be
-  # accessed by browsers (both Edge and Chrome in Nov 2018) in
-  # Windows.
-  echo "moving all tests assets into the same directory..."
-  # we don't seem to need the escaping in Windows Subsystem for Linux, while in OSX we needed \{\}
-  find $BUILD_PATH/js/tests/assets -iname 'SystemTest_*.js' -exec mv {} $BUILD_PATH/js/tests/assets \;
-  echo "...done"
-fi
-
-
 echo "cleanup unneeded files"
 rm -rdf $SCRATCH_PATH
 echo "...done"
@@ -825,9 +800,9 @@ if $homepage ; then
   echo "generating the pre-compiled file via the browser. this might take a few seconds..."
   . ./buildSystem/generate-pre-compiled-file-via-browser.sh
 
-  if ! $keepTestsDirectoryAsIs ; then
-    rm -rdf $BUILD_PATH/js/tests
-  fi
+  # the pre-compile pass above is done, so drop the two empty manifest stubs it needed: the
+  # shipped homepage tree carries no js/tests entry at all.
+  remove_tests_link
 
   rm $BUILD_PATH/js/libs/FileSaver.min.js
   rm $BUILD_PATH/js/libs/jszip.min.js
