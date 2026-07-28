@@ -74,8 +74,8 @@ here — see §10.
    begins. A and C are independent of each other; B depends on A's vendored artifacts.
 4. Phase A works in the SWCanvas repo at `/Users/davidedellacasa/code/Unified SW Canvas/SWCanvas`
    — **the path contains spaces**: quote it everywhere; `git -C "<path>"` for every git command.
-5. Owner gates: ratify the D-decisions marked RATIFY (§1) at kickoff if the owner is present;
-   otherwise proceed with the recommended choice and list them in the end-of-arc review.
+5. Owner gates: D3–D6 were RATIFIED by the owner on 2026-07-28 (all recommended choices) —
+   no kickoff questions needed; execute them as LOCKED.
    **Never commit or push without explicit owner approval** (standing rule). Cross-repo commit
    order at the end: SWCanvas first (dist is committed there), then Fizzygum (pin bump + build
    changes), then Fizzygum-tests (script adaptations).
@@ -95,10 +95,10 @@ external cross-platform driver.
 |---|---|---|---|
 | D1 | Backend selection | Build-time, per entry page. `worldWithSystemTestHarness.html` (+ `index-sw.html`) preset `window.FIZZYGUM_USE_SWCANVAS = true` and load the SW-full bundle; `index.html` presets `false` and loads the native+3D-core bundle. | LOCKED (owner, 2026-07-27) |
 | D2 | Precompile generation | Externalized: drain deleted from src, accumulator flag-gated, WSL script replaced by a puppeteer driver living in `Fizzygum-tests/scripts/`. | LOCKED (owner, 2026-07-28) |
-| D3 | det-trig in the native bundle | **Drop it** (it exists solely for SW cross-engine determinism; native pixels are not suite-gated). Consequence: native-entry trig differs from platform-Math by ≤1 ULP vs today, and Fizzytiles' cube renders ~1 ULP differently between the two entries. Keep the shim in the SW bundle unchanged. | RECOMMENDED — RATIFY |
-| D4 | Interactive SW entry | Ship `index-sw.html` (SW bundle, no test harness) — replaces the owner's `?sw=1`-on-index habit and gives the smoke script a clean SW page. | RECOMMENDED — RATIFY |
-| D5 | Homepage flavour | Native-only: no SW bundle, no `index-sw.html`, no `font-assets/` copy in `--homepage` trees (it already `rm`s the harness page). Saves 90 MB deploy + 263 KB boot payload. | RECOMMENDED — RATIFY |
-| D6 | The `?sw=1` query param | Delete the URL-param fallback (`globalFunctions.coffee` — the `bootQueryParams.get("sw")` branch) in the same arc; the preset is the only mechanism. Keep `?dpr=` (still needed for HiDPI test forcing). Update the three tests-repo scripts that pass `?sw=1` (harmless-but-dead once pages preset). | RECOMMENDED — RATIFY |
+| D3 | det-trig in the native bundle | **Drop it** (it exists solely for SW cross-engine determinism; native pixels are not suite-gated). Consequence: native-entry trig differs from platform-Math by ≤1 ULP vs today, and Fizzytiles' cube renders ~1 ULP differently between the two entries. Keep the shim in the SW bundle unchanged. | LOCKED (owner ratified 2026-07-28) |
+| D4 | Interactive SW entry | Ship `index-sw.html` (SW bundle, no test harness) — replaces the owner's `?sw=1`-on-index habit and gives the smoke script a clean SW page. | LOCKED (owner ratified 2026-07-28) |
+| D5 | Homepage flavour | Native-only: no SW bundle, no `index-sw.html`, no `font-assets/` copy in `--homepage` trees (it already `rm`s the harness page). Saves 90 MB deploy + 263 KB boot payload. | LOCKED (owner ratified 2026-07-28) |
+| D6 | The `?sw=1` query param | Delete the URL-param fallback (`globalFunctions.coffee` — the `bootQueryParams.get("sw")` branch) in the same arc; the preset is the only mechanism. Keep `?dpr=` (still needed for HiDPI test forcing). Update the three tests-repo scripts that pass `?sw=1` (harmless-but-dead once pages preset). | LOCKED (owner ratified 2026-07-28) |
 
 Non-goals: dynamic/lazy part loading; packaging profiles; anything touching the compiler; the
 single-file-save arc (separate locked plan — this arc *upgrades* its §7.2/D1 option, see §10).
