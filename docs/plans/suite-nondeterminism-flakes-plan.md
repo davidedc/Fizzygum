@@ -1,8 +1,10 @@
-# Suite nondeterminism — two OPEN non-boot flakes (discovered 2026-07-28)
+# Suite nondeterminism — non-boot flakes (discovered 2026-07-28)
 
-**STATUS (updated 2026-07-28, same day): FLAKE B — root-caused, FIXED and gated (§3.6). FLAKE A —
-still open; hypothesis A3 added (§2.6) and the deciding diagnostic landed; netting overnight with
-`torture-headless.js`.** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
+**STATUS (updated 2026-07-28, same day): FLAKE B — root-caused, FIXED, gated and PUSHED (§3.6).
+FLAKE A — still open; hypothesis A3 added (§2.6) and the deciding diagnostic landed; netting with
+`torture-headless.js`. FLAKE C (§2.7) — NEW, found by that net: a DETERMINISTIC `shards=1`-only
+failure, proven pre-existing on unmodified `master`, and invisible to every standing gate because
+none of them runs 1 shard.** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
 ZERO prior context. Every fact below was verified against the working trees on 2026-07-28
 (Fizzygum `master`, Fizzygum-tests `master`, suite = 268 SystemTests). Line numbers WILL drift —
 **the quoted method/variable names and code snippets are authoritative; re-grep before trusting any
@@ -12,9 +14,9 @@ ZERO prior context. Every fact below was verified against the working trees on 2
 (they are what made the fix findable), but §3.5's proposed one-line fix was **falsified at
 execution** — see §3.6.
 
-**MANDATE.** Eliminate both flakes at the root. The standing project bar is that a SystemTest
+**MANDATE.** Eliminate these flakes at the root. The standing project bar is that a SystemTest
 failure means a real defect: boot-storm infra flakes are tolerated (a shard that never starts), and
-**nothing else is**. Neither flake here is a boot flake. Do not "fix" either by loosening an
+**nothing else is**. None of these is a boot flake. Do not "fix" either by loosening an
 assertion, widening a tolerance, adding a retry, or moving a test out of `tests/` — those are all
 explicitly out of bounds. Either find the defect, or prove the test/rig is asking a question it has
 no right to ask and fix the QUESTION (with evidence, recorded here).
@@ -61,9 +63,10 @@ repeats it. Arc 2 landed green and is closed; these two are the residue.
 
 1. `/Users/davidedellacasa/code/Fizzygum-all/fg status` — confirm clean trees, note the suite count.
 2. Read this doc fully, then `Fizzygum-tests/DETERMINISM.md` §2c, §3a, §3e and §4 (the playbook).
-3. **Flake B first (§3).** It has a mechanically-supported hypothesis, a one-line candidate fix, and
-   reproduces ~1 in 3 full gauntlets — it is by far the more tractable of the two. Flake A (§2) is a
-   burst-mode 3a-class race that resisted every forcing technique tried; do not start there.
+3. **Flake B (§3) is DONE** — read §3.6 for what it cost and what it taught. Of what remains,
+   **flake C (§2.7) is by far the more tractable**: it is 100% reproducible (`--shards=1`), is a
+   textbook `DETERMINISM.md` §2d state-leak shape, and bisects cheaply. Flake A (§2) is a burst-mode
+   3a-class race that resisted every forcing technique tried; do not start there.
 4. Every phase ends with its gate green (§5) before the next begins.
 5. **Never commit or push without explicit owner approval** (standing rule).
 6. Budget: assume gauntlet runs are ~5–6 min each and that confirming/refuting flake B costs
@@ -259,6 +262,50 @@ still showing placeholder boxes? (`textDirty` is true for either "atlas in fligh
 scheduled"; only the former guarantees boxes.) The decisive probe is whether a forced
 `resetImmutableBackBuffersCache()` at read A changes the pixels — do it in `.scratch/`, not in the
 committed test.
+
+---
+
+## §2.7 FLAKE C (NEW, found 2026-07-28 by the flake-A net) — a DETERMINISTIC `shards=1` failure
+
+`SystemTest_macroSaveAsPromptAboveTiltedWindow` fails **100% at every `shards=1` config** and
+passes at every other shard count. From the first 9 torture iterations:
+
+| config | result |
+|---|---|
+| `dpr1-fast-s1`, `dpr1-fastest-s1`, `dpr2-fast-s1` | **FAIL 3/3** |
+| `dpr1-{fast,fastest}-s{2,4,8}` | PASS 6/6 |
+
+Signature: `FAIL - no screenshots like this one` and **the test COMPLETES** — so it is a REAL pixel
+mismatch, not the §2b stall-watchdog false positive. Torture classifies it "DETERMINISTIC fail".
+
+**⚠ This is NOT a flake and NOT caused by the flake-B fix.** Established by the §4.1 revert A/B
+(the pre-fix tree, rebuilt, `--shards=1 --dpr=1 --speed=fastest`): **it fails identically on
+unmodified `master`** — 268 tests, `failed: 1`, same test. Do not attribute it to the flake-B commits
+(Fizzygum `e798b2c5`, tests `7cb613c3c`).
+
+**⚠⚠ The standing gates are STRUCTURALLY BLIND to it.** `fg gauntlet` runs its suites at 4 shards
+and `fg suite` at 8; nothing in the routine loop ever runs `shards=1`. This bug has therefore been
+invisible to every green gate. That blind spot is arguably the more important finding than the bug.
+
+**Torture bookkeeping.** After this finding the net was resumed as `--shards=2,4,8`: flake C is now
+KNOWN and 100% deterministic, so leaving s1 in would burn ~11 min per s1 iteration re-proving it and
+bury flake A's signal. Flake A has only ever been seen at 4–6 shards, so s2/4/8 is the right net for
+it. The resumed run warns that its tallies "MIX builds" (`e0d3ce80-dirty` vs `e798b2c5-dirty`) —
+**benign here:** `e0d3ce80-dirty` WAS the flake-B fix, uncommitted at the time, so the two labels
+denote identical code.
+
+**Where to start.** The shard count is the whole variable, and it is not a load axis — it is a
+*predecessor-set* axis: at s1 the victim runs after all 267 other tests in ONE page; at s8 after only
+~33. That is precisely **DETERMINISM.md §2d, the cross-test STATE LEAK class** (a world-level
+ephemeral Set/Map that `_resetWorldNoSettle` leaves uncleared), and the leaking predecessor must be
+one that does NOT share the victim's shard at s2/s4/s8 — a strong constraint that makes a bisect
+cheap. Tool: `run-sequence-headless.js --before=SystemTest_macroSaveAsPromptAboveTiltedWindow`
+to list predecessors, then bisect them.
+
+⚠ **§2d's "SaveAs corollary" (2026-07-20) must be re-read, not trusted.** It records this same test
+as an unreproducible low-frequency flake that did NOT reproduce under its exact in-suite prefix, and
+concludes "do NOT recapture it". The 100%-at-s1 result contradicts the "unreproducible" half. The
+"do not recapture" half still stands — recapturing would bake in whatever the leak produces.
 
 ---
 
