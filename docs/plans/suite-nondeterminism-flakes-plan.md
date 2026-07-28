@@ -1,10 +1,16 @@
 # Suite nondeterminism — two OPEN non-boot flakes (discovered 2026-07-28)
 
-**STATUS: PLAN ONLY — AUTHORED 2026-07-28. Written to be executed COLD by an LLM/engineer with
-ZERO prior context.** Every fact below was verified against the working trees on 2026-07-28
+**STATUS (updated 2026-07-28, same day): FLAKE B — root-caused, FIXED and gated (§3.6). FLAKE A —
+still open; hypothesis A3 added (§2.6) and the deciding diagnostic landed; netting overnight with
+`torture-headless.js`.** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
+ZERO prior context. Every fact below was verified against the working trees on 2026-07-28
 (Fizzygum `master`, Fizzygum-tests `master`, suite = 268 SystemTests). Line numbers WILL drift —
 **the quoted method/variable names and code snippets are authoritative; re-grep before trusting any
 `file:line`.**
+
+**Read §3.6 before §3.1–3.5.** Those sections are preserved as the pre-fix investigation record
+(they are what made the fix findable), but §3.5's proposed one-line fix was **falsified at
+execution** — see §3.6.
 
 **MANDATE.** Eliminate both flakes at the root. The standing project bar is that a SystemTest
 failure means a real defect: boot-storm infra flakes are tolerated (a shard that never starts), and
@@ -125,9 +131,11 @@ framework defect behind it.
 |---|---|---|---|
 | A1 | **Real broken-rect staleness** — the close genuinely drops an invalidation under some cycle interleaving | large, roughly the rotated footprint area (thousands) | framework (`_closeNoSettle` / `_fleshOutFullBroken` / island buffer) |
 | A2 | **The macro reads mid-flush** — a test-side synchronization gap (§2.1) | small and variable (single/double digits, differing run to run) | the macro (wait for a completed frame, not just input drain) |
+| A3 | **A glyph atlas warms BETWEEN the two reads** — added 2026-07-28, see §2.6 | moderate and text-shaped (the glyph pixels of the converter's labels) | the macro (measure on a text-settled canvas) |
 
 **Getting the `found:` value decides between them.** That is the single most valuable next datum,
-and it is now automatic (§1).
+and it is now automatic (§1) — as of 2026-07-28 it is accompanied by the text state that separates
+A3 from the other two (§2.6).
 
 ### 2.3 Evidence timeline (2026-07-28)
 
@@ -166,6 +174,13 @@ making the machine uniformly slow or uniformly busy.
 
 ### 2.5 Next steps for flake A
 
+> **STATE 2026-07-28 17:42 — the net is RUNNING.** `torture-headless.js` was launched with the
+> command below, against the fresh post-fix build (`harness @ 17:41:20`, both trees dirty with the
+> flake-B fix + the new §2.6 diagnostic — so anything it catches carries the `gen` datum).
+> **Morning: `cat Fizzygum-tests/.scratch/torture/REPORT.md` then `ls .scratch/torture/failures/`,
+> and read the `found:`/`gen` values per §2.6.** It is resumable and disk-capped; Ctrl-C writes a
+> final report.
+
 1. **Net it, don't chase it.** Run the standing hunter overnight — it exists for exactly this and
    writes durable, disk-bounded evidence:
    ```
@@ -186,6 +201,64 @@ making the machine uniformly slow or uniformly busy.
      same test as "the suite's most load-sensitive incremental-repaint assertion".
 3. If torture cannot catch it in a full night, say so in this doc and stop — an uncatchable 1-in-50
    flake with a self-documenting failure path is a known, bounded liability, not an open wound.
+
+### 2.6 NEW HYPOTHESIS A3 (2026-07-28), a by-product of solving flake B
+
+Flake B established that a SWCanvas canvas has a **stable but half-finished** state while glyph
+atlases warm (§3.6), and that anything reading raw pixels must gate on text-settledness. **This
+macro reads raw pixels and does not gate on it at all.** Its measurement spans a frame boundary:
+
+```coffee
+pixelsA = (ctx.getImageData 0, 0, W, H).data   # ← if a label here is still a placeholder BOX …
+world._fullChanged()
+yield "waitNoInputsOngoing"                    # … and the atlas lands during this gap …
+pixelsB = (ctx.getImageData 0, 0, W, H).data   # … this repaint draws the REAL glyph
+```
+
+The fixture is `(new DegreesConverterApp).buildWindow()` — a text-heavy window (two labelled
+calculating patch nodes). An atlas landing in that gap yields a **non-zero `diff` with no framework
+defect behind it**, and it fits the observed epidemiology better than "the machine was slow":
+atlases load by `<script>` injection over `file://`, so a machine-wide stall stretches exactly that
+window — which explains the burst (nine failures in ONE ~20-minute window, then ~50 clean runs)
+that uniform-load forcing never reproduced (§2.4, R3).
+
+**It is cheap to tell apart, and now automatic.** `WorldWdgt.immutableBackBufferGeneration` bumps
+once per atlas-warm cache reset, so the assertion now carries the text state at BOTH reads:
+
+- `gen` **differs** between the reads ⇒ **A3 confirmed** — an atlas-warm repaint landed mid-measurement.
+  Fix: make the macro wait for `world.anyTextDirty() === false` *before* `calcWin.close()`, so the
+  whole A/B is measured on a text-settled canvas. That is a measurement PRECONDITION, not a
+  tolerance — glyph-atlas warm-up is orthogonal to the broken-rect staleness under test, and the
+  assertion stays `== 0`.
+- `gen` **equal** and text clean ⇒ A3 refuted; fall back to the A1-vs-A2 split on the `found:` magnitude.
+
+⚠ Do **not** pre-emptively apply the A3 fix. It would mask A1 (a real dropped invalidation) just as
+effectively as it would cure A3, and A1 is the reason this test exists. Wait for the datum.
+
+**First reading of the new diagnostic (2026-07-28, standalone PASS) makes A3 more than speculative:**
+
+```
+PASS … (incremental render == full repaint) [read A: textDirty=true gen=1 | read B: textDirty=true gen=1] (found: 0)
+```
+
+**Text is un-settled at BOTH reads even on an idle, passing run.** The measurement is routinely taken
+while a glyph-atlas refresh is still pending — it passed only because the deferred refresh did not
+happen to land in the gap (`gen` equal). The test builds a `DegreesConverterApp` window, which draws
+fonts a freshly-reset world may not have warmed yet, so the whole warm-up can run *during* the
+measurement. Whether the rAF lands between read A and read B is exactly the kind of irregular,
+load-sensitive coin-flip that produces a burst of failures in one 20-minute window and nothing for
+the next hour (§2.3) while resisting every *uniform*-load forcing technique (§2.4).
+
+⚠ **Consequence for reading the `found:` value — this weakens the §2.2 magnitude test.** A3 would
+repaint every label in the window from placeholder box to real glyph, so it can produce a LARGE diff,
+not a small one. "Large ⇒ A1" is therefore no longer safe on its own: **check `gen` first**, and only
+fall back to the magnitude split once A3 is excluded.
+
+One question still open and cheap to answer when the datum arrives: at read A, is the text actually
+still showing placeholder boxes? (`textDirty` is true for either "atlas in flight" or "refresh
+scheduled"; only the former guarantees boxes.) The decisive probe is whether a forced
+`resetImmutableBackBuffersCache()` at read A changes the pixels — do it in `.scratch/`, not in the
+committed test.
 
 ---
 
@@ -235,7 +308,7 @@ flake in this family (`dropPixelParity`, 2026-07-27 — one day BEFORE arc 2, so
 it) was a mid-settle sample, and this convergence loop was the fix. **That fix is insufficient here**,
 because both states are stable (R2).
 
-### 3.3 Leading hypothesis: lazily-loaded glyph atlases — mechanically confirmed, not yet caught in the act
+### 3.3 Hypothesis: lazily-loaded glyph atlases — **CONFIRMED 2026-07-28, then fixed (§3.6)**
 
 The framework documents the exact mechanism that produces two stable renders of text. From
 `Fizzygum/src/boot/extensions/SWCanvasElement-extensions.coffee` (grep `swCanvasAtlasPending`):
@@ -274,8 +347,9 @@ grep -c anyTextDirty Fizzygum-tests/scripts/smoke-boot-headless.js              
 Load-sensitivity follows: atlases load by `<script>` injection over `file://`, so heavy parallel
 load stretches precisely the window between state X and state Y.
 
-**Status: mechanically supported, NOT empirically confirmed.** Nobody has yet observed
-`anyTextDirty() === true` at the moment of a mismatching capture. Confirm that before fixing (§3.5).
+**Status: CONFIRMED EMPIRICALLY 2026-07-28 — and reproduced DETERMINISTICALLY, no gauntlet needed.**
+See §3.6 for the evidence, and for the one thing the hypothesis got WRONG (the proposed
+one-line `anyTextDirty()` fix would NOT have worked).
 
 ### 3.4 What does NOT reproduce it
 
@@ -310,6 +384,94 @@ bespoke load harness.**
 5. If step 1 REFUTES the hypothesis (mismatch with text clean), record that here as a falsified idea
    and re-open: the next suspects are any other lazily-warmed cache that a repaint re-blits
    (the island buffer cache / `immutableBackBufferGeneration`, `docs/architecture/transforms.md`).
+
+### 3.6 EXECUTED 2026-07-28 — confirmed, fixed, audited
+
+**The whole flake was cracked without a single gauntlet reproduction.** Rather than wait for a
+~1-in-3 stochastic failure, the atlas warm-up was observed DIRECTLY: boot `index-sw.html`, place the
+rig's exact fixture (`new FrameWdgt(nil, {labelContent: 'my window'})`) immediately at world-ready,
+and hash it EVERY FRAME alongside `world.anyTextDirty()` and `WorldWdgt.immutableBackBufferGeneration`
+(the counter that bumps once per atlas-warm cache reset). The warm-up walks through **three** stable
+renders, and two of them are the flake's two hashes:
+
+| frames | hash | `anyTextDirty()` | `gen` | what it looks like |
+|---|---|---|---|---|
+| 3–5 | `#2592767031` | true | 0 | **every** string is a placeholder box |
+| 6–8 | `#3394276982` | true, **then false at frame 8** | 1 | icon captions real; the **title bar + "Drop a widget in here" still boxes** |
+| 9+ | `#1949127884` | false | 2 | fully warm |
+
+`#3394276982` and `#1949127884` are EXACTLY the pair from the 2026-07-28 16:21 occurrence
+(`orig#3394276982 vs restored#1949127884`, then the same two swapped). The 15:27 occurrence's
+`#1077227077` likewise turns out to be the fully-warm masked-world render (it is what the fixed rig
+converges on every time), so `#1260335209` was its half-warm twin. **Mechanism: not in doubt.**
+
+**⚠ What the hypothesis got WRONG — the proposed one-line fix was INSUFFICIENT.** §3.5 step 2
+proposed gating the capture on `anyTextDirty() === false`. Look at frame 8 above: the half-warm
+render is on screen and **`anyTextDirty()` already reads false**. The predicate under-reported,
+because `swCanvasAtlasPending--` runs in the atlas `.then` *before* `swCanvasScheduleTextRefresh()`
+defers the placeholder-clearing repaint to a rAF. So the counter hits 0 a frame or more before the
+boxes are actually gone — and those boxes live in a cached back buffer that re-blits identically,
+so the state is stable and a convergence capture converges on it. A rig gated only on the old
+predicate would still have flaked. **This is why §3.5 step 1 (confirm before fixing) is in the plan:
+the mechanism was right and the fix derived from it was not.**
+
+**The fix, in two parts.**
+
+1. **Framework — make the predicate honest** (`src/boot/extensions/SWCanvasElement-extensions.coffee`):
+   `swCanvasAnyTextDirty` now returns `swCanvasAtlasPending > 0 or swCanvasRefreshScheduled`, and
+   `doRefresh` clears `swCanvasRefreshScheduled` only AFTER applying the reset. `anyTextDirty()` now
+   means what its doc always claimed — "the screen may still be showing placeholder boxes" — for the
+   whole window, not just the loading half. Re-running the frame probe on the fixed build shows the
+   half-warm render now carrying `textDirty=true`; the predicate goes false only on the frame the
+   fully-warm render appears. `WorldWdgt.anyTextDirty`'s doc-comment was updated to match.
+2. **Both serialization rigs — use the framework's own gate** instead of convergence alone.
+   `R.captureSettled` / `R.captureWorldMaskedSettled` (`serialization-roundtrip-headless.js`) and
+   `R.captureSettled` (`serialization-file-roundtrip-headless.js`) now `await R.awaitScreenshotReady()`
+   first, which polls **`world.macroToolkit.readyForMacroScreenshot()`** — the framework's single
+   SWCanvas screenshot settle gate (wait text-settled → force ONE warm-atlas repaint via
+   `resetImmutableBackBuffersCache` → wait a frame to flush it) — and only then runs the existing
+   consecutive-frame convergence loop. Forcing the repaint is what makes the result independent of
+   *when* the deferred refresh happens to land, so part 2 does not merely lean on part 1. Reuse, not
+   re-derivation: the rigs and the suite's screenshot gate can no longer drift apart. (The gate ships
+   in every build that emits `index-sw.html` — only `--homepage` strips `src/macros`, and a
+   `--homepage` build has no SWCanvas page for these rigs to boot — so its absence now throws loudly
+   rather than silently degrading.)
+   Neither part loosens anything: the checks still demand exact hash equality.
+
+**Self-documenting from now on.** Every capture records `textDirty` and `gen`, and every
+`pixelParity` detail line prints them for both sides — e.g.
+`orig#1949127884 [textDirty=false gen=3] vs restored#1949127884 [textDirty=false gen=4]`. A future
+recurrence names its own cause instead of costing another investigation. (`gen` differing by one
+between the two sides is normal and expected — it is the gate's own forced reset.)
+
+**§3.5 step 4 — the audit of every other pixel-reading path.** This is what makes it an elimination
+rather than a rig patch:
+
+| path | gated? | verdict |
+|---|---|---|
+| SystemTest screenshots (`compareScreenshots` ← `takeScreenshot_InputEvents_Macro`) | `readyForMacroScreenshot` — full protocol | **safe** (and it survived the old under-reporting predicate only because it forces the reset itself) |
+| `AutomatorPlayer.checkPaintTruthfulness` / `assertPaintTruthfulAfterFullRepaint` (paint audit) | no text gate | **safe** — `before`/`after` are read SYNCHRONOUSLY with no await between them, so no atlas can land mid-measurement |
+| `serialization-roundtrip-headless.js` | was convergence-only | **was exposed — FIXED** (flake B itself) |
+| `serialization-file-roundtrip-headless.js` | was convergence-only | **was exposed — FIXED.** Same `captureSettled` shape, same text-bearing `FrameWdgt` fixture. Its 2026-07-27 `dropPixelParity` flake was diagnosed as a mid-settle sample and "fixed" with the convergence loop; on this evidence that was very likely the SAME bistability, and convergence alone would not have cured it |
+| `swcanvas-hidpi-headless-check.js` | gates on `anyTextDirty()` | **safe** — reads canvas *dimensions* only, never pixel hashes |
+| `smoke-boot-headless.js` | gates on `anyTextDirty()` | **safe** — boot readiness only, no pixel hashes |
+
+**Gates (§5).** `fg gauntlet` ×3 back to back, all **13/13 PASS, zero reference churn** —
+17:27 (253s), 17:36 (251s), 17:40 (259s) — plus `fg homepage`. The meaningful detail is not just
+"green": the `serialization` leg now reads **`serialization:PASS` IN-WAVE** in all three, where the
+pre-fix baseline run (16:41) read `serialization:PASS-serial-only` — i.e. it had failed inside the
+concurrent wave and passed only on `fg`'s serial retry. That retry-shaped signature is exactly what
+this flake looked like, and it is gone. Three runs is a meaningful, not conclusive, signal against a
+~1-in-3 flake (P(3 clean by luck) ≈ 30%) — but combined with a root cause reproduced deterministically
+and a fix that removes the mechanism, not the symptom, the case is closed.
+
+⚠ **One process trap cost a run.** Gauntlet #2 was invalidated by editing a `src/*.coffee` file
+*while it ran*: `fg gauntlet` builds ONCE up front, so wave B's stale-build guard refused to run and
+`settle`/`capstone` failed at 0s/3s with `runner exit=2` / `prelude installed 0/0` — which reads like
+a serious regression and is not. During a long op, treat `fg`, `src/**`, and `tests/**` as read-only
+(docs and plans are fine). If it happens: kill the run and restart clean; do not try to salvage it.
+
+**A lead for flake A fell out of this** — see §2.6.
 
 ---
 

@@ -1452,9 +1452,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @worldCanvasContext = @worldRenderCanvas.getContext "2d"
     @worldCanvasContext.textPixelDensity = ceilPixelRatio if @worldCanvasContext.textPixelDensity?
 
-  # True while any SWCanvas glyph atlas is still loading (text would still show
-  # placeholder boxes). The SystemTest screenshot gate waits on this so it never
-  # captures un-settled text. Always false under the native backend.
+  # True while the screen may still be showing SWCanvas placeholder boxes instead of real
+  # glyphs — either an atlas is still loading, or one has landed and its placeholder-clearing
+  # repaint has not been applied yet (SWCanvasElement-extensions). Both states are covered
+  # deliberately: the half-warm one renders STABLY (the boxes sit in a cached back buffer that
+  # re-blits identically), so a capture that merely waits for frame-to-frame convergence cannot
+  # tell it from a finished render. Every pixel-reading gate waits on this. Always false under
+  # the native backend.
   anyTextDirty: ->
     if window.swCanvasAnyTextDirty?
       window.swCanvasAnyTextDirty()

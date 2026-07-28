@@ -61,14 +61,23 @@ normalizeFontForSWCanvas = (cssFont) ->
 # fillText is always safe: SWCanvas paints placeholder boxes when an atlas is
 # cold. After each fillText we make sure the atlas for the current font (and the
 # BitmapTextInvariant companion, used for special chars) is loaded; when the
-# bytes arrive we repaint so the boxes become real glyphs. swCanvasAtlasPending
-# counts in-flight loads — it backs world.anyTextDirty() (the test screenshot
-# gate). Atlases not present on disk (e.g. a size we didn't vendor) just fail to
-# load and stay as placeholders.
-swCanvasAtlasPending = 0       # in-flight atlas loads — backs anyTextDirty()
-swCanvasAtlasRequested = {}    # idString -> true (request each atlas once)
-swCanvasMissingAtlases = {}    # idString -> true (warn once per missing atlas)
-swCanvasRefreshScheduled = false
+# bytes arrive we repaint so the boxes become real glyphs. Atlases not present on
+# disk (e.g. a size we didn't vendor) just fail to load and stay as placeholders.
+#
+# TWO states make text un-settled, and anyTextDirty() reports BOTH (see
+# swCanvasAnyTextDirty): an atlas still in flight (swCanvasAtlasPending), AND an
+# atlas that has landed but whose placeholder-clearing repaint has not been applied
+# yet (swCanvasRefreshScheduled — the refresh is deferred to a rAF). Reporting only
+# the first would make the predicate LIE for that in-between window: the counter is
+# already 0 while the screen still shows placeholder boxes, and — because those boxes
+# sit in a cached back buffer that re-blits identically — that half-warm render is
+# perfectly STABLE frame to frame, so a convergence-based capture happily converges on
+# it. That is exactly how the serialization rig's pixelParity went bistable
+# (Fizzygum-tests/DETERMINISM.md §2c, flake B, 2026-07-28).
+swCanvasAtlasPending = 0          # in-flight atlas loads              — backs anyTextDirty()
+swCanvasRefreshScheduled = false  # landed, repaint not applied yet    — backs anyTextDirty()
+swCanvasAtlasRequested = {}       # idString -> true (request each atlas once)
+swCanvasMissingAtlases = {}       # idString -> true (warn once per missing atlas)
 
 # When a cold atlas was drawn its glyphs went into a CACHED back buffer as
 # placeholder boxes. A plain repaint just re-blits that cache, so once the atlas
@@ -80,11 +89,17 @@ swCanvasScheduleTextRefresh = ->
   return if swCanvasRefreshScheduled
   swCanvasRefreshScheduled = true
   doRefresh = ->
-    swCanvasRefreshScheduled = false
-    # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch (so a
-    # rotated/scaled island — a further cache downstream — also rebuilds from the now-warm text, §4.4)
-    # AND repaints the world: the full repaint is intrinsic to the reset, done world-side.
-    window.world?.resetImmutableBackBuffersCache?()
+    try
+      # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch (so a
+      # rotated/scaled island — a further cache downstream — also rebuilds from the now-warm text, §4.4)
+      # AND repaints the world: the full repaint is intrinsic to the reset, done world-side.
+      window.world?.resetImmutableBackBuffersCache?()
+    finally
+      # Cleared only AFTER the reset is applied, so anyTextDirty() stays true for the WHOLE window in
+      # which the screen may still be showing placeholder boxes. In a `finally` because this flag now
+      # gates every screenshot: leaving it stuck true would hang the gates rather than surface the
+      # error. (Both steps are synchronous, so no second refresh can be scheduled in between and lost.)
+      swCanvasRefreshScheduled = false
   if window.requestAnimationFrame?
     window.requestAnimationFrame doRefresh
   else
@@ -136,7 +151,7 @@ swCanvasEnsureAtlasForFont = (coreFont, density) ->
   return
 
 swCanvasAnyTextDirty = ->
-  swCanvasAtlasPending > 0
+  swCanvasAtlasPending > 0 or swCanvasRefreshScheduled
 
 # Expose for WorldWdgt.anyTextDirty() / the SystemTest screenshot settle-gate.
 window.swCanvasAnyTextDirty = swCanvasAnyTextDirty
