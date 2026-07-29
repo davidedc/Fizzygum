@@ -2512,19 +2512,17 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   _resetWorldNoSettle: ->
     @_changed() # redraw the whole screen
-    @fullDestroyChildren()
-    # EPHEMERAL-OVERLAY bookkeeping is world-level state NOT held in the widget tree, so
-    # fullDestroyChildren above (which destroys the reconciled highlighter/pinout WIDGETS as world
-    # children / island descendants) does NOT empty these declare/current/being structures — they keep
-    # DEAD references to the just-destroyed targets + overlays. A test that leaves a highlight or pinout
-    # active at teardown (e.g. one that never calls turnOffHighlight) would then leak those dead refs
-    # into the NEXT test in the same headless process: the reconciler (addHighlightingWidgets /
-    # addPinoutingWidgets) would touch a destroyed target and mis-render. resetWorld must reset ALL
-    # world state, so clear them here (found via the R2 highlight-tracking test, which deliberately
-    # leaves its highlight on to exercise this teardown). Product-safe: resetWorld is test/dev tooling.
-    @widgetsToBeHighlighted.clear()
-    @currentHighlightingWidgets.clear()
-    @widgetsBeingHighlighted.clear()
+    # The STRUCTURAL half of the teardown -- destroy the tree, then drop every reference to what was
+    # just destroyed -- is SHARED with the snapshot loader (_teardownWorldStructureNoSettle, which
+    # ships; see its comment for why it is one core and not two twins). What remains below is the
+    # other half, which is genuinely test-only: restoring the world's PRISTINE LOOK and the harness's
+    # own ergonomics. The loader must NOT inherit that half -- it restores colour, wallpaper, prefs
+    # and the desktop scalars from the snapshot file instead.
+    @_teardownWorldStructureNoSettle()
+    # the PINOUT tracking structures — same shape, same hazard and the same fix as the highlight trio
+    # the shared core clears, but they cannot live in it: pinouts are homepage-STRIPPED (declarations
+    # ~:300, reconciler addPinoutingWidgets), so in a product build the fields do not exist and the
+    # core would throw on them. They belong to the dev/test world, which is exactly this caller.
     @widgetsToBePinouted.clear()
     @currentPinoutingWidgets.clear()
     @widgetsBeingPinouted.clear()
@@ -2537,69 +2535,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # what made macroSaveAsPromptAboveTiltedWindow fail at shards=1 (all 268 tests in one page) while
     # passing at 2/4/8, where the consuming predecessor lands in a different shard: DETERMINISM.md §2d.
     @untitledNamingService?.resetCounters()
-    # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
-    # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
-    # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
-    # regardless; the selected widget's own repaint clears its overlay.
-    @_editorSelectedWidget = nil
-    # DANGLING WORLD SLOTS. These are bare world fields holding a widget that fullDestroyChildren
-    # above just destroyed, so each would keep a DEAD reference into the next test. The app-slot
-    # singletons and the templates window are the same two the snapshot teardown
-    # (_teardownForSnapshotLoadNoSettle) already nils -- the asymmetry between the two teardowns
-    # was itself the tell. StorageSorter's furniture marking reads world[slot] and
-    # simpleEditorTemplates unconditionally, so a dead ref there is walked every sort.
-    @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
-    @simpleEditorTemplates = nil
-    # the error console is worse than a dead ref: _showErrorsHappenedInRepaintingStepInPreviousCycle
-    # only builds one `if !@errorConsole?`, so a destroyed-but-non-nil console makes every later
-    # paint error in the page report into a dead widget -- silently swallowing the errors the
-    # headless runners' fail-gate exists to catch.
-    @errorConsole = nil
-    # the last text the user edited (used by the document editor's align ops) -- a bare ref to a
-    # widget fullDestroyChildren just destroyed.
-    @lastEditedText = nil
-    # EPHEMERAL WORLD-LEVEL COLLECTIONS, same shape as the highlight/pinout sets above: none is
-    # emptied by fullDestroyChildren (they are world state, not tree state) and none is emptied by
-    # Widget._destroyNoSettle (which only unregisters from steppingWdgts / keyboardEventsReceivers /
-    # the click-outside set -- see the standing TODO there naming exactly this gap). So a test that
-    # ends with a tooltip up, a menu open, handles shown, or a scroll still gliding leaks dead refs
-    # into the next test in the same headless process.
-    #   toolTipsList              destroyToolTips would then read bounds off a destroyed tooltip
-    #   openPopUps / freshlyCreatedPopUps  mostRecentlyCreatedPopUp and the macro toolkit's
-    #                             "the pop-up that just opened" both pick out of these
-    #   popUpsMarkedForClosure    the next drain would close() an already-destroyed pop-up
-    #   hierarchyOfClicked*       stale gesture bookkeeping (cleared per click, not per test)
-    #   temporaryHandles...       dead resize/move handles
-    #   wdgtsWithOngoingScrollMomentum  the worst: anyScrollMomentumOngoing() stays true FOREVER,
-    #                             so the macro pump's waitNoInputsOngoing never settles and every
-    #                             later test in the page STALLS rather than fails
-    @toolTipsList.clear()
-    @openPopUps.clear()
-    @freshlyCreatedPopUps.clear()
-    @popUpsMarkedForClosure.clear()
-    @hierarchyOfClickedWdgts.clear()
-    @hierarchyOfClickedMenus.clear()
-    @temporaryHandlesAndLayoutAdjusters.clear()
-    @wdgtsWithOngoingScrollMomentum.clear()
-    # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
-    # list never was, so it accumulated dead widgets for the whole life of the page.
-    @widgetsGivingErrorWhileRepainting = []
-    # the track-changes STACK: a test that dies between disableTrackChanges and
-    # maybeEnableTrackChanges leaves it unbalanced, and every later test in the page would then
-    # record no broken rectangles at all -- i.e. paint nothing.
-    @trackChanges = [true]
     # DESKTOP/SESSION state that decides what a LATER test renders.
     # numberOfIconsOnDesktop is the grid cursor for auto-placed desktop icons
     # (IconicDesktopSystemPanelWdgt.add): one folder/shortcut made by an earlier test shifts the
     # next test's first icon a whole grid cell to the right. A pure GEOMETRY leak -- the strongest
     # form of this bug class, since the pixels move.
     @numberOfIconsOnDesktop = 0
-    # the one-shot "this info doc was already created" flags (InfoDocs.REGISTRY entries, set as
-    # plain own booleans on the world): once set, the SAME app launch in a later test silently
-    # builds NO info doc. Collected first, then deleted -- deleting while iterating own props
-    # is not safe.
-    infoDocFlagNames = (name for own name of @ when name.indexOf("infoDoc") is 0)
-    delete @[name] for name in infoDocFlagNames
     # dev mode decides which context menu the world (and every widget) builds. Boot turns it ON for
     # both entry pages, right after the constructor (src/boot/globalFunctions.coffee startWorld), so
     # that -- not the constructor's own false -- is the pristine value to come back to.
@@ -2621,18 +2562,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @_reLayoutDesktop()
     if @_bootAutoAdjustToFillEntireBrowserAlsoOnResize?
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = @_bootAutoAdjustToFillEntireBrowserAlsoOnResize
-    # the storage containers (bin, shelf) are not attached
-    # to the world tree so they're not in the children,
-    # so we need to clean them up separately
-    @binWdgt?.empty()
-    @shelfWdgt?.empty()
     # some tests might change the background
     # color of the world so let's reset it.
     # public-call-sanctioned: setColor is the polymorphic public color API (heavily driven by
     # macros/user code); the world reset runs outside any pass, so the react inside is harmless.
     @setColor Color.create 205, 205, 205
     # ...and the DESKTOP WALLPAPER pattern, for the same reason: it is a world-level global (held on
-    # @wallpaper, NOT in the widget tree, so fullDestroyChildren above does not touch it), so a test
+    # @wallpaper, NOT in the widget tree, so the core's fullDestroyChildren does not touch it), so a test
     # that changes it — e.g. macroWallpaperMenuTickTracksSelection picking "circles" — would otherwise
     # leak the pattern into the NEXT test in the same headless process, rendering its desktop background
     # wrong. Reset to the boot default (pattern1 = "plain"); a no-op for the tests that never change it.
@@ -2874,8 +2810,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # ($src methods, source edits), so a file/menu load confirms first; programmatic callers
   # (the rig, a macro) pass opts.skipConfirm. This is a PUBLIC orchestrator (like resetWorld):
   # it sequences self-settling operations at the top level, so its setColor / _settleLayoutsAfter
-  # calls are the sanctioned public path. NB the teardown is built from PRODUCT-safe primitives
-  # — NOT the homepage-stripped resetWorld/_resetWorldNoSettle — since this ships in --homepage.
+  # calls are the sanctioned public path. NB the teardown is the SHARED shipping core
+  # (_teardownWorldStructureNoSettle) — NOT the homepage-stripped resetWorld/_resetWorldNoSettle,
+  # which this could never call — and every step below is one half of that core's split contract:
+  # the core drops all references to what it destroyed, and this method fills the world back in.
   loadWorldSnapshot: (envelopeOrString, opts = {}) ->
     envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
     unless envelope? and envelope.format is Serializer.FORMAT and envelope.kind is "world"
@@ -2885,8 +2823,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop, and can run code the snapshot carries."
       return unless (typeof window.confirm is "function") and window.confirm msg
     section = envelope.world or {}
-    # 1. tear the current world down (product-safe) — one settle over the NoSettle core.
-    @_settleLayoutsAfter => @_teardownForSnapshotLoadNoSettle()
+    # 1. tear the current world down — one settle over the shared NoSettle core, which also zeroes
+    #    every per-class lastBuiltInstanceNumericID, giving the clean id space the restored iids need.
+    @_settleLayoutsAfter => @_teardownWorldStructureNoSettle()
     # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
     #    so registerThisInstance sees the right high-water marks (§4.4/§4.9).
     if section.idCounters?
@@ -2958,17 +2897,123 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @noteStorageMembershipMayHaveChanged()
     return
 
-  # NoSettle teardown core for a snapshot load (mirrors _resetWorldNoSettle but product-safe:
-  # no @_changed/scrollTop/setColor — the loader re-establishes those). fullDestroyChildren is
-  # itself a NoSettle-level op that ALSO zeroes every per-class lastBuiltInstanceNumericID,
-  # giving the clean id space the restored iids need. Called only inside loadWorldSnapshot's
-  # settle wrap above.
-  _teardownForSnapshotLoadNoSettle: ->
+  # --- THE SHARED STRUCTURAL TEARDOWN ----------------------------------------------------------
+  # ONE core, two callers: the test teardown (_resetWorldNoSettle) and the snapshot loader
+  # (loadWorldSnapshot). Its contract is exactly one thing:
+  #
+  #   after fullDestroyChildren(), the world holds NO reference to anything that was just
+  #   destroyed, and no bookkeeping that assumed it still exists.
+  #
+  # Restoring what the world should LOOK like afterwards is the CALLER's job — pristine grey and
+  # the harness resolution for the test path, the file's contents for the loader. That split is
+  # what lets one core serve both, and it is the whole reason the two used to look unrelated: only
+  # the LOOK half is product-vs-test, and the reference-dropping half never was.
+  #
+  # WHY IT IS SHARED RATHER THAN MIRRORED. fullDestroyChildren() is what creates the dangling
+  # references, and both callers run it — but neither caller's name said "and I am responsible for
+  # the dangling refs", so the obligation kept being satisfied on one path and forgotten on the
+  # other. The two drifted twice in two days, in OPPOSITE directions. A shared core makes "did the
+  # other teardown get this too?" un-askable, which is the point; hand-synchronised twins are what
+  # this replaces. It SHIPS (no strip markers) because loadWorldSnapshot is a product feature and
+  # _resetWorldNoSettle is homepage-stripped — so the stripped one could never have been the shared
+  # one. Every leak below was measured surviving a real loadWorldSnapshot, not argued.
+  #
+  # NoSettle tier: BOTH callers already wrap this in exactly ONE @_settleLayoutsAfter, so no
+  # self-settling public setter may move in here. setColor / wallpaper setPattern stay with the
+  # test caller (which sanctions them explicitly); the loader calls them OUTSIDE its settle wrap on
+  # purpose. Mixing tiers here is how the flow-violation throw gets reintroduced.
+  _teardownWorldStructureNoSettle: ->
+    # destroys the widget TREE and zeroes every per-class lastBuiltInstanceNumericID, giving the
+    # clean id space a snapshot's restored iids need. Everything after it exists because it CANNOT
+    # reach world-level state held outside the tree.
     @fullDestroyChildren()
-    @binWdgt?.empty()
-    @shelfWdgt?.empty()
+    # EPHEMERAL-OVERLAY bookkeeping is world-level state NOT held in the widget tree, so
+    # fullDestroyChildren above (which destroys the reconciled highlighter WIDGETS as world children
+    # / island descendants) does NOT empty these declare/current/being structures — they keep DEAD
+    # references to the just-destroyed targets + overlays. Tearing down with a highlight still active
+    # (e.g. nothing ever called turnOffHighlight) leaks those dead refs into whatever comes next, and
+    # the reconciler (addHighlightingWidgets) then touches a destroyed target and mis-renders. Found
+    # via the R2 highlight-tracking test, which deliberately leaves its highlight on to exercise this.
+    # On the LOAD path it is worse than a dead ref: with the declaration surviving, the next cycle's
+    # reconciler RE-MATERIALISES a HighlighterWdgt as a world child, so the restored desktop carries
+    # a widget the snapshot file does not contain (measured 2026-07-29).
+    @widgetsToBeHighlighted.clear()
+    @currentHighlightingWidgets.clear()
+    @widgetsBeingHighlighted.clear()
+    # ⚠ the PINOUT twins of those three are deliberately NOT here. Pinouts are homepage-STRIPPED —
+    # both the declarations and the whole addPinoutingWidgets reconciler sit inside »>> markers — so
+    # in a product build those fields do not exist at all and clearing them would throw. They stay
+    # with the test-only caller, and there is nothing for them to leak on the product path because
+    # the feature is not in the product. The strip boundary draws this seam, not a judgement call:
+    # if pinouts ever ship, move the three clears in here beside the highlight trio.
+    # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
+    # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
+    # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
+    # regardless; the selected widget's own repaint clears its overlay.
+    @_editorSelectedWidget = nil
+    # DANGLING WORLD SLOTS. These are bare world fields holding a widget that fullDestroyChildren
+    # above just destroyed, so each would keep a DEAD reference into the next test (or, on the load
+    # path, into the rest of the session). StorageSorter's furniture marking reads world[slot] and
+    # simpleEditorTemplates unconditionally, so a dead ref there is walked every sort. The loader
+    # re-binds both from the snapshot afterwards (step 6), which is exactly the teardown-empties /
+    # caller-fills split this core is built on.
     @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
     @simpleEditorTemplates = nil
+    # the error console is worse than a dead ref: _showErrorsHappenedInRepaintingStepInPreviousCycle
+    # only builds one `if !@errorConsole?`, so a destroyed-but-non-nil console makes every later
+    # paint error in the page report into a dead widget -- silently swallowing the errors the
+    # headless runners' fail-gate exists to catch. For a real user past a snapshot load, it silently
+    # swallows every paint error for the rest of the session.
+    @errorConsole = nil
+    # the last text the user edited (used by the document editor's align ops) -- a bare ref to a
+    # widget fullDestroyChildren just destroyed.
+    @lastEditedText = nil
+    # EPHEMERAL WORLD-LEVEL COLLECTIONS, same shape as the highlight/pinout sets above: none is
+    # emptied by fullDestroyChildren (they are world state, not tree state) and none is emptied by
+    # Widget._destroyNoSettle (which only unregisters from steppingWdgts / keyboardEventsReceivers /
+    # the click-outside set -- see the standing TODO there naming exactly this gap). So tearing down
+    # with a tooltip up, a menu open, handles shown, or a scroll still gliding leaks dead refs into
+    # whatever comes next -- the next test in the same headless process, or the loaded desktop.
+    #   toolTipsList              destroyToolTips would then read bounds off a destroyed tooltip
+    #   openPopUps / freshlyCreatedPopUps  mostRecentlyCreatedPopUp and the macro toolkit's
+    #                             "the pop-up that just opened" both pick out of these
+    #   popUpsMarkedForClosure    the next drain would close() an already-destroyed pop-up
+    #   hierarchyOfClicked*       stale gesture bookkeeping (cleared per click, not per teardown)
+    #   temporaryHandles...       dead resize/move handles
+    #   wdgtsWithOngoingScrollMomentum  the worst: anyScrollMomentumOngoing() stays true FOREVER,
+    #                             so the macro pump's waitNoInputsOngoing never settles and every
+    #                             later test in the page STALLS rather than fails
+    @toolTipsList.clear()
+    @openPopUps.clear()
+    @freshlyCreatedPopUps.clear()
+    @popUpsMarkedForClosure.clear()
+    @hierarchyOfClickedWdgts.clear()
+    @hierarchyOfClickedMenus.clear()
+    @temporaryHandlesAndLayoutAdjusters.clear()
+    @wdgtsWithOngoingScrollMomentum.clear()
+    # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
+    # list never was, so it accumulated dead widgets for the whole life of the page.
+    @widgetsGivingErrorWhileRepainting = []
+    # the track-changes STACK: dying between disableTrackChanges and maybeEnableTrackChanges leaves
+    # it unbalanced, and Widget._changed() reads its TOP -- so a false top means damage stops being
+    # recorded and the world stops repainting. It is not serialized and not restored by the loader,
+    # so re-balancing it is the only thing that can put a loaded world back on its feet.
+    @trackChanges = [true]
+    # the one-shot "this info doc was already created" flags (InfoDocs.REGISTRY entries, set as
+    # plain own booleans on the world): once set, InfoDocs.createNextTo early-returns, so the SAME
+    # app launch silently builds NO info doc. Collected first, then deleted -- deleting while
+    # iterating own props is not safe.
+    # The loader's restore is ADDITIVE ONLY (`@[name] = val for own name, val of section.infoDocFlags`
+    # -- it never deletes a flag the live world has and the file lacks), so without this clear a flag
+    # set before a load would survive it FOREVER and that info doc could never be created again in
+    # the loaded world. Teardown empties, loader fills.
+    infoDocFlagNames = (name for own name of @ when name.indexOf("infoDoc") is 0)
+    delete @[name] for name in infoDocFlagNames
+    # the storage containers (bin, shelf) are not attached
+    # to the world tree so they're not in the children,
+    # so we need to clean them up separately
+    @binWdgt?.empty()
+    @shelfWdgt?.empty()
 
   buildContextMenu: ->
 

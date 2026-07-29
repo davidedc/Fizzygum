@@ -37,8 +37,8 @@ class BinWdgt extends Widget
     # there is nothing in it
     containerWindow.fullDestroy()
   
-  # NOT homepage-excluded (it long was): the snapshot-load teardown
-  # (WorldWdgt._teardownForSnapshotLoadNoSettle) ships in --homepage and calls
+  # NOT homepage-excluded (it long was): the shared world teardown
+  # (WorldWdgt._teardownWorldStructureNoSettle) ships in --homepage and calls
   # this -- with it stripped, "open from file…" on a homepage build crashed
   # at teardown.
   empty: ->

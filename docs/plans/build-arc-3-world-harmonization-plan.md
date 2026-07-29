@@ -20,14 +20,13 @@ token, gated by both headless runners) and two new ctor-captured fields (`_bootE
 and note the guard reads `WorldWdgt.preferencesAndSettings` and `PreferencesAndSettings.resetToBootInputMode`,
 so those move or stay reachable together.**
 
-**SECOND PREREQUISITE (owner-ordered 2026-07-29, NOT yet started):
-`plans/teardown-shared-core-plan.md` runs to completion BEFORE this arc — its §6 is BINDING
-here. It folds the dangling-reference half of the teardown into a shared SHIPPING core
-(`_teardownWorldStructureNoSettle`), which this arc must NOT relocate; Phase 4's move for this
-machinery then shrinks to the test-only remainder plus the completeness guard, and that plan's
-close-out rewrites this plan's stale `:2469 (~66 l)` census row with the true post-refactor
-scope. The ⚠ sizing in the paragraph above describes the PRE-shared-core state — do not scope
-Phase 4 from it.**
+**SECOND PREREQUISITE (owner-ordered 2026-07-29, DONE the same day):
+`archive/teardown-shared-core-plan.md` ran to completion — its §6 is BINDING here. It folded the
+dangling-reference half of the teardown into a shared SHIPPING core
+(`_teardownWorldStructureNoSettle`), which **this arc must NOT relocate**; Phase 4's move for this
+machinery is now the test-only remainder plus the completeness guard. The §2.3 census row below
+has been rewritten with the true post-refactor scope (`:2489`–`:2726`, 238 l). The ⚠ sizing in the
+paragraph above describes the PRE-shared-core state — do NOT scope Phase 4 from it.**
 
 **MANDATE.** Converge the homepage world and the dev/test world into ONE design, and retire the
 in-file region-exclusion mechanism COMPLETELY in this arc: at close there are ZERO `»>>` region
@@ -182,7 +181,19 @@ commented profiling call → delete · `:1528`+`:1895` addPinoutingWidgets + cyc
 (debug, moves together) · `:1992` _sizeCanvasToTestScreenResolution (960×440) → tests repo ·
 `:2075` _initVirtualKeyboard (touch input) → **promote (real feature)** · `:2366` (~62 l)
 removeEventListeners ("a DETERMINISM MECHANISM", sole caller AutomatorPlayer) → tests repo ·
-`:2469` (~66 l) resetWorld/_resetWorldNoSettle (self-described test/dev tooling) → tests repo ·
+`:2489`–`:2726` (**238 l**, corrected 2026-07-29 — see the second-prerequisite note above; the
+recorded `:2469 (~66 l)` was already stale by 4×) the WHOLE homepage-stripped teardown block →
+tests repo: `resetWorld` (`:2498`) + `_resetWorldNoSettle` (`:2513`, now only **19 code lines** —
+the structural half left for the shared SHIPPING core `_teardownWorldStructureNoSettle`, which
+this arc must NOT move) + the completeness ratchet (`@_worldStateAuditExemptions` `:2617`,
+`_pristineWorldFingerprint` `:2650`, `_summariseWorldStateValueNoSettle` `:2656`,
+`_isDerivedCacheFieldName` `:2676`, `_fingerprintWorldStateNoSettle` `:2690`,
+`_auditWorldResetCompletenessNoSettle` `:2711`) which is test-only tooling and belongs with the
+harness. ⚠ The moved remainder still clears the three PINOUT tracking sets — they stay test-side
+because pinouts are themselves homepage-stripped — and still reaches
+`WorldWdgt.preferencesAndSettings` / `PreferencesAndSettings.resetToBootInputMode`, so those move
+or stay reachable together. A relocated test teardown calling the shipping core is the RIGHT
+dependency direction; verify the reverse never appears ·
 `:2559` `if Automator?` pacing/label toggles → tests repo · `:2732` isDevMode world-menu block
 → SPLIT (inspect/color/wallpapers product-worthy → promote; demo ➜ / test ➜ → hook) · `:2766`
 popUpSystemTestsMenu → tests repo (NOTE its entry at :2753 is `if Automator?`-guarded, not

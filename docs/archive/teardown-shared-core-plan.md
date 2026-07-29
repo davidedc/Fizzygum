@@ -1,10 +1,19 @@
 # Teardown shared core — ONE structural teardown, two callers
 
-**PLAN ONLY — AUTHORED 2026-07-29. Written to be executed COLD by an LLM/engineer with ZERO prior
-context.** No code has been written for this plan. Every fact below was verified against the working
-trees on 2026-07-29 (Fizzygum `master` @ `ce674fa8`, Fizzygum-tests `master` @ `4a38fe8b7`, suite =
-268 SystemTests, build FRESH, `fg gauntlet` green). **Line numbers WILL drift — the quoted
-method/field names are authoritative; re-grep before trusting any `file:line`.**
+**STATUS: COMPLETE — EXECUTED 2026-07-29** (authored the same day). All four phases landed against
+Fizzygum `master` @ `61e9d229` + Fizzygum-tests @ `4a38fe8b7`. Per-phase execution records are inline
+below (Phase 0 under §5 Phase 0, then Phase 1/2/3), and §8 carries the final verification. Headline:
+`WorldWdgt._teardownWorldStructureNoSettle` is the one shipping core; `_teardownForSnapshotLoadNoSettle`
+was **deleted**; `_resetWorldNoSettle` went 42 → 19 code lines; **19 measured product leak rows fixed**;
+new `world.teardownHygiene.*` rig gate, proved able to fail. `fg gauntlet` all 13 legs PASS with **zero
+reference churn**, `fg homepage` PASS, plus a `--homepage` snapshot round-trip probe. Not yet committed
+(owner approval pending).
+
+**Everything below this line is the plan as authored**, with execution records added. Every fact was
+verified against the working trees on 2026-07-29 (Fizzygum `master` @ `ce674fa8`, suite = 268
+SystemTests). **Line numbers WILL drift — the quoted method/field names are authoritative; re-grep
+before trusting any `file:line`. In particular §1's table predates the refactor: read it as the
+BEFORE picture.**
 
 **MANDATE.** *Eliminate the divergence class*, not the current divergence. Fizzygum has TWO world
 teardowns that must agree about one thing — "drop every reference to what was just destroyed" — and
@@ -220,6 +229,48 @@ the four scalars come back as the snapshot's values (not leaks); `errorConsole` 
 hold destroyed/dead refs. Record the actual results in this doc before proceeding — **if the spike
 contradicts §4, re-decide §4 rather than pushing on.**
 
+#### Phase 0 RESULT — measured 2026-07-29. §4 CONFIRMED IN FULL; nothing re-decided.
+
+Instrument: `Fizzygum-tests/.scratch/snapshot-teardown-probe.js` (scratch, gitignored), modelled on
+the predecessor arc's probe. Per mutation, in its own fresh `worldWithSystemTestHarness.html` page:
+settle → take a **pristine** snapshot envelope → fingerprint → mutate → settle → fingerprint (proves
+the mutation took) → `world.loadWorldSnapshot(pristineSnapshot, skipConfirm: true)` → settle →
+fingerprint. A field whose post-load value differs from its pristine value **survived the load**.
+Collections are summarised as `n=<size> DEAD=<destroyed members>`, so a dangling ref is visible
+directly rather than inferred from a size. A **no-mutation CONTROL came back with no field moved at
+all**, so every row below is the mutation's doing, not drift.
+
+**LEAKS — confirmed surviving a real `loadWorldSnapshot` (all move into the shared core):**
+
+| field | mutation | pristine → after load |
+|---|---|---|
+| `infoDocFlags` | `InfoDocs.createNextTo "dashboards", world` | `(none)` → `infoDoc_dashboardsMaker_created` |
+| `trackChanges` | `world.disableTrackChanges()` | `Array(1) top=true` → `Array(2) top=false` |
+| `errorConsole` | `world.createErrorConsole()` | `nil` → `FrameWdgt:DESTROYED` |
+| `wdgtsWithOngoingScrollMomentum` | panel added to the set | `n=0` → `n=1 DEAD=1` |
+| `toolTipsList` | a tooltip left up | `n=0` → `n=1 DEAD=1` |
+| `openPopUps`, `freshlyCreatedPopUps` | a context menu left open | `n=0` → `n=1 DEAD=1` each |
+| `popUpsMarkedForClosure` | menu marked for closure | `n=0` → `n=1 DEAD=1` |
+| `temporaryHandlesAndLayoutAdjusters` | handles shown on a panel | `n=0` → `n=5 DEAD=5` |
+| `hierarchyOfClickedWdgts` / `…Menus` | left mid-gesture | `n=0` → `n=1 DEAD=1` each |
+| `widgetsGivingErrorWhileRepainting` | a widget pushed onto it | `n=0` → `n=1 DEAD=1` |
+| `lastEditedText` | `world.edit(aStringWdgt)` | `nil` → `StringWdgt:DESTROYED` |
+| `widgetsToBeHighlighted`, `currentHighlightingWidgets`, `widgetsBeingHighlighted` | a highlight left on | `n=0` → `n=1` / `n=1 DEAD=1` / `n=1 DEAD=1` |
+
+⚠ The highlight row is worse than a dead ref and was not predicted: with `widgetsToBeHighlighted`
+still holding the destroyed target, the per-cycle reconciler **re-materialised a `HighlighterWdgt` as
+a world child after the load** — `world.children` came back `1` where the snapshot says `0`. A
+snapshot load can therefore restore a desktop with a widget on it that the file does not contain.
+
+**NOT leaks — confirmed restored by the loader (stay test-only, exactly as §4 argued):**
+`numberOfIconsOnDesktop` (`0→1→0`), `isDevMode` (`true→false→true`), both untitled counters
+(`0→1→0`), `alpha` (never moved), the 5 app slots (`nil→live→nil`) and `simpleEditorTemplates`.
+So §4's "Considered and NOT chosen" stands: the fuller contract buys nothing measurable here.
+
+One reading note: `lastEditedText` reads `nil` at the *dirty* fingerprint and `StringWdgt:DESTROYED`
+only afterwards — the edit assigns it on the way out, during the teardown itself. It is a dangling
+ref created BY the load, which is the same defect from the other end.
+
 ### Phase 1 — extract the shared core (behaviour-preserving for the TEST path)
 
 Add `_teardownWorldStructureNoSettle` in the SHIPPING part of `WorldWdgt.coffee` (outside the `»>>`
@@ -232,6 +283,57 @@ zero-behaviour-change — the test path runs the same statements in the same ord
 (`fullDestroyChildren` first). The audit's comments explain several orderings; carry the comments
 with the lines — they are the arc's durable residue and must not be summarised away.
 
+#### Phase 1 RESULT — done 2026-07-29. Gate green, ZERO reference churn.
+
+`_teardownWorldStructureNoSettle` added in the shipping part beside the snapshot teardown, carrying
+every §4 "shared" row with its comments verbatim (plus, per row, the product consequence Phase 0
+measured). `_resetWorldNoSettle` went from **42 code lines to 19**. Core-internal statement order is
+unchanged; the only reordering is that the test-only remainder now runs *after* the whole core
+rather than interleaved with it — checked first for coupling and there is none
+(`resetToBootInputMode` is a pure static-bag reset; `binWdgt.empty` / `shelfWdgt.empty` are
+`fullDestroyChildren` on off-tree containers, independent of extent/prefs/colour).
+Gate: `fg build` OK, `fg presuite` **PASS** — 268 tests, 0 failed, 0 geometry violations, paint
+audit 0 offenders, no recapture.
+
+**⚠ ONE §4 ROW HAD TO SPLIT, and §4 did not see it: the PINOUT sets are homepage-STRIPPED.**
+§4 lists "the 6 highlight/pinout sets" as one shared row. But `widgetsToBePinouted`,
+`currentPinoutingWidgets` and `widgetsBeingPinouted` are declared *inside* `»>>` markers
+(`WorldWdgt.coffee` ~`:299`–`:303`), as is the whole `addPinoutingWidgets` reconciler — so in a
+`--homepage` build those fields **do not exist**, and a shipping core clearing them would throw on
+the first snapshot load. The three pinout clears therefore stay with the test-only caller; the
+highlight trio (which does ship) moves into the core. Nothing leaks on the product path because the
+feature is not in the product. This is the same seam §9's rejected-item 2 names — the strip boundary
+draws the line, not a judgement call — and it is commented on both sides so it is not "fixed" later.
+The lesson generalises: **before moving a line into shipping code, check the strip markers around
+its FIELD's declaration, not just around the line you are moving.**
+
+**MEASURED, not argued** (`.scratch/homepage-pinout-counterfactual.js`, against a real
+`--homepage` tree): with the three pinout clears put back into the shipping core, a snapshot load on
+a production build throws `Cannot read properties of undefined (reading 'clear')`. **No standing gate
+would have caught it** — `fg homepage` booted the page but never loaded a snapshot, and the suite and
+rigs only ever run non-homepage trees.
+
+#### That hole is now CLOSED by a real gate (owner-directed, same commit round)
+
+The throwaway probe was promoted into `Fizzygum-tests/scripts/smoke-boot-headless.js`: in
+`--homepage` mode its native leg now drives one full `serializeWorldSnapshot` →
+`loadWorldSnapshot` round-trip on the production tree, once the world is up and settled, and asserts
+it comes back clean — no throw, desktop children preserved, `trackChanges` rebalanced to `[true]`, no
+dangling `errorConsole`, and (via the page's EXISTING error rail, so teardown/restore errors are
+caught for free) no console/page/request error. `fg homepage` and `build_and_smoke.sh --homepage`
+therefore gate it from now on; **the ordinary non-homepage smoke is unchanged** (no round-trip, no
+extra time), because the rigs already cover that tree.
+
+**Proved to FAIL, not just observed silent** — the same discipline the rig gate got: planting the
+three pinout clears back into the shared core makes the leg report
+`[FAIL] snapshot round-trip threw: Cannot read properties of undefined (reading 'clear')` and
+`fg homepage` exit 1, **while `[PASS] world booted (ready)` still holds** — which is precisely the
+blind spot, and precisely what the old boot-only gate would have called green. Canary reverted;
+`fg homepage` green again: `snapshot round-trip clean (70367 bytes, 11 desktop children preserved)`.
+
+⚠ Re-check this leg when arc 3 rewrites homepage behaviour — it is the only thing standing between a
+stripped-field reference and a user's "open from file…".
+
 ### Phase 2 — point the snapshot teardown at the core (the product change)
 
 Replace `_teardownForSnapshotLoadNoSettle`'s body with a call to the shared core. Its five current
@@ -242,6 +344,22 @@ Gate: full §8 **including both serialization rigs**, which is the real gate her
 Decide while here whether `_teardownForSnapshotLoadNoSettle` still earns its own name: if it becomes
 a pure one-line alias, prefer deleting it and having `loadWorldSnapshot` call the core directly
 (the codebase's `thin-wrap` gate has opinions about pointless wrappers — run it and follow it).
+
+#### Phase 2 RESULT — done 2026-07-29. Both rigs green; every measured leak gone.
+
+`_teardownForSnapshotLoadNoSettle` was **DELETED** rather than reduced to an alias — all five of its
+lines are in the core, so the name carried nothing. `loadWorldSnapshot` step 1 now reads
+`@_settleLayoutsAfter => @_teardownWorldStructureNoSettle()`. Its header comment and the two
+`empty()` doc comments in `BinWdgt` / `ShelfWdgt` that named the deleted method were updated to name
+the core (those two comments exist to record *why* `empty()` is not homepage-excluded, so a stale
+name there is exactly the kind of thing that gets something wrongly re-stripped later).
+
+Gate: `fg build` OK (`thin-wraps`, `call-separation`, `unresolved-sends`, `stinks` all clean) ·
+`npm run test:serialization` **OK** (37→43 native, 53→59 SWCanvas checks, all matching) ·
+`npm run test:serialization:file` **OK** (7 checks) · the Phase 0 probe re-run against the fixed
+build reports **"fields that SURVIVED a snapshot load: (none)"** — every one of the 19 measured leak
+rows is gone, which is the same instrument that found them, so the before/after is directly
+comparable.
 
 ### Phase 3 — lock it so it cannot drift again
 
@@ -256,6 +374,50 @@ Consider also extending the existing `RESETWORLD_INCOMPLETE` guard to the load p
 reused as-is: it compares against a *pristine* fingerprint, and a snapshot load deliberately installs
 new state, so the check would have to run BETWEEN the core and the restore. If that proves awkward,
 the rig check above is sufficient — say so here with the reason rather than leaving it implied.
+
+#### Phase 3 RESULT — done 2026-07-29. Gate added AND proved able to fail.
+
+**Delivered: six `world.teardownHygiene.*` checks** in
+`Fizzygum-tests/scripts/serialization-roundtrip-headless.js`, in the pop-up-hygiene style
+(`{name, desirable, detail}` + an `EXPECTATIONS` entry each). STRUCTURAL, so they run under **both**
+backends, in their own fresh page. The fixture dirties every structure the core owns using product
+operations (highlight on, handles shown, tooltip up, context menu open + marked for closure, scroll
+momentum, clicked hierarchies, paint-error list, error console, an edited string, an unbalanced
+`trackChanges`, an info-doc flag, a launched app-slot window), then loads a snapshot taken **before**
+any of it existed — the real user story, and the only shape that can catch the additive-only flag
+bug — through the REAL `loadWorldSnapshot`. `fixtureDirtied` asserts the dirtying actually took, so
+the other five cannot pass vacuously.
+
+**The gate was proved to FAIL, not merely to be silent** (`.scratch/teardown-gate-falsification.js`):
+monkey-patching the core back to its pre-arc 5-line product body makes `noDanglingSlots`,
+`transientCollectionsCleared`, `trackChangesRebalanced` and `infoDocFlagsNotSticky` all go false
+while `fixtureDirtied` stays true; with the core intact, all six pass. Writing that probe paid for
+itself twice: it caught a **`Map` member-extraction bug** in the check (`widgetsToBeHighlighted` maps
+target→style, so `.values()` yields style descriptors and a dead target was invisible — it reads
+keys *and* values now), and it falsified a fifth assertion — see below.
+
+**⚠ One assertion was replaced because it could pass while broken.** The first cut asserted
+`world.children.length === pristineChildren` ("no resurrected overlay"), from the Phase 0 finding
+that a stale highlight declaration puts a `HighlighterWdgt` back on the desktop. Falsification showed
+it firing on the harness page but NOT on `index-sw.html`. Root cause: `addHighlightingWidgets`'s
+first loop re-parents an already-destroyed highlighter (`desiredParent.add eachHighlightingWidget`)
+only when the dead target reports `hasMaybeChangedPaintBounds()` — so the resurrection is real but
+conditional, and asserting the symptom yields a check that reads as coverage it does not have. It is
+now `noDestroyedWidgetsInTree` (nothing DESTROYED may be back in `world.children`) — a cheap true
+invariant, documented in-place as NOT forced by the fixture, with the highlight rows' actual coverage
+carried by `transientCollectionsCleared`, which does fire.
+
+**DECIDED: `RESETWORLD_INCOMPLETE` is NOT extended to the load path; the rig check is sufficient.**
+The reason, as §5 asks for it explicitly: that guard's baseline is *the pristine world*, captured at
+the first `resetWorld`. Running it between the core and the restore would not help, because at that
+instant the world is not pristine either — the core deliberately leaves colour, wallpaper, extent,
+prefs and the desktop scalars alone for the caller to fill in. It would therefore need a second,
+different baseline ("what the core alone leaves behind") plus its own exemption list — a whole second
+fingerprint mechanism to express what the rig check states directly and legibly in six named
+assertions. **The core is not left under-guarded by that choice: it now has TWO independent gates.**
+The rig covers it through `loadWorldSnapshot`, and — this is §3.3's "for free" dividend actually
+landing — the suite's existing `RESETWORLD_INCOMPLETE` ratchet now covers the very same core on every
+one of 268 tests, because `resetWorld` reaches it too.
 
 ## §6 Arc 3 interaction — READ BEFORE SEQUENCING
 
@@ -313,6 +475,34 @@ npm run test:serialization:file                             # rig 2
 - **Zero reference churn is the expectation** for every phase.
 - `RESETWORLD_INCOMPLETE` must stay silent throughout (`grep -c` the leg logs); it firing means the
   extraction dropped a reset.
+
+### FINAL VERIFICATION — 2026-07-29, all green
+
+| gate | result |
+|---|---|
+| `fg build` | OK (`thin-wraps`, `call-separation`, `unresolved-sends`, `stinks`, coffee-syntax all clean) |
+| `fg presuite` (Phase 1) | PASS — dpr1 268 tests / 0 failed / 0 geometry violations; paint audit 0 offenders |
+| `npm run test:serialization` | OK — 43 native + 59 SWCanvas checks (6 new), all matching expectations |
+| `npm run test:serialization:file` | OK — 7 checks |
+| `fg gauntlet` | **OK, all 13 legs** — dpr1 · dpr2 · webkit · apps · paint · tiernaming · settle · capstone · refs · revisits · census · serialization · storage. 4m12s |
+| `fg homepage` | OK (production tree builds + boots; normal build restored) |
+| `RESETWORLD_INCOMPLETE` | **zero occurrences** across every leg log |
+| reference churn | **ZERO** — no test needed recapture at any phase |
+
+Beyond the protocol, three throwaway probes under `Fizzygum-tests/.scratch/` (gitignored) carry the
+evidence this arc rests on, and are worth re-running if this code is touched again:
+`snapshot-teardown-probe.js` (the Phase 0 leak measurement — "(none)" after the fix),
+`teardown-gate-falsification.js` (proves the new rig gate FAILS on the pre-arc core),
+`homepage-pinout-counterfactual.js` (measures what a stripped-field reference does to a production
+build). The fourth, `homepage-snapshot-load-probe.js`, is **superseded** — it was promoted into
+`smoke-boot-headless.js --homepage` and is now a standing gate, so run `fg homepage` instead.
+
+**Exit criteria, checked:** one shared core ✓ · both callers on it ✓ · the product leaks fixed and
+proven fixed by a rig check that is itself proven able to fail ✓ · arc 3's inventory line corrected
+(§6; `:2489`–`:2726`, 238 l, and the "do NOT relocate the core" instruction) ✓ · gates green with zero
+churn ✓. Durable residue woven into `Fizzygum/CLAUDE.md` (Testing),
+`docs/architecture/serialization-duplication-reference.md` §11 step 2, `Fizzygum-tests/DETERMINISM.md`
+§2d, `docs/BACKLOG.md` and `archive/INDEX.md`.
 - Long ops: launch ONCE with the Bash tool's `run_in_background: true`, redirect to a log, wait for
   the task notification. Never hand-roll a foreground poll loop (the guard hook blocks them).
   ⚠ While a long op runs, `fg`, `src/**` and `tests/**` are READ-ONLY.

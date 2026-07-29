@@ -88,8 +88,9 @@ The built page is *already* 99% of a single-file app:
     through the in-browser compiler on load — class edits via `replayClassEdits()` *before*
     deserialization (`WorldWdgt.coffee:2277-2278`), instance edits via `{"$src"}` records.
   - `WorldWdgt::loadWorldSnapshot(envelopeOrString, opts)` (`WorldWdgt.coffee:2256`) is the
-    restore orchestrator: product-safe teardown (`_teardownForSnapshotLoadNoSettle`, :2335 — built
-    from primitives that SHIP in `--homepage`, unlike `resetWorld`), id-counter restore, class-edit
+    restore orchestrator: structural teardown (`_teardownWorldStructureNoSettle` — the SHARED
+    shipping core the test teardown also calls; it ships in `--homepage`, unlike `resetWorld`),
+    id-counter restore, class-edit
     replay, `Deserializer.deserialize`, app-slot/bin/shelf re-bind, one-settle child attach,
     colour/wallpaper, repaint + **`result.whenReady`** second repaint once async `$Image`/`$Canvas`
     data-URLs have decoded (:2326). **It `window.confirm`s unless `opts.skipConfirm`** (:2261-2263)

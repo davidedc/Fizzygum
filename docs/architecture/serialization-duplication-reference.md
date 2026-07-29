@@ -370,10 +370,19 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 `resetWorld`), so its `setColor`/`_settleLayoutsAfter` calls are the sanctioned public path:
 1. Confirm (a file/menu load warns it replaces the desktop AND can run code — §4.12; the rig /
    a macro pass `skipConfirm`).
-2. **Product-safe teardown** — `_teardownForSnapshotLoadNoSettle` (`fullDestroyChildren` +
-   `binWdgt.empty` + `shelfWdgt.empty` + nil the slots), NOT the homepage-stripped
-   `resetWorld` / `_resetWorldNoSettle`. `fullDestroyChildren` also zeroes every per-class
+2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
+   the homepage-stripped test teardown (`_resetWorldNoSettle`) both call. Its contract: after
+   `fullDestroyChildren`, the world holds no reference to anything just destroyed, and no
+   bookkeeping that assumed it still exists — the tree, `binWdgt`/`shelfWdgt`, the app slots +
+   `simpleEditorTemplates`, the highlight tracking structures, `errorConsole` /
+   `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
+   scroll-momentum / paint-error collections, the `trackChanges` stack, and the one-shot
+   `infoDoc*` flags. Restoring what the world should LOOK like afterwards is the CALLER's job,
+   which is what steps 3-8 below are. `fullDestroyChildren` also zeroes every per-class
    `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.
+   ⚠ The `infoDoc*` clear is load-bearing for step 4: that restore is **additive only**, so a flag
+   the live world has and the file lacks can only be removed here. The rig gate is
+   `world.teardownHygiene.*` in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js`.
 3. Restore `idCounters` **before** deserializing (so `registerThisInstance` sees the right
    high-water marks), then `Deserializer.deserialize` (`kind:"world"` preserves each `iid`;
    returns `shells` so the loader resolves the `world` section's `{$r}` refs).
