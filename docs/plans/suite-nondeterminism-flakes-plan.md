@@ -1,8 +1,8 @@
 # Suite nondeterminism — non-boot flakes (discovered 2026-07-28)
 
 **STATUS (updated 2026-07-28, same day): FLAKE B — root-caused, FIXED, gated and PUSHED (§3.6).
-FLAKE A — still open; hypothesis A3 added (§2.6) and the deciding diagnostic landed; netting with
-`torture-headless.js`. FLAKE C (§2.7) — **SOLVED**: a `resetWorld` state leak
+FLAKE A — **SOLVED 2026-07-29 (§2.6.1)**: hypothesis A3 CONFIRMED by direct measurement — a glyph
+atlas warming between the macro's two pixel reads, not a dropped invalidation. FLAKE C (§2.7) — **SOLVED**: a `resetWorld` state leak
 (`UntitledNamingService` counters) that made a default name render "Untitled 2"; it was invisible to
 every standing gate because none of them runs 1 shard (§2.7.2).** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
 ZERO prior context. Every fact below was verified against the working trees on 2026-07-28
@@ -63,10 +63,10 @@ repeats it. Arc 2 landed green and is closed; these two are the residue.
 
 1. `/Users/davidedellacasa/code/Fizzygum-all/fg status` — confirm clean trees, note the suite count.
 2. Read this doc fully, then `Fizzygum-tests/DETERMINISM.md` §2c, §3a, §3e and §4 (the playbook).
-3. **Flakes B (§3) and C (§2.7) are DONE** — read §3.6 and §2.7.1 for what they cost and what they
-   taught (both contain a FALSIFIED-at-execution step worth reading before you trust a hypothesis).
-   **Only flake A (§2) remains**, and it is the hard one: a burst-mode 3a-class race that resisted
-   every forcing technique tried. Net it with `torture-headless.js` (§2.5); do not chase it.
+3. **ALL THREE FLAKES ARE SOLVED** — A (§2.5.1), B (§3.6), C (§2.7.1). This doc is now a record, not
+   a work list. Read §2.5.1 and §3.6 before trusting any hypothesis in a future flake hunt: each
+   contains a step that was FALSIFIED at execution, and §2.5.1 also shows a probe that was
+   inconclusive in a way that nearly read as a refutation.
 4. Every phase ends with its gate green (§5) before the next begins.
 5. **Never commit or push without explicit owner approval** (standing rule).
 6. Budget: assume gauntlet runs are ~5–6 min each and that confirming/refuting flake B costs
@@ -96,7 +96,7 @@ Read this before either flake — it explains why the evidence below is thinner 
 
 ---
 
-## §2 FLAKE A — `SystemTest_macroClosingRotatedIslandChildClearsFootprint`
+## §2 FLAKE A — **SOLVED 2026-07-29** (`SystemTest_macroClosingRotatedIslandChildClearsFootprint`)
 
 ### 2.1 What the test asserts
 
@@ -175,7 +175,53 @@ classes (3b, 3c) reproduce **6/6** under that injection. This reproduces **0/2**
 explicitly says may not be forcible that way. Combined with R3, do not expect to reproduce it by
 making the machine uniformly slow or uniformly busy.
 
-### 2.5 Next steps for flake A
+### 2.5.1 RESOLVED 2026-07-29 — A3 CONFIRMED; the framework was innocent
+
+**The flake was never caught; it was MEASURED.** The overnight net ran **223 iterations
+(~65,000 test-executions)** without reproducing it — consistent with §2.4, and the reason the
+netting strategy was abandoned in favour of forcing the mechanism (`DETERMINISM.md` §4 Step 1).
+
+A scratch probe (`Fizzygum-tests/.scratch/a3-probe.js`, gitignored) replays the macro's steps as
+plain API calls — legitimate, because this macro queues **no synthetic input events**, so
+`yield "waitNoInputsOngoing"` returns after ~1 frame. Running in the HARNESS world post-`resetWorld`
+(never `index-sw.html` — the desktop clock contaminates a hand-rolled diff, §3e):
+
+| measurement at the macro's own cadence | result |
+|---|---|
+| read A vs a forced warm repaint | **7798 px**, bbox = the whole converter window |
+| warm vs B | **0 px** — *no broken-rect staleness whatsoever* |
+| A vs B (what the test asserts `== 0`) | **7798 px** ⇒ FAIL, 3/3 |
+
+**A1 is therefore refuted and A2 is beside the point: the framework's invalidation is correct.** Only
+the deferred atlas-warm repaint's timing decided pass vs fail.
+
+⚠ **The first version of the probe was INCONCLUSIVE and nearly read as a refutation** — it settled
+6–10 frames per step, which let the atlases warm and measured a text-final canvas (`A vs WARM = 0`).
+The macro's real cadence is ~1 frame per yield. **Match the cadence you are investigating, or you
+measure a different system.**
+
+⚠ **The magnitude misleads** (this retires the §2.2 table's split): 7798 px is LARGE, exactly the
+"large constant ⇒ A1" signature. **Read `gen` first**, always.
+
+**Fix** (`Fizzygum-tests/tests/.../SystemTest_macroClosingRotatedIslandChildClearsFootprint_automationCommands.js`):
+one line, `yield "waitForScreenshotReady"`, before `calcWin.close()` — the framework's own single
+SWCanvas settle gate (`MacroToolkit.readyForMacroScreenshot`: text settled → one forced warm-atlas
+repaint → a frame to flush). **Do not hand-roll a wait on `world.anyTextDirty()`**: that flag is a
+weaker condition (the refresh only queues damage via `_fullChanged()`; pixels land at the next
+`_updateBroken()`), and it is consumed from a macro only through this sentinel. Glyph-atlas warm-up is
+ORTHOGONAL to broken-rect staleness, so this is a measurement PRECONDITION, not a tolerance — the
+assertion still demands exactly 0.
+
+**Proven load-bearing** (§4 Step-4 two-way control): at the identical cadence, without the line 3/3
+diff 7798 px; with it 3/3 diff 0. **Gates:** standalone PASS with the diagnostic now reading
+`textDirty=false gen=3` at BOTH reads (was `textDirty=true gen=1`); `fg gauntlet` 13/13, every leg
+in-wave, `refs:PASS` (zero reference churn).
+
+**Why §2.4's forcing techniques all failed:** uniform load (heavy-cycle injection, concurrent suites)
+delays *both* reads equally. This needs the deferred refresh landing precisely BETWEEN them — only
+*irregular* load does that, which is exactly the burst-then-silence epidemiology of §2.3.
+
+### 2.5 (superseded) Next steps for flake A
 
 > **STATE 2026-07-28 17:42 — the net is RUNNING.** `torture-headless.js` was launched with the
 > command below, against the fresh post-fix build (`harness @ 17:41:20`, both trees dirty with the
