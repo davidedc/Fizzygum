@@ -396,8 +396,14 @@ leaks, because `fullDestroyChildren` destroys the widgets there too:
   ref, and `anyScrollMomentumOngoing()` then answers true for the rest of the session.
 - `toolTipsList` / `openPopUps` / `freshlyCreatedPopUps` / `popUpsMarkedForClosure` /
   `temporaryHandlesAndLayoutAdjusters` / `lastEditedText` — dead refs surviving a load.
-- `numberOfIconsOnDesktop` — restored only `if section.numberOfIconsOnDesktop?`, so loading a
-  snapshot that lacks it leaves the pre-load grid cursor in place.
+  (`mostRecentlyCreatedPopUp` self-heals — it prunes orphans on read — so `openPopUps` is the
+  mildest of these; the rest have no such pruning.)
+
+**Checked and NOT a gap:** `numberOfIconsOnDesktop` round-trips correctly. The prototype declares it
+`0` and CoffeeScript's `0?` is true, so the serializer always writes it and the loader always
+restores it. Only an envelope lacking the field would leave the pre-load cursor, and per the standing
+"no serialization compat obligations" there are no such envelopes. It is a leak on the *test* path
+(fixed there) but not on the snapshot path.
 
 **Not changed here on purpose:** §4 warns that over-resetting breaks product behaviour, that the two
 teardown paths must be treated separately, and this one ships in `--homepage` and is covered by the
