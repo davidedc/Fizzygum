@@ -20,6 +20,15 @@ token, gated by both headless runners) and two new ctor-captured fields (`_bootE
 and note the guard reads `WorldWdgt.preferencesAndSettings` and `PreferencesAndSettings.resetToBootInputMode`,
 so those move or stay reachable together.**
 
+**SECOND PREREQUISITE (owner-ordered 2026-07-29, NOT yet started):
+`plans/teardown-shared-core-plan.md` runs to completion BEFORE this arc — its §6 is BINDING
+here. It folds the dangling-reference half of the teardown into a shared SHIPPING core
+(`_teardownWorldStructureNoSettle`), which this arc must NOT relocate; Phase 4's move for this
+machinery then shrinks to the test-only remainder plus the completeness guard, and that plan's
+close-out rewrites this plan's stale `:2469 (~66 l)` census row with the true post-refactor
+scope. The ⚠ sizing in the paragraph above describes the PRE-shared-core state — do not scope
+Phase 4 from it.**
+
 **MANDATE.** Converge the homepage world and the dev/test world into ONE design, and retire the
 in-file region-exclusion mechanism COMPLETELY in this arc: at close there are ZERO `»>>` region
 markers of ANY kind in src/ and build.py's three region regexes
