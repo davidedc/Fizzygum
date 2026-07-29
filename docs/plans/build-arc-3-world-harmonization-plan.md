@@ -7,9 +7,18 @@ with ZERO prior context. Facts verified against the working tree 2026-07-28 (Fiz
 snippets are authoritative. **This is ARC 3 of the build-and-packaging program** — program
 table + completion doctrine: `build-arc-4-dynamic-parts-plan.md` §0.1/§0.2 (binding here).
 Requires arc 2 (`archive/build-arc-2-backend-split-precompile-plan.md` — DONE 2026-07-28) landed; arc 4 (parts)
-follows this. **PREREQUISITE ORDER (owner, 2026-07-29): run
-`plans/resetworld-teardown-completeness-audit-plan.md` to completion BEFORE this arc — it
-audits the very teardown machinery Phase 4 here relocates verbatim.**
+follows this. **PREREQUISITE SATISFIED (owner-ordered 2026-07-29, DONE the same day):
+`archive/resetworld-teardown-completeness-audit-plan.md` ran to completion — it audited the very
+teardown machinery Phase 4 here relocates verbatim. ⚠ READ ITS §7.5 BEFORE Phase 4: the teardown
+you are about to relocate is NOT the one this plan was written against. It grew 14 further resets
+(app slots, `simpleEditorTemplates`, `errorConsole`, `lastEditedText`, the tooltip/pop-up/handle/
+momentum sets, `widgetsGivingErrorWhileRepainting`, `trackChanges`, `numberOfIconsOnDesktop`, the
+`infoDoc*` flags, `isDevMode`, the prefs bag, the world extent) plus a new completeness guard
+(`_auditWorldResetCompletenessNoSettle` + `_worldStateAuditExemptions` + the `RESETWORLD_INCOMPLETE`
+token, gated by both headless runners) and two new ctor-captured fields (`_bootExtent`,
+`_bootAutoAdjustToFillEntireBrowserAlsoOnResize`). A verbatim relocation must carry ALL of it —
+and note the guard reads `WorldWdgt.preferencesAndSettings` and `PreferencesAndSettings.resetToBootInputMode`,
+so those move or stay reachable together.**
 
 **MANDATE.** Converge the homepage world and the dev/test world into ONE design, and retire the
 in-file region-exclusion mechanism COMPLETELY in this arc: at close there are ZERO `»>>` region

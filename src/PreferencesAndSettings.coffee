@@ -90,6 +90,24 @@ class PreferencesAndSettings
       @setTouchInputMode()
     else
       @setMouseInputMode()
+
+  # Put the bag back the way the constructor left it (mouse mode). This bag is reached as the
+  # STATIC WorldWdgt.preferencesAndSettings, so it outlives even a brand-new world: without this,
+  # one "touch screen settings" click leaves every later SystemTest in the same headless page
+  # rendering doubled menu/prompter fonts, sliders and scrollbars. Called from
+  # WorldWdgt._resetWorldNoSettle -- the reset knowledge lives HERE, with the owner, like
+  # UntitledNamingService.resetCounters.
+  #
+  # Self-guarded, so the ordinary teardown does no work at all, and minimumFontHeight is CARRIED
+  # OVER rather than re-derived: it measures the BROWSER's smallest renderable glyph, not the
+  # input mode, and setMouseInputMode re-probes it by rasterising a glyph and reading the pixels
+  # back -- a read whose answer depends on how warm the SWCanvas glyph atlas is (DETERMINISM.md
+  # §3g), so re-probing mid-run could hand the next test a different number than boot measured.
+  resetToBootInputMode: ->
+    return if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE
+    probedMinimumFontHeight = @minimumFontHeight
+    @setMouseInputMode()
+    @minimumFontHeight = probedMinimumFontHeight
   # this part is excluded from the fizzygum homepage build <<«
 
 

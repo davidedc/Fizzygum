@@ -152,6 +152,17 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # automatically adjusts the world size.
   automaticallyAdjustToFillEntireBrowserAlsoOnResize: true
 
+  # The extent the world booted at, remembered at the end of the constructor. The world's own
+  # SIZE is world-level mutable state: "fit whole page" (stretchWorldToFillEntirePage, a dev
+  # context-menu item) resizes the canvas AND the world for good. Nothing put it back, so under
+  # the test harness one such call would render EVERY later test in the same page at the wrong
+  # size. _resetWorldNoSettle compares against this and restores.
+  _bootExtent: nil
+  # ...and the companion "keep filling the browser on every resize" decision, which
+  # stretchWorldToFillEntirePage latches ON for good. Captured beside _bootExtent (i.e. AFTER the
+  # constructor's own sizing branch, so for the index page the captured value is the latched true).
+  _bootAutoAdjustToFillEntireBrowserAlsoOnResize: nil
+
   # »>> this part is excluded from the fizzygum homepage build
   # keypad keys map to special characters
   # so we can trigger test actions
@@ -539,6 +550,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10, 1000*60*60*24
 
     @inputEventsQueue = new InputEventsQueue
+
+    # the size the world booted at, and the resize policy that goes with it -- see the
+    # _bootExtent declaration above
+    @_bootExtent = @extent()
+    @_bootAutoAdjustToFillEntireBrowserAlsoOnResize = @automaticallyAdjustToFillEntireBrowserAlsoOnResize
 
     @_changed()
 
@@ -2489,6 +2505,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # tracker unregister leak). Private chain: the audit core, sanctioned
     # cross-object like the other NoSettle-core calls.
     @storageSorter._auditStorageNoSettle()
+    # ...and the teardown-completeness ratchet, at the same seam and in the same spirit: the world
+    # is pristine again here, so anything that does NOT match the pristine fingerprint is world
+    # state this teardown forgot. See _auditWorldResetCompletenessNoSettle for the whole rationale.
+    @_auditWorldResetCompletenessNoSettle()
 
   _resetWorldNoSettle: ->
     @_changed() # redraw the whole screen
@@ -2522,6 +2542,85 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
     # regardless; the selected widget's own repaint clears its overlay.
     @_editorSelectedWidget = nil
+    # DANGLING WORLD SLOTS. These are bare world fields holding a widget that fullDestroyChildren
+    # above just destroyed, so each would keep a DEAD reference into the next test. The app-slot
+    # singletons and the templates window are the same two the snapshot teardown
+    # (_teardownForSnapshotLoadNoSettle) already nils -- the asymmetry between the two teardowns
+    # was itself the tell. StorageSorter's furniture marking reads world[slot] and
+    # simpleEditorTemplates unconditionally, so a dead ref there is walked every sort.
+    @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
+    @simpleEditorTemplates = nil
+    # the error console is worse than a dead ref: _showErrorsHappenedInRepaintingStepInPreviousCycle
+    # only builds one `if !@errorConsole?`, so a destroyed-but-non-nil console makes every later
+    # paint error in the page report into a dead widget -- silently swallowing the errors the
+    # headless runners' fail-gate exists to catch.
+    @errorConsole = nil
+    # the last text the user edited (used by the document editor's align ops) -- a bare ref to a
+    # widget fullDestroyChildren just destroyed.
+    @lastEditedText = nil
+    # EPHEMERAL WORLD-LEVEL COLLECTIONS, same shape as the highlight/pinout sets above: none is
+    # emptied by fullDestroyChildren (they are world state, not tree state) and none is emptied by
+    # Widget._destroyNoSettle (which only unregisters from steppingWdgts / keyboardEventsReceivers /
+    # the click-outside set -- see the standing TODO there naming exactly this gap). So a test that
+    # ends with a tooltip up, a menu open, handles shown, or a scroll still gliding leaks dead refs
+    # into the next test in the same headless process.
+    #   toolTipsList              destroyToolTips would then read bounds off a destroyed tooltip
+    #   openPopUps / freshlyCreatedPopUps  mostRecentlyCreatedPopUp and the macro toolkit's
+    #                             "the pop-up that just opened" both pick out of these
+    #   popUpsMarkedForClosure    the next drain would close() an already-destroyed pop-up
+    #   hierarchyOfClicked*       stale gesture bookkeeping (cleared per click, not per test)
+    #   temporaryHandles...       dead resize/move handles
+    #   wdgtsWithOngoingScrollMomentum  the worst: anyScrollMomentumOngoing() stays true FOREVER,
+    #                             so the macro pump's waitNoInputsOngoing never settles and every
+    #                             later test in the page STALLS rather than fails
+    @toolTipsList.clear()
+    @openPopUps.clear()
+    @freshlyCreatedPopUps.clear()
+    @popUpsMarkedForClosure.clear()
+    @hierarchyOfClickedWdgts.clear()
+    @hierarchyOfClickedMenus.clear()
+    @temporaryHandlesAndLayoutAdjusters.clear()
+    @wdgtsWithOngoingScrollMomentum.clear()
+    # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
+    # list never was, so it accumulated dead widgets for the whole life of the page.
+    @widgetsGivingErrorWhileRepainting = []
+    # the track-changes STACK: a test that dies between disableTrackChanges and
+    # maybeEnableTrackChanges leaves it unbalanced, and every later test in the page would then
+    # record no broken rectangles at all -- i.e. paint nothing.
+    @trackChanges = [true]
+    # DESKTOP/SESSION state that decides what a LATER test renders.
+    # numberOfIconsOnDesktop is the grid cursor for auto-placed desktop icons
+    # (IconicDesktopSystemPanelWdgt.add): one folder/shortcut made by an earlier test shifts the
+    # next test's first icon a whole grid cell to the right. A pure GEOMETRY leak -- the strongest
+    # form of this bug class, since the pixels move.
+    @numberOfIconsOnDesktop = 0
+    # the one-shot "this info doc was already created" flags (InfoDocs.REGISTRY entries, set as
+    # plain own booleans on the world): once set, the SAME app launch in a later test silently
+    # builds NO info doc. Collected first, then deleted -- deleting while iterating own props
+    # is not safe.
+    infoDocFlagNames = (name for own name of @ when name.indexOf("infoDoc") is 0)
+    delete @[name] for name in infoDocFlagNames
+    # dev mode decides which context menu the world (and every widget) builds. Boot turns it ON for
+    # both entry pages, right after the constructor (src/boot/globalFunctions.coffee startWorld), so
+    # that -- not the constructor's own false -- is the pristine value to come back to.
+    @isDevMode = true
+    # the preferences bag is STATIC, so it survives even a brand-new world: the "touch screen
+    # settings" menu item doubles menu/prompter font sizes, slider sizes and scrollbar thickness
+    # for good. The reset lives with its owner (PreferencesAndSettings.resetToBootInputMode, which
+    # self-guards to a no-op in the ordinary teardown), like untitledNamingService.resetCounters
+    # above. Deliberately NOT done in the snapshot teardown: loadWorldSnapshot RESTORES this bag.
+    WorldWdgt.preferencesAndSettings?.resetToBootInputMode()
+    # the world's own SIZE (see @_bootExtent). Guarded on an actual mismatch so this is a no-op in
+    # every ordinary teardown -- it only fires after something resized the world, and then it
+    # restores the harness resolution the same way the constructor established it. Only for the
+    # test-harness page: on the index page the boot extent IS the browser viewport, which is
+    # legitimately allowed to change under the user (the resize listener re-stretches anyway).
+    if @_bootExtent? and !@isIndexPage and !@extent().equals @_bootExtent
+      @_sizeCanvasToTestScreenResolution()
+      @_applyExtent @_bootExtent.copy()
+      @_reLayoutDesktop()
+    if @_bootAutoAdjustToFillEntireBrowserAlsoOnResize?
+      @automaticallyAdjustToFillEntireBrowserAlsoOnResize = @_bootAutoAdjustToFillEntireBrowserAlsoOnResize
     # the storage containers (bin, shelf) are not attached
     # to the world tree so they're not in the children,
     # so we need to clean them up separately
@@ -2544,6 +2643,150 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # so we can see the test results while tests
     # are running.
     document.body.scrollTop = document.documentElement.scrollTop = 0
+
+  # --- the teardown-completeness ratchet -------------------------------------------------------
+  # WHY THIS EXISTS. All 268 SystemTests share ONE page per shard, so anything _resetWorldNoSettle
+  # above forgets leaks into the next test in that page. That teardown grew REACTIVELY -- every
+  # entry was added only after a leak was caught in the field (2026-07-10 the highlight sets,
+  # 2026-07-28 the Untitled counters), and each was found by accident. Worse, the bug class is
+  # invisible to the standing gates: a leak only bites when the consuming predecessor shares a page
+  # with the victim, and no routine gate runs 1 shard. So a fully deterministic failure can sit on
+  # master indefinitely.
+  #
+  # This closes the class rather than the next instance. It fingerprints the world's own mutable
+  # state at the end of the FIRST teardown -- which the harness runs on a virgin world, since
+  # resetWorld is each test's first command -- and re-checks that fingerprint at the end of every
+  # later teardown. A field that came back different is either a leak or a deliberate exception,
+  # and a deliberate exception has to be named in the allow-list below, WITH ITS REASON. So a
+  # newly-added world field that nothing resets shows up as a loud, greppable failure the first
+  # time any test dirties it, instead of years later as a mystery mis-render.
+  #
+  # One RESETWORLD_INCOMPLETE token line per violation, like the NON_INTEGER_GEOMETRY and
+  # STORAGE_INVARIANT guards; the headless runners gate on the token, so every suite leg enforces
+  # this for free. Cost is a shallow property sweep once per test.
+  #
+  # DELIBERATELY SURVIVING world state. Each name here is a decided exception, not an oversight:
+  #   - monotonic clocks / session ids / cache-version stamps: zeroing them would make STALE caches
+  #     look valid, which is a far worse bug than the one this guards. They are monotonic BY DESIGN.
+  #   - per-cycle transients: the teardown is not a frame boundary, so these are legitimately
+  #     mid-flight; they are re-established every cycle by the cycle itself.
+  #   - measurement instruments: switches a human or a profiler sets deliberately for a whole run
+  #     (docs/tooling/coalescing-measurement.md, the island-buffer A/B). Resetting them per test
+  #     would silently defeat the instrument.
+  #   - lastSerializationString: kept ON PURPOSE across tests so serialization tests can hand a
+  #     payload to a later test instead of re-deriving it (see its declaration).
+  #   - sourceEditsRegistry: its records MIRROR live prototype edits, which a world teardown cannot
+  #     undo. Clearing the log while the edited class survives would make the log LIE (and a world
+  #     snapshot embeds it). Tests that edit a class restore it in their own macro tail.
+  @_worldStateAuditExemptions: [
+    # monotonic / derived cache bookkeeping
+    "incrementalGcSessionId", "gcSessionId", "checkRootCache", "checkFullClippedBoundsCache"
+    "checkIsInCollapsedSubtreeCache", "childrenBoundsUpdatedAt", "_cachedCanvasPosition"
+    # per-cycle transients (re-established by doOneCycle)
+    "broken", "duplicatedBrokenRectsTracker", "numberOfDuplicatedBrokenRects"
+    "numberOfMergedSourceAndDestination", "widgetsWithMaybeChangedPaintBounds"
+    "widgetsWithMaybeChangedFullPaintBounds", "widgetsThatMaybeChangedLayout"
+    "_dirtyDescendantFlagged", "_downWalkRelaidCount", "_inLayoutMutation", "_recalculatingLayouts"
+    "healingRectanglesPhase", "paintingWidget", "paintingIntoIslandBuffer"
+    "errorsWhileRepainting", "layoutErrorsToReport", "_deferredSettleDeclarationDepth"
+    # ...and the WORLD-AS-A-WIDGET half of that same per-frame damage bookkeeping. These are
+    # Widget-level fields, but the world is a widget, so they are in the sweep. They are the
+    # _changed()/_fullChanged() dedupe flags, the last-painted footprints and the flesh-out's
+    # src/dst indices -- cleared when each paint pass consumes them, so what a teardown observes
+    # is simply where in the frame it landed. Under PARALLEL gauntlet load the teardown lands at a
+    # different point in the cycle, which is exactly how these surfaced (the settle + storage legs
+    # warned in-wave and passed serially, 2026-07-29). Cross-checked against the codebase's own
+    # independent enumeration of per-frame state: every name here is in Widget.serializationTransients,
+    # under its "per-frame broken-rect damage bookkeeping" and Stage-B1 headings.
+    "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged", "hasDirtyDescendant"
+    "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
+    "srcBrokenRect", "dstBrokenRect"
+    "_islandBufferSourceIsland", "_islandBufferSourceVirtualRect"
+    # measurement instruments, set deliberately for a whole run
+    "deferredSettlingEnabled", "showRedraws", "doubleCheckCachedMethodsResults"
+    "auditUndeclaredEndOfCycle", "_undeclaredEndOfCyclePushes", "auditPaintTimeLayoutScheduling"
+    "_paintTimeLayoutSchedules", "auditTierAndApplyNaming", "auditNotificationSettleNeutrality"
+    # deliberate cross-test carriers / the guard's own bookkeeping
+    "lastSerializationString", "sourceEditsRegistry", "_pristineWorldFingerprint"
+  ]
+
+  # the fingerprint taken at the end of the first teardown (the pristine world). nil until then.
+  _pristineWorldFingerprint: nil
+
+  # Summarise a value to something comparable across teardowns. Deliberately COARSE: a container
+  # reduces to its SIZE and a widget to its class plus liveness, because the leak shapes this
+  # guards are "a container that should be empty isn't" and "a slot that should be nil holds a
+  # destroyed widget" -- not "which particular widget".
+  _summariseWorldStateValueNoSettle: (value) ->
+    return "nil" unless value?
+    # exact-constructor tests, not instanceof: these are the JS built-in containers, so there is no
+    # polymorphic alternative to reach for and no subclassing to accommodate -- and it keeps the
+    # [stinks] instanceof-type-test tail (a widget-class smell) honest.
+    return "Set(" + value.size + ")" if value.constructor is Set
+    return "Map(" + value.size + ")" if value.constructor is Map
+    return "Array(" + value.length + ")" if Array.isArray value
+    switch typeof value
+      when "number", "boolean" then return String value
+      when "string" then return "string(" + value.length + ")"
+      when "function" then return "function"
+    if value.destroyed? and value.constructor?
+      return value.constructor.name + (if value.destroyed then ":DESTROYED" else ":live")
+    "object:" + (value.constructor?.name ? "?")
+
+  # A field is derived-cache bookkeeping iff it is named for it: the geometry caches are declared
+  # in strict `cachedFoo` / `checkFooCache` pairs (Widget, TreeNode), the value and its version
+  # stamp. They are recomputed on demand and legitimately differ between two teardowns, so they are
+  # exempt BY RULE rather than by name -- which keeps the guard correct as new caches are added.
+  _isDerivedCacheFieldName: (name) ->
+    name.indexOf("cached") is 0 or (name.indexOf("check") is 0 and /Cache$/.test name)
+
+  # The field universe. Every field is read as its EFFECTIVE value (through the prototype chain),
+  # never as "does the world own it" -- otherwise a prototype-declared field that the teardown
+  # merely ASSIGNS (@dragEmbedLabelDeclared = nil) would read as (absent) -> nil and fire, even
+  # though the value never changed. Own-ness is not state; the value is.
+  #
+  # Sweeping own properties AND the whole prototype chain covers BOTH ways a leak can appear,
+  # without anyone having to remember to declare anything:
+  #   - a field ASSIGNED on the world (@foo = x) becomes an OWN property -- swept directly, which
+  #     is what makes a newly-added world field visible automatically;
+  #   - a class-body-declared CONTAINER mutated in place (toolTipsList.add ...) stays on the
+  #     prototype -- swept by the chain walk.
+  _fingerprintWorldStateNoSettle: ->
+    fingerprint = {}
+    exempt = new Set WorldWdgt._worldStateAuditExemptions
+    record = (name) =>
+      return if fingerprint.hasOwnProperty name
+      return if exempt.has(name) or @_isDerivedCacheFieldName name
+      try
+        value = @[name]
+      catch error
+        return
+      return if typeof value is "function"
+      fingerprint[name] = @_summariseWorldStateValueNoSettle value
+    record name for own name of @
+    proto = Object.getPrototypeOf @
+    while proto? and proto isnt Object.prototype
+      record name for own name of proto
+      proto = Object.getPrototypeOf proto
+    fingerprint
+
+  # Called at the very end of resetWorld. First call establishes the pristine baseline; every later
+  # call diffs against it and reports each difference as one greppable token line.
+  _auditWorldResetCompletenessNoSettle: ->
+    fingerprint = @_fingerprintWorldStateNoSettle()
+    if !@_pristineWorldFingerprint?
+      @_pristineWorldFingerprint = fingerprint
+      return
+    report = (name, was, now) ->
+      console.error "RESETWORLD_INCOMPLETE " + name + " pristine=" + was + " afterTeardown=" + now +
+        " -- world state survived resetWorld: reset it in _resetWorldNoSettle, or add it to " +
+        "WorldWdgt._worldStateAuditExemptions with the reason (see the comment there)."
+    for own name, pristineValue of @_pristineWorldFingerprint
+      currentValue = fingerprint[name] ? "(absent)"
+      report name, pristineValue, currentValue if currentValue isnt pristineValue
+    for own name, currentValue of fingerprint
+      report name, "(absent)", currentValue unless @_pristineWorldFingerprint.hasOwnProperty name
+    return
   # this part is excluded from the fizzygum homepage build <<«
   
   # There is something special about the

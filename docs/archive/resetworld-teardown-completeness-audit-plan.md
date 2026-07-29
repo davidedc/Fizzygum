@@ -1,10 +1,17 @@
 # `_resetWorldNoSettle` completeness audit — make the world teardown PROVABLY total
 
-**PLAN ONLY — AUTHORED 2026-07-28. Written to be executed COLD by an LLM/engineer with ZERO prior
-context.** No audit has been run yet; everything below is preparation plus the candidate list found
-while authoring. Every fact was verified against the working trees on 2026-07-28 (Fizzygum `master`
-@ `a06f138c`, Fizzygum-tests `master` @ `3e9b9e83b`, suite = 268 SystemTests). **Line numbers WILL
-drift — the quoted method/field names are authoritative; re-grep before trusting any `file:line`.**
+**COMPLETE — audit EXECUTED 2026-07-29** (Fizzygum `master` @ `bd4448c0`, Fizzygum-tests @
+`4c2e8922f`, suite = 268). The audit ran in full: 26 rows inventoried and decided, **14 further
+leaks found and fixed**, and the Phase 4 structural guard delivered and proved to FAIL on a planted
+leak. Gates green with **zero reference churn**: `fg gauntlet` 13/13 legs PASS in parallel,
+`fg homepage` OK, and the `--shards=1` detector 268/268. **The execution record is §7.5 — read that
+for the inventory, the decisions and the case law; §1–§6 below are the original 2026-07-28 plan,
+kept verbatim as the brief.** Line numbers WILL drift — method/field names are authoritative.
+
+⚖ Headline: reactive patching had left **an order of magnitude more holes than the two caught
+instances implied**. The worst were not the ones anyone had noticed — a desktop grid cursor that
+moves later tests' icons, the world's own extent, and a dangling error console that silently
+swallows every later paint error in the page.
 
 **MANDATE.** *Eliminate the bug class*, not the next instance of it. The goal is a teardown that is
 **provably complete** — every piece of world-level mutable state either reset, or documented in-place
@@ -265,9 +272,155 @@ explicitly declined with a reason; gates green with zero reference churn. Then `
 - Memory: `resetworld-state-leak-between-tests` (the 2026-07-10 case),
   `suite-nondeterminism-flakes-arc` (the 2026-07-28 case).
 
+## §7.5 EXECUTION RECORD — audit run 2026-07-29
+
+Executed against Fizzygum `master` @ `bd4448c0`, Fizzygum-tests @ `4c2e8922f`, suite = 268.
+Phase 1 was done read-only and in full before any code changed, as §0.5 requires.
+
+### The instrument (and its R3 validation)
+
+A direct state observer, `Fizzygum-tests/.scratch/resetworld-audit-probe.js` (scratch, gitignored):
+for each mutation, in its own fresh harness page — fingerprint the pristine world, apply the
+mutation, `resetWorld()`, fingerprint again, diff. This is a *state* observer, not a suite-replay
+tool, so R3's objection to `run-sequence-headless.js` does not apply to it.
+
+**R3 discipline honoured — the instrument was proved to detect BOTH known leaks before its silence
+was trusted anywhere.** Neutralising the 2026-07-28 fix in-page (`resetCounters = ->`) made it
+report `untitledNamingService.howManyUntitledShortcuts 0 → 1`; neutralising the 2026-07-10
+highlight-set clears made it report all three highlight structures. A negative control (same
+mutation, fixes intact) and a no-mutation baseline both came back CLEAN.
+
+One instrument artefact to know about: a field declared on the PROTOTYPE and first *assigned* by
+the teardown shows as `(absent) → nil`. That is own-ness changing, not value — the shipped guard
+compares values read through the chain, so it does not have this artefact.
+
+### Inventory + decisions
+
+Every row was decided. **CONFIRMED** = the probe observed it surviving a real teardown.
+
+| # | state | owner | verdict | evidence / reason |
+|---|---|---|---|---|
+| 1 | world **extent** + `automaticallyAdjustToFillEntireBrowserAlsoOnResize` | world | **RESET** | CONFIRMED `960x440 → 1024x768`. `stretchWorldToFillEntirePage` ("fit whole page", dev menu) latches both. Worst row found: every later test in the page renders at the wrong size. Restore is guarded on a real mismatch ⇒ no-op normally |
+| 2 | `numberOfIconsOnDesktop` | world (proto default on `IconicDesktopSystemPanelWdgt`) | **RESET** | CONFIRMED `0 → 1` after one `makeFolder()`. It is the desktop grid cursor, so the next test's first icon moves a whole cell. A pure GEOMETRY leak — strictly worse than the 2026-07-28 name leak |
+| 3 | `infoDoc_*_created` flags | world (own booleans, `InfoDocs.REGISTRY`) | **RESET** | CONFIRMED. One-shot guards: `createNextTo` early-returns, so a later test's app launch silently builds NO info doc |
+| 4 | `WORLD_APP_SLOTS` (5) + `simpleEditorTemplates` | world | **RESET** | CONFIRMED dangling `…:DESTROYED`. §1's suspected asymmetry is REAL. `StorageSorter` marks both unconditionally each sort. Now matches `_teardownForSnapshotLoadNoSettle` |
+| 5 | `isDevMode` | world | **RESET** | CONFIRMED `true → false`. Decides which context menu every widget builds. Pristine is boot's `true` (set in `globalFunctions.startWorld`), not the ctor's `false` |
+| 6 | `WorldWdgt.preferencesAndSettings` (**static**) | `PreferencesAndSettings` | **RESET** (owner-side) | CONFIRMED: "touch screen settings" doubles menu/prompter fonts, sliders, scrollbars — and being static it outlives even a new world. New `resetToBootInputMode()`, self-guarded. NOT called from the snapshot teardown (§4: `loadWorldSnapshot` restores this bag) |
+| 7 | `errorConsole` | world | **RESET** | CONFIRMED dangling `FrameWdgt:DESTROYED`. Worse than a dead ref: the reporter only builds one `if !@errorConsole?`, so every later paint error in the page reports into a dead widget — silently swallowing what the runners' fail-gate exists to catch |
+| 8 | `wdgtsWithOngoingScrollMomentum` | world | **RESET** | CONFIRMED `Set(0) → Set(1)`. A panel destroyed mid-glide is never removed ⇒ `anyScrollMomentumOngoing()` true FOREVER ⇒ the macro pump's `waitNoInputsOngoing` never settles and later tests **STALL** rather than fail |
+| 9 | `toolTipsList`, `openPopUps`, `freshlyCreatedPopUps`, `popUpsMarkedForClosure` | world | **RESET** | CONFIRMED. Same shape as the 2026-07-10 highlight sets: world-level, so `fullDestroyChildren` cannot reach them, and `Widget._destroyNoSettle` does not unregister from them (its standing TODO names exactly this gap). `PopUpWdgt` removes itself in the PUBLIC `destroy()`, which bulk teardown never calls — the 2026-07-23 shortcut bug verbatim |
+| 10 | `temporaryHandlesAndLayoutAdjusters` | world | **RESET** | CONFIRMED `Set(0) → Set(5)` dead handles |
+| 11 | `hierarchyOfClickedWdgts` / `…Menus` | world | **RESET** | Cleared per *click*, not per test ⇒ a test ending mid-gesture leaks |
+| 12 | `lastEditedText` | world | **RESET** | CONFIRMED dangling `StringWdgt:DESTROYED` |
+| 13 | `widgetsGivingErrorWhileRepainting` | world | **RESET** | Pushed to, never cleared anywhere — accumulated dead widgets for the life of the page |
+| 14 | `trackChanges` stack | world | **RESET** | CONFIRMED `Array(1) → Array(2)`. Left unbalanced, every later test records NO broken rectangles — i.e. paints nothing |
+| 15 | highlight/pinout sets, untitled counters, `_editorSelectedWidget`, bin/shelf, colour, wallpaper | world | already RESET | the pre-existing teardown; re-verified still correct |
+| 16 | `wdgtsDetectingClickOutside…`, `editorFocusWdgt`, `hand.mouseOverList`, `hand.nonFloatDraggedWdgt` | world/hand | N/A | `_softResetWorld` |
+| 17 | `steppingWdgts`, `keyboardEventsReceivers`, `widgetsReferencingOtherWidgets`, dataflow edges | world | N/A | `Widget._destroyNoSettle` unregisters; shortcuts do it in the CORE (2026-07-23 fix) |
+| 18 | `dragEmbed*Declared` / `*Wdgt` (6) | world | N/A | **probed, not assumed**: `_softResetWorld`'s `hand.drop()` reaches `_endDragEmbedInteraction`, and the reconciler then destroys+nils the overlays. Came back clean even when left declared |
+| 19 | per-class id counters | globals | N/A | `fullDestroyChildren` zeroes them |
+| 20 | `broken`, `widgetsWithMaybeChanged*Bounds`, `errorsWhileRepainting`, `layoutErrorsToReport`, `healingRectanglesPhase`, `_inLayoutMutation`, … | world | N/A | per-cycle transients, re-established every `doOneCycle` |
+| 21 | `frameCount`, `structure/visibility/geometryVersion`, `immutableBackBufferGeneration`, `incrementalGcSessionId`, `ongoingUrlActionNumber`, `dateOf*CycleStart` | **static/monotonic** | **SURVIVES** | monotonic BY DESIGN — zeroing them makes STALE caches look VALID, a worse bug than the one being guarded. The stall watchdog reads `frameCount` |
+| 22 | `occlusionCullingEnabled`, `islandBufferCacheEnabled`, `dirtyRectListEnabled`, `deferredSettlingEnabled`, `showRedraws`, `audit*` | static/world | **SURVIVES** | measurement instruments a human/profiler sets for a WHOLE run; resetting per test would silently defeat the instrument. The one macro that flips them restores them itself and asserts the default |
+| 23 | LRU text caches | world | **SURVIVES** | content-keyed memoisation, correct across worlds; clearing only costs time |
+| 24 | `lastSerializationString` | world | **SURVIVES** | deliberate cross-test carrier (its own declaration says so) |
+| 25 | `sourceEditsRegistry.records` | collaborator | **SURVIVES** | its records MIRROR live prototype edits, which a world teardown cannot undo. Clearing the log while the edited class survives would make the log LIE (and a snapshot embeds it). Convention stands: a test that edits a class restores it in its macro tail |
+| 26 | `otherTasksToBeRunOnStep` | world | N/A (dead) | iterated once, never written — a dead field. Left alone (out of scope); noted here |
+
+### One nondeterminism found and headed off
+
+Restoring the prefs bag by re-running `setMouseInputMode()` re-derived `minimumFontHeight`, which
+is a *glyph-rasterising pixel probe* — its answer depends on how warm the SWCanvas glyph atlas is
+(DETERMINISM.md §3g/§3i), and the probe duly measured `9 → 10`. So `resetToBootInputMode` CARRIES
+OVER the probed value instead of re-deriving it: that number measures the BROWSER, not the input
+mode. Re-probing at a teardown could hand the next test a different number than boot measured.
+
+### Phase 4 — the structural guard (delivered)
+
+`WorldWdgt._auditWorldResetCompletenessNoSettle`, called at the end of `resetWorld` beside the
+existing `storageSorter._auditStorageNoSettle()` — plan option 1, merged with option 2's spirit.
+
+It fingerprints the world's own mutable state at the end of the FIRST teardown (which the harness
+runs on a virgin world, since `resetWorld` is each test's first command) and re-checks it at the
+end of every later teardown, emitting one greppable `RESETWORLD_INCOMPLETE` line per difference —
+gated by both headless runners exactly like `NON_INTEGER_GEOMETRY` / `STORAGE_INVARIANT`.
+
+The field universe is built so **both** ways a leak can appear are covered without anyone having to
+remember to declare anything:
+- a field ASSIGNED on the world (`@foo = x`) becomes an OWN property → swept directly;
+- a class-body-declared CONTAINER mutated in place (`toolTipsList.add …`) stays on the prototype →
+  the prototype chain is walked too, keeping every non-function, non-primitive (a primitive up
+  there cannot be mutated in place; assigning to it creates an own property, already covered).
+
+`WorldWdgt._worldStateAuditExemptions` is the allow-list, built from the SURVIVES rows above, each
+with its reason in the comment. **That is what converts this from a fix into a ratchet:** a newly
+added world field that nothing resets fails loudly the first time any test dirties it, and the only
+way to silence it is to reset it or to name it an exception with a reason.
+
+Two refinements the first suite run forced, both worth keeping:
+- **Compare VALUES, never own-ness.** The first cut swept own properties plus prototype containers,
+  so a prototype-declared field the teardown merely ASSIGNS (`@dragEmbedLabelDeclared = nil`) read as
+  `(absent) → nil` and fired 1469 times on a green suite. Every field is now read as its EFFECTIVE
+  value through the prototype chain. Own-ness is not state; the value is.
+- **Derived caches are exempt BY RULE, not by name.** The geometry caches are declared in strict
+  `cachedFoo` / `checkFooCache` pairs (Widget, TreeNode) and legitimately differ between teardowns,
+  so `_isDerivedCacheFieldName` exempts the shape — which stays correct as new caches are added,
+  where a hand-kept name list would rot.
+- **⚠ The guard is LOAD-SENSITIVE for per-frame fields, and only the PARALLEL gauntlet showed it.**
+  The world is a widget, so the sweep also sees Widget-level per-frame damage bookkeeping
+  (`paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, …). A teardown is *not* a frame
+  boundary, so what it observes in those is simply where in the cycle it landed — identical across
+  a quiet dpr1 suite, an s1 run and a serial gauntlet, but NOT under parallel load, where the
+  `settle` and `storage` legs warned in-wave and passed serially. They are exempt now, cross-checked
+  against the codebase's own independent enumeration of per-frame state (`Widget.serializationTransients`
+  — every exempted name appears there). **Lesson: a state-fingerprint guard must be validated under
+  the parallel gate, not only under the quiet inner loop; the quiet run cannot show this class.**
+
+**The ratchet was proved to FAIL, not just to be silent** (a guard that has never fired is not
+evidence of anything). Planting one leaking field — `@_leakCanaryTEMPORARY` bumped in `doOneCycle`,
+i.e. a FIELD, not a no-op — made the suite emit 272 token lines naming the field with its pristine
+and post-teardown values, and the runners duly failed 188 tests with an actionable message. The
+canary was then removed and the suite went green and silent again.
+
+### DELIBERATELY NOT DONE — the product-side twin (needs an owner call)
+
+The audit was scoped to `_resetWorldNoSettle`, the TEST teardown, exactly as §0/§4 frame it. But
+several of the dangling-ref rows above apply just as much to `_teardownForSnapshotLoadNoSettle`,
+the product-safe twin `loadWorldSnapshot` uses — and there they are **product** bugs, not test
+leaks, because `fullDestroyChildren` destroys the widgets there too:
+
+- `errorConsole` — after a snapshot load the slot points at a destroyed console, so every later
+  paint error in that session reports into a dead widget (the reporter only builds one
+  `if !@errorConsole?`). Errors would silently vanish for a real user.
+- `wdgtsWithOngoingScrollMomentum` — a panel gliding when the user loads a snapshot leaves a dead
+  ref, and `anyScrollMomentumOngoing()` then answers true for the rest of the session.
+- `toolTipsList` / `openPopUps` / `freshlyCreatedPopUps` / `popUpsMarkedForClosure` /
+  `temporaryHandlesAndLayoutAdjusters` / `lastEditedText` — dead refs surviving a load.
+- `numberOfIconsOnDesktop` — restored only `if section.numberOfIconsOnDesktop?`, so loading a
+  snapshot that lacks it leaves the pre-load grid cursor in place.
+
+**Not changed here on purpose:** §4 warns that over-resetting breaks product behaviour, that the two
+teardown paths must be treated separately, and this one ships in `--homepage` and is covered by the
+serialization rigs rather than by the suite. It is a small, well-evidenced follow-up arc — worth
+doing, but it is a product-behaviour change and wants its own owner sign-off and a serialization
+round-trip verification, not a silent ride-along on a test-infrastructure audit.
+
 ## §8 Provenance
 
 Authored 2026-07-28 immediately after flake C (`UntitledNamingService` counters surviving
 `resetWorld`) was root-caused and fixed — the second instance of this shape in three weeks. The
 candidate list in §1/§3 and the §2 oracle were found while authoring, by reading the three teardown
-paths and the serializer's world section against each other. **No audit has been executed.**
+paths and the serializer's world section against each other.
+
+**Executed 2026-07-29** — see §7.5. The plan's §2 oracle (diffing the serializer's world section
+against the teardown) did earn its billing: it directly produced the app-slot, `simpleEditorTemplates`,
+`numberOfIconsOnDesktop`, `infoDoc*`, `isDevMode` and preferences rows. But it was a floor, not a
+ceiling, exactly as §2 warned — the direct class sweep and the collaborator recursion found the rest,
+including the two worst (`errorConsole` and `wdgtsWithOngoingScrollMomentum`), neither of which is
+serialized and so neither of which the oracle could ever have named.
+
+This doc closes the arc; the durable residue is `Fizzygum-tests/DETERMINISM.md` §2d (the bug class
+and its ratchet), the in-code comments on `_resetWorldNoSettle` /
+`_auditWorldResetCompletenessNoSettle` / `_worldStateAuditExemptions`, and the `Fizzygum/CLAUDE.md`
+Testing entry for the new gate. The one deliberate carry-forward is the product-side twin (§7.5's
+"DELIBERATELY NOT DONE"), tracked in `docs/BACKLOG.md`.
