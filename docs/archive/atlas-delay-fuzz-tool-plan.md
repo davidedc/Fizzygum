@@ -1,6 +1,10 @@
 # `fg fuzz` — promote the glyph-atlas delay injector to a real tool
 
-**PLAN ONLY — AUTHORED 2026-07-29. Written to be executed COLD by an LLM/engineer with ZERO prior
+**STATUS: EXECUTED 2026-07-29 — the tool is built, gated and verified. See §9 for the execution
+record, including the ONE §5 test that could not be demonstrated and why.** Gauntlet green after
+the work (13/13 legs, zero reference churn).
+
+**AUTHORED 2026-07-29. Written to be executed COLD by an LLM/engineer with ZERO prior
 context.** Every fact below was verified against the working trees on 2026-07-29 (Fizzygum `master`
 @ `44ace557`, Fizzygum-tests `master` @ `fc07ae2e6`, suite = 268 SystemTests). **Line numbers WILL
 drift — the quoted file/function/flag names are authoritative; re-grep before trusting any
@@ -288,6 +292,89 @@ green, and §3.4 done or explicitly deferred with a reason. Then `git mv` this d
 - `Fizzygum/src/boot/extensions/SWCanvasElement-extensions.coffee` — `swCanvasAtlasPending`,
   `swCanvasScheduleTextRefresh`, `swCanvasAnyTextDirty`; `MacroToolkit.readyForMacroScreenshot` is
   the gate under test.
+
+## §9 EXECUTION RECORD (2026-07-29)
+
+### What was built
+
+| file | role |
+|---|---|
+| `Fizzygum-tests/scripts/audit-preludes/atlas-delay-prelude.js` | the injector. **Filed in `audit-preludes/`, not `scripts/` as §3.1 said** — that is where the three sibling injected preludes live and where §7 itself points for the model. |
+| `Fizzygum-tests/scripts/lib/atlas-fuzz.js` | loader: config by PREPENDING `window.__ATLAS_FUZZ_CONFIG` rather than substituting `__SEED__` placeholders, so the prelude stays valid standalone JS (a placeholder file would fail `fg lint`'s `node --check` over changed `scripts/*.js`). |
+| `Fizzygum-tests/scripts/run-atlas-fuzz.js` | **the validity gate (§3.2)** — PASS/FAIL/INVALID, exit 0/1/2. |
+| `Fizzygum-tests/scripts/run-atlas-fuzz-selftest.js` | 31-case canned-transcript corpus; wired into `npm run selftest`. |
+| `Fizzygum-tests/scripts/run-all-headless.js` | new `AUDIT_ECHO=1` rail (below). |
+| both serialization rigs | §3.4 done: `FUZZ_ATLAS=1` injection + **hard exit 2** when injection cannot be proven. |
+| `fg fuzz` | §3.3, local/uncommitted; INVALID gets its own banner, never OK/FAILED. |
+
+### The proof-of-injection channel (the thing §3.2 turns on)
+
+A sharded run gives the wrapper **no page handle**, so it cannot read `window.__atlasFuzz`. §6.5
+already ruled out `AUDIT_DIR`. The remaining channel was the console — but `run-all-headless.js`
+relays a prelude's lines only if they match `/FAIL|UNCAUGHT|UNHANDLED|STALL/i`. So a one-line,
+env-gated `AUDIT_ECHO=1` rail was added, **byte-identical behaviour when unset**. Two channels now
+exist and both are mandatory where available: console heartbeat (suite), `window.__atlasFuzz`
+(rigs, read directly).
+
+⚠ **`LAYOUTAUDIT installed` contains the substring "stall"** (in-**stall**-ed), so it *also* matched
+that relay regex and printed twice per shard. That looks exactly like a prelude running twice and
+double-wrapping `loadFont` — i.e. a silently doubled fault dose — and cost real time to rule out
+(probes proved one execution, one frame, one wrapper). The echo now relays once and returns, **only
+under `AUDIT_ECHO`**, so no standing gate's output changes.
+
+### §5 verification — results
+
+| # | test | result |
+|---|---|---|
+| 1 | **INVALID on no-injection** | ✅ **both paths.** Prelude neutered to never find `BitmapText`. Suite printed `ALL TESTS PASSED`, `failed: 0`, `shards complete: 4/4`; rig printed `SERIALIZATION RIG OK`. **Both exited 2.** This is the plan's headline test and it holds. |
+| 2 | **INVALID on dead shards** | ✅ Forced via §4.3's real trap (culling the browsers mid-run) rather than `--verbose`, which is not deterministic: 4/4 `DISCONNECTED`, `failed: 0` → exit 2. Injection *was* proven here, so the refusal came purely from the structural check. |
+| 3 | **FAIL on flake A reverted** | ❌ **NOT DEMONSTRATED — see below. Fix restored; `tests/` verified byte-identical to HEAD.** |
+| 4 | **PASS on a clean tree** | ✅ 268/268, 4/4 shards, injection proven in all four, 197 atlas loads delayed, seed printed. Suite leg 1.74 min. |
+
+### §5 test 3: why the regression fixture did not work (measured, not assumed)
+
+With `yield "waitForScreenshotReady"` removed, `macroClosingRotatedIslandChildClearsFootprint`
+**passed 13/13 under injection** (6 seeds @250 ms, 4 @3000, 3 @12000) — **and 3/3 in a control with
+no injection at all.** It does not reproduce on an idle box in a single-test run either way, which
+matches its own history (~223 torture iterations never caught it; only ever seen in bursts under
+irregular load).
+
+The mechanism, worth keeping because it is counter-intuitive:
+
+- A freshly booted page makes **about ONE `BitmapText.loadFont` call**; a whole shard (one page,
+  67 tests) accumulates ~50. A single-test run therefore buys roughly **one lottery ticket**.
+- The §3i failure needs the resolution to land **between** two reads that straddle a frame
+  boundary — a target window of about one frame.
+- Therefore **a bigger dose is NOT more sensitive**: too small and the atlas resolves before the
+  read; too large and it resolves after BOTH reads, so both see placeholder boxes and the diff is
+  0 again. The 12000 ms runs were *less* likely to hit than the 250 ms ones.
+
+**Consequence for how to read a PASS** (now in the tool's own header): it means "across a suite run
+with ~200 atlas resolutions displaced, every exercised pixel read stayed correct". It is not proof
+of absence, and this tool is **not a reliable reproducer for any one known race**.
+
+### Deviations from the plan, and why
+
+1. **Prelude filed in `audit-preludes/`** (§3.1 said `scripts/`) — see the table above.
+2. **Config by prepend, not placeholder substitution** — keeps the file lint-clean standalone.
+3. **`AUDIT_ECHO` rail added to `run-all-headless.js`** — not foreseen by the plan, but §3.2's
+   "proof-of-injection is mandatory" is unimplementable for a sharded run without it.
+4. **ONE retry for an INFRA-ONLY invalid round**, mirroring `fg`'s serial load-flake retry. Added
+   after a real occurrence: a shard dropped its CDP connection on its 67th test and aborted a
+   multi-round hunt that had found nothing. Invalid reasons are tagged by kind; **an
+   injection-proof failure or a dose stall is NEVER retried**, and the retry is classified from
+   scratch by the same rules, so it cannot manufacture a pass. Pinned by 3 selftest cases.
+5. **Prelude announces the FIRST delayed load immediately** — a run shorter than the 5 s heartbeat
+   could otherwise report `installed=true, delayedLoads=unknown`, i.e. injection unprovable. Found
+   by the §5 test-3 drill, which the wrapper's own strictness correctly flagged as INVALID.
+
+### Residual / not done
+
+- §5 test 3 has **no working regression fixture**. If one is wanted, it needs a scenario with many
+  atlas loads and a read near one of them, not this test. Recorded in `docs/BACKLOG.md`.
+- ⛔ §6.1 stands: **not a gauntlet leg, not a gate.** Nothing here changes that.
+
+---
 
 ## §8 Provenance
 

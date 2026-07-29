@@ -132,6 +132,7 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 ## Residual / parked items (owning doc archived)
 
 - [ ] `archive/accidental-complexity-reduction-plan.md` P5 Family 4 note: optional [U] gate baseline tighten 150→148
+- [ ] `archive/atlas-delay-fuzz-tool-plan.md` §9: `fg fuzz` has NO working regression fixture — §5 test 3 (revert flake A's `waitForScreenshotReady` and expect a catch) does not reproduce: 13/13 passes under injection AND 3/3 with none, because a fresh page makes ~1 `loadFont` call against a ~one-frame window. A fixture needs a scenario with MANY atlas loads and a pixel read near one of them. Until then the tool's own failure paths are covered only by the canned-transcript corpus (`npm run selftest`) plus the two live INVALID drills.
 - [ ] `archive/basement-dormant-layout-flag-plan.md` §5: design + implement the cached _inBasement flag
 - [ ] `archive/basement-dormant-layout-flag-plan.md` §7: step-by-step build of the flag — not started
 - [ ] `archive/basement-dormant-layout-flag-plan.md` §8: mandatory gauntlet + dpr2 torture verification — never run
