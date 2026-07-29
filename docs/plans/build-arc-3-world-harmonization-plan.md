@@ -7,7 +7,9 @@ with ZERO prior context. Facts verified against the working tree 2026-07-28 (Fiz
 snippets are authoritative. **This is ARC 3 of the build-and-packaging program** — program
 table + completion doctrine: `build-arc-4-dynamic-parts-plan.md` §0.1/§0.2 (binding here).
 Requires arc 2 (`archive/build-arc-2-backend-split-precompile-plan.md` — DONE 2026-07-28) landed; arc 4 (parts)
-follows this.
+follows this. **PREREQUISITE ORDER (owner, 2026-07-29): run
+`plans/resetworld-teardown-completeness-audit-plan.md` to completion BEFORE this arc — it
+audits the very teardown machinery Phase 4 here relocates verbatim.**
 
 **MANDATE.** Converge the homepage world and the dev/test world into ONE design, and retire the
 in-file region-exclusion mechanism COMPLETELY in this arc: at close there are ZERO `»>>` region
@@ -68,9 +70,12 @@ rules: recapture churn never dictates design; the owner explicitly dislikes the 
 ### §0.3 Cold-execution protocol
 
 `fg status` first; read this doc fully; re-grep every symbol before edit; phases in order,
-gates green between; owner ratifies the §2.3/§2.4 disposition columns at Phase 0 (they are
-recommendations from a 2026-07-28 census agent pass, verified per-site but judgment calls on
-promote-vs-delete are the owner's). Never commit/push without owner approval. Suite discipline:
+gates green between. The §2.3/§2.4 disposition columns were **RATIFIED WHOLESALE by the owner
+2026-07-29** — Phase 0 is satisfied, EXCEPT the explicit owner-call rows
+(`obfuscateAsPassword`, `_showBrokenRects` gating, InformationIcon/SaveIcon,
+ProfilingDataCollector, the WorldWdgt `:2732` split), which are raised with the owner
+INDIVIDUALLY, code in view, as execution reaches each one. Never commit/push without owner
+approval. Suite discipline:
 background runs + logs + verdicts; boot-storm flake ≠ code bug; a pixel diff in a phase
 declared pixel-neutral is a REGRESSION (do not recapture it away).
 
@@ -81,10 +86,10 @@ declared pixel-neutral is a REGRESSION (do not recapture it away).
 | # | Decision | Choice | Status |
 |---|---|---|---|
 | H-D1 | Region-marker mechanism (all three kinds) | Retired ENTIRELY this arc: 58 homepage + 3 macros + 2 video-player region sites re-homed; the three regexes deleted from build.py; a gate forbids `»>>` in src/ forever after. | LOCKED (owner marker-aversion + doctrine) |
-| H-D2 | Mis-marked product code (H-R1 list) | PROMOTE — unmark; homepage converges to the one engine/API. | LOCKED in principle; per-site table ratified Phase 0 |
+| H-D2 | Mis-marked product code (H-R1 list) | PROMOTE — unmark; homepage converges to the one engine/API. | LOCKED (dispositions ratified wholesale 2026-07-29) |
 | H-D3 | Test machinery in core classes | Relocate to harness-side extension files in the tests repo (verbatim moves — semantics-exact, the verbatim-fold rule). | LOCKED |
 | H-D4 | Demo/dev content in regions | Extract to collaborator classes in NEW whole-file-marked files; register via the H-R3 hook; become parts in arc 4. | LOCKED |
-| H-D5 | Dead accretion | DELETE (census `delete` rows) — not moved, not kept. | Per-site ratify Phase 0 |
+| H-D5 | Dead accretion | DELETE (census `delete` rows) — not moved, not kept. | LOCKED (ratified wholesale 2026-07-29; owner-call rows raised individually in-flight) |
 | H-D6 | Menu topology | One design for all builds (test/demo sections contributed additively). Target organisation chosen by owner in Phase 5; recapture wave accepted. | Owner-led |
 | H-D7 | `src/macros/` (`FILE_ONLY_FOR_MACROS` whole-file mechanism) | UNTOUCHED this arc — it is a whole-file mechanism (arc 4 turns it into test-part membership). Only its three REGION sites (`MACROS_INCLUSION_PARTS`) are re-homed here. | LOCKED |
 
@@ -202,9 +207,11 @@ landing zone (H-R2).
 
 Each phase = one disposition bucket = pixel-neutral unless stated; gate after each.
 
-- **Phase 0 — ratify dispositions.** Owner reviews §2.3/§2.4 columns (esp. the owner-call
-  rows: `obfuscateAsPassword`, `_showBrokenRects` flag, InformationIcon/SaveIcon,
-  ProfilingDataCollector, the `:2732` split). Output: the table amended in place, LOCKED.
+- **Phase 0 — dispositions ratified (DONE 2026-07-29, wholesale — no kickoff review).**
+  Residual: the owner-call rows (`obfuscateAsPassword`, `_showBrokenRects` flag,
+  InformationIcon/SaveIcon, ProfilingDataCollector, the `:2732` split) are raised with the
+  owner individually during whichever phase touches them; amend the table in place as answers
+  land.
 - **Phase 1 — ratchet gate.** `buildSystem/check-region-markers.js`: counts `»>>` sites
   against a committed baseline; any INCREASE fails the build (wired like the existing gates,
   runs every flavour). Land before any conversion.
@@ -233,9 +240,12 @@ Each phase = one disposition bucket = pixel-neutral unless stated; gate after ea
   with their existing whole-file-marked classes; the 5 macros/video-player region sites fold
   into their families. Menu CONTENT byte-identical (same items, same order, built via the
   hook) ⇒ gauntlet zero-churn gate.
-- **Phase 6 — retire the mechanism.** Assert zero `»>>` in src/; DELETE the three region
-  regexes and their `re.sub`/search applications from build.py; flip the Phase-1 gate to
-  forbid the pattern outright. `fg gauntlet` + `fg homepage`.
+- **Phase 6 — retire the mechanism + docs sync.** Assert zero `»>>` in src/; DELETE the three
+  region regexes and their `re.sub`/search applications from build.py; flip the Phase-1 gate to
+  forbid the pattern outright. `fg gauntlet` + `fg homepage`. Docs: CLAUDE.md marker/homepage
+  sections present-tense; **`docs/explainers/` pages 1–3 carry UNSYNCED arc-1/arc-2 debt**
+  (they still describe `?sw=1`, the single bundle, and the tests copy in present tense) —
+  bring them current with arcs 1–3 here, per the explainers bucket rule.
 - **Phase 7 — menu unification (owner-led, H-D6).** Owner specifies the one menu topology;
   implement; ONE recapture wave (`fg recapture --auto`, gated COMPLETE); homepage inherits the
   same topology minus absent (whole-file-marked) families. This phase may also promote the
