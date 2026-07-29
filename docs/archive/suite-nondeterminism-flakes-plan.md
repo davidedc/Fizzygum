@@ -1,14 +1,23 @@
 # Suite nondeterminism — non-boot flakes (discovered 2026-07-28)
 
-**STATUS (updated 2026-07-28, same day): FLAKE B — root-caused, FIXED, gated and PUSHED (§3.6).
-FLAKE A — **SOLVED 2026-07-29 (§2.6.1)**: hypothesis A3 CONFIRMED by direct measurement — a glyph
-atlas warming between the macro's two pixel reads, not a dropped invalidation. FLAKE C (§2.7) — **SOLVED**: a `resetWorld` state leak
-(`UntitledNamingService` counters) that made a default name render "Untitled 2"; it was invisible to
-every standing gate because none of them runs 1 shard (§2.7.2).** Authored 2026-07-28, written to be executed COLD by an LLM/engineer with
-ZERO prior context. Every fact below was verified against the working trees on 2026-07-28
-(Fizzygum `master`, Fizzygum-tests `master`, suite = 268 SystemTests). Line numbers WILL drift —
-**the quoted method/variable names and code snippets are authoritative; re-grep before trusting any
-`file:line`.**
+**STATUS: CLOSED + ARCHIVED 2026-07-29. All three flakes SOLVED, gated and pushed.** Archived
+verbatim as the investigation record; the durable case law lives in `Fizzygum-tests/DETERMINISM.md`
+§3g (flake B), §3h (flake C) and §3i (flake A).
+
+| flake | subject | root cause | fix |
+|---|---|---|---|
+| **A** (§2, §2.5.1) | `macroClosingRotatedIslandChildClearsFootprint` | a glyph atlas warming BETWEEN the macro's two pixel reads — 7798px, text-shaped; the framework's invalidation was correct | `yield "waitForScreenshotReady"` before the close (tests `fc07ae2e6`) |
+| **B** (§3, §3.6) | serialization rigs' `pixelParity` BISTABLE | a half-warm atlas render is STABLE (cached back buffer re-blits), and `anyTextDirty()` was under-reporting | honest predicate + both rigs gate on `readyForMacroScreenshot` (`e798b2c5` / `7cb613c3c`) |
+| **C** (§2.7) | `macroSaveAsPromptAboveTiltedWindow`, 100% at `--shards=1` | `UntitledNamingService` counters survived `resetWorld` → "Untitled 2" | `resetCounters()` from `_resetWorldNoSettle` (`a06f138c`) |
+
+**⚖ The three lessons worth carrying forward** (each cost real time here):
+1. **A green from an instrument you have not seen reproduce the failure is not evidence of absence**
+   — flake C's state-leak hypothesis was declared falsified because `run-sequence` passed; it cannot
+   reproduce that bug at all (§2.7.1, and the WITHDRAWN corollary in `DETERMINISM.md` §2d).
+2. **Match the cadence you are investigating, or you measure a different system** — flake A's first
+   probe over-settled, warmed the atlases, and nearly read as a refutation (§2.5.1).
+3. **Read `gen` before the pixel magnitude** — at 7798px flake A looked exactly like a real dropped
+   invalidation (§2.2's magnitude split is retired).
 
 **Read §3.6 before §3.1–3.5.** Those sections are preserved as the pre-fix investigation record
 (they are what made the fix findable), but §3.5's proposed one-line fix was **falsified at

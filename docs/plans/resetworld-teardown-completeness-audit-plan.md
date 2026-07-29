@@ -258,7 +258,7 @@ explicitly declined with a reason; gates green with zero reference churn. Then `
 
 - **`Fizzygum-tests/DETERMINISM.md` §2d** (the bug class + the WITHDRAWN SaveAs corollary) and
   **§3h** (the 2026-07-28 worked example, root cause and fix).
-- `Fizzygum/docs/plans/suite-nondeterminism-flakes-plan.md` §2.7 — how flake C was found and solved,
+- `Fizzygum/docs/archive/suite-nondeterminism-flakes-plan.md` §2.7 — how flake C was found and solved,
   including the falsified-mid-investigation step and the s1 blind-spot finding.
 - `Fizzygum/src/serialization/Serializer.coffee` — the world section (§2's oracle) and
   `WORLD_APP_SLOTS`.

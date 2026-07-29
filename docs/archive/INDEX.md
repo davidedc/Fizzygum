@@ -137,6 +137,11 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## Rendering & performance
 
+- **`suite-nondeterminism-flakes-plan.md`** — COMPLETE (2026-07-29). Investigation record for the three non-boot SystemTest flakes: A `macroClosingRotatedIslandChildClearsFootprint` (a glyph atlas warming BETWEEN the macro's two pixel reads — 7798px, text-shaped; the framework's invalidation was correct), B the serialization rigs' BISTABLE `pixelParity` (a half-warm atlas render is STABLE, and `anyTextDirty()` was under-reporting), C `macroSaveAsPromptAboveTiltedWindow` 100% at `--shards=1` (`UntitledNamingService` counters surviving `resetWorld`). Durable case law: `Fizzygum-tests/DETERMINISM.md` §3g/§3h/§3i.
+  - ⚖ a green from an instrument you have NOT seen reproduce the failure is not evidence of absence (a state-leak hypothesis was wrongly "falsified" by a runner that cannot reproduce the bug)
+  - ⚖ match the CADENCE you are investigating, or you measure a different system (an over-settling probe nearly read as a refutation)
+  - ⚖ read `gen` (`immutableBackBufferGeneration`) BEFORE the pixel magnitude — a large diff is NOT evidence of a real dropped invalidation
+  - ⚖ shard count is a PREDECESSOR-SET axis, not a load axis; no standing gate runs 1 shard, and an s1 leg is owner-DECLINED on cost
 - **`end-of-cycle-flush-drawdown-plan.md`** — COMPLETE. Case-study playbooks, code patterns, and verification protocol for converting/eliminating end-of-cycle layout-flush contributors one at a time.
   - ⚖ §7 snapshot STALE — superseded by flush-inventory §4
 - **`end-of-cycle-flush-endgame-plan.md`** — COMPLETE. Endgame plan driving the end-of-cycle careless set to zero via CONVERT/ELIMINATE/DECLARED-COALESCED, then shipping the audit-fail capstone gate.
