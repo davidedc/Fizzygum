@@ -169,11 +169,9 @@ class MenusHelper
   binIconAndText: ->
     world.add new BinOpenerWdgt
 
-  # »>> this part is excluded from the fizzygum homepage build
   newScriptWindow: ->
     scriptWdgt = new ScriptWdgt
     world.openFrameWith scriptWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
-  # this part is excluded from the fizzygum homepage build <<«
 
   # »>> this part is excluded from the fizzygum homepage build
   createFanout: ->

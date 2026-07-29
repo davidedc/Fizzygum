@@ -434,11 +434,12 @@ if ! $noSyntaxCheck ; then
 fi
 
 # --- build-time HYGIENE gates (ported from the retired SourceVault console tool, P2-T3 follow-up) ------
-# Three cheap line-scanner lints, each with the same --noSyntaxCheck escape hatch + explicit $? abort as
+# Four cheap line-scanner lints, each with the same --noSyntaxCheck escape hatch + explicit $? abort as
 # the gates above; all scan src/ only, so they run for every build flavour (incl. --homepage):
 #   * check-trailing-whitespace.js — no trailing whitespace after content on a line.
 #   * check-scheduled-checks.js     — no OVERDUE `# CHECK AFTER <date>` reminder (a build-dated time bomb).
 #   * check-stringified-scripts.js  — no `new ScriptWdgt """..."""` stringified-code literal in core.
+#   * check-region-markers.js       — the `»>>` region-exclusion mechanism, ratcheted per kind to zero.
 if ! $noSyntaxCheck ; then
   echo "checking for trailing whitespace ..."
   node ./buildSystem/check-trailing-whitespace.js
@@ -466,6 +467,15 @@ if ! $noSyntaxCheck ; then
     exit 1
   fi
   echo "... stringified-scripts check OK"
+
+  echo "checking region markers ..."
+  node ./buildSystem/check-region-markers.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: region-markers gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... region-markers check OK"
 fi
 
 # --- build-time CONSTRUCTOR-BUILD gate ------------------------------------------------

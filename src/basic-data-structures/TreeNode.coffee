@@ -227,13 +227,6 @@ class TreeNode
         return nil
 
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused
-  depth: ->
-    return 0  unless @parent
-    @parent.depth() + 1
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # Returns all the internal AND terminal nodes in the subtree starting
   # at this node - including this node.
   # Remember that the @children property already sorts widgets
@@ -282,17 +275,6 @@ class TreeNode
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
   
-  # »>> this part is excluded from the fizzygum homepage build
-  # currently unused
-  allLeafsBottomToTop: ->
-    if @children.length == 0
-      return [@]
-    result = []
-    @children.forEach (child) ->
-      result = result.concat child.allLeafsBottomToTop()
-    return result
-  # this part is excluded from the fizzygum homepage build <<«
-
   # Return all "parent" nodes from the root down to this node (including both)
   allParentsBottomToTop: ->
     if @parent?
@@ -335,7 +317,6 @@ class TreeNode
   # we find a match
   isAncestorOf: (widget) ->
 
-    # »>> this part is excluded from the fizzygum homepage build
     if Automator? and !widget?
       # this happens when in a test, you select
       # a menu entry that doesn't exist.
@@ -346,7 +327,6 @@ class TreeNode
       console.log "failed to find widget in test: " + world.automator.name
       console.log "...the macro is looking for a widget/menu item that isn't present in the current world state"
       debugger
-    # this part is excluded from the fizzygum homepage build <<«
 
     # test the widget itself
     if widget is @
@@ -360,7 +340,6 @@ class TreeNode
         return true
     return false
 
-  # »>> this part is excluded from the fizzygum homepage build
   # The direct children of the parent of this node (current node not included).
   # Currently unused.
   siblings: ->
@@ -399,7 +378,6 @@ class TreeNode
     if @parent.children[@positionAmongSiblings()+1] instanceof theConstructor
       return true
     return false
-  # this part is excluded from the fizzygum homepage build <<«
 
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0
@@ -496,19 +474,6 @@ class TreeNode
     return nil  unless @parent
     @parent.parentThatIsA constructors...
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # checks whether the widget is a child,
-  # directly or indirectly, of a specified
-  # supposed ancestor widget
-  # currently unused
-  isADescendantOf: (theSupposedAncestorWidget) ->
-    if @ == theSupposedAncestorWidget
-      return true
-    if !@parent?
-      return false
-    return @parent.isADescendantOf theSupposedAncestorWidget
-  # this part is excluded from the fizzygum homepage build <<«
-  
 
   # There would be another, simpler, implementation
   # which is also slower, where you first collect all

@@ -55,9 +55,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   dragoverEventListener: nil
   resizeBrowserEventListener: nil
   otherTasksToBeRunOnStep: []
-  # »>> this part is excluded from the fizzygum homepage build
   dropBrowserEventListener: nil
-  # this part is excluded from the fizzygum homepage build <<«
 
   # these variables shouldn't be static to the WorldWdgt, because
   # in pure theory you could have multiple worlds in the same
@@ -163,30 +161,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # constructor's own sizing branch, so for the index page the captured value is the latched true).
   _bootAutoAdjustToFillEntireBrowserAlsoOnResize: nil
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # keypad keys map to special characters
-  # so we can trigger test actions
-  # see more comments below
-  @KEYPAD_TAB_mappedToThaiKeyboard_A: "ฟ"
-  @KEYPAD_SLASH_mappedToThaiKeyboard_B: "ิ"
-  @KEYPAD_MULTIPLY_mappedToThaiKeyboard_C: "แ"
-  @KEYPAD_DELETE_mappedToThaiKeyboard_D: "ก"
-  @KEYPAD_7_mappedToThaiKeyboard_E: "ำ"
-  @KEYPAD_8_mappedToThaiKeyboard_F: "ด"
-  @KEYPAD_9_mappedToThaiKeyboard_G: "เ"
-  @KEYPAD_MINUS_mappedToThaiKeyboard_H: "้"
-  @KEYPAD_4_mappedToThaiKeyboard_I: "ร"
-  @KEYPAD_5_mappedToThaiKeyboard_J: "่" # looks like empty string but isn't :-)
-  @KEYPAD_6_mappedToThaiKeyboard_K: "า"
-  @KEYPAD_PLUS_mappedToThaiKeyboard_L: "ส"
-  @KEYPAD_1_mappedToThaiKeyboard_M: "ท"
-  @KEYPAD_2_mappedToThaiKeyboard_N: "ท"
-  @KEYPAD_3_mappedToThaiKeyboard_O: "ื"
-  @KEYPAD_ENTER_mappedToThaiKeyboard_P: "น"
-  @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
-  @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
-  # this part is excluded from the fizzygum homepage build <<«
-
   wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
   hierarchyOfClickedWdgts: new Set
   hierarchyOfClickedMenus: new Set
@@ -194,10 +168,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   freshlyCreatedPopUps: new Set
   openPopUps: new Set
   toolTipsList: new Set
-
-  # »>> this part is excluded from the fizzygum homepage build
-  @ongoingUrlActionNumber: 0
-  # this part is excluded from the fizzygum homepage build <<«
 
   @frameCount: 0
   # Monotonic GEOMETRY-CACHE VERSIONS (integers; replaced the four numberOf* counters
@@ -385,25 +355,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   widgetFactory: nil
 
   isIndexPage: nil
-
-  # »>> this part is excluded from the fizzygum homepage build
-  # This method also handles keypresses from a special
-  # external keypad which is used to
-  # record tests commands (such as capture screen, etc.).
-  # These external keypads are inexpensive
-  # so they are a good device for this kind
-  # of stuff.
-  # http://www.amazon.co.uk/Perixx-PERIPAD-201PLUS-Numeric-Keypad-Laptop/dp/B001R6FZLU/
-  # They keypad is mapped
-  # to Thai keyboard characters via an OSX app
-  # called keyremap4macbook (also one needs to add the
-  # Thai keyboard, which is just a click from System Preferences)
-  # Those Thai characters are used to trigger test
-  # commands. The only added complexity is about
-  # the "00" key of such keypads - see
-  # note below.
-  doublePressOfZeroKeypadKey: nil
-  # this part is excluded from the fizzygum homepage build <<«
 
   healingRectanglesPhase: false
 
@@ -680,70 +631,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if window.VideoPlayerWithRecommendationsWdgt? then world.draftRunVideoPlayer()
     # this part is only needed for VideoPlayer <<«
 
-
-  # »>> this part is excluded from the fizzygum homepage build
-
-  getParameterPassedInURL: (name) ->
-    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
-    regex = new RegExp '[\\?&]' + name + '=([^&#]*)'
-    results = regex.exec location.search
-    if results?
-      return decodeURIComponent results[1].replace(/\+/g, ' ')
-    else
-      return nil
-
-  # some test urls:
-
-  # this one contains two actions, two tests each, but only
-  # the second test is run for the second group.
-  # file:///Users/daviddellacasa/Fizzygum/Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22bubble%22%5D%0D%0A++++%7D%2C%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22shadow%22%2C+%22SystemTest_basicResize%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+2%2C%0D%0A++++++%22groupToBeRun%22%3A+1%0D%0A++++%7D++%5D%0D%0A%7D
-  #
-  # just one simple quick test about shadows
-  #file:///Users/daviddellacasa/Fizzygum/Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
-
-  nextStartupAction: ->
-    if (@getParameterPassedInURL "startupActions")?
-      startupActions = JSON.parse @getParameterPassedInURL "startupActions"
-
-    if (!startupActions?) or (WorldWdgt.ongoingUrlActionNumber == startupActions.actions.length)
-      WorldWdgt.ongoingUrlActionNumber = 0
-      if Automator?
-        if window.location.href.includes("worldWithSystemTestHarness")
-          if @automator.atLeastOneTestHasBeenRun
-            if @automator.allTestsPassedSoFar
-              document.getElementById("background").style.background = Color.GREEN.toString()
-      return
-
-    if !@isIndexPage then console.log "nextStartupAction " + (WorldWdgt.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
-
-    currentAction = startupActions.actions[WorldWdgt.ongoingUrlActionNumber]
-    if Automator? and currentAction.name == "runTests"
-      if currentAction.numberOfGroups?
-        @automator.numberOfGroups = currentAction.numberOfGroups
-      else
-        @automator.numberOfGroups = 1
-      if currentAction.groupToBeRun?
-        @automator.groupToBeRun = currentAction.groupToBeRun
-      else
-        @automator.groupToBeRun = 0
-
-      # selectTestsFromTagsOrTestNames loads every test's metadata ASYNChronously and only THEN
-      # populates selectedTestsBasedOnTags. runAllSystemTests must WAIT for that — otherwise
-      # testsList() races: until the selection lands it falls back to the full manifest, so the
-      # wrong test's _automationCommands get read (window[...] undefined) and the run crashes. This
-      # only bit on a COLD cache (a reload appeared to "fix" it). So run the tests from the
-      # selection callback — mirroring the headless runner, which likewise waits for the selection.
-      @automator.loader.selectTestsFromTagsOrTestNames currentAction.testsToRun, =>
-        @automator.player.runAllSystemTests()
-    WorldWdgt.ongoingUrlActionNumber++
-
-  getWidgetViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
-    allCandidateWidgetsWithSameTextDescription =
-      @allChildrenTopToBottomSuchThat (m) ->
-        m.getTextDescription() == textDescription
-
-    return allCandidateWidgetsWithSameTextDescription[occurrenceNumber]
-  # this part is excluded from the fizzygum homepage build <<«
 
   mostRecentlyCreatedPopUp: ->
     mostRecentPopUp = nil
@@ -1058,7 +945,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       brokenWidget.fullClippedBoundsWhenLastPainted = nil
 
 
-  # »>> this part is excluded from the fizzygum homepage build
   _showBrokenRects: (aContext) ->
     aContext.save()
     aContext.globalAlpha = 0.5
@@ -1076,7 +962,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
             Math.round(eachBrokenRect.width()),
             Math.round(eachBrokenRect.height())
     aContext.restore()
-    # this part is excluded from the fizzygum homepage build <<«
 
 
   # layouts are recalculated like so:
@@ -1375,9 +1260,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     @widgetsWithMaybeChangedPaintBounds = []
     @widgetsWithMaybeChangedFullPaintBounds = []
-    # »>> this part is excluded from the fizzygum homepage build
-    #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
-    # this part is excluded from the fizzygum homepage build <<«
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Widgets are traversed
@@ -2009,21 +1891,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     for task in @otherTasksToBeRunOnStep
       task()
 
-  # »>> this part is excluded from the fizzygum homepage build
-  _sizeCanvasToTestScreenResolution: ->
-    @worldCanvas.width = Math.round(960 * ceilPixelRatio)
-    @worldCanvas.height = Math.round(440 * ceilPixelRatio)
-    @worldCanvas.style.width = "960px"
-    @worldCanvas.style.height = "440px"
-    @invalidateCanvasPositionCache()
-    @_syncRenderCanvasToWorldCanvas()
-
-    bkground = document.getElementById("background")
-    bkground.style.width = "960px"
-    bkground.style.height = "720px"
-    bkground.style.backgroundColor = Color.WHITESMOKE.toString()
-  # this part is excluded from the fizzygum homepage build <<«
-
   stretchWorldToFillEntirePage: ->
     # once you call this, the world will forever take the whole page
     @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -2092,7 +1959,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   
   # WorldWdgt events:
 
-  # »>> this part is excluded from the fizzygum homepage build
   _initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
@@ -2145,7 +2011,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener, false
-  # this part is excluded from the fizzygum homepage build <<«
 
   # -----------------------------------------------------
   # clipboard events processing
@@ -2383,69 +2248,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @_initClipboardEventListeners()
     @_initOtherMiscEventListeners()
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # Detach every browser event listener the _init*EventListeners family attached.
-  #
-  # ⚠ THIS IS A DETERMINISM MECHANISM, NOT MEMORY CLEANUP. Its only caller is
-  # AutomatorPlayer.startTestPlaying, which calls it at the START of every SystemTest so that the
-  # macro's synthetic events are the ONLY input: a listener that survives here can push a REAL browser
-  # event into @inputEventsQueue mid-test and break the byte-exact contract (../Fizzygum-tests/DETERMINISM.md).
-  #
-  # ⚠⚠ EVERY LISTENER MUST BE REMOVED FROM THE SAME TARGET IT WAS ADDED TO — the listeners are spread
-  # over THREE targets (@worldCanvas / document.body / window) and removeEventListener on the wrong
-  # target is a SILENT NO-OP: no error, nothing removed, nothing logged. That is exactly the bug this
-  # method shipped with (fixed 2026-07-15): it removed all 20 from `canvas`, so the 7 that had been
-  # added to document.body (cut/copy/paste) or window (scroll/dragover/drop/resize) were never
-  # detached at all, and stayed live through every test — including @resizeBrowserEventListener, which
-  # pushes a ResizeInputEvent into the queue.
-  #
-  # So: keep the GROUPS below in sync with their _init* counterparts, and match the target exactly.
-  removeEventListeners: ->
-    canvas = @worldCanvas
-
-    # ── added to @worldCanvas ──────────────────────────────────────────────────────────────────────
-    # canvas.removeEventListener 'dblclick', @dblclickEventListener
-    canvas.removeEventListener 'mousedown', @mousedownBrowserEventListener
-    canvas.removeEventListener 'mouseup', @mouseupBrowserEventListener
-    canvas.removeEventListener 'mousemove', @mousemoveBrowserEventListener
-    canvas.removeEventListener 'contextmenu', @contextmenuEventListener
-
-    canvas.removeEventListener "touchstart", @touchstartBrowserEventListener
-    canvas.removeEventListener "touchend", @touchendBrowserEventListener
-    canvas.removeEventListener "touchmove", @touchmoveBrowserEventListener
-    canvas.removeEventListener "gesturestart", @gesturestartBrowserEventListener
-    canvas.removeEventListener "gesturechange", @gesturechangeBrowserEventListener
-
-    canvas.removeEventListener 'keydown', @keydownBrowserEventListener
-    canvas.removeEventListener 'keyup', @keyupBrowserEventListener
-    canvas.removeEventListener 'keypress', @keypressBrowserEventListener
-    canvas.removeEventListener 'wheel', @wheelBrowserEventListener
-
-    # ── added to document.body by _initClipboardEventListeners ─────────────────────────────────────
-    document.body.removeEventListener 'cut', @cutBrowserEventListener
-    document.body.removeEventListener 'copy', @copyBrowserEventListener
-    document.body.removeEventListener 'paste', @pasteBrowserEventListener
-
-    # ── added to window by _initOtherMiscEventListeners ────────────────────────────────────────────
-    # the mobile-Safari fake-wheel workaround; guarded to mirror the add site (removing a listener
-    # that was never added is a harmless no-op, but keep the pair symmetric so the reason stays visible)
-    if Utils.runningInMobileSafari()
-      window.removeEventListener 'scroll', @wheelBrowserEventListener
-    window.removeEventListener 'dragover', @dragoverEventListener
-    window.removeEventListener 'drop', @dropBrowserEventListener
-    window.removeEventListener 'resize', @resizeBrowserEventListener
-
-    # ── added to @inputDOMElementForVirtualKeyboard by _initVirtualKeyboard ────────────────────────
-    # Defensive completeness, not a leak fix: that hidden input only exists on a touch device with
-    # useVirtualKeyboard AND an open caret, and closing the caret already removes it from the DOM and
-    # nils it (taking its listeners to GC), so this is a no-op in every environment tests run in.
-    # It is here so the "detach everything" contract holds if a touch-device test ever exists.
-    if @inputDOMElementForVirtualKeyboard
-      @inputDOMElementForVirtualKeyboard.removeEventListener 'keydown', @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener
-      @inputDOMElementForVirtualKeyboard.removeEventListener 'keyup', @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener
-      @inputDOMElementForVirtualKeyboard.removeEventListener 'keypress', @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener
-  # this part is excluded from the fizzygum homepage build <<«
-  
   mouseDownLeft: ->
     noOperation
   
@@ -2486,245 +2288,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @editorFocusWdgt = nil
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # resetWorld self-settles like any public API method: it is a SEQUENCE of two self-settling
-  # operations (each flushes once -- _settleLayoutsAfter's doc blesses sequential setters), and
-  # the geometry teardown lives in _resetWorldNoSettle so an internal caller already inside a settle can
-  # reach it without re-entering the flush. _softResetWorld stays OUTSIDE the settle on purpose: its
-  # @hand.drop() does a real re-parenting drop (target.add, which self-flushes), so running it inside
-  # the settle below would re-enter recalculateLayouts and throw the flow-violation (see ~:930).
-  # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, so this is a
-  # two-statement sequence, not the bare @_settleLayoutsAfter => @_resetWorldNoSettle wrap (see above).
-  resetWorld: ->
-    @_softResetWorld()
-    @_settleLayoutsAfter => @_resetWorldNoSettle()
-    # Tier A storage audit at the test-teardown seam (no session id ->
-    # structural checks only): the world is consistent again here -- containers
-    # emptied, the tracker self-emptied via the shortcut destroy hooks -- so a
-    # violation now is residue the just-finished test left behind (e.g. a
-    # tracker unregister leak). Private chain: the audit core, sanctioned
-    # cross-object like the other NoSettle-core calls.
-    @storageSorter._auditStorageNoSettle()
-    # ...and the teardown-completeness ratchet, at the same seam and in the same spirit: the world
-    # is pristine again here, so anything that does NOT match the pristine fingerprint is world
-    # state this teardown forgot. See _auditWorldResetCompletenessNoSettle for the whole rationale.
-    @_auditWorldResetCompletenessNoSettle()
-
-  _resetWorldNoSettle: ->
-    @_changed() # redraw the whole screen
-    # The STRUCTURAL half of the teardown -- destroy the tree, then drop every reference to what was
-    # just destroyed -- is SHARED with the snapshot loader (_teardownWorldStructureNoSettle, which
-    # ships; see its comment for why it is one core and not two twins). What remains below is the
-    # other half, which is genuinely test-only: restoring the world's PRISTINE LOOK and the harness's
-    # own ergonomics. The loader must NOT inherit that half -- it restores colour, wallpaper, prefs
-    # and the desktop scalars from the snapshot file instead.
-    @_teardownWorldStructureNoSettle()
-    # the PINOUT tracking structures — same shape, same hazard and the same fix as the highlight trio
-    # the shared core clears, but they cannot live in it: pinouts are homepage-STRIPPED (declarations
-    # ~:300, reconciler addPinoutingWidgets), so in a product build the fields do not exist and the
-    # core would throw on them. They belong to the dev/test world, which is exactly this caller.
-    @widgetsToBePinouted.clear()
-    @currentPinoutingWidgets.clear()
-    @widgetsBeingPinouted.clear()
-    # The "Untitled N" counters are per-WORLD by design (UntitledNamingService is built in the ctor and
-    # documented as resetting with each new world) — but resetWorld reuses the world object, so without
-    # this they SURVIVE into the next test in the same headless process. They are consumed just by
-    # OPENING a save prompt (SaveShortcutPromptWdgt seeds its default contents from
-    # getNextUntitledShortcutName), so one earlier prompt anywhere makes the next one render
-    # "Untitled 2" instead of "Untitled" — a rendered default name that depends on run history. That is
-    # what made macroSaveAsPromptAboveTiltedWindow fail at shards=1 (all 268 tests in one page) while
-    # passing at 2/4/8, where the consuming predecessor lands in a different shard: DETERMINISM.md §2d.
-    @untitledNamingService?.resetCounters()
-    # DESKTOP/SESSION state that decides what a LATER test renders.
-    # numberOfIconsOnDesktop is the grid cursor for auto-placed desktop icons
-    # (IconicDesktopSystemPanelWdgt.add): one folder/shortcut made by an earlier test shifts the
-    # next test's first icon a whole grid cell to the right. A pure GEOMETRY leak -- the strongest
-    # form of this bug class, since the pixels move.
-    @numberOfIconsOnDesktop = 0
-    # dev mode decides which context menu the world (and every widget) builds. Boot turns it ON for
-    # both entry pages, right after the constructor (src/boot/globalFunctions.coffee startWorld), so
-    # that -- not the constructor's own false -- is the pristine value to come back to.
-    @isDevMode = true
-    # the preferences bag is STATIC, so it survives even a brand-new world: the "touch screen
-    # settings" menu item doubles menu/prompter font sizes, slider sizes and scrollbar thickness
-    # for good. The reset lives with its owner (PreferencesAndSettings.resetToBootInputMode, which
-    # self-guards to a no-op in the ordinary teardown), like untitledNamingService.resetCounters
-    # above. Deliberately NOT done in the snapshot teardown: loadWorldSnapshot RESTORES this bag.
-    WorldWdgt.preferencesAndSettings?.resetToBootInputMode()
-    # the world's own SIZE (see @_bootExtent). Guarded on an actual mismatch so this is a no-op in
-    # every ordinary teardown -- it only fires after something resized the world, and then it
-    # restores the harness resolution the same way the constructor established it. Only for the
-    # test-harness page: on the index page the boot extent IS the browser viewport, which is
-    # legitimately allowed to change under the user (the resize listener re-stretches anyway).
-    if @_bootExtent? and !@isIndexPage and !@extent().equals @_bootExtent
-      @_sizeCanvasToTestScreenResolution()
-      @_applyExtent @_bootExtent.copy()
-      @_reLayoutDesktop()
-    if @_bootAutoAdjustToFillEntireBrowserAlsoOnResize?
-      @automaticallyAdjustToFillEntireBrowserAlsoOnResize = @_bootAutoAdjustToFillEntireBrowserAlsoOnResize
-    # some tests might change the background
-    # color of the world so let's reset it.
-    # public-call-sanctioned: setColor is the polymorphic public color API (heavily driven by
-    # macros/user code); the world reset runs outside any pass, so the react inside is harmless.
-    @setColor Color.create 205, 205, 205
-    # ...and the DESKTOP WALLPAPER pattern, for the same reason: it is a world-level global (held on
-    # @wallpaper, NOT in the widget tree, so the core's fullDestroyChildren does not touch it), so a test
-    # that changes it — e.g. macroWallpaperMenuTickTracksSelection picking "circles" — would otherwise
-    # leak the pattern into the NEXT test in the same headless process, rendering its desktop background
-    # wrong. Reset to the boot default (pattern1 = "plain"); a no-op for the tests that never change it.
-    # menuItem = nil so no open menu's ticks are touched. Mirrors the setColor reset above.
-    if @wallpaper?
-      @wallpaper.setPattern nil, nil, @wallpaper.pattern1
-    # make sure thw window is scrolled to top
-    # so we can see the test results while tests
-    # are running.
-    document.body.scrollTop = document.documentElement.scrollTop = 0
-
-  # --- the teardown-completeness ratchet -------------------------------------------------------
-  # WHY THIS EXISTS. All 268 SystemTests share ONE page per shard, so anything _resetWorldNoSettle
-  # above forgets leaks into the next test in that page. That teardown grew REACTIVELY -- every
-  # entry was added only after a leak was caught in the field (2026-07-10 the highlight sets,
-  # 2026-07-28 the Untitled counters), and each was found by accident. Worse, the bug class is
-  # invisible to the standing gates: a leak only bites when the consuming predecessor shares a page
-  # with the victim, and no routine gate runs 1 shard. So a fully deterministic failure can sit on
-  # master indefinitely.
-  #
-  # This closes the class rather than the next instance. It fingerprints the world's own mutable
-  # state at the end of the FIRST teardown -- which the harness runs on a virgin world, since
-  # resetWorld is each test's first command -- and re-checks that fingerprint at the end of every
-  # later teardown. A field that came back different is either a leak or a deliberate exception,
-  # and a deliberate exception has to be named in the allow-list below, WITH ITS REASON. So a
-  # newly-added world field that nothing resets shows up as a loud, greppable failure the first
-  # time any test dirties it, instead of years later as a mystery mis-render.
-  #
-  # One RESETWORLD_INCOMPLETE token line per violation, like the NON_INTEGER_GEOMETRY and
-  # STORAGE_INVARIANT guards; the headless runners gate on the token, so every suite leg enforces
-  # this for free. Cost is a shallow property sweep once per test.
-  #
-  # DELIBERATELY SURVIVING world state. Each name here is a decided exception, not an oversight:
-  #   - monotonic clocks / session ids / cache-version stamps: zeroing them would make STALE caches
-  #     look valid, which is a far worse bug than the one this guards. They are monotonic BY DESIGN.
-  #   - per-cycle transients: the teardown is not a frame boundary, so these are legitimately
-  #     mid-flight; they are re-established every cycle by the cycle itself.
-  #   - measurement instruments: switches a human or a profiler sets deliberately for a whole run
-  #     (docs/tooling/coalescing-measurement.md, the island-buffer A/B). Resetting them per test
-  #     would silently defeat the instrument.
-  #   - lastSerializationString: kept ON PURPOSE across tests so serialization tests can hand a
-  #     payload to a later test instead of re-deriving it (see its declaration).
-  #   - sourceEditsRegistry: its records MIRROR live prototype edits, which a world teardown cannot
-  #     undo. Clearing the log while the edited class survives would make the log LIE (and a world
-  #     snapshot embeds it). Tests that edit a class restore it in their own macro tail.
-  @_worldStateAuditExemptions: [
-    # monotonic / derived cache bookkeeping
-    "incrementalGcSessionId", "gcSessionId", "checkRootCache", "checkFullClippedBoundsCache"
-    "checkIsInCollapsedSubtreeCache", "childrenBoundsUpdatedAt", "_cachedCanvasPosition"
-    # per-cycle transients (re-established by doOneCycle)
-    "broken", "duplicatedBrokenRectsTracker", "numberOfDuplicatedBrokenRects"
-    "numberOfMergedSourceAndDestination", "widgetsWithMaybeChangedPaintBounds"
-    "widgetsWithMaybeChangedFullPaintBounds", "widgetsThatMaybeChangedLayout"
-    "_dirtyDescendantFlagged", "_downWalkRelaidCount", "_inLayoutMutation", "_recalculatingLayouts"
-    "healingRectanglesPhase", "paintingWidget", "paintingIntoIslandBuffer"
-    "errorsWhileRepainting", "layoutErrorsToReport", "_deferredSettleDeclarationDepth"
-    # ...and the WORLD-AS-A-WIDGET half of that same per-frame damage bookkeeping. These are
-    # Widget-level fields, but the world is a widget, so they are in the sweep. They are the
-    # _changed()/_fullChanged() dedupe flags, the last-painted footprints and the flesh-out's
-    # src/dst indices -- cleared when each paint pass consumes them, so what a teardown observes
-    # is simply where in the frame it landed. Under PARALLEL gauntlet load the teardown lands at a
-    # different point in the cycle, which is exactly how these surfaced (the settle + storage legs
-    # warned in-wave and passed serially, 2026-07-29). Cross-checked against the codebase's own
-    # independent enumeration of per-frame state: every name here is in Widget.serializationTransients,
-    # under its "per-frame broken-rect damage bookkeeping" and Stage-B1 headings.
-    "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged", "hasDirtyDescendant"
-    "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
-    "srcBrokenRect", "dstBrokenRect"
-    "_islandBufferSourceIsland", "_islandBufferSourceVirtualRect"
-    # measurement instruments, set deliberately for a whole run
-    "deferredSettlingEnabled", "showRedraws", "doubleCheckCachedMethodsResults"
-    "auditUndeclaredEndOfCycle", "_undeclaredEndOfCyclePushes", "auditPaintTimeLayoutScheduling"
-    "_paintTimeLayoutSchedules", "auditTierAndApplyNaming", "auditNotificationSettleNeutrality"
-    # deliberate cross-test carriers / the guard's own bookkeeping
-    "lastSerializationString", "sourceEditsRegistry", "_pristineWorldFingerprint"
-  ]
-
-  # the fingerprint taken at the end of the first teardown (the pristine world). nil until then.
-  _pristineWorldFingerprint: nil
-
-  # Summarise a value to something comparable across teardowns. Deliberately COARSE: a container
-  # reduces to its SIZE and a widget to its class plus liveness, because the leak shapes this
-  # guards are "a container that should be empty isn't" and "a slot that should be nil holds a
-  # destroyed widget" -- not "which particular widget".
-  _summariseWorldStateValueNoSettle: (value) ->
-    return "nil" unless value?
-    # exact-constructor tests, not instanceof: these are the JS built-in containers, so there is no
-    # polymorphic alternative to reach for and no subclassing to accommodate -- and it keeps the
-    # [stinks] instanceof-type-test tail (a widget-class smell) honest.
-    return "Set(" + value.size + ")" if value.constructor is Set
-    return "Map(" + value.size + ")" if value.constructor is Map
-    return "Array(" + value.length + ")" if Array.isArray value
-    switch typeof value
-      when "number", "boolean" then return String value
-      when "string" then return "string(" + value.length + ")"
-      when "function" then return "function"
-    if value.destroyed? and value.constructor?
-      return value.constructor.name + (if value.destroyed then ":DESTROYED" else ":live")
-    "object:" + (value.constructor?.name ? "?")
-
-  # A field is derived-cache bookkeeping iff it is named for it: the geometry caches are declared
-  # in strict `cachedFoo` / `checkFooCache` pairs (Widget, TreeNode), the value and its version
-  # stamp. They are recomputed on demand and legitimately differ between two teardowns, so they are
-  # exempt BY RULE rather than by name -- which keeps the guard correct as new caches are added.
-  _isDerivedCacheFieldName: (name) ->
-    name.indexOf("cached") is 0 or (name.indexOf("check") is 0 and /Cache$/.test name)
-
-  # The field universe. Every field is read as its EFFECTIVE value (through the prototype chain),
-  # never as "does the world own it" -- otherwise a prototype-declared field that the teardown
-  # merely ASSIGNS (@dragEmbedLabelDeclared = nil) would read as (absent) -> nil and fire, even
-  # though the value never changed. Own-ness is not state; the value is.
-  #
-  # Sweeping own properties AND the whole prototype chain covers BOTH ways a leak can appear,
-  # without anyone having to remember to declare anything:
-  #   - a field ASSIGNED on the world (@foo = x) becomes an OWN property -- swept directly, which
-  #     is what makes a newly-added world field visible automatically;
-  #   - a class-body-declared CONTAINER mutated in place (toolTipsList.add ...) stays on the
-  #     prototype -- swept by the chain walk.
-  _fingerprintWorldStateNoSettle: ->
-    fingerprint = {}
-    exempt = new Set WorldWdgt._worldStateAuditExemptions
-    record = (name) =>
-      return if fingerprint.hasOwnProperty name
-      return if exempt.has(name) or @_isDerivedCacheFieldName name
-      try
-        value = @[name]
-      catch error
-        return
-      return if typeof value is "function"
-      fingerprint[name] = @_summariseWorldStateValueNoSettle value
-    record name for own name of @
-    proto = Object.getPrototypeOf @
-    while proto? and proto isnt Object.prototype
-      record name for own name of proto
-      proto = Object.getPrototypeOf proto
-    fingerprint
-
-  # Called at the very end of resetWorld. First call establishes the pristine baseline; every later
-  # call diffs against it and reports each difference as one greppable token line.
-  _auditWorldResetCompletenessNoSettle: ->
-    fingerprint = @_fingerprintWorldStateNoSettle()
-    if !@_pristineWorldFingerprint?
-      @_pristineWorldFingerprint = fingerprint
-      return
-    report = (name, was, now) ->
-      console.error "RESETWORLD_INCOMPLETE " + name + " pristine=" + was + " afterTeardown=" + now +
-        " -- world state survived resetWorld: reset it in _resetWorldNoSettle, or add it to " +
-        "WorldWdgt._worldStateAuditExemptions with the reason (see the comment there)."
-    for own name, pristineValue of @_pristineWorldFingerprint
-      currentValue = fingerprint[name] ? "(absent)"
-      report name, pristineValue, currentValue if currentValue isnt pristineValue
-    for own name, currentValue of fingerprint
-      report name, "(absent)", currentValue unless @_pristineWorldFingerprint.hasOwnProperty name
-    return
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # There is something special about the
   # "world" version of fullDestroyChildren:
   # it resets the counter used to count
@@ -2748,12 +2311,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
         # which is set based on lastBuiltInstanceNumericID
         window[eachWidgetClass].lastBuiltInstanceNumericID = 0
 
-    # »>> this part is excluded from the fizzygum homepage build
     if Automator?
       Automator.animationsPacingControl = false
       Automator.hidingOfWidgetsContentExtractInLabels = false
       Automator.hidingOfWidgetsNumberIDInLabels = false
-    # this part is excluded from the fizzygum homepage build <<«
 
     super()
 
@@ -3064,20 +2625,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
 
 
-  # »>> this part is excluded from the fizzygum homepage build
-  popUpSystemTestsMenu: ->
-    menu = new MenuWdgt @, target: @, title: "system tests"
-
-    menu.addMenuItem "run system tests (normal)", @automator.player, "runAllSystemTestsNormalSpeed", toolTip: "runs all the system tests at the normal (slowest, watchable) speed level"
-    menu.addMenuItem "run system tests (fast)", @automator.player, "runAllSystemTestsFastSpeed", toolTip: "runs all the system tests at the fast (intermediate) speed level"
-    menu.addMenuItem "run system tests (fastest)", @automator.player, "runAllSystemTestsFastestSpeed", toolTip: "runs all the system tests at the fastest speed level"
-
-    menu.addMenuItem "show test source", @automator, "showTestSource", toolTip: "opens a window with the source of the latest test"
-    menu.addMenuItem "save failed screenshots", @automator.player, "saveFailedScreenshots", toolTip: "save failed screenshots"
-
-    menu.popUpAtHand()
-  # this part is excluded from the fizzygum homepage build <<«
-
   create: (aWdgt) ->
     aWdgt.pickUp()
 
@@ -3133,7 +2680,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgt"
       menu.addMenuItem "color picker", @widgetFactory, "createNewColorPickerWdgt"
       menu.addLine()
-      menu.addMenuItem "sensor demo", @widgetFactory, "createNewSensorDemo"
       menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
       menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
         

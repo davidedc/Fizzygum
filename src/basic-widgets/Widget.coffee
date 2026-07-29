@@ -360,15 +360,6 @@ class Widget extends TreeNode
   widgetClassString: ->
     @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
 
-  # »>> this part is excluded from the fizzygum homepage build
-  @widgetFromUniqueIDString: (theUniqueID) ->
-    result = world.topWdgtSuchThat (m) =>
-      m.uniqueIDString() is theUniqueID
-    if not result?
-      alert "theUniqueID " + theUniqueID + " not found!"
-    return result
-  # this part is excluded from the fizzygum homepage build <<«
-
   assignUniqueID: ->
     @constructor.instancesCounter++
     @constructor.lastBuiltInstanceNumericID++
@@ -395,9 +386,7 @@ class Widget extends TreeNode
     # so we wait and we let the actual extending
     # widget to draw itself.
 
-    # »>> this part is excluded from the fizzygum homepage build
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
-    # this part is excluded from the fizzygum homepage build <<«
 
   # this happens when the Widget's constructor runs
   # and also when the Widget is duplicated
@@ -3168,50 +3157,6 @@ class Widget extends TreeNode
 
     img
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # the way we take a picture here is different
-  # than the way we usually take a picture.
-  # Usually we ask the widget and subwidgets to
-  # paint themselves anew into a new canvas.
-  # This is different: we take the area of the
-  # screen *as it is* and we crop the part of
-  # interest where the extent of our selected
-  # widget is. This means that the widget might
-  # be occluded by other things.
-  # The advantage here is that we capture
-  # the screen absolutely as is, without
-  # causing any repaints. If streaks are on the
-  # screen due to bad painting, we capture them
-  # exactly as the user sees them.
-  # Returns the canvas holding this widget's region exactly as it appears on
-  # screen (an SWCanvasElement under the software backend, else a DOM canvas).
-  # Both the screenshot data-URL (fullImageAsItAppearsOnScreen) and the SystemTest
-  # raw-pixel hash are derived from this single capture, so they never diverge and
-  # the region is only cropped once.
-  fullRenderCanvasAsItAppearsOnScreen: ->
-    fullExtentOfWidget = @fullBounds()
-    destCanvas = HTMLCanvasElement.createOfPhysicalDimensions fullExtentOfWidget.extent().scaleBy ceilPixelRatio
-    destCtx = destCanvas.getContext '2d'
-    # Read from the render canvas, not the DOM canvas: under SWCanvas this is the
-    # pristine software surface (deterministic, non-premultiplied — avoids the DOM
-    # canvas's premultiplied round-trip). When the flag is off it IS the DOM canvas.
-    destCtx.drawImage world.worldRenderCanvas,
-      fullExtentOfWidget.topLeft().x * ceilPixelRatio,
-      fullExtentOfWidget.topLeft().y * ceilPixelRatio,
-      fullExtentOfWidget.width() * ceilPixelRatio,
-      fullExtentOfWidget.height() * ceilPixelRatio,
-      0,
-      0,
-      fullExtentOfWidget.width() * ceilPixelRatio,
-      fullExtentOfWidget.height() * ceilPixelRatio
-
-    return destCanvas
-
-  fullImageAsItAppearsOnScreen: ->
-    return @fullRenderCanvasAsItAppearsOnScreen().toDataURL "image/png"
-
-  # this part is excluded from the fizzygum homepage build <<«
-  
   # shadow is added to a widget by
   # the ActivePointerWdgt while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
@@ -3312,7 +3257,6 @@ class Widget extends TreeNode
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelf()
 
-  # »>> this part is excluded from the fizzygum homepage build
   # _addNoSettle (NOT add): these run from addOrRemoveAdders during a layout pass, so a
   # self-settle would re-enter the flush guard; for the other caller
   # (showResizeAndMoveHandlesAndLayoutAdjusters, a menu action) it is byte-identical
@@ -3324,7 +3268,6 @@ class Widget extends TreeNode
   addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
     @parent._addNoSettle aWdgt, position: myPosition, layoutSpec: layoutSpec
-  # this part is excluded from the fizzygum homepage build <<«
 
   # The layoutSpec a widget takes when added with NO explicit one -- the default for add() / _addNoSettle()'s
   # layoutSpec argument. Plain widgets are free-floating; a widget with an intrinsic placement overrides this
@@ -4248,7 +4191,6 @@ class Widget extends TreeNode
         unscaled = newAlpha / 100
         return Math.min Math.max(unscaled, 0.1), 1
 
-  # »>> this part is excluded from the fizzygum homepage build
   setPadding: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
     if widgetGivingPadding?.getValue?
       padding = widgetGivingPadding.getValue()
@@ -4315,7 +4257,6 @@ class Widget extends TreeNode
         @_changed()
 
     return padding
-  # this part is excluded from the fizzygum homepage build <<«
 
   setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
     if widgetGivingAlpha?.getValue?
@@ -4348,7 +4289,6 @@ class Widget extends TreeNode
     # is intentionally narrower than _reFitContainer's own _reLayoutChildren? gate (which also matches Window/Stack).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
 
-  # »>> this part is excluded from the fizzygum homepage build
   newParentChoiceWithHorizLayout: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected widget
@@ -4357,7 +4297,6 @@ class Widget extends TreeNode
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
     # ScrollPanel-only pre-guard; @add already self-settled the attach).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
-  # this part is excluded from the fizzygum homepage build <<«
 
   # Shared body of attach / attachWithHorizLayout: a menu of the plausible new parents (minus the current
   # parent); each item invokes `newParentActionName` on the chosen widget. The two entry points differ ONLY
@@ -4393,10 +4332,8 @@ class Widget extends TreeNode
   attach: ->
     @_attachToChosenParent "newParentChoice"
 
-  # »>> this part is excluded from the fizzygum homepage build
   attachWithHorizLayout: ->
     @_attachToChosenParent "newParentChoiceWithHorizLayout"
-  # this part is excluded from the fizzygum homepage build <<«
   
   toggleIsLockingToPanels: ->
     @isLockingToPanels = not @isLockingToPanels
@@ -4577,7 +4514,6 @@ class Widget extends TreeNode
 
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
-  # »>> this part is excluded from the fizzygum homepage build
   allSetters: (menuEntriesStrings, functionNamesStrings) ->
     if !menuEntriesStrings?
       menuEntriesStrings = []
@@ -4589,7 +4525,6 @@ class Widget extends TreeNode
 
     # already sorted and deduplicated by the last of the calls above
     return [menuEntriesStrings, functionNamesStrings]
-  # this part is excluded from the fizzygum homepage build <<«
   
   # Widget entry field tabbing //////////////////////////////////////////////
   
@@ -4692,29 +4627,13 @@ class Widget extends TreeNode
   #     spec properties of the content.
 
 
-  # »>> this part is excluded from the fizzygum homepage build
   minWidth: 10
   desiredWidth: 20
   maxWidth: 100
-  # this part is excluded from the fizzygum homepage build <<«
 
-  # »>> this part is excluded from the fizzygum homepage build
   minHeight: 10
-  # this part is excluded from the fizzygum homepage build <<«
   desiredHeight: 20
-  # »>> this part is excluded from the fizzygum homepage build
   maxHeight: 100
-  # this part is excluded from the fizzygum homepage build <<«
-
-  # »>> this part is excluded from the fizzygum homepage build
-  makeSpacersTransparent: ->
-    for C in @children
-      C.makeSpacersTransparent()
-
-  makeSpacersOpaque: ->
-    for C in @children
-      C.makeSpacersOpaque()
-  # this part is excluded from the fizzygum homepage build <<«
 
   # The bare layout-enqueue ATOM: put me into the recalculateLayouts until-loop and mark my layout invalid, WITHOUT
   # climbing to ancestors and WITHOUT the flow-rule throw / careless-push audit that _invalidateLayout wraps around it
@@ -4811,7 +4730,6 @@ class Widget extends TreeNode
     # and @parent?` climb-guard (the freefloating rule now lives in ONE place, the param check above).
     @parent?._invalidateLayout(@)
 
-  # »>> this part is excluded from the fizzygum homepage build
   setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
     @minWidth = minBounds.x
     @minHeight = minBounds.y
@@ -4951,7 +4869,6 @@ class Widget extends TreeNode
       !C.isInCollapsedSubtree()
         count++
     return count
-  # this part is excluded from the fizzygum homepage build <<«
 
   # it's useful to know when a widget defers its layout
   # because it means that its current size is indicative
@@ -5045,7 +4962,6 @@ class Widget extends TreeNode
         else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
           @_applyMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
 
-    # »>> this part is excluded from the fizzygum homepage build
     else if @countOfChildrenInHorizontalStackLayout() != 0
 
       @addOrRemoveAdders()
@@ -5141,7 +5057,6 @@ class Widget extends TreeNode
         if childLeft > newBoundsForThisLayout.right() + 5
           console.error "horizontal stack distribution overflowed its allocated width by " + (childLeft - newBoundsForThisLayout.right())
         C._reLayout childBounds
-    # this part is excluded from the fizzygum homepage build <<«
 
     @_markLayoutAsFixed()
 
@@ -5163,7 +5078,6 @@ class Widget extends TreeNode
     return
 
 
-  # »>> this part is excluded from the fizzygum homepage build
   removeAdders: ->
     @_showsAdders = false
     @_invalidateLayout()
@@ -5223,4 +5137,3 @@ class Widget extends TreeNode
             new LayoutElementAdderOrDropletWdgt,
             nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-  # this part is excluded from the fizzygum homepage build <<«

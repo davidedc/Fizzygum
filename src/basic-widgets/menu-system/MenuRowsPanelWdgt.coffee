@@ -190,23 +190,6 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
       opts.toolTip, opts.color, opts.bold, opts.italic,
       opts.doubleClickAction, opts.arg1, opts.arg2, opts.representsAWidget
 
-  # »>> this part is excluded from the fizzygum homepage build
-
-  # used by the test system to check the row count / rows: children minus the top
-  # title header (a shadow lives in @shadowInfo, never a child, so there is
-  # nothing to exclude for it).
-  testNumberOfItems: ->
-    @testItems().length
-
-  testItems: ->
-    items = []
-    for item in @children
-      if item != @label
-        items.push item
-    items
-
-  # this part is excluded from the fizzygum homepage build <<«
-
   # The stack arrange, specialized by ONE menu policy: a menu SELF-sizes its
   # width to its widest row + border (a general stack takes its width from its
   # container) — hug the width FIRST so super() distributes exactly that.

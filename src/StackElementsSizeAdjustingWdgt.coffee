@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
 

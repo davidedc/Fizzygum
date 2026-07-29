@@ -54,11 +54,6 @@ class Point
   neg: ->
     new @constructor -@x, -@y
 
-  # »>> this part is excluded from the fizzygum homepage build
-  mirror: ->
-    new @constructor @y, @x
-  # this part is excluded from the fizzygum homepage build <<«
-  
   floor: ->
     new @constructor Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0)
   
@@ -88,12 +83,6 @@ class Point
   multiplyBy: (other) ->
     return new @constructor @x * other.x, @y * other.y  if other instanceof Point
     new @constructor @x * other, @y * other
-  
-  # »>> this part is excluded from the fizzygum homepage build
-  divideBy: (other) ->
-    return new @constructor @x / other.x, @y / other.y  if other instanceof Point
-    new @constructor @x / other, @y / other
-  # this part is excluded from the fizzygum homepage build <<«
   
   floorDivideBy: (other) ->
     if other instanceof Point
@@ -143,23 +132,9 @@ class Point
   distanceTo: (aPoint) ->
     aPoint.subtract(@).r()
   
-  # »>> this part is excluded from the fizzygum homepage build
-  rotate: (direction, center) ->
-    # direction must be 'right', 'left' or 'pi'
-    offset = @subtract center
-    return new @constructor(-offset.y, offset.y).add(center)  if direction is "right"
-    return new @constructor(offset.y, -offset.y).add(center)  if direction is "left"
-
-    # direction === 'pi'
-    center.subtract offset
-  
-  flip: (direction, center) ->
-    # direction must be 'vertical' or 'horizontal'
-    return new @constructor @x, center.y * 2 - @y  if direction is "vertical"
-
-    # direction === 'horizontal'
-    new @constructor center.x * 2 - @x, @y
-  
+  # The point `dist` away at compass `angle` (degrees, clockwise from north). Used by
+  # the Pen family to walk a heading — PenWdgt.forward/back and the arrowhead corners
+  # in PenAppearance.
   distanceAngle: (dist, angle) ->
     deg = angle
     if deg > 270
@@ -172,7 +147,6 @@ class Point
     x = Math.sin((180 - deg).toRadians()) * dist
     y = Math.sqrt((dist * dist) - (x * x))
     new @constructor x + @x, @y + y
-  # this part is excluded from the fizzygum homepage build <<«
   
   
   # Point transforming:
@@ -181,17 +155,6 @@ class Point
   
   translateBy: (deltaPoint) ->
     @add deltaPoint
-  
-  # »>> this part is excluded from the fizzygum homepage build
-  rotateBy: (
-    angle,
-    center = (new @constructor 0, 0)
-    ) ->
-    p = @subtract center
-    r = p.r()
-    theta = angle - p.theta()
-    new @constructor center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta))
-  # this part is excluded from the fizzygum homepage build <<«
   
   
   # Point conversion:

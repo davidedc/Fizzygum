@@ -84,7 +84,6 @@ class PreferencesAndSettings
   constructor: ->
     @setMouseInputMode()
 
-  # »>> this part is excluded from the fizzygum homepage build
   toggleInputMode: ->
     if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE
       @setTouchInputMode()
@@ -108,7 +107,6 @@ class PreferencesAndSettings
     probedMinimumFontHeight = @minimumFontHeight
     @setMouseInputMode()
     @minimumFontHeight = probedMinimumFontHeight
-  # this part is excluded from the fizzygum homepage build <<«
 
 
   # answer the height of the smallest font renderable in pixels

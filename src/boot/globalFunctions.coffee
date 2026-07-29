@@ -310,6 +310,20 @@ createWorldAndStartStepping = ->
   # world is created asynchronously (after the font metrics load) — so nothing
   # that touches `world` may run before this.
   startWorld = ->
+    # TEST-ONLY machinery lives with the harness (../Fizzygum-tests/Automator-and-test-harness-src),
+    # not inside the shipped classes, and is grafted onto the core prototypes here. Each *TestSupport
+    # class only exists in a build that ships the harness, so the existence checks ARE the mechanism
+    # that keeps a product build free of all this -- the same pattern as `Automator?` / `MacroToolkit?`
+    # / `SystemTestsControlPanelUpdater?` below. (Before arc 3 these members sat in the core files
+    # wrapped in `»>>` region markers and were textually stripped at packaging time.)
+    #
+    # ⚠ This must run BEFORE `new WorldWdgt`: the world's own constructor calls
+    # `_sizeCanvasToTestScreenResolution`, which is one of the members installed here.
+    WorldTestSupport.installOnto WorldWdgt  if WorldTestSupport?
+    WidgetTestSupport.installOnto Widget  if WidgetTestSupport?
+    MenuTestSupport.installOnto MenuWdgt  if MenuTestSupport?
+    MenuRowsPanelTestSupport.installOnto MenuRowsPanelWdgt  if MenuRowsPanelTestSupport?
+
     # "false" as second parameter below
     #   fits the world in canvas as per dimensions
     #   specified in the canvas element.
@@ -341,9 +355,6 @@ createWorldAndStartStepping = ->
 
     world.binWdgt = new BinWdgt
     world.shelfWdgt = new ShelfWdgt
-
-    #ProfilingDataCollector.enableProfiling()
-    #ProfilingDataCollector.enableBrokenRectsProfiling()
 
     if world.isIndexPage
       world.createDesktop()

@@ -121,12 +121,6 @@ class Rectangle
     t = @top() + (@height() - side) / 2
     new Rectangle l, t, l + side, t + side
 
-  # »>> this part is excluded from the fizzygum homepage build
-  # unused code
-  corners: ->
-    [@origin, @bottomLeft(), @corner, @topRight()]
-  # this part is excluded from the fizzygum homepage build <<«
-  
   extent: ->
     @corner.subtract @origin
   

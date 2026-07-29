@@ -39,7 +39,6 @@ class LayoutSpec
     spec == @ATTACHEDAS_CORNER_INTERNAL_BOTTOM
 
 
-  # »>> this part is excluded from the fizzygum homepage build
   # TODO
   # These should go in a separate constants class,
   # maybe "LayoutSpreadibilityConsts", because the
@@ -49,4 +48,3 @@ class LayoutSpec
   @SPREADABILITY_NONE: 10
   @SPREADABILITY_MEDIUM: 1000
   @SPREADABILITY_SPACERS: 100000000
-  # this part is excluded from the fizzygum homepage build <<«

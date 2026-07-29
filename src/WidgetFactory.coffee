@@ -102,13 +102,6 @@ class WidgetFactory
     wm._applyBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 100
   createNewColorPickerWdgt: ->
     world.create new ColorPickerWdgt
-  createNewSensorDemo: ->
-    newWdgt = new MouseSensorWdgt
-    newWdgt.setColor Color.create 230, 200, 100
-    newWdgt.cornerRadius = 35
-    newWdgt.alpha = 0.2
-    newWdgt._applyExtent new Point 100, 100
-    world.create newWdgt
   createNewAnimationDemo: ->
     foo = new BouncerWdgt
     foo._applyBounds (new Point 50, 20), new Point 300, 200

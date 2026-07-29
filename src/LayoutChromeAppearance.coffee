@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 # Paints the layout-editing chrome family (LayoutSpacerWdgt,
 # LayoutElementAdderOrDropletWdgt, StackElementsSizeAdjustingWdgt): a solid
 # background box in ACTUAL pixels, then the widget's own drawLayoutChrome glyph

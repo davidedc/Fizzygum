@@ -141,15 +141,3 @@ class MenuWdgt extends PopUpWdgt
 
   removeConsecutiveLines: ->
     @rowsPanel.removeConsecutiveLines()
-
-  # »>> this part is excluded from the fizzygum homepage build
-
-  # test-system hooks: the menu's row count / rows live in the panel now, so
-  # forward (MacroToolkit reaches these on the menu -- checkNumberOfItemsInMenu).
-  testNumberOfItems: ->
-    @rowsPanel.testNumberOfItems()
-
-  testItems: ->
-    @rowsPanel.testItems()
-
-  # this part is excluded from the fizzygum homepage build <<«

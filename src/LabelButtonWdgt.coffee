@@ -105,7 +105,6 @@ class LabelButtonWdgt extends ButtonWdgt
     Widget::_reLayout.call @, newBoundsForThisLayout
     @_reLayoutSelf()
 
-  # »>> this part is excluded from the fizzygum homepage build
   # THIN public wrapper over the non-settling core (canonical self-settling form): recreate the label, then
   # SELF-SETTLE (public tier, like setExtent/add) so the button's FULL re-layout -- _createLabel + centre, via
   # _reLayout -- runs synchronously and the world is consistent on return. This is the public label-setter
@@ -122,7 +121,6 @@ class LabelButtonWdgt extends ButtonWdgt
     if @label?
       @label = @label._fullDestroyNoSettle()
     @_invalidateLayout()
-  # this part is excluded from the fizzygum homepage build <<«
 
   alignCenter: ->
     if !@centered

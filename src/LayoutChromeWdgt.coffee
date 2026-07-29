@@ -1,12 +1,15 @@
-# this file is excluded from the fizzygum homepage build
-
 # Shared base for the small "layout-editing chrome" widgets -- the layout spacer
 # (LayoutSpacerWdgt), the element adder/droplet (LayoutElementAdderOrDropletWdgt),
-# and the stack-size adjuster (StackElementsSizeAdjustingWdgt). They only appear
-# while layouts are being edited (so all three, and this base, are stripped from
-# the homepage build), and they all paint identically: a solid background box in
-# ACTUAL pixels, then a small glyph drawn in LOGICAL pixels with the origin
-# translated to the widget position.
+# and the stack-size adjuster (StackElementsSizeAdjustingWdgt). They all paint
+# identically: a solid background box in ACTUAL pixels, then a small glyph drawn
+# in LOGICAL pixels with the origin translated to the widget position.
+#
+# The stack-size adjuster is the one of the three that is NOT layout-editing-only:
+# the halo's resize/move affordance inserts it around horizontal-stack siblings
+# (Widget._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle), which is reachable
+# from the base widget context menu in every build -- so it and this base ship
+# everywhere. The spacer and the adder/droplet appear only while layouts are being
+# edited.
 #
 # That shared paint scaffold lives in LayoutChromeAppearance; each subclass
 # supplies only its drawLayoutChrome tail. The spacer additionally toggles
