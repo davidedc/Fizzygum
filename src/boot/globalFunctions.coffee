@@ -150,12 +150,7 @@ loadReflectiveLayerPromise = ->
       # (and it's already running).
       (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
         stillLoadingSources = false
-        if Automator?
-          Automator.testsManifest = testsManifest
-          Automator.testsAssetsManifest = testsAssetsManifest
-        # world.getParameterPassedInURL is not included in a production build
-        if startupActions = world.getParameterPassedInURL? "startupActions"
-          world.nextStartupAction()
+        runPostBootActionsOnce()
     else
       addLogDiv()
       # there is no world to speak of yet, and no stepping: in this case
@@ -170,9 +165,44 @@ loadReflectiveLayerPromise = ->
         # backend), so chain the world-dependent code after it resolves.
         createWorldAndStartStepping()
       .then ->
-        # world.getParameterPassedInURL is not included in a production build
-        if startupActions = world.getParameterPassedInURL? "startupActions"
-          world.nextStartupAction()
+        runPostBootActionsOnce()
+
+# WHO ASKED FOR THE REFLECTIVE LAYER, and has it arrived?
+#
+# Memoized: whoever asks first starts the load, everyone else joins the same promise, and a build
+# that never asks never fetches a byte of it. That is what makes sources: "lazy" possible.
+#
+# ⚠ `reflectiveLayerIsLoaded` exists so that a caller can keep its fast path SYNCHRONOUS. On every
+# build except a lazy one the layer is already here by the time anything asks, and deferring such a
+# caller by even a microtask would move its effect a world cycle later -- which the SystemTest suite
+# measures, since it drives the world cycle by cycle (../Fizzygum-tests/DETERMINISM.md).
+reflectiveLayerLoadPromise = nil
+reflectiveLayerHasLoaded = false
+
+ensureReflectiveLayerLoaded = ->
+  reflectiveLayerLoadPromise ?= loadReflectiveLayerPromise().then -> reflectiveLayerHasLoaded = true
+  reflectiveLayerLoadPromise
+
+reflectiveLayerIsLoaded = -> reflectiveLayerHasLoaded
+
+# Can it ever arrive? No, for exactly one policy: "none" ships none of the text.
+reflectiveLayerCanLoad = -> BUILDFLAG_SOURCES isnt "none"
+
+# The two things that must happen ONCE, after the world is up, no matter where this boot finished:
+# the test manifests the Automator reads, and the `?startupActions=` URL parameter. They live here
+# rather than in the tail of the source-ingest chain because a "lazy" or "none" build never runs that
+# chain at boot, and a startup action that fires on some profiles but not others is exactly the class
+# of bug a per-flavour code path breeds. The guard is what lets a lazy build call this at boot AND
+# again when the layer eventually lands, and still fire once.
+postBootActionsHaveRun = false
+runPostBootActionsOnce = ->
+  return if postBootActionsHaveRun
+  postBootActionsHaveRun = true
+  if Automator?
+    Automator.testsManifest = testsManifest
+    Automator.testsAssetsManifest = testsAssetsManifest
+  if startupActions = world.getParameterPassedInURL? "startupActions"
+    world.nextStartupAction()
 
 boot = ->
 
@@ -322,21 +352,27 @@ boot = ->
     ]
   .then ->
     if bootLoadingDebugWrites then console.log "---- loading-and-compiling-coffeescript-sources-min, logging-div-min loaded"
-    # sources: "none" -- an appliance artifact that ships no class source text at all, so there is
-    # nothing to fetch, nothing to ingest, and no meta-system (buildProfile.py SOURCES_POLICIES).
-    # It can only be a PRE-COMPILED build -- the build refuses the combination otherwise -- so the
-    # world is already running by now and this is simply the end of the boot sequence.
-    # The flag has to be answered here rather than by an empty parts manifest: the Class and Mixin
-    # sources are fetched by name, not through the manifest, and would 404.
-    # ⚠ `window.preCompiled` is load-bearing in this condition, not defensive. The ONE boot that
-    # must still run the layer on a "none" build is its own pre-compile pass: the driver boots the
-    # freshly-built tree at ?generatePreCompiled while js/pre-compiled.js is still the
+    # WHEN does the reflective layer load? (buildProfile.py SOURCES_POLICIES)
+    #   "none"        never: this artifact ships no class source text at all, so there is nothing to
+    #                 fetch, nothing to ingest and no meta-system. The flag has to be answered here
+    #                 rather than by an empty parts manifest, because the Class and Mixin sources are
+    #                 fetched BY NAME, not through the manifest, and would 404.
+    #   "lazy"        not now: the first consumer calls ensureReflectiveLayerLoaded() and waits.
+    #                 Today that is opening an inspector (Widget.spawnInspector) or restoring a
+    #                 snapshot that carries class-level source edits (WorldWdgt.loadWorldSnapshot).
+    #   "background"  now, behind the running world -- the historical behaviour.
+    #
+    # ⚠ `window.preCompiled` is load-bearing in this condition, not defensive. The ONE boot that must
+    # run the layer whatever the policy says is the artifact's own pre-compile pass: the driver boots
+    # the freshly-built tree at ?generatePreCompiled while js/pre-compiled.js is still the
     # `preCompiled = false` stub, and compiling those sources is how the image gets harvested. Drop
     # this clause and a lean build fails with "pre-compiled generation failed" (measured).
-    if window.preCompiled and BUILDFLAG_SOURCES is "none"
+    if window.preCompiled and BUILDFLAG_SOURCES isnt "background"
+      # Nothing is loading, so say so -- and do the post-boot work the ingest tail would have done.
       stillLoadingSources = false
+      runPostBootActionsOnce()
       return
-    loadReflectiveLayerPromise()
+    ensureReflectiveLayerLoaded()
 
 
 # Load the SWCanvas bitmap-font metrics + the positioning bundle for the active

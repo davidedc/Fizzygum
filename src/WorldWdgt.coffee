@@ -2340,6 +2340,16 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # (_teardownWorldStructureNoSettle) — NOT the homepage-stripped resetWorld/_resetWorldNoSettle,
   # which this could never call — and every step below is one half of that core's split contract:
   # the core drops all references to what it destroyed, and this method fills the world back in.
+  # Does restoring this snapshot need a reflective layer that is NOT here yet but still could be?
+  # True only on a `sources: "lazy"` build, before anything has asked for it, for a file that
+  # actually carries class- or mixin-scope source edits -- so no other build ever pays a wait.
+  _snapshotNeedsTheReflectiveLayer: (envelope) ->
+    return false if SourceEditsRegistry.canReplaySourceEdits()
+    return false unless reflectiveLayerCanLoad()
+    records = envelope?.world?.sourceEdits
+    return false unless records?
+    records.some (eachRecord) -> eachRecord.scope is "class" or eachRecord.scope is "mixin"
+
   loadWorldSnapshot: (envelopeOrString, opts = {}) ->
     envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
     unless envelope? and envelope.format is Serializer.FORMAT and envelope.kind is "world"
@@ -2365,6 +2375,16 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # one and only flush; the two never run in one pass. It is a tail re-entry precisely so that
       # nothing is mutated twice (or, worse, torn down twice).
       return @parts.ensureAllLoaded(missingParts).then =>
+        @loadWorldSnapshot envelope, Object.assign {}, opts, skipConfirm: true
+    # 0b. Same bail-out-then-re-enter shape, and for the same reason, as the missing-parts block
+    #     above: a snapshot's CLASS-level source edits are replayed against the META-SYSTEM, which on
+    #     a `sources: "lazy"` build has not arrived unless something asked for it. Ask here -- before
+    #     any mutation, after the confirm, so the user is prompted exactly once -- and re-enter.
+    #     It cannot loop: the predicate requires the layer to be absent, and the re-entry runs with
+    #     it present. A build that can NEVER load it (`sources: "none"`) does not come through here
+    #     at all; it takes the refusal below instead.
+    if @_snapshotNeedsTheReflectiveLayer envelope
+      return ensureReflectiveLayerLoaded().then =>
         @loadWorldSnapshot envelope, Object.assign {}, opts, skipConfirm: true
     section = envelope.world or {}
     # 1. tear the current world down — one settle over the shared NoSettle core, which also zeroes

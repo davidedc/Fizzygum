@@ -3959,8 +3959,19 @@ class Widget extends TreeNode
   # enforces it. The guard belongs HERE, where the class is named, not at the callers.
   spawnInspector: (inspectee) ->
     return unless InspectorWdgt?
-    inspector = new InspectorWdgt inspectee
-    world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
+    openTheInspector = ->
+      inspector = new InspectorWdgt inspectee
+      world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
+    # An inspector reads the class MEMBER MAPS, which exist only once the class source text has been
+    # ingested -- and on a `sources: "lazy"` build that has deliberately not happened yet. So ask for
+    # the reflective layer and open when it lands. This is the same shape as awaiting a lazy PART
+    # before using its classes.
+    # ⚠ The already-loaded case stays SYNCHRONOUS, and that is the whole reason for the branch: every
+    # other build has the layer long before anything asks, and deferring the open by even a microtask
+    # would move the inspector's appearance a world cycle later -- which the SystemTest suite
+    # measures (it drives the world cycle by cycle, ../Fizzygum-tests/DETERMINISM.md), across the ~15
+    # tests that open one.
+    if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
   createConsole: ->
     return unless ConsoleWdgt?

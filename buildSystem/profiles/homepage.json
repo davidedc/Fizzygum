@@ -18,16 +18,20 @@
     "  index.html only      -> no SWCanvas boot bundle and no font-assets/ (~90 MB not deployed)",
     "  form precompiled     -> the pre-compile driver harvests the image from a compile-at-boot boot,",
     "                          then it is minified in place; the world starts from that image",
-    "  sources background   -> ...and the class source text follows it, off the critical path. This",
-    "                          profile KEEPS that text (~40% of the tree) because production ships",
-    "                          the inspectors, which read the member maps ingesting it builds. The",
-    "                          artifact that drops it is `lean`.",
+    "  sources lazy         -> ...and the class source text is SHIPPED but not loaded until",
+    "                          something needs it: opening an inspector, or restoring a snapshot",
+    "                          that carries class-level source edits. That text is 2.28 MB, 62.7%",
+    "                          of this tree, so a visitor who never opens an inspector never",
+    "                          downloads it -- and the first one who does waits for it once.",
+    "                          `background` is the alternative (fetch it behind the running world,",
+    "                          the historical behaviour); `lean` is the profile that drops it",
+    "                          outright. Changing this line is the whole of that decision.",
     "  the absent parts      -> their assets and vendor payloads are simply never written (so no",
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
   "parts": ["core", "meta-tools"],
   "form": "precompiled",
-  "sources": "background",
+  "sources": "lazy",
   "entries": ["index.html"]
 }

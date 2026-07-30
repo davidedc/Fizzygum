@@ -676,7 +676,70 @@ come BEFORE them.** Two reasons, both learned inside this arc:
   (which is what exercises the guarded replay), and asserts the tree ships none of
   `js/coffeescript-sources` / `js/src/dependencies-finding-min.js` / the SWCanvas payload.
 
-  **Step B — `lazy`, to be decided ON THE EVIDENCE of step A, not before.** It needs the same
+  **`[ANSWERED 2026-07-30, owner question]` "Can sources load dynamically per part — nothing for an
+  unloaded part, and a part's source arriving with the part?" MEASURED ANSWER: for a LAZY part that
+  is already how it works, and for the rest there is almost nothing to divide.**
+  - **Lazy parts: already built (arc 4), exactly as described.** `eagerSourceBatchNames()` skips
+    non-eager parts at boot, and `PartsRegistry._loadPartPromise` then loads THAT part's batches
+    (which are `SourceVault.store` calls) and ingests them at launch. fizzytiles' 130 KB of source is
+    not in the boot load and arrives with the part. ⚠ Note what this means on a precompiled tree: a
+    lazy part's source is not an extra, it IS the part's code — its classes are absent from the image,
+    which is harvested by booting `index.html`, where a lazy part by definition does not load. That is
+    why `sources: "none"` + a lazy part is refused.
+  - **Eager parts: the split has nothing to divide.** Source bytes per part, measured on a dev tree
+    (2.67 MB total): **core 80.1%**, harness 5.5%, fizzytiles 4.9%, macros 3.0%, meta-tools 1.8%,
+    demos 1.7%, dev-tools 1.2%, dev-icons 0.9%, patch-programming-experimental 0.8%,
+    fizzytiles-launcher 0.1%. On the PRODUCTION profile that is core 2.14 MB + meta-tools 0.05 MB —
+    per-part granularity would partition 2.28 MB into 96% / 2%. The machinery would work (batches are
+    already per-part, and the manifest's class→part map exists precisely so a class's part is known
+    BEFORE its source loads), but it would be machinery for a distinction that does not pay.
+  - **Nor does core decompose usefully:** its two largest directories, `src` (32.5%) and
+    `src/basic-widgets` (24.8%), are the framework everything depends on; the most app-like slices
+    (spreadsheet, maps, dataflow, graphs-plots-charts, apps) come to ~328 KB, 16% of core.
+  ⇒ **This is further evidence for the survey's conclusion above: the seam is the whole layer, not
+  per part.** The two levers that DO pay are (a) `sources: "lazy"` — deferring 2.28 MB, 62.7% of the
+  production tree, until something reflects — and (b) making MORE parts lazy, which yields per-part
+  source loading for free because that is what a lazy part already does. Neither needs a new
+  per-part source mechanism, and (b) is partition work, not loading work.
+
+  **Step B — `lazy`. `[OWNER: BUILD IT, 2026-07-30]` DONE, and `profiles/homepage.json` uses it.**
+  The evidence step A produced said the payoff is real (2.28 MB, 62.7% of the production tree, not
+  downloaded unless someone opens an inspector) and the cost is contained, so it was built and
+  production switched onto it. Reverting is one word in that file.
+
+  **AS EXECUTED.** `ensureReflectiveLayerLoaded()` memoizes `loadReflectiveLayerPromise()` — whoever
+  asks first starts it, everyone else joins, a build that never asks never fetches a byte. Two
+  consumers await it, and they are the only two (the survey's count was right):
+  1. `Widget.spawnInspector` — the single inspector entry point. ⚠ **The already-loaded case stays
+     SYNCHRONOUS, and that branch is the whole reason this was safe to do:** on every other build the
+     layer is long since here, and deferring the open by even a microtask would move the inspector's
+     appearance a world cycle later — which the SystemTest suite measures, across the ~15 tests that
+     open one. `ConsoleWdgt` needs no await at all (it only compiles user text).
+  2. `WorldWdgt.loadWorldSnapshot`, for a snapshot carrying class/mixin source edits — placed as a
+     second bail-out-then-re-enter beside the existing missing-PARTS block, which already argues the
+     position: before any mutation, after the confirm, so the user is asked once. It cannot loop (the
+     predicate requires the layer absent; the re-entry runs with it present) and no other build ever
+     waits, since the predicate also requires the file to actually carry such edits.
+
+  ⚠ **A `?startupActions=` regression was introduced and caught in the same pass.** The Automator
+  manifests and the startup-action trigger sat in the TAIL of the ingest chain — fine while every
+  boot ran that chain, but a `lazy` or `none` build does not, so both silently stopped happening.
+  Extracted to `runPostBootActionsOnce()`, guarded so a lazy build (which calls it at boot AND again
+  when the layer lands) fires once. ⚖ **Moving work off a boot path means auditing what ELSE that
+  path was carrying** — this is the same species as `compileFGCode` in step A, one level up.
+
+  **Gated, not assumed:** `smoke-boot-headless` now asserts the lazy behaviour whenever the tree
+  reports `BUILDFLAG_SOURCES === "lazy"` (read FROM the tree, not declared to the script) — both
+  halves together, because either alone passes for the wrong reason: nothing fetched at boot ALSO
+  holds for a tree that can never load it, and a working inspector ALSO holds for a tree that fetched
+  everything eagerly. Measured on the production tree: 0 source files at boot; after one
+  `spawnInspector`, 15 files, 432 sources ingested, 202 member sources on `WorldWdgt`, one inspector
+  open, no errors; a second open fetches nothing and opens immediately.
+
+  ⚠ For whoever writes the next headless probe: **poll INSIDE the page, never with
+  `page.waitForFunction`.** Fizzygum extends `Object.prototype`, which breaks puppeteer's
+  injected-utility argument path with a bare `Cannot read properties of undefined (reading
+  'consumerClassNames')` that names nothing you touched. The existing rigs all do this and say why. It needs the same
   extracted function plus a memoized `ensure…` and an `await` in `Widget.spawnInspector` and in the
   snapshot restore path. ⚠ Worth stating plainly before building it: on a precompiled tree
   `background` ALREADY starts the world first and fetches the batches behind it, so `lazy` buys
