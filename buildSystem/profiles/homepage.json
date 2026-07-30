@@ -1,0 +1,29 @@
+{
+  "//": [
+    "homepage -- the PRODUCTION artifact, built with `./build_it_please.sh --profile homepage`.",
+    "",
+    "This file replaced the `--homepage` flag, ten `if $homepage` branches in build_it_please.sh, an",
+    "`inHomepage` boolean on every part, and a per-flavour list of files to delete again at the end",
+    "of the build (arc 5). What production contains is now readable in three lines.",
+    "",
+    "The parts are listed EXPLICITLY rather than as an exclusion, because this is a shipped artifact:",
+    "its contents should be visible in one place, and a part added to the partition tomorrow should",
+    "NOT silently join production. Today that list is the product plus the in-world inspectors --",
+    "meta-tools has always been in a production build, and a `lean` profile (arc 5 phase 2) is what",
+    "will drop it.",
+    "",
+    "Everything else about this tree FOLLOWS from these three facts, with nothing to maintain:",
+    "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
+    "                          gates skipped, and the dead `if Automator?` branches stripped",
+    "  index.html only      -> no SWCanvas boot bundle and no font-assets/ (~90 MB not deployed)",
+    "  form precompiled     -> the pre-compile driver harvests the image from a compile-at-boot boot,",
+    "                          then it is minified in place; the world starts from that image and",
+    "                          loads the class sources afterwards, in the background",
+    "  the absent parts      -> their assets and vendor payloads are simply never written (so no",
+    "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
+  ],
+
+  "parts": ["core", "meta-tools"],
+  "form": "precompiled",
+  "entries": ["index.html"]
+}

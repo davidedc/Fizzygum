@@ -1,0 +1,22 @@
+{
+  "//": [
+    "dev-notests -- the dev world with the test machinery left out. Was the `--notests` flag",
+    "(arc 5 D3): `./build_it_please.sh --profile dev-notests`.",
+    "",
+    "A subtraction, so it is spelled as one: everything EXCEPT the harness part. That single",
+    "exclusion is what drops the js/tests link, BUILDFLAG_LOAD_TESTS, the two tests-repo build",
+    "gates, FileSaver/JSZip and the harness pointer icons -- one fact, not six flags.",
+    "",
+    "⚠ It keeps `macros`, which is measured behaviour and not an oversight: the old --notests tree",
+    "shipped the macro engine too (it is authoring machinery under src/, and it is the harness that",
+    "makes a build test-CAPABLE). A profile that wants neither says {\"allExcept\": [\"harness\",",
+    "\"macros\"]}.",
+    "",
+    "Nothing in the workspace builds this automatically -- it is a hand-typed check that the product",
+    "still stands up with the test machinery gone, short of a full production build."
+  ],
+
+  "parts": { "allExcept": ["harness"] },
+  "form": "compile-at-boot",
+  "entries": "all"
+}

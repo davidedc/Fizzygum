@@ -17,7 +17,7 @@
 // the allowlist file with the current dead set (the baseline).
 //
 // NOTE: needs the sibling Fizzygum-tests repo for an accurate reference set; if it is absent
-// (e.g. a --homepage build that stripped tests) the check SKIPS rather than false-fail.
+// (e.g. a production build, which ships no test machinery) the check SKIPS rather than false-fail.
 
 const fs = require('fs');
 const path = require('path');

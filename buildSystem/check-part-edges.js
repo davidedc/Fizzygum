@@ -4,7 +4,7 @@
  * check-part-edges.js — build gate: CORE must never reach into a PART without a guard.
  *
  * THE FAILURE MODE THIS EXISTS FOR. buildSystem/parts.json splits the shipped source into a core
- * plus named parts, and a part can be absent (a --homepage build drops several) or, from arc 4
+ * plus named parts, and a part can be absent (the production profile ships two) or, from arc 4
  * phase 2, not yet loaded. If core code names a part's class unconditionally, then on the artifact
  * that lacks it the reference throws `<TheClass> is not defined` — at the moment the user clicks,
  * deep in a UI no gate boots into. The suite runs the HARNESS page, which carries every part; the
@@ -80,7 +80,7 @@ try {
 // ---- which file belongs to which part -------------------------------------------------------
 let shippable;
 try {
-  shippable = execFileSync('python3', ['buildSystem/build.py', '--list-shippable'],
+  shippable = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable'],
     { cwd: REPO, encoding: 'utf8' }).split('\n').filter(Boolean);
 } catch (e) {
   fail('build.py --list-shippable failed: ' + e.message);

@@ -1,9 +1,37 @@
 # Arc 5 · Packaging profiles — parts × code-form manifests replacing the hard-coded `--homepage` flavour
 
-**STATUS: PLAN ONLY — AUTHORED 2026-07-28; §2 REVISED AGAINST THE TREE 2026-07-30 (arcs 1–4 all
-landed and pushed). NOT STARTED.** This is **ARC 5 — the LAST arc — of the build-and-packaging
-program** (program table + completion doctrine: §0.1/§0.2 of
-`archive/build-arc-4-dynamic-parts-plan.md` — read those first; they are not repeated here in full).
+**STATUS: IN PROGRESS — the arc's CENTRAL STEP IS DONE: profiles ship, and both flavour flags are
+deleted. What remains is phase 2 (the new `sources` axes + the `lean` profile) and phase 3
+(consumers + docs).** This is **ARC 5 — the LAST arc — of the build-and-packaging program**
+(program table + completion doctrine: §0.1/§0.2 of `archive/build-arc-4-dynamic-parts-plan.md` —
+read those first; they are not repeated here in full).
+
+| Phase / decision | State | Commit |
+|---|---|---|
+| plan revision (§2 re-verified cold; 4 authored facts wrong) | DONE | `7b773269` (plan only) |
+| −1 · promote the parity tool | DONE | tests `6757cb55c` |
+| 0.5 · dissolve the pruning tail (steps 1-3) | DONE | `14a1fe54` |
+| — · `build.py`'s exit code was never checked | DONE (latent bug, predates the arc) | `b569822e` |
+| D1 + D2 · stop shipping 1.9 MB of dead weight | DONE | `d14a3d0d` |
+| 1.5 · split the inspectors into `meta-tools` | DONE (moved BEFORE 0/1 — see the sequencing note in §4) | `f7364e95` |
+| **0 + 1 · profiles; `--homepage` and `--notests` DELETED** | **DONE** (merged, as §4 argued) | the commit adding `buildSystem/profiles/` |
+| 0.5 step 4 · font-assets derived from the entry set | DONE, inside phase 0 as planned | (same commit) |
+| 2 · `sources: lazy` / `none` + the `lean` profile | not started (1.5 unblocked it) | — |
+| 3 · consumers + docs | not started | — |
+
+Gates after phase 0+1: `fg gauntlet` **EXIT=0, 14/14 legs in-wave, no retries** (256s), ZERO
+reference churn; `fg homepage` **EXIT=0** (production tree: booted from the pre-compiled image, no
+SWCanvas payload, snapshot round-trip clean). PR-D4 parity across the whole rewrite: **dev and
+homepage byte-IDENTICAL, dev-notests differing by exactly its one predicted delta.** Production tree
+**5.36 MB / 28 files → 3.47 MB / 26 files (−35.4%)**.
+Six owner rulings are LOCKED (PR-D1, PR-D6, R-3, D1, D2, D3) — **do not re-litigate any of them.**
+
+**WHAT A FLAVOUR IS NOW, in one place:** `buildSystem/profiles/<name>.json` = `{parts, form,
+entries}`, read by `buildSystem/buildProfile.py` — which derives everything else and is the only code
+that parses `--profile`. `parts.json` is the PARTITION (what the parts are and what they own); a
+profile is the FLAVOUR (which of them ship). `build_it_please.sh` now contains zero flavour branches:
+it asks the reader for `PROFILE_FORM` / `PROFILE_SHIPS_TESTS` / `PROFILE_SHIPS_SWCANVAS_ENTRY` /
+`PROFILE_BOOT_PRELUDE` and branches on those.
 
 **The 2026-07-30 revision pass re-verified §2 cold against `Fizzygum master @ 10cc6129` and found
 FOUR authored facts wrong — two of them premises that reshape the work. Read §2.0 first.** In
@@ -41,16 +69,21 @@ completion doctrine: the `--homepage` conditional thicket is RETIRED IN THIS ARC
 
 ## §1 Goal and decisions
 
-A profile manifest declares:
+A profile manifest declares — **`[AS BUILT 2026-07-30]` three keys, not the five sketched here**; the
+other two turned out to be derivable or redundant and were dropped rather than written (the reasoning,
+key by key, is in §4 Phase 0+1's as-executed block, and it is PR-D6 applied to the schema itself):
 
 ```
-{ "name": "homepage",
-  "parts": ["core"],                        // which parts ship (arc-4 partition)
-  "form": "precompiled",                    // "compile-at-boot" | "precompiled"
-  "sources": "background",                  // "eager" | "background" | "lazy" | "none"
-  "entries": ["index.html"],                // which entry pages ship (arc-1 pages)
-  "extras": { "fontAssets": false, "tests": false, "videos": false } }
+buildSystem/profiles/homepage.json               // the FILE's name is the profile's name
+{ "parts": ["core", "meta-tools"],               // "all" | [names] | {"allExcept": [names]}
+  "form": "precompiled",                         // "compile-at-boot" | "precompiled"
+  "entries": ["index.html"] }                    // "all" | [names], from buildProfile's ENTRY_PAGES
 ```
+
+What was sketched and is NOT there: `name` (the filename already says it), `extras.fontAssets` and
+`extras.tests` (both derived — from the shipped entries and from whether the `harness` part ships),
+and `sources` (deferred to phase 2, which is when it gets a consumer). `extras.videos` did not
+arrive either: the video flags are per-invocation opt-ins, and phase 3 decides where they land.
 
 **`[REVISED 2026-07-30]` This schema never covered the largest piece of what `--homepage` meant** —
 the pruning tail at `build_it_please.sh:904` (8 Automator icons, 2 libs, 3 compiled boot helpers, the
@@ -66,9 +99,9 @@ the other 9 parts carries `inHomepage: false`.
 | PR-D1 | Invocation | `./build_it_please.sh --profile homepage` (manifest in `buildSystem/profiles/`). Plain `./build_it_please.sh` = the dev profile (compile-at-boot, all parts, all entries, tests). **`[OWNER RULING 2026-07-30]` `--homepage` DIES IMMEDIATELY in Phase 1 — there is no alias period.** No deletion note, no BACKLOG tail, and R-4 (the never-dying alias) is thereby eliminated rather than mitigated. Every call site changes in the same commit; all of them are local workspace tooling or the tests repo, enumerated in §4 Phase 1. **`[REVISED 2026-07-30]` PR-D1's stated premise — "a hardcoded part list from arc 4" — is FALSE (§2.0(1)): part selection is already declarative in `parts.json`. The invocation decision stands; what the manifest ADDS over today is form + entries + extras + the pruning tail, not part selection. ⚠ `--notests` must be answered here too (§2.1) or it survives as the last flag.** **`[OWNER RULING 2026-07-30]` `--notests` becomes a NAMED PROFILE** (`buildSystem/profiles/dev-notests.json`: every part except `harness`/`macros`, compile-at-boot, all entries). The flag dies with `--homepage`; zero flavour flags survive. Informing the choice: nothing in the workspace ever PASSES `--notests` — `fg` never does, `build_and_smoke.sh` only recognises it to drop the SW leg, `build_and_test.sh` only to reject it — so it is a hand-typed option whose capability is cheap to keep as data, and deleting it outright risked removing something the owner uses by hand. | LOCKED (owner) |
 | PR-D2 | `form: precompiled` | Runs arc 2's external puppeteer driver against the freshly built tree (native entry) and writes `pre-compiled.js`. Per-part precompiled chunks (accumulator tagged by part) are **banked** — v1 profiles load parts in source form (arc-4 P-D6). | LOCKED |
 | PR-D3 | `sources: "lazy"` | New seam: source batches not loaded at boot; first consumer of the Class/Mixin member maps (opening an inspector) triggers load+ingest of the needed part's batch (frame-paced, existing machinery). `"none"` = the lean/appliance profile: no batches shipped at all, inspectors/meta-tools part excluded. **`[REVISED 2026-07-30]` ⚠⚠ it CANNOT just call arc 4's `ensureLoaded` — that path is built for a part whose classes DO NOT EXIST YET, and both of its defining choices are wrong here. `PartsRegistry._ingestPartPromise` (a) filters to `fresh = (name for name in SourceVault.namesForPart partName when not window[name]?)`, and on a precompiled tree EVERY core class is already defined, so `fresh` is empty and it would ingest NOTHING; and (b) its closure passes `justIngestSources = false`, i.e. compile-and-execute, which is precisely what must not happen to a live class (`new Class src` would redefine it underneath running instances — the comment at `PartsRegistry.coffee:160-164` says so). What `sources: lazy` needs is the OTHER mode, the one the precompiled boot already uses: `storeSourceAndPotentiallyCompileItAndExecuteIt name, true` over ALL of the part's names. So the seam is a SECOND ingest mode on the registry (`ensureSourcesIngested`, ingest-only, no freshness filter), not a reuse of the existing one. Cheap, but it is real work and it must not be estimated as "already built".** ⚠⚠ THE COMPILER SHIPS IN EVERY PROFILE — the 2026-07-28 inventory proved it product-critical (FizzyPaint tools are CS source strings; spreadsheet formulas incl. RELOAD of saved sheets; `$src` snapshot records; Fizzytiles LCL). A compiler-less artifact is a non-interactive kiosk and is OUT OF SCOPE. | LOCKED |
-| PR-D4 | Flavour parity gate | Before deleting the `$homepage` branches: build old-`--homepage` and `--profile homepage` from the same tree and assert the output TREES are equivalent (file list + key byte-compares; timestamps/build-info exempt). Only then delete the branches. **`[REVISED 2026-07-30]` THE TOOL ALREADY EXISTS**: arc 4 borrowed this pattern early and wrote `Fizzygum-tests/.scratch/homepage-fingerprint.js` (stored-source NAMES + file list + sizes + SHA-256, build-stamped boot bundles exempt), which is what proved arc 4's partition byte-equivalent (433 sources both sides). It was in a **gitignored** `.scratch/`, so step one of this arc PROMOTED it to `Fizzygum-tests/scripts/build-tree-fingerprint.js` (see Phase −1 as-executed) — a gate cannot live in scratch. ⚠ Arc 4's case law: `buildVersion` embeds the commit SHA in both bundles, so a DIRTY tree changes bundle bytes; compare at a clean tree or keep the bundles exempt. | LOCKED |
+| PR-D4 ✅ | Flavour parity gate (DISCHARGED — see §5 R-1) | Before deleting the `$homepage` branches: build old-`--homepage` and `--profile homepage` from the same tree and assert the output TREES are equivalent (file list + key byte-compares; timestamps/build-info exempt). Only then delete the branches. **`[REVISED 2026-07-30]` THE TOOL ALREADY EXISTS**: arc 4 borrowed this pattern early and wrote `Fizzygum-tests/.scratch/homepage-fingerprint.js` (stored-source NAMES + file list + sizes + SHA-256, build-stamped boot bundles exempt), which is what proved arc 4's partition byte-equivalent (433 sources both sides). It was in a **gitignored** `.scratch/`, so step one of this arc PROMOTED it to `Fizzygum-tests/scripts/build-tree-fingerprint.js` (see Phase −1 as-executed) — a gate cannot live in scratch. ⚠ Arc 4's case law: `buildVersion` embeds the commit SHA in both bundles, so a DIRTY tree changes bundle bytes; compare at a clean tree or keep the bundles exempt. | LOCKED |
 | PR-D5 | Dev-build default form | Stays compile-at-boot (fast inner loop: pre-building adds a headless boot-and-harvest to every 18 s build; worth paying once per shipped artifact, not per iteration). | LOCKED |
-| PR-D6 `[NEW 2026-07-30]` | The pruning tail (§2.2) | **DERIVE it; never declare it. No omit-list, and no omit-list fallback** — owner ruling, three reasons + the escape valve in §2.2.1. Assets attribute to their owning **part** (`parts.json` already carries per-part `vendor`, so an assets key is a precedented extension); `font-assets` derives from the shipped **entry** set; build **intermediates stop being emitted into the tree** rather than being pruned from it; an item that resists attribution is a smell about the item (delete it or re-home it), never a reason for a list. **Acceptance test: at close, nothing in the tail is declared anywhere.** | LOCKED (owner) |
+| PR-D6 ✅ | The pruning tail (§2.2) — **acceptance test MET: nothing in the tail is declared anywhere**, and the schema itself shrank by the same rule | **DERIVE it; never declare it. No omit-list, and no omit-list fallback** — owner ruling, three reasons + the escape valve in §2.2.1. Assets attribute to their owning **part** (`parts.json` already carries per-part `vendor`, so an assets key is a precedented extension); `font-assets` derives from the shipped **entry** set; build **intermediates stop being emitted into the tree** rather than being pruned from it; an item that resists attribution is a smell about the item (delete it or re-home it), never a reason for a list. **Acceptance test: at close, nothing in the tail is declared anywhere.** | LOCKED (owner) |
 
 ## §2 Baseline
 
@@ -106,26 +139,36 @@ registration hook.** A guard is right for INCLUSION; a *lazy* part's entry point
 
 ### §2.1 `[REVISED 2026-07-30]` The real flavour-conditional surface (`build_it_please.sh`, 969 lines)
 
-`$homepage` appears 31 times, but only **10 are branch sites**; the other 21 are comments (many of
-them saying "this gate runs for every flavour incl. --homepage", i.e. deliberately NOT conditional).
-The authored §2 line ranges (`:590-660`, `:748+`, `:811-850`) are all stale. Measured at `10cc6129`:
+**`[RETIRED 2026-07-30]` Every row of this table is GONE** — phase 0+1 replaced all ten branches, and
+the flag itself, with the profile facts named in the right-hand column below. The table is kept as
+the record of what "the homepage" actually meant in shell code, because that inventory is what made
+the replacement checkable: ten branches in, ten derivations out, and a parity gate across the join.
 
-| Line | Condition | What it decides |
-|---|---|---|
-| `:44` | flag parse | `--homepage` → `homepage=true` |
-| `:250` | `$homepage \|\| $notests` | tests symlink: `remove_tests_link` vs `ln -sfn` + manifest generation |
-| `:622` | `! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ]` | the tests-repo-dependent syntax gate |
-| `:645` | (same) | the second such gate |
-| `:658` | `$notests \|\| $homepage` | `BUILDFLAG_LOAD_TESTS = false/true` into the boot bundle |
-| `:713` | `! $homepage` | appends `src/boot/numbertimes.coffee` to the bundle |
-| `:737` | `$homepage` | the Automator `if (false)` sed on `fizzygum-boot.js` |
-| `:780` | `! $homepage` | assembles the **SW** boot bundle (det-trig + SWCanvas + SW3D) |
-| `:858` | `[ -d font-assets ] && ! $homepage` | copies the ~90 MB SWCanvas font assets |
-| `:904` | `$homepage` | **the pruning tail + precompile generation** (§2.2) |
+`$homepage` appeared 31 times, but only **10 were branch sites**; the other 21 were comments (many of
+them saying "this gate runs for every flavour incl. --homepage", i.e. deliberately NOT conditional).
+The authored §2 line ranges (`:590-660`, `:748+`, `:811-850`) were all stale. Measured at `10cc6129`:
+
+| Line | Condition | What it decides | ⇒ NOW DERIVED FROM |
+|---|---|---|---|
+| `:44` | flag parse | `--homepage` → `homepage=true` | `--profile <name>`, parsed by `buildProfile.py` |
+| `:250` | `$homepage \|\| $notests` | tests symlink: `remove_tests_link` vs `ln -sfn` + manifest generation | `PROFILE_SHIPS_TESTS` (the `harness` part) |
+| `:622` | `! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ]` | the tests-repo-dependent syntax gate | same |
+| `:645` | (same) | the second such gate | same |
+| `:658` | `$notests \|\| $homepage` | `BUILDFLAG_LOAD_TESTS = false/true` into the boot bundle | same |
+| `:713` | `! $homepage` | appends `src/boot/numbertimes.coffee` to the bundle | `PROFILE_BOOT_PRELUDE` — fizzytiles' new `bootPrelude` in `parts.json` |
+| `:737` | `$homepage` | the Automator `if (false)` sed on `fizzygum-boot.js` | `! PROFILE_SHIPS_TESTS` (all three `Automator*` classes are harness-owned) |
+| `:780` | `! $homepage` | assembles the **SW** boot bundle (det-trig + SWCanvas + SW3D) | `PROFILE_SHIPS_SWCANVAS_ENTRY` |
+| `:858` | `[ -d font-assets ] && ! $homepage` | copies the ~90 MB SWCanvas font assets | same — and its `else` is the idempotent re-prune, moved up from `:904` |
+| `:904` | `$homepage` | **the pruning tail + precompile generation** (§2.2) | `PROFILE_FORM = precompiled` — and that is ALL that is left of the block: the tail itself was dissolved in phase 0.5 / D1 / D2 |
 
 The other flavour axes the arc must subsume — the authored plan mentions them only in passing:
 - **`--notests`** — 4 sites, all four shared with `$homepage` (`:250`, `:622`, `:645`, `:658`). It is
   a real second flavour, so "profiles" must express it or it becomes the last surviving flag.
+  **`[DONE 2026-07-30]` `profiles/dev-notests.json` = `{"allExcept": ["harness"]}`.** ⚠ MEASURED, and
+  it corrects PR-D1's parenthetical: the old `--notests` tree shipped `macros` — only the part
+  carrying `requiresFlag: "tests"` (harness) dropped out — so "every part except harness/macros"
+  would have been a silent behaviour change. The fingerprint is what settled it (notests baseline:
+  477 sources across 9 parts, `macros` among them), not a reading of `partShipsInThisFlavour`.
 - **`--includeVideoPlayer`** — no shell branch at all; it reaches `build.py` and is consumed purely
   by `requiresFlag: "videoPlayer"` on the `video-player` part. **Already data** (see §2.0).
 - **`--includeVideos` / `--keepPreviousPrivateVideos`** — 2 shell sites (`:222`, `:893`) plus `:191`;
@@ -374,6 +417,91 @@ come BEFORE them.** Two reasons, both learned inside this arc:
   `preCompiled === true` + a whole-world snapshot round-trip) — arc 4 shipped a bug that ONLY it
   could catch. Treat a green `fg gauntlet` as saying nothing about this arc.
 
+  **AS EXECUTED 2026-07-30 — phases 0 and 1 as ONE step. Both flavours moved onto profiles, and
+  `--homepage`/`--notests` are gone; a stale one now fails the build loudly (proven, below).**
+
+  **⚖ THE SCHEMA SHRANK FROM FIVE KEYS TO THREE, by applying PR-D6 to the manifest itself.** §1
+  sketched `{name, parts, form, sources, entries, extras{fontAssets, tests, videos}}`. Written that
+  way, four of those would have been fields that mirror something the build can already compute —
+  the exact species this program exists to kill — so each was tested against "what reads it?":
+  - **`name`** — the FILE's basename already is the name. A field that must agree with the filename
+    is a mirror with two spellings. DROPPED.
+  - **`extras.fontAssets`** — derivable, and PR-D6 §2.2.1 already said so: font assets exist only to
+    serve an SWCanvas page, so the fact is "does any shipped ENTRY render through SWCanvas". DROPPED
+    (this is phase 0.5 step 4, delivered here as planned).
+  - **`extras.tests`** — derivable from the `parts` selection itself: a build is test-capable iff it
+    ships the `harness` part. Keeping the field would have meant TWO mechanisms deciding one thing,
+    with nothing making them agree. DROPPED — and with it `requiresFlag: "tests"` on the harness
+    part, which was the same question asked a second time. (`requiresFlag` survives for exactly one
+    carrier, `videoPlayer`: a per-invocation opt-in is genuinely not a property of an artifact.)
+  - **`sources`** — has NO consumer until phase 2 implements `lazy`/`none`; today `background` is
+    what a precompiled boot does by construction. Writing it now would be arc 4's "don't write API
+    ahead of its callers" — and a field nothing reads is how `FILE_ONLY_FOR_VIDEOPLAYER` happened.
+    DEFERRED to phase 2, to arrive WITH its consumer.
+  ⇒ **a profile is `{parts, form, entries}`** — three facts, and a flavour is a file:
+  `profiles/dev.json` (`"all"` / compile-at-boot / `"all"`), `profiles/homepage.json`
+  (`["core","meta-tools"]` / precompiled / `["index.html"]`), `profiles/dev-notests.json`
+  (`{"allExcept":["harness"]}` / compile-at-boot / `"all"`). Both `parts` and `entries` take the same
+  three spellings — `"all"`, a list, `{"allExcept":[…]}` — so `"all"` means a new part or entry page
+  joins the dev build with no edit anywhere, while the production profile lists its contents
+  explicitly (a shipped artifact should be readable in one place, and should NOT silently grow).
+
+  **⚖ ONE READER, THREE CALLERS.** `buildSystem/buildProfile.py` resolves and VALIDATES the profile;
+  `build.py` imports it (`partShips`, `loadParts`, `ENTRY_PAGES`), and `build_it_please.sh` +
+  `build_and_smoke.sh` + `build_and_test.sh` `eval` its `--shell` output
+  (`PROFILE_NAME/FORM/SHIPS_TESTS/SHIPS_SWCANVAS_ENTRY/BOOT_PRELUDE`). It also owns `--profile`
+  PARSING, so no caller re-implements it. Two consequences worth keeping: `ENTRY_PAGES` moved OUT of
+  build.py into the reader, because the shell needs its SWCanvas column to decide the SW bundle and
+  the font assets; and `build_and_test.sh`'s guard now asks "does this profile ship tests" instead of
+  matching flavour NAMES, so a future tests-stripped profile cannot sail past it.
+  ⚠ `PROFILE_VARS=$(…)` then `eval "$PROFILE_VARS"`, never `eval "$(…)"`: the latter reports the
+  EVAL's exit code, so a failed profile read would leave every variable unset and the build would
+  cheerfully make a nameless flavour. Same masked-exit-code class as the `build.py` call above.
+
+  **⚖ THE LAST TWO FLAVOUR FACTS IN THE SHELL WERE RE-HOMED, not re-conditioned.** Two `$homepage`
+  branches were not derivable from the profile as such, and both turned out to be facts about a PART
+  that the build script happened to know:
+  - `if ! $homepage` appending `src/boot/numbertimes.coffee` — that file extends `Number` for the
+    fizzytiles LiveCodeLang preprocessor, i.e. it exists for ONE part. New `bootPrelude` field in
+    `parts.json` (fourth sibling of `dirs`/`assets`/`vendor`), and the shell now cats whatever the
+    SHIPPING parts contribute. No part name appears in the build script.
+  - the Automator dead-branch `sed` — its real precondition is "no `Automator*` class exists", and
+    all three live in the `harness` part, so it derives from `! $PROFILE_SHIPS_TESTS`. This is the
+    arc's ONE deliberate behaviour change (see the measured deltas below).
+  And the font-assets re-prune moved to the copy site as its `else` branch: `$BUILD_PATH` is shared
+  across flavours and `font-assets/` survives the cleanup section, so both directions of ONE decision
+  now sit together instead of ~50 lines apart, where the second read as belt-and-braces duplication.
+
+  **MEASURED, against the three baselines taken before anything was touched (PR-D4):**
+  | Flavour | Predicted | Measured |
+  |---|---|---|
+  | dev | byte-identical | **identical** — 502 sources, 4598 entries, `[SOURCES]` and `[FILES]` both identical |
+  | homepage | byte-identical (this is the parity gate that licenses deleting the branches) | **identical** — 434 sources, 26 entries |
+  | dev-notests | ONE deliberate delta: both boot bundles shrink, because the Automator strip now runs where `--notests` never did it | **exactly that** — `fizzygum-boot-native-min.js` 16551→16266 and `-sw-min.js` 317496→317211, the same −285 B (it is one boot JS fronted twice); source multiset identical; nothing else moved |
+  The −285 B is worth noting against the old comment's "~12 KB": that figure was for the strip's
+  OTHER application, to `pre-compiled.js`, which carries every class. And because a tests-stripped
+  tree is not otherwise exercised anywhere, the stripped bundles were BOOTED to prove them —
+  `smoke-boot-headless.js` on the dev-notests tree, both entry pages, clean.
+
+  **⚠ A GENERATED ARTIFACT APPEARED IN THE SOURCE TREE, and the obvious fix did not fix it.**
+  `build.py` now IMPORTS a module, so CPython started writing `buildSystem/__pycache__/` — bytecode
+  inside a source tree, in an arc about not doing exactly that. `python3 -B` on this script's own two
+  calls left it appearing anyway: the build reaches python3 by FOUR paths, and the other three are JS
+  gates that `execFileSync('python3', ['buildSystem/build.py', '--list-shippable', …])`. Fixed at the
+  root with an exported `PYTHONDONTWRITEBYTECODE=1` (plus `-B` in the three gates for hand-runs, and a
+  `.gitignore` line as a backstop). ⚖ The lesson is the same one this arc keeps re-learning at a
+  different scale: fix the fact where it is TRUE for every reader, not at the caller you happened to
+  notice — and verify by looking at the tree, not at the change.
+
+  **⚠⚠ FIVE NEW FAILURE PATHS, EACH OBSERVED TO FAIL before being called delivered** (the arc's
+  standing rule — the two gates that were caught lying were both found this way): a retired
+  `--homepage` on the command line ⇒ `unknown argument` + exit 1 (the arg loop's old `*) break`
+  forwarded junk silently); a typo'd profile name ⇒ names the available profiles, exit 1; `--profile`
+  with no value ⇒ exit 1; a profile naming a part that does not exist ⇒ exit 1 (this is the guard
+  that matters at a RENAME: it turns "production silently ships less" into a build failure); a
+  profile with an unknown KEY ⇒ exit 1, because a silently-ignored `"from": "precompiled"` would
+  ship a compile-at-boot tree while claiming otherwise.
+
   **`[NEW 2026-07-30]` Every `--homepage` call site, enumerated — three kinds, only the first MUST
   change:**
   1. **Real build invocations (must become `--profile homepage`):** `fg:502` (`fg_build --homepage`,
@@ -439,12 +567,28 @@ come BEFORE them.** Two reasons, both learned inside this arc:
 - **Phase 3 — consumers:** re-point the single-file-save plan's banked §7.1 at
   `form: precompiled`; video player flags → profile extras/part; document in CLAUDE.md +
   `docs/architecture/` (build/packaging section) — present-tense, no history prose.
+  **`[INHERITED FROM PHASE 0+1, 2026-07-30]` three named leftovers, all deliberate:**
+  1. **The `--homepage` mentions in `src/**/*.coffee` comments** (~12, phrases like "ships in
+     `--homepage`" meaning "ships in production"). NOT swept in phases 0+1 on purpose: editing shipped
+     source text changes the batches and would have destroyed that commit's byte-identical parity
+     proof. Two of them are worse than stale and should be fixed first — `FittingSpecText.coffee:16`
+     ("or `--homepage` will strip it", referring to the whole-file marker mechanism arc 4 DELETED) and
+     `PatchNodeWdgt.coffee:15` ("keep their own exclusion markers"). Also `src/macros/CLAUDE.md`
+     (4 sites, incl. a heading "Build-exclusion contract (`--homepage`)").
+  2. **The video flags** (`--includeVideoPlayer`, `--includeVideos`, `--keepPreviousPrivateVideos`).
+     Left as flags: they are per-invocation opt-ins, and `requiresFlag` now has exactly one carrier
+     (`videoPlayer`) which is honest about that. If phase 3 moves them into profiles, `requiresFlag`
+     disappears entirely — that is the shape of its retirement, and it should be decided on whether
+     "with the video player" is a property of an ARTIFACT or of an invocation.
+  3. **`smoke-boot-headless.js --homepage` was renamed to `--production`** (kind 2 in the call-site
+     list below, "optional"). Done in-arc after all: a gate whose CLI names a deleted flavour sends
+     its next reader looking for a flag, which is the ghost-reference species the doctrine kills.
 
 ## §5 Risks
 
 | # | Risk | Mitigation |
 |---|---|---|
-| R-1 | Parity drift while rewriting flavour logic | PR-D4 tree-equivalence gate BEFORE deleting branches |
+| ~~R-1~~ | ~~Parity drift while rewriting flavour logic~~ | **DISCHARGED 2026-07-30.** Three baselines taken before anything was touched; dev and homepage came out byte-identical and dev-notests differed in exactly the one predicted way. ⚠ The two constraints on HOW a baseline may be used (Phase −1) both bit in practice and are worth restating: compare at the SAME commit AND the same cleanliness — these three comparisons were all made on a tree that stayed dirty by one docs file throughout, at `f7364e95`, with no `src/` edit between them (which is also why the `src/**.coffee` comments that still say "--homepage" were deliberately NOT swept in this commit: editing shipped source text would have destroyed the parity proof). |
 | R-2 | `sources: lazy` first-inspect jank or race | reuse frame-paced ingest; inspector open awaits the ensure promise (same pattern as part launch) |
 | R-3 | Lean profile ships something that needs sources at runtime | inventory says only inspectors/class-editing/sourceEdits-replay do; lean excludes meta-tools and REFUSES class-level `sourceEdits` snapshots with a clear error ⟨design the error path⟩. **`[REVISED 2026-07-30]` ⚠ THERE IS NO `meta-tools` PART.** `src/meta/` (`Class`, `Mixin`, `ClassInspectorWdgt`, `InspectorWdgt`, `ConsoleWdgt`) is in **core**'s `dirs`, and `Class`/`Mixin` are load-bearing for the whole compile bootstrap — they can never leave core. So "lean excludes the meta-tools part" is not a config change: it first requires SPLITTING the inspector widgets out of `src/meta/` into a new part, leaving the meta-system behind. Arc 4 listed the same item as a phase-3 candidate and banked it for exactly this reason. **`[OWNER RULING 2026-07-30]` lean STAYS in scope and the part gets created IN-ARC — new Phase 1.5**, which also measured the edge surface at just **2 live core lines** (the 26-file grep is almost all comments; `check-part-edges.js` strips them). |
 | ~~R-4~~ | ~~Long-tail alias (`--homepage`) never dies~~ | **ELIMINATED `[OWNER RULING 2026-07-30]`** — there is no alias: the flag dies in Phase 1 (PR-D1). A risk removed by design beats a risk mitigated by a checklist. |
@@ -477,6 +621,26 @@ is cwd-correct and gates on real exit codes. Long ops go to the background with 
 | phase close | `fg gauntlet` (~5 min, 14 legs) | full behavioural gate — but see the ⚠ on Phase 1: it never builds a production tree |
 | **the arc's real gate** | `fg homepage` | the ONLY production-tree gate: boot + no-SW-payload + `preCompiled === true` + snapshot round-trip |
 | PR-D4 | `node scripts/build-tree-fingerprint.js compare <baseline> <candidate>` | tree equivalence BEFORE deleting any `$homepage` branch |
+
+**`[AS RUN 2026-07-30]` The parity workflow, concretely** — worth copying for phase 2, which changes
+what a tree contains and therefore needs the same treatment:
+1. BEFORE touching anything, build and fingerprint EVERY flavour the change can reach — for phases
+   0+1 that was three (`fg build`, `fg build --profile homepage`, `fg build --profile dev-notests`),
+   each into `Fizzygum-tests/.scratch/base-<flavour>.txt`, then restore the dev build. ~2 min, and it
+   is the only moment at which the baseline is takeable: after the first edit it is gone.
+2. State each flavour's PREDICTED delta in words before running the comparison. "Identical" and
+   "these two files, this much smaller, nothing else" are both fine; "let's see" is not — a
+   comparison you have not predicted cannot surprise you.
+3. Compare, and treat any unpredicted line as a finding, not as noise. (Arc 5 has now been bitten
+   twice here: a 15-byte boot-bundle delta that was the dirty-tree stamp, and a comparer that
+   reported a planted change as "identical".)
+4. Keep baselines in `.scratch/` (gitignored) and re-take them per comparison — a committed baseline
+   is stale at the next source commit and then actively misleading.
+
+**`[STANDING 2026-07-30]` Any new failure path must be OBSERVED to fail.** Not reasoned about:
+planted, run, and seen to exit non-zero, then restored. This arc caught two gates that could not
+fail — `build_it_please.sh` ignoring `build.py`'s exit code for years, and the parity comparer keying
+sources by a non-unique name — and both were found by insisting on this and nothing else.
 | per profile (Phase 2) | `smoke-boot-headless.js` with per-profile forbidden-file assertions | a profile that ships something it declared absent must fail loudly |
 
 Zero reference churn is the expectation throughout: this arc repackages, it does not change

@@ -1,0 +1,23 @@
+{
+  "//": [
+    "dev -- the DEFAULT profile: a plain `./build_it_please.sh` builds this one.",
+    "",
+    "Everything, compiled in the browser, all three entry pages. It is what the inner loop and the",
+    "whole SystemTest suite run on: the harness part ships, so js/tests is linked in and",
+    "BUILDFLAG_LOAD_TESTS is true, and the SWCanvas pages ship, so the SW boot bundle and the",
+    "font-assets/ come with them.",
+    "",
+    "form stays compile-at-boot deliberately (arc 5 PR-D5): pre-building would add a headless",
+    "boot-and-harvest to every ~18 s build, which is worth paying once per shipped artifact and not",
+    "once per iteration.",
+    "",
+    "`\"parts\": \"all\"` means every part the partition declares -- a new part joins the dev build",
+    "with no edit here, which is the point of the spelling. One caveat: a part that declares",
+    "`requiresFlag` additionally needs that flag on the command line, so video-player ships only",
+    "with --includeVideoPlayer (see buildProfile.py's partShips)."
+  ],
+
+  "parts": "all",
+  "form": "compile-at-boot",
+  "entries": "all"
+}

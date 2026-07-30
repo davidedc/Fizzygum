@@ -5,9 +5,9 @@
 // an inline baseline per kind that may only fall, at 0 = a hard rule.
 //
 // WHAT A WHOLE-FILE MARKER WAS. A comment on (usually) a source file's first line:
-//   # this file is excluded from the fizzygum homepage build     -> dropped from --homepage
-//   # this file is only needed for Macros                        -> dropped from --homepage
-//   # this file is only needed for VideoPlayer                   -> dropped from --homepage
+//   # this file is excluded from the fizzygum homepage build     -> dropped from the production build
+//   # this file is only needed for Macros                        -> dropped from the production build
+//   # this file is only needed for VideoPlayer                   -> dropped from the production build
 // build.py matched all three with regexes and skipped the file. It was the LAST survivor of the
 // "exclude code by pattern-matching comments in source text" family.
 //
@@ -21,9 +21,11 @@
 // in the build matching nothing at all, for who knows how long, invisible precisely because
 // nothing gathered these facts in one place.
 //
-// WHAT REPLACED IT. buildSystem/parts.json: named parts, each owning directories, each declaring
-// `inHomepage`. One file, whole partition visible at once. A part's absence is absorbed at call
-// sites by the class-existence guard idiom (`if DemoMenus?`), which check-part-edges.js enforces.
+// WHAT REPLACED IT. buildSystem/parts.json: named parts, each owning the directories, assets and
+// payloads that come and go together -- the whole partition visible at once -- and (arc 5)
+// buildSystem/profiles/*.json, which name the parts each FLAVOUR ships. A part's absence is
+// absorbed at call sites by the class-existence guard idiom (`if DemoMenus?`), which
+// check-part-edges.js enforces.
 //
 // ⛔ DO NOT introduce a replacement marker syntax. Arc 3 learned this the hard way with regions and
 // the lesson generalises: invisible text-level exclusion is the wrong tool, not a tool with the
@@ -99,8 +101,8 @@ for (const k of KINDS) {
     console.error(`\n[whole-file-markers] FAIL -- '${k.id}': ${n} > baseline ${k.baseline}.`);
     console.error(`  marker: ${k.marker}`);
     console.error(`  This mechanism is RETIRED (arc 4): a flavour excludes named PARTS, not files,`);
-    console.error(`  and the partition lives in buildSystem/parts.json. Put the file in a part whose`);
-    console.error(`  'inHomepage' (or requiresFlag) already says what you are trying to say, and make`);
+    console.error(`  and the partition lives in buildSystem/parts.json. Put the file in a part that the`);
+    console.error(`  profiles which should not have it do not name (buildSystem/profiles/*.json), and make`);
     console.error(`  sure its call sites cope with the part's absence via 'if TheClass?'.`);
     console.error(`  ⛔ Do NOT invent a replacement marker syntax.`);
     for (const f of found[k.id]) console.error(`    ${f}`);

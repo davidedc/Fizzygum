@@ -73,7 +73,7 @@ function isAllowlisted(relPath) {
 // ---- 1. the SHIPPED set, straight from build.py (single source of truth) ----
 let shippedSet;
 try {
-  const out = execFileSync('python3', ['buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
+  const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
     { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   shippedSet = new Set(out.split('\n').map(function (s) { return s.trim(); }).filter(Boolean));
 } catch (e) {

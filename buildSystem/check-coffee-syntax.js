@@ -112,7 +112,7 @@ try {
 // ---- 3. get the shipped-source file list (single source of truth = build.py) ----
 let files;
 try {
-  const out = execFileSync('python3', ['buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
+  const out = execFileSync('python3', ['-B', 'buildSystem/build.py', '--list-shippable', ...process.argv.slice(2)],
     { cwd: REPO, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
   files = out.split('\n').map(s => s.trim()).filter(Boolean);
 } catch (e) {

@@ -1,18 +1,26 @@
 #!/bin/bash
 
+# A BUILD FLAVOUR IS A PROFILE, NOT A FLAG (arc 5). buildSystem/profiles/<name>.json declares three
+# facts -- which parts ship, which code form, which entry pages -- and buildSystem/buildProfile.py
+# DERIVES from them everything this script used to decide by asking "is this the homepage?": the
+# tests link, BUILDFLAG_LOAD_TESTS, which build gates run, the boot-bundle prelude, whether the
+# SWCanvas bundle and its ~90 MB of font assets are built, and whether the pre-compile driver runs.
+# The --homepage and --notests flags are GONE; so is the per-flavour list of files to delete again at
+# the end of a build. `--profile homepage` and `--profile dev-notests` replace them.
+#
 # Examples:
-#   ./build_it_please --homepage
-#     leaves out all tests and removes experimental parts of the code
-#   ./build_it_please --notests
-#     removes tests, leaves in experimental parts of the code
+#   ./build_it_please.sh
+#     the dev profile (the default): every part, compiled in the browser, all three entry pages
+#   ./build_it_please.sh --profile homepage
+#     the production artifact: pre-compiled, native-only, no test machinery
+#   ./build_it_please.sh --profile dev-notests
+#     the dev world with the test machinery left out
 #   ./build_it_please.sh --includeVideoPlayer --includeVideos
 #     also includes the video player and the videos
 #   ./build_it_please.sh --includeVideoPlayer --includeVideos; cp -R /Volumes/Seagate\ 5tb/Fizzygum-videos-private ../Fizzygum-builds/latest/videos
 #     as before, and copies the private videos
 #   ./build_it_please.sh --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos
 #     as before but instead of copying the private videos, keep the existing ones (as these can take a long time to copy otherwise)
-#   ./build_it_please
-#     leaves in tests and experimental parts of the code
 
 # SELF-LOCATE: always run from this script's own directory (Fizzygum/), regardless of the caller's cwd.
 # The Bash cwd often resets to the umbrella Fizzygum-all/ between calls, and every path below is relative
@@ -29,9 +37,9 @@ args=( "$@" )
 
 # parse the arguments ###################################################################
 
-# we'll put the switches in these variables:
-homepage=false
-notests=false
+# we'll put the switches in these variables. NOTE what is NOT here: the build FLAVOUR. That is
+# --profile, parsed by buildSystem/buildProfile.py (see the profile block further down) so that this
+# script, build_and_smoke.sh and build.py cannot disagree about which profile is being built.
 includeVideoPlayer=false
 includeVideos=false
 keepPreviousPrivateVideos=false
@@ -41,8 +49,16 @@ noSyntaxCheck=false
 # see https://stackoverflow.com/questions/7069682/how-to-get-arguments-with-flags-in-bash
 while test $# -gt 0; do
   case "$1" in
-    --homepage)
-      homepage='true'
+    --profile)
+      # The NAME is buildProfile.py's business (it re-reads "${args[@]}"); here we only step over
+      # both tokens so the rest of the loop sees the next real flag.
+      if [ -z "$2" ]; then
+        echo "build_it_please.sh: --profile needs a name, e.g. --profile homepage" 1>&2
+        exit 1
+      fi
+      shift 2
+      ;;
+    --profile=*)
       shift
       ;;
     --includeVideoPlayer)
@@ -57,10 +73,6 @@ while test $# -gt 0; do
       keepPreviousPrivateVideos='true'
       shift
       ;;
-    --notests)
-      notests='true'
-      shift
-      ;;
     --noSyntaxCheck)
       # consumed here only; it is ALSO a no-op in build.py, so the forwarded
       # "${args[@]}" (which still contains it) does not trip build.py's argparse.
@@ -68,7 +80,14 @@ while test $# -gt 0; do
       shift
       ;;
     *)
-      break
+      # Unknown arguments used to `break` out of the loop and be forwarded silently, so a typo (or
+      # the retired --homepage / --notests) reached build.py's argparse -- or nothing at all -- and
+      # the build made something other than what was asked for. Say so instead.
+      echo "build_it_please.sh: unknown argument '$1'." 1>&2
+      echo "  A build flavour is a PROFILE: --profile <name>, one of $(ls buildSystem/profiles/*.json 2>/dev/null | xargs -n1 basename 2>/dev/null | sed 's/\.json$//' | tr '\n' ' ')" 1>&2
+      echo "  (--homepage and --notests were retired: use --profile homepage / --profile dev-notests.)" 1>&2
+      echo "  Other options: --includeVideoPlayer --includeVideos --keepPreviousPrivateVideos --noSyntaxCheck" 1>&2
+      exit 1
       ;;
   esac
 done
@@ -124,6 +143,30 @@ fi
 
 echo coffeescript version -------------
 coffee --version
+
+# ---- THE FLAVOUR: resolve the profile ------------------------------------------------------------
+# buildSystem/buildProfile.py loads buildSystem/profiles/<name>.json (default: dev) and hands back
+# the derived facts this script needs, as shell assignments:
+#   PROFILE_NAME PROFILE_FORM PROFILE_SHIPS_TESTS PROFILE_SHIPS_SWCANVAS_ENTRY PROFILE_BOOT_PRELUDE
+# It gets the WHOLE arg list because it owns --profile parsing for every caller.
+# ⚠ SUBSTITUTE FIRST, THEN eval. `eval "$(cmd)"` reports the EVAL's exit code, not the command's, so
+# a profile that failed to load would leave every PROFILE_* unset and this script would cheerfully
+# build a nameless flavour -- the same masked-exit-code class as the build.py call below, which went
+# unchecked for years (found 2026-07-30).
+# NO __pycache__ IN THE SOURCE TREE. build.py now IMPORTS buildProfile.py, so CPython would write
+# cached bytecode into buildSystem/ -- a generated artifact inside a source tree, which is the thing
+# this whole program is about not doing. Exported (not just -B on the calls below) because the build
+# reaches python3 by four paths: this script twice, and three JS gates that shell out to
+# `build.py --list-shippable`; -B on our own two calls left the gates writing it anyway (measured).
+export PYTHONDONTWRITEBYTECODE=1
+PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "${args[@]}")
+if [ "$?" != "0" ]; then
+  tput bel
+  echo "!!!!!!!!!!! error: could not read the build profile -- aborting build." 1>&2
+  exit 1
+fi
+eval "$PROFILE_VARS"
+echo "profile: $PROFILE_NAME — form $PROFILE_FORM, tests $PROFILE_SHIPS_TESTS, SWCanvas entry $PROFILE_SHIPS_SWCANVAS_ENTRY"
 
 # --- SWCanvas backend: ensure the vendored engine bundle is present ----------
 # Mirrors SWCanvas's own BitmapText auto-fetch gate. The bulk SWCanvas bytes are
@@ -246,9 +289,10 @@ fi
 # umbrella can be moved/renamed), and from $BUILD_PATH/js that is three levels up to
 # Fizzygum-all/ then down into Fizzygum-tests/tests. Everything loads over file:// by
 # <script> injection, which follows the link happily on both engines the suite drives.
-# A --homepage / --notests build ships NO js/tests entry at all (see remove_tests_link above).
-if $homepage || $notests ; then
-  # No js/tests entry AT ALL in a tests-stripped tree. A --homepage build's pre-compile pass
+# A build whose profile does not ship the harness part ships NO js/tests entry at all (see
+# remove_tests_link above).
+if ! $PROFILE_SHIPS_TESTS ; then
+  # No js/tests entry AT ALL in a tests-stripped tree. A precompiled profile's pre-compile pass
   # boots ?generatePreCompiled, and that boot loads no test machinery whatsoever (the load
   # condition is plain BUILDFLAG_LOAD_TESTS — see globalFunctions.coffee), so it needs nothing here.
   remove_tests_link
@@ -269,16 +313,17 @@ fi
 # note that this file won't contain much code.
 # All the code of the morphs is put in other .coffee files
 # which just contain the coffeescript source as the text!
-# the first parameter "--homepage" specifies whether this
-# is a build for the homepage, in which case a lot of
-# legacy code and test-supporting code is left out.
+# The flavour reaches build.py as --profile <name> inside "${args[@]}" (it resolves the profile
+# itself, through the same buildSystem/buildProfile.py this script read above), and that decides
+# which parts' sources it wraps, which assets and vendor payloads it writes, and which entry pages
+# it generates.
 # ⚠ CHECK $? — this script has no `set -e`, and for years this call had NO check at all, so the
 # single most important step of the build (wrapping every source into the SourceVault batches,
 # writing the parts manifest, generating the entry pages, copying each part's assets) could fail
 # outright and the build still printed "done!!!" and exited 0. Found 2026-07-30 by planting a
 # deliberately missing part asset: build.py correctly printed its ERROR and exited 1, and the build
 # reported OK. Same masked-failure class as the umbrella-directory check at the top of this file.
-python3 ./buildSystem/build.py "${args[@]}"
+python3 -B ./buildSystem/build.py "${args[@]}"
 if [ "$?" != "0" ]; then
   tput bel
   echo "!!!!!!!!!!! error: buildSystem/build.py failed -- aborting build." 1>&2
@@ -373,7 +418,7 @@ fi
 # dead code like the addRaw / fullRawMoveCenterTo deletions. A baseline of known-dead methods
 # is allowlisted in buildSystem/dead-method-allowlist.txt (a to-triage list); the gate FAILS
 # only on a NEW dead method not in that list. (buildSystem/check-dead-methods.js -- self-skips
-# if the sibling Fizzygum-tests repo is absent, e.g. a --homepage build; same --noSyntaxCheck
+# if the sibling Fizzygum-tests repo is absent, e.g. a production build; same --noSyntaxCheck
 # escape hatch and explicit $? check as the layering gate above.)
 if ! $noSyntaxCheck ; then
   echo "checking for dead (never-referenced) methods ..."
@@ -414,7 +459,7 @@ fi
 # BELOW. Seven are seeded (2026-07-15, docs/archive/lint-generic-rules-carryover-plan.md Phase 2): debugger 36,
 # undefined 89, null 10, wall-clock 19, timer 3, Math.random 5, instanceof 105 -- the determinism and
 # nil-convention rules that were manual-only until then. Same --noSyntaxCheck escape hatch and explicit
-# $? check as the gates above; scans src/ only, so it runs for every build flavour (incl. --homepage).
+# $? check as the gates above; scans src/ only, so it runs for every build flavour (incl. production).
 if ! $noSyntaxCheck ; then
   echo "checking for stinks (smells ratcheted to a baseline) ..."
   node ./buildSystem/check-stinks.js
@@ -446,7 +491,7 @@ fi
 
 # --- build-time HYGIENE gates (ported from the retired SourceVault console tool, P2-T3 follow-up) ------
 # Four cheap line-scanner lints, each with the same --noSyntaxCheck escape hatch + explicit $? abort as
-# the gates above; all scan src/ only, so they run for every build flavour (incl. --homepage):
+# the gates above; all scan src/ only, so they run for every build flavour (incl. production):
 #   * check-trailing-whitespace.js — no trailing whitespace after content on a line.
 #   * check-scheduled-checks.js     — no OVERDUE `# CHECK AFTER <date>` reminder (a build-dated time bomb).
 #   * check-stringified-scripts.js  — no `new ScriptWdgt """..."""` stringified-code literal in core.
@@ -528,7 +573,7 @@ fi
 # settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS one built in-flush (inside a callback). Genuine
 # exceptions carry a per-constructor `# constructor-build-exempt: <reason>` marker (no central allowlist).
 # (buildSystem/check-constructors-build.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
-# gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+# gates above; scans src/ only, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking constructors do not build children inline ..."
   node ./buildSystem/check-constructors-build.js
@@ -549,7 +594,7 @@ fi
 # gate FAILS only when a count EXCEEDS its baseline; tighten the baseline to lock gains. Per-site escape
 # hatch for [S]: mark the CALLER `# public-call-sanctioned: <why>`. Measurement engine:
 # buildSystem/census-public-private-calls.js (also a standalone census CLI). [U] self-skips without the
-# sibling Fizzygum-tests repo (e.g. --homepage), like the dead-method gate. (buildSystem/
+# sibling Fizzygum-tests repo (e.g. a production build), like the dead-method gate. (buildSystem/
 # check-call-separation.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the gates above.)
 if ! $noSyntaxCheck ; then
   echo "checking public/private call separation ..."
@@ -569,7 +614,7 @@ fi
 # widgets). A _reLayout that positions children from the newBoundsForThisLayout PARAM (or positions none)
 # passes trivially. Genuine exceptions carry a per-method `# relayout-bounds-first-exempt: <reason>` marker
 # (no central allowlist). (buildSystem/check-relayout-bounds-first.js -- same --noSyntaxCheck escape hatch +
-# explicit $? abort as the gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+# explicit $? abort as the gates above; scans src/ only, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking _reLayout applies own bounds before reading own geometry ..."
   node ./buildSystem/check-relayout-bounds-first.js
@@ -589,7 +634,7 @@ fi
 # a stale/"ghost" region (the 2026-07 D2 edit/view-toggle ghosts, Fizzygum a88a1673). Scoped to _reLayoutSelf
 # (the covering-repaint owner); genuine exceptions carry a `# relayout-repaint-exempt: <reason>` marker.
 # (buildSystem/check-relayout-repaints.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
-# gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+# gates above; scans src/ only, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking tracking-suppressing _reLayoutSelf issues its covering fullChanged ([INV-1]) ..."
   node ./buildSystem/check-relayout-repaints.js
@@ -610,7 +655,7 @@ fi
 # (`screenPointToMyPlane` on the same line — the drag-scroll idiom). Genuine exceptions carry a
 # per-method `# raw-screen-pointer-sanctioned: <reason>` marker. (buildSystem/
 # check-raw-pointer-reads.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
-# gates above; scans src/ only, so it runs for every build flavour incl. --homepage.)
+# gates above; scans src/ only, so it runs for every build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking pointer handlers consume the plane-mapped pointer (raw-pointer gate) ..."
   node ./buildSystem/check-raw-pointer-reads.js
@@ -628,9 +673,9 @@ fi
 # corrupted/missing screenshots, not an obvious error). This runs `node --check` over every
 # tests/*.js (see ../Fizzygum-tests/scripts/check-tests-syntax.js) to catch that — and any JS
 # syntax error — BEFORE the build copies them in. Same --noSyntaxCheck escape hatch and explicit
-# $? check as the CoffeeScript gate above; skipped under --homepage/--notests (no tests shipped)
-# or when the sibling Fizzygum-tests repo is absent.
-if ! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ] ; then
+# $? check as the CoffeeScript gate above; skipped when the profile ships no test machinery, or
+# when the sibling Fizzygum-tests repo is absent.
+if ! $noSyntaxCheck && $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ] ; then
   echo "checking JS syntax of all shipped test sources ..."
   node ../Fizzygum-tests/scripts/check-tests-syntax.js
   if [ "$?" != "0" ]; then
@@ -652,8 +697,8 @@ fi
 # recapture is a bad trade. It runs as the gauntlet's `refs` leg, or by hand via
 # `npm run check-refs:pixels` in Fizzygum-tests. (It needs no PNG optimizer either — recompress
 # --check-only never picks one; the old note claiming otherwise was wrong.) Same --noSyntaxCheck
-# escape hatch / $? check / homepage-notests-sibling guard as the gates above.
-if ! $noSyntaxCheck && ! $homepage && ! $notests && [ -d ../Fizzygum-tests ] ; then
+# escape hatch / $? check / ships-tests + sibling guard as the gates above.
+if ! $noSyntaxCheck && $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ] ; then
   echo "checking SWCanvas reference images for strays/duplicates ..."
   node ../Fizzygum-tests/scripts/check-refs.js --quiet
   if [ "$?" != "0" ]; then
@@ -666,10 +711,13 @@ fi
 
 touch $SCRATCH_PATH/fizzygum-boot.coffee
 
-if $notests || $homepage ; then
-  printf "BUILDFLAG_LOAD_TESTS = false\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-else
+# The one runtime flag that says "this build has test machinery in it" -- which is precisely
+# whether the harness part ships. It used to be its own pair of flavour flags, i.e. the same fact
+# spelled twice, with nothing making the two agree.
+if $PROFILE_SHIPS_TESTS ; then
   printf "BUILDFLAG_LOAD_TESTS = true\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
+else
+  printf "BUILDFLAG_LOAD_TESTS = false\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
 
@@ -721,10 +769,16 @@ cat src/boot/extensions/HTMLCanvasElement-extensions.coffee >> $SCRATCH_PATH/fiz
 
 # extensions -----------------------------------------------------
 
-if ! $homepage ; then
+# Boot-bundle pieces contributed by the parts that SHIP: prototype extensions that belong in the
+# bundle (they must exist before any class runs) but exist only for one part -- today that is
+# src/boot/numbertimes.coffee, which extends Number for the fizzytiles LiveCodeLang preprocessor and
+# is declared in fizzytiles' "bootPrelude" (buildSystem/parts.json). It used to be appended under
+# `if ! $homepage`: a fact about a part, hard-coded in the build script, in the one place where
+# nothing would ever check it against the part.
+for eachPreludePiece in "${PROFILE_BOOT_PRELUDE[@]}" ; do
   printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-  cat src/boot/numbertimes.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
-fi
+  cat "$eachPreludePiece" >> $SCRATCH_PATH/fizzygum-boot.coffee
+done
 
 # Stamp the build with its SOURCE COMMIT, never the wall clock. `buildVersion` is a human
 # affordance only — nothing reads it in code; you type it in the browser console to see which build
@@ -750,12 +804,12 @@ echo "... done compiling boot file"
 
 echo "minifying boot file..."
 
-if $homepage ; then
+if ! $PROFILE_SHIPS_TESTS ; then
   # There are a few
   #    "if Automator? ...", "if AutomatorRecorder? ...", "if AutomatorPlayer? ..."
   #    "if Automator? and ...", "if AutomatorRecorder? and ...", "if AutomatorPlayer? and ..."
-  # sections in the boot code. In the homepage version we don't use any of those three classes,
-  # and the code in those sections is completely dead,
+  # sections in the boot code. Every Automator* class lives in the HARNESS part, so when that part
+  # does not ship none of them exist, the code in those sections is completely dead,
   # so we can search/replace those checks with "if (false", so that terser can just eliminate
   # both the checks and the dead-code sections.
   #
@@ -792,7 +846,7 @@ fi
 # trailing newline; the "\n;\n" separators terminate it and defend against ASI between each unit.
 BOOT_MIN=$BUILD_PATH/js/fizzygum-boot-min.js
 
-if ! $homepage ; then
+if $PROFILE_SHIPS_SWCANVAS_ENTRY ; then
   echo "assembling the SW boot bundle (deterministic-trig + SWCanvas + SW3D + boot)..."
   # DETERMINISM: install engine-independent sin/cos/tan/atan2/asin/acos (a pure-arithmetic fdlibm
   # port — only +,-,*,/ and sqrt, all IEEE-754-exact) over Math.* BEFORE anything renders, so
@@ -865,14 +919,24 @@ rm $BOOT_MIN
 
 # Copy the vendored SWCanvas font assets (metrics + positioning bundles, and the wrapped atlas .js
 # if vendored) so the SWCanvas text backend can load them at runtime over file://. These are font
-# DATA, never embedded in a bundle. Only the SW pages can use them, so a --homepage tree (native
-# only) does not carry them — that is ~90 MB not deployed.
+# DATA, never embedded in a bundle. ONLY an SWCanvas entry page can use them, so a native-only tree
+# does not carry them — that is ~90 MB not deployed.
 # Populated by scripts/vendor-swcanvas-fonts.sh.
-if [ -d font-assets ] && ! $homepage ; then
-  echo "copying SWCanvas font assets..."
-  mkdir -p $BUILD_PATH/font-assets
-  cp -R font-assets/* $BUILD_PATH/font-assets/
-  echo "... done copying SWCanvas font assets"
+#
+# ⚠ BOTH DIRECTIONS LIVE HERE, and the else branch is not redundant: $BUILD_PATH is shared across
+# flavours and font-assets/ SURVIVES the cleanup section (unlike js/, icons/ and *.html, which are
+# wiped), so a native-only build following a full one would otherwise inherit ~90 MB of font data no
+# page in it can load. That re-prune used to sit ~50 lines below, inside the --homepage block, where
+# it read as belt-and-braces duplication rather than as the other half of one decision.
+if $PROFILE_SHIPS_SWCANVAS_ENTRY ; then
+  if [ -d font-assets ] ; then
+    echo "copying SWCanvas font assets..."
+    mkdir -p $BUILD_PATH/font-assets
+    cp -R font-assets/* $BUILD_PATH/font-assets/
+    echo "... done copying SWCanvas font assets"
+  fi
+else
+  rm -rf $BUILD_PATH/font-assets
 fi
 
 # (the entry pages themselves are written by build.py from src/index.html — see its ENTRY_PAGES)
@@ -920,12 +984,13 @@ echo "cleanup unneeded files"
 rm -rdf $SCRATCH_PATH
 echo "...done"
 
-if $homepage ; then
-  # $BUILD_PATH is shared across build flavours and font-assets survives the cleanup section
-  # (unlike js/, icons/ and *.html, which are wiped), so a homepage build following a dev build
-  # would otherwise inherit ~90 MB of SWCanvas font data that no page here can load.
-  rm -rf $BUILD_PATH/font-assets
-
+# ---- form: precompiled ---------------------------------------------------------------------------
+# What is left of what used to be the `if $homepage` block, and it is now exactly one question: does
+# this profile ship a PRE-COMPILED image instead of compiling the classes in the browser? Everything
+# else that lived in here was a per-flavour prune list, and every item of it has been re-homed --
+# assets and vendor payloads to their owning part, the intermediates to the scratch dir, the
+# font-assets re-prune to the copy decision above (arc 5 PR-D6: derive the tail, never declare it).
+if [ "$PROFILE_FORM" = "precompiled" ] ; then
   # (There used to be a prune of the per-class source files here — build.py wrote one js file per
   # class next to the batches and nothing ever loaded them, so this line deleted ~500 of them again
   # for the production tree. Arc 4 stopped emitting them, so there is nothing left to prune: the
@@ -949,8 +1014,8 @@ if $homepage ; then
   # There are many
   #    "if Automator? ...", "if AutomatorRecorder? ...", "if AutomatorPlayer? ..."
   #    "if Automator? and ...", "if AutomatorRecorder? and ...", "if AutomatorPlayer? and ..."
-  # sections in the code. In the homepage version we don't use any of those three classes,
-  # and the code in those sections is completely dead,
+  # sections in the code. A precompiled artifact is only built for a profile without the harness
+  # part, so none of those three classes exists, the code in those sections is completely dead,
   # so we can search/replace those checks with "if (false", so that terser can just eliminate
   # both the checks and the dead-code sections.
   # At the moment this was put in place, this line saves around 12kBs

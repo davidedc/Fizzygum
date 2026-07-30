@@ -18,21 +18,29 @@
 # always operate from the Fizzygum/ repo root (build_it_please.sh assumes this)
 cd "$(dirname "$0")" || exit 2
 
-# A --homepage tree is native-only by construction (no SW bundle, no index-sw.html), so its
-# smoke runs in --homepage mode: native leg only, PLUS the production-tree assertions
-# (booted from the pre-compiled image, no SWCanvas-only payload left in the tree).
-# A --notests tree still has both pages but no test harness, so it just drops the SW leg.
+# WHICH SMOKE THIS TREE GETS is derived from the profile being built, by the same reader the build
+# uses (buildSystem/buildProfile.py) — so this script cannot disagree with the build about what is
+# in the tree it is about to boot. It used to pattern-match --homepage / --notests out of "$*",
+# which meant a third place that had to know what a flavour contains.
+#   form precompiled  -> the production assertions (booted from the pre-compiled image, and no
+#                        SWCanvas-only payload left in the tree). Implies the native leg only.
+#   no SWCanvas entry -> native leg only: there is no index-sw.html to boot.
+# ⚠ substitute, check, THEN eval — see the same note in build_it_please.sh.
+PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "$@")
+if [ "$?" != "0" ]; then
+  echo "build_and_smoke: could not read the build profile -- aborting." 1>&2
+  exit 1
+fi
+eval "$PROFILE_VARS"
+
 SMOKE_ARGS=""
-case " $* " in
-  *" --homepage "*)
-    echo "(homepage build detected -> boot smoke runs native-only + production-tree assertions)"
-    SMOKE_ARGS="--homepage"
-    ;;
-  *" --notests "*)
-    echo "(tests-stripped build detected -> boot smoke runs native-only)"
-    SMOKE_ARGS="--native-only"
-    ;;
-esac
+if [ "$PROFILE_FORM" = "precompiled" ]; then
+  echo "(profile $PROFILE_NAME is precompiled -> boot smoke runs native-only + production-tree assertions)"
+  SMOKE_ARGS="--production"
+elif ! $PROFILE_SHIPS_SWCANVAS_ENTRY ; then
+  echo "(profile $PROFILE_NAME ships no SWCanvas entry page -> boot smoke runs native-only)"
+  SMOKE_ARGS="--native-only"
+fi
 
 echo "==> building (with CoffeeScript syntax gate) ..."
 ./build_it_please.sh "$@"

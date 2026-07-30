@@ -10,9 +10,9 @@
 # build_it_please.sh = bare build.
 #
 # A FULL build is REQUIRED — the headless suite needs the test harness, and the
-# js/tests link to the reference assets, that only a full build puts in place — so
-# --homepage / --notests are rejected here. Other args are forwarded to
-# build_it_please.sh (e.g. --noSyntaxCheck).
+# js/tests link to the reference assets, that only a build shipping the harness part
+# puts in place — so a profile without it is rejected here. Other args are forwarded
+# to build_it_please.sh (e.g. --noSyntaxCheck).
 # PREREQUISITE: install Puppeteer once: cd ../Fizzygum-tests && npm i
 #
 # Default browser is Chrome (Puppeteer). Set FIZZYGUM_TEST_BROWSER=webkit to instead run
@@ -24,12 +24,21 @@
 # always operate from the Fizzygum/ repo root (build_it_please.sh assumes this)
 cd "$(dirname "$0")" || exit 2
 
-case " $* " in
-  *" --homepage "*|*" --notests "*)
-    echo "build_and_test: a tests-stripped build can't run the SystemTest suite -- drop --homepage/--notests (use build_and_smoke.sh for a boot-only check of those)." 1>&2
-    exit 2
-    ;;
-esac
+# Reject a tests-stripped profile by asking the profile itself, not by matching flavour NAMES: the
+# question is "does this build have the test machinery in it", and any future profile that drops the
+# harness part must be caught too. (The old guard matched --homepage/--notests literally, so a new
+# tests-stripped profile would have sailed past it and handed the suite runner a world with no
+# Automator and no js/tests link — a confusing failure a long way from its cause.)
+PROFILE_VARS=$(python3 -B ./buildSystem/buildProfile.py --shell "$@")
+if [ "$?" != "0" ]; then
+  echo "build_and_test: could not read the build profile -- aborting." 1>&2
+  exit 2
+fi
+eval "$PROFILE_VARS"
+if ! $PROFILE_SHIPS_TESTS ; then
+  echo "build_and_test: profile '$PROFILE_NAME' ships no test machinery, so it can't run the SystemTest suite -- use the default (dev) profile, or build_and_smoke.sh for a boot-only check of this one." 1>&2
+  exit 2
+fi
 
 echo "==> building (with CoffeeScript syntax gate) ..."
 ./build_it_please.sh "$@"

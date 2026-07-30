@@ -10,24 +10,38 @@
     "directory that nobody remembered to add there shipped as NOTHING -- the build stayed green and",
     "the only symptom was a runtime '<NewClass> is not defined'.",
     "",
-    "WHAT REPLACED WHAT (arc 4 phase 1). 'inHomepage: false' is what the whole-file marker",
+    "WHAT REPLACED WHAT (arc 4 phase 1). Part membership is what the whole-file marker",
     "'# this file is excluded from the fizzygum homepage build' used to say, one file at a time, in",
     "45 files, read by three regexes in build.py. Those are all gone. Exclusion is now a property of",
-    "a NAMED SLICE, stated once, here, where you can see the whole partition at a glance -- rather",
-    "than an invisible property of a file you only discover by opening it.",
+    "a NAMED SLICE, stated once -- rather than an invisible property of a file you only discover by",
+    "opening it.",
     "",
-    "TWO SEPARATE PROPERTIES (do not conflate them -- arc 4 reframe R6):",
-    "  inHomepage  = INCLUSION: does this part ship in a production build at all?",
-    "  eager       = TIMING:    is it loaded at boot, or on demand? (default true = at boot)",
-    "A marker could only ever express the first. Keeping them separate is what let phase 1 change",
-    "inclusion with provably zero runtime change, leaving timing to phase 2.",
+    "WHERE INCLUSION LIVES (arc 5): NOT here. A part is in an artifact because the PROFILE being",
+    "built names it -- buildSystem/profiles/<name>.json, read by buildSystem/buildProfile.py. This",
+    "file is the partition (what the parts ARE and what they own); a profile is the flavour (which of",
+    "them ship). The 'inHomepage' boolean that used to sit on each part below was inclusion for the",
+    "ONE hard-coded flavour, and it is gone: 'which parts does production have?' is answered by",
+    "reading profiles/homepage.json, not by grepping eleven booleans.",
+    "",
+    "INCLUSION AND TIMING ARE DIFFERENT PROPERTIES (do not conflate them -- arc 4 reframe R6):",
+    "inclusion is a profile's business (above); `eager` here is TIMING -- loaded at boot, or on",
+    "demand? A marker could only ever express the first. Keeping them separate is what let arc 4",
+    "change inclusion with provably zero runtime change, leaving timing to its next phase.",
     "",
     "FIELDS",
     "  dirs         directories whose *.coffee files belong to this part. Not recursive: list each.",
-    "  inHomepage   default true. false = absent from a --homepage build.",
-    "  eager        default true. false = loaded on demand (phase 2+; needs a launch site that",
-    "               awaits world.parts.ensureLoaded, NOT a bare `if TheClass?` guard).",
-    "  requiresFlag optional build flag this part additionally needs ('tests', 'videoPlayer').",
+    "  eager        default true. false = loaded on demand (needs a launch site that awaits",
+    "               world.parts.ensureLoaded, NOT a bare `if TheClass?` guard).",
+    "  requiresFlag optional build flag this part additionally needs, on TOP of being selected by the",
+    "               profile. One carrier left ('videoPlayer'): a per-invocation opt-in rather than a",
+    "               property of an artifact. ('tests' is gone -- whether the test machinery ships is",
+    "               now just whether a profile selects the harness part, so it is not asked twice.)",
+    "  bootPrelude  optional src/boot/*.coffee pieces concatenated into the boot bundle when this part",
+    "               ships. Not part sources (those are classes, wrapped as text and compiled in the",
+    "               browser): these are prototype extensions the bundle needs before any class runs.",
+    "               numbertimes.coffee is the one carrier -- it extends Number for the fizzytiles LCL",
+    "               preprocessor, and it used to be appended under `if ! $homepage`, i.e. the build",
+    "               script knew a fact about a part.",
     "  vendor       optional non-source payloads that must arrive with the part, each",
     "               { out: <path relative to the build root>, concat: [<pieces relative to",
     "               Fizzygum/>] }. build.py ASSEMBLES each one (pieces joined by a newline-semicolon",
@@ -45,13 +59,17 @@
     "               what ships follows from that. The three pointer icons and FileSaver/JSZip used",
     "               to be copied unconditionally and then deleted again by the --homepage block.",
     "",
+    "So a part can own four kinds of thing -- sources (dirs), files (assets), assembled payloads",
+    "(vendor) and boot-bundle pieces (bootPrelude) -- and ALL FOUR appear or vanish together with the",
+    "part. That is the whole mechanism by which a flavour stops shipping something.",
+    "",
     "A part's absence must be a NO-OP at every call site, via the class-existence guard idiom",
     "(`if DemoMenus?`, `world.pinouts?.reset()`, `WorldTestSupport.installOnto WorldWdgt if ...?`).",
     "buildSystem/check-part-edges.js enforces that: an unguarded core reference to a part-owned",
     "class fails the build.",
     "",
-    "Arc 5 replaces the single 'inHomepage' boolean with a profile matrix. Until then this file is",
-    "the only place the partition is written down. Plan: docs/archive/build-arc-4-dynamic-parts-plan.md"
+    "Plans: docs/archive/build-arc-4-dynamic-parts-plan.md (the partition),",
+    "docs/plans/build-arc-5-packaging-profiles-plan.md (the profiles that select from it)."
   ],
 
   "parts": {
@@ -88,16 +106,16 @@
     },
 
     "meta-tools": {
-      "//": "The in-world INSPECTORS: InspectorWdgt, ClassInspectorWdgt (its subclass) and ConsoleWdgt. Split out of src/meta so that a lean/appliance profile can leave them out -- src/meta itself CANNOT become a part, because Class and Mixin live there and are the compile bootstrap. ⚠ This is the FIRST non-core part that SHIPS IN PRODUCTION (inHomepage is true, unlike every other part): the homepage has always carried the inspectors and this split must not change that. Only a profile that explicitly drops it (arc 5's `lean`, sources: none) does. Core reaches it through exactly two guarded sites, Widget.spawnInspector and Widget.createConsole.",
-      "dirs": ["src/meta-tools"],
-      "inHomepage": true
+      "//": "The in-world INSPECTORS: InspectorWdgt, ClassInspectorWdgt (its subclass) and ConsoleWdgt. Split out of src/meta so that a lean/appliance profile can leave them out -- src/meta itself CANNOT become a part, because Class and Mixin live there and are the compile bootstrap. ⚠ This is the ONE non-core part PRODUCTION SHIPS: profiles/homepage.json names it, and no other profile-shipped artifact names any other part. The homepage has always carried the inspectors and the split out of core must not change that; a `lean` profile (arc 5 phase 2, sources: none) is what will drop it. Core reaches it through exactly two guarded sites, Widget.spawnInspector and Widget.createConsole.",
+      "dirs": ["src/meta-tools"]
     },
 
     "fizzytiles": {
       "//": "The Fizzytiles ('fridge magnets') engine: the tile widgets, the LiveCodeLang compiler/preprocessor/runner, and the SW3D output pane. THE LAZY PART -- the largest self-contained app in the tree, with a vendored 3D payload, reached from exactly two entry points. Its LAUNCHER is deliberately a separate, EAGER part (see fizzytiles-launcher) so the desktop icon exists before the engine does. 'eager: false' means index.html does not carry it until someone launches it; the harness and index-sw.html override that (FIZZYGUM_EAGER_ALL_PARTS) because a part arriving mid-test would be frame-paced and therefore cycle-count-dependent.",
       "dirs": ["src/fizzytiles"],
-      "inHomepage": false,
       "eager": false,
+      "//bootPrelude": "Number::times / ::timesWithVariable, which the LiveCodeLang preprocessor emits for `3 times with i box`. It extends a built-in prototype, so it belongs in the boot bundle rather than among the part's classes -- but it exists ONLY for this part, and used to be appended by build_it_please.sh under `if ! $homepage`: a fact about a part, kept in the build script.",
+      "bootPrelude": ["src/boot/numbertimes.coffee"],
       "vendor": [
         {
           "//": "SWCanvas's subtractive 3D-CORE dist target (Surface + DepthBuffer + Texture3D + Triangle3DOps, ~14 KB vs ~263 KB for the full engine, pixel-identical on the 3D path) plus the minified SW3D userland engine. ⚠ The SW pages must NOT load this: their boot bundle carries the FULL SWCanvas as their renderer, so injecting the subtractive build over it would replace a superset with a subset. PartsRegistry's vendor step is idempotent and skips it when window.SW3D and SWCanvas.Core.Triangle3DOps are already present.",
@@ -109,48 +127,40 @@
 
     "fizzytiles-launcher": {
       "//": "The eager sliver of fizzytiles: the desktop launcher declaration plus its icon. It CANNOT be lazy -- WorldWdgt.createDesktop builds the desktop opener by instantiating FridgeMagnetsApp (and drawing FridgeMagnetsIconWdgt), and WellKnownObjects.resolveApp re-resolves snapshot references through the same class. An icon the user cannot see is an app they cannot launch. This is arc 4's reframe R6 in one part: INCLUSION and EAGERNESS are different properties, and 'the launcher is always here, the engine arrives when asked for' needs both.",
-      "dirs": ["src/fizzytiles-launcher"],
-      "inHomepage": false
+      "dirs": ["src/fizzytiles-launcher"]
     },
 
     "demos": {
       "//": "The demo/parts-bin catalogue (DemoMenus, reached as `demoMenus`) and the sample widgets it shows off: the bouncer, the pen, the pointer. Arc 3 extracted DemoMenus out of MenusHelper for exactly this; its own header already said 'arc 4 turns that into part membership'.",
-      "dirs": ["src/demos"],
-      "inHomepage": false
+      "dirs": ["src/demos"]
     },
 
     "dev-tools": {
       "//": "In-world dev scaffolding: the widget factory (world.widgetFactory), the pinout debug overlay (world.pinouts, an arc-3 extraction), and the layout-editing chrome (spacers + the element adder/droplet) reached from the test menu. Every one of them is already an optional collaborator behind an existence guard.",
-      "dirs": ["src/dev-tools"],
-      "inHomepage": false
+      "dirs": ["src/dev-tools"]
     },
 
     "dev-icons": {
       "//": "The icon gallery the demo menus show: chapter markers, information, raster-pic, save, under-carpet. Moved out of the 159-file src/icons, which is otherwise all product.",
-      "dirs": ["src/icons-dev"],
-      "inHomepage": false
+      "dirs": ["src/icons-dev"]
     },
 
     "patch-programming-experimental": {
       "//": "The unfinished half of patch programming: fanout, diffing, regex-substitution nodes. src/patch-programming was a MIXED directory (PatchNodeWdgt and CalculatingPatchNodeWdgt ship, these six do not) and P-D2 resolves a mixed directory by MOVING files, never by tagging them.",
-      "dirs": ["src/patch-programming-experimental"],
-      "inHomepage": false
+      "dirs": ["src/patch-programming-experimental"]
     },
 
     "macros": {
       "//": "The macro engine + toolkit (world.macroToolkit): the authoring path for SystemTests. Test machinery that lives in src/ because the macros drive the product through its own API. Was excluded by the FILE_ONLY_FOR_MACROS marker regex; now by part.",
-      "dirs": ["src/macros"],
-      "inHomepage": false
+      "dirs": ["src/macros"]
     },
 
     "harness": {
-      "//": "The Automator + test-harness sources, which live in the SIBLING TESTS REPO. Excluded by a build FLAG, never by a marker -- the precedent that exclusion-by-list already worked before this arc. Its five *TestSupport classes install themselves onto core prototypes at boot behind `if XTestSupport?`.",
+      "//": "The Automator + test-harness sources, which live in the SIBLING TESTS REPO. Its five *TestSupport classes install themselves onto core prototypes at boot behind `if XTestSupport?`. ⚠ THIS PART IS WHAT MAKES A BUILD TEST-CAPABLE, so five derived facts key off its presence (buildProfile.py): the js/tests symlink, BUILDFLAG_LOAD_TESTS, the two tests-repo build gates, and -- inverted -- the strip of the dead `if Automator?` branches, since Automator/AutomatorLoader/AutomatorPlayer are all in here. It used to carry `requiresFlag: \"tests\"` on top of a flavour test, which asked the same question twice.",
       "dirs": [
         "../Fizzygum-tests/Automator-and-test-harness-src",
         "../Fizzygum-tests/Automator-and-test-harness-src/AutomatorEventCommands"
       ],
-      "inHomepage": false,
-      "requiresFlag": "tests",
       "//assets": "The three pointer icons SystemTestsControlPanelUpdater sets as <img src> in the harness control panel (DOM, not canvas -- so no screenshot gate can see them go missing; the parts fingerprint is what checks them), plus FileSaver + JSZip, which globalFunctions only loads when BUILDFLAG_LOAD_TESTS is set and which product FileSaving.coffee explicitly does not depend on.",
       "assets": [
         ["auxiliary files/additional-icons/xPointerImage.png", "icons"],
@@ -164,7 +174,6 @@
     "video-player": {
       "//": "Already flag-gated before this arc; its whole-file marker was redundant belt-and-braces.",
       "dirs": ["src/video-player"],
-      "inHomepage": false,
       "requiresFlag": "videoPlayer"
     }
   }

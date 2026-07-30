@@ -24,7 +24,7 @@
  *       to call from the in-world Object Inspector / scripting) goes in
  *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom).
  *       NEEDS the sibling Fizzygum-tests repo for a sound reference set: SKIPS (never false-fails)
- *       when it is absent (e.g. a --homepage build), exactly like check-dead-methods.js.
+ *       when it is absent (e.g. a production build), exactly like check-dead-methods.js.
  *
  * Relationship to the other gates: [A]/[G] (check-layering) ban the DIRECT low-level→settling
  * calls; [S] extends the ban to transitively-settling and effectful callees — closing the one-hop

@@ -32,15 +32,16 @@ import ntpath
 
 import argparse
 
+# THE FLAVOUR, as data. buildProfile.py reads buildSystem/profiles/<name>.json and derives from it
+# everything this build used to decide by asking "is this the homepage?" -- read its header first.
+# It also owns the two tables we share with build_it_please.sh: the partition (parts.json, via
+# loadParts) and the entry pages, whose SWCanvas column the shell needs to know whether to assemble
+# the SW boot bundle. One table, two readers.
+import buildProfile
+from buildProfile import ENTRY_PAGES, loadParts, partShips
+
 # GLOBALS
 FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee'
-
-# THE PARTITION. buildSystem/parts.json names every part and the directories it owns; read its
-# header comment before changing anything here. It replaced a hand-maintained sequence of
-# glob("src/<dir>/*.coffee") calls in this file (whose omissions shipped a directory as nothing)
-# AND the three whole-file exclusion-marker regexes (which said, invisibly and one file at a time,
-# what a part now says once).
-PARTS_MANIFEST_FILE = "buildSystem/parts.json"
 
 
 INPUT_HTML_FILE = "src/index.html"
@@ -52,33 +53,8 @@ OUTPUT_HTML_DIRECTORY = "../Fizzygum-builds/latest"
 # window.FIZZYGUM_USE_SWCANVAS while the bundle executes.
 BOOT_SCRIPTS_PLACEHOLDER = "<!--FIZZYGUM_BOOT_SCRIPTS-->"
 
-# The entry pages, as (filename, renders through SWCanvas?).
-#
-# The rendering backend is a BUILD-TIME property of the page: each page presets
-# the flag and loads the bundle carrying exactly the engine it can use, so no
-# artifact ships an engine it will never call and there is no runtime switch.
-#   index.html                      native 2D + the SWCanvas 3D core (for SW3D)
-#   worldWithSystemTestHarness.html full SWCanvas — the deterministic test substrate
-#   index-sw.html                   full SWCanvas, no test harness (interactive SW)
-# The test harness is NOT switched on here: WorldWdgt/globalFunctions detect it
-# from the page's NAME, so these three differ only in the substituted lines.
-# The third column is EAGER_ALL_PARTS: does this page load every part at boot, even the ones
-# buildSystem/parts.json marks `"eager": false`?
-#   index.html                      NO  -- the interactive product: a lazy part arrives on demand.
-#   worldWithSystemTestHarness.html YES -- a part arriving MID-TEST would be frame-paced, hence
-#                                   cycle-count-dependent, which is precisely the nondeterminism
-#                                   class ../Fizzygum-tests/DETERMINISM.md exists about. The suite's
-#                                   world must stay exactly what it was, so the harness takes
-#                                   everything up front. The lazy path has its own test instead.
-#   index-sw.html                   YES -- same world as the harness minus the harness, kept
-#                                   comparable to it.
-# This is a page PRESET, like the backend above: chosen at build time, never a runtime switch, and
-# not test-only code living in the product.
-ENTRY_PAGES = [
-    ("index.html", False, False),
-    ("worldWithSystemTestHarness.html", True, True),
-    ("index-sw.html", True, True),
-]
+# (ENTRY_PAGES — the pages, their backend preset and their eagerness preset — is imported from
+# buildProfile above, which is where a profile's `entries` list is resolved against it.)
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
@@ -114,8 +90,11 @@ IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 # we just need to detect a switch
 # see https://stackoverflow.com/a/8259080
 parser = argparse.ArgumentParser()
-parser.add_argument('--homepage', action='store_true')
-parser.add_argument('--notests', action='store_true')
+# THE FLAVOUR: a profile name, resolved by buildProfile against buildSystem/profiles/<name>.json.
+# It replaced the --homepage and --notests flags (arc 5): a flavour is data, and adding one is
+# adding a file rather than threading a boolean through two scripts. A stale `--homepage` on a
+# command line now fails here, loudly, instead of silently building something else.
+parser.add_argument('--profile', default=buildProfile.DEFAULT_PROFILE_NAME)
 parser.add_argument('--includeVideoPlayer', action='store_true')
 # doing nothing with these yet, but need to add them to the parser otherwise we get an error
 parser.add_argument('--includeVideos', action='store_true')
@@ -158,12 +137,6 @@ def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas, eagerAllParts):
         f.write(content.replace(BOOT_SCRIPTS_PLACEHOLDER, bootScripts))
 
 
-def loadParts():
-    """The partition, from buildSystem/parts.json. Read that file's header before changing this."""
-    with codecs.open(PARTS_MANIFEST_FILE, "r", "utf-8") as f:
-        return json.load(f)["parts"]
-
-
 def partitionFiles(parts):
     """Every .coffee file the partition claims, in ANY flavour, as (orderedFilenames, partOfFile).
 
@@ -188,23 +161,21 @@ def partitionFiles(parts):
                 if filename in partOfFile:
                     print("ERROR: %s is claimed by two parts: %s and %s. Every directory belongs to "
                           "exactly one part -- see %s." %
-                          (filename, partOfFile[filename], partName, PARTS_MANIFEST_FILE))
+                          (filename, partOfFile[filename], partName,
+                           buildProfile.PARTS_MANIFEST_FILE))
                     exit(1)
                 partOfFile[filename] = partName
     return (sorted(partOfFile.keys()), partOfFile)
 
 
-def partShipsInThisFlavour(partName, part, args):
+def partShipsInThisFlavour(partName, part, profile, args):
     """Is this part included in the flavour being built? This is what the whole-file exclusion
-    markers used to answer, one file at a time and invisibly."""
-    if args.homepage and not part.get("inHomepage", True):
-        return False
-    flag = part.get("requiresFlag")
-    if flag == "tests" and (args.homepage or args.notests):
-        return False
-    if flag == "videoPlayer" and not args.includeVideoPlayer:
-        return False
-    return True
+    markers used to answer, one file at a time and invisibly.
+
+    The RULE itself lives in buildProfile.partShips, because build_it_please.sh asks the same
+    question (through buildProfile's --shell mode) to decide what else goes into the tree -- and one
+    question answered in two places is how a flavour ends up shipping half a part."""
+    return partShips(partName, part, profile, args.includeVideoPlayer)
 
 
 def requirePartFile(partName, sourcePath, kind):
@@ -217,7 +188,7 @@ def requirePartFile(partName, sourcePath, kind):
         exit(1)
 
 
-def copyPartAssets(parts, args):
+def copyPartAssets(parts, profile, args):
     """Materialise the non-source files owned by every part that SHIPS in this flavour: plain assets
     (copied) and vendor payloads (assembled from their pieces).
 
@@ -228,7 +199,7 @@ def copyPartAssets(parts, args):
     for partName, part in parts.items():
         if partName.startswith("//"):
             continue
-        if not partShipsInThisFlavour(partName, part, args):
+        if not partShipsInThisFlavour(partName, part, profile, args):
             continue
 
         for entry in part.get("assets", []):
@@ -256,15 +227,17 @@ def copyPartAssets(parts, args):
     print("copied %d part asset(s), assembled %d vendor payload(s)" % (copiedAssets, builtPayloads))
 
 
-def shippedFiles(parts, partOfFile, orderedFilenames, args):
+def shippedFiles(parts, partOfFile, orderedFilenames, profile, args):
     """The subset of the partition this flavour actually ships, in emission order."""
     excluded = set(name for name, part in parts.items()
-                   if not name.startswith("//") and not partShipsInThisFlavour(name, part, args))
+                   if not name.startswith("//")
+                   and not partShipsInThisFlavour(name, part, profile, args))
     return [f for f in orderedFilenames if partOfFile[f] not in excluded]
 
 
 def main():
 
+    profile = buildProfile.resolve(args.profile)
     parts = loadParts()
     allFilenames, partOfFile = partitionFiles(parts)
 
@@ -277,7 +250,7 @@ def main():
             print(filename)
         return
 
-    filenames = shippedFiles(parts, partOfFile, allFilenames, args)
+    filenames = shippedFiles(parts, partOfFile, allFilenames, profile, args)
 
     # so here we need to take a .coffee file and generate a js that
     # , when run, hands its contents as a string to the SourceVault.
@@ -460,14 +433,13 @@ def main():
     # three pointer icons and FileSaver/JSZip were copied into every tree and then deleted again from
     # the production one. Owning them here means what a flavour ships FOLLOWS from which parts ship
     # (arc 5 PR-D6: derive the tail, never declare it).
-    copyPartAssets(parts, args)
+    copyPartAssets(parts, profile, args)
 
-    # 5) the entry pages, one per backend flavour (see ENTRY_PAGES). A --homepage
-    # build is native-only — no SWCanvas bundle is assembled for it and its font
-    # assets are not shipped — so it gets index.html alone.
-    for (pageFileName, useSWCanvas, eagerAllParts) in ENTRY_PAGES:
-        if args.homepage and useSWCanvas:
-            continue
+    # 5) the entry pages this profile ships (its `entries`, resolved against ENTRY_PAGES). The
+    # production profile ships index.html alone, which is what makes it native-only: no SWCanvas
+    # boot bundle is assembled for it and no font assets travel with it — both of those follow, in
+    # build_it_please.sh, from "does any shipped entry render through SWCanvas".
+    for (pageFileName, useSWCanvas, eagerAllParts) in profile.entries:
         generateEntryPage(
                 INPUT_HTML_FILE,
                 os.path.join(OUTPUT_HTML_DIRECTORY, pageFileName),

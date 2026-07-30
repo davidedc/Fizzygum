@@ -8,5 +8,8 @@ src/.idea/
 vendor/swcanvas/
 # Vendored SWCanvas font atlases (downloaded from the release pin at build time).
 font-assets/
+# CPython bytecode cache: build.py imports buildSystem/buildProfile.py. The build itself runs
+# python3 -B so this never appears; this covers a hand-run of either script.
+buildSystem/__pycache__/
 # find_duplicated_code.sh (jscpd) output — regenerated on every run.
 duplication-report/
