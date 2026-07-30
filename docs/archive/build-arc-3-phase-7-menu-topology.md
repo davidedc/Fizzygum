@@ -1,6 +1,8 @@
 # Arc 3 · Phase 7 — the ONE menu topology (owner-ratified 2026-07-29)
 
-**STATUS: PHASE 7 COMPLETE, ALL GATES GREEN (2026-07-30) — awaiting owner commit approval.**
+**STATUS: COMPLETE — COMMITTED & PUSHED 2026-07-30 (Fizzygum `7c8f49a3`, tests `4bc119caf`).
+⚠ The §0 "STATE ON DISK" section below is a mid-execution handoff snapshot (it predates the
+final commit) — kept verbatim as history; the commits above are the truth.**
 Final pass, over both owner follow-ups (scrollbar spacing; keep BOTH duplication verbs):
 `fg build` OK · `fg recapture --auto` ✅ COMPLETE both rounds (18 tests recaptured at dpr 1 AND 2) ·
 `fg gauntlet` EXIT=0, all 13 legs, zero load-flake retries, capstone clean across 269 tests ·

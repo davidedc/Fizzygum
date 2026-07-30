@@ -1,6 +1,13 @@
 # Arc 3 · World harmonization — one world design; retire the `»>>` region-marker mechanism entirely
 
-**STATUS: PLAN ONLY — AUTHORED 2026-07-28.** Written to be executed COLD by an LLM/engineer
+**STATUS: EXECUTED IN FULL — COMPLETE 2026-07-30.** Phases 1–4: Fizzygum `faea99a6` + tests
+`8da2d08ba`; phases 5–7: Fizzygum `7c8f49a3` + tests `4bc119caf` (menu topology per the
+owner-ratified sub-plan `build-arc-3-phase-7-menu-topology.md`, archived alongside). Region
+markers 63 → 0, all three build.py region regexes DELETED, `check-region-markers.js` holds
+every kind at baseline 0 as a hard rule. 18 tests recaptured (dpr 1+2), suite 268 → 269,
+gauntlet 13/13 + homepage green. Case law: `archive/INDEX.md`.
+
+Original status: PLAN ONLY — AUTHORED 2026-07-28. Written to be executed COLD by an LLM/engineer
 with ZERO prior context. Facts verified against the working tree 2026-07-28 (Fizzygum
 `master @ ae45e0ff`, 268 SystemTests) including a full census of every marker site (§2.3–§2.4
 — embedded; the census IS this plan's fact base). Line numbers drift; quoted symbols and
