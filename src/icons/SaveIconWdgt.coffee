@@ -1,6 +1,0 @@
-# this file is excluded from the fizzygum homepage build
-
-class SaveIconWdgt extends IconWdgt
-
-  createAppearance: -> new SaveIconAppearance @
-

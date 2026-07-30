@@ -50,12 +50,22 @@ waitNextJSEventLoopCycle = ->
     , 1
 
 
-createClosureForLoadingCoffeescriptSourceBatch = (batchNumber) ->
+createClosureForLoadingCoffeescriptSourceBatch = (batchBaseName) ->
   # this only creates the closure that will be run (later)
-  # if srcLoadCompileDebugWrites then console.log "creating closure for batch #{batchNumber}"
-  -> loadJSFilePromise "js/coffeescript-sources/sources_batch_" + batchNumber + ".js"
+  -> loadJSFilePromise "js/coffeescript-sources/" + batchBaseName + ".js"
 
-  
+# The batch files to load at boot: every EAGER part's, in a stable part order. A part marked
+# `eager: false` in buildSystem/parts.json is skipped here and fetched on demand instead -- which
+# is the whole point of the partition. `window.FIZZYGUM_PARTS` is the build-written manifest
+# (delete_me/partsManifest.coffee, concatenated into this boot bundle, so it is already here).
+eagerSourceBatchNames = ->
+  names = []
+  for partName in Object.keys(window.FIZZYGUM_PARTS).sort()
+    eachPart = window.FIZZYGUM_PARTS[partName]
+    continue unless eachPart.eager
+    names = names.concat eachPart.batches
+  names
+
 loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # "Head" of the promise. We'll chain to it the loading of all the
   # batches of sources.
@@ -63,7 +73,7 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # of the chain will wait for its turn.
   # I.e. all the batches are loaded one at a time to avoid requesting too many
   # concurrent file/network request. Not only that, but in fact they are loaded
-  # in number sequence, which is not strictly needed because we detect the
+  # in sequence, which is not strictly needed because we detect the
   # dependencies later on anyways.
   promiseChain = Promise.resolve()
 
@@ -71,18 +81,16 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # being recompiled even though those are two of the few things that
   # we run from the start in the skeletal system.
   # It doesn't seem to cause problems though?
-  if srcLoadCompileDebugWrites then console.log "number of source batches: #{numberOfSourceBatches}"
-  for i in [0...numberOfSourceBatches]
-    # give a change to the main thread to breathe
+  batchNames = eagerSourceBatchNames()
+  if srcLoadCompileDebugWrites then console.log "eager source batches: #{batchNames.length}"
+  for eachBatchName in batchNames
+    # give a chance to the main thread to breathe
     promiseChain = promiseChain.then -> waitNextTurn()
-    # if srcLoadCompileDebugWrites then console.log "building promise chain for batch #{i}"
-    # This immediately creates the closure that will be run (later)
-    # and chains it to the promise chain.
-    # This is needed because it's the only ways to pass the
-    # correct value of i in the loadJSFilePromise function, because otherwise the value of i
-    # would be the one at the end of the loop, which is wrong.
-    promiseChain = promiseChain.then createClosureForLoadingCoffeescriptSourceBatch i
-  
+    # This immediately creates the closure that will be run (later) and chains it to the promise
+    # chain. It has to be a closure over the name: without one, every step would see the loop
+    # variable's FINAL value.
+    promiseChain = promiseChain.then createClosureForLoadingCoffeescriptSourceBatch eachBatchName
+
   return promiseChain
 
 compileFGCode = (codeSource, bare) ->

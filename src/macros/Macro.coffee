@@ -1,4 +1,3 @@
-# this file is only needed for Macros
 # IMMUTABLE
 
 # We deliberately avoid cute symbol/shortcut sugar to make macros more readable,

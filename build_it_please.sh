@@ -486,6 +486,27 @@ if ! $noSyntaxCheck ; then
     exit 1
   fi
   echo "... source-vault check OK"
+
+  echo "checking whole-file exclusion markers ..."
+  node ./buildSystem/check-whole-file-markers.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: whole-file-markers gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... whole-file-markers check OK"
+
+  # The partition's one hard discipline: core must not name a part-owned class unguarded, or the
+  # artifact that lacks the part throws when the user clicks. NOT derivable from the boot dependency
+  # scanner (it cannot see `new X` in a method body) -- see the gate's header.
+  echo "checking core->part edges are guarded ..."
+  node ./buildSystem/check-part-edges.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: part-edges gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... part-edges check OK"
 fi
 
 # --- build-time CONSTRUCTOR-BUILD gate ------------------------------------------------
@@ -651,8 +672,12 @@ echo "compiling boot file..."
 # time the batches would already have needed it.
 cat src/boot/source-vault.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
+# The parts manifest (window.FIZZYGUM_PARTS: per part, its batch files, eagerness and vendor
+# payloads) goes IN the bundle rather than being fetched: the batch loader needs it immediately.
+# build.py writes it from buildSystem/parts.json. It replaced numberOfSourceBatches.coffee, which
+# only ever said "there are N batches called sources_batch_0..N-1".
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
-cat $SCRATCH_PATH/numberOfSourceBatches.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+cat $SCRATCH_PATH/partsManifest.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat src/boot/globalFunctions.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee

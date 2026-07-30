@@ -1,4 +1,3 @@
-# this file is excluded from the fizzygum homepage build
 class FridgeMagnetsWdgt extends Widget
 
   # panes:

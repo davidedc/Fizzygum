@@ -24,6 +24,7 @@ This script performs only some of the steps of the build:
 from datetime import datetime
 from glob import glob
 import codecs
+import json
 import re
 import os
 import ntpath
@@ -33,10 +34,16 @@ import argparse
 # GLOBALS
 FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee'
 
+# THE PARTITION. buildSystem/parts.json names every part and the directories it owns; read its
+# header comment before changing anything here. It replaced a hand-maintained sequence of
+# glob("src/<dir>/*.coffee") calls in this file (whose omissions shipped a directory as nothing)
+# AND the three whole-file exclusion-marker regexes (which said, invisibly and one file at a time,
+# what a part now says once).
+PARTS_MANIFEST_FILE = "buildSystem/parts.json"
+
 
 INPUT_HTML_FILE = "src/index.html"
 OUTPUT_HTML_DIRECTORY = "../Fizzygum-builds/latest"
-DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE = "../Fizzygum-tests/Automator-and-test-harness-src"
 
 # The single placeholder in src/index.html that lets ONE page source serve every
 # entry page. It is replaced by the backend preset plus the matching boot-bundle
@@ -66,28 +73,30 @@ ENTRY_PAGES = [
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 
-# regexps to exclude entire FILES from a build flavour.
+# HOW A FLAVOUR EXCLUDES CODE: it drops whole PARTS, named in buildSystem/parts.json. There is no
+# marker of any kind in a source file, and no regex here that reads one. Two mechanisms were retired
+# to get here, both of which worked by cutting text the build could not see the meaning of:
 #
-# There used to be a second, per-REGION mechanism alongside these: a `# »>> this part is …`
-# comment opened a span that ended at the next comment carrying `«`, and the whole span was
-# cut out of the source TEXT by regex. Arc 3 retired it. It had accreted for eight+ years
-# without an audit, and the audit found it stripping PRODUCT code out of the homepage —
-# core sizing and `_reLayout` machinery, class constants that silently became `nil`, public
-# API — because nothing about a comment tells you whether what follows is dev scaffolding
-# or the layout engine. Its 63 sites were RE-HOMED instead: promoted where they were product,
-# moved to ../Fizzygum-tests/Automator-and-test-harness-src/ where they were test machinery,
-# or extracted into their own collaborator class (PinoutsOverlay, DemoMenus). ALL THREE region
-# regexes are now DELETED: a flavour can only drop WHOLE FILES, and a call site copes with an
-# absent file through an existence guard (`if DemoMenus?`, `world.pinouts?.…`).
-# `buildSystem/check-region-markers.js` holds every kind at zero — a hard rule now, not a
-# ratchet — so nothing can reintroduce the mechanism. Deliberately there is NO replacement
-# marker syntax: the lesson was that invisible, text-level stripping is the wrong tool, not
-# that its spelling was wrong.
-FILE_NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
-
-FILE_ONLY_FOR_MACROS = re.compile(r"# this file is only needed for Macros")
-
-FILE_ONLY_FOR_VIDEOPLAYER = re.compile(r"# this file is only needed for VideoPlayer")
+#   1. per-REGION stripping (arc 3): a `# »>> this part is …` comment opened a span ending at the
+#      next comment carrying `«`, and the span was cut out of the source TEXT. It had accreted for
+#      eight+ years without an audit; the audit found it stripping PRODUCT code out of the homepage
+#      -- core sizing and `_reLayout` machinery, class constants that silently became `nil`, public
+#      API -- because nothing about a comment tells you whether what follows is dev scaffolding or
+#      the layout engine. Its 63 sites were RE-HOMED: promoted where they were product, moved to
+#      ../Fizzygum-tests/Automator-and-test-harness-src/ where they were test machinery, or
+#      extracted into their own collaborator class (PinoutsOverlay, DemoMenus).
+#   2. per-FILE markers (arc 4, this arc): `# this file is excluded from the fizzygum homepage
+#      build` (43 files), `# this file is only needed for Macros` (2), and
+#      `# this file is only needed for VideoPlayer` (0 -- a regex with no carriers at all, live in
+#      the build for who knows how long). A file's fate was written invisibly in its first line, so
+#      the shape of a production build could only be learned by opening 499 files. It is now a
+#      property of a named slice, stated once, where the whole partition is visible at a glance.
+#
+# Both are gated at zero and cannot come back: buildSystem/check-region-markers.js and
+# buildSystem/check-whole-file-markers.js. Deliberately there is NO replacement marker syntax --
+# the lesson was that invisible, text-level exclusion is the wrong tool, not that its spelling was
+# wrong. A call site copes with an absent part through an existence guard (`if DemoMenus?`,
+# `world.pinouts?.…`), which buildSystem/check-part-edges.js requires.
 
 # we just need to detect a switch
 # see https://stackoverflow.com/a/8259080
@@ -134,63 +143,77 @@ def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas):
         f.write(content.replace(BOOT_SCRIPTS_PLACEHOLDER, bootScripts))
 
 
+def loadParts():
+    """The partition, from buildSystem/parts.json. Read that file's header before changing this."""
+    with codecs.open(PARTS_MANIFEST_FILE, "r", "utf-8") as f:
+        return json.load(f)["parts"]
+
+
+def partitionFiles(parts):
+    """Every .coffee file the partition claims, in ANY flavour, as (orderedFilenames, partOfFile).
+
+    Flavour-INDEPENDENT on purpose. Two build gates read this set through --list-shippable:
+    check-coffee-syntax.js (parse every shipped source) and check-shippable-coverage.js (every src/
+    directory is claimed by some part). Both want "everything that can ship", not "what this
+    particular flavour ships" -- a syntax error in a file only the dev build carries is still a
+    syntax error, and coverage of the partition is not a property of one flavour. Use shippedFiles()
+    for the flavour-applied set.
+
+    The order is a plain codepoint sort of the full path, which is what build.py has always emitted
+    in (it re-sorted the whole accumulated list after every directory it added). The emission order
+    decides where the source batches get cut, so preserving it exactly is what makes a build
+    byte-comparable against its predecessor.
+    """
+    partOfFile = {}
+    for partName, part in parts.items():
+        if partName.startswith("//"):
+            continue
+        for eachDir in part["dirs"]:
+            for filename in glob(eachDir + "/*.coffee"):
+                if filename in partOfFile:
+                    print("ERROR: %s is claimed by two parts: %s and %s. Every directory belongs to "
+                          "exactly one part -- see %s." %
+                          (filename, partOfFile[filename], partName, PARTS_MANIFEST_FILE))
+                    exit(1)
+                partOfFile[filename] = partName
+    return (sorted(partOfFile.keys()), partOfFile)
+
+
+def partShipsInThisFlavour(partName, part, args):
+    """Is this part included in the flavour being built? This is what the whole-file exclusion
+    markers used to answer, one file at a time and invisibly."""
+    if args.homepage and not part.get("inHomepage", True):
+        return False
+    flag = part.get("requiresFlag")
+    if flag == "tests" and (args.homepage or args.notests):
+        return False
+    if flag == "videoPlayer" and not args.includeVideoPlayer:
+        return False
+    return True
+
+
+def shippedFiles(parts, partOfFile, orderedFilenames, args):
+    """The subset of the partition this flavour actually ships, in emission order."""
+    excluded = set(name for name, part in parts.items()
+                   if not name.startswith("//") and not partShipsInThisFlavour(name, part, args))
+    return [f for f in orderedFilenames if partOfFile[f] not in excluded]
+
+
 def main():
 
-    # create a list with the coffeescript files
-    filenames = sorted(glob("src/*.coffee"))
+    parts = loadParts()
+    allFilenames, partOfFile = partitionFiles(parts)
 
-    if not (args.homepage or args.notests):
-        if os.path.exists("../Fizzygum-tests"):
-            if os.path.exists(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE):
-                filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/*.coffee")))
-                filenames = sorted(filenames + sorted(glob(DIRECTORY_WITH_AUTOMATOR_AND_TEST_HARNESS_CODE + "/AutomatorEventCommands/*.coffee")))
-
-    # add the sources from the directories
-    # the order here has no importance, just try to
-    # give it some sense anyways, from most basic/necessary
-    # to more elaborate/optional
-    # note that the boot/ directory is not visited, those files are
-    # concatenated by the shell script
-    filenames = sorted(filenames + sorted(glob("src/mixins" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/basic-data-structures" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/basic-widgets" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/basic-widgets/menu-system" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/patch-programming" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/buttons" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/icons" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/info-widgets" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/meta" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/apps" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/toolbars" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/graphs-plots-charts" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/maps" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/fizzytiles" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/events-input" + "/*.coffee")))
-    filenames = sorted(filenames + sorted(glob("src/macros" + "/*.coffee")))
-    # dataflow / calculation engine (spec docs/specs/dataflow-engine-spec.md). A shipped product
-    # feature, NOT homepage-excluded (like serialization below). The spreadsheet client's
-    # src/spreadsheet glob is added in Phase 2.
-    filenames = sorted(filenames + sorted(glob("src/dataflow" + "/*.coffee")))
-    # spreadsheet app (the dataflow engine's first client). A shipped product feature, NOT
-    # homepage-excluded (like serialization below).
-    filenames = sorted(filenames + sorted(glob("src/spreadsheet" + "/*.coffee")))
-    # serialization / deserialization / file-save-load family. NOT homepage-excluded:
-    # serialization is a shipped product feature (only the dev "test menu" items are
-    # stripped, via their own in-file markers). See serialization-deserialization-plan §8.1.
-    filenames = sorted(filenames + sorted(glob("src/serialization" + "/*.coffee")))
-    # duplication engine (the Duplicator), the live-cloning sibling of serialization.
-    # NOT homepage-excluded: duplication is a shipped product feature.
-    filenames = sorted(filenames + sorted(glob("src/duplication" + "/*.coffee")))
-    if args.includeVideoPlayer:
-        filenames = sorted(filenames + sorted(glob("src/video-player" + "/*.coffee")))
-
-    # --list-shippable: emit the shipped-source file list and stop (see the argparse
-    # note above). One path per line, consumed by buildSystem/check-coffee-syntax.js.
+    # --list-shippable: emit the partition's file list and stop (see the argparse note above).
+    # One path per line, consumed by buildSystem/check-coffee-syntax.js and
+    # buildSystem/check-shippable-coverage.js. Flavour-independent -- see partitionFiles().
     # We return BEFORE any output files are written, so nothing is built.
     if args.list_shippable:
-        for filename in filenames:
+        for filename in allFilenames:
             print(filename)
         return
+
+    filenames = shippedFiles(parts, partOfFile, allFilenames, args)
 
     # so here we need to take a .coffee file and generate a js that
     # , when run, hands its contents as a string to the SourceVault.
@@ -240,9 +263,27 @@ def main():
     # (globalFunctions loads them before any batch: the meta-system has to exist
     # before a batch's contents can be ingested).
 
-    batchedSources = ""
-    numberOfSourceBatches = 0
+    # Batches are cut PER PART, so a part's sources arrive as a unit that can be fetched on its
+    # own. Core's batches keep the historical bare `sources_batch_<n>.js` name and every other
+    # part's carry its name (`sources_batch_fizzytiles_0.js`): core is the default, and keeping its
+    # filenames unchanged is what lets a build be compared byte-for-byte against its predecessor
+    # (which is how the marker->parts migration was proven not to change what ships).
+    batchesOfPart = {}          # part -> [batch file basenames], in load order
+    accumulator = {}            # part -> the batch text being filled
     minimumSourcesBatchSize = 150000
+
+    def batchBaseName(partName, index):
+        if partName == "core":
+            return "sources_batch_" + str(index)
+        return "sources_batch_" + partName + "_" + str(index)
+
+    def writeBatch(partName):
+        """Flush the part's accumulated text as its next batch file."""
+        basename = batchBaseName(partName, len(batchesOfPart.setdefault(partName, [])))
+        with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/" + basename + ".js", "w", "utf-8") as f:
+            f.write(str(accumulator[partName]))
+        batchesOfPart[partName].append(basename)
+        accumulator[partName] = ""
 
     for filename in filenames:
         print(">>>> %s " % (filename))
@@ -263,14 +304,13 @@ def main():
         # The boot code loads those batches and then ingests/compiles each source
         # in dependency order. This is what lets Fizzygum load its classes as
         # coffeescript source code -- and, per part, load them lazily.
-
-        # the meaning of the first bracket is: if --homepage parameter
-        # is passed to this script, then
-        # there must be no "FILE_NOT_IN_FIZZYGUM_HOMEPAGE" directive in the source,
-        # nor "FILE_ONLY_FOR_MACROS" directive in the source,
-        # (since p -> q is identical to not p or q, you have what's in the
-        # bracket).
-        if (not args.homepage or not (FILE_NOT_IN_FIZZYGUM_HOMEPAGE.search(content) or FILE_ONLY_FOR_MACROS.search(content) or FILE_ONLY_FOR_VIDEOPLAYER.search(content))) and (is_class_file or is_mixin_file):
+        #
+        # There is no flavour test here any more: `filenames` is already the set this
+        # flavour ships (shippedFiles(), from the partition in buildSystem/parts.json).
+        # It used to be `not args.homepage or not (three marker regexes match)` -- i.e.
+        # every file carried, invisibly in its first line, the question of whether it
+        # ships. See parts.json's header for why that moved out of the files.
+        if is_class_file or is_mixin_file:
 
             # backslashes and quotes and newlines all need
             # to be escaped. Quotes need to be escaped otherwise
@@ -293,7 +333,7 @@ def main():
             # the vault is keyed by CLASS name, which is the file's basename
             # (one class per file, filename == class name -- see the repo CLAUDE.md)
             sourceName = ntpath.basename(filename).replace(".coffee","")
-            escaped_content_with_declaration = STRING_BLOCK % (str(sourceName), str(escaped_content), "core")
+            escaped_content_with_declaration = STRING_BLOCK % (str(sourceName), str(escaped_content), partOfFile[filename])
 
             # Class and Mixin are the two sources loaded individually and EARLY, because the
             # meta-system has to exist before any batch's contents can be ingested (see
@@ -302,27 +342,38 @@ def main():
                 with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceName+"-source.js", "w", "utf-8") as f:
                     f.write(escaped_content_with_declaration)
 
-            # pile up the sources into a batch and save the batch
-            # when is big enough
-            batchedSources += "\n\n" + escaped_content_with_declaration
-            if len(batchedSources) > minimumSourcesBatchSize:
-                sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
-                with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
-                    f.write(str(batchedSources))
-                numberOfSourceBatches = numberOfSourceBatches + 1
-                batchedSources = ""
+            # pile up the sources into this part's batch, and save the batch when it is big enough
+            eachPart = partOfFile[filename]
+            accumulator[eachPart] = accumulator.get(eachPart, "") + "\n\n" + escaped_content_with_declaration
+            if len(accumulator[eachPart]) > minimumSourcesBatchSize:
+                writeBatch(eachPart)
 
 
 
-    # take care of saving the last batch with the remainder
-    # of the sources
-    sourceFileName = ntpath.basename("sources_batch_"+str(numberOfSourceBatches))
-    with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
-        f.write(str(batchedSources))
-    numberOfSourceBatches += 1
+    # flush each part's remainder (parts are emitted in a stable order so the manifest is stable)
+    for eachPart in sorted(accumulator.keys()):
+        if accumulator[eachPart] != "":
+            writeBatch(eachPart)
 
-    with codecs.open("../Fizzygum-builds/latest/delete_me/numberOfSourceBatches.coffee", "w", "utf-8") as f:
-        f.write("numberOfSourceBatches = " + str(numberOfSourceBatches) + "\n")
+    # THE RUNTIME PARTS MANIFEST. Written as CoffeeScript and concatenated into the boot bundle by
+    # build_it_please.sh, NOT fetched as its own file: the batch loader needs it immediately, and a
+    # separate fetch would be one more thing that can arrive late. (It replaces the old
+    # numberOfSourceBatches.coffee, which said only "there are N batches, they are called
+    # sources_batch_0..N-1" -- true while every source was one undifferentiated stream.)
+    #
+    # `eager` is INCLUSION's twin, not its synonym: a part is IN this artifact because parts.json
+    # said so for this flavour; it is loaded AT BOOT because eager is true. Arc 4 phase 1 ships
+    # everything eager, so this is behaviourally identical to loading every batch in sequence.
+    manifest = {}
+    for eachPart in sorted(batchesOfPart.keys()):
+        partSpec = parts[eachPart]
+        manifest[eachPart] = {
+            "batches": batchesOfPart[eachPart],
+            "eager": partSpec.get("eager", True),
+            "vendor": partSpec.get("vendor", []),
+        }
+    with codecs.open("../Fizzygum-builds/latest/delete_me/partsManifest.coffee", "w", "utf-8") as f:
+        f.write("window.FIZZYGUM_PARTS = " + json.dumps(manifest, sort_keys=True) + "\n")
 
 
     # 4) the entry pages, one per backend flavour (see ENTRY_PAGES). A --homepage

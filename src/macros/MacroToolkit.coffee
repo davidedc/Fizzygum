@@ -1,5 +1,3 @@
-# this file is only needed for Macros
-
 # MacroToolkit — the framework-side support for high-level "macro" SystemTests,
 # lifted out of WorldWdgt so the macro machinery has a cohesive, documented home.
 # Delegation, not a mixin: the world HAS-A one, reachable as world.macroToolkit

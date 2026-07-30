@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 ##
 ## LCLProgramRunner manages the running function as it runs. E.g. this is not a
 ## translation step, this is managing things such as the actually running of the

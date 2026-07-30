@@ -555,6 +555,28 @@ phase (P-D7/R6), which is what makes "zero runtime change" literally true rather
   part list until the fingerprint matches. The 433 count stays in §2 as a sanity check on the
   fingerprint, never as a substitute for it.
 
+  **AS EXECUTED (2026-07-30) — the result, and two honest deviations.**
+  - Baseline `fp-1-markers.txt` taken on the marker-era tree (Phase 0 committed, `7f4b2172`):
+    **433 stored sources, 27 tree entries.** Final `fp-3-parts.txt` on the parts-era tree:
+    **433 stored sources, 27 tree entries, `[SOURCES]` section byte-identical** — same names, same
+    order. That is the exclusion decision, and it did not move.
+  - **Deviation 1: steps 2 and 3 were collapsed into one comparison.** Running with both mechanisms
+    live was a debugging convenience, not extra proof: the baseline is captured and immutable, so
+    fp-1-vs-fp-3 already establishes that the part list reproduces the marker mechanism. Had it
+    differed, the diff would have named the file just as well.
+  - **Deviation 2: `[FILES]` is NOT byte-identical, and should not be.** Six entries differ, each
+    accounted for: `sources_batch_3.js` and `sources_batch_6.js` (the only two batches that moved —
+    they carry `WorldWdgt` and `Widget`, which are exactly the two files the edge check made this
+    phase add guards to); `js/pre-compiled.js` + `js/pre-compiled-max.js` (the compiled image of
+    those same edited sources); `js/src/loading-and-compiling-coffeescript-sources-min.js` (rewritten
+    to load per-part batches); and the build-stamped boot bundle (already exempt). Every other batch
+    and every other file is byte-identical.
+  - Because "two batches differ" would ALSO be the symptom of an escaping bug — a far worse failure
+    than a source edit — the deltas were not argued from byte arithmetic but checked directly:
+    `Fizzygum-tests/.scratch/verify-stored-sources.js` decodes all 433 stored sources out of the
+    built batches and asserts each is byte-identical to its `.coffee` file on disk. It passes. Keep
+    that script: it is the right first move whenever a batch hash moves unexpectedly.
+
 ### 5.3 Phase 2 — runtime loader + Fizzytiles pilot
 
 - `src/PartsRegistry.coffee` (a normal core class, reachable as `world.parts`):

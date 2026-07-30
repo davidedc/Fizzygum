@@ -1,7 +1,7 @@
 # CLAUDE.md — `src/macros/` (the "macro" SystemTest subsystem)
 
-The **framework side of the high-level "macro" SystemTests**. Two files, both stripped from `--homepage`
-(each starts with `# this file is only needed for Macros`):
+The **framework side of the high-level "macro" SystemTests**. Two files, and the whole directory is the
+**`macros` part** (`buildSystem/parts.json`), which a `--homepage` build does not ship:
 
 - **`Macro.coffee`** — the engine (L0): parses a generator-from-a-string, rewrites verb calls into `yield`s,
   links subroutines, installs the per-cycle pump.
@@ -255,13 +255,18 @@ Anything that touches `world.automator` is a **harness** (assertion) concern, no
 `world.automator.player.compareScreenshots`; the sanctioned future move is for `AutomatorEventCommandStartMacro` to
 contribute that verb via the `extraSubroutineSources` merge-seam.
 
-## Build-strip contract (`--homepage`)
+## Build-exclusion contract (`--homepage`)
 
-- `Macro.coffee` and `MacroToolkit.coffee` each start with `# this file is only needed for Macros` → `build.py` skips
-  the whole file under `--homepage` (and `src/macros/*.coffee` is auto-globbed — a new file here needs no manifest entry).
-- In `WorldWdgt.coffee` the two cycle hooks sit inside `# »>> … only needed for Macros … <<«` pairs (stripped); the
-  `macroToolkit: nil` field and the `if MacroToolkit?` ctor init are unmarked (harmless in homepage: field stays `nil`,
-  guard is false).
+- This directory IS the **`macros` part**, declared `"inHomepage": false` in `buildSystem/parts.json`. A
+  `--homepage` build drops the part, i.e. both files. A new file added here is covered automatically
+  (the part owns the directory, not a file list).
+  ⛔ It used to work the other way round: each file's first line carried
+  `# this file is only needed for Macros` and `build.py` matched it with a regex. That whole-file
+  marker mechanism is **retired (arc 4)** and gated at zero by
+  `buildSystem/check-whole-file-markers.js` — do not re-add a marker here or invent a new one.
+- Every core call site copes with the part's absence through the class-existence guard idiom: the
+  `macroToolkit: nil` field stays `nil` and `if MacroToolkit?` is simply false. `buildSystem/check-part-edges.js`
+  fails the build on an *unguarded* core reference to `Macro`/`MacroToolkit`, so this cannot rot.
 
 ## History: the recorded→macro migration (closed)
 

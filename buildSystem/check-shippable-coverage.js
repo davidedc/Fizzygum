@@ -2,17 +2,23 @@
 'use strict';
 /*
  * check-shippable-coverage.js — build-time guard: every src/ subdirectory that contains
- * .coffee files must be COVERED by one of build.py's shippable-source globs.
+ * .coffee files must be CLAIMED BY A PART in buildSystem/parts.json.
  *
  * WHY THIS EXISTS
- * build.py's shipped-file list (~lines 191-233) is a hand-maintained sequence of
- * `glob("src/<dir>/*.coffee")` calls, one per directory. Add a NEW src/ subdirectory (e.g.
- * `src/toolbars` in phase C1) and it ships NOTHING until a matching glob() line is added by
- * hand — the build still exits 0, and the syntax gate (buildSystem/check-coffee-syntax.js,
- * which reads the same --list-shippable set) silently skips the new dir too. The only symptom
- * is a runtime `<NewClass> is not defined` the first time something references a class in the
- * forgotten dir — this cost a red presuite in phase C1. This gate closes that gap by comparing
- * "every .coffee file that actually exists under src/" against "what build.py says it ships".
+ * The shipped-file list is hand-maintained: it used to be a sequence of `glob("src/<dir>/*.coffee")`
+ * calls inside build.py, and since arc 4 it is the `dirs` lists in buildSystem/parts.json. Either
+ * way, add a NEW src/ subdirectory and it ships NOTHING until someone remembers to name it — the
+ * build still exits 0, and the syntax gate (buildSystem/check-coffee-syntax.js, which reads the
+ * same --list-shippable set) silently skips the new dir too. The only symptom is a runtime
+ * `<NewClass> is not defined` the first time something references a class in the forgotten dir —
+ * this cost a red presuite in phase C1. This gate closes that gap by comparing "every .coffee file
+ * that actually exists under src/" against "what the partition says ships".
+ *
+ * Since arc 4, --list-shippable is FLAVOUR-INDEPENDENT (it lists the whole partition, not what one
+ * build flavour keeps), which is what this gate and the syntax gate both want: coverage of the
+ * partition is not a property of a flavour, and a syntax error in a file only the dev build carries
+ * is still a syntax error. build.py additionally fails outright if two parts claim the same
+ * directory, so "claimed by a part" means "claimed by exactly one part".
  *
  * HOW IT WORKS
  * 1. SHIPPED set: `python3 buildSystem/build.py --list-shippable <forwarded args>` — the exact
@@ -21,21 +27,18 @@
  * 2. FULL set: every .coffee file that actually exists under src/ (recursive fs walk).
  * 3. unshipped = FULL − SHIPPED − ALLOWLIST. Any survivor FAILS the check.
  *
- * THE ALLOWLIST (two prefixes; both verified legitimate on a clean tree — neither is a real
- * coverage gap, so excluding them is what makes a clean tree PASS):
- *   - src/video-player/**  ships only behind --includeVideoPlayer (build.py ~line 232-233);
- *     on a default (no-flag) build it is correctly absent from --list-shippable.
- *   - src/boot/**          is NEVER globbed by build.py at all — build.py's own comment says
- *     "the boot/ directory is not visited, those files are concatenated by the shell script".
- *     Boot files are not text-wrapped classes: build_it_please.sh `cat`s and `coffee -c`
- *     compiles each one BY NAME, one at a time (~lines 561-703). That is a real, hand-maintained
- *     shipped list too — it just lives in the shell script instead of build.py, which puts it
- *     out of scope for THIS gate (which only checks build.py's glob list). Empirically verified:
- *     on a clean tree, `--list-shippable` omits exactly the files under src/boot/** (all
- *     individually cat'd/compiled in build_it_please.sh) and src/video-player/** — nothing else.
+ * THE ALLOWLIST (ONE prefix, verified legitimate on a clean tree — it is not a real coverage gap,
+ * so excluding it is what makes a clean tree PASS):
+ *   - src/boot/**  is not part material at all. Boot files are not text-wrapped classes:
+ *     build_it_please.sh `cat`s them into the boot bundle and `coffee -c` compiles them BY NAME,
+ *     one at a time. That is a real hand-maintained shipped list too — it just lives in the shell
+ *     script rather than in the partition, which puts it out of scope for THIS gate. parts.json
+ *     says the same thing in core's own comment. Empirically verified: on a clean tree,
+ *     --list-shippable omits exactly the files under src/boot/** and nothing else.
+ * (src/video-player/** was the second entry until arc 4 made it a PART — see ALLOWLIST_PREFIXES.)
  *
  * Any OTHER src/ subdirectory must appear, in full, in --list-shippable's output; a single
- * uncovered file (new dir, or a dir whose glob build.py forgot to add) fails the build.
+ * uncovered file (a new dir, or a dir no part claims) fails the build.
  *
  * SAFE FAILURE DIRECTION: worst case the allowlist is too narrow and the gate cries wolf on a
  * legitimately-different-but-covered dir (operational annoyance, fixed once by extending the
@@ -54,10 +57,13 @@ const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 
 function fail(msg) { console.error('check-shippable-coverage: ' + msg); process.exit(2); }
 
-// hard-coded, commented allowlist — see header for why each prefix is legitimate.
+// hard-coded, commented allowlist — see header for why the one remaining prefix is legitimate.
+// src/video-player/ used to be here (it shipped only behind --includeVideoPlayer, so it was
+// correctly absent from a default build's list). It is now the 'video-player' PART, so the
+// partition claims it in every flavour and --list-shippable always names it: the exemption became
+// unnecessary, and keeping it would have been a hole that hid a real gap in that directory.
 const ALLOWLIST_PREFIXES = [
-  'src/video-player/', // conditional: ships only behind --includeVideoPlayer
-  'src/boot/',          // never globbed by build.py; hand-cat/compiled by build_it_please.sh
+  'src/boot/',          // not part material: build_it_please.sh cats/compiles these BY NAME
 ];
 
 function isAllowlisted(relPath) {

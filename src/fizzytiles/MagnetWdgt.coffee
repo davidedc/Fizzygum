@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 # A draggable "fridge magnet" tile: a flat labeled button (LabelButtonWdgt) that
 # is draggable (rejectDrags=false) rather than a menu row. The generic
 # flat-label-button machinery it relies on (label, flat paint, centring) lives in

@@ -1593,9 +1593,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     w is @_editorSelectedWidget
 
 
-  # Only reachable through the guarded auto-launch in createDesktop: without
-  # --includeVideoPlayer the VideoPlayer family is absent and nothing calls this.
+  # The VideoPlayer family is its own part ('video-player'), shipped only with
+  # --includeVideoPlayer. createDesktop's auto-launch is guarded, so nothing calls this without
+  # the part -- but the guard belongs HERE too, on the method that names the class: a caller's
+  # guard is not a property of the callee, and the next caller will not know to repeat it.
+  # (buildSystem/check-part-edges.js is what insists.)
   draftRunVideoPlayer: ->
+      return unless VideoPlayerWithRecommendationsWdgt?
       videoPlayer = new FrameWdgt new VideoPlayerWithRecommendationsWdgt
       world.add videoPlayer
       videoPlayer.setExtent new Point 934, 896

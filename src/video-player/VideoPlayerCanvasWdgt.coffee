@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 # "container"/"contained" scenario going on.
 
 # IMPORTANT - if you are using fizzygum / video player via webserver (instead of via filesystem)

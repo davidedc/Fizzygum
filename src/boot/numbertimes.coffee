@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 # used for Fizzytiles
 
 # Note that this also handles the

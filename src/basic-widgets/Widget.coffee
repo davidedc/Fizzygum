@@ -5072,11 +5072,19 @@ class Widget extends TreeNode
     return
 
 
+  # The layout-editing chrome (the spacers and the adder/droplet placeholders the three methods
+  # below insert) is dev scaffolding: it lives in the 'dev-tools' part and is absent from a
+  # production build, where every caller -- the demo/test menus, and the adder widget's own re-show
+  # -- is absent too. Each method that NAMES the class carries its own guard, so the absence is a
+  # no-op rather than a ReferenceError. Deliberately not relying on "my callers are all part-side":
+  # a caller's guard is not a property of the callee, and the next caller will not know to repeat
+  # it. buildSystem/check-part-edges.js is what insists, and it has no allowlist on purpose.
   removeAdders: ->
     @_showsAdders = false
     @_invalidateLayout()
 
   showAdders: ->
+    return unless LayoutElementAdderOrDropletWdgt?
     @_showsAdders = true
     if @children.length == 0
       @_addNoSettle \
@@ -5086,6 +5094,7 @@ class Widget extends TreeNode
     @_invalidateLayout()
 
   addOrRemoveAdders: ->
+    return unless LayoutElementAdderOrDropletWdgt?
 
     if !@_showsAdders
       allAddersToBeDestroyed =
@@ -5110,6 +5119,7 @@ class Widget extends TreeNode
   # identical bar the scan/insert verbs): repeatedly find the first stack child still needing an adder on
   # the given side (skipping adders/droplets themselves) and insert one there, until none remain.
   _insertAddersSuchThat: (scanVerbName, insertVerbName) ->
+    return unless LayoutElementAdderOrDropletWdgt?
     while true
       leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

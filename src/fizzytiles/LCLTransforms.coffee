@@ -1,6 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
-
 # The matrix-stack runtime behind Fizzytiles' scale / rotate / move / box.
 # Column-major 4x4 (translation in [12..14], like Three.Matrix4 / gl-matrix),
 # owned by one FridgeMagnets3DCanvasWdgt. It runs the LCL "appended function"

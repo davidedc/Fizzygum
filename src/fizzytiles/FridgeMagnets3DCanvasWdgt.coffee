@@ -1,5 +1,3 @@
-# this file is excluded from the fizzygum homepage build
-
 # Fizzytiles' 3D output pane. Each frame it RUNS the LiveCodeLang program that
 # the tiles (or the code editor) compiled to, and software-renders it through
 # SW3D — the SWCanvas Core software-3D engine (DepthBuffer + Triangle3DOps) —

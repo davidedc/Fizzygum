@@ -1,0 +1,127 @@
+{
+  "//": [
+    "parts.json -- THE partition of Fizzygum's shipped source into a core plus named PARTS.",
+    "",
+    "WHAT A PART IS. A named slice of the system that can be included or excluded as a unit, and",
+    "(from arc 4 phase 2) loaded at boot or on demand. Every directory that ships appears in",
+    "EXACTLY ONE part; a .coffee file under src/ that no part claims is a BUILD FAILURE",
+    "(buildSystem/check-shippable-coverage.js). That is stronger than what came before: build.py",
+    "used to carry a hand-maintained sequence of glob('src/<dir>/*.coffee') calls, and a new",
+    "directory that nobody remembered to add there shipped as NOTHING -- the build stayed green and",
+    "the only symptom was a runtime '<NewClass> is not defined'.",
+    "",
+    "WHAT REPLACED WHAT (arc 4 phase 1). 'inHomepage: false' is what the whole-file marker",
+    "'# this file is excluded from the fizzygum homepage build' used to say, one file at a time, in",
+    "45 files, read by three regexes in build.py. Those are all gone. Exclusion is now a property of",
+    "a NAMED SLICE, stated once, here, where you can see the whole partition at a glance -- rather",
+    "than an invisible property of a file you only discover by opening it.",
+    "",
+    "TWO SEPARATE PROPERTIES (do not conflate them -- arc 4 reframe R6):",
+    "  inHomepage  = INCLUSION: does this part ship in a production build at all?",
+    "  eager       = TIMING:    is it loaded at boot, or on demand? (default true = at boot)",
+    "A marker could only ever express the first. Keeping them separate is what let phase 1 change",
+    "inclusion with provably zero runtime change, leaving timing to phase 2.",
+    "",
+    "FIELDS",
+    "  dirs         directories whose *.coffee files belong to this part. Not recursive: list each.",
+    "  inHomepage   default true. false = absent from a --homepage build.",
+    "  eager        default true. false = loaded on demand (phase 2+; needs a launch site that",
+    "               awaits world.parts.ensureLoaded, NOT a bare `if TheClass?` guard).",
+    "  requiresFlag optional build flag this part additionally needs ('tests', 'videoPlayer').",
+    "  vendor       optional non-source payloads that must arrive with the part.",
+    "",
+    "A part's absence must be a NO-OP at every call site, via the class-existence guard idiom",
+    "(`if DemoMenus?`, `world.pinouts?.reset()`, `WorldTestSupport.installOnto WorldWdgt if ...?`).",
+    "buildSystem/check-part-edges.js enforces that: an unguarded core reference to a part-owned",
+    "class fails the build.",
+    "",
+    "Arc 5 replaces the single 'inHomepage' boolean with a profile matrix. Until then this file is",
+    "the only place the partition is written down. Plan: docs/plans/build-arc-4-dynamic-parts-plan.md"
+  ],
+
+  "parts": {
+    "core": {
+      "//": "The product. Ships in every flavour, always eagerly. src/boot is absent on purpose: build_it_please.sh compiles those files BY NAME into the boot bundle, so they are not text-wrapped sources and not part material.",
+      "dirs": [
+        "src",
+        "src/mixins",
+        "src/basic-data-structures",
+        "src/basic-widgets",
+        "src/basic-widgets/menu-system",
+        "src/patch-programming",
+        "src/buttons",
+        "src/icons",
+        "src/info-widgets",
+        "src/meta",
+        "src/apps",
+        "src/toolbars",
+        "src/graphs-plots-charts",
+        "src/maps",
+        "src/events-input",
+        "src/dataflow",
+        "src/spreadsheet",
+        "src/serialization",
+        "src/duplication"
+      ]
+    },
+
+    "fizzytiles": {
+      "//": "The Fizzytiles ('fridge magnets') engine: the tile widgets, the LiveCodeLang compiler/preprocessor/runner, and the SW3D output pane. THE LAZY PILOT (arc 4 phase 2) -- the largest self-contained app in the tree, with a vendored 3D payload, reached from exactly two entry points. Its LAUNCHER is deliberately a separate, eager part: see fizzytiles-launcher.",
+      "dirs": ["src/fizzytiles"],
+      "inHomepage": false
+    },
+
+    "fizzytiles-launcher": {
+      "//": "The eager sliver of fizzytiles: the desktop launcher declaration plus its icon. It CANNOT be lazy -- WorldWdgt.createDesktop builds the desktop opener by instantiating FridgeMagnetsApp (and drawing FridgeMagnetsIconWdgt), and WellKnownObjects.resolveApp re-resolves snapshot references through the same class. An icon the user cannot see is an app they cannot launch. This is arc 4's reframe R6 in one part: INCLUSION and EAGERNESS are different properties, and 'the launcher is always here, the engine arrives when asked for' needs both.",
+      "dirs": ["src/fizzytiles-launcher"],
+      "inHomepage": false
+    },
+
+    "demos": {
+      "//": "The demo/parts-bin catalogue (DemoMenus, reached as `demoMenus`) and the sample widgets it shows off: the bouncer, the pen, the pointer. Arc 3 extracted DemoMenus out of MenusHelper for exactly this; its own header already said 'arc 4 turns that into part membership'.",
+      "dirs": ["src/demos"],
+      "inHomepage": false
+    },
+
+    "dev-tools": {
+      "//": "In-world dev scaffolding: the widget factory (world.widgetFactory), the pinout debug overlay (world.pinouts, an arc-3 extraction), and the layout-editing chrome (spacers + the element adder/droplet) reached from the test menu. Every one of them is already an optional collaborator behind an existence guard.",
+      "dirs": ["src/dev-tools"],
+      "inHomepage": false
+    },
+
+    "dev-icons": {
+      "//": "The icon gallery the demo menus show: chapter markers, information, raster-pic, save, under-carpet. Moved out of the 159-file src/icons, which is otherwise all product.",
+      "dirs": ["src/icons-dev"],
+      "inHomepage": false
+    },
+
+    "patch-programming-experimental": {
+      "//": "The unfinished half of patch programming: fanout, diffing, regex-substitution nodes. src/patch-programming was a MIXED directory (PatchNodeWdgt and CalculatingPatchNodeWdgt ship, these six do not) and P-D2 resolves a mixed directory by MOVING files, never by tagging them.",
+      "dirs": ["src/patch-programming-experimental"],
+      "inHomepage": false
+    },
+
+    "macros": {
+      "//": "The macro engine + toolkit (world.macroToolkit): the authoring path for SystemTests. Test machinery that lives in src/ because the macros drive the product through its own API. Was excluded by the FILE_ONLY_FOR_MACROS marker regex; now by part.",
+      "dirs": ["src/macros"],
+      "inHomepage": false
+    },
+
+    "harness": {
+      "//": "The Automator + test-harness sources, which live in the SIBLING TESTS REPO. Excluded by a build FLAG, never by a marker -- the precedent that exclusion-by-list already worked before this arc. Its five *TestSupport classes install themselves onto core prototypes at boot behind `if XTestSupport?`.",
+      "dirs": [
+        "../Fizzygum-tests/Automator-and-test-harness-src",
+        "../Fizzygum-tests/Automator-and-test-harness-src/AutomatorEventCommands"
+      ],
+      "inHomepage": false,
+      "requiresFlag": "tests"
+    },
+
+    "video-player": {
+      "//": "Already flag-gated before this arc; its whole-file marker was redundant belt-and-braces.",
+      "dirs": ["src/video-player"],
+      "inHomepage": false,
+      "requiresFlag": "videoPlayer"
+    }
+  }
+}
