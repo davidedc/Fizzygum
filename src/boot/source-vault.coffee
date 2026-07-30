@@ -26,14 +26,14 @@
 # `for … of`: Object-extensions.coffee puts `augmentWith`/`addInstanceProperties` on
 # Object.prototype, so an un-`own`ed walk over any object in this system also yields those.
 #
-# THE API GROWS WITH ITS CONSUMERS. The part system needs more of this registry than source
-# delivery alone does -- `namesForPart part` (what a part load walks), `partOf name` (what the
-# snapshot pre-scan maps through), a part-name list, and eventually a `forgetPart` for a hot-reload
-# that nothing yet asks for. None of them are here YET: the dead-method build gate
-# (buildSystem/check-dead-methods.js) refuses a method nothing references, and it is right to --
-# a registry API written ahead of its callers is a guess about what they will want. Each accessor
-# lands in the phase whose code first calls it. Today's entry is `{text, part}` per name, so all of
-# them are a two-line addition when their caller arrives.
+# THE API GROWS WITH ITS CONSUMERS, and only with them -- twice over, here. `namesForPart` and a
+# `partOf` were both written in the phase that introduced this registry, had no callers, and were
+# correctly REJECTED by the dead-method build gate. `namesForPart` is here now because PartsRegistry
+# walks a part's sources to ingest them. `partOf` came back and went away AGAIN: PartsRegistry needs
+# the class->part map BEFORE a lazy part loads, and the vault by definition cannot know about
+# sources it has not been given yet -- so that map is build manifest data (window.FIZZYGUM_PARTS),
+# and the entry's `part` tag is now just a label the vault carries for whoever inspects it. A
+# `forgetPart` for a part hot-reload is absent for the same reason: nothing asks.
 window.SourceVault =
 
   # name -> {text, part}
@@ -57,3 +57,10 @@ window.SourceVault =
   # order; dependencies-finding derives that separately).
   names: ->
     Array.from @_entries.keys()
+
+  # The names belonging to one part -- what loading a part walks (PartsRegistry).
+  namesForPart: (part) ->
+    found = []
+    @_entries.forEach (entry, name) ->
+      found.push name if entry.part == part
+    found

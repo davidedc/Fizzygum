@@ -454,6 +454,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if PinoutsOverlay?
       @pinouts = new PinoutsOverlay
 
+    # world.parts — the runtime loader for lazily-loadable PARTS of the system
+    # (buildSystem/parts.json). A shipped product collaborator, constructed unguarded: every
+    # artifact has a partition, even one whose every part is eager.
+    @parts = new PartsRegistry
+
     # world.dataflow — the ONE calculation/dataflow engine (spec docs/specs/dataflow-engine-spec.md).
     # A shipped product collaborator (like @sourceEditsRegistry above), so it is constructed
     # UNGUARDED, unlike the dev-only @widgetFactory. It drains once per cycle in doOneCycle,
@@ -2343,6 +2348,24 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     unless opts.skipConfirm
       msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop, and can run code the snapshot carries."
       return unless (typeof window.confirm is "function") and window.confirm msg
+    # 0. A snapshot can name classes that live in a LAZY part this page has never loaded (a saved
+    #    Fizzytiles window on a freshly-booted index.html). Load those parts FIRST, then re-enter.
+    #
+    #    ⚠ THE POSITION OF THIS BLOCK IS THE WHOLE CORRECTNESS ARGUMENT. Step 1 below destroys the
+    #    entire desktop, so the bail-out has to happen before ANY mutation: the re-entry then runs
+    #    the body below exactly once, on an intact world, with every class already resident. Put it
+    #    any lower and a lazy load would re-enter over a half-torn-down world — and a part that
+    #    FAILS to load would leave the user with nothing instead of the desktop they still have.
+    #    The scan itself is pure (it only reads the envelope), and it sits after the confirm so the
+    #    user is asked exactly once; the re-entry passes skipConfirm for that reason and no other.
+    missingParts = @parts.partsNeededFor Serializer.classNamesIn envelope
+    if missingParts.length
+      # double-settle-sanctioned: BRANCH-EXCLUSIVE, and that is the whole design. This branch
+      # RETURNS before reaching any of the settling body below, so the re-entered call performs the
+      # one and only flush; the two never run in one pass. It is a tail re-entry precisely so that
+      # nothing is mutated twice (or, worse, torn down twice).
+      return @parts.ensureAllLoaded(missingParts).then =>
+        @loadWorldSnapshot envelope, Object.assign {}, opts, skipConfirm: true
     section = envelope.world or {}
     # 1. tear the current world down — one settle over the shared NoSettle core, which also zeroes
     #    every per-class lastBuiltInstanceNumericID, giving the clean id space the restored iids need.

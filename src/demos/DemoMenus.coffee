@@ -47,9 +47,14 @@ class DemoMenus
     "porttitor, elit augue vestibulum est, nec congue " +
     "nisi."
 
+  # The demo menu's route to the same widget the desktop launcher opens. FridgeMagnetsWdgt is in the
+  # LAZY 'fizzytiles' part, so it may not be in the page yet -- go through the parts API, which
+  # loads it if needed and hands back the instance. (A `if FridgeMagnetsWdgt?` guard would be wrong
+  # here for the same reason as in FridgeMagnetsApp.launch: for a lazy part it means "silently do
+  # nothing".) Menu actions are fire-and-forget, so returning a promise changes nothing for callers.
   createFridgeMagnets: ->
-    fmm = new FridgeMagnetsWdgt
-    world.openFrameWith fmm, (new Point 570, 400), world.hand.position()
+    world.parts.launch("FridgeMagnetsWdgt").then (fmm) ->
+      world.openFrameWith fmm, (new Point 570, 400), world.hand.position()
 
 
   createImageWdgt: ->

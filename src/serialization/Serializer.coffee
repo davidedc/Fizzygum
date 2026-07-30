@@ -182,6 +182,38 @@ class Serializer
         counters[name] = klass.lastBuiltInstanceNumericID
     counters
 
+  # Every class name an envelope references, so a loader can find out what it will NEED before it
+  # changes anything. Two sources, because a snapshot names classes in two ways:
+  #   - each object record's `class` (what Deserializer.instantiate resolves as window[record.class]);
+  #   - the `{"$wk": "app:<ClassName>"}` app-singleton keys (what WellKnownObjects.resolveApp
+  #     resolves the same way) -- a desktop launcher's target arrives only through one of these.
+  # The `$`-prefixed tags ($Array, $Map, $Canvas, ...) are native-type builders, not classes, so
+  # they are skipped. Used by WorldWdgt.loadWorldSnapshot to pre-load any lazily-loadable PART the
+  # file needs; it is a pure read of the envelope, which is what lets it run before the teardown.
+  @classNamesIn: (envelope) ->
+    names = []
+    add = (name) ->
+      return unless name? and typeof name is "string"
+      return if name.charAt(0) is "$"
+      names.push name unless name in names
+    for record in (envelope?.objects ? [])
+      add record?.class
+    # walk the whole envelope for app: well-known keys (they can sit at any depth)
+    seen = new Set
+    visit = (value) ->
+      return unless value? and typeof value is "object"
+      return if seen.has value
+      seen.add value
+      if typeof value.$wk is "string" and value.$wk.indexOf("app:") is 0
+        add value.$wk.substring 4
+      if Array.isArray value
+        visit item for item in value
+      else
+        visit nested for own key, nested of value
+      return
+    visit envelope
+    names
+
   # --- the shared object-table encoder -----------------------------------------------------
   # Builds `objects` (the versioned record table) for a set of in-structure widgets, and
   # returns the encoding primitives used by BOTH serializeWidget and serializeWorld so the

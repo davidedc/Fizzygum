@@ -636,17 +636,70 @@ phase (P-D7/R6), which is what makes "zero runtime change" literally true rather
   buys). If you find yourself needing `skipConfirm` to suppress a SECOND teardown, the bail-out has
   drifted below step 1 — move it back up rather than patching the symptom.
 - **Tests**: the two existing Fizzytiles SystemTests run on the harness (eager) and construct
-  `new FridgeMagnetsWdgt` directly — unchanged, zero churn expected. **NEW SystemTest** (suite
-  269 → 270): on a core-booted world, trigger the launcher, AWAIT the load through the settle
-  machinery, assert the app opens and renders (the lazy path's own test, per R2). ⚠ It cannot run
-  on the standard harness page, which eager-loads everything by construction; author it either
-  against a part explicitly forced NOT_LOADED at test start, or as its own headless script in the
-  tests repo driving `index.html`. Decide at execution time and record which — a "lazy" test that
-  silently exercised the eager path is worse than no test.
+  `new FridgeMagnetsWdgt` directly — unchanged, zero churn expected. The lazy path needs its own
+  coverage (R2/R-9).
+  **AS EXECUTED (2026-07-30): NOT a SystemTest — two headless rigs in the tests repo, and the suite
+  stays at 269.** R-9 left this open deliberately; the resolution is that a SystemTest *cannot*
+  test laziness. Every SystemTest runs on `worldWithSystemTestHarness.html`, which presets
+  `FIZZYGUM_EAGER_ALL_PARTS` **on purpose** — so on the only page a SystemTest can use, nothing is
+  ever lazy, and a "lazy" SystemTest would pass while proving nothing. Forcing a part to
+  `NOT_LOADED` mid-suite was rejected too: it would mean un-defining live classes, which the design
+  forbids (a part is code, not state) and which is not the real path anyway. So:
+  - `../Fizzygum-tests/scripts/parts-lazy-load-headless.js` — drives `index.html`. Asserts the
+    pre-state as a PAIR (engine absent + launcher present + 3D vendor absent + the desktop icon
+    exists anyway), triggers the **product's own** launch path (`launcher.target[launcher.callback]`
+    — literally what `mouseClickLeft` calls, not a hand-rolled `ensureLoaded`), then asserts the
+    part compiled, the whole part arrived (not one class), the vendor payload arrived, the window is
+    on the desktop, **and the 3D pane rasterized actual pixels** — the last is what proves the
+    payload works rather than merely that a `<script>` was appended.
+  - `../Fizzygum-tests/scripts/parts-snapshot-load-headless.js` — the snapshot path, in TWO halves.
+    (A) a snapshot carrying a part-owned widget, produced in one page, loads in a FRESH page that
+    never loaded the part. (B) **THE ORDERING**: with `ensureAllLoaded` stubbed to reject, the load
+    must report the failure AND leave the desktop intact (12 children before, 12 after). (B) is the
+    assertion that actually locates the bail-out above the teardown — (A) passes either way, because
+    a successful load hides the ordering completely.
+  - Both are wired into `fg gauntlet` as the **`parts` leg** (wave B), so they are gated rather than
+    remembered.
 - **New smoke assertion** (`../Fizzygum-tests/scripts/smoke-boot-headless.js`): on the
   `index.html` native leg, assert `typeof FridgeMagnetsWdgt === 'undefined'` (the engine really is
   absent) AND `typeof FridgeMagnetsApp !== 'undefined'` (the launcher really is present) — the
-  pair is what proves the split, where either alone can pass for the wrong reason.
+  pair is what proves the split, where either alone can pass for the wrong reason. Also asserts
+  `index.html` does NOT preset `FIZZYGUM_EAGER_ALL_PARTS`, since that alone would make the pair
+  meaningless. Skipped in `--homepage` mode: that profile carries neither part.
+- **⚠ THREE MORE BUGS FOUND AT EXECUTION (2026-07-30), all the same shape: ONE RULE, TWO PLACES.**
+  Worth reading before writing anything else in this arc, because the shape recurs.
+  1. **"Is this part eager here?" was implemented twice.** `PartsRegistry._isEagerHere` honoured the
+     entry-page override; the boot batch loader's own test (`eagerSourceBatchNames`) did not. The
+     boot loader is what actually FETCHES batches, so on the harness page — which presets the
+     override — fizzytiles' batch was skipped and **every Fizzytiles SystemTest STALLED on an
+     undefined class**, while the registry cheerfully reported the part LOADED. Fix: ONE function,
+     `window.fizzygumPartIsEagerHere`; the registry delegates to it.
+  2. **That function then had to move into the boot BUNDLE.** Defined in
+     `loading-and-compiling-coffeescript-sources.coffee` it did not exist early enough: on a
+     pre-compiled (`--homepage`) boot, `createWorldAndStartStepping()` runs as soon as
+     `js/pre-compiled.js` lands — BEFORE that separately-fetched file — so the production tree died
+     at boot with *"window.fizzygumPartIsEagerHere is not a function"*. **`fg homepage` is what
+     caught it, and nothing else would have**: the suite and both serialization rigs only ever run
+     non-homepage builds. General rule: anything the WORLD'S CONSTRUCTOR needs belongs in the bundle.
+  3. **The `census` gate failed on a coverage hole my own change created**: its battery opens a
+     fridge-magnets window, which is unreachable on `index.html` now that fizzytiles is lazy, and the
+     gate (rightly) treats a skipped battery entry as hidden coverage. Fix: the census loads every
+     lazy part before building its battery — coverage went UP, 1684 → 1713 targets.
+- **⚠ A FOURTH, in the rig rather than the product**: the lazy rig sampled the 3D pane's pixels as
+  soon as the window appeared. The pane rasterizes on a LATER world cycle, so it passed standalone
+  and failed inside a gauntlet wave (13 concurrent browsers). The rig now WAITS for the first frame.
+  A rig that reads a value before it can exist is a broken rig, not a flaky product.
+- **⚠ ONE DESIGN CORRECTION FOUND AT EXECUTION (2026-07-30) — the class→part map cannot live in the
+  SourceVault.** `PartsRegistry.partOf` first read `SourceVault.partOf` (the vault tags every source
+  with its part). That is unusable for the one case it exists for: the vault only knows sources it
+  has been GIVEN, i.e. whose batch has already loaded, so for a LAZY part it cannot answer until
+  after the load — while the question ("which part owns `FridgeMagnetsWdgt`?") has to be answered
+  BEFORE it. Symptom: `partsNeededFor` returned `[]` and the snapshot load threw *"this file
+  references the class 'FridgeMagnetsWdgt', which does not exist in this build"* on a build that had
+  the part sitting right there. Fix: the build emits a per-part `classes` list into
+  `window.FIZZYGUM_PARTS` (core's omitted — ~430 names nothing reads), and `_partOf` consults that.
+  §5.3 always said "class→part map" in the manifest; taking it from the vault instead was the error.
+  The snapshot rig is what caught it — nothing else would have.
 
 ### 5.4 Phase 3 — later parts (in-arc if cheap, else banked)
 

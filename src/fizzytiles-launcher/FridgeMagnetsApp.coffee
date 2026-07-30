@@ -13,3 +13,16 @@ class FridgeMagnetsApp extends IconicDesktopSystemWindowedApp
   toolTip: "fridge magnets"
   buildIcon:   -> new FridgeMagnetsIconWdgt
   buildWindow: -> world.openFrameWith (new FridgeMagnetsWdgt), (new Point 570, 400), world.hand.position()
+
+  # THE ONE LAZY LAUNCH SITE. This class and its icon are the eager 'fizzytiles-launcher' part, so
+  # the desktop opener exists from boot; the engine (FridgeMagnetsWdgt and the ~9 classes behind it,
+  # plus the 3D vendor payload) is the lazy 'fizzytiles' part and is not in the page until here.
+  #
+  # An `if FridgeMagnetsWdgt?` guard would be WRONG: for a LAZY part that reads "not loaded yet, so
+  # silently do nothing", i.e. a click that does nothing. Awaiting the load is the only correct
+  # shape, and it is safe to make this async because the base launch() is fire-and-forget -- the
+  # launcher widget invokes it through reflection by name and ignores the return value. So no other
+  # app and no base-class code changes.
+  launch: ->
+    world.parts.ensureLoaded("fizzytiles").then =>
+      super()

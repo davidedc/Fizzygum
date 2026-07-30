@@ -61,10 +61,22 @@ BOOT_SCRIPTS_PLACEHOLDER = "<!--FIZZYGUM_BOOT_SCRIPTS-->"
 #   index-sw.html                   full SWCanvas, no test harness (interactive SW)
 # The test harness is NOT switched on here: WorldWdgt/globalFunctions detect it
 # from the page's NAME, so these three differ only in the substituted lines.
+# The third column is EAGER_ALL_PARTS: does this page load every part at boot, even the ones
+# buildSystem/parts.json marks `"eager": false`?
+#   index.html                      NO  -- the interactive product: a lazy part arrives on demand.
+#   worldWithSystemTestHarness.html YES -- a part arriving MID-TEST would be frame-paced, hence
+#                                   cycle-count-dependent, which is precisely the nondeterminism
+#                                   class ../Fizzygum-tests/DETERMINISM.md exists about. The suite's
+#                                   world must stay exactly what it was, so the harness takes
+#                                   everything up front. The lazy path has its own test instead.
+#   index-sw.html                   YES -- same world as the harness minus the harness, kept
+#                                   comparable to it.
+# This is a page PRESET, like the backend above: chosen at build time, never a runtime switch, and
+# not test-only code living in the product.
 ENTRY_PAGES = [
-    ("index.html", False),
-    ("worldWithSystemTestHarness.html", True),
-    ("index-sw.html", True),
+    ("index.html", False, False),
+    ("worldWithSystemTestHarness.html", True, True),
+    ("index-sw.html", True, True),
 ]
 
 # RegEx Patterns
@@ -123,7 +135,7 @@ args = parser.parse_args()
 # Writes one entry page from the single page source, substituting the backend
 # preset + boot-bundle tag for BOOT_SCRIPTS_PLACEHOLDER. Everything else about
 # the page (splash, canvas, onload -> boot()) is shared verbatim.
-def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas):
+def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas, eagerAllParts):
     with codecs.open(srcHTMLFile, "r", "utf-8") as f:
         content = f.read()
 
@@ -136,7 +148,9 @@ def generateEntryPage(srcHTMLFile, destHTMLFile, useSWCanvas):
     bundleFileName = "fizzygum-boot-sw-min.js" if useSWCanvas else "fizzygum-boot-native-min.js"
     bootScripts = (
         '<script type="text/javascript">window.FIZZYGUM_USE_SWCANVAS = ' +
-        ("true" if useSWCanvas else "false") + ';</script>\n' +
+        ("true" if useSWCanvas else "false") +
+        '; window.FIZZYGUM_EAGER_ALL_PARTS = ' +
+        ("true" if eagerAllParts else "false") + ';</script>\n' +
         '\t\t<script type="text/javascript" src="js/' + bundleFileName + '"></script>')
 
     with codecs.open(destHTMLFile, "w", "utf-8") as f:
@@ -269,6 +283,7 @@ def main():
     # filenames unchanged is what lets a build be compared byte-for-byte against its predecessor
     # (which is how the marker->parts migration was proven not to change what ships).
     batchesOfPart = {}          # part -> [batch file basenames], in load order
+    classesOfPart = {}          # part -> [class/mixin names] (the manifest's class->part map)
     accumulator = {}            # part -> the batch text being filled
     minimumSourcesBatchSize = 150000
 
@@ -344,6 +359,7 @@ def main():
 
             # pile up the sources into this part's batch, and save the batch when it is big enough
             eachPart = partOfFile[filename]
+            classesOfPart.setdefault(eachPart, []).append(sourceName)
             accumulator[eachPart] = accumulator.get(eachPart, "") + "\n\n" + escaped_content_with_declaration
             if len(accumulator[eachPart]) > minimumSourcesBatchSize:
                 writeBatch(eachPart)
@@ -364,6 +380,14 @@ def main():
     # `eager` is INCLUSION's twin, not its synonym: a part is IN this artifact because parts.json
     # said so for this flavour; it is loaded AT BOOT because eager is true. Arc 4 phase 1 ships
     # everything eager, so this is behaviourally identical to loading every batch in sequence.
+    # ⚠ `classes` is NOT redundant with the SourceVault's per-source part tag, and this bit is
+    # load-bearing: the vault only knows about sources that have ALREADY been stored, i.e. whose
+    # batch has already loaded. For a LAZY part that is precisely the thing that has not happened
+    # yet, so "which part owns FridgeMagnetsWdgt?" cannot be answered from the vault before the
+    # load -- which is the one moment anything needs to ask (a snapshot naming a class from an
+    # unloaded part). So the class->part map has to be BUILD data, here, present from boot.
+    # Core's list is deliberately omitted: it is ~430 names nothing would read, and "no part owns
+    # this name" already means "core, or not ours".
     manifest = {}
     for eachPart in sorted(batchesOfPart.keys()):
         partSpec = parts[eachPart]
@@ -372,6 +396,8 @@ def main():
             "eager": partSpec.get("eager", True),
             "vendor": partSpec.get("vendor", []),
         }
+        if eachPart != "core":
+            manifest[eachPart]["classes"] = sorted(classesOfPart.get(eachPart, []))
     with codecs.open("../Fizzygum-builds/latest/delete_me/partsManifest.coffee", "w", "utf-8") as f:
         f.write("window.FIZZYGUM_PARTS = " + json.dumps(manifest, sort_keys=True) + "\n")
 
@@ -379,13 +405,14 @@ def main():
     # 4) the entry pages, one per backend flavour (see ENTRY_PAGES). A --homepage
     # build is native-only — no SWCanvas bundle is assembled for it and its font
     # assets are not shipped — so it gets index.html alone.
-    for (pageFileName, useSWCanvas) in ENTRY_PAGES:
+    for (pageFileName, useSWCanvas, eagerAllParts) in ENTRY_PAGES:
         if args.homepage and useSWCanvas:
             continue
         generateEntryPage(
                 INPUT_HTML_FILE,
                 os.path.join(OUTPUT_HTML_DIRECTORY, pageFileName),
-                useSWCanvas)
+                useSWCanvas,
+                eagerAllParts)
 
 
 if __name__ == "__main__":

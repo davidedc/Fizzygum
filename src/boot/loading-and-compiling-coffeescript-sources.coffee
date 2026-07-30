@@ -54,15 +54,22 @@ createClosureForLoadingCoffeescriptSourceBatch = (batchBaseName) ->
   # this only creates the closure that will be run (later)
   -> loadJSFilePromise "js/coffeescript-sources/" + batchBaseName + ".js"
 
-# The batch files to load at boot: every EAGER part's, in a stable part order. A part marked
-# `eager: false` in buildSystem/parts.json is skipped here and fetched on demand instead -- which
-# is the whole point of the partition. `window.FIZZYGUM_PARTS` is the build-written manifest
-# (delete_me/partsManifest.coffee, concatenated into this boot bundle, so it is already here).
+# The batch files to load at boot: every eager part's, in a stable part order. A part that is NOT
+# eager here is skipped and fetched on demand by PartsRegistry instead -- the point of the partition.
+# `window.FIZZYGUM_PARTS` is the build-written manifest (delete_me/partsManifest.coffee, concatenated
+# into this boot bundle, so it is already here).
+#
+# ⚠ VENDOR payloads are NOT loaded here, only sources. A part's vendor files are injected by
+# PartsRegistry.ensureLoaded, which can be idempotent about them; this loader cannot, and blindly
+# injecting fizzytiles' SWCanvas 3D-CORE payload on an SW page would overwrite that page's FULL
+# SWCanvas engine -- its renderer -- with a subset. So an eager part with a vendor payload requires
+# the payload to be in the boot bundle already, which is exactly the case for fizzytiles on the two
+# pages that force it eager (they carry the full engine + SW3D).
 eagerSourceBatchNames = ->
   names = []
   for partName in Object.keys(window.FIZZYGUM_PARTS).sort()
     eachPart = window.FIZZYGUM_PARTS[partName]
-    continue unless eachPart.eager
+    continue unless window.fizzygumPartIsEagerHere eachPart
     names = names.concat eachPart.batches
   names
 

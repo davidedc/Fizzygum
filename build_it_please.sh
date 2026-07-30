@@ -820,13 +820,32 @@ fi
 # page installed — the fdlibm port on the SW pages above, the platform's own trig here. Anything that
 # reached for the global by name would throw `DetTrig is not defined` the moment a window was rotated;
 # ../Fizzygum-tests/scripts/smoke-boot-headless.js rotates a widget on this page to keep that honest.
-echo "assembling the native boot bundle (SWCanvas 3D core + SW3D + boot)..."
-cat $SWCANVAS_VENDOR/swcanvas-3d-core.min.js > $BUILD_PATH/js/fizzygum-boot-native-min.js
-printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-native-min.js
-cat $SWCANVAS_VENDOR/sw3d.min.js >> $BUILD_PATH/js/fizzygum-boot-native-min.js
-printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-native-min.js
-cat $BOOT_MIN >> $BUILD_PATH/js/fizzygum-boot-native-min.js
+echo "assembling the native boot bundle (boot only — the 3D vendor rides with its part)..."
+cat $BOOT_MIN > $BUILD_PATH/js/fizzygum-boot-native-min.js
 echo "... done assembling the native boot bundle"
+
+# ---- the fizzytiles 3D vendor payload, as a PART file --------------------------------------------
+#
+# The 3D sliver used to be prepended to the native bundle, i.e. every visitor of index.html
+# downloaded and parsed a software 3D engine to look at a desktop. It has exactly ONE consumer
+# (src/fizzytiles/FridgeMagnets3DCanvasWdgt, which reads window.SWCanvas.Core.* / window.SW3D lazily
+# inside _ensureEngine, never at class-definition time), so it belongs to that part and arrives when
+# the part does — buildSystem/parts.json names it in fizzytiles' "vendor" list, and PartsRegistry
+# injects it before the part's sources.
+#
+# ⚠ The SW pages must NOT load it: their boot bundle carries the FULL SWCanvas engine (it is their
+# renderer) plus SW3D, so injecting the subtractive 3D-CORE build over it would replace a superset
+# with a subset. PartsRegistry's vendor step is idempotent and skips it when window.SW3D and
+# SWCanvas.Core.Triangle3DOps are already there. Emitted for every flavour that ships the part.
+if [ -f $SWCANVAS_VENDOR/swcanvas-3d-core.min.js ]; then
+  echo "assembling the fizzytiles 3D vendor payload..."
+  mkdir -p $BUILD_PATH/js/vendor-parts
+  cat $SWCANVAS_VENDOR/swcanvas-3d-core.min.js > $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
+  printf '\n;\n' >> $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
+  cat $SWCANVAS_VENDOR/sw3d.min.js >> $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
+  printf '\n;\n' >> $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
+  echo "... done assembling the fizzytiles 3D vendor payload"
+fi
 
 # The bare minified boot JS is an intermediate, never an entry page's bundle.
 rm $BOOT_MIN

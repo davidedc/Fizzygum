@@ -37,6 +37,31 @@ noOperation = ->
 
 # -------------------------------------------
 
+# IS THIS PART LOADED AT BOOT? The ONE answer to that question, for the whole system: the boot batch
+# loader asks it (loading-and-compiling-coffeescript-sources.coffee, deciding which source batches to
+# fetch) and so does PartsRegistry (deciding which parts to report as already resident).
+#
+# A part is here at boot if buildSystem/parts.json says `eager` (the default), OR if this entry page
+# overrides every part to eager. The override is a build-time page preset (build.py's ENTRY_PAGES),
+# set by worldWithSystemTestHarness.html and index-sw.html: a part arriving MID-TEST would be
+# frame-paced, hence cycle-count-dependent, which is exactly the nondeterminism class
+# ../Fizzygum-tests/DETERMINISM.md is about.
+#
+# ⚠ TWO REASONS IT LIVES HERE, in the boot BUNDLE, rather than next to either caller:
+#  1. It was briefly implemented TWICE -- the entry-page override in PartsRegistry only -- so on the
+#     harness page the boot loader still skipped the lazy part's batch and every Fizzytiles
+#     SystemTest STALLED on an undefined class, while the registry reported the part LOADED. Two
+#     places encoding one rule IS the bug. Do not re-split it.
+#  2. It must exist before the WORLD does. On a pre-compiled (--homepage) boot,
+#     createWorldAndStartStepping() runs as soon as js/pre-compiled.js has loaded -- BEFORE the
+#     separately-fetched js/src/loading-and-compiling-coffeescript-sources-min.js. Defining this
+#     there made a production tree die at boot with "window.fizzygumPartIsEagerHere is not a
+#     function" (caught by fg homepage). The bundle is the entry page's first script, so anything
+#     the world's constructor needs belongs in it.
+# `window.`-qualified because a src class cannot see a boot-file local.
+window.fizzygumPartIsEagerHere = (spec) ->
+  spec.eager or window.FIZZYGUM_EAGER_ALL_PARTS is true
+
 # Helper function to use Promise style
 # instead of callback style when loading a JS
 loadJSFilePromise = (fileName) ->
