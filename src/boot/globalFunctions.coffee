@@ -323,6 +323,7 @@ createWorldAndStartStepping = ->
     WidgetTestSupport.installOnto Widget  if WidgetTestSupport?
     MenuTestSupport.installOnto MenuWdgt  if MenuTestSupport?
     MenuRowsPanelTestSupport.installOnto MenuRowsPanelWdgt  if MenuRowsPanelTestSupport?
+    MenusHelperTestSupport.installOnto MenusHelper  if MenusHelperTestSupport?
 
     # "false" as second parameter below
     #   fits the world in canvas as per dimensions
@@ -351,6 +352,9 @@ createWorldAndStartStepping = ->
         new SystemTestsControlPanelUpdater
 
     window.menusHelper = new MenusHelper
+    # the demo/parts-bin catalogue — a whole-file-marked dev family, so a production build
+    # simply has no `demoMenus` and the menu items naming it are absent with it.
+    window.demoMenus = new DemoMenus  if DemoMenus?
     world.removeSpinnerAndFakeDesktop()
 
     world.binWdgt = new BinWdgt

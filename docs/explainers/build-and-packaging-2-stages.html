@@ -84,17 +84,23 @@
   it replaces — that's a rule, not a hope (see the doctrine below). Each stage has a full,
   self-contained plan in <code>docs/plans/</code>; this page is the guided tour.</p>
 
+  <div class="callout"><strong>Status (2026-07-29):</strong> stages 1 and 2 have LANDED. The renderer is a
+  build-time property of the page and the <code>»&gt;&gt;</code> region mechanism is retired — 62 of its 63 sites
+  re-homed, the macro and video-player regexes deleted, and a build gate holding the count down. The one
+  remaining site is a menu row whose removal shifts pixels, so it closes with stage 2's menu-unification
+  phase. Stages 3 and 4 are still ahead.</div>
+
   <figure>
     <svg viewBox="0 0 820 130" width="100%">
       <defs><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
       <rect class="box" x="8"   y="20" width="185" height="62"/>
       <text class="t" x="20" y="42">1 · Backend split</text>
-      <text class="m" x="20" y="58">retires: the ?sw=1 switch,</text>
+      <text class="m" x="20" y="58">retired: the ?sw=1 switch,</text>
       <text class="m" x="20" y="72">the in-page precompile rig</text>
       <rect class="box" x="215" y="20" width="185" height="62"/>
       <text class="t" x="227" y="42">2 · One world</text>
-      <text class="m" x="227" y="58">retires: the »&gt;&gt; region</text>
+      <text class="m" x="227" y="58">retired: the »&gt;&gt; region</text>
       <text class="m" x="227" y="72">markers (all 63)</text>
       <rect class="box" x="422" y="20" width="185" height="62"/>
       <text class="t" x="434" y="42">3 · Dynamic parts</text>
@@ -123,7 +129,8 @@
     Mixed old/new states are legal only <em>inside</em> an open stage, never between stages.
   </div>
 
-  <h2><span class="stageno">Stage 1 ·</span> Backend split — the renderer becomes a property of the page</h2>
+  <h2><span class="stageno">Stage 1 ·</span> Backend split — the renderer becomes a property of the page
+  <span class="mono" style="color:var(--s3); font-size:.7em">— LANDED</span></h2>
   <p>One ~18 s build pass now produces <strong>one shared tree with two boot bundles</strong>, and each
   entry page bakes in its renderer — the <code>?sw=1</code> parameter is deleted:</p>
 
@@ -186,10 +193,12 @@
   314 KB; a homepage deploy 90 MB lighter; precompiled builds that actually generate on this
   machine; the single-file-save arc gets its “SWCanvas-free bundle” for free.</div>
 
-  <h2><span class="stageno">Stage 2 ·</span> One world — the homepage stops being a fork</h2>
-  <p>Today two world <em>designs</em> exist: the dev/test world (menus grown by accretion) and the
-  homepage world (a marker-stripped, reorganised fork). Stage 2 converges them into
-  <strong>one design</strong>, and every one of the 63 in-file region markers is re-homed and deleted:</p>
+  <h2><span class="stageno">Stage 2 ·</span> One world — the homepage stops being a fork
+  <span class="mono" style="color:var(--s3); font-size:.7em">— LANDED (menu unification closing)</span></h2>
+  <p>Two world <em>designs</em> used to exist: the dev/test world (menus grown by accretion) and the
+  homepage world (a marker-stripped, reorganised fork). Stage 2 converged them into
+  <strong>one design</strong>, re-homing the in-file region markers rather than replacing them with a
+  nicer marker syntax:</p>
 
   <figure>
     <svg viewBox="0 0 820 190" width="100%">
@@ -198,7 +207,7 @@
       <text class="m" x="36" y="54">everything + accreted test menus</text>
       <rect class="box" x="20" y="106" width="330" height="56"/>
       <text class="t" x="36" y="128">homepage world (a fork)</text>
-      <text class="m" x="36" y="144">markers strip 58 regions + 53 files</text>
+      <text class="m" x="36" y="144">markers stripped 58 regions + 53 files</text>
       <path class="flow" d="M352 44 C 420 44, 430 70, 470 82"/>
       <path class="flow" d="M352 134 C 420 134, 430 108, 470 96"/>
       <rect class="box" x="474" y="60" width="330" height="86" style="stroke:var(--s3)"/>
@@ -212,12 +221,13 @@
     being added ONTO the one world by whoever loads them.</figcaption>
   </figure>
 
-  <p>A 2026-07-28 census classified all 58 homepage regions: <strong>~17 turn out to be mis-marked
-  product code</strong> (including chunks of the layout engine — promoting them <em>fixes the homepage</em>),
-  ~28 are test/demo machinery to relocate or extract, ~11 are dead accretion to delete. The
-  markers and the three build-script regexes that process them are deleted at the end of the
-  stage; a gate keeps them dead. Menu unification (owner-designed, one recapture wave) closes
-  the stage.</p>
+  <p>A 2026-07-28 census classified all 58 homepage regions, and execution largely confirmed it:
+  <strong>~17 were mis-marked product code</strong> (including chunks of the layout engine — promoting them
+  <em>fixed the homepage</em>), ~28 were test/demo machinery to relocate or extract, ~11 dead accretion to
+  delete. A mechanical audit of what the homepage <em>referenced but did not ship</em> found the truncation
+  was worse than the census recorded: <code>_deferredSettleDeclare</code> was stripped while six shipping call
+  sites called it. Two of the three build-script regexes are now deleted and a gate keeps the count from
+  rising. Menu unification (owner-designed, one recapture wave) closes the stage.</p>
   <div class="enables"><b>Newly possible:</b> the homepage runs the same layout engine and the same
   menus as the world you develop in; “is this dev-only?” has one answer (where the code lives),
   not a per-line marker; the latent homepage crashes (excluded classes used by shipping

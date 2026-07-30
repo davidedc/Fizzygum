@@ -170,19 +170,25 @@
     <li><strong>SWCanvas</strong> — a software renderer that computes every pixel itself, so output is
       <em>byte-identical</em> on every machine and browser. That determinism is the foundation of the
       test suite: all 268 SystemTests compare screenshots down to the exact pixel hash.
-      SWCanvas draws text with <strong>BitmapText</strong>, which needs <strong>90 MB of font atlas data</strong> —
-      copied into every build.</li>
+      SWCanvas draws text with <strong>BitmapText</strong>, which needs <strong>90 MB of font atlas data</strong>.</li>
   </ul>
-  <p>Which renderer runs is decided <em>at runtime</em>, by a URL parameter: <code>?sw=1</code>. So today there is
-  <strong>one artifact carrying both engines</strong>, always — even though a given page ever uses one.</p>
+  <p>Which renderer runs is decided <strong>at build time, by the page</strong>. Each entry page presets
+  <code>window.FIZZYGUM_USE_SWCANVAS</code> and loads the boot bundle carrying exactly that engine:
+  <code>index.html</code> is native (plus the ~14 KB SWCanvas 3D core that SW3D needs),
+  <code>index-sw.html</code> and <code>worldWithSystemTestHarness.html</code> are full SWCanvas. A page missing
+  the preset <code>console.error</code>s at boot rather than guessing. To pick a backend you pick a page.</p>
+  <p class="mono" style="color:var(--muted)">This replaced a runtime <code>?sw=1</code> URL switch on a single
+  dual-engine artifact — the native bundle went 314 KB → 32 KB, and <code>--homepage</code> ships no SWCanvas
+  payload and no <code>font-assets/</code> at all. Landed by arc 2
+  (<span class="mono">archive/build-arc-2-backend-split-precompile-plan.md</span>).</p>
 
   <figure>
     <svg viewBox="0 0 820 170" width="100%">
       <rect class="box" x="290" y="14" width="240" height="52"/>
       <text class="t" x="308" y="36">the one built page</text>
-      <text class="m" x="308" y="52">carries native + SWCanvas + fonts</text>
-      <text class="m" x="252" y="102">no ?sw param</text>
-      <text class="m" x="518" y="102">?sw=1</text>
+      <text class="m" x="308" y="52">one page = one baked-in engine</text>
+      <text class="m" x="252" y="102">index.html → native</text>
+      <text class="m" x="518" y="102">index-sw / harness</text>
       <path class="flow" d="M355 68 C 320 90, 280 100, 240 118"/>
       <path class="flow" d="M465 68 C 500 90, 540 100, 580 118"/>
       <rect class="box" x="80" y="120" width="270" height="40" style="stroke:var(--s2)"/>
@@ -190,7 +196,7 @@
       <rect class="box" x="470" y="120" width="270" height="40" style="stroke:var(--s1)"/>
       <text class="t" x="486" y="145">SWCanvas — tests (exact pixels)</text>
     </svg>
-    <figcaption>One artifact, a runtime switch. The test suite hardcodes <code>?sw=1</code>; humans never type it.</figcaption>
+    <figcaption>The backend is a property of the PAGE, chosen at build time — not a runtime switch. Each page loads the bundle carrying exactly the engine it can use.</figcaption>
   </figure>
 
   <p>There is one twist that matters later: the Fizzytiles app (the fridge-magnets live-coding
@@ -202,9 +208,14 @@
   <p>Besides the dev build there is one shipping flavour, born years ago for the public
   homepage. It differs in three ways:</p>
   <ol>
-    <li><strong>It strips code using in-file markers.</strong> 53 files carry a
-      “<span class="mono"># this file is excluded from the fizzygum homepage build</span>” comment and are dropped
-      whole; 58 marked <em>regions inside</em> shipped classes are cut out of the source text by regex.</li>
+    <li><strong>It drops whole FILES using an in-file marker.</strong> A file carrying a
+      “<span class="mono"># this file is excluded from the fizzygum homepage build</span>” comment is simply
+      never emitted for this flavour.
+      <br><span class="mono" style="color:var(--muted)">There used to be a second, per-REGION mechanism as
+      well — a <code>»&gt;&gt;</code> comment opened a span, cut out of the source text by regex. Arc 3 retired it:
+      all 63 sites were re-homed (promoted where they were product, moved to the tests repo where they were
+      test machinery, or extracted into their own collaborator class), and a build gate now keeps the count
+      at zero. See the creaks table below for why.</span></li>
     <li><strong>It boots instantly from a pre-compiled image.</strong> A special page mode compiles
       everything, accumulates the compiled JS, and packages it as <code>pre-compiled.js</code> —
       Fizzygum generating its own fast-boot image (a quine-like trick). Sources still load
@@ -216,22 +227,29 @@
   and IDs, which froze the UI: menus could only ever grow, and they grew byzantine. At launch
   time the pragmatic fix was a separately-designed homepage with the accretion stripped out.
   The modern macro test system asks the live world where things are, so that constraint is
-  gone — but the fork and its markers remain.</p>
+  gone. The markers are now gone with it (arc 3); what remains of the fork is the menu topology
+  itself, which the owner is converging in that arc's last phase.</p>
 
-  <h2>Where this creaks (audited 2026-07-28)</h2>
+  <h2>Where this creaked (audited 2026-07-28) — and what has since been fixed</h2>
   <table>
     <tr><th>Finding</th><th>Consequence</th></tr>
-    <tr><td>The 314 KB bundle is ~85% renderer, shipped to every page — plus 90 MB of fonts
-      copied into every build — for an engine only tests use.</td>
-      <td>Product pages carry a test facility; the homepage deploy carries 90 MB it can never use.</td></tr>
-    <tr><td>The exclusion markers were never audited. ~14 of the 58 regions are actually
+    <tr><td>The 314 KB bundle was ~85% renderer, shipped to every page — plus 90 MB of fonts
+      in every build — for an engine only tests use.</td>
+      <td><strong>FIXED (arc 2).</strong> The backend is baked into the page, so the native bundle is
+      32 KB and <code>--homepage</code> carries neither the SWCanvas payload nor the fonts.</td></tr>
+    <tr><td>The region markers were never audited. ~14 of the 58 homepage regions turned out to be
       <strong>product code</strong>: core layout machinery, layout constants, public API.</td>
-      <td class="mono" style="color:var(--bad)">The homepage ships a truncated layout engine
-      and nil constants — a silent fork of behaviour.</td></tr>
-    <tr><td>The pre-compiled-image generator script only runs under WSL (it fishes a zip out of
-      the Windows Downloads folder).</td>
-      <td>On macOS it silently does nothing — homepage instant-boot has been inoperative,
-      masked by the compile-at-boot fallback.</td></tr>
+      <td><strong>FIXED (arc 3).</strong> It was worse than the census recorded: a mechanical audit of
+      what the homepage <em>referenced but did not ship</em> found <code>_deferredSettleDeclare</code>
+      stripped while <strong>six shipping call sites</strong> called it, plus password-field obfuscation,
+      the <code>addAsSibling*</code> pair and the halo's stack adjusters. The homepage really was running a
+      truncated layout engine. All promoted; the mechanism is retired and gated at zero.</td></tr>
+    <tr><td>The pre-compiled-image generator script only ran under WSL (it fished a zip out of
+      the Windows Downloads folder), so on macOS it silently did nothing — homepage instant-boot
+      was inoperative, masked by the compile-at-boot fallback.</td>
+      <td><strong>FIXED (arc 2).</strong> The homepage build now invokes a headless Node generator and the
+      boot check <em>asserts</em> <code>window.preCompiled === true</code> — the stub boots perfectly well, so
+      only the assertion can tell a real image from a generator that produced nothing.</td></tr>
     <tr><td>Everything loads at boot: every app, every inspector, all sources — whether or not
       this session will ever use them.</td>
       <td>Boot does maximal work; there is no way to ship “just what this artifact needs”.</td></tr>
@@ -240,7 +258,9 @@
   <div class="callout">
     <strong>Next:</strong> a four-stage plan turns each runtime switch and marker into a
     build-time or load-time decision — and retires each old mechanism completely, stage by
-    stage. <a href="build-and-packaging-2-stages.html">Part 2: the four stages →</a>
+    stage. Stages 1 and 2 (the backend split and the region markers) have landed; the remaining
+    two are the partition into parts and the packaging profiles.
+    <a href="build-and-packaging-2-stages.html">Part 2: the four stages →</a>
   </div>
 </main>
 </body>

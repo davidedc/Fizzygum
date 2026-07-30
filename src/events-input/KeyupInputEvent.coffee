@@ -12,8 +12,8 @@ class KeyupInputEvent extends KeyboardInputEvent
     for eachKeyboardEventsReceiver in Array.from world.keyboardEventsReceivers
       eachKeyboardEventsReceiver.processKeyUp? @key, @code, @shiftKey, @ctrlKey, @altKey, @metaKey
 
-    # »>> this part is excluded from the fizzygum homepage build
-    # catch the F2 key
+    # catch the F2 key: it opens the macro test menu, which lives with the harness
+    # (Automator-and-test-harness-src/MenusHelperTestSupport.coffee). The soak is what
+    # makes the key inert in a build that ships no harness.
     if @key == "F2" and !@shiftKey and !@ctrlKey and !@altKey and !@metaKey
-      menusHelper.testMenuForMacros()
-    # this part is excluded from the fizzygum homepage build <<«
+      menusHelper.testMenuForMacros?()

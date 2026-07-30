@@ -90,16 +90,24 @@ class WidgetFactory
     world.create new GrayPaletteWdgt
   createNewColorPaletteWdgt: ->
     world.create new ColorPaletteWdgt
+  # These two frame the palette AFTER world.add, so the window is already live and painted when it is
+  # sized -- which makes this a public mutation, and a public mutator must SELF-SETTLE. A raw
+  # _applyBounds here leaves the relayout on the end-of-cycle work list instead (the "careless push" the
+  # capstone gate fails on); setBounds is the one-shot position+extent public form that flushes once.
+  # (The siblings below bound their widget BEFORE adding it, where nothing is painted yet and the raw
+  # core is correct.) Reachable from the demo menu on both entry pages since arc 3 phase 7 merged
+  # popUpDemoMenu's two catalogues -- before that these items existed only on the index page, where no
+  # gate ever ran them, which is how the carelessness survived.
   createNewGrayPaletteWdgtInWindow: ->
     gP = new GrayPaletteWdgt
     wm = new FrameWdgt gP
     world.add wm
-    wm._applyBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 70
+    wm.setBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 70
   createNewColorPaletteWdgtInWindow: ->
     cP = new ColorPaletteWdgt
     wm = new FrameWdgt cP
     world.add wm
-    wm._applyBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 100
+    wm.setBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 100
   createNewColorPickerWdgt: ->
     world.create new ColorPickerWdgt
   createNewAnimationDemo: ->

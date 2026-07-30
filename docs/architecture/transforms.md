@@ -392,8 +392,11 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
 - **Duplicate** (`duplicateMenuAction`) — `fullCopy` the figure (its `deepCopy` deep-copies the
   `TransformSpec` for free), offset from the figure's position; the copy's `_applyMoveTo` rides a
   pinned anchor along.
-- **Duplicate + pick up** (`duplicateMenuActionAndPickItUp`) — same figure resolution, then
-  `_normalizePinnedAnchorNoSettle` first (the hand-carry pipeline assumes a slot-centre pivot).
+- **Duplicate + pick up** (`duplicateAndPickItUp`) — same figure resolution, then
+  `_normalizePinnedAnchorNoSettle` first (the hand-carry pipeline assumes a slot-centre pivot). Public
+  API with no menu item since arc 3 phase 7 — the one "duplicate" item means copy-in-place.
+- **Pick up** (`pickUpMenuAction`) — `_resolvePickUpFigure` (the same resolution the drag pipeline's
+  `determineGrabs` uses, so a menu pick-up and a drag grab take the same thing), then `pickUp`.
 - **Save to file** (`saveToFile`) — serialize the figure, not the bare content: the Serializer
   nils the root's parent, and serializing bare content actually **throws** a `SerializationError`
   (the content still references its island). The filename stays derived from the content.

@@ -35,19 +35,19 @@ const SRC = path.resolve(__dirname, '../src');
 
 // Baselines MEASURED by this engine. Arc 3 started at 58 homepage + 3 macros + 2 video-player = 63
 // openers, all paired; each phase that re-homes sites tightens the number here to lock the gain in.
-// Homepage: 58 (Phase 1) -> 37 (Phase 2 PROMOTE) -> 25 (Phase 3 DELETE) -> 12 (Phase 4 TESTS-REPO).
-// The one delete row Phase 3 did NOT take is BoxyAppearance's "pick inset..." item: its action
-// method no longer exists (clicking it throws), but the item still RENDERS, so removing it shortens
-// every Box-family context menu and moved 6 menu tests' pixels. That makes it menu TOPOLOGY, which
-// Phase 7 decides and closes with its one recapture wave — not dead code a pixel-neutral phase drops.
+// Homepage: 58 (Phase 1) -> 37 (Phase 2 PROMOTE) -> 25 (Phase 3 DELETE) -> 12 (Phase 4 TESTS-REPO) -> 10 (Phase 5a folds) -> 5 (Phase 5b pinouts) -> 3 (Phase 5c demo split) -> 1 (Phase 5d world-menu split).
+// ALL THREE ARE NOW ZERO, so every baseline is a HARD RULE: any occurrence fails the build, and
+// build.py no longer carries a single region regex. The last site to go was BoxyAppearance's
+// "pick inset..." row — its action method had ceased to exist (clicking it threw) but the row still
+// RENDERED, so it was menu topology and waited for the phase that closes with a recapture wave.
 const KINDS = [
-  { id: 'homepage', baseline: 12,
+  { id: 'homepage', baseline: 0,
     why: 'homepage-stripped regions — the census found product code among them; every site is re-homed by arc 3',
     open: /^[ \t]*#\s*»>>\s*this part is excluded from the fizzygum homepage build/ },
-  { id: 'macros', baseline: 3,
+  { id: 'macros', baseline: 0,
     why: 'macro-only regions; they fold into the whole-file-marked src/macros/ family (which is arc 4 territory, not this gate)',
     open: /^[ \t]*#\s*»>>\s*this part is only needed for Macros/ },
-  { id: 'videoplayer', baseline: 2,
+  { id: 'videoplayer', baseline: 0,
     why: 'video-player-only regions; they fold into the whole-file-marked video-player family',
     open: /^[ \t]*#\s*»>>\s*this part is only needed for VideoPlayer/ },
 ];

@@ -66,15 +66,27 @@ ENTRY_PAGES = [
 IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
 IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 
-# regexps to exclude entire files or parts of files from the
-# homepage build
-HOMEPAGE_EXCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is excluded from the fizzygum homepage build[^«]*«")
+# regexps to exclude entire FILES from a build flavour.
+#
+# There used to be a second, per-REGION mechanism alongside these: a `# »>> this part is …`
+# comment opened a span that ended at the next comment carrying `«`, and the whole span was
+# cut out of the source TEXT by regex. Arc 3 retired it. It had accreted for eight+ years
+# without an audit, and the audit found it stripping PRODUCT code out of the homepage —
+# core sizing and `_reLayout` machinery, class constants that silently became `nil`, public
+# API — because nothing about a comment tells you whether what follows is dev scaffolding
+# or the layout engine. Its 63 sites were RE-HOMED instead: promoted where they were product,
+# moved to ../Fizzygum-tests/Automator-and-test-harness-src/ where they were test machinery,
+# or extracted into their own collaborator class (PinoutsOverlay, DemoMenus). ALL THREE region
+# regexes are now DELETED: a flavour can only drop WHOLE FILES, and a call site copes with an
+# absent file through an existence guard (`if DemoMenus?`, `world.pinouts?.…`).
+# `buildSystem/check-region-markers.js` holds every kind at zero — a hard rule now, not a
+# ratchet — so nothing can reintroduce the mechanism. Deliberately there is NO replacement
+# marker syntax: the lesson was that invisible, text-level stripping is the wrong tool, not
+# that its spelling was wrong.
 FILE_NOT_IN_FIZZYGUM_HOMEPAGE = re.compile(r"# this file is excluded from the fizzygum homepage build")
 
-MACROS_INCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is only needed for Macros[^«]*«")
 FILE_ONLY_FOR_MACROS = re.compile(r"# this file is only needed for Macros")
 
-VIDEOPLAYER_INCLUSION_PARTS = re.compile(r"[ ]*# »>> this part is only needed for VideoPlayer[^«]*«")
 FILE_ONLY_FOR_VIDEOPLAYER = re.compile(r"# this file is only needed for VideoPlayer")
 
 # we just need to detect a switch
@@ -278,13 +290,6 @@ def main():
             escaped_content = content.replace('"',"＂")
             escaped_content = escaped_content.replace("\\","⧹")
             escaped_content = escaped_content.replace("\n","⤶")
-
-            # if we are building for the homepage, we strip out all
-            # sections of the file that don't belong to the homepage
-            if args.homepage:
-                escaped_content = re.sub(HOMEPAGE_EXCLUSION_PARTS, '', escaped_content)
-                escaped_content = re.sub(MACROS_INCLUSION_PARTS, '', escaped_content)
-                escaped_content = re.sub(VIDEOPLAYER_INCLUSION_PARTS, '', escaped_content)
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
             escaped_content_with_declaration = STRING_BLOCK % (str(sourceFileName), str(escaped_content))

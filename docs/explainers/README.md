@@ -12,7 +12,10 @@ the explainer is updated to present tense or retired.
 
 ## Current sets
 
-- **Build & packaging** (2026-07-28; describes the current state and the five-arc
+- **Build & packaging** (2026-07-28, brought current 2026-07-29 for arcs 1–3: the backend is now a
+  build-time property of the page, the tests are SERVED through a symlink rather than copied, and the
+  `»>>` region mechanism is retired — so set 3's "Before" panels are the historical baseline, not the
+  present. Describes the current state and the five-arc
   program owned by `archive/build-arc-1-test-serving-link-plan.md` through
   `plans/build-arc-5-packaging-profiles-plan.md` — filenames numbered by execution order;
   the explainer's "stages 1–4" are arcs 2–5, with arc 1 a small independent prelude):

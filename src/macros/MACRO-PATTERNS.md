@@ -551,15 +551,15 @@ assertion a recapture after a regression silently stores two different hashes an
   (poppingUpSubMenuNotClipped) used an inspector's clipped list column; a plain frame demonstrates the same point.
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
   ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
-  duplicate. Under the harness `world.isIndexPage` is false (`WorldWdgt.coffee:277-278`) so it is `Widget.duplicateMenuActionAndPickItUp`
-  (`:3489` → `fullCopy().pickUp()`) — the copy RIDES THE HAND (not the index page's +10,+10 plop). `PopUpWdgt.fullCopy` (`:92-97`)
-  clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the instant the copy exists — pinned BEFORE it
-  is dropped. Show the differential with an explicit unpinned FOIL: CARRY the hand-riding copy to the LEFT and drop it where the pointer
-  releases it (`@syntheticEventsMouseMove_InputEvents leftPt, "no button"` then `@syntheticEventsMouseClick_InputEvents()` — let the pointer
-  place it, do NOT API-reposition it), re-open a NORMAL world menu on the right (`@moveToAndClick_InputEvents pt, "right button"`), screenshot
-  the two menus, then ONE `@moveToAndClick_InputEvents emptyPt, "left button"` outside both — the unpinned foil closes, the pinned duplicate
-  survives. GOTCHA: the ORIGINAL world menu CLOSES during the duplicate navigation (eyeball-confirmed), so it can't be the contrast — open a
-  fresh foil. (Baseline of a normal menu closing on an outside click: macroMenusCloseOnMouseDownOutside.)
+  duplicate — `Widget.duplicateMenuAction`, which adds the copy to the world at the original's position + (10,10) and leaves it
+  there. `PopUpWdgt.fullCopy` (`:92-97`) clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the
+  instant the copy exists — pinned from birth, with no drop involved. Show the differential with an explicit unpinned FOIL: leave the
+  duplicate standing where it was born (top-left), re-open a NORMAL world menu on the right
+  (`@moveToAndClick_InputEvents pt, "right button"`), screenshot the two menus, then ONE
+  `@moveToAndClick_InputEvents emptyPt, "left button"` outside both — the unpinned foil closes, the pinned duplicate
+  survives. GOTCHA-TURNED-GIFT: the ORIGINAL world menu CLOSES during the duplicate navigation (eyeball-confirmed), so it can't be the
+  contrast — but that is also why the +10,+10 copy needs no carrying: there is nothing left underneath it, so it reads cleanly on its
+  own and an explicit fresh foil supplies the contrast. (Baseline of a normal menu closing on an outside click: macroMenusCloseOnMouseDownOutside.)
 
 ## Windows (chrome + content)
 
@@ -1015,20 +1015,40 @@ assertion a recapture after a regression silently stores two different hashes an
   drop on the desktop, which resets the parent to the world. So after attach + detach the morph float-drags independently again.
   GOTCHA: "attach…" is a TOP-LEVEL item, but "pick up" lives in the morph's "a <Class> ➜" HIERARCHY submenu — `clickMenuItemOfWidget
   …, "pick up"` finds nothing and crashes; use `pickUp()` directly or navigate the submenu.
-- **Duplicate a widget — copy rides the hand** (`macroDuplicateSimpleWidgetRidesHand` / `…ComplexWidget…`): a normal widget's
-  context menu carries a TOP-LEVEL "duplicate" (`Widget.duplicateMenuActionAndPickItUp` = `fullCopy().pickUp()`), so
-  `clickMenuItemOfWidget_InputEvents_Macro widget, "duplicate"` makes the COPY ride the hand (already painted on pickup); carry it
-  with `@syntheticEventsMouseMove_InputEvents` (a grabbed hand-child follows even a no-button move) and DROP with
-  `@syntheticEventsMouseClick_InputEvents()`. **image_1 is taken with NO pointer movement after the click** — the copy must be
-  fully painted the instant it is grabbed. Duplicating a COMPLEX/nested widget: right-click it → ancestor hierarchy menu →
-  navigate by class-name PREFIX to the desired ancestor's own menu → "duplicate". (A MenuWdgt CONTAINER is not right-clickable
-  for a context menu, but a MenuItemWdgt — an individual item — IS: see the next bullet.)
+- **Duplicate a widget — the copy appears IN PLACE, then you carry it** (`macroDuplicateSimpleWidgetPaintsCleanly` /
+  `…ComplexWidget…`): a normal widget's context menu carries a TOP-LEVEL "duplicate" (`Widget.duplicateMenuAction`), so
+  `clickMenuItemOfWidget_InputEvents_Macro widget, "duplicate"` deep-copies it, adds the copy to the world at the original's
+  position **+ (10,10)** and leaves it there — nothing attaches to the pointer. **image_1 is taken with NO pointer movement after
+  the click**: the copy is added last so it draws ON TOP of the original, which means the shot IS the copy and a blank or
+  half-painted birth frame would be plainly visible. To then get a LEGIBLE separated shot (at +10,+10 two identical widgets are
+  nearly indistinguishable — the reason every one of these tests needs a second shot), find the copy and carry it via its own
+  "pick up" item: `clickMenuItemOfWidget_InputEvents_Macro theCopy, "pick up"` then
+  `@syntheticEventsMouseMove_InputEvents dest, "no button"` (a grabbed hand-child follows even a no-button move), and DROP with
+  `@syntheticEventsMouseClick_InputEvents()` if it must stay put. FIND THE COPY by the deterministic offset or by diffing the
+  population across the click — never by child order: `world.topWdgtSuchThat (w) -> (w instanceof X) and (w isnt theOriginal)`, or
+  `(world.children.filter (w) -> w.position().equals expectedPos)[0]`; and assert that offset, so the placement law is pinned and
+  not merely assumed. Duplicating a COMPLEX/nested widget: right-click it → ancestor hierarchy menu → navigate by class-name
+  PREFIX to the desired ancestor's own menu → the item — factor that walk into a helper taking the ITEM LABEL, since you now need
+  the same route twice (once for "duplicate", once for the copy's "pick up"): see
+  `windowedWidgetMenuAction_InputEvents_Macro` in macroDuplicateComplexWidgetPaintsCleanly. (A MenuWdgt CONTAINER is not
+  right-clickable for a context menu, but a MenuItemWdgt — an individual item — IS: see the next bullet.) HISTORY: until arc 3
+  phase 7 the harness page wired this label to the pick-up variant (copy rides the hand) while the product page copied in
+  place; copy-in-place won as the single behaviour.
+- **Duplicate ONTO THE HAND — the verb with no menu item** (`macroDuplicateAndPickItUpRidesHand`): `Widget.duplicateAndPickItUp`
+  is the second duplication verb — same FIGURE resolution, but the copy is anchor-normalised and `pickUp()`'d onto the hand
+  instead of standing beside the original. It is **public API with NO context-menu item** (phase 7 left one "duplicate" item,
+  meaning copy-in-place), so a **direct call** `widget.duplicateAndPickItUp()` from macro source is the only way to reach it —
+  and is the sanctioned form: the "drive input through the event queue" rule (`src/macros/CLAUDE.md` rule 2) exempts behaviour
+  whose UI trigger is genuinely absent. Everything AFTER the call is still real input (no-button move to carry, mouse-DOWN to
+  drop). GOTCHA: `pickUp` CENTRES the copy on the hand, so park the pointer at a known point BEFORE calling — the hand position,
+  not the original's, decides where the copy appears. Find it with `world.hand.children`, not `world.children`; and assert the
+  transformed case by VALUE (which island rode, carrying which TransformSpec) rather than with another screenshot.
 - **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneWidget`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
   determinism toggles the item's own entry is the clean `"a MenuItem ➜"` (no instance number/bounds — `Widget.toString:467`
-  with `HidingOfWidgetsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy rides
-  the hand; carry it with `@syntheticEventsMouseMove_InputEvents` and DROP with `@syntheticEventsMouseClick_InputEvents()` (the
-  mouse-DOWN releases the float-drag). Capture the "demo ➜" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
+  with `HidingOfWidgetsNumberIDInLabels`), so an EXACT match is stable. Drill `"a MenuItem ➜"` → `"duplicate"`: the copy is added
+  straight to the WORLD at the item's position + (10,10) — and since the same click closes the menu chain it came out of, the copy
+  is simply left standing alone on the bare desktop, so the detachment needs no carry and no drop at all. Capture the "demo ➜" target item from `getMostRecentlyOpenedMenu()` WHILE the world menu is
   still fresh (the next click clears `freshlyCreatedPopUps`). image_1 = a standalone "demo ➜" menu-item morph alone on the desktop.
   **The detached copy stays FUNCTIONAL:** because "demo ➜" is a submenu-opener, left-clicking the standalone item opens the demo
   menu (locate it via `world.topWdgtSuchThat (w) -> (w instanceof MenuItemWdgt) and (w.labelString == "demo ➜")` — the only menu
@@ -1254,8 +1274,10 @@ assertion a recapture after a regression silently stores two different hashes an
   and frees it; a passing verify returns no failure images, so it stays fast. First composite-into-scroll-panel test. No new verb.
 - **An embedded "duplicate" button is self-replicating (copy-of-a-copy)** (`macroEmbeddedDuplicateButtonReduplicates`): a Panel's OWN
   context-menu "duplicate" item, picked up out of the menu and dropped INTO the panel, becomes an in-panel `MenuItemWdgt` (target = the panel,
-  action `"duplicateMenuActionAndPickItUp"`, `Widget.coffee:3489`). Clicking it deep-copies the whole panel (`fullCopy().pickUp()`,
-  `Widget.coffee:2299`); the deep copier rewires the COPIED button's target to the cloned panel (the `Duplicator`'s
+  action `"duplicateMenuAction"`). Clicking it deep-copies the whole panel and stands the copy at the panel's position + (10,10)
+  (so each generation must then be carried clear via the copy's own "pick up" — factored into the test-local verb
+  `duplicateViaEmbeddedButtonAndCarryTo_InputEvents_Macro panel, dest`, which also identifies the new panel by DIFFING the panel
+  population across the click); the deep copier rewires the COPIED button's target to the cloned panel (the `Duplicator`'s
   original->clone identity map), so clicking the COPY's embedded button duplicates the copy, not the original — the duplicator survives `fullCopy` and replicates
   across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneWidget` idiom: `@openMenuOf_InputEvents panel` →
   `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
@@ -1554,7 +1576,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `WorldWdgt.create` IS `pickUp()` and PanelWdgt overrides nothing in the grab path), then the held mid-drag idiom:
   `@moveToAndMouseDown_InputEvents panel.center()` → `@syntheticEventsMouseMove_InputEvents pt, "left button"` (lifts onto the hand) →
   `takeScreenshot…` (the held panel, fully painted with its drag shadow) → `@syntheticEventsMouseUp_InputEvents()`. The paint-on-pickup
-  sibling of `macroDuplicateSimpleWidgetRidesHand` (a DUPLICATE painted-OK the instant it's grabbed) and the held-shadow companion of
+  sibling of `macroDuplicateSimpleWidgetPaintsCleanly` (a DUPLICATE painted-OK the instant it appears) and the held-shadow companion of
   `macroCompositeWidgetsHaveCorrectShadow`. No new verb.
 - **Bare text widget casts the unified drop-shadow, lifted while dragged** (`macroBareTextWidgetDropShadowRestAndDrag`): a
   `StringWdgt` + a `TextWdgt` added straight to the world (transparent, so the shadow is the GLYPHS, not a box) each get the

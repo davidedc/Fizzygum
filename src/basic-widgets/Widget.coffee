@@ -2647,7 +2647,7 @@ class Widget extends TreeNode
     return [area,sl,st,al,at,w,h]
 
   # EPHEMERAL capability (owner's term). An ephemeral is a transient overlay owned wholly by the
-  # per-cycle reconciler (WorldWdgt.addHighlightingWidgets / addPinoutingWidgets): it is
+  # per-cycle reconciler (WorldWdgt.addHighlightingWidgets / PinoutsOverlay.reconcile): it is
   # hit-test-excluded (never steals mouseEnter / clicks / drops — ActivePointerWdgt.topWdgtUnderPointer),
   # casts no shadow (skipsAddShadowManagement below), and is skipped by world-snapshot serialization
   # (Serializer.serializeWorld). Capability, not a type test (type-test-elimination convention): reads
@@ -3053,14 +3053,16 @@ class Widget extends TreeNode
   representativeIcon: ->
     new WidgetIconWdgt
 
-  # »>> this part is excluded from the fizzygum homepage build
+  # Swap me for a PointerWdgt pointing at me. PointerWdgt is an experimental family that ships
+  # only in the full build, so this is inert without it — the two entry points (the "make
+  # pointer" demo menu item and PointerWdgt's own restore) are absent there too.
   createPointerWdgt: ->
+    return unless PointerWdgt?
     myPosition = @positionAmongSiblings()
     widgetToAdd = new PointerWdgt @
     @parent.add widgetToAdd, myPosition
     widgetToAdd.setBounds @position(), new Point 150, 20
     @removeFromTree()
-  # this part is excluded from the fizzygum homepage build <<«
 
   # PUBLIC self-settling entry (menus / triggers / double-clicks). The NON-settling core
   # _createReferenceNoSettle is what a drop recipient calls (it runs inside the drop's settle, so
@@ -3415,11 +3417,16 @@ class Widget extends TreeNode
     aFullCopy._applyMoveTo figure.position().add new Point 10, 10
     aFullCopy._rememberFractionalSituationInHoldingPanel()
 
-  # Same figure resolution as duplicateMenuAction, but the copy goes ONTO THE HAND. Normalize a
-  # possibly-pinned anchor first, matching the Bug-G pick-up seam (the whole hand-carry pipeline assumes a
-  # slot-centre pivot). Only islands define _normalizePinnedAnchorNoSettle (the `?.` no-ops off any
-  # island); the copy is a detached root, so no settle is needed here — pickUp's own settle covers it.
-  duplicateMenuActionAndPickItUp: ->
+  # The OTHER duplication verb: same figure resolution as duplicateMenuAction (see its comment above for
+  # why the copy must be the FIGURE and not the bare content), but the copy goes ONTO THE HAND instead of
+  # standing where the original is. Normalize a possibly-pinned anchor first, matching the Bug-G pick-up
+  # seam — the whole hand-carry pipeline assumes a slot-centre pivot. Only islands define
+  # _normalizePinnedAnchorNoSettle (the `?.` no-ops off any island); the copy is a detached root, so no
+  # settle is needed here — pickUp's own settle covers it.
+  # PUBLIC API WITH NO MENU ITEM, deliberately: arc 3 phase 7 unified the two entry pages onto ONE
+  # "duplicate" item meaning copy-in-place (the less surprising end-user behaviour), so this variant is
+  # reachable only programmatically. Do not re-add it to a context menu without an owner decision.
+  duplicateAndPickItUp: ->
     figure = @_enclosingIslandFigure()
     aFullCopy = figure.fullCopy()
     aFullCopy?._normalizePinnedAnchorNoSettle?()
@@ -4078,60 +4085,42 @@ class Widget extends TreeNode
       100,
       true
 
-  # »>> this part is excluded from the fizzygum homepage build
+  # the pinout debug overlay lives in its own dev-only collaborator (src/PinoutsOverlay.coffee),
+  # reached through a soak so a build without it simply has no pinouts. These two stay here
+  # because they are the widget's own context-menu ACTIONS (MenusHelper wires the menu items
+  # to these names on the target widget).
   showOutputPins: (a,b,c,d) ->
-    world.widgetsToBePinouted.add b
+    world.pinouts?.show b
 
   removeOutputPins: (a,b,c,d) ->
-    world.widgetsToBePinouted.delete b
-
-  serialiseToMemory: ->
-    # Surface a SerializationError (an external pointer that can't be encoded, a function
-    # with no source, ...) as a friendly, path-carrying dialog instead of an uncaught throw
-    # (the §4.7 UX; the file-save action in Phase 4 does the same). Any other error is a real
-    # bug and re-thrown.
-    try
-      world.lastSerializationString = @serialize()
-    catch error
-      if error instanceof SerializationError
-        world.inform error.toString()
-      else
-        throw error
-
-  deserialiseFromMemoryAndAttachToHand: ->
-    derezzedObject = world.deserialize world.lastSerializationString
-    derezzedObject.pickUp()
-
-  deserialiseFromMemoryAndAttachToWorld: ->
-    derezzedObject = world.deserialize world.lastSerializationString
-    world.add derezzedObject
-  # this part is excluded from the fizzygum homepage build <<«
+    world.pinouts?.remove b
 
   buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: ((@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
 
-    if world.isIndexPage
-      menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
-      menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
-      menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
-      menu.addLine()
-      menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
-      menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
-      menu.addMenuItem "create shortcut", @, "createReference", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
-      menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
-    else
-      menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
-      menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
-      menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
-      menu.addLine()
-      menu.addMenuItem "duplicate", @, "duplicateMenuActionAndPickItUp", toolTip: "make a copy\nand pick it up"
-      menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
-      menu.addMenuItem "attach...", @, "attach", toolTip: "stick this widget\nto another one"
-      menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
-      menu.addMenuItem "create shortcut", @, "createReference", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
-      menu.addMenuItem "test menu ➜", menusHelper, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"
-      menu.addLine()
+    # ONE widget context menu (arc 3 phase 7, owner-ratified 2026-07-29 — see
+    # docs/plans/build-arc-3-phase-7-menu-topology.md). This used to fork on world.isIndexPage,
+    # so the test-harness page showed a DIFFERENT menu from the product page: the harness got
+    # attach/inspect/test-menu/hide/destroy, the product page got save-to-file and dev ➜, and
+    # "duplicate" even MEANT something different on each (in place vs copy-and-pick-up). That
+    # fork dates from the old test system, which recognised widgets by string/ID and so froze
+    # the UI; macros interrogate the live world, so it costs a recapture wave, not test rewrites.
+    #
+    # The design is the UNION of what the two branches offered, with the genuinely dev-only
+    # entries gated below rather than page-gated. `duplicate` is copy-IN-PLACE everywhere (D2):
+    # a copy that silently attaches itself to the pointer is the more surprising default.
+    menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
+    menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
+    menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
+    menu.addLine()
+    menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
+    menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
+    menu.addMenuItem "create shortcut", @, "createReference", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
+    menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
+    menu.addMenuItem "attach...", @, "attach", toolTip: "stick this widget\nto another one"
+    menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
+    menu.addLine()
 
     # capability, was `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
     # (type-test-elimination ε) — see PanelWdgt.childrenCanLockToMe
@@ -4145,7 +4134,9 @@ class Widget extends TreeNode
       else
         menu.addMenuItem "lock to " + whereToOrFrom, @, "toggleIsLockingToPanels", toolTip: "make this widget\nmovable"
 
-    if !world.isIndexPage
+    # "hide" leaves a widget with no product way back (only the dev tools can bring it round), so
+    # it is dev-gated rather than page-gated. Same for the unrecoverable "destroy".
+    if world.isDevMode
       menu.addMenuItem "hide", @, "hide"
 
     if @isFrame?()
@@ -4153,10 +4144,13 @@ class Widget extends TreeNode
     else
       menu.addMenuItem "delete", @, "close"
 
-    if world.isIndexPage or world.macroToolkit?.aMacroIsRunning?
+    # The dev/test tail. Each entry is gated on what makes it MEANINGFUL rather than on which page
+    # we are: "dev ➜" and "destroy" on dev mode, "test menu ➜" on the demo family actually shipping
+    # (a production build has no `demoMenus` at all).
+    if world.isDevMode
       menu.addLine()
       menu.addMenuItem "dev ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "dev tools"
-    else
+      menu.addMenuItem "test menu ➜", demoMenus, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if DemoMenus?
       menu.addMenuItem "destroy", @, "fullDestroy"
 
     menu

@@ -266,12 +266,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   currentHighlightingWidgets: new Set
   widgetsBeingHighlighted: new Set
 
-  # »>> this part is excluded from the fizzygum homepage build
-  widgetsToBePinouted: new Set
-  currentPinoutingWidgets: new Set
-  widgetsBeingPinouted: new Set
-  # this part is excluded from the fizzygum homepage build <<«
-
   # --- drag-embed affordance overlays (docs/specs/drag-embed-interaction-spec.md §6/§11) --------
   # The hand's state machine sets the *Declared slots each cycle (nil = not wanted); the pre-paint
   # reconciler addDragAffordanceWidgets creates/moves/destroys the reconciler-owned overlay widgets.
@@ -455,6 +449,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # stripped and the demo menus that use it are stripped too.
     if WidgetFactory?
       @widgetFactory = new WidgetFactory
+    # the pinout debug overlay (floating labels naming the widget they point at), same
+    # dev-only collaborator shape as @widgetFactory above -- every caller soaks.
+    if PinoutsOverlay?
+      @pinouts = new PinoutsOverlay
 
     # world.dataflow — the ONE calculation/dataflow engine (spec docs/specs/dataflow-engine-spec.md).
     # A shipped product collaborator (like @sourceEditsRegistry above), so it is constructed
@@ -602,7 +600,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @add acm
 
     # TODO find a way to put this back
-    # menusHelper.createWelcomeMessageWindowAndShortcut()
+    # demoMenus.createWelcomeMessageWindowAndShortcut()
     (new HowToSaveMessageApp).createOpener()
     menusHelper.binIconAndText()
     (new SimpleDocumentApp).createOpener()
@@ -612,10 +610,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     (new PatchProgrammingApp).createOpener()
     (new GenericPanelApp).createOpener()
     (new ToolbarsApp).createOpener()
-    # »>> this part is excluded from the fizzygum homepage build
-    # (FridgeMagnetsApp and the whole fizzytiles family ship only in the full build)
-    (new FridgeMagnetsApp).createOpener()
-    # this part is excluded from the fizzygum homepage build <<«
+    # the fizzytiles family (FridgeMagnetsApp and friends) ships only in the full build,
+    # so it contributes its own desktop opener only when it is actually present
+    (new FridgeMagnetsApp).createOpener()  if FridgeMagnetsApp?
     exampleDocsFolder = @makeFolder nil, nil, "Examples"
     (new DegreesConverterApp).createOpener exampleDocsFolder
     (new SampleSlideApp).createOpener exampleDocsFolder
@@ -623,13 +620,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     (new SampleDocApp).createOpener exampleDocsFolder
     (new SpreadsheetApp).createOpener exampleDocsFolder
 
-    # »>> this part is only needed for VideoPlayer
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
     # so in a default build this boot-time auto-launch would throw "...is not defined".
     # Only run it when the class is actually present. (Surfaced by the boot-smoke gate;
     # see ../Fizzygum-tests/scripts/smoke-boot-headless.js.)
     if window.VideoPlayerWithRecommendationsWdgt? then world.draftRunVideoPlayer()
-    # this part is only needed for VideoPlayer <<«
 
 
   mostRecentlyCreatedPopUp: ->
@@ -1427,41 +1422,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @numberOfDuplicatedBrokenRects = 0
     @numberOfMergedSourceAndDestination = 0
 
-  # »>> this part is excluded from the fizzygum homepage build
-  addPinoutingWidgets: ->
-    @currentPinoutingWidgets.forEach (eachPinoutingWidget) =>
-      if @widgetsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
-        if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedPaintBounds()
-          # reposition the pinout widget if needed. The label is a WORLD child, so it must anchor to the
-          # target's SCREEN footprint: clippedThroughBounds is plane-local, and for a target inside a
-          # rotated/scaled island the un-mapped box is the wrong plane (§7.11) — off any island
-          # mapRectToScreen returns the box unchanged.
-          target = eachPinoutingWidget.wdgtThisWdgtIsPinouting
-          peekThroughBox = target.mapRectToScreen target.clippedThroughBounds()
-          eachPinoutingWidget._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-
-      else
-        @currentPinoutingWidgets.delete eachPinoutingWidget
-        @widgetsBeingPinouted.delete eachPinoutingWidget.wdgtThisWdgtIsPinouting
-        eachPinoutingWidget.wdgtThisWdgtIsPinouting = nil
-        eachPinoutingWidget.fullDestroy()
-
-    @widgetsToBePinouted.forEach (eachWidgetNeedingPinout) =>
-      unless @widgetsBeingPinouted.has eachWidgetNeedingPinout
-        hM = new StringWdgt eachWidgetNeedingPinout.toString()
-        # this bare StringWdgt is used as an ephemeral overlay — mark the INSTANCE before @add so it
-        # is hit-test-excluded and shadow-free (isEphemeral capability), like the HighlighterWdgt.
-        hM._ephemeralOverlay = true
-        @add hM
-        hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
-        # SCREEN-anchor, same mapping as the reposition branch above (§7.11)
-        peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen eachWidgetNeedingPinout.clippedThroughBounds()
-        hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-        hM.setColor Color.BLUE
-        hM.setWidth 400
-        @currentPinoutingWidgets.add hM
-        @widgetsBeingPinouted.add eachWidgetNeedingPinout
-  # this part is excluded from the fizzygum homepage build <<«
   
   addHighlightingWidgets: ->
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
@@ -1633,7 +1593,8 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     w is @_editorSelectedWidget
 
 
-  # »>> this part is only needed for VideoPlayer
+  # Only reachable through the guarded auto-launch in createDesktop: without
+  # --includeVideoPlayer the VideoPlayer family is absent and nothing calls this.
   draftRunVideoPlayer: ->
       videoPlayer = new FrameWdgt new VideoPlayerWithRecommendationsWdgt
       world.add videoPlayer
@@ -1641,8 +1602,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # it would be -28 instead of zero here below, but the system doesn't allow
       # to put windows outside of the screen
       videoPlayer.moveTo new Point 174, 0
-
-  # this part is only needed for VideoPlayer <<«
 
 
   _playQueuedEvents: ->
@@ -1726,12 +1685,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if !WorldWdgt.dateOfPreviousCycleStart?
       WorldWdgt.dateOfPreviousCycleStart = new Date WorldWdgt.dateOfCurrentCycleStart.getTime() - 30
 
-    # »>> this part is only needed for Macros
-    if !@macroToolkit.msSinceLastExecutedMacroStep?
-      @macroToolkit.msSinceLastExecutedMacroStep = 0
-    else
-      @macroToolkit.msSinceLastExecutedMacroStep += WorldWdgt.dateOfCurrentCycleStart.getTime() - WorldWdgt.dateOfPreviousCycleStart.getTime()
-    # this part is only needed for Macros <<«
+    # macro playback pacing — @macroToolkit only exists where the macro family ships
+    # (WorldWdgt's constructor builds it behind `if MacroToolkit?`)
+    if @macroToolkit?
+      if !@macroToolkit.msSinceLastExecutedMacroStep?
+        @macroToolkit.msSinceLastExecutedMacroStep = 0
+      else
+        @macroToolkit.msSinceLastExecutedMacroStep += WorldWdgt.dateOfCurrentCycleStart.getTime() - WorldWdgt.dateOfPreviousCycleStart.getTime()
 
   doOneCycle: ->
     @_updateTimeReferences()
@@ -1739,9 +1699,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @_showErrorsHappenedInRepaintingStepInPreviousCycle()
     @_showLayoutErrorsFromPreviousCycle()
 
-    # »>> this part is only needed for Macros
     @macroToolkit?.progressOnMacroSteps()
-    # this part is only needed for Macros <<«
 
     @_playQueuedEvents()
 
@@ -1794,9 +1752,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # paint-time-caret-resync arc, which first moved this work out of the paint pass into a post-flush step; the
     # Option-C arc folded it into the flush; this arc folds it into the per-event in-place settle.)
 
-    # »>> this part is excluded from the fizzygum homepage build
-    @addPinoutingWidgets()
-    # this part is excluded from the fizzygum homepage build <<«
+    @pinouts?.reconcile()
     @addHighlightingWidgets()
     @_updateEditorSelectionOverlay()
     @addDragAffordanceWidgets()
@@ -2501,12 +2457,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @widgetsToBeHighlighted.clear()
     @currentHighlightingWidgets.clear()
     @widgetsBeingHighlighted.clear()
-    # ⚠ the PINOUT twins of those three are deliberately NOT here. Pinouts are homepage-STRIPPED —
-    # both the declarations and the whole addPinoutingWidgets reconciler sit inside »>> markers — so
-    # in a product build those fields do not exist at all and clearing them would throw. They stay
-    # with the test-only caller, and there is nothing for them to leak on the product path because
-    # the feature is not in the product. The strip boundary draws this seam, not a judgement call:
-    # if pinouts ever ship, move the three clears in here beside the highlight trio.
+    @pinouts?.reset()
+    # ...and the PINOUT twins of those three, which mirror them exactly. These used to be barred from
+    # this core: the sets were declared inside `»>>` markers, so in a product build the fields did not
+    # exist and clearing them threw — the strip boundary drew the seam, and the clears had to live with
+    # the test-only caller. Arc 3 re-homed pinouts into the optional PinoutsOverlay collaborator, so the
+    # soak below is correct in EVERY build (no overlay ⇒ nothing to reset) and the seam is gone.
     # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
     # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
@@ -2591,14 +2547,25 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     else
       menu = new MenuWdgt @, target: @, title: "Widgetic"
 
-    # »>> this part is excluded from the fizzygum homepage build
+    # The world's own dev-mode section. Arc 3 SPLIT what used to be one homepage-stripped block:
+    # the six items a product desktop legitimately wants (inspect, fit whole page, colour, the
+    # wallpaper picker, the input-mode toggle) are unconditional now, so the homepage gains them;
+    # the demo and test entries are gated on their FAMILY being present, which is what replaces the
+    # strip. `DemoMenus?` is false in a production build (whole-file-marked, and `demoMenus` is not
+    # constructed), so those items simply are not offered there.
+    #
+    # ⚠ The guards are per-item ON PURPOSE, rather than one contributor list appended at the end:
+    # the items INTERLEAVE (demo before inspect, test menu after it), and a single append point
+    # cannot reproduce that order. Preserving the exact order is what makes this phase pixel-neutral.
+    # Phase 7 redesigns this topology with the owner and can introduce a proper contribution point
+    # then, since it is closed by a recapture wave anyway.
     if @isDevMode
-      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
+      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"  if DemoMenus?
       menu.addLine()
       menu.addMenuItem "delete all", @, "closeChildren"
       menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
       menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
-      menu.addMenuItem "test menu ➜", menusHelper, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"
+      menu.addMenuItem "test menu ➜", demoMenus, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if DemoMenus?
       menu.addLine()
       menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
       menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
@@ -2609,7 +2576,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       else
         menu.addMenuItem "standard settings", WorldWdgt.preferencesAndSettings, "toggleInputMode", toolTip: "smaller menu fonts\nand sliders"
       menu.addLine()
-    # this part is excluded from the fizzygum homepage build <<«
     
     if Automator?
       menu.addMenuItem "system tests ➜", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, toolTip: ""
@@ -2630,7 +2596,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   # Wrap a content widget in a window, size and place it, add it to the world --
   # the windowed sibling of `create`. Returns the window. The single home for the
-  # "fresh window" wrap (windowed apps' buildWindow, menusHelper's window demos, the
+  # "fresh window" wrap (windowed apps' buildWindow, demoMenus' window demos, the
   # inspector/console/prompt spawners). Titled / _applyExtent windows build directly.
   # A framed CITIZEN (a FrameWdgt subclass that IS its own window -- Frame-model
   # plan §5.B) passes through un-wrapped: it is sized and placed directly.
@@ -2645,48 +2611,48 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @add wm
     wm
 
-  # »>> this part is excluded from the fizzygum homepage build
+  # The demo/parts-bin menu and the layout-tests menu. They stay on the WORLD (not in DemoMenus)
+  # because they are bound as world ACTIONS: the world menu names them on `@`, and a SystemTest
+  # builds a MenuItemWdgt wired to (world, "popUpDemoMenu") to exercise button float-drag
+  # semantics. Their CONTENT is what is dev-only, and it is reached through @widgetFactory /
+  # demoMenus, both absent from a production build -- where nothing links here either, since
+  # the world menu offers "demo ➜" only when DemoMenus ships.
+  # ONE catalogue (arc 3 phase 7). This forked on isIndexPage too — a short "parts bin" on the
+  # product page and a long "make a widget" on the harness page — so the two disagreed both on
+  # WHICH widgets you could make and on whether a palette arrived bare or wrapped in a window.
+  # The union below keeps every distinct item from both; the window-wrapped palettes keep an
+  # explicit label rather than silently replacing the bare ones.
   popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
-    if @isIndexPage
-      menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "parts bin"
-      menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
-      menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
-      menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
-      menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
-      menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
-      menu.addLine()
-      menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
-      menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgtInWindow"
-      menu.addLine()
-      menu.addMenuItem "analog clock", menusHelper, "analogClock"
-    else
-      menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
-      menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
-      menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
-      menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
-      menu.addLine()
-      menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
-      menu.addMenuItem "panel", @widgetFactory, "createNewPanelWdgt"
-      menu.addMenuItem "scrollable panel", @widgetFactory, "createNewScrollPanelWdgt"
-      menu.addMenuItem "canvas", @widgetFactory, "createNewCanvas"
-      menu.addMenuItem "handle", @widgetFactory, "createNewHandle"
-      menu.addLine()
-      menu.addMenuItem "string", @widgetFactory, "createNewString"
-      menu.addMenuItem "text", @widgetFactory, "createNewText"
-      menu.addMenuItem "tool tip", @widgetFactory, "createNewToolTipWdgt"
-      menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
-      menu.addLine()
-      menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
-      menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgt"
-      menu.addMenuItem "color picker", @widgetFactory, "createNewColorPickerWdgt"
-      menu.addLine()
-      menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
-      menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
-        
-      menu.addLine()
-      menu.addMenuItem "layout tests ➜", @, "layoutTestsMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
-      menu.addLine()
-      menu.addMenuItem "under the carpet", @widgetFactory, "underTheCarpet"
+    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
+    menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
+    menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"
+    menu.addMenuItem "circle box", @widgetFactory, "createNewCircleBoxWdgt"
+    menu.addLine()
+    menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
+    menu.addMenuItem "panel", @widgetFactory, "createNewPanelWdgt"
+    menu.addMenuItem "scrollable panel", @widgetFactory, "createNewScrollPanelWdgt"
+    menu.addMenuItem "canvas", @widgetFactory, "createNewCanvas"
+    menu.addMenuItem "handle", @widgetFactory, "createNewHandle"
+    menu.addLine()
+    menu.addMenuItem "string", @widgetFactory, "createNewString"
+    menu.addMenuItem "text", @widgetFactory, "createNewText"
+    menu.addMenuItem "tool tip", @widgetFactory, "createNewToolTipWdgt"
+    menu.addMenuItem "speech bubble", @widgetFactory, "createNewSpeechBubbleWdgt"
+    menu.addLine()
+    menu.addMenuItem "gray scale palette", @widgetFactory, "createNewGrayPaletteWdgt"
+    menu.addMenuItem "color palette", @widgetFactory, "createNewColorPaletteWdgt"
+    menu.addMenuItem "color picker", @widgetFactory, "createNewColorPickerWdgt"
+    menu.addMenuItem "gray scale palette in window", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
+    menu.addMenuItem "color palette in window", @widgetFactory, "createNewColorPaletteWdgtInWindow"
+    menu.addLine()
+    menu.addMenuItem "analog clock", demoMenus, "analogClock"
+    menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
+    menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
+
+    menu.addLine()
+    menu.addMenuItem "layout tests ➜", @, "layoutTestsMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"
+    menu.addLine()
+    menu.addMenuItem "under the carpet", @widgetFactory, "underTheCarpet"
 
     menu.popUpAtHand()
 
@@ -2700,7 +2666,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   
   toggleDevMode: ->
     @isDevMode = not @isDevMode
-  # this part is excluded from the fizzygum homepage build <<«
 
   
   # edit self-settles via the public add / fullDestroy (EACH opens its own settle) exactly as it always has --
