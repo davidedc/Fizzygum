@@ -10,7 +10,14 @@
     "its contents should be visible in one place, and a part added to the partition tomorrow should",
     "NOT silently join production. Today that list is the product plus the in-world inspectors --",
     "meta-tools has always been in a production build, and a `lean` profile (arc 5 phase 2) is what",
-    "will drop it.",
+    "will drop it -- plus the example documents, which production has always shown and keeps showing:",
+    "'samples' is named here precisely so that splitting it out of core is a PACKAGING change and not",
+    "a visible one. The desktop's 'Examples' folder looks exactly as it did.",
+    "",
+    "'maps' is named for the same reason but bought with a different mechanism: the sample dashboard",
+    "and the NYC slide BUILD maps, so production cannot simply drop that part. It is LAZY instead --",
+    "shipped, but not in js/pre-compiled.js and not fetched until a map is actually asked for. That is",
+    "the one shape that keeps the Examples whole while still taking the artwork off the first load.",
     "",
     "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
     "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
@@ -30,7 +37,7 @@
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
-  "parts": ["core", "meta-tools"],
+  "parts": ["core", "meta-tools", "samples", "maps"],
   "form": "precompiled",
   "sources": "lazy",
   "entries": ["index.html"]

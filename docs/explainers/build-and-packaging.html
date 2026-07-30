@@ -126,7 +126,7 @@
 
   <h2>A part — a named slice that comes and goes as a unit</h2>
 
-  <p>Every shipping directory belongs to exactly one of the <strong>11 parts</strong>; a source
+  <p>Every shipping directory belongs to exactly one of the <strong>13 parts</strong>; a source
   file no part claims is a build failure. A part owns up to four kinds of thing — sources
   (<code>dirs</code>), copied files (<code>assets</code>), assembled vendor payloads
   (<code>vendor</code>), and boot-bundle pieces (<code>bootPrelude</code>) — and all four appear
@@ -134,10 +134,12 @@
 
   <figure>
     <div class="bar" aria-label="The partition, roughly by source size">
-      <div style="flex:80; background:var(--s2)" title="core"></div>
+      <div style="flex:76; background:var(--s2)" title="core"></div>
       <div style="flex:4; background:var(--s3)" title="meta-tools"></div>
       <div style="flex:3; background:var(--s3)" title="fizzytiles"></div>
       <div style="flex:1; background:var(--s3)" title="fizzytiles-launcher"></div>
+      <div style="flex:3; background:var(--s3)" title="maps (lazy)"></div>
+      <div style="flex:1; background:var(--s3)" title="samples"></div>
       <div style="flex:3; background:var(--s4)" title="demos"></div>
       <div style="flex:2; background:var(--s4)" title="dev-tools"></div>
       <div style="flex:2; background:var(--s4)" title="dev-icons"></div>
@@ -147,13 +149,16 @@
       <div style="flex:2; background:var(--s4)" title="video-player"></div>
     </div>
     <div class="legend">
-      <span><span class="chip" style="background:var(--s2)"></span>core (~80% of source bytes)</span>
-      <span><span class="chip" style="background:var(--s3)"></span>product-optional: meta-tools · fizzytiles(+launcher)</span>
+      <span><span class="chip" style="background:var(--s2)"></span>core (~76% of source bytes)</span>
+      <span><span class="chip" style="background:var(--s3)"></span>product-optional: meta-tools · fizzytiles(+launcher) · maps · samples</span>
       <span><span class="chip" style="background:var(--s4)"></span>dev/demo: demos · dev-tools · dev-icons · patch-programming-experimental · video-player</span>
       <span><span class="chip" style="background:var(--s1)"></span>test-side: macros · harness</span>
     </div>
-    <figcaption>The 11 parts, roughly to source-size scale. The test machinery is just two parts
-    like any other; nothing about tests is special-cased in the build.</figcaption>
+    <figcaption>The 13 parts, roughly to source-size scale. The test machinery is just two parts
+    like any other; nothing about tests is special-cased in the build. <b>Product-optional does not
+    mean production drops it</b> — production ships meta-tools, samples <em>and</em> maps; what the
+    partition buys is that a leaner artifact <em>can</em> leave them out, and that a lazy one need
+    not load them up front.</figcaption>
   </figure>
 
   <p>Two properties are deliberately <em>separate questions</em>:</p>
@@ -162,13 +167,34 @@
       An absent part must be a no-op at every call site, via the class-existence guard idiom
       (<code>if DemoMenus?</code>); a build gate fails on any unguarded core reference to a
       part-owned class.</li>
-    <li><strong>Eagerness</strong> — at boot, or on demand? A <em>lazy</em> part (today:
-      the Fizzytiles engine on <code>index.html</code>) is fetched by <code>world.parts</code>
-      when something launches it — and since classes are source text, its source arrives
-      <em>with</em> it. A lazy part's entry point awaits
+    <li><strong>Eagerness</strong> — at boot, or on demand? A <em>lazy</em> part (today: the
+      Fizzytiles engine and <code>maps</code>, on <code>index.html</code>) is fetched by
+      <code>world.parts</code> when something launches it — and since classes are source text, its
+      source arrives <em>with</em> it. A lazy part's entry point awaits
       <code>world.parts.ensureLoaded(…)</code> instead of using a guard: a guard answers
       "is it here?", a lazy part needs "get it here".</li>
   </ul>
+
+  <p>Laziness pays because a lazy part's classes are <strong>absent from the pre-compiled image</strong>
+  — the image is harvested by booting <code>index.html</code>, where lazy parts by definition do not
+  load. That is what let production keep the desktop's Examples documents (which <em>build</em> maps,
+  so the part cannot simply be dropped) while still taking the map artwork off the first load:
+  <strong>−55.8 KB, −5.1% of the image</strong>, nothing visibly changed.</p>
+
+  <div class="callout">
+    <p style="margin:0 0 8px"><strong>Two traps that only bite lazy parts.</strong></p>
+    <p style="margin:0 0 8px"><b>1 · An awaiting entry point must keep its already-loaded path
+    synchronous.</b> On every build the test suite runs, parts are eager and long since present — so
+    going through <code>.then</code> anyway defers by a microtask, which moves the effect a whole
+    world <em>cycle</em> later, and the suite measures cycles. Hence
+    <code>if world.parts.isLoaded "maps" then … else world.parts.ensureLoaded("maps").then …</code>,
+    the same shape the reflective layer uses.</p>
+    <p style="margin:0"><b>2 · Not every call site <em>can</em> await.</b> An app is easy — its
+    <code>launch</code> is fire-and-forget. A creator button is not: both the click and the drag path
+    consume its <code>createWidgetToBeHandled()</code> <em>return value</em> synchronously, so there
+    is no seam to defer through. The fix is partition, not cleverness — put the button in the part it
+    creates from, and its very existence proves the part is loaded.</p>
+  </div>
 
   <h2>A profile — four facts</h2>
 
@@ -185,11 +211,11 @@
       <div class="facts">all except harness · compile-at-boot · entries: all</div>
       <div class="shape">dev without the test machinery</div></div>
     <div class="card" style="border-color:var(--s2)"><b>homepage</b>
-      <div class="facts">core + meta-tools · precompiled · sources: lazy · index.html</div>
-      <div class="shape">production — 3.64 MB / 26 files</div></div>
+      <div class="facts">core + meta-tools + samples + maps · precompiled · sources: lazy · index.html</div>
+      <div class="shape">production — 3.59 MB / 28 files (maps is lazy, so it costs the image nothing)</div></div>
     <div class="card"><b>lean</b>
       <div class="facts">core · precompiled · sources: none · index.html</div>
-      <div class="shape">the appliance — 10 files, 1.3 MB</div></div>
+      <div class="shape">the appliance — 10 files, 1.27 MB</div></div>
   </div>
 
   <p>There are <strong>no flavour flags</strong>. <code>./build_it_please.sh</code> builds the dev
@@ -246,7 +272,7 @@
     <div class="seg">native bundle</div>
     <div class="seg">pre-compiled image</div>
     <div class="seg world">world — immediately</div>
-    <div class="seg">nothing else is fetched… until an inspector opens (then the 2.28 MB reflective layer loads, once)</div>
+    <div class="seg">nothing else is fetched… until an inspector opens (the 2.29 MB reflective layer, once) or a map is asked for (the maps part)</div>
   </div>
 
   <div class="tl-label">lean (precompiled + sources: none): 10 files, 1.3 MB, sources never</div>
@@ -255,8 +281,9 @@
     <div class="seg">pre-compiled image</div>
     <div class="seg world">world — immediately (no inspectors; runtime compiler still present)</div>
   </div>
-  <figure style="padding:10px 18px"><figcaption>Production's source text — 62.7% of its bytes —
-  is no longer part of anyone's page load unless they open an inspector.</figcaption></figure>
+  <figure style="padding:10px 18px"><figcaption>Production's source text — 63.7% of its bytes —
+  is no longer part of anyone's page load unless they open an inspector; the map artwork inside it
+  is not even in the pre-compiled image any more.</figcaption></figure>
 
   <h2>The reflective layer</h2>
   <p>"The reflective layer" is the class source text plus the meta-system that parses it — what
@@ -272,11 +299,11 @@
   <figure>
     <svg viewBox="0 0 820 118" width="100%">
       <rect class="box" x="14"  y="20" width="150" height="40"/>
-      <text x="28" y="38">Fizzytiles launcher</text>
-      <text class="m" x="28" y="53">(its own eager mini-part)</text>
+      <text x="28" y="38">a door that can await</text>
+      <text class="m" x="28" y="53">launcher · app.launch</text>
       <rect class="box" x="204" y="20" width="200" height="40" style="stroke:var(--s3)"/>
       <text x="218" y="38">world.parts.ensureLoaded</text>
-      <text class="m" x="218" y="53">"fizzytiles" (+ requires)</text>
+      <text class="m" x="218" y="53">"fizzytiles" · "maps"</text>
       <rect class="box" x="444" y="20" width="180" height="40"/>
       <text x="458" y="38">inject vendor + sources</text>
       <text class="m" x="458" y="53">3D engine ~23 KB + batches</text>
@@ -286,10 +313,14 @@
       <path class="flow" d="M166 40 L 202 40"/>
       <path class="flow" d="M406 40 L 442 40"/>
       <path class="flow" d="M626 40 L 662 40"/>
-      <text class="m" x="14" y="100">A saved world containing a fridge loads the part automatically before deserializing. Loaded parts stay loaded; resetWorld resets state, never code.</text>
+      <text class="m" x="14" y="100">A saved world naming a lazy part's classes loads it automatically before deserializing. Loaded parts stay loaded; resetWorld resets state, never code.</text>
     </svg>
-    <figcaption>The launcher stays eager (the desktop icon and snapshot resolution need its class
-    at boot); the 9-file engine is the lazy payload.</figcaption>
+    <figcaption>Two shapes of the same machinery. <b>Fizzytiles</b> splits the door from the payload:
+    the launcher is its own eager mini-part (the desktop icon and snapshot resolution need its class
+    at boot), the 9-file engine is lazy. <b>maps</b> needs no split — its doors are the four apps
+    whose windows show or author a map, and they await on <code>launch</code>. There is no part-to-part
+    <code>requires</code> mechanism yet, so a part's dependencies are honoured at its call sites, by
+    hand.</figcaption>
   </figure>
 
   <h2>The safety net</h2>
@@ -313,6 +344,7 @@
   <table>
     <tr><th>To add…</th><th>Do</th></tr>
     <tr><td>a part</td><td>entry in <span class="mono">parts.json</span> with its <code>dirs</code>; dev builds (<code>"parts": "all"</code>) pick it up; name it in <span class="mono">homepage.json</span> only if production should ship it; guard every core reference</td></tr>
+    <tr><td>a <em>lazy</em> part</td><td>the above plus <code>"eager": false</code> — then find its doors and make each <em>await</em>, keeping the already-loaded path synchronous. A call site that cannot await (a creator button) means the class belongs <em>inside</em> the part, not outside it. Mixed directories are resolved by <b>moving files</b>, never by tagging them</td></tr>
     <tr><td>a profile</td><td>add a file under <span class="mono">buildSystem/profiles/</span> — validation covers the rest</td></tr>
     <tr><td>an entry page</td><td>a row in <span class="mono">buildProfile.py</span>'s <span class="mono">ENTRY_PAGES</span> (name, renders-through-SWCanvas, loads-every-part)</td></tr>
     <tr><td>a non-source file</td><td>give it to the part that owns it (<code>assets</code>) — never to the build script; declared-but-missing is a hard failure</td></tr>

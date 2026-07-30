@@ -91,7 +91,6 @@
         "src/apps",
         "src/toolbars",
         "src/graphs-plots-charts",
-        "src/maps",
         "src/events-input",
         "src/dataflow",
         "src/spreadsheet",
@@ -135,6 +134,19 @@
     "demos": {
       "//": "The demo/parts-bin catalogue (DemoMenus, reached as `demoMenus`) and the sample widgets it shows off: the bouncer, the pen, the pointer. Arc 3 extracted DemoMenus out of MenusHelper for exactly this; its own header already said 'arc 4 turns that into part membership'.",
       "dirs": ["src/demos"]
+    },
+
+    "maps": {
+      "//": "The two vector maps -- SimpleUSAMapIconWdgt and SimpleWorldMapIconWdgt, each with its *Appearance -- and the two toolbar buttons that create them. 4 files but ~85 KB: the appearances are long vector-path artwork, which makes this the best bytes-per-edge slice in the tree and the least likely to be missed by a user who never opens it.",
+      "//eager": "LAZY, and production ships it that way: a lazy part's classes are NOT in js/pre-compiled.js (the image is harvested by booting index.html, where lazy parts by definition do not load), so profiles/homepage.json can keep the Examples AND not download the artwork until someone asks for a map.",
+      "//buttons": "⚠ WHY THE TWO CREATOR BUTTONS LIVE HERE rather than with the other sample content. A creator button has NO async seam -- WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft and Widget.grabbedWidgetSwitcheroo both consume createWidgetToBeHandled()'s RETURN VALUE synchronously -- so a button outside this part could not await the load before constructing a map. Keeping the button in the part it creates from makes its mere EXISTENCE proof that its part is loaded, which is what turns an `if USAMapCreatorButtonWdgt?` filter in the core toolbars into a correct test instead of a swallowed click.",
+      "dirs": ["src/maps"],
+      "eager": false
+    },
+
+    "samples": {
+      "//": "The three EXAMPLE DOCUMENTS WorldWdgt.createDesktop drops into the desktop's 'Examples' folder -- SampleDashboardApp (plots + maps + sliders), SampleSlideApp (the NYC slide) and SampleDocApp. They are content, not product: each is an IconicDesktopSystemWindowedApp whose buildWindow assembles a finished document out of product widgets, to show what the system can do. They sat in core only because nothing had asked them to be separable; that is the same judgment arc 3 made for DemoMenus and arc 4 for the 'demos' part. ⚠ NOT folded INTO 'demos': production ships these (profiles/homepage.json names 'samples') and must NOT gain DemoMenus and the bouncer/pen/pointer, which is exactly what naming 'demos' there would do. Two separate species of demo, two parts. Core reaches them through the three guarded createOpener calls in createDesktop, so a profile without this part simply gets a smaller Examples folder.",
+      "dirs": ["src/samples"]
     },
 
     "dev-tools": {

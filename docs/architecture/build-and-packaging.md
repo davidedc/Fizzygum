@@ -65,6 +65,24 @@ Plus two properties that are **not** the same question:
 ⚠ A *lazy* part is different: its entry point must await `world.parts.ensureLoaded`, because a guard answers
 "is it here?" and a lazy part needs "get it here".
 
+⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS** —
+`if world.parts.isLoaded "maps" then super() else world.parts.ensureLoaded("maps").then => super()`.
+On every build the SystemTest suite runs, the part is eager and long since present, so going through
+`.then` regardless defers the launch by a microtask, which moves the effect a whole world CYCLE later
+— and the suite measures cycles. (Same rule, same reason, as the reflective layer's
+`reflectiveLayerIsLoaded()` fast path in §5.) `isLoaded` answers "is it here YET"; `_isAvailable`
+answers "did this artifact ship it at all", and for a part that never shipped the first is false
+forever — so it is not a substitute for the guard at an absent-part call site.
+
+⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
+cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and `Widget.grabbedWidgetSwitcheroo`
+both consume `createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there is no seam to defer
+through. The resolution is partition, not cleverness — put the button in the part it creates from
+(`maps` owns `USAMapCreatorButtonWdgt`), so the button's mere EXISTENCE proves its part is loaded and
+a core toolbar can filter it with a plain `if USAMapCreatorButtonWdgt?`. An app is the easy case by
+contrast, because `IconicDesktopSystemWindowedApp.launch` is fire-and-forget (the launcher invokes it
+by reflection and ignores the result).
+
 ---
 
 ## 3. A profile
@@ -92,8 +110,17 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
-| `homepage` | `core` + `meta-tools` | precompiled | `lazy` | `index.html` | **production** |
+| `homepage` | `core` + `meta-tools` + `samples` + `maps` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance: 10 files, 1.3 MB |
+
+⚠ **Production names four parts, and the last two are named for opposite reasons.** `samples` (the
+three Examples documents) is EAGER and named so that splitting it out of core stays a packaging change
+rather than a visible one. `maps` is named because it *has* to be — the sample dashboard and the NYC
+slide BUILD maps, so production cannot drop the part — but it is **lazy**, which is what still takes
+the artwork off the first load: a lazy part's classes are absent from `js/pre-compiled.js`, so naming
+it costs the image nothing. Measured when the two were split out of core: production's image went
+1,101,733 B → 1,046,121 B, **−55.8 KB / −5.1%**, with the Examples folder unchanged. `lean` names
+neither, so it drops both outright.
 
 ---
 
@@ -173,6 +200,14 @@ asymmetry is why the build refuses `sources: "none"` together with a lazy part.
 For **eager** parts there is nothing worth dividing: **core is ~80% of all source bytes**, so on a production tree the
 per-part split is 96% / 2%. The levers that pay are `lazy` (the whole layer) and making MORE parts lazy — which yields
 per-part loading for free, and is partition work rather than loading work.
+
+That partition work has been done once, for `maps`, and the numbers are worth keeping because they say what the lever
+is really worth. Splitting the two vector maps and their two creator buttons out of core and marking the part lazy took
+**−55.8 KB (−5.1%)** off production's `pre-compiled.js` and moved 95 KB of source text behind an on-demand fetch.
+⚠ Note where that saving comes from: **not** from the source bytes — production is `sources: "lazy"`, so nobody was
+downloading those anyway — but from the IMAGE, because a lazy part is absent from it. The three remaining app-like
+slices inside core (spreadsheet, `graphs-plots-charts`, dataflow) are the same shape, and were measured to have ZERO
+inheritance edges out of core, so they are drawable the same way if a profile ever wants them gone.
 
 ---
 

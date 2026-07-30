@@ -6,37 +6,41 @@
 
 class SlidesToolbarWdgt extends ToolbarWdgt
 
-  _toolbarItems: -> [
-    new TextBoxCreatorButtonWdgt
-    new ExternalLinkCreatorButtonWdgt
-    new VideoPlayCreatorButtonWdgt
+  # The two map tools belong to the LAZY 'maps' part -- see DashboardsToolbarWdgt for why the LIST
+  # is filtered rather than each use guarded (order).
+  _toolbarItems: ->
+    items = [
+      new TextBoxCreatorButtonWdgt
+      new ExternalLinkCreatorButtonWdgt
+      new VideoPlayCreatorButtonWdgt
 
-    new WorldMapCreatorButtonWdgt
-    new USAMapCreatorButtonWdgt
+      (new WorldMapCreatorButtonWdgt if WorldMapCreatorButtonWdgt?)
+      (new USAMapCreatorButtonWdgt   if USAMapCreatorButtonWdgt?)
 
-    new RectangleWdgt
+      new RectangleWdgt
 
-    new MapPinIconWdgt
+      new MapPinIconWdgt
 
-    new SpeechBubbleWdgt
+      new SpeechBubbleWdgt
 
-    new DestroyIconWdgt
-    new ScratchAreaIconWdgt
-    new FloraIconWdgt
-    new ScooterIconWdgt
-    new HeartIconWdgt
+      new DestroyIconWdgt
+      new ScratchAreaIconWdgt
+      new FloraIconWdgt
+      new ScooterIconWdgt
+      new HeartIconWdgt
 
-    new FizzygumLogoIconWdgt
-    new FizzygumLogoWithTextIconWdgt
-    new VaporwaveBackgroundIconWdgt
-    new VaporwaveSunIconWdgt
+      new FizzygumLogoIconWdgt
+      new FizzygumLogoWithTextIconWdgt
+      new VaporwaveBackgroundIconWdgt
+      new VaporwaveSunIconWdgt
 
-    new ArrowNIconWdgt
-    new ArrowSIconWdgt
-    new ArrowWIconWdgt
-    new ArrowEIconWdgt
-    new ArrowNWIconWdgt
-    new ArrowNEIconWdgt
-    new ArrowSWIconWdgt
-    new ArrowSEIconWdgt
-  ]
+      new ArrowNIconWdgt
+      new ArrowSIconWdgt
+      new ArrowWIconWdgt
+      new ArrowEIconWdgt
+      new ArrowNWIconWdgt
+      new ArrowNEIconWdgt
+      new ArrowSWIconWdgt
+      new ArrowSEIconWdgt
+    ]
+    (eachItem for eachItem in items when eachItem?)

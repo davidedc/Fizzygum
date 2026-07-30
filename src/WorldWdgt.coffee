@@ -620,9 +620,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     (new FridgeMagnetsApp).createOpener()  if FridgeMagnetsApp?
     exampleDocsFolder = @makeFolder nil, nil, "Examples"
     (new DegreesConverterApp).createOpener exampleDocsFolder
-    (new SampleSlideApp).createOpener exampleDocsFolder
-    (new SampleDashboardApp).createOpener exampleDocsFolder
-    (new SampleDocApp).createOpener exampleDocsFolder
+    # the three example DOCUMENTS are the 'samples' part: content rather than product, so a
+    # profile can leave them out and get a smaller Examples folder. Production ships them
+    # (profiles/homepage.json names 'samples'); the appliance profile is what drops them.
+    (new SampleSlideApp).createOpener exampleDocsFolder      if SampleSlideApp?
+    (new SampleDashboardApp).createOpener exampleDocsFolder  if SampleDashboardApp?
+    (new SampleDocApp).createOpener exampleDocsFolder        if SampleDocApp?
     (new SpreadsheetApp).createOpener exampleDocsFolder
 
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,

@@ -14,6 +14,13 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
   buildIcon: -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
 
+  # buildWindow constructs SimpleUSAMapIconWdgt (the lazy 'maps' part) and the window's docked
+  # SlidesToolbarWdgt wants the two map tools from the same part -- see SampleDashboardApp.launch
+  # for why this awaits, and why the already-loaded path must stay synchronous.
+  launch: ->
+    if world.parts.isLoaded "maps" then super()
+    else world.parts.ensureLoaded("maps").then => super()
+
   buildWindow: ->
     slideWdgt = new SlideWdgt
 

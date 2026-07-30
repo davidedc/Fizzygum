@@ -15,7 +15,8 @@ the explainer is updated to present tense or retired.
 - [`build-and-packaging.html`](build-and-packaging.html) — how an artifact is
   assembled and selected: the partition (`parts.json`), the profiles, what a build
   derives rather than declares, the reflective layer and the `sources` axis, lazy
-  parts, the gates, and the add-a-thing recipes. Companion to
+  parts (and the two traps peculiar to them), the gates, and the add-a-thing
+  recipes. Companion to
   `../architecture/build-and-packaging.md` (authoritative). The program that
   produced this shape lives in `../archive/build-arc-1…5-*.md`; the earlier
   three-part explainer set that narrated the program as it was being planned was

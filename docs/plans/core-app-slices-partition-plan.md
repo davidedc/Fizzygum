@@ -1,5 +1,27 @@
 # Extracting the app-like slices out of `core` — spreadsheet, maps, plots, dataflow
 
+> ## ✅ EXECUTED AND CLOSED — 2026-07-30. Do not re-open P0; it was answered.
+>
+> **Owner's P0:** P0-a **yes, `maps` only** · P0-b **demo material, but production KEEPS it** ·
+> P0-c **lazy**. That combination is a third end state §1's review note did not enumerate, and it is
+> coherent: production must *have* `maps` (the samples build maps), but being LAZY it is absent from
+> `js/pre-compiled.js`, so the Examples folder survives AND the artwork leaves the first load.
+>
+> **Ran:** Phase 0 (`samples` part) · Phase 0.5 (measured) · Phase 1 (`maps` part, lazy) · Phase 4.
+> **Did NOT run: Phases 2 and 3** — `graphs-plots-charts`, `spreadsheet` and `dataflow` stay in core,
+> unextracted, by the P0-a answer. They remain drawable (zero inheritance edges, re-verified); the
+> two `WorldWdgt` product edges at `:466`/`:626` are untouched.
+>
+> **Result:** production `pre-compiled.js` **1,101,733 → 1,046,121 B (−55.8 KB, −5.1%)**, Examples
+> folder unchanged; `lean` additionally drops both parts (−92.7 KB total). Zero reference churn.
+> Gates: `fg gauntlet` 14/14, `fg homepage`, `build_and_smoke.sh --profile lean`, fingerprints across
+> dev/homepage/lean with every delta predicted in advance.
+>
+> **Four authored facts were FALSIFIED in execution — see §11 before trusting anything below.**
+> Most load-bearing: the "derived part→part `requires`" §1 leans on **does not exist**.
+>
+> Everything from here down is the ORIGINAL pre-execution plan, kept as written for the record.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.** Everything
 needed is embedded here or one named-doc hop away. Line numbers WILL drift — the quoted code, symbol
 or filename is authoritative, re-grep before editing.
@@ -393,6 +415,82 @@ It is a real option and it may be right:
 
 ⇒ **A defensible outcome of P0 is: do Phase 0, skip Phases 1-3, close the plan.** Say so explicitly
 if that is the decision, so the next session does not re-open it.
+
+---
+
+## §11 EXECUTION RECORD — 2026-07-30 (what was actually true)
+
+### §11.1 The four falsified facts
+
+1. **⚠⚠ "The samples part will carry derived part→part `requires`" (§1's review note) — FALSE.
+   There is no such mechanism.** `parts.json` has no `requires` field, `buildProfile.py`/`build.py`
+   derive none, and `PartsRegistry.ensureLoaded`'s own comment says *"Load a part (and, **when it
+   grows one**, whatever it requires)"* — it is explicitly future work. `check-part-edges.js` also
+   states outright that part→part references are NOT checked. **Consequence:** nothing in the build
+   would have caught a `samples`→`maps` mistake; the whole correctness burden sits on the call sites,
+   which is why Phase 1 put the awaits in by hand and documented them.
+2. **§2.5's "~42 KB for `maps`" — understated by ~33%.** Measured: **55,793 B**. The plan predicted
+   its own error's direction (`maps` is long vector-path literals, which minify unlike class code).
+3. **§4 Phase 0's "move them into the existing `demos` part" — not possible under P0-b.** Production
+   keeps the samples ⇒ the part must be named in `homepage.json` ⇒ naming `demos` would *add*
+   `DemoMenus` + the bouncer/pen/pointer widgets to production, which nobody asked for. Hence a NEW
+   `samples` part. Two species of demo, two parts.
+4. **§2.3's Shape C lumps the 7 creator buttons in with the 3 sample apps — they are not one
+   category.** The 5 PLOT buttons were deliberately LEFT IN CORE: `graphs-plots-charts` is not being
+   extracted, so moving them would add 10 core→`samples` edges for zero bytes and would strip `lean`'s
+   dashboard editor of its plot tools while the plot code itself stayed. The 2 MAP buttons moved into
+   **`maps`**, not `samples` — see §11.2.
+
+### §11.2 The design decision P0-c forced
+
+**A creator button has no async seam.** `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft`
+(click) and `Widget.grabbedWidgetSwitcheroo` (drag) both consume `createWidgetToBeHandled()`'s RETURN
+VALUE synchronously, so a map button outside the `maps` part could not await it. The `FridgeMagnetsApp`
+precedent does not transfer — it works only because `IconicDesktopSystemWindowedApp.launch` is
+fire-and-forget. **Resolution: partition, not cleverness.** The two map creator buttons live IN
+`maps`, so a button's existence proves its part is loaded, and the core toolbars filter the LIST
+(`(new USAMapCreatorButtonWdgt if USAMapCreatorButtonWdgt?)` inside the array, then compact) rather
+than appending behind a guard — appending would silently reshuffle the palette.
+
+**⚠ The microtask trap, which would have churned references.** Four SystemTests call
+`new SampleSlideApp().launch()` / `new SampleDashboardApp().launch()` directly. The naive
+`ensureLoaded(...).then => super()` defers by a microtask = a whole world CYCLE, which the suite
+measures — and §7 forbids recapturing to hide that. Every awaiting door therefore uses the
+already-loaded FAST PATH, which needed a new (and explicitly pre-sanctioned) `PartsRegistry.isLoaded`:
+
+```coffee
+launch: ->
+  if world.parts.isLoaded "maps" then super()
+  else world.parts.ensureLoaded("maps").then => super()
+```
+
+Four doors carry it: `SampleDashboardApp`, `SampleSlideApp` (they BUILD maps) and `DashboardsApp`,
+`SimpleSlideApp` (their windows dock a map-bearing palette). `SampleDocApp` needs none — it touches
+only `Example3DPlotWdgt`, which stayed in core.
+
+### §11.3 The one accepted wart
+
+`SlidesToolbarCreatorButtonWdgt` pops a floating `SlidesToolbarWdgt` through a synchronous click path
+with no hosting app to await at. On a build that HAS `maps` but has not loaded it yet, that palette
+opens **without its two map tools** until something else pulls the part in. Invisible on dev/harness
+(eager) and on `lean` (no maps at all); reachable only on production, and only before any dashboard or
+slide has been opened. Accepted rather than fixed: closing it means either making the whole toolbar
+build async or eagerly pre-fetching the part, and the second would forfeit the saving that motivated
+laziness in the first place.
+
+### §11.4 Measured
+
+| Tree | Before | After | Δ |
+|---|---|---|---|
+| `homepage` `js/pre-compiled.js` | 1,101,733 B | **1,046,121 B** | **−55,612 B (−5.05%)** |
+| `lean` `js/pre-compiled.js` | 1,074,170 B | 1,009,518 B | −64,652 B (−6.02%) |
+| `maps` source batch (ships, fetched on demand) | — | 94,995 B | new |
+| Stored sources, dev / homepage | 502 / 434 | 502 / 434 | unchanged |
+
+Every delta was predicted in words before it was measured; no unpredicted line appeared in any of the
+three fingerprints. Baselines and the driver script are in `Fizzygum-tests/.scratch/` (gitignored).
+
+⚠ **§2.5's 1,073,630 B figure for the production image is stale** — it was 1,101,733 B at execution.
 
 ---
 

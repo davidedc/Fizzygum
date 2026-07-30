@@ -14,6 +14,23 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
 
   buildIcon: -> new GenericShortcutIconWdgt new DashboardsIconWdgt
 
+  # buildWindow constructs SimpleUSAMapIconWdgt / SimpleWorldMapIconWdgt, which are the LAZY 'maps'
+  # part, so the load has to be awaited BEFORE the window is built -- an `if …?` guard would be
+  # wrong here (it would quietly build a dashboard with two holes in it). The docked
+  # DashboardsToolbarWdgt this window carries needs the same part for its two map tools, so one
+  # await at the door serves both.
+  #
+  # ⚠ The ALREADY-LOADED path must stay SYNCHRONOUS. Every profile the SystemTest suite runs
+  # carries maps eagerly (the harness page and index-sw.html preset FIZZYGUM_EAGER_ALL_PARTS), and
+  # three tests call `new SampleDashboardApp().launch()` directly -- going through `.then` anyway
+  # would defer the window by a microtask, i.e. a whole world CYCLE, which the suite measures.
+  # Awaiting is safe at all because the base launch() is fire-and-forget: the launcher widget
+  # invokes it through reflection by name and ignores the return value (the FridgeMagnetsApp
+  # precedent, src/fizzytiles-launcher/).
+  launch: ->
+    if world.parts.isLoaded "maps" then super()
+    else world.parts.ensureLoaded("maps").then => super()
+
   buildWindow: ->
     slideWdgt = new DashboardWdgt
 

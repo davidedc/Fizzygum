@@ -47,10 +47,22 @@ class PartsRegistry
   _isEagerHere: (spec) ->
     window.fizzygumPartIsEagerHere spec
 
-  # (No `isLoaded` predicate: nothing needs one. The lazy-load rig asserts the OBSERVABLE fact --
-  # whether the part's classes are defined in the page -- which is a better test than asking the
-  # registry for its own opinion of itself, and it keeps this class free of API written ahead of a
-  # caller. Add one when a real consumer appears, e.g. a UI that wants to show a spinner.)
+  # Is this part in the page RIGHT NOW? The consumer this was written for (which is what the note
+  # below asked to wait for) is the already-loaded FAST PATH of a launch site: an app that needs a
+  # lazy part must await it, but on every build the SystemTest suite runs, the part is eager and
+  # long since here -- and going through `ensureLoaded(...).then` anyway would defer the launch by a
+  # microtask, which moves the window's creation a whole world CYCLE later, which the suite
+  # measures. So a caller that awaits must be able to NOT await, synchronously:
+  #     if world.parts.isLoaded "maps" then super() else world.parts.ensureLoaded("maps").then => super()
+  # Same shape, and the same reason, as globalFunctions' reflectiveLayerIsLoaded() (see
+  # docs/architecture/build-and-packaging.md §5).
+  #
+  # ⚠ NOT a substitute for the guard at an absent-part call site: this answers "is it here yet?",
+  # which for a part this artifact never shipped is false forever. `_isAvailable` is that question.
+  # (The lazy-load RIG still asserts the observable fact -- whether the classes are defined in the
+  # page -- rather than asking the registry for its own opinion of itself.)
+  isLoaded: (partName) ->
+    @_state[partName] is @LOADED
 
   # Is this part in this artifact at all? A production build ships no fizzytiles, so asking for it
   # is not an error to throw at the user -- it is a feature that is not in this product.

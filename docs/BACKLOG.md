@@ -6,6 +6,27 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
+### `plans/core-app-slices-partition-plan.md` — ✅ EXECUTED AND CLOSED 2026-07-30
+Owner answered P0: omit-a-slice **yes, `maps` only** · sample content **demo material, but production
+KEEPS it** · **lazy**. That triple is a third end state the plan's §1 did not enumerate and is
+coherent — production must *have* `maps` (the samples build maps), but a lazy part is absent from
+`js/pre-compiled.js`, so the Examples folder survives *and* the artwork leaves the first load.
+- [x] Phase 0 — the three `Sample*App` → a new **`samples`** part, named in `homepage.json`.
+      ⚠ NOT folded into `demos`: naming that in production would have added `DemoMenus` + the
+      bouncer/pen/pointer widgets. Two species of demo, two parts.
+- [x] Phase 0.5 — measured: §2.5's "~42 KB for maps" was **33% understated**; the real figure is 55.8 KB.
+- [x] Phase 1 — `src/maps/` → a **lazy `maps`** part, with the two map creator buttons moved *into*
+      it (a creator button has no async seam, so it cannot await from outside).
+- [x] Phase 4 — `architecture/build-and-packaging.md`, `explainers/build-and-packaging.html`, profiles.
+- ⛔ **Phases 2-3 NOT run and deliberately closed** — `graphs-plots-charts`, `spreadsheet` and
+      `dataflow` stay in core by the P0 answer. They remain drawable (zero inheritance edges,
+      re-verified at execution); do not re-open without a new decision.
+- **Result:** production image 1,101,733 → 1,046,121 B (**−55.8 KB, −5.1%**), Examples folder
+  unchanged; `lean` drops both parts (−64.6 KB). Zero reference churn. §11 of the plan records the
+  four authored facts that execution falsified — the load-bearing one being that the **derived
+  part→part `requires` mechanism does not exist**, so part dependencies are honoured by hand at call
+  sites and no gate checks them.
+
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/7.8 items, design-first, owner-gated.
 - [ ] §7.1: transform policy engine (banked, not built)

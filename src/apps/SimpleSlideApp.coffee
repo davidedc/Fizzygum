@@ -7,3 +7,9 @@ class SimpleSlideApp extends IconicDesktopSystemWindowedApp
   buildIcon:    -> new SimpleSlideIconWdgt
   buildWindow:  -> world.openFrameWith (new SlideWdgt), (new Point 460, 400), (new Point 168, 134)
   windowOpened: (wm) -> InfoDocs.createNextTo "slidesMaker", wm
+
+  # The window's docked SlidesToolbarWdgt offers the two map tools, which are the LAZY 'maps' part
+  # -- see DashboardsApp.launch.
+  launch: ->
+    if world.parts.isLoaded "maps" then super()
+    else world.parts.ensureLoaded("maps").then => super()
