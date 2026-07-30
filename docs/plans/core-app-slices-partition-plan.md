@@ -7,15 +7,17 @@
 > coherent: production must *have* `maps` (the samples build maps), but being LAZY it is absent from
 > `js/pre-compiled.js`, so the Examples folder survives AND the artwork leaves the first load.
 >
-> **Ran:** Phase 0 (`samples` part) · Phase 0.5 (measured) · Phase 1 (`maps` part, lazy) · Phase 4.
-> **Did NOT run: Phases 2 and 3** — `graphs-plots-charts`, `spreadsheet` and `dataflow` stay in core,
-> unextracted, by the P0-a answer. They remain drawable (zero inheritance edges, re-verified); the
-> two `WorldWdgt` product edges at `:466`/`:626` are untouched.
+> **Ran, in two sessions:** Phase 0 (`samples`) · Phase 0.5 (measured) · Phase 1 (`maps`, lazy) ·
+> Phase 4 — then, on a follow-up instruction, **Phase 2 (`plots`, lazy)** and **`meta-tools` made
+> lazy** (not a phase of this plan; the inspectors were already a part, just an eager one).
+> **Phase 3 — `spreadsheet` + `dataflow` — is NOT done and is the ONLY thing left. See §12.**
 >
-> **Result:** production `pre-compiled.js` **1,101,733 → 1,046,121 B (−55.8 KB, −5.1%)**, Examples
-> folder unchanged; `lean` additionally drops both parts (−92.7 KB total). Zero reference churn.
-> Gates: `fg gauntlet` 14/14, `fg homepage`, `build_and_smoke.sh --profile lean`, fingerprints across
-> dev/homepage/lean with every delta predicted in advance.
+> **Result:** production `pre-compiled.js` **1,101,733 → 989,482 B (−112.3 KB, −10.2%)** — under
+> 1 MB — with the Examples folder unchanged; `lean` 1,074,170 → 980,440 B (−8.7%). Zero reference
+> churn throughout. Gates: `fg gauntlet` 14/14, `fg homepage`, `build_and_smoke.sh --profile lean`,
+> fingerprints across dev/homepage/lean with every delta predicted before being measured.
+> Commits: `eed2f2f2` (samples + maps), `058ea35f` (plots + lazy inspectors + the meta-system fix),
+> tests `3741b855b` (the gate).
 >
 > **Four authored facts were FALSIFIED in execution — see §11 before trusting anything below.**
 > Most load-bearing: the "derived part→part `requires`" §1 leans on **does not exist**.
@@ -491,6 +493,100 @@ Every delta was predicted in words before it was measured; no unpredicted line a
 three fingerprints. Baselines and the driver script are in `Fizzygum-tests/.scratch/` (gitignored).
 
 ⚠ **§2.5's 1,073,630 B figure for the production image is stale** — it was 1,101,733 B at execution.
+
+### §11.5 ⚠⚠ THE DEFECT THAT SHIPPED, AND THE GATE THAT NOW CATCHES IT
+
+The `maps` work (commit `eed2f2f2`) shipped **broken on production** and every gate stayed green.
+Ingesting a lazy part's sources calls `new Class` / `new Mixin` and orders them with `findLoadOrder`
+— and a PRECOMPILED tree has none of the three until something fetches them (`Class` and `Mixin` are
+the only two classes absent from `js/pre-compiled.js`; `findLoadOrder` was loaded only as step 3 of
+`loadReflectiveLayerPromise`). So `world.parts.ensureLoaded("maps")` rejected with
+`findLoadOrder is not defined` on the production tree. Proved, not inferred: restoring the pre-fix
+line for one build reproduces it.
+
+**Why nothing caught it.** `fizzytiles`, the only lazy part before `maps`, is not in production; the
+dev-tree rigs (`parts-lazy-load-headless.js`) run compile-at-boot, where the meta-system is loaded at
+boot anyway; and `fg homepage`'s inspector probe cannot see it because `spawnInspector` awaits the
+whole reflective layer, which loads the meta-system on its way past. **No gate loaded a lazy part on
+a precompiled tree.** It only surfaced when `meta-tools` itself became lazy, putting a part load
+directly in the gate's path.
+
+**Fix.** Layer steps 1–3 factored out as `ensureMetaSystemLoaded()` (~39 KB: the two meta sources +
+`dependencies-finding-min.js`), awaited by `PartsRegistry._loadPartPromise`. ⚠ It must NOT await
+`ensureReflectiveLayerLoaded()` instead — that also runs step 4, every eager batch, 2.29 MB, which is
+precisely the saving that made the part lazy.
+
+**Gate.** `smoke-boot-headless.js --production` now takes whatever the manifest says is lazy, loads
+it, and asserts: absent at boot, all its classes arrive, and ZERO of core's numbered eager batches
+came with it. It runs BEFORE the inspector probe deliberately. The gate was verified by planting the
+pre-fix behaviour and watching it fail with the exact error — a gate nobody has seen fail is not a
+gate.
+
+⚖ **The transferable lesson:** a capability's FIRST use on a given artifact shape is untested by
+construction, however well the mechanism is covered elsewhere. `maps` was the first lazy part
+production ever shipped, and every existing rig tested laziness on a tree where the prerequisite
+happened to be present already.
+
+---
+
+## §12 WHAT IS LEFT: Phase 3 — spreadsheet + dataflow (for a COLD session)
+
+Everything else in this plan is done. This section is the brief for the one remaining piece; it
+assumes nothing but `docs/architecture/build-and-packaging.md`.
+
+### §12.1 State you are starting from
+`src/spreadsheet/` (14 files, 116 KB) and `src/dataflow/` (4 files, 36 KB) are still inside `core`'s
+`dirs` in `buildSystem/parts.json`. Production (`profiles/homepage.json`) ships
+`["core", "meta-tools", "samples", "maps", "plots"]`, of which **`meta-tools`, `maps` and `plots` are
+lazy** and `samples` is eager. The production image is 989,482 B.
+
+Everything the earlier phases built is available and should be reused:
+- **`world.parts.whenAllLoaded [names], -> …`** — THE await idiom. Runs the callback INLINE when the
+  parts are already in; that synchronous fast path is a correctness requirement, not an optimisation
+  (§11.2).
+- **`world.parts.isAvailable name`** — "did this artifact ship it at all", the question a class
+  guard cannot answer for a lazy part.
+- **`ensureMetaSystemLoaded()`** — awaited by `_loadPartPromise`; a precompiled tree has no
+  `Class`/`Mixin`/`findLoadOrder` until it runs (§11.5).
+- **`fg homepage` loads a lazy part and asserts zero eager batches** — the gate that would have
+  caught §11.5. It picks whatever the manifest says is lazy, so it will cover a new lazy part free.
+
+### §12.2 The four things that make this one harder than maps and plots
+1. **1 core edge each, but neither is sample content.** `WorldWdgt.coffee:626`
+   `(new SpreadsheetApp).createOpener exampleDocsFolder` and `:466` `@dataflow = new DataflowEngine`.
+   Re-verify with `node buildSystem/check-part-edges.js`, never a grep.
+2. **⚠⚠ A LAUNCHER SPLIT IS MANDATORY for a lazy spreadsheet.** `SpreadsheetApp.coffee` lives INSIDE
+   `src/spreadsheet/`, and `createDesktop` calls `createOpener` on it AT BOOT to place the Examples
+   icon. Make that directory lazy and the icon disappears. This is exactly the
+   `fizzytiles` / `fizzytiles-launcher` shape: the launcher class (and its icon) must be its own
+   EAGER part, the engine lazy. `maps` and `plots` needed no such split because their doors are apps
+   that already existed in core.
+3. **⚠⚠ dataflow is a WORLD COLLABORATOR, not an app** — the genuinely new risk. `doOneCycle` runs
+   `recalculateDataflow` between the step functions and the layout pass, EVERY cycle. So dataflow
+   cannot simply "arrive on demand" behind a door: either it stays eager (extracted but always
+   shipped), or every `world.dataflow` site — including that drain station — must soak absence
+   (`world.dataflow?.…`). **Enumerate every call site BEFORE touching the constructor** (R-2). If one
+   cannot be soaked, STOP: the partition is drawn wrong there, and that is a finding, not an obstacle
+   to engineer around.
+4. **spreadsheet REQUIRES dataflow** (cells register with the engine) and **there is no part→part
+   `requires` mechanism** (§11.1) — so the spreadsheet's door must name BOTH:
+   `world.parts.whenAllLoaded ["spreadsheet", "dataflow"], -> …`. Nothing in the build will check
+   this; `check-part-edges.js` scans core only.
+
+### §12.3 Suite exposure
+19 spreadsheet + 1 dataflow SystemTests. They should NOT churn: `dev` ships `"parts": "all"` and the
+harness page presets `FIZZYGUM_EAGER_ALL_PARTS`. **Any reference churn means something moved that
+should not have — do not recapture, find the cause** (R-6).
+
+### §12.4 Expected payoff
+~68 KB (spreadsheet) + ~21 KB (dataflow) off the production image, ESTIMATED from the 59%
+source→image ratio the `maps` split actually produced. ⚠ Treat as unverified until measured — the
+same estimate understated `maps` by 33%.
+
+### §12.5 Verification
+Unchanged from §7, plus: take fingerprint baselines for dev/homepage/lean BEFORE touching anything
+(`Fizzygum-tests/.scratch/take-baselines-slices.sh <tag>`, gitignored), predict each delta in words,
+then compare. `fg gauntlet` · `fg homepage` · `build_and_smoke.sh --profile lean`.
 
 ---
 

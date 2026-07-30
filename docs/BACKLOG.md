@@ -6,7 +6,7 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
-### `plans/core-app-slices-partition-plan.md` — ✅ EXECUTED AND CLOSED 2026-07-30
+### `plans/core-app-slices-partition-plan.md` — ✅ PHASES 0/0.5/1/2/4 DONE; ⏳ PHASE 3 REMAINS
 Owner answered P0: omit-a-slice **yes, `maps` only** · sample content **demo material, but production
 KEEPS it** · **lazy**. That triple is a third end state the plan's §1 did not enumerate and is
 coherent — production must *have* `maps` (the samples build maps), but a lazy part is absent from
@@ -18,14 +18,22 @@ coherent — production must *have* `maps` (the samples build maps), but a lazy 
 - [x] Phase 1 — `src/maps/` → a **lazy `maps`** part, with the two map creator buttons moved *into*
       it (a creator button has no async seam, so it cannot await from outside).
 - [x] Phase 4 — `architecture/build-and-packaging.md`, `explainers/build-and-packaging.html`, profiles.
-- ⛔ **Phases 2-3 NOT run and deliberately closed** — `graphs-plots-charts`, `spreadsheet` and
-      `dataflow` stay in core by the P0 answer. They remain drawable (zero inheritance edges,
-      re-verified at execution); do not re-open without a new decision.
-- **Result:** production image 1,101,733 → 1,046,121 B (**−55.8 KB, −5.1%**), Examples folder
-  unchanged; `lean` drops both parts (−64.6 KB). Zero reference churn. §11 of the plan records the
-  four authored facts that execution falsified — the load-bearing one being that the **derived
-  part→part `requires` mechanism does not exist**, so part dependencies are honoured by hand at call
-  sites and no gate checks them.
+- [x] Phase 2 — `plots` extracted and LAZY (2nd session), with the palette and its opener moved in
+      too: every item of `PlotsToolbarWdgt` is a plot button, so filtering it would pop an empty window.
+- [x] `meta-tools` (the inspectors) made LAZY — not a phase of this plan; they were already a part.
+- [ ] **Phase 3 — `spreadsheet` + `dataflow`: THE ONLY THING LEFT. §12 of the plan is its cold-start
+      brief.** ⚠ Needs a fizzytiles-style LAUNCHER SPLIT (`SpreadsheetApp` lives inside
+      `src/spreadsheet/` and `createDesktop` opens it at boot), and dataflow is a WORLD COLLABORATOR
+      (`doOneCycle` runs `recalculateDataflow` every cycle), so every `world.dataflow` site must be
+      enumerated before the constructor is touched.
+- **Result so far:** production image 1,101,733 → **989,482 B (−112.3 KB, −10.2%)** — under 1 MB —
+  Examples folder unchanged; `lean` −93.7 KB. Zero reference churn. Commits `eed2f2f2`, `058ea35f`,
+  tests `3741b855b`.
+- ⚠⚠ §11 of the plan records the four authored facts execution falsified — chief among them that the
+  **derived part→part `requires` mechanism does not exist**, so part dependencies are honoured by hand
+  at call sites and no gate checks them — plus **§11.5, a defect that SHIPPED in `eed2f2f2`**: a lazy
+  part cannot ingest on a precompiled tree until `ensureMetaSystemLoaded()` runs, and no gate loaded a
+  lazy part on such a tree. Fixed, and `fg homepage` now asserts it (proven against a planted defect).
 
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/7.8 items, design-first, owner-gated.
