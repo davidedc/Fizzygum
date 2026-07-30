@@ -90,8 +90,10 @@ class HandleAppearance extends Appearance
 
     # Affine transforms (§6 Phase 4B): the rotate handle draws a small "knob" ring — visually distinct
     # from the resize arrows / striped triangle. The arc rasterises via SWCanvas (the tested backend),
-    # whose transcendentals are the deterministic DetTrig (installed over Math.* before SWCanvas at
-    # boot), so the ring is cross-engine byte-identical (the suite asserts exact pixels under WebKit).
+    # whose transcendentals are Math.* — and the SWCanvas-bearing pages patch those with the fdlibm
+    # port in their boot prelude, before the engine ever runs — so the ring is cross-engine
+    # byte-identical (the suite asserts exact pixels under WebKit). The native page rasterises this
+    # arc through the platform canvas instead, and matches no reference.
     if @widget.type is "rotateHandle"
       cx = @widget.width() / 2
       cy = @widget.height() / 2

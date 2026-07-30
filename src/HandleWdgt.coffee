@@ -149,15 +149,19 @@ class HandleWdgt extends Widget
   # spins with the island, so reading its 4A-1-mapped position would measure the angle in the very
   # plane it is rotating — a feedback loop (plan §4.6 / §6 4B). world.hand.position() is the raw
   # pointer (never plane-mapped), immune to 4A-2 mapping the `pos` passed to nonFloatDragging.
-  # DetTrig.atan2 (not Math.atan2) keeps it cross-engine deterministic (§6 4B risk note).
+  # DETERMINISM (§6 4B risk note): Math.atan2 here is the fdlibm port on every reference-matched page
+  # — the boot bundle those pages load runs DetTrig.install(Math) before any class source compiles, so
+  # this call site cannot observe the platform's own atan2 there. On the native page it IS the
+  # platform's, deliberately: those pixels are not reference-matched (owner call 2026-07-30). Never
+  # name the DetTrig global here — the native bundle does not define it.
   _pointerAngleToTargetAnchorDegrees: ->
     anchor = @target.rotationHalo_screenAnchor()
     p = world.hand.position()
-    DetTrig.atan2(p.y - anchor.y, p.x - anchor.x) * 180 / Math.PI
+    Math.atan2(p.y - anchor.y, p.x - anchor.x) * 180 / Math.PI
 
   # Affine transforms (§6 Phase 4B): quantize a raw (float) rotation onto an integer-degree grid,
   # snapping to a cardinal angle (0/90/180/270) within ~3°. Integer quantization is the determinism
-  # belt-and-braces over DetTrig.atan2 — any sub-ULP wobble rounds to the same integer, so the
+  # belt-and-braces over the atan2 above — any sub-ULP wobble rounds to the same integer, so the
   # committed rotationDegrees (hence every rotated pixel) is cross-engine identical.
   _quantizeRotationDegrees: (deg) ->
     d = ((deg % 360) + 360) % 360                    # JS % can be negative — normalise into [0, 360)

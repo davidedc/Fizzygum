@@ -284,10 +284,21 @@ the native path; measurement is cached via `world.canvasContextForTextMeasuremen
 - Deterministic trig: cross-engine trig differs by ~1 ULP. The fdlibm-based shim is a **Fizzygum-
   side global, `DetTrig`** (`{sin, cos, ...}`, ~345 lines, +−×÷/sqrt only; see §0-R 0b), which the
   boot sequence **installs over `Math.*` BEFORE SWCanvas renders** — it is NOT "carried by" or
-  internal to SWCanvas (that earlier wording was wrong; corrected per §0-R). **Any Fizzygum-side
-  matrix construction MUST call `DetTrig.cos/sin` explicitly** (`TransformSpec.coffee:98`) — relying
-  on `Math.*` being patched is fragile — or rotated references will differ across engines. (Past
-  campaign: memory note "SWCanvas deterministic trig".)
+  internal to SWCanvas (that earlier wording was wrong; corrected per §0-R).
+  > ⚠⚠ **SUPERSEDED 2026-07-30 — do NOT name `DetTrig` in source.** This bullet used to end "**Any
+  > Fizzygum-side matrix construction MUST call `DetTrig.cos/sin` explicitly** — relying on `Math.*`
+  > being patched is fragile". That instruction was followed (`TransformSpec._cosSin`,
+  > `HandleWdgt._pointerAngleToTargetAnchorDegrees`) and it SHIPPED A BUG: build arc 2 gave the native
+  > entry page its own boot bundle WITHOUT the det-trig prelude, so `DetTrig` is undefined there and
+  > every rotation on `index.html` / any `--homepage` build threw `DetTrig is not defined`. The global
+  > is not universally available; only the SWCanvas-bearing pages define it.
+  > **The rule is now the opposite: call `Math.cos/sin/atan2`.** Determinism still holds exactly where
+  > it is asserted, because the SWCanvas pages' prelude runs `DetTrig.install(Math)` before a single
+  > class source compiles — so on those pages `Math.*` IS the fdlibm port, and no widget can observe
+  > the un-patched one. The native page rotates with platform trig on purpose (owner call 2026-07-30):
+  > its pixels are not reference-matched. "Relying on `Math.*` being patched" turned out to be the
+  > ROBUST option; naming a global that only some bundles define is the fragile one.
+  (Past campaign: memory note "SWCanvas deterministic trig".)
 
 ### 3.8 Existing matrix code (for reference, NOT for reuse as-is)
 
@@ -1276,8 +1287,11 @@ lifted by the sub-step named):**
 - **Risks (determinism):** the handle computes the raw angle via `atan2`, and `Math.atan2` is NOT
   cross-engine bit-identical (the suite asserts byte-exact pixels under WebKit). GOOD NEWS: **`DetTrig`
   already exposes `atan2`** (confirmed §0-R 0b: `DetTrig = {sin,cos,tan,atan,atan2,asin,acos,install}`,
-  `runtime-prelude/deterministic-trig.js`) — call `DetTrig.atan2` directly, no SWCanvas-repo change
-  needed. Belt-and-suspenders: **quantize the committed `rotationDegrees` to an integer grid** before
+  `runtime-prelude/deterministic-trig.js`) — ~~call `DetTrig.atan2` directly~~, no SWCanvas-repo change
+  needed. **⚠ Superseded 2026-07-30: call `Math.atan2`, not `DetTrig.atan2` — see the reversal note in
+  §0-R 0b. The SW pages install the port over `Math.*` before any class compiles; the native page has no
+  `DetTrig` at all, and naming it there throws.**
+  Belt-and-suspenders: **quantize the committed `rotationDegrees` to an integer grid** before
   `setRotation` (also gives clean snap) and choose macro drag endpoints safely inside a grid cell.
   Record the choice in §8.
 
@@ -2918,7 +2932,23 @@ island composites via `setTransform` + `drawImage` (never `ctx.rotate`/`arc`), t
 in the island's hot path is the §4.3 matrix build — which 0b pins to DetTrig — so this test
 covers the island's actual determinism surface.
 
-### 0b — deterministic trig exposure: DECISION = call `DetTrig.cos/sin` explicitly
+### 0b — deterministic trig exposure: ~~DECISION = call `DetTrig.cos/sin` explicitly~~ REVERSED 2026-07-30
+
+> ⚠⚠ **THIS DECISION WAS REVERSED ON 2026-07-30. Source must call `Math.cos/sin/atan2`, never a named
+> `DetTrig`.** Rationale (c) below — "`DetTrig` is on `globalThis` in every build (the prelude is
+> prepended unconditionally)" — stopped being true when build arc 2 split the boot bundle in two: the
+> NATIVE bundle carries no prelude, so `DetTrig` is undefined on `index.html` and on every `--homepage`
+> build. The two sites that took this decision literally (`TransformSpec._cosSin`,
+> `HandleWdgt._pointerAngleToTargetAnchorDegrees`) therefore threw `DetTrig is not defined` on any
+> rotation there, from arc 2 until this reversal — invisible to every gate, because the suite drives the
+> SWCanvas harness page and the native pages were only boot-smoked.
+> Rationale (a) also inverts: `install` runs in the boot prelude ahead of ALL class compilation, so
+> there is no path that can run before it — install-order independence was protecting against nothing,
+> while the named global was a hard dependency on a bundle's contents. And (d) is now explicitly NOT
+> wanted: the native page rotates with platform trig by owner decision (2026-07-30), because its pixels
+> are not reference-matched. Determinism is unaffected where it is asserted — on the SWCanvas pages
+> `Math.*` IS the fdlibm port. Gate: `Fizzygum-tests/scripts/smoke-boot-headless.js` now rotates a
+> widget on both shipped entry pages. The original spike findings below stay as the record.
 
 Located the port: **`Fizzygum/runtime-prelude/deterministic-trig.js`** (a faithful SunPro
 fdlibm port; 345 lines; `+−×÷`/`sqrt` only). It exposes `globalThis.DetTrig` = `{ sin, cos,
@@ -2927,7 +2957,10 @@ tests can compare against native). `build_it_please.sh` prepends it to the SW bo
 (`fizzygum-boot-sw-min.js`) and runs `DetTrig.install(Math)` BEFORE the SWCanvas engine, so
 SWCanvas's own `Math.cos/sin` calls become deterministic at runtime. (Build arc 2 dropped it from
 the NATIVE bundle: it exists for SWCanvas's cross-engine byte-exactness, and native pixels are not
-reference-matched. That is another reason §4.3 matrix code calls `DetTrig.*` explicitly.)
+reference-matched. ~~That is another reason §4.3 matrix code calls `DetTrig.*` explicitly.~~ — that
+inference was backwards, and is exactly what broke: see the reversal note above. Because the prelude
+is prepended only to the SW bundle, `DetTrig.*` is the one spelling that CANNOT work on both pages,
+while `Math.*` works on both and is deterministic on the pages that need it to be.)
 
 Decision for §4.3 matrix code: **call `DetTrig.cos(θ)` / `DetTrig.sin(θ)` explicitly** — not
 raw `Math.*`. Rationale: (a) install-order-independent (correct even if some path runs before

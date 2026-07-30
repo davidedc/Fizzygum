@@ -96,7 +96,31 @@ external cross-platform driver.
 |---|---|---|---|
 | D1 | Backend selection | Build-time, per entry page. `worldWithSystemTestHarness.html` (+ `index-sw.html`) preset `window.FIZZYGUM_USE_SWCANVAS = true` and load the SW-full bundle; `index.html` presets `false` and loads the native+3D-core bundle. | LOCKED (owner, 2026-07-27) |
 | D2 | Precompile generation | Externalized: drain deleted from src, accumulator flag-gated, WSL script replaced by a puppeteer driver living in `Fizzygum-tests/scripts/`. | LOCKED (owner, 2026-07-28) |
-| D3 | det-trig in the native bundle | **Drop it** (it exists solely for SW cross-engine determinism; native pixels are not suite-gated). Consequence: native-entry trig differs from platform-Math by ≤1 ULP vs today, and Fizzytiles' cube renders ~1 ULP differently between the two entries. Keep the shim in the SW bundle unchanged. | LOCKED (owner ratified 2026-07-28) |
+| D3 | det-trig in the native bundle | **Drop it** (it exists solely for SW cross-engine determinism; native pixels are not suite-gated). Consequence: native-entry trig differs from platform-Math by ≤1 ULP vs today, and Fizzytiles' cube renders ~1 ULP differently between the two entries. Keep the shim in the SW bundle unchanged. | LOCKED (owner ratified 2026-07-28); **decision STANDS, one premise corrected 2026-07-30 — see below** |
+
+**D3 follow-up, 2026-07-30 — the DECISION stands, its PREMISE was wrong.** Dropping det-trig from the
+native bundle was right and remains the shape: the native page's pixels are not reference-matched, so its
+rotations do not need to be cross-engine reproducible, and platform trig is what is wanted there (owner
+re-affirmed 2026-07-30). What was false was the parenthetical "*it exists solely for SW cross-engine
+determinism*". The prelude also defined a **global that source code named directly**: `HandleWdgt.
+_pointerAngleToTargetAnchorDegrees` called `DetTrig.atan2` and `TransformSpec._cosSin` called
+`DetTrig.cos/sin`, both landed by the affine-transforms arc. So from arc 2 until 2026-07-30, rotating any
+widget on `index.html` (and on every `--homepage` build) threw `DetTrig is not defined`. No gate saw it:
+the suite drives the SWCanvas harness page, where the prelude ships, and the native pages were
+boot-smoked only — never interacted with.
+**Resolution (not a reversal):** the two call sites now use `Math.cos/sin/atan2`. On the SWCanvas pages
+the prelude still runs `DetTrig.install(Math)` before any class source compiles, so those calls resolve to
+the very same fdlibm code they did before — gated pixels cannot move, and the fix landed with zero
+reference churn. On the native page they are the platform's own trig, deliberately. The native bundle is
+back to its arc-2 content (~32 KB) and no source names `DetTrig` any more.
+**Gate added in the same change:** `Fizzygum-tests/scripts/smoke-boot-headless.js` now drives a real
+rotate gesture (halo rotate-handle press + drag, then the 4C `setRotationDegrees` sugar) on BOTH shipped
+entry pages, so "the native page can actually run the product", not merely boot it, is now covered.
+⚖ **Case law:** *a bundle-content decision is also an API decision.* Deciding a payload is
+"backend-specific" is only safe once you have grepped `src/` for every global that payload defines — a
+prelude is not just bytes for the engine, it is part of the namespace every class compiles into. And
+*booting is not exercising*: a smoke test that only loads a page certifies nothing about the code paths a
+user reaches.
 | D4 | Interactive SW entry | Ship `index-sw.html` (SW bundle, no test harness) — replaces the owner's `?sw=1`-on-index habit and gives the smoke script a clean SW page. | LOCKED (owner ratified 2026-07-28) |
 | D5 | Homepage flavour | Native-only: no SW bundle, no `index-sw.html`, no `font-assets/` copy in `--homepage` trees (it already `rm`s the harness page). Saves 90 MB deploy + 263 KB boot payload. | LOCKED (owner ratified 2026-07-28) |
 | D6 | The `?sw=1` query param | Delete the URL-param fallback (`globalFunctions.coffee` — the `bootQueryParams.get("sw")` branch) in the same arc; the preset is the only mechanism. Keep `?dpr=` (still needed for HiDPI test forcing). Update the three tests-repo scripts that pass `?sw=1` (harmless-but-dead once pages preset). | LOCKED (owner ratified 2026-07-28) |

@@ -733,6 +733,11 @@ if ! $homepage ; then
   # unaffected). Measured: it matches native V8 pixel-for-pixel across the suite, so it is a drop-in.
   # It rides ONLY on this bundle: it exists for SWCanvas's cross-engine byte-exactness, and the
   # native page's pixels are not reference-matched.
+  # ⚠ THE INSTALL LINE IS LOAD-BEARING FOR src/, NOT JUST FOR SWCANVAS. The rotation math in
+  # TransformSpec._cosSin and HandleWdgt._pointerAngleToTargetAnchorDegrees calls Math.cos/sin/atan2,
+  # so on THESE pages — and only these — those calls resolve to the fdlibm port, which is what makes
+  # rotated composites cross-engine byte-identical on the reference-matched pages. It runs before any
+  # class source compiles, so no widget can ever observe the un-patched Math. Do not move it later.
   # See runtime-prelude/deterministic-trig.js and src/macros/MACRO-PATTERNS.md.
   cat runtime-prelude/deterministic-trig.js > $BUILD_PATH/js/fizzygum-boot-sw-min.js
   printf '\n;try { DetTrig.install(Math); } catch (e) {}\n;\n' >> $BUILD_PATH/js/fizzygum-boot-sw-min.js
@@ -751,7 +756,15 @@ fi
 # its 3D — so it needs SW3D, which needs a sliver of SWCanvas (Surface + DepthBuffer + Texture3D +
 # Triangle3DOps). That sliver is SWCanvas's own subtractive dist target, ~14 KB instead of ~263 KB,
 # and it is pixel-identical to the full engine on the 3D path (SWCanvas's examples/3d-core-node.js
-# witness). No det-trig here (see above); SW3D is minified since nothing debugs through it here.
+# witness). SW3D is minified since nothing debugs through it here.
+#
+# NO det-trig here, deliberately (owner call 2026-07-30). This page's pixels are not reference-matched,
+# so its rotations do not need to be cross-engine reproducible — platform Math trig is what we want.
+# That is SAFE because no source names `DetTrig`: the two rotation-math sites (TransformSpec._cosSin,
+# HandleWdgt._pointerAngleToTargetAnchorDegrees) call Math.cos/sin/atan2, which resolve to whatever the
+# page installed — the fdlibm port on the SW pages above, the platform's own trig here. Anything that
+# reached for the global by name would throw `DetTrig is not defined` the moment a window was rotated;
+# ../Fizzygum-tests/scripts/smoke-boot-headless.js rotates a widget on this page to keep that honest.
 echo "assembling the native boot bundle (SWCanvas 3D core + SW3D + boot)..."
 cat $SWCANVAS_VENDOR/swcanvas-3d-core.min.js > $BUILD_PATH/js/fizzygum-boot-native-min.js
 printf '\n;\n' >> $BUILD_PATH/js/fizzygum-boot-native-min.js

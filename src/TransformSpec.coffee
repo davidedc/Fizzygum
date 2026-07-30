@@ -12,13 +12,15 @@
 #    epsilon-hacks — we never do it). Because the matrix is cheap (~10 flops) and
 #    derived, there is no cached-matrix / rebuildDerivedValue bookkeeping to get
 #    wrong for deepCopy (plan §4.10): only the scalars serialize.
-#  - Determinism: for a non-zero angle the matrix trig MUST come from the shared
-#    deterministic (fdlibm) port `DetTrig` (plan §0-R 0b) — the SAME sin/cos the
-#    build installs over Math.* before SWCanvas renders — or rotated references
-#    would differ across JS engines (verified byte-identical cross-engine in Phase
-#    0a). Rotation is LIVE (Phase 2); the rotation==0 fast path still returns
-#    cos=1/sin=0 directly with no trig call, so a pure scale or identity spec has no
-#    trig dependency.
+#  - Determinism: for a non-zero angle the matrix trig goes through plain Math.cos/sin,
+#    which on every reference-matched page IS the shared deterministic (fdlibm) port
+#    (plan §0-R 0b) — those pages' boot bundle runs DetTrig.install(Math) before a single
+#    class source compiles, so a rotated reference cannot pick up the platform's own
+#    transcendentals (verified byte-identical cross-engine in Phase 0a). The native page
+#    installs nothing and so rotates with platform trig, deliberately: its pixels are not
+#    reference-matched (owner call 2026-07-30). Rotation is LIVE (Phase 2); the
+#    rotation==0 fast path still returns cos=1/sin=0 directly with no trig call, so a pure
+#    scale or identity spec has no trig dependency at all.
 #
 # Canvas-2D matrix convention (a,b,c,d,e,f): x' = a·x + c·y + e ; y' = b·x + d·y + f.
 
@@ -34,8 +36,9 @@ class TransformSpec
   claimsSpace: "footprint"
 
   constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "footprint") ->
-    # Phase 2: rotation is live — for a non-zero angle the matrix trig comes from the shared
-    # deterministic DetTrig port (see _cosSin), so rotated composites are cross-engine identical.
+    # Phase 2: rotation is live — for a non-zero angle the matrix trig is Math.cos/sin, which the
+    # reference-matched pages have patched to the fdlibm port (see _cosSin), so rotated composites
+    # are cross-engine identical there.
     if @scale <= 0
       @scale = 1
 
@@ -102,14 +105,17 @@ class TransformSpec
         r = d if d > r
     new Rectangle (Math.floor(A.x - r)), (Math.floor(A.y - r)), (Math.ceil(A.x + r)), (Math.ceil(A.y + r))
 
-  # cos/sin of the rotation. The rotation==0 fast path returns exact [1,0] with no trig
-  # call (so identity / pure-scale specs have no trig dependency); a non-zero angle goes
-  # through the deterministic DetTrig port (cross-engine-identical — the live Phase-2 path).
+  # cos/sin of the rotation. The rotation==0 fast path returns exact [1,0] with no trig call (so
+  # identity / pure-scale specs have no trig dependency); a non-zero angle takes the live Phase-2
+  # path below. Math.cos/sin, NOT a named DetTrig: the reference-matched pages install the fdlibm
+  # port over Math.* in their boot prelude, ahead of all class compilation, so these two calls are
+  # the deterministic ones exactly where determinism is asserted — and the native page, which
+  # installs nothing and matches no references, simply rotates with platform trig.
   _cosSin: ->
     deg = @rotationDegrees
     return [1, 0] if deg % 360 == 0
     theta = deg * Math.PI / 180   # Math.PI is IEEE-exact across engines
-    [DetTrig.cos(theta), DetTrig.sin(theta)]
+    [Math.cos(theta), Math.sin(theta)]
 
   _anchorFor: (slotBounds) ->
     return slotBounds.center() if !@anchor?
