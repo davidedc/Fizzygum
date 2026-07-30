@@ -155,7 +155,7 @@ storeSourceAndPotentiallyCompileItAndExecuteIt = (fileName, justIngestSources) -
   if !window.JSSourcesContainer?
     window.JSSourcesContainer = {content: ""}
 
-  fileContents = window[fileName + "_coffeSource"]
+  fileContents = SourceVault.get fileName
 
   if srcLoadCompileDebugWrites then t0 = performance.now()
   if srcLoadCompileDebugWrites then console.log "checking whether " + fileName + " is already in the system "

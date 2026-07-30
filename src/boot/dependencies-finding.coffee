@@ -45,7 +45,9 @@ goodMatch = (theMatch, currentClass) ->
 
 extractDependenciesFromSource = ->
   # find out the dependencies looking at each class'
-  # source code and hints in it.
+  # source code and hints in it. The sources come from the SourceVault
+  # (src/boot/source-vault.coffee) -- the registry every generated
+  # sources_batch_*.js file stores into.
   dependenciesMap = new Map
 
   # currently REQUIRES is unused, it should be a debug or temporary option
@@ -60,18 +62,14 @@ extractDependenciesFromSource = ->
   CONSTRUCTION_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*new\s*([a-zA-Z_$][0-9a-zA-Z_$]*)///
   CLASS_USE_IN_CLASS_DECLARATION = ///^\s\s@?[a-zA-Z_$][0-9a-zA-Z_$]*\s*:\s*([A-Z][0-9a-zA-Z_$]*)///
 
-  allSources = Object.keys(window).filter (eachSourceFile) ->
-    eachSourceFile.endsWith "_coffeSource"
+  for eachFile in SourceVault.names()
 
-  for eachFile in allSources
-
-    eachFile = eachFile.replace "_coffeSource",""
     if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
     if srcLoadCompileDebugWrites then console.log eachFile + " - "
     fileDependenciesSet = new Set
 
-    lines = window[eachFile + "_coffeSource"].split '\n'
+    lines = SourceVault.get(eachFile).split '\n'
     for eachLine in lines
 
       # everything depends on globalFunctions, let's get that out of the way

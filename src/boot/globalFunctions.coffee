@@ -222,17 +222,19 @@ boot = ->
     Promise.all [
       # coffeescript could nominally be loaded here
       # if it wasn't for the fact that the paint tool needs it
-      loadJSFilePromise("js/coffeescript-sources/Class_coffeSource.js"),
-      loadJSFilePromise("js/coffeescript-sources/Mixin_coffeSource.js"),
+      loadJSFilePromise("js/coffeescript-sources/Class-source.js"),
+      loadJSFilePromise("js/coffeescript-sources/Mixin-source.js"),
       loadJSFilePromise("js/src/loading-and-compiling-coffeescript-sources-min.js"),
       loadJSFilePromise("js/src/logging-div-min.js")
     ]
   .then ->
-    if bootLoadingDebugWrites then console.log "---- Class_coffeSource, Mixin_coffeSource, loading-and-compiling-coffeescript-sources-min, logging-div-min loaded"
-    eval.call window, compileFGCode window["Mixin_coffeSource"], true
-    eval.call window, compileFGCode window["Class_coffeSource"], true
+    if bootLoadingDebugWrites then console.log "---- Class + Mixin sources, loading-and-compiling-coffeescript-sources-min, logging-div-min loaded"
+    # the two meta-system sources are the only ones fetched individually and compiled by hand:
+    # everything else needs Class/Mixin to already exist before it can be ingested.
+    eval.call window, compileFGCode SourceVault.get("Mixin"), true
+    eval.call window, compileFGCode SourceVault.get("Class"), true
   .then ->
-    if bootLoadingDebugWrites then console.log "---- compiled Mixin_coffeSource, Class_coffeSource"
+    if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"
     loadJSFilePromise("js/src/dependencies-finding-min.js")
   .then ->
     if bootLoadingDebugWrites then console.log "---- dependencies-finding-min loaded"

@@ -193,7 +193,7 @@ def main():
         return
 
     # so here we need to take a .coffee file and generate a js that
-    # , when run, puts its contents as string into a variable.
+    # , when run, hands its contents as a string to the SourceVault.
     # There are three ways of doing this.
     # 1) generate a coffeescript that contains a multiline string
     #    with the file inside it, then do another pass to convert
@@ -202,7 +202,7 @@ def main():
     # 3) directly generate a .js that contains a normal JS string
     #    (which requires us to turn the multi-line source into a normal
     #    js string)
-    # 
+    #
     # We used 1) before, however 3) is the easiest of the three.
     # You'd think that 2) is easiest but that still requires some escaping
     # of the source contents (multiline JS delimiters and in-string variables).
@@ -210,10 +210,10 @@ def main():
     # into something else. The easiest way is to replace " and \ with
     # similarly-looking unicode characters and \n with another dedicated
     # character (⤶).
-    # Of course we need to make sure that the obtained JS string is
-    # transformed back to the original source, hence why we append the
-    # three "replace"s to the string, so we undo the transformations
-    # of above.
+    # The DECODE (the three matching "replace"s) lives in SourceVault.store --
+    # src/boot/source-vault.coffee -- so it is written once instead of once per
+    # emitted line. Keep the two in sync: the three characters below and the
+    # three regexes there are one mechanism.
     #
     # Note that this mechanism fails if the "transformed to" characters
     # are already in the string, however we detect that and besides that's why
@@ -222,19 +222,24 @@ def main():
     # Also note that we tried to use .json to store these strings rather
     # than using this js trick, however .json loading is not permitted from
     # filesystem, so we'd always need a server...
-    STRING_BLOCK = 'window.%s = "%s".replace(/＂/g, "\\\"").replace(/⧹/g, "\\\\").replace(/⤶/g, "\\n");'
+    #
+    # The PART name is the third argument: it is what lets a slice of the system be
+    # loaded on demand rather than all-at-boot (docs/plans/build-arc-4-dynamic-parts-plan.md).
+    STRING_BLOCK = 'SourceVault.store("%s", "%s", "%s");'
 
     # now iterate through the source files and create
-    # 1) the js files with the coffeescript sources, one for each
-    # 2) a few the js files with A BATCH OF coffeescript sources
-    #    (so we load like 12 source batches rathern tna 400 sources)
-    # 3) the manifest for the files above, so the system knows what to load
-    #    and also we put in the manifest the number of batches that we
-    #    ended up creating
-    # In theory you don't need both emitting/loading mechanisms 1) and 2),
-    # we just generate sources in both ways for completeness even if we end
-    # up loading the batches only (i.e. 2).
-    
+    # 1) a few js files with A BATCH OF coffeescript sources
+    #    (so we load ~15 source batches rather than ~500 sources)
+    # 2) the count of the batches we ended up creating, so the boot code
+    #    knows how many to load
+    # We used to ALSO write one js file per class next to the batches, and load
+    # none of them: ~500 files and ~3 MB of duplicate source per dev build that
+    # only the --homepage flavour bothered to delete again. Arc 4 dropped them.
+    # The two exceptions -- the Class and Mixin sources -- are still emitted as
+    # their own files below, because those two ARE loaded individually and early
+    # (globalFunctions loads them before any batch: the meta-system has to exist
+    # before a batch's contents can be ingested).
+
     batchedSources = ""
     numberOfSourceBatches = 0
     minimumSourcesBatchSize = 150000
@@ -245,8 +250,7 @@ def main():
         with codecs.open(filename, "r", "utf-8") as f:
             content = f.read()
 
-        # if the file is a class, then we add its source code in a
-        # *.coffee file as a window.SOURCENAME_coffeSource variable
+        # if the file is a class, then we hand its source code to the SourceVault
         # (string block).
         # We check if the file is a class by searching its contents for a
         # class ... declaration.
@@ -254,16 +258,11 @@ def main():
         is_mixin_file = IS_MIXIN.search(content)
 
 
-        # all the class and mixins files' coffeescript source is put
-        # in .coffee files containing such sources as text.
-        # later on in the build process these .coffee "source containers"
-        # are going to be translated to javascript (still containing coffeescript
-        # sources as text).
-        # Also keep track of all the sources in a manifest.
-        # The manifest will be loaded at start, and then the sources will be
-        # dynamically and asynchronously loaded following the manifest entries.
-        # This is so Fizzygum can dynamically (and possibly lazily) load all
-        # the morph's classes as coffeescript source code.
+        # all the class and mixins files' coffeescript source is emitted as text
+        # inside a SourceVault.store call, batched into a handful of js files.
+        # The boot code loads those batches and then ingests/compiles each source
+        # in dependency order. This is what lets Fizzygum load its classes as
+        # coffeescript source code -- and, per part, load them lazily.
 
         # the meaning of the first bracket is: if --homepage parameter
         # is passed to this script, then
@@ -291,11 +290,17 @@ def main():
             escaped_content = escaped_content.replace("\\","⧹")
             escaped_content = escaped_content.replace("\n","⤶")
 
-            sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
-            escaped_content_with_declaration = STRING_BLOCK % (str(sourceFileName), str(escaped_content))
+            # the vault is keyed by CLASS name, which is the file's basename
+            # (one class per file, filename == class name -- see the repo CLAUDE.md)
+            sourceName = ntpath.basename(filename).replace(".coffee","")
+            escaped_content_with_declaration = STRING_BLOCK % (str(sourceName), str(escaped_content), "core")
 
-            with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceFileName+".js", "w", "utf-8") as f:
-                f.write(escaped_content_with_declaration)
+            # Class and Mixin are the two sources loaded individually and EARLY, because the
+            # meta-system has to exist before any batch's contents can be ingested (see
+            # globalFunctions' boot sequence). Every other source travels in a batch only.
+            if sourceName == "Class" or sourceName == "Mixin":
+                with codecs.open("../Fizzygum-builds/latest/js/coffeescript-sources/"+sourceName+"-source.js", "w", "utf-8") as f:
+                    f.write(escaped_content_with_declaration)
 
             # pile up the sources into a batch and save the batch
             # when is big enough

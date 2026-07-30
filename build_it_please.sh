@@ -440,6 +440,7 @@ fi
 #   * check-scheduled-checks.js     — no OVERDUE `# CHECK AFTER <date>` reminder (a build-dated time bomb).
 #   * check-stringified-scripts.js  — no `new ScriptWdgt """..."""` stringified-code literal in core.
 #   * check-region-markers.js       — the `»>>` region-exclusion mechanism, ratcheted per kind to zero.
+#   * check-source-vault.js         — the retired `window.<Name>_coffeSource` source delivery, at zero.
 if ! $noSyntaxCheck ; then
   echo "checking for trailing whitespace ..."
   node ./buildSystem/check-trailing-whitespace.js
@@ -476,6 +477,15 @@ if ! $noSyntaxCheck ; then
     exit 1
   fi
   echo "... region-markers check OK"
+
+  echo "checking the retired source-delivery patterns stay dead ..."
+  node ./buildSystem/check-source-vault.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: source-vault gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... source-vault check OK"
 fi
 
 # --- build-time CONSTRUCTOR-BUILD gate ------------------------------------------------
@@ -634,6 +644,14 @@ fi
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
 
+# SourceVault FIRST, before anything else in the bundle: every generated sources_batch_*.js file
+# is a sequence of SourceVault.store(...) calls, and the bundle is the entry page's first script,
+# so the vault has to exist before any batch can run. It is deliberately NOT one of the standalone
+# js/src/*-min.js boot files further down — those are loaded later in the boot sequence, by which
+# time the batches would already have needed it.
+cat src/boot/source-vault.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
+
+printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 cat $SCRATCH_PATH/numberOfSourceBatches.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 printf "\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
@@ -853,15 +871,16 @@ if $homepage ; then
   rm $BUILD_PATH/icons/leftButtonPressed.png
   rm $BUILD_PATH/icons/scrollDown.png
   rm $BUILD_PATH/js/fizzygum-boot.js
-  
-  ls -d -1 $BUILD_PATH/js/coffeescript-sources/* | grep -v /sources_batch | grep -v /Mixin_coffeSource | grep -v /Class_coffeSource | xargs rm -f
-  
-  # Generate the pre-compiled image. It MUST happen here: after the per-class source files are
-  # pruned (the generating boot only needs sources_batch_* + Class/Mixin, kept above) and while
-  # js/pre-compiled.js is still the `window.preCompiled = false` stub — compile-at-boot is
-  # exactly the mode that builds the image. The driver lives in the tests repo because Node
-  # resolves require('puppeteer') from the SCRIPT's directory; the explicit cd in a subshell is
-  # what keeps that true regardless of this build's cwd.
+
+  # (There used to be a prune of the per-class source files here — build.py wrote one js file per
+  # class next to the batches and nothing ever loaded them, so this line deleted ~500 of them again
+  # for the production tree. Arc 4 stopped emitting them, so there is nothing left to prune: the
+  # sources directory now holds only the batches plus the two individually-loaded Class/Mixin sources.)
+
+  # Generate the pre-compiled image. It MUST happen here, while js/pre-compiled.js is still the
+  # `window.preCompiled = false` stub — compile-at-boot is exactly the mode that builds the image.
+  # The driver lives in the tests repo because Node resolves require('puppeteer') from the SCRIPT's
+  # directory; the explicit cd in a subshell is what keeps that true regardless of this build's cwd.
   echo "generating the pre-compiled file headlessly. this might take a few seconds..."
   ( cd ../Fizzygum-tests && node scripts/generate-pre-compiled-headless.js ) || {
     echo "!!!!!!!!!!! error: pre-compiled generation failed" 1>&2

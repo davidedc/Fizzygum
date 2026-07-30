@@ -55,13 +55,20 @@ The built page is *already* 99% of a single-file app:
   (`loadJSFilePromise`, `src/boot/globalFunctions.coffee:42-64`) or `new Image()` — because the
   page must run over `file://`. Inlining is therefore a *natural fit*, not a retrofit.
 - **Total native-canvas no-tests payload ≈ 3.07 MB**: boot bundle 316 KB + CoffeeScript compiler
-  (`js/libs/fizzygum-coffeescript-min.js`, 208,604 B) + source batches (`sources_batch_0..13.js`,
-  2,489,628 B) + `Class_coffeSource.js`/`Mixin_coffeSource.js` (28,621 B) + three small boot
+  (`js/libs/fizzygum-coffeescript-min.js`, 208,604 B) + source batches (`sources_batch_0..14.js`,
+  ~2.7 MB) + `Class-source.js`/`Mixin-source.js` (~29 KB) + three small boot
   helpers (~8 KB) + `pre-compiled.js` stub (257 B).
 - **The booted page retains everything needed to regenerate its own code, in memory:**
-  - every class/mixin source as `window.<Name>_coffeSource` (never deleted; enumerated by
-    suffix-scanning `Object.keys(window)` — `src/boot/dependencies-finding.coffee:64-66` and
-    `src/meta/SourceVault.coffee:49-57`);
+  - every class/mixin source in the **`SourceVault`** (`window.SourceVault`,
+    `src/boot/source-vault.coffee`) — the registry every generated `sources_batch_*.js` file stores
+    into, keyed by class name and tagged with the PART the class belongs to. Never emptied.
+    `SourceVault.names()` enumerates, `SourceVault.get name` reads one
+    (`src/boot/dependencies-finding.coffee` is its first consumer).
+    ⚠ Build arc 4 replaced the old per-class `window.<Name>_coffeSource` globals and the
+    `Object.keys(window)` suffix-scan with this registry, and a build gate
+    (`buildSystem/check-source-vault.js`) keeps them dead — so the assembler enumerates the VAULT.
+    Do not reintroduce a window scan. (Nothing else changed for this plan: the sources are still
+    resident, still complete, still text.)
   - the `CoffeeScript` compiler global (kept resident — the paint tool needs it);
   - bonus: under `?generatePreCompiled`, `window.JSSourcesContainer.content` accumulates every
     class's compiled JS (the guarded appends in `src/meta/Class.coffee` / `Mixin.coffee`) — this
@@ -69,13 +76,15 @@ The built page is *already* 99% of a single-file app:
     in-browser self-reconstruction already works.** (⚠ Build arc 2 GATED that accumulation on
     the `?generatePreCompiled` mode: an ordinary boot no longer builds the string, so a
     single-file assembler running in a normal session must not assume it is populated —
-    it can request the mode, or re-derive from the `_coffeSource` globals.)
+    it can request the mode, or re-derive from the vault's sources.)
 - **Load order is computed in-browser at boot** (`findLoadOrder()`, regex-scan + topological DFS,
   `dependencies-finding.coffee`) — no build-time manifest to carry.
-- **The source-string wrapper** (build.py:273):
-  `window.%s = "%s".replace(/＂/g,"\"").replace(/⧹/g,"\\").replace(/⤶/g,"\n");`
-  — i.e. `"`→`＂`, `\`→`⧹`, newline→`⤶`, undone at load. (JSON was rejected historically because
-  `file://` blocks JSON fetch — build.py:266-272.)
+- **The source-string wrapper** (`build.py`, `STRING_BLOCK`):
+  `SourceVault.store("%s", "%s", "%s");` (name, escaped text, part)
+  — the escaping is still `"`→`＂`, `\`→`⧹`, newline→`⤶`, but the DECODE now lives once inside
+  `SourceVault.store` (`src/boot/source-vault.coffee`) instead of being appended to every emitted
+  line. An assembler re-emitting sources must apply the same three replacements and emit
+  `SourceVault.store` calls. (JSON was rejected historically because `file://` blocks JSON fetch.)
 - **The serialization arc is the complete data half:**
   - `WorldWdgt::serializeWorldSnapshot(opts)` (`src/WorldWdgt.coffee:2228`) →
     `Serializer.serializeWorld` → versioned JSON envelope
@@ -197,12 +206,13 @@ the artifact.
   <img id="spinner" src="data:image/svg+xml;…">      <!-- inlined spinner; NO fake-desktop splash (D10) -->
   <canvas id="world" tabindex="1" …></canvas>
   <script> window.FIZZYGUM_SINGLE_FILE = true; </script>
-  <script> /* boot bundle text (det-trig + SWCanvas + SW3D + boot JS) */ </script>
+  <script> /* boot bundle text (det-trig + SWCanvas + SW3D + boot JS — which contains the
+              SourceVault, first in the bundle, so the store blocks below have somewhere to go) */ </script>
   <script> window.preCompiled = false;  /* the pre-compiled.js stub, inlined */ </script>
   <script> /* CoffeeScript compiler 2.0.3 */ </script>
-  <script> /* Class_coffeSource + Mixin_coffeSource + the 3 boot helpers
+  <script> /* the Class + Mixin sources (SourceVault.store blocks) + the 3 boot helpers
               (loading-and-compiling…, logging-div, dependencies-finding) */ </script>
-  <script> /* source batches — window.<Name>_coffeSource blocks, re-encoded (§4.5) */ </script>
+  <script> /* source batches — SourceVault.store("<Name>", "…", "<part>") blocks, re-encoded (§4.5) */ </script>
   <script type="application/json" id="fizzygum-world-snapshot">
     /* serializeWorldSnapshot() envelope, "<" escaped to < (§4.5) */
   </script>
@@ -257,16 +267,23 @@ none read from the DOM:
 - **Shell template**: a literal in the class (the single-file shell is intentionally distinct from
   `src/index.html`; it is THE canonical shell for saved pages).
 - **Boot bundle + compiler texts**: from the wrapped strings the build embeds (§4.4) —
-  `window.fizzygumBootBundle_source`, `window.coffeeScriptCompiler_source` (decoded the same way
-  `_coffeSource` strings are).
+  `window.fizzygumBootBundle_source`, `window.coffeeScriptCompiler_source` (decoded with the same
+  three replacements `SourceVault.store` applies).
 - **Boot helpers** (loading-and-compiling / logging-div / dependencies-finding minified JS): also
   embedded as wrapped strings by the build (§4.4) — they are small (~8 KB total).
-- **Source batches**: regenerated from the in-memory registry — enumerate `Object.keys(window)`
-  for the `_coffeSource` suffix (same enumeration as `dependencies-finding.coffee:64-66` /
-  `SourceVault.coffee:55-57`), re-encode each with the escape spec (§4.5), emit
-  `window.<Name>_coffeSource = "…"` blocks. `Class_coffeSource`/`Mixin_coffeSource` are emitted in
-  their own earlier block (they must compile before the batches — mirror the boot chain order) and
-  deduped out of the batch set.
+- **Source batches**: regenerated from the in-memory registry — **enumerate the `SourceVault`**
+  (`SourceVault.names()`, reading each text with `SourceVault.get name`; the same enumeration
+  `dependencies-finding.coffee` uses), re-encode each with the escape spec (§4.5), and emit
+  `SourceVault.store("<Name>", "…", "<part>")` blocks — carrying each source's PART through, so a
+  saved page reproduces the partition rather than flattening it. The `Class` and `Mixin` sources are
+  emitted in their own earlier block (they must compile before the batches — mirror the boot chain
+  order) and deduped out of the batch set. The shell must therefore include
+  `src/boot/source-vault.coffee`'s compiled output before any batch block, exactly as the boot
+  bundle does.
+  ⚠ Arc 4 note: a saved page embeds **core + the parts that were actually loaded** in the session
+  doing the saving (that is what the vault holds). A part never loaded is simply not in the saved
+  page — which is the correct semantics for a single-file artifact, but it means the saved page's
+  parts manifest must be regenerated from the vault too, not copied from the build.
 - **Snapshot block**: `serializeWorldSnapshot()` (no `savedAt` unless the user-facing save wants
   it), then `.replace(/</g, "\\u003C")` — the TW trick, verbatim (§3.1).
 - **The `FIZZYGUM_SINGLE_FILE` flag block** and the `onload → boot()` tail.
@@ -310,13 +327,15 @@ Two independent payloads, two escapes:
 
 | Payload | Escape | Decode | Why |
 |---|---|---|---|
-| Code payload (every `_coffeSource` block, boot-bundle/compiler/helper strings) | build.py STRING_BLOCK substitution, **extended**: `"`→`＂`, `\`→`⧹`, `\n`→`⤶`, **NEW `<`→`＜`** (fullwidth less-than U+FF1C) | the emitted `.replace` chain gains `.replace(/＜/g,"<")` | a literal `</script` (or `<!--`) in ANY source comment/string would truncate the inline block and corrupt the whole file. Today this cannot bite (sources ship as external `.js`); inline it is fatal. Escaping ALL `<` kills `</script>` AND `<!--` parser edge cases at once. |
+| Code payload (every `SourceVault.store` block, boot-bundle/compiler/helper strings) | build.py STRING_BLOCK substitution, **extended**: `"`→`＂`, `\`→`⧹`, `\n`→`⤶`, **NEW `<`→`＜`** (fullwidth less-than U+FF1C) | **`SourceVault.store`'s decode chain gains `.replace(/＜/g,"<")`** (`src/boot/source-vault.coffee`) — arc 4 moved the decode out of the emitted line and into the vault, so this extension is a ONE-LINE change in ONE place instead of a change to the emitted template | a literal `</script` (or `<!--`) in ANY source comment/string would truncate the inline block and corrupt the whole file. Today this cannot bite (sources ship as external `.js`); inline it is fatal. Escaping ALL `<` kills `</script>` AND `<!--` parser edge cases at once. |
 | Snapshot JSON block | `json.replace(/</g,"\\u003C")` — TW-exact | none needed — `JSON.parse` restores it | `<` only occurs inside JSON strings ⇒ lossless; `</script>` can never appear as literal bytes. |
 
 Rules:
 - The runtime (CoffeeScript) encoder in the assembler and the build-time (Python) encoder never
-  process the same string — each output is decoded only by its own emitted chain — but BOTH must
-  implement the same 4-char table, and both rely on the §4.4(3) guard.
+  process the same string — each output is decoded by the same single `SourceVault.store` chain —
+  but BOTH must implement the same 4-char ENCODE table, and both rely on the §4.4(3) guard.
+  ⚠ Since arc 4 there is exactly ONE decoder (the vault). Extending the table means editing the
+  Python encoder, the CoffeeScript encoder, and that one decoder — no longer N emitted chains.
 - `<meta charset="UTF-8">` must be the FIRST element in `<head>`: the substitution characters are
   non-ASCII, and a saved file re-opened with a mis-sniffed encoding corrupts every source string.
   (Both Decker and Feather Wiki hard-code exactly this, for exactly this reason.)
