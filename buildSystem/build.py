@@ -261,7 +261,7 @@ def main():
     # filesystem, so we'd always need a server...
     #
     # The PART name is the third argument: it is what lets a slice of the system be
-    # loaded on demand rather than all-at-boot (docs/plans/build-arc-4-dynamic-parts-plan.md).
+    # loaded on demand rather than all-at-boot (docs/archive/build-arc-4-dynamic-parts-plan.md).
     STRING_BLOCK = 'SourceVault.store("%s", "%s", "%s");'
 
     # now iterate through the source files and create

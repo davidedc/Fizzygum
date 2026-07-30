@@ -1,13 +1,18 @@
 # Arc 4 · Dynamic parts — lazy-loadable code slices (SourceVault, partition, runtime loader, Fizzytiles pilot)
 
-**STATUS: EXECUTED 2026-07-30 — PHASES 0, 1 and 2 ALL DONE AND COMMITTED; PHASE 3 DECLINED BY THE
-OWNER (it is optional by construction — see §5.4). NOT YET PUSHED.**
+**STATUS: EXECUTED IN FULL — COMPLETE 2026-07-30.** Phases 0, 1 and 2 all landed; phase 3 DECLINED
+by the owner (it is optional by construction — see §5.4, and the two `docs/BACKLOG.md` lines that
+carry its candidates forward). Both of the arc's mandated retirements finished IN-ARC and are gated
+at zero: the 499 `_coffeSource` window globals + the `Object.keys(window)` suffix-scan
+(`check-source-vault.js`), and all three whole-file exclusion markers + all three build.py regexes
+(`check-whole-file-markers.js`, 45 → 0). A third new gate, `check-part-edges.js`, defends the
+partition itself. Case law: `archive/INDEX.md`.
 
 | Phase | Outcome | Commit |
 |---|---|---|
 | plan revision | §2 re-verified; 6 facts corrected, 2 of them design-changing | Fizzygum `ca854f86` (plan only) |
 | 0 · SourceVault | `_coffeSource` globals + window suffix-scan RETIRED; 499 dead per-class files dropped | Fizzygum `7f4b2172` |
-| 1 · partition | `buildSystem/parts.json` (9 parts); **45 marker lines + 3 regexes → 0**; parity MEASURED | Fizzygum `e163ce65` |
+| 1 · partition | `buildSystem/parts.json` (10 parts, core included); **45 marker lines + 3 regexes → 0**; parity MEASURED | Fizzygum `e163ce65` |
 | 2 · lazy pilot | Fizzytiles lazy on `index.html`; `world.parts`; snapshot pre-scan; 2 rigs | Fizzygum `65ce0182`, tests `c772dd39a` |
 | 3 · more lazy parts | **DECLINED** — optional; every retirement completes at 1/2, so no mixed state | — |
 
@@ -20,8 +25,8 @@ happened, including four bugs found during execution that are worth reading befo
 area again (they share one shape: ONE RULE ENCODED IN TWO PLACES). Line numbers drift — quoted
 symbols are authoritative; re-grep before editing.
 
-**Remaining, before this arc can be closed:** push approval; the docs residue in §11; then the
-`close-arc` ritual (`git mv` this doc to `docs/archive/` + stamp + `archive/INDEX.md` line).
+**§11 (What is left) is kept verbatim as the closing checklist it was** — every item on it is now
+done except the push itself, which is the owner's call.
 
 **MANDATE.** Turn the monolithic "everything compiles at boot" code delivery into named,
 lazily-loadable **parts** — and, per the completion doctrine (§0.2), *fully retire* the
@@ -52,7 +57,7 @@ Plan filenames are numbered by EXECUTION ORDER (`build-arc-N-…`):
 | 1. Test-serving link — **DONE 2026-07-28** | `archive/build-arc-1-test-serving-link-plan.md` | the per-build tests COPY + spinner; the flatten; `--keepTestsDirectoryAsIs`; build.py manifest generation; recapture's publish-rebuild |
 | 2. Backend split + precompile externalization — **DONE 2026-07-28** | `archive/build-arc-2-backend-split-precompile-plan.md` | runtime `?sw=1` switch; WSL precompile script + in-page JSZip/saveAs drain |
 | 3. World harmonization — **DONE + PUSHED 2026-07-30** (`Fizzygum 7c8f49a3`, tests `4bc119caf`) | `archive/build-arc-3-world-harmonization-plan.md` | `»>>` region markers (63 → 0) + all three region regexes; homepage-vs-dev world-design divergence |
-| **4. Dynamic parts (THIS PLAN)** | `build-arc-4-dynamic-parts-plan.md` | `_coffeSource` window globals + suffix-scan; ALL THREE whole-file exclusion markers + their build.py regexes (`FILE_NOT_IN_FIZZYGUM_HOMEPAGE`, `FILE_ONLY_FOR_MACROS`, `FILE_ONLY_FOR_VIDEOPLAYER`) |
+| **4. Dynamic parts (THIS PLAN) — DONE 2026-07-30** | `archive/build-arc-4-dynamic-parts-plan.md` | `_coffeSource` window globals + suffix-scan; ALL THREE whole-file exclusion markers + their build.py regexes (`FILE_NOT_IN_FIZZYGUM_HOMEPAGE`, `FILE_ONLY_FOR_MACROS`, `FILE_ONLY_FOR_VIDEOPLAYER`) — **all confirmed at zero, all machinery deleted** |
 | 5. Packaging profiles | `build-arc-5-packaging-profiles-plan.md` | hard-coded `--homepage` flavour conditionals in `build_it_please.sh` |
 
 ### §0.2 Completion doctrine (owner-mandated 2026-07-28 — applies to every arc)
@@ -726,7 +731,8 @@ left for Phase 3 is flipping selected ones to LAZY (timing) — a much smaller a
    pilot's; bank it unless it turns out trivial.
 4. `meta-tools` (inspectors) — needs the ingestion-on-demand seam. Bank to arc 5 if it drags.
 Also banked here: moving the four `LayoutElementAdderOrDropletWdgt`-touching `Widget` members
-(§2's dry-run finding) out of core onto the `layout-chrome` part via a
+(§2's dry-run finding) out of core onto the **`dev-tools`** part (where the class itself landed —
+the authoring-time name "layout-chrome" was a guess for a part that was never created) via a
 `…Support.installOnto Widget` extension class — the arc-3 `WidgetTestSupport` mechanism reused for
 a part instead of the harness. Phase 1 only guards them.
 Each flip is: `"eager": false` + entry-point conversion (only if the part has one) + `fg gauntlet`
@@ -817,10 +823,15 @@ in flight — the suite is served through the `js/tests` symlink and picks up te
 
 ## §11 What is left (2026-07-30) — the arc is not CLOSED until these are done
 
+**[CLOSED 2026-07-30: items 2 and 3 are DONE — the two `docs/BACKLOG.md` lines and the
+`Fizzygum-tests/CLAUDE.md` rig entry landed, and this doc is now archived + stamped + indexed. Item 1
+(push) is the owner's call and is the only thing outstanding. Kept verbatim below as the record of
+what closing this arc required.]**
+
 Phases 0–2 are committed and green; phase 3 is declined. What remains is not implementation:
 
 1. **PUSH** — owner approval required (standing rule: never push autonomously).
-   Fizzygum `ahead=4`, Fizzygum-tests `ahead=1`.
+   Fizzygum `ahead=5` (`0f17d782` stamped this doc EXECUTED), Fizzygum-tests `ahead=1`.
 2. **Docs residue** (the convention: durable residue lands in the same arc):
    - `docs/BACKLOG.md` — a line for the declined phase 3 (§5.4 candidates: `dev-icons`,
      `patch-programming-experimental`, and the bigger `demos`/`dev-tools` boot-construction case),

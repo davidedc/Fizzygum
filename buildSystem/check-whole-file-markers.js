@@ -11,7 +11,7 @@
 // build.py matched all three with regexes and skipped the file. It was the LAST survivor of the
 // "exclude code by pattern-matching comments in source text" family.
 //
-// WHY IT IS RETIRED (arc 4 phase 1, docs/plans/build-arc-4-dynamic-parts-plan.md §5.2).
+// WHY IT IS RETIRED (arc 4 phase 1, docs/archive/build-arc-4-dynamic-parts-plan.md §5.2).
 // Not because it was broken -- it worked -- but because it could not answer the question the
 // system had grown into. A marker states a file's fate INVISIBLY, one file at a time: to learn the
 // shape of a production build you had to open 499 files. It cannot express which files belong

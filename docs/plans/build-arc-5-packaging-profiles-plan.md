@@ -2,7 +2,7 @@
 
 **STATUS: PLAN ONLY — AUTHORED 2026-07-28, DESIGN-LEVEL.** This is **ARC 5 — the LAST arc —
 of the build-and-packaging program** (program table + completion doctrine: §0.1/§0.2 of
-`build-arc-4-dynamic-parts-plan.md` — read those first; they are not repeated here in full).
+`archive/build-arc-4-dynamic-parts-plan.md` — read those first; they are not repeated here in full).
 It executes after arcs 1–4 have landed, and MUST be re-validated against the tree at execution
 time (run the `author-plan` revision pass): arcs 1–4 replace the tests copy with a symlink,
 rename bundles, add SourceVault + parts.json, and delete the marker machinery this plan's
@@ -103,7 +103,7 @@ profile a common mechanism instead of two more bespoke flags.
 
 ## §7 References
 
-`build-arc-4-dynamic-parts-plan.md` §0.1/§0.2 (program + doctrine),
-`build-arc-3-world-harmonization-plan.md`, `archive/build-arc-2-backend-split-precompile-plan.md`,
+`archive/build-arc-4-dynamic-parts-plan.md` §0.1/§0.2 (program + doctrine),
+`archive/build-arc-3-world-harmonization-plan.md`, `archive/build-arc-2-backend-split-precompile-plan.md`,
 `archive/build-arc-1-test-serving-link-plan.md` (DONE), `single-file-save-plan.md` (§7.1 consumer), memory
 `backend-split-and-precompile-externalization.md` (compiler inventory, owner directions).

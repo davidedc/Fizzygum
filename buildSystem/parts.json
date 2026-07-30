@@ -36,7 +36,7 @@
     "class fails the build.",
     "",
     "Arc 5 replaces the single 'inHomepage' boolean with a profile matrix. Until then this file is",
-    "the only place the partition is written down. Plan: docs/plans/build-arc-4-dynamic-parts-plan.md"
+    "the only place the partition is written down. Plan: docs/archive/build-arc-4-dynamic-parts-plan.md"
   ],
 
   "parts": {

@@ -3,7 +3,7 @@
 // check-source-vault.js — build gate TOMBSTONING the retired `window.<Name>_coffeSource` source
 // delivery. Mirrors the check-region-markers.js idiom: a hard rule, stated as a baseline of zero.
 //
-// WHAT WAS RETIRED (arc 4 Phase 0, docs/plans/build-arc-4-dynamic-parts-plan.md §5.1).
+// WHAT WAS RETIRED (arc 4 Phase 0, docs/archive/build-arc-4-dynamic-parts-plan.md §5.1).
 // Fizzygum ships its ~500 classes as TEXT and compiles them in the browser. Until arc 4, build.py
 // emitted each one as its own window global — `window.Widget_coffeSource = "…"` — and the only way
 // to ask "which sources do we have?" was `Object.keys(window).filter(k => k.endsWith(...))`. Three
