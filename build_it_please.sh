@@ -272,7 +272,18 @@ fi
 # the first parameter "--homepage" specifies whether this
 # is a build for the homepage, in which case a lot of
 # legacy code and test-supporting code is left out.
+# ⚠ CHECK $? — this script has no `set -e`, and for years this call had NO check at all, so the
+# single most important step of the build (wrapping every source into the SourceVault batches,
+# writing the parts manifest, generating the entry pages, copying each part's assets) could fail
+# outright and the build still printed "done!!!" and exited 0. Found 2026-07-30 by planting a
+# deliberately missing part asset: build.py correctly printed its ERROR and exited 1, and the build
+# reported OK. Same masked-failure class as the umbrella-directory check at the top of this file.
 python3 ./buildSystem/build.py "${args[@]}"
+if [ "$?" != "0" ]; then
+  tput bel
+  echo "!!!!!!!!!!! error: buildSystem/build.py failed -- aborting build." 1>&2
+  exit 1
+fi
 
 # --- build-time CoffeeScript syntax gate ----------------------------------------
 # The ~470 class/mixin sources ship as TEXT and are compiled in-browser, so without
