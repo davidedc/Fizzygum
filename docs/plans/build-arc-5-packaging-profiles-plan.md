@@ -177,22 +177,32 @@ declare** — which is the test that the derivation is real and not a list in di
 
 Fingerprinting a real `--homepage` tree (28 files) surfaced two shipped-but-unused items that §2.2's
 line-by-line reading of `:904` did not, because neither is pruned there — nothing removes them at all.
-**Both change what PRODUCTION ships, so both are owner decisions, not derivations to apply silently:**
+**Both change what PRODUCTION ships, so both were raised as owner decisions rather than applied
+silently. Both were APPROVED and DONE on 2026-07-30 — together they take the production tree from
+5.36 MB / 28 files to 3.47 MB / 26 files, −1.90 MB (−35.4%):**
 
 1. **`js/pre-compiled-max.js` — 1,969,846 bytes, 35.0% of the entire production tree (5.36 MB / 28
    files), loaded by nothing.** The tail does `terser … -o pre-compiled-min.js; mv pre-compiled.js pre-compiled-max.js;
    mv pre-compiled-min.js pre-compiled.js` — so the unminified image is *renamed and kept*. Its only
    mention anywhere in either repo is that `mv`. By PR-D6's own axis it is an intermediate and should
    never enter the tree; the counter-argument is that someone may want a readable image deployed for
-   debugging. **⛔ NOT actioned — it needs an explicit call, because deleting ~2 MB from the deployed
-   site is a shipping decision, not a refactor.**
+   debugging — but that is void: this tree **already ships all 434 class sources AS TEXT** in
+   `js/coffeescript-sources/` (2.28 MB, 40.5% of it), which is what the in-world inspectors read, so
+   `-max` was a redundant second copy of the same information in compiled form. **✅ DONE: no longer
+   emitted** (minify in place, one `mv` instead of two).
 2. **`js/vendor-parts/fizzytiles-3d.js` — 18,879 bytes of software-3D engine in a tree that ships no
    fizzytiles.** Its block's own comment says "Emitted for every flavour that ships the part", but the
    only condition on it is `[ -f $SWCANVAS_VENDOR/swcanvas-3d-core.min.js ]` — **no part or flavour
    test at all**, so it ships everywhere. This is the same species as arc 4's
    `FILE_ONLY_FOR_VIDEOPLAYER`: a rule that documents a gate it never implements. The fix is exactly
-   PR-D6 (`vendor` payloads ship iff their part ships) and it is arguably an arc-4 leftover bug rather
-   than arc-5 scope. **⛔ NOT actioned pending the same call.**
+   PR-D6 (`vendor` payloads ship iff their part ships). **✅ DONE**: the payload moved from a shell
+   `cat` into `build.py`, the only place that knows which parts ship. `parts.json`'s `vendor` entries
+   became `{ out, concat: [pieces] }`; build.py assembles them for shipping parts and emits **only
+   `out`** into `window.FIZZYGUM_PARTS`, because `PartsRegistry` consumes vendor entries as URLs to
+   inject (`loadJSFilePromise`) — so the runtime contract is untouched. Verified byte-for-byte: the
+   DEV tree came out IDENTICAL, which is what proves the Python concatenation reproduces the old
+   `cat` + `printf '\n;\n'` pipeline exactly; and the homepage build now reports
+   `assembled 0 vendor payload(s)`.
 
 ⚖ Lesson worth keeping: **the tail was surveyed by reading the prune block, so it could only ever
 find things that were pruned.** The complete picture came from fingerprinting the actual output tree

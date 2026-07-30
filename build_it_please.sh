@@ -851,16 +851,14 @@ echo "... done assembling the native boot bundle"
 # ⚠ The SW pages must NOT load it: their boot bundle carries the FULL SWCanvas engine (it is their
 # renderer) plus SW3D, so injecting the subtractive 3D-CORE build over it would replace a superset
 # with a subset. PartsRegistry's vendor step is idempotent and skips it when window.SW3D and
-# SWCanvas.Core.Triangle3DOps are already there. Emitted for every flavour that ships the part.
-if [ -f $SWCANVAS_VENDOR/swcanvas-3d-core.min.js ]; then
-  echo "assembling the fizzytiles 3D vendor payload..."
-  mkdir -p $BUILD_PATH/js/vendor-parts
-  cat $SWCANVAS_VENDOR/swcanvas-3d-core.min.js > $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
-  printf '\n;\n' >> $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
-  cat $SWCANVAS_VENDOR/sw3d.min.js >> $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
-  printf '\n;\n' >> $BUILD_PATH/js/vendor-parts/fizzytiles-3d.js
-  echo "... done assembling the fizzytiles 3D vendor payload"
-fi
+# SWCanvas.Core.Triangle3DOps are already there.
+#
+# ⚠ ASSEMBLED BY build.py (arc 5 PR-D6), not here. parts.json declares the payload in fizzytiles'
+# "vendor" list as an `out` path plus the vendored pieces to concatenate, and build.py writes it
+# only for the flavours that SHIP that part. It used to be assembled here under `if the vendored
+# source file exists` -- no part or flavour test at all, while this very comment claimed it was
+# "emitted for every flavour that ships the part" -- so a --homepage tree carried 18.9 KB of
+# software-3D engine for a part it does not ship. Only build.py knows which parts ship.
 
 # The bare minified boot JS is an intermediate, never an entry page's bundle.
 rm $BOOT_MIN
@@ -964,7 +962,6 @@ if $homepage ; then
   sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/pre-compiled.js
 
   terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
-  mv $BUILD_PATH/js/pre-compiled.js $BUILD_PATH/js/pre-compiled-max.js
   mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js
 fi
 

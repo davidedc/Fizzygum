@@ -207,30 +207,53 @@ def partShipsInThisFlavour(partName, part, args):
     return True
 
 
-def copyPartAssets(parts, args):
-    """Copy the non-source files owned by every part that ships in this flavour.
+def requirePartFile(partName, sourcePath, kind):
+    """A declared-but-missing file is a HARD failure, not a warning: a payload silently not written
+    is the failure mode this whole mechanism replaced (the tree looks fine, and a page 404s for an
+    <img> or an injected script at runtime)."""
+    if not os.path.isfile(sourcePath):
+        print("ERROR: part '%s' declares a %s that does not exist: %s (buildSystem/parts.json)"
+              % (partName, kind, sourcePath))
+        exit(1)
 
-    A part declares them in parts.json as [<path relative to Fizzygum/>, <dest dir relative to the
-    build root>] pairs. A missing source file is a HARD failure, not a warning: an asset silently
-    not copied is the failure mode this replaced (the tree looked fine and a page 404'd for an
-    <img> at runtime)."""
-    copied = 0
+
+def copyPartAssets(parts, args):
+    """Materialise the non-source files owned by every part that SHIPS in this flavour: plain assets
+    (copied) and vendor payloads (assembled from their pieces).
+
+    This is what makes "what a flavour ships" follow from which parts ship, instead of being a
+    per-flavour prune list. A part that does not ship writes nothing."""
+    copiedAssets = 0
+    builtPayloads = 0
     for partName, part in parts.items():
         if partName.startswith("//"):
             continue
         if not partShipsInThisFlavour(partName, part, args):
             continue
+
         for entry in part.get("assets", []):
             sourcePath, destinationDirectory = entry
-            if not os.path.isfile(sourcePath):
-                print("ERROR: part '%s' declares an asset that does not exist: %s (buildSystem/parts.json)"
-                      % (partName, sourcePath))
-                exit(1)
+            requirePartFile(partName, sourcePath, "asset")
             fullDestinationDirectory = os.path.join("../Fizzygum-builds/latest", destinationDirectory)
             os.makedirs(fullDestinationDirectory, exist_ok=True)
             shutil.copyfile(sourcePath, os.path.join(fullDestinationDirectory, os.path.basename(sourcePath)))
-            copied += 1
-    print("copied %d part asset(s)" % copied)
+            copiedAssets += 1
+
+        # Vendor payloads: concatenate the pieces, each followed by a newline-semicolon separator
+        # that terminates the unit and defends against ASI between them (the same separator the
+        # boot-bundle assembly uses).
+        for entry in part.get("vendor", []):
+            outputPath = os.path.join("../Fizzygum-builds/latest", entry["out"])
+            os.makedirs(os.path.dirname(outputPath), exist_ok=True)
+            with open(outputPath, "wb") as payload:
+                for piece in entry["concat"]:
+                    requirePartFile(partName, piece, "vendor payload piece")
+                    with open(piece, "rb") as pieceFile:
+                        payload.write(pieceFile.read())
+                    payload.write(b"\n;\n")
+            builtPayloads += 1
+
+    print("copied %d part asset(s), assembled %d vendor payload(s)" % (copiedAssets, builtPayloads))
 
 
 def shippedFiles(parts, partOfFile, orderedFilenames, args):
@@ -421,7 +444,10 @@ def main():
         manifest[eachPart] = {
             "batches": batchesOfPart[eachPart],
             "eager": partSpec.get("eager", True),
-            "vendor": partSpec.get("vendor", []),
+            # Only the OUTPUT path reaches the runtime: PartsRegistry consumes each vendor entry as
+            # a URL to inject (loadJSFilePromise), so how the payload was assembled from vendored
+            # pieces is build-time detail that must not leak into the manifest.
+            "vendor": [eachVendor["out"] for eachVendor in partSpec.get("vendor", [])],
         }
         if eachPart != "core":
             manifest[eachPart]["classes"] = sorted(classesOfPart.get(eachPart, []))

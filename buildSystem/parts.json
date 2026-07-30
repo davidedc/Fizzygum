@@ -28,7 +28,15 @@
     "  eager        default true. false = loaded on demand (phase 2+; needs a launch site that",
     "               awaits world.parts.ensureLoaded, NOT a bare `if TheClass?` guard).",
     "  requiresFlag optional build flag this part additionally needs ('tests', 'videoPlayer').",
-    "  vendor       optional non-source payloads that must arrive with the part.",
+    "  vendor       optional non-source payloads that must arrive with the part, each",
+    "               { out: <path relative to the build root>, concat: [<pieces relative to",
+    "               Fizzygum/>] }. build.py ASSEMBLES each one (pieces joined by a newline-semicolon",
+    "               separator) for parts that ship, and emits only `out` into window.FIZZYGUM_PARTS,",
+    "               because PartsRegistry consumes vendor entries as URLs to inject. Before arc 5",
+    "               the fizzytiles payload was cat'd together by build_it_please.sh under `if the",
+    "               vendored source file exists` -- no part or flavour test at all -- while its own",
+    "               comment claimed 'emitted for every flavour that ships the part'. So a --homepage",
+    "               tree carried 18.9 KB of software-3D engine for a part it does not ship.",
     "  assets       optional non-source FILES copied into the build tree for this part, as",
     "               [<path relative to Fizzygum/>, <destination dir relative to the build root>]",
     "               pairs. A part that does not ship copies none of them, which is how a flavour",
@@ -84,7 +92,13 @@
       "dirs": ["src/fizzytiles"],
       "inHomepage": false,
       "eager": false,
-      "vendor": ["js/vendor-parts/fizzytiles-3d.js"]
+      "vendor": [
+        {
+          "//": "SWCanvas's subtractive 3D-CORE dist target (Surface + DepthBuffer + Texture3D + Triangle3DOps, ~14 KB vs ~263 KB for the full engine, pixel-identical on the 3D path) plus the minified SW3D userland engine. ⚠ The SW pages must NOT load this: their boot bundle carries the FULL SWCanvas as their renderer, so injecting the subtractive build over it would replace a superset with a subset. PartsRegistry's vendor step is idempotent and skips it when window.SW3D and SWCanvas.Core.Triangle3DOps are already present.",
+          "out": "js/vendor-parts/fizzytiles-3d.js",
+          "concat": ["vendor/swcanvas/swcanvas-3d-core.min.js", "vendor/swcanvas/sw3d.min.js"]
+        }
+      ]
     },
 
     "fizzytiles-launcher": {
