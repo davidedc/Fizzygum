@@ -1,9 +1,14 @@
 # Single-file save — the whole app (code + world) in ONE self-contained `.html`
 
 **STATUS: AUTHORED 2026-07-10 — research complete, design approved by owner, NO code written yet.**
-File/line references were verified against the Fizzygum working tree on 2026-07-10 (head ~`805490e6`,
-while the affine-transforms arc was still moving); anchor on the quoted **method names** first and
-treat line numbers as hints if they have drifted.
+**REVISED 2026-07-30 against the post-build-and-packaging-program tree** (arcs 1–5 + the
+teardown-shared-core arc all landed; head at revision `4daded29`+): every §2/§4 fact re-verified
+against current code, corrections woven in place (the partial syncs the arcs themselves made are
+retained). Anchor on quoted **method names** first; line numbers are hints.
+⚠ Cold-executor cautions: `Fizzygum-builds/CLAUDE.md` and the `pre-compiled.js` stub comment are
+STALE (pre-program — they still describe `--homepage`, `_coffeSource` globals, a zip download); do
+not source facts from them. The present-tense build reference is
+`docs/architecture/build-and-packaging.md`.
 
 This plan is self-contained: it embeds the load-bearing findings of the 2026-07-10 research pass
 (two codebase studies + six sourced web studies on TiddlyWiki/Decker/platform behavior), so it is
@@ -22,10 +27,10 @@ source edits all survive into the next generation).
 
 | # | Decision | Choice |
 |---|---|---|
-| D1 | Rendering backends in the single file | **Native HTML5-Canvas only.** BitmapText font assets (90 MB, `?sw=1`-only) are NEVER included. The SWCanvas *engine* (~285 KB, already inside the boot bundle) is **kept but hard-disabled** — `?sw=1` is ignored in single-file pages (stripping it would need a boot-bundle build variant; not worth it in v1). |
+| D1 | Rendering backends in the single file | **Native HTML5-Canvas only.** `[REVISED 2026-07-30 — the original premise dissolved; upgrade owner-sanctioned during the program]` The single file embeds the NATIVE bundle (`fizzygum-boot-native-min.js`, **18,386 B** — boot JS only: SourceVault + parts manifest + globalFunctions + extensions; no SWCanvas 2D engine, no det-trig, no fonts). There is nothing to "hard-disable": `?sw=1` no longer exists anywhere (arc 2 deleted it); the page simply presets `window.FIZZYGUM_USE_SWCANVAS = false` like every native entry page does. The fizzytiles 3D vendor payload (`vendor-parts/fizzytiles-3d.js`, 18,879 B) rides only when that part is embedded. |
 | D2 | Code representation | **Compile-at-boot v1** (source strings + in-browser compiler, exactly like today's dev build; a few seconds behind the spinner). A `--homepage`-style precompiled image inside the single file is a **later option**, not v1. |
 | D3 | Source code in the file | **KEEP the sources.** They are only ~2.5 MB, they are what makes in-system live editing work in the saved artifact, and they are already in memory for free. (Owner had offered to drop them; research showed no need.) |
-| D4 | Where "save as single page" is available | **Every build.** The build embeds the boot-bundle and compiler texts as wrapped strings (~575 KB extra, §4.4), so the menu item works from the normal dev build too, not just from single-file pages. |
+| D4 | Where "save as single page" is available | **Every build.** The build embeds the boot-bundle, compiler, helper and per-part vendor-payload texts as wrapped strings (`[REVISED 2026-07-30]` **~235 KB** extra — bundle 18 KB + compiler 209 KB + helpers ~8 KB, +19 KB per 3D-carrying part — §4.4), so the menu item works from the normal dev build too, not just from single-file pages. |
 | D5 | Save mechanism v1 | **Blob + `<a download>`** via the existing `FileSaving.saveStringAsFile` (universal, works over `file://` in all engines, Safari `data:` fallback already implemented). |
 | D6 | In-place overwrite (File System Access API) | **v2, owner-gated, Chromium-only** (§8.1). Verified to work even over `file://` — see §3.4. |
 | D7 | Assembly implementation | **ONE implementation, in CoffeeScript, in-world.** The build produces the artifact by booting the page headless and invoking the same in-world assembler (precedent: `?generatePreCompiled` / `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js`). The shipped file is *generation 0 of the quine* — produced by the very code path every later save uses. No parallel Python assembler. |
@@ -41,23 +46,30 @@ Non-goals (v1): tests inside the artifact; SWCanvas rendering; videos; precompil
 
 The built page is *already* 99% of a single-file app:
 
-- **`Fizzygum-builds/latest/index.html` is tiny**: one `<canvas id="world">`, two `<img>`s
-  (splash + spinner), an empty positioning div, an inline `FIZZYGUM_USE_SWCANVAS` preset, ONE
-  `<script src="js/fizzygum-boot-native-min.js">`, and an inline `window.onload → boot()`.
-  **No stylesheet, no fonts, no favicon, no charset meta** (see risk R2).
-  ⚠ UPDATED by build arc 2 (backend split, 2026-07-28): the bundle this plan embeds is now
-  `fizzygum-boot-native-min.js` (**32 KB** — the ~14 KB SWCanvas 3D core + SW3D + ~15 KB boot JS),
-  not the old single 316 KB `fizzygum-boot-min.js`. That IS the "stripped SWCanvas variant" this
-  plan's D1/§7.2 banked on, already built and shipped — so the size argument gets ~10× better and
-  D1 needs no separate work. The SWCanvas bundle (`fizzygum-boot-sw-min.js`, ~314 KB) is a
-  different page's (`index-sw.html` / the test harness) and is not what a single-file save embeds.
+- **`Fizzygum-builds/latest/index.html` is tiny** (`[REVISED 2026-07-30]` — measured, 2,718 B):
+  `<title>` + one `<style>` block, splash + spinner `<img>`s, a positioning div, one
+  `<canvas id="world">`, then TWO generated script tags (from `buildSystem/build.py`'s
+  `generateEntryPage`, replacing the `<!--FIZZYGUM_BOOT_SCRIPTS-->` placeholder at
+  `src/index.html`): an inline preset line
+  `window.FIZZYGUM_USE_SWCANVAS = false; window.FIZZYGUM_EAGER_ALL_PARTS = false;` and
+  `<script src="js/fizzygum-boot-native-min.js">` (**18,386 B** — boot JS only; the SWCanvas 3D
+  core + SW3D moved OUT of the bundle in arc 4, into the fizzytiles part's vendor payload
+  `js/vendor-parts/fizzytiles-3d.js`, 18,879 B, fetched with the part), plus an inline
+  `window.onload → boot()`. **No stylesheet, no fonts, no favicon, and NO charset meta — the
+  encoding currently rides on a UTF-8 BOM** at the top of both `src/index.html` and every built
+  page (see risk R2). The SWCanvas bundle (`fizzygum-boot-sw-min.js`, 319,331 B) belongs to
+  `index-sw.html`/the test harness and is never what a single-file save embeds.
 - **Nothing anywhere uses `fetch`/XHR.** All runtime loading is `<script>` injection
   (`loadJSFilePromise`, `src/boot/globalFunctions.coffee:42-64`) or `new Image()` — because the
   page must run over `file://`. Inlining is therefore a *natural fit*, not a retrofit.
-- **Total native-canvas no-tests payload ≈ 3.07 MB**: boot bundle 316 KB + CoffeeScript compiler
-  (`js/libs/fizzygum-coffeescript-min.js`, 208,604 B) + source batches (`sources_batch_0..14.js`,
-  ~2.7 MB) + `Class-source.js`/`Mixin-source.js` (~29 KB) + three small boot
-  helpers (~8 KB) + `pre-compiled.js` stub (257 B).
+- **Total native-canvas no-tests payload ≈ 3.0 MB** (`[REVISED 2026-07-30]` — measured on a dev
+  tree, ALL parts): boot bundle 18,386 B + CoffeeScript compiler
+  (`js/libs/fizzygum-coffeescript-min.js`, 208,604 B) + `js/coffeescript-sources/` (23 files,
+  2,778,000 B total: 21 per-part batch files `sources_batch_<n>` / `sources_batch_<part>_<n>` =
+  2,741,288 B, plus `Class-source.js` 24,250 + `Mixin-source.js` 12,462) + three boot helpers
+  (~7.8 KB: `loading-and-compiling…-min` 4,062, `dependencies-finding-min` 2,824,
+  `logging-div-min` 905) + `pre-compiled.js` stub (257 B). A homepage-scope subset
+  (core + meta-tools only) is smaller still.
 - **The booted page retains everything needed to regenerate its own code, in memory:**
   - every class/mixin source in the **`SourceVault`** (`window.SourceVault`,
     `src/boot/source-vault.coffee`) — the registry every generated `sources_batch_*.js` file stores
@@ -96,22 +108,35 @@ The built page is *already* 99% of a single-file app:
   - In-system source edits ARE captured (`world.sourceEdits`, `SourceEditsRegistry`) and replayed
     through the in-browser compiler on load — class edits via `replayClassEdits()` *before*
     deserialization (`WorldWdgt.coffee:2277-2278`), instance edits via `{"$src"}` records.
-  - `WorldWdgt::loadWorldSnapshot(envelopeOrString, opts)` (`WorldWdgt.coffee:2256`) is the
-    restore orchestrator: structural teardown (`_teardownWorldStructureNoSettle` — the SHARED
-    shipping core the test teardown also calls; it ships in `--homepage`, unlike `resetWorld`),
-    id-counter restore, class-edit
-    replay, `Deserializer.deserialize`, app-slot/bin/shelf re-bind, one-settle child attach,
-    colour/wallpaper, repaint + **`result.whenReady`** second repaint once async `$Image`/`$Canvas`
-    data-URLs have decoded (:2326). **It `window.confirm`s unless `opts.skipConfirm`** (:2261-2263)
-    — the boot path must pass `skipConfirm: true`.
+  - `WorldWdgt::loadWorldSnapshot(envelopeOrString, opts)` (`WorldWdgt.coffee:2353`,
+    `[REVISED 2026-07-30]`) is the restore orchestrator, and it now ALREADY handles the two
+    availability concerns a single-file boot needs:
+    **step 0** (`:2371-2378`) pre-scans the envelope's class names for missing LAZY parts and
+    re-enters itself after `@parts.ensureAllLoaded` (positioned BEFORE any mutation — the in-code
+    comment calls that placement "the whole correctness argument");
+    **step 0b** (`:2386-2388`) does the same for the reflective layer when the snapshot carries
+    class/mixin-level `sourceEdits` (`_snapshotNeedsTheReflectiveLayer`, `:2346`). Then:
+    structural teardown via the SHARED shipping core (`@_settleLayoutsAfter =>
+    @_teardownWorldStructureNoSettle()`, `:2392` — the same core the test teardown calls),
+    id-counter restore, mixin-then-class edit replay, `Deserializer.deserialize`, app-slot/bin/
+    shelf re-bind, one-settle child attach, colour/wallpaper, repaint + **`result.whenReady`**
+    second repaint once async `$Image`/`$Canvas` data-URLs have decoded (`:2464`).
+    **It `window.confirm`s unless `opts.skipConfirm`** (`:2358-2360`) — the boot path must pass
+    `skipConfirm: true`. On a single-file page steps 0/0b are structurally no-ops: every embedded
+    part is present and eager, and the sources are inline.
   - Round-trip is PROVEN pixel-identical cross-session at dpr 1 and 2
     (`../Fizzygum-tests/scripts/serialization-roundtrip-headless.js`), including source edits.
   - `FileSaving.saveStringAsFile(string, suggestedName, mimeType = "application/json")`
     (`src/serialization/FileSaving.coffee:12`) already does Blob → objectURL → `<a download>` →
     deferred revoke, with a Safari `data:`-URL fallback. Ships in all builds.
 - **The boot seam** for "boot into a snapshot" is exactly
-  `src/boot/globalFunctions.coffee:427-428`:
+  `src/boot/globalFunctions.coffee:470-471` (`[REVISED 2026-07-30]` — same shape, new home):
   `if world.isIndexPage` → `world.createDesktop()` inside `createWorldAndStartStepping.startWorld`.
+  Two nearby facts a cold executor needs: the harness `*TestSupport.installOnto` grafts run just
+  before `new WorldWdgt` (`:429-433`) — verify they are existence-guarded, since those classes are
+  absent from a single-file page; and `world.parts = new PartsRegistry` is created unguarded in the
+  `WorldWdgt` constructor (`WorldWdgt.coffee:460`), seeding its state from the page-global
+  `window.FIZZYGUM_PARTS` manifest — so the single-file page MUST carry a manifest block (§4.1/§4.3).
 - **What does NOT exist today** (= the whole feature): a boot-time snapshot load path (loading is
   strictly in-session via menu/file dialog, `FileLoading`), and any HTML bundling/export
   (`FileSaving` is the only Blob user in `src/`, and it emits JSON).
@@ -205,11 +230,16 @@ the artifact.
 <body …same user-select/position:fixed styles…>
   <img id="spinner" src="data:image/svg+xml;…">      <!-- inlined spinner; NO fake-desktop splash (D10) -->
   <canvas id="world" tabindex="1" …></canvas>
-  <script> window.FIZZYGUM_SINGLE_FILE = true; </script>
-  <script> /* boot bundle text (det-trig + SWCanvas + SW3D + boot JS — which contains the
-              SourceVault, first in the bundle, so the store blocks below have somewhere to go) */ </script>
+  <script> window.FIZZYGUM_SINGLE_FILE = true;
+           window.FIZZYGUM_USE_SWCANVAS = false;      /* the presets every native entry page carries */
+           window.FIZZYGUM_EAGER_ALL_PARTS = true;    /* everything in the file is present ⇒ eager */ </script>
+  <script> /* NATIVE boot bundle text (18 KB: SourceVault first, parts-manifest slot, boot JS —
+              so the store blocks below have somewhere to go). No SWCanvas 2D, no det-trig. */ </script>
+  <script> window.FIZZYGUM_PARTS = {…};  /* manifest REGENERATED from the saving session: the
+              embedded parts only, batches irrelevant (inline), eager (§4.3) */ </script>
   <script> window.preCompiled = false;  /* the pre-compiled.js stub, inlined */ </script>
-  <script> /* CoffeeScript compiler 2.0.3 */ </script>
+  <script> /* CoffeeScript compiler (2.0.3-based minimal build) */ </script>
+  <script> /* vendor payloads of embedded 3D-carrying parts (e.g. fizzytiles-3d, 19 KB) */ </script>
   <script> /* the Class + Mixin sources (SourceVault.store blocks) + the 3 boot helpers
               (loading-and-compiling…, logging-div, dependencies-finding) */ </script>
   <script> /* source batches — SourceVault.store("<Name>", "…", "<part>") blocks, re-encoded (§4.5) */ </script>
@@ -230,34 +260,41 @@ Notes:
 
 ### 4.2 Boot changes (`src/boot/globalFunctions.coffee`)
 
+`[REVISED 2026-07-30 — re-derived against the current boot chain; the change SHRANK]`
 Two small, surgical branches on `window.FIZZYGUM_SINGLE_FILE`:
 
-1. **Skip the script-injection chain.** Minimal-diff shape: one helper
-   `maybeLoad = (path) -> if window.FIZZYGUM_SINGLE_FILE then Promise.resolve() else loadJSFilePromise path`
-   and substitute it through the boot chain (`globalFunctions.coffee:275-350`). The rest of the
-   chain (compile Mixin/Class via `compileFGCode` at :312-313, then
-   `storeSourcesAndPotentiallyCompileThemAndExecuteThem false` at :338, then
-   `createWorldAndStartStepping()` at :346) runs **unchanged** — everything it needs is already
-   defined by the inline blocks.
-   ⚠ The test-assets block at :283-287 must be skipped in single-file mode **even though the
-   embedded boot bundle may carry `BUILDFLAG_LOAD_TESTS = true`** (it is the dev build's bundle;
-   guard it with `and not window.FIZZYGUM_SINGLE_FILE`) — otherwise the saved page 404s on
-   `js/tests/…`. `if Automator?` code paths are naturally inert (Automator classes never load).
+1. **Short-circuit the loader at its ONE choke point.** Every script the boot chain fetches —
+   `pre-compiled.js`, the compiler lib, the `BUILDFLAG_LOAD_TESTS` block
+   (`globalFunctions.coffee:326-330`), the two always-loaded helpers (`:351-354`), and everything
+   `loadReflectiveLayerPromise()` (`:130-170`) fetches (Class/Mixin sources,
+   `dependencies-finding-min`, the batch files) — goes through `loadJSFilePromise` (`:67`). On a
+   single-file page ALL of that content is already inline, executed in document order, so the
+   branch is: `loadJSFilePromise` returns an immediately-resolved Promise under
+   `FIZZYGUM_SINGLE_FILE`. One branch, one function; the rest of the chain — including the
+   compile-at-boot arm of `loadReflectiveLayerPromise` (ingest+compile from the vault,
+   `createWorldAndStartStepping()` at `:168`) — runs **unchanged** against the inline-populated
+   vault. The old per-site `maybeLoad` substitution and the per-site test-assets guard are
+   OBSOLETE: with the loader itself inert, no 404 is possible (old risk R4 dissolves
+   structurally). Verify only that `testsManifest` staying `undefined` is tolerated —
+   `runPostBootActionsOnce` (`:199-207`) is `Automator?`-guarded, and the `*TestSupport.installOnto`
+   grafts (`:429-433`) must be existence-guarded (they are expected to be; check).
 2. **Boot into the snapshot instead of the default desktop.** In `startWorld`
-   (`globalFunctions.coffee:427-428`), replace
+   (`globalFunctions.coffee:470-471`), replace
    `if world.isIndexPage then world.createDesktop()` with: if a `#fizzygum-world-snapshot` block
    exists → parse it and `world.loadWorldSnapshot envelope, {skipConfirm: true}`; else
    `world.createDesktop()` as today.
-   - `loadWorldSnapshot` on the *empty* just-constructed world: its teardown
-     (`fullDestroyChildren` + `binWdgt?.empty()` + `shelfWdgt?.empty()` + slot nils) is safe on an empty world —
-     `binWdgt` / `shelfWdgt` exist by then (created at `globalFunctions.coffee:361-362`, before this seam).
-     **Verify this explicitly in Phase 2** (it is expected-safe, not yet demonstrated).
-   - Spinner UX: `removeSpinnerAndFakeDesktop()` currently runs before this seam (:420); in
+   - `loadWorldSnapshot` on the *empty* just-constructed world: the shared-core teardown
+     (`_teardownWorldStructureNoSettle`) is designed to be safe on any world state, and
+     `binWdgt`/`shelfWdgt` exist by then (created at `:467-468`, before this seam).
+     **Verify this explicitly in Phase 2** (expected-safe, not yet demonstrated).
+     Its steps 0/0b (parts + reflective-layer pre-scans) are no-ops here by construction.
+   - Spinner UX: `removeSpinnerAndFakeDesktop()` currently runs before this seam (`:465`); in
      single-file mode prefer removing the spinner after `result.whenReady` resolves (images/canvas
      data-URLs decode async) — cosmetic, decide at implementation.
-3. **Hard-disable SWCanvas routing** in single-file mode: force
-   `window.FIZZYGUM_USE_SWCANVAS = false` regardless of `?sw=1` (no BitmapText assets exist in the
-   file; placeholder-box text would be a broken half-mode).
+3. **Presets, not overrides.** The single-file shell carries the same preset line every native
+   entry page carries (`window.FIZZYGUM_USE_SWCANVAS = false; window.FIZZYGUM_EAGER_ALL_PARTS =
+   true;` — §4.1); `boot()` console.errors if the SW preset is missing (`:257-259`), so the shell
+   must include it. There is no `?sw=1` to defend against — it no longer exists.
 
 ### 4.3 The assembler — `src/serialization/SingleFilePageAssembler.coffee` (new class)
 
@@ -268,7 +305,7 @@ none read from the DOM:
   `src/index.html`; it is THE canonical shell for saved pages).
 - **Boot bundle + compiler texts**: from the wrapped strings the build embeds (§4.4) —
   `window.fizzygumBootBundle_source`, `window.coffeeScriptCompiler_source` (decoded with the same
-  three replacements `SourceVault.store` applies).
+  replacement table `SourceVault.store` applies — four characters once Phase 1 lands).
 - **Boot helpers** (loading-and-compiling / logging-div / dependencies-finding minified JS): also
   embedded as wrapped strings by the build (§4.4) — they are small (~8 KB total).
 - **Source batches**: regenerated from the in-memory registry — **enumerate the `SourceVault`**
@@ -280,10 +317,17 @@ none read from the DOM:
   order) and deduped out of the batch set. The shell must therefore include
   `src/boot/source-vault.coffee`'s compiled output before any batch block, exactly as the boot
   bundle does.
-  ⚠ Arc 4 note: a saved page embeds **core + the parts that were actually loaded** in the session
-  doing the saving (that is what the vault holds). A part never loaded is simply not in the saved
-  page — which is the correct semantics for a single-file artifact, but it means the saved page's
-  parts manifest must be regenerated from the vault too, not copied from the build.
+  ⚠ Arc 4 note, concretized `[REVISED 2026-07-30]`: a saved page embeds **core + the parts that
+  were actually loaded** in the saving session (that is what the vault holds). A part never loaded
+  is simply not in the saved page — correct semantics for a single-file artifact. Concretely the
+  assembler must ALSO emit: (a) a **`window.FIZZYGUM_PARTS` manifest block** regenerated from the
+  live `window.FIZZYGUM_PARTS` filtered to the embedded parts — `PartsRegistry` seeds from it in
+  the `WorldWdgt` constructor and `_partOf`/the snapshot pre-scan read it (the vault deliberately
+  has no `partOf`); with `FIZZYGUM_EAGER_ALL_PARTS = true` preset, per-part eagerness and `batches`
+  entries are irrelevant on the saved page; and (b) the **vendor payload text of each embedded
+  3D-carrying part** (e.g. `fizzytiles-3d`, 19 KB) as an inline block before the batches — a loaded
+  part's vendor JS has EXECUTED but its text is not in the vault, so the build must embed those
+  payloads as wrapped strings alongside the bundle/compiler (§4.4(1)).
 - **Snapshot block**: `serializeWorldSnapshot()` (no `savedAt` unless the user-facing save wants
   it), then `.replace(/</g, "\\u003C")` — the TW trick, verbatim (§3.1).
 - **The `FIZZYGUM_SINGLE_FILE` flag block** and the `onload → boot()` tail.
@@ -304,12 +348,14 @@ gate until a test references it) — Phase 5's harness provides that reference.
 1. **Embed shell parts as wrapped strings in every build** (D4): after the boot bundle and
    compiler are finalized, wrap their file contents with the same STRING_BLOCK machinery into e.g.
    `js/coffeescript-sources/BootBundle_jsSource.js` (`window.fizzygumBootBundle_source`),
-   `…Compiler_jsSource.js`, and the three helper texts; load them in the boot chain alongside the
-   batches (multi-file builds only — the single-file page embeds their content directly AND the
-   wrapped strings, since a saved page must be able to save itself again).
-   Cost: ~575 KB per build tree. NOTE the wrapped boot-bundle string must be generated AFTER the
-   bundle is assembled+minified (ordering inside `build_it_please.sh` — bundle assembly is at
-   :535-564).
+   `…Compiler_jsSource.js`, the three helper texts, **and each part's vendor-payload text**
+   (`[REVISED 2026-07-30]` — needed so a saved page can embed a loaded part's vendor JS, §4.3);
+   load them in the boot chain alongside the batches (multi-file builds only — the single-file
+   page embeds their content directly AND the wrapped strings, since a saved page must be able to
+   save itself again). Cost: **~235 KB** per build tree (+~19 KB per 3D-carrying part). NOTE the
+   wrapped boot-bundle string must be generated AFTER the bundle is assembled+minified (ordering
+   inside `build_it_please.sh` — the NATIVE bundle is finalized at `:898`, after the one terser
+   pass at `:827`; the SW-flavour assembly at `:871-880` is irrelevant here).
 2. **`--singleFile` flag**: after the normal build, boot the built page headless and invoke the
    assembler, writing `../Fizzygum-builds/latest/fizzygum-single.html` (D7). Precedent and
    mechanics: `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js` (headless puppeteer +
@@ -317,9 +363,9 @@ gate until a test references it) — Phase 5's harness provides that reference.
    already did exactly this shape, so model the new script on it and put it in the same
    directory (Node resolves `require('puppeteer')` from the SCRIPT's directory).
    Prerequisite: Puppeteer from `../Fizzygum-tests` (`npm i` there), same as `build_and_smoke.sh`.
-3. **Exotic-char guard**: build.py must FAIL LOUDLY if any source file contains any of the four
-   substitution characters `＂ ⧹ ⤶ ＜` (both encoders assume they never occur in sources; today
-   this is an unchecked assumption).
+3. **Exotic-char guard**: `[REVISED 2026-07-30]` the guard half-exists — `build.py:368-370`
+   already FAILS LOUDLY on `＂ ⧹ ⤶` in any source. This plan extends the table AND the guard with
+   `＜` (fourth character), in the same place.
 
 ### 4.5 Escaping spec (the load-bearing correctness section)
 
@@ -339,22 +385,28 @@ Rules:
 - `<meta charset="UTF-8">` must be the FIRST element in `<head>`: the substitution characters are
   non-ASCII, and a saved file re-opened with a mis-sniffed encoding corrupts every source string.
   (Both Decker and Feather Wiki hard-code exactly this, for exactly this reason.)
-  ⚠ `src/index.html` itself currently declares NO charset — add it there too (Phase 1); external
-  `.js` files made this survivable until now.
+  ⚠ `[REVISED 2026-07-30]` `src/index.html` still declares NO charset, but is NOT naked: both it
+  and every built page start with a **UTF-8 BOM** (`ef bb bf`), which is what carries the encoding
+  today. The single-file shell should use the explicit `<meta charset>` (belt) and MAY also emit
+  the BOM (suspenders) — the assembler must decide once and the quine test then keeps it stable;
+  add the meta to `src/index.html` too (Phase 1) so the two shells agree.
 - User text content typed into widgets lives in the JSON snapshot (JSON escaping), NOT under the
   exotic-char substitution — a user typing `⤶` or `</script>` in a note is handled correctly by
   construction. Only *source code* rides the substitution, and the §4.4(3) guard polices sources.
 
 ### 4.6 Size budget (v1)
 
+`[REVISED 2026-07-30 — measured on the current dev tree]`
+
 | Component | Bytes |
 |---|---:|
-| Boot bundle (incl. SWCanvas/SW3D, kept per D1) | 316 KB |
-| CoffeeScript compiler | 257 KB |
-| Source batches + Class/Mixin (re-encoded) | ~2.52 MB |
-| Boot helpers | ~8 KB |
-| Spinner data-URI + shell | ~2 KB |
-| **Code total** | **~3.15 MB** |
+| NATIVE boot bundle (no SWCanvas 2D, no det-trig — D1) | 18.4 KB |
+| CoffeeScript compiler (minimal 2.0.3-based build) | 208.6 KB |
+| Sources: 21 per-part batches + Class/Mixin (re-encoded) | ~2.78 MB (all parts; core+meta-tools subset less) |
+| Boot helpers ×3 | ~7.8 KB |
+| Parts manifest + presets + spinner data-URI + shell | ~3 KB |
+| Vendor payloads of embedded 3D parts (only if loaded) | +18.9 KB each |
+| **Code total** | **~3.0 MB** (all parts) |
 | Snapshot | tens of KB (default desktop) → grows with content; dominated by base64 `$Canvas`/`$Image` records |
 
 Reference points: empty TiddlyWiki 2.55 MB; community comfort zone <10–20 MB ⇒ ~5× headroom for
@@ -364,8 +416,10 @@ world content before entering "large wiki" territory.
 
 ## 5. Phases
 
-Run each phase's gates green before continuing (standard arc discipline; `fg gauntlet` = build +
-suite dpr1 + dpr2 + webkit + apps legs).
+Run each phase's gates green before continuing (standard arc discipline; `fg gauntlet` is the
+13-leg behavioural gate — but remember it never builds a production tree, so packaging-visible
+changes ALSO need `fg homepage`, the only standing gate that boots one and round-trips a snapshot
+on it).
 
 ### Phase 0 — spikes (NO repo changes; scratch scripts + the EXISTING build only)
 
@@ -386,15 +440,18 @@ suite dpr1 + dpr2 + webkit + apps legs).
 
 ### Phase 1 — escaping + charset groundwork (`build.py`, `src/index.html`)
 
-- Extend STRING_BLOCK encode/decode with `＜`; add the §4.4(3) exotic-char guard; add
-  `<meta charset="UTF-8">` to `src/index.html`.
-- Runtime behavior must be identical (decode restores bytes). Gate: `fg gauntlet` + homepage.
+- Extend the STRING_BLOCK encode (`build.py:372-374`), the one decoder
+  (`source-vault.coffee:45-48`) and the existing guard (`build.py:368-370`) with `＜`; add
+  `<meta charset="UTF-8">` to `src/index.html` (currently BOM-only — §4.5).
+- Runtime behavior must be identical (decode restores bytes). Gate: `fg gauntlet` + `fg homepage`.
 
 ### Phase 2 — boot branches (`src/boot/globalFunctions.coffee`)
 
-- `maybeLoad` substitution, the `BUILDFLAG_LOAD_TESTS and not FIZZYGUM_SINGLE_FILE` guard, the
-  snapshot-block-or-createDesktop seam (with `skipConfirm: true`), SWCanvas hard-disable, spinner
-  timing. Verify the loadWorldSnapshot-on-empty-world expectation (§4.2.2).
+- `[REVISED 2026-07-30]` The central `loadJSFilePromise` short-circuit (§4.2.1 — replaces the old
+  per-site `maybeLoad` plan and the per-site tests guard), the snapshot-block-or-createDesktop
+  seam at `:470-471` (with `skipConfirm: true`), spinner timing. Verify: the
+  loadWorldSnapshot-on-empty-world expectation (§4.2.2), `testsManifest`-undefined tolerance, and
+  that the `*TestSupport.installOnto` grafts (`:429-433`) are existence-guarded.
 - Testable NOW via the S2 prototype re-generated from this build. Gate: gauntlet (multi-file
   behavior must be byte-identical — every branch is `FIZZYGUM_SINGLE_FILE`-gated) + S2 boots.
 
@@ -441,7 +498,7 @@ suite dpr1 + dpr2 + webkit + apps legs).
 | R1 | `</script` truncation via source comments/strings | §4.5 `＜` substitution (code) + `<` (JSON); §4.4(3) build guard |
 | R2 | Charset mis-sniffing corrupts substitution chars | `<meta charset="UTF-8">` first in head, both shells (Phase 1) |
 | R3 | FizzyPaint pixels may be serialization-transient | Phase 0 S1 spike BEFORE building anything |
-| R4 | Dev-build boot bundle carries `BUILDFLAG_LOAD_TESTS=true` into saved pages → 404 loads | explicit `not FIZZYGUM_SINGLE_FILE` guard (§4.2.1) |
+| R4 | Dev-build boot bundle carries `BUILDFLAG_LOAD_TESTS=true` into saved pages → 404 loads | `[REVISED 2026-07-30]` dissolved structurally: the central `loadJSFilePromise` short-circuit (§4.2.1) makes ALL loads inert; residual check = `testsManifest` stays undefined and `runPostBootActionsOnce` tolerates it (`Automator?`-guarded) |
 | R5 | DOM snapshot temptation (outerHTML) captures runtime mutations | template reassembly only; assembler reads NOTHING from the DOM |
 | R6 | `savedAt`/`build` envelope fields break generation-comparison | harness omits `savedAt`; compare code payload separately from snapshot |
 | R7 | Stale-copy UX (download model): user edits gen-N after saving, reopens gen-N-1 | inherent to the download model (TW lives with it); v2 FSA in-place save is the real fix; consider a `beforeunload` dirty-guard as a small independent follow-up |
