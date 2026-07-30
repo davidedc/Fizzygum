@@ -29,6 +29,13 @@
     "               awaits world.parts.ensureLoaded, NOT a bare `if TheClass?` guard).",
     "  requiresFlag optional build flag this part additionally needs ('tests', 'videoPlayer').",
     "  vendor       optional non-source payloads that must arrive with the part.",
+    "  assets       optional non-source FILES copied into the build tree for this part, as",
+    "               [<path relative to Fizzygum/>, <destination dir relative to the build root>]",
+    "               pairs. A part that does not ship copies none of them, which is how a flavour",
+    "               stops shipping an asset with nobody maintaining a prune list. Arc 5 PR-D6:",
+    "               the tail is DERIVED, never declared -- these pairs say who OWNS a file, and",
+    "               what ships follows from that. The three pointer icons and FileSaver/JSZip used",
+    "               to be copied unconditionally and then deleted again by the --homepage block.",
     "",
     "A part's absence must be a NO-OP at every call site, via the class-existence guard idiom",
     "(`if DemoMenus?`, `world.pinouts?.reset()`, `WorldTestSupport.installOnto WorldWdgt if ...?`).",
@@ -62,6 +69,13 @@
         "src/spreadsheet",
         "src/serialization",
         "src/duplication"
+      ],
+      "//assets": "The boot splash + spinner (drawn before any class exists) and the CoffeeScript compiler, which ships in EVERY profile: FizzyPaint tools, spreadsheet formulas, $src snapshot records and Fizzytiles' LCL are all compiled at runtime, so a compiler-less build is a non-interactive kiosk (arc 5 PR-D3).",
+      "assets": [
+        ["auxiliary files/additional-icons/spinner.svg", "icons"],
+        ["auxiliary files/additional-icons/splashScreenFakeDesktop.png", "icons"],
+        ["auxiliary files/additional-icons/splashScreenFakeDesktop@2x.png", "icons"],
+        ["auxiliary files/CoffeeScript/fizzygum-coffeescript-min.js", "js/libs"]
       ]
     },
 
@@ -116,7 +130,15 @@
         "../Fizzygum-tests/Automator-and-test-harness-src/AutomatorEventCommands"
       ],
       "inHomepage": false,
-      "requiresFlag": "tests"
+      "requiresFlag": "tests",
+      "//assets": "The three pointer icons SystemTestsControlPanelUpdater sets as <img src> in the harness control panel (DOM, not canvas -- so no screenshot gate can see them go missing; the parts fingerprint is what checks them), plus FileSaver + JSZip, which globalFunctions only loads when BUILDFLAG_LOAD_TESTS is set and which product FileSaving.coffee explicitly does not depend on.",
+      "assets": [
+        ["auxiliary files/additional-icons/xPointerImage.png", "icons"],
+        ["auxiliary files/additional-icons/leftButtonPressed.png", "icons"],
+        ["auxiliary files/additional-icons/rightButtonPressed.png", "icons"],
+        ["auxiliary files/FileSaver/FileSaver.min.js", "js/libs"],
+        ["auxiliary files/JSZip/jszip.min.js", "js/libs"]
+      ]
     },
 
     "video-player": {

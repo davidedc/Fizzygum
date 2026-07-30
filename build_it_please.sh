@@ -740,7 +740,12 @@ FG_BUILD_WHEN=$(git log -1 --format=%cI 2>/dev/null || echo "unknown-date")
 if [ -n "$(git status --porcelain 2>/dev/null)" ]; then FG_BUILD_DIRTY=" +local-changes"; else FG_BUILD_DIRTY=""; fi
 printf "\nbuildVersion = 'Fizzygum %s (%s)%s'" "$FG_BUILD_SHA" "$FG_BUILD_WHEN" "$FG_BUILD_DIRTY" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
-coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee
+# Compiled into the SCRATCH dir, not the build tree: no entry page ever loads the unminified boot
+# JS, so it is an intermediate like $BOOT_MIN below (which the SW/native assembly already removes
+# with the same reasoning). Keeping intermediates out of the tree is what makes "what a flavour
+# ships" derivable instead of something a per-flavour prune list has to remember.
+coffee -b -c -o $SCRATCH_PATH/ $SCRATCH_PATH/fizzygum-boot.coffee
+BOOT_JS=$SCRATCH_PATH/fizzygum-boot.js
 echo "... done compiling boot file"
 
 echo "minifying boot file..."
@@ -756,12 +761,11 @@ if $homepage ; then
   #
   # notice that OSX sed is different from GNU sed, so we need to give the -i '' parameter which means
   # "in-place editing, but don't make a backup file"
-  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BUILD_PATH/js/fizzygum-boot.js
-  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BUILD_PATH/js/fizzygum-boot.js
+  sed -i '' 's/if ((typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false/g' $BOOT_JS
+  sed -i '' 's/if (typeof Automator[a-zA-Z]* !== \"undefined\" && Automator[a-zA-Z]* !== null)/if (false)/g' $BOOT_JS
 fi
 
-terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BUILD_PATH/js/fizzygum-boot.js
-#cp $BUILD_PATH/js/fizzygum-boot.js $BUILD_PATH/js/fizzygum-boot-min.js
+terser --compress --mangle --output $BUILD_PATH/js/fizzygum-boot-min.js -- $BOOT_JS
 echo "... done minifying boot file"
 
 if [ "$?" != "0" ]; then
@@ -875,31 +879,37 @@ fi
 
 # (the entry pages themselves are written by build.py from src/index.html — see its ENTRY_PAGES)
 
-# copy the interesting js files from the submodules
-cp auxiliary\ files/FileSaver/FileSaver.min.js $BUILD_PATH/js/libs/
-cp auxiliary\ files/JSZip/jszip.min.js $BUILD_PATH/js/libs/
-cp auxiliary\ files/CoffeeScript/fizzygum-coffeescript-min.js $BUILD_PATH/js/libs/
-# (twgl-full.js removed: fizzytiles now software-renders through SW3D, not WebGL)
+# (The vendored js/libs files and the aux icons are copied by build.py, from the "assets" list of
+# whichever PART owns each one -- FileSaver/JSZip and the three harness pointer icons belong to the
+# harness part, the compiler and the boot splash/spinner to core. They used to be copied here
+# unconditionally and then deleted again by the --homepage block below; owning them by part means a
+# flavour stops shipping an asset because the part is absent, with no prune list to maintain.
+# twgl-full.js is gone entirely: fizzytiles software-renders through SW3D, not WebGL.)
 
-# code that can be loaded after a pre-compiled world has started
-coffee -b -c -o $BUILD_PATH/js/src/ src/boot/dependencies-finding.coffee
-terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $BUILD_PATH/js/src/dependencies-finding.js
+# Code that can be loaded after a pre-compiled world has started. EVERY boot loads only the
+# minified twin (globalFunctions.coffee fetches js/src/<name>-min.js), on the precompiled path as
+# much as the compile-at-boot one -- so the unminified .js is a pure INTERMEDIATE and is compiled
+# into the scratch dir, never into the tree. It used to be compiled into js/src/ and then deleted
+# again by the --homepage prune, which is the same untidiness with a per-flavour list in front of it.
+JSSRC_SCRATCH=$SCRATCH_PATH/js-src
+mkdir -p $JSSRC_SCRATCH
+# js/src/ used to be created as a side effect of compiling INTO it; terser will not create its
+# output's directory, so make it explicitly now that only minified files land there.
+mkdir -p $BUILD_PATH/js/src
 
-coffee -b -c -o $BUILD_PATH/js/src/ src/boot/loading-and-compiling-coffeescript-sources.coffee
-terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js -- $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
-#cp $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js
+coffee -b -c -o $JSSRC_SCRATCH/ src/boot/dependencies-finding.coffee
+terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $JSSRC_SCRATCH/dependencies-finding.js
 
-coffee -b -c -o $BUILD_PATH/js/src/ src/boot/logging-div.coffee
-terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $BUILD_PATH/js/src/logging-div.js
+coffee -b -c -o $JSSRC_SCRATCH/ src/boot/loading-and-compiling-coffeescript-sources.coffee
+terser --compress --output $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources-min.js -- $JSSRC_SCRATCH/loading-and-compiling-coffeescript-sources.js
+
+coffee -b -c -o $JSSRC_SCRATCH/ src/boot/logging-div.coffee
+terser --compress --output $BUILD_PATH/js/src/logging-div-min.js -- $JSSRC_SCRATCH/logging-div.js
 
 echo "copying pre-compiled file"
 cp auxiliary\ files/pre-compiled.js $BUILD_PATH/js/pre-compiled.js
 echo "... done"
 
-# copy aux icon files
-echo "copying icon files..."
-cp auxiliary\ files/additional-icons/*.png $BUILD_PATH/icons/
-cp auxiliary\ files/additional-icons/spinner.svg $BUILD_PATH/icons/
 
 if $includeVideos ; then
   cp ../Fizzygum-videos-public/* $BUILD_PATH/videos/
@@ -917,15 +927,6 @@ if $homepage ; then
   # (unlike js/, icons/ and *.html, which are wiped), so a homepage build following a dev build
   # would otherwise inherit ~90 MB of SWCanvas font data that no page here can load.
   rm -rf $BUILD_PATH/font-assets
-  rm $BUILD_PATH/icons/doubleClickLeft.png
-  rm $BUILD_PATH/icons/middleButtonPressed.png
-  rm $BUILD_PATH/icons/scrollUp.png
-  rm $BUILD_PATH/icons/doubleClickRight.png
-  rm $BUILD_PATH/icons/rightButtonPressed.png
-  rm $BUILD_PATH/icons/xPointerImage.png
-  rm $BUILD_PATH/icons/leftButtonPressed.png
-  rm $BUILD_PATH/icons/scrollDown.png
-  rm $BUILD_PATH/js/fizzygum-boot.js
 
   # (There used to be a prune of the per-class source files here — build.py wrote one js file per
   # class next to the batches and nothing ever loaded them, so this line deleted ~500 of them again
@@ -942,12 +943,9 @@ if $homepage ; then
     exit 1
   }
 
-  rm $BUILD_PATH/js/libs/FileSaver.min.js
-  rm $BUILD_PATH/js/libs/jszip.min.js
-
-  rm $BUILD_PATH/js/src/dependencies-finding.js
-  rm $BUILD_PATH/js/src/loading-and-compiling-coffeescript-sources.js
-  rm $BUILD_PATH/js/src/logging-div.js
+  # (The unminified boot JS and the three unminified js/src helpers used to be pruned here. They
+  # are build INTERMEDIATES that no page loads in any flavour, so they are now compiled into the
+  # scratch dir and never enter the tree at all -- see the $BOOT_JS / $JSSRC_SCRATCH assignments.)
 
 
   # There are many

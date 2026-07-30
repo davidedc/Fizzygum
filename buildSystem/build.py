@@ -27,6 +27,7 @@ import codecs
 import json
 import re
 import os
+import shutil
 import ntpath
 
 import argparse
@@ -204,6 +205,32 @@ def partShipsInThisFlavour(partName, part, args):
     if flag == "videoPlayer" and not args.includeVideoPlayer:
         return False
     return True
+
+
+def copyPartAssets(parts, args):
+    """Copy the non-source files owned by every part that ships in this flavour.
+
+    A part declares them in parts.json as [<path relative to Fizzygum/>, <dest dir relative to the
+    build root>] pairs. A missing source file is a HARD failure, not a warning: an asset silently
+    not copied is the failure mode this replaced (the tree looked fine and a page 404'd for an
+    <img> at runtime)."""
+    copied = 0
+    for partName, part in parts.items():
+        if partName.startswith("//"):
+            continue
+        if not partShipsInThisFlavour(partName, part, args):
+            continue
+        for entry in part.get("assets", []):
+            sourcePath, destinationDirectory = entry
+            if not os.path.isfile(sourcePath):
+                print("ERROR: part '%s' declares an asset that does not exist: %s (buildSystem/parts.json)"
+                      % (partName, sourcePath))
+                exit(1)
+            fullDestinationDirectory = os.path.join("../Fizzygum-builds/latest", destinationDirectory)
+            os.makedirs(fullDestinationDirectory, exist_ok=True)
+            shutil.copyfile(sourcePath, os.path.join(fullDestinationDirectory, os.path.basename(sourcePath)))
+            copied += 1
+    print("copied %d part asset(s)" % copied)
 
 
 def shippedFiles(parts, partOfFile, orderedFilenames, args):
@@ -402,7 +429,14 @@ def main():
         f.write("window.FIZZYGUM_PARTS = " + json.dumps(manifest, sort_keys=True) + "\n")
 
 
-    # 4) the entry pages, one per backend flavour (see ENTRY_PAGES). A --homepage
+    # 4) each SHIPPING part's non-source assets. These used to be unconditional `cp`s in
+    # build_it_please.sh followed by a per-flavour prune list in its --homepage block: the harness's
+    # three pointer icons and FileSaver/JSZip were copied into every tree and then deleted again from
+    # the production one. Owning them here means what a flavour ships FOLLOWS from which parts ship
+    # (arc 5 PR-D6: derive the tail, never declare it).
+    copyPartAssets(parts, args)
+
+    # 5) the entry pages, one per backend flavour (see ENTRY_PAGES). A --homepage
     # build is native-only — no SWCanvas bundle is assembled for it and its font
     # assets are not shipped — so it gets index.html alone.
     for (pageFileName, useSWCanvas, eagerAllParts) in ENTRY_PAGES:

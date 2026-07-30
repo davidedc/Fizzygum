@@ -52,18 +52,21 @@ A profile manifest declares:
   "extras": { "fontAssets": false, "tests": false, "videos": false } }
 ```
 
-**`[REVISED 2026-07-30]` This schema does not yet cover the largest piece of what `--homepage`
-means** — the pruning tail at `build_it_please.sh:904` (8 Automator icons, 2 libs, 3 compiled boot
-helpers, the unminified bundle, the re-prune of font-assets). See §2.2: either an explicit `omit`
-list or derivation from `parts` + `form`, decided at kickoff. Also note `parts: ["core"]` is exactly
-right today — every one of the other 9 parts carries `inHomepage: false`.
+**`[REVISED 2026-07-30]` This schema never covered the largest piece of what `--homepage` meant** —
+the pruning tail at `build_it_please.sh:904` (8 Automator icons, 2 libs, 3 compiled boot helpers, the
+unminified bundle, the re-prune of font-assets). **It does not need to: PR-D6 rules that the tail is
+DERIVED, and Phase 0.5 dissolved it (§2.2.1, §4) — assets now belong to the part that owns them
+(a new `assets` field in `parts.json`), intermediates never enter the tree, and 5 of those icons
+turned out to be dead and were deleted.** What remains for a manifest to express is `form`,
+`entries`, and the `extras` above. Also note `parts: ["core"]` is exactly right today — every one of
+the other 9 parts carries `inHomepage: false`.
 
 | # | Decision | Choice | Status |
 |---|---|---|---|
 | PR-D1 | Invocation | `./build_it_please.sh --profile homepage` (manifest in `buildSystem/profiles/`). Plain `./build_it_please.sh` = the dev profile (compile-at-boot, all parts, all entries, tests). **`[OWNER RULING 2026-07-30]` `--homepage` DIES IMMEDIATELY in Phase 1 — there is no alias period.** No deletion note, no BACKLOG tail, and R-4 (the never-dying alias) is thereby eliminated rather than mitigated. Every call site changes in the same commit; all of them are local workspace tooling or the tests repo, enumerated in §4 Phase 1. **`[REVISED 2026-07-30]` PR-D1's stated premise — "a hardcoded part list from arc 4" — is FALSE (§2.0(1)): part selection is already declarative in `parts.json`. The invocation decision stands; what the manifest ADDS over today is form + entries + extras + the pruning tail, not part selection. ⚠ `--notests` must be answered here too (§2.1) or it survives as the last flag.** | LOCKED (owner) **except the `--notests` question** |
 | PR-D2 | `form: precompiled` | Runs arc 2's external puppeteer driver against the freshly built tree (native entry) and writes `pre-compiled.js`. Per-part precompiled chunks (accumulator tagged by part) are **banked** — v1 profiles load parts in source form (arc-4 P-D6). | LOCKED |
 | PR-D3 | `sources: "lazy"` | New seam: source batches not loaded at boot; first consumer of the Class/Mixin member maps (opening an inspector) triggers load+ingest of the needed part's batch (frame-paced, existing machinery). `"none"` = the lean/appliance profile: no batches shipped at all, inspectors/meta-tools part excluded. **`[REVISED 2026-07-30]` ⚠⚠ it CANNOT just call arc 4's `ensureLoaded` — that path is built for a part whose classes DO NOT EXIST YET, and both of its defining choices are wrong here. `PartsRegistry._ingestPartPromise` (a) filters to `fresh = (name for name in SourceVault.namesForPart partName when not window[name]?)`, and on a precompiled tree EVERY core class is already defined, so `fresh` is empty and it would ingest NOTHING; and (b) its closure passes `justIngestSources = false`, i.e. compile-and-execute, which is precisely what must not happen to a live class (`new Class src` would redefine it underneath running instances — the comment at `PartsRegistry.coffee:160-164` says so). What `sources: lazy` needs is the OTHER mode, the one the precompiled boot already uses: `storeSourceAndPotentiallyCompileItAndExecuteIt name, true` over ALL of the part's names. So the seam is a SECOND ingest mode on the registry (`ensureSourcesIngested`, ingest-only, no freshness filter), not a reuse of the existing one. Cheap, but it is real work and it must not be estimated as "already built".** ⚠⚠ THE COMPILER SHIPS IN EVERY PROFILE — the 2026-07-28 inventory proved it product-critical (FizzyPaint tools are CS source strings; spreadsheet formulas incl. RELOAD of saved sheets; `$src` snapshot records; Fizzytiles LCL). A compiler-less artifact is a non-interactive kiosk and is OUT OF SCOPE. | LOCKED |
-| PR-D4 | Flavour parity gate | Before deleting the `$homepage` branches: build old-`--homepage` and `--profile homepage` from the same tree and assert the output TREES are equivalent (file list + key byte-compares; timestamps/build-info exempt). Only then delete the branches. **`[REVISED 2026-07-30]` THE TOOL ALREADY EXISTS**: arc 4 borrowed this pattern early and wrote `Fizzygum-tests/.scratch/homepage-fingerprint.js` (stored-source NAMES + file list + sizes + SHA-256, build-stamped boot bundles exempt), which is what proved arc 4's partition byte-equivalent (433 sources both sides). It is in a **gitignored** `.scratch/`, so step one of this arc is to PROMOTE it to `Fizzygum-tests/scripts/` — a gate cannot live in scratch. ⚠ Arc 4's case law: `buildVersion` embeds the commit SHA in both bundles, so a DIRTY tree changes bundle bytes; compare at a clean tree or keep the bundles exempt. | LOCKED |
+| PR-D4 | Flavour parity gate | Before deleting the `$homepage` branches: build old-`--homepage` and `--profile homepage` from the same tree and assert the output TREES are equivalent (file list + key byte-compares; timestamps/build-info exempt). Only then delete the branches. **`[REVISED 2026-07-30]` THE TOOL ALREADY EXISTS**: arc 4 borrowed this pattern early and wrote `Fizzygum-tests/.scratch/homepage-fingerprint.js` (stored-source NAMES + file list + sizes + SHA-256, build-stamped boot bundles exempt), which is what proved arc 4's partition byte-equivalent (433 sources both sides). It was in a **gitignored** `.scratch/`, so step one of this arc PROMOTED it to `Fizzygum-tests/scripts/build-tree-fingerprint.js` (see Phase −1 as-executed) — a gate cannot live in scratch. ⚠ Arc 4's case law: `buildVersion` embeds the commit SHA in both bundles, so a DIRTY tree changes bundle bytes; compare at a clean tree or keep the bundles exempt. | LOCKED |
 | PR-D5 | Dev-build default form | Stays compile-at-boot (fast inner loop: pre-building adds a headless boot-and-harvest to every 18 s build; worth paying once per shipped artifact, not per iteration). | LOCKED |
 | PR-D6 `[NEW 2026-07-30]` | The pruning tail (§2.2) | **DERIVE it; never declare it. No omit-list, and no omit-list fallback** — owner ruling, three reasons + the escape valve in §2.2.1. Assets attribute to their owning **part** (`parts.json` already carries per-part `vendor`, so an assets key is a precedented extension); `font-assets` derives from the shipped **entry** set; build **intermediates stop being emitted into the tree** rather than being pruned from it; an item that resists attribution is a smell about the item (delete it or re-home it), never a reason for a list. **Acceptance test: at close, nothing in the tail is declared anywhere.** | LOCKED (owner) |
 
@@ -170,6 +173,31 @@ escape valve fires once:**
 2 libs), 4 dissolved by not emitting intermediates, 1 derived from the entry set. **Nothing left to
 declare** — which is the test that the derivation is real and not a list in disguise.
 
+### §2.2.2 `[FOUND AT EXECUTION 2026-07-30]` Two further tail items the survey MISSED
+
+Fingerprinting a real `--homepage` tree (28 files) surfaced two shipped-but-unused items that §2.2's
+line-by-line reading of `:904` did not, because neither is pruned there — nothing removes them at all.
+**Both change what PRODUCTION ships, so both are owner decisions, not derivations to apply silently:**
+
+1. **`js/pre-compiled-max.js` — 1,969,846 bytes, 35.0% of the entire production tree (5.36 MB / 28
+   files), loaded by nothing.** The tail does `terser … -o pre-compiled-min.js; mv pre-compiled.js pre-compiled-max.js;
+   mv pre-compiled-min.js pre-compiled.js` — so the unminified image is *renamed and kept*. Its only
+   mention anywhere in either repo is that `mv`. By PR-D6's own axis it is an intermediate and should
+   never enter the tree; the counter-argument is that someone may want a readable image deployed for
+   debugging. **⛔ NOT actioned — it needs an explicit call, because deleting ~2 MB from the deployed
+   site is a shipping decision, not a refactor.**
+2. **`js/vendor-parts/fizzytiles-3d.js` — 18,879 bytes of software-3D engine in a tree that ships no
+   fizzytiles.** Its block's own comment says "Emitted for every flavour that ships the part", but the
+   only condition on it is `[ -f $SWCANVAS_VENDOR/swcanvas-3d-core.min.js ]` — **no part or flavour
+   test at all**, so it ships everywhere. This is the same species as arc 4's
+   `FILE_ONLY_FOR_VIDEOPLAYER`: a rule that documents a gate it never implements. The fix is exactly
+   PR-D6 (`vendor` payloads ship iff their part ships) and it is arguably an arc-4 leftover bug rather
+   than arc-5 scope. **⛔ NOT actioned pending the same call.**
+
+⚖ Lesson worth keeping: **the tail was surveyed by reading the prune block, so it could only ever
+find things that were pruned.** The complete picture came from fingerprinting the actual output tree
+and asking of each file "who loads this?". Do that first next time.
+
 ### §2.3 Committed arc outcomes, as verified 2026-07-30
 
 - **After arc 1:** tests served through the `js/tests` symlink; the two manifests are generated by
@@ -216,6 +244,46 @@ profile a common mechanism instead of two more bespoke flags.
   BASELINE fingerprint of today's `--homepage` tree at a clean tree **before touching anything**.
   Without this, PR-D4 has nothing to compare against and Phase 1 cannot close. Gate: the tool
   reports a tree identical to itself, and reports a planted difference (prove it can FAIL).
+
+  **AS EXECUTED 2026-07-30.** Promoted as `Fizzygum-tests/scripts/build-tree-fingerprint.js` — NOT
+  `homepage-fingerprint.js`, because Phases 0/0.5 fingerprint the **dev** tree too and a name that
+  says "homepage" would be a lie in most of its uses. Modes: `write <out>` and
+  `compare <baseline> <candidate>`. Three verdicts, deliberately: **0 equivalent / 1 differs /
+  2 INVALID**, where INVALID means a fingerprint could not be fully read (its own recorded counts
+  disagree with what parsed) — a gate that cannot read its inputs has measured nothing and must not
+  say PASS (`fg fuzz`'s lesson, arc 4). All three proven live: identity → 0, planted damage → 1,
+  truncated input → 2.
+
+  ⚠⚠ **The prove-it-fails drill caught a real bug in the gate itself, and it is worth knowing why.**
+  The comparer keyed sources in a `Map` by NAME — but **source names are not unique**: `Class` and
+  `Mixin` are each stored TWICE in a tree (once in their own individually-fetched
+  `js/coffeescript-sources/<Name>-source.js`, which the compile bootstrap loads by hand before any
+  batch, and again inside a regular batch). The Map silently collapsed those pairs, so the parse read
+  500 of 502 sources AND the later entry overwrote the earlier — meaning a planted part change on
+  `Class` was reported as *"identical"*. A parity gate blind to the meta-system is worse than none.
+  Fixed by comparing a **multiset** of `(name, part)`, plus the self-check that turned it up: the
+  parse must account for every source the fingerprint says it recorded.
+  (Also simplified while promoting: extraction is now ONE regex capturing name and part together,
+  replacing a per-call 4 MB slice heuristic. Safe because build.py's `STRING_BLOCK` escapes the stored
+  text so it can contain no raw `"`, `\` or newline — verified byte-identical to the old tool's output
+  over a 502-source tree before trusting it.)
+
+  **⚠⚠ TWO CONSTRAINTS ON HOW A PARITY BASELINE MAY BE USED — both discovered while building it
+  (2026-07-30). Get either wrong and the gate becomes decorative:**
+  1. **A fingerprint is only valid at ONE commit, with no `src/` edits.** `js/pre-compiled.js` and
+     every source batch EMBED class source text, so any `src/**.coffee` change legitimately changes
+     the tree. ⇒ a parity comparison must be old-mechanism vs new-mechanism **built from identical
+     `src/`** — take the baseline immediately before a machinery-only change and compare immediately
+     after. This is exactly how arc 4 did it (three builds, `src/` untouched between them). A
+     baseline therefore must NOT be committed as a standing file: it would be stale at the next
+     source commit and would then be actively misleading. Keep it in `.scratch/` (gitignored),
+     re-take it per comparison. (Contrast `scripts/revisit-baseline.json`, which is committed because
+     it records a *behavioural profile*, not a byte image.)
+  2. **Each Phase 0.5 step has a PREDICTED delta — state it before running, then check it.** These
+     steps deliberately change the tree, so "unchanged" is the wrong expectation; "changed in exactly
+     this way and no other" is the gate. Note the useful asymmetry: deleting the 5 dead pointer icons
+     changes the **dev** tree only (homepage already pruned them), and moving the intermediates out of
+     the tree changes **both** — by exactly the 4 files that the homepage prune used to delete.
 - **Phase 0 — profile loader:** `build_it_please.sh` (or a small python helper) reads the
   manifest into shell vars; plain invocation synthesizes the dev profile. No behavior change;
   gate: byte-identical dev tree vs pre-phase build (same fingerprint tool, dev flavour).
@@ -233,11 +301,48 @@ profile a common mechanism instead of two more bespoke flags.
   3. **Attribute the 3 live icons + the 2 libs to the `harness` part** (an `assets` key next to the
      existing `vendor`), so their copy is part-driven rather than flavour-driven. `BUILDFLAG_LOAD_TESTS`
      already gates the libs' *loading*; this makes the *copy* agree with it.
-  4. **Derive font-assets from the entry set** ("any shipped entry uses SWCanvas"), keeping the
-     idempotent re-prune — §2.2.1 explains why that second removal is load-bearing, not redundant.
+  4. ~~Derive font-assets from the entry set~~ **MOVED TO PHASE 0 `[2026-07-30, at execution]`.**
+     Deriving it needs the build to know *which entry pages ship* — which is precisely what the
+     Phase 0 profile loader computes and hands to the shell. Doing it inside Phase 0.5 would mean
+     inventing a one-off channel (build.py writing a `SHIPS_SWCANVAS_ENTRY` fact file) that Phase 0
+     replaces immediately — arc 4's case law: **do not write a mechanism ahead of its caller.** The
+     `! $homepage` condition therefore stays put for one more phase, and Phase 0 removes it along
+     with the rest. ⚠ Whatever does it must keep the idempotent re-prune (§2.2.1).
   Gate each step with `fg build` + the Phase −1 fingerprint (dev tree must change ONLY in the ways
   intended, homepage tree not at all), then `fg gauntlet` once at the end of Phase 0.5 — step 3
   touches what the harness page ships, which the suite runs on.
+
+  **AS EXECUTED 2026-07-30 — steps 1-3 done, step 4 deferred to Phase 0 (above). Each step's
+  predicted delta was stated first, then measured:**
+  | Step | Predicted | Measured |
+  |---|---|---|
+  | 1 · delete 5 dead icons | dev −5 files, homepage unchanged (already pruned there) | dev 4607 → **4602**, exactly those 5 `icons/*.png`, sources identical |
+  | 2 · intermediates to scratch | dev −4 files, homepage unchanged (already pruned there) | dev 4602 → **4598**, exactly `js/fizzygum-boot.js` + the 3 `js/src/*.js`, sources identical, both boot bundles unchanged in size |
+  | 3 · assets → owning part | **pure refactor: dev tree byte-IDENTICAL** | 4598 → 4598, `[FILES] identical`, `[SOURCES] identical` — which also proves build.py copied exactly the right 9 assets, since nothing else copies them any more |
+  | all three | production tree byte-unchanged | 28 files, sources identical; the ONLY delta was `fizzygum-boot-native-min.js` +15 bytes — proven to be the dirty-tree stamp (`" +local-changes"` is 15 chars; same commit `7b773269`, same timestamp), i.e. the exemption's documented caveat, not a content change |
+
+  **⚠⚠ A LATENT MASKED FAILURE, found by insisting the new hard-fail be PROVEN (2026-07-30).**
+  `copyPartAssets` aborts on a declared-but-missing asset — so I planted one. **The build printed the
+  ERROR, `build.py` exited 1, and `fg build` still reported `BUILD EXIT=0 OK`.** Cause:
+  `build_it_please.sh` called `python3 ./buildSystem/build.py "${args[@]}"` with **no `$?` check at
+  all**, and had done for years — so the single most important step of the build (wrapping every
+  source into the batches, writing the parts manifest, generating the entry pages, and now copying
+  assets) could fail outright while the build printed `done!!!` and exited 0. Every downstream gate
+  passes because none of them depend on build.py's status. Fixed in the same commit, in the style of
+  the neighbouring syntax gate, and re-proven: planted asset ⇒ `EXIT=1 FAILED`; restored ⇒ `EXIT=0`
+  with `copied 9 part asset(s)` and a byte-identical tree.
+  ⚖ **The general lesson is not about assets.** It is that a new failure path is not delivered until
+  it has been observed to fail; had I trusted the code, this arc would have added a check that could
+  never fire, on top of a build step whose failures were already invisible. Same masked-failure class
+  as `build_it_please.sh`'s own umbrella-directory `exit 1` comment.
+
+  Mechanism notes for whoever picks this up: the boot intermediate is now `$BOOT_JS` in
+  `$SCRATCH_PATH` (the Automator sed and terser both read it there), the three helpers compile into
+  `$JSSRC_SCRATCH`, and `js/src/` is now `mkdir -p`'d explicitly because it used to be created as a
+  side effect of compiling into it — terser will not create its output's directory. Assets are copied
+  by `build.py`'s `copyPartAssets()`, which **hard-fails on a declared-but-missing asset** rather than
+  warning: an asset silently not copied is the exact failure mode this replaced (tree looks fine, an
+  `<img>` 404s at runtime).
 - **Phase 1 — homepage as data:** author `profiles/homepage.json` reproducing today's flavour
   exactly (parts: core; form: precompiled; sources: background; entries: index.html; extras
   off). Run the PR-D4 parity gate against Phase −1's baseline. Then DELETE every `$homepage` branch
@@ -334,7 +439,7 @@ is cwd-correct and gates on real exit codes. Long ops go to the background with 
 | inner loop | `fg presuite` (~3.5 min) | build + dpr1 suite ∥ paint audit |
 | phase close | `fg gauntlet` (~5 min, 14 legs) | full behavioural gate — but see the ⚠ on Phase 1: it never builds a production tree |
 | **the arc's real gate** | `fg homepage` | the ONLY production-tree gate: boot + no-SW-payload + `preCompiled === true` + snapshot round-trip |
-| PR-D4 | the promoted `homepage-fingerprint.js`, two-tree mode | tree equivalence BEFORE deleting any `$homepage` branch |
+| PR-D4 | `node scripts/build-tree-fingerprint.js compare <baseline> <candidate>` | tree equivalence BEFORE deleting any `$homepage` branch |
 | per profile (Phase 2) | `smoke-boot-headless.js` with per-profile forbidden-file assertions | a profile that ships something it declared absent must fail loudly |
 
 Zero reference churn is the expectation throughout: this arc repackages, it does not change
