@@ -127,7 +127,17 @@ loadJSFilePromise = (fileName) ->
 #   4. every eager part's source batches (window.FIZZYGUM_PARTS drives which)
 #   5. ingest-only (true) against the already-running classes, or compile-and-execute (false) to
 #      CREATE them
-loadReflectiveLayerPromise = ->
+# THE META-SYSTEM: steps 1-3 on their own, because a LAZY PART needs exactly them and nothing else.
+#
+# ⚠⚠ WHY THIS IS SPLIT OUT. Ingesting any source means `new Class` / `new Mixin` (see
+# storeSourceAndPotentiallyCompileItAndExecuteIt), and ordering a batch means findLoadOrder -- and on
+# a PRECOMPILED tree none of the three exist: Class and Mixin are the only two classes absent from
+# js/pre-compiled.js, and findLoadOrder ships in a file nothing has injected yet. A lazy part loading
+# on such a tree therefore died with "findLoadOrder is not defined" until this split existed.
+# PartsRegistry._loadPartPromise awaits this, and MUST NOT await the whole reflective layer instead:
+# step 4 below is every eager batch, 2.29 MB on production, which would hand back the entire saving
+# that made the part lazy. These three files are ~39 KB.
+loadMetaSystemPromise = ->
   Promise.all [
     loadJSFilePromise("js/coffeescript-sources/Class-source.js"),
     loadJSFilePromise("js/coffeescript-sources/Mixin-source.js")
@@ -141,6 +151,16 @@ loadReflectiveLayerPromise = ->
   .then ->
     if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"
     loadJSFilePromise("js/src/dependencies-finding-min.js")
+
+# Memoized like the layer itself: a part load and a later inspector open share ONE fetch of these.
+metaSystemLoadPromise = nil
+
+ensureMetaSystemLoaded = ->
+  metaSystemLoadPromise ?= loadMetaSystemPromise()
+  metaSystemLoadPromise
+
+loadReflectiveLayerPromise = ->
+  ensureMetaSystemLoaded()
   .then ->
     if bootLoadingDebugWrites then console.log "---- dependencies-finding-min loaded"
     loadJSFilesWithCoffeescriptSourcesBatchesPromise()

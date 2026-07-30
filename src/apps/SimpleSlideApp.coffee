@@ -11,5 +11,4 @@ class SimpleSlideApp extends IconicDesktopSystemWindowedApp
   # The window's docked SlidesToolbarWdgt offers the two map tools, which are the LAZY 'maps' part
   # -- see DashboardsApp.launch.
   launch: ->
-    if world.parts.isLoaded "maps" then super()
-    else world.parts.ensureLoaded("maps").then => super()
+    world.parts.whenAllLoaded ["maps"], => super()

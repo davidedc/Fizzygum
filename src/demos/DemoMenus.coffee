@@ -394,36 +394,49 @@ class DemoMenus
     simpleVideoLinkWdgt.setExtent new Point 405, 50
     world.create simpleVideoLinkWdgt
 
+  # ⚠ THE SEVEN PLOT DEMO ITEMS BELOW NEED THE LAZY 'plots' PART. This is a part->part reference
+  # (demos -> plots), which buildSystem/check-part-edges.js deliberately does NOT check -- it scans
+  # CORE only -- so nothing but this comment and the await stands between a demo-menu click and
+  # "<TheClass> is not defined". Every one of them is reached by reflection from popUpPlotsMenu
+  # (`menu.addMenuItem "...", demoMenus, "createX"`), which ignores the return value, so awaiting is
+  # free. whenAllLoaded runs its callback inline when the part is already in, which on the harness
+  # page (FIZZYGUM_EAGER_ALL_PARTS) it always is.
   create2DAxis: ->
-    vertAxis = new AxisWdgt
-    vertAxis.setExtent new Point 40, 300
-    world.create vertAxis
+    world.parts.whenAllLoaded ["plots"], ->
+      vertAxis = new (window["AxisWdgt"])
+      vertAxis.setExtent new Point 40, 300
+      world.create vertAxis
 
   createExampleScatterPlot: ->
-    exampleScatterPlot = new ExampleScatterPlotWdgt
-    exampleScatterPlot.setExtent new Point 300, 300
-    world.create exampleScatterPlot
+    world.parts.whenAllLoaded ["plots"], ->
+      exampleScatterPlot = new (window["ExampleScatterPlotWdgt"])
+      exampleScatterPlot.setExtent new Point 300, 300
+      world.create exampleScatterPlot
 
   createExampleScatterPlotWithAxes: ->
-    exampleScatterPlot = new ExampleScatterPlotWdgt
-    plotWithAxesWdgt = new PlotWithAxesWdgt exampleScatterPlot
-    plotWithAxesWdgt.setExtent new Point 300, 300
-    world.create plotWithAxesWdgt
+    world.parts.whenAllLoaded ["plots"], ->
+      exampleScatterPlot = new (window["ExampleScatterPlotWdgt"])
+      plotWithAxesWdgt = new (window["PlotWithAxesWdgt"]) exampleScatterPlot
+      plotWithAxesWdgt.setExtent new Point 300, 300
+      world.create plotWithAxesWdgt
 
   createExampleFunctionPlot: ->
-    exampleFunctionPlot = new ExampleFunctionPlotWdgt
-    exampleFunctionPlot.setExtent new Point 300, 300
-    world.create exampleFunctionPlot
-  
+    world.parts.whenAllLoaded ["plots"], ->
+      exampleFunctionPlot = new (window["ExampleFunctionPlotWdgt"])
+      exampleFunctionPlot.setExtent new Point 300, 300
+      world.create exampleFunctionPlot
+
   createExampleBarPlot: ->
-    exampleBarPlot = new ExampleBarPlotWdgt
-    exampleBarPlot.setExtent new Point 300, 300
-    world.create exampleBarPlot
+    world.parts.whenAllLoaded ["plots"], ->
+      exampleBarPlot = new (window["ExampleBarPlotWdgt"])
+      exampleBarPlot.setExtent new Point 300, 300
+      world.create exampleBarPlot
 
   createExample3DPlot: ->
-    example3DPlot = new Example3DPlotWdgt
-    example3DPlot.setExtent new Point 300, 300
-    world.create example3DPlot
+    world.parts.whenAllLoaded ["plots"], ->
+      example3DPlot = new (window["Example3DPlotWdgt"])
+      example3DPlot.setExtent new Point 300, 300
+      world.create example3DPlot
 
   popUpMapsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Maps"

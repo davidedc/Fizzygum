@@ -3953,30 +3953,46 @@ class Widget extends TreeNode
   # (`world.add new InspectorWdgt target`): when free-floating it paints its own
   # background and is resized via its @resizer handle. This wrapper stays the
   # default for the menu/inspect paths; the naked path is the additional mode.
-  # The inspectors are the `meta-tools` part (they ship everywhere except a profile that explicitly
-  # drops them), so these two methods -- the only places core NAMES those classes -- guard on the
-  # class existing, per the standing idiom for an optional part. buildSystem/check-part-edges.js
-  # enforces it. The guard belongs HERE, where the class is named, not at the callers.
+  # The inspectors are the LAZY `meta-tools` part, and these two methods are the only places core
+  # reaches them. Two consequences, both deliberate:
+  #
+  # ⚠⚠ 1. `if InspectorWdgt?` is GONE and must not come back. For an eager part that guard reads
+  # "this artifact does not have it, do nothing"; for a lazy one the class is equally undefined
+  # merely because nobody has fetched it yet, so the guard would silently swallow the user's click
+  # forever. The two cases need opposite responses, and only a PART-level question separates them:
+  # `world.parts.isAvailable` asks "did this artifact ship it at all" (a `lean` build did not, and
+  # there is genuinely nothing to open), and the await handles "here, but not yet".
+  #
+  # ⚠⚠ 2. The class is named as a STRING. buildSystem/check-part-edges.js requires a guard wherever
+  # core names a part-owned class as a SYMBOL, and the correct guard for a lazy part does not exist
+  # -- so the gate's own sanctioned escape applies: name it as DATA (`window["InspectorWdgt"]`)
+  # after the load, exactly as PartsRegistry.launch does. Read that gate's "ONE DELIBERATE BLIND
+  # SPOT" note before changing this back to a bare identifier.
+  #
+  # An inspector also reads class MEMBER MAPS, which exist only once the class source text has been
+  # ingested -- and on a `sources: "lazy"` build that has deliberately not happened yet. So the part
+  # and the reflective layer are both awaited here, in that order.
+  # ⚠ Both already-loaded cases stay SYNCHRONOUS (whenAllLoaded runs its callback inline, and the
+  # layer keeps its own `if loaded then ... else ...` branch): every build the suite runs has both
+  # long before anything asks, and deferring the open by even a microtask would move the inspector's
+  # appearance a world cycle later -- which the SystemTest suite measures (it drives the world cycle
+  # by cycle, ../Fizzygum-tests/DETERMINISM.md), across the ~15 tests that open one.
   spawnInspector: (inspectee) ->
-    return unless InspectorWdgt?
+    return unless world.parts.isAvailable "meta-tools"
     openTheInspector = ->
-      inspector = new InspectorWdgt inspectee
+      inspector = new (window["InspectorWdgt"]) inspectee
       world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
-    # An inspector reads the class MEMBER MAPS, which exist only once the class source text has been
-    # ingested -- and on a `sources: "lazy"` build that has deliberately not happened yet. So ask for
-    # the reflective layer and open when it lands. This is the same shape as awaiting a lazy PART
-    # before using its classes.
-    # ⚠ The already-loaded case stays SYNCHRONOUS, and that is the whole reason for the branch: every
-    # other build has the layer long before anything asks, and deferring the open by even a microtask
-    # would move the inspector's appearance a world cycle later -- which the SystemTest suite
-    # measures (it drives the world cycle by cycle, ../Fizzygum-tests/DETERMINISM.md), across the ~15
-    # tests that open one.
-    if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
+    world.parts.whenAllLoaded ["meta-tools"], ->
+      if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
+  # The console does NOT read the class member maps, so it needs the part but not the reflective
+  # layer. See spawnInspector above for why the guard is part-level and the class named as data.
   createConsole: ->
-    return unless ConsoleWdgt?
-    inspector = new ConsoleWdgt @
-    world.openFrameWith inspector, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
+    return unless world.parts.isAvailable "meta-tools"
+    openTheConsole = =>
+      consoleWdgt = new (window["ConsoleWdgt"]) @
+      world.openFrameWith consoleWdgt, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
+    world.parts.whenAllLoaded ["meta-tools"], openTheConsole
 
   spawnNextTo: (widgetToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?

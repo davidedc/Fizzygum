@@ -18,6 +18,9 @@
     "and the NYC slide BUILD maps, so production cannot simply drop that part. It is LAZY instead --",
     "shipped, but not in js/pre-compiled.js and not fetched until a map is actually asked for. That is",
     "the one shape that keeps the Examples whole while still taking the artwork off the first load.",
+    "'plots' and 'meta-tools' are lazy for the same reason: the samples build plots, and the",
+    "inspectors are the definition of on-demand -- nobody opens one during a normal session, and",
+    "opening one already had to await the reflective layer, so the part load joins an existing wait.",
     "",
     "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
     "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
@@ -37,7 +40,7 @@
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
-  "parts": ["core", "meta-tools", "samples", "maps"],
+  "parts": ["core", "meta-tools", "samples", "maps", "plots"],
   "form": "precompiled",
   "sources": "lazy",
   "entries": ["index.html"]

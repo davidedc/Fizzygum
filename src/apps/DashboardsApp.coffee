@@ -12,5 +12,4 @@ class DashboardsApp extends IconicDesktopSystemWindowedApp
   # part -- so bring it in at the door, or the palette would open two tools short. Same shape as
   # SampleDashboardApp.launch (which explains why the already-loaded path stays synchronous).
   launch: ->
-    if world.parts.isLoaded "maps" then super()
-    else world.parts.ensureLoaded("maps").then => super()
+    world.parts.whenAllLoaded ["maps", "plots"], => super()

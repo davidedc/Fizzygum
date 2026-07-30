@@ -47,28 +47,27 @@ class PartsRegistry
   _isEagerHere: (spec) ->
     window.fizzygumPartIsEagerHere spec
 
-  # Is this part in the page RIGHT NOW? The consumer this was written for (which is what the note
-  # below asked to wait for) is the already-loaded FAST PATH of a launch site: an app that needs a
-  # lazy part must await it, but on every build the SystemTest suite runs, the part is eager and
-  # long since here -- and going through `ensureLoaded(...).then` anyway would defer the launch by a
-  # microtask, which moves the window's creation a whole world CYCLE later, which the suite
-  # measures. So a caller that awaits must be able to NOT await, synchronously:
-  #     if world.parts.isLoaded "maps" then super() else world.parts.ensureLoaded("maps").then => super()
-  # Same shape, and the same reason, as globalFunctions' reflectiveLayerIsLoaded() (see
-  # docs/architecture/build-and-packaging.md §5).
+  # Is this part in the page RIGHT NOW? _-tier: `whenAllLoaded` is the only caller, and it is the
+  # method call sites are meant to reach for -- a door that asks this itself would be re-deriving
+  # the fast-path rule that whenAllLoaded already encodes, and the call-separation gate [U] catches
+  # exactly that (a public query nothing but @-self calls).
   #
-  # ⚠ NOT a substitute for the guard at an absent-part call site: this answers "is it here yet?",
-  # which for a part this artifact never shipped is false forever. `_isAvailable` is that question.
+  # ⚠ NOT the same question as the guard at an absent-part call site: this answers "is it here
+  # yet?", which for a part this artifact never shipped is false forever. `isAvailable` is that one.
   # (The lazy-load RIG still asserts the observable fact -- whether the classes are defined in the
   # page -- rather than asking the registry for its own opinion of itself.)
-  isLoaded: (partName) ->
+  _isLoaded: (partName) ->
     @_state[partName] is @LOADED
 
   # Is this part in this artifact at all? A production build ships no fizzytiles, so asking for it
   # is not an error to throw at the user -- it is a feature that is not in this product.
-  # _-tier: only this class asks. A public `isAvailable` would be API written ahead of a caller,
-  # which the call-separation gate [U] correctly refuses.
-  _isAvailable: (partName) ->
+  #
+  # PUBLIC: the lazy doors ask it (Widget.spawnInspector, Widget.createConsole). A class-existence
+  # test cannot answer this question for a LAZY part, which is why those doors ask a PART instead: an
+  # undefined class means BOTH "this artifact does not ship it" and "nobody has fetched it yet", and
+  # those two want opposite responses -- do nothing, versus go and get it. Only a part-level question
+  # separates them. So a lazy door asks this first, and then awaits.
+  isAvailable: (partName) ->
     @_state[partName]?
 
   # The part a class belongs to, or nil for a core class (or a name we know nothing about).
@@ -94,7 +93,7 @@ class PartsRegistry
   ensureLoaded: (partName) ->
     return Promise.resolve() if @_state[partName] is @LOADED
     return @_promises[partName] if @_state[partName] is @LOADING
-    unless @_isAvailable partName
+    unless @isAvailable partName
       return Promise.reject new Error "Fizzygum: no such part '#{partName}' in this build."
 
     @_state[partName] = @LOADING
@@ -113,6 +112,24 @@ class PartsRegistry
   ensureAllLoaded: (partNames) ->
     Promise.all (@ensureLoaded eachName for eachName in partNames)
 
+  # ⚠⚠ THE IDIOM for a call site that needs one or more LAZY parts. Run `thenDo` once they are all
+  # in — and run it SYNCHRONOUSLY when they already are, which is the whole point and the reason this
+  # exists as one method instead of a conditional copy-pasted into every door.
+  #
+  # Why the fast path is not an optimisation but a CORRECTNESS requirement: on every build the
+  # SystemTest suite runs, the harness page presets FIZZYGUM_EAGER_ALL_PARTS, so every part is here
+  # long before anything asks. Going through `.then` regardless would defer the effect by a
+  # microtask, and a microtask moves it a whole world CYCLE later — which the suite measures, cycle
+  # by cycle (../Fizzygum-tests/DETERMINISM.md). Half a dozen doors need exactly this shape; one rule
+  # encoded in two places is how arc 4 produced four bugs of one shape, so it is encoded here, once.
+  #
+  # ⚠ Ask `isAvailable` FIRST at any door that a profile may not ship at all: this method assumes the
+  # parts exist and will reject (via ensureLoaded) if they do not.
+  whenAllLoaded: (partNames, thenDo) ->
+    for eachName in partNames
+      return @ensureAllLoaded(partNames).then thenDo unless @_isLoaded eachName
+    thenDo()
+
   # ensureLoaded + construct. `new (window[className])` deliberately names the class as DATA:
   # buildSystem/check-part-edges.js cannot see through it, which is the point -- core is not
   # allowed to name a part's class as a symbol it needs already defined, and this is the sanctioned
@@ -130,7 +147,7 @@ class PartsRegistry
       part = @_partOf eachName
       continue unless part?
       continue if @_state[part] is @LOADED
-      continue unless @_isAvailable part
+      continue unless @isAvailable part
       needed.push part unless part in needed
     needed
 
@@ -138,8 +155,15 @@ class PartsRegistry
 
   _loadPartPromise: (partName) ->
     spec = window.FIZZYGUM_PARTS[partName]
-    # 1. vendor payloads first: a part's classes may need them at first use.
-    chain = Promise.resolve()
+    # 0. THE META-SYSTEM. Ingesting this part's sources means `new Class` / `new Mixin`, and
+    # ordering them means findLoadOrder -- and a PRECOMPILED tree has none of the three until
+    # something asks: Class and Mixin are the only two classes absent from js/pre-compiled.js.
+    # ⚠⚠ Do NOT "simplify" this to ensureReflectiveLayerLoaded(): that also fetches every EAGER
+    # part's batches (2.29 MB on production), which is the entire saving this part being lazy
+    # bought. ~39 KB versus 2.29 MB. A compile-at-boot tree has already loaded it, and the
+    # promise is memoized, so there it costs nothing.
+    chain = ensureMetaSystemLoaded()
+    # 1. vendor payloads next: a part's classes may need them at first use.
     for eachVendorFile in (spec.vendor ? [])
       chain = chain.then @_createVendorLoadClosure eachVendorFile
     # 2. then its source batches, which are SourceVault.store calls.

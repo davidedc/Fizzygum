@@ -13,6 +13,12 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
   buildIcon: -> new GenericShortcutIconWdgt new TypewriterIconWdgt
 
+  # buildWindow embeds an Example3DPlotWdgt, which is the LAZY 'plots' part -- see
+  # SampleDashboardApp.launch for why this awaits and why the already-loaded path stays synchronous.
+  # No 'maps' here: this is the one sample that shows no map.
+  launch: ->
+    world.parts.whenAllLoaded ["plots"], => super()
+
   buildWindow: ->
     doc = new DocumentWdgt
     sdspw = doc.contents

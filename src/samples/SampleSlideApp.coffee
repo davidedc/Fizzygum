@@ -18,8 +18,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
   # SlidesToolbarWdgt wants the two map tools from the same part -- see SampleDashboardApp.launch
   # for why this awaits, and why the already-loaded path must stay synchronous.
   launch: ->
-    if world.parts.isLoaded "maps" then super()
-    else world.parts.ensureLoaded("maps").then => super()
+    world.parts.whenAllLoaded ["maps", "plots"], => super()
 
   buildWindow: ->
     slideWdgt = new SlideWdgt

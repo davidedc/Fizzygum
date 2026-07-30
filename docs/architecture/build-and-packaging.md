@@ -65,14 +65,22 @@ Plus two properties that are **not** the same question:
 ⚠ A *lazy* part is different: its entry point must await `world.parts.ensureLoaded`, because a guard answers
 "is it here?" and a lazy part needs "get it here".
 
-⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS** —
-`if world.parts.isLoaded "maps" then super() else world.parts.ensureLoaded("maps").then => super()`.
-On every build the SystemTest suite runs, the part is eager and long since present, so going through
-`.then` regardless defers the launch by a microtask, which moves the effect a whole world CYCLE later
-— and the suite measures cycles. (Same rule, same reason, as the reflective layer's
-`reflectiveLayerIsLoaded()` fast path in §5.) `isLoaded` answers "is it here YET"; `_isAvailable`
-answers "did this artifact ship it at all", and for a part that never shipped the first is false
-forever — so it is not a substitute for the guard at an absent-part call site.
+⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS**, which is why there is
+ONE idiom and every door uses it: `world.parts.whenAllLoaded ["maps", "plots"], => super()`.
+`whenAllLoaded` runs its callback **inline** when the parts are already in, and only falls back to a
+promise otherwise. On every build the SystemTest suite runs, the parts are eager and long since
+present, so going through `.then` regardless would defer the launch by a microtask, which moves the
+effect a whole world CYCLE later — and the suite measures cycles. (Same rule, same reason, as the
+reflective layer's `reflectiveLayerIsLoaded()` fast path in §5.) It is one method rather than a
+conditional copied into each door because one rule in two places is how arc 4 produced four bugs of
+one shape.
+
+⚠ **Two different questions, two different methods.** `isAvailable` asks "did this artifact ship this
+part at all" — a `lean` build did not ship the inspectors, and there is genuinely nothing to open.
+`_isLoaded` (private; `whenAllLoaded` is its only caller) asks "is it here YET". A class-existence
+test answers NEITHER for a lazy part: an undefined class means both at once, and they want opposite
+responses. That is why `Widget.spawnInspector` asks `world.parts.isAvailable "meta-tools"` and then
+awaits, rather than guarding on `InspectorWdgt?`.
 
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
 cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and `Widget.grabbedWidgetSwitcheroo`
@@ -110,17 +118,19 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
-| `homepage` | `core` + `meta-tools` + `samples` + `maps` | precompiled | `lazy` | `index.html` | **production** |
+| `homepage` | `core` + `meta-tools` + `samples` + `maps` + `plots` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance: 10 files, 1.3 MB |
 
-⚠ **Production names four parts, and the last two are named for opposite reasons.** `samples` (the
+⚠ **Production names five parts, and they are named for two different reasons.** `samples` (the
 three Examples documents) is EAGER and named so that splitting it out of core stays a packaging change
 rather than a visible one. `maps` is named because it *has* to be — the sample dashboard and the NYC
 slide BUILD maps, so production cannot drop the part — but it is **lazy**, which is what still takes
 the artwork off the first load: a lazy part's classes are absent from `js/pre-compiled.js`, so naming
-it costs the image nothing. Measured when the two were split out of core: production's image went
-1,101,733 B → 1,046,121 B, **−55.8 KB / −5.1%**, with the Examples folder unchanged. `lean` names
-neither, so it drops both outright.
+it costs the image nothing. `plots` is the same story as `maps` (the samples build plots too), and
+`meta-tools` is lazy for the plainest reason of all: nobody opens an inspector during a normal
+session, and opening one already had to await the reflective layer, so the part load joins a wait
+that existed anyway. `samples` is the odd one out — EAGER, and named purely so that splitting it out
+of core stays a packaging change rather than a visible one. `lean` names none of them.
 
 ---
 
@@ -171,6 +181,15 @@ Facts worth knowing before touching any of this:
 - **`Class` and `Mixin` are the only two classes ABSENT from `js/pre-compiled.js`** — they are the pair that compiled
   everything else, so nothing accumulated them into it. The meta-system reaches a precompiled world only through
   this layer.
+- ⚠⚠ **A LAZY PART NEEDS THE META-SYSTEM, AND ONLY THE META-SYSTEM.** Ingesting a part's sources means `new Class` /
+  `new Mixin`, and ordering them means `findLoadOrder` — none of which a precompiled tree has until something fetches
+  them. So steps 1–3 are factored out as `ensureMetaSystemLoaded()` (~39 KB: the two meta sources plus
+  `dependencies-finding-min.js`), and `PartsRegistry._loadPartPromise` awaits **that**, never
+  `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch, 2.29 MB, handing back the entire
+  saving that made the part lazy. Both are memoized, so a part load and a later inspector open share one fetch.
+  Before this split existed, any lazy part on a production tree died with `findLoadOrder is not defined`; nothing
+  caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs
+  run compile-at-boot where the meta-system is present anyway. `fg homepage` now asserts it (§8).
 - Its entire runtime consumer surface is **`Mixin.allMixines` in the two inspectors** (`meta-tools`) and in core's
   `SourceEditsRegistry`. There is no runtime `new Class`/`new Mixin` anywhere outside boot.
 - **`compileFGCode` is NOT part of it.** It is defined in the same file the layer fetches
@@ -246,7 +265,7 @@ nothing about packaging on its own. The ones that do:
 
 | Command | What it proves |
 |---|---|
-| `fg homepage` | the ONLY gate that exercises a production tree: boots it, asserts `preCompiled === true`, no SWCanvas payload, a whole-world snapshot round-trip, and (when the tree says `BUILDFLAG_SOURCES === "lazy"`) that nothing is fetched at boot AND an inspector works after one open |
+| `fg homepage` | the ONLY gate that exercises a production tree: boots it, asserts `preCompiled === true`, no SWCanvas payload, a whole-world snapshot round-trip, and (when the tree says `BUILDFLAG_SOURCES === "lazy"`) that nothing is fetched at boot AND an inspector works after one open. ⚠ It also **loads a LAZY PART** — whichever the manifest says is lazy — and asserts it was absent at boot, that all its classes arrive, and that **zero eager batches** came with it. That check runs BEFORE the inspector one on purpose: opening an inspector pulls the meta-system in on its way past and would mask a broken part load entirely |
 | `build_and_smoke.sh --profile lean` | the appliance boots and ships no source text |
 | `node scripts/build-tree-fingerprint.js compare <a> <b>` (tests repo) | tree equivalence: the stored-source multiset + every file's size and hash |
 

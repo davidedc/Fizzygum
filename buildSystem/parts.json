@@ -90,7 +90,6 @@
         "src/meta",
         "src/apps",
         "src/toolbars",
-        "src/graphs-plots-charts",
         "src/events-input",
         "src/dataflow",
         "src/spreadsheet",
@@ -107,8 +106,10 @@
     },
 
     "meta-tools": {
-      "//": "The in-world INSPECTORS: InspectorWdgt, ClassInspectorWdgt (its subclass) and ConsoleWdgt. Split out of src/meta so that a lean/appliance profile can leave them out -- src/meta itself CANNOT become a part, because Class and Mixin live there and are the compile bootstrap. ⚠ This is the ONE non-core part PRODUCTION SHIPS: profiles/homepage.json names it, and no other profile-shipped artifact names any other part. The homepage has always carried the inspectors and the split out of core must not change that; a `lean` profile (arc 5 phase 2, sources: none) is what will drop it. Core reaches it through exactly two guarded sites, Widget.spawnInspector and Widget.createConsole.",
-      "dirs": ["src/meta-tools"]
+      "//": "The in-world INSPECTORS: InspectorWdgt, ClassInspectorWdgt (its subclass) and ConsoleWdgt. Split out of src/meta so that a lean/appliance profile can leave them out -- src/meta itself CANNOT become a part, because Class and Mixin live there and are the compile bootstrap. Production ships it (profiles/homepage.json names it) and always has; the `lean` profile is what drops it outright. Core reaches it through exactly two sites, Widget.spawnInspector and Widget.createConsole.",
+      "//eager": "LAZY. An inspector is the definition of on-demand: nobody opens one during a normal session, and on a precompiled tree a lazy part's classes are absent from js/pre-compiled.js, so production stops paying for them up front. It pairs naturally with sources: \"lazy\" -- opening an inspector ALREADY had to await the reflective layer (an inspector reads class member maps, which exist only once the source text is ingested), so the part load joins an await that was there anyway. ⚠ The two call sites must NOT use `if InspectorWdgt?`: for a lazy part that reads 'not fetched yet' and swallows the click forever. They ask world.parts.isAvailable (did this artifact ship it at all) and then await.",
+      "dirs": ["src/meta-tools"],
+      "eager": false
     },
 
     "fizzytiles": {
@@ -134,6 +135,14 @@
     "demos": {
       "//": "The demo/parts-bin catalogue (DemoMenus, reached as `demoMenus`) and the sample widgets it shows off: the bouncer, the pen, the pointer. Arc 3 extracted DemoMenus out of MenusHelper for exactly this; its own header already said 'arc 4 turns that into part membership'.",
       "dirs": ["src/demos"]
+    },
+
+    "plots": {
+      "//": "The plots/graphs family: AxisWdgt, PlotWithAxesWdgt, the four Example*Plot widgets and the 3D plot's little geometry kit (Point3D, Grid3D, PlaneGrid3D), plus the four creator buttons that make them, the PlotsToolbarWdgt palette and the button that pops it. 12 KB of code and ~19 KB of 3D scaffolding, none of it reachable until someone asks for a chart.",
+      "//eager": "LAZY, for the same reason as maps: production ships it (the sample dashboard, the sample slide and the sample doc all BUILD plots, so it cannot be dropped) but a lazy part's classes are absent from js/pre-compiled.js, so the first load does not carry it.",
+      "//buttons": "⚠ The four creator buttons AND PlotsToolbarWdgt/PlotsToolbarCreatorButtonWdgt live here, not in core, and for two different reasons. The buttons: a creator button has no async seam (see the maps part), so it must sit in the part it creates from. The TOOLBAR: every one of its four items is a plot button, so a core toolbar filtering them out would open an EMPTY palette window -- worse than not offering it. Keeping the palette and its opener in the part means SuperToolbarWdgt filters ONE button and the palette is simply not offered until plots is in.",
+      "dirs": ["src/graphs-plots-charts"],
+      "eager": false
     },
 
     "maps": {

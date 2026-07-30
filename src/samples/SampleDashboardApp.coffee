@@ -28,8 +28,7 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
   # invokes it through reflection by name and ignores the return value (the FridgeMagnetsApp
   # precedent, src/fizzytiles-launcher/).
   launch: ->
-    if world.parts.isLoaded "maps" then super()
-    else world.parts.ensureLoaded("maps").then => super()
+    world.parts.whenAllLoaded ["maps", "plots"], => super()
 
   buildWindow: ->
     slideWdgt = new DashboardWdgt
