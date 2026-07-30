@@ -3953,11 +3953,17 @@ class Widget extends TreeNode
   # (`world.add new InspectorWdgt target`): when free-floating it paints its own
   # background and is resized via its @resizer handle. This wrapper stays the
   # default for the menu/inspect paths; the naked path is the additional mode.
+  # The inspectors are the `meta-tools` part (they ship everywhere except a profile that explicitly
+  # drops them), so these two methods -- the only places core NAMES those classes -- guard on the
+  # class existing, per the standing idiom for an optional part. buildSystem/check-part-edges.js
+  # enforces it. The guard belongs HERE, where the class is named, not at the callers.
   spawnInspector: (inspectee) ->
+    return unless InspectorWdgt?
     inspector = new InspectorWdgt inspectee
     world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
   createConsole: ->
+    return unless ConsoleWdgt?
     inspector = new ConsoleWdgt @
     world.openFrameWith inspector, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
 

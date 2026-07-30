@@ -63,7 +63,7 @@ the other 9 parts carries `inHomepage: false`.
 
 | # | Decision | Choice | Status |
 |---|---|---|---|
-| PR-D1 | Invocation | `./build_it_please.sh --profile homepage` (manifest in `buildSystem/profiles/`). Plain `./build_it_please.sh` = the dev profile (compile-at-boot, all parts, all entries, tests). **`[OWNER RULING 2026-07-30]` `--homepage` DIES IMMEDIATELY in Phase 1 — there is no alias period.** No deletion note, no BACKLOG tail, and R-4 (the never-dying alias) is thereby eliminated rather than mitigated. Every call site changes in the same commit; all of them are local workspace tooling or the tests repo, enumerated in §4 Phase 1. **`[REVISED 2026-07-30]` PR-D1's stated premise — "a hardcoded part list from arc 4" — is FALSE (§2.0(1)): part selection is already declarative in `parts.json`. The invocation decision stands; what the manifest ADDS over today is form + entries + extras + the pruning tail, not part selection. ⚠ `--notests` must be answered here too (§2.1) or it survives as the last flag.** | LOCKED (owner) **except the `--notests` question** |
+| PR-D1 | Invocation | `./build_it_please.sh --profile homepage` (manifest in `buildSystem/profiles/`). Plain `./build_it_please.sh` = the dev profile (compile-at-boot, all parts, all entries, tests). **`[OWNER RULING 2026-07-30]` `--homepage` DIES IMMEDIATELY in Phase 1 — there is no alias period.** No deletion note, no BACKLOG tail, and R-4 (the never-dying alias) is thereby eliminated rather than mitigated. Every call site changes in the same commit; all of them are local workspace tooling or the tests repo, enumerated in §4 Phase 1. **`[REVISED 2026-07-30]` PR-D1's stated premise — "a hardcoded part list from arc 4" — is FALSE (§2.0(1)): part selection is already declarative in `parts.json`. The invocation decision stands; what the manifest ADDS over today is form + entries + extras + the pruning tail, not part selection. ⚠ `--notests` must be answered here too (§2.1) or it survives as the last flag.** **`[OWNER RULING 2026-07-30]` `--notests` becomes a NAMED PROFILE** (`buildSystem/profiles/dev-notests.json`: every part except `harness`/`macros`, compile-at-boot, all entries). The flag dies with `--homepage`; zero flavour flags survive. Informing the choice: nothing in the workspace ever PASSES `--notests` — `fg` never does, `build_and_smoke.sh` only recognises it to drop the SW leg, `build_and_test.sh` only to reject it — so it is a hand-typed option whose capability is cheap to keep as data, and deleting it outright risked removing something the owner uses by hand. | LOCKED (owner) |
 | PR-D2 | `form: precompiled` | Runs arc 2's external puppeteer driver against the freshly built tree (native entry) and writes `pre-compiled.js`. Per-part precompiled chunks (accumulator tagged by part) are **banked** — v1 profiles load parts in source form (arc-4 P-D6). | LOCKED |
 | PR-D3 | `sources: "lazy"` | New seam: source batches not loaded at boot; first consumer of the Class/Mixin member maps (opening an inspector) triggers load+ingest of the needed part's batch (frame-paced, existing machinery). `"none"` = the lean/appliance profile: no batches shipped at all, inspectors/meta-tools part excluded. **`[REVISED 2026-07-30]` ⚠⚠ it CANNOT just call arc 4's `ensureLoaded` — that path is built for a part whose classes DO NOT EXIST YET, and both of its defining choices are wrong here. `PartsRegistry._ingestPartPromise` (a) filters to `fresh = (name for name in SourceVault.namesForPart partName when not window[name]?)`, and on a precompiled tree EVERY core class is already defined, so `fresh` is empty and it would ingest NOTHING; and (b) its closure passes `justIngestSources = false`, i.e. compile-and-execute, which is precisely what must not happen to a live class (`new Class src` would redefine it underneath running instances — the comment at `PartsRegistry.coffee:160-164` says so). What `sources: lazy` needs is the OTHER mode, the one the precompiled boot already uses: `storeSourceAndPotentiallyCompileItAndExecuteIt name, true` over ALL of the part's names. So the seam is a SECOND ingest mode on the registry (`ensureSourcesIngested`, ingest-only, no freshness filter), not a reuse of the existing one. Cheap, but it is real work and it must not be estimated as "already built".** ⚠⚠ THE COMPILER SHIPS IN EVERY PROFILE — the 2026-07-28 inventory proved it product-critical (FizzyPaint tools are CS source strings; spreadsheet formulas incl. RELOAD of saved sheets; `$src` snapshot records; Fizzytiles LCL). A compiler-less artifact is a non-interactive kiosk and is OUT OF SCOPE. | LOCKED |
 | PR-D4 | Flavour parity gate | Before deleting the `$homepage` branches: build old-`--homepage` and `--profile homepage` from the same tree and assert the output TREES are equivalent (file list + key byte-compares; timestamps/build-info exempt). Only then delete the branches. **`[REVISED 2026-07-30]` THE TOOL ALREADY EXISTS**: arc 4 borrowed this pattern early and wrote `Fizzygum-tests/.scratch/homepage-fingerprint.js` (stored-source NAMES + file list + sizes + SHA-256, build-stamped boot bundles exempt), which is what proved arc 4's partition byte-equivalent (433 sources both sides). It was in a **gitignored** `.scratch/`, so step one of this arc PROMOTED it to `Fizzygum-tests/scripts/build-tree-fingerprint.js` (see Phase −1 as-executed) — a gate cannot live in scratch. ⚠ Arc 4's case law: `buildVersion` embeds the commit SHA in both bundles, so a DIRTY tree changes bundle bytes; compare at a clean tree or keep the bundles exempt. | LOCKED |
@@ -294,6 +294,18 @@ profile a common mechanism instead of two more bespoke flags.
      this way and no other" is the gate. Note the useful asymmetry: deleting the 5 dead pointer icons
      changes the **dev** tree only (homepage already pruned them), and moving the intermediates out of
      the tree changes **both** — by exactly the 4 files that the homepage prune used to delete.
+**`[SEQUENCING, 2026-07-30]` Phases 0 and 1 should be executed as ONE step, and Phase 1.5 should
+come BEFORE them.** Two reasons, both learned inside this arc:
+- **0 and 1 merge** because Phase 0 as authored ("the loader, no behaviour change") builds a
+  mechanism whose only caller arrives in Phase 1 — the exact anti-pattern this arc has already
+  corrected twice (arc 4's "don't write API ahead of its callers"; Phase 0.5 step 4's deferral). A
+  loader nothing reads cannot be meaningfully gated either: "the dev tree is byte-identical" is
+  satisfied trivially by dead code. Introduce the profile mechanism and switch BOTH flavours onto it
+  in one step, gated by PR-D4 parity.
+- **1.5 first** because it is orthogonal partition work (it does not touch flavour logic at all), and
+  doing it first means Phase 1's parity comparison is made against the FINAL partition rather than
+  one that is about to change again.
+
 - **Phase 0 — profile loader:** `build_it_please.sh` (or a small python helper) reads the
   manifest into shell vars; plain invocation synthesizes the dev profile. No behavior change;
   gate: byte-identical dev tree vs pre-phase build (same fingerprint tool, dev flavour).
@@ -405,6 +417,21 @@ profile a common mechanism instead of two more bespoke flags.
   supposed to be pure repartitioning, so PR-D4 parity must hold across it.
   ⚠ Expect churn in the ~15-test inspector set only if a class NAME changes — it does not here, so
   zero-churn is the expectation; a screenshot diff means something moved that shouldn't have.
+
+  **AS EXECUTED 2026-07-30 (done BEFORE phases 0/1, per the sequencing note above).** New part
+  `meta-tools` = `src/meta-tools/` holding `InspectorWdgt`, `ClassInspectorWdgt` and `ConsoleWdgt`;
+  `Class`/`Mixin` stay in `src/meta`. Verified before moving anything: the two meta-system files
+  reference the three classes in COMMENTS only, and the sole inheritance edge
+  (`ClassInspectorWdgt extends InspectorWdgt`) is INSIDE the new part, so nothing crosses the
+  boundary. The two core sites are guarded (`return unless InspectorWdgt?` in `Widget.spawnInspector`,
+  `return unless ConsoleWdgt?` in `Widget.createConsole`) — at the site that NAMES the class, not at
+  the callers. `inHomepage: true`, so production still carries the inspectors.
+  Gates: `check-part-edges` went from 432 core sources vs 77 part-owned classes in 9 parts to
+  **429 vs 80 in 10**, still 0 unguarded references and 0 inheritance edges; `check-shippable-coverage`
+  0 gaps. Tree delta exactly as predicted: the same 502 source NAMES with 3 re-parted, one new
+  `sources_batch_meta-tools_0.js`, and the core batches repacked.
+  Ghost refs swept: `docs/plans/container-regularization-plan.md` and `Fizzygum/CLAUDE.md` (archived
+  plans keep the old paths — they are immutable history).
 - **Phase 2 — the new axes:** implement `sources: lazy` (the ingest-only seam, per PR-D3 — NOT
   `ensureLoaded`) and `sources: none` (excluding the `meta-tools` part Phase 1.5 created); add a
   `lean` profile; headless boot-smoke for each shipped profile (console-error-free, `preCompiled`

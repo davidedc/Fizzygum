@@ -135,7 +135,7 @@ unconverted). (b) `_applyExtent` (`:120`) keeps `@listContents` pinned to the fr
 Public API to preserve: `select(item, trigger)` → `@target[@action]`; the `format`/`labelGetter` mechanism
 (the `InspectorWdgt` "markOwnProperties" colouring).
 
-**`ListWdgt` consumers:** `meta/InspectorWdgt.coffee` (the property panes — the main, pixel-critical
+**`ListWdgt` consumers:** `meta-tools/InspectorWdgt.coffee` (the property panes — the main, pixel-critical
 client), `basic-widgets/ScrollPanelWdgt.coffee` (base plumbing), and `macros/MACRO-PATTERNS.md` (test docs).
 
 ### 3.5 The divider — an inline `RectangleWdgt` (no class)

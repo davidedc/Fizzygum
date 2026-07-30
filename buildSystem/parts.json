@@ -87,6 +87,12 @@
       ]
     },
 
+    "meta-tools": {
+      "//": "The in-world INSPECTORS: InspectorWdgt, ClassInspectorWdgt (its subclass) and ConsoleWdgt. Split out of src/meta so that a lean/appliance profile can leave them out -- src/meta itself CANNOT become a part, because Class and Mixin live there and are the compile bootstrap. ⚠ This is the FIRST non-core part that SHIPS IN PRODUCTION (inHomepage is true, unlike every other part): the homepage has always carried the inspectors and this split must not change that. Only a profile that explicitly drops it (arc 5's `lean`, sources: none) does. Core reaches it through exactly two guarded sites, Widget.spawnInspector and Widget.createConsole.",
+      "dirs": ["src/meta-tools"],
+      "inHomepage": true
+    },
+
     "fizzytiles": {
       "//": "The Fizzytiles ('fridge magnets') engine: the tile widgets, the LiveCodeLang compiler/preprocessor/runner, and the SW3D output pane. THE LAZY PART -- the largest self-contained app in the tree, with a vendored 3D payload, reached from exactly two entry points. Its LAUNCHER is deliberately a separate, EAGER part (see fizzytiles-launcher) so the desktop icon exists before the engine does. 'eager: false' means index.html does not carry it until someone launches it; the harness and index-sw.html override that (FIZZYGUM_EAGER_ALL_PARTS) because a part arriving mid-test would be frame-paced and therefore cycle-count-dependent.",
       "dirs": ["src/fizzytiles"],
