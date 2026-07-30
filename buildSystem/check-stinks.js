@@ -43,13 +43,13 @@ const SRC = path.resolve(__dirname, '../src');
 // STRINGS — so e.g. undefined-literal counts `typeof x is 'undefined'`. That is accepted: a ratchet
 // measures REGRESSION, not an absolute. (Masking upgrade = plan §8.8 backlog.)
 const STINKS = [
-  { id: 'debugger-statement', baseline: 36,   // Pharo: ReCodeCruftLeftInMethodsRule
+  { id: 'debugger-statement', baseline: 33,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
     why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
     re: /^\s*debugger\b/ },
-  { id: 'undefined-literal', baseline: 89,
+  { id: 'undefined-literal', baseline: 83,   // tightened 89->83 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
     why: "the codebase uses `nil` (src/boot/globalFunctions.coffee), never `undefined` — a CLAUDE.md convention that until now was manual-only",
     re: /\bundefined\b/ },
-  { id: 'null-literal', baseline: 10,
+  { id: 'null-literal', baseline: 9,   // tightened 10->9 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
     why: "the codebase uses `nil` (which IS undefined), never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
     re: /\bnull\b/ },
   { id: 'wall-clock', baseline: 19,
@@ -61,7 +61,7 @@ const STINKS = [
   { id: 'math-random', baseline: 5,
     why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
     re: /\bMath\.random\b/ },
-  { id: 'instanceof-type-test', baseline: 95,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines)
+  { id: 'instanceof-type-test', baseline: 93,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     re: /\binstanceof\b/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).

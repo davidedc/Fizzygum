@@ -18,7 +18,6 @@ reactToTargetConnection   # connection protocol hook
 paintFunction             # icon appearances' polymorphic paint hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
-unTouch             # MouseSensorWdgt touch API
 setMouseInputMode   # PreferencesAndSettings user setting
 setTouchInputMode   # PreferencesAndSettings user setting
 toggleVisibility    # Widget user verb

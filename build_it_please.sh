@@ -672,7 +672,19 @@ if ! $homepage ; then
   cat src/boot/numbertimes.coffee >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
-printf "\nbuildVersion = 'version of $(date)'" >> $SCRATCH_PATH/fizzygum-boot.coffee
+# Stamp the build with its SOURCE COMMIT, never the wall clock. `buildVersion` is a human
+# affordance only — nothing reads it in code; you type it in the browser console to see which build
+# you are looking at — but it is compiled into BOTH shipped boot bundles, so whatever goes in here
+# lands in their bytes. With $(date) in it, every build of identical sources produced a different
+# bundle, which made a byte/hash comparison useless for the one question it should answer: "did this
+# bundle actually change?". A commit id answers "which build is this?" at least as well AND is a pure
+# function of the sources, so two builds of a clean tree at the same commit are now byte-identical.
+# All three git reads degrade to a harmless literal outside a git checkout (e.g. a source tarball).
+FG_BUILD_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "no-git")
+FG_BUILD_WHEN=$(git log -1 --format=%cI 2>/dev/null || echo "unknown-date")
+# a dirty tree cannot be named by a commit, so say so rather than claim the commit's identity
+if [ -n "$(git status --porcelain 2>/dev/null)" ]; then FG_BUILD_DIRTY=" +local-changes"; else FG_BUILD_DIRTY=""; fi
+printf "\nbuildVersion = 'Fizzygum %s (%s)%s'" "$FG_BUILD_SHA" "$FG_BUILD_WHEN" "$FG_BUILD_DIRTY" >> $SCRATCH_PATH/fizzygum-boot.coffee
 
 coffee -b -c -o $BUILD_PATH/js/ $SCRATCH_PATH/fizzygum-boot.coffee
 echo "... done compiling boot file"
