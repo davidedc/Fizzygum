@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzygum — how build &amp; packaging works</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;  --surface: #fcfcfb;
+    --ink:       #0b0b0b;  --ink-2:   #52514e;  --muted: #898781;
+    --hairline:  #e1e0d9;  --border:  rgba(11,11,11,0.10);
+    --s1: #2a78d6; /* blue   — test/SW-side things            */
+    --s2: #eb6834; /* orange — core / product                  */
+    --s3: #1baf7a; /* aqua   — optional parts / mechanisms     */
+    --s4: #eda100; /* yellow — flag-gated / auxiliary          */
+    --wash-s1: rgba(42,120,214,0.08);
+    --wash-s3: rgba(27,175,122,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --wash-s1: rgba(57,135,229,0.14);
+      --wash-s3: rgba(25,158,112,0.14);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.7em; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.25em; margin: 2.4em 0 .5em; }
+  h3 { font-size: 1.02em; margin: 1.5em 0 .4em; }
+  p, li { color: var(--ink-2); }
+  strong { color: var(--ink); }
+  .kicker { color: var(--muted); font-size: .85em; letter-spacing: .06em; text-transform: uppercase; }
+  .sub { color: var(--muted); font-size: .9em; margin-bottom: 26px; }
+  .sub a { color: var(--s1); }
+  figure { margin: 20px 0 26px; background: var(--surface); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px 12px; overflow-x: auto; }
+  figcaption { font-size: .82em; color: var(--muted); margin-top: 10px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  code { background: var(--page); border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: .85em; line-height: 1.5; color: var(--ink-2); }
+  pre .c { color: var(--muted); }
+  .callout { border-left: 3px solid var(--s1); background: var(--wash-s1);
+             padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; font-size: .95em; }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline);
+           color: var(--ink-2); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; }
+  /* partition bar */
+  .bar { display: flex; gap: 2px; height: 30px; border-radius: 5px; overflow: hidden; margin: 6px 0 2px; }
+  .bar div { min-width: 4px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: .82em; color: var(--ink-2); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chip { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  /* profile cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 14px 0; }
+  .card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--surface); font-size: .86em; }
+  .card b { display: block; font-size: 1.05em; margin-bottom: 6px; color: var(--ink); }
+  .card .facts { color: var(--ink-2); line-height: 1.55; }
+  .card .shape { margin-top: 8px; color: var(--muted); font-size: .92em; }
+  /* boot timelines */
+  .trow { display: flex; gap: 2px; align-items: stretch; margin: 3px 0; }
+  .trow .seg { border-radius: 4px; padding: 4px 8px; font-size: .74em; line-height: 1.3;
+               color: var(--ink); border: 1px solid var(--border); background: var(--page); white-space: nowrap; }
+  .seg.world { background: var(--wash-s3); border-color: var(--s3); }
+  .tl-label { font-size: .8em; color: var(--muted); margin: 12px 0 2px; }
+  .derive td:first-child { white-space: nowrap; color: var(--ink); }
+  svg text { font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--ink-2); }
+  svg text.t { fill: var(--ink); font-weight: 600; }
+  svg text.m { fill: var(--muted); font-size: 11px; }
+  svg .box { fill: var(--page); stroke: var(--border); rx: 8; }
+  svg .flow { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#arr); }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Fizzygum · explainer</p>
+  <h1>How build &amp; packaging works</h1>
+  <p class="sub">The visual companion to the authoritative reference,
+  <span class="mono">docs/architecture/build-and-packaging.md</span>. The history of how the
+  system got this shape lives in <span class="mono">docs/archive/build-arc-1…5-*.md</span>.</p>
+
+  <p>Two facts make Fizzygum's packaging unusual. First, there is <strong>no module system</strong>:
+  every class is a global, shipped as escaped source <em>text</em> and compiled in the browser —
+  so "what an artifact contains" means <em>which named slices of source text it carries, which
+  pages it has, and whether classes arrive as text-to-compile or as a pre-compiled image</em>.
+  Second, everything runs by <strong>double-clicking a file</strong> (over <code>file://</code>, no
+  server), so all loading is script injection. A CoffeeScript compiler ships in <em>every</em>
+  artifact — not as a dev tool, but because paint brushes, spreadsheet formulas, saved-world
+  records, and Fizzytiles programs are all compiled from source at runtime.</p>
+
+  <h2>Two files decide everything</h2>
+
+  <figure>
+    <svg viewBox="0 0 820 180" width="100%">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+      <rect class="box" x="14" y="14" width="240" height="52" style="stroke:var(--s3)"/>
+      <text class="t" x="30" y="36">buildSystem/parts.json</text>
+      <text class="m" x="30" y="52">what the parts ARE + what each OWNS</text>
+      <rect class="box" x="14" y="106" width="240" height="52" style="stroke:var(--s2)"/>
+      <text class="t" x="30" y="128">buildSystem/profiles/&lt;name&gt;.json</text>
+      <text class="m" x="30" y="144">which ship, in what form, which pages</text>
+      <rect class="box" x="330" y="60" width="200" height="52"/>
+      <text class="t" x="346" y="82">buildProfile.py</text>
+      <text class="m" x="346" y="98">the ONE reader; derives the rest</text>
+      <rect class="box" x="600" y="60" width="206" height="52"/>
+      <text class="t" x="616" y="82">the build</text>
+      <text class="m" x="616" y="98">build.py + build_it_please.sh</text>
+      <path class="flow" d="M256 40 C 300 40, 300 70, 328 78"/>
+      <path class="flow" d="M256 132 C 300 132, 300 102, 328 94"/>
+      <path class="flow" d="M532 86 L 598 86"/>
+    </svg>
+    <figcaption><span class="mono">parts.json</span> is the partition; a profile is a flavour.
+    A part does not know which artifacts contain it; a profile does not know what a part is made
+    of. Nothing else re-implements either file's rules.</figcaption>
+  </figure>
+
+  <h2>A part — a named slice that comes and goes as a unit</h2>
+
+  <p>Every shipping directory belongs to exactly one of the <strong>11 parts</strong>; a source
+  file no part claims is a build failure. A part owns up to four kinds of thing — sources
+  (<code>dirs</code>), copied files (<code>assets</code>), assembled vendor payloads
+  (<code>vendor</code>), and boot-bundle pieces (<code>bootPrelude</code>) — and all four appear
+  or vanish together with it.</p>
+
+  <figure>
+    <div class="bar" aria-label="The partition, roughly by source size">
+      <div style="flex:80; background:var(--s2)" title="core"></div>
+      <div style="flex:4; background:var(--s3)" title="meta-tools"></div>
+      <div style="flex:3; background:var(--s3)" title="fizzytiles"></div>
+      <div style="flex:1; background:var(--s3)" title="fizzytiles-launcher"></div>
+      <div style="flex:3; background:var(--s4)" title="demos"></div>
+      <div style="flex:2; background:var(--s4)" title="dev-tools"></div>
+      <div style="flex:2; background:var(--s4)" title="dev-icons"></div>
+      <div style="flex:2; background:var(--s4)" title="patch-programming-experimental"></div>
+      <div style="flex:2; background:var(--s1)" title="macros"></div>
+      <div style="flex:4; background:var(--s1)" title="harness"></div>
+      <div style="flex:2; background:var(--s4)" title="video-player"></div>
+    </div>
+    <div class="legend">
+      <span><span class="chip" style="background:var(--s2)"></span>core (~80% of source bytes)</span>
+      <span><span class="chip" style="background:var(--s3)"></span>product-optional: meta-tools · fizzytiles(+launcher)</span>
+      <span><span class="chip" style="background:var(--s4)"></span>dev/demo: demos · dev-tools · dev-icons · patch-programming-experimental · video-player</span>
+      <span><span class="chip" style="background:var(--s1)"></span>test-side: macros · harness</span>
+    </div>
+    <figcaption>The 11 parts, roughly to source-size scale. The test machinery is just two parts
+    like any other; nothing about tests is special-cased in the build.</figcaption>
+  </figure>
+
+  <p>Two properties are deliberately <em>separate questions</em>:</p>
+  <ul>
+    <li><strong>Inclusion</strong> — is the part in this artifact at all? Decided by the profile.
+      An absent part must be a no-op at every call site, via the class-existence guard idiom
+      (<code>if DemoMenus?</code>); a build gate fails on any unguarded core reference to a
+      part-owned class.</li>
+    <li><strong>Eagerness</strong> — at boot, or on demand? A <em>lazy</em> part (today:
+      the Fizzytiles engine on <code>index.html</code>) is fetched by <code>world.parts</code>
+      when something launches it — and since classes are source text, its source arrives
+      <em>with</em> it. A lazy part's entry point awaits
+      <code>world.parts.ensureLoaded(…)</code> instead of using a guard: a guard answers
+      "is it here?", a lazy part needs "get it here".</li>
+  </ul>
+
+  <h2>A profile — four facts</h2>
+
+<pre>{ "parts":   ["core", "meta-tools"],   <span class="c">// "all" | [names] | {"allExcept": [names]}</span>
+  "form":    "precompiled",            <span class="c">// "compile-at-boot" | "precompiled"</span>
+  "sources": "lazy",                   <span class="c">// "background" | "lazy" | "none" (precompiled only)</span>
+  "entries": ["index.html"] }          <span class="c">// "all" | [names]</span></pre>
+
+  <div class="cards">
+    <div class="card"><b>dev</b>
+      <div class="facts">parts: all · compile-at-boot · entries: all</div>
+      <div class="shape">the inner loop + the whole 269-test suite; always fresh, no packaging steps</div></div>
+    <div class="card"><b>dev-notests</b>
+      <div class="facts">all except harness · compile-at-boot · entries: all</div>
+      <div class="shape">dev without the test machinery</div></div>
+    <div class="card" style="border-color:var(--s2)"><b>homepage</b>
+      <div class="facts">core + meta-tools · precompiled · sources: lazy · index.html</div>
+      <div class="shape">production — 3.64 MB / 26 files</div></div>
+    <div class="card"><b>lean</b>
+      <div class="facts">core · precompiled · sources: none · index.html</div>
+      <div class="shape">the appliance — 10 files, 1.3 MB</div></div>
+  </div>
+
+  <p>There are <strong>no flavour flags</strong>. <code>./build_it_please.sh</code> builds the dev
+  profile; <code>--profile homepage</code> builds production; an unknown argument is a hard error
+  that lists the available profiles. (<code>--noSyntaxCheck</code> and the video-copy switches
+  remain <em>invocation</em> knobs by design: a profile describes an artifact, not how carefully
+  you checked it or where its gigabytes get copied from.)</p>
+
+  <h2>Everything else is derived</h2>
+  <p>The heart of the design: every question the build once answered with a flavour check is
+  computed from the four facts. None of this is declared anywhere:</p>
+
+  <figure>
+    <table class="derive">
+      <tr><th>From…</th><th>…the build derives</th></tr>
+      <tr><td>does <b>harness</b> ship?</td>
+          <td>the <code>js/tests</code> symlink, the load-tests boot flag, the two tests-repo
+              build gates, and (inverted) stripping the dead <code>if Automator?</code> branches</td></tr>
+      <tr><td>does any entry render through SWCanvas?</td>
+          <td>assembling the SWCanvas boot bundle, and shipping (or re-pruning) the ~90 MB of
+              font atlases</td></tr>
+      <tr><td>the shipping parts themselves</td>
+          <td>every asset copy, vendor payload, and boot-bundle piece in the tree</td></tr>
+      <tr><td><code>form: precompiled</code></td>
+          <td>running the pre-compile driver on the freshly built tree, then minifying in place</td></tr>
+      <tr><td>the <code>sources</code> policy</td>
+          <td>whether <code>js/coffeescript-sources/</code> exists at all, and when (if ever) the
+              reflective layer loads</td></tr>
+      <tr><td><code>form</code> + <code>sources</code></td>
+          <td>which smoke a built tree gets, and whether the suite runner may run against it</td></tr>
+    </table>
+    <figcaption>Deriving instead of declaring is what let every per-flavour branch and prune list
+    in the build script be deleted — there is nothing left to hand-maintain or forget.</figcaption>
+  </figure>
+
+  <h2>Entry pages, bundles, and what boot looks like</h2>
+  <p>Each entry page bakes in its renderer and its part-loading policy.
+  <code>index.html</code> loads the native bundle (~32 KB: boot + the 3D core Fizzytiles needs);
+  <code>index-sw.html</code> and the test-harness page load the full software-renderer bundle
+  (byte-exact pixels for the suite). The harness page loads <em>every</em> part at boot, so the
+  269 tests always see the whole world — laziness is a product-page behaviour only.</p>
+
+  <div class="tl-label">dev (compile-at-boot): the sources ARE the program</div>
+  <div class="trow">
+    <div class="seg">native bundle ~32 KB</div>
+    <div class="seg">compiler</div>
+    <div class="seg">source batches</div>
+    <div class="seg">compile ~500 classes (behind the spinner)</div>
+    <div class="seg world">world — everything resident</div>
+  </div>
+
+  <div class="tl-label">homepage (precompiled + sources: lazy): the image is the program</div>
+  <div class="trow">
+    <div class="seg">native bundle</div>
+    <div class="seg">pre-compiled image</div>
+    <div class="seg world">world — immediately</div>
+    <div class="seg">nothing else is fetched… until an inspector opens (then the 2.28 MB reflective layer loads, once)</div>
+  </div>
+
+  <div class="tl-label">lean (precompiled + sources: none): 10 files, 1.3 MB, sources never</div>
+  <div class="trow">
+    <div class="seg">native bundle</div>
+    <div class="seg">pre-compiled image</div>
+    <div class="seg world">world — immediately (no inspectors; runtime compiler still present)</div>
+  </div>
+  <figure style="padding:10px 18px"><figcaption>Production's source text — 62.7% of its bytes —
+  is no longer part of anyone's page load unless they open an inspector.</figcaption></figure>
+
+  <h2>The reflective layer</h2>
+  <p>"The reflective layer" is the class source text plus the meta-system that parses it — what
+  lets Fizzygum <em>show and rewrite its own code</em>. On a precompiled tree it is not needed to
+  run the world, so it becomes a policy (<code>sources</code>): <strong>background</strong> —
+  fetch it once the world is up; <strong>lazy</strong> — fetch it on first demand (opening an
+  inspector, or loading a snapshot that carries class-level source edits); <strong>none</strong> —
+  ship none of it (no inspectors; snapshots with class-level source edits are refused with a
+  clear error). What never varies: the runtime <em>compiler</em> and <code>compileFGCode</code>
+  ship in every profile — runtime compilation is product behaviour, not a dev affordance.</p>
+
+  <h2>Launching a lazy part</h2>
+  <figure>
+    <svg viewBox="0 0 820 118" width="100%">
+      <rect class="box" x="14"  y="20" width="150" height="40"/>
+      <text x="28" y="38">Fizzytiles launcher</text>
+      <text class="m" x="28" y="53">(its own eager mini-part)</text>
+      <rect class="box" x="204" y="20" width="200" height="40" style="stroke:var(--s3)"/>
+      <text x="218" y="38">world.parts.ensureLoaded</text>
+      <text class="m" x="218" y="53">"fizzytiles" (+ requires)</text>
+      <rect class="box" x="444" y="20" width="180" height="40"/>
+      <text x="458" y="38">inject vendor + sources</text>
+      <text class="m" x="458" y="53">3D engine ~23 KB + batches</text>
+      <rect class="box" x="664" y="20" width="142" height="40" style="stroke:var(--s2)"/>
+      <text x="678" y="38">compile, open</text>
+      <text class="m" x="678" y="53">once per session</text>
+      <path class="flow" d="M166 40 L 202 40"/>
+      <path class="flow" d="M406 40 L 442 40"/>
+      <path class="flow" d="M626 40 L 662 40"/>
+      <text class="m" x="14" y="100">A saved world containing a fridge loads the part automatically before deserializing. Loaded parts stay loaded; resetWorld resets state, never code.</text>
+    </svg>
+    <figcaption>The launcher stays eager (the desktop icon and snapshot resolution need its class
+    at boot); the 9-file engine is the lazy payload.</figcaption>
+  </figure>
+
+  <h2>The safety net</h2>
+  <table>
+    <tr><th>Gate</th><th>Fails the build / check when…</th></tr>
+    <tr><td><span class="mono">check-shippable-coverage</span></td><td>a source file exists that no part claims</td></tr>
+    <tr><td><span class="mono">check-part-edges</span></td><td>core references a part-owned class without a guard</td></tr>
+    <tr><td><span class="mono">check-source-vault</span> · <span class="mono">check-whole-file-markers</span> · <span class="mono">check-region-markers</span></td><td>a retired mechanism (source-string globals; either marker kind) reappears — tombstones held at zero</td></tr>
+    <tr><td>profile validation</td><td>an unknown key, a nonexistent part/page (a rename fails the build instead of silently shipping less), a profile without core, <span class="mono">sources: none</span> with meta-tools or a lazy part</td></tr>
+    <tr><td><span class="mono">fg homepage</span></td><td>the production tree misbehaves — it boots it, asserts it really is precompiled, carries no SWCanvas payload, survives a whole-world snapshot round-trip, fetches nothing at boot under <span class="mono">sources: lazy</span>, and opens an inspector successfully</td></tr>
+    <tr><td><span class="mono">build-tree-fingerprint compare</span></td><td>a packaging change produces an UNPREDICTED tree delta (baseline before → predict in words → compare)</td></tr>
+  </table>
+  <div class="callout" style="margin-top:14px">
+    One habit matters more than any single gate: <strong>the behavioural suite never builds a
+    production tree</strong>. <code>fg gauntlet</code> proves behaviour; <code>fg homepage</code>
+    (and the lean smoke) prove <em>packaging</em>. A packaging change verified only by the
+    gauntlet is unverified.
+  </div>
+
+  <h2>Recipes</h2>
+  <table>
+    <tr><th>To add…</th><th>Do</th></tr>
+    <tr><td>a part</td><td>entry in <span class="mono">parts.json</span> with its <code>dirs</code>; dev builds (<code>"parts": "all"</code>) pick it up; name it in <span class="mono">homepage.json</span> only if production should ship it; guard every core reference</td></tr>
+    <tr><td>a profile</td><td>add a file under <span class="mono">buildSystem/profiles/</span> — validation covers the rest</td></tr>
+    <tr><td>an entry page</td><td>a row in <span class="mono">buildProfile.py</span>'s <span class="mono">ENTRY_PAGES</span> (name, renders-through-SWCanvas, loads-every-part)</td></tr>
+    <tr><td>a non-source file</td><td>give it to the part that owns it (<code>assets</code>) — never to the build script; declared-but-missing is a hard failure</td></tr>
+  </table>
+
+  <p class="sub" style="margin-top:34px">Authoritative detail, edge cases, and the fingerprint
+  discipline: <span class="mono">docs/architecture/build-and-packaging.md</span>. Why it is this
+  shape (the five arcs, their falsified premises and measurements):
+  <span class="mono">docs/archive/build-arc-1…5-*.md</span>.</p>
+</main>
+</body>
+</html>
