@@ -31,7 +31,7 @@ class ShelfWdgt extends PanelWdgt
     p? and p == @
 
   # NOT homepage-excluded: the shared world teardown
-  # (WorldWdgt._teardownWorldStructureNoSettle) ships in --homepage and
+  # (WorldWdgt._teardownWorldStructureNoSettle) ships in production and
   # empties the storage containers through this.
   empty: ->
     @fullDestroyChildren()

@@ -38,7 +38,11 @@ WHY THIS EXISTS. Until arc 5, one flavour -- the homepage -- was spelled as a `-
 ten `if $homepage` branches in build_it_please.sh, plus an `inHomepage` boolean per part and a
 per-flavour prune list of files to delete again at the end. "What does a production build contain?"
 could only be answered by reading a 969-line shell script. Now it is three lines of JSON, and adding
-a flavour is adding a file. See docs/plans/build-arc-5-packaging-profiles-plan.md.
+a flavour is adding a file.
+
+CURRENT-STATE REFERENCE: docs/architecture/build-and-packaging.md (the partition, the profiles, and
+the full DERIVED table). The arc that produced this shape, with its measurements and its rulings, is
+docs/archive/build-arc-5-packaging-profiles-plan.md.
 
 USAGE
     build.py                imports this module and calls resolve(name)

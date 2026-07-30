@@ -10,10 +10,12 @@
 # _buildAndConnectChildrenNoSettle (children) / _layOutNodeContents (child geometry), and, if its inputs differ
 # from the default in1..in4, _inputSetterMenuEntries.
 #
-# NOTE — this file carries NO "excluded from the fizzygum homepage build" marker ON PURPOSE:
-# CalculatingPatchNodeWdgt ships in the --homepage build and extends this base, so the base must ship too.
-# RegexSubstitution / Diffing keep their own exclusion markers and are stripped from --homepage — a present
-# base with stripped subclasses is fine.
+# NOTE — this base is in the CORE part while half its subclasses are not, and that is deliberate:
+# CalculatingPatchNodeWdgt ships in production and extends this base, so the base has to ship too.
+# The unfinished nodes (RegexSubstitution / Diffing / fanout) live in the
+# `patch-programming-experimental` part, which production does not ship -- a present base with absent
+# subclasses is fine. Arc 4 moved that FILES-not-markers way of saying it: the directory a file sits
+# in decides its part (buildSystem/parts.json), and a mixed directory is resolved by moving files.
 
 class PatchNodeWdgt extends Widget
 

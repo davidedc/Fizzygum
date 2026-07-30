@@ -1,8 +1,8 @@
 # MacroToolkit — the framework-side support for high-level "macro" SystemTests,
 # lifted out of WorldWdgt so the macro machinery has a cohesive, documented home.
 # Delegation, not a mixin: the world HAS-A one, reachable as world.macroToolkit
-# (created in the WorldWdgt constructor, guarded by `if MacroToolkit?` so the
-# --homepage build — which strips this whole file — simply has none).
+# (created in the WorldWdgt constructor, guarded by `if MacroToolkit?` so a
+# build that does not ship the `macros` part simply has none).
 #
 # It hosts four layers, told apart by naming convention (see src/macros/CLAUDE.md):
 #   L1 input primitives   — syntheticEvents…_InputEvents / expoOut: push timed raw

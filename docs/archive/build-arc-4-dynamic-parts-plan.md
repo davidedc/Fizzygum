@@ -58,7 +58,7 @@ Plan filenames are numbered by EXECUTION ORDER (`build-arc-N-…`):
 | 2. Backend split + precompile externalization — **DONE 2026-07-28** | `archive/build-arc-2-backend-split-precompile-plan.md` | runtime `?sw=1` switch; WSL precompile script + in-page JSZip/saveAs drain |
 | 3. World harmonization — **DONE + PUSHED 2026-07-30** (`Fizzygum 7c8f49a3`, tests `4bc119caf`) | `archive/build-arc-3-world-harmonization-plan.md` | `»>>` region markers (63 → 0) + all three region regexes; homepage-vs-dev world-design divergence |
 | **4. Dynamic parts (THIS PLAN) — DONE 2026-07-30** | `archive/build-arc-4-dynamic-parts-plan.md` | `_coffeSource` window globals + suffix-scan; ALL THREE whole-file exclusion markers + their build.py regexes (`FILE_NOT_IN_FIZZYGUM_HOMEPAGE`, `FILE_ONLY_FOR_MACROS`, `FILE_ONLY_FOR_VIDEOPLAYER`) — **all confirmed at zero, all machinery deleted** |
-| 5. Packaging profiles | `build-arc-5-packaging-profiles-plan.md` | hard-coded `--homepage` flavour conditionals in `build_it_please.sh` |
+| 5. Packaging profiles — **DONE + PUSHED 2026-07-30** (`Fizzygum f7fff678`, tests `3243b792a`) — **the program's LAST arc** | `archive/build-arc-5-packaging-profiles-plan.md` | the hard-coded `--homepage` flavour: its flag, all TEN `if $homepage` branches in `build_it_please.sh`, the per-part `inHomepage` boolean, `requiresFlag: "tests"`, and the per-flavour prune list — plus `--notests` — **all confirmed at zero, all machinery deleted**. A flavour is now `{parts, form, sources, entries}` in `buildSystem/profiles/*.json`; current state: `docs/architecture/build-and-packaging.md` |
 
 ### §0.2 Completion doctrine (owner-mandated 2026-07-28 — applies to every arc)
 

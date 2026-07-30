@@ -7,7 +7,7 @@
 #
 # WHY THIS IS NOT AS BIG AS IT SOUNDS. The hard part of loading code into a live world -- fetching
 # it over file:// with no fetch/XHR, then compiling it without stalling the frame loop -- already
-# existed and runs on every --homepage boot: `loadJSFilePromise` injects a <script>, and the
+# existed and runs on every production boot: `loadJSFilePromise` injects a <script>, and the
 # frame-paced ingest chain (waitNextTurn -> storeSourceAndPotentiallyCompileItAndExecuteIt, drained
 # one step per cycle out of window.framePacedPromises) compiles a source per frame behind a world
 # that is already running. This class is the bookkeeping around that: which sources belong to the
@@ -52,7 +52,7 @@ class PartsRegistry
   # registry for its own opinion of itself, and it keeps this class free of API written ahead of a
   # caller. Add one when a real consumer appears, e.g. a UI that wants to show a spinner.)
 
-  # Is this part in this artifact at all? A --homepage build ships no fizzytiles, so asking for it
+  # Is this part in this artifact at all? A production build ships no fizzytiles, so asking for it
   # is not an error to throw at the user -- it is a feature that is not in this product.
   # _-tier: only this class asks. A public `isAvailable` would be API written ahead of a caller,
   # which the call-separation gate [U] correctly refuses.

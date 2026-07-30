@@ -52,7 +52,7 @@ noOperation = ->
 #     harness page the boot loader still skipped the lazy part's batch and every Fizzytiles
 #     SystemTest STALLED on an undefined class, while the registry reported the part LOADED. Two
 #     places encoding one rule IS the bug. Do not re-split it.
-#  2. It must exist before the WORLD does. On a pre-compiled (--homepage) boot,
+#  2. It must exist before the WORLD does. On a pre-compiled boot,
 #     createWorldAndStartStepping() runs as soon as js/pre-compiled.js has loaded -- BEFORE the
 #     separately-fetched js/src/loading-and-compiling-coffeescript-sources-min.js. Defining this
 #     there made a production tree die at boot with "window.fizzygumPartIsEagerHere is not a
@@ -104,10 +104,12 @@ loadJSFilePromise = (fileName) ->
 #    all the code to build the class hierarchy and
 #    to augment the classes with the correct mixins.
 #    So, no compilation of sources is needed for the
-#    world to start, so this is much faster. After start,
-#    the world will still asynchronously load all the
-#    sources so one can view/edit the original
-#    coffeescript sources.
+#    world to start, so this is much faster. Whether the
+#    original coffeescript sources follow it -- so one can
+#    view/edit them -- is then the profile's `sources`
+#    policy: right away in the background, on first demand,
+#    or never (see loadReflectiveLayerPromise below and
+#    buildSystem/buildProfile.py's SOURCES_POLICIES).
 # THE REFLECTIVE LAYER: the class SOURCE TEXT, plus the meta-system that parses it.
 #
 # It is what lets the running system show and rewrite its own code -- the inspectors' member maps,

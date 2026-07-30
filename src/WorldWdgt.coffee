@@ -442,10 +442,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @macroToolkit = new MacroToolkit
     @untitledNamingService = new UntitledNamingService
     # the per-world log of in-world source edits (instance + class scope), embedded in and
-    # replayed from a whole-world snapshot. A product collaborator (ships in --homepage).
+    # replayed from a whole-world snapshot. A product collaborator (ships in production).
     @sourceEditsRegistry = new SourceEditsRegistry
     # WidgetFactory is dev/demo scaffolding (homepage-excluded), so guard like
-    # the other test/dev collaborators above -- under --homepage the class is
+    # the other test/dev collaborators above -- in a production build the class is
     # stripped and the demo menus that use it are stripped too.
     if WidgetFactory?
       @widgetFactory = new WidgetFactory
@@ -2305,7 +2305,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   # --- whole-world snapshot save/load (kind:"world") ---------------------------------------
   # See docs/architecture/serialization-duplication-reference.md §11 and the plan §4.9. Serialization is a
-  # PRODUCT feature — these ship in --homepage (no strip markers). The world is NOT saved as a
+  # PRODUCT feature — these ship in production (they are core-part code). The world is NOT saved as a
   # widget record (that would drag in its canvases/caches/hand/listener closures and crash the
   # walker, defect D8); Serializer.serializeWorld captures the desktop tree + off-tree bin
   # + app-slot windows into the object table, and the genuine world state into a `world` section.

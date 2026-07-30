@@ -2,9 +2,9 @@
 # `file://` protocol (the normal way Fizzygum runs). See
 # docs/architecture/serialization-duplication-reference.md §10.
 #
-# This is a PRODUCT feature and ships in ALL builds (including --homepage) — it carries no
-# homepage-strip markers and does NOT depend on the dev-only vendored FileSaver/JSZip (which
-# --homepage strips). ~one method: Blob -> object URL -> synthetic <a download> click ->
+# This is a PRODUCT feature and ships in ALL builds, production included — it is core-part code, and
+# it does NOT depend on the dev-only vendored FileSaver/JSZip (which belong to the harness part and
+# so travel only with a build that ships the test machinery). ~one method: Blob -> object URL -> synthetic <a download> click ->
 # revoke. Spike-proven byte-exact over file:// in headless Chrome (plan Appendix A).
 class FileSaving
 

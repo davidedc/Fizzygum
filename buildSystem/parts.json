@@ -68,8 +68,10 @@
     "buildSystem/check-part-edges.js enforces that: an unguarded core reference to a part-owned",
     "class fails the build.",
     "",
-    "Plans: docs/archive/build-arc-4-dynamic-parts-plan.md (the partition),",
-    "docs/plans/build-arc-5-packaging-profiles-plan.md (the profiles that select from it)."
+    "CURRENT-STATE REFERENCE: docs/architecture/build-and-packaging.md -- the partition, the profiles,",
+    "and the full table of what a build DERIVES rather than declares. The arcs that produced this",
+    "shape: docs/archive/build-arc-4-dynamic-parts-plan.md (the partition) and",
+    "docs/archive/build-arc-5-packaging-profiles-plan.md (the profiles that select from it)."
   ],
 
   "parts": {

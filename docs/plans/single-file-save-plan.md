@@ -451,8 +451,20 @@ suite dpr1 + dpr2 + webkit + apps legs).
 
 ## 7. Open items (banked, not v1)
 
-- **7.1** Precompiled single file (instant boot; +~2 MB and a second code representation) — D2 later option.
+- **7.1** Precompiled single file (instant boot; +~2 MB and a second code representation) — D2 later
+  option. **`[ARC 5, 2026-07-30]` The build side of this is now DATA, not work:** a profile is
+  `{parts, form, sources, entries}` (`buildSystem/profiles/*.json`, read by
+  `buildSystem/buildProfile.py`), so "precompiled" is `form: "precompiled"` and the "+~2 MB second
+  representation" this line worries about is `sources`, which now has three settings —
+  `background` (ship it and load it behind the world), `lazy` (ship it, load it only when something
+  reflects; what `homepage` uses) and `none` (do not ship it at all; what `lean` uses, 10 files /
+  1.3 MB). ⇒ a precompiled single file that carries NO second representation is
+  `{form: "precompiled", sources: "none"}` and needs no new build mechanism, only an assembler that
+  reads the profile it is packaging. See `docs/architecture/build-and-packaging.md`.
 - **7.2** Strip SWCanvas/SW3D from a single-file boot-bundle variant (−285 KB) — D1 later option.
+  **`[ARC 5]`** Also data now: the SW bundle and the ~90 MB of font assets are derived from whether
+  any shipped `entries` page renders through SWCanvas, so a native-only single file is
+  `entries: ["index.html"]`.
 - **7.3** "Bake" in-system source edits into the payload (vs. replay-deltas) — deliberate future feature.
 - **7.4** `beforeunload` dirty guard (R7).
 - **7.5** Snapshot-block compression (LZ-string-style) — unnecessary at current sizes.

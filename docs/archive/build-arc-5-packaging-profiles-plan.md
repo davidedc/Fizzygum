@@ -1,8 +1,16 @@
 # Arc 5 · Packaging profiles — parts × code-form manifests replacing the hard-coded `--homepage` flavour
 
-**STATUS: IN PROGRESS — profiles ship, both flavour flags are deleted, and the `lean` appliance
-artifact exists (10 files / 1.3 MB). What remains is ONE owner decision — whether `sources: "lazy"`
-is worth building at all (§4 Phase 2 step B) — and phase 3 (consumers + docs).** This is **ARC 5 — the LAST arc — of the build-and-packaging program**
+**STATUS: EXECUTED IN FULL — COMPLETE (2026-07-30).** Every phase landed and is pushed; the
+current-state reference is now **`docs/architecture/build-and-packaging.md`**, and this document keeps
+only the execution history, the measurements, and the rulings. **This closes the LAST arc of the
+build-and-packaging program** (arcs 1-5).
+
+A build FLAVOUR is `{parts, form, sources, entries}` in `buildSystem/profiles/<name>.json`, read by
+`buildSystem/buildProfile.py`, which derives everything else. `--homepage` and `--notests` are gone;
+`build_it_please.sh` contains zero flavour branches. Four profiles ship: `dev`, `dev-notests`,
+`homepage` (production: precompiled, `sources: "lazy"`) and `lean` (the appliance: 10 files, 1.3 MB).
+Production went from **5.36 MB / 28 files to 3.64 MB / 26 files**, of which the 2.28 MB of class
+source text (62.7%) is no longer fetched unless someone opens an inspector. This is **ARC 5 — the LAST arc — of the build-and-packaging program**
 (program table + completion doctrine: §0.1/§0.2 of `archive/build-arc-4-dynamic-parts-plan.md` —
 read those first; they are not repeated here in full).
 
@@ -18,7 +26,8 @@ read those first; they are not repeated here in full).
 | 0.5 step 4 · font-assets derived from the entry set | DONE, inside phase 0 as planned | (same commit) |
 | 2A · the `sources` axis, `none`, and the `lean` profile | **DONE** | the commit adding `buildSystem/profiles/lean.json` |
 | 2B · `sources: lazy` | NOT started — owner decision pending, see §4 Phase 2 step B | — |
-| 3 · consumers + docs | not started | — |
+| 2B · `sources: lazy`; production uses it | DONE (owner: BUILD IT) | `f7fff678` / tests `3243b792a` |
+| 3 · consumers + docs, and `close-arc` | DONE | the commit adding `docs/architecture/build-and-packaging.md` |
 
 Gates after phase 0+1: `fg gauntlet` **EXIT=0, 14/14 legs in-wave, no retries** (256s), ZERO
 reference churn; `fg homepage` **EXIT=0** (production tree: booted from the pre-compiled image, no
@@ -750,15 +759,45 @@ come BEFORE them.** Two reasons, both learned inside this arc:
 - **Phase 3 — consumers:** re-point the single-file-save plan's banked §7.1 at
   `form: precompiled`; video player flags → profile extras/part; document in CLAUDE.md +
   `docs/architecture/` (build/packaging section) — present-tense, no history prose.
+  **AS EXECUTED 2026-07-30 — phase 3 done, and with it the arc.**
+  - **`[OWNER RULING]` The video flags STAY flags** (`--includeVideoPlayer`, `--includeVideos`,
+    `--keepPreviousPrivateVideos`), so `requiresFlag` keeps its one carrier and does NOT retire. This
+    is a decided stopping point, not an oversight: `--includeVideos` copies gigabytes from an external
+    drive and `--keepPreviousPrivateVideos` exists precisely so as NOT to re-copy them, which
+    describes how you are running the build rather than what the artifact IS. The program therefore
+    ends with **zero flavour flags and three invocation knobs**, which is the right shape — a profile
+    describes an artifact, in the same way `--noSyntaxCheck` was kept out of the schema.
+  - **The `--homepage` comment sweep is DONE: `src/` is at ZERO references.** 12 sites plus
+    `src/macros/CLAUDE.md` (5, including a section heading). Two were worse than stale and were
+    rewritten rather than word-swapped, because both instructed the reader to manage a mechanism arc 4
+    DELETED: `FittingSpecText.coffee` said "do NOT re-add a `# this file is excluded…` header, or
+    `--homepage` will strip it" (there is no such mechanism, and
+    `check-whole-file-markers.js` gates it at zero), and `PatchNodeWdgt.coffee` claimed
+    "RegexSubstitution / Diffing keep their own exclusion markers", which is simply FALSE — they are
+    in the `patch-programming-experimental` part. ⚖ A stale comment that merely names a dead flag
+    costs a reader a moment; one that tells them to maintain a deleted mechanism costs them an hour.
+    Swept the same way: `WorldWdgt`'s "(no strip markers)", `ButtonWdgt`'s "stripped from the
+    --homepage production build", `MacroToolkit`'s "which strips this whole file", and
+    `globalFunctions`' boot overview, which promised that "the world will still asynchronously load
+    all the sources" — true of `background` only, now that `sources` has three settings.
+  - **`single-file-save-plan.md` §7.1/§7.2 re-pointed.** Both banked items turn out to be DATA now,
+    not work: a precompiled single file carrying no second code representation is
+    `{form: "precompiled", sources: "none"}`, and a native-only one is `entries: ["index.html"]`.
+    Neither needs a build mechanism, only an assembler that reads the profile it is packaging.
+  - **`docs/architecture/build-and-packaging.md` written** — the durable reference the four arcs were
+    producing all along: the partition, the profiles, the DERIVED table, the reflective layer and the
+    `sources` axis, how to add a part/profile/entry page/asset, and how to verify a packaging change
+    (including how to use the fingerprint without fooling yourself). `Fizzygum/CLAUDE.md` points at it.
+
   **`[INHERITED FROM PHASE 0+1, 2026-07-30]` three named leftovers, all deliberate:**
-  1. **The `--homepage` mentions in `src/**/*.coffee` comments** (~12, phrases like "ships in
+  1. ✅ **DONE in phase 3 (see above).** **The `--homepage` mentions in `src/**/*.coffee` comments** (~12, phrases like "ships in
      `--homepage`" meaning "ships in production"). NOT swept in phases 0+1 on purpose: editing shipped
      source text changes the batches and would have destroyed that commit's byte-identical parity
      proof. Two of them are worse than stale and should be fixed first — `FittingSpecText.coffee:16`
      ("or `--homepage` will strip it", referring to the whole-file marker mechanism arc 4 DELETED) and
      `PatchNodeWdgt.coffee:15` ("keep their own exclusion markers"). Also `src/macros/CLAUDE.md`
      (4 sites, incl. a heading "Build-exclusion contract (`--homepage`)").
-  2. **The video flags** (`--includeVideoPlayer`, `--includeVideos`, `--keepPreviousPrivateVideos`).
+  2. ✅ **RESOLVED by owner ruling: they stay flags (see above).** **The video flags** (`--includeVideoPlayer`, `--includeVideos`, `--keepPreviousPrivateVideos`).
      Left as flags: they are per-invocation opt-ins, and `requiresFlag` now has exactly one carrier
      (`videoPlayer`) which is honest about that. If phase 3 moves them into profiles, `requiresFlag`
      disappears entirely — that is the shape of its retirement, and it should be decided on whether

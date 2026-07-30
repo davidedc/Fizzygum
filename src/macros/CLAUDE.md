@@ -1,7 +1,7 @@
 # CLAUDE.md — `src/macros/` (the "macro" SystemTest subsystem)
 
 The **framework side of the high-level "macro" SystemTests**. Two files, and the whole directory is the
-**`macros` part** (`buildSystem/parts.json`), which a `--homepage` build does not ship:
+**`macros` part** (`buildSystem/parts.json`), which no production profile ships:
 
 - **`Macro.coffee`** — the engine (L0): parses a generator-from-a-string, rewrites verb calls into `yield`s,
   links subroutines, installs the per-cycle pump.
@@ -58,7 +58,7 @@ The one registered macro test (the regression anchor) is `Fizzygum-tests/tests/S
 | **L4** driver + state | the pump stub, the `wait*` gates, the macro-step fields | (state / predicates) | `MacroToolkit` |
 | **L5** test runner (harness) | `Automator*`, `AutomatorEventCommand*` | `Automator…` | `Fizzygum-tests/` |
 
-All of L0–L4 is stripped from `--homepage`.
+All of L0–L4 is absent from a production build (the part is not in its profile).
 
 ## The rules to get right
 
@@ -242,7 +242,7 @@ pair, `buildExternalAndFreeInternalWindow_Macro` + `dropInternalWindowIntoExtern
 
 The project is phasing out mixins for plain OO delegation; `MacroToolkit` is the first example. `world.macroToolkit` is
 created in the `WorldWdgt` ctor: `if MacroToolkit? then @macroToolkit = new MacroToolkit` (the guard self-disables under
-`--homepage`, where the class is stripped). `world` keeps only the two per-cycle hooks (`doOneCycle` →
+a production build, where the part is absent). `world` keeps only the two per-cycle hooks (`doOneCycle` →
 `@macroToolkit?.progressOnMacroSteps()`; `updateTimeReferences` → bookkeeping). There is **no** `world.progressOnMacroSteps`
 / `world.aMacroIsRunning` any more — all `world.macroToolkit.*`. The pump `progressOnMacroSteps` starts as an empty stub and
 is overwritten at macro start by the string `Macro._addHeaderCode` emits (eval'd via `world.macroToolkit.evaluateString`),
@@ -255,10 +255,10 @@ Anything that touches `world.automator` is a **harness** (assertion) concern, no
 `world.automator.player.compareScreenshots`; the sanctioned future move is for `AutomatorEventCommandStartMacro` to
 contribute that verb via the `extraSubroutineSources` merge-seam.
 
-## Build-exclusion contract (`--homepage`)
+## Build-exclusion contract (part membership)
 
 - This directory IS the **`macros` part**, declared `"inHomepage": false` in `buildSystem/parts.json`. A
-  `--homepage` build drops the part, i.e. both files. A new file added here is covered automatically
+  production profile does not name the part, so both files are absent. A new file added here is covered automatically
   (the part owns the directory, not a file list).
   ⛔ It used to work the other way round: each file's first line carried
   `# this file is only needed for Macros` and `build.py` matched it with a regex. That whole-file

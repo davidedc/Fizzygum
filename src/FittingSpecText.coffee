@@ -11,10 +11,10 @@
 #    window / panel / scroll content — re-wrap and auto-grow/shrink its height.
 #    Wired into StringWdgt/TextWdgt reflowText + _reLayoutSelf + createBufferCacheKey.
 #
-# This class SHIPS in the homepage build (production content layout references it
-# via FIT_BOX_TO_TEXT) — do NOT re-add a "# this file is excluded from the
-# fizzygum homepage build" header, or --homepage will strip it and the base will
-# reference an undefined class at boot.
+# This class SHIPS IN PRODUCTION: production content layout references it via FIT_BOX_TO_TEXT. It
+# is in the CORE part, which every profile ships (buildSystem/parts.json), and that is the whole of
+# what keeps it here -- there is no per-file exclusion mechanism to get wrong any more (arc 4 retired
+# the whole-file markers and buildSystem/check-whole-file-markers.js gates them at zero).
 
 class FittingSpecText
   @FIT_TEXT_TO_BOX: true

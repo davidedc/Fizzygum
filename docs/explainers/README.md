@@ -17,7 +17,7 @@ the explainer is updated to present tense or retired.
   `»>>` region mechanism is retired — so set 3's "Before" panels are the historical baseline, not the
   present. Describes the current state and the five-arc
   program owned by `archive/build-arc-1-test-serving-link-plan.md` through
-  `plans/build-arc-5-packaging-profiles-plan.md` — filenames numbered by execution order;
+  `archive/build-arc-5-packaging-profiles-plan.md` — filenames numbered by execution order;
   the explainer's "stages 1–4" are arcs 2–5, with arc 1 a small independent prelude):
   1. [`build-and-packaging-1-today.html`](build-and-packaging-1-today.html) — how the build, boot, backends, and the homepage flavour work today, and where it creaks.
   2. [`build-and-packaging-2-stages.html`](build-and-packaging-2-stages.html) — the four stages, what each retires, the completion doctrine.
