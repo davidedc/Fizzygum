@@ -1,16 +1,27 @@
 # Arc 4 · Dynamic parts — lazy-loadable code slices (SourceVault, partition, runtime loader, Fizzytiles pilot)
 
-**STATUS: PLAN ONLY — AUTHORED 2026-07-28; §2 (and every section its facts feed) REVISED
-2026-07-30 against the post-arc-1/2/3 tree. Written to be executed COLD by an LLM/engineer with
-ZERO prior context.** Facts re-verified against the working tree on 2026-07-30 (Fizzygum
-`master @ 44053c76`, tests `f32da1e48`, **269** SystemTests, all gates green). Line numbers
-drift — quoted symbols are authoritative; re-grep before editing. **This is ARC 4 of the
-build-and-packaging program** (see §0.1); arcs 1, 2 and 3 are all landed and pushed, so the tree
-this plan describes IS the tree you will find. The 2026-07-30 revision pass corrected six §2
-facts that had drifted or were wrong as authored — each is called out inline as
-**[REVISED 2026-07-30]**; the two that change the DESIGN (not just a count) are R4 in §0.3 and
-the `loadWorldSnapshot` hook in §5.3, and one design gap the revision found is answered by the
-new reframe R6 (inclusion ≠ eagerness).
+**STATUS: EXECUTED 2026-07-30 — PHASES 0, 1 and 2 ALL DONE AND COMMITTED; PHASE 3 DECLINED BY THE
+OWNER (it is optional by construction — see §5.4). NOT YET PUSHED.**
+
+| Phase | Outcome | Commit |
+|---|---|---|
+| plan revision | §2 re-verified; 6 facts corrected, 2 of them design-changing | Fizzygum `ca854f86` (plan only) |
+| 0 · SourceVault | `_coffeSource` globals + window suffix-scan RETIRED; 499 dead per-class files dropped | Fizzygum `7f4b2172` |
+| 1 · partition | `buildSystem/parts.json` (9 parts); **45 marker lines + 3 regexes → 0**; parity MEASURED | Fizzygum `e163ce65` |
+| 2 · lazy pilot | Fizzytiles lazy on `index.html`; `world.parts`; snapshot pre-scan; 2 rigs | Fizzygum `65ce0182`, tests `c772dd39a` |
+| 3 · more lazy parts | **DECLINED** — optional; every retirement completes at 1/2, so no mixed state | — |
+
+Final gate: `fg gauntlet` **EXIT=0, 14/14 legs in-wave, no retries** (269 tests × dpr1/dpr2/webkit,
+0 failed); `fg homepage` EXIT=0 with a clean snapshot round-trip on the production tree.
+
+**Everything below is the plan AS EXECUTED.** The `[REVISED 2026-07-30]` notes record where the
+2026-07-28 authoring was wrong; the **AS EXECUTED** blocks in §5.1–§5.4 record what actually
+happened, including four bugs found during execution that are worth reading before touching this
+area again (they share one shape: ONE RULE ENCODED IN TWO PLACES). Line numbers drift — quoted
+symbols are authoritative; re-grep before editing.
+
+**Remaining, before this arc can be closed:** push approval; the docs residue in §11; then the
+`close-arc` ritual (`git mv` this doc to `docs/archive/` + stamp + `archive/INDEX.md` line).
 
 **MANDATE.** Turn the monolithic "everything compiles at boot" code delivery into named,
 lazily-loadable **parts** — and, per the completion doctrine (§0.2), *fully retire* the
@@ -801,3 +812,33 @@ in flight — the suite is served through the `js/tests` symlink and picks up te
   `resetworld-state-leak-between-tests.md` (the state-vs-code case law).
 - Old `SourceVault` name history: an UNRELATED source-analysis dev-tool cluster deleted in
   accidental-complexity P2-T3 (`fcd1bafb`); name is free, no ⛔ conflict.
+
+---
+
+## §11 What is left (2026-07-30) — the arc is not CLOSED until these are done
+
+Phases 0–2 are committed and green; phase 3 is declined. What remains is not implementation:
+
+1. **PUSH** — owner approval required (standing rule: never push autonomously).
+   Fizzygum `ahead=4`, Fizzygum-tests `ahead=1`.
+2. **Docs residue** (the convention: durable residue lands in the same arc):
+   - `docs/BACKLOG.md` — a line for the declined phase 3 (§5.4 candidates: `dev-icons`,
+     `patch-programming-experimental`, and the bigger `demos`/`dev-tools` boot-construction case),
+     and a line for the banked `…Support.installOnto Widget` idea (moving the four
+     `LayoutElementAdderOrDropletWdgt`-touching `Widget` members onto the `dev-tools` part instead of
+     guarding them). Both must point at their owning section here.
+   - `../Fizzygum-tests/CLAUDE.md` — its maintenance-scripts list does not yet mention
+     `scripts/parts-lazy-load-headless.js` or `scripts/parts-snapshot-load-headless.js`, nor the
+     reason they exist (the harness page presets `FIZZYGUM_EAGER_ALL_PARTS`, so a SystemTest
+     structurally cannot observe laziness).
+   - Consider whether the partition deserves a `docs/architecture/` page. DEFERRED on purpose: arc 5
+     (packaging profiles) replaces `inHomepage` with a profile matrix and would rewrite it
+     immediately. `buildSystem/parts.json`'s own header + `Fizzygum/CLAUDE.md` carry it meanwhile.
+3. **`close-arc`** — `git mv` this doc to `docs/archive/`, status-stamp it, add its
+   `docs/archive/INDEX.md` line, and confirm the §0.1 program-table row (row 4's retirements: zero
+   counts confirmed, machinery deleted — both true).
+
+⛔ Do NOT re-do phase 3 as "finishing the arc". The completion doctrine (§0.2) is about
+RETIREMENTS finishing in-arc, and they did: `check-source-vault.js`,
+`check-whole-file-markers.js` and `check-part-edges.js` all hold at zero. Making more parts lazy is
+new capability, not an unfinished retirement.
