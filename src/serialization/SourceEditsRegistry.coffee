@@ -76,6 +76,28 @@ class SourceEditsRegistry
   serializableRecords: ->
     (Object.assign {}, r) for r in @records
 
+  # CAN THIS BUILD REPLAY class/mixin-scope edits at all? (arc 5)
+  #
+  # Both replays drive the META-SYSTEM -- Class.applyMemberEdit, Mixin.allMixines -- and the
+  # meta-system is not in the pre-compiled image: Class and Mixin are the only two classes absent
+  # from it (they are what compiled everything else), so they arrive only with the class SOURCE TEXT.
+  # An artifact built with sources: "none" ships neither, and can therefore never replay these
+  # records, no matter how long it waits.
+  #
+  # ⚠ This asks about the CAPABILITY, not the build flag, deliberately: it is the actual
+  # precondition, it keeps a BUILDFLAG out of class code (no other class reads one), and it stays
+  # correct for a future sources: "lazy" build, where the honest answer before the layer loads is
+  # "not yet" rather than "never".
+  @canReplaySourceEdits: -> Mixin?
+
+  # How many records this build will NOT be able to replay -- so a load can say so ONCE, plainly,
+  # instead of dropping the user's class edits without a word. (Instance-scope records are absent
+  # from the count: they ride the {"$src"} path, which needs only the compiler, and every profile
+  # ships that.)
+  unreplayableSourceEditsCount: ->
+    return 0 if SourceEditsRegistry.canReplaySourceEdits()
+    (r for r in @records when r.scope is "class" or r.scope is "mixin").length
+
   # replay the CLASS-scope edits against the live prototypes: each re-runs
   # Class.applyMemberEdit — the same choke point the live class-inspector save uses,
   # so the replay compiles exactly what the session compiled (incl. the super
@@ -84,6 +106,7 @@ class SourceEditsRegistry
   # here — they ride the normal {"$src"} path on their own widget. A class edit
   # that no longer compiles (the class changed, a typo) is logged, not fatal.
   replayClassEdits: ->
+    return unless SourceEditsRegistry.canReplaySourceEdits()
     for r in @records when r.scope is "class"
       theClass = window[r.className]?.class
       continue unless theClass?
@@ -102,6 +125,9 @@ class SourceEditsRegistry
   # winning. A record whose mixin/member no longer compiles is logged, not fatal
   # (same policy as replayClassEdits).
   replayMixinEdits: ->
+    # ⚠ Without this the very first line of the loop body would throw a bare `Mixin is not defined`
+    # mid-restore -- it reads Mixin.allMixines OUTSIDE the per-record try/catch below.
+    return unless SourceEditsRegistry.canReplaySourceEdits()
     for r in @records when r.scope is "mixin"
       theMixin = Mixin.allMixines.find (m) -> m.name is r.mixinName
       continue unless theMixin?

@@ -348,6 +348,11 @@ def main():
         # It used to be `not args.homepage or not (three marker regexes match)` -- i.e.
         # every file carried, invisibly in its first line, the question of whether it
         # ships. See parts.json's header for why that moved out of the files.
+        # ⚠ Emitted for EVERY profile, including sources: "none". The source text is what the
+        # pre-compile driver compiles to harvest the image, so a "none" artifact needs it DURING its
+        # own build and simply does not ship it -- build_it_please.sh drops the directory after the
+        # driver has run, the same shape as the font-assets re-prune: derived from the policy, not a
+        # list of files to delete.
         if is_class_file or is_mixin_file:
 
             # backslashes and quotes and newlines all need

@@ -34,7 +34,10 @@ fi
 eval "$PROFILE_VARS"
 
 SMOKE_ARGS=""
-if [ "$PROFILE_FORM" = "precompiled" ]; then
+if [ "$PROFILE_FORM" = "precompiled" ] && [ "$PROFILE_SOURCES" = "none" ]; then
+  echo "(profile $PROFILE_NAME is an appliance build -> boot smoke runs the production assertions + no-source-text)"
+  SMOKE_ARGS="--lean"
+elif [ "$PROFILE_FORM" = "precompiled" ]; then
   echo "(profile $PROFILE_NAME is precompiled -> boot smoke runs native-only + production-tree assertions)"
   SMOKE_ARGS="--production"
 elif ! $PROFILE_SHIPS_SWCANVAS_ENTRY ; then

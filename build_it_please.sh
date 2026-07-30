@@ -720,6 +720,11 @@ else
   printf "BUILDFLAG_LOAD_TESTS = false\n" >> $SCRATCH_PATH/fizzygum-boot.coffee
 fi
 
+# WHEN (or whether) the reflective layer loads -- the class source text plus the meta-system that
+# parses it. globalFunctions reads this; buildProfile.py's SOURCES_POLICIES documents the values.
+# "none" ships no source text at all, so the boot must not go looking for it.
+printf "BUILDFLAG_SOURCES = '%s'\n" "$PROFILE_SOURCES" >> $SCRATCH_PATH/fizzygum-boot.coffee
+
 
 # turn the coffeescript file into js in the js directory
 echo "compiling boot file..."
@@ -959,6 +964,12 @@ mkdir -p $JSSRC_SCRATCH
 # output's directory, so make it explicitly now that only minified files land there.
 mkdir -p $BUILD_PATH/js/src
 
+# dependencies-finding computes the class LOAD ORDER from the source text, so it belongs to the
+# reflective layer and is loaded only from inside it (globalFunctions' loadReflectiveLayerPromise).
+# ⚠ It is built for EVERY profile even so, and dropped later for the ones that cannot use it: the
+# pre-compile driver harvests the image by booting this tree in COMPILE-AT-BOOT mode, which runs
+# that layer and fetches this file. Skipping it here made a lean build hang until puppeteer's
+# protocol timeout, with no error naming the missing file (measured).
 coffee -b -c -o $JSSRC_SCRATCH/ src/boot/dependencies-finding.coffee
 terser --compress --output $BUILD_PATH/js/src/dependencies-finding-min.js -- $JSSRC_SCRATCH/dependencies-finding.js
 
@@ -1028,6 +1039,27 @@ if [ "$PROFILE_FORM" = "precompiled" ] ; then
 
   terser --compress --mangle --output $BUILD_PATH/js/pre-compiled-min.js -- $BUILD_PATH/js/pre-compiled.js
   mv $BUILD_PATH/js/pre-compiled-min.js $BUILD_PATH/js/pre-compiled.js
+
+  # sources: "none" -- the appliance artifact. The class source text was a build INPUT: the driver
+  # above harvested the pre-compiled image by booting this very tree in compile-at-boot mode and
+  # compiling every source. Now that the image exists, the text does not ship -- ~40% of the tree,
+  # and with it the ability to inspect and rewrite the system (buildProfile.py SOURCES_POLICIES).
+  # This is a DERIVED consequence of the policy, not a list of files to delete: one directory, and
+  # what goes in it was never enumerated here.
+  # ⚠ The parts manifest compiled into the boot bundle still NAMES those batch files, because it was
+  # written before the driver ran and lives inside a minified bundle. Nothing in this artifact reads
+  # the list -- globalFunctions skips the whole reflective layer under "none", and a lazy part (the
+  # other reader) is refused with this policy by buildProfile.py, precisely because a lazy part
+  # arrives AS SOURCE and so could never load here.
+  # ⚠ EVERYTHING THE REFLECTIVE LAYER NEEDS IS AN INPUT TO THIS STEP, so nothing it needs can be
+  # skipped earlier -- it can only be dropped here, once the image exists. Both of these were
+  # learned by watching a lean build fail: skip the source text and the driver harvests nothing;
+  # skip dependencies-finding and the generation boot hangs on a 404 until puppeteer times out.
+  if [ "$PROFILE_SOURCES" = "none" ] ; then
+    echo "sources policy 'none': dropping the reflective layer (it was only an input to the pre-compiled image)"
+    rm -rf $BUILD_PATH/js/coffeescript-sources
+    rm -f $BUILD_PATH/js/src/dependencies-finding-min.js
+  fi
 fi
 
 # BUILD STAMP: touched ONLY here, at the very end of a successful build, so its mtime == build-completion

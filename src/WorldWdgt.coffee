@@ -2381,6 +2381,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     #     edits ride the normal {"$src"} path on their own widget. The rebuilt registry is
     #     installed AFTER deserialize (below), so the $src re-injections don't double-log into it.
     restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
+    # An artifact that ships no class source text has no meta-system and can never replay these
+    # (arc 5's lean profile). Say so ONCE, to the user, before restoring the rest: the alternative
+    # is that their class edits vanish from the loaded world with only a console line to show for it.
+    # The widgets and their per-widget {"$src"} function edits still load normally.
+    if (unreplayableCount = restoredRegistry.unreplayableSourceEditsCount()) > 0
+      @inform "This build cannot re-apply the " + unreplayableCount + " class-level source edit" +
+        (if unreplayableCount is 1 then "" else "s") + " this file carries.\n" +
+        "Everything else in it loads normally."
     restoredRegistry.replayMixinEdits()
     restoredRegistry.replayClassEdits()
     # 3. deserialize the object table (kind:"world" preserves each widget's iid).

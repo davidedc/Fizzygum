@@ -108,6 +108,72 @@ loadJSFilePromise = (fileName) ->
 #    the world will still asynchronously load all the
 #    sources so one can view/edit the original
 #    coffeescript sources.
+# THE REFLECTIVE LAYER: the class SOURCE TEXT, plus the meta-system that parses it.
+#
+# It is what lets the running system show and rewrite its own code -- the inspectors' member maps,
+# and a snapshot's class/mixin source edits. It is NOT what makes the world go: a pre-compiled world
+# is already running before any of this, and (arc 5) a profile with sources: "none" never calls this
+# at all and ships none of the files it fetches.
+#
+# On the COMPILE-AT-BOOT path it is not optional and not "reflective" either -- there the sources ARE
+# the world, so the final step compiles and EXECUTES them (justIngestSources = false) and only then
+# is there a world to start. Both paths share the same five steps, which is why this is one function:
+#   1. the Class and Mixin sources, the only two classes a pre-compiled image does not contain
+#      (they are compiled here by hand, so nothing accumulated them into it)
+#   2. compile + eval those two: the meta-system must exist before any batch can be ingested
+#   3. dependencies-finding, which computes the load order from the source text
+#   4. every eager part's source batches (window.FIZZYGUM_PARTS drives which)
+#   5. ingest-only (true) against the already-running classes, or compile-and-execute (false) to
+#      CREATE them
+loadReflectiveLayerPromise = ->
+  Promise.all [
+    loadJSFilePromise("js/coffeescript-sources/Class-source.js"),
+    loadJSFilePromise("js/coffeescript-sources/Mixin-source.js")
+  ]
+  .then ->
+    if bootLoadingDebugWrites then console.log "---- Class + Mixin sources loaded"
+    # the two meta-system sources are the only ones fetched individually and compiled by hand:
+    # everything else needs Class/Mixin to already exist before it can be ingested.
+    eval.call window, compileFGCode SourceVault.get("Mixin"), true
+    eval.call window, compileFGCode SourceVault.get("Class"), true
+  .then ->
+    if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"
+    loadJSFilePromise("js/src/dependencies-finding-min.js")
+  .then ->
+    if bootLoadingDebugWrites then console.log "---- dependencies-finding-min loaded"
+    loadJSFilesWithCoffeescriptSourcesBatchesPromise()
+  .then ->
+    if bootLoadingDebugWrites then console.log "---- loaded all batches of coffeescript sources"
+    if window.preCompiled
+      # the world has already started stepping.
+      # No need to compile the sources as we already got the pre-compiled code
+      # (and it's already running).
+      (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
+        stillLoadingSources = false
+        if Automator?
+          Automator.testsManifest = testsManifest
+          Automator.testsAssetsManifest = testsAssetsManifest
+        # world.getParameterPassedInURL is not included in a production build
+        if startupActions = world.getParameterPassedInURL? "startupActions"
+          world.nextStartupAction()
+    else
+      addLogDiv()
+      # there is no world to speak of yet, and no stepping: in this case
+      # we also compile all the sources to have something to build the world with!
+      (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
+        stillLoadingSources = false
+        if Automator?
+          Automator.testsManifest = testsManifest
+          Automator.testsAssetsManifest = testsAssetsManifest
+      .then ->
+        # returns a promise (world creation is deferred under the SWCanvas
+        # backend), so chain the world-dependent code after it resolves.
+        createWorldAndStartStepping()
+      .then ->
+        # world.getParameterPassedInURL is not included in a production build
+        if startupActions = world.getParameterPassedInURL? "startupActions"
+          world.nextStartupAction()
+
 boot = ->
 
   stillLoadingSources = true
@@ -244,57 +310,33 @@ boot = ->
     if window.preCompiled
       createWorldAndStartStepping()
   .then ->
+    # ⚠ These two are NOT part of the reflective layer and load in EVERY artifact.
+    # loading-and-compiling-coffeescript-sources defines compileFGCode, which is PRODUCT machinery,
+    # not a dev affordance: ScriptWdgt, Widget.evaluateStringAsScript and the spreadsheet's
+    # FormulaCompiler all compile user-written CoffeeScript at runtime (arc 5 PR-D3 -- the compiler
+    # ships everywhere for the same reason). A build that dropped this would look fine until someone
+    # typed a formula.
     Promise.all [
-      # coffeescript could nominally be loaded here
-      # if it wasn't for the fact that the paint tool needs it
-      loadJSFilePromise("js/coffeescript-sources/Class-source.js"),
-      loadJSFilePromise("js/coffeescript-sources/Mixin-source.js"),
       loadJSFilePromise("js/src/loading-and-compiling-coffeescript-sources-min.js"),
       loadJSFilePromise("js/src/logging-div-min.js")
     ]
   .then ->
-    if bootLoadingDebugWrites then console.log "---- Class + Mixin sources, loading-and-compiling-coffeescript-sources-min, logging-div-min loaded"
-    # the two meta-system sources are the only ones fetched individually and compiled by hand:
-    # everything else needs Class/Mixin to already exist before it can be ingested.
-    eval.call window, compileFGCode SourceVault.get("Mixin"), true
-    eval.call window, compileFGCode SourceVault.get("Class"), true
-  .then ->
-    if bootLoadingDebugWrites then console.log "---- compiled the Mixin and Class sources"
-    loadJSFilePromise("js/src/dependencies-finding-min.js")
-  .then ->
-    if bootLoadingDebugWrites then console.log "---- dependencies-finding-min loaded"
-    loadJSFilesWithCoffeescriptSourcesBatchesPromise()
-  .then ->
-    if bootLoadingDebugWrites then console.log "---- loaded all batches of coffeescript sources"
-    if window.preCompiled
-      # the world has already started stepping.
-      # No need to compile the sources as we already got the pre-compiled code
-      # (and it's already running).
-      (storeSourcesAndPotentiallyCompileThemAndExecuteThem true).then ->
-        stillLoadingSources = false
-        if Automator?
-          Automator.testsManifest = testsManifest
-          Automator.testsAssetsManifest = testsAssetsManifest
-        # world.getParameterPassedInURL is not included in the homepage build
-        if startupActions = world.getParameterPassedInURL? "startupActions"
-          world.nextStartupAction()
-    else
-      addLogDiv()
-      # there is no world to speak of yet, and no stepping: in this case
-      # we also compile all the sources to have something to build the world with!
-      (storeSourcesAndPotentiallyCompileThemAndExecuteThem false).then ->
-        stillLoadingSources = false
-        if Automator?
-          Automator.testsManifest = testsManifest
-          Automator.testsAssetsManifest = testsAssetsManifest
-      .then ->
-        # returns a promise (world creation is deferred under the SWCanvas
-        # backend), so chain the world-dependent code after it resolves.
-        createWorldAndStartStepping()
-      .then ->
-        # world.getParameterPassedInURL is not included in the homepage build
-        if startupActions = world.getParameterPassedInURL? "startupActions"
-          world.nextStartupAction()
+    if bootLoadingDebugWrites then console.log "---- loading-and-compiling-coffeescript-sources-min, logging-div-min loaded"
+    # sources: "none" -- an appliance artifact that ships no class source text at all, so there is
+    # nothing to fetch, nothing to ingest, and no meta-system (buildProfile.py SOURCES_POLICIES).
+    # It can only be a PRE-COMPILED build -- the build refuses the combination otherwise -- so the
+    # world is already running by now and this is simply the end of the boot sequence.
+    # The flag has to be answered here rather than by an empty parts manifest: the Class and Mixin
+    # sources are fetched by name, not through the manifest, and would 404.
+    # ⚠ `window.preCompiled` is load-bearing in this condition, not defensive. The ONE boot that
+    # must still run the layer on a "none" build is its own pre-compile pass: the driver boots the
+    # freshly-built tree at ?generatePreCompiled while js/pre-compiled.js is still the
+    # `preCompiled = false` stub, and compiling those sources is how the image gets harvested. Drop
+    # this clause and a lean build fails with "pre-compiled generation failed" (measured).
+    if window.preCompiled and BUILDFLAG_SOURCES is "none"
+      stillLoadingSources = false
+      return
+    loadReflectiveLayerPromise()
 
 
 # Load the SWCanvas bitmap-font metrics + the positioning bundle for the active

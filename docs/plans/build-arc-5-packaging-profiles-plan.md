@@ -1,8 +1,8 @@
 # Arc 5 · Packaging profiles — parts × code-form manifests replacing the hard-coded `--homepage` flavour
 
-**STATUS: IN PROGRESS — the arc's CENTRAL STEP IS DONE: profiles ship, and both flavour flags are
-deleted. What remains is phase 2 (the new `sources` axes + the `lean` profile) and phase 3
-(consumers + docs).** This is **ARC 5 — the LAST arc — of the build-and-packaging program**
+**STATUS: IN PROGRESS — profiles ship, both flavour flags are deleted, and the `lean` appliance
+artifact exists (10 files / 1.3 MB). What remains is ONE owner decision — whether `sources: "lazy"`
+is worth building at all (§4 Phase 2 step B) — and phase 3 (consumers + docs).** This is **ARC 5 — the LAST arc — of the build-and-packaging program**
 (program table + completion doctrine: §0.1/§0.2 of `archive/build-arc-4-dynamic-parts-plan.md` —
 read those first; they are not repeated here in full).
 
@@ -16,7 +16,8 @@ read those first; they are not repeated here in full).
 | 1.5 · split the inspectors into `meta-tools` | DONE (moved BEFORE 0/1 — see the sequencing note in §4) | `f7364e95` |
 | **0 + 1 · profiles; `--homepage` and `--notests` DELETED** | **DONE** (merged, as §4 argued) | the commit adding `buildSystem/profiles/` |
 | 0.5 step 4 · font-assets derived from the entry set | DONE, inside phase 0 as planned | (same commit) |
-| 2 · `sources: lazy` / `none` + the `lean` profile | not started (1.5 unblocked it) | — |
+| 2A · the `sources` axis, `none`, and the `lean` profile | **DONE** | the commit adding `buildSystem/profiles/lean.json` |
+| 2B · `sources: lazy` | NOT started — owner decision pending, see §4 Phase 2 step B | — |
 | 3 · consumers + docs | not started | — |
 
 Gates after phase 0+1: `fg gauntlet` **EXIT=0, 14/14 legs in-wave, no retries** (256s), ZERO
@@ -564,6 +565,125 @@ come BEFORE them.** Two reasons, both learned inside this arc:
   `ensureLoaded`) and `sources: none` (excluding the `meta-tools` part Phase 1.5 created); add a
   `lean` profile; headless boot-smoke for each shipped profile (console-error-free, `preCompiled`
   state asserted, forbidden-file assertions per profile). Gate: gauntlet + per-profile smokes.
+
+  **`[SURVEYED 2026-07-30, before writing any code]` WHAT THE "SOURCES" AXIS ACTUALLY CONTROLS.** The
+  thing being made optional has a name worth using: **the REFLECTIVE LAYER**. On a precompiled boot it
+  is steps 3→7 of `globalFunctions`' chain, and it is ONE unit, not a per-part concern:
+  `Class-source.js` + `Mixin-source.js` fetched individually and `compileFGCode`+`eval`'d → then
+  `dependencies-finding-min.js` → then every source batch → then
+  `storeSourcesAndPotentiallyCompileThemAndExecuteThem true` (ingest-only:
+  `new Class src, false, false`, which registers the class, its superclasses, its augmentations and
+  its source text against the ALREADY-RUNNING class).
+  ⇒ **the seam is "run the reflective layer, or don't", extracted as one function** — NOT PR-D3's
+  sketch of a per-part `ensureSourcesIngested`. Per-part granularity would be machinery for a
+  distinction nothing makes: no consumer asks for one part's members.
+
+  **MEASURED FACTS that shape this (all four checked, not assumed):**
+  1. **`Class` and `Mixin` are the ONLY two classes absent from `js/pre-compiled.js`.** Verified by
+     grepping a real production image: `Widget`, `WorldWdgt`, `InspectorWdgt` are all in it; `Class`
+     and `Mixin` are not — because they are `compileFGCode`+`eval`'d directly, and only `new Class` /
+     `new Mixin` accumulate into `window.JSSourcesContainer.content`. So the meta-system reaches a
+     precompiled world ONLY through the reflective layer.
+  2. **The layer's entire runtime consumer surface is THREE call sites in TWO files:**
+     `Mixin.allMixines` in `InspectorWdgt` (×2) and `ClassInspectorWdgt` (×1) — the `meta-tools`
+     part — plus `Mixin.allMixines` / `window[name].class` in core's
+     `SourceEditsRegistry.replayMixinEdits` / `replayClassEdits`. **There is no runtime `new Class` or
+     `new Mixin` anywhere outside boot.** That is what makes this axis cheap.
+  3. **`ConsoleWdgt` does NOT need it** — it only calls `compileFGCode`, i.e. the compiler, which
+     ships in every profile (PR-D3). So `Widget.createConsole` needs no await even under `lazy`; only
+     `Widget.spawnInspector` does.
+  4. **R-3's ⟨design the error path⟩, with evidence.** Both replay methods are already lenient
+     per-record (try/catch → `console.log`, "logged, not fatal"), but neither is a *clear* error on a
+     tree that can never have the layer: `replayClassEdits` does
+     `theClass = window[r.className]?.class; continue unless theClass?` and so would **silently drop
+     every class edit**, and `replayMixinEdits` touches `Mixin.allMixines` OUTSIDE its try, so it
+     would throw a bare `Mixin is not defined` mid-restore. ⇒ the refusal must be ONE up-front,
+     user-visible report keyed on the build flag, not N console lines and a ReferenceError.
+
+  **DESIGN, in two steps, because they are not equally valuable.**
+
+  **Step A — the axis, `none`, and the `lean` profile.** `sources` joins the schema now that it HAS a
+  consumer (phase 0+1 deliberately left it out):
+  - Enum `background | lazy | none`, and **required iff `form` is `precompiled`, forbidden otherwise**
+    — a compile-at-boot build has no choice to make (its sources ARE its world), so declaring one
+    would mirror `form`. No defaults: a default would hide the one fact this field exists to state.
+    ⇒ "eager" is NOT in the enum; it was only ever the compile-at-boot case, which needs no name.
+  - `none` ⇒ **no `js/coffeescript-sources/` in the tree at all**: no batches, and no
+    `Class-source.js` / `Mixin-source.js` either (fact 1 — with no batches to ingest, a meta-system is
+    a 2-file fetch that can do nothing). That is the appliance artifact: it runs the world and cannot
+    reflect on itself. ~2.28 MB, 40.5% of today's production tree.
+  - **The build must REFUSE `sources: none` together with the `meta-tools` part**: inspectors with no
+    ingested members are a broken window, and this is exactly the incoherent-profile class the
+    validator exists to catch (like `precompiled` needing `index.html`).
+  - `BUILDFLAG_SOURCES` into the boot bundle from `PROFILE_SOURCES`, in the style of the existing
+    `BUILDFLAG_LOAD_TESTS`; `globalFunctions` skips the layer under `none`.
+  - `SourceEditsRegistry`: one clear up-front refusal under `none` when records exist, plus a guard so
+    `Mixin.allMixines` can never ReferenceError.
+  - `profiles/lean.json` = `{parts: ["core"], form: precompiled, sources: "none", entries:
+    ["index.html"]}`, and the smoke gains a per-profile forbidden-file assertion for it.
+
+  **AS EXECUTED 2026-07-30 — step A done. `sources` is in the schema, `lean` ships, and the
+  appliance artifact is 10 files / 1.3 MB against production's 26 / 3.47 MB (−63%).**
+
+  ⚠⚠ **THE FINDING THAT SHAPED THE IMPLEMENTATION, and it was found by watching two builds fail:
+  under `sources: "none"` the artifact's own build CONSUMES the thing the policy removes.** The
+  pre-compile driver harvests the image by booting the freshly-built tree at `?generatePreCompiled`
+  — which is a COMPILE-AT-BOOT boot, the one path on which the "reflective layer" is not reflective
+  at all but is how the world gets built. So everything that path touches must EXIST during the
+  build, and can only be dropped afterwards. Twice I skipped emitting something and twice the build
+  failed, each time in a way that named nothing useful:
+  1. skipping the source-text emission ⇒ the driver compiled nothing and `generate-pre-compiled`
+     failed its size floor: `!!! error: pre-compiled generation failed`;
+  2. skipping `dependencies-finding-min.js` (which IS only reachable from inside the layer, so it
+     looked like a free saving) ⇒ the generation boot 404'd on it mid-chain and simply never
+     finished, surfacing as puppeteer's `Runtime.callFunctionOn timed out` several minutes later.
+  ⇒ **the class source text and `dependencies-finding-min.js` are build INPUTS to a precompiled
+  artifact**, and `sources: "none"` drops them in `build_it_please.sh` right after the driver — one
+  directory and one file, derived from the policy, nothing enumerated. Same shape as the font-assets
+  re-prune. The same reasoning is why `globalFunctions` skips the layer on `window.preCompiled and
+  BUILDFLAG_SOURCES is "none"` and NOT on the flag alone: the `preCompiled` half of that condition is
+  load-bearing, because the generation boot must still run it.
+
+  ⚠ **`compileFGCode` is NOT part of the reflective layer, and cutting the seam one file too wide
+  would have shipped a lean build that dies the first time someone types a formula.** It is defined
+  in `js/src/loading-and-compiling-coffeescript-sources-min.js`, which the boot fetched in the same
+  `Promise.all` as the Class/Mixin sources — but `ScriptWdgt`, `Widget.evaluateStringAsScript` and
+  the spreadsheet's `FormulaCompiler` all call it at runtime, in core, in every profile (PR-D3).
+  That file and `logging-div-min.js` therefore stay in the always-loaded step; only the Class/Mixin
+  sources moved into the extracted `loadReflectiveLayerPromise()`.
+
+  **The refusal path (R-3's ⟨design the error path⟩), as built.** `SourceEditsRegistry` gained
+  `@canReplaySourceEdits: -> Mixin?` — a CAPABILITY question, not a build-flag question, chosen for
+  three reasons: it is the actual precondition; no other class in the tree reads a `BUILDFLAG_*`, and
+  starting now would be a new coupling; and it stays correct for step B, where the honest answer
+  before the layer loads is "not yet" rather than "never". Both replays return early on it (which
+  also fixes the bare `Mixin is not defined` that `replayMixinEdits` would have thrown from OUTSIDE
+  its own try/catch), and `WorldWdgt.loadWorldSnapshot` counts what it cannot replay and `@inform`s
+  the user ONCE, before restoring the rest. Per-widget `{"$src"}` edits are untouched — they need
+  only the compiler.
+
+  **Five more validations, each OBSERVED to fail:** a precompiled profile with no `sources`; a
+  compile-at-boot profile that declares one; an unknown value; `sources: "none"` together with the
+  `meta-tools` part (inspectors with no member maps); and `sources: "none"` together with a LAZY part
+  — that last one because a lazy part arrives AS SOURCE (`PartsRegistry` fetches and compiles its
+  batches at launch) and is not in the image either, so its desktop icon would be a button that 404s.
+
+  **Measured, against the phase 0+1 baselines:** dev and homepage keep the SAME file list (4598 and
+  26 entries) and the SAME source multiset (502 and 434); the only content that moved is the two
+  batches carrying the three edited classes, the boot bundles (+317 B: the restructure plus the new
+  `BUILDFLAG_SOURCES` line) and `pre-compiled.js`. Gate: `build_and_smoke.sh --profile lean` boots
+  the appliance tree, asserts `preCompiled === true`, runs a whole-world SNAPSHOT ROUND-TRIP on it
+  (which is what exercises the guarded replay), and asserts the tree ships none of
+  `js/coffeescript-sources` / `js/src/dependencies-finding-min.js` / the SWCanvas payload.
+
+  **Step B — `lazy`, to be decided ON THE EVIDENCE of step A, not before.** It needs the same
+  extracted function plus a memoized `ensure…` and an `await` in `Widget.spawnInspector` and in the
+  snapshot restore path. ⚠ Worth stating plainly before building it: on a precompiled tree
+  `background` ALREADY starts the world first and fetches the batches behind it, so `lazy` buys
+  deferred bandwidth/CPU on a tree that still ships the inspectors — a real but modest win — at the
+  cost of making a core UI entry point asynchronous and adding a "click the inspector, wait for
+  2.28 MB" state. Step A is a strict prerequisite either way, so build A, measure, and put B to the
+  owner with numbers rather than assuming the sketched axis earns its keep.
 - **Phase 3 — consumers:** re-point the single-file-save plan's banked §7.1 at
   `form: precompiled`; video player flags → profile extras/part; document in CLAUDE.md +
   `docs/architecture/` (build/packaging section) — present-tense, no history prose.
@@ -601,6 +721,11 @@ come BEFORE them.** Two reasons, both learned inside this arc:
    build already knows, and it is `build_it_please.sh:904` surviving under a new name — the exact
    failure the completion doctrine exists to prevent. If an item seems to need it, the item is the
    problem: delete it or give it a part.
+0b. **A `dev-notests` gauntlet leg** — REJECTED by the owner 2026-07-30, when phases 0+1 made one
+   available (`build_and_smoke.sh --profile dev-notests` boots both its pages in ~40 s, and after
+   phases 0+1 it is the one flavour whose bundles differ from what shipped before). The gauntlet is
+   already 14 legs, and `dev-notests` is a by-hand check built a few times a year. ⇒ it stays
+   on-demand; do not propose it again.
 1. **Compiler-less profiles** — product-critical inventory (PR-D3); do not re-litigate.
 2. **Per-part precompiled chunks in v1** — accumulator tagging + chunk plumbing for no current
    consumer; banked until a profile measurably needs faster part loads.

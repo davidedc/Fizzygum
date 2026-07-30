@@ -4,11 +4,15 @@
 """
 buildProfile.py -- a build FLAVOUR as DATA: the one reader of buildSystem/profiles/*.json.
 
-WHAT A PROFILE IS -- three facts, in buildSystem/profiles/<name>.json:
+WHAT A PROFILE IS -- three facts, plus one that only a precompiled artifact has to answer, in
+buildSystem/profiles/<name>.json:
 
     parts    which slices of the system ship   (the partition: buildSystem/parts.json)
     form     how the classes reach the world   ("compile-at-boot" | "precompiled")
     entries  which entry pages ship            (ENTRY_PAGES below; each presets a backend)
+    sources  WHEN the reflective layer loads   ("background" | "lazy" | "none") -- required iff
+             form is "precompiled", and forbidden otherwise, because a compile-at-boot build's
+             sources ARE its world. See SOURCES_POLICIES.
 
 EVERYTHING ELSE FOLLOWS. Every question the build used to answer with "is this the homepage?" is
 DERIVED here from those three (arc 5 PR-D6: derive, never declare):
@@ -21,11 +25,14 @@ DERIVED here from those three (arc 5 PR-D6: derive, never declare):
     which non-source files land in the tree           <- the shipping parts' own `assets` / `vendor`
     which src/boot/ pieces join the boot bundle       <- the shipping parts' own `bootPrelude`
     running the pre-compile driver + minifying it     <- form == "precompiled"
+    whether js/coffeescript-sources/ exists at all    <- sources != "none"
+    when the reflective layer loads, if ever          <- sources (BUILDFLAG_SOURCES in the bundle)
 
-So the schema has THREE keys, not the eight arc 5's plan first sketched: `sources`, `extras.tests`,
+So the schema stayed SMALL, against the eight keys arc 5's plan first sketched: `extras.tests`,
 `extras.fontAssets` and `name` all turned out to be derivable or redundant, and a field that mirrors
-a fact the build can compute is the very species this program exists to kill. (`sources: lazy|none`
-arrives in arc 5 phase 2 WITH its consumer -- until then it would be a field nothing reads.)
+a fact the build can compute is the very species this program exists to kill. `sources` was held back
+from phase 0+1 for the same reason and arrived in phase 2 WITH its consumer -- which is also why it is
+required only where it expresses a real choice.
 
 WHY THIS EXISTS. Until arc 5, one flavour -- the homepage -- was spelled as a `--homepage` flag and
 ten `if $homepage` branches in build_it_please.sh, plus an `inHomepage` boolean per part and a
@@ -94,9 +101,30 @@ ENTRY_PAGES = [
 
 FORMS = ("compile-at-boot", "precompiled")
 
+# WHEN THE REFLECTIVE LAYER LOADS -- for a PRECOMPILED artifact only (see resolve()).
+#
+# "The reflective layer" is the class SOURCE TEXT plus the meta-system that parses it: the two
+# individually-fetched Class/Mixin sources, then every source batch, then an ingest-only pass
+# (`new Class src, false, false`) that registers each class's members and source against the class
+# the pre-compiled image already defined. A precompiled world RUNS without it -- it is what lets the
+# system inspect and rewrite itself, not what makes it go.
+#
+#   background  fetch it right after the world starts, off the critical path. Today's production.
+#   lazy        fetch it on first demand (opening an inspector).
+#   none        do not ship it at all: an appliance artifact that cannot reflect on itself. ~40% of
+#               a production tree is that source text.
+#
+# There is deliberately no "eager": a COMPILE-AT-BOOT build's sources ARE its world, so it has no
+# choice to state, and a field that can only hold one value is a mirror of `form`.
+SOURCES_POLICIES = ("background", "lazy", "none")
+
 # The part whose presence MAKES a build test-capable. Named once, here, because five derived facts
 # key off it (see the module docstring) and "which part is the test machinery" is one fact.
 HARNESS_PART = "harness"
+
+# The part that CANNOT ship without the reflective layer: the in-world inspectors read the member
+# maps that only the ingest pass builds, so shipping them with sources: "none" is a broken window.
+META_TOOLS_PART = "meta-tools"
 
 
 def fail(message):
@@ -158,9 +186,13 @@ def resolveSelection(spec, universe, what, profileName):
 class Profile:
     """A validated profile: the three declared facts, plus everything derived from them."""
 
-    def __init__(self, name, parts, form, entries):
+    def __init__(self, name, parts, form, sources, entries):
         self.name = name
         self.form = form
+        # WHEN the reflective layer loads (SOURCES_POLICIES). Always "background" for a
+        # compile-at-boot build: there, the sources ARE the world and are loaded to BE it, so the
+        # question the field answers does not arise -- see resolve().
+        self.sources = sources
         # the resolved part NAMES this profile selects. Whether a part ALSO needs a build flag
         # (`requiresFlag`) is a separate question -- see partShips().
         self.selectedParts = parts
@@ -181,6 +213,14 @@ class Profile:
     @property
     def isPreCompiled(self):
         return self.form == "precompiled"
+
+    @property
+    def shipsSourceText(self):
+        """Does `js/coffeescript-sources/` exist in this tree at all? `none` is the one policy that
+        drops it -- batches AND the two individually-fetched Class/Mixin sources, which are the only
+        two classes a pre-compiled image does NOT contain (measured) and which can do nothing with no
+        batches to ingest."""
+        return self.sources != "none"
 
     def selectsPart(self, partName):
         return partName in self.selectedParts
@@ -239,7 +279,7 @@ def resolve(name):
 
     # An unknown key is a typo that would otherwise be silently ignored, and a silently-ignored
     # `"from": "precompiled"` ships a compile-at-boot tree while claiming otherwise.
-    allowed = ("//", "parts", "form", "entries")
+    allowed = ("//", "parts", "form", "sources", "entries")
     unknownKeys = [key for key in declared.keys() if key not in allowed]
     if unknownKeys:
         fail("profile '%s' has unknown key(s): %s. A profile declares exactly %s (everything else "
@@ -253,10 +293,50 @@ def resolve(name):
     if form not in FORMS:
         fail("profile '%s': form must be one of %s -- got %r" % (name, " / ".join(FORMS), form))
 
+    # `sources` is required for a precompiled artifact and FORBIDDEN otherwise -- both directions, so
+    # neither a missing choice nor a stated non-choice can pass. A compile-at-boot build loads every
+    # source in order to BE the world; there is no policy to pick, and declaring one would mirror
+    # `form` and then rot when they disagreed.
+    if form == "precompiled":
+        if "sources" not in declared:
+            fail("profile '%s': form \"precompiled\" must also declare \"sources\" (%s) -- a "
+                 "precompiled world runs without the class source text, so when that text arrives "
+                 "is a real choice this profile has to make" % (name, " / ".join(SOURCES_POLICIES)))
+        sources = declared["sources"]
+        if sources not in SOURCES_POLICIES:
+            fail("profile '%s': sources must be one of %s -- got %r"
+                 % (name, " / ".join(SOURCES_POLICIES), sources))
+    else:
+        if "sources" in declared:
+            fail("profile '%s': form \"compile-at-boot\" must NOT declare \"sources\" -- such a "
+                 "build compiles every source AT boot because they ARE its world, so the field could "
+                 "only ever restate `form`" % name)
+        sources = "background"
+
     parts = loadParts()
     selectedParts = resolveSelection(declared["parts"], partNames(parts), "parts", name)
     if "core" not in selectedParts:
         fail("profile '%s' does not ship the 'core' part -- core IS the product" % name)
+
+    # An incoherent pairing, in the same family as "precompiled needs index.html": the in-world
+    # inspectors read the member maps that only the ingest pass builds, so with no source text they
+    # would open onto nothing.
+    if sources == "none" and META_TOOLS_PART in selectedParts:
+        fail("profile '%s' ships the '%s' part with sources \"none\" -- the inspectors read the "
+             "member maps that only ingesting the source text builds, so they would open onto "
+             "nothing. Drop the part, or pick sources \"background\"/\"lazy\"."
+             % (name, META_TOOLS_PART))
+
+    # A LAZY part arrives AS SOURCE -- PartsRegistry fetches its batches and compiles them at launch
+    # -- so with no source text in the tree it could never load: its desktop icon would be a button
+    # that 404s. (Nor is its code in the pre-compiled image: that is harvested by booting index.html,
+    # where a lazy part is by definition not loaded.)
+    if sources == "none":
+        for partName in selectedParts:
+            if not parts[partName].get("eager", True):
+                fail("profile '%s' ships the lazy part '%s' with sources \"none\" -- a lazy part is "
+                     "fetched as SOURCE when something launches it, and this artifact has no source "
+                     "text, so it could never load." % (name, partName))
 
     entryNames = [pageFileName for (pageFileName, _sw, _eager) in ENTRY_PAGES]
     selectedEntryNames = resolveSelection(declared["entries"], entryNames, "entries", name)
@@ -270,7 +350,7 @@ def resolve(name):
         fail("profile '%s': form \"precompiled\" needs index.html among its entries -- the "
              "pre-compile driver harvests the image by booting it" % name)
 
-    return Profile(name, selectedParts, form, entries)
+    return Profile(name, selectedParts, form, sources, entries)
 
 
 def profileNameFromArgv(argv):
@@ -301,6 +381,8 @@ def emitShellAssignments(argv):
 
     print("PROFILE_NAME=%s" % shlex.quote(profile.name))
     print("PROFILE_FORM=%s" % shlex.quote(profile.form))
+    print("PROFILE_SOURCES=%s" % shlex.quote(profile.sources))
+    print("PROFILE_SHIPS_SOURCE_TEXT=%s" % ("true" if profile.shipsSourceText else "false"))
     print("PROFILE_SHIPS_TESTS=%s" % ("true" if profile.shipsTests else "false"))
     print("PROFILE_SHIPS_SWCANVAS_ENTRY=%s" % ("true" if profile.shipsSWCanvasEntry else "false"))
     print("PROFILE_BOOT_PRELUDE=(%s)" % " ".join(shlex.quote(piece) for piece in prelude))

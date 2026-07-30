@@ -12,18 +12,22 @@
     "meta-tools has always been in a production build, and a `lean` profile (arc 5 phase 2) is what",
     "will drop it.",
     "",
-    "Everything else about this tree FOLLOWS from these three facts, with nothing to maintain:",
+    "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
     "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
     "                          gates skipped, and the dead `if Automator?` branches stripped",
     "  index.html only      -> no SWCanvas boot bundle and no font-assets/ (~90 MB not deployed)",
     "  form precompiled     -> the pre-compile driver harvests the image from a compile-at-boot boot,",
-    "                          then it is minified in place; the world starts from that image and",
-    "                          loads the class sources afterwards, in the background",
+    "                          then it is minified in place; the world starts from that image",
+    "  sources background   -> ...and the class source text follows it, off the critical path. This",
+    "                          profile KEEPS that text (~40% of the tree) because production ships",
+    "                          the inspectors, which read the member maps ingesting it builds. The",
+    "                          artifact that drops it is `lean`.",
     "  the absent parts      -> their assets and vendor payloads are simply never written (so no",
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
   "parts": ["core", "meta-tools"],
   "form": "precompiled",
+  "sources": "background",
   "entries": ["index.html"]
 }

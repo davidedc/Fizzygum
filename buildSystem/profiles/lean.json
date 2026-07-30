@@ -1,0 +1,28 @@
+{
+  "//": [
+    "lean -- the APPLIANCE artifact: `./build_it_please.sh --profile lean`.",
+    "",
+    "`homepage` minus the ability to reflect on itself. It runs the same world, from the same",
+    "pre-compiled image, but ships NO class source text: no `js/coffeescript-sources/` at all, which",
+    "is ~40% of a production tree, and no in-world inspectors to read it (`meta-tools` is dropped --",
+    "the build REFUSES that part together with sources \"none\", because inspectors with no ingested",
+    "member maps would open onto nothing).",
+    "",
+    "⚠ WHAT THIS ARTIFACT CANNOT DO, stated plainly because it is a real loss and not a free win:",
+    "  - no InspectorWdgt / ClassInspectorWdgt / ConsoleWdgt, so no live editing of the system",
+    "  - a loaded snapshot's CLASS-scope and MIXIN-scope source edits cannot be replayed, and are",
+    "    refused with one clear report rather than silently dropped (SourceEditsRegistry). Per-widget",
+    "    `{\"$src\"}` function edits are UNAFFECTED -- those only need the compiler, which every",
+    "    profile ships (arc 5 PR-D3).",
+    "",
+    "What it keeps: the CoffeeScript compiler, because runtime compilation is product behaviour, not",
+    "a dev affordance -- FizzyPaint tools, spreadsheet formulas (including reloading a saved sheet)",
+    "and Fizzytiles' LiveCodeLang are all compiled from source strings at runtime. A compiler-less",
+    "artifact is a non-interactive kiosk and is out of scope for this arc."
+  ],
+
+  "parts": ["core"],
+  "form": "precompiled",
+  "sources": "none",
+  "entries": ["index.html"]
+}
