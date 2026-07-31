@@ -8,11 +8,28 @@ build order: **[`../../docs/plans/dataflow-engine-implementation-plan.md`](../..
 This file is the operating summary — the `DataflowEngine.coffee` class header carries the full
 node-protocol contract.
 
+## ⛔ Packaging: this directory is CORE, deliberately — do not make it a part
+
+It looks like an app slice (it sits next to `src/spreadsheet/`, which IS a lazy part), and it is
+not one. **Owner decision, 2026-07-30**, with the enumeration behind it in
+`../../docs/plans/core-app-slices-partition-plan.md` §4 Phase 3: dataflow is the **wiring
+substrate**, not an app. `ControllerMixin.ensureWireEdge` is how ANY widget wires itself to any
+other, `WorldWdgt.doOneCycle` drains it EVERY cycle, and its 14 call sites are already written
+`world.dataflow?.…` — so its absence would be silently **accepted** rather than caught: wires would
+simply never fire, sliders would stop driving their targets, patch nodes would go dead. That is
+broken rather than reduced, which fails the rule that a part's absence must be a NO-OP at every call
+site (`../../docs/architecture/build-and-packaging.md` §2) — the test for whether something can be a
+part at all. The same judgment keeps `src/meta` out.
+
+⇒ The spreadsheet's lazy-part door therefore names ONE part, and the absent part→part `requires`
+mechanism does not matter to it.
+
 ## What's here
 
 - `DataflowEngine.coffee` — the engine. A plain delegated collaborator (NOT a Widget), reached
   as `world.dataflow` (the MacroToolkit / WidgetFactory pattern). Ships in every build (a
-  product feature — no homepage exclusion), so WorldWdgt constructs it UNGUARDED.
+  product feature, and core in every profile — see the packaging note above), so WorldWdgt
+  constructs it UNGUARDED.
 - `SecondsSource.coffee` / `FrameSource.coffee` — the two **time sources** (spec §6). Plain
   non-serialized singletons the engine builds LAZILY (`world.dataflow.secondsSource()` /
   `.frameSource()`) on the first `seconds` / `frame` subscription. Each is a **pure dataflow

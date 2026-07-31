@@ -361,7 +361,11 @@
     <tr><td>a non-source file</td><td>give it to the part that owns it (<code>assets</code>) — never to the build script; declared-but-missing is a hard failure</td></tr>
   </table>
 
-  <p class="sub" style="margin-top:34px">Authoritative detail, edge cases, and the fingerprint
+  <p class="sub" style="margin-top:34px">This page is about how an artifact is <em>assembled</em>.
+  For what happens when you <em>open</em> one — the boot sequence, when the reflective layer arrives,
+  and how <code>world.parts</code> brings a lazy part in behind a running world — see the companion
+  explainer <a href="boot-and-lazy-parts.html">boot-and-lazy-parts.html</a>.
+  Authoritative detail, edge cases, and the fingerprint
   discipline: <span class="mono">docs/architecture/build-and-packaging.md</span>. Why it is this
   shape (the five arcs, their falsified premises and measurements):
   <span class="mono">docs/archive/build-arc-1…5-*.md</span>.</p>

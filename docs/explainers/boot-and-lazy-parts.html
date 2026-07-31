@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzygum — how the boot happens, and how parts arrive later</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;  --surface: #fcfcfb;
+    --ink:       #0b0b0b;  --ink-2:   #52514e;  --muted: #898781;
+    --hairline:  #e1e0d9;  --border:  rgba(11,11,11,0.10);
+    --s1: #2a78d6; /* blue   — test/SW-side things            */
+    --s2: #eb6834; /* orange — core / product                  */
+    --s3: #1baf7a; /* aqua   — optional parts / mechanisms     */
+    --s4: #eda100; /* yellow — flag-gated / auxiliary          */
+    --wash-s1: rgba(42,120,214,0.08);
+    --wash-s2: rgba(235,104,52,0.08);
+    --wash-s3: rgba(27,175,122,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --wash-s1: rgba(57,135,229,0.14);
+      --wash-s2: rgba(217,89,38,0.14);
+      --wash-s3: rgba(25,158,112,0.14);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.7em; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.25em; margin: 2.4em 0 .5em; }
+  h3 { font-size: 1.02em; margin: 1.5em 0 .4em; }
+  p, li { color: var(--ink-2); }
+  strong { color: var(--ink); }
+  .kicker { color: var(--muted); font-size: .85em; letter-spacing: .06em; text-transform: uppercase; }
+  .sub { color: var(--muted); font-size: .9em; margin-bottom: 26px; }
+  .sub a { color: var(--s1); }
+  figure { margin: 20px 0 26px; background: var(--surface); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px 12px; overflow-x: auto; }
+  figcaption { font-size: .82em; color: var(--muted); margin-top: 10px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  code { background: var(--page); border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: .85em; line-height: 1.5; color: var(--ink-2); }
+  pre .c { color: var(--muted); }
+  .callout { border-left: 3px solid var(--s1); background: var(--wash-s1);
+             padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; font-size: .95em; }
+  .callout.warn { border-left-color: var(--s2); background: var(--wash-s2); }
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline);
+           color: var(--ink-2); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; }
+  td.k { white-space: nowrap; color: var(--ink); }
+  /* boot timelines */
+  .tl-label { font-size: .8em; color: var(--muted); margin: 14px 0 2px; }
+  .trow { display: flex; gap: 3px; align-items: stretch; margin: 3px 0; flex-wrap: wrap; }
+  .trow .seg { border-radius: 4px; padding: 5px 9px; font-size: .74em; line-height: 1.35;
+               color: var(--ink); border: 1px solid var(--border); background: var(--page); }
+  .seg.world { background: var(--wash-s3); border-color: var(--s3); }
+  .seg.late  { background: var(--wash-s1); border-color: var(--s1); }
+  .seg.heavy { background: var(--wash-s2); border-color: var(--s2); }
+  ol.steps { padding-left: 1.2em; }
+  ol.steps li { margin: 6px 0; }
+  svg text { font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--ink-2); }
+  svg text.t { fill: var(--ink); font-weight: 600; }
+  svg text.m { fill: var(--muted); font-size: 11px; }
+  svg .box { fill: var(--page); stroke: var(--border); rx: 8; }
+  svg .flow { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#arr); }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Fizzygum · explainer</p>
+  <h1>How the boot happens, and how parts arrive later</h1>
+  <p class="sub">Companion to <span class="mono">docs/architecture/build-and-packaging.md</span>
+  (authoritative) and to the <a href="build-and-packaging.html">build &amp; packaging explainer</a>,
+  which covers how an artifact is <em>assembled</em>. This one covers what happens when you
+  <em>open</em> it.</p>
+
+  <p>Two facts shape everything below. First, there is <strong>no module system</strong>: every class
+  is a global, and classes are shipped as escaped source <em>text</em> that the browser compiles at
+  boot — or, for a precompiled artifact, as one already-compiled image. Second, Fizzygum runs by
+  <strong>double-clicking a file</strong>, over <code>file://</code> with no server — so there is no
+  <code>fetch</code> and no XHR, and <em>every</em> load in this document is a
+  <code>&lt;script&gt;</code> tag injected into the head, wrapped in a promise
+  (<code>loadJSFilePromise</code>, which tries three times before rejecting).</p>
+
+  <h2>1 · The entry page: two presets and one bundle tag</h2>
+
+  <p>All three entry pages are generated from the single source <code>src/index.html</code>. The build
+  substitutes two <code>window.*</code> presets plus the matching boot-bundle
+  <code>&lt;script&gt;</code> for a placeholder comment; everything else on the page — the splash
+  image, the canvas, the <code>onload</code> hook — is shared verbatim.</p>
+
+<pre>&lt;script&gt;window.FIZZYGUM_USE_SWCANVAS = false; window.FIZZYGUM_EAGER_ALL_PARTS = false;&lt;/script&gt;
+&lt;script src="js/fizzygum-boot-native-min.js"&gt;&lt;/script&gt;</pre>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Entry page</th><th>Renderer</th><th>All parts eager?</th><th>What it is</th></tr>
+    <tr><td class="k">index.html</td><td>native 2D</td><td>no</td>
+        <td><strong>the only page where laziness is real</strong> — production ships just this one</td></tr>
+    <tr><td class="k">index-sw.html</td><td>SWCanvas</td><td>yes</td><td>the same world, software-rendered</td></tr>
+    <tr><td class="k">worldWithSystemTestHarness.html</td><td>SWCanvas</td><td>yes</td><td>that plus the test harness — what the suite drives</td></tr>
+  </table>
+  </div>
+
+  <div class="callout">
+    <p style="margin:0"><strong>Why the two test-side pages force every part eager.</strong> A part
+    arriving <em>during</em> a test would be frame-paced, therefore cycle-count-dependent, therefore
+    exactly the nondeterminism class the suite is built to exclude. So they preset
+    <code>FIZZYGUM_EAGER_ALL_PARTS</code> and the suite's world is shaped as it always was. The
+    consequence worth remembering: <strong>a SystemTest can never observe laziness</strong> — it
+    would pass while proving nothing. That gap is filled by separate Node rigs (§7), and it is
+    structural, not a shortcut.</p>
+  </div>
+
+  <h2>2 · The boot bundle, and why its order is load-bearing</h2>
+
+  <p>The bundle is the page's first script. It is assembled by concatenating CoffeeScript in a fixed
+  order, compiling it once and minifying it. The order is not cosmetic:</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>Piece</th><th>Why here</th></tr>
+    <tr><td class="k">1</td><td class="k">source-vault.coffee</td>
+        <td><strong>First, always.</strong> Every generated <code>sources_batch_*.js</code> is a list of
+        <code>SourceVault.store(…)</code> calls, so the vault must exist before any batch can run.</td></tr>
+    <tr><td class="k">2</td><td class="k">partsManifest (generated)</td>
+        <td><code>window.FIZZYGUM_PARTS</code> — each part's batch files, eagerness and vendor payloads.
+        It is <em>in</em> the bundle rather than fetched because the batch loader needs it immediately.</td></tr>
+    <tr><td class="k">3</td><td class="k">globalFunctions.coffee</td>
+        <td>the boot sequence itself, plus <code>loadJSFilePromise</code> and the reflective-layer machinery</td></tr>
+    <tr><td class="k">4</td><td class="k">extensions/*</td>
+        <td>prototype extensions (Array, Object, Math, String, canvas…) that must exist before any class runs</td></tr>
+    <tr><td class="k">5</td><td class="k">each shipping part's <code>bootPrelude</code></td>
+        <td>the same, but contributed BY a part — today only <code>numbertimes.coffee</code>, which
+        Fizzytiles' LiveCodeLang needs. A part owning its own boot piece is why the build script no
+        longer holds a fact about a part.</td></tr>
+    <tr><td class="k">6</td><td class="k">the build stamp</td>
+        <td><code>buildVersion</code>, from the source COMMIT and never the wall clock — so two builds of
+        a clean tree at the same commit are byte-identical</td></tr>
+  </table>
+  </div>
+
+  <h2>3 · Two boot paths</h2>
+
+  <p>Which one runs is decided by the profile's <code>form</code>, and the difference is
+  fundamental: on a compile-at-boot tree <strong>the sources ARE the world</strong>, so they must be
+  compiled before there is anything to start. On a precompiled tree the world is already running
+  before any source text is considered.</p>
+
+  <p class="tl-label">form: compile-at-boot &nbsp;— the dev builds</p>
+  <div class="trow">
+    <div class="seg">boot bundle</div>
+    <div class="seg">pre-compiled.js <em>(a stub)</em> + CoffeeScript compiler</div>
+    <div class="seg heavy">Class + Mixin sources → compile by hand</div>
+    <div class="seg heavy">dependencies-finding</div>
+    <div class="seg heavy">every eager part's batches</div>
+    <div class="seg heavy">compile + EXECUTE all ~500 classes</div>
+    <div class="seg world">world exists → doOneCycle</div>
+  </div>
+
+  <p class="tl-label">form: precompiled &nbsp;— production and the appliance</p>
+  <div class="trow">
+    <div class="seg">boot bundle</div>
+    <div class="seg">pre-compiled.js <em>(the real image)</em> + compiler</div>
+    <div class="seg world">world exists → doOneCycle</div>
+    <div class="seg late">…later, and only if asked: the reflective layer</div>
+  </div>
+
+  <figcaption style="margin-top:2px">The orange stretch is what a precompiled artifact does not
+  pay for at startup. The blue one may never happen at all.</figcaption>
+
+  <div class="callout warn">
+    <p style="margin:0 0 8px"><strong>The stub is not a placeholder you can ignore.</strong> A
+    compile-at-boot tree still ships a <code>js/pre-compiled.js</code> — one that sets
+    <code>preCompiled = false</code>. The production boot check therefore asserts
+    <code>window.preCompiled === true</code>: <em>the stub boots perfectly well</em>, so only that
+    assertion distinguishes a real image from a generator that produced nothing.</p>
+    <p style="margin:0"><strong>And the image is harvested by booting the tree itself.</strong> The
+    packaging driver opens the freshly-built page at <code>?generatePreCompiled</code> — the one mode
+    in which <code>Class</code>/<code>Mixin</code> accumulate the JS they compile — then reads that
+    string back out and writes the file from Node. Which is why <em>the source text is a build INPUT
+    to every precompiled artifact</em>, even one whose profile says <code>sources: "none"</code>: the
+    text must exist during the build and is dropped <em>after</em> the driver runs.</p>
+  </div>
+
+  <h2>4 · The reflective layer, and the meta-system inside it</h2>
+
+  <p>"The reflective layer" is the class SOURCE TEXT plus the meta-system that parses it. It is what
+  lets the system show and rewrite its own code — inspectors read class member maps, and a snapshot
+  can carry class-scope source edits. <strong>It is not what makes the world go.</strong></p>
+
+  <p>It is five steps, and the first three have a name of their own because a lazy part needs exactly
+  those and nothing else:</p>
+
+  <figure>
+    <svg viewBox="0 0 820 176" width="100%">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+      <rect x="10" y="10" width="470" height="76" rx="9" fill="var(--wash-s3)" stroke="var(--s3)"/>
+      <text class="t" x="24" y="30">ensureMetaSystemLoaded()  ·  ~39 KB</text>
+      <text class="m" x="24" y="49">1. fetch the Class + Mixin sources   2. compile + eval them</text>
+      <text class="m" x="24" y="66">3. fetch dependencies-finding (findLoadOrder)</text>
+
+      <rect x="500" y="10" width="310" height="76" rx="9" fill="var(--wash-s2)" stroke="var(--s2)"/>
+      <text class="t" x="514" y="30">…the rest of the layer  ·  2.29 MB</text>
+      <text class="m" x="514" y="49">4. every EAGER part's source batches</text>
+      <text class="m" x="514" y="66">5. ingest them against the running classes</text>
+
+      <rect class="box" x="10" y="112" width="800" height="52"/>
+      <text class="t" x="24" y="133">Why the split exists</text>
+      <text class="m" x="24" y="151">Class and Mixin are the only two classes ABSENT from the image — they compiled everything else, so nothing accumulated them into it.</text>
+    </svg>
+    <figcaption>A lazy part must ingest its own sources, which means <code>new Class</code> /
+    <code>new Mixin</code> and <code>findLoadOrder</code> — none of which a precompiled tree has until
+    something fetches them. <code>PartsRegistry</code> awaits the green box and
+    <strong>must never await the whole layer instead</strong>: that would drag in step 4, every eager
+    batch, and hand back the entire saving that made the part lazy.</figcaption>
+  </figure>
+
+  <p>Both promises are memoized, so a part load and a later inspector open share one fetch. When the
+  layer loads — if ever — is the profile's <code>sources</code> axis:</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th><code>sources</code></th><th>Behaviour</th><th>Who ships it</th></tr>
+    <tr><td class="k">background</td><td>fetch it once the world is up, off the critical path</td><td>the historical default</td></tr>
+    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (2.28 MB, 62.7% of the tree, that a normal visit never downloads)</td></tr>
+    <tr><td class="k">none</td><td>never; ship none of it. No inspectors; class-level edits in a snapshot are refused with one clear report</td><td>the <code>lean</code> appliance</td></tr>
+  </table>
+  </div>
+
+  <div class="callout">
+    <p style="margin:0"><strong>The compiler is not part of any of this, and ships everywhere.</strong>
+    <code>compileFGCode</code> lives in a file that always loads, because runtime compilation is
+    product behaviour rather than a dev affordance: FizzyPaint tools, spreadsheet formulas (including
+    reloading a saved sheet), per-widget <code>{"$src"}</code> records and Fizzytiles' LiveCodeLang are
+    all compiled from source strings while the world runs. A compiler-less artifact is a
+    non-interactive kiosk.</p>
+  </div>
+
+  <h2>5 · Loading a part on demand</h2>
+
+  <p>A part marked <code>"eager": false</code> is simply not in the booted page: the boot batch loader
+  skips it, and on a precompiled tree its classes are absent from the image too. <code>world.parts</code>
+  (<code>PartsRegistry</code>) is what brings one in later.</p>
+
+  <figure>
+    <svg viewBox="0 0 820 132" width="100%">
+      <rect class="box" x="10" y="16" width="150" height="46"/>
+      <text class="t" x="26" y="38">a door</text>
+      <text class="m" x="26" y="54">launch / open / restore</text>
+
+      <rect class="box" x="210" y="16" width="180" height="46"/>
+      <text class="t" x="226" y="38">world.parts</text>
+      <text class="m" x="226" y="54">one promise per part</text>
+
+      <rect class="box" x="440" y="16" width="170" height="46" style="stroke:var(--s3)"/>
+      <text class="t" x="456" y="38">meta-system</text>
+      <text class="m" x="456" y="54">then vendor, then batches</text>
+
+      <rect class="box" x="660" y="16" width="150" height="46" style="stroke:var(--s2)"/>
+      <text class="t" x="676" y="38">ingest</text>
+      <text class="m" x="676" y="54">one class per FRAME</text>
+
+      <path class="flow" d="M162 39 L 206 39"/>
+      <path class="flow" d="M392 39 L 436 39"/>
+      <path class="flow" d="M612 39 L 656 39"/>
+      <text class="m" x="10" y="96">Concurrent callers get the SAME promise, so a double-click cannot start two loads. A failed load leaves the part ASKABLE again</text>
+      <text class="m" x="10" y="114">rather than stuck LOADING. Parts load monotonically and are never unloaded — resetWorld resets STATE, and code is not state.</text>
+    </svg>
+    <figcaption>The ingest is frame-paced through the same queue the boot uses: each step pushes its
+    resolver onto <code>window.framePacedPromises</code>, and the world's own cycle
+    (<code>progressFramePacedActions</code>) resolves exactly one per frame. That is what lets ~10
+    classes compile behind a world that is already running, without jitter.</figcaption>
+  </figure>
+
+  <p>Two constraints the boot path does not have, both handled in <code>_ingestPartPromise</code>:
+  <code>findLoadOrder()</code> scans every source the vault holds and is meant to run once before
+  anything is defined, so the registry takes its order and keeps only the names this part just added;
+  and a name that is <em>already</em> defined must not be re-ingested, because <code>new Class</code>
+  would redefine a live class underneath running instances.</p>
+
+  <h2>6 · Four questions, four different methods</h2>
+
+  <p>This is the part most worth getting right, because <strong>a class-existence check answers none
+  of these questions correctly for a lazy part</strong>: an undefined class means both "this artifact
+  never shipped it" and "nobody has fetched it yet", and those two want opposite responses — do
+  nothing, versus go and get it.</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>You want to know…</th><th>Ask</th><th>Notes</th></tr>
+    <tr><td>Did this artifact ship the part at all?</td><td class="k">isAvailable name</td>
+        <td>public; a <code>lean</code> build genuinely has no inspectors and there is nothing to open</td></tr>
+    <tr><td>Is it here <em>yet</em>?</td><td class="k">_isLoaded name</td>
+        <td>private — <code>whenAllLoaded</code> is its only caller. A door that asks this itself is re-deriving the fast-path rule below</td></tr>
+    <tr><td>Run this once the parts are in — they are REQUIRED</td><td class="k">whenAllLoaded [names], -&gt; …</td>
+        <td>rejects on a part this build never shipped. Right when the part <em>constitutes</em> the result</td></tr>
+    <tr><td>Run this once the parts are in — they are OPTIONAL</td><td class="k">whenOptionalPartsLoaded [names], -&gt; …</td>
+        <td>loads what is here, runs the callback regardless. Right when the part merely <em>enriches</em> the result</td></tr>
+    <tr><td>Construct a class core is not allowed to name</td><td class="k">launch "TheClass"</td>
+        <td>names it as DATA — <code>new (window[className])</code>, the edge gate's sanctioned blind spot</td></tr>
+    <tr><td>Which parts does this snapshot need?</td><td class="k">partsNeededFor [classNames]</td>
+        <td>reads the build MANIFEST, never the SourceVault — the vault only knows sources already loaded, so for a lazy part it cannot answer before the load, which is exactly when it is asked</td></tr>
+  </table>
+  </div>
+
+  <h3>Required or optional is a real decision, and getting it wrong is silent</h3>
+  <p>A <code>Sample*App</code> document <em>builds</em> plots: without them it is broken, not reduced,
+  so <code>whenAllLoaded</code> is right and rejecting loudly is the correct outcome. A window that
+  merely offers a part's tools in a docked palette is fine without them — the toolbars already filter
+  their own contents by class existence — so <code>whenOptionalPartsLoaded</code> is right there. Using
+  the wrong one is invisible until a profile actually drops the part: <code>DashboardsApp</code> and
+  <code>SimpleSlideApp</code> are core classes whose desktop icons always ship, and with
+  <code>whenAllLoaded</code> their icons on a <code>lean</code> tree could only reject — no window,
+  ever.</p>
+
+  <h2>7 · Three traps peculiar to lazy parts</h2>
+
+  <div class="callout warn">
+    <p style="margin:0 0 10px"><strong>1 · An awaiting door must keep its already-loaded path
+    SYNCHRONOUS.</strong> On every build the SystemTest suite runs, parts are eager and long since
+    present — so going through <code>.then</code> anyway defers the effect by a microtask, which moves
+    it a whole world <em>cycle</em> later, and the suite measures cycles. That is why
+    <code>whenAllLoaded</code> exists as one method that runs its callback <em>inline</em> when the
+    parts are already in, rather than as a conditional copied into every door. One rule in two places
+    is how an earlier arc produced four bugs of one shape.</p>
+
+    <p style="margin:0 0 10px"><strong>2 · Not every call site CAN await.</strong> An app is the easy
+    case: <code>launch</code> is fire-and-forget, invoked by reflection with its result ignored. A
+    creator button is not — both the click and the drag path consume
+    <code>createWidgetToBeHandled()</code>'s <em>return value</em> synchronously, so there is no seam
+    to defer through. The resolution is partition, not cleverness: put the button <em>in</em> the part
+    it creates from, and its mere existence proves the part is loaded. Likewise, if every item of a
+    palette belongs to one part, move the palette and its opener in too — filtering its contents would
+    pop an empty window.</p>
+
+    <p style="margin:0"><strong>3 · Anything reached at BOOT forces a launcher split.</strong> A door
+    can only await if something reaches it <em>later</em>. <code>createDesktop</code> places every
+    desktop and Examples icon at boot by constructing its app — so an app class living inside the lazy
+    directory it opens means no icon at all, and therefore nothing that could ever pull the part in.
+    The launcher becomes its own tiny EAGER part while the engine stays lazy:
+    <code>fizzytiles</code>/<code>fizzytiles-launcher</code>, and
+    <code>spreadsheet</code>/<code>spreadsheet-launcher</code>. Two consequences: the boot site keeps a
+    plain <code>if SpreadsheetApp?</code> guard, which is correct because it is asked of the
+    <em>eager</em> half; and a profile must name <strong>both parts or neither</strong>.</p>
+  </div>
+
+  <h3>A saved world that names a lazy part's classes</h3>
+  <p>Handled, and worth knowing about before relying on it: <code>loadWorldSnapshot</code> pre-scans
+  the file's class names and loads the parts they need <em>before</em> touching the world — so a
+  rejected part load leaves the old world standing rather than half-destroyed. On a profile that
+  dropped the part outright the load is refused with a clear report, which is the accepted behaviour
+  under the no-serialization-compat policy.</p>
+
+  <h2>8 · What proves any of this still works</h2>
+
+  <p>Since the suite can never observe laziness (§1), the coverage lives in Node rigs:</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>Rig</th><th>What it proves</th></tr>
+    <tr><td class="k">parts-lazy-load-headless.js</td>
+        <td>boots <code>index.html</code>, asserts the part is genuinely absent, drives the launcher, and waits for the pane's FIRST FRAME before reading pixels</td></tr>
+    <tr><td class="k">parts-snapshot-load-headless.js</td>
+        <td>round-trips a snapshot CONTAINING a lazy part's widgets — the only path that exercises the pre-scan; also that a rejected load leaves the old world standing</td></tr>
+    <tr><td class="k">smoke-boot-headless.js --production</td>
+        <td>the only gate on a production tree: booted from the image, no SWCanvas payload, a snapshot round-trip, nothing fetched at boot — and it loads <strong>every</strong> lazy part, asserting each was absent at boot, that all its classes arrive, and that ZERO eager batches came with it</td></tr>
+  </table>
+  </div>
+
+  <div class="callout">
+    <p style="margin:0"><strong>Why that last one runs before the inspector probe, deliberately.</strong>
+    Opening an inspector awaits the whole reflective layer, which pulls the meta-system in on its way
+    past — and would therefore mask a completely broken part load. This ordering exists because the
+    bug it now catches actually shipped: a lazy part on a precompiled tree died with
+    <code>findLoadOrder is not defined</code> while every gate stayed green, because the only lazy part
+    until then did not ship in production and every dev rig ran compile-at-boot, where the meta-system
+    is present anyway. <strong>A capability's first use on a given artifact shape is untested by
+    construction, however well the mechanism is covered elsewhere.</strong></p>
+  </div>
+
+  <h2>Where to go next</h2>
+  <ul>
+    <li><span class="mono">docs/architecture/build-and-packaging.md</span> — the authoritative
+      present-tense reference for the partition, the profiles and what a build derives</li>
+    <li><a href="build-and-packaging.html">build-and-packaging.html</a> — the companion explainer:
+      how an artifact is assembled and selected</li>
+    <li><span class="mono">src/boot/globalFunctions.coffee</span> — the boot sequence itself;
+      <span class="mono">src/PartsRegistry.coffee</span> — the runtime loader</li>
+    <li><span class="mono">../Fizzygum-tests/DETERMINISM.md</span> — why a microtask matters</li>
+  </ul>
+</main>
+</body>
+</html>
