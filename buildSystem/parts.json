@@ -134,7 +134,8 @@
 
     "demos": {
       "//": "The demo/parts-bin catalogue (DemoMenus, reached as `demoMenus`) and the sample widgets it shows off: the bouncer, the pen, the pointer. Arc 3 extracted DemoMenus out of MenusHelper for exactly this; its own header already said 'arc 4 turns that into part membership'.",
-      "dirs": ["src/demos"]
+      "//icons": "src/demos-icons holds the 23 icon classes ONLY DemoMenus names -- text-formatting glyphs (align/bold/italic/font-size/format-as-code), the collapsed/uncollapsed state pair, the little USA/world map glyphs, and the welcome/templates/text/video-play/C-F icons. They sat in src/icons, which is otherwise product, and are here for the same reason src/icons-dev exists: an icon belongs to whatever names it. ⚠ Their *IconAppearance siblings mostly did NOT come along -- 13 of them are named DIRECTLY by core toolbar buttons, so they stay in src/icons and this part reaches them the safe direction (part -> core, and core always ships). Only the five appearances whose sole namer was their own moving widget travelled with it.",
+      "dirs": ["src/demos", "src/demos-icons"]
     },
 
     "plots": {

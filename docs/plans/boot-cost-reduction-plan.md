@@ -131,7 +131,56 @@ on all three entry pages; the boot-timing probe reproducing ~59 ms; build-time d
 | `src/serialization` | 8 | 25,152 | no |
 | others (mixins, menu-system, basic-data-structures, dataflow, patch-programming, meta, info-widgets, duplication) | 32 | ~110,000 | no — substrate; ⛔ `src/dataflow` is settled core, see `core-app-slices-partition-plan.md` §4 |
 
-### §2.2 ⭐ `src/icons` is 37% of core's files and nothing has looked at it
+### §2.2a ✅ THE ICONS ANALYSIS — done 2026-07-31, with the gate, not a grep
+
+`src/icons` = **143 files: 62 `*IconWdgt` + 81 `*IconAppearance`** (not 1:1 — several widgets carry
+more than one appearance). Moving the whole directory to a scratch part and running
+`check-part-edges.js`:
+
+> **111 unguarded references, 0 inheritance edges.** Structurally extractable; the work is all
+> references, no partition error.
+
+**Core names 70 of the 143** (39 Wdgt + 31 Appearance), and the naming is concentrated:
+
+| namer | refs | can it await? |
+|---|---:|---|
+| `src/buttons` (creator buttons) | 37 | ⛔ **NO** — no async seam, so button and icon must land in the SAME part |
+| `src/toolbars` | 35 | the palette itself can, but it hosts the buttons |
+| `src/apps` | 25 | yes — but the ~11 desktop launcher icons are needed AT BOOT and stay eager |
+| the rest (bin, folder/document/script shortcuts, `IconWdgt`, `ScriptWdgt`, …) | 14 | genuinely core |
+
+⇒ **"Make the icons lazy" is not one job.** Because a creator button cannot await, the unit that can
+move is **a toolbar + its buttons + their icons, together** — exactly the shape `plots` already has
+(`PlotsToolbarWdgt` + its four buttons live inside the part). Icons alone cannot be a part.
+
+**The 23 `*IconWdgt` classes core never names** — where they actually belong:
+
+| home | count | note |
+|---|---:|---|
+| `demos` (`DemoMenus` names them) | **21** | Align*/Bold/Italic/font-size/Text/Templates/Welcome/… |
+| `meta-tools` | 1 | `AngledArrowUpLeftIconWdgt` |
+| nobody outside `src/icons` | 1 | `GenericCompositeIconWdgt` — sibling-used or dead; check before moving |
+
+⚠ **A pair can be split across parts, and one already would be:** `maps` names
+`LittleWorldIconAppearance` while only `demos` names `LittleWorldIconWdgt`. Verify each Appearance's
+users independently of its Wdgt before moving either.
+
+⚠⚠ **Moving those 21 into `demos` saves NOTHING on its own** — `demos` is an EAGER part, so its
+classes compile at boot exactly as core's do. The saving needs `demos` to become LAZY as well, which
+means its doors (`demoMenus.createX()`, currently reached behind `if DemoMenus?`) must await. That is
+a separate decision from re-homing the icons, and it should be taken deliberately rather than as a
+side effect.
+
+### §2.2b The decomposition that follows (pick per slice; each is independently gated)
+1. **Re-home the 23 free icons** into `demos` / `meta-tools`. Zero core edges, pure tidying, no
+   speed win by itself. Cheapest, safest, makes every later slice smaller.
+2. **Make `demos` lazy** — with 21 icon pairs re-homed it is a large eager block; needs awaiting
+   doors on the demo menu items.
+3. **Toolbar-shaped parts** — a toolbar + its buttons + their icons, per toolbar. This is where the
+   37+35 references live and where the real class count is. The `plots` part is the worked example.
+4. **The launcher icons stay eager forever** (~11 of them): `createDesktop` draws them at boot.
+
+### §2.2 ⭐ `src/icons` is 37% of core's files — the original note
 143 icon classes; only the handful drawn on the desktop **at boot** (the app launcher icons —
 `FloppyDiskIconWdgt`, `TypewriterIconWdgt`, `PaintBucketIconWdgt`, `GenericShortcutIconWdgt`, …) are
 needed eagerly. If ~128 of them can move behind a lazy part, that is **the single biggest item in
