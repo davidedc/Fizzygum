@@ -260,6 +260,67 @@ side effect.
    "which icons could follow"), `hypo-crosspart-edges.js` (the part→part edges the gate does not
    check), `authoring-lazy-probe.js` (drives all nine doors on `index.html`).
 
+### §2.2d SLICE 4 — THE NEXT ONE, designed 2026-07-31. Unpin the 50, do NOT split per Maker.
+
+**Status: designed, not started.** Slice 3 closed with `parts.json` gaining a `requires` mechanism
+(`510c1e74`), and the obvious follow-on — "cross-part inheritance is safe now, so split `authoring`
+per Maker" — is **the wrong slice**. The measurement says so.
+
+#### ⛔ Why NOT per-Maker (do not re-derive this)
+The whole `authoring` part is ALREADY absent from `js/pre-compiled.js`. Splitting it into
+`docs` / `slides` / `dashboards` / `draw` / `patch` / `super-toolbar` therefore saves the production
+image **nothing at all** — it only narrows what a user fetches when they open ONE Maker, once, on a
+click they made deliberately. It also costs: `GenericPanelWdgt` is the base of four of them and
+`DocumentWdgt` backs `InfoDocs` (every Maker's info window), so the shared substrate would need its
+own part that all six `require`, and the `//` prose for six parts has to explain a partition whose
+payoff is a single on-demand fetch. Keep it on the table for *uniformity* if the owner wants it; do
+not sell it on bytes.
+
+#### ⭐ What slice 4 IS: the 50 files pinned to core by lazy parts
+`node buildSystem/pinned-by-lazy-parts.js [--list]` measures it: **50 core files, 76.8 KB source /
+55.1 KB code, whose ONLY namers are lazy parts.** They sat in core because moving them would have
+created an unordered cross-part edge — which is precisely what `requires` now orders.
+
+| pinned by | files | code | where they go |
+|---|---:|---:|---|
+| `authoring` + `demos` | 32 | 31.0 KB | `authoring`; `demos` then declares `requires: ["authoring"]` |
+| `authoring` only | 7 | 9.4 KB | `authoring` — free, no declaration needed |
+| `plots` only | 5 | 9.2 KB | `plots` — free (the plot `*IconAppearance`) |
+| `demos` + `maps` | 2 | 3.5 KB | `maps`; `demos` declares `requires: ["maps"]` |
+| `authoring` + `plots` | 2 | 1.2 KB | `authoring`, requiring `plots` — or split the pair |
+| `demos` only | 2 | 0.8 KB | `demos` — free |
+
+**Predicted production win.** `demos` ships in NO production profile, so for the 32 the only namer
+that survives into production is `authoring` — they leave the image outright. Summing the rows that
+production actually carries: **~54 KB of code off `js/pre-compiled.js`**, which at slice 3's measured
+ratio (71 KB code → 91.9 KB image) is order **−70 KB, roughly another −8%**. ⚠ That ratio is a guess
+from one data point and has been wrong in both directions three times — **measure it with
+`fg fingerprint homepage` before promising anything.**
+
+#### The one design decision, and the argument both ways
+The 32 need `demos` to name `authoring`. Two shapes:
+- **`demos requires ["authoring"]`** — one line. Opening any demo menu then pulls the whole Makers
+  part in. Costs nothing in production (`demos` ships nowhere) and **deletes** the four per-site
+  awaits slice 3 added to `DemoMenus`. Recommended.
+- **A `whenAllLoaded ["authoring"]` in each of ~32 DemoMenus menu actions** — finer-grained, and
+  keeps the demo catalogue cheap on the dev page. Mechanical but 32× the edit.
+Recommendation: the first. The finer grain buys dev-page bytes on a page that already boots in 60 ms
+when built `dev-precompiled`.
+
+#### Method (each step independently gated)
+1. `node buildSystem/pinned-by-lazy-parts.js --list` → the CURRENT list (regenerate; the table above is a snapshot and will drift).
+2. Per destination part, `fg hypopart <files…>` FIRST — it reports inheritance edges and cross-part
+   callers using the gate's own classifier. An inheritance edge means the group is wrong, or
+   `requires` must be declared.
+3. `git mv`, declare `requires` where the table says, `fg build` (0 unguarded / 0 inheritance).
+4. `fg gauntlet` 14/14 with **zero reference churn** — a screenshot diff is a finding, not a
+   recapture. `fg homepage`; `build_and_smoke.sh --profile lean`.
+5. `fg fingerprint homepage` and `fg fingerprint lean` — predict every delta IN WORDS first.
+
+⚠ **`requires` does not excuse a guard.** These are all lazy→lazy moves, which `requires` genuinely
+orders. The moment a move would make an EAGER part name a lazy class, the declaration is not enough
+and the site needs a guard or an await — see `build-and-packaging.md` §2.
+
 ### §2.2c Slice 3's starting facts (measured; re-verify with the gate, never a grep)
 - `src/toolbars` = 8 files / 18.9 KB code; `src/buttons` = 38 files / 19.5 KB code. Both in `core`,
   so both ship in EVERY profile today.
