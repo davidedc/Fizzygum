@@ -70,6 +70,19 @@ Plus two properties that are **not** the same question:
 ⚠ A *lazy* part is different: its entry point must await `world.parts.ensureLoaded`, because a guard answers
 "is it here?" and a lazy part needs "get it here".
 
+⚠⚠ **THERE IS NO PART→PART `requires` MECHANISM, and the doors are what stand in for one.** `parts.json` has no such
+field, the runtime manifest carries exactly `{batches, eager, vendor, classes}`, and `PartsRegistry.ensureLoaded` loads
+the one part it is handed. What expresses a cross-part dependency is a door naming several parts —
+`whenAllLoaded ["maps", "plots", "authoring"]` — which is enough for a *reference*, and is how `samples` reaches
+`authoring`, and how `demos` reaches it back from its own menu actions. **Nothing verifies that pairing**:
+`check-part-edges.js` scans CORE only, so an edge from one part into another is invisible to it. Say so at the door
+when you add one.
+⛔ **A multi-part door does NOT make cross-part INHERITANCE safe.** `ensureAllLoaded` is a `Promise.all`, so the parts
+load concurrently with no ordering between them; only `findLoadOrder` *inside* one part orders anything, so
+`class X extends Y` across a part boundary is a race. **An inheritance family is indivisible** — which is why
+`authoring` is one part rather than one per Maker, and why `ToolbarWdgt` / `CreatorButtonWdgt` /
+`ToolbarCreatorButtonWdgt` stayed in core when everything around them left: the lazy `plots` part extends all three.
+
 ⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS**, which is why there is
 ONE idiom and every door uses it: `world.parts.whenAllLoaded ["maps", "plots"], => super()`.
 `whenAllLoaded` runs its callback **inline** when the parts are already in, and only falls back to a
@@ -116,12 +129,23 @@ await if something reaches it *later*; `WorldWdgt.createDesktop` runs at boot an
 desktop/Examples icon by constructing its app, so an app class living inside the lazy directory it
 opens means no icon at all — nothing would ever pull the part in. So the LAUNCHER becomes its own
 tiny EAGER part and the engine stays lazy: `fizzytiles` / `fizzytiles-launcher`
-(`FridgeMagnetsApp` + its icon) and `spreadsheet` / `spreadsheet-launcher` (`SpreadsheetApp` alone —
-its icon is built from core widgets). Two consequences worth stating: the boot site keeps a plain
+(`FridgeMagnetsApp` + its icon), `spreadsheet` / `spreadsheet-launcher` (`SpreadsheetApp` alone —
+its icon is built from core widgets) and `authoring` / `authoring-launcher` (the nine Maker apps).
+Two consequences worth stating: the boot site keeps a plain
 `if SpreadsheetApp?` guard — correct, because it is asked of the EAGER half — and a profile must
 name **both parts or neither**, since the launcher alone is an icon whose click can only reject and
 the engine alone is code nothing can open. `maps` and `plots` needed no such split: their doors are
 apps that already lived in core.
+
+⚠ **A launcher that stays in core does not work, even when it awaits correctly.** The nine Maker
+apps had their `launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the part still
+could not be extracted, because each one's `buildWindow: -> world.openFrameWith (new DocumentWdgt), …`
+is an unguarded core→part reference three lines below the await, and `check-part-edges.js` reads one
+line at a time. That is the gate being right: a *reader* of that file cannot see the await either,
+and nothing stops a future edit from calling `buildWindow` without going through `launch`. The fix is
+partition, not an allowlist — move the launcher into its own eager part and every one of those
+references becomes intra-part. **So the launcher split is not only about boot-time reachability; it
+is also what makes the door's await legible to the gate.**
 
 ---
 
@@ -150,25 +174,32 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
-| `homepage` | `core` + `meta-tools` + `samples` + `maps` + `plots` + `spreadsheet` + `spreadsheet-launcher` | precompiled | `lazy` | `index.html` | **production** |
-| `lean` | `core` | precompiled | `none` | `index.html` | the appliance: 10 files, 1.3 MB |
+| `homepage` | `core` + `meta-tools` + `samples` + `authoring` + `authoring-launcher` + `maps` + `plots` + `spreadsheet` + `spreadsheet-launcher` | precompiled | `lazy` | `index.html` | **production** |
+| `lean` | `core` | precompiled | `none` | `index.html` | the appliance |
 
-⚠ **Production names seven parts, and they are named for two different reasons.** Four of them —
-`maps`, `plots`, `meta-tools`, `spreadsheet` — are named because production genuinely offers what
-they do, and they are all **lazy**, which is what makes naming them nearly free: a lazy part's
-classes are absent from `js/pre-compiled.js`, so it costs the image nothing and the first load
-carries none of it. `maps` and `plots` *have* to be named (the sample dashboard and the NYC slide
-BUILD maps and plots, so production cannot drop those parts); `meta-tools` is lazy for the plainest
-reason of all — nobody opens an inspector during a normal session, and opening one already had to
-await the reflective layer, so the part load joins a wait that existed anyway; `spreadsheet` is the
-same shape, behind a desktop icon.
+⚠ **Production names eight parts beside core, and they are named for two different reasons.** Five of
+them — `maps`, `plots`, `meta-tools`, `spreadsheet`, `authoring` — are named because production
+genuinely offers what they do, and they are all **lazy**, which is what makes naming them nearly
+free: a lazy part's classes are absent from `js/pre-compiled.js`, so it costs the image nothing and
+the first load carries none of it. `maps`, `plots` and `authoring` *have* to be named (the sample
+dashboard, the NYC slide and the sample doc BUILD maps, plots, and the very citizens `authoring`
+owns); `meta-tools` is lazy for the plainest reason of all — nobody opens an inspector during a
+normal session, and opening one already had to await the reflective layer, so the part load joins a
+wait that existed anyway; `spreadsheet` is the same shape, behind a desktop icon.
 
-The other two are EAGER, and named so that splitting them out of core stays a PACKAGING change
-rather than a visible one: `samples` (the three Examples documents) and `spreadsheet-launcher`
-(`SpreadsheetApp` alone). ⚠ **`spreadsheet` and `spreadsheet-launcher` are one decision spelled as
-two parts** — see §2's launcher-split rule — and a profile should name both or neither. `lean` names
-none of the seven, so it has no spreadsheet at all; that is deliberate, because the eager launcher
-alone would put a desktop icon on a tree whose click could only reject.
+The other three are EAGER, and named so that splitting them out of core stays a PACKAGING change
+rather than a visible one: `samples` (the three Examples documents), `spreadsheet-launcher`
+(`SpreadsheetApp` alone) and `authoring-launcher` (the nine Maker app classes).
+⚠ **`spreadsheet`/`spreadsheet-launcher` and `authoring`/`authoring-launcher` are each one decision
+spelled as two parts** — see §2's launcher-split rule — and a profile should name both or neither.
+
+⚠⚠ **`lean` names none of them, and for `authoring` that is FORCED rather than chosen.** A profile
+with `sources: "none"` may not ship a lazy part at all (`buildProfile.py` fails the build: a lazy
+part's source *is* its code, since the image is harvested by booting `index.html`, where lazy parts
+do not load). So the appliance has no spreadsheet and no Makers — no Docs, Slides, Dashboards, Draw,
+Patch programming, Generic panel or Super Toolbar — and, correctly, no icons for them either: an
+eager launcher on a tree without its engine is a desktop icon whose click can only reject. An
+appliance that wants the Makers back wants `sources: "lazy"`, which is a different artifact.
 
 ---
 
@@ -264,10 +295,29 @@ be mis-estimated. ⚠ Note first where the saving comes from: **not** from the s
 `sources: "lazy"`, so nobody was downloading those anyway — but from the **IMAGE**, because a lazy part's classes are
 absent from `js/pre-compiled.js`.
 
-| Slice | Source text moved behind an on-demand fetch | Off production's `pre-compiled.js` |
-|---|---|---|
-| `maps` | 95.0 KB | **−55.8 KB (−5.1%)** |
-| `spreadsheet` | 119.4 KB | **−33.7 KB (−3.4%)** |
+| Slice | Classes | Source text moved behind an on-demand fetch | Off production's `pre-compiled.js` |
+|---|---:|---|---|
+| `maps` | 4 | 95.0 KB (97.5% code) | **−55.8 KB (−5.1%)** |
+| `spreadsheet` | 12 | 119.4 KB (27.9% code) | **−33.7 KB (−3.4%)** |
+| `authoring` | 54 | 94.3 KB (75.3% code) | **−91.9 KB (−9.8%)** |
+
+⚠⚠ **The third row broke the estimator a second time, in the OTHER direction — the image cost tracks
+CLASS COUNT at least as much as code bytes.** `authoring` and `maps` move almost exactly the same
+source (94.3 vs 95.0 KB), yet `authoring` takes 1.65× as much off the image. It has 54 classes to
+maps' 4, and every class compiles to its own prototype scaffolding, which the source bytes do not
+show. Estimating `authoring` from maps' KB-of-code ratio predicted −42 KB against an actual −91.9 KB:
+**2.2× LOW**, having been 33% low for maps and 50% high for the spreadsheet. Three slices, three
+misses, in both directions. ⇒ **Do not promise a number before the two builds are fingerprinted**
+(§8) — and when you must guess, a many-small-classes slice will beat its byte estimate and a
+heavily-commented one will fall short of it.
+
+⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle.** The runtime parts
+manifest carries each part's `classes` name list — it must, since the vault cannot answer
+"which part owns this class?" before the part loads — so `authoring` + `authoring-launcher` grew
+`js/fizzygum-boot-native-min.js` by **1,857 bytes** (17,158 → 19,015; the manifest is 3,554 B of it).
+That is a 2% toll on the thing that must arrive first, to take 92 KB off the thing that arrives
+next, so it is a good trade at this size — but it scales with class count, and a partition of many
+tiny parts would eventually spend more on the manifest than it saves.
 
 ⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured
 2026-07-31 (`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in

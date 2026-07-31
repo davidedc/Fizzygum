@@ -28,6 +28,14 @@
     "the engine in js/pre-compiled.js. Naming one without the other is the mistake to avoid -- the",
     "launcher alone is an icon whose click can only reject, the engine alone is code nothing opens.",
     "",
+    "'authoring' + 'authoring-launcher' are the Makers, and they are the same both-or-neither pairing",
+    "as the spreadsheet. The launcher part is the nine desktop-icon app classes, EAGER because",
+    "createDesktop places their openers at boot; behind them the windows they open -- Docs, Slides,",
+    "Dashboards, Draw, Patch programming, the Generic panel, the Super Toolbar and every tool palette",
+    "that serves them -- are LAZY, so production ships the icons and stops carrying 53 classes in",
+    "js/pre-compiled.js. Naming them is not optional for production: the three 'samples' documents",
+    "ASSEMBLE these citizens.",
+    "",
     "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
     "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
     "                          gates skipped, and the dead `if Automator?` branches stripped",
@@ -46,7 +54,7 @@
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
-  "parts": ["core", "meta-tools", "samples", "maps", "plots", "spreadsheet", "spreadsheet-launcher"],
+  "parts": ["core", "meta-tools", "samples", "authoring", "authoring-launcher", "maps", "plots", "spreadsheet", "spreadsheet-launcher"],
   "form": "precompiled",
   "sources": "lazy",
   "entries": ["index.html"]

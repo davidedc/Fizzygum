@@ -56,9 +56,21 @@
  * ensure promise itself, plus the lazy path's own SystemTest.
  *
  * Scope: the CORE part's own .coffee files (from parts.json, via build.py --list-shippable to stay
- * consistent with how every other gate learns the file set). Part-to-part references are NOT checked
- * here — those are legitimate when the manifest declares the dependency, and a part->part cycle is
- * caught by build.py itself.
+ * consistent with how every other gate learns the file set).
+ *
+ * ⚠⚠ PART-TO-PART REFERENCES ARE NOT CHECKED HERE, AND NOTHING ELSE CHECKS THEM EITHER. This note
+ * used to say they were "legitimate when the manifest declares the dependency"; that was never true.
+ * parts.json has no `requires` field, the runtime manifest build.py emits carries exactly
+ * {batches, eager, vendor, classes}, and PartsRegistry.ensureLoaded loads the one part it is given
+ * ("and, when it grows one, whatever it requires" — future tense, still). What DOES express a
+ * cross-part dependency is the DOOR: `whenAllLoaded ["maps", "plots"]` names both, so a reference
+ * from part A into lazy part B is safe exactly when every door that pulls A in also names B. That
+ * is a convention held up by comments, not by a gate — so when you add such an edge, say so at the
+ * door (see samples/SampleDashboardApp.launch and demos/DemoMenus.createImageWdgt).
+ * ⛔ A door naming two parts does NOT make cross-part INHERITANCE safe: ensureAllLoaded is a
+ * Promise.all, so the two load concurrently with no ordering, and `class X extends Y` across that
+ * boundary is a race. Only findLoadOrder inside a single part orders anything. An inheritance family
+ * is therefore indivisible — which is why 'authoring' is one part rather than one per app.
  */
 
 const fs = require('fs');

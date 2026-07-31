@@ -15,9 +15,12 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
   # buildWindow embeds an Example3DPlotWdgt, which is the LAZY 'plots' part -- see
   # SampleDashboardApp.launch for why this awaits and why the already-loaded path stays synchronous.
+  # ⚠ It also ASSEMBLES a DocumentWdgt, which is the lazy 'authoring' part. Nothing verifies that
+  # pairing -- check-part-edges.js scans core only, so a part reaching into another part is
+  # invisible to it and the door is the only place the dependency can be stated.
   # No 'maps' here: this is the one sample that shows no map.
   launch: ->
-    world.parts.whenAllLoaded ["plots"], => super()
+    world.parts.whenAllLoaded ["plots", "authoring"], => super()
 
   buildWindow: ->
     doc = new DocumentWdgt

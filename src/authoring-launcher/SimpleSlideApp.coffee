@@ -12,5 +12,9 @@ class SimpleSlideApp extends IconicDesktopSystemWindowedApp
   # OPTIONAL rather than required -- a slide window without the map tools is a smaller palette, not
   # a broken window -- so a profile that ships no 'maps' still opens it. See DashboardsApp.launch
   # and PartsRegistry.whenOptionalPartsLoaded for why the distinction matters.
+  #
+  # ⚠⚠ 'authoring' is the other kind, at the same door: SlideWdgt lives in that part, so it is
+  # REQUIRED -- see DashboardsApp.launch. Required first, then optional.
   launch: ->
-    world.parts.whenOptionalPartsLoaded ["maps"], => super()
+    world.parts.whenAllLoaded ["authoring"], =>
+      world.parts.whenOptionalPartsLoaded ["maps"], => super()

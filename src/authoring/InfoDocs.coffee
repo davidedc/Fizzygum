@@ -171,6 +171,11 @@ class InfoDocs
   # shared layout builder. RETURNS the DocumentWdgt --
   # WindowsToolbarCreatorButtonWdgt's caller captures it (readmeWindow) to
   # reposition it; the other callers discard it.
+  # ⚠ NO await here, and that is a property of where this class LIVES. Every info doc IS a
+  # DocumentWdgt, and InfoDocs sits in the same 'authoring' part as DocumentWdgt -- all eight of its
+  # REGISTRY keys name a Maker, so it is authoring-surface material and nothing in core reaches it.
+  # Its callers are the nine launchers' `windowOpened` hooks, which the base runs after buildWindow,
+  # i.e. after `launch` already awaited; and WindowsToolbarCreatorButtonWdgt, which is in this part.
   @createNextTo: (key, nextToThisWidget) ->
     entry = @REGISTRY[key]
     return if world[entry.flag]

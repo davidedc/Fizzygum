@@ -57,11 +57,23 @@ class DemoMenus
       world.openFrameWith fmm, (new Point 570, 400), world.hand.position()
 
 
+  # ⚠ THE PART THIS BUILDS FROM IS NOT THIS PART. ImageWdgt / SlideWdgt / DocumentWdgt and the
+  # WelcomeMessageInfoWdgt are the lazy 'authoring' part, so each of these four menu actions has to
+  # bring it in itself. It cannot be hoisted to the door that loads 'demos' (WorldWdgt's
+  # popUpDemoTestMenu / createDemoAnalogClock): that would make every demo menu drag the Makers in,
+  # and most of this catalogue does not want them. It is safe HERE because a menu item's action is
+  # fire-and-forget -- ButtonWdgt discards the return value -- and whenAllLoaded still runs inline
+  # when the part is already in, which on the harness page it always is.
+  # ⚠⚠ Nothing verifies this pairing: check-part-edges.js scans CORE only, so a part naming another
+  # part's class is invisible to it. parts.json has no part->part `requires` field either, and a
+  # multi-part door would not help even if one existed, because ensureAllLoaded is a Promise.all.
   createImageWdgt: ->
-    world.openFrameWith (new ImageWdgt), (new Point 460, 400), world.hand.position()
+    world.parts.whenAllLoaded ["authoring"], ->
+      world.openFrameWith (new ImageWdgt), (new Point 460, 400), world.hand.position()
 
   createSlideWdgt: ->
-    world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
+    world.parts.whenAllLoaded ["authoring"], ->
+      world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
@@ -382,7 +394,8 @@ class DemoMenus
     world.create new VideoPlayIconWdgt
 
   createDocumentWdgt: ->
-    world.openFrameWith (new DocumentWdgt), (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
+    world.parts.whenAllLoaded ["authoring"], ->
+      world.openFrameWith (new DocumentWdgt), (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
 
   createSimpleLinkWdgt: ->
     simpleLinkWdgt = new SimpleLinkWdgt
@@ -754,9 +767,10 @@ class DemoMenus
 
 
   createWelcomeMessageWindowAndShortcut: ->
-    wm = WelcomeMessageInfoWdgt.create()
-    readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
-    # this "add" is going to try to position the reference
-    # in some smart way (i.e. according to a grid)
-    world.add readmeLauncher
-    readmeLauncher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
+    world.parts.whenAllLoaded ["authoring"], ->
+      wm = WelcomeMessageInfoWdgt.create()
+      readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
+      # this "add" is going to try to position the reference
+      # in some smart way (i.e. according to a grid)
+      world.add readmeLauncher
+      readmeLauncher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()

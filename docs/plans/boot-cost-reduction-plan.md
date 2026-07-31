@@ -187,12 +187,78 @@ side effect.
    by every inspector and failed `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly`
    (fixture: a `RectangleWdgt`). The menu passes the widget through the ARGUMENTS, not the target,
    so `world` serves both call sites and the references stay untouched.
-3. ⏳ **NEXT — toolbar-shaped parts.** A toolbar + its buttons + their icons, per toolbar. This is
-   where the 37+35 icon references live, where the real class count is, and — unlike `demos` — it
-   ships in `homepage` and `lean`, so it is the ONLY remaining slice that cuts the production
-   download. The `plots` part is the worked example (`PlotsToolbarWdgt` + its four creator buttons
-   live inside it). See §2.2c.
+3. ✅ **DONE — the `authoring` + `authoring-launcher` pair.** ⚠ **This slice's PLANNED SHAPE WAS
+   FALSIFIED before a line was written.** "A toolbar + its buttons + their icons, per toolbar" is
+   not extractable, and the measurement said so twice over:
+   - Each docked palette is reached from its host's **synchronous `buildToolbar` hook** — a pure
+     factory with no seam to await through (`DocumentWdgt`→`TextToolbarWdgt`,
+     `SlideWdgt`→`SlidesToolbarWdgt`, `DashboardWdgt`→`DashboardsToolbarWdgt`,
+     `ImageWdgt`→`PaintToolbarWdgt`). A toolbar cannot leave without its host.
+   - Those hosts are ONE INHERITANCE FAMILY (`… extends GenericPanelWdgt`), and cross-part
+     inheritance is a race whatever the doors say — `ensureAllLoaded` is a `Promise.all`, so two
+     parts named at one door load concurrently and nothing orders them. **An inheritance family is
+     indivisible.** ⇒ one part, forced, not chosen.
+
+   Landed as **54 lazy classes** (7 content widgets + 7 toolbars + 28 buttons + `InfoDocs` + 11 icon
+   appearances, 94.3 KB source / **71.0 KB code**) behind an EAGER 9-class launcher part. Core
+   **364 → 301** sources. ⚠ Left behind, each for a stated reason: `ToolbarWdgt` /
+   `CreatorButtonWdgt` / `ToolbarCreatorButtonWdgt` (the lazy `plots` part extends all three), the 8
+   window-chrome buttons, and `PatchNodeWdgt` + `CalculatingPatchNodeWdgt` (the EAGER
+   `patch-programming-experimental` part extends them, so they must exist at boot).
 4. **The launcher icons stay eager forever** (~11 of them): `createDesktop` draws them at boot.
+
+### §2.2c-post What slice 3 actually taught (read before attempting slice 4)
+
+1. ⚠⚠ **THERE IS NO PART→PART `requires` MECHANISM — and two authored facts disagreed about it.**
+   `parts.json`'s spreadsheet note said there is none (right); `check-part-edges.js`'s header said
+   part-to-part references are "legitimate when the manifest declares the dependency" (**wrong** —
+   the manifest carries `{batches, eager, vendor, classes}` and nothing else; that comment is now
+   fixed). What stands in for one is a DOOR naming several parts, `whenAllLoaded ["maps", "plots",
+   "authoring"]`, and **nothing verifies the pairing** because the gate scans core only. When you add
+   a part→part edge, say so at the door. ⛔ And it does **not** cover inheritance — see item 3.
+2. ⚠⚠ **A LAUNCHER LEFT IN CORE CANNOT AWAIT ITS WAY OUT.** All nine Maker apps had a correct
+   `launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the build still failed: each
+   `buildWindow: -> world.openFrameWith (new DocumentWdgt), …` is an unguarded core→part reference,
+   and the gate reads one line at a time. That is the gate being RIGHT — a human reader cannot see
+   the await either, and nothing forces `buildWindow` to be reached through `launch`. The fix is
+   partition (move the launchers into their own eager part), never an allowlist. **So the
+   launcher-split rule has a second reason nobody had written down: it is what makes the await
+   legible to the gate.**
+3. ⚠ **A CLASS NAMED BY ANY LAZY PART IS PINNED TO CORE.** This is what shrank the icon follow-on
+   from 71 files to 11: `demos` names `ArrowNIconWdgt`, `BrushIconWdgt`, `MapPinIconWdgt` and ~57
+   more, and part→core is the safe direction that has to keep working. Moving them would need every
+   door that pulls `demos` in to also name the new part. **Slice 2 therefore made slice 3 smaller** —
+   worth knowing before assuming slices compose additively.
+4. ⚠ **`lean` COULD NOT TAKE THIS PART, and that is a product-visible consequence:**
+   `buildProfile.py` refuses a lazy part on `sources: "none"`. So the appliance now has no Makers and
+   (correctly) no icons for them. An appliance that wants them back wants `sources: "lazy"`.
+5. **MEASURED payoff** (fingerprints `s3base-*` / `s3cand-*`, both trees built, nothing estimated):
+
+   | tree | `js/pre-compiled.js` | change |
+   |---|---|---:|
+   | `homepage` | 936,920 → 845,004 B | **−91,916 B (−9.8%)** |
+   | `lean` | 926,920 → 821,162 B | **−105,758 B (−11.4%)** |
+
+   Production ships 411 sources on both sides, the same names, only their `part=` differing for 63 —
+   a packaging change, not a visible one. dev `index.html` 2931 → **2711 ms**, vault 422 → 368.
+   ⚠ Two estimates missed: the image saving was **2.2× LARGER** than a bytes-of-code estimate
+   (class count drives the image, not source bytes) and the boot saving **2× SMALLER** than the flat
+   8.6 ms/source rate (these are small classes). ⚠ The boot bundle GREW 1,857 B — the parts manifest
+   must carry both new parts' class-name lists. Both recorded in `build-and-packaging.md` §5.
+6. ⚠ **HOW TO GET A REAL "BEFORE" FINGERPRINT, and the trap in it.** There was no pre-slice baseline
+   on disk, and `git stash` is banned here. What works is a sibling worktree —
+   `git worktree add ../../Fizzygum-baseline/Fizzygum HEAD` plus a **worktree (never a symlink)** of
+   `Fizzygum-tests`, with only `node_modules` symlinked. ⚠⚠ The first attempt symlinked the whole
+   tests repo and the baseline homepage build wrote its 1.85 MB image **into the real
+   `Fizzygum-builds/latest`**: `generate-pre-compiled-headless.js` and `build-tree-fingerprint.js`
+   both resolve their paths from `__dirname`, so through a symlink they address the REAL tree while
+   the build addresses the baseline one. The measurement was void and the live build tree was
+   clobbered (harmless — the next build overwrites it — but silent).
+7. Tooling built for this, reusable and gitignored, in `../Fizzygum-tests/.scratch/`:
+   `hypo-part-edges.js` (reuses the gate's own guard classification against a HYPOTHETICAL part, so
+   a grouping can be evaluated before a file is moved), `hypo-icon-followers.js` (greatest-fixpoint
+   "which icons could follow"), `hypo-crosspart-edges.js` (the part→part edges the gate does not
+   check), `authoring-lazy-probe.js` (drives all nine doors on `index.html`).
 
 ### §2.2c Slice 3's starting facts (measured; re-verify with the gate, never a grep)
 - `src/toolbars` = 8 files / 18.9 KB code; `src/buttons` = 38 files / 19.5 KB code. Both in `core`,

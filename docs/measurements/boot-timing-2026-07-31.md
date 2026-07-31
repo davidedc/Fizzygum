@@ -52,6 +52,21 @@ definition.** So the ceiling on this lever is set by how much can be moved OUT o
 app-slice candidates under discussion (the GenericPanel/Document family + `samples`, ~13 sources)
 are worth roughly **110 ms — 3%**.
 
+### What the three extraction slices actually delivered (measured after each landed)
+
+| after | sources in the vault at boot | dev `index.html` ready |
+|---|---:|---:|
+| the measurement above | 452 | 3219 ms |
+| slice 1 — 25 icons re-homed | 452 | 3219 ms *(re-homing alone moves nothing)* |
+| slice 2 — `demos` made lazy | 422 | 2931 ms |
+| slice 3 — `authoring` extracted | **368** | **2711 ms** |
+
+⚠ **`~8.6 ms per source` is an AVERAGE and over-predicts a slice of small classes.** Slice 3 took 54
+sources out of the boot compile and the flat rate predicted −464 ms; the measured saving was
+**−220 ms**, i.e. ~4.1 ms per source — **2× optimistic**. Compile cost tracks a source's SIZE, and
+buttons and icon appearances are far below the tree's mean. Use the flat rate to rank candidates,
+never to promise a number.
+
 ## The other lever: build the DEV tree pre-compiled (55×, and it keeps every class)
 
 Spiked 2026-07-31 as a scratch profile — same `parts: all`, same three entry pages, the only change

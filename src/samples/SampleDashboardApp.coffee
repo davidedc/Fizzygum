@@ -22,13 +22,15 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
   #
   # ⚠ The ALREADY-LOADED path must stay SYNCHRONOUS. Every profile the SystemTest suite runs
   # carries maps eagerly (the harness page and index-sw.html preset FIZZYGUM_EAGER_ALL_PARTS), and
+  # ⚠ The dashboard itself is a DashboardWdgt, from the lazy 'authoring' part -- a part->part edge,
+  # which check-part-edges.js cannot see (it scans core only), so this door is where it is stated.
   # three tests call `new SampleDashboardApp().launch()` directly -- going through `.then` anyway
   # would defer the window by a microtask, i.e. a whole world CYCLE, which the suite measures.
   # Awaiting is safe at all because the base launch() is fire-and-forget: the launcher widget
   # invokes it through reflection by name and ignores the return value (the FridgeMagnetsApp
   # precedent, src/fizzytiles-launcher/).
   launch: ->
-    world.parts.whenAllLoaded ["maps", "plots"], => super()
+    world.parts.whenAllLoaded ["maps", "plots", "authoring"], => super()
 
   buildWindow: ->
     slideWdgt = new DashboardWdgt

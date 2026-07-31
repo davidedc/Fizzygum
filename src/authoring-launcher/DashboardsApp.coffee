@@ -17,5 +17,11 @@ class DashboardsApp extends IconicDesktopSystemWindowedApp
   # smaller palette, which is what the toolbar's own `if WorldMapCreatorButtonWdgt?` filters already
   # produce. whenAllLoaded would instead REJECT on such a build, so this always-shipped desktop icon
   # would open nothing at all. See PartsRegistry.whenOptionalPartsLoaded.
+  #
+  # ⚠⚠ 'authoring' is the other kind, at the same door, which is why both idioms appear here:
+  # DashboardWdgt itself lives in that part, so it is REQUIRED -- there is no reduced window to open
+  # without it, and the desktop opener is guarded by the same `isAvailable "authoring"` test, so a
+  # profile that lacks the part never places an icon to click. Required first, then optional.
   launch: ->
-    world.parts.whenOptionalPartsLoaded ["maps", "plots"], => super()
+    world.parts.whenAllLoaded ["authoring"], =>
+      world.parts.whenOptionalPartsLoaded ["maps", "plots"], => super()

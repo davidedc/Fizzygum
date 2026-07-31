@@ -606,20 +606,27 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     # TODO find a way to put this back
     # demoMenus.createWelcomeMessageWindowAndShortcut()
-    (new HowToSaveMessageApp).createOpener()
+    # THE MAKERS: their launcher classes are the eager 'authoring-launcher' part and the windows
+    # they open are the lazy 'authoring' part, so the class-existence guard is the right shape here
+    # for the same reason it is right for SpreadsheetApp below -- it is asked of the EAGER half,
+    # which a profile either ships or does not. (The appliance ships neither part: sources "none"
+    # forbids carrying a lazy one, and an icon that can only reject is worse than no icon.)
+    # ⚠ Guarded ONE BY ONE so their ORDER is untouched -- createOpener lays the icons out in call
+    # order, so gathering them under a single test would move the whole column.
+    (new HowToSaveMessageApp).createOpener()                 if HowToSaveMessageApp?
     menusHelper.binIconAndText()
-    (new SimpleDocumentApp).createOpener()
-    (new FizzyPaintApp).createOpener()
-    (new SimpleSlideApp).createOpener()
-    (new DashboardsApp).createOpener()
-    (new PatchProgrammingApp).createOpener()
-    (new GenericPanelApp).createOpener()
-    (new ToolbarsApp).createOpener()
+    (new SimpleDocumentApp).createOpener()                   if SimpleDocumentApp?
+    (new FizzyPaintApp).createOpener()                       if FizzyPaintApp?
+    (new SimpleSlideApp).createOpener()                      if SimpleSlideApp?
+    (new DashboardsApp).createOpener()                       if DashboardsApp?
+    (new PatchProgrammingApp).createOpener()                 if PatchProgrammingApp?
+    (new GenericPanelApp).createOpener()                     if GenericPanelApp?
+    (new ToolbarsApp).createOpener()                         if ToolbarsApp?
     # the fizzytiles family (FridgeMagnetsApp and friends) ships only in the full build,
     # so it contributes its own desktop opener only when it is actually present
     (new FridgeMagnetsApp).createOpener()  if FridgeMagnetsApp?
     exampleDocsFolder = @makeFolder nil, nil, "Examples"
-    (new DegreesConverterApp).createOpener exampleDocsFolder
+    (new DegreesConverterApp).createOpener exampleDocsFolder  if DegreesConverterApp?
     # the three example DOCUMENTS are the 'samples' part: content rather than product, so a
     # profile can leave them out and get a smaller Examples folder. Production ships them
     # (profiles/homepage.json names 'samples'); the appliance profile is what drops them.
