@@ -422,6 +422,12 @@ def main():
         manifest[eachPart] = {
             "batches": batchesOfPart[eachPart],
             "eager": partSpec.get("eager", True),
+            # The parts this one's code names. PartsRegistry.ensureLoaded loads them FULLY FIRST,
+            # which is the only thing that orders a cross-part `extends` -- a door naming several
+            # parts goes through Promise.all and orders nothing. Emitted for every part, not just
+            # lazy ones, because the manifest is also what a reader consults to understand the
+            # shape; it costs a few bytes and an absent key would read as "none" rather than "n/a".
+            "requires": partSpec.get("requires", []),
             # Only the OUTPUT path reaches the runtime: PartsRegistry consumes each vendor entry as
             # a URL to inject (loadJSFilePromise), so how the payload was assembled from vendored
             # pieces is build-time detail that must not leak into the manifest.

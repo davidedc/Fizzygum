@@ -9,19 +9,12 @@
 
 class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
+  requiredParts: ["maps", "plots", "authoring"]
+
   title: "Sample slide"
   slot:  "sampleSlideWindow"
 
   buildIcon: -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
-
-  # buildWindow constructs SimpleUSAMapIconWdgt (the lazy 'maps' part) and the window's docked
-  # SlidesToolbarWdgt wants the two map tools from the same part -- see SampleDashboardApp.launch.
-  # ⚠ The slide itself is a SlideWdgt, which is the lazy 'authoring' part; a part->part edge is
-  # invisible to check-part-edges.js (it scans core only), so the door is where it gets stated
-  # for why this awaits, and why the already-loaded path must stay synchronous.
-  launch: ->
-    world.parts.whenAllLoaded ["maps", "plots", "authoring"], => super()
-
   buildWindow: ->
     slideWdgt = new SlideWdgt
 

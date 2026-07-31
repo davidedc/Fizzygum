@@ -87,9 +87,23 @@ class PartsRegistry
       return partName if className in spec.classes
     nil
 
-  # Load a part (and, when it grows one, whatever it requires) if it is not already in. Returns a
-  # promise that resolves when its classes are defined and usable. Concurrent callers get the SAME
-  # promise, so a double-click cannot start two loads.
+  # The parts this one's code names, from the build manifest (parts.json `requires`). They are
+  # loaded FULLY FIRST -- see ensureLoaded.
+  _requiredPartsOf: (partName) ->
+    (window.FIZZYGUM_PARTS?[partName]?.requires) ? []
+
+  # Load a part, and whatever it requires, if it is not already in. Returns a promise that resolves
+  # when its classes are defined and usable. Concurrent callers get the SAME promise, so a
+  # double-click cannot start two loads.
+  #
+  # ⚠⚠ THE REQUIRED PARTS RESOLVE BEFORE THIS PART'S OWN BATCHES ARE INGESTED, and the ordering is
+  # the whole point rather than tidiness. Within one part `_ingestPartPromise` orders classes by
+  # findLoadOrder, so `class X extends Y` is safe; ACROSS parts nothing ordered anything, because
+  # the only cross-part idiom was a door naming several parts and `ensureAllLoaded` is a
+  # `Promise.all` -- they arrive concurrently, and a base class that has not been defined yet is a
+  # race, not an error you can catch. Sequencing here is what makes a lazy part able to extend
+  # another lazy part's class at all. Each requirement's own promise chain handles ITS requirements,
+  # and every one is memoized, so the transitive closure loads once and a diamond costs nothing.
   ensureLoaded: (partName) ->
     return Promise.resolve() if @_state[partName] is @LOADED
     return @_promises[partName] if @_state[partName] is @LOADING
@@ -97,7 +111,13 @@ class PartsRegistry
       return Promise.reject new Error "Fizzygum: no such part '#{partName}' in this build."
 
     @_state[partName] = @LOADING
-    @_promises[partName] = @_loadPartPromise(partName).then =>
+    required = @_requiredPartsOf partName
+    withRequirements =
+      if required.length
+        @ensureAllLoaded(required).then => @_loadPartPromise partName
+      else
+        @_loadPartPromise partName
+    @_promises[partName] = withRequirements.then =>
       @_state[partName] = @LOADED
       delete @_promises[partName]
       return

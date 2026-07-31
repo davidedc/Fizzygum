@@ -55,22 +55,38 @@
  * the correct pattern and push authors back to the broken one. The safety net for that path is the
  * ensure promise itself, plus the lazy path's own SystemTest.
  *
- * Scope: the CORE part's own .coffee files (from parts.json, via build.py --list-shippable to stay
- * consistent with how every other gate learns the file set).
+ * SCOPE: EVERY source that is present at boot -- core AND every eager part -- plus each lazy part
+ * measured against the parts it does not declare in `requires`. It used to be core alone, on the
+ * stated premise that part-to-part references were "legitimate when the manifest declares the
+ * dependency"; no such mechanism existed, so that premise excused exactly nothing and the hole
+ * shipped four broken doors (BouncerWdgt/PenWdgt from dev-tools, the two map icons from demos --
+ * each threw '<Class> is not defined' on a real menu click). An EAGER part is in the artifact from
+ * the first frame exactly as core is, so it has to obey the same rule.
  *
- * ⚠⚠ PART-TO-PART REFERENCES ARE NOT CHECKED HERE, AND NOTHING ELSE CHECKS THEM EITHER. This note
- * used to say they were "legitimate when the manifest declares the dependency"; that was never true.
- * parts.json has no `requires` field, the runtime manifest build.py emits carries exactly
- * {batches, eager, vendor, classes}, and PartsRegistry.ensureLoaded loads the one part it is given
- * ("and, when it grows one, whatever it requires" — future tense, still). What DOES express a
- * cross-part dependency is the DOOR: `whenAllLoaded ["maps", "plots"]` names both, so a reference
- * from part A into lazy part B is safe exactly when every door that pulls A in also names B. That
- * is a convention held up by comments, not by a gate — so when you add such an edge, say so at the
- * door (see samples/SampleDashboardApp.launch and demos/DemoMenus.createImageWdgt).
- * ⛔ A door naming two parts does NOT make cross-part INHERITANCE safe: ensureAllLoaded is a
- * Promise.all, so the two load concurrently with no ordering, and `class X extends Y` across that
- * boundary is a race. Only findLoadOrder inside a single part orders anything. An inheritance family
- * is therefore indivisible — which is why 'authoring' is one part rather than one per app.
+ * WHAT SATISFIES A REFERENCE INTO ANOTHER PART, beyond the guards above:
+ *   6. AN AWAIT IS A GUARD. `world.parts.whenAllLoaded ["maps"], ->` opens a scope, exactly as
+ *      `if X?` does, and every deeper-indented line under it runs with that part present. Not
+ *      teaching this gate the idiom it exists to encourage was its worst false positive: it
+ *      demanded a guard at sites that had correctly awaited, which pushes an author toward
+ *      `if X?` -- the ONE idiom that is wrong for a lazy part, because it silently swallows the
+ *      click instead of fetching. ⚠ whenOptionalPartsLoaded does NOT count: it runs its callback
+ *      even when the part never arrives, so those references still need their own guard.
+ *   7. A CLASS-LEVEL `requiredParts: [...]` covers the whole file. It is the list an
+ *      IconicDesktopSystemWindowedApp's inherited `launch` awaits before calling buildWindow, so
+ *      the declaration and the await cannot drift -- the await IS the declaration. This exists
+ *      because the gate reads one line at a time and can never see that a `launch` three methods
+ *      up already awaited; before it, nine apps awaited correctly and still failed the gate, which
+ *      is what forced the authoring/authoring-launcher split.
+ *   8. parts.json `requires` covers a LAZY part naming another part. There PartsRegistry loads the
+ *      required parts FULLY FIRST, so the classes are defined before this part is even ingested.
+ *      ⚠ It does NOT excuse an EAGER part: that one is already running at boot, so `requires` can
+ *      only promise the other part SHIPS, never that it has arrived. Hence the asymmetry --
+ *      eager->lazy still needs a guard or an await where it stands.
+ *
+ * ⛔ CROSS-PART INHERITANCE is only safe under `requires`. A door naming several parts goes through
+ * ensureAllLoaded = Promise.all, so they arrive concurrently with nothing ordering them, and
+ * `class X extends Y` across that boundary is a race rather than a catchable error. Only
+ * findLoadOrder (inside one part) and `requires` (between parts) order anything.
  */
 
 const fs = require('fs');
@@ -103,6 +119,14 @@ for (const [partName, part] of Object.entries(parts)) {
   if (partName.startsWith('//')) continue;
   for (const d of part.dirs || []) dirToPart.set(path.posix.normalize(d), partName);
 }
+
+const isLazy = (partName) => partName !== 'core' && !!parts[partName] && parts[partName].eager === false;
+// What a part may name without guarding: itself, plus whatever parts.json declares it `requires`.
+// For a LAZY part that declaration is enforced by the loader (PartsRegistry brings the required
+// parts fully in BEFORE ingesting this one); for an eager one it only promises they SHIP together,
+// which is why an eager->lazy reference still has to be guarded or awaited where it stands.
+const declaredRequires = (partName) =>
+  new Set([partName, ...(((parts[partName] || {}).requires) || [])]);
 
 const coreFiles = [];
 const partClassOwner = new Map();   // ClassName -> partName (non-core parts only)
@@ -203,6 +227,23 @@ function guardedPartsPerLine(lines, ownerOfClass) {
       perLine[i].add(part);
       openGuards.push({ indent: ind, part });
     }
+
+    // AN AWAIT IS A GUARD TOO, and not seeing that was this gate's blind spot: a lazy part's
+    // prescribed entry point is `world.parts.whenAllLoaded ["maps", "plots"], ->`, and every line
+    // nested under it runs with those parts present -- exactly the scope an `if X?` opens. Before
+    // this, the gate demanded a guard at sites that had correctly awaited, which pushes authors
+    // toward `if X?` -- the one idiom that is WRONG for a lazy part, because it silently swallows
+    // the click instead of fetching. Only whenAllLoaded counts: whenOptionalPartsLoaded runs its
+    // callback even when the part never arrives, so a reference under it still needs its own guard.
+    const awaited = /\bwhenAllLoaded\s*\[([^\]]*)\]/.exec(raw);
+    if (awaited) {
+      for (const m of awaited[1].match(/["']([^"']+)["']/g) || []) {
+        const part = m.slice(1, -1);
+        if (!parts[part]) continue;
+        perLine[i].add(part);
+        openGuards.push({ indent: ind, part });
+      }
+    }
   }
   return perLine;
 }
@@ -210,28 +251,49 @@ function guardedPartsPerLine(lines, ownerOfClass) {
 const refViolations = [];
 const inheritViolations = [];
 
-for (const rel of coreFiles) {
+// EVERY file that is present at boot is in scope, not just core's. An EAGER part is in the artifact
+// from the first frame exactly as core is, so `samples` naming a lazy `plots` class unguarded is the
+// same defect as core doing it -- and it was invisible for as long as this gate looked only at core.
+// A LAZY part is in scope too, against the parts it does NOT declare in `requires`.
+const scanned = [...shippable].filter(rel => dirToPart.get(path.posix.normalize(path.posix.dirname(rel))));
+
+for (const rel of scanned) {
+  const owner = dirToPart.get(path.posix.normalize(path.posix.dirname(rel)));
   const abs = path.join(REPO, rel);
   let lines;
   try { lines = fs.readFileSync(abs, 'utf8').split('\n'); } catch (e) { continue; }
   const guards = guardedPartsPerLine(lines, partClassOwner);
+  const satisfied = declaredRequires(owner);
+
+  // A CLASS-LEVEL DECLARATION covers the whole file. `requiredParts: ["authoring"]` on an
+  // IconicDesktopSystemWindowedApp subclass is the list its inherited `launch` awaits before it
+  // calls buildWindow, so every reference in that class runs with those parts in. The gate reads
+  // one line at a time and could never infer that; reading the declaration is how it learns.
+  // ⚠ `optionalParts` deliberately does NOT count -- that idiom runs the callback even when the
+  // part never arrived, so those references still need a guard of their own.
+  const declared = /^\s*requiredParts\s*:\s*\[([^\]]*)\]/m.exec(lines.join('\n'));
+  if (declared) {
+    for (const q of declared[1].match(/["']([^"']+)["']/g) || []) satisfied.add(q.slice(1, -1));
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const code = codePartOf(lines[i]);
     if (!code.trim()) continue;
     for (const p of patterns) {
+      if (p.owner === owner || satisfied.has(p.owner)) continue;
       if (!p.ref.test(code)) continue;
       if (p.inherit.test(code)) {
-        inheritViolations.push({ rel, line: i + 1, name: p.name, owner: p.owner, text: lines[i].trim() });
+        inheritViolations.push({ rel, from: owner, line: i + 1, name: p.name, owner: p.owner, text: lines[i].trim() });
         continue;
       }
       if (guards[i].has(p.owner)) continue;
-      refViolations.push({ rel, line: i + 1, name: p.name, owner: p.owner, text: lines[i].trim() });
+      refViolations.push({ rel, from: owner, line: i + 1, name: p.name, owner: p.owner, text: lines[i].trim(),
+                           lazy: isLazy(p.owner) });
     }
   }
 }
 
-console.log(`[part-edges] scan done — ${coreFiles.length} core source(s) vs ` +
+console.log(`[part-edges] scan done — ${scanned.length} source(s) present at boot or in a part vs ` +
   `${partClassOwner.size} part-owned class(es) in ${new Set(partClassOwner.values()).size} part(s): ` +
   `${refViolations.length} unguarded reference(s), ${inheritViolations.length} inheritance edge(s).`);
 
@@ -241,16 +303,17 @@ if (inheritViolations.length) {
   console.error('the base class / mixin is core material, so move it into core (or move the deriving');
   console.error('class into the part).');
   for (const v of inheritViolations) {
-    console.error(`  ${v.rel}:${v.line}  core -> ${v.name} (part '${v.owner}')`);
+    console.error(`  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}')`);
     console.error(`      ${v.text}`);
   }
 }
 
 if (refViolations.length) {
-  console.error('\n[part-edges] FAIL -- core names a part-owned class with no guard. On an artifact');
-  console.error("that does not carry the part, this throws '<TheClass> is not defined' when the code runs:");
+  console.error('\n[part-edges] FAIL -- a class present at boot names a part-owned class with no guard.');
+  console.error("On an artifact that does not carry the part -- or, for a LAZY part, before anything has");
+  console.error("fetched it -- this throws '<TheClass> is not defined' at the moment the code runs:");
   for (const v of refViolations) {
-    console.error(`  ${v.rel}:${v.line}  core -> ${v.name} (part '${v.owner}')`);
+    console.error(`  ${v.rel}:${v.line}  ${v.from} -> ${v.name} (part '${v.owner}'${v.lazy ? ', LAZY' : ''})`);
     console.error(`      ${v.text}`);
   }
   console.error('\nFIX, for an EAGER part (present or absent, never late): guard the site --');

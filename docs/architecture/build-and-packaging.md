@@ -70,18 +70,32 @@ Plus two properties that are **not** the same question:
 ⚠ A *lazy* part is different: its entry point must await `world.parts.ensureLoaded`, because a guard answers
 "is it here?" and a lazy part needs "get it here".
 
-⚠⚠ **THERE IS NO PART→PART `requires` MECHANISM, and the doors are what stand in for one.** `parts.json` has no such
-field, the runtime manifest carries exactly `{batches, eager, vendor, classes}`, and `PartsRegistry.ensureLoaded` loads
-the one part it is handed. What expresses a cross-part dependency is a door naming several parts —
-`whenAllLoaded ["maps", "plots", "authoring"]` — which is enough for a *reference*, and is how `samples` reaches
-`authoring`, and how `demos` reaches it back from its own menu actions. **Nothing verifies that pairing**:
-`check-part-edges.js` scans CORE only, so an edge from one part into another is invisible to it. Say so at the door
-when you add one.
-⛔ **A multi-part door does NOT make cross-part INHERITANCE safe.** `ensureAllLoaded` is a `Promise.all`, so the parts
-load concurrently with no ordering between them; only `findLoadOrder` *inside* one part orders anything, so
-`class X extends Y` across a part boundary is a race. **An inheritance family is indivisible** — which is why
-`authoring` is one part rather than one per Maker, and why `ToolbarWdgt` / `CreatorButtonWdgt` /
-`ToolbarCreatorButtonWdgt` stayed in core when everything around them left: the lazy `plots` part extends all three.
+**PART→PART DEPENDENCIES: `requires`.** A part may name another part's classes, and `parts.json`'s
+`requires: [...]` is where that is stated. One declaration, two readers:
+
+- **Inclusion** — `buildProfile.py` fails a profile that ships a part without what it requires. This is
+  the both-or-neither rule (`authoring`/`authoring-launcher`, `spreadsheet`/`spreadsheet-launcher`,
+  `fizzytiles`/`fizzytiles-launcher`, and `samples`, which *assembles* maps, plots and authoring
+  citizens) — a rule that lived in prose until prose failed: `lean` once carried desktop icons whose
+  click could only reject, because nothing checked the parts behind them shipped too.
+- **Ordering** — for a LAZY part, `PartsRegistry.ensureLoaded` loads its requirements **fully first**,
+  before ingesting its own batches. ⛔ **This is the only thing that makes cross-part inheritance
+  safe.** A door naming several parts (`whenAllLoaded ["maps", "plots"]`) is enough for a *reference*
+  but never for a base class: `ensureAllLoaded` is a `Promise.all`, so they arrive concurrently with
+  nothing ordering them, and `class X extends Y` across that boundary is a race rather than a
+  catchable error. Inside one part `findLoadOrder` orders; between parts, only `requires` does.
+
+⚠ **`requires` does NOT excuse an EAGER part from guarding.** An eager part is already running at
+boot, so the declaration can only promise the other part SHIPS, never that it has arrived — an
+eager→lazy reference still needs a guard or an await where it stands. `check-part-edges.js` enforces
+exactly that asymmetry, and its scope is every source present at boot (core **and** every eager
+part), not core alone. ⚠ Cycles are rejected by the build: a cycle has no valid ingest order.
+
+⚠ **Today `requires` earns its keep on inclusion, not ordering.** Every lazy→lazy edge in the tree is
+better served by a per-site await — a demo menu action that opens a Document awaits `authoring` in
+that one method, rather than dragging the Makers in for the whole demo catalogue. The ordering path
+is what a per-Maker split of `authoring` would need, and it is verified by
+`../Fizzygum-tests/.scratch/requires-order-probe.js` rather than by any shipping configuration.
 
 ⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS**, which is why there is
 ONE idiom and every door uses it: `world.parts.whenAllLoaded ["maps", "plots"], => super()`.
@@ -136,6 +150,15 @@ Two consequences worth stating: the boot site keeps a plain
 name **both parts or neither**, since the launcher alone is an icon whose click can only reject and
 the engine alone is code nothing can open. `maps` and `plots` needed no such split: their doors are
 apps that already lived in core.
+
+⚠ **A launcher declares its parts as DATA, and the door is inherited.** `IconicDesktopSystemWindowedApp`
+owns `launch`, which awaits `requiredParts` (and then `optionalParts`) before building the window, so a
+subclass writes `requiredParts: ["authoring"]` and nothing else. That one line has two readers — the
+await, and `check-part-edges.js`, which treats it as satisfying every reference the class makes into
+those parts. Fourteen apps used to hand-write their own `launch` override instead; the gate could not
+read any of them, so nine correct awaits still looked like violations. A declaration cannot drift from
+the await, because the await IS the declaration. ⚠ Only `requiredParts` satisfies the gate: an optional
+part may genuinely be absent, so references to one still need a guard where they stand.
 
 ⚠ **A launcher that stays in core does not work, even when it awaits correctly.** The nine Maker
 apps had their `launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the part still

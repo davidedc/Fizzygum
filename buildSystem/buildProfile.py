@@ -141,7 +141,49 @@ def fail(message):
 def loadParts():
     """The partition, from buildSystem/parts.json. Read that file's header before changing this."""
     with codecs.open(PARTS_MANIFEST_FILE, "r", "utf-8") as f:
-        return json.load(f)["parts"]
+        parts = json.load(f)["parts"]
+    checkRequiresGraph(parts)
+    return parts
+
+
+def checkRequiresGraph(parts):
+    """`requires` must name real parts and must not cycle -- neither was checked before.
+
+    A cycle is not a style problem: PartsRegistry loads a part's requirements FULLY before ingesting
+    the part itself, so A->B->A has no valid ingest order and would deadlock behind two promises
+    that each wait for the other. check-part-edges.js's header used to claim build.py caught this;
+    it did not, and there was no `requires` field for it to catch anything in.
+    """
+    names = set(partNames(parts))
+    for name in partNames(parts):
+        for required in parts[name].get("requires", []):
+            if required not in names:
+                fail("part '%s' requires '%s', which is not a part in %s"
+                     % (name, required, PARTS_MANIFEST_FILE))
+            if required == name:
+                fail("part '%s' requires itself" % name)
+
+    # depth-first cycle detection, reporting the actual cycle rather than just its existence
+    VISITING, DONE = 1, 2
+    state, stack = {}, []
+
+    def walk(node):
+        state[node] = VISITING
+        stack.append(node)
+        for nxt in parts[node].get("requires", []):
+            if state.get(nxt) == VISITING:
+                cycle = stack[stack.index(nxt):] + [nxt]
+                fail("parts.json has a `requires` CYCLE: %s -- a cycle has no valid ingest order, "
+                     "since each part's requirements must be fully loaded before it is."
+                     % " -> ".join(cycle))
+            if state.get(nxt) != DONE:
+                walk(nxt)
+        stack.pop()
+        state[node] = DONE
+
+    for name in partNames(parts):
+        if state.get(name) != DONE:
+            walk(name)
 
 
 def partNames(parts):
@@ -341,6 +383,19 @@ def resolve(name):
                 fail("profile '%s' ships the lazy part '%s' with sources \"none\" -- a lazy part is "
                      "fetched as SOURCE when something launches it, and this artifact has no source "
                      "text, so it could never load." % (name, partName))
+
+    # A part's `requires` names other parts whose classes its code names. Shipping one without them
+    # is the both-or-neither rule that lived only in prose until now -- and prose is exactly what
+    # failed: 'lean' once carried DashboardsApp and SimpleSlideApp icons whose click could only
+    # reject, because nothing checked that the parts they need were there too.
+    for partName in selectedParts:
+        for requiredPart in parts[partName].get("requires", []):
+            if requiredPart not in selectedParts:
+                fail("profile '%s' ships the part '%s' but not '%s', which parts.json says it "
+                     "REQUIRES -- '%s' names classes from it, so those call sites would throw "
+                     "'<TheClass> is not defined' the moment they ran. Add '%s' to this profile's "
+                     "parts, or drop '%s'." % (name, partName, requiredPart, partName,
+                                               requiredPart, partName))
 
     entryNames = [pageFileName for (pageFileName, _sw, _eager) in ENTRY_PAGES]
     selectedEntryNames = resolveSelection(declared["entries"], entryNames, "entries", name)

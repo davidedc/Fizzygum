@@ -28,6 +28,24 @@ class IconicDesktopSystemWindowedApp
   slot: nil           # world.<slot> holds the single window; nil => a fresh window every launch
   toolTip: nil
 
+  # THE PARTS THIS APP'S buildWindow BUILDS FROM. One declaration with two readers, which is the
+  # whole point of stating it as data rather than writing the await by hand in each subclass:
+  #   - `launch` below awaits exactly this, so the window is never assembled from absent classes;
+  #   - buildSystem/check-part-edges.js reads the same line, and treats it as satisfying every
+  #     reference this class makes into those parts -- because the gate reads one line at a time
+  #     and can never see that a `launch` three methods up already awaited.
+  # Before this existed each subclass hand-wrote its own `launch: -> whenAllLoaded [...], => super()`
+  # override, which the gate could not read at all: nine apps did it correctly and the gate still
+  # had to be told, one exemption at a time. A declaration cannot drift from the await, because the
+  # await IS the declaration.
+  # ⚠ REQUIRED vs OPTIONAL is the distinction PartsRegistry documents: `requiredParts` CONSTITUTE
+  # the window (a Sample doc that assembles plots is broken without them, so it must reject loudly),
+  # `optionalParts` merely ENRICH it (a docked palette offers fewer tools, which is reduced rather
+  # than broken). ⚠ Only `requiredParts` satisfies the gate -- an optional part may genuinely be
+  # absent, so a reference to one still has to be guarded where it stands.
+  requiredParts: []
+  optionalParts: []
+
   # --- per-app hooks (subclasses override) ---
   buildIcon: -> nil                      # the launcher's icon widget
   buildWindow: -> nil                    # build + world.add the app's window; return it
@@ -46,7 +64,16 @@ class IconicDesktopSystemWindowedApp
       world.add launcher
       launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 
+  # ⚠ Both already-loaded paths stay SYNCHRONOUS, which is correctness rather than speed: whenAllLoaded
+  # runs its callback inline when the parts are in, and an EMPTY list is inline too, so an app that
+  # declares nothing pays not one microtask. Deferring by even a microtask moves the launch a whole
+  # world CYCLE later, and the SystemTest suite measures cycles (../Fizzygum-tests/DETERMINISM.md).
   launch: ->
+    world.parts.whenAllLoaded @requiredParts, =>
+      world.parts.whenOptionalPartsLoaded @optionalParts, =>
+        @_launchNow()
+
+  _launchNow: ->
     if @slot?
       existingWindow = world[@slot]
       if existingWindow? and !existingWindow.destroyed and existingWindow.parent?

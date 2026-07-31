@@ -32,6 +32,19 @@
     "  dirs         directories whose *.coffee files belong to this part. Not recursive: list each.",
     "  eager        default true. false = loaded on demand (needs a launch site that awaits",
     "               world.parts.ensureLoaded, NOT a bare `if TheClass?` guard).",
+    "  requires     other PARTS whose classes this part's code names. Two readers, one statement:",
+    "               (1) buildProfile.py fails a profile that ships this part without them -- the",
+    "               both-or-neither pairing that used to live only in prose, and whose absence",
+    "               shipped a desktop icon whose click could only reject; (2) for a LAZY part,",
+    "               PartsRegistry loads them FULLY FIRST, before ingesting this part's own batches",
+    "               -- the only thing that makes `class X extends Y` across a part boundary safe,",
+    "               since a door naming two parts goes through ensureAllLoaded = Promise.all and",
+    "               orders nothing.",
+    "               WARN It is NOT a licence for an EAGER part to name a LAZY part's class",
+    "               unguarded: the eager part is already running at boot, so `requires` can only",
+    "               promise the lazy one SHIPS, never that it has arrived. Those sites still guard",
+    "               or await -- check-part-edges.js enforces exactly that asymmetry.",
+    "               STOP Cycles are rejected by build.py: a cycle has no valid ingest order.",
     "  requiresFlag optional build flag this part additionally needs, on TOP of being selected by the",
     "               profile. One carrier left ('videoPlayer'): a per-invocation opt-in rather than a",
     "               property of an artifact. ('tests' is gone -- whether the test machinery ships is",
@@ -128,6 +141,8 @@
 
     "fizzytiles-launcher": {
       "//": "The eager sliver of fizzytiles: the desktop launcher declaration plus its icon. It CANNOT be lazy -- WorldWdgt.createDesktop builds the desktop opener by instantiating FridgeMagnetsApp (and drawing FridgeMagnetsIconWdgt), and WellKnownObjects.resolveApp re-resolves snapshot references through the same class. An icon the user cannot see is an app they cannot launch. This is arc 4's reframe R6 in one part: INCLUSION and EAGERNESS are different properties, and 'the launcher is always here, the engine arrives when asked for' needs both.",
+      "//requires": "Both-or-neither: FridgeMagnetsApp.buildWindow names FridgeMagnetsWdgt, so the launcher without its engine is a desktop icon that can only reject.",
+      "requires": ["fizzytiles"],
       "dirs": ["src/fizzytiles-launcher"]
     },
 
@@ -136,6 +151,8 @@
       "//eager": "LAZY. Nothing reaches the demo family until someone opens the 'demo ➜' or 'test menu ➜' entries, so it has no business compiling at boot -- 28 classes with src/demos-icons folded in. ⚠ Its doors are MENU ITEMS, which makes them a shape the app launchers do not have: a menu is BUILT synchronously (ButtonWdgt binds `@target[@action]` at build time), so the item cannot target the `demoMenus` singleton -- core owns the item, asks `world.parts.isAvailable \"demos\"` to decide whether to OFFER it, and awaits inside the action. See Widget.popUpDemoTestMenu. ⚠ Not shipped by any production profile, so this buys dev-page boot and partition uniformity, never download size.",
       "eager": false,
       "//icons": "src/demos-icons holds the 23 icon classes ONLY DemoMenus names -- text-formatting glyphs (align/bold/italic/font-size/format-as-code), the collapsed/uncollapsed state pair, the little USA/world map glyphs, and the welcome/templates/text/video-play/C-F icons. They sat in src/icons, which is otherwise product, and are here for the same reason src/icons-dev exists: an icon belongs to whatever names it. ⚠ Their *IconAppearance siblings mostly did NOT come along -- 13 of them are named DIRECTLY by core toolbar buttons, so they stay in src/icons and this part reaches them the safe direction (part -> core, and core always ships). Only the five appearances whose sole namer was their own moving widget travelled with it.",
+      "//requires": "The demo catalogue SHOWS OFF other parts: the icon gallery (dev-icons), the unfinished patch nodes (patch-programming-experimental) and three Maker apps it opens by name (authoring-launcher). All three are EAGER, so this is an INCLUSION statement -- a profile with 'demos' must carry them, or those menu entries would throw on click. ⚠ 'authoring' is deliberately NOT here: four DemoMenus methods await it individually, which keeps opening a demo menu from dragging the whole Makers part in.",
+      "requires": ["dev-icons", "patch-programming-experimental", "authoring-launcher"],
       "dirs": ["src/demos", "src/demos-icons"]
     },
 
@@ -154,6 +171,8 @@
       "//": "The eager sliver of 'authoring': the nine IconicDesktopSystemWindowedApp subclasses whose desktop icons open a Maker -- Docs / Slides / Dashboards / Draw / Patch programming / Generic panel / Super Toolbar, plus 'How to save?' and the C-F converter in the Examples folder. Each is a title, an icon, a buildWindow and a `launch` that awaits 'authoring'. Same split as fizzytiles-launcher and spreadsheet-launcher, for the same reason: WorldWdgt.createDesktop places these openers AT BOOT, so an app class living inside the lazy directory it opens would mean no icon at all, and nothing would ever pull the part in.",
       "//why-not-core": "⚠ THE LAUNCHERS ARE A PART RATHER THAN GUARDED CORE, and that is not a stylistic choice. Left in core, each `buildWindow: -> world.openFrameWith (new DocumentWdgt), …` is an unguarded core->part reference and check-part-edges.js fails the build -- correctly, since it reads one line at a time and cannot see that `launch` awaited three lines above. The gate's own advice ('for a LAZY part a guard is WRONG, await instead') is already satisfied here; the reference is simply in the wrong PART. Moving the launchers out makes every one of those an intra-part reference and leaves createDesktop asking the plain `if SimpleDocumentApp?` question -- which is right, because it is asked of the EAGER half.",
       "//pairing": "⚠ A PROFILE MUST NAME BOTH THIS AND 'authoring', OR NEITHER. This part alone is nine desktop icons whose click can only reject; 'authoring' alone is 53 classes nothing can open. dev and homepage name both; lean names neither -- it cannot, since sources \"none\" forbids shipping a lazy part at all, so the appliance has no Makers and, correctly, no icons for them.",
+      "//requires": "THE BOTH-OR-NEITHER PAIRING, now enforced rather than asked for in prose: nine desktop icons whose click can only reject is worse than no icons. Stated on the LAUNCHER because that is the half that would ship alone and misbehave -- the engine alone is merely unreachable code.",
+      "requires": ["authoring"],
       "dirs": ["src/authoring-launcher"]
     },
 
@@ -175,6 +194,8 @@
 
     "samples": {
       "//": "The three EXAMPLE DOCUMENTS WorldWdgt.createDesktop drops into the desktop's 'Examples' folder -- SampleDashboardApp (plots + maps + sliders), SampleSlideApp (the NYC slide) and SampleDocApp. They are content, not product: each is an IconicDesktopSystemWindowedApp whose buildWindow assembles a finished document out of product widgets, to show what the system can do. They sat in core only because nothing had asked them to be separable; that is the same judgment arc 3 made for DemoMenus and arc 4 for the 'demos' part. ⚠ NOT folded INTO 'demos': production ships these (profiles/homepage.json names 'samples') and must NOT gain DemoMenus and the bouncer/pen/pointer, which is exactly what naming 'demos' there would do. Two separate species of demo, two parts. Core reaches them through the three guarded createOpener calls in createDesktop, so a profile without this part simply gets a smaller Examples folder.",
+      "//requires": "The three example documents ASSEMBLE plots, maps and the authoring citizens -- their windows are not reduced without those parts, they cannot be built at all, which is why each Sample*App declares them as requiredParts and awaits with whenAllLoaded rather than the optional idiom.",
+      "requires": ["maps", "plots", "authoring"],
       "dirs": ["src/samples"]
     },
 
@@ -189,11 +210,15 @@
     "spreadsheet-launcher": {
       "//": "The eager sliver of the spreadsheet: SpreadsheetApp, the desktop launcher declaration, and nothing else (its icon is built from core widgets, so unlike fizzytiles-launcher there is no icon file to bring along). It CANNOT be lazy -- WorldWdgt.createDesktop calls createOpener on it AT BOOT to place the Examples-folder icon, and WellKnownObjects.resolveApp re-resolves snapshot launcher references through the same class. Arc 4's reframe R6 again: INCLUSION and EAGERNESS are different properties, and 'the icon is always here, the grid arrives when asked for' needs both.",
       "//pairing": "⚠ A PROFILE SHOULD NAME BOTH PARTS OR NEITHER. This one alone would put a desktop icon on a tree whose click can only reject -- worse than no icon; the engine alone would ship 114 KB nothing can open. homepage names both, lean names neither.",
+      "//requires": "The both-or-neither pairing this part's own //pairing note has always asked for, now checked by buildProfile.py instead of by whoever reads the note.",
+      "requires": ["spreadsheet"],
       "dirs": ["src/spreadsheet-launcher"]
     },
 
     "dev-tools": {
       "//": "In-world dev scaffolding: the widget factory (world.widgetFactory), the pinout debug overlay (world.pinouts, an arc-3 extraction), and the layout-editing chrome (spacers + the element adder/droplet) reached from the test menu. Every one of them is already an optional collaborator behind an existence guard.",
+      "//requires": "WidgetFactory builds the bouncer and the pen, which are demo widgets. Its two factory methods AWAIT the part (timing); this line is the other half (inclusion) -- on a profile with dev-tools but no demos those awaits could only reject.",
+      "requires": ["demos"],
       "dirs": ["src/dev-tools"]
     },
 
@@ -214,6 +239,8 @@
 
     "harness": {
       "//": "The Automator + test-harness sources, which live in the SIBLING TESTS REPO. Its five *TestSupport classes install themselves onto core prototypes at boot behind `if XTestSupport?`. ⚠ THIS PART IS WHAT MAKES A BUILD TEST-CAPABLE, so five derived facts key off its presence (buildProfile.py): the js/tests symlink, BUILDFLAG_LOAD_TESTS, the two tests-repo build gates, and -- inverted -- the strip of the dead `if Automator?` branches, since Automator/AutomatorLoader/AutomatorPlayer are all in here. It used to carry `requiresFlag: \"tests\"` on top of a flavour test, which asked the same question twice.",
+      "//requires": "AutomatorEventCommandStartMacro builds its macros with Macro.fromString, so a test-capable build that somehow omitted 'macros' would carry a harness that cannot replay a single test. Both eager, so this is inclusion only.",
+      "requires": ["macros"],
       "dirs": [
         "../Fizzygum-tests/Automator-and-test-harness-src",
         "../Fizzygum-tests/Automator-and-test-harness-src/AutomatorEventCommands"

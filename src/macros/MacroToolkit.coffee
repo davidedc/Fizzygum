@@ -794,6 +794,16 @@ class MacroToolkit
 
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
+  # ⚠ InspectorWdgt is the LAZY 'meta-tools' part, and this class is the EAGER 'macros' one, so the
+  # bare name would be an unguarded reference into something a profile may not ship and a page may
+  # not yet have fetched. The bail-out is exact rather than defensive: this asks "is an inspector
+  # already OPEN", and without the part no inspector can exist, so nil is the true answer.
+  # ⚠ It keeps the CLASS rather than the string "InspectorWdgt", because the string form matches an
+  # exact widgetClassString() and would quietly stop finding ClassInspectorWdgt, its subclass.
+  _findTopInspector: ->
+    return nil unless InspectorWdgt?
+    @findTopWidgetByClassNameOrClass InspectorWdgt
+
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
     if typeof widgetNameOrClass == "string"
       world.topWdgtSuchThat (item) -> item.widgetClassString() == widgetNameOrClass
@@ -852,11 +862,11 @@ class MacroToolkit
     @syntheticEventsMouseMovePressDragRelease_InputEvents handleCurrentCenter, (new Point handleCurrentCenter.x, handleTargetCenterY)
 
   bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
+    inspectorNaked = @_findTopInspector()
     @scrollInspectorListItemIntoView_InputEvents inspectorNaked.list, listItemString
 
   clickOnListItemFromTopInspector_InputEvents: (listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
+    inspectorNaked = @_findTopInspector()
 
     list = inspectorNaked.list
 
@@ -871,7 +881,7 @@ class MacroToolkit
 
 
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
+    inspectorNaked = @_findTopInspector()
 
     slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
@@ -880,12 +890,12 @@ class MacroToolkit
     @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
   clickOnSaveButtonFromTopInspector_InputEvents: (milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
+    inspectorNaked = @_findTopInspector()
     saveButton = inspectorNaked.saveButton
     @moveToAndClick_InputEvents saveButton, "left button", milliseconds, startTime
 
   bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
-    inspectorNaked = @findTopWidgetByClassNameOrClass InspectorWdgt
+    inspectorNaked = @_findTopInspector()
 
     slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
