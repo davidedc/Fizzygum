@@ -57,23 +57,23 @@ class DemoMenus
       world.openFrameWith fmm, (new Point 570, 400), world.hand.position()
 
 
-  # ⚠ THE PART THIS BUILDS FROM IS NOT THIS PART. ImageWdgt / SlideWdgt / DocumentWdgt and the
-  # WelcomeMessageInfoWdgt are the lazy 'authoring' part, so each of these four menu actions has to
-  # bring it in itself. It cannot be hoisted to the door that loads 'demos' (WorldWdgt's
-  # popUpDemoTestMenu / createDemoAnalogClock): that would make every demo menu drag the Makers in,
-  # and most of this catalogue does not want them. It is safe HERE because a menu item's action is
-  # fire-and-forget -- ButtonWdgt discards the return value -- and whenAllLoaded still runs inline
-  # when the part is already in, which on the harness page it always is.
-  # ⚠⚠ Nothing verifies this pairing: check-part-edges.js scans CORE only, so a part naming another
-  # part's class is invisible to it. parts.json has no part->part `requires` field either, and a
-  # multi-part door would not help even if one existed, because ensureAllLoaded is a Promise.all.
+  # ⚠ THE PARTS THIS BUILDS FROM ARE NOT THIS PART, and parts.json states that ONCE instead of every
+  # action restating it: 'demos' REQUIRES 'authoring' and 'maps', so PartsRegistry loads both fully
+  # before any class in here exists, and these actions can name ImageWdgt / SlideWdgt / DocumentWdgt
+  # / SimpleWorldMapIconWdgt outright. That declaration is forced rather than convenient: 13 widgets
+  # in src/demos-icons reach their appearance through `createAppearance`, whose value the
+  # CreatorButtonWdgt constructor consumes synchronously, so those 13 sites have no seam to await
+  # through and only `requires` can serve them -- once it is declared for their sake, an await here
+  # would be ceremony over a part that is already in.
+  # ⚠ 'plots' is deliberately NOT in that declaration: every reference to it sits in a menu action
+  # with a real seam, so its six actions await individually and opening a demo menu does not drag
+  # the charting part in. Both edges ARE checked -- check-part-edges.js covers a lazy part against
+  # the parts it does not declare in `requires`.
   createImageWdgt: ->
-    world.parts.whenAllLoaded ["authoring"], ->
-      world.openFrameWith (new ImageWdgt), (new Point 460, 400), world.hand.position()
+    world.openFrameWith (new ImageWdgt), (new Point 460, 400), world.hand.position()
 
   createSlideWdgt: ->
-    world.parts.whenAllLoaded ["authoring"], ->
-      world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
+    world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
@@ -372,18 +372,12 @@ class DemoMenus
   createAlignLeftIconWdgt: ->
     world.create new AlignLeftIconWdgt
 
-  # ⚠⚠ The two map icons are the LAZY 'maps' part, not this one -- loading 'demos' does not
-  # bring 'maps' with it, because there is no part->part `requires` mechanism (parts.json has
-  # no such field and PartsRegistry.ensureLoaded loads only the part it is handed). So each of
-  # these menu actions names the part it actually builds from. Without this the click threw
-  # 'SimpleWorldMapIconWdgt is not defined' -- since 'maps' went lazy, and nothing caught it.
+  # The two map icons are the LAZY 'maps' part; `demos` requires it, so it is in before this runs.
   createWorldMapIconWdgt: ->
-    world.parts.whenAllLoaded ["maps"], ->
-      world.create new SimpleWorldMapIconWdgt
+    world.create new SimpleWorldMapIconWdgt
 
   createUSAMapIconWdgt: ->
-    world.parts.whenAllLoaded ["maps"], ->
-      world.create new SimpleUSAMapIconWdgt
+    world.create new SimpleUSAMapIconWdgt
 
   createBoldIconWdgt: ->
     world.create new BoldIconWdgt
@@ -401,8 +395,7 @@ class DemoMenus
     world.create new VideoPlayIconWdgt
 
   createDocumentWdgt: ->
-    world.parts.whenAllLoaded ["authoring"], ->
-      world.openFrameWith (new DocumentWdgt), (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
+    world.openFrameWith (new DocumentWdgt), (new Point 368, 335), world.hand.position().subtract(new Point 50, 100)
 
   createSimpleLinkWdgt: ->
     simpleLinkWdgt = new SimpleLinkWdgt
@@ -774,10 +767,9 @@ class DemoMenus
 
 
   createWelcomeMessageWindowAndShortcut: ->
-    world.parts.whenAllLoaded ["authoring"], ->
-      wm = WelcomeMessageInfoWdgt.create()
-      readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
-      # this "add" is going to try to position the reference
-      # in some smart way (i.e. according to a grid)
-      world.add readmeLauncher
-      readmeLauncher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
+    wm = WelcomeMessageInfoWdgt.create()
+    readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add readmeLauncher
+    readmeLauncher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()

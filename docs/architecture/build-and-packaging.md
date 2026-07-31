@@ -91,11 +91,16 @@ eager→lazy reference still needs a guard or an await where it stands. `check-p
 exactly that asymmetry, and its scope is every source present at boot (core **and** every eager
 part), not core alone. ⚠ Cycles are rejected by the build: a cycle has no valid ingest order.
 
-⚠ **Today `requires` earns its keep on inclusion, not ordering.** Every lazy→lazy edge in the tree is
-better served by a per-site await — a demo menu action that opens a Document awaits `authoring` in
-that one method, rather than dragging the Makers in for the whole demo catalogue. The ordering path
-is what a per-Maker split of `authoring` would need, and it is verified by
-`../Fizzygum-tests/.scratch/requires-order-probe.js` rather than by any shipping configuration.
+⚠ **A per-site await is the finer instrument, and `requires` is the one that reaches where an await
+cannot.** Prefer the await when the reference sits somewhere with a seam: `demos` names `plots` from
+six menu actions, each of which awaits, so opening a demo menu does not drag the charting part in.
+But `demos` declares `requires: ["authoring", "maps"]`, and that is FORCED rather than chosen —
+13 widgets in `src/demos-icons` reach their appearance through `createAppearance`, whose value
+`CreatorButtonWdgt`'s constructor consumes synchronously (the no-async-seam rule below). At a site
+with no seam there is nothing to await *in*, so ordering the load is the only mechanism left. The
+rule that falls out: **a per-site await where a seam exists; `requires` where one does not, or where
+a base class crosses the boundary.** Deciding it by taste instead is how a door ends up awaiting a
+part it cannot wait for.
 
 ⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS**, which is why there is
 ONE idiom and every door uses it: `world.parts.whenAllLoaded ["maps", "plots"], => super()`.
@@ -323,16 +328,28 @@ absent from `js/pre-compiled.js`.
 | `maps` | 4 | 95.0 KB (97.5% code) | **−55.8 KB (−5.1%)** |
 | `spreadsheet` | 12 | 119.4 KB (27.9% code) | **−33.7 KB (−3.4%)** |
 | `authoring` | 54 | 94.3 KB (75.3% code) | **−91.9 KB (−9.8%)** |
+| unpinning what only lazy parts named | 81 | 100.6 KB (71.8% code) | **−119.5 KB (−14.15%)** |
 
 ⚠⚠ **The third row broke the estimator a second time, in the OTHER direction — the image cost tracks
 CLASS COUNT at least as much as code bytes.** `authoring` and `maps` move almost exactly the same
 source (94.3 vs 95.0 KB), yet `authoring` takes 1.65× as much off the image. It has 54 classes to
 maps' 4, and every class compiles to its own prototype scaffolding, which the source bytes do not
 show. Estimating `authoring` from maps' KB-of-code ratio predicted −42 KB against an actual −91.9 KB:
-**2.2× LOW**, having been 33% low for maps and 50% high for the spreadsheet. Three slices, three
-misses, in both directions. ⇒ **Do not promise a number before the two builds are fingerprinted**
-(§8) — and when you must guess, a many-small-classes slice will beat its byte estimate and a
-heavily-commented one will fall short of it.
+**2.2× LOW**, having been 33% low for maps and 50% high for the spreadsheet. The fourth row confirms
+the class-count reading a second time and missed the same way (predicted order −70 KB, measured
+−119.5 KB): 81 mostly one-method icon classes, the smallest-per-class slice yet, took the most off
+the image of any of them. Four slices, four misses, in both directions. ⇒ **Do not promise a number
+before the two builds are fingerprinted** (§8) — and when you must guess, a many-small-classes slice
+will beat its byte estimate and a heavily-commented one will fall short of it.
+
+⚠ **A class is pinned to `core` by being named there, so a slice UNPINS more than it moves.** The
+fourth row is not an app slice at all: it is the classes whose only namers were already-lazy parts,
+which stayed in `core` only because moving them would have made an unordered cross-part edge — the
+thing `requires` now orders. Because each mover takes its own references with it, the pinned set is a
+**FIXPOINT**: 48 files qualified, moving them qualified 28 more, then 4, then 1. Re-run
+`buildSystem/pinned-by-lazy-parts.js` after every round; it reports the two files deliberately left
+behind (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt` — `plots` extends both, and moving them would
+oblige `plots requires ["authoring"]` for 1.2 KB).
 
 ⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle.** The runtime parts
 manifest carries each part's `classes` name list — it must, since the vault cannot answer
@@ -340,7 +357,11 @@ manifest carries each part's `classes` name list — it must, since the vault ca
 `js/fizzygum-boot-native-min.js` by **1,857 bytes** (17,158 → 19,015; the manifest is 3,554 B of it).
 That is a 2% toll on the thing that must arrive first, to take 92 KB off the thing that arrives
 next, so it is a good trade at this size — but it scales with class count, and a partition of many
-tiny parts would eventually spend more on the manifest than it saves.
+tiny parts would eventually spend more on the manifest than it saves. Moving 81 more classes into
+existing parts cost another **1,935 B** (19,158 → 21,093) without creating a single new part: the
+toll is per CLASS NAME, not per part. On `lean`, which ships no lazy part and therefore no such list,
+the same change moved the boot bundle by **−3 B** — which is the cleanest statement of where the
+cost actually lives.
 
 ⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured
 2026-07-31 (`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in

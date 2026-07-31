@@ -11,18 +11,25 @@ case had evaporated (a precompiled dev tree boots in 60 ms), the owner reaffirme
 reasons here; **boot speed is not** — see §0.1.
 
 > ## ⏩ WHERE THIS ARC IS, 2026-07-31 — read this first
-> **Track A: DONE** (§1.1b, `f1ab5d40`). **Track B slices 1-3: DONE and PUSHED.**
+> **Track A: DONE** (§1.1b, `f1ab5d40`). **Track B slices 1-4: ALL DONE.**
 > `50cbf48b` icons re-homed · `e39392bf` `demos` lazy · `9acadaab` the `authoring` +
 > `authoring-launcher` split (production `js/pre-compiled.js` **−9.8%**, `lean` **−11.4%**, dev
 > `index.html` 3219 → 2711 ms) · `eb2bd955` four broken doors the new analysis found ·
 > `510c1e74` a part→part **`requires` mechanism** and a gate that covers those edges ·
-> `b6173e12` the palette fix + the tooling below.
+> `b6173e12` the palette fix + the tooling below · `b2f4e01d` slice 4 designed ·
+> **slice 4 EXECUTED (§2.2d): 81 files out of `core`, production −14.15%, `lean` −14.55%.**
 >
-> **⏳ NEXT: §2.2d — SLICE 4.** It is fully designed and self-contained; start there.
-> **Tools it depends on, all committed:** `node buildSystem/pinned-by-lazy-parts.js --list` (the work
-> list), `fg hypopart <files…>` (evaluate a grouping BEFORE moving a file), `fg fingerprint
-> [profile] [baseref]` (measure the payoff instead of estimating it).
-> **Rules that cost a re-run in slices 1-3:** §2.5, and §2.2d's own "the gate that does not exist".
+> **CUMULATIVE across slices 3+4: production `js/pre-compiled.js` 936,920 → 724,991 B, −22.6%.**
+>
+> **⏳ NEXT: nothing is designed.** The obvious candidates and why they are NOT automatic:
+> a per-Maker split of `authoring` (§2.2d "why NOT per-Maker" — saves the production image nothing);
+> the remaining `src/icons` tail; §2.3/§2.4. ⚠ Whatever comes next, the estimate must be ITERATED to
+> a fixpoint (§2.2d method step 4) and MEASURED, not extrapolated.
+> **Tools, all committed:** `node buildSystem/pinned-by-lazy-parts.js --list` (the work list —
+> reports only the 2 deliberately-kept files today), `fg hypopart <files…>` (evaluate a grouping
+> BEFORE moving a file), `fg fingerprint [profile] [baseref]` (measure instead of estimating).
+> **Rules that cost a re-run:** §2.5, and §2.2d's own "the gate that does not exist" +
+> "what execution changed about the design".
 
 ---
 
@@ -222,17 +229,27 @@ side effect.
    `CreatorButtonWdgt` / `ToolbarCreatorButtonWdgt` (the lazy `plots` part extends all three), the 8
    window-chrome buttons, and `PatchNodeWdgt` + `CalculatingPatchNodeWdgt` (the EAGER
    `patch-programming-experimental` part extends them, so they must exist at boot).
-4. **The launcher icons stay eager forever** (~11 of them): `createDesktop` draws them at boot.
+4. ✅ **DONE — slice 4, §2.2d. Unpin what only lazy parts name.** **81 files** out of `core` (a
+   four-round FIXPOINT, not the 48 designed), into `authoring` (72), `plots` (5), `maps` (2) and
+   `demos` (2), plus `demos requires ["authoring", "maps"]`. Production `js/pre-compiled.js`
+   844,517 → **724,991 B (−14.15%)**, `lean` 821,770 → **702,244 B (−14.55%)** — the same −119,526 B
+   in both. Gauntlet 14/14, zero churn; `index.html` probe 33/33.
+   `pinned-by-lazy-parts.js` now reports only the two deliberately-kept files.
+5. **The launcher icons stay eager forever** (~11 of them): `createDesktop` draws them at boot.
 
 ### §2.2c-post What slice 3 actually taught (read before attempting slice 4)
 
-1. ⚠⚠ **THERE IS NO PART→PART `requires` MECHANISM — and two authored facts disagreed about it.**
-   `parts.json`'s spreadsheet note said there is none (right); `check-part-edges.js`'s header said
-   part-to-part references are "legitimate when the manifest declares the dependency" (**wrong** —
-   the manifest carries `{batches, eager, vendor, classes}` and nothing else; that comment is now
-   fixed). What stands in for one is a DOOR naming several parts, `whenAllLoaded ["maps", "plots",
-   "authoring"]`, and **nothing verifies the pairing** because the gate scans core only. When you add
-   a part→part edge, say so at the door. ⛔ And it does **not** cover inheritance — see item 3.
+1. ⚠⚠ **THERE WAS NO PART→PART `requires` MECHANISM WHEN SLICE 3 STARTED — and two authored facts
+   disagreed about whether there was.** `parts.json`'s spreadsheet note said there is none (right);
+   `check-part-edges.js`'s header said part-to-part references are "legitimate when the manifest
+   declares the dependency" (**wrong** — the manifest carried `{batches, eager, vendor, classes}` and
+   nothing else). Both comments are fixed, and slice 3 closed by BUILDING the mechanism (`510c1e74`):
+   `parts.json` `requires: [...]`, one declaration with two readers (inclusion + ordering), a gate
+   whose scope is every source present at boot, and cycle/unknown-target rejection. **Present-tense
+   contract: `docs/architecture/build-and-packaging.md` §2 — read that, not this bullet.** The lesson
+   worth keeping is not the mechanism's absence but the shape of the failure: an authored claim about
+   a mechanism outlived the mechanism, in TWO places, disagreeing with each other, and the only
+   reason it was caught is that the owner asked "are you sure?".
 2. ⚠⚠ **A LAUNCHER LEFT IN CORE CANNOT AWAIT ITS WAY OUT.** All nine Maker apps had a correct
    `launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the build still failed: each
    `buildWindow: -> world.openFrameWith (new DocumentWdgt), …` is an unguarded core→part reference,
@@ -277,9 +294,29 @@ side effect.
    "which icons could follow"), `hypo-crosspart-edges.js` (the part→part edges the gate does not
    check), `authoring-lazy-probe.js` (drives all nine doors on `index.html`).
 
-### §2.2d SLICE 4 — THE NEXT ONE, designed 2026-07-31. Unpin 48 of the 50; do NOT split per Maker.
+### §2.2d SLICE 4 — ✅ DONE 2026-07-31. Unpin what only lazy parts name; do NOT split per Maker.
 
-**Status: designed, not started.** Slice 3 closed with `parts.json` gaining a `requires` mechanism
+> **✅ EXECUTED. 81 files left `core`** (the design below predicted 48 — see "what execution changed"
+> at the end of this section, which is the part worth reading if you are planning slice 5).
+> **Measured, two trees built each side (`fg fingerprint <profile> b2f4e01d`):**
+>
+> | tree | `js/pre-compiled.js` | change |
+> |---|---|---:|
+> | `homepage` | 844,517 → 724,991 B | **−119,526 B (−14.15%)** |
+> | `lean` | 821,770 → 702,244 B | **−119,526 B (−14.55%)** |
+>
+> The absolute delta is IDENTICAL on both, which is the consistency check that the same 81 classes
+> left the same eager image. Boot bundle +1,935 B on `homepage` (the parts manifest carries 81 more
+> class names) and −3 B on `lean` (which ships no lazy part, so no list grows).
+> `js/coffeescript-sources/` −1,740 B. Gauntlet 14/14 zero churn · `fg homepage` · lean smoke ·
+> `index.html` probes green (`.scratch/slice4-probe.js`, 33 assertions; `authoring-lazy-probe.js`).
+>
+> ⚠ **Production dropped two classes outright, and that is the one product-visible line:**
+> `ClippingBoxWdgt` and `SimpleTextPanelWdgt` went to `demos`, which no production profile ships, so
+> the shipped source count went 411 → 409. Nothing in production could reach them (that is *why* they
+> were movable), but it is a real reduction rather than a re-packaging, unlike the other 79.
+
+**Status: DONE.** Slice 3 closed with `parts.json` gaining a `requires` mechanism
 (`510c1e74`), and the obvious follow-on — "cross-part inheritance is safe now, so split `authoring`
 per Maker" — is **the wrong slice**. The measurement says so.
 
@@ -332,6 +369,8 @@ There is no per-file membership: a part lists `dirs`. The receiving directories 
 makes `plots` INHERIT across a part boundary, which would oblige `plots` to declare
 `requires: ["authoring"]` — every chart in the system then dragging in the whole Makers part. That is
 a large, permanent coupling bought for 1.2 KB. **Not worth it.** ⇒ the real target is **48 files**.
+(✅ Held on execution: these two are exactly what `pinned-by-lazy-parts.js` still reports. But "48"
+was one round of a fixpoint — 81 files actually moved; see method step 4.)
 
 #### ⚠ THE `maps` PAIR NEEDS `requires`, NOT AN AWAIT
 `LittleUSAIconAppearance` / `LittleWorldIconAppearance` move to `maps`, and `demos-icons`'
@@ -340,18 +379,32 @@ like a method that could await, and it cannot: `CreatorButtonWdgt`'s constructor
 `@appearance = @createAppearance()` and consumes the value synchronously — the same no-async-seam
 rule that governs creator buttons. So this one is `demos` declaring `requires: ["maps"]`, full stop.
 
-#### The one open design decision, and the argument both ways
-The 32 need `demos` to name `authoring`. Two shapes:
-- **`demos requires ["authoring"]`** — one line. Opening any demo menu then pulls the whole Makers
-  part in. Costs nothing in production (`demos` ships nowhere) and **deletes** the four per-site
-  awaits slice 3 added to `DemoMenus` (`createImageWdgt`, `createSlideWdgt`, `createDocumentWdgt`,
-  `createWelcomeMessageWindowAndShortcut`). Recommended.
-- **A `whenAllLoaded ["authoring"]` in each of ~32 DemoMenus menu actions** — finer-grained, keeps
-  the demo catalogue cheap on the dev page. Mechanical but 32× the edit.
-Recommendation: the first. The finer grain buys dev-page bytes on a page that already boots in 60 ms
-when built `dev-precompiled`. ⚠ Either way `dev-tools requires ["demos"]` already exists, so the
-chain becomes dev-tools → demos → authoring; `checkRequiresGraph` rejects a cycle, so if that ever
-closes into one, the partition is wrong rather than the gate.
+#### ✅ RESOLVED — the "open design decision" was never open
+It was framed as taste — `demos requires ["authoring"]` (one line) versus a `whenAllLoaded` in each
+of ~32 `DemoMenus` actions (finer-grained) — with the first recommended. **Execution showed the
+second is not merely worse, it is IMPOSSIBLE.** 14 widgets in `src/demos-icons` reach their
+appearance through `createAppearance: -> new FooIconAppearance @`, and `CreatorButtonWdgt`'s
+constructor does `@appearance = @createAppearance()`, consuming the value synchronously. **There is
+no seam to await through at those 14 sites**, so no per-site await can exist there at all — exactly
+the reasoning already written down for the `maps` pair, which turned out to generalise. Landed as
+`demos requires ["dev-icons", "patch-programming-experimental", "authoring-launcher", "authoring",
+"maps"]`, and the four per-site `authoring` awaits slice 3 added to `DemoMenus` were deleted as
+ceremony over a part that is now always in.
+
+⚠ **The general rule this yields, now in `build-and-packaging.md` §2:** a per-site await where a seam
+exists; `requires` where one does not, or where a base class crosses the boundary. `plots` is the
+contrast that proves it is not "always declare `requires`" — every `demos`→`plots` reference sits in
+a menu action with a real seam, so those six still await per site and a demo menu does not drag the
+charting part in. The `index.html` probe asserts exactly that asymmetry.
+
+⚠ `dev-tools requires ["demos"]` already existed, so the chain is now
+dev-tools → demos → authoring; `checkRequiresGraph` rejects a cycle, so if that ever closes into one,
+the partition is wrong rather than the gate. ⚠ **`requires` is NOT transitive for the GATE**
+(`check-part-edges.js` allows `[partName, ...requires]`, one level) although it IS for ordering
+(`ensureLoaded` recurses, memoized) and effectively is for inclusion (`buildProfile` fixpoints over
+the shipped set). So `demos` had to name `authoring` DIRECTLY even though it already required
+`authoring-launcher`, which requires `authoring` — and that is the right answer anyway: `demos` names
+`authoring`'s classes itself, so relying on a third part's declaration would be a silent coupling.
 
 #### Method (each step independently gated)
 1. `node buildSystem/pinned-by-lazy-parts.js --list` → the CURRENT list (the table above is a
@@ -368,10 +421,20 @@ closes into one, the partition is wrong rather than the gate.
    destination is included. Verified 2026-07-31.
 3. `git mv` into the directories above, declare `requires` where stated, then `fg build`
    (expect: 0 unguarded references, 0 inheritance edges).
-4. `fg gauntlet` 14/14 with **ZERO reference churn** — a screenshot diff is a finding, never a
+4. ⚠⚠ **RE-RUN STEP 1 AND ITERATE — THE PINNED SET IS A FIXPOINT, NOT A LIST.** Every file that
+   leaves `core` takes its references with it, so classes it was the last core namer of become
+   pinned-by-lazy in their turn. This was NOT in the original design and it is where the slice's
+   payoff actually came from: 50 → move 48 → **30 remain** (28 new arrivals, mostly the
+   `*IconAppearance` siblings of the icons just moved) → move 28 → 6 → move 4 → 3 → move 1 → **2**,
+   the deliberately-kept pair. **81 files, four rounds**, against a design that predicted 48 in one.
+   Each round needs its own `fg hypopart` check; do not batch them on faith.
+5. `fg gauntlet` 14/14 with **ZERO reference churn** — a screenshot diff is a finding, never a
    recapture. Then `fg homepage` and `cd Fizzygum && ./build_and_smoke.sh --profile lean`.
-5. `fg fingerprint homepage` and `fg fingerprint lean` — **predict every delta IN WORDS first**, and
-   treat any unpredicted line as a finding.
+6. `fg fingerprint homepage` and `fg fingerprint lean` — **predict every delta IN WORDS first**, and
+   treat any unpredicted line as a finding. (It earned its keep: the prediction "shipped source count
+   is unchanged at 411" was WRONG — two classes went to `demos`, which production does not ship, so
+   they left the build outright at 409. A predicted-first delta turns that into a noticed fact rather
+   than a number nobody read.)
 
 #### ⚠⚠ THE GATE THAT DOES NOT EXIST: the suite cannot see a laziness defect
 The harness page and `index-sw.html` preset `FIZZYGUM_EAGER_ALL_PARTS`, so every part is present
@@ -385,11 +448,45 @@ done, drive `index.html` with a probe: reuse `../Fizzygum-tests/.scratch/crosspa
 icons moved. Assert each class is `undefined` BEFORE and `function` AFTER — absence alone is also
 what a broken build looks like.
 
-#### Exit criteria
-`pinned-by-lazy-parts.js` reports **only the two deliberately-kept files**; `fg build` 0/0;
-`fg gauntlet` 14/14 zero churn; `fg homepage`; lean smoke; both fingerprints taken with predictions
-written first; an `index.html` probe green on every door whose classes moved; §2.2d marked DONE with
-the measured image delta and this plan's ledger (§2.2b) updated.
+✅ **Done for slice 4 as `../Fizzygum-tests/.scratch/slice4-probe.js` (33 assertions, all green):**
+every one of the 81 movers absent at boot and present after its part loads (checked per part, from
+`movers.json` beside it, so it cannot drift into checking a hand-picked sample); the `requires`
+ordering — after the `demos` door, `authoring` and `maps` are entirely present and `plots` entirely
+absent; and all 12 demo-menu actions that build a moved class produce a live instance.
+⚠ **Writing it reproduced the "probe that cannot fail" trap twice, in one sitting**, which is worth
+knowing because both versions LOOKED right:
+  1. It first asserted `world.children` grew. But `world.create` is `aWdgt.pickUp()`, which puts the
+     widget in the HAND — so nine assertions failed for a reason that had nothing to do with the
+     product, and had the count happened to grow for any other reason they would have PASSED
+     meaninglessly.
+  2. Fixed to "a live instance of the expected class exists", the FIRST hand case passed and every
+     later one failed: `pickUp` is a **no-op while the hand is already full**, so the probe had to
+     `world.hand.drop()` between actions. Without that, one real assertion and eight vacuous ones.
+⇒ when a probe fails, establish whether the ASSERTION or the product is wrong before touching either;
+and prefer an assertion that names the expected object over one that counts things.
+
+#### Exit criteria — ✅ ALL MET
+`pinned-by-lazy-parts.js` reports **only the two deliberately-kept files** (`ToolbarWdgt`,
+`ToolbarCreatorButtonWdgt`) ✅ · `fg build` 0 unguarded / 0 inheritance ✅ · `fg gauntlet` 14/14 zero
+churn ✅ · `fg homepage` (which independently re-derives the win: `authoring` 126 classes absent at
+boot, `maps` 8, `plots` 23, each "dragged in 0 eager batches", snapshot round-trip clean) ✅ · lean
+smoke ✅ · both fingerprints with predictions written first ✅ · `index.html` probes green ✅ ·
+§2.2b ledger updated ✅.
+
+#### ⚠ What execution changed about the DESIGN — read this before planning slice 5
+1. **The pinned set is a FIXPOINT** (method step 4). The design's "48 files" was one round of a
+   four-round convergence to 81. Any future "which files can leave core" estimate must be iterated.
+2. **The `demos` decision was forced, not chosen** — see the RESOLVED section above. The general rule
+   (seam ⇒ await, no seam ⇒ `requires`) is now in `build-and-packaging.md` §2.
+3. **`requires` is non-transitive for the gate** but transitive for ordering and inclusion. Declare
+   the direct edge.
+4. **The payoff beat the estimate again, and again in the same direction** — predicted order −70 KB
+   for 48 files, measured −119.5 KB for 81. Class count drives the image; these were small classes.
+   That is now THREE slices in a row where a bytes-of-code estimate was low. It still does not make
+   the estimator trustworthy: it was 2× low here and 50% HIGH for the spreadsheet.
+5. **`fg hypopart` needs the destination part's dirs**, and the right reading is a DIFF against the
+   destination alone — the destination's own pre-existing references otherwise swamp the signal
+   (`authoring` alone reports 23 unguarded references; the 7-file group adds exactly 0).
 
 ### §2.2c Slice 3's starting facts (measured; re-verify with the gate, never a grep)
 - `src/toolbars` = 8 files / 18.9 KB code; `src/buttons` = 38 files / 19.5 KB code. Both in `core`,
