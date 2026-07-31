@@ -479,8 +479,15 @@ createWorldAndStartStepping = ->
         new SystemTestsControlPanelUpdater
 
     window.menusHelper = new MenusHelper
-    # the demo/parts-bin catalogue — a whole-file-marked dev family, so a production build
-    # simply has no `demoMenus` and the menu items naming it are absent with it.
+    # The demo/parts-bin catalogue. `demos` is a LAZY part, so this line is deliberately BOTH
+    # things at once and the guard is load-bearing in two different ways:
+    #   - on a page that forces every part eager (the harness, index-sw.html) the class is here at
+    #     boot, so `demoMenus` is built exactly when it always was and every test sees the world it
+    #     always saw;
+    #   - on index.html the class is absent, this is a no-op, and the singleton is instead built on
+    #     first use by the doors that await the part (Widget.popUpDemoTestMenu,
+    #     WorldWdgt.createDemoAnalogClock), which name the class as data to construct it.
+    # A build that does not ship `demos` at all simply never gets one, as before.
     window.demoMenus = new DemoMenus  if DemoMenus?
     world.removeSpinnerAndFakeDesktop()
 

@@ -4183,7 +4183,13 @@ class Widget extends TreeNode
     if world.isDevMode
       menu.addLine()
       menu.addMenuItem "dev ➜", menusHelper, "popUpDevToolsMenu", closesUnpinnedPopUps: false, toolTip: "dev tools"
-      menu.addMenuItem "test menu ➜", demoMenus, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if DemoMenus?
+      # ⚠ target is `world`, NOT `@`. The door has to live on ONE class, and putting it on Widget
+      # adds a public member to every widget's prototype -- which the inspector faithfully lists, so
+      # it churns the inspector-list reference screenshots for a method that has nothing to do with
+      # the widget being inspected. The menu machinery passes the widget through the ARGUMENTS
+      # (`@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv`) rather than
+      # through the target, so the door receives the same widget whatever the target is.
+      menu.addMenuItem "test menu ➜", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
       menu.addMenuItem "destroy", @, "fullDestroy"
 
     menu

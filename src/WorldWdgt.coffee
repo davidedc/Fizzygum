@@ -2623,12 +2623,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # Phase 7 redesigns this topology with the owner and can introduce a proper contribution point
     # then, since it is closed by a recapture wave anyway.
     if @isDevMode
-      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"  if DemoMenus?
+      menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
       menu.addLine()
       menu.addMenuItem "delete all", @, "closeChildren"
       menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
       menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
-      menu.addMenuItem "test menu ➜", demoMenus, "testMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if DemoMenus?
+      menu.addMenuItem "test menu ➜", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
       menu.addLine()
       menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
       menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
@@ -2685,6 +2685,43 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # WHICH widgets you could make and on whether a palette arrived bare or wrapped in a window.
   # The union below keeps every distinct item from both; the window-wrapped palettes keep an
   # explicit label rather than silently replacing the bare ones.
+  # The one item of the demo menu that reaches the LAZY `demos` part, routed through core so the
+  # menu itself can still be BUILT synchronously -- the menu's other items are all widgetFactory's,
+  # and offering "demo ➜" only says the part is available, never that it has arrived. Deferring the
+  # whole popUpDemoMenu instead would move every item a world cycle later for the sake of one.
+  # ⚠ The delegate is `demoMenus.analogClock`, which is a one-liner over the CORE AnalogClockWdgt --
+  # so this awaits the part for the sake of where the method lives, not what it builds. If the demo
+  # menu is ever reorganised, this item wants to become a plain widgetFactory entry and lose the
+  # await entirely.
+  createDemoAnalogClock: ->
+    world.parts.whenAllLoaded ["demos"], ->
+      window.demoMenus ?= new (window["DemoMenus"])
+      window.demoMenus.analogClock()
+
+  # THE DOOR into the demo family's "test menu", from the world menu AND from any widget's context
+  # menu. `demos` is a LAZY part, so three things have to be true here and none is the obvious one:
+  #
+  # ⚠ 1. The menu ITEM's visibility asks `world.parts.isAvailable "demos"`, never `if DemoMenus?`.
+  # For a lazy part an undefined class means BOTH "this artifact never shipped it" and "nobody has
+  # fetched it yet", and those want opposite answers -- hide the entry forever, versus offer it and
+  # fetch on click. Only the part-level question separates them.
+  #
+  # ⚠ 2. The item's target is `world`, not the widget and not the `demoMenus` singleton. The menu
+  # binds its target when the menu is BUILT and on a lazy build there is no singleton yet to bind;
+  # and it lives on WorldWdgt rather than Widget because a public member on Widget's prototype is
+  # listed by every inspector, which churns the inspector-list references (measured: it failed
+  # SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly, whose fixture is a RectangleWdgt).
+  # The widget being inspected arrives through the ARGUMENTS instead.
+  #
+  # ⚠ 3. The singleton is built HERE on first use, naming the class as DATA (`window["DemoMenus"]`)
+  # -- the check-part-edges blind spot that exists for exactly this. On a page that forces every
+  # part eager (the harness, index-sw.html) startWorld already built it, whenAllLoaded runs inline,
+  # and this whole path stays byte-identical to what the suite has always measured.
+  popUpDemoTestMenu: (widgetOpeningThePopUp, targetWidget) ->
+    world.parts.whenAllLoaded ["demos"], ->
+      window.demoMenus ?= new (window["DemoMenus"])
+      window.demoMenus.testMenu widgetOpeningThePopUp, targetWidget
+
   popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
     menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
@@ -2708,7 +2745,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     menu.addMenuItem "gray scale palette in window", @widgetFactory, "createNewGrayPaletteWdgtInWindow"
     menu.addMenuItem "color palette in window", @widgetFactory, "createNewColorPaletteWdgtInWindow"
     menu.addLine()
-    menu.addMenuItem "analog clock", demoMenus, "analogClock"
+    menu.addMenuItem "analog clock", @, "createDemoAnalogClock"
     menu.addMenuItem "animation demo", @widgetFactory, "createNewAnimationDemo"
     menu.addMenuItem "pen", @widgetFactory, "createNewPenWdgt"
 
