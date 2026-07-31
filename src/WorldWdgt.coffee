@@ -626,19 +626,27 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # so it contributes its own desktop opener only when it is actually present
     (new FridgeMagnetsApp).createOpener()  if FridgeMagnetsApp?
     exampleDocsFolder = @makeFolder nil, nil, "Examples"
-    (new DegreesConverterApp).createOpener exampleDocsFolder  if DegreesConverterApp?
-    # the three example DOCUMENTS are the 'samples' part: content rather than product, so a
-    # profile can leave them out and get a smaller Examples folder. Production ships them
-    # (profiles/homepage.json names 'samples'); the appliance profile is what drops them.
-    (new SampleSlideApp).createOpener exampleDocsFolder      if SampleSlideApp?
-    (new SampleDashboardApp).createOpener exampleDocsFolder  if SampleDashboardApp?
-    (new SampleDocApp).createOpener exampleDocsFolder        if SampleDocApp?
-    # the spreadsheet's LAUNCHER is its own eager part ('spreadsheet-launcher'); the grid behind it
-    # is the lazy 'spreadsheet' part, brought in by SpreadsheetApp.launch. The guard is therefore
-    # the right shape here even though the engine is lazy -- it is asked of the EAGER half, which a
-    # profile either ships or does not (the appliance ships neither: an icon that opens nothing is
-    # worse than no icon).
-    (new SpreadsheetApp).createOpener exampleDocsFolder      if SpreadsheetApp?
+    # ⚠⚠ THESE FIVE ICONS ARE BUILT WITHOUT THEIR APPS, and that is the point: each app is alone in
+    # its own one-class lazy part, fetched, compiled and run by the CLICK on its own icon and by
+    # nothing else. Opening this folder costs no part at all. An icon needs only its ART (all core,
+    # below) and the app's class NAME -- the launcher resolves the name to a part when clicked
+    # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). ⇒ contrast the desktop icons above,
+    # which are constructed FROM their app objects and so must have them at boot; being reached at
+    # boot is what forces an eager launcher, not being a launcher.
+    # ⚠ The guard is canEverProvideClass, NOT `if SampleDocApp?`: for a lazy class an existence test
+    # reads "not fetched yet" and would silently drop the icon for ever. This asks the other
+    # question -- can this build EVER produce it -- so `lean`, which ships none of these parts, gets
+    # the empty Examples folder it has always had rather than five icons that could only reject.
+    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "DegreesConverterApp", "C-F converter",
+      -> new DegreesConverterIconWdgt
+    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SampleSlideApp", "Slide",
+      -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
+    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SampleDashboardApp", "Dashboard",
+      -> new GenericShortcutIconWdgt new DashboardsIconWdgt
+    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SampleDocApp", "Document",
+      -> new GenericShortcutIconWdgt new TypewriterIconWdgt
+    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SpreadsheetApp", "Spreadsheet",
+      -> new GenericShortcutIconWdgt new TypewriterIconWdgt
 
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
     # so in a default build this boot-time auto-launch would throw "...is not defined".

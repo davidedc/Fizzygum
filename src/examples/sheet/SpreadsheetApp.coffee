@@ -7,11 +7,16 @@
 # painted grid -- §5.B; openFrameWith passes the framed citizen through). See docs/specs/dataflow-engine-
 # spec.md §9.1 and src/spreadsheet/CLAUDE.md.
 #
-# ⚠ THIS FILE IS NOT IN src/spreadsheet/, AND THAT IS THE POINT. It is the whole of the EAGER
-# 'spreadsheet-launcher' part, while the grid it opens is the LAZY 'spreadsheet' part. The split is
-# forced: WorldWdgt.createDesktop calls createOpener at BOOT to place the Examples-folder icon, so
-# a launcher inside the lazy directory would mean no icon until something else pulled the part in
-# -- i.e. never. Exactly the fizzytiles / fizzytiles-launcher shape.
+# ⚠ THIS FILE IS NOT IN src/spreadsheet/, AND THAT IS THE POINT — though the point is not a launcher
+# split. It is one of the five DOORS of the desktop's Examples folder (the lazy 'examples'
+# part); the grid it opens is the separate lazy 'spreadsheet' part. Two layers, two moments:
+# opening the folder fetches this class and the four beside it, and NOTHING else; clicking this icon
+# fetches the grid, through the `requiredParts` below that the inherited `launch` awaits.
+# That works because a FOLDER IS A DOOR — its contents are invisible until it is opened, and
+# IconicDesktopSystemShortcutWdgt.bringUpTarget is fire-and-forget, so it can await. A DESKTOP icon
+# cannot: createDesktop constructs those at boot, which is why authoring-launcher and
+# fizzytiles-launcher are eager slivers. ⇒ boot-time reachability forces a launcher split, not
+# launcher-hood. See ExamplesFolderWindowWdgt.
 
 class SpreadsheetApp extends IconicDesktopSystemWindowedApp
 

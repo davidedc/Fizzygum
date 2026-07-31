@@ -179,6 +179,30 @@ class PartsRegistry
     return Promise.resolve new (window[className]) unless part?
     @ensureLoaded(part).then -> new (window[className])
 
+  # Can this artifact EVER produce this class -- is it already here, or does a part this build
+  # ships own it? Asked by whoever is deciding whether to put a control on screen at all: an icon
+  # whose class can never arrive is a button whose only possible outcome is a rejected load, which
+  # is worse than no icon (the `lean` dead-icon bug). ⚠ This is the isAvailable question, keyed by
+  # CLASS instead of by part -- not "is it here yet", which is whenClassAvailable's business.
+  canEverProvideClass: (className) ->
+    return true if window[className]?
+    part = @_partOf className
+    part? and @isAvailable part
+
+  # Run `callback` with this class present, fetching whatever part owns it if need be. The caller
+  # names a CLASS, never a part: which slice of the partition holds it is not its business, and
+  # keying off the name is what lets a launcher be built at boot out of a string.
+  # ⚠ INLINE when the class is already defined -- correctness, not economy. Deferring by a microtask
+  # moves the effect a whole world CYCLE later and the SystemTest suite measures cycles
+  # (../Fizzygum-tests/DETERMINISM.md), the same rule as whenAllLoaded's fast path.
+  whenClassAvailable: (className, callback) ->
+    return callback() if window[className]?
+    part = @_partOf className
+    # nothing owns it: a build that simply does not have this class. The caller decided whether to
+    # offer the control at all (canEverProvideClass); reaching here means it is genuinely absent.
+    return unless part?
+    @whenAllLoaded [part], callback
+
   # Which not-yet-loaded parts a set of class names needs. Used by the snapshot loader: a saved
   # world can name classes this page has never loaded.
   partsNeededFor: (classNames) ->

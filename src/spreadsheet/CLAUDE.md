@@ -15,11 +15,13 @@ This directory is the `spreadsheet` part (`buildSystem/parts.json`), marked `"ea
 appliance profile does not ship it at all.
 
 The one door is **`SpreadsheetApp.launch`**, which lives in the sibling directory
-[`../spreadsheet-launcher/`](../spreadsheet-launcher/) — its own EAGER part, because
-`WorldWdgt.createDesktop` places the Examples-folder icon at BOOT and a launcher inside this lazy
-directory would mean no icon at all. It awaits with the standard idiom,
-`world.parts.whenAllLoaded ["spreadsheet"], => super()`; the inline already-loaded path is a
-correctness requirement, not an optimisation (the suite runs eager-everything and measures cycles).
+[`../examples/`](../examples/) — one of the five doors of the desktop's Examples folder, and itself
+LAZY. It needs no eager sliver because a **folder is a door**: its contents are invisible until it is
+opened, so nothing here is reachable at boot the way a desktop icon is. Opening the folder fetches
+the five door classes and nothing else; clicking this one fetches the grid. The await is a
+`requiredParts: ["spreadsheet"]` declaration that the inherited `launch` consumes; the inline
+already-loaded path is a correctness requirement, not an optimisation (the suite runs
+eager-everything and measures cycles).
 ⚠ An `if SimpleSpreadsheetWdgt?` guard would be WRONG here — for a lazy part that reads "not fetched
 yet" and swallows the click. The dataflow engine this app is built on is NOT lazy and NOT a part:
 `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging.md` §2.

@@ -60,6 +60,7 @@ from glob import glob
 import codecs
 import json
 import os
+import re
 import shlex
 import sys
 
@@ -396,6 +397,33 @@ def resolve(name):
                      "'<TheClass> is not defined' the moment they ran. Add '%s' to this profile's "
                      "parts, or drop '%s'." % (name, partName, requiredPart, partName,
                                                requiredPart, partName))
+
+    # ...and the SAME both-or-neither rule for the parts a CLASS declares rather than a part.
+    #
+    # ⚠⚠ WHY THIS IS SEPARATE FROM `requires` ABOVE, AND MUST STAY SEPARATE. `requires` carries two
+    # meanings at once: shipping (checked above) and, for a LAZY part, ORDERING -- PartsRegistry
+    # loads the requirements FULLY FIRST. That second meaning makes it the wrong tool for a door.
+    # Each `example-*` part is ONE launcher class, and the whole point is that its source arrives on
+    # the click of its own icon: declaring `requires: ["maps","plots","authoring"]` on one would be
+    # correct about shipping and disastrous about timing, dragging a document's whole apparatus in
+    # behind the door rather than behind the click. So a door states its apps per-CLASS, in the
+    # `requiredParts` its inherited `launch` awaits, and the shipping half is checked HERE instead.
+    # Without this, having no `requires` would silently give back the dead-icon bug it was added for.
+    declRe = re.compile(r'^\s*requiredParts\s*:\s*\[([^\]]*)\]', re.M)
+    for partName in selectedParts:
+        for sourceDir in parts[partName].get("dirs", []):
+            for sourcePath in sorted(glob(os.path.join(sourceDir, "*.coffee"))):
+                with codecs.open(sourcePath, "r", "utf-8") as handle:
+                    found = declRe.search(handle.read())
+                if not found:
+                    continue
+                for declaredPart in re.findall(r'["\']([^"\']+)["\']', found.group(1)):
+                    if declaredPart not in selectedParts:
+                        fail("profile '%s' ships %s, which declares requiredParts \"%s\" -- a part "
+                             "this profile does not ship. Its `launch` awaits that part, so the "
+                             "icon would be present and its click could only reject. Add '%s', or "
+                             "drop the part that carries this class."
+                             % (name, sourcePath, declaredPart, declaredPart))
 
     entryNames = [pageFileName for (pageFileName, _sw, _eager) in ENTRY_PAGES]
     selectedEntryNames = resolveSelection(declared["entries"], entryNames, "entries", name)
