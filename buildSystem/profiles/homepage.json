@@ -22,6 +22,12 @@
     "inspectors are the definition of on-demand -- nobody opens one during a normal session, and",
     "opening one already had to await the reflective layer, so the part load joins an existing wait.",
     "",
+    "'spreadsheet' + 'spreadsheet-launcher' are ONE decision spelled as two parts, and both are named",
+    "here on purpose. The launcher is EAGER because WorldWdgt.createDesktop places its Examples-folder",
+    "icon at boot; the 114 KB grid behind it is LAZY, so production keeps the icon and stops carrying",
+    "the engine in js/pre-compiled.js. Naming one without the other is the mistake to avoid -- the",
+    "launcher alone is an icon whose click can only reject, the engine alone is code nothing opens.",
+    "",
     "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
     "  no harness part      -> no js/tests link, BUILDFLAG_LOAD_TESTS false, the tests-repo build",
     "                          gates skipped, and the dead `if Automator?` branches stripped",
@@ -40,7 +46,7 @@
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
-  "parts": ["core", "meta-tools", "samples", "maps", "plots"],
+  "parts": ["core", "meta-tools", "samples", "maps", "plots", "spreadsheet", "spreadsheet-launcher"],
   "form": "precompiled",
   "sources": "lazy",
   "entries": ["index.html"]

@@ -7,12 +7,24 @@ build order + phase ledger:
 **[`../../docs/plans/dataflow-engine-implementation-plan.md`](../../docs/plans/dataflow-engine-implementation-plan.md)**.
 The dataflow engine itself is in [`../dataflow/`](../dataflow/CLAUDE.md).
 
-## What's here (grows per phase)
+## Packaging: this directory is a LAZY PART, and its launcher is NOT in it
 
-- `SpreadsheetApp.coffee` — the desktop launcher/opener (`IconicDesktopSystemWindowedApp`
-  subclass; `slot: nil` ⇒ a fresh window per launch, multiple sheets allowed). `buildWindow`
-  wraps a `SpreadsheetWdgt` in a window via `world.openFrameWith`. Registered at the WorldWdgt
-  boot site into the desktop "examples" folder.
+This directory is the `spreadsheet` part (`buildSystem/parts.json`), marked `"eager": false`: on
+`index.html` its 12 classes are not in the page — and, on a precompiled tree, not in
+`js/pre-compiled.js` — until something asks for them. Production ships it that way; the `lean`
+appliance profile does not ship it at all.
+
+The one door is **`SpreadsheetApp.launch`**, which lives in the sibling directory
+[`../spreadsheet-launcher/`](../spreadsheet-launcher/) — its own EAGER part, because
+`WorldWdgt.createDesktop` places the Examples-folder icon at BOOT and a launcher inside this lazy
+directory would mean no icon at all. It awaits with the standard idiom,
+`world.parts.whenAllLoaded ["spreadsheet"], => super()`; the inline already-loaded path is a
+correctness requirement, not an optimisation (the suite runs eager-everything and measures cycles).
+⚠ An `if SimpleSpreadsheetWdgt?` guard would be WRONG here — for a lazy part that reads "not fetched
+yet" and swallows the click. The dataflow engine this app is built on is NOT lazy and NOT a part:
+`src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging.md` §2.
+
+## What's here (grows per phase)
 - `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1/F6): it paints
   NOTHING (nil appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
   `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:

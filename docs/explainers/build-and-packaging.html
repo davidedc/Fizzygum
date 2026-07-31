@@ -126,7 +126,7 @@
 
   <h2>A part — a named slice that comes and goes as a unit</h2>
 
-  <p>Every shipping directory belongs to exactly one of the <strong>14 parts</strong>; a source
+  <p>Every shipping directory belongs to exactly one of the <strong>16 parts</strong>; a source
   file no part claims is a build failure. A part owns up to four kinds of thing — sources
   (<code>dirs</code>), copied files (<code>assets</code>), assembled vendor payloads
   (<code>vendor</code>), and boot-bundle pieces (<code>bootPrelude</code>) — and all four appear
@@ -151,13 +151,13 @@
     </div>
     <div class="legend">
       <span><span class="chip" style="background:var(--s2)"></span>core (~74% of source bytes)</span>
-      <span><span class="chip" style="background:var(--s3)"></span>product-optional: meta-tools · fizzytiles(+launcher) · maps · plots · samples</span>
+      <span><span class="chip" style="background:var(--s3)"></span>product-optional: meta-tools · fizzytiles(+launcher) · spreadsheet(+launcher) · maps · plots · samples</span>
       <span><span class="chip" style="background:var(--s4)"></span>dev/demo: demos · dev-tools · dev-icons · patch-programming-experimental · video-player</span>
       <span><span class="chip" style="background:var(--s1)"></span>test-side: macros · harness</span>
     </div>
-    <figcaption>The 14 parts, roughly to source-size scale. The test machinery is just two parts
+    <figcaption>The 16 parts, roughly to source-size scale. The test machinery is just two parts
     like any other; nothing about tests is special-cased in the build. <b>Product-optional does not
-    mean production drops it</b> — production ships meta-tools, samples <em>and</em> maps; what the
+    mean production drops it</b> — production ships meta-tools, samples, the spreadsheet <em>and</em> maps; what the
     partition buys is that a leaner artifact <em>can</em> leave them out, and that a lazy one need
     not load them up front.</figcaption>
   </figure>
@@ -169,7 +169,7 @@
       (<code>if DemoMenus?</code>); a build gate fails on any unguarded core reference to a
       part-owned class.</li>
     <li><strong>Eagerness</strong> — at boot, or on demand? A <em>lazy</em> part (today: the
-      Fizzytiles engine, <code>maps</code>, <code>plots</code> and the inspectors, on <code>index.html</code>) is fetched by
+      Fizzytiles engine, <code>maps</code>, <code>plots</code>, the <code>spreadsheet</code> grid and the inspectors, on <code>index.html</code>) is fetched by
       <code>world.parts</code> when something launches it — and since classes are source text, its
       source arrives <em>with</em> it. A lazy part's entry point awaits
       <code>world.parts.ensureLoaded(…)</code> instead of using a guard: a guard answers
@@ -188,8 +188,9 @@
     synchronous.</b> On every build the test suite runs, parts are eager and long since present — so
     going through <code>.then</code> anyway defers by a microtask, which moves the effect a whole
     world <em>cycle</em> later, and the suite measures cycles. Hence
-    <code>if world.parts.isLoaded "maps" then … else world.parts.ensureLoaded("maps").then …</code>,
-    the same shape the reflective layer uses.</p>
+    <code>world.parts.whenAllLoaded ["maps"], -&gt; …</code>, which runs its callback <em>inline</em>
+    when the parts are already in and only falls back to a promise otherwise — one method rather
+    than a conditional copied into every door, and the same shape the reflective layer uses.</p>
     <p style="margin:0 0 8px"><b>2 · Not every call site <em>can</em> await.</b> An app is easy — its
     <code>launch</code> is fire-and-forget. A creator button is not: both the click and the drag path
     consume its <code>createWidgetToBeHandled()</code> <em>return value</em> synchronously, so there
@@ -219,11 +220,11 @@
       <div class="facts">all except harness · compile-at-boot · entries: all</div>
       <div class="shape">dev without the test machinery</div></div>
     <div class="card" style="border-color:var(--s2)"><b>homepage</b>
-      <div class="facts">core + meta-tools + samples + maps + plots · precompiled · sources: lazy · index.html</div>
-      <div class="shape">production — three of its five parts are lazy, so they cost the image nothing</div></div>
+      <div class="facts">core + meta-tools + samples + maps + plots + spreadsheet + spreadsheet-launcher · precompiled · sources: lazy · index.html</div>
+      <div class="shape">production — four of its seven parts are lazy, so they cost the image nothing</div></div>
     <div class="card"><b>lean</b>
       <div class="facts">core · precompiled · sources: none · index.html</div>
-      <div class="shape">the appliance — 10 files, 1.27 MB</div></div>
+      <div class="shape">the appliance — 10 files, 1.20 MB</div></div>
   </div>
 
   <p>There are <strong>no flavour flags</strong>. <code>./build_it_please.sh</code> builds the dev
@@ -311,7 +312,7 @@
       <text class="m" x="28" y="53">launcher · app.launch</text>
       <rect class="box" x="204" y="20" width="200" height="40" style="stroke:var(--s3)"/>
       <text x="218" y="38">world.parts.ensureLoaded</text>
-      <text class="m" x="218" y="53">"fizzytiles" · "maps" · "plots"</text>
+      <text class="m" x="218" y="53">"fizzytiles" · "maps" · "plots" · "spreadsheet"</text>
       <rect class="box" x="444" y="20" width="180" height="40"/>
       <text x="458" y="38">inject vendor + sources</text>
       <text class="m" x="458" y="53">3D engine ~23 KB + batches</text>
@@ -323,12 +324,14 @@
       <path class="flow" d="M626 40 L 662 40"/>
       <text class="m" x="14" y="100">A saved world naming a lazy part's classes loads it automatically before deserializing. Loaded parts stay loaded; resetWorld resets state, never code.</text>
     </svg>
-    <figcaption>Two shapes of the same machinery. <b>Fizzytiles</b> splits the door from the payload:
-    the launcher is its own eager mini-part (the desktop icon and snapshot resolution need its class
-    at boot), the 9-file engine is lazy. <b>maps</b> needs no split — its doors are the four apps
-    whose windows show or author a map, and they await on <code>launch</code>. There is no part-to-part
-    <code>requires</code> mechanism yet, so a part's dependencies are honoured at its call sites, by
-    hand.</figcaption>
+    <figcaption>Two shapes of the same machinery. <b>Fizzytiles</b> and the <b>spreadsheet</b> split
+    the door from the payload: the launcher is its own eager mini-part (the desktop icon is placed at
+    boot, and snapshot resolution needs its class), while the engine behind it — 9 files for
+    Fizzytiles, 12 for the spreadsheet — is lazy. Anything reached at BOOT forces that split: there
+    is no later moment at which a door could await. <b>maps</b> needs none — its doors are the four
+    apps whose windows show or author a map, and they await on <code>launch</code>. There is no
+    part-to-part <code>requires</code> mechanism yet, so a part's dependencies are honoured at its
+    call sites, by hand.</figcaption>
   </figure>
 
   <h2>The safety net</h2>

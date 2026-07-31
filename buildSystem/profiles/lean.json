@@ -14,11 +14,16 @@
     "    refused with one clear report rather than silently dropped (SourceEditsRegistry). Per-widget",
     "    `{\"$src\"}` function edits are UNAFFECTED -- those only need the compiler, which every",
     "    profile ships (arc 5 PR-D3).",
+    "  - NO SPREADSHEET. Neither 'spreadsheet' nor 'spreadsheet-launcher' is named, so the Examples",
+    "    folder carries no sheet icon and a snapshot naming a sheet is refused. Naming NEITHER is the",
+    "    deliberate half of that pair: shipping the eager launcher alone would put an icon on the",
+    "    desktop whose only possible outcome is a rejected part load.",
     "",
     "What it keeps: the CoffeeScript compiler, because runtime compilation is product behaviour, not",
-    "a dev affordance -- FizzyPaint tools, spreadsheet formulas (including reloading a saved sheet)",
-    "and Fizzytiles' LiveCodeLang are all compiled from source strings at runtime. A compiler-less",
-    "artifact is a non-interactive kiosk and is out of scope for this arc."
+    "a dev affordance -- FizzyPaint tools and per-widget `{\"$src\"}` records are compiled from source",
+    "strings at runtime HERE, and in the profiles that ship them so are spreadsheet formulas",
+    "(including reloading a saved sheet) and Fizzytiles' LiveCodeLang. A compiler-less artifact is a",
+    "non-interactive kiosk and is out of scope for this arc."
   ],
 
   "parts": ["core"],

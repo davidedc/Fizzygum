@@ -77,6 +77,7 @@
   "parts": {
     "core": {
       "//": "The product. Ships in every flavour, always eagerly. src/boot is absent on purpose: build_it_please.sh compiles those files BY NAME into the boot bundle, so they are not text-wrapped sources and not part material.",
+      "//dataflow": "⚠ src/dataflow IS CORE, DELIBERATELY -- do not extract it (owner decision, 2026-07-30). It looks like an app slice next to src/spreadsheet, and it is not: it is the wiring substrate every widget reaches (ControllerMixin.ensureWireEdge is how ANY widget wires to any other), and WorldWdgt.doOneCycle drains it EVERY cycle. Its 14 call sites are all already written `world.dataflow?.…`, so its absence would be silently ACCEPTED rather than caught -- wires would simply never fire, sliders would stop driving their targets, patch nodes would go dead. That is broken, not reduced, and it fails the absence-must-be-a-no-op rule below. Same judgment as src/meta.",
       "dirs": [
         "src",
         "src/mixins",
@@ -92,7 +93,6 @@
         "src/toolbars",
         "src/events-input",
         "src/dataflow",
-        "src/spreadsheet",
         "src/serialization",
         "src/duplication"
       ],
@@ -156,6 +156,20 @@
     "samples": {
       "//": "The three EXAMPLE DOCUMENTS WorldWdgt.createDesktop drops into the desktop's 'Examples' folder -- SampleDashboardApp (plots + maps + sliders), SampleSlideApp (the NYC slide) and SampleDocApp. They are content, not product: each is an IconicDesktopSystemWindowedApp whose buildWindow assembles a finished document out of product widgets, to show what the system can do. They sat in core only because nothing had asked them to be separable; that is the same judgment arc 3 made for DemoMenus and arc 4 for the 'demos' part. ⚠ NOT folded INTO 'demos': production ships these (profiles/homepage.json names 'samples') and must NOT gain DemoMenus and the bouncer/pen/pointer, which is exactly what naming 'demos' there would do. Two separate species of demo, two parts. Core reaches them through the three guarded createOpener calls in createDesktop, so a profile without this part simply gets a smaller Examples folder.",
       "dirs": ["src/samples"]
+    },
+
+    "spreadsheet": {
+      "//": "The spreadsheet ENGINE: the grid (SimpleSpreadsheetWdgt), its frame, the widgetised cells and headers with their appearances, the sparse SheetModel + SheetCellRecord, FormulaCompiler/FormulaHelpers and SheetError. 13 files, ~114 KB -- the largest app-like slice that was still sitting inside core. Its LAUNCHER is a separate, EAGER part (see spreadsheet-launcher), for the same reason fizzytiles has one: the desktop icon must exist before the engine does.",
+      "//eager": "LAZY, and production ships it that way (profiles/homepage.json names it): a lazy part's classes are absent from js/pre-compiled.js, so a visitor who never opens a sheet never pays for one. The one door is SpreadsheetApp.launch, which awaits.",
+      "//dataflow": "⚠ THE ENGINE IT DEPENDS ON IS NOT HERE, ON PURPOSE. Cells are dataflow nodes, but src/dataflow stays in CORE -- it is the wiring substrate the whole system uses (ControllerMixin.ensureWireEdge, sliders, patch nodes, and WorldWdgt.doOneCycle's every-cycle drain), not an app slice, and its absence would be a silent semantic break rather than a no-op. So this part's door names ONE part, and the fact that parts.json has no part->part `requires` mechanism does not matter here. See docs/plans/core-app-slices-partition-plan.md §4 Phase 3 (amended) for the enumeration that settled it.",
+      "dirs": ["src/spreadsheet"],
+      "eager": false
+    },
+
+    "spreadsheet-launcher": {
+      "//": "The eager sliver of the spreadsheet: SpreadsheetApp, the desktop launcher declaration, and nothing else (its icon is built from core widgets, so unlike fizzytiles-launcher there is no icon file to bring along). It CANNOT be lazy -- WorldWdgt.createDesktop calls createOpener on it AT BOOT to place the Examples-folder icon, and WellKnownObjects.resolveApp re-resolves snapshot launcher references through the same class. Arc 4's reframe R6 again: INCLUSION and EAGERNESS are different properties, and 'the icon is always here, the grid arrives when asked for' needs both.",
+      "//pairing": "⚠ A PROFILE SHOULD NAME BOTH PARTS OR NEITHER. This one alone would put a desktop icon on a tree whose click can only reject -- worse than no icon; the engine alone would ship 114 KB nothing can open. homepage names both, lean names neither.",
+      "dirs": ["src/spreadsheet-launcher"]
     },
 
     "dev-tools": {

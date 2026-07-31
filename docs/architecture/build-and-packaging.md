@@ -82,6 +82,21 @@ test answers NEITHER for a lazy part: an undefined class means both at once, and
 responses. That is why `Widget.spawnInspector` asks `world.parts.isAvailable "meta-tools"` and then
 awaits, rather than guarding on `InspectorWdgt?`.
 
+⚠⚠ **REQUIRED versus OPTIONAL is a real decision at every door, and getting it wrong is SILENT.**
+Two await idioms, and the difference is what should happen on a profile that ships none of the parts
+named:
+
+| Idiom | On a part this artifact never shipped | Use when |
+|---|---|---|
+| `whenAllLoaded [names], -> …` | REJECTS; the callback never runs | the part CONSTITUTES the result — a `Sample*App` document that *builds* plots is broken without them, not reduced, so it must fail loudly rather than open half-assembled |
+| `whenOptionalPartsLoaded [names], -> …` | loads what IS here, runs the callback anyway | the part ENRICHES the result — `DashboardsApp`/`SimpleSlideApp` merely offer its tools in a docked palette, and the toolbars already filter their own contents by class existence |
+
+The failure mode is worth stating because it shipped: `DashboardsApp` and `SimpleSlideApp` are CORE
+classes whose desktop openers `createDesktop` creates unguarded, and they used `whenAllLoaded ["maps",
+…]`. On `lean`, which ships neither `maps` nor `plots`, the icon was therefore present and its click
+could only reject — no window, ever, and an unhandled promise rejection. Fixed 2026-07-31; the
+distinction now has a name so the next door has to choose deliberately.
+
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
 cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and `Widget.grabbedWidgetSwitcheroo`
 both consume `createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there is no seam to defer
@@ -90,6 +105,18 @@ through. The resolution is partition, not cleverness — put the button in the p
 a core toolbar can filter it with a plain `if USAMapCreatorButtonWdgt?`. An app is the easy case by
 contrast, because `IconicDesktopSystemWindowedApp.launch` is fire-and-forget (the launcher invokes it
 by reflection and ignores the result).
+
+⚠ **THE LAUNCHER SPLIT — the same rule one level up, for anything reached at BOOT.** A door can only
+await if something reaches it *later*; `WorldWdgt.createDesktop` runs at boot and places every
+desktop/Examples icon by constructing its app, so an app class living inside the lazy directory it
+opens means no icon at all — nothing would ever pull the part in. So the LAUNCHER becomes its own
+tiny EAGER part and the engine stays lazy: `fizzytiles` / `fizzytiles-launcher`
+(`FridgeMagnetsApp` + its icon) and `spreadsheet` / `spreadsheet-launcher` (`SpreadsheetApp` alone —
+its icon is built from core widgets). Two consequences worth stating: the boot site keeps a plain
+`if SpreadsheetApp?` guard — correct, because it is asked of the EAGER half — and a profile must
+name **both parts or neither**, since the launcher alone is an icon whose click can only reject and
+the engine alone is code nothing can open. `maps` and `plots` needed no such split: their doors are
+apps that already lived in core.
 
 ---
 
@@ -118,19 +145,25 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
-| `homepage` | `core` + `meta-tools` + `samples` + `maps` + `plots` | precompiled | `lazy` | `index.html` | **production** |
+| `homepage` | `core` + `meta-tools` + `samples` + `maps` + `plots` + `spreadsheet` + `spreadsheet-launcher` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance: 10 files, 1.3 MB |
 
-⚠ **Production names five parts, and they are named for two different reasons.** `samples` (the
-three Examples documents) is EAGER and named so that splitting it out of core stays a packaging change
-rather than a visible one. `maps` is named because it *has* to be — the sample dashboard and the NYC
-slide BUILD maps, so production cannot drop the part — but it is **lazy**, which is what still takes
-the artwork off the first load: a lazy part's classes are absent from `js/pre-compiled.js`, so naming
-it costs the image nothing. `plots` is the same story as `maps` (the samples build plots too), and
-`meta-tools` is lazy for the plainest reason of all: nobody opens an inspector during a normal
-session, and opening one already had to await the reflective layer, so the part load joins a wait
-that existed anyway. `samples` is the odd one out — EAGER, and named purely so that splitting it out
-of core stays a packaging change rather than a visible one. `lean` names none of them.
+⚠ **Production names seven parts, and they are named for two different reasons.** Four of them —
+`maps`, `plots`, `meta-tools`, `spreadsheet` — are named because production genuinely offers what
+they do, and they are all **lazy**, which is what makes naming them nearly free: a lazy part's
+classes are absent from `js/pre-compiled.js`, so it costs the image nothing and the first load
+carries none of it. `maps` and `plots` *have* to be named (the sample dashboard and the NYC slide
+BUILD maps and plots, so production cannot drop those parts); `meta-tools` is lazy for the plainest
+reason of all — nobody opens an inspector during a normal session, and opening one already had to
+await the reflective layer, so the part load joins a wait that existed anyway; `spreadsheet` is the
+same shape, behind a desktop icon.
+
+The other two are EAGER, and named so that splitting them out of core stays a PACKAGING change
+rather than a visible one: `samples` (the three Examples documents) and `spreadsheet-launcher`
+(`SpreadsheetApp` alone). ⚠ **`spreadsheet` and `spreadsheet-launcher` are one decision spelled as
+two parts** — see §2's launcher-split rule — and a profile should name both or neither. `lean` names
+none of the seven, so it has no spreadsheet at all; that is deliberate, because the eager launcher
+alone would put a desktop icon on a tree whose click could only reject.
 
 ---
 
@@ -220,13 +253,29 @@ For **eager** parts there is nothing worth dividing: **core is ~80% of all sourc
 per-part split is 96% / 2%. The levers that pay are `lazy` (the whole layer) and making MORE parts lazy — which yields
 per-part loading for free, and is partition work rather than loading work.
 
-That partition work has been done once, for `maps`, and the numbers are worth keeping because they say what the lever
-is really worth. Splitting the two vector maps and their two creator buttons out of core and marking the part lazy took
-**−55.8 KB (−5.1%)** off production's `pre-compiled.js` and moved 95 KB of source text behind an on-demand fetch.
-⚠ Note where that saving comes from: **not** from the source bytes — production is `sources: "lazy"`, so nobody was
-downloading those anyway — but from the IMAGE, because a lazy part is absent from it. The three remaining app-like
-slices inside core (spreadsheet, `graphs-plots-charts`, dataflow) are the same shape, and were measured to have ZERO
-inheritance edges out of core, so they are drawable the same way if a profile ever wants them gone.
+That partition work has now been done for every app-like slice that was worth extracting — `maps`, `plots` and
+`spreadsheet` — and the numbers are worth keeping, because they say what the lever is really worth and how badly it can
+be mis-estimated. ⚠ Note first where the saving comes from: **not** from the source bytes — production is
+`sources: "lazy"`, so nobody was downloading those anyway — but from the **IMAGE**, because a lazy part's classes are
+absent from `js/pre-compiled.js`.
+
+| Slice | Source text moved behind an on-demand fetch | Off production's `pre-compiled.js` |
+|---|---|---|
+| `maps` | 95.0 KB | **−55.8 KB (−5.1%)** |
+| `spreadsheet` | 119.4 KB | **−33.7 KB (−3.4%)** |
+
+⚠⚠ **Those two rows are the warning: source bytes do not predict image bytes, and the ratio between them varies by
+2.5×.** `maps` is vector-path artwork — 2.5% comment bytes, essentially all code. `src/spreadsheet` is 72.1% COMMENT
+bytes, and comments never reach a compiled, minified image. So a per-KB-of-source estimate calibrated on one slice was
+33% LOW for `maps` and 50% HIGH for `spreadsheet`. **Estimate from a slice's CODE bytes, and treat even that as a
+guess until the two builds have been diffed** (`scripts/build-tree-fingerprint.js`, §8).
+
+**What is deliberately NOT a part.** `src/dataflow/` looks like the obvious fourth slice and is not one: it is the
+wiring substrate (`ControllerMixin.ensureWireEdge` is how any widget wires to any other, and `WorldWdgt.doOneCycle`
+drains it every cycle), and all 14 of its call sites are already written `world.dataflow?.…` — so its absence would be
+silently ACCEPTED rather than caught. Wires would simply stop firing. That fails the absence-must-be-a-no-op rule in §2,
+which is the test for whether something can be a part at all; the same judgment keeps `src/meta` out. Recorded so it is
+not re-attempted: `docs/plans/core-app-slices-partition-plan.md` §4 Phase 3.
 
 ---
 

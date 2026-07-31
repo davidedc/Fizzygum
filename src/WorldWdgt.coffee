@@ -626,7 +626,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     (new SampleSlideApp).createOpener exampleDocsFolder      if SampleSlideApp?
     (new SampleDashboardApp).createOpener exampleDocsFolder  if SampleDashboardApp?
     (new SampleDocApp).createOpener exampleDocsFolder        if SampleDocApp?
-    (new SpreadsheetApp).createOpener exampleDocsFolder
+    # the spreadsheet's LAUNCHER is its own eager part ('spreadsheet-launcher'); the grid behind it
+    # is the lazy 'spreadsheet' part, brought in by SpreadsheetApp.launch. The guard is therefore
+    # the right shape here even though the engine is lazy -- it is asked of the EAGER half, which a
+    # profile either ships or does not (the appliance ships neither: an icon that opens nothing is
+    # worse than no icon).
+    (new SpreadsheetApp).createOpener exampleDocsFolder      if SpreadsheetApp?
 
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
     # so in a default build this boot-time auto-launch would throw "...is not defined".

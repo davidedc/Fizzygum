@@ -130,6 +130,26 @@ class PartsRegistry
       return @ensureAllLoaded(partNames).then thenDo unless @_isLoaded eachName
     thenDo()
 
+  # THE SAME IDIOM FOR PARTS THAT MERELY ENRICH THE CALLER, rather than ones it cannot work without.
+  # Loads the ones this artifact actually has and runs `thenDo` regardless — so on a profile that
+  # ships none of them, this is simply `thenDo()`.
+  #
+  # ⚠ WHICH OF THE TWO A DOOR WANTS IS A REAL DECISION, not a style preference, and getting it wrong
+  # is silent. `whenAllLoaded` REJECTS on a part this build never shipped, which is right when the
+  # part is load-bearing: a Sample* document that BUILDS plots is broken without them, not reduced,
+  # so it must fail loudly rather than open half-assembled. But a door whose window merely offers a
+  # part's tools in a palette is fine without them — the toolbars already filter their own contents
+  # by class existence — and there `whenAllLoaded` would turn a shipped desktop icon into one whose
+  # click can only reject: no window, ever, and an unhandled rejection. That is the trap this method
+  # exists to close, and it is only reachable when the DOOR always ships while its parts may not
+  # (DashboardsApp and SimpleSlideApp are core, with unguarded openers, naming parts `lean` omits).
+  # A door behind a guarded opener cannot hit it, because the opener is absent with the part.
+  #
+  # It is a method rather than a comprehension copied into each door for the reason the whole class
+  # exists: one rule encoded in two places is how arc 4 produced four bugs of one shape.
+  whenOptionalPartsLoaded: (partNames, thenDo) ->
+    @whenAllLoaded (eachName for eachName in partNames when @isAvailable eachName), thenDo
+
   # ensureLoaded + construct. `new (window[className])` deliberately names the class as DATA:
   # buildSystem/check-part-edges.js cannot see through it, which is the point -- core is not
   # allowed to name a part's class as a symbol it needs already defined, and this is the sanctioned

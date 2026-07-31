@@ -7,17 +7,26 @@
 > coherent: production must *have* `maps` (the samples build maps), but being LAZY it is absent from
 > `js/pre-compiled.js`, so the Examples folder survives AND the artwork leaves the first load.
 >
-> **Ran, in two sessions:** Phase 0 (`samples`) · Phase 0.5 (measured) · Phase 1 (`maps`, lazy) ·
+> **Ran, in three sessions:** Phase 0 (`samples`) · Phase 0.5 (measured) · Phase 1 (`maps`, lazy) ·
 > Phase 4 — then, on a follow-up instruction, **Phase 2 (`plots`, lazy)** and **`meta-tools` made
-> lazy** (not a phase of this plan; the inspectors were already a part, just an eager one).
-> **Phase 3 — `spreadsheet` + `dataflow` — is NOT done and is the ONLY thing left. See §12.**
+> lazy** (not a phase of this plan; the inspectors were already a part, just an eager one) — then
+> **Phase 3: the `spreadsheet` extracted and made lazy, with `dataflow` DELIBERATELY LEFT IN CORE.**
+> **ALL PHASES ARE NOW DONE. §13 is Phase 3's execution record; §12 was its brief.**
 >
-> **Result:** production `pre-compiled.js` **1,101,733 → 989,482 B (−112.3 KB, −10.2%)** — under
-> 1 MB — with the Examples folder unchanged; `lean` 1,074,170 → 980,440 B (−8.7%). Zero reference
-> churn throughout. Gates: `fg gauntlet` 14/14, `fg homepage`, `build_and_smoke.sh --profile lean`,
-> fingerprints across dev/homepage/lean with every delta predicted before being measured.
+> **Result:** production `pre-compiled.js` **1,101,733 → 955,796 B (−145.9 KB, −13.3%)** with the
+> Examples folder unchanged; `lean` 1,074,170 → 945,796 B (−12.0%). Zero reference churn throughout.
+> Gates: `fg gauntlet` 14/14, `fg homepage`, `build_and_smoke.sh --profile lean`, fingerprints across
+> dev/homepage/lean with every delta predicted before being measured.
 > Commits: `eed2f2f2` (samples + maps), `058ea35f` (plots + lazy inspectors + the meta-system fix),
 > tests `3741b855b` (the gate).
+>
+> **⛔ `dataflow` IS NOT A PART AND MUST NOT BECOME ONE** — owner decision, with the enumeration
+> behind it in §4 Phase 3's amendment box. It is the wiring substrate, not an app slice.
+>
+> **Two things Phase 3 found that outlive it:** §13.3, the payoff estimator is broken (source bytes
+> do not predict image bytes — `src/spreadsheet` is 72% comments, `src/maps` is 2.5%); and §13.7, a
+> PRE-EXISTING defect this phase did not cause and did not fix — `DashboardsApp` / `SimpleSlideApp`
+> are dead icons on a `lean` tree.
 >
 > **Four authored facts were FALSIFIED in execution — see §11 before trusting anything below.**
 > Most load-bearing: the "derived part→part `requires`" §1 leans on **does not exist**.
@@ -299,6 +308,22 @@ anything outside the plots family (a chart axis is the kind of thing that gets r
 will say, but read the hits rather than guarding blindly.
 
 ### Phase 3 — `spreadsheet` and `dataflow` (1 edge each, but the two riskiest)
+
+> **⛔ AMENDED 2026-07-30 BY OWNER DECISION D2 — `dataflow` STAYS IN CORE. Do not re-attempt its
+> extraction.** The R-2 enumeration this phase demanded was done, and it is the reason: `world.dataflow`
+> has **14 call sites, almost all core** — `Widget.coffee`, `ControllerMixin` ×3 (`ensureWireEdge`,
+> i.e. how ANY widget wires itself to any other), `SliderWdgt`, `SimpleTextWdgt`, `StringWdgt`,
+> `PaletteWdgt`, the core `PatchNodeWdgt`, `WellKnownObjects` — plus the every-cycle drain station
+> `WorldWdgt.recalculateDataflow`. They soak SYNTACTICALLY (they are already `world.dataflow?.…`) but
+> **not SEMANTICALLY**: with the engine absent, wires silently never fire, sliders stop driving their
+> targets, patch nodes go dead. That is BROKEN, not reduced, and it fails arc 4's rule that a part's
+> absence must be a NO-OP. **`dataflow` is the wiring substrate, not an app slice** — the same
+> judgment as "`src/meta` cannot be a part". §12.2's item 4 (the missing part→part `requires`) is
+> therefore moot for this phase: the spreadsheet's door names ONE part.
+>
+> The `spreadsheet` half below still runs, with one addition forced by owner decision D1 (lazy, not
+> eager): see §12.
+
 - **spreadsheet**: guard `WorldWdgt.createDesktop`'s `(new SpreadsheetApp).createOpener` exactly like
   the `FridgeMagnetsApp` line above it. ⚠ `FormulaCompiler` calls `compileFGCode` at runtime — that is
   product machinery present in every profile (arc 5 PR-D3), so no new dependency, but re-read
@@ -529,10 +554,20 @@ happened to be present already.
 
 ---
 
-## §12 WHAT IS LEFT: Phase 3 — spreadsheet + dataflow (for a COLD session)
+## §12 WHAT IS LEFT: Phase 3 — the spreadsheet (for a COLD session)
 
 Everything else in this plan is done. This section is the brief for the one remaining piece; it
 assumes nothing but `docs/architecture/build-and-packaging.md`.
+
+> **⛔ SCOPE, FIXED BY OWNER DECISIONS 2026-07-30 — do not re-open any of the three:**
+> **D1** the spreadsheet is `"eager": false` in `parts.json`, NAMED in `homepage.json` (production
+> ships it lazily) and NOT named in `lean.json` (the appliance drops it outright) — the exact
+> `maps`/`plots` shape; inclusion and timing are different axes.
+> **D2** **`dataflow` STAYS IN CORE** — see the amendment box on §4 Phase 3 for the enumeration that
+> settled it. Items 3 and 4 below are therefore struck.
+> **D3** `SpreadsheetApp` becomes its own EAGER launcher mini-part, `fizzytiles-launcher`-style
+> (item 2 below) — forced by D1. ⚠ `lean` must name NEITHER part: a desktop icon that opens nothing
+> is worse than no icon, so the guard on the `createOpener` line stays.
 
 ### §12.1 State you are starting from
 `src/spreadsheet/` (14 files, 116 KB) and `src/dataflow/` (4 files, 36 KB) are still inside `core`'s
@@ -561,17 +596,15 @@ Everything the earlier phases built is available and should be reused:
    `fizzytiles` / `fizzytiles-launcher` shape: the launcher class (and its icon) must be its own
    EAGER part, the engine lazy. `maps` and `plots` needed no such split because their doors are apps
    that already existed in core.
-3. **⚠⚠ dataflow is a WORLD COLLABORATOR, not an app** — the genuinely new risk. `doOneCycle` runs
-   `recalculateDataflow` between the step functions and the layout pass, EVERY cycle. So dataflow
-   cannot simply "arrive on demand" behind a door: either it stays eager (extracted but always
-   shipped), or every `world.dataflow` site — including that drain station — must soak absence
-   (`world.dataflow?.…`). **Enumerate every call site BEFORE touching the constructor** (R-2). If one
-   cannot be soaked, STOP: the partition is drawn wrong there, and that is a finding, not an obstacle
-   to engineer around.
-4. **spreadsheet REQUIRES dataflow** (cells register with the engine) and **there is no part→part
-   `requires` mechanism** (§11.1) — so the spreadsheet's door must name BOTH:
-   `world.parts.whenAllLoaded ["spreadsheet", "dataflow"], -> …`. Nothing in the build will check
-   this; `check-part-edges.js` scans core only.
+3. ~~**dataflow is a WORLD COLLABORATOR, not an app**~~ — **STRUCK by D2.** The R-2 enumeration was
+   run and it is exactly why: `doOneCycle` drains `recalculateDataflow` every cycle, and 14 call
+   sites across `Widget`, `ControllerMixin`, `SliderWdgt`, `SimpleTextWdgt`, `StringWdgt`,
+   `PaletteWdgt`, `PatchNodeWdgt` and `WellKnownObjects` soak the engine's absence syntactically but
+   not semantically. The plan's own instruction was *"if one cannot be soaked, STOP: the partition is
+   drawn wrong there"* — that is the finding, and D2 is it. dataflow stays in core.
+4. ~~**spreadsheet REQUIRES dataflow** … the door must name BOTH~~ — **MOOT under D2.** dataflow is
+   core, so it is always present, and the spreadsheet's door names ONE part. The missing part→part
+   `requires` mechanism (§11.1) does not matter for this phase.
 
 ### §12.3 Suite exposure
 19 spreadsheet + 1 dataflow SystemTests. They should NOT churn: `dev` ships `"parts": "all"` and the
@@ -579,14 +612,153 @@ harness page presets `FIZZYGUM_EAGER_ALL_PARTS`. **Any reference churn means som
 should not have — do not recapture, find the cause** (R-6).
 
 ### §12.4 Expected payoff
-~68 KB (spreadsheet) + ~21 KB (dataflow) off the production image, ESTIMATED from the 59%
-source→image ratio the `maps` split actually produced. ⚠ Treat as unverified until measured — the
-same estimate understated `maps` by 33%.
+~68 KB (spreadsheet) off the production image, ESTIMATED from the 59% source→image ratio the `maps`
+split actually produced. (The ~21 KB that `dataflow` would have added is off the table under D2.)
+⚠ Treat as unverified until measured — the same estimate understated `maps` by 33%.
 
 ### §12.5 Verification
 Unchanged from §7, plus: take fingerprint baselines for dev/homepage/lean BEFORE touching anything
 (`Fizzygum-tests/.scratch/take-baselines-slices.sh <tag>`, gitignored), predict each delta in words,
 then compare. `fg gauntlet` · `fg homepage` · `build_and_smoke.sh --profile lean`.
+
+---
+
+## §13 PHASE 3 EXECUTION RECORD — 2026-07-30 (the spreadsheet; dataflow deliberately NOT extracted)
+
+**Ran under owner decisions D1 (lazy, production ships it, `lean` drops it), D2 (dataflow stays in
+core) and D3 (a separate eager launcher part).** All three held; nothing in execution argued back.
+
+### §13.1 What landed
+| | |
+|---|---|
+| `src/spreadsheet-launcher/SpreadsheetApp.coffee` | moved out of `src/spreadsheet/` (`git mv`) — the whole of the new EAGER part |
+| `parts.json` | `src/spreadsheet` leaves `core`; new `spreadsheet` (12 classes, `eager: false`) + `spreadsheet-launcher` (1 class, eager) |
+| `WorldWdgt.createDesktop` | the ONE core edge gains `if SpreadsheetApp?` — asked of the EAGER half, so a plain guard is right |
+| `SpreadsheetApp.launch` | `world.parts.whenAllLoaded ["spreadsheet"], => super()` |
+| `profiles/homepage.json` | names both new parts; `lean.json` names neither, by design |
+| `smoke-boot-headless.js` | the lazy-part probe now LOOPS over every lazy part (see §13.4) |
+
+### §13.2 The edges, re-measured with the gate (never a grep)
+`node buildSystem/check-part-edges.js` with `src/spreadsheet` moved to a scratch part:
+**1 unguarded reference** (`src/WorldWdgt.coffee:629`), **0 inheritance edges** — exactly what
+§12.2 predicted. After the work: **0 unguarded, 0 inheritance**, and `check-shippable-coverage`
+clean with the new directory claimed.
+
+### §13.3 ⚠⚠ MEASURED — AND THE PAYOFF ESTIMATE WAS 50% HIGH (the finding of this phase)
+
+| Tree | Before | After | Δ |
+|---|---|---|---|
+| `homepage` `js/pre-compiled.js` | 989,482 B | **955,796 B** | **−33,686 B (−3.40%)** |
+| `lean` `js/pre-compiled.js` | 980,440 B | **945,796 B** | **−34,644 B (−3.53%)** |
+| `spreadsheet` source batch (ships, fetched on demand) | — | 119,408 B | new |
+| `spreadsheet-launcher` source batch (eager) | — | 3,407 B | new |
+| Stored sources, dev / homepage | 502 / 434 | 502 / 434 | unchanged |
+| production tree | 29 files / 3,539,265 B | 30 files / 3,507,984 B | −31,281 B |
+
+§12.4 predicted **~68 KB** off the image. The truth is **33.7 KB — half of it.** The cause is
+measurable and worth carrying forward, because it invalidates the estimator, not just the estimate:
+
+| Slice | total source | comment bytes | code bytes |
+|---|---|---|---|
+| `src/maps` | 88,247 | 2,175 (**2.5%**) | 86,047 |
+| `src/spreadsheet` | 112,095 | 80,873 (**72.1%**) | 31,079 |
+
+§12.4's ratio was calibrated on `maps`, which is vector-path ARTWORK and essentially all code. The
+spreadsheet is 72% comment bytes, and **comments never reach a compiled, minified image**. ⇒ the
+same estimator was 33% LOW for `maps` and 50% HIGH here. ⚖ **Estimate from CODE bytes, not source
+bytes — and treat even that as a guess until two builds have been fingerprinted.**
+
+The `lean` drop is 958 B LARGER than production's, and that number is exactly `SpreadsheetApp`'s
+compiled contribution: production keeps the eager launcher in its image, `lean` ships neither part.
+Cross-checked independently — the homepage-minus-lean image gap went 9,042 → 10,000 B.
+
+**Every other delta was predicted before being measured**, in `.scratch/p3-predictions.md`. Two were
+not exactly right, both benign and in the same mechanism: the predicted file count was +2 per tree
+but is **+1**, because core losing ~116 KB of source made its numbered batches re-pack from 12 into
+11 — `sources_batch_11.js` disappears while the two part batches appear; and only TWO core batches
+changed content (`_10` −86 KB, `_3` +458 B) rather than "many". The boot bundles grew +405 B on the
+trees that gained parts (the `FIZZYGUM_PARTS` manifest is concatenated into them) and SHRANK 19 B on
+`lean` — one dropped `"sources_batch_11",` entry. Nothing unaccounted-for appeared in any of the
+three fingerprints.
+
+### §13.4 The gate would NOT have covered this part — so the gate changed
+`fg homepage`'s lazy-part assertion took `Object.keys(FIZZYGUM_PARTS).find(eager === false)`, and
+the manifest is written `sort_keys=True` — so it always picked the alphabetically first lazy part,
+`maps`, and would have gone on picking it. `spreadsheet` would have shipped in production **never
+once loaded by any gate** — precisely the §11.5 shape ("a capability's FIRST use on a given artifact
+shape is untested by construction"). **Decision: loop it over every lazy part.** It now reports
+`maps`, `meta-tools`, `plots` and `spreadsheet`, asserting per part: absent at boot, all classes
+arrive, zero eager batches dragged in. ⚠ Coverage is deliberately not uniform and the code says so:
+only the FIRST load runs on a tree with no meta-system, so only it proves the §11.5 bootstrap.
+The probe is also now skipped on pages presetting `FIZZYGUM_EAGER_ALL_PARTS`, where "absent at boot"
+is false by design.
+
+### §13.5 Zero reference churn
+As required by R-6, and it held: `fg gauntlet` green with no recapture — dpr1, dpr2 and webkit each
+269 tests, 0 failed, 0 geometry violations. `dev` ships `"parts": "all"` and the harness page presets
+`FIZZYGUM_EAGER_ALL_PARTS`, so `whenAllLoaded` takes its inline path and the 19 spreadsheet tests —
+several of which do `world.evaluateString "(new SpreadsheetApp).launch()"` and then read the sheet in
+the same macro step — see exactly the cycles they saw before.
+
+### §13.6 ⚠ THE GATE THAT DID FIRE: the serialization rig, and why it was RIGHT to
+The first full gauntlet came back **13/14, with `serialization` a hard FAIL** — 11 mismatches, all
+`SimpleSpreadsheetWdgt is not defined`, all on the NATIVE leg, while the SWCanvas leg passed clean.
+That asymmetry is the whole diagnosis: `serialization-roundtrip-headless.js` builds its fixtures by
+naming classes directly (`new SimpleSpreadsheetWdgt()`), it boots **`index.html`** — the one dev-tree
+page where laziness is REAL — and `index-sw.html` presets `FIZZYGUM_EAGER_ALL_PARTS`. Until this
+phase the rig had never touched a lazy part's class on the native page (the one phase that uses
+`ClassInspectorWdgt` is SW-only), so the gap had never been visible.
+
+**This was the rig catching up with the product, not a product defect** — the product's own paths
+both do the right thing already (`SpreadsheetApp.launch` awaits; `loadWorldSnapshot` pre-scans a
+snapshot's class names and loads the parts they need). A harness naming the class as a bare symbol
+has to do what those doors do. Fix: `bootPage` — the single funnel every rig page goes through — now
+loads **every** lazy part the tree ships, before any fixture is built. Self-maintaining (a new lazy
+part joins for free), and it restores the rig's own premise: the same structural checks under both
+backends, differing in the renderer and not in which parts happen to be resident.
+⚖ **Net gain in coverage:** the 22 spreadsheet checks now run against classes that arrived through
+an ON-DEMAND part load, which is closer to the shipped path than what they exercised before.
+
+### §13.7 ⚠ A PRE-EXISTING DEFECT FOUND, NOT INTRODUCED — two core doors are dead on `lean`
+Found while reasoning about whether the spreadsheet door needed an `isAvailable` check, then
+**verified empirically** on a built `lean` tree (`Fizzygum-tests/.scratch/lean-door-probe.js`):
+
+```
+partsShipped: ["core"] · dashboardsAppExists: true · mapsAvailable: false
+(new DashboardsApp()).launch()  ->  windows before 0, after 0
+pageerror: Fizzygum: no such part 'maps' in this build.
+```
+
+`DashboardsApp.launch` and `SimpleSlideApp.launch` are CORE classes whose openers `createDesktop`
+creates unguarded, and they call `world.parts.whenAllLoaded ["maps", "plots"]` / `["maps"]` with no
+`isAvailable` check first. On `lean`, which ships neither part, `ensureLoaded` REJECTS, `super()`
+never runs, and the icon is dead — an unhandled rejection and no window. `PartsRegistry`'s own header
+states the rule that would have prevented it: *"Ask `isAvailable` FIRST at any door that a profile may
+not ship at all"* — which `Widget.spawnInspector` does and these two do not.
+
+It predates Phase 3 (it arrived with the `maps` and `plots` phases, `eed2f2f2` / `058ea35f`) and
+Phase 3's own door was never affected — `lean` ships neither spreadsheet part, so there is no icon to
+click. **FIXED 2026-07-31 on owner instruction**, and the fix names the rule rather than repeating it:
+
+```coffee
+# PartsRegistry — next to whenAllLoaded, because the choice between them is the point
+whenOptionalPartsLoaded: (partNames, thenDo) ->
+  @whenAllLoaded (eachName for eachName in partNames when @isAvailable eachName), thenDo
+```
+
+`DashboardsApp.launch` and `SimpleSlideApp.launch` now call it. ⚖ **The general rule, now recorded in
+`docs/architecture/build-and-packaging.md` §2:** `whenAllLoaded` is for parts that CONSTITUTE the
+result (a `Sample*App` builds plots — without them it is broken, not reduced, so rejecting is
+right); `whenOptionalPartsLoaded` is for parts that ENRICH it (a docked palette with fewer tools).
+Only the two core doors changed: the six `DemoMenus` sites and the three `Sample*App`s genuinely
+require their parts — filtering there would run the callback and then throw on an undefined class,
+which is strictly worse than a clean rejection.
+
+**Verified both directions.** On a rebuilt `lean` tree the probe now reports
+`new children: DashboardWdgt, DocumentWdgt` and zero page errors, where before it reported no window
+and `pageerror: no such part 'maps' in this build`. Where the parts ARE available (dev, homepage) the
+filter is the identity, so behaviour is unchanged — and the inline already-loaded fast path is
+untouched, since `whenOptionalPartsLoaded` delegates straight to `whenAllLoaded`.
 
 ---
 
