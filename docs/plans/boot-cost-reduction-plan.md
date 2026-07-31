@@ -172,13 +172,43 @@ a separate decision from re-homing the icons, and it should be taken deliberatel
 side effect.
 
 ### §2.2b The decomposition that follows (pick per slice; each is independently gated)
-1. **Re-home the 23 free icons** into `demos` / `meta-tools`. Zero core edges, pure tidying, no
-   speed win by itself. Cheapest, safest, makes every later slice smaller.
-2. **Make `demos` lazy** — with 21 icon pairs re-homed it is a large eager block; needs awaiting
-   doors on the demo menu items.
-3. **Toolbar-shaped parts** — a toolbar + its buttons + their icons, per toolbar. This is where the
-   37+35 references live and where the real class count is. The `plots` part is the worked example.
+1. ✅ **DONE — `50cbf48b`. Re-home the free icons** into `demos` / `meta-tools`. 25 files
+   (20 `*IconWdgt` + the 5 `*IconAppearance` whose only namer was their own moving widget), into the
+   new `src/demos-icons/` and into `src/meta-tools/`. Core 389 → 364 sources. Gauntlet 14/14, zero
+   churn. ⚠ Two classes were pulled back OUT of the candidate list because an early filter excluded
+   `src/icons/` and hid SIBLING references: `GenericCompositeIconWdgt` (base class of the BOOT icon
+   `GenericShortcutIconWdgt`) and `ObjectIconWdgt`/`ShortcutArrowIconWdgt` (used by those same
+   staying classes). ⚠ 13 `*IconAppearance` are named DIRECTLY by core toolbar buttons, so only
+   their widget moved — the pair does NOT travel as a unit.
+2. ✅ **DONE — `e39392bf`. `demos` is lazy.** 28 classes. dev `index.html` 3219 → **2931 ms**,
+   vault 452 → 422. ⚠⚠ Its doors are MENU ITEMS, a shape no earlier lazy part had — see the
+   `//eager` note in `parts.json` and `WorldWdgt.popUpDemoTestMenu`. ⚠⚠ **The doors live on
+   WorldWdgt, NOT Widget, and must not move back**: a public member on `Widget.prototype` is listed
+   by every inspector and failed `SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly`
+   (fixture: a `RectangleWdgt`). The menu passes the widget through the ARGUMENTS, not the target,
+   so `world` serves both call sites and the references stay untouched.
+3. ⏳ **NEXT — toolbar-shaped parts.** A toolbar + its buttons + their icons, per toolbar. This is
+   where the 37+35 icon references live, where the real class count is, and — unlike `demos` — it
+   ships in `homepage` and `lean`, so it is the ONLY remaining slice that cuts the production
+   download. The `plots` part is the worked example (`PlotsToolbarWdgt` + its four creator buttons
+   live inside it). See §2.2c.
 4. **The launcher icons stay eager forever** (~11 of them): `createDesktop` draws them at boot.
+
+### §2.2c Slice 3's starting facts (measured; re-verify with the gate, never a grep)
+- `src/toolbars` = 8 files / 18.9 KB code; `src/buttons` = 38 files / 19.5 KB code. Both in `core`,
+  so both ship in EVERY profile today.
+- 118 files remain in `src/icons`; core names ~39 `*IconWdgt` + ~31 `*IconAppearance` of them.
+- ⛔ **A creator button CANNOT await** — `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and
+  `CreatorButtonWdgt.grabbedWidgetSwitcheroo` both consume `createWidgetToBeHandled()`'s RETURN
+  VALUE synchronously (`ActivePointerWdgt` line ~1026; `ButtonWdgt` dispatches
+  `@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, …`). So button and icon
+  must land in the SAME part, and a core toolbar filters the LIST in place
+  (`(new XCreatorButtonWdgt if XCreatorButtonWdgt?)` inside the array, then compact) — appending
+  behind a guard reshuffles the palette and churns screenshots.
+- ⚠ If every item of a palette belongs to one part, move the PALETTE and its opener in too —
+  filtering its contents would pop an EMPTY window (`plots` did exactly this).
+- ⚠ Adding a public member to `Widget.prototype` churns the inspector-list references. Put new doors
+  on `WorldWdgt` (or the narrowest class that works).
 
 ### §2.2 ⭐ `src/icons` is 37% of core's files — the original note
 143 icon classes; only the handful drawn on the desktop **at boot** (the app launcher icons —
