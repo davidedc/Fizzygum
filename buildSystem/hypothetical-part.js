@@ -21,7 +21,12 @@
  * ⚠ NEVER answer these questions with a grep: the classifier strips comments and string literals,
  * and prose naming a class has produced false hits in two separate arcs.
  *
+ * ⚠⚠ MOVING FILES INTO AN EXISTING PART? PASS THAT PART'S DIRS TOO. The argument set is modelled
+ * as ONE new part, so a destination part's own references to the movers otherwise read as
+ * violations — which looks exactly like a broken grouping and is not one.
+ *
  * Usage:  node buildSystem/hypothetical-part.js <file-or-dir>…      (paths relative to Fizzygum/)
+ *         node buildSystem/hypothetical-part.js src/authoring src/authoring-icons src/Foo.coffee
  *         fg hypopart src/authoring/DocumentWdgt.coffee src/authoring/SlideWdgt.coffee
  */
 

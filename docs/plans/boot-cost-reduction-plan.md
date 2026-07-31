@@ -5,7 +5,24 @@ is embedded here or one named-doc hop away. Line numbers WILL drift — the quot
 is authoritative, re-grep before editing.
 
 **Owner mandate, 2026-07-31:** *"I want to chase both. I want EVERYTHING that can be lazy-loaded to
-be lazy loaded, and as well I'm happy to look into the precompiled build."*
+be lazy loaded, and as well I'm happy to look into the precompiled build."* When told the boot-speed
+case had evaporated (a precompiled dev tree boots in 60 ms), the owner reaffirmed the scope anyway:
+*"This is about uniformity at this point."* ⇒ uniformity and production DOWNLOAD bytes are standing
+reasons here; **boot speed is not** — see §0.1.
+
+> ## ⏩ WHERE THIS ARC IS, 2026-07-31 — read this first
+> **Track A: DONE** (§1.1b, `f1ab5d40`). **Track B slices 1-3: DONE and PUSHED.**
+> `50cbf48b` icons re-homed · `e39392bf` `demos` lazy · `9acadaab` the `authoring` +
+> `authoring-launcher` split (production `js/pre-compiled.js` **−9.8%**, `lean` **−11.4%**, dev
+> `index.html` 3219 → 2711 ms) · `eb2bd955` four broken doors the new analysis found ·
+> `510c1e74` a part→part **`requires` mechanism** and a gate that covers those edges ·
+> `b6173e12` the palette fix + the tooling below.
+>
+> **⏳ NEXT: §2.2d — SLICE 4.** It is fully designed and self-contained; start there.
+> **Tools it depends on, all committed:** `node buildSystem/pinned-by-lazy-parts.js --list` (the work
+> list), `fg hypopart <files…>` (evaluate a grouping BEFORE moving a file), `fg fingerprint
+> [profile] [baseref]` (measure the payoff instead of estimating it).
+> **Rules that cost a re-run in slices 1-3:** §2.5, and §2.2d's own "the gate that does not exist".
 
 ---
 
@@ -260,7 +277,7 @@ side effect.
    "which icons could follow"), `hypo-crosspart-edges.js` (the part→part edges the gate does not
    check), `authoring-lazy-probe.js` (drives all nine doors on `index.html`).
 
-### §2.2d SLICE 4 — THE NEXT ONE, designed 2026-07-31. Unpin the 50, do NOT split per Maker.
+### §2.2d SLICE 4 — THE NEXT ONE, designed 2026-07-31. Unpin 48 of the 50; do NOT split per Maker.
 
 **Status: designed, not started.** Slice 3 closed with `parts.json` gaining a `requires` mechanism
 (`510c1e74`), and the obvious follow-on — "cross-part inheritance is safe now, so split `authoring`
@@ -287,39 +304,92 @@ created an unordered cross-part edge — which is precisely what `requires` now 
 | `authoring` only | 7 | 9.4 KB | `authoring` — free, no declaration needed |
 | `plots` only | 5 | 9.2 KB | `plots` — free (the plot `*IconAppearance`) |
 | `demos` + `maps` | 2 | 3.5 KB | `maps`; `demos` declares `requires: ["maps"]` |
-| `authoring` + `plots` | 2 | 1.2 KB | `authoring`, requiring `plots` — or split the pair |
+| `authoring` + `plots` | 2 | 1.2 KB | ⛔ **STAY IN CORE** — see below |
 | `demos` only | 2 | 0.8 KB | `demos` — free |
 
 **Predicted production win.** `demos` ships in NO production profile, so for the 32 the only namer
 that survives into production is `authoring` — they leave the image outright. Summing the rows that
-production actually carries: **~54 KB of code off `js/pre-compiled.js`**, which at slice 3's measured
+production actually carries: **~54 KB of code off `js/pre-compiled.js`** (the 48; the 1.2 KB pair stays), which at slice 3's measured
 ratio (71 KB code → 91.9 KB image) is order **−70 KB, roughly another −8%**. ⚠ That ratio is a guess
 from one data point and has been wrong in both directions three times — **measure it with
 `fg fingerprint homepage` before promising anything.**
 
-#### The one design decision, and the argument both ways
+#### The DESTINATION of each group — parts own DIRECTORIES, so every move is a `git mv`
+There is no per-file membership: a part lists `dirs`. The receiving directories already exist.
+
+| group | → directory | note |
+|---|---|---|
+| icons + `*IconAppearance` going to `authoring` | `src/authoring-icons/` | the dir slice 3 created for exactly this |
+| non-icon widgets going to `authoring` | `src/authoring/` | e.g. `StretchableWidgetContainerWdgt`, `RadioButtonsHolderWdgt` |
+| the 5 plot appearances | `src/graphs-plots-charts/` | `plots`' only dir |
+| the 2 demo-only widgets | `src/demos/` | |
+| the 2 little-map appearances | `src/maps/` | |
+
+#### ⛔ TWO OF THE 50 DO NOT MOVE — decided, do not re-open
+`src/toolbars/ToolbarWdgt.coffee` and `src/buttons/ToolbarCreatorButtonWdgt.coffee` (the
+`authoring`+`plots` row, 1.2 KB) **stay in core**. `PlotsToolbarWdgt extends ToolbarWdgt` and
+`PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt`, so moving them into `authoring`
+makes `plots` INHERIT across a part boundary, which would oblige `plots` to declare
+`requires: ["authoring"]` — every chart in the system then dragging in the whole Makers part. That is
+a large, permanent coupling bought for 1.2 KB. **Not worth it.** ⇒ the real target is **48 files**.
+
+#### ⚠ THE `maps` PAIR NEEDS `requires`, NOT AN AWAIT
+`LittleUSAIconAppearance` / `LittleWorldIconAppearance` move to `maps`, and `demos-icons`'
+`LittleUSAIconWdgt` / `LittleWorldIconWdgt` then name them from `createAppearance: ->`. That reads
+like a method that could await, and it cannot: `CreatorButtonWdgt`'s constructor does
+`@appearance = @createAppearance()` and consumes the value synchronously — the same no-async-seam
+rule that governs creator buttons. So this one is `demos` declaring `requires: ["maps"]`, full stop.
+
+#### The one open design decision, and the argument both ways
 The 32 need `demos` to name `authoring`. Two shapes:
 - **`demos requires ["authoring"]`** — one line. Opening any demo menu then pulls the whole Makers
   part in. Costs nothing in production (`demos` ships nowhere) and **deletes** the four per-site
-  awaits slice 3 added to `DemoMenus`. Recommended.
-- **A `whenAllLoaded ["authoring"]` in each of ~32 DemoMenus menu actions** — finer-grained, and
-  keeps the demo catalogue cheap on the dev page. Mechanical but 32× the edit.
+  awaits slice 3 added to `DemoMenus` (`createImageWdgt`, `createSlideWdgt`, `createDocumentWdgt`,
+  `createWelcomeMessageWindowAndShortcut`). Recommended.
+- **A `whenAllLoaded ["authoring"]` in each of ~32 DemoMenus menu actions** — finer-grained, keeps
+  the demo catalogue cheap on the dev page. Mechanical but 32× the edit.
 Recommendation: the first. The finer grain buys dev-page bytes on a page that already boots in 60 ms
-when built `dev-precompiled`.
+when built `dev-precompiled`. ⚠ Either way `dev-tools requires ["demos"]` already exists, so the
+chain becomes dev-tools → demos → authoring; `checkRequiresGraph` rejects a cycle, so if that ever
+closes into one, the partition is wrong rather than the gate.
 
 #### Method (each step independently gated)
-1. `node buildSystem/pinned-by-lazy-parts.js --list` → the CURRENT list (regenerate; the table above is a snapshot and will drift).
-2. Per destination part, `fg hypopart <files…>` FIRST — it reports inheritance edges and cross-part
-   callers using the gate's own classifier. An inheritance edge means the group is wrong, or
-   `requires` must be declared.
-3. `git mv`, declare `requires` where the table says, `fg build` (0 unguarded / 0 inheritance).
-4. `fg gauntlet` 14/14 with **zero reference churn** — a screenshot diff is a finding, not a
-   recapture. `fg homepage`; `build_and_smoke.sh --profile lean`.
-5. `fg fingerprint homepage` and `fg fingerprint lean` — predict every delta IN WORDS first.
+1. `node buildSystem/pinned-by-lazy-parts.js --list` → the CURRENT list (the table above is a
+   2026-07-31 snapshot and WILL drift; the tool is the authority).
+2. Per destination part, **`fg hypopart <files…>` FIRST** — it reports inheritance edges and
+   cross-part callers using the gate's own classifier. An inheritance edge means the group is wrong,
+   or `requires` must be declared. ⚠ Never answer this with a grep: the classifier strips comments
+   and string literals, and prose naming a class produced false verdicts in two previous arcs.
+   ⚠⚠ **PASS THE DESTINATION PART'S DIRS TOO** when moving files INTO an existing part —
+   `fg hypopart src/authoring src/authoring-icons <the files…>`. The tool models the argument set as
+   ONE new part, so without them the destination's own references to the movers read as violations:
+   the 7-file `authoring` group alone reports 1 inheritance edge and 18 unguarded references (all
+   from `PaintToolbarWdgt`, which is *already* in `authoring`), and reports **0 and 0** once the
+   destination is included. Verified 2026-07-31.
+3. `git mv` into the directories above, declare `requires` where stated, then `fg build`
+   (expect: 0 unguarded references, 0 inheritance edges).
+4. `fg gauntlet` 14/14 with **ZERO reference churn** — a screenshot diff is a finding, never a
+   recapture. Then `fg homepage` and `cd Fizzygum && ./build_and_smoke.sh --profile lean`.
+5. `fg fingerprint homepage` and `fg fingerprint lean` — **predict every delta IN WORDS first**, and
+   treat any unpredicted line as a finding.
 
-⚠ **`requires` does not excuse a guard.** These are all lazy→lazy moves, which `requires` genuinely
-orders. The moment a move would make an EAGER part name a lazy class, the declaration is not enough
-and the site needs a guard or an await — see `build-and-packaging.md` §2.
+#### ⚠⚠ THE GATE THAT DOES NOT EXIST: the suite cannot see a laziness defect
+The harness page and `index-sw.html` preset `FIZZYGUM_EAGER_ALL_PARTS`, so every part is present
+there and the references record a world in which nothing is lazy. **Laziness is only real on
+`index.html`, which no test drives.** That blind spot produced three separate defects on 2026-07-31 —
+four throwing menu doors, a Super Toolbar offering five palettes instead of six, and a
+`SlidesToolbarWdgt` whose contents depended on which door opened it — **every one with a green
+gauntlet.** ⇒ "14/14, zero churn" is NOT evidence the lazy path works. Before claiming this slice
+done, drive `index.html` with a probe: reuse `../Fizzygum-tests/.scratch/crosspart-door-probe.js`
+(menu doors) and `authoring-lazy-probe.js` (the nine Maker doors), and add the demo-menu items whose
+icons moved. Assert each class is `undefined` BEFORE and `function` AFTER — absence alone is also
+what a broken build looks like.
+
+#### Exit criteria
+`pinned-by-lazy-parts.js` reports **only the two deliberately-kept files**; `fg build` 0/0;
+`fg gauntlet` 14/14 zero churn; `fg homepage`; lean smoke; both fingerprints taken with predictions
+written first; an `index.html` probe green on every door whose classes moved; §2.2d marked DONE with
+the measured image delta and this plan's ledger (§2.2b) updated.
 
 ### §2.2c Slice 3's starting facts (measured; re-verify with the gate, never a grep)
 - `src/toolbars` = 8 files / 18.9 KB code; `src/buttons` = 38 files / 19.5 KB code. Both in `core`,
