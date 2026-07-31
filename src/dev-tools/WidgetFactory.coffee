@@ -109,43 +109,51 @@ class WidgetFactory
     wm.setBounds (world.hand.position().subtract new Point 50, 100), new Point 130, 100
   createNewColorPickerWdgt: ->
     world.create new ColorPickerWdgt
+  # ⚠⚠ BouncerWdgt and PenWdgt are the LAZY 'demos' part, and this class is the EAGER 'dev-tools'
+  # one -- an eager part naming a lazy part's class, which check-part-edges.js cannot see (it scans
+  # CORE only). Both are reached from world menu -> 'demo ➜', which offers the items but loads
+  # nothing, so without this await the click threw '<Class> is not defined' on index.html.
+  # Awaiting here rather than at the menu door is deliberate: only these two factory methods want
+  # the demo family, and the rest of that menu is core widgets that must stay instant.
   createNewAnimationDemo: ->
-    foo = new BouncerWdgt
-    foo._applyBounds (new Point 50, 20), new Point 300, 200
-    foo.alpha = 0.9
-    foo.speed = 3
-    bar = new BouncerWdgt
-    bar.setColor Color.create 50, 50, 50
-    bar._applyBounds (new Point 80, 80), new Point 80, 250
-    bar.type = "horizontal"
-    bar.direction = "right"
-    bar.alpha = 0.9
-    bar.speed = 5
-    baz = new BouncerWdgt
-    baz.setColor Color.create 20, 20, 20
-    baz._applyBounds (new Point 90, 140), new Point 40, 30
-    baz.type = "horizontal"
-    baz.direction = "right"
-    baz.speed = 3
-    garply = new BouncerWdgt
-    garply.setColor Color.create 200, 20, 20
-    garply._applyBounds (new Point 90, 140), new Point 20, 20
-    garply.type = "vertical"
-    garply.direction = "up"
-    garply.speed = 8
-    fred = new BouncerWdgt
-    fred.setColor Color.create 20, 200, 20
-    fred._applyBounds (new Point 120, 140), new Point 20, 20
-    fred.type = "vertical"
-    fred.direction = "down"
-    fred.speed = 4
-    bar.add garply
-    bar.add baz
-    foo.add fred
-    foo.add bar
-    world.create foo
+    world.parts.whenAllLoaded ["demos"], ->
+      foo = new BouncerWdgt
+      foo._applyBounds (new Point 50, 20), new Point 300, 200
+      foo.alpha = 0.9
+      foo.speed = 3
+      bar = new BouncerWdgt
+      bar.setColor Color.create 50, 50, 50
+      bar._applyBounds (new Point 80, 80), new Point 80, 250
+      bar.type = "horizontal"
+      bar.direction = "right"
+      bar.alpha = 0.9
+      bar.speed = 5
+      baz = new BouncerWdgt
+      baz.setColor Color.create 20, 20, 20
+      baz._applyBounds (new Point 90, 140), new Point 40, 30
+      baz.type = "horizontal"
+      baz.direction = "right"
+      baz.speed = 3
+      garply = new BouncerWdgt
+      garply.setColor Color.create 200, 20, 20
+      garply._applyBounds (new Point 90, 140), new Point 20, 20
+      garply.type = "vertical"
+      garply.direction = "up"
+      garply.speed = 8
+      fred = new BouncerWdgt
+      fred.setColor Color.create 20, 200, 20
+      fred._applyBounds (new Point 120, 140), new Point 20, 20
+      fred.type = "vertical"
+      fred.direction = "down"
+      fred.speed = 4
+      bar.add garply
+      bar.add baz
+      foo.add fred
+      foo.add bar
+      world.create foo
   createNewPenWdgt: ->
-    world.create new PenWdgt
+    world.parts.whenAllLoaded ["demos"], ->
+      world.create new PenWdgt
   underTheCarpet: ->
     newWdgt = new BinWdgt
     world.create newWdgt

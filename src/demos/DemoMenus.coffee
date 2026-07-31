@@ -372,11 +372,18 @@ class DemoMenus
   createAlignLeftIconWdgt: ->
     world.create new AlignLeftIconWdgt
 
+  # ⚠⚠ The two map icons are the LAZY 'maps' part, not this one -- loading 'demos' does not
+  # bring 'maps' with it, because there is no part->part `requires` mechanism (parts.json has
+  # no such field and PartsRegistry.ensureLoaded loads only the part it is handed). So each of
+  # these menu actions names the part it actually builds from. Without this the click threw
+  # 'SimpleWorldMapIconWdgt is not defined' -- since 'maps' went lazy, and nothing caught it.
   createWorldMapIconWdgt: ->
-    world.create new SimpleWorldMapIconWdgt
+    world.parts.whenAllLoaded ["maps"], ->
+      world.create new SimpleWorldMapIconWdgt
 
   createUSAMapIconWdgt: ->
-    world.create new SimpleUSAMapIconWdgt
+    world.parts.whenAllLoaded ["maps"], ->
+      world.create new SimpleUSAMapIconWdgt
 
   createBoldIconWdgt: ->
     world.create new BoldIconWdgt
