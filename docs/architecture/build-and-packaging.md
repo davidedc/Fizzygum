@@ -9,6 +9,11 @@ falsified premises and its measurements, lives in `docs/archive/build-arc-{1,2,3
 `docs/archive/build-arc-5-packaging-profiles-plan.md`. It is not the build-time *checking* system either: for the gates
 `build_it_please.sh` runs, see **`docs/architecture/lint-and-static-checks.md`**.
 
+**Visual companions** (`docs/explainers/`, for a reader with light context): `build-and-packaging.html` walks through
+this document; **`boot-and-lazy-parts.html` covers the RUNTIME half** — the boot sequence, the two boot paths, when the
+reflective layer arrives, and how `PartsRegistry` brings a lazy part in behind a running world. §2 and §5 below are the
+authoritative statements of what that page illustrates.
+
 > **Orientation.** Fizzygum has no module system. Every class is a global, shipped as escaped TEXT and compiled
 > **in the browser** at boot; only `src/boot/*` is compiled to JS at build time. That single fact is why "packaging"
 > here is unusual: what an artifact ships is not a dependency graph's closure, it is a set of *named slices of source
@@ -263,6 +268,16 @@ absent from `js/pre-compiled.js`.
 |---|---|---|
 | `maps` | 95.0 KB | **−55.8 KB (−5.1%)** |
 | `spreadsheet` | 119.4 KB | **−33.7 KB (−3.4%)** |
+
+⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured
+2026-07-31 (`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in
+**54 ms**, of which the whole image parse+execute is ~46 ms — so a further slice worth ~1.6% of the
+image buys about half a millisecond, and there is nothing to win. The **compile-at-boot `dev`
+`index.html`** takes **3219 ms**, 97% of it compiling, ~8.6 ms per source — so laziness genuinely
+helps *there*, bounded by a measured floor of 2680 ms (core alone is 389 of the 452 sources and
+cannot be lazy). ⚠ The SystemTest suite benefits either way: the harness and SWCanvas pages preset
+`FIZZYGUM_EAGER_ALL_PARTS`, so they compile everything regardless. ⇒ extract further parts for
+download size, partition uniformity, or dev-page boot — not for production startup.
 
 ⚠⚠ **Those two rows are the warning: source bytes do not predict image bytes, and the ratio between them varies by
 2.5×.** `maps` is vector-path artwork — 2.5% comment bytes, essentially all code. `src/spreadsheet` is 72.1% COMMENT
