@@ -31,12 +31,13 @@
     "without its door is code nothing opens -- but it is checked rather than remembered: buildProfile.py",
     "reads each class's `requiredParts` against this list.",
     "",
-    "'authoring' + 'authoring-launcher' are the Makers, and they are the same both-or-neither pairing",
-    "as the spreadsheet. The launcher part is the nine desktop-icon app classes, EAGER because",
-    "createDesktop places their openers at boot; behind them the windows they open -- Docs, Slides,",
+    "'authoring' is the Makers, and it is now ONE part rather than a lazy engine plus an eager",
+    "launcher sliver: the nine desktop-icon app classes live in it too, because createDesktop builds",
+    "their icons from core art plus a class NAME and needs nothing of the app until the icon is",
+    "clicked. Behind them the windows they open -- Docs, Slides,",
     "Dashboards, Draw, Patch programming, the Generic panel, the Super Toolbar and every tool palette",
-    "that serves them -- are LAZY, so production ships the icons and stops carrying 53 classes in",
-    "js/pre-compiled.js. Naming them is not optional for production: the three example documents",
+    "that serves them -- are LAZY, so production ships the icons and stops carrying those classes in",
+    "js/pre-compiled.js. Naming it is not optional for production: the three example documents",
     "and the C-F converter ASSEMBLE these citizens.",
     "",
     "Everything else about this tree FOLLOWS from these four facts, with nothing to maintain:",
@@ -57,7 +58,7 @@
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
-  "parts": ["core", "meta-tools", "example-degrees-converter", "example-doc", "example-slide", "example-dashboard", "example-sheet", "authoring", "authoring-launcher", "maps", "plots", "spreadsheet"],
+  "parts": ["core", "meta-tools", "examples-icons", "example-degrees-converter", "example-doc", "example-slide", "example-dashboard", "example-sheet", "authoring", "maps", "plots", "spreadsheet"],
   "form": "precompiled",
   "sources": "lazy",
   "entries": ["index.html"]

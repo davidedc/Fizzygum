@@ -45,8 +45,12 @@ class PanelWdgt extends Widget
 
   # only the desktop and folder panels have menu entries
   # to invoke this
-  makeFolder: (ignored, ignored2, name) ->
-    newFolderWindow = new FolderWindowWdgt
+  # `folderWindow` lets a caller supply a FolderWindowWdgt SUBCLASS while reusing the installation
+  # ritual below (close to the shelf, make a shortcut, count the name). WorldWdgt.createDesktop is
+  # the one such caller: the Examples folder is an ExamplesFolderWindowWdgt, which fills itself on
+  # first open. Menu callers pass three arguments and get the plain folder, as before.
+  makeFolder: (ignored, ignored2, name, folderWindow) ->
+    newFolderWindow = folderWindow ? new FolderWindowWdgt
     newFolderWindow.close()
     newFolderWindow.createReference (name or world.untitledNamingService.getNextUntitledFolderShortcutName()), @
     world.untitledNamingService.noteShortcutCreated()

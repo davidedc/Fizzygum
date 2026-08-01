@@ -3661,6 +3661,21 @@ class Widget extends TreeNode
   findRootForGrab: ->
     return @findFirstLooseWidget()
 
+  # Asked by IconicDesktopSystemShortcutWdgt.bringUpTarget before I am shown: do I owe myself any
+  # CONTENT first? Almost nothing does — a widget resting in storage is already whole — so the
+  # default runs the callback INLINE. That is correctness rather than economy: going through a
+  # promise regardless would defer every shortcut click by a microtask, moving the open a whole
+  # world cycle later, and the SystemTest suite measures cycles (../Fizzygum-tests/DETERMINISM.md).
+  # ExamplesFolderWindowWdgt is the one overrider: its contents are five openers whose art is a LAZY
+  # part, so it fetches them here, the first time it is opened.
+  # ⚠ This DOES add a public member to Widget.prototype, which every inspector lists, so it churns
+  # the inspector reference set — recaptured deliberately. The alternative (defining it only on the
+  # folder and dispatching with ?()) would have been chosen to dodge a screenshot rather than on
+  # merits: "is this widget ready to be shown?" is a question any bring-up target can be asked, and
+  # a hook with a sensible default is what that is.
+  whenReadyToBeBroughtUp: (callback) ->
+    callback()
+
   _amIDirectlyInsideScrollPanelWdgt: ->
     if @parent?
       if (@parent instanceof PanelWdgt) or (@parent instanceof SimpleVerticalStackPanelWdgt)

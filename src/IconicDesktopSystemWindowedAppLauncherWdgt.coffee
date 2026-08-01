@@ -37,11 +37,29 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
   # ⚠ `buildIcon` is a THUNK, and the guard comes before it: an artifact that can never produce this
   # app constructs no widget and gets no icon, rather than one whose click could only reject.
   @addToFolder: (folder, appClassName, title, buildIcon) ->
-    return unless world.parts.canEverProvideClass appClassName
-    launcher = new @ title, buildIcon(), nil, nil
-    launcher.appClassName = appClassName
+    launcher = @_lazyLauncherFor appClassName, title, buildIcon
+    return unless launcher?
+    # in-folder: size FIRST, then add — the icon grid places on add
     launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
     folder.contents.contents.add launcher
+
+  # Same, onto the desktop. ⚠ The two orders are NOT interchangeable and never were (this pair is
+  # lifted verbatim from IconicDesktopSystemWindowedApp.createOpener's two arms): the desktop places
+  # by smart grid ON ADD, so it must be added before it is sized, while a folder's grid reads the
+  # extent as it adds.
+  @addToDesktop: (appClassName, title, buildIcon) ->
+    launcher = @_lazyLauncherFor appClassName, title, buildIcon
+    return unless launcher?
+    world.add launcher
+    launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
+
+  # nil when this artifact can never produce the app — no widget is constructed and no icon appears,
+  # rather than one whose click could only reject. `buildIcon` is a thunk for exactly that reason.
+  @_lazyLauncherFor: (appClassName, title, buildIcon) ->
+    return nil unless world.parts.canEverProvideClass appClassName
+    launcher = new @ title, buildIcon(), nil, nil
+    launcher.appClassName = appClassName
+    launcher
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

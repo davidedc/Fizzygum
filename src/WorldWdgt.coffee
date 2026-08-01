@@ -606,47 +606,37 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     # TODO find a way to put this back
     # demoMenus.createWelcomeMessageWindowAndShortcut()
-    # THE MAKERS: their launcher classes are the eager 'authoring-launcher' part and the windows
-    # they open are the lazy 'authoring' part, so the class-existence guard is the right shape here
-    # for the same reason it is right for SpreadsheetApp below -- it is asked of the EAGER half,
-    # which a profile either ships or does not. (The appliance ships neither part: sources "none"
-    # forbids carrying a lazy one, and an icon that can only reject is worse than no icon.)
-    # ⚠ Guarded ONE BY ONE so their ORDER is untouched -- createOpener lays the icons out in call
-    # order, so gathering them under a single test would move the whole column.
-    (new HowToSaveMessageApp).createOpener()                 if HowToSaveMessageApp?
+    # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
+    # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED
+    # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). So the Makers' nine app classes sit
+    # in the lazy 'authoring' part they already build from, FridgeMagnetsApp sits in lazy
+    # 'fizzytiles', and a session that never opens a Maker never downloads or compiles one.
+    # ⇒ what forces an eager launcher is BOOT-TIME REACHABILITY, and an icon is not its app: reading
+    # a name at boot is not reaching the class. (Before this, an eager sliver part existed for each
+    # lazy app precisely because createDesktop constructed the app to ask it for its title and icon.)
+    # ⚠ The guard is canEverProvideClass, NOT `if SimpleDocumentApp?`: for a lazy class an existence
+    # test reads "not fetched yet" and would silently drop the icon for ever. This asks the other
+    # question -- can this artifact EVER produce it -- so `lean`, which ships neither part, draws
+    # none of these rather than icons whose click could only reject.
+    # ⚠ ORDER IS THE LAYOUT: createDesktop places icons in call order down a column (wrapping after
+    # 5), so this sequence, and the bin's position inside it, is what the user sees.
+    addOpener = (appClassName, title, buildIcon) ->
+      IconicDesktopSystemWindowedAppLauncherWdgt.addToDesktop appClassName, title, buildIcon
+    addOpener "HowToSaveMessageApp", "How to save?",     -> new FloppyDiskIconWdgt
     menusHelper.binIconAndText()
-    (new SimpleDocumentApp).createOpener()                   if SimpleDocumentApp?
-    (new FizzyPaintApp).createOpener()                       if FizzyPaintApp?
-    (new SimpleSlideApp).createOpener()                      if SimpleSlideApp?
-    (new DashboardsApp).createOpener()                       if DashboardsApp?
-    (new PatchProgrammingApp).createOpener()                 if PatchProgrammingApp?
-    (new GenericPanelApp).createOpener()                     if GenericPanelApp?
-    (new ToolbarsApp).createOpener()                         if ToolbarsApp?
-    # the fizzytiles family (FridgeMagnetsApp and friends) ships only in the full build,
-    # so it contributes its own desktop opener only when it is actually present
-    (new FridgeMagnetsApp).createOpener()  if FridgeMagnetsApp?
-    exampleDocsFolder = @makeFolder nil, nil, "Examples"
-    # ⚠⚠ THESE FIVE ICONS ARE BUILT WITHOUT THEIR APPS, and that is the point: each app is alone in
-    # its own one-class lazy part, fetched, compiled and run by the CLICK on its own icon and by
-    # nothing else. Opening this folder costs no part at all. An icon needs only its ART (all core,
-    # below) and the app's class NAME -- the launcher resolves the name to a part when clicked
-    # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). ⇒ contrast the desktop icons above,
-    # which are constructed FROM their app objects and so must have them at boot; being reached at
-    # boot is what forces an eager launcher, not being a launcher.
-    # ⚠ The guard is canEverProvideClass, NOT `if SampleDocApp?`: for a lazy class an existence test
-    # reads "not fetched yet" and would silently drop the icon for ever. This asks the other
-    # question -- can this build EVER produce it -- so `lean`, which ships none of these parts, gets
-    # the empty Examples folder it has always had rather than five icons that could only reject.
-    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "DegreesConverterApp", "C-F converter",
-      -> new DegreesConverterIconWdgt
-    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SampleSlideApp", "Slide",
-      -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
-    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SampleDashboardApp", "Dashboard",
-      -> new GenericShortcutIconWdgt new DashboardsIconWdgt
-    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SampleDocApp", "Document",
-      -> new GenericShortcutIconWdgt new TypewriterIconWdgt
-    IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder exampleDocsFolder, "SpreadsheetApp", "Spreadsheet",
-      -> new GenericShortcutIconWdgt new TypewriterIconWdgt
+    addOpener "SimpleDocumentApp",   "Docs Maker",       -> new TypewriterIconWdgt
+    addOpener "FizzyPaintApp",       "Draw",             -> new PaintBucketIconWdgt
+    addOpener "SimpleSlideApp",      "Slides Maker",     -> new SimpleSlideIconWdgt
+    addOpener "DashboardsApp",       "Dashboards",       -> new DashboardsIconWdgt
+    addOpener "PatchProgrammingApp", "Patch programming",-> new PatchProgrammingIconWdgt
+    addOpener "GenericPanelApp",     "Generic panel",    -> new GenericPanelIconWdgt
+    addOpener "ToolbarsApp",         "Super Toolbar",    -> new ToolbarsIconWdgt
+    addOpener "FridgeMagnetsApp",    "Fizzytiles",       -> new FridgeMagnetsIconWdgt
+    # The Examples folder is created EMPTY and fills itself the first time it is opened: its five
+    # openers, and the C-F art only they draw, are LAZY parts. See ExamplesFolderWindowWdgt for
+    # the three tiers (boot / open / click) and why a folder — unlike the desktop icons above —
+    # can defer its contents at all.
+    @makeFolder nil, nil, "Examples", new ExamplesFolderWindowWdgt
 
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
     # so in a default build this boot-time auto-launch would throw "...is not defined".

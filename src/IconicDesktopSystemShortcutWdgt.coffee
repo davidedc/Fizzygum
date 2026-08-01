@@ -73,6 +73,21 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
       @inform "The referenced item is\nalready open and containing\nwhat you just clicked on!"
       return
 
+    # A target may owe itself some CONTENT before it can be shown — the desktop's Examples folder
+    # builds its five openers here rather than at boot, because a folder is the door that makes them
+    # lazy at all (ExamplesFolderWindowWdgt). Widget's default runs the callback inline, so every
+    # other shortcut in the system pays nothing and stays in this same cycle.
+    # ⚠ KNOWN LIMIT: this is the bring-up ritual, so it covers the shortcut click — the way a user
+    # opens a stored thing — but not a window dragged straight out of the shelf by hand. That window
+    # shows empty once; `populated` is still false, so the next bring-up fills it. The lifecycle
+    # alternative (_reactToBeingAdded) fires INSIDE the add's settle, and creating five children
+    # there would re-enter the settle tier, so it is not a seam content may be built in.
+    @target.whenReadyToBeBroughtUp => @_bringUpTargetNow()
+
+  # nosettle-exempt: not a _NoSettle twin — this is the second half of bringUpTarget, split out so
+  # the content-readiness seam above has something to call back into. It settles exactly as the
+  # undivided method did, through spawnNextTo.
+  _bringUpTargetNow: ->
     whatToBringUp = @target.findRootForGrab()
     # things like draggable graphs have no root for grab,
     # however since they rest in storage (the shelf, or the bin)
