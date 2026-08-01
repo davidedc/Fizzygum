@@ -14,6 +14,13 @@
  * ⚠ Comments and string literals are stripped before matching, exactly as check-part-edges.js does:
  * prose naming a class produced false "movable" verdicts in two separate arcs.
  *
+ * ⚠ THIS ASKS A ONE-LEVEL QUESTION, AND THAT IS ITS LIMIT. It reads the partition as it stands, so a
+ * class two hops behind an eager namer reads back "must not move" even when the whole chain is
+ * on-demand — which is how 9.5 KB of C-F icon art stayed in the production image until someone
+ * spotted it by eye. `what-pins-core.js` asks the transitive form (walk out from src/boot and see
+ * what is never reached), and additionally ranks the SOLE ROUTES that hold weight in the image.
+ * Use this one to confirm a specific class's namers; use that one to find candidates at all.
+ *
  * Usage:  node buildSystem/pinned-by-lazy-parts.js [--list]
  */
 

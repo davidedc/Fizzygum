@@ -21,9 +21,10 @@ reasons here; **boot speed is not** — see §0.1.
 > | `eb2bd955` `510c1e74` `b6173e12` `b2f4e01d` | four broken doors · the `requires` mechanism + gate · palette fix + tooling | 844,517 B |
 > | `4d42f8d2` | **slice 4** — unpin the 81 classes only lazy parts named (a FIXPOINT, §2.2d) | 724,991 B |
 > | `7bcf3fa7` | the Examples folder's five doors, one class per part | 713,269 B |
-> | `17e892ee` | every remaining app icon + the folder's own art | **699,228 B** |
+> | `17e892ee` | every remaining app icon + the folder's own art | 699,228 B |
+> | (this round) | the 9 classes no boot path reaches, found by the new `fg whatpins` | **682,031 B** |
 >
-> **Cumulative −25.4%.** ⭐ And a structural end state: **every non-core part in production is now
+> **Cumulative −27.2%.** ⭐ And a structural end state: **every non-core part in production is now
 > lazy**, so the eager image IS the core image and `homepage`/`lean` emit a byte-identical
 > `js/pre-compiled.js`.
 >
@@ -34,7 +35,19 @@ reasons here; **boot speed is not** — see §0.1.
 > third moment, because its contents are not drawn until it is opened: boot → nothing, open →
 > the folder's own art, click → that one app.
 >
-> **⏳ NEXT: nothing is designed.** Candidates, none automatic: a per-Maker split of `authoring`
+> **⏳ NEXT: nothing is designed. ASK `fg whatpins` FIRST.** `buildSystem/what-pins-core.js` walks out
+> from `src/boot` and reports what no boot path reaches (movable, transitively, in ONE pass instead of
+> the four move-rebuild-rerun rounds `pinned-by-lazy-parts.js` needs) plus the SOLE ROUTES that hold
+> weight in the image. Its current answer: **11 classes / 14.2 KB code left, and none of them free** —
+> each needs either a `requires` edge with a real click-time cost (`plots`/`maps` → `authoring`) or a
+> guard added inside an EAGER part. The two deliberate leave-behinds it re-reports every run are
+> `ToolbarWdgt`/`ToolbarCreatorButtonWdgt` and `IconicDesktopSystemWindowedApp`.
+> Its section 2 names the biggest remaining block, and it is NOT a partition mistake: **18 icon +
+> appearance sole-route pairs, 62.8 KB of code across 38 classes**, of which 9 desktop icons
+> (37.3 KB, 18 classes) are each sole-routed from one line of `createDesktop` with `refs=1`. They are
+> structurally identical to the C-F art that started this — except they are DRAWN AT BOOT, so no door
+> can go in front of them. Moving that block needs a different idea, not a different partition.
+> Other candidates, none automatic: a per-Maker split of `authoring`
 > (§2.2d "why NOT per-Maker" — saves the production image nothing); the remaining `src/icons` tail;
 > §2.3. ⚠ Any future estimate must be ITERATED to a fixpoint (§2.2d method step 4) and MEASURED.
 > ⚠⚠ And note the image is now core-only: a slice can no longer be measured by comparing profiles,
@@ -550,9 +563,16 @@ document-assembly in its own `buildWindow`, and the class is needed at boot for 
 needs a launcher/builder split (3 new classes) for 9.4 KB of code.
 
 ### §2.5 The rules every item obeys (all established, all with precedent)
-- **Anything reached at BOOT forces a launcher split** — `createDesktop` builds each icon by
-  constructing its app. Precedents: `fizzytiles`/`fizzytiles-launcher`,
-  `spreadsheet`/`spreadsheet-launcher`. A profile must name both parts or neither.
+- ⛔ **SUPERSEDED — "anything reached at BOOT forces a launcher split".** This rule held for most of
+  the arc and is FALSE. It read `createDesktop`'s icon-building as *constructing each app*, so every
+  lazy app seemed to need an eager sliver (`fizzytiles`/`fizzytiles-launcher`,
+  `spreadsheet`/`spreadsheet-launcher`, `authoring`/`authoring-launcher`) and a profile had to name
+  both parts or neither. But that construction only ever asked the app for a **title and an icon**,
+  and the art is core: ⭐ **an icon is not its app.** A launcher holds `appClassName` as a STRING and
+  asks `PartsRegistry` for its part on the click, so all three launcher parts were DELETED. The
+  surviving rule is the sharper one — **what forces eagerness is boot-time REACHABILITY, and reading
+  a name is not reaching a class.** Corollary the arc then exploited: a FOLDER is a door too, giving a
+  third moment (boot → open → click). Current statement: `build-and-packaging.md` §2.
 - **A creator button CANNOT await** (`mouseClickLeft`/`grabbedWidgetSwitcheroo` consume
   `createWidgetToBeHandled()`'s return value synchronously) ⇒ put it IN the part it creates from.
 - **`whenAllLoaded` vs `whenOptionalPartsLoaded`** — required vs optional; getting it wrong is

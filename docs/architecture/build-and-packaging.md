@@ -352,13 +352,15 @@ launch, and `eagerSourceBatchNames()` never fetches them at boot. On a precompil
 extra — it IS the part's code, since the image is harvested by booting `index.html`, where lazy parts do not load. That
 asymmetry is why the build refuses `sources: "none"` together with a lazy part.
 
-For **eager** parts there is nothing worth dividing: **core is ~80% of all source bytes**, so on a production tree the
-per-part split is 96% / 2%. The levers that pay are `lazy` (the whole layer) and making MORE parts lazy — which yields
-per-part loading for free, and is partition work rather than loading work.
+For **eager** parts there is nothing worth dividing: on production, `core` IS the only eager part, so there is no split
+to make. The levers that pay are `lazy` (the whole layer) and making MORE parts lazy — which yields per-part loading for
+free, and is partition work rather than loading work. Core is **59.6% of all shippable source bytes** (73.7% of what
+production ships), down from ~80% before the slices below — the ratio is worth re-measuring rather than quoting, since
+every slice moves it.
 
-That partition work has now been done for every app-like slice that was worth extracting — `maps`, `plots` and
-`spreadsheet` — and the numbers are worth keeping, because they say what the lever is really worth and how badly it can
-be mis-estimated. ⚠ Note first where the saving comes from: **not** from the source bytes — production is
+That partition work has now been done for every app-like slice that was worth extracting — `maps`, `plots`,
+`spreadsheet` and `authoring` — and the numbers are worth keeping, because they say what the lever is really worth and
+how badly it can be mis-estimated. ⚠ Note first where the saving comes from: **not** from the source bytes — production is
 `sources: "lazy"`, so nobody was downloading those anyway — but from the **IMAGE**, because a lazy part's classes are
 absent from `js/pre-compiled.js`.
 
@@ -370,6 +372,7 @@ absent from `js/pre-compiled.js`.
 | unpinning what only lazy parts named | 81 | 100.6 KB (71.8% code) | **−119.5 KB (−14.15%)** |
 | the Examples folder's five doors | 5 | 19.7 KB (64% code) | **−11.7 KB (−1.62%)** |
 | every remaining app icon + the folder's own art | 11 | 29.3 KB | **−14.0 KB (−1.97%)** |
+| what no boot path reaches (`fg whatpins`) | 9 | 20.1 KB (12.2 KB code) | **−16.8 KB (−2.46%)** |
 
 ⚠⚠ **The third row broke the estimator a second time, in the OTHER direction — the image cost tracks
 CLASS COUNT at least as much as code bytes.** `authoring` and `maps` move almost exactly the same
@@ -388,9 +391,25 @@ fourth row is not an app slice at all: it is the classes whose only namers were 
 which stayed in `core` only because moving them would have made an unordered cross-part edge — the
 thing `requires` now orders. Because each mover takes its own references with it, the pinned set is a
 **FIXPOINT**: 48 files qualified, moving them qualified 28 more, then 4, then 1. Re-run
-`buildSystem/pinned-by-lazy-parts.js` after every round; it reports the two files deliberately left
-behind (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt` — `plots` extends both, and moving them would
-oblige `plots requires ["authoring"]` for 1.2 KB).
+`buildSystem/pinned-by-lazy-parts.js` after every round.
+
+⚠⚠ **"WHO NAMES IT" IS A WEAKER QUESTION THAN "WHAT REACHES IT", and the gap has a body count.**
+`pinned-by-lazy-parts.js` reads ONE level over the partition as it stands, so a class two hops behind
+an EAGER namer reads back "must not move" even when the whole chain is on-demand. That is how
+`DegreesConverterIconAppearance` — 9.5 KB of art nothing draws but one icon inside a folder — stayed
+in the production image until it was spotted BY EYE. `buildSystem/what-pins-core.js` (`fg whatpins`)
+asks the transitive form: walk out from `src/boot/*` following every reference not behind a door, and
+whatever the walk never arrives at is movable, transitively, in one pass instead of over four
+move-rebuild-rerun rounds. It also ranks the **SOLE ROUTES** — where every boot path to a group of
+classes goes through one class, so a door in front of that class takes the whole group with it. ⚠ That
+second list is QUESTIONS, not findings: its top entries (`WorldWdgt`, `Widget`) are structural, which
+is what its `refs` column is for. And it is honest about its own ceiling — no static tool over the old
+partition could have called that art movable, because the app really was eager and "pinned" really was
+the right verdict. What it can do is price the pinning so the design question gets asked.
+The sixth row is its first harvest. Deliberately left behind, and reported every run: `ToolbarWdgt`
+and `ToolbarCreatorButtonWdgt` (`plots` extends both; moving them would oblige
+`plots requires ["authoring"]` for 1.2 KB), and `IconicDesktopSystemWindowedApp`, the base class of
+every app across seven doors.
 
 ⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle.** The runtime parts
 manifest carries each part's `classes` name list — it must, since the vault cannot answer
@@ -406,7 +425,7 @@ cost actually lives. ⚠ Six MORE parts (five one-class doors plus `examples-ico
 **+397 B** between them, which is what settles the "many tiny parts" worry at this scale: the
 per-part overhead is a name and a batch list, and it is the CLASS names that dominate.
 
-⭐ **Cumulatively, `js/pre-compiled.js` went 936,920 → 699,228 B — −25.4% — and production's eager
+⭐ **Cumulatively, `js/pre-compiled.js` went 936,920 → 682,031 B — −27.2% — and production's eager
 image is now exactly core.**
 
 ⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured

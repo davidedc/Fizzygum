@@ -346,15 +346,32 @@
     palette belongs to one part, move the palette and its opener in too — filtering its contents would
     pop an empty window.</p>
 
-    <p style="margin:0"><strong>3 · Anything reached at BOOT forces a launcher split.</strong> A door
-    can only await if something reaches it <em>later</em>. <code>createDesktop</code> places every
-    desktop and Examples icon at boot by constructing its app — so an app class living inside the lazy
-    directory it opens means no icon at all, and therefore nothing that could ever pull the part in.
-    The launcher becomes its own tiny EAGER part while the engine stays lazy:
-    <code>fizzytiles</code>/<code>fizzytiles-launcher</code>, and
-    <code>spreadsheet</code>/<code>spreadsheet-launcher</code>. Two consequences: the boot site keeps a
-    plain <code>if SpreadsheetApp?</code> guard, which is correct because it is asked of the
-    <em>eager</em> half; and a profile must name <strong>both parts or neither</strong>.</p>
+    <p style="margin:0 0 10px"><strong>3 · ⭐ An icon is not its app.</strong> <code>createDesktop</code>
+    places every desktop and Examples icon at boot, which <em>looks</em> like it forces each lazy app
+    to keep a tiny eager sliver beside it purely so there is a class to construct. It does not. That
+    construction only ever asked the app for a <em>title and an icon</em>, and the art is core — so the
+    launcher holds <code>appClassName</code> as a <b>string</b> and, on the click, asks
+    <code>PartsRegistry</code> which part owns that name, fetches it, and only then constructs and
+    launches. All three launcher parts were deleted. What forces eagerness is boot-time
+    <em>reachability</em>, and reading a name is not reaching a class. Two consequences: the boot site
+    asks <code>world.parts.canEverProvideClass</code> rather than <code>if SpreadsheetApp?</code>
+    — for a lazy class an existence test reads "not fetched yet" and would drop the icon for ever,
+    whereas the question at boot is "can this artifact EVER produce it", so a profile that ships
+    neither the door nor its app simply draws no icon; and a profile must still name a door's part and
+    its app's part together, which <code>buildProfile.py</code> now checks by reading every shipped
+    class's <code>requiredParts</code> instead of anyone remembering it.</p>
+
+    <p style="margin:0"><strong>4 · A folder is a door, and that is a third moment.</strong> Desktop
+    icons are drawn at boot; a folder's contents are not drawn until it is opened, and
+    <code>bringUpTarget</code> is fire-and-forget, so it <em>can</em> await. So the Examples folder
+    fills itself on first open, buying a tier the desktop cannot have — the art only that folder draws
+    stays out of the boot image entirely. At <b>boot</b>: the folder, empty; no icon, no art, no app
+    class. On <b>open</b>: <code>examples-icons</code>, and the five openers are built — still no app.
+    On <b>click</b>: that one app's part, and no other's, which is why the five doors are five
+    ONE-CLASS parts (the part is the loading unit, so five in one part would mean opening any of them
+    fetched all five). ⚠ Only art <em>nothing else</em> draws can move: the folder's other icons are
+    drawn by desktop icons and by <code>FolderWindowWdgt</code>/<code>BinOpenerWdgt</code> at boot, so
+    they are core whatever the folder does.</p>
   </div>
 
   <h3>A saved world that names a lazy part's classes</h3>
