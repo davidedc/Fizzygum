@@ -10,25 +10,39 @@ case had evaporated (a precompiled dev tree boots in 60 ms), the owner reaffirme
 *"This is about uniformity at this point."* ⇒ uniformity and production DOWNLOAD bytes are standing
 reasons here; **boot speed is not** — see §0.1.
 
-> ## ⏩ WHERE THIS ARC IS, 2026-07-31 — read this first
-> **Track A: DONE** (§1.1b, `f1ab5d40`). **Track B slices 1-4: ALL DONE.**
-> `50cbf48b` icons re-homed · `e39392bf` `demos` lazy · `9acadaab` the `authoring` +
-> `authoring-launcher` split (production `js/pre-compiled.js` **−9.8%**, `lean` **−11.4%**, dev
-> `index.html` 3219 → 2711 ms) · `eb2bd955` four broken doors the new analysis found ·
-> `510c1e74` a part→part **`requires` mechanism** and a gate that covers those edges ·
-> `b6173e12` the palette fix + the tooling below · `b2f4e01d` slice 4 designed ·
-> **slice 4 EXECUTED (§2.2d): 81 files out of `core`, production −14.15%, `lean` −14.55%.**
+> ## ⏩ WHERE THIS ARC IS — read this first. **ALL SLICES DONE + PUSHED.**
+> **Track A: DONE** (§1.1b, `f1ab5d40`). **Track B: DONE**, slices 1-4 plus two follow-ons that
+> came out of the owner reviewing the result.
 >
-> **CUMULATIVE across slices 3+4: production `js/pre-compiled.js` 936,920 → 724,991 B, −22.6%.**
+> | | | production `js/pre-compiled.js` |
+> |---|---|---:|
+> | arc start | | 936,920 B |
+> | `50cbf48b` `e39392bf` `9acadaab` | icons re-homed · `demos` lazy · the `authoring` split | 845,004 B |
+> | `eb2bd955` `510c1e74` `b6173e12` `b2f4e01d` | four broken doors · the `requires` mechanism + gate · palette fix + tooling | 844,517 B |
+> | `4d42f8d2` | **slice 4** — unpin the 81 classes only lazy parts named (a FIXPOINT, §2.2d) | 724,991 B |
+> | `7bcf3fa7` | the Examples folder's five doors, one class per part | 713,269 B |
+> | `17e892ee` | every remaining app icon + the folder's own art | **699,228 B** |
 >
-> **⏳ NEXT: nothing is designed.** The obvious candidates and why they are NOT automatic:
-> a per-Maker split of `authoring` (§2.2d "why NOT per-Maker" — saves the production image nothing);
-> the remaining `src/icons` tail; §2.3/§2.4. ⚠ Whatever comes next, the estimate must be ITERATED to
-> a fixpoint (§2.2d method step 4) and MEASURED, not extrapolated.
-> **Tools, all committed:** `node buildSystem/pinned-by-lazy-parts.js --list` (the work list —
-> reports only the 2 deliberately-kept files today), `fg hypopart <files…>` (evaluate a grouping
-> BEFORE moving a file), `fg fingerprint [profile] [baseref]` (measure instead of estimating).
-> **Rules that cost a re-run:** §2.5, and §2.2d's own "the gate that does not exist" +
+> **Cumulative −25.4%.** ⭐ And a structural end state: **every non-core part in production is now
+> lazy**, so the eager image IS the core image and `homepage`/`lean` emit a byte-identical
+> `js/pre-compiled.js`.
+>
+> **THE IDEA THE LAST TWO COMMITS TURN ON, now in `build-and-packaging.md` §2: an icon is not its
+> app.** `createDesktop` was constructing each app at boot only to ask it for a title and an icon,
+> and the art is core — so a launcher holds the app's class NAME as a string and resolves it on the
+> click. That deleted all three eager launcher parts and made every app icon lazy. A FOLDER adds a
+> third moment, because its contents are not drawn until it is opened: boot → nothing, open →
+> the folder's own art, click → that one app.
+>
+> **⏳ NEXT: nothing is designed.** Candidates, none automatic: a per-Maker split of `authoring`
+> (§2.2d "why NOT per-Maker" — saves the production image nothing); the remaining `src/icons` tail;
+> §2.3. ⚠ Any future estimate must be ITERATED to a fixpoint (§2.2d method step 4) and MEASURED.
+> ⚠⚠ And note the image is now core-only: a slice can no longer be measured by comparing profiles,
+> only by fingerprinting the same profile across a change.
+> **Tools, all committed:** `node buildSystem/pinned-by-lazy-parts.js --list` (reports only the 2
+> deliberately-kept files today), `fg hypopart <files…>`, `fg fingerprint [profile] [baseref]`,
+> `fg lazyprobe` (the index.html invariants — the ONLY thing that can see any of this).
+> **Rules that cost a re-run:** §2.5, and §2.2d's "the gate that does not exist" +
 > "what execution changed about the design".
 
 ---
@@ -436,17 +450,22 @@ the shipped set). So `demos` had to name `authoring` DIRECTLY even though it alr
    they left the build outright at 409. A predicted-first delta turns that into a noticed fact rather
    than a number nobody read.)
 
-#### ⚠⚠ THE GATE THAT DOES NOT EXIST: the suite cannot see a laziness defect
+#### ⚠⚠ THE GATE THAT DID NOT EXIST — it does now: `fg lazyprobe`
+**`Fizzygum-tests/scripts/parts-lazy-icons-headless.js`, in the gauntlet's `parts` leg.** Everything
+below is why it had to exist; it is no longer something to hand-roll per slice. It asserts, on
+`index.html`, that every app icon is drawn with NO app class defined, that the Examples folder is
+empty at boot and fetches only its own art when opened, and that one click fetches one app.
+
+
 The harness page and `index-sw.html` preset `FIZZYGUM_EAGER_ALL_PARTS`, so every part is present
 there and the references record a world in which nothing is lazy. **Laziness is only real on
 `index.html`, which no test drives.** That blind spot produced three separate defects on 2026-07-31 —
 four throwing menu doors, a Super Toolbar offering five palettes instead of six, and a
 `SlidesToolbarWdgt` whose contents depended on which door opened it — **every one with a green
 gauntlet.** ⇒ "14/14, zero churn" is NOT evidence the lazy path works. Before claiming this slice
-done, drive `index.html` with a probe: reuse `../Fizzygum-tests/.scratch/crosspart-door-probe.js`
-(menu doors) and `authoring-lazy-probe.js` (the nine Maker doors), and add the demo-menu items whose
-icons moved. Assert each class is `undefined` BEFORE and `function` AFTER — absence alone is also
-what a broken build looks like.
+done, run `fg lazyprobe` — and if the slice touches a door the probe does not cover, add it there
+rather than writing a new scratch script. Assert each class is `undefined` BEFORE and `function`
+AFTER — absence alone is also what a broken build looks like.
 
 ✅ **Done for slice 4 as `../Fizzygum-tests/.scratch/slice4-probe.js` (33 assertions, all green):**
 every one of the 81 movers absent at boot and present after its part loads (checked per part, from

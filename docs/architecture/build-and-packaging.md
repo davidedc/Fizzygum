@@ -74,10 +74,11 @@ Plus two properties that are **not** the same question:
 `requires: [...]` is where that is stated. One declaration, two readers:
 
 - **Inclusion** — `buildProfile.py` fails a profile that ships a part without what it requires. This is
-  the both-or-neither rule (`authoring`/`authoring-launcher`, `spreadsheet`/`spreadsheet-launcher`,
-  `fizzytiles`/`fizzytiles-launcher`, and `samples`, which *assembles* maps, plots and authoring
-  citizens) — a rule that lived in prose until prose failed: `lean` once carried desktop icons whose
-  click could only reject, because nothing checked the parts behind them shipped too.
+  the both-or-neither rule — one that lived in prose until prose failed: `lean` once carried desktop
+  icons whose click could only reject, because nothing checked the parts behind them shipped too.
+  ⚠ Most such pairings are now stated per-CLASS instead, in `requiredParts`, and checked against the
+  profile by the same pass (§8). That is deliberate: `requires` is the wrong tool for a door, because
+  its second meaning below would drag the app in behind the door instead of behind the click.
 - **Ordering** — for a LAZY part, `PartsRegistry.ensureLoaded` loads its requirements **fully first**,
   before ingesting its own batches. ⛔ **This is the only thing that makes cross-part inheritance
   safe.** A door naming several parts (`whenAllLoaded ["maps", "plots"]`) is enough for a *reference*
@@ -95,7 +96,7 @@ part), not core alone. ⚠ Cycles are rejected by the build: a cycle has no vali
 cannot.** Prefer the await when the reference sits somewhere with a seam: `demos` names `plots` from
 six menu actions, each of which awaits, so opening a demo menu does not drag the charting part in.
 But `demos` declares `requires: ["authoring", "maps"]`, and that is FORCED rather than chosen —
-13 widgets in `src/demos-icons` reach their appearance through `createAppearance`, whose value
+14 widgets in `src/demos-icons` reach their appearance through `createAppearance`, whose value
 `CreatorButtonWdgt`'s constructor consumes synchronously (the no-async-seam rule below). At a site
 with no seam there is nothing to await *in*, so ordering the load is the only mechanism left. The
 rule that falls out: **a per-site await where a seam exists; `requires` where one does not, or where
@@ -143,18 +144,36 @@ a core toolbar can filter it with a plain `if USAMapCreatorButtonWdgt?`. An app 
 contrast, because `IconicDesktopSystemWindowedApp.launch` is fire-and-forget (the launcher invokes it
 by reflection and ignores the result).
 
-⚠ **THE LAUNCHER SPLIT — the same rule one level up, for anything reached at BOOT.** A door can only
-await if something reaches it *later*; `WorldWdgt.createDesktop` runs at boot and places every
-desktop/Examples icon by constructing its app, so an app class living inside the lazy directory it
-opens means no icon at all — nothing would ever pull the part in. So the LAUNCHER becomes its own
-tiny EAGER part and the engine stays lazy: `fizzytiles` / `fizzytiles-launcher`
-(`FridgeMagnetsApp` + its icon), `spreadsheet` / `spreadsheet-launcher` (`SpreadsheetApp` alone —
-its icon is built from core widgets) and `authoring` / `authoring-launcher` (the nine Maker apps).
-Two consequences worth stating: the boot site keeps a plain
-`if SpreadsheetApp?` guard — correct, because it is asked of the EAGER half — and a profile must
-name **both parts or neither**, since the launcher alone is an icon whose click can only reject and
-the engine alone is code nothing can open. `maps` and `plots` needed no such split: their doors are
-apps that already lived in core.
+⭐ **AN ICON IS NOT ITS APP — which is why there are no launcher parts.** `WorldWdgt.createDesktop`
+runs at boot and places every desktop and in-folder app icon — which looks like it forces each lazy
+app to keep a tiny EAGER sliver beside it, purely so `createDesktop` has a class to construct. It
+does not. `createDesktop` constructs the app only to ask it for a **title and an icon**, and the art
+is core: **an icon needs the app's NAME, never the app.** So `IconicDesktopSystemWindowedAppLauncherWdgt` has a **lazy mode** that holds
+`appClassName` as a string and, on the click, asks `PartsRegistry` which part owns that name, fetches
+it, and only then constructs and launches. All three launcher parts are **deleted**; every app class
+now lives in the lazy part it opens from, and a session that never clicks an icon never downloads or
+compiles the app behind it.
+
+Two things follow, and they are the ones to get right:
+
+- **The boot site asks `world.parts.canEverProvideClass`, not `if SpreadsheetApp?`.** For a lazy
+  class an existence test reads "not fetched yet" and would silently drop the icon for ever; the
+  question being asked at boot is the *isAvailable* one — can this artifact EVER produce it — so a
+  profile that ships neither the door nor its app (the `lean` appliance) simply draws no icon, rather
+  than one whose click could only reject.
+- **A profile must still name the door's part and its app's part together**, for the reason the
+  launcher pairing always had. That is no longer remembered: `buildProfile.py` reads every shipped
+  class's `requiredParts` against the profile's part list (§8).
+
+⚠ **The lazy mode is also what makes a part per DOOR worth having.** The part is the loading unit, so
+the Examples folder's five doors are five ONE-CLASS parts: with all five in one part, opening any one
+would fetch the other four. The nine desktop Makers are the opposite case and live *inside*
+`authoring` — they all declare `requiredParts: ["authoring"]` and build its widgets, so a click loads
+that part regardless and separate parts would buy nothing while costing nine manifest entries.
+
+⚠ **The EAGER mode is still live and still correct** — `IconicDesktopSystemWindowedApp.createOpener`
+hands over a live app singleton, which is what `DemoMenus`' "launcher" menu items use. Choose it when
+the app class is already in hand; choose the lazy mode when its arrival is the point.
 
 ⚠ **A launcher declares its parts as DATA, and the door is inherited.** `IconicDesktopSystemWindowedApp`
 owns `launch`, which awaits `requiredParts` (and then `optionalParts`) before building the window, so a
@@ -165,15 +184,38 @@ read any of them, so nine correct awaits still looked like violations. A declara
 the await, because the await IS the declaration. ⚠ Only `requiredParts` satisfies the gate: an optional
 part may genuinely be absent, so references to one still need a guard where they stand.
 
-⚠ **A launcher that stays in core does not work, even when it awaits correctly.** The nine Maker
-apps had their `launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the part still
-could not be extracted, because each one's `buildWindow: -> world.openFrameWith (new DocumentWdgt), …`
-is an unguarded core→part reference three lines below the await, and `check-part-edges.js` reads one
-line at a time. That is the gate being right: a *reader* of that file cannot see the await either,
-and nothing stops a future edit from calling `buildWindow` without going through `launch`. The fix is
-partition, not an allowlist — move the launcher into its own eager part and every one of those
-references becomes intra-part. **So the launcher split is not only about boot-time reachability; it
-is also what makes the door's await legible to the gate.**
+⚠ **AN AWAIT IN ANOTHER METHOD IS INVISIBLE TO THE GATE, so a class in core cannot await its way
+into a part.** The nine Maker apps had a correct
+`launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the part still could not be
+extracted, because each one's `buildWindow: -> world.openFrameWith (new DocumentWdgt), …` is an
+unguarded core→part reference three lines below the await, and `check-part-edges.js` reads one line
+at a time. That is the gate being right: a *reader* of that file cannot see the await either, and
+nothing stops a future edit from calling `buildWindow` without going through `launch`. The fix is
+partition, not an allowlist — the class moves into the part it builds from, and every one of those
+references becomes intra-part.
+⚠ The same rule bites inside one class: `ExamplesFolderWindowWdgt` builds its five openers *inside*
+the `whenAllLoaded` callback rather than in a tidier `_populate` helper, because a reference three
+methods from the await it depends on is indistinguishable from an unguarded one.
+
+⚠ **A FOLDER IS A DOOR, and that is a third moment worth having.** Desktop icons are drawn at boot;
+a folder's contents are not drawn until it is opened, and `IconicDesktopSystemShortcutWdgt.bringUpTarget`
+is fire-and-forget, so it can await. `ExamplesFolderWindowWdgt` therefore fills itself on first open,
+which buys a tier the desktop cannot have — the art that ONLY that folder draws
+(`examples-icons`, 9.5 KB of C-F glyph) stays out of the boot image entirely:
+
+| moment | what arrives |
+|---|---|
+| boot | the folder, EMPTY. No icon, no art, no app class |
+| the folder is opened | `examples-icons`, and the five openers are built. Still no app |
+| an opener is clicked | that one app's part — and no other's |
+
+⚠ Only art that *nothing else* draws can move: the folder's other four icons (typewriter, slide,
+dashboards, the generic shortcut frame) are drawn by desktop icons and by
+`FolderWindowWdgt`/`BinOpenerWdgt` at boot, so they are core whatever the folder does.
+⚠ KNOWN LIMIT: `bringUpTarget` is the shortcut-click ritual, so a folder window dragged straight out
+of the shelf by hand shows empty once (`populated` stays false, so the next bring-up fills it). The
+lifecycle alternative, `_reactToBeingAdded`, fires INSIDE the add's settle, and building children
+there would re-enter the settle tier — it is not a seam content may be created in.
 
 ---
 
@@ -202,24 +244,21 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
-| `homepage` | `core` + `meta-tools` + `samples` + `authoring` + `authoring-launcher` + `maps` + `plots` + `spreadsheet` + `spreadsheet-launcher` | precompiled | `lazy` | `index.html` | **production** |
+| `homepage` | `core` + LAZY `meta-tools` `examples-icons` `example-degrees-converter` `example-doc` `example-slide` `example-dashboard` `example-sheet` `authoring` `maps` `plots` `spreadsheet` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance |
 
-⚠ **Production names eight parts beside core, and they are named for two different reasons.** Five of
-them — `maps`, `plots`, `meta-tools`, `spreadsheet`, `authoring` — are named because production
-genuinely offers what they do, and they are all **lazy**, which is what makes naming them nearly
-free: a lazy part's classes are absent from `js/pre-compiled.js`, so it costs the image nothing and
-the first load carries none of it. `maps`, `plots` and `authoring` *have* to be named (the sample
-dashboard, the NYC slide and the sample doc BUILD maps, plots, and the very citizens `authoring`
-owns); `meta-tools` is lazy for the plainest reason of all — nobody opens an inspector during a
-normal session, and opening one already had to await the reflective layer, so the part load joins a
-wait that existed anyway; `spreadsheet` is the same shape, behind a desktop icon.
+⭐ **Production names ELEVEN parts beside core, and EVERY ONE OF THEM IS LAZY.** That is the whole
+shape of production now: `meta-tools`, `maps`, `plots`, `spreadsheet`, `authoring`, `examples-icons`
+and the five one-class `example-*` doors. Naming a lazy part is nearly free — its classes are absent
+from `js/pre-compiled.js`, so it costs the image nothing and the first load carries none of it — and
+the artifact still offers everything it always did.
 
-The other three are EAGER, and named so that splitting them out of core stays a PACKAGING change
-rather than a visible one: `samples` (the three Examples documents), `spreadsheet-launcher`
-(`SpreadsheetApp` alone) and `authoring-launcher` (the nine Maker app classes).
-⚠ **`spreadsheet`/`spreadsheet-launcher` and `authoring`/`authoring-launcher` are each one decision
-spelled as two parts** — see §2's launcher-split rule — and a profile should name both or neither.
+⚠⚠ **A consequence worth knowing before you reason about either profile: `homepage` and `lean` now
+emit a BYTE-IDENTICAL `js/pre-compiled.js`.** The image contains only what is EAGER, and after the
+launcher parts were dissolved that set is exactly `core` in both. The two artifacts differ in what
+they can FETCH (production ships eleven lazy parts and 2.28 MB of source text; the appliance ships
+neither), not in what they start from. So an image-size measurement cannot distinguish them, and a
+change that moves a class between core and any lazy part moves BOTH numbers identically.
 
 ⚠⚠ **`lean` names none of them, and for `authoring` that is FORCED rather than chosen.** A profile
 with `sources: "none"` may not ship a lazy part at all (`buildProfile.py` fails the build: a lazy
@@ -329,6 +368,8 @@ absent from `js/pre-compiled.js`.
 | `spreadsheet` | 12 | 119.4 KB (27.9% code) | **−33.7 KB (−3.4%)** |
 | `authoring` | 54 | 94.3 KB (75.3% code) | **−91.9 KB (−9.8%)** |
 | unpinning what only lazy parts named | 81 | 100.6 KB (71.8% code) | **−119.5 KB (−14.15%)** |
+| the Examples folder's five doors | 5 | 19.7 KB (64% code) | **−11.7 KB (−1.62%)** |
+| every remaining app icon + the folder's own art | 11 | 29.3 KB | **−14.0 KB (−1.97%)** |
 
 ⚠⚠ **The third row broke the estimator a second time, in the OTHER direction — the image cost tracks
 CLASS COUNT at least as much as code bytes.** `authoring` and `maps` move almost exactly the same
@@ -353,7 +394,7 @@ oblige `plots requires ["authoring"]` for 1.2 KB).
 
 ⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle.** The runtime parts
 manifest carries each part's `classes` name list — it must, since the vault cannot answer
-"which part owns this class?" before the part loads — so `authoring` + `authoring-launcher` grew
+"which part owns this class?" before the part loads — so extracting `authoring` grew
 `js/fizzygum-boot-native-min.js` by **1,857 bytes** (17,158 → 19,015; the manifest is 3,554 B of it).
 That is a 2% toll on the thing that must arrive first, to take 92 KB off the thing that arrives
 next, so it is a good trade at this size — but it scales with class count, and a partition of many
@@ -361,7 +402,12 @@ tiny parts would eventually spend more on the manifest than it saves. Moving 81 
 existing parts cost another **1,935 B** (19,158 → 21,093) without creating a single new part: the
 toll is per CLASS NAME, not per part. On `lean`, which ships no lazy part and therefore no such list,
 the same change moved the boot bundle by **−3 B** — which is the cleanest statement of where the
-cost actually lives.
+cost actually lives. ⚠ Six MORE parts (five one-class doors plus `examples-icons`) then cost only
+**+397 B** between them, which is what settles the "many tiny parts" worry at this scale: the
+per-part overhead is a name and a batch list, and it is the CLASS names that dominate.
+
+⭐ **Cumulatively, `js/pre-compiled.js` went 936,920 → 699,228 B — −25.4% — and production's eager
+image is now exactly core.**
 
 ⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured
 2026-07-31 (`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in
