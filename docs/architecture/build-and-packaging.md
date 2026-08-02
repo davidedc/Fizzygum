@@ -272,10 +272,15 @@ which buys a tier the desktop cannot have — the art that ONLY that folder draw
 ⚠ Only art that *nothing else* draws can move: the folder's other four icons (typewriter, slide,
 dashboards, the generic shortcut frame) are drawn by desktop icons and by
 `FolderWindowWdgt`/`BinOpenerWdgt` at boot, so they are core whatever the folder does.
-⚠ KNOWN LIMIT: `bringUpTarget` is the shortcut-click ritual, so a folder window dragged straight out
-of the shelf by hand shows empty once (`populated` stays false, so the next bring-up fills it). The
-lifecycle alternative, `_reactToBeingAdded`, fires INSIDE the add's settle, and building children
-there would re-enter the settle tier — it is not a seam content may be created in.
+⚠ BEING SHOWN is what obliges the folder to fill itself, not the ritual that showed it, so it has
+TWO entry points. `bringUpTarget` (the shortcut click) awaits `whenReadyToBeBroughtUp` *before*
+showing it, which is why that path never flashes an empty folder; and a `step` catches every other
+way it reaches the tree — in practice the BIN, since deleting the folder's shortcut makes it
+unreachable, drains it there, and opening the bin paints it with no shortcut left to ever fill it.
+`step` is the settle-safe seam (`_runChildrensStepFunction` runs outside any settle, and before the
+same cycle's paint, so an already-fetched part fills the folder with no visible flash); the obvious
+lifecycle hook `_reactToBeingAdded` is NOT — it fires inside the add's own settle, and building
+children there would re-enter the settle tier.
 
 ---
 

@@ -21,6 +21,11 @@
 # The C-F glyph is 9.5 KB of vector art that nothing else names, which is exactly what made it worth
 # a part of its own.
 #
+# ⚠ TWO ENTRY POINTS FILL ME, because being SHOWN is what owes me content — not the ritual that
+# showed me. `whenReadyToBeBroughtUp` is awaited by the shortcut click (which is why that path never
+# flashes an empty folder), and `step` catches every other way I reach the tree — in practice the
+# bin, once my shortcut has been deleted. Both funnel into the one awaited scope below.
+#
 # ⚠ THE POPULATOR IS A METHOD ON A SUBCLASS, NOT A FUNCTION STORED ON THE INSTANCE. Assigning a
 # closure to a widget field is BANNED — the serializer cannot encode one, and doing it crashed the
 # save path once already (the StringWdgt selection-handler arc). A subclass carries its behaviour in
@@ -69,3 +74,37 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
         L.addToFolder @, "SampleDocApp"
         L.addToFolder @, "SpreadsheetApp"
       callback()
+
+  # ⚠⚠ POPULATION MUST NOT DEPEND ON WHICH RITUAL SHOWED ME — hence the step below, and this
+  # registration to feed it. bringUpTarget awaits the protocol above BEFORE showing me, which is why
+  # the shortcut click never flashes an empty folder; but it is not the only way I reach the tree.
+  # DELETE my desktop shortcut and I become unreachable, the storage sorter drains me to the BIN, and
+  # opening the bin PAINTS me — empty, with no shortcut left to ever fill me. That route is driven
+  # end to end by scripts/parts-lazy-icons-headless.js, which is where its evidence lives.
+  # ⚠ I step only while I still OWE myself content: the step unregisters the first time it fires, so
+  # the per-cycle cost ends at the first open and a folder saved after being populated is never
+  # registered at all — the Serializer records stepping membership, so the restore is automatic.
+  # DataflowSource is the same register-only-while-needed precedent.
+  constructor: ->
+    super
+    world.steppingWdgts.add @
+
+  # ⚠ THE ONLY SEAM AVAILABLE, and it is available for a precise reason: _runChildrensStepFunction
+  # runs early in doOneCycle — after the queued events, BEFORE the dataflow and layout drains and
+  # outside any settle — so a step may legally create children. _reactToBeingAdded, the obvious
+  # lifecycle hook, fires INSIDE the add's own settle, where building five children would re-enter
+  # the settle tier. ⭐ Because the events that drop me on the tree are played EARLIER IN THE SAME
+  # CYCLE, an already-fetched `examples-icons` fills me before that cycle's paint: no empty flash at
+  # all. Only the first-ever open (which must fetch) can show one, and that beats the alternative of
+  # showing empty for ever.
+  # ⚠ `root() == world`, not `parent?`: while the hand drags me my root is the HAND, and contents are
+  # better built on the drop than in flight. root() is cached per WorldWdgt.structureVersion, so this
+  # is a field compare per cycle until it fires.
+  step: ->
+    return unless @root() == world
+    # ONE SHOT, whatever the outcome. On an artifact that ships no `examples-icons` (the `lean`
+    # appliance) the protocol calls back WITHOUT populating and never could — retrying every cycle
+    # for the life of the world would buy nothing. A second entry cannot build twice anyway (the
+    # `unless @populated` guard above), so this is economy rather than correctness.
+    world.steppingWdgts.delete @
+    @whenReadyToBeBroughtUp noOperation

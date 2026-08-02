@@ -1,5 +1,41 @@
 # The lazily-populated folder, and the entry points that bypass its readiness protocol
 
+> ## ✅ COMPLETE — executed 2026-08-02, same day it was authored.
+> **The §6.1 spike settled the question the plan was written around, and BOTH of §0.2's predictions
+> were correct.** The shelf scenario the code documented is unreachable — `world.shelfWdgt` is
+> constructed in `globalFunctions.startWorld` and never added to any parent, so there is no shelf UI
+> to drag out of. The BIN route is real and was driven end to end on a built `index.html`
+> (`Fizzygum-tests/.scratch/spike-folder-reachability.js`): delete the Examples shortcut → the
+> storage sorter drains the folder window to the bin → click the bin opener → **the folder is on the
+> tree and PAINTED, empty** → a real synthesised mouse drag pulls it onto the desktop, where it stayed
+> empty for ever (`populated:false, children:0`, `examples-icons` never fetched, zero console errors).
+> So the comment's consolation ("shows empty once; the next bring-up fills it") was false on the only
+> reachable path — no shortcut survives it.
+>
+> ⭐ **The spike also moved the fix.** §4.C (hook the bin's revival path) is not merely awkward but
+> INSUFFICIENT: the folder is already painted-empty *inside the bin window*, before any drag. The
+> bug's onset is "the bin is opened", not "the drag completes". §4.B was implemented —
+> `ExamplesFolderWindowWdgt` registers in `world.steppingWdgts` while it still owes itself content and
+> populates from `step` the first time `@root() == world`, unregistering on that one shot.
+>
+> ⚖ **§1.5's two stated costs both came out smaller than the plan feared.** "Runs every cycle for
+> ever" is wrong for this mechanism: stepping is opt-IN via `world.steppingWdgts` (the
+> `DataflowSource` precedent), so the cost ends at the first fill and never starts again — and a
+> populated folder restored from a snapshot is never registered, because the Serializer already
+> records stepping membership. The "visible pop" is also mostly absent: `_playQueuedEvents` runs
+> EARLIER IN THE SAME CYCLE than `_runChildrensStepFunction`, both before the paint, so an
+> already-fetched part fills the folder in the very frame the drop lands. Only the first-ever open,
+> which must fetch, can show a flash.
+>
+> **Gate (§6.4):** `scripts/parts-lazy-icons-headless.js` (`fg lazyprobe`, gauntlet `parts` leg) grew
+> the route as six assertions, and they check BOTH halves — that deleting the shortcut fetches
+> NOTHING while the folder is off the tree (which would catch a "fix" that just populated eagerly),
+> and that being shown fills it. Proven non-vacuous by a negative control that removes the folder from
+> `steppingWdgts` at runtime to reproduce the pre-fix world (`.scratch/spike-negative-control.js`).
+>
+> ⚠ Both comments and the architecture doc were corrected (§6.5). No SystemTest reference moved, as
+> predicted: the harness page builds no desktop, and the fix adds no member to `Widget.prototype`.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.** Everything
 needed is embedded here or one named-doc hop away. **Line numbers WILL drift — the quoted symbol or
 code fragment is authoritative; re-grep before editing.** Facts verified against `7f5830ef`
@@ -247,6 +283,29 @@ the script's directory):
 2. Enumerate every caller that can add a `FolderWindowWdgt` to the tree. Start from
    `Widget._addNoSettle`'s callers and from the bin/shelf revival paths.
 3. Record the answer in this plan before writing code.
+
+**✅ SPIKE RESULT (2026-08-02).** Driven on a built `index.html` by
+`Fizzygum-tests/.scratch/spike-folder-reachability.js`, with a real synthesised mouse drag:
+
+| step | observed |
+|---|---|
+| boot | folder on the SHELF, off-tree, `populated:false`, 0 children |
+| "delete" the desktop shortcut (the generic widget menu binds that entry to `close`) | shortcut AND folder both drain to the BIN; folder still off-tree and unpopulated |
+| click the bin opener | bin window on the tree — and the folder is painted **inside it, empty**, chain `ExamplesFolderWindowWdgt → PanelWdgt → ScrollPanelWdgt → BinWdgt → FrameWdgt → WorldWdgt` |
+| drag the folder out onto the desktop | on the world tree directly, still `populated:false`, 0 children |
+| +5 s | unchanged; `examples-icons` never fetched; 0 console errors |
+
+**Every add-to-tree path for a resting widget, enumerated:** (a) `bringUpTarget` → `spawnNextTo` —
+the ritual, HONOURS the protocol; (b) **the hand, grabbing a resident out of the open bin view — the
+reachable bypass, and note the folder is already painted-empty in the bin BEFORE the grab**; (c) the
+shelf — unreachable, no view, `world.shelfWdgt` is never added to a parent; (d)
+`IconicDesktopSystemWindowedApp._launchNow`'s `world.add figure`, reviving a stored app singleton —
+a genuine second bypass, but no app window is lazily populated today; (e) `TemplatesButtonWdgt`
+reviving `world.simpleEditorTemplates` — same shape, same non-issue today; (f) snapshot restore —
+consistent by construction, since `populated` is serialized.
+
+⇒ REACHABLE. ⚠ And because the folder is painted-empty *in the bin* before any drag, **§4.C is not
+just awkward but insufficient** — the onset is "the bin is opened", not "the drag completes".
 
 ### §6.2 If nothing is reachable → §4.A, then stop
 Correct the comment; add a line to `docs/BACKLOG.md`; archive this plan with the spike's evidence.

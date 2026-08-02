@@ -77,11 +77,15 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     # builds its five openers here rather than at boot, because a folder is the door that makes them
     # lazy at all (ExamplesFolderWindowWdgt). Widget's default runs the callback inline, so every
     # other shortcut in the system pays nothing and stays in this same cycle.
-    # ⚠ KNOWN LIMIT: this is the bring-up ritual, so it covers the shortcut click — the way a user
-    # opens a stored thing — but not a window dragged straight out of the shelf by hand. That window
-    # shows empty once; `populated` is still false, so the next bring-up fills it. The lifecycle
-    # alternative (_reactToBeingAdded) fires INSIDE the add's settle, and creating five children
-    # there would re-enter the settle tier, so it is not a seam content may be built in.
+    # ⚠ THIS IS NOT THE ONLY WAY A TARGET REACHES THE TREE, and it never was — so a target that owes
+    # itself content cannot rely on this ritual alone. Delete a folder's desktop shortcut and the
+    # folder becomes unreachable, the storage sorter drains it to the BIN, and opening the bin paints
+    # it with NO shortcut left to ever click: "shows empty once" would in fact be empty for good.
+    # ⛔ The SHELF is not the route to worry about, however tempting it looks as the other resting
+    # place: it has no view at all — ShelfWdgt is never added to a parent and never painted — so
+    # nothing can be dragged out of it by hand. The bin is the one that is a real view.
+    # ⇒ ExamplesFolderWindowWdgt ALSO fills itself from a `step`, which is the settle-safe seam for
+    # building content; _reactToBeingAdded is not, since it fires INSIDE the add's own settle.
     @target.whenReadyToBeBroughtUp => @_bringUpTargetNow()
 
   # nosettle-exempt: not a _NoSettle twin — this is the second half of bringUpTarget, split out so
