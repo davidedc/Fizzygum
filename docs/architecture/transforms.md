@@ -320,6 +320,9 @@ dirty sub-rect. Fields on `TransformFrameWdgt` (all **derived render state**, li
   `"all"`.
 - `_islandBufferGeneration` — the `WorldWdgt.immutableBackBufferGeneration` the buffer was built
   at.
+- `_islandShadowSilhouette` — the black-silhouette twin of `_islandBuffer` the shadow pass
+  composites (§8.2); nilled by every `_rasterizeIslandContent` (the one funnel for buffer-pixel
+  changes), so it rebuilds at most once per content change and never on a pure transform change.
 
 `_refreshIslandBuffer` forces a full rebuild when there is no buffer, on a slot-extent change, or
 when `_islandBufferGeneration != WorldWdgt.immutableBackBufferGeneration` — the **async glyph-
@@ -347,8 +350,18 @@ so returning to identity drops it (`_dropIslandBufferIfIdentity`).
 The island is transparent (`@appearance = nil`), so it casts its **content's** shadow, not a box
 silhouette: `_fullPaintIntoAreaOrBlitFromBackBufferJustShadow` reverts to the base `Widget`
 shadow-paint. Because the warp composes onto the incoming CTM (which carries the unified shadow
-pass' offset translate), a warped faint copy at the shadow offset **is** the correctly
-rotated/scaled content shadow — no quad-silhouette special case. Broken-rect repaint stays correct
+pass' offset translate), the warp lands the shadow at the correctly rotated/scaled place — no
+quad-silhouette special case. What gets composited in the shadow pass is **not** the buffer
+itself but its **black silhouette** (`_shadowSilhouetteOfIslandBuffer`: the buffer's alpha
+channel with every visible pixel black, via a `source-in` fill — cached as
+`_islandShadowSilhouette`, see §8.1): the recursive shadow paint blackens every widget's fill
+(`appliedShadow? ⇒ Color.BLACK`) before applying the shadow alpha, and the composite must match
+it. Re-tinting the buffer's own colours at shadow alpha instead was the tilted-window
+faint-shadow bug (fixed 2026-08-02): a near-white window's "shadow" *lightened* the desktop.
+Per-pixel coverage (AA fringes, semi-transparent content) carries through the silhouette, so
+partially-covered pixels shade proportionally, exactly as in the recursive pass. Regression
+guard: `SystemTest_macroTiltedFigureShadowAsDarkAsStraight` (numeric A/B — survives reference
+recapture). Broken-rect repaint stays correct
 because damage crosses each island via `mapRectToScreen` (virtual → screen AABB, clipped in the
 screen plane against the outermost island's visible rect), and the mandatory composite clip
 guarantees the warp touches only the damage region.

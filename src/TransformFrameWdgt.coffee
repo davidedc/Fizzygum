@@ -38,6 +38,7 @@ class TransformFrameWdgt extends PanelWdgt
   _islandBufferDirtyRect: nil        # nil (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
   _islandBufferGeneration: -1        # WorldWdgt.immutableBackBufferGeneration the buffer was built at
                                      # (async glyph-atlas warmup invalidation; -1 ⇒ never built)
+  _islandShadowSilhouette: nil       # black-silhouette twin of _islandBuffer for the shadow pass, or nil
   # Per-island opt-out of the cache. Public + macro-readable (no `_`). Serialises as a plain boolean
   # (like _materializedBySugar) so a saved island keeps its policy; the GLOBAL kill-switch is the class
   # property WorldWdgt.islandBufferCacheEnabled.
@@ -62,6 +63,7 @@ class TransformFrameWdgt extends PanelWdgt
     "_islandBufferSlotExtent"
     "_islandBufferDirtyRect"
     "_islandBufferGeneration"
+    "_islandShadowSilhouette"
   ]
 
   constructor: (contentWidget = nil, transformSpec = nil) ->
@@ -197,6 +199,7 @@ class TransformFrameWdgt extends PanelWdgt
     @_islandBufferSlotExtent = nil
     @_islandBufferDirtyRect = nil
     @_islandBufferGeneration = -1
+    @_islandShadowSilhouette = nil
 
   # deepCopy safety (§3.1): the buffer fields are DERIVED render state. HTMLCanvasElement::deepCopy
   # clones the canvas into the copy (a DISTINCT canvas -- no sharing), but a copied island must not
@@ -467,6 +470,9 @@ class TransformFrameWdgt extends PanelWdgt
   # world is flagged so descendants record their (virtual) last-painted bounds (§4.5) — save/restore
   # for nested islands.
   _rasterizeIslandContent: (slot, physExtent, clip) ->
+    # every change to the buffer's pixels funnels through here, so this is the one
+    # invalidation point the shadow-silhouette twin needs.
+    @_islandShadowSilhouette = nil
     if clip?
       buffer = @_islandBuffer
       clipRect = clip
@@ -500,10 +506,33 @@ class TransformFrameWdgt extends PanelWdgt
   _compositeIslandBuffer: (aContext, clippingRectangle, appliedShadow) ->
     buffer = @_refreshIslandBuffer()
     return if !buffer?
+    # The shadow pass must composite a BLACK SILHOUETTE of the content — the same thing the
+    # recursive shadow paint produces widget-by-widget (every appearance swaps its fill to
+    # Color.BLACK). Compositing the buffer's own colours at shadow alpha would cast a faint
+    # COPY instead, which over a light background LIGHTENS where a shadow must darken (the
+    # tilted-window faint-shadow bug).
+    buffer = @_shadowSilhouetteOfIslandBuffer buffer if appliedShadow?
     if @transformSpec.rotationDegrees % 360 == 0
       @_compositeScaleOnly aContext, clippingRectangle, appliedShadow, buffer
     else
       @_compositeTransformed aContext, clippingRectangle, appliedShadow, buffer
+
+  # The buffer's alpha channel with every visible pixel black ("source-in" fill), so
+  # per-pixel coverage — AA fringes, semi-transparent content — carries into the shadow
+  # exactly as the recursive shadow paint would. Cached: every buffer-pixel change funnels
+  # through _rasterizeIslandContent, which nils it, so it rebuilds at most once per content
+  # change and never on a pure transform change. The composite's globalAlpha then applies
+  # the shadow's faintness, exactly as on the normal pass.
+  _shadowSilhouetteOfIslandBuffer: (buffer) ->
+    if !@_islandShadowSilhouette?
+      sil = HTMLCanvasElement.createOfPhysicalDimensions new Point buffer.width, buffer.height
+      sctx = sil.getContext "2d"
+      sctx.drawImage buffer, 0, 0
+      sctx.globalCompositeOperation = "source-in"
+      sctx.fillStyle = Color.BLACK.toString()
+      sctx.fillRect 0, 0, buffer.width, buffer.height
+      @_islandShadowSilhouette = sil
+    @_islandShadowSilhouette
 
   # §4.2 scale-only fast path: a uniform scale needs no setTransform — an unequal
   # src/dst drawImage suffices, every mapped rect stays axis-aligned, and the damage

@@ -1678,6 +1678,15 @@ assertion a recapture after a regression silently stores two different hashes an
   byte-identical (`@assertScreenshotsIdentical`). Sweep spin-stability asserts EXACT integer equality of
   `panel.contents.width()/height()` across angles.
 
+- **Numeric shadow-darkness assert (survives recapture)** (`macroTiltedFigureShadowAsDarkAsStraight`): to pin a shadow's
+  DARKNESS (not just its shape), isolate it with a shadow-on/off A/B — screenshot the shadowed scene (leaves a settled,
+  fully-painted canvas), `getImageData` read A, then `widget.removeShadow()` on each shadow owner (the SUGAR ISLAND owns a
+  tilted figure's shadow — `tilted.parent`, not the widget), `world._fullChanged()` (sanctioned test oracle), yield, read B,
+  and assert per-region `max(lumaB − lumaA)` — the flat interior of a black shadow at alpha 0.2 over the grey desktop.
+  Geometry-free (no hand-derived rotated sample points ⇒ dpr-invariant), and the numeric assert is what makes the guard
+  survive a batch recapture: a screenshot-only shadow test would be silently re-baselined by the next `fg recapture --auto`.
+  Born with the 2026-08-02 tilted-window faint-shadow fix (the faint-copy bug scores the tilted half ≤ 0 — it only LIGHTENS).
+
 ## The verb-establishing pilots
 
 - **`macroBasicWorldMenuAndBubble`** (from 89 cmds): open the world menu, hover "demo", `yield <ms>` for the help bubble, screenshot.
