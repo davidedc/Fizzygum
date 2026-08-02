@@ -23,10 +23,7 @@ class ToolbarsApp extends IconicDesktopSystemWindowedApp
   # fewer palettes is reduced, not broken, and the toolbars' own `if X?` filters already produce it.
   optionalParts: ["maps", "plots"]
 
-  title: "Super Toolbar"
-  toolTip: "a toolbar to rule them all"
 
-  buildIcon: -> new ToolbarsIconWdgt
   buildWindow: ->
     world.openFrameWith new SuperToolbarWdgt, (new Point 60, 261), (new Point 170, 170)
 

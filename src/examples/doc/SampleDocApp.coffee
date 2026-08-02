@@ -10,10 +10,8 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["plots", "authoring"]
 
-  title: "Sample doc"
   slot:  "sampleDocWindow"
 
-  buildIcon: -> new GenericShortcutIconWdgt new TypewriterIconWdgt
   buildWindow: ->
     doc = new DocumentWdgt
     sdspw = doc.contents

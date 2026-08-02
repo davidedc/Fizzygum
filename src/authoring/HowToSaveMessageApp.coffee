@@ -11,10 +11,8 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["authoring"]
 
-  title: "How to save?"
   slot:  "howToSaveDocWindow"
 
-  buildIcon: -> new FloppyDiskIconWdgt
   buildWindow: ->
     doc = new DocumentWdgt
     sdspw = doc.contents

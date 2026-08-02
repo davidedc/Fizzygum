@@ -230,7 +230,7 @@
       <div class="shape">production — <b>all eleven</b> non-core parts are lazy, so its eager image is exactly core</div></div>
     <div class="card"><b>lean</b>
       <div class="facts">core · precompiled · sources: none · index.html</div>
-      <div class="shape">the appliance — 10 files, 1.20 MB</div></div>
+      <div class="shape">the appliance — 10 files, 0.90 MB</div></div>
   </div>
 
   <p>There are <strong>no flavour flags</strong>. <code>./build_it_please.sh</code> builds the dev
@@ -287,18 +287,18 @@
     <div class="seg">native bundle</div>
     <div class="seg">pre-compiled image</div>
     <div class="seg world">world — immediately</div>
-    <div class="seg">nothing else is fetched… until an inspector opens (the 2.29 MB reflective layer, once) or a map is asked for (the maps part)</div>
+    <div class="seg">nothing else is fetched… until an inspector opens (the 2.20 MB reflective layer, once) or a map is asked for (the maps part)</div>
   </div>
 
-  <div class="tl-label">lean (precompiled + sources: none): 10 files, 1.3 MB, sources never</div>
+  <div class="tl-label">lean (precompiled + sources: none): 10 files, 0.90 MB, sources never</div>
   <div class="trow">
     <div class="seg">native bundle</div>
     <div class="seg">pre-compiled image</div>
     <div class="seg world">world — immediately (no inspectors; runtime compiler still present)</div>
   </div>
-  <figure style="padding:10px 18px"><figcaption>Production's source text — 63.7% of its bytes —
-  is no longer part of anyone's page load unless they open an inspector; the map artwork inside it
-  is not even in the pre-compiled image any more.</figcaption></figure>
+  <figure style="padding:10px 18px"><figcaption>Production's source text — 70.9% of its bytes —
+  reaches a page load only when someone opens an inspector, and the map artwork inside it is absent
+  from the pre-compiled image entirely.</figcaption></figure>
 
   <h2>The reflective layer</h2>
   <p>"The reflective layer" is the class source text plus the meta-system that parses it — what
@@ -331,11 +331,13 @@
       <text class="m" x="14" y="100">A saved world naming a lazy part's classes loads it automatically before deserializing. Loaded parts stay loaded; resetWorld resets state, never code.</text>
     </svg>
     <figcaption>⭐ <b>An icon is not its app</b>, which is why no part is split into a door and a
-    payload any more. <code>createDesktop</code> only ever constructed an app to ask it for a
-    <em>title and an icon</em>, and the art is core — so the launcher holds the app's class NAME as a
-    string and, on the click, asks <code>PartsRegistry</code> which part owns that name. All three
-    launcher parts were deleted; every app class now lives in the lazy part it opens from. What
-    forces eagerness is boot-time REACHABILITY, and reading a name is not reaching a class.
+    payload. <code>createDesktop</code> constructs no app: an icon is CORE art plus the app's class
+    NAME, and on the click the launcher asks <code>PartsRegistry</code> which part owns that name.
+    There are no launcher parts; every app class lives in the lazy part it opens from. What forces
+    eagerness is boot-time REACHABILITY, and reading a name is not reaching a class.
+    The caption and art live in <code>AppCatalog</code>, keyed by class name — one descriptor both
+    launcher modes read, and pointedly <em>not</em> on the app class, since reading a field off an app
+    at boot is that same reachability.
     <b>A folder is a door too</b>, and that buys a third moment the desktop cannot have: at boot the
     Examples folder is EMPTY; opening it fetches <code>examples-icons</code>, the art only it draws;
     clicking one opener fetches that one app's part and no other's. An app declares its parts as DATA

@@ -11,10 +11,8 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["authoring"]
 
-  title: "°C ↔ °F"
   slot:  "degreesConverterWindow"
 
-  buildIcon: -> new DegreesConverterIconWdgt
   buildWindow: ->
     xCorrection = 32
     yCorrection = 50

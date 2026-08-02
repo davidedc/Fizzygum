@@ -11,10 +11,8 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["maps", "plots", "authoring"]
 
-  title: "Sample slide"
   slot:  "sampleSlideWindow"
 
-  buildIcon: -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
   buildWindow: ->
     slideWdgt = new SlideWdgt
 

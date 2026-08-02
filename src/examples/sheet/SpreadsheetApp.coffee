@@ -22,12 +22,10 @@ class SpreadsheetApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["spreadsheet"]
 
-  title: "Spreadsheet"
   slot:  nil   # multiple sheets — a fresh window every launch (no world slot)
 
   # v1 placeholder icon (an existing shortcut glyph); a dedicated SpreadsheetIconWdgt is
   # deferred (recorded in the implementation plan's Phase-2a notes).
-  buildIcon: -> new GenericShortcutIconWdgt new TypewriterIconWdgt
   buildWindow: ->
     # THE default-size pin (F6 V4): with fill-class sheet content the passed window extent is
     # AUTHORITATIVE, and 452×336 grants the content exactly 442×300 — the default 6×14 grid —

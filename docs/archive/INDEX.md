@@ -10,6 +10,11 @@ Archived docs are immutable history — the current-state truth lives in
 - **`all-constructors-settle-plan.md`** — COMPLETE. Converts ~27 inline-building constructors to the uniform self-settling _buildAndConnectChildren wrapper/core pattern.
   - ⚖ notification-settle gate refined to permit orphan-receiver settle in a callback, not weakened
   - ⚖ ScrollPanelWdgt needed a DISTINCT _buildScrollFrame name, not the shared leaf core name
+- **`app-descriptor-unification-plan.md`** — COMPLETE. Gives each windowed app ONE descriptor (`src/AppCatalog.coffee`, keyed by class NAME) that both launcher modes read, replacing `title`/`buildIcon`/`toolTip` duplicated across 14 app classes and their two call sites.
+  - ⚠⚠ the duplication had already SHIPPED a bug, and not by drifting: the lazy path simply lacked `toolTip`, so two desktop icons lost their bubble help — incompleteness is invisible to review and to every gate, which is why the fix is one reader, not a check that two copies agree
+  - ⛔ the descriptor may NOT live on the app class — reading a field off an app at boot is the reachability the boot-cost arc removed; keyed by NAME always
+  - ⚖ §5.1 — a launcher's caption belongs to the APP, not the placement: a per-placement name puts two differently-named icons for one app side by side once one leaves the folder. No label override
+  - ⚠ meta-system constraint found in execution: a class-level object must be a METHOD and each entry ONE LINE (Class.coffee compiles each member's body alone) — invisible to `coffee -c`
 - **`basement-dormant-layout-flag-plan.md`** — PARKED. Proposes a cached per-widget flag to skip layout-invalidations for widgets sitting in the CLOSED (dormant, off-world) basement.
   - ⚖ §4 — blanket orphan-skip REJECTED, previously broke 63 tests
   - ⚖ §6 — safer seam-by-seam alternative to weigh before building the flag

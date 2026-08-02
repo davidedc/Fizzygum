@@ -11,7 +11,4 @@ class FridgeMagnetsApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["fizzytiles"]
 
-  title: "Fizzytiles"
-  toolTip: "fridge magnets"
-  buildIcon:   -> new FridgeMagnetsIconWdgt
   buildWindow: -> world.openFrameWith (new FridgeMagnetsWdgt), (new Point 570, 400), world.hand.position()

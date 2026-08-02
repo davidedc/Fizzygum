@@ -11,10 +11,8 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["maps", "plots", "authoring"]
 
-  title: "Sample dashboard"
   slot:  "sampleDashboardWindow"
 
-  buildIcon: -> new GenericShortcutIconWdgt new DashboardsIconWdgt
   buildWindow: ->
     slideWdgt = new DashboardWdgt
 

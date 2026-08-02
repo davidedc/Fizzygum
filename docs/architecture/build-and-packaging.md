@@ -145,14 +145,14 @@ contrast, because `IconicDesktopSystemWindowedApp.launch` is fire-and-forget (th
 by reflection and ignores the result).
 
 ⭐ **AN ICON IS NOT ITS APP — which is why there are no launcher parts.** `WorldWdgt.createDesktop`
-runs at boot and places every desktop and in-folder app icon — which looks like it forces each lazy
-app to keep a tiny EAGER sliver beside it, purely so `createDesktop` has a class to construct. It
-does not. `createDesktop` constructs the app only to ask it for a **title and an icon**, and the art
-is core: **an icon needs the app's NAME, never the app.** So `IconicDesktopSystemWindowedAppLauncherWdgt` has a **lazy mode** that holds
-`appClassName` as a string and, on the click, asks `PartsRegistry` which part owns that name, fetches
-it, and only then constructs and launches. All three launcher parts are **deleted**; every app class
-now lives in the lazy part it opens from, and a session that never clicks an icon never downloads or
-compiles the app behind it.
+runs at boot and places every desktop and in-folder app icon, and it **constructs no app to do it**:
+an icon is built from CORE art plus the app's class **NAME**, which `AppCatalog` supplies. An icon
+needs only what it draws and what it points at, and neither is the app. ⇒ **what forces eagerness is
+boot-time REACHABILITY, and reading a name is not reaching a class.**
+`IconicDesktopSystemWindowedAppLauncherWdgt`'s **lazy mode** therefore holds `appClassName` as a
+string and, on the click, asks `PartsRegistry` which part owns that name, fetches it, and only then
+constructs and launches. There are no launcher parts: every app class lives in the lazy part it
+opens from, and a session that never clicks an icon never downloads or compiles the app behind it.
 
 Two things follow, and they are the ones to get right:
 
@@ -162,8 +162,8 @@ Two things follow, and they are the ones to get right:
   profile that ships neither the door nor its app (the `lean` appliance) simply draws no icon, rather
   than one whose click could only reject.
 - **A profile must still name the door's part and its app's part together**, for the reason the
-  launcher pairing always had. That is no longer remembered: `buildProfile.py` reads every shipped
-  class's `requiredParts` against the profile's part list (§8).
+  launcher pairing always had. It is CHECKED rather than remembered: `buildProfile.py` reads every
+  shipped class's `requiredParts` against the profile's part list (§8).
 
 ⚠ **The lazy mode is also what makes a part per DOOR worth having.** The part is the loading unit, so
 the Examples folder's five doors are five ONE-CLASS parts: with all five in one part, opening any one
@@ -174,6 +174,29 @@ that part regardless and separate parts would buy nothing while costing nine man
 ⚠ **The EAGER mode is still live and still correct** — `IconicDesktopSystemWindowedApp.createOpener`
 hands over a live app singleton, which is what `DemoMenus`' "launcher" menu items use. Choose it when
 the app class is already in hand; choose the lazy mode when its arrival is the point.
+
+⭐ **BOTH MODES READ ONE DESCRIPTOR: `AppCatalog`.** What an app looks like as a desktop citizen — its
+caption, its art, its tooltip — is written once, in `src/AppCatalog.coffee`, keyed by class NAME, and
+both modes reach it through the single `IconicDesktopSystemWindowedAppLauncherWdgt._fromCatalogEntry`
+path. ⚠⚠ **One reader, not two copies that must agree** — because the failure a second copy produces
+is not disagreement but **INCOMPLETENESS**: a field present in one and simply absent from the other,
+which reads as correct and is invisible to every gate (nothing asserts a tooltip). A checker that
+compared two copies would not catch it; only having one place to write the field does.
+⚠ The catalog **must not** live on the app class, however natural that looks: reading a field off an
+app at boot is exactly the reachability this section is about, and would make every app eager again.
+Keyed by name, always.
+⚠ **An app has ONE name**, so there is no per-call-site label override. A launcher's caption is
+stored on the widget, so a placement-dependent name would put two differently-named icons for the
+same app side by side as soon as one is dragged out of the Examples folder onto the desktop.
+The one override that exists is for an ICON and is forced: the C↔F door's art is in the lazy
+`examples-icons` part, which a core file may not name, so `ExamplesFolderWindowWdgt` passes it in
+from inside the `whenAllLoaded` scope that makes naming it legal.
+⚠ Two shape constraints on the catalog, both imposed by the meta-system rather than by taste:
+`@entries` is a **method** and each entry is **one line**. `src/meta/Class.coffee` splits a class body
+with `/^  (@?ident) *: *(.*)/` and compiles each member's body alone, so a value beginning on the
+next line — or an entry wrapped onto a second — has nothing to attach to. It fails only under the
+fragmented compile the browser uses, so `coffee -c` on the file passes and the build's syntax gate is
+what catches it.
 
 ⚠ **A launcher declares its parts as DATA, and the door is inherited.** `IconicDesktopSystemWindowedApp`
 owns `launch`, which awaits `requiredParts` (and then `optionalParts`) before building the window, so a
@@ -256,7 +279,7 @@ the artifact still offers everything it always did.
 ⚠⚠ **A consequence worth knowing before you reason about either profile: `homepage` and `lean` now
 emit a BYTE-IDENTICAL `js/pre-compiled.js`.** The image contains only what is EAGER, and after the
 launcher parts were dissolved that set is exactly `core` in both. The two artifacts differ in what
-they can FETCH (production ships eleven lazy parts and 2.28 MB of source text; the appliance ships
+they can FETCH (production ships eleven lazy parts and 2.20 MB of source text; the appliance ships
 neither), not in what they start from. So an image-size measurement cannot distinguish them, and a
 change that moves a class between core and any lazy part moves BOTH numbers identically.
 
@@ -321,7 +344,7 @@ Facts worth knowing before touching any of this:
   `new Mixin`, and ordering them means `findLoadOrder` — none of which a precompiled tree has until something fetches
   them. So steps 1–3 are factored out as `ensureMetaSystemLoaded()` (~39 KB: the two meta sources plus
   `dependencies-finding-min.js`), and `PartsRegistry._loadPartPromise` awaits **that**, never
-  `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch, 2.29 MB, handing back the entire
+  `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch, 2.20 MB, handing back the entire
   saving that made the part lazy. Both are memoized, so a part load and a later inspector open share one fetch.
   Before this split existed, any lazy part on a production tree died with `findLoadOrder is not defined`; nothing
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs

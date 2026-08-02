@@ -213,7 +213,7 @@
       <text class="m" x="24" y="66">3. fetch dependencies-finding (findLoadOrder)</text>
 
       <rect x="500" y="10" width="310" height="76" rx="9" fill="var(--wash-s2)" stroke="var(--s2)"/>
-      <text class="t" x="514" y="30">…the rest of the layer  ·  2.29 MB</text>
+      <text class="t" x="514" y="30">…the rest of the layer  ·  2.20 MB</text>
       <text class="m" x="514" y="49">4. every EAGER part's source batches</text>
       <text class="m" x="514" y="66">5. ingest them against the running classes</text>
 
@@ -235,7 +235,7 @@
   <table>
     <tr><th><code>sources</code></th><th>Behaviour</th><th>Who ships it</th></tr>
     <tr><td class="k">background</td><td>fetch it once the world is up, off the critical path</td><td>the historical default</td></tr>
-    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (2.28 MB, 62.7% of the tree, that a normal visit never downloads)</td></tr>
+    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (2.20 MB, 70.9% of the tree, that a normal visit never downloads)</td></tr>
     <tr><td class="k">none</td><td>never; ship none of it. No inspectors; class-level edits in a snapshot are refused with one clear report</td><td>the <code>lean</code> appliance</td></tr>
   </table>
   </div>
@@ -347,19 +347,31 @@
     pop an empty window.</p>
 
     <p style="margin:0 0 10px"><strong>3 · ⭐ An icon is not its app.</strong> <code>createDesktop</code>
-    places every desktop and Examples icon at boot, which <em>looks</em> like it forces each lazy app
-    to keep a tiny eager sliver beside it purely so there is a class to construct. It does not. That
-    construction only ever asked the app for a <em>title and an icon</em>, and the art is core — so the
-    launcher holds <code>appClassName</code> as a <b>string</b> and, on the click, asks
-    <code>PartsRegistry</code> which part owns that name, fetches it, and only then constructs and
-    launches. All three launcher parts were deleted. What forces eagerness is boot-time
-    <em>reachability</em>, and reading a name is not reaching a class. Two consequences: the boot site
+    places every desktop and Examples icon at boot and <b>constructs no app to do it</b>: an icon is
+    built from CORE art plus the app's class NAME. So the launcher holds <code>appClassName</code> as a
+    <b>string</b> and, on the click, asks <code>PartsRegistry</code> which part owns that name, fetches
+    it, and only then constructs and launches. There are no launcher parts — an app needs no eager
+    sliver beside it, because what forces eagerness is boot-time <em>reachability</em>, and reading a
+    name is not reaching a class. Two consequences: the boot site
     asks <code>world.parts.canEverProvideClass</code> rather than <code>if SpreadsheetApp?</code>
     — for a lazy class an existence test reads "not fetched yet" and would drop the icon for ever,
     whereas the question at boot is "can this artifact EVER produce it", so a profile that ships
     neither the door nor its app simply draws no icon; and a profile must still name a door's part and
     its app's part together, which <code>buildProfile.py</code> now checks by reading every shipped
     class's <code>requiredParts</code> instead of anyone remembering it.</p>
+
+    <p style="margin:10px 0 0"><strong>3b · Where the caption and the art come from.</strong> Not from
+    the app — that is the whole point, since reading a field off an app at boot is the reachability
+    just removed. They live in <code>AppCatalog</code>, keyed by class NAME, one entry per app, and
+    <em>both</em> launcher modes (the lazy one above and the eager
+    <code>createOpener</code>, which hands over a live app singleton) read it through a single
+    <code>_fromCatalogEntry</code>. ⚠⚠ One reader rather than two copies that must agree, because the
+    failure a second copy produces is <b>incompleteness</b>, not disagreement: a field present in one
+    and simply absent from the other reads as correct, and no gate asserts a tooltip. A checker
+    comparing two copies could not catch that; having one place to write the field does.
+    ⚠ An app has ONE name: a launcher's caption is stored on the widget, so a per-placement name
+    would put two differently-named icons for the same app side by side once one is dragged out of
+    the folder — hence no label override.</p>
 
     <p style="margin:0"><strong>4 · A folder is a door, and that is a third moment.</strong> Desktop
     icons are drawn at boot; a folder's contents are not drawn until it is opened, and

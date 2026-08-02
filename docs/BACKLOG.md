@@ -59,6 +59,9 @@ coherent — production must *have* `maps` (the samples build maps), but a lazy 
   part cannot ingest on a precompiled tree until `ensureMetaSystemLoaded()` runs, and no gate loaded a
   lazy part on such a tree. Fixed, and `fg homepage` now asserts it (proven against a planted defect).
 
+### ~~`plans/app-descriptor-unification-plan.md`~~ → `archive/`
+- [x] **An app's identity was stated TWICE and the second copy was already incomplete.** DONE 2026-08-02. `src/AppCatalog.coffee` is now the one entry per app (caption, art, tooltip), keyed by class NAME, and both launcher modes read it through a single `_fromCatalogEntry`. `title` / `buildIcon` / `toolTip` deleted from all 14 app classes and the base. ⚠⚠ It had already SHIPPED a bug, and note the shape: the copies did not DISAGREE, the lazy path simply lacked `toolTip`, so the "Super Toolbar" and "Fizzytiles" desktop icons drew without bubble help — invisible to review and to every gate (no SystemTest asserts a tooltip), which is why the fix is one reader rather than a check that two copies agree. ⛔ The catalog may NOT live on the app class: reading a field off an app at boot is the reachability the boot-cost arc removed. ⚖ One name per app, no label override (§5.1). Churn was exactly the one PREDICTED test, recaptured `COMPLETE`. Gauntlet 14/14, lazyprobe/homepage/lean green.
+
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/7.8 items, design-first, owner-gated.
 - [ ] §7.1: transform policy engine (banked, not built)

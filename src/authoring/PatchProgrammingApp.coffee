@@ -4,7 +4,5 @@ class PatchProgrammingApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["authoring"]
 
-  title: "Patch programming"
-  buildIcon:    -> new PatchProgrammingIconWdgt
   buildWindow:  -> world.openFrameWith (new PatchProgrammingWdgt), (new Point 460, 400), world.hand.position()
   windowOpened: (wm) -> InfoDocs.createNextTo "patchProgramming", wm

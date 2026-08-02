@@ -58,9 +58,14 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
         # sequence is what the user sees. Each opener names its app as a STRING and resolves it on
         # click — see IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode.
         L = IconicDesktopSystemWindowedAppLauncherWdgt
-        L.addToFolder @, "DegreesConverterApp", "C-F converter", -> new DegreesConverterIconWdgt
-        L.addToFolder @, "SampleSlideApp",      "Slide",         -> new GenericShortcutIconWdgt new SimpleSlideIconWdgt
-        L.addToFolder @, "SampleDashboardApp",  "Dashboard",     -> new GenericShortcutIconWdgt new DashboardsIconWdgt
-        L.addToFolder @, "SampleDocApp",        "Document",      -> new GenericShortcutIconWdgt new TypewriterIconWdgt
-        L.addToFolder @, "SpreadsheetApp",      "Spreadsheet",   -> new GenericShortcutIconWdgt new TypewriterIconWdgt
+        # ⚠ THE ONE ICON OVERRIDE IN THE SYSTEM, and it is forced rather than preferred: this art is
+        # the LAZY `examples-icons` part, and only a line inside this awaited scope may legally name
+        # it — check-part-edges.js reads one line at a time, so the same thunk written in AppCatalog
+        # (a CORE file) would be an unguarded core->lazy reference and fail the build. Every other
+        # door takes both its caption and its art from the catalog.
+        L.addToFolder @, "DegreesConverterApp", -> new DegreesConverterIconWdgt
+        L.addToFolder @, "SampleSlideApp"
+        L.addToFolder @, "SampleDashboardApp"
+        L.addToFolder @, "SampleDocApp"
+        L.addToFolder @, "SpreadsheetApp"
       callback()

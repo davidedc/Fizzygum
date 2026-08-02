@@ -48,7 +48,7 @@
     "                          then it is minified in place; the world starts from that image",
     "  sources lazy         -> ...and the class source text is SHIPPED but not loaded until",
     "                          something needs it: opening an inspector, or restoring a snapshot",
-    "                          that carries class-level source edits. That text is 2.28 MB, 62.7%",
+    "                          that carries class-level source edits. That text is 2.20 MB, 70.9%",
     "                          of this tree, so a visitor who never opens an inspector never",
     "                          downloads it -- and the first one who does waits for it once.",
     "                          `background` is the alternative (fetch it behind the running world,",

@@ -3,17 +3,20 @@
 #   EAGER — built by IconicDesktopSystemWindowedApp.createOpener, which hands over the live app
 #           singleton as @target and the method to call on it. The app class is already here (it had
 #           to be, to build this icon at all), so the click is a plain call.
-#   LAZY  — built from a DESCRIPTOR: a title, an icon made of CORE art, and the app's class NAME as
-#           a string. Nothing of the app exists yet. On the click the name is resolved to the part
-#           that owns it, that part is fetched, compiled and run, and only then is the app launched.
+#   LAZY  — built from the app's class NAME as a string. Nothing of the app exists yet. On the click
+#           the name is resolved to the part that owns it, that part is fetched, compiled and run,
+#           and only then is the app launched.
+#
+# Both take the caption and the art from AppCatalog, through the one _fromCatalogEntry path below —
+# stating them per-mode is how a field reaches one mode and not the other. See AppCatalog.
 #
 # ⚠⚠ THE LAZY MODE IS WHAT LETS AN APP'S SOURCE ARRIVE ON ITS OWN CLICK RATHER THAN WITH ITS
-# NEIGHBOURS'. A launcher was assumed to have to be eager, because WorldWdgt.createDesktop builds
-# every icon at boot and an app class inside a lazy part could not be constructed there — which is
-# why authoring-launcher and fizzytiles-launcher exist as eager slivers. But building the ICON never
-# needed the APP: the art is core, and the only thing genuinely required at boot is a NAME. So each
-# of the Examples folder's five doors sits alone in its own one-class part and is fetched by exactly
-# the click that wants it — opening the folder fetches nothing at all.
+# NEIGHBOURS'. WorldWdgt.createDesktop builds every icon at boot, which makes a launcher look like it
+# has to be eager — an app class inside a lazy part cannot be constructed there. But building the
+# ICON does not need the APP: the art is core, and the only thing genuinely required at boot is a
+# NAME. So no app needs an eager sliver beside it, and each of the Examples folder's five doors sits
+# alone in its own one-class part, fetched by exactly the click that wants it — opening the folder
+# fetches nothing at all.
 #
 # ⚠ A STRING IS ALSO WHAT MAKES THIS SERIALIZE FOR FREE. The eager mode stores a live app object,
 # which the Serializer encodes symbolically as {"$wk":"app:<ClassName>"} and re-resolves on load;
@@ -34,10 +37,11 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
   # bare constructor so the two modes cannot be confused at a call site (`new …(title, icon, nil,
   # nil)` would be silently launch-less), and because installing an in-folder icon is a ritual —
   # size FIRST, then add, since the icon grid places on add.
-  # ⚠ `buildIcon` is a THUNK, and the guard comes before it: an artifact that can never produce this
-  # app constructs no widget and gets no icon, rather than one whose click could only reject.
-  @addToFolder: (folder, appClassName, title, buildIcon) ->
-    launcher = @_lazyLauncherFor appClassName, title, buildIcon
+  # ⚠ `iconOverride` has exactly ONE caller in the system and is not a general escape hatch: the
+  # Examples folder's C-F door draws art from the LAZY `examples-icons` part, which a CORE file may
+  # not name (AppCatalog's header explains why). Everything else takes its icon from the catalog.
+  @addToFolder: (folder, appClassName, iconOverride) ->
+    launcher = @forAppNamed appClassName, iconOverride
     return unless launcher?
     # in-folder: size FIRST, then add — the icon grid places on add
     launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
@@ -47,18 +51,40 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
   # lifted verbatim from IconicDesktopSystemWindowedApp.createOpener's two arms): the desktop places
   # by smart grid ON ADD, so it must be added before it is sized, while a folder's grid reads the
   # extent as it adds.
-  @addToDesktop: (appClassName, title, buildIcon) ->
-    launcher = @_lazyLauncherFor appClassName, title, buildIcon
+  @addToDesktop: (appClassName) ->
+    launcher = @forAppNamed appClassName
     return unless launcher?
     world.add launcher
     launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 
-  # nil when this artifact can never produce the app — no widget is constructed and no icon appears,
-  # rather than one whose click could only reject. `buildIcon` is a thunk for exactly that reason.
-  @_lazyLauncherFor: (appClassName, title, buildIcon) ->
+  # LAZY mode. nil when this artifact can never produce the app — no widget is constructed and no
+  # icon appears, rather than one whose click could only reject. ⚠ The availability question comes
+  # BEFORE the catalog lookup and before the icon thunk runs, and it is `canEverProvideClass` rather
+  # than `if TheApp?`: for a lazy class an existence test reads "not fetched yet" and would drop the
+  # icon for ever, when what is being asked at boot is "can this artifact EVER produce it".
+  @forAppNamed: (appClassName, iconOverride) ->
     return nil unless world.parts.canEverProvideClass appClassName
-    launcher = new @ title, buildIcon(), nil, nil
-    launcher.appClassName = appClassName
+    launcher = @_fromCatalogEntry appClassName, iconOverride, nil, nil
+    launcher.appClassName = appClassName  if launcher?
+    launcher
+
+  # EAGER mode: the app singleton is already in hand, so the click is a plain call on it.
+  @forApp: (app) ->
+    @_fromCatalogEntry app.constructor.name, nil, app, "launch"
+
+  # ⭐ THE ONE PLACE A LAUNCHER IS BUILT FROM AN APP'S IDENTITY, which is the whole point of the
+  # catalog: a construction path per mode is how a field ends up on one launcher and not the other
+  # (`toolTip` is the one that fits in a comment). One reader ⇒ a field reaches both modes or neither.
+  @_fromCatalogEntry: (appClassName, iconOverride, target, callback) ->
+    entry = AppCatalog.get appClassName
+    if !entry?
+      # a programming error, not a packaging one: the app exists but nothing says what it looks
+      # like. Loud, because the boot smoke fails on console errors and will catch it immediately.
+      console.error "AppCatalog has no entry for '#{appClassName}'"
+      return nil
+    icon = if iconOverride? then iconOverride() else entry.icon()
+    launcher = new @ entry.title, icon, target, callback
+    launcher.toolTipMessage = entry.toolTip  if entry.toolTip?
     launcher
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->

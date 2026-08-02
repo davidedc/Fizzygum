@@ -620,18 +620,21 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # none of these rather than icons whose click could only reject.
     # ⚠ ORDER IS THE LAYOUT: createDesktop places icons in call order down a column (wrapping after
     # 5), so this sequence, and the bin's position inside it, is what the user sees.
-    addOpener = (appClassName, title, buildIcon) ->
-      IconicDesktopSystemWindowedAppLauncherWdgt.addToDesktop appClassName, title, buildIcon
-    addOpener "HowToSaveMessageApp", "How to save?",     -> new FloppyDiskIconWdgt
+    # ⚠ A NAME IS ALL THIS NEEDS. The caption and the art come from AppCatalog, which is the one
+    # place either is written down; naming them again here is how one of the two loses a field --
+    # tooltips. The app class itself is NOT touched — that is what keeps every app lazy.
+    addOpener = (appClassName) ->
+      IconicDesktopSystemWindowedAppLauncherWdgt.addToDesktop appClassName
+    addOpener "HowToSaveMessageApp"
     menusHelper.binIconAndText()
-    addOpener "SimpleDocumentApp",   "Docs Maker",       -> new TypewriterIconWdgt
-    addOpener "FizzyPaintApp",       "Draw",             -> new PaintBucketIconWdgt
-    addOpener "SimpleSlideApp",      "Slides Maker",     -> new SimpleSlideIconWdgt
-    addOpener "DashboardsApp",       "Dashboards",       -> new DashboardsIconWdgt
-    addOpener "PatchProgrammingApp", "Patch programming",-> new PatchProgrammingIconWdgt
-    addOpener "GenericPanelApp",     "Generic panel",    -> new GenericPanelIconWdgt
-    addOpener "ToolbarsApp",         "Super Toolbar",    -> new ToolbarsIconWdgt
-    addOpener "FridgeMagnetsApp",    "Fizzytiles",       -> new FridgeMagnetsIconWdgt
+    addOpener "SimpleDocumentApp"
+    addOpener "FizzyPaintApp"
+    addOpener "SimpleSlideApp"
+    addOpener "DashboardsApp"
+    addOpener "PatchProgrammingApp"
+    addOpener "GenericPanelApp"
+    addOpener "ToolbarsApp"
+    addOpener "FridgeMagnetsApp"
     # The Examples folder is created EMPTY and fills itself the first time it is opened: its five
     # openers, and the C-F art only they draw, are LAZY parts. See ExamplesFolderWindowWdgt for
     # the three tiers (boot / open / click) and why a folder — unlike the desktop icons above —

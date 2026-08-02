@@ -2,10 +2,14 @@
 # (Draw, Docs Maker, Slides Maker, the sample doc/slide/dashboard examples, the
 # degrees converter, ...). It lifts the launch / opener / bring-up apparatus that
 # used to be copy-pasted across ~12 MenusHelper methods into ONE place. A subclass
-# only declares its launcher title/icon (and, for a singleton app, the world slot
-# that holds its one window) and implements buildWindow; this base owns:
+# declares the parts its window is built from (and, for a singleton app, the world
+# slot that holds its one window) and implements buildWindow; this base owns:
 #   - createOpener: builds the IconicDesktopSystemWindowedAppLauncherWdgt (the
 #     desktop or in-folder shortcut) pointing at this app's "launch" action, and
+# ⚠ WHAT AN APP LOOKS LIKE IS NOT DECLARED HERE. Its caption, icon and tooltip live
+# in AppCatalog, keyed by class NAME, because the desktop draws an app's icon at BOOT
+# for an app whose class has not been fetched -- reading a field off this object would
+# make every app eager again. See AppCatalog's header and build-and-packaging.md §2.
 #   - launch: for a singleton app (slot set) brings the existing window forward or
 #     builds it; for a fresh app builds a new window and runs the windowOpened hook
 #     (e.g. to spawn the adjacent Info widget).
@@ -24,9 +28,7 @@ class IconicDesktopSystemWindowedApp
   wellKnownKey: -> "app:" + @constructor.name
 
   # --- per-app configuration (subclasses override) ---
-  title: nil
   slot: nil           # world.<slot> holds the single window; nil => a fresh window every launch
-  toolTip: nil
 
   # THE PARTS THIS APP'S buildWindow BUILDS FROM. One declaration with two readers, which is the
   # whole point of stating it as data rather than writing the await by hand in each subclass:
@@ -47,14 +49,13 @@ class IconicDesktopSystemWindowedApp
   optionalParts: []
 
   # --- per-app hooks (subclasses override) ---
-  buildIcon: -> nil                      # the launcher's icon widget
   buildWindow: -> nil                    # build + world.add the app's window; return it
   windowOpened: (newlyOpenedWindow) ->   # after a FRESH (non-singleton) launch; no-op by default
 
   # --- shared apparatus (written once) ---
   createOpener: (inWhichFolder) ->
-    launcher = new IconicDesktopSystemWindowedAppLauncherWdgt @title, @buildIcon(), @, "launch"
-    launcher.toolTipMessage = @toolTip if @toolTip?
+    launcher = IconicDesktopSystemWindowedAppLauncherWdgt.forApp @
+    return unless launcher?
     if inWhichFolder?
       # in-folder opener: size first, then add into the folder
       launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
