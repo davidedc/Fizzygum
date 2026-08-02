@@ -86,11 +86,21 @@ Plus two properties that are **not** the same question:
   nothing ordering them, and `class X extends Y` across that boundary is a race rather than a
   catchable error. Inside one part `findLoadOrder` orders; between parts, only `requires` does.
 
-⚠ **`requires` does NOT excuse an EAGER part from guarding.** An eager part is already running at
-boot, so the declaration can only promise the other part SHIPS, never that it has arrived — an
-eager→lazy reference still needs a guard or an await where it stands. `check-part-edges.js` enforces
-exactly that asymmetry, and its scope is every source present at boot (core **and** every eager
-part), not core alone. ⚠ Cycles are rejected by the build: a cycle has no valid ingest order.
+⚠⚠ **`requires` MEANS TWO THINGS AND ONLY ONE OF THEM SURVIVES AN EAGER OWNER.** It always promises
+the other part SHIPS. It promises the classes have ARRIVED only when the owner is **lazy** — there
+`PartsRegistry` brings the requirements fully in before ingesting the part. An **eager** owner is
+running from the first frame, so a **lazy** requirement may not be here yet and that site still needs
+a guard or an await where it stands. (eager→**eager** is fine: both are in the artifact from frame
+one, so shipping-together is the whole of what could go wrong — which is why `harness requires
+["macros"]` needs nothing further.) `check-part-edges.js` implements exactly this, and its scope is
+every source present at boot (core **and** every eager part), not core alone.
+⚠ It did NOT implement it until 2026-08-02: `declaredRequires` handed every owner its full list, and
+that set is tested *before* the inheritance check, so an eager part declaring `requires` on a lazy one
+could both reference and `extends` its classes with the build staying green. Found while adding the
+`app-kit` edges, and fixed there. **Both directions are proven rather than argued** — planting an
+unguarded `new SpeechBubbleWdgt` and an `@augmentWith ParentStainerMixin` in `dev-tools` reported
+`0 / 0` before and fails with a named site after. ⚠ Cycles are rejected by the build: a cycle has no
+valid ingest order.
 
 ⚠ **A per-site await is the finer instrument, and `requires` is the one that reaches where an await
 cannot.** Prefer the await when the reference sits somewhere with a seam: `demos` names `plots` from
@@ -102,6 +112,33 @@ with no seam there is nothing to await *in*, so ordering the load is the only me
 rule that falls out: **a per-site await where a seam exists; `requires` where one does not, or where
 a base class crosses the boundary.** Deciding it by taste instead is how a door ends up awaiting a
 part it cannot wait for.
+
+⭐ **A SHARED BASE LAYER IS ITSELF A PART — `app-kit` — and it is the configuration `requires` was
+built for.** Nine classes are not any app's: the app protocol `IconicDesktopSystemWindowedApp`, the
+toolbar/creator-button family (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt`, `CreatorButtonWdgt` and the
+two mixins they are made of), the tool-panel grid a toolbar lays its buttons out in, and
+`SpeechBubbleWdgt`. **Nine** parts DERIVE from them across 44 inheritance edges, and eleven declare
+`requires` (`demos` and `dev-tools` merely reference). They sat in `core` for
+two arcs, and the reason is worth keeping because it is a *reasoning* failure rather than an oversight:
+
+- **Nothing at boot reaches them.** `fg whatpins` reported exactly these, every run.
+- **They were priced against the wrong home.** The analyser names the part that mentions a class most
+  — `authoring` — and against *that* home every one of them is a bad trade: `plots` and `maps` would
+  each declare `requires: ["authoring"]`, so opening a chart or a map would first fetch and compile
+  225.5 KB of Makers it does not use. That produced the standing verdict "movable, but none are free".
+- **The classes are a LAYER, not a leftover.** 44 edges from 11 parts is the definition of a shared
+  base, and a shared base with no part of its own is a partition missing a piece. `authoring` is not
+  their owner; it is the largest thing built *on* them.
+
+⇒ the home is a part of their own that every consumer `requires`, and the toll falls from 225.5 KB to
+23.3 KB of material each consumer is literally compiled against. ⚠⚠ **The generalisation, because it
+is the one that keeps being got wrong: "who names it most" is not "who owns it".** When several
+parts derive from a group of classes, asking which existing part should absorb them has no good
+answer by construction — every answer makes the others pay for a part they do not use. Invent the
+part. Two consequences follow that a reader should not have to rediscover: a base class can only
+cross a part boundary under `requires` (a `class X extends Y` line has no seam to await *in*, so
+there is no per-site alternative to weigh), and an **eager** part therefore cannot participate at
+all — which is what still holds `CanvasWdgt` and `PatchNodeWdgt` in core (§5).
 
 ⚠⚠ **An awaiting entry point must keep its already-loaded path SYNCHRONOUS**, which is why there is
 ONE idiom and every door uses it: `world.parts.whenAllLoaded ["maps", "plots"], => super()`.
@@ -267,19 +304,19 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
-| `homepage` | `core` + LAZY `meta-tools` `examples-icons` `example-degrees-converter` `example-doc` `example-slide` `example-dashboard` `example-sheet` `authoring` `maps` `plots` `spreadsheet` | precompiled | `lazy` | `index.html` | **production** |
+| `homepage` | `core` + LAZY `app-kit` `meta-tools` `examples-icons` `example-degrees-converter` `example-doc` `example-slide` `example-dashboard` `example-sheet` `authoring` `maps` `plots` `spreadsheet` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance |
 
-⭐ **Production names ELEVEN parts beside core, and EVERY ONE OF THEM IS LAZY.** That is the whole
-shape of production now: `meta-tools`, `maps`, `plots`, `spreadsheet`, `authoring`, `examples-icons`
-and the five one-class `example-*` doors. Naming a lazy part is nearly free — its classes are absent
-from `js/pre-compiled.js`, so it costs the image nothing and the first load carries none of it — and
-the artifact still offers everything it always did.
+⭐ **Production names TWELVE parts beside core, and EVERY ONE OF THEM IS LAZY.** That is the whole
+shape of production now: `app-kit`, `meta-tools`, `maps`, `plots`, `spreadsheet`, `authoring`,
+`examples-icons` and the five one-class `example-*` doors. Naming a lazy part is nearly free — its
+classes are absent from `js/pre-compiled.js`, so it costs the image nothing and the first load
+carries none of it — and the artifact still offers everything it always did.
 
 ⚠⚠ **A consequence worth knowing before you reason about either profile: `homepage` and `lean` now
 emit a BYTE-IDENTICAL `js/pre-compiled.js`.** The image contains only what is EAGER, and after the
 launcher parts were dissolved that set is exactly `core` in both. The two artifacts differ in what
-they can FETCH (production ships eleven lazy parts and 2.20 MB of source text; the appliance ships
+they can FETCH (production ships twelve lazy parts and 2.20 MB of source text; the appliance ships
 neither), not in what they start from. So an image-size measurement cannot distinguish them, and a
 change that moves a class between core and any lazy part moves BOTH numbers identically.
 
@@ -377,7 +414,7 @@ asymmetry is why the build refuses `sources: "none"` together with a lazy part.
 
 For **eager** parts there is nothing worth dividing: on production, `core` IS the only eager part, so there is no split
 to make. The levers that pay are `lazy` (the whole layer) and making MORE parts lazy — which yields per-part loading for
-free, and is partition work rather than loading work. Core is **59.6% of all shippable source bytes** (73.7% of what
+free, and is partition work rather than loading work. Core is **58.8% of all shippable source bytes** (72.7% of what
 production ships), down from ~80% before the slices below — the ratio is worth re-measuring rather than quoting, since
 every slice moves it.
 
@@ -396,6 +433,7 @@ absent from `js/pre-compiled.js`.
 | the Examples folder's five doors | 5 | 19.7 KB (64% code) | **−11.7 KB (−1.62%)** |
 | every remaining app icon + the folder's own art | 11 | 29.3 KB | **−14.0 KB (−1.97%)** |
 | what no boot path reaches (`fg whatpins`) | 9 | 20.1 KB (12.2 KB code) | **−16.8 KB (−2.46%)** |
+| the shared base layer → `app-kit` | 9 | 23.3 KB (9.8 KB code) | **−13.2 KB (−1.93%)** |
 
 ⚠⚠ **The third row broke the estimator a second time, in the OTHER direction — the image cost tracks
 CLASS COUNT at least as much as code bytes.** `authoring` and `maps` move almost exactly the same
@@ -408,6 +446,14 @@ the class-count reading a second time and missed the same way (predicted order �
 the image of any of them. Four slices, four misses, in both directions. ⇒ **Do not promise a number
 before the two builds are fingerprinted** (§8) — and when you must guess, a many-small-classes slice
 will beat its byte estimate and a heavily-commented one will fall short of it.
+
+⚠ **The last row is the first prediction that landed** — stated in words before the build ("−12 to
+−16 KB, on the class-count reading") against a measured −13.2 KB, and the boot bundle's +369 B against
+a predicted +250–450 B. Five misses then a hit is not a calibrated estimator; it is one slice that
+happened to resemble the row above it (9 classes both times). The rule stands: **predict in words,
+then fingerprint, and treat any unpredicted FILE as a finding** — which is the half that actually
+paid here, since the source-batch repacking it surfaced (one batch replaced, seven rewritten) is
+exactly the kind of churn a size-only check would have read straight past.
 
 ⚠ **A class is pinned to `core` by being named there, so a slice UNPINS more than it moves.** The
 fourth row is not an app slice at all: it is the classes whose only namers were already-lazy parts,
@@ -429,10 +475,33 @@ second list is QUESTIONS, not findings: its top entries (`WorldWdgt`, `Widget`) 
 is what its `refs` column is for. And it is honest about its own ceiling — no static tool over the old
 partition could have called that art movable, because the app really was eager and "pinned" really was
 the right verdict. What it can do is price the pinning so the design question gets asked.
-The sixth row is its first harvest. Deliberately left behind, and reported every run: `ToolbarWdgt`
-and `ToolbarCreatorButtonWdgt` (`plots` extends both; moving them would oblige
-`plots requires ["authoring"]` for 1.2 KB), and `IconicDesktopSystemWindowedApp`, the base class of
-every app across seven doors.
+The sixth row is its first harvest. ⚠ Its seventh and eighth rows are the same tool's list read
+twice, and the difference between them is the lesson: `ToolbarWdgt`, `ToolbarCreatorButtonWdgt` and
+`IconicDesktopSystemWindowedApp` were left behind on the seventh with a stated reason — moving them
+would oblige `plots requires ["authoring"]` for 1.2 KB — and the eighth moved all nine of them by
+rejecting the assumed home rather than the move (`app-kit`, §2). **A tool that ranks candidate homes
+can only price the homes that exist**, so "movable but not free" is a verdict about the current
+partition and never about the classes. Read it as a prompt to ask whether the right home has been
+invented yet.
+
+⛔ **The two that stay, and why it is a decision rather than a residue.** `fg whatpins` still reports
+`CanvasWdgt` and `PatchNodeWdgt` — 4.3 KB — and they are blocked **by rule, not by cost**: the EAGER
+`video-player` part extends `CanvasWdgt` and the EAGER `patch-programming-experimental` part extends
+`PatchNodeWdgt`, and an eager part cannot extend a lazy part's class at all (§2). Unblocking either
+means making those parts lazy, and neither is a packaging question:
+
+- `video-player` is **auto-launched at boot** (`WorldWdgt`: `if window.VideoPlayerWithRecommendationsWdgt?
+  then world.draftRunVideoPlayer()`). A part that runs at boot is eager by definition, so the change
+  is a product decision about whether a flag-gated draft feature should launch itself.
+- `patch-programming-experimental` is **entangled with core**: `FanoutWdgt` is named by `ScriptWdgt`,
+  `CodePromptWdgt` and `ToolPanelWdgt`, and `FanoutPinWdgt` by `ControllerMixin` — the dataflow wiring
+  substrate. Those core sites are guarded, which is right for an *absent* part and wrong for a *lazy*
+  one (a guard swallows the wire instead of fetching it), and `ControllerMixin.ensureWireEdge` has no
+  async seam to convert them into. Same reasoning as "What is deliberately NOT a part", below.
+
+⚠ Independently of the blocker, `CanvasWdgt` is defensible core material on layering merits: it is in
+`src/basic-widgets/` and three different parts' canvas widgets derive from it. **"No boot path reaches
+it" is not the same as "it does not belong in core"** — the analyser answers the first question only.
 
 ⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle.** The runtime parts
 manifest carries each part's `classes` name list — it must, since the vault cannot answer
@@ -448,8 +517,9 @@ cost actually lives. ⚠ Six MORE parts (five one-class doors plus `examples-ico
 **+397 B** between them, which is what settles the "many tiny parts" worry at this scale: the
 per-part overhead is a name and a batch list, and it is the CLASS names that dominate.
 
-⭐ **Cumulatively, `js/pre-compiled.js` went 936,920 → 682,031 B — −27.2% — and production's eager
-image is now exactly core.**
+⭐ **Cumulatively, `js/pre-compiled.js` went 936,920 → 669,855 B — −28.5% — and production's eager
+image is now exactly core, with nothing left in it that no boot path reaches except the two named
+above.**
 
 ⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured
 2026-07-31 (`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in

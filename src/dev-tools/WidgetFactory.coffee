@@ -79,9 +79,15 @@ class WidgetFactory
     # TextWdgt wraps to its own width via softWrap, like the
     # createNewTextWdgtWithBackground demo.
     world.create newWdgt
+  # ⚠ SpeechBubbleWdgt is the LAZY 'app-kit' part (the shared base layer the app parts derive from),
+  # and this class is the EAGER 'dev-tools' one -- the same eager->lazy shape as the two demo
+  # factories below, and it takes the same fix. An `if SpeechBubbleWdgt?` guard would be the WRONG
+  # one: it answers "is it here?" when the question is "get it here", so the menu click would be
+  # silently swallowed instead of fetching the part.
   createNewSpeechBubbleWdgt: ->
-    newWdgt = new SpeechBubbleWdgt
-    world.create newWdgt
+    world.parts.whenAllLoaded ["app-kit"], ->
+      newWdgt = new SpeechBubbleWdgt
+      world.create newWdgt
   createNewToolTipWdgt: ->
     newWdgt = new ToolTipWdgt
     world.create newWdgt

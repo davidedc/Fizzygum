@@ -326,7 +326,7 @@
   <code>whenAllLoaded</code> their icons on a <code>lean</code> tree could only reject — no window,
   ever.</p>
 
-  <h2>7 · Three traps peculiar to lazy parts</h2>
+  <h2>7 · Traps peculiar to lazy parts</h2>
 
   <div class="callout warn">
     <p style="margin:0 0 10px"><strong>1 · An awaiting door must keep its already-loaded path
@@ -384,6 +384,22 @@
     fetched all five). ⚠ Only art <em>nothing else</em> draws can move: the folder's other icons are
     drawn by desktop icons and by <code>FolderWindowWdgt</code>/<code>BinOpenerWdgt</code> at boot, so
     they are core whatever the folder does.</p>
+
+    <p style="margin:10px 0 0"><strong>5 · ⛔ A BASE CLASS crossing a part boundary has no await to
+    hide behind.</strong> Every trap above is about finding the right seam to defer through. A
+    <code>class X extends Y</code> line has none — the base must be <em>defined</em> before the
+    deriving class exists at all, which is long before any <code>launch</code> runs. Only
+    <code>parts.json</code>'s <code>requires</code> orders that: <code>ensureLoaded</code> resolves a
+    part's requirements <b>fully first</b>, then ingests its own batches. A door naming several parts
+    is <em>not</em> a substitute — <code>ensureAllLoaded</code> is a <code>Promise.all</code>, so they
+    arrive concurrently and the extend is a race rather than a catchable error. Two things follow.
+    <b>An EAGER part can never derive from a lazy one</b> (it is running from the first frame, so
+    <code>requires</code> can promise the other part <em>ships</em> but never that it has
+    <em>arrived</em>) — which is what keeps <code>CanvasWdgt</code> and <code>PatchNodeWdgt</code> in
+    core. And <b>a shared base layer wants a part of its own</b>: when several parts derive from one
+    group of classes, no existing part is the right home, because putting them in the biggest
+    consumer makes every other consumer <code>requires</code> that consumer and fetch all of it.
+    Fizzygum's is <code>app-kit</code> — nine classes, 23.3 KB, required by eleven parts.</p>
   </div>
 
   <h3>A saved world that names a lazy part's classes</h3>

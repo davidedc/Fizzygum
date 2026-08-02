@@ -126,7 +126,7 @@
 
   <h2>A part — a named slice that comes and goes as a unit</h2>
 
-  <p>Every shipping directory belongs to exactly one of the <strong>20 parts</strong>; a source
+  <p>Every shipping directory belongs to exactly one of the <strong>21 parts</strong>; a source
   file no part claims is a build failure. A part owns up to four kinds of thing — sources
   (<code>dirs</code>), copied files (<code>assets</code>), assembled vendor payloads
   (<code>vendor</code>), and boot-bundle pieces (<code>bootPrelude</code>) — and all four appear
@@ -134,8 +134,9 @@
 
   <figure>
     <div class="bar" aria-label="The partition, roughly by source size">
-      <div style="flex:596; background:var(--s2)" title="core — 1534.6 KB"></div>
-      <div style="flex:88; background:var(--s3)" title="authoring (lazy) — 225.5 KB"></div>
+      <div style="flex:589; background:var(--s2)" title="core — 1518.3 KB"></div>
+      <div style="flex:9; background:var(--s3)" title="app-kit (lazy) — the shared base layer, 23.3 KB"></div>
+      <div style="flex:87; background:var(--s3)" title="authoring (lazy) — 225.0 KB"></div>
       <div style="flex:43; background:var(--s3)" title="spreadsheet (lazy) — 111.7 KB"></div>
       <div style="flex:35; background:var(--s3)" title="maps (lazy) — 89.9 KB"></div>
       <div style="flex:18; background:var(--s3)" title="meta-tools (lazy) — 46.4 KB"></div>
@@ -152,15 +153,15 @@
       <div style="flex:54; background:var(--s1)" title="harness — 138.0 KB"></div>
     </div>
     <div class="legend">
-      <span><span class="chip" style="background:var(--s2)"></span>core — 59.6% of shippable source bytes</span>
-      <span><span class="chip" style="background:var(--s3)"></span>in production, all LAZY: authoring · spreadsheet · maps · plots · meta-tools · examples-icons · the five example-* doors</span>
+      <span><span class="chip" style="background:var(--s2)"></span>core — 58.8% of shippable source bytes</span>
+      <span><span class="chip" style="background:var(--s3)"></span>in production, all LAZY: app-kit · authoring · spreadsheet · maps · plots · meta-tools · examples-icons · the five example-* doors</span>
       <span><span class="chip" style="background:var(--s4)"></span>not in production: fizzytiles · demos · dev-tools · dev-icons · patch-programming-experimental · video-player</span>
       <span><span class="chip" style="background:var(--s1)"></span>test-side: macros · harness</span>
     </div>
-    <figcaption>The 20 parts, roughly to source-size scale (the smallest are drawn at a floor to stay
+    <figcaption>The 21 parts, roughly to source-size scale (the smallest are drawn at a floor to stay
     visible). The test machinery is just two parts like any other; nothing about tests is
     special-cased in the build. <b>Being in production and being loaded at boot are different
-    things</b> — production ships eleven parts besides core and <em>every one of them is lazy</em>,
+    things</b> — production ships twelve parts besides core and <em>every one of them is lazy</em>,
     so production's eager image IS the core image, and <code>homepage</code> and <code>lean</code>
     emit a byte-identical <code>js/pre-compiled.js</code>. The consequence for measuring: a packaging
     change can only be read by fingerprinting ONE profile across the change, never by comparing two.
@@ -174,7 +175,7 @@
       An absent part must be a no-op at every call site, via the class-existence guard idiom
       (<code>if DemoMenus?</code>); a build gate fails on any unguarded core reference to a
       part-owned class.</li>
-    <li><strong>Eagerness</strong> — at boot, or on demand? A <em>lazy</em> part (today 13 of the 19
+    <li><strong>Eagerness</strong> — at boot, or on demand? A <em>lazy</em> part (today 14 of the 20
       non-core parts, and every single one production ships) is fetched by
       <code>world.parts</code> when something launches it — and since classes are source text, its
       source arrives <em>with</em> it. A lazy part's entry point awaits
@@ -226,8 +227,8 @@
       <div class="facts">all except harness · compile-at-boot · entries: all</div>
       <div class="shape">dev without the test machinery</div></div>
     <div class="card" style="border-color:var(--s2)"><b>homepage</b>
-      <div class="facts">core + meta-tools + authoring + maps + plots + spreadsheet + examples-icons + the five example-* doors · precompiled · sources: lazy · index.html</div>
-      <div class="shape">production — <b>all eleven</b> non-core parts are lazy, so its eager image is exactly core</div></div>
+      <div class="facts">core + app-kit + meta-tools + authoring + maps + plots + spreadsheet + examples-icons + the five example-* doors · precompiled · sources: lazy · index.html</div>
+      <div class="shape">production — <b>all twelve</b> non-core parts are lazy, so its eager image is exactly core</div></div>
     <div class="card"><b>lean</b>
       <div class="facts">core · precompiled · sources: none · index.html</div>
       <div class="shape">the appliance — 10 files, 0.90 MB</div></div>

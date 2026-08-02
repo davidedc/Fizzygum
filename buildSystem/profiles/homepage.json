@@ -31,6 +31,13 @@
     "without its door is code nothing opens -- but it is checked rather than remembered: buildProfile.py",
     "reads each class's `requiredParts` against this list.",
     "",
+    "'app-kit' is the SHARED BASE LAYER every one of those parts is built out of -- the app protocol",
+    "IconicDesktopSystemWindowedApp, the toolbar/creator-button family and the two mixins they are",
+    "made of. Naming it is not a choice: 'authoring', 'plots', 'maps' and all five doors declare",
+    "`requires: [\"app-kit\"]` because they EXTEND its classes, and buildProfile.py fails a profile",
+    "that ships a part without what it requires. It is LAZY like the rest, so it costs the image",
+    "nothing and arrives, in full and first, with whichever consumer is asked for.",
+    "",
     "'authoring' is the Makers, and it is now ONE part rather than a lazy engine plus an eager",
     "launcher sliver: the nine desktop-icon app classes live in it too, because createDesktop builds",
     "their icons from core art plus a class NAME and needs nothing of the app until the icon is",
@@ -58,7 +65,7 @@
     "                          fizzytiles 3D payload, no FileSaver/JSZip, no harness pointer icons)"
   ],
 
-  "parts": ["core", "meta-tools", "examples-icons", "example-degrees-converter", "example-doc", "example-slide", "example-dashboard", "example-sheet", "authoring", "maps", "plots", "spreadsheet"],
+  "parts": ["core", "app-kit", "meta-tools", "examples-icons", "example-degrees-converter", "example-doc", "example-slide", "example-dashboard", "example-sheet", "authoring", "maps", "plots", "spreadsheet"],
   "form": "precompiled",
   "sources": "lazy",
   "entries": ["index.html"]
