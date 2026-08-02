@@ -42,11 +42,15 @@ reasons here; **boot speed is not** — see §0.1.
 > each needs either a `requires` edge with a real click-time cost (`plots`/`maps` → `authoring`) or a
 > guard added inside an EAGER part. The two deliberate leave-behinds it re-reports every run are
 > `ToolbarWdgt`/`ToolbarCreatorButtonWdgt` and `IconicDesktopSystemWindowedApp`.
-> Its section 2 names the biggest remaining block, and it is NOT a partition mistake: **18 icon +
-> appearance sole-route pairs, 62.8 KB of code across 38 classes**, of which 9 desktop icons
-> (37.3 KB, 18 classes) are each sole-routed from one line of `createDesktop` with `refs=1`. They are
-> structurally identical to the C-F art that started this — except they are DRAWN AT BOOT, so no door
-> can go in front of them. Moving that block needs a different idea, not a different partition.
+> ⛔ Its section 2's biggest block is **ANSWERED — do not re-raise** (owner, 2026-08-02): the ~18
+> icon+appearance sole-route pairs, **62.8 KB across 38 classes**, drawn at boot by `createDesktop`
+> and the desktop chrome. The art must be in the boot payload in SOME representation, and a data
+> format (SVG, bitmaps) is not meaningfully smaller while LOSING what these classes buy — they are
+> SIZE-AWARE, choosing level of detail and integer-pixel geometry from their actual device size,
+> which is what makes them crisp under the non-AA SWCanvas backend. Deferring them would pop icons
+> in after first paint. The only residue is prototype scaffolding for ~38 classes, and collecting it
+> means writing an interpreter for a DSL strictly less expressive than CoffeeScript. ⇒ **that weight
+> is what drawing 18 icons costs**, and the list will keep showing it every run.
 > Other candidates, none automatic: a per-Maker split of `authoring`
 > (§2.2d "why NOT per-Maker" — saves the production image nothing); the remaining `src/icons` tail;
 > §2.3. ⚠ Any future estimate must be ITERATED to a fixpoint (§2.2d method step 4) and MEASURED.

@@ -589,6 +589,15 @@ const ranked = [...subtree].filter(([n, s]) => n !== BOOT && s.count > 1)
   .sort((a, b) => b[1].code - a[1].code).slice(0, TOP);
 const fullSubtree = (n, out) => { for (const k of kids.get(n) || []) { out.push(k); fullSubtree(k, out); } return out; };
 
+// ⛔ ANSWERED ALREADY, and it will be the biggest block in every run of this list: the ~18
+// icon+appearance pairs (62.8 KB) drawn at boot by createDesktop and the desktop chrome. Owner
+// decision 2026-08-02, do not re-raise. The art has to be in the boot payload in SOME
+// representation, and a data format (SVG, bitmaps) would not be meaningfully smaller while LOSING
+// what these classes buy: they are size-aware, choosing level of detail and integer-pixel geometry
+// from their actual device size, which is what makes them crisp under the non-AA SWCanvas backend.
+// Deferring them would pop icons in after first paint. The only residue would be prototype
+// scaffolding for ~38 classes, and collecting it means writing an interpreter for a DSL strictly
+// less expressive than CoffeeScript. ⇒ that weight is simply what drawing 18 icons costs.
 console.log(`\n== 2. SOLE ROUTES: every boot path to these classes goes through ONE class ==`);
 console.log('   Put a door in front of that class and its whole subtree leaves the image with it. This');
 console.log('   is where the C-F art would have shown up: 2 classes, 9.6 KB, one naming site in');
