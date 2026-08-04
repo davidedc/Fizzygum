@@ -6,6 +6,12 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
+### `archive/budgeted-source-compile-scheduler-plan.md` — ✅ EXECUTED + CLOSED 2026-08-04
+- [x] Both one-class-per-turn ingest pacings replaced by ONE `SourceCompileScheduler` (end-of-frame
+      budget drain, per-line EWMA estimator, dev-boot chunk pump). Dev boot 3219→946 ms; gauntlet
+      14/14, zero churn. ⚠⚠ case law: 40 ms sync chunks collapsed the parallel test wave — chunks
+      stay ≤10 ms (`measurements/budgeted-compile-scheduler-2026-08-04.md`).
+
 ### `plans/core-app-slices-partition-plan.md` — ✅ ALL PHASES DONE (0/0.5/1/2/3/4)
 - [x] ⚠ **FOUND IN PHASE 3, NOT CAUSED BY IT — two CORE doors were dead on a `lean` tree; FIXED.**
       `DashboardsApp.launch`/`SimpleSlideApp.launch` used `whenAllLoaded ["maps", …]` while

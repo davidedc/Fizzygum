@@ -115,7 +115,8 @@
 
   <div class="callout">
     <p style="margin:0"><strong>Why the two test-side pages force every part eager.</strong> A part
-    arriving <em>during</em> a test would be frame-paced, therefore cycle-count-dependent, therefore
+    arriving <em>during</em> a test would be ingested under a wall-clock frame budget — how many
+    classes land in which cycle depends on machine load — therefore cycle-count-dependent, therefore
     exactly the nondeterminism class the suite is built to exclude. So they preset
     <code>FIZZYGUM_EAGER_ALL_PARTS</code> and the suite's world is shaped as it always was. The
     consequence worth remembering: <strong>a SystemTest can never observe laziness</strong> — it
@@ -271,7 +272,7 @@
 
       <rect class="box" x="660" y="16" width="150" height="46" style="stroke:var(--s2)"/>
       <text class="t" x="676" y="38">ingest</text>
-      <text class="m" x="676" y="54">one class per FRAME</text>
+      <text class="m" x="676" y="54">budgeted, per frame</text>
 
       <path class="flow" d="M162 39 L 206 39"/>
       <path class="flow" d="M392 39 L 436 39"/>
@@ -279,10 +280,13 @@
       <text class="m" x="10" y="96">Concurrent callers get the SAME promise, so a double-click cannot start two loads. A failed load leaves the part ASKABLE again</text>
       <text class="m" x="10" y="114">rather than stuck LOADING. Parts load monotonically and are never unloaded — resetWorld resets STATE, and code is not state.</text>
     </svg>
-    <figcaption>The ingest is frame-paced through the same queue the boot uses: each step pushes its
-    resolver onto <code>window.framePacedPromises</code>, and the world's own cycle
-    (<code>progressFramePacedActions</code>) resolves exactly one per frame. That is what lets ~10
-    classes compile behind a world that is already running, without jitter.</figcaption>
+    <figcaption>The ingest goes through <code>window.SourceCompileScheduler</code>, the same budgeted
+    queue the boot ingest uses: the world's own cycle drains it synchronously at <em>end</em> of frame,
+    right after paint, fitting as many classes as the leftover frame budget allows (estimated from
+    each source's line count times a self-calibrating observed ms/line) — and at least one per frame,
+    always. That is what lets a part compile behind a world that is already running, without jitter.
+    (Only the batch <em>fetches</em> still go one-per-frame through
+    <code>window.framePacedPromises</code>/<code>progressFramePacedActions</code>.)</figcaption>
   </figure>
 
   <p>Two constraints the boot path does not have, both handled in <code>_ingestPartPromise</code>:

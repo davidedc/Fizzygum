@@ -14,9 +14,11 @@ nil = undefined
 # globals -------------------------------------------------
 world = nil
 
-# At the moment using an array is overkill because
-# we only use this when loading the coffeescript sources batches
-# and we only load one batch at a time
+# Paces the FETCHING of the coffeescript sources batches: each waitNextTurn
+# parks its resolver here and the world's doOneCycle releases one per frame
+# (progressFramePacedActions). Compiling the fetched sources goes through
+# window.SourceCompileScheduler instead, drained at END of frame under a time
+# budget. An array is overkill -- batches load one at a time -- but harmless.
 framePacedPromises = []
 
 srcLoadCompileDebugWrites = false

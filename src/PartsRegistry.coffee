@@ -7,20 +7,22 @@
 #
 # WHY THIS IS NOT AS BIG AS IT SOUNDS. The hard part of loading code into a live world -- fetching
 # it over file:// with no fetch/XHR, then compiling it without stalling the frame loop -- already
-# existed and runs on every production boot: `loadJSFilePromise` injects a <script>, and the
-# frame-paced ingest chain (waitNextTurn -> storeSourceAndPotentiallyCompileItAndExecuteIt, drained
-# one step per cycle out of window.framePacedPromises) compiles a source per frame behind a world
-# that is already running. This class is the bookkeeping around that: which sources belong to the
-# part, in what order to compile them, and one promise per part so concurrent callers coalesce.
+# existed and runs on every production boot: `loadJSFilePromise` injects a <script> (fetch pacing:
+# waitNextTurn, one batch per frame out of window.framePacedPromises), and
+# window.SourceCompileScheduler compiles sources behind the running world at END of frame, fitting
+# as many per frame as the leftover frame budget allows (at least one). This class is the
+# bookkeeping around that: which sources belong to the part, in what order to compile them, and one
+# promise per part so concurrent callers coalesce.
 #
 # ⚠ A PART IS CODE, NOT STATE. Parts load monotonically within a page session and are never
 # unloaded: resetWorld resets STATE, and unloading CODE between tests would recompile ~10 classes
 # per test for no isolation gain (all ~500 classes already stay resident across an entire shard).
 # There is deliberately no `unload`.
 #
-# ⚠ THE TEST PROFILE EAGER-LOADS EVERYTHING. A part arriving mid-test would be frame-paced, hence
-# cycle-count-dependent, hence exactly the nondeterminism class DETERMINISM.md is about (cycle
-# counts diverge at dpr 2 under parallel load). The harness page and index-sw.html therefore set
+# ⚠ THE TEST PROFILE EAGER-LOADS EVERYTHING. A part arriving mid-test would be ingested under a
+# WALL-CLOCK frame budget -- how many classes land in which cycle depends on machine load -- which
+# is exactly the nondeterminism class DETERMINISM.md is about (cycle counts diverge at dpr 2 under
+# parallel load). The harness page and index-sw.html therefore set
 # window.FIZZYGUM_EAGER_ALL_PARTS, so the suite's world is what it always was. The lazy path gets
 # its own test, which AWAITS the load.
 class PartsRegistry
@@ -234,7 +236,7 @@ class PartsRegistry
     for eachBatch in spec.batches
       chain = chain.then -> waitNextTurn()
       chain = chain.then @_createBatchLoadClosure eachBatch
-    # 3. then compile what just arrived, frame-paced like the boot ingest.
+    # 3. then compile what just arrived, through the budgeted scheduler like the boot ingest.
     chain.then => @_ingestPartPromise partName
 
   # A closure per file: without one, every step would see the loop variable's final value.
@@ -255,7 +257,10 @@ class PartsRegistry
       return window.SW3D? and window.SWCanvas?.Core?.Triangle3DOps?
     false
 
-  # Compile+run the part's sources, in dependency order, one per frame.
+  # Compile+run the part's sources, in dependency order, through the budgeted
+  # end-of-frame scheduler -- as many per frame as the leftover frame budget
+  # fits, at least one (window.SourceCompileScheduler, drained by doOneCycle
+  # right after paint).
   #
   # ⚠ Two constraints the boot path does not have. (a) findLoadOrder() scans EVERY source the vault
   # holds and is meant to run once, before anything is defined; here most classes already exist, so
@@ -267,12 +272,4 @@ class PartsRegistry
     ordered = (name for name from findLoadOrder() when name in fresh)
     # anything the load order did not mention (it skips Class/Mixin) still needs ingesting
     ordered = ordered.concat (name for name in fresh when name not in ordered)
-
-    chain = Promise.resolve()
-    for eachName in ordered
-      chain = chain.then -> waitNextTurn()
-      chain = chain.then @_createIngestClosure eachName
-    chain
-
-  _createIngestClosure: (fileName) ->
-    -> storeSourceAndPotentiallyCompileItAndExecuteIt fileName, false
+    window.SourceCompileScheduler.enqueueJob ordered, false

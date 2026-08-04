@@ -55,7 +55,7 @@ const STINKS = [
   { id: 'wall-clock', baseline: 19,
     why: 'Date.now()/new Date() in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock)',
     re: /\b(Date\.now\s*\(|new Date\s*\()/ },
-  { id: 'timer', baseline: 3,
+  { id: 'timer', baseline: 4,   // raised 3->4 on 2026-08-04: SourceCompileScheduler._ensurePumpScheduled pumps the compile-at-boot ingest, which runs only while NO world exists (same nature as the waitNextJSEventLoopCycle timer beside it) — bug-class B needs a live suite world to bite
     why: 'setTimeout/setInterval diverge at dpr2 under parallel load (DETERMINISM.md bug-class B: heavy cycles starve timers); the cycle/step machinery is the sanctioned clock',
     re: /\b(setTimeout|setInterval)\s*\(/ },
   { id: 'math-random', baseline: 5,
@@ -68,7 +68,7 @@ const STINKS = [
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',
     re: /\b(the (below|above) is|is actually (correct|right|fine|wrong)|to be clear,)\b/i },
-  { id: 'comment-narration', baseline: 106, scope: 'comments',
+  { id: 'comment-narration', baseline: 105, scope: 'comments',   // tightened 106->105 on 2026-08-04 (budgeted-compile-scheduler edits removed one; locking the gain in)
     why: 'history narration ("used to", "previously", "no longer", "in the old model") belongs in docs/archive/ with a pointer, not inline — a comment states what IS',
     re: /\b(used to\b|previously\b|no longer\b|in the old (model|way|code)\b)/i },
   { id: 'commented-out-debug', baseline: 0, scope: 'comments',

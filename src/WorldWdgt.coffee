@@ -1664,13 +1664,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     @inputEventsQueue.clear()
 
-  # we keep the "pacing" promises in this
-  # framePacedPromises array, (or, more precisely,
-  # we keep their resolving functions) and each frame
-  # we resolve one, so we don't cause gitter.
+  # Batch-FETCH pacing: each waitNextTurn parks its resolving function in the
+  # framePacedPromises array and each frame we release one, so a sources-batch
+  # <script> load gets a whole frame of network time without causing gitter.
+  # This paces FETCHES only -- compiling the fetched sources goes through
+  # window.SourceCompileScheduler, drained at END of frame under a time budget
+  # (the compile station at the tail of doOneCycle).
   # At the moment using an array is overkill because
-  # we only use this when loading the coffeescript sources batches
-  # and we only load one batch at a time.
+  # we only load one batch at a time.
   progressFramePacedActions: ->
     if window.framePacedPromises.length > 0
       resolvingFunction = window.framePacedPromises.shift()
@@ -1719,6 +1720,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
         @macroToolkit.msSinceLastExecutedMacroStep += WorldWdgt.dateOfCurrentCycleStart.getTime() - WorldWdgt.dateOfPreviousCycleStart.getTime()
 
   doOneCycle: ->
+    # for the end-of-frame compile station only -- a local, deliberately not a
+    # static: nothing for the resetWorld completeness audit to track
+    cycleStartPerfMs = performance.now()
+
     @_updateTimeReferences()
 
     @_showErrorsHappenedInRepaintingStepInPreviousCycle()
@@ -1735,7 +1740,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # currently unused
     @runOtherTasksStepFunction()
     
-    # used to load fizzygum sources progressively
+    # paces the FETCHING of coffeescript source batches, one per frame (early in
+    # the cycle so a fetch gets the whole frame of network time); compiling them
+    # happens at the end-of-frame compile station below
     @progressFramePacedActions()
     
     @_runChildrensStepFunction()
@@ -1784,6 +1791,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     # here is where the repainting on screen happens
     @_updateBroken()
+
+    # END-OF-FRAME compile station: budget-drain pending class-source compiles
+    # AFTER paint, so a lazy-part load burst spends only the frame time paint
+    # left over -- and at least one source per frame regardless. Guarded: on a
+    # precompiled boot the world steps before
+    # js/src/loading-and-compiling-coffeescript-sources-min.js arrives.
+    window.SourceCompileScheduler?.drainAtEndOfCycle cycleStartPerfMs
 
     WorldWdgt.frameCount++
 

@@ -70,6 +70,12 @@ extractDependenciesFromSource = ->
     fileDependenciesSet = new Set
 
     lines = SourceVault.get(eachFile).split '\n'
+    # free byproduct of the split we already pay for: per-source line counts, the
+    # compile-time estimator's input (window.SourceCompileScheduler, in
+    # loading-and-compiling-coffeescript-sources.coffee). A Map, not an object:
+    # Object.prototype is extended in this system.
+    window.sourceLineCounts ?= new Map
+    window.sourceLineCounts.set eachFile, lines.length
     for eachLine in lines
 
       # everything depends on globalFunctions, let's get that out of the way
