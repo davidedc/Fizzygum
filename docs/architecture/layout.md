@@ -195,14 +195,51 @@ layout feedback. It is the layout system's single named state-read — do not ad
 genuinely must be sized-then-measured, the value is **handed forward** from the sizing call
 (`_setWidthSizeHeightAccordingly` returns its resulting height) rather than mutated-then-read-back.
 
-### 4.2 One constraint box everywhere
+### 4.2 The layout-spec FAMILY — one object per attachment, carried by the child
 
-`VerticalStackLayoutSpec` is a constraint box: a `desiredWidth` (the width wish, captured at placement) + a `grow`
-factor (0..1 share of extra space) + an `alignment`, with
-`width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )`. The horizontal path is likewise a
-textbook constraint box (`getRecursiveMinDim`/`getRecursiveDesiredDim`/`getRecursiveMaxDim` computed bottom-up over
-the shared `_getRecursiveStackDim` walker; the base `_reLayout` distributes under-min shrink / desired-margin grow /
-max-margin grow). There is no add-time proportional state and no width↔height cycle.
+HOW a child participates in its container's layout is ONE spec object on the child — `Widget.layoutSpec`,
+the ACTIVE attachment. **Free-floating is the ABSENCE of a spec (nil)** — `isFreeFloating()` is a nil
+check, and the layouting system leaves such a widget alone. WHICH strategy places a child is answered by
+duck-typed capability queries on its spec (`isDivisionElement?()`, `isCornerInternal?()`,
+`isStackElementActive?()`, `isFrameContentActive?()`), never a type test. The family
+(`src/LayoutSpec.coffee` is the abstract base):
+
+- **`DivisionStackLayoutSpec`** — min/desired/max (both axes) + `axis` (`'x'` a row dividing width,
+  `'y'` a vertical division stack dividing height) + `crossAlign` (`'stretch'` default, or
+  `'start'|'center'|'end'` at the cell's own cross-axis desired extent). The engine is
+  **`StackLayoutEngine.arrange`**: the three-regime division of the container's MAIN axis
+  (under-min shrink / desired-margin grow / max-margin fill — max extents bite only in regime 3,
+  which is what the divider's closed form rests on), axis-parameterized, one shared placement loop.
+  LIFECYCLE: a per-widget KNOB (`Widget._divisionBox`, kept for the widget's whole life — a
+  divider-tuned cell dragged out of its stack and back keeps its box), which doubles as the add-time
+  attachment: `holder.add w, nil, w.divisionBox('y')`.
+- **`VerticalStackLayoutSpec`** — `desiredWidth` (the width wish, captured at placement) + `grow`
+  (0..1 share of extra space) + `alignment`, with
+  `width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )` — the content
+  stack's cross-axis FIT law (`SimpleVerticalStackPanelWdgt`; the main axis hugs content).
+  LIFECYCLE: per PLACEMENT — captured at adoption, kept across detachment
+  (`Widget._stackElementSpec`) so explicit grow/alignment edits survive a grab-out-and-drop-back.
+- **`FrameContentLayoutSpec`** (a `VerticalStackLayoutSpec` subclass) — adds the starting-size
+  sentinels, `canSetHeightFreely`, `resizerCanOverlapContents`, and `attachedAsFrameContent` (the
+  role bit that lets the SAME kept object be adopted by a stack). Consumed by `FrameWdgt`'s content
+  negotiation; re-initialised per MOUNT and re-armed unless the mount is a same-content
+  chrome-rebuild re-add.
+- **`CornerInternalLayoutSpec`** — `anchor` (`'topLeft'|'topRight'|'bottomRight'|'rightMiddle'|
+  'bottomMiddle'`) + `proportionOfParent`/`fixedSize`/`inset`, applied by base `_reLayout`'s corner
+  pass; held by its carrier (`HandleWdgt.cornerSpec`, the triangle badges).
+
+A container's own box derives bottom-up: `getRecursiveMinDim`/`getRecursiveDesiredDim`/
+`getRecursiveMaxDim` over the shared `_getRecursiveStackDim` walker — the children's division axis
+is SUMMED and the cross axis takes the MAX, so an 'x' row nested as a 'y' cell reports its height
+from its own children. There is no add-time proportional state and no width↔height cycle.
+
+**The scaffold — layouts are directly manipulable.** The halo inserts axis-aware dividers between
+division siblings (`StackElementsSizeAdjustingWdgt` — the closed-form exact pointer drag, on either
+axis); "edit layout" on a division container's context menu shows drop-slot adders between the
+cells (`LayoutElementAdderOrDropletWdgt` + `LayoutSpacerWdgt`, in the LAZY `authoring` part — the
+menu entry awaits the part, `Widget.editLayout`). A border layout is COMPOSITION, not an engine: a
+'y' division stack whose middle cell is an 'x' row, dividers at the seams
+(`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
 
 **hug vs grow.** `grow 0` is a size-stability choice (a size-stable window content declares it in its
 `initialiseDefaultFrameContentLayoutSpec` override — e.g. the clock and `IconWdgt`; the spreadsheet is a grow-1
@@ -310,7 +347,7 @@ To fit the engine, a new widget / container / layout spec honours, in priority o
    `_scheduleRelayoutRespectingPhase`, aimed at the one directly-affected widget — never the bare climbing verb.
 
 4. **Free-floating content climbs nothing; a size-tracking container gets the up-edge automatically.** A free-floating
-   child (`ATTACHEDAS_FREEFLOATING`, `src/LayoutSpec.coffee`) does not invalidate its parent. If your container tracks
+   child (nil `layoutSpec`) does not invalidate its parent. If your container tracks
    its content's size, define `_reLayoutChildren` — that is the marker `_reFitContainer` gates on — and the settle loop
    re-fits you after your content settles. Do not wire a manual notification.
 

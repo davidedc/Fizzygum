@@ -14,7 +14,7 @@
 # non-settling StringWdgt::_reflowContainedTextThenInvalidateLayout core (gated by the mode), so ANY
 # TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
-# layoutSpecDetails.canSetHeightFreely = false (height is content-driven), the
+# _stackElementSpec.canSetHeightFreely = false (height is content-driven), the
 # scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
 # the dataflow plumbing (updateTarget + bang), and the panel-colour blend helpers.
 
@@ -56,7 +56,7 @@ class SimpleTextWdgt extends TextWdgt
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @layoutSpecDetails.canSetHeightFreely = false
+    @_stackElementSpec.canSetHeightFreely = false
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
@@ -104,7 +104,7 @@ class SimpleTextWdgt extends TextWdgt
   # This runs synchronously in a click handler with IMMEDIATE layout work (raw resize inside
   # setTextLineWrapping + an explicit _reLayoutSelf) instead of the framework's deferred _invalidateLayout()
   # pattern: the deferred mechanism is half-built (geometry accessors read applied @bounds only), and
-  # soft-wrap has an EXTRA blocker -- the content/text are ATTACHEDAS_FREEFLOATING (so _invalidateLayout()
+  # soft-wrap has an EXTRA blocker -- the content/text are free-floating (nil layoutSpec) (so _invalidateLayout()
   # never climbs to the scroll panel) and the wrap geometry lives in _positionAndResizeChildren, off the
   # _reLayout cycle. Completing the deferred model stays the goal -- see
   # docs/archive/softwrap-deferred-layout-conversion-plan.md for the obstacle map and what a conversion

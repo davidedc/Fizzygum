@@ -4,10 +4,10 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   constructor: ->
     super()
     @setColor Color.BLACK
-    @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
+    @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
 
   # Role query (replaces the `x instanceof LayoutElementAdderOrDropletWdgt` filters in
-  # Widget.addOrRemoveAdders): "am I one of the auto-inserted stack add/drop placeholders?" — true
+  # Widget._addOrRemoveAdders): "am I one of the auto-inserted stack add/drop placeholders?" — true
   # here (and any subclass), so callers skip these chrome placeholders when scanning real stack
   # content. Parallels isLayoutInert. (type-test-elimination campaign, capability-first)
   isLayoutAdderOrDroplet: ->
@@ -91,13 +91,11 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       newWdgt = new Widget
       @parent.add newWdgt
       newWdgt._applyGrantedBounds @boundingBox()
-      newWdgt.add @, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      newWdgt.add @, nil, @_ensureDivisionBox()
       newWdgt.showAdders()
 
-    @addAsSiblingAfterMe \
-      (new LayoutElementAdderOrDropletWdgt),
-      nil,
-      LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    newAdder = new LayoutElementAdderOrDropletWdgt
+    @addAsSiblingAfterMe newAdder, nil, newAdder._divisionBox
 
   # Runs inside the drop's single settle: addAsSiblingAfterMe is already non-settling (-> _addNoSettle),
   # and fullDestroy -> the non-settling core _fullDestroyNoSettle.
@@ -105,7 +103,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     @addAsSiblingAfterMe \
       widgetBeingDropped,
       nil,
-      LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      widgetBeingDropped._ensureDivisionBox()
     @_fullDestroyNoSettle()
 
   mouseEnter: ->

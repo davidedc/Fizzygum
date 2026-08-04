@@ -705,6 +705,7 @@ class DemoMenus
     menu.addMenuItem "make spacers opaque", targetWidget, "makeSpacersOpaque"
     menu.addMenuItem "show adders", targetWidget, "showAdders"
     menu.addMenuItem "remove adders", targetWidget, "removeAdders"
+    menu.addMenuItem "border layout scaffold", world.widgetFactory, "createBorderLayoutScaffold"
     menu.addMenuItem "StringWdgt without background", demoMenus, "createNewStringWdgtWithoutBackground"
     menu.addMenuItem "StringWdgt with background", demoMenus, "createNewStringWdgtWithBackground"
     menu.addMenuItem "TextWdgt with background", demoMenus, "createNewTextWdgtWithBackground"

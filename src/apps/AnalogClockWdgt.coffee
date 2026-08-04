@@ -32,7 +32,7 @@ class AnalogClockWdgt extends Widget
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @layoutSpecDetails.canSetHeightFreely = false
+    @_stackElementSpec.canSetHeightFreely = false
     # FIXED (grow 0): the clock keeps its own square size as window content; it does NOT
     # stretch to fill a larger (e.g. nested) window. This makes its width CONVERGENCE-INDEPENDENT:
     # at grow 0, getWidthInStack = min(desiredWidth, availW) -- no term samples the stack width,
@@ -41,7 +41,7 @@ class AnalogClockWdgt extends Widget
     # window-in-window, the ancestor-cascade-converged width and drove the deferred-layout
     # runaway; U1 deleted that snapshot from the model entirely). The clock's square aspect is
     # preserved by _setWidthSizeHeightAccordingly.
-    @layoutSpecDetails.grow = 0
+    @_stackElementSpec.grow = 0
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_applyExtent new Point newWidth, newWidth

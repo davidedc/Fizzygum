@@ -28,12 +28,12 @@ class ToolPanelWdgt extends PanelWdgt
   # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern). Was: a public add ending in a
   # bare _invalidateLayout() that rode the end-of-cycle flush, plus a hand-rolled
   # `dontLayout` batching flag -- the pre-convert shape everywhere else already left.
-  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
-    layoutSpec = opts.layoutSpec ? LayoutSpec.ATTACHEDAS_FREEFLOATING
+    layoutSpec = opts.layoutSpec
     beingDropped = opts.beingDropped
     positionOnScreen = opts.positionOnScreen
 

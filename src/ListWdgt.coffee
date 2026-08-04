@@ -56,7 +56,7 @@ class ListWdgt extends ScrollPanelWdgt
   # non-settling twin of that redirect is `@contents._addNoSettle` (NOT the base `@_addNoSettle`, which would
   # wrongly attach @listContents to the scroll frame itself and break every InspectorWdgt's property pane --
   # the reason the orphan-settledness sweep left this unconverted). The core builds via @contents._addNoSettle
-  # with the same explicit ATTACHEDAS_FREEFLOATING layoutSpec the public redirect passes, so behaviour is byte-
+  # with the same default free-floating attachment the public redirect passes, so behaviour is byte-
   # identical and the wrapper settles once -- `new ListWdgt` still returns settled.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
@@ -102,7 +102,7 @@ class ListWdgt extends ScrollPanelWdgt
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
 
-    @contents._addNoSettle @listContents, layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
+    @contents._addNoSettle @listContents
 
   # A ListWdgt is excluded from the "scroll panel re-fits its contained stack
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for

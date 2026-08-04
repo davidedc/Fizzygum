@@ -290,8 +290,17 @@ class Widget extends TreeNode
   # finally, via world._dirtyDescendantFlagged). Outside a flush every flag is false — which is why
   # it must stay in @serializationTransients even though its resting own-value is false.
   hasDirtyDescendant: false
-  layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
-  layoutSpecDetails: nil
+  # The ACTIVE layout spec (a LayoutSpec-family object) — HOW my container places me right
+  # now. nil = FREE-FLOATING: the absence of a spec, the layouting system leaves me alone.
+  layoutSpec: nil
+  # The kept content-stack spec (VerticalStackLayoutSpec / FrameContentLayoutSpec) — spec
+  # DATA persists across detachment (an element grabbed OUT of a stack keeps its explicit
+  # grow/alignment for a later re-adoption); the adopting arranges read/refresh it and make
+  # it the active @layoutSpec.
+  _stackElementSpec: nil
+  # the widget's division constraint box (a DivisionStackLayoutSpec) once it has a private
+  # one — see _ensureDivisionBox() / _divisionBoxOrDefaults() in the Layouts section
+  _divisionBox: nil
 
   _showsAdders: false
 
@@ -325,21 +334,22 @@ class Widget extends TreeNode
   wasPositionedSlightlyOutsidePanel: false
 
   initialiseDefaultFrameContentLayoutSpec: ->
-    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
+    @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
     # bind the element NOW (the capture re-binds it later): a PRE-capture measure's
     # total-fallback (getWidthInStack, U2) derives its answer from the element's
     # natural width, so it needs the back-ref before the first arrange runs.
-    @layoutSpecDetails.element = @
+    @_stackElementSpec.element = @
 
   initialiseDefaultVerticalStackLayoutSpec: ->
-    # use the existing VerticalStackLayoutSpec (if it's there)
-    unless @layoutSpecDetails instanceof VerticalStackLayoutSpec
+    # use the existing kept spec (if it's there — including a FrameContentLayoutSpec whose
+    # widget moved from a window into a stack: the capability keeps explicit edits alive)
+    unless @_stackElementSpec?.isContentStackCapable?()
       # no grow arg: UNDECIDED — the capture derives it from the add-time relationship
       # (a full-width add tracks the stack, a narrower add keeps its size — D2-def,
       # docs/archive/sizing-model-unification-plan.md §9.1/§9.5)
-      @layoutSpecDetails = new VerticalStackLayoutSpec
+      @_stackElementSpec = new VerticalStackLayoutSpec
       # element bound now for the pre-capture measure fallback (see the window-content twin above)
-      @layoutSpecDetails.element = @
+      @_stackElementSpec.element = @
 
   mouseClickRight: ->
     # you could bring up what you right-click,
@@ -386,8 +396,6 @@ class Widget extends TreeNode
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
     # widget to draw itself.
-
-    @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
   # this happens when the Widget's constructor runs
   # and also when the Widget is duplicated
@@ -738,7 +746,7 @@ class Widget extends TreeNode
     return nil
 
   isFreeFloating: ->
-    @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    !@layoutSpec?
 
   _setLayoutSpec: (newLayoutSpec) ->
     if @layoutSpec == newLayoutSpec
@@ -1645,19 +1653,19 @@ class Widget extends TreeNode
   # the fields it does NOT carry: the STRETCHABLE-PANEL fractional geometry (positionFractionalInHolding-
   # Panel / extentFractionalInHoldingPanel / wasPositionedSlightlyOutsidePanel — else the panel's _reLayout
   # reads @positionFractionalInHoldingPanel[0] on a nil and aborts the whole relayout as LAYOUT_ERROR), and
-  # the STACK layoutSpecDetails object (else the island has layoutSpec == VERTICAL_STACK_ELEMENT but nil
-  # details, the stack's init block is skipped because the enum already matches, and _childWidthInStack
+  # the kept STACK spec object (else the island is stack-active but has a nil kept spec, the stack's
+  # init block is skipped because the active spec already matches, and _childWidthInStack
   # falls back to raw available width instead of proportional tracking). MOVE (nil the source) keeps a
   # single owner, so a fullCopy of the wrapped figure never double-references the shared spec object.
   _moveHoldingPanelBookkeepingTo: (target) ->
     target.positionFractionalInHoldingPanel = @positionFractionalInHoldingPanel
     target.extentFractionalInHoldingPanel = @extentFractionalInHoldingPanel
     target.wasPositionedSlightlyOutsidePanel = @wasPositionedSlightlyOutsidePanel
-    target.layoutSpecDetails = @layoutSpecDetails
+    target._stackElementSpec = @_stackElementSpec
     @positionFractionalInHoldingPanel = nil
     @extentFractionalInHoldingPanel = nil
     @wasPositionedSlightlyOutsidePanel = false
-    @layoutSpecDetails = nil
+    @_stackElementSpec = nil
 
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
   # become its single free-floating child, keeping my absolute position (virtual ≡ screen at identity).
@@ -3272,15 +3280,15 @@ class Widget extends TreeNode
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelf()
 
-  # _addNoSettle (NOT add): these run from addOrRemoveAdders during a layout pass, so a
+  # _addNoSettle (NOT add): these run from _addOrRemoveAdders during a layout pass, so a
   # self-settle would re-enter the flush guard; for the other caller
   # (showResizeAndMoveHandlesAndLayoutAdjusters, a menu action) it is byte-identical
   # because the frame settles anyway.
-  addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = nil) ->
     myPosition = @positionAmongSiblings()
     @parent._addNoSettle aWdgt, position: (myPosition + 1), layoutSpec: layoutSpec
 
-  addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = nil) ->
     myPosition = @positionAmongSiblings()
     @parent._addNoSettle aWdgt, position: myPosition, layoutSpec: layoutSpec
 
@@ -3290,7 +3298,7 @@ class Widget extends TreeNode
   # attachment. The destination is passed so the placement can depend on it (e.g. a HandleWdgt corner-attaches
   # only to the very widget it resizes -- its @target -- and is free-floating on the world / hand otherwise).
   defaultLayoutSpecWhenAddedTo: (destination) ->
-    LayoutSpec.ATTACHEDAS_FREEFLOATING
+    nil
 
   # ===== structural add =====
   # add() is the PUBLIC self-settling entry: it links the widget in through the private,
@@ -3915,20 +3923,20 @@ class Widget extends TreeNode
       # correct once a rotation is in play.
       @_addAndTrackHandle "rotateHandle"
     else
-      if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
+      stackSiblingBefore = @lastSiblingBeforeMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()
+      if stackSiblingBefore? and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)
+        newAdjuster = new StackElementsSizeAdjustingWdgt
+        newAdjuster._divisionBox.axis = stackSiblingBefore.layoutSpec.axis
         world.temporaryHandlesAndLayoutAdjusters.add \
-          @addAsSiblingBeforeMe \
-            new StackElementsSizeAdjustingWdgt,
-            nil,
-            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+          @addAsSiblingBeforeMe newAdjuster, nil, newAdjuster._divisionBox
 
 
-      if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingWdgt)
+      stackSiblingAfter = @firstSiblingAfterMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()
+      if stackSiblingAfter? and !@siblingAfterMeIsA(StackElementsSizeAdjustingWdgt)
+        newAdjuster = new StackElementsSizeAdjustingWdgt
+        newAdjuster._divisionBox.axis = stackSiblingAfter.layoutSpec.axis
         world.temporaryHandlesAndLayoutAdjusters.add \
-          @addAsSiblingAfterMe \
-            new StackElementsSizeAdjustingWdgt,
-            nil,
-            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+          @addAsSiblingAfterMe newAdjuster, nil, newAdjuster._divisionBox
       if @parent?
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
@@ -4212,13 +4220,22 @@ class Widget extends TreeNode
   # Widget-specific menu entries are basically the ones
   # beyond the generic entries above.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+    if @layoutSpec?.isStackElementActive?()
       # it could be possible to figure out layouts when the vertical
       # stack doesn't contrain the content widths but it's rather
       # more complicated so we are not doing it for the time
       # being
       if @parent?.constrainContentWidth
-        @layoutSpecDetails.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
+        @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
+    # a DIVISION container gets the layout-scaffold toggle: "edit layout" shows the
+    # drop-slot adders between the cells (fetching the lazy authoring part that carries
+    # them), "done editing layout" removes them
+    if @_divisionChildrenAxis()?
+      menu.addLine()
+      if @_showsAdders
+        menu.addMenuItem "done editing layout", @, "removeAdders", toolTip: ""
+      else
+        menu.addMenuItem "edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
 
   buildWidgetContextMenu: (widgetOpeningThePopUp) ->
     menu = @buildBaseWidgetClassContextMenu widgetOpeningThePopUp
@@ -4341,7 +4358,7 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     # double-settle-sanctioned: deliberate SEQUENTIAL pair, exactly as newParentChoice above.
-    @add theWidgetToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add theWidgetToBeAttached, nil, theWidgetToBeAttached._ensureDivisionBox()
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
     # ScrollPanel-only pre-guard; @add already self-settled the attach).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
@@ -4475,7 +4492,7 @@ class Widget extends TreeNode
   _beforeBeingGrabbed: ->
     @userMovedThisFromComputedPosition = true
     @_unlockFromPanels()
-    @_setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
+    @_setLayoutSpec nil
 
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
     menuEntriesStrings = Array.from(new Set(menuEntriesStrings))
@@ -4675,13 +4692,23 @@ class Widget extends TreeNode
   #     spec properties of the content.
 
 
-  minWidth: 10
-  desiredWidth: 20
-  maxWidth: 100
+  # The division constraint box (min/desired/max, both axes) — a per-widget KNOB retained
+  # for the widget's whole life (see DivisionStackLayoutSpec). Writers materialize a
+  # private box; a widget without one reads through the shared immutable defaults.
+  _ensureDivisionBox: ->
+    @_divisionBox ?= new DivisionStackLayoutSpec
 
-  minHeight: 10
-  desiredHeight: 20
-  maxHeight: 100
+  # PUBLIC face of the box (macros / demos / in-world scripting): the box doubles as the
+  # ATTACHMENT value for adding a widget as a division element — `holder.add w, nil,
+  # w.divisionBox()` for a horizontal row, `w.divisionBox('y')` for a vertical division
+  # stack. Internal private callers use the _ensureDivisionBox core.
+  divisionBox: (axis) ->
+    box = @_ensureDivisionBox()
+    box.axis = axis if axis?
+    box
+
+  _divisionBoxOrDefaults: ->
+    @_divisionBox ? DivisionStackLayoutSpec.defaults()
 
   # The bare layout-enqueue ATOM: put me into the recalculateLayouts until-loop and mark my layout invalid, WITHOUT
   # climbing to ancestors and WITHOUT the flow-rule throw / careless-push audit that _invalidateLayout wraps around it
@@ -4778,15 +4805,16 @@ class Widget extends TreeNode
     # and @parent?` climb-guard (the freefloating rule now lives in ONE place, the param check above).
     @parent?._invalidateLayout(@)
 
-  setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
-    @minWidth = minBounds.x
-    @minHeight = minBounds.y
+  setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = DivisionStackLayoutSpec.SPREADABILITY_MEDIUM) ->
+    box = @_ensureDivisionBox()
+    box.minWidth = minBounds.x
+    box.minHeight = minBounds.y
 
-    @desiredWidth = desiredBounds.x
-    @desiredHeight = desiredBounds.y
+    box.desiredWidth = desiredBounds.x
+    box.desiredHeight = desiredBounds.y
 
-    @maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
-    @maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
+    box.maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
+    box.maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
 
     # ELIMINATE (end-of-cycle-flush-drawdown): every caller is a CONSTRUCTOR, so @ is an ORPHAN here -- the
     # widget is just sized now and re-fit TOP-DOWN when it is later added to the world (a self-settling add
@@ -4797,7 +4825,7 @@ class Widget extends TreeNode
     # The skip is SAFE specifically at THIS sizing-then-add seam -- NOT as a blanket _invalidateLayout
     # orphan-skip, which broke 63 tests because orphan invalidates are generally load-bearing (cf.
     # PanelWdgt._reactToChildRemoved). A disable-probe confirmed the orphan re-layout changes nothing (byte-identical).
-    # (Sets @maxWidth/@maxHeight inline rather than via _setMaxDimNoSettle, which would re-introduce the very
+    # (Writes the box's max pair inline rather than via _setMaxDimNoSettle, which would re-introduce the very
     # construction invalidate this skips; setMaxDim's own callers are unaffected.)
     @_invalidateLayout() unless @isOrphan()
 
@@ -4846,10 +4874,11 @@ class Widget extends TreeNode
       world._deferredSettleDeclarationDepth -= 1
 
   _setMaxDimNoSettle: (overridingMaxDim) ->
-    # (a proportional rescale of ATTACHEDAS_STACK_* children was once sketched
+    # (a proportional rescale of the division-stack children was once sketched
     # here — see git history — but never enabled)
-    @maxWidth = overridingMaxDim.x
-    @maxHeight = overridingMaxDim.y
+    box = @_ensureDivisionBox()
+    box.maxWidth = overridingMaxDim.x
+    box.maxHeight = overridingMaxDim.y
 
     @_invalidateLayout()
 
@@ -4865,58 +4894,70 @@ class Widget extends TreeNode
     @getRecursiveMinDim()
   getMaxDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-    maxDim = new Point @maxWidth, @maxHeight
+    box = @_divisionBoxOrDefaults()
+    maxDim = new Point box.maxWidth, box.maxHeight
     return maxDim.max @getDesiredDim()
 
 
-  # NB the .height() halves of the three getRecursive*Dim queries are currently CONSUMED NOWHERE outside the
-  # queries' own cross-clamps -- every external reader takes .width() only (the horizontal 3-case distribution
-  # in Widget._reLayout, and the stack-divider drag). Kept correct anyway: desiredHeight used to init to nil,
-  # and `nil < h` is always false in JS, so the child-height max never accumulated (fixed with the dim-cache
-  # scaffolding removal -- the caches were written but never read, and NOTHING ever reset their check-flags,
-  # so enabling the commented-out reads would have served permanently stale sizes).
-  # ONE recursive walker for the three min/desired/max queries below. They differed only
-  # in WHICH per-child query recurses and WHICH own-field pair backstops a widget with no
-  # horizontal-stack children (plus the desired/min clamp, applied by the wrappers below).
-  # Width SUMS across the stack children; height takes the MAX.
+  # ONE recursive walker for the three min/desired/max queries below. They differ only
+  # in WHICH per-child query recurses and WHICH own-box pair backstops a widget with no
+  # division children (plus the desired/min clamp, applied by the wrappers below).
+  # The children's DIVISION AXIS is SUMMED and the cross axis takes the MAX — an 'x' row
+  # sums widths / maxes heights, a 'y' division stack sums heights / maxes widths.
   _getRecursiveStackDim: (childQueryName, ownWidth, ownHeight) ->
-    width = 0
-    height = 0
-    gotAWidth = false
-    gotAHeight = false
+    axis = @_divisionChildrenAxis() ? 'x'
+    horizontal = axis == 'x'
+    sumDim = 0
+    maxDim = 0
+    gotASum = false
+    gotAMax = false
     for C in @children
-      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      if C.layoutSpec?.isDivisionElement?()
         childSize = C[childQueryName]()
-        gotAWidth = true
-        width += childSize.width()
-        if height < childSize.height()
-          gotAHeight = true
-          height = childSize.height()
-    width = ownWidth unless gotAWidth
-    height = ownHeight unless gotAHeight
+        gotASum = true
+        sumDim += if horizontal then childSize.width() else childSize.height()
+        childCross = if horizontal then childSize.height() else childSize.width()
+        if maxDim < childCross
+          gotAMax = true
+          maxDim = childCross
+    if horizontal
+      width = if gotASum then sumDim else ownWidth
+      height = if gotAMax then maxDim else ownHeight
+    else
+      height = if gotASum then sumDim else ownHeight
+      width = if gotAMax then maxDim else ownWidth
     new Point width, height
 
   getRecursiveDesiredDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-    (@_getRecursiveStackDim "getDesiredDim", @desiredWidth, @desiredHeight).min @getRecursiveMaxDim()
+    box = @_divisionBoxOrDefaults()
+    (@_getRecursiveStackDim "getDesiredDim", box.desiredWidth, box.desiredHeight).min @getRecursiveMaxDim()
 
   getRecursiveMinDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
     # the user might have forced the "desired" to be smaller than the widget's standard minimum
-    (@_getRecursiveStackDim "getMinDim", @minWidth, @minHeight).min @getRecursiveMaxDim()
+    box = @_divisionBoxOrDefaults()
+    (@_getRecursiveStackDim "getMinDim", box.minWidth, box.minHeight).min @getRecursiveMaxDim()
 
   getRecursiveMaxDim: ->
     if @isInCollapsedSubtree() then return new Point 0,0
-    @_getRecursiveStackDim "getMaxDim", @maxWidth, @maxHeight
+    box = @_divisionBoxOrDefaults()
+    @_getRecursiveStackDim "getMaxDim", box.maxWidth, box.maxHeight
 
-  countOfChildrenInHorizontalStackLayout: ->
-    if @isInCollapsedSubtree() then return 0
-    count = 0
+  # WHICH axis my division children divide — nil when I have none (the base _reLayout's
+  # dispatch predicate). Mixed axes under one parent are a configuration error: the first
+  # child's axis wins, loudly, and the layout stays deterministic.
+  _divisionChildrenAxis: ->
+    if @isInCollapsedSubtree() then return nil
+    axis = nil
     for C in @children
-      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
+      if C.layoutSpec?.isDivisionElement?() and
       !C.isInCollapsedSubtree()
-        count++
-    return count
+        childAxis = C.layoutSpec.axis
+        axis ?= childAxis
+        if childAxis != axis
+          console.error "mixed division axes under one container (" + @constructor?.name + ") — first child's axis '" + axis + "' wins"
+    return axis
 
   # it's useful to know when a widget defers its layout
   # because it means that its current size is indicative
@@ -4983,128 +5024,36 @@ class Widget extends TreeNode
     else
       @_applyExtent newBoundsForThisLayout.extent()
 
-    if LayoutSpec.isCornerOrEdgeInternal @layoutSpec
+    if @layoutSpec?.isCornerInternal?()
       if @parent
         xDim = @parent.width()
         yDim = @parent.height()
         # Integer placement (Layer A): minDim is a proportional (fractional) size used for BOTH this widget's
         # extent AND its right/bottom-anchored position below (parent.right() - minDim); round it once so both
         # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
-        minDim = Math.round Math.min(xDim, yDim) * @layoutSpec_cornerInternal_proportionOfParent + @layoutSpec_cornerInternal_fixedSize
+        spec = @layoutSpec
+        minDim = Math.round Math.min(xDim, yDim) * spec.proportionOfParent + spec.fixedSize
 
         @__commitExtent new Point minDim, minDim
 
-        # TODO this hack is because I couldn't initialise this properly
-        # where I should, due to load dependency problems
-        if !@layoutSpec_cornerInternal_inset?
-          @layoutSpec_cornerInternal_inset = new Point 0, 0
+        inset = spec.inset
 
-        if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
-          @_applyMoveTo new Point @parent.left() + @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
-        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
-          @_applyMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.top() + @layoutSpec_cornerInternal_inset.y
-        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
-          @_applyMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
-        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
-          @_applyMoveTo new Point @parent.right() - minDim - @layoutSpec_cornerInternal_inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
-        else if @layoutSpec == LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
-          @_applyMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - @layoutSpec_cornerInternal_inset.y
+        if spec.anchor == 'topLeft'
+          @_applyMoveTo new Point @parent.left() + inset.x, @parent.top() + inset.y
+        else if spec.anchor == 'topRight'
+          @_applyMoveTo new Point @parent.right() - minDim - inset.x, @parent.top() + inset.y
+        else if spec.anchor == 'bottomRight'
+          @_applyMoveTo new Point @parent.right() - minDim - inset.x, @parent.bottom() - minDim - inset.y
+        else if spec.anchor == 'rightMiddle'
+          @_applyMoveTo new Point @parent.right() - minDim - inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
+        else if spec.anchor == 'bottomMiddle'
+          @_applyMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - inset.y
 
-    else if @countOfChildrenInHorizontalStackLayout() != 0
-
-      @addOrRemoveAdders()
-
-      min = @getRecursiveMinDim()
-      desired = @getRecursiveDesiredDim()
-      max = @getRecursiveMaxDim()
-      
-      # we are forced to be in a space smaller
-      # than the minimum needed. We obey.
-      # Each of the three width regimes below differs ONLY in the per-child WIDTH it hands out, so each
-      # sets a childWidthFor(C) closure (case preamble math hoisted as before); the ONE shared placement
-      # loop underneath walks the stack children and lays each out. (Was three copies of that same loop.)
-      if min.width() >= newBoundsForThisLayout.width()
-        # Give all children under minimum
-        # this is unfortunate but
-        # we don't want to rely on clipping what's
-        # beyond the allocated space. Clipping
-        # in this Widgetic implementation has special
-        # status and we don't want to meddle with
-        # that.
-        # example: if newBoundsForThisLayout.width() is 10 and min.width() is 50
-        # then reductionFraction = 1/5 , i.e. all the minimums
-        # will be further reduced to fit
-        reductionFraction = newBoundsForThisLayout.width() / min.width()
-        childWidthFor = (C) -> C.getMinDim().width() * reductionFraction
-
-      # the min is within the bounds but the desired is just
-      # equal or larger than the bounds.
-      # i.e. we have more space then what is strictly needed
-      # but less of what is desired.
-      # give min to all and then what is left available
-      # redistribute proportionally based on desired
-      else if desired.width() >= newBoundsForThisLayout.width()
-        desiredMargin = desired.width() - min.width()
-        if desiredMargin != 0
-          fraction = (newBoundsForThisLayout.width() - min.width()) / desiredMargin
-        else
-          fraction = 0
-        childWidthFor = (C) ->
-          minWidth = C.getMinDim().width()
-          desWidth = C.getDesiredDim().width()
-          minWidth + (desWidth - minWidth) * fraction
-
-      # min and desired are strictly less than the bounds
-      # i.e. we have more space than needed or desired
-      # allocate all the desired spaces, and on top of that
-      # give extra space based on maximum widths
-      else
-        maxMargin = max.width() - desired.width()
-        totDesWidth = desired.width()
-        extraSpace = newBoundsForThisLayout.width() - desired.width()
-        if extraSpace < 0
-          console.error "this shouldn't happen, extraSpace is negative: " + extraSpace
-
-        if maxMargin > 0
-          fillByDesiredFraction = 0
-        else if maxMargin == 0
-          fillByDesiredFraction = 1
-        else
-          console.error "this shouldn't happen, maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
-          fillByDesiredFraction = 0
-
-        childWidthFor = (C) ->
-          maxWidth = C.getMaxDim().width()
-          desWidth = C.getDesiredDim().width()
-          if (maxWidth - desWidth) > 0
-            xtra = extraSpace * ((maxWidth - desWidth)/maxMargin)
-          else
-            xtra = 0
-          desWidth + xtra + fillByDesiredFraction * (newBoundsForThisLayout.width()-desired.width()) * (desWidth / totDesWidth)
-
-      # ONE shared placement loop for all three cases (each set childWidthFor above). The overflow guard
-      # runs for every case but only case 3's max-based fill can trip it: cases 1 and 2 distribute to EXACTLY
-      # newBoundsForThisLayout.width() (their per-child widths telescope to the available width), so childLeft
-      # lands on right() and never exceeds it.
-      childLeft = newBoundsForThisLayout.left()
-      for C in @children
-        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
-        # Integer placement (Layer A): childWidthFor() is a proportional (fractional) width, so round each
-        # child's left/right BOUNDARY to commit an integer @bounds -- but carry the EXACT running position
-        # (childRight, not the rounded width) forward, so the children still telescope to the available width
-        # with no accumulated rounding drift and adjacent children share the one rounded boundary.
-        # NB rounding here shifts the divider-drag reproportion onto a different (still deterministic) trajectory
-        # -- macroStackDividerReproportionsCells was recaptured for it. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
-        childRight = childLeft + childWidthFor(C)
-        childBounds = new Rectangle \
-          Math.round(childLeft),
-          newBoundsForThisLayout.top(),
-          Math.round(childRight),
-          newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
-        childLeft = childRight
-        if childLeft > newBoundsForThisLayout.right() + 5
-          console.error "horizontal stack distribution overflowed its allocated width by " + (childLeft - newBoundsForThisLayout.right())
-        C._reLayout childBounds
+    else if (divisionAxis = @_divisionChildrenAxis())?
+      # my division children jointly divide my main axis — the three-regime solve + the
+      # placement loop live in StackLayoutEngine ('x' = a row dividing my width, 'y' = a
+      # vertical division stack dividing my height)
+      StackLayoutEngine.arrange @, newBoundsForThisLayout, divisionAxis
 
     @_markLayoutAsFixed()
 
@@ -5120,7 +5069,7 @@ class Widget extends TreeNode
   # retired synchronous hook masked exactly this by running the arrange inside super's own
   # self-extent-apply, so the hug landed BEFORE this loop). Idempotent when the frame is stable.
   _reLayoutCornerInternalChildren: ->
-    allCornerLayoutedChildren = @children.filter (m) -> LayoutSpec.isCornerOrEdgeInternal m.layoutSpec
+    allCornerLayoutedChildren = @children.filter (m) -> m.layoutSpec?.isCornerInternal?()
     for w in allCornerLayoutedChildren
       w._reLayout()
     return
@@ -5137,52 +5086,58 @@ class Widget extends TreeNode
     @_showsAdders = false
     @_invalidateLayout()
 
-  showAdders: ->
+  # PRODUCT entry for the layout scaffold ("edit layout" in a division container's context
+  # menu): fetch the LAZY authoring part that carries the adder/droplet chrome, THEN show
+  # the drop-slots. An existence guard here would silently swallow the click — inclusion
+  # guards are for the arranges, ensureLoaded is for user entry points.
+  editLayout: ->
+    world.parts.ensureLoaded('authoring').then => @showAdders(@_divisionChildrenAxis() ? 'x')
+
+  showAdders: (axis = 'x') ->
     return unless LayoutElementAdderOrDropletWdgt?
     @_showsAdders = true
     if @children.length == 0
-      @_addNoSettle \
-        new LayoutElementAdderOrDropletWdgt,
-        nil,
-        LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      # the seed adder of an EMPTY container joins the division layout it starts
+      newAdder = new LayoutElementAdderOrDropletWdgt
+      newAdder._divisionBox.axis = axis
+      @_addNoSettle newAdder, layoutSpec: newAdder._divisionBox
     @_invalidateLayout()
 
-  addOrRemoveAdders: ->
+  _addOrRemoveAdders: (axis = 'x') ->
     return unless LayoutElementAdderOrDropletWdgt?
 
     if !@_showsAdders
       allAddersToBeDestroyed =
         @collectAllChildrenBottomToTopSuchThat (m) ->
-          m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
+          m.layoutSpec?.isDivisionElement?() and
           m.isLayoutAdderOrDroplet?()
       for C in allAddersToBeDestroyed
-        C.fullDestroy()
+        # non-settling core: this runs from inside the arrange (a layout pass) — the public
+        # self-settling fullDestroy would re-enter the flush (rule [G])
+        C._fullDestroyNoSettle()
       return
 
     if @children.length == 0
-      @_addNoSettle \
-        new LayoutElementAdderOrDropletWdgt,
-        nil,
-        LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      @_addNoSettle new LayoutElementAdderOrDropletWdgt
 
-    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe"
+    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", axis
     # the second call scans the OTHER direction -- only needed to add the LAST adder/droplet.
-    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe"
+    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", axis
 
-  # ONE direction-parameterized scan for addOrRemoveAdders' two passes (was two ~20-line while-loops
+  # ONE direction-parameterized scan for _addOrRemoveAdders' two passes (was two ~20-line while-loops
   # identical bar the scan/insert verbs): repeatedly find the first stack child still needing an adder on
   # the given side (skipping adders/droplets themselves) and insert one there, until none remain.
-  _insertAddersSuchThat: (scanVerbName, insertVerbName) ->
+  _insertAddersSuchThat: (scanVerbName, insertVerbName, axis = 'x') ->
     return unless LayoutElementAdderOrDropletWdgt?
     while true
       leftToDo = @firstChildSuchThat (m) ->
-          if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+          if !m.layoutSpec?.isDivisionElement?()
             return false
           if m.isLayoutAdderOrDroplet?()
             return false
           kkk = m[scanVerbName](
               (mm) ->
-                mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+                mm.layoutSpec?.isDivisionElement?()
             )
           if !kkk?
             return true
@@ -5191,7 +5146,6 @@ class Widget extends TreeNode
           return true
       if !leftToDo?
         break
-      leftToDo[insertVerbName] \
-            new LayoutElementAdderOrDropletWdgt,
-            nil,
-            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      newAdder = new LayoutElementAdderOrDropletWdgt
+      newAdder._divisionBox.axis = axis
+      leftToDo[insertVerbName] newAdder, nil, newAdder._divisionBox

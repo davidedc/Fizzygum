@@ -22,7 +22,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
-  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
@@ -30,7 +30,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
-    layoutSpec = opts.layoutSpec ? LayoutSpec.ATTACHEDAS_FREEFLOATING
+    layoutSpec = opts.layoutSpec
     beingDropped = opts.beingDropped
     positionOnScreen = opts.positionOnScreen
     aWdgt._resizeToWithoutSpacing()
@@ -112,7 +112,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @layoutSpecDetails.canSetHeightFreely = false
+    @_stackElementSpec.canSetHeightFreely = false
 
   availableWidthForContents: ->
     @width() - 2 * @padding
@@ -135,12 +135,12 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # available width -- keeps the pure measures TOTAL (never throw), mirroring
   # FrameWdgt.preferredExtentForWidth's guard; the arrange initialises every spec before asking.
   _childWidthInStack: (widget, availForContents) ->
-    widget.layoutSpecDetails?.getWidthInStack(availForContents) ? availForContents
+    widget._stackElementSpec?.getWidthInStack(availForContents) ? availForContents
 
   _childLeftInStack: (widget, childWidth) ->
-    if widget.layoutSpecDetails?.alignment == 'right'
+    if widget._stackElementSpec?.alignment == 'right'
       @left() + @width() - @padding - childWidth
-    else if widget.layoutSpecDetails?.alignment == 'center'
+    else if widget._stackElementSpec?.alignment == 'center'
       @left() + Math.floor (@width() - childWidth) / 2
     else
       # 'left' (or a transiently-missing spec)
@@ -231,10 +231,13 @@ class SimpleVerticalStackPanelWdgt extends Widget
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     childrenNotHandlesNorCarets.forEach (widget) =>
-      if widget.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+      unless widget.layoutSpec?.isStackElementActive?()
         widget.initialiseDefaultVerticalStackLayoutSpec()
-        widget.layoutSpecDetails.captureInitialPlacement widget, @
-        widget._setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+        # a kept spec may come from a FRAME-content life — this adoption makes it a stack
+        # element again (see VerticalStackLayoutSpec.attachedAsFrameContent)
+        widget._stackElementSpec.attachedAsFrameContent = false
+        widget._stackElementSpec.captureInitialPlacement widget, @
+        widget._setLayoutSpec widget._stackElementSpec
 
     childrenNotHandlesNorCarets.forEach (widget, childIndex) =>
       # top border above the first element, inter-element gap above the rest

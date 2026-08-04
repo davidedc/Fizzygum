@@ -23,7 +23,7 @@ class BinWdgt extends Widget
     # I only ever appear as a window's content (BinOpenerWdgt always wraps me in a
     # FrameWdgt), and I am a VIEW, not a fixed-proportion artifact: fill the window
     # on both axes and track its resizes (like PaletteWdgt / the text scroll panels).
-    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND, FrameContentLayoutSpec.DONT_MIND, 1
+    @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND, FrameContentLayoutSpec.DONT_MIND, 1
     @_buildAndConnectChildren()
 
   colloquialName: ->

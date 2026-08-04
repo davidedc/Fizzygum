@@ -514,7 +514,17 @@ containers gained true `preferredExtentForWidth` twins (U3), and the newborn-win
 owner-decided) makes a container-owned window size like a captured one FROM BIRTH — the container owns its
 width; the hug is desktop-window behaviour. The one applied read-back (`subWidgetsMergedFullBounds`) is kept
 and RECLASSIFIED as the layout system's ONE named state-read (user-placed free-floating children — genuine
-state, D4). (D2 scroll-reachability note, claimsSpace arc 2026-07-17: the walk now takes a transformed
+state, D4).
+
+**⇄ CONFIGURATION UNIFIED (2026-08-04, `docs/archive/layout-spec-family-unification-plan.md`).** The
+REMAINING split — the configuration story — is gone too: the `LayoutSpec` integer enum, the six loose
+per-widget box fields and the three ad-hoc corner fields are DELETED, replaced by ONE per-child
+spec-object family (`Widget.layoutSpec` = the active spec; nil = free-floating; capability queries,
+never type tests), with the storage-split-by-ownership ruling above honoured as per-CLASS lifecycle
+(division box = per-widget knob kept for life; content-stack spec = per-placement, kept across
+detachment). The division machinery moved to the axis-parameterized `StackLayoutEngine` — vertical
+division, the axis-keyed divider, cross-axis alignment and border layouts BY COMPOSITION fell out of
+that one generalization. Present-tense reference: `docs/architecture/layout.md` §4.2. (D2 scroll-reachability note, claimsSpace arc 2026-07-17: the walk now takes a transformed
 island's `scrollOverflowBoundsInParentPlane?()` — claimed box ∪ ink hull — instead of its slot-box
 fullBounds, seed included; still a read of stable applied geometry + a pure derived box, so the
 classification is unchanged.) A second datum on the two-philosophies axis (claimsSpace arc,

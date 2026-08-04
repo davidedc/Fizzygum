@@ -40,14 +40,14 @@ class PointerWdgt extends BoxWdgt
 
     lmContent3 = new CloseIconButtonWdgt
 
-    @_addNoSettle lmContent1, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @_addNoSettle lmContent2, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @_addNoSettle lmContent3, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @_addNoSettle lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+    @_addNoSettle lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+    @_addNoSettle lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
     
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_MEDIUM
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), DivisionStackLayoutSpec.SPREADABILITY_NONE
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), DivisionStackLayoutSpec.SPREADABILITY_MEDIUM
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), DivisionStackLayoutSpec.SPREADABILITY_NONE
 
 
   mouseClickLeft: (pos) ->

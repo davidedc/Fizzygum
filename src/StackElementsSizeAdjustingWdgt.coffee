@@ -7,7 +7,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   constructor: ->
     super()
     @noticesTransparentClick = true
-    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
+    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
   @includeInNewWidgetMenu: ->
@@ -64,36 +64,42 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     if !deltaDragFromPreviousCall?
       return
 
+    # MY division axis: in an 'x' row I split widths dragging horizontally; in a 'y'
+    # division stack I split heights dragging vertically. Same closed form, transposed —
+    # "left/right" below reads as "before/after me along the axis".
+    horizontal = (@layoutSpec?.axis ? 'x') == 'x'
+    mainOf = (point) -> if horizontal then point.x else point.y
+
     leftWidget = @lastSiblingBeforeMeSuchThat (m) ->
-      m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      m.layoutSpec?.isDivisionElement?()
 
     rightWidget = @firstSiblingAfterMeSuchThat (m) ->
-      m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      m.layoutSpec?.isDivisionElement?()
 
     return unless leftWidget? and rightWidget?
 
-    # Where the pointer says my LEFT EDGE should be, in MY plane. nonFloatDragPositionWithinWdgtAtStart
+    # Where the pointer says my LEADING EDGE should be, in MY plane. nonFloatDragPositionWithinWdgtAtStart
     # is the grab grip, captured in my plane at drag start (ActivePointerWdgt.coffee:1096-1099).
     # Affine transforms §7.12: this REPLACES the old inverse-linear-part mapping of the screen DELTA (a
     # delta had to be mapped as the difference of two plane-mapped points, or the translation
     # double-applies) -- an absolute target needs no such care, and screenPointToMyPlane is identity off
     # any island, so the ex-@_isInsideNonIdentityIsland gate that kept the dormant path off the ancestor
     # walk is no longer worth its own branch here.
-    targetLeft = (@screenPointToMyPlane pos).x - nonFloatDragPositionWithinWdgtAtStart.x
+    targetLeft = mainOf(@screenPointToMyPlane pos) - mainOf(nonFloatDragPositionWithinWdgtAtStart)
 
     # ONE walk of the stack children: D/sumMax over the WHOLE stack, A/B up to me. (These are
-    # @parent.getRecursiveDesiredDim().x and @parent.getRecursiveMaxDim().x, inlined so the four sums
-    # cost one walk rather than four. D needs no .min(sumMax) clamp: getMaxDim is literally
-    # max(@maxWidth, getDesiredDim), so max_C >= des_C for every child and sumMax >= D always.)
+    # the main components of @parent.getRecursiveDesiredDim() and .getRecursiveMaxDim(), inlined so the
+    # four sums cost one walk rather than four. D needs no .min(sumMax) clamp: getMaxDim is literally
+    # max(box max, getDesiredDim), so max_C >= des_C for every child and sumMax >= D always.)
     D = 0
     sumMax = 0
     A = 0
     B = 0
     beforeMe = true
     for C in @parent.children
-      continue unless C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-      des = C.getDesiredDim().x
-      max = C.getMaxDim().x
+      continue unless C.layoutSpec?.isDivisionElement?()
+      des = mainOf C.getDesiredDim()
+      max = mainOf C.getMaxDim()
       D += des
       sumMax += max
       if C == @
@@ -102,13 +108,15 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
         A += des
         B += max - des
 
-    extraSpace = @parent.width() - D
+    parentMainExtent = if horizontal then @parent.width() else @parent.height()
+    parentMainLo = if horizontal then @parent.left() else @parent.top()
+    extraSpace = parentMainExtent - D
     maxMargin = sumMax - D
-    # Outside the third width regime there is no spare to apportion and max widths are inert, so the
+    # Outside the third regime there is no spare to apportion and the maxes are inert, so the
     # drag genuinely cannot move anything -- bail rather than mutate to no visible effect.
     return unless extraSpace > 0 and maxMargin > 0
 
-    delta = (targetLeft - @parent.left() - A) * maxMargin / extraSpace - B
+    delta = (targetLeft - parentMainLo - A) * maxMargin / extraSpace - B
 
     # FEASIBLE INTERVAL: neither cell may be pushed below its content (desired) width, where getMaxDim
     # clamps UP to getDesiredDim so the +delta/-delta stop cancelling and the conservation this solve
@@ -122,8 +130,8 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # toward a collapsed neighbour used to hang the world.
     lmdd = leftWidget.getMaxDim()
     rmdd = rightWidget.getMaxDim()
-    lo = leftWidget.getDesiredDim().x - lmdd.x
-    hi = rmdd.x - rightWidget.getDesiredDim().x
+    lo = mainOf(leftWidget.getDesiredDim()) - mainOf(lmdd)
+    hi = mainOf(rmdd) - mainOf(rightWidget.getDesiredDim())
     delta = Math.min(hi, Math.max(lo, delta))
     # at a bound (or on a pointer move too small to shift the split) there is nothing to do -- and this
     # costs ZERO mutations, where the old predicate still paid two on an accepted-but-pointless move.
@@ -135,8 +143,12 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # -> ~26 muts/frame; see docs/tooling/coalescing-measurement.md); toggle world.deferredSettlingEnabled to
     # self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for discrete callers.)
     # (end-of-cycle-flush-drawdown -- CONVERT)
-    leftWidget._setMaxDimDeferredSettle new Point lmdd.x + delta, lmdd.y
-    rightWidget._setMaxDimDeferredSettle new Point rmdd.x - delta, rmdd.y
+    if horizontal
+      leftWidget._setMaxDimDeferredSettle new Point lmdd.x + delta, lmdd.y
+      rightWidget._setMaxDimDeferredSettle new Point rmdd.x - delta, rmdd.y
+    else
+      leftWidget._setMaxDimDeferredSettle new Point lmdd.x, lmdd.y + delta
+      rightWidget._setMaxDimDeferredSettle new Point rmdd.x, rmdd.y - delta
 
 
   # TODO: this mechanism to show the right cursor is 90%
@@ -145,7 +157,8 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # happens while nonFloatDragging. It's not a big deal
   # and it's simpler, but something one could improve.
   mouseEnter: ->
-    document.getElementById("world").style.cursor = "col-resize"
+    cursor = if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
+    document.getElementById("world").style.cursor = cursor
   
   mouseLeave: ->
     document.getElementById("world").style.cursor = "auto"

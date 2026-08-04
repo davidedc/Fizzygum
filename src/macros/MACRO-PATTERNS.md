@@ -394,7 +394,7 @@ assertion a recapture after a regression silently stores two different hashes an
   click point → a non-finite base-width → a "Point x must be finite" paint crash.) (2) base-width only bites when the paragraph's remembered
   `widthOfStackWhenAdded` equals the current available stack width; the SHIPPED default paragraph remembered it at CONSTRUCTION (before
   `doc._applyExtent`), so with elasticity 1 the proportional-width calc (`availW·baseWidth/stackWhenAdded`) cancels to full width — re-anchor
-  the paragraph's initial dimensions to the resized stack in the FIXTURE: `target.layoutSpecDetails.rememberInitialDimensions target,
+  the paragraph's initial dimensions to the resized stack in the FIXTURE: `target.layoutSpec.captureInitialPlacement target,
   doc.contents`.
 
 ## Menus & popups
@@ -639,7 +639,7 @@ assertion a recapture after a regression silently stores two different hashes an
   charging-ring invisible-alpha teardown residue can differ at dpr2 — same caveat as the DWELL-TO-ARM entry).
 - **Internal window dropped INTO a window → becomes its content** (`macroInternalWindowDroppedIntoWindowFits` /
   `macroResizeWindowContainingInternalWindow`): drop an internal window over an EMPTY external window — `FrameWdgt.add`
-  (`:179`) re-parents it `ATTACHEDAS_FRAME_CONTENT`, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
+  (`:179`) re-parents it as FRAME CONTENT, `_positionAndResizeChildren` (`:384`) COUPLES their bounds (the free-floating
   OUTER window sizes itself to WRAP the content + chrome), relabelled "window with an internal window". Then
   `@dragWindowResizerTo_InputEvents` resizes the outer and the inner content stretches to fill (the resizer sits at the inner
   window's corner, `resizerCanOverlapContents`). Shared fixture verbs: `buildExternalAndFreeInternalWindow_Macro()` (`return
@@ -1365,8 +1365,8 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Layout
 
 - **Proportional stack cells** (`macroLayoutBasicProportions`): make a holder a horizontal stack —
-  `holder.add cell, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` per cell + `cell.setMinAndMaxBoundsAndSpreadability(min,
-  desired, k*LayoutSpec.SPREADABILITY_MEDIUM)` (k = its share of spare space). Position with `moveTo` BEFORE `world.add`, then
+  `holder.add cell, nil, cell.divisionBox()` per cell + `cell.setMinAndMaxBoundsAndSpreadability(min,
+  desired, k*DivisionStackLayoutSpec.SPREADABILITY_MEDIUM)` (k = its share of spare space). Position with `moveTo` BEFORE `world.add`, then
   `new HandleWdgt holder` (self-installs at the bottom-right; lone holder ⇒ lone handle). Resize via
   `@dragResizeMoveHandleTo_InputEvents` and the cells redistribute by spreadability. Distilled from the first holder of
   `Widget.setupTestScreen1`.
@@ -1375,7 +1375,7 @@ assertion a recapture after a regression silently stores two different hashes an
   one puts a `TextWdgt` and a `StringWdgt` INSIDE a stack and resizes the HOLDER. The menu mechanic: "attach with horizontal
   layout" (`Widget.attachWithHorizLayout:3684`) pops a choose-new-parent menu of INTERSECTING morphs (labels are
   `toString()`-based — match by prefix, "a Rectangle") whose pick runs `newParentChoiceWithHorizLayout` = `holder.add child,
-  nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED` — turning a plain demo RectangleWdgt into a
+  nil, theWidget.divisionBox()` — turning a plain demo RectangleWdgt into a
   horizontal stack that FITS to its cells when small and SPLITS its width between them when grown. Resizing through the real
   resize/move handles re-wraps the TextWdgt's paragraphs to its CELL width (and re-fits the font SMALLER when the cell
   narrows); the StringWdgt cell honours its own menu — "∸ align center" (`StringWdgt.alignCenter:987`), "⍿ align middle"
@@ -1390,7 +1390,7 @@ assertion a recapture after a regression silently stores two different hashes an
   instanceof-TextWdgt EXCLUSION. No new verb.
 - **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
   proportions above — a `StackElementsSizeAdjustingWdgt` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue, nil,
-  LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED`; this is `setupTestScreen1`'s second holder, `Widget.coffee:4515`).
+  theCell.divisionBox()`; this is `setupTestScreen1`'s second holder, `Widget.coffee:4515`).
   Dragging the divider runs its `nonFloatDragging` (`StackElementsSizeAdjustingWdgt.coffee:28`), which shifts the max-size (spreadability)
   allowance between the flanking cells — re-apportioning the split. Drive it with the HELD-DRAG idiom (a per-test helper): `p =
   divider.center(); @moveToAndMouseDown_InputEvents p; yield "waitNoInputsOngoing"; @syntheticEventsMouseMove_InputEvents (new Point (p.x+Δ),
@@ -1421,7 +1421,7 @@ assertion a recapture after a regression silently stores two different hashes an
   distribution loops read — `getDesiredDim`/`getMinDim`/`getMaxDim` — gate on `isInCollapsedSubtree()` and return zero for a
   collapsed cell (`:4089-4098`): the moment a cell collapses, `_reLayout` re-runs and hands its WHOLE share to the siblings
   by spreadability (the divider rides to the holder's edge; no gap), every resize-while-collapsed keeps distributing to the
-  others, and `unCollapse()` re-runs the same distribution off the UNTOUCHED `layoutSpecDetails` — a collapse/unCollapse
+  others, and `unCollapse()` re-runs the same distribution off the UNTOUCHED `_stackElementSpec` — a collapse/unCollapse
   round-trip at a fixed size is BYTE-EQUAL, and collapse → resize → unCollapse ends as if never collapsed. Verified
   cross-test: this macro's image_1/image_5 are byte-identical (same dataHash, both dprs) to `macroLayoutsAndVisibility`'s —
   the two tests share their exact endpoints and differ ONLY in who holds the space in between. Drive
@@ -1429,7 +1429,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `un-collapse` items call (`Widget.coffee:3284-3288`), and the un-collapse item is unreachable by right-click anyway (a
   collapsed cell is zero-size; the recording used an inspector eval — scaffolding). No new verb.
 - **Layout spacer / spring** (`macroLayoutSpacerEatsSpareSpace`): a `LayoutSpacerWdgt` is a spring (ctor passes spreadability
-  `weight*LayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
+  `weight*DivisionStackLayoutSpec.SPREADABILITY_SPACERS` = 1e8, a ~1e6 max that dwarfs any cell's), so in a stack it absorbs almost all spare
   width and the cells stay at DESIRED size. Reuse `Widget.setupTestScreen1()` (8 holders, several `[spacer|adj|green|adj|blue|adj|yellow|adj|spacer(2)]`);
   locate holders as `world.children.filter (c) -> c instanceof RectangleWdgt and c.children.length > 0`, each handle a HandleWdgt
   among the holder's OWN children. DRIFT: the current layout settles a stretched stack's cells at DESIRED width, so two holders
@@ -1483,7 +1483,7 @@ assertion a recapture after a regression silently stores two different hashes an
   empty desktop to exit. `world.add text` to detach the content and empty the stack.
 - **A lone centered widget stays centered** (`macroCenteredWidgetStaysCenteredWhenAlone`): a stack child's
   `VerticalStackLayoutSpec.alignment` (`"left"|"center"|"right"`, default left) drives its horizontal placement; `setAlignmentToCenter`
-  is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpecDetails.setAlignmentToCenter()` is the direct
+  is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpec.setAlignmentToCenter()` is the direct
   equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ScrollPanelWdgt._positionAndResizeChildren`
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
   HeartIconWdgt (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`

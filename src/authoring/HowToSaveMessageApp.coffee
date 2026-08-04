@@ -23,8 +23,8 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
     startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
-    startingContent.layoutSpecDetails.setGrow 0
-    startingContent.layoutSpecDetails.setAlignmentToCenter()
+    startingContent._stackElementSpec.setGrow 0
+    startingContent._stackElementSpec.setAlignmentToCenter()
 
     startingContent = new SimpleTextWdgt(
       "How to save?",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
@@ -45,7 +45,7 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
     startingContent = new SimpleLinkWdgt "Contacts", "http://fizzygum.org/contact/"
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent.layoutSpecDetails.setAlignmentToRight()
+    startingContent._stackElementSpec.setAlignmentToRight()
 
     sdspw.addSpacer()
 

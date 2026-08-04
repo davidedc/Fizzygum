@@ -107,6 +107,12 @@ Archived docs are immutable history — the current-state truth lives in
 - **`settle-tier-followups-examination-plan.md`** — COMPLETE (residual in BACKLOG.md). Post-orphan-settledness examination across 5 topics: determinism flake, lint symmetry, NoSettle naming audit, constructor settling, allowlist sanitization.
   - ⚖ Topic 1 'flake' was a false stall-timeout keyed off wall-clock, not a pixel bug
   - ⚖ Owner wants exemption markers/allowlists re-tested against today's code, not left standing
+- **`layout-spec-family-unification-plan.md`** — COMPLETE (authored + executed 2026-08-04, one session). Deletes the layout-configuration split: the `LayoutSpec` enum + loose box fields + ad-hoc corner fields → ONE per-child spec-object family (`Widget.layoutSpec`, nil = free-floating), the division machinery extracted into the axis-parameterized `StackLayoutEngine` — which is what made vertical division, the axis-keyed divider, cross-axis alignment and border-layouts-by-composition fall out; the drag-drop scaffold promoted to product ("edit layout", chrome in the lazy `authoring` part).
+  - ⚖ The two stack engines were complementary halves (main-axis DIVISION vs cross-axis FIT) — one axis parameterization, no new engine
+  - ⚖ Specs SURVIVE detachment (per-class lifecycle: division box = per-widget knob; content-stack spec = per-placement, kept) — the faithful translation of the old tag+details split
+  - ⚖ A capability predicate may only land WITH its callers (dead-method gate); macros forced the public `divisionBox()` door (rule [D])
+  - ⚖ The `_`-tier rename of `addOrRemoveAdders` EXPOSED a pre-existing [G] violation its public name had hidden (in-arrange `fullDestroy`)
+  - ⚖ The FrameWdgt resizer TODO was a pure deletion — it was corner-attached all along, the hand-place was a redundant re-commit
 - **`sizing-model-unification-plan.md`** — COMPLETE. Unifies Fizzygum's two sizing philosophies into ONE constraint-box model, deleting the proportional formula and last convergence residuals.
   - ⚖ Owner mid-arc: no serialization compat exists, so large behaviour changes were sanctioned
   - ⚖ Window drop-mounts content TWICE, re-arming a captured spec — fixed via remount detection

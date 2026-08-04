@@ -47,6 +47,14 @@ class FrameContentLayoutSpec extends VerticalStackLayoutSpec
 
   resizerCanOverlapContents: true
 
+  # born as frame content (see VerticalStackLayoutSpec — a content stack that adopts a kept
+  # instance of me flips this false)
+  attachedAsFrameContent: true
+
+  # am I ACTIVE as a frame's content right now? (false while a content stack has adopted me)
+  isFrameContentActive: ->
+    @attachedAsFrameContent
+
   # Capability query (the isFrame?() idiom): lets a content widget ask "am I
   # laid out as FRAME content right now?" without naming this class -- no base
   # default, dispatched via ?(), a non-frame-content spec answers undefined.

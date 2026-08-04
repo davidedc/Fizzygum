@@ -26,7 +26,7 @@ class PaletteWdgt extends Widget
   defaultSize: -> new Point 80, 50
 
   initialiseDefaultFrameContentLayoutSpec: ->
-    @layoutSpecDetails = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND , FrameContentLayoutSpec.DONT_MIND, 1
+    @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.DONT_MIND , FrameContentLayoutSpec.DONT_MIND, 1
 
   detachesWhenDragged: ->
     false

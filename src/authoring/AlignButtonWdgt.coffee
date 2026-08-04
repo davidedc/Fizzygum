@@ -14,5 +14,5 @@ class AlignButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       lastClicked[@alignDirectMethod]()
     else if lastClicked?
       root = lastClicked.findRootForGrab()
-      if root?.layoutSpec? and root.layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
-        root.layoutSpecDetails[@layoutAlignSetterMethod]()
+      if root?.layoutSpec?.isStackElementActive?()
+        root.layoutSpec[@layoutAlignSetterMethod]()

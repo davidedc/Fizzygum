@@ -27,8 +27,11 @@ class WidgetFactory
   createNewStackElementsSizeAdjustingWdgt: ->
     world.create new StackElementsSizeAdjustingWdgt
 
+  # ⚠ the adder/droplet is the LAZY 'authoring' part — same eager->lazy shape as
+  # createNewSpeechBubbleWdgt below, same fix (a guard would swallow the click).
   createNewLayoutElementAdderOrDropletWdgt: ->
-    world.create new LayoutElementAdderOrDropletWdgt
+    world.parts.whenAllLoaded ["authoring"], ->
+      world.create new LayoutElementAdderOrDropletWdgt
 
   createNewRectangleWdgt: ->
     world.create new RectangleWdgt
@@ -164,258 +167,301 @@ class WidgetFactory
     newWdgt = new BinWdgt
     world.create newWdgt
 
+  # The layout-demo gallery builds LayoutSpacerWdgt springs, which live in the LAZY
+  # 'authoring' part — whenAllLoaded's inline fast path keeps this SYNCHRONOUS when the
+  # part is already in (the all-eager harness page), which the layout macros that call
+  # setupTestScreen1 rely on.
   setupTestScreen1: ->
+    world.parts.whenAllLoaded ["authoring"], =>
 
-    ## draw some reference patterns to see the sizes
+      ## draw some reference patterns to see the sizes
 
-    for i in [0..5]
+      for i in [0..5]
+        lmHolder = new RectangleWdgt
+        lmHolder.setBounds (new Point 10 + 60 * i, 10 + 50 * 0), new Point 10 + i*10,10 + i*10
+
+        world.add lmHolder
+
+      # ----------------------------------------------
+
       lmHolder = new RectangleWdgt
-      lmHolder.setBounds (new Point 10 + 60 * i, 10 + 50 * 0), new Point 10 + i*10,10 + i*10
+      lmContent1 = new RectangleWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* DivisionStackLayoutSpec.SPREADABILITY_MEDIUM
+
+      lmHolder.moveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
       world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    # ----------------------------------------------
+      # ----------------------------------------------
 
-    lmHolder = new RectangleWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
+      lmHolder = new RectangleWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
 
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.moveTo new Point 10 + 60 * 0, 30 + 50 * 1
+      lmHolder.moveTo new Point 10 + 60 * 1, 30 + 50 * 1
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    # ----------------------------------------------
+      # ----------------------------------------------
 
-    lmHolder = new RectangleWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
+      lmHolder = new RectangleWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+      lmContent3 = new RectangleWdgt
 
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      lmHolder.add lmContent3, nil, lmContent3._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+      lmContent3.setColor Color.YELLOW
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.moveTo new Point 10 + 60 * 1, 30 + 50 * 1
+      lmHolder.moveTo new Point 10 + 60 * 2, 30 + 50 * 1
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    # ----------------------------------------------
+      # ----------------------------------------------
 
-    lmHolder = new RectangleWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
-    lmContent3 = new RectangleWdgt
+      lmHolder = new RectangleWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+      lmAdj2 = new StackElementsSizeAdjustingWdgt
+      lmContent3 = new RectangleWdgt
 
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
-    lmContent3.setColor Color.YELLOW
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj2, nil, lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent3, nil, lmContent3._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+      lmContent3.setColor Color.YELLOW
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.moveTo new Point 10 + 60 * 2, 30 + 50 * 1
+      lmHolder.moveTo new Point 10 + 60 * 3, 30 + 50 * 1
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    # ----------------------------------------------
+      # ----------------------------------------------
 
-    lmHolder = new RectangleWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingWdgt
-    lmContent3 = new RectangleWdgt
+      lmHolder = new RectangleWdgt
 
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
-    lmContent3.setColor Color.YELLOW
+      lmSpacer1 = new LayoutSpacerWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj2 = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+      lmAdj3 = new StackElementsSizeAdjustingWdgt
+      lmContent3 = new RectangleWdgt
+      lmAdj4 = new StackElementsSizeAdjustingWdgt
+      lmSpacer2 = new LayoutSpacerWdgt
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+      lmHolder.add lmSpacer1, nil, lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, nil, lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, nil, lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, nil, lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, nil, lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, nil, lmSpacer2._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+      lmContent3.setColor Color.YELLOW
 
-    lmHolder.moveTo new Point 10 + 60 * 3, 30 + 50 * 1
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+      lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      lmHolder.moveTo new Point 10 + 60 * 4, 30 + 50 * 1
 
-    # ----------------------------------------------
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    lmHolder = new RectangleWdgt
+      # ----------------------------------------------
 
-    lmSpacer1 = new LayoutSpacerWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingWdgt
-    lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingWdgt
-    lmSpacer2 = new LayoutSpacerWdgt
+      lmHolder = new RectangleWdgt
 
-    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
-    lmContent3.setColor Color.YELLOW
+      lmSpacer1 = new LayoutSpacerWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj2 = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+      lmAdj3 = new StackElementsSizeAdjustingWdgt
+      lmContent3 = new RectangleWdgt
+      lmAdj4 = new StackElementsSizeAdjustingWdgt
+      lmSpacer2 = new LayoutSpacerWdgt 2
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+      lmHolder.add lmSpacer1, nil, lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, nil, lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, nil, lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, nil, lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, nil, lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, nil, lmSpacer2._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+      lmContent3.setColor Color.YELLOW
 
-    lmHolder.moveTo new Point 10 + 60 * 4, 30 + 50 * 1
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+      lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      lmHolder.moveTo new Point 10 + 60 * 5, 30 + 50 * 1
 
-    # ----------------------------------------------
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    lmHolder = new RectangleWdgt
+      # ----------------------------------------------
 
-    lmSpacer1 = new LayoutSpacerWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingWdgt
-    lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingWdgt
-    lmSpacer2 = new LayoutSpacerWdgt 2
+      lmHolder = new RectangleWdgt
 
-    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
-    lmContent3.setColor Color.YELLOW
+      lmSpacer1 = new LayoutSpacerWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj2 = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+      lmAdj3 = new StackElementsSizeAdjustingWdgt
+      lmContent3 = new RectangleWdgt
+      lmAdj4 = new StackElementsSizeAdjustingWdgt
+      lmSpacer2 = new LayoutSpacerWdgt 2
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+      lmHolder.add lmSpacer1, nil, lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, nil, lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, nil, lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, nil, lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, nil, lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, nil, lmSpacer2._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+      lmContent3.setColor Color.YELLOW
 
-    lmHolder.moveTo new Point 10 + 60 * 5, 30 + 50 * 1
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), DivisionStackLayoutSpec.SPREADABILITY_NONE
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
+      lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), 2 * DivisionStackLayoutSpec.SPREADABILITY_MEDIUM
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      lmHolder.moveTo new Point 10 + 60 * 6, 30 + 50 * 1
 
-    # ----------------------------------------------
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    lmHolder = new RectangleWdgt
+      # ----------------------------------------------
 
-    lmSpacer1 = new LayoutSpacerWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingWdgt
-    lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingWdgt
-    lmSpacer2 = new LayoutSpacerWdgt 2
+      lmHolder = new RectangleWdgt
 
-    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
-    lmContent3.setColor Color.YELLOW
+      lmSpacer1 = new LayoutSpacerWdgt
+      lmAdj = new StackElementsSizeAdjustingWdgt
+      lmContent1 = new RectangleWdgt
+      lmAdj2 = new StackElementsSizeAdjustingWdgt
+      lmContent2 = new RectangleWdgt
+      lmAdj3 = new StackElementsSizeAdjustingWdgt
+      lmContent3 = new RectangleWdgt
+      lmAdj4 = new StackElementsSizeAdjustingWdgt
+      lmSpacer2 = new LayoutSpacerWdgt 2
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), LayoutSpec.SPREADABILITY_NONE
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), 2 * LayoutSpec.SPREADABILITY_MEDIUM
+      lmHolder.add lmSpacer1, nil, lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, nil, lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, nil, lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, nil, lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, nil, lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, nil, lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, nil, lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, nil, lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, nil, lmSpacer2._ensureDivisionBox()
+      
+      lmContent1.setColor Color.LIME
+      lmContent2.setColor Color.BLUE
+      lmContent3.setColor Color.YELLOW
 
-    lmHolder.moveTo new Point 10 + 60 * 6, 30 + 50 * 1
+      lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), DivisionStackLayoutSpec.SPREADABILITY_NONE
+      lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), DivisionStackLayoutSpec.SPREADABILITY_NONE
+      lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), DivisionStackLayoutSpec.SPREADABILITY_NONE
 
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+      lmHolder.moveTo new Point 10 + 60 * 7, 30 + 50 * 1
 
-    # ----------------------------------------------
+      world.add lmHolder
+      lmHolder.add new HandleWdgt
 
-    lmHolder = new RectangleWdgt
-
-    lmSpacer1 = new LayoutSpacerWdgt
-    lmAdj = new StackElementsSizeAdjustingWdgt
-    lmContent1 = new RectangleWdgt
-    lmAdj2 = new StackElementsSizeAdjustingWdgt
-    lmContent2 = new RectangleWdgt
-    lmAdj3 = new StackElementsSizeAdjustingWdgt
-    lmContent3 = new RectangleWdgt
-    lmAdj4 = new StackElementsSizeAdjustingWdgt
-    lmSpacer2 = new LayoutSpacerWdgt 2
-
-    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    
-    lmContent1.setColor Color.LIME
-    lmContent2.setColor Color.BLUE
-    lmContent3.setColor Color.YELLOW
-
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
-
-    lmHolder.moveTo new Point 10 + 60 * 7, 30 + 50 * 1
-
-    world.add lmHolder
-    lmHolder.add new HandleWdgt
+  # The BORDER-LAYOUT scaffold (Swing's N/W-C-E/S) assembled by COMPOSITION — the layout
+  # spec-family arc's design claim: no dedicated 5-region engine, just a vertical division
+  # stack whose middle cell is a horizontal division row, with a divider at every seam.
+  # The North/South/West/East bands are SPREADABILITY_NONE (near-fixed thickness); the
+  # Center absorbs the spare space on both axes. Drop content into a region, drag the
+  # dividers to re-apportion, or "edit layout" on a band to get drop-slots.
+  createBorderLayoutScaffold: ->
+    holder = new RectangleWdgt
+    north = new RectangleWdgt
+    vdiv1 = new StackElementsSizeAdjustingWdgt
+    centerRow = new RectangleWdgt
+    vdiv2 = new StackElementsSizeAdjustingWdgt
+    south = new RectangleWdgt
+    holder.add north, nil, north.divisionBox('y')
+    holder.add vdiv1, nil, vdiv1.divisionBox('y')
+    holder.add centerRow, nil, centerRow.divisionBox('y')
+    holder.add vdiv2, nil, vdiv2.divisionBox('y')
+    holder.add south, nil, south.divisionBox('y')
+    north.setMinAndMaxBoundsAndSpreadability (new Point 40, 24), (new Point 60, 40), DivisionStackLayoutSpec.SPREADABILITY_NONE
+    south.setMinAndMaxBoundsAndSpreadability (new Point 40, 24), (new Point 60, 40), DivisionStackLayoutSpec.SPREADABILITY_NONE
+    west = new RectangleWdgt
+    hdiv1 = new StackElementsSizeAdjustingWdgt
+    center = new RectangleWdgt
+    hdiv2 = new StackElementsSizeAdjustingWdgt
+    east = new RectangleWdgt
+    centerRow.add west, nil, west.divisionBox()
+    centerRow.add hdiv1, nil, hdiv1.divisionBox()
+    centerRow.add center, nil, center.divisionBox()
+    centerRow.add hdiv2, nil, hdiv2.divisionBox()
+    centerRow.add east, nil, east.divisionBox()
+    west.setMinAndMaxBoundsAndSpreadability (new Point 30, 30), (new Point 50, 60), DivisionStackLayoutSpec.SPREADABILITY_NONE
+    east.setMinAndMaxBoundsAndSpreadability (new Point 30, 30), (new Point 50, 60), DivisionStackLayoutSpec.SPREADABILITY_NONE
+    for region in [north, south, west, east]
+      region.setColor Color.create 235, 235, 235
+    center.setColor Color.WHITE
+    holder._applyExtent new Point 300, 300
+    world.create holder

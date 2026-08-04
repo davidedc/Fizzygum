@@ -132,7 +132,7 @@ class FrameWdgt extends Widget
   # extent) was the root of the nested-window settle re-visits. availW = the window width the
   # caller proposes (the arrange passes its own current width).
   _negotiatedContentWidth: (availW) ->
-    spec = @contents.layoutSpecDetails
+    spec = @contents._stackElementSpec
     if spec.preferredStartingWidth == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
       # (U3-C) "the size I have now" through the content's preferredExtent, not its raw
       # width(): identical for plain content (base preferredExtent IS the applied extent),
@@ -158,10 +158,10 @@ class FrameWdgt extends Widget
   #   byte-identical: every suite-covered hug of a container-owned window was anyway
   #   reasserted to exactly this width by its container's re-fit).
   _firstPlacementContentWidth: (availW) ->
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+    if @isFreeFloating()
       @_negotiatedContentWidth availW
     else
-      @contents.layoutSpecDetails.getWidthInStack availW - @_chromeWidth()
+      @contents._stackElementSpec.getWidthInStack availW - @_chromeWidth()
 
   # (U3-C) A window whose first placement is PENDING (content spec uncaptured) answers
   # preferredExtent with the extent that placement will produce -- the PURE mirror of the
@@ -170,9 +170,9 @@ class FrameWdgt extends Widget
   # A collapsed-content or captured (steady-state) window IS its applied extent, like any
   # plain widget. Recursion (a window in a window in ...) terminates at plain content.
   preferredExtent: ->
-    spec = @contents?.layoutSpecDetails
+    spec = @contents?._stackElementSpec
     if !spec? or spec.desiredWidth? or @contents.collapsed then return @extent()
-    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and spec.preferredStartingWidth != FrameContentLayoutSpec.DONT_MIND
+    if @isFreeFloating() and spec.preferredStartingWidth != FrameContentLayoutSpec.DONT_MIND
       # the width hug (DESKTOP windows only -- §9.7-Q, same own-layoutSpec predicate as the
       # arrange's first-placement branch, incl. the not-recursively-freefloating min-clamp;
       # keep the two in lockstep)
@@ -186,7 +186,7 @@ class FrameWdgt extends Widget
 
   preferredExtentForWidth: (availW) ->
     if @contents? and !@contents.collapsed
-      spec = @contents.layoutSpecDetails
+      spec = @contents._stackElementSpec
       # A content transiently WITHOUT its layoutSpec (mid drop/delete) has no derivable measure --
       # keep the measure total and report the current extent.
       if !spec? then return new Point (availW ? @width()), @height()
@@ -244,7 +244,7 @@ class FrameWdgt extends Widget
     @defaultContents = new FrameContentsPlaceholderText
     if !@contents?
       @contents = @defaultContents
-    else if @contents.layoutSpecDetails instanceof FrameContentLayoutSpec
+    else if @contents._stackElementSpec?.isFrameContentSpec?()
       # (U2 re-arm, constructor edition) ctor-supplied content may be a VETERAN
       # of a previous windowed life (the bin: closed with its window destroyed,
       # then re-wrapped fresh at the next open), carrying a spec still LATCHED
@@ -254,7 +254,7 @@ class FrameWdgt extends Widget
       # remount (see add's isSameContentRemount note): this mount's first
       # placement then re-captures and re-binds. A fresh spec is already
       # unlatched, so this is a no-op for the universal fresh-content case.
-      @contents.layoutSpecDetails.desiredWidth = nil
+      @contents._stackElementSpec.desiredWidth = nil
 
     @padding = 5
     # TODO this looks better:
@@ -428,11 +428,11 @@ class FrameWdgt extends Widget
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
       # window must FOLLOW that height (shrinking when a widen re-wraps to fewer
       # lines), not stretch the content to fill a freely-dragged height. A
-      # SimpleTextWdgt already forces this via layoutSpecDetails.canSetHeightFreely
+      # SimpleTextWdgt already forces this via its content spec's canSetHeightFreely
       # = false in its ctor; keying off the mode generalizes it to any contained
       # TextWdgt (a non-text content has no fittingSpec, so this is a no-op for it).
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then return false
-      return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isInCollapsedSubtree()) and !duringReInflation
+      return (@contents._stackElementSpec.canSetHeightFreely and !@contents.isInCollapsedSubtree()) and !duringReInflation
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
   recursivelyAttachedAsFreeFloating: ->
@@ -536,7 +536,7 @@ class FrameWdgt extends Widget
   # outer (up-edge endgame V1-b, docs/archive/upedge-endgame-plan.md §9). Absent (undefined via ?()) on
   # a stack, whose synchronous re-lay keeps its container-assigned width.
   _reLayoutMayResizeOwnWidth: ->
-    @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and !@contents?.layoutSpecDetails?.desiredWidth?
+    @isFreeFloating() and !@contents?._stackElementSpec?.desiredWidth?
 
   add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
@@ -573,15 +573,18 @@ class FrameWdgt extends Widget
       # the recalculateLayouts pass). The old synchronous pre-fit (@_reLayoutChildren here) is removed.
       # Init the content's FrameContentLayoutSpec up-front -- the pre-fit used to do this implicitly
       # via _positionAndResizeChildren, so without it the deferred re-fit would deref an uninitialised spec.
-      aWdgt.initialiseDefaultFrameContentLayoutSpec() unless aWdgt.layoutSpecDetails instanceof FrameContentLayoutSpec
+      aWdgt.initialiseDefaultFrameContentLayoutSpec() unless aWdgt._stackElementSpec?.isFrameContentSpec?()
+      # a kept spec may come from a STACK life (attachedAsFrameContent flipped false by the
+      # stack's adoption) — this mount makes it frame content again
+      aWdgt._stackElementSpec.attachedAsFrameContent = true
       # (U2) re-arm the first-placement ONE-SHOT for this mount: content (re)mounted into a
       # window re-negotiates its placement. The old model re-ran the capture via
       # the contentNeverSetInPlaceYet flag; the CAPTURE is now itself the latch, so un-latch it
       # (a fresh spec is already unlatched; this covers content carrying a spec from a prior
       # life) -- but NOT for a same-widget chrome-rebuild re-add (§9.7-Q above): the standing
       # capture is exactly the placement this mount already has.
-      aWdgt.layoutSpecDetails.desiredWidth = nil unless isSameContentRemount
-      super aWdgt, position: position, layoutSpec: LayoutSpec.ATTACHEDAS_FRAME_CONTENT, beingDropped: beingDropped
+      aWdgt._stackElementSpec.desiredWidth = nil unless isSameContentRemount
+      super aWdgt, position: position, layoutSpec: aWdgt._stackElementSpec, beingDropped: beingDropped
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
     @resizer?._moveInFrontOfSiblings()
@@ -854,7 +857,7 @@ class FrameWdgt extends Widget
   # base init -- byte-what the stack's override did.
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @layoutSpecDetails.canSetHeightFreely = false
+    @_stackElementSpec.canSetHeightFreely = false
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
   # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
@@ -867,23 +870,23 @@ class FrameWdgt extends Widget
     stackHeight = 0
 
     if @contents? and !@contents.collapsed
-      # Order-independent spec init: also (re)init when the content lacks a FrameContentLayoutSpec,
-      # not only when its layoutSpec tag is unset. With the on-add pre-fit removed (deferred layout),
-      # super sets the layoutSpec tag to ATTACHEDAS_FRAME_CONTENT BEFORE this deferred re-fit runs,
-      # so the old tag-only gate would skip init and this would deref an uninitialised/stack-typed spec.
-      if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_FRAME_CONTENT or !(@contents.layoutSpecDetails instanceof FrameContentLayoutSpec)
+      # Order-independent spec init: (re)init whenever the content's ACTIVE spec is not
+      # frame-content — a fresh mount's active spec is set by _addNoSettle before this
+      # deferred re-fit runs, so the common steady state skips; anything else (transient /
+      # stack-flavoured / missing spec) gets a fresh FrameContentLayoutSpec and is adopted.
+      if !@contents.layoutSpec?.isFrameContentActive?()
         @contents.initialiseDefaultFrameContentLayoutSpec()
-        @contents._setLayoutSpec LayoutSpec.ATTACHEDAS_FRAME_CONTENT
+        @contents._setLayoutSpec @contents._stackElementSpec
 
       # (U2) the first-placement ONE-SHOT is CONTENT-owned: an uncaptured spec (desiredWidth
       # unset -- fresh init above, or re-armed on content (re)mount in _addNoSettle) selects
       # the negotiation branch ONCE; captureInitialPlacement below is itself the latch. Computed
       # BEFORE the capture latches, and used by BOTH the width branch here and the height branch below.
-      firstPlacement = !@contents.layoutSpecDetails.desiredWidth?
+      firstPlacement = !@contents._stackElementSpec.desiredWidth?
 
       if firstPlacement
         recommendedElementWidth = @_firstPlacementContentWidth @width()
-        if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING and @contents.layoutSpecDetails.preferredStartingWidth != FrameContentLayoutSpec.DONT_MIND
+        if @isFreeFloating() and @contents._stackElementSpec.preferredStartingWidth != FrameContentLayoutSpec.DONT_MIND
           # THIS_ONE_I_HAVE_NOW / an explicit px on a DESKTOP window: the WINDOW resizes
           # (hugs) to the content's width. A CONTAINER-OWNED window never self-resizes its
           # width -- the container owns it (§9.7-Q, owner-decided 2026-07-17; the predicate
@@ -900,24 +903,24 @@ class FrameWdgt extends Widget
             windowWidth = Math.min @width(), recommendedElementWidth + @_chromeWidth()
           @_applyExtentBase new Point windowWidth, @height()
 
-        @contents.layoutSpecDetails.captureInitialPlacement @contents, @
+        @contents._stackElementSpec.captureInitialPlacement @contents, @
 
 
       else
-        recommendedElementWidth = @contents.layoutSpecDetails.getWidthInStack()
+        recommendedElementWidth = @contents._stackElementSpec.getWidthInStack()
 
-      partOfHeightUsedUp = @_chromeHeight @contents.layoutSpecDetails
+      partOfHeightUsedUp = @_chromeHeight @contents._stackElementSpec
 
       # this re-layouts each widget to fit the width.
       if firstPlacement
-        if @contents.layoutSpecDetails.preferredStartingHeight == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
+        if @contents._stackElementSpec.preferredStartingHeight == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
           desiredHeight = @contents.preferredExtent().y
           if !@recursivelyAttachedAsFreeFloating()
             desiredHeight = Math.min desiredHeight, @height() - partOfHeightUsedUp
           @contents._applyWidth recommendedElementWidth
           @contents._applyHeight desiredHeight
-        else if @contents.layoutSpecDetails.preferredStartingHeight == FrameContentLayoutSpec.DONT_MIND
+        else if @contents._stackElementSpec.preferredStartingHeight == FrameContentLayoutSpec.DONT_MIND
           @contents._applyWidth recommendedElementWidth
           desiredHeight = Math.round @height() - partOfHeightUsedUp
           @contents._applyHeight desiredHeight
@@ -1001,10 +1004,6 @@ class FrameWdgt extends Widget
         toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
       @toolbar._reLayout toolbarBounds
 
-    # TODO there is *already* a way to make handles do the right thing, and that is
-    # to have this sort of code in a _reLayout function, and calling super in there,
-    # where the base Windget._reLayout takes care of everything that has a
-    # corner or edge internal layout, like handles. This should work the same way i.e.
-    # this code should not be here.
-    if @resizer?.parent == @
-      @resizer.__commitMoveTo new Point @right() - WorldWdgt.preferencesAndSettings.handleSize - @padding, @bottom() - WorldWdgt.preferencesAndSettings.handleSize - @padding
+    # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
+    # bottom-right with the padding-derived inset, is applied by base _reLayout's corner tail
+    # against my final frame)

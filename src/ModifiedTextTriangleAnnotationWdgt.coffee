@@ -2,8 +2,9 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
 
   positionWithinParent: "topLeft"
 
-  constructor: (parent = nil, @layoutSpec_cornerInternal_proportionOfParent = 0, @layoutSpec_cornerInternal_fixedSize = 10) ->
+  constructor: (parent = nil, proportionOfParent = 0, fixedSize = 10) ->
     super()
+    @cornerSpec = new CornerInternalLayoutSpec 'topLeft', proportionOfParent, fixedSize
     @appearance = new UpperRightTriangleAppearance @, @positionWithinParent
 
     # this widget has triangular shape and we want it
@@ -13,7 +14,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
 
     size = WorldWdgt.preferencesAndSettings.handleSize
     @__commitExtent new Point size, size
-    parent?.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
+    parent?.add @, nil, @cornerSpec
 
   # I attach directly to a scroll panel's frame (not its inner contents) when added -- the
   # container add methods key off this instead of `instanceof ModifiedTextTriangleAnnotationWdgt`.

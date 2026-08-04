@@ -1,8 +1,8 @@
 class UpperRightTriangleWdgt extends Widget
 
-  constructor: (parent = nil, @layoutSpec_cornerInternal_proportionOfParent = 4/8) ->
+  constructor: (parent = nil, proportionOfParent = 4/8) ->
     super()
-    @layoutSpec_cornerInternal_fixedSize = 0
+    @cornerSpec = new CornerInternalLayoutSpec 'topRight', proportionOfParent, 0
     @appearance = new UpperRightTriangleAppearance @
 
     # this widget has triangular shape and we want it
@@ -12,4 +12,4 @@ class UpperRightTriangleWdgt extends Widget
 
     size = WorldWdgt.preferencesAndSettings.handleSize
     @__commitExtent new Point size, size
-    parent?.add @, nil, LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+    parent?.add @, nil, @cornerSpec

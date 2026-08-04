@@ -27,7 +27,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Dashboards Maker", "http://fizzygum.org/docs/dashboards/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     genericPanel:
       flag:        "infoDoc_genericPanel_created"
@@ -41,7 +41,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Mixing widgets (using generic panels)", "http://fizzygum.org/docs/mixing-widgets/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     patchProgramming:
       flag:        "infoDoc_patchProgramming_created"
@@ -57,12 +57,12 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Patch programming - basics", "http://fizzygum.org/docs/basic-connections/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
         startingContent = new SimpleVideoLinkWdgt "Patch programming - advanced", "http://fizzygum.org/docs/advanced-connections/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     drawingsMaker:
       flag:        "infoDoc_drawingsMaker_created"
@@ -77,7 +77,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Draw app", "http://fizzygum.org/docs/draw-app/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
         sdspw.addNormalParagraph "You can also edit the tools you use, by clicking on the pencil icon next to the tool."
         sdspw.addNormalParagraph "To see how an example of editing the tools, see this video:"
@@ -85,7 +85,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Hacking Fizzygum", "http://fizzygum.org/docs/hacking-fizzygum/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     docsMaker:
       flag:        "infoDoc_docsMaker_created"
@@ -98,7 +98,7 @@ class InfoDocs
         startingContent.add new TemplatesButtonWdgt
         startingContent._applyExtent new Point 50, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToCenter()
+        startingContent._stackElementSpec.setAlignmentToCenter()
 
         sdspw.addSpacer()
 
@@ -108,7 +108,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Docs Maker", "http://fizzygum.org/docs/documents-maker/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     slidesMaker:
       flag:        "infoDoc_slidesMaker_created"
@@ -123,7 +123,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Slides Maker", "http://fizzygum.org/docs/slides-maker/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     superToolbar:
       flag:        "infoDoc_superToolbar_created"
@@ -135,7 +135,7 @@ class InfoDocs
         startingContent = new SimpleVideoLinkWdgt "Mixing widgets", "http://fizzygum.org/docs/mixing-widgets/"
         startingContent._applyExtent new Point 405, 50
         sdspw.add startingContent
-        startingContent.layoutSpecDetails.setAlignmentToRight()
+        startingContent._stackElementSpec.setAlignmentToRight()
 
     windowsToolbar:
       flag:        "infoDoc_windowsToolbar_created"
@@ -153,7 +153,7 @@ class InfoDocs
         #startingContent = new SimpleVideoLinkWdgt "Using windows"
         #startingContent._applyExtent new Point 405, 50
         #sdspw.add startingContent
-        #startingContent.layoutSpecDetails.setAlignmentToRight()
+        #startingContent._stackElementSpec.setAlignmentToRight()
 
   # the per-doc ICON is a literal `new X` so the dep finder sees it:
   @_iconFor:
@@ -194,8 +194,8 @@ class InfoDocs
 
     iconWidget._applyExtent new Point 85, 85
     sdspw.setContents iconWidget, 5
-    iconWidget.layoutSpecDetails.setGrow 0
-    iconWidget.layoutSpecDetails.setAlignmentToCenter()
+    iconWidget._stackElementSpec.setGrow 0
+    iconWidget._stackElementSpec.setAlignmentToCenter()
 
     titleWidget = new SimpleTextWdgt(
       title,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)

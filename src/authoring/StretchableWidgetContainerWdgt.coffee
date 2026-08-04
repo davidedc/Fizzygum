@@ -37,7 +37,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
   # actually
   # ends up in the Panel inside it
-  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
     if !@contents? or aWdgt.attachesToScrollFrameDirectly?()
@@ -53,13 +53,13 @@ class StretchableWidgetContainerWdgt extends Widget
   # below), never from mere content crystallization. (Pre-§5.B these writes
   # hit a nil/stack spec anyway -- the editor's own spec governed the window.)
   setRatio: (@ratio) ->
-    unless @layoutSpecDetails?.isFrameContentSpec?()
-      @layoutSpecDetails?.canSetHeightFreely = false
+    unless @_stackElementSpec?.isFrameContentSpec?()
+      @_stackElementSpec?.canSetHeightFreely = false
 
   resetRatio: ->
     if @ratio?
       @ratio = nil
-      @layoutSpecDetails?.canSetHeightFreely = true
+      @_stackElementSpec?.canSetHeightFreely = true
       @_invalidateLayout()
 
 
@@ -91,16 +91,16 @@ class StretchableWidgetContainerWdgt extends Widget
       @_freeFromRatioConstraints()
 
   _constrainToRatio: ->
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = false
+    if @_stackElementSpec?
+      @_stackElementSpec.canSetHeightFreely = false
       # force a resize, so the holder frame takes the right ratio. The height
       # of 0 is ignored -- _setWidthSizeHeightAccordingly calculates it.
       if @ratio?
         @_applyExtent new Point @width(), 0
 
   _freeFromRatioConstraints: ->
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = true
+    if @_stackElementSpec?
+      @_stackElementSpec.canSetHeightFreely = true
 
       availableHeight = world.height() - 20
       if @parent.height() > availableHeight
@@ -157,7 +157,7 @@ class StretchableWidgetContainerWdgt extends Widget
   # spec / nil spec answers undefined here and falls to the ratio body --
   # bare-container-in-a-stack behaviour unchanged.
   _setWidthSizeHeightAccordingly: (newWidth) ->
-    if @layoutSpecDetails?.canSetHeightFreely
+    if @_stackElementSpec?.canSetHeightFreely
       return super  # Path B: propagate the resulting height. See Widget._setWidthSizeHeightAccordingly.
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
@@ -165,8 +165,8 @@ class StretchableWidgetContainerWdgt extends Widget
     if childrenNotHandlesNorCarets.length != 0
       if !@ratio?
         @ratio = @width() / @height()
-        unless @layoutSpecDetails?.isFrameContentSpec?()
-          @layoutSpecDetails?.canSetHeightFreely = false
+        unless @_stackElementSpec?.isFrameContentSpec?()
+          @_stackElementSpec?.canSetHeightFreely = false
       @_applyExtent new Point newWidth, Math.round(newWidth/@ratio)
     else
       @_applyExtent new Point newWidth, @height()
@@ -178,7 +178,7 @@ class StretchableWidgetContainerWdgt extends Widget
   # SAME value is DERIVED locally with NO write -- a measure must not take the mutation's
   # lazy-init side effect (@ratio + canSetHeightFreely).
   preferredExtentForWidth: (availW) ->
-    if @layoutSpecDetails?.canSetHeightFreely then return super
+    if @_stackElementSpec?.canSetHeightFreely then return super
     if (@childrenNotHandlesNorCarets @contents).length != 0
       ratio = @ratio ? (@width() / @height())
       new Point availW, Math.round(availW / ratio)

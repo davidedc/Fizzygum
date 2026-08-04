@@ -223,7 +223,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # end up in the Panel inside it.
   # This would also apply to resizing handles - so we need to
   # correct for that case
-  add: (aWdgt, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
     # TODO this check below should probably just be testing if layoutSpec
     # is a corner or edge internal layout
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
@@ -851,7 +851,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # the deferred mechanism is half-built by construction (the geometry accessors read
   # applied @bounds only, so handler-level raw geometry is a symptom of that
   # incompleteness, not a one-off). Soft-wrap has an EXTRA blocker on top: the content
-  # panel + text are ATTACHEDAS_FREEFLOATING, so _invalidateLayout() on them does NOT
+  # panel + text are free-floating, so _invalidateLayout() on them does NOT
   # climb up to this scroll panel, and the wrap geometry lives in _positionAndResizeChildren
   # -- which the _reLayout cycle never reaches for a wrap toggle. Completing the
   # deferred model (and this case) is deliberate, sequenced work; see

@@ -1,6 +1,6 @@
 # VerticalStackLayoutSpec
 
-class VerticalStackLayoutSpec
+class VerticalStackLayoutSpec extends LayoutSpec
 
   stack: nil
   element: nil
@@ -24,7 +24,24 @@ class VerticalStackLayoutSpec
   grow: nil
   alignment: 'left'
 
+  # ROLE while ACTIVE: false = an element of a content STACK; true = a frame's CONTENT.
+  # Class default false (FrameContentLayoutSpec overrides true); the adopting arranges keep
+  # it truthful — a kept spec re-adopted by a stack flips back to false. This is what lets
+  # the family tell the two adoptions of the SAME object apart without a type test.
+  attachedAsFrameContent: false
+
+  # Capability queries (duck-typed at the call sites, never a type test):
+  # may a content stack ADOPT me, keeping my explicit grow/alignment edits?
+  # (FrameContentLayoutSpec inherits true — a window content moved into a document keeps its spec)
+  isContentStackCapable: ->
+    true
+
+  # am I currently an element of a content STACK (as opposed to frame content)?
+  isStackElementActive: ->
+    !@attachedAsFrameContent
+
   constructor: (@grow = nil) ->
+    super()
     return nil
 
   # Capture the spec's initial desiredWidth from the element's natural width at THIS

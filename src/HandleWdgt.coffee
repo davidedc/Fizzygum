@@ -46,9 +46,7 @@ class HandleWdgt extends Widget
     @color = Color.WHITE
     @noticesTransparentClick = true
 
-    @layoutSpec_cornerInternal_proportionOfParent = 0
-    @layoutSpec_cornerInternal_fixedSize = WorldWdgt.preferencesAndSettings.handleSize
-    @layoutSpec_cornerInternal_inset = @inset
+    @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, WorldWdgt.preferencesAndSettings.handleSize, @inset
 
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
   # resize/move @target. Added to the WORLD or the HAND (a naked desktop handle, or while detached / picked
@@ -57,17 +55,21 @@ class HandleWdgt extends Widget
   # stay free-floating. (The base Widget answer is FREEFLOATING, so only handles place themselves on add.)
   defaultLayoutSpecWhenAddedTo: (destination) ->
     if destination == world or destination == world.hand
-      return LayoutSpec.ATTACHEDAS_FREEFLOATING
+      return nil
+    @cornerSpec
+
+  # my corner anchor, fixed by @type at construction (the spec carries it for the corner pass)
+  _anchorForType: ->
     switch @type
-      when "resizeBothDimensionsHandle" then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOMRIGHT
-      when "moveHandle"                 then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPLEFT
-      when "resizeHorizontalHandle"     then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_RIGHT
-      when "resizeVerticalHandle"       then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_BOTTOM
+      when "resizeBothDimensionsHandle" then 'bottomRight'
+      when "moveHandle"                 then 'topLeft'
+      when "resizeHorizontalHandle"     then 'rightMiddle'
+      when "resizeVerticalHandle"       then 'bottomMiddle'
       # Affine transforms (§6 Phase 4B): the rotate handle takes the free TOP-RIGHT corner (the four
       # resize/move handles hold the other corners/edges). Corner-INTERNAL like the rest, so on an
       # island it is in-plane content painted into the island buffer — it warps with the content and
       # tracks the transformed corner for free (§4.6 halo model).
-      when "rotateHandle"               then LayoutSpec.ATTACHEDAS_CORNER_INTERNAL_TOPRIGHT
+      when "rotateHandle"               then 'topRight'
 
   # HandleWdgt is overlay chrome (a resize/move handle), not a content child, so
   # it is excluded from content-bounds and real-children calculations (see
@@ -106,7 +108,7 @@ class HandleWdgt extends Widget
       @target = whereTo
       pad = Math.max (@target.padding ? 2), 2
       @inset = new Point pad, pad
-      @layoutSpec_cornerInternal_inset = @inset
+      @cornerSpec.inset = @inset
     @_moveInFrontOfSiblings()
 
   updateVisibility: ->

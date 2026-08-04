@@ -73,7 +73,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @layoutSpecDetails.canSetHeightFreely = false
+    @_stackElementSpec.canSetHeightFreely = false
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_resizeToWithoutSpacing()

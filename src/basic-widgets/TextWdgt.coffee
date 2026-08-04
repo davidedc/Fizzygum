@@ -320,7 +320,7 @@ class TextWdgt extends StringWdgt
   initialiseDefaultVerticalStackLayoutSpec: ->
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-      @layoutSpecDetails.grow ?= 1
+      @_stackElementSpec.grow ?= 1
 
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
