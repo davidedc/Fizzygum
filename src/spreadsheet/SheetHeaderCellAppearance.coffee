@@ -15,6 +15,10 @@ class SheetHeaderCellAppearance extends Appearance
     @widget.kind is "column" or @widget.kind is "corner" or (@widget.kind is "row" and @widget.index is 0)
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    # shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the
+    # header fill + grid edges are interior chrome on the sheet's opaque panels, not
+    # coverage (the panels beneath provide it) — the shadow pass skips them.
+    return if appliedShadow?
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
     sheetWidget = @widget._sheetWidget

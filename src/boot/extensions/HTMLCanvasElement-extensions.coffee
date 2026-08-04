@@ -27,4 +27,28 @@ HTMLCanvasElement.createOfPhysicalDimensions = (extentPoint) ->
   canvas.height = Math.ceil  ext.y
   canvas
 
+# Turn a canvas's pixels into a black silhouette IN PLACE: every visible pixel
+# becomes black, per-pixel alpha (AA fringes, semi-transparent content) is kept.
+# The one primitive behind the shadow-pass contract (Widget.coffee "How the
+# shadow painting works"): a shadow is the caster's per-pixel COVERAGE, chroma
+# always black. "source-in" is a canvas-wide composite op on both backends
+# (SWCanvas has a fillRect fast path for it).
+HTMLCanvasElement.blackenIntoSilhouetteInPlace = (canvas) ->
+  ctx = canvas.getContext "2d"
+  ctx.save()
+  ctx.setTransform 1, 0, 0, 1, 0, 0
+  ctx.globalCompositeOperation = "source-in"
+  ctx.fillStyle = "black"
+  ctx.fillRect 0, 0, canvas.width, canvas.height
+  ctx.restore()
+
+# A NEW canvas holding the black silhouette of `sourceCanvas` (which is left
+# untouched) — for shadow passes that blit an existing buffer (island buffers,
+# BackBufferMixin back buffers) rather than re-painting art.
+HTMLCanvasElement.blackSilhouetteOf = (sourceCanvas) ->
+  sil = HTMLCanvasElement.createOfPhysicalDimensions new Point sourceCanvas.width, sourceCanvas.height
+  sil.getContext("2d").drawImage sourceCanvas, 0, 0
+  HTMLCanvasElement.blackenIntoSilhouetteInPlace sil
+  sil
+
 

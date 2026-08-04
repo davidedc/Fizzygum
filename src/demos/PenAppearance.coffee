@@ -18,7 +18,7 @@ class PenAppearance extends Appearance
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = @widget.alpha
+    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()
     widgetPosition = @widget.position()
@@ -37,7 +37,11 @@ class PenAppearance extends Appearance
       left = start.distanceAngle(len * 0.33, direction + 230)
       right = start.distanceAngle(len * 0.33, direction - 230)
 
-    aContext.fillStyle = @widget.color.toString()
+    # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the
+    # dart's shadow is its black-filled shape; the white/black legibility outline is
+    # skipped like every stroke under appliedShadow (the Boxy precedent).
+    fillColor = if appliedShadow? then Color.BLACK else @widget.color
+    aContext.fillStyle = fillColor.toString()
     aContext.beginPath()
 
     aContext.moveTo start.x, start.y
@@ -46,15 +50,19 @@ class PenAppearance extends Appearance
     aContext.lineTo right.x, right.y
 
     aContext.closePath()
-    aContext.strokeStyle = Color.WHITE.toString()
-    aContext.lineWidth = 3
-    aContext.stroke()
-    aContext.strokeStyle = Color.BLACK.toString()
-    aContext.lineWidth = 1
-    aContext.stroke()
+    if !appliedShadow?
+      aContext.strokeStyle = Color.WHITE.toString()
+      aContext.lineWidth = 3
+      aContext.stroke()
+      aContext.strokeStyle = Color.BLACK.toString()
+      aContext.lineWidth = 1
+      aContext.stroke()
     aContext.fill()
 
     aContext.restore()
+
+    # skipped in the shadow pass: the hover highlight is not part of the caster's ink.
+    return if appliedShadow?
 
     # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels

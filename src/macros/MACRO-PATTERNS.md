@@ -1686,6 +1686,13 @@ assertion a recapture after a regression silently stores two different hashes an
   Geometry-free (no hand-derived rotated sample points ⇒ dpr-invariant), and the numeric assert is what makes the guard
   survive a batch recapture: a screenshot-only shadow test would be silently re-baselined by the next `fg recapture --auto`.
   Born with the 2026-08-02 tilted-window faint-shadow fix (the faint-copy bug scores the tilted half ≤ 0 — it only LIGHTENS).
+- **Chroma-neutrality assert (the shadow-COLOUR guard)** (`macroColoredCastersShadowNeutralBlack`): the same A/B isolation,
+  plus, over pixels the shadow darkened by > 8 luma, assert the SHADOWED image's max RGB channel spread ≤ 2 — over the
+  neutral grey desktop a contract-true black shadow stays channel-balanced, while a shadow that re-tints the caster's own
+  colours scores its hue's spread (the un-aligned rainbow palette scored ~200). Fixture = one caster per PAINT PATH, since
+  each path enforces the contract separately (Widget.coffee "How the shadow painting works"): coloured text (BackBufferMixin
+  blit), a coloured icon (Appearance scratch-silhouette), the ColorPaletteWdgt (immutable palette buffer). Also assert no
+  pixel LIGHTENED (> 2 luma) — the ghost-copy failure mode. Born with the 2026-08-03 shadow-colour alignment arc.
 
 ## The verb-establishing pilots
 

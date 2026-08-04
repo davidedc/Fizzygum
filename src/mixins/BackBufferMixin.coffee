@@ -43,6 +43,21 @@ BackBufferMixin =
       backBuffer: nil
       backBufferContext: nil
 
+      # black-silhouette twin of backBuffer for the shadow pass (the shadow-paint contract:
+      # per-pixel coverage, chroma always black — see Widget.coffee "How the shadow painting
+      # works"). Cached KEYED ON THE SOURCE CANVAS OBJECT: text/palette buffers are immutable
+      # (a content change swaps in a different canvas), so identity is a complete staleness
+      # check for them; CanvasWdgt mutates its raster IN PLACE, so its pixel mutators nil
+      # the twin explicitly. Serialization transients (Widget's list), like backBuffer.
+      _backBufferShadowSilhouette: nil
+      _backBufferShadowSilhouetteSource: nil
+
+      _shadowSilhouetteOfBackBuffer: ->
+        if !@_backBufferShadowSilhouette? or @_backBufferShadowSilhouetteSource != @backBuffer
+          @_backBufferShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf @backBuffer
+          @_backBufferShadowSilhouetteSource = @backBuffer
+        @_backBufferShadowSilhouette
+
       # just a flag to indicate that the
       # backBufferContext value can be derived from others
       # currently unused
@@ -117,7 +132,12 @@ BackBufferMixin =
 
         aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
-        aContext.drawImage @backBuffer,
+        # the shadow pass blits the buffer's black-silhouette twin, never the buffer's own
+        # colours — a coloured string/palette/canvas re-tinted at shadow alpha is a ghost
+        # copy, not a shadow (over a light background it LIGHTENS; the tilted-window bug's
+        # shape). Per-pixel alpha (glyph AA, semi-transparent raster) carries through.
+        sourceBuffer = if appliedShadow? then @_shadowSilhouetteOfBackBuffer() else @backBuffer
+        aContext.drawImage sourceBuffer,
           Math.round(sl),
           Math.round(st),
           Math.round(w),
@@ -128,6 +148,10 @@ BackBufferMixin =
           Math.round(h)
 
         aContext.restore()
+
+        # skipped in the shadow pass: the hover highlight is not part of the caster's ink
+        # (same rule as the editor selection overlay).
+        return if appliedShadow?
 
         # _drawHighlightOverlay is usually made to work with
         # al, at, w, h which are actual pixels

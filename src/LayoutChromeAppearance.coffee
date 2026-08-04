@@ -30,15 +30,23 @@ class LayoutChromeAppearance extends Appearance
     # al, at, w, h which are actual pixels
     # rather than logical pixels, this is why
     # it's called before the scaling.
-    @widget.paintRectangle aContext, al, at, w, h, @widget.color
-    aContext.useLogicalPixelsUntilRestore()
+    # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the box
+    # is opaque, so its BLACK version is the complete silhouette — the chrome art drawn
+    # inside it adds no coverage and is skipped, like the hover highlight (not ink).
+    boxColor = if appliedShadow? then Color.BLACK else @widget.color
+    @widget.paintRectangle aContext, al, at, w, h, boxColor
 
-    widgetPosition = @widget.position()
-    aContext.translate widgetPosition.x, widgetPosition.y
+    if !appliedShadow?
+      aContext.useLogicalPixelsUntilRestore()
 
-    @widget.drawLayoutChrome aContext
+      widgetPosition = @widget.position()
+      aContext.translate widgetPosition.x, widgetPosition.y
+
+      @widget.drawLayoutChrome aContext
 
     aContext.restore()
+
+    return if appliedShadow?
 
     # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels

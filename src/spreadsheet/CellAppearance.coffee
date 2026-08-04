@@ -9,6 +9,10 @@
 class CellAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    # shadow-pass paint contract (Widget.coffee "How the shadow painting works"): grid
+    # edges and the selection ring are interior chrome on the sheet's opaque panels, not
+    # coverage — they contribute nothing to a silhouette, so the shadow pass skips them.
+    return if appliedShadow?
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
     sheetWidget = @widget._sheetWidget

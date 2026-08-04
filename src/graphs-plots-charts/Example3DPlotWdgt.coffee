@@ -200,7 +200,9 @@ class Example3DPlotWdgt extends Widget
     # clean the background
     if appliedShadow?
       context.globalAlpha = appliedShadow.alpha * @alpha
-      context.fillStyle = (Color.create 80, 80, 80).toString()
+      # shadow-pass paint contract (Widget.coffee "How the shadow painting works"):
+      # the plot box's shadow is BLACK, like every other caster's
+      context.fillStyle = Color.BLACK.toString()
       context.fillRect 0, 0, width, height
       # let's avoid paint 3d stuff twice because
       # of the shadow

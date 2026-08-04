@@ -19,9 +19,15 @@ class UpperRightTriangleAppearance extends Appearance
 
     @_beginLogicalPixelsBox aContext, appliedShadow, al, at, w, h
 
-    @_renderingHelper aContext, @widget.color
+    # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the art
+    # colour goes BLACK under appliedShadow — _beginLogicalPixelsBox already applied the
+    # shadow's alpha.
+    @_renderingHelper aContext, (if appliedShadow? then Color.BLACK else @widget.color)
 
     aContext.restore()
+
+    # skipped in the shadow pass: the hover highlight is not part of the caster's ink.
+    return if appliedShadow?
 
     # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels

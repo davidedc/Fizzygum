@@ -25,12 +25,20 @@ class HandleAppearance extends Appearance
     widgetPosition = @widget.position()
     aContext.translate widgetPosition.x, widgetPosition.y
 
-    if @widget.state == @widget.STATE_NORMAL
+    # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): both
+    # art colours go BLACK under appliedShadow — the alpha above already carries the
+    # shadow's faintness.
+    if appliedShadow?
+      @handleWidgetRenderingHelper aContext, Color.BLACK, Color.BLACK
+    else if @widget.state == @widget.STATE_NORMAL
       @handleWidgetRenderingHelper aContext, @widget.color, Color.create 150, 150, 150
-    if @widget.state == @widget.STATE_HIGHLIGHTED
+    else if @widget.state == @widget.STATE_HIGHLIGHTED
       @handleWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
 
     aContext.restore()
+
+    # skipped in the shadow pass: the hover highlight is not part of the caster's ink.
+    return if appliedShadow?
 
     # _drawHighlightOverlay is usually made to work with
     # al, at, w, h which are actual pixels

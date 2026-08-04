@@ -525,13 +525,7 @@ class TransformFrameWdgt extends PanelWdgt
   # the shadow's faintness, exactly as on the normal pass.
   _shadowSilhouetteOfIslandBuffer: (buffer) ->
     if !@_islandShadowSilhouette?
-      sil = HTMLCanvasElement.createOfPhysicalDimensions new Point buffer.width, buffer.height
-      sctx = sil.getContext "2d"
-      sctx.drawImage buffer, 0, 0
-      sctx.globalCompositeOperation = "source-in"
-      sctx.fillStyle = Color.BLACK.toString()
-      sctx.fillRect 0, 0, buffer.width, buffer.height
-      @_islandShadowSilhouette = sil
+      @_islandShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf buffer
     @_islandShadowSilhouette
 
   # §4.2 scale-only fast path: a uniform scale needs no setTransform — an unequal

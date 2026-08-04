@@ -88,13 +88,23 @@ class IconAppearance extends Appearance
     return nil unless keyValues?
     [area,sl,st,al,at,w,h] = keyValues
 
+    # the icon art (paintFunction) sets its own colours, so the shadow pass renders it to a
+    # scratch and blits the black silhouette (the shadow-pass paint contract).
+    if appliedShadow?
+      @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
+        @_paintColoredIcon sctx, al, at, w, h
+      return
+
+    @_paintColoredIcon aContext, al, at, w, h
+
+  _paintColoredIcon: (aContext, al, at, w, h) ->
     aContext.save()
 
     # clip out the dirty rectangle as we are
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
+    aContext.globalAlpha = @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()
 

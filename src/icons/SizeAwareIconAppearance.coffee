@@ -24,13 +24,24 @@ class SizeAwareIconAppearance extends IconAppearance
     return nil unless keyValues?
     [area,sl,st,al,at,w,h] = keyValues
 
+    # the icon art (_paintSizeAware) sets its own colours, so the shadow pass renders it to
+    # a scratch and blits the black silhouette (the shadow-pass paint contract).
+    if appliedShadow?
+      @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
+        @_paintColoredIcon sctx, al, at, w, h
+      return
+
+    @_paintColoredIcon aContext, al, at, w, h
+    return nil
+
+  _paintColoredIcon: (aContext, al, at, w, h) ->
     aContext.save()
 
     # clip out the dirty rectangle as we are
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
+    aContext.globalAlpha = @widget.alpha
 
     # deliberately NO useLogicalPixelsUntilRestore(): subclasses draw in
     # integer DEVICE pixels, anchored to the widget's own origin — never to the
@@ -44,7 +55,6 @@ class SizeAwareIconAppearance extends IconAppearance
       @widget.height() * ceilPixelRatio
 
     aContext.restore()
-    return nil
 
   # subclass responsibility: all-integer device-pixel drawing into the
   # (x0, y0, wDev, hDev) box

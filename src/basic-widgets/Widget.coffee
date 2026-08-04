@@ -36,8 +36,9 @@ class Widget extends TreeNode
     "lastTime"
     # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
     # _createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
-    # re-renders it on its first paint.
+    # re-renders it on its first paint. The shadow-silhouette twin follows the same rule.
     "backBuffer", "backBufferContext"
+    "_backBufferShadowSilhouette", "_backBufferShadowSilhouetteSource"
     "cachedFullBounds", "checkFullBoundsCache", "childrenBoundsUpdatedAt"
     # the root() cache (TreeNode) — the ONE cache pair that was missing here: a STALE
     # cachedRoot can point into a subtree destroyed since the last structure change
@@ -2832,12 +2833,24 @@ class Widget extends TreeNode
   # IMPORTANT: a widget NEVER bakes its own shadow into its back-buffer. The ONLY
   # shadow mechanism is this unified recursive re-paint: a widget that has a shadow
   # (@shadowInfo) re-paints its WHOLE subtree once more, faintly and offset, BEHIND
-  # the normal paint. It is NOT a hard "silhouette"/outline — each widget is
-  # re-painted with its actual (possibly semi-transparent) pixels at
-  # appliedShadow.alpha, so a transparent text widget casts a faint copy of its
-  # GLYPHS and a semi-transparent panel-with-text casts a faint copy of fill AND
-  # content together. (There is no per-glyph / per-widget baked shadow: a
-  # per-glyph shadowOffset/shadowColor route is deliberately not reintroduced.)
+  # the normal paint.
+  # THE SHADOW-PASS PAINT CONTRACT: a shadow is the caster's per-pixel COVERAGE,
+  # chroma always black — a shadow occludes light, so it may only darken, never
+  # carry the caster's own colours (a caster lighter than the background would
+  # otherwise cast a GLOW — the tilted-window faint-shadow bug, fixed 2026-08-02).
+  # Coverage means per-pixel OPACITY, not a hard mask: a translucent widget casts a
+  # proportionally fainter shadow (appliedShadow.alpha × its alpha), glyph AA edges
+  # shade proportionally, a hole casts nothing. Every paint leaf honours the
+  # contract by the cheapest correct means: appearances that control their fills
+  # swap them to Color.BLACK under appliedShadow; buffer blits (BackBufferMixin,
+  # the island composite) blit a cached black-silhouette twin
+  # (HTMLCanvasElement.blackSilhouetteOf); arbitrary-coloured art (icons, the
+  # clock) renders to a scratch and blits its silhouette
+  # (Appearance._paintDamagedAreaAsBlackSilhouette). Hover/selection overlays are
+  # not part of the caster's ink and are skipped in the shadow pass. (There is no
+  # per-glyph / per-widget baked shadow: a per-glyph shadowOffset/shadowColor
+  # route is deliberately not reintroduced; a COLOURED shadow, if ever wanted,
+  # would be an explicit ShadowInfo field, not a paint-path accident.)
   # If appliedShadow is defined, it means that we are painting the whole
   # of the widget recursively AS SHADOW. Since there are no shadows of a shadow
   # so we can skip the "just shadow" part, and we paint the widget as shadow.

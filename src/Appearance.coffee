@@ -58,6 +58,29 @@ class Appearance
     aContext.translate widgetPosition.x, widgetPosition.y
 
 
+  # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,
+  # the analog clock) — where the boxy pattern of swapping ONE fill to Color.BLACK cannot
+  # reach the art's colours. Renders `paintColoredArt` (the appearance's NORMAL, full-colour
+  # painting; receives the scratch context, pre-translated so the art's usual absolute device
+  # coordinates land in the scratch) into a scratch canvas of just the DAMAGED area (w×h
+  # device px — cost tracks damage, not widget size), blackens it in place, and blits it at
+  # the shadow alpha. This honours the shadow-pass PAINT contract (Widget.coffee "How the
+  # shadow painting works": per-pixel coverage, chroma always black) with zero per-primitive
+  # colour surgery, so future art changes stay contract-true for free. The art must paint
+  # EXACTLY as its normal (non-shadow) path does, @widget.alpha included — per-pixel opacity
+  # carries into the silhouette, so the blit applies ONLY the shadow's own alpha on top
+  # (total = appliedShadow.alpha × widget alpha, the recursive pass's formula, not squared).
+  _paintDamagedAreaAsBlackSilhouette: (aContext, al, at, w, h, appliedShadow, paintColoredArt) ->
+    scratch = HTMLCanvasElement.createOfPhysicalDimensions new Point w, h
+    sctx = scratch.getContext "2d"
+    sctx.translate -al, -at
+    paintColoredArt sctx
+    HTMLCanvasElement.blackenIntoSilhouetteInPlace scratch
+    aContext.save()
+    aContext.globalAlpha = appliedShadow.alpha
+    aContext.drawImage scratch, 0, 0, w, h, al, at, w, h
+    aContext.restore()
+
   # This method only paints this very widget
   # i.e. it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,

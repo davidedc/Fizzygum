@@ -20,13 +20,33 @@ class AnalogClockAppearance extends Appearance
       if w < 1 or h < 1
         return nil
 
+      # the clock face + hands set their own colours (white face, black hands, blue arc),
+      # so the shadow pass renders the whole clock to a scratch and blits the black
+      # silhouette (the shadow-pass paint contract). The highlight overlay is not part of
+      # the caster's ink, so it is skipped in the shadow pass (same rule as the editor
+      # selection overlay).
+      if appliedShadow?
+        @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
+          @_paintColoredClock sctx, sl, st, al, at, w, h
+        return
+
+      @_paintColoredClock aContext, sl, st, al, at, w, h
+
+      # _drawHighlightOverlay here is made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, this is why
+      # it's called outside the effect of the scaling
+      # (after the restore).
+      @_drawHighlightOverlay aContext, al, at, w, h
+
+  _paintColoredClock: (aContext, sl, st, al, at, w, h) ->
       aContext.save()
 
       # clip out the dirty rectangle as we are
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.backgroundTransparency
+      aContext.globalAlpha = @widget.backgroundTransparency
 
       # paintRectangle here is made to work with
       # al, at, w, h which are actual pixels
@@ -42,12 +62,9 @@ class AnalogClockAppearance extends Appearance
       # lands byte-for-byte where the old in-_renderingHelper tick strokes did. The ticks
       # are the BOTTOM layer (drawn first, under the hands); the dynamic hands and the
       # centre dot + outer arc that sit IN FRONT of the hands are still drawn live by
-      # _renderingHelper, so the z-order is unchanged. globalAlpha matches the ticks' old
-      # alpha (_renderingHelper uses appliedShadowAlpha * @widget.alpha), and the blit works
-      # identically in the shadow pass — the caller has already translated the context
-      # by the shadow offset, and drawImage rides that translate like any other draw.
+      # _renderingHelper, so the z-order is unchanged.
       faceBuffer = @_getFaceBuffer()
-      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
+      aContext.globalAlpha = @widget.alpha
       aContext.drawImage faceBuffer,
         Math.round(sl), Math.round(st), Math.round(w), Math.round(h),
         Math.round(al), Math.round(at), Math.round(w), Math.round(h)
@@ -57,16 +74,9 @@ class AnalogClockAppearance extends Appearance
       widgetPosition = @widget.position()
       aContext.translate widgetPosition.x, widgetPosition.y
 
-      @_renderingHelper aContext, Color.WHITE, appliedShadow
+      @_renderingHelper aContext, Color.WHITE
 
       aContext.restore()
-
-      # _drawHighlightOverlay here is made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, this is why
-      # it's called outside the effect of the scaling
-      # (after the restore).
-      @_drawHighlightOverlay aContext, al, at, w, h
 
   _calculateHandsAngles: ->
 
@@ -95,7 +105,7 @@ class AnalogClockAppearance extends Appearance
     context.rotate -Math.PI / 2
     context.strokeStyle = Color.BLACK.toString()
 
-  _renderingHelper: (context, color, appliedShadow) ->
+  _renderingHelper: (context, color) ->
     height = @widget.height()
     width = @widget.width()
 
@@ -103,7 +113,7 @@ class AnalogClockAppearance extends Appearance
     context.lineCap = "round"
 
     context.save()
-    context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
+    context.globalAlpha = @widget.alpha
 
     squareDim = Math.min width/2, height/2
 
