@@ -189,6 +189,10 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## OO cleanup, lint & modernization
 
+- **`immutability-and-canonical-instances-plan.md`** — COMPLETE (2026-08-04). Finished the Bloch treatment of the value classes: eliminated the last 6 in-place Point mutations, DELETED `Point/Rectangle::copy()`, added `Point.ZERO` + return-`@`/canonical shortcuts (exact-`===` bar), made the 137 Color constants permanently interned (`createConstant` + `Class.coffee` regex widening), converted TransformSpec to withers, and put `keptByReferenceOnDeepCopy` on Point/Rectangle/ShadowInfo/TransformSpec. Zero pixel churn across every gate. Residue: `docs/architecture/immutable-value-classes.md`.
+  - ⚠⚠ a class-level constant may reference ITSELF (deferred-static mechanism) but NEVER another class: the boot dependency scanner only sees `new X` edges in class-declaration-level initializers, so `@NO_SHADOW: new ShadowInfo Point.ZERO, 0` class-evaled before Point existed and hung the interactive boot — the harness page masked it; the boot smoke named it. Fix shape: lazy memo in the factory.
+  - ⚖ shortcut guards must be duck-typed (`delta.isZero?()`), not `instanceof` — the type-test stink ratchet (baseline 93) correctly rejected the first guard shape
+  - ⚖ `multiplyBy 0 → ZERO` needs a `Number.isFinite` guard (NaN·0 ≠ 0); `-0`-for-`+0` accepted under the `===` bar
 - **`accidental-complexity-reduction-plan.md`** — COMPLETE. Five-dimension refactor plan (dead code, duplication, over-engineering, control-flow, tooling) across ~470 .coffee files; all actionable items landed+pushed.
   - ⚖ P4 — ScrollPanelWdgt scroll-delta LEAVE-AS-IS, determinism-critical
   - ⚖ P5 — ctor-arg reorder safe for serialization/duplication (Object.create bypasses ctor)

@@ -1,3 +1,6 @@
+# IMMUTABLE (whole family) — an input event is a value: fields are set at
+# construction and never written again (see docs/architecture/immutable-value-classes.md).
+
 class InputEvent
   isSynthetic: false
 

@@ -80,9 +80,14 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 - A property whose value has a **`rebuildDerivedValue`** method is a *derived* value: it
   is skipped and later regenerated (only canvas 2D contexts define it — they rebuild from
   their sibling canvas by naming convention).
-- A property whose value is flagged **`keptByReferenceOnDeepCopy`** (world-level shared
-  singletons: `Wallpaper`, `WidgetFactory`, `IconicDesktopSystemWindowedApp`) is kept by
-  reference on duplication; the new serializer encodes it as a well-known `{"$wk"}` (§4).
+- A property whose value is flagged **`keptByReferenceOnDeepCopy`** is kept by reference
+  on duplication. Two kinds of class declare it: world-level shared singletons
+  (`Wallpaper`, `WidgetFactory`, `IconicDesktopSystemWindowedApp`, `DataflowEngine`) —
+  which the serializer *independently* encodes as well-known `{"$wk"}` refs (§4, matched
+  by identity, not by this flag) — and immutable value classes (`Point`, `Rectangle`,
+  `ShadowInfo`, `TransformSpec`, `SheetError`), which serialize as ordinary values
+  (sharing round-trips via the identity-keyed object table). See
+  `docs/architecture/immutable-value-classes.md` §4.
 - A `Widget` NOT in `allWidgetsInStructure` (the set of widgets in the subtree being
   copied) is **external**: duplication keeps the live reference (so a duplicate can stay
   wired to an outside widget); serialization cannot keep a live pointer, so this is where

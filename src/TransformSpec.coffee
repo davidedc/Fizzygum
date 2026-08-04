@@ -35,6 +35,9 @@ class TransformSpec
   # reserve) — mode rationale + D1 history: docs/architecture/transforms.md §5.1.
   claimsSpace: "footprint"
 
+  # a shared, immutable value: deep copies keep the reference (see Duplicator)
+  keptByReferenceOnDeepCopy: true
+
   constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "footprint") ->
     # Phase 2: rotation is live — for a non-zero angle the matrix trig is Math.cos/sin, which the
     # reference-matched pages have patched to the fdlibm port (see _cosSin), so rotated composites
@@ -47,12 +50,31 @@ class TransformSpec
   isIdentity: ->
     (@rotationDegrees % 360 == 0) and (@scale == 1)
 
-  # The canonical scalars (scale / rotationDegrees / claimsSpace) are mutated DIRECTLY by
-  # TransformFrameWdgt's guarded _set*NoSettle cores (a thin setter here would collide, by name,
-  # with the widget's self-settling public wrappers and false-trip the layering gate). The anchor
-  # is mutated directly too, by its owning island's lifecycle seams only (the Bug-D pin/un-pin in
-  # TrackingTransformFrameWdgt._reLayoutChildren, the Bug-F move-level anchor-rides, the Bug-G
-  # pick-up normalization) — no setter exists by design.
+  # IMMUTABLE — a TransformSpec is never mutated after construction: its owning island
+  # REPLACES the whole spec through the withers below (from TransformFrameWdgt's guarded
+  # _set*NoSettle cores, and from the anchor lifecycle seams — the Bug-D pin/un-pin in
+  # TrackingTransformFrameWdgt._reLayoutChildren, the Bug-F move-level anchor-rides, the
+  # Bug-G pick-up normalization). The withers are named with*, NOT set* — a set* name here
+  # would collide, by name, with the widget's self-settling public wrappers and false-trip
+  # the layering gate. Each wither returns `this` unchanged when the new value is `===`
+  # the current one, and routes through the constructor (preserving its scale > 0
+  # normalization) otherwise — see the shortcut policy in the Rectangle class header.
+
+  withRotationDegrees: (deg) ->
+    return @ if deg is @rotationDegrees
+    new @constructor deg, @scale, @anchor, @claimsSpace
+
+  withScale: (s) ->
+    return @ if s is @scale
+    new @constructor @rotationDegrees, s, @anchor, @claimsSpace
+
+  withAnchor: (aPointOrNil) ->
+    return @ if aPointOrNil is @anchor
+    new @constructor @rotationDegrees, @scale, aPointOrNil, @claimsSpace
+
+  withClaimsSpace: (mode) ->
+    return @ if mode is @claimsSpace
+    new @constructor @rotationDegrees, @scale, @anchor, mode
 
   # ---- layout coupling: the extent this island CLAIMS from its parent, and where the slot ----
   #      box sits inside it — same three modes as claimsSpace above; see docs/architecture/transforms.md §5.1.

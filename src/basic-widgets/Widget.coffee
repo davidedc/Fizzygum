@@ -994,7 +994,7 @@ class Widget extends TreeNode
         @desiredExtent = newExtent
         @_invalidateLayout()
 
-      newPos = aRectangle.origin.copy()
+      newPos = aRectangle.origin
       unless @position().equals newPos
         @desiredPosition = newPos
         @_invalidateLayout()

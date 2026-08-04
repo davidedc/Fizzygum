@@ -1,5 +1,8 @@
 # A parameter object for a single menu row.
 #
+# SHALLOWLY IMMUTABLE — fields are never written after construction, but `target` /
+# `action` reference live widgets (see docs/architecture/immutable-value-classes.md).
+#
 # MenuWdgt.addMenuItem / .prependMenuItem / .createMenuItem used to thread a
 # dozen positional arguments straight into MenuItemWdgt's (17-arg) constructor,
 # annotated with a per-argument trailing comment because the bare positional

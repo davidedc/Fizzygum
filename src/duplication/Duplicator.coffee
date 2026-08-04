@@ -190,10 +190,12 @@ class Duplicator
           # on the clone.
           cloneOfMe[property] = nil
         else if value.keptByReferenceOnDeepCopy
-          # A shared, world-level singleton (e.g. world.wallpaper,
-          # world.widgetFactory): it is NOT part of the sub-structure being
-          # copied, so a deep copy KEEPS THE REFERENCE rather than cloning it —
-          # exactly as the dispatch core returns a Widget outside the structure as-is.
+          # Kept by reference, two kinds: a shared world-level singleton (e.g.
+          # world.wallpaper, world.widgetFactory) is NOT part of the sub-structure
+          # being copied — exactly as the dispatch core returns a Widget outside the
+          # structure as-is; and an immutable value (Point, Rectangle, ShadowInfo,
+          # TransformSpec, SheetError) never changes, so sharing it is invisible.
+          # See docs/architecture/immutable-value-classes.md.
           cloneOfMe[property] = value
         else
           cloneOfMe[property] = @_duplicate value

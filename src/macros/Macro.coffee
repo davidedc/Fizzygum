@@ -6,6 +6,8 @@
 class Macro
   _body: nil
   _name: nil
+  # lazily-filled derivation of _body — a sanctioned memo on an otherwise immutable
+  # class, same pattern as Color._derived_String
   _linkedCode: nil
 
   constructor: (@_name, @_body) ->

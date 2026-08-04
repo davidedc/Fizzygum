@@ -148,27 +148,27 @@ class Example3DPlotWdgt extends Widget
   _calculateNewPlotValues: ->
     @vertices = []
 
-    @graphGrid = new Grid3D 21, 21, []
-
+    graphGridIndexes = []
     for i in [-1..1] by 0.1
       for j in [-1..1] by 0.1
         @vertices.push new Point3D i, j, (Math.sin(i*@parameterValue/30)) + (Math.sin(i*3 + @currentAngle/160) + Math.cos(j*3 + @currentAngle/160))/2
-        @graphGrid.vertexIndexes.push @vertices.length - 1
+        graphGridIndexes.push @vertices.length - 1
+    @graphGrid = new Grid3D 21, 21, graphGridIndexes
 
 
-    @planeGrid = new PlaneGrid3D 21, 21
-
+    planeGridIndexes = []
     for i in [-1..1] by 0.1
       @vertices.push new Point3D i, -1, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
+      planeGridIndexes.push @vertices.length - 1
       @vertices.push new Point3D i, 1, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
+      planeGridIndexes.push @vertices.length - 1
 
     for j in [-1..1] by 0.1
       @vertices.push new Point3D -1, j, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
+      planeGridIndexes.push @vertices.length - 1
       @vertices.push new Point3D 1, j, 0
-      @planeGrid.vertexIndexes.push @vertices.length - 1
+      planeGridIndexes.push @vertices.length - 1
+    @planeGrid = new PlaneGrid3D 21, 21, planeGridIndexes
 
 
     @_changed()
@@ -224,9 +224,8 @@ class Example3DPlotWdgt extends Widget
     context.scale squareDim/300, squareDim/300
 
     for eachVertex in @vertices
-      newPoint = eachVertex.rotateX(90).rotateY(@currentAngle/2).translateXYZ(0,0.5,0).project(300, 300, 220, 3)
-      newPoint.y -= squareDim * 1/6
-      points.push newPoint
+      projected = eachVertex.rotateX(90).rotateY(@currentAngle/2).translateXYZ(0,0.5,0).project(300, 300, 220, 3)
+      points.push new Point projected.x, projected.y - squareDim * 1/6
 
     for eachQuad in @quads
       context.beginPath()

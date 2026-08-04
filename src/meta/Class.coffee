@@ -412,10 +412,11 @@ class Class
 
           if window.srcLoadCompileDebugWrites then console.log fieldDeclaration
 
-          if ((new RegExp("\\s*new\\s*" + @name + "(\\s|$)")).test fieldValue) or ((new RegExp("\\s*" + @name + "\\.create(\\s|\\()")).test fieldValue)
+          if ((new RegExp("\\s*new\\s*" + @name + "(\\s|$)")).test fieldValue) or ((new RegExp("\\s*" + @name + "\\.create\\w*(\\s|\\()")).test fieldValue)
             # for example, in the Color class:
+            #    @BLACK: Color.createConstant 0,0,0
+            #      or the alternatives
             #    @BLACK: Color.create 0,0,0
-            #      or the alternative (not actually used)
             #    @BLACK: new Color 0,0,0
             # we need to put these aside and add them last, so that the
             # rest of the class is defined and we can initialise these

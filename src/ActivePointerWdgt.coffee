@@ -1092,7 +1092,7 @@ class ActivePointerWdgt extends Widget
           deltaDragFromPreviousCall = pos.subtract @previousNonFloatDraggingPos
         else
           deltaDragFromPreviousCall = nil
-        @previousNonFloatDraggingPos = pos.copy()
+        @previousNonFloatDraggingPos = pos
         @nonFloatDraggedWdgt.nonFloatDragging?(@nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall)
     
 

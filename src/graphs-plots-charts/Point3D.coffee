@@ -1,3 +1,6 @@
+# IMMUTABLE — "new on change" like Point: every operation returns a fresh instance
+# (see docs/architecture/immutable-value-classes.md).
+#
 # adapted from thomasdarimont/spinning-cube.html
 # https://gist.github.com/thomasdarimont/8c694b4522c6cb10d85c
 

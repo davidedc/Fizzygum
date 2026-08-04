@@ -1,3 +1,5 @@
+# IMMUTABLE — see the InputEvent header. (fromBrowserEvent's deltaX/deltaY writes
+# land on the RAW browser event, before this value object is constructed.)
 # see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
 class WheelInputEvent extends MouseInputEvent
 

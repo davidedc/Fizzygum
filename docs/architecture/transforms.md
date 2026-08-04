@@ -91,11 +91,17 @@ demand and never stored as truth.**
   coords), `claimsSpace` (layout-coupling mode, §5). Extracting angle/scale back out of a
   matrix is what forced Lively's epsilon-hacks — Fizzygum never does it, so `isIdentity`'s
   `% 360 == 0` / `== 1` tests stay exact.
+- **IMMUTABLE.** A `TransformSpec` is never mutated after construction: the owning island
+  replaces its whole spec through the withers (`withScale` / `withRotationDegrees` /
+  `withAnchor` / `withClaimsSpace`), each returning `this` when the value is unchanged and a
+  fresh spec (through the constructor, preserving its `scale > 0` normalization) otherwise.
+  The withers are deliberately named `with*`, not `set*` — a `set*` name would collide with
+  the widget-side self-settling wrappers and false-trip the layering gate. Being an immutable
+  value it declares `keptByReferenceOnDeepCopy`, so deep copies share the spec instance.
 - **Matrix is cheap and derived.** `matrixForSlot(slotBounds)` returns `{a,b,c,d,e,f}` for
   `p' = A + s·Rot(θ)·(p − A)` mapping slot/virtual coords up to the island's **parent** plane;
   `inverseMatrixForSlot` is its exact inverse (for hit-testing). Because the matrix is derived
-  there is no cached-matrix bookkeeping to get wrong under `deepCopy` — only scalars serialize
-  (`TransformSpec @augmentWith DeepCopierMixin`).
+  there is no cached-matrix bookkeeping to get wrong under `deepCopy` — only scalars serialize.
 - **Point maps:** `mapPoint` (forward, virtual → parent plane) and `inverseMapPoint`
   (parent → virtual). There is deliberately no `inverseMapRect` / `compose` / `inverseMapVector` —
   point-map both endpoints and subtract for deltas.

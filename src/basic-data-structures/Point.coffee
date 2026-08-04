@@ -1,23 +1,27 @@
-# See the Rectangle class about the "copy on change" policy
-# of this class.
+# IMMUTABLE — "new on change": see the Rectangle class header for the full policy,
+# including the return-`@` / canonical-constant shortcut rules and their exact-`===` bar.
 
 class Point
 
   x: nil
   y: nil
-   
+
+  # a shared, immutable value: deep copies keep the reference (see Duplicator)
+  keptByReferenceOnDeepCopy: true
+
+  # THE canonical zero point. A deferred static (see Class.coffee): a class-level value
+  # whose source says `new Point` is initialised right after the class itself exists —
+  # same mechanism as Rectangle.EMPTY and the Color constants.
+  @ZERO: new Point 0, 0
+
   constructor: (@x = 0, @y = 0) ->
 
   # Point string representation: e.g. '12@68'
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
 
-  # Point copying:
-  copy: ->
-    new @constructor @x, @y
-
   # Point comparison:
-  isZero: (aPoint) ->
+  isZero: ->
     # ==
     @x is 0 and @y is 0
   
@@ -39,25 +43,36 @@ class Point
     @x <= aPoint.x and @y <= aPoint.y
   
   max: (aPoint) ->
+    return @ if @x >= aPoint.x and @y >= aPoint.y
+    return aPoint if aPoint.x >= @x and aPoint.y >= @y
     new @constructor Math.max(@x, aPoint.x), Math.max(@y, aPoint.y)
-  
+
   min: (aPoint) ->
+    return @ if @x <= aPoint.x and @y <= aPoint.y
+    return aPoint if aPoint.x <= @x and aPoint.y <= @y
     new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)
   
   # Point conversion:
+  # (the return-`@` guards: already-integral coordinates are the common case under
+  # the integer-placement policy, so these ops mostly need no allocation at all)
   round: ->
+    return @ if Number.isInteger(@x) and Number.isInteger(@y)
     new @constructor Math.round(@x), Math.round(@y)
-  
+
   abs: ->
+    return @ if @x >= 0 and @y >= 0
     new @constructor Math.abs(@x), Math.abs(@y)
-  
+
   neg: ->
     new @constructor -@x, -@y
 
+  # NOTE: floor also clamps to >= 0
   floor: ->
+    return @ if Number.isInteger(@x) and @x >= 0 and Number.isInteger(@y) and @y >= 0
     new @constructor Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0)
-  
+
   ceil: ->
+    return @ if Number.isInteger(@x) and Number.isInteger(@y)
     new @constructor Math.ceil(@x), Math.ceil(@y)
   
 
@@ -72,16 +87,32 @@ class Point
 
   
   # Point arithmetic:
+  # adding/subtracting zero and multiplying by one return `this` (exact no-ops);
+  # multiplying by zero returns THE canonical Point.ZERO — but only for finite
+  # coordinates, since NaN/Infinity times zero is not zero.
   add: (other) ->
-    return new @constructor @x + other.x, @y + other.y  if other instanceof Point
+    if other instanceof Point
+      return @ if other.x is 0 and other.y is 0
+      return new @constructor @x + other.x, @y + other.y
+    return @ if other is 0
     new @constructor @x + other, @y + other
-  
+
   subtract: (other) ->
-    return new @constructor @x - other.x, @y - other.y  if other instanceof Point
+    if other instanceof Point
+      return @ if other.x is 0 and other.y is 0
+      return new @constructor @x - other.x, @y - other.y
+    return @ if other is 0
     new @constructor @x - other, @y - other
-  
+
   multiplyBy: (other) ->
-    return new @constructor @x * other.x, @y * other.y  if other instanceof Point
+    if other instanceof Point
+      return @ if other.x is 1 and other.y is 1
+      if other.x is 0 and other.y is 0 and Number.isFinite(@x) and Number.isFinite(@y)
+        return @constructor.ZERO
+      return new @constructor @x * other.x, @y * other.y
+    return @ if other is 1
+    if other is 0 and Number.isFinite(@x) and Number.isFinite(@y)
+      return @constructor.ZERO
     new @constructor @x * other, @y * other
   
   floorDivideBy: (other) ->

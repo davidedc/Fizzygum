@@ -287,13 +287,13 @@ class CaretWdgt extends BlinkerWdgt
         left = @parent.left() + @viewPadding
         if pos.x > right
           @target._moveLeftSideTo @target.left() + right - pos.x
-          pos.x = right
+          pos = new Point right, pos.y
         if pos.x < left
           left = Math.min @parent.left(), left
           @target._moveLeftSideTo @target.left() + left - pos.x
-          pos.x = left
+          pos = new Point left, pos.y
         if @target.right() < right and right - @target.width() < left
-          pos.x += right - @target.right()
+          pos = new Point pos.x + (right - @target.right()), pos.y
           @target._moveRightSideTo right
       # public-call-sanctioned: show is the heavily-public visibility verb (settle-free one-liner);
       # consciously reused by this core.

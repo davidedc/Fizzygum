@@ -115,19 +115,14 @@ class HandleAppearance extends Appearance
       bottomLeft = @widget.bottomLeft().subtract(@widget.position())
       topRight = @widget.topRight().subtract(@widget.position())
 
-      bottomLeftSweep = bottomLeft.copy()
-      topRightSweep = topRight.copy()
-
       # draw the lines sweeping from long lines
-      # down to the short ones at the corner
+      # down to the short ones at the corner: the start point
+      # sweeps right along the bottom edge, the end point
+      # sweeps down the right edge
       for i in [0..@widget.height()] by 6
-        # bottomLeftSweep moves right
-        bottomLeftSweep.x = bottomLeft.x + i
-        # topRightSweep moves down
-        topRightSweep.y = topRight.y + i
         context.beginPath()
-        context.moveTo bottomLeftSweep.x, bottomLeftSweep.y
-        context.lineTo topRightSweep.x, topRightSweep.y
+        context.moveTo bottomLeft.x + i, bottomLeft.y
+        context.lineTo topRight.x, topRight.y + i
         context.closePath()
         context.stroke()
 

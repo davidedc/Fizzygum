@@ -87,15 +87,15 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     if !@transformSpec.isIdentity()
       if newSlot.extent().equals @bounds.extent()
         if @transformSpec.anchor?
-          @transformSpec.anchor = @transformSpec.anchor.add newSlot.topLeft().subtract @bounds.topLeft()
+          @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add newSlot.topLeft().subtract @bounds.topLeft()
       else   # extent changed
         if arrangeDriven
-          @transformSpec.anchor = nil                                 # arrange owns placement: render GLUED to the slot (F1)
+          @transformSpec = @transformSpec.withAnchor nil                                 # arrange owns placement: render GLUED to the slot (F1)
         else
-          @transformSpec.anchor = @transformSpec._anchorFor @bounds    # content-driven: Bug-D pin, unchanged
+          @transformSpec = @transformSpec.withAnchor @transformSpec._anchorFor @bounds    # content-driven: Bug-D pin, unchanged
     @bounds = newSlot
     if @transformSpec.anchor? and @transformSpec.anchor.equals newSlot.center()
-      @transformSpec.anchor = nil
+      @transformSpec = @transformSpec.withAnchor nil
     @__breakMoveResizeCaches()
     @_lastClaimedExtent = nil
     # D2: the re-hug moved/resized the slot, so the reachability memo is stale too. Just nil it

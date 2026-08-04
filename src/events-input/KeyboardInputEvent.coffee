@@ -1,3 +1,4 @@
+# IMMUTABLE — see the InputEvent header.
 # see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent
 class KeyboardInputEvent extends InputEvent
   key: nil

@@ -1,3 +1,6 @@
+# IMMUTABLE — see the InputEvent header. (Construction is not pure — the
+# constructor reads the global `world` to derive pageX/pageY — but the instance
+# is never written after it.)
 class MousemoveInputEvent extends MouseInputEvent
   pageX: nil
   pageY: nil

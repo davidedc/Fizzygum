@@ -1,3 +1,4 @@
+# IMMUTABLE — see the InputEvent header.
 # clipboard events take a text instead of the event,
 # the reason is that you can't access the clipboard
 # outside of the EventListener, I presume for

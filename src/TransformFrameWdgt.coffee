@@ -142,7 +142,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   _setScaleNoSettle: (s) ->
     return if !(s > 0) or s == @transformSpec.scale
-    @transformSpec.scale = s   # set the canonical scalar directly (guarded above)
+    @transformSpec = @transformSpec.withScale s   # replace the immutable spec (guarded above)
     @_transformChangedNoSettle()
 
   # Phase 2: rotate the island by `deg` degrees about its anchor (default the slot centre).
@@ -153,7 +153,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   _setRotationNoSettle: (deg) ->
     return if deg == @transformSpec.rotationDegrees
-    @transformSpec.rotationDegrees = deg   # set the canonical scalar directly
+    @transformSpec = @transformSpec.withRotationDegrees deg   # replace the immutable spec
     @_transformChangedNoSettle()
 
 
@@ -165,7 +165,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   _setClaimsSpaceNoSettle: (mode) ->
     return if mode == @transformSpec.claimsSpace
-    @transformSpec.claimsSpace = mode   # set the canonical scalar directly
+    @transformSpec = @transformSpec.withClaimsSpace mode   # replace the immutable spec
     @_lastClaimedExtent = nil
     @__breakMoveResizeCaches()
     @_fullChanged()
@@ -309,16 +309,16 @@ class TransformFrameWdgt extends PanelWdgt
   # population — nil anchor ⇒ the guard skips).
   _applyMoveBy: (delta) ->
     super delta
-    @transformSpec.anchor = @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
+    @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
 
   _applyMoveByBase: (delta) ->
     moved = super delta
-    @transformSpec.anchor = @transformSpec.anchor.add delta if moved and @transformSpec?.anchor?
+    @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add delta if moved and @transformSpec?.anchor?
     moved
 
   __commitMoveBy: (delta) ->
     super delta
-    @transformSpec.anchor = @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
+    @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
 
   # §7.5 Bug G (reparent-transparency, PICK-UP NORMALIZATION): re-express a PINNED anchor
   # (Bug-D anchor-stability, set by a tracked resize) as the equivalent NIL-anchor similitude before
@@ -334,7 +334,7 @@ class TransformFrameWdgt extends PanelWdgt
   _normalizePinnedAnchorNoSettle: ->
     return if !@transformSpec?.anchor? or @transformSpec.isIdentity()
     t = @transformSpec._nilAnchorEquivalentTranslation @bounds   # read t while the anchor is still pinned
-    @transformSpec.anchor = nil
+    @transformSpec = @transformSpec.withAnchor nil
     @_applyMoveBy t.round()
 
   # ---------------------------------------------------------------------------

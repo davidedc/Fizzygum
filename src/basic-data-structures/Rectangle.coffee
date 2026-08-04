@@ -18,25 +18,30 @@
 # you can have the new Rectangle pointing directly at the old
 # origin and corner, because we are guaranteed that *those*
 # will never change.
-# Also another effect is that you never need to copy() a
-# Rectangle. This is because the one you have will never change
-# and the new operations you put it through will just create
-# new ones.
-# The drawback is that "new on change" policy means that a bunch
-# of Rectangles are created for potentially a great
-# number of transient transformations which would
-# otherwise be cheaper to just do
-# in place. The problem with mixing the two approaches
-# is that using in-place changes poisons the other approach,
-# so the two approaches can only be mixed with great care, so
-# it should probably only be done in "optimisation" phase
-# if profiling shows it's actually a problem.
+# Also another effect is that a Rectangle never needs defensive
+# copying: the one you have will never change, and operations on
+# it just create new ones — which is why neither Point nor
+# Rectangle has a copy() at all.
+# A further effect: when an operation's result would be
+# value-identical to an existing instance, the operation is free
+# to RETURN that instance instead of allocating — either `this`
+# (e.g. round() on an already-integral Rectangle) or a shared
+# canonical constant (Rectangle.EMPTY, Point.ZERO). The bar for
+# such a shortcut is exact `===` equality of every coordinate
+# with what the allocation would have produced: a -0-for-+0 swap
+# (`===`-equal) is accepted, while NaN/Infinity inputs must take
+# the allocating path (hence the Number.isFinite guards).
+# Full policy + class inventory: docs/architecture/immutable-value-classes.md.
 
 class Rectangle
 
 
   origin: nil # a Point
   corner: nil # a Point
+
+  # a shared, immutable value: deep copies keep the reference (see Duplicator)
+  keptByReferenceOnDeepCopy: true
+
   @EMPTY: new Rectangle
   
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
@@ -55,37 +60,36 @@ class Rectangle
       @corner = top
     else if left instanceof Point
       @origin = left
-      @corner = new Point 0, 0
+      @corner = Point.ZERO
     else if left instanceof Rectangle
       @origin = left.origin
-      @corner = top.origin
+      @corner = left.corner
   
   
   # Rectangle string representation: e.g. '[0@0 | 160@80]'
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
 
-  # Rectangle copying:
-  copy: ->
-    new @constructor @left(), @top(), @right(), @bottom()
-  
   # Rectangle accessing - setting
   # This is used to create a bound with the specified
   # width and height: the corner needs to be displaced
   # of (width, bound) in respect to the origin
   setBoundsWidthAndHeight: (width, height) ->
-    copy = @copy()
+    result = new @constructor()
+    result.origin = @origin
     if (typeof(width) is "number") and (typeof(height) is "number")
-      copy.corner = new Point(
-        width + copy.origin.x,
-        height + copy.origin.y
+      result.corner = new Point(
+        width + @origin.x,
+        height + @origin.y
       )
     else if (width instanceof Point)
-      copy.corner = new Point(
-        width.x + copy.origin.x,
-        width.y + copy.origin.y
+      result.corner = new Point(
+        width.x + @origin.x,
+        width.y + @origin.y
       )
-    return copy
+    else
+      result.corner = @corner
+    return result
   
   # Rectangle accessing - getting:
   area: ->
@@ -104,7 +108,7 @@ class Rectangle
     new Point @origin.x, @corner.y
   
   bottomRight: ->
-    @corner.copy()
+    @corner
   
   boundingBox: ->
     @
@@ -176,6 +180,7 @@ class Rectangle
   # Rectangle functions:
   insetBy: (delta) ->
     # delta can be either a Point or a Number
+    return @ if delta is 0 or delta.isZero?()
     result = new @constructor()
     result.origin = @origin.add delta
     result.corner = @corner.subtract delta
@@ -184,11 +189,12 @@ class Rectangle
   rightHalf: ->
     result = new @constructor()
     result.origin = @origin.add new Point Math.round(@width()/2),0
-    result.corner = @corner.copy()
+    result.corner = @corner
     result
   
   expandBy: (delta) ->
     # delta can be either a Point or a Number
+    return @ if delta is 0 or delta.isZero?()
     result = new @constructor()
     result.origin = @origin.subtract delta
     result.corner = @corner.add delta
@@ -196,8 +202,9 @@ class Rectangle
   
   growBy: (delta) ->
     # delta can be either a Point or a Number
+    return @ if delta is 0 or delta.isZero?()
     result = new @constructor()
-    result.origin = @origin.copy()
+    result.origin = @origin
     result.corner = @corner.add delta
     result
   
@@ -228,22 +235,36 @@ class Rectangle
       return b
     if b.isEmpty()
       return a
+    # when one rectangle already contains the other, the union IS that rectangle
+    return a if a.containsRectangle b
+    return b if b.containsRectangle a
     result = new @constructor()
     result.origin = a.origin.min b.origin
-    result.corner = a.corner.max aRect.corner
+    result.corner = a.corner.max b.corner
     result
   
+  # true when all four coordinates are already integers — the common case under the
+  # integer-placement policy, and the guard for the return-`@` shortcuts below
+  _isIntegral: ->
+    Number.isInteger(@origin.x) and Number.isInteger(@origin.y) and Number.isInteger(@corner.x) and Number.isInteger(@corner.y)
+
   round: ->
+    return @ if @_isIntegral()
     @origin.round().corner @corner.round()
 
+  # NOTE: like Point.floor, this also clamps to >= 0
   floor: ->
+    return @ if @_isIntegral() and @origin.x >= 0 and @origin.y >= 0 and @corner.x >= 0 and @corner.y >= 0
     @origin.floor().corner @corner.floor()
 
   ceil: ->
+    return @ if @_isIntegral()
     @origin.ceil().corner @corner.ceil()
-  
+
   spread: ->
     # round me by applying floor() to my origin and ceil() to my corner
+    # (floor clamps, so the origin must also be >= 0 for this to be a no-op)
+    return @ if @_isIntegral() and @origin.x >= 0 and @origin.y >= 0
     @origin.floor().corner @corner.ceil()
   
   toLocalCoordinatesOf: (aWdgt) ->
@@ -268,12 +289,17 @@ class Rectangle
   # Rectangle transforming:
   scaleBy: (scale) ->
     # scale can be either a Point or a scalar
+    return @ if scale is 1 or (scale.x is 1 and scale.y is 1)
+    scalesToZero = scale is 0 or scale.isZero?()
+    if scalesToZero and Number.isFinite(@origin.x) and Number.isFinite(@origin.y) and Number.isFinite(@corner.x) and Number.isFinite(@corner.y)
+      return @constructor.EMPTY
     o = @origin.multiplyBy scale
     c = @corner.multiplyBy scale
     new @constructor o.x, o.y, c.x, c.y
-  
+
   translateBy: (factor) ->
     # factor can be either a Point or a scalar
+    return @ if factor is 0 or factor.isZero?()
     o = @origin.add factor
     c = @corner.add factor
     new @constructor o.x, o.y, c.x, c.y
