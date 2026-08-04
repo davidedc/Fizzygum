@@ -29,5 +29,4 @@ class MousemoveInputEvent extends MouseInputEvent
     # add the mouse move command here *after* the
     # potential grab command.
 
-    #if @hand.isThisPointerFloatDraggingSomething()
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED

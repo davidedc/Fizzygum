@@ -1,11 +1,13 @@
 # SampleSlideApp -- the "sample slide" example app: the New York City slide (a
 # scrolling USA map with a pin, a small bar plot, a caption and a wiki link),
 # opened from the examples folder. One of the per-app IconicDesktopSystemWindowedApp
-# subclasses (Phase 6 step 6c.2): it declares its launcher title/icon and the
-# singleton world slot, and builds its window in buildWindow; the base class owns
-# the launcher/opener construction and the bring-up-or-create launch logic. The
-# window body was lifted verbatim from MenusHelper (the createSampleSlideWindow...
-# builder, minus its final world-slot assignment, now done by the base's launch).
+# subclasses (Phase 6 step 6c.2): it declares its required parts and the singleton
+# world slot, and builds its window in buildWindow; its launcher title and icon
+# live in AppCatalog, not here (see IconicDesktopSystemWindowedApp's header). The
+# base class owns the launcher/opener construction and the bring-up-or-create
+# launch logic. The window body was lifted verbatim from MenusHelper (the
+# createSampleSlideWindow... builder, minus its final world-slot assignment, now
+# done by the base's launch).
 
 class SampleSlideApp extends IconicDesktopSystemWindowedApp
 

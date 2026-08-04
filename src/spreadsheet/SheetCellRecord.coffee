@@ -45,9 +45,11 @@ class SheetCellRecord
   # deep-copied per sheet (a duplicated sheet gets its OWN records). The derived fields ride along:
   # @compiledFn (a function) copies by reference and @value (maybe a SheetError, kept by reference)
   # too — both are then OVERWRITTEN when the duplicated sheet recommits every cell (rebuild), so
-  # the brief sharing is harmless; @boundNames (an array) copies via Array::deepCopy. On the
-  # SERIALIZE side these four are dropped instead (@serializationTransients below), then rebuilt
-  # the same way on restore.
+  # the brief sharing is harmless; @boundNames (an array) copies through the Duplicator's generic
+  # array walk (Duplicator._copyArray) -- there is no per-type ::deepCopy method any more (that
+  # mechanism retired with DeepCopierMixin's fold into the Duplicator engine). On the SERIALIZE
+  # side these four are dropped instead (@serializationTransients below), then rebuilt the same
+  # way on restore.
 
   @serializationTransients: ["compiledFn", "boundNames", "value", "errorFlag"]
 

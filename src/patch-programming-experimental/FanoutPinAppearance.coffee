@@ -6,7 +6,6 @@ class FanoutPinAppearance extends IconAppearance
     @specificationSize = new Point 100, 100
 
   paintFunction: (context) ->
-    # matches the old inline ownColorInsteadOfWidgetColor?-ternary exactly (byte-identical)
     iconColorString = @_iconColorString()
     outlineColor = 'rgb(184, 184, 184)'
     #// outline Drawing

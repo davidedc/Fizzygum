@@ -812,7 +812,7 @@ class MacroToolkit
 
   # Topmost widget whose getTextDescription() matches an identifier triple
   # [textDescription, occurrenceIndex, totalOccurrences] — a stable locator
-  # (world.getWidgetViaTextLabel / Widget.identifyViaTextLabel).
+  # (world.getWidgetViaTextLabel).
   # Accepts a bare string (treated as [string, 0, 1]).
   findWidgetByTextDescription: (identifier) ->
     identifier = [identifier, 0, 1] if typeof identifier == "string"

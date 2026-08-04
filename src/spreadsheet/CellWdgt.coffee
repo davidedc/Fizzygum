@@ -31,11 +31,12 @@
 # @address (which cell — re-indexed on restore) and @hostedWidget (a ref to the child, so a
 # VALUE-widget's runtime state — a dragged slider's position — rides the tree and survives save/load)
 # serialize. Transient: @_sheetWidget (a back-ref cycle, re-set on re-index), @presentedValue (the
-# branch-2 churn-skip), and @_scalarText / @_scalarIsError (derived text, rebuilt by the next
-# reconcile). On restore the sheet re-indexes cells by address, then recompute RETAINS a widget-valued
-# cell's restored widget (class match) rather than rebuilding it — presenters (derived) are rebuilt,
-# scalars repaint, value-widgets (state-bearing) are kept. This is the SAME retain-and-remount the
-# CellSocketWdgt used for one-per-rich-cell, now scaled to one-per-visible-cell.
+# branch-2 churn-skip), and @_scalarTextWdgt / @_scalarShowsError (the derived scalar-text child,
+# rebuilt by the next reconcile). On restore the sheet re-indexes cells by address, then recompute
+# RETAINS a widget-valued cell's restored widget (class match) rather than rebuilding it —
+# presenters (derived) are rebuilt, scalars repaint, value-widgets (state-bearing) are kept. This
+# is the SAME retain-and-remount the CellSocketWdgt used for one-per-rich-cell, now scaled to
+# one-per-visible-cell.
 
 class CellWdgt extends Widget
 
@@ -62,8 +63,9 @@ class CellWdgt extends Widget
     @_scalarShowsError = false # true when the text child wears the error colour (SheetError badge)
     @_editorWdgt = nil         # the mounted overlay editor while THIS cell is being edited (F2/F5), or nil
     # transparent: the cells panel under me fills the data background; I paint my own grid
-    # edges + selection ring + scalar text (F5 — "the sheet paints nothing"), so the panel's
-    # background shows through a hosted widget's transparent parts (a slider's track).
+    # edges + selection ring (F5 — "the sheet paints nothing") — my scalar text is a passive
+    # StringWdgt child that paints itself — so the panel's background shows through a hosted
+    # widget's transparent parts (a slider's track).
     # (The CanvasGlassTopWdgt idiom — a nil colour paints nothing.)
     @color = nil
 
@@ -76,10 +78,10 @@ class CellWdgt extends Widget
     return
 
   # ── branch 3: present the scalar value's text as my passive StringWdgt child ──────────────
-  # The editor's exact configuration (isEditable false, fontSize 12, full cell rect) so
-  # resting and editing text align; the pixels come from StringWdgt's standard immutable back
-  # buffers, so repeated labels share cached rasters world-wide. NoSettle: called from the
-  # sheet's reconcile, which runs inside the dataflow drain's layout settle
+  # Same (4,2) box inset + fontSize 12 the overlay editor uses (isEditable false here, true
+  # there) so resting and editing text align; the pixels come from StringWdgt's standard
+  # immutable back buffers, so repeated labels share cached rasters world-wide. NoSettle:
+  # called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
   # (DataflowEngine._drainOnePass). Drops any hosted widget first (a cell that was rich and
   # became a scalar). `text` nil / "" clears the cell (an emptied cell shows nothing).
   # Churn-tolerant: a per-cycle recompute (a `frame` cell) funnels into _setTextNoSettle's own
@@ -119,9 +121,9 @@ class CellWdgt extends Widget
   # NoSettle: called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
   # (DataflowEngine._drainOnePass), and from the drop hook (F4) — it TOLERATES a widget that is
   # already my child (the drop's target.add ran first): _addNoSettle's __add is a safe
-  # remove-then-append self-re-add. Any previously-hosted widget (or painted scalar) is dropped first.
-  # The hosted widget is inset by the gridline so the cell's borders/selection stay visible around it
-  # (the CellSocketWdgt inset, now applied here since the cell fills the whole cell rect).
+  # remove-then-append self-re-add. Any previously-hosted widget (or scalar-text child) is dropped
+  # first. The hosted widget is inset by the gridline so the cell's borders/selection stay visible
+  # around it (the CellSocketWdgt inset, now applied here since the cell fills the whole cell rect).
   hostNoSettle: (widget) ->
     @_unhostNoSettle()
     @_scalarTextWdgt?._fullDestroyNoSettle()

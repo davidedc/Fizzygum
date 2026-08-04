@@ -8,8 +8,6 @@
 # Determinism: the animation clock is EVENT time under the Automator (so the
 # suite's screenshots are a pure function of the event stream) and wall time
 # when live. See @timeNowSeconds / DETERMINISM.md.
-#
-# "container"/"contained" scenario going on.
 
 class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
 

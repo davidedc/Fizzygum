@@ -3,10 +3,9 @@ class KeyupInputEvent extends KeyboardInputEvent
   processEvent: ->
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
 
-    # dispatch to keyboard receiver
-    # so far the caret is the only keyboard
-    # event handler and it has no keyup
-    # handler
+    # dispatch to keyboard receivers (world.keyboardEventsReceivers -- the caret always;
+    # the spreadsheet and the video player register too). None of them implements
+    # processKeyUp today, so this loop is currently a no-op.
     # SNAPSHOT the receivers (same contract as KeydownInputEvent: the event is delivered to
     # the receivers registered when it arrived, never to one added mid-dispatch)
     for eachKeyboardEventsReceiver in Array.from world.keyboardEventsReceivers

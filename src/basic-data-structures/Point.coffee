@@ -164,8 +164,8 @@ class Point
     aPoint.subtract(@).r()
   
   # The point `dist` away at compass `angle` (degrees, clockwise from north). Used by
-  # the Pen family to walk a heading — PenWdgt.forward/back and the arrowhead corners
-  # in PenAppearance.
+  # the Pen family to walk a heading — PenWdgt.forward (negative steps walk backward)
+  # and the arrowhead corners in PenAppearance.
   distanceAngle: (dist, angle) ->
     deg = angle
     if deg > 270

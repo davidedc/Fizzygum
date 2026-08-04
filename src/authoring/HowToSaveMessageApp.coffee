@@ -1,9 +1,11 @@
 # HowToSaveMessageApp -- the "How to save?" desktop app (a SimpleDocument explaining
 # how to save). One of the per-app IconicDesktopSystemWindowedApp subclasses (Phase 6
-# step 6c.3): it declares its launcher title/icon and the singleton world slot and
+# step 6c.3): it declares the parts its window needs and the singleton world slot, and
 # builds its window inline in buildWindow; the base owns the launcher/opener + the
-# bring-up-or-create launch logic. Its opener is on the DESKTOP (no folder), so the
-# WorldWdgt bootstrap calls createOpener() with no argument. The window body was folded
+# bring-up-or-create launch logic, and AppCatalog (keyed by class name) holds its
+# launcher title/icon. Its opener is on the DESKTOP (no folder), so WorldWdgt's
+# createDesktop adds it by name (IconicDesktopSystemWindowedAppLauncherWdgt.addToDesktop
+# "HowToSaveMessageApp") without ever constructing this class. The window body was folded
 # in verbatim from the former HowToSaveMessageInfoWdg.create (a single-use factory-
 # namespace class, now removed -- which also fixes its filename/classname mismatch).
 

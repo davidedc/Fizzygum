@@ -22,9 +22,11 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   input3: nil
   input4: nil
 
-  # we need to keep track of which inputs are
-  # connected because we wait for those to be
-  # all updated before the node fires
+  # ControllerMixin's setTargetAndActionWithOnesPickedFromMenu flips these true when a wire is
+  # connected via the menu (@target[@action + "IsConnected"] = true) -- bookkeeping only,
+  # nothing reads them. The old "wait for all connected inputs before firing" freshness gate
+  # they were for is gone (see PatchNodeWdgt.updateTarget): any input change marks me STALE and
+  # the drain pulls whatever is currently stored.
   setInput1IsConnected: false
   setInput2IsConnected: false
   setInput3IsConnected: false
@@ -56,7 +58,6 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   recalculateOutput: ->
     if @textWidget.text != ""
       @evaluateString "@functionFromCompiledCode = " + @textWidget.text
-      # now we have the user-defined function in @functionFromCompiledCode
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
       @outputTextAreaText._setTextConnector @output + ""
 
@@ -75,12 +76,10 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
     @formulaTextBoxLabel = new StringWdgt "Formula", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @formulaTextBoxLabel.toggleHeaderLine()
-    #@formulaTextBoxLabel.alignCenter()
     @_addNoSettle @formulaTextBoxLabel
 
     @outputTextBoxLabel = new StringWdgt "Output", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @outputTextBoxLabel.toggleHeaderLine()
-    #@outputTextBoxLabel.alignCenter()
     @_addNoSettle @outputTextBoxLabel
 
 

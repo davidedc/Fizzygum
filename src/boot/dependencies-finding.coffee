@@ -17,7 +17,6 @@ visit = (dependenciesMap, theClass, loadOrder) ->
         # to the next needed thing)
         continue
       visit dependenciesMap, key, loadOrder
-  # if theClass == "Widget" then debugger
   loadOrder.add theClass
 
 # we still need to go through the classes in the
@@ -32,7 +31,6 @@ extractDependenciesFromDependenciesMap = (dependenciesMap) ->
   loadOrder = new Set
 
   for key from dependenciesMap.keys()
-    #value = dependenciesMap[key]
     # recursively find out what this needed thing needs
     # and add those to the dependency list
     visit dependenciesMap, key, loadOrder
@@ -50,9 +48,11 @@ extractDependenciesFromSource = ->
   # sources_batch_*.js file stores into.
   dependenciesMap = new Map
 
-  # currently REQUIRES is unused, it should be a debug or temporary option
-  # as we should really pick up all the dependencies automatically from
-  # the source code
+  # a hand-written escape hatch for a dependency the scanner below can't see:
+  # its regexes only match class-declaration-level lines (EXTENDS /
+  # CONSTRUCTION_IN_CLASS_DECLARATION / CLASS_USE_IN_CLASS_DECLARATION), so a
+  # "new SomeClass" inside a constructor BODY needs a manual REQUIRES hint
+  # (e.g. LRUCache.coffee's REQUIRES DoubleLinkedList) to get an edge at all.
   REQUIRES = ///\sREQUIRES\s*(\w+)///
 
   EXTENDS = ///\sextends\s*(\w+)///

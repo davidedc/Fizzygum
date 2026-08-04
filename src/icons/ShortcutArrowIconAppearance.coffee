@@ -104,8 +104,9 @@ class ShortcutArrowIconAppearance extends SizeAwareIconAppearance
     # parameterization keeps the sampling uniform along the arc; the previous
     # per-COLUMN sampling degenerated at small sizes (few columns, so the
     # bottom flattened into a rightward "curl" foot). Math.sin/cos are safe
-    # here: the build prepends the deterministic-trig shim to every page, so
-    # they are engine-exact.
+    # here: the reference-matched SWCanvas pages get the deterministic-trig
+    # shim (engine-exact there), and the native page's pixels are never
+    # reference-matched, so platform trig is fine on that page too.
     tx = px(@TAIL_TIP[0]); ty = py(@TAIL_TIP[1]) - liftSmall
     jx = jxHead ? px(@TAIL_JOIN[0])
     jy = jyHead ? py(@TAIL_JOIN[1])

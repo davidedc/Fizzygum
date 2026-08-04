@@ -45,7 +45,7 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
     squareDim = Math.min width, height
 
-     # p0 is the origin, the origin being in the bottom-left corner
+     # p0 is the origin, the origin being in the top-left corner
     p0 = @topLeft()
 
     # now the origin is in the middle of the widget

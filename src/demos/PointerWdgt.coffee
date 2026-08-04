@@ -22,13 +22,13 @@ class PointerWdgt extends BoxWdgt
     lmContent2 = new StringWdgt(
       @target.toString(),
       nil, #@originallySetFontSize,
-      nil, #@fontStyle,
+      nil, #@fontName,
       nil, #@isBold,
       nil, #@isItalic,
-      false, # isNumeric
-      nil, #color,
-      Color.WHITE, #@backgroundColor,
-      nil, #@backgroundTransparency
+      false, #@isHeaderLine,
+      nil, #@isNumeric,
+      Color.WHITE, #@color,
+      nil, #@backgroundColor
     )
     # override inherited properties:
     lmContent2.noticesTransparentClick = true
@@ -44,8 +44,6 @@ class PointerWdgt extends BoxWdgt
     @_addNoSettle lmContent2, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @_addNoSettle lmContent3, layoutSpec: LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    #lmContent1.setColor Color.LIME
-    #lmContent2.setColor Color.BLUE
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_MEDIUM

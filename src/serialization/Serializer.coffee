@@ -29,7 +29,7 @@ class Serializer
   # property names the serializer must SKIP. A subclass's declaration ADDS to (never
   # shadows) its ancestors' — mirroring how the codebase's other class-body conventions
   # accumulate up the hierarchy. Pure function of its class argument, so it works for any
-  # serializable type (Widget subclasses and the DeepCopier-augmented data classes alike).
+  # serializable type (Widget subclasses and the plain non-Widget data classes alike).
   @transientsForClass: (klass) ->
     merged = new Set
     return merged unless klass?

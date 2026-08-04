@@ -32,7 +32,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   isTextSizedGlassBoxItem: ->
     true
 
-  # reset my selection highlight (called for every menu child by MenuWdgt.unselectAllItems,
+  # reset my selection highlight (called for every menu child by MenuRowsPanelWdgt.unselectAllItems,
   # replacing its `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
   unselect: ->
     @state = @STATE_NORMAL
@@ -91,7 +91,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       @label._changed()
 
   # As a menu entry, prefer my (multi-line TextWdgt) label's width plus a little
-  # padding. MenuWdgt.maxWidthOfMenuEntries calls this polymorphically rather
+  # padding. MenuRowsPanelWdgt.maxWidthOfMenuEntries calls this polymorphically rather
   # than type-checking the entry. The label is @children[0]; a row somehow built
   # without one is a BUG -- let the read throw loudly here. (This guard used to
   # be a `debugger` statement: dead in production, a stealth breakpoint under

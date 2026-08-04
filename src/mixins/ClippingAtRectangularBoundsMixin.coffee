@@ -128,35 +128,6 @@ ClippingAtRectangularBoundsMixin =
         # then we do have to continue traversing all the
         # children of the Frame.
 
-        # This is why as well it's good to use PanelWdgts whenever
-        # it's clear that there is a "container" case. Think
-        # for example that you could stick a small
-        # RectangleWdgt (not a Frame) on the desktop and then
-        # attach a thousand
-        # CircleBoxWdgts on it.
-        # Say that the circles are all inside the rectangle,
-        # apart from four that are at the corners of the world.
-        # that's a nightmare scenegraph
-        # to *completely* traverse for *any* broken rectangle
-        # anywhere on the screen.
-        # The traversal is complete because a) Widgetic doesn't
-        # assume that the rectangle clips its children and
-        # b) the bounding rectangle (which currently is not
-        # efficiently calculated anyways) is the whole screen.
-        # So the children could be anywhere and need to be all
-        # checked for damaged areas to repaint.
-        # If the RectangleWdgt is made into a Panel, one can
-        # avoid the traversal for any broken rectangle not
-        # overlapping it.
-
-        # Also note that in theory you could stop recursion on any
-        # PanelWdgt completely covered by a large opaque widget
-        # (or on any Widget which fullBounds are completely
-        # covered, for that matter). You could
-        # keep for example a list of the top n biggest opaque widgets
-        # (say, Panels and rectangles)
-        # and check that case while you traverse the list.
-        # (see https://github.com/davidedc/Fizzygum/issues/149 )
         
         # the part to be redrawn could be outside the Panel entirely,
         # in which case we can stop going down the widgets inside the Panel

@@ -1,10 +1,11 @@
 # SampleDocApp -- the "sample doc" example app (a SimpleDocument showing what can be
 # embedded in a text document: an interactive 3D plot, a connected slider, etc.). One
 # of the per-app IconicDesktopSystemWindowedApp subclasses (Phase 6 step 6c.3): it
-# declares its launcher title/icon and the singleton world slot and builds its window
-# inline in buildWindow; the base owns the launcher/opener + bring-up-or-create launch
-# logic. The window body was folded in verbatim from the former
-# SimpleDocumentSampleWdgt.create (a single-use factory-namespace class, now removed).
+# declares its required parts and the singleton world slot and builds its window
+# inline in buildWindow; its launcher title and icon live in AppCatalog, not here.
+# The base owns the launcher/opener + bring-up-or-create launch logic. The window
+# body was folded in verbatim from the former SimpleDocumentSampleWdgt.create (a
+# single-use factory-namespace class, now removed).
 
 class SampleDocApp extends IconicDesktopSystemWindowedApp
 

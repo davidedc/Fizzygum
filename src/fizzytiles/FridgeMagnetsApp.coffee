@@ -2,11 +2,9 @@
 # fresh fridge-magnets window at the hand on each launch (same window shape as
 # DemoMenus.createFridgeMagnets, which stays as the menu path to the same
 # widget). An IconicDesktopSystemWindowedApp; like the whole fizzytiles family
-# this ships only in the full build, so its desktop-launcher creation in
-# WorldWdgt.createDesktop is homepage-excluded too. The launcher caption is a
-# single-line StringWdgt that truncates past ~13 chars, so the title is the
-# widget's own colloquial name ("Fizzytiles", also the window-bar title) and
-# the tooltip carries the descriptive name.
+# this ships only in the full build. Its caption, icon and tooltip are NOT
+# declared here -- they live in AppCatalog, keyed by class name, so drawing
+# its desktop icon never reaches this class (see AppCatalog's header).
 class FridgeMagnetsApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["fizzytiles"]

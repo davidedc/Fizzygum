@@ -6,9 +6,9 @@
 # window-builder class -- the *.create() factory pattern also used by
 # WelcomeMessageInfoWdgt: the heavy builder becomes a
 # static @create factory and its two callers (the templates toolbar buttons) call
-# TemplatesWindowWdgt.create() directly. Ships in the homepage build (it is
-# reached from the toolbars), so it is NOT homepage-excluded. OO-backlog Phase 6
-# step 6c.1.
+# TemplatesWindowWdgt.create() directly. Lives in the LAZY 'authoring' part, named
+# by the homepage profile, so it ships but is fetched only when a Maker's templates
+# toolbar loads it, not at first paint. OO-backlog Phase 6 step 6c.1.
 
 class TemplatesWindowWdgt extends FrameWdgt
 

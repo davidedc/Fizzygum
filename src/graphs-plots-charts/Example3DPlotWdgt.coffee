@@ -72,8 +72,8 @@ class Example3DPlotWdgt extends Widget
   # when unpinned, vs the mixin's stateless current-aspect sizing), and it
   # additionally wires the DIRECT drop/grab hooks (_reactToBeingDropped/
   # _reactToBeingGrabbed) alongside the holder-frame pair. Augmenting would inject
-  # six members only to have four immediately shadowed by this class body -- legal
-  # (class body wins over injections) but a misleading read.
+  # six members and have every one of them immediately shadowed by this class body
+  # -- legal (class body wins over injections) but a misleading read.
 
   _reactToBeingDropped: (whereIn) ->
     super

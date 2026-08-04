@@ -148,8 +148,9 @@ class SliderWdgt extends CircleBoxWdgt
   # the thumb there). Deriving the value from it — instead of reading the just-moved
   # @button.top()/.left()/.bottom() back — decouples value-derivation from the thumb's
   # APPLIED geometry, which is the precondition for ever deferring the thumb's move.
-  # It is byte-identical to the old read-back: the raw move at SliderButtonWdgt:95
-  # runs synchronously BEFORE this call, so @button.top() ≡ arg.y, @button.left() ≡
+  # It is byte-identical to the old read-back: the raw move inside
+  # SliderButtonWdgt.nonFloatDragging (its @_applyMoveTo newPosition call) runs
+  # synchronously BEFORE this call, so @button.top() ≡ arg.y, @button.left() ≡
   # arg.x, @button.bottom() ≡ arg.y + @button.height() at that instant. No argument ⇒
   # fall back to the applied button geometry (safe for any other/serialization caller).
   # See docs/archive/softwrap-deferred-layout-conversion-plan.md §6a.
@@ -247,7 +248,7 @@ class SliderWdgt extends CircleBoxWdgt
 
     # self + thumb: the re-lays above move/resize the button through
     # non-notifying tiers. The caller covers its own repaint (a scroll
-    # frame's adjustScrollBars starts with its own _changed()) — a widget
+    # frame's _reLayoutScrollbars does its own _changed()) — a widget
     # invalidates only itself (widget-citizenship contract point 2).
     @_fullChanged()
   

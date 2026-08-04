@@ -1,9 +1,11 @@
 # DegreesConverterApp -- the "C <-> F" degrees-converter example app (a patch-
 # programming window wiring two sliders/calc nodes into a live converter). One of the
 # per-app IconicDesktopSystemWindowedApp subclasses (Phase 6 step 6c.3): it declares
-# its launcher title/icon and the singleton world slot and builds its window inline in
-# buildWindow; the base owns the launcher/opener + bring-up-or-create launch logic. The
-# window body was lifted verbatim from MenusHelper's
+# the singleton world slot and builds its window inline in buildWindow; its launcher
+# caption lives in AppCatalog, keyed by class name, and it has NO icon there (its art
+# is in the lazy examples-icons part, passed in by ExamplesFolderWindowWdgt -- the one
+# override in the system). The base owns the launcher/opener + bring-up-or-create
+# launch logic. The window body was lifted verbatim from MenusHelper's
 # createDegreesConverterWindowOrBringItUpIfAlreadyCreated (minus the final world-slot
 # assignment, now done by the base's launch).
 
@@ -78,7 +80,6 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     container._addNoSettle fLabel
     fLabel._rememberFractionalSituationInHoldingPanel()
 
-    #@inform (@position().subtract @parent.position()) + " " +  @extent()
 
     patchProgrammingWdgt._applyBounds (new Point 114, 10), new Point 596, 592
     # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core -- the

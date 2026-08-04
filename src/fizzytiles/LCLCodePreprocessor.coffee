@@ -5,8 +5,10 @@
 ## This pre-processing step can raise some errors - which are
 ## returned in a dedicated variable.
 ##
-## In order to run the tests from fizzygum:
-##   world.children[5].children[2].lclCodeCompiler.codePreprocessor.test()
+## To run the tests from fizzygum: copy the testCases/test properties in
+## (see the note on those two fields below), open the Fizzytiles app
+## (FridgeMagnetsApp) and call, on its window content:
+##   visualOutput.lclCodeCompiler.codePreprocessor.test()
 ## or, to run a subset (useful for bisection in case something goes wrong):
 ##   ...test(rangeMin, rangeMax)
 ##
@@ -77,7 +79,6 @@ class LCLCodePreprocessor
     "simpleGradient"
     "colorMode"
     # Lighting
-    # "ambient""reflect" "refract"
     "lights"
     "noLights"
     "ambientLight"
@@ -1433,10 +1434,6 @@ class LCLCodePreprocessor
     code = code.replace(rx, "$1♠$2♠ ♦$3♦ fill ♦$4♦ $5")
     if @detailedDebug then console.log "rearrangeColorCommands-2.5\n" + code + " error: " + error
 
-    #rx = RegExp("(^[\\t ]*|[^♠\\r\\n][\\t ]+)♦([^♦]*)♦[\\t ]+♦([^♦]*)♦[\\t ]+♠("+@colorsCommandsRegex+")♠(?![\\w\\d])",'gm')
-    #if rx.test code
-    #  if @detailedDebug then console.log "missing color command - 2"
-    #  return [undefined, "missing color command"]
 
     rx = RegExp("(^[\\t ]*|[^♠\\r\\n][\\t ]+)♦([^♦]*)♦[\\t ]+♠("+@colorsCommandsRegex+")♠[\\t ]+♦([^♦]*)♦[\\t ]+([^♠\\r\\n]|$)",'gm')
     if rx.test code
@@ -1627,9 +1624,10 @@ class LCLCodePreprocessor
 
     return [code, error]
 
-  # not used at the moment, but it could be used in case all functions
-  # belong to another object/scope, for example if you wanted
-  #   LCLAPIs.box
+  # runs the full preprocess, then prefixes every command call with @ so
+  # commands resolve off the runtime scope object rather than as bare
+  # globals (e.g. LCLAPIs.box); called by LCLCodeCompiler.compileCode on
+  # every compile.
   preprocessAndBindFunctionsToThis: (code, bracketsVariables) ->
 
     [code, error] = @preprocess code, bracketsVariables
@@ -1680,13 +1678,6 @@ class LCLCodePreprocessor
     [code, error] = @rearrangeColorCommands(code, error)
     if @detailedDebug then console.log "preprocess-8\n" + code + " error: " + error
 
-    # allow some common command forms can be used in postfix notation, e.g.
-    #   60 bpm
-    #   red fill
-    #   yellow stroke
-    #   black background
-    #[code, error] = @adjustPostfixNotations(code, error)
-    #if @detailedDebug then console.log "preprocess-9\n" + code + " error: " + error
 
 
     [code, error] = @normaliseTimesNotationFromInput(code, error)
@@ -1797,8 +1788,6 @@ class LCLCodePreprocessor
       startOfThisLine = match[1]
       if startOfThisLine.length > startOfPreviousLine.length
         linesWithBlockStart.push eachLine-1
-        #blockStart = eachLine-1
-        #blockEnd = @identifyBlockEnd(sourceByLine, eachLine)
       startOfPreviousLine = startOfThisLine
 
     return [code, linesWithBlockStart, undefined]

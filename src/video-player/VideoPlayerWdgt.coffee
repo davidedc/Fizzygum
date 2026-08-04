@@ -25,7 +25,7 @@ class VideoPlayerWdgt extends Widget
         @togglePlayPause()
 
   play: ->
-    # pause the video element in @videoPlayerCanvas.video
+    # play the video element in @videoPlayerCanvas.video
     @videoPlayerCanvas.play()
 
   pause: ->
@@ -40,10 +40,8 @@ class VideoPlayerWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    # remove all submorhs i.e. panes and buttons
-    # THE ONES THAT ARE STILL
-    # subwidgets of the inspector. If they
-    # have been peeled away, they still live
+    # Remove all children that are still ours (fullDestroyChildren walks @children only --
+    # widgets already peeled away elsewhere are untouched and still live).
     @fullDestroyChildren()
 
     @videoPlayerCanvas = new VideoPlayerCanvasWdgt

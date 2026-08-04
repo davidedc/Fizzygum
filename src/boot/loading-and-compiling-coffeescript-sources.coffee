@@ -78,10 +78,11 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   # dependencies later on anyways.
   promiseChain = Promise.resolve()
 
-  # Note that the sources for "Class" and "Mixin" might end-up
-  # being recompiled even though those are two of the few things that
-  # we run from the start in the skeletal system.
-  # It doesn't seem to cause problems though?
+  # "Class" and "Mixin" travel in their part's batch too (build.py piles every source into
+  # its part's batch with no exceptions) even though both are already compiled by hand,
+  # early, by loadMetaSystemPromise. Fetching that batch later just re-registers their text
+  # in SourceVault -- storeSourcesAndPotentiallyCompileThemAndExecuteThem's "names" filter
+  # excludes them from the actual compile step by name, so nothing ever recompiles them.
   batchNames = eagerSourceBatchNames()
   if srcLoadCompileDebugWrites then console.log "eager source batches: #{batchNames.length}"
   for eachBatchName in batchNames
@@ -95,7 +96,6 @@ loadJSFilesWithCoffeescriptSourcesBatchesPromise = ->
   return promiseChain
 
 compileFGCode = (codeSource, bare) ->
-  #t0 = performance.now()
   try
     # Coffeescript v2 is used
     compiled = CoffeeScript.compile codeSource,{"bare":bare}
@@ -106,7 +106,6 @@ compileFGCode = (codeSource, bare) ->
     errorMessage += err + "\n"
     throw new Error errorMessage
 
-  #t1 = performance.now()
 
   return compiled
 

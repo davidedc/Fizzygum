@@ -80,19 +80,10 @@ class LCLTransforms
     dst[15] = m[15]
     dst
 
-  # in the following case:
-  #  flashing = <if random < 0.5 then scale 0>
-  #  flashing
-  #  ball
-  # it happens that because flashing is invoked
-  # without arguments, then scale is invoked with 0
-  # and a function that returns null
-  # in which case it means that scale has done a
-  # push matrix, it invokes the chained function
-  # and finds out that the transformation actually
-  # won't be popped. So we need a way to "undo"
-  # the push. This is like a pop but we
-  # discard the popped value.
+  # Undo a push whose chained block turned out to be a "fake": e.g. `flashing = <if
+  # random < 0.5 then scale 0>` invoked bare chains into `scale 0` and a block that
+  # returns nil, so scale has already pushed before it can tell the push won't be
+  # popped. Discards the popped matrix instead of restoring it (unlike popMatrix).
   discardPushedMatrix: ->
     if @matrixStack.length
       @matrixStack.pop()

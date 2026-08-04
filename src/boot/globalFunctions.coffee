@@ -337,7 +337,6 @@ boot = ->
     loadJSFilePromise "js/pre-compiled.js",
     # coffeescript could nominally be loaded later
     # if it wasn't for the fact that the paint tool needs it
-    # (see comment later to see where you can load it)
     loadJSFilePromise "js/libs/fizzygum-coffeescript-min.js"
   ]
 
@@ -366,7 +365,7 @@ boot = ->
   .then ->
     # ⚠ These two are NOT part of the reflective layer and load in EVERY artifact.
     # loading-and-compiling-coffeescript-sources defines compileFGCode, which is PRODUCT machinery,
-    # not a dev affordance: ScriptWdgt, Widget.evaluateStringAsScript and the spreadsheet's
+    # not a dev affordance: ScriptWdgt, Widget.evaluateString and the spreadsheet's
     # FormulaCompiler all compile user-written CoffeeScript at runtime (arc 5 PR-D3 -- the compiler
     # ships everywhere for the same reason). A build that dropped this would look fine until someone
     # typed a formula.
@@ -487,7 +486,7 @@ createWorldAndStartStepping = ->
     #     boot, so `demoMenus` is built exactly when it always was and every test sees the world it
     #     always saw;
     #   - on index.html the class is absent, this is a no-op, and the singleton is instead built on
-    #     first use by the doors that await the part (Widget.popUpDemoTestMenu,
+    #     first use by the doors that await the part (WorldWdgt.popUpDemoTestMenu,
     #     WorldWdgt.createDemoAnalogClock), which name the class as data to construct it.
     # A build that does not ship `demos` at all simply never gets one, as before.
     window.demoMenus = new DemoMenus  if DemoMenus?

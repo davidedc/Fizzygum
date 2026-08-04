@@ -131,7 +131,6 @@ class Macro
     world.macroToolkit.macroGenerator = nil
     world.macroToolkit.returnFromLastMacroStep = nil
 
-    #world.macroVars = {} # a dedicated global space for macros. Unused so far.
     world.macroToolkit.aMacroIsRunning = true
 
     world.macroToolkit.evaluateString @_linkedCode

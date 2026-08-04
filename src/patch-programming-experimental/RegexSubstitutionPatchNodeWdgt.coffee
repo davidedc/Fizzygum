@@ -15,9 +15,9 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
   input3: nil
   input4: nil
 
-  # we need to keep track of which inputs are
-  # connected because we wait for those to be
-  # all updated before the node fires
+  # vestigial: written by ControllerMixin.setTargetAndActionWithOnesPickedFromMenu but read
+  # nowhere -- their reader was the multi-input freshness gate, deleted when any-input-marks-
+  # stale replaced it (PatchNodeWdgt.updateTarget).
   setInput1IsConnected: false
   setInput2IsConnected: false
   setInput3IsConnected: false

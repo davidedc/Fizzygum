@@ -6,7 +6,9 @@
 ## This is because doOnce statements get transformed by pre-pending a
 ## tick once they are run, which prevents them from being run again.
 ## Note that LCLCodeCompiler doesn't run the user sketch, it just
-## makes it available to the LCLProgramRunner.
+## makes it available to its caller -- today FridgeMagnets3DCanvasWdgt,
+## which calls compileCode directly (LCLProgramRunner is dead code:
+## zero references in src -- see docs/plans/livecodelang-cleanup-and-extensions-plan.md).
 ##
 
 class LCLCodeCompiler
@@ -20,7 +22,6 @@ class LCLCodeCompiler
     # the code compiler needs the LCLCodePreprocessor
     
     @codePreprocessor = new LCLCodePreprocessor
-    #@codePreprocessor = new LCLCodePreprocessor
 
 
   compileCode: (code) ->
@@ -37,11 +38,8 @@ class LCLCodeCompiler
 
     [code, error] = @codePreprocessor.preprocessAndBindFunctionsToThis code
 
-    # if 'error' is anything else then undefined then it
-    # means that the process of translation has found
-    # some glaringly missing pieces. In which case,
-    # we report the error and skip the coffeescript
-    # to javascript translation step.
+    # a non-nil error means the preprocessor found something too broken to
+    # translate; skip the coffeescript-to-javascript step and report it.
     if error?
       output.status = 'error'
       output.error = error
@@ -110,7 +108,6 @@ class LCLCodeCompiler
     # tickboxes put back) in the editor. Which will trigger a re-registration
     # of the new code.
     @eventRouter.emit("code-updated-by-livecodelab", elaboratedSource)
-    #alert elaboratedSource
     
     # no need to recompile the code here
     # because it's already recompiled with the "emit" done just

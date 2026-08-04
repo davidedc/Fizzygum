@@ -215,7 +215,7 @@ class Widget extends TreeNode
   textDescription: nil
 
   # note that not all the changed widgets have this flag set
-  # because if a parent does a fullChanged, we don't set this
+  # because if a parent does a _fullChanged, we don't set this
   # flag in the children. This is intentionally so,
   # as we don't want to navigate the children too many times.
   # If you want to know whether a widget has changed its
@@ -228,7 +228,7 @@ class Widget extends TreeNode
 
   # you'd be tempted to check this flag to figure out
   # whether any widget has possibly changed position but
-  # you can't. If a PARENT has done a fullChanged, the
+  # you can't. If a PARENT has done a _fullChanged, the
   # children are NOT set this flag. This flag is set
   # only for the parent widget, and it's important that
   # it stays that way for how the mechanism for fleshing out
@@ -2248,8 +2248,8 @@ class Widget extends TreeNode
   _setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
-  # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / SliderWdgt / ListWdgt /
-  # StretchableWidgetContainerWdgt / TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
+  # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / ListWdgt /
+  # TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
   # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
   # body per behaviour, two names for dispatch; the bare twin is the override-BYPASSING base apply the
   # top-down arrange uses) PLUS the SCHEDULE-VALVE (B4 hook retirement §9-N1, gate made STRUCTURAL by
@@ -3812,7 +3812,8 @@ class Widget extends TreeNode
 
   # the SELF drop gate (public, pure, positive — layering/naming convention §3): the base default is
   # "yes, droppable"; BinOpenerWdgt overrides to refuse (the old FrameWdgt internal/external override
-  # was replaced by the drag-embed dwell gate — see ActivePointerWdgt ~:1257). (ex-rejectsBeingDropped,
+  # was replaced by ActivePointerWdgt's drag-embed dwell-to-arm state machine —
+  # docs/specs/drag-embed-interaction-spec.md §6). (ex-rejectsBeingDropped,
   # polarity-flipped; a base default is required so a widget with no override still defaults droppable.)
   wantsToBeDropped: ->
     return true
@@ -4037,11 +4038,6 @@ class Widget extends TreeNode
   # menu on the desktop, or a menu to disambiguate which
   # widget it's being selected...
   buildContextMenu: ->
-    # commented-out addendum for the implementation of 1):
-    #show the normal menu in case there is text selected,
-    #otherwise show the spacial multiplexing list
-    #if !@world().caret
-    #    return @buildHierarchyMenu()
 
     widgetToAskMenuTo = @
 
@@ -4160,17 +4156,8 @@ class Widget extends TreeNode
 
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: ((@constructor.name.replace "Wdgt", "") or (@constructor.toString().replace "Wdgt", "").split(" ")[1].split("(")[0])
 
-    # ONE widget context menu (arc 3 phase 7, owner-ratified 2026-07-29 — see
-    # docs/plans/build-arc-3-phase-7-menu-topology.md). This used to fork on world.isIndexPage,
-    # so the test-harness page showed a DIFFERENT menu from the product page: the harness got
-    # attach/inspect/test-menu/hide/destroy, the product page got save-to-file and dev ➜, and
-    # "duplicate" even MEANT something different on each (in place vs copy-and-pick-up). That
-    # fork dates from the old test system, which recognised widgets by string/ID and so froze
-    # the UI; macros interrogate the live world, so it costs a recapture wave, not test rewrites.
-    #
-    # The design is the UNION of what the two branches offered, with the genuinely dev-only
-    # entries gated below rather than page-gated. `duplicate` is copy-IN-PLACE everywhere (D2):
-    # a copy that silently attaches itself to the pointer is the more surprising default.
+    # ONE widget context menu — no isIndexPage fork; "duplicate" is copy-IN-PLACE everywhere (D2).
+    # See docs/archive/build-arc-3-phase-7-menu-topology.md.
     menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose another color \nfor this widget"
     menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
     menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
