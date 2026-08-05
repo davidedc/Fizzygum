@@ -260,9 +260,9 @@
     },
 
     "dev-tools": {
-      "//": "In-world dev scaffolding: the widget factory (world.widgetFactory), the pinout debug overlay (world.pinouts, an arc-3 extraction), and the layout-editing chrome (spacers + the element adder/droplet) reached from the test menu. Every one of them is already an optional collaborator behind an existence guard.",
-      "//requires": "WidgetFactory builds the bouncer and the pen, which are demo widgets, and a speech bubble, which is 'app-kit'. Its three factory methods AWAIT those parts (timing); this line is the other half (inclusion) -- on a profile with dev-tools but no demos / no app-kit those awaits could only reject. ⚠⚠ THE AWAIT IS WHAT ACTUALLY PROTECTS THE SITE, and this declaration must never be read as replacing it: this part is EAGER, so `requires` can promise the other part SHIPS but never that it has ARRIVED. Both requirements here are LAZY, so check-part-edges.js discounts this line entirely when scanning these files -- drop an await and the build fails, which is the intended reading.",
-      "requires": ["demos", "app-kit"],
+      "//": "In-world dev scaffolding: the widget factory (world.widgetFactory) and the pinout debug overlay (world.pinouts, an arc-3 extraction). Both are already optional collaborators behind an existence guard. (The layout-editing chrome the factory instantiates lives in 'authoring' -- see //requires.)",
+      "//requires": "WidgetFactory builds the bouncer and the pen, which are demo widgets, a speech bubble, which is 'app-kit', and the layout adder/droplet + the test-screen layout gallery, which are 'authoring'. Its factory methods AWAIT those parts (timing); this line is the other half (inclusion) -- on a profile with dev-tools but no demos / no app-kit / no authoring those awaits could only reject. ⚠⚠ THE AWAIT IS WHAT ACTUALLY PROTECTS THE SITE, and this declaration must never be read as replacing it: this part is EAGER, so `requires` can promise the other part SHIPS but never that it has ARRIVED. All requirements here are LAZY, so check-part-edges.js discounts this line entirely when scanning these files -- drop an await and the build fails, which is the intended reading.",
+      "requires": ["demos", "app-kit", "authoring"],
       "dirs": ["src/dev-tools"]
     },
 

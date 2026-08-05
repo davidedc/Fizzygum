@@ -1402,6 +1402,32 @@ assertion a recapture after a regression silently stores two different hashes an
   back-and-forth (the return leg would mostly revert and duplicate the baseline shot). Resize the holder via its lone HandleWdgt
   (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle"`) to show the dragged split survives a container resize. First
   interactive-layout-re-proportioning test. No new verb.
+- **VERTICAL division stack — the 'y' transpose of the proportional-cells recipe**
+  (`macroStackDividerFollowsPointerExactlyVertical`): attach each cell with `holder.add cell, nil, cell.divisionBox('y')`
+  and the cells divide the holder's HEIGHT — the same axis-parameterized `StackLayoutEngine` as the 'x' row, so the same
+  `setMinAndMaxBoundsAndSpreadability(min, desired, spreadability)` boxes apply, with their HEIGHT halves as the main
+  dims (the width halves are the cross axis; a nested container derives both recursively from its own children — SUM on
+  its division axis, MAX on the cross). A divider is a `StackElementsSizeAdjustingWdgt` added with `divider.divisionBox('y')`
+  between the cells: it drags vertically (`row-resize` cursor) with the same 0px-exact closed form — the named test
+  value-asserts every beat against the live hand, incl. the past-bound re-sync; drive it with the HELD-DRAG idiom of the
+  divider entry above. ⚠ ONE AXIS PER PARENT: mixed `divisionBox` axes under one holder are a loud console.error (first
+  child wins — `Widget._divisionChildrenAxis`); to mix directions, nest a row INSIDE a cell (border entry below). No new verb.
+- **Cross-axis alignment of a division cell — the crossAlign knob** (`macroDivisionCrossAlignment`): a cell opts out of
+  the classic full-band stretch by setting `cell.divisionBox().crossAlign = 'start' | 'center' | 'end'` (default
+  `'stretch'`) before/after the add: the engine's placement loop then gives the cell its own cross-axis DESIRED extent
+  (recursively derived for a nested container) seated at the chosen edge/middle of the band — in an 'x' row the cross
+  axis is VERTICAL, so start/center/end = top/middle/bottom. Growing the band (a taller `holder.setExtent`) shows the
+  distinction: a stretch cell fills the new height while aligned cells KEEP their desired cross extent and track their
+  edge. No new verb.
+- **BORDER layout (N/W-C-E/S) is COMPOSITION, not an engine** (`macroVerticalDivisionBorderSkeleton` — THE
+  border-composition template): a 'y' division stack `[North | divider | centerRow | divider | South]` whose middle cell
+  is itself an 'x' division row `[West | divider | Center | divider | East]`. Near-fixed bands take `SPREADABILITY_NONE`
+  boxes; the middle band and Center take spreadable ones, so they absorb the spare height/width respectively. The nested
+  row also exercises the recursive box derivation: the middle cell's height box derives from its own x-children
+  (cross-axis max), never a hand-set box. The test's three shots pin composed placement, a wider+shorter resize (fixed
+  bands hold thickness), and a live vertical-divider drag inside the composition (North grows, the middle band shrinks,
+  South stays). Product twin: `WidgetFactory.createBorderLayoutScaffold` (the "border layout scaffold" demo-menu row).
+  No new verb.
 - **Hiding a stack cell does NOT redistribute — visibility is layout-blind** (`macroLayoutsAndVisibility`): `hide()`/`show()`
   only flip paint state (`Widget.hide:1841`/`show:1860` touch `@isVisible` + the bounds caches; NEITHER calls
   `invalidateLayout`), and `_reLayout`'s three stack-distribution loops filter children by `layoutSpec` only

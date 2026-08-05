@@ -62,6 +62,38 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @__commitExtent(extent) if extent?
     @color = color if color?
 
+  # Capability query (duck-typed at the call sites): may "edit layout" show content
+  # drop-slots between my elements? Follows my drop gate — slots are DROP targets, so a
+  # stack that refuses drops (MenuRowsPanelWdgt: menus are not user-editable layouts)
+  # refuses slots for the same reason.
+  hostsContentStackDropSlots: ->
+    @_acceptsDrops
+
+  # The content-stack drop-slot reconciler — the content twin of the division engine's
+  # _addOrRemoveAdders hook (StackLayoutEngine.arrange): run at the top of every arrange,
+  # it inserts SPEC-LESS droplets between the real content children (and at both ends)
+  # while @_showsAdders, and destroys my direct-child droplets when not. The arrange
+  # below then ADOPTS each spec-less droplet as an ordinary stack element (the same
+  # initialiseDefaultVerticalStackLayoutSpec capture every dropped widget gets), which is
+  # what makes a slot a thin, droppable row of the document.
+  _reconcileContentDropSlots: ->
+    return unless LayoutElementAdderOrDropletWdgt?
+    if !@_showsAdders
+      for C in @children.filter((m) -> m.isLayoutAdderOrDroplet?())
+        # non-settling core: this runs from inside the arrange (rule [G]); the spec is
+        # detached FIRST so the teardown's parent-invalidate takes the free-floating
+        # silent no-op instead of the mid-pass FLOWRULE throw (see _insertAddersSuchThat)
+        C._setLayoutSpec nil
+        C._fullDestroyNoSettle()
+      return
+    if @children.length == 0
+      @_addNoSettle new LayoutElementAdderOrDropletWdgt
+    # membership = any real (non-inert) child: content children need no particular spec —
+    # a just-dropped one is adopted by this very arrange. axis nil ⇒ spec-less insert.
+    contentMember = (m) -> !m.isLayoutInert?()
+    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", nil, contentMember
+    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", nil, contentMember
+
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
   # contents. See Widget._reLayoutChildren.
   _reLayoutChildren: ->
@@ -224,6 +256,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     merged
 
   _positionAndResizeChildren: ->
+    @_reconcileContentDropSlots()
 
     stackHeight = 0
     verticalPadding = 0

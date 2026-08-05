@@ -36,3 +36,8 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents
 
     @_addEditingLockMenuEntries menu, childrenNotHandlesNorCarets
+    # surface the edit-layout toggle on the DOCUMENT's own menu (what the user right-clicks),
+    # targeting the inner stack that owns the scaffold — same reach-into-contents shape as
+    # the editing-lock entries above
+    if @contents?.hostsContentStackDropSlots?()
+      @contents.addLayoutEditingMenuEntries menu

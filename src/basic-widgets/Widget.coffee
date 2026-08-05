@@ -4227,15 +4227,29 @@ class Widget extends TreeNode
       # being
       if @parent?.constrainContentWidth
         @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
-    # a DIVISION container gets the layout-scaffold toggle: "edit layout" shows the
-    # drop-slot adders between the cells (fetching the lazy authoring part that carries
-    # them), "done editing layout" removes them
-    if @_divisionChildrenAxis()?
-      menu.addLine()
-      if @_showsAdders
-        menu.addMenuItem "done editing layout", @, "removeAdders", toolTip: ""
-      else
-        menu.addMenuItem "edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
+    # a DIVISION cell gets its spec's own submenu ("layout in row/column ➜" — desired/max
+    # size + cross-alignment). The layout CHROME (divider / adder / spacer) is a division
+    # cell too, but its box is machinery working state, not a user knob — excluded by
+    # capability, never a type test.
+    else if @layoutSpec?.isDivisionElement?() and !@isLayoutChrome?()
+      @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
+    # a DIVISION container — or a drop-slot-hosting CONTENT stack (a document's inner
+    # stack) — gets the layout-scaffold toggle: "edit layout" shows the drop-slot adders
+    # between the cells (fetching the lazy authoring part that carries them), "done
+    # editing layout" removes them
+    if @_divisionChildrenAxis()? or @hostsContentStackDropSlots?()
+      @addLayoutEditingMenuEntries menu
+
+  # The edit-layout toggle pair, on whatever widget OWNS the scaffold — called on self by
+  # the gate above, and by a SCROLL FRAME on its contained stack (a document surfaces the
+  # toggle on its own menu while the entries TARGET the inner stack, which is what the
+  # user means by "the document's layout" — SimpleVerticalStackScrollPanelWdgt).
+  addLayoutEditingMenuEntries: (menu) ->
+    menu.addLine()
+    if @_showsAdders
+      menu.addMenuItem "done editing layout", @, "removeAdders", toolTip: ""
+    else
+      menu.addMenuItem "edit layout", @, "editLayout", toolTip: "show drop-slots between the cells, to add or drop in new ones"
 
   buildWidgetContextMenu: (widgetOpeningThePopUp) ->
     menu = @buildBaseWidgetClassContextMenu widgetOpeningThePopUp
@@ -4695,8 +4709,12 @@ class Widget extends TreeNode
   # The division constraint box (min/desired/max, both axes) — a per-widget KNOB retained
   # for the widget's whole life (see DivisionStackLayoutSpec). Writers materialize a
   # private box; a widget without one reads through the shared immutable defaults.
+  # The element back-ref binds HERE — the one place a private box is materialized — so the
+  # spec's public setters can settle on their widget; the box never changes owner.
   _ensureDivisionBox: ->
     @_divisionBox ?= new DivisionStackLayoutSpec
+    @_divisionBox.element ?= @
+    @_divisionBox
 
   # PUBLIC face of the box (macros / demos / in-world scripting): the box doubles as the
   # ATTACHMENT value for adding a widget as a division element — `holder.add w, nil,
@@ -5076,13 +5094,19 @@ class Widget extends TreeNode
 
 
   # The layout-editing chrome (the spacers and the adder/droplet placeholders the three methods
-  # below insert) is dev scaffolding: it lives in the 'dev-tools' part and is absent from a
-  # production build, where every caller -- the demo/test menus, and the adder widget's own re-show
-  # -- is absent too. Each method that NAMES the class carries its own guard, so the absence is a
-  # no-op rather than a ReferenceError. Deliberately not relying on "my callers are all part-side":
-  # a caller's guard is not a property of the callee, and the next caller will not know to repeat
-  # it. buildSystem/check-part-edges.js is what insists, and it has no allowlist on purpose.
+  # below insert) lives in the LAZY 'authoring' part: a profile may omit it entirely (lean),
+  # and even a shipping profile has not necessarily LOADED it when a division arrange runs.
+  # Each method that NAMES the class therefore carries its own existence guard, so absent --
+  # or not yet arrived -- is a no-op rather than a ReferenceError; the one USER entry point
+  # (editLayout below) instead awaits ensureLoaded, because a guard there would swallow the
+  # click. Deliberately not relying on "my callers are all part-side": a caller's guard is not
+  # a property of the callee, and the next caller will not know to repeat it.
+  # buildSystem/check-part-edges.js is what insists, and it has no allowlist on purpose.
+  # canonical public wrapper / _NoSettle-core split (rule [H]: all logic in the core)
   removeAdders: ->
+    @_settleLayoutsAfter => @_removeAddersNoSettle()
+
+  _removeAddersNoSettle: ->
     @_showsAdders = false
     @_invalidateLayout()
 
@@ -5093,11 +5117,19 @@ class Widget extends TreeNode
   editLayout: ->
     world.parts.ensureLoaded('authoring').then => @showAdders(@_divisionChildrenAxis() ? 'x')
 
+  # canonical public wrapper / _NoSettle-core split (rule [H]: all logic in the core) —
+  # like removeAdders below; a menu-driven discrete mutation must self-settle, not ride
+  # the end-of-cycle flush (the capstone gate holds the careless set at zero)
   showAdders: (axis = 'x') ->
+    @_settleLayoutsAfter => @_showAddersNoSettle axis
+
+  _showAddersNoSettle: (axis = 'x') ->
     return unless LayoutElementAdderOrDropletWdgt?
     @_showsAdders = true
-    if @children.length == 0
-      # the seed adder of an EMPTY container joins the division layout it starts
+    # the seed adder of an EMPTY container joins the DIVISION layout it starts; a content
+    # stack instead seeds through its own reconciler (the arrange runs it regardless of
+    # division children, so the empty case needs no help here)
+    if @children.length == 0 and !@hostsContentStackDropSlots?()
       newAdder = new LayoutElementAdderOrDropletWdgt
       newAdder._divisionBox.axis = axis
       @_addNoSettle newAdder, layoutSpec: newAdder._divisionBox
@@ -5107,13 +5139,18 @@ class Widget extends TreeNode
     return unless LayoutElementAdderOrDropletWdgt?
 
     if !@_showsAdders
-      allAddersToBeDestroyed =
-        @collectAllChildrenBottomToTopSuchThat (m) ->
-          m.layoutSpec?.isDivisionElement?() and
-          m.isLayoutAdderOrDroplet?()
+      # DIRECT children only: an adder is always a direct child of the container whose
+      # layout it edits, and a nested container's adders are its OWN toggle's business —
+      # a deep sweep here would destroy a nested content stack's slots on every
+      # not-showing division arrange.
+      allAddersToBeDestroyed = @children.filter (m) -> m.isLayoutAdderOrDroplet?()
       for C in allAddersToBeDestroyed
         # non-settling core: this runs from inside the arrange (a layout pass) — the public
-        # self-settling fullDestroy would re-enter the flush (rule [G])
+        # self-settling fullDestroy would re-enter the flush (rule [G]). Detach the spec
+        # FIRST (non-scheduling): the teardown's parent-invalidate is the sanctioned silent
+        # no-op for a free-floating child, but would be a mid-pass FLOWRULE throw for a
+        # spec-carrying one — the mirror of the spec-less insert in _insertAddersSuchThat.
+        C._setLayoutSpec nil
         C._fullDestroyNoSettle()
       return
 
@@ -5124,20 +5161,33 @@ class Widget extends TreeNode
     # the second call scans the OTHER direction -- only needed to add the LAST adder/droplet.
     @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", axis
 
-  # ONE direction-parameterized scan for _addOrRemoveAdders' two passes (was two ~20-line while-loops
+  # ONE direction-parameterized scan for the two reconciler passes (was two ~20-line while-loops
   # identical bar the scan/insert verbs): repeatedly find the first stack child still needing an adder on
   # the given side (skipping adders/droplets themselves) and insert one there, until none remain.
-  _insertAddersSuchThat: (scanVerbName, insertVerbName, axis = 'x') ->
+  # TWO flavours share it: the DIVISION reconciler (_addOrRemoveAdders — member = division element,
+  # adders join the division on the given axis) and the content-stack reconciler
+  # (SimpleVerticalStackPanelWdgt._reconcileContentDropSlots — its own membership predicate, and
+  # axis nil ⇒ the adder stays spec-less, for the stack's arrange to adopt). ⚠ NO default on
+  # axis: nil is MEANINGFUL (content mode), and a CoffeeScript default would swallow it.
+  #
+  # BOTH flavours run MID-PASS (from inside the container's own arrange), so the insert must not
+  # schedule layout: the adder is added SPEC-LESS — a free-floating child's add-invalidate is the
+  # sanctioned silent no-op — and the division attachment is then ACTIVATED via the non-scheduling
+  # _setLayoutSpec, exactly the stack-adoption idiom. (Passing the box as the add's layoutSpec made
+  # Widget._addNoSettle's new-container invalidate reach a NON-freefloating child mid-pass ⇒ the
+  # FLOWRULE throw — latent in the division flavour until the first edit-layout-driving test.)
+  _insertAddersSuchThat: (scanVerbName, insertVerbName, axis, isMember) ->
     return unless LayoutElementAdderOrDropletWdgt?
+    isMember ?= (m) -> m.layoutSpec?.isDivisionElement?()
     while true
       leftToDo = @firstChildSuchThat (m) ->
-          if !m.layoutSpec?.isDivisionElement?()
+          if !isMember m
             return false
           if m.isLayoutAdderOrDroplet?()
             return false
           kkk = m[scanVerbName](
               (mm) ->
-                mm.layoutSpec?.isDivisionElement?()
+                isMember mm
             )
           if !kkk?
             return true
@@ -5147,5 +5197,7 @@ class Widget extends TreeNode
       if !leftToDo?
         break
       newAdder = new LayoutElementAdderOrDropletWdgt
-      newAdder._divisionBox.axis = axis
-      leftToDo[insertVerbName] newAdder, nil, newAdder._divisionBox
+      leftToDo[insertVerbName] newAdder
+      if axis?
+        newAdder._divisionBox.axis = axis
+        newAdder._setLayoutSpec newAdder._divisionBox

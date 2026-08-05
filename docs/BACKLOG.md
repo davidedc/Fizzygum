@@ -147,7 +147,7 @@ Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowW
 - [x] §5.A: `WindowWdgt` → `FrameWdgt` rename + de-inherit + `FrameBarWdgt` bar composition — PHASE A COMPLETE 2026-07-19
 - [x] §5.C: one shared `ToolbarWdgt` per content type + the frame toolbar-slot — PHASE C COMPLETE 2026-07-19 (C1 `1e06b79f`, C2 `74322e1d`, C3 `3e8eecd6`); paint toolbar QUARANTINED in `ReconfigurablePaintWdgt` for §5.D; slot guard test landed (tests `24bfa3882`)
 - [x] §5.B: payload/citizen split — PHASE B COMPLETE 2026-07-19 (B1 `fe76f679` substrate, B2 `79eaaf9c` SimpleTextWdgt+TitleWdgt, B3 `4dcfbc4c` DocumentWdgt, B4 `19b13d9d` GenericPanelWdgt family, B5+B6 spreadsheet/image renames — execution design + case law in plan §5.B)
-- [ ] §5.C follow-ons: undock-to-float context-menu entry (D9 tail, never a bar button); `right`/`bottom` dock arranges (property values exist, arrange support doesn't)
+- [ ] §5.C follow-ons: undock-to-float context-menu entry (D9 tail, never a bar button); `right`/`bottom` dock arranges (property values exist, arrange support doesn't) — OWNED by `plans/layout-spec-family-followups-plan.md` F4 (owner-gated; 2026-08-05 owner picked "fresh session" — the transpose is now idiomatic and cheap, see that plan's §4 F4 for the executable scope)
 - [ ] §5.B follow-ons: `DeckWdgt` = D2 reserved name, no substrate yet. Creation-menu wording ✅ 2026-07-20 — the citizen-creator dev-menu labels renamed to the kind ("simple document"→"document", "Simple slide"→"slide", + the two launchers "document launcher"/"slide launcher"); recapture-FREE (those labels are dev-menu-only, navigated/screenshotted by no test). The `simple plain text …` dev-menu cluster left as-is (out of scope, owner kept it tight)
 - [ ] §5.D follow-ons: a load-image-FILE flow into `ImageWdgt` (owner decision D13: `SimpleImageWdgt`, the bitmap loader, stays a sibling payload with its one button-face consumer until such a flow exists — the stamp drop-flow already imports pixels). ⚠ 2026-08-02: `SimpleImageWdgt` moved out of core into the `video-player` part (nothing on the boot path reached it; its only consumers are that part's). Since `video-player` is `requiresFlag`-gated, it now ships ONLY with `--includeVideoPlayer` — so building this flow means first deciding where the loader belongs. The ungrammatical "a Image" hierarchy row ✅ FIXED 2026-07-20 — `Widget.toString` now derives the article ("an" before a vowel-initial class name, else "a"); probe-verified (`an Image`/`an AnalogClock`/`a Rectangle`), zero recaptures (no test screenshots a vowel-initial menu label)
 - [ ] build tooling: shippable-vs-`find src` coverage check — a new `src/` directory ships NOTHING until listed in `build.py`'s explicit glob list, the build exits 0, and the syntax gate consumes the same list (cost one red presuite in C1; runtime symptom `<NewClass> is not defined`)
@@ -192,6 +192,21 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 - [ ] §4.4: duplicate vs duplicate-contents for references (second wave)
 
 ## Residual / parked items (owning doc archived)
+
+### `archive/layout-spec-family-followups-plan.md` — discovered en route (not caused by the arc)
+- [ ] **A context menu taller than the world leaves its tail permanently unreachable** (F1 find):
+      pop-ups clamp their TOP into the world (`PopUpWdgt.popUp → _moveWithin`), so a menu taller
+      than the world overflows the bottom and no pointer can reach the overflow items. Real on
+      small screens; at the 960×440 harness it silently caps what macros can drive (the TextWdgt
+      demo menu is ~500px: "soft wrap" and "run contents" were ALREADY off-canvas before the arc,
+      which is why `toggleSoftWrap()` is a sanctioned direct call — "shrink to fit" joined that
+      class when division cells gained their submenu). Wants scrolling/compacting menus, or a
+      max-height policy — a design decision, not a patch.
+- [ ] **The in-world error console commits degenerate child bounds while being built** (F2 find):
+      `ErrorsLogViewerWdgt`'s construction cascade emits `NON_INTEGER_GEOMETRY … [12@25 | 38@15]`
+      (inverted rects, StringWdgt/SimpleButtonWdgt/ToggleButtonWdgt via `_applyGrantedBounds`/
+      `__commitExtent` in a `CodeAreaWdgt` arrange) whenever the console pops — observed while
+      diagnosing the F2 FLOWRULE throw; reproduce by making any layout error surface on-world.
 
 ### ~~The build-and-packaging program~~ — **COMPLETE (2026-07-30). All five arcs done and pushed; all five plans in `archive/`.**
 Program table + completion doctrine in `archive/build-arc-4-dynamic-parts-plan.md` §0.1/§0.2.

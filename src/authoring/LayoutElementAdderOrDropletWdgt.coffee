@@ -82,6 +82,9 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     context.strokeStyle = color.toString()
     @drawHandle context
 
+  # Both gestures below are MODE-AWARE off my OWN active spec: as a DIVISION slot my
+  # insertions join the division layout (a division box rides along), as a CONTENT-stack
+  # slot they are inserted SPEC-LESS so the stack's arrange adopts them at that position.
   mouseClickLeft: ->
     @bringToForeground()
     # if the adder/droplet is on its own, free floating, then
@@ -95,15 +98,21 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       newWdgt.showAdders()
 
     newAdder = new LayoutElementAdderOrDropletWdgt
-    @addAsSiblingAfterMe newAdder, nil, newAdder._divisionBox
+    if @layoutSpec?.isDivisionElement?()
+      @addAsSiblingAfterMe newAdder, nil, newAdder._divisionBox
+    else
+      @addAsSiblingAfterMe newAdder
 
   # Runs inside the drop's single settle: addAsSiblingAfterMe is already non-settling (-> _addNoSettle),
   # and fullDestroy -> the non-settling core _fullDestroyNoSettle.
   _reactToChildDropped: (widgetBeingDropped) ->
-    @addAsSiblingAfterMe \
-      widgetBeingDropped,
-      nil,
-      widgetBeingDropped._ensureDivisionBox()
+    if @layoutSpec?.isDivisionElement?()
+      @addAsSiblingAfterMe \
+        widgetBeingDropped,
+        nil,
+        widgetBeingDropped._ensureDivisionBox()
+    else
+      @addAsSiblingAfterMe widgetBeingDropped
     @_fullDestroyNoSettle()
 
   mouseEnter: ->

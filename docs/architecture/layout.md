@@ -235,9 +235,22 @@ from its own children. There is no add-time proportional state and no width↔he
 
 **The scaffold — layouts are directly manipulable.** The halo inserts axis-aware dividers between
 division siblings (`StackElementsSizeAdjustingWdgt` — the closed-form exact pointer drag, on either
-axis); "edit layout" on a division container's context menu shows drop-slot adders between the
-cells (`LayoutElementAdderOrDropletWdgt` + `LayoutSpacerWdgt`, in the LAZY `authoring` part — the
-menu entry awaits the part, `Widget.editLayout`). A border layout is COMPOSITION, not an engine: a
+axis); "edit layout" shows drop-slot adders between the elements (`LayoutElementAdderOrDropletWdgt`
++ `LayoutSpacerWdgt`, in the LAZY `authoring` part — the menu entry awaits the part,
+`Widget.editLayout`), on BOTH families: a division container's context menu offers it directly, and
+a content stack that accepts drops (`hostsContentStackDropSlots`, following the drop gate — menus
+therefore excluded) offers it too, with a DOCUMENT surfacing the toggle on its own menu while the
+entries target the inner stack. The two reconcilers share one insertion scan
+(`Widget._insertAddersSuchThat`, membership-parameterized): division slots join the division on its
+axis, content slots stay SPEC-LESS and the stack's arrange ADOPTS them; dropping onto a slot
+inserts the payload at exactly that seam (the droplet is mode-aware off its own spec). Because a
+reconciler runs MID-PASS, its structural edits keep the child free-floating at the boundary — insert
+spec-less then activate via `_setLayoutSpec`; detach the spec before `_fullDestroyNoSettle` — so no
+add/teardown invalidate fires mid-pass. `showAdders`/`removeAdders` are canonical self-settling
+wrappers. A DIVISION CELL's knobs are menu-reachable: its spec's "layout in row ➜"/"layout in
+column ➜" submenu (desired/max size prompts, cross-alignment entries — the settle-on-element setter
+family on `DivisionStackLayoutSpec`, `element` bound at `_ensureDivisionBox`; the VSLS idiom), the
+chrome excluded by the `isLayoutChrome` capability. A border layout is COMPOSITION, not an engine: a
 'y' division stack whose middle cell is an 'x' row, dividers at the seams
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
 
