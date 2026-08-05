@@ -1,6 +1,13 @@
 # Layout spec-family follow-ups — division-cell product surface, content-stack drop-slots, dock completion
 
-**PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
+**STATUS: ✅ EXECUTED IN FULL — F0/F1/F2/F3/F5 on 2026-08-04/05, F4 (owner-gated, fresh session per
+the owner ruling) on 2026-08-05. Every phase gate green; final: full gauntlet 14/14 legs at 277
+tests + `fg homepage`, zero recaptures in F1/F4, the three F2-era gated recaptures diffpage-verified.
+The §8 execution ledger is the authoritative record — including the THREE latent parent-arc bugs F2
+exposed (mid-pass FLOWRULE insert/destroy, careless showAdders), F4's latent
+parent-clobber-in-FrameWdgt-ctor fix, and the F4 resizer-overlap ruling (accepted, mirroring
+resizerCanOverlapContents). Present-tense residue: `docs/architecture/layout.md` §4.2 (scaffold +
+cell menus) and the FrameWdgt/ToolbarWdgt in-file chrome doctrine.**
 Authored 2026-08-04, hours after its parent arc closed; every citation verified against Fizzygum
 `c9f84d4c` / Fizzygum-tests `ac50cbfdc` (both pushed, all gates green). ⚠ Line numbers drift — quoted
 method/class names are authoritative; re-grep before trusting a line.
@@ -386,6 +393,83 @@ copies) · `docs/plans/onion-widget-composition-plan.md` §5.C (dock/toolbar flo
 - **OWNER DECISIONS (2026-08-05, via AskUserQuestion): F4 runs in a FRESH SESSION (this plan stays
   in `plans/` with F4 as its one open phase — it moves to `archive/` + INDEX when F4 resolves);
   commit both repos now.** BACKLOG §5.C line annotated to point here.
+
+### F4 — frame dock right/bottom + undock-to-float, 2026-08-05 (fresh session per the owner ruling)
+- **The transpose landed as the plan predicted — pure mirrors through the one-home chrome math:**
+  `_rightDockThickness`/`_bottomDockThickness` twins (same contract: pure read, 0 when hidden or
+  docked elsewhere; ONE toolbar ⇒ at most one of the four non-zero); `_chromeWidth` gains the right
+  term, `_chromeHeight` the bottom term in BOTH spec branches — every measure (availableWidth,
+  negotiation, preferredExtent*, the hug) followed with ZERO further edits, the §6.1-rule-1
+  discipline paying off exactly; the arrange's toolbar-slot drive became a 4-way switch ('right' =
+  column at `right()−padding−dock`, 'bottom' = full-available-width strip at content-bottom+padding
+  ⇒ a padding above the frame bottom under overlap semantics, above the reserved handle row under
+  `resizerCanOverlapContents: false`); the centring line subtracts BOTH side docks. Headless probe
+  pixel-exact on all four sides (`.scratch/probe-frame-dock-sides-and-float.js`): right column at
+  425 for a 470-right frame (40-thick text toolbar), availW 360→315; bottom strip bottom at
+  frame-bottom−5; content re-centred each time; zero console errors.
+- **⚖ THE ONE OPEN DECISION — the bottom-right resizer over a right/bottom dock: ACCEPT THE
+  OVERLAP,** the same trade 'top'/'left' already make with content under the default
+  `resizerCanOverlapContents: true` (the resizer draws over every default-spec window's content
+  corner today, scrollbar tails included). Reasons, on the merits: (1) precedent + visibility — the
+  resizer is corner-internal and always re-fronted (`_moveInFrontOfSiblings` on every later add),
+  so the affordance stays clickable over the strip exactly as over content; (2) transpose purity —
+  an inset dock would couple the dock's extent to the resizer's presence/size and break the
+  left/right, top/bottom mirror, complicating the measures for a corner case; (3) low practical
+  cost — the tool grid fills from the top-left, so the covered far corner is normally empty strip,
+  and the strip is a SCROLL panel (anything covered stays reachable); (4) the escape hatch already
+  exists — content that cannot tolerate overlap declares `resizerCanOverlapContents: false`, and
+  the bottom-dock placement composes with that branch (the strip sits above the handle row).
+  Recorded in the arrange comment at the switch.
+- **Undock-to-float = the D9 tail, exactly as ruled:** `FrameWdgt.addWidgetSpecificMenuEntries`
+  (the frame's FIRST such override — base `super` then the entry) adds "float the toolbar" gated on
+  `_dockedToolbarShowing()` (you float what you can see; view mode hides the entry with the strip).
+  `floatToolbar` re-homes the docked strip into the SAME FrameWdgt float home the toolbar creator
+  buttons build — placed so the new window's content region lands EXACTLY on the old strip pixels
+  (in-place pop-out), sized by the creator-button idiom (the ctor's closing setExtent is a
+  placeholder the caller imposes over — the "hug for free" idea was falsified by the probe: the
+  ctor's 300×300 always wins, so the caller wraps `strip extent + chrome` explicitly, chrome read
+  off the mounted spec's own homes). The slot stays EMPTY after (a content change rebuilds a fresh
+  variant); the floated strip serves via the focus pointer like every summoned toolbar. dockSide
+  'float' remains a vocabulary word no slot state records — floating IS being a window's content
+  (ToolbarWdgt comment truthed up; onion plan §5.C reserved-values bullet stamped CLOSED).
+- **⚠⚠ LATENT PARENT-CLOBBER FOUND — the F2 genre again (first real caller exposes it):**
+  `FrameWdgt._addNoSettle`'s content path ran `@removeChild @contents` unconditionally, and in the
+  ctor case @contents IS the incoming widget — `TreeNode.removeChild` nils `node.parent` even when
+  the receiver isn't the parent, so wrapping a STILL-PARENTED widget in `new FrameWdgt` silently
+  destroyed the old parentage: `Widget._addNoSettle` saw no previousParent ⇒ the source frame never
+  got `_reactToChildRemoved` (no re-fit, content stayed at the docked-era height) and its children
+  list was never cleaned by `__add` (probe: the toolbar sat in BOTH trees). Latent forever because
+  every ctor caller passed orphans. Fix at the root: `@removeChild @contents if @contents.parent
+  == @` — byte-identical for every existing caller (orphan removeChild was a no-op; the rebuild
+  case still detaches), and the parented case now flows through the standard old-parent machinery.
+- New test `SystemTest_macroDocsToolbarDockSidesAndFloat` (suite 277): the F2 fixture (Docs Maker
+  window), dockSide written by the macro (no product chooser exists — recorded in provenance) with
+  the re-arrange driven through the REAL eye/pencil round-trip, undock through the REAL context
+  menu (hierarchy → "a Document" → "float the toolbar"); 3 screenshots (right / bottom incl. the
+  pinned resizer-over-strip corner / floated-in-place) + 4 value asserts (slot emptied, strip
+  top-left unchanged, framed, on-desktop). ⚠ authoring gotcha for the next menu-driving macro:
+  HIERARCHY rows are CLASS-named (`toString` → `widgetClassString`, "Wdgt" stripped) — "a Document",
+  never the colloquial "a Docs Maker"; the first capture failed exactly there. All three refs
+  eyeballed at capture: right column with the resizer over its bottom end, bottom strip with the
+  resizer over its right end (the ruling, pinned in pixels), float wrapping the strip in place with
+  the source body re-expanded.
+- ⚠ A first `fg presuite` FAILED on the infra signature (shards DISCONNECTED, failed 0 everywhere,
+  paint leg 1085s vs ~90s) — leftover browsers from the crashed first capture had the machine at
+  load ~12. `fg killz` + re-run: PASS 12:46 (dpr1 57s + paint 88s), 277 tests, zero churn outside
+  the new test (the macroEditModeTogglePencilEyeGlyph right-click happens in VIEW mode, where the
+  gate hides the new entry — pre-verified, held).
+- **F4 CLOSED 2026-08-05 13:09: FULL GAUNTLET GREEN (caffeinated), all 14 legs, 337s, zero serial
+  retries, 277 tests** — census zero movers (the transpose arranges are idempotent), revisits
+  baseline EMPTY held, BOTH serialization rigs green (the nil'd @toolbar field + the floated
+  toolbar window serialize/duplicate on the creator-float precedent), webkit green — **+ `fg
+  homepage` GREEN (45 PASS, production boots from the pre-compiled image, snapshot round-trip
+  clean, dev build restored). ZERO recaptures in the phase.**
+- Residuals BANKED, not pursued (BACKLOG'd at close): a product chooser UI for dockSide (the
+  arranges are engine-complete; today only per-type class defaults + programmatic writes reach
+  right/bottom) and a re-dock path after floating (by design a content change rebuilds a fresh
+  variant; the floated strip stays a normal toolbar window).
+
+### Plan CLOSED 2026-08-05 — all six phases executed; moved to archive/ the same day.
 
 ### F1 — division-cell product surface, 2026-08-04
 - `DivisionStackLayoutSpec` gained: `element` back-ref (bound in `Widget._ensureDivisionBox`, the

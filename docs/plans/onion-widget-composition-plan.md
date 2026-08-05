@@ -689,6 +689,11 @@ filling; folding the lock into the build deletes those calls). Colloquial name s
 (`ToolPanelWdgt.scrollPanelColloquialName`). Class knobs, one per variant:
 - `dockSide` — the D9 property, string, class default per variant. C implements `top` and `left` arrange
   support (the two defaults in use); `right`/`bottom`/`float` are reserved values (BACKLOG).
+  **(✅ CLOSED 2026-08-05 by `layout-spec-family-followups-plan.md` F4: `right`/`bottom` arranges landed
+  (transpose twins + one-home chrome math), and the D9-tail undock lives as the frame's "float the
+  toolbar" context-menu entry → `FrameWdgt.floatToolbar`, which re-homes the docked strip in place into
+  the same FrameWdgt float home the creator buttons build. The bottom-right resizer deliberately may
+  overlap a right/bottom dock's far corner — same trade as `resizerCanOverlapContents` content.)**
 - `dockThickness` — the strip's cross-axis size when docked: text 40 (thumbnail 30 + 2×5 inner padding —
   the variant overrides its inner panel's `externalPadding` from 10 to 5 so a one-row strip is honest
   ToolPanel geometry; today's HorizontalMenuPanel strip is 35, so the doc toolbar grows 5px — conscious

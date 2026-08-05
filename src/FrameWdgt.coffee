@@ -88,9 +88,9 @@ class FrameWdgt extends Widget
   # whole sum -- identical only while @padding is an integer.
   _chromeHeight: (spec) ->
     if spec.resizerCanOverlapContents
-      @_titlebarHeight() + 2 * @padding + @_topDockThickness()
+      @_titlebarHeight() + 2 * @padding + @_topDockThickness() + @_bottomDockThickness()
     else
-      @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize + @_topDockThickness()
+      @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize + @_topDockThickness() + @_bottomDockThickness()
 
   # ===== the toolbar-slot's layout terms (§5.C) =====
   # The docked toolbar occupies layout space exactly when it is HERE and SHOWN
@@ -116,13 +116,29 @@ class FrameWdgt extends Widget
     else
       0
 
+  # The right/bottom twins (layout follow-ups plan F4): same contract as their
+  # left/top mirrors -- a pure read the measures consume, 0 when hidden or
+  # docked elsewhere. A frame has ONE toolbar, so at most one of the four is
+  # ever non-zero.
+  _rightDockThickness: ->
+    if @_dockedToolbarShowing() and @toolbar.dockSide == 'right'
+      @toolbar.dockThickness + @padding
+    else
+      0
+
+  _bottomDockThickness: ->
+    if @_dockedToolbarShowing() and @toolbar.dockSide == 'bottom'
+      @toolbar.dockThickness + @padding
+    else
+      0
+
   # Frame chrome WIDTH -- everything that is not content width: the side
-  # paddings plus a left-docked shown toolbar. The width sibling of
+  # paddings plus a side-docked shown toolbar. The width sibling of
   # _chromeHeight, and the ONE home the measures and the arrange both read
   # (§6.1 rule 1): availableWidthForContents, the width negotiation and the
   # first-placement hug all route through it.
   _chromeWidth: ->
-    2 * @padding + @_leftDockThickness()
+    2 * @padding + @_leftDockThickness() + @_rightDockThickness()
 
   # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
   # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
@@ -566,7 +582,16 @@ class FrameWdgt extends Widget
       # re-negotiate was just negotiated in the same flush, so re-arming for it only produced
       # a duplicate first-placement pass (one settle re-visit per drop, probe-verified).
       isSameContentRemount = aWdgt == @contents
-      @removeChild @contents
+      # detach the OLD occupant -- but only if it is actually MY child:
+      # TreeNode.removeChild nils node.parent unconditionally, so in the ctor
+      # case (@contents pre-assigned to the incoming widget) removing a widget
+      # that still belongs to ANOTHER parent would clobber that parentage --
+      # Widget._addNoSettle below would then see no previousParent, so the real
+      # old parent would neither be notified (_reactToChildRemoved, its re-fit)
+      # nor have its children list cleaned by __add. Latent while every ctor
+      # caller passed orphans; floatToolbar (F4) is the first to wrap a
+      # still-parented widget.
+      @removeChild @contents if @contents.parent == @
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
       # (super -> _addNoSettle invalidates the window; the inherited _reLayout runs @_reLayoutChildren on
@@ -659,6 +684,44 @@ class FrameWdgt extends Widget
   _destroyToolbarNoSettle: ->
     @toolbar?._destroyNoSettle()
     @toolbar = nil
+
+  # The frame's own context-menu entries (on top of the generic Widget set):
+  # the toolbar-slot's undock action, on the frame's menu because the frame
+  # OWNS the slot -- and DELIBERATELY a menu entry, never a bar button (owner
+  # ruling D9, Frame-model plan §5.C: don't spend bar space on it). Gated on
+  # the toolbar actually showing: you float what you can see.
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
+    super
+    if @_dockedToolbarShowing()
+      menu.addLine()
+      menu.addMenuItem "float the toolbar", @, "floatToolbar", toolTip: "undock the toolbar into its own window"
+
+  # Undock-to-float (D9 tail): free the docked toolbar into its own floating
+  # window -- the SAME float home the toolbar creator buttons build (one
+  # construction, two homes), placed so the strip pops out IN PLACE: the new
+  # window's content region lands exactly where the docked strip sat, and the
+  # window HUGS the strip's extent (the content spec's THIS_ONE_I_HAVE_NOW
+  # defaults). The slot stays EMPTY afterwards -- a content change rebuilds a
+  # fresh variant -- and the floated toolbar serves any widget via the focus
+  # pointer, like every summoned toolbar.
+  floatToolbar: ->
+    return unless @_dockedToolbarShowing()
+    toolbar = @toolbar
+    stripPosition = toolbar.position()
+    stripExtent = toolbar.extent()
+    @toolbar = nil
+    # the FrameWdgt ctor re-homes the toolbar out of me (Widget._addNoSettle
+    # notifies my _reactToChildRemoved, so my chrome re-fits over the freed
+    # region)
+    floatHome = new FrameWdgt toolbar
+    world.add floatHome
+    # size the window to WRAP the strip as it was docked -- the creator-button
+    # idiom: the ctor's closing setExtent is a placeholder the caller imposes
+    # over (so no hug survives it); chrome read off the mounted content's own
+    # spec, the one home the measure and arrange share, no literals
+    floatHome.setExtent stripExtent.add new Point floatHome._chromeWidth(), floatHome._chromeHeight floatHome.contents._stackElementSpec
+    floatHome._applyMoveTo stripPosition.subtract new Point floatHome.padding, floatHome._titlebarHeight() + floatHome.padding
+    floatHome._moveWithin world
 
   # A framed CITIZEN's _resetToDefaultContents consults this flag (§5.B): a
   # payload dying because the WHOLE frame is going away must NOT be replaced --
@@ -961,10 +1024,11 @@ class FrameWdgt extends Widget
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
         @contents.softWrap = true
 
-      # centre the content in its REGION -- the frame width minus a left-docked
-      # shown toolbar (identical to the whole width when none is docked left)
+      # centre the content in its REGION -- the frame width minus a side-docked
+      # shown toolbar on either flank (identical to the whole width when none
+      # is docked left/right)
       contentRegionLeft = @left() + @_leftDockThickness()
-      leftPosition = contentRegionLeft + Math.floor (@width() - @_leftDockThickness() - recommendedElementWidth) / 2
+      leftPosition = contentRegionLeft + Math.floor (@width() - @_leftDockThickness() - @_rightDockThickness() - recommendedElementWidth) / 2
 
       @contents._applyMoveTo new Point leftPosition, @top() + @_titlebarHeight() + @_topDockThickness() + @padding
       stackHeight += desiredHeight
@@ -986,22 +1050,43 @@ class FrameWdgt extends Widget
       @bar._reLayout barBounds
 
     # the toolbar-slot: place the docked toolbar in the padded body, under the
-    # bar -- TOP: a full-available-width strip the content then starts below;
-    # LEFT: a column sharing the content's vertical span (stackHeight is the
-    # content height this pass just derived). Driven SYNCHRONOUSLY via
-    # _reLayout bounds, the same drive as @bar above -- a scroll panel's
-    # _reLayout applies its own bounds THEN re-fits its contents+scrollbars, so
-    # a width change that re-wraps the tool grid converges IN THIS PASS. (A
-    # bare _applyMoveTo/_applyExtent drive commits the viewport but re-fits
+    # bar -- TOP/BOTTOM: a full-available-width strip the content starts below
+    # (top) or ends a padding above (bottom); LEFT/RIGHT: a column on that
+    # flank sharing the content's vertical span (stackHeight is the content
+    # height this pass just derived, so every placement is pass-local -- no
+    # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
+    # the same drive as @bar above -- a scroll panel's _reLayout applies its
+    # own bounds THEN re-fits its contents+scrollbars, so a width change that
+    # re-wraps the tool grid converges IN THIS PASS. (A bare
+    # _applyMoveTo/_applyExtent drive commits the viewport but re-fits
     # nothing, leaving the inner panel at a stale wrap height -- fg census
     # caught exactly that: ToolPanel 75 tall inside the 40 strip after a
     # narrow->wide window resize.)
+    # ⚖ The bottom-right RESIZER may OVERLAP a right/bottom dock's far corner
+    # -- accepted DELIBERATELY (layout follow-ups plan F4), the same trade the
+    # content already makes under resizerCanOverlapContents: the resizer is
+    # corner-internal, always re-fronted, and the tool grid fills from the
+    # top-left so the covered corner is normally empty strip; an inset dock
+    # would buy that corner at the price of coupling the dock's extent to the
+    # resizer and breaking the left/right, top/bottom mirror symmetry.
     if @_dockedToolbarShowing()
-      toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding
-      if @toolbar.dockSide == 'top'
-        toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @width() - 2 * @padding, @toolbar.dockThickness
-      else
-        toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
+      switch @toolbar.dockSide
+        when 'top'
+          toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding
+          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @width() - 2 * @padding, @toolbar.dockThickness
+        when 'bottom'
+          # just below the content: the strip's bottom lands where the content
+          # region's bottom sits for the content's spec branch (a padding above
+          # the frame bottom, or above the reserved handle row -- _chromeHeight
+          # carries the matching reservation either way)
+          toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding + stackHeight + @padding
+          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @width() - 2 * @padding, @toolbar.dockThickness
+        when 'right'
+          toolbarBounds = new Rectangle new Point @right() - @padding - @toolbar.dockThickness, @top() + @_titlebarHeight() + @padding
+          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
+        else # 'left'
+          toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding
+          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
       @toolbar._reLayout toolbarBounds
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
