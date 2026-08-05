@@ -675,6 +675,9 @@ class FrameWdgt extends Widget
       # contentsRecursivelyCanSetHeightFreely. (Direct arrange call: _reLayoutChildren is exactly
       # this dispatch, and only THIS caller carries the mode.)
       @_positionAndResizeChildren true
+      # RE-RECORD (the F6 family, auto-bookkeeping arc): uncollapse just restored my extent,
+      # so my extent fractions are stale -- a geometry-change re-record, which the fill-only
+      # seed (placement-time, fresh widgets only) deliberately does not cover.
       @_rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
       @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt

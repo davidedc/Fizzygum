@@ -2066,6 +2066,15 @@ class Widget extends TreeNode
     # This might make some mathematical sense but is very unintuitive so
     # we just don't move widgets along the dimensions that have a negative
     # fractional component
+    # ⚠ The three fractional IMPOSERS below MUST stay on the polymorphic PLAIN twins
+    # (_applyMoveTo / _applyExtent), never the Base twins -- FALSIFIED BOTH WAYS
+    # (auto-bookkeeping arc P1, 2026-08-05): a TransformFrameWdgt island OVERRIDES
+    # _applyMoveTo to ride its pinned anchor along (Bug-G), so a Base-twin imposition
+    # strands the anchor and renders a tilted stretch child offset; and _applyExtent's
+    # schedule-valve gives a resized composite child the deferred second re-lay its
+    # interior (wrapping text, nested scroll) needs to converge -- on the Base twin both
+    # classes of test churned. Imposition is arrange-driven but its TARGETS are arbitrary
+    # figures, so the polymorphic dispatch is load-bearing.
     if @positionFractionalInHoldingPanel[0] > 0
       @_applyMoveTo (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
     if @positionFractionalInHoldingPanel[1] > 0
@@ -2075,6 +2084,7 @@ class Widget extends TreeNode
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
+    # plain twin, deliberately -- see the imposer comment above (island anchor-carry).
     @_applyMoveTo (
       new Point \
        boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]),
@@ -2085,6 +2095,7 @@ class Widget extends TreeNode
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
+    # plain twin, deliberately -- see the imposer comment above (schedule-valve convergence).
     @_applyExtent new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
 
   
@@ -2152,11 +2163,18 @@ class Widget extends TreeNode
     return if !fig.parent?
     fig.extentFractionalInHoldingPanel = fig.extentFractionalInWidget fig.parent
 
-  # TODO this is used a lot, where I suspect all we need to do
-  # is to do this automatically ALSO when a widget is added/moved
-  # to a new parent. I don't dare to do this now because I don't
-  # have enough tests in the new environment to check for
-  # bad implications.
+  # Derive my proportional situation in my holding panel from my CURRENT geometry (the
+  # figure's, so islands are handled). Since the auto-bookkeeping arc (2026-08-05, resolving
+  # the old "do this automatically on add" TODO) the framework OWNS ordinary placement
+  # records: a FRESH widget entering a fractional-consuming holder is seeded automatically
+  # (the __add seed -> the world's fill-only drain station, plus the stretch panel's
+  # arrange-time heal), so a plain builder never calls this. The remaining explicit callers
+  # are the RE-RECORD family: sites re-placing or re-sizing a widget that ALREADY carries
+  # bookkeeping (drop, duplicate, file-load, app re-home, spawnNextTo of a stored widget,
+  # uncollapse), which the fill-only seed deliberately respects. ⚠ Builder rule: when
+  # building into a STRETCH PANEL, place BEFORE adding -- the panel's arrange-time heal
+  # records at the add's settle, so a later placement would be pinned wrong (world-side
+  # sites may place after adding; the drain fills them post-placement).
   _rememberFractionalSituationInHoldingPanel: ->
     @_rememberFractionalPositionInHoldingPanel()
     @_rememberFractionalExtentInHoldingPanel()
@@ -3398,6 +3416,15 @@ class Widget extends TreeNode
 
   calculateAndUpdateExtent: ->
 
+  # Does this container CONSUME its children's fractional bookkeeping (the proportional-
+  # reflow trio positionFractionalInHoldingPanel / extentFractionalInHoldingPanel /
+  # wasPositionedSlightlyOutsidePanel)? True only for the two consumers -- WorldWdgt
+  # (desktop reflow on browser resize, position-only) and StretchablePanelWdgt (full
+  # proportional re-lay). Asked by the __add seed below. Class-level query
+  # (type-test-elimination idiom -- no instanceof at the ask site).
+  consumesFractionalChildGeometry: ->
+    false
+
   __add: (aWdgt, avoidExtentCalculation, position = nil) ->
     # the widget that is being
     # attached might be attached to
@@ -3414,6 +3441,19 @@ class Widget extends TreeNode
     @_addChild aWdgt, position
     if !avoidExtentCalculation
       aWdgt.calculateAndUpdateExtent()
+    # FRACTIONAL-BOOKKEEPING SEED (framework-owned; stretch-fractional auto-bookkeeping
+    # arc): entering a holder that consumes fractional child geometry REQUESTS proportional
+    # bookkeeping; the world's drain station derives it once, AFTER the current JS turn's
+    # builder code finished placing things -- "last write wins", the semantics the
+    # historical per-call-site _rememberFractionalSituationInHoldingPanel() protocol
+    # implemented by hand at every placement endpoint. Layout-inert chrome (handles /
+    # carets / highlighters) is excluded exactly as the consuming arranges exclude it; the
+    # hand is world chrome, never a reflow subject. NOT recorded synchronously here: many
+    # builders place AFTER adding, so an add-time record would pin pre-placement geometry
+    # (the deferred-seed reasoning, plan §0).
+    if world? and @consumesFractionalChildGeometry() and
+    !aWdgt.isLayoutInert?() and aWdgt != world.hand
+      world.pendingFractionalBookkeepingSeeds.add aWdgt
     
 
   # Duplication and Serialization /////////////////////////////////////////
@@ -3436,6 +3476,9 @@ class Widget extends TreeNode
     aFullCopy._unlockFromPanels()
     world.add aFullCopy
     aFullCopy._applyMoveTo figure.position().add new Point 10, 10
+    # RE-RECORD (the F6 family, auto-bookkeeping arc): the copy deep-copied the ORIGINAL's
+    # fractional bookkeeping, which the fill-only seed respects -- re-derive at the offset
+    # position or the next desktop reflow snaps the copy onto the original.
     aFullCopy._rememberFractionalSituationInHoldingPanel()
 
   # The OTHER duplication verb: same figure resolution as duplicateMenuAction (see its comment above for
@@ -3813,6 +3856,10 @@ class Widget extends TreeNode
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
 
   _reactToBeingDropped: (whereIn) ->
+    # RE-RECORD (the F6 family, auto-bookkeeping arc): a dropped widget usually carries
+    # fractional bookkeeping from wherever it lived before, and the fill-only seed respects
+    # existing values -- so every drop re-derives at the drop position explicitly. (For a
+    # first-ever drop this coincides with what the seed's drain would fill.)
     @_rememberFractionalSituationInHoldingPanel()
     
   wantsDropOfChild: (aWdgt) ->

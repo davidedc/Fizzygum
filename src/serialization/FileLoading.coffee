@@ -54,6 +54,9 @@ class FileLoading
         widget = result.widget
         world.add widget
         widget._applyMoveTo dropPoint if dropPoint?
+        # RE-RECORD (the F6 family, auto-bookkeeping arc): the loaded widget carries the
+        # fractional bookkeeping serialized in its previous life, which the fill-only seed
+        # respects -- re-derive at the landing position explicitly.
         widget._rememberFractionalSituationInHoldingPanel?()
         # cross-invalidation-sanctioned: load orchestration — a deferred repaint once async
         # image/canvas assets have decoded; the deserializer restores fields directly, so

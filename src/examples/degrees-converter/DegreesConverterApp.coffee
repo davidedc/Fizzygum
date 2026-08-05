@@ -31,34 +31,28 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider1._applyBounds (container.position().add new Point 43+xCorrection, 195+yCorrection), new Point 20, 100
     container._addNoSettle slider1
-    slider1._rememberFractionalSituationInHoldingPanel()
 
     slider2 = new SliderWdgt nil, nil, nil, nil, nil, true
     slider2._applyBounds (container.position().add new Point 472+xCorrection, 203+yCorrection), new Point 20, 100
     container._addNoSettle slider2
-    slider2._rememberFractionalSituationInHoldingPanel()
 
     cText = new TextWdgt "0"
     cText._applyBounds (container.position().add new Point 104, 253), new Point 150, 75
     container._addNoSettle cText
-    cText._rememberFractionalSituationInHoldingPanel()
 
     fText = new TextWdgt "0"
     fText._applyMoveTo container.position().add new Point 344, 255
     fText.alignRight()
     fText._applyExtent new Point 150, 75
     container._addNoSettle fText
-    fText._rememberFractionalSituationInHoldingPanel()
 
     calc1 = new FrameWdgt new CalculatingPatchNodeWdgt("# °C → °F formula\n(in1)->Math.round in1*9/5+32")
     calc1._applyBounds (container.position().add new Point 148+xCorrection/2, 19), new Point 241, 167
     container._addNoSettle calc1
-    calc1._rememberFractionalSituationInHoldingPanel()
 
     calc2 = new FrameWdgt new CalculatingPatchNodeWdgt("# °F → °C formula\n(in1)->Math.round (in1-32)*5/9")
     calc2._applyBounds (container.position().add new Point 148+xCorrection/2, 365), new Point 241, 167
     container._addNoSettle calc2
-    calc2._rememberFractionalSituationInHoldingPanel()
 
 
     slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, cText, "setText"
@@ -73,12 +67,10 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     cLabel = new TextWdgt "°C"
     cLabel._applyBounds (container.position().add new Point 0+xCorrection, 102+yCorrection), new Point 90, 90
     container._addNoSettle cLabel
-    cLabel._rememberFractionalSituationInHoldingPanel()
 
     fLabel = new TextWdgt "°F"
     fLabel._applyBounds (container.position().add new Point 422+xCorrection, 102+yCorrection), new Point 90, 90
     container._addNoSettle fLabel
-    fLabel._rememberFractionalSituationInHoldingPanel()
 
 
     patchProgrammingWdgt._applyBounds (new Point 114, 10), new Point 596, 592

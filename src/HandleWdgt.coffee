@@ -131,6 +131,13 @@ class HandleWdgt extends Widget
   mouseUpLeft: ->
     @_rotateGrabStartRotationDegrees = nil
     @_rotateGrabStartPointerAngleDegrees = nil
+    # RE-RECORD request (the F6 family, auto-bookkeeping arc): this gesture resized/moved my
+    # target by user intent, so its fractional bookkeeping is stale. Deferred to the world's
+    # post-flush drain (my writes are deferred-settle, so the settled geometry is the
+    # gesture's outcome) -- without it, a handle-resized stretch child snapped back to its
+    # pre-gesture proportions on the next holder reflow (a long-standing product bug, the
+    # arc's P0 probe GAP A).
+    world.pendingFractionalReRecords.add @target  if @target?
 
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button

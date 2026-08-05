@@ -105,6 +105,9 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
       @inform "The referenced item does exist\nhowever it's part of something\nthat can't be grabbed!"
     else
       whatToBringUp.spawnNextTo @, world
+      # RE-RECORD (the F6 family, auto-bookkeeping arc): the brought-up widget may carry
+      # fractional bookkeeping from an earlier desktop/storage life, which the fill-only
+      # seed respects -- re-derive at the spawned position explicitly.
       whatToBringUp._rememberFractionalSituationInHoldingPanel()
       whatToBringUp.setTitle? @label.text
 

@@ -118,7 +118,6 @@ class StretchableWidgetContainerWdgt extends Widget
   smartPlace: (widgetToBePlaced, creator) ->
     widgetToBePlaced._applyMoveTo @center().round().subtract widgetToBePlaced.extent().floorDivideBy 2
     @add widgetToBePlaced
-    widgetToBePlaced._rememberFractionalSituationInHoldingPanel()
     @bringToForeground()
     creator.bringToForeground()
 

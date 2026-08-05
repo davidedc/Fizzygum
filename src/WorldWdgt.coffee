@@ -295,6 +295,18 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # the same idea as waiting for font atlases before a capture.
   wdgtsWithOngoingScrollMomentum: new Set
 
+  # widgets that entered a fractional-consuming holder (me, or a StretchablePanelWdgt) this
+  # turn and whose proportional bookkeeping the drain station derives once their builder is
+  # done placing them -- the __add seed (stretch-fractional auto-bookkeeping arc). Cleared
+  # in the world teardown like every other world-level ephemeral collection.
+  pendingFractionalBookkeepingSeeds: new Set
+
+  # widgets whose fractional bookkeeping must be RE-derived because an external gesture just
+  # changed their geometry (a resize/move HandleWdgt release -- the F6 re-record family,
+  # deferred because the handle's writes are deferred-settle). Drained AFTER the geometry
+  # flush, so the re-record reads the settled fixed point. Cleared in the world teardown.
+  pendingFractionalReRecords: new Set
+
   anyScrollMomentumOngoing: ->
     @wdgtsWithOngoingScrollMomentum.size > 0
 
@@ -1762,6 +1774,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # recalculateDataflow station precedent above). Dark-cheap when nothing is
     # pending.
     @storageSorter.drainPendingSort()
+    # Drain the pending fractional-bookkeeping seeds (the __add seed; stretch-fractional
+    # auto-bookkeeping arc): bookkeeping-only writes, no geometry mutation, so it sits with
+    # the other drain stations BEFORE the geometry settle. Dark-cheap when empty.
+    @_drainPendingFractionalBookkeepingSeeds()
     @recalculateLayouts()
     # Hover re-sync AFTER the flush: re-derive the widgets-under-(stationary)-pointer set against the
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
@@ -1771,6 +1787,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # (off-settle) push from a hover handler would be caught by the end-of-cycle capstone gate.
     # See docs/archive/hover-resync-after-flush-plan.md.
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
+    # Re-derive fractional bookkeeping for handle-gestured widgets against the SETTLED
+    # geometry (bookkeeping-only writes, no geometry mutation -- see the drain method).
+    @_drainPendingFractionalReRecords()
 
     # (There is no caret scroll-follow step here any more: a caret MOVE settles its scroll-follow IN-PLACE,
     # during the event that moved it -- a discrete click/arrow move self-settles (CaretWdgt.gotoSlot), and a
@@ -1918,6 +1937,50 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # drop the memoised position so the next read reflects the new geometry
     @invalidateCanvasPositionCache()
 
+
+  # The desktop consumes its children's fractional bookkeeping (position-only, in
+  # _reLayoutDesktop below) -- the __add seed asks this to know whether a widget entering me
+  # needs its proportional situation derived. See Widget.consumesFractionalChildGeometry.
+  consumesFractionalChildGeometry: ->
+    true
+
+  # Drain station for the __add fractional-bookkeeping seeds: derive the proportional
+  # situation of every widget that entered a consuming holder since the last cycle, AFTER
+  # its builder's JS turn finished placing it, and BEFORE geometry settles and paints.
+  # FILL, never overwrite: existing bookkeeping is authoritative -- it may be a builder's
+  # deliberate record, a drop's, or values the island wrap TRANSFERRED
+  # (_moveHoldingPanelBookkeepingTo, whose islands have a DIFFERENT box than the figure the
+  # values were derived from) -- and a re-derive over an integer imposition also drifts the
+  # fractions a little each time. The seed exists for widgets arriving with NO bookkeeping
+  # at all: the StretchablePanelWdgt heal's exact contract, run at the better moment (after
+  # the builder finished placing, not mid-arrange at possibly pre-placement geometry). The
+  # figure-parent gate skips widgets that moved on to a non-consuming holder (or died) in
+  # the meantime -- deriving would write data nothing reads. Dark-cheap when the set is
+  # empty. (Both halves measured: the overwriting form churned the island-wrap and
+  # sample-slide tests, auto-bookkeeping arc P1 ledger.)
+  _drainPendingFractionalBookkeepingSeeds: ->
+    return if @pendingFractionalBookkeepingSeeds.size == 0
+    @pendingFractionalBookkeepingSeeds.forEach (w) ->
+      fig = w._enclosingIslandFigure()
+      if !w.destroyed and fig.parent?.consumesFractionalChildGeometry() and
+      (!fig.positionFractionalInHoldingPanel? or !fig.extentFractionalInHoldingPanel?)
+        w._rememberFractionalSituationInHoldingPanel()
+    @pendingFractionalBookkeepingSeeds.clear()
+
+  # Drain the pending RE-records (HandleWdgt release enqueues its target): unlike the
+  # fill-only seed drain above, a re-record OVERWRITES -- the gesture deliberately changed
+  # the widget's geometry, so its stored proportions are stale by user intent. Runs AFTER
+  # recalculateLayouts (the handle's writes are deferred-settle, so only the post-flush
+  # geometry is the gesture's outcome). Without this, a handle-resized stretch child snapped
+  # back to its pre-gesture proportions on the next holder reflow (the auto-bookkeeping
+  # arc's P0 probe, GAP A -- a long-standing product bug). Dark-cheap when empty.
+  _drainPendingFractionalReRecords: ->
+    return if @pendingFractionalReRecords.size == 0
+    @pendingFractionalReRecords.forEach (w) ->
+      fig = w._enclosingIslandFigure()
+      if !w.destroyed and fig.parent?.consumesFractionalChildGeometry()
+        w._rememberFractionalSituationInHoldingPanel()
+    @pendingFractionalReRecords.clear()
 
   _reLayoutDesktop: ->
     binOpenerWdgt = @firstChildSuchThat (w) ->
@@ -2593,6 +2656,8 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @hierarchyOfClickedMenus.clear()
     @temporaryHandlesAndLayoutAdjusters.clear()
     @wdgtsWithOngoingScrollMomentum.clear()
+    @pendingFractionalBookkeepingSeeds.clear()
+    @pendingFractionalReRecords.clear()
     # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
     # list never was, so it accumulated dead widgets for the whole life of the page.
     @widgetsGivingErrorWhileRepainting = []

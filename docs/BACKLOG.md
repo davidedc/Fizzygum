@@ -141,6 +141,12 @@ AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0
 - [ ] §5 Phase 0: S1 FizzyPaint round-trip spike + S2 hand-built prototype — not yet run
 - [ ] §7: banked v1-excluded items: precompiled file, SWCanvas strip, baked edits, dirty guard
 
+### ~~`plans/stretch-fractional-auto-bookkeeping-plan.md`~~ → `archive/` — ✅ EXECUTED IN FULL 2026-08-05 (same day as authoring, P0→P4)
+Fractional bookkeeping is FRAMEWORK-OWNED: fill-only deferred seed at reparent + the F6 RE-RECORD family (drop/duplicate/load/re-home/spawnNextTo/uncollapse/handle-release); 33/41 manual calls DELETED, the Widget TODO retired; FOUND+FIXED the handle-resize snap-back product bug (`HandleWdgt.mouseUpLeft` → post-flush re-record drain); suite 278→280 (`macroStretchPanelChildrenReflowOnResize` + `macroStretchChildHandleResizeSurvivesReflow`, both proven non-vacuous — the only gates that pin fraction VALUES); 15 benign inspector recaptures (seeded fields visible in lists). Gauntlet 14/14 + homepage. Case law in `archive/INDEX.md`.
+
+### `plans/stretch-layout-spec-unification-plan.md` — AUTHORED 2026-08-05, ⛔ Phase 0 design is OWNER-GATED; prerequisite (the auto-bookkeeping arc) ✅ LANDED same day
+Folds the fractional trio into a `StretchLayoutSpec` in the LayoutSpec family (one per-child layout-state home), converts `StretchablePanelWdgt._reLayout` to the grant-bounds shape (closing its "TODO antipattern"), collapses `_moveHoldingPanelBookkeepingTo`. §4 now carries D7 (owner-raised): consider EDGE-based fractions — independent per-child rounding can seam abutting children ±1px at some sizes. D3 decision will file the `_stackElementSpec` third-mechanism line when this arc closes.
+
 ### `plans/onion-widget-composition-plan.md` — "The Frame model" — ✅ FLAGSHIP ARC COMPLETE 2026-07-20 (A·C·B·D·E); follow-ons below
 Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowWdgt`) → App=launcher. Intrinsic-framing principle LOCKED (D1–D9). Correctness-first — no churn deferrals.
 - [x] §5 P0: `architecture/regularity-principles.md` — LANDED 2026-07-19

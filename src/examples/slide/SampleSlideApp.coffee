@@ -25,18 +25,15 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     windowWithScrollingPanel.setTitleWithoutPrependedContentName "New York City"
     windowWithScrollingPanel._applyBounds (container.position().add new Point 28, 43), new Point 322, 268
     container.add windowWithScrollingPanel
-    windowWithScrollingPanel._rememberFractionalSituationInHoldingPanel()
 
 
     usaMap = new SimpleUSAMapIconWdgt Color.create 183, 183, 183
     usaMap._applyExtent new Point 1808, 1115
     windowWithScrollingPanel.contents.add usaMap
-    usaMap._rememberFractionalSituationInHoldingPanel()
 
     mapPin = new MapPinIconWdgt
     windowWithScrollingPanel.contents.add mapPin
     mapPin._applyMoveTo windowWithScrollingPanel.contents.contents.position().add new Point 1606, 343
-    mapPin._rememberFractionalSituationInHoldingPanel()
 
     sampleBarPlot = new FrameWdgt new PlotWithAxesWdgt(new ExampleBarPlotWdgt)
     sampleBarPlot._applyExtent new Point 240, 104
@@ -53,12 +50,10 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
 
     mapCaption._applyBounds (container.position().add new Point 366, 40), new Point 176, 387
     container.add mapCaption
-    mapCaption._rememberFractionalSituationInHoldingPanel()
 
     wikiLink = new SimpleLinkWdgt "New York City Wikipedia page", "https://en.wikipedia.org/wiki/New_York_City"
     wikiLink._applyBounds (container.position().add new Point 110, 348), new Point 250, 50
     container.add wikiLink
-    wikiLink._rememberFractionalSituationInHoldingPanel()
 
 
     slideWdgt._applyBounds (new Point 114, 10), new Point 596, 592

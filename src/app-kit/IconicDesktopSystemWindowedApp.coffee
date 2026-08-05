@@ -88,6 +88,10 @@ class IconicDesktopSystemWindowedApp
         figure.bringToForeground()
         figure._applyMoveTo world.hand.position().add new Point 100, -50
         figure._moveWithin world
+        # RE-RECORD (the F6 family, auto-bookkeeping arc): the window carries fractional
+        # bookkeeping from its previous desktop life, which the fill-only seed respects --
+        # after this re-home moves it, its proportional situation must be re-derived
+        # explicitly or the next desktop reflow snaps it back to the old spot.
         figure._rememberFractionalSituationInHoldingPanel()
         return
       world[@slot] = @buildWindow()

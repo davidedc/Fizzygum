@@ -36,11 +36,15 @@ class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
       windowedBinWdgt = new FrameWdgt @target
       world.add windowedBinWdgt
       windowedBinWdgt._applyBounds (new Point 140, 90), new Point 460, 400
-      windowedBinWdgt._rememberFractionalSituationInHoldingPanel()
     else
       # if the bin is not an orphan, then it's
       # visible somewhere and it's in a window
       @target.parent.spawnNextTo @
+      # RE-RECORD (the F6 family, auto-bookkeeping arc): the bin window already carries
+      # fractional bookkeeping from its previous desktop life, so the fill-only seed will
+      # not touch it -- after spawnNextTo re-places it, its proportional situation must be
+      # re-derived explicitly. (The fresh-window branch above needs nothing: the seed's
+      # drain fills a fresh widget at its post-placement geometry.)
       @target.parent._rememberFractionalSituationInHoldingPanel()
 
 

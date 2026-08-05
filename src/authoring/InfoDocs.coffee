@@ -223,6 +223,5 @@ class InfoDocs
     doc.closeFromFrameBarPolicy = 'destroy'
 
     doc._moveToSideOf nextToThisWidget
-    doc._rememberFractionalSituationInHoldingPanel()
 
     return doc

@@ -5,6 +5,12 @@ class StretchablePanelWdgt extends PanelWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
+  # I re-lay my children from their fractional bookkeeping (see _reLayout below) -- the
+  # __add seed asks this to know a widget entering me needs its proportional situation
+  # derived. See Widget.consumesFractionalChildGeometry.
+  consumesFractionalChildGeometry: ->
+    true
+
   _reactToChildRemoved: (child) ->
     super
     if @parent?.setRatio? and @parent.ratio?
