@@ -531,10 +531,19 @@ class ScrollPanelWdgt extends PanelWdgt
   # my being moved/resized (e.g. the sample-slide edit->view container shift). Was `-whereTo.x/.y`,
   # i.e. absolute world coords that only landed right for a frame at the world origin -- the root of
   # the 2026-07 mis-scrolled-slide magic constant. SampleSlideApp is the sole caller.
+  #
+  # CLAMPED like every other scroll path: the request is expressed as deltas and routed through
+  # scrollX/scrollY, so a target past the content's edge stops AT the edge -- a raw move here let a
+  # too-far request commit an over-scrolled state no gesture can produce, with the contents frame no
+  # longer covering the viewport (the arrange's own fit rule): the census's one as-built mover, the
+  # sample slide's map sitting 27px short of its window edge. After a real scroll, re-fit contents
+  # + scrollbars, the standard post-scroll pair.
   scrollTo: (whereTo) ->
-    @contents._moveLeftSideTo @left() - whereTo.x
-    @contents._moveTopSideTo @top() - whereTo.y
-    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
+    scrolledX = @scrollX @left() - whereTo.x - @contents.left()
+    scrolledY = @scrollY @top() - whereTo.y - @contents.top()
+    if scrolledX or scrolledY
+      # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
+      @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
 
