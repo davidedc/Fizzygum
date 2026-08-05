@@ -203,11 +203,18 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
       which is why `toggleSoftWrap()` is a sanctioned direct call — "shrink to fit" joined that
       class when division cells gained their submenu). Wants scrolling/compacting menus, or a
       max-height policy — a design decision, not a patch.
-- [ ] **The in-world error console commits degenerate child bounds while being built** (F2 find):
-      `ErrorsLogViewerWdgt`'s construction cascade emits `NON_INTEGER_GEOMETRY … [12@25 | 38@15]`
-      (inverted rects, StringWdgt/SimpleButtonWdgt/ToggleButtonWdgt via `_applyGrantedBounds`/
-      `__commitExtent` in a `CodeAreaWdgt` arrange) whenever the console pops — observed while
-      diagnosing the F2 FLOWRULE throw; reproduce by making any layout error surface on-world.
+- [x] **The in-world error console commits degenerate child bounds while being built** (F2 find) —
+      ✅ FIXED 2026-08-05. Root cause (probe-reproduced: 49 guard hits per create+pop, zero after):
+      `ErrorsLogViewerWdgt`'s button row divided its width `/3` UNROUNDED — fractional button
+      widths and origins on almost every width (`ConsoleWdgt`/`ScriptWdgt` had already been fixed
+      to round; this class and `CodePromptWdgt` had not) — and its text-panel height went negative
+      at transient degenerate sizes mid window-negotiation, inverting child rects (the ctor's
+      `super new Point 200,400` was also a DEAD argument — Widget's ctor takes none — so the
+      console was born 50×40 and crammed a full row pass at that size). Fix at the producers,
+      family-precedent shape: `Math.round` the `/3` + `Math.max 0` the panel height, in BOTH
+      remaining carriers. Pinned by `SystemTest_macroErrorConsolePopsClean` (suite 278): the
+      geometry guards are wired into the runners' fail-gate, so any recurrence fails the test
+      structurally; its screenshot is also the console's first pixel coverage anywhere.
 
 ### ~~The build-and-packaging program~~ — **COMPLETE (2026-07-30). All five arcs done and pushed; all five plans in `archive/`.**
 Program table + completion doctrine in `archive/build-arc-4-dynamic-parts-plan.md` §0.1/§0.2.

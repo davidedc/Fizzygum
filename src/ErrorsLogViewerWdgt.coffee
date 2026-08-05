@@ -12,8 +12,11 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
   paused: false
 
+  # (Widget's constructor takes no arguments -- a birth extent passed to super
+  # was silently discarded, so the console is born at Widget's default bounds
+  # and gets its real size from the window that wraps it, createErrorConsole.)
   constructor: (@msg, @target, @callback, @defaultContents) ->
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
 
   colloquialName: ->
@@ -104,7 +107,10 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     world.disableTrackChanges()
 
 
-    mainCanvasHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+    # clamped at 0: a transient degenerate height mid window-negotiation must not
+    # invert the text panel's rect (a negative height here was half the console's
+    # NON_INTEGER_GEOMETRY construction cascade)
+    mainCanvasHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
     mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
 
     if @tempPromptEntryField.parent == @
@@ -112,9 +118,13 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
 
     # buttons -------------------------------
-    
 
-    eachButtonWidth = (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
+
+    # fractional /3 makes the second and third buttons' origins (each = the
+    # previous one's right edge plus the padding) fractional -- round it here so
+    # all three land on integer pixels (the ConsoleWdgt /2 precedent; integer
+    # placement is enforced by the always-on bounds guard)
+    eachButtonWidth = Math.round (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
 
     if @clearButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding

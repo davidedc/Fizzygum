@@ -73,7 +73,9 @@ class CodePromptWdgt extends CodeAreaWdgt
     # going to be painted and moved OK.
     world.disableTrackChanges()
 
-    textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
+    # clamped at 0: a transient degenerate height must not invert the text
+    # panel's rect (the ErrorsLogViewerWdgt construction-cascade fix, same family)
+    textHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - 15
     textBottom = @top() + @externalPadding + textHeight
 
     if @tempPromptEntryField.parent == @
@@ -83,7 +85,10 @@ class CodePromptWdgt extends CodeAreaWdgt
     # buttons -------------------------------
     
 
-    eachButtonWidth = (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
+    # fractional /3 makes the second and third buttons' origins fractional --
+    # round it here so all three land on integer pixels (the ConsoleWdgt /2
+    # precedent; integer placement is enforced by the always-on bounds guard)
+    eachButtonWidth = Math.round (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
 
     if @cancelButton.parent == @
       buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
