@@ -693,7 +693,10 @@ filling; folding the lock into the build deletes those calls). Colloquial name s
   (transpose twins + one-home chrome math), and the D9-tail undock lives as the frame's "float the
   toolbar" context-menu entry → `FrameWdgt.floatToolbar`, which re-homes the docked strip in place into
   the same FrameWdgt float home the creator buttons build. The bottom-right resizer deliberately may
-  overlap a right/bottom dock's far corner — same trade as `resizerCanOverlapContents` content.)**
+  overlap a right/bottom dock's far corner — same trade as `resizerCanOverlapContents` content.
+  Same-day tail: D9's "user-adjustable per frame" is now literal — the frame's "dock the toolbar ➜"
+  popout re-sides a docked strip (current side omitted) and, over an EMPTY slot, re-docks a FRESH
+  variant after a float — never reclaiming the floated instance, which stays a normal toolbar window.)**
 - `dockThickness` — the strip's cross-axis size when docked: text 40 (thumbnail 30 + 2×5 inner padding —
   the variant overrides its inner panel's `externalPadding` from 10 to 5 so a one-row strip is honest
   ToolPanel geometry; today's HorizontalMenuPanel strip is 35, so the doc toolbar grows 5px — conscious

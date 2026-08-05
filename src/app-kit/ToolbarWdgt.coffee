@@ -15,11 +15,13 @@ class ToolbarWdgt extends ScrollPanelWdgt
 
   # D9 (Frame-model plan §5.C): where this toolbar docks when it occupies a
   # frame's toolbar-slot. A per-instance property with a per-TYPE class
-  # default. All four sides ('top' / 'left' / 'right' / 'bottom') have
-  # frame-arrange support. FLOATING is not a slot state this field records:
-  # a floating toolbar is a window's CONTENT -- the home the toolbar creator
-  # buttons build, and where the frame's "float the toolbar" context-menu
-  # entry re-homes a docked one (FrameWdgt.floatToolbar).
+  # default, user-adjustable per frame via the frame's "dock the toolbar ➜"
+  # context-menu popout. All four sides ('top' / 'left' / 'right' / 'bottom')
+  # have frame-arrange support. FLOATING is not a slot state this field
+  # records: a floating toolbar is a window's CONTENT -- the home the toolbar
+  # creator buttons build, and where the frame's "float the toolbar"
+  # context-menu entry re-homes a docked one (FrameWdgt.floatToolbar; the
+  # same menu re-docks a FRESH variant afterwards).
   dockSide: 'left'
 
   # The strip's cross-axis size when docked: width for left/right, height for

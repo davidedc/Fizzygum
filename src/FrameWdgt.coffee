@@ -686,15 +686,77 @@ class FrameWdgt extends Widget
     @toolbar = nil
 
   # The frame's own context-menu entries (on top of the generic Widget set):
-  # the toolbar-slot's undock action, on the frame's menu because the frame
-  # OWNS the slot -- and DELIBERATELY a menu entry, never a bar button (owner
-  # ruling D9, Frame-model plan §5.C: don't spend bar space on it). Gated on
-  # the toolbar actually showing: you float what you can see.
+  # the toolbar-slot's dock-side chooser and undock action, on the frame's menu
+  # because the frame OWNS the slot -- and DELIBERATELY menu entries, never bar
+  # buttons (owner ruling D9, Frame-model plan §5.C: don't spend bar space on
+  # them). Gated on the toolbar actually showing (you adjust what you can see)
+  # -- or, for the chooser alone, on an EMPTY slot the content could refill
+  # (the re-dock path after "float the toolbar").
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    if @_dockedToolbarShowing()
+    if @_dockedToolbarShowing() or @_canDockAFreshToolbar()
       menu.addLine()
-      menu.addMenuItem "float the toolbar", @, "floatToolbar", toolTip: "undock the toolbar into its own window"
+      menu.addMenuItem "dock the toolbar ➜", @, "dockToolbarMenu", closesUnpinnedPopUps: false, toolTip: ""
+      if @_dockedToolbarShowing()
+        menu.addMenuItem "float the toolbar", @, "floatToolbar", toolTip: "undock the toolbar into its own window"
+
+  # Can the empty slot be (re)filled? The content must declare a variant (a
+  # framed citizen declares its own -- §5.B), and be EDITING: a fresh dock in
+  # view mode would land collapsed, an invisible no-op entry.
+  _canDockAFreshToolbar: ->
+    return false if @toolbar?
+    return false unless @buildToolbar? or @contents?.buildToolbar?
+    @contents?.dragsDropsAndEditingEnabled == true
+
+  # The dock-side chooser popout ("dock the toolbar ➜"): the current side is
+  # omitted when docked (the VSLS-alignment / division-cell menu pattern); ALL
+  # FOUR are offered over an empty slot -- that IS the re-dock path after
+  # "float the toolbar", and it builds a FRESH variant rather than reclaiming
+  # the floated instance: toolbars are identity-free by design (one
+  # construction, buttons duck-type onto the focused widget -- §5.C), so
+  # reclaiming would buy nothing and cost a tracked back-ref; the floated strip
+  # simply stays a normal toolbar window.
+  dockToolbarMenu: (widgetOpeningThePopUp, targetWidget, a, b, c) ->
+    menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
+    currentSide = if @_dockedToolbarShowing() then @toolbar.dockSide else nil
+    menu.addMenuItem "top", @, "dockToolbarTop"  if currentSide isnt "top"
+    menu.addMenuItem "left", @, "dockToolbarLeft"  if currentSide isnt "left"
+    menu.addMenuItem "right", @, "dockToolbarRight"  if currentSide isnt "right"
+    menu.addMenuItem "bottom", @, "dockToolbarBottom"  if currentSide isnt "bottom"
+    menu.popUpAtHand()
+
+  dockToolbarTop: ->
+    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "top"
+
+  dockToolbarLeft: ->
+    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "left"
+
+  dockToolbarRight: ->
+    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "right"
+
+  dockToolbarBottom: ->
+    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "bottom"
+
+  # ONE parameterized core for the four wrappers above (dockToolbarMenu
+  # addresses them BY NAME). Docked: re-side the existing strip. Empty slot:
+  # build the content's fresh variant at the chosen side -- mirrors the
+  # _buildAndConnectChildrenNoSettle slot build incl. the born-collapsed-when-
+  # viewing rule (the menu gate only offers the empty-slot entries while
+  # editing, but the core stays mode-complete for programmatic callers).
+  # ⚠ the fresh-build arm must invalidate UNCONDITIONALLY: the add alone does
+  # not reach the frame's layout (a spec-less chrome child rides the
+  # freefloating skip in Widget._addNoSettle's container invalidate).
+  _dockToolbarAtNoSettle: (side) ->
+    if @toolbar?
+      return if @toolbar.dockSide == side
+    else
+      @toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
+      return unless @toolbar?
+      @_addNoSettle @toolbar, notContent: true
+      if !@contents.dragsDropsAndEditingEnabled
+        @toolbar._collapseNoSettle()
+    @toolbar.dockSide = side
+    @_invalidateLayout()
 
   # Undock-to-float (D9 tail): free the docked toolbar into its own floating
   # window -- the SAME float home the toolbar creator buttons build (one
