@@ -5,27 +5,19 @@ class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
   constructor: ->
     super "Bin", new GenericShortcutIconWdgt new BinIconWdgt
     @target = world.binWdgt
+    # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): bottom-right of the
+    # desktop, desktopSidesPadding inside, ZERO size declared -- the corner pass places
+    # me by my own extent, it never sizes me. The CREATOR arms it at add
+    # (menusHelper.binIconAndText) -- deliberately NOT via defaultLayoutSpecWhenAddedTo,
+    # which would re-anchor me on every user re-drop; a grab disarms the slot and I stay
+    # free-floating, which IS the "until the user intervenes" lifecycle.
+    @cornerSpec = new CornerInternalLayoutSpec 'bottomRight', 0, 0, new Point world.desktopSidesPadding, world.desktopSidesPadding
 
   # I am a desktop icon but the desktop positions me itself (bottom-right corner), so I do
   # NOT take part in the auto icon grid -- override of WidgetHolderWithCaptionWdgt (was the
   # `!(aWdgt instanceof BinOpenerWdgt)` exclusion). (type-test-elimination campaign)
   participatesInIconGrid: ->
     false
-
-  _reactToBeingAdded: (whereTo, beingDropped) ->
-    super
-    if whereTo == world and !@userMovedThisFromComputedPosition
-      # _applyMoveTo (NOT the public moveTo): _reactToBeingAdded is fired by the add
-      # core INSIDE the add's settle, so a public setter here would re-enter the flush
-      # guard and throw. The freefloating position is not changed by the outer settle,
-      # so this is byte-equivalent to the old deferred moveTo.
-      @_applyMoveTo world.bottomRight().subtract @extent().add world.desktopSidesPadding
-
-  _reactToBeingDropped: (whereIn) ->
-    super
-    if whereIn == world
-      @userMovedThisFromComputedPosition = true
-
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

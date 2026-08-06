@@ -323,16 +323,6 @@ class Widget extends TreeNode
 
   shadowInfo: nil
 
-  # some widgets such as references are given a
-  # default "computed" position on the screen.
-  # As long as the user didn't manually
-  # reposition them, then we keep giving them a
-  # computed position. BUT as soon as the user manually
-  # places them, then we quit giving the widget a
-  # computed position and rather we stick with the
-  # position the user gave.
-  userMovedThisFromComputedPosition: false
-
   initialiseDefaultFrameContentLayoutSpec: ->
     @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
     # bind the element NOW (the capture re-binds it later): a PRE-capture measure's
@@ -2116,6 +2106,13 @@ class Widget extends TreeNode
   _rememberFractionalSituationInHoldingPanel: (provisional = false) ->
     fig = @_enclosingIslandFigure()
     return if !fig.parent? or !fig.parent.consumesFractionalGeometryOf fig
+    # ⚠ Same doctrine, other axis: a spec that OWNS placement (a corner-armed desktop
+    # furniture piece -- the one owning kind a CONSUMING holder can host) must not be
+    # replaced by a stretch record either -- the arrange places the widget FROM that spec,
+    # and the __add seed fires for every consumed entrant, so without this gate the drain
+    # would disarm a corner knob one cycle after its creator armed it. (A stretch spec
+    # answers ownsPlacement() false, so re-records pass through untouched.)
+    return if fig.layoutSpec?.ownsPlacement()
     spec = fig.layoutSpec
     unless spec?.isStretchElement?()
       spec = new StretchLayoutSpec()
@@ -4485,7 +4482,6 @@ class Widget extends TreeNode
   # ---------------------------------------------------------------------
 
   _beforeBeingGrabbed: ->
-    @userMovedThisFromComputedPosition = true
     @_unlockFromPanels()
     @_setLayoutSpec nil
 
@@ -5043,28 +5039,36 @@ class Widget extends TreeNode
 
     if @layoutSpec?.isCornerInternal?()
       if @parent
-        xDim = @parent.width()
-        yDim = @parent.height()
-        # Integer placement (Layer A): minDim is a proportional (fractional) size used for BOTH this widget's
-        # extent AND its right/bottom-anchored position below (parent.right() - minDim); round it once so both
-        # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
         spec = @layoutSpec
-        minDim = Math.round Math.min(xDim, yDim) * spec.proportionOfParent + spec.fixedSize
-
-        @__commitExtent new Point minDim, minDim
+        if spec.proportionOfParent == 0 and spec.fixedSize == 0
+          # a spec that declares NO size (both terms zero) does not size its carrier: the
+          # anchor formulas place me by my OWN per-axis extent instead (the desktop
+          # furniture -- bin opener / clock -- whose extent is their own business, and
+          # need not be square).
+          wDim = @width()
+          hDim = @height()
+        else
+          xDim = @parent.width()
+          yDim = @parent.height()
+          # Integer placement (Layer A): minDim is a proportional (fractional) size used for BOTH this widget's
+          # extent AND its right/bottom-anchored position below (parent.right() - minDim); round it once so both
+          # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
+          minDim = Math.round Math.min(xDim, yDim) * spec.proportionOfParent + spec.fixedSize
+          @__commitExtent new Point minDim, minDim
+          wDim = hDim = minDim
 
         inset = spec.inset
 
         if spec.anchor == 'topLeft'
           @_applyMoveTo new Point @parent.left() + inset.x, @parent.top() + inset.y
         else if spec.anchor == 'topRight'
-          @_applyMoveTo new Point @parent.right() - minDim - inset.x, @parent.top() + inset.y
+          @_applyMoveTo new Point @parent.right() - wDim - inset.x, @parent.top() + inset.y
         else if spec.anchor == 'bottomRight'
-          @_applyMoveTo new Point @parent.right() - minDim - inset.x, @parent.bottom() - minDim - inset.y
+          @_applyMoveTo new Point @parent.right() - wDim - inset.x, @parent.bottom() - hDim - inset.y
         else if spec.anchor == 'rightMiddle'
-          @_applyMoveTo new Point @parent.right() - minDim - inset.x, Math.floor(@parent.top() + (@parent.extent().y - minDim)/2)
+          @_applyMoveTo new Point @parent.right() - wDim - inset.x, Math.floor(@parent.top() + (@parent.extent().y - hDim)/2)
         else if spec.anchor == 'bottomMiddle'
-          @_applyMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - minDim)/2), @parent.bottom() - minDim - inset.y
+          @_applyMoveTo new Point Math.floor(@parent.left() + (@parent.extent().x - wDim)/2), @parent.bottom() - hDim - inset.y
 
     else if (divisionAxis = @_divisionChildrenAxis())?
       # my division children jointly divide my main axis — the three-regime solve + the

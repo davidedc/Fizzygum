@@ -19,6 +19,12 @@ class AnalogClockWdgt extends Widget
     @appearance = new AnalogClockAppearance @
     @setColor Color.create 255, 125, 125
     @_applyExtent new Point 200, 200
+    # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): top-right of the
+    # desktop, desktopSidesPadding inside, ZERO size declared -- the corner pass places
+    # me by my own extent, it never sizes me. Only createDesktop ARMS it (explicitly, at
+    # add) -- deliberately NOT via defaultLayoutSpecWhenAddedTo, which would re-anchor on
+    # every user re-drop; inert everywhere else a clock lives (windows, demos).
+    @cornerSpec = new CornerInternalLayoutSpec 'topRight', 0, 0, new Point world.desktopSidesPadding, world.desktopSidesPadding
     return
 
   colloquialName: ->

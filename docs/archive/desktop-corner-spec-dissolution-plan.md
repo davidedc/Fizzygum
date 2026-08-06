@@ -1,5 +1,10 @@
 # Desktop corner-spec dissolution — the last type-test placement dies
 
+**STATUS: EXECUTED IN FULL 2026-08-06 (both phases, same day as authoring). See the
+execution ledger at the bottom: three in-flight discoveries (a confirmed latent resize-throw
+product bug the fold fixed; the seed-drain/recorder `ownsPlacement()` gate; the
+`loadWorldSnapshot` step-7 slot re-arm), 2 benign inspector recaptures, gauntlet green.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-06; every fact below verified same day against Fizzygum `76130d2f` /
 Fizzygum-tests `c8a2b8775` (the kept-spec knob-model arc's close — its landed state is this
@@ -204,3 +209,52 @@ whose only purpose is preserving behavior is a backcompat smell) ·
 `ask-before-commit-push`, `no-serialization-compat-obligations`.
 
 ### Execution ledger (append per phase; empty at authoring)
+
+**P1 EXECUTED 2026-08-06.** D1 (zero-size declaration skips `__commitExtent`, anchors by the
+carrier's per-axis extent; sized path byte-identical) + D2 (constructor `cornerSpec` knobs on
+`BinOpenerWdgt` bottomRight / `AnalogClockWdgt` topRight, armed explicitly by
+`menusHelper.binIconAndText` and `createDesktop`) + D3 (`_reLayoutDesktop` = generic loop +
+`_reLayoutCornerInternalChildren()`, identity-exclusions dropped). Probe
+(`Fizzygum-tests/.scratch/desktop-corner-probe.js`, baseline vs post-fold JSON): anchored
+placements BYTE-IDENTICAL at 1024×768 and 1280×900; post-grab opener stays put, clock
+proportionally tracks; no page errors. THREE in-flight discoveries, all evidence-first:
+1. **Latent product bug CONFIRMED and fixed by the fold:** pre-fold, a grabbed (spec-less)
+   opener made `_reLayoutDesktop` throw `Cannot read properties of undefined ('leftFraction')`
+   on EVERY browser resize (`corner-throw-check.js`) — aborting the whole desktop reflow, so
+   the grabbed CLOCK visibly stopped proportional-tracking too (baseline viewC pins it). §1's
+   "post-grab life is clamp-only" description was the code's INTENT, not its behavior.
+2. **The seed drain would disarm a corner knob one cycle after arming** (the clock is a
+   consumed entrant, so `__add` seeds it and the fill drain's `!isStretchElement?()` gate
+   passes for a corner spec): fixed at the ONE recorder home —
+   `_rememberFractionalSituationInHoldingPanel` now returns early when the fig's spec
+   `ownsPlacement()` (a stretch spec answers false, so records/re-records are untouched).
+3. **`loadWorldSnapshot` step 7 disarmed every world child's slot** (`_addNoSettle child`
+   resolved `defaultLayoutSpecWhenAddedTo` → nil over the deserialized spec; invisible
+   pre-fold because world children only ever carried nil or re-derivable stretch records):
+   step 7 now passes `layoutSpec: child.layoutSpec` — the snapshot's attachment state is
+   authoritative, which also stops the per-load stretch-fraction re-derive drift.
+Suite: 2 fails, both inspector tests on an AnalogClockWdgt (the new `cornerSpec` own field —
+the D5-anticipated benign class); diffpage + eyeball + recapture per protocol.
+P1 gates: diffpage eyeball confirmed benign (the member list gains the blue `cornerSpec` row
+after `constructor`; rows shift; scrollbar thumb shrinks — nothing else), `fg recapture`
+COMPLETE (full suite green at dpr 1 AND 2), `fg apps` PASS, `fg homepage` PASS (production
+boot + snapshot round-trip on the production tree — the step-7 re-arm proven there too).
+
+**P2 EXECUTED 2026-08-06.** D4 sweep: flag decl + vestigial comment gone (`Widget` ~:326),
+`_beforeBeingGrabbed` set gone, `BinOpenerWdgt._reactToBeingAdded` and `_reactToBeingDropped`
+overrides DELETED whole (they held only the duplicate corner formula + flag bookkeeping);
+zero remaining references in src / live docs / tests (grep-verified). Docs: layout.md §4.2
+corner entry rewritten (optional sizing, furniture knobs, creator-arming, the recorder's
+`ownsPlacement()` refusal, `_reLayoutDesktop` = loop + corner pass), §4.2 preamble knob list
+gains the furniture knobs, `CornerInternalLayoutSpec.coffee` header notes optional sizing,
+serialization-duplication-reference.md load-step 5 documents the authoritative-slot re-attach.
+Gates at close: the flag deletion churned ONE more inspector test
+(`macroDuplicatedInspectorDrivesCopiedTargetOnly` — the deleted prototype row shifts the
+member list's scroll quantization; the functional assertion — original 0.25 / duplicate 0.6 —
+held, so the kept-spec arc's clamped-click robustness fix did its job): diffpage eyeball
+benign, `fg recapture` COMPLETE at dpr 1+2. Then **fg gauntlet 14/14 GREEN (5m38s) +
+fg homepage OK**; corner probe re-run post-P2: byte-identical to baseline on every leg
+except the documented fixed-bug leg (grabbed clock now tracks: 281,167 at 900×600 where the
+pre-fold build froze it at 400,250), round-trip preserves both knobs by identity, the flag
+reads as undefined everywhere. Total suite churn for the whole arc: 3 inspector tests, all
+recaptured under the completeness gate.

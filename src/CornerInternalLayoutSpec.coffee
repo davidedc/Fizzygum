@@ -2,13 +2,17 @@
 
 # The per-child spec for a corner/edge-internal attachment: a child placed by base
 # Widget._reLayout's corner pass against its parent's CURRENT frame (resize/move/rotate
-# handles, the pencil triangle badges, the modified-text triangle). Carries WHICH of the
-# five anchors the child takes plus the anchor's geometry parameters.
+# handles, the pencil triangle badges, the modified-text triangle, the desktop furniture —
+# bin opener / clock). Carries WHICH of the five anchors the child takes plus the anchor's
+# geometry parameters.
 #
-# Sizing: the corner pass sizes the child square, to
-#   round( min(parentW, parentH) * proportionOfParent + fixedSize )
-# so a spec is either PROPORTIONAL (handle badges scaling with the parent: proportion > 0,
-# fixedSize 0) or FIXED (the resize/move handles: proportion 0, fixedSize = handleSize).
+# Sizing is OPTIONAL. A spec that declares a size has the corner pass size the child square,
+# to  round( min(parentW, parentH) * proportionOfParent + fixedSize )
+# — PROPORTIONAL (handle badges scaling with the parent: proportion > 0, fixedSize 0) or
+# FIXED (the resize/move handles: proportion 0, fixedSize = handleSize). A spec that
+# declares NO size (both terms zero) never sizes its carrier: the anchor formulas place the
+# child by its OWN per-axis extent (the furniture knobs — the carrier's extent is its own
+# business, and need not be square).
 # `inset` backs the anchor off the parent's edge (a handle respecting its target's padding —
 # HandleWdgt re-derives it in _reactToBeingAdded once the real target is known).
 #

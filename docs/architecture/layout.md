@@ -212,7 +212,8 @@ never a type test.
 **LIFECYCLE is exactly TWO kinds** — a spec is either a **carrier-owned KNOB** (an object the
 widget owns for its whole life, holding underivable per-class/user preferences, which doubles as
 the attachment value and is armed into the slot at attachment: `Widget._divisionBox`,
-`HandleWdgt.cornerSpec`, and the content-stack spec `Widget._contentStackSpec`) or a
+`HandleWdgt.cornerSpec` and the desktop furniture's corner knobs, and the content-stack spec
+`Widget._contentStackSpec`) or a
 **per-attachment RECORD** (derived at entry, discarded at detachment: `StretchLayoutSpec`).
 Container-side reads of a child's content-stack spec go **SLOT-FIRST through the one accessor
 `Widget.contentStackSpec()`** (the active spec when content-stack-capable, else the knob field):
@@ -248,7 +249,21 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   chrome-rebuild re-add.
 - **`CornerInternalLayoutSpec`** — `anchor` (`'topLeft'|'topRight'|'bottomRight'|'rightMiddle'|
   'bottomMiddle'`) + `proportionOfParent`/`fixedSize`/`inset`, applied by base `_reLayout`'s corner
-  pass; held by its carrier (`HandleWdgt.cornerSpec`, the triangle badges).
+  pass; held by its carrier (`HandleWdgt.cornerSpec`, the triangle badges, the desktop furniture's
+  `cornerSpec` knobs — `BinOpenerWdgt` bottomRight, `AnalogClockWdgt` topRight). SIZING IS
+  OPTIONAL: a spec declaring a size (either term non-zero) sizes its carrier square; a ZERO-size
+  declaration only PLACES, by the carrier's own per-axis extent (the furniture — whose extent is
+  its own business, and need not be square). The furniture knobs are armed by their CREATORS at
+  add (`createDesktop`, `menusHelper.binIconAndText`) — deliberately NOT via
+  `defaultLayoutSpecWhenAddedTo`, which would re-anchor on every user re-drop: "corner-anchored
+  until the user intervenes" is nothing but the family lifecycle (a grab disarms the slot, nothing
+  re-arms it, the membership rule takes over — the opener is a desktop icon outside the desktop's
+  consumption, the clock is consumed and proportionally tracks). The desktop's browser-resize
+  reflow (`WorldWdgt._reLayoutDesktop`) is just the generic consumed-children loop + this corner
+  pass — the last `instanceof` placement dispatch died with the corner-spec dissolution arc. Since
+  a corner-armed child can sit in a CONSUMING holder, the fractional recorder
+  (`_rememberFractionalSituationInHoldingPanel`) refuses to shadow any spec that `ownsPlacement()`
+  — the seed drain fills only free-floating entrants.
 - **`StretchLayoutSpec`** — the one FOLLOWER (`ownsPlacement()` false): the child's proportional
   placement record in a fractional-consuming holder, as four EDGE fractions of the holder's box
   (extents derive from independently ROUNDED edges in `grantedBoundsWithin`, so abutting children

@@ -400,8 +400,13 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    cycle.
 5. Attach the desktop children in ONE settle batch via the base `_addNoSettle` (the grid mixin
    overrides only `add`, so `_addNoSettle` does NOT re-place them — restored positions are
-   preserved); then `setColor` + `wallpaper.setPattern` (sequential self-settling public ops);
-   await `whenReady`; repaint. Never a raw layout core (DETERMINISM.md risk 4).
+   preserved), **passing each child's deserialized `layoutSpec` through** — the snapshot's
+   attachment state is authoritative: without the explicit arg the add resolves
+   `defaultLayoutSpecWhenAddedTo` (nil) over the restored slot, disarming the desktop
+   furniture's corner knobs and downgrading every stretch record to a seed-drain geometry
+   re-derive (the fraction drift the record law forbids); then `setColor` +
+   `wallpaper.setPattern` (sequential self-settling public ops); await `whenReady`; repaint.
+   Never a raw layout core (DETERMINISM.md risk 4).
 
 `WellKnownObjects.resolveApp(className)` returns a **memoized fresh app singleton** — an
 `IconicDesktopSystemWindowedApp` subclass is a stateless config holder (its one window lives on

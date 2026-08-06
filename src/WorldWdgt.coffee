@@ -613,8 +613,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @_makePrettier()
 
     acm = new AnalogClockWdgt
-    acm._applyBounds (new Point @right()-80-@desktopSidesPadding, @top() + @desktopSidesPadding), new Point 80, 80
-    @add acm
+    acm._applyExtent new Point 80, 80
+    # the creator ARMS the clock's corner knob (top-right); the corner pass places it, so
+    # no hand-computed position here. Corner-anchored until the user grabs it -- the grab
+    # disarms the slot and the membership rule takes over (proportional tracking).
+    @add acm, nil, acm.cornerSpec
 
     # TODO find a way to put this back
     # demoMenus.createWelcomeMessageWindowAndShortcut()
@@ -1986,38 +1989,22 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @pendingFractionalReRecords.clear()
 
   _reLayoutDesktop: ->
-    binOpenerWdgt = @firstChildSuchThat (w) ->
-      w instanceof BinOpenerWdgt
-    if binOpenerWdgt?
-      if binOpenerWdgt.userMovedThisFromComputedPosition
-        binOpenerWdgt._moveInDesktopToFractionalPosition()
-        if !binOpenerWdgt.layoutSpec?.wasPositionedSlightlyOutsidePanel
-          binOpenerWdgt._moveWithin @
-      else
-        # anchored desktopSidesPadding px inside the corner, by its own extent
-        # (was a hardcoded `new Point 75, 75`, the old standard icon extent)
-        binOpenerWdgt._applyMoveTo @bottomRight().subtract binOpenerWdgt.extent().add @desktopSidesPadding
-
-    analogClockWdgt = @firstChildSuchThat (w) ->
-      w instanceof AnalogClockWdgt
-    if analogClockWdgt?
-      if analogClockWdgt.userMovedThisFromComputedPosition
-        analogClockWdgt._moveInDesktopToFractionalPosition()
-        if !analogClockWdgt.layoutSpec?.wasPositionedSlightlyOutsidePanel
-          analogClockWdgt._moveWithin @
-      else
-        analogClockWdgt._applyMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
-
     @children.forEach (child) =>
-      # reposition the consumed desktop children (the bin opener and clock are handled
-      # above) -- membership is the SAME consumesFractionalGeometryOf rule the seed and
-      # the drains ask, so read-side and seed-side exclusions (icons, chrome, the hand)
-      # cannot drift
-      if child != binOpenerWdgt and child != analogClockWdgt and @consumesFractionalGeometryOf child
+      # reposition the consumed desktop children -- membership is the SAME
+      # consumesFractionalGeometryOf rule the seed and the drains ask, so read-side and
+      # seed-side exclusions (icons, chrome, the hand) cannot drift. A corner-ARMED child
+      # (the clock) has no stretch record, so only the harmless keep-within clamp touches
+      # it here before the corner pass below places it; the bin opener is an icon, outside
+      # the rule entirely.
+      if @consumesFractionalGeometryOf child
         if child.layoutSpec?.isStretchElement?()
           child._moveInDesktopToFractionalPosition()
         if !child.layoutSpec?.wasPositionedSlightlyOutsidePanel
           child._moveWithin @
+    # the desktop furniture (bin opener bottom-right, clock top-right) rides the standard
+    # corner pass; this reflow runs OUTSIDE the settle's base _reLayout (the browser-resize
+    # handler calls it directly), so run the pass here too
+    @_reLayoutCornerInternalChildren()
   
   # WorldWdgt events:
 
@@ -2543,13 +2530,17 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     #    grid mixin does NOT re-place them (their restored positions are preserved) — the
     #    sanctioned public-equivalent path (never a raw layout core; see DETERMINISM.md).
     #    Clear each child's parent first (deserialize pre-set it to {"$wk":"world"}) so the
-    #    attach is a clean re-parent.
+    #    attach is a clean re-parent. The SNAPSHOT's attachment state is authoritative:
+    #    re-arm each child's deserialized spec explicitly, else the add would resolve
+    #    defaultLayoutSpecWhenAddedTo (nil) over it — disarming the furniture's corner
+    #    knobs, and downgrading every stretch record to a geometry re-derive (the fraction
+    #    drift the record law forbids).
     @_settleLayoutsAfter =>
       for childRef in (section.children or [])
         child = resolve childRef
         if child?
           child.parent = nil
-          @_addNoSettle child
+          @_addNoSettle child, layoutSpec: child.layoutSpec
     # 8. desktop colour + wallpaper (sequential self-settling public ops).
     restoredColor = resolve section.desktopColor
     @setColor restoredColor if restoredColor?
