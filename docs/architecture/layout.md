@@ -479,3 +479,24 @@ re-attempted — is in the archived plans, indexed in `docs/archive/INDEX.md`:
 - **`proper-layouts-4.1-pure-measure-campaign-plan.md`** — the `preferredExtentForWidth` measure protocol (§4.1).
 - **`fractional-widget-bounds-investigation-plan.md`** — the integer-placement enforcement arc (§6); ⚖ divider-drag
   reproportion is sub-pixel-sensitive — recapture, don't chase.
+- **`layout-spec-family-unification-plan.md`** + **`layout-spec-family-followups-plan.md`** — the enum + loose box
+  fields collapsed into the per-child spec-object family and the axis-parameterized `StackLayoutEngine` (§4.2), then
+  the cell knobs went menu-reachable, drop-slots extended to content stacks, and the dock completed; ⚖⚖ specs SURVIVE
+  detachment; ⚖ CoffeeScript defaults swallow nil sentinels.
+- **`stretch-fractional-auto-bookkeeping-plan.md`** — the framework-owned RECORD LAW: the fill-only `__add` seed +
+  the F6 re-record family (§4.2 stretch entry); ⚖ fill never overwrites a recorded spec; ⚖ imposition rides the
+  polymorphic plain twins.
+- **`stretch-layout-spec-unification-plan.md`** — the fractional trio became `StretchLayoutSpec`, the one FOLLOWER
+  (§4.2); ⚖⚖ AUTHORITY DIRECTION (`ownsPlacement()`) is the family's real axis; ⚖ an ARMED spec is not an inert
+  field — the recorder gates on the consumer.
+- **`kept-layout-spec-unification-plan.md`** — the KNOB MODEL: lifecycle = carrier-owned KNOB vs per-attachment
+  RECORD, container reads slot-first through `contentStackSpec()`, the island hand-carry deleted (§4.2); ⚖⚖ a
+  mechanism whose only purpose is preserving behavior is a backcompat smell.
+- **`desktop-corner-spec-dissolution-plan.md`** — corner-spec sizing became optional, the desktop furniture carries
+  creator-armed corner knobs, the last `instanceof` placement dispatch died (§4.2 corner entry); ⚖ the recorder
+  refuses any spec that `ownsPlacement()`; ⚖ `loadWorldSnapshot` re-arms each child's deserialized slot.
+- **`island-content-preferences-plan.md`** — the island LENS: its content-stack preferences (and its name) ARE its
+  content's (§4.2; transforms.md §5.4); ⚖ a lens answer a consumer CAPTURES during the materialize's empty window
+  needs a pre-seed or an arrival-time nudge.
+- **`census-as-built-extension-plan.md`** — the census certifies as-built and post-resize separately (§7); ⚖ a
+  calibrated tolerance constant can enshrine a broken state — clamp at the producer instead.

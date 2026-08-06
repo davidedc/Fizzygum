@@ -26,7 +26,7 @@ Keep these distinct — most confusion comes from conflating them:
 | Layer | What | Integer? | Where |
 |---|---|---|---|
 | **A. Applied bounds** (`@bounds`) | where a widget is placed + its size on screen | **YES — enforced** | `@position()`, `@extent()` |
-| **B. Desired / logical geometry** | what layout *wants* before rounding | may be fractional, **remembered on the side** | `@desiredPosition`, `@desiredExtent`, `@positionFractionalInHoldingPanel` |
+| **B. Desired / logical geometry** | what layout *wants* before rounding | may be fractional, **remembered on the side** | `@desiredPosition`, `@desiredExtent`, the `StretchLayoutSpec` edge fractions |
 | **C. Internal content rendering** | the pixels a widget draws *inside* its box | fractional & legitimate | appearance `paintFunction` / `renderingHelper` |
 
 Layer A is the "placement & sizing" the policy governs. Layers B and C are *supposed* to
@@ -79,13 +79,15 @@ not the arrange-apply path, which is how the ~2018→2025 fractional-placement g
 ## 3. Fractional geometry "on the side" (Layer B)
 
 The framework deliberately keeps the *fractional* intent even though it applies integers.
-The canonical case is a child inside a **stretchable panel**: its applied position is
-rounded, but its *fractional position relative to the holding panel* is remembered
-(`Widget._moveToNoSettle` → `@positionFractionalInHoldingPanel`), so that when the
-panel is later resized, the child is repositioned from the exact fraction rather than
-drifting off the accumulated rounding. The comment on `Widget._moveToNoSettle` spells this
-out. Same idea for `@desiredPosition` / `@desiredExtent`: layout records what it wants; the
-mutator rounds what it commits.
+The canonical case is a child inside a **stretchable panel** (or on the desktop): its
+applied bounds are integer, but its *proportional situation in the holding panel* is
+remembered as the four EDGE fractions of a `StretchLayoutSpec` record
+(layout.md §4.2 — written at intent moments by the `__add` seed / F6 re-record drains,
+never re-derived from the imposed integers), so that when the panel is later resized, the
+child's box derives from the exact fractions — independently rounded per edge in
+`grantedBoundsWithin`, so abutting children share boundaries — rather than drifting off
+accumulated rounding. Same idea for `@desiredPosition` / `@desiredExtent`: layout records
+what it wants; the mutator rounds what it commits.
 
 **Rule:** never "fix" a fractional *desired* value by rounding it at the source — that
 destroys the information Layer B exists to preserve. Rounding belongs only at the commit

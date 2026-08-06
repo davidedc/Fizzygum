@@ -388,14 +388,15 @@ assertion a recapture after a regression silently stores two different hashes an
   prompt's value lives in a `StringFieldWdgt` (the single prompt entry field — was `StringFieldMorph`, now `StringWdgt`-backed)
   that DEFAULTS to the current width, so CLICK the field to focus it
   (`StringFieldWdgt.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
-  which reads the field's `getValue()` into `setWidthOfElementWhenAdded`. Typing WITHOUT focusing the field leaves the default, so Ok
-  re-applies the current width = no visible change. (If instead you drive the prompt's `SliderWdgt` via
-  `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a scalar — a scalar indexes as `fraction[0]`=undefined → a NaN
-  click point → a non-finite base-width → a "Point x must be finite" paint crash.) (2) base-width only bites when the paragraph's remembered
-  `widthOfStackWhenAdded` equals the current available stack width; the SHIPPED default paragraph remembered it at CONSTRUCTION (before
-  `doc._applyExtent`), so with elasticity 1 the proportional-width calc (`availW·baseWidth/stackWhenAdded`) cancels to full width — re-anchor
-  the paragraph's initial dimensions to the resized stack in the FIXTURE: `target.layoutSpec.captureInitialPlacement target,
-  doc.contents`.
+  which reads the field's `getValue()` into `setDesiredWidth` (pre-U4 name: `setWidthOfElementWhenAdded`; the prompt still says
+  "base width"). Typing WITHOUT focusing the field leaves the default, so Ok re-applies the current width = no visible change.
+  (If instead you drive the prompt's `SliderWdgt` via `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a
+  scalar — a scalar indexes as `fraction[0]`=undefined → a NaN click point → a non-finite base-width → a "Point x must be finite"
+  paint crash.) (2) under the grow model (`width = round(min(availW, desiredWidth + grow·(availW−desiredWidth)))`) an explicit
+  base-width edit PINS the element (grow 0 — "I want THIS width"), so the knob always bites; the fixture's
+  `target.layoutSpec.captureInitialPlacement target, doc.contents` re-anchor predates that pin (the OLD proportional model's
+  width calc cancelled to full width when the remembered add-time stack width matched — the U1-deleted snapshot) and is now just
+  a harmless re-capture.
 
 ## Menus & popups
 
@@ -1471,7 +1472,7 @@ assertion a recapture after a regression silently stores two different hashes an
   distribution loops read — `getDesiredDim`/`getMinDim`/`getMaxDim` — gate on `isInCollapsedSubtree()` and return zero for a
   collapsed cell (`:4089-4098`): the moment a cell collapses, `_reLayout` re-runs and hands its WHOLE share to the siblings
   by spreadability (the divider rides to the holder's edge; no gap), every resize-while-collapsed keeps distributing to the
-  others, and `unCollapse()` re-runs the same distribution off the UNTOUCHED `_stackElementSpec` — a collapse/unCollapse
+  others, and `unCollapse()` re-runs the same distribution off the UNTOUCHED division spec (the cell's `_divisionBox` knob) — a collapse/unCollapse
   round-trip at a fixed size is BYTE-EQUAL, and collapse → resize → unCollapse ends as if never collapsed. Verified
   cross-test: this macro's image_1/image_5 are byte-identical (same dataHash, both dprs) to `macroLayoutsAndVisibility`'s —
   the two tests share their exact endpoints and differ ONLY in who holds the space in between. Drive

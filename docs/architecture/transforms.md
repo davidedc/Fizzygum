@@ -477,5 +477,8 @@ window is seen as a window by drop policy). Full serialization internals:
     duplicate/save/pick-up.
   - `claimsspace-footprint-default-and-scroll-reachability-plan.md` — the D1 (`footprint` default)
     and D2 (scroll reachability) decisions.
+  - `island-content-preferences-plan.md` — the LENS declarations (§5.4): content-stack
+    preferences + `colloquialName` read through to the content; ⚖ a lens answer a consumer
+    CAPTURES during the materialize's empty window needs a pre-seed or an arrival-time nudge.
 - The `footprint`-default flip (owner decision D1, 2026-07-17) makes a sugar-rotated document
   image reflow its siblings per drag — the current, intended behaviour, not a regression.
