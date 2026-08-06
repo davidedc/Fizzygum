@@ -290,8 +290,10 @@ class Widget extends TreeNode
   # finally, via world._dirtyDescendantFlagged). Outside a flush every flag is false — which is why
   # it must stay in @serializationTransients even though its resting own-value is false.
   hasDirtyDescendant: false
-  # The ACTIVE layout spec (a LayoutSpec-family object) — HOW my container places me right
-  # now. nil = FREE-FLOATING: the absence of a spec, the layouting system leaves me alone.
+  # The ACTIVE layout spec (a LayoutSpec-family object) — HOW I participate in my
+  # container's layout right now. FREE-FLOATING = no spec OWNS my placement: nil, or a
+  # follower spec (StretchLayoutSpec — proportional placement MEMORY, ownsPlacement()
+  # false) — see isFreeFloating and the LayoutSpec family contract.
   layoutSpec: nil
   # The kept content-stack spec (VerticalStackLayoutSpec / FrameContentLayoutSpec) — spec
   # DATA persists across detachment (an element grabbed OUT of a stack keeps its explicit
@@ -330,8 +332,6 @@ class Widget extends TreeNode
   # computed position and rather we stick with the
   # position the user gave.
   userMovedThisFromComputedPosition: false
-  positionFractionalInHoldingPanel: nil
-  wasPositionedSlightlyOutsidePanel: false
 
   initialiseDefaultFrameContentLayoutSpec: ->
     @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
@@ -745,8 +745,13 @@ class Widget extends TreeNode
       @children[0]._fullDestroyNoSettle()
     return nil
 
+  # Free-floating = NO SPEC OWNS MY PLACEMENT: no layoutSpec at all, or a follower spec
+  # (StretchLayoutSpec — proportional placement MEMORY whose ownsPlacement() is false).
+  # Both mean the layouting system leaves me alone between my holder's own re-lays: I am
+  # user-movable/resizable, my mutations don't climb into my parent's layout, handles
+  # show. See the LayoutSpec family contract.
   isFreeFloating: ->
-    !@layoutSpec?
+    !@layoutSpec? or !@layoutSpec.ownsPlacement()
 
   _setLayoutSpec: (newLayoutSpec) ->
     if @layoutSpec == newLayoutSpec
@@ -1043,23 +1048,6 @@ class Widget extends TreeNode
   position: ->
     @bounds.origin
 
-  positionFractionalInWidget: (theWidget) ->
-    [relativeXPos, relativeYPos] = @positionPixelsInWidget theWidget
-    fractionalXPos = relativeXPos / theWidget.width()
-    fractionalYPos = relativeYPos / theWidget.height()
-    return [fractionalXPos, fractionalYPos]
-
-  extentFractionalInWidget: (theWidget) ->
-    width = @width()
-    height = @height()
-    fractionalWidth = width / theWidget.width()
-    fractionalHeight = height / theWidget.height()
-    return [fractionalWidth, fractionalHeight]
-
-  positionPixelsInWidget: (theWidget) ->
-    relativePos = @position().toLocalCoordinatesOf theWidget
-    return [relativePos.x, relativePos.y]
-  
   extent: ->
     @bounds.extent()
   
@@ -1646,25 +1634,18 @@ class Widget extends TreeNode
     return nil if !@parent?._materializedBySugar
     @_enclosingSoleContentIsland()
 
-  # Affine transforms (§7.5 latent 3): MOVE my holding-panel / stack bookkeeping to `target` across a
-  # sugar-island materialize (content→island) or dematerialize (island→content), so the container's
-  # _reLayout finds it on the child it actually iterates (the panel/stack sees the ISLAND, not the wrapped
-  # content). The index + the layoutSpec ENUM already ride with the reparent (_addNoSettle args); these are
-  # the fields it does NOT carry: the STRETCHABLE-PANEL fractional geometry (positionFractionalInHolding-
-  # Panel / extentFractionalInHoldingPanel / wasPositionedSlightlyOutsidePanel — else the panel's _reLayout
-  # reads @positionFractionalInHoldingPanel[0] on a nil and aborts the whole relayout as LAYOUT_ERROR), and
-  # the kept STACK spec object (else the island is stack-active but has a nil kept spec, the stack's
-  # init block is skipped because the active spec already matches, and _childWidthInStack
+  # Affine transforms (§7.5 latent 3): MOVE my KEPT stack spec to `target` across a
+  # sugar-island materialize (content→island) or dematerialize (island→content), so the stack's
+  # _reLayout finds it on the child it actually iterates (the stack sees the ISLAND, not the wrapped
+  # content). The index + the ACTIVE layoutSpec already ride with the reparent (_addNoSettle's
+  # layoutSpec: arg) — which since the spec-unification arc also carries the stretch panel's
+  # proportional record (a StretchLayoutSpec IS the active spec), so the kept STACK spec object is
+  # the ONE piece left to hand-carry (else the island is stack-active but has a nil kept spec, the
+  # stack's init block is skipped because the active spec already matches, and _childWidthInStack
   # falls back to raw available width instead of proportional tracking). MOVE (nil the source) keeps a
   # single owner, so a fullCopy of the wrapped figure never double-references the shared spec object.
-  _moveHoldingPanelBookkeepingTo: (target) ->
-    target.positionFractionalInHoldingPanel = @positionFractionalInHoldingPanel
-    target.extentFractionalInHoldingPanel = @extentFractionalInHoldingPanel
-    target.wasPositionedSlightlyOutsidePanel = @wasPositionedSlightlyOutsidePanel
+  _moveKeptStackSpecTo: (target) ->
     target._stackElementSpec = @_stackElementSpec
-    @positionFractionalInHoldingPanel = nil
-    @extentFractionalInHoldingPanel = nil
-    @wasPositionedSlightlyOutsidePanel = false
     @_stackElementSpec = nil
 
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
@@ -1691,8 +1672,8 @@ class Widget extends TreeNode
     # myIndex, me free-floating inside it); homing an empty tracking island is safe (its _reLayoutChildren
     # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
     # island stays a detached root and I move into it, exactly as before.
-    @_moveHoldingPanelBookkeepingTo island                     # the fractional/stack bookkeeping rides to the panel/stack's new child (the island)
-    formerParent?._addNoSettle island, position: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec
+    @_moveKeptStackSpecTo island                               # the kept stack spec rides to the stack's new child (the island)
+    formerParent?._addNoSettle island, position: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec (incl. a stretch record)
     island._addNoSettle @                                      # then reparent me into the now-homed island (free-floating child)
     island
 
@@ -1707,8 +1688,8 @@ class Widget extends TreeNode
     islandIndex = islandParent.children.indexOf island
     islandLayoutSpec = island.layoutSpec
     pos = @position()
-    island._moveHoldingPanelBookkeepingTo @                      # hand the fractional/stack bookkeeping back to me (the panel/stack's child once more)
-    islandParent._addNoSettle @, position: islandIndex, layoutSpec: islandLayoutSpec   # reparent me back into the island's slot + spec
+    island._moveKeptStackSpecTo @                                # hand the kept stack spec back to me (the stack's child once more)
+    islandParent._addNoSettle @, position: islandIndex, layoutSpec: islandLayoutSpec   # reparent me back into the island's slot + spec (incl. a stretch record)
     @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
     # R2 (§6 affine): a highlight (or any layout-inert ephemeral chrome, isEphemeral) parented INTO this
     # island while it was rotated must ride OUT before we drop it — else _destroyNoSettle just nulls
@@ -2052,51 +2033,37 @@ class Widget extends TreeNode
         return
     WorldWdgt.geometryVersion++
 
-  # moving to fractional position within the desktop is
-  # different from the case below because the desktop can be
-  # resized to any ratio
+  # The desktop's position-only imposition from the child's StretchLayoutSpec (the panel
+  # consumer instead GRANTS whole boxes through the child's _reLayout — see
+  # StretchablePanelWdgt._reLayout; the desktop moves without sizing, so it keeps this
+  # imposer).
   _moveInDesktopToFractionalPosition: (boundsOfParent) ->
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
     # we do one dimension at a time here for a subtle reason: if
     # say a window has the left side beyond the left side of the desktop
-    # then the x of positionFractionalInHoldingPanel is NEGATIVE
+    # then its recorded left-edge fraction is NEGATIVE
     # and as one shrinks the browser the window comes TO THE RIGHT.
     # This might make some mathematical sense but is very unintuitive so
     # we just don't move widgets along the dimensions that have a negative
-    # fractional component
-    # ⚠ The three fractional IMPOSERS below MUST stay on the polymorphic PLAIN twins
-    # (_applyMoveTo / _applyExtent), never the Base twins -- FALSIFIED BOTH WAYS
-    # (auto-bookkeeping arc P1, 2026-08-05): a TransformFrameWdgt island OVERRIDES
-    # _applyMoveTo to ride its pinned anchor along (Bug-G), so a Base-twin imposition
-    # strands the anchor and renders a tilted stretch child offset; and _applyExtent's
-    # schedule-valve gives a resized composite child the deferred second re-lay its
-    # interior (wrapping text, nested scroll) needs to converge -- on the Base twin both
-    # classes of test churned. Imposition is arrange-driven but its TARGETS are arbitrary
-    # figures, so the polymorphic dispatch is load-bearing.
-    if @positionFractionalInHoldingPanel[0] > 0
-      @_applyMoveTo (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
-    if @positionFractionalInHoldingPanel[1] > 0
-      @_applyMoveTo (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
-
-  _moveInStretchablePanelToFractionalPosition: (boundsOfParent) ->
-    if !boundsOfParent?
-      boundsOfParent = @parent.bounds
-
-    # plain twin, deliberately -- see the imposer comment above (island anchor-carry).
-    @_applyMoveTo (
-      new Point \
-       boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]),
-       boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])
-    ).round()
-
-  _setExtentToFractionalExtentInPaneUserHasSet: (boundsOfParent) ->
-    if !boundsOfParent?
-      boundsOfParent = @parent.bounds
-
-    # plain twin, deliberately -- see the imposer comment above (schedule-valve convergence).
-    @_applyExtent new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
+    # edge fraction
+    # ⚠ Fractional IMPOSITION — here and on the panel's granted path — MUST ride the
+    # polymorphic PLAIN twins (_applyMoveTo / _applyExtent), never the Base twins:
+    # FALSIFIED BOTH WAYS (auto-bookkeeping arc P1, 2026-08-05): a TransformFrameWdgt
+    # island OVERRIDES _applyMoveTo to ride its pinned anchor along (Bug-G), so a
+    # Base-twin imposition strands the anchor and renders a tilted stretch child offset;
+    # and _applyExtent's schedule-valve gives a resized composite child the deferred
+    # second re-lay its interior (wrapping text, nested scroll) needs to converge -- on
+    # the Base twin both classes of test churned. Imposition is arrange-driven but its
+    # TARGETS are arbitrary figures, so the polymorphic dispatch is load-bearing (base
+    # Widget._reLayout's granted path routes through exactly these twins, which is what
+    # sanctions the panel's grant shape).
+    spec = @layoutSpec
+    if spec.leftFraction > 0
+      @_applyMoveTo new Point boundsOfParent.left() + Math.round(spec.leftFraction * boundsOfParent.width()), @top()
+    if spec.topFraction > 0
+      @_applyMoveTo new Point @left(), boundsOfParent.top() + Math.round(spec.topFraction * boundsOfParent.height())
 
   
   # this one actually immediately changes the position and
@@ -2110,13 +2077,16 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  moveTo: (aPoint, widgetStartingTheChange = nil) ->
-    @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
+  moveTo: (aPoint) ->
+    @_settleLayoutsAfter => @_moveToNoSettle aPoint
 
   # Non-settling move core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredPosition + invalidate,
   # no flush -- rides an OUTER settle. Callers: public moveTo (self-settles) + _moveToDeferredSettle
   # (rides the ONE end-of-cycle flush). Feature code uses those PUBLIC entrypoints, never this core directly.
-  _moveToNoSettle: (aPoint, widgetStartingTheChange = nil) ->
+  # (The per-move-step fractional remember that used to sit here recorded PRE-flush geometry -- the
+  # staleness class the post-flush re-record drain fixed; the handle's release enqueue is the one
+  # gesture record now, so the hook and its widgetStartingTheChange plumbing are deleted.)
+  _moveToNoSettle: (aPoint) ->
     if not @isFreeFloating()
       return
     else
@@ -2127,61 +2097,46 @@ class Widget extends TreeNode
       unless @position().equals newPos
         @desiredPosition = newPos
         @_invalidateLayout()
-        # all the moves via the handles arrive here,
-        # where we remember the fractional position in the
-        # holding panel. That is so for example moving
-        # items inside a StretchablePanel causes their
-        # relative position to be remembered, so resizing
-        # the stretchable panel will get them to the
-        # correct positions
-        if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
-          @_rememberFractionalPositionInHoldingPanel()
 
   # PRIVATE DEFERRED-SETTLE move entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _moveToNoSettle core).
-  _moveToDeferredSettle: (aPoint, widgetStartingTheChange = nil) ->
+  _moveToDeferredSettle: (aPoint) ->
     if world?.deferredSettlingEnabled
-      @_deferredSettleDeclare => @_moveToNoSettle aPoint, widgetStartingTheChange
+      @_deferredSettleDeclare => @_moveToNoSettle aPoint
     else
-      @_settleLayoutsAfter => @_moveToNoSettle aPoint, widgetStartingTheChange
+      @_settleLayoutsAfter => @_moveToNoSettle aPoint
 
 
-  # §5c: record the fractional geometry on the FIGURE (my enclosing sole-content island) w.r.t. the
-  # figure's REAL holding panel — not on ME w.r.t. @parent. When I am wrapped in a sugar island a
-  # handle-resize/move mutates ME against @parent == the ISLAND, but the panel iterates + reads the
-  # ISLAND's fractional fields (I am not its child), so recording on me leaves the figure's panel-relative
-  # data stale (it then never re-tracks on a panel resize). _enclosingIslandFigure() is identity off any
-  # island ⇒ fig == @ ⇒ byte-identical dormant for the entire un-wrapped population. Guarded on fig.parent?
-  # so a content wrapped in an ORPHAN island (fig.parent nil) skips instead of throwing.
-  _rememberFractionalPositionInHoldingPanel: ->
+  # Record my proportional situation in my holding panel — a StretchLayoutSpec derived from
+  # CURRENT geometry, created/updated on the FIGURE (my enclosing sole-content island) w.r.t.
+  # the figure's REAL holding panel, not on ME w.r.t. @parent (§5c: when I am wrapped in a
+  # sugar island a handle gesture mutates ME, but the panel iterates + reads the ISLAND — so
+  # the record must live there; _enclosingIslandFigure() is identity off any island ⇒
+  # byte-identical dormant for the entire un-wrapped population; guarded on fig.parent? so a
+  # content wrapped in an ORPHAN island skips instead of throwing). The framework OWNS
+  # ordinary placement records (auto-bookkeeping arc, 2026-08-05): a widget entering a
+  # fractional-consuming holder is seeded automatically (the __add seed -> the world's fill
+  # drain station), so a plain builder never calls this — builders may place before OR after
+  # adding, since the arrange-time heal's pre-placement guess is marked PROVISIONAL and the
+  # drain re-derives it once at builder-final geometry (the D8 provenance gate; the historical
+  # place-before-add builder rule is retired). The remaining explicit callers are the
+  # RE-RECORD family: sites re-placing or re-sizing a widget that ALREADY carries a recorded
+  # spec (drop, duplicate, file-load, app re-home, spawnNextTo of a stored widget, uncollapse,
+  # handle-release via the post-flush drain), which the fill drain deliberately respects.
+  # ⚠ Gated on the figure's parent CONSUMING the record: the F6 sites fire for drops /
+  # uncollapses into ARBITRARY containers (stacks, documents, nested windows), and arming an
+  # ACTIVE spec there would shadow the container's own adoption (a stack child whose
+  # layoutSpec is suddenly a stretch spec breaks every isStackElementActive path) — the old
+  # field writes were inert on non-consuming parents, an armed spec is not, so the recorder
+  # carries the membership gate for every caller.
+  _rememberFractionalSituationInHoldingPanel: (provisional = false) ->
     fig = @_enclosingIslandFigure()
-    return if !fig.parent?
-    fig.positionFractionalInHoldingPanel = fig.positionFractionalInWidget fig.parent
-
-  _rememberFractionalExtentInHoldingPanel: ->
-    fig = @_enclosingIslandFigure()
-    return if !fig.parent?
-    fig.extentFractionalInHoldingPanel = fig.extentFractionalInWidget fig.parent
-
-  # Derive my proportional situation in my holding panel from my CURRENT geometry (the
-  # figure's, so islands are handled). Since the auto-bookkeeping arc (2026-08-05, resolving
-  # the old "do this automatically on add" TODO) the framework OWNS ordinary placement
-  # records: a FRESH widget entering a fractional-consuming holder is seeded automatically
-  # (the __add seed -> the world's fill-only drain station, plus the stretch panel's
-  # arrange-time heal), so a plain builder never calls this. The remaining explicit callers
-  # are the RE-RECORD family: sites re-placing or re-sizing a widget that ALREADY carries
-  # bookkeeping (drop, duplicate, file-load, app re-home, spawnNextTo of a stored widget,
-  # uncollapse), which the fill-only seed deliberately respects. ⚠ Builder rule: when
-  # building into a STRETCH PANEL, place BEFORE adding -- the panel's arrange-time heal
-  # records at the add's settle, so a later placement would be pinned wrong (world-side
-  # sites may place after adding; the drain fills them post-placement).
-  _rememberFractionalSituationInHoldingPanel: ->
-    @_rememberFractionalPositionInHoldingPanel()
-    @_rememberFractionalExtentInHoldingPanel()
-    # the outside-panel flag rides the figure too (§5c), for the SAME reason: the panel reads it off its
-    # child (the figure), not off my wrapped self.
-    fig = @_enclosingIslandFigure()
-    fig.wasPositionedSlightlyOutsidePanel = ! fig.parent.bounds.containsRectangle fig.bounds  if fig.parent?
+    return if !fig.parent? or !fig.parent.consumesFractionalGeometryOf fig
+    spec = fig.layoutSpec
+    unless spec?.isStretchElement?()
+      spec = new StretchLayoutSpec()
+      fig._setLayoutSpec spec
+    spec.recordFor fig, provisional
   
   __commitMoveTo: (aPoint) ->
     # no cache-break here: __commitMoveBy breaks the caches itself, so a zero-delta move
@@ -2315,14 +2270,17 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  setExtent: (aPoint, widgetStartingTheChange = nil) ->
-    @_settleLayoutsAfter => @_setExtentNoSettle aPoint, widgetStartingTheChange
+  setExtent: (aPoint) ->
+    @_settleLayoutsAfter => @_setExtentNoSettle aPoint
 
   # Non-settling extent core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
   # but do NOT flush -- so the mutation rides an OUTER settle. Two callers: the public setExtent (self-settles
   # via _settleLayoutsAfter) and the _setExtentDeferredSettle (rides the ONE end-of-cycle flush). Feature
   # code uses one of those PUBLIC entrypoints, never this core directly.
-  _setExtentNoSettle: (aPoint, widgetStartingTheChange = nil) ->
+  # (The per-resize-step fractional remember that used to sit here recorded PRE-flush geometry -- the
+  # staleness class the post-flush re-record drain fixed; the handle's release enqueue is the one
+  # gesture record now, so the hook and its widgetStartingTheChange plumbing are deleted.)
+  _setExtentNoSettle: (aPoint) ->
     if not @isFreeFloating()
       return
     else
@@ -2333,23 +2291,14 @@ class Widget extends TreeNode
       unless @extent().equals newExtent
         @desiredExtent = newExtent
         @_invalidateLayout()
-        # all the resizes via the handles arrive here,
-        # where we remember the fractional size in the
-        # holding panel. That is so for example resizing
-        # items inside a StretchablePanel causes their
-        # relative size to be remembered, so resizing
-        # the stretchable panel will get them to the
-        # correct dimensions
-        if widgetStartingTheChange?.changeShouldRememberFractionalGeometry?() and @parent?
-          @_rememberFractionalExtentInHoldingPanel()   # §5c: route through the figure (was an inline write against @parent, stale when I am island-wrapped)
 
   # PRIVATE DEFERRED-SETTLE extent entrypoint -- see the FAMILY comment on _setMaxDimDeferredSettle (rule [O]
   # caller-allowlist; world.deferredSettlingEnabled A/B switch; BOTH branches reach the _setExtentNoSettle core).
-  _setExtentDeferredSettle: (aPoint, widgetStartingTheChange = nil) ->
+  _setExtentDeferredSettle: (aPoint) ->
     if world?.deferredSettlingEnabled
-      @_deferredSettleDeclare => @_setExtentNoSettle aPoint, widgetStartingTheChange
+      @_deferredSettleDeclare => @_setExtentNoSettle aPoint
     else
-      @_settleLayoutsAfter => @_setExtentNoSettle aPoint, widgetStartingTheChange
+      @_settleLayoutsAfter => @_setExtentNoSettle aPoint
 
   
   # The silent extent-commit LEAF: round + min-extent clamp + commit @bounds, NO repaint / NO self-relayout. Returns
@@ -3323,22 +3272,23 @@ class Widget extends TreeNode
   # NON-settling _addNoSettle and then flushes layouts once (_settleLayoutsAfter), so a
   # top-level caller (app / macro / event handler) is left with a consistent world -- no manual
   # settle/yield. _addNoSettle is the COMPLETE add minus the settle (shadow management + structural
-  # link-in + fractional-position recording); add() is just the settle-wrap over it. Callers that
+  # link-in + the fractional-record seed enqueue); add() is just the settle-wrap over it. Callers that
   # run INSIDE a layout pass (_reLayout / _reLayoutSelf), build their own innards during
   # construction, or tear down / re-home from a private chain call _addNoSettle DIRECTLY (it does not
   # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
-  # removeShadow and the fractional step is skipped. See docs/archive/deferred-layout-refit-and-add-design.md (D3).
+  # removeShadow. See docs/archive/deferred-layout-refit-and-add-design.md (D3).
   add: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
   # every internal layout-time / construction-time / teardown adder (it must NOT
   # flush layouts: it runs inside another mutation's settle, during construction, or from a
-  # private teardown chain). Full semantics: shadow management + invalidate + __add +
-  # _reactToBeingAdded / _reactToChildAdded / _reactToChildRemoved callbacks + fractional-position, but never
-  # recalculateLayouts. (The shadow/fractional steps fold in what add() used to do in its
-  # settle-wrap; they are no-ops for the fresh non-world children the internal adders pass.)
+  # private teardown chain). Full semantics: shadow management + invalidate + __add (which
+  # enqueues the fractional-record seed) + _reactToBeingAdded / _reactToChildAdded /
+  # _reactToChildRemoved callbacks, but never recalculateLayouts. (The shadow step folds in
+  # what add() used to do in its settle-wrap; it is a no-op for the fresh non-world
+  # children the internal adders pass.)
   # ??? TODO you should handle the case of Widget
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
@@ -3395,11 +3345,10 @@ class Widget extends TreeNode
     if @_reactToChildAdded?
       @_reactToChildAdded aWdgt
 
-    # fractional-position recording (folded in from add()): only meaningful for a world-level
-    # widget, skipped otherwise -- so a no-op for the internal adders.
-    if @ == world
-      aWdgt._rememberFractionalPositionInHoldingPanel()
-
+    # (The old synchronous world-add HALF-record died with the spec fold: it half-planted
+    # POSITION so the drain's either-missing condition would complete the pair at
+    # builder-final geometry -- an atomic StretchLayoutSpec cannot represent a half-record,
+    # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
   sourceChanged: ->
@@ -3416,13 +3365,14 @@ class Widget extends TreeNode
 
   calculateAndUpdateExtent: ->
 
-  # Does this container CONSUME its children's fractional bookkeeping (the proportional-
-  # reflow trio positionFractionalInHoldingPanel / extentFractionalInHoldingPanel /
-  # wasPositionedSlightlyOutsidePanel)? True only for the two consumers -- WorldWdgt
-  # (desktop reflow on browser resize, position-only) and StretchablePanelWdgt (full
-  # proportional re-lay). Asked by the __add seed below. Class-level query
-  # (type-test-elimination idiom -- no instanceof at the ask site).
-  consumesFractionalChildGeometry: ->
+  # Does this container CONSUME this child's proportional placement record (a
+  # StretchLayoutSpec on the child)? ONE membership rule per consumer, asked by the __add
+  # seed below, both world drain stations, AND the consumer's own reflow -- so the seed's
+  # exclusions and the arrange's read exclusions cannot drift. True only for the two
+  # consumers -- WorldWdgt (desktop reflow on browser resize, position-only) and
+  # StretchablePanelWdgt (full proportional re-lay) -- each stating its COMPLETE child
+  # rule. Class-level query (type-test-elimination idiom -- no instanceof at the ask site).
+  consumesFractionalGeometryOf: (child) ->
     false
 
   __add: (aWdgt, avoidExtentCalculation, position = nil) ->
@@ -3441,18 +3391,18 @@ class Widget extends TreeNode
     @_addChild aWdgt, position
     if !avoidExtentCalculation
       aWdgt.calculateAndUpdateExtent()
-    # FRACTIONAL-BOOKKEEPING SEED (framework-owned; stretch-fractional auto-bookkeeping
-    # arc): entering a holder that consumes fractional child geometry REQUESTS proportional
-    # bookkeeping; the world's drain station derives it once, AFTER the current JS turn's
-    # builder code finished placing things -- "last write wins", the semantics the
-    # historical per-call-site _rememberFractionalSituationInHoldingPanel() protocol
-    # implemented by hand at every placement endpoint. Layout-inert chrome (handles /
-    # carets / highlighters) is excluded exactly as the consuming arranges exclude it; the
-    # hand is world chrome, never a reflow subject. NOT recorded synchronously here: many
-    # builders place AFTER adding, so an add-time record would pin pre-placement geometry
-    # (the deferred-seed reasoning, plan §0).
-    if world? and @consumesFractionalChildGeometry() and
-    !aWdgt.isLayoutInert?() and aWdgt != world.hand
+    # FRACTIONAL-RECORD SEED (framework-owned; stretch-fractional auto-bookkeeping arc):
+    # entering a holder that consumes this child's fractional geometry REQUESTS a
+    # proportional record (a StretchLayoutSpec); the world's drain station derives it
+    # once, AFTER the current JS turn's builder code finished placing things -- "last
+    # write wins", the semantics the historical per-call-site
+    # _rememberFractionalSituationInHoldingPanel() protocol implemented by hand at every
+    # placement endpoint. The membership exclusions (layout-inert chrome, the hand,
+    # desktop icons) live in each consumer's consumesFractionalGeometryOf -- the ONE rule
+    # the seed, the drains, and the consumer's reflow all ask. NOT recorded synchronously
+    # here: many builders place AFTER adding, so an add-time record would pin
+    # pre-placement geometry (the deferred-seed reasoning).
+    if world? and @consumesFractionalGeometryOf aWdgt
       world.pendingFractionalBookkeepingSeeds.add aWdgt
     
 

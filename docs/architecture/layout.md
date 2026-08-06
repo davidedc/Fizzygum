@@ -198,11 +198,16 @@ genuinely must be sized-then-measured, the value is **handed forward** from the 
 ### 4.2 The layout-spec FAMILY — one object per attachment, carried by the child
 
 HOW a child participates in its container's layout is ONE spec object on the child — `Widget.layoutSpec`,
-the ACTIVE attachment. **Free-floating is the ABSENCE of a spec (nil)** — `isFreeFloating()` is a nil
-check, and the layouting system leaves such a widget alone. WHICH strategy places a child is answered by
-duck-typed capability queries on its spec (`isDivisionElement?()`, `isCornerInternal?()`,
-`isStackElementActive?()`, `isFrameContentActive?()`), never a type test. The family
-(`src/LayoutSpec.coffee` is the abstract base):
+the ACTIVE attachment. **Free-floating means NO SPEC OWNS the child's placement** — `layoutSpec` nil, or
+a FOLLOWER spec whose `ownsPlacement()` is false — and the layouting system leaves such a widget alone
+between its holder's own re-lays. The family base declares the AUTHORITY contract explicitly:
+`LayoutSpec.ownsPlacement() -> true` (the arrange places the child FROM the spec; user intent must edit
+the spec through its knobs — move a stack child by hand and the next arrange snaps it back);
+`StretchLayoutSpec` alone answers false (it is derived placement MEMORY that trails the child's own
+geometry — the child stays user-movable, handles show, its mutations don't climb). WHICH strategy places
+a child is answered by duck-typed capability queries on its spec (`isDivisionElement?()`,
+`isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`),
+never a type test. The family (`src/LayoutSpec.coffee` is the abstract base):
 
 - **`DivisionStackLayoutSpec`** — min/desired/max (both axes) + `axis` (`'x'` a row dividing width,
   `'y'` a vertical division stack dividing height) + `crossAlign` (`'stretch'` default, or
@@ -227,6 +232,29 @@ duck-typed capability queries on its spec (`isDivisionElement?()`, `isCornerInte
 - **`CornerInternalLayoutSpec`** — `anchor` (`'topLeft'|'topRight'|'bottomRight'|'rightMiddle'|
   'bottomMiddle'`) + `proportionOfParent`/`fixedSize`/`inset`, applied by base `_reLayout`'s corner
   pass; held by its carrier (`HandleWdgt.cornerSpec`, the triangle badges).
+- **`StretchLayoutSpec`** — the one FOLLOWER (`ownsPlacement()` false): the child's proportional
+  placement record in a fractional-consuming holder, as four EDGE fractions of the holder's box
+  (extents derive from independently ROUNDED edges in `grantedBoundsWithin`, so abutting children
+  share every rounded boundary at every holder size — seams are unrepresentable), plus the
+  outside-panel flag (gates the desktop's keep-within clamp) and `provisional` (a pre-placement
+  heal guess the fill drain re-derives once). TWO consumers, each stating its complete child
+  membership in `consumesFractionalGeometryOf(child)` — the ONE rule the `__add` seed, both world
+  drain stations, and the consumer's own reflow all ask: `StretchablePanelWdgt` GRANTS whole
+  spec-derived integer boxes through each child's own `_reLayout(bounds)` (the engine-standard
+  shape; base `_reLayout`'s granted path routes through the polymorphic `_applyMoveTo` /
+  `_applyExtent`, which is what keeps a transform island's pinned anchor riding and a composite
+  interior's schedule-valve second re-lay alive — both measured falsifications of Base-twin
+  routing); `WorldWdgt`'s desktop imposes POSITION only (`_moveInDesktopToFractionalPosition`,
+  negative-edge dimensions deliberately skipped). RECORD LAW: edges are recorded at INTENT moments
+  — the fill drain after a child enters a holder (post-builder-turn, last-write-wins) and the F6
+  re-record family (drop / duplicate / file-load / app re-home / spawnNextTo-of-stored /
+  uncollapse / handle-release via the post-flush drain) — and never re-derived from imposed
+  integers; `provisional` is the one sanctioned overwrite gate. LIFECYCLE: per ATTACHMENT —
+  created at record moments, nil'd by grab/reparent like any active spec, re-derived fresh on
+  re-entry (its values are derivable placement memory with no user-edited knobs, so nothing is
+  lost — unlike the stack spec's kept slot, which preserves underivable edits). It rides a sugar
+  island's materialize/dematerialize through the ordinary `layoutSpec:` add-arg (the panel reads
+  the ISLAND's spec — the figure it iterates).
 
 A container's own box derives bottom-up: `getRecursiveMinDim`/`getRecursiveDesiredDim`/
 `getRecursiveMaxDim` over the shared `_getRecursiveStackDim` walker — the children's division axis
@@ -360,7 +388,7 @@ To fit the engine, a new widget / container / layout spec honours, in priority o
    `_scheduleRelayoutRespectingPhase`, aimed at the one directly-affected widget — never the bare climbing verb.
 
 4. **Free-floating content climbs nothing; a size-tracking container gets the up-edge automatically.** A free-floating
-   child (nil `layoutSpec`) does not invalidate its parent. If your container tracks
+   child (nil `layoutSpec`, or a follower spec — `ownsPlacement()` false) does not invalidate its parent. If your container tracks
    its content's size, define `_reLayoutChildren` — that is the marker `_reFitContainer` gates on — and the settle loop
    re-fits you after your content settles. Do not wire a manual notification.
 

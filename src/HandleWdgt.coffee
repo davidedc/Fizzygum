@@ -17,13 +17,6 @@ class HandleWdgt extends Widget
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
 
-  # Capability query (replaces `widgetStartingTheChange instanceof HandleWdgt` in Widget's raw move/resize
-  # paths): a geometry change INITIATED by a handle makes the moved/resized child remember its fractional
-  # position/extent in its holding panel. True here only; dispatched via ?() (nothing on Widget).
-  # (type-test-elimination campaign)
-  changeShouldRememberFractionalGeometry: ->
-    true
-
   # Resize / move / rotate handles are CHROME, never editor content (§5.D D-3/D21). Clicking or dragging a
   # handle to reshape a widget must NOT make the handle world.editorFocusWdgt -- otherwise the editor-focus
   # SELECTION overlay frames the HANDLE (it sits inside the reshaped widget's editing-amenity frame, so the
@@ -194,9 +187,9 @@ class HandleWdgt extends Widget
       # ...i.e. *after* the parent has re-layouted (in the deferred layout phase).
       when "resizeBothDimensionsHandle"
         newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
-        @target._setExtentDeferredSettle newExt, @
+        @target._setExtentDeferredSettle newExt
       when "moveHandle"
-        @target._moveToDeferredSettle (newPos.subtract @inset), @
+        @target._moveToDeferredSettle newPos.subtract @inset
       when "resizeHorizontalHandle"
         newWidth = newPos.x + @extent().x + @inset.x - @target.left()
         @target._setWidthDeferredSettle newWidth

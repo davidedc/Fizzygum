@@ -1938,32 +1938,35 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @invalidateCanvasPositionCache()
 
 
-  # The desktop consumes its children's fractional bookkeeping (position-only, in
-  # _reLayoutDesktop below) -- the __add seed asks this to know whether a widget entering me
-  # needs its proportional situation derived. See Widget.consumesFractionalChildGeometry.
-  consumesFractionalChildGeometry: ->
-    true
+  # The desktop consumes its children's proportional records (position-only, in
+  # _reLayoutDesktop below) -- my COMPLETE child rule, asked by the __add seed, both drain
+  # stations, and _reLayoutDesktop itself (see Widget.consumesFractionalGeometryOf):
+  # layout-inert chrome (handles / carets / highlighters) is never a reflow subject, the
+  # hand is world chrome, and desktop icons live in the icon grid -- _reLayoutDesktop
+  # never repositions them, so seeding them would store records nothing reads.
+  consumesFractionalGeometryOf: (child) ->
+    !child.isLayoutInert?() and child != @hand and !child.isDesktopIcon?()
 
-  # Drain station for the __add fractional-bookkeeping seeds: derive the proportional
-  # situation of every widget that entered a consuming holder since the last cycle, AFTER
-  # its builder's JS turn finished placing it, and BEFORE geometry settles and paints.
-  # FILL, never overwrite: existing bookkeeping is authoritative -- it may be a builder's
-  # deliberate record, a drop's, or values the island wrap TRANSFERRED
-  # (_moveHoldingPanelBookkeepingTo, whose islands have a DIFFERENT box than the figure the
-  # values were derived from) -- and a re-derive over an integer imposition also drifts the
-  # fractions a little each time. The seed exists for widgets arriving with NO bookkeeping
-  # at all: the StretchablePanelWdgt heal's exact contract, run at the better moment (after
-  # the builder finished placing, not mid-arrange at possibly pre-placement geometry). The
-  # figure-parent gate skips widgets that moved on to a non-consuming holder (or died) in
-  # the meantime -- deriving would write data nothing reads. Dark-cheap when the set is
-  # empty. (Both halves measured: the overwriting form churned the island-wrap and
-  # sample-slide tests, auto-bookkeeping arc P1 ledger.)
+  # Drain station for the __add fractional-record seeds: derive the proportional
+  # record (a StretchLayoutSpec) of every widget that entered a consuming holder since the
+  # last cycle, AFTER its builder's JS turn finished placing it, and BEFORE geometry
+  # settles and paints. FILL, never overwrite a RECORDED spec: existing records are
+  # authoritative -- a builder's deliberate record, a drop's, or a spec that rode an
+  # island wrap (the layoutSpec: add-arg, whose islands have a DIFFERENT box than the
+  # figure the values were derived from) -- and a re-derive over an integer imposition
+  # also drifts the fractions a little each time. The ONE sanctioned overwrite is a
+  # PROVISIONAL spec (the stretch arrange's pre-placement heal guess, D8): re-derived
+  # HERE, once, at builder-final geometry -- which is what retired the place-before-add
+  # builder rule. The figure-parent gate skips widgets that moved on to a non-consuming
+  # holder (or died) in the meantime -- deriving would write data nothing reads.
+  # Dark-cheap when the set is empty. (Both halves measured: the overwriting form churned
+  # the island-wrap and sample-slide tests, auto-bookkeeping arc P1 ledger.)
   _drainPendingFractionalBookkeepingSeeds: ->
     return if @pendingFractionalBookkeepingSeeds.size == 0
     @pendingFractionalBookkeepingSeeds.forEach (w) ->
       fig = w._enclosingIslandFigure()
-      if !w.destroyed and fig.parent?.consumesFractionalChildGeometry() and
-      (!fig.positionFractionalInHoldingPanel? or !fig.extentFractionalInHoldingPanel?)
+      if !w.destroyed and fig.parent?.consumesFractionalGeometryOf(fig) and
+      (!fig.layoutSpec?.isStretchElement?() or fig.layoutSpec.provisional)
         w._rememberFractionalSituationInHoldingPanel()
     @pendingFractionalBookkeepingSeeds.clear()
 
@@ -1978,7 +1981,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     return if @pendingFractionalReRecords.size == 0
     @pendingFractionalReRecords.forEach (w) ->
       fig = w._enclosingIslandFigure()
-      if !w.destroyed and fig.parent?.consumesFractionalChildGeometry()
+      if !w.destroyed and fig.parent?.consumesFractionalGeometryOf(fig)
         w._rememberFractionalSituationInHoldingPanel()
     @pendingFractionalReRecords.clear()
 
@@ -1988,7 +1991,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if binOpenerWdgt?
       if binOpenerWdgt.userMovedThisFromComputedPosition
         binOpenerWdgt._moveInDesktopToFractionalPosition()
-        if !binOpenerWdgt.wasPositionedSlightlyOutsidePanel
+        if !binOpenerWdgt.layoutSpec?.wasPositionedSlightlyOutsidePanel
           binOpenerWdgt._moveWithin @
       else
         # anchored desktopSidesPadding px inside the corner, by its own extent
@@ -2000,19 +2003,20 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if analogClockWdgt?
       if analogClockWdgt.userMovedThisFromComputedPosition
         analogClockWdgt._moveInDesktopToFractionalPosition()
-        if !analogClockWdgt.wasPositionedSlightlyOutsidePanel
+        if !analogClockWdgt.layoutSpec?.wasPositionedSlightlyOutsidePanel
           analogClockWdgt._moveWithin @
       else
         analogClockWdgt._applyMoveTo new Point @right() - 80 - @desktopSidesPadding, @top() + @desktopSidesPadding
 
     @children.forEach (child) =>
-      # reposition the non-icon desktop children (the bin opener and clock are handled
-      # above); !child.isDesktopIcon?() replaces `!(child instanceof WidgetHolderWithCaptionWdgt)`
-      # (type-test-elimination campaign)
-      if child != binOpenerWdgt and child != analogClockWdgt and !child.isDesktopIcon?()
-        if child.positionFractionalInHoldingPanel?
+      # reposition the consumed desktop children (the bin opener and clock are handled
+      # above) -- membership is the SAME consumesFractionalGeometryOf rule the seed and
+      # the drains ask, so read-side and seed-side exclusions (icons, chrome, the hand)
+      # cannot drift
+      if child != binOpenerWdgt and child != analogClockWdgt and @consumesFractionalGeometryOf child
+        if child.layoutSpec?.isStretchElement?()
           child._moveInDesktopToFractionalPosition()
-        if !child.wasPositionedSlightlyOutsidePanel
+        if !child.layoutSpec?.wasPositionedSlightlyOutsidePanel
           child._moveWithin @
   
   # WorldWdgt events:

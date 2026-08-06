@@ -1364,23 +1364,30 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Layout
 
-- **Stretch-panel fractional reflow — pin the SEEDED fractions' values** (`macroStretchPanelChildrenReflowOnResize`,
-  `macroStretchChildHandleResizeSurvivesReflow`): build a real stretch app fixture DIRECTLY in the macro
+- **Stretch-panel fractional reflow — pin the recorded proportions' VALUES** (`macroStretchPanelChildrenReflowOnResize`,
+  `macroStretchChildHandleResizeSurvivesReflow`, `macroStretchChildDetachReaddKeepsProportions`): build a real stretch
+  app fixture DIRECTLY in the macro
   (`win = (new SampleDashboardApp()).buildWindow()`) — the programmatic-add path is the mechanism under test, and its
-  fractional bookkeeping arrives via the framework seed (the auto-bookkeeping arc), not per-site calls — then resize
+  proportional record (a `StretchLayoutSpec` on each child, spec-unification arc) arrives via the framework seed
+  (the auto-bookkeeping arc's fill drain), not per-site calls — then resize
   the WINDOW via sanctioned direct `win.moveTo` + `win.setExtent` (the outer corner resizer is OFF-CANVAS at the
   960×440 harness resolution — the off-canvas-resizer precedent; the resize gesture is not under test, the REFLOW is)
   and screenshot at two+ sizes: the children must sit at the same proportions in every shot. The ratio-preserving
   `StretchableWidgetContainerWdgt` letterboxes the panel at wide sizes — expected, and it gives the fractions a second
   imposition size for free. To reach a CHILD window inside the panel, walk from the returned window:
   `panel = win.topWdgtSuchThat (w) -> w.constructor.name is "StretchablePanelWdgt"` then filter
-  `childrenNotHandlesNorCarets()` by class name. A child's OWN corner resizer IS drivable as real input
+  `childrenNotHandlesNorCarets()` by class name (⚠ NOT `firstChildSuchThat`, which scans DIRECT children only —
+  the panel is nested at `win.contents.contents`). A child's OWN corner resizer IS drivable as real input
   (`@dragWindowResizerTo_InputEvents child, (new Point child.right()+dx, child.bottom()+dy)`); the release re-records
-  the child's fractions (`HandleWdgt.mouseUpLeft` → the world's post-flush re-record drain), so a later holder resize
-  scales the USER's size — the second test pins exactly that. ⚠ These tests are the only oracle for fraction VALUES:
-  the census sees only self-consistency (a stable-but-wrong fraction passes it). ⚠ When planting a wrong fraction to
-  prove such a test can fail, set BOTH `positionFractionalInHoldingPanel` AND `extentFractionalInHoldingPanel` — the
-  stretch arrange's heal re-derives BOTH when EITHER is missing, so a half-plant self-heals.
+  the child's spec (`HandleWdgt.mouseUpLeft` → the world's post-flush re-record drain), so a later holder resize
+  scales the USER's size — the second test pins exactly that. The third test pins the spec's per-ATTACHMENT
+  lifecycle with value-asserts (detach nils the active spec; re-add derives a FRESH recorded spec whose four edge
+  fractions are exactly equal at unchanged geometry — the heal→fill-drain provenance path end-to-end). ⚠ These
+  tests are the only oracle for the record's VALUES: the census sees only self-consistency (a stable-but-wrong
+  fraction passes it). ⚠ When planting wrong values to prove such a test can fail, overwrite the edge fractions ON
+  the child's `layoutSpec` (e.g. shift `leftFraction`/`rightFraction` together) — the spec is atomic (it exists
+  whole or not at all; the old plant-BOTH-fields gotcha died with the fields), and a plant must happen AFTER the
+  drains have run (a provisional or missing spec is legitimately re-derived).
 - **Proportional stack cells** (`macroLayoutBasicProportions`): make a holder a horizontal stack —
   `holder.add cell, nil, cell.divisionBox()` per cell + `cell.setMinAndMaxBoundsAndSpreadability(min,
   desired, k*DivisionStackLayoutSpec.SPREADABILITY_MEDIUM)` (k = its share of spare space). Position with `moveTo` BEFORE `world.add`, then
