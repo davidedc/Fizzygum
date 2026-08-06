@@ -144,7 +144,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @_stackElementSpec.canSetHeightFreely = false
+    @_contentStackSpec.canSetHeightFreely = false
 
   availableWidthForContents: ->
     @width() - 2 * @padding
@@ -167,12 +167,12 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # available width -- keeps the pure measures TOTAL (never throw), mirroring
   # FrameWdgt.preferredExtentForWidth's guard; the arrange initialises every spec before asking.
   _childWidthInStack: (widget, availForContents) ->
-    widget._stackElementSpec?.getWidthInStack(availForContents) ? availForContents
+    widget.contentStackSpec()?.getWidthInStack(availForContents) ? availForContents
 
   _childLeftInStack: (widget, childWidth) ->
-    if widget._stackElementSpec?.alignment == 'right'
+    if widget.contentStackSpec()?.alignment == 'right'
       @left() + @width() - @padding - childWidth
-    else if widget._stackElementSpec?.alignment == 'center'
+    else if widget.contentStackSpec()?.alignment == 'center'
       @left() + Math.floor (@width() - childWidth) / 2
     else
       # 'left' (or a transiently-missing spec)
@@ -268,9 +268,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
         widget.initialiseDefaultVerticalStackLayoutSpec()
         # a kept spec may come from a FRAME-content life — this adoption makes it a stack
         # element again (see VerticalStackLayoutSpec.attachedAsFrameContent)
-        widget._stackElementSpec.attachedAsFrameContent = false
-        widget._stackElementSpec.captureInitialPlacement widget, @
-        widget._setLayoutSpec widget._stackElementSpec
+        widget._contentStackSpec.attachedAsFrameContent = false
+        widget._contentStackSpec.captureInitialPlacement widget, @
+        widget._setLayoutSpec widget._contentStackSpec
 
     childrenNotHandlesNorCarets.forEach (widget, childIndex) =>
       # top border above the first element, inter-element gap above the rest

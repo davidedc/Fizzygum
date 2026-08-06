@@ -43,8 +43,8 @@ KeepsRatioWhenInVerticalStackMixin =
         @_freeFromRatioConstraints()
 
     _freeFromRatioConstraints: ->
-      if @_stackElementSpec?
-        @_stackElementSpec.canSetHeightFreely = true
+      if @_contentStackSpec?
+        @_contentStackSpec.canSetHeightFreely = true
 
         availableHeight = world.height() - 20
         if @parent.height() > availableHeight
@@ -59,8 +59,8 @@ KeepsRatioWhenInVerticalStackMixin =
         @_constrainToRatio()
 
     _constrainToRatio: ->
-      if @_stackElementSpec?
-        @_stackElementSpec.canSetHeightFreely = false
+      if @_contentStackSpec?
+        @_contentStackSpec.canSetHeightFreely = false
         # force a resize, so widget
         # will take the right ratio
         # Note that the height of 0 here is ignored since

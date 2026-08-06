@@ -875,9 +875,16 @@ class MacroToolkit
         item.text == listItemString
       else
         false
-    entryTopLeft = entry.topLeft()
 
-    @moveToAndClick_InputEvents entryTopLeft.translateBy(new Point 10, 2), "left button", milliseconds, startTime
+    # Clamp the click into the pane's visible box: the scroll verb's handle-drag is
+    # quantized to scrollbar pixels, so a member-list length change can leave the found
+    # row EDGE-CLIPPED at the pane top — a click 2px under a clipped top lands off-pane
+    # and selects nothing (measured 2026-08-06, kept-spec arc P1, via the inspector-alpha
+    # test's local twin of this click). Identical to the plain top-edge click whenever
+    # the row is fully visible.
+    clickY = Math.max (entry.top() + 2), (list.top() + 2)
+    clickY = Math.min clickY, (entry.bottom() - 2)
+    @moveToAndClick_InputEvents (new Point (entry.left() + 10), clickY), "left button", milliseconds, startTime
 
 
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->

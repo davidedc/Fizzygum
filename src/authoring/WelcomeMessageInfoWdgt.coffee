@@ -8,8 +8,8 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     startingContent._applyExtent new Point 85, 85
 
     sdspw.setContents startingContent, 5
-    startingContent._stackElementSpec.setGrow 0
-    startingContent._stackElementSpec.setAlignmentToCenter()
+    startingContent._contentStackSpec.setGrow 0
+    startingContent._contentStackSpec.setAlignmentToCenter()
 
 
     startingContent = new SimpleTextWdgt(
@@ -76,21 +76,21 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     startingContent = new SimpleLinkWdgt "Screenshots", "http://fizzygum.org/screenshots/"
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToRight()
+    startingContent._contentStackSpec.setAlignmentToRight()
 
     sdspw.addNormalParagraph "...or watch some quick demos on the Youtube channel:"
 
     startingContent = new SimpleVideoLinkWdgt "YouTube channel", "https://www.youtube.com/channel/UCmYco9RU3h9dofRVN3bqxIw"
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToRight()
+    startingContent._contentStackSpec.setAlignmentToRight()
 
     sdspw.addNormalParagraph "...or docs here:"
 
     startingContent = new SimpleLinkWdgt "Docs", "http://fizzygum.org/docs/intro/"
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToRight()
+    startingContent._contentStackSpec.setAlignmentToRight()
 
     sdspw.addSpacer(2)
 
@@ -109,7 +109,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     startingContent = new SimpleLinkWdgt "Contacts", "http://fizzygum.org/contact/"
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToRight()
+    startingContent._contentStackSpec.setAlignmentToRight()
 
     doc._applyExtent new Point 365, 405
     doc._moveFullCenterTo world.center()

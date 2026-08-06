@@ -30,7 +30,7 @@ class GenericCompositeIconWdgt extends Widget
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @_stackElementSpec.canSetHeightFreely = false
+    @_contentStackSpec.canSetHeightFreely = false
 
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_resizeToWithoutSpacing()

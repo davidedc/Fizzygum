@@ -102,8 +102,8 @@ class MenuWdgt extends PopUpWdgt
       return "menu"
 
   initialiseDefaultFrameContentLayoutSpec: ->
-    @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
-    @_stackElementSpec.canSetHeightFreely = false
+    @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
+    @_contentStackSpec.canSetHeightFreely = false
 
   # Lay out at ADD time -- the menu's layout trigger. The opener builds a menu, adds
   # its items (raw __add, no settle -- so the panel never re-lays-out its rows on

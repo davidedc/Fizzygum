@@ -14,7 +14,7 @@
 # non-settling StringWdgt::_reflowContainedTextThenInvalidateLayout core (gated by the mode), so ANY
 # TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class is its CONTROLLER chrome: pinning
-# _stackElementSpec.canSetHeightFreely = false (height is content-driven), the
+# _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
 # scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
 # the dataflow plumbing (updateTarget + bang), and the panel-colour blend helpers.
 
@@ -56,7 +56,7 @@ class SimpleTextWdgt extends TextWdgt
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @_stackElementSpec.canSetHeightFreely = false
+    @_contentStackSpec.canSetHeightFreely = false
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

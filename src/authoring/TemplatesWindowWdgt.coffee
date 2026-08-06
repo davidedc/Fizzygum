@@ -30,7 +30,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     startingContent = new ArrowSIconWdgt
     startingContent._applyExtent new Point 25, 25
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToCenter()
+    startingContent._contentStackSpec.setAlignmentToCenter()
 
     sdspw.addDivider()
 
@@ -99,12 +99,12 @@ class TemplatesWindowWdgt extends FrameWdgt
     startingContent = new SimpleLinkWdgt
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToRight()
+    startingContent._contentStackSpec.setAlignmentToRight()
 
     startingContent = new SimpleVideoLinkWdgt
     startingContent._applyExtent new Point 405, 50
     sdspw.add startingContent
-    startingContent._stackElementSpec.setAlignmentToRight()
+    startingContent._contentStackSpec.setAlignmentToRight()
 
     startingContent = new SimpleTextWdgt(
       "Useful characters:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)

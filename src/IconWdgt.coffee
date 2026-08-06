@@ -19,9 +19,9 @@ class IconWdgt extends Widget
 
   initialiseDefaultFrameContentLayoutSpec: ->
     super
-    @_stackElementSpec.canSetHeightFreely = false
+    @_contentStackSpec.canSetHeightFreely = false
     # FIXED (grow 0): an icon keeps its own natural size as window content rather than
     # stretching to fill the window -- an aspect/natural-size object, like the clock. (Also makes
     # its width convergence-independent: at grow 0 getWidthInStack = min(desiredWidth, availW).)
-    @_stackElementSpec.grow = 0
+    @_contentStackSpec.grow = 0
 

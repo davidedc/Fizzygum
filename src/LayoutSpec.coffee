@@ -25,10 +25,15 @@
 # - which strategy places a child is answered by duck-typed capability queries on its spec
 #   (`isDivisionElement?()`, `isCornerInternal?()`, `isStackElementActive?()`,
 #   `isFrameContentActive?()`, `isStretchElement?()`, …), never by a type test.
-# - LIFECYCLE is per class: a division box is a per-widget KNOB kept for the widget's whole
-#   life (`Widget._divisionBox`); a content-stack spec is captured per PLACEMENT, kept
-#   across detachment (`Widget._stackElementSpec`) and re-armed on content remount; a
-#   stretch spec is per ATTACHMENT — derived at entry, riding gestures, gone on detach.
+# - LIFECYCLE is exactly TWO kinds. A spec is either a carrier-owned KNOB — an object the
+#   widget owns for its whole life, holding underivable per-class/user preferences, doubling
+#   as the attachment value, armed into the slot at attachment (`Widget._divisionBox`,
+#   `HandleWdgt.cornerSpec`, and the content-stack spec `Widget._contentStackSpec`, whose
+#   placement values are re-captured at each adoption/mount) — or a per-attachment RECORD,
+#   derived at entry and discarded at detachment (`StretchLayoutSpec`). Container-side reads
+#   of a child's content-stack spec go SLOT-FIRST through `Widget.contentStackSpec()` — on a
+#   sugar island the spec rides only the slot (the `layoutSpec:` add-arg; the knob never
+#   leaves the wrapped content).
 class LayoutSpec
 
   # The family's AUTHORITY contract: does the arrange place the child FROM this spec, so

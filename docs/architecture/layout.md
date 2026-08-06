@@ -207,7 +207,22 @@ the spec through its knobs — move a stack child by hand and the next arrange s
 geometry — the child stays user-movable, handles show, its mutations don't climb). WHICH strategy places
 a child is answered by duck-typed capability queries on its spec (`isDivisionElement?()`,
 `isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`),
-never a type test. The family (`src/LayoutSpec.coffee` is the abstract base):
+never a type test.
+
+**LIFECYCLE is exactly TWO kinds** — a spec is either a **carrier-owned KNOB** (an object the
+widget owns for its whole life, holding underivable per-class/user preferences, which doubles as
+the attachment value and is armed into the slot at attachment: `Widget._divisionBox`,
+`HandleWdgt.cornerSpec`, and the content-stack spec `Widget._contentStackSpec`) or a
+**per-attachment RECORD** (derived at entry, discarded at detachment: `StretchLayoutSpec`).
+Container-side reads of a child's content-stack spec go **SLOT-FIRST through the one accessor
+`Widget.contentStackSpec()`** (the active spec when content-stack-capable, else the knob field):
+while armed the two are the same object, and on a sugar ISLAND the spec rides ONLY the slot — the
+materialize's `layoutSpec:` add-arg carries it while the knob never leaves the wrapped content.
+The resulting cross-widget sharing (content's field == island's slot while wrapped) is safe by
+the graph engines' identity-map traversal contract: it fullCopies and serializes as one shared
+object. A FIELD read on an island is the historical proportional-tracking failure the retired
+island hand-carry (`_moveKeptStackSpecTo`) existed to paper over — slot-first is correctness,
+not style. The family (`src/LayoutSpec.coffee` is the abstract base):
 
 - **`DivisionStackLayoutSpec`** — min/desired/max (both axes) + `axis` (`'x'` a row dividing width,
   `'y'` a vertical division stack dividing height) + `crossAlign` (`'stretch'` default, or
@@ -222,8 +237,10 @@ never a type test. The family (`src/LayoutSpec.coffee` is the abstract base):
   (0..1 share of extra space) + `alignment`, with
   `width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )` — the content
   stack's cross-axis FIT law (`SimpleVerticalStackPanelWdgt`; the main axis hugs content).
-  LIFECYCLE: per PLACEMENT — captured at adoption, kept across detachment
-  (`Widget._stackElementSpec`) so explicit grow/alignment edits survive a grab-out-and-drop-back.
+  LIFECYCLE: a carrier-owned KNOB (`Widget._contentStackSpec`) whose placement values are
+  captured at each adoption — the object survives detachment, so explicit grow/alignment edits
+  survive a grab-out-and-drop-back (and a desktop sojourn, where a stretch record occupies the
+  slot while the knob rides in its field).
 - **`FrameContentLayoutSpec`** (a `VerticalStackLayoutSpec` subclass) — adds the starting-size
   sentinels, `canSetHeightFreely`, `resizerCanOverlapContents`, and `attachedAsFrameContent` (the
   role bit that lets the SAME kept object be adopted by a stack). Consumed by `FrameWdgt`'s content
@@ -252,7 +269,7 @@ never a type test. The family (`src/LayoutSpec.coffee` is the abstract base):
   integers; `provisional` is the one sanctioned overwrite gate. LIFECYCLE: per ATTACHMENT —
   created at record moments, nil'd by grab/reparent like any active spec, re-derived fresh on
   re-entry (its values are derivable placement memory with no user-edited knobs, so nothing is
-  lost — unlike the stack spec's kept slot, which preserves underivable edits). It rides a sugar
+  lost — unlike the content-stack KNOB, which preserves underivable edits). It rides a sugar
   island's materialize/dematerialize through the ordinary `layoutSpec:` add-arg (the panel reads
   the ISLAND's spec — the figure it iterates).
 

@@ -76,8 +76,8 @@ class SliderWdgt extends CircleBoxWdgt
 
   initialiseDefaultVerticalStackLayoutSpec: ->
     # use the existing VerticalStackLayoutSpec (if it's there)
-    unless @_stackElementSpec?.isContentStackCapable?()
-      @_stackElementSpec = new VerticalStackLayoutSpec 0
+    unless @_contentStackSpec?.isContentStackCapable?()
+      @_contentStackSpec = new VerticalStackLayoutSpec 0
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelfAndButton()
@@ -107,8 +107,8 @@ class SliderWdgt extends CircleBoxWdgt
     @_reLayoutChildren()
     
   initialiseDefaultFrameContentLayoutSpec: ->
-    @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
-    @_stackElementSpec.resizerCanOverlapContents = false
+    @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
+    @_contentStackSpec.resizerCanOverlapContents = false
 
   
   rangeSize: ->

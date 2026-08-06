@@ -299,7 +299,7 @@ class Widget extends TreeNode
   # DATA persists across detachment (an element grabbed OUT of a stack keeps its explicit
   # grow/alignment for a later re-adoption); the adopting arranges read/refresh it and make
   # it the active @layoutSpec.
-  _stackElementSpec: nil
+  _contentStackSpec: nil
   # the widget's division constraint box (a DivisionStackLayoutSpec) once it has a private
   # one — see _ensureDivisionBox() / _divisionBoxOrDefaults() in the Layouts section
   _divisionBox: nil
@@ -334,22 +334,22 @@ class Widget extends TreeNode
   userMovedThisFromComputedPosition: false
 
   initialiseDefaultFrameContentLayoutSpec: ->
-    @_stackElementSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
+    @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
     # bind the element NOW (the capture re-binds it later): a PRE-capture measure's
     # total-fallback (getWidthInStack, U2) derives its answer from the element's
     # natural width, so it needs the back-ref before the first arrange runs.
-    @_stackElementSpec.element = @
+    @_contentStackSpec.element = @
 
   initialiseDefaultVerticalStackLayoutSpec: ->
     # use the existing kept spec (if it's there — including a FrameContentLayoutSpec whose
     # widget moved from a window into a stack: the capability keeps explicit edits alive)
-    unless @_stackElementSpec?.isContentStackCapable?()
+    unless @_contentStackSpec?.isContentStackCapable?()
       # no grow arg: UNDECIDED — the capture derives it from the add-time relationship
       # (a full-width add tracks the stack, a narrower add keeps its size — D2-def,
       # docs/archive/sizing-model-unification-plan.md §9.1/§9.5)
-      @_stackElementSpec = new VerticalStackLayoutSpec
+      @_contentStackSpec = new VerticalStackLayoutSpec
       # element bound now for the pre-capture measure fallback (see the window-content twin above)
-      @_stackElementSpec.element = @
+      @_contentStackSpec.element = @
 
   mouseClickRight: ->
     # you could bring up what you right-click,
@@ -1634,20 +1634,6 @@ class Widget extends TreeNode
     return nil if !@parent?._materializedBySugar
     @_enclosingSoleContentIsland()
 
-  # Affine transforms (§7.5 latent 3): MOVE my KEPT stack spec to `target` across a
-  # sugar-island materialize (content→island) or dematerialize (island→content), so the stack's
-  # _reLayout finds it on the child it actually iterates (the stack sees the ISLAND, not the wrapped
-  # content). The index + the ACTIVE layoutSpec already ride with the reparent (_addNoSettle's
-  # layoutSpec: arg) — which since the spec-unification arc also carries the stretch panel's
-  # proportional record (a StretchLayoutSpec IS the active spec), so the kept STACK spec object is
-  # the ONE piece left to hand-carry (else the island is stack-active but has a nil kept spec, the
-  # stack's init block is skipped because the active spec already matches, and _childWidthInStack
-  # falls back to raw available width instead of proportional tracking). MOVE (nil the source) keeps a
-  # single owner, so a fullCopy of the wrapped figure never double-references the shared spec object.
-  _moveKeptStackSpecTo: (target) ->
-    target._stackElementSpec = @_stackElementSpec
-    @_stackElementSpec = nil
-
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
   # become its single free-floating child, keeping my absolute position (virtual ≡ screen at identity).
   # The island inherits MY former index AND layoutSpec in my parent — so wrapping is position-invariant
@@ -1672,8 +1658,7 @@ class Widget extends TreeNode
     # myIndex, me free-floating inside it); homing an empty tracking island is safe (its _reLayoutChildren
     # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
     # island stays a detached root and I move into it, exactly as before.
-    @_moveKeptStackSpecTo island                               # the kept stack spec rides to the stack's new child (the island)
-    formerParent?._addNoSettle island, position: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec (incl. a stretch record)
+    formerParent?._addNoSettle island, position: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec (incl. a stretch record; my kept content-stack knob stays MINE — container reads find the riding spec slot-first, see contentStackSpec)
     island._addNoSettle @                                      # then reparent me into the now-homed island (free-floating child)
     island
 
@@ -1688,7 +1673,6 @@ class Widget extends TreeNode
     islandIndex = islandParent.children.indexOf island
     islandLayoutSpec = island.layoutSpec
     pos = @position()
-    island._moveKeptStackSpecTo @                                # hand the kept stack spec back to me (the stack's child once more)
     islandParent._addNoSettle @, position: islandIndex, layoutSpec: islandLayoutSpec   # reparent me back into the island's slot + spec (incl. a stretch record)
     @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
     # R2 (§6 affine): a highlight (or any layout-inert ephemeral chrome, isEphemeral) parented INTO this
@@ -4724,6 +4708,24 @@ class Widget extends TreeNode
 
   _divisionBoxOrDefaults: ->
     @_divisionBox ? DivisionStackLayoutSpec.defaults()
+
+  # The widget's content-stack spec (VerticalStackLayoutSpec / FrameContentLayoutSpec) as
+  # currently relevant — SLOT-FIRST: the ACTIVE spec when it is content-stack-capable,
+  # else the kept knob field. While armed the two are the same object, so this answers
+  # byte-what a field read answers; the divergence is the sugar ISLAND, where the spec
+  # rides ONLY the slot (the materialize's layoutSpec: add-arg — the kept field stays on
+  # the wrapped content, one home per carrier). Slot-first is CORRECTNESS, not style: a
+  # field read on an island answers nil, the stack's init guard is skipped (the active
+  # spec already matches), and _childWidthInStack falls back to raw available width
+  # instead of proportional tracking — the historical failure the retired island
+  # hand-carry (_moveKeptStackSpecTo) existed to paper over. Container-side reads go
+  # through HERE; the field stays the home for the widget's OWN knob (initialisers and
+  # class-default writers address it directly).
+  contentStackSpec: ->
+    if @layoutSpec?.isContentStackCapable?()
+      @layoutSpec
+    else
+      @_contentStackSpec
 
   # The bare layout-enqueue ATOM: put me into the recalculateLayouts until-loop and mark my layout invalid, WITHOUT
   # climbing to ancestors and WITHOUT the flow-rule throw / careless-push audit that _invalidateLayout wraps around it

@@ -85,9 +85,9 @@ class Example3DPlotWdgt extends Widget
       @_constrainToRatio()
 
   _constrainToRatio: ->
-    if @_stackElementSpec?
+    if @_contentStackSpec?
       @ratio = @width() / @height()
-      @_stackElementSpec.canSetHeightFreely = false
+      @_contentStackSpec.canSetHeightFreely = false
       # force a resize, so the slide and the window
       # it's in will take the right ratio, and hence
       # the content will take the whole window it's in.
@@ -105,8 +105,8 @@ class Example3DPlotWdgt extends Widget
       @_freeFromRatioConstraints()
 
   _freeFromRatioConstraints: ->
-    if @_stackElementSpec?
-      @_stackElementSpec.canSetHeightFreely = true
+    if @_contentStackSpec?
+      @_contentStackSpec.canSetHeightFreely = true
       @ratio = nil
 
       availableHeight = world.height() - 20
