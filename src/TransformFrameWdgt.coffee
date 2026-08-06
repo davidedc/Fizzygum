@@ -129,6 +129,42 @@ class TransformFrameWdgt extends PanelWdgt
     @add contentWidget
     @
 
+  # my single wrapped content subtree (handles/carets are chrome, never content)
+  _soleContent: ->
+    @childrenNotHandlesNorCarets()?[0]
+
+  # ---------------------------------------------------------------------------
+  # The LENS declarations: an island's content-stack preferences ARE its content's knob.
+  # The content-stack spec holds preferences about the DISPLAYED thing's nature ("empty
+  # vertical space around a clock is meaningless", "this paragraph centers") — and the
+  # island displays exactly that thing, transformed; it has no content-nature of its own.
+  # Same doctrine as isTransparentAt / the escalate-only click /
+  # resolvesEditorSelectionToContent: the invisible wrapper adds no behavior of its own.
+  # Creation DELEGATES to the content's own class-specific initialiser (a clock content
+  # yields clock defaults) and the OBJECT is SHARED — identity-mapped by both graph
+  # engines (kept-spec fold E1-M4), so edits made through the island hit the one knob the
+  # content resumes on unwrap, and unwrap needs no hand-off. Delegation re-runs off the
+  # CURRENT sole content at every (re)initialisation, so a content change cannot leave a
+  # stale borrowed knob; an EMPTY authored island falls back to its own base defaults.
+  # The mount/adoption seams then operate on the shared object exactly as for any veteran
+  # knob (role flip, un-latch, captureInitialPlacement re-binding .element to ME while I
+  # am the armed carrier).
+  # ---------------------------------------------------------------------------
+  initialiseDefaultFrameContentLayoutSpec: ->
+    content = @_soleContent()
+    return super() if !content?
+    # mirror the mount seam's own guard: only create fresh on the content when it has no
+    # frame-content-capable knob — a veteran knob's explicit edits stay alive
+    content.initialiseDefaultFrameContentLayoutSpec() unless content._contentStackSpec?.isFrameContentSpec?()
+    @_contentStackSpec = content._contentStackSpec
+
+  initialiseDefaultVerticalStackLayoutSpec: ->
+    content = @_soleContent()
+    return super() if !content?
+    # the content's own initialiser carries the keep-a-capable-knob guard
+    content.initialiseDefaultVerticalStackLayoutSpec()
+    @_contentStackSpec = content._contentStackSpec
+
   # ---------------------------------------------------------------------------
   # the transform spec + its mutation (invalidation mirrors a move: §6 step 2).
   # Each public mutator is the canonical self-settling wrapper (@_settleLayoutsAfter

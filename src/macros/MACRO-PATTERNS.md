@@ -1736,6 +1736,22 @@ assertion a recapture after a regression silently stores two different hashes an
   Geometry-free (no hand-derived rotated sample points ⇒ dpr-invariant), and the numeric assert is what makes the guard
   survive a batch recapture: a screenshot-only shadow test would be silently re-baselined by the next `fg recapture --auto`.
   Born with the 2026-08-02 tilted-window faint-shadow fix (the faint-copy bug scores the tilted half ≤ 0 — it only LIGHTENS).
+- **Wrapped-content SPEC-SHARING oracles (the island LENS law)** (`macroIslandLensWindowHeightLock`): a window whose CONTENT
+  is rotated gets the sugar island as its `contents`, and the island's content-stack preferences must BE the content's knob —
+  one shared object (island-content-preferences plan). Fixture = `clock = new AnalogClockWdgt; win = new FrameWdgt clock;
+  win.moveTo …; world.add win; win.setExtent …` (the clock's own knob declares `canSetHeightFreely = false`). Drive the
+  rotation via the public sugar (`clock.setRotationDegrees 30` — fixture-altitude; the rotate GESTURE is pinned elsewhere),
+  then assert the law twice over: PIXELS — `@dragWindowResizerTo_InputEvents win, (a point with a much larger Y)` before,
+  during and after the wrap; the window's height IGNORES the drag's Y in all three shots because the height-lock rides the
+  ONE knob — and IDENTITY — `@assertValuesEqual` on `win.contents.layoutSpec == clock._contentStackSpec` (slot) and
+  `win.contents._contentStackSpec == clock._contentStackSpec` (field), each read carrying
+  `# macro-private-call-sanctioned: identity ORACLE …` (the layering gate's rule [D] flags private reads in macro source;
+  the sanction is for exactly this — the law under test IS which object the island carries). ⚠ The clock's-own-knob VALUE
+  assert (`canSetHeightFreely` false) is NOT the sharp oracle — it stays true even when the lens is broken (the fresh island
+  spec, not the knob, then governs); the identity asserts + the wrapped-resize screenshot are what a lens regression flips
+  (proven by the non-vacuity plant: disabling the materialize pre-seed failed exactly those two asserts + the pixels).
+  While wrapped the window BAR reads "transform frame" (the island's colloquialName — the bar labels the contents), so the
+  wrapped shots legitimately differ in the title too.
 - **Chroma-neutrality assert (the shadow-COLOUR guard)** (`macroColoredCastersShadowNeutralBlack`): the same A/B isolation,
   plus, over pixels the shadow darkened by > 8 luma, assert the SHADOWED image's max RGB channel spread ≤ 2 — over the
   neutral grey desktop a contract-true black shadow stays channel-balanced, while a shadow that re-tints the caster's own

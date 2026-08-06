@@ -144,8 +144,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # and a re-hug that changes the slot is a frame change, so the engine's frame-change up-edge
   # re-fits the parent (no new wiring).
   # ---------------------------------------------------------------------------
-  _soleContent: ->
-    @childrenNotHandlesNorCarets()?[0]
+  # (_soleContent lives on the base TransformFrameWdgt — hoisted with the lens overrides.)
 
   # Parent arrange sizes ME → size my content, then re-hug the slot to it. I override the POLYMORPHIC
   # _applyExtent (like StretchablePanel / Stack / ScrollPanel / TextWdgt add their re-fit here), NOT the

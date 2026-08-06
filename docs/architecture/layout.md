@@ -217,11 +217,14 @@ the attachment value and is armed into the slot at attachment: `Widget._division
 **per-attachment RECORD** (derived at entry, discarded at detachment: `StretchLayoutSpec`).
 Container-side reads of a child's content-stack spec go **SLOT-FIRST through the one accessor
 `Widget.contentStackSpec()`** (the active spec when content-stack-capable, else the knob field):
-while armed the two are the same object, and on a sugar ISLAND the spec rides ONLY the slot — the
-materialize's `layoutSpec:` add-arg carries it while the knob never leaves the wrapped content.
-The resulting cross-widget sharing (content's field == island's slot while wrapped) is safe by
-the graph engines' identity-map traversal contract: it fullCopies and serializes as one shared
-object. A FIELD read on an island is the historical proportional-tracking failure the retired
+while armed the two are the same object, and on a sugar ISLAND the spec rides the slot via the
+materialize's `layoutSpec:` add-arg while the knob never leaves the wrapped content — and the
+island is a LENS (transforms.md §5.4): its own content-stack initialisers DELEGATE to the
+content's and share the one knob object (the materialize pre-seeds the island's field), so a
+mount/adoption that asks the ISLAND for preferences gets the CONTENT's (a rotated clock's window
+stays height-locked while wrapped). The resulting cross-widget sharing (content's field ==
+island's slot/field while wrapped) is safe by the graph engines' identity-map traversal
+contract: it fullCopies and serializes as one shared object. A FIELD read on an island is the historical proportional-tracking failure the retired
 island hand-carry (`_moveKeptStackSpecTo`) existed to paper over — slot-first is correctness,
 not style. The family (`src/LayoutSpec.coffee` is the abstract base):
 

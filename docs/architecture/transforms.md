@@ -236,6 +236,25 @@ The **content→slot** hugging direction (`_reLayout` sync-settles a pending con
 established island slot-set idiom); the buffer rebuilds from `@bounds` on the next composite, so
 content stops clipping at the frozen footprint.
 
+### 5.4 The LENS declarations — an island's content-stack preferences ARE its content's knob
+
+The content-stack spec (layout.md §4.2) holds preferences about the DISPLAYED thing's nature
+("empty vertical space around a clock is meaningless") — and the island displays exactly that
+thing, transformed; it has no content-nature of its own. Same doctrine as `isTransparentAt` /
+the escalate-only click / `resolvesEditorSelectionToContent`: the invisible wrapper adds no
+behavior of its own. So base `TransformFrameWdgt` overrides the two content-stack initialisers
+(`initialiseDefaultFrameContentLayoutSpec` / `initialiseDefaultVerticalStackLayoutSpec`) to
+DELEGATE creation to `_soleContent()`'s own class-specific initialiser and SHARE the object —
+identity-mapped by both graph engines, so edits made through the island hit the one knob the
+content resumes on unwrap (a rotated clock's window stays height-locked while wrapped; a
+rotated stack element adopted by a document applies the content's alignment/grow edits). One
+seam asks while the island is still EMPTY — `_materializeSugarIslandNoSettle` homes the island
+into a FrameWdgt former parent BEFORE reparenting the content (the skin-derivation order), and
+the frame's mount guard runs the initialiser right then — so the materialize PRE-SEEDS the
+island's field with the content's knob before homing. Pinned by
+`SystemTest_macroIslandLensWindowHeightLock` (identity oracles + the wrapped-resize
+height-lock) and the two `.scratch` kept-spec probes' C/D/E sections.
+
 ---
 
 ## 6. Pinned anchors

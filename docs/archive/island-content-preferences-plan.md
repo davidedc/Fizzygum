@@ -1,5 +1,9 @@
 # The island is a LENS — its content-stack preferences are its content's knob
 
+**STATUS: RATIFIED + EXECUTED IN FULL 2026-08-06 (P0 owner-ratified on the pure-cleanliness
+question; P1+P2 same day). See the execution ledger at the bottom: one in-flight discovery
+(the materialize's empty-window seam → the pre-seed), suite 282 → 283, gauntlet green.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-06; every fact below verified same day against Fizzygum `76130d2f` /
 Fizzygum-tests `c8a2b8775` (the kept-spec knob-model arc's close; suite 282, gauntlet
@@ -162,3 +166,45 @@ state defaults — verified at authoring).
 `kept-layout-spec-unification-arc`, `ask-before-commit-push`.
 
 ### Execution ledger (append per phase; empty at authoring)
+
+**P0 RATIFIED 2026-08-06.** Presented after the corner-spec dissolution arc closed
+(Fizzygum `41584e2f` / tests `5e04e2cca`); owner asked whether the LENS framing is the
+Right Thing on pure cleanliness grounds regardless of compat, and ratified EXECUTE on the
+answer: the overrides complete the island's existing "invisible plumbing" doctrine family
+(isTransparentAt / escalate-only click / resolvesEditorSelectionToContent / derived claims)
+rather than adding a mechanism; the restored pre-fold behaviors are consequences, not the
+motivation. ⚠ Verified corrections to §4's sketch: the island has NO `@contents` field —
+the content accessor is `TrackingTransformFrameWdgt._soleContent()` (to be HOISTED to base
+`TransformFrameWdgt`), and the delegation must be robust to the content seam (one-content-
+for-life made structural, not incidental).
+
+**P1 EXECUTED 2026-08-06.** `_soleContent()` hoisted to base `TransformFrameWdgt`; the two
+LENS overrides added there (FCLS flavor mirrors the mount seam's guard — create fresh on the
+CONTENT only when it has no frame-content-capable knob; VSLS flavor delegates
+unconditionally, the content's own initialiser carries the keep-a-capable-knob guard; both
+fall back to `super()` for an EMPTY island). ONE in-flight discovery, probe-first: the
+sharing probe's new E1 check FAILED on the window flow — `_materializeSugarIslandNoSettle`
+homes the island into the former parent BEFORE reparenting the content (the load-bearing
+skin-derivation order), so a FrameWdgt former parent's mount guard ran the initialiser while
+`_soleContent()` was still nil → base fallback → fresh spec. Fix: the materialize PRE-SEEDS
+`island._contentStackSpec = @_contentStackSpec` before homing (the one seam that asks during
+the empty window; the overrides cover every flow where the island holds its content).
+Verification: BOTH kept-spec probes updated to the post-fold rename (`_stackElementSpec` →
+`_contentStackSpec`, they predated P2's rename) and to the lens shape (island field now
+SHARES the knob — C0/C1/D1/C2/D3), and the sharing probe gained the E section (window flow
+E0-E2, stack flow + edit-through-island E3-E4): 16/16 + 11/11 green. New
+`SystemTest_macroIslandLensWindowHeightLock` (suite 282 → 283, dpr 1+2): identity oracles
+(`assertValuesEqual` + rule-[D] sanction comments) + the wrapped-resize height-lock pixels;
+NON-VACUOUS by plant — disabling the pre-seed flips exactly the two sharing asserts + the
+pixels (⚠ the clock's-own-knob VALUE assert stays true under the plant — the identity
+asserts are the sharp oracle; catalogued in MACRO-PATTERNS.md). While wrapped the window BAR
+reads "transform frame" (the bar labels the contents' colloquialName — pre-existing naming
+behavior, surfaced to the owner as a possible future lens-family item, out of scope here).
+`fg presuite` OK (dpr1 283 green + paint).
+
+**P2 EXECUTED 2026-08-06.** Docs: transforms.md gains §5.4 (the LENS declarations),
+layout.md §4.2's island-sharing paragraph updated (delegating initialisers + pre-seed,
+slot/field sharing); BACKLOG line closed; archive + INDEX + memory per the close ritual.
+Close gates: **fg gauntlet 14/14 GREEN (4m24s — dpr1/dpr2/webkit suites at 283, apps, parts,
+paint, tiernaming, settle, capstone, refs, revisits, census, BOTH serialization rigs,
+storage) + fg homepage OK** (production boot + snapshot round-trip).

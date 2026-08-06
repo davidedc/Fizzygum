@@ -1639,6 +1639,13 @@ class Widget extends TreeNode
     island = new TrackingTransformFrameWdgt()
     island._materializedBySugar = true
     island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
+    # LENS pre-seed (island content preferences): the island is homed EMPTY first (order
+    # comment below), so a FrameWdgt former parent's mount guard would find no knob on it
+    # and create fresh BASE preferences — share MY content-stack knob NOW, so the mount
+    # operates on the one object. The island's lens initialiser overrides cover every flow
+    # where the island already holds its content when asked; this covers the one seam that
+    # asks during the empty window.
+    island._contentStackSpec = @_contentStackSpec if @_contentStackSpec?
     # HOME the (empty) island into MY former slot + spec FIRST, THEN reparent me into it. Order matters:
     # _addNoSettle fires the added widget's _reactToBeingAdded, and a widget whose appearance is DERIVED from
     # its nesting (a FrameWdgt's internal/external skin, via isInternal looking THROUGH this _materializedBySugar
