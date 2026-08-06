@@ -1750,8 +1750,10 @@ assertion a recapture after a regression silently stores two different hashes an
   assert (`canSetHeightFreely` false) is NOT the sharp oracle — it stays true even when the lens is broken (the fresh island
   spec, not the knob, then governs); the identity asserts + the wrapped-resize screenshot are what a lens regression flips
   (proven by the non-vacuity plant: disabling the materialize pre-seed failed exactly those two asserts + the pixels).
-  While wrapped the window BAR reads "transform frame" (the island's colloquialName — the bar labels the contents), so the
-  wrapped shots legitimately differ in the title too.
+  The window BAR keeps reading "analog clock" while wrapped — the island's `colloquialName` is a lens read-through to its
+  content, and since the bar CAPTURES the name while the materialize still holds the island EMPTY, the island nudges the
+  frame's `noteContentsNameMayHaveChanged()` when its content arrives (assert it with
+  `win.contents.colloquialName() == "analog clock"`).
 - **Chroma-neutrality assert (the shadow-COLOUR guard)** (`macroColoredCastersShadowNeutralBlack`): the same A/B isolation,
   plus, over pixels the shadow darkened by > 8 luma, assert the SHADOWED image's max RGB channel spread ≤ 2 — over the
   neutral grey desktop a contract-true black shadow stays channel-balanced, while a shadow that re-tints the caster's own

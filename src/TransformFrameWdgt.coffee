@@ -86,8 +86,21 @@ class TransformFrameWdgt extends PanelWdgt
     if contentWidget?
       @wrapContent contentWidget
 
+  # LENS (§5.4 family): my name is my content's — a window bar / inspector title / console
+  # title naming me should name the DISPLAYED thing, not the invisible plumbing. An empty
+  # authored island falls back to its own name (dev-facing hierarchy/menus stay CLASS-named
+  # regardless — they never ask colloquialName).
   colloquialName: ->
-    "transform frame"
+    @_soleContent()?.colloquialName() ? "transform frame"
+
+  # LENS timing twin of the materialize's spec pre-seed: the ONE consumer that CAPTURES my
+  # name — a FrameWdgt titles its bar at mount — asks while the materialize still holds me
+  # EMPTY (the homing order), so when my content arrives, nudge a labeling parent to
+  # re-derive. Intent-named public note on the receiver (the noteWallpaperChanged idiom);
+  # runs inside the add's settle, so the receiver uses its non-settling label core.
+  _reactToChildAdded: (aWdgt) ->
+    super
+    @parent?.noteContentsNameMayHaveChanged?() unless aWdgt.isLayoutInert?()
 
   # Phase 4B-universal (§6): an EXPLICIT island drives the halo rotation protocol against its OWN spec
   # (not the Widget base, which would wrap the island in ANOTHER sugar island). screenAnchor honours an

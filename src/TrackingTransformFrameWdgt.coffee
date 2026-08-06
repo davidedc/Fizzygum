@@ -16,7 +16,7 @@
 #
 # @_materializedBySugar stays the ORTHOGONAL auto-remove-at-identity gate (inherited): a future
 # explicitly-authored hugging island would be this class with the flag false. colloquialName is inherited
-# ("transform frame"), so hierarchy/menu labels are unchanged — only constructor.name differs.
+# (the LENS read-through to the content, "transform frame" when empty) — only constructor.name differs.
 
 class TrackingTransformFrameWdgt extends TransformFrameWdgt
 

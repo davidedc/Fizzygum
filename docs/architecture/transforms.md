@@ -251,9 +251,19 @@ rotated stack element adopted by a document applies the content's alignment/grow
 seam asks while the island is still EMPTY — `_materializeSugarIslandNoSettle` homes the island
 into a FrameWdgt former parent BEFORE reparenting the content (the skin-derivation order), and
 the frame's mount guard runs the initialiser right then — so the materialize PRE-SEEDS the
-island's field with the content's knob before homing. Pinned by
-`SystemTest_macroIslandLensWindowHeightLock` (identity oracles + the wrapped-resize
-height-lock) and the two `.scratch` kept-spec probes' C/D/E sections.
+island's field with the content's knob before homing.
+
+The island's **`colloquialName` is the third lens member**: it reads through to
+`_soleContent()`'s name ("transform frame" only when empty), so a window bar / inspector
+title / console title naming the island names the displayed thing (dev-facing hierarchy and
+menus stay CLASS-named — they never ask `colloquialName`). Its timing twin of the pre-seed:
+the frame bar CAPTURES the name at mount, during the materialize's empty window, so the
+island's `_reactToChildAdded` nudges `FrameWdgt.noteContentsNameMayHaveChanged()` (an
+intent-named public note, the `noteWallpaperChanged` idiom) once the content arrives.
+
+Pinned by `SystemTest_macroIslandLensWindowHeightLock` (identity + name oracles, the
+wrapped-resize height-lock, the bar reading "analog clock" while wrapped) and the two
+`.scratch` kept-spec probes' C/D/E sections.
 
 ---
 

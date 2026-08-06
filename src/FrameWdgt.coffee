@@ -354,6 +354,17 @@ class FrameWdgt extends Widget
       titleToBeSet = "window with an " + titleToBeSet
     titleToBeSet
 
+  # Re-derive the bar title from my CURRENT contents' colloquialName. Intent-named public
+  # note (the noteWallpaperChanged idiom) for a contents whose ANSWER to colloquialName
+  # changes after the mount captured it — the materialize homes an EMPTY island into me
+  # before its content moves in (the load-bearing skin-derivation order), so the island
+  # nudges me here once it holds the content its lens name reads through to. Non-settling
+  # label core: the nudge arrives inside the add's own settle (same reason as the
+  # _addNoSettle title site).
+  noteContentsNameMayHaveChanged: ->
+    return unless @label? and @contents? and @contents != @defaultContents
+    @label._setTextNoSettle @_titleForContents @contents
+
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
 

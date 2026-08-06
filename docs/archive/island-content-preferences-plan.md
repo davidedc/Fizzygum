@@ -208,3 +208,15 @@ slot/field sharing); BACKLOG line closed; archive + INDEX + memory per the close
 Close gates: **fg gauntlet 14/14 GREEN (4m24s — dpr1/dpr2/webkit suites at 283, apps, parts,
 paint, tiernaming, settle, capstone, refs, revisits, census, BOTH serialization rigs,
 storage) + fg homepage OK** (production boot + snapshot round-trip).
+
+**SAME-DAY FOLLOW-UP (owner-directed): the THIRD lens member — `colloquialName` read-through.**
+The P1 observation (bar reads "transform frame" while wrapped) landed as
+`TransformFrameWdgt.colloquialName -> @_soleContent()?.colloquialName() ? "transform frame"`,
+plus the timing twin of the pre-seed: the FrameWdgt bar CAPTURES the name at mount — during
+the materialize's empty window — so the island's `_reactToChildAdded` nudges the new
+intent-named public note `FrameWdgt.noteContentsNameMayHaveChanged()` once the content
+arrives (⚖ captured-during-the-empty-window is a seam CLASS). The lens test gained the name
+oracle; its two wrapped shots recaptured COMPLETE at dpr 1+2 (the gate's full-suite runs
+prove no other test sees the name change — consumer census: bar titles, inspector/console
+titles, the naming service; hierarchy/menus are CLASS-named and never ask). Gauntlet 14/14
+(5m44s) + homepage green again.
