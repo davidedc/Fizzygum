@@ -62,18 +62,12 @@ class BoxyAppearance extends Appearance
     if appliedShadow?
       aContext.fillStyle = Color.BLACK.toString()
 
-    aContext.beginPath()
-    @outlinePath aContext, @getCornerRadius(), false
-    aContext.closePath()
-    aContext.fill()
+    @fillOutline aContext
 
     if @widget.strokeColor? and !appliedShadow?
       aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
       aContext.strokeStyle = @widget.strokeColor.toString()
-      aContext.beginPath()
-      @outlinePath aContext, @getCornerRadius(), true
-      aContext.closePath()
-      aContext.stroke()
+      @strokeOutline aContext
 
     aContext.restore()
 
@@ -85,32 +79,21 @@ class BoxyAppearance extends Appearance
     @_drawHighlightOverlay aContext, al, at, w, h
 
   
-  outlinePath: (context, radius, isStroke) ->
-    offset = radius
-    # in order to be crisp, strokes have to be displaced a bit
-    # (while fills don't, they'd look fuzzy instead).
-    # Note that the curved corners will be drawn with antialiasing,
-    # which for small dimensions and/or for small curvatures looks messy.
-    # There is really no way to disable antialiasing when drawing
-    # vector graphics (see:
-    # https://stackoverflow.com/questions/195262/can-i-turn-off-antialiasing-on-an-html-canvas-element
-    # ). A possible solution is to detect when you are
-    # drawing small components (somehow track the scale that it's drawn at)
-    # and small radius, and in those cases avoid to paint the arc, but
-    # rather fiddle with pixels individually (following the equation of the
-    # circle or just manually pixel-painting the curve).
-    if isStroke
-      offset += 0.5
-    w = @widget.width()
-    h = @widget.height()
-    # top left (from -180 to -90 degrees):
-    context.arc offset, offset, radius, -Math.PI, -Math.PI/2
-    # top right (from -90 to 0 degrees):
-    context.arc w - offset, offset, radius, -Math.PI/2, 0
-    # bottom right (from 0 to 90 degrees):
-    context.arc w - offset, h - offset, radius, 0, Math.PI/2
-    # bottom left (from 90 to 180 degrees):
-    context.arc offset, h - offset, radius, Math.PI/2, Math.PI
+  # Fill / stroke the rounded-box outline through the direct rounded-rect calls
+  # (CanvasRenderingContext2D-extensions.coffee): SWCanvas's dedicated fast
+  # rasterizers on the software backend, a roundRect() path on native. One
+  # spelling covers every backend/dpr combination — the fill spans exactly the
+  # widget box, and the 1-logical-px stroke path is inset half a logical pixel
+  # so the stroke covers precisely the boundary pixel ring (the standard HTML5
+  # crisp-stroke idiom; strokes need the displacement, fills would just look
+  # fuzzy from it). On native the curved corners anti-alias; on SWCanvas they
+  # are hard-edged. BubblyAppearance overrides BOTH of these with its
+  # generic-path speech-bubble outline.
+  fillOutline: (context) ->
+    context.fillRoundRect 0, 0, @widget.width(), @widget.height(), @getCornerRadius()
+
+  strokeOutline: (context) ->
+    context.strokeRoundRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1, @getCornerRadius()
 
   cornerRadiusPopout: (menuItem)->
     @widget.prompt menuItem.parent.title + "\ncorner\nradius:",

@@ -8,6 +8,22 @@ class BubblyAppearance extends BoxyAppearance
   # classes. Both call sites pass one argument (`new BubblyAppearance @`), so the synthesised
   # forward-everything is equivalent to the explicit forward-one anyway.
 
+  # The bubble outline (rounded box + tail spike) is not a roundRect, so unlike
+  # BoxyAppearance both of these paint through the generic path pipeline. Fill
+  # and stroke share the one path — this outline never applied the boxy
+  # half-pixel stroke displacement.
+  fillOutline: (context) ->
+    context.beginPath()
+    @outlinePath context, @getCornerRadius()
+    context.closePath()
+    context.fill()
+
+  strokeOutline: (context) ->
+    context.beginPath()
+    @outlinePath context, @getCornerRadius()
+    context.closePath()
+    context.stroke()
+
   outlinePath: (context, radius) ->
 
     padding = radius

@@ -2770,8 +2770,9 @@ class Widget extends TreeNode
           # the main @color fill clips to the tight box (bounds inset by the four paddings)
           @boundingBoxTight()
       when BoxyAppearance
-        # inscribed box: the straight edges between corners fill crisply to the bounds, only the
-        # corner arcs anti-alias -> inset every side by cornerRadius + 1 (conservative)
+        # inscribed box: the straight edges between corners fill crisply to the bounds; the corner
+        # areas are cut away by the rounding (anti-aliased on native, hard-edged on SWCanvas)
+        # -> inset every side by cornerRadius + 1 (conservative)
         @boundingBox().insetBy Math.max(@appearance.getCornerRadius(), 0) + 1
       else
         nil
