@@ -1,8 +1,19 @@
 # Direct-shape fast paths — follow-ups to the Boxy roundRect conversion
 
-**PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-Authored 2026-08-07, immediately after the Boxy→roundRect arc closed. Nothing below has
-been started. Every `file:line` was verified on authoring day but LINES DRIFT — the quoted
+**STATUS: ✅ EXECUTED IN FULL AND CLOSED 2026-08-08 — all phases P1–P6 (P6 added
+in execution: the uniform-scale gate). Landed as SWCanvas `277e8e3`+`af9af84`+`7414c35`,
+Fizzygum `4d1876bc`+`2682fb5e` (pin), Fizzygum-tests `d402421bb` (133-test re-baseline,
+dpr 1+2). Verification: recapture COMPLETE at both densities; closing gauntlet 14/14
+legs incl. WebKit on the new references. Deviations from the authored text: the
+stadium primitive is a dedicated `StadiumOps` (the RoundedRectOpsAA-at-degenerate-radius
+delegation was measured and REJECTED — edge-sampled corner extents lose a horizontal
+stadium's apex columns); the P3 conversion additionally swept mechanically-safe icon
+path-rects/circles to direct calls (owner-directed); the rotate-handle hairline ring
+was converted, found to vanish in scaled islands (sub-pixel width below every direct
+threshold), and REVERTED with a written reason — the four-swirlies glyph redesign is
+the real fix (BACKLOG). Case law: memory note `direct-shape-fastpaths-arc.md`.**
+
+Authored 2026-08-07, immediately after the Boxy→roundRect arc closed. Every `file:line` was verified on authoring day but LINES DRIFT — the quoted
 method names and code are authoritative; re-grep before trusting a number.
 
 **Mandate:** finish what the Boxy arc started — eliminate the remaining path-drawn,
