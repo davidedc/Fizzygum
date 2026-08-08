@@ -6,6 +6,11 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
+### `plans/hairline-direct-strokes-plan.md` — AUTHORED 2026-08-08, not started
+- [ ] H1 upstream SWCanvas: the generic pipeline's sub-pixel faint rule (1px geometry × proportional opacity, `Rasterizer._strokeInternal`) replicated as a hairline branch in ALL five direct stroke dispatchers (rect/roundRect/circle/arc/line) — today each does something different below 1px; probes + core test 055 + zero-churn sweeps for lw≥1 + `build:prod` before vendoring.
+- [ ] H2 Fizzygum: pin bump; re-convert the rotate-handle knob ring to `strokeCircle` (the prior arc's revert, now unblocked); suite dpr1+2 → owner diffpage eyeball → recapture → gauntlet.
+- [ ] H3 docs-sync (integer-pixel §7 hairline rule) + archive/close loop.
+
 ### `archive/direct-shape-fastpaths-followups-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-08 (P1–P6)
 - [x] P1 upstream SWCanvas: circle-path hardening — tier-0 clip wiring for CircleOps + crisp-contract probes + doc truth-up (SWCanvas `277e8e3`; also fixed a latent fillStroke_Any off-surface span-wrap corruption). ⚡ The "relax CircleOps' transform" premise was FALSIFIED at authoring: circles already fast-path under Fizzygum's transforms; the doc was stale.
 - [x] P2 upstream SWCanvas: stadium/capsule primitive (SWCanvas `af9af84`: `fillStadium` over a new `StadiumOps`; RoundedRectOpsAA-at-max-radius delegation was measured and REJECTED — its edge-sampled corner extents lose a horizontal stadium's apex columns).
