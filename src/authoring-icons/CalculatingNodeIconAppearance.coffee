@@ -82,15 +82,11 @@ class CalculatingNodeIconAppearance extends IconAppearance
     context.lineWidth = 2
     context.stroke()
     #// Rectangle 2 Drawing
-    context.beginPath()
-    context.rect 65.5, 54.5, 4, 4
     context.fillStyle = iconColorString
-    context.fill()
+    context.fillRect 65.5, 54.5, 4, 4
     #// Rectangle 3 Drawing
-    context.beginPath()
-    context.rect 65.5, 68.5, 4, 4
     context.fillStyle = iconColorString
-    context.fill()
+    context.fillRect 65.5, 68.5, 4, 4
     #// Oval Drawing
     @oval context, 88.5, 48, 6, 6
     context.fillStyle = iconColorString

@@ -154,7 +154,42 @@ come from *content rendering*, not placement:
 
 All of this is Layer C: correct, inherent, and out of scope for the integer-placement policy.
 
-## 7. Contributor checklist
+## 7. Direct-shape chrome: the ONE crisp spelling per shape
+
+Compactly-parametrisable chrome shapes (menu/button/window rounded rects, slider
+stadiums, title-bar rings) do not go through `beginPath()`/`arc()` paths. They use
+**SWCanvas's non-standard direct-call names as the shared vocabulary** — on the
+SWCanvas backend these reach dedicated rasterizers (fast for solid colour +
+source-over + uniform scale, with tier-0 rect-clip support so a per-widget damage
+clip never materialises a full-surface mask); on the native backend the same names
+are path-based polyfills in
+`src/boot/extensions/CanvasRenderingContext2D-extensions.coffee`. One spelling per
+shape is crisp on both backends at every `ceilPixelRatio` (integer logical box ×
+integer scale = integer device box, and the rasterizers' contracts are pinned by
+SWCanvas's core tests):
+
+- **Rounded rect** — fill the widget box: `fillRoundRect 0, 0, w, h, r`;
+  1-logical-px ring just inside it: `strokeRoundRect 0.5, 0.5, w - 1, h - 1, r`
+  (valid because SWCanvas's 1px stroke snaps its corners onto the edges' pixel
+  frame). Used by `BoxyAppearance` / menus / window chrome.
+- **Stadium** — fill the widget box, both orientations, exactly `[0,w)×[0,h)`:
+  `fillStadium 0, 0, w, h` (cap radius `min(w,h)/2` is implied). Used by
+  `CircleBoxyAppearance` (sliders). Deliberately fill-only.
+- **Circle** — fill inscribed in an s×s box at `x,y`: `fillCircle x + s/2, y + s/2, s/2`
+  (covers exactly the box, both parities). Thick ring: `strokeCircle cx, cy, rMid`
+  with `lineWidth` = ring thickness — the rasterized annulus is exactly
+  `[rMid − lw/2, rMid + lw/2]`. Used by `IconAppearance`'s button rings (in the
+  icon's specification space; the icon transform is always a uniform
+  aspect-fit scale, so it hits the fast path). Under a NON-uniform transform
+  SWCanvas gates the direct circle/arc paths onto the generic pipeline, which
+  draws the correct ellipse — content needing ellipses simply renders slower,
+  never wrong.
+
+The upstream reference for the rasterizer contracts, tier-0 clipping, and the
+per-shape eligibility conditions is the SWCanvas repo's
+`DIRECT-RENDERING-SUMMARY.MD` (§3, §5) and its `tests/core/046–053`.
+
+## 8. Contributor checklist
 
 - Adding a geometry mutator? Round at the commit point (mirror `__commitExtent` /
   `_moveToNoSettle`), and preserve any fractional *desired* value on the side — don't round it away.

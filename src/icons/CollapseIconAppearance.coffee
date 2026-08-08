@@ -6,9 +6,8 @@ class CollapseIconAppearance extends IconAppearance
     # The circle
     @_paintButtonRing context, fillColor
 
-    # The "open window" inside the circle
-    context.beginPath()
-    context.rect 65, 107, 65, 21
-    context.closePath()
-    context.fill()
+    # The "open window" inside the circle. Sets its own fillStyle: the ring is
+    # a STROKE, so nothing upstream leaves a fill colour behind for this fill.
+    context.fillStyle = fillColor.toString()
+    context.fillRect 65, 107, 65, 21
 

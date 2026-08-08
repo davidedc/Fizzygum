@@ -19,24 +19,12 @@ class IconAppearance extends Appearance
   _outlineColorString: ->
     WorldWdgt.preferencesAndSettings.outlineColorString
 
-  # default icon is a circle
+  # default icon is a ring — one direct mid-radius stroke (see _paintButtonRing):
+  # outer r 91.5, inner r 78.1 in specification space
   paintFunction: (context) ->
-    fillColor = @color
-    context.beginPath()
-    context.moveTo 100.5, 7
-    context.bezierCurveTo 50.05, 7, 9, 48.04, 9, 98.5
-    context.bezierCurveTo 9, 148.95, 50.05, 190, 100.5, 190
-    context.bezierCurveTo 150.95, 190, 192, 148.95, 192, 98.5
-    context.bezierCurveTo 192, 48.04, 150.95, 7, 100.5, 7
-    context.closePath()
-    context.moveTo 100.5, 20.39
-    context.bezierCurveTo 143.72, 20.39, 178.61, 55.28, 178.61, 98.5
-    context.bezierCurveTo 178.61, 141.72, 143.72, 176.61, 100.5, 176.61
-    context.bezierCurveTo 57.28, 176.61, 22.39, 141.72, 22.39, 98.5
-    context.bezierCurveTo 22.39, 55.28, 57.28, 20.39, 100.5, 20.39
-    context.closePath()
-    context.fillStyle = fillColor.toString()
-    context.fill()
+    context.strokeStyle = @color.toString()
+    context.lineWidth = 13.4
+    context.strokeCircle 100.5, 98.5, 84.8
 
 
 
@@ -264,10 +252,8 @@ class IconAppearance extends Appearance
   # handle oval), shared by the Color/Grayscale palette icons — the gradient is the only
   # difference between them, so it is built by each subclass and passed in.
   _paintPaletteSwatch: (context, gradient, iconColorString) ->
-    context.beginPath()
-    context.rect 21, 19, 58, 63
     context.fillStyle = gradient
-    context.fill()
+    context.fillRect 21, 19, 58, 63
     context.beginPath()
     context.rect 20.5, 17.5, 60, 66
     context.strokeStyle = iconColorString
@@ -288,20 +274,14 @@ class IconAppearance extends Appearance
   # The concentric-circle button "ring" (an annulus), shared by the Close / Collapse /
   # Uncollapse title-bar button icons; each fills it from its own @widget.color.
   _paintButtonRing: (context, fillColor) ->
-    context.beginPath()
-    context.moveTo 100.5, 196.5
-    context.bezierCurveTo 153.91, 196.5, 197.5, 152.91, 197.5, 99.5
-    context.bezierCurveTo 197.5, 46.09, 153.91, 2.5, 100.5, 2.5
-    context.bezierCurveTo 47.09, 2.5, 3.5, 46.09, 3.5, 99.5
-    context.bezierCurveTo 3.5, 152.91, 47.09, 196.5, 100.5, 196.5
-    context.closePath()
-    context.moveTo 100.5, 15.1
-    context.bezierCurveTo 147.11, 15.1, 184.9, 52.89, 184.9, 99.5
-    context.bezierCurveTo 184.9, 146.11, 147.11, 183.9, 100.5, 183.9
-    context.bezierCurveTo 53.89, 183.9, 16.1, 146.11, 16.1, 99.5
-    context.bezierCurveTo 16.1, 52.89, 53.89, 15.1, 100.5, 15.1
-    context.closePath()
-    context.fillStyle = fillColor.toString()
-    context.fill()
+    # ONE direct mid-radius stroke: the thick-stroke path rasterizes the exact
+    # analytic annulus [90.7−6.3, 90.7+6.3] = outer r 97, inner r 84.4 in the
+    # 200×200 specification space. Safe under the icon transform because
+    # calculateRectangleOfIcon aspect-fits to a square, so the paint scale is
+    # always UNIFORM (a non-uniform scale would silently draw a wrong-radius
+    # circle where an ellipse belongs).
+    context.strokeStyle = fillColor.toString()
+    context.lineWidth = 12.6
+    context.strokeCircle 100.5, 99.5, 90.7
 
 

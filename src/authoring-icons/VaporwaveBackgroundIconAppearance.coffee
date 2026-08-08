@@ -23,7 +23,5 @@ class VaporwaveBackgroundIconAppearance extends IconAppearance
         g
       @backgroundGradient = colorStops context.createLinearGradient 50, 91.61, 50, -28.19
 
-    context.beginPath()
-    context.rect 0, 0, 100, 99.5
     context.fillStyle = @backgroundGradient
-    context.fill()
+    context.fillRect 0, 0, 100, 99.5

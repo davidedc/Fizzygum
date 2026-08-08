@@ -13,10 +13,12 @@ class FridgeMagnetsIconAppearance extends IconAppearance
 
     #// fridge body: light halo fill so the glyph reads on the wallpaper
     #// dots, then the outline stroke
+    context.fillStyle = outlineColorString
+    context.fillRect 33, 8, 34, 84
+    # the stroke keeps its PATH form: it rounds its corners (lineJoin below), and
+    # SWCanvas's direct strokeRect draws square corners regardless of lineJoin
     context.beginPath()
     context.rect 33, 8, 34, 84
-    context.fillStyle = outlineColorString
-    context.fill()
     context.strokeStyle = iconColorString
     context.lineWidth = 3.5
     context.lineJoin = 'round'

@@ -102,6 +102,12 @@ class HandleAppearance extends Appearance
     # port in their boot prelude, before the engine ever runs — so the ring is cross-engine
     # byte-identical (the suite asserts exact pixels under WebKit). The native page rasterises this
     # arc through the platform canvas instead, and matches no reference.
+    # ⚠ Deliberately NOT a strokeCircle direct call: this ring strokes at the hairline
+    # lineWidth 0.5 set by handleWidgetRenderingHelper, below every direct-path
+    # threshold (STROKE_1PX_TOLERANCE), so strokeCircle would re-route it through a
+    # DEVICE-space path fallback that loses the sub-pixel ring entirely inside a
+    # scaled island. (The rotate glyph is due a redesign anyway — the four-swirlies
+    # square — at which point this paint goes away wholesale.)
     if @widget.type is "rotateHandle"
       cx = @widget.width() / 2
       cy = @widget.height() / 2

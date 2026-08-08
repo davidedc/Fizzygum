@@ -57,33 +57,16 @@ class CircleBoxyAppearance extends Appearance
 
     @_beginLogicalPixelsBox aContext, appliedShadow, al, at, w, h
 
-    [radius,center1,center2,rect] = @calculateKeyPoints()
-
-    # the centers of two circles
-    points = [center1.toLocalCoordinatesOf(@widget), center2.toLocalCoordinatesOf(@widget)]
-
-    color = @widget.color
-
     if appliedShadow?
       aContext.fillStyle = Color.BLACK.toString()
     else
-      aContext.fillStyle = color.toString()
+      aContext.fillStyle = @widget.color.toString()
 
-    aContext.beginPath()
-
-    # the two circles (one at each end)
-    aContext.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI
-    aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI
-    # the rectangle
-    rect = rect.floor()
-    rect = rect.toLocalCoordinatesOf @widget
-    aContext.moveTo rect.origin.x, rect.origin.y
-    aContext.lineTo rect.origin.x + rect.width(), rect.origin.y
-    aContext.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()
-    aContext.lineTo rect.origin.x, rect.origin.y + rect.height()
-
-    aContext.closePath()
-    aContext.fill()
+    # ONE stadium fill covering exactly the widget box, both orientations —
+    # a single primitive rather than the old two-arcs+rectangle path, so the
+    # shadow pass (which fills at globalAlpha < 1) blends every pixel once.
+    # (calculateKeyPoints stays as the hit test's — isTransparentAt — geometry.)
+    aContext.fillStadium 0, 0, @widget.width(), @widget.height()
 
     aContext.restore()
 

@@ -6,6 +6,14 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
+### `plans/direct-shape-fastpaths-followups-plan.md` — IN EXECUTION (P1+P2 landed upstream 2026-08-07)
+- [x] P1 upstream SWCanvas: circle-path hardening — tier-0 clip wiring for CircleOps + crisp-contract probes + doc truth-up (SWCanvas `277e8e3`; also fixed a latent fillStroke_Any off-surface span-wrap corruption). ⚡ The "relax CircleOps' transform" premise was FALSIFIED at authoring: circles already fast-path under Fizzygum's transforms; the doc was stale.
+- [x] P2 upstream SWCanvas: stadium/capsule primitive (SWCanvas `af9af84`: `fillStadium` over a new `StadiumOps`; RoundedRectOpsAA-at-max-radius delegation was measured and REJECTED — its edge-sampled corner extents lose a horizontal stadium's apex columns).
+- [ ] P3 Fizzygum: convert `CircleBoxyAppearance` (sliders) + `IconAppearance._paintButtonRing` (title-bar buttons) — MASS-VISUAL, owner-gated diffpage + recapture.
+- [ ] P4 upstream SWCanvas: `fillStroke_AA_Any` tier-0 (implemented + verified, incl. a radius<1 fill-half clip-drop fix; awaiting commit gate).
+- [ ] P5 docs-sync of the landed Boxy roundRect conversion (crisp-spelling contract → `architecture/integer-pixel-placement-and-sizing.md`).
+- [ ] FOLLOW-UP (owner, 2026-08-08): redesign the rotate-handle glyph as the four-swirlies square (the classic rotate glyph: square outline with four curled arrows at the corners — owner supplied reference screenshots). The current knob-ring paint in `HandleAppearance` strokes a 0.5-width hairline — deliberately NOT converted to `strokeCircle` (sub-pixel hairlines fall below every direct-path threshold and vanish in scaled islands); the redesign replaces that paint wholesale. Candidate flow: the size-aware icon workflow.
+
 ### `archive/budgeted-source-compile-scheduler-plan.md` — ✅ EXECUTED + CLOSED 2026-08-04
 - [x] Both one-class-per-turn ingest pacings replaced by ONE `SourceCompileScheduler` (end-of-frame
       budget drain, per-line EWMA estimator, dev-boot chunk pump). Dev boot 3219→946 ms; gauntlet

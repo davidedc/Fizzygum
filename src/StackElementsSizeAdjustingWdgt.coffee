@@ -174,9 +174,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     centerY = @bounds.height() / 2
     radius = Math.min centerX, centerY
     radius = radius - radius / 20
-    aContext.beginPath()
-    aContext.arc centerX, centerY, radius, 0, 2 * Math.PI
     aContext.fillStyle = Color.GRAY.toString()
-    aContext.fill()
-    aContext.closePath()
+    aContext.fillCircle centerX, centerY, radius
 

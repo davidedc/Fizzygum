@@ -47,3 +47,36 @@ CanvasRenderingContext2D::strokeRoundRect = (x, y, w, h, radius) ->
   @beginPath()
   @roundRect x, y, w, h, radius
   @stroke()
+
+# Stadium (capsule): the w×h box with its shorter axis fully rounded — two
+# half-circle caps of radius min(w,h)/2 joined by a rectangular body, the
+# orientation implied by the longer axis, so ONE call covers vertical and
+# horizontal sliders. On SWCanvas this name reaches the dedicated StadiumOps
+# rasterizer (single-blend at any alpha, exact-box crisp contract, tier-0
+# clip); the native polyfill is the standard roundRect at the degenerate
+# radius, whose pixel-center-sampled path output is a correct stadium.
+# Crisp spelling: fill the widget box = fillStadium 0, 0, w, h
+CanvasRenderingContext2D::fillStadium = (x, y, w, h) ->
+  @beginPath()
+  @roundRect x, y, w, h, Math.min(w, h) / 2
+  @fill()
+
+# Direct circle stroke (annulus at the current lineWidth), mirroring
+# SWCanvas's strokeCircle so ring-shaped chrome (window title-bar buttons)
+# speaks the same vocabulary on both backends. On SWCanvas the thick-stroke
+# path rasterizes the exact analytic annulus [r−lw/2, r+lw/2]; the native
+# polyfill strokes the equivalent arc path.
+CanvasRenderingContext2D::strokeCircle = (cx, cy, r) ->
+  @beginPath()
+  @arc cx, cy, r, 0, 2 * Math.PI
+  @stroke()
+
+# Direct circle fill. Crisp spelling: a circle inscribed in an s×s box at x,y
+# is fillCircle x + s/2, y + s/2, s/2 — it covers exactly the box on SWCanvas.
+# Uniform-scale contexts hit SWCanvas's direct renderer; a non-uniform
+# transform is gated upstream onto the generic pipeline, which draws the
+# correct ellipse — the same shape this polyfill's arc path produces natively.
+CanvasRenderingContext2D::fillCircle = (cx, cy, r) ->
+  @beginPath()
+  @arc cx, cy, r, 0, 2 * Math.PI
+  @fill()
