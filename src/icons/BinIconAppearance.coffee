@@ -5,10 +5,11 @@ class BinIconAppearance extends SizeAwareIconAppearance
   # now a simple BIN -- a small handle over a wider lid over a gently
   # tapered body with three inner ridges. Light line art: outlines on the
   # tc unit, ridges on the hairline td (the reference is thin uniform
-  # strokes), halo envelope on o. The tapered sides are quantized per row
-  # with the SAME taper on the outer and inner trapezoids, so the walls
-  # are exactly tc on every row. Fully integer-painted: the whole image is
-  # byte-identical across backends.
+  # strokes), halo envelope on o. The tapered body is a trapezoid path
+  # whose interior twin shares the SAME side lines shifted tc inward, so
+  # the slanted walls read tc thick at every row; each backend rasterizes
+  # the slant its own way (the geometry-vs-rendering doctrine in
+  # SizeAwareIconAppearance's header).
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
@@ -41,8 +42,6 @@ class BinIconAppearance extends SizeAwareIconAppearance
     tc = if S >= 20 then Math.max 2, Math.round S / 45 else 1
     td = Math.max 1, Math.round S / 64  # the ridges
     o = t
-    ink = @_iconColorString()
-    light = @_outlineColorString()
 
     # widths parity-normalized to S so every shape shares ONE exact center
     cw = (f) =>
@@ -64,21 +63,22 @@ class BinIconAppearance extends SizeAwareIconAppearance
     lidY = topY + handleH
     bodyY = lidY + lidH
 
+    cxc = x + S / 2                     # every body shape shares this center
+    taper = (bodyTopW - bodyBotW) / 2   # per-side horizontal travel
+
     # ---- halos first: with every halo down before any ink, none can
     # punch a border ----------------------------------------------------------
-    ctx.fillStyle = light
+    @_useLight ctx
     ctx.fillRect handleX - o, topY - o, handleW + 2 * o, handleH + 2 * o
     ctx.fillRect lidX - o, lidY - o, lidW + 2 * o, lidH + 2 * o
-    for [rl, rw], ri in @_binBodyRows bodyX - o, bodyTopW + 2 * o, bodyBotW + 2 * o, bodyH + 2 * o
-      ctx.fillRect rl, bodyY - o + ri, rw, 1
+    @_binTrapezoid ctx, cxc, bodyTopW + 2 * o, bodyBotW + 2 * o, bodyY - o, bodyH + 2 * o
 
     # ---- ink silhouettes, then light interiors (border idiom) ---------------
-    ctx.fillStyle = ink
+    @_useInk ctx
     ctx.fillRect handleX, topY, handleW, handleH
     ctx.fillRect lidX, lidY, lidW, lidH
-    for [rl, rw], ri in @_binBodyRows bodyX, bodyTopW, bodyBotW, bodyH
-      ctx.fillRect rl, bodyY + ri, rw, 1
-    ctx.fillStyle = light
+    @_binTrapezoid ctx, cxc, bodyTopW, bodyBotW, bodyY, bodyH
+    @_useLight ctx
     # the handle is BOTTOMLESS -- its interior runs down to the lid, whose
     # own top line closes the shape (a drawn handle bottom would sit on the
     # lid's top border and read as one doubled, thicker line)
@@ -88,10 +88,12 @@ class BinIconAppearance extends SizeAwareIconAppearance
       ctx.fillRect lidX + tc, lidY + tc, lidW - 2 * tc, lidH - 2 * tc
     # the body has no top border of its own -- the lid's bottom edge is the
     # bin's top line -- so the interior starts at the body's first row and
-    # stops above the tc bottom border
-    for [rl, rw], ri in @_binBodyRows bodyX + tc, bodyTopW - 2 * tc, bodyBotW - 2 * tc, bodyH
-      break if ri >= bodyH - tc
-      ctx.fillRect rl, bodyY + ri, rw, 1
+    # stops above the tc bottom border; its sides are the outer sides
+    # shifted tc inward (same slope), so the slanted walls are tc thick
+    innerH = bodyH - tc
+    if bodyTopW - 2 * tc >= 1 and innerH >= 1
+      @_binTrapezoid ctx, cxc, bodyTopW - 2 * tc,
+        bodyTopW - 2 * tc - 2 * taper * innerH / bodyH, bodyY, innerH
 
     # ---- the three ridges: td verticals, clear of the walls and of the
     # lid/bottom (a ridge that can't keep 1px of light off the slanted
@@ -100,16 +102,21 @@ class BinIconAppearance extends SizeAwareIconAppearance
     rBot = bodyY + bodyH - tc - Math.max 1, Math.round S * @RIDGE_BOT
     return if rBot - rTop < 2
     innerHalfAtBot = (bodyBotW - 2 * tc) // 2
-    ctx.fillStyle = ink
+    @_useInk ctx
     for offF in @RIDGE_XS
       rx = x + Math.round((S - td) / 2) + Math.round offF * S
       halfSpan = Math.abs(rx + (if offF > 0 then td else 0) - (x + S / 2))
       continue if halfSpan + 1 > innerHalfAtBot
       ctx.fillRect rx, rTop, td, rBot - rTop
 
-  # per-row [left x, width] spans of the tapered body (top wider than the
-  # bottom), the slanted sides quantized one row at a time
-  _binBodyRows: (bx, topW, botW, h) ->
-    for r in [0...h]
-      ins = Math.round (topW - botW) / 2 * (if h is 1 then 0 else r / (h - 1))
-      [bx + ins, topW - 2 * ins]
+  # one filled trapezoid of the body family (top wider than the bottom),
+  # centered on cxc — the widths are parity-normalized to S, so cxc ± w/2
+  # land on integer columns
+  _binTrapezoid: (ctx, cxc, topW, botW, yT, h) ->
+    ctx.beginPath()
+    ctx.moveTo cxc - topW / 2, yT
+    ctx.lineTo cxc + topW / 2, yT
+    ctx.lineTo cxc + botW / 2, yT + h
+    ctx.lineTo cxc - botW / 2, yT + h
+    ctx.closePath()
+    ctx.fill()

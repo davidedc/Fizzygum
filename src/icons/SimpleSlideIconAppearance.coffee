@@ -4,11 +4,11 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
   # /convert-icon-size-aware; idiom docs: docs/plans/pixel-icons-plan.md §5b):
   # the family's shared slide-card panel (the base's _pxSlideCard) holding
   # slide content -- a left column of text rows and a right column with a
-  # rising 3-bar chart over two more text rows. All content is integer runs
+  # rising 3-bar chart over two more text rows. All content is integer rects
   # on the lighter tc unit: the old 1.5-design-unit strokes land around one
   # device pixel at the real display sizes and dropped out, or dashed,
-  # under the non-AA backend. Fully integer-painted, so the whole image is
-  # byte-identical across backends.
+  # under the non-AA backend. The card's rounded corners are
+  # fillRoundRect's, rasterized by each backend its own way.
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
@@ -35,10 +35,8 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
     t = Math.max 1, Math.round S / 32   # structural unit: the card border
     tc = Math.max 1, Math.round S / 45  # lighter unit: all slide content
     o = t                               # halo/envelope thickness
-    ink = @_iconColorString()
-    light = @_outlineColorString()
 
-    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o, ink, light
+    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o
 
     # the content clearance box: >=1px of light inside the card ring
     # (rounding otherwise parks content ON the border at small sizes)
@@ -47,8 +45,8 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
     lx1 = Math.max x + Math.round(S * @COL1_X), cxMin
     lx2 = Math.max x + Math.round(S * @COL2_X), cxMin
 
-    [yB, chartRight] = @_paintBarChart ctx, y, S, tc, lx2, cxMax, py, t, ink, light
-    @_paintTextRows ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight, ink
+    [yB, chartRight] = @_paintBarChart ctx, y, S, tc, lx2, cxMax, py, t
+    @_paintTextRows ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight
 
   # the rising bar chart: uniform-width bars (walls tc, hollow when the
   # hole keeps 1px, solid below) sharing one baseline, left-anchored on the
@@ -60,7 +58,7 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
   # cross the clearance box is dropped too. Returns the baseline and the
   # chart's right edge (nil when no bar fit) -- the right column's text
   # rows align their ends to it.
-  _paintBarChart: (ctx, y, S, tc, lx2, cxMax, py, t, ink, light) ->
+  _paintBarChart: (ctx, y, S, tc, lx2, cxMax, py, t) ->
     yB = y + Math.round S * @BAR_BASE
     bw = Math.max 1, Math.round S * @BAR_W
     gap = Math.max 1, Math.round S * @BAR_GAP
@@ -77,10 +75,10 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
       bx = lx2 + i * (bw + gap)
       break if bx + bw - 1 > cxMax
       chartRight = bx + bw - 1
-      ctx.fillStyle = ink
+      @_useInk ctx
       ctx.fillRect bx, yB - h, bw, h
       if bw - 2 * tc >= 2 and h - 2 * tc >= 2
-        ctx.fillStyle = light
+        @_useLight ctx
         ctx.fillRect bx + tc, yB - h + tc, bw - 2 * tc, h - 2 * tc
     [yB, chartRight]
 
@@ -89,10 +87,10 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
   # the previous one is dropped (min-pitch rule); the right column draws
   # its subset only below the chart's baseline, and its rows end exactly
   # at the chart's right edge (the two right edges read as one margin)
-  _paintTextRows: (ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight, ink) ->
+  _paintTextRows: (ctx, y, S, tc, lx1, lx2, cxMax, py, t, yB, chartRight) ->
     len = Math.round S * @LINE_LEN
     len2 = if chartRight? then chartRight - lx2 + 1 else Math.min(len, cxMax - lx2 + 1)
-    ctx.fillStyle = ink
+    @_useInk ctx
     prevY = -99
     for f, i in @LINE_YS
       yy = Math.max y + Math.round(S * f) - Math.round(tc / 2), py + t + 1

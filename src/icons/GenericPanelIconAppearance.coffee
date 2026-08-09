@@ -8,8 +8,9 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
   # small floating toolbars overlapping its edges. The toolbars follow the
   # super-toolbar column's recipe at the finer tc weight but stay LOCAL:
   # they are thinner and smaller than the super-toolbar's column, not worth
-  # a shared abstraction. Fully integer-painted, so unlike the hybrid
-  # Toolbars icon the whole image is byte-identical across backends.
+  # a shared abstraction. The toolbars are integer rects; the card's
+  # rounded corners are fillRoundRect's, rasterized by each backend its
+  # own way.
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
@@ -41,12 +42,10 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
       t: Math.max 1, Math.round S / 32  # structural unit: panel border
       tc: Math.max 1, Math.round S / 45 # lighter unit: all toolbar line work
       td: Math.max 1, Math.round S / 64 # detail unit: the tool-box rings
-      ink: @_iconColorString()
-      light: @_outlineColorString()
     u.o = u.t                           # halo/envelope thickness
 
     # the landscape rounded card
-    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, u.t, u.o, u.ink, u.light
+    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, u.t, u.o
 
     # a toolbar's light backing may punch the panel's TOP border (right
     # toolbar) and BOTTOM border (left toolbar) -- that's the design -- but
@@ -99,7 +98,7 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
   # unit when its hole survives, a solid dot when smaller, nothing once
   # even a dot can't keep 1px of clearance.
   _paintMiniToolbar: (ctx, x, y, u, iw, fx, fy, nDesign, xMinBacking, xMaxBacking, yMaxBacking) ->
-    {S, tc, td, o, ink, light} = u
+    {S, tc, td, o} = u
     hH = Math.round S * @TB_HEADER_H
     hH = 0 if hH < 2                    # too thin to read as the title bar
     headerSpan = if hH > 0 then hH + tc else 0
@@ -126,40 +125,40 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
 
     # backing/halo, then the frame: ink silhouette, light interior
     fh = frameH()
-    ctx.fillStyle = light
+    @_useLight ctx
     ctx.fillRect xL - o, yT - o, W + 2 * o, fh + 2 * o
-    ctx.fillStyle = ink
+    @_useInk ctx
     ctx.fillRect xL, yT, W, fh
-    ctx.fillStyle = light
+    @_useLight ctx
     ctx.fillRect xL + tc, yT + tc, iw, fh - 2 * tc
 
     cy = yT + tc
     if hH > 0
-      ctx.fillStyle = @HEADER_BG
+      @_useDetail ctx, @HEADER_BG
       ctx.fillRect xL + tc, cy, iw, hH
       # the white line keeps >=1px of gray on every side (clearance is a
       # spec: rounding can otherwise land its end on the frame's ink)
       lw = Math.min Math.round(iw * @HEADER_LINE_W), iw - 2
       if hH >= 3 * tc and lw >= 1
-        ctx.fillStyle = Color.WHITE.toString()
+        @_useDetail ctx, Color.WHITE.toString()
         ctx.fillRect xL + tc + Math.round((iw - lw) / 2),
           cy + Math.round((hH - tc) / 2), lw, tc
-      ctx.fillStyle = ink
+      @_useInk ctx
       ctx.fillRect xL + tc, cy + hH, iw, tc
       cy += hH + tc
 
     for i in [0...n]
       if i > 0
-        ctx.fillStyle = ink
+        @_useInk ctx
         ctx.fillRect xL + tc, cy - tc, iw, tc
       k = Math.min Math.round(iw * @BOX_K), iw - 2, boxH - 2
       if k >= 2
         kx = xL + tc + Math.round (iw - k) / 2
         ky = cy + Math.round (boxH - k) / 2
-        ctx.fillStyle = ink
+        @_useInk ctx
         ctx.fillRect kx, ky, k, k
         if k - 2 * td >= 2
-          ctx.fillStyle = light
+          @_useLight ctx
           ctx.fillRect kx + td, ky + td, k - 2 * td, k - 2 * td
       cy += boxH + tc
     xL + W                              # my frame's right edge, for the

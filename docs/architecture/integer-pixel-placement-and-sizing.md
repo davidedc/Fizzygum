@@ -182,7 +182,24 @@ SWCanvas's core tests):
   aspect-fit scale, so it hits the fast path). Under a NON-uniform transform
   SWCanvas gates the direct circle/arc paths onto the generic pipeline, which
   draws the correct ellipse — content needing ellipses simply renders slower,
-  never wrong.
+  never wrong. ⚠ A ring is a mid-radius `strokeCircle`, never a `fillCircle`
+  minus an inner `fillCircle` — at small radii the subtracted disc reads
+  4-petaled under non-AA.
+- **Line** — single straight segment: `strokeLine x1, y1, x2, y2` at the current
+  `lineWidth` (SWCanvas's dedicated line rasterizer, hairline faintness rule
+  included; the native polyfill strokes the two-point path). Multi-segment
+  polylines stay ordinary stroked paths — per-segment direct calls would lose
+  the joins.
+
+The size-aware icons (`SizeAwareIconAppearance` + subclasses) speak this same
+vocabulary for their curved and round shapes, plus plain filled/stroked paths for
+oblique edges and free curves, on integer device-pixel geometry they compute
+themselves: the geometry is the icon's business, the rasterization each backend's
+(SWCanvas non-AA, native AA — the renders legitimately differ). Icon code never
+re-implements a rasterization algorithm; only extra-small features (a few pixels)
+may be hand-placed as fillRect runs. The doctrine lives in
+`SizeAwareIconAppearance`'s header; the conversion case law in
+`docs/plans/pixel-icons-plan.md` §5b.
 
 **Hairline (sub-1-device-px) strokes — one rule, both pipelines.** Stroke at the
 TRUE sub-pixel width (e.g. the rotate-handle knob ring's `lineWidth 0.5` in

@@ -442,13 +442,21 @@ through ~8 review iterations; the conversion process is packaged as the local sk
 `/convert-icon-size-aware` (umbrella `.claude/skills/`, uncommitted workspace tooling — the
 in-repo record is this section + the reference implementation itself).
 
-**The objective, stated precisely (owner, 2026-07-21)**: make the NON-AA backend's render
-look good at every size — no ragged/uneven strokes, no dropouts — by having the icon use
-its space intelligently and align integer-width strokes to the grid per size; the same
-discipline also makes the HTML5-canvas (AA) render neater. It is NOT about making the two
-backends render identically, and NOT about "correcting" native AA — AA is not a defect,
-just AA. Cross-backend byte-identity falls out as a side effect and is kept purely as a
-cheap verification invariant.
+**The objective, stated precisely (owner, 2026-07-21; sharpened 2026-08-09)**: make the
+NON-AA backend's render look good at every size — no ragged/uneven strokes, no dropouts —
+by having the icon use its space intelligently and align integer-width strokes to the grid
+per size; the same discipline also makes the HTML5-canvas (AA) render neater. It is NOT
+about making the two backends render identically, and NOT about "correcting" native AA —
+AA is not a defect, just AA. **Geometry is the icon's business; rasterization is the
+backend's** (owner, 2026-08-09): icon code issues standard drawing commands on
+pixel-aligned geometry and each backend rasterizes them its own way — re-implementing a
+rasterization algorithm in icon code (disc row-spans, column-stepped arcs, staircase
+obliques, stamped segments) to force the backends to agree duplicates the engine and is a
+defect. Cross-backend byte-identity is therefore NOT expected and NOT a gate on
+curved/oblique features (it still falls out on all-rect icons, which is fine but carries
+no weight); hand-placed pixel runs are legitimate only for EXTRA-SMALL features where no
+drawing command expresses the intended pixels. See the 2026-08-09 rework entry at the end
+of this section.
 
 **Lessons learned (each verified empirically on the typewriter):**
 
@@ -658,6 +666,54 @@ exactness on the taper, junction singleness, ridge separation, byte gate).
     (valid because the light color is 244,243,244 — pure white exists only in title
     lines). The white-line clearance fix was back-ported to the already-landed
     Toolbars icon, which shared the flaw.
+
+**FAMILY REWORK (2026-08-09) — drawing commands replace the hand-rasterizers.** The
+owner identified the July idiom's over-reach: to keep both backends byte-identical, the
+icons had grown their own rasterization routines — disc row-spans (`_pxDiscRows`),
+row-run round-rects/stadiums, column-stepped ellipses, 1-px staircase obliques, stamped
+line segments — re-implementing (and so duplicating) what the engines already do, and
+forcing a pixelated look onto the AA backend. All of it is replaced by standard drawing
+commands: the direct-call vocabulary (`fillCircle` / `fillStadium` / `fillRoundRect` /
+`strokeCircle` / `strokeLine` — SWCanvas's dedicated crisp rasterizers, native
+path-based polyfills, incl. a new native `strokeLine`), `ellipse` arcs (typewriter slot
+mouth), and plain filled paths (typewriter flare hexagon, bin trapezoids, arrow head +
+tapered swoosh band, zigzag polyline). Deleted outright: `_pxDiscRows`/`_pxDisc`/
+`_pxStadium`/`_pxRoundRect` (base), `_binBodyRows`, `_stampSegment`, the scanline
+triangle + staircase band machinery — the dead-method gate enforced the base deletions.
+The metrics/tier/clearance layer (everything lessons 2–27 say about GEOMETRY) is
+untouched. Extra-small hand-placed tiers stay: the sub-5px key squares/dots and the
+≤24px shortcut-arrow 45° glyph. New lessons:
+
+28. **Geometry is the icon's business; rasterization is the backend's.** An icon that
+    hand-rasterizes a curve to make two backends agree duplicates the engine — when a
+    drawing command expresses the shape, issue the command; the non-AA backend renders
+    it crisp via its direct dispatchers, the AA backend renders it smooth, and the two
+    diverging is the system working. Byte-identity across backends carries no
+    verification weight for such features (SW-side determinism — same bytes every run
+    and engine — is what the suite still relies on, and keeps).
+29. **Two parallel oblique path edges at an integer offset quantize to a uniform wall
+    for free** under the non-AA backend (pixel-center sampling shifts both edges
+    identically): the bin's trapezoid walls and the typewriter's flank border stay
+    exactly `tc`/`t` per row with no per-row bookkeeping — the property the twin
+    row-quantization loops existed to guarantee.
+30. **A degenerate path still fills.** A negative-size `fillRect` is a no-op, but a
+    path with inverted extent is a valid (differently-wound) polygon and paints —
+    converting fillRect geometry to paths needs explicit guards at the degenerate
+    sizes the fillRects survived silently. And **tiny-radius `fillCircle` holes read
+    4-petaled** under non-AA — a ring is a mid-radius `strokeCircle` (the exact
+    analytic annulus, the title-bar-ring spelling), not a disc minus a disc.
+31. **The halo must not cast shadow (2026-08-09, owner-reported as "wrong shadow"
+    blobs under dragged/handled icons).** The shadow contract takes per-pixel
+    COVERAGE — and the size-aware icons' opaque light halo + light interiors are
+    coverage, so their shadows rendered as fat halo-envelope blobs (on BOTH
+    backends, since July; legacy ink-on-transparency icons never had the problem).
+    Fix: every painter picks colours through the base's role helpers (`_useInk` /
+    `_useLight` / `_useDetail`); in the shadow-pass silhouette scratch the LIGHT
+    role switches to destination-out, so light ERASES coverage and the shadow is
+    the dark line-work. The border idiom's paint order already makes this correct
+    (halos before ink erase nothing; interiors after ink punch through). A raw
+    `ctx.fillStyle` in a size-aware painter is now a defect — it silently fattens
+    the shadow. Normal-pass renders are untouched (288-render golden check).
 
 ## §6 Phases
 

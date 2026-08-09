@@ -31,9 +31,6 @@ class FolderIconAppearance extends SizeAwareIconAppearance
     iy = y + o
     iS = S - 2 * o
 
-    ink = @_iconColorString()
-    halo = @_outlineColorString()
-
     m = Math.round iS * @SIDE_MARGIN
     gx = ix + m                                # glyph x-range (symmetric)
     gw = iS - 2 * m
@@ -46,15 +43,20 @@ class FolderIconAppearance extends SizeAwareIconAppearance
 
     # ---- halos first (lesson 13: light must never be drawn over sibling ink;
     # painting every envelope before any ink makes that impossible)
-    @_pxRoundRect ctx, gx - o, bodyTop - o, gw + 2 * o, (bottom - bodyTop) + 2 * o, r + o, halo
-    @_pxRoundRect ctx, gx - o, tabTop - o, tabW + 2 * o, (bodyTop - tabTop) + 2 * o, rTab + o, halo
+    @_useLight ctx
+    ctx.fillRoundRect gx - o, bodyTop - o, gw + 2 * o, (bottom - bodyTop) + 2 * o, r + o
+    ctx.fillRoundRect gx - o, tabTop - o, tabW + 2 * o, (bodyTop - tabTop) + 2 * o, rTab + o
 
     # ---- the tab: its own bordered box; the parts reaching below bodyTop are
     # deliberately overpainted by the body, so only its top corners round
-    @_pxRoundRect ctx, gx, tabTop, tabW, (bodyTop - tabTop) + r + t, rTab, ink
-    @_pxRoundRect ctx, gx + t, tabTop + t, tabW - 2 * t, (bodyTop - tabTop) + r, Math.max(0, rTab - t), halo
+    @_useInk ctx
+    ctx.fillRoundRect gx, tabTop, tabW, (bodyTop - tabTop) + r + t, rTab
+    @_useLight ctx
+    ctx.fillRoundRect gx + t, tabTop + t, tabW - 2 * t, (bodyTop - tabTop) + r, Math.max(0, rTab - t)
 
     # ---- the body: bordered box over the tab's lower reaches; its top edge is
     # the full-width line the tab visibly sits on (as in the original)
-    @_pxRoundRect ctx, gx, bodyTop, gw, bottom - bodyTop, r, ink
-    @_pxRoundRect ctx, gx + t, bodyTop + t, gw - 2 * t, (bottom - bodyTop) - 2 * t, Math.max(0, r - t), halo
+    @_useInk ctx
+    ctx.fillRoundRect gx, bodyTop, gw, bottom - bodyTop, r
+    @_useLight ctx
+    ctx.fillRoundRect gx + t, bodyTop + t, gw - 2 * t, (bottom - bodyTop) - 2 * t, Math.max(0, r - t)

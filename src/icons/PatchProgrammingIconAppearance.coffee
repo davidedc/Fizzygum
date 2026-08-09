@@ -3,12 +3,13 @@ class PatchProgrammingIconAppearance extends SizeAwareIconAppearance
   # SIZE-AWARE patch-programming icon (2026-07-21, converted with
   # /convert-icon-size-aware; idiom docs: docs/plans/pixel-icons-plan.md §5b):
   # the family's shared slide-card panel (the base's _pxSlideCard) holding
-  # the patch motif -- a circle node wired to a square node. The motif is
-  # all integer runs on the t unit: a _pxDiscRows ring (the old 3.5-unit
-  # stroked oval rendered ragged under non-AA), a border-idiom square, and
+  # the patch motif -- a circle node wired to a square node, all on the t
+  # unit: a mid-radius strokeCircle ring (the old 3.5-unit stroked oval
+  # rendered ragged under non-AA), a border-idiom square, and
   # a wire that meets each node's outer wall exactly (the old wire crossed
-  # INTO both nodes' interiors, leaving stubs). Fully integer-painted, so
-  # the whole image is byte-identical across backends.
+  # INTO both nodes' interiors, leaving stubs). Each backend rasterizes the
+  # circle its own way (the geometry-vs-rendering doctrine in
+  # SizeAwareIconAppearance's header).
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
@@ -31,10 +32,8 @@ class PatchProgrammingIconAppearance extends SizeAwareIconAppearance
     t = Math.max 1, Math.round S / 32   # the line unit: card border, node
                                         #   walls, wire
     o = t                               # halo/envelope thickness
-    ink = @_iconColorString()
-    light = @_outlineColorString()
 
-    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o, ink, light
+    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o
 
     # both nodes share one size and one vertical band, so the wire lines up
     # by construction; each keeps >=1px of light from the card's border ink
@@ -47,18 +46,23 @@ class PatchProgrammingIconAppearance extends SizeAwareIconAppearance
     sl = x + Math.round S * @SQUARE_CX - k / 2
     sl = Math.min sl, px + pw - t - 1 - k
 
-    # circle node: ink disc, light hole inset t (ring walls can never thin
-    # below t). The hole additionally needs k >= 6: below that a 1px-wall
-    # pixel ring 4-DISCONNECTS into arcs (flood-verified), so it stays a
-    # solid dot
-    @_pxDisc ctx, cl, top, k, ink
-    @_pxDisc ctx, cl + t, top + t, k - 2 * t, light if k - 2 * t >= 2 and k >= 6
+    # circle node: a mid-radius strokeCircle ring — the exact analytic
+    # annulus [(k - 2t)/2, k/2], walls t by construction, same spelling as
+    # the title-bar rings. The hollow needs k >= 6 and a surviving hole;
+    # below that the node stays a solid fillCircle dot
+    if k - 2 * t >= 2 and k >= 6
+      @_useInk ctx
+      ctx.lineWidth = t
+      ctx.strokeCircle cl + k / 2, top + k / 2, (k - t) / 2
+    else
+      @_useInk ctx
+      ctx.fillCircle cl + k / 2, top + k / 2, k / 2
 
     # square node: same border idiom
-    ctx.fillStyle = ink
+    @_useInk ctx
     ctx.fillRect sl, top, k, k
     if k - 2 * t >= 2
-      ctx.fillStyle = light
+      @_useLight ctx
       ctx.fillRect sl + t, top + t, k - 2 * t, k - 2 * t
 
     # the wire: t thick, vertically centered on the nodes, spanning exactly
@@ -67,5 +71,5 @@ class PatchProgrammingIconAppearance extends SizeAwareIconAppearance
     wx = cl + k
     wLen = sl - wx
     if wLen >= 1
-      ctx.fillStyle = ink
+      @_useInk ctx
       ctx.fillRect wx, top + Math.round((k - t) / 2), wLen, t

@@ -80,3 +80,13 @@ CanvasRenderingContext2D::fillCircle = (cx, cy, r) ->
   @beginPath()
   @arc cx, cy, r, 0, 2 * Math.PI
   @fill()
+
+# Direct single-segment line stroke, mirroring SWCanvas's strokeLine (its
+# dedicated line rasterizer, hairline faintness rule included) so straight
+# line work speaks the same vocabulary on both backends; the native polyfill
+# strokes the equivalent two-point path.
+CanvasRenderingContext2D::strokeLine = (x1, y1, x2, y2) ->
+  @beginPath()
+  @moveTo x1, y1
+  @lineTo x2, y2
+  @stroke()

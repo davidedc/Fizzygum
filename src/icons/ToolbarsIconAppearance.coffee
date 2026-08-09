@@ -128,9 +128,8 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
     ctx.bezierCurveTo 35, 24, 41.5, 28.5, 41.5, 28.5
     ctx.lineTo 41.5, 6.5
     ctx.closePath()
-    ctx.fillStyle = @_outlineColorString()
+    @_useLight ctx
     ctx.fill()
-    ctx.strokeStyle = @_outlineColorString()
     ctx.lineWidth = 7
     ctx.stroke()
 
@@ -146,11 +145,11 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
     ctx.bezierCurveTo 70.24, 82.81, 76.65, 84.12, 76.65, 84.12
     ctx.lineTo 60.15, 36.81
     ctx.closePath()
-    ctx.fillStyle = @_iconColorString()
+    @_useInk ctx
     ctx.fill()
 
     # the two flexing arms
-    ctx.strokeStyle = @_iconColorString()
+    @_useInk ctx
     ctx.lineWidth = Math.max 3, 1 / sc  # never below one device pixel
     ctx.miterLimit = 4
     ctx.lineCap = 'round'
@@ -186,11 +185,11 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
   # idiom -- the border can never thin below t), light interior
   _paintColumn: (ctx, x, y, m) ->
     {t, o, Wc, xL, yT, H} = m
-    ctx.fillStyle = @_outlineColorString()
+    @_useLight ctx
     ctx.fillRect x + xL - o, y + yT - o, Wc + 2 * o, H + 2 * o
-    ctx.fillStyle = @_iconColorString()
+    @_useInk ctx
     ctx.fillRect x + xL, y + yT, Wc, H
-    ctx.fillStyle = @_outlineColorString()
+    @_useLight ctx
     ctx.fillRect x + xL + t, y + yT + t, Wc - 2 * t, H - 2 * t
 
   # the gray title-bar band with its white title line, plus the divider
@@ -199,15 +198,15 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
     {t, tc, Wc, xL, yT, hH} = m
     return if hH is 0
     iw = Wc - 2 * t
-    ctx.fillStyle = @HEADER_BG
+    @_useDetail ctx, @HEADER_BG
     ctx.fillRect x + xL + t, y + yT + t, iw, hH
-    ctx.fillStyle = @_iconColorString()
+    @_useInk ctx
     ctx.fillRect x + xL + t, y + yT + t + hH, iw, tc
     # the white line keeps >=1px of gray on every side (clearance is a
     # spec: rounding can otherwise land its end on the column's ink)
     lw = Math.min Math.round(iw * @HEADER_LINE_W), iw - 2
     if hH >= 3 * tc and lw >= 1
-      ctx.fillStyle = Color.WHITE.toString()
+      @_useDetail ctx, Color.WHITE.toString()
       ctx.fillRect x + xL + t + Math.round((iw - lw) / 2),
         y + yT + t + Math.round((hH - tc) / 2), lw, tc
 
@@ -217,18 +216,16 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
   _paintCompartments: (ctx, x, y, m) ->
     {t, tc, Wc, xL, comps} = m
     iw = Wc - 2 * t
-    ink = @_iconColorString()
-    light = @_outlineColorString()
     for [cy, ch], i in comps
       if i > 0
-        ctx.fillStyle = ink
+        @_useInk ctx
         ctx.fillRect x + xL + t, y + cy - tc, iw, tc
       k = Math.min Math.round(Wc * @BOX_K), iw - 2, ch - 2
       continue if k < 2
       kx = x + xL + t + Math.round((iw - k) / 2)
       ky = y + cy + Math.round((ch - k) / 2)
-      ctx.fillStyle = ink
+      @_useInk ctx
       ctx.fillRect kx, ky, k, k
       if k - 2 * tc >= 2
-        ctx.fillStyle = light
+        @_useLight ctx
         ctx.fillRect kx + tc, ky + tc, k - 2 * tc, k - 2 * tc

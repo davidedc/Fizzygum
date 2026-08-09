@@ -14,9 +14,10 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # or uneven strokes, no dropouts — because the icon is smart about how it
   # uses its space and aligns integer-width strokes to the grid per size. The
   # same discipline makes the HTML5-canvas render neater too (AA itself was
-  # never a defect). Useful side effect, kept as a verification gate rather
-  # than being a goal: both backends render it byte-identically at every size
-  # and dpr. Conversion lessons + process: docs/plans/pixel-icons-plan.md §5b.
+  # never a defect). Conversion lessons + process: docs/plans/pixel-icons-plan.md
+  # §5b; the geometry-vs-rendering doctrine (pixel-aligned geometry, standard
+  # drawing commands, each backend rasterizes its own way) is in
+  # SizeAwareIconAppearance's header.
   #
   # The drawing idiom (a vocabulary for future size-aware icons):
   #   - two line units: t = round(S/32) for paper/document-lines/chassis/knobs,
@@ -25,10 +26,11 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   #     unit; the light halo "envelope" around the glyph is o = t thick
   #   - regions paint a solid-ink silhouette, then repaint their interior in
   #     the light color inset by t — so borders can never thin below t
-  #   - curves are integer runs: the slot mouth is a column-stepped ellipse
-  #     (each dark run extends to its deeper neighbour so the steep ends never
-  #     dash), keys are row-span discs (Math.sqrt is IEEE-exact, hence the
-  #     same pixels on every JS engine)
+  #   - curves and oblique edges are drawing commands: the slot mouth is an
+  #     elliptical arc (light punch + t-thick stroked lip), the flared lower
+  #     body a filled hexagon path, keys are strokeCircle rings / fillCircle
+  #     dots, the spacebar a fillStadium; only the sub-5px key squares/dots
+  #     are hand-placed rects
   #   - detail adapts to the budget: document lines fill the paper only while
   #     they keep clearance, keys go disc-ring → dot, and the mouth / knob
   #     hollow / flare tiers drop out when they cannot render honestly
@@ -111,8 +113,6 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
       cR: ix + chassisM + (iS - 2 * chassisM) - inset
       paperX: ix + paperMargin
       paperW: iS - 2 * paperMargin
-      ink: @_iconColorString()
-      halo: @_outlineColorString()
 
     # the slot mouth only exists when the budget gives it a recognizable curve
     mouthR = Math.round m.paperW * @MOUTH_RADIUS
@@ -126,9 +126,9 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # machine below, and the count reaches 0 when nothing fits
   _paintPaper: (ctx, m) ->
     {t, o, iy, carriageTop, paperX, paperW} = m
-    ctx.fillStyle = m.halo
+    @_useLight ctx
     ctx.fillRect paperX - o, iy - o, paperW + 2 * o, carriageTop - iy + 2 * o
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     ctx.fillRect paperX, iy, paperW, t
     ctx.fillRect paperX, iy, t, carriageTop - iy
     ctx.fillRect paperX + paperW - t, iy, t, carriageTop - iy
@@ -150,38 +150,35 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # lip, running visibly beneath the paper as in the original.
   _paintCarriage: (ctx, m) ->
     {t, o, cL, cR, carriageTop, deckTop, paperX, paperW} = m
-    ctx.fillStyle = m.halo
+    @_useLight ctx
     ctx.fillRect cL - o, carriageTop - o, paperX - (cL - o), o
     ctx.fillRect paperX + paperW, carriageTop - o, (cR + o) - (paperX + paperW), o
     ctx.fillRect cL - o, carriageTop, o, deckTop - carriageTop
     ctx.fillRect cR, carriageTop, o, deckTop - carriageTop
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     ctx.fillRect cL, carriageTop, cR - cL, deckTop - carriageTop
-    ctx.fillStyle = m.halo
+    @_useLight ctx
     ctx.fillRect cL + t, carriageTop + t, (cR - t) - (cL + t), deckTop - (carriageTop + t)
 
-  # the slot mouth: a column-stepped ellipse punched through the lip. Per
-  # mirrored column pair, a light run opens the mouth and a dark run traces
-  # the curve, each dark run extended down to its deeper neighbour's top so
-  # the steep ends stay solid instead of breaking into dashes.
+  # the slot mouth: a half-ellipse punched through the lip in the light color,
+  # its curve traced by a t-thick elliptical stroke just below the punch (the
+  # trace's semi-axes sit t/2 outside the punch's, so the ink band hangs off
+  # the opening's rim). The ellipse is a drawing command — each backend
+  # rasterizes the curve its own way. The arc's butt caps end exactly on the
+  # lip's top row (the endpoints are the arc's topmost points).
   _paintSlotMouth: (ctx, m) ->
     {t, ix, iS, carriageTop} = m
     {R, D} = m.mouth
-    cxRight = ix + (iS >> 1)                   # right-of-center column
-    cxLeft = cxRight - 1 + (iS % 2)            # same column when iS is odd
-    depths = for dx in [0..R]
-      Math.round D * Math.sqrt Math.max 0, 1 - (dx * dx) / (R * R)
-    ctx.fillStyle = m.halo
-    for dx in [0..R] when depths[dx] > 0
-      ctx.fillRect cxLeft - dx, carriageTop, 1, depths[dx]
-      ctx.fillRect cxRight + dx, carriageTop, 1, depths[dx]
-    ctx.fillStyle = m.ink
-    for dx in [0..R]
-      d = depths[dx]
-      deeper = if dx is 0 then d else depths[dx - 1]
-      runH = Math.max t, deeper - d + t
-      ctx.fillRect cxLeft - dx, carriageTop + d, 1, runH
-      ctx.fillRect cxRight + dx, carriageTop + d, 1, runH
+    cx = ix + iS / 2
+    @_useLight ctx
+    ctx.beginPath()
+    ctx.ellipse cx, carriageTop, R, D, 0, 0, Math.PI
+    ctx.fill()
+    @_useInk ctx
+    ctx.lineWidth = t
+    ctx.beginPath()
+    ctx.ellipse cx, carriageTop, R + t / 2, D + t / 2, 0, 0, Math.PI
+    ctx.stroke()
 
   # platen knobs: thin, LIGHT "D"-tabs hanging off the carriage sides — a
   # bt-thin outline (thinner than the chassis line) OPEN toward the chassis,
@@ -197,74 +194,70 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
     knobH += 1 if (carriageH - knobH) % 2 is 1
     knobH = Math.min knobH, carriageH
     knobY = carriageTop + Math.floor (carriageH - knobH) / 2
-    ctx.fillStyle = m.halo
+    @_useLight ctx
     ctx.fillRect cL - knobW - o, knobY - o, knobW + o, knobH + 2 * o
     ctx.fillRect cR, knobY - o, knobW + o, knobH + 2 * o
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     ctx.fillRect cL - knobW, knobY, knobW, knobH
     ctx.fillRect cR, knobY, knobW, knobH
     if knobW - bt >= 1 and knobH - 2 * bt >= 2
-      ctx.fillStyle = m.halo
+      @_useLight ctx
       ctx.fillRect cL - knobW + bt, knobY + bt, knobW - bt, knobH - 2 * bt
       ctx.fillRect cR, knobY + bt, knobW - bt, knobH - 2 * bt
 
-  # the lower body: flares from carriage width to the full base width as a
-  # 1-px-per-band staircase, then runs straight to the bottom. Three passes:
-  #   halo — each band expanded o sideways; bands after the first also extend
-  #     UP by o (the band above's ink covers that everywhere except the
-  #     exposed step ledges, exactly where the envelope is needed; the first
-  #     band must not, or it would punch light into the carriage's side
-  #     borders) and the last extends DOWN by o
-  #   ink — the bands themselves
-  #   interior — lags ONE band behind the ink on the flank (and insets t), so
-  #     the stepped border never thins below t
+  # the lower body: flares from the carriage width out to the full base width
+  # on an oblique flank, then runs straight to the bottom — one hexagonal
+  # silhouette, filled three times: light halo (expanded o sideways and o
+  # below; the top edge stays put, or it would punch light into the
+  # carriage's side borders), ink, then the light interior (flank shifted t
+  # inward, top edge t lower so the divider line under the carriage
+  # survives, bottom edge t higher). The oblique flank is a path edge — each
+  # backend rasterizes it its own way; the interior flank parallels the ink
+  # flank at a t horizontal offset, so the slanted border reads t thick at
+  # every row.
   _paintLowerBody: (ctx, m) ->
     {t, o, bodyX, bodyW, deckTop, bottom, inset} = m
     deckH = bottom - deckTop
-    # the base (last, full-width band) is RESERVED, never a remainder: clamping
-    # the step height guarantees it stays >= 2*t (a t bottom edge + interior
-    # above it). An unreserved remainder made the bottom edge's thickness vary
-    # erratically with size — whenever it landed below the line unit, the band
-    # was too short for its interior repaint and rendered solid.
-    bands = []                                 # [inset-from-bodyX, yTop, height]
-    maxStep = Math.floor (deckH - 2 * t) / inset
-    if maxStep < 1                             # even 1-px steps don't fit: no flare
-      bands.push [0, deckTop, deckH]
-    else
-      stepH = Math.min Math.max(t, Math.floor(deckH * @FLARE_HEIGHT / inset)), maxStep
-      yb = deckTop
-      for i in [0..inset]
-        s = inset - i
-        hBand = if i < inset then stepH else bottom - yb
-        bands.push [s, yb, hBand]
-        yb += hBand
-    last = bands.length - 1
-    ctx.fillStyle = m.halo
-    for [s, yT, hBand], i in bands
-      # the up-extension rims the exposed step ledge; it must never rise past
-      # the band above's own height, or it punches light through whatever sits
-      # above (with steps shorter than o, that was the CARRIAGE's side borders
-      # — the "top of the chassis doesn't connect" bug)
-      upExt = if i is 0 then 0 else Math.min o, bands[i - 1][2]
-      hH = hBand + upExt + (if i is last then o else 0)
-      ctx.fillRect bodyX + s - o, yT - upExt, bodyW - 2 * s + 2 * o, hH
-    ctx.fillStyle = m.ink
-    for [s, yT, hBand] in bands
-      ctx.fillRect bodyX + s, yT, bodyW - 2 * s, hBand
-    ctx.fillStyle = m.halo
-    for [s, yT, hBand], i in bands
-      sIn = (if i is 0 then s else bands[i - 1][0]) + t
-      yIn = if i is 0 then yT + t else yT      # keeps the divider under the carriage
-      hIn = hBand - (if i is 0 then t else 0)
-      hIn -= t if i is last                    # keeps the base's bottom edge
-      continue if hIn <= 0 or bodyW - 2 * sIn <= 0
-      ctx.fillRect bodyX + sIn, yIn, bodyW - 2 * sIn, hIn
+    return if deckH < 1
+    # the straight base keeps at least 2*t (a t bottom edge + the interior
+    # above it); when even a 1px flare can't fit, the body is a plain box
+    flareH = Math.min Math.round(deckH * @FLARE_HEIGHT), deckH - 2 * t
+    flareH = 0 if flareH < 1 or inset < 1
+    yFlare = deckTop + flareH
+    body = (dx, yT, yB) ->
+      # the silhouette shifted dx inward per side (negative = outward),
+      # spanning yT..yB; the flank runs from inset at deckTop to 0 at yFlare.
+      # A path with inverted or empty extent still fills (a negative-size
+      # fillRect is a no-op, a path is not) — bail explicitly.
+      return if yB <= yT
+      hasFlank = flareH > 0 and yT < yFlare
+      xTop = if hasFlank then dx + inset * (1 - (yT - deckTop) / flareH) else dx
+      ctx.beginPath()
+      ctx.moveTo bodyX + xTop, yT
+      ctx.lineTo bodyX + bodyW - xTop, yT
+      if hasFlank
+        ctx.lineTo bodyX + bodyW - dx, yFlare
+        ctx.lineTo bodyX + bodyW - dx, yB
+        ctx.lineTo bodyX + dx, yB
+        ctx.lineTo bodyX + dx, yFlare
+      else
+        ctx.lineTo bodyX + bodyW - dx, yB
+        ctx.lineTo bodyX + dx, yB
+      ctx.closePath()
+      ctx.fill()
+    @_useLight ctx
+    body -o, deckTop, bottom + o
+    @_useInk ctx
+    body 0, deckTop, bottom
+    @_useLight ctx
+    body t, deckTop + t, bottom - t
 
-  # the keyboard: rows computed from the deck's inner budget. Keys are pixel
-  # discs (ringed while the hole survives) from diameter 5 up, square rings /
-  # dots below; the spacebar is a stadium spanning 3 OR 4 middle slots —
-  # whichever lets the remaining keys split evenly — and a plain bar when the
-  # row can't host bar + side keys.
+  # the keyboard: rows computed from the deck's inner budget. Keys are
+  # strokeCircle rings (fillCircle dots once the hole can't survive) from
+  # diameter 5 up, hand-placed square rings / dots below (the extra-small
+  # tier); the spacebar is a fillStadium spanning 3 OR 4 middle slots —
+  # whichever lets the remaining keys split evenly — and a plain bar when
+  # the row can't host bar + side keys.
   _paintKeyboard: (ctx, m) ->
     {S, t, tc, bodyX, bodyW, inset, deckTop, bottom} = m
     deckX = bodyX + inset + t
@@ -289,13 +282,22 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
 
     drawKey = (kx, ky) =>
       if isRound
-        @_pxDisc ctx, kx, ky, k, m.ink
-        @_pxDisc ctx, kx + tc, ky + tc, k - 2 * tc, m.halo if isRing
+        if isRing
+          # a mid-radius strokeCircle renders the exact analytic annulus
+          # [rMid - tc/2, rMid + tc/2] — the same spelling as the title-bar
+          # rings (a fillCircle pair reads 4-petaled at these small radii
+          # under the non-AA backend)
+          @_useInk ctx
+          ctx.lineWidth = tc
+          ctx.strokeCircle kx + k / 2, ky + k / 2, (k - tc) / 2
+        else
+          @_useInk ctx
+          ctx.fillCircle kx + k / 2, ky + k / 2, k / 2
       else if isRing
-        ctx.fillStyle = m.ink
+        @_useInk ctx
         @_pxBorder ctx, kx, ky, k, k, tc
       else
-        ctx.fillStyle = m.ink
+        @_useInk ctx
         ctx.fillRect kx, ky, k, k
 
     for i in [0...nk]
@@ -309,18 +311,21 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
       sbX = kx0 + sbSlot * (k + g)
       sbW = sbCount * k + (sbCount - 1) * g
       if isRound
-        @_pxStadium ctx, sbX, y2, sbW, k, m.ink
-        @_pxStadium ctx, sbX + tc, y2 + tc, sbW - 2 * tc, k - 2 * tc, m.halo if isRing
+        @_useInk ctx
+        ctx.fillStadium sbX, y2, sbW, k
+        if isRing
+          @_useLight ctx
+          ctx.fillStadium sbX + tc, y2 + tc, sbW - 2 * tc, k - 2 * tc
       else if isRing
-        ctx.fillStyle = m.ink
+        @_useInk ctx
         @_pxBorder ctx, sbX, y2, sbW, k, tc
       else
-        ctx.fillStyle = m.ink
+        @_useInk ctx
         ctx.fillRect sbX, y2, sbW, k
       for i in [0...nk] when i < sbSlot or i >= sbSlot + sbCount
         drawKey kx0 + i * (k + g), y2
     else
-      ctx.fillStyle = m.ink
+      @_useInk ctx
       sbW = Math.max 2 * k, Math.round deckW * 0.5
       sbX = deckX + Math.floor (deckW - sbW) / 2
       ctx.fillRect sbX, y2, sbW, k

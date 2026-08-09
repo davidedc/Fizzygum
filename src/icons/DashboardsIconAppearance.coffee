@@ -4,11 +4,12 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
   # /convert-icon-size-aware; idiom docs: docs/plans/pixel-icons-plan.md §5b):
   # the family's shared slide-card panel holding four quadrant mini-charts --
   # a scatter plot, a zigzag line chart, a bar chart and a small node graph.
-  # All content is integer runs: axes on the hairline td unit (the old
-  # 1.2-design-unit fills), data ink on tc, dots as small squares. The old
-  # drawing's sub-pixel letter glyphs at the graph's spoke ends (0.4 design
-  # units -- under half a device pixel even at 128px) become end DOTS. Fully
-  # integer-painted, so the whole image is byte-identical across backends.
+  # Axes are td rects, the zigzag a tc-wide stroked polyline, the 3D spokes
+  # td strokeLine calls, dots small squares; the old drawing's sub-pixel
+  # letter glyphs at the graph's spoke ends (0.4 design units -- under half
+  # a device pixel even at 128px) become end DOTS. Each backend rasterizes
+  # the oblique strokes its own way (the geometry-vs-rendering doctrine in
+  # SizeAwareIconAppearance's header).
 
   # natural/layout size (IconWdgt._resizeToWithoutSpacing aspect-fits this)
   preferredSize: new Point 100, 100
@@ -41,10 +42,8 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
     tc = Math.max 1, Math.round S / 45  # data ink: zigzag line
     td = Math.max 1, Math.round S / 64  # hairline: axes, graph spokes
     o = t
-    ink = @_iconColorString()
-    light = @_outlineColorString()
 
-    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o, ink, light
+    [px, py, pw, ph, r] = @_pxSlideCard ctx, x, y, S, t, o
 
     # the content clearance box: >=1px of light inside the card ring; every
     # coordinate below goes through these clamps (the bottom quadrants sit
@@ -54,7 +53,7 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
     cyMin = py + t + 1
     cyMax = py + ph - t - 2
     m =
-      S: S, t: t, tc: tc, td: td, ink: ink, light: light
+      S: S, t: t, tc: tc, td: td
       cxMin: cxMin, cxMax: cxMax, cyMin: cyMin, cyMax: cyMax
       fx: (f) => Math.min Math.max(x + Math.round(S * f), cxMin), cxMax
       fy: (f) => Math.min Math.max(y + Math.round(S * f), cyMin), cyMax
@@ -72,7 +71,7 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
       @_paintChartTiles ctx, m
       return
 
-    ctx.fillStyle = ink
+    @_useInk ctx
     q1Bot = @_paintScatter ctx, m
     q2Bot = @_paintLineChart ctx, m
     q3Right = @_paintBars ctx, m, q1Bot
@@ -81,7 +80,7 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
   # the under-20px miniature: solid tiles on the quadrant footprints,
   # kept apart by explicit >=1px gaps; tiles that can't fit drop
   _paintChartTiles: (ctx, m) ->
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     x1 = m.fx 0.22
     r1 = m.fx 0.46
     x2 = Math.max m.fx(0.56), r1 + 2
@@ -101,18 +100,9 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
   # extend it to their content's right edge, so the axis always reaches
   # the end of the graph
   _paintAxes: (ctx, m, ax, ayTop, axEnd, ayBot) ->
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     ctx.fillRect ax, ayTop, m.td, ayBot - ayTop
     ctx.fillRect ax, ayBot - m.td, axEnd - ax + 1, m.td
-
-  # squares stamped along a straight segment, w thick (diagonal steps are
-  # fine -- 8-connected, like any quantized arc)
-  _stampSegment: (ctx, x1, y1, x2, y2, w) ->
-    n = Math.max Math.abs(x2 - x1), Math.abs(y2 - y1), 1
-    for i in [0..n]
-      f = i / n
-      ctx.fillRect Math.round(x1 + (x2 - x1) * f - w / 2),
-        Math.round(y1 + (y2 - y1) * f - w / 2), w, w
 
   # top-left: scatter dots + L-axes extended under them; a dot that can't
   # keep 1px of light from an already-placed dot is dropped (they'd read
@@ -131,26 +121,31 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
     for [dx2] in placed
       axEnd = Math.max axEnd, dx2 + k - 1
     @_paintAxes ctx, m, ax, ayTop, axEnd, ayBot
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     for [dx2, dy2] in placed
       ctx.fillRect dx2, dy2, k, k
     ayBot
 
-  # top-right: L-axes + the zigzag data line, stamped tc thick; vertices
-  # keep 1px of light off both axes
+  # top-right: L-axes + the zigzag data line, one tc-wide stroked polyline
+  # with round joins and caps; vertices keep 1px of light off both axes
   _paintLineChart: (ctx, m) ->
     [ax, ayTop, axRight, ayBot] = [m.fx(@Q2_AXES[0]), m.fy(@Q2_AXES[1]),
       m.fx(@Q2_AXES[2]), m.fy(@Q2_AXES[3])]
-    # stamp-safe vertex clamps: a stamped square extends ceil(tc/2) beyond
-    # its vertex, so the vertex must sit that far inside every bound
+    # stroke-safe vertex clamps: the stroke extends ~tc/2 beyond its vertex
+    # (round cap), so the vertex must sit that far inside every bound
     vs = for [fvx, fvy] in @ZIGZAG
       [Math.min(Math.max(m.fx(fvx), ax + m.td + 1 + (m.tc >> 1)), m.cxMax - (m.tc >> 1)),
        Math.min(Math.max(m.fy(fvy), m.cyMin + Math.ceil(m.tc / 2)), ayBot - m.td - 2 - (m.tc >> 1))]
     axEnd = Math.max axRight, Math.round(vs[vs.length - 1][0] - m.tc / 2) + m.tc - 1
     @_paintAxes ctx, m, ax, ayTop, axEnd, ayBot
-    ctx.fillStyle = m.ink
-    for i in [1...vs.length]
-      @_stampSegment ctx, vs[i - 1][0], vs[i - 1][1], vs[i][0], vs[i][1], m.tc
+    @_useInk ctx
+    ctx.lineWidth = m.tc
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo vs[0][0], vs[0][1]
+    ctx.lineTo v[0], v[1] for v in vs[1..]
+    ctx.stroke()
     ayBot
 
   # bottom-left: L-axes + solid bars standing on the horizontal axis; the
@@ -174,20 +169,20 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
       bars.push [bx, top]
     axEnd = Math.max axRight, prevRight
     @_paintAxes ctx, m, ax, ayTop, axEnd, ayBot
-    ctx.fillStyle = m.ink
+    @_useInk ctx
     for [bx, top] in bars
       ctx.fillRect bx, top, bw, ayBot - m.td - top
     axEnd
 
   # bottom-right: 3D AXES -- three td spokes (X, Y, Z) radiating from the
-  # origin. The original's tiny letter labels (sub-pixel at every real
-  # size) render as dots sitting AT the quadrant box's edges -- top center,
-  # bottom-left and bottom-right corners, where the letters sit in the
-  # design -- and each axis stops 1px + a stamp-half short of its label:
-  # separated (connected they'd read as part of the axis) but near, and
-  # the WHOLE glyph stays inside the same footprint as the other three
-  # plots. A spoke with no room for a separated label draws bare to the
-  # box edge instead.
+  # origin, each a strokeLine. The original's tiny letter labels (sub-pixel
+  # at every real size) render as dots sitting AT the quadrant box's edges
+  # -- top center, bottom-left and bottom-right corners, where the letters
+  # sit in the design -- and each axis stops 1px + half a line width short
+  # of its label: separated (connected they'd read as part of the axis) but
+  # near, and the WHOLE glyph stays inside the same footprint as the other
+  # three plots. A spoke with no room for a separated label draws bare to
+  # the box edge instead.
   _paintNodeGraph: (ctx, m, q2Bot, q3Right) ->
     k = Math.max 2, Math.round m.S * 0.02
     hs = Math.ceil m.td / 2
@@ -199,7 +194,10 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
     qB = m.fy @GRAPH_B
     cx = m.fx @GRAPH_C[0]
     cy = Math.max m.fy(@GRAPH_C[1]), qT + hs
-    ctx.fillStyle = m.ink
+    @_useInk ctx
+    @_useInk ctx
+    ctx.lineWidth = m.td
+    ctx.lineCap = 'butt'
     # per spoke: [label x, label y, axis tip x, axis tip y], then the bare
     # box-edge endpoint used when the label can't fit separated
     spokes = [
@@ -212,7 +210,7 @@ class DashboardsIconAppearance extends SizeAwareIconAppearance
       outward = if i is 0 then tipY < cy \
         else tipY > cy and (if i is 1 then tipX < cx else tipX > cx)
       if outward
-        @_stampSegment ctx, cx, cy, tipX, tipY, m.td
+        ctx.strokeLine cx, cy, tipX, tipY
         ctx.fillRect lx, ly, k, k
       else
-        @_stampSegment ctx, cx, cy, bare[i][0], bare[i][1], m.td
+        ctx.strokeLine cx, cy, bare[i][0], bare[i][1]

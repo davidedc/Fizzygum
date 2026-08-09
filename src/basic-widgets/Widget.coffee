@@ -2810,7 +2810,11 @@ class Widget extends TreeNode
   # the island composite) blit a cached black-silhouette twin
   # (HTMLCanvasElement.blackSilhouetteOf); arbitrary-coloured art (icons, the
   # clock) renders to a scratch and blits its silhouette
-  # (Appearance._paintDamagedAreaAsBlackSilhouette). Hover/selection overlays are
+  # (Appearance._paintDamagedAreaAsBlackSilhouette). In that scratch the
+  # size-aware icons' LIGHT role (halo + light interiors) ERASES coverage
+  # (SizeAwareIconAppearance._useLight, destination-out): the halo is visually
+  # background, not ink, so an icon's shadow is its dark line-work — never the
+  # halo-envelope blob. Hover/selection overlays are
   # not part of the caster's ink and are skipped in the shadow pass. (There is no
   # per-glyph / per-widget baked shadow: a per-glyph shadowOffset/shadowColor
   # route is deliberately not reintroduced; a COLOURED shadow, if ever wanted,
