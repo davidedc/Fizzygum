@@ -3902,6 +3902,12 @@ class Widget extends TreeNode
     # _resolvePickOutFigureNoSettle — reuse the island when I am its sole content, else pick-out;
     # the old Phase-1 grabsToParentWhenDragged island-escalation was removed by 4D-2a.)
     if @isFreeFloating()
+      # idempotent: this is reachable while my handles are already up (the
+      # public method is callable without the menu-open teardown running in
+      # between), and a repeat invocation must not stack a second identical
+      # handle set on top of the first — the duplicates are invisible (same
+      # positions) but double-paint the hairline glyphs and their shadows
+      return if @children.some (c) -> world.temporaryHandlesAndLayoutAdjusters.has c
       @_addAndTrackHandle "resizeHorizontalHandle"
       @_addAndTrackHandle "resizeVerticalHandle"
       @_addAndTrackHandle "moveHandle"

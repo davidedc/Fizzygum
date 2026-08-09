@@ -151,7 +151,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
   `dragWindowResizerTo`); assertions (`assertTopMenuItemCount`, `assertTopMenuItemStrings`,
-  `assertScreenshotsIdentical` — MANDATORY for every within-test byte-equality claim: call it right after the
+  `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see
+  (stacked duplicate handles paint near-identically), `assertScreenshotsIdentical` — MANDATORY for every
+  within-test byte-equality claim: call it right after the
   later shot with both full image names, earlier first). All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,

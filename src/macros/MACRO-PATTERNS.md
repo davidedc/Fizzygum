@@ -1695,6 +1695,15 @@ assertion a recapture after a regression silently stores two different hashes an
   grow, shrink — each entry building a fresh set of the four mode handles). Inherited from the recorded
   fiddlingWithResizerHandles, whose own references already held the law (its image_4 ≡ image_3 byte-identical in all six
   reference families: native/SWCanvas/Windows × dpr 1/2). No new verb.
+- **API idempotence via direct re-invocation + a count assertion** (`macroResizeMoveHandlesIdempotent`): when the claim is
+  "calling the public method AGAIN changes nothing", drive the first invocation through the UI (right-click →
+  "resize/move..."), then call the method DIRECTLY (`rect.showResizeAndMoveHandlesAndLayoutAdjusters()`) — the direct call
+  is the point: the UI path runs the menu-open teardown of temporary handles first
+  (`ActivePointerWdgt.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem`), which would mask a stacking bug.
+  Screenshots CANNOT see this failure mode (duplicate handles overlap pixel-for-pixel bar hairline double-blending), so
+  assert the structural fact in-run with `@assertHandleCountOn rect, 5` before AND after, plus
+  `@assertScreenshotsIdentical` for the pixel half. Guard under test: the early return in
+  `Widget._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` (bails when a child is already a tracked temporary handle).
 
 ## Affine transforms (islands)
 

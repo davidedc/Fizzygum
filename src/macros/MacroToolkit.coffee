@@ -755,6 +755,14 @@ class MacroToolkit
     passed = (found?) and (found.length == expectedLabels.length) and (expectedLabels.every (label, i) -> found[i] == label)
     world.automator.player.recordMacroAssertion passed, "top menu item strings", expectedLabels.join(" | "), (if found? then found.join(" | ") else "no menu")
 
+  # Assert how many resize/move HandleWdgts are currently attached to a widget
+  # (the "resize/move..." chrome). Pushes no input events and does not yield.
+  # A toolkit method for the same reason as the menu assertions above: the
+  # assertion sink's mid-name "Macro" must not appear in macro source.
+  assertHandleCountOn: (aWdgt, expectedCount) ->
+    found = (aWdgt.children.filter (c) -> c instanceof HandleWdgt).length
+    world.automator.player.recordMacroAssertion (found == expectedCount), "handle count on " + aWdgt.toString(), expectedCount, found
+
   # Assert that two screenshots ALREADY TAKEN in this test are byte-identical — the explicit
   # form of the no-op / round-trip idiom (undo restores the pre-edit pixels, collapse →
   # uncollapse restores the window, a cancelled prompt leaves zero residue, …). Pass the two
