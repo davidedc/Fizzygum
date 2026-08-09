@@ -11,7 +11,7 @@ class ToolTipWdgt extends Widget
   @ongoingTimeouts: new Set
 
   contents: nil
-  padding: nil # additional vertical pixels
+  padding: nil # extra pixels around the contents, both axes; when 0 the cornerRadius supplies the horizontal margin
   widgetInvokingThis: nil
 
   constructor: (
@@ -26,10 +26,8 @@ class ToolTipWdgt extends Widget
     @appearance = new BubblyAppearance @
   
   @createBubbleHelpIfHandStillOnWidget: (contents, widgetInvokingThis) ->
-    # let's check that the item that the
-    # bubble is about is still actually there
-    # and the mouse is still over it, otherwise
-    # do nothing. The hand is SCREEN-plane and bounds are PLANE-local — map the point into
+    # Only proceed if the invoking widget is still rooted in the world and the
+    # hand is still over it. The hand is SCREEN-plane and bounds are PLANE-local — map the point into
     # the widget's plane so the containment holds for tilted widgets too (off any island the
     # mapping returns the same point; the raw-pointer lint's same-line shape).
     if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint (widgetInvokingThis.screenPointToMyPlane world.hand.position())
@@ -51,7 +49,6 @@ class ToolTipWdgt extends Widget
         )
         , delay
   
-  # ToolTipWdgt invoking:
   openAt: (pos) ->
     @_buildAndConnectChildren()
     @_applyMoveTo pos.subtract new Point 8, @height()

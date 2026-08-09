@@ -42,11 +42,6 @@ class UpperRightTriangleAppearance extends Appearance
     # direct fast paths, which are butt-cap-gated)
     context.lineWidth = 1
 
-    # give it a good shadow so that
-    # it's visible also when on light
-    # background. Do that by painting it
-    # twice, slightly translated, in
-    # darker color.
     context.save()
 
     context.fillStyle = color.toString()

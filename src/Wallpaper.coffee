@@ -93,9 +93,8 @@ class Wallpaper
       when @pattern7
         pattern7Tick = tick
 
-    # the rows live in the menu's rowsPanel now (index 0 is the title header, 1..7
-    # the pattern items) -- the same order the menu's own children had before it
-    # composed the panel.
+    # rows[0] is the menu's title header; rows[1..7] are the seven pattern
+    # items, in wallpapersMenu's add order.
     rows = menu.rowsPanel.children
     rows[1].label.setText pattern1Tick + @pattern1
     rows[2].label.setText pattern2Tick + @pattern2

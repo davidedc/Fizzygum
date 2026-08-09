@@ -15,12 +15,8 @@ class CodeAreaWdgt extends Widget
   tempPromptEntryField: nil
   textWidget: nil
 
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
+  # space between the container's edges and its internal contents -- often
+  # left 0 because windows already add their own inner padding.
   externalPadding: 0
   # the internal padding is the space between the internal
   # components. It doesn't necessarily need to be equal to the

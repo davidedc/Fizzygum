@@ -1,28 +1,11 @@
 class SimpleDropletAppearance extends RectangularAppearance
 
-  # the "alreadyUsingCanvasClipping" flag is needed because when
-  # drawing some fundamental shapes
-  # (read: plain simple rectangles) we "clip by hand" the rectangle
-  # (i.e. we clip the rectangle mathematically) rather
-  # than using the actual canvas clipping functionality
-  # (because we think it's just faster)
-  # So, since such "by hand" clipping might not be
-  # simple/feasible for arbitrary shapes, we pass here whether
-  # the canvas clipping is in use (in which case we don't need
-  # to do it here) or not (in which case we do need to do the
-  # additional canvas clipping)
-  #
-  # similarly, the "alreadyUsingCanvasScaling" flag is needed because when
-  # drawing some fundamental shapes
-  # (read: plain simple rectangles) we "scale by hand" the rectangle
-  # (i.e. we scale the rectangle mathematically) rather
-  # than using the actual canvas scaling functionality
-  # (because we think it's just faster)
-  # So, since such "by hand" scaling might not be
-  # simple/feasible for arbitrary shapes, we pass here whether
-  # the canvas scaling is in use (in which case we don't need
-  # to do it here) or not (in which case we do need to do the
-  # additional canvas scaling)
+  # alreadyUsingCanvasClipping / alreadyUsingCanvasScaling: true when the caller
+  # already clipped/scaled the canvas for the base rectangle by hand (the fast
+  # path used for plain rectangles instead of native canvas clip/scale -- by-hand
+  # is not feasible for arbitrary shapes), so this hook must not repeat that
+  # work; false means this hook must do its own clipToRectangle /
+  # useLogicalPixelsUntilRestore before drawing.
 
   drawAdditionalPartsOnBaseShape: (alreadyUsingCanvasClipping, alreadyUsingCanvasScaling, appliedShadow, context, al, at, w, h) ->
 

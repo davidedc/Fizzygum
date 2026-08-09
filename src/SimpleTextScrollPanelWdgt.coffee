@@ -1,10 +1,10 @@
 # The SimpleTextScrollPanelWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or
-# other Widgets like the SimpleVerticalStackPanelWdgt/DocumentViewerOrEditor do.
+# other Widgets like the SimpleVerticalStackPanelWdgt/DocumentWdgt do.
 #
 # However, what the SimpleTextScrollPanelWdgt DOES
-# in respect to the SimpleVerticalStackPanelWdgt/DocumentViewerOrEditor is to
+# in respect to the SimpleVerticalStackPanelWdgt/DocumentWdgt is to
 # view/edit UNWRAPPED text, which is quite important for
 # code, since really code must have the option of an
 # unwrapped view.
@@ -40,9 +40,11 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
 
   # Configure this panel as the "mono text-entry box" the code-editing widgets share: a white, drops-disabled
   # panel whose text widget has a transparent background and a monospaced font, editable-and-selectable when
-  # isEditable, read-only otherwise. Factored out of the ~identical setup copied into the patch nodes, the
-  # Console and the errors-log viewer (each still does its own `new … , false, 5` and keeps its own textWdgt
-  # reference + _addNoSettle). The drops/colour lines re-assert the constructor's defaults verbatim — kept so
+  # isEditable, read-only otherwise. The Console / errors-log family reaches this through CodeAreaWdgt's
+  # shared _buildMonoCodeAreaNoSettle; the patch nodes (CalculatingPatchNodeWdgt,
+  # RegexSubstitutionPatchNodeWdgt, DiffingPatchNodeWdgt) still hand-copy the ~identical setup, each
+  # constructing its own panel and keeping its own textWdgt-derived field.
+  # The drops/colour lines re-assert the constructor's defaults verbatim — kept so
   # this is pure code-motion (the exact op sequence the call sites ran), not an idempotency argument.
   configureAsMonoTextPanel: (isEditable) ->
     @disableDrops()
@@ -71,11 +73,6 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
   addModifiedContentIndicator: ->
     @modifiedTextTriangleAnnotation = new ModifiedTextTriangleAnnotationWdgt @
     @textWdgt.widgetToBeNotifiedOfTextModificationChange = @
-
-    # just because we add the modified content indicator it
-    # doesn't mean that we automatically "save" the content,
-    # so removing this.
-    # @textWdgt.considerCurrentTextAsReferenceText()
 
     @textWdgt.checkIfTextContentWasModifiedFromTextAtStart()
 
