@@ -6,10 +6,10 @@ Generated 2026-07-17 from the docs restructure; keep current per README rule 5.
 
 ## Active arcs (`plans/`)
 
-### `plans/hairline-direct-strokes-plan.md` — AUTHORED 2026-08-08, not started
-- [ ] H1 upstream SWCanvas: the generic pipeline's sub-pixel faint rule (1px geometry × proportional opacity, `Rasterizer._strokeInternal`) replicated as a hairline branch in ALL five direct stroke dispatchers (rect/roundRect/circle/arc/line) — today each does something different below 1px; probes + core test 055 + zero-churn sweeps for lw≥1 + `build:prod` before vendoring.
-- [ ] H2 Fizzygum: pin bump; re-convert the rotate-handle knob ring to `strokeCircle` (the prior arc's revert, now unblocked); suite dpr1+2 → owner diffpage eyeball → recapture → gauntlet.
-- [ ] H3 docs-sync (integer-pixel §7 hairline rule) + archive/close loop.
+### `archive/hairline-direct-strokes-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-09 (H1–H3)
+- [x] H1 upstream SWCanvas: the sub-pixel faint rule as a hairline branch in ALL five direct stroke dispatchers, incl. the rotated branches (SWCanvas `d6e6765`; core test 055; 540-case sweeps byte-identical for lw≥1; + two consistency fixes surfaced in execution: ArcOps opaque-1px walk canonicalized, rotated-rect 1px DDA corner dedup).
+- [x] H2 Fizzygum: pin bump; rotate-handle knob ring re-converted to `strokeCircle` (the prior arc's revert, unblocked); 16-test owner-eyeballed diffpage → recapture COMPLETE dpr1+2 → gauntlet 14/14 incl. WebKit.
+- [x] H3 docs-sync (integer-pixel §7 hairline faintness rule — deliberately NOT named anti-aliasing) + archive/close loop.
 
 ### `archive/direct-shape-fastpaths-followups-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-08 (P1–P6)
 - [x] P1 upstream SWCanvas: circle-path hardening — tier-0 clip wiring for CircleOps + crisp-contract probes + doc truth-up (SWCanvas `277e8e3`; also fixed a latent fillStroke_Any off-surface span-wrap corruption). ⚡ The "relax CircleOps' transform" premise was FALSIFIED at authoring: circles already fast-path under Fizzygum's transforms; the doc was stale.

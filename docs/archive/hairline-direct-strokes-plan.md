@@ -1,5 +1,26 @@
 # Hairline strokes on the direct fast paths — the sub-pixel faint rule, uniformly
 
+**STATUS: ✅ EXECUTED IN FULL AND CLOSED 2026-08-09 — H1+H2+H3.** Landed as
+SWCanvas `d6e6765` (the hairline branch in all five direct stroke dispatchers,
+core test 055, probe; plus two consistency fixes the rule surfaced in execution:
+ArcOps' opaque 1px Bresenham walk canonicalized to the family spelling — a
+partial arc no longer changes shape with its opacity — and the rotated-rect 1px
+DDA dedups shared corner pixels), Fizzygum (pin bump + the rotate-handle ring
+re-converted to `strokeCircle` + a dead lineCap removed from
+UpperRightTriangleAppearance + integer-pixel doc §7), Fizzygum-tests (16-test
+re-baseline, dpr 1+2: 9 ring tests — at dpr 2 the 0.5-logical ring is a TRUE
+1px device stroke and sharpens from a 2-px half-opacity band to a crisp opaque
+ring — plus 7 collapsed-window tests whose uncollapse icon strokes sub-1px at
+dpr 1 only). Verification: 540-case sweeps byte-identical for lw ≥ 1; test 055's
+oracles FAIL on the pre-change dist (non-vacuity); recapture COMPLETE both
+densities; closing gauntlet 14/14 incl. WebKit on the new refs. Terminology
+(owner): this is the HAIRLINE FAINTNESS RULE, not anti-aliasing — both backends
+blend the faint stroke with what lies beneath (probe-measured on Chrome);
+SWCanvas stays non-AA, one uniform level per stroke. Deviation from §4 H1.2:
+the rotated rect/roundRect branches got the rule too (their 1px renderers take
+the multiplied alpha through the existing globalAlpha argument), rather than
+keep-current-behaviour-with-a-comment.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-08, immediately after the direct-shape fast-paths arc closed
 (`docs/archive/direct-shape-fastpaths-followups-plan.md`). Nothing below has been
