@@ -224,10 +224,10 @@ class ScrollPanelWdgt extends PanelWdgt
   # This would also apply to resizing handles - so we need to
   # correct for that case
   add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
-    # TODO this check below should probably just be testing if layoutSpec
-    # is a corner or edge internal layout
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
-    # (type-test-elimination campaign)
+    # (type-test-elimination campaign). Keyed off the WIDGET, not the layoutSpec argument:
+    # handles are added with no explicit spec (defaultLayoutSpecWhenAddedTo resolves it inside
+    # the add), so the argument is nil exactly for the widgets this must catch.
     if aWdgt.attachesToScrollFrameDirectly?()
       super
     else
@@ -442,16 +442,13 @@ class ScrollPanelWdgt extends PanelWdgt
 
         # Anchor to the viewport's own left/top even when subBounds starts elsewhere (e.g. a single
         # centered icon) -- otherwise merging bounds that start off-origin would shift the panel so
-        # the icon's left aligns with the viewport's left, un-centering it.
+        # the icon's left aligns with the viewport's left, un-centering it. The merge rect spans my
+        # full width but only 1px of height, so it also guarantees newBounds.width() >= @width() --
+        # only the height may still fall short of the viewport:
         newBounds = newBounds.merge new Rectangle @contents.left(), @contents.top(), @contents.left() + @width(), @contents.top() + 1
 
         if newBounds.height() < @height()
           newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
-        # I don't think this check below is needed anymore,
-        # TODO verify when there are a healthy number of tests around
-        # vertical stack and text scroll panels
-        if newBounds.width() < @width()
-          newBounds = newBounds.growBy new Point @width() - newBounds.width(), 0
       else
         newBounds = subBounds.expandBy(padding).merge @boundingBox()?.ceil()
     else
@@ -798,17 +795,16 @@ class ScrollPanelWdgt extends PanelWdgt
       # scrolled this inner one "up/down to the end".
       # In such case, the outer one has to scroll...
       #
-      # if scrolling up and the content top is already below the top (or just a little above the top)
+      # if scrolling up and the content top is already at (or below) the top
       #  OR
-      # if scrolling down and the content bottom is already above the bottom (or just a little below the bottom)
+      # if scrolling down and the content bottom is already at (or above) the bottom
       #  THEN
-      # escalate the method up, since there might be another scrollbar catching it
-      #
-      # The "just a little" caveats are because sometimes dimensions are non-integer
-      # (TODO ...which shouldn't really happen)
-      #
-      if (y > 0 and @contents.top() >= (@top() - 1)) or
-       (y < 0 and @contents.bottom() <= (@bottom() + 1))
+      # escalate the method up, since there might be another scrollbar catching it.
+      # Exact comparisons: geometry is integer by invariant (Widget._assertBoundsWellFormed),
+      # and a tolerance here would hand a 1px-shy inner panel's last wheel step to the outer
+      # panel instead of letting the inner one reach its edge.
+      if (y > 0 and @contents.top() >= @top()) or
+       (y < 0 and @contents.bottom() <= @bottom())
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
@@ -816,8 +812,8 @@ class ScrollPanelWdgt extends PanelWdgt
     if x != 0
       # similar to the vertical case, escalate the scroll in case
       # we are in a nested ScrollPanel situation
-      if (x > 0 and @contents.left() >= (@left()-1)) or
-       (x < 0 and @contents.right() <= (@right()+1) )
+      if (x > 0 and @contents.left() >= @left()) or
+       (x < 0 and @contents.right() <= @right())
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true

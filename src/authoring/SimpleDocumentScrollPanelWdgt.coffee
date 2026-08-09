@@ -64,17 +64,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
     return codeBlock
 
   addSpacer: (numberOfLines = 1) ->
-
-    # TODO it's 2018 now, if you see this in 2019
-    # consider replacing this with ES6 repeat() method
-    repeatStringNumTimes = (string, times) ->
-      repeatedString = ''
-      while times > 0
-        repeatedString += string
-        times--
-      repeatedString
-
-    spacer = @getNormalParagraph repeatStringNumTimes("\n",numberOfLines-1)
+    spacer = @getNormalParagraph "\n".repeat(Math.max 0, numberOfLines - 1)
     spacer.isEditable = true
     spacer.enableSelecting()
     @add spacer

@@ -1,7 +1,5 @@
 class ToolPanelWdgt extends PanelWdgt
 
-  # TODO pretty sure that we don't need numberOfIconsOnPanel
-  numberOfIconsOnPanel: 0
   internalPadding: 5
   externalPadding: 10
   thumbnailSize: 30
@@ -75,9 +73,8 @@ class ToolPanelWdgt extends PanelWdgt
       if dropSlot?
         super aWdgt, position: dropSlot, layoutSpec: layoutSpec, beingDropped: beingDropped
       else
-        super aWdgt, position: @numberOfIconsOnPanel, layoutSpec: layoutSpec, beingDropped: beingDropped
-
-      @numberOfIconsOnPanel++
+        # no drop position (a programmatic add): append after the existing icons
+        super aWdgt, layoutSpec: layoutSpec, beingDropped: beingDropped
 
       @_invalidateLayout()
 
