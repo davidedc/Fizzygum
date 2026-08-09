@@ -5,16 +5,11 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
 
   videoPlayerCanvas: nil
 
-  # these are used because there is some delay between
-  # when the user scrubs / clicks play/pause and the
-  # video element state catching up / reacting. So if we update
-  # the UI based on video state immediately after a user
-  # action, the UI will seem to "bounce back" to the
-  # previous play/pause state, or scrub time.
-  # So the solution is to wait a bit before updating
-  # the UI, so the video element state has time
-  # to catch up on the user action, and the UI
-  # then doesn't bounce.
+  # there is a delay between a user scrub / play-pause click and the video
+  # element's state catching up, so updating the UI from video state
+  # immediately after a user action would visibly bounce it back to the
+  # previous state -- the update is deferred briefly instead (the 250ms
+  # guard in _updatePlayPauseToggle).
   timeWhenPlayPauseButtonWasLastClicked: nil
 
   colloquialName: ->
@@ -27,11 +22,10 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
     @playPausePlayButton.faceWidget.alignMiddle()
     super @playPausePauseButton, @playPausePlayButton, 0
 
-    # the label of the current time is updated via the stepping
-    # mechanism, but you could do that via the connectors mechanism
-    # instead, ideally you should have the canvas widget to only fire when
-    # the time changes at the seconds level, and only
-    # within a step.
+    # the toggle's play/pause state is updated via the stepping mechanism, but
+    # you could do that via the connectors mechanism instead; ideally the canvas
+    # widget would only fire when the play/pause state actually changes, rather
+    # than every step.
     @fps = 5
     world.steppingWdgts.add @
 
@@ -50,15 +44,14 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
           # show the pause button
           @_setToggleState 0
 
-  # TODO this is a private method, should have an underscore
+  # pause/play are the SimpleButtonWdgt action targets, dispatched BY NAME from
+  # ButtonWdgt.trigger (as target[action]) -- external entry points, so no
+  # underscore (the public/private call-separation convention).
   pause: ->
-    # pause the video element in @videoPlayerCanvas.video
     @videoPlayerCanvas.video.pause()
     @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 
-  # TODO this is a private method, should have an underscore
   play: ->
-    # pause the video element in @videoPlayerCanvas.video
     @videoPlayerCanvas.video.play()
     @timeWhenPlayPauseButtonWasLastClicked = Date.now()
 

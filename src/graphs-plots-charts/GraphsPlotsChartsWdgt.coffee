@@ -13,7 +13,7 @@ class GraphsPlotsChartsWdgt extends Widget
     world.steppingWdgts.add @
 
   # true while a SystemTest replays with animations-pacing control on -- animated widgets must then
-  # render a FIXED, deterministic frame (mirrors AnalogClockWdgt._calculateHandsAngles, which pins
+  # render a FIXED, deterministic frame (mirrors AnalogClockAppearance._calculateHandsAngles, which pins
   # @dateLastTicked to a fixed date under the same condition). Turned on by the macro's
   # AutomatorEventCommandTurnOnAnimationsPacingControl.
   _animationFrozenForDeterministicReplay: ->

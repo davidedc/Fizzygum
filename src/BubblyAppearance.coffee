@@ -1,12 +1,10 @@
 class BubblyAppearance extends BoxyAppearance
 
-  # No constructor: a `(widget) -> super widget` one would be byte-identical to BoxyAppearance's, and the
-  # meta-compiler synthesises exactly that for a class without one — `__super__.constructor.apply this,
-  # arguments` plus `registerThisInstance?()` (meta/Class.coffee, the `else` branch of the
-  # `hasOwnProperty('constructor')` test, which is also what _addInstancesTracker injects into an
-  # explicit one). 286 of 455 classes already rely on that path, including 4 of the 8 Appearance-family
-  # classes. Both call sites pass one argument (`new BubblyAppearance @`), so the synthesised
-  # forward-everything is equivalent to the explicit forward-one anyway.
+  # No constructor: the meta-compiler synthesises a forward-everything one for a class
+  # without its own — `__super__.constructor.apply this, arguments` plus
+  # `registerThisInstance?()` (meta/Class.coffee) — equivalent to the explicit
+  # `(widget) -> super widget` this would otherwise need (both call sites pass one
+  # argument). Dedup case law: docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md.
 
   # The bubble outline (rounded box + tail spike) is not a roundRect, so unlike
   # BoxyAppearance both of these paint through the generic path pipeline. Fill

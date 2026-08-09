@@ -47,8 +47,9 @@ class NumberPromptWdgt extends PromptWdgt
   # The reactive-CONNECTOR entrypoint (check-layering [P]): the dataflow engine delivers the prompt slider's wire
   # HERE (its @action is "takeSliderValue", so _applyWireValue / _fireConnection resolve `_<action>Connector`
   # first). It JOINS the drain's enclosing settle instead of opening its own, so the mid-drain _editNoSettle in the
-  # core below is legal (edit() is public/self-settling -- illegal mid-flush, Widget:824). Same NoSettle core as the
-  # public takeSliderValue above -- the setFontSize / _setFontSizeConnector pattern. NO connectionsCalculation
+  # core below is legal (edit() is public/self-settling -- illegal mid-flush; see Widget._settleLayoutsAfter's
+  # re-entrancy throw). Same NoSettle core as the public takeSliderValue above -- the setFontSize /
+  # _setFontSizeConnector pattern. NO connectionsCalculation
   # Token guard: this is a pure SINK (it never calls updateTarget), so a circuit cannot cycle through it; the
   # dispatch's extra (argumentToAction, token) arguments are simply ignored, exactly as the public entry ignores them.
   _takeSliderValueConnector: (num) ->

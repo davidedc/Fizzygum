@@ -73,7 +73,6 @@ class SpeechBubbleWdgt extends Widget
     # which left the origin stale, so @position() below lagged one cadence on a move)
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # adjust layout of my contents
     @contentsWidget._reLayout (
       (new Rectangle 0, 0,
         (newBoundsForThisLayout.width() - (2 * @cornerRadius)),

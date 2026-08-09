@@ -2856,7 +2856,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # pattern below), but routes it through the NON-settling _fullDestroyNoSettle / _addNoSettle for a caller ALREADY
   # inside a layout flush/pass -- a dataflow connection sink delivering into a prompt slider's editable field
   # (PromptWdgt._takeSliderValueConnector -> StringWdgt._editNoSettle), where the public self-settling add /
-  # fullDestroy would throw the flow-rule (Widget:824).
+  # fullDestroy would throw the flow-rule (Widget._settleLayoutsAfter's re-entrancy throw).
   # thin-wrap-exempt: shares its body with _editNoSettle via a teardown/add-strategy thunk -- NOT the bare
   # @_settleLayoutsAfter => @_editNoSettle wrap.
   edit: (aStringWidgetOrTextWidget) ->
