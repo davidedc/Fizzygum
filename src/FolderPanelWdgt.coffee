@@ -36,17 +36,11 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
   scrollPanelColloquialName: ->
     "folder"
 
-  # Widgets that are NOT shortcuts (object shortcuts or folders) that are
-  # dropped are then going to be closed and their references
-  # are going to be left in the folder instead.
-  # HOWEVER we have to move that first "transient" widget dropped so that
-  # it doesn't go "left" or "above" the folder panel, otherwise the
-  # folder panel is going to resize so to fit the dropped widget
-  # and the folder window is going to get scrollbars and the
-  # subsequent shortcut is going to end up in a bad place instead
-  # of the neat automatic grid positioning.
-  # So, move the "transient" dropped widget just a bit to the
-  # right and below the origin.
+  # A dropped widget that is not already a shortcut is moved off the origin
+  # (not merely re-fit like a shortcut) before being replaced by its reference,
+  # so the folder panel doesn't grow to fit it — a resize here would give the
+  # folder window scrollbars and misplace the eventual shortcut instead of the
+  # neat automatic grid positioning.
   _beforeChildDropped: (child) ->
     # a shortcut (already a reference) just fits within; a real dropped widget is offset so
     # the folder panel doesn't resize and scroll (was `instanceof

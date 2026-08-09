@@ -84,14 +84,6 @@ class ListWdgt extends ScrollPanelWdgt
             else # assume it's a color
               color = pair[0]
 
-      #labelString,
-      #action,
-      #toolTipMessage,
-      #color,
-      #bold = false,
-      #italic = false,
-      #doubleClickAction # optional, when used as list contents
-
       @listContents.addMenuItem @labelGetter(element), @, "select",
         color: color
         bold: bold

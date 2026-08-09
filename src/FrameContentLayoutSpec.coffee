@@ -2,26 +2,17 @@
 
 class FrameContentLayoutSpec extends VerticalStackLayoutSpec
 
-  # Sentinel values for the constructor's preferredStartingWidth/Height, moved here
-  # from the former PreferredSize marker class -- these two constants were used
-  # exclusively with FrameContentLayoutSpec (both as ctor args and in FrameWdgt's
-  # comparisons). -1 = "keep the size I have now"; -2 = "I don't mind, size me".
+  # Sentinel values for the constructor's preferredStartingWidth/Height, used as
+  # ctor args and in FrameWdgt's comparisons. -1 = "keep the size I have now";
+  # -2 = "I don't mind, size me". (Folded in from the former PreferredSize marker
+  # class -- docs/archive/accidental-complexity-reduction-plan.md.)
   @THIS_ONE_I_HAVE_NOW: -1
   @DONT_MIND: -2
 
-  # when you drop something on a window, you
-  # expect a couple of possible behaviours:
-  # 1) the window takes the size of the dropped item
-  # 2) the item takes the size of the window
-  # You normally expect 1) with things that inherently have
-  # a particular size and proportion, for example a slider
-  # (which makes no sense when enlarged and deformed to a
-  # different proportion)
-  # You expect 2) with things that are "small", since you
-  # want to "window" them you probably want to give them
-  # more importance.
-  # These two properties can define which behaviour is
-  # going to take effect.
+  # Govern how dropped content and its window negotiate initial size: a widget
+  # with an inherent size/proportion (e.g. a slider, which deforms badly) keeps
+  # its own size and the window takes it; a "small", proportion-agnostic widget
+  # instead takes the window's size.
   preferredStartingWidth: nil
   preferredStartingHeight: nil
   

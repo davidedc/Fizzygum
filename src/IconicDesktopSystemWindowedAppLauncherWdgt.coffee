@@ -13,10 +13,11 @@
 # ⚠⚠ THE LAZY MODE IS WHAT LETS AN APP'S SOURCE ARRIVE ON ITS OWN CLICK RATHER THAN WITH ITS
 # NEIGHBOURS'. WorldWdgt.createDesktop builds every icon at boot, which makes a launcher look like it
 # has to be eager — an app class inside a lazy part cannot be constructed there. But building the
-# ICON does not need the APP: the art is core, and the only thing genuinely required at boot is a
-# NAME. So no app needs an eager sliver beside it, and each of the Examples folder's five doors sits
-# alone in its own one-class part, fetched by exactly the click that wants it — opening the folder
-# fetches nothing at all.
+# ICON does not need the APP: for the desktop's own icons the art is core, and the only thing
+# genuinely required at boot is a NAME. So no app needs an eager sliver beside it. The Examples
+# folder's five doors take this further: each sits alone in its own one-class part, fetched only by
+# the click that wants it — opening the folder fetches just its own art (the lazy examples-icons
+# part), never any door's app.
 #
 # ⚠ A STRING IS ALSO WHAT MAKES THIS SERIALIZE FOR FREE. The eager mode stores a live app object,
 # which the Serializer encodes symbolically as {"$wk":"app:<ClassName>"} and re-resolves on load;

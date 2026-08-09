@@ -15,10 +15,8 @@ class AllPlotsIconAppearance extends IconAppearance
 
     context.beginPath()
 
-    # axes
-    # ...this would look like a better job for a stroke rather than a fill, however
-    # hey hardware is fast and this way we only create one path that is filled
-    # all at once.
+    # axes: filled rather than stroked, so everything joins the one
+    # path that a single context.fill() paints at the end.
     context.moveTo 7, 8
     context.lineTo 11.25, 8
     context.lineTo 11.25, 88.76
@@ -38,10 +36,7 @@ class AllPlotsIconAppearance extends IconAppearance
     @circle context, 53, 25, 3
     @circle context, 53, 15, 3
 
-    # function plot line drawing
-    # ...this would look like a better job for a stroke rather than a fill, however
-    # hey hardware is fast and this way we only create one path that is filled
-    # all at once.
+    # function plot line drawing (filled, same single path as the axes and dots)
     context.moveTo 20.06, 79.26
     context.lineTo 15.23, 75.9
     context.lineTo 26.06, 56.31

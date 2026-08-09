@@ -73,12 +73,12 @@ class PreferencesAndSettings
   dwellToArmMs: 450
   dwellRingSteps: 5
 
-  # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
-  # in the font size. This is so the resizing of the
-  # text is less "jumpy".
-  # "1" seems to be perfect in terms of jumpiness,
-  # but obviously this routine gets quite a bit more
-  # expensive.
+  # decimalFloatFiguresOfFontSizeGranularity would let StringWdgt's
+  # searchLargestFittingFont step through sub-points of font size, trading
+  # jumpiness ("1" was the sweet spot) for a costlier search -- but that method
+  # unconditionally resets this field to 0 at the start of every call, so it is
+  # currently pinned at integer granularity; adjusting it here has no effect
+  # unless that reset is removed too.
   @decimalFloatFiguresOfFontSizeGranularity: 0
 
   constructor: ->
