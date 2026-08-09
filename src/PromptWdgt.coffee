@@ -15,11 +15,6 @@ class PromptWdgt extends PopUpWdgt
 
   # pattern: children declared here so a duplicate has the handles to remap
   # (whether they are set in the constructor or lazily).
-  #feedback: nil
-  #choice: nil
-  #colorPalette: nil
-  #grayPalette: nil
-
   target: nil
   msg: nil
   callback: nil
@@ -48,12 +43,11 @@ class PromptWdgt extends PopUpWdgt
   # transparent EVERYWHERE and hit-testing must fall THROUGH me to my panel (and, at my
   # transparent rounded corners / padding, on through to whatever is behind me). Without
   # this the base answers OPAQUE (the explicit appearance-less default -- most
-  # appearance-less widgets are hit-targets, see Widget.isTransparentAt; container-
-  # regularization §5.6 proved flipping the DEFAULT instead regresses ~70 tests, so
-  # transparency stays a per-class override). Owner-accepted the one visible consequence
-  # (a resting pointer over a prompt corner now hover-highlights the widget behind,
-  # e.g. macroSaveAsPromptAboveTiltedWindow's close button -- consciously recaptured
-  # 2026-07-19).
+  # appearance-less widgets are hit-targets, see Widget.isTransparentAt); transparency
+  # stays a per-class override, with the owner-accepted consequence that a resting
+  # pointer over a prompt corner hover-highlights the widget behind (e.g.
+  # macroSaveAsPromptAboveTiltedWindow's close button). Why the base DEFAULT was not
+  # flipped instead: docs/archive/container-regularization-plan.md §5.6.
   isTransparentAt: (aPoint) ->
     true
 
@@ -67,7 +61,7 @@ class PromptWdgt extends PopUpWdgt
     # after super() has bound their extra params (e.g. NumberPromptWdgt's ceiling):
     # CoffeeScript binds a subclass's ctor params only AFTER super(), so building
     # here would dispatch into the subclass editor hook too early (same reason
-    # MenuWdgt keeps its label build out of a virtual _buildAndConnectChildren).
+    # MenuRowsPanelWdgt keeps its label build out of a virtual _buildAndConnectChildren).
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->

@@ -1,18 +1,15 @@
-# a "shortcut" (for friends) is a reference to something else.
-# What does it mean? That if you duplicate the shortcut you just
-# duplicate a reference, and opening either one will open the
-# SAME referenced widget. Note that you can't show TWO
-# "SAME widget"s at the same time, so opening a shortcut is likely
-# to move the referenced widget from a location to another.
+# A shortcut is a REFERENCE to another widget, not an independent copy.
+# Duplicating a shortcut duplicates the reference: both copies still point
+# at, and open, the SAME target -- and since only one instance of a widget
+# can be shown at once, opening either one is likely to relocate the target
+# from wherever it currently sits.
 #
-# If you want to duplicate the referencED widget instead, just
-# duplicate that one, and create a reference FOR THE COPY.
+# To get an independent copy, duplicate the referencED widget itself and
+# create a fresh reference for the copy.
 #
-# So, for example, is the Fizzypaint launcher icon a reference?
-# NO, because if you duplicate the launcher, and open both of the
-# launchers, you don't get to the SAME widget, you get to two entirely
-# separate Fizzypaint instances that have different lives and can be
-# shown both at the same time on the screen.
+# Contrast: a launcher icon is NOT a reference -- duplicating a launcher
+# and opening both copies spawns two entirely separate, independently-alive
+# instances that can be shown at the same time.
 
 class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
 
@@ -45,9 +42,9 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
 
   # Bookkeeping lives in the CORE, not the public destroy() wrapper: bulk paths
   # (fullDestroy / fullDestroyChildren / teardown) recurse core-to-core and
-  # never touch the public wrapper -- an override there leaked every
-  # bulk-destroyed shortcut into the tracker (latent for years; the Tier A
-  # storage audit made it loud, 2026-07-23).
+  # never touch the public wrapper -- an override there leaves every
+  # bulk-destroyed shortcut behind in the tracker. See
+  # docs/archive/bin-shelf-eager-sorting-plan.md (Tier A storage audit).
   _destroyNoSettle: ->
     super
     world.widgetsReferencingOtherWidgets.delete @
@@ -93,12 +90,11 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   # undivided method did, through spawnNextTo.
   _bringUpTargetNow: ->
     whatToBringUp = @target.findRootForGrab()
-    # things like draggable graphs have no root for grab,
-    # however since they rest in storage (the shelf, or the bin)
-    # "directly" on their own it's OK to bring those up (as opposed
-    # to things that are part of other widgets resting in storage,
-    # in that case you'd tear it off an existing widget and it
-    # would probably be a bad thing)
+    # findRootForGrab can return nil (e.g. a draggable graph has no grabbable
+    # root); when the target itself rests DIRECTLY in the bin or shelf it is
+    # its own root for this purpose. A target that is merely part of a larger
+    # widget resting in storage has no such direct root -- bringing it up
+    # would tear it off its container, which this path must not do.
     if !whatToBringUp? and (@target.isDirectlyInBin() or @target.isDirectlyInShelf())
       whatToBringUp = @target
     if !whatToBringUp?

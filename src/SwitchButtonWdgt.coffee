@@ -14,12 +14,8 @@ class SwitchButtonWdgt extends Widget
 
   constructor: (@buttons) ->
 
-    # additional properties:
-
     super()
 
-    #@color = Color.create 255, 152, 152
-    #@color = Color.WHITE
     @_buildAndConnectChildren()
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).

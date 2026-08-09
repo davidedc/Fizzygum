@@ -397,14 +397,11 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
         return false
     return false
 
-  # normally a button injects new code only when
-  # is pressed, BUT here we make it so we inject new
-  # code also if the tool is selected, without it to
-  # be re-pressed. In order to do that, we
-  # simply listen to a notification of new code being
-  # available from a button, we check if it's selected
-  # and in that case we tell the button to actually
-  # inject the code.
+  # Unlike a normal button, which injects code only when pressed, a SELECTED
+  # tool must pick up newly edited source immediately, without being
+  # re-pressed: CodeInjectingSimpleRectangularButtonWdgt notifies me of new
+  # code, and I forward the injection to the button only when it is the
+  # currently selected tool.
   newCodeToInjectFromButton: (whichButtonHasNewCode) ->
     if @isToolPressed whichButtonHasNewCode
       whichButtonHasNewCode.injectCodeIntoTarget()
@@ -454,13 +451,9 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
 
     @eraserToolButton = new ToggleButtonWdgt eraserToolButtonOff, eraserToolButtonOn
 
-    # pencilAnnotation
     new EditableMarkWdgt @pencilToolButton, pencilButtonOff, "editInjectableSource"
-    # brushAnnotation
     new EditableMarkWdgt @brushToolButton, brushToolButtonOff, "editInjectableSource"
-    # toothpasteAnnotation
     new EditableMarkWdgt @toothpasteToolButton, toothpasteToolButtonOff, "editInjectableSource"
-    # eraserAnnotation
     new EditableMarkWdgt @eraserToolButton, eraserToolButtonOff, "editInjectableSource"
 
     @_addNoSettle @pencilToolButton

@@ -28,7 +28,6 @@ class SimpleTextWdgt extends TextWdgt
    @fontName = @justArialFontStack,
    @isBold = false,
    @isItalic = false,
-   #@isNumeric = false,
    @color = Color.BLACK,
    @backgroundColor = nil,
    @backgroundTransparency = nil

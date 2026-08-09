@@ -57,9 +57,11 @@ class AnalogClockAppearance extends Appearance
       # C1: blit the cached STATIC face (the 12 hour + 48 minute tick marks) instead of
       # re-stroking all 60 marks every repaint. It's rendered once per size into an
       # immutable back buffer (see _getFaceBuffer) and blitted here in DEVICE space,
-      # integer-aligned to the SAME al/at/sl/st as the background rect — so, with
-      # SWCanvas's hard-edged (non-AA) rasterisation and integer widget positions, it
-      # lands byte-for-byte where the old in-_renderingHelper tick strokes did. The ticks
+      # integer-aligned to the SAME al/at/sl/st as the background rect. NOT guaranteed
+      # byte-identical to the old direct strokes, though: the floating-point CTM differs
+      # between a direct draw and a buffer-plus-blit, which can shift a near-boundary
+      # tick endpoint by 1px at some sizes/dprs (see
+      # docs/architecture/integer-pixel-placement-and-sizing.md §5). The ticks
       # are the BOTTOM layer (drawn first, under the hands); the dynamic hands and the
       # centre dot + outer arc that sit IN FRONT of the hands are still drawn live by
       # _renderingHelper, so the z-order is unchanged.
@@ -95,8 +97,10 @@ class AnalogClockAppearance extends Appearance
 
   # The shared clock-face transform: recentre to the clock's middle, scale to 0.9,
   # rotate so 12 o'clock points up, and set the black stroke. Used by both the live
-  # _renderingHelper and the cached _renderStaticFace so the two stay pixel-identical
-  # (the C1 face-buffer byte-identity invariant).
+  # _renderingHelper and the cached _renderStaticFace so both draw with the same
+  # origin and orientation — which does NOT make the buffered ticks byte-identical
+  # to a direct stroke (the C1 floating-point caveat:
+  # docs/architecture/integer-pixel-placement-and-sizing.md §5).
   _applyFaceTransform: (context) ->
     width = @widget.width()
     height = @widget.height()
@@ -171,7 +175,10 @@ class AnalogClockAppearance extends Appearance
   # Draws ONLY the hour + minute tick marks, in the clock's local logical space (buffer
   # origin = clock origin). This is exactly the tick portion that used to live at the
   # top of _renderingHelper — identical transform, stroke widths, caps and iteration
-  # order — so blitting the result is byte-identical to stroking them live. Drawn
+  # order — but blitting is still NOT guaranteed byte-identical to stroking live: the
+  # floating-point CTM differs between a direct draw and a buffer-plus-blit and can
+  # shift a near-boundary tick endpoint by 1px at some sizes/dprs (the C1 caveat,
+  # docs/architecture/integer-pixel-placement-and-sizing.md §5). Drawn
   # pristine: globalAlpha 1, no shadow (opaque black on transparent); the clock's alpha
   # and any shadow are applied at blit time in paintIntoAreaOrBlitFromBackBuffer.
   _renderStaticFace: (context) ->

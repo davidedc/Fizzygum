@@ -30,11 +30,8 @@ class BinWdgt extends Widget
     "Bin"
 
   closeFromContainerFrame: (containerWindow) ->
-    # remove ourselves from
-    # the window
     @removeFromTree()
-    # here we are just removing the empty window
-    # there is nothing in it
+    # containerWindow is now empty (we just detached above), so destroying it loses nothing
     containerWindow.fullDestroy()
   
   # NOT homepage-excluded (it long was): the shared world teardown

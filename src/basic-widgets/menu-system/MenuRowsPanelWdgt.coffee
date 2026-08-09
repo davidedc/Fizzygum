@@ -87,9 +87,8 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # FULL row width — menus equalize so hover highlights span the menu — where
   # the base's spec-derived answer would leave a narrower row at its natural
   # width. With this, both engine branches emerge equalized and no stretch
-  # post-pass is needed (menu-row-conformance Phase 2e; its first landing
-  # FALSIFIED the assumption that this override already existed — the §5.2e
-  # equalization had lived entirely in the post-pass).
+  # post-pass is needed (menu-row-conformance Phase 2e — falsification history
+  # in docs/archive/menu-row-conformance-plan.md).
   _childWidthInStack: (widget, availForContents) ->
     availForContents
 
@@ -117,7 +116,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # the end (orphan-settledness: `new X` returns settled). Only the HEADER is
   # ctor-built: the ROWS are composed by the owner after construction
   # (addMenuItem / addLine). Distinct name from `_buildAndConnectChildren` for
-  # the same reason MenuWdgt states: a subclass binds its ctor params only after
+  # the same reason PromptWdgt states: a subclass binds its ctor params only after
   # super(), so a virtual builder called from a base ctor would dispatch too early.
   _buildMenuLabel: ->
     @_settleLayoutsAfter => @_buildMenuLabelNoSettle()
@@ -195,13 +194,11 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # container) — hug the width FIRST so super() distributes exactly that.
   # Row equalization needs no pass of its own: _childWidthInStack (above) hands
   # every row the full row width, and each row kind arranges its own innards
-  # through the engine's standard chokepoints (menu-row-conformance Phase 2:
-  # header/slider/field track via _reLayoutChildren, the picker via its
-  # deferred _reLayout; items and dividers are true leaves), so BOTH engine
-  # branches emerge equalized. The interim §5.2e post-pass that re-stretched
-  # every row through the virtual _applyWidth — the sole equalizer before the
-  # width policy above existed, and the only path that fired the row types'
-  # bespoke pre-conformance hooks — is gone (Phase 2e).
+  # through the engine's standard chokepoints (header/slider/field track via
+  # _reLayoutChildren, the picker via its deferred _reLayout; items and
+  # dividers are true leaves), so BOTH engine branches emerge equalized. The
+  # retired interim post-pass this replaced is in
+  # docs/archive/menu-row-conformance-plan.md (Phase 2e).
   _positionAndResizeChildren: ->
     @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
     super()
