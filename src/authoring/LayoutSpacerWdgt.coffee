@@ -30,9 +30,6 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
     context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
     context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftDown.x, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y
 
-    #context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-    #context.lineTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-
     context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
     context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y
 
@@ -77,9 +74,11 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
 
     # give it a good shadow so that
     # it's visible also when on light
-    # background. Do that by painting it
-    # twice, slightly translated, in
-    # darker color.
+    # background: stroke the same path
+    # twice, shadow color first, then
+    # the main color on top (only the
+    # antialiased fringe of the shadow
+    # stroke stays visible).
     context.save()
     context.strokeStyle = shadowColor.toString()
     @drawReplacerWidget context

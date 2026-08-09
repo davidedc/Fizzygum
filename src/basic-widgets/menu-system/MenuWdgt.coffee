@@ -28,7 +28,7 @@ class MenuWdgt extends PopUpWdgt
   # Same instance as @rowsPanel.label, so `.center()` tracks it live.
   label: nil
 
-  # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's menuAtPointer filter + the
+  # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's
   # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other pop-ups. True here,
   # inherited by PromptWdgt/SaveShortcutPromptWdgt (mirroring the instanceof); dispatched via ?() (nothing
   # on Widget). Parallels isFrame. (type-test-elimination campaign)

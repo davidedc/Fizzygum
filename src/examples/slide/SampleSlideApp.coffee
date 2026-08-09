@@ -63,15 +63,13 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     slideWdgt.disableDragsDropsAndEditing()
 
     # Re-anchor the NYC viewport AFTER the mode flip: the container shifts left when editing
-    # turns off, and post-orphan-settledness (ce21dcf7) the scroll no longer re-derives, so
-    # scrolling LAST anchors it in the geometry the user actually sees (2026-07 mis-scrolled
-    # -slide regression). Expressed in the pin's OWN content coordinates -- put the pin toward
-    # the frame's top-left, (89,23) -- so it is robust to the frame's final position/size
-    # (ScrollPanelWdgt.scrollTo is frame-relative). No magic viewport constant. Horizontally
-    # that request lies just past the map's end, so the clamped scrollTo stops at the edge:
-    # the map sits flush with the viewport and the pin lands at (116,23). (The 89 is the
-    # July-2026 calibration, measured from a state that was itself over-scrolled by the 27px
-    # container shift -- kept as the intent, with the clamp supplying the reachable truth.)
+    # turns off and the scroll does not auto-re-derive, so scrolling LAST anchors it in the
+    # geometry the user actually sees. Expressed in the pin's OWN content coordinates,
+    # targeting (89,23) near the frame's top-left, so it stays correct across the frame's own
+    # position/size (ScrollPanelWdgt.scrollTo is frame-relative and clamped). Horizontally that
+    # target lies just past the map's end, so the clamped scroll stops there: the map sits
+    # flush with the viewport and the pin lands at (116,23). Calibration history:
+    # docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md.
     pinOffsetInScrolledContent = mapPin.position().subtract windowWithScrollingPanel.contents.contents.position()
     windowWithScrollingPanel.contents.scrollTo pinOffsetInScrolledContent.subtract new Point 89, 23
     

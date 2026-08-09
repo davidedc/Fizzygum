@@ -74,10 +74,9 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
 
 
     patchProgrammingWdgt._applyBounds (new Point 114, 10), new Point 596, 592
-    # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core -- the
-    # disable/enable-editing family convert), so calling it BEFORE or AFTER world.add is equally legal: the delicate
-    # "must precede world.add" ordering that once made this the lone witness of that method's careless tail has
-    # DISSOLVED (the tail rides the wrapper's own flush now, on orphan or attached alike). Order kept as-is, unchanged.
+    # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core), so
+    # calling it BEFORE or AFTER world.add is equally legal; order kept as-is. See
+    # docs/archive/disable-editing-family-convert-plan.md.
     patchProgrammingWdgt.disableDragsDropsAndEditing()
     world.add patchProgrammingWdgt
     patchProgrammingWdgt.setTitleWithoutPrependedContentName "°C ↔ °F converter"

@@ -42,10 +42,9 @@ class AnalogClockWdgt extends Widget
     # FIXED (grow 0): the clock keeps its own square size as window content; it does NOT
     # stretch to fill a larger (e.g. nested) window. This makes its width CONVERGENCE-INDEPENDENT:
     # at grow 0, getWidthInStack = min(desiredWidth, availW) -- no term samples the stack width,
-    # so the clock never depends on a container width sampled at capture time (under the old
-    # proportional model that sample -- widthOfStackWhenAdded -- was, for a clock nested in a
-    # window-in-window, the ancestor-cascade-converged width and drove the deferred-layout
-    # runaway; U1 deleted that snapshot from the model entirely). The clock's square aspect is
+    # so the clock never depends on a container width sampled at capture time (the old
+    # proportional model's snapshot, deleted by U1 -- see
+    # docs/archive/sizing-model-unification-plan.md §9.5). The clock's square aspect is
     # preserved by _setWidthSizeHeightAccordingly.
     @_contentStackSpec.grow = 0
 

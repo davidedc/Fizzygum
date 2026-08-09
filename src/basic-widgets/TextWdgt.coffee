@@ -119,18 +119,13 @@ class TextWdgt extends StringWdgt
         currentLine = ""
       else
         if maxTextWidth > 0 # there is a width limit, we might have to wrap
-          # there is a width limit, so we need
-          # to check whether we overflowed it. So create
-          # a prospective line and then check its width.
+          # build a prospective line (current line + word)
+          # and check it against the width limit.
           lineForOverflowTest = currentLine + word + " "
           w = Math.ceil @measureText overrideFontSize, lineForOverflowTest
           if w > maxTextWidth
-            # ok we just overflowed the available space,
-            # so we need to push the line *without the last word*
-            # and the corresponding "slotsInParagraph" number in the
-            # respective arrays.
-            # the new line is going to only contain the
-            # word that has caused the overflow.
+            # overflowed: push the line *without the last word* --
+            # that word starts the next line.
 
             currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
             # if we don't do this test there is a strange behaviour
@@ -204,11 +199,14 @@ class TextWdgt extends StringWdgt
       # called @wrappedLines, which contains the string for
       # each line (excluding the end of lines).
       # Also another array is created, called
-      # @wrappedLineSlots, which memorises how many characters
-      # of the text have been consumed up to each line
+      # @wrappedLineSlots -- one entry longer than @wrappedLines:
+      # a leading 0, then the cumulative count of characters
+      # consumed up to the end of each line (each line counts
+      # its invisible trailing carriage-return/space slot), so
+      # @wrappedLineSlots[row] is the slot where row starts.
       #  example: original text: "Hello\nWorld"
       # then @wrappedLines[0] = "Hello" @wrappedLines[1] = "World"
-      # and @wrappedLineSlots[0] = 6, @wrappedLineSlots[1] = 11
+      # and @wrappedLineSlots = [0, 6, 12]
       # Note that this algorithm doesn't work in case
       # of single non-spaced words that are longer than
       # the allowed width.
@@ -654,13 +652,9 @@ class TextWdgt extends StringWdgt
 
   # StringWdgt editing:
   edit: ->
-    # when you edit a text widget, potentially
-    # you need to change the alignment of the
-    # text, because managing the caret with
-    # alignments other than the top-left
-    # ones is complex. So during editing
-    # we might change the alignment, hence
-    # ths method here with @_changed()
+    # force a repaint on entering edit
+    # mode; the actual editing setup is
+    # StringWdgt's (super).
     @_changed()
     return super
 

@@ -1,10 +1,8 @@
 # Sliders (and hence slider button widgets)
 # are also used in the ScrollPanelWdgts .
 
-# In previous versions the user could force an orientation, so
-# that one could have a vertical slider even if the slider is
-# more wide than tall. Simplified that code because it doesn't
-# look like a common need.
+# The orientation is auto-derived from my geometry (taller-than-wide = vertical);
+# a user-forced orientation existed once and was simplified away as uncommon.
 
 class SliderWdgt extends CircleBoxWdgt
 
@@ -45,7 +43,7 @@ class SliderWdgt extends CircleBoxWdgt
     @color = Color.BLACK,
     @smallestValueIsAtBottomEnd = false
     ) ->
-    super # if nil, then a vertical one will be created
+    super
     @alpha = 0.1
     @__commitExtent new Point 20, 100
     @_buildAndConnectChildren()
@@ -311,11 +309,9 @@ class SliderWdgt extends CircleBoxWdgt
       newSize = parseFloat size
       @size = Math.min Math.max(newSize, 1), @stop - @start  unless isNaN newSize
     @value = Math.min @value, @stop - @size
-    # it just so happens that, as hoped but somewhat
-    # unexpectedly, as the slider resizes,
-    # the resize mechanism is such that the
-    # button keeps the same value, so there
-    # is no need to update the target.
+    # the resize mechanism happens to keep the
+    # button's value stable, so there is no
+    # need to update the target.
     #@updateTarget()
     @_reLayoutSelfAndButton()
   

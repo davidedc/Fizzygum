@@ -1,4 +1,4 @@
-# this is made to go inside the StretchablePanelContainer,
+# this is made to go inside a StretchableWidgetContainerWdgt,
 # it probably makes no sense on its own
 
 class StretchablePanelWdgt extends PanelWdgt

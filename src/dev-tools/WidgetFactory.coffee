@@ -3,9 +3,10 @@
 # WorldWdgt's "make a widget" / "parts bin" demo menus and floats each on the
 # hand. Lifted out of WorldWdgt as a plain delegated collaborator (the
 # MacroToolkit pattern): the world HAS-A one, reachable as world.widgetFactory.
-# This is all dev/demo scaffolding, hence the whole-file homepage exclusion
-# above (and the guarded `if WidgetFactory?` construction in the WorldWdgt
-# ctor). The widgets are floated via world.create, which STAYS on WorldWdgt as
+# This is all dev/demo scaffolding, hence its own 'dev-tools' part (absent
+# from the homepage/lean profiles) and the guarded `if WidgetFactory?`
+# construction in the WorldWdgt ctor. The widgets are floated via
+# world.create, which STAYS on WorldWdgt as
 # the shared pickUp helper (used widely, e.g. by MenusHelper). NB: inside these
 # methods `world.` is the live world -- it was `@` when they lived on WorldWdgt.
 # OO-backlog Phase 6 step 6a.2.
@@ -103,9 +104,7 @@ class WidgetFactory
   # _applyBounds here leaves the relayout on the end-of-cycle work list instead (the "careless push" the
   # capstone gate fails on); setBounds is the one-shot position+extent public form that flushes once.
   # (The siblings below bound their widget BEFORE adding it, where nothing is painted yet and the raw
-  # core is correct.) Reachable from the demo menu on both entry pages since arc 3 phase 7 merged
-  # popUpDemoMenu's two catalogues -- before that these items existed only on the index page, where no
-  # gate ever ran them, which is how the carelessness survived.
+  # core is correct.)
   createNewGrayPaletteWdgtInWindow: ->
     gP = new GrayPaletteWdgt
     wm = new FrameWdgt gP
@@ -119,8 +118,9 @@ class WidgetFactory
   createNewColorPickerWdgt: ->
     world.create new ColorPickerWdgt
   # ⚠⚠ BouncerWdgt and PenWdgt are the LAZY 'demos' part, and this class is the EAGER 'dev-tools'
-  # one -- an eager part naming a lazy part's class, which check-part-edges.js cannot see (it scans
-  # CORE only). Both are reached from world menu -> 'demo ➜', which offers the items but loads
+  # one -- a lazy requirement on an eager owner, which check-part-edges.js discounts entirely when
+  # scanning these files (parts.json //requires): the await below is what satisfies the gate.
+  # Both are reached from world menu -> 'demo ➜', which offers the items but loads
   # nothing, so without this await the click threw '<Class> is not defined' on index.html.
   # Awaiting here rather than at the menu door is deliberate: only these two factory methods want
   # the demo family, and the rest of that menu is core widgets that must stay instant.

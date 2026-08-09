@@ -134,7 +134,7 @@ class Example3DPlotWdgt extends Widget
 
   step: ->
     # freeze the auto-rotation under SystemTest replay so the mesh renders a fixed frame -- mirrors
-    # AnalogClockWdgt._calculateHandsAngles / GraphsPlotsChartsWdgt. (Inlined, not shared: unlike the 2D
+    # AnalogClockAppearance._calculateHandsAngles / GraphsPlotsChartsWdgt. (Inlined, not shared: unlike the 2D
     # plots I extend Widget directly, not GraphsPlotsChartsWdgt -- I keep my own paint/anim copy.)
     frozenForReplay = Automator? and Automator.animationsPacingControl and Automator.state == Automator.PLAYING
     if @autoRotate and not frozenForReplay

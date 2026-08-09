@@ -61,7 +61,7 @@ const STINKS = [
   { id: 'math-random', baseline: 5,
     why: 'Math.random in render/layout/input code breaks byte-exact screenshot determinism',
     re: /\bMath\.random\b/ },
-  { id: 'instanceof-type-test', baseline: 88,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries)
+  { id: 'instanceof-type-test', baseline: 87,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries); 88->87 (2026-08-09, banking a gain already landed; surfaced by the comments-audit stink run)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     re: /\binstanceof\b/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).

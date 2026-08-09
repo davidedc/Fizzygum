@@ -36,10 +36,8 @@ class IconicDesktopSystemWindowedApp
   #   - buildSystem/check-part-edges.js reads the same line, and treats it as satisfying every
   #     reference this class makes into those parts -- because the gate reads one line at a time
   #     and can never see that a `launch` three methods up already awaited.
-  # Before this existed each subclass hand-wrote its own `launch: -> whenAllLoaded [...], => super()`
-  # override, which the gate could not read at all: nine apps did it correctly and the gate still
-  # had to be told, one exemption at a time. A declaration cannot drift from the await, because the
-  # await IS the declaration.
+  # A declaration cannot drift from the await, because the await IS the declaration -- a hand-written
+  # launch override defeats the gate the same way (case history: docs/architecture/build-and-packaging.md).
   # ⚠ REQUIRED vs OPTIONAL is the distinction PartsRegistry documents: `requiredParts` CONSTITUTE
   # the window (a Sample doc that assembles plots is broken without them, so it must reject loudly),
   # `optionalParts` merely ENRICH it (a docked palette offers fewer tools, which is reduced rather

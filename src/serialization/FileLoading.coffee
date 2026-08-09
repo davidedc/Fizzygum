@@ -4,7 +4,7 @@
 #
 # The single file extension is `*.fzw.json` (plain JSON inside); a `kind:"widget"` file
 # restores a detached widget attached at the drop point, a `kind:"world"` file loads a whole
-# world snapshot (Phase 5). Non-Fizzygum files are rejected with a friendly inform.
+# world snapshot (§11). Non-Fizzygum files are rejected with a friendly inform.
 class FileLoading
 
   # A hidden <input type=file>, created on demand and clicked from a "open from file…" menu

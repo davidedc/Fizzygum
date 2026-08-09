@@ -25,9 +25,8 @@ class ToolPanelWdgt extends PanelWdgt
     return
 
   # Public add self-settles over the non-settling core (the Widget /
-  # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern). Was: a public add ending in a
-  # bare _invalidateLayout() that rode the end-of-cycle flush, plus a hand-rolled
-  # `dontLayout` batching flag -- the pre-convert shape everywhere else already left.
+  # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern); the pre-convert shape is in
+  # docs/archive/layout-optimizations-and-oo-cleanup-plan.md.
   add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
@@ -110,13 +109,9 @@ class ToolPanelWdgt extends PanelWdgt
     scanningChildrenY = 0
     numberOfEntries = 0
 
-    # The ToolPanel if often inside a scroll panel,
-    # in which case the panel width stays the same as the scroll panel
-    # is resized (because that's what scrollpanels do, they change
-    # dimensions but the contents remain the same).
-    # BUT we want the toolpanel to never scroll horizontally
-    # (only vertically), i.e. we want it to fit the contents
-    # of the scroll panel parent
+    # A scroll-panel parent resizes while keeping its contents' width fixed, and the
+    # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
+    # the scroll frame's content width, read via the widthContentsMustFitWithin?
     # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
     # frame answers the question; any other parent (or no parent) leaves my own width.
     widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()

@@ -71,9 +71,11 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
 
     # give it a good shadow so that
     # it's visible also when on light
-    # background. Do that by painting it
-    # twice, slightly translated, in
-    # darker color.
+    # background: stroke the same path
+    # twice, shadow color first, then
+    # the main color on top (only the
+    # antialiased fringe of the shadow
+    # stroke stays visible).
     context.save()
     context.strokeStyle = shadowColor.toString()
     @drawHandle context

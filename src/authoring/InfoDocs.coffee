@@ -174,7 +174,7 @@ class InfoDocs
   # ⚠ NO await here, and that is a property of where this class LIVES. Every info doc IS a
   # DocumentWdgt, and InfoDocs sits in the same 'authoring' part as DocumentWdgt -- all eight of its
   # REGISTRY keys name a Maker, so it is authoring-surface material and nothing in core reaches it.
-  # Its callers are the nine launchers' `windowOpened` hooks, which the base runs after buildWindow,
+  # Its callers are the seven launchers' `windowOpened` hooks, which the base runs after buildWindow,
   # i.e. after `launch` already awaited; and WindowsToolbarCreatorButtonWdgt, which is in this part.
   @createNextTo: (key, nextToThisWidget) ->
     entry = @REGISTRY[key]
@@ -186,8 +186,8 @@ class InfoDocs
   # Shared builder for the one-shot info documents above. It lays out the
   # common shape -- the icon + centred title + divider header, then the
   # per-key body via the `buildBody sdspw` callback, then places/titles/locks
-  # the doc window (set the once-only `world[flagName]`, monkey-patch
-  # close-to-destroy, position next to nextToThisWidget) -- and RETURNS the
+  # the doc window (set the once-only `world[flagName]`, set the
+  # destroy-on-close policy, position next to nextToThisWidget) -- and RETURNS the
   # DocumentWdgt.
   @_buildInfoDocNextTo: (nextToThisWidget, flagName, doc, iconWidget, title, windowTitle, buildBody) ->
     sdspw = doc.contents

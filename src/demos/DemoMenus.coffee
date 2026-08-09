@@ -1,11 +1,9 @@
 # The DEMO / parts-bin menus: the "demo ➜" catalogue, the icon galleries, the widget and
 # layout sample factories, and the test menu they hang off.
 #
-# This is the bulk of what used to be MenusHelper. Before arc 3, 689 of that class's 758
-# lines sat inside `»>>` markers (the retired region-exclusion mechanism) — i.e. MenusHelper
-# was already a demo class with three product members stranded inside it. Arc 3 split it the
-# way the sizes suggest: the demo content moved HERE and the file carries a whole-file marker
-# (arc 4 turns that into part membership), while MenusHelper keeps only what ships.
+# This is the bulk of what used to be MenusHelper, split out of it in arc 3 and made the
+# 'demos' part in arc 4 (see docs/archive/build-arc-3-world-harmonization-plan.md and
+# docs/archive/build-arc-4-dynamic-parts-plan.md); MenusHelper keeps only what ships.
 #
 # Reached as `demoMenus`, built in globalFunctions behind `if DemoMenus?` — the collaborator
 # pattern (cf. `world.widgetFactory`, `world.pinouts`). Menu items name it as their target;
@@ -407,10 +405,10 @@ class DemoMenus
     simpleVideoLinkWdgt.setExtent new Point 405, 50
     world.create simpleVideoLinkWdgt
 
-  # ⚠ THE SEVEN PLOT DEMO ITEMS BELOW NEED THE LAZY 'plots' PART. This is a part->part reference
-  # (demos -> plots), which buildSystem/check-part-edges.js deliberately does NOT check -- it scans
-  # CORE only -- so nothing but this comment and the await stands between a demo-menu click and
-  # "<TheClass> is not defined". Every one of them is reached by reflection from popUpPlotsMenu
+  # ⚠ THE SIX PLOT DEMO ITEMS BELOW NEED THE LAZY 'plots' PART. This is a part->part reference
+  # (demos -> plots) that buildSystem/check-part-edges.js DOES check -- 'demos' is scanned against
+  # every part it does not declare in requires (as the note near the top of this file explains) --
+  # and the await below is what satisfies it. Every one of them is reached by reflection from popUpGraphsMenu
   # (`menu.addMenuItem "...", demoMenus, "createX"`), which ignores the return value, so awaiting is
   # free. whenAllLoaded runs its callback inline when the part is already in, which on the harness
   # page (FIZZYGUM_EAGER_ALL_PARTS) it always is.
@@ -676,7 +674,6 @@ class DemoMenus
     menu.popUpAtHand()
 
   createNewStringWdgtWithBackground: ->
-    #newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(255, 255, 54), 0.5
     newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
     newWdgt.isEditable = true
     world.create newWdgt

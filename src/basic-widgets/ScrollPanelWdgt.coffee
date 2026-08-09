@@ -280,17 +280,15 @@ class ScrollPanelWdgt extends PanelWdgt
     @add aWdgt
 
 
-  # SCROLL-POSITION POLICY, not a child re-lay (schedule-valve arc V1, 2026-07-16 — absorbs the old
-  # _reLayoutMyChildrenAfterImmediateResize override, whose re-lay half is now the base default /
-  # the engine's job): a REAL immediate resize of a text-wrapping panel re-pins its contents to my
-  # origin (the shipped reset-scroll-on-resize behaviour), while a re-lay at an unchanged frame
-  # must never touch the scroll position. The pin lives AT the resize event because only the event
-  # knows the delta — a scheduled/settle re-lay enters _reLayout with the extent already committed,
-  # so an extent-delta gate inside _reLayout structurally cannot see an immediate resize. Pinning
-  # BEFORE super is byte-equal to the old post-commit pin (an extent commit never changes my
-  # origin); the arrange that follows (via the resize re-lay) then anchors and clamps off the
-  # pinned position, same order as the old hook (pin → size → arrange). Wrapping-STACK contents
-  # are excluded exactly as before (the arrange's clamp manages their position).
+  # SCROLL-POSITION POLICY, not a child re-lay (schedule-valve V1): a REAL immediate resize of a
+  # text-wrapping panel re-pins its contents to my origin (the shipped reset-scroll-on-resize
+  # behaviour), while a re-lay at an unchanged frame must never touch the scroll position. The pin
+  # lives AT the resize event because only the event knows the delta — a scheduled/settle re-lay
+  # enters _reLayout with the extent already committed, so an extent-delta gate inside _reLayout
+  # structurally cannot see an immediate resize. Pinning BEFORE super is safe (an extent commit
+  # never changes my origin); the arrange that follows (via the resize re-lay) then anchors and
+  # clamps off the pinned position. Wrapping-STACK contents are excluded (the arrange's clamp
+  # manages their position).
   _applyExtent: (aPoint) ->
     if !aPoint.equals(@extent()) and @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
       @contents._applyMoveTo @position()
@@ -370,11 +368,9 @@ class ScrollPanelWdgt extends PanelWdgt
     totalPadding = 2*padding
 
     if @contents instanceof SimpleVerticalStackPanelWdgt
-      # (schedule-valve V1) the old immediate-resize hook pre-set the stack to the viewport extent
-      # (polymorphic contents._applyExtent) BEFORE the arrange ran; with the hook retired the arrange
-      # normalizes the tracked WIDTH itself -- a WIDTH-CONSTRAINING stack's width is MY contract (it
-      # tracks the viewport; macroWindowCellsInConstrainedScrollStackReflow regressed without this),
-      # its height falls out of the merge-commit below. A FREE-width stack
+      # (schedule-valve V1) a WIDTH-CONSTRAINING stack's width is MY contract (it tracks the
+      # viewport; macroWindowCellsInConstrainedScrollStackReflow regressed without this), its
+      # height falls out of the merge-commit below. A FREE-width stack
       # (constrainContentWidth false) OWNS its width -- the whole point of the horizontal scrollbar
       # -- so normalizing it would valve-schedule a re-grow every arrange and ping-pong onto the
       # end-of-cycle flush (the capstone gate caught exactly that on
@@ -384,8 +380,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @contents._applyWidth @width()
       # arrange the content stack's children; I OWN its frame regardless (I size it from the §4.1 pure
       # measure -- subBounds -> the frame commit below), and the stack's terminal self-resize notifies nobody
-      # (the notify-by-mutation seam is deleted; its parentWillSizeMe don't-notify-my-sizer parameter went
-      # with it -- Tier D, 2026-07-02).
+      # (the notify-by-mutation seam is deleted).
       @contents._positionAndResizeChildren()
     else if @isTextLineWrapping and @contents instanceof PanelWdgt
       @contents.children.forEach (widget) =>
@@ -400,22 +395,17 @@ class ScrollPanelWdgt extends PanelWdgt
           # (schedule-valve V1) wrap width derives from MY viewport, not @contents.width(): the two are
           # equal at the fixpoint (the merge-commit below pins contents width to mine for wrap panels),
           # but mid-transient — my frame just resized, contents not yet re-committed — only @width() is
-          # current. The old immediate-resize hook pre-set contents to the viewport precisely to feed
-          # this read; deriving from @width() removes that dependency.
+          # current.
           textWidth = @width() - totalPadding
           widget._applyWidth textWidth
           # (Phase C, proper-layouts) We only RE-WRAP the text child here (_applyWidth -> height = wrapped
           # line count); paint + the caret's synchronous @wrappedLines read need that committed, and the new
-          # height then flows into subBounds below. We do NOT prime the contents FRAME height here anymore:
-          # the merged-bounds commit at the end of this method is the SINGLE owner of @contents' extent. The
-          # old priming `@contents._applyHeight (max(<text wrapped height>, @height()) - totalPadding)` was
-          # redundant with that commit (nothing between here and there reads @contents.height() -- subBounds is
-          # the CHILDREN's merged bounds, not the frame's) and, worse, NON-IDEMPOTENT: it set `max(M,vp) -
-          # totalPadding` while the commit sets `max(M + 2*padding, vp)`, so the frame height flip-flopped by
-          # ~totalPadding every pass (a re-fit seam each) -- one of the three self-oscillations the
-          # @_adjustingContentsBounds flag had to mask, and the one that PERPETUATED the non-convergence (the
-          # position clamp self-settles in <=2 passes once this stops). The genuine content-height read-back is
-          # subBounds itself, retired only when a later phase gives the arrange a pure measure of its children.
+          # height then flows into subBounds below. We do NOT prime the contents FRAME height here: the
+          # merged-bounds commit at the end of this method is the SINGLE owner of @contents' extent -- an
+          # earlier priming here disagreed with that commit by ~totalPadding and flip-flopped the frame
+          # height every pass (see docs/archive/proper-layouts-eliminate-suppression-booleans-plan.md).
+          # The genuine content-height read-back is subBounds itself, retired only when a later phase gives
+          # the arrange a pure measure of its children.
 
     # §4.1 Stage C (proper-layouts): a content-sizing scroll panel (text-wrapping / vertical-stack / plain-text)
     # derives its content frame from a PURE measure of @contents's children (subWidgetsMergedPreferredBounds)
@@ -474,20 +464,19 @@ class ScrollPanelWdgt extends PanelWdgt
       # the content; the seam only delivered a confirm pass that the §4.1 measure already makes a no-op.
       @contents._commitBounds newBounds
       @contents._reLayoutSelf()
-      # (schedule-valve V1; gate made STRUCTURAL by §9-N4) a contents WITH ITS OWN ARRANGE places its
-      # children in its _reLayout (ToolPanelWdgt wraps its buttons -- the 2026-07-16 census-day bug,
-      # healed until now by the retired hook's polymorphic contents._applyExtent chain); committing its
-      # new frame via the non-notifying twin re-fits only its SELF layer, so schedule its full re-lay
-      # through the phase-valve -- in-pass the same flush's next round heals it, off-pass the wrapping
-      # settle does. The engine heals the interior; this arrange never re-lays it synchronously. (Also
-      # covers the FrameWdgt early-settle route, where the later engine re-visit sees no frame delta
-      # for the injection to act on.) The gate is implementsDeferredLayout, NOT children.length: a
-      # base-_reLayout contents (the plain PanelWdgt of every ordinary scroll panel) gets nothing from
-      # a full re-lay beyond the _reLayoutSelf above, and this arrange is ALSO reached off-settle by
-      # the sanctioned synchronous content-change endpoints (public add/addMany -> _reLayoutChildren)
-      # and the drag-to-scroll step -- a children.length gate made every such call push the contents
-      # onto the end-of-cycle flush (the capstone gate caught 34 careless pushes across 10 scroll
-      # tests, N4 close; plan §11).
+      # (schedule-valve V1; gate made STRUCTURAL by §9-N4, docs/archive/ordered-downwalk-stage-b-plan.md)
+      # a contents WITH ITS OWN ARRANGE places its children in its _reLayout (ToolPanelWdgt wraps its
+      # buttons); committing its new frame via the non-notifying twin re-fits only its SELF layer, so
+      # schedule its full re-lay through the phase-valve -- in-pass the same flush's next round heals
+      # it, off-pass the wrapping settle does. The engine heals the interior; this arrange never
+      # re-lays it synchronously. (Also covers the FrameWdgt early-settle route, where the later
+      # engine re-visit sees no frame delta for the injection to act on.) The gate is
+      # implementsDeferredLayout, NOT children.length: a base-_reLayout contents (the plain PanelWdgt
+      # of every ordinary scroll panel) gets nothing from a full re-lay beyond the _reLayoutSelf
+      # above, and this arrange is ALSO reached off-settle by the sanctioned synchronous
+      # content-change endpoints (public add/addMany -> _reLayoutChildren) and the drag-to-scroll
+      # step -- a children.length gate made every such call push the contents onto the end-of-cycle
+      # flush (34 careless pushes across 10 scroll tests, plan §11).
       if @contents.implementsDeferredLayout()
         @contents._scheduleRelayoutRespectingPhase()
 
@@ -529,15 +518,14 @@ class ScrollPanelWdgt extends PanelWdgt
   # Scroll so CONTENT-point `whereTo` sits at my top-left. FRAME-RELATIVE (offset from my own
   # origin), so the result is independent of where I am in the world -- a caller's scroll survives
   # my being moved/resized (e.g. the sample-slide edit->view container shift). Was `-whereTo.x/.y`,
-  # i.e. absolute world coords that only landed right for a frame at the world origin -- the root of
-  # the 2026-07 mis-scrolled-slide magic constant. SampleSlideApp is the sole caller.
+  # i.e. absolute world coords that only landed right for a frame at the world origin -- the root
+  # of a real mis-scrolled-slide bug. SampleSlideApp is the sole caller.
   #
   # CLAMPED like every other scroll path: the request is expressed as deltas and routed through
   # scrollX/scrollY, so a target past the content's edge stops AT the edge -- a raw move here let a
-  # too-far request commit an over-scrolled state no gesture can produce, with the contents frame no
-  # longer covering the viewport (the arrange's own fit rule): the census's one as-built mover, the
-  # sample slide's map sitting 27px short of its window edge. After a real scroll, re-fit contents
-  # + scrollbars, the standard post-scroll pair.
+  # too-far request commit an over-scrolled state no gesture can produce, with the contents frame
+  # no longer covering the viewport (the arrange's own fit rule). After a real scroll, re-fit
+  # contents + scrollbars, the standard post-scroll pair.
   scrollTo: (whereTo) ->
     scrolledX = @scrollX @left() - whereTo.x - @contents.left()
     scrolledY = @scrollY @top() - whereTo.y - @contents.top()

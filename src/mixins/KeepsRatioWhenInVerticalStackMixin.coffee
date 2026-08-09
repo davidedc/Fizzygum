@@ -62,8 +62,8 @@ KeepsRatioWhenInVerticalStackMixin =
       if @_contentStackSpec?
         @_contentStackSpec.canSetHeightFreely = false
         # force a resize, so widget
-        # will take the right ratio
-        # Note that the height of 0 here is ignored since
-        # "_setWidthSizeHeightAccordingly" will
-        # calculate the height.
+        # will take the right ratio --
+        # "_setWidthSizeHeightAccordingly"
+        # recalculates the height from
+        # the new width.
         @_setWidthSizeHeightAccordingly @width()
