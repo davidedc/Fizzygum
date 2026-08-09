@@ -3,9 +3,9 @@
 # of WorldWdgt as a plain delegated collaborator (the MacroToolkit pattern): the
 # world HAS-A one, reachable as world.wallpaper, and DesktopAppearance paints the
 # desktop by reading world.wallpaper.patternName / .pattern1..7. NB inside these
-# methods `world.` is the live world (it was `@` when they lived on WorldWdgt),
-# while `@` now means this Wallpaper -- so the picker menu items target `@` to
-# reach this object's own setPattern. OO-backlog Phase 6 step 6a.3.
+# methods `world.` is the live world GLOBAL, while `@` means this Wallpaper --
+# so the picker menu items target `@` to reach this object's own setPattern.
+# OO-backlog Phase 6 step 6a.3.
 class Wallpaper
 
   pattern1: "plain"
@@ -61,7 +61,7 @@ class Wallpaper
     # DesktopAppearance reads my patternName)
     world.noteWallpaperChanged()
 
-    # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
+    # instead of `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
     if menuItem?.parent? and menuItem.parent.isMenu?()
       @updatePatternsMenuEntriesTicks menuItem.parent
 

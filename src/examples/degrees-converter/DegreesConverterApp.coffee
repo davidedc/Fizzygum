@@ -85,8 +85,7 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     fText.isEditable = true
 
     # closing just closes (no save prompt) -- a sample window isn't worth
-    # saving. The tracked close policy (§5.E E2), replacing the untracked
-    # instance-method injection this once was.
+    # saving. The tracked close policy (§5.E E2).
     patchProgrammingWdgt.closeFromFrameBarPolicy = 'close'
 
     return patchProgrammingWdgt

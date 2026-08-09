@@ -74,8 +74,7 @@ class SampleSlideApp extends IconicDesktopSystemWindowedApp
     windowWithScrollingPanel.contents.scrollTo pinOffsetInScrolledContent.subtract new Point 89, 23
     
     # closing just closes (no save prompt) -- a sample window isn't worth
-    # saving. The tracked close policy (§5.E E2), replacing the untracked
-    # instance-method injection this once was.
+    # saving. The tracked close policy (§5.E E2).
     slideWdgt.closeFromFrameBarPolicy = 'close'
 
     return slideWdgt

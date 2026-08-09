@@ -1190,8 +1190,8 @@ class ActivePointerWdgt extends Widget
         # proxy — a rotated window must not edge-auto-scroll either. The GEOMETRY arg below keeps the figure.
         if not widgetBeingFloatDragged._dropPolicyProxy().requiresDeliberateEmbedding()
           # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
-          # (was `newWdgt instanceof ScrollPanelWdgt` + the wantsDropOfChild / edge / start logic here).
-          # (type-test-elimination campaign)
+          # (instead of an inline `newWdgt instanceof ScrollPanelWdgt` check + the
+          # wantsDropOfChild / edge / start logic here). (type-test-elimination campaign)
           newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()
 
     @mouseOverList = mouseOverNew

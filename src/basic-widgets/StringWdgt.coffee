@@ -1011,7 +1011,7 @@ class StringWdgt extends Widget
       @fontName = theNewFontName
       @_changed()
 
-      # was `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
+      # instead of `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
       if menuItem?.parent? and menuItem.parent.isMenu?()
         @updateFontsMenuEntriesTicks menuItem.parent
     @_reflowContainedTextThenInvalidateLayout()

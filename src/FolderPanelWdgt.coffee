@@ -43,8 +43,8 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
   # neat automatic grid positioning.
   _beforeChildDropped: (child) ->
     # a shortcut (already a reference) just fits within; a real dropped widget is offset so
-    # the folder panel doesn't resize and scroll (was `instanceof
-    # IconicDesktopSystemShortcutWdgt`). (type-test-elimination campaign)
+    # the folder panel doesn't resize and scroll (instead of `instanceof
+    # IconicDesktopSystemShortcutWdgt`; type-test-elimination campaign)
     if child.isDesktopShortcut?()
       child._moveWithin @
     else
@@ -53,8 +53,8 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
   _reactToChildDropped: (droppedWidget) ->
     super
     # a real widget (not already a shortcut) leaves a reference behind and closes
-    # (was `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`).
-    # (type-test-elimination campaign)
+    # (instead of `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`;
+    # type-test-elimination campaign)
     # _reactToChildDropped runs inside the drop's single settle -> the non-settling core.
     if !droppedWidget.isDesktopShortcut?()
       droppedWidget._createReferenceAndCloseNoSettle nil, @

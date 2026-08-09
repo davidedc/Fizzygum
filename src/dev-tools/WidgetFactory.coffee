@@ -8,7 +8,7 @@
 # construction in the WorldWdgt ctor. The widgets are floated via
 # world.create, which STAYS on WorldWdgt as
 # the shared pickUp helper (used widely, e.g. by MenusHelper). NB: inside these
-# methods `world.` is the live world -- it was `@` when they lived on WorldWdgt.
+# methods `world.` is the live world GLOBAL, while `@` means this factory.
 # OO-backlog Phase 6 step 6a.2.
 class WidgetFactory
 

@@ -32,7 +32,7 @@ class CaretWdgt extends BlinkerWdgt
   isLayoutInert: -> true
 
   # I am a transient overlay, so I am skipped by the add-time drop-shadow management in
-  # Widget.add (was `instanceof CaretWdgt` there). (type-test-elimination campaign)
+  # Widget.add (instead of `instanceof CaretWdgt` there; type-test-elimination campaign)
   skipsAddShadowManagement: -> true
 
   # The INERT re-sync of the caret to its target: re-size it to the target's font height and re-place it
@@ -104,8 +104,8 @@ class CaretWdgt extends BlinkerWdgt
               return @target.backTab @target
             else
               # SimpleTextWdgt inserts two spaces on Tab; every other target
-              # handles Tab itself (was `@target instanceof SimpleTextWdgt`).
-              # (type-test-elimination campaign)
+              # handles Tab itself (instead of `@target instanceof SimpleTextWdgt`;
+              # type-test-elimination campaign)
               if @target.tabInsertsSpaces?()
                 @insert "  "
               else

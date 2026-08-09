@@ -1,6 +1,6 @@
 class BubblyAppearance extends BoxyAppearance
 
-  # No constructor: it was `(widget) -> super widget`, byte-identical to BoxyAppearance's, and the
+  # No constructor: a `(widget) -> super widget` one would be byte-identical to BoxyAppearance's, and the
   # meta-compiler synthesises exactly that for a class without one — `__super__.constructor.apply this,
   # arguments` plus `registerThisInstance?()` (meta/Class.coffee, the `else` branch of the
   # `hasOwnProperty('constructor')` test, which is also what _addInstancesTracker injects into an

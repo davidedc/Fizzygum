@@ -62,8 +62,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
 
     # closing just closes (no save prompt) -- a sample window isn't worth
-    # saving. The tracked close policy (§5.E E2), replacing the untracked
-    # instance-method injection this once was.
+    # saving. The tracked close policy (§5.E E2).
     doc.closeFromFrameBarPolicy = 'close'
 
     # return the WINDOW: the base stores it in world[@slot] for the

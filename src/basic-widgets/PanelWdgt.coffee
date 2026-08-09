@@ -90,7 +90,7 @@ class PanelWdgt extends Widget
   # Do my direct children get the "lock to panel/desktop" menu toggle? Panels are lockable
   # surfaces (the world included); a scroll frame opts OUT — its direct children are chrome,
   # while children INSIDE the scrolled contents get the toggle from their own PanelWdgt parent.
-  # Capability, was `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
+  # Capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
   # at the lock-menu site (type-test-elimination ε).
   childrenCanLockToMe: ->
     true
@@ -105,7 +105,8 @@ class PanelWdgt extends Widget
     # the text should happen via API rather than via spoofing
     # a mouse event?
     if @_amITheContentsPanelOfAScrollPanelWdgt()
-      # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
+      # the caret is a world singleton, compared by identity instead of
+      # `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @children.filter (m) ->
         m != world.caret
       if childrenNotCarets.length == 1

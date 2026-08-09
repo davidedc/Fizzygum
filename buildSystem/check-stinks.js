@@ -74,7 +74,7 @@ const STINKS = [
   { id: 'commented-out-debug', baseline: 0, scope: 'comments',
     why: 'commented-out alert/debugger/console.log is dead debug cruft — delete it; git remembers',
     re: /^#\s*(alert\s*\(|debugger\b|console\.log\s*[\('"])/ },
-  { id: 'comment-past-receipt', baseline: 33, scope: 'comments',   // seeded 2026-08-09 at the measured count (comments-audit tail batches); sweep sites via --list, then tighten
+  { id: 'comment-past-receipt', baseline: 0, scope: 'comments',   // seeded at 33 and swept to ZERO the same day (2026-08-09) -- now a HARD rule; the sweep's translation idiom is "instead of <old expr>" (present-tense design statement, old expression kept as the contract spec)
     why: 'a "was <old code>" conversion receipt narrates history — state the surviving present-tense contract (what the predicate answers, or why this spelling) and let docs/archive/ keep the before-picture. EXCEPTION judged per-site at sweep time: an old expression that documents COMPOUND semantics the new form must preserve gets TRANSLATED into a present-tense contract, not deleted.',
     re: /\b(was|were) `|\bthis once was\b|\bformerly\b|\brenamed from\b/i },
 ];

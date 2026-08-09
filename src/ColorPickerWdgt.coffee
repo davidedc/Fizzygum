@@ -31,8 +31,8 @@ class ColorPickerWdgt extends Widget
   menuEntryPreferredWidth: -> @menuEntryNaturalWidth ?= @width()
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  # (Was `buildSubwidgets`, an ad-hoc one-hop indirection that hid the ctor child-building from the
-  # constructor-build gate; converted to the canonical pattern, matching ButtonWdgt.)
+  # (The canonical name matters: an ad-hoc alias like `buildSubwidgets` hides the ctor
+  # child-building from the constructor-build gate; matches ButtonWdgt.)
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 

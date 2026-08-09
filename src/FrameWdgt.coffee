@@ -450,7 +450,7 @@ class FrameWdgt extends Widget
   # window height; every other caller (incl. the preferredExtentForWidth measure) takes the
   # default false. History/rationale: docs/archive/upedge-endgame-plan.md §9-E4.
   contentsRecursivelyCanSetHeightFreely: (duringReInflation = false) ->
-    # was `!(@contents instanceof FrameWdgt)` (type-test-elimination campaign)
+    # instead of `!(@contents instanceof FrameWdgt)` (type-test-elimination campaign)
     if !@contents.isFrame?()
       # FIT_BOX_TO_TEXT content drives its OWN height from its wrapped text, so the
       # window must FOLLOW that height (shrinking when a widen re-wraps to fewer
@@ -467,7 +467,7 @@ class FrameWdgt extends Widget
       return true
 
     if @parent?
-      # was `@parent instanceof FrameWdgt` (type-test-elimination campaign)
+      # instead of `@parent instanceof FrameWdgt` (type-test-elimination campaign)
       if @parent.isFrame?()
         return @parent.recursivelyAttachedAsFreeFloating()
 

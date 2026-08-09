@@ -218,8 +218,7 @@ class InfoDocs
     world[flagName] = true
 
     # one-shot info window: closing destroys it outright (no save prompt) --
-    # the tracked close policy (§5.E E2), replacing the untracked instance-method
-    # injection this once was.
+    # the tracked close policy (§5.E E2).
     doc.closeFromFrameBarPolicy = 'destroy'
 
     doc._moveToSideOf nextToThisWidget

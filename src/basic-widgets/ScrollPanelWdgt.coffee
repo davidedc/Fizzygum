@@ -82,7 +82,7 @@ class ScrollPanelWdgt extends PanelWdgt
 
   wantsDropOfChild: (aWdgt) ->
     # the CONTENTS vetoes raw drops into its frame (a folder's contents are managed by the
-    # folder-window machinery) — capability via ?(), was `@contents instanceof FolderPanelWdgt`
+    # folder-window machinery) — capability via ?(), instead of `@contents instanceof FolderPanelWdgt`
     # (type-test-elimination ε)
     return false if @contents?.vetoesScrollPanelDrops?()
     return @_acceptsDrops
@@ -514,8 +514,8 @@ class ScrollPanelWdgt extends PanelWdgt
 
   # Scroll so CONTENT-point `whereTo` sits at my top-left. FRAME-RELATIVE (offset from my own
   # origin), so the result is independent of where I am in the world -- a caller's scroll survives
-  # my being moved/resized (e.g. the sample-slide edit->view container shift). Was `-whereTo.x/.y`,
-  # i.e. absolute world coords that only landed right for a frame at the world origin -- the root
+  # my being moved/resized (e.g. the sample-slide edit->view container shift). Not `-whereTo.x/.y`
+  # (absolute world coords): those only land right for a frame at the world origin -- the root
   # of a real mis-scrolled-slide bug. SampleSlideApp is the sole caller.
   #
   # CLAMPED like every other scroll path: the request is expressed as deltas and routed through
@@ -888,5 +888,5 @@ class ScrollPanelWdgt extends PanelWdgt
     # ELIMINATE (end-of-cycle-flush-drawdown): a disable-probe proved the deferred re-fit that used to
     # live here redundant -- disabling only changes appearance/drop-handling, and the cascade's
     # @contents._disableDragsDropsAndEditingNoSettle above already did the synchronous work. See
-    # docs/archive/end-of-cycle-flush-inventory.md. (Was `@_invalidateLayout()`.)
+    # docs/archive/end-of-cycle-flush-inventory.md.
 

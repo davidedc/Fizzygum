@@ -4174,7 +4174,7 @@ class Widget extends TreeNode
     menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
     menu.addLine()
 
-    # capability, was `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
+    # capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
     # (type-test-elimination ε) — see PanelWdgt.childrenCanLockToMe
     if @parent?.childrenCanLockToMe?()
       if @parent == world

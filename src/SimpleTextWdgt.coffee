@@ -49,7 +49,7 @@ class SimpleTextWdgt extends TextWdgt
     "text"
 
   # On Tab, this widget inserts two spaces instead of letting the target handle Tab
-  # (was `@target instanceof SimpleTextWdgt` in the caret). (type-test-elimination campaign)
+  # (instead of `@target instanceof SimpleTextWdgt` in the caret; type-test-elimination campaign)
   tabInsertsSpaces: ->
     true
 
@@ -78,7 +78,8 @@ class SimpleTextWdgt extends TextWdgt
     @_addTargetConnectionMenuEntries menu, "numerical"
 
     if @_amIDirectlyInsideScrollPanelWdgt()
-      # the caret is a world singleton; was `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
+      # the caret is a world singleton, compared by identity instead of
+      # `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @parent.children.filter (m) ->
         m != world.caret
       if childrenNotCarets.length == 1

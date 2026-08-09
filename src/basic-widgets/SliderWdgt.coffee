@@ -284,7 +284,7 @@ class SliderWdgt extends CircleBoxWdgt
   
   mouseDownLeft: (pos) ->
     # jump-drag policy is the OWNING CONTEXT's (scroll frame / prompt) — capability via ?(),
-    # was `(parent instanceof ScrollPanelWdgt) or (parent instanceof PromptWdgt)`
+    # instead of `(parent instanceof ScrollPanelWdgt) or (parent instanceof PromptWdgt)`
     # (type-test-elimination ε)
     if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
       world.hand.nonFloatDragWdgtFarAwayToHere @button, pos

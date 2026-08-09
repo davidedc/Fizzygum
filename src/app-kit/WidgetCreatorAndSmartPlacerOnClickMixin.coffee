@@ -22,7 +22,7 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         # (the citizens' StretchableWidgetContainerWdgt payload, and a
         # DocumentWdgt's SimpleDocumentScrollPanelWdgt payload -- §5.B).
         where = world.topmostChildSuchThat (w) ->
-          # was `w instanceof FrameWdgt` (type-test-elimination campaign)
+          # instead of `w instanceof FrameWdgt` (type-test-elimination campaign)
           w.isFrame?() and w.contents?.acceptsSmartPlacedWidgets?()
 
         if where?

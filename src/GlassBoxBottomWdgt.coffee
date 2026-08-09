@@ -41,7 +41,7 @@ class GlassBoxBottomWdgt extends BoxWdgt
     for w in childrenNotHandlesNorCarets
 
       # a menu item is sized to its text; other contents become square thumbnails
-      # (was `w instanceof MenuItemWdgt`). (type-test-elimination campaign)
+      # (instead of `w instanceof MenuItemWdgt`; type-test-elimination campaign)
       if w.isTextSizedGlassBoxItem?()
         w._applyMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
       else

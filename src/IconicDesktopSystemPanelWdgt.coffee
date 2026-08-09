@@ -20,7 +20,7 @@ class IconicDesktopSystemPanelWdgt extends PanelWdgt
     # where it is. Conversely, if an icon is just "created" somewhere,
     # then automatic grid positioning is better.
     # a freshly-created (not dropped) desktop icon that takes part in the grid is auto-placed;
-    # was `(aWdgt instanceof WidgetHolderWithCaptionWdgt) and !(aWdgt instanceof BinOpenerWdgt)`
+    # instead of `(aWdgt instanceof WidgetHolderWithCaptionWdgt) and !(aWdgt instanceof BinOpenerWdgt)`
     # (type-test-elimination campaign)
     if !beingDropped and aWdgt.participatesInIconGrid?()
       if @laysIconsHorizontallyInGrid
