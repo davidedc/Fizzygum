@@ -74,6 +74,9 @@ const STINKS = [
   { id: 'commented-out-debug', baseline: 0, scope: 'comments',
     why: 'commented-out alert/debugger/console.log is dead debug cruft — delete it; git remembers',
     re: /^#\s*(alert\s*\(|debugger\b|console\.log\s*[\('"])/ },
+  { id: 'comment-past-receipt', baseline: 33, scope: 'comments',   // seeded 2026-08-09 at the measured count (comments-audit tail batches); sweep sites via --list, then tighten
+    why: 'a "was <old code>" conversion receipt narrates history — state the surviving present-tense contract (what the predicate answers, or why this spelling) and let docs/archive/ keep the before-picture. EXCEPTION judged per-site at sweep time: an old expression that documents COMPOUND semantics the new form must preserve gets TRANSLATED into a present-tense contract, not deleted.',
+    re: /\b(was|were) `|\bthis once was\b|\bformerly\b|\brenamed from\b/i },
 ];
 
 function walk(dir, acc) {
@@ -88,10 +91,20 @@ function walk(dir, acc) {
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 function commentPart(line) { const i = line.indexOf('#'); return i < 0 ? null : line.slice(i); }
 
+// --list <stink-id>: print every site of ONE stink and exit — a sweep enumerator, not a gate
+// (the comments-side twin of check-doc-narration's --full). Reached as `fg stinks --list <id>`.
+const listIdx = process.argv.indexOf('--list');
+const listId = listIdx >= 0 ? process.argv[listIdx + 1] : null;
+if (listIdx >= 0 && !STINKS.some(s => s.id === listId)) {
+  console.error(`[stinks] unknown stink id '${listId}' — known: ${STINKS.map(s => s.id).join(', ')}`);
+  process.exit(2);
+}
+
 const files = walk(SRC, []);
 let over = 0;        // total occurrences ABOVE baseline (a build failure)
 let ratchetable = 0; // stinks now BELOW baseline (a chance to tighten)
 for (const stink of STINKS) {
+  if (listId && stink.id !== listId) continue;
   const baseline = stink.baseline || 0;
   const hits = [];
   for (const p of files) {
@@ -101,6 +114,11 @@ for (const stink of STINKS) {
     });
   }
   const n = hits.length;
+  if (listId) {
+    console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline})`);
+    for (const h of hits) console.log(`    ${h}`);
+    process.exit(0);
+  }
   const tag = n > baseline ? 'FAIL' : n < baseline ? 'UNDER' : 'OK';
   console.log(`[stinks] ${stink.id}: ${n} site(s) (baseline ${baseline}) -- ${tag}`);
   if (n > baseline) {
