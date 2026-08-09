@@ -13,7 +13,6 @@ class ClassInspectorWdgt extends InspectorWdgt
   _buildAndConnectChildrenNoSettle: ->
     super
     @lastLabelInHierarchy._setTextNoSettle "this class"
-    #@label.setText "class " + @target.constructor.name
     @overrideInThisClassButton = new SimpleButtonWdgt true, @, "overrideInThisClass", "override in this class"
     @_addNoSettle @overrideInThisClassButton
     @overrideInThisClassButton.hide()
@@ -146,10 +145,6 @@ class ClassInspectorWdgt extends InspectorWdgt
 
   _buildAndConnectObjOwnPropsButton: ->
 
-  # TODO: when inspecting objects, we added the functionality to
-  # inject code in the objects themselves.
-  # We'd have to do the same here, add a way to inject code in
-  # object classes.
   # The shared save scaffolding lives in InspectorWdgt::save; a class inspector
   # differs only in HOW it applies the edit: it evaluates the assignment against
   # the class prototype (and keeps the source for functions so CoffeeScript

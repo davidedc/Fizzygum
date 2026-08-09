@@ -64,8 +64,8 @@ class HandleAppearance extends Appearance
     context.closePath()
     context.stroke()
 
-  # from Chrome code coverage - it doesn't seem tha this is used?
-  # TODO check and remove if not needed
+  # the per-type arrow art -- called once per paint state (three of them) by
+  # handleWidgetRenderingHelper, i.e. on every handle render
   drawHandle: (context) ->
 
     # horizontal arrow
