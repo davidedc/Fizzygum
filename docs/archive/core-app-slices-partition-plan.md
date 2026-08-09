@@ -1,3 +1,6 @@
+> **ARCHIVED — EXECUTED AND CLOSED (2026-07-30).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Extracting the app-like slices out of `core` — spreadsheet, maps, plots, dataflow
 
 > ## ✅ EXECUTED AND CLOSED — 2026-07-30. Do not re-open P0; it was answered.

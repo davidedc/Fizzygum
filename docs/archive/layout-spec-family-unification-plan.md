@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (authored + executed 2026-08-04, one session).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Layout spec-family unification — one per-child spec object family, shared axis-parameterized engines, scaffolds as product
 
 **STATUS: ✅ EXECUTED IN FULL, 2026-08-04 — authored, fact-checked and executed the same day, in one

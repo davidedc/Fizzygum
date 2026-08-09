@@ -1,3 +1,6 @@
+> **ARCHIVED — EXECUTED (2026-07-29).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # `fg fuzz` — promote the glyph-atlas delay injector to a real tool
 
 **STATUS: EXECUTED 2026-07-29 — the tool is built, gated and verified. See §9 for the execution

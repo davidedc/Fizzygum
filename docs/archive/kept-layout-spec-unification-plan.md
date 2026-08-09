@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (executed 2026-08-06, single session; P0 in TWO ROUNDS — the round-1 slot-with-dormancy package superseded mid-review).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Kept layout specs join the one lifecycle — the knob model, the last hand-carry dies
 
 **STATUS: EXECUTED IN FULL + CLOSED 2026-08-06** (P0 in two rounds — the round-1

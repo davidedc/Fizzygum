@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (executed 2026-08-06, same day as authoring; both phases, single session).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Desktop corner-spec dissolution — the last type-test placement dies
 
 **STATUS: EXECUTED IN FULL 2026-08-06 (both phases, same day as authoring). See the

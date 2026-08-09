@@ -1,3 +1,4 @@
-[core]
-	autocrlf = false
-	
+# Never convert line endings on checkin or checkout.
+# This is the portable, in-repo equivalent of `core.autocrlf = false`: it
+# travels with the clone, whereas that config setting is per-machine.
+* -text

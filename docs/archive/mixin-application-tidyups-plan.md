@@ -1,3 +1,6 @@
+> **ARCHIVED — EXECUTED IN FULL (2026-07-27).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Mixin application tidy-ups (the inverse audit) — new edit-mode-bubbling mixin, Highlightable hoist, ratio-variant documentation
 
 > **Status: EXECUTED IN FULL 2026-07-27** (authored 2026-07-26/27, owner-approved scope:

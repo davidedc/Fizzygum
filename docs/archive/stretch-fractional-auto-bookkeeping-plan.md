@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (executed 2026-08-05, same day as authoring; P0→P4 single session).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Stretch-panel fractional bookkeeping becomes FRAMEWORK-OWNED — the caller-remember protocol is deleted
 
 **STATUS: ✅ EXECUTED IN FULL — 2026-08-05, same day as authoring, single session (P0→P4).
@@ -135,7 +138,7 @@ the holder's `_reLayout` reads them off the child it iterates. Any new mechanism
 working (the seed operates on the FIGURE via `_enclosingIslandFigure()`, same as the recorder).
 
 **Adjacent mechanisms NOT in scope** (they go with the big arc,
-`docs/plans/stretch-layout-spec-unification-plan.md`): `layoutSpec` objects,
+`docs/archive/stretch-layout-spec-unification-plan.md`): `layoutSpec` objects,
 `_stackElementSpec`, folding the three fields into a `LayoutSpec` subclass.
 
 **Existing test cover:** `macroDropIntoRotatedStretchablePanelStretchesOnResize` and
@@ -347,7 +350,7 @@ commit messages presented (`git commit -F`), never commit/push without the owner
 
 ## §8 References + execution ledger
 
-`docs/plans/stretch-layout-spec-unification-plan.md` (the companion big arc — this plan is its
+`docs/archive/stretch-layout-spec-unification-plan.md` (the companion big arc — this plan is its
 ground-clearing) · `docs/archive/census-as-built-extension-plan.md` (the as-built oracle + the
 prove-the-gate-fails discipline) · `docs/archive/proper-layouts-4.2-structural-arrange-plan.md`
 (the arrange-uses-Base-twins doctrine) · `docs/architecture/layout.md` (the rulebook) · memory:

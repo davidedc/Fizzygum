@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (executed 2026-08-04/05; F4 in its own owner-ruled session).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Layout spec-family follow-ups — division-cell product surface, content-stack drop-slots, dock completion
 
 **STATUS: ✅ EXECUTED IN FULL — F0/F1/F2/F3/F5 on 2026-08-04/05, F4 (owner-gated, fresh session per

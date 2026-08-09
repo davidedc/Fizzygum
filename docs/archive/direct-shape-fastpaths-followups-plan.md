@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (authored 2026-08-07, executed 2026-08-08; P6 added in execution).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Direct-shape fast paths — follow-ups to the Boxy roundRect conversion
 
 **STATUS: ✅ EXECUTED IN FULL AND CLOSED 2026-08-08 — all phases P1–P6 (P6 added

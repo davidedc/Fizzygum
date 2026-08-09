@@ -458,7 +458,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   first live child widget = the socket precursor (Phase 4 generalises "mount a live widget at a
   cell rect").
 - **The editing model (standard-caret arc, 2026-07-24 —
-  `docs/plans/spreadsheet-standard-caret-editing-plan.md`):** the editing cell's overlay
+  `docs/archive/spreadsheet-standard-caret-editing-plan.md`):** the editing cell's overlay
   `StringWdgt` is EDITABLE (`isEditable`, `alwaysEditsInline` — an over-long text stays
   inline-ellipsised, never the pop-out "edit:" prompt) and the sheet enters it via
   `world._editNoSettle` inside the edit-start settle, so the standard `CaretWdgt` — a cell

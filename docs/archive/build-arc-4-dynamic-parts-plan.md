@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-30).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arc 4 · Dynamic parts — lazy-loadable code slices (SourceVault, partition, runtime loader, Fizzytiles pilot)
 
 **STATUS: EXECUTED IN FULL — COMPLETE 2026-07-30.** Phases 0, 1 and 2 all landed; phase 3 DECLINED

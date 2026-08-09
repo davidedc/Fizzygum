@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-08-02).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # The shared base layer — getting the last movable classes out of core
 
 > **STATUS: COMPLETE — executed 2026-08-02, in full, as written.** The nine classes are the new LAZY

@@ -391,8 +391,8 @@ itself but its **black silhouette** (`_shadowSilhouetteOfIslandBuffer`: the buff
 channel with every visible pixel black, via a `source-in` fill — cached as
 `_islandShadowSilhouette`, see §8.1): the recursive shadow paint blackens every widget's fill
 (`appliedShadow? ⇒ Color.BLACK`) before applying the shadow alpha, and the composite must match
-it. Re-tinting the buffer's own colours at shadow alpha instead was the tilted-window
-faint-shadow bug (fixed 2026-08-02): a near-white window's "shadow" *lightened* the desktop.
+it. Re-tinting the buffer's own colours at shadow alpha instead is the trap: a near-white
+window's "shadow" would then *lighten* the desktop.
 Per-pixel coverage (AA fringes, semi-transparent content) carries through the silhouette, so
 partially-covered pixels shade proportionally, exactly as in the recursive pass. Regression
 guard: `SystemTest_macroTiltedFigureShadowAsDarkAsStraight` (numeric A/B — survives reference

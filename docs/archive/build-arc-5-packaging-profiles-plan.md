@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-30).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arc 5 · Packaging profiles — parts × code-form manifests replacing the hard-coded `--homepage` flavour
 
 **STATUS: EXECUTED IN FULL — COMPLETE (2026-07-30).** Every phase landed and is pushed; the
@@ -568,7 +571,7 @@ come BEFORE them.** Two reasons, both learned inside this arc:
   **429 vs 80 in 10**, still 0 unguarded references and 0 inheritance edges; `check-shippable-coverage`
   0 gaps. Tree delta exactly as predicted: the same 502 source NAMES with 3 re-parted, one new
   `sources_batch_meta-tools_0.js`, and the core batches repacked.
-  Ghost refs swept: `docs/plans/container-regularization-plan.md` and `Fizzygum/CLAUDE.md` (archived
+  Ghost refs swept: `docs/archive/container-regularization-plan.md` and `Fizzygum/CLAUDE.md` (archived
   plans keep the old paths — they are immutable history).
 - **Phase 2 — the new axes:** implement `sources: lazy` (the ingest-only seam, per PR-D3 — NOT
   `ensureLoaded`) and `sources: none` (excluding the `meta-tools` part Phase 1.5 created); add a

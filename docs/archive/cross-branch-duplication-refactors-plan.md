@@ -1,3 +1,6 @@
+> **ARCHIVED — EXECUTED IN FULL (2026-07-27).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Cross-branch duplication refactors (inverse-audit findings 4–6): paint→Appearance delegation, the code-runner base class, three small helper extractions
 
 > **Status: EXECUTED 2026-07-27** (authored 2026-07-26/27; the sibling
@@ -286,7 +289,7 @@ one stubborn class doesn't block the other eight.
 
 ## §7 References
 
-- Sibling plan: `docs/plans/mixin-application-tidyups-plan.md` (findings 1–3; run it
+- Sibling plan: `docs/archive/mixin-application-tidyups-plan.md` (findings 1–3; run it
   first — it touches StretchableWidgetContainerWdgt and the mixins doc too).
 - `duplication-report/*.ai.txt` (regenerate with `./find_duplicated_code.sh`,
   `./find_similar_code.sh`) — the raw clone evidence.

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-30).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arc 3 · World harmonization — one world design; retire the `»>>` region-marker mechanism entirely
 
 **STATUS: EXECUTED IN FULL — COMPLETE 2026-07-30.** Phases 1–4: Fizzygum `faea99a6` + tests

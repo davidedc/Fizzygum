@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-08-02).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # The lazily-populated folder, and the entry points that bypass its readiness protocol
 
 > ## ✅ COMPLETE — executed 2026-08-02, same day it was authored.

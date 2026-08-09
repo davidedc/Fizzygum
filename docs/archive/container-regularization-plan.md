@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-19).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Container regularization — de-byzantinate Menu / List / Prompt / Divider
 
 **STATUS: ✅ COMPLETE 2026-07-19 — ALL sections landed, §5.2e included (see its OUTCOME block).

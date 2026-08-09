@@ -15,9 +15,7 @@ how the machinery works; the plan is the *build order*.
 > **[LIVE]** in the build · **[Ph N]** lands in plan Phase N. As of **Phase 5**: the whole
 > widget serialization round-trip is **LIVE and wired** — `Widget.serialize` →
 > `Serializer.serializeWidget` (the §3 envelope), `Widget.deserialize` / `world.deserialize`
-> → `Deserializer.deserialize`; the old `doSerialize=true` prototype and its dead trio are
-> deleted; duplication lives in the `Duplicator` engine (`src/duplication/`, converted from
-> the former `DeepCopierMixin` 2026-07-26, pixel-verified byte-identical).
+> → `Deserializer.deserialize`; duplication lives in the `Duplicator` engine (`src/duplication/`).
 > Restored widgets are byte-identical to the originals (same-page AND cross-session). **File
 > save/load over `file://` (§10) is LIVE** — `Widget.saveToFile` / `FileSaving`, the
 > `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`. **The whole-world
@@ -42,9 +40,8 @@ Fizzygum has two object-graph walkers over the same graph shapes:
   [LIVE], load-bearing.** `Widget.fullCopy` → `new Duplicator(allWidgetsInStructure)
   .duplicate @`. One engine instance per copy run carries the original→clone identity
   map; it clones a widget subtree into live sibling widgets, and the SystemTest suite
-  bakes its exact pixels in. (Converted 2026-07-26 from the former `DeepCopierMixin` +
-  per-native-prototype `::deepCopy` extensions — same walk, one home, behaviour
-  byte-identical.)
+  bakes its exact pixels in. The walk lives in ONE home rather than being spread across
+  per-native-prototype `::deepCopy` extensions.
 - **Serialization — the `Serializer`/`Deserializer` pair (`src/serialization/`)**: a
   separate, side-effect-free record builder (it must not keep live pointers).
 
@@ -192,8 +189,8 @@ general fallback
 and documents intent (it is the eventual replacement for `keptByReferenceOnDeepCopy`).
 App-singleton resolution (`resolveApp`) is stubbed until the whole-world snapshot phase.
 
-This replaces the old bare `"$EXTERNAL"` token (which destroyed all identity) with a
-reconstructable symbolic link.
+The link is symbolic and reconstructable — it preserves identity, which a bare opaque
+`"$EXTERNAL"` marker cannot.
 
 ---
 
@@ -266,12 +263,12 @@ kinds so the SWCanvas variants are caught too):
 | Type | Serialize record ([Ph 2]) | Notes |
 |---|---|---|
 | `Array` | `$Array` `items` | element-wise; own table slot; can be shared between properties |
-| `Date` | `$Date` `ms` | the old handler pushed a raw `Date` → stringified to a bare ISO string → killed deserialize; the tagged record fixes it |
+| `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back |
 | `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise ([Ph 3]) |
 | `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS` |
-| `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | the old handler was broken (emitted `className:"Canvas"`, crashed); the tagged record fixes it |
+| `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
 | `CanvasGradient` | `nil` (both modes) | context-bound; consumers rebuild — keep |
-| plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | the old walker threw on these; the new encoders add support |
+| plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
 | `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
 
 ---

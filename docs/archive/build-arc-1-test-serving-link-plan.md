@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-28).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arc 1 · Test-serving link — replace the per-build tests COPY with a symlink; manifests move to the tests repo
 
 **STATUS: COMPLETE — EXECUTED 2026-07-28.** All three phases landed; gates green (full `fg gauntlet`

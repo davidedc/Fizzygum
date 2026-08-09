@@ -12,7 +12,7 @@ node-protocol contract.
 
 It looks like an app slice (it sits next to `src/spreadsheet/`, which IS a lazy part), and it is
 not one. **Owner decision, 2026-07-30**, with the enumeration behind it in
-`../../docs/plans/core-app-slices-partition-plan.md` §4 Phase 3: dataflow is the **wiring
+`../../docs/archive/core-app-slices-partition-plan.md` §4 Phase 3: dataflow is the **wiring
 substrate**, not an app. `ControllerMixin.ensureWireEdge` is how ANY widget wires itself to any
 other, `WorldWdgt.doOneCycle` drains it EVERY cycle, and its 14 call sites are already written
 `world.dataflow?.…` — so its absence would be silently **accepted** rather than caught: wires would

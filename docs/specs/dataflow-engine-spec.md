@@ -14,7 +14,7 @@ it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
 - **2b** — a buffer-driven overlay editor, NO caret (deterministic Enter-commits / Escape-cancels; the
   framework provided no accept/cancel handlers, and the caret was believed to blink under a screenshot).
   **SUPERSEDED 2026-07-24 (the standard-caret arc,
-  `docs/plans/spreadsheet-standard-caret-editing-plan.md`): cell editing now IS the standard
+  `docs/archive/spreadsheet-standard-caret-editing-plan.md`): cell editing now IS the standard
   `CaretWdgt` on an editable in-cell editor** — type-to-edit replace / Enter / F2 / double-click-at-slot
   enter it; Enter commits and Escape reverts via the caret's accept/cancel escalations landing on the
   `CellWdgt`; acting elsewhere commits. (The 2b fears resolved: accept/cancel escalations were made

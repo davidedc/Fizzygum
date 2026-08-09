@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (authored 2026-08-08, executed 2026-08-09).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Hairline strokes on the direct fast paths — the sub-pixel faint rule, uniformly
 
 **STATUS: ✅ EXECUTED IN FULL AND CLOSED 2026-08-09 — H1+H2+H3.** Landed as
@@ -383,7 +386,7 @@ Run in order; each phase lands (owner-gated) before the next starts.
 
 > Run the hairline direct-strokes plan. Orient with
 > `/Users/davidedellacasa/code/Fizzygum-all/fg status`, then read
-> `Fizzygum/docs/plans/hairline-direct-strokes-plan.md` IN FULL and follow its §0.5
+> `Fizzygum/docs/archive/hairline-direct-strokes-plan.md` IN FULL and follow its §0.5
 > cold-execution protocol (it tells you what else to read and in what order). Verify
 > the §0.5 shas are ancestors of the current heads before trusting §1; re-grep every
 > cited symbol before editing. Start with H1. All commits, pushes, the H2 diff-page

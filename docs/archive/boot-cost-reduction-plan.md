@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-08-01).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Cutting Fizzygum's boot cost — the pre-compiled dev tree, and maximal laziness
 
 **PLAN. Written to be executed COLD by an LLM/engineer with ZERO prior context.** Everything needed

@@ -165,7 +165,7 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
   | `instanceof-type-test` | 97 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`); tightened 105→97 at the comments cleanup |
   | `comment-meta-edit` | 0 | HARD: a comment arguing with itself ("the below is actually correct", "to be clear,") is process residue — state the surviving constraint once |
-  | `comment-narration` | 106 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS |
+  | `comment-narration` | 106 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS | <!-- narration-ok: this row DEFINES the narration rule, so it must quote its own trigger words -->
   | `commented-out-debug` | 0 | HARD: commented-out `alert(`/`debugger`/`console.log` is dead debug cruft — delete it; git remembers |
 
   ⚠ The engine's `stripComment` is a naive `#` cut that does **not** mask STRINGS, so e.g. `undefined-literal` counts
@@ -228,6 +228,29 @@ people to reach for `--noSyntaxCheck`, and — worse — a false gate-PASS bakes
 The same safety asymmetry is documented for `fg classify` (a BENIGN? verdict is a hint for reading a diff faster, never
 permission to recapture). When in doubt, ship the rule one tier weaker and promote it once the evidence is in.
 
+## 3b-docs. The DOCS ratchet — `check-doc-narration.js` (`fg doc-narration`)
+
+The docs-side twin of the `comment-narration` stink. `docs/README.md` files every doc by what it IS,
+and each bucket carries a TENSE; filing rule 3 requires durable residue to land in `architecture/`
+"present tense, no changelog prose. The plan keeps the history; the architecture doc keeps only the
+current truth." Nothing enforced that, so a doc could drift into explaining a live mechanism by naming
+the dead one it replaced — and eventually contradict itself, one section stating a change landed while
+another still proposed it.
+
+**Scope is deliberately narrow.** It scans `architecture/` + `tooling/` (present tense by definition)
+and NOTHING else: `specs/` is excluded because a spec's change/landing statements are load-bearing
+(owner direction), and `plans/`, `archive/` and `measurements/` are chronological BY DESIGN — archive
+is immutable past tense, plans are future tense, measurements are dated snapshots.
+
+**It is a RATCHET, not a zero-baseline gate** (same shape as `check-stinks.js`): a per-file baseline in
+`buildSystem/check-doc-narration-baseline.json`, failing only when a file's count RISES or a new file
+starts narrating. Accretion stops immediately; the pre-existing debt — concentrated in this doc and
+`layering-naming-convention.md`, where a ban is often explained by narrating what it removed — burns
+down deliberately, banked with `--write-baseline`. A provenance stamp ("verified against `src/` <date>")
+is NOT narration and is skipped; `<!-- narration-ok: reason -->` exempts a line that must quote the
+trigger words. Fenced blocks and inline code are stripped before matching, so file paths and SHAs
+cannot trip it. Not on the build — docs prose should not block a build; run it with `fg doc-narration`.
+
 ## 3c. The ANALYSIS tools (censuses — never gates)
 
 Three read-only censuses, all exit 0 (2 on operational error), all `--json`-capable, all ≲1 s. Run them from `Fizzygum/`
@@ -287,7 +310,7 @@ the parent (`Object-extensions.coffee:18` writes `@::[key] = value`; `meta/Class
 scanner — which is exactly why these are advisory and can never be gates. **Treat a finding as a question, never an
 instruction.** Full case law (14 entries): `docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md`.
 
-✅ **FIXED 2026-07-15 (was a KNOWN BUG; plan Phase 0) — the DEMOTE rule now requires the property to be READ.** As
+**The DEMOTE rule requires the property to be READ.** As
 originally shipped it did not, so a **WRITE-ONLY** field was reported as demotable. That was wrong twice: demoting a
 write-only field makes it **dead**, not local; and a write-only field is usually **enumeration payload** — reached by
 `JSON.stringify(obj)` / `DeepCopierMixin`'s `@[property]` walk / the serializer, none of which a name scanner sees

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-08-02).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # One descriptor per app — killing the duplicated launcher identity
 
 > ## ✅ COMPLETE — executed 2026-08-02, same day it was authored.
@@ -64,7 +67,7 @@ class you just name it. Root workspace `Fizzygum-all/` holds three sibling repos
 
 ### The arc that created this problem, and its one big idea
 
-The **boot-cost arc** (closed 2026-08-02, `docs/plans/boot-cost-reduction-plan.md`) cut production's
+The **boot-cost arc** (closed 2026-08-02, `docs/archive/boot-cost-reduction-plan.md`) cut production's
 `js/pre-compiled.js` from 936,920 to 682,031 bytes, −27.2%. Its central realisation:
 
 > ⭐ **AN ICON IS NOT ITS APP.** `WorldWdgt.createDesktop` runs at boot and places every desktop and
@@ -536,7 +539,7 @@ reacting either way, and never recapture to make an unexplained diff go away.
   APP**, `canEverProvideClass` vs `whenClassAvailable`. Authoritative and present-tense.
 - `docs/explainers/boot-and-lazy-parts.html` §3–4 — the same, illustrated, plus the boot/open/click
   tiers.
-- `docs/plans/boot-cost-reduction-plan.md` — the arc that created this residue; §2.5 carries the
+- `docs/archive/boot-cost-reduction-plan.md` — the arc that created this residue; §2.5 carries the
   ⛔ SUPERSEDED stamp on the old "anything reached at BOOT forces a launcher split" rule.
 - `buildSystem/check-part-edges.js` — the gate whose one-line-at-a-time reading forces §1.5.
 - `buildSystem/what-pins-core.js` (`fg whatpins`) — the analyser that closed out the arc; useful for

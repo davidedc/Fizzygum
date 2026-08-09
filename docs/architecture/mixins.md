@@ -1,12 +1,9 @@
 # Mixins — mechanism, inventory, and the keep-vs-remove position
 
-> Written 2026-07-03 (three-agent sweep: per-mixin inventory, docs/git-history record,
-> tooling-coupling map), refreshed and re-verified against `src/` 2026-07-24; the five
-> misfiled mixins were folded into standard-OO homes 2026-07-26 (§4). This doc is
-> BOTH the evergreen reference for how the mixin mechanism works and the standing
-> position on keeping vs. removing it, with the evidence embedded (self-contained per
-> `docs/README.md`). The inventory table is dated; re-verify counts before relying on
-> them in a future arc.
+> Verified against `src/` 2026-07-27. This doc is BOTH the evergreen reference for how the
+> mixin mechanism works and the standing position on keeping vs. removing it, with the
+> evidence embedded (self-contained per `docs/README.md`). The inventory table carries its
+> own verification date; re-verify counts before relying on them in a future arc.
 
 ## 1. The standing position
 
@@ -16,8 +13,7 @@ unrelated branches of the hierarchy, overriding framework hooks (`setColor`, `ad
 `mouseDownLeft`, the paint/geometry protocol) — something a delegated collaborator
 structurally cannot do without a forwarding stub per hook per consumer.
 
-The refined policy (supersedes a literal reading of the "mixins are being phased out"
-line in `CLAUDE.md` — see §6):
+The policy:
 
 - **No new mixin for a liftable responsibility.** A cohesive responsibility that can be
   *delegated out* becomes a plain collaborator class (the `MacroToolkit` pattern:
@@ -28,7 +24,7 @@ line in `CLAUDE.md` — see §6):
   (This is the `docs/archive/god-class-decomposition-plan.md` carve-out, and it is what
   practice has consistently done — §6.)
 - **Single-consumer / single-subtree mixins are misfiled** — fold them into the consumer
-  or a shared base (executed 2026-07-26 for all five then-misfiled ones, §4).
+  or a shared base (§4).
 - **A full-removal campaign is explicitly rejected** — the arithmetic in §5 and §7: it
   would trade the one-line `@augmentWith` declarations (31 consumer files) for ~100+ forwarding stubs or
   hierarchy surgery across the paint/input/clipping/copy subsystems (the most
@@ -64,10 +60,10 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     arguments), `super(args)`, `super arg, …` — mirroring the class-side rewriter
     (`Class._equivalentforSuper`), with the same load-bearing rule order;
   - `arguments.callee` pins the compiled output to sloppy mode;
-  - the rewrite rules are order-sensitive text substitutions — a bare `super` with a
-    trailing inline comment silently dropped all arguments until hardened on 2026-07-02
-    (`cbb90457`, the "thin vertical slice" defect). The same hazard class exists for
-    classes too; it is a cost of fragment-wise compilation, only partly a mixin cost.
+  - the rewrite rules are order-sensitive text substitutions, and the order is
+    load-bearing — the known trap is a bare `super` carrying a trailing inline comment,
+    which a mis-ordered rule set silently strips of all arguments. The same hazard class
+    exists for classes too; it is a cost of fragment-wise compilation, only partly a mixin cost.
   - default parameter values don't survive the mixin field parser (the workaround is
     manual `if !param?` defaulting in the method body).
 - **Override semantics: the class body wins.** The boot emitter outputs the
@@ -77,9 +73,7 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   gate-visible: `census-hierarchy-duplication.js` reports `SHADOWS-MIXIN`, and the
   case law is recorded in `docs/architecture/lint-and-static-checks.md` (a "redundant"
   class-body default that actually exists to override its mixin — deleting it would have
-  turned the desktop icons near-white). (`Color`'s long-standing shadow of the
-  then-`DeepCopierMixin`'s shell method became an ordinary per-class hook when that mixin
-  was converted to the `Duplicator` engine — §5-C.)
+  turned the desktop icons near-white).
 - **Load order** — `@augmentWith X` is one of the literal forms
   `src/boot/dependencies-finding.coffee` regex-scans (`REQUIRES_MIXIN`), creating the
   "mixin defined before its consumer" edge. Keep the literal form so the finder sees it.
@@ -91,9 +85,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   `Mixin` instances register in `Mixin.allMixines` (create pass only — the build-time
   syntax gate's parse-only pass never registers), and
   `InspectorWdgt._mixinProvidingMember` consults each class's `augmentedWith` list to
-  show a mixin method's REAL CoffeeScript source in the inspector (view since Tier H5,
-  `b05f8d1e`; crash guard `14014e44` — the prototype-walk used to throw on mixin methods
-  under JSC). Since 2026-07-26 the same attribution routes a CLASS-inspector save to the
+  show a mixin method's REAL CoffeeScript source in the inspector. The same attribution
+  routes a CLASS-inspector save to the
   DONOR: `Mixin.applyMemberEdit` updates the recorded source, recompiles the member (the
   mixin super rewrite; the function's `.name` is restored so the fake-super companion
   lookup keeps working) and re-injects it into every consumer class recorded at
@@ -155,12 +148,10 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
 | `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
 
-(`ContainerMixin` — dead since birth, "TEMPORARY. JUST STARTED IT." — was deleted
-2026-07 in the accidental-complexity batch `3267b0dd`. The five misfiled mixins were
-folded into standard-OO homes 2026-07-26 — see §4 — and `DeepCopierMixin` was converted
-to the `Duplicator` engine (`src/duplication/`) the same day, completing for duplication
-the engine inversion serialization got in July — see §5-C. `Mixin.allMixines` — formerly
-dead scaffolding — became load-bearing for the inspector in Tier H5.)
+(The count excludes three that no longer exist as mixins: dead `ContainerMixin`, deleted;
+the five misfiled ones, folded into standard-OO homes — §4; and `DeepCopierMixin`, inverted
+into the `Duplicator` engine (`src/duplication/`) — §5-C. `Mixin.allMixines` is load-bearing
+for the inspector.)
 
 ## 4. Which of these are GENUINE multiple inheritance
 
@@ -178,8 +169,8 @@ The test: consumers on unrelated branches AND behaviour that overrides framework
   `KeepsRatioWhenInVerticalStackMixin`,
   `WidgetCreatorAndSmartPlacerOnClickMixin`, `ParentStainerMixin` (barely — 2 unrelated
   leaves each).
-- **Misfiled (single consumer / single subtree / config bag) — all five folded into
-  standard-OO homes 2026-07-26**, motivated by inspectability (a mixed-in member's
+- **Misfiled (single consumer / single subtree / config bag) — all five now live in
+  standard-OO homes**, motivated by inspectability (a mixed-in member's
   source is view-only in the inspector, and it is unclear whether to edit the donor or
   the receiver; a class member is fully first-class). Where each went:
   - `GridPositioningOfAddedShortcutsMixin` + `KeepIconicDesktopSystemLinksBackMixin`
@@ -219,10 +210,9 @@ objects on the paint path). Three shapes, with costs:
   — the most determinism-critical code, where restructuring means screenshot-level
   re-verification for zero functional gain.
 - **C — invert to an external engine** (visitor). Right where the "mixin" is really one
-  algorithm plus per-class hooks. **Executed twice**: for serialization in July 2026 (the
-  `doSerialize` half of the then-`DeepCopierMixin` became the plain
-  `Serializer`/`Deserializer` classes, `src/serialization/`), and for duplication on
-  2026-07-26 — the remaining walker became the `Duplicator` engine
+  algorithm plus per-class hooks. **Both halves of the old copy walker went this way**:
+  serialization is the plain `Serializer`/`Deserializer` pair (`src/serialization/`), and
+  duplication is the `Duplicator` engine
   (`src/duplication/Duplicator.coffee`): one instance per copy run owns the identity
   bookkeeping, the per-class hooks (`getEmptyObjectOfSameTypeAsThisOne`,
   `rebuildDerivedValue`, `keptByReferenceOnDeepCopy`, `_reactToBeingCopied`) stay on the
@@ -234,42 +224,33 @@ State migration (mixin fields like `@target`/`@action` serialize as widget own-p
 and by-name dispatch (menus invoke `openTargetSelector` on the widget) are the two
 recurring conversion costs regardless of shape.
 
-## 6. The written record vs. executed practice
+## 6. What practice actually shows
 
-- `CLAUDE.md`/`AGENTS.md` long said "Mixins are being **phased out** in favour of
-  plain-OO delegation"; both were reworded 2026-07-26 to the §1 policy. The archived
-  `god-class-decomposition-plan.md` states the real, narrower rule:
-  delegation for what can be *delegated out*; mixins "remain available where a behaviour
-  must be *injected into* the widget."
-- **In ~9.5 years of history, no mixin was ever converted to delegation.** One was
-  deleted (dead `ContainerMixin`, 2026-07). The delegation direction produced NEW
-  collaborators (`MacroToolkit` → `Wallpaper` → `WidgetFactory` → `UntitledNamingService`
-  → `Serializer`/`Deserializer`) — it never dismantled a mixin. The 2026-07-26 fold of
-  the five misfiled ones (§4) is the first conversion, and it went to *inheritance
-  homes* (fold into consumer / shared base), not delegation — consistent with the §1
-  policy, which reserves delegation for liftable responsibilities.
-- **New code keeps choosing mixins** (all July 2026): the spreadsheet subsystem
-  (`SimpleSpreadsheetWdgt` → Clipping; `SheetModel`/`SheetCellRecord` → the then-DeepCopier),
-  the frame model (`FrameWdgt` → Clipping), transforms (`TransformSpec` → the then-DeepCopier),
-  the patch-programming dedup (`PatchNodeWdgt` base → Controller). The dataflow-engine
-  campaign made `ControllerMixin` the cohesive home of the whole wire-client protocol
-  (`_fireConnection`, `firesPerEvent`, the shared connect-menu block) — and the dedup
-  arcs moved shared menu code INTO it. `docs/plans/creation-and-templates-plan.md`
-  builds `FactoryWdgt` on the `Duplicator`.
-- Meanwhile the platform *invested in* mixins rather than removing them: inspector
-  source recovery (Tier H5), the `SHADOWS-MIXIN` census, mixin-DSL awareness in
-  `check-layering`, the hardened super-rewriter, and the retired connection-token
-  machinery simplifying the stainer mixins to clean 2-line overrides.
+- The narrow rule (`god-class-decomposition-plan.md`, archived): delegation for what can be
+  *delegated out*; mixins "remain available where a behaviour must be *injected into* the widget."
+- **The delegation direction produces NEW collaborators, it does not dismantle mixins.**
+  `MacroToolkit`, `Wallpaper`, `WidgetFactory`, `UntitledNamingService`,
+  `Serializer`/`Deserializer` all arrived that way. The one fold of misfiled mixins (§4) went to
+  *inheritance homes* — fold into consumer / shared base — not to delegation, which the §1
+  policy reserves for liftable responsibilities.
+- **New subsystems keep choosing mixins**: the spreadsheet (`SimpleSpreadsheetWdgt` → Clipping;
+  `SheetModel`/`SheetCellRecord` → Duplicator), the frame model (`FrameWdgt` → Clipping),
+  transforms (`TransformSpec` → Duplicator), the patch-programming base (`PatchNodeWdgt` →
+  Controller). `ControllerMixin` is the cohesive home of the whole wire-client protocol
+  (`_fireConnection`, `firesPerEvent`, the shared connect-menu block); shared menu code lives
+  INSIDE it. `docs/plans/creation-and-templates-plan.md` builds `FactoryWdgt` on the `Duplicator`.
+- The platform *invests in* mixins rather than removing them: inspector source recovery
+  (Tier H5), the `SHADOWS-MIXIN` census, mixin-DSL awareness in `check-layering`, the hardened
+  super-rewriter, and stainer mixins reduced to clean 2-line overrides.
 
 Practice, tooling, and new subsystems all treat mixins as a permanent, first-class
-mechanism with a narrow remit. The `CLAUDE.md` phase-out sentence should be reworded to
-the §1 policy (proposed, §8).
+mechanism with a narrow remit — which is the §1 policy.
 
 ## 7. The tradeoff ledger (why the position is "keep")
 
 Costs of keeping (all real, all now bounded):
 - the emulated `super` (weaker than the class form; `arguments.callee`; regex rewriter —
-  one silent-miscompile incident, since hardened; the class-side twin keeps most of this
+  one guarded silent-miscompile hazard; the class-side twin keeps most of this
   risk alive even in a mixin-free world);
 - the mixin-DSL tax on every new static gate (paid for all current gates; the census
   class model now makes it reusable);
@@ -285,18 +266,11 @@ Costs of removing (why it loses):
 - both escape hatches violate standing doctrine (shrink `Widget`; capability methods on
   the answering subclass, never a base default);
 - ~350 L of machinery deleted, ~642 L of behaviour merely relocated, net LOC likely UP;
-- no active campaign is blocked by mixins (verified across all plan docs, twice —
-  2026-07-03 and 2026-07-24);
-- the July evolution demonstrates the healthy equilibrium: delegate what delegates
-  (serializer), inject what injects (dataflow client protocol), delete what's dead
-  (`ContainerMixin`).
+- no active campaign is blocked by mixins (verified across all plan docs);
+- the equilibrium is healthy on its own terms: delegate what delegates
+  (serializer), inject what injects (dataflow client protocol), delete what's dead.
 
 ## 8. Proposed follow-ups (NOT scheduled; adopt via `BACKLOG.md` if picked up)
-
-(Executed 2026-07-26: the `CLAUDE.md`/`AGENTS.md` reword, the misfiled-five fold — §4/§6
-— and the full mixin-editing arc — §2 "meta-system status": donor editing, the four-form
-super rewriter, the receiver-side "override in this class" gesture, the donor label,
-add/remove members, and class-side statics.)
 
 1. **Gate the detector pair**: assert `build.py`'s and the boot loader's mixin
    detectors classify every shipped file identically.

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (executed 2026-08-06; P0 design owner-reviewed 08-05/06, P1–P4 single session).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Stretch layout joins the LayoutSpec family — one per-child layout-state home, grant-bounds arrange
 
 **STATUS: COMPLETE — executed 2026-08-06 (P0 design 08-05/06 with owner review; P1–P4 single
@@ -35,7 +38,7 @@ mid-run). Read `Fizzygum/CLAUDE.md`, `Fizzygum-tests/CLAUDE.md`, and
 `docs/architecture/layout.md` (the rulebook) first.
 
 **Why this plan exists.** The 2026-08 layout-spec-family unification
-(`docs/archive/layout-spec-family-plan.md` + follow-ups) gave stacks, divisions, frame content
+(`docs/archive/layout-spec-family-unification-plan.md` + follow-ups) gave stacks, divisions, frame content
 and corner-internal chrome ONE vocabulary: a per-child `layoutSpec` object; `nil` = free-
 floating (`Widget.isFreeFloating: -> !@layoutSpec?`); specs ride add/reparent/wrap/unwrap and
 SURVIVE detachment (⚖⚖). The stretchable panel — the layout of the slide/dashboard/generic-panel
@@ -579,7 +582,7 @@ at dpr 1+2 and proven non-vacuous (void the spec application, watch the test fai
 
 `docs/archive/stretch-fractional-auto-bookkeeping-plan.md` (companion, prerequisite — LANDED;
 its §8 ledger + INDEX entry are required reading) ·
-`docs/archive/layout-spec-family-plan.md` + `docs/archive/layout-spec-family-followups-plan.md`
+`docs/archive/layout-spec-family-unification-plan.md` + `docs/archive/layout-spec-family-followups-plan.md`
 (the family's design + case law) · `docs/architecture/layout.md` ·
 `docs/archive/census-as-built-extension-plan.md` (the as-built oracle) ·
 `src/macros/MACRO-PATTERNS.md` "Stretch-panel fractional reflow" entry (the testing idiom) ·

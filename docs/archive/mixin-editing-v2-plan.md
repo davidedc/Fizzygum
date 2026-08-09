@@ -1,3 +1,6 @@
+> **ARCHIVED — EXECUTED IN FULL (2026-07-26).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Mixin editing v2 — plan (authored 2026-07-26; owner-approved scope: all 5 points)
 
 > **Status: EXECUTED IN FULL + CLOSED 2026-07-26** — all 5 points (P1–P5) plus the

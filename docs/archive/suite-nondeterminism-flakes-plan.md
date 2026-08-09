@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-29).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Suite nondeterminism — non-boot flakes (discovered 2026-07-28)
 
 **STATUS: CLOSED + ARCHIVED 2026-07-29. All three flakes SOLVED, gated and pushed.** Archived

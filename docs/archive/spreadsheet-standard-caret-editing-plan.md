@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (authored + executed 2026-07-24).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Spreadsheet standard-caret cell editing — design + execution plan
 
 **STATUS: COMPLETE — EXECUTED IN FULL 2026-07-24 (same day it was authored). All phases

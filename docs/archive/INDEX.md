@@ -251,6 +251,11 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## OO cleanup, lint & modernization
 
+- **`container-regularization-plan.md`** — COMPLETE (2026-07-19). De-byzantinates the Menu / List / Prompt / Divider family: `DividerWdgt` extracted, `MenuRowsPanelWdgt` lifted, `MenuWdgt`/`PromptWdgt` recomposed as `PopUpWdgt` composing a titled row panel.
+  - ⚖ menu-ness already lived in `PopUpWdgt`, so the untie was a lift, not a rewrite — every section landed byte-identical
+  - ⚖ §5.4 — the "one container becomes a window" merge was deliberately NOT done; ruled and recorded in `architecture/layering-naming-convention.md`
+- **`menu-row-conformance-plan.md`** — ARC COMPLETE (2026-07-19). The follow-on ironing out `container-regularization-plan.md` §5.2e's residual wrinkles (menu-row conformance + hug-class stack).
+  - ⛔ Phase 4 RUN AND FALSIFIED (falsification #2) — the tracking-pop-up shape is permanently CLOSED; do not re-attempt it
 - **`immutability-and-canonical-instances-plan.md`** — COMPLETE (2026-08-04). Finished the Bloch treatment of the value classes: eliminated the last 6 in-place Point mutations, DELETED `Point/Rectangle::copy()`, added `Point.ZERO` + return-`@`/canonical shortcuts (exact-`===` bar), made the 137 Color constants permanently interned (`createConstant` + `Class.coffee` regex widening), converted TransformSpec to withers, and put `keptByReferenceOnDeepCopy` on Point/Rectangle/ShadowInfo/TransformSpec. Zero pixel churn across every gate. Residue: `docs/architecture/immutable-value-classes.md`.
   - ⚠⚠ a class-level constant may reference ITSELF (deferred-static mechanism) but NEVER another class: the boot dependency scanner only sees `new X` edges in class-declaration-level initializers, so `@NO_SHADOW: new ShadowInfo Point.ZERO, 0` class-evaled before Point existed and hung the interactive boot — the harness page masked it; the boot smoke named it. Fix shape: lazy memo in the factory.
   - ⚖ shortcut guards must be duck-typed (`delta.isZero?()`), not `instanceof` — the type-test stink ratchet (baseline 93) correctly rejected the first guard shape
@@ -339,6 +344,13 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## Build & toolchain
 
+- **`boot-cost-reduction-plan.md`** — COMPLETE (2026-08-01). Cuts Fizzygum's boot cost via a pre-compiled dev tree and maximal laziness; ends with every app icon lazy and the launcher parts gone.
+  - ⭐ **AN ICON IS NOT ITS APP** — an icon is core art plus the app's class NAME, so it draws without its app being defined; asserting absence alone passes for the wrong reason, so the gate checks the PAIR (icons drawn AND no app class defined)
+  - ⚠ the SUITE cannot see laziness at all: the harness page presets `FIZZYGUM_EAGER_ALL_PARTS`, so a "lazy" SystemTest would pass while proving nothing — laziness is only observable on `index.html`, hence `fg lazyprobe`
+  - ⛔ **a creator button CANNOT await** (`WidgetCreatorAndSmartPlacerOnClickMixin`) — the door has to be somewhere that can
+- **`core-app-slices-partition-plan.md`** — EXECUTED AND CLOSED (2026-07-30). Extracts the app-like slices — spreadsheet, maps, plots — out of `core`.
+  - ⛔ `dataflow` STAYS IN CORE (owner decision D2): it is settled core, not an app slice
+  - ⚠⚠ two CORE doors were dead on a `lean` tree — `createDesktop` drew their icons unguarded while `launch` used `whenAllLoaded`, so the click could only reject. Required-vs-optional is now a deliberate choice at every door: `whenAllLoaded` when the part CONSTITUTES the result, `whenOptionalPartsLoaded` when it merely ENRICHES it
 - **`budgeted-source-compile-scheduler-plan.md`** — COMPLETE (2026-08-04). Replaces BOTH one-class-per-turn source-ingest pacings (boot chain + `PartsRegistry._ingestPartPromise`) with ONE `window.SourceCompileScheduler`: a synchronous end-of-frame drain (after `_updateBroken()`) fitting as many classes as the leftover frame budget allows — always ≥1, strict dependency order — with a per-line EWMA cost estimator, and a `setTimeout(0)` chunk pump when no world exists. `framePacedPromises` paces batch FETCHES only now. Dev boot 3219→946 ms; spreadsheet part 12 classes in 2 frames (was 12). Gauntlet 14/14, zero reference churn. Measurements: `measurements/budgeted-compile-scheduler-2026-08-04.md`.
   - ⚠⚠ 40 ms sync pump chunks COLLAPSED the parallel test wave, twice, reproducibly — all 8 suite shards died at once while 5 paint pages boot-compiled beside them; either leg alone passed. Chrome closes targets when a page holds its core in long uninterruptible blocks under ~13-page contention. **Chunks ≤10 ms on pages sharing a loaded machine; batching wins come from fewer timer turns, never longer blocks**
   - ⚖ the ≥1-per-drain floor IS the biggest single class (fizzytiles' `LCLCodePreprocessor`, 1887 lines ≈ 28 ms) — the old one-per-frame pacing paid the identical cost; don't assert drain bounds tighter than budget + one-class overshoot

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-29).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # `_resetWorldNoSettle` completeness audit — make the world teardown PROVABLY total
 
 **COMPLETE — audit EXECUTED 2026-07-29** (Fizzygum `master` @ `bd4448c0`, Fizzygum-tests @

@@ -1,3 +1,6 @@
+> **ARCHIVED — ARC COMPLETE (2026-07-19).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Menu-row conformance + hug-class stack — ironing out the §5.2e residual wrinkles
 
 > **STATUS: ✅ ARC COMPLETE 2026-07-19 (same day as authored).** Phases 1, 2a–2e and 3 ALL
@@ -11,7 +14,7 @@
 >
 > *(original header)* **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO
 > prior context.** STATUS: AUTHORED 2026-07-19, no code written. Follow-on of the
-> container-regularization arc (`docs/plans/container-regularization-plan.md` §5.2e, landed
+> container-regularization arc (`docs/archive/container-regularization-plan.md` §5.2e, landed
 > 2026-07-19). Do NOT start this plan until that arc's §5.2e commit has LANDED (recapture +
 > gauntlet green + pushed) — this plan edits the same files.
 >
@@ -492,21 +495,21 @@ failure costs one revert and buys a documented second falsification. Both are wi
 
 ## §9 References + BACKLOG lines
 
-- `docs/plans/container-regularization-plan.md` — §5.2a–§5.2e history + lessons.
+- `docs/archive/container-regularization-plan.md` — §5.2a–§5.2e history + lessons.
 - `docs/architecture/layout.md` — settle tiers, rulebook, chokepoint vocabulary.
 - `docs/architecture/layering-naming-convention.md` §6 — container roles.
 - Memory: `onion-widget-composition-arc` (arc state), `stop-iterating-fix-shapes-after-two-falsifications`, `dont-let-recapture-churn-dictate-design`.
 - **BACKLOG lines to add** (NOT yet added — `docs/BACKLOG.md` is currently dirty with
   the unrelated pixel-icons arc; add these verbatim when that resolves, or fold into
   this plan's first commit if BACKLOG is clean by then):
-  - `- Menu-row types hand-roll innard re-layout (Slider/StringField/ColorPicker/MenuHeader) → docs/plans/menu-row-conformance-plan.md §5 Phase 2`
-  - `- MenuRowsPanelWdgt post-pass double-write + width-flow asymmetry → docs/plans/menu-row-conformance-plan.md §5 Phases 2e/3`
-  - `- menuEntryPreferredWidth current-width ratchet (no-shrink hug) → docs/plans/menu-row-conformance-plan.md §5 Phase 1`
+  - `- Menu-row types hand-roll innard re-layout (Slider/StringField/ColorPicker/MenuHeader) → docs/archive/menu-row-conformance-plan.md §5 Phase 2`
+  - `- MenuRowsPanelWdgt post-pass double-write + width-flow asymmetry → docs/archive/menu-row-conformance-plan.md §5 Phases 2e/3`
+  - `- menuEntryPreferredWidth current-width ratchet (no-shrink hug) → docs/archive/menu-row-conformance-plan.md §5 Phase 1`
 
 ## §10 Ready-to-paste start prompt (fresh session)
 
 ```
-Execute Fizzygum/docs/plans/menu-row-conformance-plan.md — the follow-on arc that
+Execute Fizzygum/docs/archive/menu-row-conformance-plan.md — the follow-on arc that
 makes the four menu row types conform to the layout engine's child contract and then
 deletes MenuRowsPanelWdgt's compensating post-pass. PLAN IS SELF-CONTAINED: read it
 top-to-bottom first; §0.5 is the execution protocol, §1 the verified current state

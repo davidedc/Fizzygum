@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-30, committed with arc 3 phases 5–7).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arc 3 · Phase 7 — the ONE menu topology (owner-ratified 2026-07-29)
 
 **STATUS: COMPLETE — COMMITTED & PUSHED 2026-07-30 (Fizzygum `7c8f49a3`, tests `4bc119caf`).

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-28).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arc 2 · Backend split (SW-full vs native+3D-core bundles) + precompile-generation externalization
 
 **STATUS: ✅ EXECUTED AND CLOSED 2026-07-28 — all three phases landed, `fg gauntlet` + `fg homepage`

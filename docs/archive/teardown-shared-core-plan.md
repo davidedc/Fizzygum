@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-07-29).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Teardown shared core — ONE structural teardown, two callers
 
 **STATUS: COMPLETE — EXECUTED 2026-07-29** (authored the same day). All four phases landed against
@@ -421,7 +424,7 @@ one of 268 tests, because `resetWorld` reaches it too.
 
 ## §6 Arc 3 interaction — READ BEFORE SEQUENCING
 
-`docs/plans/build-arc-3-world-harmonization-plan.md` is the NEXT arc. Its Phase 4 relocates
+`docs/archive/build-arc-3-world-harmonization-plan.md` is the NEXT arc. Its Phase 4 relocates
 `resetWorld`/`_resetWorldNoSettle` to the tests repo as **verbatim moves only**, installed onto the
 prototype from a new `Automator-and-test-harness-src/WorldTestSupport.coffee`.
 

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-08-04).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Budgeted source-compile scheduler — replace "one class per turn" with an end-of-frame time budget
 
 **STATUS: EXECUTED + CLOSED 2026-08-04.** Landed as one change, full gauntlet green (14/14).

@@ -94,9 +94,9 @@ a guard or an await where it stands. (eager→**eager** is fine: both are in the
 one, so shipping-together is the whole of what could go wrong — which is why `harness requires
 ["macros"]` needs nothing further.) `check-part-edges.js` implements exactly this, and its scope is
 every source present at boot (core **and** every eager part), not core alone.
-⚠ It did NOT implement it until 2026-08-02: `declaredRequires` handed every owner its full list, and
-that set is tested *before* the inheritance check, so an eager part declaring `requires` on a lazy one
-could both reference and `extends` its classes with the build staying green. Found while adding the
+⚠ The subtlety the gate has to get right: `declaredRequires` is tested *before* the inheritance check,
+so if it hands every owner its full list, an eager part declaring `requires` on a lazy one can both
+reference and `extends` its classes with the build staying green. Found while adding the
 `app-kit` edges, and fixed there. **Both directions are proven rather than argued** — planting an
 unguarded `new SpeechBubbleWdgt` and an `@augmentWith ParentStainerMixin` in `dev-tools` reported
 `0 / 0` before and fails with a named site after. ⚠ Cycles are rejected by the build: a cycle has no
@@ -169,8 +169,8 @@ named:
 The failure mode is worth stating because it shipped: `DashboardsApp` and `SimpleSlideApp` are CORE
 classes whose desktop openers `createDesktop` creates unguarded, and they used `whenAllLoaded ["maps",
 …]`. On `lean`, which ships neither `maps` nor `plots`, the icon was therefore present and its click
-could only reject — no window, ever, and an unhandled promise rejection. Fixed 2026-07-31; the
-distinction now has a name so the next door has to choose deliberately.
+could only reject — no window, ever, and an unhandled promise rejection. The distinction has a name so
+that the next door has to choose deliberately.
 
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
 cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and `Widget.grabbedWidgetSwitcheroo`
@@ -239,8 +239,8 @@ what catches it.
 owns `launch`, which awaits `requiredParts` (and then `optionalParts`) before building the window, so a
 subclass writes `requiredParts: ["authoring"]` and nothing else. That one line has two readers — the
 await, and `check-part-edges.js`, which treats it as satisfying every reference the class makes into
-those parts. Fourteen apps used to hand-write their own `launch` override instead; the gate could not
-read any of them, so nine correct awaits still looked like violations. A declaration cannot drift from
+those parts. A hand-written `launch` override is the shape to avoid: the gate cannot read one, so a
+correct await inside it still looks like a violation. A declaration cannot drift from
 the await, because the await IS the declaration. ⚠ Only `requiredParts` satisfies the gate: an optional
 part may genuinely be absent, so references to one still need a guard where they stand.
 
@@ -337,8 +337,8 @@ appliance that wants the Makers back wants `sources: "lazy"`, which is a differe
 
 ## 4. What is DERIVED
 
-This table is the heart of the design: every question the build used to answer by asking *"is this the homepage?"* is
-now computed from the four facts above. Nothing in this column is declared anywhere.
+This table is the heart of the design: every question about a build's shape is computed from the four
+facts above, never from the identity of a particular flavour. Nothing in this column is declared anywhere.
 
 | Derived | From |
 |---|---|
@@ -547,7 +547,7 @@ wiring substrate (`ControllerMixin.ensureWireEdge` is how any widget wires to an
 drains it every cycle), and all 14 of its call sites are already written `world.dataflow?.…` — so its absence would be
 silently ACCEPTED rather than caught. Wires would simply stop firing. That fails the absence-must-be-a-no-op rule in §2,
 which is the test for whether something can be a part at all; the same judgment keeps `src/meta` out. Recorded so it is
-not re-attempted: `docs/plans/core-app-slices-partition-plan.md` §4 Phase 3.
+not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 
 ---
 

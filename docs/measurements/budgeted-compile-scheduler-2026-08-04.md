@@ -1,7 +1,7 @@
 # Budgeted source-compile scheduler — measured behavior (2026-08-04)
 
 Measured on the owner's machine at the landing of `SourceCompileScheduler`
-(`docs/plans/budgeted-source-compile-scheduler-plan.md`), replacing the one-class-per-turn ingest
+(`docs/archive/budgeted-source-compile-scheduler-plan.md`), replacing the one-class-per-turn ingest
 pacing. Probes: `../Fizzygum-tests/.scratch/compile-scheduler-boot-probe.js` and
 `compile-scheduler-lazy-probe.js` (gitignored scratch; recreate from the plan if needed).
 

@@ -301,7 +301,7 @@ have installed on every test (a coverage gap fails the gate, so a silent miss ca
 
 The same "the name encodes the role" principle governs the CONTAINER classes, and it settles a standing
 proposal. The 2017 ZombieKernel "V2" diagram (row **F** of the container-regularization scorecard,
-`docs/plans/container-regularization-plan.md` §3.7) floated **one general container that becomes a
+`docs/archive/container-regularization-plan.md` §3.7) floated **one general container that becomes a
 window / pinnable-window** via a mode flag. Fizzygum deliberately does **NOT** merge them — the roles are
 kept distinct, each named for what it is:
 

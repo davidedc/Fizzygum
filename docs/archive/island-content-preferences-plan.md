@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (owner-ratified P0 + executed 2026-08-06, same day as authoring).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # The island is a LENS — its content-stack preferences are its content's knob
 
 **STATUS: RATIFIED + EXECUTED IN FULL 2026-08-06 (P0 owner-ratified on the pure-cleanliness

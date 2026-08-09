@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (2026-08-04).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Immutability completion + canonical-instance shortcuts
 
 **STATUS: COMPLETE — CLOSED 2026-08-04.** All phases §4.1–§4.6 executed and gated: 5×

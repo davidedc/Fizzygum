@@ -7,7 +7,7 @@
 // `# »>> this part is …` opener comment and the next comment ending in `«`, so a marked region
 // simply does not exist in the flavour that strips it.
 //
-// WHY IT IS BEING RETIRED (arc 3, docs/plans/build-arc-3-world-harmonization-plan.md). The
+// WHY IT IS BEING RETIRED (arc 3, docs/archive/build-arc-3-world-harmonization-plan.md). The
 // mechanism was the only tool available when the OLD test system recognised widgets by string/ID
 // and so froze the UI; it then accreted for eight+ years without an audit. The 2026-07-28 census
 // found ~14 of 58 homepage sites are not dev/test code at all but PRODUCT code — core sizing and

@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE (executed 2026-08-05, same day as authoring).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Census as-built extension — the truth re-lay sweep runs BEFORE the resize battery too
 
 **STATUS: ✅ EXECUTED IN FULL — 2026-08-05, same day as authoring, single session. P1 root cause

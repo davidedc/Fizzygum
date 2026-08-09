@@ -1,3 +1,6 @@
+> **ARCHIVED — COMPLETE + SHIPPED (2026-07-23).**
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Minimal Fizzygum-only CoffeeScript runtime compiler — PLAN
 
 > **STATUS: COMPLETE + SHIPPED (2026-07-23). ARCHIVED — immutable history.** Delivered as the
@@ -422,7 +425,7 @@ Then:
 
 ## Ready-to-paste start prompt (run this plan cold in a fresh session)
 
-> Read `Fizzygum/docs/plans/minimal-coffeescript-runtime-compiler-plan.md` in full — it
+> Read `Fizzygum/docs/archive/minimal-coffeescript-runtime-compiler-plan.md` in full — it
 > is self-contained. Goal: build a minimal Fizzygum-only fork of the CoffeeScript **2.7.0**
 > in-browser runtime compiler that exposes only `window.CoffeeScript.compile(src,{bare})`,
 > emits byte-identical `bare` JS to stock 2.7.0 for all ~487 Fizzygum sources, passes the

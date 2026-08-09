@@ -14,7 +14,7 @@ the box under the table:
 The full recurring workflow (scan → triage ledger → LLM session → land → rescan) is the
 ["re-audit / re-triage cycle" section](#the-recurring-re-audit--re-triage-cycle) below.
 
-**A THIRD axis, added 2026-07-15 — hierarchy-aware duplication:**
+**A THIRD axis — hierarchy-aware duplication:**
 
 ```sh
 node ./buildSystem/census-hierarchy-duplication.js   # overrides that add NOTHING (~0.4 s, advisory)
@@ -116,8 +116,8 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
 5. **jsinspect's CLI hard-codes ignoring any path matching `node_modules|bower_components|
    test|spec`** — its `--ignore` only APPENDS patterns. "Fizzygum-tests", ".../tests/...",
    and even "Inspector" (In-**spec**-tor, lowercase substring match) all trip it: the two
-   `meta/*Inspector*` files were silently missing from every directory-based structural scan
-   until 2026-07-14. Explicit FILE arguments bypass the filter, so `find_similar_code.sh`
+   `meta/*Inspector*` files are the ones this silently drops from a directory-based structural
+   scan. Explicit FILE arguments bypass the filter, so `find_similar_code.sh`
    always expands the file lists itself — **never call the jsinspect bin with a directory
    argument.**
 6. **jscpd's `--ignore` globs cannot exclude dot-directories** (`**/.scratch/**` silently
