@@ -37,8 +37,10 @@ class UpperRightTriangleAppearance extends Appearance
     @_drawHighlightOverlay aContext, al, at, w, h
 
   _renderingHelper: (context, color) ->
+    # (no lineCap here: this paint only ever fill()s — caps affect strokes alone,
+    # and a stray cap/width state is exactly what blocks the strokeLine/arc
+    # direct fast paths, which are butt-cap-gated)
     context.lineWidth = 1
-    context.lineCap = "round"
 
     # give it a good shadow so that
     # it's visible also when on light

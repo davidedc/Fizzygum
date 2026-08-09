@@ -185,9 +185,31 @@ SWCanvas's core tests):
   draws the correct ellipse — content needing ellipses simply renders slower,
   never wrong.
 
-The upstream reference for the rasterizer contracts, tier-0 clipping, and the
-per-shape eligibility conditions is the SWCanvas repo's
-`DIRECT-RENDERING-SUMMARY.MD` (§3, §5) and its `tests/core/046–053`.
+**Hairline (sub-1-device-px) strokes — one rule, both pipelines.** Stroke at the
+TRUE sub-pixel width (e.g. the rotate-handle knob ring's `lineWidth 0.5` in
+`HandleAppearance`); never pre-compensate. SWCanvas renders any such stroke as
+**1px geometry at opacity proportional to the width** — the generic pipeline
+applies the rule to the logical width, and every direct stroke dispatcher applies
+it to the DEVICE width (`scaledLineWidth`), so on the direct paths the faintness
+scales with the enclosing transform and the outline stays closed at any uniform
+scale. Two consequences worth knowing:
+
+- a 0.5-logical stroke at dpr 2 is a TRUE 1px stroke — it renders crisp and
+  fully opaque, not faint (the direct dispatch keys on device width by design);
+- the native backend honours the same rule through its own hairline handling —
+  a fractional width comes out proportionally fainter there too (measured on
+  Chrome: 0.5px black on white reads one uniform mid-gray, 0.5px white over red
+  reads pink — on BOTH backends the faint stroke is a source-over blend with
+  whatever lies beneath), so cross-backend the stroke WEIGHT matches even
+  though the exact pixels differ (the usual native-vs-SWCanvas situation).
+  This is the hairline faintness rule, NOT anti-aliasing: SWCanvas stays
+  non-AA — one uniform level per stroke — while native distributes the
+  coverage its own way.
+
+The upstream reference for the rasterizer contracts, tier-0 clipping, the
+per-shape eligibility conditions, and the hairline stroke rule (incl. the
+five-family opaque/alpha twin invariant) is the SWCanvas repo's
+`DIRECT-RENDERING-SUMMARY.MD` (§3, §5) and its `tests/core/046–055`.
 
 ## 8. Contributor checklist
 

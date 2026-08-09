@@ -96,25 +96,23 @@ class HandleAppearance extends Appearance
       @drawArrow context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
 
 
-    # Affine transforms (§6 Phase 4B): the rotate handle draws a small "knob" ring — visually distinct
-    # from the resize arrows / striped triangle. The arc rasterises via SWCanvas (the tested backend),
-    # whose transcendentals are Math.* — and the SWCanvas-bearing pages patch those with the fdlibm
-    # port in their boot prelude, before the engine ever runs — so the ring is cross-engine
-    # byte-identical (the suite asserts exact pixels under WebKit). The native page rasterises this
-    # arc through the platform canvas instead, and matches no reference.
-    # ⚠ Deliberately NOT a strokeCircle direct call: this ring strokes at the hairline
-    # lineWidth 0.5 set by handleWidgetRenderingHelper, below every direct-path
-    # threshold (STROKE_1PX_TOLERANCE), so strokeCircle would re-route it through a
-    # DEVICE-space path fallback that loses the sub-pixel ring entirely inside a
-    # scaled island. (The rotate glyph is due a redesign anyway — the four-swirlies
-    # square — at which point this paint goes away wholesale.)
+    # Affine transforms (§6 Phase 4B): the rotate handle draws a small "knob" ring — visually
+    # distinct from the resize arrows / striped triangle. The ring strokes at the hairline
+    # lineWidth 0.5 set by handleWidgetRenderingHelper: every SWCanvas direct stroke dispatcher
+    # renders a sub-1px width as 1px geometry at opacity proportional to the true DEVICE width
+    # (the generic pipeline's sub-pixel rule, restated at the dispatch layer), so this is a
+    # faint 1px Bresenham ring whose faintness scales with the island and whose closure holds
+    # at ANY uniform scale — the transform-robustness that qualifies a hairline for the direct
+    # path at all (case law: docs/archive/direct-shape-fastpaths-followups-plan.md). The ring
+    # involves no trig, so its cross-engine byte-identity (the suite asserts exact pixels under
+    # WebKit) is independent of the fdlibm shim. The native page rasterises strokeCircle through
+    # the arc polyfill on the platform canvas, and matches no reference. (The rotate glyph is
+    # due the four-swirlies redesign — BACKLOG — at which point this paint goes away wholesale.)
     if @widget.type is "rotateHandle"
       cx = @widget.width() / 2
       cy = @widget.height() / 2
       r  = Math.min(@widget.width(), @widget.height()) / 2 - 1
-      context.beginPath()
-      context.arc cx, cy, r, 0, 2 * Math.PI
-      context.stroke()
+      context.strokeCircle cx, cy, r
 
     # draw the traditional "striped triangle" resizer
     if @widget.type is "resizeBothDimensionsHandle"
