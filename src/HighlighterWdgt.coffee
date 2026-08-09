@@ -9,11 +9,13 @@
 # addHighlightingWidgets function in doOneCycle -- one of the per-cycle
 # reconciler steps that all run before the @_updateBroken() call.
 #
-# That addHighlightingWidgets function tries to be smart so to just
-# add/modify/remove the HighlighterWdgts that
-# are new or that need to change position or that need to go away.
-# (i.e. HighlighterWdgt are not just blindly created anew each frame)
-# (TODO is this optimisation needed/worth it? probably not?)
+# That addHighlightingWidgets function RECONCILES: it only adds/modifies/removes
+# the HighlighterWdgts that are new, need to change position, or need to go away
+# (i.e. they are not blindly recreated each frame). That is load-bearing, not an
+# optimisation: a steady highlight must emit ZERO damage (a per-frame recreate
+# would repaint every cycle), and the kept identity is what the affine island
+# re-homing and per-target style reconciliation hang off.
+# addDragAffordanceWidgets copies this declare-and-reconcile shape.
 #
 # These widgets are always at the top, so you can always see a widget being
 # highlighted even if it's (partially) occluded by other widgets.

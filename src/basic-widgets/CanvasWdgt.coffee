@@ -103,7 +103,12 @@ class CanvasWdgt extends PanelWdgt
     @_backBufferShadowSilhouette = nil
     @_changed()
 
-  # TODO id: DRAW_LINE_SHOULD_BE_IN_TURTLE_NOT_IN_CANVAS date: 3-May-2023
+  # The pen ASKS the canvas (PenWdgt.forward is the sole caller): a line primitive
+  # lives on the raster's OWNER because every mutation must be followed by the
+  # owner's PRIVATE bookkeeping below (silhouette invalidation + _changed) -- a
+  # turtle-side implementation would have to reach into the buffer and repaint a
+  # foreign widget, which invalidation-privacy bans. (The once-feared growth of
+  # turtle-specific primitives here never happened: this is the only one.)
   drawLine: (start, dest, lineWidth, color) ->
     if !@backBuffer? then @_createRefreshOrGetBackBuffer()
 
