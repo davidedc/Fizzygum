@@ -1,4 +1,4 @@
-# see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
+# see https://developer.mozilla.org/en-US/docs/Web/API/Window/resize_event
 class ResizeInputEvent extends InputEvent
 
   @fromBrowserEvent: (event, isSynthetic, time) ->
