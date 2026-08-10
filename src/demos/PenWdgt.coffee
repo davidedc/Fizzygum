@@ -15,12 +15,12 @@ class PenWdgt extends Widget
   penPoint: 'tip' # or 'center'
   
   constructor: ->
-    @penSize = WorldWdgt.preferencesAndSettings.handleSize * 4
     super()
     @appearance = new PenAppearance @
-    @_applyExtent new Point @penSize, @penSize
-    # TODO we need to change the size two times, for getting the right size
-    # of the arrow and of the line. Probably should make the two distinct
+    # the arrow (the widget's on-screen representation) is sized at handle
+    # scale; @penSize is only the stroke width forward() draws with
+    arrowExtent = WorldWdgt.preferencesAndSettings.handleSize * 4
+    @_applyExtent new Point arrowExtent, arrowExtent
     @penSize = 1
 
   _reactToBeingAdded: (whereTo, beingDropped) ->

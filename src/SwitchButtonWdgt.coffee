@@ -66,6 +66,21 @@ class SwitchButtonWdgt extends Widget
   isSelected: ->
     return @buttonShown != 0
 
+  # changes the shown button without firing the action
+  # i.e. clicking the button
+  # This is useful when the switch needs to reflect the
+  # state of something that has been independently changed
+  # (i.e. changed by something else than the user clicking this switch) --
+  # including CROSS-OBJECT (the paint toolbar reflects arm/disarm on its tool
+  # toggles, §5.D), hence the public wrap over the private core.
+  setToggleState: (whichOne) ->
+    @_setToggleState whichOne
+
+  _setToggleState: (whichOne) ->
+    if @buttonShown != whichOne
+      @buttonShown = whichOne
+      @_invalidateLayout()
+
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     # SELF-SETTLE the toggle (end-of-cycle-flush drawdown convert 2026-06-25): a discrete click is an
     # outermost public mutation, so it flushes ONCE on return instead of riding the per-frame end-of-cycle

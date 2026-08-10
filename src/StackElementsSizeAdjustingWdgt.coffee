@@ -151,17 +151,23 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       rightWidget._setMaxDimDeferredSettle new Point rmdd.x, rmdd.y - delta
 
 
-  # TODO: this mechanism to show the right cursor is 90%
-  # there but could be better. The cursor changes to normal
-  # as soon as the pointer gets out of the adjuster, which
-  # happens while nonFloatDragging. It's not a big deal
-  # and it's simpler, but something one could improve.
   mouseEnter: ->
     cursor = if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
     document.getElementById("world").style.cursor = cursor
-  
+
+  # mid-drag the pointer routinely outruns this thin strip, so keep the resize
+  # cursor while THIS adjuster is the one being non-float dragged -- the
+  # endOfNonFloatDrag hook below restores it at the true end of the drag
   mouseLeave: ->
+    return if world.hand.nonFloatDraggedWdgt == @
     document.getElementById("world").style.cursor = "auto"
+
+  # the drag can end with the pointer outside my bounds (that mouseLeave was
+  # suppressed above), so restore the cursor here unless the pointer is back
+  # over me -- then the eventual mouseLeave handles it
+  endOfNonFloatDrag: ->
+    if world.hand.topWdgtUnderPointer() != @
+      document.getElementById("world").style.cursor = "auto"
 
 
   # The size-adjuster's glyph: a grey filled circle. (The shared background

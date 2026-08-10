@@ -4633,13 +4633,11 @@ class Widget extends TreeNode
   
   # Widget events --------------------------------------------
 
-  # TODO I'm sure there is a cleaner way to handle arbitrary
-  # number of arguments here
-  escalateEvent: (functionName, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+  escalateEvent: (functionName, args...) ->
     handler = @parent
     if handler?
       handler = handler.parent  while not handler[functionName] and handler.parent?
-      handler[functionName] arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9  if handler[functionName]
+      handler[functionName] args...  if handler[functionName]
   
   
   # Widget eval. Used by the Inspector and the text widget.

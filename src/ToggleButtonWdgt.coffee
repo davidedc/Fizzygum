@@ -7,22 +7,6 @@ class ToggleButtonWdgt extends SwitchButtonWdgt
     else
       super [button2, button1]
 
-  # changes the toggle without firing the action
-  # i.e. clicking the toggle button
-  # This is useful when the toggle needs to reflect the
-  # state of something that has been independently changed
-  # (i.e. changed by something else than the user clicking this toggle) --
-  # including CROSS-OBJECT (the paint toolbar reflects arm/disarm on its tool
-  # toggles, §5.D), hence the public wrap over the private core.
-  # TODO this should probably be in SwitchButtonWdgt
-  setToggleState: (whichOne) ->
-    @_setToggleState whichOne
-
-  _setToggleState: (whichOne) ->
-    if @buttonShown != whichOne
-      @buttonShown = whichOne
-      @_invalidateLayout()
-
   mouseClickLeft: ->
     # can't "unselect" a radio button if it's attached to a radio
     # panel that mandates that at least one of the radio

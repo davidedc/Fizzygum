@@ -36,20 +36,22 @@ class AxisWdgt extends Widget
 
     @_invalidateLayout()
 
-  # TODO some duplication of code here with
-  # the method below
-  distanceOfAxisOriginFromEdge: ->
-    height = @height()
-    width = @width()
-
+  # the tick pitch along the axis' long dimension: one slot more than the
+  # tick count (shared by distanceOfAxisOriginFromEdge and _reLayout)
+  _tickPitch: ->
     numberOfTicks = @max - @min + 1
-    if height > width
+    if @height() > @width()
+      @height() / (numberOfTicks + 1)
+    else
+      @width() / (numberOfTicks + 1)
+
+  distanceOfAxisOriginFromEdge: ->
+    tickHeight = @_tickPitch()
+    if @height() > @width()
       # vert axis
-      tickHeight = height/(numberOfTicks + 1)
       return new Point -5, tickHeight
     else
       # horiz axis
-      tickHeight = width/(numberOfTicks + 1)
       return new Point tickHeight, 5
 
 
@@ -79,10 +81,7 @@ class AxisWdgt extends Widget
     width = @width()
 
     numberOfTicks = @max - @min + 1
-    if height > width
-      tickHeight = height/(numberOfTicks + 1)
-    else
-      tickHeight = width/(numberOfTicks + 1)
+    tickHeight = @_tickPitch()
     heightOfTheDrawnBar = (numberOfTicks - 1) * tickHeight
 
     thickness = 2
