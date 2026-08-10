@@ -320,17 +320,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   binWdgt: nil
   shelfWdgt: nil
 
-  # since the shadow is just a "rendering" effect
-  # there is no widget for it, we need to just clean up
-  # the shadow area ad-hoc. We do that by just growing any
-  # broken rectangle by the maximum shadow offset.
-  # We could be more surgical and remember the offset of the
-  # shadow (if any) in the start and end location of the
-  # widget, just like we do with the position, but it
-  # would complicate things and probably be overkill.
-  # The downside of this is that if we change the
-  # shadow sizes, we have to check that this max size
-  # still captures the biggest.
+  # Since a shadow is just a "rendering" effect there is no widget for it; the shadow area is
+  # cleaned up by growing broken rects. maxShadowSize is the flat margin every damage rect gets
+  # (AA fringe + slack); the shadow itself is covered EXACTLY, whatever its size, by the
+  # pre-map reach growth in the widget's own plane — Widget.paintedShadowReach at the record
+  # site (source side) and at the flesh-out destination lanes — so this constant need not
+  # capture the biggest shadow in the product.
   maxShadowSize: 6
 
   inputEventsQueue: nil
@@ -790,20 +785,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   SLOWclipThrough: ->
     return @boundingBox()
 
-  # Broken rects are grown so a widget's drop shadow — painted beyond its bounds — is
-  # invalidated/erased together with it. maxShadowSize covers the standard small shadows;
-  # a widget carrying a LARGER shadowInfo offset (e.g. the 12px drag-style shadow on a
-  # transform island) needs its declared reach honoured — with a fixed allowance the outer
-  # shadow band falls outside every broken rect and goes stale under incremental repaints
-  # (SystemTest_macroTransformFrameRotatedShadow catches this now that captures read the
-  # incremental canvas). +1 for the AA fringe. Residual, documented: removing a shadow
-  # larger than maxShadowSize erases with the then-smaller allowance — no caller removes
-  # an oversized shadow today.
-  _shadowGrowFor: (aWidget) ->
-    return @maxShadowSize if !aWidget.shadowInfo?
-    offset = aWidget.shadowInfo.offset
-    Math.max @maxShadowSize, 1 + Math.max(Math.abs(offset.x), Math.abs(offset.y))
-
   _pushBrokenRect: (brokenWidget, theRect, isSrc) ->
     if @duplicatedBrokenRectsTracker[theRect.toString()]?
       @numberOfDuplicatedBrokenRects++
@@ -908,7 +889,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # (_recordDrawnAreaForNextBrokenRects mapped it at paint time, while the widget was still attached),
           # so a widget detached between paint and flush (close/destroy) still erases its true rotated
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
-          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @_shadowGrowFor brokenWidget
+          # The record is also SHADOW-INCLUSIVE (grown by the reach that painted), so the grow here is
+          # pure margin — a shadow term would double-cover and hide a record-time regression.
+          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
       # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullBroken). Consumed by
       # whichever lane runs first (_fleshOutFullBroken is called before _fleshOutBroken); the field is
@@ -930,10 +913,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
         if boundsToBeChanged.isNotEmpty()
           # affine transforms (§4.5): map the current (virtual for island descendants)
-          # rect to screen BEFORE spread/expand/shadow-grow. Mapped BEFORE the merge/
+          # rect to screen BEFORE spread/expand/margin-grow. Mapped BEFORE the merge/
           # dedupe below so those never see mixed planes. Identity → unchanged object.
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto the island (§4.4).
-          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @_shadowGrowFor brokenWidget
+          # The shadow reach of what is about to be painted is applied PRE-map, in the widget's own
+          # plane (paintedShadowReach: the map composes island scale and rotation over it), which also
+          # makes the island deposits shadow-inclusive; the post-map grow is pure margin.
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged.growBy(brokenWidget.paintedShadowReach()), true).spread().expandBy(1).growBy @maxShadowSize
 
       if sourceBroken? and destinationBroken?
         @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
@@ -959,7 +945,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # affine transforms (§4.5): fullClippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
           # (mapped at paint time), so a widget detached between paint and flush (close/destroy) erases its
           # true rotated footprint, not the un-transformed slot. Off any island it is the raw rect ⇒ dormant-identical.
-          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @_shadowGrowFor brokenWidget
+          # The record is also SHADOW-INCLUSIVE (grown by the reach that painted), so the grow here is
+          # pure margin — a shadow term would double-cover and hide a record-time regression.
+          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
 
       # §4.4 island buffer cache — source (old-position) lane: erase the vacated buffer region of a
       # widget that MOVED within (or was removed from) its stationary island. The stashed island stays
@@ -977,9 +965,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
         boundsToBeChanged = brokenWidget.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          # affine transforms (§4.5): map to screen before spread/expand/shadow-grow, before merge (identity → unchanged).
+          # affine transforms (§4.5): map to screen before spread/expand/margin-grow, before merge (identity → unchanged).
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
-          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @_shadowGrowFor brokenWidget
+          # Shadow reach applied PRE-map in the widget's own plane (see the twin note in _fleshOutBroken).
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged.growBy(brokenWidget.paintedShadowReach()), true).spread().expandBy(1).growBy @maxShadowSize
 
       if sourceBroken? and destinationBroken?
         @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken

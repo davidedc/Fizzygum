@@ -1391,10 +1391,12 @@ class Widget extends TreeNode
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
         # §4.4 buffer cache — the "destination" (new-position) deposit: the PRE-mapping rect is in
         # THIS island's virtual (buffer) plane, so it is exactly the region this widget now occupies
-        # in the island's buffer. Deposit it as content-dirty. Only the two damage-flesh-out lanes
-        # pass depositBufferDirty=true; the OTHER caller (_recordDrawnAreaForNextBrokenRects, the
-        # paint-time snapshot) passes false, so a mere repaint never dirties the buffer. Depositing
-        # on EACH crossed island handles nesting for free. Zero dormant cost (off-island never enters).
+        # in the island's buffer — and the damage lanes pass it already grown by the widget's
+        # paintedShadowReach, so it covers the shadow px in every crossed plane too. Deposit it as
+        # content-dirty. Only the two damage-flesh-out lanes pass depositBufferDirty=true; the OTHER
+        # caller (_recordDrawnAreaForNextBrokenRects, the paint-time snapshot) passes false, so a
+        # mere repaint never dirties the buffer. Depositing on EACH crossed island handles nesting
+        # for free. Zero dormant cost (off-island never enters).
         ancestor._depositIslandBufferDirtyRect result if depositBufferDirty
         result = ancestor.transformSpec.mapRect result, ancestor.bounds
         outermostIsland = ancestor
@@ -2710,14 +2712,22 @@ class Widget extends TreeNode
       # chain (an identity) and erase the WRONG (un-transformed) rect, leaving the rotated on-screen footprint
       # stale (owner bug: closing a tilted converter's inner window). mapRectToScreen returns the SAME rect
       # off any island ⇒ byte-identical dormant. (Field names kept; they now hold the screen-plane footprint.)
-      fullVirtual = @fullClippedBounds()
-      @clippedBoundsWhenLastPainted = @mapRectToScreen @clippedThroughBounds()
+      # Shadow inclusion: the recorded footprints cover what this paint ACTUALLY painted, shadow
+      # included, so the erase (source) side of the next flush never reconstructs shadow history —
+      # a removed/shrunk shadow erases with the reach that PAINTED it, not with today's shadowInfo.
+      # The reach is applied in MY OWN plane BEFORE mapping (see paintedShadowReach: the map
+      # composes an island's scale and rotation over it), and the island stash below carries the
+      # same grown rect (the buffer IS my plane).
+      reach = @paintedShadowReach()
+      fullVirtual = @fullClippedBounds().growBy reach
+      @clippedBoundsWhenLastPainted = @mapRectToScreen @clippedThroughBounds().growBy reach
       @fullClippedBoundsWhenLastPainted = @mapRectToScreen fullVirtual
       # §4.4 buffer cache — the "source" (old-position) lane. When painting INTO an island buffer,
-      # stash the PRE-mapping virtual full-bounds and the island. If this widget later MOVES within
-      # (or is removed from) the stationary island, the flesh-out source lane deposits this OLD
-      # footprint as buffer-dirty so the partial rebuild erases the vacated region — the buffer-plane
-      # twin of the screen-footprint erase above (the NEW footprint rides the mapRectToScreen deposit).
+      # stash the PRE-mapping virtual full-bounds (shadow-inclusive, per the above) and the island.
+      # If this widget later MOVES within (or is removed from) the stationary island, the flesh-out
+      # source lane deposits this OLD footprint as buffer-dirty so the partial rebuild erases the
+      # vacated region — the buffer-plane twin of the screen-footprint erase above (the NEW footprint
+      # rides the mapRectToScreen deposit).
       # nil on every ordinary (non-island) paint ⇒ dormant-free; consumed+cleared at flesh-out.
       if world.paintingIntoIslandBuffer?
         @_islandBufferSourceIsland = world.paintingIntoIslandBuffer
@@ -3144,9 +3154,23 @@ class Widget extends TreeNode
     if @hasShadow()
       @shadowInfo = nil
       @_fullChanged()
-  
-  
-  
+
+  # How far beyond my bounds my shadow paints, in MY OWN plane's px: the offset plus 1 px of
+  # AA fringe; 0 without a shadow. The damage machinery applies this reach IN MY OWN PLANE,
+  # BEFORE mapping to screen — my plane is where the shadow paints, so an ancestor island's
+  # map then composes scale AND rotation over it exactly (a post-map grow cannot: rotation
+  # turns the offset's screen direction, scale multiplies it). Corner-ward growth matches the
+  # down-right paint (every product offset is positive). Consumed by the flesh-out DESTINATION
+  # lanes and my own painted-footprint record (_recordDrawnAreaForNextBrokenRects); the
+  # flesh-out SOURCE lanes need no shadow term because that record is already shadow-inclusive
+  # — adding one there would double-cover and hide a record-time regression from the fixtures.
+  paintedShadowReach: ->
+    return 0 if !@shadowInfo?
+    offset = @shadowInfo.offset
+    1 + Math.max Math.abs(offset.x), Math.abs(offset.y)
+
+
+
   # Widget updating ///////////////////////////////////////////////////////////////
   _changed: ->
     # tests should all pass even if you don't

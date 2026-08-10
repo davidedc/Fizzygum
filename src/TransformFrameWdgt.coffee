@@ -432,11 +432,14 @@ class TransformFrameWdgt extends PanelWdgt
     return if !@_islandBufferCacheActive()
     return if @_islandBufferDirtyRect == "all"
     return if !aRect? or aRect.isEmpty()
-    # Grow by the SAME allowance the screen flesh-out lane uses (`.expandBy(1).growBy maxShadowSize`):
-    # a changed child paints its own shadow into the buffer beyond its bounds (down-right), and AA
-    # touches a 1px fringe, so the cleared+repainted region MUST cover them or the old shadow/fringe
-    # ghosts under the partial rebuild (the byte-identity gate would catch it). Clamped to the slot in
-    # _refreshIslandBuffer. Kept virtual (this island's plane) — the composite maps it to screen.
+    # The incoming rect is SHADOW-INCLUSIVE in this buffer's plane: both damage lanes grow it by
+    # the depositing child's paintedShadowReach in the child's own plane before it reaches here
+    # (destination via mapRectToScreen's pre-grown input, source via the shadow-inclusive stash of
+    # _recordDrawnAreaForNextBrokenRects), so an oversized shadow's band is covered exactly. The
+    # fixed grow below is the AA-fringe/margin floor (AA touches a 1px fringe; without margin the
+    # old fringe ghosts under the partial rebuild — the byte-identity gate would catch it).
+    # Clamped to the slot in _refreshIslandBuffer. Kept virtual (this island's plane) — the
+    # composite maps it to screen.
     dirty = aRect.expandBy(1).growBy world.maxShadowSize
     if !@_islandBufferDirtyRect?
       @_islandBufferDirtyRect = [dirty]
