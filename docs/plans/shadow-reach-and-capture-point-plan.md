@@ -1,0 +1,135 @@
+# Shadow reach + capture point: record what was painted, thread what will be painted, read pixels at ONE seam
+
+**PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
+Status: AUTHORED 2026-08-10, not started. Owner-approved as the follow-on to the screenshot-gate arc (Fizzygum `76a0d79c`). TWO phases, independently landable, Phase 1 first (its zero-churn expectation makes Phase 2's churn spike a clean measurement).
+
+**Mandate:**
+- **Phase 1 (shadow reach):** eliminate the two documented shadow-allowance residuals outright — make "the broken-rect machinery invalidates exactly what a shadow paints" true for EVERY shadow size, in EVERY plane (world canvas and island buffer), under EVERY transition (add, move, shrink, remove) — not just for shadows that happen to fit the historical fixed allowance. No new persistent state; the fix shape is "record what was actually painted; thread what is about to be painted."
+- **Phase 2 (capture point, owner-proposed):** move EVERY raw-pixel read — macro screenshot captures AND the two serialization rigs — onto ONE seam: the end of a painted `doOneCycle`, right after `_updateBroken`. Then the capture invariant is a single sentence ("pixels are read only at the natural end of a painted cycle"), and the `WorldWdgt.warmRepaintFlushPending` latch is DELETED rather than worked around. Partial adoption (moving only the macro capture while keeping the latch for the rigs) is explicitly out — it adds a seam without removing the latch, a net complexity increase (§6).
+
+---
+
+## §0 Orientation
+
+Fizzygum repaints incrementally: damaged widgets are collected per frame and `WorldWdgt._updateBroken` repaints only their **broken rects** (dirty regions). A widget's drop shadow (`@shadowInfo`, a `ShadowInfo` with `offset: Point` + `alpha` — see `docs/architecture/` and the unified-shadow mechanism: shadows are painted BY the widget's own paint pass, never child widgets) paints **beyond the widget's bounds** by its offset, so every broken rect derived from widget bounds must be **grown** to cover shadow reach.
+
+The 2026-08-10 screenshot-gate arc (`76a0d79c`) made suite screenshots read the true incremental canvas (no forced pre-capture repaint), which immediately surfaced and fixed the first bug of this family: the flesh-out lanes grew every rect by a **fixed** `maxShadowSize` (6), so the rotated-island test's 12px shadow left a stale sliver (28 px at offset 12; measured onset at offset 9; offsets ≤ 8 clean — the coverage is `growBy(6) + expandBy(1) +` ~1 px of mapped-AABB padding). The landed fix: `WorldWdgt._shadowGrowFor(aWidget)` = `max(maxShadowSize, 1 + max(|offset.x|, |offset.y|))`, used at all four flesh-out grow sites. That commit's message **documents two residuals**, which are this plan's subject. Both are **derived, not yet reproduced** — Phase 0 reproduces them first (standing rule: no conclusions before evidence).
+
+**Critical reframe:** the landed `_shadowGrowFor` reads the widget's **current** `shadowInfo`. That is correct only for the *destination* side (what is about to be painted). The *source* side's job is to erase **what was painted last frame** — a different quantity whenever the shadow changed in between. Deriving the erase allowance from current state is the root defect; the durable fix is to make the **recorded painted footprint** itself shadow-inclusive at paint time, so the source side never needs to reconstruct history.
+
+## §1 Exact current state (verify each with a fresh grep before trusting line numbers — method names are authoritative)
+
+All in the `Fizzygum` repo unless said otherwise. As of `76a0d79c`:
+
+- **`src/WorldWdgt.coffee`**
+  - `maxShadowSize: 6` (instance field, ~:334).
+  - `_shadowGrowFor: (aWidget) ->` — `max(@maxShadowSize, 1 + max(|offset.x|,|offset.y|))` of `aWidget.shadowInfo`, else `@maxShadowSize`. Sits directly above `_pushBrokenRect`.
+  - `_fleshOutBroken` / `_fleshOutFullBroken` — per-widget loops (locals init per-iteration since `e603ba7b`); FOUR grow sites, all `.expandBy(1).growBy @_shadowGrowFor brokenWidget`:
+    - source: `brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy …` / `fullClippedBoundsWhenLastPainted…`
+    - destination: `(brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy …` (×2)
+  - The flesh-out source lanes also deposit the island-buffer source stash: `brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect` (one per lane), then nil the island field.
+- **`src/basic-widgets/Widget.coffee`**
+  - `_recordDrawnAreaForNextBrokenRects` (~:2702) — once per frame (`childrenBoundsUpdatedAt` guard). Records the SCREEN-plane painted footprint: `@clippedBoundsWhenLastPainted = @mapRectToScreen @clippedThroughBounds()` and `@fullClippedBoundsWhenLastPainted = @mapRectToScreen fullVirtual` (`fullVirtual = @fullClippedBounds()`), **without shadow**. When painting into an island buffer it stashes `@_islandBufferSourceIsland = world.paintingIntoIslandBuffer` and `@_islandBufferSourceVirtualRect = fullVirtual` (the RAW virtual rect, un-grown).
+  - **The complete consumer set of `clippedBoundsWhenLastPainted` / `fullClippedBoundsWhenLastPainted`** (grep-verified 2026-08-10): written only in `_recordDrawnAreaForNextBrokenRects`; read only by the two flesh-out source lanes (which then nil them); listed in `Widget.serializationTransients` (~:70) and in the harness reset-audit exemptions (`Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee` `_worldStateAuditExemptions`). **No other reader** — the record-time change's blast radius is exactly the two source lanes.
+  - `mapRectToScreen` (~:1395) — while mapping a rect out through ancestor islands, deposits the mapped rect onto each crossed island when `depositBufferDirty` is true: `ancestor._depositIslandBufferDirtyRect result if depositBufferDirty`. (`@` = the widget being mapped; this is the **destination** deposit. A cross-object `_`-call grandfathered in the call-separation baseline — do not add NEW `_`-tier cross-calls; adding a parameter to this existing call is fine.)
+  - `_fullPaintIntoAreaOrBlitFromBackBufferJustShadow` (~:2856) — the shadow pass translates the culling rect by `-offset` and paints the content as shadow (the content lands at `+offset` via ctx translate). `addShadow(offset = (4,4), alpha = 0.2)` / `removeShadow` / `hasShadow` sit nearby (~:3133).
+- **`src/TransformFrameWdgt.coffee`**
+  - `_depositIslandBufferDirtyRect: (aRect) ->` (~:431) — grows every deposited dirty rect by the FIXED allowance: `dirty = aRect.expandBy(1).growBy world.maxShadowSize`, then coalesces into the disjoint rect-list. Its own comment states why the grow exists: "a changed child paints its own shadow into the buffer beyond its bounds (down-right), and AA touches a 1px fringe". **This is Residual 2's site.**
+  - `_compositeTransformed` (~:644) — the warp composite hard-clips to `visibleDst = footprint ∩ clippingRectangle` under the incoming CTM (identity on the normal pass, the shadow-offset translate on the shadow pass). The island's OWN shadow is a composite-time silhouette of the buffer (`_shadowSilhouetteOfIslandBuffer`) — it is **not stored in the buffer**, which is why the landed fix needed no buffer change.
+- **Product shadow inventory** (grep `addShadow\|new ShadowInfo` in `src/`): `ActivePointerWdgt` float-drag `(6,6) α.1`; `PopUpWdgt.addShadow` default `(5,5) α.2`; `Widget.addShadow` default `(4,4) α.2`; `ToolTipWdgt` default. **All within the fixed allowance.** The only oversized shadow anywhere is the test fixture's island shadow `(12,12) α.35` in `Fizzygum-tests/tests/SystemTest_macroTransformFrameRotatedShadow/`, never removed or shrunk — which is why both residuals are unreachable in product TODAY. This plan exists so the invariant holds by construction, not by inventory.
+
+## §2 The two residuals
+
+**R1 — removing (or shrinking) an oversized shadow erases with the then-smaller allowance.** `removeShadow()` nils `@shadowInfo` and issues `_fullChanged()`; at the NEXT flush the source lanes grow the recorded footprint by `_shadowGrowFor` of the **now-nil** shadow = `maxShadowSize`(6)+1 — but the on-screen pixels still carry the old shadow out to `offset` px. For offset 12, the band between ~8 and ~13 px beyond the footprint stays painted: a ghost shadow strip. Same hole when a shadow is REPLACED by a smaller one (`addShadow (4,4)` over a `(12,12)`).
+
+**R2 — the island buffer's internal deposit uses the fixed allowance.** A child INSIDE an island paints its own shadow INTO the island's kept buffer, beyond its bounds by its offset. `_depositIslandBufferDirtyRect` grows the deposited dirty region by the fixed `world.maxShadowSize`, so an oversized-shadow child's change under-clears/under-repaints the buffer: stale shadow pixels INSIDE the buffer, then composited to screen every frame. (The partial rebuild is active when `WorldWdgt.islandBufferCacheEnabled` and the island's `cachesBuffer` are both on — the default.)
+
+## §3 The distilled argument for the fix shape
+
+- **Record time is the only honest source of "what was painted".** Any scheme that reconstructs the erase allowance at FLUSH time from current state (the landed `_shadowGrowFor` on the source lanes) or from remembered transitions (a one-shot latch in `removeShadow`) re-derives history and has holes or bookkeeping. Growing the recorded footprint by the shadow reach **as applied during that very paint** makes the source side correct by construction for every transition — stateless, no serialization/teardown surface.
+- **Destination stays current-state** — what is ABOUT to be painted is by definition the current `shadowInfo`. Correct already; only its HOME moves (widget-owned public query, so the island deposit can use it too without a new cross-object `_`-call).
+- **The deposit is the same invariant one plane down** — the buffer's dirty region must cover what the child's paint touches in the buffer, including its shadow. Thread the reach; keep the fixed grow as the AA/margin floor.
+- **Why now:** screenshots are staleness-sensitive since `76a0d79c`, so for the first time these fixtures can be pinned by ordinary SystemTests (plus the exact-zero incremental-vs-full diff oracle, `Fizzygum-tests/DETERMINISM.md` §2c). The residuals are documented in a commit message — a place nobody re-reads — and the invariant should not depend on the accident that no product widget carries a big shadow yet.
+
+## §4 Fix shape (end state)
+
+1. **`Widget.paintedShadowReach()`** (new, public query): `if @shadowInfo? then 1 + Math.max(Math.abs(@shadowInfo.offset.x), Math.abs(@shadowInfo.offset.y)) else 0`. The `+1` is the AA fringe (empirically part of the coverage arithmetic — §1's onset measurement). *Naming caution:* pick names not used by ANY other class (census name-keyed allowlist case law — see `removeOwnProperty` history in the [[todo-triage-2026-08-10]] memory); grep before finalizing.
+2. **Record-time inclusion** (`_recordDrawnAreaForNextBrokenRects`): grow both mapped screen rects AND the island stash by the reach of the shadow being painted this frame:
+   - `@clippedBoundsWhenLastPainted = (@mapRectToScreen @clippedThroughBounds()).growBy reach` (same for the full twin)
+   - `@_islandBufferSourceVirtualRect = fullVirtual.growBy reach`
+   with `reach = @paintedShadowReach()` — but see **Spike S1** for the scale question on the screen-plane rects.
+3. **Flesh-out source lanes:** revert `.growBy @_shadowGrowFor brokenWidget` → `.growBy @maxShadowSize` (pure margin; the record is now shadow-inclusive — keeping `_shadowGrowFor` there would silently double-cover and hide a record-time regression from the fixtures).
+4. **Flesh-out destination lanes:** `.growBy brokenWidget.shadowGrowForBrokenRects()` where **`Widget.shadowGrowForBrokenRects()`** (new, public) = `Math.max world.maxShadowSize, @paintedShadowReach()`. **Delete `WorldWdgt._shadowGrowFor`** (its comment's content moves to the Widget method).
+5. **Deposit threading:** `_depositIslandBufferDirtyRect: (aRect, shadowGrow = world.maxShadowSize) ->` with `dirty = aRect.expandBy(1).growBy Math.max(world.maxShadowSize, shadowGrow)`; the `mapRectToScreen` destination deposit passes `@shadowGrowForBrokenRects()`. The two flesh-out source-lane deposit calls pass nothing (the stash is inclusive per item 2).
+6. Comment updates at every touched site, present-tense, stating the invariant ("grown by what this paint actually painted / what the next paint will paint"), never the history.
+
+## §5 Central risks & spikes
+
+- **Spike S1 — scale composition (MUST run before finalizing item 2).** Under a SCALED island, a child's shadow painted into the buffer has reach = offset in VIRTUAL px (deposit lane: exact as specced), but its SCREEN-plane reach is `scale × offset`. `mapRectToScreen` maps the rect; the `.growBy reach` afterwards is in screen px. Determine empirically whether the screen-lane grow must multiply by the widget's cumulative island scale: build (scaled island, scale 2, child with `(12,12)` shadow), run the incremental-vs-full oracle on a child move. Read `docs/architecture/transforms.md` (lens/two-vocabulary sections) for the sanctioned cumulative-scale query before inventing one. If needed, `paintedShadowReach` stays plane-local and the record site scales it. **Do not skip S1 even if the unscaled fixtures pass** — an unscaled pass proves nothing about the scaled path.
+- **Pixel risk: NONE expected.** Every change grows coverage (bigger erase/repaint regions); repainting clean pixels is idempotent. Predicted: zero reference churn, suite byte-green. If any screenshot shifts, STOP and investigate — that is a real finding, not recapture fodder.
+- **Record-semantics widening:** the `*WhenLastPainted` fields change meaning from "painted content footprint" to "painted footprint incl. shadow". §1's consumer audit shows only the two source lanes read them, but RE-RUN that grep cold (`grep -rn "WhenLastPainted" src/ ../Fizzygum-tests/Automator-and-test-harness-src/ ../Fizzygum-tests/tests/ ../Fizzygum-tests/scripts/`) — a consumer added since 2026-08-10 changes the calculus. Update the §4.5 comments at the record site and the flesh-out lanes that describe these fields.
+- **`fullImage` overlap:** `Widget.fullImage` separately grows bounds by `@shadowInfo.offset` for its own canvas sizing — unrelated code path (offscreen widget imaging, not broken rects); do not unify in this arc.
+- **Gates that could trip:** call-separation (new methods must be public — they are cross-object-read); census/tiernaming (distinctive names, grep first); dead-method scanner (both new methods land WITH their callers in the same commit).
+
+## §0.5 Cold-execution protocol
+
+1. Orient: `fg status` (expect all repos clean; if not, stop and ask). Read this plan fully. Read the memory note `broken-rect-staleness-invisible-to-screenshots` (current capture-gate design) if available; else DETERMINISM.md §2c suffices.
+2. Re-verify §1 against current code (grep every named method; line numbers are advisory).
+3. **Phase 0 — reproduce both residuals** (probes in `Fizzygum-tests/.scratch/`, modeled on `probe-rotshadow-3way.js` from the gate arc if still present; otherwise: puppeteer, boot `worldWithSystemTestHarness.html?speed=fastest&intro=0&dpr=1`, build fixture via `page.evaluate`, settle on `!world.anyTextDirty() && !WorldWdgt.warmRepaintFlushPending && world.inputEventsQueue.isEmpty()` + ~10 rAFs, then read incremental pixels A, `world._fullChanged(); world._updateBroken()`, read B, diff):
+   - **P0-R1:** plain widget, `addShadow(new Point(12,12), 0.35)`, settle, `removeShadow()`, settle → expect A≠B (ghost band). Also the shrink variant (`addShadow (4,4)` over `(12,12)`).
+   - **P0-R2:** `TransformFrameWdgt` (rotation 35°) wrapping a box; add a CHILD widget with `(12,12)` shadow inside the island; settle; MOVE the child within the island; settle → expect A≠B (stale buffer shadow).
+   - A residual that does NOT reproduce: do not proceed to "fix" it — root-cause what covers it, record the finding here, and re-shape.
+4. **Spike S1** (§5) — decide the scale rule.
+5. Implement §4. Inner loop: `fg presuite`. Re-run P0 probes → both must flip to A==B.
+6. **Cover:** two (three with S1's variant) macro SystemTests via the `/author-macro-test` skill — the exact-zero diff-oracle form (no screenshot references needed; pattern: `SystemTest_macroClosingRotatedIslandChildClearsFootprint`). Suggested names: `macroOversizedShadowRemovalLeavesNoGhost`, `macroOversizedShadowChildInIslandRepaintsBuffer` (+ scaled variant). Each must be **proved non-vacuous**: temporarily revert the corresponding fix hunk and watch the test FAIL, then restore (never commit the revert).
+7. Phase 1 close: full `fg gauntlet` (14 legs) — expect zero reference churn (§5). Propose the Phase 1 commit and WAIT for owner OK before starting Phase 2 (separate commits — Phase 2 is independently revertable).
+8. **Phase 2** (§8): implement the spike configuration (§8.2 — macro capture on the seam, latch still present), run Spike S2 (full dpr1 suite, count mismatches), then follow §8.2's decision gate. On adoption: rigs onto the seam, latch DELETED, §8.3 verification battery (both rigs standalone, gauntlet, `fg fuzz` — mandatory), docs per §8.1 item 5.
+9. Close: the close-arc ritual (memory + BACKLOG line flip + this plan → `docs/archive/` with a status stamp + INDEX line), propose commits, WAIT for owner OK. Owner rules: ask before commit/push; comment edits via the Edit tool; absolute paths; background long ops; mass-visual recapture → ASK.
+
+## §6 Rejected alternatives (do not re-attempt blind)
+
+- **One-shot "pending erase reach" latched in `removeShadow`:** works, but adds a transient field needing `serializationTransients` + reset-audit exemption + clearing at both flesh-out lanes, and misses any transition that forgets to latch (shrink via direct `shadowInfo` assignment). Dominated by record-time inclusion (stateless, covers all transitions). Not falsified — just strictly worse.
+- **Contract clamp (`assert offset ≤ maxShadowSize` in `__addShadow`):** bans the drag-style oversized island shadow that `macroTransformFrameRotatedShadow` deliberately exercises; wrong direction — the mechanism should serve the design, not cap it.
+- **Raise `maxShadowSize` to 13 globally:** every broken rect grows by +7 px per side forever (pure overdraw on all ~30k merge-path pushes per suite run measured in the stale-locals arc) to serve a shadow size almost nothing uses. Also still static — the next bigger shadow re-opens the hole.
+- **(Phase 2) Move only the MACRO capture to end-of-cycle, keep the latch for the rigs:** the latch is load-bearing for any outside-cycle pixel reader (§8.0), so this buys no deletion — it ADDS a request/deliver seam while keeping the flush-window state and reasoning. Strictly worse than either endpoint (full adoption, or keeping today's pump-read + latch design, which is already correct and reference-churn-free). Do it fully or not at all.
+
+## §7 References
+
+- Commits: Fizzygum `76a0d79c` (gate + `_shadowGrowFor`; residuals named in its message), `e603ba7b` (flesh-out per-iteration locals); tests `ee70425a5` (DETERMINISM.md §2c flip).
+- `Fizzygum-tests/DETERMINISM.md` §2c (screenshot staleness-sensitivity + the diff oracle), §3g/§3i (the capture gate's atlas latch).
+- `docs/architecture/transforms.md` §8/§9 (island composite + hard clip); `docs/archive/island-buffer-cache-plan.md` + `docs/archive/island-buffer-cache-rectlist-plan.md` (deposit/coalesce design).
+- Memory notes: `broken-rect-staleness-invisible-to-screenshots` (slug historical — content is the CURRENT capture design), `todo-triage-2026-08-10`.
+
+## §8 Phase 2 — the end-of-cycle capture point
+
+### §8.0 Orientation and the critical reframe
+
+Since `76a0d79c` the SWCanvas screenshot gate (`MacroToolkit.readyForMacroScreenshot`) is three waits and no repaint: scroll-momentum settle, `world.anyTextDirty()`, and the `WorldWdgt.warmRepaintFlushPending` latch. The latch exists because of WHERE pixels are read today: the macro pump runs INSIDE `doOneCycle` BEFORE `_updateBroken`, and `compareScreenshots` snapshots the render surface synchronously at pump time — so a capture in cycle N reads the state flushed at the END of cycle N−1. In the one-cycle window where an atlas-warm refresh has been APPLIED (`resetImmutableBackBuffersCache` ran; `anyTextDirty()` already false) but its `_fullChanged()` repaint has not yet been painted, a pump-time read would capture placeholder boxes; the latch (set in the reset, cleared at the end of `_updateBroken`) closes that window.
+
+The owner's proposal: read pixels at the END of `doOneCycle` instead, right after `_updateBroken` — the broken rects have had their natural chance in THIS cycle, and any reset earlier in the cycle is already flushed at the read point, so the latch becomes unnecessary. Staleness sensitivity is IDENTICAL (both read a fully-flushed natural frame; neither forces repaints).
+
+**Critical reframe — the latch is NOT macro-only.** Both serialization rigs (`Fizzygum-tests/scripts/serialization-roundtrip-headless.js`, `serialization-file-roundtrip-headless.js`) poll `world.macroToolkit.readyForMacroScreenshot()` from Node and then read pixels via `page.evaluate` — BETWEEN cycles, i.e. outside `doOneCycle`. For such a reader the applied-but-unflushed window is real regardless of where the MACRO capture moves, and their convergence capture cannot save them (placeholder boxes re-blit stably — that is exactly flake B, DETERMINISM.md §3g). So deleting the latch is sound ONLY if the rigs' reads also move onto the end-of-cycle seam. Phase 2 is therefore "one seam for ALL pixel reads", not "move the screenshot".
+
+### §8.1 Fix shape
+
+1. **The seam:** a small request/deliver mechanism — a caller registers a capture request; `WorldWdgt.doOneCycle`, immediately after `@_updateBroken()`, delivers every pending request by invoking its callback (which snapshots `world.fullRenderCanvasAsItAppearsOnScreen()` / runs the player's compare). Keep it dumb: an array of thunks on the world or the toolkit, drained post-paint; empty-array fast path costs nothing per cycle. (Placement precedent: the `SourceCompileScheduler.drainAtEndOfCycle` call already sits right after `_updateBroken` — put the drain beside it, BEFORE `frameCount++`.)
+2. **Macro captures:** `takeScreenshot_InputEvents_Macro` keeps `yield "waitForScreenshotReady"` (gate: momentum + `anyTextDirty` only); the pump then registers the capture request instead of calling `compareScreenshots` synchronously; the existing `yield "waitForScreenshotHash"` already makes the macro wait until the capture+hash completed (`screenshotHashPendingCount` increments when the capture RUNS — verify the pending-count increment moves with the capture so the hash wait cannot pass before the capture happened).
+3. **Rigs:** replace their poll-gate-then-read with poll-gate-then-request-and-await (a page-side helper, e.g. `world.macroToolkit.captureAtEndOfCycle(fn)` returning a promise the rig awaits via `page.evaluate`). Their convergence-capture wrappers (`captureSettled` etc.) keep their outer shape; only the innermost "read now" becomes "read at end of next cycle".
+4. **Delete `WorldWdgt.warmRepaintFlushPending`** — the declaration, the set in `resetImmutableBackBuffersCache`, the clear in `_updateBroken`, and the gate's check. The gate becomes: momentum + `anyTextDirty()`.
+5. Docs: DETERMINISM.md §3e/§3g (the latch paragraphs — rewrite to the seam), the gate's own doc comment, `src/macros/CLAUDE.md` step 4 if wording drifts, and the memory note `broken-rect-staleness-invisible-to-screenshots` at close.
+
+### §8.2 Spike S2 — measure the sampling-shift churn (run BEFORE committing to adoption)
+
+The read moves one frame later relative to every existing reference (pump-of-N reads end-of-(N−1); the seam reads end-of-N). For a quiescent scene the two states are pixel-identical; only a scene where something advances state within cycle N between the pump's gate-pass and `_updateBroken` — a paced animation stepping (`runChildrensStepFunction`), dataflow, hover-driven paint state — can differ. Under `AnimationsPacingControl` animation clocks are event-time-driven and a capture happens at a drained-queue settle point, so the PREDICTION is zero or near-zero churn — but it is a prediction. S2: implement §8.1 items 1–2 (macro capture only, latch still present — this is the spike configuration, not the landing configuration), run the full dpr1 suite, count mismatches.
+- **Zero mismatches →** adopt fully (items 3–4), re-run suite + gauntlet + `fg fuzz` (MANDATORY — the gate's shape changes, and fuzz is the standing coverage check for exactly this gate; a FAIL here means the seam has a hole, e.g. a read delivered before a same-cycle reset's flush — fix the ordering, never recapture).
+- **Nonzero →** dump the diffs (`fg diffpage`), classify each (expected one-frame animation-phase shift vs anything else), and STOP for an owner decision: recapture the affected references and adopt, or archive Phase 2 as measured-and-declined with the diff inventory as evidence. Do not recapture on your own authority (standing rule: mass-visual recapture → ASK).
+
+### §8.3 Phase-2 verification
+
+`fg presuite` inner loop; both serialization rigs standalone (`node scripts/serialization-roundtrip-headless.js`, then the file-roundtrip twin) since they are rewired; full `fg gauntlet`; `fg fuzz` (three-outcome — an INVALID run measured nothing, re-run it). Non-vacuity: temporarily re-introduce a one-cycle early read (deliver requests BEFORE `_updateBroken`) and watch fuzz or the rigs catch placeholder-box captures — proving the seam's position is load-bearing — then restore.
+
+---
+
+### Ready-to-paste start prompt for a fresh session
+
+> Run the shadow-reach + capture-point arc: `Fizzygum/docs/plans/shadow-reach-and-capture-point-plan.md` — read it fully and follow its §0.5 cold-execution protocol. Start with `fg status` (all three repos should be clean), re-verify the plan's §1 claims against current src (grep method names, don't trust line numbers). Phase 1 first: Phase 0 reproduces BOTH shadow residuals with probes before any fix; Spike S1 (scale composition) gates the record-time change; `fg presuite` inner loop, full `fg gauntlet` to close, zero reference churn expected (a pixel shift = stop and investigate); propose the Phase 1 commit and WAIT. Phase 2 (one end-of-cycle seam for ALL pixel reads, latch deleted): run Spike S2 first and follow its decision gate — nonzero churn is an OWNER decision, and `fg fuzz` is mandatory on adoption. Present commits and wait for owner OK — never push autonomously.
