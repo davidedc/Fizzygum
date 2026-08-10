@@ -9,10 +9,10 @@ class VideoDurationLabelWdgt extends HhmmssLabelWdgt
     super "n/a", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @alignLeft()
 
-    # the label of the is updated via the stepping
+    # the label of the duration is updated via the stepping
     # mechanism, but you could do that via the connectors mechanism
     # instead, ideally you should have the canvas widget to only fire when
-    # the time changes at the seconds level, and only
+    # the duration changes, and only
     # within a step.
     @fps = 5
     world.steppingWdgts.add @

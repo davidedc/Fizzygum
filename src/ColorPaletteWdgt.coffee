@@ -14,10 +14,8 @@ class ColorPaletteWdgt extends PaletteWdgt
       y = 0
       for y in [0..extent.y]
         l = 100 - (y / extent.y * 100)
-        # see link below for alternatives on how to set a single
-        # pixel color.
-        # You should really be using putImageData of the whole buffer
-        # here anyways. But this is clearer.
+        # deliberately per-pixel fillRect for clarity -- putImageData of the
+        # whole buffer would be faster; alternatives:
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         backBufferContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         backBufferContext.fillRect x, y, 1, 1
