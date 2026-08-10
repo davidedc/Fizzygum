@@ -5,10 +5,9 @@ class DoubleLinkedList
   constructor:  ->
     @headNode = @tailNode = nil
 
-  # removes the last element. Since
-  # we move used elements to head, the last
-  # element is *probably* a relatively
-  # unused one.
+  # unlinks the given node, wherever it sits -- the caller picks it.
+  # The LRU cache evicts by passing the tail node: used nodes move to
+  # head, so the tail is the least-recently-used entry.
   remove: (node) ->
     if node.pre
       node.pre.next = node.next
