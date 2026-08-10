@@ -3535,7 +3535,27 @@ class Widget extends TreeNode
       if m.index == regex.lastIndex
         regex.lastIndex++
       @injectProperty m[1],m[2]
-  
+
+  # the remove twin of injectProperty ("Own" keeps it clear of InspectorWdgt's
+  # same-named zero-arg button actions, which would otherwise shadow these on
+  # inspectors -- inspectors are Widgets too): drops the member AND its
+  # <name>_source companion -- the companion rides serialization as {"$src"}
+  # and would re-inject the removed member on snapshot restore.
+  removeOwnProperty: (propertyName) ->
+    delete @[propertyName]
+    delete @[propertyName + "_source"]
+    @sourceChanged()
+
+  # the rename twin: re-keys the member and moves the <name>_source companion
+  # with it, so a snapshot restores the member under the new name only.
+  renameOwnProperty: (oldName, newName) ->
+    @[newName] = @[oldName]
+    delete @[oldName]
+    if @[oldName + "_source"]?
+      @[newName + "_source"] = @[oldName + "_source"]
+      delete @[oldName + "_source"]
+    @sourceChanged()
+
   # Widget dragging (and dropping) /////////////////////////////////////////
   
   # (In this comment section "non-float" dragging and "dragging" are

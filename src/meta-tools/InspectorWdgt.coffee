@@ -667,8 +667,6 @@ class InspectorWdgt extends Widget
     @target.injectProperty propertyName, txt
 
 
-  # TODO should have a removeProperty method in Widget (and in the classes somehow)
-  # rather than here
   addProperty: (ignoringThis, widgetWithProperty) ->
     prop = widgetWithProperty.text.text
     if prop?
@@ -689,16 +687,22 @@ class InspectorWdgt extends Widget
   addPropertyPopout: ->
     @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)
 
-  # TODO should have a removeProperty method in Widget (and in the classes somehow)
-  # rather than here
+  # the one differing step between object- and class-inspector rename
+  # (mirroring applyPropertyEdit above): the object inspector delegates to the
+  # Widget-level renameOwnProperty twin, which moves the <name>_source
+  # companion with the member -- otherwise a snapshot restore re-injects the
+  # method under the OLD name. ClassInspectorWdgt overrides this with its raw
+  # prototype re-keying.
+  _applyPropertyRename: (oldName, newName) ->
+    @target.renameOwnProperty oldName, newName
+
   renameProperty: (ignoringThis, widgetWithProperty) ->
     propertyName = @list.selected.labelString
     prop = widgetWithProperty.text.text
     if prop.getValue?
       prop = prop.getValue()
-    
-    delete @target[propertyName]
-    @target[prop] = @currentProperty
+
+    @_applyPropertyRename propertyName, prop
 
     @_buildAndConnectChildren()
     @notifyInstancesOfSourceChange([prop, propertyName])
@@ -707,12 +711,17 @@ class InspectorWdgt extends Widget
     propertyName = @list.selected.labelString
     @prompt "property name:", @, "renameProperty", propertyName
   
-  # TODO should have a removeProperty method in Widget (and in the classes somehow)
-  # rather than here
+  # removal's differing step, same seam as _applyPropertyRename: the object
+  # inspector delegates to the Widget-level removeOwnProperty twin, which also
+  # drops the <name>_source companion -- otherwise the {"$src"} serialization
+  # ride re-injects the removed member on snapshot restore.
+  _applyPropertyRemoval: (propertyName) ->
+    @target.removeOwnProperty propertyName
+
   removeProperty: ->
     propertyName = @list.selected.labelString
 
-    delete @target[propertyName]
+    @_applyPropertyRemoval propertyName
 
     @currentProperty = nil
     @_buildAndConnectChildren()

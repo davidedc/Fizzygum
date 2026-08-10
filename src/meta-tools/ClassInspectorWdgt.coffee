@@ -104,6 +104,19 @@ class ClassInspectorWdgt extends InspectorWdgt
       return
     super
 
+  # plain prototype members keep the RAW delete/re-key (the Widget-level twins
+  # would drive instance machinery -- sourceChanged -- against a prototype).
+  # Known gap, mirroring the base seam comments: a plain class-member removal
+  # or rename leaves any <name>_source live override behind and is not
+  # registry-recorded, so it does not replay on snapshot restore (the mixin
+  # path above closes this with recordMixinMemberRemoval).
+  _applyPropertyRemoval: (propertyName) ->
+    delete @target[propertyName]
+
+  _applyPropertyRename: (oldName, newName) ->
+    delete @target[oldName]
+    @target[newName] = @currentProperty
+
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
   # edited source as a live override on THIS class's prototype only. Dropping the

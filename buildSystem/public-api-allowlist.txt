@@ -18,6 +18,8 @@ reactToTargetConnection   # connection protocol hook
 paintFunction             # icon appearances' polymorphic paint hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
+removeOwnProperty   # Widget property op, injectProperty's remove twin — inspector / live-code surface
+renameOwnProperty   # Widget property op, injectProperty's rename twin — inspector / live-code surface
 setMouseInputMode   # PreferencesAndSettings user setting
 setTouchInputMode   # PreferencesAndSettings user setting
 toggleVisibility    # Widget user verb
@@ -27,7 +29,6 @@ setProgram          # LCLProgramRunner programming API
 processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 processTripleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 addText             # ErrorsLogViewerWdgt log-append verb; its body drives the public .setText on the text pane — rule [A] forbids the _-form
-createErrorConsole        # WorldWdgt error-path builder; drives public setExtent/moveTo/add — rules [A]/[G] forbid the _-form
 addDragAffordanceWidgets  # WorldWdgt frame-driven affordance rebuilder; drives public add/fullDestroy/setWidth — [A]/[G] forbid the _-form
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
