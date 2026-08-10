@@ -222,15 +222,23 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # world-snapshot serialization; matched to islandBufferCacheEnabled). See docs/archive/island-buffer-cache-plan.md §6.
   @immutableBackBufferGeneration: 0
 
+  # True between a resetImmutableBackBuffersCache full-repaint request and its flush at the
+  # next _updateBroken. The SWCanvas screenshot gate (MacroToolkit.readyForMacroScreenshot)
+  # refuses to capture while it is set: in that window the canvas may still show placeholder
+  # boxes even though anyTextDirty() already reads false (the refresh was APPLIED, its repaint
+  # not yet painted). Class property like the generation above (screenshot-settle bookkeeping,
+  # not world state to serialize or teardown-audit).
+  @warmRepaintFlushPending: false
+
   # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
   # downstream island buffers rebuild from the now-warm text, AND repaints everything — dropping the
   # cache means every text-bearing pixel on screen may be stale, so the full repaint is intrinsic to
-  # the reset, not the caller's business (widget-citizenship point 2: I invalidate myself). Callers:
-  # swCanvasScheduleTextRefresh (atlas warm, real usage) and the macro screenshot gate
-  # (readyForMacroScreenshot).
+  # the reset, not the caller's business (widget-citizenship point 2: I invalidate myself). Caller:
+  # swCanvasScheduleTextRefresh (atlas warm).
   resetImmutableBackBuffersCache: ->
     @cacheForImmutableBackBuffers?.reset?()
     WorldWdgt.immutableBackBufferGeneration++
+    WorldWdgt.warmRepaintFlushPending = true
     @_fullChanged()
 
   # PUBLIC notification — a widget currently marked in my broken-bookkeeping lists was
@@ -782,6 +790,20 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   SLOWclipThrough: ->
     return @boundingBox()
 
+  # Broken rects are grown so a widget's drop shadow — painted beyond its bounds — is
+  # invalidated/erased together with it. maxShadowSize covers the standard small shadows;
+  # a widget carrying a LARGER shadowInfo offset (e.g. the 12px drag-style shadow on a
+  # transform island) needs its declared reach honoured — with a fixed allowance the outer
+  # shadow band falls outside every broken rect and goes stale under incremental repaints
+  # (SystemTest_macroTransformFrameRotatedShadow catches this now that captures read the
+  # incremental canvas). +1 for the AA fringe. Residual, documented: removing a shadow
+  # larger than maxShadowSize erases with the then-smaller allowance — no caller removes
+  # an oversized shadow today.
+  _shadowGrowFor: (aWidget) ->
+    return @maxShadowSize if !aWidget.shadowInfo?
+    offset = aWidget.shadowInfo.offset
+    Math.max @maxShadowSize, 1 + Math.max(Math.abs(offset.x), Math.abs(offset.y))
+
   _pushBrokenRect: (brokenWidget, theRect, isSrc) ->
     if @duplicatedBrokenRectsTracker[theRect.toString()]?
       @numberOfDuplicatedBrokenRects++
@@ -886,7 +908,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # (_recordDrawnAreaForNextBrokenRects mapped it at paint time, while the widget was still attached),
           # so a widget detached between paint and flush (close/destroy) still erases its true rotated
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
-          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @_shadowGrowFor brokenWidget
 
       # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullBroken). Consumed by
       # whichever lane runs first (_fleshOutFullBroken is called before _fleshOutBroken); the field is
@@ -911,7 +933,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # rect to screen BEFORE spread/expand/shadow-grow. Mapped BEFORE the merge/
           # dedupe below so those never see mixed planes. Identity → unchanged object.
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto the island (§4.4).
-          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @_shadowGrowFor brokenWidget
 
       if sourceBroken? and destinationBroken?
         @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
@@ -937,7 +959,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # affine transforms (§4.5): fullClippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
           # (mapped at paint time), so a widget detached between paint and flush (close/destroy) erases its
           # true rotated footprint, not the un-transformed slot. Off any island it is the raw rect ⇒ dormant-identical.
-          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @_shadowGrowFor brokenWidget
 
       # §4.4 island buffer cache — source (old-position) lane: erase the vacated buffer region of a
       # widget that MOVED within (or was removed from) its stationary island. The stashed island stays
@@ -957,7 +979,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
         if boundsToBeChanged.isNotEmpty()
           # affine transforms (§4.5): map to screen before spread/expand/shadow-grow, before merge (identity → unchanged).
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
-          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @maxShadowSize
+          destinationBroken = (brokenWidget.mapRectToScreen boundsToBeChanged, true).spread().expandBy(1).growBy @_shadowGrowFor brokenWidget
 
       if sourceBroken? and destinationBroken?
         @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
@@ -1333,6 +1355,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # visible. Only when something was actually painted this cycle.
     if @domBlitContext? and @broken.length != 0
       @blitRenderCanvasToDOM()
+
+    # any full repaint a resetImmutableBackBuffersCache requested has now been painted
+    # (every pending damage mark is consumed above) — the screenshot gate may capture
+    WorldWdgt.warmRepaintFlushPending = false
 
     @_resetDataStructuresForBrokenRects()
 

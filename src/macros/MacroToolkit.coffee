@@ -23,10 +23,6 @@ class MacroToolkit
   msSinceLastExecutedMacroStep: nil
   aMacroIsRunning: nil
   returnFromLastMacroStep: nil
-  # latches the frame on which we forced a warm-atlas repaint before a macro
-  # screenshot, so readyForMacroScreenshot waits exactly one cycle for it to
-  # flush. nil when no macro screenshot is settling.
-  macroScreenshotWarmRepaintFrame: nil
   # the running macro's generator; (re)created at macro start by the pump header
   # in Macro._addHeaderCode, cleared (nil) between macros.
   macroGenerator: nil
@@ -208,10 +204,14 @@ class MacroToolkit
   # Used by a macro's screenshot step (the "waitForScreenshotReady" yield in
   # Macro's pump): decide, across cycles, when the canvas is safe to capture
   # deterministically. Native: capture immediately. SWCanvas: wait until glyph
-  # atlases have loaded (no text dirty), then force ONE warm-atlas repaint into
-  # the software surface and wait a single doOneCycle for _updateBroken (which
-  # runs AFTER progressOnMacroSteps) to flush it — so the captured pixels are
-  # identical run-to-run. This is the single SWCanvas screenshot settle gate.
+  # atlases have loaded (no text dirty — that predicate also covers a landed
+  # atlas whose placeholder-clearing refresh has not been APPLIED yet) and until
+  # the warm repaint that refresh requests world-side (swCanvasScheduleTextRefresh
+  # → resetImmutableBackBuffersCache) has FLUSHED through _updateBroken — so no
+  # capture can read placeholder boxes. Deliberately NO forced pre-capture full
+  # repaint: the capture reads the INCREMENTAL (broken-rect) canvas, keeping
+  # screenshots sensitive to repaint/staleness defects a forced full repaint
+  # would erase. This is the single SWCanvas screenshot settle gate.
   readyForMacroScreenshot: ->
     # never capture while a scroll-momentum glide is settling (matters for
     # native captures too, hence before the SWCanvas-only early return)
@@ -219,16 +219,8 @@ class MacroToolkit
     return true unless window.FIZZYGUM_USE_SWCANVAS
     if world.anyTextDirty()
       return false
-    if !@macroScreenshotWarmRepaintFrame?
-      # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch (so a
-      # rotated/scaled island buffer — a further cache downstream — rebuilds from warm text before
-      # capture, §4.4) AND repaints the world — the warm-atlas repaint this gate needs, done world-side.
-      world.resetImmutableBackBuffersCache?()
-      @macroScreenshotWarmRepaintFrame = WorldWdgt.frameCount
+    if WorldWdgt.warmRepaintFlushPending
       return false
-    if WorldWdgt.frameCount <= @macroScreenshotWarmRepaintFrame
-      return false
-    @macroScreenshotWarmRepaintFrame = nil
     return true
 
   # other useful tween functions here:
