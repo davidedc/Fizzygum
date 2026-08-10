@@ -257,7 +257,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   broken: nil
   duplicatedBrokenRectsTracker: nil
   numberOfDuplicatedBrokenRects: 0
-  numberOfMergedSourceAndDestination: 0
 
   # target -> style descriptor (HighlighterWdgt.fillStyle / — Phase 2 — outline styles). A Map, not
   # a Set: the drag-embed arc needs per-target highlight styles (the style channel). The two tracking
@@ -796,16 +795,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @broken.push theRect
     @duplicatedBrokenRectsTracker[theRect.toString()] = true
 
-  # two live call sites (_fleshOutBroken / _fleshOutFullBroken), but Chrome's code-coverage
-  # tool showed it never firing at runtime
-  # TODO investigate and see whether this is needed
+  # both lanes produced a rect for this widget (e.g. it moved in place): push ONE merged
+  # rect when merging wastes little area — the dominant case in practice — else push both
   _mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
     if mergedBrokenRectArea < sumArea + sumArea/10
       @_pushBrokenRect brokenWidget, mergedBrokenRect, true
-      @numberOfMergedSourceAndDestination++
     else
       @_pushBrokenRect brokenWidget, sourceBroken, true
       @_pushBrokenRect brokenWidget, destinationBroken, false
@@ -872,11 +869,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
 
   _fleshOutBroken: ->
-    sourceBroken = nil
-    destinationBroken = nil
-
-
     for brokenWidget in @widgetsWithMaybeChangedPaintBounds
+      # fresh per widget: a value carried over from a previous iteration would be
+      # re-pushed attributed to THIS widget — spurious extra repaint area (any widget
+      # lacking one of its own rects would consume its predecessor's)
+      sourceBroken = nil
+      destinationBroken = nil
 
       # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
@@ -929,11 +927,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     
 
   _fleshOutFullBroken: ->
-    sourceBroken = nil
-    destinationBroken = nil
-
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-
+      # fresh per widget: see the twin note in _fleshOutBroken
+      sourceBroken = nil
+      destinationBroken = nil
 
       if brokenWidget.fullClippedBoundsWhenLastPainted?
         if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
@@ -1277,7 +1274,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
-    @numberOfMergedSourceAndDestination = 0
 
     @_fleshOutFullBroken()
     @_fleshOutBroken()
@@ -1454,7 +1450,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
-    @numberOfMergedSourceAndDestination = 0
 
   
   addHighlightingWidgets: ->
