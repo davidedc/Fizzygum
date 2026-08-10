@@ -9,14 +9,5 @@ class MousedownInputEvent extends MouseInputEvent
   # So we'll need to correct this eventually
 
   processEvent: ->
-    # the recording of the test command (in case we are
-    # recording a test) is handled inside the function
-    # here below.
-    # This is different from the other methods similar
-    # to this one but there is a little bit of
-    # logic we apply in case there is a right-click,
-    # or user left or right-clicks on a menu,
-    # in which case we record a more specific test
-    # commands.
     # PLACE TO ADD AUTOMATOR EVENT RECORDING IF NEEDED
     world.hand.processMouseDown @button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey

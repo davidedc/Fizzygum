@@ -57,9 +57,6 @@ class PenWdgt extends Widget
   up: ->
     @isDown = false
   
-  # TODO I don't think this is going to
-  # work. Needs to clear the canvas, not
-  # to change it.
   clear: ->
     if !@parent.backBuffer?
       return

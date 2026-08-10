@@ -32,7 +32,7 @@ class SheetHeaderCellAppearance extends Appearance
       aContext.useLogicalPixelsUntilRestore()
       widgetPosition = @widget.position()
       aContext.translate widgetPosition.x, widgetPosition.y
-      # the header-strip fill (was the sheet's two strip fillRects)
+      # the header-strip fill
       aContext.fillStyle = sheetWidget.headerFillColor.toString()
       aContext.fillRect 0, 0, @widget.width(), @widget.height()
       # the header's top+left grid edges (grid-coloured first, dark last — the crossing rule).

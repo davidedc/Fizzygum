@@ -1,6 +1,6 @@
 # A thin horizontal divider line separating groups of rows in a menu (and any
-# row-stack that mints one via MenuWdgt.createLine). It is a first-class type so
-# removeConsecutiveLines can identify dividers by `instanceof DividerWdgt` rather
+# row-stack that mints one via MenuRowsPanelWdgt.createLine). It is a first-class type so
+# removeConsecutiveLines can identify dividers via the isDivider role query rather
 # than by `instanceof RectangleWdgt` — the latter mistakes ANY stray
 # RectangleWdgt in a menu for a divider.
 #
