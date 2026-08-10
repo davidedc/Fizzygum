@@ -1,8 +1,8 @@
 addLogDiv = ->
-  # this "log" div shows info a) while loading all the source files and then
-  # b) while compiling and evaluating them. Useful to give some feedback as these
-  # can take in order of 10s of seconds. This div is removed after the last
-  # log to it
+  # this "log" div shows info while compiling and evaluating each source
+  # file (one "compiling and evalling <name> (n/total)" line at a time).
+  # Useful to give some feedback as this can take in order of 10s of
+  # seconds. This div is removed after the last log to it
   loadingLogDiv = document.createElement 'div'
   loadingLogDiv.id = 'loadingLog'
   loadingLogDiv.style.position = 'absolute'
