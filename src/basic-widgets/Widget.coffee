@@ -621,17 +621,6 @@ class Widget extends TreeNode
     # death — a dead node left in @edgesFrom/@edgesTo is a leak AND a ghost recompute (spec §2, the node-death
     # API). A cheap no-op for a widget that was never a node.
     world.dataflow?.removeAllEdgesOf @
-    # TODO note that there might be other data structures that
-    # reference this widget that should have that reference removed.
-    # The duplication method deals with a similar situation, so you
-    # should check that all the data structures that are updated
-    # in the duplication method are also updated here.
-    # Also, possibly you should have a similar pattern of updates
-    # See the methods:
-    #   alignCopiedWidgetToBrokenInfoDataStructures
-    #   alignCopiedWidgetToSteppingStructures
-    #   alignCopiedWidgetToReferenceTracker
-    #   alignCopiedWidgetToKeyboardEventsReceiversSet
 
     @destroyed = true
     # FREEFLOATING-skip is centralized in _invalidateLayout(triggeringChild): passing @ lets the
@@ -655,8 +644,8 @@ class Widget extends TreeNode
 
     # Editor-focus hygiene (Frame-model plan §5.D D2b): if the widget the editor
     # chrome acts on (the focus register) is in the dying subtree, clear it -- a
-    # dangling register let a text button silently format a detached widget (the
-    # TODO below flagged exactly this leak class). Ancestor-or-self, mirroring
+    # dangling register let a text button silently format a detached widget
+    # (a data structure referencing a dead widget). Ancestor-or-self, mirroring
     # the caret check above, so a single-widget destroy (which orphans its
     # children rather than destroying them) still covers a focused descendant.
     focusWdgt = world.editorFocusWdgt
@@ -1098,7 +1087,6 @@ class Widget extends TreeNode
   # for widgets that marked themselves
   # as broken but at moment of destination
   # might be invisible
-  # TODO for sure this should also check for the .destroyed flag
   surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage: ->
     if !@isVisible
       return true
@@ -3282,10 +3270,6 @@ class Widget extends TreeNode
   # _reactToChildRemoved callbacks, but never recalculateLayouts. (The shadow step folds in
   # what add() used to do in its settle-wrap; it is a no-op for the fresh non-world
   # children the internal adders pass.)
-  # ??? TODO you should handle the case of Widget
-  #     being added to itself and the case of
-  # ??? TODO a Widget being added to one of its
-  #     children
   _addNoSettle: (aWdgt, opts = {}) ->
     position = opts.position
     layoutSpec = opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)
@@ -3707,9 +3691,6 @@ class Widget extends TreeNode
     scanningWidgets = @
     while scanningWidgets.parent?
       scanningWidgets = scanningWidgets.parent
-      # TODO actually stop at the first
-      # CLIPPING widget (more generic), not
-      # just a PanelWdgt
       if scanningWidgets.clipsAtRectangularBounds
         return nil
       if scanningWidgets.hasShadow()

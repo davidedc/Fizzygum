@@ -100,7 +100,7 @@ class DemoMenus
     world.create new WidgetHolderWithCaptionWdgt "hey there"
 
   makeFolderWindow: (a,b,c,d,e) ->
-    world.create new FolderWindowWdgt nil,nil,nil,nil, @
+    world.create new FolderWindowWdgt
 
   makeBouncingParticle: ->
     world.create new BouncerWdgt

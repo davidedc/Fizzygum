@@ -634,10 +634,6 @@ class ActivePointerWdgt extends Widget
       w = @topWdgtUnderPointer()
 
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem w
-      # TODO it seems a little aggressive to stop any editing
-      # just on the "down", probably something higher level
-      # would be better? Like if any other object is brought to the
-      # foreground?
       @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere w
 
       # if we are doing a mousedown on anything outside a menu

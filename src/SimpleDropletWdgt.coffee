@@ -19,9 +19,6 @@ class SimpleDropletWdgt extends Widget
     @setColor Color.BLACK
 
   _reactToChildDropped: (widgetBeingDropped) ->
-    # TODO we add as FREEFLOATING if we don't pass
-    # the third parameter, certainly that's not always
-    # the case?
     @parent?[@parentFieldToAttachingTheWidgetToAsString] = widgetBeingDropped
     @addAsSiblingAfterMe \
       widgetBeingDropped,

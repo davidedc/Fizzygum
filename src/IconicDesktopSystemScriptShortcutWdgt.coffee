@@ -3,9 +3,6 @@
 # However here we make an exception and instead of doing that,
 # we actually ask the referred ScriptWdgt to run the its code.
 
-# TODO I don't think this should be extending IconicDesktopSystemShortcutWdgt but
-# but rather IconicDesktopSystemLinkWdgt
-
 class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutWdgt
 
   constructor: (@target, @title, @icon) ->

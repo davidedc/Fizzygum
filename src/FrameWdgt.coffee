@@ -38,7 +38,6 @@ class FrameWdgt extends Widget
   editButton: nil
   collapseUncollapseSwitchButton: nil
   titlebarBackground: nil
-  labelContent: nil
   resizer: nil
   padding: nil
   contents: nil
@@ -237,19 +236,14 @@ class FrameWdgt extends Widget
       return new Point availW, @_titlebarHeight()
     return new Point availW, @height()
 
-  # TODO passing the @labelContent doesn't quite work, when
-  # you add a widget to the window it overwrites the
-  # title which means that this one parameter passed in
-  # the constructor has no effect
   # `contents` (the widget this window wraps) is the one meaningful argument; every call site
-  # passes only it. labelContent / closeButton are optional, supplied via the opts object
-  # (labelContent defaults to "my window"). The former `internal` / `alwaysShowInternalExternalButton`
+  # passes only it. closeButton is optional, supplied via the opts object (FolderWindowWdgt
+  # injects its own). The former `internal` / `alwaysShowInternalExternalButton`
   # positional args are GONE (P5 arg-object conversion): internal-ness is DERIVED from parentage
   # (see isInternal) and the internal/external switch button is gone, so both were inert — neither
   # was ever bound to `@`, stored, or serialized.
   constructor: (@contents, opts = {}) ->
     super()
-    @labelContent = opts.labelContent ? "my window"
     @closeButton = opts.closeButton
 
     @_deriveAndSetBodyAppearance()
@@ -901,7 +895,7 @@ class FrameWdgt extends Widget
     # the bar builds/keeps its pieces (label rebuilt every time, the rest
     # keep-if-exist); @closeButton is the ctor-supplied one on the first build
     # (FolderWindowWdgt injects its own), then the alias of the bar's.
-    @bar._buildAndConnectPiecesNoSettle @labelContent, @closeButton
+    @bar._buildAndConnectPiecesNoSettle @closeButton
     # re-point the aliases at the (possibly fresh) pieces -- see the field block.
     @titlebarBackground = @bar.titlebarBackground
     @label = @bar.label

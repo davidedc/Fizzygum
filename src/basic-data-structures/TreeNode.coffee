@@ -45,7 +45,6 @@ class TreeNode
   checkFirstParentClippingAtBoundsCache: nil
   cachedFirstParentClippingAtBounds: nil
 
-  gcSessionIdMark: 0 # TODO unused
   gcReferenceExaminedSessionIdMark: 0
 
   constructor: (@parent = nil, @children = []) ->

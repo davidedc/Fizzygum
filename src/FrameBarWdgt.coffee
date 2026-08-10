@@ -92,16 +92,16 @@ class FrameBarWdgt extends Widget
   # ===== build =====
   # Mirrors the frame's historical chrome build exactly: background and the two
   # buttons are keep-if-exist (rebuilds re-add the same instances), the label is
-  # destroyed + rebuilt every time (its text follows the content). The caller
-  # (the frame) passes its labelContent and -- on the first build -- any
-  # ctor-supplied close button (FolderWindowWdgt injects its own).
-  _buildAndConnectPiecesNoSettle: (labelContent, suppliedCloseButton) ->
+  # destroyed + rebuilt every time, born blank -- every build path immediately
+  # re-derives its text from the content. The caller (the frame) passes -- on the
+  # first build -- any ctor-supplied close button (FolderWindowWdgt injects its own).
+  _buildAndConnectPiecesNoSettle: (suppliedCloseButton) ->
     if !@titlebarBackground?
       @_buildTitlebarBackground()
 
     # label -- tear down through the non-settling core (inside the rebuild's settle)
     @label?._fullDestroyNoSettle()
-    @label = new StringWdgt labelContent, WorldWdgt.preferencesAndSettings.titleBarTextFontSize
+    @label = new StringWdgt "", WorldWdgt.preferencesAndSettings.titleBarTextFontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
     # safari's rendering of bright text on dark background is atrocious

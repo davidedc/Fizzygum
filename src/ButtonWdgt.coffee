@@ -88,20 +88,12 @@ class ButtonWdgt extends Widget
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # TODO can we use the more standard way i.e.
-    # calculate the bounds and pass them as args in the _reLayout method
-    # of the faceWidget?
-
     if @faceWidget?.parent == @
       @faceWidget._applyGrantedBounds newBoundsForThisLayout.insetBy @padding
 
     super
     @_markLayoutAsFixed()
 
-  # TODO
-  getTextDescription: ->
-
-    
   # trigger button action:
   trigger: ->
     if @action? and @action != ""

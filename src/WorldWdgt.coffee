@@ -619,8 +619,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # disarms the slot and the membership rule takes over (proportional tracking).
     @add acm, nil, acm.cornerSpec
 
-    # TODO find a way to put this back
-    # demoMenus.createWelcomeMessageWindowAndShortcut()
     # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
     # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED
     # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). So the Makers' nine app classes sit
@@ -2218,19 +2216,16 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # other place we work with text.
 
     @cutBrowserEventListener = (event) =>
-      # TODO this should follow the fromBrowserEvent pattern
       @inputEventsQueue.push CutInputEvent.fromBrowserEvent event
 
     document.body.addEventListener "cut", @cutBrowserEventListener, false
     
     @copyBrowserEventListener = (event) =>
-      # TODO this should follow the fromBrowserEvent pattern
       @inputEventsQueue.push CopyInputEvent.fromBrowserEvent event
 
     document.body.addEventListener "copy", @copyBrowserEventListener, false
 
     @pasteBrowserEventListener = (event) =>
-      # TODO this should follow the fromBrowserEvent pattern
       @inputEventsQueue.push PasteInputEvent.fromBrowserEvent event
 
     document.body.addEventListener "paste", @pasteBrowserEventListener, false
@@ -2631,7 +2626,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # EPHEMERAL WORLD-LEVEL COLLECTIONS, same shape as the highlight/pinout sets above: none is
     # emptied by fullDestroyChildren (they are world state, not tree state) and none is emptied by
     # Widget._destroyNoSettle (which only unregisters from steppingWdgts / keyboardEventsReceivers /
-    # the click-outside set -- see the standing TODO there naming exactly this gap). So tearing down
+    # the click-outside set -- world-level collections are outside its remit). So tearing down
     # with a tooltip up, a menu open, handles shown, or a scroll still gliding leaks dead refs into
     # whatever comes next -- the next test in the same headless process, or the loaded desktop.
     #   toolTipsList              destroyToolTips would then read bounds off a destroyed tooltip

@@ -1,9 +1,9 @@
 class FolderWindowWdgt extends FrameWdgt
 
 
-  constructor: (@labelContent, @closeButton, @contents, @internal = false) ->
+  constructor: (@closeButton, @contents, @internal = false) ->
     @contents = new ScrollPanelWdgt new FolderPanelWdgt
-    super @contents, labelContent: "", closeButton: @closeButton
+    super @contents, closeButton: @closeButton
     # wide enough for a 3-column icon grid at the desktop-icon pitch
     # (3 × 105 + the grid's edge padding + window chrome); overrides the
     # generic 300×300 FrameWdgt default, which clips the third column

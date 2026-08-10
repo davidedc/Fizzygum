@@ -61,9 +61,6 @@ class SwitchButtonWdgt extends Widget
     super newBoundsForThisLayout
 
 
-  # TODO
-  getTextDescription: ->
-
   # if one calls "isSelected" it probably means that this SwitchButton
   # has two buttons: a "selected" button and an "unselected" button
   isSelected: ->
