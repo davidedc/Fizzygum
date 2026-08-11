@@ -151,7 +151,11 @@ ClippingAtRectangularBoundsMixin =
             child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
       _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-        clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
+        # the culling rect moves OPPOSITE the paint (a pixel at P shows the shadow of
+        # content at P − offset), as a VECTOR — any direction, any asymmetry.
+        # Rectangle.translateBy takes ONE argument (Point or scalar): passing -x, -y
+        # here would silently degrade the translate to a scalar of the x component.
+        clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
 
         if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
 

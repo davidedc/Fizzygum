@@ -1679,7 +1679,8 @@ assertion a recapture after a regression silently stores two different hashes an
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
   "waitNoInputsOngoing"` before a screenshot.
 - **Staleness diff-oracles: incremental-vs-full and incremental-vs-REBUILD** (`macroClosingRotatedIslandChildClearsFootprint`,
-  `macroOversizedShadowRemovalLeavesNoGhost`, `macroOversizedShadowChildIn{,Scaled}IslandRepaintsBuffer`): pin a broken-rect
+  `macroOversizedShadowRemovalLeavesNoGhost`, `macroOversizedShadowChildIn{,Scaled}IslandRepaintsBuffer`,
+  `macroShadowAnyDirectionRendersAndErases`, `macroShadowAsymmetricInIslandRepaintsBuffer`): pin a broken-rect
   invariant DIRECTLY, reference-independent — gesture/mutation, `yield "waitNoInputsOngoing"` + `yield "waitForScreenshotReady"`,
   `getImageData` read A off `world.worldCanvasContext` (NO takeScreenshot — a capture-side repaint would hide the bug), then the
   oracle, yield(s), read B, `@assertValuesEqual` an exact-0 RGB-differing-pixel count. TWO oracles, pick by WHERE the staleness
@@ -1687,12 +1688,21 @@ assertion a recapture after a regression silently stores two different hashes an
   NOT island-buffer-internal staleness — the composite re-reads the SAME kept buffer, so incremental and plain-full AGREE on
   stale buffer px; for anything inside a kept island buffer the oracle must be `world.resetImmutableBackBuffersCache()` (public;
   epoch-bump REBUILD of every buffer), followed by `yield "waitNoInputsOngoing"` + `yield "waitForScreenshotReady"` (the pump
-  advances a macro at most one step per cycle, so the read's segment runs a full painted cycle after the reset flushed). Two fixture rules
+  advances a macro at most one step per cycle, so the read's segment runs a full painted cycle after the reset flushed). The
+  REBUILD verb's full repaint is intrinsic self-invalidation (it `_fullChanged`s ITSELF), so it is also the PREFERRED oracle for a
+  plain scene when the screen-lane-vs-buffer diagnostic distinction isn't needed — no sanctioned private call
+  (`macroShadowAnyDirectionRendersAndErases` uses it island-free); reach for the sanctioned `world._fullChanged()` only when a
+  failure must distinguish A≠B (screen lane) from A==B≠C (buffer interior). Two fixture rules
   learned by falsified non-vacuity plants: (1) a move-transition fixture must move AWAY from the shadow/overhang trail
   (up-left for a down-right shadow) or the NEW position's damage covers the vacated band and the test can't see a source-side
   regression; (2) prove non-vacuity with a SURGICAL revert — a whole-mechanism kill can cancel (with the destination reach also
   dead, an oversized shadow is never fully PAINTED in a quiescent world, so under-paint and under-erase cancel exactly at the
-  remove step and the test passes vacuously).
+  remove step and the test passes vacuously); (3) an ASYMMETRIC-shadow staleness fixture must pick an offset whose shadow-pass
+  mis-cull error (|offset.x − offset.y|, shifting the effective paint window by (0, y−x)) EXCEEDS the flesh-out lanes'
+  `.expandBy(1).growBy WorldWdgt.maxShadowSize` slack in the direction it shifts — that slack is corner-ward (≈+7px
+  bottom-right, +1 top-left), so (12,4) (window shifts UP 8) is fully absorbed and passes vacuously under a scalar-cull plant,
+  while (−12,4) (window shifts DOWN 16 into 1px of top slack) fails it with a ~120-px stale band (measured, arbitrary-direction-shadows
+  arc Phase 0). Inside `fullImage` there is no such margin, so probe-level checks there catch even the absorbed offsets.
 - **Eval a snippet against the inspected object via the CONSOLE** (`macroInspectorWorkAreaEvaluatesCoffeeScript`): the new `InspectorWdgt`
   has no work/execution pane, but each widget's **"dev → console"** menu opens a `ConsoleWdgt` — an editable code area (`@textWidget`) plus
   "run selection" / "run all" buttons. **"run all" → `ConsoleWdgt.doAll`** compiles the code area's text and runs it with `@` = the console's

@@ -2794,7 +2794,9 @@ class Widget extends TreeNode
   # IMPORTANT: a widget NEVER bakes its own shadow into its back-buffer. The ONLY
   # shadow mechanism is this unified recursive re-paint: a widget that has a shadow
   # (@shadowInfo) re-paints its WHOLE subtree once more, faintly and offset, BEHIND
-  # the normal paint.
+  # the normal paint. The offset is an arbitrary integer-px VECTOR — any direction,
+  # asymmetric is fine: the pass is two vector operations (cull rect translated by
+  # −offset, ctx translated by +offset), with no directional assumption anywhere.
   # THE SHADOW-PASS PAINT CONTRACT: a shadow is the caster's per-pixel COVERAGE,
   # chroma always black — a shadow occludes light, so it may only darken, never
   # carry the caster's own colours (a caster lighter than the background would
@@ -2863,7 +2865,11 @@ class Widget extends TreeNode
   # In this function the parameter "appliedShadow" MUST contain a shadow info.
   # This parameter will cause the whole widget to be painted recursively as shadow.
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-    clippingRectangle = clippingRectangle.translateBy -appliedShadow.offset.x, -appliedShadow.offset.y
+    # the culling rect moves OPPOSITE the paint (a pixel at P shows the shadow of content
+    # at P − offset), as a VECTOR — any direction, any asymmetry. Rectangle.translateBy
+    # takes ONE argument (Point or scalar): passing -x, -y here would silently degrade
+    # the translate to a scalar of the x component, mis-culling asymmetric offsets.
+    clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
@@ -3113,9 +3119,15 @@ class Widget extends TreeNode
     if !bounds?
       bounds = @fullBounds()
       # if we do want the shadow, and there is one, then
-      # we have to consider bigger bounds for the full widget
+      # we have to consider bigger bounds for the full widget — the union of the
+      # content and the content translated by the offset (the imaging twin of
+      # shadowExtendedRect's union, deliberately WITHOUT its expandBy(1) AA margin:
+      # fullImage never included one, which keeps positive-offset images byte-identical).
+      # A corner-ward growBy would SHRINK the canvas for a negative offset component
+      # and clip the widget; the union covers any offset direction, and the
+      # -bounds.origin ctx translate below places an up-left extension correctly.
       if !noShadow and @hasShadow()
-        bounds = bounds.growBy @shadowInfo.offset
+        bounds = bounds.merge bounds.translateBy @shadowInfo.offset
 
 
     img = HTMLCanvasElement.createOfPhysicalDimensions bounds.extent().scaleBy ceilPixelRatio
@@ -3164,9 +3176,9 @@ class Widget extends TreeNode
   # Consumed by the flesh-out DESTINATION lanes and my own painted-footprint record
   # (_recordDrawnAreaForNextBrokenRects); the flesh-out SOURCE lanes need no shadow term
   # because that record is already shadow-inclusive — adding one there would double-cover and
-  # hide a record-time regression from the fixtures. (Whether the shadow PAINTER handles a
-  # negative offset is a separate, unexercised question — no producer exists; this rect is
-  # exact for whatever the painter paints.)
+  # hide a record-time regression from the fixtures. (The shadow PAINTER is equally
+  # direction-agnostic — the cull and ctx translates are vectors — so this rect is exact
+  # for any offset.)
   shadowExtendedRect: (aRect) ->
     return aRect if !@shadowInfo?
     (aRect.merge aRect.translateBy @shadowInfo.offset).expandBy 1

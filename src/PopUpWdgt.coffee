@@ -166,7 +166,7 @@ class PopUpWdgt extends Widget
 
   # shadow is added to a widget by
   # the ActivePointerWdgt while floatDragging
-  addShadow: (offset = new Point(5, 5), alpha = 0.2, color) ->
+  addShadow: (offset = new Point(5, 5), alpha = 0.2) ->
 
     if @isPopUpPinned() and @parent == world
       super new Point(3, 3), 0.3

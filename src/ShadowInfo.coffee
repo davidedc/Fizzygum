@@ -3,6 +3,9 @@
 
 class ShadowInfo
 
+  # offset is an arbitrary INTEGER-px vector — any direction, any asymmetry (up-left,
+  # mixed-sign, …) paints, erases and images correctly; integer per the cross-engine
+  # determinism convention (never .5 offsets). alpha ∈ [0,1].
   offset: nil
   alpha: 0
 
