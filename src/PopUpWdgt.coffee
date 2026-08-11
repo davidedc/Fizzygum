@@ -197,8 +197,9 @@ class PopUpWdgt extends Widget
     # to base the shadow on
     # P.S. this is the thing that causes the MenuWdgt buffer
     # to be painted after the creation.
+    # (addShadow's own _fullChanged closes the invalidation — the add dispatcher
+    # already set the dedup flag, so no trailing repaint call is needed here.)
     @addShadow()
-    @_fullChanged()
 
   destroy: ->
     super()

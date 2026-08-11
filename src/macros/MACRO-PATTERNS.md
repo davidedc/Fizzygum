@@ -1691,8 +1691,12 @@ assertion a recapture after a regression silently stores two different hashes an
   advances a macro at most one step per cycle, so the read's segment runs a full painted cycle after the reset flushed). The
   REBUILD verb's full repaint is intrinsic self-invalidation (it `_fullChanged`s ITSELF), so it is also the PREFERRED oracle for a
   plain scene when the screen-lane-vs-buffer diagnostic distinction isn't needed — no sanctioned private call
-  (`macroShadowAnyDirectionRendersAndErases` uses it island-free); reach for the sanctioned `world._fullChanged()` only when a
-  failure must distinguish A≠B (screen lane) from A==B≠C (buffer interior). Two fixture rules
+  (`macroShadowAnyDirectionRendersAndErases` and `macroHiddenShadowChildLeavesNoBand` use it island-free;
+  `macroOversizedShadowRemovalLeavesNoGhost` and the two shadow-contract isolation tests adopted it too); reach for the
+  sanctioned `world._fullChanged()` only when the PLAIN-full oracle is itself load-bearing — a failure must distinguish A≠B
+  (screen lane) from A==B≠C (buffer interior), the kept buffer IS the subject (`macroIslandBufferCacheByteIdentity` — a
+  rebuild would destroy the state under test), or a diagnostic depends on the buffer generation staying put
+  (`macroClosingRotatedIslandChildClearsFootprint`'s gen= atlas-warm forensics — the public verb bumps gen by construction). Two fixture rules
   learned by falsified non-vacuity plants: (1) a move-transition fixture must move AWAY from the shadow/overhang trail
   (up-left for a down-right shadow) or the NEW position's damage covers the vacated band and the test can't see a source-side
   regression; (2) prove non-vacuity with a SURGICAL revert — a whole-mechanism kill can cancel (with the destination reach also

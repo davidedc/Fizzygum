@@ -2936,7 +2936,7 @@ class Widget extends TreeNode
   toggleVisibility: ->
     @isVisible = not @isVisible
     WorldWdgt.noteVisibilityOrCollapseChange()
-    @_fullChanged()
+    @_fullChangedIncludingShadowOwner()
 
   # SELF-SETTLE (single-mutation tier). _beforeChildCollapsed now tears down the bar buttons through the
   # NON-settling core (_destroyNoSettle), and _reactToChildCollapsed re-fits via immediate mutators + _reFitContainer, so
@@ -2959,7 +2959,7 @@ class Widget extends TreeNode
     @collapsed = true
     WorldWdgt.noteVisibilityOrCollapseChange()
     @_scheduleRelayoutRespectingPhase()
-    @_fullChanged()
+    @_fullChangedIncludingShadowOwner()
     @parent?._reactToChildCollapsed? @
 
   # SELF-SETTLE (single-mutation tier). _beforeChildUnCollapsed re-creates the bar buttons through the
@@ -2985,7 +2985,7 @@ class Widget extends TreeNode
     @collapsed = false
     WorldWdgt.noteVisibilityOrCollapseChange()
     @_scheduleRelayoutRespectingPhase()
-    @_fullChanged()
+    @_fullChangedIncludingShadowOwner()
     @parent?._reactToChildUnCollapsed? @
 
   
@@ -3028,8 +3028,10 @@ class Widget extends TreeNode
     @parent?._invalidateLayout(@)
     @__breakMoveResizeCaches()
     WorldWdgt.noteStructureChange()
+    # invalidate BEFORE the detach (same order as the destroy path): the shadow-owner walk
+    # needs the parent chain, which removeChild severs.
+    @_fullChangedIncludingShadowOwner()
     @parent.removeChild @
-    @_fullChanged()
 
   colloquialName: ->
     "generic widget"
@@ -3239,8 +3241,12 @@ class Widget extends TreeNode
 
   # fullChanged, but shadow-aware: if I contribute to an ancestor's shadow, the repaint
   # must start from the first parent OWNING that shadow (breaking only my own rect would
-  # leave its stale shadow on screen), so walk up to it. Used by the structural verbs
-  # (destroy/hide/show/add); many other bare @_fullChanged sites could arguably use this too.
+  # leave its stale shadow on screen), so walk up to it. A bare @_fullChanged needs this
+  # walk iff the operation changes what the subtree CONTRIBUTES to an ancestor-owned
+  # silhouette (appear/disappear/shape) — a move erases via the recorded shadow-inclusive
+  # footprint, z-order cannot change the opacity union, and add/removeShadow's receiver
+  # IS the owner, so those stay bare. Used by the appear/disappear structural verbs
+  # (destroy/hide/show/toggleVisibility/removeFromTree/collapse/uncollapse/add).
   _fullChangedIncludingShadowOwner: ->
     firstParentOwningMyShadow = @firstParentOwningMyShadow()
     if firstParentOwningMyShadow?
@@ -3808,6 +3814,13 @@ class Widget extends TreeNode
     @rootForFocus()?.isLastChild()
 
   bringToForeground: ->
+    # No-op guards: an already-last focus-root cannot be raised further, and a PARENTLESS
+    # root (the world itself — every empty-desktop click routes here via mouseDownLeft —
+    # or an orphan) has nothing to be raised within. In both cases the raise is structural
+    # no-op and the invalidation below a gratuitous full repaint of the root — the
+    # overwhelmingly common case, since every left-click press routes here. Suppressing
+    # it is pixel-identical: repaint is byte-idempotent.
+    return if @isInForeground() or !@rootForFocus()?.parent?
     @rootForFocus()?.moveAsLastChild()
     # cross-invalidation-sanctioned: z-order structural verb — invalidates the focus-root
     # it just raised (the moved widget), same dispatcher shape as _addNoSettle's

@@ -54,8 +54,9 @@ class ToolTipWdgt extends Widget
     @_applyMoveTo pos.subtract new Point 8, @height()
     @_moveWithin world
     world.add @
+    # addShadow's own _fullChanged closes the invalidation (the add already set the
+    # dedup flag) — no trailing repaint call needed.
     @addShadow()
-    @_fullChanged()
     world.destroyToolTips()
     world.toolTipsList.add @
     

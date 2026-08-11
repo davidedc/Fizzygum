@@ -79,6 +79,68 @@ swCanvasRefreshScheduled = false  # landed, repaint not applied yet    — backs
 swCanvasAtlasRequested = {}       # idString -> true (request each atlas once)
 swCanvasMissingAtlases = {}       # idString -> true (warn once per missing atlas)
 
+# --- Surgical cold-glyph attribution -----------------------------------------
+# WHO drew cold placeholders is recorded AT THE DRAW: SWCanvas's fillText RETURNS
+# the per-draw status, and the paint loop maintains world.paintingWidget — so the
+# atlas-warm refresh can repaint exactly the affected widgets instead of the whole
+# world. Only NO_ATLAS (code 3) is recorded: a pending/possible load will cure it.
+# PARTIAL_ATLAS (code 4 — chars missing from a LOADED atlas, e.g. the menu arrow
+# glyph at 12px) is deliberately NOT recorded: no load will change it, and
+# recording it would keep the pending set non-empty forever. Cache entries SET
+# into the immutable-back-buffer cache while the cold window is open are suspected
+# poisoned (they may embed placeholder pixels, and entries are shared content-keyed
+# across widgets, so a kept entry would re-blit placeholders on the next hit) and
+# are recorded for eviction — over-capture only costs a rebuild on the next hit.
+# A cold draw OUTSIDE any widget paint cannot be attributed and falls back to the
+# whole-world reset for that batch. A never-vendored atlas's widgets re-record on
+# each repaint and drain only when atlas arrivals stop (bounded: arrivals are
+# front-loaded; the repaints are idempotent).
+swCanvasColdGlyphWidgets = []      # widgets that drew NO_ATLAS placeholders since the last refresh
+swCanvasPoisonedCacheKeys = []     # immutable-back-buffer cache keys set during the cold window
+swCanvasColdGlyphUnattributed = false
+swCanvasPoisonedKeyRecorderOn = false
+
+swCanvasColdWindowOpen = ->
+  swCanvasAtlasPending > 0 or swCanvasRefreshScheduled or
+    swCanvasColdGlyphWidgets.length > 0 or swCanvasColdGlyphUnattributed
+
+swCanvasInstallPoisonedKeyRecorder = ->
+  return if swCanvasPoisonedKeyRecorderOn
+  cache = window.world?.cacheForImmutableBackBuffers
+  return unless cache?
+  swCanvasPoisonedKeyRecorderOn = true
+  # instance wrap, serialization-safe: the world is deliberately not a table record,
+  # so its caches (and this closure) never meet the serializer's walker
+  originalCacheSet = cache.set
+  cache.set = (key, value, onDispose) ->
+    if swCanvasColdWindowOpen()
+      swCanvasPoisonedCacheKeys.push key if swCanvasPoisonedCacheKeys.indexOf(key) == -1
+    originalCacheSet.call @, key, value, onDispose
+  # A cache HIT on a poisoned entry poisons the CONSUMER too: entries are shared
+  # content-keyed across widgets, and a widget REBUILT mid-cold-window (layout churn
+  # recreates e.g. axis labels) blits the poisoned entry WITHOUT any fillText — no
+  # cold draw fires for it, and the originally-recorded instance may be detached by
+  # refresh time. Recording at the hit closes that hole; a hit outside any widget
+  # paint falls back to the whole-world reset like an unattributed draw.
+  originalCacheGet = cache.get
+  cache.get = (key) ->
+    hit = originalCacheGet.call @, key
+    if hit? and swCanvasPoisonedCacheKeys.indexOf(key) != -1
+      w = window.world?.paintingWidget
+      if w?
+        swCanvasColdGlyphWidgets.push w if swCanvasColdGlyphWidgets.indexOf(w) == -1
+      else
+        swCanvasColdGlyphUnattributed = true
+    hit
+
+swCanvasRecordColdGlyphDraw = ->
+  w = window.world?.paintingWidget
+  if w?
+    swCanvasColdGlyphWidgets.push w if swCanvasColdGlyphWidgets.indexOf(w) == -1
+  else
+    swCanvasColdGlyphUnattributed = true
+  swCanvasInstallPoisonedKeyRecorder()
+
 # When a cold atlas was drawn its glyphs went into a CACHED back buffer as
 # placeholder boxes. A plain repaint just re-blits that cache, so once the atlas
 # is warm we must reset the immutable-back-buffer cache (forcing the text widgets
@@ -90,10 +152,21 @@ swCanvasScheduleTextRefresh = ->
   swCanvasRefreshScheduled = true
   doRefresh = ->
     try
-      # resetImmutableBackBuffersCache resets the text cache AND bumps the island-buffer epoch (so a
-      # rotated/scaled island — a further cache downstream — also rebuilds from the now-warm text, §4.4)
-      # AND repaints the world: the full repaint is intrinsic to the reset, done world-side.
-      window.world?.resetImmutableBackBuffersCache?()
+      # Surgical path: evict exactly the suspected-poisoned cache entries and repaint
+      # exactly the widgets that drew cold placeholders (through their shadow owners;
+      # the island-buffer epoch stays put — each widget's own damage deposits into its
+      # island buffer through the exact flesh-out lanes). The whole-world reset remains
+      # the fallback when a cold draw could not be attributed to a painting widget.
+      # An arrival with NOTHING recorded needs NO repaint at all: the recorder was live
+      # from before the first draw, so no screen pixel or cache entry can hold this
+      # atlas's placeholders (e.g. the load was triggered by a flagged calibration probe).
+      if swCanvasColdGlyphUnattributed or not window.world?.noteColdGlyphRegionsWarm?
+        window.world?.resetImmutableBackBuffersCache?()
+      else if swCanvasColdGlyphWidgets.length > 0
+        window.world.noteColdGlyphRegionsWarm swCanvasColdGlyphWidgets, swCanvasPoisonedCacheKeys
+      swCanvasColdGlyphWidgets = []
+      swCanvasPoisonedCacheKeys = []
+      swCanvasColdGlyphUnattributed = false
     finally
       # Cleared only AFTER the reset is applied, so anyTextDirty() stays true for the WHOLE window in
       # which the screen may still be showing placeholder boxes. In a `finally` because this flag now
@@ -187,6 +260,13 @@ installSWCanvasExtensions = ->
     swContextProto.fillText = (text, x, y, maxWidth) ->
       result = originalFillText.call @, text, x, y, maxWidth
       try
+        # NO_ATLAS placeholders: record WHO drew them (see the surgical
+        # cold-glyph attribution block above) so the warm-up refresh can
+        # repaint exactly the affected widgets. Calibration probes rasterise
+        # into throwaway canvases (pixels never reach the screen) and are
+        # flagged out of the recording.
+        if result?.status?.code == 3 and not @isFizzygumCalibrationProbe
+          swCanvasRecordColdGlyphDraw()
         swCanvasEnsureAtlasForFont @_core?._font, @_core?._textPixelDensity
       catch err
       result

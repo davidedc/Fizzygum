@@ -225,14 +225,35 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
   # downstream island buffers rebuild from the now-warm text, AND repaints everything — dropping the
   # cache means every text-bearing pixel on screen may be stale, so the full repaint is intrinsic to
-  # the reset, not the caller's business (widget-citizenship point 2: I invalidate myself). Caller:
-  # swCanvasScheduleTextRefresh (atlas warm). The requested repaint needs no capture-side flag:
-  # every pixel read rides the end-of-cycle seam (MacroToolkit.captureAtEndOfCycle, delivered
-  # after _updateBroken), so a read can never land between this request and its flush.
+  # the reset, not the caller's business (widget-citizenship point 2: I invalidate myself). Callers:
+  # the test ground-truth oracles, and swCanvasScheduleTextRefresh's UNATTRIBUTED fallback — the
+  # attributed atlas-warm path is the surgical noteColdGlyphRegionsWarm below. The requested repaint
+  # needs no capture-side flag: every pixel read rides the end-of-cycle seam
+  # (MacroToolkit.captureAtEndOfCycle, delivered after _updateBroken), so a read can never land
+  # between this request and its flush.
   resetImmutableBackBuffersCache: ->
     @cacheForImmutableBackBuffers?.reset?()
     WorldWdgt.immutableBackBufferGeneration++
     @_fullChanged()
+
+  # PUBLIC notification (SWCanvas pages only — the fillText seam in SWCanvasElement-extensions
+  # records the callers per DRAW): these widgets painted placeholder glyphs while their atlas
+  # was cold, and the atlas has now warmed. Evict exactly the cache entries built during the
+  # cold window (they may embed placeholder pixels, and entries are shared content-keyed across
+  # widgets, so a kept entry would re-blit placeholders on the next hit) and repaint exactly
+  # the affected widgets, through their shadow owners. The island-buffer epoch stays put: each
+  # widget's own damage deposits into its island buffer through the exact flesh-out lanes.
+  # resetImmutableBackBuffersCache above remains the whole-world verb (test oracles; the
+  # unattributed-cold-draw fallback).
+  noteColdGlyphRegionsWarm: (widgets, cacheKeys) ->
+    for key in cacheKeys
+      @cacheForImmutableBackBuffers?.remove key
+    for w in widgets
+      continue unless w? and w.root() == @   # destroyed/detached: its pixels are already erased
+      # cross-invalidation-sanctioned: atlas-warm orchestration — the world repaints the
+      # widgets recorded as having painted cold placeholder glyphs
+      w._fullChangedIncludingShadowOwner()
+    return
 
   # PUBLIC notification — a widget currently marked in my broken-bookkeeping lists was
   # deep-copied: the copy must inherit the mark (it will paint this cycle exactly where the

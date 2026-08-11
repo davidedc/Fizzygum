@@ -116,6 +116,10 @@ class PreferencesAndSettings
     # go through the factory so the SWCanvas backend switch reaches this probe
     canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point size, size
     ctx = canvas.getContext "2d", willReadFrequently: true
+    # a THROWAWAY calibration rasterisation: its pixels never reach the screen, so the
+    # SWCanvas cold-glyph recorder must not count its (possibly placeholder) draw
+    # (SWCanvasElement-extensions' surgical atlas-warm attribution reads this flag)
+    ctx.isFizzygumCalibrationProbe = true
     ctx.font = "1px serif"
     maxX = Math.ceil ctx.measureText(str).width
     ctx.fillStyle = Color.BLACK.toString()
