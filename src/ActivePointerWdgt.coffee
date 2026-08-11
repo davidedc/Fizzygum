@@ -910,15 +910,6 @@ class ActivePointerWdgt extends Widget
 
   
   # ActivePointerWdgt tools
-  
-  # ActivePointerWdgt floatDragging optimization
-  _applyMoveBy: (delta) ->
-    if delta.isZero() then return
-    world.disableTrackChanges()
-    @__breakMoveResizeCaches()
-    super delta
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
 
   processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
 

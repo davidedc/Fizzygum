@@ -1955,8 +1955,8 @@ class Widget extends TreeNode
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
   # now (what the FLOWRULE always wanted), a thin wrapper over the shared move core _applyMoveByBase. The "AndNotify"
   # suffix is historical -- but this twin is NOT collapsible into _applyMoveByBase (2026-07-01 twin-collapse verdict):
-  # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization and the
-  # ActivePointerWdgt float-drag OVERRIDES (which repaint via @_changed, not @_fullChanged), whereas bare _applyMoveByBase
+  # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization OVERRIDE
+  # (which repaints via @_changed, not @_fullChanged) and TransformFrameWdgt's anchor-ride override, whereas bare _applyMoveByBase
   # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveByBase
   # would route arrange moves through them on clipping panels and change their dirty regions -- so the two names are a
   # genuine dispatch distinction, not redundant twins. (Only the truly-redundant SILENT-commit twins collapsed in that
