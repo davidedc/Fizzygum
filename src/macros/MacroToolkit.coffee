@@ -202,16 +202,18 @@ class MacroToolkit
     world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing()
 
   # Used by a macro's screenshot step (the "waitForScreenshotReady" yield in
-  # Macro's pump): decide, across cycles, when the canvas is safe to capture
-  # deterministically. Native: capture immediately. SWCanvas: wait until glyph
-  # atlases have loaded (no text dirty — that predicate also covers a landed
-  # atlas whose placeholder-clearing refresh has not been APPLIED yet) and until
-  # the warm repaint that refresh requests world-side (swCanvasScheduleTextRefresh
-  # → resetImmutableBackBuffersCache) has FLUSHED through _updateBroken — so no
-  # capture can read placeholder boxes. Deliberately NO forced pre-capture full
-  # repaint: the capture reads the INCREMENTAL (broken-rect) canvas, keeping
-  # screenshots sensitive to repaint/staleness defects a forced full repaint
-  # would erase. This is the single SWCanvas screenshot settle gate.
+  # Macro's pump) and polled by the page-side rigs: decide, across cycles, when
+  # the canvas is safe to capture deterministically. Native: capture immediately.
+  # SWCanvas: wait until glyph atlases have loaded (no text dirty — that
+  # predicate also covers a landed atlas whose placeholder-clearing refresh has
+  # not been APPLIED yet). The refresh-APPLIED-but-repaint-not-yet-painted
+  # window needs no gate term: every pixel read rides the end-of-cycle seam
+  # (captureAtEndOfCycle below, delivered after _updateBroken), so any repaint
+  # requested earlier in the read's cycle has landed by the read. Deliberately
+  # NO forced pre-capture full repaint: the capture reads the INCREMENTAL
+  # (broken-rect) canvas, keeping screenshots sensitive to repaint/staleness
+  # defects a forced full repaint would erase. This is the single SWCanvas
+  # screenshot settle gate.
   readyForMacroScreenshot: ->
     # never capture while a scroll-momentum glide is settling (matters for
     # native captures too, hence before the SWCanvas-only early return)
@@ -219,9 +221,27 @@ class MacroToolkit
     return true unless window.FIZZYGUM_USE_SWCANVAS
     if world.anyTextDirty()
       return false
-    if WorldWdgt.warmRepaintFlushPending
-      return false
     return true
+
+  # The END-OF-CYCLE pixel-read seam: a caller registers a capture thunk and doOneCycle
+  # delivers every pending one right after _updateBroken — so a delivered thunk reads a
+  # fully-flushed, just-painted frame, with any repaint requested earlier in the SAME cycle
+  # (e.g. a warm-atlas cache reset) already landed. Registered by the macro screenshot verb
+  # (which routes compareScreenshots through it) and callable from page-side riggery as
+  # world.macroToolkit.captureAtEndOfCycle(fn) — the serialization rigs wrap it in a Promise.
+  # nil when empty, so the per-cycle drain costs one existence check.
+  endOfCycleCaptureRequests: nil
+
+  captureAtEndOfCycle: (fn) ->
+    (@endOfCycleCaptureRequests ?= []).push fn
+    return
+
+  drainEndOfCycleCaptures: ->
+    return unless @endOfCycleCaptureRequests?
+    requests = @endOfCycleCaptureRequests
+    @endOfCycleCaptureRequests = nil
+    fn() for fn in requests
+    return
 
   # other useful tween functions here:
   # https://github.com/ashblue/simple-tween-js/blob/master/tween.js
@@ -1083,7 +1103,11 @@ class MacroToolkit
       takeScreenshot_InputEvents_Macro = (screenShotImageName) ->
         yield "waitNoInputsOngoing"
         yield "waitForScreenshotReady"
-        world.automator.player.compareScreenshots screenShotImageName
+        # capture at the END of this cycle (right after _updateBroken) — the natural end of
+        # a painted frame. The hash wait below cannot pass before the capture ran: the pump
+        # re-checks it only next cycle, and the pending count increments synchronously
+        # inside the delivered compareScreenshots.
+        @captureAtEndOfCycle -> world.automator.player.compareScreenshots screenShotImageName
         yield "waitForScreenshotHash"
     """
 

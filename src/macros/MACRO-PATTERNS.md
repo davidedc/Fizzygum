@@ -1686,8 +1686,8 @@ assertion a recapture after a regression silently stores two different hashes an
   can live: `world._fullChanged()` (macro-private-call-sanctioned; ground-truth full REPAINT) catches screen-plane staleness but
   NOT island-buffer-internal staleness — the composite re-reads the SAME kept buffer, so incremental and plain-full AGREE on
   stale buffer px; for anything inside a kept island buffer the oracle must be `world.resetImmutableBackBuffersCache()` (public;
-  epoch-bump REBUILD of every buffer), followed by `yield "waitNoInputsOngoing"` + `yield "waitForScreenshotReady"` (the reset
-  sets the warm-repaint latch, so the ready-wait guarantees the rebuild's repaint landed before the read). Two fixture rules
+  epoch-bump REBUILD of every buffer), followed by `yield "waitNoInputsOngoing"` + `yield "waitForScreenshotReady"` (the pump
+  advances a macro at most one step per cycle, so the read's segment runs a full painted cycle after the reset flushed). Two fixture rules
   learned by falsified non-vacuity plants: (1) a move-transition fixture must move AWAY from the shadow/overhang trail
   (up-left for a down-right shadow) or the NEW position's damage covers the vacated band and the test can't see a source-side
   regression; (2) prove non-vacuity with a SURGICAL revert — a whole-mechanism kill can cancel (with the destination reach also

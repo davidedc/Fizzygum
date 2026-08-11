@@ -222,23 +222,16 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # world-snapshot serialization; matched to islandBufferCacheEnabled). See docs/archive/island-buffer-cache-plan.md §6.
   @immutableBackBufferGeneration: 0
 
-  # True between a resetImmutableBackBuffersCache full-repaint request and its flush at the
-  # next _updateBroken. The SWCanvas screenshot gate (MacroToolkit.readyForMacroScreenshot)
-  # refuses to capture while it is set: in that window the canvas may still show placeholder
-  # boxes even though anyTextDirty() already reads false (the refresh was APPLIED, its repaint
-  # not yet painted). Class property like the generation above (screenshot-settle bookkeeping,
-  # not world state to serialize or teardown-audit).
-  @warmRepaintFlushPending: false
-
   # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
   # downstream island buffers rebuild from the now-warm text, AND repaints everything — dropping the
   # cache means every text-bearing pixel on screen may be stale, so the full repaint is intrinsic to
   # the reset, not the caller's business (widget-citizenship point 2: I invalidate myself). Caller:
-  # swCanvasScheduleTextRefresh (atlas warm).
+  # swCanvasScheduleTextRefresh (atlas warm). The requested repaint needs no capture-side flag:
+  # every pixel read rides the end-of-cycle seam (MacroToolkit.captureAtEndOfCycle, delivered
+  # after _updateBroken), so a read can never land between this request and its flush.
   resetImmutableBackBuffersCache: ->
     @cacheForImmutableBackBuffers?.reset?()
     WorldWdgt.immutableBackBufferGeneration++
-    WorldWdgt.warmRepaintFlushPending = true
     @_fullChanged()
 
   # PUBLIC notification — a widget currently marked in my broken-bookkeeping lists was
@@ -1345,10 +1338,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if @domBlitContext? and @broken.length != 0
       @blitRenderCanvasToDOM()
 
-    # any full repaint a resetImmutableBackBuffersCache requested has now been painted
-    # (every pending damage mark is consumed above) — the screenshot gate may capture
-    WorldWdgt.warmRepaintFlushPending = false
-
     @_resetDataStructuresForBrokenRects()
 
     @healingRectanglesPhase = false
@@ -1821,6 +1810,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     # here is where the repainting on screen happens
     @_updateBroken()
+
+    # END-OF-CYCLE pixel-read seam: deliver pending capture requests (macro screenshots,
+    # page-side rig reads) now that this cycle's damage — including any repaint a cache
+    # reset requested earlier in the cycle — has been painted. The position IS the contract:
+    # delivered one cycle earlier, a read can catch a requested-but-unflushed warm repaint
+    # (fuzz-proven at adoption). See MacroToolkit.captureAtEndOfCycle. Guarded like the
+    # pump: absent from production.
+    @macroToolkit?.drainEndOfCycleCaptures()
 
     # END-OF-FRAME compile station: budget-drain pending class-source compiles
     # AFTER paint, so a lazy-part load burst spends only the frame time paint
