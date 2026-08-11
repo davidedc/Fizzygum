@@ -547,10 +547,16 @@ class TransformFrameWdgt extends PanelWdgt
       bctx.clipToRectangle clipRect.left() * ceilPixelRatio, clipRect.top() * ceilPixelRatio, clipRect.width() * ceilPixelRatio, clipRect.height() * ceilPixelRatio
     prevIslandBuffer = world.paintingIntoIslandBuffer
     world.paintingIntoIslandBuffer = @
-    @children.forEach (child) =>
-      child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, clipRect, nil
-    world.paintingIntoIslandBuffer = prevIslandBuffer
-    bctx.restore()
+    try
+      @children.forEach (child) =>
+        child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, clipRect, nil
+    finally
+      # restore in `finally`: a throwing child paint propagates to _updateBroken's per-rect
+      # catch, and a skipped restore would leave the world flag stuck on this island (every
+      # later ordinary paint would stash spurious buffer-dirty deposits against it via
+      # Widget._recordDrawnAreaForNextBrokenRects) and the buffer ctx clipped
+      world.paintingIntoIslandBuffer = prevIslandBuffer
+      bctx.restore()
     buffer
 
   # Dispatch the non-identity composite (identity is handled by the caller). A pure uniform

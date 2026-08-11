@@ -528,10 +528,10 @@ class InspectorWdgt extends Widget
       # classes diagram
       justAcounter = 0
       anotherCount = 0
-      # reverse works in-place, so we need to remember
-      # to put them back right after we are done
-      @classesButtons.reverse()
-      for eachClassButton in @classesButtons
+      # base class first: iterate a reversed COPY — reversing @classesButtons in
+      # place would need a restoring second reverse, which an exception mid-loop
+      # would skip, leaving the stored order persistently flipped
+      for eachClassButton in @classesButtons.slice().reverse()
         if eachClassButton.parent == @
           buttonBounds = new Rectangle new Point(Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@internalPadding + justAcounter))
           buttonBounds = buttonBounds.setBoundsWidthAndHeight 120 + @classNamesTextPadding * 2, 15 + @classNamesTextPadding * 2
@@ -546,7 +546,6 @@ class InspectorWdgt extends Widget
           justAcounter += 20
 
         anotherCount++
-      @classesButtons.reverse()
       @layoutLastLabelInHierarchy Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2 * @internalPadding + justAcounter)
 
       @hierarchyBackgroundPanel._applyBounds (new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding

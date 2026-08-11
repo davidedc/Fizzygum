@@ -1318,44 +1318,48 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     @errorsWhileRepainting = []
 
-    @broken.forEach (rect) =>
-      if !rect?
-        return
-      if rect.isNotEmpty()
-        try
-          # public-call-sanctioned: fullPaintIntoAreaOrBlitFromBackBuffer is the polymorphic
-          # paint recursion (parent paints child through it, tree-wide) — it stays public;
-          # the paint executor here is simply its top-level entry.
-          @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
-        catch err
-          @resetWorldCanvasContext()
-          @_queueErrorForLaterReporting err
-          @_hideOffendingWidget()
-          @_softResetWorld()
+    # the phase flag clears in `finally`: the per-rect catch below contains widget paint
+    # errors, but a throw from the whole-screen error recovery (or any other escape) would
+    # otherwise leave the flag stuck true across frames
+    try
+      @broken.forEach (rect) =>
+        if !rect?
+          return
+        if rect.isNotEmpty()
+          try
+            # public-call-sanctioned: fullPaintIntoAreaOrBlitFromBackBuffer is the polymorphic
+            # paint recursion (parent paints child through it, tree-wide) — it stays public;
+            # the paint executor here is simply its top-level entry.
+            @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
+          catch err
+            @resetWorldCanvasContext()
+            @_queueErrorForLaterReporting err
+            @_hideOffendingWidget()
+            @_softResetWorld()
 
-    # IF we got errors while repainting, the
-    # screen might be in a bad state (because everything in front of the
-    # "bad" widget is not repainted since the offending widget has
-    # thrown, so nothing in front of it could be painted properly)
-    # SO do COMPLETE repaints of the screen and hide
-    # further offending widgets until there are no more errors
-    # (i.e. the offending widgets are progressively hidden so eventually
-    # we should repaint the whole screen without errors, hopefully)
-    if @errorsWhileRepainting.length != 0
-      @_findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
+      # IF we got errors while repainting, the
+      # screen might be in a bad state (because everything in front of the
+      # "bad" widget is not repainted since the offending widget has
+      # thrown, so nothing in front of it could be painted properly)
+      # SO do COMPLETE repaints of the screen and hide
+      # further offending widgets until there are no more errors
+      # (i.e. the offending widgets are progressively hidden so eventually
+      # we should repaint the whole screen without errors, hopefully)
+      if @errorsWhileRepainting.length != 0
+        @_findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
 
-    if @showRedraws
-      @_showBrokenRects @worldCanvasContext
+      if @showRedraws
+        @_showBrokenRects @worldCanvasContext
 
-    # Under the SWCanvas backend, everything above painted into the software
-    # render surface; lift it onto the DOM <canvas id="world"> so it becomes
-    # visible. Only when something was actually painted this cycle.
-    if @domBlitContext? and @broken.length != 0
-      @blitRenderCanvasToDOM()
+      # Under the SWCanvas backend, everything above painted into the software
+      # render surface; lift it onto the DOM <canvas id="world"> so it becomes
+      # visible. Only when something was actually painted this cycle.
+      if @domBlitContext? and @broken.length != 0
+        @blitRenderCanvasToDOM()
 
-    @_resetDataStructuresForBrokenRects()
-
-    @healingRectanglesPhase = false
+      @_resetDataStructuresForBrokenRects()
+    finally
+      @healingRectanglesPhase = false
 
     # DEBUG (auditPaintTimeLayoutScheduling, default off): report any layout scheduled DURING this frame's paint
     # pass, then reset for the next frame. A non-empty log => paint was NOT read-only (a widget scheduled layout
