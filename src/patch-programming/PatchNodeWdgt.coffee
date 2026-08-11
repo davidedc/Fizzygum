@@ -111,16 +111,9 @@ class PatchNodeWdgt extends Widget
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # Disable broken-rectangle tracking while the children are repositioned: every subwidget is within my
-    # own bounds, so my single broken rectangle already covers them. (Anything a subwidget sticks out past
-    # my boundary is still painted and moved correctly.)
-    world.disableTrackChanges()
-
-    # subclass hook: position this node's own children within the (now-final) frame.
-    @_layOutNodeContents()
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+    @_repaintAsOneUnit =>
+      # subclass hook: position this node's own children within the (now-final) frame.
+      @_layOutNodeContents()
 
     super
     @_markLayoutAsFixed()

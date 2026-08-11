@@ -23,41 +23,28 @@ class GlassBoxBottomWdgt extends BoxWdgt
 
   _reLayoutSelf: ->
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    thumbnailSize = @width()
+      thumbnailSize = @width()
 
-    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    for w in childrenNotHandlesNorCarets
+      for w in childrenNotHandlesNorCarets
 
-      # a menu item is sized to its text; other contents become square thumbnails
-      # (instead of `w instanceof MenuItemWdgt`; type-test-elimination campaign)
-      if w.isTextSizedGlassBoxItem?()
-        w._applyMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
-      else
-        if w.idealRatioWidthToHeight?
-          ratio = w.idealRatioWidthToHeight
-          if ratio > 1
-            # more wide than tall
-            w._applyExtent new Point thumbnailSize, thumbnailSize / ratio
-          else
-            # more tall than wide
-            w._applyExtent new Point thumbnailSize * ratio, thumbnailSize
+        # a menu item is sized to its text; other contents become square thumbnails
+        # (instead of `w instanceof MenuItemWdgt`; type-test-elimination campaign)
+        if w.isTextSizedGlassBoxItem?()
+          w._applyMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
         else
-          w._applyExtent new Point thumbnailSize, thumbnailSize
+          if w.idealRatioWidthToHeight?
+            ratio = w.idealRatioWidthToHeight
+            if ratio > 1
+              # more wide than tall
+              w._applyExtent new Point thumbnailSize, thumbnailSize / ratio
+            else
+              # more tall than wide
+              w._applyExtent new Point thumbnailSize * ratio, thumbnailSize
+          else
+            w._applyExtent new Point thumbnailSize, thumbnailSize
 
-        w._applyMoveTo @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+          w._applyMoveTo @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())

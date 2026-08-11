@@ -380,13 +380,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   healingRectanglesPhase: false
 
-  # we use the trackChanges array as a stack to
-  # keep track whether a whole segment of code
-  # (including all function calls in it) will
-  # record the broken rectangles.
-  # Using a stack we can correctly track nested "disabling of track
-  # changes" correctly.
-  trackChanges: [true]
+  # damage-suppression nesting depth (Widget._repaintAsOneUnit): while > 0,
+  # _changed/_fullChanged marks are dropped — the unit's owner issues the one
+  # covering mark at close. Transient (never serialized, like the trackChanges
+  # stack it replaced); the teardown re-zeroes it, and _updateBroken self-heals
+  # + reports DAMAGE_SUPPRESSION_UNBALANCED (a headless fail-gate token) if it
+  # is ever nonzero at flush.
+  _damageSuppressionDepth: 0
 
   widgetsWithMaybeChangedPaintBounds: []
   widgetsWithMaybeChangedFullPaintBounds: []
@@ -1289,12 +1289,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     for m in @widgetsWithMaybeChangedFullPaintBounds
       m.fullPaintBoundsMaybeChanged = false
 
-  disableTrackChanges: ->
-    @trackChanges.push false
-
-  maybeEnableTrackChanges: ->
-    @trackChanges.pop()
-
   _updateBroken: ->
     @broken = []
     @duplicatedBrokenRectsTracker = {}
@@ -1376,8 +1370,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       console.log "PAINT-SCHEDULES frame=" + WorldWdgt.frameCount + " total=" + @_paintTimeLayoutSchedules.length + " :: " + parts.join(", ")
     @_paintTimeLayoutSchedules = nil
 
-    if @trackChanges.length != 1 and @trackChanges[0] != true
-      alert "trackChanges array should have only one element (true)"
+    # tripwire for the one corruption the _repaintAsOneUnit construct cannot
+    # prevent (direct field tampering / a future bug): a nonzero depth at flush
+    # means damage recording is silently OFF — report on the fail-gated token
+    # channel and HEAL, so a live world degrades loudly-but-visibly instead of
+    # going dark
+    if @_damageSuppressionDepth isnt 0
+      console.error "DAMAGE_SUPPRESSION_UNBALANCED depth=" + @_damageSuppressionDepth
+      @_damageSuppressionDepth = 0
 
   # SWCanvas backend only: copy the whole software render surface onto the DOM
   # <canvas id="world"> so the frame becomes visible. (Per-broken-rect partial
@@ -2679,11 +2679,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
     # list never was, so it accumulated dead widgets for the whole life of the page.
     @widgetsGivingErrorWhileRepainting = []
-    # the track-changes STACK: dying between disableTrackChanges and maybeEnableTrackChanges leaves
-    # it unbalanced, and Widget._changed() reads its TOP -- so a false top means damage stops being
-    # recorded and the world stops repainting. It is not serialized and not restored by the loader,
-    # so re-balancing it is the only thing that can put a loaded world back on its feet.
-    @trackChanges = [true]
+    # the damage-suppression depth: direct tampering (the serialization rig does it
+    # deliberately) leaves it nonzero, and Widget._changed() drops marks while it is —
+    # so a stuck depth means damage stops being recorded and the world stops repainting.
+    # It is not serialized and not restored by the loader, so re-zeroing it is the only
+    # thing that can put a loaded world back on its feet (the _updateBroken tripwire
+    # heals mid-life corruption the same way).
+    @_damageSuppressionDepth = 0
     # the one-shot "this info doc was already created" flags (InfoDocs.REGISTRY entries, set as
     # plain own booleans on the world): once set, InfoDocs.createNextTo early-returns, so the SAME
     # app launch silently builds NO info doc. Collected first, then deleted -- deleting while

@@ -66,63 +66,50 @@ class AxisWdgt extends Widget
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    height = @height()
-    width = @width()
+      height = @height()
+      width = @width()
 
-    numberOfTicks = @max - @min + 1
-    tickHeight = @_tickPitch()
-    heightOfTheDrawnBar = (numberOfTicks - 1) * tickHeight
+      numberOfTicks = @max - @min + 1
+      tickHeight = @_tickPitch()
+      heightOfTheDrawnBar = (numberOfTicks - 1) * tickHeight
 
-    thickness = 2
-    labelSizeReduction = 0.7
-    labelSpace = tickHeight* labelSizeReduction
+      thickness = 2
+      labelSizeReduction = 0.7
+      labelSpace = tickHeight* labelSizeReduction
 
-    # Integer placement (Layer A): tickHeight is a legitimately-fractional MEASURE (height/(numberOfTicks+1));
-    # the tick + label POSITIONS derived from it must commit as integer @bounds, so round each placement point.
-    # The arrange-apply path no longer rounds for us -- see docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
-    if height > width
-      @majorDimLine._applyBounds ((new Point @right() - 5, @top() + tickHeight).round()), new Point thickness, heightOfTheDrawnBar
-    else
-      @majorDimLine._applyBounds ((new Point @left() + tickHeight, @top() + 5).round()), new Point heightOfTheDrawnBar, thickness
-
-    # _reLayout runs INSIDE the layout pass (recalculateLayouts), so the tick labels are positioned
-    # AND texted through the non-settling APIs (_applyExtent / _applyMoveTo / _setTextNoSettle) -- a
-    # public settling setText here would re-enter the settle tier and throw the flow-violation.
-    for i in [0 ... numberOfTicks]
+      # Integer placement (Layer A): tickHeight is a legitimately-fractional MEASURE (height/(numberOfTicks+1));
+      # the tick + label POSITIONS derived from it must commit as integer @bounds, so round each placement point.
+      # The arrange-apply path no longer rounds for us -- see docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
       if height > width
-        @ticksRectangles[i]._applyMoveTo (new Point @right()-10, @top() + tickHeight + Math.round(i * tickHeight)).round()
-        @ticksRectangles[i]._applyExtent new Point 5 + thickness, thickness
-
-        @labelsTextBoxes[i]._setTextNoSettle "" + (@max - i)
-        @labelsTextBoxes[i]._applyMoveTo (new Point @left(), @top() + tickHeight + Math.round(i * tickHeight) - labelSpace/2).round()
-        @labelsTextBoxes[i]._applyExtent new Point width - 10, labelSpace
-        @labelsTextBoxes[i].alignMiddle()
-        @labelsTextBoxes[i].alignRight()
-
+        @majorDimLine._applyBounds ((new Point @right() - 5, @top() + tickHeight).round()), new Point thickness, heightOfTheDrawnBar
       else
-        @ticksRectangles[i]._applyMoveTo (new Point @left() + tickHeight + Math.round(i * tickHeight), @top() + 5).round()
-        @ticksRectangles[i]._applyExtent new Point thickness, 5 + thickness
+        @majorDimLine._applyBounds ((new Point @left() + tickHeight, @top() + 5).round()), new Point heightOfTheDrawnBar, thickness
 
-        @labelsTextBoxes[i]._setTextNoSettle "" + (@min + i)
-        @labelsTextBoxes[i]._applyMoveTo (new Point @left() + tickHeight + Math.round(i * tickHeight) - labelSpace/2, @top() + 5 + 5).round()
-        @labelsTextBoxes[i]._applyExtent new Point labelSpace, height - 10
-        @labelsTextBoxes[i].alignTop()
-        @labelsTextBoxes[i].alignCenter()
+      # _reLayout runs INSIDE the layout pass (recalculateLayouts), so the tick labels are positioned
+      # AND texted through the non-settling APIs (_applyExtent / _applyMoveTo / _setTextNoSettle) -- a
+      # public settling setText here would re-enter the settle tier and throw the flow-violation.
+      for i in [0 ... numberOfTicks]
+        if height > width
+          @ticksRectangles[i]._applyMoveTo (new Point @right()-10, @top() + tickHeight + Math.round(i * tickHeight)).round()
+          @ticksRectangles[i]._applyExtent new Point 5 + thickness, thickness
 
+          @labelsTextBoxes[i]._setTextNoSettle "" + (@max - i)
+          @labelsTextBoxes[i]._applyMoveTo (new Point @left(), @top() + tickHeight + Math.round(i * tickHeight) - labelSpace/2).round()
+          @labelsTextBoxes[i]._applyExtent new Point width - 10, labelSpace
+          @labelsTextBoxes[i].alignMiddle()
+          @labelsTextBoxes[i].alignRight()
 
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+        else
+          @ticksRectangles[i]._applyMoveTo (new Point @left() + tickHeight + Math.round(i * tickHeight), @top() + 5).round()
+          @ticksRectangles[i]._applyExtent new Point thickness, 5 + thickness
+
+          @labelsTextBoxes[i]._setTextNoSettle "" + (@min + i)
+          @labelsTextBoxes[i]._applyMoveTo (new Point @left() + tickHeight + Math.round(i * tickHeight) - labelSpace/2, @top() + 5 + 5).round()
+          @labelsTextBoxes[i]._applyExtent new Point labelSpace, height - 10
+          @labelsTextBoxes[i].alignTop()
+          @labelsTextBoxes[i].alignCenter()
 
     super
     @_markLayoutAsFixed()

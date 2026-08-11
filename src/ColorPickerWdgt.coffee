@@ -59,33 +59,21 @@ class ColorPickerWdgt extends Widget
   # (virtual _applyWidth + synchronous _reLayout), re-arranging my innards in
   # the same write instead of relying on a later valve-scheduled pass.
   _reLayoutChildren: ->
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    @colorPalette._applyBounds @position(), new Point @width(), Math.round(@height() * 0.625)
+      @colorPalette._applyBounds @position(), new Point @width(), Math.round(@height() * 0.625)
 
-    @grayPalette._applyBounds @colorPalette.bottomLeft(), new Point @width(), Math.round(@height() * 0.0625)
+      @grayPalette._applyBounds @colorPalette.bottomLeft(), new Point @width(), Math.round(@height() * 0.0625)
 
-    # SIZE feedback FIRST, then centre it from its NEW dims (schedule-valve arc V3, 2026-07-16):
-    # the old move-then-resize order centred it with the STALE size, leaving the first pass after
-    # any frame change off-centre by half the size delta -- a per-pass NON-IDEMPOTENCE the retired
-    # synchronous hook's extra re-lay passes used to converge away (the census's force-re-lay
-    # caught it the moment the valve made one pass the norm).
-    @feedback._applyExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
-    x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
-    y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
-    @feedback._applyMoveTo new Point x, y
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      # SIZE feedback FIRST, then centre it from its NEW dims (schedule-valve arc V3, 2026-07-16):
+      # the old move-then-resize order centred it with the STALE size, leaving the first pass after
+      # any frame change off-centre by half the size delta -- a per-pass NON-IDEMPOTENCE the retired
+      # synchronous hook's extra re-lay passes used to converge away (the census's force-re-lay
+      # caught it the moment the valve made one pass the norm).
+      @feedback._applyExtent new Point Math.min(@width(), Math.round(@height() * 0.25)), Math.round(@height() * 0.25)
+      x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
+      y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
+      @feedback._applyMoveTo new Point x, y
 
   _reLayout: (newBoundsForThisLayout) ->
 

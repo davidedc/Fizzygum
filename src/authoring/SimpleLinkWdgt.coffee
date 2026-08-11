@@ -71,35 +71,22 @@ class SimpleLinkWdgt extends Widget
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    availableHeight = @height() - 2 * @externalPadding - @internalPadding
-    text1Height = Math.round availableHeight * 50/100
-    text2Height = availableHeight - text1Height - @externalPadding
+      availableHeight = @height() - 2 * @externalPadding - @internalPadding
+      text1Height = Math.round availableHeight * 50/100
+      text2Height = availableHeight - text1Height - @externalPadding
 
-    squareSize = Math.min @width(), @height() - 2 * @externalPadding
+      squareSize = Math.min @width(), @height() - 2 * @externalPadding
 
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
+      if @tempPromptEntryField.parent == @
+        @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
 
-    if @outputTextArea.parent == @
-      @outputTextArea._applyBounds (new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
+      if @outputTextArea.parent == @
+        @outputTextArea._applyBounds (new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
 
-    if @externalLinkIcon.parent == @
-      @externalLinkIcon._applyBounds (new Point @right() - @externalPadding - squareSize, @top() + @externalPadding), new Point squareSize, squareSize
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      if @externalLinkIcon.parent == @
+        @externalLinkIcon._applyBounds (new Point @right() - @externalPadding - squareSize, @top() + @externalPadding), new Point squareSize, squareSize
 
     super
     @_markLayoutAsFixed()

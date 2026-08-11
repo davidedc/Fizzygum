@@ -29,41 +29,28 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this composite are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    height = @height()
-    width = @width()
+      height = @height()
+      width = @width()
 
-    squareDim = Math.min width, height
+      squareDim = Math.min width, height
 
-     # p0 is the origin, the origin being in the top-left corner
-    p0 = @topLeft()
+       # p0 is the origin, the origin being in the top-left corner
+      p0 = @topLeft()
 
-    # now the origin is in the middle of the widget
-    centerPoint = p0.add new Point width/2, height/2
-    p0 = centerPoint
+      # now the origin is in the middle of the widget
+      centerPoint = p0.add new Point width/2, height/2
+      p0 = centerPoint
 
-    # now the origin is in the top left corner of the
-    # square centered in the widget
-    p0 = p0.subtract new Point squareDim/2, squareDim/2
+      # now the origin is in the top left corner of the
+      # square centered in the widget
+      p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-    @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
+      @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
 
 
-    @objectIcon._applyBounds p0, (new Point squareDim, squareDim).round()
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      @objectIcon._applyBounds p0, (new Point squareDim, squareDim).round()
 
     super
     @_markLayoutAsFixed()

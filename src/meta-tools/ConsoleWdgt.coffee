@@ -63,48 +63,35 @@ class ConsoleWdgt extends CodeAreaWdgt
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
-    textBottom = @top() + @externalPadding + textHeight
-    textWidth = @width() - 2 * @externalPadding
-    # Integer placement (Layer A): the two run-buttons share this width and are laid side by side, so a
-    # fractional /2 makes the second button's origin (= first's right edge) fractional -- round it here so both
-    # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
-    buttonsWidth = Math.round (textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2
+      textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
+      textBottom = @top() + @externalPadding + textHeight
+      textWidth = @width() - 2 * @externalPadding
+      # Integer placement (Layer A): the two run-buttons share this width and are laid side by side, so a
+      # fractional /2 makes the second button's origin (= first's right edge) fractional -- round it here so both
+      # commit integer @bounds. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).
+      buttonsWidth = Math.round (textWidth - 2 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize)/2
 
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight
+      if @tempPromptEntryField.parent == @
+        @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point textWidth, textHeight
 
 
-    # buttons -------------------------------
-    
-
-    if @runSelectionButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runSelectionButton._reLayout buttonBounds
-
-    if @runAllButton.parent == @
-      buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
-      @runAllButton._reLayout buttonBounds
+      # buttons -------------------------------
 
 
-    # ----------------------------------------------
+      if @runSelectionButton.parent == @
+        buttonBounds = new Rectangle new Point @left() + @externalPadding, textBottom + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
+        @runSelectionButton._reLayout buttonBounds
+
+      if @runAllButton.parent == @
+        buttonBounds = new Rectangle new Point buttonBounds.right() + @internalPadding, textBottom + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonsWidth, 15
+        @runAllButton._reLayout buttonBounds
 
 
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      # ----------------------------------------------
 
     super
     @_markLayoutAsFixed()

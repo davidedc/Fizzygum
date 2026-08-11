@@ -178,30 +178,17 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
+      # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
+      # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
+      # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
+      @_applyGrantedBounds newBoundsForThisLayout
 
-    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    for w in childrenNotHandlesNorCarets
-      w._applyGrantedBounds @bounds
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      for w in childrenNotHandlesNorCarets
+        w._applyGrantedBounds @bounds
 
     super
     @_markLayoutAsFixed()

@@ -28,31 +28,18 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this composite are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    # the largest square centred in my bounds: the icon fills it, the little
-    # reference-arrow overlay sits in its bottom-left corner
-    square = @boundingBox().largestCenteredSquare()
-    squareDim = square.width()
-    p0 = square.topLeft()
+      # the largest square centred in my bounds: the icon fills it, the little
+      # reference-arrow overlay sits in its bottom-left corner
+      square = @boundingBox().largestCenteredSquare()
+      squareDim = square.width()
+      p0 = square.topLeft()
 
-    @icon._applyBounds p0.round(), (new Point squareDim, squareDim).round()
+      @icon._applyBounds p0.round(), (new Point squareDim, squareDim).round()
 
 
-    @referenceArrowIcon._applyBounds ((p0.add new Point 0, squareDim*7/10).round()), (new Point squareDim*3/10, squareDim*3/10).round()
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      @referenceArrowIcon._applyBounds ((p0.add new Point 0, squareDim*7/10).round()), (new Point squareDim*3/10, squareDim*3/10).round()
 
     super
     @_markLayoutAsFixed()

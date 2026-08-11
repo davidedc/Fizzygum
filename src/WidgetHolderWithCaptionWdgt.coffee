@@ -100,31 +100,19 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    # two full-width bands: the icon on top, the (up to two-line) caption below.
-    # The icon widget letterboxes its art within its band, so a band wider than
-    # the art just centres it.
-    height = @height()
-    width = @width()
-    labelBand = Math.min height, @_labelBandHeight()
-    iconBand = height - labelBand
+      # two full-width bands: the icon on top, the (up to two-line) caption below.
+      # The icon widget letterboxes its art within its band, so a band wider than
+      # the art just centres it.
+      height = @height()
+      width = @width()
+      labelBand = Math.min height, @_labelBandHeight()
+      iconBand = height - labelBand
 
-    p0 = @topLeft()
-    @icon._applyBounds p0, (new Point width, iconBand).round()
-    @label._applyBounds (p0.add new Point 0, iconBand), (new Point width, labelBand).round()
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      p0 = @topLeft()
+      @icon._applyBounds p0, (new Point width, iconBand).round()
+      @label._applyBounds (p0.add new Point 0, iconBand), (new Point width, labelBand).round()
 
     super
     @_markLayoutAsFixed()

@@ -201,45 +201,31 @@ class StretchableWidgetContainerWdgt extends Widget
     @_applyGrantedBounds newBoundsForThisLayout
 
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    height = @height()
-    width = @width()
+      height = @height()
+      width = @width()
 
-    if @ratio?
-      widthBasedOnHeight = height * @ratio
-      heightBasedOnWidth = width / @ratio
+      if @ratio?
+        widthBasedOnHeight = height * @ratio
+        heightBasedOnWidth = width / @ratio
 
-       # p0 is the origin, the origin being in the top-left corner
-      p0 = @topLeft()
+         # p0 is the origin, the origin being in the top-left corner
+        p0 = @topLeft()
 
-      if widthBasedOnHeight <= width
-        p0 = p0.add new Point (width - widthBasedOnHeight) / 2 , 0
-        newExtent = new Point widthBasedOnHeight, height
+        if widthBasedOnHeight <= width
+          p0 = p0.add new Point (width - widthBasedOnHeight) / 2 , 0
+          newExtent = new Point widthBasedOnHeight, height
 
-      else if heightBasedOnWidth <= height
-        p0 = p0.add new Point 0 , (height - heightBasedOnWidth) / 2
-        newExtent = new Point width, heightBasedOnWidth
+        else if heightBasedOnWidth <= height
+          p0 = p0.add new Point 0 , (height - heightBasedOnWidth) / 2
+          newExtent = new Point width, heightBasedOnWidth
 
-      newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
-      @contents._reLayout newBounds.round()
+        newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
+        @contents._reLayout newBounds.round()
 
-    else
-      @contents._reLayout @bounds
-
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      else
+        @contents._reLayout @bounds
 
     super
     @_markLayoutAsFixed()

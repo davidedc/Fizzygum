@@ -288,8 +288,8 @@ client's:
   grid-coloured edge strokes before the dark edge (dark wins crossings); nobody strokes right/bottom;
   no data-background fill (the backdrop shows through, as always).
 - Layout discipline: the `StretchablePanelWdgt` pattern — immediate `_apply*` mutators
-  inside `_reLayout`, bulk child moves inside `disableTrackChanges()` …
-  `maybeEnableTrackChanges()` + one `_fullChanged()`.
+  inside `_reLayout`, bulk child moves inside one `@_repaintAsOneUnit =>` block (the
+  self-covering damage-coalescing unit).
 - **No structural row/column insertion/deletion in v1** (named references break under it;
   reference-rewriting is a known scope sink, deliberately deferred).
 

@@ -58,30 +58,18 @@ class SpeechBubbleWdgt extends Widget
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    # adjust my layout -- apply BOTH position and size up front (was _applyWidth + _applyHeight,
-    # which left the origin stale, so @position() below lagged one cadence on a move)
-    @_applyGrantedBounds newBoundsForThisLayout
+      # adjust my layout -- apply BOTH position and size up front (was _applyWidth + _applyHeight,
+      # which left the origin stale, so @position() below lagged one cadence on a move)
+      @_applyGrantedBounds newBoundsForThisLayout
 
-    @contentsWidget._reLayout (
-      (new Rectangle 0, 0,
-        (newBoundsForThisLayout.width() - (2 * @cornerRadius)),
-        (newBoundsForThisLayout.height() - (2 * @cornerRadius) - newBoundsForThisLayout.height()/5))
-      .translateBy @position().add @padding + @cornerRadius
-    )
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      @contentsWidget._reLayout (
+        (new Rectangle 0, 0,
+          (newBoundsForThisLayout.width() - (2 * @cornerRadius)),
+          (newBoundsForThisLayout.height() - (2 * @cornerRadius) - newBoundsForThisLayout.height()/5))
+        .translateBy @position().add @padding + @cornerRadius
+      )
 
     super
     @_markLayoutAsFixed()

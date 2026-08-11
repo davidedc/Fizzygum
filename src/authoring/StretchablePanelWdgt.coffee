@@ -39,60 +39,45 @@ class StretchablePanelWdgt extends PanelWdgt
 
     if @_handleCollapsedStateShouldWeReturn() then return
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    # The engine-standard GRANT-BOUNDS arrange (spec-unification arc, closing the founding
-    # "antipattern" TODO): each consumed child is granted the integer box its
-    # StretchLayoutSpec derives for my granted bounds, through the child's OWN
-    # _reLayout(bounds) — the same shape StackLayoutEngine uses. ⚠⚠ The grant MUST keep
-    # routing through base Widget._reLayout's PLAIN twins (_applyMoveTo / _applyExtent),
-    # never Base twins — falsified both ways (auto-bookkeeping arc, measured): the island's
-    # anchor-carrying _applyMoveTo override (Bug-G) is load-bearing for a tilted child, and
-    # _applyExtent's schedule-valve gives a resized composite interior (wrapping text,
-    # nested scroll) its deferred second re-lay. Base _reLayout provides exactly those on
-    # the granted path — see the imposer comment in Widget._moveInDesktopToFractionalPosition.
-    for w in childrenNotHandlesNorCarets
-      # the SAME membership rule the __add seed and the world drains ask (D10): a
-      # layout-inert overlay (highlighter) parked in me is not a reflow subject, and the
-      # gated recorder below would refuse it a spec anyway — skip, don't nil-deref
-      continue unless @consumesFractionalGeometryOf w
-      # Hardening (§5b): a child that somehow lacks its proportional record — a stale/foreign child,
-      # or one added mid-pass before the world's fill drain could seed it — must NOT abort my WHOLE
-      # relayout by dereferencing a nil spec in the grant below (that TypeError is caught as
-      # LAYOUT_ERROR and silently aborts the pass). Lazily derive it from the child's current place in
-      # me, marked PROVISIONAL (D8): a pre-placement guess the fill drain re-derives once at
-      # builder-final geometry — which is what retired the place-before-add builder rule.
-      # (No-op when the record is already present — the common case.)
-      w._rememberFractionalSituationInHoldingPanel true if !w.layoutSpec?.isStretchElement?()
-      # the panel OWNS a spec-carrying child's frame: a pending desire against it is stale
-      # by definition (user intent arrives through the post-flush re-record drain), and a
-      # desire left to linger would fire at the child's next own settle — clear both.
-      w.desiredPosition = nil
-      w.desiredExtent = nil
-      # layout-apply-sanctioned: this IS the arrange — grant the spec-derived integer box
-      w._reLayout w.layoutSpec.grantedBoundsWithin newBoundsForThisLayout
+      # The engine-standard GRANT-BOUNDS arrange (spec-unification arc, closing the founding
+      # "antipattern" TODO): each consumed child is granted the integer box its
+      # StretchLayoutSpec derives for my granted bounds, through the child's OWN
+      # _reLayout(bounds) — the same shape StackLayoutEngine uses. ⚠⚠ The grant MUST keep
+      # routing through base Widget._reLayout's PLAIN twins (_applyMoveTo / _applyExtent),
+      # never Base twins — falsified both ways (auto-bookkeeping arc, measured): the island's
+      # anchor-carrying _applyMoveTo override (Bug-G) is load-bearing for a tilted child, and
+      # _applyExtent's schedule-valve gives a resized composite interior (wrapping text,
+      # nested scroll) its deferred second re-lay. Base _reLayout provides exactly those on
+      # the granted path — see the imposer comment in Widget._moveInDesktopToFractionalPosition.
+      for w in childrenNotHandlesNorCarets
+        # the SAME membership rule the __add seed and the world drains ask (D10): a
+        # layout-inert overlay (highlighter) parked in me is not a reflow subject, and the
+        # gated recorder below would refuse it a spec anyway — skip, don't nil-deref
+        continue unless @consumesFractionalGeometryOf w
+        # Hardening (§5b): a child that somehow lacks its proportional record — a stale/foreign child,
+        # or one added mid-pass before the world's fill drain could seed it — must NOT abort my WHOLE
+        # relayout by dereferencing a nil spec in the grant below (that TypeError is caught as
+        # LAYOUT_ERROR and silently aborts the pass). Lazily derive it from the child's current place in
+        # me, marked PROVISIONAL (D8): a pre-placement guess the fill drain re-derives once at
+        # builder-final geometry — which is what retired the place-before-add builder rule.
+        # (No-op when the record is already present — the common case.)
+        w._rememberFractionalSituationInHoldingPanel true if !w.layoutSpec?.isStretchElement?()
+        # the panel OWNS a spec-carrying child's frame: a pending desire against it is stale
+        # by definition (user intent arrives through the post-flush re-record drain), and a
+        # desire left to linger would fire at the child's next own settle — clear both.
+        w.desiredPosition = nil
+        w.desiredExtent = nil
+        # layout-apply-sanctioned: this IS the arrange — grant the spec-derived integer box
+        w._reLayout w.layoutSpec.grantedBoundsWithin newBoundsForThisLayout
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
-
-
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
+      # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
+      # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
+      @_applyGrantedBounds newBoundsForThisLayout
 
     super
     @_markLayoutAsFixed()

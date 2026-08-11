@@ -134,57 +134,44 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
     # call is for
     super newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    videoPlayerBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() - 5
-    videoPlayerBounds = videoPlayerBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, @externalPadding + Math.floor newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 + 5 + 7
-    @videoPlayer._reLayout videoPlayerBounds
+      videoPlayerBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() - 5
+      videoPlayerBounds = videoPlayerBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, @externalPadding + Math.floor newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 + 5 + 7
+      @videoPlayer._reLayout videoPlayerBounds
 
-    recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 - 10 + 15
-    recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, Math.ceil newBoundsForThisLayout.height()/2 - 24 - newBoundsForThisLayout.height()*0.1125 + 10 - 18
-    @recommendationsPane._reLayout recommendationPaneBounds
+      recommendationPaneBounds = new Rectangle new Point newBoundsForThisLayout.left() + @externalPadding, newBoundsForThisLayout.top() + 2* @externalPadding + @internalPadding + newBoundsForThisLayout.height()/2 + 24 + newBoundsForThisLayout.height()*0.1125 - 10 + 15
+      recommendationPaneBounds = recommendationPaneBounds.setBoundsWidthAndHeight newBoundsForThisLayout.width() - 2 * @externalPadding, Math.ceil newBoundsForThisLayout.height()/2 - 24 - newBoundsForThisLayout.height()*0.1125 + 10 - 18
+      @recommendationsPane._reLayout recommendationPaneBounds
 
 
-    # a for loop that positions the @thumbnailsRows x @thumbnailsColumns
-    # stored in thumbs. The thumbnails are equally sized, and evenly positioned in the recommendationsPane
-    # of size @width() x @height()
-    #
-    # TODO id: FACTOR_OUT_BOUNDS_WITHIN_BOUNDS_WITH_SPECIFIED_RATIO date: 6-May-2023 description:
-    # the thumbnails are now painted with a ratio that changes with the size of the recommendationPane
-    # rather, what should happen is that the thumbnails should be painted with a fixed ratio. This coould be
-    # done by using a new Rectangle function that takes a bound and creates a new bound completely inside it
-    # that has a specified ratio. Note that we do that in the VideoPlayerCanvasWdgt, so we can reuse that code.
-    internalPadding = 2
-    spaceForPrevNextButtons = 0
-    widthOfPrevNextButtons = 44
-    widthOfEachThumbnail = Math.round((recommendationPaneBounds.width() - 2 * (widthOfPrevNextButtons + internalPadding) - (internalPadding * (@thumbnailsColumns - 1))) / @thumbnailsColumns)
-    heightOfEachThumbnail = Math.round((recommendationPaneBounds.height() - spaceForPrevNextButtons - (internalPadding * (@thumbnailsRows + 1))) / @thumbnailsRows)
+      # a for loop that positions the @thumbnailsRows x @thumbnailsColumns
+      # stored in thumbs. The thumbnails are equally sized, and evenly positioned in the recommendationsPane
+      # of size @width() x @height()
+      #
+      # TODO id: FACTOR_OUT_BOUNDS_WITHIN_BOUNDS_WITH_SPECIFIED_RATIO date: 6-May-2023 description:
+      # the thumbnails are now painted with a ratio that changes with the size of the recommendationPane
+      # rather, what should happen is that the thumbnails should be painted with a fixed ratio. This coould be
+      # done by using a new Rectangle function that takes a bound and creates a new bound completely inside it
+      # that has a specified ratio. Note that we do that in the VideoPlayerCanvasWdgt, so we can reuse that code.
+      internalPadding = 2
+      spaceForPrevNextButtons = 0
+      widthOfPrevNextButtons = 44
+      widthOfEachThumbnail = Math.round((recommendationPaneBounds.width() - 2 * (widthOfPrevNextButtons + internalPadding) - (internalPadding * (@thumbnailsColumns - 1))) / @thumbnailsColumns)
+      heightOfEachThumbnail = Math.round((recommendationPaneBounds.height() - spaceForPrevNextButtons - (internalPadding * (@thumbnailsRows + 1))) / @thumbnailsRows)
 
-    for i in [0...@thumbnailsRows]
-      for j in [0...@thumbnailsColumns]
-        thumb = @thumbs[i*@thumbnailsColumns + j]
-        thumbBounds = new Rectangle new Point recommendationPaneBounds.left() + widthOfPrevNextButtons + internalPadding + j * (widthOfEachThumbnail + internalPadding), recommendationPaneBounds.top() + spaceForPrevNextButtons + internalPadding + i * (heightOfEachThumbnail + internalPadding)
-        thumbBounds = thumbBounds.setBoundsWidthAndHeight widthOfEachThumbnail, heightOfEachThumbnail
-        thumb._reLayout thumbBounds
+      for i in [0...@thumbnailsRows]
+        for j in [0...@thumbnailsColumns]
+          thumb = @thumbs[i*@thumbnailsColumns + j]
+          thumbBounds = new Rectangle new Point recommendationPaneBounds.left() + widthOfPrevNextButtons + internalPadding + j * (widthOfEachThumbnail + internalPadding), recommendationPaneBounds.top() + spaceForPrevNextButtons + internalPadding + i * (heightOfEachThumbnail + internalPadding)
+          thumbBounds = thumbBounds.setBoundsWidthAndHeight widthOfEachThumbnail, heightOfEachThumbnail
+          thumb._reLayout thumbBounds
 
-    # place the prev and next buttons on the bottom of the recommendationsPane
-    prevButtonBounds = new Rectangle new Point recommendationPaneBounds.left(), recommendationPaneBounds.top() + internalPadding
-    prevButtonBounds = prevButtonBounds.setBoundsWidthAndHeight widthOfPrevNextButtons, recommendationPaneBounds.height() - 2 * internalPadding
-    @prevButton._reLayout prevButtonBounds
+      # place the prev and next buttons on the bottom of the recommendationsPane
+      prevButtonBounds = new Rectangle new Point recommendationPaneBounds.left(), recommendationPaneBounds.top() + internalPadding
+      prevButtonBounds = prevButtonBounds.setBoundsWidthAndHeight widthOfPrevNextButtons, recommendationPaneBounds.height() - 2 * internalPadding
+      @prevButton._reLayout prevButtonBounds
 
-    nextButtonBounds = new Rectangle new Point recommendationPaneBounds.right() - widthOfPrevNextButtons, recommendationPaneBounds.top() + internalPadding
-    nextButtonBounds = nextButtonBounds.setBoundsWidthAndHeight widthOfPrevNextButtons, recommendationPaneBounds.height() - 2 * internalPadding
-    @nextButton._reLayout nextButtonBounds
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      nextButtonBounds = new Rectangle new Point recommendationPaneBounds.right() - widthOfPrevNextButtons, recommendationPaneBounds.top() + internalPadding
+      nextButtonBounds = nextButtonBounds.setBoundsWidthAndHeight widthOfPrevNextButtons, recommendationPaneBounds.height() - 2 * internalPadding
+      @nextButton._reLayout nextButtonBounds

@@ -507,21 +507,6 @@ class Widget extends TreeNode
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   
-  #
-  #    damage list housekeeping
-  #
-  #	the world.trackChanges property of the Widget prototype is a Boolean switch
-  #	that determines whether the World's damage list ('broken' rectangles)
-  #	tracks changes. By default the switch is always on. If set to false,
-  #	changes are not stored. This can be very useful for housekeeping of
-  #	the damage list in situations where a large number of (sub-) widgets
-  #	are changed more or less at once. Instead of keeping track of every
-  #	single subwidget's changes tremendous performance improvements can be
-  #	achieved by setting the world.trackChanges flag to false before propagating
-  #	the layout changes, setting it to true again and then storing the full
-  #	bounds of the surrounding widget.
-  
-  
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
   toString: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
@@ -3189,31 +3174,26 @@ class Widget extends TreeNode
 
   # Widget updating ///////////////////////////////////////////////////////////////
   _changed: ->
-    # tests should all pass even if you don't
-    # use the world.trackChanges flag, perhaps things
-    # should just be a bit slower (but probably not
-    # significantly). This is because there is no
-    # harm into changing children of a widget
-    # that is fullChanged, the checks should
-    # simplify the situation.
-    # I tested this was OK in December 2017
-    if world.trackChanges[world.trackChanges.length - 1]
+    # dropped while a _repaintAsOneUnit block is open: the unit's owner issues
+    # the one covering mark at close, so per-child marks inside it would only
+    # proliferate redundant broken rects
+    return if world._damageSuppressionDepth > 0
 
-      # if the widget is attached to a hand then there is also a shadow to
-      # change, so the whole carried composite must repaint — the hand
-      # invalidates itself in this public notification
-      if @isBeingFloatDragged()
-        world.hand.noteCarriedWidgetChanged()
-        return
+    # if the widget is attached to a hand then there is also a shadow to
+    # change, so the whole carried composite must repaint — the hand
+    # invalidates itself in this public notification
+    if @isBeingFloatDragged()
+      world.hand.noteCarriedWidgetChanged()
+      return
 
-      # you could check directly if it's in the array
-      # but we use a flag because it's faster.
-      if !@paintBoundsMaybeChanged
-        # if we already issued a fullChanged on this widget
-        # then there is no point issuing a change too.
-        if !@fullPaintBoundsMaybeChanged
-          world.widgetsWithMaybeChangedPaintBounds.push @
-          @paintBoundsMaybeChanged = true
+    # you could check directly if it's in the array
+    # but we use a flag because it's faster.
+    if !@paintBoundsMaybeChanged
+      # if we already issued a fullChanged on this widget
+      # then there is no point issuing a change too.
+      if !@fullPaintBoundsMaybeChanged
+        world.widgetsWithMaybeChangedPaintBounds.push @
+        @paintBoundsMaybeChanged = true
 
   # to actually make sure if a widget has changed
   # position, you need to check it and all its
@@ -3232,12 +3212,12 @@ class Widget extends TreeNode
   # See comment on the fullPaintBoundsMaybeChanged
   # property above for more info.
   _fullChanged: ->
-    # (on the trackChanges flag see the note in `changed` above)
-    if world.trackChanges[world.trackChanges.length - 1]
-      # check if we already issued a fullChanged on this widget
-      if !@fullPaintBoundsMaybeChanged
-        world.widgetsWithMaybeChangedFullPaintBounds.push @
-        @fullPaintBoundsMaybeChanged = true
+    # (on the suppression depth see the note in `_changed` above)
+    return if world._damageSuppressionDepth > 0
+    # check if we already issued a fullChanged on this widget
+    if !@fullPaintBoundsMaybeChanged
+      world.widgetsWithMaybeChangedFullPaintBounds.push @
+      @fullPaintBoundsMaybeChanged = true
 
   # fullChanged, but shadow-aware: if I contribute to an ancestor's shadow, the repaint
   # must start from the first parent OWNING that shadow (breaking only my own rect would
@@ -3255,7 +3235,22 @@ class Widget extends TreeNode
       firstParentOwningMyShadow._fullChanged()
     else
       @_fullChanged()
-  
+
+  # Run fn (a bulk child-positioning pass) with per-widget damage recording
+  # suspended, then mark ME as the one damage unit covering everything fn did:
+  # my box bounds every child the pass placed, so ONE owner rect replaces N
+  # child rects at flush. Suspension nests: an inner unit's cover fires under
+  # the outer depth and is dropped, and the outer owner's box covers it. The
+  # restore AND the cover sit in `finally` — neither an early return nor a
+  # throwing _reLayout can leak the depth or lose the covering repaint.
+  _repaintAsOneUnit: (fn) ->
+    world._damageSuppressionDepth++
+    try
+      fn()
+    finally
+      world._damageSuppressionDepth--
+      @_fullChanged()
+
   # Widget accessing - structure //////////////////////////////////////////////
 
   # Hierarchy/bounds change methods come in tiers (see

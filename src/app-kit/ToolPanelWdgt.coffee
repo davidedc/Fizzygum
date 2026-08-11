@@ -89,51 +89,39 @@ class ToolPanelWdgt extends PanelWdgt
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
+      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    scanningChildrenX = 0
-    scanningChildrenY = 0
-    numberOfEntries = 0
+      scanningChildrenX = 0
+      scanningChildrenY = 0
+      numberOfEntries = 0
 
-    # A scroll-panel parent resizes while keeping its contents' width fixed, and the
-    # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
-    # the scroll frame's content width, read via the widthContentsMustFitWithin?
-    # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
-    # frame answers the question; any other parent (or no parent) leaves my own width.
-    widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
+      # A scroll-panel parent resizes while keeping its contents' width fixed, and the
+      # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
+      # the scroll frame's content width, read via the widthContentsMustFitWithin?
+      # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
+      # frame answers the question; any other parent (or no parent) leaves my own width.
+      widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
 
-    for w in childrenNotHandlesNorCarets
-
-      xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
-      yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
-
-      if @externalPadding + xPos + @thumbnailSize + @externalPadding > widthINeedToFitContentIn
-        scanningChildrenX = 0
-        if numberOfEntries != 0
-          scanningChildrenY++
+      for w in childrenNotHandlesNorCarets
 
         xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
         yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
 
-      horizAdj = (@thumbnailSize - w.width()) / 2
-      vertAdj = (@thumbnailSize - w.height()) / 2
-      w._applyMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
-      scanningChildrenX++
-      numberOfEntries++
+        if @externalPadding + xPos + @thumbnailSize + @externalPadding > widthINeedToFitContentIn
+          scanningChildrenX = 0
+          if numberOfEntries != 0
+            scanningChildrenY++
 
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+          xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
+          yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
+
+        horizAdj = (@thumbnailSize - w.width()) / 2
+        vertAdj = (@thumbnailSize - w.height()) / 2
+        w._applyMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
+        scanningChildrenX++
+        numberOfEntries++
 
     super
     @_markLayoutAsFixed()

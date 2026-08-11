@@ -122,35 +122,27 @@ class BinWdgt extends Widget
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    # the main pane fills the body above the button row (the
-    # ErrorsLogViewerWdgt scheme: the row's height is the handleSize band)
-    mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
-    mainPaneBottom = @top() + @externalPadding + mainPaneHeight
+      # the main pane fills the body above the button row (the
+      # ErrorsLogViewerWdgt scheme: the row's height is the handleSize band)
+      mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+      mainPaneBottom = @top() + @externalPadding + mainPaneHeight
 
-    if @scrollPanel.parent == @
-      @scrollPanel._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainPaneHeight
+      if @scrollPanel.parent == @
+        @scrollPanel._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainPaneHeight
 
-    # the Empty-bin button sits at the LEFT of the bottom row (owner-placed:
-    # destructive action away from the sizing-handle corner) at its NATURAL
-    # width -- it shrinks only when the window gets narrower than natural
-    # width + padding + the sizing handle (both always spared). Integer by
-    # construction: a constant clamped by integer geometry.
-    if @emptyBinButton.parent == @
-      rowWidth = @width() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
-      buttonWidth = Math.max 0, Math.min @emptyBinButtonWidth, rowWidth
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, mainPaneBottom + @internalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonWidth, 15
-      @emptyBinButton._reLayout buttonBounds
-
-    world.maybeEnableTrackChanges()
+      # the Empty-bin button sits at the LEFT of the bottom row (owner-placed:
+      # destructive action away from the sizing-handle corner) at its NATURAL
+      # width -- it shrinks only when the window gets narrower than natural
+      # width + padding + the sizing handle (both always spared). Integer by
+      # construction: a constant clamped by integer geometry.
+      if @emptyBinButton.parent == @
+        rowWidth = @width() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+        buttonWidth = Math.max 0, Math.min @emptyBinButtonWidth, rowWidth
+        buttonBounds = new Rectangle new Point @left() + @externalPadding, mainPaneBottom + @internalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight buttonWidth, 15
+        @emptyBinButton._reLayout buttonBounds
 
     super
     @_markLayoutAsFixed()

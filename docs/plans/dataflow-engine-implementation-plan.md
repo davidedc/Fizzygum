@@ -416,8 +416,8 @@ per rules 7/8:
 
 New `src/spreadsheet/` directory (+ `build.py` glob line, same commit). All widgets follow
 the layout discipline: immediate `_apply*` mutators inside `_reLayout`, bulk moves inside
-`world.disableTrackChanges()` … `world.maybeEnableTrackChanges()` + one `_fullChanged()`
-(model: `StretchablePanelWdgt._reLayout`). Seed `src/spreadsheet/CLAUDE.md` in the 2a
+one `@_repaintAsOneUnit =>` block (model: `StretchablePanelWdgt._reLayout`; the old paired
+disable/enable verbs are retired). Seed `src/spreadsheet/CLAUDE.md` in the 2a
 commit (shell + painted-grid model + socket philosophy) and grow it in 2b/2c/4 — subsystem
 docs are a per-phase deliverable, not a Phase 7 chore.
 

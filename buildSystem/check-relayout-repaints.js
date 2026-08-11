@@ -1,46 +1,34 @@
 #!/usr/bin/env node
-// check-relayout-repaints.js — build lint for INVARIANT [INV-1] (2026-07 layout-regressions arc,
-// docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md §2). Static sibling to the runtime
-// paint-truthfulness capstone (Fizzygum-tests scripts/run-paint-audit.js). Mirrors
-// check-relayout-bounds-first.js (line scanner; exit 0 clean / 1 violation).
+// check-relayout-repaints.js — TOMBSTONE for the retired paired damage-suppression verbs
+// (repaint-as-one-unit arc, 2026-08-11; formerly the [INV-1] covering-repaint lint).
 //
-// THE RULE ([INV-1]). A `_reLayoutSelf` that opens a change-tracking-suppression frame with
-// `world.disableTrackChanges()` MUST issue a covering `@_fullChanged()` (or `world._fullChanged()`)
-// AFTER its LAST `world.maybeEnableTrackChanges()` — i.e. once the outermost tracking frame has
-// actually re-armed. Inside a still-open (nested) suppression frame `_fullChanged` is a no-op DROPPED
-// by design, so a repaint issued before the matching `maybeEnableTrackChanges` is silently lost. When
-// a `_reLayoutSelf` applies geometry raw (`@_applyMoveTo`/`@_applyExtent`, whose public-setter
-// equivalents used to mark the moved region), dropping that covering repaint leaves a stale / "ghost"
-// region on the canvas — exactly the D2 edit/view-toggle ghosts fixed 2026-07 in the five
-// StretchableEditable-family `_reLayoutSelf`s (Fizzygum a88a1673). In-tree precedent for the FIXED
-// shape: HorizontalMenuPanelWdgt._reLayoutSelf, and the five F2 bodies (StretchableEditableWdgt /
-// SimpleSlideWdgt / DashboardsWdgt / PatchProgrammingWdgt / ReconfigurablePaintWdgt).
+// [INV-1] — "a `_reLayoutSelf` that suppresses change-tracking MUST issue a covering
+// `_fullChanged()` after its last re-enable" (born from the 2026-07 D2 edit/view-toggle
+// ghosts, docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md §2) — is now
+// STRUCTURAL: bulk child positioning coalesces through `Widget._repaintAsOneUnit fn`, whose
+// `finally` both restores `world._damageSuppressionDepth` and issues the owner's covering
+// repaint, so neither half can be forgotten or lost to an exception. The runtime twin
+// (the paint-truthfulness audit, Fizzygum-tests scripts/run-paint-audit.js) is unchanged.
 //
-// SCOPE — `_reLayoutSelf` ONLY (the layout method that OWNS its covering repaint). A `_reLayout`
-// *orchestrator* override, by contrast, ends by delegating to `super` (base `Widget::_reLayout`,
-// which re-applies its own bounds and positions stack/corner children) — a structurally different
-// tail — so this line scanner deliberately does NOT flag `_reLayout` bodies (they would false-positive
-// on the super-delegation, and the base issues no blanket `@_fullChanged()`). Both the empirically
-// observed D2 bug class (5 bodies) and the [INV-1] precedent are `_reLayoutSelf`; anything the static
-// shape cannot reach is covered by the runtime paint-truthfulness audit
-// (Fizzygum-tests/scripts/run-paint-audit.js, a `fg gauntlet` gate). Only `_reLayoutSelf` bodies that
-// CALL `disableTrackChanges` are checked (the suppression frame is what can swallow the repaint); a
-// body that never suppresses, or that re-enables in a DIFFERENT method (no `maybeEnableTrackChanges`
-// here — the enable + covering repaint live at the outer call site), is out of reach and reported as
-// "deferred-enable" (advisory, not a failure). Comments are stripped before matching.
+// What is left to lint is only that nobody resurrects the retired imperative spelling:
+// `disableTrackChanges` / `maybeEnableTrackChanges` (world verbs, paired by caller
+// discipline) must not reappear anywhere in shipping src or the harness src — a caller
+// wanting a suppression window wants `@_repaintAsOneUnit =>` instead. Mirrors the other
+// retired-mechanism tombstones (check-region-markers.js, check-whole-file-markers.js):
+// the gate slot stays occupied so the retirement cannot silently un-happen.
 //
-// EXEMPTION: a `# relayout-repaint-exempt: <reason>` marker (non-empty reason) in the contiguous
-// comment block directly above the method header.
+// Exit 0 clean / 1 violation.
 
 const fs = require('fs');
 const path = require('path');
-const SRC = path.resolve(__dirname, '../src');
 
-const HEADER  = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;          // 2-space-indent class method header
-const EXEMPT  = /#\s*relayout-repaint-exempt:\s*\S/;            // marker WITH a non-empty reason
-const DISABLE = /\bdisableTrackChanges\b/;                      // opens a change-suppression frame
-const ENABLE  = /\bmaybeEnableTrackChanges\b/;                  // re-arms the outermost frame
-const REPAINT = /\b_?fullChanged\s*\(/;                           // the covering repaint (@ or world.)
+const ROOTS = [
+  path.resolve(__dirname, '../src'),
+  // the harness compiles into the same world — a resurrection there is just as live
+  path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src'),
+];
+
+const RETIRED = /\b(disableTrackChanges|maybeEnableTrackChanges)\b/;
 
 function walk(dir, acc) {
   if (!fs.existsSync(dir)) return acc;
@@ -51,53 +39,31 @@ function walk(dir, acc) {
   }
   return acc;
 }
-function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 
 const violations = [];
-let checked = 0, noSuppress = 0, deferredEnable = 0, exempt = 0;
-for (const p of walk(SRC, [])) {
-  const cls = path.basename(p, '.coffee');
-  const lines = fs.readFileSync(p, 'utf8').split('\n');
-  const heads = [];
-  lines.forEach((l, i) => { const m = HEADER.exec(l); if (m) heads.push({ name: m[1], i }); });
-  for (let k = 0; k < heads.length; k++) {
-    if (heads[k].name !== '_reLayoutSelf') continue;            // scope: the covering-repaint owner (see header)
-    const head = heads[k];
-    // EXEMPTION: scan upward through the contiguous comment block directly above the header.
-    let marked = false;
-    for (let j = head.i - 1; j >= 0 && /^\s*#/.test(lines[j]); j--) {
-      if (EXEMPT.test(lines[j])) { marked = true; break; }
-    }
-    if (marked) { exempt++; continue; }
-    const end = k + 1 < heads.length ? heads[k + 1].i : lines.length;
-    // Scan the body (code only): does it suppress tracking? where is the LAST re-enable? any repaint after it?
-    let sawDisable = false, lastEnable = -1, repaintAfterEnable = false;
-    for (let j = head.i + 1; j < end; j++) {
-      const code = stripComment(lines[j]);
-      if (!code.trim()) continue;
-      if (DISABLE.test(code)) sawDisable = true;
-      if (ENABLE.test(code)) { lastEnable = j; repaintAfterEnable = false; }   // reset: only a repaint AFTER the last enable counts
-      else if (lastEnable !== -1 && REPAINT.test(code)) repaintAfterEnable = true;
-    }
-    if (!sawDisable) { noSuppress++; continue; }                 // no suppression frame -> nothing can be dropped
-    if (lastEnable === -1) { deferredEnable++; continue; }       // re-enable + repaint are at the outer call site
-    if (repaintAfterEnable) { checked++; continue; }
-    violations.push({ cls, name: head.name, file: path.relative(SRC, p), line: head.i + 1, enableLine: lastEnable + 1 });
+let scanned = 0;
+for (const root of ROOTS) {
+  for (const p of walk(root, [])) {
+    scanned++;
+    const lines = fs.readFileSync(p, 'utf8').split('\n');
+    lines.forEach((l, i) => {
+      if (RETIRED.test(l)) violations.push({ file: p, line: i + 1, text: l.trim() });
+    });
   }
 }
 
-console.log(`[relayout-repaints] ${checked} suppress+covering-repaint + ${noSuppress} no-suppression + ${deferredEnable} deferred-enable + ${exempt} exempt _reLayoutSelf override(s) checked.`);
 if (violations.length) {
-  console.error(`\n[relayout-repaints] FAIL -- ${violations.length} _reLayoutSelf override(s) suppress change-tracking but issue NO covering _fullChanged() after re-enabling it (a raw-applied move would leave a stale/ghost region -- [INV-1] / the 2026-07 D2 bug class):`);
+  console.error(`\n[relayout-repaints] FAIL -- ${violations.length} occurrence(s) of the RETIRED paired suppression verbs (deleted 2026-08-11, repaint-as-one-unit arc):`);
   for (const v of violations) {
-    console.error(`  ${v.cls}.${v.name}  (${v.file}:${v.line}) -- last maybeEnableTrackChanges at line ${v.enableLine}, no _fullChanged() after it`);
+    console.error(`  ${v.file}:${v.line}  ${v.text}`);
   }
-  console.error('\nFIX: add a covering repaint immediately after the re-enable -- e.g.:');
-  console.error('       world.maybeEnableTrackChanges()');
-  console.error('       @fullChanged()                    # [INV-1]: repaint what the raw geometry applies above moved');
-  console.error('     (see HorizontalMenuPanelWdgt._reLayoutSelf and the five F2 bodies for the fixed shape).');
-  console.error('Or add  # relayout-repaint-exempt: <reason>  directly above the method header.');
+  console.error('\nThe imperative disable/enable pair is retired: pairing and the covering repaint were caller');
+  console.error('obligations, and both failure modes (a leaked frame, a forgotten cover) shipped real bugs.');
+  console.error('Wrap the bulk child-positioning pass in the self-balancing, self-covering block instead:');
+  console.error('       @_repaintAsOneUnit =>');
+  console.error('         <position children via _apply*/_reLayout tiers>');
+  console.error('(Widget._repaintAsOneUnit — suppression depth and covering @_fullChanged both restored in `finally`.)');
   process.exit(1);
 }
-console.log('[relayout-repaints] OK -- every tracking-suppressing _reLayoutSelf issues its covering _fullChanged() after re-enable ([INV-1]).');
+console.log(`[relayout-repaints] OK -- ${scanned} file(s): the retired disableTrackChanges/maybeEnableTrackChanges spelling is extinct ([INV-1] is structural in Widget._repaintAsOneUnit).`);
 process.exit(0);

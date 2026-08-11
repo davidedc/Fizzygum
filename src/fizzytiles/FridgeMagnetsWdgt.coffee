@@ -114,74 +114,61 @@ class FridgeMagnetsWdgt extends Widget
     # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
+
+      eachPaneWidth = Math.floor( (@width() - 2*@externalPadding - 2 * @internalPadding) / 3)
 
 
-    eachPaneWidth = Math.floor( (@width() - 2*@externalPadding - 2 * @internalPadding) / 3)
+      # fridge
+      fridgeWidth = eachPaneWidth
+      fridgeHeight = Math.floor((@height() - 2 * @externalPadding - 2 * 15 - 3 * @internalPadding)/2)
+
+      magnetsBoxLeft = @left() + @externalPadding + eachPaneWidth + @internalPadding
+
+      if @fridge.parent == @
+        @fridge._applyBounds (new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding), new Point eachPaneWidth, fridgeHeight
+
+      if @liveCodeLangOutputHeader.parent == @
+        @liveCodeLangOutputHeader._applyBounds (new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding), new Point eachPaneWidth, 15
+
+      # codeOutput
+      if @codeOutput.parent == @
+        @codeOutput._applyBounds (new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding), new Point fridgeWidth, fridgeHeight
+
+      if @dragTheTilesHereHeader.parent == @
+        @dragTheTilesHereHeader._applyBounds (new Point magnetsBoxLeft, @top() + @externalPadding), new Point eachPaneWidth, 15
+
+      if @tilesBinHeader.parent == @
+        @tilesBinHeader._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point eachPaneWidth, 15
+
+      # magnets box
+      magnetsBoxHeight = @height() - 2 * @externalPadding - 15 - @internalPadding
+      if @magnetsBox.parent == @
+        @magnetsBox._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding), new Point(eachPaneWidth, magnetsBoxHeight).round()
+
+      # visual output
+      visualOutputLeft = @codeOutput.right() + @internalPadding
+      if @visualOutput.parent == @
+        @visualOutput._applyBounds (new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding), new Point(eachPaneWidth, magnetsBoxHeight).round()
+
+      if @outputAnimationHeader.parent == @
+        @outputAnimationHeader._applyBounds (new Point visualOutputLeft, @top() + @externalPadding), new Point eachPaneWidth, 15
 
 
-    # fridge
-    fridgeWidth = eachPaneWidth
-    fridgeHeight = Math.floor((@height() - 2 * @externalPadding - 2 * 15 - 3 * @internalPadding)/2)
+      # sample magnets -------------------------------
+      if @scale.parent == @magnetsBox
+        @scale._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @magnetsBox.top() + @internalPadding
 
-    magnetsBoxLeft = @left() + @externalPadding + eachPaneWidth + @internalPadding
+      if @rotate.parent == @magnetsBox
+        @rotate._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @scale.bottom() + @internalPadding
 
-    if @fridge.parent == @
-      @fridge._applyBounds (new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding), new Point eachPaneWidth, fridgeHeight
+      if @box.parent == @magnetsBox
+        @box._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @rotate.bottom() + @internalPadding
 
-    if @liveCodeLangOutputHeader.parent == @
-      @liveCodeLangOutputHeader._applyBounds (new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding), new Point eachPaneWidth, 15
+      if @move.parent == @magnetsBox
+        @move._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @box.bottom() + @internalPadding
 
-    # codeOutput
-    if @codeOutput.parent == @
-      @codeOutput._applyBounds (new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding), new Point fridgeWidth, fridgeHeight
-
-    if @dragTheTilesHereHeader.parent == @
-      @dragTheTilesHereHeader._applyBounds (new Point magnetsBoxLeft, @top() + @externalPadding), new Point eachPaneWidth, 15
-
-    if @tilesBinHeader.parent == @
-      @tilesBinHeader._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point eachPaneWidth, 15
-
-    # magnets box
-    magnetsBoxHeight = @height() - 2 * @externalPadding - 15 - @internalPadding
-    if @magnetsBox.parent == @
-      @magnetsBox._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding), new Point(eachPaneWidth, magnetsBoxHeight).round()
-
-    # visual output
-    visualOutputLeft = @codeOutput.right() + @internalPadding
-    if @visualOutput.parent == @
-      @visualOutput._applyBounds (new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding), new Point(eachPaneWidth, magnetsBoxHeight).round()
-
-    if @outputAnimationHeader.parent == @
-      @outputAnimationHeader._applyBounds (new Point visualOutputLeft, @top() + @externalPadding), new Point eachPaneWidth, 15
-
-
-    # sample magnets -------------------------------
-    if @scale.parent == @magnetsBox
-      @scale._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @magnetsBox.top() + @internalPadding
-
-    if @rotate.parent == @magnetsBox
-      @rotate._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @scale.bottom() + @internalPadding
-
-    if @box.parent == @magnetsBox
-      @box._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @rotate.bottom() + @internalPadding
-
-    if @move.parent == @magnetsBox
-      @move._applyMoveTo new Point @magnetsBox.left() + @internalPadding, @box.bottom() + @internalPadding
-
-    # ----------------------------------------------
-
-
-    world.maybeEnableTrackChanges()
+      # ----------------------------------------------
 
     super
     @_markLayoutAsFixed()

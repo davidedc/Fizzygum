@@ -518,83 +518,76 @@ class InspectorWdgt extends Widget
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
     @_applyBounds newBoundsForThisLayout.origin, newBoundsForThisLayout.extent()
 
-    # Disable broken-rect tracking while we lay out children manually: every inspector subwidget
-    # stays within the parent's own bounds, so the parent's broken rect covers them all (this
-    # optimization relies on that invariant). Anything attached that sticks out past our bounds
-    # is still painted/moved correctly.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))
-    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding, 15
-    @hierarchyHeaderString._reLayout headerBounds
+      headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))
+      headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding, 15
+      @hierarchyHeaderString._reLayout headerBounds
 
 
-    # classes diagram
-    justAcounter = 0
-    anotherCount = 0
-    # reverse works in-place, so we need to remember
-    # to put them back right after we are done
-    @classesButtons.reverse()
-    for eachClassButton in @classesButtons
-      if eachClassButton.parent == @
-        buttonBounds = new Rectangle new Point(Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@internalPadding + justAcounter))
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight 120 + @classNamesTextPadding * 2, 15 + @classNamesTextPadding * 2
-        eachClassButton._reLayout buttonBounds
+      # classes diagram
+      justAcounter = 0
+      anotherCount = 0
+      # reverse works in-place, so we need to remember
+      # to put them back right after we are done
+      @classesButtons.reverse()
+      for eachClassButton in @classesButtons
+        if eachClassButton.parent == @
+          buttonBounds = new Rectangle new Point(Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@internalPadding + justAcounter))
+          buttonBounds = buttonBounds.setBoundsWidthAndHeight 120 + @classNamesTextPadding * 2, 15 + @classNamesTextPadding * 2
+          eachClassButton._reLayout buttonBounds
 
-        # the top class doesn't get an arrow pointing upwards
-        if anotherCount > 0
-          if @angledArrows[anotherCount-1].parent == @
-            @angledArrows[anotherCount-1]._applyMoveTo new Point(eachClassButton.left() - 15, Math.round(eachClassButton.top()))
-            @angledArrows[anotherCount-1]._applyExtent new Point 15, 15
+          # the top class doesn't get an arrow pointing upwards
+          if anotherCount > 0
+            if @angledArrows[anotherCount-1].parent == @
+              @angledArrows[anotherCount-1]._applyMoveTo new Point(eachClassButton.left() - 15, Math.round(eachClassButton.top()))
+              @angledArrows[anotherCount-1]._applyExtent new Point 15, 15
 
-        justAcounter += 20
+          justAcounter += 20
 
-      anotherCount++
-    @classesButtons.reverse()
-    @layoutLastLabelInHierarchy Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2 * @internalPadding + justAcounter)
+        anotherCount++
+      @classesButtons.reverse()
+      @layoutLastLabelInHierarchy Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2 * @internalPadding + justAcounter)
 
-    @hierarchyBackgroundPanel._applyBounds (new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
+      @hierarchyBackgroundPanel._applyBounds (new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
 
-    headerBounds = new Rectangle new Point @left() + @externalPadding , @hierarchyBackgroundPanel.bottom()+ @internalPadding
-    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
-    @propertyHeaderString._reLayout headerBounds
+      headerBounds = new Rectangle new Point @left() + @externalPadding , @hierarchyBackgroundPanel.bottom()+ @internalPadding
+      headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
+      @propertyHeaderString._reLayout headerBounds
 
-    listWidth = Math.floor((@width() - 2 * @externalPadding - @internalPadding ) / 3)
-    detailWidth = 2*listWidth
+      listWidth = Math.floor((@width() - 2 * @externalPadding - @internalPadding ) / 3)
+      detailWidth = 2*listWidth
 
-    @layoutOwnPropsOnlyToggle @propertyHeaderString.bottom() + @internalPadding, listWidth, detailWidth
+      @layoutOwnPropsOnlyToggle @propertyHeaderString.bottom() + @internalPadding, listWidth, detailWidth
 
-    # list
-    listHeight = (@bottom() - @externalPadding - @internalPadding - 15) - (@showMethodsToggle.bottom() + @internalPadding)
-    if @list.parent == @
-      @list._applyBounds (new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding), new Point listWidth, listHeight
+      # list
+      listHeight = (@bottom() - @externalPadding - @internalPadding - 15) - (@showMethodsToggle.bottom() + @internalPadding)
+      if @list.parent == @
+        @list._applyBounds (new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding), new Point listWidth, listHeight
 
-    # detail
-    if @detail.parent == @
-      @detail._applyBounds (new Point @list.right() + @internalPadding, @list.top()), (new Point detailWidth, listHeight).round()
+      # detail
+      if @detail.parent == @
+        @detail._applyBounds (new Point @list.right() + @internalPadding, @list.top()), (new Point detailWidth, listHeight).round()
 
-    widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
+      widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
 
-    buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-    @addPropertyButton._reLayout buttonBounds
+      buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
+      @addPropertyButton._reLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-    @renamePropertyButton._reLayout buttonBounds
+      buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
+      @renamePropertyButton._reLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-    @removePropertyButton._reLayout buttonBounds
+      buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
+      @removePropertyButton._reLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
-    @saveButton._reLayout buttonBounds
+      buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
+      @saveButton._reLayout buttonBounds
 
-    @_layoutOverrideInThisClassButton()
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      @_layoutOverrideInThisClassButton()
 
     super
     @_markLayoutAsFixed()

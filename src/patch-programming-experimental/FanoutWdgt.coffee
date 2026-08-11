@@ -69,38 +69,25 @@ class FanoutWdgt extends Widget
     # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
     @_applyGrantedBounds newBoundsForThisLayout
 
-    # here we are disabling all the broken
-    # rectangles. The reason is that all the
-    # subwidgets of this widget are within the
-    # bounds of the parent Widget. This means that
-    # if only the parent widget breaks its rectangle
-    # then everything is OK.
-    # Also note that if you attach something else to its
-    # boundary in a way that sticks out, that's still
-    # going to be painted and moved OK.
-    world.disableTrackChanges()
+    @_repaintAsOneUnit =>
 
-    # the largest square centred in my bounds: the fanout body fills it and the
-    # four pins sit at its edge midpoints
-    square = @boundingBox().largestCenteredSquare()
-    squareDim = square.width()
-    p0 = square.topLeft()
+      # the largest square centred in my bounds: the fanout body fills it and the
+      # four pins sit at its edge midpoints
+      square = @boundingBox().largestCenteredSquare()
+      squareDim = square.width()
+      p0 = square.topLeft()
 
-    pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
+      pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
 
-    @pinUp._applyExtent pinSize
-    @pinDown._applyExtent pinSize
-    @pinLeft._applyExtent pinSize
-    @pinRight._applyExtent pinSize
+      @pinUp._applyExtent pinSize
+      @pinDown._applyExtent pinSize
+      @pinLeft._applyExtent pinSize
+      @pinRight._applyExtent pinSize
 
-    @pinUp._applyMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
-    @pinDown._applyMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
-    @pinLeft._applyMoveTo (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
-    @pinRight._applyMoveTo (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
-
-
-    world.maybeEnableTrackChanges()
-    @_fullChanged()
+      @pinUp._applyMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
+      @pinDown._applyMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
+      @pinLeft._applyMoveTo (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
+      @pinRight._applyMoveTo (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
 
     super
     @_markLayoutAsFixed()

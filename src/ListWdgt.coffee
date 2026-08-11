@@ -69,28 +69,27 @@ class ListWdgt extends ScrollPanelWdgt
     @listContents = new MenuRowsPanelWdgt target: @, selectsItemsOnClick: true
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
-    world.disableTrackChanges()
-    @elements.forEach (element) =>
-      color = nil
-      bold = false
-      italic = false
-      @format.forEach (pair) ->
-        if pair[1].call nil, element
-          switch pair[0]
-            when 'bold'
-              bold = true
-            when 'italic'
-              italic = true
-            else # assume it's a color
-              color = pair[0]
+    @_repaintAsOneUnit =>
+      @elements.forEach (element) =>
+        color = nil
+        bold = false
+        italic = false
+        @format.forEach (pair) ->
+          if pair[1].call nil, element
+            switch pair[0]
+              when 'bold'
+                bold = true
+              when 'italic'
+                italic = true
+              else # assume it's a color
+                color = pair[0]
 
-      @listContents.addMenuItem @labelGetter(element), @, "select",
-        color: color
-        bold: bold
-        italic: italic
-        doubleClickAction: @doubleClickAction
+        @listContents.addMenuItem @labelGetter(element), @, "select",
+          color: color
+          bold: bold
+          italic: italic
+          doubleClickAction: @doubleClickAction
 
-    world.maybeEnableTrackChanges()
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
 
