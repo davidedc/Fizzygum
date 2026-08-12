@@ -388,6 +388,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # is ever nonzero at flush.
   _damageSuppressionDepth: 0
 
+  # count of _changed/_fullChanged attempts dropped under the depth above.
+  # MONOTONIC, never reset — only deltas are read: _repaintAsOneUnit snapshots
+  # it at open and skips its closing cover when it did not advance (a provably
+  # vacuous unit). Transient like the depth (never serialized); exempted by
+  # name in the tests' world-state fingerprint audit.
+  _suppressedMarkAttempts: 0
+
   widgetsWithMaybeChangedPaintBounds: []
   widgetsWithMaybeChangedFullPaintBounds: []
   widgetsThatMaybeChangedLayout: []

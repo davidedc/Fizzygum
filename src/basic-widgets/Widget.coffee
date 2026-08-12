@@ -3176,8 +3176,12 @@ class Widget extends TreeNode
   _changed: ->
     # dropped while a _repaintAsOneUnit block is open: the unit's owner issues
     # the one covering mark at close, so per-child marks inside it would only
-    # proliferate redundant broken rects
-    return if world._damageSuppressionDepth > 0
+    # proliferate redundant broken rects. Each drop is COUNTED (monotonic, on
+    # the world) so the closing unit can tell a vacuous body from one that
+    # tried to mark — see _repaintAsOneUnit's skip condition.
+    if world._damageSuppressionDepth > 0
+      world._suppressedMarkAttempts++
+      return
 
     # if the widget is attached to a hand then there is also a shadow to
     # change, so the whole carried composite must repaint — the hand
@@ -3212,8 +3216,10 @@ class Widget extends TreeNode
   # See comment on the fullPaintBoundsMaybeChanged
   # property above for more info.
   _fullChanged: ->
-    # (on the suppression depth see the note in `_changed` above)
-    return if world._damageSuppressionDepth > 0
+    # (on the suppression depth and the attempt count see the note in `_changed` above)
+    if world._damageSuppressionDepth > 0
+      world._suppressedMarkAttempts++
+      return
     # check if we already issued a fullChanged on this widget
     if !@fullPaintBoundsMaybeChanged
       world.widgetsWithMaybeChangedFullPaintBounds.push @
@@ -3243,13 +3249,25 @@ class Widget extends TreeNode
   # the outer depth and is dropped, and the outer owner's box covers it. The
   # restore AND the cover sit in `finally` — neither an early return nor a
   # throwing _reLayout can leak the depth or lose the covering repaint.
+  # The cover is SKIPPED when provably vacuous: fn completed and not one
+  # suppressed mark was attempted inside the unit — nothing the marking tiers
+  # (_apply*/_reLayout) can see changed (an unchanged-bounds re-lay is all
+  # identity no-ops), so the cover would only repaint identical pixels.
+  # Nesting stays sound: an inner unit that saw attempts fires its cover
+  # SUPPRESSED, which itself counts as an attempt, so the outer unit sees the
+  # advancement; an inner unit with zero attempts contributes none. On an
+  # exception the work fn did is unknown — cover unconditionally.
   _repaintAsOneUnit: (fn) ->
+    attemptsAtOpen = world._suppressedMarkAttempts
+    completed = false
     world._damageSuppressionDepth++
     try
       fn()
+      completed = true
     finally
       world._damageSuppressionDepth--
-      @_fullChanged()
+      if !completed or world._suppressedMarkAttempts isnt attemptsAtOpen
+        @_fullChanged()
 
   # Widget accessing - structure //////////////////////////////////////////////
 
