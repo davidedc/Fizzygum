@@ -86,6 +86,27 @@ class PromptWdgt extends PopUpWdgt
   # widgetEnv from it, mirroring the old MenuWdgt environment-slot arg).
   _buildAndAddValueEditorInto: (panel) ->
 
+  # The shared core of the text-bearing editors (Text / Number): build the
+  # StringFieldWdgt entry field, surface it under the conventional
+  # @tempPromptEntryField name (see its declaration above), and add it to the
+  # panel. isNumericField flips the field's numeric mode — NumberPromptWdgt
+  # passes whether a ceiling exists.
+  _buildAndAddEntryFieldInto: (panel, isNumericField) ->
+    @tempPromptEntryField = new StringFieldWdgt(
+      @defaultContents or "",
+      @intendedWidth or 100,
+      WorldWdgt.preferencesAndSettings.prompterFontSize,
+      WorldWdgt.preferencesAndSettings.prompterFontName,
+      false,
+      false,
+      isNumericField)
+    panel.environment = @tempPromptEntryField
+    panel._addNoSettle @tempPromptEntryField
+    # _addNoSettle skips the child's calculateAndUpdateExtent (which measures the
+    # text and applies width >= minTextWidth, feeding the panel's width via
+    # menuEntryPreferredWidth); run it explicitly.
+    @tempPromptEntryField.calculateAndUpdateExtent()
+
   # The everyday button row: a divider then "Ok" (fires the caller's callback on
   # the target) and "Close" (dismisses this prompt). SaveShortcutPromptWdgt
   # overrides with its own three buttons and no leading divider.

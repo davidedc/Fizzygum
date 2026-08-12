@@ -8,17 +8,4 @@ class TextPromptWdgt extends PromptWdgt
     @_buildAndConnectChildren()
 
   _buildAndAddValueEditorInto: (panel) ->
-    @tempPromptEntryField = new StringFieldWdgt(
-      @defaultContents or "",
-      @intendedWidth or 100,
-      WorldWdgt.preferencesAndSettings.prompterFontSize,
-      WorldWdgt.preferencesAndSettings.prompterFontName,
-      false,
-      false,
-      false)
-    panel.environment = @tempPromptEntryField
-    panel._addNoSettle @tempPromptEntryField
-    # _addNoSettle skips the child's calculateAndUpdateExtent (which measures the
-    # text and applies width >= minTextWidth, feeding the panel's width via
-    # menuEntryPreferredWidth); run it explicitly.
-    @tempPromptEntryField.calculateAndUpdateExtent()
+    @_buildAndAddEntryFieldInto panel, false

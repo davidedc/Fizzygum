@@ -69,32 +69,17 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.addCodeBlock "a code block with\n  some example\n    code in here"
 
 
-    startingContent = new SimpleTextWdgt(
-      "Spacers:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.toggleWeight()
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addSectionHeading "Spacers:"
 
     sdspw.addSpacer()
     sdspw.addSpacer 2
     sdspw.addSpacer 3
 
-    startingContent = new SimpleTextWdgt(
-      "Divider line:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.toggleWeight()
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addSectionHeading "Divider line:"
 
     sdspw.addDivider()
 
-    startingContent = new SimpleTextWdgt(
-      "Links:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.toggleWeight()
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addSectionHeading "Links:"
 
     startingContent = new SimpleLinkWdgt
     startingContent._applyExtent new Point 405, 50
@@ -106,12 +91,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.add startingContent
     startingContent._contentStackSpec.setAlignmentToRight()
 
-    startingContent = new SimpleTextWdgt(
-      "Useful characters:",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.toggleWeight()
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addSectionHeading "Useful characters:"
     # in March 2018, greek chars take a long time to paint on OSX/Chrome so
     # not adding those to the paragraph, however here they are:
     # αβγδεζηθικλμνξοπρστυφχψω ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ

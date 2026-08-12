@@ -655,6 +655,8 @@ ADDED) and J6 (two inspector-visible methods DELETED).
 > - **The J6 gate is ready:** `Fizzygum-tests/scripts/cache-oracle-audit/run-cache-oracle-gate.sh` (+
 >   `cache-oracle-prelude.js`; bite-proof `cache-oracle-selftest-prelude.js`) directly guards the
 >   fullBounds-invalidation class J6 touches. J3.4's "multiple of baseline" prediction was wrong — oracle-on ≈ 0.9 min.
+>   *[2026-08-12: the self-test file is now `cache-oracle-selftest-plant.js`, composed onto the real prelude by the
+>   gate — run it with `CACHE_ORACLE_SELFTEST=1 bash run-cache-oracle-gate.sh`; see the gate's header.]*
 
 ### §8.1 — Evidence bank (verified + measured 2026-07-03 at `d6bda64a`; re-run the greps before editing)
 

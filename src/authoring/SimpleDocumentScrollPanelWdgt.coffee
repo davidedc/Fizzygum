@@ -46,6 +46,23 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
     @add divider
     return divider
 
+  # the standard centred 22px title line of the info documents (InfoDocs'
+  # shared header, the welcome doc's sections)
+  addTitle: (text) ->
+    title = @getNormalParagraph text
+    title.alignCenter()
+    title.setFontSize 22
+    @add title
+    return title
+
+  # a bold section heading at the running text size (the templates window's
+  # section labels)
+  addSectionHeading: (text) ->
+    heading = @getNormalParagraph text
+    heading.toggleWeight()
+    @add heading
+    return heading
+
   addIndentedText: (text)->
     indentedText = @getNormalParagraph text
     indentedText._applyExtent new Point Math.round(92*@width()/100), 335

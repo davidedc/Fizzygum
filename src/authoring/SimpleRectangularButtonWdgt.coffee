@@ -4,24 +4,10 @@
 
 class SimpleRectangularButtonWdgt extends ButtonWdgt
 
-  constructor: (
-      @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
-      @target = nil,
-      @action = nil,
-
-      @faceWidget = nil,
-
-      @dataSourceWidgetForTarget = nil,
-      @widgetEnv,
-      @toolTipMessage = nil,
-
-      @doubleClickAction = nil,
-      @argumentToAction1 = nil,
-      @argumentToAction2 = nil,
-      @representsAWidget = false
-      ) ->
-
-    # additional properties:
+  # The ctor params are identical to ButtonWdgt's, so we drop the re-declared signature: bare
+  # `super` forwards `arguments` and the base assigns every @param onto this same instance —
+  # byte-identical (the SimpleButtonWdgt precedent).
+  constructor: ->
 
     super
 

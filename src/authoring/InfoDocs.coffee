@@ -197,13 +197,7 @@ class InfoDocs
     iconWidget._contentStackSpec.setGrow 0
     iconWidget._contentStackSpec.setAlignmentToCenter()
 
-    titleWidget = new SimpleTextWdgt(
-      title,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    titleWidget.alignCenter()
-    titleWidget.setFontSize 22
-    titleWidget.isEditable = true
-    titleWidget.enableSelecting()
-    sdspw.add titleWidget
+    sdspw.addTitle title
 
     sdspw.addDivider()
 

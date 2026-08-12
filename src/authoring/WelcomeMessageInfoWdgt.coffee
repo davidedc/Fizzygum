@@ -36,13 +36,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
 
     sdspw.addSpacer()
 
-    startingContent = new SimpleTextWdgt(
-      "What it can do for you",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addTitle "What it can do for you"
 
     sdspw.addDivider()
 
@@ -58,13 +52,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
 
     sdspw.addSpacer()
 
-    startingContent = new SimpleTextWdgt(
-      "New here?",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addTitle "New here?"
 
     sdspw.addDivider()
 
@@ -94,13 +82,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
 
     sdspw.addSpacer(2)
 
-    startingContent = new SimpleTextWdgt(
-      "Get in touch",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
-    startingContent.alignCenter()
-    startingContent.setFontSize 22
-    startingContent.isEditable = true
-    startingContent.enableSelecting()
-    sdspw.add startingContent
+    sdspw.addTitle "Get in touch"
 
     sdspw.addDivider()
 
