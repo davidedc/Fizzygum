@@ -13,36 +13,18 @@ class UpperRightTriangleAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
-    [area,sl,st,al,at,w,h] = keyValues
-
-    @_beginLogicalPixelsBox aContext, appliedShadow, al, at, w, h
-
-    # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the art
-    # colour goes BLACK under appliedShadow — _beginLogicalPixelsBox already applied the
-    # shadow's alpha.
-    @_renderingHelper aContext, (if appliedShadow? then Color.BLACK else @widget.color)
-
-    aContext.restore()
-
-    # skipped in the shadow pass: the hover highlight is not part of the caster's ink.
-    return if appliedShadow?
-
-    # _drawHighlightOverlay is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    @_drawHighlightOverlay aContext, al, at, w, h
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+      # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the art
+      # colour goes BLACK under appliedShadow — the scope already applied the shadow's alpha.
+      @_renderingHelper ctx, (if appliedShadow? then Color.BLACK else @widget.color)
 
   _renderingHelper: (context, color) ->
+    context.save()
+
     # (no lineCap here: this paint only ever fill()s — caps affect strokes alone,
     # and a stray cap/width state is exactly what blocks the strokeLine/arc
     # direct fast paths, which are butt-cap-gated)
     context.lineWidth = 1
-
-    context.save()
 
     context.fillStyle = color.toString()
 

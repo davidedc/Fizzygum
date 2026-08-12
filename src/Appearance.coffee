@@ -1,3 +1,9 @@
+# The base of the pluggable per-widget painters. The paint convention (the law, its
+# rationale, and the declared device-space exceptions) is in
+# docs/architecture/appearance-paint-convention.md: a body draws its widget's OWN pixels
+# in widget-local LOGICAL coordinates through the ctx matrix, inside _paintInLocalScope
+# below — device-space business (damage clipping, blits, the shadow-silhouette fallback)
+# belongs to the preamble, never to bodies.
 class Appearance
 
   widget: nil
@@ -12,27 +18,10 @@ class Appearance
 
   isTransparentAt: (aPoint) ->
 
-  # _drawHighlightOverlay can work in two patterns:
-  #  * passing actual pixels, when used
-  #    outside the effect of the scope of
-  #    "useLogicalPixelsUntilRestore()", or
-  #  * passing logical pixels, when used
-  #    inside the effect of the scope of
-  #    "useLogicalPixelsUntilRestore()", or
-  # Mostly, the first pattern is used.
-  #
-  # useful for example when hovering over references
-  # to widgets. Can only modify the rendering of a widget,
-  # so any highlighting is only visible in the measure that
-  # the widget is visible (as opposed to HighlighterWdgt being
-  # used to highlight a widget)
-  _drawHighlightOverlay: (aContext, al, at, w, h) ->
-
-
-  # Shared paint preamble for the appearance paint methods: bail (nil) if there is nothing to draw, else return
-  # the [area,sl,st,al,at,w,h] key-values (nil when the widget is sub-pixel / off-clip). ZERO draw ops. Callers
-  # that need it keep their own justBeforeBeingPainted?() after this. (RectangularAppearance's own paint is the
-  # one exception that keeps this inline — it wedges its wallpaper hook between the two guards.)
+  # The key-values half of the paint preamble: bail (nil) if there is nothing to draw, else return
+  # the [area,sl,st,al,at,w,h] key-values (nil when the widget is sub-pixel / off-clip). ZERO draw
+  # ops. _paintInLocalScope below consumes it; RectangularAppearance's paint also calls it directly
+  # as an early bail that gates its post-scope stroke + wallpaper epilogues.
   _calculateKeyValuesOrNil: (aContext, clippingRectangle) ->
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return nil
@@ -40,22 +29,72 @@ class Appearance
     return nil if w < 1 or h < 1 or area.isEmpty()
     return [area,sl,st,al,at,w,h]
 
-  # Shared "open a logical-pixels drawing box" for the boxy appearances (CircleBoxy / Boxy / UpperRightTriangle):
-  # save, clip to the dirty rect, set the shadow-aware alpha, switch to logical pixels and translate to the
-  # widget origin. Leaves the context SAVED (each caller restores) with the pen at the widget origin in logical
-  # pixels. IconAppearance (a different translate+scale) and DragChargingRing (plain @widget.alpha) keep their own.
-  _beginLogicalPixelsBox: (aContext, appliedShadow, al, at, w, h) ->
+  # THE one appearance paint scope (the appearance paint convention): nil when there is nothing
+  # to draw, else runs
+  #   bodyFn aContext, localArea, appliedShadow
+  # inside save → damage clip → alpha → logical pixels → translate to the widget position, then
+  # restores. The body draws the widget's OWN pixels in widget-local LOGICAL coordinates through
+  # the ctx matrix; localArea is the damage box as a widget-local logical rect (integer) for
+  # partial-repaint fills. Device-space business (the damage clip here, back-buffer blits, the
+  # shadow-silhouette fallback) stays OUT of bodies — a body never sees al/at.
+  # (IconAppearance keeps its own scope: a different translate+scale into its 200×200 spec space.)
+  # opts?.alpha picks the globalAlpha policy:
+  #   omitted — the shadow-aware product (appliedShadow.alpha or 1) × widget alpha (the norm)
+  #   "none"  — untouched (the sheet cells: edge/ring chrome painted at the ambient alpha)
+  #   "backgroundTransparencyNormalPass" — @widget.backgroundTransparency, normal pass only (the
+  #             plot family: in the shadow pass the body's simpleShadow sets its own)
+  _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, opts, bodyFn) ->
+    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
+    return nil unless keyValues?
+    [area,sl,st,al,at,w,h] = keyValues
+
+    # soft hook, only CaretWdgt defines it (the inert paint-time re-place); same slot it always
+    # ran in: after the key values, before any ctx op
+    @widget.justBeforeBeingPainted?()
+
     aContext.save()
 
     # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
+    # going to paint the whole of the box.
+    # opts.clip false: RectangularAppearance opts OUT — its legacy device paint never
+    # clipped (its fills/stroke bound themselves to damage∩tight), and adding the clip is
+    # NOT free of pixels: in an island buffer the ambient translate can be FRACTIONAL (a
+    # fractional slot origin), where the clip's own boundary quantization differs from the
+    # fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
+    if opts?.clip != false
+      aContext.clipToRectangle al,at,w,h
 
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
+    alphaPolicy = opts?.alpha
+    if alphaPolicy == "backgroundTransparencyNormalPass"
+      if !appliedShadow?
+        aContext.globalAlpha = @widget.backgroundTransparency
+    else if alphaPolicy != "none"
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()
     widgetPosition = @widget.position()
     aContext.translate widgetPosition.x, widgetPosition.y
+
+    bodyFn aContext, area.translateBy(widgetPosition.neg()), appliedShadow
+
+    aContext.restore()
+
+  # Fill a widget-local rect SNAPPED to the device-pixel grid — the quantization contract the
+  # legacy device-space fills carried (Widget.paintRectangle Math.round()s its rect). For the
+  # normal integer-geometry widget the snap is the identity (bit-exact same fill). It exists
+  # for the widgets whose PLANE position is legitimately FRACTIONAL — a payload dropped into a
+  # rotated container lands at the inverse-mapped screen point (the reparent-transparency
+  # figure), fractional in general — where handing the raw fractional rect to the rasterizer
+  # rounds edges differently (ceil(v−0.5) boundaries) than the legacy Math.round did, shifting
+  # a fill edge by 1 device px (found at dpr 2, macroDropIntoRotatedStretchablePanel…). The
+  # C1 float-arithmetic case law: docs/architecture/integer-pixel-placement-and-sizing.md §5.
+  _fillLocalRectSnappedToDevicePixels: (ctx, localRect) ->
+    widgetPosition = @widget.position()
+    l = Math.round (localRect.left() + widgetPosition.x) * ceilPixelRatio
+    t = Math.round (localRect.top() + widgetPosition.y) * ceilPixelRatio
+    w = Math.round localRect.width() * ceilPixelRatio
+    h = Math.round localRect.height() * ceilPixelRatio
+    ctx.fillRect l / ceilPixelRatio - widgetPosition.x, t / ceilPixelRatio - widgetPosition.y, w / ceilPixelRatio, h / ceilPixelRatio
 
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,

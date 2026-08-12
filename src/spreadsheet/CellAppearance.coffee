@@ -13,31 +13,21 @@ class CellAppearance extends Appearance
     # edges and the selection ring are interior chrome on the sheet's opaque panels, not
     # coverage — they contribute nothing to a silhouette, so the shadow pass skips them.
     return if appliedShadow?
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
     sheetWidget = @widget._sheetWidget
     return unless sheetWidget?
-    [area, sl, st, al, at, w, h] = @widget.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
-      aContext.save()
-      aContext.clipToRectangle al, at, w, h
-      aContext.useLogicalPixelsUntilRestore()
-      widgetPosition = @widget.position()
-      aContext.translate widgetPosition.x, widgetPosition.y
+    # alpha "none": edge/ring chrome painted at the ambient alpha, as it always was
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { alpha: "none" }, (ctx) =>
       # dark edges sit on the header separators: the left edge of the viewport's FIRST visible
       # column and the top edge of its FIRST visible row (viewport-relative, F1 — at origin 0
       # that is sheet col/row 0, exactly the pre-scroll form)
       colRow = sheetWidget.model.colRowFor @widget.address
-      sheetWidget.paintGridEdges aContext, @widget.width(), @widget.height(), (colRow?.col is sheetWidget.viewOriginCol), (colRow?.row is sheetWidget.viewOriginRow)
+      sheetWidget.paintGridEdges ctx, @widget.width(), @widget.height(), (colRow?.col is sheetWidget.viewOriginCol), (colRow?.row is sheetWidget.viewOriginRow)
       # the cell's MODEL selection ring (F5 receipt B): drawn INLINE here, in the cell's own logical-pixel
       # scope, fully INSIDE it (band [1,3), under its hosted child). This is a distinct concern from the
       # editor-focus SELECTION overlay (Widget._drawSelectionOverlay): a cell is never world.editorFocusWdgt
       # (clicks escalate to the sheet; SheetCellsPanelWdgt opts its cells out of the editor-selection walk),
       # so the generic teal overlay never fires here -- the cell owns its selection look, the sheet the state.
       if sheetWidget.isSelectedAddress @widget.address
-        aContext.strokeStyle = sheetWidget.selectionColor.toString()
-        aContext.lineWidth = 2
-        aContext.strokeRect 2, 2, @widget.width() - 4, @widget.height() - 4
-      aContext.restore()
+        ctx.strokeStyle = sheetWidget.selectionColor.toString()
+        ctx.lineWidth = 2
+        ctx.strokeRect 2, 2, @widget.width() - 4, @widget.height() - 4

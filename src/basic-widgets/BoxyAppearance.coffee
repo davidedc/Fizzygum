@@ -51,32 +51,19 @@ class BoxyAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
-    [area,sl,st,al,at,w,h] = keyValues
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+      if !@widget.color? then debugger
+      ctx.fillStyle = @widget.color.toString()
 
-    @_beginLogicalPixelsBox aContext, appliedShadow, al, at, w, h
-    if !@widget.color? then debugger
-    aContext.fillStyle = @widget.color.toString()
-    
-    if appliedShadow?
-      aContext.fillStyle = Color.BLACK.toString()
+      if appliedShadow?
+        ctx.fillStyle = Color.BLACK.toString()
 
-    @fillOutline aContext
+      @fillOutline ctx
 
-    if @widget.strokeColor? and !appliedShadow?
-      aContext.lineWidth = 1 # TODO might look better if * ceilPixelRatio
-      aContext.strokeStyle = @widget.strokeColor.toString()
-      @strokeOutline aContext
-
-    aContext.restore()
-
-    # _drawHighlightOverlay is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    @_drawHighlightOverlay aContext, al, at, w, h
+      if @widget.strokeColor? and !appliedShadow?
+        ctx.lineWidth = 1 # TODO might look better if * ceilPixelRatio
+        ctx.strokeStyle = @widget.strokeColor.toString()
+        @strokeOutline ctx
 
   
   # Fill / stroke the rounded-box outline through the direct rounded-rect calls

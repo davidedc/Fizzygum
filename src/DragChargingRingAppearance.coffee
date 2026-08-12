@@ -10,35 +10,23 @@ class DragChargingRingAppearance extends Appearance
     # an ephemeral overlay casts no shadow — nothing to draw on the shadow pass
     return nil if appliedShadow?
 
-    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
-    [area,sl,st,al,at,w,h] = keyValues
+    # (the scope's default alpha reduces to plain @widget.alpha here — no shadow pass reaches this)
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+      cx = @widget.width() / 2
+      cy = @widget.height() / 2
+      radius = Math.min(cx, cy) - 2
+      steps = @widget.ringSteps
+      filled = @widget.chargeStep
+      seg = 2 * Math.PI / steps
+      gap = seg * 0.18                    # a small gap between segments so they read as discrete
 
-    aContext.save()
-    aContext.clipToRectangle al, at, w, h
-    aContext.globalAlpha = @widget.alpha
-    aContext.useLogicalPixelsUntilRestore()
-    widgetPosition = @widget.position()
-    aContext.translate widgetPosition.x, widgetPosition.y
-
-    cx = @widget.width() / 2
-    cy = @widget.height() / 2
-    radius = Math.min(cx, cy) - 2
-    steps = @widget.ringSteps
-    filled = @widget.chargeStep
-    seg = 2 * Math.PI / steps
-    gap = seg * 0.18                    # a small gap between segments so they read as discrete
-
-    aContext.lineWidth = 3
-    aContext.lineCap = "butt"
-    for i in [0...steps]
-      startAngle = -Math.PI / 2 + i * seg + gap / 2
-      endAngle   = -Math.PI / 2 + (i + 1) * seg - gap / 2
-      aContext.beginPath()
-      aContext.arc cx, cy, radius, startAngle, endAngle
-      aContext.strokeStyle = (if i < filled then @widget.filledColor else @widget.emptyColor).toString()
-      aContext.stroke()
-
-    aContext.restore()
-
-    @_drawHighlightOverlay aContext, al, at, w, h
+      ctx.lineWidth = 3
+      ctx.lineCap = "butt"
+      for i in [0...steps]
+        startAngle = -Math.PI / 2 + i * seg + gap / 2
+        endAngle   = -Math.PI / 2 + (i + 1) * seg - gap / 2
+        ctx.beginPath()
+        ctx.arc cx, cy, radius, startAngle, endAngle
+        ctx.strokeStyle = (if i < filled then @widget.filledColor else @widget.emptyColor).toString()
+        ctx.stroke()
+      return

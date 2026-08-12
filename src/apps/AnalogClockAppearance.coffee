@@ -22,9 +22,7 @@ class AnalogClockAppearance extends Appearance
 
       # the clock face + hands set their own colours (white face, black hands, blue arc),
       # so the shadow pass renders the whole clock to a scratch and blits the black
-      # silhouette (the shadow-pass paint contract). The highlight overlay is not part of
-      # the caster's ink, so it is skipped in the shadow pass (same rule as the editor
-      # selection overlay).
+      # silhouette (the shadow-pass paint contract).
       if appliedShadow?
         @_paintDamagedAreaAsBlackSilhouette aContext, al, at, w, h, appliedShadow, (sctx) =>
           @_paintColoredClock sctx, sl, st, al, at, w, h
@@ -32,13 +30,11 @@ class AnalogClockAppearance extends Appearance
 
       @_paintColoredClock aContext, sl, st, al, at, w, h
 
-      # _drawHighlightOverlay here is made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, this is why
-      # it's called outside the effect of the scaling
-      # (after the restore).
-      @_drawHighlightOverlay aContext, al, at, w, h
-
+  # Keeps its OWN paint preamble instead of Appearance._paintInLocalScope (the appearance
+  # paint convention's blit exception): the cached-face drawImage below is DEVICE-space
+  # preamble business — like BackBufferMixin's blit — and the background fill must sit
+  # UNDER it, so both stay in device pixels here; only the live content (hands + dot +
+  # arc, via _renderingHelper) rides the logical-pixels scope.
   _paintColoredClock: (aContext, sl, st, al, at, w, h) ->
       aContext.save()
 
@@ -48,11 +44,12 @@ class AnalogClockAppearance extends Appearance
 
       aContext.globalAlpha = @widget.backgroundTransparency
 
-      # paintRectangle here is made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, this is why
-      # it's called before the scaling.
-      @widget.paintRectangle aContext, al, at, w, h, @widget.backgroundColor
+      # the background, filling the damage box (al/at/w/h: device pixels).
+      # (backgroundColor is nil unless the user sets one — the base Widget default — so
+      # this fill is usually skipped: the clock sits transparent around its face circle)
+      if @widget.backgroundColor?
+        aContext.fillStyle = @widget.backgroundColor.toString()
+        aContext.fillRect al, at, w, h
 
       # C1: blit the cached STATIC face (the 12 hour + 48 minute tick marks) instead of
       # re-stroking all 60 marks every repaint. It's rendered once per size into an

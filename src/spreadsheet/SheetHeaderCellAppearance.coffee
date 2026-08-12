@@ -19,23 +19,13 @@ class SheetHeaderCellAppearance extends Appearance
     # header fill + grid edges are interior chrome on the sheet's opaque panels, not
     # coverage (the panels beneath provide it) — the shadow pass skips them.
     return if appliedShadow?
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
     sheetWidget = @widget._sheetWidget
     return unless sheetWidget?
-    [area, sl, st, al, at, w, h] = @widget.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return nil
-      aContext.save()
-      aContext.clipToRectangle al, at, w, h
-      aContext.useLogicalPixelsUntilRestore()
-      widgetPosition = @widget.position()
-      aContext.translate widgetPosition.x, widgetPosition.y
+    # alpha "none": fill/edge chrome painted at the ambient alpha, as it always was
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { alpha: "none" }, (ctx) =>
       # the header-strip fill
-      aContext.fillStyle = sheetWidget.headerFillColor.toString()
-      aContext.fillRect 0, 0, @widget.width(), @widget.height()
+      ctx.fillStyle = sheetWidget.headerFillColor.toString()
+      ctx.fillRect 0, 0, @widget.width(), @widget.height()
       # the header's top+left grid edges (grid-coloured first, dark last — the crossing rule).
       # The label is NOT painted here: it is the header's StringWdgt child (children paint after it).
-      sheetWidget.paintGridEdges aContext, @widget.width(), @widget.height(), @_leftEdgeIsDark(), @_topEdgeIsDark()
-      aContext.restore()
+      sheetWidget.paintGridEdges ctx, @widget.width(), @widget.height(), @_leftEdgeIsDark(), @_topEdgeIsDark()

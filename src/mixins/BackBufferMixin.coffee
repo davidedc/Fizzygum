@@ -145,13 +145,4 @@ BackBufferMixin =
 
         aContext.restore()
 
-        # skipped in the shadow pass: the hover highlight is not part of the caster's ink
-        # (same rule as the editor selection overlay).
-        return if appliedShadow?
-
-        # _drawHighlightOverlay is usually made to work with
-        # al, at, w, h which are actual pixels
-        # rather than logical pixels, so it's generally used
-        # outside the effect of the scaling because
-        # of the ceilPixelRatio
-        @_drawHighlightOverlay aContext, al, at, w, h
+        return

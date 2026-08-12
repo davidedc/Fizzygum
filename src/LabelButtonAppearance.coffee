@@ -7,31 +7,23 @@ class LabelButtonAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
+    # unconditional (unlike preliminaryCheckNothingToDraw's live-tree-conditioned twin gates):
+    # a hidden/collapsed label button skips even scratch renders, as it always did
     if !@widget.visibleBasedOnIsVisibleProperty() or @widget.isInCollapsedSubtree()
       return nil
 
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx, localArea) =>
+      if appliedShadow?
+        color = Color.BLACK
+      else
+        color = switch @widget.state
+          when @widget.STATE_NORMAL
+            @widget.color
+          when @widget.STATE_HIGHLIGHTED
+            @widget.highlightColor
+          when @widget.STATE_PRESSED
+            @widget.pressColor
 
-    if appliedShadow?
-      color = Color.BLACK
-    else
-      color = switch @widget.state
-        when @widget.STATE_NORMAL
-          @widget.color
-        when @widget.STATE_HIGHLIGHTED
-          @widget.highlightColor
-        when @widget.STATE_PRESSED
-          @widget.pressColor
-
-    # paintRectangle works in actual (not logical) pixels, outside the
-    # ceilPixelRatio scaling.
-    @widget.paintRectangle \
-      aContext,
-      al, at, w, h,
-      color,
-      @widget.alpha,
-      true, # push and pop the context
-      appliedShadow
-
-    @_drawHighlightOverlay aContext, al, at, w, h
+      if color?
+        ctx.fillStyle = color.toString()
+        @_fillLocalRectSnappedToDevicePixels ctx, localArea

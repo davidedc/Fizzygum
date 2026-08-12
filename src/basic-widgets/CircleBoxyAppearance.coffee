@@ -51,28 +51,14 @@ class CircleBoxyAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
-    [area,sl,st,al,at,w,h] = keyValues
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+      if appliedShadow?
+        ctx.fillStyle = Color.BLACK.toString()
+      else
+        ctx.fillStyle = @widget.color.toString()
 
-    @_beginLogicalPixelsBox aContext, appliedShadow, al, at, w, h
-
-    if appliedShadow?
-      aContext.fillStyle = Color.BLACK.toString()
-    else
-      aContext.fillStyle = @widget.color.toString()
-
-    # ONE stadium fill covering exactly the widget box, both orientations —
-    # a single primitive rather than the old two-arcs+rectangle path, so the
-    # shadow pass (which fills at globalAlpha < 1) blends every pixel once.
-    # (calculateKeyPoints stays as the hit test's — isTransparentAt — geometry.)
-    aContext.fillStadium 0, 0, @widget.width(), @widget.height()
-
-    aContext.restore()
-
-    # _drawHighlightOverlay is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    @_drawHighlightOverlay aContext, al, at, w,
+      # ONE stadium fill covering exactly the widget box, both orientations —
+      # a single primitive rather than the old two-arcs+rectangle path, so the
+      # shadow pass (which fills at globalAlpha < 1) blends every pixel once.
+      # (calculateKeyPoints stays as the hit test's — isTransparentAt — geometry.)
+      ctx.fillStadium 0, 0, @widget.width(), @widget.height()

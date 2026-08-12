@@ -92,7 +92,10 @@ CLOSED 2026-08-02 — executed in full; the residue is in `architecture/build-an
 - [x] **⚠⚠ Gate gap found in passing, PROVEN, and FIXED in the same arc: `check-part-edges.js` let an EAGER part's `requires` excuse its references, contradicting its own header.** `declaredRequires` handed every owner its full list, and that set is tested BEFORE the inheritance check — so an eager part declaring `requires` on a lazy one could both reference and `extends` its classes with the build staying green, which is exactly the catastrophe the gate exists for. ⚖ The fix is narrower than "eager owners get nothing", and the distinction is the point: **`requires` always promises the other part SHIPS, but promises it has ARRIVED only when the OWNER is lazy** (there `PartsRegistry` orders the load). So `declaredRequires` now drops LAZY requirements for an eager owner and keeps EAGER ones — `harness requires ["macros"]` is still fully covered, `dev-tools requires ["demos", "app-kit"]` is now discounted and its three awaits are what carry it. Proven in both directions: planting an unguarded `new SpeechBubbleWdgt` and an `@augmentWith ParentStainerMixin` in `dev-tools` reported `0 / 0` before and fails with a named site after.
 
 ### `plans/affine-transforms-plan.md`
-Phase 4 + residuals + claimsSpace arc shipped/pushed; REMAINING = big §7.1-7.4/7.8 items, design-first, owner-gated.
+Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12
+(`archive/appearance-local-coords-plan.md` — every appearance body now draws through the ctx matrix,
+byte-identically; the vector-replay prerequisite is banked); REMAINING = big §7.1-7.4/7.8 items,
+design-first, owner-gated.
 - [ ] §7.1: transform policy engine (banked, not built)
 - [ ] §7.2: leaf self-warp (non-island rotation)
 - [ ] §7.3: quad-aware damage + occlusion behind transformed widgets

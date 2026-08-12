@@ -429,14 +429,6 @@ class Widget extends TreeNode
   isTransparentAt: (aPoint) ->
     (@appearance?.isTransparentAt aPoint) ? false
 
-  # useful for example when hovering over references
-  # to widgets. Can only modify the rendering of a widget,
-  # so any highlighting is only visible in the measure that
-  # the widget is visible (as opposed to HighlighterWdgt being
-  # used to highlight a widget)
-  _drawHighlightOverlay: (aContext, al, at, w, h) ->
-    @appearance?._drawHighlightOverlay aContext, al, at, w, h
-
   # Selection overlay (selection-overlay-unification arc, supersedes the §5.D D-3/D21 world-attached
   # HighlighterWdgt). The editor-focus selection is a per-widget decoration drawn ON TOP of the selected
   # widget -- NOT a separate world/island widget -- so it rides that widget's own z-order (a click that

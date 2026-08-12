@@ -110,13 +110,6 @@ class IconAppearance extends Appearance
 
     aContext.restore()
 
-    # _drawHighlightOverlay is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    #@_drawHighlightOverlay aContext, al, at, w, h
-
   oval: (context, x, y, w, h) ->
     context.save()
     context.beginPath()

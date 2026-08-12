@@ -7,45 +7,16 @@ class HandleAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
-
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
-
-    aContext.save()
-
-    # clip out the dirty rectangle as we are
-    # going to paint the whole of the box
-    aContext.clipToRectangle al,at,w,h
-
-    aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
-
-    aContext.useLogicalPixelsUntilRestore()
-    widgetPosition = @widget.position()
-    aContext.translate widgetPosition.x, widgetPosition.y
-
-    # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): both
-    # art colours go BLACK under appliedShadow — the alpha above already carries the
-    # shadow's faintness.
-    if appliedShadow?
-      @handleWidgetRenderingHelper aContext, Color.BLACK, Color.BLACK
-    else if @widget.state == @widget.STATE_NORMAL
-      @handleWidgetRenderingHelper aContext, @widget.color, Color.create 150, 150, 150
-    else if @widget.state == @widget.STATE_HIGHLIGHTED
-      @handleWidgetRenderingHelper aContext, Color.WHITE, Color.create 200, 200, 255
-
-    aContext.restore()
-
-    # skipped in the shadow pass: the hover highlight is not part of the caster's ink.
-    return if appliedShadow?
-
-    # _drawHighlightOverlay is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels, so it's generally used
-    # outside the effect of the scaling because
-    # of the ceilPixelRatio (i.e. after the restore)
-    @_drawHighlightOverlay aContext, al, at, w, h
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+      # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): both
+      # art colours go BLACK under appliedShadow — the scope's alpha already carries the
+      # shadow's faintness.
+      if appliedShadow?
+        @handleWidgetRenderingHelper ctx, Color.BLACK, Color.BLACK
+      else if @widget.state == @widget.STATE_NORMAL
+        @handleWidgetRenderingHelper ctx, @widget.color, Color.create 150, 150, 150
+      else if @widget.state == @widget.STATE_HIGHLIGHTED
+        @handleWidgetRenderingHelper ctx, Color.WHITE, Color.create 200, 200, 255
 
   drawArrow: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
     context.beginPath()

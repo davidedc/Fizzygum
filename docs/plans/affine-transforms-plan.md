@@ -1897,14 +1897,15 @@ See §7. None of these block declaring the feature shipped.
    pixel-test-excluded by construction. Low priority; Squeak-soft is the accepted look.
 6. **Container-level "freeze" veto** for `claimsSpace` (presentation mode: treat all children
    as `'slot'`); build only on demonstrated need.
-7. **Appearance conversion to local-logical-coordinate drawing** (through the ctx matrix,
-   legacy integer path kept as the identity fast path) — the prerequisite for widespread
-   vector-replay; bounded set: the rectangular family + the nine per-class Appearance
-   subclasses that were the custom painters until the 2026-07-27 Appearance-delegation
-   arc (Handle/Pen/LabelButton/LayoutChrome/Cell/SheetHeaderCell/AnalogClock/
-   GraphsPlotsCharts/Example3DPlot — `docs/archive/cross-branch-duplication-refactors-plan.md`).
-   That arc already extracted every paint body onto an appearance object, so this item's
-   remaining work is purely the coordinate-space conversion inside each appearance.
+7. **Appearance conversion to local-logical-coordinate drawing — ✅ LANDED 2026-08-12
+   (the appearance local-coords arc, `docs/archive/appearance-local-coords-plan.md`).**
+   Every appearance body now draws widget-local logical coordinates through the ctx matrix
+   inside the ONE preamble (`Appearance._paintInLocalScope`), byte-identically (suite +
+   wallpaper/window A/B probes); the deliberate device-space family (SizeAware icons, blits,
+   pattern fills) is declared by the convention law,
+   `docs/architecture/appearance-paint-convention.md`. The original "legacy integer path
+   kept as the identity fast path" clause proved MOOT: SWCanvas fast paths never gated on
+   identity, so there is no second path. Vector-replay (§7.1/§7.2) is now unblocked.
 8. **Bilinear (fixed-point) sampling for SWCanvas transformed `drawImage`** — SWCanvas
    currently samples nearest-neighbor by design (`swcanvas.js:1837-1838`; Phase 0f). A
    fixed-point-weight bilinear path (weights quantized so results are integer-exact →

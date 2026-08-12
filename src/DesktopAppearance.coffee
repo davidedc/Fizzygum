@@ -12,7 +12,8 @@ class DesktopAppearance extends RectangularAppearance
   # line-for-line — the single most dangerous clone in the codebase, since a fix to the rectangular paint
   # silently skipped the desktop), it hooks into the two soft `?`-call sites the base paint offers:
   #   _setUpBackgroundPattern     — after the preliminaryCheckNothingToDraw guard, before the size guard
-  #   _paintBackgroundPatternFill — after paintStroke, before restore
+  #   _paintBackgroundPatternFill — after paintStroke, once the logical-pixels scope has closed
+  #                                 (device-space — see the override below for why)
   # Op order is therefore identical to the old inlined method.
 
   # build (once per pattern change) the 5×5 wallpaper tile and turn it into a repeating CanvasPattern
@@ -80,8 +81,16 @@ class DesktopAppearance extends RectangularAppearance
 
       @pattern = aContext.createPattern(@pattern, 'repeat')
 
-  # fill the built pattern over the just-painted rectangle
-  _paintBackgroundPatternFill: (aContext, toBePainted) ->
+  # fill the built pattern over the just-painted rectangle. DEVICE-space by declaration (the
+  # appearance paint convention's blit/pattern exception): a CanvasPattern anchors to the
+  # coordinate space, so under the logical-pixels scope's CTM the 5-device-px tile would scale
+  # with the dpr and its phase would follow the translate — the base paint therefore calls this
+  # hook AFTER the scope closes, in device pixels (its old epilogue position; the desktop sits
+  # at the origin, so the phase is unchanged there anyway).
+  _paintBackgroundPatternFill: (aContext, toBePainted, appliedShadow) ->
     if @pattern?
+      aContext.save()
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
       aContext.fillStyle = @pattern
       aContext.fillRect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
+      aContext.restore()
