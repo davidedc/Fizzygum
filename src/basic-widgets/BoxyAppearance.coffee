@@ -61,7 +61,7 @@ class BoxyAppearance extends Appearance
       @fillOutline ctx
 
       if @widget.strokeColor? and !appliedShadow?
-        ctx.lineWidth = 1 # TODO might look better if * ceilPixelRatio
+        ctx.lineWidth = 1
         ctx.strokeStyle = @widget.strokeColor.toString()
         @strokeOutline ctx
 

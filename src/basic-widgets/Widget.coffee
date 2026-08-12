@@ -442,20 +442,22 @@ class Widget extends TreeNode
   _showsSelectionOverlay: ->
     world?.isEditorSelected @
   _drawSelectionOverlay: (aContext, al, at, w, h) ->
-    # the teal outline the old editor-focus HighlighterWdgt drew (D19, Color 38,166,154): a 1px stroke on my
-    # own screen footprint, half-pixel-inset for a crisp line (see RectangularAppearance.paintStroke), clipped
-    # to my visible rect so a partially-scrolled widget is not outlined past its clip.
+    # the teal outline the old editor-focus HighlighterWdgt drew (D19, Color 38,166,154): a 1-LOGICAL-px
+    # stroke (ceilPixelRatio device px — the same thickness as every rectangular-family border) on my own
+    # screen footprint, inset half a logical pixel for a crisp line (see RectangularAppearance.paintStroke),
+    # clipped to my visible rect so a partially-scrolled widget is not outlined past its clip. Deliberately
+    # DEVICE-space: this is world-level screen chrome, not an appearance body (only the thickness is logical).
     aContext.save()
     aContext.beginPath()
     aContext.rect Math.round(al), Math.round(at), Math.round(w), Math.round(h)
     aContext.clip()
     aContext.globalAlpha = 1
-    aContext.lineWidth = 1
+    aContext.lineWidth = ceilPixelRatio
     aContext.strokeStyle = Color.create(38, 166, 154, 1).toString()
-    aContext.strokeRect (Math.round(@left() * ceilPixelRatio) + 0.5),
-      (Math.round(@top() * ceilPixelRatio) + 0.5),
-      (Math.round(@width() * ceilPixelRatio) - 1),
-      (Math.round(@height() * ceilPixelRatio) - 1)
+    aContext.strokeRect (Math.round(@left() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
+      (Math.round(@top() * ceilPixelRatio) + 0.5 * ceilPixelRatio),
+      (Math.round(@width() * ceilPixelRatio) - ceilPixelRatio),
+      (Math.round(@height() * ceilPixelRatio) - ceilPixelRatio)
     aContext.restore()
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->

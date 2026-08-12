@@ -66,15 +66,13 @@ class RectangularAppearance extends Appearance
       area = clippingRectangle.intersect(@widget.bounds).round()
       @_paintBackgroundPatternFill aContext, (area.intersect @widget.boundingBoxTight()).scaleBy(ceilPixelRatio), appliedShadow
 
-  # The rectangular border: ONE DEVICE pixel wide by design, at every dpr — visually a hairline
-  # at dpr 2, half the logical thickness of BoxyAppearance's 1-logical-px stroke. Spelled in the
-  # local-logical scope as lineWidth 1/ceilPixelRatio with a half-DEVICE-pixel inset
-  # 0.5/ceilPixelRatio — dyadic for dpr ∈ {1,2}, so the device geometry AND SWCanvas's hairline
-  # classification (which reads the CTM-scaled width) are exactly the old device spelling's.
+  # The rectangular border: ONE LOGICAL pixel wide at every dpr (2 device px at dpr 2) — the
+  # same thickness and the same raw local-logical spelling as BoxyAppearance's strokeOutline,
+  # so every rectangular-family border shares one look through the scope's matrix.
   # Also a standalone entry (the clipping panels and the world re-stroke their border after the
   # children paint), so it derives its own key values.
   #
-  # Some notes / thoughts around the 1-device-pixel choice:
+  # Some notes / thoughts around the stroke:
   #  1) for a stroke width of one pixel, the stroke is inset by half a pixel. This is needed because
   #     lines in HTML5 Canvas are centered on the coordinates, so we have to center them in the middle
   #     of the pixel to fill the full width of precisely one pixel.
@@ -83,8 +81,7 @@ class RectangularAppearance extends Appearance
   #
   #  IF you'll want to make the stroke width arbitrary then...
   #
-  #  3) in case the stroke width is even (which might depend on the ceilPixelRatio, see the TODO
-  #     below), you don't need to inset by 0.5. TODO.
+  #  3) in case the stroke width is even, you don't need to inset by 0.5. TODO.
   #  4) in case the stroke is > 1, the question is where do we draw it? All inside so that it's not
   #     clipped? But then that eats into the widget's area... TODO.
   paintStroke: (aContext, clippingRectangle) ->
@@ -105,15 +102,14 @@ class RectangularAppearance extends Appearance
       ctx.clip()
 
       ctx.strokeStyle = @widget.strokeColor.toString()
-      ctx.lineWidth = 1 / ceilPixelRatio # TODO might look better as 1 logical px (the Boxy spelling) — a dpr-2 recapture
-      # the widget box snapped to the device grid (Math.round, the legacy spelling — a
-      # rotated-container payload's plane position is legitimately fractional), inset by half
-      # a DEVICE pixel for the crisp one-device-pixel line. For an integer position this is
-      # exactly inset 0.5/ceilPixelRatio at width-1/ceilPixelRatio — the probe-proven form.
-      widgetPosition = @widget.position()
-      sx = (Math.round(widgetPosition.x * ceilPixelRatio) + 0.5) / ceilPixelRatio - widgetPosition.x
-      sy = (Math.round(widgetPosition.y * ceilPixelRatio) + 0.5) / ceilPixelRatio - widgetPosition.y
-      sw = (Math.round(@widget.width() * ceilPixelRatio) - 1) / ceilPixelRatio
-      sh = (Math.round(@widget.height() * ceilPixelRatio) - 1) / ceilPixelRatio
-      ctx.strokeRect sx, sy, sw, sh
+      ctx.lineWidth = 1
+      # raw local coords, the Boxy spelling — deliberately NOT snapped to the device grid: a
+      # widget's own plane position is integer by the placement law, so snapping is provably
+      # the identity here, and the one genuinely fractional offset (a compensating wrapper's
+      # figure origin, plus its rotation pair) lives in the CTM, which a body never reads.
+      # Inside such a wrapper every thin stroke rasterizes dashed on the thresholded SWCanvas
+      # backend (the old device-hairline spelling did too, and the selection overlay still
+      # does) — a rasterization-class limit pinned by
+      # SystemTest_macroDropStrokedRectIntoRotatedPanel and ledgered in docs/BACKLOG.md.
+      ctx.strokeRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1
 

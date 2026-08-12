@@ -82,13 +82,22 @@ back-ref checks) stay in the caller, before the scope call.
   `DesktopAppearance._paintBackgroundPatternFill` therefore runs AFTER the scope closes, in
   device pixels (verified by the wallpaper A/B probe — the desktop has no suite coverage).
 - **The world-level selection/highlight overlays** (`Widget._drawSelectionOverlay`) are not
-  appearance bodies; they keep their device spelling.
+  appearance bodies; they keep their device spelling (only the stroke THICKNESS is logical —
+  `lineWidth ceilPixelRatio`, matching the rectangular-family border).
 
 ## Related spellings
 
 - `IconAppearance` keeps its own scope: a different translate+scale into its 200×200 spec
   space — already through-the-matrix, untouched by this arc.
-- `RectangularAppearance.paintStroke` draws the rectangular border at ONE DEVICE pixel by
-  design (a deliberate visual choice, spelled `1/ceilPixelRatio` in the local scope — dyadic,
-  so exactly the old device hairline at dpr 1 and 2). It is also a standalone entry (clipping
-  panels and the world re-stroke after children), so it derives its own key values.
+- `RectangularAppearance.paintStroke` draws the rectangular border at ONE LOGICAL pixel
+  (2 device px at dpr 2) — the same thickness and the same raw local spelling as
+  `BoxyAppearance.strokeOutline` (`lineWidth 1`, half-logical-pixel inset), so every
+  rectangular-family border shares one look through the matrix. It is also a standalone entry
+  (clipping panels and the world re-stroke after children), so it derives its own key values.
+  Deliberately NOT device-grid-snapped: a widget's plane position is integer by the placement
+  law (snapping is provably the identity), and the one genuinely fractional offset — a
+  compensating wrapper's figure origin plus its rotation pair — lives in the CTM, which a body
+  never reads. Inside such a wrapper every thin stroke rasterizes DASHED on the thresholded
+  SWCanvas backend (the retired device-hairline spelling did too, and the selection overlay
+  still does) — a rasterization-class limit, pinned by
+  `SystemTest_macroDropStrokedRectIntoRotatedPanel` and ledgered in `docs/BACKLOG.md`.
