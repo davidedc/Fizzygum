@@ -107,9 +107,7 @@ class RectangularAppearance extends Appearance
       # widget's own plane position is integer by the placement law, so snapping is provably
       # the identity here, and the one genuinely fractional offset (a compensating wrapper's
       # figure origin, plus its rotation pair) lives in the CTM, which a body never reads.
-      # Inside such a wrapper every thin stroke rasterizes dashed on the thresholded SWCanvas
-      # backend (the old device-hairline spelling did too, and the selection overlay still
-      # does) — a rasterization-class limit pinned by
-      # SystemTest_macroDropStrokedRectIntoRotatedPanel and ledgered in docs/BACKLOG.md.
+      # Under rotated composites the stroke renders continuously — SWCanvas samples the
+      # island warp bilinear (docs/architecture/transforms.md §8, sampling contract).
       ctx.strokeRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1
 

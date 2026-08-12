@@ -97,7 +97,6 @@ back-ref checks) stay in the caller, before the scope call.
   Deliberately NOT device-grid-snapped: a widget's plane position is integer by the placement
   law (snapping is provably the identity), and the one genuinely fractional offset — a
   compensating wrapper's figure origin plus its rotation pair — lives in the CTM, which a body
-  never reads. Inside such a wrapper every thin stroke rasterizes DASHED on the thresholded
-  SWCanvas backend (the retired device-hairline spelling did too, and the selection overlay
-  still does) — a rasterization-class limit, pinned by
-  `SystemTest_macroDropStrokedRectIntoRotatedPanel` and ledgered in `docs/BACKLOG.md`.
+  never reads. Thin strokes render CONTINUOUSLY under rotated composites: SWCanvas samples the
+  rotation composite bilinear (`docs/architecture/transforms.md` §8, sampling contract), so a
+  1-2px feature cannot disintegrate into dashes at the warp.

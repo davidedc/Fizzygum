@@ -340,6 +340,24 @@ invisible-panel blit; else → `_compositeIslandBuffer`. Three composite paths, 
   un-repainted front content (z-order corruption). v1 warps the **whole** buffer under the clip
   (correctness-first).
 
+  **Sampling contract (SWCanvas).** SWCanvas's `drawImage` samples **bilinear** on any
+  non-axis-aligned transform (`b ≠ 0 || c ≠ 0` — every rotated composite) and keeps
+  nearest-neighbor on axis-aligned ones (every plain blit and pure-scale composite,
+  byte-for-byte). The bilinear path samples at the dest pixel center, filters
+  **premultiplied** (the arbitrary RGB under the buffer's transparent background cannot
+  fringe into edges), treats taps outside the source sub-rect as transparent black, and
+  reduces bit-exactly to the pure texel when a sample lands on a texel center — so an
+  exact-90° composite with integer translation stays crisp, no blur. WHY: nearest-neighbor's
+  floor-quantized sample point periodically lands on the texel BESIDE a 1-2px source feature
+  under rotation, disintegrating hairline strokes and selection overlays into dashes — a
+  compensating wrapper (`TrackingTransformFrameWdgt`) resamples TWICE (±θ) and suffers it
+  worst. v1 sampled nearest-neighbor everywhere. Contract pinned SWCanvas-side by
+  `tests/core/057-drawimage-rotated-bilinear-contract.js`; Fizzygum-side by
+  `SystemTest_macroRotatedStrokedRectSingleComposite` and the
+  `SystemTest_macroDropStrokedRectIntoRotatedPanel` references. (Native rotates through the
+  browser's own smoothing `drawImage`, so the two backends now agree that rotated composites
+  are filtered.)
+
 ### 8.1 The island buffer cache
 
 The content subtree is rasterized **un-transformed once** and kept across composites
@@ -415,10 +433,12 @@ guarantees the warp touches only the damage region.
   every rotated composite is engine-independent. `TransformSpec._cosSin` routes non-zero angles
   through it; the zero-angle fast path takes no trig at all. (`HandleWdgt` likewise uses `DetTrig`
   for its rotate-angle math.)
-- **Nearest-neighbor scaling (accepted for v1).** SWCanvas `drawImage` samples nearest-neighbor
-  by design; rotated/scaled content — glyphs included — is nearest-neighbor-chunky on the SW
-  backend. This is the **accepted** v1 trade-off (affine plan §0f / §4.7); no smoothing/snap is
-  wired.
+- **Sampling: bilinear on rotation, nearest-neighbor on scale.** SWCanvas `drawImage` samples
+  bilinear on non-axis-aligned composites (§8 sampling contract) — rotated content, glyphs
+  included, is smoothed like native. Axis-aligned SCALED composites still sample
+  nearest-neighbor (scaled content is nearest-neighbor-chunky on the SW backend): scale-path
+  smoothing is a deliberately separate decision with its own mass re-baseline, and
+  `imageSmoothingEnabled` stays unimplemented.
 - **Whole-buffer warp (v1).** `_compositeTransformed` warps the entire buffer under the clip
   rather than a sub-rect (correctness-first). The sub-rect optimisation is banked.
 - **≤1px at a grab.** `_normalizePinnedAnchorNoSettle` rounds its compensating translation to
