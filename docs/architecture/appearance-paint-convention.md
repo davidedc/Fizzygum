@@ -23,7 +23,7 @@ before writing or modifying any `*Appearance` paint body, and together with
 ## The one preamble
 
 `Appearance._paintInLocalScope aContext, clippingRectangle, appliedShadow, opts, bodyFn`
-(`src/Appearance.coffee`) is the single spelling of the scope. It returns nil when there is
+(`src/Appearance.coffee`) is the single spelling of the scope. It returns undefined when there is
 nothing to draw, else runs `bodyFn ctx, localArea, appliedShadow` inside the scope and restores.
 `localArea` = the damage box translated to widget-local logical coordinates (integer — both the
 damage box and the widget position are integer by the placement law).

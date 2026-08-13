@@ -149,17 +149,18 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   `fg critique` resurfaces it). Baseline 0 = a HARD rule. Scans `src/` only (not the harness — a stink is a statement
   about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines — except a stink declaring
   `scope: 'comments'`, which matches the COMMENT part of each line instead (the comment-hygiene ratchets).
-  **Current stinks — ten: seven seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its
-  target `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then) **plus three comment-hygiene
-  ratchets added at the 2026-07-17 comments cleanup**. Every baseline was MEASURED by the engine on its seeding day and
+  **Current stinks — eleven: seven seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its
+  target `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then), **three comment-hygiene
+  ratchets added at the 2026-07-17 comments cleanup**, and `comment-past-receipt` (2026-08-09). One of the original
+  seven, `undefined-literal`, has since been REPLACED rather than removed — see `nil-literal` below. Every baseline was MEASURED by the engine on its seeding day and
   every stink spot-checked against its real hits; they are ratchets recording that day's count, not verdicts — driving
   any of them down is a future arc:
 
   | stink | baseline | why |
   |---|---|---|
   | `debugger-statement` | 36 | left-in debug cruft; hard-stops execution whenever devtools are open (Pharo: `ReCodeCruftLeftInMethodsRule`) |
-  | `undefined-literal` | 89 | the codebase uses `nil`, never `undefined` — a CLAUDE.md convention that was manual-only until now |
-  | `null-literal` | 10 | the codebase uses `nil`; the JS-interop sites (`JSON.stringify`'s arg, `onload = null`) are the tolerated tail |
+  | `nil-literal` | 0 | HARD: the `nil = undefined` global is RETIRED (`archive/nil-global-retirement.md`), so a `nil` is a ReferenceError waiting to happen. Replaced `undefined-literal` (baseline 83), which enforced the now-inverted convention |
+  | `null-literal` | 8 | `undefined` is the ONE absence value; the JS-interop sites (`JSON.stringify`'s arg, `onload = null`) are the tolerated tail |
   | `wall-clock` | 19 | `Date.now()`/`new Date()` breaks event-stream determinism (DETERMINISM.md — recognition keys off EVENT timestamps) |
   | `timer` | 3 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
@@ -168,8 +169,8 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   | `comment-narration` | 106 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS | <!-- narration-ok: this row DEFINES the narration rule, so it must quote its own trigger words -->
   | `commented-out-debug` | 0 | HARD: commented-out `alert(`/`debugger`/`console.log` is dead debug cruft — delete it; git remembers |
 
-  ⚠ The engine's `stripComment` is a naive `#` cut that does **not** mask STRINGS, so e.g. `undefined-literal` counts
-  `typeof x is 'undefined'`. That is ACCEPTED, not a bug: a ratchet measures REGRESSION, not an absolute. (Upgrading it
+  ⚠ The engine's `stripComment` is a naive `#` cut that does **not** mask STRINGS, so e.g. `null-literal` counts the
+  `"null"` inside a string as readily as a real `null`. That is ACCEPTED, not a bug: a ratchet measures REGRESSION, not an absolute. (Upgrading it
   to the shared `stripLine` masking is banked as §8.8 of the carryover plan.) There is also no multi-line matcher — an
   empty-catch stink would need one (§8.9).
 - **thin-wrap (`check-thin-wraps.js`).** For a private `_<name>NoSettle`, the public `<name>` in the SAME class must be,

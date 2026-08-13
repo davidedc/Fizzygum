@@ -267,7 +267,7 @@ contribute that verb via the `extraSubroutineSources` merge-seam.
   marker mechanism is **retired (arc 4)** and gated at zero by
   `buildSystem/check-whole-file-markers.js` — do not re-add a marker here or invent a new one.
 - Every core call site copes with the part's absence through the class-existence guard idiom: the
-  `macroToolkit: nil` field stays `nil` and `if MacroToolkit?` is simply false. `buildSystem/check-part-edges.js`
+  `macroToolkit: undefined` field stays `undefined` and `if MacroToolkit?` is simply false. `buildSystem/check-part-edges.js`
   fails the build on an *unguarded* core reference to `Macro`/`MacroToolkit`, so this cannot rot.
 
 ## History: the recorded→macro migration (closed)

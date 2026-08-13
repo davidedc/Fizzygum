@@ -316,6 +316,13 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## OO cleanup, lint & modernization
 
+- **`nil-global-retirement.md`** — DONE (2026-08-13). Retires the `nil = undefined` global introduced in 2017 as a CoffeeScript 1→2 default-parameter workaround: ~2000 sites across both repos renamed to `undefined`, preceded by removing the "pass a hole, get the default" call sites and 41 dead `= nil` defaults. Residue: the one-absence-value convention + the `nil-literal` (baseline 0) / `null-literal` stinks.
+  - ⚖ the decisive argument was not verbosity but that the alias had leaked into the REFLECTIVE layer — `ClassInspectorWdgt` emitted the token `"nil"` as generated source, so the meta-system could only emit code requiring the global it also defined
+  - ⛔ a naive `\bnil\b` replace is NOT sufficient — string literals (one of them emitted source), prose broken by substitution, `nils` as a VERB, and uppercase `NIL` all escape it
+  - ⛔ deleting a `= nil` default does NOT disarm the `@param` trap: `constructor: (@x) ->` writes `undefined` over the prototype default just as `(@x = nil)` did. The hazard is the `@param`. (eb063b3d's commit message claims otherwise and is wrong.)
+  - ⚖ the source-DISPLAY surface is far narrower than the source-TEXT surface — rewriting ~1500 lines of class source moved exactly ONE test, because the inspector renders source only for the member SELECTED
+  - ⚖ found + fixed on the way: `DemoMenus` had been building a stack panel with `@padding = null` → 0 instead of 5, the very CS2 breakage `nil` existed to prevent, alive in one of the ten tolerated `null` literals
+  - ⚠ left open, each needing its own pass: `SliderWdgt` (8 hole-passing sites, wants an opts constructor) and the `add` family (four overrides carry a param named `unused` while `FrameWdgt` gives that slot the meaning `notContent` — a latent bug independent of `nil`)
 - **`container-regularization-plan.md`** — COMPLETE (2026-07-19). De-byzantinates the Menu / List / Prompt / Divider family: `DividerWdgt` extracted, `MenuRowsPanelWdgt` lifted, `MenuWdgt`/`PromptWdgt` recomposed as `PopUpWdgt` composing a titled row panel.
   - ⚖ menu-ness already lived in `PopUpWdgt`, so the untie was a lift, not a rewrite — every section landed byte-identical
   - ⚖ §5.4 — the "one container becomes a window" merge was deliberately NOT done; ruled and recorded in `architecture/layering-naming-convention.md`

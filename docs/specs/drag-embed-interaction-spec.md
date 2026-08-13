@@ -48,7 +48,7 @@ Owner decisions baked in (2026-07-05; **items 4 and 7 were later revised — see
 **Fizzygum** = CoffeeScript GUI framework on one `<canvas>` (Morphic.js descendant); "web operating system"
 with windows, desktop, drag-and-drop, live in-system editing. Umbrella `/Users/davidedellacasa/code/Fizzygum-all/`
 (NOT a git repo) holds sibling repos `Fizzygum/` (source, ~470 `.coffee`), `Fizzygum-tests/` (~180 byte-exact
-screenshot macro SystemTests), `Fizzygum-builds/` (generated — never edit). `nil` == `undefined`; one class per
+screenshot macro SystemTests), `Fizzygum-builds/` (generated — never edit). `undefined` == `undefined`; one class per
 file; no imports (every class a global). Commands via `./fg` from the umbrella root: `./fg build` · `./fg suite`
 · `./fg gauntlet` (build + dpr1 + dpr2 + webkit + apps + gates) · `./fg test <name>`. Determinism doctrine:
 render/layout/input must be a pure function of the **event stream** — never wall-clock (`Fizzygum-tests/DETERMINISM.md`).

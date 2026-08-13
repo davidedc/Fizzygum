@@ -30,7 +30,7 @@ damage-mapping, and hit-testing do.
 clipping frame whose bounds-recursion terminates at itself and whose children clip to its
 box. The island's own `@bounds` is the **slot box** — integer, axis-aligned, absolute,
 ordinary Fizzygum geometry that layout sees. The frame paints no chrome of its own
-(`@appearance = @color = @strokeColor = nil` in the constructor), so an **identity** island
+(`@appearance = @color = @strokeColor = undefined` in the constructor), so an **identity** island
 is byte-for-byte just its children painted normally.
 
 **Dormant guarantee.** When a spec is identity (`TransformSpec::isIdentity` — an exact test
@@ -87,7 +87,7 @@ anchor. The design rule: **the scalars are canonical and exact; the 3×2 matrix 
 demand and never stored as truth.**
 
 - **Canonical scalars (the only serialized state):** `rotationDegrees` (float),
-  `scale` (float > 0), `anchor` (`nil` ⇒ slot-box centre, else a `Point` in slot-box/plane
+  `scale` (float > 0), `anchor` (`undefined` ⇒ slot-box centre, else a `Point` in slot-box/plane
   coords), `claimsSpace` (layout-coupling mode, §5). Extracting angle/scale back out of a
   matrix is what forced Lively's epsilon-hacks — Fizzygum never does it, so `isIdentity`'s
   `% 360 == 0` / `== 1` tests stay exact.
@@ -205,7 +205,7 @@ Layout and *reachability* answer different questions: even a `slot` island claim
 siblings, yet its rotated ink must still be scrollable-to. `TransformSpec.scrollOverflowBoxFor`
 returns **claimed box ∪ the ink's integer hull** (the unpadded exact mapped AABB, floor/ceil'd
 — nested inside the sweep square at every angle). `TransformFrameWdgt` exposes it as
-`scrollOverflowBoundsInParentPlane` (nil at identity) for the enclosing scroll frame's content-
+`scrollOverflowBoundsInParentPlane` (undefined at identity) for the enclosing scroll frame's content-
 extent merge, and re-fits that frame when the box changes
 (`_reFitScrollFrameIfReachChangedNoSettle`, memoized on `_lastScrollOverflowBox`).
 
@@ -269,7 +269,7 @@ wrapped-resize height-lock, the bar reading "analog clock" while wrapped) and th
 
 ## 6. Pinned anchors
 
-The `anchor` is `nil` (⇒ slot-box centre) for the entire un-resized population. A `nil` anchor
+The `anchor` is `undefined` (⇒ slot-box centre) for the entire un-resized population. A `undefined` anchor
 derives from the slot centre and rides moves for free. But a resize of a rotated figure would
 move the derived centre and rigidly translate every persisting screen point by `(I − sR)·delta`
 — the title bar of a collapsed tilted window would visibly jump. The fix (§7.5 **Bug D**) is to
@@ -277,21 +277,21 @@ move the derived centre and rigidly translate every persisting screen point by `
 
 - **Set/pin.** `TrackingTransformFrameWdgt._reLayoutChildren` pins the anchor on a
   **content-driven** extent change (`@transformSpec.anchor = @transformSpec._anchorFor @bounds`)
-  and translates an already-pinned anchor on a pure move; it **un-pins** (back to `nil`) when the
+  and translates an already-pinned anchor on a pure move; it **un-pins** (back to `undefined`) when the
   anchor coincides with the new slot centre again (canonical minimal form).
-- **Nil on arrange.** On an **arrange-driven** re-fit (`arrangeDriven = true`, forwarded from
-  `_applyExtent` / `_setWidthSizeHeightAccordingly`) it **nils** the anchor: the parent's
+- **Cleared on arrange.** On an **arrange-driven** re-fit (`arrangeDriven = true`, forwarded from
+  `_applyExtent` / `_setWidthSizeHeightAccordingly`) it **clears** the anchor: the parent's
   fractional model owns placement, so a stale pinned anchor would telescope and drift the render
-  off the slot. Nil re-glues render to slot.
+  off the slot. Clearing it re-glues render to slot.
 - **Pinned anchors ride moves.** A pinned anchor is an absolute plane point, so it must ride a
   rigid translation of the island. `TransformFrameWdgt` overrides the three distinct move
   primitives — `_applyMoveBy`, `_applyMoveByBase`, `__commitMoveBy` — each adding `delta` to the
-  anchor. Dormant off pinned anchors (the guard skips a `nil` anchor).
+  anchor. Dormant off pinned anchors (the guard skips a `undefined` anchor).
 - **Pick-up normalization** (§7.5 **Bug G**). Before a figure travels across planes,
   `_normalizePinnedAnchorNoSettle` re-expresses a pinned-anchor similitude as its rendering-
-  identical **nil-anchor** form (translate the whole figure by
+  identical **undefined-anchor** form (translate the whole figure by
   `t = (I − sR)(A − centre)`, computed by `TransformSpec._nilAnchorEquivalentTranslation`).
-  **Order matters:** read `t` while the anchor is still pinned, nil the anchor, *then* translate
+  **Order matters:** read `t` while the anchor is still pinned, undefined the anchor, *then* translate
   — else the move-level anchor-rides would drag `A` along and void the algebra. Integer rounding
   of `t` costs ≤1px, accepted at a grab (a new state).
 
@@ -389,12 +389,12 @@ dirty sub-rect. Fields on `TransformFrameWdgt` (all **derived render state**, li
 - `_islandBuffer` — the kept content canvas (physical pixels).
 - `_islandBufferSlotExtent` — the slot extent it was built at (the realloc key; a slot **extent**
   change forces a full rebuild, a pure move keeps the buffer).
-- `_islandBufferDirtyRect` — `nil` (clean) | a **coalesced disjoint rect-list** (virtual coords) |
+- `_islandBufferDirtyRect` — `undefined` (clean) | a **coalesced disjoint rect-list** (virtual coords) |
   `"all"`.
 - `_islandBufferGeneration` — the `WorldWdgt.immutableBackBufferGeneration` the buffer was built
   at.
 - `_islandShadowSilhouette` — the black-silhouette twin of `_islandBuffer` the shadow pass
-  composites (§8.2); nilled by every `_rasterizeIslandContent` (the one funnel for buffer-pixel
+  composites (§8.2); cleared by every `_rasterizeIslandContent` (the one funnel for buffer-pixel
   changes), so it rebuilds at most once per content change and never on a pure transform change.
 
 `_refreshIslandBuffer` forces a full rebuild when there is no buffer, on a slot-extent change, or
@@ -420,7 +420,7 @@ so returning to identity drops it (`_dropIslandBufferIfIdentity`).
 
 ### 8.2 Shadows and broken-rect under rotation
 
-The island is transparent (`@appearance = nil`), so it casts its **content's** shadow, not a box
+The island is transparent (`@appearance = undefined`), so it casts its **content's** shadow, not a box
 silhouette: `_fullPaintIntoAreaOrBlitFromBackBufferJustShadow` reverts to the base `Widget`
 shadow-paint. Because the warp composes onto the incoming CTM (which carries the unified shadow
 pass' offset translate), the warp lands the shadow at the correctly rotated/scaled place — no
@@ -493,7 +493,7 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
 - **Pick up** (`pickUpMenuAction`) — `_resolvePickUpFigure` (the same resolution the drag pipeline's
   `determineGrabs` uses, so a menu pick-up and a drag grab take the same thing), then `pickUp`.
 - **Save to file** (`saveToFile`) — serialize the figure, not the bare content: the Serializer
-  nils the root's parent, and serializing bare content actually **throws** a `SerializationError`
+  clears the root's parent, and serializing bare content actually **throws** a `SerializationError`
   (the content still references its island). The filename stays derived from the content.
 
 Related look-throughs: `_parentThroughIslands` (container-side, for classification like

@@ -174,8 +174,8 @@ singletons present in every world: `world`, `hand`, `wallpaper`, `widgetFactory`
 derived/disposable and never serialized), `bin`, `shelf`, `preferences`, and
 `app:<ClassName>` per windowed-app singleton.
 
-- `WellKnownObjects.keyFor(obj)` → symbolic key or `nil`.
-- `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `nil`
+- `WellKnownObjects.keyFor(obj)` → symbolic key or `undefined`.
+- `WellKnownObjects.resolve(key)` → the live object in the **current** world, or `undefined`
   (an unknown key is the deserializer's cue to raise a rich error).
 
 **It is lazy, not snapshotted.** Keys resolve against the live `world` on demand rather
@@ -267,7 +267,7 @@ kinds so the SWCanvas variants are caught too):
 | `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise ([Ph 3]) |
 | `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS` |
 | `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
-| `CanvasGradient` | `nil` (both modes) | context-bound; consumers rebuild — keep |
+| `CanvasGradient` | `undefined` (both modes) | context-bound; consumers rebuild — keep |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
 | `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
 
@@ -348,7 +348,7 @@ furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` 
 `world.shelfWdgt` subtrees (the two STORAGE containers — the eager storage sort keeps the
 shelf holding the reachable residents and the bin the lost ones, `StorageSorter`; a snapshot
 taken with a sort still pending is legitimate — each resident serializes wherever it rests
-and re-sorts on the first cycle after load), each non-nil app-slot window
+and re-sorts on the first cycle after load), each non-undefined app-slot window
 (`Serializer.WORLD_APP_SLOTS` — may be orphaned-but-revivable), and
 `world.simpleEditorTemplates`. `widgetSet` = the union of their subtrees; the
 world itself is excluded (a pointer *to* it becomes `{"$wk":"world"}`).
@@ -399,7 +399,7 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    overrides only `add`, so `_addNoSettle` does NOT re-place them — restored positions are
    preserved), **passing each child's deserialized `layoutSpec` through** — the snapshot's
    attachment state is authoritative: without the explicit arg the add resolves
-   `defaultLayoutSpecWhenAddedTo` (nil) over the restored slot, disarming the desktop
+   `defaultLayoutSpecWhenAddedTo` (undefined) over the restored slot, disarming the desktop
    furniture's corner knobs and downgrading every stretch record to a seed-drain geometry
    re-derive (the fraction drift the record law forbids); then `setColor` +
    `wallpaper.setPattern` (sequential self-settling public ops); await `whenReady`; repaint.

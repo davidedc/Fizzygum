@@ -198,7 +198,7 @@ genuinely must be sized-then-measured, the value is **handed forward** from the 
 ### 4.2 The layout-spec FAMILY — one object per attachment, carried by the child
 
 HOW a child participates in its container's layout is ONE spec object on the child — `Widget.layoutSpec`,
-the ACTIVE attachment. **Free-floating means NO SPEC OWNS the child's placement** — `layoutSpec` nil, or
+the ACTIVE attachment. **Free-floating means NO SPEC OWNS the child's placement** — `layoutSpec` undefined, or
 a FOLLOWER spec whose `ownsPlacement()` is false — and the layouting system leaves such a widget alone
 between its holder's own re-lays. The family base declares the AUTHORITY contract explicitly:
 `LayoutSpec.ownsPlacement() -> true` (the arrange places the child FROM the spec; user intent must edit
@@ -236,7 +236,7 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   which is what the divider's closed form rests on), axis-parameterized, one shared placement loop.
   LIFECYCLE: a per-widget KNOB (`Widget._divisionBox`, kept for the widget's whole life — a
   divider-tuned cell dragged out of its stack and back keeps its box), which doubles as the add-time
-  attachment: `holder.add w, nil, w.divisionBox('y')`.
+  attachment: `holder.add w, undefined, w.divisionBox('y')`.
 - **`VerticalStackLayoutSpec`** — `desiredWidth` (the width wish, captured at placement) + `grow`
   (0..1 share of extra space) + `alignment`, with
   `width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )` — the content
@@ -285,7 +285,7 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   re-record family (drop / duplicate / file-load / app re-home / spawnNextTo-of-stored /
   uncollapse / handle-release via the post-flush drain) — and never re-derived from imposed
   integers; `provisional` is the one sanctioned overwrite gate. LIFECYCLE: per ATTACHMENT —
-  created at record moments, nil'd by grab/reparent like any active spec, re-derived fresh on
+  created at record moments, cleared by grab/reparent like any active spec, re-derived fresh on
   re-entry (its values are derivable placement memory with no user-edited knobs, so nothing is
   lost — unlike the content-stack KNOB, which preserves underivable edits). It rides a sugar
   island's materialize/dematerialize through the ordinary `layoutSpec:` add-arg (the panel reads
@@ -423,7 +423,7 @@ To fit the engine, a new widget / container / layout spec honours, in priority o
    `_scheduleRelayoutRespectingPhase`, aimed at the one directly-affected widget — never the bare climbing verb.
 
 4. **Free-floating content climbs nothing; a size-tracking container gets the up-edge automatically.** A free-floating
-   child (nil `layoutSpec`, or a follower spec — `ownsPlacement()` false) does not invalidate its parent. If your container tracks
+   child (undefined `layoutSpec`, or a follower spec — `ownsPlacement()` false) does not invalidate its parent. If your container tracks
    its content's size, define `_reLayoutChildren` — that is the marker `_reFitContainer` gates on — and the settle loop
    re-fits you after your content settles. Do not wire a manual notification.
 
@@ -482,7 +482,7 @@ re-attempted — is in the archived plans, indexed in `docs/archive/INDEX.md`:
 - **`layout-spec-family-unification-plan.md`** + **`layout-spec-family-followups-plan.md`** — the enum + loose box
   fields collapsed into the per-child spec-object family and the axis-parameterized `StackLayoutEngine` (§4.2), then
   the cell knobs went menu-reachable, drop-slots extended to content stacks, and the dock completed; ⚖⚖ specs SURVIVE
-  detachment; ⚖ CoffeeScript defaults swallow nil sentinels.
+  detachment; ⚖ CoffeeScript defaults swallow undefined sentinels.
 - **`stretch-fractional-auto-bookkeeping-plan.md`** — the framework-owned RECORD LAW: the fill-only `__add` seed +
   the F6 re-record family (§4.2 stretch entry); ⚖ fill never overwrites a recorded spec; ⚖ imposition rides the
   polymorphic plain twins.

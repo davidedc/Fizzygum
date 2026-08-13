@@ -28,7 +28,7 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
 
 ## What's here (grows per phase)
 - `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1/F6): it paints
-  NOTHING (nil appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
+  NOTHING (undefined appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
   `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
   `ClippingAtRectangularBoundsMixin`, cropping partial-edge headers; the panel crops partial
   cells). It materialises the widget chrome
@@ -47,7 +47,7 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
   owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
 - `SheetCellsPanelWdgt.coffee` (F5) — the TRANSPARENT `PanelWdgt` subclass spanning the data
   region and hosting the `CellWdgt`s (owner direction: cells attach into a container
-  subclass). Nil appearance (the sheet never painted a data background — the backdrop shows
+  subclass). Undefined appearance (the sheet never painted a data background — the backdrop shows
   through, as always); clicks escalate through it to the sheet; drops/lock-menu/editing
   amenities neutralised; its inherited bounds-clipping is LOAD-BEARING since F6 (it crops the
   PARTIAL edge cells a non-cell-quantized window size leaves at the right/bottom; pre-F6 it
@@ -132,8 +132,8 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   `SheetCellRecord.dataflowNoteError` returns a `#ERR`. A cell whose INPUT is a `SheetError` yields
   that same error, short-circuiting before running its formula — so errors PROPAGATE along
   references. Error values paint in the error colour.
-- **Deleting a cell (blank commit).** The value is cleared to `nil` and the cell's incoming edges
-  dropped, but the NODE is KEPT — so downstream references reactively see `nil`. Full
+- **Deleting a cell (blank commit).** The value is cleared to `undefined` and the cell's incoming edges
+  dropped, but the NODE is KEPT — so downstream references reactively see `undefined`. Full
   `removeAllEdgesOf` (node death) is reserved for the sheet's `destroy` (drops every cell's edges)
   and Phase 6 un-wiring; a plain deletion is not node death because the cell may still be referenced.
 
@@ -188,7 +188,7 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   Phase 8's scroll-virtualisation will reuse. The widget is (re)built only on first mount or a class
   change.
 - **Interactivity IN (spec §9.3 Scenario A).** The cell wires an interactive value-widget
-  (`wireValueWidget` → `setTargetAndActionWithOnesPickedFromMenu nil, nil, cell, "cellInput"`): a
+  (`wireValueWidget` → `setTargetAndActionWithOnesPickedFromMenu undefined, undefined, cell, "cellInput"`): a
   drag fires `cellInput` → `SpreadsheetWdgt._markCellStaleFromHostedWidgetNoSettle` → `markStale` on the
   cell → the pooled drain recomputes the cell (retaining the widget) and its dependents in one cycle.
   A presenter (branch 2) is "one-way glass" and is NOT wired. Drag-and-DROP of desktop widgets INTO
@@ -230,7 +230,7 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   the engine edge dies via the public `world.dataflow.removeAllEdgesOf`, equivalent for a
   value-widget, which has no incoming edges), and ⚠ the cached `record.value` is cleared
   through the normal blank-commit path — without that the next recompute's branch-1 reconcile
-  would RE-HOST the widget right off the hand. Dependents see `nil` next drain; the widget
+  would RE-HOST the widget right off the hand. Dependents see `undefined` next drain; the widget
   lands wherever dropped.
 - **The drag-out needed a NEW parent-side seam** (found empirically: NO payload class was
   grabbable out of a cell — `Widget.grabsToParentWhenDragged`'s generic solid-with-parent
@@ -292,7 +292,7 @@ direct children, and post-F5 ones), then recommit every cell (rebuild `compiledF
 AND re-declare edges), mark all stale, one drain — so a restored/duplicated sheet re-declares
 its OWN edges, RETAINS its widget-valued cells' live widgets (class match) and REBUILDS its
 presenters from values (a Color's swatch is DERIVED, spec §9.4; its churn-skip
-`presentedValue` is nil after restore, forcing the rebuild — no orphan/double), needing no
+`presentedValue` is undefined after restore, forcing the rebuild — no orphan/double), needing no
 engine fix-up. **The constructor builds the full
 grid, but the deserialize/duplicate path SKIPS the constructor (`Object.create`), so the restored/copied
 cells ride the snapshot and are adopted by the re-index — never a double grid.** (This replaced Phase 3's
@@ -311,7 +311,7 @@ duplicated sheet (which inherits receiver membership via the copier) doesn't edi
 inside the transparent `SheetCellsPanelWdgt`) and the header cells (`SheetHeaderCellWdgt`,
 direct children) each paint their own fill/edges/ring and carry their label/value as CHILD
 widgets (hosted value / presenter / passive scalar-text `StringWdgt`) — the sheet is the model
-owner, formula scope, keyboard receiver and geometry authority, with a nil appearance. This
+owner, formula scope, keyboard receiver and geometry authority, with an undefined appearance. This
 completes the arc: "painted chrome, widgetized contents" (Phase 4, sockets for rich cells
 only) → "widgetized viewport over painted chrome" (Phase 8, every visible DATA cell a widget)
 → "everything a widget" (F5, owner direction 2026-07-17: anything selectable/clickable should
@@ -377,7 +377,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   (the **hidden-rich-cell exemption**: it `__hide`s in place so its hosted widget's runtime
   state keeps riding the tree and survives save/load — spec §13 retain-and-remount extended to
   scroll; the exemption predicate is "the hosted widget IS the record's value, or the record's
-  value is still nil on the restore path"); nothing else. `@_cells` indexes both. A recompute
+  value is still undefined on the restore path"); nothing else. `@_cells` indexes both. A recompute
   that turns a hidden cell's value non-widget recycles it on the spot
   (`_reconcileCellNoSettle`); a widget value committed to a cell with NO widget materialises a
   hidden one right there (widgets ride the TREE, not the model — losing the mount would lose

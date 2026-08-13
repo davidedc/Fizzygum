@@ -45,7 +45,7 @@ Two pieces, both in the framework source:
 ### 2a. `Widget::opaqueCoveredRect()` — the coverage predicate
 
 Returns the axis-aligned rectangle this widget **provably paints fully opaque**, in logical px
-world coordinates, or `nil`. It is the single geometry the whole feature rests on. Gates, ALL
+world coordinates, or `undefined`. It is the single geometry the whole feature rests on. Gates, ALL
 evaluated at runtime (never baked per class — appearances are swapped live, e.g. a re-parented
 window flips Rectangular↔Boxy):
 
@@ -67,7 +67,7 @@ window flips Rectangular↔Boxy):
    - `BoxyAppearance` (rounded windows) → the **inscribed box**: bounds inset by
      `cornerRadius + 1` on every side (the straight edges fill crisply; only the corner arcs
      anti-alias, so +1 is conservative);
-   - anything else (gradients, `DesktopAppearance`, unknown subclasses) → `nil`.
+   - anything else (gradients, `DesktopAppearance`, unknown subclasses) → `undefined`.
 
 Padding ≠ 0 and a *translucent* `backgroundColor` are **not** exclusions — the tight-box result
 already accounts for both.
@@ -98,7 +98,7 @@ skipped beneath it would have been overpainted anyway — the final pixels are i
 full-depth pass. This holds even for the coverer's own drop shadow: all painting is clipped to
 `dirtyPart`, and the coverer's fill (which contains `dirtyPart + 1px`) overpaints its own
 pre-content shadow. The only way to be wrong is to *over-claim* a covered rect, and every gate in
-§2a guards against that by yielding `nil` / a smaller rect on any doubt. The byte-exact SystemTest
+§2a guards against that by yielding `undefined` / a smaller rect on any doubt. The byte-exact SystemTest
 suite (265 tests × dpr1/dpr2/WebKit) is the proof; it also empirically covers the paint-record
 skip.
 
