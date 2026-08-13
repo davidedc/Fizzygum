@@ -523,7 +523,7 @@ class Widget extends TreeNode
   # sort re-files anything reachable to the shelf that same cycle). The
   # save-close path passes the shelf directly: the reference demonstrably
   # exists, so filing there just skips the bin hop the sort would fix up.
-  _closeNoSettle: (restingContainer = nil) ->
+  _closeNoSettle: (restingContainer) ->
 
     # closing window content: also close the window
     # UNLESS we are an internal window, in such case
@@ -839,7 +839,7 @@ class Widget extends TreeNode
   # ride along, like every unmarked move verb): the one-shot for the ubiquitous construction
   # idiom `w._applyMoveTo p; w._applyExtent e`. CONTRAST _applyGrantedBounds below, the arrange
   # engine's frame-commit, whose translate deliberately does NOT carry children.
-  _applyBounds: (aRectangleOrPosition, extent = nil) ->
+  _applyBounds: (aRectangleOrPosition, extent) ->
     aRectangle = if extent? then aRectangleOrPosition.extent extent else aRectangleOrPosition
     # deliberately NOT re-fusable into a self-call: this IS the one-shot the pairs fuse into
     @_applyMoveTo aRectangle.origin
@@ -948,12 +948,12 @@ class Widget extends TreeNode
   # prefer this over a setExtent-then-moveTo pair, which flushes twice). Two call shapes:
   #   setBounds aRectangle            -- the Morphic/Cocoa-setFrame form
   #   setBounds aPosition, anExtent   -- origin + size as Points (the friendly form)
-  setBounds: (aRectangleOrPosition, extent = nil) ->
+  setBounds: (aRectangleOrPosition, extent) ->
     @_settleLayoutsAfter => @_setBoundsNoSettle aRectangleOrPosition, extent
 
   # Non-settling bounds core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent /
   # @desiredPosition + invalidate, no flush -- rides an OUTER settle. Was setBounds' inline thunk.
-  _setBoundsNoSettle: (aRectangleOrPosition, extent = nil) ->
+  _setBoundsNoSettle: (aRectangleOrPosition, extent) ->
     aRectangle = if extent? then aRectangleOrPosition.extent extent else aRectangleOrPosition
     if not @isFreeFloating()
       return
@@ -3283,11 +3283,11 @@ class Widget extends TreeNode
   # self-settle would re-enter the flush guard; for the other caller
   # (showResizeAndMoveHandlesAndLayoutAdjusters, a menu action) it is byte-identical
   # because the frame settles anyway.
-  addAsSiblingAfterMe: (aWdgt, position = nil, layoutSpec = nil) ->
+  addAsSiblingAfterMe: (aWdgt, position, layoutSpec) ->
     myPosition = @positionAmongSiblings()
     @parent._addNoSettle aWdgt, position: (myPosition + 1), layoutSpec: layoutSpec
 
-  addAsSiblingBeforeMe: (aWdgt, position = nil, layoutSpec = nil) ->
+  addAsSiblingBeforeMe: (aWdgt, position, layoutSpec) ->
     myPosition = @positionAmongSiblings()
     @parent._addNoSettle aWdgt, position: myPosition, layoutSpec: layoutSpec
 
@@ -3310,7 +3310,7 @@ class Widget extends TreeNode
   # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
   # removeShadow. See docs/archive/deferred-layout-refit-and-add-design.md (D3).
-  add: (aWdgt, position = nil, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
+  add: (aWdgt, position, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
@@ -3403,7 +3403,7 @@ class Widget extends TreeNode
   consumesFractionalGeometryOf: (child) ->
     false
 
-  __add: (aWdgt, avoidExtentCalculation, position = nil) ->
+  __add: (aWdgt, avoidExtentCalculation, position) ->
     # the widget that is being
     # attached might be attached to
     # a clipping widget. So we
@@ -4829,7 +4829,7 @@ class Widget extends TreeNode
       ancestor = ancestor.parent
     return
 
-  _invalidateLayout: (triggeringChild = nil) ->
+  _invalidateLayout: (triggeringChild) ->
     # FREEFLOATING-skip -- THE single home of the rule: a freefloating child's add/remove/resize
     # cannot change its parent's layout (it's positioned absolutely, not laid out by the parent).
     # The climb and every teardown/move site pass the child whose change triggered this invalidate;

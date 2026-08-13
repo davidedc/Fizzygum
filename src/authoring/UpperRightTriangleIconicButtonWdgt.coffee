@@ -10,7 +10,7 @@ class UpperRightTriangleIconicButtonWdgt extends UpperRightTriangleWdgt
 
   color: Color.WHITE
 
-  constructor: (parent = nil) ->
+  constructor: (parent) ->
     super
     @_buildAndConnectChildren()
 

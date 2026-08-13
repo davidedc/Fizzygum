@@ -223,7 +223,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # end up in the Panel inside it.
   # This would also apply to resizing handles - so we need to
   # correct for that case
-  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign). Keyed off the WIDGET, not the layoutSpec argument:
     # handles are added with no explicit spec (defaultLayoutSpecWhenAddedTo resolves it inside

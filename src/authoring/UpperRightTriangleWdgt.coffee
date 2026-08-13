@@ -1,6 +1,6 @@
 class UpperRightTriangleWdgt extends Widget
 
-  constructor: (parent = nil, proportionOfParent = 4/8) ->
+  constructor: (parent, proportionOfParent = 4/8) ->
     super()
     @cornerSpec = new CornerInternalLayoutSpec 'topRight', proportionOfParent, 0
     @appearance = new UpperRightTriangleAppearance @

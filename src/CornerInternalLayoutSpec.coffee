@@ -29,7 +29,7 @@ class CornerInternalLayoutSpec extends LayoutSpec
   fixedSize: 0
   inset: nil
 
-  constructor: (@anchor, @proportionOfParent = 0, @fixedSize = 0, inset = nil) ->
+  constructor: (@anchor, @proportionOfParent = 0, @fixedSize = 0, inset) ->
     super()
     @inset = inset ? new Point 0, 0
 

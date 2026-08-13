@@ -124,7 +124,7 @@ class StorageSorter
   # precedent). Quiet during teardown BY CONSTRUCTION (mirroring the bounds
   # guard): it is only ever called from the drain station -- which never runs
   # mid-teardown -- and from resetWorld's end, after the world is consistent.
-  _auditStorageNoSettle: (justComputedGcSessionId = nil) ->
+  _auditStorageNoSettle: (justComputedGcSessionId) ->
     binContents = world.binWdgt?.scrollPanel?.contents
     if binContents?
       for w in binContents.children

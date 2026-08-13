@@ -67,7 +67,7 @@ class AnalogClockWdgt extends Widget
   # fill set by _renderingHelper (color=nil → left untouched), the seconds hand alone sets its own
   # red. Every op is in the same order as the old per-hand bodies, and colour is scoped by save/
   # restore exactly as before, so the pixels are identical. (@width()/@height() are pure getters.)
-  _drawHand: (context, squareDim, angle, widthMultiplier, innerDivisor, outerDivisor, color = nil) ->
+  _drawHand: (context, squareDim, angle, widthMultiplier, innerDivisor, outerDivisor, color) ->
     context.save()
     context.rotate angle
     if color?

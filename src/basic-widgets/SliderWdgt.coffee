@@ -152,7 +152,7 @@ class SliderWdgt extends CircleBoxWdgt
   # arg.x, @button.bottom() ≡ arg.y + @button.height() at that instant. No argument ⇒
   # fall back to the applied button geometry (safe for any other/serialization caller).
   # See docs/archive/softwrap-deferred-layout-conversion-plan.md §6a.
-  updateValue: (constrainedButtonPosition = nil) ->
+  updateValue: (constrainedButtonPosition) ->
     if constrainedButtonPosition?
       buttonTop = constrainedButtonPosition.y
       buttonLeft = constrainedButtonPosition.x

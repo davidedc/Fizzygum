@@ -25,7 +25,7 @@ class ToolPanelWdgt extends PanelWdgt
   # Public add self-settles over the non-settling core (the Widget /
   # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern); the pre-convert shape is in
   # docs/archive/layout-optimizations-and-oo-cleanup-plan.md.
-  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
   _addNoSettle: (aWdgt, opts = {}) ->

@@ -52,7 +52,7 @@ ControllerMixin =
       # the public @action otherwise (setValue / setInput1 / setColor / ... never open a settle, so the public
       # name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). @action stays the
       # menu-friendly public name everywhere (menus, <action>IsConnected flags, hard-wired app circuits).
-      _fireConnection: (value, argumentToAction = nil) ->
+      _fireConnection: (value, argumentToAction) ->
         return unless @target? and @action and @action != ""
         # under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my dataflowValue
         # when it delivers along my edge (spec §3, notifications carry no values). So every controller's

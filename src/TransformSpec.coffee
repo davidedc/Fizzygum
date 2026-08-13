@@ -38,7 +38,7 @@ class TransformSpec
   # a shared, immutable value: deep copies keep the reference (see Duplicator)
   keptByReferenceOnDeepCopy: true
 
-  constructor: (@rotationDegrees = 0, @scale = 1, @anchor = nil, @claimsSpace = "footprint") ->
+  constructor: (@rotationDegrees = 0, @scale = 1, @anchor, @claimsSpace = "footprint") ->
     # Phase 2: rotation is live — for a non-zero angle the matrix trig is Math.cos/sin, which the
     # reference-matched pages have patched to the fdlibm port (see _cosSin), so rotated composites
     # are cross-engine identical there.

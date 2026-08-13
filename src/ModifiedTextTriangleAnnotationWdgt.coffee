@@ -2,7 +2,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
 
   positionWithinParent: "topLeft"
 
-  constructor: (parent = nil, proportionOfParent = 0, fixedSize = 10) ->
+  constructor: (parent, proportionOfParent = 0, fixedSize = 10) ->
     super()
     @cornerSpec = new CornerInternalLayoutSpec 'topLeft', proportionOfParent, fixedSize
     @appearance = new UpperRightTriangleAppearance @, @positionWithinParent

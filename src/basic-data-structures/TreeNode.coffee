@@ -47,7 +47,7 @@ class TreeNode
 
   gcReferenceExaminedSessionIdMark: 0
 
-  constructor: (@parent = nil, @children = []) ->
+  constructor: (@parent, @children = []) ->
 
   
   # TreeNode string representation: e.g. 'a TreeNode[3]'
@@ -59,7 +59,7 @@ class TreeNode
     "a TreeNode" + "[" + childrenLength + "]"
 
   # TreeNode accessing:
-  _addChild: (node, position = nil) ->
+  _addChild: (node, position) ->
     WorldWdgt.noteStructureChange()
     if !position?
       @children.push node

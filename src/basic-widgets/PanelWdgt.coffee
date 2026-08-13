@@ -14,7 +14,7 @@ class PanelWdgt extends Widget
 
   # if this Panel belongs to a ScrollPanel, then
   # the @scrollPanel points to it
-  constructor: (@scrollPanel = nil) ->
+  constructor: (@scrollPanel) ->
     super()
     @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @

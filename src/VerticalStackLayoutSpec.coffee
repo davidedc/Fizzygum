@@ -40,7 +40,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
   isStackElementActive: ->
     !@attachedAsFrameContent
 
-  constructor: (@grow = nil) ->
+  constructor: (@grow) ->
     super()
     return nil
 

@@ -66,7 +66,7 @@ class TransformFrameWdgt extends PanelWdgt
     "_islandShadowSilhouette"
   ]
 
-  constructor: (contentWidget = nil, transformSpec = nil) ->
+  constructor: (contentWidget, transformSpec) ->
     super()   # PanelWdgt ctor (sets appearance/color/stroke) — we blank them below
     @transformSpec = transformSpec ? new TransformSpec()
     # invisible frame: no background, no stroke, no chrome of its own.

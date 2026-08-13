@@ -37,7 +37,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
   # actually
   # ends up in the Panel inside it
-  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped) ->
+  add: (aWdgt, position, layoutSpec, beingDropped) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
     if !@contents? or aWdgt.attachesToScrollFrameDirectly?()

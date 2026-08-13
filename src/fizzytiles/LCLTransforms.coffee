@@ -237,7 +237,7 @@ class LCLTransforms
       startIndex++
     @popMatrix()
 
-  scale: (a, b = 1, c = 1, d = nil) ->
+  scale: (a, b = 1, c = 1, d) ->
     arg_a = a
     arg_b = b
     arg_c = c
@@ -273,7 +273,7 @@ class LCLTransforms
     if appendedFunctionsStartIndex?
       @_runAppendedBlocks arguments, appendedFunctionsStartIndex
 
-  rotate: (a, b, c = 0, d = nil) ->
+  rotate: (a, b, c = 0, d) ->
     arg_a = a
     arg_b = b
     arg_c = c
@@ -302,7 +302,7 @@ class LCLTransforms
     if appendedFunctionsStartIndex?
       @_runAppendedBlocks arguments, appendedFunctionsStartIndex
 
-  move: (a, b, c = 0, d = nil) ->
+  move: (a, b, c = 0, d) ->
     arg_a = a
     arg_b = b
     arg_c = c

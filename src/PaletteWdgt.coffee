@@ -18,7 +18,7 @@ class PaletteWdgt extends Widget
   argumentToAction: nil
   choice: nil
 
-  constructor: (@target = nil, sizePoint) ->
+  constructor: (@target, sizePoint) ->
     super()
     @__commitExtent sizePoint or @defaultSize()
 

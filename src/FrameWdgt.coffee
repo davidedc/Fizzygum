@@ -559,7 +559,7 @@ class FrameWdgt extends Widget
   _reLayoutMayResizeOwnWidth: ->
     @isFreeFloating() and !@contents?.contentStackSpec()?.desiredWidth?
 
-  add: (aWdgt, position = nil, layoutSpec, beingDropped, notContent) ->
+  add: (aWdgt, position, layoutSpec, beingDropped, notContent) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
 
   # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle).

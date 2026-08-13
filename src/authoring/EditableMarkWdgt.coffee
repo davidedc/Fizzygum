@@ -3,7 +3,7 @@ class EditableMarkWdgt extends UpperRightTriangleIconicButtonWdgt
   editObject: nil
   editMethodAsString: ""
 
-  constructor: (parent = nil, @editObject, @editMethodAsString) ->
+  constructor: (parent, @editObject, @editMethodAsString) ->
     super parent
     @toolTipMessage = "edit code for the tool"
 

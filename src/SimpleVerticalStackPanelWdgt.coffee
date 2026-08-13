@@ -22,7 +22,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
-  add: (aWdgt, position = nil, layoutSpec = nil, beingDropped, unused, positionOnScreen) ->
+  add: (aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific

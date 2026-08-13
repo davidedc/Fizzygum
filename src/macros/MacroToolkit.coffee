@@ -997,7 +997,7 @@ class MacroToolkit
     # a palette, dragging a slider) calls target[setter](value). Each menu is captured fresh from
     # getMostRecentlyOpenedMenu() right after it opens (every mouseUp clears world.freshlyCreatedPopUps).
     macroSubroutines.add Macro.fromString """
-      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix = nil) ->
+      setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, propertyLabel, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
         @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
         yield "waitNoInputsOngoing"
         # When the controller is INSIDE a container (its parent is not the world), right-clicking it opens the
