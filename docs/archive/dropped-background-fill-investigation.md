@@ -51,14 +51,24 @@
 > alpha — empirical proof that a screenshot test alone could NOT have caught this, and the
 > reason the guard asserts the FIELD.
 >
-> **Left open, deliberately (not blockers, flagged to the owner):** SWCanvas does not validate
-> `globalAlpha` per HTML5 (it stores `undefined`/`NaN` raw; `NaN` still zeroes a fill on the
-> *current* engine — measured); and three other sites read `@backgroundTransparency` without a
-> nil-safe path — `Appearance.coffee:70`, `AnalogClockAppearance.coffee:45` (both assign it
-> straight to `globalAlpha`) and `RectangularAppearance.coffee:6` / `SimpleImageWdgt.coffee:119`
-> / `VideoPlayerCanvasWdgt.coffee:116` (which skip the background fill entirely when it is nil —
-> the same silent-drop shape, engine-independent). No shipping class reaches them with a nil
-> today now that the two clobbering constructors are fixed.
+> **Follow-ups — CLOSED the same day (2026-08-13), owner-directed.**
+> - **The upstream half is fixed.** SWCanvas `e1d8c4a`: `globalAlpha` is no longer a plain public
+>   field but a **validated accessor pair**, in the same style as `lineWidth` — an infinite / NaN /
+>   out-of-range assignment is IGNORED and the previous alpha stands, per HTML5. This removes the
+>   half of the mechanism that made the failure SILENT: a bad alpha can no longer zero a fill.
+>   SWCanvas test `070-globalalpha-invalid-assignment-ignored` pins it (invalid ignored in BOTH the
+>   readback and the painted pixels; the boundaries 0 and 1 still apply; `globalAlpha` 0 still draws
+>   nothing, proving it was not "fixed" by clamping; save/restore round-trips), and was verified to
+>   FAIL without the fix. Vendored into Fizzygum with the pin bumped.
+> - **The remaining Fizzygum readers are handled.** `Appearance.coffee`'s
+>   `backgroundTransparencyNormalPass` policy and `AnalogClockAppearance` both assigned
+>   `@widget.backgroundTransparency` straight to `globalAlpha`; both now coerce with `? 1`.
+>   ⚠ **Correction to this banner's first draft:** the other three sites —
+>   `RectangularAppearance`, `SimpleImageWdgt`, `VideoPlayerCanvasWdgt` — do NOT skip a background
+>   fill. They use the field in **`isTransparentAt` (hit-testing)**, and their
+>   `backgroundTransparency?` existence check was **vacuous, not buggy**: `nil > 0` is already
+>   false, so the outcome never differed. With the field now an invariant, that dead check is
+>   collapsed into the meaningful `> 0` test.
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-13, immediately after the SWCanvas one-rect-fill campaign closed

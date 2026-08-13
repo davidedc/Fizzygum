@@ -42,7 +42,9 @@ class AnalogClockAppearance extends Appearance
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = @widget.backgroundTransparency
+      # `? 1`: an absent backgroundTransparency means fully opaque (Widget's class-level
+      # default) — never hand the canvas a nil (see StringWdgt::_prepareTextBufferContext).
+      aContext.globalAlpha = @widget.backgroundTransparency ? 1
 
       # the background, filling the damage box (al/at/w/h: device pixels).
       # (backgroundColor is nil unless the user sets one — the base Widget default — so

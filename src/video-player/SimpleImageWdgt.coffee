@@ -116,8 +116,10 @@ class SimpleImageWdgt extends CanvasWdgt
   isTransparentAt: (aPoint) ->
     if @boundingBoxTight().containsPoint aPoint
       return false
-    if @backgroundTransparency? and @backgroundColor?
-      if @backgroundTransparency > 0
-        if @boundsContainPoint aPoint
-          return false
+    # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
+    # leaves it nil) — so only the "is it actually opaque enough to catch a click" test
+    # remains; the old `backgroundTransparency?` existence check was vacuous.
+    if @backgroundColor? and @backgroundTransparency > 0
+      if @boundsContainPoint aPoint
+        return false
     return true

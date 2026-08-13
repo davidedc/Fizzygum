@@ -67,7 +67,12 @@ class Appearance
     alphaPolicy = opts?.alpha
     if alphaPolicy == "backgroundTransparencyNormalPass"
       if !appliedShadow?
-        aContext.globalAlpha = @widget.backgroundTransparency
+        # `? 1`: an absent backgroundTransparency means fully opaque (Widget's class-level
+        # default) — never hand the canvas a nil. See the note in
+        # StringWdgt::_prepareTextBufferContext: an invalid globalAlpha is not necessarily
+        # loud, and relying on "the previous value stands" would silently paint at whatever
+        # alpha the ambient context happened to carry.
+        aContext.globalAlpha = @widget.backgroundTransparency ? 1
     else if alphaPolicy != "none"
       aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 

@@ -3,10 +3,12 @@ class RectangularAppearance extends Appearance
   isTransparentAt: (aPoint) ->
     if @widget.boundingBoxTight().containsPoint aPoint
       return false
-    if @widget.backgroundTransparency? and @widget.backgroundColor?
-      if @widget.backgroundTransparency > 0
-        if @widget.boundsContainPoint aPoint
-          return false
+    # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
+    # leaves it nil) — so only the "is it actually opaque enough to catch a click" test
+    # remains; the old `backgroundTransparency?` existence check was vacuous.
+    if @widget.backgroundColor? and @widget.backgroundTransparency > 0
+      if @widget.boundsContainPoint aPoint
+        return false
     return true
 
   # This method only paints this very widget
