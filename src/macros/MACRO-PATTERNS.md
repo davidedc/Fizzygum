@@ -1741,6 +1741,14 @@ assertion a recapture after a regression silently stores two different hashes an
   click the empty desktop (`@moveToAndClick_InputEvents (new Point X, Y)`) to deselect before rotating/screenshotting, and the ring
   IS the stroke. (Keep the selection when the OVERLAY is the subject — `macroDropStrokedRectIntoRotatedPanel` pins overlay + border
   together on the compensating-wrapper face.)
+- **Pinning the SCALE-sampling policy: rescale ONE island across the integer boundary**
+  (`macroScaledStrokedRectSmooth`): build the stroked-box fixture programmatically (strokeColor
+  before `world.add`, no clicks → no selection overlay to deselect), wrap at a NON-integer scale
+  (`new TransformFrameWdgt box, new TransformSpec(0, 1.5)` — smooth/bilinear look, matching
+  native), screenshot; then `island.setScale 2` + `yield "waitNoInputsOngoing"` — the SAME island
+  at an INTEGER scale renders crisp NN pixel duplication (`_compositeScaleOnly`'s
+  `imageSmoothingEnabled = false` opt-out), screenshot. One test, both faces of the policy;
+  the sampling contract itself lives in `docs/architecture/transforms.md` §8.
 - **Tilted-island fixture discipline** (`macroDropIntoTiltedStackInsertsAtVisualSlot`, `macroStackAdjusterInTiltedIslandMapsDragDelta`):
   tilt via the public sugar (`widget.setRotationDegrees deg` + `yield "waitNoInputsOngoing"` — wraps in a `TrackingTransformFrameWdgt`).
   **Prefer 180° for screen-vs-plane catch tests**: it inverts the visual order / flips the sign EXACTLY, while at 45° the bug class

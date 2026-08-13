@@ -586,9 +586,16 @@ class TransformFrameWdgt extends PanelWdgt
       @_islandShadowSilhouette = HTMLCanvasElement.blackSilhouetteOf buffer
     @_islandShadowSilhouette
 
-  # §4.2 scale-only fast path: a uniform scale needs no setTransform — an unequal
-  # src/dst drawImage suffices, every mapped rect stays axis-aligned, and the damage
-  # clip is a plain rect intersection of the dst rect (no ctx.clip()).
+  # §4.2 scale-only fast path: a uniform scale needs no setTransform — the whole buffer
+  # is drawn through the ONE slot→dst mapping under a rect clip to the damage region,
+  # every mapped rect stays axis-aligned. The clip (not a src sub-rect) is what confines
+  # the draw: SWCanvas samples scaled draws BILINEAR, and a per-strip src sub-rect would
+  # give each damage strip its own rounded mapping — a half-texel phase shift per strip —
+  # and starve edge taps (outside the sub-rect samples transparent), so an incremental
+  # composite would visibly diverge from a full one at every strip seam. One continuous
+  # mapping + clip makes strips byte-identical to the full composite BY CONSTRUCTION
+  # (the rotation path's proven shape; SWCanvas' rect clip clamps the iterated pixels,
+  # so this costs the same inner-loop work as the old sub-rect spelling).
   _compositeScaleOnly: (aContext, clippingRectangle, appliedShadow, buffer) ->
     slot = @bounds
     s = @transformSpec.scale
@@ -604,43 +611,32 @@ class TransformFrameWdgt extends PanelWdgt
     visibleDst = dstRect.intersect clippingRectangle
     return if visibleDst.isEmpty()
 
-    # map the visible dst sub-rect back to buffer-local (logical) coords: 0..slotW,
-    # 0..slotH. Dividing by s inverts the scale.
-    srcLeftL = (visibleDst.left() - dstLeft) / s
-    srcTopL  = (visibleDst.top()  - dstTop)  / s
-    srcWL    = visibleDst.width()  / s
-    srcHL    = visibleDst.height() / s
-
     cpr = ceilPixelRatio
-    sx = Math.round srcLeftL * cpr
-    sy = Math.round srcTopL * cpr
-    sw = Math.round srcWL * cpr
-    sh = Math.round srcHL * cpr
-    # Clamp the SOURCE sub-rect into the buffer. Float rounding at a partial clip edge
-    # (e.g. the shadow pass' offset clip, or a scroll-frame overhang) can push it a
-    # pixel past the buffer edge, and SWCanvas' drawImage THROWS on an out-of-bounds
-    # source rect (native silently clips) — which, un-caught, banned the island from
-    # repainting and made the frame nondeterministic. Mirror BackBufferMixin.calculate-
-    # KeyValues' Math.min clamp; the dst keeps its extent, so at most a sub-pixel edge
-    # strip is stretched — imperceptible and, crucially, deterministic.
-    if sx < 0 then sw += sx ; sx = 0
-    if sy < 0 then sh += sy ; sy = 0
-    sw = Math.min sw, buffer.width - sx
-    sh = Math.min sh, buffer.height - sy
-    return if sw < 1 or sh < 1
     aContext.save()
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
-    # Round the four device EDGES and derive extent from them (dr-dl, db-dt), NOT round(width)
-    # independently. If one cycle splits this island's damage into adjacent strips, strip A's right
-    # edge round(boundary*cpr) then equals strip B's left edge round(boundary*cpr) — gapless by
-    # construction. round(l)+round(w) could disagree with round(r) by 1px on a NON-INTEGER dst edge
-    # (a fractional scale/anchor), leaving a stale or doubled column at the seam. For an integer scale
-    # (all current refs) the edges are already integer, so this is byte-identical.
+    # INTEGER-scale zooms stay NEAREST-NEIGHBOR by explicit opt-out (owner D2a,
+    # scale-smoothing arc): an integer axis-aligned upscale is pure pixel
+    # duplication — crisp and information-preserving — and both backends honor
+    # the standard flag, so native and SWCanvas agree at every scale: integer
+    # crisp, non-integer smooth. Restored by the restore() below. (Rotated
+    # composites — 90°-multiples included — keep the smoothing sampler: the
+    # spec matrix carries ~1e-16 trig residues at quadrant angles, and NN's
+    # floor through a residue-skewed inverse picks wrong texels; the bilinear
+    # zero-fraction path absorbs residues instead. See docs/BACKLOG.md.)
+    aContext.imageSmoothingEnabled = false if s == Math.round s
+    # Round the four clip EDGES and derive extents from them (dr-dl, db-dt), NOT
+    # round(width) independently: if one cycle splits this island's damage into adjacent
+    # strips, strip A's right edge round(boundary*cpr) equals strip B's left edge —
+    # gapless partition by construction. The clip is in the INCOMING coordinate space
+    # (identity on the normal pass, the shadow-offset translate on the shadow pass),
+    # exactly like the rotation path's damage clip.
     dl = Math.round visibleDst.left() * cpr
     dt = Math.round visibleDst.top() * cpr
     dr = Math.round visibleDst.right() * cpr
     db = Math.round visibleDst.bottom() * cpr
-    aContext.drawImage buffer, sx, sy, sw, sh, dl, dt, dr - dl, db - dt
+    aContext.clipToRectangle dl, dt, dr - dl, db - dt
+    aContext.drawImage buffer, 0, 0, buffer.width, buffer.height,
+      dstLeft * cpr, dstTop * cpr, (dstRight - dstLeft) * cpr, (dstBot - dstTop) * cpr
     aContext.restore()
 
   # §4.2 general warp path (Phase 2 — rotation, and rotation+scale): render-straight-then-warp,

@@ -329,10 +329,18 @@ invisible-panel blit; else → `_compositeIslandBuffer`. Three composite paths, 
 (`TransformFrameWdgt`):
 
 - **identity** — stock clipping-panel blit (byte-identical to the bare children).
-- **pure scale** (`_compositeScaleOnly`) — an unequal-src/dst `drawImage`; every mapped rect
-  stays axis-aligned, so the damage clip is a plain rect intersection, no `setTransform`, no
-  `ctx.clip()`. Source sub-rect is clamped into the buffer (SWCanvas `drawImage` **throws** on an
-  out-of-bounds source rect; native silently clips).
+- **pure scale** (`_compositeScaleOnly`) — the **whole buffer** drawn through the one
+  slot→dst mapping under a rect clip to the damage region (`clipToRectangle`, no
+  `setTransform`); every mapped rect stays axis-aligned. The clip — not a src sub-rect —
+  is what confines the draw: under the smoothing sampler a per-strip src sub-rect would
+  give each damage strip its own rounded mapping (a half-texel phase shift) and starve
+  edge taps, so an incremental composite would visibly diverge from a full one at strip
+  seams; one continuous mapping + clip makes strips byte-identical to the full composite
+  by construction (pinned by `SystemTest_macroOversizedShadowChildInScaledIslandRepaintsBuffer`'s
+  numeric A/B). At an INTEGER scale the composite sets `imageSmoothingEnabled = false`
+  for the one draw: an integer axis-aligned upscale is pure pixel duplication — crisp,
+  information-preserving — and both backends honor the standard flag, so native and
+  SWCanvas agree at every scale (integer crisp-NN, non-integer smooth).
 - **rotation** (`_compositeTransformed`) — render-straight-then-warp: `ctx.transform` composes
   `(device × island matrix)` onto the incoming CTM and `drawImage`s the buffer onto the slot box
   under a **mandatory** real path clip to `(damage ∩ screen footprint)`. A transformed
@@ -340,23 +348,35 @@ invisible-panel blit; else → `_compositeIslandBuffer`. Three composite paths, 
   un-repainted front content (z-order corruption). v1 warps the **whole** buffer under the clip
   (correctness-first).
 
-  **Sampling contract (SWCanvas).** SWCanvas's `drawImage` samples **bilinear** on any
-  non-axis-aligned transform (`b ≠ 0 || c ≠ 0` — every rotated composite) and keeps
-  nearest-neighbor on axis-aligned ones (every plain blit and pure-scale composite,
-  byte-for-byte). The bilinear path samples at the dest pixel center, filters
-  **premultiplied** (the arbitrary RGB under the buffer's transparent background cannot
-  fringe into edges), treats taps outside the source sub-rect as transparent black, and
-  reduces bit-exactly to the pure texel when a sample lands on a texel center — so an
-  exact-90° composite with integer translation stays crisp, no blur. WHY: nearest-neighbor's
-  floor-quantized sample point periodically lands on the texel BESIDE a 1-2px source feature
-  under rotation, disintegrating hairline strokes and selection overlays into dashes — a
-  compensating wrapper (`TrackingTransformFrameWdgt`) resamples TWICE (±θ) and suffers it
-  worst. v1 sampled nearest-neighbor everywhere. Contract pinned SWCanvas-side by
-  `tests/core/057-drawimage-rotated-bilinear-contract.js`; Fizzygum-side by
-  `SystemTest_macroRotatedStrokedRectSingleComposite` and the
-  `SystemTest_macroDropStrokedRectIntoRotatedPanel` references. (Native rotates through the
-  browser's own smoothing `drawImage`, so the two backends now agree that rotated composites
-  are filtered.)
+  **Sampling contract (SWCanvas).** SWCanvas's `drawImage` samples **bilinear** whenever
+  the draw actually RESAMPLES the source: any non-axis-aligned transform (`b ≠ 0 || c ≠ 0`
+  — every rotated composite), and any axis-aligned draw whose **effective sample step ≠ 1**
+  (the per-device-pixel source step `invA·xScale` / `invD·yScale` — the CTM scale and the
+  src/dst rect ratio COMPOSE, so a `ctx.scale` re-blit and a rect-scaled blit both count,
+  while dpr-2's scale(2)×half-size-rect compensation steps exactly 1 and does not).
+  Step-1 axis-aligned draws — every plain blit, glyph, back-buffer and shadow-scratch
+  blit — keep the historical nearest-neighbor bytes BY CONSTRUCTION. The bilinear path
+  samples at the dest pixel center, filters **premultiplied** (the arbitrary RGB under the
+  buffer's transparent background cannot fringe into edges), treats taps outside the
+  source sub-rect as transparent black, and reduces bit-exactly to the pure texel when a
+  sample lands on a texel center — so an exact-90° composite with integer translation
+  stays crisp, no blur. `imageSmoothingEnabled` is implemented per HTML5 (default `true`,
+  boolean, save/restore state, both API layers; `false` forces nearest-neighbor for every
+  transform). Fizzygum sets it `false` in exactly ONE place: `_compositeScaleOnly`'s
+  integer-scale opt-out (§ above) — never at any step-1 site, whose bytes need no flag.
+  WHY bilinear on rotation: nearest-neighbor's floor-quantized sample point periodically
+  lands on the texel BESIDE a 1-2px source feature, disintegrating hairline strokes and
+  selection overlays into dashes — a compensating wrapper (`TrackingTransformFrameWdgt`)
+  resamples TWICE (±θ) and suffers it worst. WHY smooth on scale: native smooths scaled
+  draws by default, so NN scaled islands were the one remaining visible backend
+  divergence; and NN downscale DROPS rows/columns (dashed diagonals, vanished hairlines)
+  where bilinear averages them. v1 sampled nearest-neighbor everywhere; the rotation half
+  landed first (bilinear arc), the scale half second (scale-smoothing arc). Contract
+  pinned SWCanvas-side by `tests/core/057-drawimage-rotated-bilinear-contract.js` +
+  `tests/core/058-drawimage-scaled-smoothing-contract.js` (step-1 byte-equality, the
+  opt-out, seam-free clipped composition); Fizzygum-side by
+  `SystemTest_macroRotatedStrokedRectSingleComposite`,
+  `SystemTest_macroDropStrokedRectIntoRotatedPanel`, and the scaled-island references.
 
 ### 8.1 The island buffer cache
 
@@ -433,12 +453,19 @@ guarantees the warp touches only the damage region.
   every rotated composite is engine-independent. `TransformSpec._cosSin` routes non-zero angles
   through it; the zero-angle fast path takes no trig at all. (`HandleWdgt` likewise uses `DetTrig`
   for its rotate-angle math.)
-- **Sampling: bilinear on rotation, nearest-neighbor on scale.** SWCanvas `drawImage` samples
-  bilinear on non-axis-aligned composites (§8 sampling contract) — rotated content, glyphs
-  included, is smoothed like native. Axis-aligned SCALED composites still sample
-  nearest-neighbor (scaled content is nearest-neighbor-chunky on the SW backend): scale-path
-  smoothing is a deliberately separate decision with its own mass re-baseline, and
-  `imageSmoothingEnabled` stays unimplemented.
+- **Sampling: smooth whenever the draw resamples; integer zooms crisp by policy.** SWCanvas
+  `drawImage` samples bilinear on rotation AND on axis-aligned draws whose effective sample
+  step ≠ 1 (§8 sampling contract); step-1 blits stay byte-exact nearest-neighbor.
+  `imageSmoothingEnabled` is implemented (default true; Fizzygum's one opt-out is the
+  integer-scale island composite, which renders crisp pixel-duplication on BOTH backends).
+  Accepted nuances: at an island's outer boundary the smoothing sampler fades the last
+  pixel against the background (taps outside the buffer are transparent) where native
+  edge-clamps — ~1px of extra anti-aliasing; 90°-multiple ROTATED islands take the
+  smoothing sampler even at integer scale (the spec matrix carries ~1e-16 trig residues
+  at quadrant angles, and NN's floor through a residue-skewed inverse picks wrong texels
+  — extending the crisp policy there needs quadrant-exact `_cosSin`, see `docs/BACKLOG.md`);
+  and bilinear minification below ~0.5× aliases (native's bilinear tier does too — a
+  box-filter/mipmap tier is future work).
 - **Whole-buffer warp (v1).** `_compositeTransformed` warps the entire buffer under the clip
   rather than a sub-rect (correctness-first). The sub-rect optimisation is banked.
 - **≤1px at a grab.** `_normalizePinnedAnchorNoSettle` rounds its compensating translation to
