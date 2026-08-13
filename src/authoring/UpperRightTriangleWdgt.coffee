@@ -12,4 +12,4 @@ class UpperRightTriangleWdgt extends Widget
 
     size = WorldWdgt.preferencesAndSettings.handleSize
     @__commitExtent new Point size, size
-    parent?.add @, nil, @cornerSpec
+    parent?.add @, undefined, @cornerSpec

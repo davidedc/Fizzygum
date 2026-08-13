@@ -1,15 +1,15 @@
 class FridgeMagnetsWdgt extends Widget
 
   # panes:
-  fridge: nil
-  codeOutput: nil
-  magnetsBox: nil
-  visualOutput: nil
+  fridge: undefined
+  codeOutput: undefined
+  magnetsBox: undefined
+  visualOutput: undefined
 
-  dragTheTilesHereHeader: nil
-  tilesBinHeader: nil
-  liveCodeLangOutputHeader: nil
-  outputAnimationHeader: nil
+  dragTheTilesHereHeader: undefined
+  tilesBinHeader: undefined
+  liveCodeLangOutputHeader: undefined
+  outputAnimationHeader: undefined
 
   externalPadding: 0
   internalPadding: 5
@@ -36,7 +36,7 @@ class FridgeMagnetsWdgt extends Widget
     @_addNoSettle @visualOutput
     
     # source code output pane
-    @codeOutput = new FizzytilesCodeWdgt "",nil,nil,nil,nil,nil,(Color.create 255, 250, 245), 1
+    @codeOutput = new FizzytilesCodeWdgt "",undefined,undefined,undefined,undefined,undefined,(Color.create 255, 250, 245), 1
     @codeOutput.fridgeMagnetsCanvas = @visualOutput
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()

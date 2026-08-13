@@ -8,12 +8,12 @@ class SaveShortcutPromptWdgt extends PromptWdgt
   # the trailing spaces pad the title so the prompt opens at a decent width.
   msg: " save as...         "
 
-  wdgtWhereReferenceWillGo: nil
+  wdgtWhereReferenceWillGo: undefined
 
   constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
     if !@defaultContents
       @defaultContents = world.untitledNamingService.getNextUntitledShortcutName()
-    super widgetOpeningThePopUp, @msg, @target, nil, @defaultContents, @intendedWidth
+    super widgetOpeningThePopUp, @msg, @target, undefined, @defaultContents, @intendedWidth
     @_buildAndConnectChildren()
     @rowsPanel._applyWidth 150
     @_applyExtent @rowsPanel.extent()

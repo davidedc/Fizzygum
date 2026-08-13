@@ -32,11 +32,11 @@ class Duplicator
   duplicate: (value) ->
     @_duplicate value
 
-  # The dispatch core every handler recurses through. nil normalizes to nil;
+  # The dispatch core every handler recurses through. undefined normalizes to undefined;
   # boolean, number, bigint, string, symbol and function values ride along
   # uncopied.
   _duplicate: (value) ->
-    return nil if !value?
+    return undefined if !value?
     return value if typeof value isnt "object"
 
     return @clonesByOriginal.get value if @clonesByOriginal.has value
@@ -118,11 +118,11 @@ class Duplicator
       cloneOfMe
 
   # Canvas gradients might be tied to a specific context, so to keep things
-  # simple the clone is NIL and users of gradients re-create them from scratch
-  # when nil (search for "gradient" to see the pattern). Only the identity
+  # simple the clone is UNDEFINED and users of gradients re-create them from scratch
+  # when undefined (search for "gradient" to see the pattern). Only the identity
   # mapping is registered, so the walk can move past them.
   _copyGradient: (original) ->
-    @_copyWithIdentity original, => nil
+    @_copyWithIdentity original, => undefined
 
   # ===== the generic walk (Fizzygum class instances and plain objects) =====
 
@@ -181,14 +181,14 @@ class Duplicator
     for own property of obj
       value = obj[property]
       if !value?
-        # undefined, null, nil
-        cloneOfMe[property] = nil
+        # undefined, null, undefined
+        cloneOfMe[property] = undefined
       else if typeof value is "object"
         if value.rebuildDerivedValue?
           # a value that can be rebuilt after the cloning (e.g. a canvas
           # context): skip it — the rebuildDerivedValues pass below rebuilds it
           # on the clone.
-          cloneOfMe[property] = nil
+          cloneOfMe[property] = undefined
         else if value.keptByReferenceOnDeepCopy
           # Kept by reference, two kinds: a shared world-level singleton (e.g.
           # world.wallpaper, world.widgetFactory) is NOT part of the sub-structure

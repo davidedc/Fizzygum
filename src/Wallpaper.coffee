@@ -15,7 +15,7 @@ class Wallpaper
   pattern5: "dots"
   pattern6: "zigzag"
   pattern7: "bricks"
-  patternName: nil
+  patternName: undefined
   # world.wallpaper is a shared, per-world singleton: when something that refers to
   # it is deep-copied (e.g. duplicating a menu whose item targets it), the copy must
   # KEEP THE REFERENCE, not clone the wallpaper -- otherwise the copy's picker would

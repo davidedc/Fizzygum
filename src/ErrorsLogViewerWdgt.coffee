@@ -6,9 +6,9 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
   defaultContents: ""
 
-  clearButton: nil
-  pauseToggle: nil
-  okButton: nil
+  clearButton: undefined
+  pauseToggle: undefined
+  okButton: undefined
 
   paused: false
 
@@ -82,7 +82,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @textWidget.setText ""
 
   informTarget: ->
-    @target[@callback].call @target, nil, @textWidget
+    @target[@callback].call @target, undefined, @textWidget
 
   _reLayout: (newBoundsForThisLayout) ->
 

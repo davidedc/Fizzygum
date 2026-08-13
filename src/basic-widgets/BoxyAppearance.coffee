@@ -51,7 +51,7 @@ class BoxyAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
       if !@widget.color? then debugger
       ctx.fillStyle = @widget.color.toString()
 
@@ -87,7 +87,7 @@ class BoxyAppearance extends Appearance
       @widget,
       "setCornerRadius",
       @widget.cornerRadius.toString(),
-      nil,
+      undefined,
       0,
       100,
       true

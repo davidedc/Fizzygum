@@ -1,6 +1,6 @@
 class VaporwaveBackgroundIconAppearance extends IconAppearance
 
-  backgroundGradient: nil
+  backgroundGradient: undefined
 
   preferredSize: new Point 100, 100
   specificationSize: new Point 100, 100

@@ -28,12 +28,12 @@ class SheetHeaderCellWdgt extends Widget
     super()
     @appearance = new SheetHeaderCellAppearance @
     @kind = kind        # "column" | "row" | "corner"
-    @index = index      # 0-based viewport SLOT index (the label = view origin + slot, F1); nil for the corner
-    @_sheetWidget = nil
-    @_labelWdgt = nil   # the label child (a passive StringWdgt); nil for the corner
+    @index = index      # 0-based viewport SLOT index (the label = view origin + slot, F1); undefined for the corner
+    @_sheetWidget = undefined
+    @_labelWdgt = undefined   # the label child (a passive StringWdgt); undefined for the corner
     # transparent by default — every visible pixel is painted explicitly by
     # SheetHeaderCellAppearance (the fill), so there is no boxy/rectangular paint to keep in sync
-    @color = nil
+    @color = undefined
 
   colloquialName: ->
     "header cell"
@@ -50,7 +50,7 @@ class SheetHeaderCellWdgt extends Widget
     switch @kind
       when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @index)
       when "row"    then "" + (@_sheetWidget.viewOriginRow + @index + 1)
-      else nil
+      else undefined
 
   # Keep my label child in sync (create / retext / place) — called from the sheet's chrome
   # ensure, whose build/scroll/resize/restore paths all funnel through buildHeader. The label

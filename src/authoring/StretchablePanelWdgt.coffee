@@ -56,11 +56,11 @@ class StretchablePanelWdgt extends PanelWdgt
       for w in childrenNotHandlesNorCarets
         # the SAME membership rule the __add seed and the world drains ask (D10): a
         # layout-inert overlay (highlighter) parked in me is not a reflow subject, and the
-        # gated recorder below would refuse it a spec anyway — skip, don't nil-deref
+        # gated recorder below would refuse it a spec anyway — skip, don't undefined-deref
         continue unless @consumesFractionalGeometryOf w
         # Hardening (§5b): a child that somehow lacks its proportional record — a stale/foreign child,
         # or one added mid-pass before the world's fill drain could seed it — must NOT abort my WHOLE
-        # relayout by dereferencing a nil spec in the grant below (that TypeError is caught as
+        # relayout by dereferencing an undefined spec in the grant below (that TypeError is caught as
         # LAYOUT_ERROR and silently aborts the pass). Lazily derive it from the child's current place in
         # me, marked PROVISIONAL (D8): a pre-placement guess the fill drain re-derives once at
         # builder-final geometry — which is what retired the place-before-add builder rule.
@@ -69,8 +69,8 @@ class StretchablePanelWdgt extends PanelWdgt
         # the panel OWNS a spec-carrying child's frame: a pending desire against it is stale
         # by definition (user intent arrives through the post-flush re-record drain), and a
         # desire left to linger would fire at the child's next own settle — clear both.
-        w.desiredPosition = nil
-        w.desiredExtent = nil
+        w.desiredPosition = undefined
+        w.desiredExtent = undefined
         # layout-apply-sanctioned: this IS the arrange — grant the spec-derived integer box
         w._reLayout w.layoutSpec.grantedBoundsWithin newBoundsForThisLayout
 

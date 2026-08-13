@@ -3,8 +3,8 @@
 
 class PlaneGrid3D
 
-  width: nil
-  height: nil
-  vertexIndexes: nil
+  width: undefined
+  height: undefined
+  vertexIndexes: undefined
    
   constructor: (@width, @height, @vertexIndexes = []) ->

@@ -10,9 +10,9 @@ class LabelButtonAppearance extends Appearance
     # unconditional (unlike preliminaryCheckNothingToDraw's live-tree-conditioned twin gates):
     # a hidden/collapsed label button skips even scratch renders, as it always did
     if !@widget.visibleBasedOnIsVisibleProperty() or @widget.isInCollapsedSubtree()
-      return nil
+      return undefined
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx, localArea) =>
       if appliedShadow?
         color = Color.BLACK
       else

@@ -21,12 +21,12 @@ class PatchNodeWdgt extends Widget
 
   @augmentWith ControllerMixin
 
-  textWidget: nil
+  textWidget: undefined
 
-  output: nil
+  output: undefined
 
-  input1: nil
-  input2: nil
+  input1: undefined
+  input2: undefined
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason

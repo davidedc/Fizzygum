@@ -32,7 +32,7 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   excludedFromEditorFocusTracking: ->
     true
 
-  iconToolTipMessage: nil
+  iconToolTipMessage: undefined
 
   constructor: (@color) ->
     super @color

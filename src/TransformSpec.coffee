@@ -30,7 +30,7 @@ class TransformSpec
   # ---- canonical scalars (the ONLY serialized state) ----
   rotationDegrees: 0        # float, canonical (Phase 2: live)
   scale: 1                  # float > 0
-  anchor: nil               # nil => centre of the slot box; else a Point in slot-box coords
+  anchor: undefined               # undefined => centre of the slot box; else a Point in slot-box coords
   # layout coupling: 'footprint' (THE DEFAULT) / 'slot' (paint-only) / 'sweep' (spin-stable
   # reserve) — mode rationale + D1 history: docs/architecture/transforms.md §5.1.
   claimsSpace: "footprint"
@@ -146,10 +146,10 @@ class TransformSpec
     @anchor
 
   # §7.5 Bug G backing math: the translation that re-expresses a PINNED-anchor similitude as its
-  # rendering-identical NIL-anchor (slot-centre) form — t = (I − sR)(A − centre), the Bug-D
+  # rendering-identical UNDEFINED-anchor (slot-centre) form — t = (I − sR)(A − centre), the Bug-D
   # compensation algebra inverted. A plane-local vector (anchor and slot both live in the island's
   # own plane, hence no `screen` in the name). Caller contract (TransformFrameWdgt.
-  # _normalizePinnedAnchorNoSettle): read t while the anchor is still PINNED, then nil the anchor,
+  # _normalizePinnedAnchorNoSettle): read t while the anchor is still PINNED, then undefined the anchor,
   # THEN translate — the ordering lives at the caller, this method only computes.
   _nilAnchorEquivalentTranslation: (slotBounds) ->
     [c, s] = @_cosSin()

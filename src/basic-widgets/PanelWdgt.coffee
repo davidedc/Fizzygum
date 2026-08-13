@@ -7,7 +7,7 @@ class PanelWdgt extends Widget
 
   @augmentWith ClippingAtRectangularBoundsMixin, @name
 
-  scrollPanel: nil
+  scrollPanel: undefined
   extraPadding: 0
   _acceptsDrops: true
   providesAmenitiesForEditing: true
@@ -30,10 +30,10 @@ class PanelWdgt extends Widget
 
   # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at screen point
   # `posOnScreen` land? Returns the sibling insertion index (bumped one past a child whose right half holds
-  # the point), or nil when the point is over no child — callers then fall back to appending at the end.
+  # the point), or undefined when the point is over no child — callers then fall back to appending at the end.
   # Pure computation; used verbatim by ToolPanelWdgt._addNoSettle.
   _findDropSlot: (posOnScreen, children) ->
-    return nil unless posOnScreen? and children.length > 0
+    return undefined unless posOnScreen? and children.length > 0
     positionNumberAmongSiblings = 0
     for w in children
       if w.bounds.growBy(@internalPadding).containsPoint posOnScreen
@@ -41,7 +41,7 @@ class PanelWdgt extends Widget
           positionNumberAmongSiblings++
         return positionNumberAmongSiblings
       positionNumberAmongSiblings++
-    return nil
+    return undefined
 
   # only the desktop and folder panels have menu entries
   # to invoke this

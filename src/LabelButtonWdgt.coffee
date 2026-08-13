@@ -12,13 +12,13 @@ class LabelButtonWdgt extends ButtonWdgt
 
   # label fields (the button family carries a faceWidget instead; a label button
   # draws its own @label)
-  label: nil
-  labelString: nil
-  labelColor: nil
-  labelBold: nil
-  labelItalic: nil
-  fontSize: nil
-  fontStyle: nil
+  label: undefined
+  labelString: undefined
+  labelColor: undefined
+  labelBold: undefined
+  labelItalic: undefined
+  fontSize: undefined
+  fontStyle: undefined
 
   # the flat state-fill look
   highlightColor: Color.SILVER
@@ -27,28 +27,28 @@ class LabelButtonWdgt extends ButtonWdgt
 
   constructor: (
       ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
-      target = nil,
-      action = nil,
-      labelString = nil,
+      target = undefined,
+      action = undefined,
+      labelString = undefined,
       fontSize = WorldWdgt.preferencesAndSettings.menuFontSize,
       fontStyle = "sans-serif",
       centered = false,
-      environment = nil,
+      environment = undefined,
       widgetEnv,
-      toolTipMessage = nil,
+      toolTipMessage = undefined,
       color = WorldWdgt.preferencesAndSettings.menuButtonsLabelColor,
       bold = false,
       italic = false,
-      doubleClickAction = nil,
-      argumentToAction1 = nil,
-      argumentToAction2 = nil,
+      doubleClickAction = undefined,
+      argumentToAction1 = undefined,
+      argumentToAction2 = undefined,
       representsAWidget = false
       ) ->
 
     # ButtonWdgt owns the trigger machinery; map our label-button args onto its
     # constructor. We pass NO faceWidget (we draw our own @label), and our
     # "environment" arg is ButtonWdgt's dataSourceWidgetForTarget.
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, nil, environment, widgetEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget
+    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, undefined, environment, widgetEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget
 
     @labelString = labelString
     @fontSize = fontSize

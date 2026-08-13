@@ -4,7 +4,7 @@ class RectangularAppearance extends Appearance
     if @widget.boundingBoxTight().containsPoint aPoint
       return false
     # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
-    # leaves it nil) — so only the "is it actually opaque enough to catch a click" test
+    # leaves it undefined) — so only the "is it actually opaque enough to catch a click" test
     # remains; the old `backgroundTransparency?` existence check was vacuous.
     if @widget.backgroundColor? and @widget.backgroundTransparency > 0
       if @widget.boundsContainPoint aPoint
@@ -20,7 +20,7 @@ class RectangularAppearance extends Appearance
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return nil
+      return undefined
 
     # Soft hook (a no-op for every plain rectangular widget): DesktopAppearance overrides it to build its
     # wallpaper-tile pattern here, BEFORE the size guard, exactly where its old inlined copy of this method did.
@@ -28,7 +28,7 @@ class RectangularAppearance extends Appearance
 
     # the scope below re-derives the key values; this early bail must also gate the post-scope
     # stroke + pattern-fill epilogues, so it runs here too (pure, cheap)
-    return nil unless (@_calculateKeyValuesOrNil aContext, clippingRectangle)?
+    return undefined unless (@_calculateKeyValuesOrNil aContext, clippingRectangle)?
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { clip: false }, (ctx, localArea) =>
       if !@widget.color? then debugger
@@ -90,7 +90,7 @@ class RectangularAppearance extends Appearance
 
     # normal-pass only (the base paint skips it under appliedShadow; the standalone callers gate on
     # !appliedShadow too), so the scope's default alpha reduces to the plain widget alpha
-    @_paintInLocalScope aContext, clippingRectangle, nil, { clip: false }, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, undefined, { clip: false }, (ctx, localArea) =>
       return unless @widget.strokeColor?
 
       # clip to the damage ∩ tight box (the stroke must not paint into the padding halo)

@@ -25,10 +25,10 @@
 
 class SimpleImageWdgt extends CanvasWdgt
 
-  imagePath: nil
+  imagePath: undefined
   imageLoaded: false
-  img: nil
-  lastPaintedImageSize: nil
+  img: undefined
+  lastPaintedImageSize: undefined
 
   constructor: (@imagePath) ->
     super
@@ -47,7 +47,7 @@ class SimpleImageWdgt extends CanvasWdgt
     @img = new Image()
     @img.onload = =>
       @imageLoaded = true
-      @lastPaintedImageSize = nil
+      @lastPaintedImageSize = undefined
       # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
       world.steppingWdgts.add @
     @img.src = @imagePath
@@ -117,7 +117,7 @@ class SimpleImageWdgt extends CanvasWdgt
     if @boundingBoxTight().containsPoint aPoint
       return false
     # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
-    # leaves it nil) — so only the "is it actually opaque enough to catch a click" test
+    # leaves it undefined) — so only the "is it actually opaque enough to catch a click" test
     # remains; the old `backgroundTransparency?` existence check was vacuous.
     if @backgroundColor? and @backgroundTransparency > 0
       if @boundsContainPoint aPoint

@@ -2,8 +2,8 @@
 
 class VerticalStackLayoutSpec extends LayoutSpec
 
-  stack: nil
-  element: nil
+  stack: undefined
+  element: undefined
 
   # ONE constraint-box sizing model (sizing-model unification U1 — docs/archive/sizing-model-unification-plan.md):
   #
@@ -14,14 +14,14 @@ class VerticalStackLayoutSpec extends LayoutSpec
   #   load-bearing history: nothing samples the container's PAST width.
   # - grow: the 0..1 share of the EXTRA space (availW - desiredWidth) the element takes.
   #   0 = keep the desired width (fixed); 1 = fill the row / track the stack width. The
-  #   "elasticity..." menu knob edits it on a 0..100 scale. nil = NOT DECIDED YET: the
+  #   "elasticity..." menu knob edits it on a 0..100 scale. undefined = NOT DECIDED YET: the
   #   capture below derives it from the add-time relationship (an element placed at/above
   #   the stack width is fill-class and tracks; a narrower one keeps its size — D2-def). An
   #   EXPLICIT grow (the fixed/aspect classes' 0, a menu edit, a constructor arg) always wins
   #   over the derivation. (The aspect CONTRACT — pure measure + role-appropriate grow — is
   #   documented at KeepsRatioWhenInVerticalStackMixin, D6.)
-  desiredWidth: nil
-  grow: nil
+  desiredWidth: undefined
+  grow: undefined
   alignment: 'left'
 
   # ROLE while ACTIVE: false = an element of a content STACK; true = a frame's CONTENT.
@@ -42,7 +42,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
 
   constructor: (@grow) ->
     super()
-    return nil
+    return undefined
 
   # Capture the spec's initial desiredWidth from the element's natural width at THIS
   # placement — re-run at every (re)placement, exactly the old capture timing (the arrange
@@ -139,7 +139,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @,
       "setGrowFromPercent",
       ((@grow ? 1) * 100).toString(),
-      nil,
+      undefined,
       0,
       100,
       true
@@ -172,7 +172,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @,
       "setDesiredWidth",
       @desiredWidth.toString(),
-      nil,
+      undefined,
       10,
       1000,
       true

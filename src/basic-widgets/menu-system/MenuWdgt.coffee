@@ -17,16 +17,16 @@
 
 class MenuWdgt extends PopUpWdgt
 
-  target: nil
-  title: nil
-  environment: nil
-  fontSize: nil
+  target: undefined
+  title: undefined
+  environment: undefined
+  fontSize: undefined
   # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
   # shared with PromptWdgt, along with the lay-and-hug + membership absorber.)
   # my title bar: the MenuHeader the rows-panel builds from @title, surfaced here
   # so `menu.label` reaches it (the drag/pin-by-header idiom the menu tests share).
   # Same instance as @rowsPanel.label, so `.center()` tracks it live.
-  label: nil
+  label: undefined
 
   # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's
   # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other pop-ups. True here,
@@ -40,7 +40,7 @@ class MenuWdgt extends PopUpWdgt
   # opts in here so a click on any of its items neither steals the focus
   # pointer nor ends the ongoing edit. Ancestry-honored, so the ROOT menu
   # answering is enough — no per-descendant stamping (the ChangeFontButtonWdgt
-  # loop this replaced). Default nil ⇒ ordinary menus are unaffected.
+  # loop this replaced). Default undefined ⇒ ordinary menus are unaffected.
   actsAsEditorChrome: false
   excludedFromEditorFocusTracking: ->
     @actsAsEditorChrome
@@ -61,7 +61,7 @@ class MenuWdgt extends PopUpWdgt
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
   # (P5 arg-object conversion). Defaults match the old positional signature: killOutside /
-  # killOnTriggers true; target / title / environment / fontSize nil.
+  # killOnTriggers true; target / title / environment / fontSize undefined.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
     @target = opts.target
     @killThisPopUpIfClickOutsideDescendants = opts.killOutside ? true

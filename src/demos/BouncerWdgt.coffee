@@ -3,7 +3,7 @@
 
 class BouncerWdgt extends Widget
 
-  velocity: nil
+  velocity: undefined
 
   constructor: ->
     super()

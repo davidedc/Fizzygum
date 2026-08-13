@@ -18,15 +18,15 @@
 
 class ScriptWdgt extends CodeAreaWdgt
 
-  runItButton: nil
-  saveButton: nil
+  runItButton: undefined
+  saveButton: undefined
 
-  savedScript: nil
+  savedScript: undefined
   # the saved script COMPILED -- a derived Function (@savedScript is the truth),
   # never serialized: an own function property has no editable source and would
   # crash the serializer; doAll recompiles it on demand after a restore.
   @serializationTransients: ["functionFromCompiledCode"]
-  functionFromCompiledCode: nil
+  functionFromCompiledCode: undefined
 
   constructor: (@savedScript = "") ->
     super new Point 200,400

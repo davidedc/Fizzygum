@@ -18,7 +18,7 @@ class AnalogClockAppearance extends Appearance
     [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return nil
+        return undefined
 
       # the clock face + hands set their own colours (white face, black hands, blue arc),
       # so the shadow pass renders the whole clock to a scratch and blits the black
@@ -43,11 +43,11 @@ class AnalogClockAppearance extends Appearance
       aContext.clipToRectangle al,at,w,h
 
       # `? 1`: an absent backgroundTransparency means fully opaque (Widget's class-level
-      # default) — never hand the canvas a nil (see StringWdgt::_prepareTextBufferContext).
+      # default) — never hand the canvas an undefined (see StringWdgt::_prepareTextBufferContext).
       aContext.globalAlpha = @widget.backgroundTransparency ? 1
 
       # the background, filling the damage box (al/at/w/h: device pixels).
-      # (backgroundColor is nil unless the user sets one — the base Widget default — so
+      # (backgroundColor is undefined unless the user sets one — the base Widget default — so
       # this fill is usually skipped: the clock sits transparent around its face circle)
       if @widget.backgroundColor?
         aContext.fillStyle = @widget.backgroundColor.toString()

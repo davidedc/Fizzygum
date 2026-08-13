@@ -1,20 +1,20 @@
 class VideoScrubberWdgt extends SliderWdgt
 
-  videoPlayerCanvas: nil
+  videoPlayerCanvas: undefined
 
   # there is a delay between a user scrub / play-pause click and the video
   # element's state catching up, so updating the UI from video state
   # immediately after a user action would visibly bounce it back to the
   # previous state -- the update is deferred briefly instead (the 750ms
   # guard in _updateHbar).
-  timeWhenScrubWasLastMoved: nil
+  timeWhenScrubWasLastMoved: undefined
 
   colloquialName: ->
     "Video scrubber"
 
   constructor: (@videoPlayerCanvas) ->
-    super nil, nil, nil, nil, nil, true
-    @setTargetAndActionWithOnesPickedFromMenu nil, nil, @, "setPlayAt"
+    super undefined, undefined, undefined, undefined, undefined, true
+    @setTargetAndActionWithOnesPickedFromMenu undefined, undefined, @, "setPlayAt"
     @fps = 5
     world.steppingWdgts.add @
 

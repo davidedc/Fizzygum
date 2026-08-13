@@ -13,8 +13,8 @@ class FrameContentLayoutSpec extends VerticalStackLayoutSpec
   # with an inherent size/proportion (e.g. a slider, which deforms badly) keeps
   # its own size and the window takes it; a "small", proportion-agnostic widget
   # instead takes the window's size.
-  preferredStartingWidth: nil
-  preferredStartingHeight: nil
+  preferredStartingWidth: undefined
+  preferredStartingHeight: undefined
   
   # if this is set, it means that the widget can
   # meaningfully have its height set to any value,

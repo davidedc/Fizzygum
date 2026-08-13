@@ -10,7 +10,7 @@
 # crossing rule — see paintGridEdges) and — the selected cell — its own selection ring; every
 # label/value is a CHILD widget (hosted value / presenter / passive StringWdgt text — "scalar
 # text is a StringWdgt child, period", owner direction 2026-07-24). This widget has NO paint
-# of its own (nil appearance): it is the model owner,
+# of its own (undefined appearance): it is the model owner,
 # the formula scope, the keyboard receiver, and the geometry authority (the constants below).
 #
 # Widgetising is owner direction (2026-07-05 cells; 2026-07-17 headers + chrome — plan §3-F F5,
@@ -136,10 +136,10 @@ class SimpleSpreadsheetWdgt extends Widget
     @valueTextColor = Color.create 30, 30, 30
     @errorTextColor = Color.create 200, 40, 40
     # editing state (which cell is being edited; the editor WIDGET lives on the editing
-    # cell, and the standard caret types straight into it); nil / false until an edit begins
+    # cell, and the standard caret types straight into it); undefined / false until an edit begins
     @_editing = false
-    @_editCol = nil
-    @_editRow = nil
+    @_editCol = undefined
+    @_editRow = undefined
     # cell index (spec §9.3/§9.4 classify→present): address → its CellWdgt. Every VISIBLE cell has one
     # (the viewport, materialised by _reconcileViewportNoSettle below — plus one HIDDEN one per
     # off-viewport widget-VALUED cell, F1); each renders its own value —
@@ -150,7 +150,7 @@ class SimpleSpreadsheetWdgt extends Widget
     # chrome handles (F5): the data-cells container and the header-cell index ("kind:index" →
     # SheetHeaderCellWdgt). TRANSIENT + DERIVED: destroyed and rebuilt from the geometry
     # constants on restore (_reindexCellsNoSettle), never adopted from a snapshot.
-    @_cellsPanel = nil
+    @_cellsPanel = undefined
     @_headerCells = new Map
     # headers + one cell — the smallest extent at which the viewport derivations still answer
     # a 1×1 viewport (F6; the __commitExtent leaf enforces this floor on every commit). An
@@ -266,7 +266,7 @@ class SimpleSpreadsheetWdgt extends Widget
       return
     visibleCols = @_visibleCols()
     visibleRows = @_visibleRows()
-    buildHeader "corner", nil, 0, 0, @headerColWidth, @headerRowHeight
+    buildHeader "corner", undefined, 0, 0, @headerColWidth, @headerRowHeight
     col = 0
     while col < visibleCols
       buildHeader "column", col, (@headerColWidth + col * @colWidth), 0, @colWidth, @headerRowHeight
@@ -335,9 +335,9 @@ class SimpleSpreadsheetWdgt extends Widget
       else
         record = @model.cellAt address
         # the exemption predicate: the hosted widget IS the record's value (branch 1). On the
-        # RESTORE path the record's derived @value is still nil (a serialization transient —
+        # RESTORE path the record's derived @value is still undefined (a serialization transient —
         # the recommit + drain re-derive it AFTER this reconcile), so an adopted already-hosting
-        # cell keeps its exemption through the nil disjunct: a snapshot only ever carries
+        # cell keeps its exemption through the undefined disjunct: a snapshot only ever carries
         # off-viewport cells for widget-VALUED records (this very invariant at save time).
         keepsWidgetAlive = cellWdgt.hostedWidget? and record? and
           ((record.value is cellWdgt.hostedWidget) or (not record.value?))
@@ -420,7 +420,7 @@ class SimpleSpreadsheetWdgt extends Widget
     return
 
   # ── painting: the sheet paints NOTHING (F5) — only the shared edge-stroke helper lives here ──
-  # The sheet has a nil @appearance (the Widget default), so the base
+  # The sheet has an undefined @appearance (the Widget default), so the base
   # paintIntoAreaOrBlitFromBackBuffer paints nothing: the cells panel fills the data region,
   # the header cells fill their strips, and every widget strokes its own top+left edges + its
   # own text/value/ring. (The old one-pass _paintGrid died here — plan §3-F F5, byte-identical
@@ -542,14 +542,14 @@ class SimpleSpreadsheetWdgt extends Widget
   _cellAtLocal: (localPos) ->
     x = localPos.x
     y = localPos.y
-    return nil if x < @headerColWidth or y < @headerRowHeight
-    return nil if x >= @width() or y >= @height()
+    return undefined if x < @headerColWidth or y < @headerRowHeight
+    return undefined if x >= @width() or y >= @height()
     col = Math.floor (x - @headerColWidth) / @colWidth
     row = Math.floor (y - @headerRowHeight) / @rowHeight
     # backdrop past the last visible/logical column-row is NOT a cell (F6). A click on a
     # PARTIAL edge cell selects it — v1: NO auto-scroll on click (arrows/edit follow, clicks
     # don't; the plan's recorded deviation-point, no deviation taken).
-    return nil if col < 0 or col >= @_visibleCols() or row < 0 or row >= @_visibleRows()
+    return undefined if col < 0 or col >= @_visibleCols() or row < 0 or row >= @_visibleRows()
     {col: col, row: row}
 
   # single-sheet keyboard focus: the sheet the user is typing into is the ONLY sheet receiving
@@ -664,9 +664,9 @@ class SimpleSpreadsheetWdgt extends Widget
     @_editingCellWdgt()?._mountEditorNoSettle seedText
     return
 
-  # the CellWdgt of the cell being edited, or nil when not editing
+  # the CellWdgt of the cell being edited, or undefined when not editing
   _editingCellWdgt: ->
-    return nil unless @_editCol? and @_editRow?
+    return undefined unless @_editCol? and @_editRow?
     @_cells.get @model.addressFor @_editCol, @_editRow
 
   # commit: compile the source ONCE (FormulaCompiler) and mark the cell stale; the once-per-cycle
@@ -687,7 +687,7 @@ class SimpleSpreadsheetWdgt extends Widget
     # widget is destroyed by the drain's reconcile (the unhost), its engine edges by
     # Widget._destroyNoSettle. (Eject-to-world instead of destroying was considered and
     # rejected for v1 — see src/spreadsheet/CLAUDE.md.)
-    cell.widgetEntry = nil if cell.widgetEntry?
+    cell.widgetEntry = undefined if cell.widgetEntry?
     FormulaCompiler.commit cell, source
     world.dataflow.markStale cell
     @_teardownEditorNoSettle()
@@ -744,8 +744,8 @@ class SimpleSpreadsheetWdgt extends Widget
     # the caret targeting a dead widget (its paint-time re-sync reads the target).
     world._stopEditingNoSettle() if @_isCaretEditLive()
     @_editing = false
-    @_editCol = nil
-    @_editRow = nil
+    @_editCol = undefined
+    @_editRow = undefined
     editingCell?._teardownEditorNoSettle()
     @_changed()
     return
@@ -772,7 +772,7 @@ class SimpleSpreadsheetWdgt extends Widget
   #     (spec §13): REBUILD on value change; a churn-skip keeps an unchanged value's presenter, so a
   #     steady cell rebuilds nothing. No reuse-and-update — keeps the sheet value-class-agnostic (it
   #     just calls cellPresenter() again). A presenter is "one-way glass": it is NOT wired.
-  #   branch 3 — scalar / error / nil → no hosted widget: the cell PAINTS toString() (or clears if nil).
+  #   branch 3 — scalar / error / undefined → no hosted widget: the cell PAINTS toString() (or clears if undefined).
   _reconcileCellNoSettle: (cell, value) ->
     return value unless cell?
     cellWdgt = @_cells.get cell.address
@@ -789,7 +789,7 @@ class SimpleSpreadsheetWdgt extends Widget
       cellWdgt = @_materialiseCellNoSettle cell.address, (colRow.col - @viewOriginCol), (colRow.row - @viewOriginRow)
       cellWdgt.__hide()
     # an OFF-viewport (hidden) cell keeps its CellWdgt only while the record's value IS its
-    # hosted widget: a hidden cell whose value just became scalar/presenter/nil loses the
+    # hosted widget: a hidden cell whose value just became scalar/presenter/undefined loses the
     # exemption and recycles now (F1 — the viewport invariant; a re-entry rebuilds from the
     # record like any off-screen cell)
     if not cellWdgt.isVisible and not (value instanceof Widget)
@@ -813,10 +813,10 @@ class SimpleSpreadsheetWdgt extends Widget
         cellWdgt.presentedValue = value
         @_changed()
         return value
-      # a value class may answer cellPresenter yet decline (nil) → fall through to branch 3
-    # branch 3 — scalar / error / nil: the cell presents the text via its scalar StringWdgt
+      # a value class may answer cellPresenter yet decline (undefined) → fall through to branch 3
+    # branch 3 — scalar / error / undefined: the cell presents the text via its scalar StringWdgt
     # child (dropping any hosted widget)
-    text = if value? then value.toString() else nil
+    text = if value? then value.toString() else undefined
     cellWdgt.showScalarNoSettle text, (value instanceof SheetError)
     value
 
@@ -834,7 +834,7 @@ class SimpleSpreadsheetWdgt extends Widget
     return
 
   # PUBLIC: the live widget a cell currently hosts — its value-widget (branch 1, a slider) or
-  # presenter (branch 2, a swatch), or nil for a scalar / empty cell. The public reach into a
+  # presenter (branch 2, a swatch), or undefined for a scalar / empty cell. The public reach into a
   # mounted cell widget (a macro drags `sheet.hostedWidgetAt "A1"`, never the private cell index).
   hostedWidgetAt: (address) -> @_cells.get(address)?.hostedWidget
 
@@ -871,14 +871,14 @@ class SimpleSpreadsheetWdgt extends Widget
   # the fresh panel, and _reconcileViewportNoSettle re-establishes the viewport invariant for
   # the RESTORED view origin, whatever mix the snapshot carried (F1): visible cells re-place at
   # their slots, an off-viewport HIDDEN rich cell keeps its exemption (its record's derived
-  # value is still nil here — the predicate's nil disjunct covers it), anything else recycles,
+  # value is still undefined here — the predicate's undefined disjunct covers it), anything else recycles,
   # and every on-screen gap fills. The transient edit state resets.
   _reindexCellsNoSettle: ->
     @_editing = false
-    @_editCol = nil
-    @_editRow = nil
+    @_editCol = undefined
+    @_editRow = undefined
     @_cells = new Map
-    @_cellsPanel = nil
+    @_cellsPanel = undefined
     @_headerCells = new Map
     # rescue the data cells out of any snapshot chrome, up to direct children
     for child in @children.slice()
@@ -892,8 +892,8 @@ class SimpleSpreadsheetWdgt extends Widget
     for child in @children.slice()
       if child instanceof CellWdgt
         child.attachSheet this
-        child._editorWdgt = nil
-        child._scalarTextWdgt = nil
+        child._editorWdgt = undefined
+        child._scalarTextWdgt = undefined
         child._scalarShowsError = false
         for grand in child.children.slice()
           grand._fullDestroyNoSettle() unless grand is child.hostedWidget

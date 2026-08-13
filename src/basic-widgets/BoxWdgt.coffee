@@ -2,7 +2,7 @@
 
 class BoxWdgt extends Widget
 
-  cornerRadius: nil
+  cornerRadius: undefined
 
   constructor: (@cornerRadius = 4) ->
     super()

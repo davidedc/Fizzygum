@@ -49,7 +49,7 @@ window.SourceVault =
     @_entries.set name, {text: text, part: part}
     return
 
-  # The source text for a class/mixin name, or nil if we hold no such source.
+  # The source text for a class/mixin name, or undefined if we hold no such source.
   get: (name) ->
     @_entries.get(name)?.text
 

@@ -73,7 +73,7 @@ class TypewriterIconAppearance extends SizeAwareIconAppearance
   # by construction (all widths derive from symmetric insets)
   _typewriterMetrics: (x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev
-    return nil if S < 6
+    return undefined if S < 6
 
     t = Math.max 1, Math.round S / 32          # the line unit (paper, chassis, knobs)
     tc = Math.max 1, Math.round S / 45         # the KEYS line unit — a touch

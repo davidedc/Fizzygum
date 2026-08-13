@@ -1,22 +1,22 @@
 class VideoPlayerWithRecommendationsWdgt extends Widget
 
-  videoPlayer: nil
-  recommendationsPane: nil
+  videoPlayer: undefined
+  recommendationsPane: undefined
 
   externalPadding: 0
   internalPadding: 5
-  padding: nil
+  padding: undefined
 
 
-  thumbs: nil
+  thumbs: undefined
   thumbnailsRows: 3
   thumbnailsColumns: 5
 
-  prevButton: nil
-  nextButton: nil
+  prevButton: undefined
+  nextButton: undefined
 
-  videosIndex: nil
-  shuffledVideosIndex: nil
+  videosIndex: undefined
+  shuffledVideosIndex: undefined
 
   recommendationsPage: 0
 

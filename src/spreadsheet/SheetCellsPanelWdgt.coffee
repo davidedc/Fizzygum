@@ -5,14 +5,14 @@
 # the sheet's CellWdgt children (84 at the default 6×14 viewport); the frozen header cells are deliberately OUTSIDE it
 # (direct sheet children), so the PanelWdgt clip below can never touch them.
 #
-# It is TRANSPARENT (nil @appearance — the CellWdgt idiom): the sheet NEVER painted a data
-# background (its old paint passed the nil Widget-default @backgroundColor, a no-op), so the
+# It is TRANSPARENT (undefined @appearance — the CellWdgt idiom): the sheet NEVER painted a data
+# background (its old paint passed the undefined Widget-default @backgroundColor, a no-op), so the
 # backdrop under the sheet — a window's content pane, the desktop — always showed through the
 # data region, and it must keep showing through. (The F5 flesh-out's first reading — "the
 # 248 in the reference is the sheet's background fill" — was FALSIFIED here: 248 is the
 # WINDOW's backdrop seen through the transparent sheet; giving this panel a fill of its own
 # would freeze that coincidence into the widget. The inherited PanelWdgt
-# RectangularAppearance also cannot render a nil colour — it throws on every repaint — which
+# RectangularAppearance also cannot render an undefined colour — it throws on every repaint — which
 # is how the falsification announced itself.)
 #
 # It paints NO residual border either: the F5 receipts (plan §3-F) established that the
@@ -46,8 +46,8 @@ class SheetCellsPanelWdgt extends PanelWdgt
   constructor: ->
     super()
     # transparent (see the header): no fill, no inherited inset stroke over the cells' edge
-    # pixels — the nil appearance paints nothing at all, exactly like a CellWdgt
-    @appearance = nil
+    # pixels — the undefined appearance paints nothing at all, exactly like a CellWdgt
+    @appearance = undefined
 
   colloquialName: ->
     "cells panel"

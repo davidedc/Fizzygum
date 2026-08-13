@@ -1,6 +1,6 @@
 class ColorPalettePatchProgrammingIconAppearance extends IconAppearance
 
-  colorGradient: nil
+  colorGradient: undefined
 
   preferredSize: new Point 100, 100
   specificationSize: new Point 100, 100

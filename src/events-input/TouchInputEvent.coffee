@@ -1,12 +1,12 @@
 # IMMUTABLE — see the InputEvent header.
 # see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
 class TouchInputEvent extends InputEvent
-  ctrlKey: nil
-  shiftKey: nil
-  altKey: nil
-  metaKey: nil
+  ctrlKey: undefined
+  shiftKey: undefined
+  altKey: undefined
+  metaKey: undefined
 
-  touches: nil
+  touches: undefined
 
   constructor: (@touches, @ctrlKey, @shiftKey, @altKey, @metaKey, isSynthetic, time) ->
     super isSynthetic, time

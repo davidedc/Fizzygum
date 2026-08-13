@@ -42,11 +42,11 @@ class DivisionStackLayoutSpec extends LayoutSpec
   # (Widget._ensureDivisionBox) and never re-bound: the box is a per-widget knob and never
   # changes owner. The shared @defaults() instance deliberately keeps NO element — it backs
   # plain widgets read-only, and no menu is ever built on it.
-  element: nil
+  element: undefined
 
   constructor: ->
     super()
-    return nil
+    return undefined
 
   # The shared read-only instance backing every widget without a private box (see the class
   # comment). Built lazily at first use rather than as a class-level instance, so boot pays
@@ -123,7 +123,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
       @,
       "setDesiredMainDim",
       currentDesired.toString(),
-      nil,
+      undefined,
       10,
       1000,
       true
@@ -154,7 +154,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
       @,
       "setMaxMainDim",
       currentMax.toString(),
-      nil,
+      undefined,
       10,
       1000,
       true

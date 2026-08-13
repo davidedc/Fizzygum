@@ -82,13 +82,13 @@ class FormulaCompiler
     cell.source = newSource
     engine = world?.dataflow
     # a blank cell holds nothing. Drop its incoming edges but KEEP the node (its downstream
-    # references reactively see `nil`); full node-death (removeAllEdgesOf) is reserved for sheet
+    # references reactively see `undefined`); full node-death (removeAllEdgesOf) is reserved for sheet
     # destroy / Phase 6 un-wiring — see src/spreadsheet/CLAUDE.md.
     if not newSource? or newSource.trim() is ""
       engine?.removeEdgesInto cell
-      cell.compiledFn = nil
+      cell.compiledFn = undefined
       cell.boundNames = []
-      cell.value      = nil
+      cell.value      = undefined
       cell.errorFlag  = false
       return cell
 
@@ -101,7 +101,7 @@ class FormulaCompiler
       compiledFn = eval compileFGCode wrapperSource, true
     catch error
       # compileFGCode throws a rich Error on a parse failure (boot ~88) — that IS the SYNTAX path.
-      cell.compiledFn = nil
+      cell.compiledFn = undefined
       cell.boundNames = []
       cell.value      = new SheetError "SYNTAX", (error?.message ? "" + error)
       cell.errorFlag  = true
@@ -114,7 +114,7 @@ class FormulaCompiler
     for name in boundNames when SheetModel.looksLikeCellRef name
       refCell = cell.sheet.getOrCreateCellAt name
       if engine?.wouldCloseCycle refCell, cell
-        cell.compiledFn = nil
+        cell.compiledFn = undefined
         cell.boundNames = []
         cell.value      = new SheetError "LOOP"
         cell.errorFlag  = true

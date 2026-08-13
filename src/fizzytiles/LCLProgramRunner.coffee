@@ -22,7 +22,7 @@ class LCLProgramRunner
 
   # contains the last stable draw function as a Function object. Never mind the
   # initialisation as an empty string.
-  lastStableProgram = nil
+  lastStableProgram = undefined
 
   # contains the code that is meant to be run, as a string.
   # note that it might be impossible to run it because of errors, in which case

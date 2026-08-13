@@ -2,8 +2,8 @@
 # constructor reads the global `world` to derive pageX/pageY — but the instance
 # is never written after it.)
 class MousemoveInputEvent extends MouseInputEvent
-  pageX: nil
-  pageY: nil
+  pageX: undefined
+  pageY: undefined
 
   constructor: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time) ->
     super button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time

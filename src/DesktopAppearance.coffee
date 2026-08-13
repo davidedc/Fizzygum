@@ -5,7 +5,7 @@ class DesktopAppearance extends RectangularAppearance
   # from world.wallpaper.patternName. See docs/architecture/serialization-duplication-reference.md §5.
   @serializationTransients: ["pattern", "currentPattern"]
 
-  currentPattern: nil
+  currentPattern: undefined
 
   # The desktop paints exactly like a plain rectangular widget PLUS a repeating wallpaper tile behind it.
   # Rather than re-copy RectangularAppearance::paintIntoAreaOrBlitFromBackBuffer (which it used to reproduce
@@ -21,7 +21,7 @@ class DesktopAppearance extends RectangularAppearance
 
     if @widget.wallpaper.patternName? && @widget.wallpaper.patternName == @widget.wallpaper.pattern1
       @currentPattern = @widget.wallpaper.patternName
-      @pattern = nil
+      @pattern = undefined
 
     if @widget.wallpaper.patternName? && @widget.wallpaper.patternName != @currentPattern
       @currentPattern = @widget.wallpaper.patternName

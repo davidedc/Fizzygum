@@ -21,10 +21,10 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
 
   internalPadding: 5
 
-  pencilToolButton: nil
-  brushToolButton: nil
-  toothpasteToolButton: nil
-  eraserToolButton: nil
+  pencilToolButton: undefined
+  brushToolButton: undefined
+  toothpasteToolButton: undefined
+  eraserToolButton: undefined
   highlightedToolIconColor: Color.create 245, 126, 0
 
   # whether the tools are armed on the resolved painting overlay. Born true:
@@ -238,7 +238,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
       # from outside the canvas
       initialiseQueueIfNeeded = ->
           if !@queue?
-              @queue = [0..24].map -> nil
+              @queue = [0..24].map -> undefined
 
       mouseUpLeft = ->
           if world.hand.isThisPointerDraggingSomething() then return
@@ -354,7 +354,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   # image. FLOATING: my parent frame's content is me, so the frame's
   # paintingOverlay dispatch finds nothing -- fall to the FOCUSED widget.
   # Either leg resolves through the paintingOverlay() capability chain
-  # (glass / canvas / container / frame); nil = nothing paintable, the press
+  # (glass / canvas / container / frame); undefined = nothing paintable, the press
   # is a visual-only radio flip (the text-toolbar no-op contract).
   resolveInjectionTarget: ->
     @parent?.paintingOverlay?() ? world.editorFocusWdgt?.paintingOverlay?()

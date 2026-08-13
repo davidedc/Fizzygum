@@ -1,6 +1,6 @@
 class GrayscalePalettePatchProgrammingIconAppearance extends IconAppearance
 
-  grayscaleGradient: nil
+  grayscaleGradient: undefined
 
   preferredSize: new Point 100, 100
   specificationSize: new Point 100, 100

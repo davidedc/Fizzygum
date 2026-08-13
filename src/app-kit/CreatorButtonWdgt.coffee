@@ -18,7 +18,7 @@ class CreatorButtonWdgt extends Widget
   excludedFromEditorFocusTracking: ->
     true
 
-  iconToolTipMessage: nil
+  iconToolTipMessage: undefined
 
   # subclasses supply createAppearance (the icon) + iconToolTipMessage (hover
   # text); the appearance is set here after super, as the original ctors did.

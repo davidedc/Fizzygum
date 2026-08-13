@@ -11,32 +11,32 @@ class PreferencesAndSettings
 
   # all these properties can be modified
   # by the input mode.
-  inputMode: nil
-  minimumFontHeight: nil
-  shortcutsFontSize: nil
-  menuFontName: nil
-  menuFontSize: nil
-  menuHeaderFontSize: nil
-  menuHeaderColor: nil
-  menuHeaderBold: nil
-  menuStrokeColor: nil
-  menuBackgroundColor: nil
-  menuButtonsLabelColor: nil
-  normalTextFontSize: nil
-  textInButtonsFontSize: nil
-  titleBarTextFontSize: nil
-  titleBarBoldText: nil
-  titleBarTextHeight: nil
-  bubbleHelpFontSize: nil
-  prompterFontName: nil
-  prompterFontSize: nil
-  prompterSliderSize: nil
-  handleSize: nil
-  scrollBarsThickness: nil
+  inputMode: undefined
+  minimumFontHeight: undefined
+  shortcutsFontSize: undefined
+  menuFontName: undefined
+  menuFontSize: undefined
+  menuHeaderFontSize: undefined
+  menuHeaderColor: undefined
+  menuHeaderBold: undefined
+  menuStrokeColor: undefined
+  menuBackgroundColor: undefined
+  menuButtonsLabelColor: undefined
+  normalTextFontSize: undefined
+  textInButtonsFontSize: undefined
+  titleBarTextFontSize: undefined
+  titleBarBoldText: undefined
+  titleBarTextHeight: undefined
+  bubbleHelpFontSize: undefined
+  prompterFontName: undefined
+  prompterFontSize: undefined
+  prompterSliderSize: undefined
+  handleSize: undefined
+  scrollBarsThickness: undefined
 
   # (no outlineColor field: it is a local in setMouseInputMode -- nothing but the
   # outlineColorString shortcut below ever reads the Color object itself.)
-  outlineColorString: nil
+  outlineColorString: undefined
 
   wheelScaleX: 1
   wheelScaleY: 1
@@ -58,11 +58,11 @@ class PreferencesAndSettings
       y *= -1
     [x, y]
 
-  useSliderForInput: nil
-  useVirtualKeyboard: nil
-  isTouchDevice: nil
-  rasterizeSVGs: nil
-  isFlat: nil
+  useSliderForInput: undefined
+  useVirtualKeyboard: undefined
+  isTouchDevice: undefined
+  rasterizeSVGs: undefined
+  isFlat: undefined
   grabDragThreshold: 7
 
   # Drag-embed dwell-to-arm (docs/specs/drag-embed-interaction-spec.md §6). A WINDOW payload embeds

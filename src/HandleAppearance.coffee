@@ -7,7 +7,7 @@ class HandleAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): both
       # art colours go BLACK under appliedShadow — the scope's alpha already carries the
       # shadow's faintness.

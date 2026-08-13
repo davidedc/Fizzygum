@@ -6,7 +6,7 @@ class PenAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
       direction = @widget.heading
       len = @widget.width() / 2
       start = @widget.center().subtract(@widget.position())

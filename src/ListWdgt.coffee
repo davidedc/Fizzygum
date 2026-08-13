@@ -1,14 +1,14 @@
 class ListWdgt extends ScrollPanelWdgt
   
-  elements: nil
-  labelGetter: nil
-  format: nil
-  listContents: nil # a MenuRowsPanelWdgt with the contents of the list
-  selected: nil # actual element currently selected
-  active: nil # menu item representing the selected element
-  action: nil
-  target: nil
-  doubleClickAction: nil
+  elements: undefined
+  labelGetter: undefined
+  format: undefined
+  listContents: undefined # a MenuRowsPanelWdgt with the contents of the list
+  selected: undefined # actual element currently selected
+  active: undefined # menu item representing the selected element
+  action: undefined
+  target: undefined
+  doubleClickAction: undefined
 
   constructor: (
     @target,
@@ -21,7 +21,7 @@ class ListWdgt extends ScrollPanelWdgt
     ,
 
     @format = [],
-    @doubleClickAction = nil
+    @doubleClickAction = undefined
     ) ->
     #
     #    passing a format is optional. If the format parameter is specified
@@ -48,7 +48,7 @@ class ListWdgt extends ScrollPanelWdgt
     @color = Color.WHITE
     @_buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
-    # instead of nil because the scrollbars (inherited from ScrollPanel)
+    # instead of undefined because the scrollbars (inherited from ScrollPanel)
     # need the step function to react to mouse floatDrag.
   
   # builds the list contents, via the _buildAndConnectChildren wrapper + NoSettle-core pattern. ListWdgt extends
@@ -71,11 +71,11 @@ class ListWdgt extends ScrollPanelWdgt
     @elements = ["(empty)"]  if !@elements.length
     @_repaintAsOneUnit =>
       @elements.forEach (element) =>
-        color = nil
+        color = undefined
         bold = false
         italic = false
         @format.forEach (pair) ->
-          if pair[1].call nil, element
+          if pair[1].call undefined, element
             switch pair[0]
               when 'bold'
                 bold = true
@@ -102,7 +102,7 @@ class ListWdgt extends ScrollPanelWdgt
   # (_reactToChildDropped/_reactToChildGrabbed and the inherited _reLayoutChildrenAndScrollbars),
   # which is exactly why those are kept separate from this notification.
   _reLayOutAfterContainedPanelChange: ->
-    nil
+    undefined
 
   select: (item, trigger) ->
     @selected = item

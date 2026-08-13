@@ -28,11 +28,11 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     # construction). Under orphan-settledness a public container.add() would settle MID-construction
     # on the half-built tree and crash; the single `world.add wm` below settles the whole tree once.
 
-    slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
+    slider1 = new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
     slider1._applyBounds (container.position().add new Point 43+xCorrection, 195+yCorrection), new Point 20, 100
     container._addNoSettle slider1
 
-    slider2 = new SliderWdgt nil, nil, nil, nil, nil, true
+    slider2 = new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
     slider2._applyBounds (container.position().add new Point 472+xCorrection, 203+yCorrection), new Point 20, 100
     container._addNoSettle slider2
 
@@ -55,12 +55,12 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     container._addNoSettle calc2
 
 
-    slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, cText, "setText"
-    cText.setTargetAndActionWithOnesPickedFromMenu nil, nil, calc1.contents, "setInput1"
-    calc1.contents.setTargetAndActionWithOnesPickedFromMenu nil, nil, fText, "setText"
-    fText.setTargetAndActionWithOnesPickedFromMenu nil, nil, slider2, "setValue"
-    slider2.setTargetAndActionWithOnesPickedFromMenu nil, nil, calc2.contents, "setInput1"
-    calc2.contents.setTargetAndActionWithOnesPickedFromMenu nil, nil, slider1, "setValue"
+    slider1.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, cText, "setText"
+    cText.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, calc1.contents, "setInput1"
+    calc1.contents.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, fText, "setText"
+    fText.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, slider2, "setValue"
+    slider2.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, calc2.contents, "setInput1"
+    calc2.contents.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, slider1, "setValue"
 
 
 

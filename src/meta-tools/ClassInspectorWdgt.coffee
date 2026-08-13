@@ -2,7 +2,7 @@ class ClassInspectorWdgt extends InspectorWdgt
 
   # the SECOND save destination for a mixin-donated member (see overrideInThisClass);
   # laid out left of the save button, shown only while such a member is selected
-  overrideInThisClassButton: nil
+  overrideInThisClassButton: undefined
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.constructor.class.notifyInstancesOfSourceChange propertiesArray
@@ -33,7 +33,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # Class.applyMemberEdit for fields too), the class body's recorded source
   # (chain walk, mirroring the function branch), then the mixin donor's (setting
   # the donor attribution, so the save routes to the mixin and the override
-  # gesture is offered -- field parity with methods). nil when no source is
+  # gesture is offered -- field parity with methods). undefined when no source is
   # recorded (the base then falls back to showing the VALUE).
   _sourceForFieldMember: (selected) ->
     if @target[selected + "_source"]?
@@ -48,7 +48,7 @@ class ClassInspectorWdgt extends InspectorWdgt
         @currentPropertySourceMixin = theMixinProvidingIt
         return theMixinProvidingIt.nonStaticPropertiesSources[selected]
       goingUpTargetProtChain = goingUpTargetProtChain.__proto__
-    nil
+    undefined
 
   # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point).
   # The gap between the remove button and the save button, in the bottom row.
@@ -83,8 +83,8 @@ class ClassInspectorWdgt extends InspectorWdgt
   addPropertyToMixin: (ignored, ignored2, prop, mixinGlobalName) ->
     theMixin = Mixin.allMixines.find (m) -> m.name + "Mixin" is mixinGlobalName or m.name is mixinGlobalName
     return unless theMixin?
-    theMixin.applyMemberEdit prop, "nil"
-    world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, prop, "nil"
+    theMixin.applyMemberEdit prop, "undefined"
+    world?.sourceEditsRegistry?.recordMixinEdit? theMixin.name, prop, "undefined"
     @_buildAndConnectChildren()
 
   # a mixin-donated INSTANCE member (not shadowed by this class) is removed from
@@ -97,8 +97,8 @@ class ClassInspectorWdgt extends InspectorWdgt
       propertyName = @list.selected.labelString
       updatedCount = theMixin.removeMember propertyName
       world?.sourceEditsRegistry?.recordMixinMemberRemoval? theMixin.name, propertyName
-      @currentProperty = nil
-      @currentPropertySourceMixin = nil
+      @currentProperty = undefined
+      @currentPropertySourceMixin = undefined
       @_buildAndConnectChildren()
       @inform "removed from " + theMixin.name + "Mixin\n(" + updatedCount + " consumer class" + (if updatedCount is 1 then "" else "es") + " updated)"
       return
@@ -120,7 +120,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
   # edited source as a live override on THIS class's prototype only. Dropping the
-  # mixin attribution first makes the plain save routing do exactly that -- and nil
+  # mixin attribution first makes the plain save routing do exactly that -- and undefined
   # IS the true post-state: the prototype then carries `<name>_source`, which is
   # what a re-selection would attribute the member to (and what applyMemberEdit's
   # live-override shadow guard keys off), so future donor edits skip this class.
@@ -129,7 +129,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     return unless @currentPropertySourceMixin?
     return if @currentPropertySourceIsStatic
     theMixinName = @currentPropertySourceMixin.name
-    @currentPropertySourceMixin = nil
+    @currentPropertySourceMixin = undefined
     @overrideInThisClassButton.hide()
     # the donor label follows the attribution: the member is class-owned now
     @mixinDonorLabel?.setText ""

@@ -12,8 +12,8 @@
 # differ beyond the button fields).
 class CodeAreaWdgt extends Widget
 
-  tempPromptEntryField: nil
-  textWidget: nil
+  tempPromptEntryField: undefined
+  textWidget: undefined
 
   # space between the container's edges and its internal contents -- often
   # left 0 because windows already add their own inner padding.
@@ -44,7 +44,7 @@ class CodeAreaWdgt extends Widget
 
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle undefined, undefined, @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 

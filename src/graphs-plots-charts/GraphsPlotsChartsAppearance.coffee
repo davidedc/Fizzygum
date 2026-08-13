@@ -15,7 +15,7 @@ class GraphsPlotsChartsAppearance extends Appearance
     # simpleShadow fills the WHOLE box black at the shadow alpha, so the coloured background
     # underneath is skipped (painting it too would tint and double-darken through accumulation).
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { alpha: "backgroundTransparencyNormalPass" }, (ctx, localArea) =>
-      # (backgroundColor is nil unless the user sets one — the base Widget default — so this
+      # (backgroundColor is undefined unless the user sets one — the base Widget default — so this
       # fill is usually skipped; drawPlot's own background-clean fill paints the plot box)
       if !appliedShadow? and @widget.backgroundColor?
         ctx.fillStyle = @widget.backgroundColor.toString()

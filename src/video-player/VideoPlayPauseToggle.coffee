@@ -1,16 +1,16 @@
 class VideoPlayPauseToggle extends ToggleButtonWdgt
 
-  playPausePlayButton: nil
-  playPausePauseButton: nil
+  playPausePlayButton: undefined
+  playPausePauseButton: undefined
 
-  videoPlayerCanvas: nil
+  videoPlayerCanvas: undefined
 
   # there is a delay between a user scrub / play-pause click and the video
   # element's state catching up, so updating the UI from video state
   # immediately after a user action would visibly bounce it back to the
   # previous state -- the update is deferred briefly instead (the 250ms
   # guard in _updatePlayPauseToggle).
-  timeWhenPlayPauseButtonWasLastClicked: nil
+  timeWhenPlayPauseButtonWasLastClicked: undefined
 
   colloquialName: ->
     "Play/pause button"

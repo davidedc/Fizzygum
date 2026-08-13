@@ -74,11 +74,11 @@ class DemoMenus
     world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
-    world.create new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
+    world.create new SimpleRectangularButtonWdgt true, @, undefined, new IconWdgt(undefined)
 
   createSwitchButtonWdgt: ->
-    button1 = new SimpleRectangularButtonWdgt true, @, nil, new IconWdgt(nil)
-    button2 = new SimpleRectangularButtonWdgt true, @, nil, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
+    button1 = new SimpleRectangularButtonWdgt true, @, undefined, new IconWdgt(undefined)
+    button2 = new SimpleRectangularButtonWdgt true, @, undefined, new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonWdgt [button1, button2]
 
   createNewClippingBoxWdgt: ->
@@ -192,7 +192,7 @@ class DemoMenus
     world.openFrameWith diffingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   createSliderWithSmallestValueAtBottomEnd: ->
-    world.create new SliderWdgt nil, nil, nil, nil, nil, true
+    world.create new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
 
   createRegexSubstitutionPatchNodeWdgt: ->
     regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt
@@ -510,7 +510,7 @@ class DemoMenus
     @createSimpleVerticalStackScrollPanelWdgt()
 
   createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
-    svspw = new SimpleVerticalStackPanelWdgt nil, nil, nil, false
+    svspw = new SimpleVerticalStackPanelWdgt undefined, undefined, undefined, false
     world.add svspw
     svspw.setBounds new Point(35, 30), new Point(370, 325)
 
@@ -575,7 +575,7 @@ class DemoMenus
 
   createNewWrappingSimpleTextWdgtWithBackground: ->
     newWdgt = new SimpleTextWdgt(
-      @LOREM_LONG,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      @LOREM_LONG,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
 
     world.add newWdgt
@@ -592,7 +592,7 @@ class DemoMenus
       "porttitor, elit augue vestibulum est, nec congue " +
       "ex dui a velit. Nullam lectus leo, lobortis eget " +
       "erat ac, lobortis dignissim " +
-      "magna.",nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      "magna.",undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
     # non-wrapping ("code view"): hug the natural text width.
     newWdgt.softWrap = false
@@ -674,7 +674,7 @@ class DemoMenus
     menu.popUpAtHand()
 
   createNewStringWdgtWithBackground: ->
-    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, Color.create(230, 230, 130), 1
+    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",undefined,undefined,undefined,undefined,undefined,undefined,undefined, Color.create(230, 230, 130), 1
     newWdgt.isEditable = true
     world.create newWdgt
 
@@ -685,7 +685,7 @@ class DemoMenus
 
   createNewTextWdgtWithBackground: ->
     newWdgt = new TextWdgt(
-      @LOREM_LONG,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      @LOREM_LONG,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
     newWdgt.isEditable = true
     world.create newWdgt
 

@@ -1,60 +1,60 @@
 class InspectorWdgt extends Widget
 
-  target: nil
-  currentProperty: nil
+  target: undefined
+  currentProperty: undefined
   # the parsed Mixin whose source the currently-selected member's view came from
-  # (nil when the source came from the instance or the class chain). Set by
+  # (undefined when the source came from the instance or the class chain). Set by
   # selectionFromList; consulted by ClassInspectorWdgt.applyPropertyEdit to route
   # a save to the DONOR mixin.
-  currentPropertySourceMixin: nil
+  currentPropertySourceMixin: undefined
   # true when the mixin-attributed selection is a CLASS-SIDE (static) member --
   # the save then routes to Mixin.applyStaticEdit instead of applyMemberEdit
   currentPropertySourceIsStatic: false
   markOwnershipOfProperties: true
   # panes:
-  list: nil
-  detail: nil
+  list: undefined
+  detail: undefined
 
-  classesButtons: nil
-  classesNames: nil
-  angledArrows: nil
-  hierarchyHeaderString: nil
-  propertyHeaderString: nil
+  classesButtons: undefined
+  classesNames: undefined
+  angledArrows: undefined
+  hierarchyHeaderString: undefined
+  propertyHeaderString: undefined
 
   # only the TOGGLES are fields: each toggle owns its own on/off buttons (SwitchButtonWdgt keeps them
   # in @buttons), so the inspector parking a second reference to each was redundant state.
-  showMethodsToggle: nil
-  showFieldsToggle: nil
-  showInheritedToggle: nil
-  showOwnPropsOnlyToggle: nil
+  showMethodsToggle: undefined
+  showFieldsToggle: undefined
+  showInheritedToggle: undefined
+  showOwnPropsOnlyToggle: undefined
 
-  lastLabelInHierarchy: nil
-  lastArrowInHierarchy: nil
+  lastLabelInHierarchy: undefined
+  lastArrowInHierarchy: undefined
   # "from <Name>Mixin" appended to the hierarchy row while a mixin-donated member
   # is selected (the donor is provenance, like the class chain); empty otherwise
-  mixinDonorLabel: nil
+  mixinDonorLabel: undefined
 
-  hierarchyBackgroundPanel: nil
+  hierarchyBackgroundPanel: undefined
 
   showingFields: true
   showingMethods: true
   showingInherited: false
   showingOwnPropsOnly: false
 
-  addPropertyButton: nil
-  renamePropertyButton: nil
-  removePropertyButton: nil
-  saveButton: nil
-  saveTextWdgt: nil
+  addPropertyButton: undefined
+  renamePropertyButton: undefined
+  removePropertyButton: undefined
+  saveButton: undefined
+  saveTextWdgt: undefined
 
   # opaque background appearance, painted ONLY while the inspector is
   # free-floating (naked); dropped while it is FrameWdgt content (the
   # window supplies the background) — see the constructor + _setLayoutSpec
-  inspectorBackgroundAppearance: nil
+  inspectorBackgroundAppearance: undefined
 
   externalPadding: 0
   internalPadding: 5
-  padding: nil
+  padding: undefined
 
   # normally buttons only contain centered lower case text
   # so we can get away with just no padding between button
@@ -140,7 +140,7 @@ class InspectorWdgt extends Widget
       if @isFreeFloating()
         @inspectorBackgroundAppearance
       else
-        nil
+        undefined
   
   # A live rebuild (property add/rename/remove or show/hide toggle) SELF-SETTLES ONCE around the
   # non-settling @_addNoSettle core below -- see docs/archive/end-of-cycle-flush-drawdown-plan.md.
@@ -208,7 +208,7 @@ class InspectorWdgt extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldWdgt.preferencesAndSettings.textInButtonsFontSize),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
+      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldWdgt.preferencesAndSettings.textInButtonsFontSize),undefined,undefined,undefined,undefined,eachNamedClass,undefined,undefined,@classNamesTextPadding
       @classesButtons.push classButton
       @_addNoSettle classButton
 
@@ -274,7 +274,7 @@ class InspectorWdgt extends Widget
       @, # target
       "selectionFromList", #action
       (if @target instanceof Array then attribs else attribs.sort()), #elements
-      nil, #labelGetter
+      undefined, #labelGetter
       @filterProperties(targetOwnMethods), #format
       doubleClickAction #doubleClickAction
     )
@@ -309,7 +309,7 @@ class InspectorWdgt extends Widget
 
     @textWidget = @detail.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle nil, nil, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle undefined, undefined, @textWidget.monoFontStack
     @textWidget.isEditable = false
 
     @_addNoSettle @detail
@@ -333,8 +333,8 @@ class InspectorWdgt extends Widget
     # so a naked inspector is self-resizable while a windowed one defers to the
     # window's resizer. Covered by
     # SystemTest_macroNakedInspectorRendersResizesAndEdits.
-    # Attach the resizer, then record it -- @resizer stays nil during its own add (byte-identical to the old
-    # `@resizer = new HandleWdgt @`, whose in-constructor add ran while @resizer was still nil; see FrameWdgt).
+    # Attach the resizer, then record it -- @resizer stays undefined during its own add (byte-identical to the old
+    # `@resizer = new HandleWdgt @`, whose in-constructor add ran while @resizer was still undefined; see FrameWdgt).
     resizer = new HandleWdgt
     @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
     @resizer = resizer
@@ -391,9 +391,9 @@ class InspectorWdgt extends Widget
         ]
       ]
     else
-      return nil
+      return undefined
 
-  # The parsed Mixin that injects member `selected` into `theClass` (nil when no
+  # The parsed Mixin that injects member `selected` into `theClass` (undefined when no
   # augmentedWith mixin carries it). `augmentedWith` holds the mixin GLOBAL names
   # ("ControllerMixin"); a parsed Mixin's @name is that minus the "Mixin" suffix
   # ("Controller"), so match either form. Mixin.allMixines is the list of parsed Mixins
@@ -402,38 +402,38 @@ class InspectorWdgt extends Widget
   # compiled JS -- the mixin leg the class-chain walk in selectionFromList lacked) and
   # the edit routing (ClassInspectorWdgt saves a mixin-donated member to the donor).
   _mixinProvidingMember: (theClass, selected) ->
-    return nil unless theClass.augmentedWith?
+    return undefined unless theClass.augmentedWith?
     for mixinName in theClass.augmentedWith
       for theMixin in Mixin.allMixines
         if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
            theMixin.nonStaticPropertiesSources[selected]?
           return theMixin
-    nil
+    undefined
 
-  # the recorded SOURCE of a non-function member, or nil to show its VALUE. The
+  # the recorded SOURCE of a non-function member, or undefined to show its VALUE. The
   # class inspector overrides this with the prototype-level truth (live override /
   # class body / mixin donor, setting the donor attribution); an OBJECT inspector
   # keeps showing the instance's VALUE -- per-instance state is its own truth.
   _sourceForFieldMember: (selected) ->
-    nil
+    undefined
 
   # the static twin of _mixinProvidingMember: the parsed Mixin donating class-side
-  # member `selected` to `theClass` (nil when none does)
+  # member `selected` to `theClass` (undefined when none does)
   _mixinProvidingStaticMember: (theClass, selected) ->
-    return nil unless theClass?.augmentedWith?
+    return undefined unless theClass?.augmentedWith?
     for mixinName in theClass.augmentedWith
       for theMixin in Mixin.allMixines
         if (theMixin.name == mixinName or theMixin.name + "Mixin" == mixinName) and
            theMixin.staticPropertiesSources[selected]?
           return theMixin
-    nil
+    undefined
 
   selectionFromList: (selected) ->
     if selected == undefined then return
 
     val = @target[selected]
     @currentProperty = val
-    @currentPropertySourceMixin = nil
+    @currentPropertySourceMixin = undefined
     @currentPropertySourceIsStatic = false
 
     # functions should have a source somewhere
@@ -485,7 +485,7 @@ class InspectorWdgt extends Widget
       else if (fieldSource = @_sourceForFieldMember selected)?
         txt = fieldSource
       else if !val?
-        txt = "nil"
+        txt = "undefined"
       else if Utils.isString val
         txt = '"'+val+'"'
       else
@@ -669,7 +669,7 @@ class InspectorWdgt extends Widget
   # the add core, past the prompt: the popout flow (addProperty) and the class
   # inspector's destination menu both land here
   _addNamedProperty: (prop) ->
-    @target[prop] = nil
+    @target[prop] = undefined
     # nosettle-sanctioned: gesture tail shared by two PUBLIC add actions (the popout
     # Ok and the class inspector's destination menu), event-time only -- the rebuild
     # is that gesture's single settle, exactly as when it was inlined in addProperty
@@ -715,6 +715,6 @@ class InspectorWdgt extends Widget
 
     @_applyPropertyRemoval propertyName
 
-    @currentProperty = nil
+    @currentProperty = undefined
     @_buildAndConnectChildren()
     @notifyInstancesOfSourceChange([propertyName])

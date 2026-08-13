@@ -1,14 +1,14 @@
 class ScrollPanelWdgt extends PanelWdgt
 
-  autoScrollTrigger: nil
+  autoScrollTrigger: undefined
   hasVelocity: true
   padding: 0 # around the scrollable area
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
-  scrollBarsThickness: nil
-  contents: nil
-  vBar: nil
-  hBar: nil
+  scrollBarsThickness: undefined
+  contents: undefined
+  vBar: undefined
+  hBar: undefined
 
   # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
   # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay) or content (a dropped
@@ -44,7 +44,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # `_buildAndConnectChildren` to build its list CONTENTS, and CoffeeScript binds a subclass's constructor
   # params (@elements, …) only AFTER super(). If THIS base constructor called the (virtual)
   # `_buildAndConnectChildren`, `new ListWdgt` would dispatch into ListWdgt's contents-core during super()
-  # with @elements still nil → crash. So the base builds only the frame here (a name ListWdgt does not
+  # with @elements still undefined → crash. So the base builds only the frame here (a name ListWdgt does not
   # override); ListWdgt's constructor builds its contents via `_buildAndConnectChildren` AFTER super().
   _buildScrollFrame: ->
     @_settleLayoutsAfter => @_buildScrollFrameNoSettle()
@@ -62,13 +62,13 @@ class ScrollPanelWdgt extends PanelWdgt
     @color = @contents.color
     @alpha = @contents.alpha
 
-    @hBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
+    @hBar = new SliderWdgt undefined, undefined, undefined, undefined, @sliderColor
     @hBar._applyHeight @scrollBarsThickness
 
     @hBar.target = @
     @_addNoSettle @hBar
 
-    @vBar = new SliderWdgt nil, nil, nil, nil, @sliderColor
+    @vBar = new SliderWdgt undefined, undefined, undefined, undefined, @sliderColor
     @vBar._applyWidth @scrollBarsThickness
     @vBar.target = @
     @_addNoSettle @vBar
@@ -227,11 +227,11 @@ class ScrollPanelWdgt extends PanelWdgt
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign). Keyed off the WIDGET, not the layoutSpec argument:
     # handles are added with no explicit spec (defaultLayoutSpecWhenAddedTo resolves it inside
-    # the add), so the argument is nil exactly for the widgets this must catch.
+    # the add), so the argument is undefined exactly for the widgets this must catch.
     if aWdgt.attachesToScrollFrameDirectly?()
       super
     else
-      @contents.add aWdgt, position, layoutSpec, beingDropped, nil, positionOnScreen
+      @contents.add aWdgt, position, layoutSpec, beingDropped, undefined, positionOnScreen
       # Intentional synchronous APPLY (not an off-settle trigger to defer): add / addMany /
       # showResizeAndMoveHandlesAndLayoutAdjusters are public content-change ENDPOINTS, idempotent
       # with this panel's own _reLayout ('super; @_reLayoutChildren'), distinct from the seam sites
@@ -561,7 +561,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # scroll panel anchored to a non-draggable background, such as a color palette).
   mouseDownLeft: (pos) ->
 
-    return nil  unless @isScrollingByfloatDragging
+    return undefined  unless @isScrollingByfloatDragging
 
     oldPos = pos
     deltaX = 0
@@ -701,7 +701,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # frame-cadence-independent even though the path there isn't (see the
     # edge-auto-scroll entry in src/macros/MACRO-PATTERNS.md).
     inset = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
-    if @isOrphan() then return nil
+    if @isOrphan() then return undefined
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     world.steppingWdgts.add @
@@ -715,10 +715,10 @@ class ScrollPanelWdgt extends PanelWdgt
       else
         @step = noOperation
         world.steppingWdgts.delete @
-        @autoScrollTrigger = nil
+        @autoScrollTrigger = undefined
   
   autoScroll: (pos) ->
-    return nil  if Date.now() - @autoScrollTrigger < 500
+    return undefined  if Date.now() - @autoScrollTrigger < 500
     inset = WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false

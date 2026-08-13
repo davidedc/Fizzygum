@@ -13,7 +13,7 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   #    we just hold the Function then we lose the CS source
 
   sourceCodeToBeInjected: ""
-  wdgtToBeNotifiedForNewCode: nil
+  wdgtToBeNotifiedForNewCode: undefined
 
   constructor: (@wdgtToBeNotifiedForNewCode, face) ->
     super true, @, 'injectCodeIntoTarget', face
@@ -25,7 +25,7 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
     @textPrompt "Code", @, "modifyCodeToBeInjected", @sourceCodeToBeInjected
 
   # this happens when pressed, the source code is injected into the target the
-  # owner resolves NOW (nil = nothing paintable in reach: the press is a
+  # owner resolves NOW (undefined = nothing paintable in reach: the press is a
   # visual-only selection change)
   injectCodeIntoTarget: ->
     @wdgtToBeNotifiedForNewCode.resolveInjectionTarget?()?.injectProperties @sourceCodeToBeInjected

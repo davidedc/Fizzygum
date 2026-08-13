@@ -71,7 +71,7 @@ class Widget extends TreeNode
     "srcBrokenRect", "dstBrokenRect"
   ]
 
-  appearance: nil
+  appearance: undefined
 
   dragsDropsAndEditingEnabled: true
 
@@ -79,20 +79,20 @@ class Widget extends TreeNode
   # into a single property (a Rectangle). Only
   # a few geometry-related methods should directly
   # access this property.
-  bounds: nil
-  minimumExtent: nil
+  bounds: undefined
+  minimumExtent: undefined
   color: Color.create 80, 80, 80
-  strokeColor: nil
-  texture: nil # optional url of a fill-image
+  strokeColor: undefined
+  texture: undefined # optional url of a fill-image
 
-  lastTime: nil
+  lastTime: undefined
   # when you use the high-level geometry-change APIs
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it.
   # Here we store the desired extent and position.
-  desiredExtent: nil
-  desiredPosition: nil
+  desiredExtent: undefined
+  desiredPosition: undefined
 
   # 1: fully opaque, 0: fully transparent
   alpha: 1
@@ -120,7 +120,7 @@ class Widget extends TreeNode
   # entire rectangular bounds of the widget.
   # I.e. they area they fill is not affected by the
   # padding or the actual design of the widget.
-  backgroundColor: nil
+  backgroundColor: undefined
   backgroundTransparency: 1
 
   # for a Widget, being visible and collapsed
@@ -176,7 +176,7 @@ class Widget extends TreeNode
   # code contained in the text panel, rather than
   # to fiddle with the properties of the text panel
   # itself.
-  overridingContextMenu: nil
+  overridingContextMenu: undefined
 
   # menu merging is useful when you want a "parent"
   # menu to take over the menus of their children.
@@ -208,11 +208,11 @@ class Widget extends TreeNode
   # text
   takesOverAndMergesChildrensMenus: false
 
-  onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
+  onNextStep: undefined # optional function to be run once. Not currently used in Fizzygum
 
-  clickOutsideMeOrAnyOfMeChildrenCallback: [nil]
+  clickOutsideMeOrAnyOfMeChildrenCallback: [undefined]
 
-  textDescription: nil
+  textDescription: undefined
 
   # note that not all the changed widgets have this flag set
   # because if a parent does a _fullChanged, we don't set this
@@ -224,7 +224,7 @@ class Widget extends TreeNode
   # See comment below on fullPaintBoundsMaybeChanged
   # for more information.
   paintBoundsMaybeChanged: false
-  clippedBoundsWhenLastPainted: nil
+  clippedBoundsWhenLastPainted: undefined
 
   # you'd be tempted to check this flag to figure out
   # whether any widget has possibly changed position but
@@ -249,36 +249,36 @@ class Widget extends TreeNode
   # array to do that. Seems quite a bit more work and complication,
   # so just use the method.
   fullPaintBoundsMaybeChanged: false
-  fullClippedBoundsWhenLastPainted: nil
+  fullClippedBoundsWhenLastPainted: undefined
 
   # §4.4 island buffer cache — the "source" (old-position) lane. When this widget last painted INTO
   # an island's buffer, these hold the PRE-mapping virtual full-bounds and that island, so a later
   # move-within-island can erase the vacated buffer region (_recordDrawnAreaForNextBrokenRects sets
-  # them; the flesh-out source lane consumes+clears them). nil on every ordinary (non-island) paint.
-  _islandBufferSourceIsland: nil
-  _islandBufferSourceVirtualRect: nil
+  # them; the flesh-out source lane consumes+clears them). undefined on every ordinary (non-island) paint.
+  _islandBufferSourceIsland: undefined
+  _islandBufferSourceVirtualRect: undefined
 
-  cachedFullBounds: nil
-  checkFullBoundsCache: nil
+  cachedFullBounds: undefined
+  checkFullBoundsCache: undefined
   childrenBoundsUpdatedAt: -1
 
-  cachedFullClippedBounds: nil
-  checkFullClippedBoundsCache: nil
+  cachedFullClippedBounds: undefined
+  checkFullClippedBoundsCache: undefined
 
-  cachedVisibleBasedOnIsVisibleProperty: nil
-  checkVisibleBasedOnIsVisiblePropertyCache: nil
+  cachedVisibleBasedOnIsVisibleProperty: undefined
+  checkVisibleBasedOnIsVisiblePropertyCache: undefined
 
-  cachedClippedThroughBounds: nil
-  checkClippedThroughBoundsCache: nil
+  cachedClippedThroughBounds: undefined
+  checkClippedThroughBoundsCache: undefined
 
-  cachedClipThrough: nil
-  checkClipThroughCache: nil
+  cachedClipThrough: undefined
+  checkClipThroughCache: undefined
 
-  cachedIsInCollapsedSubtree: nil
-  checkIsInCollapsedSubtreeCache: nil
+  cachedIsInCollapsedSubtree: undefined
+  checkIsInCollapsedSubtreeCache: undefined
 
-  srcBrokenRect: nil
-  dstBrokenRect: nil
+  srcBrokenRect: undefined
+  dstBrokenRect: undefined
 
   layoutIsValid: true
   # (ordered down-walk Stage B2 — docs/archive/ordered-downwalk-stage-b-plan.md) FLUSH-LOCAL dirty-path
@@ -291,18 +291,18 @@ class Widget extends TreeNode
   # it must stay in @serializationTransients even though its resting own-value is false.
   hasDirtyDescendant: false
   # The ACTIVE layout spec (a LayoutSpec-family object) — HOW I participate in my
-  # container's layout right now. FREE-FLOATING = no spec OWNS my placement: nil, or a
+  # container's layout right now. FREE-FLOATING = no spec OWNS my placement: undefined, or a
   # follower spec (StretchLayoutSpec — proportional placement MEMORY, ownsPlacement()
   # false) — see isFreeFloating and the LayoutSpec family contract.
-  layoutSpec: nil
+  layoutSpec: undefined
   # The kept content-stack spec (VerticalStackLayoutSpec / FrameContentLayoutSpec) — spec
   # DATA persists across detachment (an element grabbed OUT of a stack keeps its explicit
   # grow/alignment for a later re-adoption); the adopting arranges read/refresh it and make
   # it the active @layoutSpec.
-  _contentStackSpec: nil
+  _contentStackSpec: undefined
   # the widget's division constraint box (a DivisionStackLayoutSpec) once it has a private
   # one — see _ensureDivisionBox() / _divisionBoxOrDefaults() in the Layouts section
-  _divisionBox: nil
+  _divisionBox: undefined
 
   _showsAdders: false
 
@@ -310,7 +310,7 @@ class Widget extends TreeNode
   # if this widget has the purpose of highlighting
   # another widget, then this field points to the
   # widget that this widget is supposed to highlight
-  wdgtThisWdgtIsHighlighting: nil
+  wdgtThisWdgtIsHighlighting: undefined
 
   # I am a transient EPHEMERAL overlay (highlight / pinout / — future — drag affordance),
   # created and destroyed by the per-cycle reconciler in WorldWdgt.doOneCycle, not by normal
@@ -321,7 +321,7 @@ class Widget extends TreeNode
 
   destroyed: false
 
-  shadowInfo: nil
+  shadowInfo: undefined
 
   initialiseDefaultFrameContentLayoutSpec: ->
     @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
@@ -519,7 +519,7 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_closeNoSettle()
 
   # restingContainer: which storage container the closed figure comes to rest
-  # in -- nil = the bin (the generic close verdict; the end-of-cycle storage
+  # in -- undefined = the bin (the generic close verdict; the end-of-cycle storage
   # sort re-files anything reachable to the shelf that same cycle). The
   # save-close path passes the shelf directly: the reference demonstrably
   # exists, so filing there just skips the bin hop the sort would fix up.
@@ -629,11 +629,11 @@ class Widget extends TreeNode
     # children rather than destroying them) still covers a focused descendant.
     focusWdgt = world.editorFocusWdgt
     if focusWdgt? and (focusWdgt == @ or @isAncestorOf focusWdgt)
-      world.editorFocusWdgt = nil
+      world.editorFocusWdgt = undefined
 
     # remove callback when user clicks outside
     # me or any of my children
-    @onClickOutsideMeOrAnyOfMyChildren nil
+    @onClickOutsideMeOrAnyOfMyChildren undefined
 
     if @parent?
       previousParent = @parent
@@ -648,7 +648,7 @@ class Widget extends TreeNode
     if @children.length != 0
       @children = []
 
-    return nil
+    return undefined
   
   # destroys the whole tree
   # from the bottom (leaf widgets, drawn on top
@@ -670,7 +670,7 @@ class Widget extends TreeNode
     until @children.length == 0
       @children[0]._fullDestroyNoSettle()
     @_destroyNoSettle()
-    return nil
+    return undefined
 
   closeChildren: ->
     WorldWdgt.noteStructureChange()
@@ -683,7 +683,7 @@ class Widget extends TreeNode
     # each immediate settle re-fits a half-emptied container. The caller settles once afterwards.
     until @children.length == 0
       @children[0]._closeNoSettle()
-    return nil
+    return undefined
 
   fullDestroyChildren: ->
     if @children.length == 0
@@ -701,7 +701,7 @@ class Widget extends TreeNode
     # once afterwards (or redraw an empty container), so no per-child flush is wanted.
     until @children.length == 0
       @children[0]._fullDestroyNoSettle()
-    return nil
+    return undefined
 
   # Free-floating = NO SPEC OWNS MY PLACEMENT: no layoutSpec at all, or a follower spec
   # (StretchLayoutSpec — proportional placement MEMORY whose ownsPlacement() is false).
@@ -733,7 +733,7 @@ class Widget extends TreeNode
   # leaving this function as step means that the widget wants to do nothing
   # but the children *are* traversed and their step function is invoked.
   # If a Widget wants to do nothing and wants to prevent the children to be
-  # traversed, then this function should be set to nil.
+  # traversed, then this function should be set to undefined.
   step: noOperation
   
   
@@ -907,7 +907,7 @@ class Widget extends TreeNode
     # docs/archive/orphan-settledness-plan.md): a public mutation leaves the receiver's OWN subtree settled on return,
     # so there is no "is it settled here?" question for a detached/under-construction widget either.
     # recalculateLayouts lays out the orphan's queued invalidations, which are its own subtree (an orphan's
-    # _invalidateLayout can't climb into the world -- it stops at parent==nil), so when the world is already
+    # _invalidateLayout can't climb into the world -- it stops at parent==undefined), so when the world is already
     # settled this flushes ONLY the orphan. The orphan's intrinsic (parentless) geometry re-settles to its
     # in-context form when it is later added to the world.
     world._inLayoutMutation = true
@@ -1180,7 +1180,7 @@ class Widget extends TreeNode
   # (pixel-less, virtual) slot box, which must not inflate the frame. Still a read of stable
   # applied geometry + a pure derived box — the D4/U3-A classification is unchanged.
   subWidgetsMergedFullBounds: ->
-    result = nil
+    result = undefined
     @children.forEach (child) ->
       # we exclude the HandleWdgts because they
       # mangle how the Panel inside ScrollPanelWdgts
@@ -1218,7 +1218,7 @@ class Widget extends TreeNode
   # each child at (the caller subtracts its own padding). SimpleVerticalStackPanelWdgt overrides this to also
   # derive child POSITIONS from measures (its children's positions are layout-derived, not stable state).
   subWidgetsMergedPreferredBounds: (childMeasureWidth) ->
-    result = nil
+    result = undefined
     if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
@@ -1364,7 +1364,7 @@ class Widget extends TreeNode
   # the transform (§4.11).
   mapRectToScreen: (aRect, depositBufferDirty = false) ->
     result = aRect
-    outermostIsland = nil
+    outermostIsland = undefined
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
@@ -1392,7 +1392,7 @@ class Widget extends TreeNode
   # bounds/pixel test runs in the plane where its (virtual) geometry lives; corner
   # fall-through and per-pixel transparency then come out exact for free (§10.4).
   screenPointToMyPlane: (aPoint) ->
-    islands = nil
+    islands = undefined
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
@@ -1429,17 +1429,17 @@ class Widget extends TreeNode
     @_enclosingNonIdentityIsland()?
 
   # Affine transforms (§6 R2): the INNERMOST enclosing non-identity island (TransformFrameWdgt) on my
-  # parent chain, or nil. My (virtual) geometry lives in THIS island's plane — clippedThroughBounds and
+  # parent chain, or undefined. My (virtual) geometry lives in THIS island's plane — clippedThroughBounds and
   # the mapRectToScreen / screenPointToMyPlane chain are all expressed there — so ephemeral chrome that
   # must track me (a highlight) is parented HERE to composite through the transform for free (rotates +
-  # clips with me, §4.6 halo-handle model). Dormant returns nil (no island) ⇒ the highlight stays a
+  # clips with me, §4.6 halo-handle model). Dormant returns undefined (no island) ⇒ the highlight stays a
   # world child, byte-identical. Backs _isInsideNonIdentityIsland above (its one caller is boolean-context).
   _enclosingNonIdentityIsland: ->
     ancestor = @parent
     while ancestor?
       return ancestor if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
       ancestor = ancestor.parent
-    nil
+    undefined
 
   # ---------------------------------------------------------------------------
   # PUBLIC GEOMETRY API UNDER TRANSFORMS — the two-vocabulary law.
@@ -1562,16 +1562,16 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_setRotationDegreesNoSettle deg
 
   _setRotationDegreesNoSettle: (deg) ->
-    @_applyTransformSugarNoSettle deg, nil
+    @_applyTransformSugarNoSettle deg, undefined
 
   setScaleFactor: (s) ->
     @_settleLayoutsAfter => @_setScaleFactorNoSettle s
 
   _setScaleFactorNoSettle: (s) ->
-    @_applyTransformSugarNoSettle nil, s
+    @_applyTransformSugarNoSettle undefined, s
 
   # shared core: find-or-materialize the enclosing sugar island, apply the (partial) spec change,
-  # then dematerialize if it returned to identity. degOrNil / sOrNil: nil means "leave unchanged".
+  # then dematerialize if it returned to identity. degOrNil / sOrNil: undefined means "leave unchanged".
   _applyTransformSugarNoSettle: (degOrNil, sOrNil) ->
     island = @_enclosingSugarIsland()
     if !island?
@@ -1590,7 +1590,7 @@ class Widget extends TreeNode
   # _enclosingSoleContentIsland's — this just adds the sugar gate up front (only islands define
   # _materializedBySugar, so the guard also rejects any non-island parent before the delegate runs).
   _enclosingSugarIsland: ->
-    return nil if !@parent?._materializedBySugar
+    return undefined if !@parent?._materializedBySugar
     @_enclosingSoleContentIsland()
 
   # wrap me in a fresh sugar island IN PLACE: the island's slot box becomes my current bounds and I
@@ -1620,7 +1620,7 @@ class Widget extends TreeNode
     # its nesting (a FrameWdgt's internal/external skin, via isInternal looking THROUGH this _materializedBySugar
     # island to the real parent) must derive against the island's TRUE parent -- so the island has to be homed
     # before I move in. The reverse order derived my skin while the island was still a detached root (parent
-    # nil), flipping a tilted window to the wrong skin. The final tree is identical either way (island ends at
+    # undefined), flipping a tilted window to the wrong skin. The final tree is identical either way (island ends at
     # myIndex, me free-floating inside it); homing an empty tracking island is safe (its _reLayoutChildren
     # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
     # island stays a detached root and I move into it, exactly as before.
@@ -1685,7 +1685,7 @@ class Widget extends TreeNode
       # placement homes the SLOT centre, so a tilted+RESIZED figure dropped into a counter-tilted
       # container lands off by O((I−sR)(A−centre)) (probe: −50,+49 px at 45°/−45°; the un-resized
       # control is exact). Normalize at the pick-up seam: re-express the similitude as its equivalent
-      # nil-anchor form (identical rendering, ≤1px rounding), so the ENTIRE hand-carry pipeline
+      # undefined-anchor form (identical rendering, ≤1px rounding), so the ENTIRE hand-carry pipeline
       # (drag, re-spec, placement, re-home) runs its already-exact centre-pivot math.
       figure._normalizePinnedAnchorNoSettle()
       # §7.5 Bug F (reparent-transparency, PICK half): the reused figure keeps its user-observed look
@@ -1698,7 +1698,7 @@ class Widget extends TreeNode
       # dormant. The transient mid-gesture re-spec is never painted (the synchronous-gesture argument):
       # both centre points below are NUMERIC values used only to compute the re-homed bounds that render
       # on the identity hand plane AFTER the grab reparents (which preserves numeric bounds), so they need
-      # not share a coordinate frame here. NIL-anchor correct by that numeric argument; PINNED-anchor
+      # not share a coordinate frame here. UNDEFINED-anchor correct by that numeric argument; PINNED-anchor
       # correct because the move-level override (TransformFrameWdgt._applyMoveBy et al.) rides the anchor
       # on the re-home _applyMoveTo, restoring the fixed-point property (probe-verified 0.5px, scenarios
       # 4 + 5b — see docs §7.5 Bug F).
@@ -1724,7 +1724,7 @@ class Widget extends TreeNode
           return figure
         # non-identity total: post-reparent the figure renders its own map at its numeric bounds — home
         # its visual centre back to where it was. The move-level anchor-ride (see the block comment)
-        # keeps this exact for a pinned anchor too; nil anchor is exact by the numeric argument.
+        # keeps this exact for a pinned anchor too; undefined anchor is exact by the numeric argument.
         centreAfter = figure.transformSpec.mapPoint(figure.center(), figure.bounds)
         figure._applyMoveTo figure.position().add (screenCentreBefore.subtract centreAfter).round()
       return figure
@@ -1765,10 +1765,10 @@ class Widget extends TreeNode
   # must never auto-dissolve or be reused by the property sugar.
   _enclosingSoleContentIsland: ->
     p = @parent
-    return nil if !(p instanceof TransformFrameWdgt)
+    return undefined if !(p instanceof TransformFrameWdgt)
     kids = p.childrenNotHandlesNorCarets()
     return p if kids? and kids.length == 1 and kids[0] == @
-    nil
+    undefined
 
   # Affine transforms (§7.5 Bug B + latent 2, Option B): the outermost island of which I am (transitively)
   # the SOLE content — sugar or explicit — i.e. the whole "figure" that a RE-HOME (close-to-bin,
@@ -1854,7 +1854,7 @@ class Widget extends TreeNode
       # the drop moment), not a user-authored transform — it must never claim layout space in the
       # tilted container it lands in. The 4C/4D-2a sugar islands, by contrast, FOLLOW the
       # 'footprint' default (they carry a user-visible rotation — D1's mainstream case).
-      island.transformSpec = new TransformSpec relDeg, 1 / sPlane, nil, "slot"
+      island.transformSpec = new TransformSpec relDeg, 1 / sPlane, undefined, "slot"
       # slot = my bounds (I am on the hand, screen coords); the wrapper pivots on the slot centre so my
       # on-screen look is unchanged, and the 4D-1 block below places the wrapper by its visual centre.
       island.bounds = new Rectangle @left(), @top(), @right(), @bottom()
@@ -2126,13 +2126,13 @@ class Widget extends TreeNode
     # to look into desired extent and desired position
     if @desiredExtent?
       newBoundsForThisLayout = @desiredExtent
-      @desiredExtent = nil
+      @desiredExtent = undefined
     else
       newBoundsForThisLayout = @extent()
 
     if @desiredPosition?
       newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-      @desiredPosition = nil
+      @desiredPosition = undefined
     else
       newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
@@ -2515,7 +2515,7 @@ class Widget extends TreeNode
 
   # The principal value this widget offers to a spreadsheet reference (dataflow spec §9.3): the
   # unified reader over today's duck-typed export cluster — a colour picker's colour, a field's
-  # value, else its text. Widgets that export none of these answer nil here; the reference read then
+  # value, else its text. Widgets that export none of these answer undefined here; the reference read then
   # falls back to the widget itself (that fallback lives at the read site — see the spreadsheet's
   # widget-valued-cell path, plan Phase 4). Only ColorPickerWdgt defines getColor and only
   # StringFieldWdgt defines getValue today; SliderWdgt gains getValue when it joins the protocol
@@ -2628,7 +2628,7 @@ class Widget extends TreeNode
     aContext,
     al, at, w, h,
     color,
-    transparency = nil,
+    transparency = undefined,
     pushAndPopContext = false,
     appliedShadow
   ) ->
@@ -2687,7 +2687,7 @@ class Widget extends TreeNode
       # attached and being painted), NOT the raw virtual rect. fleshOut(Full)Broken erases the "source"
       # (where-I-was) rect from these; if it re-mapped a stored VIRTUAL rect at flush time instead, a widget
       # DETACHED between paint and flush — a close/destroy (_destroyNoSettle / _closeNoSettle issue
-      # _fullChanged() then sever @parent, re-homing me to the bin) — would map through a nil/bin
+      # _fullChanged() then sever @parent, re-homing me to the bin) — would map through an undefined/bin
       # chain (an identity) and erase the WRONG (un-transformed) rect, leaving the rotated on-screen footprint
       # stale (owner bug: closing a tilted converter's inner window). mapRectToScreen returns the SAME rect
       # off any island ⇒ byte-identical dormant. (Field names kept; they now hold the screen-plane footprint.)
@@ -2706,17 +2706,17 @@ class Widget extends TreeNode
       # source lane deposits this OLD footprint as buffer-dirty so the partial rebuild erases the
       # vacated region — the buffer-plane twin of the screen-footprint erase above (the NEW footprint
       # rides the mapRectToScreen deposit).
-      # nil on every ordinary (non-island) paint ⇒ dormant-free; consumed+cleared at flesh-out.
+      # undefined on every ordinary (non-island) paint ⇒ dormant-free; consumed+cleared at flesh-out.
       if world.paintingIntoIslandBuffer?
         @_islandBufferSourceIsland = world.paintingIntoIslandBuffer
         @_islandBufferSourceVirtualRect = fullVirtual
       else if @_islandBufferSourceIsland?
-        @_islandBufferSourceIsland = nil
+        @_islandBufferSourceIsland = undefined
 
   # Occlusion culling (docs/plans/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
-  # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or nil. It is the geometry both
+  # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or undefined. It is the geometry both
   # avenues of the plan share (Avenue A scans it per broken rect; Avenue B would cache it).
-  # CONSERVATIVE BY DESIGN: any uncertainty MUST yield nil -- a wrong (too-big) rect silently drops
+  # CONSERVATIVE BY DESIGN: any uncertainty MUST yield undefined -- a wrong (too-big) rect silently drops
   # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
   # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
   # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
@@ -2724,19 +2724,19 @@ class Widget extends TreeNode
     # (1) The paint must route through the plain appearance delegation. Widget::paintIntoAreaOrBlit-
     # FromBackBuffer just delegates to @appearance (every widget class now routes through it — the
     # former nine custom painters each moved their override into their own Appearance subclass, whose
-    # constructors fall to this switch's else -> nil), but BackBufferMixin still overrides it to blit
+    # constructors fall to this switch's else -> undefined), but BackBufferMixin still overrides it to blit
     # an offscreen buffer of unknown per-pixel opacity. This prototype-identity check excludes its
     # consumers.
-    return nil if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
+    return undefined if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
     # (2) ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
-    return nil if @isEphemeral()
+    return undefined if @isEphemeral()
     # (3) the fill runs at globalAlpha = @alpha (RectangularAppearance), and (4) @color must be a
     # solid opaque colour (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1)
-    return nil if @alpha != 1
-    return nil if !@color? or @color._a != 1
+    return undefined if @alpha != 1
+    return undefined if !@color? or @color._a != 1
     # Dispatch on the EXACT appearance class (CoffeeScript switch compares with ===): a subclass
     # appearance may add arbitrary drawing (drawAdditionalPartsOnBaseShape) and must NOT inherit a
-    # coverage claim. DesktopAppearance falls to the else -> nil (the world occludes nothing).
+    # coverage claim. DesktopAppearance falls to the else -> undefined (the world occludes nothing).
     switch @appearance?.constructor
       when RectangularAppearance
         if @backgroundColor? and @backgroundColor._a == 1
@@ -2751,7 +2751,7 @@ class Widget extends TreeNode
         # -> inset every side by cornerRadius + 1 (conservative)
         @boundingBox().insetBy Math.max(@appearance.getCornerRadius(), 0) + 1
       else
-        nil
+        undefined
 
   # in general, the children of a Widget could be outside the
   # bounds of the parent (they could also be much larger
@@ -2826,7 +2826,7 @@ class Widget extends TreeNode
       # widget inside a non-identity island paints into the island's buffer (not the
       # world canvas), so without this its virtual last-painted snapshot would never
       # update and the flesh-out "source" (cleanup-of-old-position) rect would be
-      # missing. world.paintingIntoIslandBuffer is nil on every ordinary paint, so
+      # missing. world.paintingIntoIslandBuffer is undefined on every ordinary paint, so
       # this is byte-identical when the feature is dormant.
       if aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?
         @_recordDrawnAreaForNextBrokenRects()
@@ -3045,7 +3045,7 @@ class Widget extends TreeNode
     # here is a menuItem. We take that parameter away
     # in that case.
     if referenceName? and typeof(referenceName) != "string"
-      referenceName = nil
+      referenceName = undefined
       placeToDropItIn = world
 
     # don't create new reference if it exists already
@@ -3088,11 +3088,11 @@ class Widget extends TreeNode
       @shadowInfo = ShadowInfo.noShadow()
       shadowHadBeenReplacedOrAdded = true
     else if forceShadow and !@hasShadow()
-      # in this case originalShadow is nil
+      # in this case originalShadow is undefined
       # because the widget has no shadow
-      # and the widget will get nil shadow back
+      # and the widget will get undefined shadow back
       # again at the end of this method
-      originalShadow = nil
+      originalShadow = undefined
       @shadowInfo = new ShadowInfo new Point(4, 4), 0.2
       shadowHadBeenReplacedOrAdded = true
 
@@ -3144,7 +3144,7 @@ class Widget extends TreeNode
   
   removeShadow: ->
     if @hasShadow()
-      @shadowInfo = nil
+      @shadowInfo = undefined
       @_fullChanged()
 
   # The rect my paint touches, in MY OWN plane, when my content occupies aRect: the content,
@@ -3297,7 +3297,7 @@ class Widget extends TreeNode
   # attachment. The destination is passed so the placement can depend on it (e.g. a HandleWdgt corner-attaches
   # only to the very widget it resizes -- its @target -- and is free-floating on the world / hand otherwise).
   defaultLayoutSpecWhenAddedTo: (destination) ->
-    nil
+    undefined
 
   # ===== structural add =====
   # add() is the PUBLIC self-settling entry: it links the widget in through the private,
@@ -3329,9 +3329,9 @@ class Widget extends TreeNode
     # let's check if we are trying to add
     # an ancestor of me below me.
     # That would be impossible to do,
-    # so we return nil to signal the error.
+    # so we return undefined to signal the error.
     if aWdgt.isAncestorOf @
-      return nil
+      return undefined
 
     # shadow management (folded in from add()'s old settle-wrap): added to the world a widget
     # gains a drop-shadow; added anywhere else it loses one. Transient overlays (highlighter,
@@ -3505,7 +3505,7 @@ class Widget extends TreeNode
   fullCopy: ->
     if @destroyed
       @inform "The item you are\ntrying to copy\nis dead!"
-      return nil
+      return undefined
     allWidgetsInStructure = @allChildrenBottomToTop()
     copiedWidget = new Duplicator(allWidgetsInStructure).duplicate @
     return copiedWidget
@@ -3535,7 +3535,7 @@ class Widget extends TreeNode
   saveToFile: ->
     # Serialize the whole FIGURE (widget + transform-island plumbing), the same figure resolution as
     # duplicateMenuAction, so a rotated/scaled widget saves WITH its transform. Serializing the bare
-    # CONTENT loses it: the Serializer nils the ROOT's parent by policy (the island is the parent), and
+    # CONTENT loses it: the Serializer clears the ROOT's parent by policy (the island is the parent), and
     # because the content also keeps a non-parent reference to its island the walk actually THROWS a
     # SerializationError ("… is outside the serialized structure") rather than silently dropping it —
     # either way the saved *.fzw.json is wrong. Off any island the figure IS me (byte-identical). The
@@ -3693,11 +3693,11 @@ class Widget extends TreeNode
 
   # finds the first widget (including this one)
   # that doesn't grab to its parent
-  # returns nil if going up the grabbing chain
+  # returns undefined if going up the grabbing chain
   # a widget rejects the drag
   findFirstLooseWidget: ->
     if @rejectDrags()
-      return nil
+      return undefined
 
     if @nonFloatDragging?
       return @
@@ -3710,7 +3710,7 @@ class Widget extends TreeNode
       scanningWidgets = scanningWidgets.parent
 
       if scanningWidgets.rejectDrags()
-        return nil
+        return undefined
 
       if scanningWidgets.nonFloatDragging?
         return scanningWidgets
@@ -3718,7 +3718,7 @@ class Widget extends TreeNode
       if !scanningWidgets.grabsToParentWhenDragged()
         return scanningWidgets
 
-    return nil
+    return undefined
 
   findRootForGrab: ->
     return @findFirstLooseWidget()
@@ -3763,11 +3763,11 @@ class Widget extends TreeNode
     while scanningWidgets.parent?
       scanningWidgets = scanningWidgets.parent
       if scanningWidgets.clipsAtRectangularBounds
-        return nil
+        return undefined
       if scanningWidgets.hasShadow()
         return scanningWidgets
 
-    return nil
+    return undefined
 
   # if true, then the drag will be a float drag
   # otherwise it will be a nonfloating drag
@@ -3929,7 +3929,7 @@ class Widget extends TreeNode
         origin: @parent
         position: @position().subtract @parent.position()
       )
-    nil
+    undefined
   
   # Widget utilities ////////////////////////////////////////////////////////
   
@@ -3983,7 +3983,7 @@ class Widget extends TreeNode
         newAdjuster = new StackElementsSizeAdjustingWdgt
         newAdjuster._divisionBox.axis = stackSiblingBefore.layoutSpec.axis
         world.temporaryHandlesAndLayoutAdjusters.add \
-          @addAsSiblingBeforeMe newAdjuster, nil, newAdjuster._divisionBox
+          @addAsSiblingBeforeMe newAdjuster, undefined, newAdjuster._divisionBox
 
 
       stackSiblingAfter = @firstSiblingAfterMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()
@@ -3991,7 +3991,7 @@ class Widget extends TreeNode
         newAdjuster = new StackElementsSizeAdjustingWdgt
         newAdjuster._divisionBox.axis = stackSiblingAfter.layoutSpec.axis
         world.temporaryHandlesAndLayoutAdjusters.add \
-          @addAsSiblingAfterMe newAdjuster, nil, newAdjuster._divisionBox
+          @addAsSiblingAfterMe newAdjuster, undefined, newAdjuster._divisionBox
       if @parent?
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
@@ -4200,7 +4200,7 @@ class Widget extends TreeNode
       @,
       "setAlphaScaled",
       (@alpha * 100).toString(),
-      nil,
+      undefined,
       1,
       100,
       true
@@ -4427,7 +4427,7 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     # double-settle-sanctioned: deliberate SEQUENTIAL pair, exactly as newParentChoice above.
-    @add theWidgetToBeAttached, nil, theWidgetToBeAttached._ensureDivisionBox()
+    @add theWidgetToBeAttached, undefined, theWidgetToBeAttached._ensureDivisionBox()
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
     # ScrollPanel-only pre-guard; @add already self-settled the attach).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
@@ -4560,7 +4560,7 @@ class Widget extends TreeNode
 
   _beforeBeingGrabbed: ->
     @_unlockFromPanels()
-    @_setLayoutSpec nil
+    @_setLayoutSpec undefined
 
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
     menuEntriesStrings = Array.from(new Set(menuEntriesStrings))
@@ -4769,7 +4769,7 @@ class Widget extends TreeNode
     @_divisionBox
 
   # PUBLIC face of the box (macros / demos / in-world scripting): the box doubles as the
-  # ATTACHMENT value for adding a widget as a division element — `holder.add w, nil,
+  # ATTACHMENT value for adding a widget as a division element — `holder.add w, undefined,
   # w.divisionBox()` for a horizontal row, `w.divisionBox('y')` for a vertical division
   # stack. Internal private callers use the _ensureDivisionBox core.
   divisionBox: (axis) ->
@@ -4786,7 +4786,7 @@ class Widget extends TreeNode
   # byte-what a field read answers; the divergence is the sugar ISLAND, where the spec
   # rides ONLY the slot (the materialize's layoutSpec: add-arg — the kept field stays on
   # the wrapped content, one home per carrier). Slot-first is CORRECTNESS, not style: a
-  # field read on an island answers nil, the stack's init guard is skipped (the active
+  # field read on an island answers undefined, the stack's init guard is skipped (the active
   # spec already matches), and _childWidthInStack falls back to raw available width
   # instead of proportional tracking — the historical failure the retired island
   # hand-carry (_moveKeptStackSpecTo) existed to paper over. Container-side reads go
@@ -4833,7 +4833,7 @@ class Widget extends TreeNode
     # FREEFLOATING-skip -- THE single home of the rule: a freefloating child's add/remove/resize
     # cannot change its parent's layout (it's positioned absolutely, not laid out by the parent).
     # The climb and every teardown/move site pass the child whose change triggered this invalidate;
-    # a nil triggeringChild is a direct self-invalidate from feature code. This return MUST stay
+    # an undefined triggeringChild is a direct self-invalidate from feature code. This return MUST stay
     # BEFORE the _recalculatingLayouts throw below: a freefloating teardown is a silent no-op today
     # (the inline `unless …isFreeFloating()` guard meant _invalidateLayout wasn't even called for it),
     # so it has to keep being a silent no-op even if it happens mid-pass -- it must never throw.
@@ -5032,12 +5032,12 @@ class Widget extends TreeNode
     box = @_divisionBoxOrDefaults()
     @_getRecursiveStackDim "getMaxDim", box.maxWidth, box.maxHeight
 
-  # WHICH axis my division children divide — nil when I have none (the base _reLayout's
+  # WHICH axis my division children divide — undefined when I have none (the base _reLayout's
   # dispatch predicate). Mixed axes under one parent are a configuration error: the first
   # child's axis wins, loudly, and the layout stays deterministic.
   _divisionChildrenAxis: ->
-    if @isInCollapsedSubtree() then return nil
-    axis = nil
+    if @isInCollapsedSubtree() then return undefined
+    axis = undefined
     for C in @children
       if C.layoutSpec?.isDivisionElement?() and
       !C.isInCollapsedSubtree()
@@ -5057,7 +5057,7 @@ class Widget extends TreeNode
     if !newBoundsForThisLayout?
       if @desiredExtent?
         newBoundsForThisLayout = @desiredExtent
-        @desiredExtent = nil
+        @desiredExtent = undefined
       else
         newBoundsForThisLayout = @extent()
 
@@ -5066,7 +5066,7 @@ class Widget extends TreeNode
       # is not quite a layout relationship
       if !@isBeingFloatDragged() and @desiredPosition?
         newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-        @desiredPosition = nil
+        @desiredPosition = undefined
       else
         newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
@@ -5228,7 +5228,7 @@ class Widget extends TreeNode
         # FIRST (non-scheduling): the teardown's parent-invalidate is the sanctioned silent
         # no-op for a free-floating child, but would be a mid-pass FLOWRULE throw for a
         # spec-carrying one — the mirror of the spec-less insert in _insertAddersSuchThat.
-        C._setLayoutSpec nil
+        C._setLayoutSpec undefined
         C._fullDestroyNoSettle()
       return
 
@@ -5245,8 +5245,8 @@ class Widget extends TreeNode
   # TWO flavours share it: the DIVISION reconciler (_addOrRemoveAdders — member = division element,
   # adders join the division on the given axis) and the content-stack reconciler
   # (SimpleVerticalStackPanelWdgt._reconcileContentDropSlots — its own membership predicate, and
-  # axis nil ⇒ the adder stays spec-less, for the stack's arrange to adopt). ⚠ NO default on
-  # axis: nil is MEANINGFUL (content mode), and a CoffeeScript default would swallow it.
+  # axis undefined ⇒ the adder stays spec-less, for the stack's arrange to adopt). ⚠ NO default on
+  # axis: undefined is MEANINGFUL (content mode), and a CoffeeScript default would swallow it.
   #
   # BOTH flavours run MID-PASS (from inside the container's own arrange), so the insert must not
   # schedule layout: the adder is added SPEC-LESS — a free-floating child's add-invalidate is the

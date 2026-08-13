@@ -15,22 +15,22 @@ class PromptWdgt extends PopUpWdgt
 
   # pattern: children declared here so a duplicate has the handles to remap
   # (whether they are set in the constructor or lazily).
-  target: nil
-  msg: nil
-  callback: nil
-  defaultContents: nil
-  intendedWidth: nil
+  target: undefined
+  msg: undefined
+  callback: undefined
+  defaultContents: undefined
+  intendedWidth: undefined
   # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
   # shared with MenuWdgt, along with the lay-and-hug + membership absorber.)
   # this pop-up's title bar: the MenuHeader the rows-panel builds from @msg,
   # surfaced here so `prompt.label` reaches it the same way `menu.label` reaches a
   # menu's header (the drag/pin-by-header idiom the menu tests share). Storage
   # lives on the panel; this is the same instance, so `.center()` tracks it live.
-  label: nil
+  label: undefined
   # the value editor for the text-bearing prompts (Text / Number / SaveShortcut);
   # kept under this conventional name because Widget.prompt and the macro tests
   # reach it as `<prompt>.tempPromptEntryField`.
-  tempPromptEntryField: nil
+  tempPromptEntryField: undefined
 
   # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does, so
   # the three isMenu? sites (ActivePointerWdgt's click-outside menu dismissal,

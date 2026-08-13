@@ -2,10 +2,10 @@
 
 class CaretWdgt extends BlinkerWdgt
 
-  target: nil
-  slot: nil
+  target: undefined
+  slot: undefined
   viewPadding: 1
-  currentCaretFontSize: nil
+  currentCaretFontSize: undefined
 
   constructor: (@target) ->
     @slot = @target.text.length
@@ -272,7 +272,7 @@ class CaretWdgt extends BlinkerWdgt
     # early-return-sanctioned: the guard is the "is a follow pending?" predicate, not a state-skip that belongs in
     #   a _<name>NoSettle core -- this settle has no core (it is a pure drain of an already-enqueued inert overlay).
     return if @layoutIsValid
-    @_settleLayoutsAfter => nil
+    @_settleLayoutsAfter => undefined
 
   # A SINGLE scroll-follow pass (see _reLayout, which iterates this to a fixed point via the flush). Re-derives
   # pos from the current (settled) geometry, applies the horizontal clamp (which scrolls @target and adjusts where
@@ -400,21 +400,21 @@ class CaretWdgt extends BlinkerWdgt
 
   # User presses enter on a stringWidget (or clicks/actions away from the edit — the
   # pointer's action-elsewhere funnel accepts too). The escalation climbs from the TARGET,
-  # not from me: stopEditing destroys me and nils my @parent, so an escalation from the
-  # caret could never deliver (it climbed from nil — nobody ever received these events
+  # not from me: stopEditing destroys me and clears my @parent, so an escalation from the
+  # caret could never deliver (it climbed from undefined — nobody ever received these events
   # until the spreadsheet cell became the first consumer). The target is still parented
   # at this moment, so accept/cancel reach ITS parent chain — for a spreadsheet cell
   # editor that is cell → cells panel → sheet.
   accept: ->
     target = @target
     world.stopEditing()
-    target.escalateEvent "accept", nil
+    target.escalateEvent "accept", undefined
 
   # User presses ESC
   cancel: ->
     target = @target
     world.stopEditing()
-    target.escalateEvent 'cancel', nil
+    target.escalateEvent 'cancel', undefined
 
   # User presses CTRL-Z or CMD-Z, potentially with shift
   undo: (shiftKey) ->
@@ -436,7 +436,7 @@ class CaretWdgt extends BlinkerWdgt
     # discrete event outside any pass, so the self-settling form is exactly right here. (This
     # method stays PUBLIC: its setText drive makes the _-form an [A] violation — see the
     # public-api-allowlist entry.)
-    @target.setText state.textContent, nil
+    @target.setText state.textContent, undefined
     @gotoSlot state.cursorPos   # discrete (undo/redo restore) -> public self-settling gotoSlot
     if state.selectionStart? and state.selectionEnd?
       @target.selectBetween state.selectionStart, state.selectionEnd
@@ -464,7 +464,7 @@ class CaretWdgt extends BlinkerWdgt
       # this is a setText that will trigger the text
       # connections "from within", starting a new connections
       # update round
-      @target.setText text, nil
+      @target.setText text, undefined
       # The text just GREW: if it no longer fits a CROP-overflow field, hand off to the pop-out editor NOW, at
       # event time (off the flush). This is the explicit home of what used to fire lazily + impurely inside
       # slotCoordinates -- insert (typing + paste) is the only path that can grow inline-edited text past the
@@ -497,7 +497,7 @@ class CaretWdgt extends BlinkerWdgt
     else
       text = @target.text
       text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.setText text, nil
+      @target.setText text, undefined
   
   deleteLeft: ->
     if @target.selection()
@@ -505,7 +505,7 @@ class CaretWdgt extends BlinkerWdgt
       @target.deleteSelection()
     else
       text = @target.text
-      @target.setText text.substring(0, @slot - 1) + text.substr(@slot), nil
+      @target.setText text.substring(0, @slot - 1) + text.substr(@slot), undefined
       @_goLeftNoSettle()   # internal: rides setText's flush, must NOT self-settle early (see goLeft/goRight)
 
     @updateSelection false

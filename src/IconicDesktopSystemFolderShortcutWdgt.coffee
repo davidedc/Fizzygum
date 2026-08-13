@@ -10,7 +10,7 @@ class IconicDesktopSystemFolderShortcutWdgt extends IconicDesktopSystemShortcutW
       droppedWidget._reactToBeingDroppedIntoFolder @target.contents.contents
     else
       # runs inside the drop's single settle -> the non-settling core
-      droppedWidget._createReferenceAndCloseNoSettle nil, @target.contents.contents
+      droppedWidget._createReferenceAndCloseNoSettle undefined, @target.contents.contents
 
   constructor: (@target, @title) ->
     super @target, @title, new GenericShortcutIconWdgt new FolderIconWdgt

@@ -7,9 +7,9 @@
 class TitleWdgt extends SimpleTextWdgt
 
   constructor: (text = "Title") ->
-    super text, nil, nil, nil, nil, nil, WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1
+    super text, undefined, undefined, undefined, undefined, undefined, WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1
     @alignCenter()
-    @setFontName nil, nil, @georgiaFontStack
+    @setFontName undefined, undefined, @georgiaFontStack
     @setFontSize 48
     @isEditable = true
     @enableSelecting()

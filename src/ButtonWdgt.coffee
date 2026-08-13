@@ -10,17 +10,17 @@ class ButtonWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name
 
-  target: nil
-  action: nil
-  dataSourceWidgetForTarget: nil
-  widgetEnv: nil
+  target: undefined
+  action: undefined
+  dataSourceWidgetForTarget: undefined
+  widgetEnv: undefined
  
  
-  doubleClickAction: nil
-  argumentToAction1: nil
-  argumentToAction2: nil
+  doubleClickAction: undefined
+  argumentToAction1: undefined
+  argumentToAction2: undefined
  
-  toolTipMessage: nil
+  toolTipMessage: undefined
  
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
@@ -36,18 +36,18 @@ class ButtonWdgt extends Widget
 
   constructor: (
       @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
-      @target = nil,
-      @action = nil,
+      @target = undefined,
+      @action = undefined,
 
-      @faceWidget = nil,
+      @faceWidget = undefined,
 
-      @dataSourceWidgetForTarget = nil,
+      @dataSourceWidgetForTarget = undefined,
       @widgetEnv,
-      @toolTipMessage = nil,
+      @toolTipMessage = undefined,
 
-      @doubleClickAction = nil,
-      @argumentToAction1 = nil,
-      @argumentToAction2 = nil,
+      @doubleClickAction = undefined,
+      @argumentToAction1 = undefined,
+      @argumentToAction2 = undefined,
       @representsAWidget = false,
       @padding = 0
       ) ->

@@ -1,6 +1,6 @@
 class MenuHeader extends BoxWdgt
 
-  text: nil
+  text: undefined
 
   constructor: (textContents) ->
     super 3

@@ -3,7 +3,7 @@
 
 class VideoThumbnailWdgt extends SimpleRasterImageButtonWdgt
 
-  videoPath: nil
+  videoPath: undefined
 
   constructor: (
       imagePath,

@@ -3,7 +3,7 @@
 
 class DoubleLinkedList
   constructor:  ->
-    @headNode = @tailNode = nil
+    @headNode = @tailNode = undefined
 
   # unlinks the given node, wherever it sits -- the caller picks it.
   # The LRU cache evicts by passing the tail node: used nodes move to
@@ -32,4 +32,4 @@ class DoubleLinkedList
     @insertBeginning node
 
   clear: ->
-    @headNode = @tailNode = nil
+    @headNode = @tailNode = undefined

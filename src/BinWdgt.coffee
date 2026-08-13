@@ -5,8 +5,8 @@
 class BinWdgt extends Widget
 
   # panes:
-  scrollPanel: nil
-  emptyBinButton: nil
+  scrollPanel: undefined
+  emptyBinButton: undefined
 
   externalPadding: 0
   internalPadding: 5

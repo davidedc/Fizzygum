@@ -79,11 +79,11 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
     container.add dashboardTitle
 
 
-    slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
+    slider1 = new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
     slider1._applyBounds (container.position().add new Point 491, 484), new Point 201, 24
     container.add slider1
 
-    slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"
+    slider1.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, plot3D.contents, "setParameter"
 
     slideWdgt._applyBounds (new Point 114, 10), new Point 596, 592
     world.add slideWdgt

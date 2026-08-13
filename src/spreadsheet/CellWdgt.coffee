@@ -8,7 +8,7 @@
 # and it is the two-way interaction boundary a hosted interactive value-widget fires into.
 #   branch 1 — the value IS a Widget (a `new SliderWdgt`) → HOST it live (hostNoSettle) + wire it.
 #   branch 2 — the value answers cellPresenter() (a Color → a swatch) → host that presenter.
-#   branch 3 — a scalar / error / nil → present its toString() text as my passive StringWdgt
+#   branch 3 — a scalar / error / undefined → present its toString() text as my passive StringWdgt
 #              CHILD ("scalar text is a StringWdgt child, period" — owner direction 2026-07-24,
 #              completing the F5 everything-is-a-widget story; the editor's exact configuration,
 #              so resting and editing text align). The cell still paints its own top+left grid
@@ -56,18 +56,18 @@ class CellWdgt extends Widget
     super()
     @appearance = new CellAppearance @
     @address = address         # which cell (col/row via the model); stable across save/load
-    @hostedWidget = nil        # the mounted value/presenter widget (this cell's rich child), or nil
-    @presentedValue = nil      # branch-2 churn-skip: the value the current presenter reflects
-    @_sheetWidget = nil        # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
-    @_scalarTextWdgt = nil     # branch-3 text child (a passive StringWdgt), or nil when empty/hosting
+    @hostedWidget = undefined        # the mounted value/presenter widget (this cell's rich child), or undefined
+    @presentedValue = undefined      # branch-2 churn-skip: the value the current presenter reflects
+    @_sheetWidget = undefined        # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
+    @_scalarTextWdgt = undefined     # branch-3 text child (a passive StringWdgt), or undefined when empty/hosting
     @_scalarShowsError = false # true when the text child wears the error colour (SheetError badge)
-    @_editorWdgt = nil         # the mounted overlay editor while THIS cell is being edited (F2/F5), or nil
+    @_editorWdgt = undefined         # the mounted overlay editor while THIS cell is being edited (F2/F5), or undefined
     # transparent: the cells panel under me fills the data background; I paint my own grid
     # edges + selection ring (F5 — "the sheet paints nothing") — my scalar text is a passive
     # StringWdgt child that paints itself — so the panel's background shows through a hosted
     # widget's transparent parts (a slider's track).
-    # (The CanvasGlassTopWdgt idiom — a nil colour paints nothing.)
-    @color = nil
+    # (The CanvasGlassTopWdgt idiom — an undefined colour paints nothing.)
+    @color = undefined
 
   colloquialName: -> "cell"
 
@@ -83,22 +83,22 @@ class CellWdgt extends Widget
   # immutable back buffers, so repeated labels share cached rasters world-wide. NoSettle:
   # called from the sheet's reconcile, which runs inside the dataflow drain's layout settle
   # (DataflowEngine._drainOnePass). Drops any hosted widget first (a cell that was rich and
-  # became a scalar). `text` nil / "" clears the cell (an emptied cell shows nothing).
+  # became a scalar). `text` undefined / "" clears the cell (an emptied cell shows nothing).
   # Churn-tolerant: a per-cycle recompute (a `frame` cell) funnels into _setTextNoSettle's own
   # no-change guard; an error↔value colour flip (rare) rebuilds the child.
   showScalarNoSettle: (text, isError) ->
     @_unhostNoSettle() if @hostedWidget?
-    scalarText = if text? and text != "" then text else nil
+    scalarText = if text? and text != "" then text else undefined
     showsError = isError is true
     if not scalarText?
       if @_scalarTextWdgt?
         @_scalarTextWdgt._fullDestroyNoSettle()
-        @_scalarTextWdgt = nil
+        @_scalarTextWdgt = undefined
         @_changed()
       return
     if @_scalarTextWdgt? and @_scalarShowsError != showsError
       @_scalarTextWdgt._fullDestroyNoSettle()
-      @_scalarTextWdgt = nil
+      @_scalarTextWdgt = undefined
     if @_scalarTextWdgt?
       @_scalarTextWdgt._setTextNoSettle scalarText
     else
@@ -127,7 +127,7 @@ class CellWdgt extends Widget
   hostNoSettle: (widget) ->
     @_unhostNoSettle()
     @_scalarTextWdgt?._fullDestroyNoSettle()
-    @_scalarTextWdgt = nil
+    @_scalarTextWdgt = undefined
     @hostedWidget = widget
     @_addNoSettle widget
     inset = 2
@@ -136,8 +136,8 @@ class CellWdgt extends Widget
 
   _unhostNoSettle: ->
     old = @hostedWidget
-    @hostedWidget = nil
-    @presentedValue = nil
+    @hostedWidget = undefined
+    @presentedValue = undefined
     old?._fullDestroyNoSettle()
     return
 
@@ -193,11 +193,11 @@ class CellWdgt extends Widget
     return unless @_sheetWidget?
     record = @_sheetWidget.model.cellAt @address
     return unless record? and record.widgetEntry? and grabbedWdgt is record.widgetEntry
-    @hostedWidget = nil if @hostedWidget is grabbedWdgt
-    @presentedValue = nil
-    record.widgetEntry = nil
-    grabbedWdgt.target = nil
-    grabbedWdgt.action = nil
+    @hostedWidget = undefined if @hostedWidget is grabbedWdgt
+    @presentedValue = undefined
+    record.widgetEntry = undefined
+    grabbedWdgt.target = undefined
+    grabbedWdgt.action = undefined
     world.dataflow?.removeAllEdgesOf grabbedWdgt
     FormulaCompiler.commit record, ""
     world.dataflow?.markStale record
@@ -209,7 +209,7 @@ class CellWdgt extends Widget
   # ignored args match setTargetAndActionWithOnesPickedFromMenu's menu-driven signature. A widget
   # with no connection API (a plain RectangleWdgt presenter) simply isn't wired (the `?` guard).
   wireValueWidget: (widget) ->
-    widget.setTargetAndActionWithOnesPickedFromMenu? nil, nil, this, "cellInput"
+    widget.setTargetAndActionWithOnesPickedFromMenu? undefined, undefined, this, "cellInput"
     return
 
   # the connection target the hosted value-widget fires into: mark this cell's cell STALE so the
@@ -274,14 +274,14 @@ class CellWdgt extends Widget
   # WITHOUT committing. Swallowed at the cell; Excel-style commit-and-advance-the-selection
   # is a deliberate later variant.
   nextTab: (editField) ->
-    nil
+    undefined
 
   previousTab: (editField) ->
-    nil
+    undefined
 
   _teardownEditorNoSettle: ->
     editor = @_editorWdgt
-    @_editorWdgt = nil
+    @_editorWdgt = undefined
     editor?._fullDestroyNoSettle()
     @_scalarTextWdgt?.show()
     @_changed()

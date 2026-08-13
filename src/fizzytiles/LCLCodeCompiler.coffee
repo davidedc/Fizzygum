@@ -12,9 +12,9 @@
 ##
 
 class LCLCodeCompiler
-  currentCodeString: nil
-  codePreprocessor: nil
-  lastCorrectOutput: nil
+  currentCodeString: undefined
+  codePreprocessor: undefined
+  lastCorrectOutput: undefined
 
   whitespaceCheck: /^\s*$/
 
@@ -38,7 +38,7 @@ class LCLCodeCompiler
 
     [code, error] = @codePreprocessor.preprocessAndBindFunctionsToThis code
 
-    # a non-nil error means the preprocessor found something too broken to
+    # a non-undefined error means the preprocessor found something too broken to
     # translate; skip the coffeescript-to-javascript step and report it.
     if error?
       output.status = 'error'

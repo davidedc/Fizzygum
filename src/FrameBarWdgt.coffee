@@ -24,12 +24,12 @@
 
 class FrameBarWdgt extends Widget
 
-  frame: nil
-  titlebarBackground: nil
-  label: nil
-  closeButton: nil
-  collapseUncollapseSwitchButton: nil
-  editButton: nil
+  frame: undefined
+  titlebarBackground: undefined
+  label: undefined
+  closeButton: undefined
+  collapseUncollapseSwitchButton: undefined
+  editButton: undefined
 
   constructor: (@frame) ->
     super()
@@ -174,7 +174,7 @@ class FrameBarWdgt extends Widget
 
   _destroyEditButtonNoSettle: ->
     @editButton?._destroyNoSettle()
-    @editButton = nil
+    @editButton = undefined
 
   # ===== the strip arrange =====
   # The bar's bounds ARE the frame's top strip (the frame hands them over in

@@ -36,8 +36,8 @@
 class Rectangle
 
 
-  origin: nil # a Point
-  corner: nil # a Point
+  origin: undefined # a Point
+  corner: undefined # a Point
 
   # a shared, immutable value: deep copies keep the reference (see Duplicator)
   keptByReferenceOnDeepCopy: true

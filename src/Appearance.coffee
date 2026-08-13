@@ -6,30 +6,30 @@
 # belongs to the preamble, never to bodies.
 class Appearance
 
-  widget: nil
+  widget: undefined
   # the ownColorInsteadOfWidgetColor is used for buttons
   # with icons on a glass bottom: the glass bottom has
   # to change the color on hover, so the icon_button on it
   # stain it, but they have to retain their color otherwise
   # they are not visible anymore.
-  ownColorInsteadOfWidgetColor: nil
+  ownColorInsteadOfWidgetColor: undefined
 
   constructor: (@widget, @ownColorInsteadOfWidgetColor) ->
 
   isTransparentAt: (aPoint) ->
 
-  # The key-values half of the paint preamble: bail (nil) if there is nothing to draw, else return
-  # the [area,sl,st,al,at,w,h] key-values (nil when the widget is sub-pixel / off-clip). ZERO draw
+  # The key-values half of the paint preamble: bail (undefined) if there is nothing to draw, else return
+  # the [area,sl,st,al,at,w,h] key-values (undefined when the widget is sub-pixel / off-clip). ZERO draw
   # ops. _paintInLocalScope below consumes it; RectangularAppearance's paint also calls it directly
   # as an early bail that gates its post-scope stroke + wallpaper epilogues.
   _calculateKeyValuesOrNil: (aContext, clippingRectangle) ->
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return nil
+      return undefined
     [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return nil if w < 1 or h < 1 or area.isEmpty()
+    return undefined if w < 1 or h < 1 or area.isEmpty()
     return [area,sl,st,al,at,w,h]
 
-  # THE one appearance paint scope (the appearance paint convention): nil when there is nothing
+  # THE one appearance paint scope (the appearance paint convention): undefined when there is nothing
   # to draw, else runs
   #   bodyFn aContext, localArea, appliedShadow
   # inside save → damage clip → alpha → logical pixels → translate to the widget position, then
@@ -45,7 +45,7 @@ class Appearance
   #             plot family: in the shadow pass the body's simpleShadow sets its own)
   _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, opts, bodyFn) ->
     keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
+    return undefined unless keyValues?
     [area,sl,st,al,at,w,h] = keyValues
 
     # soft hook, only CaretWdgt defines it (the inert paint-time re-place); same slot it always
@@ -68,7 +68,7 @@ class Appearance
     if alphaPolicy == "backgroundTransparencyNormalPass"
       if !appliedShadow?
         # `? 1`: an absent backgroundTransparency means fully opaque (Widget's class-level
-        # default) — never hand the canvas a nil. See the note in
+        # default) — never hand the canvas an undefined. See the note in
         # StringWdgt::_prepareTextBufferContext: an invalid globalAlpha is not necessarily
         # loud, and relying on "the previous value stands" would silently paint at whatever
         # alpha the ambient context happened to carry.

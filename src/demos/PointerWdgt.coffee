@@ -21,14 +21,14 @@ class PointerWdgt extends BoxWdgt
     lmContent1 = new CollapsedStateIconWdgt
     lmContent2 = new StringWdgt(
       @target.toString(),
-      nil, #@originallySetFontSize,
-      nil, #@fontName,
-      nil, #@isBold,
-      nil, #@isItalic,
+      undefined, #@originallySetFontSize,
+      undefined, #@fontName,
+      undefined, #@isBold,
+      undefined, #@isItalic,
       false, #@isHeaderLine,
-      nil, #@isNumeric,
+      undefined, #@isNumeric,
       Color.WHITE, #@color,
-      nil, #@backgroundColor
+      undefined, #@backgroundColor
     )
     # override inherited properties:
     lmContent2.noticesTransparentClick = true

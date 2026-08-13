@@ -36,7 +36,7 @@ class Deserializer
 
     # resolve a reference form to a live value (used at any nesting depth).
     resolveRef = (ref) =>
-      return nil unless ref?
+      return undefined unless ref?
       t = typeof ref
       return ref if t is "string" or t is "number" or t is "boolean"
       return shells[ref.$r] if ref.$r?              # $r may legitimately be 0
@@ -46,7 +46,7 @@ class Deserializer
         return shellByUniqueId.get(ref.$ext) ? @resolveExternal ref.$ext
       # a $src at a non-property position (e.g. inside an array/Map) — rare; compile eagerly.
       return @compileFunction(ref.$src) if ref.$src?
-      nil
+      undefined
 
     assignProps = (shell, props) ->
       return unless props?
@@ -194,13 +194,13 @@ class Deserializer
   @resolveWellKnown: (key) ->
     resolved = WellKnownObjects.resolve key
     # An unresolved well-known (e.g. an app singleton not present in this world) is left as
-    # nil rather than aborting the whole restore; the widget simply loses that link.
+    # undefined rather than aborting the whole restore; the widget simply loses that link.
     resolved
 
   # A same-world re-link token ({"$ext": uniqueID}) — used by the world snapshot's tolerant
-  # pass. Resolve against the live world by unique-id string; nil if absent.
+  # pass. Resolve against the live world by unique-id string; undefined if absent.
   @resolveExternal: (uniqueID) ->
-    return nil unless world?
+    return undefined unless world?
     world.topWdgtSuchThat? (w) -> w.uniqueIDString?() is uniqueID
 
   @compileFunction: (source) ->
@@ -210,4 +210,4 @@ class Deserializer
     try
       world?.evaluateString? "(" + source + ")"
     catch e
-      nil
+      undefined

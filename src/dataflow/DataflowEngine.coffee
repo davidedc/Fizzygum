@@ -97,8 +97,8 @@ class DataflowEngine
     @lastValues = new WeakMap
     @_recalculatingDataflow = false
     # the node the engine is currently applying an edge INTO (6b): its own onward-fire tail re-marks it —
-    # the ECHO — which markStale then drops (spec §1.13). nil outside _processNode.
-    @_applyingNode = nil
+    # the ECHO — which markStale then drops (spec §1.13). undefined outside _processNode.
+    @_applyingNode = undefined
     # instrumentation (spec §10 measured-convergence posture)
     @lastDrainPassCount = 0
     @maxObservedPassCount = 0
@@ -108,8 +108,8 @@ class DataflowEngine
     # time sources (spec §6), constructed LAZILY on first subscription (secondsSource/frameSource).
     # World-level singletons the sheet's `seconds`/`frame` edges point at; never serialized (the
     # engine itself is a $wk singleton whose own-props the serializer never walks).
-    @_secondsSource = nil
-    @_frameSource   = nil
+    @_secondsSource = undefined
+    @_frameSource   = undefined
 
   # ── EDGE INDEX (derived, disposable; clients re-declare — the engine never serializes it) ──
 
@@ -122,7 +122,7 @@ class DataflowEngine
       @edgesFrom.set producer, outSet
     outSet.add
       consumer: consumer
-      action: (opts.action ? nil)
+      action: (opts.action ? undefined)
       firesPerEvent: (opts.firesPerEvent ? false)
       cold: (opts.cold ? false)
     inSet = @edgesTo.get consumer
@@ -185,7 +185,7 @@ class DataflowEngine
   ensureWireEdge: (producer, consumer, opts = {}) ->
     return if @_recalculatingDataflow
     existing = @_wireEdgeRecord producer, consumer
-    return if existing? and existing.action is (opts.action ? nil) and existing.firesPerEvent is (opts.firesPerEvent ? false)
+    return if existing? and existing.action is (opts.action ? undefined) and existing.firesPerEvent is (opts.firesPerEvent ? false)
     @_removeOutgoingEdgesOf producer
     @addEdge producer, consumer, opts
     return
@@ -351,8 +351,8 @@ class DataflowEngine
 
   _wireEdgeRecord: (producer, consumer) ->
     outSet = @edgesFrom.get producer
-    return nil unless outSet?
-    found = nil
+    return undefined unless outSet?
+    found = undefined
     outSet.forEach (rec) -> found = rec if rec.consumer is consumer
     found
 
@@ -372,7 +372,7 @@ class DataflowEngine
       # (routed through the target's _<action>Connector lane, exactly as _fireConnection would). Sheet
       # reference edges carry no action, so they are skipped — the spreadsheet client is unaffected.
       @_applyIncomingWireEdges node, changed
-      newVal = nil
+      newVal = undefined
       if node.dataflowRecompute?
         oldVal = @lastValues.get node
         try
@@ -402,7 +402,7 @@ class DataflowEngine
       # the node's _<action>Connector lane and joins the pass settle opened by _drainOnePass.
       node.dataflowApply?(newVal)
     finally
-      @_applyingNode = nil
+      @_applyingNode = undefined
     return
 
   _noteRecomputeError: (node, error, oldVal) ->

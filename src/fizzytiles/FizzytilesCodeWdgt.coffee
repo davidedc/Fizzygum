@@ -1,6 +1,6 @@
 class FizzytilesCodeWdgt extends TextWdgt
 
-  fridgeMagnetsCanvas: nil
+  fridgeMagnetsCanvas: undefined
 
 
   # compileTiles (my only caller, via FridgeWdgt's drop/grab gesture hooks) runs inside the gesture's

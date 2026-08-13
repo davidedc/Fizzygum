@@ -1,9 +1,9 @@
 class ConsoleWdgt extends CodeAreaWdgt
 
-  runSelectionButton: nil
-  runAllButton: nil
+  runSelectionButton: undefined
+  runAllButton: undefined
 
-  functionFromCompiledCode: nil
+  functionFromCompiledCode: undefined
 
   constructor: (@target) ->
     super new Point 200,400

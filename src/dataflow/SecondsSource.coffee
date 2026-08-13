@@ -43,7 +43,7 @@ class SecondsSource extends DataflowSource
 
   # Pulled by the drain (this is a pure source: no dataflowRecompute, so _processNode reads this) and
   # by a `seconds` cell's SheetCellRecord._resolveBoundName. dateOfCurrentCycleStart is the one
-  # timestamp per cycle (nil'd only at cycle END, so it is always set during the drain); the
+  # timestamp per cycle (cleared only at cycle END, so it is always set during the drain); the
   # dateOfPreviousCycleStart fallback keeps a value should this ever be pulled off-cycle — NEVER a
   # fresh `new Date`, which would break the one-instant-per-batch / determinism contract.
   dataflowValue: ->

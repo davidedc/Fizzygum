@@ -38,7 +38,7 @@ class SimpleTextPanelWdgt extends PanelWdgt
 
   _buildAndConnectChildrenNoSettle: ->
     ostmA = new SimpleTextWdgt(
-      @textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      @textAsString,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
     ostmA.isEditable = true
     if !@isTextLineWrapping
       # non-wrapping ("code view"): hug the natural text width.

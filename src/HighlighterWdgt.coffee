@@ -68,7 +68,7 @@ class HighlighterWdgt extends RectangleWdgt
       @alpha = style.alpha ? 1
     else
       # the translucent fill wash
-      @strokeColor = nil
+      @strokeColor = undefined
       @setColor style.color
       @setAlphaScaled style.alphaScaled
 

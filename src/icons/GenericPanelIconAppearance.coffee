@@ -62,7 +62,7 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
     # clamps squeeze them into each other), and a toolbar that still can't
     # keep every hard clearance is dropped rather than painted overlapping.
     yMaxFor = (hangsBelow) => if hangsBelow then y + S else py + ph - u.t
-    iw = nil
+    iw = undefined
     for [fx, fy, nBoxes, hangsBelow] in @TOOLBARS
       fit = @_toolbarFitIW u, fy, nBoxes, y, yMaxFor hangsBelow
       iw = fit if not iw? or fit < iw
@@ -121,7 +121,7 @@ class GenericPanelIconAppearance extends SizeAwareIconAppearance
     # soft max-clamp; the o of extra border clearance folded into
     # xMaxBacking is allowed to give, but the backing crossing the border
     # ink itself never is -- drop the toolbar instead
-    return nil if xL + W > xMaxBacking
+    return undefined if xL + W > xMaxBacking
 
     # backing/halo, then the frame: ink silhouette, light interior
     fh = frameH()

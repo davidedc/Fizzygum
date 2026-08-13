@@ -14,21 +14,21 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # LCL compiler + the current/previous compiled program. The empty prototype
   # graphicsCode below is replaced per-instance by newGraphicsCode once tiles
   # or edited code compile.
-  lclCodeCompiler: nil
-  transforms: nil
+  lclCodeCompiler: undefined
+  transforms: undefined
 
   # SW3D runtime, all rebuilt lazily by @_ensureEngine / @_ensureRuntime (see
   # @serializationTransients): a duplicated or restored pane carries none of
   # these and rebuilds them on its next render.
-  surface: nil
-  depth: nil
-  engine: nil
-  imageData: nil
-  meshCache: nil
+  surface: undefined
+  depth: undefined
+  engine: undefined
+  imageData: undefined
+  meshCache: undefined
 
   # current LCL draw state (plain [r,g,b])
-  currentFillRGB: nil
-  backgroundRGB: nil
+  currentFillRGB: undefined
+  backgroundRGB: undefined
   defaultFillRGB: [231, 76, 60]         # cubes-demo red
   defaultBackgroundRGB: [230, 230, 230] # light gray
 
@@ -76,7 +76,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   # The deep-copier (window duplication) and the file Serializer both DROP a
   # property whose value carries a rebuildDerivedValue method (same idiom canvas
   # contexts use), rather than trying to clone the Surface / typed-array / engine
-  # and crashing. Stamp that no-op onto each runtime object so the clone gets nil
+  # and crashing. Stamp that no-op onto each runtime object so the clone gets undefined
   # and rebuilds it lazily on its next render (@_ensureRuntime / @_ensureEngine).
   # Belt-and-suspenders with @serializationTransients, which also covers the
   # compiled-program Functions the Serializer can't emit.
@@ -219,7 +219,7 @@ class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
   fill: ->
     args = arguments
     a = args[0]
-    newColor = nil
+    newColor = undefined
     if typeof a is "number" and typeof args[1] is "number" and typeof args[2] is "number"
       newColor = [a, args[1], args[2]]
     else if a? and a.r? and a.g? and a.b?

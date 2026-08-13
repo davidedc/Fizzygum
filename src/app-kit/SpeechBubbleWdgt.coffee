@@ -7,9 +7,9 @@
 
 class SpeechBubbleWdgt extends Widget
 
-  contents: nil
-  padding: nil # additional vertical pixels
-  widgetInvokingThis: nil
+  contents: undefined
+  padding: undefined # additional vertical pixels
+  widgetInvokingThis: undefined
 
   constructor: (@contents="hello") ->
     super()
@@ -35,7 +35,7 @@ class SpeechBubbleWdgt extends Widget
     @contentsWidget = new TextWdgt(
       @contents,
       WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
-      nil,
+      undefined,
       false,
       true,
       "center")

@@ -1,6 +1,6 @@
 class UpperRightTriangleAppearance extends Appearance
 
-  positionWithinParent: nil
+  positionWithinParent: undefined
 
   constructor: (widget, @positionWithinParent = "topRight") ->
     super widget
@@ -13,7 +13,7 @@ class UpperRightTriangleAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the art
       # colour goes BLACK under appliedShadow — the scope already applied the shadow's alpha.
       @_renderingHelper ctx, (if appliedShadow? then Color.BLACK else @widget.color)

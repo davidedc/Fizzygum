@@ -1,8 +1,8 @@
 class FridgeWdgt extends PanelWdgt
 
   tabs: []
-  sourceCodeHolder: nil
-  fridgeMagnetsCanvas: nil
+  sourceCodeHolder: undefined
+  fridgeMagnetsCanvas: undefined
 
   topMostMagnet: (setOfWidgets = @children) ->
     filtered = setOfWidgets.filter (m) ->
@@ -11,7 +11,7 @@ class FridgeWdgt extends PanelWdgt
     calculated = filtered.map (m) ->
       m.top()
     calcIndex = calculated.indexOf(Math.min(calculated...))
-    if calcIndex == -1 then return nil
+    if calcIndex == -1 then return undefined
 
     return filtered[calcIndex]
 
@@ -41,7 +41,7 @@ class FridgeWdgt extends PanelWdgt
     calculated = correctSide.map (m) ->
       m.rightCenter().distanceTo(aMagnet.leftCenter())
     calcIndex = calculated.indexOf(Math.min(calculated...))
-    if calcIndex == -1 then return nil
+    if calcIndex == -1 then return undefined
     return correctSide[calcIndex]
 
   # the magnet following another magnet is
@@ -89,7 +89,7 @@ class FridgeWdgt extends PanelWdgt
       left = @magnetToLeftOf eachMagnet
       if !left? or left.rightCenter().distanceTo(eachMagnet.leftCenter()) > aMagnet.rightCenter().distanceTo(eachMagnet.leftCenter())
         return eachMagnet
-    return nil
+    return undefined
 
 
   # the idea is that we first find the top most one
@@ -101,11 +101,11 @@ class FridgeWdgt extends PanelWdgt
     bag = @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords
 
-    topMostMagnet = nil
+    topMostMagnet = undefined
 
     while bag.length > 0
       topMostMagnet = @topMostMagnet bag
-      if !topMostMagnet? then return nil
+      if !topMostMagnet? then return undefined
 
       # filter through the ones on the left
       bag = bag.filter (m) ->

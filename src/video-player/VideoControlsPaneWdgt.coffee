@@ -1,18 +1,18 @@
 class VideoControlsPaneWdgt extends RectangleWdgt
 
-  playPauseToggle: nil
+  playPauseToggle: undefined
 
   # labels
-  playHeadTimeLabel: nil
-  durationTimeLabel: nil
+  playHeadTimeLabel: undefined
+  durationTimeLabel: undefined
 
-  videoScrubber: nil
+  videoScrubber: undefined
 
   externalPadding: 0
   internalPadding: 5
-  padding: nil
+  padding: undefined
 
-  videoPlayerCanvas: nil
+  videoPlayerCanvas: undefined
 
   colloquialName: ->
     "Video controls"
@@ -48,7 +48,7 @@ class VideoControlsPaneWdgt extends RectangleWdgt
 
 
   # TODO you should use the newBoundsForThisLayout param
-  # and if it's nil then you should use the current bounds
+  # and if it's undefined then you should use the current bounds
   #
 
   _reLayout: (newBoundsForThisLayout) ->

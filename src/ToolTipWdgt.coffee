@@ -10,9 +10,9 @@ class ToolTipWdgt extends Widget
 
   @ongoingTimeouts: new Set
 
-  contents: nil
-  padding: nil # extra pixels around the contents, both axes; when 0 the cornerRadius supplies the horizontal margin
-  widgetInvokingThis: nil
+  contents: undefined
+  padding: undefined # extra pixels around the contents, both axes; when 0 the cornerRadius supplies the horizontal margin
+  widgetInvokingThis: undefined
 
   constructor: (
    @contents="text here",
@@ -70,7 +70,7 @@ class ToolTipWdgt extends Widget
     if @contents instanceof Widget
       @contentsWidget = @contents
     else if Utils.isString @contents
-      # "sans-serif" passed explicitly: the old text widget defaulted a nil font
+      # "sans-serif" passed explicitly: the old text widget defaulted an undefined font
       # to "sans-serif", whereas TextWdgt's default is 'Arial, sans-serif'.
       # Color.BLACK passed explicitly: old text widget forced black, TextWdgt
       # defaults to (37,37,37).

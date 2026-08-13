@@ -20,23 +20,23 @@
 
 class MacroToolkit
 
-  msSinceLastExecutedMacroStep: nil
-  aMacroIsRunning: nil
-  returnFromLastMacroStep: nil
+  msSinceLastExecutedMacroStep: undefined
+  aMacroIsRunning: undefined
+  returnFromLastMacroStep: undefined
   # the running macro's generator; (re)created at macro start by the pump header
-  # in Macro._addHeaderCode, cleared (nil) between macros.
-  macroGenerator: nil
+  # in Macro._addHeaderCode, cleared (undefined) between macros.
+  macroGenerator: undefined
 
   # False-double-click guard state (see guardedClickStart). The most recent scheduled
   # CLICK gesture's last-release ABSOLUTE virtual time + the pointer position it landed
   # on; and currentPointerTarget = the last scheduled move's destination (= where the
   # next click lands). Used so two distinct same-spot single clicks can be pushed past
   # the hand's 300ms EVENT-TIME double-click window, now that fast-test recognition is ungated.
-  # nil until the first move/click of a macro (fresh per test — ResetWorld rebuilds the
+  # undefined until the first move/click of a macro (fresh per test — ResetWorld rebuilds the
   # toolkit).
-  lastClickGestureUpTime: nil
-  lastClickGesturePosition: nil
-  currentPointerTarget: nil
+  lastClickGestureUpTime: undefined
+  lastClickGesturePosition: undefined
+  currentPointerTarget: undefined
 
   # ─── Global playback SPEED ──────────────────────────────────────────────────
   # ONE global, three-level speed control the macro EVENT GENERATORS honour.
@@ -229,8 +229,8 @@ class MacroToolkit
   # (e.g. a warm-atlas cache reset) already landed. Registered by the macro screenshot verb
   # (which routes compareScreenshots through it) and callable from page-side riggery as
   # world.macroToolkit.captureAtEndOfCycle(fn) — the serialization rigs wrap it in a Promise.
-  # nil when empty, so the per-cycle drain costs one existence check.
-  endOfCycleCaptureRequests: nil
+  # undefined when empty, so the per-cycle drain costs one existence check.
+  endOfCycleCaptureRequests: undefined
 
   captureAtEndOfCycle: (fn) ->
     (@endOfCycleCaptureRequests ?= []).push fn
@@ -239,7 +239,7 @@ class MacroToolkit
   drainEndOfCycleCaptures: ->
     return unless @endOfCycleCaptureRequests?
     requests = @endOfCycleCaptureRequests
-    @endOfCycleCaptureRequests = nil
+    @endOfCycleCaptureRequests = undefined
     fn() for fn in requests
     return
 
@@ -821,11 +821,11 @@ class MacroToolkit
   # ⚠ InspectorWdgt is the LAZY 'meta-tools' part, and this class is the EAGER 'macros' one, so the
   # bare name would be an unguarded reference into something a profile may not ship and a page may
   # not yet have fetched. The bail-out is exact rather than defensive: this asks "is an inspector
-  # already OPEN", and without the part no inspector can exist, so nil is the true answer.
+  # already OPEN", and without the part no inspector can exist, so undefined is the true answer.
   # ⚠ It keeps the CLASS rather than the string "InspectorWdgt", because the string form matches an
   # exact widgetClassString() and would quietly stop finding ClassInspectorWdgt, its subclass.
   _findTopInspector: ->
-    return nil unless InspectorWdgt?
+    return undefined unless InspectorWdgt?
     @findTopWidgetByClassNameOrClass InspectorWdgt
 
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->

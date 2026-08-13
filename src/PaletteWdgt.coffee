@@ -13,10 +13,10 @@ class PaletteWdgt extends Widget
   @augmentWith ControllerMixin
   @augmentWith BackBufferMixin
 
-  target: nil
-  action: nil
-  argumentToAction: nil
-  choice: nil
+  target: undefined
+  action: undefined
+  argumentToAction: undefined
+  choice: undefined
 
   constructor: (@target, sizePoint) ->
     super()

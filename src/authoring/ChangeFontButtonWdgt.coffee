@@ -7,12 +7,12 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   # the object the font-selection menu is stashed on, so a re-click re-focuses
   # the open menu instead of stacking a new one -- each home passes its own
   # per-editor object (a toolbar, a document)
-  fontSelectionMenuHolder: nil
+  fontSelectionMenuHolder: undefined
 
   iconToolTipMessage: "change font"
 
   constructor: (@fontSelectionMenuHolder) ->
-    super nil  # nil keeps @color = nil as before; icon line-colour set in createAppearance
+    super undefined  # undefined keeps @color = undefined as before; icon line-colour set in createAppearance
 
   createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
@@ -47,4 +47,4 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   setFontName: (ignored1, ignored2, theNewFontName) ->
     if world.editorFocusWdgt?.setFontName?
       widgetClickedLast = world.editorFocusWdgt
-      widgetClickedLast.setFontName(nil, ignored2, widgetClickedLast[theNewFontName])
+      widgetClickedLast.setFontName(undefined, ignored2, widgetClickedLast[theNewFontName])

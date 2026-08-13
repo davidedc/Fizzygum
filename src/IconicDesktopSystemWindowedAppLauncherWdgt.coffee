@@ -25,8 +25,8 @@
 # without carrying — or needing — the app.
 class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLinkWdgt
 
-  # set only in the lazy mode; nil means @target/@callback are live (the eager mode)
-  appClassName: nil
+  # set only in the lazy mode; undefined means @target/@callback are live (the eager mode)
+  appClassName: undefined
 
   constructor: (@title, @icon, @target, @callback) ->
     if !@title?
@@ -35,8 +35,8 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
     super @title, @icon
 
   # Build the lazy-mode icon for `appClassName` and put it in `folder`. A class method rather than a
-  # bare constructor so the two modes cannot be confused at a call site (`new …(title, icon, nil,
-  # nil)` would be silently launch-less), and because installing an in-folder icon is a ritual —
+  # bare constructor so the two modes cannot be confused at a call site (`new …(title, icon, undefined,
+  # undefined)` would be silently launch-less), and because installing an in-folder icon is a ritual —
   # size FIRST, then add, since the icon grid places on add.
   # ⚠ `iconOverride` has exactly ONE caller in the system and is not a general escape hatch: the
   # Examples folder's C-F door draws art from the LAZY `examples-icons` part, which a CORE file may
@@ -58,20 +58,20 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
     world.add launcher
     launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 
-  # LAZY mode. nil when this artifact can never produce the app — no widget is constructed and no
+  # LAZY mode. undefined when this artifact can never produce the app — no widget is constructed and no
   # icon appears, rather than one whose click could only reject. ⚠ The availability question comes
   # BEFORE the catalog lookup and before the icon thunk runs, and it is `canEverProvideClass` rather
   # than `if TheApp?`: for a lazy class an existence test reads "not fetched yet" and would drop the
   # icon for ever, when what is being asked at boot is "can this artifact EVER produce it".
   @forAppNamed: (appClassName, iconOverride) ->
-    return nil unless world.parts.canEverProvideClass appClassName
-    launcher = @_fromCatalogEntry appClassName, iconOverride, nil, nil
+    return undefined unless world.parts.canEverProvideClass appClassName
+    launcher = @_fromCatalogEntry appClassName, iconOverride, undefined, undefined
     launcher.appClassName = appClassName  if launcher?
     launcher
 
   # EAGER mode: the app singleton is already in hand, so the click is a plain call on it.
   @forApp: (app) ->
-    @_fromCatalogEntry app.constructor.name, nil, app, "launch"
+    @_fromCatalogEntry app.constructor.name, undefined, app, "launch"
 
   # ⭐ THE ONE PLACE A LAUNCHER IS BUILT FROM AN APP'S IDENTITY, which is the whole point of the
   # catalog: a construction path per mode is how a field ends up on one launcher and not the other
@@ -82,7 +82,7 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
       # a programming error, not a packaging one: the app exists but nothing says what it looks
       # like. Loud, because the boot smoke fails on console errors and will catch it immediately.
       console.error "AppCatalog has no entry for '#{appClassName}'"
-      return nil
+      return undefined
     icon = if iconOverride? then iconOverride() else entry.icon()
     launcher = new @ entry.title, icon, target, callback
     launcher.toolTipMessage = entry.toolTip  if entry.toolTip?

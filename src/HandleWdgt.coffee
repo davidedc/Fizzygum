@@ -3,15 +3,15 @@
 
 class HandleWdgt extends Widget
 
-  target: nil
-  inset: nil
-  type: nil
+  target: undefined
+  inset: undefined
+  type: undefined
 
   # Affine transforms (§6 Phase 4B): transient rotate-gesture reference frame — the island's rotation
   # and the pointer's angle about the anchor, both captured at grab-start (mouseDownLeft), cleared at
-  # mouseUpLeft. nil at rest / for every non-rotate handle, so nothing to serialize.
-  _rotateGrabStartRotationDegrees: nil
-  _rotateGrabStartPointerAngleDegrees: nil
+  # mouseUpLeft. undefined at rest / for every non-rotate handle, so nothing to serialize.
+  _rotateGrabStartRotationDegrees: undefined
+  _rotateGrabStartPointerAngleDegrees: undefined
 
   state: 0
   STATE_NORMAL: 0
@@ -48,7 +48,7 @@ class HandleWdgt extends Widget
   # stay free-floating. (The base Widget answer is FREEFLOATING, so only handles place themselves on add.)
   defaultLayoutSpecWhenAddedTo: (destination) ->
     if destination == world or destination == world.hand
-      return nil
+      return undefined
     @cornerSpec
 
   # my corner anchor, fixed by @type at construction (the spec carries it for the corner pass)
@@ -120,10 +120,10 @@ class HandleWdgt extends Widget
   # prevents the parent from doing anything.
   mouseClickLeft: ->
   # Affine transforms (§6 Phase 4B): end of a rotate gesture — clear the grab-start state so the next
-  # grab re-captures its own reference angle. Harmless for the other handle types (fields stay nil).
+  # grab re-captures its own reference angle. Harmless for the other handle types (fields stay undefined).
   mouseUpLeft: ->
-    @_rotateGrabStartRotationDegrees = nil
-    @_rotateGrabStartPointerAngleDegrees = nil
+    @_rotateGrabStartRotationDegrees = undefined
+    @_rotateGrabStartPointerAngleDegrees = undefined
     # RE-RECORD request (the F6 family, auto-bookkeeping arc): this gesture resized/moved my
     # target by user intent, so its fractional bookkeeping is stale. Deferred to the world's
     # post-flush drain (my writes are deferred-settle, so the settled geometry is the
@@ -136,7 +136,7 @@ class HandleWdgt extends Widget
   # anything, otherwise the handle on a button
   # will trigger the button when resizing.
   mouseDownLeft: (pos) ->
-    return nil  unless @target
+    return undefined  unless @target
     @target.bringToForeground()
     # Affine transforms (§6 Phase 4B): capture the rotate gesture's reference frame AT PRESS — the
     # island's current rotation plus the pointer's angle about the island's screen anchor. The drag

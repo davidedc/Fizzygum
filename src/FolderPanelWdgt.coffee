@@ -57,7 +57,7 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
     # type-test-elimination campaign)
     # _reactToChildDropped runs inside the drop's single settle -> the non-settling core.
     if !droppedWidget.isDesktopShortcut?()
-      droppedWidget._createReferenceAndCloseNoSettle nil, @
+      droppedWidget._createReferenceAndCloseNoSettle undefined, @
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

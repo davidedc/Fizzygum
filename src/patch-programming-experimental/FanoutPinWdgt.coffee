@@ -2,9 +2,9 @@ class FanoutPinWdgt extends Widget
 
   @augmentWith ControllerMixin
 
-  inputValue: nil
-  target: nil
-  action: nil
+  inputValue: undefined
+  target: undefined
+  action: undefined
 
   constructor: (@color) ->
     super

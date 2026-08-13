@@ -11,7 +11,7 @@ class SimpleDropletWdgt extends Widget
   color_normal: Color.BLACK
 
   _acceptsDrops: true
-  parentFieldToAttachingTheWidgetToAsString: nil
+  parentFieldToAttachingTheWidgetToAsString: undefined
 
   constructor: (@parentFieldToAttachingTheWidgetToAsString) ->
     super()
@@ -22,11 +22,11 @@ class SimpleDropletWdgt extends Widget
     @parent?[@parentFieldToAttachingTheWidgetToAsString] = widgetBeingDropped
     @addAsSiblingAfterMe \
       widgetBeingDropped,
-      nil,
-      nil
+      undefined,
+      undefined
     # _reactToChildDropped runs inside the drop's single settle, so it uses NON-settling calls throughout:
     # addAsSiblingAfterMe already routes through _addNoSettle; _commitBounds is the immediate mutator (the
-    # dropped widget is freefloating -- added via addAsSiblingAfterMe with a nil layoutSpec (free-floating) --
+    # dropped widget is freefloating -- added via addAsSiblingAfterMe with an undefined layoutSpec (free-floating) --
     # so the immediate raw set is byte-identical to the deferred setBounds path and fires the container
     # re-fit seam); fullDestroy -> _fullDestroyNoSettle.
     widgetBeingDropped._commitBounds @bounds

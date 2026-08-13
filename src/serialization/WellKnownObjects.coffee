@@ -23,9 +23,9 @@
 # world, so keyFor is robust even where no marker is declared.
 class WellKnownObjects
 
-  # live object -> symbolic key, or nil if the object is not well-known.
+  # live object -> symbolic key, or undefined if the object is not well-known.
   @keyFor: (obj) ->
-    return nil unless obj?
+    return undefined unless obj?
     if world?
       return "world"         if obj is world
       return "hand"          if obj is world.hand
@@ -40,12 +40,12 @@ class WellKnownObjects
     wk = obj.wellKnownKey
     wk = wk.call obj if typeof wk is "function"
     return wk if wk?
-    nil
+    undefined
 
-  # symbolic key -> the live object in the CURRENT world, or nil if the key is unknown
+  # symbolic key -> the live object in the CURRENT world, or undefined if the key is unknown
   # (an unknown key is the deserializer's cue to raise a rich error).
   @resolve: (key) ->
-    return nil unless key?
+    return undefined unless key?
     switch key
       when "world"         then world
       when "hand"          then world?.hand
@@ -59,7 +59,7 @@ class WellKnownObjects
         if key.indexOf("app:") is 0
           @resolveApp key.substring 4
         else
-          nil
+          undefined
 
   # Resolve the per-app singleton for a windowed-app class name (e.g. the target of a
   # deserialized desktop launcher). An IconicDesktopSystemWindowedApp subclass is a
@@ -72,7 +72,7 @@ class WellKnownObjects
   # semantics), and because the apps are stateless the cache is safe to keep across loads.
   @resolveApp: (className) ->
     appClass = window[className]
-    return nil unless appClass?
+    return undefined unless appClass?
     @_appSingletons ?= {}
     @_appSingletons[className] ?= new appClass
     @_appSingletons[className]

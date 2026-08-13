@@ -4,11 +4,11 @@
 # out of a concern that it might hinder help from LLMs.
 
 class Macro
-  _body: nil
-  _name: nil
+  _body: undefined
+  _name: undefined
   # lazily-filled derivation of _body — a sanctioned memo on an otherwise immutable
   # class, same pattern as Color._derived_String
-  _linkedCode: nil
+  _linkedCode: undefined
 
   constructor: (@_name, @_body) ->
 
@@ -128,8 +128,8 @@ class Macro
 
   start: ->
     world.macroToolkit.msSinceLastExecutedMacroStep = 0
-    world.macroToolkit.macroGenerator = nil
-    world.macroToolkit.returnFromLastMacroStep = nil
+    world.macroToolkit.macroGenerator = undefined
+    world.macroToolkit.returnFromLastMacroStep = undefined
 
     world.macroToolkit.aMacroIsRunning = true
 

@@ -25,15 +25,15 @@ class SerializationError
 
   constructor: (@message = "serialization failed", details = {}) ->
     @name = "SerializationError"
-    @rootDescription = details.rootDescription ? nil
-    @path = details.path ? nil
-    @offender = details.offender ? nil
-    @remediation = details.remediation ? nil
+    @rootDescription = details.rootDescription ? undefined
+    @path = details.path ? undefined
+    @offender = details.offender ? undefined
+    @remediation = details.remediation ? undefined
     # best-effort stack for debugging, without `extends Error`
     try
       @stack = (new Error @message).stack
     catch e
-      @stack = nil
+      @stack = undefined
 
   # A multi-line, human-readable rendering — this is what menu/file actions feed to
   # world.inform, and what a headless rig can snapshot. Structured callers read the

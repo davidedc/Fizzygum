@@ -72,7 +72,7 @@ class PartsRegistry
   isAvailable: (partName) ->
     @_state[partName]?
 
-  # The part a class belongs to, or nil for a core class (or a name we know nothing about).
+  # The part a class belongs to, or undefined for a core class (or a name we know nothing about).
   # _-tier: only this class asks (launch + partsNeededFor).
   #
   # ⚠ This reads the BUILD MANIFEST's per-part `classes` list, NOT SourceVault.partOf, and the
@@ -87,7 +87,7 @@ class PartsRegistry
     for own partName, spec of (window.FIZZYGUM_PARTS ? {})
       continue unless spec.classes?
       return partName if className in spec.classes
-    nil
+    undefined
 
   # The parts this one's code names, from the build manifest (parts.json `requires`). They are
   # loaded FULLY FIRST -- see ensureLoaded.

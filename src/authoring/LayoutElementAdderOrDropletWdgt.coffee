@@ -96,12 +96,12 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       newWdgt = new Widget
       @parent.add newWdgt
       newWdgt._applyGrantedBounds @boundingBox()
-      newWdgt.add @, nil, @_ensureDivisionBox()
+      newWdgt.add @, undefined, @_ensureDivisionBox()
       newWdgt.showAdders()
 
     newAdder = new LayoutElementAdderOrDropletWdgt
     if @layoutSpec?.isDivisionElement?()
-      @addAsSiblingAfterMe newAdder, nil, newAdder._divisionBox
+      @addAsSiblingAfterMe newAdder, undefined, newAdder._divisionBox
     else
       @addAsSiblingAfterMe newAdder
 
@@ -111,7 +111,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     if @layoutSpec?.isDivisionElement?()
       @addAsSiblingAfterMe \
         widgetBeingDropped,
-        nil,
+        undefined,
         widgetBeingDropped._ensureDivisionBox()
     else
       @addAsSiblingAfterMe widgetBeingDropped

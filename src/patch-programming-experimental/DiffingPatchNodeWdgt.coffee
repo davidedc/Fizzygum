@@ -3,8 +3,8 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
   # shared dataflow-node behaviour (dataflow protocol, connect-to-target menu, setter menus, _reLayout
   # scaffold, padding, and the input1/input2/output/textWidget preamble) lives on PatchNodeWdgt.
 
-  tempPromptEntryField: nil
-  defaultContents: nil
+  tempPromptEntryField: undefined
+  defaultContents: undefined
 
   # vestigial: written by ControllerMixin.setTargetAndActionWithOnesPickedFromMenu but read
   # nowhere -- their reader was the multi-input freshness gate, deleted when any-input-marks-

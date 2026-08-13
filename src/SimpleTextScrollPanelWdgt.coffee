@@ -11,9 +11,9 @@
 
 class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
 
-  textWdgt: nil
-  modifiedTextTriangleAnnotation: nil
-  widgetToBeNotifiedOfTextModificationChange: nil
+  textWdgt: undefined
+  modifiedTextTriangleAnnotation: undefined
+  widgetToBeNotifiedOfTextModificationChange: undefined
 
   constructor: (
     textAsString,
@@ -28,7 +28,7 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
     @isTextLineWrapping = wraps
     @color = Color.WHITE
     @textWdgt = new SimpleTextWdgt(
-      textAsString,nil,nil,nil,nil,nil,Color.create(230, 230, 130), 1)
+      textAsString,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
     @textWdgt.isEditable = true
     if !wraps
       # non-wrapping ("code view"): the box hugs the natural, un-wrapped text width
@@ -51,7 +51,7 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
     @contents.disableDrops()
     @color = Color.WHITE
     @textWdgt.backgroundColor = Color.TRANSPARENT
-    @textWdgt._setFontNameNoSettle nil, nil, @textWdgt.monoFontStack
+    @textWdgt._setFontNameNoSettle undefined, undefined, @textWdgt.monoFontStack
     @textWdgt.isEditable = isEditable
     if isEditable then @textWdgt.enableSelecting()
     return @

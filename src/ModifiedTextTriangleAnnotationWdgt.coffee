@@ -14,7 +14,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
 
     size = WorldWdgt.preferencesAndSettings.handleSize
     @__commitExtent new Point size, size
-    parent?.add @, nil, @cornerSpec
+    parent?.add @, undefined, @cornerSpec
 
   # I attach directly to a scroll panel's frame (not its inner contents) when added -- the
   # container add methods key off this instead of `instanceof ModifiedTextTriangleAnnotationWdgt`.

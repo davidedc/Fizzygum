@@ -8,8 +8,8 @@ class SliderWdgt extends CircleBoxWdgt
 
   @augmentWith ControllerMixin
 
-  target: nil
-  action: nil
+  target: undefined
+  action: undefined
 
   # A slider is editor content when dropped alone (a value control you can select/align), but a scroll
   # panel's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
@@ -20,16 +20,16 @@ class SliderWdgt extends CircleBoxWdgt
   excludedFromEditorFocusTracking: ->
     @parent?.isMyScrollBar?(@) is true
 
-  start: nil
-  stop: nil
-  value: nil
-  size: nil
-  offset: nil
-  button: nil
-  argumentToAction: nil
+  start: undefined
+  stop: undefined
+  value: undefined
+  size: undefined
+  offset: undefined
+  button: undefined
+  argumentToAction: undefined
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
   # that method); declared so Duplicator duplication carries it.
-  menuEntryNaturalWidth: nil
+  menuEntryNaturalWidth: undefined
 
   smallestValueIsAtBottomEnd: false
 
@@ -173,7 +173,7 @@ class SliderWdgt extends CircleBoxWdgt
     newvalue = Math.round relPos / @unitSize() + @start
 
     if @value != newvalue
-      @setValue newvalue, nil
+      @setValue newvalue, undefined
 
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
@@ -205,7 +205,7 @@ class SliderWdgt extends CircleBoxWdgt
       @prompt menu.title + "\nfloor:",
         @setStart,
         @start.toString(),
-        nil,
+        undefined,
         0,
         @stop - @size,
         true
@@ -214,7 +214,7 @@ class SliderWdgt extends CircleBoxWdgt
       @prompt menu.title + "\nceiling:",
         @setStop,
         @stop.toString(),
-        nil,
+        undefined,
         @start + @size,
         @size * 100,
         true
@@ -223,7 +223,7 @@ class SliderWdgt extends CircleBoxWdgt
       @prompt menu.title + "\nbutton size:",
         @setSize,
         @size.toString(),
-        nil,
+        undefined,
         1,
         @stop - @start,
         true

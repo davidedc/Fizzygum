@@ -1,6 +1,6 @@
 class VideoTimeLabelWdgt extends HhmmssLabelWdgt
 
-  videoPlayerCanvas: nil
+  videoPlayerCanvas: undefined
 
   colloquialName: ->
     "Video time"

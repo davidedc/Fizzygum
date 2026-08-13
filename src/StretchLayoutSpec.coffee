@@ -26,15 +26,15 @@
 # provisional records ONCE at builder-final geometry, recording them.
 #
 # LIFECYCLE is per ATTACHMENT (the family's per-class lifecycle law): created at record
-# moments and armed as the child's ACTIVE layoutSpec, nil'd by grab/reparent like any
+# moments and armed as the child's ACTIVE layoutSpec, cleared by grab/reparent like any
 # active spec — re-entry into a holder derives a fresh record. It serializes/duplicates
 # with the child like every spec.
 class StretchLayoutSpec extends LayoutSpec
 
-  leftFraction: nil
-  topFraction: nil
-  rightFraction: nil
-  bottomFraction: nil
+  leftFraction: undefined
+  topFraction: undefined
+  rightFraction: undefined
+  bottomFraction: undefined
 
   # the child was deliberately placed sticking out of its holder: the desktop's reflow
   # then skips its keep-within clamp, so the widget stays outside on purpose

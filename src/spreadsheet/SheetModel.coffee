@@ -53,11 +53,11 @@ class SheetModel
   # {col,row} (both 0-based) -> address ("A1"); rows display 1-based, so row 0 -> "1".
   addressFor: (col, row) -> @colToLetters(col) + (row + 1)
 
-  # address ("A1") -> {col,row} (both 0-based), or nil if it is not a cell address.
+  # address ("A1") -> {col,row} (both 0-based), or undefined if it is not a cell address.
   colRowFor: (address) ->
-    return nil unless SheetModel.looksLikeCellRef address
+    return undefined unless SheetModel.looksLikeCellRef address
     m = address.match /^([A-Z]{1,2})([0-9]+)$/
-    return nil unless m?
+    return undefined unless m?
     {col: @lettersToCol(m[1]), row: (parseInt(m[2], 10) - 1)}
 
   # ── cell store ─────────────────────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ class SheetModel
     @cells.set address, record
     record
 
-  # the raw VALUE at an address (nil for an untouched cell) — what the grid PAINTS / a Color mounts.
+  # the raw VALUE at an address (undefined for an untouched cell) — what the grid PAINTS / a Color mounts.
   valueAt: (address) -> @cells.get(address)?.value
 
   # the EXPORTED value at an address (spec §9.3): what a REFERENCE to the cell yields — a

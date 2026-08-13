@@ -33,7 +33,7 @@ class SizeAwareIconAppearance extends IconAppearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
+    return undefined unless keyValues?
     [area,sl,st,al,at,w,h] = keyValues
 
     # the icon art (_paintSizeAware) sets its own colours, so the shadow pass renders it to
@@ -51,7 +51,7 @@ class SizeAwareIconAppearance extends IconAppearance
       return
 
     @_paintColoredIcon aContext, al, at, w, h
-    return nil
+    return undefined
 
   _paintColoredIcon: (aContext, al, at, w, h) ->
     aContext.save()

@@ -53,7 +53,7 @@ class ToolbarsIconAppearance extends SizeAwareIconAppearance
     yT = Math.max o, Math.round(S * @COL_TOP)
     yB = Math.round S * @COL_BOT
     H = yB - yT
-    return nil if H < 4 * t
+    return undefined if H < 4 * t
 
     hH = Math.round S * @HEADER_H
     hH = 0 if hH < 2                    # too thin to read as the title bar

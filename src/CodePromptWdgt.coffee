@@ -2,10 +2,10 @@ class CodePromptWdgt extends CodeAreaWdgt
 
   defaultContents: ""
 
-  cancelButton: nil
-  saveButton: nil
-  okButton: nil
-  saveTextWdgt: nil
+  cancelButton: undefined
+  saveButton: undefined
+  okButton: undefined
+  saveTextWdgt: undefined
 
   constructor: (@msg, @target, @callback, @defaultContents) ->
     super new Point 200,400
@@ -47,7 +47,7 @@ class CodePromptWdgt extends CodeAreaWdgt
 
 
   informTarget: ->
-    @target[@callback].call @target, nil, @textWidget
+    @target[@callback].call @target, undefined, @textWidget
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 

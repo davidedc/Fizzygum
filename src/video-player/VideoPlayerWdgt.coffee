@@ -1,11 +1,11 @@
 class VideoPlayerWdgt extends Widget
 
-  videoPlayerCanvas: nil
-  videoControlsPane: nil
+  videoPlayerCanvas: undefined
+  videoControlsPane: undefined
 
   externalPadding: 0
   internalPadding: 5
-  padding: nil
+  padding: undefined
 
   colloquialName: ->
     "Video player"

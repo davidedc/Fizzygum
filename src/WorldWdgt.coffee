@@ -5,17 +5,17 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # the event listeners so we are
   # going to put them all in properties
   # here.
-  # dblclickEventListener: nil
-  mousedownBrowserEventListener: nil
-  mouseupBrowserEventListener: nil
-  mousemoveBrowserEventListener: nil
-  contextmenuEventListener: nil
+  # dblclickEventListener: undefined
+  mousedownBrowserEventListener: undefined
+  mouseupBrowserEventListener: undefined
+  mousemoveBrowserEventListener: undefined
+  contextmenuEventListener: undefined
 
-  touchstartBrowserEventListener: nil
-  touchendBrowserEventListener: nil
-  touchmoveBrowserEventListener: nil
-  gesturestartBrowserEventListener: nil
-  gesturechangeBrowserEventListener: nil
+  touchstartBrowserEventListener: undefined
+  touchendBrowserEventListener: undefined
+  touchmoveBrowserEventListener: undefined
+  gesturestartBrowserEventListener: undefined
+  gesturechangeBrowserEventListener: undefined
 
   # Note how there can be two handlers for
   # keyboard events.
@@ -26,15 +26,15 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # handler. See "_initVirtualKeyboard"
   # method to see where and when this input and
   # these handlers are set up.
-  keydownBrowserEventListener: nil
-  keyupBrowserEventListener: nil
-  keypressBrowserEventListener: nil
-  wheelBrowserEventListener: nil
+  keydownBrowserEventListener: undefined
+  keyupBrowserEventListener: undefined
+  keypressBrowserEventListener: undefined
+  wheelBrowserEventListener: undefined
 
-  cutBrowserEventListener: nil
-  copyBrowserEventListener: nil
-  pasteBrowserEventListener: nil
-  errorConsole: nil
+  cutBrowserEventListener: undefined
+  copyBrowserEventListener: undefined
+  pasteBrowserEventListener: undefined
+  errorConsole: undefined
 
   # the string for the last serialised widget
   # is kept in here, to make serialization
@@ -48,22 +48,22 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # attached to a hidden
   # "input" div which keeps track of the
   # text that is being input.
-  inputDOMElementForVirtualKeyboardKeydownBrowserEventListener: nil
-  inputDOMElementForVirtualKeyboardKeyupBrowserEventListener: nil
-  inputDOMElementForVirtualKeyboardKeypressBrowserEventListener: nil
+  inputDOMElementForVirtualKeyboardKeydownBrowserEventListener: undefined
+  inputDOMElementForVirtualKeyboardKeyupBrowserEventListener: undefined
+  inputDOMElementForVirtualKeyboardKeypressBrowserEventListener: undefined
 
-  dragoverEventListener: nil
-  resizeBrowserEventListener: nil
+  dragoverEventListener: undefined
+  resizeBrowserEventListener: undefined
   otherTasksToBeRunOnStep: []
-  dropBrowserEventListener: nil
+  dropBrowserEventListener: undefined
 
   # these variables shouldn't be static to the WorldWdgt, because
   # in pure theory you could have multiple worlds in the same
   # page with different settings
-  @preferencesAndSettings: nil
+  @preferencesAndSettings: undefined
 
-  @dateOfPreviousCycleStart: nil
-  @dateOfCurrentCycleStart: nil
+  @dateOfPreviousCycleStart: undefined
+  @dateOfCurrentCycleStart: undefined
 
   # The .time of the input event currently being dispatched by _playQueuedEvents
   # (a deterministic scheduled ms for macro playback; a real ms for browser users).
@@ -71,7 +71,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # used by the hand's multi-click recognition to forget a stale double/triple-click
   # candidate on an event-time gap (deterministic), instead of depending on a
   # wall-clock setTimeout that can fire late under heavy-cycle load.
-  @timeOfEventBeingProcessed: nil
+  @timeOfEventBeingProcessed: undefined
 
   showRedraws: false
   doubleCheckCachedMethodsResults: false
@@ -79,9 +79,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # affine transforms (docs/plans/affine-transforms-plan.md §4.5): set to the island
   # currently refreshing its buffer while its content subtree paints INTO that
   # buffer (not the world canvas), so those descendants still record their
-  # (virtual) last-painted bounds for the flesh-out "source" cleanup rect. nil on
+  # (virtual) last-painted bounds for the flesh-out "source" cleanup rect. undefined on
   # every ordinary paint — the whole affine machinery is dormant otherwise.
-  paintingIntoIslandBuffer: nil
+  paintingIntoIslandBuffer: undefined
 
   # The A/B switch for the _-private *DeferredSettle layout API (Widget._setMaxDimDeferredSettle, ...; _-private +
   # stream-handler-restricted by check-layering [O]). ON (default): a *DeferredSettle call defers its layout flush to
@@ -99,7 +99,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # not yet on a *DeferredSettle entrypoint) the eventual declared-deferred-settling gate will reject. Off => ~zero overhead.
   _deferredSettleDeclarationDepth: 0
   auditUndeclaredEndOfCycle: false
-  _undeclaredEndOfCyclePushes: nil
+  _undeclaredEndOfCyclePushes: undefined
 
   # PAINT must be READ-ONLY: the cycle PROCESSES EVENTS (fixing layouts step by step) -> FIXES the deferred-settle
   # layouts (recalculateLayouts) -> PAINTS (_updateBroken), with NO layout work at paint. auditPaintTimeLayout-
@@ -108,7 +108,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved off paint
   # and now settles per-event IN PLACE as the caret's _reLayout (CaretWdgt._requestScrollFollow). Off => ~zero overhead.
   auditPaintTimeLayoutScheduling: false
-  _paintTimeLayoutSchedules: nil
+  _paintTimeLayoutSchedules: undefined
 
   # auditTierAndApplyNaming (DEBUG, default off): the RUNTIME twin of the static [K] apply-2x2 name-consistency lint
   # (check-layering.js). The static gate enforces the surviving NEGATIVE (a _apply*Base bypass twin must not fire the
@@ -126,22 +126,22 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # gesture/structural dispatch batch. Driven by notification-settle-audit/run-notification-settle-gate.sh. Off => zero overhead.
   auditNotificationSettleNeutrality: false
 
-  automator: nil
+  automator: undefined
 
   # this is the actual reference to the canvas
   # on the html page, where the world is
   # finally painted to.
-  worldCanvas: nil
-  worldCanvasContext: nil
+  worldCanvas: undefined
+  worldCanvasContext: undefined
 
-  canvasForTextMeasurements: nil
-  canvasContextForTextMeasurements: nil
-  cacheForTextMeasurements: nil
-  cacheForTextParagraphSplits: nil
-  cacheForParagraphsWordsSplits: nil
-  cacheForParagraphsWrappingData: nil
-  cacheForTextWrappingData: nil
-  cacheForTextBreakingIntoLinesTopLevel: nil
+  canvasForTextMeasurements: undefined
+  canvasContextForTextMeasurements: undefined
+  cacheForTextMeasurements: undefined
+  cacheForTextParagraphSplits: undefined
+  cacheForParagraphsWordsSplits: undefined
+  cacheForParagraphsWrappingData: undefined
+  cacheForTextWrappingData: undefined
+  cacheForTextBreakingIntoLinesTopLevel: undefined
 
   # By default the world will always fill
   # the entire page, also when browser window
@@ -155,11 +155,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # context-menu item) resizes the canvas AND the world for good. Nothing put it back, so under
   # the test harness one such call would render EVERY later test in the same page at the wrong
   # size. _resetWorldNoSettle compares against this and restores.
-  _bootExtent: nil
+  _bootExtent: undefined
   # ...and the companion "keep filling the browser on every resize" decision, which
   # stretchWorldToFillEntirePage latches ON for good. Captured beside _bootExtent (i.e. AFTER the
   # constructor's own sizing branch, so for the index page the captured value is the latched true).
-  _bootAutoAdjustToFillEntireBrowserAlsoOnResize: nil
+  _bootAutoAdjustToFillEntireBrowserAlsoOnResize: undefined
 
   wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
   hierarchyOfClickedWdgts: new Set
@@ -276,8 +276,8 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   noteWallpaperChanged: ->
     @_changed()
 
-  broken: nil
-  duplicatedBrokenRectsTracker: nil
+  broken: undefined
+  duplicatedBrokenRectsTracker: undefined
   numberOfDuplicatedBrokenRects: 0
 
   # target -> style descriptor (HighlighterWdgt.fillStyle / — Phase 2 — outline styles). A Map, not
@@ -288,24 +288,24 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   widgetsBeingHighlighted: new Set
 
   # --- drag-embed affordance overlays (docs/specs/drag-embed-interaction-spec.md §6/§11) --------
-  # The hand's state machine sets the *Declared slots each cycle (nil = not wanted); the pre-paint
+  # The hand's state machine sets the *Declared slots each cycle (undefined = not wanted); the pre-paint
   # reconciler addDragAffordanceWidgets creates/moves/destroys the reconciler-owned overlay widgets.
   # PRODUCT code (unlike the pinout debug path) — ships in the homepage build.
-  dragEmbedChargeRingDeclared: nil
-  dragEmbedLabelDeclared: nil
-  dragEmbedLockBadgeDeclared: nil
-  dragEmbedChargeRingWdgt: nil
-  dragEmbedLabelWdgt: nil
-  dragEmbedLockBadgeWdgt: nil
+  dragEmbedChargeRingDeclared: undefined
+  dragEmbedLabelDeclared: undefined
+  dragEmbedLockBadgeDeclared: undefined
+  dragEmbedChargeRingWdgt: undefined
+  dragEmbedLabelWdgt: undefined
+  dragEmbedLockBadgeWdgt: undefined
 
   # --- editor-focus selection (§5.D D-3/D21; selection-overlay-unification arc) --------------------
-  # The widget generically SELECTED for editing this cycle, or nil. PULL model: recomputed each cycle from
+  # The widget generically SELECTED for editing this cycle, or undefined. PULL model: recomputed each cycle from
   # editorFocusWdgt + the edit-mode predicate (_updateEditorSelectionOverlay), so it can't drift. The
   # selection is drawn as a per-widget PAINT-TIME overlay (Widget._drawSelectionOverlay) on top of the
   # selected widget's own content, NOT a separate world-attached widget -- so it rides that widget's own
   # z-order + back-buffer for free. This is a once-per-cycle cache; the per-widget paint reads it via the
   # O(1) _isEditorSelected identity check (never the tree-walking _widgetBeingEdited).
-  _editorSelectedWidget: nil
+  _editorSelectedWidget: undefined
 
   steppingWdgts: new Set
 
@@ -331,8 +331,8 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   anyScrollMomentumOngoing: ->
     @wdgtsWithOngoingScrollMomentum.size > 0
 
-  binWdgt: nil
-  shelfWdgt: nil
+  binWdgt: undefined
+  shelfWdgt: undefined
 
   # Since a shadow is just a "rendering" effect there is no widget for it; the shadow area is
   # cleaned up by growing broken rects. maxShadowSize is the flat margin every damage rect gets
@@ -342,7 +342,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # need not capture the biggest shadow in the product.
   maxShadowSize: 6
 
-  inputEventsQueue: nil
+  inputEventsQueue: undefined
 
   widgetsReferencingOtherWidgets: new Set
   incrementalGcSessionId: 0
@@ -353,7 +353,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   iconsLayingInGridWrapCount: 5
 
   errorsWhileRepainting: []
-  paintingWidget: nil
+  paintingWidget: undefined
   widgetsGivingErrorWhileRepainting: []
 
   # errors thrown by a _reLayout() DURING the recalculateLayouts flush. We can't build the
@@ -369,14 +369,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # then it highlights in some manner and ends up in this list)
   # and then operations can be performed on the whole list
   # of widgets.
-  editorFocusWdgt: nil
+  editorFocusWdgt: undefined
 
-  wallpaper: nil
+  wallpaper: undefined
 
-  untitledNamingService: nil
-  widgetFactory: nil
+  untitledNamingService: undefined
+  widgetFactory: undefined
 
-  isIndexPage: nil
+  isIndexPage: undefined
 
   healingRectanglesPhase: false
 
@@ -417,7 +417,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   _inLayoutMutation: false
   _recalculatingLayouts: false
 
-  macroToolkit: nil
+  macroToolkit: undefined
 
   constructor: (
       @worldCanvas,
@@ -448,7 +448,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @appearance = new DesktopAppearance @
 
     @color = Color.create 205, 205, 205 # (130, 130, 130)
-    @strokeColor = nil
+    @strokeColor = undefined
 
     @alpha = 1
 
@@ -456,10 +456,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @isDevMode = false
     @hand = new ActivePointerWdgt
     @keyboardEventsReceivers = new Set
-    @lastEditedText = nil
-    @caret = nil
+    @lastEditedText = undefined
+    @caret = undefined
     @temporaryHandlesAndLayoutAdjusters = new Set
-    @inputDOMElementForVirtualKeyboard = nil
+    @inputDOMElementForVirtualKeyboard = undefined
 
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and @isIndexPage
       @stretchWorldToFillEntirePage()
@@ -517,7 +517,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @domBlitContext = @worldCanvas.getContext "2d"
     else
       @worldRenderCanvas = @worldCanvas
-      @domBlitContext = nil
+      @domBlitContext = undefined
     @worldCanvasContext = @worldRenderCanvas.getContext "2d"
     @worldCanvasContext.textPixelDensity = ceilPixelRatio if @worldCanvasContext.textPixelDensity?
 
@@ -558,10 +558,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # actually changes (see invalidateCanvasPositionCache callers). Fizzygum's world
   # canvas fills a fixed viewport, so page scroll is not a factor; add scroll
   # invalidation here if the canvas is ever embedded in a scrollable container.
-  _cachedCanvasPosition: nil
+  _cachedCanvasPosition: undefined
 
   invalidateCanvasPositionCache: ->
-    @_cachedCanvasPosition = nil
+    @_cachedCanvasPosition = undefined
 
   # answer the absolute coordinates of the world canvas within the document
   getCanvasPosition: ->
@@ -609,7 +609,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
     WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
 
-    @wallpaper.setPattern nil, nil, "dots"
+    @wallpaper.setPattern undefined, undefined, "dots"
 
     @_changed()
 
@@ -640,7 +640,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # the creator ARMS the clock's corner knob (top-right); the corner pass places it, so
     # no hand-computed position here. Corner-anchored until the user grabs it -- the grab
     # disarms the slot and the membership rule takes over (proportional tracking).
-    @add acm, nil, acm.cornerSpec
+    @add acm, undefined, acm.cornerSpec
 
     # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
     # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED
@@ -675,7 +675,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # openers, and the C-F art only they draw, are LAZY parts. See ExamplesFolderWindowWdgt for
     # the three tiers (boot / open / click) and why a folder — unlike the desktop icons above —
     # can defer its contents at all.
-    @makeFolder nil, nil, "Examples", new ExamplesFolderWindowWdgt
+    @makeFolder undefined, undefined, "Examples", new ExamplesFolderWindowWdgt
 
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
     # so in a default build this boot-time auto-launch would throw "...is not defined".
@@ -685,7 +685,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
 
   mostRecentlyCreatedPopUp: ->
-    mostRecentPopUp = nil
+    mostRecentPopUp = undefined
     mostRecentPopUpID = -1
 
     # we have to check which menus
@@ -766,7 +766,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     dirtyPart = aRect.intersect @boundingBox()          # identical to the mixin's narrowing of the dirty rect to the desktop
     return false if dirtyPart.isEmpty()
     testRect = dirtyPart.expandBy 1                      # +1px margin: painting rounds on the logical grid (calculateKeyValues)
-    covererIndex = nil
+    covererIndex = undefined
     for i in [@children.length - 1 .. 0] by -1          # front-to-back
       child = @children[i]
       coveredRect = child.opaqueCoveredRect()
@@ -842,28 +842,28 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           debugger
         if @broken[brokenWidgetAncestor.srcBrokenRect].containsRectangle aRect
           if isSrc
-            @broken[brokenWidget.srcBrokenRect] = nil
-            brokenWidget.srcBrokenRect = nil
+            @broken[brokenWidget.srcBrokenRect] = undefined
+            brokenWidget.srcBrokenRect = undefined
           else
-            @broken[brokenWidget.dstBrokenRect] = nil
-            brokenWidget.dstBrokenRect = nil
+            @broken[brokenWidget.dstBrokenRect] = undefined
+            brokenWidget.dstBrokenRect = undefined
         else if aRect.containsRectangle @broken[brokenWidgetAncestor.srcBrokenRect]
-          @broken[brokenWidgetAncestor.srcBrokenRect] = nil
-          brokenWidgetAncestor.srcBrokenRect = nil
+          @broken[brokenWidgetAncestor.srcBrokenRect] = undefined
+          brokenWidgetAncestor.srcBrokenRect = undefined
 
       if brokenWidgetAncestor.dstBrokenRect?
         if !@broken[brokenWidgetAncestor.dstBrokenRect]?
           debugger
         if @broken[brokenWidgetAncestor.dstBrokenRect].containsRectangle aRect
           if isSrc
-            @broken[brokenWidget.srcBrokenRect] = nil
-            brokenWidget.srcBrokenRect = nil
+            @broken[brokenWidget.srcBrokenRect] = undefined
+            brokenWidget.srcBrokenRect = undefined
           else
-            @broken[brokenWidget.dstBrokenRect] = nil
-            brokenWidget.dstBrokenRect = nil
+            @broken[brokenWidget.dstBrokenRect] = undefined
+            brokenWidget.dstBrokenRect = undefined
         else if aRect.containsRectangle @broken[brokenWidgetAncestor.dstBrokenRect]
-          @broken[brokenWidgetAncestor.dstBrokenRect] = nil
-          brokenWidgetAncestor.dstBrokenRect = nil
+          @broken[brokenWidgetAncestor.dstBrokenRect] = undefined
+          brokenWidgetAncestor.dstBrokenRect = undefined
 
 
   _rectAlreadyIncludedInParentBrokenWidget: ->
@@ -885,11 +885,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   _cleanupSrcAndDestRectsOfWidgets: ->
     for brokenWidget in @widgetsWithMaybeChangedPaintBounds
-      brokenWidget.srcBrokenRect = nil
-      brokenWidget.dstBrokenRect = nil
+      brokenWidget.srcBrokenRect = undefined
+      brokenWidget.dstBrokenRect = undefined
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-      brokenWidget.srcBrokenRect = nil
-      brokenWidget.dstBrokenRect = nil
+      brokenWidget.srcBrokenRect = undefined
+      brokenWidget.dstBrokenRect = undefined
 
 
   _fleshOutBroken: ->
@@ -897,8 +897,8 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # fresh per widget: a value carried over from a previous iteration would be
       # re-pushed attributed to THIS widget — spurious extra repaint area (any widget
       # lacking one of its own rects would consume its predecessor's)
-      sourceBroken = nil
-      destinationBroken = nil
+      sourceBroken = undefined
+      destinationBroken = undefined
 
       # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
@@ -916,10 +916,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
       # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullBroken). Consumed by
       # whichever lane runs first (_fleshOutFullBroken is called before _fleshOutBroken); the field is
-      # nil'd on consumption so this second lane is a no-op when the full lane already handled it.
+      # cleared on consumption so this second lane is a no-op when the full lane already handled it.
       if brokenWidget._islandBufferSourceIsland?
         brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
-        brokenWidget._islandBufferSourceIsland = nil
+        brokenWidget._islandBufferSourceIsland = undefined
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
@@ -951,15 +951,15 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           @_pushBrokenRect brokenWidget, destinationBroken, true
 
       brokenWidget.paintBoundsMaybeChanged = false
-      brokenWidget.clippedBoundsWhenLastPainted = nil
+      brokenWidget.clippedBoundsWhenLastPainted = undefined
 
     
 
   _fleshOutFullBroken: ->
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
       # fresh per widget: see the twin note in _fleshOutBroken
-      sourceBroken = nil
-      destinationBroken = nil
+      sourceBroken = undefined
+      destinationBroken = undefined
 
       if brokenWidget.fullClippedBoundsWhenLastPainted?
         if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
@@ -975,7 +975,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # alive even when the widget detached, so removal is ghost-free (_recordDrawnAreaForNextBrokenRects).
       if brokenWidget._islandBufferSourceIsland?
         brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
-        brokenWidget._islandBufferSourceIsland = nil
+        brokenWidget._islandBufferSourceIsland = undefined
 
       # for the "destination" broken rectangle we can actually
       # check whether the Widget is still visible because we
@@ -1000,7 +1000,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           @_pushBrokenRect brokenWidget, destinationBroken, true
 
       brokenWidget.fullPaintBoundsMaybeChanged = false
-      brokenWidget.fullClippedBoundsWhenLastPainted = nil
+      brokenWidget.fullClippedBoundsWhenLastPainted = undefined
 
 
   _showBrokenRects: (aContext) ->
@@ -1054,7 +1054,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       console.log "UNDECLARED-EOC frame=" + WorldWdgt.frameCount + " total=" + @_undeclaredEndOfCyclePushes.length + " :: " + parts.join(", ")
     # reset the per-frame accumulator at the end-of-cycle flush ONLY -- a mid-frame self-settle (which calls
     # recalculateLayouts with @_inLayoutMutation set) must not drop off-settle pushes recorded before it.
-    @_undeclaredEndOfCyclePushes = nil unless @_inLayoutMutation
+    @_undeclaredEndOfCyclePushes = undefined unless @_inLayoutMutation
     # re-entrancy guard: recalculateLayouts must not run inside itself. This fires if a
     # public geometry setter (which flushes via recalculateLayouts) is reached from a
     # layout pass (_reLayout/_positionAndResizeChildren). Internal layout must use the immediate (geometry)
@@ -1254,7 +1254,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # fix. Runs through this same method recursively, so heals cascade, the up-edge applies
       # (no-op unless the child's OWN _reLayout moved its frame — an arrange-placed child re-applies
       # the same frame), the error containment applies, and the RECALC counter bounds it.
-      watchedChildren = nil
+      watchedChildren = undefined
       for c in node.children when c.layoutIsValid
         (watchedChildren ?= []).push [c, c.left(), c.top(), c.width(), c.height()]
       preL = node.left(); preT = node.top(); preW = node.width(); preH = node.height()
@@ -1277,7 +1277,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # settle + ban the offender (both layout-clean), then defer the softReset + reporting to the
       # next cycle's drain, outside the flush. (task #18)
       node._markLayoutAsFixed()   # it threw before doing this itself; do it now so the settle converges
-      node.__hide()          # ban from paint -- silent: nils caches only, no _invalidateLayout/flush
+      node.__hide()          # ban from paint -- silent: clears caches only, no _invalidateLayout/flush
       @layoutErrorsToReport.push err
     # the never-fire termination assert (see _recalculateLayoutsBody's header comment). Counted
     # OUTSIDE the try: this throw must propagate out of the flush, never be swallowed by the
@@ -1379,7 +1379,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       for own k, v of summary
         parts.push k + " x" + v
       console.log "PAINT-SCHEDULES frame=" + WorldWdgt.frameCount + " total=" + @_paintTimeLayoutSchedules.length + " :: " + parts.join(", ")
-    @_paintTimeLayoutSchedules = nil
+    @_paintTimeLayoutSchedules = undefined
 
     # tripwire for the one corruption the _repaintAsOneUnit construct cannot
     # prevent (direct field tampering / a future bug): a nonzero depth at flush
@@ -1436,7 +1436,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # there are no errors.
 
     currentErrorsCount = @errorsWhileRepainting.length
-    previousErrorsCount = nil
+    previousErrorsCount = undefined
     numberOfTotalRepaints = 0
     until previousErrorsCount == currentErrorsCount
       numberOfTotalRepaints++
@@ -1505,7 +1505,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       else
         @currentHighlightingWidgets.delete eachHighlightingWidget
         @widgetsBeingHighlighted.delete target
-        eachHighlightingWidget.wdgtThisWdgtIsHighlighting = nil
+        eachHighlightingWidget.wdgtThisWdgtIsHighlighting = undefined
         eachHighlightingWidget.fullDestroy()
 
     @widgetsToBeHighlighted.forEach (styleDescriptor, eachWidgetNeedingHighlight) =>
@@ -1534,13 +1534,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @dragEmbedChargeRingWdgt.updateChargeDeclaration @dragEmbedChargeRingDeclared
     else if @dragEmbedChargeRingWdgt?
       @dragEmbedChargeRingWdgt.fullDestroy()
-      @dragEmbedChargeRingWdgt = nil
+      @dragEmbedChargeRingWdgt = undefined
 
     # armed label — a StringWdgt overlay near the cursor
     if @dragEmbedLabelDeclared?
       if @dragEmbedLabelWdgt? and @dragEmbedLabelWdgt.text isnt @dragEmbedLabelDeclared.text
         @dragEmbedLabelWdgt.fullDestroy()
-        @dragEmbedLabelWdgt = nil
+        @dragEmbedLabelWdgt = undefined
       unless @dragEmbedLabelWdgt?
         @dragEmbedLabelWdgt = new StringWdgt @dragEmbedLabelDeclared.text
         @dragEmbedLabelWdgt._ephemeralOverlay = true
@@ -1550,7 +1550,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @dragEmbedLabelWdgt._applyMoveTo @dragEmbedLabelDeclared.point
     else if @dragEmbedLabelWdgt?
       @dragEmbedLabelWdgt.fullDestroy()
-      @dragEmbedLabelWdgt = nil
+      @dragEmbedLabelWdgt = undefined
 
     # lock badge — a small StringWdgt at the reluctant (view-mode) target's title-bar right
     if @dragEmbedLockBadgeDeclared?
@@ -1567,9 +1567,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @dragEmbedLockBadgeWdgt._applyMoveTo new Point(box.right() - 70, box.top() + 4)
     else if @dragEmbedLockBadgeWdgt?
       @dragEmbedLockBadgeWdgt.fullDestroy()
-      @dragEmbedLockBadgeWdgt = nil
+      @dragEmbedLockBadgeWdgt = undefined
 
-  # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or nil. editorFocusWdgt
+  # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or undefined. editorFocusWdgt
   # is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a SELECTED
   # op-target within an active editing context, so the indicator frames "this is what an op will act on":
   #   TEXT      — a caret is up editing exactly this focus widget. They coincide: the click that sets
@@ -1585,12 +1585,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # Stale-pointer guarded (belt to D2b's destroy-time clear): the target must still be attached here.
   _widgetBeingEdited: ->
     focus = @editorFocusWdgt
-    return nil unless focus?
+    return undefined unless focus?
     # Never frame the desktop itself: a click on empty desktop sets editorFocusWdgt = world (the world
     # is not editor-focus-excluded), and the world is a PanelWdgt with editing enabled, so the citizen
     # branch below would otherwise outline the WHOLE screen. The world is never a "widget being edited".
-    return nil if focus is @
-    return nil unless focus.root() is @
+    return undefined if focus is @
+    return undefined unless focus.root() is @
     # A transform ISLAND (the sugar wrapper setRotationDegrees / setScaleFactor materialises, or an explicit
     # TransformFrameWdgt) is structural chrome around content -- never editor content ITSELF. A MOVE of a
     # tilted widget makes the island the focus (a click INTO the content focuses the content directly), and
@@ -1598,10 +1598,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # drawing an AXIS-ALIGNED box around the island's own (un-rotated) bounds (the rotation lives in its
     # transformSpec, not its @bounds). Resolve to the wrapped CONTENT instead: it draws its frame WARPED
     # inside the island buffer, so a tilted editor is framed exactly like the non-tilted one. Loop for
-    # nested islands (rotate-then-scale can wrap twice); an empty wrapper resolves to nil.
+    # nested islands (rotate-then-scale can wrap twice); an empty wrapper resolves to undefined.
     while focus.resolvesEditorSelectionToContent?()
       focus = focus.childrenNotHandlesNorCarets()?[0]
-      return nil unless focus?
+      return undefined unless focus?
     # A menu/list ROW (MenuItemWdgt) is the selectable UNIT, and it is FULL-WIDTH in its list; but a click
     # lands on its tight LABEL child (the deepest widget). Resolve the label up to the row so the selection
     # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
@@ -1622,11 +1622,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     container = focus.parent
     while container? and container isnt @
       if container.providesAmenitiesForEditing is true
-        return (if container.dragsDropsAndEditingEnabled then focus else nil)
+        return (if container.dragsDropsAndEditingEnabled then focus else undefined)
       if container.providesAmenitiesForEditing is false
-        return nil
+        return undefined
       container = container.parent
-    nil
+    undefined
 
   # Recompute, once per cycle just before paint, which widget is generically SELECTED for editing
   # (_widgetBeingEdited, §5.D D-3/D21) and cache it for the per-widget paint-time selection overlay
@@ -1861,7 +1861,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     WorldWdgt.frameCount++
 
     WorldWdgt.dateOfPreviousCycleStart = WorldWdgt.dateOfCurrentCycleStart
-    WorldWdgt.dateOfCurrentCycleStart = nil
+    WorldWdgt.dateOfCurrentCycleStart = undefined
 
   # Widget stepping:
   _runChildrensStepFunction: ->
@@ -1926,7 +1926,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   _stepWidget: (whichWidget) ->
     if whichWidget.onNextStep
       nxt = whichWidget.onNextStep
-      whichWidget.onNextStep = nil
+      whichWidget.onNextStep = undefined
       nxt.call whichWidget
     if !whichWidget.step?
       debugger
@@ -2048,7 +2048,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   _initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
-      @inputDOMElementForVirtualKeyboard = nil
+      @inputDOMElementForVirtualKeyboard = undefined
     unless (WorldWdgt.preferencesAndSettings.isTouchDevice and WorldWdgt.preferencesAndSettings.useVirtualKeyboard)
       return
     @inputDOMElementForVirtualKeyboard = document.createElement "input"
@@ -2367,9 +2367,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # settle/pass — the hand's public self-settling drop() is exactly what a cleanup wants here.
     @hand.drop()
     @hand.mouseOverList.clear()
-    @hand.nonFloatDraggedWdgt = nil
+    @hand.nonFloatDraggedWdgt = undefined
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
-    @editorFocusWdgt = nil
+    @editorFocusWdgt = undefined
 
   # There is something special about the
   # "world" version of fullDestroyChildren:
@@ -2533,7 +2533,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     result = Deserializer.deserialize envelope
     shells = result.shells or []
     resolve = (refOrVal) ->
-      return nil unless refOrVal?
+      return undefined unless refOrVal?
       return shells[refOrVal.$r] if refOrVal.$r?
       return WellKnownObjects.resolve refOrVal.$wk if refOrVal.$wk?
       refOrVal
@@ -2566,19 +2566,19 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     #    Clear each child's parent first (deserialize pre-set it to {"$wk":"world"}) so the
     #    attach is a clean re-parent. The SNAPSHOT's attachment state is authoritative:
     #    re-arm each child's deserialized spec explicitly, else the add would resolve
-    #    defaultLayoutSpecWhenAddedTo (nil) over it — disarming the furniture's corner
+    #    defaultLayoutSpecWhenAddedTo (undefined) over it — disarming the furniture's corner
     #    knobs, and downgrading every stretch record to a geometry re-derive (the fraction
     #    drift the record law forbids).
     @_settleLayoutsAfter =>
       for childRef in (section.children or [])
         child = resolve childRef
         if child?
-          child.parent = nil
+          child.parent = undefined
           @_addNoSettle child, layoutSpec: child.layoutSpec
     # 8. desktop colour + wallpaper (sequential self-settling public ops).
     restoredColor = resolve section.desktopColor
     @setColor restoredColor if restoredColor?
-    @wallpaper.setPattern nil, nil, section.wallpaperPatternName if section.wallpaperPatternName? and @wallpaper?
+    @wallpaper.setPattern undefined, undefined, section.wallpaperPatternName if section.wallpaperPatternName? and @wallpaper?
     # 9. install the snapshot's source-edit registry (its class edits are already replayed;
     #    this makes the loaded world's edit history authoritative), then repaint now and again
     #    once any async image/canvas assets have decoded.
@@ -2642,26 +2642,26 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # soak below is correct in EVERY build (no overlay ⇒ nothing to reset) and the seam is gone.
     # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
     # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
-    # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute nil next cycle
+    # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute undefined next cycle
     # regardless; the selected widget's own repaint clears its overlay.
-    @_editorSelectedWidget = nil
+    @_editorSelectedWidget = undefined
     # DANGLING WORLD SLOTS. These are bare world fields holding a widget that fullDestroyChildren
     # above just destroyed, so each would keep a DEAD reference into the next test (or, on the load
     # path, into the rest of the session). StorageSorter's furniture marking reads world[slot] and
     # simpleEditorTemplates unconditionally, so a dead ref there is walked every sort. The loader
     # re-binds both from the snapshot afterwards (step 6), which is exactly the teardown-empties /
     # caller-fills split this core is built on.
-    @[slot] = nil for slot in Serializer.WORLD_APP_SLOTS
-    @simpleEditorTemplates = nil
+    @[slot] = undefined for slot in Serializer.WORLD_APP_SLOTS
+    @simpleEditorTemplates = undefined
     # the error console is worse than a dead ref: _showErrorsHappenedInRepaintingStepInPreviousCycle
-    # only builds one `if !@errorConsole?`, so a destroyed-but-non-nil console makes every later
+    # only builds one `if !@errorConsole?`, so a destroyed-but-non-undefined console makes every later
     # paint error in the page report into a dead widget -- silently swallowing the errors the
     # headless runners' fail-gate exists to catch. For a real user past a snapshot load, it silently
     # swallows every paint error for the rest of the session.
-    @errorConsole = nil
+    @errorConsole = undefined
     # the last text the user edited (used by the document editor's align ops) -- a bare ref to a
     # widget fullDestroyChildren just destroyed.
-    @lastEditedText = nil
+    @lastEditedText = undefined
     # EPHEMERAL WORLD-LEVEL COLLECTIONS, same shape as the highlight/pinout sets above: none is
     # emptied by fullDestroyChildren (they are world state, not tree state) and none is emptied by
     # Widget._destroyNoSettle (which only unregisters from steppingWdgts / keyboardEventsReceivers /
@@ -2908,7 +2908,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   _editTearingAndAddingCaretWith: (aStringWidgetOrTextWidget, tearDownCaret, addCaret) ->
     # first off, if the Widget is not editable
     # then there is nothing to do
-    # return nil  unless aStringWidgetOrTextWidget.isEditable
+    # return undefined  unless aStringWidgetOrTextWidget.isEditable
 
     # there is only one caret in the World, so destroy
     # the previous one if there was one.
@@ -2976,7 +2976,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard.blur()
       document.body.removeChild @inputDOMElementForVirtualKeyboard
-      @inputDOMElementForVirtualKeyboard = nil
+      @inputDOMElementForVirtualKeyboard = undefined
     @worldCanvas.focus()
 
   # Chokepoint mark for the eager storage sort (StorageSorter): called after

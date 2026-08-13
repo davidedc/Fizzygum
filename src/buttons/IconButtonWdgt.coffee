@@ -18,7 +18,7 @@ class IconButtonWdgt extends ButtonWdgt
   # hover / press colour for the family (orange); a subclass overrides this
   # field if it wants a different one (e.g. CloseIconButtonWdgt → red).
   iconHoverColor: Color.create 255, 153, 0
-  iconToolTipMessage: nil
+  iconToolTipMessage: undefined
 
   # Frame-bar chrome, never editor content (§5.D D-3/D21 correction 1). This whole family IS the window
   # chrome (close / collapse / uncollapse / edit — the only IconButtonWdgt subclasses). Clicking the
@@ -39,7 +39,7 @@ class IconButtonWdgt extends ButtonWdgt
     @color_pressed = @color_hover
     @appearance = @createAppearance()
     # set AFTER super on purpose: ButtonWdgt's constructor has @toolTipMessage
-    # as a parameter that defaults back to nil, so a plain toolTipMessage:
+    # as a parameter that defaults back to undefined, so a plain toolTipMessage:
     # prototype-field override would be clobbered — hence the separate
     # iconToolTipMessage source copied across here.
     @toolTipMessage = @iconToolTipMessage

@@ -35,7 +35,7 @@ class FolderWindowWdgt extends FrameWdgt
     # here is a menuItem. We take that parameter away
     # in that case.
     if referenceName? and typeof(referenceName) != "string"
-      referenceName = nil
+      referenceName = undefined
 
     widgetToAdd = new IconicDesktopSystemFolderShortcutWdgt @, referenceName
     # this "add" is going to try to position the reference

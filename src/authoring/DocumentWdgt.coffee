@@ -24,7 +24,7 @@ class DocumentWdgt extends FrameWdgt
   _makeStartingPayload: ->
     scrollPanel = new SimpleDocumentScrollPanelWdgt
     startingContent = new SimpleTextWdgt(
-      @startingText,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      @startingText,undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     scrollPanel.setContents startingContent, 5
     startingContent.isEditable = true
     startingContent.enableSelecting()

@@ -1,8 +1,8 @@
 class AxisWdgt extends Widget
 
-  majorDimLine: nil
-  ticksRectangles: nil
-  labelsTextBoxes: nil
+  majorDimLine: undefined
+  ticksRectangles: undefined
+  labelsTextBoxes: undefined
   min: 0
   max: 0
 

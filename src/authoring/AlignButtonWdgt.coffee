@@ -5,8 +5,8 @@
 
 class AlignButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  alignDirectMethod: nil        # e.g. "alignLeft"
-  layoutAlignSetterMethod: nil  # e.g. "setAlignmentToLeft"
+  alignDirectMethod: undefined        # e.g. "alignLeft"
+  layoutAlignSetterMethod: undefined  # e.g. "setAlignmentToLeft"
 
   mouseClickLeft: ->
     lastClicked = world.editorFocusWdgt

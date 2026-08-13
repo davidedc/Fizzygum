@@ -27,10 +27,10 @@
 class StretchableCanvasWdgt extends CanvasWdgt
 
   anythingPaintedYet: false
-  extentWhenCanvasGotDirty: nil
+  extentWhenCanvasGotDirty: undefined
 
-  behindTheScenesBackBuffer: nil
-  behindTheScenesBackBufferContext: nil
+  behindTheScenesBackBuffer: undefined
+  behindTheScenesBackBufferContext: undefined
 
 
   # No changes of position or extent should be
@@ -169,7 +169,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
   # Runs inside the drop's single settle: re-home the dropped widget through the non-settling add core.
   _reactToChildDropped: (droppedWidget) ->
-    @_paintImage droppedWidget.position(), droppedWidget.fullImage(nil, false, true)
+    @_paintImage droppedWidget.position(), droppedWidget.fullImage(undefined, false, true)
     world._addNoSettle droppedWidget, beingDropped: true
   
   _reLayout: (newBoundsForThisLayout) ->

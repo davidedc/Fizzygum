@@ -3,9 +3,9 @@
 # see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
 class WheelInputEvent extends MouseInputEvent
 
-  deltaX: nil
-  deltaY: nil
-  deltaZ: nil
+  deltaX: undefined
+  deltaY: undefined
+  deltaZ: undefined
 
   constructor: (@deltaX, @deltaY, @deltaZ, button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time) ->
     super button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time

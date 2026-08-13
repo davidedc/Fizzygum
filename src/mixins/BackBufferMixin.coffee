@@ -40,17 +40,17 @@ BackBufferMixin =
       # widget with all of the subwidgets. I.e. for an inspector, this will only
       # contain the background of the window pane. Not any of its contents.
       # for the worldWidget, this only contains the background
-      backBuffer: nil
-      backBufferContext: nil
+      backBuffer: undefined
+      backBufferContext: undefined
 
       # black-silhouette twin of backBuffer for the shadow pass (the shadow-paint contract:
       # per-pixel coverage, chroma always black — see Widget.coffee "How the shadow painting
       # works"). Cached KEYED ON THE SOURCE CANVAS OBJECT: text/palette buffers are immutable
       # (a content change swaps in a different canvas), so identity is a complete staleness
-      # check for them; CanvasWdgt mutates its raster IN PLACE, so its pixel mutators nil
+      # check for them; CanvasWdgt mutates its raster IN PLACE, so its pixel mutators undefined
       # the twin explicitly. Serialization transients (Widget's list), like backBuffer.
-      _backBufferShadowSilhouette: nil
-      _backBufferShadowSilhouetteSource: nil
+      _backBufferShadowSilhouette: undefined
+      _backBufferShadowSilhouetteSource: undefined
 
       _shadowSilhouetteOfBackBuffer: ->
         if !@_backBufferShadowSilhouette? or @_backBufferShadowSilhouetteSource != @backBuffer
@@ -114,15 +114,15 @@ BackBufferMixin =
         @justBeforeBeingPainted?()
 
         if !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()
-          return nil
+          return undefined
 
         [@backBuffer, @backBufferContext] = @_createRefreshOrGetBackBuffer()
 
         if !@backBuffer?
-          return nil
+          return undefined
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-        return nil if w < 1 or h < 1 or area.isEmpty()
+        return undefined if w < 1 or h < 1 or area.isEmpty()
 
         aContext.save()
 

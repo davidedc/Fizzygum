@@ -46,11 +46,11 @@ const STINKS = [
   { id: 'debugger-statement', baseline: 33,   // Pharo: ReCodeCruftLeftInMethodsRule; tightened 36->33 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
     why: 'a debugger statement is left-in debug cruft; it hard-stops execution whenever devtools are open',
     re: /^\s*debugger\b/ },
-  { id: 'undefined-literal', baseline: 83,   // tightened 89->83 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
-    why: "the codebase uses `nil` (src/boot/globalFunctions.coffee), never `undefined` — a CLAUDE.md convention that until now was manual-only",
-    re: /\bundefined\b/ },
-  { id: 'null-literal', baseline: 8,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug — see below)
-    why: "the codebase uses `nil` (which IS undefined), never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
+  // `undefined-literal` (baseline 83) was DELETED on 2026-08-13: it enforced `nil` OVER `undefined`,
+  // and the `nil` global it protected has been retired, so the rule now polices the opposite of the
+  // convention. Its replacement is `nil-literal` below — same intent, inverted direction.
+  { id: 'null-literal', baseline: 8,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug)
+    why: "the codebase uses `undefined` as its ONE absence value, never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
     re: /\bnull\b/ },
   { id: 'wall-clock', baseline: 19,
     why: 'Date.now()/new Date() in framework code breaks event-stream determinism (Fizzygum-tests/DETERMINISM.md; multi-click recognition keys off EVENT timestamps, never the wall clock)',

@@ -6,8 +6,8 @@
 class ColorPromptWdgt extends PromptWdgt
 
   # the picker is this prompt's value editor (color has no text field, so the
-  # base's tempPromptEntryField stays nil); declared for duplicate remapping.
-  colorPicker: nil
+  # base's tempPromptEntryField stays undefined); declared for duplicate remapping.
+  colorPicker: undefined
 
   constructor: (widgetOpeningThePopUp, msg, target, callback, defaultContents) ->
     super widgetOpeningThePopUp, msg, target, callback, defaultContents

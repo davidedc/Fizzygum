@@ -5,7 +5,7 @@ class SliderNodeCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new SliderNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWdgt = new SliderWdgt nil, nil, nil, nil, nil, true
+    switcherooWdgt = new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
     return switcherooWdgt
 
 

@@ -6,9 +6,9 @@
 
 class Point3D
 
-  x: nil
-  y: nil
-  z: nil
+  x: undefined
+  y: undefined
+  z: undefined
 
   constructor: (@x = 0, @y = 0, @z = 0) ->
 

@@ -3,7 +3,7 @@
 # source through `new Class(src, true, false)` (generate-precompiled mode: it compiles
 # each fragment but eval's nothing) to catch CoffeeScript syntax errors at build time,
 # before they would otherwise only surface at in-browser boot. That checker provides a
-# tiny shim for the globals this class touches at construction time (window, nil,
+# tiny shim for the globals this class touches at construction time (window, undefined,
 # compileFGCode, JSSourcesContainer, srcLoadCompileDebugWrites). If you make the
 # constructor / its helpers read a NEW global, add a matching stand-in to that shim or
 # the gate will break with an operational (exit 2) error.
@@ -11,13 +11,13 @@
 class Class
 
   @allClasses: []
-  nonStaticPropertiesSources: nil
-  staticPropertiesSources: nil
+  nonStaticPropertiesSources: undefined
+  staticPropertiesSources: undefined
   name: ""
-  superClassName: nil
-  augmentedWith: nil
-  superClass: nil
-  subClasses: nil
+  superClassName: undefined
+  augmentedWith: undefined
+  superClass: undefined
+  subClasses: undefined
   classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
   propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *(.*)/m
   augmentRegex: /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
@@ -228,7 +228,7 @@ class Class
         console.log "propertyFirstLineOfBody: \n" + propertyFirstLineOfBody
 
       propertyBodyExceptFirstLine = ""
-      if returned = @findUpTo remainingSourceLines, @topLevelCommentRegex, nil, @propertyRegex, true
+      if returned = @findUpTo remainingSourceLines, @topLevelCommentRegex, undefined, @propertyRegex, true
         propertyBodyExceptFirstLine = returned[1]
         remainingSourceLines = returned[3] # leave the next top level comment or property regex IN
 

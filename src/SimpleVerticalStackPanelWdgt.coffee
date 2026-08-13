@@ -43,7 +43,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
     # The vertical stack lays children in sibling order, so inserting means counting up to the child
     # at the same height and inserting after it -- add() takes a position argument for this.
-    positionNumberAmongSiblings = nil
+    positionNumberAmongSiblings = undefined
     if (childrenNotHandlesNorCarets.length > 0) and (positionOnScreen instanceof Point)
       positionNumberAmongSiblings = 0
       for w in childrenNotHandlesNorCarets
@@ -83,16 +83,16 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # non-settling core: this runs from inside the arrange (rule [G]); the spec is
         # detached FIRST so the teardown's parent-invalidate takes the free-floating
         # silent no-op instead of the mid-pass FLOWRULE throw (see _insertAddersSuchThat)
-        C._setLayoutSpec nil
+        C._setLayoutSpec undefined
         C._fullDestroyNoSettle()
       return
     if @children.length == 0
       @_addNoSettle new LayoutElementAdderOrDropletWdgt
     # membership = any real (non-inert) child: content children need no particular spec —
-    # a just-dropped one is adopted by this very arrange. axis nil ⇒ spec-less insert.
+    # a just-dropped one is adopted by this very arrange. axis undefined ⇒ spec-less insert.
     contentMember = (m) -> !m.isLayoutInert?()
-    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", nil, contentMember
-    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", nil, contentMember
+    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", undefined, contentMember
+    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", undefined, contentMember
 
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
   # contents. See Widget._reLayoutChildren.
@@ -233,9 +233,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # and the frame wants the NATURAL children union.
   subWidgetsMergedPreferredBounds: (availW) ->
     kids = @childrenNotHandlesNorCarets()
-    return nil if kids.length == 0
+    return undefined if kids.length == 0
     avail = (availW ? @width()) - 2 * @padding
-    merged = nil
+    merged = undefined
     cumH = 0
     for widget, i in kids
       if @constrainContentWidth
@@ -275,7 +275,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     childrenNotHandlesNorCarets.forEach (widget, childIndex) =>
       # top border above the first element, inter-element gap above the rest
       verticalPadding += if childIndex == 0 then @padding else @interElementGap()
-      elementHeight = nil   # set in the else-branch from the handed-forward resize result; see stackHeight += below
+      elementHeight = undefined   # set in the else-branch from the handed-forward resize result; see stackHeight += below
 
       if !@constrainContentWidth
         # If the stack doesn't constrain child widths, alignment can't be honored consistently (e.g.

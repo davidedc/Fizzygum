@@ -15,7 +15,7 @@
 
 class TreeNode
 
-  parent: nil
+  parent: undefined
   # "children" is an ordered list of the immediate
   # children of this node. First child is at the
   # back relative to other children, last child is at the
@@ -37,13 +37,13 @@ class TreeNode
   # Note that when you add a widget A to a widget B, it doesn't
   # mean that A is contained in B. The two potentially might
   # not even overlap.
-  children: nil
+  children: undefined
 
-  cachedRoot: nil
-  checkRootCache: nil
+  cachedRoot: undefined
+  checkRootCache: undefined
 
-  checkFirstParentClippingAtBoundsCache: nil
-  cachedFirstParentClippingAtBounds: nil
+  checkFirstParentClippingAtBoundsCache: undefined
+  cachedFirstParentClippingAtBounds: undefined
 
   gcReferenceExaminedSessionIdMark: 0
 
@@ -111,7 +111,7 @@ class TreeNode
   removeChild: (node) ->
     WorldWdgt.noteStructureChange()
     @children.remove node
-    node.parent = nil
+    node.parent = undefined
 
   markReferenceAsVisited: (newGcSessionId) ->
     @gcReferenceExaminedSessionIdMark = newGcSessionId
@@ -203,7 +203,7 @@ class TreeNode
   # of children positions relative to the world.
   # Meaning that if the widget is not attached to the
   # world or if it's attached to the hand, then
-  # nil is returned.
+  # undefined is returned.
   # Example: [0, 2, 1] means that this widget is
   # at
   #  world.children[0].children[2].children[1]
@@ -223,7 +223,7 @@ class TreeNode
         pathSoFar.lengthOfChildrenArrays.reverse()
         return pathSoFar
       else
-        return nil
+        return undefined
 
   
   # Returns all the internal AND terminal nodes in the subtree starting
@@ -257,7 +257,7 @@ class TreeNode
     # children, we add ourselves to the last position
     # of the list since this node is at the bottom of all of
     # its children...
-    if predicate.call nil, @
+    if predicate.call undefined, @
       collected.push @ # include myself
 
     return collected
@@ -269,7 +269,7 @@ class TreeNode
   # child before top child). Cheaper than @allChildrenBottomToTop(): no
   # intermediary arrays are built.
   forAllChildrenBottomToTop: (aFunction) ->
-    aFunction.call nil, @
+    aFunction.call undefined, @
     if @children.length
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
@@ -297,13 +297,13 @@ class TreeNode
     result = []
     if @parent?
       result = @parent.allParentsBottomToTopSuchThat predicate
-    if predicate.call(nil, @)
+    if predicate.call(undefined, @)
       result.push @
     result
 
   allParentsTopToBottomSuchThat: (predicate) ->
     collected = []
-    if predicate.call nil, @
+    if predicate.call undefined, @
       collected = [@] # include myself
     if @parent?
       collected = collected.concat @parent.allParentsTopToBottomSuchThat predicate
@@ -380,28 +380,28 @@ class TreeNode
 
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0
-    indexOfWidget = nil
+    indexOfWidget = undefined
     for eachSibling in @parent.children
       if eachSibling == @
         break
-      if predicate.call nil, eachSibling
+      if predicate.call undefined, eachSibling
         indexOfWidget = theCount
       theCount++
 
     if indexOfWidget?
       return @parent.children[indexOfWidget]
     else
-      return nil
+      return undefined
 
   firstSiblingAfterMeSuchThat: (predicate) ->
     searchActuallyOngoing = false
     for eachSibling in @parent.children
       if searchActuallyOngoing
-        if predicate.call nil, eachSibling
+        if predicate.call undefined, eachSibling
           return eachSibling
       if eachSibling == @
         searchActuallyOngoing = true
-    return nil
+    return undefined
 
   childrenNotHandlesNorCarets: (whereToAct = @) ->
     whereToAct.children.filter (w) ->
@@ -417,11 +417,11 @@ class TreeNode
   nthChildSuchThat: (n, predicate) ->
     theCount = 0
     for w in @children
-      if predicate.call nil, w
+      if predicate.call undefined, w
         theCount++
         if theCount is n
           return w
-    return nil
+    return undefined
 
   firstChildSuchThat: (predicate) ->
     @nthChildSuchThat 1, predicate
@@ -433,7 +433,7 @@ class TreeNode
       else
         return widgetToStartFrom.parent.SLOWfirstParentClippingAtBounds()
     else
-      return nil
+      return undefined
 
   firstParentClippingAtBounds: ->
     if @checkFirstParentClippingAtBoundsCache == WorldWdgt.structureVersion
@@ -449,7 +449,7 @@ class TreeNode
       else
         result = @parent.firstParentClippingAtBounds()
     else
-      result =  nil
+      result =  undefined
 
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWfirstParentClippingAtBounds()
@@ -470,7 +470,7 @@ class TreeNode
     for eachConstructor in constructors
       if @ instanceof eachConstructor
         return [@, eachConstructor]
-    return nil  unless @parent
+    return undefined  unless @parent
     @parent.parentThatIsA constructors...
 
 
@@ -485,12 +485,12 @@ class TreeNode
   topWdgtSuchThat: (predicate) ->
     # base case - I am a leaf child, so I just test
     # the predicate on myself and return myself
-    # if I satisfy, else I return nil
+    # if I satisfy, else I return undefined
     if @children.length == 0
-      if predicate.call nil, @
+      if predicate.call undefined, @
         return @
       else
-        return nil
+        return undefined
     # if I have children, then start to test from
     # the top one (the last one in the array)
     # and proceed to test "towards the back" i.e.
@@ -503,12 +503,12 @@ class TreeNode
       if foundWidget?
         return foundWidget
     # now that all children are tested, test myself
-    if predicate.call nil, @
+    if predicate.call undefined, @
       return @
 
     # ok none of my children nor me test positive,
-    # so return nil.
-    return nil
+    # so return undefined.
+    return undefined
 
   topmostChildSuchThat: (predicate) ->
     # start to test from
@@ -519,15 +519,15 @@ class TreeNode
     # over.
     for widgetNumber in [@children.length-1..0] by -1
       widget = @children[widgetNumber]
-      if predicate.call nil, widget
+      if predicate.call undefined, widget
         return widget
     # ok none of my children test positive,
-    # so return nil.
-    return nil
+    # so return undefined.
+    return undefined
 
   collectAllChildrenBottomToTopSuchThat: (predicate) ->
     collected = []
-    if predicate.call(nil, @)
+    if predicate.call(undefined, @)
       collected = [@] # include myself
     @children.forEach (child) ->
       collected = collected.concat(child.collectAllChildrenBottomToTopSuchThat(predicate))

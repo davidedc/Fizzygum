@@ -38,11 +38,11 @@
 
 class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
-  target: nil
-  environment: nil
-  fontSize: nil
-  title: nil
-  label: nil
+  target: undefined
+  environment: undefined
+  fontSize: undefined
+  title: undefined
+  label: undefined
   _selectsItemsOnClick: false
   # A menu / list-contents row-stack is the internal body of a pop-up or scroll
   # frame — it accepts no drops and imposes no width ratio on its rows, unlike a
@@ -60,7 +60,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     # padding 2 = the menu's tight border; rows stack FLUSH inside it (see
     # interElementGap below). No extent/color through the base ctor — the look
     # is set right here.
-    super nil, nil, 2
+    super undefined, undefined, 2
     @target = opts.target
     @environment = opts.environment
     @fontSize = opts.fontSize
@@ -142,7 +142,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
   prependLine: (height) ->
     item = @createLine height
-    @__add item, nil, 0
+    @__add item, undefined, 0
 
   # Builds a MenuItemWdgt from a MenuItemSpec and this panel's context: the font
   # (this panel's @fontSize, or the global default) and -- note the historical
@@ -182,7 +182,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     @__add @createMenuItem @_menuItemSpecFrom label, target, action, opts
 
   prependMenuItem: (label, target, action, opts = {}) ->
-    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), nil, 0
+    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), undefined, 0
 
   _menuItemSpecFrom: (label, target, action, opts) ->
     new MenuItemSpec label, opts.closesUnpinnedPopUps, target, action,

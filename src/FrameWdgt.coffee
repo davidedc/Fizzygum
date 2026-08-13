@@ -26,28 +26,28 @@ class FrameWdgt extends Widget
 
   # the title bar -- ONE child (FrameBarWdgt) owning the five title-strip
   # pieces and the title half of the skin
-  bar: nil
+  bar: undefined
   # ALIASES into the bar's pieces: same instances, frame-side names -- these are
   # load-bearing contracts (MacroToolkit + the macro tests reach win.label /
   # win.closeButton / win.editButton / win.collapseUncollapseSwitchButton /
   # win.titlebarBackground; FolderWindowWdgt supplies its own closeButton;
   # showEditModeInBar drives @editButton). Kept in sync at the three mutation
   # points: build, edit-button destroy on collapse, recreate on uncollapse.
-  label: nil
-  closeButton: nil
-  editButton: nil
-  collapseUncollapseSwitchButton: nil
-  titlebarBackground: nil
-  resizer: nil
-  padding: nil
-  contents: nil
-  defaultContents: nil
+  label: undefined
+  closeButton: undefined
+  editButton: undefined
+  collapseUncollapseSwitchButton: undefined
+  titlebarBackground: undefined
+  resizer: undefined
+  padding: undefined
+  contents: undefined
+  defaultContents: undefined
   # the toolbar-slot's occupant (Frame-model plan §5.C): a ToolbarWdgt the
   # CONTENT declares (@contents.buildToolbar?()), docked per its dockSide,
   # STABLE across mode flips -- shown in edit mode, COLLAPSED (not removed) in
-  # view mode, so flipping the pencil never churns the tree. nil when the
+  # view mode, so flipping the pencil never churns the tree. undefined when the
   # content declares none (plain content, the empty-window placeholder).
-  toolbar: nil
+  toolbar: undefined
 
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
@@ -264,7 +264,7 @@ class FrameWdgt extends Widget
       # remount (see add's isSameContentRemount note): this mount's first
       # placement then re-captures and re-binds. A fresh spec is already
       # unlatched, so this is a no-op for the universal fresh-content case.
-      @contents._contentStackSpec.desiredWidth = nil
+      @contents._contentStackSpec.desiredWidth = undefined
 
     @padding = 5
     # TODO this looks better:
@@ -297,7 +297,7 @@ class FrameWdgt extends Widget
     # here is a menuItem. We take that parameter away
     # in that case.
     if referenceName? and typeof(referenceName) != "string"
-      referenceName = nil
+      referenceName = undefined
       placeToDropItIn = world
 
     # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
@@ -374,7 +374,7 @@ class FrameWdgt extends Widget
   # paintingOverlay() capability chain (§5.D): a paint toolbar resolving its
   # injection target at press time asks the frame, which asks its content
   # (container -> canvas -> glass). Frames over non-paintable content answer
-  # nil through the ?. -- and a FLOATING paint toolbar's own frame answers nil
+  # undefined through the ?. -- and a FLOATING paint toolbar's own frame answers undefined
   # too (its content IS the toolbar), which is what routes the floating press
   # to the focus pointer instead (PaintToolbarWdgt.resolveInjectionTarget).
   paintingOverlay: ->
@@ -588,7 +588,7 @@ class FrameWdgt extends Widget
       # a duplicate first-placement pass (one settle re-visit per drop, probe-verified).
       isSameContentRemount = aWdgt == @contents
       # detach the OLD occupant -- but only if it is actually MY child:
-      # TreeNode.removeChild nils node.parent unconditionally, so in the ctor
+      # TreeNode.removeChild clears node.parent unconditionally, so in the ctor
       # case (@contents pre-assigned to the incoming widget) removing a widget
       # that still belongs to ANOTHER parent would clobber that parentage --
       # Widget._addNoSettle below would then see no previousParent, so the real
@@ -613,7 +613,7 @@ class FrameWdgt extends Widget
       # (a fresh spec is already unlatched; this covers content carrying a spec from a prior
       # life) -- but NOT for a same-widget chrome-rebuild re-add (§9.7-Q above): the standing
       # capture is exactly the placement this mount already has.
-      aWdgt._contentStackSpec.desiredWidth = nil unless isSameContentRemount
+      aWdgt._contentStackSpec.desiredWidth = undefined unless isSameContentRemount
       super aWdgt, position: position, layoutSpec: aWdgt._contentStackSpec, beingDropped: beingDropped
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
@@ -647,7 +647,7 @@ class FrameWdgt extends Widget
       # collapse's settle, so the public self-settling destroy() would throw under the
       # single-mutation tier. The enclosing collapse settle covers the re-layout.
       @bar._destroyEditButtonNoSettle()
-      @editButton = nil
+      @editButton = undefined
       # a collapsed window is JUST its titlebar -- the docked toolbar hides with
       # the content (restored per the content's mode on uncollapse below)
       @toolbar?._collapseNoSettle()
@@ -691,7 +691,7 @@ class FrameWdgt extends Widget
   # rebuild then makes the NEW content's variant (or none)
   _destroyToolbarNoSettle: ->
     @toolbar?._destroyNoSettle()
-    @toolbar = nil
+    @toolbar = undefined
 
   # The frame's own context-menu entries (on top of the generic Widget set):
   # the toolbar-slot's dock-side chooser and undock action, on the frame's menu
@@ -726,7 +726,7 @@ class FrameWdgt extends Widget
   # simply stays a normal toolbar window.
   dockToolbarMenu: (widgetOpeningThePopUp, targetWidget, a, b, c) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    currentSide = if @_dockedToolbarShowing() then @toolbar.dockSide else nil
+    currentSide = if @_dockedToolbarShowing() then @toolbar.dockSide else undefined
     menu.addMenuItem "top", @, "dockToolbarTop"  if currentSide isnt "top"
     menu.addMenuItem "left", @, "dockToolbarLeft"  if currentSide isnt "left"
     menu.addMenuItem "right", @, "dockToolbarRight"  if currentSide isnt "right"
@@ -779,7 +779,7 @@ class FrameWdgt extends Widget
     toolbar = @toolbar
     stripPosition = toolbar.position()
     stripExtent = toolbar.extent()
-    @toolbar = nil
+    @toolbar = undefined
     # the FrameWdgt ctor re-homes the toolbar out of me (Widget._addNoSettle
     # notifies my _reactToChildRemoved, so my chrome re-fits over the freed
     # region)
@@ -918,10 +918,10 @@ class FrameWdgt extends Widget
           @toolbar._collapseNoSettle()
 
     if !@resizer?
-      # Attach the resizer, then record it. @resizer stays nil DURING its own add so the
+      # Attach the resizer, then record it. @resizer stays undefined DURING its own add so the
       # `@resizer?._moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
       # itself -- it only re-fronts the resizer when LATER content is added. (Byte-identical to the
-      # old `@resizer = new HandleWdgt @`, whose in-constructor add also ran while @resizer was nil.)
+      # old `@resizer = new HandleWdgt @`, whose in-constructor add also ran while @resizer was undefined.)
       resizer = new HandleWdgt
       @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer

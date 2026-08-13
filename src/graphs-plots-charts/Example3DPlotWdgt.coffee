@@ -1,14 +1,14 @@
 class Example3DPlotWdgt extends Widget
 
 
-  vertices: nil
-  quads: nil
-  currentAngle: nil
-  planeGrid: nil
-  graphGrid: nil
-  previousMousePoint: nil
+  vertices: undefined
+  quads: undefined
+  currentAngle: undefined
+  planeGrid: undefined
+  graphGrid: undefined
+  previousMousePoint: undefined
   autoRotate: true
-  ratio: nil
+  ratio: undefined
 
   # a parameter for a slider to control,
   # so to show interactive graph/plot
@@ -107,7 +107,7 @@ class Example3DPlotWdgt extends Widget
   _freeFromRatioConstraints: ->
     if @_contentStackSpec?
       @_contentStackSpec.canSetHeightFreely = true
-      @ratio = nil
+      @ratio = undefined
 
       availableHeight = world.height() - 20
       if @parent.height() > availableHeight

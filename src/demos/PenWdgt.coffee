@@ -10,7 +10,7 @@
 class PenWdgt extends Widget
   
   heading: 0
-  penSize: nil
+  penSize: undefined
   isDown: true
   penPoint: 'tip' # or 'center'
   

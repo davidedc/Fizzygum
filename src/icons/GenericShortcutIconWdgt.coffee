@@ -1,6 +1,6 @@
 class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
 
-  referenceArrowIcon: nil
+  referenceArrowIcon: undefined
 
   # (ctor, the settling _buildAndConnectChildren wrapper, the square-sizing surface and the
   # children-staining setColor live in GenericCompositeIconWdgt)

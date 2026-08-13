@@ -13,7 +13,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
 
 
     startingContent = new SimpleTextWdgt(
-      "Welcome to Fizzygum",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Welcome to Fizzygum",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
@@ -21,7 +21,7 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     sdspw.add startingContent
 
     startingContent = new SimpleTextWdgt(
-      "version 1.1.12",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "version 1.1.12",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 9
     startingContent.isEditable = true

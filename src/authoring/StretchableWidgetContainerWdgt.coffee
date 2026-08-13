@@ -14,8 +14,8 @@ class StretchableWidgetContainerWdgt extends Widget
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
-  ratio: nil
-  contents: nil
+  ratio: undefined
+  contents: undefined
 
   constructor: (@contents) ->
     super new Point 300, 300
@@ -51,14 +51,14 @@ class StretchableWidgetContainerWdgt extends Widget
   # the retired editor era behaved -- the ratio-LOCK of the holding frame
   # arrives only through the holder-frame stack-drop hook (_constrainToRatio
   # below), never from mere content crystallization. (Pre-§5.B these writes
-  # hit a nil/stack spec anyway -- the editor's own spec governed the window.)
+  # hit an undefined/stack spec anyway -- the editor's own spec governed the window.)
   setRatio: (@ratio) ->
     unless @_contentStackSpec?.isFrameContentSpec?()
       @_contentStackSpec?.canSetHeightFreely = false
 
   resetRatio: ->
     if @ratio?
-      @ratio = nil
+      @ratio = undefined
       @_contentStackSpec?.canSetHeightFreely = true
       @_invalidateLayout()
 
@@ -153,7 +153,7 @@ class StretchableWidgetContainerWdgt extends Widget
   # spec (canSetHeightFreely -- the base default; false only after a
   # holder-frame stack-drop constrains it) sizes width-only via super, so a
   # desktop citizen window keeps its dragged height and letterboxes. A stack
-  # spec / nil spec answers undefined here and falls to the ratio body --
+  # spec / undefined spec answers undefined here and falls to the ratio body --
   # bare-container-in-a-stack behaviour unchanged.
   _setWidthSizeHeightAccordingly: (newWidth) ->
     if @_contentStackSpec?.canSetHeightFreely

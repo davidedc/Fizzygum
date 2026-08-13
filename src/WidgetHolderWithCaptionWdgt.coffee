@@ -5,7 +5,7 @@
 
 class WidgetHolderWithCaptionWdgt extends Widget
 
-  label: nil
+  label: undefined
 
   # The ONE home for the standard desktop-icon extent — every launcher/shortcut
   # creation site sizes through this: a 60px icon band + the two-line caption

@@ -18,7 +18,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw._applyExtent new Point 365, 335
 
     startingContent = new SimpleTextWdgt(
-      "Simply drag the items below into your document",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Simply drag the items below into your document",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 18
     startingContent.isEditable = true
@@ -39,7 +39,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.add new TitleWdgt
 
     startingContent = new SimpleTextWdgt(
-      "Section X",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Section X",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()
@@ -47,7 +47,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.add startingContent
 
     startingContent = new SimpleTextWdgt(
-      "Section X.X",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Section X.X",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.isEditable = true
     startingContent.enableSelecting()
     startingContent.setFontSize 24
@@ -56,7 +56,7 @@ class TemplatesWindowWdgt extends FrameWdgt
     sdspw.addNormalParagraph "Normal text."
 
     startingContent = new SimpleTextWdgt(
-      "“Be careful--with quotations, you can damn anything.”\n― André Malraux",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "“Be careful--with quotations, you can damn anything.”\n― André Malraux",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.toggleItalic()
     startingContent.alignRight()
     startingContent.isEditable = true

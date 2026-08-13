@@ -11,6 +11,6 @@ class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
     if world.editorFocusWdgt?.setFontName?
       widgetClickedLast = world.editorFocusWdgt
       if widgetClickedLast.fontName != widgetClickedLast.monoFontStack
-        widgetClickedLast.setFontName nil, nil, widgetClickedLast.monoFontStack
+        widgetClickedLast.setFontName undefined, undefined, widgetClickedLast.monoFontStack
       else
-        widgetClickedLast.setFontName nil, nil, widgetClickedLast.justArialFontStack
+        widgetClickedLast.setFontName undefined, undefined, widgetClickedLast.justArialFontStack

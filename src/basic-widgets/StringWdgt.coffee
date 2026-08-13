@@ -29,17 +29,17 @@ class StringWdgt extends Widget
   # and cropping.
   textPossiblyCroppedToFit: ""
 
-  fittingFontSize: nil
-  originallySetFontSize: nil
+  fittingFontSize: undefined
+  originallySetFontSize: undefined
 
-  fontName: nil
-  isBold: nil
-  isItalic: nil
+  fontName: undefined
+  isBold: undefined
+  isItalic: undefined
   # TODO there is no API to toggle this properly yet,
   # TODO?? ...and there is no menu entry for this
   # TODO???? ...should we let users pick any color?
   hasDarkOutline: false
-  isHeaderLine: nil
+  isHeaderLine: undefined
   isEditable: false
   # may the user drag-select my text? (see enableSelecting). A serializable MODE
   # consumed by the prototype mouseDownLeft/mouseMove handlers -- NOT a pair of
@@ -50,7 +50,7 @@ class StringWdgt extends Widget
   isSelectable: false
   # if "isNumeric", it rejects all inputs
   # other than numbers and "-" and "."
-  isNumeric: nil
+  isNumeric: undefined
   isPassword: false
   isShowingBlanks: false
 
@@ -83,8 +83,8 @@ class StringWdgt extends Widget
   # i.e. startMark might be higher than endMark if
   # text had been selected starting from the
   # right and "going left"
-  startMark: nil
-  endMark: nil
+  startMark: undefined
+  endMark: undefined
 
   markedTextColor: Color.WHITE
   markedBackgroundColor: Color.create 60, 60, 120
@@ -165,7 +165,7 @@ class StringWdgt extends Widget
   #      WIDTH_ADJUSTS_TO_HEIGHT=false never shipped.)
   fittingSpecBoxWhichDimensionAdjusts: true
 
-  caretHorizPositionForVertMovement: nil
+  caretHorizPositionForVertMovement: undefined
 
   emptyCharacter: '\u2063'
 
@@ -191,11 +191,11 @@ class StringWdgt extends Widget
   heavyFontStack: 'Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans-serif'
   monoFontStack: 'Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace'
 
-  hashOfTextConsideredAsReference: nil
-  widgetToBeNotifiedOfTextModificationChange: nil
+  hashOfTextConsideredAsReference: undefined
+  widgetToBeNotifiedOfTextModificationChange: undefined
 
-  undoHistory: nil
-  redoHistory: nil
+  undoHistory: undefined
+  redoHistory: undefined
 
   constructor: (
       @text = (if text is "" then "" else "StringWdgt"),
@@ -743,11 +743,11 @@ class StringWdgt extends Widget
     # This is because it's inside the scope of the
     # "useLogicalPixelsUntilRestore()".
     # An ABSENT backgroundTransparency means fully opaque (Widget's class-level default
-    # is 1) — never hand the canvas a nil. `ctx.globalAlpha = undefined` is an invalid
+    # is 1) — never hand the canvas an undefined. `ctx.globalAlpha = undefined` is an invalid
     # assignment that HTML5 says to IGNORE, but SWCanvas stores it raw, and some engine
     # builds then composite the fill at NaN coverage: the specified backgroundColor
     # silently paints NOTHING, with no error anywhere. Belt-and-braces since the two
-    # constructors that used to leave the field nil were fixed (TextWdgt/SimpleTextWdgt),
+    # constructors that used to leave the field undefined were fixed (TextWdgt/SimpleTextWdgt),
     # because the failure mode is invisible rather than loud.
     if @backgroundColor
       backBufferContext.save()
@@ -988,7 +988,7 @@ class StringWdgt extends Widget
       @,
       "setFontSize",
       @originallySetFontSize.toString(),
-      nil, 6, 500, true
+      undefined, 6, 500, true
 
   editPopup: (menuItem)->
     if menuItem?
@@ -1000,7 +1000,7 @@ class StringWdgt extends Widget
       @,
       "setText",
       @text,
-      nil, 6, nil, true
+      undefined, 6, undefined, true
 
   # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters. From a font menu it
   # ALSO re-ticks the sibling menu items, but updateFontsMenuEntriesTicks does that through the
@@ -1415,7 +1415,7 @@ class StringWdgt extends Widget
       return true
     else
       @editPopup()
-      return nil
+      return undefined
 
   # The NoSettle sibling of edit, for a caller already inside a layout flush/pass -- a dataflow connection sink
   # delivering into a prompt slider's editable field (PromptWdgt._takeSliderValueConnector). Routes the
@@ -1428,7 +1428,7 @@ class StringWdgt extends Widget
       return true
     else
       @editPopup()
-      return nil
+      return undefined
 
   # When inline editing and the just-grown text no longer fits a CROP-overflow field, abandon inline
   # editing and hand off to the pop-out editor (stopEditing tears down the inline caret; edit() then
@@ -1452,12 +1452,12 @@ class StringWdgt extends Widget
   
   firstSelectedSlot: ->
     if !@startMark? or !@endMark?
-      return nil
+      return undefined
     return Math.min @startMark, @endMark
 
   lastSelectedSlot: ->
     if !@startMark? or !@endMark?
-      return nil
+      return undefined
     return Math.max @startMark, @endMark
 
   currentlySelecting: ->
@@ -1468,8 +1468,8 @@ class StringWdgt extends Widget
   clearSelection: ->
     if !@startMark? and !@endMark?
       return
-    @startMark = nil
-    @endMark = nil
+    @startMark = undefined
+    @endMark = undefined
     @_changed()
 
   _setEndMark: (slot) ->
@@ -1559,7 +1559,7 @@ class StringWdgt extends Widget
     world.caret?.bringToForeground()
     if @isEditable
       # doesn't matter what we set editResult to initially,
-      # just not undefined or nil cause that's
+      # just not undefined or undefined cause that's
       # going to be significant
       editResult = true
       previousCaretSlot = world.caret?.slot

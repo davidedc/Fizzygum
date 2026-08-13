@@ -3,11 +3,11 @@
 
 class TextEditingState
 
-  selectionStart: nil
-  selectionEnd: nil
-  cursorPos: nil
-  textContent: nil
-  isJustFirstClickToPositionCursor: nil
+  selectionStart: undefined
+  selectionEnd: undefined
+  cursorPos: undefined
+  textContent: undefined
+  isJustFirstClickToPositionCursor: undefined
 
   constructor: (@selectionStart, @selectionEnd, @cursorPos, @textContent, @isJustFirstClickToPositionCursor) ->
   

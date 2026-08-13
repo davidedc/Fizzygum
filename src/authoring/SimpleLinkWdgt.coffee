@@ -1,13 +1,13 @@
 class SimpleLinkWdgt extends Widget
 
 
-  tempPromptEntryField: nil
-  textWidget: nil
+  tempPromptEntryField: undefined
+  textWidget: undefined
 
-  outputTextArea: nil
-  outputTextAreaText: nil
+  outputTextArea: undefined
+  outputTextAreaText: undefined
 
-  externalLinkIcon: nil
+  externalLinkIcon: undefined
 
   externalPadding: 5
   # the internal padding is the space between the internal
@@ -15,8 +15,8 @@ class SimpleLinkWdgt extends Widget
   # external padding
   internalPadding: 5
 
-  descriptionString: nil
-  linkString: nil
+  descriptionString: undefined
+  linkString: undefined
 
   constructor: (@descriptionString = "insert link caption here", @linkString = "http://www.google.com") ->
     super new Point 405, 50

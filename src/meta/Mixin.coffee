@@ -9,8 +9,8 @@
 
 class Mixin
   @allMixines: []
-  nonStaticPropertiesSources: nil
-  staticPropertiesSources: nil
+  nonStaticPropertiesSources: undefined
+  staticPropertiesSources: undefined
   name: ""
 
   _equivalentforSuper: (aString) ->

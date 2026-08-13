@@ -2,11 +2,11 @@ class FanoutWdgt extends Widget
 
   @augmentWith ControllerMixin
 
-  pinUp: nil
-  pinDown: nil
-  pinLeft: nil
-  pinRight: nil
-  inputValue: nil
+  pinUp: undefined
+  pinDown: undefined
+  pinLeft: undefined
+  pinRight: undefined
+  inputValue: undefined
 
   constructor: (@color) ->
     super
@@ -37,7 +37,7 @@ class FanoutWdgt extends Widget
   updateTarget: ->
     for target in @children
       if target.isConnectionPin?()
-        target.setInput @inputValue, nil
+        target.setInput @inputValue, undefined
     return
 
   # ── dataflow node protocol ───────────────────────────────────────────────────────────────

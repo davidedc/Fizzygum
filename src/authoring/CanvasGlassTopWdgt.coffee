@@ -1,6 +1,6 @@
 class CanvasGlassTopWdgt extends CanvasWdgt
 
-  underlyingCanvasWdgt: nil
+  underlyingCanvasWdgt: undefined
   defaultRejectDrags: true
 
   # paintingOverlay() capability chain (§5.D): I AM the injection target --
@@ -15,7 +15,7 @@ class CanvasGlassTopWdgt extends CanvasWdgt
 
   constructor: ->
     super
-    @color = nil
+    @color = undefined
     # the overlay canvas is usually attached to a Canvas
     # which unfortunately is a Frame (it shouldn't, it should
     # just clip at its bounds via a mixin TODO ). So, usually

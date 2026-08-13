@@ -28,7 +28,7 @@ class IconicDesktopSystemWindowedApp
   wellKnownKey: -> "app:" + @constructor.name
 
   # --- per-app configuration (subclasses override) ---
-  slot: nil           # world.<slot> holds the single window; nil => a fresh window every launch
+  slot: undefined           # world.<slot> holds the single window; undefined => a fresh window every launch
 
   # THE PARTS THIS APP'S buildWindow BUILDS FROM. One declaration with two readers, which is the
   # whole point of stating it as data rather than writing the await by hand in each subclass:
@@ -47,7 +47,7 @@ class IconicDesktopSystemWindowedApp
   optionalParts: []
 
   # --- per-app hooks (subclasses override) ---
-  buildWindow: -> nil                    # build + world.add the app's window; return it
+  buildWindow: -> undefined                    # build + world.add the app's window; return it
   windowOpened: (newlyOpenedWindow) ->   # after a FRESH (non-singleton) launch; no-op by default
 
   # --- shared apparatus (written once) ---

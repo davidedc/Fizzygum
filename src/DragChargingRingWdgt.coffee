@@ -19,10 +19,10 @@ class DragChargingRingWdgt extends Widget
   _ephemeralOverlay: true          # reconciler-owned drag-affordance overlay (Phase-1 capability)
   ringSteps: 5
   chargeStep: 0                    # how many segments are filled (0..ringSteps) — read by the appearance
-  filledColor: nil
-  emptyColor: nil
-  lingerOriginEventTime: nil
-  lingerOriginWallTime: nil
+  filledColor: undefined
+  emptyColor: undefined
+  lingerOriginEventTime: undefined
+  lingerOriginWallTime: undefined
 
   constructor: ->
     super()

@@ -4,7 +4,7 @@ class AnalogClockWdgt extends Widget
   minutesHandAngle: 0
   secondsHandAngle: 0
   strokeSizeToClockDimensionRatio: 1/250
-  dateLastTicked: nil
+  dateLastTicked: undefined
 
   constructor: ->
 
@@ -64,7 +64,7 @@ class AnalogClockWdgt extends Widget
 
   # Shared hand drawing. The three hands differ only in angle, stroke-width multiplier, the two
   # length divisors (inner tail / outer tip), and colour: hours & minutes inherit the black stroke/
-  # fill set by _renderingHelper (color=nil → left untouched), the seconds hand alone sets its own
+  # fill set by _renderingHelper (color=undefined → left untouched), the seconds hand alone sets its own
   # red. Every op is in the same order as the old per-hand bodies, and colour is scoped by save/
   # restore exactly as before, so the pixels are identical. (@width()/@height() are pure getters.)
   _drawHand: (context, squareDim, angle, widthMultiplier, innerDivisor, outerDivisor, color) ->

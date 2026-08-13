@@ -35,7 +35,7 @@ class SimpleTextWdgt extends TextWdgt
 
     # plain (non-`@`) parameters, forwarded to TextWdgt -> StringWdgt, which assigns them
     # only when actually passed: an `@`-parameter assigns unconditionally, so the old
-    # `@backgroundTransparency = nil` shadowed Widget's class-level default of 1 — see
+    # `@backgroundTransparency = undefined` shadowed Widget's class-level default of 1 — see
     # the note in TextWdgt's constructor.
     super
     @_commitBounds new Rectangle 0,0,400,40
@@ -108,7 +108,7 @@ class SimpleTextWdgt extends TextWdgt
   # This runs synchronously in a click handler with IMMEDIATE layout work (raw resize inside
   # setTextLineWrapping + an explicit _reLayoutSelf) instead of the framework's deferred _invalidateLayout()
   # pattern: the deferred mechanism is half-built (geometry accessors read applied @bounds only), and
-  # soft-wrap has an EXTRA blocker -- the content/text are free-floating (nil layoutSpec) (so _invalidateLayout()
+  # soft-wrap has an EXTRA blocker -- the content/text are free-floating (undefined layoutSpec) (so _invalidateLayout()
   # never climbs to the scroll panel) and the wrap geometry lives in _positionAndResizeChildren, off the
   # _reLayout cycle. Completing the deferred model stays the goal -- see
   # docs/archive/softwrap-deferred-layout-conversion-plan.md for the obstacle map and what a conversion

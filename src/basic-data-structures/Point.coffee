@@ -3,8 +3,8 @@
 
 class Point
 
-  x: nil
-  y: nil
+  x: undefined
+  y: undefined
 
   # a shared, immutable value: deep copies keep the reference (see Duplicator)
   keptByReferenceOnDeepCopy: true

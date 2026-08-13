@@ -8,10 +8,10 @@ class DragChargingRingAppearance extends Appearance
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     # an ephemeral overlay casts no shadow — nothing to draw on the shadow pass
-    return nil if appliedShadow?
+    return undefined if appliedShadow?
 
     # (the scope's default alpha reduces to plain @widget.alpha here — no shadow pass reaches this)
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
       cx = @widget.width() / 2
       cy = @widget.height() / 2
       radius = Math.min(cx, cy) - 2

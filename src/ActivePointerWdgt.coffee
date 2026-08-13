@@ -4,40 +4,40 @@
 
 class ActivePointerWdgt extends Widget
 
-  mouseButton: nil
+  mouseButton: undefined
   # used for example to check that
   # mouseDown and mouseUp happen on the
   # same Widget (otherwise clicks happen for
   # example when resizing a button via the
   # handle)
-  mouseDownWdgt: nil
-  mouseDownPosition: nil
-  wdgtToGrab: nil
-  grabOrigin: nil
+  mouseDownWdgt: undefined
+  mouseDownPosition: undefined
+  wdgtToGrab: undefined
+  grabOrigin: undefined
   # --- drag-embed dwell-to-arm state (docs/specs/drag-embed-interaction-spec.md §6) -------------
   # Live only while float-dragging a payload; all cleared by _endDragEmbedInteraction on release.
-  dragEmbedCandidate: nil              # innermost receptive widget under the cursor (nil = none / world)
-  dragEmbedReluctant: nil              # innermost view-mode editing-amenity widget, when NO candidate
-  dragEmbedLingerOriginPoint: nil      # pointer position where the current linger began
-  dragEmbedLingerOriginEventTime: nil  # EVENT.time (never wall-clock) at that origin — the arm clock
-  dragEmbedLingerOriginWallTime: nil   # wall time at that origin (ring animation only, never the decision)
+  dragEmbedCandidate: undefined              # innermost receptive widget under the cursor (undefined = none / world)
+  dragEmbedReluctant: undefined              # innermost view-mode editing-amenity widget, when NO candidate
+  dragEmbedLingerOriginPoint: undefined      # pointer position where the current linger began
+  dragEmbedLingerOriginEventTime: undefined  # EVENT.time (never wall-clock) at that origin — the arm clock
+  dragEmbedLingerOriginWallTime: undefined   # wall time at that origin (ring animation only, never the decision)
   dragEmbedArmed: false                # window payload: has the dwell elapsed?
-  _dragEmbedOutlinedWdgt: nil          # which widget we currently declare into the highlight style channel
-  mouseOverList: nil
+  _dragEmbedOutlinedWdgt: undefined          # which widget we currently declare into the highlight style channel
+  mouseOverList: undefined
   # One multi-click candidate each — widget + position + EVENT-TIME armed; see
   # MultiClickRecognizer. Replaces the six hand-mirrored double/triple fields. Instantiated
   # per-instance in the constructor (mutable state — must not be shared prototype objects).
-  doubleClick: nil
-  tripleClick: nil
+  doubleClick: undefined
+  tripleClick: undefined
   # The multi-click recognition window: two same-spot left clicks fold into a double-
   # / triple-click only if they land within this many ms of each other. Enforced by the
   # EVENT-TIME forget gate in processMouseUp (deterministic, load-immune).
   doubleClickWindowMs: 300
-  nonFloatDraggedWdgt: nil
-  nonFloatDragPositionWithinWdgtAtStart: nil
+  nonFloatDraggedWdgt: undefined
+  nonFloatDragPositionWithinWdgtAtStart: undefined
   # this is useful during nonFloatDrags to pass the widget
   # the delta position since the last invocation
-  previousNonFloatDraggingPos: nil
+  previousNonFloatDraggingPos: undefined
 
   constructor: ->
     @mouseOverList = new Set
@@ -193,14 +193,14 @@ class ActivePointerWdgt extends Widget
     # drop outcome agree for a tilted window too.
     payloadPolicy = payload._dropPolicyProxy()
     wdgt = @topWdgtUnderPointer()
-    reluctant = nil
+    reluctant = undefined
     while wdgt? and wdgt isnt world
       if wdgt.wantsDropOfChild payloadPolicy
-        return {candidate: wdgt, reluctant: nil}
+        return {candidate: wdgt, reluctant: undefined}
       if !reluctant? and wdgt.providesAmenitiesForEditing and not wdgt.dragsDropsAndEditingEnabled
         reluctant = wdgt
       wdgt = wdgt.parent
-    {candidate: nil, reluctant: reluctant}
+    {candidate: undefined, reluctant: reluctant}
 
   _reAnchorDragEmbedLinger: (eventTime) ->
     @dragEmbedLingerOriginPoint = @position()
@@ -218,7 +218,7 @@ class ActivePointerWdgt extends Widget
       @dragEmbedCandidate = candidate
       @_reAnchorDragEmbedLinger eventTime
       @dragEmbedArmed = false
-    @dragEmbedReluctant = if candidate? then nil else reluctant
+    @dragEmbedReluctant = if candidate? then undefined else reluctant
 
     if candidate? and payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: a tilted WINDOW still needs the dwell
       unless @dragEmbedArmed
@@ -263,7 +263,7 @@ class ActivePointerWdgt extends Widget
         lingerOriginEventTime: @dragEmbedLingerOriginEventTime
         lingerOriginWallTime: @dragEmbedLingerOriginWallTime
     else
-      world.dragEmbedChargeRingDeclared = nil
+      world.dragEmbedChargeRingDeclared = undefined
 
     # 3. armed label — window payload, armed
     if isFrame and @dragEmbedArmed and @dragEmbedCandidate?
@@ -272,13 +272,13 @@ class ActivePointerWdgt extends Widget
         point: new Point(payload.left(), affordanceTop)
         text: "Drop to insert into '#{candidateTitle}'"
     else
-      world.dragEmbedLabelDeclared = nil
+      world.dragEmbedLabelDeclared = undefined
 
     # 4. lock badge — reluctant (view-mode) target, no candidate
     if @dragEmbedReluctant?
       world.dragEmbedLockBadgeDeclared = target: @dragEmbedReluctant
     else
-      world.dragEmbedLockBadgeDeclared = nil
+      world.dragEmbedLockBadgeDeclared = undefined
 
   _dragEmbedCandidateTitle: ->
     name = @dragEmbedCandidate?.colloquialName?() ? "here"
@@ -288,19 +288,19 @@ class ActivePointerWdgt extends Widget
   # drop). The reconcilers destroy the overlays on the next pre-paint pass.
   _endDragEmbedInteraction: ->
     world.widgetsToBeHighlighted.delete @_dragEmbedOutlinedWdgt if @_dragEmbedOutlinedWdgt?
-    @_dragEmbedOutlinedWdgt = nil
-    world.dragEmbedChargeRingDeclared = nil
-    world.dragEmbedLabelDeclared = nil
-    world.dragEmbedLockBadgeDeclared = nil
-    @dragEmbedCandidate = nil
-    @dragEmbedReluctant = nil
-    @dragEmbedLingerOriginPoint = nil
-    @dragEmbedLingerOriginEventTime = nil
-    @dragEmbedLingerOriginWallTime = nil
+    @_dragEmbedOutlinedWdgt = undefined
+    world.dragEmbedChargeRingDeclared = undefined
+    world.dragEmbedLabelDeclared = undefined
+    world.dragEmbedLockBadgeDeclared = undefined
+    @dragEmbedCandidate = undefined
+    @dragEmbedReluctant = undefined
+    @dragEmbedLingerOriginPoint = undefined
+    @dragEmbedLingerOriginEventTime = undefined
+    @dragEmbedLingerOriginWallTime = undefined
     @dragEmbedArmed = false
 
   grab: (aWdgt, displacementDueToGrabDragThreshold,  switcherooHappened) ->
-    return nil  if aWdgt == world
+    return undefined  if aWdgt == world
     oldParent = aWdgt.parent
     if !@isThisPointerFloatDraggingSomething()
 
@@ -464,11 +464,11 @@ class ActivePointerWdgt extends Widget
       # whole block is a no-op when dormant (byte-identical). NoSettle mutator — the target.add below
       # carries the single settle.
       if target._isInsideNonIdentityIsland()
-        # §7.5 Bug-D interplay: a nil anchor makes center() the rotation fixed point, so it IS the on-screen
+        # §7.5 Bug-D interplay: an undefined anchor makes center() the rotation fixed point, so it IS the on-screen
         # visual centre — but a figure picked up after a resize can carry a PINNED anchor (anchor-stability),
         # and then its bounds center() is spun about the pinned anchor and is NOT the visual centre. Map the
         # bounds centre through the payload's OWN spec to get the true visual centre before mapping it into
-        # target's plane (a nil/centre anchor makes mapPoint the identity on the centre ⇒ unchanged for fresh
+        # target's plane (an undefined/centre anchor makes mapPoint the identity on the centre ⇒ unchanged for fresh
         # pick-out islands; a plain-widget payload has no transformSpec ⇒ bare center()).
         payloadVisualCentre = if wdgtToDrop.transformSpec? then wdgtToDrop.transformSpec.mapPoint(wdgtToDrop.center(), wdgtToDrop.bounds) else wdgtToDrop.center()
         virtualCentre = target.screenPointToMyPlane payloadVisualCentre
@@ -481,7 +481,7 @@ class ActivePointerWdgt extends Widget
       # inverts the visual order, so a drop on the first child inserted after the last). Same gate +
       # mapping as the 4D-1 block above; dormant path passes @position() through, byte-identical.
       dropPositionInTargetPlane = if target._isInsideNonIdentityIsland() then target.screenPointToMyPlane @position() else @position()
-      target.add wdgtToDrop, nil, nil, true, nil, dropPositionInTargetPlane
+      target.add wdgtToDrop, undefined, undefined, true, undefined, dropPositionInTargetPlane
       # Affine transforms 4D-2b (§6): the UNWRAP half of the re-expression. _reExpressFigureForPlaneOfNoSettle
       # above re-spec'd a dropped sugar figure to its RELATIVE similitude; when that was identity the figure is
       # now a _materializedBySugar island at identity NESTED in target, so the 4C auto-unwrap dissolves it in
@@ -614,7 +614,7 @@ class ActivePointerWdgt extends Widget
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     world.destroyToolTips()
-    @wdgtToGrab = nil
+    @wdgtToGrab = undefined
 
     if Automator? and Automator.state == Automator.PLAYING
       if button is 2 or ctrlKey
@@ -629,7 +629,7 @@ class ActivePointerWdgt extends Widget
     # of a floatDrag/drop operation
     if @isThisPointerFloatDraggingSomething()
       @drop()
-      @mouseButton = nil
+      @mouseButton = undefined
     else
       w = @topWdgtUnderPointer()
 
@@ -642,7 +642,7 @@ class ActivePointerWdgt extends Widget
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
       if !(w.firstParentThatIsAPopUp()?.isMenu?())
-        @cleanupMenuWdgts nil, w, true
+        @cleanupMenuWdgts undefined, w, true
 
       @wdgtToGrab = w.findRootForGrab()
       if button is 2 or ctrlKey
@@ -695,7 +695,7 @@ class ActivePointerWdgt extends Widget
       if @isThisPointerNonFloatDraggingSomething()
         @nonFloatDraggedWdgt.endOfNonFloatDrag?()
 
-      @previousNonFloatDraggingPos = nil
+      @previousNonFloatDraggingPos = undefined
 
       if @mouseButton is "left"
         expectedClick = "mouseClickLeft"
@@ -822,8 +822,8 @@ class ActivePointerWdgt extends Widget
       if !@nonFloatDraggedWdgt?
         @cleanupMenuWdgts expectedClick, w
 
-    @mouseButton = nil
-    @nonFloatDraggedWdgt = nil
+    @mouseButton = undefined
+    @nonFloatDraggedWdgt = undefined
 
 
   cleanupMenuWdgts: (expectedClick, w, alsoKillFreshMenus)->
@@ -886,7 +886,7 @@ class ActivePointerWdgt extends Widget
     else
       w = w.parent  while w and not w.mouseDoubleClick
       w.mouseDoubleClick @_pointerPositionInPlaneOf(w) if w
-    @mouseButton = nil
+    @mouseButton = undefined
 
   processTripleClick: (w = @topWdgtUnderPointer()) ->
     world.destroyToolTips()
@@ -895,7 +895,7 @@ class ActivePointerWdgt extends Widget
     else
       w = w.parent  while w and not w.mouseTripleClick
       w.mouseTripleClick @_pointerPositionInPlaneOf(w) if w
-    @mouseButton = nil
+    @mouseButton = undefined
   
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
   processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
@@ -965,7 +965,7 @@ class ActivePointerWdgt extends Widget
     # not a "later" point once the threshold is passed.
 
     # so we have to bypass this mechanism for those.
-    displacementDueToGrabDragThreshold = nil
+    displacementDueToGrabDragThreshold = undefined
     skipGrabDragThreshold = false
     
     if Automator? and Automator.state == Automator.PLAYING
@@ -975,7 +975,7 @@ class ActivePointerWdgt extends Widget
     if !skipGrabDragThreshold
       if @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
         if (@mouseDownPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold
-          return [true,nil]
+          return [true,undefined]
       displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
 
     return [false, displacementDueToGrabDragThreshold]
@@ -1078,7 +1078,7 @@ class ActivePointerWdgt extends Widget
         if @previousNonFloatDraggingPos?
           deltaDragFromPreviousCall = pos.subtract @previousNonFloatDraggingPos
         else
-          deltaDragFromPreviousCall = nil
+          deltaDragFromPreviousCall = undefined
         @previousNonFloatDraggingPos = pos
         @nonFloatDraggedWdgt.nonFloatDragging?(@nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall)
     

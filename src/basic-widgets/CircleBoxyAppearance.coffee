@@ -51,7 +51,7 @@ class CircleBoxyAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, nil, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
       if appliedShadow?
         ctx.fillStyle = Color.BLACK.toString()
       else

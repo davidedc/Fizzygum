@@ -168,12 +168,12 @@ class Color
 
   # params as in the HTML rgba() function
   # https://www.w3schools.com/cssref/func_rgba.asp
-  _r: nil # intensity of red as an integer between 0 and 255
-  _g: nil # intensity of green as an integer between 0 and 255
-  _b: nil # intensity of blue as an integer between 0 and 255
-  _a: nil # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
+  _r: undefined # intensity of red as an integer between 0 and 255
+  _g: undefined # intensity of green as an integer between 0 and 255
+  _b: undefined # intensity of blue as an integer between 0 and 255
+  _a: undefined # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
-  _derived_String: nil
+  _derived_String: undefined
 
   # all values are optional, just (r, g, b) is fine
   # this should ONLY be used from the static factories

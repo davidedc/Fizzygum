@@ -24,7 +24,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 
   getNormalParagraph: (text) ->
     paragraph = new SimpleTextWdgt(
-      text,nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      text,undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     paragraph.isEditable = true
     paragraph.enableSelecting()
     return paragraph
@@ -76,7 +76,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 
   addCodeBlock: (text) ->
     codeBlock = @addIndentedText "a code block with\n  some example\n    code in here"
-    codeBlock.setFontName nil, nil, codeBlock.monoFontStack
+    codeBlock.setFontName undefined, undefined, codeBlock.monoFontStack
     @add codeBlock
     return codeBlock
 

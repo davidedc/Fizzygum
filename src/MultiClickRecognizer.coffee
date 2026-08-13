@@ -16,9 +16,9 @@
 class MultiClickRecognizer
 
   constructor: (@clickCount) ->
-    @wdgt = nil
-    @position = nil
-    @armedAtEventTime = nil
+    @wdgt = undefined
+    @position = undefined
+    @armedAtEventTime = undefined
 
   arm: (wdgt, position, eventTime) ->
     @wdgt = wdgt
@@ -26,9 +26,9 @@ class MultiClickRecognizer
     @armedAtEventTime = eventTime
 
   forget: ->
-    @wdgt = nil
-    @position = nil
-    @armedAtEventTime = nil
+    @wdgt = undefined
+    @position = undefined
+    @armedAtEventTime = undefined
 
   # Has this candidate gone stale? True when it was armed more than windowMs of EVENT time
   # before the click now being processed — it belongs to a previous gesture and must be

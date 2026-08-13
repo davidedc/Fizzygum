@@ -7,7 +7,7 @@
 # Persistent (serialized): {@sheet, @address, @source, @widgetEntry}. @source IS the cell's
 # CoffeeScript ("everything is CoffeeScript", spec §9.2 — `42`, `"total"`, `A1 * 2` are all just
 # source). @widgetEntry (F4) is the OTHER kind of entry: a desktop widget DROPPED into the cell
-# IS the cell's value — no formula (source stays blank). Prototype default nil, own-only-when-set
+# IS the cell's value — no formula (source stays blank). Prototype default undefined, own-only-when-set
 # (the 6a idiom: a formula cell serializes byte-for-byte as before); when set it serializes as an
 # in-structure $r reference to the widget, which rides the tree as the cell's hosted child, and
 # the Duplicator remaps it to the copy — save AND duplicate free (spec §2). Its LIFECYCLE is
@@ -56,14 +56,14 @@ class SheetCellRecord
   # F4 widget-entry kind (see the header): a DROPPED desktop widget as the cell's value.
   # PERSISTENT (deliberately NOT in @serializationTransients) but a PROTOTYPE default — only a
   # cell that actually received a drop carries the own property.
-  widgetEntry: nil
+  widgetEntry: undefined
 
   # @sheet is the owning SheetModel ("the sheet the cell belongs to"); @sheet.sheetWidget is the
   # SimpleSpreadsheetWdgt that paints it and serves as the formula scope (@ inside a formula).
   constructor: (@sheet, @address, @source = "") ->
-    @compiledFn = nil
+    @compiledFn = undefined
     @boundNames = []
-    @value      = nil
+    @value      = undefined
     @errorFlag  = false
 
   # ── dataflow node protocol ───────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ class SheetCellRecord
     # blank-commits the source).
     return @_cacheValue @widgetEntry if @widgetEntry?
     # A blank, syntax-errored or loop-rejected cell has no compiled function: its @value is already
-    # resolved (nil, or a SheetError set by FormulaCompiler.commit). Route it through _cacheValue
+    # resolved (undefined, or a SheetError set by FormulaCompiler.commit). Route it through _cacheValue
     # anyway so the socket reconcile drops any widget the cell used to show (e.g. blanking a Color).
     return @_cacheValue @value unless @compiledFn?
     boundValues = @boundNames.map (name) => @_resolveBoundName name
@@ -145,4 +145,4 @@ class SheetCellRecord
       return world?.dataflow?.secondsSource().dataflowValue()
     if name is "frame"
       return world?.dataflow?.frameSource().dataflowValue()
-    nil
+    undefined

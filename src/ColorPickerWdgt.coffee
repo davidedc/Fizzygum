@@ -5,13 +5,13 @@ class ColorPickerWdgt extends Widget
 
   # pattern: declare every child field here (not only set in the constructor) so
   # the Duplicator's walk picks it up even under lazy initialisation.
-  feedback: nil
-  choice: nil
-  colorPalette: nil
-  grayPalette: nil
+  feedback: undefined
+  choice: undefined
+  colorPalette: undefined
+  grayPalette: undefined
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
   # that method); declared so Duplicator duplication carries it.
-  menuEntryNaturalWidth: nil
+  menuEntryNaturalWidth: undefined
 
   constructor: ( @choice = Color.WHITE ) ->
     super()

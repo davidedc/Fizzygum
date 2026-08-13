@@ -1,12 +1,12 @@
 # IMMUTABLE — see the InputEvent header.
 # see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent
 class KeyboardInputEvent extends InputEvent
-  key: nil
-  code: nil
-  shiftKey: nil
-  ctrlKey: nil
-  altKey: nil
-  metaKey: nil
+  key: undefined
+  code: undefined
+  shiftKey: undefined
+  ctrlKey: undefined
+  altKey: undefined
+  metaKey: undefined
 
   constructor: (@key, @code, @shiftKey, @ctrlKey, @altKey, @metaKey, isSynthetic, time) ->
     super isSynthetic, time

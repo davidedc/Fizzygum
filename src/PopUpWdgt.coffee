@@ -30,12 +30,12 @@ class PopUpWdgt extends Widget
   #    will be in the foreground.
   # 2) they can appear unoccluded if the "parent widget" or "parent object"
   #    are in a widget that clips at its boundaries.
-  widgetOpeningThePopUp: nil
+  widgetOpeningThePopUp: undefined
   # the MenuRowsPanelWdgt that is this pop-up's whole visible body (box, optional
   # title header, and the rows) — both subclasses (MenuWdgt / PromptWdgt) build
   # one and delegate/compose against it; the shared lay-and-hug + membership-
   # change absorber below work off it. Free-floating, so it co-moves with me.
-  rowsPanel: nil
+  rowsPanel: undefined
 
   constructor: (@widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
     super()
@@ -106,7 +106,7 @@ class PopUpWdgt extends Widget
     else
       if @widgetOpeningThePopUp?
         return @widgetOpeningThePopUp.firstParentThatIsAPopUp()
-    return nil
+    return undefined
 
   firstParentThatIsAPopUp: ->
     if !@isPopUpMarkedForClosure or !@parent? then return @
@@ -118,7 +118,7 @@ class PopUpWdgt extends Widget
   pinPopUp: (pinMenuItem)->
     @killThisPopUpIfClickOnDescendantsTriggers = false
     @killThisPopUpIfClickOutsideDescendants = false
-    @onClickOutsideMeOrAnyOfMyChildren nil
+    @onClickOutsideMeOrAnyOfMyChildren undefined
     if pinMenuItem?
       pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
       world.closePopUpsMarkedForClosure()
@@ -135,7 +135,7 @@ class PopUpWdgt extends Widget
 
   fullCopy: ->
     copiedWidget = super
-    copiedWidget.onClickOutsideMeOrAnyOfMyChildren nil
+    copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
     copiedWidget.killThisPopUpIfClickOnDescendantsTriggers = false
     copiedWidget.killThisPopUpIfClickOutsideDescendants = false
     return copiedWidget

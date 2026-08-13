@@ -22,17 +22,17 @@
 class MenuItemSpec
 
   # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
-  label: nil
+  label: undefined
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
-  target: nil
-  action: nil
-  toolTipMessage: nil
-  color: nil
+  target: undefined
+  action: undefined
+  toolTipMessage: undefined
+  color: undefined
   bold: false
   italic: false
-  doubleClickAction: nil
-  argumentToAction1: nil
-  argumentToAction2: nil
+  doubleClickAction: undefined
+  argumentToAction1: undefined
+  argumentToAction2: undefined
   representsAWidget: false
 
   constructor: (@label, @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true, @target, @action, @toolTipMessage, @color, @bold = false, @italic = false, @doubleClickAction, @argumentToAction1, @argumentToAction2, @representsAWidget = false) ->

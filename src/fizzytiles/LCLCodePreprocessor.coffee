@@ -20,8 +20,8 @@ class LCLCodePreprocessor
 
   # if you want to run the tests, copy these two properties
   # from LCLCodePreprocessor_Testing.coffee.txt
-  testCases: nil
-  test: nil
+  testCases: undefined
+  test: undefined
 
 
   # We separate Commands from Expressions here.
@@ -883,7 +883,7 @@ class LCLCodePreprocessor
     code = code.replace(rx, "($1♠)")
 
     rx = RegExp("<[\\s]*(("+allFunctionsRegex+")[^\\r\\n]*?)>",'gm')
-    code = code.replace(rx, "((parametersForBracketedFunctions)->($1, -> (if parametersForBracketedFunctions? then parametersForBracketedFunctions() else nil)))")
+    code = code.replace(rx, "((parametersForBracketedFunctions)->($1, -> (if parametersForBracketedFunctions? then parametersForBracketedFunctions() else undefined)))")
 
     code = code.replace(/→/g, "->")
 

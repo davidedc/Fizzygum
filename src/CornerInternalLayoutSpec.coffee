@@ -19,15 +19,15 @@
 # `inset` is constructed at runtime, never as a class-level default: a class-level
 # `new Point` here would need a boot-order edge the dependency scanner cannot promise
 # (docs/architecture/immutable-value-classes.md §3) — the constructor guarantees it, so the
-# corner pass needs no nil-inset backfill.
+# corner pass needs no undefined-inset backfill.
 class CornerInternalLayoutSpec extends LayoutSpec
 
   # 'topLeft' | 'topRight' | 'bottomRight' | 'rightMiddle' | 'bottomMiddle'
-  anchor: nil
+  anchor: undefined
 
   proportionOfParent: 0
   fixedSize: 0
-  inset: nil
+  inset: undefined
 
   constructor: (@anchor, @proportionOfParent = 0, @fixedSize = 0, inset) ->
     super()

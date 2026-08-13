@@ -10,18 +10,18 @@
 
 class StringFieldWdgt extends PanelWdgt
 
-  defaultContents: nil
-  minTextWidth: nil
-  fontSize: nil
-  fontStyle: nil
-  isBold: nil
-  isItalic: nil
-  isNumeric: nil
-  text: nil
+  defaultContents: undefined
+  minTextWidth: undefined
+  fontSize: undefined
+  fontStyle: undefined
+  isBold: undefined
+  isItalic: undefined
+  isNumeric: undefined
+  text: undefined
   isEditable: true
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
   # that method); declared so Duplicator duplication carries it.
-  menuEntryNaturalWidth: nil
+  menuEntryNaturalWidth: undefined
 
   constructor: (
       @defaultContents = "",

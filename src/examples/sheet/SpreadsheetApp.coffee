@@ -1,7 +1,7 @@
 # SpreadsheetApp — the desktop launcher/opener for the spreadsheet (one of the
 # IconicDesktopSystemWindowedApp subclasses; the DegreesConverterApp shape). Its title/icon are
 # read from AppCatalog (keyed by class name, not by this class); this file only builds the window --
-# the base owns createOpener + launch. `slot: nil`
+# the base owns createOpener + launch. `slot: undefined`
 # ⇒ a FRESH window every launch (multiple sheets allowed — the sheet is NOT a world singleton).
 #
 # Opens a SpreadsheetWdgt citizen (a FrameWdgt over the SimpleSpreadsheetWdgt
@@ -22,7 +22,7 @@ class SpreadsheetApp extends IconicDesktopSystemWindowedApp
 
   requiredParts: ["spreadsheet"]
 
-  slot:  nil   # multiple sheets — a fresh window every launch (no world slot)
+  slot:  undefined   # multiple sheets — a fresh window every launch (no world slot)
 
   # v1 placeholder icon (an existing shortcut glyph); a dedicated SpreadsheetIconWdgt is
   # deferred (recorded in the implementation plan's Phase-2a notes).

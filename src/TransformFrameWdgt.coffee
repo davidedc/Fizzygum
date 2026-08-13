@@ -15,15 +15,15 @@ class TransformFrameWdgt extends PanelWdgt
   # through this to my content. Capability, not an `instanceof` type-test (type-test-elimination convention).
   resolvesEditorSelectionToContent: -> true
 
-  transformSpec: nil
+  transformSpec: undefined
   # Phase 3 (§4.9): last claimed extent reported to the parent layout, for reflow-on-change
-  # detection. nil for a 'slot' island (paint-only, never reflows) -- 'footprint' is the
+  # detection. undefined for a 'slot' island (paint-only, never reflows) -- 'footprint' is the
   # default since the D1 flip (claimsSpace arc, 2026-07-17; TransformSpec.claimsSpace).
-  _lastClaimedExtent: nil
+  _lastClaimedExtent: undefined
   # D2 scroll reachability (claimsSpace arc): last claimed ∪ ink box handed to an enclosing
   # scroll frame, for refit-on-change detection — the REACHABILITY twin of _lastClaimedExtent
   # (claim → sibling layout; union → scroll extent: two questions, two memos, two edges).
-  _lastScrollOverflowBox: nil
+  _lastScrollOverflowBox: undefined
   # Phase 4C (§6): true when this island was MATERIALIZED by the Widget-level property sugar
   # (widget.setRotationDegrees / setScaleFactor). Only a sugar-materialized island is auto-REMOVED
   # when its spec returns to identity (an explicitly-authored island stays, merely dormant). Serializes
@@ -33,12 +33,12 @@ class TransformFrameWdgt extends PanelWdgt
   # §4.4 island buffer cache: the fields below are DERIVED render state (never truth) ->
   # serializationTransients below; a deepCopy drops them (see _reactToBeingCopied). Mechanism +
   # rebuild/reuse/dirty-rect policy: docs/architecture/transforms.md §8.1.
-  _islandBuffer: nil                 # the kept content canvas (physical pixels), or nil
-  _islandBufferSlotExtent: nil       # Point: the slot extent the buffer was built at (the realloc key)
-  _islandBufferDirtyRect: nil        # nil (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
+  _islandBuffer: undefined                 # the kept content canvas (physical pixels), or undefined
+  _islandBufferSlotExtent: undefined       # Point: the slot extent the buffer was built at (the realloc key)
+  _islandBufferDirtyRect: undefined        # undefined (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
   _islandBufferGeneration: -1        # WorldWdgt.immutableBackBufferGeneration the buffer was built at
                                      # (async glyph-atlas warmup invalidation; -1 ⇒ never built)
-  _islandShadowSilhouette: nil       # black-silhouette twin of _islandBuffer for the shadow pass, or nil
+  _islandShadowSilhouette: undefined       # black-silhouette twin of _islandBuffer for the shadow pass, or undefined
   # Per-island opt-out of the cache. Public + macro-readable (no `_`). Serialises as a plain boolean
   # (like _materializedBySugar) so a saved island keeps its policy; the GLOBAL kill-switch is the class
   # property WorldWdgt.islandBufferCacheEnabled.
@@ -70,9 +70,9 @@ class TransformFrameWdgt extends PanelWdgt
     super()   # PanelWdgt ctor (sets appearance/color/stroke) — we blank them below
     @transformSpec = transformSpec ? new TransformSpec()
     # invisible frame: no background, no stroke, no chrome of its own.
-    @appearance = nil
-    @color = nil
-    @strokeColor = nil
+    @appearance = undefined
+    @color = undefined
+    @strokeColor = undefined
     # The invisible frame itself never accepts drops — permanent design, not just the Phase-1
     # §4.6 scope cut it began as: 4D confirmed no flip is needed (a drop-accepting CONTENT
     # container inside the island resolves as the dropTargetFor climb target; when the climb
@@ -215,7 +215,7 @@ class TransformFrameWdgt extends PanelWdgt
   _setClaimsSpaceNoSettle: (mode) ->
     return if mode == @transformSpec.claimsSpace
     @transformSpec = @transformSpec.withClaimsSpace mode   # replace the immutable spec
-    @_lastClaimedExtent = nil
+    @_lastClaimedExtent = undefined
     @__breakMoveResizeCaches()
     @_fullChanged()
     @_invalidateLayout()
@@ -244,11 +244,11 @@ class TransformFrameWdgt extends PanelWdgt
     @_dropIslandBuffer()
 
   _dropIslandBuffer: ->
-    @_islandBuffer = nil
-    @_islandBufferSlotExtent = nil
-    @_islandBufferDirtyRect = nil
+    @_islandBuffer = undefined
+    @_islandBufferSlotExtent = undefined
+    @_islandBufferDirtyRect = undefined
     @_islandBufferGeneration = -1
-    @_islandShadowSilhouette = nil
+    @_islandShadowSilhouette = undefined
 
   # deepCopy safety (§3.1): the buffer fields are DERIVED render state. HTMLCanvasElement::deepCopy
   # clones the canvas into the copy (a DISTINCT canvas -- no sharing), but a copied island must not
@@ -303,10 +303,10 @@ class TransformFrameWdgt extends PanelWdgt
   # layout-box family, which stays the slot box, nor the screen family, which is
   # fractional/global — docs/archive/affine-geometry-api-plan.md). Per-class capability (`?()` dispatch,
   # NO Widget base default — type-test-elimination convention); the ONE consumer is
-  # Widget.subWidgetsMergedFullBounds' merge walk. nil at identity, so the walk's stock
+  # Widget.subWidgetsMergedFullBounds' merge walk. undefined at identity, so the walk's stock
   # fullBounds merge runs and an untransformed island stays byte-identical (dormant guarantee).
   scrollOverflowBoundsInParentPlane: ->
-    return nil if @transformSpec.isIdentity()
+    return undefined if @transformSpec.isIdentity()
     @transformSpec.scrollOverflowBoxFor @bounds
 
   # what we report to the parent's arrange: a non-identity island claims a FIXED figure size (the
@@ -342,11 +342,11 @@ class TransformFrameWdgt extends PanelWdgt
       aPoint = aPoint.add @transformSpec.slotOffsetWithinClaim(@bounds)
     super aPoint
 
-  # §7.5 Bug F (reparent-transparency, MOVE level): a PINNED anchor (transformSpec.anchor non-nil, set by
+  # §7.5 Bug F (reparent-transparency, MOVE level): a PINNED anchor (transformSpec.anchor non-undefined, set by
   # the Bug-D asymmetric-extent-change rule) is stored as an ABSOLUTE point in the island's plane, so it
   # must RIDE a rigid translation of the island — else the figure renders about a STALE anchor and its
   # content swings by (sR − I)·delta on a plain drag (probe-verified: a 40° figure dragged by (40,30) moved
-  # its centre by (11,49), i.e. R(40°)·(40,30)). A NIL anchor derives from the slot centre and rides for
+  # its centre by (11,49), i.e. R(40°)·(40,30)). An UNDEFINED anchor derives from the slot centre and rides for
   # free; the tracking re-fit translates a pinned anchor only on CONTENT-relative moves (it sets @bounds
   # directly, bypassing these primitives), so these overrides cover exactly the DIRECT-move paths it
   # early-returns on — the THREE distinct primitives that rigidly translate this island's bounds (each
@@ -355,7 +355,7 @@ class TransformFrameWdgt extends PanelWdgt
   # _applyMoveByBase), _applyMoveByBase (I am arrange-placed as a leaf — the base path), and __commitMoveBy
   # (I am moved as a child of a moving ancestor). Restoring the fixed-point property also makes the pick-out
   # re-home's numeric delta correct under a pinned anchor. Dormant off pinned anchors (the entire pre-Bug-D
-  # population — nil anchor ⇒ the guard skips).
+  # population — undefined anchor ⇒ the guard skips).
   _applyMoveBy: (delta) ->
     super delta
     @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
@@ -370,20 +370,20 @@ class TransformFrameWdgt extends PanelWdgt
     @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
 
   # §7.5 Bug G (reparent-transparency, PICK-UP NORMALIZATION): re-express a PINNED anchor
-  # (Bug-D anchor-stability, set by a tracked resize) as the equivalent NIL-anchor similitude before
+  # (Bug-D anchor-stability, set by a tracked resize) as the equivalent UNDEFINED-anchor similitude before
   # this figure travels across planes. An (anchor A, slot B) similitude renders identically to
-  # (anchor nil, whole figure translated by t = (I − sR)(A − centre)) — the Bug-D compensation algebra,
+  # (anchor undefined, whole figure translated by t = (I − sR)(A − centre)) — the Bug-D compensation algebra,
   # inverted, computed by TransformSpec._nilAnchorEquivalentTranslation (the spec owns its own
   # algebra). Every hand-carry apply-site assumes the pivot IS the slot centre (the 2b-i relative
-  # re-spec, the 4D-1 slot-centre placement, the Bug-F pick re-home): true only for nil anchors, so the
-  # pick-up seam normalizes once and they all stay in their simple exact math. ORDER MATTERS: nil the
+  # re-spec, the 4D-1 slot-centre placement, the Bug-F pick re-home): true only for undefined anchors, so the
+  # pick-up seam normalizes once and they all stay in their simple exact math. ORDER MATTERS: undefined the
   # anchor FIRST — the move-level anchor-ride overrides above would otherwise drag A along with the
   # compensating translate and void the algebra. Integer rounding of t ⇒ ≤1px, acceptable at a grab
-  # (a new state). No-op for nil anchors (every un-resized figure) and at identity (anchor is inert).
+  # (a new state). No-op for undefined anchors (every un-resized figure) and at identity (anchor is inert).
   _normalizePinnedAnchorNoSettle: ->
     return if !@transformSpec?.anchor? or @transformSpec.isIdentity()
     t = @transformSpec._nilAnchorEquivalentTranslation @bounds   # read t while the anchor is still pinned
-    @transformSpec = @transformSpec.withAnchor nil
+    @transformSpec = @transformSpec.withAnchor undefined
     @_applyMoveBy t.round()
 
   # ---------------------------------------------------------------------------
@@ -395,11 +395,11 @@ class TransformFrameWdgt extends PanelWdgt
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     if @transformSpec.isIdentity()
       # stock invisible-clipping-panel behaviour: children painted, clipped to the
-      # slot box, no chrome (appearance is nil). Byte-identical to the children alone.
+      # slot box, no chrome (appearance is undefined). Byte-identical to the children alone.
       return super aContext, clippingRectangle, appliedShadow
     @_compositeIslandBuffer aContext, clippingRectangle, appliedShadow
 
-  # The island is TRANSPARENT (appearance nil), so it must cast its CONTENT's shadow,
+  # The island is TRANSPARENT (appearance undefined), so it must cast its CONTENT's shadow,
   # not a box silhouette. PanelWdgt/ClippingAtRectangularBoundsMixin's JustShadow
   # takes an opaque-panel shortcut (paint the box silhouette; skip children when
   # alpha==1) — wrong here (there is no box to silhouette). Revert to the BASE Widget
@@ -486,17 +486,17 @@ class TransformFrameWdgt extends PanelWdgt
   _refreshIslandBuffer: ->
     slot = @bounds
     physExtent = slot.extent().scaleBy ceilPixelRatio
-    return nil if physExtent.x < 1 or physExtent.y < 1
+    return undefined if physExtent.x < 1 or physExtent.y < 1
 
     if !@_islandBufferCacheActive()
-      return @_rasterizeIslandContent slot, physExtent, nil
+      return @_rasterizeIslandContent slot, physExtent, undefined
 
     # A full rebuild is forced by: no buffer yet; a slot EXTENT change (realloc); OR a stale
     # text-back-buffer epoch -- the one non-event async glyph-atlas invalidation the cache needs
     # (native never loads an atlas, so this never fires there). See docs/architecture/transforms.md §8.1.
     slotExtent = slot.extent()
     if !@_islandBuffer? or !(@_islandBufferSlotExtent? and @_islandBufferSlotExtent.equals slotExtent) or @_islandBufferGeneration != WorldWdgt.immutableBackBufferGeneration
-      @_islandBuffer = @_rasterizeIslandContent slot, physExtent, nil
+      @_islandBuffer = @_rasterizeIslandContent slot, physExtent, undefined
       @_islandBufferSlotExtent = slotExtent
       @_islandBufferGeneration = WorldWdgt.immutableBackBufferGeneration
     else if @_islandBufferDirtyRect?
@@ -510,10 +510,10 @@ class TransformFrameWdgt extends PanelWdgt
           clip = dirtyRect.intersect slot
           @_rasterizeIslandContent slot, physExtent, clip if clip.isNotEmpty()
     # else: clean -> reuse @_islandBuffer as-is.
-    @_islandBufferDirtyRect = nil
+    @_islandBufferDirtyRect = undefined
     @_islandBuffer
 
-  # Rasterise the content subtree into the buffer, UN-transformed at device resolution. clip nil =>
+  # Rasterise the content subtree into the buffer, UN-transformed at device resolution. clip undefined =>
   # a FULL build into a FRESH canvas (returned); a sub-rect => a PARTIAL rebuild INTO the kept canvas
   # (@_islandBuffer), clearing the region first — the island background is TRANSPARENT, so an
   # un-cleared region would ghost the old pixels under alpha. The buffer context is a SINGLETON per
@@ -524,7 +524,7 @@ class TransformFrameWdgt extends PanelWdgt
   _rasterizeIslandContent: (slot, physExtent, clip) ->
     # every change to the buffer's pixels funnels through here, so this is the one
     # invalidation point the shadow-silhouette twin needs.
-    @_islandShadowSilhouette = nil
+    @_islandShadowSilhouette = undefined
     if clip?
       buffer = @_islandBuffer
       clipRect = clip
@@ -549,7 +549,7 @@ class TransformFrameWdgt extends PanelWdgt
     world.paintingIntoIslandBuffer = @
     try
       @children.forEach (child) =>
-        child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, clipRect, nil
+        child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, clipRect, undefined
     finally
       # restore in `finally`: a throwing child paint propagates to _updateBroken's per-rect
       # catch, and a skipped restore would leave the world flag stuck on this island (every
@@ -578,7 +578,7 @@ class TransformFrameWdgt extends PanelWdgt
   # The buffer's alpha channel with every visible pixel black ("source-in" fill), so
   # per-pixel coverage — AA fringes, semi-transparent content — carries into the shadow
   # exactly as the recursive shadow paint would. Cached: every buffer-pixel change funnels
-  # through _rasterizeIslandContent, which nils it, so it rebuilds at most once per content
+  # through _rasterizeIslandContent, which clears it, so it rebuilds at most once per content
   # change and never on a pure transform change. The composite's globalAlpha then applies
   # the shadow's faintness, exactly as on the normal pass.
   _shadowSilhouetteOfIslandBuffer: (buffer) ->

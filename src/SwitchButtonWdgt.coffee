@@ -1,6 +1,6 @@
 class SwitchButtonWdgt extends Widget
 
-  buttons: nil
+  buttons: undefined
  
   highlightColor: Color.SILVER
   pressColor: Color.GRAY

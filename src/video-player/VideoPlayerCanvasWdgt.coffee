@@ -13,8 +13,8 @@
 
 class VideoPlayerCanvasWdgt extends CanvasWdgt
 
-  video: nil
-  _extentWhenPreviousBackgroundWasPainted: nil
+  video: undefined
+  _extentWhenPreviousBackgroundWasPainted: undefined
 
   _createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
@@ -48,7 +48,7 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     @video = document.createElement 'video'
     @video.src = videoPath
     @video.autoplay = true
-    @_extentWhenPreviousBackgroundWasPainted = nil
+    @_extentWhenPreviousBackgroundWasPainted = undefined
 
 
 
@@ -114,7 +114,7 @@ class VideoPlayerCanvasWdgt extends CanvasWdgt
     if @boundingBoxTight().containsPoint aPoint
       return false
     # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
-    # leaves it nil) — so only the "is it actually opaque enough to catch a click" test
+    # leaves it undefined) — so only the "is it actually opaque enough to catch a click" test
     # remains; the old `backgroundTransparency?` existence check was vacuous.
     if @backgroundColor? and @backgroundTransparency > 0
       if @boundsContainPoint aPoint

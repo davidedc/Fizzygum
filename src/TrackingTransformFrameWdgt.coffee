@@ -62,24 +62,24 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # @bounds directly is the established island slot-set idiom (wrapContent / _materializeSugarIslandNoSettle
   # both do it) — _applyExtent would no-op here (the fixed-figure _applyExtentBase override early-returns).
   # The cache-break + fullChanged mirror what a transform change does. (The original R3 "Option A" —
-  # let an asymmetric grow re-centre the figure via the nil slot-centre anchor — was superseded by the
+  # let an asymmetric grow re-centre the figure via the undefined slot-centre anchor — was superseded by the
   # §7.5 Bug-D anchor-stability rule below: persisting content must stay screen-still across a re-fit.)
   # arrangeDriven distinguishes the TWO re-fit regimes on an EXTENT change (follow-up F1,
   # docs/…-layout-transparency-plan.md §9): a CONTENT-driven re-fit (bare call — the settle-loop
   # up-edge, my own _reLayout) keeps the Bug-D pin so a user handle-resizing the wrapped widget
   # sees persisting screen points stay still; an ARRANGE-driven re-fit (true — forwarded from my
-  # §5a _applyExtent / _setWidthSizeHeightAccordingly under a laying-out parent) NILs the anchor,
+  # §5a _applyExtent / _setWidthSizeHeightAccordingly under a laying-out parent) clears the anchor,
   # because the parent's fractional model OWNS placement (§5c records SLOT-box fractions) and a
   # pinned anchor inherited from an earlier user gesture decouples the render from the slot the
   # model is placing — telescoping d = A − c by extΔ/2 each frame, rendering the content offset
-  # by (I − sR)(A − c) (probe leg E: 14.7px drift). Nil-ing re-glues the render to the slot and
-  # converges. See §9.3/§9.4 for the algebra and why nil (not Bug-G normalize) is the locked choice.
+  # by (I − sR)(A − c) (probe leg E: 14.7px drift). Clearing it re-glues the render to the slot and
+  # converges. See §9.3/§9.4 for the algebra and why undefined (not Bug-G normalize) is the locked choice.
   _reLayoutChildren: (arrangeDriven = false) ->
     content = @childrenNotHandlesNorCarets()?[0]
     return if !content?
     newSlot = new Rectangle content.left(), content.top(), content.right(), content.bottom()
     return if newSlot.equals @bounds
-    # Bug-D fix (anchor stability): a nil anchor means "slot centre", so an
+    # Bug-D fix (anchor stability): an undefined anchor means "slot centre", so an
     # EXTENT change moves the anchor and rigidly translates every persisting screen
     # point by (I - sR)delta (collapse: the title bar visibly jumps). Pin the anchor at
     # its current absolute point across extent changes; translate a pinned anchor on
@@ -90,18 +90,18 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
           @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add newSlot.topLeft().subtract @bounds.topLeft()
       else   # extent changed
         if arrangeDriven
-          @transformSpec = @transformSpec.withAnchor nil                                 # arrange owns placement: render GLUED to the slot (F1)
+          @transformSpec = @transformSpec.withAnchor undefined                                 # arrange owns placement: render GLUED to the slot (F1)
         else
           @transformSpec = @transformSpec.withAnchor @transformSpec._anchorFor @bounds    # content-driven: Bug-D pin, unchanged
     @bounds = newSlot
     if @transformSpec.anchor? and @transformSpec.anchor.equals newSlot.center()
-      @transformSpec = @transformSpec.withAnchor nil
+      @transformSpec = @transformSpec.withAnchor undefined
     @__breakMoveResizeCaches()
-    @_lastClaimedExtent = nil
-    # D2: the re-hug moved/resized the slot, so the reachability memo is stale too. Just nil it
+    @_lastClaimedExtent = undefined
+    # D2: the re-hug moved/resized the slot, so the reachability memo is stale too. Just undefined it
     # (pure bookkeeping — legal mid-pass): the scroll frame's re-fit for a slot change rides the
     # engine's frame-change up-edge, and the next transform change recomputes the memo fresh.
-    @_lastScrollOverflowBox = nil
+    @_lastScrollOverflowBox = undefined
     @_fullChanged()
 
   # ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     # never a child's participation in a dictating container's sizing.
     return if aPoint.equals @extent()
     content._applyExtent aPoint
-    @_reLayoutChildren true    # ARRANGE-driven re-fit: nil the anchor so the render stays glued to the slot (F1)
+    @_reLayoutChildren true    # ARRANGE-driven re-fit: undefined the anchor so the render stays glued to the slot (F1)
 
   # Path B (the width→height container protocol a vertical stack drives its tracking-container children
   # through, SimpleVerticalStackPanelWdgt._positionAndResizeChildren): size my content to the width by
@@ -191,7 +191,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
       # exactly as the base island's measure ignores availW.
       return (@transformSpec.claimedExtentFor @bounds).y
     resultingHeight = content._setWidthSizeHeightAccordingly newWidth
-    @_reLayoutChildren true    # ARRANGE-driven re-fit: nil the anchor so the render stays glued to the slot (F1)
+    @_reLayoutChildren true    # ARRANGE-driven re-fit: undefined the anchor so the render stays glued to the slot (F1)
     resultingHeight
 
   # Keep MEASURE and ARRANGE coherent: report what my content would take at the offered width (the

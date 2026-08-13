@@ -90,7 +90,7 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   # undivided method did, through spawnNextTo.
   _bringUpTargetNow: ->
     whatToBringUp = @target.findRootForGrab()
-    # findRootForGrab can return nil (e.g. a draggable graph has no grabbable
+    # findRootForGrab can return undefined (e.g. a draggable graph has no grabbable
     # root); when the target itself rests DIRECTLY in the bin or shelf it is
     # its own root for this purpose. A target that is merely part of a larger
     # widget resting in storage has no such direct root -- bringing it up

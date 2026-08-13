@@ -56,8 +56,8 @@ class ShortcutArrowIconAppearance extends SizeAwareIconAppearance
     py = (f) => iy + Math.round iS * (0.5 + (f - 0.5) * g)
 
     @_useInk ctx
-    jxHead = nil
-    jyHead = nil
+    jxHead = undefined
+    jyHead = undefined
     liftSmall = 0
     if S <= 24
       # small sizes: an EXACT 45-degree right triangle — horizontal top edge,

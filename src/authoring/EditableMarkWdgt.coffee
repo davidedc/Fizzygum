@@ -1,6 +1,6 @@
 class EditableMarkWdgt extends UpperRightTriangleIconicButtonWdgt
 
-  editObject: nil
+  editObject: undefined
   editMethodAsString: ""
 
   constructor: (parent, @editObject, @editMethodAsString) ->

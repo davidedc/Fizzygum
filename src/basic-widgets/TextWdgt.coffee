@@ -11,12 +11,12 @@ class TextWdgt extends StringWdgt
   wrappedLineSlots: []
   softWrap: true
 
-  backgroundColor: nil
+  backgroundColor: undefined
 
   #additional properties for ad-hoc evaluation:
-  receiver: nil
-  heightOfPossiblyCroppedText: nil
-  widthOfPossiblyCroppedText: nil
+  receiver: undefined
+  heightOfPossiblyCroppedText: undefined
+  widthOfPossiblyCroppedText: undefined
 
   constructor: (
    @text = "TextWdgt",
@@ -31,8 +31,8 @@ class TextWdgt extends StringWdgt
 
     # backgroundColor/backgroundTransparency are PLAIN parameters, not `@`-parameters,
     # and are merely forwarded: a `@param` in the signature assigns the instance field
-    # UNCONDITIONALLY, so `@backgroundTransparency = nil` used to shadow the class-level
-    # default of 1 (Widget) with nil on every construction. That nil then reached
+    # UNCONDITIONALLY, so `@backgroundTransparency = undefined` used to shadow the class-level
+    # default of 1 (Widget) with undefined on every construction. That undefined then reached
     # `ctx.globalAlpha` in _prepareTextBufferContext as `undefined` — an invalid canvas
     # value — and a specified backgroundColor silently painted nothing. StringWdgt owns
     # the "override existing ones only when passed" guard; let it do that job.

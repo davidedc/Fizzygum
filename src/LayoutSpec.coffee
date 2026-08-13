@@ -19,7 +19,7 @@
 # - a spec lives ON THE CHILD, never in a container-side map — the child carries its own
 #   attachment contract (and the spec serializes/duplicates with it for free).
 # - `Widget.layoutSpec` holds the child's ACTIVE spec; FREE-FLOATING means NO SPEC OWNS
-#   the child's placement — `layoutSpec` nil, or a follower spec whose `ownsPlacement()`
+#   the child's placement — `layoutSpec` undefined, or a follower spec whose `ownsPlacement()`
 #   is false (the layouting system then leaves the widget alone between the holder's own
 #   re-lays) — which is what `isFreeFloating()` asks.
 # - which strategy places a child is answered by duck-typed capability queries on its spec

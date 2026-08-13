@@ -33,11 +33,11 @@ class FileLoading
   # Sniff a string as a Fizzygum envelope and route by its `kind`. `dropPoint` (optional) is
   # where a restored widget should be placed.
   @loadEnvelopeString: (string, dropPoint) ->
-    envelope = nil
+    envelope = undefined
     try
       envelope = JSON.parse string
     catch e
-      envelope = nil
+      envelope = undefined
     unless envelope? and envelope.format is Serializer.FORMAT
       world.inform "This is not a Fizzygum file\n(expected a *.fzw.json file)."
       return

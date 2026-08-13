@@ -56,7 +56,7 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
   # survivors compact left -- the rise is the chart's identity, so at tiny
   # sizes fewer still-rising bars beat a flattened row. A bar that would
   # cross the clearance box is dropped too. Returns the baseline and the
-  # chart's right edge (nil when no bar fit) -- the right column's text
+  # chart's right edge (undefined when no bar fit) -- the right column's text
   # rows align their ends to it.
   _paintBarChart: (ctx, y, S, tc, lx2, cxMax, py, t) ->
     yB = y + Math.round S * @BAR_BASE
@@ -70,7 +70,7 @@ class SimpleSlideIconAppearance extends SizeAwareIconAppearance
       break if h < 1
       hs.unshift h
       hNext = h
-    chartRight = nil
+    chartRight = undefined
     for h, i in hs
       bx = lx2 + i * (bw + gap)
       break if bx + bw - 1 > cxMax

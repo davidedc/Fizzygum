@@ -18,7 +18,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     sdspw = doc.contents
 
     startingContent = new SimpleTextWdgt(
-      "Sample Doc",nil,nil,nil,nil,nil,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+      "Sample Doc",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true
@@ -41,10 +41,10 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
 
     sdspw.addNormalParagraph "Connected widgets can be added too, for example this slider below controls the data points of the graph above:\n"
 
-    slider1 = new SliderWdgt nil, nil, nil, nil, nil, true
+    slider1 = new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
     slider1._applyExtent new Point 400, 24
     sdspw.add slider1
-    slider1.setTargetAndActionWithOnesPickedFromMenu nil, nil, plot3D.contents, "setParameter"
+    slider1.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, plot3D.contents, "setParameter"
 
     sdspw.addSpacer()
 

@@ -5,9 +5,9 @@
 # exit; a block that returns null undoes the push and leaves).
 class LCLTransforms
 
-  matrixStack: nil
-  worldMatrix: nil
-  widget: nil
+  matrixStack: undefined
+  worldMatrix: undefined
+  widget: undefined
 
   constructor: (@widget) ->
     @resetMatrixStack()
@@ -82,7 +82,7 @@ class LCLTransforms
 
   # Undo a push whose chained block turned out to be a "fake": e.g. `flashing = <if
   # random < 0.5 then scale 0>` invoked bare chains into `scale 0` and a block that
-  # returns nil, so scale has already pushed before it can tell the push won't be
+  # returns undefined, so scale has already pushed before it can tell the push won't be
   # popped. Discards the popped matrix instead of restoring it (unlike popMatrix).
   discardPushedMatrix: ->
     if @matrixStack.length
@@ -222,7 +222,7 @@ class LCLTransforms
 
   # Run any trailing appended blocks (the `(f) ->` bodies passed after the numeric
   # args, starting at startIndex in the caller's arguments) against @widget, then pop
-  # the pushed matrix. If a block turns out to be a "fake" (returns nil) undo the push
+  # the pushed matrix. If a block turns out to be a "fake" (returns undefined) undo the push
   # and bail without popping. Shared verbatim by scale/rotate/move.
   _runAppendedBlocks: (args, startIndex) ->
     # public-call-sanctioned: driving the public matrix-stack protocol (pop/discard) IS

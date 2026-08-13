@@ -2,13 +2,13 @@
 # see also https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
 class MouseInputEvent extends InputEvent
 
-  button: nil
-  buttons: nil
+  button: undefined
+  buttons: undefined
 
-  ctrlKey: nil
-  shiftKey: nil
-  altKey: nil
-  metaKey: nil
+  ctrlKey: undefined
+  shiftKey: undefined
+  altKey: undefined
+  metaKey: undefined
 
   constructor: (@button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, isSynthetic, time) ->
     super isSynthetic, time

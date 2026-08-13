@@ -4,9 +4,9 @@
 
 class NumberPromptWdgt extends PromptWdgt
 
-  floorNum: nil
-  ceilingNum: nil
-  isRounded: nil
+  floorNum: undefined
+  ceilingNum: undefined
+  isRounded: undefined
 
   constructor: (widgetOpeningThePopUp, msg, target, callback, defaultContents, intendedWidth, @floorNum, @ceilingNum, @isRounded) ->
     super widgetOpeningThePopUp, msg, target, callback, defaultContents, intendedWidth

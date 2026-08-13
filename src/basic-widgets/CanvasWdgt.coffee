@@ -20,7 +20,7 @@ class CanvasWdgt extends PanelWdgt
 
   # paintingOverlay() capability chain (§5.D): the glass a paint tool's
   # press-time injection targets. A canvas answers its glass-top child if it
-  # carries one (an ImageWdgt's main canvas does), else nil.
+  # carries one (an ImageWdgt's main canvas does), else undefined.
   paintingOverlay: ->
     @firstChildSuchThat (eachChild) -> eachChild.isPaintingOverlay?()
   
@@ -100,7 +100,7 @@ class CanvasWdgt extends PanelWdgt
     @backBufferContext.useLogicalPixelsUntilRestore()
     # the raster mutated in place, so the shadow-silhouette twin is stale (the mixin's
     # identity check cannot see an in-place change)
-    @_backBufferShadowSilhouette = nil
+    @_backBufferShadowSilhouette = undefined
     @_changed()
 
   # The pen ASKS the canvas (PenWdgt.forward is the sole caller): a line primitive
@@ -126,6 +126,6 @@ class CanvasWdgt extends PanelWdgt
     context.stroke()
     # the raster mutated in place, so the shadow-silhouette twin is stale (the mixin's
     # identity check cannot see an in-place change)
-    @_backBufferShadowSilhouette = nil
+    @_backBufferShadowSilhouette = undefined
     @_changed()
   

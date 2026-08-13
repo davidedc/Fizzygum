@@ -1,6 +1,6 @@
 class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
-  objectIcon: nil
+  objectIcon: undefined
 
   # (ctor, the settling _buildAndConnectChildren wrapper, the square-sizing surface and the
   # children-staining setColor live in GenericCompositeIconWdgt)

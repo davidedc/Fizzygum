@@ -73,7 +73,7 @@ class IconAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
-    return nil unless keyValues?
+    return undefined unless keyValues?
     [area,sl,st,al,at,w,h] = keyValues
 
     # the icon art (paintFunction) sets its own colours, so the shadow pass renders it to a

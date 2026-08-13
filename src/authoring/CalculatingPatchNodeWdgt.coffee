@@ -8,19 +8,19 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   # never serialized: an own function property has no editable source and would
   # crash the serializer; the restored node recompiles at its first recalculation.
   @serializationTransients: ["functionFromCompiledCode"]
-  functionFromCompiledCode: nil
+  functionFromCompiledCode: undefined
 
-  tempPromptEntryField: nil
-  defaultFormulaBoxContents: nil
+  tempPromptEntryField: undefined
+  defaultFormulaBoxContents: undefined
 
-  formulaTextBoxLabel: nil
-  outputTextBoxLabel: nil
+  formulaTextBoxLabel: undefined
+  outputTextBoxLabel: undefined
 
-  outputTextArea: nil
-  outputTextAreaText: nil
+  outputTextArea: undefined
+  outputTextAreaText: undefined
 
-  input3: nil
-  input4: nil
+  input3: undefined
+  input4: undefined
 
   # ControllerMixin's setTargetAndActionWithOnesPickedFromMenu flips these true when a wire is
   # connected via the menu (@target[@action + "IsConnected"] = true) -- bookkeeping only,

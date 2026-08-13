@@ -3,17 +3,17 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
   # shared dataflow-node behaviour (dataflow protocol, connect-to-target menu, setter menus, _reLayout
   # scaffold, padding, and the input1/input2/output/textWidget preamble) lives on PatchNodeWdgt.
 
-  regexEntryField: nil
-  defaultContents: nil
+  regexEntryField: undefined
+  defaultContents: undefined
 
-  substitutionTextArea: nil
-  substitutionTextAreaText: nil
+  substitutionTextArea: undefined
+  substitutionTextAreaText: undefined
 
-  outputTextArea: nil
-  outputTextAreaText: nil
+  outputTextArea: undefined
+  outputTextAreaText: undefined
 
-  input3: nil
-  input4: nil
+  input3: undefined
+  input4: undefined
 
   # vestigial: written by ControllerMixin.setTargetAndActionWithOnesPickedFromMenu but read
   # nowhere -- their reader was the multi-input freshness gate, deleted when any-input-marks-

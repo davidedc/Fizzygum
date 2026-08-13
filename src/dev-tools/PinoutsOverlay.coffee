@@ -57,7 +57,7 @@ class PinoutsOverlay
       else
         @currentPinoutingWidgets.delete eachPinoutingWidget
         @widgetsBeingPinouted.delete eachPinoutingWidget.wdgtThisWdgtIsPinouting
-        eachPinoutingWidget.wdgtThisWdgtIsPinouting = nil
+        eachPinoutingWidget.wdgtThisWdgtIsPinouting = undefined
         eachPinoutingWidget.fullDestroy()
 
     @widgetsToBePinouted.forEach (eachWidgetNeedingPinout) =>

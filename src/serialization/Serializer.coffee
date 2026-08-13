@@ -14,7 +14,7 @@ class Serializer
   @FORMAT: "fizzygum"
   @FORMAT_VERSION: 1
 
-  # The world slots that each hold (at most) one singleton-app window. A slot may be nil, or
+  # The world slots that each hold (at most) one singleton-app window. A slot may be undefined, or
   # hold an ORPHANED-but-revivable window (the app's launch() checks parent?). See
   # IconicDesktopSystemWindowedApp and the world snapshot (§11).
   @WORLD_APP_SLOTS: [
@@ -84,7 +84,7 @@ class Serializer
   # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
   # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
   # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop
-  # children, the off-tree bin, the non-nil app-slot windows, the templates window — are
+  # children, the off-tree bin, the non-undefined app-slot windows, the templates window — are
   # walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
   # widget and the caret are dropped by construction (they live outside the snapshot roots);
   # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
@@ -119,7 +119,7 @@ class Serializer
     # (§4.9) holds and no world state is silently dropped. (A stray {"$ext"} same-world token
     # is still resolvable by iid on restore, but "capture" leaves none for a settled world.)
     onExternal = opts.onExternalPointer or "capture"
-    table = @_buildObjectTable widgetSet, onExternal, "the world", nil
+    table = @_buildObjectTable widgetSet, onExternal, "the world", undefined
     ref = table.refFor
 
     # --- the explicit world section (plain, greppable; outside the object table) ---
@@ -218,13 +218,13 @@ class Serializer
   # Builds `objects` (the versioned record table) for a set of in-structure widgets, and
   # returns the encoding primitives used by BOTH serializeWidget and serializeWorld so the
   # two share one walker and cannot drift. `root` is the single detach-root (its `parent`
-  # serializes as null) or nil (world snapshot: top children keep parent = {"$wk":"world"}).
+  # serializes as null) or undefined (world snapshot: top children keep parent = {"$wk":"world"}).
   @_buildObjectTable: (widgetSet, onExternal, rootDescription, root) ->
     objects = []
     slotOf = new Map          # live object -> table index (identity; cycle/sharing safe)
 
     describe = (v) ->
-      return "nil" unless v?
+      return "undefined" unless v?
       if v instanceof Widget then return v.uniqueIDString() + " (a " + v.constructor.name + ")"
       if v.constructor?.name then return "a " + v.constructor.name
       typeof v
