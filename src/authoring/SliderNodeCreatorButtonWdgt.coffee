@@ -5,7 +5,7 @@ class SliderNodeCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new SliderNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    switcherooWdgt = new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
+    switcherooWdgt = new SliderWdgt smallestValueIsAtBottomEnd: true
     return switcherooWdgt
 
 

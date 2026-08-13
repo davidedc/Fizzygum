@@ -192,7 +192,7 @@ class DemoMenus
     world.openFrameWith diffingPatchNodeWdgt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
   createSliderWithSmallestValueAtBottomEnd: ->
-    world.create new SliderWdgt undefined, undefined, undefined, undefined, undefined, true
+    world.create new SliderWdgt smallestValueIsAtBottomEnd: true
 
   createRegexSubstitutionPatchNodeWdgt: ->
     regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt

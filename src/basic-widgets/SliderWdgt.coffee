@@ -35,15 +35,19 @@ class SliderWdgt extends CircleBoxWdgt
 
   idealRatioWidthToHeight: 1/4
 
-  constructor: (
-    @start = 1,
-    @stop = 100,
-    @value = 50,
-    @size = 10,
-    @color = Color.BLACK,
-    @smallestValueIsAtBottomEnd = false
-    ) ->
-    super
+  # An OPTIONS object, not positionals. The two trailing knobs (`color`,
+  # `smallestValueIsAtBottomEnd`) used to be reachable only by passing holes through the four
+  # numeric ones, and the two groups of callers that wanted them wanted DISJOINT tails — 6 sites
+  # wanted only the flag, 2 only the colour — so NO parameter order could serve both. Fields are
+  # assigned before the super call, preserving the order the `@param` form compiled to.
+  constructor: (opts = {}) ->
+    @start = opts.start ? 1
+    @stop = opts.stop ? 100
+    @value = opts.value ? 50
+    @size = opts.size ? 10
+    @color = opts.color ? Color.BLACK
+    @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
+    super()
     @alpha = 0.1
     @__commitExtent new Point 20, 100
     @_buildAndConnectChildren()

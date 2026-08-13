@@ -16,10 +16,10 @@ class NumberPromptWdgt extends PromptWdgt
     @_buildAndAddEntryFieldInto panel, (@ceilingNum?)
 
     slider = new SliderWdgt(
-      @floorNum or 0,
-      @ceilingNum,
-      parseFloat(@defaultContents),
-      Math.floor((@ceilingNum - @floorNum) / 4))
+      start: @floorNum or 0,
+      stop: @ceilingNum,
+      value: parseFloat(@defaultContents),
+      size: Math.floor((@ceilingNum - @floorNum) / 4))
     slider.alpha = 1
     slider.color = Color.create 225, 225, 225
     slider.button.setColorScheme Color.create 60, 60, 60

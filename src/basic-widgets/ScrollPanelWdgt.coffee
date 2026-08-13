@@ -62,13 +62,13 @@ class ScrollPanelWdgt extends PanelWdgt
     @color = @contents.color
     @alpha = @contents.alpha
 
-    @hBar = new SliderWdgt undefined, undefined, undefined, undefined, @sliderColor
+    @hBar = new SliderWdgt color: @sliderColor
     @hBar._applyHeight @scrollBarsThickness
 
     @hBar.target = @
     @_addNoSettle @hBar
 
-    @vBar = new SliderWdgt undefined, undefined, undefined, undefined, @sliderColor
+    @vBar = new SliderWdgt color: @sliderColor
     @vBar._applyWidth @scrollBarsThickness
     @vBar.target = @
     @_addNoSettle @vBar
@@ -223,7 +223,8 @@ class ScrollPanelWdgt extends PanelWdgt
   # end up in the Panel inside it.
   # This would also apply to resizing handles - so we need to
   # correct for that case
-  add: (aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen) ->
+  # slot 5 is `notContent` family-wide — accepted and ignored here (see SimpleVerticalStackPanelWdgt.add)
+  add: (aWdgt, position, layoutSpec, beingDropped, notContent, positionOnScreen) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign). Keyed off the WIDGET, not the layoutSpec argument:
     # handles are added with no explicit spec (defaultLayoutSpecWhenAddedTo resolves it inside

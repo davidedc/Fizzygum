@@ -22,7 +22,11 @@ class SimpleVerticalStackPanelWdgt extends Widget
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
-  add: (aWdgt, position, layoutSpec, beingDropped, unused, positionOnScreen) ->
+  # Slot 5 is `notContent` family-wide. FrameWdgt is the ONLY receiver that acts on it; here it is
+  # accepted and ignored, so the slot carries ONE meaning across every add() in the family and slot 6
+  # (positionOnScreen) stays aligned. It was named `unused` in three classes while FrameWdgt called the
+  # same slot `notContent`, which made one positional call mean different things per receiver.
+  add: (aWdgt, position, layoutSpec, beingDropped, notContent, positionOnScreen) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
