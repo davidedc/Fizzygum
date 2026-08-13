@@ -1,5 +1,65 @@
 # A specified widget background that silently never painted — find the mechanism
 
+> ## ✅ EXECUTED IN FULL — 2026-08-13. Root cause found, fixed, regression-tested.
+>
+> **Root cause (Fizzygum, not the rasterizer).** `TextWdgt` and `SimpleTextWdgt` declared
+> `@backgroundColor = nil, @backgroundTransparency = nil` as constructor **`@`-parameters**. A
+> CoffeeScript `@param` in a signature compiles to an **unconditional** `this.x = x`, so every
+> construction wrote `nil` over `Widget`'s class-level default `backgroundTransparency: 1`
+> (`Widget.coffee:124`) — and `StringWdgt`'s own *"properties that override existing ones only
+> when passed"* guard (`StringWdgt.coffee:216-217`) could not undo a field that had already been
+> written. That `nil` reached
+> `backBufferContext.globalAlpha = @backgroundTransparency` in
+> `StringWdgt::_prepareTextBufferContext` as **`globalAlpha = undefined`** — an invalid canvas
+> assignment which HTML5 says to IGNORE, but which SWCanvas stores raw and some engine builds
+> then composite at NaN coverage. The `fillRect` ran with the correct `fillStyle` and the correct
+> 400×34 extent and **painted nothing**, raising no error anywhere.
+>
+> **The decisive measurement** (instrumenting the fill site itself): immediately after the
+> `fillRect`, the buffer read `0,0,0,0` at three sampled points, while a **control** fill at an
+> explicit `globalAlpha = 1` on the same context painted `230,230,130,255`. That isolates the
+> alpha, not any rasterization difference. 28 fills were silently dropped in that one test.
+>
+> **⚠ BOTH of §0's "critical reframes" were WRONG, and each cost time — recorded so the next
+> reader does not inherit them:**
+> 1. **REFRAME 2 is FALSIFIED.** The mechanism is NOT indirect. It is `fillRect`'s **own**
+>    direct arm — exactly the entry point the missing paint uses. Measured across engine
+>    builds: `globalAlpha = undefined` + `fillRect` paints nothing at `45dffae`, and paints
+>    correctly from **B1 `8f11434`** (which removed `fillRect`'s direct arms) onward.
+> 2. **The bisect in §2.2 was MISATTRIBUTED**, and the cause is a build artifact: at B1
+>    `8f11434` **`dist/swcanvas.min.js` was STALE**. Its `build-info` names commit `f3e6ac9`
+>    (11:01:18) while its own unminified `dist/swcanvas.js` names `45dffae` (11:11:52). The
+>    browser loads the **minified** bundle, so it was still running pre-Phase-A code at B1; B2
+>    `838b9f7` merely re-synced the two. Bisecting a vendored engine **through the browser** is
+>    bisecting the minified artifact — verify `swcanvas.min.build-info.js`, not just the SHA.
+>    (Same trap, third sighting — cf. the D2 scale-path arc's "stale min = phantom all-green".)
+>
+> **Fix.** `TextWdgt` + `SimpleTextWdgt` now take `backgroundColor`/`backgroundTransparency` as
+> **plain** parameters and forward them, letting `StringWdgt`'s existing guard assign them only
+> when passed. `_prepareTextBufferContext` additionally coerces an absent transparency to `1`
+> rather than handing the canvas a nil, because this failure mode is invisible rather than loud.
+>
+> **Proof the fix is the cure, not the engine:** with the buggy pre-B2 engine still vendored, the
+> fix alone restored the band — 11839 px at the reference's exact bbox (400×34 @ 230,150), vs
+> **zero** such pixels before. (The residual few-px delta there is the old engine's known
+> hairline/alpha convention difference, and it disappears on the pinned engine.)
+>
+> **Regression test:** `SystemTest_macroSpecifiedBackgroundActuallyPaints` — deliberately
+> **assertion-only** (no screenshots, so no reference images and no dpr axis). Verified to FAIL
+> on the pre-fix tree (`found: undefined` on both field assertions). ⭐ Its *pixel* assertion
+> **passed** on the pre-fix tree, because the currently pinned engine tolerates an undefined
+> alpha — empirical proof that a screenshot test alone could NOT have caught this, and the
+> reason the guard asserts the FIELD.
+>
+> **Left open, deliberately (not blockers, flagged to the owner):** SWCanvas does not validate
+> `globalAlpha` per HTML5 (it stores `undefined`/`NaN` raw; `NaN` still zeroes a fill on the
+> *current* engine — measured); and three other sites read `@backgroundTransparency` without a
+> nil-safe path — `Appearance.coffee:70`, `AnalogClockAppearance.coffee:45` (both assign it
+> straight to `globalAlpha`) and `RectangularAppearance.coffee:6` / `SimpleImageWdgt.coffee:119`
+> / `VideoPlayerCanvasWdgt.coffee:116` (which skip the background fill entirely when it is nil —
+> the same silent-drop shape, engine-independent). No shipping class reaches them with a nil
+> today now that the two clobbering constructors are fixed.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-13, immediately after the SWCanvas one-rect-fill campaign closed
 (SWCanvas `main` `16e4ed9`, Fizzygum `fb087298`, Fizzygum-tests `10af6a144` — all pushed).

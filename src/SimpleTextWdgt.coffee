@@ -29,10 +29,14 @@ class SimpleTextWdgt extends TextWdgt
    @isBold = false,
    @isItalic = false,
    @color = Color.BLACK,
-   @backgroundColor = nil,
-   @backgroundTransparency = nil
+   backgroundColor,
+   backgroundTransparency
    ) ->
 
+    # plain (non-`@`) parameters, forwarded to TextWdgt -> StringWdgt, which assigns them
+    # only when actually passed: an `@`-parameter assigns unconditionally, so the old
+    # `@backgroundTransparency = nil` shadowed Widget's class-level default of 1 — see
+    # the note in TextWdgt's constructor.
     super
     @_commitBounds new Rectangle 0,0,400,40
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT

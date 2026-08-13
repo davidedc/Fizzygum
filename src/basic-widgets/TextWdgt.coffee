@@ -25,10 +25,17 @@ class TextWdgt extends StringWdgt
    @isBold = false,
    @isItalic = false,
    @color,
-   @backgroundColor = nil,
-   @backgroundTransparency = nil
+   backgroundColor,
+   backgroundTransparency
    ) ->
 
+    # backgroundColor/backgroundTransparency are PLAIN parameters, not `@`-parameters,
+    # and are merely forwarded: a `@param` in the signature assigns the instance field
+    # UNCONDITIONALLY, so `@backgroundTransparency = nil` used to shadow the class-level
+    # default of 1 (Widget) with nil on every construction. That nil then reached
+    # `ctx.globalAlpha` in _prepareTextBufferContext as `undefined` — an invalid canvas
+    # value — and a specified backgroundColor silently painted nothing. StringWdgt owns
+    # the "override existing ones only when passed" guard; let it do that job.
     super(
       @text,
       @originallySetFontSize,
@@ -38,8 +45,8 @@ class TextWdgt extends StringWdgt
       false, # isHeaderLine
       false, # isNumeric
       @color,
-      @backgroundColor,
-      @backgroundTransparency
+      backgroundColor,
+      backgroundTransparency
       )
     # override inherited properties:
     @markedTextColor = Color.WHITE

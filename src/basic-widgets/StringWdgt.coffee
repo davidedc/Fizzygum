@@ -742,10 +742,17 @@ class StringWdgt extends Widget
     # (contrary to most direct canvas calls elsewhere in the codebase).
     # This is because it's inside the scope of the
     # "useLogicalPixelsUntilRestore()".
+    # An ABSENT backgroundTransparency means fully opaque (Widget's class-level default
+    # is 1) — never hand the canvas a nil. `ctx.globalAlpha = undefined` is an invalid
+    # assignment that HTML5 says to IGNORE, but SWCanvas stores it raw, and some engine
+    # builds then composite the fill at NaN coverage: the specified backgroundColor
+    # silently paints NOTHING, with no error anywhere. Belt-and-braces since the two
+    # constructors that used to leave the field nil were fixed (TextWdgt/SimpleTextWdgt),
+    # because the failure mode is invisible rather than loud.
     if @backgroundColor
       backBufferContext.save()
       backBufferContext.fillStyle = @backgroundColor.toString()
-      backBufferContext.globalAlpha = @backgroundTransparency
+      backBufferContext.globalAlpha = @backgroundTransparency ? 1
       backBufferContext.fillRect  0,
           0,
           Math.round(@width()),

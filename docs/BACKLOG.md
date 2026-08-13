@@ -230,6 +230,25 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 
 ## Residual / parked items (owning doc archived)
 
+### `archive/dropped-background-fill-investigation.md` — left open deliberately at close (2026-08-13)
+- [ ] **SWCanvas does not validate `globalAlpha` per HTML5** — the spec says an out-of-range or
+      non-finite assignment is IGNORED (the previous value stands); SWCanvas stores it raw, so
+      `ctx.globalAlpha = NaN` still composites a fill at zero coverage on the CURRENTLY PINNED
+      engine (measured 2026-08-13; `undefined` is tolerated only since B1 `8f11434`). That is the
+      half of the dropped-background-fill mechanism that makes it SILENT rather than loud, and it
+      is upstream, in the `SWCanvas` repo. Fizzygum no longer hands it a nil, so this is a
+      hardening item, not a live bug: any future caller passing a bad alpha loses its paint with
+      no error. Wants a conformant setter (ignore non-finite / clamp) upstream.
+- [ ] **Three more `@backgroundTransparency` readers have no nil-safe path** — `Appearance.coffee:70`
+      and `AnalogClockAppearance.coffee:45` assign it straight to `globalAlpha` (same invalid-value
+      exposure as the fill site that was fixed); `RectangularAppearance.coffee:6`,
+      `SimpleImageWdgt.coffee:119` and `VideoPlayerCanvasWdgt.coffee:116` instead *skip the
+      background fill entirely* when it is nil — the same silent-drop shape, and that one is
+      engine-independent. No shipping class reaches any of them with a nil now that the two
+      clobbering constructors (`TextWdgt`, `SimpleTextWdgt`) are fixed, so this is latent, not
+      live. Wants either the same `? 1` coercion at each site or, better, a decision that the
+      field is an invariant (never nil) enforced once.
+
 ### `archive/layout-spec-family-followups-plan.md` — discovered en route (not caused by the arc)
 - [ ] **A context menu taller than the world leaves its tail permanently unreachable** (F1 find):
       pop-ups clamp their TOP into the world (`PopUpWdgt.popUp → _moveWithin`), so a menu taller
