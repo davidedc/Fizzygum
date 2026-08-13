@@ -57,6 +57,23 @@ if [ -n "$SOURCE_PATH" ]; then
       exit 1
     fi
   done
+  # STALE-MIN GATE: SWCanvas's `npm run build` regenerates dist/swcanvas.js but NOT
+  # dist/swcanvas.min.js (that is `npm run minify` / `npm run build:prod`) — and the
+  # Fizzygum boot bundle embeds the MIN bundle, so vendoring a stale min silently ships
+  # OLD engine behaviour while the unminified dist (and the checkout's own green tests)
+  # carry the new. That exact trap produced a phantom all-green suite on 2026-08-13
+  # (scale-smoothing arc). The build-info sidecars carry ISO-8601 timestamps, which
+  # compare lexicographically: refuse to vendor when the min bundle predates the plain one.
+  if [ -f "$SRC/dist/swcanvas.build-info.js" ] && [ -f "$SRC/dist/swcanvas.min.build-info.js" ]; then
+    PLAIN_TS="$(sed -n 's/.*"timestamp": *"\([^"]*\)".*/\1/p' "$SRC/dist/swcanvas.build-info.js" | head -1)"
+    MIN_TS="$(sed -n 's/.*"timestamp": *"\([^"]*\)".*/\1/p' "$SRC/dist/swcanvas.min.build-info.js" | head -1)"
+    if [ -n "$PLAIN_TS" ] && [ -n "$MIN_TS" ] && [ "$MIN_TS" \< "$PLAIN_TS" ]; then
+      echo "error: dist/swcanvas.min.js is STALE — minified $MIN_TS but the unminified dist was built $PLAIN_TS." >&2
+      echo "       The boot bundle embeds the MIN bundle, so this would vendor OLD engine behaviour." >&2
+      echo "       Run 'npm run minify' (or 'npm run build:prod') in $SRC, then re-vendor." >&2
+      exit 1
+    fi
+  fi
   cp "$SRC/dist/swcanvas.js" "$SRC/dist/swcanvas.min.js" \
      "$SRC/dist/swcanvas-3d-core.js" "$SRC/dist/swcanvas-3d-core.min.js" \
      "$SRC/dist/sw3d.min.js" "$SRC/examples/sw3d.js" "$STAGING/"

@@ -37,8 +37,11 @@
 > ⚠ `fg recapture --auto`'s classifier mis-filed the one genuinely pixel-stale test as
 > "needs-a-fix (failureImages=0)" while a single run visibly dumped a failing image, and a
 > parallel suite leg returned a phantom PASS for it (the zero-failed-screenshots-masks-an-error
-> gotcha) — re-captured via the per-test `capture-macro-test-references.js` + re-gated; the
-> classifier quirk is noted for a tooling follow-up. Sweep over the 2 changed refs: CLEAN.
+> gotcha) — re-captured via the per-test `capture-macro-test-references.js` + re-gated.
+> BOTH tooling defects (plus the stale-min vendor trap and the relay mis-attribution) were
+> FIXED the same day: the harness `MACRO INCOMPLETE` guard, self-identifying mismatch lines,
+> recapture.js's two-sample pixel classification, and vendor-swcanvas.sh's stale-min gate —
+> see the tests repo's CLAUDE.md + the follow-up commits. Sweep over the 2 changed refs: CLEAN.
 > T-scale test `SystemTest_macroScaledStrokedRectSmooth` pins BOTH policy faces (1.5× smooth,
 > then `setScale 2` crisp) — captured both dprs, stable ×6. SWCanvas commit pushed on main
 > BEFORE the pin rewrite (dual suites 244/244 green, test counts re-synced).
