@@ -48,7 +48,10 @@ const STINKS = [
     re: /^\s*debugger\b/ },
   // `undefined-literal` (baseline 83) was DELETED on 2026-08-13: it enforced `nil` OVER `undefined`,
   // and the `nil` global it protected has been retired, so the rule now polices the opposite of the
-  // convention. Its replacement is `nil-literal` below — same intent, inverted direction.
+  // convention. `nil-literal` is its replacement — same intent, inverted direction.
+  { id: 'nil-literal', baseline: 0,   // HARD: `nil` no longer exists; a reference to it is a ReferenceError waiting to happen
+    why: "the `nil = undefined` global is RETIRED — `undefined` is the codebase's one absence value, spelled the way the language spells it. `nil` was an alias for a primitive that cost a writable global, a boot-order dependency and a lint rule, and had leaked into the reflective layer as emitted source",
+    re: /\bnil\b/ },
   { id: 'null-literal', baseline: 8,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug)
     why: "the codebase uses `undefined` as its ONE absence value, never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
     re: /\bnull\b/ },

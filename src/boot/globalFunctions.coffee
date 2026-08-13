@@ -1,16 +1,3 @@
-# we use "nil" everywhere instead of "null"
-# and this "nil" we use is really "undefined"
-# The reason is the following: Coffeescript v2 has the
-# same "default values" policy as ES2015 i.e.
-# "null" values DON'T get defaults anymore.
-# Since we used that a lot, we devise the trick that
-# we replace "null" with "nil" everywhere and we get the
-# same behaviour as before (because existential operators
-# such as "?" work the same on "undefined" and "null").
-# The only thing we have to do is to never use "undefined"
-# and "null" explicitly.
-nil = undefined
-
 # globals -------------------------------------------------
 world = undefined
 
