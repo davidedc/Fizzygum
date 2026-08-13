@@ -309,19 +309,20 @@ class MacroToolkit
     # widget would shift ~1px (macroPromptShadowFollowsOnDrag). Only the duration grows.
     flooredDrag = @dragSpanWithFloor millisecondsForDrag
     dragEventsPerMs = numberOfEventsPerMillisecond * millisecondsForDrag / flooredDrag
-    @syntheticEventsMouseMove_InputEvents orig, "left button", 100, nil, startTime, numberOfEventsPerMillisecond
+    @syntheticEventsMouseMove_InputEvents orig, "left button", 100, startTime, numberOfEventsPerMillisecond
     @syntheticEventsMouseDown_InputEvents "left button", startTime + 100
-    @syntheticEventsMouseMove_InputEvents dest, "left button", flooredDrag, orig, startTime + 100 + 100, dragEventsPerMs
+    @syntheticEventsMouseMove_InputEvents dest, "left button", flooredDrag, startTime + 100 + 100, dragEventsPerMs, orig
     @syntheticEventsMouseUp_InputEvents "left button", startTime + 100 + 100 + flooredDrag + 100
 
   # This should be used if you want to drag from point A to B to C ...
   # If rather you want to just drag from point A to point B,
   # then just use syntheticEventsMouseMovePressDragRelease_InputEvents
-  syntheticEventsMouseMoveWhileDragging_InputEvents: (dest, milliseconds = 1000, orig = world.hand.position(), startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+  # same optional-parameter ordering as syntheticEventsMouseMove_InputEvents, which this delegates to
+  syntheticEventsMouseMoveWhileDragging_InputEvents: (dest, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1, orig = world.hand.position()) ->
     # floor the span, keep the count constant (see syntheticEventsMouseMovePressDragRelease)
     flooredMs = @dragSpanWithFloor milliseconds
     dragEventsPerMs = numberOfEventsPerMillisecond * milliseconds / flooredMs
-    @syntheticEventsMouseMove_InputEvents dest, "left button", flooredMs, orig, startTime, dragEventsPerMs
+    @syntheticEventsMouseMove_InputEvents dest, "left button", flooredMs, startTime, dragEventsPerMs, orig
 
   # mouse moves need an origin and a destination, so we
   # need to place the mouse in _some_ place to begin with
@@ -330,7 +331,10 @@ class MacroToolkit
     @currentPointerTarget = place
     @queueInputEvent new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
 
-  syntheticEventsMouseMove_InputEvents: (dest, whichButton = "no button", milliseconds = 1000, orig = world.hand.position(), startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+  # Optional parameters are ordered by how often a caller actually specifies one, most-specified
+  # first, so no caller ever has to pass a hole to reach a later argument. `orig` is last because
+  # it is almost always the default: the move starts wherever the hand currently is.
+  syntheticEventsMouseMove_InputEvents: (dest, whichButton = "no button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1, orig = world.hand.position()) ->
     if whichButton == "left button"
       button = 0
       buttons = 1
@@ -424,7 +428,7 @@ class MacroToolkit
     @queueInputEvent (new MouseupInputEvent button, buttons, false, false, false, false, true, startTime), nonScaled
 
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
     @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100
 
   # Move to a point/widget then MOUSE DOWN and HOLD — the press half of a click, scheduled AFTER the move
@@ -435,7 +439,7 @@ class MacroToolkit
   # `yield "waitNoInputsOngoing"` -> `takeScreenshot_InputEvents_Macro "…"` (captures with the button still
   # held) -> `@syntheticEventsMouseUp_InputEvents()` -> `yield "waitNoInputsOngoing"`.
   moveToAndMouseDown_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
     @syntheticEventsMouseDown_InputEvents whichButton, startTime + milliseconds + 100
 
   # Resolve a [widget | text-description identifier | Point] + an [fx, fy] fraction to an absolute
@@ -519,7 +523,7 @@ class MacroToolkit
     # public-call-sanctioned: syntheticEventsMouseMove_InputEvents is an L1 event-synthesis primitive (it
     # pushes a queued mouse-move, not any settling/orchestration) — this is the SAME call the public
     # double/tripleClick verbs made inline before their shared body was factored here; behaviour is unchanged.
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
     @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100
 
   # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
@@ -528,7 +532,7 @@ class MacroToolkit
   # the anchor caret, then one or more shiftClickAtFractionOf to grow the selection. The selection-extend
   # sibling of the double-/triple-click verbs. Queues input events — follow with `yield "waitNoInputsOngoing"`.
   shiftClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
     @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
 
   # Push ONE synthetic WheelInputEvent onto the input queue — the queued primitive behind
@@ -549,7 +553,7 @@ class MacroToolkit
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, nil, startTime, nil
+    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its

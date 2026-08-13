@@ -49,7 +49,7 @@ const STINKS = [
   { id: 'undefined-literal', baseline: 83,   // tightened 89->83 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
     why: "the codebase uses `nil` (src/boot/globalFunctions.coffee), never `undefined` — a CLAUDE.md convention that until now was manual-only",
     re: /\bundefined\b/ },
-  { id: 'null-literal', baseline: 9,   // tightened 10->9 on 2026-07-30 (banking a gain already landed; fg critique surfaced it)
+  { id: 'null-literal', baseline: 8,   // tightened 9->8 on 2026-08-13 (the DemoMenus stack-panel `null`s were a live CS2 default-param bug — see below)
     why: "the codebase uses `nil` (which IS undefined), never `null` — the JS-interop sites (JSON.stringify's arg, DOM `onload = null`) are the tolerated tail",
     re: /\bnull\b/ },
   { id: 'wall-clock', baseline: 19,

@@ -568,7 +568,7 @@ class StringWdgt extends Widget
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  measureText: (overrideFontSize = @fittingFontSize, text) ->
+  measureText: (text, overrideFontSize = @fittingFontSize) ->
     cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + text.hashCode()
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
@@ -607,7 +607,7 @@ class StringWdgt extends Widget
       debugger
     if text == ""
       return true
-    extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), @fontHeight(overrideFontSize)
+    extentOccupiedByText = new Point Math.ceil(@measureText text, overrideFontSize), @fontHeight(overrideFontSize)
 
     # reserve the halo margin HORIZONTALLY only: measured width is the glyphs'
     # actual advance (ink reaches it), but fontHeight is the full em box, whose
@@ -646,7 +646,7 @@ class StringWdgt extends Widget
         return largestFittingFontSize
 
   calculateTextWidth: (text, overrideFontSize) ->
-    return @measureText overrideFontSize, text
+    return @measureText text, overrideFontSize
 
   _setFittingFontSize: (theValue) ->
     if @fittingFontSize != theValue
@@ -870,7 +870,7 @@ class StringWdgt extends Widget
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
       backBufferContext.fillStyle = @markedBackgroundColor.toString()
-      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText nil, c) + 1, Math.ceil @fontHeight @fittingFontSize
+      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText c) + 1, Math.ceil @fontHeight @fittingFontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
       backBufferContext.fillText c, p.x, p.y + Math.ceil @fontHeight @fittingFontSize
     

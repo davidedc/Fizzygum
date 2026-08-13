@@ -122,14 +122,14 @@ class TextWdgt extends StringWdgt
         currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
         wrappedLinesOfThisParagraph.push currentLine
         wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-        maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
+        maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText currentLine, overrideFontSize
         currentLine = ""
       else
         if maxTextWidth > 0 # there is a width limit, we might have to wrap
           # build a prospective line (current line + word)
           # and check it against the width limit.
           lineForOverflowTest = currentLine + word + " "
-          w = Math.ceil @measureText overrideFontSize, lineForOverflowTest
+          w = Math.ceil @measureText lineForOverflowTest, overrideFontSize
           if w > maxTextWidth
             # overflowed: push the line *without the last word* --
             # that word starts the next line.
@@ -140,7 +140,7 @@ class TextWdgt extends StringWdgt
             if currentLine != @emptyCharacter
               wrappedLinesOfThisParagraph.push currentLine
               wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-              maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
+              maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText currentLine, overrideFontSize
             currentLine = word + " "
           else
             # no overflow happened, so just proceed as normal
@@ -466,7 +466,7 @@ class TextWdgt extends StringWdgt
     # math (slotCoordinates) uses, and the carrier of the halo-margin inset.
     i = 0
     for line in @wrappedLines
-      width = Math.ceil(@measureText nil, line)
+      width = Math.ceil(@measureText line)
       x = @textHorizontalPosition width
       y = (i + 1) * Math.ceil @fontHeight @fittingFontSize
       i++
@@ -526,8 +526,8 @@ class TextWdgt extends StringWdgt
     @reflowText()
     [slotRow, slotColumn] = @slotRowAndColumn slot
 
-    lineWidth = @measureText nil, @wrappedLines[slotRow]
-    xOffset = Math.ceil @measureText nil, (@wrappedLines[slotRow]).substring(0,slotColumn)
+    lineWidth = @measureText @wrappedLines[slotRow]
+    xOffset = Math.ceil @measureText @wrappedLines[slotRow].substring(0,slotColumn)
     yOffset = slotRow * Math.ceil @fontHeight @fittingFontSize
 
     textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
