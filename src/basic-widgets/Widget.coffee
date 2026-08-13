@@ -3310,7 +3310,11 @@ class Widget extends TreeNode
   # settle, so it neither re-enters the flush guard nor triggers a redundant relayout). They are
   # byte-identical to going through add(): for a fresh non-world child the shadow step is a no-op
   # removeShadow. See docs/archive/deferred-layout-refit-and-add-design.md (D3).
-  add: (aWdgt, position, layoutSpec = aWdgt.defaultLayoutSpecWhenAddedTo(@), beingDropped) ->
+  # No default for layoutSpec here on purpose: _addNoSettle is the ONE resolver
+  # (`opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)`). A default here too would state the
+  # fallback twice — and since the base answer IS undefined, it also called the resolver twice per
+  # add: once here, then again in the core because `?` saw the undefined it had just produced.
+  add: (aWdgt, position, layoutSpec, beingDropped) ->
     @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
