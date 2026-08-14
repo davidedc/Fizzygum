@@ -152,4 +152,8 @@ in [`app-fit-criteria.md`](app-fit-criteria.md).
   derived from parentage.
 
 See [`design-principles.md`](design-principles.md) for the system-wide principles this
-contract serves.
+contract serves, and
+[`widget-authoring-guidelines.md`](widget-authoring-guidelines.md) for the per-facet house
+rules that discharge it when writing a class (with
+[`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md)
+recording how the existing widgets score against them).
