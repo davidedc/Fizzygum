@@ -403,8 +403,16 @@ batches: the 5 code-area/prompt classes · the 4 stretchable classes · the 5 ic
 rest). Byte-identity is the acceptance; any diff means the hook is in the wrong place (§4).
 Recapture budget: **0** — a diff here is a bug, never a new baseline.
 
-**W6a — widen the pin setters.** (§2.6) Bring shapes B, C and D to shape A's coercion, keeping each
-body's existing clamping and firing untouched:
+**W6a — widen the pin setters.** (§2.6) ⚠ **Coordinate with
+[`connector-ubiquity-and-reflection-plan.md`](connector-ubiquity-and-reflection-plan.md) first** — that
+arc (authored the same day) re-examines the whole pin protocol from the other end (a controller is a
+view of the value it controls; what announces itself, and which classes can be a source at all), and
+its §2 inventories the same setter tables. If it lands first, re-derive §2.6 against the tree it
+leaves. If this lands first, W6a is a pure widening that its work sits on top of. Either way the two
+must not edit the same setter bodies in parallel.
+
+Bring shapes B, C and D to shape A's coercion, keeping each body's existing clamping and firing
+untouched:
 ```coffee
 value = widgetGiving?.getValue?() ? valueOrWidget?.getValue?() ? valueOrWidget
 ```
@@ -610,6 +618,8 @@ Other lists: `grep -rn '^  _reLayout:' src` (W5) · `grep -rn '^  colloquialName
 - Closest precedent for the phase shape and the stop rule:
   [`../archive/menu-slider-ctor-conversion-plan.md`](../archive/menu-slider-ctor-conversion-plan.md);
   the constructor contract it locked in: [`../archive/all-constructors-settle-plan.md`](../archive/all-constructors-settle-plan.md)
+- **Sibling arc, same territory:** [`connector-ubiquity-and-reflection-plan.md`](connector-ubiquity-and-reflection-plan.md)
+  — the pin protocol seen from the value's side (the controller-is-a-view law). Overlaps W6; see §5.
 - Case law on why census findings are questions, not instructions:
   [`../archive/duplication-triage-2026-07-15-hierarchy-round4.md`](../archive/duplication-triage-2026-07-15-hierarchy-round4.md) ·
   [`../archive/census-findings-triage-plan.md`](../archive/census-findings-triage-plan.md)

@@ -138,6 +138,9 @@ four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what i
       one advisory `census-widget-conformance.js` that re-derives the survey's mechanical facets on
       demand, and a ratchet on its two most objective counts. ⚠ Deliberately NOT gated: `colloquialName`
       coverage, `super`-in-menu-overrides, setter shapes — each has a legitimate exception today.
+- ⚠ **W6 overlaps `plans/connector-ubiquity-and-reflection-plan.md`** (authored the same day, from the
+  value's side rather than the setter's). Whichever lands first, the other re-derives its setter
+  inventory against the tree left behind; they must not edit the same setter bodies in parallel.
 
 ### `plans/dropped-background-fill-investigation.md` — AUTHORED 2026-08-13, NOT started
 Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campaign itself is
