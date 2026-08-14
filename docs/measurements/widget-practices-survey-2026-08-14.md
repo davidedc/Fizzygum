@@ -245,18 +245,31 @@ and the inspector. `ColorPickerWdgt` states the rule in a comment: *"declare eve
 (not only set in the constructor) so the Duplicator's walk picks it up even under lazy
 initialisation."* `PromptWdgt` and `StringFieldWdgt` repeat it.
 
-Measured over the 136 widgets that assign at least one own field (declaration searched across the
-whole ancestor chain **and** applied mixins):
+Measured over the 136 widgets that assign at least one own field. A field counts as declared if any
+class in the ancestor chain declares it **or** any mixin applied anywhere in that chain injects it
+through the mixin DSL; comments are stripped before looking for assignments.
 
 | | count |
 |---|---|
-| every assigned field declared somewhere in the chain | **79** |
-| at least one undeclared assigned field | **57** |
-| undeclared field assignments in total | **135** |
+| every assigned field declared somewhere in the chain | **84** |
+| at least one undeclared assigned field | **52** |
+| undeclared field assignments in total | **124** |
 
-Worst offenders (undeclared count): `WorldWdgt` 17, `SimpleSpreadsheetWdgt` 16, `CellWdgt` 7,
+Worst offenders (undeclared count): `WorldWdgt` 16, `SimpleSpreadsheetWdgt` 16, `CellWdgt` 7,
 `FrameWdgt` 6, `IconicDesktopSystemWindowedAppLauncherWdgt` 4, `SheetHeaderCellWdgt` 4,
 `FridgeMagnetsWdgt` 4, `SpeechBubbleWdgt` 4.
+
+**48 of the 124 are eight repeated fields**, so the shape of the work is structural rather than
+clerical — each is a question about where the field belongs:
+
+| field | classes | reading |
+|---|---|---|
+| `toolTipMessage` | 11 | declared on `ButtonWdgt` only, yet `Widget.startCountdownForBubbleHelp` is the reader and non-button widgets set it |
+| `target` | 10 | the shortcut/prompt/console families each re-invent it as a `@param` |
+| `icon` | 8 | the icon-holder + shortcut families |
+| `cornerSpec` | 5 | the carrier-owned corner KNOB (`layout.md` §4.2) — a named family concept with no declaration |
+| `title` | 5 | the `IconicDesktopSystem*` shortcut family |
+| `callback`, `cornerRadius`, `seed` | 3 each | prompt family / rounded-chrome family / plot samples |
 
 Note the shape of the misses: `target`/`title`/`icon`/`callback` are undeclared in all four
 `IconicDesktopSystem*ShortcutWdgt` classes even though they are pure constructor `@param`s — i.e. the
@@ -708,6 +721,7 @@ per facet. Known limits, all shared with the repo's own scanners:
 ## See also
 
 - [`../architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) — the prescriptive companion: what a new widget should do, facet by facet.
+- [`../plans/widget-practices-convergence-plan.md`](../plans/widget-practices-convergence-plan.md) — the arc that acts on these findings, in order, with the recapture budget and the owner decisions.
 - [`../architecture/widget-citizenship.md`](../architecture/widget-citizenship.md) — the contract these facets serve.
 - [`../architecture/layering-naming-convention.md`](../architecture/layering-naming-convention.md) · [`../architecture/layout.md`](../architecture/layout.md) — the mechanics behind F13–F17.
 - [`../architecture/lint-and-static-checks.md`](../architecture/lint-and-static-checks.md) — every gate named in the scorecard.

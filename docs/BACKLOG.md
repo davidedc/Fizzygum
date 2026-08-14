@@ -99,6 +99,46 @@ CLOSED 2026-08-12 — executed in full the day it was authored; residue in `arch
 - [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.
 - [ ] **FOUND BY P1's recapture, pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
 
+### `plans/widget-practices-convergence-plan.md` — AUTHORED 2026-08-14, NOT started
+Acts on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes);
+target state is `architecture/widget-authoring-guidelines.md`. Ordered by (defect severity x safety);
+four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what is deliberately PARKED
+(the `Simple*` split, constructor geometry verbs, appearance-factory conversion of leaves,
+`isTransparentAt` placement, always-on stepping, hard-coded colours).
+- [ ] **W1 — three malformed menu entries in `SliderWdgt.addWidgetSpecificMenuEntries` (§2.1).** A real
+      defect: a FUNCTION in `addMenuItem`'s string-action slot and a STRING where `opts` goes, plus a
+      `@prompt` call whose arguments are shifted one place (`@setStart` passed as `target`).
+      `ButtonWdgt.trigger`'s dev tripwire already names this class as carrying "the same latent misuse".
+- [ ] **W2 — two teardown overrides sit on the public wrapper instead of the core (§2.2).**
+      `SimpleSpreadsheetWdgt.destroy` + `PopUpWdgt.destroy`; bulk teardown recurses cores, so the
+      cleanup is skipped exactly when a subtree goes away. `IconicDesktopSystemShortcutWdgt` states the
+      rule in a comment. `PopUpWdgt`'s case is masked by `WorldWdgt`'s per-cycle `openPopUps` sweep.
+- [ ] **W3 (owner D1) — `PointerWdgt` + `IconicDesktopSystemScriptShortcutWdgt` drop `super` in
+      `addWidgetSpecificMenuEntries` (§2.3)**, so neither offers the base layout submenu.
+- [ ] **W4 — 52 widget classes assign 124 own fields with no class-level declaration (§2.4).** Invisible
+      to the Duplicator's own-property walk, the serializer and the inspector. 48 of the 124 are EIGHT
+      repeated fields (`toolTipMessage` x11, `target` x10, `icon` x8, `cornerSpec` x5, `title` x5,
+      `callback`/`cornerRadius`/`seed` x3), so the work is eight placement decisions (owner D2) plus ~76
+      clerical lines. ⚠ Every addition must be checked against the mixin-clobber trap (plan §3.4).
+- [ ] **W5 — the `_reLayout` prologue is copy-pasted verbatim in 23 classes (§2.5).** `PatchNodeWdgt`
+      already has the hook the others want (`_layOutNodeContents`). Zero recapture budget: a diff here
+      means the hook landed in the wrong place, never a new baseline.
+- [ ] **W6a — pin setters use FIVE argument shapes across the tree (§2.6).** A wire delivers the value in
+      slot 1, a menu/prompt/button delivers the value-giving widget in slot 2; most setters handle only
+      one. Widening is additive. **W6b (owner D3)** adds the idempotence guards — a real behaviour change
+      (a wired circuit stops re-firing on an equal value).
+- [ ] **W7 (owner D4) — 164 of 270 widgets answer the base `colloquialName` "generic widget"** and 257
+      answer the base `representativeIcon` (§2.7). The string is DRAWN (window titles, inspector/console
+      titles, drag-embed hint, shortcut auto-namer), so this phase has a real recapture budget.
+- [ ] **W8 (owner D5) — `LabelButtonWdgt` takes 17 positional slots, `ButtonWdgt` 12 (§2.8)**, and the
+      `@param`-shadowing law forces three classes to carry a parallel `iconToolTipMessage` shadow field.
+      Precedent: `21d5b64` (SliderWdgt) + `archive/menu-slider-ctor-conversion-plan.md`.
+- [ ] **W9 — give the surviving conventions a mechanism (§5).** One HARD GATE that is a sound negative
+      (`check-menu-actions.js`: a function literal in an action slot, a string literal where `opts` goes),
+      one advisory `census-widget-conformance.js` that re-derives the survey's mechanical facets on
+      demand, and a ratchet on its two most objective counts. ⚠ Deliberately NOT gated: `colloquialName`
+      coverage, `super`-in-menu-overrides, setter shapes — each has a legitimate exception today.
+
 ### `plans/dropped-background-fill-investigation.md` — AUTHORED 2026-08-13, NOT started
 Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campaign itself is
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).

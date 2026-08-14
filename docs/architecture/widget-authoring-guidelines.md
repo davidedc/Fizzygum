@@ -723,3 +723,4 @@ the debt.
 - [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`mixins.md`](mixins.md) · [`build-and-packaging.md`](build-and-packaging.md).
 - [`lint-and-static-checks.md`](lint-and-static-checks.md) — every gate cited above.
 - [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing 270 widgets score against these rules.
+- [`../plans/widget-practices-convergence-plan.md`](../plans/widget-practices-convergence-plan.md) — the arc bringing the existing tree to these rules.
