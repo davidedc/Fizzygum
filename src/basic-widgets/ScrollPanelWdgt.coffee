@@ -62,13 +62,13 @@ class ScrollPanelWdgt extends PanelWdgt
     @color = @contents.color
     @alpha = @contents.alpha
 
-    @hBar = new SliderWdgt color: @sliderColor
+    @hBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @hBar._applyHeight @scrollBarsThickness
 
     @hBar.target = @
     @_addNoSettle @hBar
 
-    @vBar = new SliderWdgt color: @sliderColor
+    @vBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @vBar._applyWidth @scrollBarsThickness
     @vBar.target = @
     @_addNoSettle @vBar

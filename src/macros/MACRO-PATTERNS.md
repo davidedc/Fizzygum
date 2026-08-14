@@ -1585,7 +1585,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`SliderButtonWdgt.nonFloatDragging`) — so grab a track point OFF the button. There is NO from-a-fraction drag verb
   (`@dragWidgetTo_InputEvents` grabs at `center()` = the button), so compose the primitive:
   `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.5, 0.15]), dropPoint` (one held drag-move
-  is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderWdgt start: 1, stop: 100, value: 50, size: 10` + `slider.alpha = 1`
+  is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderWdgt 1, 100, 50, 10` + `slider.alpha = 1`
   (ctor defaults `@alpha = 0.1` ≈ invisible, `:38`) + `_applyExtent 22×130` (height>width ⇒ vertical) + a `PanelWdgt` + an EMPTY
   `ScrollPanelWdgt` (empty ⇒ no bars ⇒ no extent growth). The button stays mid-track across all four shots = the proof. (The
   recorded original's DIGEST mislabels the drag source as the panel; its 4 screenshots show the SLIDER is the moving object —

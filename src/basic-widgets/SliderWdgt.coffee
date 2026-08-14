@@ -35,16 +35,19 @@ class SliderWdgt extends CircleBoxWdgt
 
   idealRatioWidthToHeight: 1/4
 
-  # An OPTIONS object, not positionals. The two trailing knobs (`color`,
-  # `smallestValueIsAtBottomEnd`) used to be reachable only by passing holes through the four
-  # numeric ones, and the two groups of callers that wanted them wanted DISJOINT tails — 6 sites
-  # wanted only the flag, 2 only the colour — so NO parameter order could serve both. Fields are
-  # assigned before the super call, preserving the order the `@param` form compiled to.
-  constructor: (opts = {}) ->
-    @start = opts.start ? 1
-    @stop = opts.stop ? 100
-    @value = opts.value ? 50
-    @size = opts.size ? 10
+  # POSITIONAL for the four numbers, an OPTIONS object for the rest.
+  #
+  # The numbers are a natural ordered tuple (range, then value, then size) and they are the
+  # USER-FACING spelling: a spreadsheet cell accepts typed CoffeeScript, so `new SliderWdgt 0, 100,
+  # 30, 10` is a formula a user enters (FormulaCompiler), and it is the documented idiom in
+  # src/macros/MACRO-PATTERNS.md. Keeping them positional keeps that terse.
+  #
+  # The two trailing knobs are FLAGS, and they are why the options object exists: they used to be
+  # reachable only by passing holes through the four numbers, and the two groups of callers that
+  # wanted them wanted DISJOINT tails — 6 sites wanted only the flag, 2 only the colour — so no
+  # parameter ORDER could serve both. Those callers now state the numbers they want and name the
+  # knob. Assigned before the super call, preserving the order the all-`@param` form compiled to.
+  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
     @color = opts.color ? Color.BLACK
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()

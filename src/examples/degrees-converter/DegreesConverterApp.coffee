@@ -28,11 +28,11 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     # construction). Under orphan-settledness a public container.add() would settle MID-construction
     # on the half-built tree and crash; the single `world.add wm` below settles the whole tree once.
 
-    slider1 = new SliderWdgt smallestValueIsAtBottomEnd: true
+    slider1 = new SliderWdgt 1, 100, 50, 10, smallestValueIsAtBottomEnd: true
     slider1._applyBounds (container.position().add new Point 43+xCorrection, 195+yCorrection), new Point 20, 100
     container._addNoSettle slider1
 
-    slider2 = new SliderWdgt smallestValueIsAtBottomEnd: true
+    slider2 = new SliderWdgt 1, 100, 50, 10, smallestValueIsAtBottomEnd: true
     slider2._applyBounds (container.position().add new Point 472+xCorrection, 203+yCorrection), new Point 20, 100
     container._addNoSettle slider2
 

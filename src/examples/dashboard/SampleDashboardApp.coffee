@@ -79,7 +79,7 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
     container.add dashboardTitle
 
 
-    slider1 = new SliderWdgt smallestValueIsAtBottomEnd: true
+    slider1 = new SliderWdgt 1, 100, 50, 10, smallestValueIsAtBottomEnd: true
     slider1._applyBounds (container.position().add new Point 491, 484), new Point 201, 24
     container.add slider1
 

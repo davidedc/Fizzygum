@@ -101,14 +101,29 @@ Ordered so the semantics moved before the name, and so every step had a working 
   it is. That is an argument for renaming BEFORE fixing the remaining positional-hole APIs,
   not after.
 
-## Found on the way, still open
+## Found on the way — both since CLOSED
 
 - **`SliderWdgt`** — 8 hole-passing construction sites in two groups wanting disjoint trailing
-  parameters. No reordering helps; it wants `constructor: (opts = {})`.
-- **The `add` family** — four overrides carry a parameter literally named `unused`, while
-  `FrameWdgt.add` gives that same fifth positional slot the meaning `notContent`. One
-  positional call therefore means different things per receiver. This is a latent bug
-  independent of `nil` and deserves its own investigation, not a cleanup pass.
+  parameters, so no reordering could help. Closed 2026-08-14 with the HYBRID
+  `constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {})`. ⚠ Full opts landed
+  first (`025ec563`) and was superseded: the four numbers are the USER-FACING spelling, since a
+  spreadsheet cell accepts typed CoffeeScript and `new SliderWdgt 0, 100, 30, 10` is a formula users
+  enter, so only the two FLAG knobs — what the holes existed to reach — moved into `opts`.
+  ⭐ **Case law: check for user-facing spellings before redesigning a constructor.** The first
+  analysis scanned `src` only and concluded "8 call sites, wants full opts"; the tests repo held ~25
+  more positional constructions and the formula surface, which is what made the shape a real
+  decision rather than a cleanup.
+- **The `add` family** — four overrides carried a parameter literally named `unused`, while
+  `FrameWdgt.add` gave that same fifth positional slot the meaning `notContent`, so one positional
+  call meant different things per receiver. HUNT FIRST found **no live bug**: only two sites pass a
+  fifth argument and both pass `undefined`. Renamed `unused` → `notContent` anyway (a parameter
+  nothing reads, so a no-op) so the slot has one meaning family-wide.
+  - ⚖ the slot-3 divergence flagged alongside it is REAL but INTENTIONAL: `Widget._addNoSettle`
+    resolves `opts.layoutSpec ? defaultLayoutSpecWhenAddedTo` while the stack/tool/frame cores leave
+    it absent, because their ARRANGE assigns the spec
+  - ⭐ a redundancy fell out and was fixed: `Widget.add` declared the same fallback in its signature
+    AND its core, and since the base answer IS `undefined`, it resolved TWICE on every ordinary
+    `parent.add child` — the signature copy is deleted, leaving one resolver
 
 ## Fixed on the way
 
