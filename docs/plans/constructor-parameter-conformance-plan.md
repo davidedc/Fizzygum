@@ -221,6 +221,20 @@ drive.
 **Atomic unit:** `ButtonWdgt`, `LabelButtonWdgt`, `MenuItemWdgt`, `MagnetWdgt`,
 `SimpleButtonWdgt`, `SimpleRectangularButtonWdgt`, `SimpleRasterImageButtonWdgt` — one commit.
 
+⚠ **P3 overlaps `plans/widget-practices-convergence-plan.md` W8** (§2.8, authored the same day from
+the widget survey), which is **owner-gated (D5) and deliberately sequenced LAST** in that arc, after
+its W1–W6, as its highest-churn item. **Same work; do it once** — whichever arc reaches it first
+executes, the other de-scopes to a pointer. Honour W8's gating: if that arc is live, P3 waits for D5
+rather than racing it.
+
+⭐ **W8's own finding, which this plan must carry:** `IconButtonWdgt` (~:41-45), `CreatorButtonWdgt`
+(~:26-29) and `EditorContentPropertyChangerButtonWdgt` (~:40-42) each keep a **parallel shadow
+field** `iconToolTipMessage`, copied into `@toolTipMessage` after `super`, purely because
+`ButtonWdgt` takes `@toolTipMessage` as a `@param` defaulting to `undefined` (`IconButtonWdgt`'s
+comment says so outright). That is the R5 hazard wearing a workaround. Moving `toolTip` into `opts`
+lets all three shadow fields be **deleted** — a concrete correctness win riding on the conversion, so
+verify they are gone when P3 lands.
+
 ⚠ `LabelButtonWdgt` passes `undefined` for `faceWidget` deliberately (it draws its own
 `@label`). Under an options object it simply omits the key — but check `ButtonWdgt` treats an
 absent `faceWidget` identically to an explicitly-`undefined` one before relying on that.

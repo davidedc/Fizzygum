@@ -19,6 +19,13 @@ This is the [regularity law](regularity-principles.md) applied to argument lists
 fused axes, and let the *calling convention* encode which axis a parameter serves. A reader at
 a call site can tell identity from configuration without opening the callee.
 
+**Scope.** This governs *every* class, not only widgets — value classes, input events and spec
+objects are all covered, and §3 is mostly about them. The widget-author's short form of the
+same rule is §3.1 of
+[`widget-authoring-guidelines.md`](widget-authoring-guidelines.md), which points here; that doc
+also owns the surrounding construction rules (the `_buildAndConnectChildren` pair, settle-once,
+the geometry verb to use in a constructor) that this one deliberately does not repeat.
+
 ---
 
 ## 1. Why not one object for everything

@@ -291,6 +291,15 @@ The non-icon classes among the 164 include `ButtonWdgt`, `CreatorButtonWdgt`, `C
 Precedent for the conversion: `21d5b64` (`SliderWdgt`: positional numbers + an options object) and
 `archive/menu-slider-ctor-conversion-plan.md`.
 
+⚠ **W8 overlaps `plans/constructor-parameter-conformance-plan.md` P3** (authored the same day, from
+the constructor survey rather than the widget survey). That plan states the general RULE — now
+[`architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
+— sweeps all five families that carry it (the button family is one of them), and seeds the
+`positional-hole` ratchet. **The button conversion is ONE piece of work; do it once.** Whichever arc
+reaches it first executes it and the other de-scopes to a pointer. The shadow-field finding above is
+this section's own and must ride along either way: the options conversion is what lets those three
+`iconToolTipMessage` fields be DELETED rather than perpetuated.
+
 ---
 
 ## 3. The core engineering facts every phase rests on

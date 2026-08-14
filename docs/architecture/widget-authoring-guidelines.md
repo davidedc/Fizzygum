@@ -91,6 +91,16 @@ The same shape is already the norm one level up in the API: `add aWdgt, position
 beingDropped` funnels into `_addNoSettle aWdgt, opts`, and `addMenuItem label, target, action, opts`
 serves 326 call sites with named knobs.
 
+📖 **The full law lives in
+[`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md)** — it states
+the identity/configuration split, the decisive **hole test** (*if any call site must pass `undefined`
+to reach a later argument, the parameter list is wrong*), the cap of 4, the option-key vocabulary,
+and the **exemptions** where positional is right no matter how long the list gets: value/geometry
+tuples, per-frame construction, foreign-API records (`events-input/`), and published user-facing
+spellings. It is not widget-specific — it also governs `Point`, `Color`, the input events and the
+spec classes — which is why it has its own doc. Read this section for the widget case; read that one
+before changing a signature.
+
 ### 3.2 A `@param` overwrites the class-level default — take the parameter plainly and assign it guarded
 
 **[convention, and the sharpest trap in the codebase]** `constructor: (@backgroundColor) ->` compiles

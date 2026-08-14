@@ -133,6 +133,9 @@ four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what i
 - [ ] **W8 (owner D5) — `LabelButtonWdgt` takes 17 positional slots, `ButtonWdgt` 12 (§2.8)**, and the
       `@param`-shadowing law forces three classes to carry a parallel `iconToolTipMessage` shadow field.
       Precedent: `21d5b64` (SliderWdgt) + `archive/menu-slider-ctor-conversion-plan.md`.
+      ⚠ **Overlaps `plans/constructor-parameter-conformance-plan.md` P3** (same button conversion,
+      authored the same day from the constructor survey). ONE piece of work — whichever arc reaches
+      it first executes it and the other de-scopes; P3 honours this D5 gate rather than racing it.
 - [ ] **W9 — give the surviving conventions a mechanism (§5).** One HARD GATE that is a sound negative
       (`check-menu-actions.js`: a function literal in an action slot, a string literal where `opts` goes),
       one advisory `census-widget-conformance.js` that re-derives the survey's mechanical facets on
@@ -158,7 +161,7 @@ records, 1 done = `SliderWdgt`), **51 lines** across 26 files carrying ≥2 cons
 - [ ] P0 seed the `positional-hole` stink in `check-stinks.js` at the runner's measured baseline (~51), so every later phase's gain self-locks
 - [ ] P1 `MenuItemSpec` — 12 positional, ONE call site that already unpacks an `opts` back into slots; the near-zero-risk warm-up that proves the idiom
 - [ ] P2 the text family (`StringWdgt` 10 / `TextWdgt` 8 / `SimpleTextWdgt` 8) — biggest payoff: ~20 sites share `text, undefined×5, color, 1`. **68 `new` sites in src** + the tests repo; all three convert in ONE commit (two-level `super` chain)
-- [ ] P3 the button family (`ButtonWdgt` 12 / `LabelButtonWdgt` **17** / +5 subclasses) — atomic; do after P1 so it inherits the settled option vocabulary. `closesUnpinnedPopUps` as the FIRST positional is why nearly every button call site opens with a bare `true`
+- [ ] P3 the button family (`ButtonWdgt` 12 / `LabelButtonWdgt` **17** / +5 subclasses) — atomic; do after P1 so it inherits the settled option vocabulary. `closesUnpinnedPopUps` as the FIRST positional is why nearly every button call site opens with a bare `true`. ⚠ **Overlaps `plans/widget-practices-convergence-plan.md` W8** (owner-gated D5, sequenced last there) — ONE piece of work, do it once; P3 waits on D5 rather than racing it. ⭐ W8's finding rides along: the conversion lets the three parallel `iconToolTipMessage` shadow fields be DELETED
 - [ ] P4 the prompt family (6 classes on a drifted shared prefix; `NumberPromptWdgt` 9)
 - [ ] P5 stragglers — incl. `TransformSpec`, whose one hole wants a **reorder**, not an opts bag (value class, exempt E1)
 - [ ] P6 ratchet `positional-hole` to 0 (HARD), docs-sync §7, archive + INDEX + de-backlog
