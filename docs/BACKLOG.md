@@ -147,6 +147,23 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
+### `plans/constructor-parameter-conformance-plan.md` — AUTHORED 2026-08-14, NOT started
+Brings `src/` onto the constructor convention now stated in
+`architecture/constructor-and-parameter-conventions.md` (positional head for identity, one
+trailing `opts` object for configuration; the hole test is decisive). Finishes what
+`archive/accidental-complexity-reduction-plan.md` P5 started per-family without ever stating a
+rule. Measured 2026-08-14: 139 constructors, **22 at ≥5 params** (6 exempt as foreign-API event
+records, 1 done = `SliderWdgt`), **51 lines** across 26 files carrying ≥2 consecutive bare
+`undefined` args.
+- [ ] P0 seed the `positional-hole` stink in `check-stinks.js` at the runner's measured baseline (~51), so every later phase's gain self-locks
+- [ ] P1 `MenuItemSpec` — 12 positional, ONE call site that already unpacks an `opts` back into slots; the near-zero-risk warm-up that proves the idiom
+- [ ] P2 the text family (`StringWdgt` 10 / `TextWdgt` 8 / `SimpleTextWdgt` 8) — biggest payoff: ~20 sites share `text, undefined×5, color, 1`. **68 `new` sites in src** + the tests repo; all three convert in ONE commit (two-level `super` chain)
+- [ ] P3 the button family (`ButtonWdgt` 12 / `LabelButtonWdgt` **17** / +5 subclasses) — atomic; do after P1 so it inherits the settled option vocabulary. `closesUnpinnedPopUps` as the FIRST positional is why nearly every button call site opens with a bare `true`
+- [ ] P4 the prompt family (6 classes on a drifted shared prefix; `NumberPromptWdgt` 9)
+- [ ] P5 stragglers — incl. `TransformSpec`, whose one hole wants a **reorder**, not an opts bag (value class, exempt E1)
+- [ ] P6 ratchet `positional-hole` to 0 (HARD), docs-sync §7, archive + INDEX + de-backlog
+⚠ Standing: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run) — only `new`/`super`/`@method` self-call sites matter, **in both repos**; the sibling `Fizzygum-tests` is not checked out in the authoring session and must be re-measured per family. Reference churn is a red flag, not an expected cost.
+
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12
 (`archive/appearance-local-coords-plan.md` — every appearance body now draws through the ctx matrix,
