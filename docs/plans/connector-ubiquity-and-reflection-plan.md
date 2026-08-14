@@ -446,6 +446,122 @@ structured update. Two options:
   whose open question is "no customer exists yet".** ⭐ **Here is a customer, and it is product code,
   not a hypothetical sequencer.** Whichever option wins, this fact should be recorded in that plan.
 
+### P10 — Buttons: **NO** to engine delivery, **YES** to the gesture and the index
+
+Owner question, 2026-08-14: *"buttons don't connect to their destinations using the connection
+system. Should they?"* The honest answer splits three ways, and the split is worth recording as a
+law, because "unify the two `@target`/`@action` mechanisms" looks obviously right and is not.
+
+**Current state.** `ButtonWdgt` holds `@target` / `@action` / `@doubleClickAction` /
+`@argumentToAction1` / `@argumentToAction2` / `@dataSourceWidgetForTarget` / `@widgetEnv`, and
+`trigger()` is one synchronous call inside the click handler:
+
+```coffee
+@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
+```
+
+It does **not** `@augmentWith ControllerMixin`, declares no edge, and appears in no setter table. The
+population is large: `MenuItemWdgt` extends `LabelButtonWdgt` extends `ButtonWdgt`, so **every one of
+the 328 `addMenuItem` call sites in `src/` is a button edge** — roughly two orders of magnitude more
+than the wire edges.
+
+#### (a) Delivery: NO — a command is not a current value
+
+Five independent reasons, any one of which is sufficient:
+
+1. **Count matters and pooling destroys it.** `@stalePool` / `@forcedPool` are `Set`s, so two bangs
+   in one cycle are one fire. Click a button twice, get one invocation. Count-preserving delivery is
+   exactly the deferred `firesPerEvent` mini-pass
+   ([`wire-vocabulary-extensions-plan.md`](wire-vocabulary-extensions-plan.md) W1) — **so routing
+   buttons through the engine today would be a regression, not a unification.**
+2. **A button has no value to pull.** The engine's model is "notifications carry no values; the drain
+   PULLS the producer's `dataflowValue`" (spec §3). A button's payload is *four positional
+   arguments*, none of which is its value. It would be a `bang` with baggage the edge record cannot
+   carry.
+3. **Button actions are commands, not pins.** `makeFolder`, `saveWorldSnapshotToFile`, `openFromFile`,
+   `inspect`, `toggleDevMode`, `wallpapersMenu` — these open dialogs, do file I/O, spawn windows. The
+   setter tables deliberately advertise *properties others may drive*, not the whole method surface.
+   Feeding commands into the pin vocabulary would destroy the one thing that makes the target-chooser
+   menus meaningful.
+4. **The settle discipline forbids it at scale.** Engine sinks must route through `_<action>Connector`
+   lanes or bare mutators, never public self-settling setters, because the drain holds one settle
+   open per pass. Button actions are overwhelmingly public and self-settling. The case law is exact:
+   in 6c, the **single** prompt slider whose action reached `edit()` required building a whole
+   `_*NoSettle` lattice (`WorldWdgt.edit`/`_editNoSettle`, `StringWdgt._editNoSettle`,
+   `PromptWdgt.takeSliderValue`). Doing that 328 times is not a plan — and it would be *wrong*: those
+   actions **should** self-settle, because they run at event time in their own event, which is where
+   they belong.
+5. **It would move work later for no gain.** A click invokes synchronously in `_playQueuedEvents`;
+   through the engine it would be deferred to the drain station later in the same cycle, breaking
+   read-your-writes inside event handlers.
+
+⇒ **Law to record:** *a wire carries a current value; a button carries a command invocation. Two
+delivery mechanisms, deliberately.* This is the same message-vs-signal split
+[`wire-vocabulary-extensions-plan.md`](wire-vocabulary-extensions-plan.md) §8 already makes for
+audio, one level up.
+
+#### (b) The index: YES — one edge vocabulary, two delivery mechanisms
+
+The button's `@target` **is** an information-flow edge, and today nothing indexes it — so the system
+cannot answer "what does this button touch?", cannot show the wiring, and cannot count it for
+reachability. That is precisely what
+[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.2/§4.3 wants (a common
+add/remove/enumerate accessor over containment ∪ target ∪ reference, and one GC walk over the
+union), and §4.2's ruling — *"keep the dataflow index as the single home of the target edges, don't
+fork it"* — already covers buttons whether or not anyone noticed.
+
+Shape: a button declares `addEdge @, @target, {action, command: true}`, and a **command edge is
+excluded from the downstream closure** — indexed, never traversed, never delivered. That is
+mechanically the same exclusion `cold` needs (W2), reached from a different direction. Zero change
+to invocation; the payoff is discoverability, GC reachability, and the ability to *draw* the wiring.
+
+#### (c) The gesture: YES, and this is the real gap
+
+You can point a slider at any widget through `connect to ➜` and pick a pin. **You cannot point a
+button at anything** — a button's `@target`/`@action` is set at construction, in code, always. There
+is no direct-manipulation path from "here is a button" to "make it do X to Y".
+
+That is a live failure against
+[`../architecture/design-principles.md`](../architecture/design-principles.md)'s route 2 ("an app
+assembled by direct manipulation, no code") and against citizenship point 5, which claims *"menu
+entries are widgets, so handy commands can in principle be extracted into a custom control panel"* —
+**in principle**, because no mechanism exists.
+
+What is missing is the command-side twin of §P1's `PinSpec`: a **command table** — "which of my
+methods may a button invoke?" — with the same chain-through-`super` shape as the setter tables, and
+the same `_popUpTargetPropertyMenu` gesture. Note the vocabulary already half-exists: **`bang!`
+appears in every setter table**, and a bang *is* the button semantic expressed inside the wire
+system. So the coherent story is not "make buttons use wires" but:
+
+> **A button is a bang source. Give it the same target-chooser gesture and the same index; keep its
+> delivery synchronous.**
+
+And if W1 ever lands, a button gains the *option* of engine delivery (count-preserving, ordered,
+fan-out to several targets) for the subset of actions that are drain-safe — with `firesPerEvent`
+being exactly the switch that makes it legal. That is the honest dependency: **W1 is the
+prerequisite for buttons ever joining the engine, and until it lands the answer is no.**
+
+#### (d) Toggles and switches: here the answer flips to YES
+
+`ToggleButtonWdgt` / `SwitchButtonWdgt` are a different animal and belong in the value world:
+`@buttonShown` **is state**, and a toggle **is a view of a boolean**. Today they advertise no pins,
+have no reader, and — the tell — `ToggleButtonWdgt.select` changes state by *simulating an input
+event*:
+
+```coffee
+select: (whichOne) ->
+  if @buttonShown != whichOne
+    @buttons[@buttonShown].mouseClickLeft()
+```
+
+There is no non-firing reflect path, so nothing can drive a toggle without faking a click. That is
+§2.3's `_updateHandlePosition` gap again, in a class that never got the verb. A toggle should have a
+value pin and be bindable exactly like a slider — which also raises the missing payload kind: the
+three tables are colour/string/numerical, and **there is no boolean**. Decide whether a toggle
+exports `0`/`1` as numerical (cheap, honest enough) or whether a fourth kind is warranted (probably
+not — per facet 9, payloads are the cheap axis but a kind that only one widget uses is not worth its
+menu).
+
 ### P9 — Naming: `@target` means four different things
 
 Prerequisite hygiene for even discussing bindings. `@target` is today: the dataflow target
@@ -504,6 +620,9 @@ carry zero engine risk, which makes them the right way to test the law before pa
 | 5 | **P4** — a controller owns a list of wires | index mirroring; **serialization surface** | G2; frees `FanoutWdgt` |
 | 6 | **P2** — the `bind ⇄` gesture | none (two ordinary wires) | the headline |
 | 7 | **P8** — scroll pins + reverse edge, retire the field plumbing | none, given 1/4/5 | complaint ① |
+| 8 | **P10(d)** — toggle/switch gain a value pin and a non-firing reflect path | none, given 4 | the `mouseClickLeft()`-to-set-state smell |
+| — | **P10(b)** — index button edges as command edges | index only, no delivery | rides `graph-edges-and-lifecycle-plan.md` §4.2, not this arc |
+| — | **P10(c)** — a command table + "make this button do X to Y" gesture | none | its own arc; needs P1's shape first |
 
 Steps 1 and 2 are each a self-contained session. Step 5 is its own arc and needs the serialization
 round-trip legs. Step 7 needs the `updateSpecs` payload decision (§P8), which is also the answer the
@@ -526,6 +645,11 @@ wire-vocabulary plan's W2 is waiting for.
 - **Deep-comparing values to detect change.** `_valuesEqual` is `a.equals?(b)` else identity, by
   design; immutable value classes make that correct
   ([`../architecture/immutable-value-classes.md`](../architecture/immutable-value-classes.md)).
+- **Routing `ButtonWdgt.trigger` through the dataflow drain** (§P10a). Pooling destroys click counts,
+  a button has no value to pull, its actions are commands rather than pins, and 328 menu actions
+  would each need the `_*NoSettle` lattice the single 6c prompt slider needed. One edge *vocabulary*,
+  two delivery *mechanisms*. Revisit only if W1 (per-event delivery) lands — and even then, opt-in
+  per button, for drain-safe actions only.
 
 ---
 
@@ -545,6 +669,10 @@ wire-vocabulary plan's W2 is waiting for.
 6. **Does `@wires` (P4) get a serialization version bump**, or does the `@target`/`@action`
    accessor shim make old snapshots load unchanged?
 7. **Scope of P5** — wallpaper only, or wallpaper + `PreferencesAndSettings` in the same session?
+8. **Command edges (§P10b)** — index button `@target`s in `world.dataflow` as non-traversed command
+   edges, or leave the button edge unindexed until the unified collector arc actually needs it?
+9. **Boolean payloads (§P10d)** — a bound toggle exports `0`/`1` as numerical, or does a fourth
+   payload kind earn its menu?
 
 ---
 
