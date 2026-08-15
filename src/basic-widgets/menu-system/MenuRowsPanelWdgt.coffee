@@ -184,10 +184,11 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   prependMenuItem: (label, target, action, opts = {}) ->
     @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), undefined, 0
 
+  # The spec takes the SAME label/target/action head and the SAME opts vocabulary
+  # this method is handed, so it forwards rather than transcribes -- an opt added
+  # to one is available on the other with no edit here.
   _menuItemSpecFrom: (label, target, action, opts) ->
-    new MenuItemSpec label, opts.closesUnpinnedPopUps, target, action,
-      opts.toolTip, opts.color, opts.bold, opts.italic,
-      opts.doubleClickAction, opts.arg1, opts.arg2, opts.representsAWidget
+    new MenuItemSpec label, target, action, opts
 
   # The stack arrange, specialized by ONE menu policy: a menu SELF-sizes its
   # width to its widest row + border (a general stack takes its width from its

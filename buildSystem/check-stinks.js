@@ -74,7 +74,7 @@ const STINKS = [
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',
     re: /\b(the (below|above) is|is actually (correct|right|fine|wrong)|to be clear,)\b/i },
-  { id: 'comment-narration', baseline: 104, scope: 'comments',   // tightened 105->104 on 2026-08-04 (comments-audit sweep removed one; locking the gain in)
+  { id: 'comment-narration', baseline: 103, scope: 'comments',   // tightened 105->104 on 2026-08-04 (comments-audit sweep removed one; locking the gain in); 104->103 on 2026-08-15 (MenuItemSpec's header stopped narrating what its constructor replaced when that constructor changed again)
     why: 'history narration ("used to", "previously", "no longer", "in the old model") belongs in docs/archive/ with a pointer, not inline — a comment states what IS',
     re: /\b(used to\b|previously\b|no longer\b|in the old (model|way|code)\b)/i },
   { id: 'commented-out-debug', baseline: 0, scope: 'comments',

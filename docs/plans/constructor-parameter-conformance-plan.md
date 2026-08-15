@@ -109,7 +109,7 @@ site. ⚠ The three `LCLCodePreprocessor` returns are **not holes at all** — t
 result tuple `[a, b, error]`, the shape R3 does not address; expect them to need an explicit
 exemption or a small refactor rather than an options object.
 
-## 2. P1 — `MenuItemSpec` (warm-up: 12 positional, 1 call site)
+## 2. P1 — `MenuItemSpec` (warm-up: 12 positional, 1 call site) ✅ DONE 2026-08-15
 
 The irony worth fixing first: `MenuItemSpec` **is** a parameter object, constructed
 positionally.
@@ -139,8 +139,26 @@ italic / representsAWidget `false`).
 **Risk: minimal.** One call site, no subclasses, not constructed anywhere else, and the spec's
 own field defaults are unchanged. This is the phase that proves the idiom end to end.
 
-**Verification:** `./build_and_test.sh` — menus are exercised heavily by the suite; expect
-**zero** reference churn.
+**As built.** `constructor: (@label, @target, @action, opts = {})`, the nine knobs read
+`opts.<key> ? <default>` in the body — keyed by the **`addMenuItem` vocabulary**
+(`closesUnpinnedPopUps` / `toolTip` / `arg1` / `arg2` / …), not by the field names they land in
+(R4). That is what turns `_menuItemSpecFrom` into a pure forward: `new MenuItemSpec label,
+target, action, opts`, so an option added to `addMenuItem` reaches the spec with no edit in
+between. The method survives (it names the step) but no longer transcribes anything.
+
+⚠ **The plan's site count was two short, and both were in the tests repo** — `MenuItemSpec` is
+built directly inside the CoffeeScript macro source of `macroBareButtonFloatDragsWithoutTriggering`
+and `macroEditButtonLabelText`, plus a third edit in the former's `provenance` metadata string,
+which quotes its own construction line verbatim. **A macro source is CoffeeScript inside a JS
+template literal, so no `.coffee` search will ever find it** — search the tests repo by class
+name across `*.js` too. Both sites also shed arguments they were passing at the default: the
+explicit `true` for closes-unpinned, and a `undefined, undefined` target/action pair.
+
+**Verified:** `fg presuite` green — dpr1 suite PASS (294 tests), paint-truthfulness PASS,
+fracplane dpr2 rider PASS. **Zero reference churn**, as predicted.
+
+Rewriting the class header to describe the shape it now has also dropped its one
+`comment-narration` hit, so that stink tightens 104 → 103 in the same commit (ratchet discipline).
 
 ## 3. P2 — The text family (biggest payoff; `StringWdgt` / `TextWdgt` / `SimpleTextWdgt`)
 
@@ -322,6 +340,18 @@ and may be exempt on inspection (E5-adjacent) — check before converting.
   not checked out here. It carries construction sites in test macros, in **spreadsheet formula
   strings**, and in plain JS rig code (`new SliderWdgt(0, 100, 40, 10)`). The `SliderWdgt`
   conversion touched 19 of them.
+  ⚠ **The tests repo has no `.coffee` construction sites at all** — a macro's `mainMacroSource`
+  is CoffeeScript inside a **JS template literal** in `tests/**/*_automationCommands.js`, and the
+  four mandatory metadata strings in `tests/**/SystemTest_<name>.js` quote construction lines as
+  prose. Search by CLASS NAME across the whole repo, never by file extension. (P1 found two live
+  sites and one prose quote this way; P2's tests-repo count exceeds its `src/` count.)
+- **Count arity with a paren/quote-aware scan, not a comma grep.** `Fizzygum-tests/.scratch/
+  ctor-arity-scan.js` (gitignored, written at P2) joins continuation lines and counts TOP-LEVEL
+  arguments for every `new <Class>` in both repos, with a histogram. A single-line comma grep gets
+  this wrong in both directions: it counts commas inside string literals and nested calls
+  (`Color.create(230, 230, 130)`) as argument separators, and it cannot see the multi-line paren
+  form — which is precisely where the long calls live. Only sites passing MORE positionals than
+  the new head need editing, so this list IS the work list.
 - **Verify the call spellings against the compiler before converting a family.** All four forms
   need checking — positional, no-arg, trailing implicit object, and the multi-line paren form —
   in particular that a trailing `key: value` lands as a **separate final argument** rather than
