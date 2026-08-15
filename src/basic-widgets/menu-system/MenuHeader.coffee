@@ -6,12 +6,10 @@ class MenuHeader extends BoxWdgt
     super 3
     @color = WorldWdgt.preferencesAndSettings.menuHeaderColor
 
-    @text = new TextWdgt(
-      textContents,
-      @fontSize or WorldWdgt.preferencesAndSettings.menuHeaderFontSize,
-      WorldWdgt.preferencesAndSettings.menuFontName,
-      WorldWdgt.preferencesAndSettings.menuHeaderBold,
-      false)
+    @text = new TextWdgt textContents,
+      fontSize: @fontSize or WorldWdgt.preferencesAndSettings.menuHeaderFontSize
+      fontName: WorldWdgt.preferencesAndSettings.menuFontName
+      bold: WorldWdgt.preferencesAndSettings.menuHeaderBold
     @text.color = Color.WHITE
     @text.backgroundColor = @color
     @text.alignCenter()

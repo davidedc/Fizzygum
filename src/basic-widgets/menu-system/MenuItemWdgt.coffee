@@ -56,7 +56,9 @@ class MenuItemWdgt extends LabelButtonWdgt
   # opposite of LabelButtonWdgt's default single-line StringWdgt label, which
   # leaves the box alone.
   _createLabel: ->
-    @label = new TextWdgt @labelString, @fontSize, @fontStyle
+    @label = new TextWdgt @labelString,
+      fontSize: @fontSize
+      fontName: @fontStyle
     @label.setColor @labelColor
 
     # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a

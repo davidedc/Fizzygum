@@ -197,24 +197,37 @@ class StringWdgt extends Widget
   undoHistory: undefined
   redoHistory: undefined
 
-  constructor: (
-      @text = (if text is "" then "" else "StringWdgt"),
-      @originallySetFontSize = WorldWdgt.preferencesAndSettings.normalTextFontSize,
-      @fontName = @justArialFontStack,
-      @isBold = false,
-      @isItalic = false,
-      @isHeaderLine = false,
-      @isNumeric = false,
-      @color = (Color.create 37, 37, 37),
-      backgroundColor,
-      backgroundTransparency
-      ) ->
+  # The text is the identity — what this widget SHOWS, and the one argument every caller
+  # passes. Everything else, font SIZE included, is an independently-optional knob and rides
+  # `opts` (docs/architecture/constructor-and-parameter-conventions.md).
+  #
+  # Size is an option and not a second positional because the hole test (R3) says so: measured
+  # across the family's construction sites, only ~28% pass a size, while ~50 would have had to
+  # pass `undefined` THROUGH it to reach a colour. The tuple that would justify a positional
+  # pair does not exist here — a size is just the most popular of nine knobs.
+  #
+  # NONE of these is a `@param`: a `@param` assigns its field unconditionally, which is the
+  # trap this class's own backgroundColor guard was written to dodge (§3.2 of
+  # widget-authoring-guidelines.md). Reading options in the body puts the guard in plain sight.
+  #
+  # `?` and not a parameter default, so an explicit "" survives as a real value while an
+  # omitted argument still gets "StringWdgt".
+  constructor: (text, opts = {}) ->
+    @text = text ? "StringWdgt"
+    @originallySetFontSize = opts.fontSize ? WorldWdgt.preferencesAndSettings.normalTextFontSize
+    @fontName = opts.fontName ? @justArialFontStack
+    @isBold = opts.bold ? false
+    @isItalic = opts.italic ? false
+    @isHeaderLine = opts.headerLine ? false
+    @isNumeric = opts.numeric ? false
+    @color = opts.color ? (Color.create 37, 37, 37)
+
     # additional properties:
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
 
     # properties that override existing ones only when passed
-    @backgroundColor = backgroundColor if backgroundColor?
-    @backgroundTransparency = backgroundTransparency if backgroundTransparency?
+    @backgroundColor = opts.backgroundColor if opts.backgroundColor?
+    @backgroundTransparency = opts.backgroundTransparency if opts.backgroundTransparency?
 
     @undoHistory = []
     @redoHistory = []

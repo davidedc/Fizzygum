@@ -22,22 +22,19 @@ class SimpleTextWdgt extends TextWdgt
 
   @augmentWith ControllerMixin
 
-  constructor: (
-   @text = "SimpleText",
-   @originallySetFontSize = 12,
-   @fontName = @justArialFontStack,
-   @isBold = false,
-   @isItalic = false,
-   @color = Color.BLACK,
-   backgroundColor,
-   backgroundTransparency
-   ) ->
-
-    # plain (non-`@`) parameters, forwarded to TextWdgt -> StringWdgt, which assigns them
-    # only when actually passed: an `@`-parameter assigns unconditionally, so the old
-    # `@backgroundTransparency = undefined` shadowed Widget's class-level default of 1 — see
-    # the note in TextWdgt's constructor.
-    super
+  # Same head and same opts vocabulary as TextWdgt -> StringWdgt, which does all the assigning
+  # (see the note in TextWdgt's constructor for why nothing here is a `@param`).
+  #
+  # This class states NO defaults of its own, deliberately: the ones it used to declare
+  # (12pt, Color.BLACK, "SimpleText") never reached an instance and were removed with this
+  # signature. A bare `super` compiles to `.apply(this, arguments)` — the arguments the CALLER
+  # passed, not this constructor's defaulted parameters — while `@param` assignment happens
+  # BEFORE that call, so the base re-defaulted every omitted slot straight over the top. What
+  # a SimpleTextWdgt has always actually got is StringWdgt's normalTextFontSize and
+  # Color(37,37,37). Restoring the stated intent is a visible change to every unsized
+  # SimpleTextWdgt in the system, so it is a decision, not a cleanup.
+  constructor: (text, opts = {}) ->
+    super text, opts
     @_commitBounds new Rectangle 0,0,400,40
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

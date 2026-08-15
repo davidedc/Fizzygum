@@ -102,7 +102,7 @@ class CellWdgt extends Widget
     if @_scalarTextWdgt?
       @_scalarTextWdgt._setTextNoSettle scalarText
     else
-      textWdgt = new StringWdgt scalarText, 12
+      textWdgt = new StringWdgt scalarText, fontSize: 12
       textWdgt.color = if showsError then @_sheetWidget.errorTextColor else @_sheetWidget.valueTextColor
       textWdgt.isEditable = false
       @_addNoSettle textWdgt
@@ -231,7 +231,7 @@ class CellWdgt extends Widget
     # (damage-free __hide — adding the editor repaints the same rect); teardown reveals it
     # again, which also serves the Escape-cancel path (no reconcile runs there)
     @_scalarTextWdgt?.__hide()
-    editor = new StringWdgt seedText, 12
+    editor = new StringWdgt seedText, fontSize: 12
     editor.color = @_sheetWidget.valueTextColor
     editor.isEditable = true
     # an edit never leaves the cell for the pop-out "edit:" prompt — a pop-out would bypass

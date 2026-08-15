@@ -18,36 +18,18 @@ class TextWdgt extends StringWdgt
   heightOfPossiblyCroppedText: undefined
   widthOfPossiblyCroppedText: undefined
 
-  constructor: (
-   @text = "TextWdgt",
-   @originallySetFontSize = WorldWdgt.preferencesAndSettings.normalTextFontSize,
-   @fontName = @justArialFontStack,
-   @isBold = false,
-   @isItalic = false,
-   @color,
-   backgroundColor,
-   backgroundTransparency
-   ) ->
-
-    # backgroundColor/backgroundTransparency are PLAIN parameters, not `@`-parameters,
-    # and are merely forwarded: a `@param` in the signature assigns the instance field
-    # UNCONDITIONALLY, so `@backgroundTransparency = undefined` used to shadow the class-level
-    # default of 1 (Widget) with undefined on every construction. That undefined then reached
-    # `ctx.globalAlpha` in _prepareTextBufferContext as `undefined` — an invalid canvas
-    # value — and a specified backgroundColor silently painted nothing. StringWdgt owns
-    # the "override existing ones only when passed" guard; let it do that job.
-    super(
-      @text,
-      @originallySetFontSize,
-      @fontName,
-      @isBold,
-      @isItalic,
-      false, # isHeaderLine
-      false, # isNumeric
-      @color,
-      backgroundColor,
-      backgroundTransparency
-      )
+  # Same head and same opts vocabulary as StringWdgt, which does all the assigning: every
+  # option this class accepts is one StringWdgt already knows, and every default except the
+  # placeholder text is StringWdgt's own. So the whole constructor is one forward.
+  #
+  # NOTHING here is a `@param`. A `@param` assigns its field unconditionally, so
+  # `@backgroundTransparency = undefined` shadowed Widget's class-level default of 1 on every
+  # construction; that undefined reached `ctx.globalAlpha` in _prepareTextBufferContext, and a
+  # specified backgroundColor then painted nothing at all, silently
+  # (docs/archive/dropped-background-fill-investigation.md). Options are immune by
+  # construction — StringWdgt reads them in its body, behind a visible guard.
+  constructor: (text, opts = {}) ->
+    super (text ? "TextWdgt"), opts
     # override inherited properties:
     @markedTextColor = Color.WHITE
     @markedBackgroundColor = Color.create 60, 60, 120

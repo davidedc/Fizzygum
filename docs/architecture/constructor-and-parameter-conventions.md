@@ -131,6 +131,16 @@ preserve the order the all-`@param` form compiled to — a field a superclass co
 must be set before `super()`, not after. `SliderWdgt` reads both its options above `super()`
 for exactly this reason.
 
+⚠ *Before*, not after, because Fizzygum does not run ES class syntax. `src/meta/Class.coffee`
+compiles each constructor as a standalone fragment and rewrites `super` into a plain
+`__super__.constructor` call, so the compiler never sees a *derived* constructor and emits the
+`@param` assignments at the top of the function as it would anywhere else. Under real
+`class X extends Y`, ES forbids touching `this` before `super()` and CoffeeScript moves those
+assignments *below* the call — the opposite order, and a base constructor calling a virtual
+method would then see the subclass's parameters unbound. Reason about this codebase from the
+fragmented emit, never from what `coffee -bcp` prints for a whole file (which mostly refuses to
+compile these files at all).
+
 ### R7 — A base-class signature change ripples through every `super`. Convert a family atomically.
 
 `super` calls in subclasses pass the **old** positional signature and must change with the
@@ -139,8 +149,14 @@ mis-bound field at worst. The button family (`ButtonWdgt` → `LabelButtonWdgt` 
 `MenuItemWdgt`/`MagnetWdgt`, plus `SimpleButtonWdgt`/`SimpleRectangularButtonWdgt`/
 `SimpleRasterImageButtonWdgt`) is one unit; so is the text family.
 
-⚠ A **bare** `super` forwards the *defaulted* parameters, so it must become an explicit call
-when the signature changes shape.
+⚠ A **bare** `super` forwards `arguments` — what the CALLER passed — not this constructor's
+defaulted parameters. `Class.coffee`'s `_equivalentforSuper` rewrites it to
+`__super__.constructor.apply(this, arguments)`, and the `@param` assignments sit **above** that
+call (§R6), so the base then re-defaults every slot the caller omitted **straight over the
+subclass's own defaults**. A subclass that states defaults and forwards bare therefore states
+them to no effect: `SimpleTextWdgt` declared 12pt and `Color.BLACK` and shipped
+`normalTextFontSize` and `Color(37,37,37)` for years. Make the call explicit when the signature
+changes shape — and check, when you do, whether the defaults it was hiding were ever real.
 
 ### R8 — Don't invent a second options shape where a spec class already exists.
 

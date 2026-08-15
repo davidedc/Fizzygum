@@ -27,8 +27,9 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
     @contents.disableDrops()
     @isTextLineWrapping = wraps
     @color = Color.WHITE
-    @textWdgt = new SimpleTextWdgt(
-      textAsString,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
+    @textWdgt = new SimpleTextWdgt textAsString,
+      backgroundColor: Color.create(230, 230, 130)
+      backgroundTransparency: 1
     @textWdgt.isEditable = true
     if !wraps
       # non-wrapping ("code view"): the box hugs the natural, un-wrapped text width

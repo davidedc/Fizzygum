@@ -64,7 +64,12 @@ class StringFieldWdgt extends PanelWdgt
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
     # note: StringWdgt takes isHeaderLine as its 6th arg, so isNumeric is the 7th
-    text = new StringWdgt txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric
+    text = new StringWdgt txt,
+      fontSize: @fontSize
+      fontName: @fontStyle
+      bold: @isBold
+      italic: @isItalic
+      numeric: @isNumeric
     text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     # THIS is the field's natural-width derivation — capture it for
     # menuEntryPreferredWidth at the source rather than reading applied
@@ -76,7 +81,12 @@ class StringFieldWdgt extends PanelWdgt
     super()
     txt = (if @text then @getValue() else @defaultContents)
     if !@text?
-      @text = new StringWdgt(txt, @fontSize, @fontStyle, @isBold, @isItalic, false, @isNumeric)
+      @text = new StringWdgt txt,
+        fontSize: @fontSize
+        fontName: @fontStyle
+        bold: @isBold
+        italic: @isItalic
+        numeric: @isNumeric
       @text.isNumeric = @isNumeric # for whichever reason...
       @text.isEditable = @isEditable
       @text.enableSelecting()

@@ -32,13 +32,10 @@ class SpeechBubbleWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    @contentsWidget = new TextWdgt(
-      @contents,
-      WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
-      undefined,
-      false,
-      true,
-      "center")
+    @contentsWidget = new TextWdgt @contents,
+      fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
+      italic: true
+      color: "center"
 
     @contentsWidget.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @contentsWidget.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

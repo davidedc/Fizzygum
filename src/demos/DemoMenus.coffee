@@ -574,16 +574,16 @@ class DemoMenus
     world.add wm
 
   createNewWrappingSimpleTextWdgtWithBackground: ->
-    newWdgt = new SimpleTextWdgt(
-      @LOREM_LONG,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
+    newWdgt = new SimpleTextWdgt @LOREM_LONG,
+      backgroundColor: Color.create(230, 230, 130)
+      backgroundTransparency: 1
     newWdgt.isEditable = true
 
     world.add newWdgt
     newWdgt.setBounds new Point(25, 40), new Point(500, 300)
 
   createNewNonWrappingSimpleTextWdgtWithBackground: ->
-    newWdgt = new SimpleTextWdgt(
-      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+    newWdgt = new SimpleTextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
       "varius." +
@@ -592,7 +592,9 @@ class DemoMenus
       "porttitor, elit augue vestibulum est, nec congue " +
       "ex dui a velit. Nullam lectus leo, lobortis eget " +
       "erat ac, lobortis dignissim " +
-      "magna.",undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
+      "magna.",
+      backgroundColor: Color.create(230, 230, 130)
+      backgroundTransparency: 1
     newWdgt.isEditable = true
     # non-wrapping ("code view"): hug the natural text width.
     newWdgt.softWrap = false
@@ -674,7 +676,9 @@ class DemoMenus
     menu.popUpAtHand()
 
   createNewStringWdgtWithBackground: ->
-    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",undefined,undefined,undefined,undefined,undefined,undefined,undefined, Color.create(230, 230, 130), 1
+    newWdgt = new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",
+      backgroundColor: Color.create(230, 230, 130)
+      backgroundTransparency: 1
     newWdgt.isEditable = true
     world.create newWdgt
 
@@ -684,8 +688,9 @@ class DemoMenus
     world.create newWdgt
 
   createNewTextWdgtWithBackground: ->
-    newWdgt = new TextWdgt(
-      @LOREM_LONG,undefined,undefined,undefined,undefined,undefined,Color.create(230, 230, 130), 1)
+    newWdgt = new TextWdgt @LOREM_LONG,
+      backgroundColor: Color.create(230, 230, 130)
+      backgroundTransparency: 1
     newWdgt.isEditable = true
     world.create newWdgt
 

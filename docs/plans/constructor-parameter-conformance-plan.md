@@ -1,6 +1,6 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0 landed 2026-08-15; P1 next.** Owner-gated per family.
+**STATUS: ACTIVE. P0, P1 and P2 landed 2026-08-15. P3 next — owner-gated (D5).** Owner-gated per family.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -86,7 +86,7 @@ Added to `STINKS` in `buildSystem/check-stinks.js`, **baseline 51** — the runn
 Seeding at the measured 51 keeps the build green today and makes every later phase's gain
 self-locking: each family that lands drops the count, and the check prints the
 tighten-the-baseline reminder. **Tighten the baseline in the same commit that drops it** — that
-is the established ratchet discipline.
+is the established ratchet discipline. (P2 duly took it to **30**.)
 
 The ⚠ this phase carried — *the seeded number must come from the runner's own count, not this
 document's, because a naive scan counts comment prose* — was **checked and found moot for this
@@ -160,7 +160,7 @@ fracplane dpr2 rider PASS. **Zero reference churn**, as predicted.
 Rewriting the class header to describe the shape it now has also dropped its one
 `comment-narration` hit, so that stink tightens 104 → 103 in the same commit (ratchet discipline).
 
-## 3. P2 — The text family (biggest payoff; `StringWdgt` / `TextWdgt` / `SimpleTextWdgt`)
+## 3. P2 — The text family (biggest payoff; `StringWdgt` / `TextWdgt` / `SimpleTextWdgt`) ✅ DONE 2026-08-15
 
 The single largest hole cluster in the codebase. ~20 call sites share one shape:
 
@@ -187,28 +187,44 @@ SimpleTextWdgt: (@text, @originallySetFontSize, @fontName, @isBold, @isItalic,
                  @color, backgroundColor, backgroundTransparency)
 ```
 
-**Target head:** `(text, fontSize, opts = {})` for all three — `text` is the identity,
-`fontSize` is the one other argument callers routinely pass positionally (`new StringWdgt
-scalarText, 12` in `CellWdgt:105`/`:234`, `new StringWdgt eachNamedClass, …` in
-`InspectorWdgt:211`). Everything else — `fontName`, `isBold`, `isItalic`, `isHeaderLine`,
-`isNumeric`, `color`, `backgroundColor`, `backgroundTransparency` — moves to `opts`.
+**Target head:** `(text, opts = {})` for all three — `text` alone is the identity. Everything
+else, **`fontSize` included**, moves to `opts`: `fontName`, `bold`, `italic`, `headerLine`,
+`numeric`, `color`, `backgroundColor`, `backgroundTransparency`.
+
+⚠ This head is a **correction to the one first specified here**, `(text, fontSize, opts)`, which
+rested on the claim that `fontSize` "is the one other argument callers routinely pass
+positionally" and cited three sites for it. Measurement says otherwise — see the boxed finding
+below, which is the record of why.
 
 The 15-site cluster then reads:
 
 ```coffee
 super "Drop a widget in here",
-  undefined,
-  color: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor,
+  backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
   backgroundTransparency: 1
 ```
+
+⚠ **`backgroundColor:`, not `color:`** — this snippet said `color:` when it was authored, and that
+is a mis-binding, not a typo with local blast radius: slot 7 of the old signature is
+`backgroundColor` (slot 6, the text colour, is one of the five `undefined`s), and the argument's
+own name says so. Taken literally it would have painted the text in the background colour at
+~60 sites.
 
 ⚠ Or better: give the family a **named factory** for this recurring look, since fifteen sites
 asking for the same two knobs is a shape, not a coincidence. Decide at execution time; the
 mechanical conversion is correct either way and the factory can land on top.
 
-⚠ **`text` must stay a plain guarded parameter or keep its conditional default** — `StringWdgt`'s
+⚠ ~~**`text` must stay a plain guarded parameter or keep its conditional default** — `StringWdgt`'s
 is `@text = (if text is "" then "" else "StringWdgt")`, which distinguishes "" from absent.
-Transcribe it exactly; do not "simplify" it.
+Transcribe it exactly; do not "simplify" it.~~ **FALSIFIED at execution — transcribing it exactly
+would have preserved a latent crash.** CoffeeScript renames the parameter to `text1` and leaves
+the default expression referring to a free `text`, so `new StringWdgt()` raises
+`ReferenceError: text is not defined`; when the argument IS supplied the default never evaluates
+at all. The conditional is inert in both directions. `""` does survive as a real value, but
+because ES defaults fire on `undefined` only — nothing to do with the conditional. The spelling
+that has the intended meaning *and* no crash is the plain `@text = text ? "StringWdgt"`, which is
+what landed. (Nothing constructs a `StringWdgt` with no arguments, which is why the crash has
+never fired.)
 
 **Risks.** Largest blast radius of the arc (**68** `new` sites in `src/` across the three
 classes, plus subclass `super` chains and the tests repo). All three classes convert in ONE
@@ -217,6 +233,59 @@ chain, so both `super` calls move together.
 
 **Verification:** `./build_and_test.sh`. This family draws text everywhere; any mis-bound
 field shows up as reference churn immediately. Expect **zero** churn — investigate any.
+
+### What the conversion exposed
+
+The value of naming the slots is that three things nobody could see in a row of `undefined`s
+became obvious the moment they had names. The P2 commit itself stays **pixel-neutral**; anything
+with a visible result lands separately, so it stays bisectable.
+
+1. **`SpeechBubbleWdgt` passed `"center"` as its TEXT COLOUR.** Old slot 6 of `TextWdgt` is
+   `color`, and the site passed the string `"center"` — an alignment argument aimed at the wrong
+   signature, while `@contentsWidget.alignCenter()` two lines below already does the real job. As
+   a literal `color: "center"` it is self-evidently wrong on sight; as the sixth of eight
+   positionals it was invisible. Its effect is the `dropped-background-fill` failure mode again:
+   an invalid value handed to a canvas property is not loud — HTML5 says ignore it — so the
+   bubble's text painted in whatever `fillStyle` happened to be set last. ⭐ **The generalisation
+   worth keeping: that arc's lesson reads as being about `backgroundTransparency`, but the real
+   rule is that ANY invalid value assigned to ANY canvas property fails silently.** FIXED in its
+   own follow-up commit (option deleted, so the text takes `StringWdgt`'s default): it moves 8
+   references, and an A/B with just this line reverted proved those 8 are the ONLY pixels either
+   change touches.
+2. **`SimpleTextWdgt`'s declared defaults never reached an instance.** `12` and `Color.BLACK` (and
+   `"SimpleText"`) were overwritten on every construction by the base's own defaults, via the
+   bare-`super` mechanism now written up in the convention doc's R7. The dead declarations are
+   deleted; the behaviour is untouched. ⭐ The gap is much smaller than it looks, which is why
+   restoring the intent was rejected rather than deferred: **`normalTextFontSize` IS 12**, so the
+   size half was always a no-op, and `"SimpleText"` is unreachable because nothing constructs one
+   with no arguments. Only `Color.BLACK` vs `Color(37,37,37)` ever differed — and repainting every
+   contained text in the system on the strength of a declaration that has never once been true is
+   a design change, not a bug fix.
+3. **The specified head would have left a single `undefined` hole at 50 sites** — measured and
+   rejected; see below.
+
+### ⚠ The head is `(text, opts = {})` — §3's `(text, fontSize, opts)` was measured and rejected
+
+§3 asserted `fontSize` "is the one other argument callers routinely pass positionally", citing
+three sites. Measured across all **186** construction sites: **84 pass only `text`, 33 pass
+`text, fontSize`, and 69 pass more** — and of those 69, **50 pass `undefined` for `fontSize`**
+purely to reach a later argument.
+
+So a size is supplied by **28%** of callers, which fails R1's "the *typical* caller passes it",
+and 50 sites must skip it, which is R3's hole test failing outright. §4's own procedure routes
+this to step 4: *"Does any call site still need a hole? → go back to 2; you got one wrong."* The
+decisive comparison is that **the group paying the hole (50) is larger than the group gaining the
+terseness (33)** — in the family this plan calls its biggest payoff.
+
+⚠ The `SliderWdgt` precedent does **not** carry over, and this is where it would have misled: its
+four numbers stayed positional under **E4**, because `new SliderWdgt 0, 100, 30, 10` is a
+spelling users type into spreadsheet formulas. Checked for this family — `MACRO-PATTERNS.md`
+documents no constructor spelling for it and no formula string constructs one. **E4 is absent, so
+only R1 and R3 apply, and both say the same thing.** A size is not half of a tuple here; it is
+the most popular of nine knobs.
+
+Result: the family contributes **zero** sites to `positional-hole`. Final shape across both
+repos — **84 sites pass `text` alone, 103 pass `text` + an options object, none pass more.**
 
 ## 4. P3 — The button family (deepest `super` chain; convert atomically)
 
@@ -345,6 +414,14 @@ and may be exempt on inspection (E5-adjacent) — check before converting.
   four mandatory metadata strings in `tests/**/SystemTest_<name>.js` quote construction lines as
   prose. Search by CLASS NAME across the whole repo, never by file extension. (P1 found two live
   sites and one prose quote this way; P2's tests-repo count exceeds its `src/` count.)
+- **⚠⚠ `new X (expr), a, b` is a PAREN-LESS call with a parenthesised FIRST ARGUMENT, not a paren
+  call.** The space matters: CoffeeScript reads `f (a), b` as `f(a, b)` and `f(a), b` as
+  `(f(a)), b`. Any scanner that skips whitespace before testing for `(` reads the whole call as
+  one argument, silently classifies an 8-argument site as a 1-argument one, and leaves it
+  unconverted. P2 hit this exactly once in 186 sites
+  (`macroTextWdgtCaretPlacementUnderAlignments`), and **the suite is what caught it** — a single
+  red test in an otherwise-clean run. Treat "reference churn is a red flag" as covering this too:
+  the failure of a conversion to REACH a site looks identical to a mis-binding.
 - **Count arity with a paren/quote-aware scan, not a comma grep.** `Fizzygum-tests/.scratch/
   ctor-arity-scan.js` (gitignored, written at P2) joins continuation lines and counts TOP-LEVEL
   arguments for every `new <Class>` in both repos, with a histogram. A single-line comma grep gets

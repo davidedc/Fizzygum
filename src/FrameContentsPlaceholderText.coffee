@@ -2,7 +2,9 @@ class FrameContentsPlaceholderText extends TextWdgt
 
   constructor: ->
 
-    super "Drop a widget in here",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1
+    super "Drop a widget in here",
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
 
     @alignCenter()
     @alignMiddle()

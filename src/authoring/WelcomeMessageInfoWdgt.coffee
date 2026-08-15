@@ -12,16 +12,18 @@ class WelcomeMessageInfoWdgt extends DocumentWdgt
     startingContent._contentStackSpec.setAlignmentToCenter()
 
 
-    startingContent = new SimpleTextWdgt(
-      "Welcome to Fizzygum",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent = new SimpleTextWdgt "Welcome to Fizzygum",
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
     startingContent.enableSelecting()
     sdspw.add startingContent
 
-    startingContent = new SimpleTextWdgt(
-      "version 1.1.12",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent = new SimpleTextWdgt "version 1.1.12",
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 9
     startingContent.isEditable = true

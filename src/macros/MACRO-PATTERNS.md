@@ -185,7 +185,7 @@ assertion a recapture after a regression silently stores two different hashes an
   Keep the box wide enough that the text NEVER crops, or clicks deflect into the edit prompt (the deferral entry). No new verb.
 - **Text ellipsisation** (`macroStringEllipsisation`): a `StringWdgt` does NOT grow to its text — when too narrow it
   crops to the longest fitting prefix + "…" (`fittingSpecWhenBoundsTooSmall` defaults to `CROP`; SCALEDOWN scales instead,
-  the "crop/shrink to fit" item). `new StringWdgt "long text", fontSize` (give a `backgroundColor` so the bounds show) +
+  the "crop/shrink to fit" item). `new StringWdgt "long text", fontSize: 12, backgroundColor: bg` (give a `backgroundColor` so the bounds show) +
   `_applyExtent` to a narrow width ellipsises; a narrower extent crops more. The screenshot's settle re-crops.
 - **Text shrink-to-fit (SCALEDOWN)** (`macroTextWdgtShrinksToFitLongToken`): the SCALEDOWN counterpart of the CROP
   ellipsisation above. When a wrapping `TextWdgt` holds a single UNBREAKABLE token wider than the box, the WHOLE text's
@@ -362,7 +362,7 @@ assertion a recapture after a regression silently stores two different hashes an
   depends on what is selected. `setReceiver obj` (`TextWdgt.coffee:657-659`) installs `evaluationMenu` as the widget's
   `overridingContextMenu` (so `Widget.buildContextMenu` returns it directly); that menu prepends "do all"/"select all" when
   `@text.length>0` (`:618`) and ALSO "do selection"/"show selection"/"inspect selection" ONLY when `@selection()` is non-empty
-  (`:625`). Fixture: a STANDALONE `new TextWdgt("3 + 4", nil,nil,nil,nil, nil, bg, 1)` (the inspector value panes are OLD
+  (`:625`). Fixture: a STANDALONE `new TextWdgt "3 + 4", backgroundColor: bg, backgroundTransparency: 1` (the inspector value panes are OLD
   TextMorph — build the TextWdgt directly to exercise THIS path), `isEditable=true` + `setReceiver world`, sized so the text
   FITS (else a click opens the "edit:" prompt). Beats: click in → `@openMenuOf_InputEvents txt` (UNSELECTED shot) → dismiss with
   a mouse-down on empty desktop, RE-CLICK in, `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` → `@openMenuOf_InputEvents

@@ -130,11 +130,15 @@ and option-object unpacking standing in for the parameters an all-positional sig
 bound at the same moment (`SliderWdgt`'s `opts.color` / `opts.smallestValueIsAtBottomEnd`). Everything
 else — appearance, colours, sizing, registrations, child building — goes after.
 
-⚠ CoffeeScript binds a *subclass's* constructor parameters only **after** `super()`. A base
-constructor that calls a virtual method therefore sees the subclass's parameters unbound — which is
-why `ScrollPanelWdgt` builds through a distinctly-named `_buildScrollFrame`, `MenuRowsPanelWdgt`
-through `_buildMenuLabel`, and `PromptWdgt` leaves `@_buildAndConnectChildren()` to each subclass's
-own constructor.
+⚠ A base constructor that calls a **virtual** method runs it before the subclass constructor's own
+body has done anything past `super` — which is why `ScrollPanelWdgt` builds through a
+distinctly-named `_buildScrollFrame`, `MenuRowsPanelWdgt` through `_buildMenuLabel`, and
+`PromptWdgt` leaves `@_buildAndConnectChildren()` to each subclass's own constructor.
+
+⚠ What that base DOES see is the subclass's `@param` fields, already assigned:
+[`constructor-and-parameter-conventions.md` R6](constructor-and-parameter-conventions.md) has the
+mechanism and why it is the reverse of ES class syntax. Reason about construction order from the
+fragmented emit `src/meta/Class.coffee` produces, not from vanilla `class X extends Y`.
 
 ### 3.4 Build children in `_buildAndConnectChildrenNoSettle`, reached through the canonical wrapper
 

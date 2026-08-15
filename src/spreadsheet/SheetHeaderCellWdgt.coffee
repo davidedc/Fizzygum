@@ -63,7 +63,7 @@ class SheetHeaderCellWdgt extends Widget
     if @_labelWdgt?
       @_labelWdgt._setTextNoSettle label
     else
-      labelWdgt = new StringWdgt label, 12
+      labelWdgt = new StringWdgt label, fontSize: 12
       labelWdgt.color = @_sheetWidget.headerTextColor
       labelWdgt.isEditable = false
       @_addNoSettle labelWdgt

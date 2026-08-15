@@ -74,13 +74,11 @@ class ToolTipWdgt extends Widget
       # to "sans-serif", whereas TextWdgt's default is 'Arial, sans-serif'.
       # Color.BLACK passed explicitly: old text widget forced black, TextWdgt
       # defaults to (37,37,37).
-      @contentsWidget = new TextWdgt(
-        @contents,
-        WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
-        "sans-serif",
-        false,
-        true,
-        Color.BLACK)
+      @contentsWidget = new TextWdgt @contents,
+        fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
+        fontName: "sans-serif"
+        italic: true
+        color: Color.BLACK
       @contentsWidget.alignCenter()
     # canvas-like (a DOM canvas OR an SWCanvasElement under the software backend);
     # Widget / string contents are already handled by the branches above.
@@ -91,13 +89,11 @@ class ToolTipWdgt extends Widget
       @contentsWidget.backBuffer = @contents
       @contentsWidget.backBufferContext = @contentsWidget.backBuffer.getContext "2d"
     else
-      @contentsWidget = new TextWdgt(
-        @contents.toString(),
-        WorldWdgt.preferencesAndSettings.bubbleHelpFontSize,
-        "sans-serif",
-        false,
-        true,
-        Color.BLACK)
+      @contentsWidget = new TextWdgt @contents.toString(),
+        fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
+        fontName: "sans-serif"
+        italic: true
+        color: Color.BLACK
       @contentsWidget.alignCenter()
     @_addNoSettle @contentsWidget
 

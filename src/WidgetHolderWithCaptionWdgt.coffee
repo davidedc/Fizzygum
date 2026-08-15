@@ -30,7 +30,7 @@ class WidgetHolderWithCaptionWdgt extends Widget
     # both lines); the CROP default ellipsises what overflows line 2, and
     # editing an ellipsised caption hands off to the pop-out editor
     # (handOffToPopoutEditorIfOverflowing), same as the old one-line label.
-    @label = new TextWdgt @labelContent, WorldWdgt.preferencesAndSettings.shortcutsFontSize
+    @label = new TextWdgt @labelContent, fontSize: WorldWdgt.preferencesAndSettings.shortcutsFontSize
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @label.color = Color.WHITE
     @label.hasDarkOutline = true

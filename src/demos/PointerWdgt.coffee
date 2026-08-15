@@ -19,17 +19,7 @@ class PointerWdgt extends BoxWdgt
 
   _buildAndConnectChildrenNoSettle: ->
     lmContent1 = new CollapsedStateIconWdgt
-    lmContent2 = new StringWdgt(
-      @target.toString(),
-      undefined, #@originallySetFontSize,
-      undefined, #@fontName,
-      undefined, #@isBold,
-      undefined, #@isItalic,
-      false, #@isHeaderLine,
-      undefined, #@isNumeric,
-      Color.WHITE, #@color,
-      undefined, #@backgroundColor
-    )
+    lmContent2 = new StringWdgt @target.toString(), color: Color.WHITE
     # override inherited properties:
     lmContent2.noticesTransparentClick = true
     lmContent2.isEditable = false

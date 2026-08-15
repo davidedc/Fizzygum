@@ -6,7 +6,7 @@ class VideoTimeLabelWdgt extends HhmmssLabelWdgt
     "Video time"
 
   constructor: (@videoPlayerCanvas) ->
-    super "n/a", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    super "n/a", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @alignLeft()
 
     # the label of the current time is updated via the stepping

@@ -36,7 +36,9 @@ class FridgeMagnetsWdgt extends Widget
     @_addNoSettle @visualOutput
     
     # source code output pane
-    @codeOutput = new FizzytilesCodeWdgt "",undefined,undefined,undefined,undefined,undefined,(Color.create 255, 250, 245), 1
+    @codeOutput = new FizzytilesCodeWdgt "",
+      backgroundColor: (Color.create 255, 250, 245)
+      backgroundTransparency: 1
     @codeOutput.fridgeMagnetsCanvas = @visualOutput
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()

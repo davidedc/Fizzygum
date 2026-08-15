@@ -17,8 +17,9 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     doc = new DocumentWdgt
     sdspw = doc.contents
 
-    startingContent = new SimpleTextWdgt(
-      "Sample Doc",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent = new SimpleTextWdgt "Sample Doc",
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 22
     startingContent.isEditable = true

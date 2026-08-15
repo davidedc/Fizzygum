@@ -23,7 +23,7 @@ class CodePromptWdgt extends CodeAreaWdgt
     @_addNoSettle @cancelButton
 
     
-    @saveTextWdgt = new StringWdgt "save", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @saveTextWdgt = new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "informTarget", @saveTextWdgt
     @_addNoSettle @saveButton

@@ -208,7 +208,7 @@ class InspectorWdgt extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, WorldWdgt.preferencesAndSettings.textInButtonsFontSize),undefined,undefined,undefined,undefined,eachNamedClass,undefined,undefined,@classNamesTextPadding
+      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize),undefined,undefined,undefined,undefined,eachNamedClass,undefined,undefined,@classNamesTextPadding
       @classesButtons.push classButton
       @_addNoSettle classButton
 
@@ -253,7 +253,7 @@ class InspectorWdgt extends Widget
     @removePropertyButton = new SimpleButtonWdgt true, @, "removeProperty", "remove"
     @_addNoSettle @removePropertyButton
 
-    @saveTextWdgt = (new StringWdgt "save", WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+    @saveTextWdgt = (new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
     @saveButton = new SimpleButtonWdgt true, @, "save", @saveTextWdgt
     @_addNoSettle @saveButton
 
@@ -316,13 +316,13 @@ class InspectorWdgt extends Widget
 
 
 
-    @hierarchyHeaderString = new StringWdgt "Hierarchy", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @hierarchyHeaderString = new StringWdgt "Hierarchy", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @hierarchyHeaderString.toggleHeaderLine()
     @hierarchyHeaderString.alignCenter()
     @_addNoSettle @hierarchyHeaderString
 
 
-    @propertyHeaderString = new StringWdgt "Properties", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @propertyHeaderString = new StringWdgt "Properties", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @propertyHeaderString.toggleHeaderLine()
     @propertyHeaderString.alignCenter()
     @_addNoSettle @propertyHeaderString

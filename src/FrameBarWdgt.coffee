@@ -101,7 +101,7 @@ class FrameBarWdgt extends Widget
 
     # label -- tear down through the non-settling core (inside the rebuild's settle)
     @label?._fullDestroyNoSettle()
-    @label = new StringWdgt "", WorldWdgt.preferencesAndSettings.titleBarTextFontSize
+    @label = new StringWdgt "", fontSize: WorldWdgt.preferencesAndSettings.titleBarTextFontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
     # safari's rendering of bright text on dark background is atrocious

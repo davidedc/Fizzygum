@@ -69,16 +69,12 @@ class LabelButtonWdgt extends ButtonWdgt
   # the button's box. Subclasses that need the box to hug the label (e.g.
   # MenuItemWdgt) override this.
   _createLabel: ->
-    @label = new StringWdgt(
-      @labelString or "",
-      @fontSize,
-      @fontStyle,
-      @labelBold,
-      @labelItalic,
-      false, # isHeaderLine
-      false, # isNumeric
-      @labelColor
-    )
+    @label = new StringWdgt (@labelString or ""),
+      fontSize: @fontSize
+      fontName: @fontStyle
+      bold: @labelBold
+      italic: @labelItalic
+      color: @labelColor
     # _addNoSettle (NOT add): _createLabel is driven by _reLayoutSelf (a layout pass), so a
     # self-settle here would re-enter the flush guard and throw.
     @_addNoSettle @label

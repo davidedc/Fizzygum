@@ -26,8 +26,9 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
     startingContent._contentStackSpec.setGrow 0
     startingContent._contentStackSpec.setAlignmentToCenter()
 
-    startingContent = new SimpleTextWdgt(
-      "How to save?",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent = new SimpleTextWdgt "How to save?",
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
     startingContent.alignCenter()
     startingContent.setFontSize 24
     startingContent.isEditable = true
@@ -49,8 +50,9 @@ class HowToSaveMessageApp extends IconicDesktopSystemWindowedApp
 
     sdspw.addSpacer()
 
-    startingContent = new SimpleTextWdgt(
-      "Footnotes",undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent = new SimpleTextWdgt "Footnotes",
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
     startingContent.toggleWeight()
     startingContent.isEditable = true
     startingContent.enableSelecting()

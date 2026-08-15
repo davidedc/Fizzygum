@@ -74,11 +74,11 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     @_addNoSettle @outputTextArea
 
 
-    @formulaTextBoxLabel = new StringWdgt "Formula", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @formulaTextBoxLabel = new StringWdgt "Formula", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @formulaTextBoxLabel.toggleHeaderLine()
     @_addNoSettle @formulaTextBoxLabel
 
-    @outputTextBoxLabel = new StringWdgt "Output", WorldWdgt.preferencesAndSettings.textInButtonsFontSize
+    @outputTextBoxLabel = new StringWdgt "Output", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @outputTextBoxLabel.toggleHeaderLine()
     @_addNoSettle @outputTextBoxLabel
 

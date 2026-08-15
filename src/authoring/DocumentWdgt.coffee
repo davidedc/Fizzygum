@@ -23,8 +23,9 @@ class DocumentWdgt extends FrameWdgt
   # paragraph -- exactly what the fused class's build core did.
   _makeStartingPayload: ->
     scrollPanel = new SimpleDocumentScrollPanelWdgt
-    startingContent = new SimpleTextWdgt(
-      @startingText,undefined,undefined,undefined,undefined,undefined,WorldWdgt.preferencesAndSettings.editableItemBackgroundColor, 1)
+    startingContent = new SimpleTextWdgt @startingText,
+      backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
+      backgroundTransparency: 1
     scrollPanel.setContents startingContent, 5
     startingContent.isEditable = true
     startingContent.enableSelecting()
