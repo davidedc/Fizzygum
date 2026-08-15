@@ -22,7 +22,7 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
     @toolTipMessage = face.toolTipMessage
 
   editInjectableSource: ->
-    @textPrompt "Code", @, "modifyCodeToBeInjected", @sourceCodeToBeInjected
+    @textPrompt "Code", @, "modifyCodeToBeInjected", defaultContents: @sourceCodeToBeInjected
 
   # this happens when pressed, the source code is injected into the target the
   # owner resolves NOW (undefined = nothing paintable in reach: the press is a

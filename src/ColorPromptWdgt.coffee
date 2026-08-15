@@ -9,8 +9,8 @@ class ColorPromptWdgt extends PromptWdgt
   # base's tempPromptEntryField stays undefined); declared for duplicate remapping.
   colorPicker: undefined
 
-  constructor: (widgetOpeningThePopUp, msg, target, callback, defaultContents) ->
-    super widgetOpeningThePopUp, msg, target, callback, defaultContents
+  constructor: (widgetOpeningThePopUp, target, opts = {}) ->
+    super widgetOpeningThePopUp, target, opts
     @_buildAndConnectChildren()
 
   _buildAndAddValueEditorInto: (panel) ->

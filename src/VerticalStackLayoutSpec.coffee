@@ -135,14 +135,11 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   growPopout: (menuItem,a,b,c,d,e,f)->
-    @element.prompt menuItem.parent.title + "\nelasticity:",
-      @,
-      "setGrowFromPercent",
-      ((@grow ? 1) * 100).toString(),
-      undefined,
-      0,
-      100,
-      true
+    @element.prompt menuItem.parent.title + "\nelasticity:", @, "setGrowFromPercent",
+      defaultContents: ((@grow ? 1) * 100).toString()
+      floorNum: 0
+      ceilingNum: 100
+      isRounded: true
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   # The prompt's adapter: the user-facing "elasticity" knob speaks 0..100, the model's grow
@@ -168,14 +165,11 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
   desiredWidthPopout: (menuItem,a,b,c,d,e,f)->
-    @element.prompt menuItem.parent.title + "\nbase width:",
-      @,
-      "setDesiredWidth",
-      @desiredWidth.toString(),
-      undefined,
-      10,
-      1000,
-      true
+    @element.prompt menuItem.parent.title + "\nbase width:", @, "setDesiredWidth",
+      defaultContents: @desiredWidth.toString()
+      floorNum: 10
+      ceilingNum: 1000
+      isRounded: true
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   # (pre-U4 name: setWidthOfElementWhenAdded; the user-facing prompt still says "base width".)

@@ -8,8 +8,12 @@ class NumberPromptWdgt extends PromptWdgt
   ceilingNum: undefined
   isRounded: undefined
 
-  constructor: (widgetOpeningThePopUp, msg, target, callback, defaultContents, intendedWidth, @floorNum, @ceilingNum, @isRounded) ->
-    super widgetOpeningThePopUp, msg, target, callback, defaultContents, intendedWidth
+  constructor: (widgetOpeningThePopUp, target, opts = {}) ->
+    # read BEFORE the build below: _buildAndAddValueEditorInto reads all three.
+    @floorNum = opts.floorNum
+    @ceilingNum = opts.ceilingNum
+    @isRounded = opts.isRounded
+    super widgetOpeningThePopUp, target, opts
     @_buildAndConnectChildren()
 
   _buildAndAddValueEditorInto: (panel) ->

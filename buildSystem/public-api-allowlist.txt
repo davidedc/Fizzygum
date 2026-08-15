@@ -18,12 +18,10 @@ reactToTargetConnection   # connection protocol hook
 paintFunction             # icon appearances' polymorphic paint hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
-removeOwnProperty   # Widget property op, injectProperty's remove twin — inspector / live-code surface
-renameOwnProperty   # Widget property op, injectProperty's rename twin — inspector / live-code surface
 setMouseInputMode   # PreferencesAndSettings user setting
 setTouchInputMode   # PreferencesAndSettings user setting
-toggleVisibility    # Widget user verb
 saveScript          # ScriptWdgt user action
+textPrompt          # Widget code-entry prompt door, sibling of prompt/inform/pickColor — inspector / live-code surface
 setProgram          # LCLProgramRunner programming API
 # Kept public for structural reasons (T5 execution findings, 2026-07-12):
 processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
@@ -34,4 +32,3 @@ bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public 
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
 bringUpTarget             # IconicDesktopSystemShortcut shared "open the referenced target" ritual; drives public show/spawnNextTo/setTitle on other widgets — [A]/[G] forbid the _-form
 scrollToBottom            # ScrollPanelWdgt in-world scrolling verb (natural end-user/inspector API); §5.B left it with only a self-call (the fused SimpleDocumentWdgt was its lone external caller)
-removeFromTree            # Widget in-world detach verb (natural end-user/inspector API); §5.D left it with only self-calls (the retired paint teardown was its lone cross-object caller)

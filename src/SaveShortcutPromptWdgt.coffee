@@ -10,10 +10,18 @@ class SaveShortcutPromptWdgt extends PromptWdgt
 
   wdgtWhereReferenceWillGo: undefined
 
-  constructor: (widgetOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
-    if !@defaultContents
-      @defaultContents = world.untitledNamingService.getNextUntitledShortcutName()
-    super widgetOpeningThePopUp, @msg, @target, undefined, @defaultContents, @intendedWidth
+  # No msg and no callback: the title is the class-level constant above, and there
+  # is no caller action — Ok routes to my own createReferenceAndClose. Both are
+  # simply absent from the options I forward, which is why the base reads msg
+  # guarded (a bare assignment there would blank the constant).
+  constructor: (widgetOpeningThePopUp, target, opts = {}) ->
+    @wdgtWhereReferenceWillGo = opts.wdgtWhereReferenceWillGo
+    defaultContents = opts.defaultContents
+    if !defaultContents
+      defaultContents = world.untitledNamingService.getNextUntitledShortcutName()
+    super widgetOpeningThePopUp, target,
+      defaultContents: defaultContents
+      intendedWidth: opts.intendedWidth ? 100
     @_buildAndConnectChildren()
     @rowsPanel._applyWidth 150
     @_applyExtent @rowsPanel.extent()

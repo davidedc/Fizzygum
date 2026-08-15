@@ -91,6 +91,15 @@ The same shape is already the norm one level up in the API: `add aWdgt, position
 beingDropped` funnels into `_addNoSettle aWdgt, opts`, and `addMenuItem label, target, action, opts`
 serves 326 call sites with named knobs.
 
+⚠ **Choosing the head across a FAMILY is stricter than choosing it for one class.** Once there is a
+trailing `opts = {}`, an operand can no longer be omitted — reaching the tail means filling it — so
+the head is what **every** subclass supplies, not what reads best. One member that legitimately has
+nothing to put in a slot is enough to disqualify it: `PromptWdgt` takes only
+`(widgetOpeningThePopUp, target, opts = {})` because `SaveShortcutPromptWdgt` has a class-level title
+and no caller action, and a `msg`/`callback` head would have forced it to write
+`super widgetOpeningThePopUp, undefined, target, undefined, opts`. A convenience **door** with its
+own narrower caller set may still take them positionally and translate (`Widget.prompt`).
+
 📖 **The full law lives in
 [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md)** — it states
 the identity/configuration split, the decisive **hole test** (*if any call site must pass `undefined`

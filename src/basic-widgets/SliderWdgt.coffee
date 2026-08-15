@@ -209,32 +209,26 @@ class SliderWdgt extends CircleBoxWdgt
     menu.addLine()
     menu.addMenuItem "show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
     menu.addMenuItem "floor...", @, (->
-      @prompt menu.title + "\nfloor:",
-        @setStart,
-        @start.toString(),
-        undefined,
-        0,
-        @stop - @size,
-        true
-    ), "set the minimum value\nwhich can be selected"
+      @prompt menu.title + "\nfloor:", @, "setStart",
+        defaultContents: @start.toString()
+        floorNum: 0
+        ceilingNum: @stop - @size
+        isRounded: true
+    ), toolTip: "set the minimum value\nwhich can be selected"
     menu.addMenuItem "ceiling...", @, (->
-      @prompt menu.title + "\nceiling:",
-        @setStop,
-        @stop.toString(),
-        undefined,
-        @start + @size,
-        @size * 100,
-        true
-    ), "set the maximum value\nwhich can be selected"
+      @prompt menu.title + "\nceiling:", @, "setStop",
+        defaultContents: @stop.toString()
+        floorNum: @start + @size
+        ceilingNum: @size * 100
+        isRounded: true
+    ), toolTip: "set the maximum value\nwhich can be selected"
     menu.addMenuItem "button size...", @, (->
-      @prompt menu.title + "\nbutton size:",
-        @setSize,
-        @size.toString(),
-        undefined,
-        1,
-        @stop - @start,
-        true
-    ), "set the range\ncovered by\nthe slider button"
+      @prompt menu.title + "\nbutton size:", @, "setSize",
+        defaultContents: @size.toString()
+        floorNum: 1
+        ceilingNum: @stop - @start
+        isRounded: true
+    ), toolTip: "set the range\ncovered by\nthe slider button"
     @_addTargetConnectionMenuEntries menu, "numerical"
 
   showValue: ->

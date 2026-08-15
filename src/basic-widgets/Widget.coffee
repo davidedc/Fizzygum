@@ -4010,31 +4010,35 @@ class Widget extends TreeNode
     m.addMenuItem "Ok"
     m.popUpCenteredAtHand world
 
-  prompt: (msg, target, callback, defaultContents, width, floorNum,
-    ceilingNum, isRounded) ->
+  # The door to the Text/Number prompts. msg/callback are operands HERE — every
+  # caller of this method supplies all three — but options on the constructors,
+  # where SaveShortcutPromptWdgt supplies neither; this is the one place that
+  # translates. opts: defaultContents, intendedWidth, floorNum, ceilingNum, isRounded.
+  prompt: (msg, target, callback, opts = {}) ->
+
+    promptOpts = Object.assign {}, opts, msg: msg, callback: callback
 
     # dispatch on the numeric ceiling (the old slider condition): a numeric
     # prompt gets the slider, a plain one is text-only.
-    if ceilingNum? or WorldWdgt.preferencesAndSettings.useSliderForInput
-      prompt = new NumberPromptWdgt(@, msg, target, callback, defaultContents, width, floorNum,
-      ceilingNum, isRounded)
+    if opts.ceilingNum? or WorldWdgt.preferencesAndSettings.useSliderForInput
+      prompt = new NumberPromptWdgt @, target, promptOpts
     else
-      prompt = new TextPromptWdgt(@, msg, target, callback, defaultContents, width)
+      prompt = new TextPromptWdgt @, target, promptOpts
 
     prompt.popUpAtHand()
     prompt.tempPromptEntryField.text.edit()
 
-  textPrompt: (msg, target, callback, defaultContents, width, floorNum,
-    ceilingNum, isRounded) ->
+  # The door to the code-entry prompt. It takes no numeric range — CodePromptWdgt
+  # has no slider — so the head stops at the three operands.
+  textPrompt: (msg, target, callback, opts = {}) ->
 
-    prompt = new CodePromptWdgt(msg, target, callback, defaultContents, width, floorNum,
-    ceilingNum, isRounded)
+    prompt = new CodePromptWdgt target, (Object.assign {}, opts, msg: msg, callback: callback)
     world.openFrameWith prompt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
 
 
-  
+  # E5-exempt: three operands, no hole — no caller skips one to reach a later one.
   pickColor: (msg, callback, defaultContents) ->
-    colorPrompt = new ColorPromptWdgt @, msg, @, callback, defaultContents
+    colorPrompt = new ColorPromptWdgt @, @, msg: msg, callback: callback, defaultContents: defaultContents
     colorPrompt.popUpAtHand()
 
   inspect: ->
@@ -4200,14 +4204,11 @@ class Widget extends TreeNode
 
 
   transparencyPopout: (menuItem)->
-    @prompt menuItem.parent.title + "\nalpha\nvalue:",
-      @,
-      "setAlphaScaled",
-      (@alpha * 100).toString(),
-      undefined,
-      1,
-      100,
-      true
+    @prompt menuItem.parent.title + "\nalpha\nvalue:", @, "setAlphaScaled",
+      defaultContents: (@alpha * 100).toString()
+      floorNum: 1
+      ceilingNum: 100
+      isRounded: true
 
   # the pinout debug overlay lives in its own dev-only collaborator (src/PinoutsOverlay.coffee),
   # reached through a soak so a build without it simply has no pinouts. These two stay here

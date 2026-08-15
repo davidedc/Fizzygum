@@ -119,14 +119,11 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   desiredMainDimPopout: (menuItem,a,b,c,d,e,f)->
     currentDesired = if @axis == 'y' then @desiredHeight else @desiredWidth
-    @element.prompt menuItem.parent.title + "\ndesired size:",
-      @,
-      "setDesiredMainDim",
-      currentDesired.toString(),
-      undefined,
-      10,
-      1000,
-      true
+    @element.prompt menuItem.parent.title + "\ndesired size:", @, "setDesiredMainDim",
+      defaultContents: currentDesired.toString()
+      floorNum: 10
+      ceilingNum: 1000
+      isRounded: true
 
   # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
   # Prompt-adapter signature (value-or-widget-giving-value), like VerticalStackLayoutSpec.setDesiredWidth.
@@ -150,14 +147,11 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   maxMainDimPopout: (menuItem,a,b,c,d,e,f)->
     currentMax = if @axis == 'y' then @maxHeight else @maxWidth
-    @element.prompt menuItem.parent.title + "\nmax size:",
-      @,
-      "setMaxMainDim",
-      currentMax.toString(),
-      undefined,
-      10,
-      1000,
-      true
+    @element.prompt menuItem.parent.title + "\nmax size:", @, "setMaxMainDim",
+      defaultContents: currentMax.toString()
+      floorNum: 10
+      ceilingNum: 1000
+      isRounded: true
 
   # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
   # Prompt-adapter signature (value-or-widget-giving-value), like VerticalStackLayoutSpec.setDesiredWidth.

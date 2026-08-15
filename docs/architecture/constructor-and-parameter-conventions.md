@@ -91,6 +91,25 @@ exempt (§3), a hole means *reorder* — put the commonly-passed operand first. 
 "slot"`) is an immutable value class with one hole; it wants its parameters reordered, not an
 options bag. Read the hole as a diagnosis, then pick the treatment.
 
+⚠⚠ **Once there is a tail, every *optional* operand is a hole — so the head is what EVERY
+caller supplies, not what reads best in a signature.** Trailing arguments can be omitted
+freely; operands *before* an `opts = {}` cannot, because reaching the tail means filling
+them. This is what decides a head across a family, and it is stricter than R1's "the typical
+caller passes it": one member that legitimately has nothing to put in a slot is enough.
+`PromptWdgt` is the worked case — `msg` and `callback` read like operands and three of its four
+descendants pass both, but `SaveShortcutPromptWdgt` has a class-level title and no caller
+action at all, so a `(widgetOpeningThePopUp, msg, target, callback, opts)` head forces it to
+write `super widgetOpeningThePopUp, undefined, target, undefined, opts`. The head is therefore
+`(widgetOpeningThePopUp, target, opts = {})`, and the omitted operands become option keys.
+
+⭐ **A DOOR may keep the natural spelling.** The constraint above binds the constructor, whose
+callers include every subclass `super`; it does not bind a convenience method with its own,
+narrower caller set. `Widget.prompt` stays `(msg, target, callback, opts = {})` because no
+caller of *it* skips any of the three — and the door is then the single place that translates
+into the constructor's bag (`Object.assign {}, opts, msg: msg, callback: callback`). Keep the
+key SPELLINGS identical across the seam: a forwarded options bag cannot survive one field
+under two names, because the receiver never reads the alias.
+
 ### R4 — Option keys are the caller's vocabulary, not the field's name.
 
 An option key is named for what the **caller** means, and may be much shorter than the field

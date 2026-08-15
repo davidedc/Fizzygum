@@ -7,7 +7,16 @@ class CodePromptWdgt extends CodeAreaWdgt
   okButton: undefined
   saveTextWdgt: undefined
 
-  constructor: (@msg, @target, @callback, @defaultContents) ->
+  # A prompt by role, not by descent (I am a CodeAreaWdgt, not a PopUpWdgt), so I
+  # have no widgetOpeningThePopUp operand — but I share the family's opts
+  # vocabulary: msg, callback, defaultContents.
+  constructor: (target, opts = {}) ->
+    @msg = opts.msg
+    @target = target
+    @callback = opts.callback
+    # guarded: absence must leave the class-level "" standing, which a bare
+    # assignment would overwrite with undefined (R5).
+    @defaultContents = opts.defaultContents if opts.defaultContents?
     super new Point 200,400
     @_buildAndConnectChildren()
 

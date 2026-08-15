@@ -997,11 +997,11 @@ class StringWdgt extends Widget
     @textPossiblyCroppedToFit.length
 
   fontSizePopup: (menuItem)->
-    @prompt menuItem.parent.title + "\nfont\nsize:",
-      @,
-      "setFontSize",
-      @originallySetFontSize.toString(),
-      undefined, 6, 500, true
+    @prompt menuItem.parent.title + "\nfont\nsize:", @, "setFontSize",
+      defaultContents: @originallySetFontSize.toString()
+      floorNum: 6
+      ceilingNum: 500
+      isRounded: true
 
   editPopup: (menuItem)->
     if menuItem?
@@ -1009,11 +1009,10 @@ class StringWdgt extends Widget
     else
       title = "edit:"
 
-    @prompt title,
-      @,
-      "setText",
-      @text,
-      undefined, 6, undefined, true
+    @prompt title, @, "setText",
+      defaultContents: @text
+      floorNum: 6
+      isRounded: true
 
   # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters. From a font menu it
   # ALSO re-ticks the sibling menu items, but updateFontsMenuEntriesTicks does that through the

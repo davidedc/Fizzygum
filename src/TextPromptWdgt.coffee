@@ -3,8 +3,8 @@
 
 class TextPromptWdgt extends PromptWdgt
 
-  constructor: (widgetOpeningThePopUp, msg, target, callback, defaultContents, intendedWidth) ->
-    super widgetOpeningThePopUp, msg, target, callback, defaultContents, intendedWidth
+  constructor: (widgetOpeningThePopUp, target, opts = {}) ->
+    super widgetOpeningThePopUp, target, opts
     @_buildAndConnectChildren()
 
   _buildAndAddValueEditorInto: (panel) ->

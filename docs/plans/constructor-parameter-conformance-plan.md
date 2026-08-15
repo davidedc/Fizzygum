@@ -1,6 +1,6 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0, P1, P2 and P3 landed 2026-08-15. P4 (prompts) next.** Owner-gated per family.
+**STATUS: ACTIVE. P0–P4 landed 2026-08-15. P5 (stragglers) next.** Owner-gated per family.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -49,25 +49,26 @@ must move with the base).
 | 11 | 1 | 0 | `WheelInputEvent` | **exempt E3** |
 | 10 | 2 | 0 | `MousemoveInputEvent` | **exempt E3** |
 | 10 | 35 | 2 | `StringWdgt` | **P2** |
-| 9 | 1 | 0 | `NumberPromptWdgt` | **P4** |
+| 9 | 1 | 0 | `NumberPromptWdgt` | ✅ **P4** |
 | 8 | 16 | 1 | `SimpleTextWdgt` | **P2** |
 | 8 | 0 | 2 | `KeyboardInputEvent` | **exempt E3** |
 | 8 | 0 | 4 | `MouseInputEvent` | **exempt E3** |
 | 8 | 17 | 3 | `TextWdgt` | **P2** |
 | 7 | 0 | 3 | `TouchInputEvent` | **exempt E3** |
 | 7 | 2 | 0 | `StringFieldWdgt` | **P5** |
-| 6 | 0 | 4 | `PromptWdgt` | **P4** |
+| 6 | 0 | 4 | `PromptWdgt` | ✅ **P4** |
 | 6 | 3 | 0 | `ListWdgt` | **P5** |
-| 6 | 1 | 0 | `TextPromptWdgt` | **P4** |
+| 6 | 1 | 0 | `TextPromptWdgt` | ✅ **P4** |
 | 6 | 1 | 0 | `MenuItemWdgt` | **P3** |
 | 5 | 1 | 0 | `TextEditingState` | **P5** |
 | 5 | 1 | 0 | `ToolTipWdgt` | **P5** |
-| 5 | 3 | 0 | `SaveShortcutPromptWdgt` | **P4** |
-| 5 | 1 | 0 | `ColorPromptWdgt` | **P4** |
+| 5 | 3 | 0 | `SaveShortcutPromptWdgt` | ✅ **P4** |
+| 5 | 1 | 0 | `ColorPromptWdgt` | ✅ **P4** |
 | 5 | 13 | 1 | `SliderWdgt` | ✅ **done** (`21d5b64`) |
 
-Six of the 22 are exempt under E3 (foreign-API records reached through
-`fromBrowserEvent`); one is done. **15 remain**, in five families.
+Five of the 22 are exempt under E3 (foreign-API records reached through `fromBrowserEvent`);
+`SliderWdgt` was converted before this arc. P1–P4 landed twelve more. **4 remain** — the P5
+stragglers `StringFieldWdgt`, `ListWdgt`, `TextEditingState`, `ToolTipWdgt`.
 
 ---
 
@@ -383,19 +384,66 @@ SaveShortcutPromptWdgt: (widgetOpeningThePopUp, @target, @defaultContents, @inte
 CodePromptWdgt:         (@msg, @target, @callback, @defaultContents)
 ```
 
-**Target head:** `(widgetOpeningThePopUp, msg, target, callback, opts = {})` — four operands,
-at the R1 cap, and every prompt genuinely needs all four. `defaultContents`, `intendedWidth`,
-`floorNum`, `ceilingNum`, `isRounded`, `wdgtWhereReferenceWillGo` move to `opts`. This also
-regularises the family onto one prefix, which is the larger win: `NumberPromptWdgt`'s three
-trailing `@`-bound numerics are exactly the holes-in-waiting R3 describes.
+**Atomic unit — the descendant closure, computed from source.** `PromptWdgt` has exactly four
+descendants (`TextPromptWdgt`, `NumberPromptWdgt`, `ColorPromptWdgt`, `SaveShortcutPromptWdgt`)
+and none of those has one. `CodePromptWdgt` is **not in that closure at all**: it extends
+`CodeAreaWdgt`, alongside `ScriptWdgt` / `ErrorsLogViewerWdgt` / `ConsoleWdgt`, which this phase
+does not touch. Two independent conversions, not one.
 
-⚠ `SaveShortcutPromptWdgt` and `CodePromptWdgt` deviate from the prefix (no `msg`, no
-`callback` respectively). Do **not** force them into the shared head if the argument is
-genuinely absent — an unused positional slot is the disease, not the cure. Give each the head
-it actually needs and share only the `opts` vocabulary.
+**Head, as built:** `(widgetOpeningThePopUp, target, opts = {})` — **two** operands, not the four
+this section originally proposed. ⚠ The proposed `(widgetOpeningThePopUp, msg, target, callback,
+opts)` was **falsified by the hole test**, exactly as P2's proposed head was. Measured over the
+four descendants: `widgetOpeningThePopUp` 4/4, `target` 4/4, `msg` 3/4, `callback` 3/4 —
+`SaveShortcutPromptWdgt` supplies neither (its `msg` is a class-level constant, and it has no
+caller action at all: Ok routes to its own `createReferenceAndClose`). With a trailing `opts`,
+**anything optional before it is a hole**: the four-operand head forces that one subclass to write
+`super widgetOpeningThePopUp, undefined, target, undefined, opts`. So `msg` and `callback` ride
+`opts`, and `SaveShortcutPromptWdgt`'s class-level title becomes the single source of truth
+instead of being hand-carried up through `super`. `CodePromptWdgt` takes `(target, opts = {})` —
+same vocabulary, minus the operand it has no analogue for.
 
-**Verification:** `./build_and_test.sh`, plus a manual open of each prompt — prompts are
-modal and some paths may be thin on suite coverage. Check `world.errorConsole` is clean.
+⭐ **The general rule this yields:** a trailing options object turns every *optional positional*
+into a hole. The operands must be the ones **every** member supplies — not the ones that read
+most naturally in a signature.
+
+**The doors keep the natural spelling.** `Widget.prompt` and `Widget.textPrompt` are
+`(msg, target, callback, opts = {})`: no caller of *those* skips any of the three, so they stay
+operands there, and the door is the one place that translates into the constructors' options bag
+(`Object.assign {}, opts, msg: msg, callback: callback` — the idiom `WorldWdgt.loadWorldSnapshot`
+already uses). `Widget.pickColor` is left alone: three operands, no hole, **E5**.
+⚠ `textPrompt` also loses four trailing parameters (`width, floorNum, ceilingNum, isRounded`)
+that it declared, passed on, and that `CodePromptWdgt` never accepted — dead in both directions.
+
+**Two live defects surfaced by the conversion, both in `SliderWdgt`'s three numeric menu items
+(`floor...` / `ceiling...` / `button size...`), both fixed here.** They are the same root cause —
+an argument counted into the wrong slot — and named options make both unwritable:
+
+1. Each passed a bare tooltip **string** where `addMenuItem`'s `opts` object goes (a P1 leftover:
+   these three were the only such sites left in either repo). `opts.toolTip` read `undefined`, so
+   all three items had **no tooltip**.
+2. Each called `@prompt` with **seven** arguments, omitting the `@,` target that all six sibling
+   call sites pass. Verified at runtime: `target` received the FUNCTION `setStart`, `callback`
+   received the current value as a STRING (`"0"`), `defaultContents` was empty, and `ceilingNum`
+   was `true` — so the pop-up opened with an empty field and a nonsense slider range, and its Ok
+   button would have dispatched `<function>["0"]`.
+
+**Verification:** `fg presuite` per family, `fg gauntlet` before the push. Suite coverage turned
+out to be **better than this section feared** — `macroSimpleDocumentCanAddIndentedParagraph` drives
+the `base width...` prompt through the real menu, `macroBoxTransparencyAndColorChanging` drives the
+transparency prompt, and `macroSavedDocumentShortcutIcon` / `macroSaveAsPromptAboveTiltedWindow`
+drive `SaveShortcutPromptWdgt`. Nothing covers the three slider items, which is how both defects
+above survived.
+
+⚠ **This phase does not move the `positional-hole` ratchet**, and that is not a miss. Every hole it
+removed is a **multi-line** call — one bare `undefined` per line — and the stink's regex needs two
+`undefined`s *adjacent on one line*. The gate is a proxy; R3 is the goal.
+
+⚠ **Fallout worth knowing: the call-separation gate went red on a pre-existing condition.**
+`prompt` and `textPrompt` had **two-line signatures**, and `census-public-private-calls.js` requires
+`->` on the header line — so it had never counted either method. Fitting the new heads on one line
+made them visible, and `textPrompt` (self-called only) tripped rule [U]. It is allowlisted as
+deliberate end-user API, beside its `prompt`/`inform`/`pickColor` siblings. The four stale
+allowlist entries the gate's own NOTE had been reporting are deleted in the same commit.
 
 ## 6. P5 — Stragglers
 

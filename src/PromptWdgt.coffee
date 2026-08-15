@@ -54,14 +54,28 @@ class PromptWdgt extends PopUpWdgt
   colloquialName: ->
     if @msg then "\"" + @msg + "\" prompt" else "prompt"
 
-  constructor: (widgetOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth) ->
+  # Only widgetOpeningThePopUp and target are OPERANDS: they are the two every
+  # member supplies. msg and callback ride opts because SaveShortcutPromptWdgt
+  # supplies neither (its msg is the class-level constant above its head, and it
+  # has no callback at all) — as positionals they would force it to punch two
+  # `undefined`s through to reach opts, which is exactly the hole R3 forbids
+  # (docs/architecture/constructor-and-parameter-conventions.md).
+  constructor: (widgetOpeningThePopUp, target, opts = {}) ->
+    # msg is read GUARDED: absence must leave a subclass's class-level default
+    # standing (SaveShortcutPromptWdgt's " save as... "), which a bare assignment
+    # would overwrite with undefined. The rest have no prototype default to keep.
+    @msg = opts.msg if opts.msg?
+    @target = target
+    @callback = opts.callback
+    @defaultContents = opts.defaultContents
+    @intendedWidth = opts.intendedWidth
     super widgetOpeningThePopUp
     @onClickOutsideMeOrAnyOfMyChildren "close"
     # NOTE: subclasses call @_buildAndConnectChildren() from their OWN constructor,
-    # after super() has bound their extra params (e.g. NumberPromptWdgt's ceiling):
-    # CoffeeScript binds a subclass's ctor params only AFTER super(), so building
-    # here would dispatch into the subclass editor hook too early (same reason
-    # MenuRowsPanelWdgt keeps its label build out of a virtual _buildAndConnectChildren).
+    # so that a subclass's extra options (e.g. NumberPromptWdgt's ceiling) are read
+    # before the editor hook runs — building here would dispatch into the subclass
+    # hook while those fields are still unset (same reason MenuRowsPanelWdgt keeps
+    # its label build out of a virtual _buildAndConnectChildren).
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->

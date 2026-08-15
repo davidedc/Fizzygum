@@ -83,14 +83,11 @@ class BoxyAppearance extends Appearance
     context.strokeRoundRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1, @getCornerRadius()
 
   cornerRadiusPopout: (menuItem)->
-    @widget.prompt menuItem.parent.title + "\ncorner\nradius:",
-      @widget,
-      "setCornerRadius",
-      @widget.cornerRadius.toString(),
-      undefined,
-      0,
-      100,
-      true
+    @widget.prompt menuItem.parent.title + "\ncorner\nradius:", @widget, "setCornerRadius",
+      defaultContents: @widget.cornerRadius.toString()
+      floorNum: 0
+      ceilingNum: 100
+      isRounded: true
   
   # Boxy menus:
   addShapeSpecificMenuItems: (menu) ->

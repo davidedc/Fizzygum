@@ -680,7 +680,8 @@ class InspectorWdgt extends Widget
     @notifyInstancesOfSourceChange([prop])
   
   addPropertyPopout: ->
-    @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)
+    # Chrome cannot handle empty strings (others do), hence the "property" default
+    @prompt "new property name:", @, "addProperty", defaultContents: "property"
 
   # the one differing step between object- and class-inspector rename
   # (mirroring applyPropertyEdit above): the object inspector delegates to the
@@ -704,7 +705,7 @@ class InspectorWdgt extends Widget
   
   renamePropertyPopout: ->
     propertyName = @list.selected.labelString
-    @prompt "property name:", @, "renameProperty", propertyName
+    @prompt "property name:", @, "renameProperty", defaultContents: propertyName
   
   # removal's differing step, same seam as _applyPropertyRename: the object
   # inspector delegates to the Widget-level removeOwnProperty twin, which also
