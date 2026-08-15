@@ -32,10 +32,11 @@ class SpeechBubbleWdgt extends Widget
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
+    # No colour opinion: the text takes StringWdgt's default. The centring this widget wants is
+    # @contentsWidget.alignCenter() below — the layout verb, not a constructor argument.
     @contentsWidget = new TextWdgt @contents,
       fontSize: WorldWdgt.preferencesAndSettings.bubbleHelpFontSize
       italic: true
-      color: "center"
 
     @contentsWidget.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @contentsWidget.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
