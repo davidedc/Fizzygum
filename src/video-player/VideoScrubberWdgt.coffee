@@ -13,7 +13,9 @@ class VideoScrubberWdgt extends SliderWdgt
     "Video scrubber"
 
   constructor: (@videoPlayerCanvas) ->
-    super undefined, undefined, undefined, undefined, undefined, true
+    # the base's own defaults, spelled out: a scrubber wants SliderWdgt's standard
+    # 1..100 range and 10 button, and its value at the bottom end.
+    super 1, 100, 50, 10, smallestValueIsAtBottomEnd: true
     @setTargetAndActionWithOnesPickedFromMenu undefined, undefined, @, "setPlayAt"
     @fps = 5
     world.steppingWdgts.add @
