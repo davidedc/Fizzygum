@@ -34,23 +34,35 @@ class ButtonWdgt extends Widget
   # overrides to superclass
   color: Color.WHITE
 
-  constructor: (
-      @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
-      @target = undefined,
-      @action = undefined,
-
-      @faceWidget = undefined,
-
-      @dataSourceWidgetForTarget = undefined,
-      @widgetEnv,
-      @toolTipMessage = undefined,
-
-      @doubleClickAction = undefined,
-      @argumentToAction1 = undefined,
-      @argumentToAction2 = undefined,
-      @representsAWidget = false,
-      @padding = 0
-      ) ->
+  # target and action are the identity: WHO to tell and WHAT to say. They are the
+  # established pair, they are the only two a typical caller passes, and no reader has to
+  # look up their order. Everything else is an independently-optional knob and rides `opts`
+  # (docs/architecture/constructor-and-parameter-conventions.md).
+  #
+  # `closesUnpinnedPopUps` in particular is an OPTION rather than the leading positional: a bare
+  # `true` opening nearly every call site is precisely the smell R1 names, and since it defaults
+  # to true, the sites that only wanted the default simply do not say it.
+  #
+  # `face` (not `faceWidget`) because the value is as often a STRING as a widget — the body
+  # below wraps a string into a centred StringWdgt — and an option is named for what the
+  # CALLER means (R4).
+  #
+  # NOTHING here is a `@param` beyond the head: a `@param` assigns unconditionally, so a
+  # subclass's prototype value for any of these fields is clobbered with `undefined` on every
+  # construction. `toolTipMessage` in particular is read GUARDED, which is what lets a subclass
+  # declare `toolTipMessage:` on its prototype and have it survive — the IconButtonWdgt family
+  # states its hover text that way.
+  constructor: (@target, @action, opts = {}) ->
+    @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = opts.closesUnpinnedPopUps ? true
+    @faceWidget = opts.face
+    @dataSourceWidgetForTarget = opts.dataSource
+    @widgetEnv = opts.widgetEnv
+    @toolTipMessage = opts.toolTip if opts.toolTip?
+    @doubleClickAction = opts.doubleClickAction
+    @argumentToAction1 = opts.arg1
+    @argumentToAction2 = opts.arg2
+    @representsAWidget = opts.representsAWidget ? false
+    @padding = opts.padding ? 0
 
     # additional properties:
 

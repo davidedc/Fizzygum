@@ -1,6 +1,6 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0, P1 and P2 landed 2026-08-15. P3 next — owner-gated (D5).** Owner-gated per family.
+**STATUS: ACTIVE. P0, P1, P2 and P3 landed 2026-08-15. P4 (prompts) next.** Owner-gated per family.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -287,7 +287,7 @@ the most popular of nine knobs.
 Result: the family contributes **zero** sites to `positional-hole`. Final shape across both
 repos — **84 sites pass `text` alone, 103 pass `text` + an options object, none pass more.**
 
-## 4. P3 — The button family (deepest `super` chain; convert atomically)
+## 4. P3 — The button family (deepest `super` chain; convert atomically) ✅ DONE 2026-08-15
 
 `LabelButtonWdgt` at **17** parameters is the codebase's worst, and it is a *pure forwarder*:
 eleven of its arguments are threaded straight into `ButtonWdgt`'s twelve-slot `super`.
@@ -319,8 +319,32 @@ established pair and the only two a typical caller passes. `closesUnpinnedPopUps
 built from a `MenuItemSpec`, so P1 and P3 meet here; do P1 first and let the spec's field names
 drive.
 
-**Atomic unit:** `ButtonWdgt`, `LabelButtonWdgt`, `MenuItemWdgt`, `MagnetWdgt`,
-`SimpleButtonWdgt`, `SimpleRectangularButtonWdgt`, `SimpleRasterImageButtonWdgt` — one commit.
+**Atomic unit:** ⚠⚠ **NOT the seven classes this line used to list — compute the descendant
+CLOSURE from the source.** `ButtonWdgt` has **thirteen** descendants, and the two the list omitted
+are exactly where P3 broke: `CodeInjectingSimpleRectangularButtonWdgt` kept
+`super true, @, 'injectCodeIntoTarget', face`, which against `(target, action, opts)` binds `true`
+to target, `@` to action, the ACTION STRING to opts, and drops `face` entirely — the Drawings
+Maker's pencil/brush/spray/eraser buttons rendered as empty grey boxes.
+(`VideoThumbnailWdgt`, the other omission, is genuinely safe: it supers into
+`SimpleRasterImageButtonWdgt`'s own unchanged signature.) The rewriter deliberately never touches
+`super`, so enumerating the closure is a MANDATORY manual step, not a check:
+
+```
+LabelButtonWdgt, SimpleButtonWdgt, IconButtonWdgt, SimpleRectangularButtonWdgt, MenuItemWdgt,
+MagnetWdgt, SimpleRasterImageButtonWdgt, EditIconButtonWdgt, CloseIconButtonWdgt,
+UncollapseIconButtonWdgt, CollapseIconButtonWdgt, CodeInjectingSimpleRectangularButtonWdgt,
+VideoThumbnailWdgt
+```
+
+**As built.** `(target, action, opts = {})` on `ButtonWdgt` and `LabelButtonWdgt`;
+`(menuItemSpec, opts = {})` on `MenuItemWdgt`; `(target)` on `MagnetWdgt`. 42 call sites rewritten
+mechanically + 8 by hand. `positional-hole` 30 → 28. Zero reference churn.
+
+⚠ Two naming decisions worth knowing: the option is **`face`**, not `faceWidget`, because the value
+is as often a STRING as a widget (`ButtonWdgt` wraps a string into a centred `StringWdgt`); and
+`LabelButtonWdgt`'s "environment" is **`dataSource`**, the same key `ButtonWdgt` uses, because one
+field under two names is precisely what a FORWARDED options bag cannot survive — the receiver would
+never read the alias.
 
 ⚠ **P3 overlaps `plans/widget-practices-convergence-plan.md` W8** (§2.8, authored the same day from
 the widget survey), which is **owner-gated (D5) and deliberately sequenced LAST** in that arc, after
@@ -328,13 +352,15 @@ its W1–W6, as its highest-churn item. **Same work; do it once** — whichever 
 executes, the other de-scopes to a pointer. Honour W8's gating: if that arc is live, P3 waits for D5
 rather than racing it.
 
-⭐ **W8's own finding, which this plan must carry:** `IconButtonWdgt` (~:41-45), `CreatorButtonWdgt`
-(~:26-29) and `EditorContentPropertyChangerButtonWdgt` (~:40-42) each keep a **parallel shadow
-field** `iconToolTipMessage`, copied into `@toolTipMessage` after `super`, purely because
-`ButtonWdgt` takes `@toolTipMessage` as a `@param` defaulting to `undefined` (`IconButtonWdgt`'s
-comment says so outright). That is the R5 hazard wearing a workaround. Moving `toolTip` into `opts`
-lets all three shadow fields be **deleted** — a concrete correctness win riding on the conversion, so
-verify they are gone when P3 lands.
+⭐ **W8's own finding — and it is ONE THIRD right, which is worth recording.** W8 states that
+`IconButtonWdgt`, `CreatorButtonWdgt` and `EditorContentPropertyChangerButtonWdgt` each keep a
+parallel `iconToolTipMessage` *because* `ButtonWdgt` takes `@toolTipMessage` as a `@param`. Only
+`IconButtonWdgt` extends `ButtonWdgt`; the other two extend `Widget` and `IconWdgt`, which never
+take or clobber the field (`toolTipMessage` is declared on `ButtonWdgt` alone). So the R5 hazard
+explains exactly one of them, and P3 deleted exactly that one: `ButtonWdgt` now reads
+`opts.toolTip` **guarded**, so the four `IconButtonWdgt` subclasses simply declare
+`toolTipMessage:` on their prototypes. The other ~14 carriers have a different cause and want
+their own small cleanup — not a P3 deliverable, and NOT evidence that P3 under-delivered.
 
 ⚠ `LabelButtonWdgt` passes `undefined` for `faceWidget` deliberately (it draws its own
 `@label`). Under an options object it simply omits the key — but check `ButtonWdgt` treats an

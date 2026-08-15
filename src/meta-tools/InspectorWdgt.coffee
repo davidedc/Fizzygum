@@ -208,7 +208,10 @@ class InspectorWdgt extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonWdgt true, @, "openClassInspector", (new StringWdgt eachNamedClass, fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize),undefined,undefined,undefined,undefined,eachNamedClass,undefined,undefined,@classNamesTextPadding
+      classButton = new SimpleButtonWdgt @, "openClassInspector",
+        face: (new StringWdgt eachNamedClass, fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize)
+        arg1: eachNamedClass
+        padding: @classNamesTextPadding
       @classesButtons.push classButton
       @_addNoSettle classButton
 
@@ -229,32 +232,32 @@ class InspectorWdgt extends Widget
     @mixinDonorLabel = new StringWdgt ""
     @_addNoSettle @mixinDonorLabel
 
-    showMethodsOnButton = new SimpleButtonWdgt true, @, "hideMethods", "methods: on"
-    showMethodsOffButton = new SimpleButtonWdgt true, @, "showMethods", "methods: off"
+    showMethodsOnButton = new SimpleButtonWdgt @, "hideMethods", face: "methods: on"
+    showMethodsOffButton = new SimpleButtonWdgt @, "showMethods", face: "methods: off"
     @showMethodsToggle = new ToggleButtonWdgt showMethodsOnButton, showMethodsOffButton, if @showingMethods then 0 else 1
     @_addNoSettle @showMethodsToggle
 
-    showFieldsOnButton = new SimpleButtonWdgt true, @, "hideFields", "fields: on"
-    showFieldsOffButton = new SimpleButtonWdgt true, @, "showFields", "fields: off"
+    showFieldsOnButton = new SimpleButtonWdgt @, "hideFields", face: "fields: on"
+    showFieldsOffButton = new SimpleButtonWdgt @, "showFields", face: "fields: off"
     @showFieldsToggle = new ToggleButtonWdgt showFieldsOnButton, showFieldsOffButton, if @showingFields then 0 else 1
     @_addNoSettle @showFieldsToggle
 
-    showInheritedOnButton = new SimpleButtonWdgt true, @, "hideInherited", "inherited: on"
-    showInheritedOffButton = new SimpleButtonWdgt true, @, "showInherited", "inherited: off"
+    showInheritedOnButton = new SimpleButtonWdgt @, "hideInherited", face: "inherited: on"
+    showInheritedOffButton = new SimpleButtonWdgt @, "showInherited", face: "inherited: off"
     @showInheritedToggle = new ToggleButtonWdgt showInheritedOnButton, showInheritedOffButton, if @showingInherited then 0 else 1
     @_addNoSettle @showInheritedToggle
 
     @_buildAndConnectObjOwnPropsButton()
 
-    @addPropertyButton = new SimpleButtonWdgt true, @, "addPropertyPopout", "add..."
+    @addPropertyButton = new SimpleButtonWdgt @, "addPropertyPopout", face: "add..."
     @_addNoSettle @addPropertyButton
-    @renamePropertyButton = new SimpleButtonWdgt true, @, "renamePropertyPopout", "rename..."
+    @renamePropertyButton = new SimpleButtonWdgt @, "renamePropertyPopout", face: "rename..."
     @_addNoSettle @renamePropertyButton
-    @removePropertyButton = new SimpleButtonWdgt true, @, "removeProperty", "remove"
+    @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "remove"
     @_addNoSettle @removePropertyButton
 
     @saveTextWdgt = (new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
-    @saveButton = new SimpleButtonWdgt true, @, "save", @saveTextWdgt
+    @saveButton = new SimpleButtonWdgt @, "save", face: @saveTextWdgt
     @_addNoSettle @saveButton
 
 
@@ -356,8 +359,8 @@ class InspectorWdgt extends Widget
 
 
   _buildAndConnectObjOwnPropsButton: ->
-    showOwnPropsOnlyOnButton = new SimpleButtonWdgt true, @, "hideOwnPropsOnly", "obj own props only: on"
-    showOwnPropsOnlyOffButton = new SimpleButtonWdgt true, @, "showOwnPropsOnly", "obj own props only: off"
+    showOwnPropsOnlyOnButton = new SimpleButtonWdgt @, "hideOwnPropsOnly", face: "obj own props only: on"
+    showOwnPropsOnlyOffButton = new SimpleButtonWdgt @, "showOwnPropsOnly", face: "obj own props only: off"
     @showOwnPropsOnlyToggle = new ToggleButtonWdgt showOwnPropsOnlyOnButton, showOwnPropsOnlyOffButton, if @showingOwnPropsOnly then 0 else 1
     @_addNoSettle @showOwnPropsOnlyToggle
 

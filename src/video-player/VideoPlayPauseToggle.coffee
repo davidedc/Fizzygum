@@ -16,9 +16,9 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
     "Play/pause button"
 
   constructor: (@videoPlayerCanvas) ->
-    @playPausePauseButton = new SimpleButtonWdgt true, @, "pause", "❙ ❙"
+    @playPausePauseButton = new SimpleButtonWdgt @, "pause", face: "❙ ❙"
     @playPausePauseButton.faceWidget.alignMiddle()
-    @playPausePlayButton = new SimpleButtonWdgt true, @, "play", "▶"
+    @playPausePlayButton = new SimpleButtonWdgt @, "play", face: "▶"
     @playPausePlayButton.faceWidget.alignMiddle()
     super @playPausePauseButton, @playPausePlayButton, 0
 

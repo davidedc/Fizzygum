@@ -144,12 +144,16 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     item = @createLine height
     @__add item, undefined, 0
 
-  # Builds a MenuItemWdgt from a MenuItemSpec and this panel's context: the font
-  # (this panel's @fontSize, or the global default) and -- note the historical
-  # mapping -- this panel's @target as the item's "environment" and @environment
-  # as the item's widgetEnv.
+  # Builds a MenuItemWdgt from a MenuItemSpec and this panel's context: the font (this panel's
+  # @fontSize, or the global default) and the environment pair. ⚠ Note the CROSSOVER, which the
+  # named options now make visible where positional slots hid it: this panel's @target is the
+  # item's dataSource, and this panel's @environment is the item's widgetEnv.
   createMenuItem: (menuItemSpec) ->
-    item = new MenuItemWdgt menuItemSpec, (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize), WorldWdgt.preferencesAndSettings.menuFontName, false, @target, @environment
+    item = new MenuItemWdgt menuItemSpec,
+      fontSize: (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize)
+      fontStyle: WorldWdgt.preferencesAndSettings.menuFontName
+      dataSource: @target
+      widgetEnv: @environment
     if !@environment?
       item.dataSourceWidgetForTarget = item
       item.widgetEnv = @target

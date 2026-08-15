@@ -24,4 +24,7 @@ class SimpleRasterImageButtonWdgt extends SimpleButtonWdgt
     @imageWdgt.mouseClickLeft = (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
       @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
-    super true, target, action, @imageWdgt, undefined, undefined, undefined, undefined, argumentToAction1,undefined,undefined,2
+    super target, action,
+      face: @imageWdgt
+      arg1: argumentToAction1
+      padding: 2

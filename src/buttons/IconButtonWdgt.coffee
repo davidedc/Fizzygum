@@ -9,7 +9,7 @@
 #
 # A subclass supplies only what differs from this base:
 #   createAppearance   -> new <Foo>IconAppearance @   (the icon shape)
-#   iconToolTipMessage :  "…"                          (hover tooltip)
+#   toolTipMessage     :  "…"                          (hover tooltip)
 #   actOnClick         -> …                            (what the press does)
 #   iconHoverColor     :  <Color>                      (only if not the default orange)
 
@@ -18,7 +18,6 @@ class IconButtonWdgt extends ButtonWdgt
   # hover / press colour for the family (orange); a subclass overrides this
   # field if it wants a different one (e.g. CloseIconButtonWdgt → red).
   iconHoverColor: Color.create 255, 153, 0
-  iconToolTipMessage: undefined
 
   # Frame-bar chrome, never editor content (§5.D D-3/D21 correction 1). This whole family IS the window
   # chrome (close / collapse / uncollapse / edit — the only IconButtonWdgt subclasses). Clicking the
@@ -34,12 +33,7 @@ class IconButtonWdgt extends ButtonWdgt
     # can't set the parent as the target directly because this widget might
     # not have a parent yet, so the button targets ITSELF and routes the
     # press to its own actOnClick (see the super args: target = @).
-    super true, @, 'actOnClick', new Widget
+    super @, 'actOnClick', face: new Widget
     @color_hover = @iconHoverColor
     @color_pressed = @color_hover
     @appearance = @createAppearance()
-    # set AFTER super on purpose: ButtonWdgt's constructor has @toolTipMessage
-    # as a parameter that defaults back to undefined, so a plain toolTipMessage:
-    # prototype-field override would be clobbered — hence the separate
-    # iconToolTipMessage source copied across here.
-    @toolTipMessage = @iconToolTipMessage

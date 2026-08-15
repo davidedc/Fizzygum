@@ -56,7 +56,7 @@ class BinWdgt extends Widget
     @scrollPanel.contents.color = Color.WHITE
     @_addNoSettle @scrollPanel
 
-    @emptyBinButton = new SimpleButtonWdgt true, @, "emptyBinRequested", "Empty bin"
+    @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin"
     @_addNoSettle @emptyBinButton
 
     @_invalidateLayout()

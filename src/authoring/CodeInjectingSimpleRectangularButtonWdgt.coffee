@@ -16,7 +16,7 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   wdgtToBeNotifiedForNewCode: undefined
 
   constructor: (@wdgtToBeNotifiedForNewCode, face) ->
-    super true, @, 'injectCodeIntoTarget', face
+    super @, 'injectCodeIntoTarget', face: face
     @strokeColor = Color.BLACK
     @setColor Color.create 150, 150, 150
     @toolTipMessage = face.toolTipMessage

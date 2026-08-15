@@ -3,7 +3,7 @@
 
 class UncollapseIconButtonWdgt extends IconButtonWdgt
 
-  iconToolTipMessage: "un-collapse window"
+  toolTipMessage: "un-collapse window"
 
   createAppearance: -> new UncollapseIconAppearance @
 

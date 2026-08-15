@@ -57,13 +57,13 @@ class ScriptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @savedScript
 
     # buttons -------------------------------
-    @runItButton = new SimpleButtonWdgt true, @, "tryIt", "try it"
+    @runItButton = new SimpleButtonWdgt @, "tryIt", face: "try it"
     @_addNoSettle @runItButton
 
     # local: @saveButton keeps it as its face widget, so a second copy on `this` was redundant state.
     saveTextWdgt = new StringWdgt "save + close", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonWdgt true, @, "saveScriptAndClose", saveTextWdgt
+    @saveButton = new SimpleButtonWdgt @, "saveScriptAndClose", face: saveTextWdgt
     @_addNoSettle @saveButton
     # ---------------------------------------
 

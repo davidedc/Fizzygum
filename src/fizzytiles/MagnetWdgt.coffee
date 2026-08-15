@@ -10,11 +10,12 @@ class MagnetWdgt extends LabelButtonWdgt
   putIntoWords: false
   isTemplate: true
 
-  constructor: (
-      @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked,
-      @target
-     ) ->
-    super
+  # A magnet has a target and no action — it is dragged, not triggered — so `target` is the
+  # whole head. (A bare `super` would forward `arguments` verbatim into LabelButtonWdgt's
+  # (target, action, opts), which is exactly how a signature change mis-binds a field in
+  # silence: the call must be explicit.)
+  constructor: (target) ->
+    super target, undefined
     @defaultRejectDrags = false
 
   rightCenter: ->

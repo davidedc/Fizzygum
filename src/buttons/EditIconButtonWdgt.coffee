@@ -19,7 +19,7 @@ class EditIconButtonWdgt extends IconButtonWdgt
   # default the mode so an early paint (before the window sets the real mode) is a mono pencil
   _editModeNow: true
 
-  iconToolTipMessage: "edit contents"
+  toolTipMessage: "edit contents"
 
   createAppearance: -> new PencilIconAppearance @
 

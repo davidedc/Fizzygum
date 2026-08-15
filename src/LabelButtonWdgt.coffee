@@ -25,38 +25,27 @@ class LabelButtonWdgt extends ButtonWdgt
   pressColor: Color.GRAY
   centered: false
 
-  constructor: (
-      ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
-      target = undefined,
-      action = undefined,
-      labelString = undefined,
-      fontSize = WorldWdgt.preferencesAndSettings.menuFontSize,
-      fontStyle = "sans-serif",
-      centered = false,
-      environment = undefined,
-      widgetEnv,
-      toolTipMessage = undefined,
-      color = WorldWdgt.preferencesAndSettings.menuButtonsLabelColor,
-      bold = false,
-      italic = false,
-      doubleClickAction = undefined,
-      argumentToAction1 = undefined,
-      argumentToAction2 = undefined,
-      representsAWidget = false
-      ) ->
+  # Same head as ButtonWdgt — target/action — and the same opts object, extended with the
+  # label knobs this class adds. It forwards `opts` untouched rather than transcribing it,
+  # which is what makes the two vocabularies ONE vocabulary: an option added to ButtonWdgt is
+  # available here with no edit.
+  #
+  # It passes no `face`: a label button draws its own @label. An absent `face` and an
+  # explicitly-undefined one are the same thing to ButtonWdgt, so there is nothing to say.
+  #
+  # ⚠ ONE field, ONE name: ButtonWdgt's `dataSourceWidgetForTarget` is `dataSource` here too.
+  # A second alias for it is exactly what an options vocabulary cannot afford (R4), because a
+  # forwarded bag would then carry a key the receiver never reads.
+  constructor: (target, action, opts = {}) ->
+    super target, action, opts
 
-    # ButtonWdgt owns the trigger machinery; map our label-button args onto its
-    # constructor. We pass NO faceWidget (we draw our own @label), and our
-    # "environment" arg is ButtonWdgt's dataSourceWidgetForTarget.
-    super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, undefined, environment, widgetEnv, toolTipMessage, doubleClickAction, argumentToAction1, argumentToAction2, representsAWidget
-
-    @labelString = labelString
-    @fontSize = fontSize
-    @fontStyle = fontStyle
-    @centered = centered
-    @labelColor = color
-    @labelBold = bold
-    @labelItalic = italic
+    @labelString = opts.labelString
+    @fontSize = opts.fontSize ? WorldWdgt.preferencesAndSettings.menuFontSize
+    @fontStyle = opts.fontStyle ? "sans-serif"
+    @centered = opts.centered ? false
+    @labelColor = opts.color ? WorldWdgt.preferencesAndSettings.menuButtonsLabelColor
+    @labelBold = opts.bold ? false
+    @labelItalic = opts.italic ? false
 
     # the flat fill (ButtonWdgt defaults to white)
     @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor

@@ -19,16 +19,16 @@ class CodePromptWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @cancelButton = new SimpleButtonWdgt true, @, "close", "cancel"
+    @cancelButton = new SimpleButtonWdgt @, "close", face: "cancel"
     @_addNoSettle @cancelButton
 
     
     @saveTextWdgt = new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonWdgt true, @, "informTarget", @saveTextWdgt
+    @saveButton = new SimpleButtonWdgt @, "informTarget", face: @saveTextWdgt
     @_addNoSettle @saveButton
 
-    @okButton = new SimpleButtonWdgt true, @, "notifyTargetAndClose", "ok"
+    @okButton = new SimpleButtonWdgt @, "notifyTargetAndClose", face: "ok"
     @_addNoSettle @okButton
     # ---------------------------------------
 

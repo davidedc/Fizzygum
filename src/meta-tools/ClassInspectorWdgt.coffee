@@ -13,7 +13,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   _buildAndConnectChildrenNoSettle: ->
     super
     @lastLabelInHierarchy._setTextNoSettle "this class"
-    @overrideInThisClassButton = new SimpleButtonWdgt true, @, "overrideInThisClass", "override in this class"
+    @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "override in this class"
     @_addNoSettle @overrideInThisClassButton
     @overrideInThisClassButton.hide()
 

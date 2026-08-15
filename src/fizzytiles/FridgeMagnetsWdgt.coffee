@@ -59,22 +59,22 @@ class FridgeMagnetsWdgt extends Widget
     # sample magnets -------------------------------
     # the magnets are orphan members built here; label them through the non-settling _setLabelNoSettle core
     # (the public setLabel would re-enter the settle from this low-level build), like the @_addNoSettle adds above.
-    @scale = new MagnetWdgt true, @
+    @scale = new MagnetWdgt @
     @scale._setLabelNoSettle "scale"
     @scale.alignCenter()
     @magnetsBox.add @scale
 
-    @rotate = new MagnetWdgt true, @
+    @rotate = new MagnetWdgt @
     @rotate._setLabelNoSettle "rotate"
     @rotate.alignCenter()
     @magnetsBox.add @rotate
 
-    @box = new MagnetWdgt true, @
+    @box = new MagnetWdgt @
     @box._setLabelNoSettle "box"
     @box.alignCenter()
     @magnetsBox.add @box
 
-    @move = new MagnetWdgt true, @
+    @move = new MagnetWdgt @
     @move._setLabelNoSettle "move"
     @move.alignCenter()
     @magnetsBox.add @move

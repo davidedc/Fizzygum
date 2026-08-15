@@ -58,16 +58,16 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @_buildMonoCodeAreaNoSettle @defaultContents
 
     # buttons -------------------------------
-    @clearButton = new SimpleButtonWdgt true, @, "clearTextPane", "clear"
+    @clearButton = new SimpleButtonWdgt @, "clearTextPane", face: "clear"
     @_addNoSettle @clearButton
 
 
-    pauseButton = new SimpleButtonWdgt true, @, "pauseErrors", "pause"
-    unpauseButton = new SimpleButtonWdgt true, @, "unpauseErrors", "un-pause"
+    pauseButton = new SimpleButtonWdgt @, "pauseErrors", face: "pause"
+    unpauseButton = new SimpleButtonWdgt @, "unpauseErrors", face: "un-pause"
     @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
     @_addNoSettle @pauseToggle
 
-    @okButton = new SimpleButtonWdgt true, @, "closeFromContainerFrame", "ok"
+    @okButton = new SimpleButtonWdgt @, "closeFromContainerFrame", face: "ok"
     @_addNoSettle @okButton
 
     @_invalidateLayout()

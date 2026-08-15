@@ -7,15 +7,30 @@
 
 class MenuItemWdgt extends LabelButtonWdgt
 
-  # Built from a MenuItemSpec (the per-item fields) plus the menu-level context
-  # the owning MenuWdgt supplies: the font (size / style), whether the label is
-  # centered, and the menu's environment (which maps onto the button family's
-  # "environment" / widgetEnv slots). We unpack the spec onto LabelButtonWdgt's
-  # positional constructor here; an absent spec.label falls back to "close" (the
-  # historical default). (spec.label may itself be a Widget, a Canvas, or an
-  # [icon, string] tuple.)
-  constructor: (menuItemSpec, fontSize, fontStyle, centered, environment, widgetEnv) ->
-    super menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, menuItemSpec.target, menuItemSpec.action, (menuItemSpec.label or "close"), fontSize, fontStyle, centered, environment, widgetEnv, menuItemSpec.toolTipMessage, menuItemSpec.color, menuItemSpec.bold, menuItemSpec.italic, menuItemSpec.doubleClickAction, menuItemSpec.argumentToAction1, menuItemSpec.argumentToAction2, menuItemSpec.representsAWidget
+  # The SPEC is the identity — it is what this row IS, and spec.label may be a string, a
+  # Widget, a Canvas or an [icon, string] tuple. The rest is the menu-level CONTEXT the owning
+  # MenuWdgt supplies (font size / style, centring, and the environment pair), which is the
+  # same for every row, so it rides `opts`.
+  #
+  # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
+  # spec.label falls back to "close".
+  constructor: (menuItemSpec, opts = {}) ->
+    super menuItemSpec.target, menuItemSpec.action,
+      closesUnpinnedPopUps: menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
+      labelString: (menuItemSpec.label or "close")
+      fontSize: opts.fontSize
+      fontStyle: opts.fontStyle
+      centered: opts.centered
+      dataSource: opts.dataSource
+      widgetEnv: opts.widgetEnv
+      toolTip: menuItemSpec.toolTipMessage
+      color: menuItemSpec.color
+      bold: menuItemSpec.bold
+      italic: menuItemSpec.italic
+      doubleClickAction: menuItemSpec.doubleClickAction
+      arg1: menuItemSpec.argumentToAction1
+      arg2: menuItemSpec.argumentToAction2
+      representsAWidget: menuItemSpec.representsAWidget
     @actionableAsThumbnail = true
 
   # As a menu/list ROW I am the selectable UNIT (and I stretch FULL-WIDTH in a list), but a click lands on

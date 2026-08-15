@@ -4,7 +4,7 @@
 class CloseIconButtonWdgt extends IconButtonWdgt
 
   iconHoverColor: Color.RED
-  iconToolTipMessage: "close window"
+  toolTipMessage: "close window"
 
   createAppearance: -> new CloseIconAppearance @
 

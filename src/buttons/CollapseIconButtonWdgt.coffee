@@ -3,7 +3,7 @@
 
 class CollapseIconButtonWdgt extends IconButtonWdgt
 
-  iconToolTipMessage: "collapse window"
+  toolTipMessage: "collapse window"
 
   createAppearance: -> new CollapseIconAppearance @
 
