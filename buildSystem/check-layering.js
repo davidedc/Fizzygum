@@ -389,7 +389,7 @@ function collectCoffee(dir, out) {
   return out;
 }
 
-const METHOD_HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;   // a class-level (2-space) method def
+const { METHOD_HEADER, MIXIN_METHOD_HEADER } = require('./lib/coffee-method-header');   // a class-level (2-space) method def, + the mixin variant below
 
 // --- mixin-DSL awareness: ATTRIBUTE methods defined inside a mixin instead of lumping them into
 // onceAddedClassProperties. A mixin (src/mixins/*) declares its methods INSIDE a 2-space
@@ -399,7 +399,6 @@ const METHOD_HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;   // a class-level 
 // at that indent as headers (deeper lines = their bodies). For a NON-mixin file (no onceAddedClass
 // Properties) mixinHashIndent stays null and methodBoundary is byte-for-byte the old 2-space logic.
 const MIXIN_CONTAINER = 'onceAddedClassProperties';
-const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;
 
 // What a fully-closed line does to the current method grouping:
 //   { method, mixinHashIndent, kind:'header'|'end' }  -- the line STARTS or ENDS a method

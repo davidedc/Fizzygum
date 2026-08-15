@@ -149,6 +149,10 @@ class PopUpWdgt extends Widget
   _reactToBeingDropped: (whereIn) ->
     super
     if whereIn != world
+      # public-call-sanctioned: pinPopUp is BUILT for this caller — its no-arg branch exists
+      # precisely because this hook runs inside the drop's settle, and takes the NoSettle path
+      # (_closePopUpsMarkedForClosureNoSettle) so the closures ride the drop's flush instead of
+      # re-entering the flush guard. See the comment on that branch.
       @pinPopUp()
 
     @_updatePopUpShadow()

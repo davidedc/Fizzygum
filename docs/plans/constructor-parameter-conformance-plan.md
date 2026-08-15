@@ -445,6 +445,42 @@ made them visible, and `textPrompt` (self-called only) tripped rule [U]. It is a
 deliberate end-user API, beside its `prompt`/`inform`/`pickColor` siblings. The four stale
 allowlist entries the gate's own NOTE had been reporting are deleted in the same commit.
 
+### 5b. The gate blind spot that fallout exposed — followed to the end (2026-08-15)
+
+The census's method total moving by exactly two was the only visible symptom, and it was worth
+pulling on. **The same regex was copy-pasted in SIX gates** — `census-public-private-calls`,
+`check-dead-methods`, `check-raw-pointer-reads`, `check-layering`, `check-relayout-bounds-first`,
+`check-thin-wraps` — each with the same two holes:
+
+1. it demands the `->` on the header line, so a **wrapped signature** is not a method (10 on this tree);
+2. it demands a **space before the arrow**, so the ordinary `foo: (a, b)->` is not a method either
+   (**35** on this tree, incl. `ActivePointerWdgt.cleanupMenuWdgts` and most layout-spec menu popouts).
+
+Hole 2 was found by the regression guard written for hole 1, within a minute of writing it — which is
+the argument for building the guard rather than just fixing the regex.
+
+**⭐⭐ The lesson is about the failure MODE, not the spellings: a gate that cannot see a method reports
+nothing about it.** There is no warning, no count anomaly, no red build — the output looks healthy and
+stable. Six gates were silently not checking 45 methods, and nothing in any of their outputs could have
+told you.
+
+Fixed by extracting **`buildSystem/lib/coffee-method-header.js`** as the one shared matcher (both
+spellings, name still `m[1]`) plus `unseenMethodHeaders()`, a guard that FAILS `check-dead-methods` on
+any class-level line ending in an arrow, or opening an unbalanced paren list, that the matcher misses —
+so the next spelling is a build error naming its own fix instead of another silent hole. Widening it
+surfaced, and this commit resolves, four real things:
+
+| revealed | resolution |
+|---|---|
+| `Widget.paintRectangle` **dead** — ~30 lines, zero callers in src/harness/tests | deleted (+ the dangling reference in `Appearance.coffee`'s comment) |
+| rule **[S]**: `PopUpWdgt._reactToBeingDropped → @pinPopUp` | conscious and correct — `pinPopUp`'s no-arg branch exists *for* this caller and already takes the NoSettle path. Marked `# public-call-sanctioned:` |
+| rule **[S]**: `Widget._destroyNoSettle → @onClickOutsideMeOrAnyOfMyChildren` | pure registry bookkeeping (one Set add/delete), settle-neutral. Marked `# public-call-sanctioned:` |
+| rule **[U]**: `InspectorWdgt.filterProperties` | an internal colour-criteria helper wearing a public name; sole caller is a self-call → renamed `_filterProperties` |
+
+Also `check-raw-pointer-reads` now scans **81** handler bodies, not 80: one pointer handler had never
+been checked at all. Gate baselines are unchanged ([U] 127/127, [S] 0/0) — the fix reveals violations,
+it does not move the bar. Present-tense reference: `../architecture/lint-and-static-checks.md` §6b.
+
 ## 6. P5 — Stragglers
 
 `StringFieldWdgt` (7), `ListWdgt` (6), `ToolTipWdgt` (5), `TextEditingState` (5), and the

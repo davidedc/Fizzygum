@@ -178,9 +178,8 @@ function maskLine(line, state) {
   return { mask, state };
 }
 
-const METHOD_HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;
+const { METHOD_HEADER, MIXIN_METHOD_HEADER } = require('./lib/coffee-method-header');
 const MIXIN_CONTAINER = 'onceAddedClassProperties';
-const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;
 
 function methodBoundary(raw, mixinHashIndent) {
   const m = raw.match(METHOD_HEADER);

@@ -84,8 +84,8 @@ class Appearance
 
     aContext.restore()
 
-  # Fill a widget-local rect SNAPPED to the device-pixel grid — the quantization contract the
-  # legacy device-space fills carried (Widget.paintRectangle Math.round()s its rect). For the
+  # Fill a widget-local rect SNAPPED to the device-pixel grid — the quantization contract a
+  # device-space fill carries, i.e. each edge Math.round()ed to a whole device pixel. For the
   # normal integer-geometry widget the snap is the identity (bit-exact same fill). It exists
   # for the widgets whose PLANE position is legitimately FRACTIONAL — a payload dropped into a
   # rotated container lands at the inverse-mapped screen point (the reparent-transparency

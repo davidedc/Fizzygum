@@ -162,7 +162,7 @@ class InspectorWdgt extends Widget
     # (enumerable such as strings and un-enumerable such as functions)
     # of the whole prototype chain.
     #
-    # filterProperties (below) colors these in two tiers, not three: GREEN when the property
+    # _filterProperties (below) colors these in two tiers, not three: GREEN when the property
     # is declared directly on the object's own class (@target.constructor.prototype.hasOwnProperty
     # is true); everything else -- inherited from a superclass, or stitched onto the instance with
     # no class declaration -- stays the default BLUE. A RED tier existed before the 2017
@@ -278,7 +278,7 @@ class InspectorWdgt extends Widget
       "selectionFromList", #action
       (if @target instanceof Array then attribs else attribs.sort()), #elements
       undefined, #labelGetter
-      @filterProperties(targetOwnMethods), #format
+      @_filterProperties(targetOwnMethods), #format
       doubleClickAction #doubleClickAction
     )
     @list.disableDrops()
@@ -368,7 +368,7 @@ class InspectorWdgt extends Widget
     classInspector = new ClassInspectorWdgt window[className].prototype
     world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
-  filterProperties: (targetOwnMethods)->
+  _filterProperties: (targetOwnMethods)->
     if @markOwnershipOfProperties
       return [
         # give color criteria from the most general to the most specific

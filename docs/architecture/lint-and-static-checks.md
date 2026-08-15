@@ -455,6 +455,35 @@ geometry-apply **2×2** + the notification **(perspective × phase)** grid) and 
 
 ---
 
+## 6b. What "this line defines a method" means — ONE shared matcher, and its guard
+
+Six gates group a `.coffee` file into methods: `census-public-private-calls`, `check-dead-methods`,
+`check-raw-pointer-reads`, `check-layering`, `check-relayout-bounds-first`, `check-thin-wraps`. They all
+take that definition from **`buildSystem/lib/coffee-method-header.js`** (`METHOD_HEADER` /
+`MIXIN_METHOD_HEADER`). Do not re-declare it locally — the module exists because six copies of one regex
+had drifted into a shared blind spot nobody could see.
+
+A header is either **closed on the line** (`foo: ->`, `foo: (a, b) ->`, `foo: (a)->`, `foo: (a) =>`) or
+**opens a wrapped parameter list** (`foo: (` with nothing after the paren; the continuation lines are
+ordinary body lines to every gate, which is correct — they are the signature).
+
+⚠ **The failure mode this protects against is silence, not noise.** A gate that cannot see a method does
+not warn about it — it reports nothing, so its output looks healthy and its counts look stable. Both
+spellings above escaped every gate until a reformatted signature moved the census's method total by
+exactly two; the module's own header comment carries that account. What widening the matcher surfaced:
+
+| revealed | what it was |
+|---|---|
+| `Widget.paintRectangle` | dead — a ~30-line legacy device-space paint helper with zero callers anywhere |
+| 2 rule `[S]` sites | `PopUpWdgt._reactToBeingDropped → @pinPopUp`, `Widget._destroyNoSettle → @onClickOutsideMeOrAnyOfMyChildren` — both conscious and correct, now carrying the `# public-call-sanctioned:` marker they could never be asked for |
+| 1 rule `[U]` site | `InspectorWdgt.filterProperties`, an internal helper wearing a public name — renamed `_filterProperties` |
+| +1 handler body | one pointer handler had never been scanned by `check-raw-pointer-reads` at all |
+
+`unseenMethodHeaders()` in the same module is the **regression guard**: `check-dead-methods` (which owns
+the method inventory) FAILS on any class-level line that ends in an arrow, or opens an unbalanced paren
+list, that `METHOD_HEADER` does not match. A future spelling therefore becomes a build error that names
+its own fix, instead of another silent hole.
+
 ## 7. Documented BOUNDARIES (reasoned gaps, not silent ones)
 
 What the layering gate deliberately does NOT cover, and why — so a maintainer reads a reasoned boundary, never a hole:

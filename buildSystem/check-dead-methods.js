@@ -27,7 +27,7 @@ const TESTS    = path.resolve(__dirname, '../../Fizzygum-tests/tests');
 const HARNESS  = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
 const ALLOWLIST = path.resolve(__dirname, 'dead-method-allowlist.txt');
 
-const HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;   // a 2-space-indent class method header
+const { METHOD_HEADER: HEADER, unseenMethodHeaders } = require('./lib/coffee-method-header');   // a 2-space-indent class method header
 const WORD   = /[A-Za-z_]\w*/g;
 
 function walk(dir, ext, acc) {
@@ -110,12 +110,26 @@ if (!fs.existsSync(TESTS) || !fs.existsSync(HARNESS)) {
 }
 
 // 1. every method header in src -> name => [first def location, ...]
+// This gate owns the method INVENTORY, so it also carries the guard for headers the shared matcher
+// cannot see: an unseen header is not a missing warning, it is a method NO gate checks at all.
 const defs = new Map();
+const unseen = [];
 for (const p of walk(SRC, '.coffee', [])) {
-  fs.readFileSync(p, 'utf8').split('\n').forEach((line, i) => {
+  const lines = fs.readFileSync(p, 'utf8').split('\n');
+  lines.forEach((line, i) => {
     const m = HEADER.exec(line);
     if (m) { if (!defs.has(m[1])) defs.set(m[1], []); defs.get(m[1]).push(path.relative(SRC, p) + ':' + (i + 1)); }
   });
+  for (const u of unseenMethodHeaders(lines)) unseen.push(`${path.relative(SRC, p)}:${u.line}: ${u.text}`);
+}
+if (unseen.length) {
+  console.error(`[dead-methods] FAIL — ${unseen.length} method header(s) the shared matcher cannot see:`);
+  for (const u of unseen) console.error('   ' + u);
+  console.error('\nA method whose signature wraps must break immediately after the `(`, so that the header line');
+  console.error('ends there — every build gate groups a .coffee file by that shape, and a header none of them');
+  console.error('matches makes the WHOLE METHOD invisible to all of them, silently. Re-wrap the signature, or');
+  console.error('widen METHOD_HEADER in buildSystem/lib/coffee-method-header.js and re-run every gate.');
+  process.exit(1);
 }
 
 // 2. every identifier USED (not on a def header, not in a comment)

@@ -28,7 +28,7 @@ const path = require('path');
 
 const SRC = path.resolve(__dirname, '../src');
 
-const HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;   // 2-space-indent class method header
+const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');   // 2-space-indent class method header
 const GUARD  = /^return\s+(if|unless)\b/;               // idempotency guard clause
 const EXEMPT = /#\s*thin-wrap-exempt:\s*\S/;            // marker WITH a non-empty reason
 

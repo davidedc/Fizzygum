@@ -633,6 +633,10 @@ class Widget extends TreeNode
 
     # remove callback when user clicks outside
     # me or any of my children
+    # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
+    # add/delete on world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren) — it settles nothing and
+    # touches no geometry, so calling it from a NoSettle core is settle-neutral. Deregistering here
+    # is the point: a destroyed widget must not stay in that set.
     @onClickOutsideMeOrAnyOfMyChildren undefined
 
     if @parent?
@@ -2606,50 +2610,6 @@ class Widget extends TreeNode
       @highlighted = false
       world.widgetsToBeHighlighted.delete @
       @_changed()
-
-
-  # paintRectangle can work in two patterns:
-  #  * passing actual pixels, when used
-  #    outside the effect of the scope of
-  #    "useLogicalPixelsUntilRestore()", or
-  #  * passing logical pixels, when used
-  #    inside the effect of the scope of
-  #    "useLogicalPixelsUntilRestore()", or
-  # Mostly, the first pattern is used.
-  # Note that the resulting rectangle WILL reflect
-  # if it's being painted as a shadow or not,
-  # so it can't be used to paint on a backbuffer,
-  # since you always want to paint on a backbuffer
-  # "pristine", since the shadow effect is applied
-  # when the backbuffer is in turn blitted to
-  # screen, LATER.
-
-  paintRectangle: (
-    aContext,
-    al, at, w, h,
-    color,
-    transparency = undefined,
-    pushAndPopContext = false,
-    appliedShadow
-  ) ->
-
-      if !color?
-        return
-
-      if pushAndPopContext
-        aContext.save()
-
-      aContext.fillStyle = color.toString()
-      if transparency?
-        aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * transparency
-
-      aContext.fillRect  Math.round(al),
-          Math.round(at),
-          Math.round(w),
-          Math.round(h)
-
-      if pushAndPopContext
-        aContext.restore()
 
 
   preliminaryCheckNothingToDraw: (clippingRectangle, aContext) ->

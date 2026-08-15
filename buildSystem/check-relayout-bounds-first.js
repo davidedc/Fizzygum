@@ -30,7 +30,7 @@ const fs = require('fs');
 const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
-const HEADER = /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/;        // 2-space-indent class method header
+const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');   // 2-space-indent class method header
 const EXEMPT = /#\s*relayout-bounds-first-exempt:\s*\S/;     // marker WITH a non-empty reason
 // own-geometry accessor reads that indicate positioning children against MY (about-to-change) frame:
 const GEOM = /@(?:left|right|top|bottom|width|height|position|topLeft|topRight|bottomLeft|bottomRight|center)\(\)|@bounds\b(?!\s*=)/;
