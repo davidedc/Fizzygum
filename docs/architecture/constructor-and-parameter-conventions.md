@@ -242,9 +242,16 @@ plain JS `new SliderWdgt(0, 100, 40, 10)` in the rigs.
 ## 7. Current conformance
 
 139 constructors in `src/`; 117 take ≤4 parameters and are already conformant or exempt. The
-22 at ≥5 are inventoried, with a per-family conversion order, in
+remaining ones at ≥5 are inventoried, with a per-family conversion order, in
 [`../plans/constructor-parameter-conformance-plan.md`](../plans/constructor-parameter-conformance-plan.md).
-Landed conversions to date: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
+Landed conversions: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
 `FrameWdgt` constructors, the four `_addNoSettle` overrides
 ([`../archive/accidental-complexity-reduction-plan.md`](../archive/accidental-complexity-reduction-plan.md) P5),
-and `SliderWdgt`.
+`SliderWdgt`, `MenuItemSpec`, and the text family (`StringWdgt` / `TextWdgt` /
+`SimpleTextWdgt`, all three to `(text, opts = {})`).
+
+The hole test is ratcheted at **30** by the `positional-hole` stink. ⚠ Reading that number as
+"30 constructors left" is wrong: **25 of the 30 are ordinary method calls**, chiefly
+`setFontName` and `setTargetAndActionWithOnesPickedFromMenu`, whose signatures want the same
+head/tail treatment — this convention is not constructor-specific. Three more are a positional
+*result* tuple (`return [a, b, error]`), a shape R3 does not address at all.
