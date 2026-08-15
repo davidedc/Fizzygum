@@ -67,6 +67,9 @@ const STINKS = [
   { id: 'instanceof-type-test', baseline: 87,   // Pharo: ReBadMessageRule (isKindOf:); tightened 105->97 (2026-07-17); 97->95 (2026-07-18, DividerWdgt.isDivider role query retired 2 `instanceof DividerWdgt` in removeConsecutiveLines); 95->93 (2026-07-30, banking a gain already landed; fg critique surfaced it); 93->88 (2026-08-04, layout spec-family arc: the enum dispatch + 5 spec-class instanceofs became capability queries); 88->87 (2026-08-09, banking a gain already landed; surfaced by the comments-audit stink run)
     why: 'the type-test-elimination campaign drove instanceof down; this locks the tail against regrowth — prefer polymorphism',
     re: /\binstanceof\b/ },
+  { id: 'positional-hole', baseline: 51,   // seeded 2026-08-15 at THIS engine's own count; target 0 (docs/plans/constructor-parameter-conformance-plan.md drives it down family by family)
+    why: 'a call punching `undefined` through to reach a later argument PROVES the skipped parameter is configuration rather than identity — no single order can serve callers wanting disjoint tails. The remedy is a trailing `opts = {}` object (or, for an exempt value class, a reorder): docs/architecture/constructor-and-parameter-conventions.md R3',
+    re: /\bundefined\b\s*,\s*\bundefined\b/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',

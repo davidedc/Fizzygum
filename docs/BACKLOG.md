@@ -150,7 +150,7 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
-### `plans/constructor-parameter-conformance-plan.md` — AUTHORED 2026-08-14, NOT started
+### `plans/constructor-parameter-conformance-plan.md` — AUTHORED 2026-08-14, IN PROGRESS (P0 done)
 Brings `src/` onto the constructor convention now stated in
 `architecture/constructor-and-parameter-conventions.md` (positional head for identity, one
 trailing `opts` object for configuration; the hole test is decisive). Finishes what
@@ -158,7 +158,7 @@ trailing `opts` object for configuration; the hole test is decisive). Finishes w
 rule. Measured 2026-08-14: 139 constructors, **22 at ≥5 params** (6 exempt as foreign-API event
 records, 1 done = `SliderWdgt`), **51 lines** across 26 files carrying ≥2 consecutive bare
 `undefined` args.
-- [ ] P0 seed the `positional-hole` stink in `check-stinks.js` at the runner's measured baseline (~51), so every later phase's gain self-locks
+- [x] P0 seed the `positional-hole` stink in `check-stinks.js` at the runner's measured baseline — **DONE 2026-08-15, baseline 51**. The runner's own comment-stripped count agrees exactly with the plan's naive one: the regex `undefined\s*,\s*undefined` matches nothing inside a comment anywhere in `src/`, so the two hit SETS are identical, not merely equinumerous. Target 0
 - [ ] P1 `MenuItemSpec` — 12 positional, ONE call site that already unpacks an `opts` back into slots; the near-zero-risk warm-up that proves the idiom
 - [ ] P2 the text family (`StringWdgt` 10 / `TextWdgt` 8 / `SimpleTextWdgt` 8) — biggest payoff: ~20 sites share `text, undefined×5, color, 1`. **68 `new` sites in src** + the tests repo; all three convert in ONE commit (two-level `super` chain)
 - [ ] P3 the button family (`ButtonWdgt` 12 / `LabelButtonWdgt` **17** / +5 subclasses) — atomic; do after P1 so it inherits the settled option vocabulary. `closesUnpinnedPopUps` as the FIRST positional is why nearly every button call site opens with a bare `true`. ⚠ **Overlaps `plans/widget-practices-convergence-plan.md` W8** (owner-gated D5, sequenced last there) — ONE piece of work, do it once; P3 waits on D5 rather than racing it. ⭐ W8's finding rides along: the conversion lets the three parallel `iconToolTipMessage` shadow fields be DELETED

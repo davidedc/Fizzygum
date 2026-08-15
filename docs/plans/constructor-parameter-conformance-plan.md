@@ -1,6 +1,6 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE, not started.** Owner-gated per family.
+**STATUS: ACTIVE. P0 landed 2026-08-15; P1 next.** Owner-gated per family.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -71,9 +71,9 @@ Six of the 22 are exempt under E3 (foreign-API records reached through
 
 ---
 
-## 1. P0 — Seed the gate (do first, lands alone)
+## 1. P0 — Seed the gate (do first, lands alone) ✅ DONE 2026-08-15
 
-Add to `STINKS` in `buildSystem/check-stinks.js`:
+Added to `STINKS` in `buildSystem/check-stinks.js`, **baseline 51** — the runner's own count:
 
 ```js
 { id: 'positional-hole', baseline: 51,   // seeded 2026-08-14; target 0. A hole proves the
@@ -88,12 +88,26 @@ self-locking: each family that lands drops the count, and the check prints the
 tighten-the-baseline reminder. **Tighten the baseline in the same commit that drops it** — that
 is the established ratchet discipline.
 
-⚠ Confirm the regex is evaluated against non-comment source with the existing scope machinery
-(the stink runner already distinguishes `scope: 'comments'`); two of the current 51-ish
-matches in a naive scan are prose inside comments, so the seeded number must come from the
-runner's own count, not from this document's.
+The ⚠ this phase carried — *the seeded number must come from the runner's own count, not this
+document's, because a naive scan counts comment prose* — was **checked and found moot for this
+particular regex**: `undefined\s*,\s*undefined` matches nothing inside a comment anywhere in
+`src/`, so the runner's comment-stripped hits and a naive `grep`'s are the **same 51 lines**, set
+for set (verified by diffing the two `file:line` lists, not by comparing totals — two counts can
+agree while their contents differ). The discipline still stands for the next stink; it simply had
+nothing to correct here.
 
-**Verification:** `./build_it_please.sh` green, `[stinks] positional-hole: N site(s)` printed.
+**Verified:** `./build_it_please.sh` green; `[stinks] positional-hole: 51 site(s) (baseline 51)
+-- OK`. Counted by hand off the runner's `--list`, the 51 sites split **26 construction holes**
+(`new`/`super` — the work of P2–P5) against **25 that are not constructor calls at all**:
+`setFontName`/`_setFontNameNoSettle` (7), `setTargetAndActionWithOnesPickedFromMenu` (10),
+`setPattern` (2), `makeFolder`, `add`, `_fromCatalogEntry`, and three `return [undefined,
+undefined, error]` tuples in `LCLCodePreprocessor`. **Half the gate's population is method
+signatures, which the ≥5 constructor inventory never counted** — the stink is a *hole* gate, not a
+*constructor* gate, so
+driving it to 0 (P6) means converting those methods too, or naming each survivor's reason at the
+site. ⚠ The three `LCLCodePreprocessor` returns are **not holes at all** — they are a positional
+result tuple `[a, b, error]`, the shape R3 does not address; expect them to need an explicit
+exemption or a small refactor rather than an options object.
 
 ## 2. P1 — `MenuItemSpec` (warm-up: 12 positional, 1 call site)
 
@@ -284,7 +298,10 @@ and may be exempt on inspection (E5-adjacent) — check before converting.
 ## 7. P6 — Close out
 
 1. Drive `positional-hole` to **0** and make it a HARD rule (baseline 0), alongside
-   `nil-literal` and `comment-past-receipt`.
+   `nil-literal` and `comment-past-receipt`. ⚠ P2–P5 cannot get there on their own: **25 of the
+   51 seeded sites are method calls, not constructions** (§1) — chiefly `setFontName` and
+   `setTargetAndActionWithOnesPickedFromMenu`, whose own signatures need the same head/tail
+   treatment. Budget that as its own step; the convention is not widget-constructor-specific.
 2. Any surviving hole must be **named with its reason** at the site, or the class listed as
    exempt in the convention doc §3 — not silently tolerated.
 3. Update §7 of
