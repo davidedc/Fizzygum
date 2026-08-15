@@ -60,7 +60,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     # padding 2 = the menu's tight border; rows stack FLUSH inside it (see
     # interElementGap below). No extent/color through the base ctor — the look
     # is set right here.
-    super undefined, undefined, 2
+    super padding: 2
     @target = opts.target
     @environment = opts.environment
     @fontSize = opts.fontSize

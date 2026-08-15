@@ -38,7 +38,12 @@ class TransformSpec
   # a shared, immutable value: deep copies keep the reference (see Duplicator)
   keptByReferenceOnDeepCopy: true
 
-  constructor: (@rotationDegrees = 0, @scale = 1, @anchor, @claimsSpace = "footprint") ->
+  # REORDERED, not given an options tail: an immutable value class stays positional
+  # however long the list gets (conventions §3 E1), so R3's remedy here is to move the
+  # commonly-passed operand up. `anchor` is never supplied at construction — every
+  # anchor arrives later through withAnchor — while `claimsSpace` is, so leaving anchor
+  # third made five call sites punch `undefined` through it to reach the mode.
+  constructor: (@rotationDegrees = 0, @scale = 1, @claimsSpace = "footprint", @anchor) ->
     # Phase 2: rotation is live — for a non-zero angle the matrix trig is Math.cos/sin, which the
     # reference-matched pages have patched to the fdlibm port (see _cosSin), so rotated composites
     # are cross-engine identical there.
@@ -62,19 +67,19 @@ class TransformSpec
 
   withRotationDegrees: (deg) ->
     return @ if deg is @rotationDegrees
-    new @constructor deg, @scale, @anchor, @claimsSpace
+    new @constructor deg, @scale, @claimsSpace, @anchor
 
   withScale: (s) ->
     return @ if s is @scale
-    new @constructor @rotationDegrees, s, @anchor, @claimsSpace
+    new @constructor @rotationDegrees, s, @claimsSpace, @anchor
 
   withAnchor: (aPointOrNil) ->
     return @ if aPointOrNil is @anchor
-    new @constructor @rotationDegrees, @scale, aPointOrNil, @claimsSpace
+    new @constructor @rotationDegrees, @scale, @claimsSpace, aPointOrNil
 
   withClaimsSpace: (mode) ->
     return @ if mode is @claimsSpace
-    new @constructor @rotationDegrees, @scale, @anchor, mode
+    new @constructor @rotationDegrees, @scale, mode, @anchor
 
   # ---- layout coupling: the extent this island CLAIMS from its parent, and where the slot ----
   #      box sits inside it — same three modes as claimsSpace above; see docs/architecture/transforms.md §5.1.

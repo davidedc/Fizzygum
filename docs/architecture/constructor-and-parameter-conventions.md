@@ -85,11 +85,14 @@ worked case: 6 sites wanted only the trailing flag, 2 only the colour — **disj
 no reordering could ever have fixed it. That is the signature of a parameter that belongs in
 the options object.
 
-⚠ **The remedy is not always an options object.** For a ≤4-parameter class that is otherwise
-exempt (§3), a hole means *reorder* — put the commonly-passed operand first. `TransformSpec`
-(`src/basic-widgets/Widget.coffee:1857`: `new TransformSpec relDeg, 1 / sPlane, undefined,
-"slot"`) is an immutable value class with one hole; it wants its parameters reordered, not an
-options bag. Read the hole as a diagnosis, then pick the treatment.
+⚠ **The remedy is not always an options object.** For a class that is otherwise exempt (§3), a
+hole means *reorder* — move the commonly-passed operand up. `TransformSpec` is the worked case:
+an immutable value class (E1), so it stays positional however long the list gets, and five sites
+were writing `new TransformSpec relDeg, 1 / sPlane, undefined, "slot"` to skip `anchor`. The
+diagnosis was that `anchor` is **never** supplied at construction — every anchor arrives later
+through `withAnchor` — while `claimsSpace` regularly is. Swapping the two
+(`(rotationDegrees, scale, claimsSpace, anchor)`) removed every hole without an options bag.
+Read the hole as a diagnosis, then pick the treatment.
 
 ⚠⚠ **Once there is a tail, every *optional* operand is a hole — so the head is what EVERY
 caller supplies, not what reads best in a signature.** Trailing arguments can be omitted

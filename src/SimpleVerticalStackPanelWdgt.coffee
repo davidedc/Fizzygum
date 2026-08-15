@@ -60,7 +60,16 @@ class SimpleVerticalStackPanelWdgt extends Widget
     else
       super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
 
-  constructor: (extent, color, @padding = 5, @constrainContentWidth = true) ->
+  # ALL options, no operand. `extent` reads like the natural first one, but only 4 of
+  # ~15 sites pass it (fails R1's "the typical caller passes it") and the two that want
+  # a later knob without it — MenuRowsPanelWdgt's super and DemoMenus' free-width demo —
+  # had to punch `undefined` past it to get there (R3). MenuRowsPanelWdgt already took
+  # exactly this shape; the base now matches its own subclass.
+  constructor: (opts = {}) ->
+    extent = opts.extent
+    color = opts.color
+    @padding = opts.padding ? 5
+    @constrainContentWidth = opts.constrainContentWidth ? true
     super()
     @appearance = new RectangularAppearance @
     @__commitExtent(extent) if extent?

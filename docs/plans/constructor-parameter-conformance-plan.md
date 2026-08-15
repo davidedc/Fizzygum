@@ -1,6 +1,7 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0–P4 landed 2026-08-15. P5 (stragglers) next.** Owner-gated per family.
+**STATUS: ACTIVE. P0–P5 landed 2026-08-15. P6 (close-out) next, and it is METHOD work.**
+Owner-gated per family.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -55,20 +56,21 @@ must move with the base).
 | 8 | 0 | 4 | `MouseInputEvent` | **exempt E3** |
 | 8 | 17 | 3 | `TextWdgt` | **P2** |
 | 7 | 0 | 3 | `TouchInputEvent` | **exempt E3** |
-| 7 | 2 | 0 | `StringFieldWdgt` | **P5** |
+| 7 | 2 | 0 | `StringFieldWdgt` | ✅ **P5** |
 | 6 | 0 | 4 | `PromptWdgt` | ✅ **P4** |
-| 6 | 3 | 0 | `ListWdgt` | **P5** |
+| 6 | 3 | 0 | `ListWdgt` | ✅ **P5** |
 | 6 | 1 | 0 | `TextPromptWdgt` | ✅ **P4** |
 | 6 | 1 | 0 | `MenuItemWdgt` | **P3** |
-| 5 | 1 | 0 | `TextEditingState` | **P5** |
-| 5 | 1 | 0 | `ToolTipWdgt` | **P5** |
+| 5 | 1 | 0 | `TextEditingState` | ✅ **exempt E1** |
+| 5 | 1 | 0 | `ToolTipWdgt` | ✅ **P5** |
 | 5 | 3 | 0 | `SaveShortcutPromptWdgt` | ✅ **P4** |
 | 5 | 1 | 0 | `ColorPromptWdgt` | ✅ **P4** |
 | 5 | 13 | 1 | `SliderWdgt` | ✅ **done** (`21d5b64`) |
 
-Five of the 22 are exempt under E3 (foreign-API records reached through `fromBrowserEvent`);
-`SliderWdgt` was converted before this arc. P1–P4 landed twelve more. **4 remain** — the P5
-stragglers `StringFieldWdgt`, `ListWdgt`, `TextEditingState`, `ToolTipWdgt`.
+Five of the 22 are exempt under E3 (foreign-API records reached through `fromBrowserEvent`) and
+`TextEditingState` under E1; `SliderWdgt` was converted before this arc. P1–P5 landed the other
+fifteen. **This table is now CLOSED** — every constructor in `src/` is at ≤4 operands or named
+exempt with its reason. What remains for P6 is the METHOD signatures the table never counted.
 
 ---
 
@@ -491,6 +493,47 @@ value class, E1), `IconicDesktopSystemWindowedAppLauncherWdgt`, `VideoScrubberWd
 
 Low call-site counts, no deep chains; batch by directory. `TextEditingState` is a plain record
 and may be exempt on inspection (E5-adjacent) — check before converting.
+
+**As built.**
+
+| class | before | after |
+|---|---|---|
+| `StringFieldWdgt` | 7 | `(@defaultContents = "", opts = {})` |
+| `ListWdgt` | 6 | `(@elements = [], opts = {})` |
+| `ToolTipWdgt` | 5 | `(@contents = "text here", opts = {})` |
+| `SimpleVerticalStackPanelWdgt` | 4 | `(opts = {})` |
+| `TransformSpec` | 4 | **reordered** `(@rotationDegrees = 0, @scale = 1, @claimsSpace = "footprint", @anchor)` |
+| `TextEditingState` | 5 | **unchanged — exempt E1** |
+
+⚠ **Three of the six names in this section are not constructor work at all**, and belong to P6:
+`FormatAsCodeButtonWdgt` and `DegreesConverterApp` carry only `setFontName` /
+`setTargetAndActionWithOnesPickedFromMenu` **method** holes, and
+`IconicDesktopSystemWindowedAppLauncherWdgt`'s hole is in the `_fromCatalogEntry` method — its
+constructor is a conformant 4.
+
+⚠ **`SimpleVerticalStackPanelWdgt` has a descendant this section did not name** —
+`MenuRowsPanelWdgt`, whose `super undefined, undefined, 2` was itself one of the gate's 28 holes.
+It already took `(opts = {})`, and its own comment already said *"No extent/color through the base
+ctor"*: the base now matches the shape its subclass had adopted years earlier. `extent` looks like
+the obvious operand but only 4 of ~15 sites pass it (fails R1) and the two that want a later knob
+*without* it had to punch past it (fails R3) — hence no operand at all.
+
+⭐ **`TextEditingState` is exempt and stays 5 positional.** It is an immutable undo-history
+snapshot (its own header says so, citing `immutable-value-classes.md`), constructed at exactly one
+site which passes all five in a fixed, canonical order — a value tuple under **E1**, like `Point`
+and `Color`. Arity is not the test; a hole is, and it has none.
+
+⭐⭐ **A third stale site from the pre-arc `SliderWdgt` conversion (`21d5b64`) — a LIVE inverted
+control, fixed in its own commit.** `VideoScrubberWdgt` was calling
+`super undefined, undefined, undefined, undefined, undefined, true`. Against the converted head
+`(start, stop, value, size, opts)` the five `undefined`s let all four ES defaults fire (harmless)
+but `opts` reads `undefined` and the trailing `true` lands in **no parameter at all** — so
+`smallestValueIsAtBottomEnd` silently reverted to `false` and the video scrubber has been running
+with its axis inverted ever since. Every other slider site uses `smallestValueIsAtBottomEnd: true`
+as a named option. ⚠ `video-player` is a `requiresFlag` part, so no suite leg builds it — this is
+the same lesson as P4's `SliderWdgt` menu items: **the sites a conversion misses are exactly the
+ones nothing runs.** Grep the WHOLE of `src/` after converting a head, parts you do not build
+included.
 
 ## 7. P6 — Close out
 

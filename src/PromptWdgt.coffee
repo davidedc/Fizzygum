@@ -106,14 +106,11 @@ class PromptWdgt extends PopUpWdgt
   # panel. isNumericField flips the field's numeric mode — NumberPromptWdgt
   # passes whether a ceiling exists.
   _buildAndAddEntryFieldInto: (panel, isNumericField) ->
-    @tempPromptEntryField = new StringFieldWdgt(
-      @defaultContents or "",
-      @intendedWidth or 100,
-      WorldWdgt.preferencesAndSettings.prompterFontSize,
-      WorldWdgt.preferencesAndSettings.prompterFontName,
-      false,
-      false,
-      isNumericField)
+    @tempPromptEntryField = new StringFieldWdgt (@defaultContents or ""),
+      minTextWidth: @intendedWidth or 100
+      fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
+      fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName
+      isNumeric: isNumericField
     panel.environment = @tempPromptEntryField
     panel._addNoSettle @tempPromptEntryField
     # _addNoSettle skips the child's calculateAndUpdateExtent (which measures the

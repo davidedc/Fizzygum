@@ -28,14 +28,10 @@ class SaveShortcutPromptWdgt extends PromptWdgt
     @tempPromptEntryField.text.edit()
 
   _buildAndAddValueEditorInto: (panel) ->
-    @tempPromptEntryField = new StringFieldWdgt(
-      @defaultContents,
-      150,
-      WorldWdgt.preferencesAndSettings.prompterFontSize,
-      WorldWdgt.preferencesAndSettings.prompterFontName,
-      false,
-      false,
-      false)
+    @tempPromptEntryField = new StringFieldWdgt @defaultContents,
+      minTextWidth: 150
+      fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
+      fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName
     panel.environment = @tempPromptEntryField
     panel._addNoSettle @tempPromptEntryField
     # _addNoSettle skips calculateAndUpdateExtent (which measures the text and

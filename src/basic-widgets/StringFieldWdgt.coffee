@@ -23,15 +23,13 @@ class StringFieldWdgt extends PanelWdgt
   # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: undefined
 
-  constructor: (
-      @defaultContents = "",
-      @minTextWidth = 100,
-      @fontSize = 12,
-      @fontStyle = "sans-serif",
-      @isBold = false,
-      @isItalic = false,
-      @isNumeric = false
-      ) ->
+  constructor: (@defaultContents = "", opts = {}) ->
+    @minTextWidth = opts.minTextWidth ? 100
+    @fontSize = opts.fontSize ? 12
+    @fontStyle = opts.fontStyle ? "sans-serif"
+    @isBold = opts.isBold ? false
+    @isItalic = opts.isItalic ? false
+    @isNumeric = opts.isNumeric ? false
     super()
     @color = Color.WHITE
 

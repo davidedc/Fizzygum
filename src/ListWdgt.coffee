@@ -1,5 +1,12 @@
 class ListWdgt extends ScrollPanelWdgt
-  
+
+  # The label rule when a caller supplies none. A STATIC, so every list shares the
+  # one function object rather than each instance carrying its own closure.
+  @defaultLabelGetter: (element) ->
+    return element  if Utils.isString element
+    return element.toSource()  if element.toSource
+    element.toString()
+
   elements: undefined
   labelGetter: undefined
   format: undefined
@@ -10,19 +17,15 @@ class ListWdgt extends ScrollPanelWdgt
   target: undefined
   doubleClickAction: undefined
 
-  constructor: (
-    @target,
-    @action,
-    @elements = [],
-    @labelGetter = (element) ->
-        return element  if Utils.isString element
-        return element.toSource()  if element.toSource
-        element.toString()
-    ,
-
-    @format = [],
-    @doubleClickAction = undefined
-    ) ->
+  # The rows are the operand: every caller supplies them, while only the inspector
+  # supplies target/action — which as leading positionals made the other six sites
+  # open with `undefined, undefined` just to reach the rows (R3).
+  constructor: (@elements = [], opts = {}) ->
+    @target = opts.target
+    @action = opts.action
+    @labelGetter = opts.labelGetter ? ListWdgt.defaultLabelGetter
+    @format = opts.format ? []
+    @doubleClickAction = opts.doubleClickAction
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:

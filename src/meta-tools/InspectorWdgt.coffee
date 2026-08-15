@@ -273,14 +273,11 @@ class InspectorWdgt extends Widget
       inspector._moveWithin world
       world.add inspector
 
-    @list = new ListWdgt(
-      @, # target
-      "selectionFromList", #action
-      (if @target instanceof Array then attribs else attribs.sort()), #elements
-      undefined, #labelGetter
-      @_filterProperties(targetOwnMethods), #format
-      doubleClickAction #doubleClickAction
-    )
+    @list = new ListWdgt (if @target instanceof Array then attribs else attribs.sort()),
+      target: @
+      action: "selectionFromList"
+      format: @_filterProperties(targetOwnMethods)
+      doubleClickAction: doubleClickAction
     @list.disableDrops()
 
     # @list.listContents (the MenuRowsPanelWdgt holding this list's items) never animates, so it's

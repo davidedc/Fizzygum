@@ -1858,7 +1858,7 @@ class Widget extends TreeNode
       # the drop moment), not a user-authored transform — it must never claim layout space in the
       # tilted container it lands in. The 4C/4D-2a sugar islands, by contrast, FOLLOW the
       # 'footprint' default (they carry a user-visible rotation — D1's mainstream case).
-      island.transformSpec = new TransformSpec relDeg, 1 / sPlane, undefined, "slot"
+      island.transformSpec = new TransformSpec relDeg, 1 / sPlane, "slot"
       # slot = my bounds (I am on the hand, screen coords); the wrapper pivots on the slot centre so my
       # on-screen look is unchanged, and the 4D-1 block below places the wrapper by its visual centre.
       island.bounds = new Rectangle @left(), @top(), @right(), @bottom()

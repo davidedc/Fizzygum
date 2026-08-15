@@ -510,7 +510,7 @@ class DemoMenus
     @createSimpleVerticalStackScrollPanelWdgt()
 
   createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
-    svspw = new SimpleVerticalStackPanelWdgt undefined, undefined, undefined, false
+    svspw = new SimpleVerticalStackPanelWdgt constrainContentWidth: false
     world.add svspw
     svspw.setBounds new Point(35, 30), new Point(370, 325)
 

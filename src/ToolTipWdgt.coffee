@@ -14,15 +14,13 @@ class ToolTipWdgt extends Widget
   padding: undefined # extra pixels around the contents, both axes; when 0 the cornerRadius supplies the horizontal margin
   widgetInvokingThis: undefined
 
-  constructor: (
-   @contents="text here",
-   @widgetInvokingThis,
-   @color = WorldWdgt.preferencesAndSettings.menuBackgroundColor,
-   cornerRadius,
-   @padding = 0) ->
+  constructor: (@contents = "text here", opts = {}) ->
+    @widgetInvokingThis = opts.widgetInvokingThis
+    @color = opts.color ? WorldWdgt.preferencesAndSettings.menuBackgroundColor
+    @padding = opts.padding ? 0
     super()
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
-    @cornerRadius = cornerRadius or 6
+    @cornerRadius = opts.cornerRadius or 6
     @appearance = new BubblyAppearance @
   
   @createBubbleHelpIfHandStillOnWidget: (contents, widgetInvokingThis) ->
@@ -31,7 +29,7 @@ class ToolTipWdgt extends Widget
     # the widget's plane so the containment holds for tilted widgets too (off any island the
     # mapping returns the same point; the raw-pointer lint's same-line shape).
     if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint (widgetInvokingThis.screenPointToMyPlane world.hand.position())
-      theBubble = new @ contents, widgetInvokingThis
+      theBubble = new @ contents, widgetInvokingThis: widgetInvokingThis
       theBubble.openAt widgetInvokingThis.topRight()
 
   @cancelAllScheduledToolTips: ->
