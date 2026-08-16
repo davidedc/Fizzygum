@@ -19,6 +19,10 @@ class SliderButtonWdgt extends CircleBoxWdgt
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
+  # grab offset held for the duration of a knob drag: a plane-local position, mapped
+  # through the (possibly rotated) island so it stays consistent with my own plane
+  offset: undefined
+
   constructor: ->
     super
     @isLockingToPanels = false

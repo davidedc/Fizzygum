@@ -3,6 +3,9 @@ class Example3DPlotWdgt extends Widget
 
   vertices: undefined
   quads: undefined
+  # the constructor fills this with a fresh array — declared undefined, never [], so
+  # instances never share one mutable array off the prototype
+  edges: undefined
   currentAngle: undefined
   planeGrid: undefined
   graphGrid: undefined

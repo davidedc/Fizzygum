@@ -641,6 +641,13 @@ for k, p in pat.items():
 | D1 | **W3** — add the base menu block to `PointerWdgt` and `IconicDesktopSystemScriptShortcutWdgt`? (adds layout entries; recaptures their menu shots) | **Yes** — the omission looks accidental (both open with `menu.addLine`), and the entries are the base affordance every other widget has. |
 | D2 | **W4b** — for each of the eight repeated fields, `Widget` / family base / leave? | **Family base wherever one exists**; `Widget` only for `toolTipMessage` (its reader is already on `Widget`), accepting the inspector recapture. `target` stays per-family — see the corrected reason below. |
 
+✅ **D1 and D2 DECIDED by the owner, 2026-08-16.** D1: yes (W3 landed). D2: the recommended split —
+`toolTipMessage` → `Widget` **together with** deleting the 33 `iconToolTipMessage` declarations and
+their two copy lines (§2.8); `title` → `IconicDesktopSystemShortcutWdgt`; `seed` →
+`GraphsPlotsChartsWdgt`; `icon` → the two family bases; `cornerRadius` declared per class (the three
+do not extend `BoxWdgt`); `target` **left alone** pending the connector arc's P9; `callback` dropped
+from the table, now below threshold. The inspector recapture is accepted.
+
 ⚠ **D2 correction, measured 2026-08-16 (W0).** The original reason given for keeping `target`
 per-family — "a `Widget.target` would collide conceptually with `ControllerMixin`'s" — is **false**:
 `ControllerMixin` declares NO fields at all (its own comment says "class properties here: none"); it
@@ -738,7 +745,29 @@ proposes.
   **Follow-up worth taking:** add both classes to the sweep's `REPRESENTATIVES` (its own comment says
   a root that fails to build is a coverage gap worth reporting), or author a macro that drops one
   into a division stack and screenshots the menu. Until then W3 is a code fix with no witness.
-- W4a / W4b (D2) / W4c field declarations: ☐ ☐ ☐
+- **W4a · CONVERGED — 2026-08-16.** All 11 classes / 13 fields declared, every one `: undefined`
+  following `BoxWdgt`'s precedent (`cornerRadius: undefined` declared even though the constructor
+  defaults it to 4). The §7 scanner drops 51 classes / 120 fields → **40 / 107**, exactly −11 / −13.
+  Mixin-clobber pre-check (landmine §8) run first: no mixin declares ANY of the 13, so no
+  declaration could clobber a donated value.
+  Two of the thirteen are declared `undefined` for a REASON, not just convention, and the comments
+  say so: `Example3DPlotWdgt.edges` and `PaintToolbarWdgt.queue` are both arrays built lazily/in the
+  constructor — a prototype `[]` would be ONE array shared by every instance, and `queue`'s lazy
+  build keys off `if !@queue?`. `InspectorWdgt.resizer` likewise must stay undefined through its own
+  `add`, which its existing comment already documents.
+  **Recaptures: 2 tests / 20 references (40 files) — the FIRST non-zero budget of this arc.**
+  `ButtonWdgt.faceWidget` is a member, so `ButtonWdgt`'s class-inspector member list gained one row,
+  and both mixin-donor tests screenshot exactly that list.
+  ⭐ **The diff was confirmed benign by looking, not by assuming**: `faceWidget` inserts
+  alphabetically after `doubleClickAction`, everything below shifts one row, the pane re-clips its
+  last row — and the selected member is unchanged, because the macros select by LABEL
+  (`selectInspectorRow_InputEvents_Macro ci, "color_hover"`), not by index. Had they selected by
+  index, a recapture would have baked in a test that silently checks the wrong member.
+  Recaptured with `fg recapture --auto`: verdict **✅ RECAPTURE COMPLETE**, suite green at dpr 1 and
+  dpr 2, nothing else stale.
+  ⚠ **Scale warning for W4b:** `toolTipMessage` on `Widget` puts a row in EVERY widget's inspector
+  list, so its recapture is not 2 tests — budget for most of §11.1's 18.
+- W4b (D2) / W4c field declarations: ☐ ☐
 - W5 `_reLayout` template: ☐
 - W6a widen setters / W6b guards (D3): ☐ ☐
 - W7 self-description (D4): ☐

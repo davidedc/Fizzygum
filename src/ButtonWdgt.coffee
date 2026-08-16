@@ -21,7 +21,11 @@ class ButtonWdgt extends Widget
   argumentToAction2: undefined
  
   toolTipMessage: undefined
- 
+
+  # what the button SHOWS, from opts.face. A string is coerced to a centred StringWdgt
+  # and added as a child in the constructor, so by then this always holds a widget.
+  faceWidget: undefined
+
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
   # tells if the button represents a widget, in which

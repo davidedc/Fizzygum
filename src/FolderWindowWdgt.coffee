@@ -1,5 +1,8 @@
 class FolderWindowWdgt extends FrameWdgt
 
+  # true for a folder window opened INSIDE another container rather than on the
+  # desktop; the constructor takes it and defaults it to false
+  internal: undefined
 
   constructor: (@closeButton, @contents, @internal = false) ->
     @contents = new ScrollPanelWdgt new FolderPanelWdgt

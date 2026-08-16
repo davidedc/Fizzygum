@@ -7,6 +7,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
   _acceptsDrops: true
   tight: true
   constrainContentWidth: true
+  # serves as BOTH the border inset and the inter-element gap (see the note at its
+  # read sites); the constructor takes it as opts.padding and defaults it to 5
+  padding: undefined
 
   colloquialName: ->
     "stack"

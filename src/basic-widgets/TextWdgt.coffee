@@ -13,6 +13,9 @@ class TextWdgt extends StringWdgt
 
   backgroundColor: undefined
 
+  # "left" / "right" / "center", set by the three alignment menu actions
+  alignment: undefined
+
   #additional properties for ad-hoc evaluation:
   receiver: undefined
   heightOfPossiblyCroppedText: undefined

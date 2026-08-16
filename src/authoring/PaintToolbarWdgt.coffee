@@ -27,6 +27,11 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   eraserToolButton: undefined
   highlightedToolIconColor: Color.create 245, 126, 0
 
+  # rolling buffer of recent pointer positions, built lazily on first use and drained
+  # as the stroke is laid down. Declared undefined, never [] — the lazy build keys off
+  # `if !@queue?`, and a prototype array would be shared by every instance.
+  queue: undefined
+
   # whether the tools are armed on the resolved painting overlay. Born true:
   # ImageWdgt's payload is built with the pencil source injected (born
   # editing), and this toolbar is built showing pencil selected to match.

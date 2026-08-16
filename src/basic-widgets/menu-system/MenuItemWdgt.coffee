@@ -7,6 +7,10 @@
 
 class MenuItemWdgt extends LabelButtonWdgt
 
+  # a menu row can be picked up and dropped as a standalone widget; the constructor
+  # turns this on for every row
+  actionableAsThumbnail: undefined
+
   # The SPEC is the identity — it is what this row IS, and spec.label may be a string, a
   # Widget, a Canvas or an [icon, string] tuple. The rest is the menu-level CONTEXT the owning
   # MenuWdgt supplies (font size / style, centring, and the environment pair), which is the

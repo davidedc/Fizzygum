@@ -14,6 +14,11 @@ class InspectorWdgt extends Widget
   # panes:
   list: undefined
   detail: undefined
+  # the detail pane's text widget, adopted from @detail once it is built
+  textWidget: undefined
+  # the free-floating resize handle. Stays undefined for the duration of its own add
+  # (see the note at its assignment), so it must declare undefined, not a value.
+  resizer: undefined
 
   classesButtons: undefined
   classesNames: undefined

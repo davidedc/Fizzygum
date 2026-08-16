@@ -23,6 +23,8 @@ class DragChargingRingWdgt extends Widget
   emptyColor: undefined
   lingerOriginEventTime: undefined
   lingerOriginWallTime: undefined
+  # last ring centre, kept to skip the move when the centre has not actually changed
+  _lastRingCenter: undefined
 
   constructor: ->
     super()
