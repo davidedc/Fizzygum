@@ -156,7 +156,7 @@ open findings: **"dev tools ➜ > inspect" and "> console" target `demoMenus` in
 because `popUpSecondMenu` takes only `(widgetOpeningThePopUp)` where its sibling `popUpFirstMenu`
 also takes `widgetThisMenuIsAbout`. Demo-menu-only, and the fix is a small design call on
 `popUpDevToolsMenu`'s contract (it reads its subject from dispatcher slot 2, which is the enclosing
-panel's target — correct from a widget's context menu, wrong from a demo menu). → BACKLOG.
+panel's target — correct from a widget's context menu, wrong from a demo menu). → **[`../plans/menu-subject-routing-plan.md`](../plans/menu-subject-routing-plan.md) P1**, which also carries the second, LATENT finding of the same shape (the edit-mode family's `triggeringWidget`). ⚠ Those two `KNOWN` entries are that phase's acceptance test: deleting them while the sweep stays green is what proves the cause is gone rather than tolerated.
 
 ## 5. Verification
 

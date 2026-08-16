@@ -152,20 +152,44 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
+### `plans/menu-subject-routing-plan.md` — AUTHORED, not started
+The two findings the menu-action arc left open, both the same question: **a verb wired to a menu needs
+to know which widget it is about, and the dispatcher does not reliably tell it.** Slot 2 of
+`ButtonWdgt`'s four-slot dispatch is the ENCLOSING PANEL's target, not the item's — right from a
+widget's context menu, wrong from anywhere else. Full diagnosis, three candidate shapes with a
+recommendation, and the acceptance test: that plan.
+- [ ] **P1 — "dev tools ➜ > inspect" and "> console" are dead** (live symptom, demo-menu + dev-mode only).
+      `DemoMenus.popUpSecondMenu` drops the widget its sibling `popUpFirstMenu` forwards.
+      ⚖ A design call, not a typo. **Acceptance test is ready-made:** delete the two
+      `UNRESOLVED_ACTION` entries from `menu-click-sweep-headless.js`'s `KNOWN` map and the sweep must
+      stay green — the deletion is part of the change, not a follow-up.
+- [ ] **P2 — the edit-mode family receives a `MenuItemWdgt` as `triggeringWidget`.** ⚠ LATENT, not
+      live: the only use is `@parent != triggeringWidget`, and neither a menu item nor `@` is ever
+      `@parent`, so today it changes nothing. Worth fixing because the guard is permanently disarmed
+      on the menu path and it is exactly the shape that made `createOpener` crash. Two `…FromMenu`
+      adapters on `Widget`. ⚠ Do NOT delete the parameter from the four overrides —
+      `editButtonPressedFromFrameBar` genuinely passes a widget.
+
 ### `archive/menu-action-wiring-plan.md` — CLOSED, residual included; SIX live bugs fixed
 Four found by reading (three `SliderWdgt` prompts that threw on every click; three demo "…launcher"
 items that crashed), two more found by the rig that closed the arc's own residual (every widget
 wearing a `BoxyAppearance` threw when its numerical-setters menu was built; `cornerRadiusPopout` read
-a field only `BoxWdgt` declares). Both halves are now gated: `buildSystem/check-menu-actions.js` on
-the build, and `menu-click-sweep-headless.js` (`fg menusweep`) as a gauntlet wave-A leg.
-- [ ] **"dev tools ➜ > inspect" and "> console" target `demoMenus` instead of a widget.**
-      `DemoMenus.popUpSecondMenu` takes only `(widgetOpeningThePopUp)` where its sibling
-      `popUpFirstMenu` also takes `widgetThisMenuIsAbout`, so the Dev Tools menu it opens has no
-      widget to act on and both items are dead. Demo-menu-only, dev-mode-only. ⚠ The fix is a small
-      DESIGN call, not a typo: `popUpDevToolsMenu` reads its subject from dispatcher slot 2, which is
-      the ENCLOSING PANEL's target — right when opened from a widget's context menu, wrong from a demo
-      menu. Either give that menu the widget as its panel target, or give the verb an explicit
-      operand. Recorded in the rig's `KNOWN` allowlist, so it stays visible and cannot silently grow.
+a field only `BoxWdgt` declares). Both halves are gated: `buildSystem/check-menu-actions.js` on the
+build, and `menu-click-sweep-headless.js` (`fg menusweep`) as a gauntlet wave-A leg. The two open
+findings moved to `plans/menu-subject-routing-plan.md` above.
+- **Stated limits of the sweep, so nobody reads a green run as more than it is** (all printed every
+  run, so a drift is visible rather than silent): it covers DISPATCH, not click plumbing (it fires the
+  action directly — a real click tears the menu down under the walk; the suite covers the other side);
+  its roots are **15 hand-picked** classes plus the world, and an unbuildable root is REPORTED (0
+  today); and ~51 items per run are skipped because an earlier item in the same walk DESTROYED the
+  receiver. ⚠⚠ **A rig that mutates the world manufactures its own bugs** — `make pointer` looked like
+  a find until it was re-run in ISOLATION and did not throw. **Re-run any sweep finding in isolation
+  before believing it.**
+- [ ] Expand the root list only when a bug is found in a class that has none — generic instantiation
+      of ~270 widget classes is fragile, and the reported unbuilt-root count is what makes the gap visible.
+- ⚠ **The gauntlet WIRING for this leg lives only in the local `fg`** (the umbrella is not a git repo),
+  so the rig is committed but its enforcement is not — true of every `fg` leg, noted because "it is
+  gated" holds on this machine only.
 
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 Brought `src/` onto the constructor convention stated in
