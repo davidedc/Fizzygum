@@ -291,7 +291,7 @@ The non-icon classes among the 164 include `ButtonWdgt`, `CreatorButtonWdgt`, `C
 Precedent for the conversion: `21d5b64` (`SliderWdgt`: positional numbers + an options object) and
 `archive/menu-slider-ctor-conversion-plan.md`.
 
-⚠ **W8 was EXECUTED as P3 of `archive/constructor-parameter-conformance-plan.md`** (authored the same day, from
+⚠ **W8 was EXECUTED as P3 of `plans/constructor-parameter-conformance-plan.md`** (authored the same day, from
 the constructor survey rather than the widget survey). That plan states the general RULE — now
 [`architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
 — sweeps all five families that carry it (the button family is one of them), and seeds the

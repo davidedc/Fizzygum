@@ -133,8 +133,8 @@ four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what i
 - [ ] **W8 (owner D5) — `LabelButtonWdgt` takes 17 positional slots, `ButtonWdgt` 12 (§2.8)**, and the
       `@param`-shadowing law forces three classes to carry a parallel `iconToolTipMessage` shadow field.
       Precedent: `21d5b64` (SliderWdgt) + `archive/menu-slider-ctor-conversion-plan.md`.
-      ✅ **DONE — executed as P3 of the constructor conformance arc** (2026-08-15, now
-      `archive/constructor-parameter-conformance-plan.md`): `LabelButtonWdgt` 17 and `ButtonWdgt` 12
+      ✅ **DONE — executed as P3 of the constructor conformance arc**
+      (2026-08-15, `plans/constructor-parameter-conformance-plan.md`): `LabelButtonWdgt` 17 and `ButtonWdgt` 12
       both became `(target, action, opts)`, and only `IconButtonWdgt`'s `iconToolTipMessage` was
       actually the `@param`-shadow hazard — the other two shadow fields have a different cause. This
       W8 line survives only for that remainder.
@@ -151,6 +151,22 @@ four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what i
 Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campaign itself is
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
+
+### `plans/constructor-parameter-conformance-plan.md` — RE-OPENED 2026-08-16 (P0–P7 landed + pushed; P8 is the tail)
+Brought `src/` onto the constructor convention stated in
+`architecture/constructor-and-parameter-conventions.md` (positional head for identity, one
+trailing `opts` object for configuration; the hole test decisive). P0–P7 landed and pushed
+(Fizzygum `20356b17` / tests `36dfad268`), `positional-hole` **51 → 0 and now HARD**, every
+constructor at ≤4 operands or named exempt. ⚠⚠ **It was archived as complete and re-opened the
+same day**: a post-close sweep found **~9 hole sites the gate cannot see** (its regex needs two
+`undefined`s adjacent on ONE line), and they are the SAME bugs one layer below the verbs that were
+converted. Full measurement + prescribed shapes: plan §7c.
+- [ ] **P8 item 1 — `__add` / `_addChild`, the `add` bug at its origin.** ⭐ Do this one first. Both still call the sibling INDEX `position` — the exact name that made two macros pass a `Point` and lose the placement silently (§7b) — and `__add` has 2 holes of its own (`MenuRowsPanelWdgt:145` `@__add item, undefined, 0`, and `:189` in the paren-less form a regex misses). Contained: 6 `__add` call sites, 1 `_addChild` call site, **nothing in the tests repo**. Shape: `__add (aWdgt, opts = {})` with `atIndex` + a renamed flag (its one flag-passing caller writes a bare `true`, an R1 smell); `_addChild (node, atIndex)` is a pure rename, E5-exempt, no bag
+- [ ] **P8 item 2 — two hand-rolled dispatcher `.call`s P6 could not reach.** `ErrorsLogViewerWdgt:85` and `CodePromptWdgt:59` both `@target[@callback].call @target, undefined, @textWidget` — the P6 bug shape exactly (`undefined` punched past `dataSourceWidgetForTarget`), invisible because P6 swept method DEFINITIONS and these hand-roll the convention at the call site. ⚠ Diagnose first: the remedy differs depending on whether `@callback` names a verb or a `…FromMenu` adapter
+- [ ] **P8 item 3 — the P3 button head has 3 holes after all (OWNER DECISION).** `DemoMenus:77,80,81` write `new SimpleRectangularButtonWdgt @, undefined, face: …`, skipping `action`. ⚖ 3 sites of ~50, all one demo file, all wanting a face-only button — reads more like a missing DOOR than a failed head. Do not re-open the P3 head without deciding which
+- [ ] **P8 item 4 — `buildHeader "corner", undefined, 0, 0, …`** (`SimpleSpreadsheetWdgt:269`), a 6-positional LOCAL FUNCTION LITERAL — a category the arc never enumerated (§0 counted constructors, P6 counted methods). Worth one sweep for its siblings
+- [ ] **P8 item 5 — the scanner that did the work is GITIGNORED (owner-gated).** `Fizzygum-tests/.scratch/ctor-arity-scan.js` found 108 of P7's 109 holes; the ratchet found 1. Recommendation in plan §7c: the CHECK half becomes a paren-aware `buildSystem/check-*.js` (runs on the build ⇒ once per gauntlet, free) replacing the blind regex, and the INVENTORY half becomes an `fg critique` step. ⛔ NOT a new gauntlet leg — every leg but `census` is a browser run, and a static scan there would duplicate what the build already ran
+⚠ Standing: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run) — only `new`/`super`/`@method` self-call sites matter, **in both repos** incl. the harness `.coffee`. Reference churn is a red flag, not an expected cost. **Ask the SCANNER whether a family is done, never the gate.**
 
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12

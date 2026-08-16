@@ -1,8 +1,18 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: COMPLETE. P0–P7 landed 2026-08-15/16 — `positional-hole` 51 → 0, now a HARD rule.**
-Every constructor in `src/` takes ≤4 operands or is named exempt; the method families and the
-polymorphic `add` family are converted too. The durable law is
+**STATUS: ACTIVE — RE-OPENED 2026-08-16 after being archived the same day. P0–P7 are landed and
+pushed** (Fizzygum `20356b17` / tests `36dfad268`; `positional-hole` 51 → 0, hard) — **but closing
+it was premature: a post-close sweep found ~9 hole sites the arc never reached, and they are the
+same bugs one level down.** They are §7c, and they are the remaining work.
+
+⚠⚠ **The arc closed one level too high, and the reason is worth stating plainly:** every phase swept
+the layer it was named for — P6 the menu-adapter *method definitions*, P7 the public `add` — while
+the layer immediately beneath (`__add`, `_addChild`, hand-rolled `.call` on the dispatcher
+convention) kept both the misleading parameter name and its own holes. The gate could not flag any
+of it (§7b), so "the ratchet is at 0" was mistaken for "the tree is clean". **A phase is not done
+when its own layer is converted; it is done when the layer it delegates to is checked too.**
+
+The durable law is
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md);
 this file is the arc's record — what was measured, and the four heads that measurement overruled.
 
@@ -673,6 +683,127 @@ mid-run, `src/` and `tests/` are not.
 
 ---
 
+## 7c. P8 — The tail the gate could not see (REMAINING WORK)
+
+Measured 2026-08-16, on the tree at Fizzygum `20356b17`, immediately after P7 was pushed. A
+one-line scan for a **single** `undefined` in non-final argument position — the shape
+`positional-hole` is structurally blind to (§7b) — returns **7 sites across 6 verbs**, and the
+paren-less first-argument form it cannot see adds **2 more**: ~9 in total. That is the whole tail;
+`src/` has nothing else.
+
+⚠ Reproduce the measurement before starting (it is one regex, and it is not the gate):
+
+```
+grep -rn --include='*.coffee' -E '[A-Za-z_][A-Za-z0-9_]*\s+[^,#]+,\s*undefined\s*,' src/ | grep -v '^\S*: *#'
+```
+
+⚠ That regex misses `@verb (parenthesised first arg), undefined, x` — the CoffeeScript form where
+the space before `(` makes it a paren-LESS call (§8's standing hazard). Grep the verb by name to
+catch those; item 1 below has one.
+
+### Item 1 — `__add` / `_addChild`: the same bug one level below `add` ⭐ do this one first
+
+P7 converted `add`, whose core reaches `Widget.__add`, which reaches `TreeNode._addChild`. **Both
+still call the sibling index `position`** — and that name is where the P7 macro bug was born (§7b:
+two fixtures read `position` as a screen position and lost the placement silently). Renaming the
+option key on `add` alone leaves the misleading name at its origin, one call away.
+
+```coffee
+# src/basic-widgets/Widget.coffee:3382
+__add: (aWdgt, avoidExtentCalculation, position) ->
+# src/basic-data-structures/TreeNode.coffee:62
+_addChild: (node, position) ->
+```
+
+Full inventory — **6 `__add` call sites, 1 `_addChild` call site, and NOTHING in the tests repo**
+(checked: `tests/`, `scripts/`, `Automator-and-test-harness-src/` are all clean of both names), so
+the blast radius is entirely inside `src/`:
+
+| site | call | note |
+|---|---|---|
+| `Widget.coffee:3344` | `@__add aWdgt, true, atIndex` | the only site passing the flag — a **bare `true`**, which R1 names as a smell |
+| `Widget.coffee:3395` | `@_addChild aWdgt, position` | the sole `_addChild` caller, inside `__add` |
+| `MenuRowsPanelWdgt.coffee:131` | `@__add @label` | |
+| `MenuRowsPanelWdgt.coffee:141` | `@__add item` | |
+| `MenuRowsPanelWdgt.coffee:145` | `@__add item, undefined, 0` | **HOLE** |
+| `MenuRowsPanelWdgt.coffee:186` | `@__add @createMenuItem …` | |
+| `MenuRowsPanelWdgt.coffee:189` | `@__add (@createMenuItem …), undefined, 0` | **HOLE**, and the paren-less form the regex misses |
+
+**Prescribed shape.** `__add` → `(aWdgt, opts = {})` with `opts.atIndex` and a renamed flag
+(`skipExtentCalculation` reads as what the one caller means); the two prepends become
+`@__add item, atIndex: 0`. `_addChild` → `(node, atIndex)`, a **pure rename**: arity 2, no hole,
+exempt under E5, so it needs no bag — only the honest name. Keep the key spelling `atIndex`
+identical across all three layers (R4, and the conventions doc's forwarded-bag warning).
+
+### Item 2 — two hand-rolled dispatcher calls P6 could not reach
+
+```coffee
+# src/ErrorsLogViewerWdgt.coffee:85   and   src/CodePromptWdgt.coffee:59  (identical line)
+@target[@callback].call @target, undefined, @textWidget
+```
+
+This is **exactly the P6 bug** (§7, the verb/adapter split): `undefined` punched past the
+dispatcher's `dataSourceWidgetForTarget` slot to reach `widgetEnv`. P6 did not reach it because P6
+swept *method definitions* (`setFontName`, `setPattern`, `makeFolder`, …) — these two sites
+hand-roll `ButtonWdgt`'s 4-slot convention with an explicit `.call`, so no signature sweep sees
+them. ⚠ Diagnose before converting: the remedy depends on whether `@callback` names a **verb** or a
+**menu adapter**. If the target method is already a plain verb, the `.call` should simply pass what
+the verb takes; only if it is a `…FromMenu` adapter does the split apply.
+
+### Item 3 — the button head has 3 holes after all (owner decision, not a mechanical fix)
+
+```coffee
+# src/demos/DemoMenus.coffee:77, 80, 81
+new SimpleRectangularButtonWdgt @, undefined, face: new IconWdgt(undefined)
+```
+
+P3 gave the button family `(target, action, opts = {})`; these three skip `action` to reach `opts`.
+By the letter of R3 that is a hole and the head is wrong. ⚖ **But weigh it before acting:** 3 sites
+out of ~50, all in one demo file, all wanting a face-only button with no action — which reads more
+like a missing **door** (a `faceOnly`/decorative constructor, or `action` moving into `opts`) than a
+head that fails the family. R3's own guidance is to read a hole as a *diagnosis* and then pick the
+treatment. Do not re-open the P3 head on 3 demo sites without deciding which of those it is.
+
+### Item 4 — `buildHeader`, a 6-positional local helper
+
+```coffee
+# src/spreadsheet/SimpleSpreadsheetWdgt.coffee:269
+buildHeader "corner", undefined, 0, 0, @headerColWidth, @headerRowHeight
+```
+
+Never inventoried, because §0 counted **constructors** and P6 counted **methods** — this is a local
+function literal inside a method body, a category the arc never enumerated. ⚠ Worth one sweep for
+its siblings: `grep -rn --include='*.coffee' -E '^\s+[a-z][A-Za-z0-9_]* = \([^)]*,[^)]*,[^)]*,' src/`
+finds local helpers taking ≥3 positionals, none of which any phase of this arc has looked at.
+
+### Item 5 — the tooling gap (owner-gated: see the recommendation)
+
+⭐⭐ **The tool that found 108 of P7's 109 holes is gitignored.** `Fizzygum-tests/.scratch/
+ctor-arity-scan.js` (paren/quote-aware, joins continuation lines, `--call=<method>` and
+`--super=<class>` modes, scans BOTH repos) is what produced every work list in P2–P7; the ratchet
+found one site. Its companion `frag-compile.js` is the only faithful way to see what a fragment
+compiles to (`coffee -bcp <wholefile>` is not — §8). Both live in a gitignored scratch dir and will
+be lost.
+
+**Recommendation — the two halves want different homes, and neither is a gauntlet leg:**
+
+1. **The CHECK half → `buildSystem/`, replacing the `positional-hole` regex.** Ratchets live in
+   `buildSystem/check-*.js` and run *on the build* — which is once per gauntlet, in the preamble,
+   alongside `[stinks]` / `[dead-methods]` / `[unresolved-sends]` / `[thin-wraps]` /
+   `[call-separation]`. A paren-aware "non-final bare `undefined` argument" check belongs exactly
+   there: it costs ~1 s, it needs no new leg, and it closes the blindness §7b documents. Seed the
+   baseline at the measured count (~9) and ratchet to 0 as P8 lands.
+2. **The INVENTORY half → `fg critique`.** The arity histogram and the call listing are an
+   exploration view, not a verdict — and `fg critique` is already "the Critic Browser analogue:
+   every ratchet's tighten-me signal plus the censuses' summary counts, read-only, never gates".
+   That is precisely this tool's shape. Promote the scanner to `buildSystem/` so it is versioned,
+   and add a `step` line.
+3. ⛔ **NOT a new gauntlet leg.** Every gauntlet leg but `census` is a *browser* run; a static text
+   scan added as leg 15 would duplicate what the build already ran minutes earlier in the same
+   invocation, for +1 leg of failure surface and zero extra coverage.
+
+---
+
 ## 8. Standing hazards (read before every phase)
 
 - **Serialization and duplication are safe.** Both instantiate via `Object.create`; the
@@ -716,13 +847,26 @@ mid-run, `src/` and `tests/` are not.
 - **No constructor-build regressions.** `archive/menu-slider-ctor-conversion-plan.md` retired
   ctor-build patterns; converting a signature must not reintroduce one. Keep the
   `_buildAndConnectChildren` / `…NoSettle` pair intact and settle exactly once.
+- **⚠⚠ CONVERT THE LAYER BENEATH, OR AT LEAST CHECK IT.** This arc was archived as complete and
+  re-opened the same day (§7c): P6 swept menu-adapter *definitions* and P7 swept the public `add`,
+  but `__add`/`_addChild` one call below kept BOTH the misleading `position` name and two holes of
+  their own, and two sites hand-rolling the dispatcher with an explicit `.call` were invisible to a
+  signature sweep. A public verb almost always delegates to a private core, which delegates again;
+  the convention has to reach the bottom or the same bug simply moves down. Before declaring a
+  family done, follow its own call chain one level further and grep the verbs it delegates to.
+- **⚠ A green ratchet is not a finished sweep.** `positional-hole` reads 0 with ~9 holes standing,
+  because its regex needs two `undefined`s adjacent on one line. Ask the SCANNER whether you are
+  done, never the gate (§7c item 5).
 - **Reference churn is a red flag, not an expected cost.** Every landed phase should be
   pixel-identical. `SliderWdgt` and P5 families 1–4 all landed with zero churn. If a phase
   churns references, a field is mis-bound — find it before recapturing anything.
 
 ## 9. Order and independence
 
-**P0 → P1 → P2 → P3 → P4 → P5 → P6.**
+**P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8.** P0–P7 are landed and pushed; **P8 (§7c) is the
+remaining work**, and its five items are independent of each other — item 1 is the one that matters
+(it is the P7 bug at its origin), item 3 is an owner decision rather than a conversion, and item 5
+is tooling.
 
 P0 first so every later gain locks itself in. P1 is the warm-up that proves the idiom at
 near-zero risk. P2 next because it is the biggest payoff and its blast radius, while wide, is

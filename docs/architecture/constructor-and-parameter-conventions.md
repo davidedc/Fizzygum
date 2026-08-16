@@ -127,9 +127,15 @@ it lands in. This is established practice, not a liberty:
 
 The long field name states the mechanism to a maintainer; the short key states the intent to a
 caller. Both are right in their own place. Keep a key's spelling identical across every class
-that offers it — the `_addNoSettle` family shares one vocabulary (`position` / `layoutSpec` /
-`beingDropped` / `notContent` / `positionOnScreen`) across four overrides, and that consistency
-is what makes the option nameable without checking the receiver.
+that offers it — the `add` / `_addNoSettle` family shares one vocabulary (`atIndex` / `layoutSpec`
+/ `beingDropped` / `notContent` / `positionOnScreen`) across all seven overrides, and that
+consistency is what makes the option nameable without checking the receiver.
+
+⭐ **A key can be the bug, so pick the one that makes a wrong argument look wrong.** That family's
+index key names a slot reaching `@children.splice`, and under the vaguer name `position` two callers
+read it as a screen position and wrote `world.add slider, new Point 760, 240` — `Number(Point)` is
+NaN, so `splice` takes index 0 and the placement is dropped in silence. `atIndex` is a name nobody
+hands a `Point`. (Case history: `plans/constructor-parameter-conformance-plan.md` §7b.)
 
 ### R5 — A `@param` in the signature is a hazard; options are read in the body.
 
@@ -269,10 +275,18 @@ plain JS `new SliderWdgt(0, 100, 40, 10)` in the rigs.
 
 ## 7. Current conformance
 
-**The sweep is complete.** Every constructor in `src/` takes ≤4 operands or is named exempt under
-§3, and `positional-hole` sits at **0**, hard. The arc that got there —
-[`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md) —
-records the per-family measurements and the four heads that measurement overruled.
+**Every CONSTRUCTOR is conformant; a small METHOD tail is not.** Every constructor in `src/` takes
+≤4 operands or is named exempt under §3, and `positional-hole` sits at **0**, hard. ⚠ But 0 is what
+the gate can see, and §5 says what it cannot: a post-close sweep found **~9 surviving hole sites**,
+tracked as P8 of
+[`../plans/constructor-parameter-conformance-plan.md`](../plans/constructor-parameter-conformance-plan.md),
+which also records the per-family measurements and the four heads that measurement overruled.
+
+⚠⚠ **The tail is one layer below the verbs that were converted, and that is the lesson.** `add` was
+converted while `__add` / `_addChild` beneath it kept the same misleading parameter name *and* two
+holes of their own; the menu-adapter *definitions* were converted while two sites hand-rolling the
+same dispatcher with an explicit `.call` were invisible to a signature sweep. **A public verb
+delegates to a private core, which delegates again — convert the chain, not the face.**
 
 Landed conversions, in order: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
 `FrameWdgt` constructors, and the four `_addNoSettle` overrides
