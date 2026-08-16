@@ -181,21 +181,33 @@ fixed, the latent `triggeringWidget` mis-feed given its adapters).
 ### Menu-dispatch residue — left by `archive/menu-subject-routing-plan.md`, none of it live
 Ranked by value. All four are the same family: the four-slot dispatch tells a verb less than its
 signature claims. The law is `architecture/constructor-and-parameter-conventions.md` R3.
-- [ ] ⭐ **`widgetOpeningThePopUp` is a MISNOMER across the whole `popUp*Menu` family** (~15 methods in
-      `DemoMenus` / `MenusHelper` / `WorldWdgt`): slot 1 is the **`MenuItemWdgt`**, never the widget
-      that opened the pop-up. This is the defect class the conformance arc closed on — *a parameter
-      name can be the bug* — and it is the reason the dead dev-tools items stayed invisible. A RENAME,
-      not a deletion: the value is genuinely used (it becomes `MenuWdgt`'s first constructor argument),
-      so read what `MenuWdgt` does with it before picking the honest name, and do the family in ONE
-      commit.
-- [ ] **`BubblesEditModeToCoordinatorMixin`'s two cores end `super @`, but the base
-      `Widget._enable/_disableDragsDropsAndEditingNoSettle` declare no parameter** — an argument with
-      nowhere to land, the shape this arc's predecessor cleaned up elsewhere. ⚠ Not a glance-fix: the
-      mixin is injected onto classes whose `super` reaches `FrameWdgt`/`ScrollPanelWdgt` cores that DO
-      take `triggeringWidget`, so it needs the full super-site walk before the argument is dropped.
-- [ ] **`menusHelper.testMenuForMacros?()`** is called at `events-input/KeyupInputEvent.coffee:18` and
-      no such method appears to exist — the `?` makes it a silent no-op. Grep both repos, then
-      implement it or delete the call.
+- ⛔ **FALSIFIED, do not re-open: `widgetOpeningThePopUp` is NOT a misnomer.** It was filed as one on
+      the reasoning that dispatch slot 1 holds a `MenuItemWdgt` — but the consumer settles it the other
+      way. `PopUpWdgt` uses the value for exactly one purpose,
+      `getParentPopUp: -> @widgetOpeningThePopUp.firstParentThatIsAPopUp()` (`PopUpWdgt.coffee:107`,
+      and menus hang off the WORLD rather than their opener, which is why the link must be stored at
+      all). For a submenu opened by clicking a row, the menu item IS the widget that opened it, and its
+      `firstParentThatIsAPopUp()` is the parent menu — passing "the widget the menu is about" instead
+      would break the pop-up parent chain. 103 sites across 31 files, all correct. ⚠ The general
+      lesson: **the dispatch fact tells you what slot 1 HOLDS, never whether the receiving parameter is
+      WRONG to want it** — check the consumer before calling a name a defect.
+- [ ] ⭐ **`triggeringWidget` is declared in TEN members across FOUR classes and READ in exactly ONE
+      place** — `BubblesEditModeToCoordinatorMixin`'s `@parent != triggeringWidget`. Walked in full:
+      `FrameWdgt`'s four members (both public wrappers, both cores) declare it and never read it, and
+      have no fallback either; `ScrollPanelWdgt`'s four declare it, run
+      `if !triggeringWidget? then triggeringWidget = @`, and then never read the result — two no-op
+      lines; only `StretchablePanelWdgt` / `StretchableWidgetContainerWdgt` (and
+      `SimpleVerticalStackScrollPanelWdgt`) genuinely need to forward, because the mixin IS their core.
+      `Widget`'s own cores are correctly parameterless. ⚠ The predecessor plan's warning — "do NOT
+      delete it from the four overrides, `editButtonPressedFromFrameBar` genuinely passes `@`" — is
+      only HALF right: the caller does pass `@`, but only a receiver whose core READS it can care, and
+      two of the four drop it on the floor. This is the conformance arc's "a HOLE IS A SYMPTOM" shape,
+      one layer down: dead parameters plus dead fallback lines hiding behind a live one.
+- ⛔ **FALSIFIED, do not re-open: `menusHelper.testMenuForMacros?()` is not a dead call.** The method
+      lives in the TESTS repo (`Automator-and-test-harness-src/MenusHelperTestSupport.coffee:22`) and is
+      installed onto `MenusHelper`'s prototype at boot; the `?` soak is the deliberate part-absence
+      idiom that makes F2 inert in a build shipping no harness, and the call site says so. ⚠ Filed from
+      a `Fizzygum/src`-only grep — the "sweep BOTH repos" rule exists for exactly this.
 - [ ] **The layout-audit prelude tags `Widget.prototype.disableDragsDropsAndEditing`, which the four
       containers OVERRIDE**, so end-of-cycle records from a container's edit-mode toggle are never
       attributed to it (`Fizzygum-tests/scripts/end-of-cycle-audit/layout-audit-prelude.js`).
