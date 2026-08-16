@@ -7,7 +7,7 @@
 # @output along the out-edge. This base holds everything the three nodes share verbatim: the dataflow node
 # protocol, the connect-to-target menu wiring, the setter menus, and the _reLayout scaffold. Each subclass
 # supplies only what actually differs — its constructor / colloquialName / setInput* / recalculateOutput /
-# _buildAndConnectChildrenNoSettle (children) / _layOutNodeContents (child geometry), and, if its inputs differ
+# _buildAndConnectChildrenNoSettle (children) / _layOutOwnContents (child geometry), and, if its inputs differ
 # from the default in1..in4, _inputSetterMenuEntries.
 #
 # NOTE — this base is in the CORE part while half its subclasses are not, and that is deliberate:
@@ -100,20 +100,7 @@ class PatchNodeWdgt extends Widget
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
+  # the whole layout shape is Widget's own-contents template; each node subclass supplies only
+  # its own _layOutOwnContents
   _reLayout: (newBoundsForThisLayout) ->
-
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-
-    if @_handleCollapsedStateShouldWeReturn() then return
-
-    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
-    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
-    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyGrantedBounds newBoundsForThisLayout
-
-    @_repaintAsOneUnit =>
-      # subclass hook: position this node's own children within the (now-final) frame.
-      @_layOutNodeContents()
-
-    super
-    @_markLayoutAsFixed()
+    @_reLayoutWithOwnContents newBoundsForThisLayout

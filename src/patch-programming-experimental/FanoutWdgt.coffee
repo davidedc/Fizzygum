@@ -59,36 +59,27 @@ class FanoutWdgt extends Widget
     @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    # the largest square centred in my bounds: the fanout body fills it and the
+    # four pins sit at its edge midpoints
+    square = @boundingBox().largestCenteredSquare()
+    squareDim = square.width()
+    p0 = square.topLeft()
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
+    pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
 
-    @_repaintAsOneUnit =>
+    @pinUp._applyExtent pinSize
+    @pinDown._applyExtent pinSize
+    @pinLeft._applyExtent pinSize
+    @pinRight._applyExtent pinSize
 
-      # the largest square centred in my bounds: the fanout body fills it and the
-      # four pins sit at its edge midpoints
-      square = @boundingBox().largestCenteredSquare()
-      squareDim = square.width()
-      p0 = square.topLeft()
-
-      pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
-
-      @pinUp._applyExtent pinSize
-      @pinDown._applyExtent pinSize
-      @pinLeft._applyExtent pinSize
-      @pinRight._applyExtent pinSize
-
-      @pinUp._applyMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
-      @pinDown._applyMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
-      @pinLeft._applyMoveTo (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
-      @pinRight._applyMoveTo (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
-
-    super
-    @_markLayoutAsFixed()
+    @pinUp._applyMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
+    @pinDown._applyMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
+    @pinLeft._applyMoveTo (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
+    @pinRight._applyMoveTo (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
 

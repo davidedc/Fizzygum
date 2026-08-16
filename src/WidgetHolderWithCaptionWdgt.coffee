@@ -96,30 +96,21 @@ class WidgetHolderWithCaptionWdgt extends Widget
     new Point availW, @_heightForWidth availW
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    # two full-width bands: the icon on top, the (up to two-line) caption below.
+    # The icon widget letterboxes its art within its band, so a band wider than
+    # the art just centres it.
+    height = @height()
+    width = @width()
+    labelBand = Math.min height, @_labelBandHeight()
+    iconBand = height - labelBand
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
-
-    @_repaintAsOneUnit =>
-
-      # two full-width bands: the icon on top, the (up to two-line) caption below.
-      # The icon widget letterboxes its art within its band, so a band wider than
-      # the art just centres it.
-      height = @height()
-      width = @width()
-      labelBand = Math.min height, @_labelBandHeight()
-      iconBand = height - labelBand
-
-      p0 = @topLeft()
-      @icon._applyBounds p0, (new Point width, iconBand).round()
-      @label._applyBounds (p0.add new Point 0, iconBand), (new Point width, labelBand).round()
-
-    super
-    @_markLayoutAsFixed()
+    p0 = @topLeft()
+    @icon._applyBounds p0, (new Point width, iconBand).round()
+    @label._applyBounds (p0.add new Point 0, iconBand), (new Point width, labelBand).round()
 

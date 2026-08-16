@@ -32,43 +32,34 @@ class PlotWithAxesWdgt extends Widget
     @plot.colloquialName()
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    height = @height()
+    width = @width()
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
+    ftft = 35
 
-    @_repaintAsOneUnit =>
+    # vertAxis / horizAxis are composites (ticks + digit labels placed by THEIR _reLayout).
+    # Drive them via _reLayout (not the raw _applyExtent/_applyMoveTo cores) so their children
+    # re-lay at the new size instead of staying at construction geometry -- the 2026-07
+    # plot-collapse regression (INV-2). Each bounds reproduces the old raw pair's exact
+    # origin + extent, so positions/sizes are unchanged -- only the mechanism.
+    vertAxisOrigin = (@position().add new Point 0, -2).subtract((new Point -width/ftft,height/ftft).round())
+    vertAxisBounds = (new Rectangle vertAxisOrigin).setBoundsWidthAndHeight (new Point width/10 - 4, height).round()
+    @vertAxis._reLayout vertAxisBounds
 
-      height = @height()
-      width = @width()
+    # horizAxis: apply its extent raw FIRST so adjustmentX below can read the axis's
+    # extent-derived distanceOfAxisOriginFromEdge (the original code order relied on this),
+    # then drive its final bounds through _reLayout so its children re-lay too.
+    @horizAxis._applyExtent (new Point width, height/10).round()
+    adjustmentX = (@vertAxis.left() + @horizAxis.distanceOfAxisOriginFromEdge().x) - ( @vertAxis.right() + @vertAxis.distanceOfAxisOriginFromEdge().x )
+    horizAxisOrigin = (@bottomLeft().subtract new Point adjustmentX, height/10).round().subtract((new Point -width/ftft,height/ftft).round())
+    horizAxisBounds = (new Rectangle horizAxisOrigin).setBoundsWidthAndHeight (new Point width, height/10).round()
+    @horizAxis._reLayout horizAxisBounds
 
-      ftft = 35
-
-      # vertAxis / horizAxis are composites (ticks + digit labels placed by THEIR _reLayout).
-      # Drive them via _reLayout (not the raw _applyExtent/_applyMoveTo cores) so their children
-      # re-lay at the new size instead of staying at construction geometry -- the 2026-07
-      # plot-collapse regression (INV-2). Each bounds reproduces the old raw pair's exact
-      # origin + extent, so positions/sizes are unchanged -- only the mechanism.
-      vertAxisOrigin = (@position().add new Point 0, -2).subtract((new Point -width/ftft,height/ftft).round())
-      vertAxisBounds = (new Rectangle vertAxisOrigin).setBoundsWidthAndHeight (new Point width/10 - 4, height).round()
-      @vertAxis._reLayout vertAxisBounds
-
-      # horizAxis: apply its extent raw FIRST so adjustmentX below can read the axis's
-      # extent-derived distanceOfAxisOriginFromEdge (the original code order relied on this),
-      # then drive its final bounds through _reLayout so its children re-lay too.
-      @horizAxis._applyExtent (new Point width, height/10).round()
-      adjustmentX = (@vertAxis.left() + @horizAxis.distanceOfAxisOriginFromEdge().x) - ( @vertAxis.right() + @vertAxis.distanceOfAxisOriginFromEdge().x )
-      horizAxisOrigin = (@bottomLeft().subtract new Point adjustmentX, height/10).round().subtract((new Point -width/ftft,height/ftft).round())
-      horizAxisBounds = (new Rectangle horizAxisOrigin).setBoundsWidthAndHeight (new Point width, height/10).round()
-      @horizAxis._reLayout horizAxisBounds
-
-      @plot._applyBounds ((@position().add new Point @horizAxis.distanceOfAxisOriginFromEdge().x - adjustmentX + 1, @vertAxis.distanceOfAxisOriginFromEdge().y - 1).round().subtract((new Point -width/ftft,height/ftft).round())), (new Point width - 2 *  @horizAxis.distanceOfAxisOriginFromEdge().x , height - 2 *  @vertAxis.distanceOfAxisOriginFromEdge().y).round()
-
-    super
-    @_markLayoutAsFixed()
+    @plot._applyBounds ((@position().add new Point @horizAxis.distanceOfAxisOriginFromEdge().x - adjustmentX + 1, @vertAxis.distanceOfAxisOriginFromEdge().y - 1).round().subtract((new Point -width/ftft,height/ftft).round())), (new Point width - 2 *  @horizAxis.distanceOfAxisOriginFromEdge().x , height - 2 *  @vertAxis.distanceOfAxisOriginFromEdge().y).round()
 

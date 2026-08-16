@@ -187,50 +187,35 @@ class StretchableWidgetContainerWdgt extends Widget
 
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
+    height = @height()
+    width = @width()
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+    if @ratio?
+      widthBasedOnHeight = height * @ratio
+      heightBasedOnWidth = width / @ratio
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+       # p0 is the origin, the origin being in the top-left corner
+      p0 = @topLeft()
 
+      if widthBasedOnHeight <= width
+        p0 = p0.add new Point (width - widthBasedOnHeight) / 2 , 0
+        newExtent = new Point widthBasedOnHeight, height
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
+      else if heightBasedOnWidth <= height
+        p0 = p0.add new Point 0 , (height - heightBasedOnWidth) / 2
+        newExtent = new Point width, heightBasedOnWidth
 
+      newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
+      @contents._reLayout newBounds.round()
 
-    @_repaintAsOneUnit =>
-
-      height = @height()
-      width = @width()
-
-      if @ratio?
-        widthBasedOnHeight = height * @ratio
-        heightBasedOnWidth = width / @ratio
-
-         # p0 is the origin, the origin being in the top-left corner
-        p0 = @topLeft()
-
-        if widthBasedOnHeight <= width
-          p0 = p0.add new Point (width - widthBasedOnHeight) / 2 , 0
-          newExtent = new Point widthBasedOnHeight, height
-
-        else if heightBasedOnWidth <= height
-          p0 = p0.add new Point 0 , (height - heightBasedOnWidth) / 2
-          newExtent = new Point width, heightBasedOnWidth
-
-        newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
-        @contents._reLayout newBounds.round()
-
-      else
-        @contents._reLayout @bounds
-
-    super
-    @_markLayoutAsFixed()
-
-
+    else
+      @contents._reLayout @bounds
   # same as simpledocumentscrollpanel, you can lock the contents.
   # worth factoring it out as a mixin?
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

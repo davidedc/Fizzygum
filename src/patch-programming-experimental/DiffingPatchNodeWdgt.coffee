@@ -60,7 +60,7 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
     @_invalidateLayout()
 
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
-  _layOutNodeContents: ->
+  _layOutOwnContents: ->
 
     textHeight = @height() - 2 * @externalPadding
 

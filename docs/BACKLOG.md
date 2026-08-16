@@ -99,7 +99,7 @@ CLOSED 2026-08-12 — executed in full the day it was authored; residue in `arch
 - [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.
 - [ ] **FOUND BY P1's recapture, pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
 
-### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W4c DONE 2026-08-16, W5 next
+### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W5 DONE 2026-08-16, W6/W7 next (both owner-gated)
 Acts on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes);
 target state is `architecture/widget-authoring-guidelines.md`. Ordered by (defect severity x safety);
 four phases are owner-gated. Plan §9 holds the six decisions (D1 and D2 now DECIDED and executed);
@@ -182,9 +182,18 @@ lists, not from how many classes inherit the field.
       `IconicDesktopSystemWindowedAppLauncherWdgt`'s own comment already treats the two as one
       ("undefined means `@target`/`@callback` are live"). Declaring half a pair P9 will rename whole
       is worse than leaving it. Reversible in one commit if the owner disagrees.
-- [ ] **W5 — the `_reLayout` prologue is copy-pasted verbatim in 23 classes (§2.5).** `PatchNodeWdgt`
-      already has the hook the others want (`_layOutNodeContents`). Zero recapture budget: a diff here
-      means the hook landed in the wrong place, never a new baseline.
+- [x] **W5 — the `_reLayout` prologue (§2.5).** ✅ **DONE 2026-08-16.** `Widget` gains the
+      `_reLayoutWithOwnContents` template + the `_layOutOwnContents` hook; **16** classes convert to a
+      two-line delegating `_reLayout` (451 insertions / 526 deletions over 21 files, including 48 lines
+      of the same rationale comment copied into all sixteen). `PatchNodeWdgt._layOutNodeContents` folds
+      into the house hook. ⚠ **The plan's "verbatim in 23" was wrong — it is 18**, and `ButtonWdgt` +
+      `ColorPickerWdgt` are deliberately left alone (no repaint unit; `ButtonWdgt` also reads the
+      granted bounds in its contents pass). ⚠⚠ **The stated ZERO recapture budget was unachievable and
+      the reason is structural** — any hook on `Widget` adds an ENUMERABLE prototype method,
+      `InspectorWdgt.showingMethods` defaults true, and `macroDuplicatedInspectorDrivesCopiedTargetOnly`
+      toggles `showingInherited` on. Owner-approved budget: 1 test / 4 refs; A/B with one unrelated
+      class proved the code motion inert. `check-relayout-bounds-first.js` was extended in the same
+      commit — it scans only `_reLayout` bodies and would otherwise have gone silently blind on all 16.
 - [ ] **W6a — pin setters use FIVE argument shapes across the tree (§2.6).** A wire delivers the value in
       slot 1, a menu/prompt/button delivers the value-giving widget in slot 2; most setters handle only
       one. Widening is additive. **W6b (owner D3)** adds the idempotence guards — a real behaviour change

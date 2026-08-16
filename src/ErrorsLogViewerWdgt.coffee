@@ -89,54 +89,45 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @textWidget.setText ""
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    # clamped at 0: a transient degenerate height mid window-negotiation must not
+    # invert the text panel's rect (a negative height here was half the console's
+    # NON_INTEGER_GEOMETRY construction cascade)
+    mainCanvasHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
+    mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
-
-    @_repaintAsOneUnit =>
-
-      # clamped at 0: a transient degenerate height mid window-negotiation must not
-      # invert the text panel's rect (a negative height here was half the console's
-      # NON_INTEGER_GEOMETRY construction cascade)
-      mainCanvasHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
-      mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
-
-      if @tempPromptEntryField.parent == @
-        @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainCanvasHeight
+    if @tempPromptEntryField.parent == @
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainCanvasHeight
 
 
-      # buttons -------------------------------
+    # buttons -------------------------------
 
 
-      # fractional /3 makes the second and third buttons' origins (each = the
-      # previous one's right edge plus the padding) fractional -- round it here so
-      # all three land on integer pixels (the ConsoleWdgt /2 precedent; integer
-      # placement is enforced by the always-on bounds guard)
-      eachButtonWidth = Math.round (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
+    # fractional /3 makes the second and third buttons' origins (each = the
+    # previous one's right edge plus the padding) fractional -- round it here so
+    # all three land on integer pixels (the ConsoleWdgt /2 precedent; integer
+    # placement is enforced by the always-on bounds guard)
+    eachButtonWidth = Math.round (@width() - 2* @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
 
-      if @clearButton.parent == @
-        buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-        @clearButton._reLayout buttonBounds
+    if @clearButton.parent == @
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @clearButton._reLayout buttonBounds
 
-      if @pauseToggle.parent == @
-        buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-        @pauseToggle._reLayout buttonBounds
+    if @pauseToggle.parent == @
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @pauseToggle._reLayout buttonBounds
 
-      if @okButton.parent == @
-        buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-        @okButton._reLayout buttonBounds
+    if @okButton.parent == @
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @okButton._reLayout buttonBounds
 
-      # ----------------------------------------------
-
-    super
-    @_markLayoutAsFixed()
+    # ----------------------------------------------
 

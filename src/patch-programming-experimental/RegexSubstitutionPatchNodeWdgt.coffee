@@ -82,7 +82,7 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
     @_invalidateLayout()
 
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
-  _layOutNodeContents: ->
+  _layOutOwnContents: ->
 
     availableHeight = @height() - 2 * @externalPadding - 2 * @internalPadding
     text1Height = Math.round(availableHeight * 1/4)

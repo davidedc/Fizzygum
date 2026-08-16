@@ -230,14 +230,27 @@ The full list is reproducible with the §7 snippet. The decomposition that makes
   `SheetHeaderCellWdgt` (4) — plus `FrameWdgt` (6), `FridgeMagnetsWdgt` (4), `SpeechBubbleWdgt` (4),
   `IconicDesktopSystemWindowedAppLauncherWdgt` (4).
 
-### 2.5 W5 · The 23-fold `_reLayout` prologue (survey F13)
+### 2.5 W5 · The `_reLayout` prologue (survey F13)
+
+⚠ **"Verbatim in 23" was WRONG — measured 2026-08-16, the exact count is 18.** The corrected list is
+below; the five that were miscounted are named after it, each with the difference that would have
+broken a blind conversion. Re-derive with `grep -rn '^  _reLayout:' src` (39 definitions in all:
+these, plus shape B's 9 containers, `Widget` itself, and 11 one-off shapes).
 
 Shape A, verbatim in each of: `AxisWdgt`, `BinWdgt`, `ButtonWdgt`, `CodePromptWdgt`,
 `ColorPickerWdgt`, `ConsoleWdgt`, `ErrorsLogViewerWdgt`, `FanoutWdgt`, `FridgeMagnetsWdgt`,
 `GenericObjectIconWdgt`, `GenericShortcutIconWdgt`, `PatchNodeWdgt`, `PlotWithAxesWdgt`, `ScriptWdgt`,
-`SimpleLinkWdgt`, `SimpleSpreadsheetWdgt`, `SpeechBubbleWdgt`, `StretchableCanvasWdgt`,
-`StretchablePanelWdgt`, `StretchableWidgetContainerWdgt`, `SwitchButtonWdgt`, `ToolPanelWdgt`,
-`WidgetHolderWithCaptionWdgt`.
+`SimpleLinkWdgt`, `StretchableWidgetContainerWdgt`, `ToolPanelWdgt`, `WidgetHolderWithCaptionWdgt`.
+
+**NOT shape A, though this plan listed them as such:**
+
+| class | how it actually differs |
+|---|---|
+| `SimpleSpreadsheetWdgt` | no trailing `@_markLayoutAsFixed()` — the body ends at `super` |
+| `SpeechBubbleWdgt` | `@_applyGrantedBounds` sits *inside* the `_repaintAsOneUnit` block |
+| `StretchableCanvasWdgt` | same |
+| `StretchablePanelWdgt` | inside the block **and last**, after the children loop — bounds are applied AFTER the children are laid out |
+| `SwitchButtonWdgt` | no collapsed guard, no repaint unit, and the tail is `super newBoundsForThisLayout` with no `@_markLayoutAsFixed()` |
 
 ```coffee
 _reLayout: (newBoundsForThisLayout) ->
@@ -649,7 +662,36 @@ for k, p in pat.items():
   nearly triggered a revert of a correct change. Filter on the reference's own hash, and throw if
   the match count is not 1 — a hand-rolled comparison that silently compares the wrong pair is
   worse than no comparison. (The suite itself is immune: it matches on the raw-pixel `dataHash`.)
-- **Never recapture your way past a diff** in a zero-budget phase.
+- **⚠⚠ Adding any named METHOD to `Widget` is not pixel-free either, and the §3.5 rule does not cover
+  it** (measured 2026-08-16, W5). The meta-system installs class-body members with a plain
+  `@::[key] = value` (`Object::addInstanceProperties`), so they are **enumerable**, and
+  `InspectorWdgt.showingMethods` defaults to **true** — so `_filterProperties`' `for property of @target`
+  lists prototype METHODS, not just fields. §3.5's "predict from which class a test opens" holds only
+  while `showingInherited` is false (its default); a test that TOGGLES it on sees the whole chain, and
+  a `Widget`-level addition shifts its list. Exactly one test does this today —
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly` ("show inherited properties, so 'alpha' is
+  reachable") — and W5's two new `Widget` methods cost it 4 references. ⓘ The diff is NOT a clean row
+  shift: that macro reaches the row by dragging the scroll HANDLE, whose mapping is quantized to
+  scrollbar pixels, so a changed member count lands the pane on different rows entirely. The macro
+  selects by MEANING (`m.text == "alpha"`), so a recapture cannot blind it — its own comment records
+  the same hazard from the kept-spec arc.
+- **⚠⚠ A gate that scans BY METHOD NAME goes blind the moment you move code into a differently-named
+  method — silently, and while still reporting success.** `check-relayout-bounds-first.js` scans only
+  bodies named `_reLayout`; W5's hook extraction would have reclassified all 16 converted classes from
+  its `apply-first` bucket into "positions no children", i.e. out of coverage, with the gate still
+  printing OK. Extend the gate in the SAME commit as the motion (W5 added a `template` bucket plus a
+  hook-side rule). Same family as the `coffee-method-header` blind spot that hid 45 methods from six
+  gates.
+- **`implementsDeferredLayout` is `@_reLayout != Widget::_reLayout`** — a literal identity test, read at
+  four sites (`Widget` ~:821 and ~:1215, `FrameWdgt` ~:1091, `ScrollPanelWdgt` ~:477) and explicitly
+  PINNED by five classes. So a refactor may not simply delete a `_reLayout` override, however empty it
+  becomes: doing so flips the predicate for that class. W5's converted classes keep a two-line
+  delegating override for exactly this reason.
+- **Never recapture your way past a diff** in a zero-budget phase — but check first that the budget was
+  ACHIEVABLE. W5's stated zero was not: any hook on `Widget` adds a name, and the landmine above makes
+  a name visible. Establish the cause with an A/B (convert ONE class the failing test never touches —
+  if it still fails, the cause is the base-class addition, not the code motion), then put the corrected
+  budget to the owner rather than either recapturing quietly or abandoning the phase.
 
 ---
 
@@ -888,7 +930,41 @@ proposes.
   P9 will rename whole is worse than leaving it. (P9's text covers `@target` only — `callback`
   appears nowhere in `connector-ubiquity-and-reflection-plan.md` — so this is a coherence
   judgement, not a blocking dependency. Reversible in one commit if the owner prefers.)
-- W5 `_reLayout` template: ☐
+- **W5 · CONVERGED — 2026-08-16.** `Widget` gains the own-contents template
+  `_reLayoutWithOwnContents` plus the empty hook `_layOutOwnContents`; **16 classes** convert to a
+  two-line `_reLayout` that delegates, with their varying pass moved into the hook. Net over 21 files:
+  451 insertions / 526 deletions — the six-line prologue ×16 and, with it, the SAME three-line "apply
+  my own bounds FIRST" rationale copy-pasted into all sixteen (48 lines of duplicated reasoning), now
+  stated once on the template. `PatchNodeWdgt`'s private family hook `_layOutNodeContents` folds into
+  the house one: its three subclasses override `_layOutOwnContents` directly and `Widget`'s empty base
+  replaces the family's.
+  - *The list was wrong, and the shape's real work was the measurement.* §2.5's "verbatim in 23" is
+    **18** (corrected in place, with a table of how the five miscounted ones actually differ — one has
+    no `@_markLayoutAsFixed()` tail, three apply their bounds INSIDE the repaint unit, one has no
+    collapse guard at all). Of the 18, **`ButtonWdgt` and `ColorPickerWdgt` are deliberately NOT
+    converted**: neither has a `_repaintAsOneUnit` unit, so the template would newly coalesce their
+    damage to `@_fullChanged()` — strictly larger, pixel-identical in principle, but a behaviour change
+    with no upside for a two-line and a one-line pass. `ButtonWdgt` has a second reason: it is the only
+    one of the 18 whose contents pass reads `newBoundsForThisLayout` rather than its own just-committed
+    frame, so it would need the hook to take an argument the other 17 ignore.
+  - *The zero budget was unachievable, and the reason is structural* — see the two new §8 landmines.
+    Any hook on `Widget` adds an enumerable prototype method, `InspectorWdgt.showingMethods` defaults
+    true, and one test toggles `showingInherited` on. **Budget corrected to 1 test / 4 references by
+    owner decision**, after an A/B established the cause: converting a SINGLE class that test never
+    touches (`GenericShortcutIconWdgt`, a desktop icon; the scenario is a panel + rectangle +
+    inspector) reproduces the failure identically. The code motion itself is inert — 293/294 with the
+    full conversion, 0 geometry violations, paint audit green.
+  - *The gate had to move with the code.* `check-relayout-bounds-first.js` scans only bodies named
+    `_reLayout`, so the extraction would have dropped all 16 out of its coverage while it still printed
+    OK. It now has a `template` bucket (a delegating `_reLayout` is apply-first by construction) and a
+    hook-side rule (a `_layOutOwnContents` reading own geometry in a file whose `_reLayout` does NOT
+    delegate is a violation), with its one honest blind spot stated in the header: a file defining the
+    hook and NO `_reLayout` inherits one this line-scanner cannot follow. Counts move
+    17 apply-first / 21 trivial → **4 apply-first / 16 template / 18 trivial** (totals conserved).
+  - ⚠ `implementsDeferredLayout` is `@_reLayout != Widget::_reLayout` — which is why every converted
+    class keeps the two-line override rather than dropping it (§8).
+  Verification: `fg presuite` 293/294 (the one budgeted test) → `fg recapture --auto`
+  **✅ RECAPTURE COMPLETE**, suite green at dpr 1 and dpr 2.
 - W6a widen setters / W6b guards (D3): ☐ ☐
 - W7 self-description (D4): ☐
 - W8 constructor shapes (D5): ☐

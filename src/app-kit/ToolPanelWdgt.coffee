@@ -76,51 +76,42 @@ class ToolPanelWdgt extends PanelWdgt
       @_invalidateLayout()
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
-    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
-    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyGrantedBounds newBoundsForThisLayout
+    scanningChildrenX = 0
+    scanningChildrenY = 0
+    numberOfEntries = 0
 
-    @_repaintAsOneUnit =>
+    # A scroll-panel parent resizes while keeping its contents' width fixed, and the
+    # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
+    # the scroll frame's content width, read via the widthContentsMustFitWithin?
+    # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
+    # frame answers the question; any other parent (or no parent) leaves my own width.
+    widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
 
-      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
+    for w in childrenNotHandlesNorCarets
 
-      scanningChildrenX = 0
-      scanningChildrenY = 0
-      numberOfEntries = 0
+      xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
+      yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
 
-      # A scroll-panel parent resizes while keeping its contents' width fixed, and the
-      # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
-      # the scroll frame's content width, read via the widthContentsMustFitWithin?
-      # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
-      # frame answers the question; any other parent (or no parent) leaves my own width.
-      widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
-
-      for w in childrenNotHandlesNorCarets
+      if @externalPadding + xPos + @thumbnailSize + @externalPadding > widthINeedToFitContentIn
+        scanningChildrenX = 0
+        if numberOfEntries != 0
+          scanningChildrenY++
 
         xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
         yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
 
-        if @externalPadding + xPos + @thumbnailSize + @externalPadding > widthINeedToFitContentIn
-          scanningChildrenX = 0
-          if numberOfEntries != 0
-            scanningChildrenY++
-
-          xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
-          yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
-
-        horizAdj = (@thumbnailSize - w.width()) / 2
-        vertAdj = (@thumbnailSize - w.height()) / 2
-        w._applyMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
-        scanningChildrenX++
-        numberOfEntries++
-
-    super
-    @_markLayoutAsFixed()
+      horizAdj = (@thumbnailSize - w.width()) / 2
+      vertAdj = (@thumbnailSize - w.height()) / 2
+      w._applyMoveTo @position().add(new Point @externalPadding, @externalPadding).add(new Point xPos, yPos).add(new Point horizAdj, vertAdj).round()
+      scanningChildrenX++
+      numberOfEntries++
 
 

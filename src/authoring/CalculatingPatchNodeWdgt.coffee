@@ -86,7 +86,7 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     @_invalidateLayout()
 
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
-  _layOutNodeContents: ->
+  _layOutOwnContents: ->
 
     availableHeight = @height() - 2 * @externalPadding - 3 * @internalPadding - 2 * 15
     text1Height = Math.round(availableHeight * 2/3)

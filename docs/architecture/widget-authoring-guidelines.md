@@ -324,25 +324,37 @@ _reLayout: (newBoundsForThisLayout) ->
 
 **[gated — `check-relayout-bounds-first.js`]** A `_reLayout` override that places children must commit
 its own frame first; positioning from a frame the trailing `super` has not applied yet lags the
-children one cadence. The prologue for a non-container override:
+children one cadence.
+
+**Do not write that prologue yourself — take the template.** A widget with its own contents overrides
+`_layOutOwnContents` and delegates the shape to `Widget._reLayoutWithOwnContents`:
 
 ```coffee
 _reLayout: (newBoundsForThisLayout) ->
-  newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-  if @_handleCollapsedStateShouldWeReturn() then return
-  @_applyGrantedBounds newBoundsForThisLayout      # my frame FIRST
-  @_layOutMyContents()                             # ← the only part that varies
-  super
-  @_markLayoutAsFixed()
+  @_reLayoutWithOwnContents newBoundsForThisLayout
+
+_layOutOwnContents: ->
+  # my frame is already committed, so @width()/@height()/@topLeft() read the NEW frame
 ```
 
-Everything except the middle line is boilerplate. If your class heads a family, factor the middle into
-a named hook, as `PatchNodeWdgt._layOutNodeContents` does, and let subclasses fill that in rather than
-recopying the prologue.
+The template commits the granted bounds, runs the hook as one damage unit, then runs the base pass and
+marks the layout fixed — so bounds-first holds by construction, and the ordering that makes it work
+(the base's `_applyMoveTo`/`_applyExtent` and its corner-internal tail run AFTER the contents) is
+stated in one place instead of being re-derived per class.
+
+⚠ **Keep the two-line `_reLayout`.** `implementsDeferredLayout` is literally
+`@_reLayout != Widget::_reLayout`, and four call sites read it to decide whether a widget settles
+itself — a class that dropped the override would silently flip that predicate.
 
 The container shape in §6.1 satisfies the same rule the other way round: `super` applies the frame
 before `@_reLayoutChildren()` reads it. Use that shape whenever it fits — it is shorter and there is
 nothing to keep in step with the base.
+
+⚠ **Adding any named method to `Widget` is not pixel-free.** The meta-system installs class-body
+members with a plain `@::[key] = value`, so they are ENUMERABLE, and `InspectorWdgt.showingMethods`
+defaults to **true** — so a test that turns `showingInherited` on lists the whole chain's methods and
+gains a row per addition. That is why the hook above cost one recapture. (§4.1's rule about which
+class a test *opens* covers the `showingInherited: false` default; this is its exception.)
 
 ### 6.3 Measure purely; never read applied geometry back to decide a size
 

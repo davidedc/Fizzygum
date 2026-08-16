@@ -19,38 +19,29 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
     @_invalidateLayout()
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    height = @height()
+    width = @width()
 
-    # Apply my OWN bounds FIRST (do NOT defer this to the trailing super): children below are
-    # positioned from my frame, so applying via super-at-the-bottom would lag them one cadence
-    # (the InspectorWdgt 2026-06-16 bug; enforced by buildSystem/check-relayout-bounds-first.js).
-    @_applyGrantedBounds newBoundsForThisLayout
+    squareDim = Math.min width, height
 
-    @_repaintAsOneUnit =>
+     # p0 is the origin, the origin being in the top-left corner
+    p0 = @topLeft()
 
-      height = @height()
-      width = @width()
+    # now the origin is in the middle of the widget
+    centerPoint = p0.add new Point width/2, height/2
+    p0 = centerPoint
 
-      squareDim = Math.min width, height
+    # now the origin is in the top left corner of the
+    # square centered in the widget
+    p0 = p0.subtract new Point squareDim/2, squareDim/2
 
-       # p0 is the origin, the origin being in the top-left corner
-      p0 = @topLeft()
-
-      # now the origin is in the middle of the widget
-      centerPoint = p0.add new Point width/2, height/2
-      p0 = centerPoint
-
-      # now the origin is in the top left corner of the
-      # square centered in the widget
-      p0 = p0.subtract new Point squareDim/2, squareDim/2
-
-      @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
+    @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
 
 
-      @objectIcon._applyBounds p0, (new Point squareDim, squareDim).round()
-
-    super
-    @_markLayoutAsFixed()
+    @objectIcon._applyBounds p0, (new Point squareDim, squareDim).round()

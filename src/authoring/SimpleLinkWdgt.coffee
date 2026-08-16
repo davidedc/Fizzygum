@@ -61,33 +61,24 @@ class SimpleLinkWdgt extends Widget
     @externalLinkIcon = new ExternalLinkButtonWdgt
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    availableHeight = @height() - 2 * @externalPadding - @internalPadding
+    text1Height = Math.round availableHeight * 50/100
+    text2Height = availableHeight - text1Height - @externalPadding
 
-    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
-    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
-    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyGrantedBounds newBoundsForThisLayout
+    squareSize = Math.min @width(), @height() - 2 * @externalPadding
 
-    @_repaintAsOneUnit =>
+    if @tempPromptEntryField.parent == @
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
 
-      availableHeight = @height() - 2 * @externalPadding - @internalPadding
-      text1Height = Math.round availableHeight * 50/100
-      text2Height = availableHeight - text1Height - @externalPadding
+    if @outputTextArea.parent == @
+      @outputTextArea._applyBounds (new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
 
-      squareSize = Math.min @width(), @height() - 2 * @externalPadding
-
-      if @tempPromptEntryField.parent == @
-        @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text1Height
-
-      if @outputTextArea.parent == @
-        @outputTextArea._applyBounds (new Point @left() + @externalPadding, @tempPromptEntryField.bottom() + @internalPadding), new Point @width() - 2 * @externalPadding - @internalPadding - squareSize, text2Height
-
-      if @externalLinkIcon.parent == @
-        @externalLinkIcon._applyBounds (new Point @right() - @externalPadding - squareSize, @top() + @externalPadding), new Point squareSize, squareSize
-
-    super
-    @_markLayoutAsFixed()
+    if @externalLinkIcon.parent == @
+      @externalLinkIcon._applyBounds (new Point @right() - @externalPadding - squareSize, @top() + @externalPadding), new Point squareSize, squareSize
 

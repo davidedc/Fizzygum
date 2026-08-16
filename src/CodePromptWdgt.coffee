@@ -65,52 +65,43 @@ class CodePromptWdgt extends CodeAreaWdgt
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 
   _reLayout: (newBoundsForThisLayout) ->
+    @_reLayoutWithOwnContents newBoundsForThisLayout
 
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+  # position my contents against my CURRENT frame (already committed by
+  # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me)
+  _layOutOwnContents: ->
 
-    if @_handleCollapsedStateShouldWeReturn() then return
+    # clamped at 0: a transient degenerate height must not invert the text
+    # panel's rect (the ErrorsLogViewerWdgt construction-cascade fix, same family)
+    textHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - 15
+    textBottom = @top() + @externalPadding + textHeight
 
-    # Apply my own bounds FIRST, so the children laid out below read the FINAL frame and
-    # not the previous pass's (else they lag one cadence on resize -- see InspectorWdgt._reLayout /
-    # FanoutWdgt._reLayout). The trailing super re-applies the same bounds, idempotently.
-    @_applyGrantedBounds newBoundsForThisLayout
-
-    @_repaintAsOneUnit =>
-
-      # clamped at 0: a transient degenerate height must not invert the text
-      # panel's rect (the ErrorsLogViewerWdgt construction-cascade fix, same family)
-      textHeight = Math.max 0, @height() - 2 * @externalPadding - @internalPadding - 15
-      textBottom = @top() + @externalPadding + textHeight
-
-      if @tempPromptEntryField.parent == @
-        @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, textHeight
+    if @tempPromptEntryField.parent == @
+      @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, textHeight
 
 
-      # buttons -------------------------------
+    # buttons -------------------------------
 
 
-      # fractional /3 makes the second and third buttons' origins fractional --
-      # round it here so all three land on integer pixels (the ConsoleWdgt /2
-      # precedent; integer placement is enforced by the always-on bounds guard)
-      eachButtonWidth = Math.round (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
+    # fractional /3 makes the second and third buttons' origins fractional --
+    # round it here so all three land on integer pixels (the ConsoleWdgt /2
+    # precedent; integer placement is enforced by the always-on bounds guard)
+    eachButtonWidth = Math.round (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldWdgt.preferencesAndSettings.handleSize) / 3
 
-      if @cancelButton.parent == @
-        buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-        @cancelButton._reLayout buttonBounds
+    if @cancelButton.parent == @
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @cancelButton._reLayout buttonBounds
 
-      if @saveButton.parent == @
-        buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-        @saveButton._reLayout buttonBounds
+    if @saveButton.parent == @
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @saveButton._reLayout buttonBounds
 
-      if @okButton.parent == @
-        buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
-        @okButton._reLayout buttonBounds
+    if @okButton.parent == @
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @okButton._reLayout buttonBounds
 
-      # ----------------------------------------------
-
-    super
-    @_markLayoutAsFixed()
+    # ----------------------------------------------
 

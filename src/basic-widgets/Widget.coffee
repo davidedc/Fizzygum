@@ -5188,6 +5188,40 @@ class Widget extends TreeNode
     # of all children that have position/size depending on mine
     @_reLayoutCornerInternalChildren()
 
+  # The house shape for a widget that lays out its OWN CONTENTS -- a fixed internal arrangement it
+  # builds and places itself (a prompt's field + buttons, an icon's art, a plot's axes) -- as opposed
+  # to a CONTAINER, which lays out whatever children it is given and instead overrides
+  # _reLayoutChildren and keeps the `super` + `@_reLayoutChildren()` shape.
+  #
+  # Override _layOutOwnContents, never this. The ORDER here is the whole point and is why the shape
+  # is worth having in one place at all:
+  #   - the granted frame is applied FIRST, so the contents pass reads @width()/@height()/@topLeft()
+  #     at the NEW frame rather than the previous pass's (children lagging one layout cadence on a
+  #     resize was a real dpr2 flake -- buildSystem/check-relayout-bounds-first.js is the gate);
+  #   - the contents pass runs as ONE damage unit, so N child rects collapse to my one box;
+  #   - the base pass runs AFTER the contents, because its trailing corner-internal placement and its
+  #     own _applyMoveTo/_applyExtent must see the finished arrangement. Moving the hook one line
+  #     either way changes the frame the children see.
+  # Widget::_reLayout is reached explicitly rather than through `super` because this method IS on
+  # Widget: `@_reLayout` would dispatch straight back to the caller's own override. (The same
+  # explicit form LabelButtonWdgt already uses to skip its parent's override.)
+  #
+  # NOTE the overriders keep a two-line `_reLayout` that delegates here rather than dropping the
+  # override: `implementsDeferredLayout` is literally `@_reLayout != Widget::_reLayout`, and four
+  # call sites read it to decide whether a widget settles itself.
+  _reLayoutWithOwnContents: (newBoundsForThisLayout) ->
+    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
+    if @_handleCollapsedStateShouldWeReturn() then return
+    @_applyGrantedBounds newBoundsForThisLayout
+    @_repaintAsOneUnit => @_layOutOwnContents()
+    Widget::_reLayout.call @, newBoundsForThisLayout
+    @_markLayoutAsFixed()
+
+  # Place my own contents against my CURRENT frame (already committed by the caller above, so
+  # @width()/@height()/@topLeft() read the frame this layout grants me). A widget with no contents
+  # of its own places nothing.
+  _layOutOwnContents: ->
+
   # Re-place my corner/edge-internal children (the handle overlays) against my CURRENT frame --
   # they live-read my bounds. Base _reLayout's tail (above) runs this after the main placement;
   # an arrange that re-commits its OWN frame AFTER that tail (the vertical stack's tight-hug,
