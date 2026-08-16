@@ -208,28 +208,36 @@ class SliderWdgt extends CircleBoxWdgt
     super
     menu.addLine()
     menu.addMenuItem "show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
-    menu.addMenuItem "floor...", @, (->
-      @prompt menu.title + "\nfloor:", @, "setStart",
-        defaultContents: @start.toString()
-        floorNum: 0
-        ceilingNum: @stop - @size
-        isRounded: true
-    ), toolTip: "set the minimum value\nwhich can be selected"
-    menu.addMenuItem "ceiling...", @, (->
-      @prompt menu.title + "\nceiling:", @, "setStop",
-        defaultContents: @stop.toString()
-        floorNum: @start + @size
-        ceilingNum: @size * 100
-        isRounded: true
-    ), toolTip: "set the maximum value\nwhich can be selected"
-    menu.addMenuItem "button size...", @, (->
-      @prompt menu.title + "\nbutton size:", @, "setSize",
-        defaultContents: @size.toString()
-        floorNum: 1
-        ceilingNum: @stop - @start
-        isRounded: true
-    ), toolTip: "set the range\ncovered by\nthe slider button"
+    menu.addMenuItem "floor...", @, "promptForFloor", toolTip: "set the minimum value\nwhich can be selected"
+    menu.addMenuItem "ceiling...", @, "promptForCeiling", toolTip: "set the maximum value\nwhich can be selected"
+    menu.addMenuItem "button size...", @, "promptForButtonSize", toolTip: "set the range\ncovered by\nthe slider button"
     @_addTargetConnectionMenuEntries menu, "numerical"
+
+  # The three range prompts. ⚠ An action MUST be a STRING method name: ButtonWdgt dispatches
+  # `@target[@action]`, so a function literal indexes the target with a stringified function,
+  # finds nothing, and throws (its own dev tripwire says so). These read the menu's title from
+  # the dispatcher's first slot — the MENU ITEM — which is the same idiom
+  # Widget.transparencyPopout uses, and `item.parent.title` is the rows panel's copy of it.
+  promptForFloor: (menuItem) ->
+    @prompt menuItem.parent.title + "\nfloor:", @, "setStart",
+      defaultContents: @start.toString()
+      floorNum: 0
+      ceilingNum: @stop - @size
+      isRounded: true
+
+  promptForCeiling: (menuItem) ->
+    @prompt menuItem.parent.title + "\nceiling:", @, "setStop",
+      defaultContents: @stop.toString()
+      floorNum: @start + @size
+      ceilingNum: @size * 100
+      isRounded: true
+
+  promptForButtonSize: (menuItem) ->
+    @prompt menuItem.parent.title + "\nbutton size:", @, "setSize",
+      defaultContents: @size.toString()
+      floorNum: 1
+      ceilingNum: @stop - @start
+      isRounded: true
 
   showValue: ->
     @inform @value

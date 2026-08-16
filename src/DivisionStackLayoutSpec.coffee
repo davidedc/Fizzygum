@@ -74,7 +74,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
     menuLabel = if @axis == 'y' then "layout in column ➜" else "layout in row ➜"
     menu.addMenuItem menuLabel, @, "divisionCellMenu", closesUnpinnedPopUps: false, toolTip: ""
 
-  divisionCellMenu: (widgetOpeningThePopUp,targetWidget,a,b,c)->
+  divisionCellMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     menu.addMenuItem "desired size...", @, "desiredMainDimPopout", toolTip: ""
     menu.addMenuItem "max size...", @, "maxMainDimPopout", toolTip: ""
@@ -117,7 +117,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
       @crossAlign = newCrossAlign
       @element._invalidateLayout()
 
-  desiredMainDimPopout: (menuItem,a,b,c,d,e,f)->
+  desiredMainDimPopout: (menuItem)->
     currentDesired = if @axis == 'y' then @desiredHeight else @desiredWidth
     @element.prompt menuItem.parent.title + "\ndesired size:", @, "setDesiredMainDim",
       defaultContents: currentDesired.toString()
@@ -145,7 +145,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
         @desiredWidth = newDim
         @element._invalidateLayout()
 
-  maxMainDimPopout: (menuItem,a,b,c,d,e,f)->
+  maxMainDimPopout: (menuItem)->
     currentMax = if @axis == 'y' then @maxHeight else @maxWidth
     @element.prompt menuItem.parent.title + "\nmax size:", @, "setMaxMainDim",
       defaultContents: currentMax.toString()

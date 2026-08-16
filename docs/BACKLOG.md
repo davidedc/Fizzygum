@@ -152,6 +152,18 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
+### `archive/menu-action-wiring-plan.md` — CLOSED; ONE residual, and it is a TEST-INFRA gap
+Fixed four live menu-wiring bugs (three `SliderWdgt` prompts that threw on every click; three demo
+"…launcher" items that crashed) and gated the two scannable shapes with
+`buildSystem/check-menu-actions.js`.
+- [ ] **A `menu-click-sweep` rig — open every menu, click every item, fail on a throw or console error.**
+      ⚠ This is the arc's stated residual, not a nice-to-have: the gate's rule 3 would NOT have caught
+      the crash class. `createOpener`'s parameter WAS read — it was read as the wrong THING (a
+      `MenuItemWdgt` asked for its `.contents`), which no text scan can see. Both crash-class bugs lived
+      in menus nothing exercises; `ButtonWdgt` even carries a runtime tripwire for one of them that had
+      been firing for nobody. Natural sibling of the gauntlet's `apps` / `parts` legs (wave A).
+      ⚠ Expect it to find more: it is the first thing that would ever have clicked these items.
+
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 Brought `src/` onto the constructor convention stated in
 `architecture/constructor-and-parameter-conventions.md` (positional head for identity, one trailing

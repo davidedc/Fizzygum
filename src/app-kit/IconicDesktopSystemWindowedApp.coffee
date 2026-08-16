@@ -51,17 +51,19 @@ class IconicDesktopSystemWindowedApp
   windowOpened: (newlyOpenedWindow) ->   # after a FRESH (non-singleton) launch; no-op by default
 
   # --- shared apparatus (written once) ---
-  createOpener: (inWhichFolder) ->
+  # Put this app's EAGER launcher on the desktop. Takes NOTHING, and that is load-bearing: it is
+  # wired to demo menu items, and ButtonWdgt dispatches actions with a fixed four-slot convention
+  # (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), so any parameter here would
+  # receive a WIDGET from a click. A verb that takes nothing cannot be mis-fed by the dispatcher.
+  # ⚠ The in-folder variant lives on the launcher class as
+  # IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder — go there rather than re-growing a
+  # parameter here; note the two add/size ORDERS are not interchangeable, which that pair documents.
+  createOpener: ->
     launcher = IconicDesktopSystemWindowedAppLauncherWdgt.forApp @
     return unless launcher?
-    if inWhichFolder?
-      # in-folder opener: size first, then add into the folder
-      launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
-      inWhichFolder.contents.contents.add launcher
-    else
-      # desktop launcher: add first (smart grid placement), then size
-      world.add launcher
-      launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
+    # desktop launcher: add first (smart grid placement), then size
+    world.add launcher
+    launcher.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
 
   # ⚠ Both already-loaded paths stay SYNCHRONOUS, which is correctness rather than speed: whenAllLoaded
   # runs its callback inline when the parts are in, and an EMPTY list is inline too, so an app that

@@ -4213,11 +4213,14 @@ class Widget extends TreeNode
   # reached through a soak so a build without it simply has no pinouts. These two stay here
   # because they are the widget's own context-menu ACTIONS (MenusHelper wires the menu items
   # to these names on the target widget).
-  showOutputPins: (a,b,c,d) ->
-    world.pinouts?.show b
+  # ⚠ They take NOTHING: the menu wires them onto the very widget being pinouted, so the subject is
+  # the RECEIVER. Four dispatcher slots here would only route `@` back in as an argument — and did,
+  # which is what made the one macro caller write `w.showOutputPins undefined, w`.
+  showOutputPins: ->
+    world.pinouts?.show @
 
-  removeOutputPins: (a,b,c,d) ->
-    world.pinouts?.remove b
+  removeOutputPins: ->
+    world.pinouts?.remove @
 
   buildBaseWidgetClassContextMenu: (widgetOpeningThePopUp) ->
 

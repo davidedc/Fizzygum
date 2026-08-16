@@ -715,7 +715,7 @@ class FrameWdgt extends Widget
   # construction, buttons duck-type onto the focused widget -- §5.C), so
   # reclaiming would buy nothing and cost a tracked back-ref; the floated strip
   # simply stays a normal toolbar window.
-  dockToolbarMenu: (widgetOpeningThePopUp, targetWidget, a, b, c) ->
+  dockToolbarMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     currentSide = if @_dockedToolbarShowing() then @toolbar.dockSide else undefined
     menu.addMenuItem "top", @, "dockToolbarTop"  if currentSide isnt "top"

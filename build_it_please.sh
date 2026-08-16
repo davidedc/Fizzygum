@@ -492,6 +492,29 @@ if ! $noSyntaxCheck ; then
   echo "... argument-hole check OK"
 fi
 
+# --- build-time MENU-ACTION WIRING gate -----------------------------------------------
+# A menu item is dispatched through ButtonWdgt's FIXED four-slot convention
+# (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), and nothing at the call site
+# says so -- `menu.addMenuItem "label", target, "verb"` names none of the four arguments `verb` will
+# receive. Three failure modes follow, all of which were LIVE when this gate was written: a FUNCTION
+# LITERAL in the action slot (dispatch is `@target[@action]`, so it throws when clicked -- three
+# SliderWdgt items sat broken behind ButtonWdgt's runtime tripwire, because a runtime tripwire needs
+# someone to CLICK and the suite never clicks a slider's "floor..."); a STRING where the options
+# object goes; and a signature PADDED with unread slots to reach the one it wants, which puts widgets
+# into parameters whose names promise otherwise and forces every other caller to punch `undefined`
+# through. Rules 1-2 are sound negatives and HARD; rule 3 is a ratchet at 0 -- pad if you must, but
+# NAME the slot `ignored`/`unused`. Same --noSyntaxCheck escape hatch + explicit $? abort as above.
+if ! $noSyntaxCheck ; then
+  echo "checking menu-action wiring ..."
+  node ./buildSystem/check-menu-actions.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: menu-action gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... menu-action check OK"
+fi
+
 # --- build-time THIN-WRAP gate --------------------------------------------------------
 # Enforces the ONE canonical shape for a public self-settling method that owns a private *Core twin:
 # `[guards] @mutateGeometryThenSettle => @_<name>Core <args>` -- it must do no work of its own, only

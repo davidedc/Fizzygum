@@ -2840,7 +2840,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       window.demoMenus ?= new (window["DemoMenus"])
       window.demoMenus.testMenu widgetOpeningThePopUp, targetWidget
 
-  popUpDemoMenu: (widgetOpeningThePopUp,b,c,d) ->
+  popUpDemoMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "make a widget"
     menu.addMenuItem "rectangle", @widgetFactory, "createNewRectangleWdgt"
     menu.addMenuItem "box", @widgetFactory, "createNewBoxWdgt"

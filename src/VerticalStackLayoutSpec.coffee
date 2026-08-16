@@ -88,7 +88,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
     menu.addLine()
     menu.addMenuItem "layout in stack ➜", @, "vertStackMenu", closesUnpinnedPopUps: false, toolTip: ""
 
-  vertStackMenu: (widgetOpeningThePopUp,targetWidget,a,b,c)->
+  vertStackMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     menu.addMenuItem "base width...", @, "desiredWidthPopout", toolTip: ""
     menu.addMenuItem "elasticity...", @, "growPopout", toolTip: ""
@@ -134,7 +134,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @alignment = newAlignment
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
-  growPopout: (menuItem,a,b,c,d,e,f)->
+  growPopout: (menuItem)->
     @element.prompt menuItem.parent.title + "\nelasticity:", @, "setGrowFromPercent",
       defaultContents: ((@grow ? 1) * 100).toString()
       floorNum: 0
@@ -164,7 +164,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @grow = newGrow
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
 
-  desiredWidthPopout: (menuItem,a,b,c,d,e,f)->
+  desiredWidthPopout: (menuItem)->
     @element.prompt menuItem.parent.title + "\nbase width:", @, "setDesiredWidth",
       defaultContents: @desiredWidth.toString()
       floorNum: 10

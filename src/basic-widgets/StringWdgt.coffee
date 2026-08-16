@@ -1047,7 +1047,7 @@ class StringWdgt extends Widget
     @_settleLayoutsAfter => @_setFontNameNoSettle theNewFontName, menuItem
 
 
-  fontsMenu: (a,targetWidget)->
+  fontsMenu: (ignored,targetWidget)->
     menu = new MenuWdgt @, target: targetWidget, title: "Fonts"
 
     menu.addMenuItem untick + "Arial", @, "setFontNameFromMenu", arg1: @justArialFontStack

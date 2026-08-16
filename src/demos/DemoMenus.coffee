@@ -99,7 +99,7 @@ class DemoMenus
   makeEmptyIconWithText: ->
     world.create new WidgetHolderWithCaptionWdgt "hey there"
 
-  makeFolderWindow: (a,b,c,d,e) ->
+  makeFolderWindow: ->
     world.create new FolderWindowWdgt
 
   makeBouncingParticle: ->

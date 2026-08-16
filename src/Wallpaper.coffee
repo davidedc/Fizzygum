@@ -33,7 +33,7 @@ class Wallpaper
   constructor: ->
     @patternName = @pattern1
 
-  wallpapersMenu: (a,targetWidget)->
+  wallpapersMenu: (ignored,targetWidget)->
     menu = new MenuWdgt world, target: targetWidget, title: "Wallpapers"
 
     # we add the "untick" prefix to all entries
