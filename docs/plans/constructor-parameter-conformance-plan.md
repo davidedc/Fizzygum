@@ -722,7 +722,7 @@ rather than the real verb. Read the argument list, not just the name.
 | 2 | `_createReferenceAndCloseNoSettle` | first-position holes, invisible to the first pass |
 | 1 each | `cleanupMenuWdgts`, `fullImage`, `_applyTransformSugarNoSettle`, `Class.findUpTo` | |
 
-⭐⭐ **`_paintInLocalScope` is the find, and it is a SHAPE worth naming.**
+⭐⭐ **`_paintInLocalScope` is the find, and it is a SHAPE worth naming — see item 1b below.**
 
 ```coffee
 # src/Appearance.coffee:46
@@ -730,12 +730,9 @@ _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, opts, bodyFn) -
 ```
 
 **An options bag placed BEFORE a required trailing callback is a hole at every default call site** —
-the block wants to be last (CoffeeScript idiom), so reaching it means filling `opts`, and 9 of the
-10 callers write `undefined` to do so. Only `RectangularAppearance:93` passes anything
-(`{ clip: false }`). This is R3 firing on the ONE preamble every appearance paints through
-(`architecture/appearance-paint-convention.md`), so it is core, not a corner. ⚠ It also does not
-have an obvious fix — `opts` cannot simply move to the tail without displacing the block — so it
-wants a design decision, not a mechanical conversion. **Do not fold it into item 1.**
+the block wants to be last (CoffeeScript idiom), so reaching it means filling `opts`. This is R3
+firing on the ONE preamble every appearance paints through
+(`architecture/appearance-paint-convention.md`), so it is core, not a corner.
 
 ### Item 1 — `__add` / `_addChild`: the same bug one level below `add` ✅ DONE 2026-08-16
 
@@ -781,20 +778,86 @@ where a parenthesised FIRST argument sits in front of a trailing implicit object
 `TreeNode._addChild` now carries the case history in a comment, so the next reader of that slot
 learns why it is not called `position` at the place where the mistake would be made.
 
-### Item 2 — two hand-rolled dispatcher calls P6 could not reach
+### Item 1b — `_paintInLocalScope`: 8 holes, and the options are not options ⛔ OWNER DECISION
+
+Measured across all **14** callers of `Appearance._paintInLocalScope`:
+
+| what they pass in the `opts` slot | callers |
+|---|---|
+| `undefined` (the hole) | **8** — LabelButton, LayoutChrome, DragChargingRing, UpperRightTriangle, Handle, Boxy, CircleBoxy, Pen |
+| `{ clip: false }` | 2 — `RectangularAppearance`, both its sites |
+| `{ alpha: "none" }` | 2 — `CellAppearance`, `SheetHeaderCellAppearance` |
+| `{ alpha: "backgroundTransparencyNormalPass" }` | 2 — `Example3DPlotAppearance`, `GraphsPlotsChartsAppearance` |
+
+⚠ **A first reading of this ("9 of 10 pass undefined, the bag is vestigial") was wrong** — the bag
+is used by 6 of 14, which is a real feature, not dead weight. The defect is only its POSITION.
+
+⭐⭐ **But the decisive observation is that these are not per-CALL options at all: every appearance
+class always passes the same constant.** `RectangularAppearance` passes `{clip: false}` at both of
+its sites; each of the other four passes one fixed alpha policy at its single site. Nothing here
+varies per paint — it varies per CLASS. So the honest shape is not a better-placed bag but a
+**class-level declaration**, exactly the field-as-truth/capability pattern this codebase already
+uses for `claimsSpace`, `implementsDeferredLayout` and `attachesToScrollFrameDirectly`:
+
+```coffee
+class CellAppearance extends Appearance
+  paintAlphaPolicy: "none"          # declared once, not repeated at the call
+
+class RectangularAppearance extends Appearance
+  clipsToLocalArea: false
+```
+
+with `_paintInLocalScope` reading `@paintAlphaPolicy` / `@clipsToLocalArea` off itself and becoming
+
+```coffee
+_paintInLocalScope: (aContext, clippingRectangle, appliedShadow, bodyFn) ->
+```
+
+— four operands, block last, and **zero holes at all 14 sites** rather than 8 fixed and 6 relocated.
+
+⚖ **Why it is still owner-gated.** It touches the paint preamble every appearance goes through, it
+has its own architecture doc (`architecture/appearance-paint-convention.md`) whose declared-exception
+list would need the two new fields added, and the two alpha policies are currently documented as a
+three-way enum in one comment block — moving them to class fields spreads that explanation across
+five files unless the base keeps the enum's documentation. That is a design change to a core
+convention, not a parameter-list tidy, so it wants an explicit yes.
+
+### Item 2 — two hand-rolled dispatcher calls P6 could not reach ✅ DONE 2026-08-16
 
 ```coffee
 # src/ErrorsLogViewerWdgt.coffee:85   and   src/CodePromptWdgt.coffee:59  (identical line)
 @target[@callback].call @target, undefined, @textWidget
 ```
 
-This is **exactly the P6 bug** (§7, the verb/adapter split): `undefined` punched past the
-dispatcher's `dataSourceWidgetForTarget` slot to reach `widgetEnv`. P6 did not reach it because P6
-swept *method definitions* (`setFontName`, `setPattern`, `makeFolder`, …) — these two sites
-hand-roll `ButtonWdgt`'s 4-slot convention with an explicit `.call`, so no signature sweep sees
-them. ⚠ Diagnose before converting: the remedy depends on whether `@callback` names a **verb** or a
-**menu adapter**. If the target method is already a plain verb, the `.call` should simply pass what
-the verb takes; only if it is a `…FromMenu` adapter does the split apply.
+P6 did not reach these because P6 swept *method definitions* — these two sites hand-roll
+`ButtonWdgt`'s 4-slot convention with an explicit `.call`, so no signature sweep sees them.
+
+**Diagnosis first, and it answered differently for each site — they were not one bug.**
+
+⭐⭐ **Site A (`ErrorsLogViewerWdgt`) was DEAD, and dead in a way that hid a second defect.** Its
+`informTarget` is unreachable: its ok button is wired to `closeFromContainerFrame`, and the
+`notifyTargetAndClose` path that would call it is wired only by `CodePromptWdgt`. And had it ever
+run it would have **thrown** — the world constructs it as `new ErrorsLogViewerWdgt "Errors", @,
+"modifyCodeToBeInjected", ""`, but `WorldWdgt` does not define `modifyCodeToBeInjected` (only
+`CodeInjectingSimpleRectangularButtonWdgt` does), so `@target[@callback]` is `undefined` and
+`.call` on it is a TypeError. `@msg` was never read at all. So the fix is not a conversion:
+**`informTarget` is deleted**, `@msg`/`@target`/`@callback` leave the constructor (now
+`(opts = {})`, `defaultContents` read guarded per R5), and the world's call site becomes
+`new ErrorsLogViewerWdgt()`. An error log reports; it does not commit a value back to anyone.
+
+⚠ **Why no gate caught a dead method with a broken callback:** `check-dead-methods.js` keys off
+method NAMES, and `informTarget` is very much alive on `CodePromptWdgt`; `check-unresolved-sends.js`
+cannot resolve `@target[@callback]` because the selector is a runtime string. A dynamic dispatch is
+a blind spot for both, which is the general lesson worth carrying — **a string-named send is
+invisible to every static gate here.**
+
+⭐ **Site B (`CodePromptWdgt`) is LIVE, and is a plain callback, not a menu adapter.** The whole
+path is one call site (`CodeInjectingSimpleRectangularButtonWdgt:25`'s `textPrompt`) and one
+callback (`modifyCodeToBeInjected`), which declared `(unused, textWidget)` purely to absorb the
+dispatcher's first slot. Nothing dispatches it as a menu/button action — checked in both repos — so
+it carries no dispatcher slots: `informTarget` now calls `@target[@callback].call @target,
+@textWidget` and the callback takes `(textWidget)`. **The `unused` parameter is gone, which is the
+point: it existed only to pad a convention this call was never part of.**
 
 ### Item 3 — the button head has 3 holes after all (owner decision, not a mechanical fix)
 
@@ -810,7 +873,7 @@ like a missing **door** (a `faceOnly`/decorative constructor, or `action` moving
 head that fails the family. R3's own guidance is to read a hole as a *diagnosis* and then pick the
 treatment. Do not re-open the P3 head on 3 demo sites without deciding which of those it is.
 
-### Item 4 — `buildHeader`, a 6-positional local helper
+### Item 4 — `buildHeader`, a 6-positional local helper ✅ DONE 2026-08-16
 
 ```coffee
 # src/spreadsheet/SimpleSpreadsheetWdgt.coffee:269
@@ -821,6 +884,17 @@ Never inventoried, because §0 counted **constructors** and P6 counted **methods
 function literal inside a method body, a category the arc never enumerated. ⚠ Worth one sweep for
 its siblings: `grep -rn --include='*.coffee' -E '^\s+[a-z][A-Za-z0-9_]* = \([^)]*,[^)]*,[^)]*,' src/`
 finds local helpers taking ≥3 positionals, none of which any phase of this arc has looked at.
+
+**As built: `(kind, topLeftOffset, extent, index)`.** The four loose geometry numbers were always
+the two `Point` tuples the body immediately built out of them, so they become those tuples — the
+codebase's own E1 value classes rather than free scalars — and `index` moves to the **tail**,
+because the corner header is the one caller with nothing to put there. Four operands, no hole,
+R1-conformant.
+
+⭐ **Allocation is unchanged, which is why this is free.** The old body already minted
+`new Point x, y` and `new Point w, h` on every call; the Points simply move to the caller and the
+body keeps the `.add`. Three allocations before, three after — worth checking, because this runs
+per visible header on every scroll and resize.
 
 ### Item 5 — the tooling gap ✅ TOOLS PROMOTED 2026-08-16; the GATE half is still open
 

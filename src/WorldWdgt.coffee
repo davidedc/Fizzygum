@@ -614,7 +614,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @_changed()
 
   createErrorConsole: ->
-    errorsLogViewerWdgt = new ErrorsLogViewerWdgt "Errors", @, "modifyCodeToBeInjected", ""
+    errorsLogViewerWdgt = new ErrorsLogViewerWdgt()
     wm = new FrameWdgt errorsLogViewerWdgt
     wm.setExtent new Point 460, 400
     @add wm

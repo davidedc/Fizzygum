@@ -55,8 +55,11 @@ class CodePromptWdgt extends CodeAreaWdgt
     @saveTextWdgt.setColor Color.create 200, 200, 200
 
 
+  # The callback is invoked with what it actually needs. It is NOT a menu action: nothing
+  # dispatches it through ButtonWdgt's fixed 4-slot convention, so it carries no leading
+  # dataSource/widgetEnv slots and no caller has to punch `undefined` past them (R3).
   informTarget: ->
-    @target[@callback].call @target, undefined, @textWidget
+    @target[@callback].call @target, @textWidget
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 

@@ -15,7 +15,14 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   # (Widget's constructor takes no arguments -- a birth extent passed to super
   # was silently discarded, so the console is born at Widget's default bounds
   # and gets its real size from the window that wraps it, createErrorConsole.)
-  constructor: (@msg, @target, @callback, @defaultContents) ->
+  # ALL options, no operand: the error console is opened by the world with nothing to
+  # configure. It carries no target/callback pair -- an error log reports, it does not commit a
+  # value back to anyone, so my ok button closes (closeFromContainerFrame) and the
+  # notifyTargetAndClose path belongs to CodePromptWdgt alone.
+  # defaultContents is read GUARDED so absence leaves the class-level "" standing: a bare
+  # @param would overwrite it with undefined (R5).
+  constructor: (opts = {}) ->
+    @defaultContents = opts.defaultContents if opts.defaultContents?
     super()
     @_buildAndConnectChildren()
 
@@ -80,9 +87,6 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
 
   clearTextPane: ->
     @textWidget.setText ""
-
-  informTarget: ->
-    @target[@callback].call @target, undefined, @textWidget
 
   _reLayout: (newBoundsForThisLayout) ->
 

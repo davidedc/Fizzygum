@@ -251,7 +251,11 @@ class SimpleSpreadsheetWdgt extends Widget
     @_cellsPanel._applyBounds (@position().add new Point @headerColWidth, @headerRowHeight), new Point (@width() - @headerColWidth), (@height() - @headerRowHeight)
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
-    buildHeader = (kind, index, x, y, w, h) =>
+    # (kind, topLeftOffset, extent, index): the four loose geometry numbers are the two Point
+    # tuples they always were, and `index` moved to the TAIL because the corner header has none
+    # -- with it in slot 2 the corner call had to write `undefined` past it to reach the
+    # geometry (R3). Allocation is unchanged: the two Points were already being minted here.
+    buildHeader = (kind, topLeftOffset, extent, index) =>
       key = kind + ":" + (index ? "")
       unless @_headerCells.has key
         header = new SheetHeaderCellWdgt kind, index
@@ -259,21 +263,21 @@ class SimpleSpreadsheetWdgt extends Widget
         @_addNoSettle header
         @_headerCells.set key, header
       header = @_headerCells.get key
-      header._applyBounds (@position().add new Point x, y), new Point w, h
+      header._applyBounds (@position().add topLeftOffset), extent
       # label child sync (create/retext/place) — every chrome-ensure path (build, scroll,
       # resize, restore) funnels here, so the origin-derived labels stay current in place
       header._syncLabelNoSettle()
       return
     visibleCols = @_visibleCols()
     visibleRows = @_visibleRows()
-    buildHeader "corner", undefined, 0, 0, @headerColWidth, @headerRowHeight
+    buildHeader "corner", Point.ZERO, (new Point @headerColWidth, @headerRowHeight)
     col = 0
     while col < visibleCols
-      buildHeader "column", col, (@headerColWidth + col * @colWidth), 0, @colWidth, @headerRowHeight
+      buildHeader "column", (new Point (@headerColWidth + col * @colWidth), 0), (new Point @colWidth, @headerRowHeight), col
       col += 1
     row = 0
     while row < visibleRows
-      buildHeader "row", row, 0, (@headerRowHeight + row * @rowHeight), @headerColWidth, @rowHeight
+      buildHeader "row", (new Point 0, (@headerRowHeight + row * @rowHeight)), (new Point @headerColWidth, @rowHeight), row
       row += 1
     # TRIM (F6): headers beyond the current viewport (the window shrank, or the origin
     # reached the sheet edge and the ex-partial slot is backdrop now) are DERIVED chrome —
