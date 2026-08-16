@@ -688,12 +688,12 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     mostRecentPopUp = undefined
     mostRecentPopUpID = -1
 
-    # we have to check which menus
-    # are actually open, because
-    # the destroy() function used
-    # everywhere is not recursive and
-    # that's where we update the @openPopUps
-    # set so we have to doublecheck here
+    # Membership is doublechecked against the TREE here, and pruned lazily. The close
+    # and destroy CORES drop a pop-up from @openPopUps as it dies, so a dying pop-up
+    # announces itself; what nothing announces is a pop-up that merely LEAVES the tree
+    # (isOrphan = my root is neither the world nor the hand). Pruning on this query --
+    # which the pointer asks on a click, not the cycle -- keeps the set honest without
+    # a per-cycle walk over it.
     @openPopUps.forEach (eachPopUp) =>
       if eachPopUp.isOrphan()
         @openPopUps.delete eachPopUp

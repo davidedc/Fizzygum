@@ -633,8 +633,13 @@ for k, p in pat.items():
 - **`colloquialName` is drawn** (§3.6).
 - **The 2026-07-02 meaning swap:** in history before that date, `_applyExtent` names what is today
   `_applyExtentBase`. Reading old commits around the layout code will mislead otherwise.
-- **`world.openPopUps` is swept every cycle** (`WorldWdgt` ~:691) — so W2's `PopUpWdgt` half fixes a
-  latent tier violation, not a visible leak. Do not oversell it in the commit message.
+- **`world.openPopUps` is pruned LAZILY, not every cycle** (corrected 2026-08-16; the claim here was
+  "swept every cycle"). The pruning lives inside `WorldWdgt.mostRecentlyCreatedPopUp` (~:687), which
+  `ActivePointerWdgt` asks on a CLICK — `Serializer.coffee` ~:313 already calls it "the lazy orphan
+  pruning". It also prunes on a different predicate: `isOrphan()` ("my root is neither the world nor
+  the hand"), which is broader than `destroyed`. So W2's `PopUpWdgt` half still fixes a latent tier
+  violation rather than a visible leak — but **the pruning is NOT redundant with it and must not be
+  deleted**: a pop-up can leave the tree without dying, and nothing else notices.
 - **Never recapture your way past a diff** in a zero-budget phase.
 
 ---

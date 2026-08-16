@@ -118,16 +118,30 @@ lists, not from how many classes inherit the field.
 - [x] **W2 — two teardown overrides sat on the public wrapper instead of the core (§2.2).**
       ✅ **DONE 2026-08-16**, `2e7e67d6`. Both moved to `_destroyNoSettle`. The sheet's redundant
       `keyboardEventsReceivers` delete went with it (the base core already does it).
-      ↳ **OPEN follow-up:** `WorldWdgt`'s per-cycle `openPopUps` sweep now has a comment that is no
-      longer true ("the destroy() function used everywhere is not recursive"). Try deleting it; if
-      the suite + serialization stay green it existed only for the bug W2 fixed.
+      ✅ **Follow-up CLOSED 2026-08-16 — and its premise was wrong.** The suspicion was that
+      `WorldWdgt`'s `openPopUps` sweep had become redundant. It has not: the pruning is LAZY (inside
+      `mostRecentlyCreatedPopUp`, which `ActivePointerWdgt` asks on a click — not per cycle, despite
+      what plan §8 said) and it prunes on `isOrphan()`, which is broader than `destroyed`. A pop-up
+      can LEAVE THE TREE without dying, and nothing else notices, so the pruning stays. Only its
+      comment was stale — it justified itself with "the destroy() function used everywhere is not
+      recursive", which is precisely what W2 fixed — and that is now rewritten to the real reason.
 - [x] **W3 (owner D1) — `PointerWdgt` + `IconicDesktopSystemScriptShortcutWdgt` dropped `super` in
       `addWidgetSpecificMenuEntries` (§2.3).** ✅ **DONE 2026-08-16**, `75af5434`. 0 recaptures.
       ⚠⚠ **The gates prove no regression and do NOT prove the fix — the added entries have no
       witness.** The suite has zero references to either class (every apparent `PointerWdgt` hit is
       `ActivePointerWdgt`), and `menu-click-sweep-headless.js` builds menus only for `world` plus 14
       named `REPRESENTATIVES`, which include neither.
-      ↳ **OPEN follow-up:** add both classes to that `REPRESENTATIVES` list.
+      ↳ **PARTLY closed 2026-08-16** (`Fizzygum-tests` `efa7c449`+): both classes are now
+      `REPRESENTATIVES` in the sweep, which needed a small extension — an entry may be
+      `[name, makeArgs]`, because both classes' menu actions REACH a constructor argument
+      (`@target.close()`, `@bringUpTarget()`), so a bare `new Klass()` would have reported a
+      TypeError that is a FIXTURE defect, not a wiring defect. Both dispatch clean; distinct
+      coverage 515 → 567 pairs.
+      ↳ **STILL OPEN — this does NOT witness W3.** The sweep adds its representative straight to the
+      world, and the base block W3 restored only contributes entries when the widget sits in a
+      DIVISION STACK or content stack. So the two classes' own items are now covered and the
+      newly-enabled layout submenu still is not. Closing it properly wants a macro that drops one
+      into a division stack and screenshots the menu.
 - [x] **W4a — the 13 fields carrying no placement question.** ✅ **DONE 2026-08-16**, `20557aca`.
       All `: undefined` per `BoxWdgt`'s precedent. Recaptured 2 tests / 20 refs
       (`Fizzygum-tests` `8da30a819`): `ButtonWdgt.faceWidget` is a member, and both mixin-donor tests
