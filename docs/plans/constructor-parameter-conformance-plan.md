@@ -685,21 +685,57 @@ mid-run, `src/` and `tests/` are not.
 
 ## 7c. P8 — The tail the gate could not see (REMAINING WORK)
 
-Measured 2026-08-16, on the tree at Fizzygum `20356b17`, immediately after P7 was pushed. A
-one-line scan for a **single** `undefined` in non-final argument position — the shape
-`positional-hole` is structurally blind to (§7b) — returns **7 sites across 6 verbs**, and the
-paren-less first-argument form it cannot see adds **2 more**: ~9 in total. That is the whole tail;
-`src/` has nothing else.
-
-⚠ Reproduce the measurement before starting (it is one regex, and it is not the gate):
+Measured 2026-08-16 on the tree at Fizzygum `20356b17`, immediately after P7 was pushed:
 
 ```
-grep -rn --include='*.coffee' -E '[A-Za-z_][A-Za-z0-9_]*\s+[^,#]+,\s*undefined\s*,' src/ | grep -v '^\S*: *#'
+node buildSystem/census-call-arity.js --holes
 ```
 
-⚠ That regex misses `@verb (parenthesised first arg), undefined, x` — the CoffeeScript form where
-the space before `(` makes it a paren-LESS call (§8's standing hazard). Grep the verb by name to
-catch those; item 1 below has one.
+**25 distinct hole sites in `src/`, 25 more in the tests repo — 50 in all**, against a
+`positional-hole` reading of 0.
+
+⚠⚠ **A first pass at this measurement said "~9" and was WRONG, in a way worth recording.** It used
+a hand-written regex `verb <arg>, undefined,` — which can only see `undefined` in position **2 or
+later**, and so missed every hole where the skipped parameter is the **first** one
+(`@_createReferenceAndCloseNoSettle undefined, @`). It also missed the paren-less form
+`@verb (parenthesised first arg), undefined, x`. **This is the §7b lesson recurring one level up:
+the ad-hoc regex written to check the gate had its own blind spot.** Use the scanner, which shares
+the paren/quote-aware parser that produced every work list in P2–P7.
+
+⚠ Two caveats the scanner's own header states, both material to reading its output. It excludes
+`fn.call undefined, x` / `.apply` / `.bind`, where `undefined` is a foreign API's *this*-arg and not
+a skipped parameter — those are ~65 of the ~115 raw hits and would bury everything else. And in the
+tree-wide mode it matches every identifier on a line, so it collapses to one row per `file:line`;
+the surviving callee is the leftmost, which for a few rows is a fragment (`target`, `world`, `if`)
+rather than the real verb. Read the argument list, not just the name.
+
+### The tail by verb (`src/`)
+
+| n | verb | note |
+|---|---|---|
+| **9** | `_paintInLocalScope` | ⭐ the biggest single family, and NEW — see below |
+| 2 | `__add` | **item 1** |
+| 2 | `.call` on the dispatcher (`ErrorsLogViewerWdgt`, `CodePromptWdgt`) | **item 2** |
+| 3 | `new SimpleRectangularButtonWdgt` (`DemoMenus`) | **item 3** |
+| 1 | `buildHeader` | **item 4** |
+| 2 | `_insertAddersSuchThat` | ⚠ its `undefined` axis is **MEANINGFUL** (content mode) — see its own comment; a hole by the letter of R3, but the diagnosis may be "name the mode", not "add a bag" |
+| 2 | `_createReferenceAndCloseNoSettle` | first-position holes, invisible to the first pass |
+| 1 each | `cleanupMenuWdgts`, `fullImage`, `_applyTransformSugarNoSettle`, `Class.findUpTo` | |
+
+⭐⭐ **`_paintInLocalScope` is the find, and it is a SHAPE worth naming.**
+
+```coffee
+# src/Appearance.coffee:46
+_paintInLocalScope: (aContext, clippingRectangle, appliedShadow, opts, bodyFn) ->
+```
+
+**An options bag placed BEFORE a required trailing callback is a hole at every default call site** —
+the block wants to be last (CoffeeScript idiom), so reaching it means filling `opts`, and 9 of the
+10 callers write `undefined` to do so. Only `RectangularAppearance:93` passes anything
+(`{ clip: false }`). This is R3 firing on the ONE preamble every appearance paints through
+(`architecture/appearance-paint-convention.md`), so it is core, not a corner. ⚠ It also does not
+have an obvious fix — `opts` cannot simply move to the tail without displacing the block — so it
+wants a design decision, not a mechanical conversion. **Do not fold it into item 1.**
 
 ### Item 1 — `__add` / `_addChild`: the same bug one level below `add` ⭐ do this one first
 
@@ -776,28 +812,34 @@ function literal inside a method body, a category the arc never enumerated. ⚠ 
 its siblings: `grep -rn --include='*.coffee' -E '^\s+[a-z][A-Za-z0-9_]* = \([^)]*,[^)]*,[^)]*,' src/`
 finds local helpers taking ≥3 positionals, none of which any phase of this arc has looked at.
 
-### Item 5 — the tooling gap (owner-gated: see the recommendation)
+### Item 5 — the tooling gap ✅ TOOLS PROMOTED 2026-08-16; the GATE half is still open
 
-⭐⭐ **The tool that found 108 of P7's 109 holes is gitignored.** `Fizzygum-tests/.scratch/
-ctor-arity-scan.js` (paren/quote-aware, joins continuation lines, `--call=<method>` and
-`--super=<class>` modes, scans BOTH repos) is what produced every work list in P2–P7; the ratchet
-found one site. Its companion `frag-compile.js` is the only faithful way to see what a fragment
-compiles to (`coffee -bcp <wholefile>` is not — §8). Both live in a gitignored scratch dir and will
-be lost.
+⭐⭐ **The tool that found 108 of P7's 109 holes was gitignored** — and it is what found this whole
+tail too, including the 9-site `_paintInLocalScope` family that two hand-written regexes had both
+missed. Now promoted out of `Fizzygum-tests/.scratch/`:
 
-**Recommendation — the two halves want different homes, and neither is a gauntlet leg:**
+| was | now | what it is |
+|---|---|---|
+| `.scratch/ctor-arity-scan.js` | **`buildSystem/census-call-arity.js`** | ADVISORY inventory: call sites + top-level arity, `--call=` / `--super=` / class modes, and a new **`--holes`** mode built on the same paren-aware parser. Wired into `fg critique` |
+| `.scratch/frag-compile.js` | **`buildSystem/compile-fragment.js`** | compiles ONE fragment the way the browser does — the §8 "verify the spelling against the compiler" check. `coffee -bcp <wholefile>` is not a faithful substitute |
 
-1. **The CHECK half → `buildSystem/`, replacing the `positional-hole` regex.** Ratchets live in
+⛔ **Still open: the CHECK half.** `positional-hole`'s two-adjacent-`undefined` regex remains the
+gate, and it still reads 0 against 50 real holes. Replacing it with a paren-aware
+`buildSystem/check-*.js` (seeded at the measured count, ratcheted down as P8 lands) is the work that
+actually closes the blindness; the census only makes it *visible on demand*.
+
+**Where each half belongs — neither is a gauntlet leg:**
+
+1. ⛔ **NOT DONE — the CHECK half → `buildSystem/`, replacing the `positional-hole` regex.** Ratchets live in
    `buildSystem/check-*.js` and run *on the build* — which is once per gauntlet, in the preamble,
    alongside `[stinks]` / `[dead-methods]` / `[unresolved-sends]` / `[thin-wraps]` /
    `[call-separation]`. A paren-aware "non-final bare `undefined` argument" check belongs exactly
    there: it costs ~1 s, it needs no new leg, and it closes the blindness §7b documents. Seed the
    baseline at the measured count (~9) and ratchet to 0 as P8 lands.
-2. **The INVENTORY half → `fg critique`.** The arity histogram and the call listing are an
+2. ✅ **DONE — the INVENTORY half → `fg critique`.** The arity histogram and the call listing are an
    exploration view, not a verdict — and `fg critique` is already "the Critic Browser analogue:
    every ratchet's tighten-me signal plus the censuses' summary counts, read-only, never gates".
-   That is precisely this tool's shape. Promote the scanner to `buildSystem/` so it is versioned,
-   and add a `step` line.
+   That is precisely this tool's shape.
 3. ⛔ **NOT a new gauntlet leg.** Every gauntlet leg but `census` is a *browser* run; a static text
    scan added as leg 15 would duplicate what the build already ran minutes earlier in the same
    invocation, for +1 leg of failure surface and zero extra coverage.

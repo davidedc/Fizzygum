@@ -278,6 +278,7 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 | `census-public-private-calls.js` | public/private SELF-call mixing (R1–R4) | ALSO the measurement ENGINE behind the [S]/[U] gate. Its `runCensus()` exports the whole-system **class model** (`classInfo` / `chainOf` / `resolve` — parent + `@augmentWith` mixins + methods + resolution order) and `maskLine`; the two censuses below REUSE it rather than re-implement it. |
 | `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
 | `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
+| `census-call-arity.js` | call sites + top-level argument arity; `--holes` lists calls punching a bare `undefined` through to a later argument (R3) | ⚠⚠ **The real hole count — `positional-hole` sees only the two-adjacent-`undefined` subset and reads 0 while 50 stand.** Paren/quote-aware, joins continuation lines, scans BOTH repos. `--call=<method>` / `--super=<class>` / `new <Class>` modes; excludes `.call`/`.apply`/`.bind`, where `undefined` is a foreign API's *this*-arg. |
 
 **Why those two can never be promoted to gates** — the reasons are specific, not ceremonial:
 - **`super` is META-COMPILED** (`src/meta/Class.coffee` `_equivalentforSuper` rewrites every super form at fragment
@@ -563,6 +564,14 @@ write findings to the `duplication-report/triage-report.md` ledger rather than t
 ⚠ `runCensus()`'s `bodyLines` carry STRING-STRIPPED code (fine for call extraction, wrong for comparing bodies) — if
 you need text with strings intact, re-read the source and cut comments with `maskLine`, as
 `census-hierarchy-duplication.js` does.
+
+**`compile-fragment.js` — the hand tool beside the syntax gate.** `check-coffee-syntax.js` drives
+every *shipped source* through the real `Class.coffee`; `compile-fragment.js` compiles ONE pasted
+fragment the same fragmented way, for the question "what does this signature/call actually become".
+Use it before converting a parameter list — especially to confirm a trailing `key: value` lands as a
+SEPARATE final argument. ⚠ `coffee -bcp <wholefile>` is NOT a substitute: it applies ES-class
+semantics (parameters bound after `super`, bare `super` illegal as a statement) that this tree's
+emit does not have, and false-fails on most files.
 
 **Self-test a rule (a lint that can't fail is worthless).** Plant a known violation in a throwaway source file, confirm
 the build/gate **aborts loudly** with the right message, confirm the marker exempts it, then **delete the fixture**:
