@@ -471,6 +471,27 @@ if ! $noSyntaxCheck ; then
   echo "... stink check OK"
 fi
 
+# --- build-time ARGUMENT-HOLE gate (baseline-ratcheted) --------------------------------
+# Enforces the HOLE TEST (R3 of docs/architecture/constructor-and-parameter-conventions.md): if any
+# call site must pass `undefined` to reach a later argument, the parameter list is wrong. Shares ONE
+# parser with buildSystem/census-call-arity.js (the advisory view behind `fg critique`), so the gate
+# and the census can never disagree about what a hole is. This is the HONEST count: the
+# `positional-hole` stink above matches only two `undefined`s adjacent on one line, and reading its 0
+# as "clean" is how the conformance arc came to be archived complete and re-opened the same day with
+# ~50 holes standing. Baseline inline in the check; FAILS on a rise, prints a tighten-me note on a
+# drop. Scans src/ only (the tests repo's metadata PROSE would false-positive a build). Same
+# --noSyntaxCheck escape hatch + explicit $? abort as the gates above.
+if ! $noSyntaxCheck ; then
+  echo "checking for argument holes (the R3 hole test, ratcheted) ..."
+  node ./buildSystem/check-argument-holes.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: argument-hole gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... argument-hole check OK"
+fi
+
 # --- build-time THIN-WRAP gate --------------------------------------------------------
 # Enforces the ONE canonical shape for a public self-settling method that owns a private *Core twin:
 # `[guards] @mutateGeometryThenSettle => @_<name>Core <args>` -- it must do no work of its own, only

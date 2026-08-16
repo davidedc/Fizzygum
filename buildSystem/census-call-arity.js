@@ -140,10 +140,17 @@ function callArgText(lines, li, col) {
   return { text, endLine: lines.length - 1 };
 }
 
-const files = ROOTS.flatMap(r => walk(r, []));
-const rows = [];
-
-for (const p of files) {
+// ---- the reusable scan -------------------------------------------------------------------
+// buildSystem/check-argument-holes.js REQUIRES this module and calls collectHoles() rather than
+// re-implementing the parser — the census-public-private-calls.js precedent (ONE engine, several
+// consumers), and the reason the gate and this view can never disagree about what a hole is.
+function scanRows(roots, cfg) {
+  const superOf = cfg.superOf || '';
+  const callOf = cfg.callOf || '';
+  const classes = cfg.classes || [];
+  const sweepAll = !!cfg.sweepAll;
+  const rows = [];
+  for (const p of roots.flatMap(r => walk(r, []))) {
   const src = fs.readFileSync(p, 'utf8');
   const lines = src.split('\n');
   for (let li = 0; li < lines.length; li++) {
@@ -151,7 +158,7 @@ for (const p of files) {
     if (/^\s*(#|\/\/)/.test(line)) continue;   // whole-line comment
     const patterns = superOf
       ? [new RegExp('\\bsuper\\b', 'g')]
-      : (holesOnly && !callOf && !classes.length)
+      : sweepAll
         // tree-wide hole sweep: any identifier followed by an argument list. Over-matches (it
         // catches non-calls too); the `undefined`-in-non-final-position filter below is what
         // makes the output meaningful, and a non-call cannot have one.
@@ -175,6 +182,8 @@ for (const p of files) {
       }
     }
   }
+  }
+  return rows;
 }
 
 // A HOLE = a bare `undefined` argument that is NOT the last one. A TRAILING `undefined` is not a
@@ -186,17 +195,29 @@ const FOREIGN_THISARG = /^(call|apply|bind)$/;
 const isHole = r => !FOREIGN_THISARG.test(r.callee.replace(/^.*[.@]/, '')) &&
   r.args.some((a, i) => a === 'undefined' && i < r.args.length - 1);
 
+// In the tree-wide sweep every identifier on a line matches, so ONE physical call is reported once
+// per name in it (`_paintInLocalScope aContext, clippingRectangle, …` reports 4 times). Collapse to
+// one row per (file, line) — rows arrive arity-descending, so the first kept is the leftmost /
+// outermost callee, which is the real one.
+function dedupeBySite(rows) {
+  const seen = new Set();
+  return rows.filter(r => { const k = r.file + ':' + r.line; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// THE one answer to "which calls punch `undefined` through to a later argument", shared by the gate.
+function collectHoles(roots) {
+  const rows = scanRows(roots, { sweepAll: true }).filter(isHole);
+  rows.sort((x, y) => y.n - x.n || x.file.localeCompare(y.file) || x.line - y.line);
+  return dedupeBySite(rows);
+}
+
+module.exports = { scanRows, isHole, dedupeBySite, collectHoles, ROOT, ROOTS };
+if (require.main !== module) return;
+
+const rows = scanRows(ROOTS, { superOf, callOf, classes, sweepAll: holesOnly && !callOf && !classes.length });
 rows.sort((x, y) => y.n - x.n || x.file.localeCompare(y.file) || x.line - y.line);
 let shown = rows.filter(r => r.n >= minArgs);
-if (holesOnly) {
-  shown = shown.filter(isHole);
-  // ⚠ In the tree-wide mode every identifier on a line matches, so ONE physical call is reported
-  // once per name in it (`_paintInLocalScope aContext, clippingRectangle, …` reports 4 times).
-  // Collapse to one row per (file, line) — rows are sorted by arity descending, so the first is
-  // the leftmost/outermost callee, which is the real one.
-  const seen = new Set();
-  shown = shown.filter(r => { const k = r.file + ':' + r.line; if (seen.has(k)) return false; seen.add(k); return true; });
-}
+if (holesOnly) shown = dedupeBySite(shown.filter(isHole));
 for (const r of shown) {
   console.log(`${r.n}  ${r.file}:${r.line}${r.endLine !== r.line ? '-' + r.endLine : ''}  ${r.callee}  [ ${r.args.join(' | ')} ]`);
 }

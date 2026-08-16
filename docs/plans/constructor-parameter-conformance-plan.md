@@ -896,7 +896,7 @@ R1-conformant.
 body keeps the `.add`. Three allocations before, three after — worth checking, because this runs
 per visible header on every scroll and resize.
 
-### Item 5 — the tooling gap ✅ TOOLS PROMOTED 2026-08-16; the GATE half is still open
+### Item 5 — the tooling gap ✅ DONE 2026-08-16 (tools promoted AND the gate built)
 
 ⭐⭐ **The tool that found 108 of P7's 109 holes was gitignored** — and it is what found this whole
 tail too, including the 9-site `_paintInLocalScope` family that two hand-written regexes had both
@@ -907,10 +907,25 @@ missed. Now promoted out of `Fizzygum-tests/.scratch/`:
 | `.scratch/ctor-arity-scan.js` | **`buildSystem/census-call-arity.js`** | ADVISORY inventory: call sites + top-level arity, `--call=` / `--super=` / class modes, and a new **`--holes`** mode built on the same paren-aware parser. Wired into `fg critique` |
 | `.scratch/frag-compile.js` | **`buildSystem/compile-fragment.js`** | compiles ONE fragment the way the browser does — the §8 "verify the spelling against the compiler" check. `coffee -bcp <wholefile>` is not a faithful substitute |
 
-⛔ **Still open: the CHECK half.** `positional-hole`'s two-adjacent-`undefined` regex remains the
-gate, and it still reads 0 against 50 real holes. Replacing it with a paren-aware
-`buildSystem/check-*.js` (seeded at the measured count, ratcheted down as P8 lands) is the work that
-actually closes the blindness; the census only makes it *visible on demand*.
+✅ **The CHECK half: `buildSystem/check-argument-holes.js`**, wired into the build beside the stink
+gate, ratcheted at the measured **20** (`src/` only) and failing on any rise. It does not
+re-implement anything: `census-call-arity.js` now exports `collectHoles()` and the gate calls it, so
+**the gate and the advisory view cannot disagree about what a hole is** — the
+`census-public-private-calls.js` precedent of one engine with several consumers.
+
+⚠ **Scope is `Fizzygum/src/**/*.coffee` only, deliberately.** The tests repo carries ~25 more holes,
+but its `SystemTest_*.js` metadata is PROSE inside string literals and the tree-wide identifier
+sweep necessarily over-matches it. **A doc edit in a test must never break a build.** Sweep those by
+hand with `census-call-arity.js --holes`.
+
+⭐ **`positional-hole` STAYS.** Two mechanisms for one law is justified here because one is a strict
+subset of the other: the stink is the instant alarm for the worst shape, at zero cost, inside a pass
+already running; the new check is the honest count. The stink's comment now points at it, so nobody
+reads its 0 as "clean" again.
+
+⚠ **Proven to fail, not just to pass.** A hole planted in `PointerWdgt` takes the check to 21/20 and
+aborts the build with `argument-hole gate failed`; reverting returns it to 20 and green. A gate that
+has never been seen to fail is not known to work.
 
 **Where each half belongs — neither is a gauntlet leg:**
 
