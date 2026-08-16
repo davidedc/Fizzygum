@@ -205,8 +205,13 @@ class PopUpWdgt extends Widget
     # already set the dedup flag, so no trailing repaint call is needed here.)
     @addShadow()
 
-  destroy: ->
-    super()
+  # Leaving the open set belongs in the CORE, beside the _closeNoSettle half below: bulk teardown
+  # recurses core-to-core (fullDestroyChildren / _fullDestroyNoSettle) and never calls the public
+  # destroy(), so an override there misses every pop-up destroyed as part of a subtree. WorldWdgt's
+  # per-cycle openPopUps sweep already covers the gap, which is why this is a tier correction rather
+  # than a visible-leak fix.
+  _destroyNoSettle: ->
+    super
     world.openPopUps.delete @
 
   # Dismissal policy: a PINNED pop-up is desktop furniture -- closing it is the ordinary

@@ -134,8 +134,9 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   references. Error values paint in the error colour.
 - **Deleting a cell (blank commit).** The value is cleared to `undefined` and the cell's incoming edges
   dropped, but the NODE is KEPT — so downstream references reactively see `undefined`. Full
-  `removeAllEdgesOf` (node death) is reserved for the sheet's `destroy` (drops every cell's edges)
-  and Phase 6 un-wiring; a plain deletion is not node death because the cell may still be referenced.
+  `removeAllEdgesOf` (node death) is reserved for the sheet's `_destroyNoSettle` (drops every cell's
+  edges — the CORE, so bulk teardown reaches it too) and Phase 6 un-wiring; a plain deletion is not
+  node death because the cell may still be referenced.
 
 ## Value protocol & presenters (3)
 

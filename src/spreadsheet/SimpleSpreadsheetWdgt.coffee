@@ -925,12 +925,19 @@ class SimpleSpreadsheetWdgt extends Widget
   _afterDeserialization: ->
     @_recommitAllCells()
 
-  # drop keyboard focus when this sheet goes away, so a dead widget never receives keys (the
-  # whole widget subtree — panel, headers, cells, any live editor on a cell — is torn down by
-  # super's child destruction). Also perform NODE DEATH on every cell: drop its edges from the
-  # shared engine (the Phase-1 removeAllEdgesOf API) — a destroyed sheet's cells are gone, so
-  # leaving their edges would leak and could ghost-recompute.
-  destroy: ->
-    world?.keyboardEventsReceivers?.delete @
+  # NODE DEATH on every cell: drop its edges from the shared engine (the Phase-1 removeAllEdgesOf
+  # API) — a destroyed sheet's cells are gone, so leaving their edges is a leak and a ghost
+  # recompute. This belongs in the CORE, not on the public destroy() wrapper: bulk teardown
+  # (fullDestroyChildren / _fullDestroyNoSettle / resetWorld) recurses core-to-core and never
+  # touches the public verb, so cleanup hung there is skipped in exactly the case that needs it —
+  # a whole subtree containing a sheet going away. Same rule, same reason, as
+  # IconicDesktopSystemShortcutWdgt's tracker cleanup.
+  # The @model? guard covers the deserialization path, where an Object.create'd instance can be
+  # destroyed before its model lands; forEachCell over an empty Map is a no-op, and
+  # removeAllEdgesOf is cheap for a cell that was never a node.
+  # Keyboard focus needs no line here — the base core drops me from world.keyboardEventsReceivers
+  # itself, and the whole subtree (panel, headers, cells, any live editor on a cell) goes down with
+  # super's child destruction.
+  _destroyNoSettle: ->
+    super
     @model?.forEachCell (cell) -> world.dataflow?.removeAllEdgesOf cell
-    super()
