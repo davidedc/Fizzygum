@@ -6,6 +6,10 @@ class HandleWdgt extends Widget
   target: undefined
   inset: undefined
   type: undefined
+  # my carrier-owned corner knob — the layoutSpec I hand my parent at add() time,
+  # and whose .inset I keep in step with @inset. LayoutSpec.coffee names this one
+  # as the pattern's reference example.
+  cornerSpec: undefined
 
   # Affine transforms (§6 Phase 4B): transient rotate-gesture reference frame — the island's rotation
   # and the pointer's angle about the anchor, both captured at grab-start (mouseDownLeft), cleared at

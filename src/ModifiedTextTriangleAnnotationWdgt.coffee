@@ -1,6 +1,9 @@
 class ModifiedTextTriangleAnnotationWdgt extends Widget
 
   positionWithinParent: "topLeft"
+  # my carrier-owned corner knob — the layoutSpec I hand my parent at add() time
+  # (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)
+  cornerSpec: undefined
 
   constructor: (parent, proportionOfParent = 0, fixedSize = 10) ->
     super()

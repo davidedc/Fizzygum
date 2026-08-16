@@ -1,5 +1,9 @@
 class UpperRightTriangleWdgt extends Widget
 
+  # my carrier-owned corner knob — the layoutSpec I hand my parent at add() time
+  # (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)
+  cornerSpec: undefined
+
   constructor: (parent, proportionOfParent = 4/8) ->
     super()
     @cornerSpec = new CornerInternalLayoutSpec 'topRight', proportionOfParent, 0

@@ -99,27 +99,58 @@ CLOSED 2026-08-12 — executed in full the day it was authored; residue in `arch
 - [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.
 - [ ] **FOUND BY P1's recapture, pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
 
-### `plans/widget-practices-convergence-plan.md` — AUTHORED 2026-08-14, NOT started
+### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W4b DONE 2026-08-16, W4c next
 Acts on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes);
 target state is `architecture/widget-authoring-guidelines.md`. Ordered by (defect severity x safety);
-four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what is deliberately PARKED
+four phases are owner-gated. Plan §9 holds the six decisions (D1 and D2 now DECIDED and executed);
+§10 holds what is deliberately PARKED
 (the `Simple*` split, constructor geometry verbs, appearance-factory conversion of leaves,
 `isTransparentAt` placement, always-on stepping, hard-coded colours).
-- [ ] **W1 — three malformed menu entries in `SliderWdgt.addWidgetSpecificMenuEntries` (§2.1).** A real
-      defect: a FUNCTION in `addMenuItem`'s string-action slot and a STRING where `opts` goes, plus a
-      `@prompt` call whose arguments are shifted one place (`@setStart` passed as `target`).
-      `ButtonWdgt.trigger`'s dev tripwire already names this class as carrying "the same latent misuse".
-- [ ] **W2 — two teardown overrides sit on the public wrapper instead of the core (§2.2).**
-      `SimpleSpreadsheetWdgt.destroy` + `PopUpWdgt.destroy`; bulk teardown recurses cores, so the
-      cleanup is skipped exactly when a subtree goes away. `IconicDesktopSystemShortcutWdgt` states the
-      rule in a comment. `PopUpWdgt`'s case is masked by `WorldWdgt`'s per-cycle `openPopUps` sweep.
-- [ ] **W3 (owner D1) — `PointerWdgt` + `IconicDesktopSystemScriptShortcutWdgt` drop `super` in
-      `addWidgetSpecificMenuEntries` (§2.3)**, so neither offers the base layout submenu.
-- [ ] **W4 — 52 widget classes assign 124 own fields with no class-level declaration (§2.4).** Invisible
-      to the Duplicator's own-property walk, the serializer and the inspector. 48 of the 124 are EIGHT
-      repeated fields (`toolTipMessage` x11, `target` x10, `icon` x8, `cornerSpec` x5, `title` x5,
-      `callback`/`cornerRadius`/`seed` x3), so the work is eight placement decisions (owner D2) plus ~76
-      clerical lines. ⚠ Every addition must be checked against the mixin-clobber trap (plan §3.4).
+⭐ **The recapture rule this arc measured:** `InspectorWdgt.showingInherited` defaults to FALSE, so a
+member list shows the inspected class's OWN members. A pull-up to a base class is inspector-FREE; a
+declaration on a class some test OPENS is what costs. Predict from plan §11.1's per-surface test
+lists, not from how many classes inherit the field.
+- [x] **W1 — three malformed menu entries in `SliderWdgt.addWidgetSpecificMenuEntries` (§2.1).**
+      ✅ **DONE — landed by another arc**, `6c5e616f` (2026-08-15, P4 of the constructor-conformance
+      arc): string actions with `@` as target, and the `@prompt` calls reading the title as
+      `menuItem.parent.title`. ⚠ It resolved the handler signature as `(menuItem)`, NOT the
+      `(ignored, ignored2, menuItem)` §2.1 predicted — slot 1 IS the menu item. Trust the code.
+- [x] **W2 — two teardown overrides sat on the public wrapper instead of the core (§2.2).**
+      ✅ **DONE 2026-08-16**, `2e7e67d6`. Both moved to `_destroyNoSettle`. The sheet's redundant
+      `keyboardEventsReceivers` delete went with it (the base core already does it).
+      ↳ **OPEN follow-up:** `WorldWdgt`'s per-cycle `openPopUps` sweep now has a comment that is no
+      longer true ("the destroy() function used everywhere is not recursive"). Try deleting it; if
+      the suite + serialization stay green it existed only for the bug W2 fixed.
+- [x] **W3 (owner D1) — `PointerWdgt` + `IconicDesktopSystemScriptShortcutWdgt` dropped `super` in
+      `addWidgetSpecificMenuEntries` (§2.3).** ✅ **DONE 2026-08-16**, `75af5434`. 0 recaptures.
+      ⚠⚠ **The gates prove no regression and do NOT prove the fix — the added entries have no
+      witness.** The suite has zero references to either class (every apparent `PointerWdgt` hit is
+      `ActivePointerWdgt`), and `menu-click-sweep-headless.js` builds menus only for `world` plus 14
+      named `REPRESENTATIVES`, which include neither.
+      ↳ **OPEN follow-up:** add both classes to that `REPRESENTATIVES` list.
+- [x] **W4a — the 13 fields carrying no placement question.** ✅ **DONE 2026-08-16**, `20557aca`.
+      All `: undefined` per `BoxWdgt`'s precedent. Recaptured 2 tests / 20 refs
+      (`Fizzygum-tests` `8da30a819`): `ButtonWdgt.faceWidget` is a member, and both mixin-donor tests
+      open a class inspector on `ButtonWdgt`. ⭐ Safe to recapture because those macros select by
+      LABEL, not index — an index-selecting macro would have silently started checking another member.
+- [x] **W4b (owner D2) — the repeated-field placements.** ✅ **DONE 2026-08-16**, `668db897`,
+      0 recaptures. `toolTipMessage`→`Widget` (which retired `iconToolTipMessage` entirely: 33
+      renames + 2 copy lines), `title`→`IconicDesktopSystemLinkWdgt` (NOT `…ShortcutWdgt` — the app
+      launcher is a sibling, not a subclass), `icon`→`WidgetHolderWithCaptionWdgt` +
+      `GenericCompositeIconWdgt` (only two homes: the link family extends the former),
+      `seed`→`GraphsPlotsChartsWdgt`, `cornerRadius` + `cornerSpec` per class.
+      **`target` (9) is deliberately NOT declared** — 12 classes already declare it independently and
+      the connector arc's P9 proposes SPLITTING the name; declaring it now would entrench the
+      ambiguity P9 exists to remove. `callback` (2) fell below the threshold that picked the rest.
+      ⚠ §2.4's counts were re-derived at W0: F9 is **51 classes / 120 fields**, not 52/124 (the
+      prompt-family conversion `6c5e616f` removed `ErrorsLogViewerWdgt` and `CodePromptWdgt.msg`).
+- [ ] **W4c — the remainder: 20 classes / 72 fields.** `SimpleSpreadsheetWdgt` 16, `WorldWdgt` 16,
+      `CellWdgt` 7, `FrameWdgt` 6, `FridgeMagnetsWdgt` + `SheetHeaderCellWdgt` 4 each, and a tail
+      that includes `WidgetHolderWithCaptionWdgt.labelContent` and the two `callback` writers.
+      ⚠ Do `WorldWdgt` **alone and first**: declaring world state changes what the `resetWorld`
+      completeness ratchet fingerprints. ⚠ Every addition must still be checked against the
+      mixin-clobber trap (plan §3.4) — no mixin declared any of W4a/W4b's fields, but that is a
+      per-field fact, not a general one.
 - [ ] **W5 — the `_reLayout` prologue is copy-pasted verbatim in 23 classes (§2.5).** `PatchNodeWdgt`
       already has the hook the others want (`_layOutNodeContents`). Zero recapture budget: a diff here
       means the hook landed in the wrong place, never a new baseline.
@@ -133,19 +164,36 @@ four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what i
 - [ ] **W8 (owner D5) — `LabelButtonWdgt` takes 17 positional slots, `ButtonWdgt` 12 (§2.8)**, and the
       `@param`-shadowing law forces three classes to carry a parallel `iconToolTipMessage` shadow field.
       Precedent: `21d5b64` (SliderWdgt) + `archive/menu-slider-ctor-conversion-plan.md`.
-      ✅ **DONE — executed as P3 of the constructor conformance arc**
-      (2026-08-15, `archive/constructor-parameter-conformance-plan.md`): `LabelButtonWdgt` 17 and `ButtonWdgt` 12
-      both became `(target, action, opts)`, and only `IconButtonWdgt`'s `iconToolTipMessage` was
-      actually the `@param`-shadow hazard — the other two shadow fields have a different cause. This
-      W8 line survives only for that remainder.
+      ✅ **DONE, both halves.** Constructors: P3 of the constructor conformance arc (2026-08-15,
+      `archive/constructor-parameter-conformance-plan.md`) — `LabelButtonWdgt` 17 and `ButtonWdgt` 12
+      both became `(target, action, opts)`. Shadow fields: W4b (2026-08-16, `668db897`) — declaring
+      `toolTipMessage` on `Widget` is what let the whole `iconToolTipMessage` family go (33 subclass
+      declarations renamed, 2 base declarations + 2 copy lines deleted); `grep iconToolTipMessage src`
+      is empty. ⓘ `CreatorButtonWdgt extends Widget`, not `ButtonWdgt` — which is why it carried a
+      shadow at all, and why a `Widget`-level declaration is what retires it. **Nothing left here.**
 - [ ] **W9 — give the surviving conventions a mechanism (§5).** One HARD GATE that is a sound negative
       (`check-menu-actions.js`: a function literal in an action slot, a string literal where `opts` goes),
       one advisory `census-widget-conformance.js` that re-derives the survey's mechanical facets on
       demand, and a ratchet on its two most objective counts. ⚠ Deliberately NOT gated: `colloquialName`
       coverage, `super`-in-menu-overrides, setter shapes — each has a legitimate exception today.
-- ⚠ **W6 overlaps `plans/connector-ubiquity-and-reflection-plan.md`** (authored the same day, from the
-  value's side rather than the setter's). Whichever lands first, the other re-derives its setter
-  inventory against the tree left behind; they must not edit the same setter bodies in parallel.
+- ⚠⚠ **W6 collides with `plans/connector-ubiquity-and-reflection-plan.md` in DIRECTION, not just in
+  files — and W6's own premise is incomplete. Three findings from the 2026-08-16 pass; settle the
+  sequencing question BEFORE starting W6a or D3, since it gates both** (detail in plan §2.6):
+  1. **§2.6's table omits a sixth route, and it is the tree's existing answer to W6's problem.**
+     `DataflowEngine._applyWireValue` prefers a `_<action>Connector` method when the consumer defines
+     one, so the wire path can have its own entry point instead of one widened method serving both.
+     Three sites use it (`StringWdgt._setTextConnector`, `._setFontSizeConnector`,
+     `NumberPromptWdgt._takeSliderValueConnector`). W6a must decide whether it is UNIFYING the setters
+     or PROMOTING this lane — the second needs no signature widening at all.
+  2. **W6a would entrench what the sibling arc's P1 deletes.** P1 replaces the duck-typed
+     `getColor?() ? getValue?() ? @text` coercion with an explicit `@get` on a `PinSpec`, and costs
+     the same ~19 setter overrides on 9 classes W6a would rewrite. Sequence P1 first, or aim W6a at
+     P1's target shape.
+  3. **D3's idempotence guards are NOT redundant with the engine's cutoff, and may break P2.** The
+     equal-value cutoff (`_valuesEqual`, the widget-sink branch) gates onward TRAVERSAL only —
+     `_applyWireValue` still CALLS the setter with an equal value — so a guard would newly suppress
+     the setter's own repaint. And P2's proposed bind-time rule ("the side whose menu you opened
+     pushes") depends on both wires FIRING when the two sides already agree.
 
 ### ~~`archive/dropped-background-fill-investigation.md`~~ → `archive/` — ✅ EXECUTED IN FULL 2026-08-13
 The MECHANISM question left by the SWCanvas one-rect-fill campaign (itself `✅ EXECUTED IN FULL`;

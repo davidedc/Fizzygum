@@ -1,6 +1,9 @@
 class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
   _acceptsDrops: true
+  # my carrier-owned corner knob — the layoutSpec MenusHelper hands my parent at
+  # add() time (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)
+  cornerSpec: undefined
 
   constructor: ->
     super "Bin", new GenericShortcutIconWdgt new BinIconWdgt

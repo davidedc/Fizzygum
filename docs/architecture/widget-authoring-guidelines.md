@@ -128,8 +128,11 @@ constructor: (backgroundColor) ->
   @backgroundColor = backgroundColor if backgroundColor?
 ```
 
-Do not introduce a parallel shadow field (`iconToolTipMessage` → `@toolTipMessage`) to dodge a
-parameter you control: fix the parameter.
+Do not introduce a parallel shadow field — a second name a subclass sets, copied onto the real field
+after `super` — to dodge a parameter you control: fix the parameter. The tree carries no such field
+today; the worked example, and what removing it took, is
+[`../plans/widget-practices-convergence-plan.md`](../plans/widget-practices-convergence-plan.md)
+§2.8.
 
 ### 3.3 Call `super` first unless something in the base needs a value
 

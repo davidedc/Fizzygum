@@ -793,6 +793,25 @@ proposes.
     plus their `@toolTipMessage = @iconToolTipMessage` copy line. `grep iconToolTipMessage src` is
     now empty. ⓘ `CreatorButtonWdgt extends Widget`, NOT `ButtonWdgt` — which is why it needed the
     shadow at all, and why a `Widget`-level declaration is what retires it.
+  - *Batch 3 — `cornerSpec` (5), 0 recaptures.* ⚠ This one was **omitted from the D2 recommendation
+    as put to the owner** and had to be caught afterwards, so W4b briefly stood "complete" while one
+    of the eight fields was untouched. Declared PER CLASS, matching `cornerRadius`: four of the five
+    writers extend `Widget` directly and `BinOpenerWdgt` extends `IconicDesktopSystemLinkWdgt`, so
+    there is no family base to pull up to, and a niche layout knob does not belong on the root.
+    ⭐ **Lesson: a decision put to the owner must be checked against the table it answers.** The
+    eight-row table was the spec; the recommendation covered seven rows and nothing flagged it.
+  ⭐⭐ **AND THE TWO WAYS A DECLARATION SHOWS UP, which are different pixels.** `cornerSpec` cost one
+  test (`macroNakedInspectorRendersResizesAndEdits`, which inspects an `AnalogClockWdgt` INSTANCE),
+  and the diff was not a moved row: all 150 changed pixels were one colour flip, `0,0,180` → `0,180,0`.
+  `InspectorWdgt._filterProperties` colours members most-general-first, and the specific criterion is
+  `@target.constructor.prototype.hasOwnProperty(element)` — **blue means "not declared on the class",
+  green means "declared"**. So:
+  - an **OBJECT** inspector already lists the field (the constructor made it an own property); the
+    declaration flips its colour blue → green;
+  - a **CLASS** inspector (`ClassInspectorWdgt X.prototype`) does not list it at all until it is
+    declared; the declaration ADDS A ROW (W4a's `faceWidget`).
+  ⭐ That colour flip is the inspector reporting the fix, so the recapture is EVIDENCE the phase
+  worked — §2.4's whole premise is that an undeclared field is invisible to the inspector.
   ⭐⭐ **THE RULE THIS PHASE BOUGHT — a base-class declaration is inspector-FREE; a declaration on the
   class being INSPECTED is what costs.** `InspectorWdgt.showingInherited` defaults to **false**, so a
   member list shows own members only. That is why `Widget.toolTipMessage` (a base, 11 writers) cost
