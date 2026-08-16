@@ -25,7 +25,6 @@ putTicksNextToDoOnceBlocksThatHaveBeenRun
 runProgram
 runLastWorkingProgram
 getWorldMatrix
-identifyBlockEnd
 
 # --- Dispatched ONLY by computed name (invisible to the static reference scanner): the reactive-connection
 #     dispatch resolves the connector by "_#{@action}Connector" (ControllerMixin._fireConnection), so the literal

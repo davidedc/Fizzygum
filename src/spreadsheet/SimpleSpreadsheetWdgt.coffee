@@ -711,6 +711,8 @@ class SimpleSpreadsheetWdgt extends Widget
   # clicked slot is the caret's own PUBLIC self-settling gotoSlot — a discrete event-time
   # entry exactly like a click on any editing text — so it runs AFTER this settle.
   startEditAtPointer: (address, pos) ->
+    # early-return-sanctioned: an address that resolves to no cell has nothing to edit, and this is a
+    # pointer-event path — opening a settle to discover that is churn, not thinness.
     colRow = @model.colRowFor address
     return unless colRow?
     @_settleLayoutsAfter =>
@@ -730,11 +732,16 @@ class SimpleSpreadsheetWdgt extends Widget
   # the ONE settle for the commit/cancel work, exactly like processKeyDown / mouseClickLeft.
   # Guarded: an accept escalated by an unrelated nested editable text is a no-op.
   acceptCellEdit: ->
+    # early-return-sanctioned: an ESCALATION handler — an accept raised by an unrelated nested
+    # editable text reaches us too, and for that case this method is the documented no-op above.
+    # A no-op must not open a settle.
     return unless @_editing
     @_settleLayoutsAfter => @_commitEditNoSettle()
     return
 
   cancelCellEdit: ->
+    # early-return-sanctioned: the cancel twin of acceptCellEdit's guard — same unrelated-escalation
+    # no-op, same reason not to open a settle for it.
     return unless @_editing
     @_settleLayoutsAfter => @_cancelEditNoSettle()
     return

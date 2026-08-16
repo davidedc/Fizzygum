@@ -2469,6 +2469,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     records.some (eachRecord) -> eachRecord.scope is "class" or eachRecord.scope is "mixin"
 
   loadWorldSnapshot: (envelopeOrString, opts = {}) ->
+    # early-return-sanctioned: every guard below MUST precede the settle, and none of them can live
+    # in a core that only runs after the teardown they exist to prevent — a format check that informs
+    # and stops, a user confirm that may decline, and the lazy-part branch, which RE-ENTERS this same
+    # public method once the parts arrive rather than continuing.
     envelope = if typeof envelopeOrString is "string" then JSON.parse(envelopeOrString) else envelopeOrString
     unless envelope? and envelope.format is Serializer.FORMAT and envelope.kind is "world"
       world.inform "This is not a Fizzygum world snapshot file."

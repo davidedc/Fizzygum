@@ -37,6 +37,9 @@ class StorageSorter
 
   # the doOneCycle station: dark-cheap when nothing is pending.
   drainPendingSort: ->
+    # early-return-sanctioned: this runs from doOneCycle on EVERY cycle, and staying dark-cheap when
+    # nothing is pending is the guard's entire job. Pushed into the core it would open a settle every
+    # cycle just to discover there is nothing to drain.
     return unless @sortPending
     world._settleLayoutsAfter => @_drainNoSettle()
 
