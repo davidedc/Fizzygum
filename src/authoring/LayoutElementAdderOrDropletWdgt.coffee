@@ -96,12 +96,12 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       newWdgt = new Widget
       @parent.add newWdgt
       newWdgt._applyGrantedBounds @boundingBox()
-      newWdgt.add @, undefined, @_ensureDivisionBox()
+      newWdgt.add @, layoutSpec: @_ensureDivisionBox()
       newWdgt.showAdders()
 
     newAdder = new LayoutElementAdderOrDropletWdgt
     if @layoutSpec?.isDivisionElement?()
-      @addAsSiblingAfterMe newAdder, undefined, newAdder._divisionBox
+      @addAsSiblingAfterMe newAdder, layoutSpec: newAdder._divisionBox
     else
       @addAsSiblingAfterMe newAdder
 
@@ -109,10 +109,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   # and fullDestroy -> the non-settling core _fullDestroyNoSettle.
   _reactToChildDropped: (widgetBeingDropped) ->
     if @layoutSpec?.isDivisionElement?()
-      @addAsSiblingAfterMe \
-        widgetBeingDropped,
-        undefined,
-        widgetBeingDropped._ensureDivisionBox()
+      @addAsSiblingAfterMe widgetBeingDropped, layoutSpec: widgetBeingDropped._ensureDivisionBox()
     else
       @addAsSiblingAfterMe widgetBeingDropped
     @_fullDestroyNoSettle()

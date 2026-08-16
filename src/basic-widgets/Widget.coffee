@@ -1628,7 +1628,7 @@ class Widget extends TreeNode
     # myIndex, me free-floating inside it); homing an empty tracking island is safe (its _reLayoutChildren
     # no-ops with no content, and __add skips the extent recalculation). Orphan-safe: no formerParent => the
     # island stays a detached root and I move into it, exactly as before.
-    formerParent?._addNoSettle island, position: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec (incl. a stretch record; my kept content-stack knob stays MINE — container reads find the riding spec slot-first, see contentStackSpec)
+    formerParent?._addNoSettle island, atIndex: myIndex, layoutSpec: myLayoutSpec   # drop the (empty) island into MY former slot + spec (incl. a stretch record; my kept content-stack knob stays MINE — container reads find the riding spec slot-first, see contentStackSpec)
     island._addNoSettle @                                      # then reparent me into the now-homed island (free-floating child)
     island
 
@@ -1643,7 +1643,7 @@ class Widget extends TreeNode
     islandIndex = islandParent.children.indexOf island
     islandLayoutSpec = island.layoutSpec
     pos = @position()
-    islandParent._addNoSettle @, position: islandIndex, layoutSpec: islandLayoutSpec   # reparent me back into the island's slot + spec (incl. a stretch record)
+    islandParent._addNoSettle @, atIndex: islandIndex, layoutSpec: islandLayoutSpec   # reparent me back into the island's slot + spec (incl. a stretch record)
     @_moveToNoSettle pos                                          # preserve my absolute position (desktop case)
     # R2 (§6 affine): a highlight (or any layout-inert ephemeral chrome, isEphemeral) parented INTO this
     # island while it was rotated must ride OUT before we drop it — else _destroyNoSettle just nulls
@@ -2985,7 +2985,7 @@ class Widget extends TreeNode
     return unless PointerWdgt?
     myPosition = @positionAmongSiblings()
     widgetToAdd = new PointerWdgt @
-    @parent.add widgetToAdd, myPosition
+    @parent.add widgetToAdd, atIndex: myPosition
     widgetToAdd.setBounds @position(), new Point 150, 20
     @removeFromTree()
 
@@ -3243,16 +3243,18 @@ class Widget extends TreeNode
   # self-settle would re-enter the flush guard; for the other caller
   # (showResizeAndMoveHandlesAndLayoutAdjusters, a menu action) it is byte-identical
   # because the frame settles anyway.
-  addAsSiblingAfterMe: (aWdgt, position, layoutSpec) ->
+  # The index is the whole point of these two -- they compute it from MY own slot -- so they take
+  # only the add family's other option, spelled the same way it is spelled on add().
+  addAsSiblingAfterMe: (aWdgt, opts = {}) ->
     myPosition = @positionAmongSiblings()
-    @parent._addNoSettle aWdgt, position: (myPosition + 1), layoutSpec: layoutSpec
+    @parent._addNoSettle aWdgt, atIndex: (myPosition + 1), layoutSpec: opts.layoutSpec
 
-  addAsSiblingBeforeMe: (aWdgt, position, layoutSpec) ->
+  addAsSiblingBeforeMe: (aWdgt, opts = {}) ->
     myPosition = @positionAmongSiblings()
-    @parent._addNoSettle aWdgt, position: myPosition, layoutSpec: layoutSpec
+    @parent._addNoSettle aWdgt, atIndex: myPosition, layoutSpec: opts.layoutSpec
 
   # The layoutSpec a widget takes when added with NO explicit one -- the default for add() / _addNoSettle()'s
-  # layoutSpec argument. Plain widgets are free-floating; a widget with an intrinsic placement overrides this
+  # layoutSpec option. Plain widgets are free-floating; a widget with an intrinsic placement overrides this
   # so a caller can write the uniform `parent.add child` (no spec at the call site) and still get the right
   # attachment. The destination is passed so the placement can depend on it (e.g. a HandleWdgt corner-attaches
   # only to the very widget it resizes -- its @target -- and is free-floating on the world / hand otherwise).
@@ -3274,8 +3276,18 @@ class Widget extends TreeNode
   # (`opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)`). A default here too would state the
   # fallback twice — and since the base answer IS undefined, it also called the resolver twice per
   # add: once here, then again in the core because `?` saw the undefined it had just produced.
-  add: (aWdgt, position, layoutSpec, beingDropped) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
+  # The options bag is handed to the core UNCHANGED, so the two faces of the same operation share
+  # one vocabulary; the overrides below add keys (notContent, positionOnScreen) that only their own
+  # cores read, and a key its receiver does not read is simply ignored -- which is what lets one
+  # caller write the same add against any container in the family.
+  # opts.atIndex -- WHERE AMONG THE SIBLINGS, an integer index into @children (it reaches
+  #   TreeNode._addChild as `@children.splice atIndex, 0, node`), NOT a screen position: a
+  #   container that wants the latter takes opts.positionOnScreen.
+  # opts.layoutSpec -- the attachment; absent means ask the widget (see the core).
+  # opts.beingDropped -- true only on the drop path, so a receiver can tell a user gesture from a
+  #   programmatic add.
+  add: (aWdgt, opts = {}) ->
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
 
   # _addNoSettle -- the COMPLETE add minus the settle. The single NON-settling core behind add() and
   # every internal layout-time / construction-time / teardown adder (it must NOT
@@ -3286,7 +3298,7 @@ class Widget extends TreeNode
   # what add() used to do in its settle-wrap; it is a no-op for the fresh non-world
   # children the internal adders pass.)
   _addNoSettle: (aWdgt, opts = {}) ->
-    position = opts.position
+    atIndex = opts.atIndex
     layoutSpec = opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)
     beingDropped = opts.beingDropped
 
@@ -3329,7 +3341,7 @@ class Widget extends TreeNode
     # cross-invalidation-sanctioned: structural-move dispatcher — the add orchestration
     # invalidates the widget being re-homed (its own tiers run non-notifying here)
     aWdgt._fullChanged()
-    @__add aWdgt, true, position
+    @__add aWdgt, true, atIndex
     aWdgt._reactToBeingAdded @, beingDropped
     if previousParent?._reactToChildRemoved?
       previousParent._reactToChildRemoved aWdgt
@@ -3947,7 +3959,7 @@ class Widget extends TreeNode
         newAdjuster = new StackElementsSizeAdjustingWdgt
         newAdjuster._divisionBox.axis = stackSiblingBefore.layoutSpec.axis
         world.temporaryHandlesAndLayoutAdjusters.add \
-          @addAsSiblingBeforeMe newAdjuster, undefined, newAdjuster._divisionBox
+          @addAsSiblingBeforeMe newAdjuster, layoutSpec: newAdjuster._divisionBox
 
 
       stackSiblingAfter = @firstSiblingAfterMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()
@@ -3955,7 +3967,7 @@ class Widget extends TreeNode
         newAdjuster = new StackElementsSizeAdjustingWdgt
         newAdjuster._divisionBox.axis = stackSiblingAfter.layoutSpec.axis
         world.temporaryHandlesAndLayoutAdjusters.add \
-          @addAsSiblingAfterMe newAdjuster, undefined, newAdjuster._divisionBox
+          @addAsSiblingAfterMe newAdjuster, layoutSpec: newAdjuster._divisionBox
       if @parent?
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
@@ -4392,7 +4404,7 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     # double-settle-sanctioned: deliberate SEQUENTIAL pair, exactly as newParentChoice above.
-    @add theWidgetToBeAttached, undefined, theWidgetToBeAttached._ensureDivisionBox()
+    @add theWidgetToBeAttached, layoutSpec: theWidgetToBeAttached._ensureDivisionBox()
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
     # ScrollPanel-only pre-guard; @add already self-settled the attach).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
@@ -4734,7 +4746,7 @@ class Widget extends TreeNode
     @_divisionBox
 
   # PUBLIC face of the box (macros / demos / in-world scripting): the box doubles as the
-  # ATTACHMENT value for adding a widget as a division element — `holder.add w, undefined,
+  # ATTACHMENT value for adding a widget as a division element — `holder.add w, layoutSpec:
   # w.divisionBox()` for a horizontal row, `w.divisionBox('y')` for a vertical division
   # stack. Internal private callers use the _ensureDivisionBox core.
   divisionBox: (axis) ->

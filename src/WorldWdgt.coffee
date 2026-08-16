@@ -640,7 +640,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # the creator ARMS the clock's corner knob (top-right); the corner pass places it, so
     # no hand-computed position here. Corner-anchored until the user grabs it -- the grab
     # disarms the slot and the membership rule takes over (proportional tracking).
-    @add acm, undefined, acm.cornerSpec
+    @add acm, layoutSpec: acm.cornerSpec
 
     # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
     # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED

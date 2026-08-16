@@ -22,7 +22,7 @@ class MenusHelper
     binOpener = new BinOpenerWdgt
     # the creator ARMS the opener's corner knob: corner-anchored until the user grabs it
     # (the grab disarms the slot; nothing re-arms it -- the spec-family lifecycle)
-    world.add binOpener, undefined, binOpener.cornerSpec
+    world.add binOpener, layoutSpec: binOpener.cornerSpec
 
   newScriptWindow: ->
     scriptWdgt = new ScriptWdgt

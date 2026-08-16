@@ -25,20 +25,16 @@ class ToolPanelWdgt extends PanelWdgt
   # Public add self-settles over the non-settling core (the Widget /
   # SimpleVerticalStackPanelWdgt add/_addNoSettle pattern); the pre-convert shape is in
   # docs/archive/layout-optimizations-and-oo-cleanup-plan.md.
-  # slot 5 is `notContent` family-wide — accepted and ignored here (see SimpleVerticalStackPanelWdgt.add)
-  add: (aWdgt, position, layoutSpec, beingDropped, notContent, positionOnScreen) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
+  add: (aWdgt, opts = {}) ->
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
 
   _addNoSettle: (aWdgt, opts = {}) ->
-    position = opts.position
-    layoutSpec = opts.layoutSpec
-    beingDropped = opts.beingDropped
     positionOnScreen = opts.positionOnScreen
 
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
     if aWdgt.attachesToScrollFrameDirectly?()
-      super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
+      super aWdgt, opts
     else
       # if aWdgt specifies a non-default switcharoo then it
       # means it's like the TextBoxCreatorButtonWdgt, which creates a textbox
@@ -72,10 +68,10 @@ class ToolPanelWdgt extends PanelWdgt
       dropSlot = @_findDropSlot positionOnScreen, childrenNotHandlesNorCarets
 
       if dropSlot?
-        super aWdgt, position: dropSlot, layoutSpec: layoutSpec, beingDropped: beingDropped
+        super aWdgt, Object.assign {}, opts, atIndex: dropSlot
       else
         # no drop position (a programmatic add): append after the existing icons
-        super aWdgt, layoutSpec: layoutSpec, beingDropped: beingDropped
+        super aWdgt, opts
 
       @_invalidateLayout()
 

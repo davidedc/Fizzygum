@@ -52,7 +52,7 @@ class PointerWdgt extends BoxWdgt
     if !@target.isOrphan()
       @target.createPointerWdgt()
     myPosition = @positionAmongSiblings()
-    @parent.add @target, myPosition
+    @parent.add @target, atIndex: myPosition
     @target.moveTo @position()
     @close()
 

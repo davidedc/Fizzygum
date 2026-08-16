@@ -22,20 +22,17 @@ class SimpleVerticalStackPanelWdgt extends Widget
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
-  # Slot 5 is `notContent` family-wide. FrameWdgt is the ONLY receiver that acts on it; here it is
-  # accepted and ignored, so the slot carries ONE meaning across every add() in the family and slot 6
-  # (positionOnScreen) stays aligned. It was named `unused` in three classes while FrameWdgt called the
-  # same slot `notContent`, which made one positional call mean different things per receiver.
-  add: (aWdgt, position, layoutSpec, beingDropped, notContent, positionOnScreen) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, positionOnScreen: positionOnScreen
+  # opts.positionOnScreen -- where the widget was released on SCREEN, so the stack can work out which
+  # sibling it landed between. Distinct from opts.atIndex, which names that slot outright.
+  # A key this receiver does not read (opts.notContent, which only the frame acts on) is simply
+  # ignored -- which is why one drop-site call can address any container in the add family.
+  add: (aWdgt, opts = {}) ->
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
 
   # _addNoSettle -- the non-settling core of add(), mirroring Widget.add/_addNoSettle. The stack-specific
   # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   _addNoSettle: (aWdgt, opts = {}) ->
-    position = opts.position
-    layoutSpec = opts.layoutSpec
-    beingDropped = opts.beingDropped
     positionOnScreen = opts.positionOnScreen
     aWdgt._resizeToWithoutSpacing()
 
@@ -46,7 +43,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
     # The vertical stack lays children in sibling order, so inserting means counting up to the child
-    # at the same height and inserting after it -- add() takes a position argument for this.
+    # at the same height and inserting after it -- opts.atIndex names that slot outright.
     positionNumberAmongSiblings = undefined
     if (childrenNotHandlesNorCarets.length > 0) and (positionOnScreen instanceof Point)
       positionNumberAmongSiblings = 0
@@ -56,9 +53,9 @@ class SimpleVerticalStackPanelWdgt extends Widget
           break
 
     if positionNumberAmongSiblings?
-      super aWdgt, position: positionNumberAmongSiblings, layoutSpec: layoutSpec, beingDropped: beingDropped
+      super aWdgt, Object.assign {}, opts, atIndex: positionNumberAmongSiblings
     else
-      super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
+      super aWdgt, opts
 
   # ALL options, no operand. `extent` reads like the natural first one, but only 4 of
   # ~15 sites pass it (fails R1's "the typical caller passes it") and the two that want

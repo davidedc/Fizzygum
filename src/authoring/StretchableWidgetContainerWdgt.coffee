@@ -37,13 +37,13 @@ class StretchableWidgetContainerWdgt extends Widget
 
   # actually
   # ends up in the Panel inside it
-  add: (aWdgt, position, layoutSpec, beingDropped) ->
+  add: (aWdgt, opts = {}) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
     if !@contents? or aWdgt.attachesToScrollFrameDirectly?()
       super
     else
-      @contents.add aWdgt, position, layoutSpec, beingDropped
+      @contents.add aWdgt, opts
 
   # Crystallizing a ratio pins canSetHeightFreely ONLY on a STACK spec (§5.B):
   # as a framed CITIZEN's direct content my FrameContentLayoutSpec stays FREE

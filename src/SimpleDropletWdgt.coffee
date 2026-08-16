@@ -20,10 +20,7 @@ class SimpleDropletWdgt extends Widget
 
   _reactToChildDropped: (widgetBeingDropped) ->
     @parent?[@parentFieldToAttachingTheWidgetToAsString] = widgetBeingDropped
-    @addAsSiblingAfterMe \
-      widgetBeingDropped,
-      undefined,
-      undefined
+    @addAsSiblingAfterMe widgetBeingDropped
     # _reactToChildDropped runs inside the drop's single settle, so it uses NON-settling calls throughout:
     # addAsSiblingAfterMe already routes through _addNoSettle; _commitBounds is the immediate mutator (the
     # dropped widget is freefloating -- added via addAsSiblingAfterMe with an undefined layoutSpec (free-floating) --

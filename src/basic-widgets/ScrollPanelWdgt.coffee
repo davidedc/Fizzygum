@@ -223,8 +223,7 @@ class ScrollPanelWdgt extends PanelWdgt
   # end up in the Panel inside it.
   # This would also apply to resizing handles - so we need to
   # correct for that case
-  # slot 5 is `notContent` family-wide — accepted and ignored here (see SimpleVerticalStackPanelWdgt.add)
-  add: (aWdgt, position, layoutSpec, beingDropped, notContent, positionOnScreen) ->
+  add: (aWdgt, opts = {}) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign). Keyed off the WIDGET, not the layoutSpec argument:
     # handles are added with no explicit spec (defaultLayoutSpecWhenAddedTo resolves it inside
@@ -232,7 +231,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if aWdgt.attachesToScrollFrameDirectly?()
       super
     else
-      @contents.add aWdgt, position, layoutSpec, beingDropped, undefined, positionOnScreen
+      @contents.add aWdgt, opts
       # Intentional synchronous APPLY (not an off-settle trigger to defer): add / addMany /
       # showResizeAndMoveHandlesAndLayoutAdjusters are public content-change ENDPOINTS, idempotent
       # with this panel's own _reLayout ('super; @_reLayoutChildren'), distinct from the seam sites

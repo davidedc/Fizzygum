@@ -474,14 +474,17 @@ class ActivePointerWdgt extends Widget
         virtualCentre = target.screenPointToMyPlane payloadVisualCentre
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
 
-      # Affine transforms §7.13: the 6th add arg is consumed by the stack/menu panels
+      # Affine transforms §7.13: positionOnScreen is consumed by the stack/menu panels
       # (SimpleVerticalStackPanelWdgt / ToolPanelWdgt) to derive a
       # child-INSERT index by comparing against their children's PLANE-LOCAL spans — for a target
       # inside a non-identity island the raw screen point picks the wrong slot (a 180°-tilted stack
       # inverts the visual order, so a drop on the first child inserted after the last). Same gate +
       # mapping as the 4D-1 block above; dormant path passes @position() through, byte-identical.
+      # This one call addresses every container in the add family: a receiver that does not read
+      # positionOnScreen simply ignores it, which is what the options tail buys over the six
+      # positional slots (four of them holes) this used to need.
       dropPositionInTargetPlane = if target._isInsideNonIdentityIsland() then target.screenPointToMyPlane @position() else @position()
-      target.add wdgtToDrop, undefined, undefined, true, undefined, dropPositionInTargetPlane
+      target.add wdgtToDrop, beingDropped: true, positionOnScreen: dropPositionInTargetPlane
       # Affine transforms 4D-2b (§6): the UNWRAP half of the re-expression. _reExpressFigureForPlaneOfNoSettle
       # above re-spec'd a dropped sugar figure to its RELATIVE similitude; when that was identity the figure is
       # now a _materializedBySugar island at identity NESTED in target, so the 4C auto-unwrap dissolves it in

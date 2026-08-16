@@ -559,8 +559,10 @@ class FrameWdgt extends Widget
   _reLayoutMayResizeOwnWidth: ->
     @isFreeFloating() and !@contents?.contentStackSpec()?.desiredWidth?
 
-  add: (aWdgt, position, layoutSpec, beingDropped, notContent) ->
-    @_settleLayoutsAfter => @_addNoSettle aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped, notContent: notContent
+  # opts.notContent -- add as CHROME, not as my content: skip the title/@contents bookkeeping below.
+  # The frame is the only receiver in the add family that acts on it.
+  add: (aWdgt, opts = {}) ->
+    @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
 
   # _addNoSettle -- the non-settling core of add() (mirrors Widget.add/_addNoSettle).
   # Folds in the frame's content bookkeeping (title, @contents swap, spec init +
@@ -569,9 +571,6 @@ class FrameWdgt extends Widget
   # directly (A2a de-inherit), all non-settling. Adding @contents through THIS core (vs
   # the bare base _addNoSettle) is exactly what keeps the content wired by the deferred re-fit.
   _addNoSettle: (aWdgt, opts = {}) ->
-    position = opts.position
-    layoutSpec = opts.layoutSpec
-    beingDropped = opts.beingDropped
     notContent = opts.notContent
     # the polymorphic strip-spacing hook (a base no-op; some widget types override
     # it) runs on every add, mirroring the stack's add core.
@@ -614,9 +613,9 @@ class FrameWdgt extends Widget
       # life) -- but NOT for a same-widget chrome-rebuild re-add (§9.7-Q above): the standing
       # capture is exactly the placement this mount already has.
       aWdgt._contentStackSpec.desiredWidth = undefined unless isSameContentRemount
-      super aWdgt, position: position, layoutSpec: aWdgt._contentStackSpec, beingDropped: beingDropped
+      super aWdgt, Object.assign {}, opts, layoutSpec: aWdgt._contentStackSpec
     else
-      super aWdgt, position: position, layoutSpec: layoutSpec, beingDropped: beingDropped
+      super aWdgt, opts
     @resizer?._moveInFrontOfSiblings()
 
   # (A2a, was inherited from the stack) membership-change re-fit -- same

@@ -11,10 +11,9 @@ class IconicDesktopSystemPanelWdgt extends PanelWdgt
   iconsLayingInGridWrapCount: 3
   iconsPaddingFromContainerEdges: 5
 
-  # position/layoutSpec ride through to Widget.add untouched (bare super
-  # forwards all arguments), so a plain payload lands free-floating via
-  # Widget.add's own defaulting.
-  add: (aWdgt, position, layoutSpec, beingDropped) ->
+  # the options ride through to Widget.add untouched (bare super forwards all
+  # arguments), so a plain payload lands free-floating via Widget.add's own defaulting.
+  add: (aWdgt, opts = {}) ->
     super
     # If the user drops an icon, it's more natural to just position it
     # where it is. Conversely, if an icon is just "created" somewhere,
@@ -22,7 +21,7 @@ class IconicDesktopSystemPanelWdgt extends PanelWdgt
     # a freshly-created (not dropped) desktop icon that takes part in the grid is auto-placed;
     # instead of `(aWdgt instanceof WidgetHolderWithCaptionWdgt) and !(aWdgt instanceof BinOpenerWdgt)`
     # (type-test-elimination campaign)
-    if !beingDropped and aWdgt.participatesInIconGrid?()
+    if !opts.beingDropped and aWdgt.participatesInIconGrid?()
       if @laysIconsHorizontallyInGrid
         xPos = @numberOfIconsOnDesktop % @iconsLayingInGridWrapCount
         yPos = Math.floor @numberOfIconsOnDesktop / @iconsLayingInGridWrapCount

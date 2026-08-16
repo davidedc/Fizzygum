@@ -236,7 +236,7 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   which is what the divider's closed form rests on), axis-parameterized, one shared placement loop.
   LIFECYCLE: a per-widget KNOB (`Widget._divisionBox`, kept for the widget's whole life — a
   divider-tuned cell dragged out of its stack and back keeps its box), which doubles as the add-time
-  attachment: `holder.add w, undefined, w.divisionBox('y')`.
+  attachment: `holder.add w, layoutSpec: w.divisionBox('y')`.
 - **`VerticalStackLayoutSpec`** — `desiredWidth` (the width wish, captured at placement) + `grow`
   (0..1 share of extra space) + `alignment`, with
   `width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )` — the content

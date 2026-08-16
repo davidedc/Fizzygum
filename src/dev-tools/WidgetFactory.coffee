@@ -189,9 +189,9 @@ class WidgetFactory
       lmAdj = new StackElementsSizeAdjustingWdgt
       lmContent2 = new RectangleWdgt
 
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -211,9 +211,9 @@ class WidgetFactory
       lmAdj = new StackElementsSizeAdjustingWdgt
       lmContent2 = new RectangleWdgt
 
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -234,10 +234,10 @@ class WidgetFactory
       lmContent2 = new RectangleWdgt
       lmContent3 = new RectangleWdgt
 
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
-      lmHolder.add lmContent3, undefined, lmContent3._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+      lmHolder.add lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -261,11 +261,11 @@ class WidgetFactory
       lmAdj2 = new StackElementsSizeAdjustingWdgt
       lmContent3 = new RectangleWdgt
 
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
-      lmHolder.add lmAdj2, undefined, lmAdj2._ensureDivisionBox()
-      lmHolder.add lmContent3, undefined, lmContent3._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj2, layoutSpec: lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -294,15 +294,15 @@ class WidgetFactory
       lmAdj4 = new StackElementsSizeAdjustingWdgt
       lmSpacer2 = new LayoutSpacerWdgt
 
-      lmHolder.add lmSpacer1, undefined, lmSpacer1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj2, undefined, lmAdj2._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
-      lmHolder.add lmAdj3, undefined, lmAdj3._ensureDivisionBox()
-      lmHolder.add lmContent3, undefined, lmContent3._ensureDivisionBox()
-      lmHolder.add lmAdj4, undefined, lmAdj4._ensureDivisionBox()
-      lmHolder.add lmSpacer2, undefined, lmSpacer2._ensureDivisionBox()
+      lmHolder.add lmSpacer1, layoutSpec: lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, layoutSpec: lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, layoutSpec: lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, layoutSpec: lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, layoutSpec: lmSpacer2._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -331,15 +331,15 @@ class WidgetFactory
       lmAdj4 = new StackElementsSizeAdjustingWdgt
       lmSpacer2 = new LayoutSpacerWdgt 2
 
-      lmHolder.add lmSpacer1, undefined, lmSpacer1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj2, undefined, lmAdj2._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
-      lmHolder.add lmAdj3, undefined, lmAdj3._ensureDivisionBox()
-      lmHolder.add lmContent3, undefined, lmContent3._ensureDivisionBox()
-      lmHolder.add lmAdj4, undefined, lmAdj4._ensureDivisionBox()
-      lmHolder.add lmSpacer2, undefined, lmSpacer2._ensureDivisionBox()
+      lmHolder.add lmSpacer1, layoutSpec: lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, layoutSpec: lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, layoutSpec: lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, layoutSpec: lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, layoutSpec: lmSpacer2._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -368,15 +368,15 @@ class WidgetFactory
       lmAdj4 = new StackElementsSizeAdjustingWdgt
       lmSpacer2 = new LayoutSpacerWdgt 2
 
-      lmHolder.add lmSpacer1, undefined, lmSpacer1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj2, undefined, lmAdj2._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
-      lmHolder.add lmAdj3, undefined, lmAdj3._ensureDivisionBox()
-      lmHolder.add lmContent3, undefined, lmContent3._ensureDivisionBox()
-      lmHolder.add lmAdj4, undefined, lmAdj4._ensureDivisionBox()
-      lmHolder.add lmSpacer2, undefined, lmSpacer2._ensureDivisionBox()
+      lmHolder.add lmSpacer1, layoutSpec: lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, layoutSpec: lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, layoutSpec: lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, layoutSpec: lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, layoutSpec: lmSpacer2._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -405,15 +405,15 @@ class WidgetFactory
       lmAdj4 = new StackElementsSizeAdjustingWdgt
       lmSpacer2 = new LayoutSpacerWdgt 2
 
-      lmHolder.add lmSpacer1, undefined, lmSpacer1._ensureDivisionBox()
-      lmHolder.add lmAdj, undefined, lmAdj._ensureDivisionBox()
-      lmHolder.add lmContent1, undefined, lmContent1._ensureDivisionBox()
-      lmHolder.add lmAdj2, undefined, lmAdj2._ensureDivisionBox()
-      lmHolder.add lmContent2, undefined, lmContent2._ensureDivisionBox()
-      lmHolder.add lmAdj3, undefined, lmAdj3._ensureDivisionBox()
-      lmHolder.add lmContent3, undefined, lmContent3._ensureDivisionBox()
-      lmHolder.add lmAdj4, undefined, lmAdj4._ensureDivisionBox()
-      lmHolder.add lmSpacer2, undefined, lmSpacer2._ensureDivisionBox()
+      lmHolder.add lmSpacer1, layoutSpec: lmSpacer1._ensureDivisionBox()
+      lmHolder.add lmAdj, layoutSpec: lmAdj._ensureDivisionBox()
+      lmHolder.add lmContent1, layoutSpec: lmContent1._ensureDivisionBox()
+      lmHolder.add lmAdj2, layoutSpec: lmAdj2._ensureDivisionBox()
+      lmHolder.add lmContent2, layoutSpec: lmContent2._ensureDivisionBox()
+      lmHolder.add lmAdj3, layoutSpec: lmAdj3._ensureDivisionBox()
+      lmHolder.add lmContent3, layoutSpec: lmContent3._ensureDivisionBox()
+      lmHolder.add lmAdj4, layoutSpec: lmAdj4._ensureDivisionBox()
+      lmHolder.add lmSpacer2, layoutSpec: lmSpacer2._ensureDivisionBox()
       
       lmContent1.setColor Color.LIME
       lmContent2.setColor Color.BLUE
@@ -441,11 +441,11 @@ class WidgetFactory
     centerRow = new RectangleWdgt
     vdiv2 = new StackElementsSizeAdjustingWdgt
     south = new RectangleWdgt
-    holder.add north, undefined, north.divisionBox('y')
-    holder.add vdiv1, undefined, vdiv1.divisionBox('y')
-    holder.add centerRow, undefined, centerRow.divisionBox('y')
-    holder.add vdiv2, undefined, vdiv2.divisionBox('y')
-    holder.add south, undefined, south.divisionBox('y')
+    holder.add north, layoutSpec: north.divisionBox('y')
+    holder.add vdiv1, layoutSpec: vdiv1.divisionBox('y')
+    holder.add centerRow, layoutSpec: centerRow.divisionBox('y')
+    holder.add vdiv2, layoutSpec: vdiv2.divisionBox('y')
+    holder.add south, layoutSpec: south.divisionBox('y')
     north.setMinAndMaxBoundsAndSpreadability (new Point 40, 24), (new Point 60, 40), DivisionStackLayoutSpec.SPREADABILITY_NONE
     south.setMinAndMaxBoundsAndSpreadability (new Point 40, 24), (new Point 60, 40), DivisionStackLayoutSpec.SPREADABILITY_NONE
     west = new RectangleWdgt
@@ -453,11 +453,11 @@ class WidgetFactory
     center = new RectangleWdgt
     hdiv2 = new StackElementsSizeAdjustingWdgt
     east = new RectangleWdgt
-    centerRow.add west, undefined, west.divisionBox()
-    centerRow.add hdiv1, undefined, hdiv1.divisionBox()
-    centerRow.add center, undefined, center.divisionBox()
-    centerRow.add hdiv2, undefined, hdiv2.divisionBox()
-    centerRow.add east, undefined, east.divisionBox()
+    centerRow.add west, layoutSpec: west.divisionBox()
+    centerRow.add hdiv1, layoutSpec: hdiv1.divisionBox()
+    centerRow.add center, layoutSpec: center.divisionBox()
+    centerRow.add hdiv2, layoutSpec: hdiv2.divisionBox()
+    centerRow.add east, layoutSpec: east.divisionBox()
     west.setMinAndMaxBoundsAndSpreadability (new Point 30, 30), (new Point 50, 60), DivisionStackLayoutSpec.SPREADABILITY_NONE
     east.setMinAndMaxBoundsAndSpreadability (new Point 30, 30), (new Point 50, 60), DivisionStackLayoutSpec.SPREADABILITY_NONE
     for region in [north, south, west, east]

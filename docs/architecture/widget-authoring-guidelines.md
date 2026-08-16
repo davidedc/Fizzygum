@@ -87,8 +87,8 @@ constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
   super()
 ```
 
-The same shape is already the norm one level up in the API: `add aWdgt, position, layoutSpec,
-beingDropped` funnels into `_addNoSettle aWdgt, opts`, and `addMenuItem label, target, action, opts`
+The same shape is already the norm one level up in the API: `add aWdgt, opts` funnels into
+`_addNoSettle aWdgt, opts` sharing one key vocabulary, and `addMenuItem label, target, action, opts`
 serves 326 call sites with named knobs.
 
 ⚠ **Choosing the head across a FAMILY is stricter than choosing it for one class.** Once there is a

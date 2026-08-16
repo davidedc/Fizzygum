@@ -242,9 +242,15 @@ to make the call readable at all; two call-site groups that want disjoint tails.
 
 The hole test is mechanically checkable and is ratcheted by the `positional-hole` stink in
 `buildSystem/check-stinks.js` (see [`lint-and-static-checks.md`](lint-and-static-checks.md)):
-≥2 consecutive bare `undefined` arguments on a non-comment line. It is a **ratchet** —
-exceeding the baseline fails the build; dropping below it is a prompt to tighten. The target is
-0.
+≥2 consecutive bare `undefined` arguments on a non-comment line. It is at **0**, and 0 is now a
+HARD rule — there is no site left to grandfather.
+
+⚠⚠ **A green gate is a floor, not a proof.** The regex needs two `undefined`s *adjacent on one
+line*, so it is blind to the two commonest holes: a **single** `undefined` (`holder.add w,
+undefined, w.divisionBox()` — 67 such sites in `src/` and 41 in the macros, none of them ever
+counted), and a hole spread over a **multi-line** call. It is a regression alarm for the worst
+shape, not an inventory. When you convert a family, sweep it by METHOD NAME across both repos and
+read the call list; do not ask the gate whether you are done.
 
 Everything else here is convention, checked by review. The cap in R1, the vocabulary in R4 and
 the atomicity in R7 are not expressible as a text scan.
@@ -263,17 +269,24 @@ plain JS `new SliderWdgt(0, 100, 40, 10)` in the rigs.
 
 ## 7. Current conformance
 
-139 constructors in `src/`; 117 take ≤4 parameters and are already conformant or exempt. The
-remaining ones at ≥5 are inventoried, with a per-family conversion order, in
-[`../plans/constructor-parameter-conformance-plan.md`](../plans/constructor-parameter-conformance-plan.md).
-Landed conversions: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
-`FrameWdgt` constructors, the four `_addNoSettle` overrides
-([`../archive/accidental-complexity-reduction-plan.md`](../archive/accidental-complexity-reduction-plan.md) P5),
-`SliderWdgt`, `MenuItemSpec`, and the text family (`StringWdgt` / `TextWdgt` /
-`SimpleTextWdgt`, all three to `(text, opts = {})`).
+**The sweep is complete.** Every constructor in `src/` takes ≤4 operands or is named exempt under
+§3, and `positional-hole` sits at **0**, hard. The arc that got there —
+[`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md) —
+records the per-family measurements and the four heads that measurement overruled.
 
-The hole test is ratcheted at **30** by the `positional-hole` stink. ⚠ Reading that number as
-"30 constructors left" is wrong: **25 of the 30 are ordinary method calls**, chiefly
-`setFontName` and `setTargetAndActionWithOnesPickedFromMenu`, whose signatures want the same
-head/tail treatment — this convention is not constructor-specific. Three more are a positional
-*result* tuple (`return [a, b, error]`), a shape R3 does not address at all.
+Landed conversions, in order: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
+`FrameWdgt` constructors, and the four `_addNoSettle` overrides
+([`../archive/accidental-complexity-reduction-plan.md`](../archive/accidental-complexity-reduction-plan.md) P5);
+then `SliderWdgt`, `MenuItemSpec`, the text family (`StringWdgt` / `TextWdgt` / `SimpleTextWdgt`,
+all three to `(text, opts = {})`), the button family, the prompt family
+(`(widgetOpeningThePopUp, target, opts = {})`), the stragglers, the **method** families, and
+finally the polymorphic **`add`** family — 7 overrides of inconsistent arity (4, 5 and 6 slots)
+collapsed to one `(aWdgt, opts = {})`.
+
+⭐ **The convention is not constructor-specific, and the last two phases are the proof.** Of the 51
+holes originally counted, 25 were ordinary **method** calls, and the final phase was a method
+family too. Both phases found the same shape: a method whose extra slots exist for a *dispatcher*
+(`ButtonWdgt`'s fixed 4-slot menu convention) or for a *sibling class* (`add`'s `notContent` /
+`positionOnScreen`, read by one receiver each), with everyone else punching `undefined` through to
+reach past them. The options tail is what lets one call address a whole polymorphic family: a
+receiver that does not read a key simply ignores it.

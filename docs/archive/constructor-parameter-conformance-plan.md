@@ -1,7 +1,10 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0–P6 landed 2026-08-15/16 — `positional-hole` 51 → 1. ONE item remains: the
-`add` family (§7), owner-gated.** Owner-gated per family.
+**STATUS: COMPLETE. P0–P7 landed 2026-08-15/16 — `positional-hole` 51 → 0, now a HARD rule.**
+Every constructor in `src/` takes ≤4 operands or is named exempt; the method families and the
+polymorphic `add` family are converted too. The durable law is
+[`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md);
+this file is the arc's record — what was measured, and the four heads that measurement overruled.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -583,15 +586,7 @@ error path. ⚠ The other **33** `return [undefined, error] if error?` guards in
 alone deliberately: those stages DO set errors, one `undefined` is not a hole, and rewriting them
 would be churn with no defect behind it.
 
-⛔ **`add` is deliberately not done and wants its own decision.** `ActivePointerWdgt:484`
-(`target.add wdgtToDrop, undefined, undefined, true, undefined, dropPositionInTargetPlane`) is the
-last hole, but `add` is an **8-override polymorphic family with inconsistent arity** — `Widget` takes
-4, `FrameWdgt` 5, and `SimpleVerticalStackPanelWdgt`/`ScrollPanelWdgt`/`ToolPanelWdgt` 6 — and the
-caller passes all six *on purpose*, so that only the containers that declare `notContent` /
-`positionOnScreen` receive them. Its own non-settling core `_addNoSettle` **already** takes
-`(aWdgt, opts = {})`, so converting the public face would make the pair consistent and close the
-gate at 0. That is a wide, widely-called public API and a bigger change than the rest of P6
-combined: gate it separately.
+⛔ **`add` was deliberately left out of P6 and got its own phase — see §7b.**
 
 ⚠⚠ **THE MISS THAT COST A RE-RUN, AND IT IS THE STANDING HAZARD RESTATED.** The first P6 suite run
 came back with **30** failures, not the ~11 of benign inspector churn. Cause: the method families
@@ -619,6 +614,62 @@ before recapturing. Keeping `wireTo` on the mixin is the correct home — it rea
 `@reactToTargetConnection`, and `CellWdgt` probes `widget.wireTo?` to tell a controller from a plain
 presenter, which putting it on `Widget` would defeat. `fg recapture --auto`: **✅ RECAPTURE COMPLETE**,
 11 tests, suite green at dpr 1 and 2.
+
+---
+
+## 7b. P7 — The `add` family (the last one)
+
+`add` is the framework's widest public verb and the reason P6 stopped at 1 rather than 0. Seven
+overrides of **inconsistent arity** — `Widget` / `IconicDesktopSystemPanelWdgt` /
+`StretchableWidgetContainerWdgt` take 4, `FrameWdgt` 5 (`+ notContent`),
+`SimpleVerticalStackPanelWdgt` / `ScrollPanelWdgt` / `ToolPanelWdgt` 6 (`+ positionOnScreen`) — with
+`ActivePointerWdgt`'s drop site passing all six *on purpose*, four of them holes, so that whichever
+container it hits picks up the slots it declares. (`Point.add` is a different class entirely and was
+never in scope.)
+
+**As built: one `(aWdgt, opts = {})` across all seven, `positional-hole` 1 → 0 (now HARD).**
+
+⭐ **The target shape was already in the codebase.** `add`'s own non-settling core `_addNoSettle`
+had taken `(aWdgt, opts = {})` since the P5 of the predecessor arc, and `Widget.add` already
+translated into it key by key. So the public face was the *only* half still positional, and
+converting it made `add` hand the bag straight through — the two faces of one operation now share
+one vocabulary instead of a hand-maintained transcription that could drift.
+
+⭐⭐ **The gate was blind to 108 of the holes, and the interesting ones were all single-`undefined`.**
+`positional-hole` needs two `undefined`s adjacent on one line, so it counted exactly ONE `add` site.
+Sweeping by method name instead found **67 more in `src/`** and **41 in the macros**, every one of
+them `holder.add w, undefined, w.divisionBox()` — a hole punched through `position` to reach
+`layoutSpec`. They are the bulk of the conversion and the gate never saw them. This is now written
+into the convention doc §5 as a standing caveat: the stink is a regression alarm for the worst
+shape, not an inventory.
+
+⭐⭐ **`position` meant "sibling index", and the name had already caused a live bug.** The slot
+reaches `TreeNode._addChild` as `@children.splice position, 0, node`. Two spreadsheet macro fixtures
+read the name as a screen position and wrote `world.add slider, new Point 760, 240`; measured, the
+Point coerces through `splice` to index **0** (`Number(Point)` is NaN) and the placement is silently
+dropped — the slider sat clipped in the top-left corner while the fixture's own comment said "on the
+empty right side of the desktop, clear of the sheet's window", and the reference image had that
+baked in since capture. The option key is therefore **`atIndex`**, not `position` (R4: the key is the
+caller's vocabulary) — nobody writes `atIndex: new Point 760, 240`. The two fixtures now
+`world.add slider` then `slider.moveTo new Point 760, 240`, which is what they always meant.
+
+⭐ **Two sibling verbs came with it, carrying a parameter that did nothing at all.**
+`addAsSiblingAfterMe` / `addAsSiblingBeforeMe` were `(aWdgt, position, layoutSpec)` — and they
+compute the index from their own slot, so `position` was **dead**, yet four call sites passed
+`undefined` to skip it and one passed `undefined, undefined` to skip both. Now `(aWdgt, opts = {})`
+sharing `add`'s `layoutSpec` key.
+
+**Verification.** 293 of 294 tests pixel-identical on the first run — the conversion (7 overrides,
+108 call sites, both repos) is byte-clean. The single failure was
+`macroSpreadsheetDropWidgetIntoCell`, and only its **image_1**: images 2 and 3, which show the
+slider already hosted in cell B2, matched byte-for-byte, so the drop, the wiring and the dataflow
+recompute are all untouched and the diff is exactly the fixture placement. Verified visually before
+recapturing (slider whole and clear of the sheet, versus clipped at the corner).
+
+⚠ **The stale-build guard fired mid-run, and it was right.** Two comment edits to `src/` while the
+presuite was running bumped the source mtime past the build, so the runner refused the retry leg
+rather than measure old code. A running long op owns its inputs — docs and memory are safe to edit
+mid-run, `src/` and `tests/` are not.
 
 ---
 
