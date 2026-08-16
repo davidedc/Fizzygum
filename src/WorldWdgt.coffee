@@ -47,7 +47,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # for keyboard events. This one is
   # attached to a hidden
   # "input" div which keeps track of the
-  # text that is being input.
+  # text that is being input. This is that hidden element; it is created on demand (when a
+  # caret wants keyboard input) and torn down with the caret, so it is undefined most of the time.
+  inputDOMElementForVirtualKeyboard: undefined
   inputDOMElementForVirtualKeyboardKeydownBrowserEventListener: undefined
   inputDOMElementForVirtualKeyboardKeyupBrowserEventListener: undefined
   inputDOMElementForVirtualKeyboardKeypressBrowserEventListener: undefined
@@ -134,6 +136,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   worldCanvas: undefined
   worldCanvasContext: undefined
 
+  # where the world actually RENDERS, and the context that carries the result to the page.
+  # Under the SWCanvas backend @worldRenderCanvas is a separate software canvas whose pixels
+  # are blitted onto the DOM canvas once per painted frame through @domBlitContext (see
+  # blitRenderCanvasToDOM). Under the native backend the render canvas IS the DOM canvas and
+  # there is no blit, so @domBlitContext stays undefined. Both are set in the constructor.
+  worldRenderCanvas: undefined
+  domBlitContext: undefined
+
   canvasForTextMeasurements: undefined
   canvasContextForTextMeasurements: undefined
   cacheForTextMeasurements: undefined
@@ -142,6 +152,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   cacheForParagraphsWrappingData: undefined
   cacheForTextWrappingData: undefined
   cacheForTextBreakingIntoLinesTopLevel: undefined
+
+  # the island back-buffer cache: rendered buffers of transform islands whose content is
+  # unchanged, keyed by immutableBackBufferGeneration. Sized like the text caches above.
+  cacheForImmutableBackBuffers: undefined
 
   # By default the world will always fill
   # the entire page, also when browser window
@@ -371,12 +385,42 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # of widgets.
   editorFocusWdgt: undefined
 
+  # the world's input and text-editing state, all established in the constructor.
+  #   @hand — the ONE ActivePointerWdgt: the pointer, and the carrier of whatever is being dragged.
+  #   @keyboardEventsReceivers — widgets currently listening for keyboard input.
+  #   @caret — the single live CaretWdgt, or undefined when nothing is being edited.
+  #   @lastEditedText — the widget the caret was last in, kept after the caret goes so an editor
+  #     can still act on "the text the user last touched" (see @editorFocusWdgt above).
+  #   @temporaryHandlesAndLayoutAdjusters — the ephemeral handles/adjusters overlaid on a widget.
+  hand: undefined
+  keyboardEventsReceivers: undefined
+  caret: undefined
+  lastEditedText: undefined
+  temporaryHandlesAndLayoutAdjusters: undefined
+
   wallpaper: undefined
 
   untitledNamingService: undefined
   widgetFactory: undefined
 
+  # world.parts — the runtime loader for lazily-loadable PARTS of the system
+  # (buildSystem/parts.json), and world.dataflow / world.storageSorter / world.sourceEditsRegistry,
+  # the three other shipped product collaborators. All four are constructed unguarded.
+  parts: undefined
+  dataflow: undefined
+  storageSorter: undefined
+  sourceEditsRegistry: undefined
+
+  # the pinout debug overlay, a dev-only collaborator: present only when its class ships, so
+  # every caller soaks (@pinouts?.…) and it is legitimately undefined in a production build.
+  pinouts: undefined
+
+  # the simple-editor templates carried in a whole-world snapshot; undefined until one is loaded.
+  simpleEditorTemplates: undefined
+
   isIndexPage: undefined
+  # dev mode: the in-world editing/inspection affordances. Toggled from the world menu.
+  isDevMode: undefined
 
   healingRectanglesPhase: false
 
