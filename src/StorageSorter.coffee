@@ -91,7 +91,7 @@ class StorageSorter
     for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
       if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
         if !eachReferencingWdgt.isInStorage()
-          eachReferencingWdgt.target.markItAndItsParentsAsReachable newGcSessionId
+          eachReferencingWdgt.referencedWidget.markItAndItsParentsAsReachable newGcSessionId
           eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     # system furniture parked in storage is reachable through WORLD FIELDS, not
@@ -113,7 +113,7 @@ class StorageSorter
         if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
           if eachReferencingWdgt.isInStorageButReachable newGcSessionId
             newReachableReferencesUncovered = true
-            eachReferencingWdgt.target.markItAndItsParentsAsReachable newGcSessionId
+            eachReferencingWdgt.referencedWidget.markItAndItsParentsAsReachable newGcSessionId
             eachReferencingWdgt.markReferenceAsVisited newGcSessionId
 
     return newGcSessionId

@@ -3041,6 +3041,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # the wanted widget. Note that the reference could itself be
     # unreachable (e.g. sitting in the bin)
     for eachReferencingWdgt from @widgetsReferencingOtherWidgets
-      if eachReferencingWdgt.target == whichWdgt
+      if eachReferencingWdgt.referencedWidget == whichWdgt
         return true
     return false

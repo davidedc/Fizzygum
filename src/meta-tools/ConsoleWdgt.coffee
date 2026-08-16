@@ -1,5 +1,8 @@
 class ConsoleWdgt extends CodeAreaWdgt
 
+  # the object typed code is evaluated AGAINST (the receiver of the compiled function)
+  target: undefined
+
   runSelectionButton: undefined
   runAllButton: undefined
 

@@ -5,21 +5,21 @@
 
 class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutWdgt
 
-  constructor: (@target, @title, @icon) ->
+  constructor: (@referencedWidget, @title, @icon) ->
     if !@icon?
       @icon = new GenericShortcutIconWdgt new ScriptIconWdgt
     
-    super @target, @title, @icon
+    super @referencedWidget, @title, @icon
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 
-    if @target.destroyed
+    if @referencedWidget.destroyed
       @inform "The referenced item\nis dead!"
       return
 
-    @target.contents.doAll()
+    @referencedWidget.contents.doAll()
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->

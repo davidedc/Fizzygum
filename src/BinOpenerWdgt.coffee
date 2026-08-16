@@ -1,5 +1,9 @@
 class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
+  # the bin I open. NOT a tracked reference edge (I am not in
+  # world.widgetsReferencingOtherWidgets) -- I am a fixed opener for the one bin singleton.
+  target: undefined
+
   _acceptsDrops: true
   # my carrier-owned corner knob — the layoutSpec MenusHelper hands my parent at
   # add() time (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)

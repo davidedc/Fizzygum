@@ -1,7 +1,7 @@
 # A shortcut is a REFERENCE to another widget, not an independent copy.
 # Duplicating a shortcut duplicates the reference: both copies still point
-# at, and open, the SAME target -- and since only one instance of a widget
-# can be shown at once, opening either one is likely to relocate the target
+# at, and open, the SAME referenced widget -- and since only one instance of a
+# widget can be shown at once, opening either one is likely to relocate it
 # from wherever it currently sits.
 #
 # To get an independent copy, duplicate the referencED widget itself and
@@ -13,11 +13,17 @@
 
 class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
 
+  # The REFERENCE edge, and deliberately not called `target`: `@target` elsewhere in the tree means
+  # information flow (a dataflow consumer, a dispatch receiver), and reading one as the other is the
+  # hazard this name exists to remove. My membership of world.widgetsReferencingOtherWidgets is what
+  # the storage sorter walks to keep a referent reachable.
+  referencedWidget: undefined
+
   _reactToChildDropped: (droppedWidget) ->
 
-  constructor: (@target, @title, @icon) ->
+  constructor: (@referencedWidget, @title, @icon) ->
     if !@title?
-      @title = @target.colloquialName()
+      @title = @referencedWidget.colloquialName()
 
     super @title, @icon
     world.widgetsReferencingOtherWidgets.add @
@@ -26,12 +32,12 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     # drains at end-of-cycle, never per-event.
     world.noteStorageMembershipMayHaveChanged()
 
-  # Capability query (replaces `w instanceof IconicDesktopSystemShortcutWdgt and w.target == X` in
-  # Widget.createReference): "am I a shortcut pointing at `widget`?" -- folds the target check in.
+  # Capability query (replaces an `instanceof` test plus a referent comparison in
+  # Widget.createReference): "am I a shortcut pointing at `widget`?" -- folds the referent check in.
   # Defined here (inherited by all shortcut subclasses), dispatched via ?() (nothing on Widget).
   # (type-test-elimination campaign)
   isShortcutTo: (widget) ->
-    @target == widget
+    @referencedWidget == widget
 
   # I am a desktop shortcut (a reference), not a real widget being dropped in. A folder's drop
   # handling positions/references me accordingly, asking this instead of testing
@@ -62,11 +68,11 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   # itself when it sits directly in the bin), and spawn that next to this shortcut.
   # Public, not _-tier: it drives other widgets' public settling API. [call-separation A]
   bringUpTarget: ->
-    if @target.destroyed
+    if @referencedWidget.destroyed
       @inform "The referenced item\nis dead!"
       return
 
-    if @target.isAncestorOf @
+    if @referencedWidget.isAncestorOf @
       @inform "The referenced item is\nalready open and containing\nwhat you just clicked on!"
       return
 
@@ -83,20 +89,20 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     # nothing can be dragged out of it by hand. The bin is the one that is a real view.
     # ⇒ ExamplesFolderWindowWdgt ALSO fills itself from a `step`, which is the settle-safe seam for
     # building content; _reactToBeingAdded is not, since it fires INSIDE the add's own settle.
-    @target.whenReadyToBeBroughtUp => @_bringUpTargetNow()
+    @referencedWidget.whenReadyToBeBroughtUp => @_bringUpTargetNow()
 
   # nosettle-exempt: not a _NoSettle twin — this is the second half of bringUpTarget, split out so
   # the content-readiness seam above has something to call back into. It settles exactly as the
   # undivided method did, through spawnNextTo.
   _bringUpTargetNow: ->
-    whatToBringUp = @target.findRootForGrab()
+    whatToBringUp = @referencedWidget.findRootForGrab()
     # findRootForGrab can return undefined (e.g. a draggable graph has no grabbable
     # root); when the target itself rests DIRECTLY in the bin or shelf it is
     # its own root for this purpose. A target that is merely part of a larger
     # widget resting in storage has no such direct root -- bringing it up
     # would tear it off its container, which this path must not do.
-    if !whatToBringUp? and (@target.isDirectlyInBin() or @target.isDirectlyInShelf())
-      whatToBringUp = @target
+    if !whatToBringUp? and (@referencedWidget.isDirectlyInBin() or @referencedWidget.isDirectlyInShelf())
+      whatToBringUp = @referencedWidget
     if !whatToBringUp?
       @inform "The referenced item does exist\nhowever it's part of something\nthat can't be grabbed!"
     else

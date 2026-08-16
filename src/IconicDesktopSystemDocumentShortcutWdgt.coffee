@@ -5,11 +5,11 @@ class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcu
 
   _reactToChildDropped: (droppedWidget) ->
 
-  constructor: (@target, @title, @icon) ->
+  constructor: (@referencedWidget, @title, @icon) ->
     if !@icon?
-      @icon = new GenericShortcutIconWdgt new GenericObjectIconWdgt @target.representativeIcon()
+      @icon = new GenericShortcutIconWdgt new GenericObjectIconWdgt @referencedWidget.representativeIcon()
 
-    super @target, @title, @icon
+    super @referencedWidget, @title, @icon
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

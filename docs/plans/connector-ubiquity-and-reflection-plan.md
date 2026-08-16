@@ -1,6 +1,8 @@
 # Connector ubiquity & the controller-is-a-view law
 
-**STATUS: BRAINSTORM / design-stage, AUTHORED 2026-08-14. NO code written. Owner-gated.**
+**STATUS: design-stage, AUTHORED 2026-08-14. Owner-gated. ONE step executed: P9 LANDED 2026-08-16**
+(the `@target` disambiguation — §6's step 3; see the P9 section for what actually landed and what it
+deliberately left alone). Everything else is still design-stage with no code written.
 Anchor on **symbol names** (verified against `src/` on 2026-08-14); line numbers drift.
 Self-contained.
 
@@ -562,14 +564,48 @@ exports `0`/`1` as numerical (cheap, honest enough) or whether a fourth kind is 
 not — per facet 9, payloads are the cheap axis but a kind that only one widget uses is not worth its
 menu).
 
-### P9 — Naming: `@target` means four different things
+### P9 — Naming: `@target` means four different things — ✅ **LANDED 2026-08-16**
 
-Prerequisite hygiene for even discussing bindings. `@target` is today: the dataflow target
+Prerequisite hygiene for even discussing bindings. `@target` was: the dataflow target
 (`ControllerMixin`), the dispatch target (`ButtonWdgt`), the inspected object (`InspectorWdgt`), and
 the referent (`IconicDesktopSystemShortcutWdgt`).
-[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.1 already proposes
-`referencedWidget` for the fourth. Add `inspectedObject` for the third. Per
+[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.1 already proposed
+`referencedWidget` for the fourth; `inspectedObject` for the third. Per
 `regularity-principles.md`, the rename *is* part of the fix.
+
+**As landed.** The two overloaded meanings were renamed and the other two keep the name, because for
+them it is correct:
+
+| meaning | classes | outcome |
+|---|---|---|
+| referent | `IconicDesktopSystemShortcutWdgt` + Document/Folder/Script | → **`referencedWidget`** (21 sites + the 2 cross-file readers: `StorageSorter` keeping a referent reachable, `WorldWdgt`'s referrer lookup) |
+| inspected object | `InspectorWdgt`, `ClassInspectorWdgt` | → **`inspectedObject`** (40 sites, no cross-file readers) |
+| dataflow target | `ControllerMixin` and the wire path | unchanged — this IS the information-flow meaning the other two were borrowing |
+| dispatch target | `ButtonWdgt`, `CodePromptWdgt`, `IconicDesktopSystemWindowedAppLauncherWdgt` | unchanged |
+
+⭐ **The membership test is what settles which classes are referents, not the word "link".**
+`BinOpenerWdgt` and `IconicDesktopSystemWindowedAppLauncherWdgt` are SIBLINGS of the shortcut base
+(all three extend `IconicDesktopSystemLinkWdgt`) and neither joins
+`world.widgetsReferencingOtherWidgets`, so neither was renamed: calling their field
+`referencedWidget` would imply a tracked reference edge they do not have, blurring the distinction
+this rename exists to sharpen.
+
+⚠⚠ **The sweep must cover `Fizzygum-tests/scripts/`, and that is what this rename got wrong first.**
+`src/`, `tests/` and `Automator-and-test-harness-src/` were all swept clean and the SUITE stayed green
+— and the gauntlet's **`apps` and `parts`** legs still failed, because `smoke-apps-headless.js` and
+`parts-lazy-icons-headless.js` read `folderShortcut.target.contents.contents` at three sites inside
+`page.evaluate` bodies. Those rigs drive `index.html`, which the suite never touches, so no amount of
+suite-green says anything about them.
+
+⚠ **Residue — three `target`s that are neither dataflow, dispatch, nor a tracked reference**, left as
+`target` and now DECLARED with a comment saying what each actually is: `BinOpenerWdgt` (the bin it
+opens), `PointerWdgt` (the widget it points at), `ConsoleWdgt` (the object typed code is evaluated
+against). Each wants its own name and none is obvious; that is a small separate decision, not a
+reason to hold P9.
+
+⭐ **Rider: this retired the widget-practices arc's last open floor.** Its W4c parked 9 classes / 11
+undeclared fields on this rename (D2); with the meanings settled, all 11 are declared and
+`census-widget-conformance.js`'s undeclared-field baseline drops **9/11 → 0**.
 
 ---
 
@@ -615,7 +651,7 @@ carry zero engine risk, which makes them the right way to test the law before pa
 |---|---|---|---|
 | 1 | **P5 + P7** — wallpaper (and input mode) as nodes; ticks as reflection | **none** | complaint ③ |
 | 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) | **none** | complaint ②'s view half |
-| 3 | **P9** — the `@target` renames | none | reading hazard |
+| 3 | **P9** — the `@target` renames ✅ **LANDED 2026-08-16** | none | reading hazard |
 | 4 | **P1** — `PinSpec` with readers | pull-a-pin | unblocks 5–6 |
 | 5 | **P4** — a controller owns a list of wires | index mirroring; **serialization surface** | G2; frees `FanoutWdgt` |
 | 6 | **P2** — the `bind ⇄` gesture | none (two ordinary wires) | the headline |

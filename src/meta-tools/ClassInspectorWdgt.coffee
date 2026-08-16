@@ -5,7 +5,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   overrideInThisClassButton: undefined
 
   notifyInstancesOfSourceChange: (propertiesArray)->
-    @target.constructor.class.notifyInstancesOfSourceChange propertiesArray
+    @inspectedObject.constructor.class.notifyInstancesOfSourceChange propertiesArray
 
   # Override the NON-SETTLING core (not the wrapper): the inherited _buildAndConnectChildren wrapper settles
   # once, and this extension runs inside that single settle -- so the "this class" label is set via the
@@ -36,9 +36,9 @@ class ClassInspectorWdgt extends InspectorWdgt
   # gesture is offered -- field parity with methods). undefined when no source is
   # recorded (the base then falls back to showing the VALUE).
   _sourceForFieldMember: (selected) ->
-    if @target[selected + "_source"]?
-      return @target[selected + "_source"]
-    goingUpTargetProtChain = @target
+    if @inspectedObject[selected + "_source"]?
+      return @inspectedObject[selected + "_source"]
+    goingUpTargetProtChain = @inspectedObject
     while goingUpTargetProtChain?.constructor?.class?
       theClass = goingUpTargetProtChain.constructor.class
       if theClass.nonStaticPropertiesSources[selected]?
@@ -63,7 +63,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
   addProperty: (ignored, widgetWithProperty) ->
-    augmentations = @target.constructor.class?.augmentedWith
+    augmentations = @inspectedObject.constructor.class?.augmentedWith
     if !augmentations? or augmentations.length is 0
       super
       return
@@ -72,7 +72,7 @@ class ClassInspectorWdgt extends InspectorWdgt
       prop = prop.getValue()
     return unless prop
     menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:"
-    menu.addMenuItem @target.constructor.name, @, "addPropertyToClass", arg1: prop
+    menu.addMenuItem @inspectedObject.constructor.name, @, "addPropertyToClass", arg1: prop
     for eachMixinGlobalName in augmentations
       menu.addMenuItem eachMixinGlobalName, @, "addPropertyToMixin", arg1: prop, arg2: eachMixinGlobalName
     menu.popUpAtHand()
@@ -111,11 +111,11 @@ class ClassInspectorWdgt extends InspectorWdgt
   # registry-recorded, so it does not replay on snapshot restore (the mixin
   # path above closes this with recordMixinMemberRemoval).
   _applyPropertyRemoval: (propertyName) ->
-    delete @target[propertyName]
+    delete @inspectedObject[propertyName]
 
   _applyPropertyRename: (oldName, newName) ->
-    delete @target[oldName]
-    @target[newName] = @currentProperty
+    delete @inspectedObject[oldName]
+    @inspectedObject[newName] = @currentProperty
 
   # The second save destination for a mixin-donated member: instead of editing the
   # DONOR (what plain save does while @currentPropertySourceMixin is set), keep the
@@ -134,10 +134,10 @@ class ClassInspectorWdgt extends InspectorWdgt
     # the donor label follows the attribution: the member is class-owned now
     @mixinDonorLabel?.setText ""
     @save()
-    @inform "overridden in " + @target.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
+    @inform "overridden in " + @inspectedObject.constructor.name + "\n(" + theMixinName + "Mixin edits no longer affect it)"
 
   colloquialName: ->
-    "Class Inspector (" + @target.constructor.name.replace("Wdgt", "") + ")"
+    "Class Inspector (" + @inspectedObject.constructor.name.replace("Wdgt", "") + ")"
 
   layoutOwnPropsOnlyToggle: (height) ->
     # layout-apply-sanctioned: apply helper, runs under _reLayout (settle point)
@@ -188,8 +188,8 @@ class ClassInspectorWdgt extends InspectorWdgt
     # rewritten exactly as at boot, `<name>_source` kept for CoffeeScript editability).
     # Log the CLASS-scope source edit -- method or field -- so a world snapshot can
     # carry AND replay it (§12). Unlike an instance edit, nothing else records a
-    # prototype edit — @target is the class prototype, so this is the registry's
+    # prototype edit — @inspectedObject is the class prototype, so this is the registry's
     # essential case.
-    @target.constructor.class.applyMemberEdit propertyName, txt
-    world?.sourceEditsRegistry?.recordClassEdit? @target, propertyName, txt
+    @inspectedObject.constructor.class.applyMemberEdit propertyName, txt
+    world?.sourceEditsRegistry?.recordClassEdit? @inspectedObject, propertyName, txt
     @notifyInstancesOfSourceChange([propertyName])

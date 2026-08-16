@@ -25,8 +25,11 @@ const path = require('path');
 const SRC = path.resolve(__dirname, '../src');
 
 // ── the two ratcheted floors ────────────────────────────────────────────────────────────────────
-const BASELINE_UNDECLARED_CLASSES = 9;   // W4c floor: all of it the `target`/`callback` pair, left
-const BASELINE_UNDECLARED_FIELDS  = 11;  // undeclared pending the connector arc's P9 rename (plan D2)
+// ZERO since the connector arc's P9 (the `@target` disambiguation) retired W4c's floor: the four
+// shortcut classes' referent became `referencedWidget`, the inspector pair's subject became
+// `inspectedObject`, and the five genuinely-dispatch/tool `target`s were declared under that name.
+const BASELINE_UNDECLARED_CLASSES = 0;
+const BASELINE_UNDECLARED_FIELDS  = 0;
 // W5 floor: classes still repeating the _reLayout prologue instead of taking Widget's own-contents
 // template. ButtonWdgt + ColorPickerWdgt (no _repaintAsOneUnit unit, and ButtonWdgt's pass reads the
 // granted bounds); SimpleSpreadsheetWdgt, SpeechBubbleWdgt, StretchableCanvasWdgt,

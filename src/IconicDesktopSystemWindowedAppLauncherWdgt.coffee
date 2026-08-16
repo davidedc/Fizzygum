@@ -25,6 +25,11 @@
 # without carrying — or needing — the app.
 class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLinkWdgt
 
+  # the DISPATCH pair, live only in the EAGER mode -- see appClassName below, whose presence
+  # means the app class has not arrived yet and these two are undefined
+  target: undefined
+  callback: undefined
+
   # set only in the lazy mode; undefined means @target/@callback are live (the eager mode)
   appClassName: undefined
 

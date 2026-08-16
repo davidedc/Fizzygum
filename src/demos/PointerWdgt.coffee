@@ -3,6 +3,10 @@
 
 class PointerWdgt extends BoxWdgt
 
+  # the widget I point at. NOT a tracked reference edge (I am not in
+  # world.widgetsReferencingOtherWidgets); I re-point myself from its own createPointerWdgt.
+  target: undefined
+
   constructor: (@target) ->
     super()
 

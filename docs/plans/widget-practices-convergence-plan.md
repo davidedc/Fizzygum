@@ -700,7 +700,7 @@ for k, p in pat.items():
 | # | Decision | Recommendation |
 |---|---|---|
 | D1 | **W3** — add the base menu block to `PointerWdgt` and `IconicDesktopSystemScriptShortcutWdgt`? (adds layout entries; recaptures their menu shots) | **Yes** — the omission looks accidental (both open with `menu.addLine`), and the entries are the base affordance every other widget has. |
-| D2 | **W4b** — for each of the eight repeated fields, `Widget` / family base / leave? | **Family base wherever one exists**; `Widget` only for `toolTipMessage` (its reader is already on `Widget`), accepting the inspector recapture. `target` stays per-family — see the corrected reason below. |
+| D2 | **W4b** — for each of the eight repeated fields, `Widget` / family base / leave? | **Family base wherever one exists**; `Widget` only for `toolTipMessage` (its reader is already on `Widget`), accepting the inspector recapture. `target` stays per-family — see the corrected reason below. ✅ Its deferral of `target`/`callback` to the connector arc's P9 is DISCHARGED: P9 landed 2026-08-16 and all 11 fields are declared (baseline 9/11 → 0). |
 
 ✅ **D1 and D2 DECIDED by the owner, 2026-08-16.** D1: yes (W3 landed). D2: the recommended split —
 `toolTipMessage` → `Widget` **together with** deleting the 33 `iconToolTipMessage` declarations and
@@ -917,8 +917,11 @@ proposes.
     the field passes BOTH before (let through as "stitched on, in no class") and after (let through
     as "own property of the immediate prototype"). A declaration can only ADD a row where the field
     was in neither category — i.e. on a CLASS inspector (W4a's `faceWidget`).
-  ⭐⭐ **W4c has a FLOOR, not a zero, and W9 must be set to it: 9 classes / 11 fields, every one of
-  them the `target`/`callback` pair, parked on the connector arc's P9 by D2.** `BinOpenerWdgt`,
+  ⭐⭐ **W4c had a FLOOR, not a zero: 9 classes / 11 fields, every one of them the `target`/`callback`
+  pair, parked on the connector arc's P9 by D2.** ✅ **RETIRED 2026-08-16 when P9 landed** — the four
+  shortcut classes' referent became `referencedWidget`, the inspector pair's subject became
+  `inspectedObject`, and the five genuinely dispatch/tool `target`s were declared under that name.
+  `census-widget-conformance.js`'s undeclared-field baseline is now **0/0**. The floor as it stood: `BinOpenerWdgt`,
   `ConsoleWdgt`, `PointerWdgt`, the four `IconicDesktopSystem*Shortcut` classes (`target` each),
   plus `CodePromptWdgt` and `IconicDesktopSystemWindowedAppLauncherWdgt` (`target` + `callback`).
   ⚠ **`callback` was re-examined and deliberately LEFT with `target`,** though D2 dropped it from

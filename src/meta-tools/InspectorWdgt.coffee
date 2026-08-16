@@ -1,6 +1,9 @@
 class InspectorWdgt extends Widget
 
-  target: undefined
+  # the object I am a view OF, and deliberately not called `target`: `@target` elsewhere means
+  # information flow (a dataflow consumer, a dispatch receiver) or a tracked reference edge, and
+  # reading one as the other is the hazard this name exists to remove
+  inspectedObject: undefined
   currentProperty: undefined
   # the parsed Mixin whose source the currently-selected member's view came from
   # (undefined when the source came from the instance or the class chain). Set by
@@ -69,7 +72,7 @@ class InspectorWdgt extends Widget
   classNamesTextPadding: 2
 
   colloquialName: ->
-    "Object Inspector (" + @target.colloquialName() + ")"
+    "Object Inspector (" + @inspectedObject.colloquialName() + ")"
 
   showFields: ->
     if !@showingFields
@@ -111,7 +114,7 @@ class InspectorWdgt extends Widget
       @showingOwnPropsOnly = false
       @_buildAndConnectChildren()
 
-  constructor: (@target) ->
+  constructor: (@inspectedObject) ->
     @classesButtons = []
     @classesNames = []
     @angledArrows = []
@@ -168,22 +171,22 @@ class InspectorWdgt extends Widget
     # of the whole prototype chain.
     #
     # _filterProperties (below) colors these in two tiers, not three: GREEN when the property
-    # is declared directly on the object's own class (@target.constructor.prototype.hasOwnProperty
+    # is declared directly on the object's own class (@inspectedObject.constructor.prototype.hasOwnProperty
     # is true); everything else -- inherited from a superclass, or stitched onto the instance with
     # no class declaration -- stays the default BLUE. A RED tier existed before the 2017
     # InspectorMorph2 refactor (commit 753d2c8f) and was never restored.
     #
     # TODO show the static methods and variables in yet another color.
     
-    for property of @target
+    for property of @inspectedObject
       # dummy condition, to be refined
       attribs.push property  if property
 
     if !@showingMethods
-      attribs = attribs.filter (prop) => !Utils.isFunction @target[prop]
+      attribs = attribs.filter (prop) => !Utils.isFunction @inspectedObject[prop]
 
     if !@showingFields
-      attribs = attribs.filter (prop) => Utils.isFunction @target[prop]
+      attribs = attribs.filter (prop) => Utils.isFunction @inspectedObject[prop]
 
     # if we don't show inherited props, then we let through two types of props (each side of the "or"
     # takes care of one type):
@@ -191,18 +194,18 @@ class InspectorWdgt extends Widget
     #   2) the ones that are just stitched to the object but are in none of the classes upwards i.e.
     #      are not a reachable property from the prototype
     if !@showingInherited
-      attribs = attribs.filter (prop) => @target.constructor.prototype.hasOwnProperty(prop) or (prop not of @target.constructor.prototype)
+      attribs = attribs.filter (prop) => @inspectedObject.constructor.prototype.hasOwnProperty(prop) or (prop not of @inspectedObject.constructor.prototype)
 
     if @showingOwnPropsOnly
-      attribs = attribs.filter (prop) => @target.hasOwnProperty(prop)
+      attribs = attribs.filter (prop) => @inspectedObject.hasOwnProperty(prop)
 
 
     # caches the own methods of the object
     if @markOwnershipOfProperties
-      targetOwnMethods = Object.getOwnPropertyNames @target.constructor::
+      targetOwnMethods = Object.getOwnPropertyNames @inspectedObject.constructor::
 
-    if @target?
-      goingUpTargetProtChain = @target.__proto__
+    if @inspectedObject?
+      goingUpTargetProtChain = @inspectedObject.__proto__
       while goingUpTargetProtChain.constructor.name != "Object"
         @classesNames.push goingUpTargetProtChain.constructor.name
         goingUpTargetProtChain = goingUpTargetProtChain.__proto__
@@ -278,7 +281,7 @@ class InspectorWdgt extends Widget
       inspector._moveWithin world
       world.add inspector
 
-    @list = new ListWdgt (if @target instanceof Array then attribs else attribs.sort()),
+    @list = new ListWdgt (if @inspectedObject instanceof Array then attribs else attribs.sort()),
       target: @
       action: "selectionFromList"
       format: @_filterProperties(targetOwnMethods)
@@ -392,7 +395,7 @@ class InspectorWdgt extends Widget
             # functions.
             # In theory, getOwnPropertyNames should give ALL the properties but the methods
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-            @target.constructor.prototype.hasOwnProperty(element)
+            @inspectedObject.constructor.prototype.hasOwnProperty(element)
         ]
       ]
     else
@@ -436,7 +439,7 @@ class InspectorWdgt extends Widget
   selectionFromList: (selected) ->
     if selected == undefined then return
 
-    val = @target[selected]
+    val = @inspectedObject[selected]
     @currentProperty = val
     @currentPropertySourceMixin = undefined
     @currentPropertySourceIsStatic = false
@@ -445,8 +448,8 @@ class InspectorWdgt extends Widget
     # either in the object or in a superclass,
     # try to find it.
     if Utils.isFunction(val)
-      if @target[selected + "_source"]?
-          val = @target[selected + "_source"]
+      if @inspectedObject[selected + "_source"]?
+          val = @inspectedObject[selected + "_source"]
       else
         # Walk the Fizzygum class chain looking for the selected method's recorded source. Guard on
         # `.constructor?.class?` (a Fizzygum Class object) rather than the old `!= Object`: __proto__ yields
@@ -455,7 +458,7 @@ class InspectorWdgt extends Widget
         # any class. Not-found is legitimate: a mixin-injected method (e.g. ControllerMixin._fireConnection) is
         # not recorded in any class's nonStaticPropertiesSources, so its source is not on the class chain -- fall
         # through to val.toString() below instead of crashing. (V8 masked this; JSC surfaced it.)
-        goingUpTargetProtChain = @target
+        goingUpTargetProtChain = @inspectedObject
         while goingUpTargetProtChain?.constructor?.class?
           theClass = goingUpTargetProtChain.constructor.class
           if theClass.nonStaticPropertiesSources[selected]?
@@ -475,11 +478,11 @@ class InspectorWdgt extends Widget
     else
       # this is for finding the static variables
       if val is undefined
-        val = @target.constructor[selected]
+        val = @inspectedObject.constructor[selected]
         # a static may be MIXIN-donated (augmentWith copies the literal's class-side
         # keys onto each consumer constructor at boot): show the donor's recorded
         # source and remember the attribution so a class-inspector save routes to it
-        theMixinProvidingIt = @_mixinProvidingStaticMember @target.constructor.class, selected
+        theMixinProvidingIt = @_mixinProvidingStaticMember @inspectedObject.constructor.class, selected
         if theMixinProvidingIt?
           @currentPropertySourceMixin = theMixinProvidingIt
           @currentPropertySourceIsStatic = true
@@ -500,7 +503,7 @@ class InspectorWdgt extends Widget
 
     cnts = @detail.textWdgt
     cnts.setText txt
-    cnts.setReceiver @target
+    cnts.setReceiver @inspectedObject
     cnts.isEditable = true
     cnts.enableSelecting()
     cnts.considerCurrentTextAsReferenceText()
@@ -634,7 +637,7 @@ class InspectorWdgt extends Widget
 
 
   notifyInstancesOfSourceChange: (propertiesArray)->
-    @target.sourceChanged()
+    @inspectedObject.sourceChanged()
   
   #InspectorWdgt editing ops:
   # Shared save scaffolding: object inspectors inject the property, class
@@ -661,7 +664,7 @@ class InspectorWdgt extends Widget
   # overrides this to evaluate an assignment against the class prototype).
   applyPropertyEdit: (propertyName, txt) ->
     # inject code will also break the layout and the widget
-    @target.injectProperty propertyName, txt
+    @inspectedObject.injectProperty propertyName, txt
 
 
   addProperty: (ignored, widgetWithProperty) ->
@@ -674,7 +677,7 @@ class InspectorWdgt extends Widget
   # the add core, past the prompt: the popout flow (addProperty) and the class
   # inspector's destination menu both land here
   _addNamedProperty: (prop) ->
-    @target[prop] = undefined
+    @inspectedObject[prop] = undefined
     # nosettle-sanctioned: gesture tail shared by two PUBLIC add actions (the popout
     # Ok and the class inspector's destination menu), event-time only -- the rebuild
     # is that gesture's single settle, exactly as when it was inlined in addProperty
@@ -692,7 +695,7 @@ class InspectorWdgt extends Widget
   # method under the OLD name. ClassInspectorWdgt overrides this with its raw
   # prototype re-keying.
   _applyPropertyRename: (oldName, newName) ->
-    @target.renameOwnProperty oldName, newName
+    @inspectedObject.renameOwnProperty oldName, newName
 
   renameProperty: (ignored, widgetWithProperty) ->
     propertyName = @list.selected.labelString
@@ -714,7 +717,7 @@ class InspectorWdgt extends Widget
   # drops the <name>_source companion -- otherwise the {"$src"} serialization
   # ride re-injects the removed member on snapshot restore.
   _applyPropertyRemoval: (propertyName) ->
-    @target.removeOwnProperty propertyName
+    @inspectedObject.removeOwnProperty propertyName
 
   removeProperty: ->
     propertyName = @list.selected.labelString

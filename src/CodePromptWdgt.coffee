@@ -1,5 +1,9 @@
 class CodePromptWdgt extends CodeAreaWdgt
 
+  # the DISPATCH pair: on Ok I call @target[@callback].call @target, @textWidget
+  target: undefined
+  callback: undefined
+
   defaultContents: ""
 
   cancelButton: undefined
