@@ -52,7 +52,7 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
     @contents.disableDrops()
     @color = Color.WHITE
     @textWdgt.backgroundColor = Color.TRANSPARENT
-    @textWdgt._setFontNameNoSettle undefined, undefined, @textWdgt.monoFontStack
+    @textWdgt._setFontNameNoSettle @textWdgt.monoFontStack
     @textWdgt.isEditable = isEditable
     if isEditable then @textWdgt.enableSelecting()
     return @

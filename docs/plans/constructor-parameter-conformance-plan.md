@@ -1,7 +1,7 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0–P5 landed 2026-08-15. P6 (close-out) next, and it is METHOD work.**
-Owner-gated per family.
+**STATUS: ACTIVE. P0–P6 landed 2026-08-15/16 — `positional-hole` 51 → 1. ONE item remains: the
+`add` family (§7), owner-gated.** Owner-gated per family.
 
 **What this is.** The execution arc that brings `src/` onto the convention stated in
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md)
@@ -549,6 +549,76 @@ included.
    with the final conformance numbers.
 4. `git mv` this plan to `docs/archive/`, stamp it, add its `archive/INDEX.md` line, remove its
    `BACKLOG.md` entries (filing rules 2 and 5).
+
+**As built — `positional-hole` 25 → 1, and every one of them had ONE cause.**
+
+| family | sites | what it became |
+|---|---|---|
+| `setTargetAndActionWithOnesPickedFromMenu` | 10 | verb **`wireTo (theTarget, action)`** extracted; the long name stays on the adapter |
+| `setFontName` / `_setFontNameNoSettle` | 7 | verb keeps the name; adapter becomes **`setFontNameFromMenu`** |
+| `LCLCodePreprocessor` result tuples | 3 | **refactored, not exempted** — see below |
+| `setPattern` | 2 | verb + **`setPatternFromMenu`** |
+| `makeFolder` | 1 | verb + **`makeFolderFromMenu`** |
+| `_fromCatalogEntry` | 1 | `(appClassName, opts = {})` |
+| `add` | 1 | ⛔ **NOT DONE — owner-gated**, see below |
+
+⭐⭐ **They were all the same bug, and it was never in the methods.** `ButtonWdgt.coffee:118`
+dispatches every menu/button action as
+`@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1,
+@argumentToAction2` — a **fixed foreign calling convention**. A menu-driven method therefore *must*
+have two leading slots it ignores, and there is nothing wrong with that. What was wrong is that
+code called those adapters **programmatically**, punching `undefined, undefined` past a dispatcher's
+slots to reach the payload. So the fix is never "shorten the adapter" — it is **split the verb from
+the adapter** and let each keep the name that suits it: the plain name goes to the verb, and the
+adapter's name says it is one. This is why P6 reached 1 instead of needing a pile of exemptions.
+
+⭐ **The three `LCLCodePreprocessor` returns did NOT need the exemption §1 predicted.** Read
+properly, all three were dead ceremony: `identifyBlockEnd` had **no callers and referenced a free
+`error` that is not one of its parameters** (a `ReferenceError` waiting to happen, under a comment
+saying *"we might not need this function"*) — deleted; `identifyBlockStarts` never sets an error and
+never rewrites the code, and its one caller destructured two of its three slots into `ignore` — it
+now answers the line list itself; `stripCommentsAndStrings` likewise never sets an error, so its
+third slot only ever handed back the caller's own value — it now answers a 2-tuple, with `[]` on the
+error path. ⚠ The other **33** `return [undefined, error] if error?` guards in that file are left
+alone deliberately: those stages DO set errors, one `undefined` is not a hole, and rewriting them
+would be churn with no defect behind it.
+
+⛔ **`add` is deliberately not done and wants its own decision.** `ActivePointerWdgt:484`
+(`target.add wdgtToDrop, undefined, undefined, true, undefined, dropPositionInTargetPlane`) is the
+last hole, but `add` is an **8-override polymorphic family with inconsistent arity** — `Widget` takes
+4, `FrameWdgt` 5, and `SimpleVerticalStackPanelWdgt`/`ScrollPanelWdgt`/`ToolPanelWdgt` 6 — and the
+caller passes all six *on purpose*, so that only the containers that declare `notContent` /
+`positionOnScreen` receive them. Its own non-settling core `_addNoSettle` **already** takes
+`(aWdgt, opts = {})`, so converting the public face would make the pair consistent and close the
+gate at 0. That is a wide, widely-called public API and a bigger change than the rest of P6
+combined: gate it separately.
+
+⚠⚠ **THE MISS THAT COST A RE-RUN, AND IT IS THE STANDING HAZARD RESTATED.** The first P6 suite run
+came back with **30** failures, not the ~11 of benign inspector churn. Cause: the method families
+were swept in `src/` only. Four call sites lived in the **sibling tests repo** — and the standing
+hazard's wording ("the tests repo has no `.coffee` construction sites") had been internalised as
+being about CONSTRUCTION, when it is really about *any* call:
+- `tests/…macroDesktopShortcutIcons…js:28` — `world.makeFolder undefined, undefined, "Examples"`, so
+  the Examples folder came out named **"new folder"** (a visible, real pixel change);
+- **`Automator-and-test-harness-src/WorldTestSupport.coffee:263`** — the **test teardown**, calling
+  `@wallpaper.setPattern undefined, undefined, pattern1`, which under the new head set the desktop
+  pattern to `undefined` **after every test**: a textbook cross-test state leak (DETERMINISM.md §2d)
+  that reddened ~19 window/rotation/text tests having nothing to do with the conversion;
+- two more in `scripts/serialization-roundtrip-headless.js`.
+⭐ **The harness is `.coffee` and lives in the OTHER repo** — a `--include='*.coffee'` grep rooted at
+`Fizzygum/src` cannot see it. Sweep by METHOD NAME across BOTH repos, all extensions, harness
+included. And note what nearly happened: `fg recapture --auto` would have baked "new folder" into the
+reference set as fact. **The suite failing is what protected the references — recapture only ever
+after the failing set is understood, never as a way to make red go green.**
+
+**Recapture.** The 11 surviving failures are the known **inspector member-list churn**: `wireTo` is a
+`ControllerMixin` method, so it is copied in as an OWN member of all 8 controllers and shifts every
+inspected list by a row — the trap `Widget._popUpTargetPropertyMenu`'s own comment documents, and the
+reason `fg recapture-inspector` exists. Verified benign at 8× zoom (one row, nothing else moved)
+before recapturing. Keeping `wireTo` on the mixin is the correct home — it reads `@firesPerEvent` and
+`@reactToTargetConnection`, and `CellWdgt` probes `widget.wireTo?` to tell a controller from a plain
+presenter, which putting it on `Widget` would defeat. `fg recapture --auto`: **✅ RECAPTURE COMPLETE**,
+11 tests, suite green at dpr 1 and 2.
 
 ---
 

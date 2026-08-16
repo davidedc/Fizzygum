@@ -55,12 +55,12 @@ class DegreesConverterApp extends IconicDesktopSystemWindowedApp
     container._addNoSettle calc2
 
 
-    slider1.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, cText, "setText"
-    cText.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, calc1.contents, "setInput1"
-    calc1.contents.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, fText, "setText"
-    fText.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, slider2, "setValue"
-    slider2.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, calc2.contents, "setInput1"
-    calc2.contents.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, slider1, "setValue"
+    slider1.wireTo cText, "setText"
+    cText.wireTo calc1.contents, "setInput1"
+    calc1.contents.wireTo fText, "setText"
+    fText.wireTo slider2, "setValue"
+    slider2.wireTo calc2.contents, "setInput1"
+    calc2.contents.wireTo slider1, "setValue"
 
 
 

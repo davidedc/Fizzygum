@@ -609,7 +609,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
     WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
 
-    @wallpaper.setPattern undefined, undefined, "dots"
+    @wallpaper.setPattern "dots"
 
     @_changed()
 
@@ -675,7 +675,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # openers, and the C-F art only they draw, are LAZY parts. See ExamplesFolderWindowWdgt for
     # the three tiers (boot / open / click) and why a folder — unlike the desktop icons above —
     # can defer its contents at all.
-    @makeFolder undefined, undefined, "Examples", new ExamplesFolderWindowWdgt
+    @makeFolder "Examples", new ExamplesFolderWindowWdgt
 
     # Guard: VideoPlayerWithRecommendationsWdgt is only bundled with --includeVideoPlayer,
     # so in a default build this boot-time auto-launch would throw "...is not defined".
@@ -2578,7 +2578,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # 8. desktop colour + wallpaper (sequential self-settling public ops).
     restoredColor = resolve section.desktopColor
     @setColor restoredColor if restoredColor?
-    @wallpaper.setPattern undefined, undefined, section.wallpaperPatternName if section.wallpaperPatternName? and @wallpaper?
+    @wallpaper.setPattern section.wallpaperPatternName if section.wallpaperPatternName? and @wallpaper?
     # 9. install the snapshot's source-edit registry (its class edits are already replayed;
     #    this makes the loaded world's edit history authoritative), then repaint now and again
     #    once any async image/canvas assets have decoded.
@@ -2718,7 +2718,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     if @isIndexPage
       menu = new MenuWdgt @, target: @, title: "Desktop"
       menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
-      menu.addMenuItem "new folder", @, "makeFolder"
+      menu.addMenuItem "new folder", @, "makeFolderFromMenu"
       menu.addMenuItem "save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
       menu.addMenuItem "open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
       return menu
@@ -2766,7 +2766,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     else
       menu.addMenuItem "switch to dev mode", @, "toggleDevMode"
 
-    menu.addMenuItem "new folder", @, "makeFolder"
+    menu.addMenuItem "new folder", @, "makeFolderFromMenu"
     menu.addMenuItem "about Fizzygum...", @, "about"
     menu
 

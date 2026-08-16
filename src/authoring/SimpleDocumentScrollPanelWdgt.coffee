@@ -77,7 +77,7 @@ class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 
   addCodeBlock: (text) ->
     codeBlock = @addIndentedText "a code block with\n  some example\n    code in here"
-    codeBlock.setFontName undefined, undefined, codeBlock.monoFontStack
+    codeBlock.setFontName codeBlock.monoFontStack
     @add codeBlock
     return codeBlock
 

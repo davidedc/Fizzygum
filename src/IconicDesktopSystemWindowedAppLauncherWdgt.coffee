@@ -65,18 +65,23 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
   # icon for ever, when what is being asked at boot is "can this artifact EVER produce it".
   @forAppNamed: (appClassName, iconOverride) ->
     return undefined unless world.parts.canEverProvideClass appClassName
-    launcher = @_fromCatalogEntry appClassName, iconOverride, undefined, undefined
+    launcher = @_fromCatalogEntry appClassName, iconOverride: iconOverride
     launcher.appClassName = appClassName  if launcher?
     launcher
 
   # EAGER mode: the app singleton is already in hand, so the click is a plain call on it.
   @forApp: (app) ->
-    @_fromCatalogEntry app.constructor.name, undefined, app, "launch"
+    @_fromCatalogEntry app.constructor.name, target: app, callback: "launch"
 
   # ⭐ THE ONE PLACE A LAUNCHER IS BUILT FROM AN APP'S IDENTITY, which is the whole point of the
   # catalog: a construction path per mode is how a field ends up on one launcher and not the other
   # (`toolTip` is the one that fits in a comment). One reader ⇒ a field reaches both modes or neither.
-  @_fromCatalogEntry: (appClassName, iconOverride, target, callback) ->
+  # The app's name is the only operand — the two modes disagree on everything else, which is why
+  # the rest ride opts: LAZY supplies iconOverride and no target, EAGER supplies target/callback
+  # and no icon, so whichever came first positionally forced the other mode to skip it with an
+  # `undefined` (R3). opts: iconOverride, target, callback.
+  @_fromCatalogEntry: (appClassName, opts = {}) ->
+    iconOverride = opts.iconOverride
     entry = AppCatalog.get appClassName
     if !entry?
       # a programming error, not a packaging one: the app exists but nothing says what it looks
@@ -84,7 +89,7 @@ class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLink
       console.error "AppCatalog has no entry for '#{appClassName}'"
       return undefined
     icon = if iconOverride? then iconOverride() else entry.icon()
-    launcher = new @ entry.title, icon, target, callback
+    launcher = new @ entry.title, icon, opts.target, opts.callback
     launcher.toolTipMessage = entry.toolTip  if entry.toolTip?
     launcher
 

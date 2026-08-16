@@ -49,7 +49,12 @@ class PanelWdgt extends Widget
   # ritual below (close to the shelf, make a shortcut, count the name). WorldWdgt.createDesktop is
   # the one such caller: the Examples folder is an ExamplesFolderWindowWdgt, which fills itself on
   # first open. Menu callers pass three arguments and get the plain folder, as before.
-  makeFolder: (ignored, ignored2, name, folderWindow) ->
+  # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): the menu items
+  # carry no arguments at all, so both slots arrive empty and everything defaults.
+  makeFolderFromMenu: (ignored, ignored2, name, folderWindow) ->
+    @makeFolder name, folderWindow
+
+  makeFolder: (name, folderWindow) ->
     newFolderWindow = folderWindow ? new FolderWindowWdgt
     newFolderWindow.close()
     newFolderWindow.createReference (name or world.untitledNamingService.getNextUntitledFolderShortcutName()), @

@@ -325,9 +325,14 @@ class LCLCodePreprocessor
         return true
       code = code.slice(1)
 
+  # I answer [codeWithoutComments, codeWithoutStringsOrComments] — no error slot, because
+  # I never set an error: the one I was handed came back out unchanged, so my caller was
+  # only ever re-binding the value it already had.
   stripCommentsAndStrings: (code, error) ->
-    # if there is an error, just propagate it
-    return [undefined, undefined, error] if error?
+    # A pending error means there is no code to strip (an upstream stage returns `undefined`
+    # in the code slot), so this guard is load-bearing. Answering the empty tuple leaves both
+    # of my caller's values undefined, which is exactly what a failed stage produces.
+    return [] if error?
 
     # for some strange reason the comments on the last line
     # are not stripped, so adding a new line which we'll
@@ -411,7 +416,7 @@ class LCLCodePreprocessor
     # line are not stripped
     codeWithoutComments = code.substring(0, code.length - 1)
 
-    return [codeWithoutComments, codeWithoutStringsOrComments, error]
+    return [codeWithoutComments, codeWithoutStringsOrComments]
 
   checkBasicSyntax: (code, codeWithoutStringsOrComments, error) ->
     # if there is an error, just propagate it
@@ -1662,7 +1667,7 @@ class LCLCodePreprocessor
     #@qualifyingCommandsRegex = @qualifyingCommands + bracketsVariables
     #@allCommandsRegex = @allCommandsRegex + bracketsVariables
 
-    [code, codeWithoutStringsOrComments, error] = @stripCommentsAndStrings(code, error)
+    [code, codeWithoutStringsOrComments] = @stripCommentsAndStrings(code, error)
     if @detailedDebug then console.log "preprocess-4\n" + code + " error: " + error
     [code, error] = @removeTickedDoOnce(code, error)
     if @detailedDebug then console.log "preprocess-5\n" + code + " error: " + error
@@ -1713,7 +1718,7 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log "preprocess-12\n" + code + " error: " + error
     [code, error] = @addTracingInstructionsToDoOnceBlocks(code, error)
 
-    [ignore,a,ignore] = @identifyBlockStarts code, error
+    a = @identifyBlockStarts code, error
     [code, error] = @completeImplicitFunctionPasses code, a, error, userDefinedFunctionsWithArguments, bracketsVariables
     if @detailedDebug then console.log "completeImplicitFunctionPasses:\n" + code + " error: " + error
 
@@ -1772,9 +1777,13 @@ class LCLCodePreprocessor
     return [code, error, userDefinedFunctions]
 
   # finds each possible block start
+  # I answer the LINE LIST itself, not a [code, lines, error] tuple: I never set an error
+  # and I never rewrite the code, so the other two slots only ever carried back what my
+  # caller already held — which is why it destructured them into `ignore`.
   identifyBlockStarts: (code, error) ->
-    # if there is an error, just propagate it
-    return [undefined, undefined, error] if error?
+    # A pending error means there is no code to scan (an upstream stage returns `undefined`
+    # in the code slot), so this guard is load-bearing, not just an optimization.
+    return undefined if error?
 
     sourceByLine = code.split("\n")
     startOfPreviousLine = ""
@@ -1790,32 +1799,7 @@ class LCLCodePreprocessor
         linesWithBlockStart.push eachLine-1
       startOfPreviousLine = startOfThisLine
 
-    return [code, linesWithBlockStart, undefined]
-
-  # we might not need this function, leaving it here,
-  # mute for the moment.
-  # finds where the block starting at line "startLine" ends
-  identifyBlockEnd: (sourceByLine, startLine) ->
-    # if there is an error, just propagate it
-    return [undefined, undefined, error] if error?
-
-    rx = RegExp("^(\\s*)",'gm')
-    match = rx.exec sourceByLine[startLine]
-    lengthToBeat = (match[1]).length
-
-    linesWithBlockStart = []
-    
-    for eachLine in [startLine...sourceByLine.length]
-      line = sourceByLine[eachLine]
-      rx = RegExp("^(\\s*)",'gm')
-      match = rx.exec line
-      continue if not match?
-      startOfThisLine = match[1]
-      if startOfThisLine.length < lengthToBeat
-        return eachLine - 1
-
-    bottomOfProgram = sourceByLine.length-1
-    return bottomOfProgram
+    return linesWithBlockStart
 
   completeImplicitFunctionPasses: (code, linesWithBlockStart, error, userDefinedFunctionsWithArguments, bracketsVariables) ->
     # if there is an error, just propagate it

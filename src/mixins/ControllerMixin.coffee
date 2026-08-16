@@ -26,9 +26,12 @@ ControllerMixin =
           menu = new MenuWdgt @, target: @, title: "no targets available"
         menu.popUpAtHand()
 
-      setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
+      # THE WIRE VERB — bind me to drive `action` on `theTarget`. Two operands, no holes:
+      # this is what a caller building a circuit in code means, and what the menu adapter
+      # below reduces to once the dispatcher's slots have been unpacked.
+      wireTo: (theTarget, action) ->
         @target = theTarget
-        @action = each
+        @action = action
         if @target[@action + "IsConnected"]?
           @target[@action + "IsConnected"] = true
         # a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with the
@@ -43,6 +46,17 @@ ControllerMixin =
         # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
         # Non-forced is sufficient (a fresh wire's producer value differs from the target's, so it propagates).
         @reactToTargetConnection?()
+
+      # THE MENU ADAPTER. Its first two parameters are not mine to choose: a menu/button
+      # action is dispatched as
+      #   target[action].call target, dataSource, widgetEnv, arg1, arg2   (ButtonWdgt)
+      # so the picked target and property necessarily ride slots 3 and 4. That fixed foreign
+      # convention is the ONLY reason this signature has leading ignored slots — a caller
+      # wiring a circuit in code wants wireTo above, because passing `undefined, undefined`
+      # to reach past a dispatcher's slots is exactly the hole R3 names
+      # (docs/architecture/constructor-and-parameter-conventions.md).
+      setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, action) ->
+        @wireTo theTarget, action
 
       # A wire's producer marks ITSELF stale -- the ONE onward-fire every controller's updateTarget calls. It
       # derives the producer->target edge from @target/@action (ensureWireEdge) and marks me stale; the engine's

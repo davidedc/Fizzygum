@@ -83,7 +83,7 @@ class SampleDashboardApp extends IconicDesktopSystemWindowedApp
     slider1._applyBounds (container.position().add new Point 491, 484), new Point 201, 24
     container.add slider1
 
-    slider1.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, plot3D.contents, "setParameter"
+    slider1.wireTo plot3D.contents, "setParameter"
 
     slideWdgt._applyBounds (new Point 114, 10), new Point 596, 592
     world.add slideWdgt

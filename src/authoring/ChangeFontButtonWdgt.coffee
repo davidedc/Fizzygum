@@ -24,15 +24,15 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       @fontSelectionMenuHolder.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
     else
       menu = new MenuWdgt @, target: @, title: "Fonts"
-      menu.addMenuItem "Arial", @, "setFontName", arg1: "justArialFontStack"
-      menu.addMenuItem "Times", @, "setFontName", arg1: "timesFontStack"
-      menu.addMenuItem "Georgia", @, "setFontName", arg1: "georgiaFontStack"
-      menu.addMenuItem "Garamo", @, "setFontName", arg1: "garamoFontStack"
-      menu.addMenuItem "Helve", @, "setFontName", arg1: "helveFontStack"
-      menu.addMenuItem "Verda", @, "setFontName", arg1: "verdaFontStack"
-      menu.addMenuItem "Treby", @, "setFontName", arg1: "trebuFontStack"
-      menu.addMenuItem "Heavy", @, "setFontName", arg1: "heavyFontStack"
-      menu.addMenuItem "Mono", @, "setFontName", arg1: "monoFontStack"
+      menu.addMenuItem "Arial", @, "setFontNameFromMenu", arg1: "justArialFontStack"
+      menu.addMenuItem "Times", @, "setFontNameFromMenu", arg1: "timesFontStack"
+      menu.addMenuItem "Georgia", @, "setFontNameFromMenu", arg1: "georgiaFontStack"
+      menu.addMenuItem "Garamo", @, "setFontNameFromMenu", arg1: "garamoFontStack"
+      menu.addMenuItem "Helve", @, "setFontNameFromMenu", arg1: "helveFontStack"
+      menu.addMenuItem "Verda", @, "setFontNameFromMenu", arg1: "verdaFontStack"
+      menu.addMenuItem "Treby", @, "setFontNameFromMenu", arg1: "trebuFontStack"
+      menu.addMenuItem "Heavy", @, "setFontNameFromMenu", arg1: "heavyFontStack"
+      menu.addMenuItem "Mono", @, "setFontNameFromMenu", arg1: "monoFontStack"
 
       menu.popUp @position().subtract(new Point 80,0), world
 
@@ -44,7 +44,9 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
       @fontSelectionMenuHolder.fontSelectionMenu = menu
 
-  setFontName: (ignored1, ignored2, theNewFontName) ->
+  # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu): my items carry the NAME of a
+  # font-stack field in arg1, which slot 3 of the dispatcher's fixed convention delivers here.
+  setFontNameFromMenu: (ignored1, ignored2, theNewFontName) ->
     if world.editorFocusWdgt?.setFontName?
       widgetClickedLast = world.editorFocusWdgt
-      widgetClickedLast.setFontName(undefined, ignored2, widgetClickedLast[theNewFontName])
+      widgetClickedLast.setFontName widgetClickedLast[theNewFontName]

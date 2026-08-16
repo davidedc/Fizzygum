@@ -44,7 +44,7 @@ class CodeAreaWdgt extends Widget
 
     @textWidget = @tempPromptEntryField.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle undefined, undefined, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle @textWidget.monoFontStack
     @textWidget.isEditable = true
     @textWidget.enableSelecting()
 

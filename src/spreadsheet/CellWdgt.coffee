@@ -205,11 +205,10 @@ class CellWdgt extends Widget
     return
 
   # ── interaction: wire an interactive value-widget to fire into this cell ──────────────────
-  # Hard-wire the hosted value-widget's connection to THIS cell's cellInput (spec §9.3): the two
-  # ignored args match setTargetAndActionWithOnesPickedFromMenu's menu-driven signature. A widget
+  # Hard-wire the hosted value-widget's connection to THIS cell's cellInput (spec §9.3). A widget
   # with no connection API (a plain RectangleWdgt presenter) simply isn't wired (the `?` guard).
   wireValueWidget: (widget) ->
-    widget.setTargetAndActionWithOnesPickedFromMenu? undefined, undefined, this, "cellInput"
+    widget.wireTo? this, "cellInput"
     return
 
   # the connection target the hosted value-widget fires into: mark this cell's cell STALE so the

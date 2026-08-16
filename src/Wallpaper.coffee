@@ -40,19 +40,21 @@ class Wallpaper
     # so we allocate the right amount of space for
     # the labels, we are going to put the
     # right ticks soon after
-    menu.addMenuItem untick + @pattern1, @, "setPattern", arg1: @pattern1
-    menu.addMenuItem untick + @pattern2, @, "setPattern", arg1: @pattern2
-    menu.addMenuItem untick + @pattern3, @, "setPattern", arg1: @pattern3
-    menu.addMenuItem untick + @pattern4, @, "setPattern", arg1: @pattern4
-    menu.addMenuItem untick + @pattern5, @, "setPattern", arg1: @pattern5
-    menu.addMenuItem untick + @pattern6, @, "setPattern", arg1: @pattern6
-    menu.addMenuItem untick + @pattern7, @, "setPattern", arg1: @pattern7
+    menu.addMenuItem untick + @pattern1, @, "setPatternFromMenu", arg1: @pattern1
+    menu.addMenuItem untick + @pattern2, @, "setPatternFromMenu", arg1: @pattern2
+    menu.addMenuItem untick + @pattern3, @, "setPatternFromMenu", arg1: @pattern3
+    menu.addMenuItem untick + @pattern4, @, "setPatternFromMenu", arg1: @pattern4
+    menu.addMenuItem untick + @pattern5, @, "setPatternFromMenu", arg1: @pattern5
+    menu.addMenuItem untick + @pattern6, @, "setPatternFromMenu", arg1: @pattern6
+    menu.addMenuItem untick + @pattern7, @, "setPatternFromMenu", arg1: @pattern7
 
     @updatePatternsMenuEntriesTicks menu
 
     menu.popUpAtHand()
 
-  setPattern: (menuItem, ignored2, thePatternName) ->
+  # menuItem is the OPTIONAL menu context (only setPatternFromMenu has one) and rides last,
+  # where omitting it costs no caller an `undefined`.
+  setPattern: (thePatternName, menuItem) ->
     if @patternName == thePatternName
       return
 
@@ -64,6 +66,12 @@ class Wallpaper
     # instead of `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
     if menuItem?.parent? and menuItem.parent.isMenu?()
       @updatePatternsMenuEntriesTicks menuItem.parent
+
+  # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): a menu action is
+  # dispatched as `target[action].call target, dataSource, widgetEnv, arg1, arg2`, so the
+  # picked pattern rides slot 3 and the item itself slot 1.
+  setPatternFromMenu: (menuItem, ignored2, thePatternName) ->
+    @setPattern thePatternName, menuItem
 
 
   # cheap way to keep menu consistency when pinned

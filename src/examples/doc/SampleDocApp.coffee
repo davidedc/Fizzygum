@@ -45,7 +45,7 @@ class SampleDocApp extends IconicDesktopSystemWindowedApp
     slider1 = new SliderWdgt 1, 100, 50, 10, smallestValueIsAtBottomEnd: true
     slider1._applyExtent new Point 400, 24
     sdspw.add slider1
-    slider1.setTargetAndActionWithOnesPickedFromMenu undefined, undefined, plot3D.contents, "setParameter"
+    slider1.wireTo plot3D.contents, "setParameter"
 
     sdspw.addSpacer()
 

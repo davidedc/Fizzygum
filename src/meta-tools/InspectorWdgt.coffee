@@ -309,7 +309,7 @@ class InspectorWdgt extends Widget
 
     @textWidget = @detail.textWdgt
     @textWidget.backgroundColor = Color.TRANSPARENT
-    @textWidget._setFontNameNoSettle undefined, undefined, @textWidget.monoFontStack
+    @textWidget._setFontNameNoSettle @textWidget.monoFontStack
     @textWidget.isEditable = false
 
     @_addNoSettle @detail

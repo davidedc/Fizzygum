@@ -62,5 +62,5 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "new folder", @, "makeFolder", toolTip: "make a new folder"
+    menu.addMenuItem "new folder", @, "makeFolderFromMenu", toolTip: "make a new folder"
 

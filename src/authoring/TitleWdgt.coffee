@@ -11,7 +11,7 @@ class TitleWdgt extends SimpleTextWdgt
       backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
       backgroundTransparency: 1
     @alignCenter()
-    @setFontName undefined, undefined, @georgiaFontStack
+    @setFontName @georgiaFontStack
     @setFontSize 48
     @isEditable = true
     @enableSelecting()

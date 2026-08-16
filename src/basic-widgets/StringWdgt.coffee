@@ -1019,13 +1019,15 @@ class StringWdgt extends Widget
   # NON-settling label core (menu.rowsPanel.children[i].label._setTextNoSettle), so it does NOT nest another
   # settling setter -- the menu items' re-fit rides this single settle (or popUpAtHand's, when the menu
   # is still being built on the hand).
-  setFontName: (menuItem, ignored2, theNewFontName) ->
-    @_settleLayoutsAfter => @_setFontNameNoSettle menuItem, ignored2, theNewFontName
+  setFontName: (theNewFontName) ->
+    @_settleLayoutsAfter => @_setFontNameNoSettle theNewFontName
 
   # The NON-settling core of setFontName -- used by low-level builders that configure a contained text
   # widget while assembling it (e.g. InspectorWdgt's detail pane, inside its own rebuild settle). The public
   # setFontName self-settles over this; low-level code reaches the core directly (cores call cores).
-  _setFontNameNoSettle: (menuItem, ignored2, theNewFontName) ->
+  # menuItem is the OPTIONAL menu context (only setFontNameFromMenu has one) and rides last, where
+  # omitting it costs no caller an `undefined`.
+  _setFontNameNoSettle: (theNewFontName, menuItem) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName
       @_changed()
@@ -1035,19 +1037,28 @@ class StringWdgt extends Widget
         @updateFontsMenuEntriesTicks menuItem.parent
     @_reflowContainedTextThenInvalidateLayout()
 
+  # THE MENU ADAPTER. A menu/button action is dispatched as
+  #   target[action].call target, dataSource, widgetEnv, arg1, arg2   (ButtonWdgt)
+  # so the picked font necessarily rides slot 3 and the menu item arrives in slot 1. That fixed
+  # foreign convention is the only reason for the ignored slots — code setting a font wants the
+  # plain setFontName above, because passing `undefined, undefined` to reach past a dispatcher's
+  # slots is the hole R3 names (docs/architecture/constructor-and-parameter-conventions.md).
+  setFontNameFromMenu: (menuItem, ignored2, theNewFontName) ->
+    @_settleLayoutsAfter => @_setFontNameNoSettle theNewFontName, menuItem
+
 
   fontsMenu: (a,targetWidget)->
     menu = new MenuWdgt @, target: targetWidget, title: "Fonts"
 
-    menu.addMenuItem untick + "Arial", @, "setFontName", arg1: @justArialFontStack
-    menu.addMenuItem untick + "Times", @, "setFontName", arg1: @timesFontStack
-    menu.addMenuItem untick + "Georgia", @, "setFontName", arg1: @georgiaFontStack
-    menu.addMenuItem untick + "Garamo", @, "setFontName", arg1: @garamoFontStack
-    menu.addMenuItem untick + "Helve", @, "setFontName", arg1: @helveFontStack
-    menu.addMenuItem untick + "Verda", @, "setFontName", arg1: @verdaFontStack
-    menu.addMenuItem untick + "Treby", @, "setFontName", arg1: @trebuFontStack
-    menu.addMenuItem untick + "Heavy", @, "setFontName", arg1: @heavyFontStack
-    menu.addMenuItem untick + "Mono", @, "setFontName", arg1: @monoFontStack
+    menu.addMenuItem untick + "Arial", @, "setFontNameFromMenu", arg1: @justArialFontStack
+    menu.addMenuItem untick + "Times", @, "setFontNameFromMenu", arg1: @timesFontStack
+    menu.addMenuItem untick + "Georgia", @, "setFontNameFromMenu", arg1: @georgiaFontStack
+    menu.addMenuItem untick + "Garamo", @, "setFontNameFromMenu", arg1: @garamoFontStack
+    menu.addMenuItem untick + "Helve", @, "setFontNameFromMenu", arg1: @helveFontStack
+    menu.addMenuItem untick + "Verda", @, "setFontNameFromMenu", arg1: @verdaFontStack
+    menu.addMenuItem untick + "Treby", @, "setFontNameFromMenu", arg1: @trebuFontStack
+    menu.addMenuItem untick + "Heavy", @, "setFontNameFromMenu", arg1: @heavyFontStack
+    menu.addMenuItem untick + "Mono", @, "setFontNameFromMenu", arg1: @monoFontStack
 
     @updateFontsMenuEntriesTicks menu
 
