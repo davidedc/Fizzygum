@@ -1,10 +1,25 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE. P0–P8 are landed and pushed** (Fizzygum `60dc7ac1` / tests `36dfad268`).
-`positional-hole` 51 → 0 (HARD); the honest count — `buildSystem/check-argument-holes.js`, which the
-arc built after discovering the stink was blind to most holes — is ratcheted at **9** in `src/`.
-**P9 (§7d) is the remaining work**: the 9 gated survivors (4 of which are not holes at all), two
-categories nobody has ever counted, the tests repo's ungated 25, and one unwritten rule.
+> **ARCHIVED 2026-08-16 — COMPLETE (P0–P9).** Kept verbatim as the arc's record. The living law is
+> [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md);
+> the standing enforcement is `buildSystem/check-argument-holes.js` (at its FLOOR of 2) plus the
+> `positional-hole` stink (HARD 0). Two ⚖ items stayed open on purpose and live in `docs/BACKLOG.md`:
+> the sibling tests repo is ungated by decision (§7d-C), and `Widget.textPrompt` keeps a `msg`
+> operand its only receiver ignores (§7d-D).
+>
+> ⚠ This plan was archived ONCE BEFORE, prematurely, on the strength of a green ratchet — see the
+> re-opening note below. This archiving is backed by an accounting of **every** surviving hole site
+> in both repos, not by a gate reading zero.
+
+**STATUS: COMPLETE — P0–P9 all landed.** `positional-hole` 51 → 0 (HARD); the honest count —
+`buildSystem/check-argument-holes.js`, which the arc built after discovering the stink was blind to
+most holes — went 25 → 9 (P8) → **2**, and 2 is its FLOOR, not a way-point: both survivors are
+`undefined`-as-a-VALUE, annotated at their call sites, and "fixing" either would damage a correct
+signature. `src/` is conformant in constructors and methods alike.
+
+The remaining open question is deliberate and recorded, not forgotten: the sibling **tests repo is
+ungated** (§7d-C), because its `SystemTest_*.js` metadata is English prose inside string literals
+that any identifier sweep over-matches, and a doc edit in a test must never break a build.
 
 ⚠⚠ **This plan was archived as COMPLETE and re-opened the same day, and the reason is the arc's
 main lesson.** Every phase swept the layer it was named for — P6 the menu-adapter *method
@@ -982,87 +997,126 @@ has never been seen to fail is not known to work.
 
 ---
 
-## 7d. P9 — the tail, the uncounted categories, and the unwritten rule (REMAINING WORK)
+## 7d. P9 — the tail, the uncounted categories, and the unwritten rule ✅ DONE 2026-08-16
 
-Measured 2026-08-16 on the tree at Fizzygum `60dc7ac1`, after P8. Reproduce before starting:
+Holes 9 → **2**, and the 2 are values, not work. The phase's most useful product is not a conversion
+at all but a TEST, because four of the nine survivors had been provisionally filed as "values" and
+reading them showed the filing was half wrong.
 
-```
-node buildSystem/check-argument-holes.js          # the gate: src/ only, ratcheted at 9
-node buildSystem/census-call-arity.js --holes     # the honest sweep: 34 tree-wide
-```
+### A1 — the hole-vs-value test (this is the durable bit; now R3 in the convention doc)
 
-### A — the 9 gated survivors, of which **4 are not holes** ⭐ start here
+> **A `undefined` is a HOLE iff some OTHER call site of the same callee OMITS that position's
+> trailing tail** — i.e. this caller writes it only because the list gives it no shorter way to
+> reach a later argument.
 
-The gate cannot tell "skipped to reach past" from "`undefined` IS the value". Reading all nine
-settles it — do NOT convert blind:
+Applied to the four candidates it splits 2/2, and the split is not the one their own comments
+suggested:
 
-**A1. Four are genuine VALUES. Annotate them at the site; do not touch the signature.**
-
-| site | why it is a value |
-|---|---|
-| `SimpleVerticalStackPanelWdgt.coffee:104,105` `_insertAddersSuchThat` ×2 | its own comment already says it: *"⚠ NO default on axis: undefined is MEANINGFUL (content mode)"* |
-| `RectangularAppearance.coffee:96` `_paintInLocalScope` | an absent `appliedShadow` in a normal-pass-only method = "no shadow" (§7c item 1b) |
-| `Widget.coffee:1575` `_applyTransformSugarNoSettle undefined, s` | the parameters are literally named `(degOrNil, sOrNil)` |
-
-The deliverable is a one-line comment at each saying *this `undefined` is a value, not a skip*, so
-the next reader does not "fix" it — and the gate baseline then means "4 known values", not "4 to do".
-
-**A2. Five are genuine holes.**
-
-| site | signature | diagnosis |
+| site | verdict | why |
 |---|---|---|
-| `ActivePointerWdgt.coffee:648` `@cleanupMenuWdgts undefined, w, true` | `(expectedClick, w, alsoKillFreshMenus)` | skips slot 1 to reach slot 3. Only 2 callers (`:648`, `:826` which passes `expectedClick, w`) — a trailing `opts` or a reorder both fit |
-| `StretchableCanvasWdgt.coffee:172` `droppedWidget.fullImage(undefined, false, true)` | `(bounds, noShadow = false, forceShadow = false)` | ⭐ **the ONLY caller of `fullImage` in either repo.** It skips `bounds` AND spells `noShadow`'s own default. `(opts = {})` reduces it to `fullImage forceShadow: true` |
-| `FolderPanelWdgt.coffee:60` + `IconicDesktopSystemFolderShortcutWdgt.coffee:13` `_createReferenceAndCloseNoSettle undefined, @…` | `(referenceName, placeToDropItIn = world)` | arity 2 ⇒ E5 exempts it from a bag, so R3's remedy here is a **REORDER** to `(placeToDropItIn, referenceName)` — both holes vanish and the public wrapper `Widget.coffee:3028` moves with it |
-| `Class.coffee:231` `@findUpTo remainingSourceLines, @topLevelCommentRegex, undefined, @propertyRegex, true` | `(sourceLines, regexStopPositive, regexStopNegative, regexStopPositive2, keepStashWhenEOF)` | 5 positional, 4 call sites (`:202/:220/:231/:254`), all in `Class.coffee`. ⚠⚠ **This is the META-COMPILER** — it parses every class at boot. Convert it LAST and alone, and note that `buildSystem/check-coffee-syntax.js` and `compile-fragment.js` both load this file, so a mistake breaks the build gate as well as the world |
+| `RectangularAppearance:96` `_paintInLocalScope` | **value** — annotated | all 14 callers pass all 4 arguments (`bodyFn` is a required trailing block), so there is no shorter form to punch past |
+| `Widget:1575` `_applyTransformSugarNoSettle undefined, s` | **value** — annotated | a symmetric two-slot partial-update record; its mirror writes the absence in the other slot, so no order removes it. Arity 2 ⇒ E5 besides |
+| `SimpleVerticalStackPanelWdgt:104,105` `_insertAddersSuchThat` ×2 | **HOLE** — converted | ⚠ **the plan filed these as values on the strength of the method's own comment** (*"undefined is MEANINGFUL: content mode"*). True but irrelevant: `Widget:5224/5226` calls it at **arity 3**, omitting `isMember` entirely, so the stack caller is filling a slot purely to reach past it. Two callers, disjoint tails — textbook R3 → `(scanVerbName, insertVerbName, opts = {})` with `axis` / `isMember` |
 
-**Ratchet to 4** in `buildSystem/check-argument-holes.js` when A2 lands.
+**A parameter's documentation cannot settle this; only the other call sites can.** That is why the
+test is phrased over callers rather than over meaning.
 
-### B — two categories NOBODY has ever counted
+### A2 — the real holes, and what was underneath each
 
-**B1. Local function literals.** §0 counted constructors and P6 counted methods; a `name = (a, b, c) ->`
-inside a method body was in neither census. P8 item 4 found `buildHeader` only because a hole
-happened to make it visible. **11 more exist:**
+| what | shape landed | what the hole was hiding |
+|---|---|---|
+| `cleanupMenuWdgts` | `(clickedWdgt, opts = {})` | ⭐ **`expectedClick` appeared ONLY in its own signature** — a dead parameter, and the one caller passing it was passing it to nothing. Deleting it plus moving the bare boolean `alsoKillFreshMenus` into opts (R1: never a boolean in the head) removed both holes with no bag ceremony. `w` → `clickedWdgt` while there |
+| `fullImage` | `(opts = {})` | every parameter optional and no caller supplies all of them ⇒ **no head at all**. Its one caller in either repo becomes `fullImage forceShadow: true`, and the comment *"if you want to forceShadow that noShadow must be sent as false"* — a per-argument decoder ring, the §4 smell — deletes |
+| the **`createReference` family** | `(placeToDropItIn = world, referenceName)` ×4 + 2 overrides | see below — much the largest find |
+| `Class.findUpTo` | `(sourceLines, regexStopPositive, opts = {})` with `orStopOn` / `abortOn` / `keepStashWhenEOF` | the meta-compiler. Converted last and alone; the build's syntax gate LOADS this file and drives all ~470 sources through it, so a green build is a real proof here rather than a formality |
 
+### A2's centrepiece — `createReference`, and why a menu item shaped six signatures
+
+The count named **two** holes in `_createReferenceAndCloseNoSettle`. Sweeping the FAMILY name rather
+than the flagged method found **six methods** — `createReference` / `_createReferenceNoSettle` /
+`createReferenceAndClose` / `_createReferenceAndCloseNoSettle` on `Widget`, plus overrides on
+`FrameWdgt` and `FolderWindowWdgt` (the latter spelling the same parameter `whichFolderPanelToAddTo`).
+
+All three implementations carried an identical defensive block:
+
+```coffee
+# this function can also be called as a callback of a trigger, in which case the
+# first parameter here is a menuItem. We take that parameter away in that case.
+if referenceName? and typeof(referenceName) != "string"
+  referenceName = undefined
+  placeToDropItIn = world
 ```
-grep -rn --include='*.coffee' -E '^\s+[a-z][A-Za-z0-9_]* = \([^)]*,[^)]*,[^)]*\)' src/
-```
 
-e.g. `Serializer.coffee:232` `fail = (message, path, offender, remediation)`,
-`LRUCache.coffee:37` `createNode = (data, pre, next)`. Most will be fine (a local closure has one
-call site and no `super`); the deliverable is the READ, and converting only what the hole test
-actually condemns.
+⭐⭐ **One menu item — `menu.addMenuItem "create shortcut", @, "createReference"` — put a runtime type
+test into a class and both its overrides.** It is triplicated because a bare `super` compiles to
+`.apply(this, arguments)`: it forwards the RAW arguments, not the parameters the sniff just rebound,
+so each level has to defend itself again. And the sniff pinned the parameter order, which is what
+forced the two drop recipients to keep punching `undefined` through.
 
-**B2. Positional RESULT tuples — the rule is unwritten.** R3 governs arguments; the convention doc
-says nothing about `return [a, b, error]`. P6 refactored three of these in `LCLCodePreprocessor`
-because they were dead ceremony, and deliberately left the other **33** `return [undefined, error]`
-guards (those stages DO set errors; one `undefined` is not a hole). ⚖ **The decision to make is
-whether the convention doc should say anything at all** — a documented "result tuples are out of
-scope, and here is why" is a legitimate outcome and closes the question permanently.
+The fix is one line of indirection — `createReferenceFromMenu: -> @createReference()`, the shape
+`PanelWdgt.makeFolderFromMenu` already uses two screens away — after which all three sniffs delete
+and the family is free to take the order it should have had. `placeToDropItIn` leads because every
+caller supplies one (5 of 6 sites) while the name is usually left to `untitledNamingService`.
 
-### C — the tests repo has 25 holes and NO gate
+⚠ **The reorder is not separable from the adapter**: with the place in slot 1, a menu-dispatched
+`menuItem` would land in `placeToDropItIn` where the sniff — which tests `referenceName` — could not
+see it. Doing either half alone breaks the other.
 
-Deliberate (`check-argument-holes.js` header): its `SystemTest_*.js` metadata is prose inside string
-literals that the tree-wide sweep over-matches, and **a doc edit must never break a build**. But
-that leaves half the tree unratcheted. Concentrations: `setValue` ×5, `assertValuesEqual` ×3,
-`showOutputPins` ×2, `processKeyDown` ×2.
+Two more of the same shape fell out: `FolderWindowWdgt`'s override lacked the `= world` default its
+siblings had, so a menu "create shortcut" on a folder window filed the shortcut into `@widgetEnv`;
+and `SaveShortcutPromptWdgt.createReferenceAndClose` was an **arity-0 menu action SHADOWING the
+family verb of the same name** on every instance of that class (now `…FromMenu`).
 
-⚖ Two ways to close it, pick one: **(a)** gate a safe SUBSET — `tests/**/*_automationCommands.js`
-only, never the `SystemTest_*.js` metadata files — or **(b)** accept hand-sweeping and say so
-explicitly in the check's header so the asymmetry is a stated decision rather than an omission.
+### B1 — local function literals: counted, and clean
 
-### D — one loose end from P8 item 2
+The category §0 and P6 both skipped. Nine real ones exist (the naive grep also matches a call and a
+comprehension). **None carries a hole** — which the honest counter already told us, since it is
+call-site-based and name-agnostic: that is exactly how P8 found `buildHeader`. Arities are ≤4 bar
+one, `MacroToolkit`'s 5-parameter `setControllerTargetToWidgetProperty_InputEvents_Macro`, which is
+macro source in a template string with **16 call sites across the tests repo, none of them holed**
+(its 4th and 5th parameters happen to be correlated, so the optional tail never needs skipping).
+Converting that would churn 16 test files to fix nothing. Left as is, deliberately.
 
-`CodePromptWdgt.coffee:14` assigns `@msg = opts.msg` and **never reads it** — the same dead-field
-shape removed from `ErrorsLogViewerWdgt` in item 2, spotted at the time and left as out of scope.
-One line. ⚠ Check first whether the `msg:` key is meaningful to the shared `textPrompt` door before
-deleting the field.
+### B2 — positional RESULT tuples: OUT OF SCOPE, and why
 
-### Verification for all of P9
+R3 governs arguments. A returned tuple has no call sites to disagree with each other, so the hole
+test has nothing to bite on: `return [undefined, error]` is one value with a slot unfilled, not a
+caller working around a bad parameter list. The 33 `LCLCodePreprocessor` guards stay. **Recorded here
+so the question is closed rather than re-opened by the next reader who notices them.**
 
-`fg presuite` while iterating; `fg gauntlet` before proposing a commit. Every item here should be
-**pixel-free** — a signature change that churns references means a field is mis-bound (§8). The one
-exception to expect is none: no item in P9 changes behaviour by design.
+### C — the tests repo stays UNGATED, and now with evidence
+
+Decision: **(b)**, hand-sweeping, stated in `check-argument-holes.js`'s header and in §5 of the
+convention doc. What settled it is that running the tree-wide sweep shows *why*: roughly a third of
+the tests repo's "holes" are **English sentences**. The scanner reads
+
+> `"…is never undefined, on the two classes that break it, and that a specified backgroundColor…"`
+
+as a call named `never` with four arguments. Others are `undefined` used as an EXPECTED VALUE
+(`assertValuesEqual "…", undefined, el.layoutSpec` asserts that something IS undefined). A gate there
+would fail builds over prose edits, which is the one thing it must never do. The genuine remainder —
+`setValue` ×5 and `processKeyDown` ×2 in `serialization-roundtrip-headless.js`, a couple of macro
+verbs — is small, inert, and reachable any time with `census-call-arity.js --holes`.
+
+### D — `CodePromptWdgt.@msg`
+
+Dead field, removed. The `textPrompt` door does forward `msg:`, but `CodePromptWdgt` builds its own
+children and has no title bar to put one in, so the value has never had anywhere to land. The door's
+signature is left alone (it mirrors its sibling `prompt`, and R3's ⭐ blesses a door keeping the
+natural spelling); a note at the constructor records that the key is inert here. ⚖ Whether
+`textPrompt` should keep an operand its only receiver ignores is a live question, deliberately not
+taken unilaterally.
+
+### Verification
+
+Every signature conversion is **pixel-free** — proven, not assumed: the one test that moved
+(`macroDuplicatedInspectorDrivesCopiedTargetOnly`) was A/B'd by removing ONLY the newly-added
+`createReferenceFromMenu` prototype member, with all other conversions still in place, and it passed
+all three screenshots. So the churn is not a mis-binding; it is the inspector member-list
+quantization that test's own comment already documents (*"a change in Widget's member list can land
+the row with its TOP EDGE slightly clipped by the pane… one prototype member added + one deleted
+shifted alpha's index by one"*), because it is the one inspector test that SCROLLS its list to a
+named member. Recaptured under the gated flow (`fg recapture`, 2 images × 2 densities).
 
 ---
 

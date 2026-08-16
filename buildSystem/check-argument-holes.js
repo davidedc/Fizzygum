@@ -13,7 +13,7 @@
 // is blind to the two commonest holes: a SINGLE `undefined` (`holder.add w, undefined, spec`) and
 // one spread over a multi-line call. Reading its 0 as "the tree is clean" is exactly how the
 // conformance arc came to be archived as complete and re-opened the same day with ~50 holes
-// standing (docs/plans/constructor-parameter-conformance-plan.md §7c). This check is the honest
+// standing (docs/archive/constructor-parameter-conformance-plan.md §7c). This check is the honest
 // count, and it shares ONE parser with `census-call-arity.js` so the gate and the advisory view can
 // never disagree about what a hole is.
 //
@@ -31,15 +31,20 @@
 const path = require('path');
 const census = require('./census-call-arity.js');
 
-// Seeded 2026-08-16 at 20 and tightened to 9 the same day as P8 items 1b and 3 landed (the sweep
-// started at 25). Every REMAINING site is a one-off; the two families are gone —
-// `Appearance._paintInLocalScope` shed 8 when its two knobs became class-level declarations, and
-// the demo buttons shed 3 when SimpleRectangularButtonWdgt took an options head.
-// ⚠ Some survivors are `undefined` used as a MEANING rather than a skip (`_insertAddersSuchThat`'s
-// axis is documented as "undefined is MEANINGFUL: content mode"; RectangularAppearance.paintStroke
-// passes an absent appliedShadow because it is normal-pass-only). This regex cannot tell those from
-// real holes — read the site before converting, and if it is genuinely a value, say so at the site.
-const BASELINE = 9;
+// Seeded at 20, tightened to 9 (P8), and to 2 at P9 — which is this check's FLOOR, not a way-point.
+//
+// ⚠⚠ THE REMAINING 2 ARE NOT HOLES, AND NO FUTURE SWEEP SHOULD "FIX" THEM. They are `undefined`
+// used as a VALUE, which this regex cannot distinguish from a skipped parameter:
+//   - RectangularAppearance.paintStroke      an absent appliedShadow MEANS "no shadow"
+//   - Widget._setScaleFactorNoSettle         an absent rotation MEANS "leave it unchanged"
+// Each is annotated at its call site. The test that separates the two cases, worked out by reading
+// all nine of P8's survivors: a `undefined` is a HOLE when some OTHER caller of the same method
+// OMITS that trailing tail — i.e. the parameter list gives this caller no shorter way to reach a
+// later argument. When EVERY caller passes every argument (typically because the last one is a
+// required block, as with _paintInLocalScope's bodyFn) or when no reordering can help (a symmetric
+// two-slot partial-update record), the `undefined` is an operand with an absent value and the list
+// is right. So: a rise here is a regression; reaching 0 is not a goal.
+const BASELINE = 2;
 
 const SRC = [path.join(census.ROOT, 'Fizzygum', 'src')];
 

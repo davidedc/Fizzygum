@@ -1572,6 +1572,10 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_setScaleFactorNoSettle s
 
   _setScaleFactorNoSettle: (s) ->
+    # ⚠ `undefined` here is the degOrNil VALUE — "leave the rotation unchanged" — not a skip to
+    # reach a later argument: this is a two-slot PARTIAL-UPDATE record, and its mirror one line
+    # above writes the same absence in the other slot. No order removes it, so it is not a hole
+    # under R3 (docs/architecture/constructor-and-parameter-conventions.md).
     @_applyTransformSugarNoSettle undefined, s
 
   # shared core: find-or-materialize the enclosing sugar island, apply the (partial) spec change,
@@ -2989,25 +2993,33 @@ class Widget extends TreeNode
     widgetToAdd.setBounds @position(), new Point 150, 20
     @removeFromTree()
 
-  # PUBLIC self-settling entry (menus / triggers / double-clicks). The NON-settling core
-  # _createReferenceNoSettle is what a drop recipient calls (it runs inside the drop's settle, so
-  # a public add/setExtent would re-enter the flush guard and throw under the single-mutation tier).
-  createReference: (referenceName, placeToDropItIn = world) ->
-    @_settleLayoutsAfter => @_createReferenceNoSettle referenceName, placeToDropItIn
+  # THE MENU ADAPTER for the "create shortcut" item — the shape shared with
+  # PanelWdgt.makeFolderFromMenu and StringWdgt.setFontNameFromMenu. ButtonWdgt dispatches a FIXED
+  # 4-slot convention (`@target[@action].call @target, dataSource, env, arg1, arg2`), so a menu item
+  # carrying no arguments of its own still arrives with WIDGETS in the leading slots. Keeping the
+  # adapter separate from the verb is what lets createReference take the parameters IT wants: a menu
+  # click means "a shortcut to me, on the desktop, auto-named", which is exactly the no-argument call.
+  # ⚠ Point menu items and triggers at THIS, never at createReference: the verb has no defence of its
+  # own, and the three overrides of it that would each need one are the reason to have a door here.
+  createReferenceFromMenu: ->
+    @createReference()
+
+  # PUBLIC self-settling entry (double-clicks, the menu adapter above, macro/user code). The
+  # NON-settling core _createReferenceNoSettle is what a drop recipient calls (it runs inside the
+  # drop's settle, so a public add/setExtent would re-enter the flush guard and throw under the
+  # single-mutation tier).
+  # ⚠ ORDER — the place leads because every caller supplies one while the name is usually left to
+  # untitledNamingService; with the name in front, the two drop recipients have to skip a slot to
+  # reach the place they care about (R3's hole test, whose remedy for a two-slot list is this
+  # reorder rather than an options bag). The whole family shares the one order.
+  createReference: (placeToDropItIn = world, referenceName) ->
+    @_settleLayoutsAfter => @_createReferenceNoSettle placeToDropItIn, referenceName
 
   # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtent
   # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
   # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
   # positions identically once the enclosing settle re-fits).
-  _createReferenceNoSettle: (referenceName, placeToDropItIn = world) ->
-    # this function can also be called as a callback
-    # of a trigger, in which case the first parameter
-    # here is a menuItem. We take that parameter away
-    # in that case.
-    if referenceName? and typeof(referenceName) != "string"
-      referenceName = undefined
-      placeToDropItIn = world
-
+  _createReferenceNoSettle: (placeToDropItIn = world, referenceName) ->
     # don't create new reference if it exists already
     for w in placeToDropItIn.children
       if w.isShortcutTo?(@)
@@ -3024,11 +3036,11 @@ class Widget extends TreeNode
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
   # (IconicDesktopSystemFolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
-  createReferenceAndClose: (referenceName, placeToDropItIn = world) ->
-    @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle referenceName, placeToDropItIn
+  createReferenceAndClose: (placeToDropItIn = world, referenceName) ->
+    @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle placeToDropItIn, referenceName
 
-  _createReferenceAndCloseNoSettle: (referenceName, placeToDropItIn = world) ->
-    @_createReferenceNoSettle referenceName, placeToDropItIn
+  _createReferenceAndCloseNoSettle: (placeToDropItIn = world, referenceName) ->
+    @_createReferenceNoSettle placeToDropItIn, referenceName
     # the reference just created (or already existing -- the create dedups)
     # keeps me reachable, so file straight to the SHELF
     @_closeNoSettle world.shelfWdgt
@@ -3037,9 +3049,15 @@ class Widget extends TreeNode
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160
   #
-  # if you want to forceShadow that noShadow must be
-  # sent as false
-  fullImage: (bounds, noShadow = false, forceShadow = false) ->
+  # EVERY parameter is optional and no caller supplies them all, so there is no positional head
+  # and they all ride opts (R3, docs/architecture/constructor-and-parameter-conventions.md):
+  #   bounds      the region to image; absent means my own fullBounds, grown to cover any shadow
+  #   noShadow    image me with my shadow suppressed — wins over forceShadow if both are set
+  #   forceShadow give me the standard float-drag shadow for the shot if I have none of my own
+  fullImage: (opts = {}) ->
+    bounds = opts.bounds
+    noShadow = opts.noShadow ? false
+    forceShadow = opts.forceShadow ? false
 
     shadowHadBeenReplacedOrAdded = false
 
@@ -4213,7 +4231,7 @@ class Widget extends TreeNode
     menu.addLine()
     menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
     menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
-    menu.addMenuItem "create shortcut", @, "createReference", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
+    menu.addMenuItem "create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
     menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
     menu.addMenuItem "attach...", @, "attach", toolTip: "stick this widget\nto another one"
     menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
@@ -5221,18 +5239,19 @@ class Widget extends TreeNode
     if @children.length == 0
       @_addNoSettle new LayoutElementAdderOrDropletWdgt
 
-    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", axis
+    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", axis: axis
     # the second call scans the OTHER direction -- only needed to add the LAST adder/droplet.
-    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", axis
+    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", axis: axis
 
   # ONE direction-parameterized scan for the two reconciler passes (was two ~20-line while-loops
   # identical bar the scan/insert verbs): repeatedly find the first stack child still needing an adder on
   # the given side (skipping adders/droplets themselves) and insert one there, until none remain.
-  # TWO flavours share it: the DIVISION reconciler (_addOrRemoveAdders — member = division element,
-  # adders join the division on the given axis) and the content-stack reconciler
-  # (SimpleVerticalStackPanelWdgt._reconcileContentDropSlots — its own membership predicate, and
-  # axis undefined ⇒ the adder stays spec-less, for the stack's arrange to adopt). ⚠ NO default on
-  # axis: undefined is MEANINGFUL (content mode), and a CoffeeScript default would swallow it.
+  # TWO flavours share it, and they want DISJOINT tails — which is why the knobs ride an options
+  # bag (R3) rather than two positional slots: the DIVISION reconciler (_addOrRemoveAdders — member
+  # = division element, adders join the division on the given `axis`, default membership) and the
+  # content-stack reconciler (SimpleVerticalStackPanelWdgt._reconcileContentDropSlots — its own
+  # `isMember` predicate, and no axis at all, so the adder stays spec-less for the stack's arrange
+  # to adopt). ⚠ NO default for the axis: its ABSENCE is meaningful (content mode).
   #
   # BOTH flavours run MID-PASS (from inside the container's own arrange), so the insert must not
   # schedule layout: the adder is added SPEC-LESS — a free-floating child's add-invalidate is the
@@ -5240,8 +5259,10 @@ class Widget extends TreeNode
   # _setLayoutSpec, exactly the stack-adoption idiom. (Passing the box as the add's layoutSpec made
   # Widget._addNoSettle's new-container invalidate reach a NON-freefloating child mid-pass ⇒ the
   # FLOWRULE throw — latent in the division flavour until the first edit-layout-driving test.)
-  _insertAddersSuchThat: (scanVerbName, insertVerbName, axis, isMember) ->
+  _insertAddersSuchThat: (scanVerbName, insertVerbName, opts = {}) ->
     return unless LayoutElementAdderOrDropletWdgt?
+    axis = opts.axis
+    isMember = opts.isMember
     isMember ?= (m) -> m.layoutSpec?.isDivisionElement?()
     while true
       leftToDo = @firstChildSuchThat (m) ->

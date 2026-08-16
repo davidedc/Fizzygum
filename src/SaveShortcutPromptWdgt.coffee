@@ -11,7 +11,7 @@ class SaveShortcutPromptWdgt extends PromptWdgt
   wdgtWhereReferenceWillGo: undefined
 
   # No msg and no callback: the title is the class-level constant above, and there
-  # is no caller action — Ok routes to my own createReferenceAndClose. Both are
+  # is no caller action — Ok routes to my own createReferenceAndCloseFromMenu. Both are
   # simply absent from the options I forward, which is why the base reads msg
   # guarded (a bare assignment there would blank the constant).
   constructor: (widgetOpeningThePopUp, target, opts = {}) ->
@@ -43,8 +43,12 @@ class SaveShortcutPromptWdgt extends PromptWdgt
     panel.addMenuItem "Don't save", @target, "destroy"
     # "Cancel" here just dismisses this prompt, but the target wdgt remains open.
     panel.addMenuItem "Cancel", @, "close"
-    panel.addMenuItem "Ok", @, "createReferenceAndClose"
+    panel.addMenuItem "Ok", @, "createReferenceAndCloseFromMenu"
 
-  createReferenceAndClose: ->
-    @target.createReferenceAndClose @tempPromptEntryField.text.text, @wdgtWhereReferenceWillGo
+  # THE MENU ADAPTER for my own Ok button: it takes the name the user typed and the place the
+  # opener chose, so it has nothing to take from the dispatcher's four slots. The name is
+  # deliberately NOT the family verb's — an arity-0 method called createReferenceAndClose would
+  # SHADOW Widget.createReferenceAndClose on every instance of this class.
+  createReferenceAndCloseFromMenu: ->
+    @target.createReferenceAndClose @wdgtWhereReferenceWillGo, @tempPromptEntryField.text.text
     @close()

@@ -169,7 +169,7 @@ class StretchableCanvasWdgt extends CanvasWdgt
 
   # Runs inside the drop's single settle: re-home the dropped widget through the non-settling add core.
   _reactToChildDropped: (droppedWidget) ->
-    @_paintImage droppedWidget.position(), droppedWidget.fullImage(undefined, false, true)
+    @_paintImage droppedWidget.position(), droppedWidget.fullImage(forceShadow: true)
     world._addNoSettle droppedWidget, beingDropped: true
   
   _reLayout: (newBoundsForThisLayout) ->

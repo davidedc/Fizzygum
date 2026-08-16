@@ -146,11 +146,21 @@ class Class
 
     return [superClassName, superClass]
 
-  findUpTo: (sourceLines, regexStopPositive, regexStopNegative, regexStopPositive2, keepStashWhenEOF) ->
+  # Collect lines up to a stop. Two operands — the lines and the pattern that ends the stash — because
+  # all four callers supply exactly those; the three rarer controls ride opts, since each is wanted by
+  # ONE caller and any positional order leaves the others skipping a slot (R3, the hole test:
+  # docs/architecture/constructor-and-parameter-conventions.md):
+  #   opts.orStopOn         a SECOND stop-positive; either pattern ends the stash
+  #   opts.abortOn          a stop-NEGATIVE: matching it abandons the stash and returns false
+  #   opts.keepStashWhenEOF at end of input, return what was collected instead of failing
+  findUpTo: (sourceLines, regexStopPositive, opts = {}) ->
     # This works by prospectively collecting lines until a
     # stop regex is found.
     # If a stop positive is found, we return the stash and the line with the stop.
     # Otherwise, if a stop negative or end of file, we return false.
+    regexStopPositive2 = opts.orStopOn
+    regexStopNegative = opts.abortOn
+    keepStashWhenEOF = opts.keepStashWhenEOF
 
     sourceLinesOrig = sourceLines
     linesUpToStop = []
@@ -199,7 +209,7 @@ class Class
     augmentationComments = []
     augmentationNames = []
 
-    while returned = @findUpTo remainingSourceLines, @augmentRegex, @propertyRegex
+    while returned = @findUpTo remainingSourceLines, @augmentRegex, abortOn: @propertyRegex
       augmentationNames.push (returned[0].match @augmentRegex)[1]
       augmentationComments.push returned[1]
       remainingSourceLines = returned[2]
@@ -228,7 +238,7 @@ class Class
         console.log "propertyFirstLineOfBody: \n" + propertyFirstLineOfBody
 
       propertyBodyExceptFirstLine = ""
-      if returned = @findUpTo remainingSourceLines, @topLevelCommentRegex, undefined, @propertyRegex, true
+      if returned = @findUpTo remainingSourceLines, @topLevelCommentRegex, orStopOn: @propertyRegex, keepStashWhenEOF: true
         propertyBodyExceptFirstLine = returned[1]
         remainingSourceLines = returned[3] # leave the next top level comment or property regex IN
 

@@ -8,7 +8,7 @@
 // were invisible to the public/private call census for as long as they had two-line signatures — the
 // census simply had no record that the methods existed, and nobody could see that from its output,
 // because a gate that cannot see a method reports nothing about it rather than reporting a gap.
-// Found 2026-08-15 while landing P4 of docs/plans/constructor-parameter-conformance-plan.md: fitting
+// Found 2026-08-15 while landing P4 of docs/archive/constructor-parameter-conformance-plan.md: fitting
 // the two signatures onto one line made the census's method count jump by exactly two, which is the
 // only reason the blind spot surfaced at all.
 //

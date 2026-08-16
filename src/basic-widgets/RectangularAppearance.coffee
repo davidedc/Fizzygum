@@ -92,7 +92,12 @@ class RectangularAppearance extends Appearance
   paintStroke: (aContext, clippingRectangle) ->
 
     # normal-pass only (the base paint skips it under appliedShadow; the standalone callers gate on
-    # !appliedShadow too), so the scope's default alpha reduces to the plain widget alpha
+    # !appliedShadow too), so the scope's default alpha reduces to the plain widget alpha.
+    # ⚠ That `undefined` is the appliedShadow VALUE — "no shadow" — not a skip to reach the block:
+    # every one of _paintInLocalScope's callers passes all four arguments, because the trailing
+    # bodyFn is required. It is therefore NOT a hole under R3 and must not be "fixed" into one
+    # (docs/architecture/constructor-and-parameter-conventions.md; buildSystem/check-argument-holes.js
+    # counts it because a regex cannot tell an absent value from a skipped parameter).
     @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx, localArea) =>
       return unless @widget.strokeColor?
 

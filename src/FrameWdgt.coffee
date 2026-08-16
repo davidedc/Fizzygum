@@ -291,15 +291,7 @@ class FrameWdgt extends Widget
   # a special type of reference that has a slightly different icon
   # and when double-clicked actually runs the script rather than
   # bringing up the script
-  createReference: (referenceName, placeToDropItIn) ->
-    # this function can also be called as a callback
-    # of a trigger, in which case the first parameter
-    # here is a menuItem. We take that parameter away
-    # in that case.
-    if referenceName? and typeof(referenceName) != "string"
-      referenceName = undefined
-      placeToDropItIn = world
-
+  createReference: (placeToDropItIn = world, referenceName) ->
     # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
     # any other content falls to the default reference via super. The content type decides via
     # specialFrameReferenceShortcut instead of `@contents instanceof ScriptWdgt`.

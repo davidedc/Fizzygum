@@ -85,6 +85,28 @@ worked case: 6 sites wanted only the trailing flag, 2 only the colour — **disj
 no reordering could ever have fixed it. That is the signature of a parameter that belongs in
 the options object.
 
+⚠⚠ **Not every `undefined` argument is a hole — some are the VALUE.** A parameter whose absence
+*means* something ("no shadow", "leave the rotation unchanged") is an operand like any other, and
+writing `undefined` for it is supplying it, not skipping it. ⚠ But that meaning is NOT the test —
+the third row below is a parameter whose absence is genuinely meaningful *and* a hole all the same.
+What separates them is the callers:
+
+> **A `undefined` is a hole iff some OTHER call site of the same callee OMITS that position's
+> trailing tail** — i.e. this caller writes `undefined` only because the list gives it no shorter
+> way to reach a later argument.
+
+Three worked cases, all from the same reading pass:
+
+| site | verdict | why |
+|---|---|---|
+| `Appearance._paintInLocalScope aContext, clip, undefined, bodyFn` | **value** | all 14 callers pass all 4 arguments — `bodyFn` is a required trailing block, so there is no shorter form to punch past. The `undefined` is an `appliedShadow` that is genuinely absent |
+| `_applyTransformSugarNoSettle undefined, s` | **value** | a symmetric two-slot partial-update record (`degOrNil, sOrNil`): its mirror writes the absence in the other slot, so no order removes it |
+| `_insertAddersSuchThat scan, insert, undefined, isMember` | **HOLE** | the other caller stops at arity 3, omitting `isMember` — so this one is filling a slot purely to reach past it. Two callers, disjoint tails, textbook |
+
+The distinction matters in both directions: converting a value costs a real signature and buys
+nothing, and dismissing a hole as "well, `undefined` is meaningful there" is how a tail survives a
+sweep. Read the *other* call sites, not the parameter's documentation.
+
 ⚠ **The remedy is not always an options object.** For a class that is otherwise exempt (§3), a
 hole means *reorder* — move the commonly-passed operand up. `TransformSpec` is the worked case:
 an immutable value class (E1), so it stays positional however long the list gets, and five sites
@@ -113,6 +135,23 @@ into the constructor's bag (`Object.assign {}, opts, msg: msg, callback: callbac
 key SPELLINGS identical across the seam: a forwarded options bag cannot survive one field
 under two names, because the receiver never reads the alias.
 
+⭐⭐ **A MENU/TRIGGER ADAPTER IS NOT THE VERB — and wiring a menu item straight to a verb taxes
+every override of it.** `ButtonWdgt` dispatches a fixed four-slot convention
+(`@target[@action].call @target, dataSource, env, arg1, arg2`), so an item carrying no arguments
+still arrives with *widgets* in the leading slots. A verb wired directly to a menu has to defend
+itself — and since a bare `super` forwards the raw `arguments` rather than the parameters that
+defence just rebound, **every override needs its own copy of it**. `createReference` is the worked
+case: one menu item put the same `if referenceName? and typeof(referenceName) != "string"` sniff
+into the `Widget` core *and* both overrides — three copies of a runtime type test whose only job was
+to undo the dispatcher — and the sniff also pinned the parameter order, so the two drop recipients
+kept punching `undefined` through to reach the place they cared about. One line of indirection fixes
+all of it: a `…FromMenu` / `…MenuAction` adapter (the shape `PanelWdgt.makeFolderFromMenu` and
+`StringWdgt.setFontNameFromMenu` already use) translating the click into the call the verb actually
+wants — for a menu, usually the NO-argument call. The three sniffs then delete and the verb is free
+to take the parameters it should have had. ⚠ It applies in reverse too: never give an adapter the
+verb's own name — an arity-0 `createReferenceAndClose` menu action on a prompt class SHADOWS
+`Widget.createReferenceAndClose` on every instance of that class.
+
 ### R4 — Option keys are the caller's vocabulary, not the field's name.
 
 An option key is named for what the **caller** means, and may be much shorter than the field
@@ -135,7 +174,7 @@ consistency is what makes the option nameable without checking the receiver.
 index key names a slot reaching `@children.splice`, and under the vaguer name `position` two callers
 read it as a screen position and wrote `world.add slider, new Point 760, 240` — `Number(Point)` is
 NaN, so `splice` takes index 0 and the placement is dropped in silence. `atIndex` is a name nobody
-hands a `Point`. (Case history: `plans/constructor-parameter-conformance-plan.md` §7b.)
+hands a `Point`. (Case history: `archive/constructor-parameter-conformance-plan.md` §7b.)
 
 ### R5 — A `@param` in the signature is a hazard; options are read in the body.
 
@@ -258,6 +297,18 @@ counted), and a hole spread over a **multi-line** call. It is a regression alarm
 shape, not an inventory. When you convert a family, sweep it by METHOD NAME across both repos and
 read the call list; do not ask the gate whether you are done.
 
+**`buildSystem/check-argument-holes.js` is the honest count**, and it also runs on every build. It
+shares `census-call-arity.js`'s paren-aware parser — so the gate and the advisory view
+(`fg critique`'s fourth census, or `census-call-arity.js --holes` for the tree-wide list) can never
+disagree about what a hole is — and it is ratcheted at **2**, which is its FLOOR: both survivors are
+`undefined`-as-a-value, annotated at their call sites, and driving it to 0 would mean converting a
+correct signature. It scans `Fizzygum/src/**` only, deliberately: the sibling tests repo's
+`SystemTest_*.js` metadata is English PROSE inside string literals, and a tree-wide identifier sweep
+reads sentences like *"…never undefined, on the two classes that break it…"* as a four-argument
+call. A doc edit in a test must never break a build, so that half is swept by hand with
+`census-call-arity.js --holes`, where the prose hits are obvious to a reader and invisible to a
+regex.
+
 Everything else here is convention, checked by review. The cap in R1, the vocabulary in R4 and
 the atomicity in R7 are not expressible as a text scan.
 
@@ -275,32 +326,47 @@ plain JS `new SliderWdgt(0, 100, 40, 10)` in the rigs.
 
 ## 7. Current conformance
 
-**Every CONSTRUCTOR is conformant; a small METHOD tail is not.** Every constructor in `src/` takes
-≤4 operands or is named exempt under §3, and `positional-hole` sits at **0**, hard. ⚠ But 0 is what
-the gate can see, and §5 says what it cannot: a post-close sweep found **~9 surviving hole sites**,
-tracked as P8 of
-[`../plans/constructor-parameter-conformance-plan.md`](../plans/constructor-parameter-conformance-plan.md),
-which also records the per-family measurements and the four heads that measurement overruled.
+**`src/` is conformant, constructors and methods alike.** Every constructor takes ≤4 operands or is
+named exempt under §3; `positional-hole` sits at **0**, hard; and the honest counter
+`check-argument-holes.js` sits at its floor of **2**, both of which are `undefined`-as-a-value
+(§5), annotated at their call sites. The per-family measurements, the four heads that measurement
+overruled, and the phase-by-phase record are in
+[`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md).
+The sibling tests repo is deliberately ungated and swept by hand — §5 gives the reason.
 
-⚠⚠ **The tail is one layer below the verbs that were converted, and that is the lesson.** `add` was
-converted while `__add` / `_addChild` beneath it kept the same misleading parameter name *and* two
-holes of their own; the menu-adapter *definitions* were converted while two sites hand-rolling the
-same dispatcher with an explicit `.call` were invisible to a signature sweep. **A public verb
-delegates to a private core, which delegates again — convert the chain, not the face.**
+⚠⚠ **The last tail found was one layer BELOW the verbs already converted, and that is the lesson.**
+`add` was converted while `__add` / `_addChild` beneath it kept the same misleading parameter name
+*and* two holes of their own; the menu-adapter *definitions* were converted while two sites
+hand-rolling the same dispatcher with an explicit `.call` stayed invisible to a signature sweep; and
+`createReference` was reached only by following `createReferenceAndClose` down to the core they
+share. **A public verb delegates to a private core, which delegates again — convert the chain, not
+the face**, and sweep by the FAMILY name rather than the one method that showed up in the count.
 
 Landed conversions, in order: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
 `FrameWdgt` constructors, and the four `_addNoSettle` overrides
 ([`../archive/accidental-complexity-reduction-plan.md`](../archive/accidental-complexity-reduction-plan.md) P5);
 then `SliderWdgt`, `MenuItemSpec`, the text family (`StringWdgt` / `TextWdgt` / `SimpleTextWdgt`,
 all three to `(text, opts = {})`), the button family, the prompt family
-(`(widgetOpeningThePopUp, target, opts = {})`), the stragglers, the **method** families, and
-finally the polymorphic **`add`** family — 7 overrides of inconsistent arity (4, 5 and 6 slots)
-collapsed to one `(aWdgt, opts = {})`.
+(`(widgetOpeningThePopUp, target, opts = {})`), the stragglers, the **method** families, the
+polymorphic **`add`** family — 7 overrides of inconsistent arity (4, 5 and 6 slots) collapsed to one
+`(aWdgt, opts = {})` — and finally the tail the gate could not see: `Appearance._paintInLocalScope`
+(whose two "options" turned out to be class-level declarations), the `createReference` family
+(reordered behind a new menu adapter), `cleanupMenuWdgts`, `fullImage`, `_insertAddersSuchThat` and
+the meta-compiler's own `Class.findUpTo`.
 
-⭐ **The convention is not constructor-specific, and the last two phases are the proof.** Of the 51
-holes originally counted, 25 were ordinary **method** calls, and the final phase was a method
-family too. Both phases found the same shape: a method whose extra slots exist for a *dispatcher*
-(`ButtonWdgt`'s fixed 4-slot menu convention) or for a *sibling class* (`add`'s `notContent` /
-`positionOnScreen`, read by one receiver each), with everyone else punching `undefined` through to
-reach past them. The options tail is what lets one call address a whole polymorphic family: a
-receiver that does not read a key simply ignores it.
+⭐ **The convention is not constructor-specific, and the method phases are the proof.** Of the 51
+holes originally counted, 25 were ordinary **method** calls, and the last three phases were all
+method families. They kept finding the same shape: a method whose extra slots exist for a
+*dispatcher* (`ButtonWdgt`'s fixed 4-slot menu convention) or for a *sibling class* (`add`'s
+`notContent` / `positionOnScreen`, read by one receiver each), with everyone else punching
+`undefined` through to reach past them. The options tail is what lets one call address a whole
+polymorphic family: a receiver that does not read a key simply ignores it.
+
+⭐ **A hole is a symptom; read it as a diagnosis and the real defect is usually elsewhere.** Chasing
+these last few turned up, at the bottom of them: a dead-and-broken callback nothing could reach
+(`ErrorsLogViewerWdgt.informTarget`), two spreadsheet fixtures whose slider was never placed because
+a `Point` coerced to index 0, a parameter that padded a convention its method was never part of, a
+runtime type-test triplicated across a class and both its overrides, a dead field
+(`CodePromptWdgt.@msg`), and a dead parameter (`cleanupMenuWdgts`'s `expectedClick`, which appeared
+only in its own signature). The mis-shaped list is the visible end of something that was never
+looked at.

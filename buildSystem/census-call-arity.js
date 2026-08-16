@@ -4,7 +4,7 @@
 //
 // ADVISORY. Nothing here gates; `fg critique` prints its summary. This is the tool the
 // constructor-conformance arc actually ran to build every phase's work list
-// (docs/plans/constructor-parameter-conformance-plan.md).
+// (docs/archive/constructor-parameter-conformance-plan.md).
 //
 // ⚠⚠ WHY IT EXISTS RATHER THAN A GREP. The `positional-hole` stink is a REGRESSION ALARM, not an
 // inventory: its regex needs two `undefined`s adjacent on ONE line, so it reads 0 while

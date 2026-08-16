@@ -134,7 +134,7 @@ four phases are owner-gated. Plan §9 holds the six decisions; §10 holds what i
       `@param`-shadowing law forces three classes to carry a parallel `iconToolTipMessage` shadow field.
       Precedent: `21d5b64` (SliderWdgt) + `archive/menu-slider-ctor-conversion-plan.md`.
       ✅ **DONE — executed as P3 of the constructor conformance arc**
-      (2026-08-15, `plans/constructor-parameter-conformance-plan.md`): `LabelButtonWdgt` 17 and `ButtonWdgt` 12
+      (2026-08-15, `archive/constructor-parameter-conformance-plan.md`): `LabelButtonWdgt` 17 and `ButtonWdgt` 12
       both became `(target, action, opts)`, and only `IconButtonWdgt`'s `iconToolTipMessage` was
       actually the `@param`-shadow hazard — the other two shadow fields have a different cause. This
       W8 line survives only for that remainder.
@@ -152,22 +152,25 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
-### `plans/constructor-parameter-conformance-plan.md` — P0–P8 landed + pushed; **P9 is the remaining work**
+### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 Brought `src/` onto the constructor convention stated in
 `architecture/constructor-and-parameter-conventions.md` (positional head for identity, one trailing
-`opts` for configuration; the hole test decisive). ⚠⚠ **Archived as COMPLETE and re-opened the same
-day** — `positional-hole` read 0 while ~50 holes stood, because its regex needs two `undefined`s
-adjacent on ONE line. That produced the arc's main lesson (**a green ratchet is a floor, never an
-inventory**; and **a phase is not done when its own layer is converted, but when the layer it
-delegates to is checked too**) and the gate that now measures honestly:
-`buildSystem/check-argument-holes.js`, ratcheted at **9** in `src/`, sharing `census-call-arity.js`'s
-parser. Full measurement + prescribed shapes: plan §7d.
-- [ ] **P9-A — the 9 gated survivors, and 4 of them are NOT holes.** ⭐ Start here, and start with the READ. A1: `_insertAddersSuchThat` ×2 (its own comment says the `undefined` axis is MEANINGFUL — content mode), `RectangularAppearance.paintStroke` (absent `appliedShadow` = "no shadow"), `_applyTransformSugarNoSettle` (params literally named `degOrNil, sOrNil`) — these want a one-line comment saying *value, not skip*, NOT a signature change. A2, the five real ones: `cleanupMenuWdgts` (2 callers), `fullImage` (⭐ the ONLY caller in either repo — `(opts = {})` reduces it to `forceShadow: true`), `_createReferenceAndCloseNoSettle` ×2 (arity 2 ⇒ E5, so R3's remedy is a **REORDER**, not a bag), and `Class.findUpTo` (⚠⚠ the META-COMPILER, 5 positional, 4 call sites — convert LAST and alone; `check-coffee-syntax.js` and `compile-fragment.js` both load it). Then ratchet 9 → 4
-- [ ] **P9-B1 — local function literals, a category NOBODY has counted.** §0 counted constructors, P6 counted methods; `name = (a, b, c) ->` inside a method body was in neither. P8 found `buildHeader` only because a hole made it visible; **11 more** exist (`Serializer.fail(message, path, offender, remediation)`, `LRUCache.createNode`, …). The deliverable is the READ — most will be fine (one call site, no `super`)
-- [ ] **P9-B2 — positional RESULT tuples: the rule is UNWRITTEN (decision).** R3 governs arguments; the convention doc says nothing about `return [a, b, error]`. P6 refactored 3 in `LCLCodePreprocessor` as dead ceremony and deliberately left **33** `return [undefined, error]` guards. ⚖ A documented "out of scope, and here is why" is a legitimate outcome and closes it permanently
-- [ ] **P9-C — the tests repo has 25 holes and NO gate (decision).** Deliberate: its `SystemTest_*.js` metadata is PROSE in string literals and a doc edit must never break a build. ⚖ Either gate a safe subset (`*_automationCommands.js` only) or state the asymmetry in the check's header so it is a decision, not an omission. Concentrations: `setValue` ×5, `assertValuesEqual` ×3
-- [ ] **P9-D — `CodePromptWdgt:14` assigns `@msg = opts.msg` and never reads it.** The dead-field shape removed from `ErrorsLogViewerWdgt` in P8; one line. ⚠ Check the `msg:` key is not meaningful to the shared `textPrompt` door first
-⚠⚠ Standing, and learned TWICE in this arc (P3, then P8 item 3 in the same class family): **"I checked the callers" is HALF a sweep — a signature is owned by its call sites AND its `super` sites.** `grep -rn "extends <Class>\b" src/`, then RECURSE, however small the caller count looks. Also: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run); sweep BOTH repos incl. the harness `.coffee`; reference churn is a red flag, not an expected cost.
+`opts` for configuration; the hole test decisive) — constructors AND methods. ⚠⚠ **Archived as
+COMPLETE once and re-opened the same day** — `positional-hole` read 0 while ~50 holes stood, because
+its regex needs two `undefined`s adjacent on ONE line. That produced the arc's main lesson (**a green
+ratchet is a floor, never an inventory**; and **a phase is not done when its own layer is converted,
+but when the layer it delegates to is checked too**) and the gate that now measures honestly:
+`buildSystem/check-argument-holes.js`, sharing `census-call-arity.js`'s parser, ratcheted at **2** —
+its FLOOR, since both survivors are `undefined`-as-a-VALUE and annotated as such.
+- ⚖ **ONE open question, deliberately left (plan §7d-D).** `Widget.textPrompt` keeps a `msg` operand
+  its only receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The
+  dead FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.
+- ⚖ **The sibling tests repo stays UNGATED, by decision (plan §7d-C).** Its `SystemTest_*.js`
+  metadata is English prose inside string literals, and an identifier sweep reads a sentence like
+  *"…is never undefined, on the two classes that break it…"* as a four-argument call — so a gate
+  there would fail builds over prose edits. Sweep it by hand with `census-call-arity.js --holes`;
+  the genuine remainder is small (`setValue` ×5, `processKeyDown` ×2 in the serialization rig).
+⚠⚠ Standing, and learned TWICE in this arc (P3, then P8 item 3 in the same class family): **"I checked the callers" is HALF a sweep — a signature is owned by its call sites AND its `super` sites.** `grep -rn "extends <Class>\b" src/`, then RECURSE, however small the caller count looks. P9 adds the companion: **sweep by the FAMILY name, not the one method the count flagged** — two flagged holes in `_createReferenceAndCloseNoSettle` turned out to be six methods sharing one core, all three implementations carrying the same triplicated type-sniff that a single menu item had forced on them. Also: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run); sweep BOTH repos incl. the harness `.coffee`; reference churn is a red flag, not an expected cost.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12

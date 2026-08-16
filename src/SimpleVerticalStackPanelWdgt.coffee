@@ -99,10 +99,10 @@ class SimpleVerticalStackPanelWdgt extends Widget
     if @children.length == 0
       @_addNoSettle new LayoutElementAdderOrDropletWdgt
     # membership = any real (non-inert) child: content children need no particular spec —
-    # a just-dropped one is adopted by this very arrange. axis undefined ⇒ spec-less insert.
+    # a just-dropped one is adopted by this very arrange. No axis ⇒ spec-less insert.
     contentMember = (m) -> !m.isLayoutInert?()
-    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", undefined, contentMember
-    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", undefined, contentMember
+    @_insertAddersSuchThat "lastSiblingBeforeMeSuchThat", "addAsSiblingBeforeMe", isMember: contentMember
+    @_insertAddersSuchThat "firstSiblingAfterMeSuchThat", "addAsSiblingAfterMe", isMember: contentMember
 
   # The re-fit chokepoint for a stack (no scrollbars): re-lay-out my stacked
   # contents. See Widget._reLayoutChildren.

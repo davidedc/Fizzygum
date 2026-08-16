@@ -11,7 +11,7 @@
 // Use it to check a call/`super` spelling BEFORE converting a family — in particular that a
 // trailing `key: value` lands as a SEPARATE final argument rather than folding into the
 // positionals. That check is a standing hazard of the constructor-conformance arc
-// (docs/plans/constructor-parameter-conformance-plan.md §8) and this is the tool for it.
+// (docs/archive/constructor-parameter-conformance-plan.md §8) and this is the tool for it.
 //
 // Usage: node buildSystem/compile-fragment.js <file.coffee>        # that file's constructor
 //        node buildSystem/compile-fragment.js --stdin [ClassName]  # a fragment on stdin

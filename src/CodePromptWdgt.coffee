@@ -9,9 +9,10 @@ class CodePromptWdgt extends CodeAreaWdgt
 
   # A prompt by role, not by descent (I am a CodeAreaWdgt, not a PopUpWdgt), so I
   # have no widgetOpeningThePopUp operand — but I share the family's opts
-  # vocabulary: msg, callback, defaultContents.
+  # vocabulary: callback, defaultContents.
+  # ⚠ NOT msg: I build my own children and have no title bar to put one in, so the
+  # `msg` the textPrompt door forwards has nowhere to land here and is not read.
   constructor: (target, opts = {}) ->
-    @msg = opts.msg
     @target = target
     @callback = opts.callback
     # guarded: absence must leave the class-level "" standing, which a bare

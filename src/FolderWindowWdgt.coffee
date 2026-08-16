@@ -29,18 +29,14 @@ class FolderWindowWdgt extends FrameWdgt
     super
     @contents.contents.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
 
-  createReference: (referenceName, whichFolderPanelToAddTo) ->
-    # this function can also be called as a callback
-    # of a trigger, in which case the first parameter
-    # here is a menuItem. We take that parameter away
-    # in that case.
-    if referenceName? and typeof(referenceName) != "string"
-      referenceName = undefined
-
+  # A folder's own reference is a folder shortcut. Same parameter order and same `world` default as
+  # the rest of the family (Widget.createReference), so the menu adapter's no-argument call lands
+  # the shortcut on the desktop here exactly as it does everywhere else.
+  createReference: (placeToDropItIn = world, referenceName) ->
     widgetToAdd = new IconicDesktopSystemFolderShortcutWdgt @, referenceName
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
-    whichFolderPanelToAddTo.add widgetToAdd
+    placeToDropItIn.add widgetToAdd
     widgetToAdd.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
     @bringToForeground()
 

@@ -645,7 +645,7 @@ class ActivePointerWdgt extends Widget
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
       if !(w.firstParentThatIsAPopUp()?.isMenu?())
-        @cleanupMenuWdgts undefined, w, true
+        @cleanupMenuWdgts w, alsoKillFreshMenus: true
 
       @wdgtToGrab = w.findRootForGrab()
       if button is 2 or ctrlKey
@@ -823,13 +823,18 @@ class ActivePointerWdgt extends Widget
       # is a non-float drag ongoing then we avoid
       # cleaning-up the pop-overs
       if !@nonFloatDraggedWdgt?
-        @cleanupMenuWdgts expectedClick, w
+        @cleanupMenuWdgts w
 
     @mouseButton = undefined
     @nonFloatDraggedWdgt = undefined
 
 
-  cleanupMenuWdgts: (expectedClick, w, alsoKillFreshMenus)->
+  # Dismiss the open pop-up cascade around a click on `clickedWdgt`: everything that asked to be
+  # told about a click outside itself, and is not in that widget's ancestry, gets its callback.
+  # `alsoKillFreshMenus` rides opts because only the mouse-DOWN path wants it (a bare boolean is
+  # never a head operand, R1) — the mouse-UP path passes the widget alone.
+  cleanupMenuWdgts: (clickedWdgt, opts = {}) ->
+    alsoKillFreshMenus = opts.alsoKillFreshMenus
 
     world.hierarchyOfClickedWdgts.clear()
     world.hierarchyOfClickedMenus.clear()
@@ -847,7 +852,7 @@ class ActivePointerWdgt extends Widget
     # remove menus that have requested to be removed when a click happens outside of their bounds OR
     # the bounds of their children: collect all widgets up the hierarchy of the one the user clicked on
     # (including the one the user clicked on).
-    ascendingWdgts = w
+    ascendingWdgts = clickedWdgt
     world.hierarchyOfClickedWdgts.clear()
     world.hierarchyOfClickedWdgts.add ascendingWdgts
     while ascendingWdgts.parent?
@@ -858,7 +863,7 @@ class ActivePointerWdgt extends Widget
     # the bounds of their children: collect all the menus up the hierarchy of the one the user clicked
     # on (including the one the user clicked on) -- note that the hierarchy of the menus is actually
     # via the getParentPopUp method.
-    firstParentThatIsAPopUp = w.firstParentThatIsAPopUp()
+    firstParentThatIsAPopUp = clickedWdgt.firstParentThatIsAPopUp()
     if firstParentThatIsAPopUp?.hierarchyOfPopUps?
       world.hierarchyOfClickedMenus = firstParentThatIsAPopUp.hierarchyOfPopUps()
     

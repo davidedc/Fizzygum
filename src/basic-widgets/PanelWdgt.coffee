@@ -57,7 +57,7 @@ class PanelWdgt extends Widget
   makeFolder: (name, folderWindow) ->
     newFolderWindow = folderWindow ? new FolderWindowWdgt
     newFolderWindow.close()
-    newFolderWindow.createReference (name or world.untitledNamingService.getNextUntitledFolderShortcutName()), @
+    newFolderWindow.createReference @, (name or world.untitledNamingService.getNextUntitledFolderShortcutName())
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
