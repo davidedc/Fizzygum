@@ -855,11 +855,15 @@ class ScrollPanelWdgt extends PanelWdgt
     if wraps
       @contents._applyBounds @position(), @extent()
 
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+  # ⚠ NO `triggeringWidget` parameter here — see the note on FrameWdgt's pair. It is read in exactly
+  # one place tree-wide, BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget`, and that
+  # mixin is the core of the two Stretchables, not of a scroll panel. (A subclass whose core IS the
+  # mixin — SimpleVerticalStackScrollPanelWdgt — still `super`s into this one; the argument it hands
+  # over is simply ignored, which is the honest outcome for a value nothing here consults.)
+  enableDragsDropsAndEditing: ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
 
-  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
+  _enableDragsDropsAndEditingNoSettle: ->
     if @dragsDropsAndEditingEnabled
       return
     @parent?.showEditModeInBar?()
@@ -871,11 +875,10 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @contents._enableDragsDropsAndEditingNoSettle @
 
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+  disableDragsDropsAndEditing: ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
-  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
+  _disableDragsDropsAndEditingNoSettle: ->
     if !@dragsDropsAndEditingEnabled
       return
     @parent?.showViewModeInBar?()

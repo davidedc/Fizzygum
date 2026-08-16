@@ -947,18 +947,24 @@ class FrameWdgt extends Widget
   # child level, no payload-specific propagation) and notify only @parent. My
   # own flag mirrors the payload's so a frame nested as another frame's content
   # keeps Widget.editButtonPressedFromFrameBar's toggle direction honest.
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle triggeringWidget
+  # ⚠ NO `triggeringWidget` parameter here, unlike the Stretchables. That parameter exists ONLY to
+  # stop an edit-mode change bubbling back to whoever triggered it, and the only code that reads it
+  # is BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget` — which is the CORE of the
+  # two Stretchables, not of a frame. A frame that declared it would be accepting a value it then
+  # drops on the floor. The `@` passed DOWN to @contents below is a different thing and IS live:
+  # the contents may be mixin-cored, and that core reads it.
+  enableDragsDropsAndEditing: ->
+    @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()
 
-  _enableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+  _enableDragsDropsAndEditingNoSettle: ->
     @dragsDropsAndEditingEnabled = true
     @contents?._enableDragsDropsAndEditingNoSettle @
     @showEditModeInBar()
 
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle triggeringWidget
+  disableDragsDropsAndEditing: ->
+    @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
-  _disableDragsDropsAndEditingNoSettle: (triggeringWidget) ->
+  _disableDragsDropsAndEditingNoSettle: ->
     @dragsDropsAndEditingEnabled = false
     @contents?._disableDragsDropsAndEditingNoSettle @
     @showViewModeInBar()

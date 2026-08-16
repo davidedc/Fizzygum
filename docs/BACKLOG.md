@@ -178,9 +178,13 @@ fixed, the latent `triggeringWidget` mis-feed given its adapters).
   CURRENTLY IN THE WORLD. `menus walked` is the stable reach number; `--verbose` prints the pair set so
   a move is diffed, not argued about. (Detail: `archive/menu-subject-routing-plan.md` §5.2.)
 
-### Menu-dispatch residue — left by `archive/menu-subject-routing-plan.md`, none of it live
-Ranked by value. All four are the same family: the four-slot dispatch tells a verb less than its
-signature claims. The law is `architecture/constructor-and-parameter-conventions.md` R3.
+### Menu-dispatch residue — left by `archive/menu-subject-routing-plan.md`
+⚠⚠ **Five items were filed here at the arc's close; on verification TWO were plain wrong and a third
+was wrong about its own remedy.** They are kept with their refutations rather than deleted, because a
+falsified item silently removed is an item somebody re-files. The common cause of both bad ones: a
+defect inferred from the four-slot dispatch fact without reading the CONSUMER — **the dispatch fact
+tells you what a slot HOLDS, never whether the receiving parameter is wrong to want it.** One item
+remains open (the audit-prelude tag). Law: `architecture/constructor-and-parameter-conventions.md` R3.
 - ⛔ **FALSIFIED, do not re-open: `widgetOpeningThePopUp` is NOT a misnomer.** It was filed as one on
       the reasoning that dispatch slot 1 holds a `MenuItemWdgt` — but the consumer settles it the other
       way. `PopUpWdgt` uses the value for exactly one purpose,
@@ -191,18 +195,19 @@ signature claims. The law is `architecture/constructor-and-parameter-conventions
       would break the pop-up parent chain. 103 sites across 31 files, all correct. ⚠ The general
       lesson: **the dispatch fact tells you what slot 1 HOLDS, never whether the receiving parameter is
       WRONG to want it** — check the consumer before calling a name a defect.
-- [ ] ⭐ **`triggeringWidget` is declared in TEN members across FOUR classes and READ in exactly ONE
-      place** — `BubblesEditModeToCoordinatorMixin`'s `@parent != triggeringWidget`. Walked in full:
-      `FrameWdgt`'s four members (both public wrappers, both cores) declare it and never read it, and
-      have no fallback either; `ScrollPanelWdgt`'s four declare it, run
-      `if !triggeringWidget? then triggeringWidget = @`, and then never read the result — two no-op
-      lines; only `StretchablePanelWdgt` / `StretchableWidgetContainerWdgt` (and
-      `SimpleVerticalStackScrollPanelWdgt`) genuinely need to forward, because the mixin IS their core.
-      `Widget`'s own cores are correctly parameterless. ⚠ The predecessor plan's warning — "do NOT
-      delete it from the four overrides, `editButtonPressedFromFrameBar` genuinely passes `@`" — is
-      only HALF right: the caller does pass `@`, but only a receiver whose core READS it can care, and
-      two of the four drop it on the floor. This is the conformance arc's "a HOLE IS A SYMPTOM" shape,
-      one layer down: dead parameters plus dead fallback lines hiding behind a live one.
+- ✅ **DONE (2026-08-16): `triggeringWidget` now exists only where it is read.** It was declared in TEN
+      members across FOUR classes and read in exactly ONE place —
+      `BubblesEditModeToCoordinatorMixin`'s `@parent != triggeringWidget`, which is the CORE of the two
+      Stretchables and of nothing else. Dropped from `FrameWdgt`'s four members and `ScrollPanelWdgt`'s
+      four (including its two dead `if !triggeringWidget? then triggeringWidget = @` lines, which
+      assigned a value nothing consulted), and the mixin's `super @` became `super()` now that every
+      core it can reach takes none. KEPT where live: the mixin's two cores and the four public wrappers
+      on the two Stretchables that feed them — and the `@` passed DOWN to `@contents`, which is a
+      different value entirely and reaches mixin-cored contents that DO read it. ⚠ The predecessor
+      plan's "do NOT delete it from the four overrides, `editButtonPressedFromFrameBar` genuinely
+      passes `@`" was only HALF right: the caller does pass `@`, but only a receiver whose core READS
+      it can care. Suite 294/294 with no recapture — removing a parameter cannot move the inspector's
+      member list, which is also the proof it changed no behaviour.
 - ⛔ **FALSIFIED, do not re-open: `menusHelper.testMenuForMacros?()` is not a dead call.** The method
       lives in the TESTS repo (`Automator-and-test-harness-src/MenusHelperTestSupport.coffee:22`) and is
       installed onto `MenusHelper`'s prototype at boot; the `?` soak is the deliberate part-absence
@@ -212,10 +217,20 @@ signature claims. The law is `architecture/constructor-and-parameter-conventions
       containers OVERRIDE**, so end-of-cycle records from a container's edit-mode toggle are never
       attributed to it (`Fizzygum-tests/scripts/end-of-cycle-audit/layout-audit-prelude.js`).
       Attribution only, not correctness.
-- [ ] **`fg classify` cannot recognise a list SCROLLED by N rows** — the commonest benign inspector
-      shape — so it returns REVIEW and the pixels have to be read by hand. Teaching
-      `Fizzygum-tests/scripts/classify-diff.js` that shape would make the advisory tool earn its keep
-      on exactly the churn it sees most.
+- ✅ **DONE (2026-08-16), but NOT as filed — and the difference is the point.** Filed as "`fg classify`
+      cannot recognise a list SCROLLED by N rows, teach it that shape". ⛔ **That request is wrong and
+      must not be re-attempted:** the `BENIGN?(row-shift)` path already exists, and `classify-diff.js`'s
+      own MEASURED RECALL header records (probed 2026-07-14, real data, both column edges swept) that
+      the real inspector artifact provably does NOT fit it — adding a member makes the list TALLER, so
+      the scroll moves by LESS than one row, no whole row cleanly inserts or drops, the re-clipped
+      edges show new glyph fragments and the moved selection re-renders interior rows. Making it call
+      that BENIGN would invert the tool's founding safety asymmetry (a false REVIEW costs a minute; a
+      false BENIGN bakes a regression into the references). **What was actually wrong, and is now
+      fixed:** the `INSPECTOR_CHURN_SET` corroboration fired only on the BENIGN path, while real
+      inspector churn lands on REVIEW — so the tool knew the test was a member-list renderer and never
+      said so. REVIEW now carries that corroboration plus the raw hunk composition, changing NO
+      verdict, pinned by four new `classify-diff-selftest.js` checks (the last of which asserts the
+      verdict is unchanged — decoration must never move the ship gate).
 
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 Brought `src/` onto the constructor convention stated in
