@@ -199,7 +199,7 @@ Both open with `menu.addLine…` instead of `super`, so the base's block (`Widge
 those two widgets offer no layout submenu when they sit in a division stack or a content stack.
 `ScrollPanelWdgt` (~:829) also omits it, but *conditionally and deliberately* — leave it alone.
 
-### 2.4 W4 · Undeclared instance fields (survey F9) — 52 classes / 124 fields
+### 2.4 W4 · Undeclared instance fields (survey F9) — 51 classes / 120 fields
 
 The full list is reproducible with the §7 snippet. The decomposition that makes it tractable:
 
@@ -208,18 +208,23 @@ The full list is reproducible with the §7 snippet. The decomposition that makes
   (`internal`), `InspectorWdgt` (`resizer`, `textWidget`), `MenuItemWdgt` (`actionableAsThumbnail`),
   `PaintToolbarWdgt` (`queue`), `SimpleTextPanelWdgt` (`isTextLineWrapping`, `textAsString`),
   `SimpleVerticalStackPanelWdgt` (`padding`), `SliderButtonWdgt` (`offset`), `TextWdgt` (`alignment`).
-- **W4b — the eight repeated fields (48 occurrences), each a placement DECISION:**
+- **W4b — the eight repeated fields (46 occurrences), each a placement DECISION:**
 
   | field | classes | the question |
   |---|---|---|
   | `toolTipMessage` | 11 | declare on `Widget` (the reader `startCountdownForBubbleHelp` lives there) or on each setter? |
-  | `target` | 10 | `ControllerMixin` declares it for controllers; the shortcut / prompt / console families each re-declare it as a `@param`. One home or four? |
+  | `target` | 9 | `ControllerMixin` declares it for controllers; the shortcut / prompt / console families each re-declare it as a `@param`. One home or four? |
   | `icon` | 8 | `WidgetHolderWithCaptionWdgt` + the shortcut family + the generic-icon family |
   | `cornerSpec` | 5 | the carrier-owned corner knob — `Widget`, or a `layout.md`-named family base? |
   | `title` | 5 | the `IconicDesktopSystem*` shortcut family — pull up to `IconicDesktopSystemShortcutWdgt` |
-  | `callback` | 3 | `CodePromptWdgt`, `ErrorsLogViewerWdgt`, `IconicDesktopSystemWindowedAppLauncherWdgt` |
+  | `callback` | 2 | `CodePromptWdgt`, `IconicDesktopSystemWindowedAppLauncherWdgt` |
   | `cornerRadius` | 3 | `MenuRowsPanelWdgt`, `SpeechBubbleWdgt`, `ToolTipWdgt` (`BoxWdgt` already declares it) |
   | `seed` | 3 | the three `Example*PlotWdgt` — pull up to `GraphsPlotsChartsWdgt` |
+
+  ⚠ `callback` now stands at 2 classes, below the ≥3 threshold that picked the other seven; it stays
+  in the table because it is still a placement decision, not because it is still a repeat. Two more
+  fields sit at 2 (`_sheetWidget` in `CellWdgt`/`SheetHeaderCellWdgt`, `contentsWidget` in
+  `SpeechBubbleWdgt`/`ToolTipWdgt`); both are W4c business.
 
 - **W4c — the four big classes:** `WorldWdgt` (16), `SimpleSpreadsheetWdgt` (16), `CellWdgt` (7),
   `SheetHeaderCellWdgt` (4) — plus `FrameWdgt` (6), `FridgeMagnetsWdgt` (4), `SpeechBubbleWdgt` (4),
@@ -269,6 +274,33 @@ A pin setter is reached along two paths that put the value in **different argume
 Secondary divergence: the **idempotence guard** (`return if @color?.equals aColor`) and the
 **return-the-coerced-value tail** exist in shape A and are absent from B, C and D.
 
+**⚠ Three corrections to this section, measured 2026-08-16 while running W0–W2. Read them before
+starting W6.**
+
+1. **There is a SIXTH route the table omits, and it is the tree's existing answer to this very
+   problem: the `_<action>Connector` lane.** `DataflowEngine._applyWireValue` (~:359) computes
+   `connectorName = "_#{action}Connector"` and prefers that method when the consumer defines it —
+   so a class can give the WIRE path its own entry point and leave the menu/button signature alone,
+   instead of widening one method to serve both. Three sites use it today:
+   `StringWdgt._setTextConnector`, `StringWdgt._setFontSizeConnector`,
+   `NumberPromptWdgt._takeSliderValueConnector`. W6a must decide whether it is unifying the setters
+   or promoting this lane; those are different plans, and the second needs no signature widening.
+2. **W6b's idempotence guard is NOT redundant with the engine's cutoff, but it is close enough to
+   need care.** The engine's equal-value cutoff (`_valuesEqual`, ~:253; the widget-sink branch
+   ~:394) decides only whether to traverse ONWARD from a sink — `_applyWireValue` still CALLS the
+   setter with an equal value. So a per-setter guard would newly suppress the setter's own side
+   effects (its `_changed()` repaint and any onward fire), which is a real behaviour change and the
+   reason D3 wants its own commit.
+3. **W6a collides with the sibling arc's P1 in DIRECTION, not just in files.**
+   [`connector-ubiquity-and-reflection-plan.md`](connector-ubiquity-and-reflection-plan.md) §P1
+   replaces the duck-typed `getColor?() ? getValue?() ? @text` coercion with an explicit `@get` on a
+   `PinSpec` record, and costs "~19 setter overrides on 9 classes" — the same overrides W6a would
+   rewrite. If W6a standardises ON the slot-2 duck-typed coercion it entrenches exactly what P1
+   deletes. Sequence P1 first, or make W6a's target shape the one P1 is heading for.
+   ⚠ Also worth checking before D3: P2's proposed bind-time rule ("the side whose menu you opened
+   pushes") depends on both wires FIRING at bind time; an idempotence guard could swallow the second
+   fire when the two sides already agree.
+
 ### 2.7 W7 · Self-description (survey F21)
 
 164 of 270 widgets answer the base `colloquialName` → `"generic widget"`; 257 answer the base
@@ -299,6 +331,20 @@ the constructor survey rather than the widget survey). That plan states the gene
 reaches it first executes it and the other de-scopes to a pointer. The shadow-field finding above is
 this section's own and must ride along either way: the options conversion is what lets those three
 `iconToolTipMessage` fields be DELETED rather than perpetuated.
+
+**Status, verified 2026-08-16 (W0):** the CONSTRUCTOR half landed — `LabelButtonWdgt` and
+`ButtonWdgt` are both `(target, action, opts = {})`, and `ButtonWdgt` now reads its tooltip
+GUARDED (`@toolTipMessage = opts.toolTip if opts.toolTip?`, ~:60), with a comment saying that is
+precisely what lets a subclass declare `toolTipMessage:` on its prototype and have it survive.
+**The shadow-field half did NOT ride along.** `iconToolTipMessage` is present in 35 files: 33
+subclass declarations carrying the actual string, plus the two base classes that declare it
+`undefined` and copy it after `super` — `CreatorButtonWdgt` (~:21, ~:28) and
+`EditorContentPropertyChangerButtonWdgt` (~:35, ~:42), each `@toolTipMessage = @iconToolTipMessage`.
+`IconButtonWdgt` has already moved off it entirely (zero mentions; its header comment tells
+subclasses to write `toolTipMessage:` directly), so the enabling change is done and only the cleanup
+is outstanding — two copy lines deleted and 33 declarations renamed.
+⭐ This is the same decision as W4b's `toolTipMessage` row: renaming those 33 IS the "declare it on
+the prototype" answer, so **do W4b's `toolTipMessage` and this together, or neither.**
 
 ---
 
@@ -534,6 +580,33 @@ for c in sorted(cls):
 Other lists: `grep -rn '^  _reLayout:' src` (W5) · `grep -rn '^  colloquialName:' src` (W7) ·
 `grep -rn 'addMenuItem .*(->' src` (W1) · `grep -rn '^  set[A-Z]\w*: *(' src` (W6).
 
+The **recapture-risk lists** of §11.1, run from `../Fizzygum-tests/tests`. ⚠ Comments must be
+stripped: the macros carry long explanatory headers, and matching them inflates the inspector list
+from 18 to 43 — a list that over-reports is worse than none, because it stops distinguishing the
+tests that will actually move.
+
+```python
+# python3 - <<'PY'   (from Fizzygum-tests/tests)
+import os, re
+tests = sorted(d for d in os.listdir('.') if os.path.isdir(d))
+def code(d):
+    out = []
+    for f in os.listdir(d):
+        if f.endswith('.js'):
+            for l in open(os.path.join(d, f), encoding='utf-8', errors='replace'):
+                out.append(l.split('#')[0])          # executable text only
+    return '\n'.join(out)
+pat = {
+  'inspector': r'openInspector|InspectorWdgt|"inspect"|\binspect\b\s*\(',
+  'titlebar':  r'FrameBarWdgt|titleBar|\.label\b|setTitle',
+  'menu':      r'rightClick|contextMenu|MenuWdgt|rightMouse|openMenu',
+}
+for k, p in pat.items():
+    hits = [t for t in tests if re.search(p, code(t), re.I)]
+    print(f'=== {k}: {len(hits)} ==='); [print('   ', t) for t in hits]
+# PY
+```
+
 ---
 
 ## 8. Landmines (each bought with evidence — do not rediscover)
@@ -566,7 +639,25 @@ Other lists: `grep -rn '^  _reLayout:' src` (W5) · `grep -rn '^  colloquialName
 | # | Decision | Recommendation |
 |---|---|---|
 | D1 | **W3** — add the base menu block to `PointerWdgt` and `IconicDesktopSystemScriptShortcutWdgt`? (adds layout entries; recaptures their menu shots) | **Yes** — the omission looks accidental (both open with `menu.addLine`), and the entries are the base affordance every other widget has. |
-| D2 | **W4b** — for each of the eight repeated fields, `Widget` / family base / leave? | **Family base wherever one exists**; `Widget` only for `toolTipMessage` (its reader is already on `Widget`), accepting the inspector recapture. `target` stays per-family — a `Widget.target` would collide conceptually with `ControllerMixin`'s. |
+| D2 | **W4b** — for each of the eight repeated fields, `Widget` / family base / leave? | **Family base wherever one exists**; `Widget` only for `toolTipMessage` (its reader is already on `Widget`), accepting the inspector recapture. `target` stays per-family — see the corrected reason below. |
+
+⚠ **D2 correction, measured 2026-08-16 (W0).** The original reason given for keeping `target`
+per-family — "a `Widget.target` would collide conceptually with `ControllerMixin`'s" — is **false**:
+`ControllerMixin` declares NO fields at all (its own comment says "class properties here: none"); it
+only assigns `@target = theTarget` inside `setTargetAndActionWithOnesPickedFromMenu`. The conclusion
+survives on better evidence: **`target` is already declared independently by 12 classes**
+(`HandleWdgt`, `PaletteWdgt`, `PromptWdgt`, `ButtonWdgt`, `ListWdgt`, `CaretWdgt`, `SliderWdgt`,
+`MenuWdgt`, `MenuItemSpec`, `MenuRowsPanelWdgt`, `InspectorWdgt`, `FanoutPinWdgt`) on top of the 9
+that write it undeclared — 21 classes in which a caret's target, a menu's target, a handle's target
+and a wire's target are four different concepts. That is exactly what the sibling arc's
+[P9](connector-ubiquity-and-reflection-plan.md) proposes to SPLIT, so pulling the name up to
+`Widget` now would entrench the ambiguity P9 exists to remove. **Leave `target` alone until P9
+decides the vocabulary.**
+
+Mixin-clobber pre-check (landmine §8) for the other seven: **none** of `toolTipMessage`, `icon`,
+`cornerSpec`, `title`, `callback`, `cornerRadius`, `seed` is declared by any mixin, so a class-body
+declaration cannot clobber a mixin value for any of them. The landmine still applies to whatever W4c
+proposes.
 | D3 | **W6b** — add idempotence guards to the B/C/D setters? (behaviour change: a wired circuit stops re-firing on an equal value) | **Yes, but as its own commit**, after W6a is green, with the patch-programming + converter macros run explicitly. |
 | D4 | **W7** — is the `"generic widget"` label worth a recapture round? | **Yes for the ~30 substantial non-icon classes**, no for the icon leaves (their colloquial name rarely reaches a title bar). |
 | D5 | **W8** — convert `ButtonWdgt`/`LabelButtonWdgt` to options objects? | **Yes, last**, and only if W1–W6 landed clean: it is the highest-churn item and the one most likely to reveal a call site nobody knew about. |
@@ -601,9 +692,33 @@ Other lists: `grep -rn '^  _reLayout:' src` (W5) · `grep -rn '^  colloquialName
   `measurements/widget-practices-survey-2026-08-14.md` (evidence) and
   `architecture/widget-authoring-guidelines.md` (target state). Survey corrected in the same commit
   as this plan for the two §0.5 findings (F9 → 52 classes / 124 fields; the eight repeated fields).
-- W0 preliminaries: ☐
-- W1 SliderWdgt menu entries: ☐
-- W2 teardown tier: ☐
+- **2026-08-16 — W0 DONE.** Baseline `fg gauntlet` green on `972e5050` (15/15 legs, 353 s; suite
+  **294** SystemTests). Counts re-derived with the §7 scanner and this doc corrected: F9 is **51
+  classes / 120 fields**, not 52/124, and W4b is **46** occurrences, not 48. The whole delta is the
+  prompt-family constructor conversion (`6c5e616f`, P4 of the constructor-conformance arc):
+  `ErrorsLogViewerWdgt` leaves the list entirely (`callback`, `msg`, `target` now declared) and
+  `CodePromptWdgt` loses `msg`. W4a (11 classes / 13 fields) and W4c are unchanged.
+- **W1 · ALREADY CONVERGED — landed by another arc, no work needed here.** `6c5e616f` converted the
+  three `SliderWdgt` entries to string actions with `@` as target, and the three `@prompt` calls to
+  `(msg, target, action, opts)` reading the title as `menuItem.parent.title`. It resolved the handler
+  signature as `(menuItem)` — NOT the `(ignored, ignored2, menuItem)` this plan predicted in §2.1:
+  the menu-action wiring arc established that dispatch slot 1 IS the menu item. ⚠ §2.1's proposed
+  form is therefore wrong in its signature; trust the landed code, not the snippet. Recaptures: 0.
+- **W2 · CONVERGED, 2026-08-16.** Both overrides moved from the public wrapper to the core:
+  `SimpleSpreadsheetWdgt.destroy` → `_destroyNoSettle`, `PopUpWdgt.destroy` → `_destroyNoSettle`,
+  both `super`-first like `IconicDesktopSystemShortcutWdgt`. Recaptures: **0** — `fg presuite`
+  294/294; `fg gauntlet` 15/15 legs, 333 s, dpr1 + dpr2 + webkit all 294/294 with 0 failed and 0
+  geometry violations; `fg homepage` OK. Two findings from doing it:
+  - The sheet's `world?.keyboardEventsReceivers?.delete @` was **redundant** and is gone —
+    `Widget._destroyNoSettle` already does that unconditionally, and its own preceding line would
+    have thrown first if `world` were absent, so the `?.` guards bought nothing. The surviving body
+    is the cell-edge sweep alone.
+  - `src/spreadsheet/CLAUDE.md` named `destroy` as the home of node death; updated in the same
+    commit.
+  The `@model?` guard needed no strengthening: `@model` is assigned in the constructor and never
+  cleared, `forEachCell` is a `Map.forEach` (no-op when empty), and the guard already covers the
+  `Object.create` deserialization window. `WorldWdgt`'s per-cycle `openPopUps` sweep is untouched —
+  banked as a follow-up, per §8.
 - W3 missing `super`s (D1): ☐
 - W4a / W4b (D2) / W4c field declarations: ☐ ☐ ☐
 - W5 `_reLayout` template: ☐
@@ -613,7 +728,43 @@ Other lists: `grep -rn '^  _reLayout:' src` (W5) · `grep -rn '^  colloquialName
 - W9 gate + census + ratchet: ☐
 - W10 closeout: ☐
 
----
+### 11.1 Recapture-risk lists (produced by W0, 2026-08-16)
+
+Which SystemTests put each recapture-sensitive surface on screen. Derived by matching the macros'
+**executable** lines only (comments stripped — the macros are heavily commented, and a naive grep
+inflates the inspector list from 18 to 43). Regenerate with the snippet in §7; treat these as the
+blast radius to check FIRST when a phase touches the surface, not as a proof of completeness.
+
+- **(a) Inspector member list — 18 tests** (the surface D2/W4b's `Widget`-level declarations would
+  disturb, per landmine §3.5): `macroAddEditSaveRenameRemoveProperty`, `macroAnalogClockInspectEdit`,
+  `macroDuplicateComplexWidgetPaintsCleanly`, `macroDuplicatedInspectorDrivesCopiedTargetOnly`,
+  `macroDuplicatedInspectorsCloseIndependently`, `macroInspectorRejectsDrops`,
+  `macroInspectorResizingOKEvenWhenTakenApart`, `macroInspectorScrollbarUnplugged`,
+  `macroInspectorWorkAreaEvaluatesCoffeeScript`, `macroMixinEditDonorAndOverride`,
+  `macroMixinFieldEditDonorAndOverride`,
+  `macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`,
+  `macroMultilineTextInputScrollsWell`, `macroNakedInspectorRendersResizesAndEdits`,
+  `macroPickingUpPartsFromInspector`, `macroResizingPristineInspector`,
+  `macroSimpleDocumentHandlesOldInspector`, `macroWrappingTextFieldResizesOK`.
+- **(b) Window title bar — 22 tests** (the surface W7/D4's `colloquialName` would disturb, per
+  landmine §3.6): `macroCollapsingTiltedWindowKeepsTitleBarStill`,
+  `macroDragEmbedRepositionNestedWindowStaysWithoutDwell`, `macroDuplicateComplexWidgetPaintsCleanly`,
+  `macroDuplicatedInspectorsCloseIndependently`, `macroEditButtonLabelText`,
+  `macroFontsMenuTickTracksSelection`, `macroMenuInWindowInScrollStackStaysLive`,
+  `macroMenuPinnedByHeaderClick`, `macroMenuPinnedInScrollPanel`,
+  `macroMenuShadowCorrectWhileAndAfterDrag`,
+  `macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly`,
+  `macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`, `macroPromptShadowFollowsOnDrag`,
+  `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`,
+  `macroSimpleDocumentHandlesOldInspector`, `macroSpreadsheetResizeViewport`,
+  `macroSubMenuDroppedIntoPanelPinsItself`, `macroTiltedWindowDropRequiresDwell`,
+  `macroWallpaperMenuTickTracksSelection`, `macroWindowWithAClockInAWindowConstructionTwo`,
+  `macroWindowWithPlainWrappingTextResizingFollowsContentSize`,
+  `macroWindowsNestedCollapsingUncollapsing`.
+- **(c) Open widget context menu — 64 tests**, the largest blast radius, and the one W3 (D1) walks
+  into: adding the base menu block changes the item COUNT, so a menu screenshot shifts height. Too
+  long to inline; regenerate with the §7 snippet. ⚠ `macroCheckNumberOfItemsInWorldMenu` asserts a
+  menu item count directly and will need attention in W3 even though it is a world menu.
 
 ## 12. Cross-links
 
