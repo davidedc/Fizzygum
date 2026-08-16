@@ -64,6 +64,7 @@ class PointerWdgt extends BoxWdgt
     @close()
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
+    super
     menu.addLine 1
     menu.addMenuItem "close this button", @, "closeThis"
     menu.addMenuItem "close target widget", @, "closeThisAndTarget"

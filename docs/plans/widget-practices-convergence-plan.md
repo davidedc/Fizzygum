@@ -719,7 +719,25 @@ proposes.
   cleared, `forEachCell` is a `Map.forEach` (no-op when empty), and the guard already covers the
   `Object.create` deserialization window. `WorldWdgt`'s per-cycle `openPopUps` sweep is untouched —
   banked as a follow-up, per §8.
-- W3 missing `super`s (D1): ☐
+- **W3 · CONVERGED (code), but the new affordance is UNCOVERED — 2026-08-16.** D1 approved.
+  `PointerWdgt` (~:66) and `IconicDesktopSystemScriptShortcutWdgt` (~:25) now open with `super`,
+  the house shape. `ScrollPanelWdgt` left alone as directed — it calls `super` in its `else` branch
+  and delegates to the single child when `takesOverAndMergesChildrensMenus`. Verified the scope: a
+  body scan of all 21 `addWidgetSpecificMenuEntries` definitions finds exactly five without `super`,
+  and the other three are correct (`Widget` is the base; `DivisionStackLayoutSpec` and
+  `VerticalStackLayoutSpec` are specs, not Widgets).
+  Recaptures: **0** — predicted and confirmed. The base block adds nothing unless the widget has an
+  active stack/division `layoutSpec` or hosts division children, which a desktop-resident pointer or
+  script shortcut does not; so every existing menu screenshot is unchanged.
+  ⚠⚠ **That same fact means the gates prove NO REGRESSION and do not prove the FIX.** Nothing
+  exercises the added entries: the suite has **zero** references to either class (all 47 apparent
+  `PointerWdgt` hits are `ActivePointerWdgt`), and `menu-click-sweep-headless.js` builds menus only
+  for `world` plus 14 named `REPRESENTATIVES`, which include neither. The change is correct by
+  construction — the base block is generic over `@layoutSpec`, and the only reason it never ran was
+  the missing `super` — but that is reasoning, not measurement.
+  **Follow-up worth taking:** add both classes to the sweep's `REPRESENTATIVES` (its own comment says
+  a root that fails to build is a coverage gap worth reporting), or author a macro that drops one
+  into a division stack and screenshots the menu. Until then W3 is a code fix with no witness.
 - W4a / W4b (D2) / W4c field declarations: ☐ ☐ ☐
 - W5 `_reLayout` template: ☐
 - W6a widen setters / W6b guards (D3): ☐ ☐

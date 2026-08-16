@@ -23,6 +23,7 @@ class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutW
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "edit script...", @, "editScript"
     menu
