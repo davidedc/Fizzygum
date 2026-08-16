@@ -6,6 +6,8 @@
 class WidgetHolderWithCaptionWdgt extends Widget
 
   label: undefined
+  # the caption text, taken by the constructor (@label above is the widget that draws it)
+  labelContent: undefined
   # the held widget, taken by the constructor. Declared here rather than on the
   # desktop-link family below me, since IconicDesktopSystemLinkWdgt extends this class
   # and so inherits it along with its four descendants.

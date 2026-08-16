@@ -24,13 +24,22 @@ class SheetHeaderCellWdgt extends Widget
   # practice restored header cells are destroyed + rebuilt by the re-index, never adopted)
   @serializationTransients: ["_sheetWidget"]
 
+  # "column" | "row" | "corner"
+  kind: undefined
+  # 0-based viewport SLOT index (the label = view origin + slot, F1); undefined for the corner
+  index: undefined
+  # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
+  _sheetWidget: undefined
+  # the label child (a passive StringWdgt); undefined for the corner
+  _labelWdgt: undefined
+
   constructor: (kind, index) ->
     super()
     @appearance = new SheetHeaderCellAppearance @
-    @kind = kind        # "column" | "row" | "corner"
-    @index = index      # 0-based viewport SLOT index (the label = view origin + slot, F1); undefined for the corner
+    @kind = kind
+    @index = index
     @_sheetWidget = undefined
-    @_labelWdgt = undefined   # the label child (a passive StringWdgt); undefined for the corner
+    @_labelWdgt = undefined
     # transparent by default — every visible pixel is painted explicitly by
     # SheetHeaderCellAppearance (the fill), so there is no boxy/rectangular paint to keep in sync
     @color = undefined

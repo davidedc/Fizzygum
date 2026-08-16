@@ -116,6 +116,36 @@ class SimpleSpreadsheetWdgt extends Widget
   viewOriginCol: 0
   viewOriginRow: 0
 
+  # the selection: a single cell (0-based col/row); v1 always has one selected
+  selectedCol: undefined
+  selectedRow: undefined
+
+  # the sparse data model — this widget owns it and is its formula scope
+  model: undefined
+
+  # the palette the child widgets read. Declared undefined and BUILT IN THE CONSTRUCTOR
+  # on purpose: a class-level Color.create would run at class-definition time, before
+  # Color has loaded (see the constructor's own note).
+  headerFillColor: undefined
+  gridlineColor: undefined
+  headerBorderColor: undefined
+  headerTextColor: undefined
+  selectionColor: undefined
+  valueTextColor: undefined
+  errorTextColor: undefined
+
+  # editing state: which cell is being edited. The editor WIDGET lives on the editing cell.
+  _editing: undefined
+  _editCol: undefined
+  _editRow: undefined
+
+  # the cell index (address → its CellWdgt) and the chrome handles: the data-cells container
+  # and the header-cell index ("kind:index" → SheetHeaderCellWdgt). All three are TRANSIENT —
+  # rebuilt on restore by _reindexCellsNoSettle, never adopted from a snapshot.
+  _cells: undefined
+  _cellsPanel: undefined
+  _headerCells: undefined
+
   constructor: ->
     super()
     # selection is a single cell (0-based col/row); v1 always has one selected

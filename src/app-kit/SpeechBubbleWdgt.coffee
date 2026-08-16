@@ -12,6 +12,10 @@ class SpeechBubbleWdgt extends Widget
   widgetInvokingThis: undefined
   # per class, not pulled up: this extends Widget, not BoxWdgt
   cornerRadius: undefined
+  # the TextWdgt child holding @contents
+  contentsWidget: undefined
+  # the size a bubble takes when dragged out of the glass box
+  extentToGetWhenDraggedFromGlassBox: undefined
 
   constructor: (@contents="hello") ->
     super()

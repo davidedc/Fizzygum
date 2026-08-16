@@ -52,16 +52,31 @@ class CellWdgt extends Widget
   # default — never an own property, so nothing serializes.
   isLockingToPanels: true
 
+  # which cell (col/row via the model); stable across save/load
+  address: undefined
+  # the mounted value/presenter widget (this cell's rich child), or undefined
+  hostedWidget: undefined
+  # branch-2 churn-skip: the value the current presenter reflects
+  presentedValue: undefined
+  # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
+  _sheetWidget: undefined
+  # branch-3 text child (a passive StringWdgt), or undefined when empty/hosting
+  _scalarTextWdgt: undefined
+  # true when the text child wears the error colour (SheetError badge)
+  _scalarShowsError: undefined
+  # the mounted overlay editor while THIS cell is being edited (F2/F5), or undefined
+  _editorWdgt: undefined
+
   constructor: (address) ->
     super()
     @appearance = new CellAppearance @
-    @address = address         # which cell (col/row via the model); stable across save/load
-    @hostedWidget = undefined        # the mounted value/presenter widget (this cell's rich child), or undefined
-    @presentedValue = undefined      # branch-2 churn-skip: the value the current presenter reflects
-    @_sheetWidget = undefined        # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
-    @_scalarTextWdgt = undefined     # branch-3 text child (a passive StringWdgt), or undefined when empty/hosting
-    @_scalarShowsError = false # true when the text child wears the error colour (SheetError badge)
-    @_editorWdgt = undefined         # the mounted overlay editor while THIS cell is being edited (F2/F5), or undefined
+    @address = address
+    @hostedWidget = undefined
+    @presentedValue = undefined
+    @_sheetWidget = undefined
+    @_scalarTextWdgt = undefined
+    @_scalarShowsError = false
+    @_editorWdgt = undefined
     # transparent: the cells panel under me fills the data background; I paint my own grid
     # edges + selection ring (F5 — "the sheet paints nothing") — my scalar text is a passive
     # StringWdgt child that paints itself — so the panel's background shows through a hosted

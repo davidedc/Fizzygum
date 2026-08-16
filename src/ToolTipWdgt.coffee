@@ -15,6 +15,8 @@ class ToolTipWdgt extends Widget
   widgetInvokingThis: undefined
   # per class, not pulled up: this extends Widget, not BoxWdgt
   cornerRadius: undefined
+  # the widget child holding @contents, built when the tip is opened and torn down with it
+  contentsWidget: undefined
 
   constructor: (@contents = "text here", opts = {}) ->
     @widgetInvokingThis = opts.widgetInvokingThis

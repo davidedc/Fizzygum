@@ -2,6 +2,11 @@ class PlotWithAxesWdgt extends Widget
 
   @augmentWith KeepsRatioWhenInVerticalStackMixin, @name
 
+  # the plotted content, taken by the constructor, and the two AxisWdgts built around it
+  plot: undefined
+  vertAxis: undefined
+  horizAxis: undefined
+
   constructor: (@plot) ->
     super
     @plot.drawOnlyPartOfBoundingRect = true

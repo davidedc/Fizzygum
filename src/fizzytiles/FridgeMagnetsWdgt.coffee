@@ -11,6 +11,12 @@ class FridgeMagnetsWdgt extends Widget
   liveCodeLangOutputHeader: undefined
   outputAnimationHeader: undefined
 
+  # the four sample magnets built into @magnetsBox -- the starting tile vocabulary
+  scale: undefined
+  rotate: undefined
+  box: undefined
+  move: undefined
+
   externalPadding: 0
   internalPadding: 5
 

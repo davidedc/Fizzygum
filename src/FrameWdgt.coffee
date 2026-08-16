@@ -49,6 +49,21 @@ class FrameWdgt extends Widget
   # content declares none (plain content, the empty-window placeholder).
   toolbar: undefined
 
+  # does the window hug its content (a "tight" frame) rather than keeping a size of its own
+  tight: undefined
+
+  # the geometry remembered ACROSS a collapse, so uncollapsing restores what was there:
+  # recorded in _beforeChildCollapsed (the un-collapsed width, and both extents) and in
+  # _beforeChildUnCollapsed (the collapsed width). undefined until the first collapse.
+  widthWhenUnCollapsed: undefined
+  widthWhenCollapsed: undefined
+  contentsExtentWhenCollapsed: undefined
+  extentWhenCollapsed: undefined
+
+  # set at the subtree's destroy ENTRY (_fullDestroyNoSettle) so the whole recursion knows
+  # the window is going away -- see the note there.
+  _beingFullDestroyed: undefined
+
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
   # mutating anything, so a parent (a stack/scroll holding this window) can MEASURE this window
