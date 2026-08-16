@@ -142,7 +142,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
   prependLine: (height) ->
     item = @createLine height
-    @__add item, undefined, 0
+    @__add item, atIndex: 0
 
   # Builds a MenuItemWdgt from a MenuItemSpec and this panel's context: the font (this panel's
   # @fontSize, or the global default) and the environment pair. ⚠ Note the CROSSOVER, which the
@@ -186,7 +186,7 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     @__add @createMenuItem @_menuItemSpecFrom label, target, action, opts
 
   prependMenuItem: (label, target, action, opts = {}) ->
-    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), undefined, 0
+    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), atIndex: 0
 
   # The spec takes the SAME label/target/action head and the SAME opts vocabulary
   # this method is handed, so it forwards rather than transcribes -- an opt added

@@ -737,7 +737,7 @@ the block wants to be last (CoffeeScript idiom), so reaching it means filling `o
 have an obvious fix — `opts` cannot simply move to the tail without displacing the block — so it
 wants a design decision, not a mechanical conversion. **Do not fold it into item 1.**
 
-### Item 1 — `__add` / `_addChild`: the same bug one level below `add` ⭐ do this one first
+### Item 1 — `__add` / `_addChild`: the same bug one level below `add` ✅ DONE 2026-08-16
 
 P7 converted `add`, whose core reaches `Widget.__add`, which reaches `TreeNode._addChild`. **Both
 still call the sibling index `position`** — and that name is where the P7 macro bug was born (§7b:
@@ -765,11 +765,21 @@ the blast radius is entirely inside `src/`:
 | `MenuRowsPanelWdgt.coffee:186` | `@__add @createMenuItem …` | |
 | `MenuRowsPanelWdgt.coffee:189` | `@__add (@createMenuItem …), undefined, 0` | **HOLE**, and the paren-less form the regex misses |
 
-**Prescribed shape.** `__add` → `(aWdgt, opts = {})` with `opts.atIndex` and a renamed flag
-(`skipExtentCalculation` reads as what the one caller means); the two prepends become
-`@__add item, atIndex: 0`. `_addChild` → `(node, atIndex)`, a **pure rename**: arity 2, no hole,
-exempt under E5, so it needs no bag — only the honest name. Keep the key spelling `atIndex`
-identical across all three layers (R4, and the conventions doc's forwarded-bag warning).
+**As built — exactly the prescribed shape.** `__add` → **`(aWdgt, opts = {})`** reading
+`opts.atIndex` and **`opts.skipExtentCalculation`** (the renamed flag; its one caller was writing a
+bare `true`, which R1 names as a smell). `_addChild` → **`(node, atIndex)`**, a pure rename: arity
+2, no hole, exempt under E5, so it takes no bag — only the honest name. The key `atIndex` now means
+the same thing at all three layers of the chain (`add` → `_addNoSettle` → `__add` → `_addChild`),
+which is the R4 consistency the forwarded-bag warning asks for.
+
+All six call sites converted; both holes gone (`census-call-arity.js --call=__add,_addChild
+--holes` → **0**, tree-wide 50 → 48). ⚠ The spellings were checked through
+`buildSystem/compile-fragment.js` first — in particular `@__add (@createMenuItem …), atIndex: 0`,
+where a parenthesised FIRST argument sits in front of a trailing implicit object; it compiles to
+`this.__add(this.createMenuItem(…), {atIndex: 0})`, which is the intent.
+
+`TreeNode._addChild` now carries the case history in a comment, so the next reader of that slot
+learns why it is not called `position` at the place where the mistake would be made.
 
 ### Item 2 — two hand-rolled dispatcher calls P6 could not reach
 

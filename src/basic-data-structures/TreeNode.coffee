@@ -59,12 +59,17 @@ class TreeNode
     "a TreeNode" + "[" + childrenLength + "]"
 
   # TreeNode accessing:
-  _addChild: (node, position) ->
+  # atIndex -- WHERE AMONG THE SIBLINGS, an index into @children; absent means append. It is NOT a
+  # screen position, and the name says so on purpose: while this slot was called `position` two
+  # callers up the chain read it as one and passed a Point, which Array::splice coerces to NaN and
+  # then to 0 -- inserting at the front and dropping the intended placement in silence. See
+  # docs/architecture/constructor-and-parameter-conventions.md R4.
+  _addChild: (node, atIndex) ->
     WorldWdgt.noteStructureChange()
-    if !position?
+    if !atIndex?
       @children.push node
     else
-      @children.splice position, 0, node
+      @children.splice atIndex, 0, node
     node.parent = @
   
   isLastChild: ->

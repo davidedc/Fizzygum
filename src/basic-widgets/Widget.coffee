@@ -3341,7 +3341,7 @@ class Widget extends TreeNode
     # cross-invalidation-sanctioned: structural-move dispatcher — the add orchestration
     # invalidates the widget being re-homed (its own tiers run non-notifying here)
     aWdgt._fullChanged()
-    @__add aWdgt, true, atIndex
+    @__add aWdgt, atIndex: atIndex, skipExtentCalculation: true
     aWdgt._reactToBeingAdded @, beingDropped
     if previousParent?._reactToChildRemoved?
       previousParent._reactToChildRemoved aWdgt
@@ -3379,7 +3379,16 @@ class Widget extends TreeNode
   consumesFractionalGeometryOf: (child) ->
     false
 
-  __add: (aWdgt, avoidExtentCalculation, position) ->
+  # The structural link-in, one level below _addNoSettle: it shares that family's option
+  # vocabulary so the same key means the same thing at every layer of the add chain.
+  # opts.atIndex -- WHERE AMONG THE SIBLINGS (an index into @children; absent means append), NOT a
+  #   screen position. See TreeNode._addChild, which is where the confusion this name retires cost
+  #   two callers a silently dropped placement.
+  # opts.skipExtentCalculation -- the entrant's extent is about to be set by the caller, so do not
+  #   compute it here. Named rather than positional because the one caller that passes it was
+  #   writing a bare `true` at the call site (R1 names that a smell) and the two that wanted only
+  #   atIndex had to write `undefined` past it (R3).
+  __add: (aWdgt, opts = {}) ->
     # the widget that is being
     # attached might be attached to
     # a clipping widget. So we
@@ -3392,8 +3401,8 @@ class Widget extends TreeNode
       owner.removeChild aWdgt
     if aWdgt.isPopUpMarkedForClosure?
       aWdgt.isPopUpMarkedForClosure = false
-    @_addChild aWdgt, position
-    if !avoidExtentCalculation
+    @_addChild aWdgt, opts.atIndex
+    if !opts.skipExtentCalculation
       aWdgt.calculateAndUpdateExtent()
     # FRACTIONAL-RECORD SEED (framework-owned; stretch-fractional auto-bookkeeping arc):
     # entering a holder that consumes this child's fractional geometry REQUESTS a
