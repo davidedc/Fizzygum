@@ -1,6 +1,6 @@
 class ExternalLinkCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "external link"
+  toolTipMessage: "external link"
 
   createAppearance: -> new ExternalLinkIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

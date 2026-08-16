@@ -1,6 +1,6 @@
 class ColorPaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "color palette"
+  toolTipMessage: "color palette"
 
   createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

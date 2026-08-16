@@ -1,6 +1,6 @@
 class WindowWithScrollPanelCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "scroll panel"
+  toolTipMessage: "scroll panel"
 
   createAppearance: -> new WindowWithScrollingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

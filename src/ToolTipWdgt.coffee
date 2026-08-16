@@ -13,6 +13,8 @@ class ToolTipWdgt extends Widget
   contents: undefined
   padding: undefined # extra pixels around the contents, both axes; when 0 the cornerRadius supplies the horizontal margin
   widgetInvokingThis: undefined
+  # per class, not pulled up: this extends Widget, not BoxWdgt
+  cornerRadius: undefined
 
   constructor: (@contents = "text here", opts = {}) ->
     @widgetInvokingThis = opts.widgetInvokingThis

@@ -1,6 +1,6 @@
 class WindowWithPanelCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "cropping panel"
+  toolTipMessage: "cropping panel"
 
   createAppearance: -> new WindowWithCroppingPanelIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

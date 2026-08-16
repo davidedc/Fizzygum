@@ -6,6 +6,10 @@
 # directly.
 class GenericCompositeIconWdgt extends Widget
 
+  # the inner icon this one composes around, taken by the constructor; inherited by
+  # GenericObjectIconWdgt and GenericShortcutIconWdgt
+  icon: undefined
+
   constructor: (@icon) ->
     super()
     @_buildAndConnectChildren()

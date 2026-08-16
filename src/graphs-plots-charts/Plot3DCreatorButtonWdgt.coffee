@@ -1,6 +1,6 @@
 class Plot3DCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "3D plot"
+  toolTipMessage: "3D plot"
 
   createAppearance: -> new Plot3DIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

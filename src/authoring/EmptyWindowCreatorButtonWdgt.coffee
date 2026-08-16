@@ -1,6 +1,6 @@
 class EmptyWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "empty window"
+  toolTipMessage: "empty window"
 
   createAppearance: -> new EmptyWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

@@ -3,7 +3,7 @@
 
 class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  iconToolTipMessage: "format as code"
+  toolTipMessage: "format as code"
 
   createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

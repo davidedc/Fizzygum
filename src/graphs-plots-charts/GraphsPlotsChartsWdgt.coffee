@@ -4,6 +4,8 @@ class GraphsPlotsChartsWdgt extends Widget
 
   drawOnlyPartOfBoundingRect: false
   graphNumber: 1
+  # PRNG seed for the sample data, set by each Example*PlotWdgt subclass
+  seed: undefined
 
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()

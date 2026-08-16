@@ -1,6 +1,6 @@
 class UsefulTextSnippetsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
-  iconToolTipMessage: "Useful text snippets"
+  toolTipMessage: "Useful text snippets"
 
   createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

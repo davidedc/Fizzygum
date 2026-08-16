@@ -1,6 +1,6 @@
 class VideoPlayCreatorButtonWdgt extends ExternalLinkCreatorButtonWdgt
 
-  iconToolTipMessage: "link to video"
+  toolTipMessage: "link to video"
 
   createAppearance: -> new VideoPlayIconAppearance @
 

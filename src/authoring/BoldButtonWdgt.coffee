@@ -3,7 +3,7 @@
 
 class BoldButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  iconToolTipMessage: "bold"
+  toolTipMessage: "bold"
 
   createAppearance: -> new BoldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

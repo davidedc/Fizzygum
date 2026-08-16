@@ -1,6 +1,6 @@
 class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "USA map"
+  toolTipMessage: "USA map"
 
   createAppearance: -> new LittleUSAIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

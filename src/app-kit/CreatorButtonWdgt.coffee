@@ -18,14 +18,12 @@ class CreatorButtonWdgt extends Widget
   excludedFromEditorFocusTracking: ->
     true
 
-  iconToolTipMessage: undefined
-
-  # subclasses supply createAppearance (the icon) + iconToolTipMessage (hover
-  # text); the appearance is set here after super, as the original ctors did.
+  # subclasses supply createAppearance (the icon) + toolTipMessage (hover text,
+  # declared on Widget); the appearance is set here after super, as the original
+  # ctors did.
   constructor: ->
     super
     @appearance = @createAppearance()
-    @toolTipMessage = @iconToolTipMessage
 
   grabbedWidgetSwitcheroo: ->
     return @createWidgetToBeHandled()

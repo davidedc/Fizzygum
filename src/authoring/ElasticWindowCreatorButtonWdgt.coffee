@@ -2,7 +2,7 @@
 
 class ElasticWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "elastic panel"
+  toolTipMessage: "elastic panel"
 
   createAppearance: -> new ElasticWindowIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

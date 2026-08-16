@@ -6,7 +6,7 @@
 # They share: the highlightable hover/press colouring + parent-stainer mixins,
 # the grey hover/press/normal colour scheme, the thumbnail-actionability flag
 # and the editor-chrome exclusion below. A subclass supplies only its icon
-# (createAppearance), its tooltip (iconToolTipMessage), and its mouseClickLeft.
+# (createAppearance), its tooltip (toolTipMessage), and its mouseClickLeft.
 #
 # All of them are icon-shaped, hence the IconWdgt base. (Bold/Italic and the
 # Align trio used to extend Widget directly — an inconsistency, since they draw
@@ -32,11 +32,6 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   excludedFromEditorFocusTracking: ->
     true
 
-  iconToolTipMessage: undefined
-
   constructor: (@color) ->
     super @color
     @appearance = @createAppearance()
-    # set after super (mirrors the family's original constructors); a subclass
-    # provides the icon via createAppearance and the text via iconToolTipMessage.
-    @toolTipMessage = @iconToolTipMessage

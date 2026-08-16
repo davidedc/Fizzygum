@@ -1,6 +1,6 @@
 class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
-  iconToolTipMessage: "items for slides"
+  toolTipMessage: "items for slides"
 
   createAppearance: -> new SlidesToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

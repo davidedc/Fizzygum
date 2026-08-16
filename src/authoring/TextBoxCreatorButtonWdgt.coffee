@@ -1,6 +1,6 @@
 class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "text box"
+  toolTipMessage: "text box"
 
   createAppearance: -> new TextIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

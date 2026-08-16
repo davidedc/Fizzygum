@@ -1,6 +1,6 @@
 class FunctionPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "function plot"
+  toolTipMessage: "function plot"
 
   createAppearance: -> new FunctionPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

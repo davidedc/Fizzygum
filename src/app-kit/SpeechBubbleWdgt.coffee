@@ -10,6 +10,8 @@ class SpeechBubbleWdgt extends Widget
   contents: undefined
   padding: undefined # additional vertical pixels
   widgetInvokingThis: undefined
+  # per class, not pulled up: this extends Widget, not BoxWdgt
+  cornerRadius: undefined
 
   constructor: (@contents="hello") ->
     super()

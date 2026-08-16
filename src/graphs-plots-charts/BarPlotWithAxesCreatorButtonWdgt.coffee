@@ -1,6 +1,6 @@
 class BarPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "bar plot"
+  toolTipMessage: "bar plot"
 
   createAppearance: -> new BarPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

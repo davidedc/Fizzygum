@@ -6,6 +6,10 @@
 class WidgetHolderWithCaptionWdgt extends Widget
 
   label: undefined
+  # the held widget, taken by the constructor. Declared here rather than on the
+  # desktop-link family below me, since IconicDesktopSystemLinkWdgt extends this class
+  # and so inherits it along with its four descendants.
+  icon: undefined
 
   # The ONE home for the standard desktop-icon extent — every launcher/shortcut
   # creation site sizes through this: a 60px icon band + the two-line caption

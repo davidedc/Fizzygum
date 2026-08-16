@@ -43,6 +43,10 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   fontSize: undefined
   title: undefined
   label: undefined
+  # the rounding of the panel's own corners. Declared per class rather than pulled up:
+  # this class extends SimpleVerticalStackPanelWdgt, not BoxWdgt, which is where the
+  # framework's other cornerRadius lives.
+  cornerRadius: undefined
   _selectsItemsOnClick: false
   # A menu / list-contents row-stack is the internal body of a pop-up or scroll
   # frame — it accepts no drops and imposes no width ratio on its rows, unlike a

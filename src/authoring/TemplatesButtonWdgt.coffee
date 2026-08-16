@@ -3,7 +3,7 @@
 
 class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
-  iconToolTipMessage: "useful snippets"
+  toolTipMessage: "useful snippets"
 
   createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

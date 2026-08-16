@@ -1,6 +1,6 @@
 class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
-  iconToolTipMessage: "Text tools"
+  toolTipMessage: "Text tools"
 
   createAppearance: -> new TextToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

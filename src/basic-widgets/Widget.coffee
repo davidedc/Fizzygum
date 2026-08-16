@@ -212,6 +212,13 @@ class Widget extends TreeNode
 
   clickOutsideMeOrAnyOfMeChildrenCallback: [undefined]
 
+  # hover help text. Declared on the base because this is where its consumer hook
+  # lives (startCountdownForBubbleHelp, below) and because HighlightableMixin reads
+  # it on whatever it is mixed into — branches that share no ancestor below Widget.
+  # A subclass may state its own by declaring a value; ButtonWdgt's constructor reads
+  # opts.toolTip GUARDED so that a declared value survives construction.
+  toolTipMessage: undefined
+
   textDescription: undefined
 
   # note that not all the changed widgets have this flag set

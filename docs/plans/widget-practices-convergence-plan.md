@@ -624,7 +624,12 @@ for k, p in pat.items():
 - **A `@param` assigns unconditionally** and shadows the class default — the reason the three
   `iconToolTipMessage` shadow fields exist (W8), and a live hazard whenever W4 adds a default to a
   class that also takes that field as a `@param`.
-- **Adding properties to a base class is not pixel-free for inspector tests** (§3.5).
+- **Adding a property to a class some test INSPECTS is not pixel-free** (§3.5 — reworded 2026-08-16
+  from "adding properties to a base class", which is backwards). `InspectorWdgt.showingInherited`
+  defaults to **false**, so a member list shows the inspected class's OWN members: a pull-up to a
+  base is inspector-free (W4b's `Widget.toolTipMessage`, 11 writers, 0 recaptures), while a
+  declaration on the inspected class itself costs (W4a's `ButtonWdgt.faceWidget`, 20 references).
+  Predict from §11.1's list of which class each test opens, not from how many classes inherit.
 - **`colloquialName` is drawn** (§3.6).
 - **The 2026-07-02 meaning swap:** in history before that date, `_applyExtent` names what is today
   `_applyExtentBase`. Reading old commits around the layout code will mislead otherwise.
@@ -765,9 +770,38 @@ proposes.
   index, a recapture would have baked in a test that silently checks the wrong member.
   Recaptured with `fg recapture --auto`: verdict **✅ RECAPTURE COMPLETE**, suite green at dpr 1 and
   dpr 2, nothing else stale.
-  ⚠ **Scale warning for W4b:** `toolTipMessage` on `Widget` puts a row in EVERY widget's inspector
-  list, so its recapture is not 2 tests — budget for most of §11.1's 18.
-- W4b (D2) / W4c field declarations: ☐ ☐
+  ⛔ **A scale warning issued here — "`toolTipMessage` on `Widget` puts a row in EVERY widget's
+  inspector list, budget for most of §11.1's 18" — was WRONG, and W4b measured 0.** The reason is
+  worth keeping: `InspectorWdgt.showingInherited` defaults to **false**, so a member list shows the
+  inspected class's OWN members only. See the rule under W4b.
+- **W4b · CONVERGED — 2026-08-16.** D2's placements landed in two gated batches; the scanner goes
+  40 classes / 107 fields → 33 / 88 → **23 / 77**. `target` (9) and `callback` (2) are deliberately
+  NOT declared, per D2.
+  - *Batch 1 — four fields, SEVEN declarations, 0 recaptures.* The families nest more tightly than
+    §2.4 assumed, so two of D2's placements are corrected here:
+    **`title` goes on `IconicDesktopSystemLinkWdgt`, not `IconicDesktopSystemShortcutWdgt`** —
+    `IconicDesktopSystemWindowedAppLauncherWdgt` is a SIBLING of that class, not a subclass, so the
+    plan's home would have missed one of the five writers. And **`icon` needs only two homes**
+    because `IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt`: declaring on
+    `WidgetHolderWithCaptionWdgt` covers 5 of the 8 writers, `GenericCompositeIconWdgt` the other 3.
+    `seed` → `GraphsPlotsChartsWdgt` (3) and `cornerRadius` per class (3, none extends `BoxWdgt`) are
+    as planned.
+  - *Batch 2 — `toolTipMessage` on `Widget`, plus retiring `iconToolTipMessage`, 0 recaptures.* One
+    declaration on `Widget` cleared all 11 writers. The shadow family is gone with it: 33 subclass
+    declarations renamed `iconToolTipMessage:` → `toolTipMessage:` (anchored rewrite, whole diff
+    read back — the de-indent trap), and both base classes lost their `iconToolTipMessage: undefined`
+    plus their `@toolTipMessage = @iconToolTipMessage` copy line. `grep iconToolTipMessage src` is
+    now empty. ⓘ `CreatorButtonWdgt extends Widget`, NOT `ButtonWdgt` — which is why it needed the
+    shadow at all, and why a `Widget`-level declaration is what retires it.
+  ⭐⭐ **THE RULE THIS PHASE BOUGHT — a base-class declaration is inspector-FREE; a declaration on the
+  class being INSPECTED is what costs.** `InspectorWdgt.showingInherited` defaults to **false**, so a
+  member list shows own members only. That is why `Widget.toolTipMessage` (a base, 11 writers) cost
+  ZERO references while W4a's `ButtonWdgt.faceWidget` (the class the two mixin-donor tests actually
+  inspect) cost 20. ⛔ It also means landmine §3.5 as written — "adding properties to a base class is
+  not pixel-free for inspector tests" — is **backwards for a pull-up**, and should be read as: adding
+  to a class some test INSPECTS is not pixel-free. Predict recapture from *which class a test opens*,
+  not from how many classes inherit the field.
+- W4c field declarations: ☐
 - W5 `_reLayout` template: ☐
 - W6a widen setters / W6b guards (D3): ☐ ☐
 - W7 self-description (D4): ☐

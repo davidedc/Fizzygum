@@ -9,7 +9,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   # per-editor object (a toolbar, a document)
   fontSelectionMenuHolder: undefined
 
-  iconToolTipMessage: "change font"
+  toolTipMessage: "change font"
 
   constructor: (@fontSelectionMenuHolder) ->
     super undefined  # undefined keeps @color = undefined as before; icon line-colour set in createAppearance

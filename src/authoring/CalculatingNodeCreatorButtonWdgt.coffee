@@ -1,6 +1,6 @@
 class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "calculating node"
+  toolTipMessage: "calculating node"
 
   createAppearance: -> new CalculatingNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

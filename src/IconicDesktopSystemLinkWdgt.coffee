@@ -12,6 +12,11 @@ class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
   color_pressed: Color.GRAY
   color_normal: Color.BLACK
 
+  # the link's caption text. Declared HERE rather than on IconicDesktopSystemShortcutWdgt
+  # because IconicDesktopSystemWindowedAppLauncherWdgt is a sibling of that class, not a
+  # subclass — this is the tightest base that covers all five writers.
+  title: undefined
+
   moveOnTopOfTopReference: ->
     # find the topmost OTHER desktop icon to layer myself just above it
     # (instead of `c instanceof WidgetHolderWithCaptionWdgt`; type-test-elimination campaign)

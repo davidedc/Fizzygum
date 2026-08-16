@@ -1,6 +1,6 @@
 class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
-  iconToolTipMessage: "plots/graphs"
+  toolTipMessage: "plots/graphs"
 
   createAppearance: -> new AllPlotsIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

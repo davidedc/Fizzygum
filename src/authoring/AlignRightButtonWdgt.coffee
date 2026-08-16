@@ -3,7 +3,7 @@
 
 class AlignRightButtonWdgt extends AlignButtonWdgt
 
-  iconToolTipMessage: "align right"
+  toolTipMessage: "align right"
   alignDirectMethod: "alignRight"
   layoutAlignSetterMethod: "setAlignmentToRight"
 

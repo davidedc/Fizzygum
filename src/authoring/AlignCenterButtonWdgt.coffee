@@ -3,7 +3,7 @@
 
 class AlignCenterButtonWdgt extends AlignButtonWdgt
 
-  iconToolTipMessage: "align center"
+  toolTipMessage: "align center"
   alignDirectMethod: "alignCenter"
   layoutAlignSetterMethod: "setAlignmentToCenter"
 

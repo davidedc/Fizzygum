@@ -1,6 +1,6 @@
 class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "scatter plot"
+  toolTipMessage: "scatter plot"
 
   createAppearance: -> new ScatterPlotIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

@@ -1,6 +1,6 @@
 class SliderNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
-  iconToolTipMessage: "slider node"
+  toolTipMessage: "slider node"
 
   createAppearance: -> new SliderNodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 

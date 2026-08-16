@@ -3,7 +3,7 @@
 
 class AlignLeftButtonWdgt extends AlignButtonWdgt
 
-  iconToolTipMessage: "align left"
+  toolTipMessage: "align left"
   alignDirectMethod: "alignLeft"
   layoutAlignSetterMethod: "setAlignmentToLeft"
 
