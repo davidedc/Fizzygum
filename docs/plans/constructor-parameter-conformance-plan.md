@@ -1,16 +1,18 @@
 # Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
-**STATUS: ACTIVE — RE-OPENED 2026-08-16 after being archived the same day. P0–P7 are landed and
-pushed** (Fizzygum `20356b17` / tests `36dfad268`; `positional-hole` 51 → 0, hard) — **but closing
-it was premature: a post-close sweep found ~9 hole sites the arc never reached, and they are the
-same bugs one level down.** They are §7c, and they are the remaining work.
+**STATUS: ACTIVE. P0–P8 are landed and pushed** (Fizzygum `60dc7ac1` / tests `36dfad268`).
+`positional-hole` 51 → 0 (HARD); the honest count — `buildSystem/check-argument-holes.js`, which the
+arc built after discovering the stink was blind to most holes — is ratcheted at **9** in `src/`.
+**P9 (§7d) is the remaining work**: the 9 gated survivors (4 of which are not holes at all), two
+categories nobody has ever counted, the tests repo's ungated 25, and one unwritten rule.
 
-⚠⚠ **The arc closed one level too high, and the reason is worth stating plainly:** every phase swept
-the layer it was named for — P6 the menu-adapter *method definitions*, P7 the public `add` — while
-the layer immediately beneath (`__add`, `_addChild`, hand-rolled `.call` on the dispatcher
-convention) kept both the misleading parameter name and its own holes. The gate could not flag any
-of it (§7b), so "the ratchet is at 0" was mistaken for "the tree is clean". **A phase is not done
-when its own layer is converted; it is done when the layer it delegates to is checked too.**
+⚠⚠ **This plan was archived as COMPLETE and re-opened the same day, and the reason is the arc's
+main lesson.** Every phase swept the layer it was named for — P6 the menu-adapter *method
+definitions*, P7 the public `add` — while the layer immediately beneath (`__add`, `_addChild`,
+hand-rolled `.call` on the dispatcher convention) kept both the misleading parameter name and its
+own holes. The gate could not flag any of it, so "the ratchet is at 0" was mistaken for "the tree is
+clean". **A phase is not done when its own layer is converted; it is done when the layer it
+delegates to is checked too — and a green ratchet is a floor, never an inventory.**
 
 The durable law is
 [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md);
@@ -980,6 +982,90 @@ has never been seen to fail is not known to work.
 
 ---
 
+## 7d. P9 — the tail, the uncounted categories, and the unwritten rule (REMAINING WORK)
+
+Measured 2026-08-16 on the tree at Fizzygum `60dc7ac1`, after P8. Reproduce before starting:
+
+```
+node buildSystem/check-argument-holes.js          # the gate: src/ only, ratcheted at 9
+node buildSystem/census-call-arity.js --holes     # the honest sweep: 34 tree-wide
+```
+
+### A — the 9 gated survivors, of which **4 are not holes** ⭐ start here
+
+The gate cannot tell "skipped to reach past" from "`undefined` IS the value". Reading all nine
+settles it — do NOT convert blind:
+
+**A1. Four are genuine VALUES. Annotate them at the site; do not touch the signature.**
+
+| site | why it is a value |
+|---|---|
+| `SimpleVerticalStackPanelWdgt.coffee:104,105` `_insertAddersSuchThat` ×2 | its own comment already says it: *"⚠ NO default on axis: undefined is MEANINGFUL (content mode)"* |
+| `RectangularAppearance.coffee:96` `_paintInLocalScope` | an absent `appliedShadow` in a normal-pass-only method = "no shadow" (§7c item 1b) |
+| `Widget.coffee:1575` `_applyTransformSugarNoSettle undefined, s` | the parameters are literally named `(degOrNil, sOrNil)` |
+
+The deliverable is a one-line comment at each saying *this `undefined` is a value, not a skip*, so
+the next reader does not "fix" it — and the gate baseline then means "4 known values", not "4 to do".
+
+**A2. Five are genuine holes.**
+
+| site | signature | diagnosis |
+|---|---|---|
+| `ActivePointerWdgt.coffee:648` `@cleanupMenuWdgts undefined, w, true` | `(expectedClick, w, alsoKillFreshMenus)` | skips slot 1 to reach slot 3. Only 2 callers (`:648`, `:826` which passes `expectedClick, w`) — a trailing `opts` or a reorder both fit |
+| `StretchableCanvasWdgt.coffee:172` `droppedWidget.fullImage(undefined, false, true)` | `(bounds, noShadow = false, forceShadow = false)` | ⭐ **the ONLY caller of `fullImage` in either repo.** It skips `bounds` AND spells `noShadow`'s own default. `(opts = {})` reduces it to `fullImage forceShadow: true` |
+| `FolderPanelWdgt.coffee:60` + `IconicDesktopSystemFolderShortcutWdgt.coffee:13` `_createReferenceAndCloseNoSettle undefined, @…` | `(referenceName, placeToDropItIn = world)` | arity 2 ⇒ E5 exempts it from a bag, so R3's remedy here is a **REORDER** to `(placeToDropItIn, referenceName)` — both holes vanish and the public wrapper `Widget.coffee:3028` moves with it |
+| `Class.coffee:231` `@findUpTo remainingSourceLines, @topLevelCommentRegex, undefined, @propertyRegex, true` | `(sourceLines, regexStopPositive, regexStopNegative, regexStopPositive2, keepStashWhenEOF)` | 5 positional, 4 call sites (`:202/:220/:231/:254`), all in `Class.coffee`. ⚠⚠ **This is the META-COMPILER** — it parses every class at boot. Convert it LAST and alone, and note that `buildSystem/check-coffee-syntax.js` and `compile-fragment.js` both load this file, so a mistake breaks the build gate as well as the world |
+
+**Ratchet to 4** in `buildSystem/check-argument-holes.js` when A2 lands.
+
+### B — two categories NOBODY has ever counted
+
+**B1. Local function literals.** §0 counted constructors and P6 counted methods; a `name = (a, b, c) ->`
+inside a method body was in neither census. P8 item 4 found `buildHeader` only because a hole
+happened to make it visible. **11 more exist:**
+
+```
+grep -rn --include='*.coffee' -E '^\s+[a-z][A-Za-z0-9_]* = \([^)]*,[^)]*,[^)]*\)' src/
+```
+
+e.g. `Serializer.coffee:232` `fail = (message, path, offender, remediation)`,
+`LRUCache.coffee:37` `createNode = (data, pre, next)`. Most will be fine (a local closure has one
+call site and no `super`); the deliverable is the READ, and converting only what the hole test
+actually condemns.
+
+**B2. Positional RESULT tuples — the rule is unwritten.** R3 governs arguments; the convention doc
+says nothing about `return [a, b, error]`. P6 refactored three of these in `LCLCodePreprocessor`
+because they were dead ceremony, and deliberately left the other **33** `return [undefined, error]`
+guards (those stages DO set errors; one `undefined` is not a hole). ⚖ **The decision to make is
+whether the convention doc should say anything at all** — a documented "result tuples are out of
+scope, and here is why" is a legitimate outcome and closes the question permanently.
+
+### C — the tests repo has 25 holes and NO gate
+
+Deliberate (`check-argument-holes.js` header): its `SystemTest_*.js` metadata is prose inside string
+literals that the tree-wide sweep over-matches, and **a doc edit must never break a build**. But
+that leaves half the tree unratcheted. Concentrations: `setValue` ×5, `assertValuesEqual` ×3,
+`showOutputPins` ×2, `processKeyDown` ×2.
+
+⚖ Two ways to close it, pick one: **(a)** gate a safe SUBSET — `tests/**/*_automationCommands.js`
+only, never the `SystemTest_*.js` metadata files — or **(b)** accept hand-sweeping and say so
+explicitly in the check's header so the asymmetry is a stated decision rather than an omission.
+
+### D — one loose end from P8 item 2
+
+`CodePromptWdgt.coffee:14` assigns `@msg = opts.msg` and **never reads it** — the same dead-field
+shape removed from `ErrorsLogViewerWdgt` in item 2, spotted at the time and left as out of scope.
+One line. ⚠ Check first whether the `msg:` key is meaningful to the shared `textPrompt` door before
+deleting the field.
+
+### Verification for all of P9
+
+`fg presuite` while iterating; `fg gauntlet` before proposing a commit. Every item here should be
+**pixel-free** — a signature change that churns references means a field is mis-bound (§8). The one
+exception to expect is none: no item in P9 changes behaviour by design.
+
+---
+
 ## 8. Standing hazards (read before every phase)
 
 - **Serialization and duplication are safe.** Both instantiate via `Object.create`; the
@@ -1046,10 +1132,11 @@ has never been seen to fail is not known to work.
 
 ## 9. Order and independence
 
-**P0 → P1 → P2 → P3 → P4 → P5 → P6 → P7 → P8.** P0–P7 are landed and pushed; **P8 (§7c) is the
-remaining work**, and its five items are independent of each other — item 1 is the one that matters
-(it is the P7 bug at its origin), item 3 is an owner decision rather than a conversion, and item 5
-is tooling.
+**P0 → … → P8 → P9.** P0–P8 are landed and pushed. **P9 (§7d) is the remaining work.** Its parts
+are independent; the useful order is **A** (finish the gated 9 — start with A1, the four that are
+values, because that is a READ not a conversion and it shrinks the real work to five), then **B1**
+(the 11 uncounted local helpers), then **C** and **B2**, which are decisions to make rather than
+code to write. **D** is a one-liner takeable at any point.
 
 P0 first so every later gain locks itself in. P1 is the warm-up that proves the idiom at
 near-zero risk. P2 next because it is the biggest payoff and its blast radius, while wide, is
