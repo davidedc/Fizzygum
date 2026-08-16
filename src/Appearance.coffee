@@ -7,6 +7,24 @@
 class Appearance
 
   widget: undefined
+
+  # ===== the two _paintInLocalScope knobs, DECLARED per class =====
+  # Neither varies between paints of the same appearance, so both are class-level facts rather than
+  # call arguments (the field-as-truth idiom used for claimsSpace / laysIconsHorizontallyInGrid).
+  #
+  # @alphaPolicy — which globalAlpha the scope establishes:
+  #   undefined — the shadow-aware product (appliedShadow.alpha or 1) × widget alpha (the norm)
+  #   "none"    — untouched; the body paints at the ambient alpha (the sheet cells' edge/ring chrome)
+  #   "backgroundTransparencyNormalPass" — @widget.backgroundTransparency, normal pass only (the
+  #               plot family: in the shadow pass the body's simpleShadow sets its own)
+  alphaPolicy: undefined
+  #
+  # @clipsToLocalArea — does the scope clip to the damage box? RectangularAppearance declares FALSE:
+  # its legacy device paint never clipped (its fills/stroke bound themselves to damage∩tight), and
+  # adding the clip is NOT free of pixels — in an island buffer the ambient translate can be
+  # FRACTIONAL (a fractional slot origin), where the clip's own boundary quantization differs from
+  # the fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
+  clipsToLocalArea: true
   # the ownColorInsteadOfWidgetColor is used for buttons
   # with icons on a glass bottom: the glass bottom has
   # to change the color on hover, so the icon_button on it
@@ -38,12 +56,14 @@ class Appearance
   # partial-repaint fills. Device-space business (the damage clip here, back-buffer blits, the
   # shadow-silhouette fallback) stays OUT of bodies — a body never sees al/at.
   # (IconAppearance keeps its own scope: a different translate+scale into its 200×200 spec space.)
-  # opts?.alpha picks the globalAlpha policy:
-  #   omitted — the shadow-aware product (appliedShadow.alpha or 1) × widget alpha (the norm)
-  #   "none"  — untouched (the sheet cells: edge/ring chrome painted at the ambient alpha)
-  #   "backgroundTransparencyNormalPass" — @widget.backgroundTransparency, normal pass only (the
-  #             plot family: in the shadow pass the body's simpleShadow sets its own)
-  _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, opts, bodyFn) ->
+  #
+  # The two knobs are DECLARED BY THE CLASS (@alphaPolicy / @clipsToLocalArea below), not passed per
+  # call, because no appearance varies them between paints — each one wants a fixed policy for its
+  # whole life. Declaring them keeps this signature at four operands with the block LAST, which is
+  # what the CoffeeScript block idiom needs; carrying them as a bag in front of the block instead
+  # made every default caller write `undefined` to reach past it (R3 of
+  # docs/architecture/constructor-and-parameter-conventions.md — 8 of the 14 callers did).
+  _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, bodyFn) ->
     keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
     return undefined unless keyValues?
     [area,sl,st,al,at,w,h] = keyValues
@@ -56,16 +76,10 @@ class Appearance
 
     # clip out the dirty rectangle as we are
     # going to paint the whole of the box.
-    # opts.clip false: RectangularAppearance opts OUT — its legacy device paint never
-    # clipped (its fills/stroke bound themselves to damage∩tight), and adding the clip is
-    # NOT free of pixels: in an island buffer the ambient translate can be FRACTIONAL (a
-    # fractional slot origin), where the clip's own boundary quantization differs from the
-    # fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
-    if opts?.clip != false
+    if @clipsToLocalArea
       aContext.clipToRectangle al,at,w,h
 
-    alphaPolicy = opts?.alpha
-    if alphaPolicy == "backgroundTransparencyNormalPass"
+    if @alphaPolicy == "backgroundTransparencyNormalPass"
       if !appliedShadow?
         # `? 1`: an absent backgroundTransparency means fully opaque (Widget's class-level
         # default) — never hand the canvas an undefined. See the note in
@@ -73,7 +87,7 @@ class Appearance
         # loud, and relying on "the previous value stands" would silently paint at whatever
         # alpha the ambient context happened to carry.
         aContext.globalAlpha = @widget.backgroundTransparency ? 1
-    else if alphaPolicy != "none"
+    else if @alphaPolicy != "none"
       aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
 
     aContext.useLogicalPixelsUntilRestore()

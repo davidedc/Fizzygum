@@ -11,7 +11,7 @@ class DragChargingRingAppearance extends Appearance
     return undefined if appliedShadow?
 
     # (the scope's default alpha reduces to plain @widget.alpha here — no shadow pass reaches this)
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       cx = @widget.width() / 2
       cy = @widget.height() / 2
       radius = Math.min(cx, cy) - 2

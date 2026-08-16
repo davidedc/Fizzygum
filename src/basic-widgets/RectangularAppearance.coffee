@@ -1,5 +1,8 @@
 class RectangularAppearance extends Appearance
 
+  # the legacy device paint bounds its own fills/stroke to damage∩tight; see Appearance.
+  clipsToLocalArea: false
+
   isTransparentAt: (aPoint) ->
     if @widget.boundingBoxTight().containsPoint aPoint
       return false
@@ -30,7 +33,7 @@ class RectangularAppearance extends Appearance
     # stroke + pattern-fill epilogues, so it runs here too (pure, cheap)
     return undefined unless (@_calculateKeyValuesOrNil aContext, clippingRectangle)?
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { clip: false }, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
       if !@widget.color? then debugger
 
       # paint the background: the whole damage box (the padding halo beyond the tight box)
@@ -90,7 +93,7 @@ class RectangularAppearance extends Appearance
 
     # normal-pass only (the base paint skips it under appliedShadow; the standalone callers gate on
     # !appliedShadow too), so the scope's default alpha reduces to the plain widget alpha
-    @_paintInLocalScope aContext, clippingRectangle, undefined, { clip: false }, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx, localArea) =>
       return unless @widget.strokeColor?
 
       # clip to the damage ∩ tight box (the stroke must not paint into the padding halo)

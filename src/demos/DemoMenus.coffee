@@ -74,11 +74,11 @@ class DemoMenus
     world.openFrameWith (new SlideWdgt), (new Point 460, 400), world.hand.position()
 
   createSimpleButton: ->
-    world.create new SimpleRectangularButtonWdgt @, undefined, face: new IconWdgt(undefined)
+    world.create new SimpleRectangularButtonWdgt target: @, face: new IconWdgt(undefined)
 
   createSwitchButtonWdgt: ->
-    button1 = new SimpleRectangularButtonWdgt @, undefined, face: new IconWdgt(undefined)
-    button2 = new SimpleRectangularButtonWdgt @, undefined, face: new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
+    button1 = new SimpleRectangularButtonWdgt target: @, face: new IconWdgt(undefined)
+    button2 = new SimpleRectangularButtonWdgt target: @, face: new StringWdgt "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonWdgt [button1, button2]
 
   createNewClippingBoxWdgt: ->

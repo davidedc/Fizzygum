@@ -4,6 +4,9 @@
 
 class SheetHeaderCellAppearance extends Appearance
 
+  # edge/ring chrome paints at the ambient alpha (see Appearance).
+  alphaPolicy: "none"
+
   # F5 edge ownership: the LEFT edge is the DARK border colour when it sits on the sheet's
   # outer-left boundary (row headers, corner) or on the number-header separator (column 0);
   # the TOP edge is dark on the outer-top boundary (column headers, corner) or on the
@@ -22,7 +25,7 @@ class SheetHeaderCellAppearance extends Appearance
     sheetWidget = @widget._sheetWidget
     return unless sheetWidget?
     # alpha "none": fill/edge chrome painted at the ambient alpha, as it always was
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { alpha: "none" }, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       # the header-strip fill
       ctx.fillStyle = sheetWidget.headerFillColor.toString()
       ctx.fillRect 0, 0, @widget.width(), @widget.height()

@@ -22,21 +22,29 @@ before writing or modifying any `*Appearance` paint body, and together with
 
 ## The one preamble
 
-`Appearance._paintInLocalScope aContext, clippingRectangle, appliedShadow, opts, bodyFn`
+`Appearance._paintInLocalScope aContext, clippingRectangle, appliedShadow, bodyFn`
 (`src/Appearance.coffee`) is the single spelling of the scope. It returns undefined when there is
 nothing to draw, else runs `bodyFn ctx, localArea, appliedShadow` inside the scope and restores.
 `localArea` = the damage box translated to widget-local logical coordinates (integer — both the
 damage box and the widget position are integer by the placement law).
 
-`opts?.alpha` picks the globalAlpha policy:
+The block is the LAST argument, which is what the CoffeeScript idiom needs. The scope's two knobs
+are therefore **declared by the appearance class**, not passed per call — no appearance varies
+either between paints, so each is a class-level fact:
+
+`@alphaPolicy` picks the globalAlpha policy:
 
 | policy | effect | users |
 |---|---|---|
-| omitted | `(appliedShadow.alpha or 1) × @widget.alpha` — the norm | almost everyone |
+| `undefined` (the base) | `(appliedShadow.alpha or 1) × @widget.alpha` — the norm | almost everyone |
 | `"none"` | globalAlpha untouched (ambient) | the sheet cells (edge/ring chrome) |
 | `"backgroundTransparencyNormalPass"` | `@widget.backgroundTransparency`, normal pass only | the plot family |
 
-`opts?.clip: false` skips the scope's damage clip — for a body whose every draw provably
+⚠ A subclass inherits these like any field. That is correct here only because each declaring class
+is also where the `_paintInLocalScope` call lives, so the field cannot reach a subclass whose paint
+the declaration was not already deciding. Check that before adding a third knob.
+
+`@clipsToLocalArea: false` skips the scope's damage clip — for a body whose every draw provably
 bounds itself to damage∩tight (`RectangularAppearance`: its fills and stroke are exact rects,
 and its droplet hook self-clips). This is not an optimization but a PIXEL contract: in an
 island buffer the ambient translate can be FRACTIONAL (a rotated-container payload's figure

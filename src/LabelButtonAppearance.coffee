@@ -12,7 +12,7 @@ class LabelButtonAppearance extends Appearance
     if !@widget.visibleBasedOnIsVisibleProperty() or @widget.isInCollapsedSubtree()
       return undefined
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, undefined, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
       if appliedShadow?
         color = Color.BLACK
       else

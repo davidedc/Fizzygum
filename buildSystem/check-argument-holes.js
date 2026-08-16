@@ -31,13 +31,15 @@
 const path = require('path');
 const census = require('./census-call-arity.js');
 
-// Seeded 2026-08-16 at the measured count, after P8 items 1/2/4 landed (the sweep started at 25).
-// The remaining 20 are inventoried in docs/plans/constructor-parameter-conformance-plan.md §7c:
-// 8 are `Appearance._paintInLocalScope` (item 1b — its options bag sits BEFORE a required trailing
-// callback, so every default caller must fill it; owner-gated because the fix is a class-level
-// declaration, not a parameter move), 3 are the button family's demo sites (item 3, owner
-// decision), and the rest are one-offs.
-const BASELINE = 20;
+// Seeded 2026-08-16 at 20 and tightened to 9 the same day as P8 items 1b and 3 landed (the sweep
+// started at 25). Every REMAINING site is a one-off; the two families are gone —
+// `Appearance._paintInLocalScope` shed 8 when its two knobs became class-level declarations, and
+// the demo buttons shed 3 when SimpleRectangularButtonWdgt took an options head.
+// ⚠ Some survivors are `undefined` used as a MEANING rather than a skip (`_insertAddersSuchThat`'s
+// axis is documented as "undefined is MEANINGFUL: content mode"; RectangularAppearance.paintStroke
+// passes an absent appliedShadow because it is normal-pass-only). This regex cannot tell those from
+// real holes — read the site before converting, and if it is genuinely a value, say so at the site.
+const BASELINE = 9;
 
 const SRC = [path.join(census.ROOT, 'Fizzygum', 'src')];
 

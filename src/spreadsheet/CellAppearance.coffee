@@ -8,6 +8,9 @@
 
 class CellAppearance extends Appearance
 
+  # edge/ring chrome paints at the ambient alpha (see Appearance).
+  alphaPolicy: "none"
+
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     # shadow-pass paint contract (Widget.coffee "How the shadow painting works"): grid
     # edges and the selection ring are interior chrome on the sheet's opaque panels, not
@@ -16,7 +19,7 @@ class CellAppearance extends Appearance
     sheetWidget = @widget._sheetWidget
     return unless sheetWidget?
     # alpha "none": edge/ring chrome painted at the ambient alpha, as it always was
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { alpha: "none" }, (ctx) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       # dark edges sit on the header separators: the left edge of the viewport's FIRST visible
       # column and the top edge of its FIRST visible row (viewport-relative, F1 — at origin 0
       # that is sheet col/row 0, exactly the pre-scroll form)

@@ -7,6 +7,9 @@
 
 class GraphsPlotsChartsAppearance extends Appearance
 
+  # in the shadow pass the body's simpleShadow sets its own alpha (see Appearance).
+  alphaPolicy: "backgroundTransparencyNormalPass"
+
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     # alpha policy: the background fill AND drawPlot's opening background-clean fill run at
@@ -14,7 +17,7 @@ class GraphsPlotsChartsAppearance extends Appearance
     # contract (Widget.coffee "How the shadow painting works"): in the shadow pass drawPlot's
     # simpleShadow fills the WHOLE box black at the shadow alpha, so the coloured background
     # underneath is skipped (painting it too would tint and double-darken through accumulation).
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, { alpha: "backgroundTransparencyNormalPass" }, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
       # (backgroundColor is undefined unless the user sets one — the base Widget default — so this
       # fill is usually skipped; drawPlot's own background-clean fill paints the plot box)
       if !appliedShadow? and @widget.backgroundColor?

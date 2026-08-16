@@ -778,7 +778,7 @@ where a parenthesised FIRST argument sits in front of a trailing implicit object
 `TreeNode._addChild` now carries the case history in a comment, so the next reader of that slot
 learns why it is not called `position` at the place where the mistake would be made.
 
-### Item 1b — `_paintInLocalScope`: 8 holes, and the options are not options ⛔ OWNER DECISION
+### Item 1b — `_paintInLocalScope`: 8 holes, and the options are not options ✅ DONE 2026-08-16
 
 Measured across all **14** callers of `Appearance._paintInLocalScope`:
 
@@ -815,12 +815,22 @@ _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, bodyFn) ->
 
 — four operands, block last, and **zero holes at all 14 sites** rather than 8 fixed and 6 relocated.
 
-⚖ **Why it is still owner-gated.** It touches the paint preamble every appearance goes through, it
-has its own architecture doc (`architecture/appearance-paint-convention.md`) whose declared-exception
-list would need the two new fields added, and the two alpha policies are currently documented as a
-three-way enum in one comment block — moving them to class fields spreads that explanation across
-five files unless the base keeps the enum's documentation. That is a design change to a core
-convention, not a parameter-list tidy, so it wants an explicit yes.
+**As built, exactly that.** `Appearance` declares `alphaPolicy: undefined` and
+`clipsToLocalArea: true`, with the three-way enum documented ONCE on the base; five subclasses
+override one field each; all 14 call sites drop the slot. Holes for this family: 8 → 0.
+
+⭐ **The structural fact that made it safe:** two of the five declaring classes DO have subclasses
+(`RectangularAppearance` → `SimpleDropletAppearance`/`DesktopAppearance`; `BoxyAppearance` →
+`BubblyAppearance`/`MenuAppearance`), so an inherited field could in principle change a subclass's
+paint where a positional `undefined` did not. It cannot here, because **the `_paintInLocalScope`
+call lives in the same class as the field** — no subclass calls it independently (checked), so field
+inheritance exactly mirrors the method inheritance that already decided the value. Verify that
+before turning any other per-call option into a class declaration.
+
+⚠ **One `undefined` survives at `RectangularAppearance.paintStroke`, and it is CORRECT.** It passes
+an absent `appliedShadow` because that method is normal-pass-only — a VALUE meaning "no shadow", not
+a skip to reach the block. The gate's regex cannot tell those apart; the check's header names the
+category so the next reader does not "fix" it.
 
 ### Item 2 — two hand-rolled dispatcher calls P6 could not reach ✅ DONE 2026-08-16
 
@@ -859,19 +869,44 @@ it carries no dispatcher slots: `informTarget` now calls `@target[@callback].cal
 @textWidget` and the callback takes `(textWidget)`. **The `unused` parameter is gone, which is the
 point: it existed only to pad a convention this call was never part of.**
 
-### Item 3 — the button head has 3 holes after all (owner decision, not a mechanical fix)
+### Item 3 — the button head has 3 holes after all ✅ DONE 2026-08-16
 
 ```coffee
 # src/demos/DemoMenus.coffee:77, 80, 81
 new SimpleRectangularButtonWdgt @, undefined, face: new IconWdgt(undefined)
 ```
 
-P3 gave the button family `(target, action, opts = {})`; these three skip `action` to reach `opts`.
-By the letter of R3 that is a hole and the head is wrong. ⚖ **But weigh it before acting:** 3 sites
-out of ~50, all in one demo file, all wanting a face-only button with no action — which reads more
-like a missing **door** (a `faceOnly`/decorative constructor, or `action` moving into `opts`) than a
-head that fails the family. R3's own guidance is to read a hole as a *diagnosis* and then pick the
-treatment. Do not re-open the P3 head on 3 demo sites without deciding which of those it is.
+P3 gave the button family `(target, action, opts = {})`; these three skipped `action` to reach
+`opts`. The diagnosis was "a missing door, not a failed head", and measurement confirmed it twice
+over: **those three ARE every caller of `SimpleRectangularButtonWdgt`**, and not one of them wires
+it — while `ButtonWdgt` at large has the ~50 callers that do. So the P3 head stays and the SUBCLASS
+becomes the door.
+
+**As built:** `SimpleRectangularButtonWdgt` takes `(opts = {})` and forwards
+`super opts.target, opts.action, opts`; the demo sites become
+`new SimpleRectangularButtonWdgt target: @, face: …`. The operands nobody supplies become option
+keys — the `PromptWdgt` remedy — and the class stays general: pass `action:` to wire one after all.
+⭐ An unwired button is a **supported** state, not a broken one — `ButtonWdgt` guards its dispatch
+with `if @action? and @action != ""`, checked before assuming these three were latent crashes.
+
+⚠⚠ **The codebase's own hard rule selected this shape.** The obvious door —
+`new SimpleRectangularButtonWdgt undefined, undefined, face: …` inside one helper — is unwritable:
+`positional-hole` is HARD at 0, so two adjacent `undefined`s fail the build. A constructor that
+forwarded the absent operands (`super undefined, undefined, opts`) is unwritable for the same
+reason. **The gate did not merely measure this conversion, it ruled out the lazy version of it.**
+
+⚠⚠⚠ **AND THE FIRST ATTEMPT REPEATED P3'S EXACT MISTAKE — read this before the next conversion.**
+The three demo sites were verified as "every caller", and the head was changed on that basis. They
+are every *direct* caller; `CodeInjectingSimpleRectangularButtonWdgt` **extends** the class and was
+calling `super @, 'injectCodeIntoTarget', face: face`, which against the new `(opts = {})` head
+bound the widget itself to `opts` and dropped both the action and the face. Two Drawings-Maker tests
+went red (`macroDrawingsMakerReEnableEditing`, `macroEditModeTogglePencilEyeGlyph`) — the same
+symptom, in the same class family, that §7's P3 entry already records in bold. **A signature is
+owned by its call sites AND its `super` sites; "I checked the callers" is only half the sweep, and
+the descendant closure must be computed FROM SOURCE every time — even when it is one class, even
+when the caller count is three.** The subclass now passes `target:`/`action:` as option keys and is
+byte-identical; the premise "nothing constructs one of these wired" was false and the comment
+asserting it has been corrected in the source too.
 
 ### Item 4 — `buildHeader`, a 6-positional local helper ✅ DONE 2026-08-16
 
@@ -988,6 +1023,13 @@ has never been seen to fail is not known to work.
 - **No constructor-build regressions.** `archive/menu-slider-ctor-conversion-plan.md` retired
   ctor-build patterns; converting a signature must not reintroduce one. Keep the
   `_buildAndConnectChildren` / `…NoSettle` pair intact and settle exactly once.
+- **⚠⚠⚠ "I CHECKED THE CALLERS" IS HALF THE SWEEP — a signature is owned by its call sites AND its
+  `super` sites.** P3 lost the Drawings Maker's tool buttons this way (the `ButtonWdgt` descendant
+  closure is 13, not the 7 the plan named), and **P8 item 3 did it again in the same class family**
+  with a closure of ONE: three direct callers were verified as "every caller" while
+  `CodeInjectingSimpleRectangularButtonWdgt` sat below, forwarding positionally. Compute the
+  descendant closure FROM SOURCE every time — `grep -rn "extends <Class>\b" src/`, then recurse —
+  no matter how small the caller count looks.
 - **⚠⚠ CONVERT THE LAYER BENEATH, OR AT LEAST CHECK IT.** This arc was archived as complete and
   re-opened the same day (§7c): P6 swept menu-adapter *definitions* and P7 swept the public `add`,
   but `__add`/`_addChild` one call below kept BOTH the misleading `position` name and two holes of
