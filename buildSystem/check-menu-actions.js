@@ -38,6 +38,14 @@
 // parameter and crashed on every click, because from a menu that parameter is a MenuItemWdgt and the
 // body did `inWhichFolder.contents.contents`. No text scan can catch that. The mechanism that would
 // is a rig that CLICKS every demo menu item — see the plan's residual.
+//
+// ⚠ AND IT RESOLVES ACTIONS BY NAME, NOT BY RECEIVER, because the receiver of
+// `menu.addMenuItem "…", someExpression, "verb"` is a runtime value and this tree dispatches through
+// a string. So a method whose NAME matches a menu action is checked even on a class no menu ever
+// wires — `ToggleButtonWdgt.select(whichOne)` is checked because `ListWdgt` wires a `"select"`. That
+// direction is deliberate: over-matching costs a spurious rule-3 hit (fix by naming the slot, which
+// is never wrong), while under-matching would let a real one through. If it ever false-positives on
+// a genuinely unrelated method, prefer renaming that method over loosening the rule.
 
 const fs = require('fs');
 const path = require('path');
@@ -70,10 +78,29 @@ const hard = [];        // rule 1 + 2 violations
 const actionNames = new Set();   // every verb reached from a menu
 
 // ---- pass 1: read every addMenuItem/prependMenuItem call site -------------------------------
+// ⚠ A CALL MAY WRAP, and a scan that reads one line at a time is blind to everything past the
+// break — the same blind spot that hid two methods from six gates until lib/coffee-method-header.js
+// (see its header). `ListWdgt:90` is the one wrapped call on this tree today and its options object
+// is entirely on the continuation lines, so rule 2 would never have looked at it. Continuations are
+// simply the deeper-indented lines that follow, joined here before any argument is counted.
+function joinContinuation(lines, i) {
+  const indent = (lines[i].match(/^\s*/) || [''])[0].length;
+  let out = stripComment(lines[i]);
+  for (let j = i + 1; j < lines.length; j++) {
+    const nxt = lines[j];
+    if (!nxt.trim()) break;
+    if ((nxt.match(/^\s*/) || [''])[0].length <= indent) break;
+    out += ' ' + stripComment(nxt).trim();
+  }
+  return out;
+}
+
 for (const p of files) {
   const rel = path.relative(SRC, p);
-  fs.readFileSync(p, 'utf8').split('\n').forEach((raw, i) => {
-    const line = stripComment(raw);
+  const allLines = fs.readFileSync(p, 'utf8').split('\n');
+  allLines.forEach((raw, i) => {
+    if (!/\b(?:add|prepend)MenuItem\b/.test(stripComment(raw))) return;
+    const line = joinContinuation(allLines, i);
     const m = /\b(?:add|prepend)MenuItem\s+(.*)$/.exec(line);
     if (!m) return;
     const args = m[1];
