@@ -113,11 +113,11 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayout(newBounds)` | the per-node **arrange**: position self, apply own extent, place corner/edge-internal children, mark fixed, re-lay any child the arrange moved |
 | `_reLayoutSelf` | self-only heal hook (empty on base `Widget`); fired by `_applyExtentBase` when a widget's own extent commits |
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
-| `_positionAndResizeChildren` | the actual measure-and-place-children body (per container: `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`, `FrameWdgt`) |
+| `_positionAndResizeChildren` | the actual measure-and-place-children body — seven definers: `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the scroll panel respectively |
 
-`_reLayoutChildren` is defined by every size-tracking container and nothing else: the stack and
-scroll panels, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its
-own) plus its title bar, and the size-tracking menu-row
+`_reLayoutChildren` is defined by every size-tracking container and nothing else — ten definers: the
+stack and scroll panels, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its
+own) plus its title bar, the docked paint toolbar, and the size-tracking menu-row
 widgets (slider / string-field / colour-picker / menu-header). Anything without it is not a
 size-tracking container, and the re-fit machinery (§3) is a no-op on it.
 

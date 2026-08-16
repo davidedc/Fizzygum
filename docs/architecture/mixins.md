@@ -1,6 +1,6 @@
 # Mixins — mechanism, inventory, and the keep-vs-remove position
 
-> Verified against `src/` 2026-07-27. This doc is BOTH the evergreen reference for how the
+> Verified against `src/` 2026-08-16. This doc is BOTH the evergreen reference for how the
 > mixin mechanism works and the standing position on keeping vs. removing it, with the
 > evidence embedded (self-contained per `docs/README.md`). The inventory table carries its
 > own verification date; re-verify counts before relying on them in a future arc.
@@ -135,16 +135,22 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (verified 2026-07-27; 8 mixins, 686 L, 32 consumer files)
+## 3. Inventory (verified 2026-08-16; 8 mixins, 687 L, 32 consumer slots across 26 files)
+
+Six live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
+in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 32 is the
+sum of the per-mixin consumer counts below, spread over 26 distinct files: `CreatorButtonWdgt` takes
+three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
+`EditorContentPropertyChangerButtonWdgt` take two each.
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
-| `ClippingAtRectangularBoundsMixin` | 220 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
-| `ControllerMixin` | 112 | 7 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
+| `ClippingAtRectangularBoundsMixin` | 195 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
+| `ControllerMixin` | 126 | 7 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
 | `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `IconicDesktopSystemLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
-| `BackBufferMixin` | 137 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
-| `KeepsRatioWhenInVerticalStackMixin` | 75 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
-| `BubblesEditModeToCoordinatorMixin` | 44 | 3 — `SimpleVerticalStackScrollPanelWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ScrollPanelWdgt`) | unrelated branches (ScrollPanel / Panel / Widget) | yes |
+| `BackBufferMixin` | 148 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
+| `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
+| `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `SimpleVerticalStackScrollPanelWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ScrollPanelWdgt`) | unrelated branches (ScrollPanel / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
 | `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
 
