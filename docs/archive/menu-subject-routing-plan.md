@@ -1,13 +1,27 @@
 # Menu subject routing — how a menu-dispatched verb learns WHICH widget it acts on
 
-**STATUS: AUTHORED, not started.** Two findings from the menu-action arc
+**STATUS: COMPLETE (2026-08-16). P1 landed as shape (a); P2 landed as the two adapters.** Two
+findings from the menu-action arc
 ([`../archive/menu-action-wiring-plan.md`](../archive/menu-action-wiring-plan.md)), left open there
 on purpose because each needs a small design decision rather than a typo fix. Both are the SAME
 question wearing two hats: *a verb wired to a menu needs to know which widget it is about, and the
 dispatcher does not reliably tell it.*
 
-**Neither is a crash.** P1 is two dead menu items; P2 is latent — today it changes no behaviour, and
-it is in this plan because it is the exact shape that made `createOpener` crash.
+**Neither was a crash.** P1 was two dead menu items; P2 is latent — it changes no behaviour, and it
+is in this plan because it is the exact shape that made `createOpener` crash.
+
+**As-built, and the three things worth carrying forward** (§5 has the detail):
+
+1. **The dispatcher fact is CONDITIONAL, and the plan below states only half of it.** Slot 1 = the
+   `MenuItemWdgt` and slot 2 = the panel's target **only when the panel carries no `environment`**;
+   with one, slot 1 is the panel target and slot 2 is that environment. Both branches read the
+   panel's `@target` — which has exactly two readers tree-wide, both inside `createMenuItem`.
+2. **P1's shape (a) was verified, not assumed**, and the verification is what made it safe: every
+   other row of `popUpSecondMenu`'s menu takes `(widgetOpeningThePopUp)` only, so only
+   `popUpDevToolsMenu` can see slot 2 change. The result is structurally identical to the site that
+   already worked, Widget's own "dev ➜".
+3. ⚠⚠ **The sweep's DISTINCT count is not a ratchet** — it fell 519 → 515 on a change that fixed a
+   bug and lost no reach. See §5.2: one action enumerates the world's current widget population.
 
 ---
 
@@ -167,3 +181,59 @@ the deletion is part of the change, not a follow-up.
 
 P2 should be **behaviour-free**: same branch taken either way. Any reference churn beyond the
 inspector member-list row means something else moved — find it before recapturing.
+
+---
+
+## 5. As built
+
+### 5.1 What landed
+
+**P1 — shape (a).** `DemoMenus.popUpSecondMenu` takes `(widgetOpeningThePopUp, widgetThisMenuIsAbout)`
+and builds its menu `target: widgetThisMenuIsAbout`. Both `UNRESOLVED_ACTION` entries are gone from
+`menu-click-sweep-headless.js`'s `KNOWN` map and the sweep is green (5 allowlisted causes → 3), so
+"> inspect" and "> console" now RESOLVE and DISPATCH rather than being tolerated.
+
+The precondition the plan demanded be verified rather than assumed, was:
+
+| checked | result |
+|---|---|
+| every other row of that menu | takes `(widgetOpeningThePopUp)` only — none can observe slot 2 |
+| readers of a menu panel's `@target` | exactly two, both in `MenuRowsPanelWdgt.createMenuItem`; `MenuItemWdgt`'s `@target` is the ROW's, not the panel's |
+| subclasses of `DemoMenus` / `MenusHelper` | none |
+| other callers of `popUpSecondMenu` | none — it is reachable only as a menu action |
+| can `widgetThisMenuIsAbout` be absent? | no: `popUpDemoTestMenu`'s two wiring sites are context menus built `target: @`, so it is the world or the widget |
+
+⭐ A free confirmation of the static gate came out of the A/B: reverting the BODY while keeping the
+parameter makes the build fail with `check-menu-actions.js: unread parameter 'widgetThisMenuIsAbout'`
+— the gate does catch this bug shape, once the signature admits the parameter at all.
+
+**P2 — the two adapters**, `enableDragsDropsAndEditingFromMenu` / `disableDragsDropsAndEditingFromMenu`
+on `Widget`, with `_addEditingLockMenuEntries` pointing at them. ⚠ Still **latent**: the only reader
+is `@parent != triggeringWidget`, and a menu item and `@` take the same branch. The value is now what
+the parameter's name says it is. Two SystemTests drive these items by LABEL, so they were unaffected —
+and `macroEditModeTogglePencilEyeGlyph` asserts `image_0 == image_2` (menu-driven enable reproduces
+the click-driven pixels exactly), which is a real behavioural check on the path.
+
+### 5.2 ⚠⚠ The sweep's DISTINCT count is coverage BREADTH, not a ratchet
+
+The fix moved it **519 → 515** (items fired 2866 → 2796). A fix that shrinks coverage deserves
+suspicion, so it was A/B'd properly — full revert, rebuild, diff the two pair sets — rather than
+argued about. The entire delta is **one action**: 7 `<Class>.newParentChoiceWithHorizLayout` pairs
+lost, 3 gained. `Widget._attachToChosenParent` builds **one menu row per widget currently in the
+world**, each row targeting that widget, so those pairs track the world's population at that instant —
+and now that `inspect`/`createConsole` actually RUN, the population differs. `menus walked` is
+identical (324) and no reach was lost. The rig now says this in its report, and `--verbose` prints the
+pair set so the next move can be diffed instead of debated.
+
+### 5.3 The recapture
+
+One test, `macroDuplicatedInspectorDrivesCopiedTargetOnly`, at both densities — the predicted benign
+inspector churn, and the prediction was checked rather than trusted:
+
+- **A/B**: with P1 kept and only P2's two members removed, the test PASSES. So the churn is
+  attributable to the two added prototype members, and P1 is proven pixel-neutral.
+- **At the pixel** (`fg diffpage`): both member lists shift by exactly one row — two more members
+  make the list longer, so the same scroll fraction lands a row lower — while everything the test
+  exists to assert is untouched: left inspector `alpha = 0.25`, right `alpha = 0.6`, i.e. the
+  inspector still drives the COPIED target only. ⚠ `fg classify` called it REVIEW, not BENIGN?; that
+  verdict is advisory and reading the pixels is what settles it.

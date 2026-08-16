@@ -728,6 +728,10 @@ class DemoMenus
 
     menu.popUpAtHand()
 
+  # ⚠ Built `target: @`, so slot 2 of every row here is `demoMenus`, NOT the widget — the one row
+  # that needs the widget ("make pointer") receives it as the ROW's own target instead. A row added
+  # here that took its SUBJECT from slot 2 would silently act on `demoMenus`; popUpSecondMenu below
+  # is the same question answered the other way. See constructor-and-parameter-conventions.md R3.
   popUpFirstMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "others"
     menu.addMenuItem "make sliders' buttons states bright", demoMenus, "makeSlidersButtonsStatesBright"
@@ -748,8 +752,16 @@ class DemoMenus
 
     menu.popUpAtHand()
 
-  popUpSecondMenu: (widgetOpeningThePopUp) ->
-    menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "others"
+  # ⚠ THIS menu's panel target is the widget the menu is about, where the sibling above uses `@`.
+  # The "dev tools ➜" row reaches `menusHelper.popUpDevToolsMenu`, which takes its subject from the
+  # SECOND dispatch slot — and that slot holds the ENCLOSING PANEL's target, not the row's own
+  # (see the CROSSOVER note in MenuRowsPanelWdgt.createMenuItem). Building this panel about `@`
+  # would hand `demoMenus` to a verb that wants a widget. Every other row here takes
+  # `(widgetOpeningThePopUp)` only and so cannot tell the difference; the sibling above can keep
+  # `target: @` because its one widget-hungry row ("make pointer") routes through the ROW's target
+  # instead. This matches the other `popUpDevToolsMenu` wiring site, Widget's own "dev ➜".
+  popUpSecondMenu: (widgetOpeningThePopUp, widgetThisMenuIsAbout) ->
+    menu = new MenuWdgt widgetOpeningThePopUp, target: widgetThisMenuIsAbout, title: "others"
     menu.addMenuItem "icons ➜", demoMenus, "popUpIconsMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "simple plain text ➜", demoMenus, "popUpSimpleTextWdgtMenu", closesUnpinnedPopUps: false, toolTip: "icons"
     menu.addMenuItem "vertical stack ➜", demoMenus, "popUpVerticalStackMenu", closesUnpinnedPopUps: false, toolTip: "icons"

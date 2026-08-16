@@ -152,6 +152,18 @@ to take the parameters it should have had. ⚠ It applies in reverse too: never 
 verb's own name — an arity-0 `createReferenceAndClose` menu action on a prompt class SHADOWS
 `Widget.createReferenceAndClose` on every instance of that class.
 
+⭐⭐ **AND THE SLOTS ARE NOT WHAT THEY LOOK LIKE: slot 2 is the ENCLOSING PANEL's target, not the
+row's own.** `MenuRowsPanelWdgt.createMenuItem` fills an ordinary (environment-free) row with slot 1 =
+**the `MenuItemWdgt` itself** and slot 2 = **the widget the enclosing menu was built about**; only a
+panel carrying an `environment` puts the panel target in slot 1 and that environment in slot 2. So a
+verb taking its SUBJECT from slot 2 — `MenusHelper.popUpDevToolsMenu`, and every pin setter (see
+`widget-authoring-guidelines.md`, "The pin-setter contract") — is right exactly when the menu it sits
+in was built *about* that subject, and silently receives something else everywhere else. Two
+consequences: a menu with subject-hungry rows must be built `target: <that subject>` (Widget's own
+"dev ➜" is the pattern), and a row cannot be copied into another menu without first checking what
+THAT panel's target is. ⚠ A row wired to a **different** receiver than the panel does not opt out of
+this — the receiver comes from the row, the two leading arguments still come from the panel.
+
 ### R4 — Option keys are the caller's vocabulary, not the field's name.
 
 An option key is named for what the **caller** means, and may be much shorter than the field

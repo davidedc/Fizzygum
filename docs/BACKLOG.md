@@ -152,31 +152,14 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
-### `plans/menu-subject-routing-plan.md` — AUTHORED, not started
-The two findings the menu-action arc left open, both the same question: **a verb wired to a menu needs
-to know which widget it is about, and the dispatcher does not reliably tell it.** Slot 2 of
-`ButtonWdgt`'s four-slot dispatch is the ENCLOSING PANEL's target, not the item's — right from a
-widget's context menu, wrong from anywhere else. Full diagnosis, three candidate shapes with a
-recommendation, and the acceptance test: that plan.
-- [ ] **P1 — "dev tools ➜ > inspect" and "> console" are dead** (live symptom, demo-menu + dev-mode only).
-      `DemoMenus.popUpSecondMenu` drops the widget its sibling `popUpFirstMenu` forwards.
-      ⚖ A design call, not a typo. **Acceptance test is ready-made:** delete the two
-      `UNRESOLVED_ACTION` entries from `menu-click-sweep-headless.js`'s `KNOWN` map and the sweep must
-      stay green — the deletion is part of the change, not a follow-up.
-- [ ] **P2 — the edit-mode family receives a `MenuItemWdgt` as `triggeringWidget`.** ⚠ LATENT, not
-      live: the only use is `@parent != triggeringWidget`, and neither a menu item nor `@` is ever
-      `@parent`, so today it changes nothing. Worth fixing because the guard is permanently disarmed
-      on the menu path and it is exactly the shape that made `createOpener` crash. Two `…FromMenu`
-      adapters on `Widget`. ⚠ Do NOT delete the parameter from the four overrides —
-      `editButtonPressedFromFrameBar` genuinely passes a widget.
-
 ### `archive/menu-action-wiring-plan.md` — CLOSED, residual included; SIX live bugs fixed
 Four found by reading (three `SliderWdgt` prompts that threw on every click; three demo "…launcher"
 items that crashed), two more found by the rig that closed the arc's own residual (every widget
 wearing a `BoxyAppearance` threw when its numerical-setters menu was built; `cornerRadiusPopout` read
 a field only `BoxWdgt` declares). Both halves are gated: `buildSystem/check-menu-actions.js` on the
 build, and `menu-click-sweep-headless.js` (`fg menusweep`) as a gauntlet wave-A leg. The two open
-findings moved to `plans/menu-subject-routing-plan.md` above.
+findings became `archive/menu-subject-routing-plan.md`, now CLOSED too (the two dead dev-tools items
+fixed, the latent `triggeringWidget` mis-feed given its adapters).
 - **Stated limits of the sweep, so nobody reads a green run as more than it is** (all printed every
   run, so a drift is visible rather than silent): it covers DISPATCH, not click plumbing (it fires the
   action directly — a real click tears the menu down under the walk; the suite covers the other side);
@@ -190,6 +173,37 @@ findings moved to `plans/menu-subject-routing-plan.md` above.
 - ⚠ **The gauntlet WIRING for this leg lives only in the local `fg`** (the umbrella is not a git repo),
   so the rig is committed but its enforcement is not — true of every `fg` leg, noted because "it is
   gated" holds on this machine only.
+- ⚠ **The sweep's DISTINCT count is coverage BREADTH, not a ratchet** — it moves in BOTH directions on
+  changes that lose no reach, because `Widget._attachToChosenParent` builds one menu row PER WIDGET
+  CURRENTLY IN THE WORLD. `menus walked` is the stable reach number; `--verbose` prints the pair set so
+  a move is diffed, not argued about. (Detail: `archive/menu-subject-routing-plan.md` §5.2.)
+
+### Menu-dispatch residue — left by `archive/menu-subject-routing-plan.md`, none of it live
+Ranked by value. All four are the same family: the four-slot dispatch tells a verb less than its
+signature claims. The law is `architecture/constructor-and-parameter-conventions.md` R3.
+- [ ] ⭐ **`widgetOpeningThePopUp` is a MISNOMER across the whole `popUp*Menu` family** (~15 methods in
+      `DemoMenus` / `MenusHelper` / `WorldWdgt`): slot 1 is the **`MenuItemWdgt`**, never the widget
+      that opened the pop-up. This is the defect class the conformance arc closed on — *a parameter
+      name can be the bug* — and it is the reason the dead dev-tools items stayed invisible. A RENAME,
+      not a deletion: the value is genuinely used (it becomes `MenuWdgt`'s first constructor argument),
+      so read what `MenuWdgt` does with it before picking the honest name, and do the family in ONE
+      commit.
+- [ ] **`BubblesEditModeToCoordinatorMixin`'s two cores end `super @`, but the base
+      `Widget._enable/_disableDragsDropsAndEditingNoSettle` declare no parameter** — an argument with
+      nowhere to land, the shape this arc's predecessor cleaned up elsewhere. ⚠ Not a glance-fix: the
+      mixin is injected onto classes whose `super` reaches `FrameWdgt`/`ScrollPanelWdgt` cores that DO
+      take `triggeringWidget`, so it needs the full super-site walk before the argument is dropped.
+- [ ] **`menusHelper.testMenuForMacros?()`** is called at `events-input/KeyupInputEvent.coffee:18` and
+      no such method appears to exist — the `?` makes it a silent no-op. Grep both repos, then
+      implement it or delete the call.
+- [ ] **The layout-audit prelude tags `Widget.prototype.disableDragsDropsAndEditing`, which the four
+      containers OVERRIDE**, so end-of-cycle records from a container's edit-mode toggle are never
+      attributed to it (`Fizzygum-tests/scripts/end-of-cycle-audit/layout-audit-prelude.js`).
+      Attribution only, not correctness.
+- [ ] **`fg classify` cannot recognise a list SCROLLED by N rows** — the commonest benign inspector
+      shape — so it returns REVIEW and the pixels have to be read by hand. Teaching
+      `Fizzygum-tests/scripts/classify-diff.js` that shape would make the advisory tool earn its keep
+      on exactly the churn it sees most.
 
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 Brought `src/` onto the constructor convention stated in

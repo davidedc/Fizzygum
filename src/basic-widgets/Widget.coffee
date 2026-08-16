@@ -568,9 +568,9 @@ class Widget extends TreeNode
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
       if !@dragsDropsAndEditingEnabled
-        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditing", toolTip: "lets you drag content in and out"
+        menu.addMenuItem "enable editing", @, "enableDragsDropsAndEditingFromMenu", toolTip: "lets you drag content in and out"
       else
-        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditing", toolTip: "prevents dragging content in and out"
+        menu.addMenuItem "disable editing", @, "disableDragsDropsAndEditingFromMenu", toolTip: "prevents dragging content in and out"
     menu.removeConsecutiveLines()
 
   # Widgets destroying ======
@@ -4487,6 +4487,23 @@ class Widget extends TreeNode
 
   # ---------------------------------------------------------------------
   # locking of contents
+
+  # THE MENU ADAPTERS for the "enable editing" / "disable editing" lock entries — the shape of
+  # createReferenceFromMenu above. ButtonWdgt dispatches a FIXED 4-slot convention
+  # (`@target[@action].call @target, dataSource, env, arg1, arg2`), so an item carrying no arguments
+  # of its own still arrives with WIDGETS in the leading slots. Here that matters because the four
+  # container overrides of these verbs (FrameWdgt, ScrollPanelWdgt, StretchablePanelWdgt,
+  # StretchableWidgetContainerWdgt) read slot 1 as `triggeringWidget` — the widget whose own toggle
+  # must not be echoed back at it (BubblesEditModeToCoordinatorMixin). A menu click has no such
+  # widget, which is exactly what those cores' `if !triggeringWidget? then triggeringWidget = @`
+  # fallback is for; taking NO parameter here is what lets the fallback fire.
+  # ⚠ Point the lock menu items at THESE, never at the verbs: the verb has the real parameter, and
+  # editButtonPressedFromFrameBar is a caller that genuinely supplies it.
+  enableDragsDropsAndEditingFromMenu: ->
+    @enableDragsDropsAndEditing()
+
+  disableDragsDropsAndEditingFromMenu: ->
+    @disableDragsDropsAndEditing()
 
   # SELF-SETTLE (single-mutation tier): unlock the contents settle-free, then flush ONCE (mirror of
   # disableDragsDropsAndEditing). Any entry point self-settles, so ordering vs world.add no longer matters;
