@@ -5,6 +5,9 @@ class AnalogClockWdgt extends Widget
   secondsHandAngle: 0
   strokeSizeToClockDimensionRatio: 1/250
   dateLastTicked: undefined
+  # tick with the world's cycle clock rather than my own: every clock on screen
+  # advances its second hand on the same frame
+  synchronisedStepping: undefined
   # my carrier-owned corner knob — the layoutSpec I hand my parent at add() time
   # (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)
   cornerSpec: undefined

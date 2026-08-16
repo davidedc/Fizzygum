@@ -230,6 +230,21 @@ This applies to constructor `@param` fields too. Adding a property to a class wh
 SystemTest inspects shifts that test's member list, which is a benign recapture — budget it, do not
 skip the declaration for it.
 
+**Declare it `: undefined`, and let the constructor supply the real value.** Two reasons, both of
+which bite silently:
+
+- **Never a mutable `[]` or `{}` at class level.** A prototype array is ONE array shared by every
+  instance of the class, so an `@queue.push` on one widget is visible from all of them. `: undefined`
+  plus a constructor (or lazy `if !@queue?`) build is the only safe shape for a container.
+- **A class-level default must not call another class.** `headerFillColor: Color.create 236,236,236`
+  runs at class-*definition* time, before `Color` has necessarily loaded, and the boot dependency
+  scanner only sees declaration-level `new X` edges — see
+  [`immutable-value-classes.md`](immutable-value-classes.md) §3. Build such values in the constructor.
+
+The declaration is also the field's **documented home**: if a field carries a trailing explanatory
+comment on its constructor assignment, move the text up to the declaration rather than keeping the
+same sentence in two places.
+
 ### 4.2 Declare what must not be serialized, and how it comes back
 
 **[convention; caught only by the production snapshot round-trip]** Anything derived — a compiled

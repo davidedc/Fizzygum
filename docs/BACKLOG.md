@@ -99,7 +99,7 @@ CLOSED 2026-08-12 — executed in full the day it was authored; residue in `arch
 - [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.
 - [ ] **FOUND BY P1's recapture, pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
 
-### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W4b DONE 2026-08-16, W4c next
+### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W4c DONE 2026-08-16, W5 next
 Acts on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes);
 target state is `architecture/widget-authoring-guidelines.md`. Ordered by (defect severity x safety);
 four phases are owner-gated. Plan §9 holds the six decisions (D1 and D2 now DECIDED and executed);
@@ -158,13 +158,30 @@ lists, not from how many classes inherit the field.
       ambiguity P9 exists to remove. `callback` (2) fell below the threshold that picked the rest.
       ⚠ §2.4's counts were re-derived at W0: F9 is **51 classes / 120 fields**, not 52/124 (the
       prompt-family conversion `6c5e616f` removed `ErrorsLogViewerWdgt` and `CodePromptWdgt.msg`).
-- [ ] **W4c — the remainder: 20 classes / 72 fields.** `SimpleSpreadsheetWdgt` 16, `WorldWdgt` 16,
-      `CellWdgt` 7, `FrameWdgt` 6, `FridgeMagnetsWdgt` + `SheetHeaderCellWdgt` 4 each, and a tail
-      that includes `WidgetHolderWithCaptionWdgt.labelContent` and the two `callback` writers.
-      ⚠ Do `WorldWdgt` **alone and first**: declaring world state changes what the `resetWorld`
-      completeness ratchet fingerprints. ⚠ Every addition must still be checked against the
-      mixin-clobber trap (plan §3.4) — no mixin declared any of W4a/W4b's fields, but that is a
-      per-field fact, not a general one.
+- [x] **W4c — the remainder.** ✅ **DONE 2026-08-16**, in three gated batches; the §7 scanner goes
+      20 classes / 72 fields → **9 / 11**. Batch 1 `WorldWdgt` alone (16); batch 2 nine classes (44);
+      batch 3 `AnalogClockWdgt` alone, the one item whose recapture was predicted — **1 test / 4
+      refs**, and the pixels are the rule working: 554 pixels, ONE transition, `0,0,180`→`0,180,0`,
+      a single 11px row. The row moves COLOUR not POSITION because `_filterProperties`'
+      `!showingInherited` filter passes the field both before and after (undeclared = "stitched on,
+      in no class"; declared = "own property of the immediate prototype"). A declaration can only
+      ADD a row where the field was in neither category — i.e. on a CLASS inspector.
+      ⭐ **`WorldWdgt` could not disturb the `RESETWORLD_INCOMPLETE` ratchet, and the reason is
+      structural:** the ratchet's fingerprint sweeps own properties AND the prototype chain, reading
+      each name as its EFFECTIVE value — *own-ness is not state, the value is*, as its own comment
+      puts it. All 16 are constructor/boot-assigned, so each is already an own property when the
+      pristine fingerprint is taken; a declaration underneath one changes no value and adds no name.
+      ⭐ **The mixin-clobber check is inherent to the scanner** — it unions the chain's declarations
+      with every mixin's before reporting, so a reported field is by construction un-donated. (Run
+      explicitly for `WorldWdgt` anyway; agreed.)
+      ⭐⭐ **W4c has a FLOOR, not a zero — W9's gate must be set to 9 classes / 11 fields**, every one
+      the `target`/`callback` pair parked on connector P9. ⚠ `callback` was re-examined and left WITH
+      `target`: D2 dropped it from the repeated-field table for being below the ≥3 threshold, which
+      says it is not a shared-*placement* question, not that it is exempt. Both classes use it as the
+      ACTION half of the pair (`@target[@callback].call @target, …`), and
+      `IconicDesktopSystemWindowedAppLauncherWdgt`'s own comment already treats the two as one
+      ("undefined means `@target`/`@callback` are live"). Declaring half a pair P9 will rename whole
+      is worse than leaving it. Reversible in one commit if the owner disagrees.
 - [ ] **W5 — the `_reLayout` prologue is copy-pasted verbatim in 23 classes (§2.5).** `PatchNodeWdgt`
       already has the hook the others want (`_layOutNodeContents`). Zero recapture budget: a diff here
       means the hook landed in the wrong place, never a new baseline.

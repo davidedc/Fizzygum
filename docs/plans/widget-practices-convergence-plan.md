@@ -640,6 +640,15 @@ for k, p in pat.items():
   the hand"), which is broader than `destroyed`. So W2's `PopUpWdgt` half still fixes a latent tier
   violation rather than a visible leak — but **the pruning is NOT redundant with it and must not be
   deleted**: a pop-up can leave the tree without dying, and nothing else notices.
+- **⚠⚠ When you diff a dumped failure by hand, match the reference's `systemInfoHash` and assert
+  exactly ONE match** (measured 2026-08-16, W4c batch 3). `.scratch/<test>/dpr1/` **persists across
+  sessions**, so it can hold several dumps of the same `image_N` under different `systemInfoHash`
+  values; a `readdirSync().find(x => x.includes('_image_1-'))` picks whichever sorts first, which
+  may be a stale artifact from another run. Doing exactly that turned a 554-pixel, single-row,
+  one-transition colour flip into an apparent **19,253-pixel, 56-transition, whole-pane** diff and
+  nearly triggered a revert of a correct change. Filter on the reference's own hash, and throw if
+  the match count is not 1 — a hand-rolled comparison that silently compares the wrong pair is
+  worse than no comparison. (The suite itself is immune: it matches on the raw-pixel `dataHash`.)
 - **Never recapture your way past a diff** in a zero-budget phase.
 
 ---
@@ -825,7 +834,60 @@ proposes.
   not pixel-free for inspector tests" — is **backwards for a pull-up**, and should be read as: adding
   to a class some test INSPECTS is not pixel-free. Predict recapture from *which class a test opens*,
   not from how many classes inherit the field.
-- W4c field declarations: ☐
+- **W4c · CONVERGED — 2026-08-16.** The scanner goes 20 classes / 72 fields → 19 / 56 → 10 / 12 →
+  **9 / 11**, in three gated batches. Every field `: undefined`, no mutable `[]`/`{}` anywhere.
+  ⭐ **The mixin-clobber pre-check is INHERENT to the §7 scanner and need not be run separately:**
+  the scanner unions the whole chain's declarations *with every mixin's* before reporting a field
+  as undeclared, so a field it reports is by construction donated by no mixin. (It was still run
+  explicitly for `WorldWdgt`, and agreed.)
+  - *Batch 1 — `WorldWdgt` alone, 16 fields, 0 recaptures.* Done first and alone because it is the
+    one class whose declarations could disturb the `RESETWORLD_INCOMPLETE` ratchet. **They cannot,
+    and the reason is structural:** `WorldTestSupport._fingerprintWorldStateNoSettle` sweeps own
+    properties AND the whole prototype chain, and reads each name as its EFFECTIVE value rather
+    than as "does the world own it" — its own comment says *own-ness is not state, the value is*.
+    All sixteen are assigned in the constructor or during boot, so each is already an own property
+    when the pristine fingerprint is taken at the end of the first `resetWorld`; a prototype
+    declaration underneath an own property changes no value, adds no name and shifts no summary.
+    The harness's `WorldTestSupport`, which copies members onto this prototype at boot, declares
+    none of the sixteen either. Placed by family (render-canvas pair, island buffer cache, the
+    hidden keyboard input element, the pointer/caret/edit state, the four shipped collaborators
+    plus the two optional ones, `isDevMode` beside `isIndexPage`), not in one block.
+  - *Batch 2 — nine classes, 44 fields, 0 recaptures.* `SimpleSpreadsheetWdgt` 16, `CellWdgt` 7,
+    `FrameWdgt` 6, `SheetHeaderCellWdgt` 4, `FridgeMagnetsWdgt` 4, `PlotWithAxesWdgt` 3,
+    `SpeechBubbleWdgt` 2, `ToolTipWdgt` 1, `WidgetHolderWithCaptionWdgt` 1. Two classes documented
+    each field with a trailing comment on its constructor assignment (`CellWdgt`,
+    `SheetHeaderCellWdgt`); those descriptions moved up to the declarations, since the declaration
+    is the field's documented home and the same sentence should not sit in two places.
+    ⭐ `SimpleSpreadsheetWdgt`'s seven colours MUST stay `: undefined` and be built in the
+    constructor — a class-level `Color.create` would run at class-definition time, before `Color`
+    loads. The constructor already carried that warning; the declaration now repeats it where
+    someone tempted to add a "real" default will read it. Same for `PlotWithAxesWdgt.plot` and
+    `WidgetHolderWithCaptionWdgt.labelContent`, which are constructor `@param`s: the declaration is
+    documentation, never a default, because a `@param` assigns unconditionally (landmine §8).
+  - *Batch 3 — `AnalogClockWdgt.synchronisedStepping` alone, kept separate because its recapture was
+    PREDICTED rather than hoped to be zero.* **1 test / 4 references** (`fg recapture --auto`:
+    ✅ RECAPTURE COMPLETE, suite green at dpr 1 and 2), and the pixels are exactly what §2.4's
+    premise says they should be: **554 changed pixels over the two shots, ONE transition family,
+    `0,0,180` → `0,180,0`, confined to a single 11px row of the member list** (the `0,0,97` and
+    `0,0,162` pairs are that same text's anti-aliased edges). `image_0` matched and was left alone.
+    ⭐ The row moves COLOUR and not POSITION, and `_filterProperties` says why: its
+    `!showingInherited` filter is `prototype.hasOwnProperty(prop) or (prop not of prototype)`, so
+    the field passes BOTH before (let through as "stitched on, in no class") and after (let through
+    as "own property of the immediate prototype"). A declaration can only ADD a row where the field
+    was in neither category — i.e. on a CLASS inspector (W4a's `faceWidget`).
+  ⭐⭐ **W4c has a FLOOR, not a zero, and W9 must be set to it: 9 classes / 11 fields, every one of
+  them the `target`/`callback` pair, parked on the connector arc's P9 by D2.** `BinOpenerWdgt`,
+  `ConsoleWdgt`, `PointerWdgt`, the four `IconicDesktopSystem*Shortcut` classes (`target` each),
+  plus `CodePromptWdgt` and `IconicDesktopSystemWindowedAppLauncherWdgt` (`target` + `callback`).
+  ⚠ **`callback` was re-examined and deliberately LEFT with `target`,** though D2 dropped it from
+  the repeated-field table for being below the ≥3 threshold — which is a statement that it is not a
+  shared-*placement* question, not that it is exempt from declaration. Both classes use it as the
+  ACTION half of the pair, at one call-site shape (`@target[@callback].call @target, …`), and
+  `IconicDesktopSystemWindowedAppLauncherWdgt`'s existing `appClassName` comment already treats the
+  two as one thing ("undefined means `@target`/`@callback` are live"). Declaring half a pair that
+  P9 will rename whole is worse than leaving it. (P9's text covers `@target` only — `callback`
+  appears nowhere in `connector-ubiquity-and-reflection-plan.md` — so this is a coherence
+  judgement, not a blocking dependency. Reversible in one commit if the owner prefers.)
 - W5 `_reLayout` template: ☐
 - W6a widen setters / W6b guards (D3): ☐ ☐
 - W7 self-description (D4): ☐
