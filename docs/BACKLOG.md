@@ -152,17 +152,20 @@ Open MECHANISM question left by the SWCanvas one-rect-fill campaign (that campai
 `✅ EXECUTED IN FULL`; SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`).
 - [ ] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted, and removing SWCanvas's `fillRoundRect` direct fill arm made it appear.** Owner-confirmed which render is correct and the two references (`macroSliderTextSliderPatchCycle`, `macroSliderTextTwoWayPatchCycle`) were re-baselined to it, so the SYMPTOM is fixed and invisible in the current tree — reproducing needs the pre-B2 engine vendored (plan §3 Step 1). ⚠ The missing paint is a `fillRect` into a back buffer while the trigger commit changed `fillRoundRect`, so the mechanism is INDIRECT: five direct-rasterization explanations (off-surface throws, dropped fills clipped and unclipped, style side effects, path clobbering) are probed and FALSIFIED in the plan's §4 — do not re-run them. Ranked hypotheses start at a directly-assigned field that marks nothing dirty (invalidation is private by design) and damage-driven repaint. Worth doing because "a specified fill that silently does not paint" can hide anywhere.
 
-### `archive/menu-action-wiring-plan.md` — CLOSED; ONE residual, and it is a TEST-INFRA gap
-Fixed four live menu-wiring bugs (three `SliderWdgt` prompts that threw on every click; three demo
-"…launcher" items that crashed) and gated the two scannable shapes with
-`buildSystem/check-menu-actions.js`.
-- [ ] **A `menu-click-sweep` rig — open every menu, click every item, fail on a throw or console error.**
-      ⚠ This is the arc's stated residual, not a nice-to-have: the gate's rule 3 would NOT have caught
-      the crash class. `createOpener`'s parameter WAS read — it was read as the wrong THING (a
-      `MenuItemWdgt` asked for its `.contents`), which no text scan can see. Both crash-class bugs lived
-      in menus nothing exercises; `ButtonWdgt` even carries a runtime tripwire for one of them that had
-      been firing for nobody. Natural sibling of the gauntlet's `apps` / `parts` legs (wave A).
-      ⚠ Expect it to find more: it is the first thing that would ever have clicked these items.
+### `archive/menu-action-wiring-plan.md` — CLOSED, residual included; SIX live bugs fixed
+Four found by reading (three `SliderWdgt` prompts that threw on every click; three demo "…launcher"
+items that crashed), two more found by the rig that closed the arc's own residual (every widget
+wearing a `BoxyAppearance` threw when its numerical-setters menu was built; `cornerRadiusPopout` read
+a field only `BoxWdgt` declares). Both halves are now gated: `buildSystem/check-menu-actions.js` on
+the build, and `menu-click-sweep-headless.js` (`fg menusweep`) as a gauntlet wave-A leg.
+- [ ] **"dev tools ➜ > inspect" and "> console" target `demoMenus` instead of a widget.**
+      `DemoMenus.popUpSecondMenu` takes only `(widgetOpeningThePopUp)` where its sibling
+      `popUpFirstMenu` also takes `widgetThisMenuIsAbout`, so the Dev Tools menu it opens has no
+      widget to act on and both items are dead. Demo-menu-only, dev-mode-only. ⚠ The fix is a small
+      DESIGN call, not a typo: `popUpDevToolsMenu` reads its subject from dispatcher slot 2, which is
+      the ENCLOSING PANEL's target — right when opened from a widget's context menu, wrong from a demo
+      menu. Either give that menu the widget as its panel target, or give the verb an explicit
+      operand. Recorded in the rig's `KNOWN` allowlist, so it stays visible and cannot silently grow.
 
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
 Brought `src/` onto the constructor convention stated in

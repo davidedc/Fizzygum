@@ -1,10 +1,12 @@
-# Menu-action wiring — the four-slot convention, and the four live bugs it hid
+# Menu-action wiring — the four-slot convention, and the six live bugs it hid
 
 > **ARCHIVED 2026-08-16 — COMPLETE, authored and executed the same day.** A short successor to
 > [`constructor-parameter-conformance-plan.md`](constructor-parameter-conformance-plan.md), which
 > closed with the observation that ONE menu item had shaped six `createReference` signatures. This
 > arc asked the obvious next question — *how many other verbs are wired straight at a menu?* — and
-> found four live user-facing bugs. The standing mechanism is `buildSystem/check-menu-actions.js`;
+> found SIX live user-facing bugs: four by reading, then two more from the rig built to close its own
+> residual. The standing mechanisms are `buildSystem/check-menu-actions.js` (static, on the build)
+> and `Fizzygum-tests/scripts/menu-click-sweep-headless.js` (runtime, a gauntlet leg);
 > the law it serves is
 > [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md).
 
@@ -32,7 +34,7 @@ drives menus heavily, but it does not click **every** item, and the ones it neve
 where these lived. `ButtonWdgt` even carries a runtime tripwire for the worst case — which had been
 firing for nobody, because nothing clicked the items that would trip it.
 
-## 1. The four live bugs
+## 1. The first four, found by reading
 
 **B1 — `SliderWdgt`'s three range prompts threw on every click.** `"floor..."`, `"ceiling..."` and
 `"button size..."` passed a **function literal** as the action. The dispatch is `@target[@action]`,
@@ -101,18 +103,60 @@ arc: *a gate blind to a method reports nothing*).
 each abort the real build (exit 1), and both return green on revert. 255 menu-dispatched verbs, 0
 violations.
 
-## 4. ⚠ The residual — what this gate CANNOT catch
+## 4. The residual — CLOSED by a rig, which then found two more bugs
 
 **Rule 3 would not have caught B2.** `createOpener`'s `inWhichFolder` *was* read; it was read as the
 wrong THING. No text scan can see that a parameter holding a `MenuItemWdgt` is being asked for its
-`.contents`. The mechanism that catches that class is **a rig that CLICKS every menu item** — the
-demo menus in particular, which nothing exercises today and which is where both crash-class bugs
-lived.
+`.contents`. So the arc's stated residual was a rig that CLICKS — and it exists now:
+**`Fizzygum-tests/scripts/menu-click-sweep-headless.js`** (`fg menusweep`, `npm run menu-sweep`,
+and a gauntlet wave-A leg).
 
-→ **BACKLOG**: a `menu-click-sweep` rig (open each menu, click each item, fail on a throw or a
-console error). It is the natural sibling of `apps` and `parts` in the gauntlet's wave A. Not built
-here because it is a test-infrastructure arc rather than a wiring one, and because the two known
-crashes are now fixed and gated at the shapes that a scan *can* see.
+It fires every reachable menu action and fails on a throw. **519 distinct (receiver class, action)
+pairs**, which is the coverage number that means something — "menus walked" is inflated because the
+same demo tree hangs off every widget's context menu.
+
+⚠ **It dispatches the action directly rather than calling `mouseClickLeft`**, because a real click
+also tears the menu down (`cleanupMenuWdgts`) under the walk. It therefore covers DISPATCH, which is
+where both known bug classes live, and not click PLUMBING, which the SystemTest suite already covers.
+
+**Proven to FAIL:** re-planting B2 makes it red with the full menu path
+(`RectangleWdgt > test menu ➜ > others 2 ➜ > shortcuts & scripts ➜ > document launcher`); reverting
+returns it green.
+
+### What it found on its first run
+
+**B5 — every widget wearing a `BoxyAppearance` threw when its numerical-setters menu was built.**
+`Widget.addShapeSpecificNumericalSetters` delegates to the appearance, and
+`BoxyAppearance.addShapeSpecificNumericalSetters` ended with
+`@deduplicateSettersAndSortByMenuEntryString` — **a `Widget` method, on an `Appearance`**. It is also
+redundant: the only caller dedupes what the appearance returns. So the appearance now returns the
+pair. Reached from Box, Frame, Document, Slide, Image, MenuRowsPanel, GlassBoxBottom — ~25 sweep hits.
+
+**B6 — `cornerRadiusPopout` read `@widget.cornerRadius` raw.** Only `BoxWdgt` declares that field
+(and sets it in its constructor); the appearance is worn by widgets that never do, so the item threw
+for a frame or a folder window. It now goes through `getCornerRadius()`, the appearance's own getter,
+which already owned the absent case (`else return 4`).
+
+### ⚠ A rig that mutates the world can manufacture its own bugs
+
+`make pointer` looked like a third find — `Cannot read properties of undefined (reading 'removeChild')`.
+Re-run in ISOLATION it does not throw: an earlier item in the same walk had detached the receiver.
+**A sweep that fires hundreds of actions at one widget will destroy and detach it along the way, and
+everything after that fails for reasons that have nothing to do with wiring.** The rig now re-attaches
+a detached-but-alive receiver (skipping instead cost 73% of its reach, because the submenus that row
+would have opened go unwalked too) and skips a destroyed one out loud. **Always re-run a sweep finding
+in isolation before believing it.**
+
+### Still open, recorded in the rig's own allowlist
+
+`KNOWN` is the `check-dead-methods.js` idiom: each entry is a stated decision with a reason, and
+anything unlisted fails the run. Two entries are genuinely correct behaviour (the dev menu has an
+item whose whole job is to throw; "deserialize from memory" is a precondition, not wiring). Two are
+open findings: **"dev tools ➜ > inspect" and "> console" target `demoMenus` instead of a widget**,
+because `popUpSecondMenu` takes only `(widgetOpeningThePopUp)` where its sibling `popUpFirstMenu`
+also takes `widgetThisMenuIsAbout`. Demo-menu-only, and the fix is a small design call on
+`popUpDevToolsMenu`'s contract (it reads its subject from dispatcher slot 2, which is the enclosing
+panel's target — correct from a widget's context menu, wrong from a demo menu). → BACKLOG.
 
 ## 5. Verification
 

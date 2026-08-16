@@ -83,8 +83,11 @@ class BoxyAppearance extends Appearance
     context.strokeRoundRect 0.5, 0.5, @widget.width() - 1, @widget.height() - 1, @getCornerRadius()
 
   cornerRadiusPopout: (menuItem)->
+    # ⚠ through the GETTER, which owns the absent case: this appearance is worn by widgets that
+    # never declare a cornerRadius of their own (a frame, a folder window), and reading the field
+    # raw threw on every click of this item for those.
     @widget.prompt menuItem.parent.title + "\ncorner\nradius:", @widget, "setCornerRadius",
-      defaultContents: @widget.cornerRadius.toString()
+      defaultContents: @getCornerRadius().toString()
       floorNum: 0
       ceilingNum: 100
       isRounded: true
@@ -101,4 +104,7 @@ class BoxyAppearance extends Appearance
       functionNamesStrings = []
     menuEntriesStrings.push "corner radius"
     functionNamesStrings.push "setCornerRadius"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+    # ⚠ Return the PAIR and stop there. An appearance is not a Widget, so it does not have
+    # deduplicateSettersAndSortByMenuEntryString — calling it here threw for every widget wearing this
+    # appearance. Widget.addShapeSpecificNumericalSetters, the only caller, dedupes what we return.
+    [menuEntriesStrings, functionNamesStrings]
