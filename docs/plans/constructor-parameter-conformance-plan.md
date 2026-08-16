@@ -573,7 +573,7 @@ included.
 | `setPattern` | 2 | verb + **`setPatternFromMenu`** |
 | `makeFolder` | 1 | verb + **`makeFolderFromMenu`** |
 | `_fromCatalogEntry` | 1 | `(appClassName, opts = {})` |
-| `add` | 1 | ⛔ **NOT DONE — owner-gated**, see below |
+| `add` | 1 | deferred out of P6 into its own phase — **P7**, §7b |
 
 ⭐⭐ **They were all the same bug, and it was never in the methods.** `ButtonWdgt.coffee:118`
 dispatches every menu/button action as
@@ -964,7 +964,7 @@ has never been seen to fail is not known to work.
 
 **Where each half belongs — neither is a gauntlet leg:**
 
-1. ⛔ **NOT DONE — the CHECK half → `buildSystem/`, replacing the `positional-hole` regex.** Ratchets live in
+1. ✅ **DONE — the CHECK half → `buildSystem/check-argument-holes.js`.** Ratchets live in
    `buildSystem/check-*.js` and run *on the build* — which is once per gauntlet, in the preamble,
    alongside `[stinks]` / `[dead-methods]` / `[unresolved-sends]` / `[thin-wraps]` /
    `[call-separation]`. A paren-aware "non-final bare `undefined` argument" check belongs exactly
