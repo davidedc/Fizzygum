@@ -664,7 +664,7 @@ class InspectorWdgt extends Widget
     @target.injectProperty propertyName, txt
 
 
-  addProperty: (ignoringThis, widgetWithProperty) ->
+  addProperty: (ignored, widgetWithProperty) ->
     prop = widgetWithProperty.text.text
     if prop?
       if prop.getValue?
@@ -694,7 +694,7 @@ class InspectorWdgt extends Widget
   _applyPropertyRename: (oldName, newName) ->
     @target.renameOwnProperty oldName, newName
 
-  renameProperty: (ignoringThis, widgetWithProperty) ->
+  renameProperty: (ignored, widgetWithProperty) ->
     propertyName = @list.selected.labelString
     prop = widgetWithProperty.text.text
     if prop.getValue?

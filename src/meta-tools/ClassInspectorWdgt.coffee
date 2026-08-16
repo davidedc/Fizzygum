@@ -62,7 +62,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # can receive the new member either on itself or on one of its mixins (a member
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
-  addProperty: (ignoringThis, widgetWithProperty) ->
+  addProperty: (ignored, widgetWithProperty) ->
     augmentations = @target.constructor.class?.augmentedWith
     if !augmentations? or augmentations.length is 0
       super

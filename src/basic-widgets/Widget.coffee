@@ -5209,13 +5209,17 @@ class Widget extends TreeNode
   # NOTE the overriders keep a two-line `_reLayout` that delegates here rather than dropping the
   # override: `implementsDeferredLayout` is literally `@_reLayout != Widget::_reLayout`, and four
   # call sites read it to decide whether a widget settles itself.
+  #
+  # There is deliberately NO trailing @_markLayoutAsFixed() -- the base pass above already marks, and
+  # its own tail (_reLayoutCornerInternalChildren) does not re-invalidate the widget it was called on.
+  # All sixteen copies of this shape carried that extra mark; it was measured redundant when they were
+  # folded together (suite green AND the settle re-visit profile still empty -- no added iterations).
   _reLayoutWithOwnContents: (newBoundsForThisLayout) ->
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
     if @_handleCollapsedStateShouldWeReturn() then return
     @_applyGrantedBounds newBoundsForThisLayout
     @_repaintAsOneUnit => @_layOutOwnContents()
     Widget::_reLayout.call @, newBoundsForThisLayout
-    @_markLayoutAsFixed()
 
   # Place my own contents against my CURRENT frame (already committed by the caller above, so
   # @width()/@height()/@topLeft() read the frame this layout grants me). A widget with no contents

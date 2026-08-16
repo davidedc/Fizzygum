@@ -19,6 +19,10 @@
 // tripwire for it, but a runtime tripwire only fires when something CLICKS, and nothing in the suite
 // clicks a slider's "floor..." — three such items sat broken behind that tripwire. A build-time
 // check needs no one to click.
+// RULE 1 has TWO doors, because there are two ways into that slot. Besides addMenuItem/prependMenuItem,
+// `prompt` / `textPrompt` take a `callback` that PromptWdgt hands to a menu item verbatim
+// (`panel.addMenuItem "Ok", @target, @callback`) — the same slot, one hop later, so the same proof
+// applies and the callbacks count as menu-dispatched verbs for RULE 3 as well.
 //
 // ── RULE 2 (HARD, sound) — the options bag is an object.
 // A string literal where `opts` goes is provably wrong for the same reason: `opts.toolTip` on a
@@ -98,6 +102,34 @@ function joinContinuation(lines, i) {
 for (const p of files) {
   const rel = path.relative(SRC, p);
   const allLines = fs.readFileSync(p, 'utf8').split('\n');
+  // ---- RULE 1, second door: prompt / textPrompt -------------------------------------------
+  // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — it hands it
+  // straight to a menu item (`PromptWdgt._buildButtonRow`: `panel.addMenuItem "Ok", @target, @callback`),
+  // so the callback slot IS an action slot and a function literal there is wrong for exactly the same
+  // reason, one hop later. Same proof, same severity, so it lives here rather than in its own gate.
+  // ⓘ Deliberately NOT the stricter "the 3rd argument must be a string LITERAL": that would flag a
+  // variable holding a method name, which is legitimate and which RULE 1 already tolerates for
+  // addMenuItem. Keeping both doors to the same standard is what keeps this gate a sound negative.
+  allLines.forEach((raw, i) => {
+    // keyed on the RECEIVER (`@prompt …` / `@element.prompt …`), which is what tells a CALL apart
+    // from the definition `prompt: (msg, target, callback, opts = {}) ->`. ⚠ An earlier spelling
+    // keyed on the first ARGUMENT instead and matched only quoted/`@` first args, so it silently
+    // missed every real site — all of which open with an expression (`menuItem.parent.title + …`).
+    if (!/[@.](?:textPrompt|prompt)\s+\S/.test(stripComment(raw))) return;
+    const m = /[@.](?:textPrompt|prompt)\s+(.*)$/.exec(joinContinuation(allLines, i));
+    if (!m) return;
+    const parts = splitTopLevel(m[1]);
+    if (parts.length < 3) return;
+    const cb = parts[2].trim();
+    if (/^\(?\s*(?:\(|->|=>)/.test(cb)) {
+      hard.push({ rel, line: i + 1, rule: 1, text: raw.trim(),
+        why: 'a FUNCTION LITERAL in the prompt CALLBACK slot — it is handed to `addMenuItem "Ok", @target, @callback`, so dispatch is `@target[@callback]` and this throws on Ok' });
+      return;
+    }
+    // a prompt callback is a menu-dispatched verb like any other: let RULE 3 see it too
+    const nm = /^["']([A-Za-z_]\w*)["']$/.exec(cb);
+    if (nm) actionNames.add(nm[1]);
+  });
   allLines.forEach((raw, i) => {
     if (!/\b(?:add|prepend)MenuItem\b/.test(stripComment(raw))) return;
     const line = joinContinuation(allLines, i);

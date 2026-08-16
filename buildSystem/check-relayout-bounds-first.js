@@ -34,10 +34,11 @@
 // The hazard the template introduces instead is a class that overrides `_layOutOwnContents` but does
 // NOT route through the template, so nothing applies its bounds first: a `_layOutOwnContents` that
 // reads own geometry in a file whose own `_reLayout` does not delegate is a violation.
-// ⚠ KNOWN BLIND SPOT: this is a line scanner with no class graph, so a file that defines the hook and
-// no `_reLayout` at all (it INHERITS a delegating one -- the three PatchNodeWdgt subclasses) cannot be
-// told apart from one that inherits a non-delegating one, and passes. The base's delegation is what
-// makes that safe in the tree today.
+// A file defining the hook and NO `_reLayout` of its own (the three PatchNodeWdgt subclasses) is
+// RESOLVED, not trusted: the scanner reads every `class X extends Y` line first, then walks up to the
+// nearest ancestor that actually defines `_reLayout` and asks whether THAT one delegates. Reaching
+// Widget without finding one means the base pass runs and the hook is never called at all -- dead
+// code, and a violation too.
 //
 // EXEMPTION: a `# relayout-bounds-first-exempt: <reason>` marker (non-empty reason) in the comment block
 // directly above the `_reLayout` header. The base `Widget::_reLayout` (the applier itself) is skipped.
@@ -72,19 +73,46 @@ function walk(dir, acc) {
 }
 function stripComment(line) { const i = line.indexOf('#'); return i < 0 ? line : line.slice(0, i); }
 
-const violations = [];
-let checked = 0, exempt = 0, trivial = 0, template = 0;
+// PASS 1 — parse every file once, so the hook rule below can resolve an INHERITED `_reLayout`
+// instead of assuming one. (Without this the three PatchNodeWdgt subclasses — which define the hook
+// and no `_reLayout` — would be waved through on trust.)
+const FILES = [];
+const byClass = new Map();
 for (const p of walk(SRC, [])) {
-  const cls = path.basename(p, '.coffee');
-  if (cls === 'Widget') continue;                           // the base _reLayout IS the applier
   const lines = fs.readFileSync(p, 'utf8').split('\n');
   const heads = [];
   lines.forEach((l, i) => { const m = HEADER.exec(l); if (m) heads.push({ name: m[1], i }); });
   const bodyEnd = (k) => (k + 1 < heads.length ? heads[k + 1].i : lines.length);
-  // does this file's OWN _reLayout hand the shape to the own-contents template?
-  const delegatesToTemplate = heads.some((h, k) =>
-    h.name === '_reLayout' &&
-    lines.slice(h.i + 1, bodyEnd(k)).some((l) => DELEGATES.test(stripComment(l))));
+  const decl = /^class\s+(\w+)(?:\s+extends\s+(\w+))?/m.exec(lines.join('\n'));
+  const rec = {
+    p, lines, heads, bodyEnd,
+    cls: decl ? decl[1] : path.basename(p, '.coffee'),
+    parent: decl ? decl[2] : undefined,
+    hasOwnReLayout: heads.some((h) => h.name === '_reLayout'),
+    delegatesToTemplate: heads.some((h, k) =>
+      h.name === '_reLayout' &&
+      lines.slice(h.i + 1, bodyEnd(k)).some((l) => DELEGATES.test(stripComment(l)))),
+  };
+  FILES.push(rec);
+  byClass.set(rec.cls, rec);
+}
+// The nearest ancestor that actually defines `_reLayout` decides: does the shape I am a hook for
+// route through the template? Reaching Widget without one means the base runs and never calls the
+// hook at all — the hook is dead code, which is also worth failing on.
+function reachesTemplate(rec) {
+  for (let c = rec.parent, guard = 0; c && guard < 40; c = byClass.get(c)?.parent, guard++) {
+    const a = byClass.get(c);
+    if (!a) return false;
+    if (a.hasOwnReLayout) return a.delegatesToTemplate;
+  }
+  return false;
+}
+
+const violations = [];
+let checked = 0, exempt = 0, trivial = 0, template = 0;
+for (const rec of FILES) {
+  const { p, lines, heads, bodyEnd, cls, delegatesToTemplate } = rec;
+  if (cls === 'Widget') continue;                           // the base _reLayout IS the applier
   for (let k = 0; k < heads.length; k++) {
     if (heads[k].name !== '_reLayout' && heads[k].name !== HOOK) continue;
     const head = heads[k];
@@ -94,8 +122,8 @@ for (const p of walk(SRC, [])) {
       if (delegatesToTemplate) continue;
       const geomAt = lines.slice(head.i + 1, bodyEnd(k)).findIndex((l) => GEOM.test(stripComment(l)));
       if (geomAt === -1) continue;                            // reads no own geometry -> nothing to lag
-      // no _reLayout in this file at all: it inherits one, which this scanner cannot follow (see header)
-      if (!heads.some((h) => h.name === '_reLayout')) continue;
+      // no _reLayout of my own: RESOLVE the inherited one rather than trusting it
+      if (!rec.hasOwnReLayout && reachesTemplate(rec)) { template++; continue; }
       const g = head.i + 1 + geomAt;
       violations.push({ cls, file: path.relative(SRC, p), method: HOOK, line: head.i + 1, geomLine: g + 1, geom: lines[g].trim() });
       continue;

@@ -99,7 +99,7 @@ CLOSED 2026-08-12 — executed in full the day it was authored; residue in `arch
 - [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.
 - [ ] **FOUND BY P1's recapture, pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
 
-### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W5 DONE 2026-08-16, W6/W7 next (both owner-gated)
+### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W5 + W9 DONE 2026-08-16; only W6/W7 (owner-gated) and the W10 closeout remain
 Acts on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes);
 target state is `architecture/widget-authoring-guidelines.md`. Ordered by (defect severity x safety);
 four phases are owner-gated. Plan §9 holds the six decisions (D1 and D2 now DECIDED and executed);
@@ -211,11 +211,19 @@ lists, not from how many classes inherit the field.
       declarations renamed, 2 base declarations + 2 copy lines deleted); `grep iconToolTipMessage src`
       is empty. ⓘ `CreatorButtonWdgt extends Widget`, not `ButtonWdgt` — which is why it carried a
       shadow at all, and why a `Widget`-level declaration is what retires it. **Nothing left here.**
-- [ ] **W9 — give the surviving conventions a mechanism (§5).** One HARD GATE that is a sound negative
-      (`check-menu-actions.js`: a function literal in an action slot, a string literal where `opts` goes),
-      one advisory `census-widget-conformance.js` that re-derives the survey's mechanical facets on
-      demand, and a ratchet on its two most objective counts. ⚠ Deliberately NOT gated: `colloquialName`
-      coverage, `super`-in-menu-overrides, setter shapes — each has a legitimate exception today.
+- [x] **W9 — give the surviving conventions a mechanism (§5).** ✅ **DONE 2026-08-16.** The hard gate
+      already existed (`check-menu-actions.js`, from the menu-action wiring arc); what W9 added is its
+      **`prompt`/`textPrompt` door** — those callbacks reach a menu item verbatim, so the same soundness
+      proof applies. That door also made them visible to the RULE 3 ratchet (coverage 255 → **269**
+      verbs) and immediately found three skipped slots named `ignoringThis` instead of the house
+      `ignored`. New **`census-widget-conformance.js`**: six facets, advisory + `--json`, with a
+      `--gate` ratchet on the two objective ones wired into the build. ⚠⚠ **Both baselines are FLOORS**
+      — 9 classes/11 fields and 8 prologue copies, each occurrence a stated decision. Mixin-awareness
+      and both ratchets are proven by plant tests, not asserted. ⚠ Deliberately NOT gated:
+      `colloquialName` coverage, `super`-in-menu-overrides, setter shapes — each has a legitimate
+      exception today. Also closed W5's three residue items (redundant `_markLayoutAsFixed` deleted
+      after measuring; `check-relayout-bounds-first.js` now resolves an INHERITED `_reLayout` through
+      the class graph instead of trusting it; prologue floor recorded as the ratchet baseline).
 - ⚠⚠ **W6 collides with `plans/connector-ubiquity-and-reflection-plan.md` in DIRECTION, not just in
   files — and W6's own premise is incomplete. Three findings from the 2026-08-16 pass; settle the
   sequencing question BEFORE starting W6a or D3, since it gates both** (detail in plan §2.6):

@@ -968,7 +968,41 @@ proposes.
 - W6a widen setters / W6b guards (D3): ☐ ☐
 - W7 self-description (D4): ☐
 - W8 constructor shapes (D5): ☐
-- W9 gate + census + ratchet: ☐
+- **W9 · CONVERGED — 2026-08-16.** All three tiers landed, plus the three W5 residue items.
+  - **HARD GATE.** §5 proposed `check-menu-actions.js`, which the menu-action wiring arc had already
+    built — RULE 1 and RULE 2 were in place. What was missing is its `prompt` half, now added as
+    RULE 1's **second door**: `prompt`/`textPrompt` take a `callback` that `PromptWdgt` hands to a menu
+    item verbatim (`panel.addMenuItem "Ok", @target, @callback`), so it is the same slot one hop later
+    and a function literal there is wrong by the same proof.
+    ⚠ §5 said "extend to `[@.]prompt` whose 3rd argument is **not a string literal**" — deliberately NOT
+    implemented that way. That would flag a variable holding a method name, which is legitimate and
+    which RULE 1 already tolerates for `addMenuItem`; holding both doors to one standard is what keeps
+    the gate a sound negative. ⭐ **The prompt door pays twice:** those callbacks are now visible to the
+    RULE 3 unread-parameter ratchet too, taking coverage 255 → **269** verbs, and it immediately found
+    three (`ClassInspectorWdgt.addProperty`, `InspectorWdgt.addProperty`/`renameProperty`) whose skipped
+    slot was named `ignoringThis` rather than the house `ignored`. Renamed rather than widening the
+    allowlist. ⚠ My first spelling of the rule keyed on the first ARGUMENT and matched only quoted/`@`
+    openers, so it silently missed EVERY real call site (all open with an expression) — caught only
+    because the plant test was run; the rule now keys on the RECEIVER.
+  - **ADVISORY CENSUS — `census-widget-conformance.js`** (new): six facets, exit 0, `--json`. It
+    independently reproduces both recorded floors (9 classes / 11 fields; 8 prologue copies), which is
+    what makes it trustworthy as the survey's re-runnable half. Its mixin-awareness is PROVEN in both
+    directions, not assumed: a planted `@color_hover` (donated by `HighlightableMixin`) is not
+    reported, a planted `@notDonatedAtAll` is.
+  - **RATCHET** — the same script's `--gate`, wired into `build_it_please.sh`. Verified by planting a
+    violation of each ratchet and confirming the BUILD aborts on it (the first attempt aborted at the
+    dead-method gate instead, which proved nothing — the plant has to sit in an existing method).
+  - Advisory numbers worth having on record: **270** widget classes · 202 without `colloquialName`
+    (W7's real scope) · **0** constructors over four positional slots without an options bag — the
+    constructor arc closed that facet completely · 68 pin setters over 28 classes, arity 1→26, 2→38,
+    3→4 (W6's table, re-derivable) · 148 without a header comment.
+  - **W5 residue closed here.** (a) The `_reLayout` template's trailing `@_markLayoutAsFixed()` was
+    MEASURED redundant and deleted — suite green AND the settle re-visit profile still empty, so it
+    added no iterations; all sixteen copies had carried it. (b) `check-relayout-bounds-first.js` no
+    longer trusts an inherited `_reLayout`: it reads every `class X extends Y` line and resolves the
+    nearest ancestor that defines one, which moves the three `PatchNodeWdgt` subclasses from assumed-safe
+    to verified (template bucket 16 → 19). Proven by planting a non-delegating base and watching all
+    three fail. (c) The prologue-copy floor of 8 is now the ratchet's baseline, per W4c's precedent.
 - W10 closeout: ☐
 
 ### 11.1 Recapture-risk lists (produced by W0, 2026-08-16)

@@ -670,6 +670,28 @@ if ! $noSyntaxCheck ; then
   echo "... relayout-bounds-first check OK"
 fi
 
+# --- build-time WIDGET-CONFORMANCE ratchet --------------------------------------
+# The ratcheted half of buildSystem/census-widget-conformance.js, which re-derives the mechanical facets of
+# docs/measurements/widget-practices-survey-2026-08-14.md. Only TWO facets are objective enough to gate --
+# instance fields written but never DECLARED at class level (they are invisible to duplication,
+# serialization and the inspector until declared), and classes still spelling out the `_reLayout` prologue
+# instead of taking Widget._reLayoutWithOwnContents. Everything else the census reports is a heuristic and
+# stays advisory: run `node ./buildSystem/census-widget-conformance.js` (or --json) to see it all.
+# ⚠ BOTH BASELINES ARE FLOORS, NOT ZEROS, and each remaining occurrence is a stated decision named in the
+# script. Green means "nothing got worse", never "nothing is left".
+# (same --noSyntaxCheck escape hatch + explicit $? abort as the gates above; scans src/ only, so it runs
+# for every build flavour incl. production.)
+if ! $noSyntaxCheck ; then
+  echo "checking widget-practices conformance ratchets ..."
+  node ./buildSystem/census-widget-conformance.js --gate
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: widget-conformance ratchet failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... widget-conformance check OK"
+fi
+
 # --- build-time RELAYOUT-REPAINTS gate ([INV-1]) --------------------------------------
 # Static sibling to the runtime paint-truthfulness capstone (Fizzygum-tests/scripts/run-paint-audit.js).
 # Enforces [INV-1] (docs/layout-regressions-2026-07-icons-plots-editghosts-plan.md): a `_reLayoutSelf` that
