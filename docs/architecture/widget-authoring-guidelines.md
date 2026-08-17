@@ -294,6 +294,17 @@ Inside the appearance, paint the widget's own pixels in widget-local **logical**
 the ctx matrix, inside `Appearance._paintInLocalScope`. Device-space business belongs to the preamble
 ([`appearance-paint-convention.md`](appearance-paint-convention.md)).
 
+**A cached raster cannot carry anything per-instance — draw that half live, on top.** [convention]
+`BackBufferMixin` buffers are keyed on class + extent, so widgets of the same class and size share
+one canvas (`world.cacheForImmutableBackBuffers`); nothing that differs between two such widgets can
+be painted into it. The shape is two layers in one appearance: `@widget.blitBackBufferInto` for the
+cached half, in device space, then the per-instance half inside `_paintInLocalScope`. `PaletteWdgt`
+(its choice marker over the shared colour field) and `AnalogClockWdgt` (its hands over the cached
+face) are the two. Such a widget also defines `paintIntoAreaOrBlitFromBackBuffer` as the plain
+delegation to `@appearance`, purely to un-shadow the mixin's own member — a class-body member
+out-ranks a mixin's. ⚠ Anything the live half draws INSIDE the buffer's opaque footprint adds no
+coverage, so skip it on the shadow pass rather than paying for a silhouette that cannot differ.
+
 **Hit-testing follows the shape.** If the widget's silhouette is the appearance's business, implement
 `isTransparentAt` on the appearance; implement it on the widget only when the answer depends on widget
 state the appearance does not hold.

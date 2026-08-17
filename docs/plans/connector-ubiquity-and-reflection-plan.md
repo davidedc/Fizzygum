@@ -189,7 +189,13 @@ does not own, each only for its own instance and only at the moment it was click
 
 The `rows[1..7]` indexing is separately fragile: it breaks the day someone adds a divider.
 
-### 2.7 Controllers that aren't views: the palette
+### 2.7 Controllers that aren't views: the palette — ⚠ **SUPERSEDED by P6 (landed 2026-08-17)**
+
+The shared-immutable-buffer FACT below still holds and is still the constraint; what has changed is
+the consequence. The palette now paints its choice live OVER the blit (`PaletteAppearance`), both
+riders are resolved (the choice seed is deleted, not relocated — see P6 "As landed" (iii)), and
+`ColorPickerWdgt` has the `ControllerMixin`, so neither class is missing its half any more.
+
 
 `PaletteWdgt` holds `@choice` and paints **nothing** about it. Its pixels come from a back buffer
 that is *shared and immutable*: `_createRefreshOrGetBackBuffer` keys
@@ -561,7 +567,7 @@ closed menu drops its edges. ⚠ But the world-teardown completeness ratchet
 world-level mutable state — a `Wallpaper` that is now a live node needs its edges dropped on
 `resetWorld` like everything else, or `RESETWORLD_INCOMPLETE` will (correctly) fire.
 
-### P6 — Give the palette its picture
+### P6 — Give the palette its picture — ✅ **LANDED 2026-08-17**
 
 Two independent halves; the first is worth doing on its own merits and needs nothing else in this
 document.
@@ -598,6 +604,86 @@ That honesty is better than snapping the marker to a lie.
 the picture without the handle. Give `ColorPickerWdgt` the `ControllerMixin` too — a colour picker
 that cannot be pointed at a target is an odd citizen in a system whose principle is "a colour is
 changed with a picker aimed at the thing".
+
+#### As landed
+
+All four parts, plus one addition the sketch did not ask for and one rider that inverted.
+
+**(i) The marker is an appearance, and the blit got a name.** New `PaletteAppearance` (core),
+reached the ordinary way: `PaletteWdgt` declares `@appearance` and defines
+`paintIntoAreaOrBlitFromBackBuffer` as the plain delegation, which is needed only to un-shadow
+`BackBufferMixin`'s member (a class-body member out-ranks a mixin's, `src/meta/Mixin.coffee`). The
+appearance then composes the two layers exactly as `AnalogClockAppearance` does for its cached face
+plus live hands: the mixin's blit in device space, then the marker inside the one
+`Appearance._paintInLocalScope`. To make that composition possible the mixin's blit body is now
+`blitBackBufferInto`, with `paintIntoAreaOrBlitFromBackBuffer` delegating to it — a name for a thing
+that already existed, so a widget whose picture is "cached raster PLUS something live" can reach the
+first half.
+  The marker is skipped on the shadow pass. It lands inside the buffer's own opaque footprint and is
+clipped to it, so it adds no COVERAGE, and coverage is the whole of what a shadow is.
+  ⚠ A layout-inert child (the other shape §P6 offered) is ruled out by more than taste: the gesture
+is a DRAG ACROSS the palette, and a child under the pointer would take the events the pick needs.
+
+**(ii) The position is DERIVED, not stored — the sketch's `@choicePosition` is not there.** Each
+subclass declares `positionForColor`, the inverse of its own `fillPaletteBuffer`, and the appearance
+asks it on every paint. Storing a picked position alongside `@choice` would state one fact in two
+places, which is the shape P1 already caught disagreeing (2 of 5 sites); deriving also means a
+colour arriving by ANY route — pick, wire, snapshot, duplicate, script — is placed by the one path.
+The inverse is exact, not approximate: an `hsl(h,100%,l)` colour still reports saturation 1 after the
+browser rounds it to integer channels, and one column spans far more hue than that rounding can
+move, so a colour picked off the field inverts back to the very pixel it came from (verified in the
+references — the ring lands on the clicked pixel at both densities).
+  Off-map is a frame, never a snap (§8 q4, owner-answered): a colour band round the whole field,
+laid between two black hairlines so it reads against the white corner as well as the black one. It
+claims no position, which is the point.
+  `Color.hueSaturationLightness` is new and public — the inverse needs HSL, and reaching into
+`_r/_g/_b` from outside is what `channelDistanceTo` exists to avoid.
+
+**⭐ The addition: the palette's picked colour became a read/WRITE pin** (`getChoice` / `setChoice`,
+`principalPinLabel: "picked color"`, and the `dataflowValue` override deleted — Widget's base now
+covers it). Not in the sketch, and required by it: (ii) is about a colour "arriving from outside",
+and there was no way for one to arrive. Every colour a palette PRODUCES is on its own surface by
+construction, so without a setter the off-map rendering is unreachable code and the inverse is
+untestable. `setChoice` deliberately does not fire onward — a value delivered to me is not a pick,
+and re-firing it would make the palette an echo.
+
+**(iii) The rider INVERTED: the `@choice = Color.BLACK` initialisation is DELETED, not relocated.**
+Moving it was the right call while the choice was invisible. Once it is DRAWN, the fabrication
+shows: a palette nobody has picked from has no choice, and a seeded black makes the marker assert a
+pick, at hue 0, that never happened. `undefined` was already the handled state (`bang` declines,
+`reactToTargetConnection` deliberately fires nothing), and deleting the seed unfuses the two axes
+more completely than relocating it would — no palette anywhere gets a phantom choice. ⇒ **Making a
+value visible can turn a refactor into a correctness question, and answer it differently.**
+
+**(iv) `ColorPickerWdgt` is a controller**, and the change reached further than the mixin. Its two
+palettes now wire to the PICKER (`wireTo @, "setPickedColor"`) instead of straight to the feedback
+swatch: the picker is what knows a pick happened, so it can keep the swatch showing it AND fire its
+own wire onward — aimed at the swatch, a pick would update it and nothing would ever tell the picker.
+That relay makes `setPickedColor` a real write for `getColor`'s property, so the picker's principal
+pin stopped being read-only and its apology comment is gone. ⚠ Both `PinSpec` and
+`Widget.principalPinLabel` cited it as the canonical READ-ONLY pin; they now cite
+`StringFieldWdgt.value`, which is read-only for a structural reason (its string lives in a child
+widget, so there is no one-call setter twin).
+
+**⭐⭐ One live defect found, in the crash the first render produced rather than by reasoning:**
+`Color.hueSaturationLightness` was first written with CoffeeScript's `%%`, which compiles to a
+`modulo` HELPER FUNCTION — and the meta-system strips the emitted `var` block, where helpers land,
+out of every member it compiles (`Class._removeHelperFunctions`). So the operator became a call to
+something that does not exist. Nothing caught it: it parses, so the syntax gate passed it, and the
+strip's own guard enumerates three helper names (`indexOf`/`hasProp`/`slice`) and does not know
+about this one. It surfaced as `ReferenceError: modulo is not defined` in the error console, with the
+palette banned from repainting — i.e. as a screenshot diff that a mass recapture would have baked
+in. Now a **zero-baseline `helper-compiling-operator` stink**, proven to fail on a planted `%%`.
+⇒ **Looking at the pixels before recapturing is what caught it; the "REVIEW: 260k px changed"
+verdict alone read as "the marker landed".**
+
+**Deliberate simplification:** one marker shape for both palettes (a ring with a radius that shrinks
+on a palette too small to hold it), not a ring for the 2-D field and a bar for the 1-D strip. The
+1-D case would read slightly better as a bar; it is one method to override if it ever matters.
+
+New test: `SystemTest_macroPaletteMarksItsChoice` — six shots covering unmarked, picked, driven
+on-map, driven off-map, and both on the gray strip. It is the only coverage the off-map branch has,
+and it reaches it through the pin, the route a wire delivers on.
 
 ### P7 — Ticks become a reflection, not a redraw — ✅ **LANDED 2026-08-17 (for the non-widget half)**
 
@@ -889,7 +975,7 @@ carry zero engine risk, which makes them the right way to test the law before pa
 |---|---|---|---|
 | 1 | **P5 + P7** — wallpaper (and input mode) as nodes; ticks as reflection ✅ **LANDED 2026-08-17** | **none** | complaint ③ (the non-widget half; the three WIDGET-owned ticks turned out to need P3 first — see P7 "As landed") |
 | 1b | **P3** — `markNonValueChange` + the edge's `firesOnAnyChange`; P7's remaining three sites ✅ **LANDED 2026-08-17** | the two announcements, additive | complaint ③ (the widget half); unblocks every reverse edge |
-| 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) | **none** | complaint ②'s view half |
+| 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) ✅ **LANDED 2026-08-17** | **none** | complaint ②'s view half |
 | 3 | **P9** — the `@target` renames ✅ **LANDED 2026-08-16** | none | reading hazard |
 | 4 | **P1** — `PinSpec` with readers ✅ **LANDED 2026-08-16** | none (the pull lands with P2) | unblocks 5–6 |
 | 5 | **P4** — a controller owns a list of wires | index mirroring; **serialization surface** | G2; frees `FanoutWdgt` |
@@ -941,8 +1027,10 @@ wire-vocabulary plan's W2 is waiting for.
    which is where 19 overrides collapsed to 9). See P1 "As landed".
 3. **Bind-time precedence** — "the side whose menu you opened pushes" (§P2), or an explicit
    source/mirror choice in the gesture?
-4. **Palette off-map colours** — distinct "off-map" marker, nearest-point snap, or no marker at all
-   when the colour is not on the surface?
+4. ~~**Palette off-map colours** — distinct "off-map" marker, nearest-point snap, or no marker at
+   all when the colour is not on the surface?~~ **ANSWERED — a distinct rendering, and NEVER a
+   snap**, because a snapped ring displays a position the value does not have. As landed it is a
+   colour band round the whole field, claiming no position. See P6 "As landed" (ii).
 5. **Scroll's four-number reverse channel** — an immutable `SliderRange` value payload, or the first
    real use of cold edges (and therefore a decision that belongs jointly to
    `wire-vocabulary-extensions-plan.md` W2)?

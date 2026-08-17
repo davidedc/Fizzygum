@@ -111,6 +111,16 @@ BackBufferMixin =
       # Note that this widget might paint something on the screen even if
       # it's not a "leaf".
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+        @blitBackBufferInto aContext, clippingRectangle, appliedShadow
+
+      # The blit itself, NAMED — so a widget whose picture is "the cached raster PLUS something
+      # live on top" can compose it instead of re-deriving it. A cached buffer is per-class-and-
+      # size, never per-instance (PaletteWdgt's is literally shared through
+      # world.cacheForImmutableBackBuffers), so anything that varies per instance has to be drawn
+      # over the blit; PaletteAppearance is the one caller today, drawing where its palette's
+      # choice sits on the field. Device-space, like every blit (the appearance paint convention's
+      # declared exception): the live half rides the logical-pixels scope on top.
+      blitBackBufferInto: (aContext, clippingRectangle, appliedShadow) ->
         @justBeforeBeingPainted?()
 
         if !@visibleBasedOnIsVisibleProperty() or @isInCollapsedSubtree()

@@ -82,9 +82,14 @@ back-ref checks) stay in the caller, before the scope call.
 
 - **The SizeAware icon family** (`src/icons/SizeAwareIconAppearance.coffee`, base + 9):
   dpr-conditional integer-device pixel art, by documented design. The law's exception clause.
-- **Blits are preamble business**: `BackBufferMixin`'s buffer blit, and
-  `AnalogClockAppearance`'s cached-face blit (its background fill sits UNDER that blit, so both
-  stay device-space in its own preamble; only the hands/live content ride the scope).
+- **Blits are preamble business**: `BackBufferMixin`'s buffer blit (named `blitBackBufferInto`, so
+  an appearance can compose it), and `AnalogClockAppearance`'s cached-face blit (its background fill
+  sits UNDER that blit, so both stay device-space in its own preamble; only the hands/live content
+  ride the scope). `PaletteAppearance` is the same two-layer shape over the mixin's blit: a cached
+  buffer is keyed on class + extent and therefore SHARED, so anything per-instance — a palette's
+  choice marker — has to be drawn live on top, and that half rides the scope. Such an appearance
+  keeps its own entry (it calls the blit before opening the scope) and its widget defines
+  `paintIntoAreaOrBlitFromBackBuffer` as the plain delegation, to un-shadow the mixin's member.
 - **Pattern fills**: a `CanvasPattern` anchors to the coordinate space — under the scope's CTM
   the tile would scale with the dpr and its phase would follow the translate.
   `DesktopAppearance._paintBackgroundPatternFill` therefore runs AFTER the scope closes, in

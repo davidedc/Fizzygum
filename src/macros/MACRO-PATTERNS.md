@@ -526,9 +526,11 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Pick a colour / set transparency via a popup**: colour: `"color..."` opens a colour-picker menu — capture
   `picker = @getMostRecentlyOpenedMenu()`, click `picker.topWdgtSuchThat((m)-> m instanceof ColorPickerWdgt).colorPalette`
   at `[fx,0.5]` (saturated; the palette is `hsl(360·fx,100%,50%)`), then `@moveToItemOfMenuAndClick_InputEvents picker, "Ok"`.
-  COLOUR-PICKER TRAP: a `ColorPickerWdgt` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette` (a
-  GrayPaletteWdgt, which SUBCLASSES ColorPaletteWdgt) — reach the colour one via the `.colorPalette` accessor, NOT an
-  `instanceof ColorPaletteWdgt` search. transparency: `"transparency..."` opens a `PromptWdgt` —
+  COLOUR-PICKER TRAP: a `ColorPickerWdgt` holds both a hue×lightness `.colorPalette` and a thin `.grayPalette`, and both
+  are `PaletteWdgt`s (SIBLINGS — a gray palette is-not-a colour palette), so reach the colour one via the `.colorPalette`
+  accessor rather than by searching the subtree for a palette. Each palette also draws a ring where its own current
+  choice sits on it, so a screenshot of a picked palette shows the pick, not just the field. transparency:
+  `"transparency..."` opens a `PromptWdgt` —
   `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderWdgt), [fx,0.5]` then "Ok".
 
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the

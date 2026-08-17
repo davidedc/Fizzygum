@@ -236,8 +236,49 @@ class Color
   # case). Public so a macro can read colour closeness without touching the private _r/_g/_b channels.
   channelDistanceTo: (aColor) ->
     Math.abs(@_r - aColor._r) + Math.abs(@_g - aColor._g) + Math.abs(@_b - aColor._b)
-  
-  
+
+  # Am I fully see-through? Public for the same reason as channelDistanceTo: the alpha channel is
+  # private, and the question gets asked from outside — a pixel READ that comes back fully
+  # transparent generally means the sample point was off the buffer, not that anything was picked.
+  isFullyTransparent: ->
+    @_a == 0
+
+  # Me as HSL: [hue 0..360, saturation 0..1, lightness 0..1], the standard sRGB conversion — i.e.
+  # the exact inverse of the `hsl(h,s%,l%)` spelling. Public, and here rather than at its caller,
+  # because reaching into _r/_g/_b from outside is precisely what channelDistanceTo above exists to
+  # avoid; the palettes are the callers (ColorPaletteWdgt inverts its own hue x lightness field,
+  # GrayPaletteWdgt only asks "is this achromatic?", i.e. saturation 0).
+  #   An achromatic color has no hue and answers 0 — the conventional choice, and the one under
+  # which black and white round-trip through hsl(0,100%,0%) / hsl(0,100%,100%).
+  #   EXACTNESS, which the palette inverse leans on: a color spelled hsl(h,100%,l) always has
+  # either min = 0 (l <= 50%) or max = 255 (l >= 50%) EVEN AFTER the browser rounds the channels to
+  # integers, so its saturation here comes back as exactly 1 — no tolerance needed to recognise a
+  # color as one of a fully-saturated field's own pixels.
+  hueSaturationLightness: ->
+    r = @_r / 255
+    g = @_g / 255
+    b = @_b / 255
+    max = Math.max r, g, b
+    min = Math.min r, g, b
+    lightness = (max + min) / 2
+    return [0, 0, lightness] if max == min
+    delta = max - min
+    saturation = if lightness > 0.5 then delta / (2 - max - min) else delta / (max + min)
+    # The wrap on the red sextant is spelled out rather than written `%% 6`: CoffeeScript compiles
+    # that operator into a `modulo` HELPER FUNCTION, and the meta-system strips the leading `var`
+    # block (where helpers land) out of every member it compiles — Class._removeHelperFunctions —
+    # so a `%%` in a class member becomes a call to something that does not exist. It survives the
+    # build's syntax gate, because it is not a parse error.
+    if max == r
+      sextant = (g - b) / delta
+      sextant += 6 if sextant < 0
+    else if max == g
+      sextant = (b - r) / delta + 2
+    else
+      sextant = (r - g) / delta + 4
+    [sextant * 60, saturation, lightness]
+
+
   # Color mixing (dataflow spec §9.5 — the value-class method algebra a spreadsheet formula operates
   # with). Answer a NEW color that is this color blended with `otherColor`, `proportion` being THIS
   # color's weight: proportion = 1 ⇒ this color unchanged, 0 ⇒ otherColor, 0.5 ⇒ halfway. ALL FOUR

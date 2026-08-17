@@ -225,7 +225,7 @@ class Widget extends TreeNode
   # The LABEL of my principal pin — the one `exportedValue` reads when something asks for my value
   # without naming a pin (a spreadsheet reference, the dataflow drain). undefined => I export no
   # value. By label rather than by setter because a principal pin may legitimately be READ-ONLY
-  # (ColorPickerWdgt's picked colour), and then there is no setter to name it by.
+  # (StringFieldWdgt's value), and then there is no setter to name it by.
   principalPinLabel: undefined
 
   # hover help text. Declared on the base because this is where its consumer hook

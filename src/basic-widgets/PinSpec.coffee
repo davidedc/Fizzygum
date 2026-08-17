@@ -33,9 +33,9 @@
 #     today -- their fields are readable, but no reader METHOD exists and inventing one here would
 #     be fabricating a contract nothing implements.
 #   • no `set` => a READ-ONLY pin. It never appears in a "choose target property" menu, because
-#     nothing can drive it. ColorPickerWdgt's picked colour is the canonical one: `getColor` reads
-#     `@feedback.color` while `Widget.setColor` writes the picker's own chrome `@color`, so pairing
-#     them would have been a lie. The arrays could not express this at all.
+#     nothing can drive it. StringFieldWdgt's `value` is the canonical one: it holds its string in
+#     a child StringWdgt, so `getValue` reaches through the child and there is simply no one-call
+#     setter twin to pair it with. The arrays could not express this at all.
 #
 # A pin with NEITHER is meaningless and is refused at construction rather than silently ignored.
 

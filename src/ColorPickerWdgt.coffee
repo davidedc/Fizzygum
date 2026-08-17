@@ -1,11 +1,30 @@
-# Note that the ColorPicker has no "set target..." from
-# the menu.
+# A colour picker: two palettes to drag across and a swatch showing what came out.
+#
+# It is a CONTROLLER exactly as its own palettes are — "set target..." aims it at another widget,
+# and a pick then drives that widget's colour property. In a system whose principle is "a colour is
+# changed with a picker aimed at the thing", the picker is the last widget that should lack the
+# handle; a palette carries both the handle and (through its choice marker) the picture, and so
+# does this.
 
 class ColorPickerWdgt extends Widget
+
+  @augmentWith ControllerMixin
+
+  target: undefined
+  action: undefined
+  argumentToAction: undefined
+
+  # I drive colours: what the "choose target property" menu filters the target's pins by, and the
+  # adjective in the "set target" tooltip.
+  producesPinKind: "color"
 
   # pattern: declare every child field here (not only set in the constructor) so
   # the Duplicator's walk picks it up even under lazy initialisation.
   feedback: undefined
+  # the colour I am SEEDED with, which is all this is: the swatch below is built from it and from
+  # then on the swatch holds the truth (getColor reads it). Nothing re-reads this field, so a pick
+  # deliberately does not write it back — that would be a second, driftable statement of a fact
+  # @feedback.color already makes.
   choice: undefined
   colorPalette: undefined
   grayPalette: undefined
@@ -36,8 +55,13 @@ class ColorPickerWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
     @feedback = new RectangleWdgt new Point(20, 20), @choice
-    @colorPalette = new ColorPaletteWdgt @feedback, new Point @width(), 50
-    @grayPalette = new GrayPaletteWdgt @feedback, new Point @width(), 5
+    @colorPalette = new ColorPaletteWdgt @, new Point @width(), 50
+    @grayPalette = new GrayPaletteWdgt @, new Point @width(), 5
+    # Both palettes drive ME rather than the swatch directly. I am the one that knows a pick has
+    # happened, so I can keep the swatch showing it AND fire my own wire onward; aimed at the
+    # swatch they would update it and nothing would ever tell me. wireTo, not an @action
+    # assignment, because it is the named wire verb and it declares the edge there and then.
+    palette.wireTo @, "setPickedColor" for palette in [@colorPalette, @grayPalette]
     @_addNoSettle @colorPalette
     @_addNoSettle @grayPalette
     @_addNoSettle @feedback
@@ -48,12 +72,40 @@ class ColorPickerWdgt extends Widget
   getColor: ->
     @feedback.color
 
-  # My principal pin is READ-ONLY. `getColor` reads the colour picked through me (@feedback.color),
-  # while Widget's `color` pin writes @color — my own chrome, which the constructor sets to white and
-  # which has nothing to do with the picked colour. They are two different properties, so pairing them
-  # into one read/write pin would be a lie: a wire writing it would not change what a reader reads.
-  pins: -> super().concat [ new PinSpec "picked color", "color", get: "getColor" ]
+  # A colour picked THROUGH me: the write half of my picked-colour pin, and what both my palettes
+  # drive. Keep the swatch showing it, then fire my own wire onward so a picker aimed at a target
+  # behaves like every other controller.
+  setPickedColor: (aColor) ->
+    return unless aColor?
+    @feedback.setColor aColor
+    @updateTarget()
+    return aColor
+
+  # My picked colour is a genuine read/WRITE pin — the pair reads and writes @feedback.color, the
+  # same property. (Widget's own `color` pin is a different one: it writes @color, my chrome, which
+  # the constructor sets to white and which has nothing to do with the picked colour. Pairing THOSE
+  # two into one pin would be the lie, because a wire writing it would not change what a reader
+  # reads.) The names are asymmetric because each is fixed from its own side: `getColor` is the
+  # duck-typed spelling Widget.setColor and the spreadsheet's cell reader both look for, and
+  # `setColor` was already taken by the chrome.
+  pins: -> super().concat [ new PinSpec "picked color", "color", set: "setPickedColor", get: "getColor" ]
   principalPinLabel: "picked color"
+
+  # the wire verb every controller ends at: fire my picked colour to whatever I am aimed at.
+  updateTarget: ->
+    if !@target? then return
+    if !@action?
+      @action = "setColor"
+    @_fireConnection @getColor()
+    return
+
+  # push my current colour the moment I am wired, as a slider does — I always have one to push.
+  reactToTargetConnection: ->
+    @updateTarget()
+
+  addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
+    super
+    @_addTargetConnectionMenuEntries menu
 
 
   # The palette/feedback arrange from my applied frame — the engine's standard

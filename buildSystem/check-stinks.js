@@ -71,6 +71,9 @@ const STINKS = [
 
     why: 'a call punching `undefined` through to reach a later argument PROVES the skipped parameter is configuration rather than identity — no single order can serve callers wanting disjoint tails. The remedy is a trailing `opts = {}` object (or, for an exempt value class, a reorder): docs/architecture/constructor-and-parameter-conventions.md R3',
     re: /\bundefined\b\s*,\s*\bundefined\b/ },
+  { id: 'helper-compiling-operator', baseline: 0,   // HARD from the day it was added (2026-08-17): src was already at zero, and every site this can match is a guaranteed runtime ReferenceError
+    why: "CoffeeScript compiles `%%` into a `modulo` HELPER FUNCTION declared in the emitted `var` block — and the meta-system STRIPS that block out of every member it compiles (src/meta/Class.coffee _removeHelperFunctions, `/^var(.|\\n)*?\\(function/`), so the operator becomes a call to something that does not exist. Nothing else catches it: it parses, so the syntax gate passes it, and the strip's own guard enumerates only three helper names (indexOf/hasProp/slice) — it does not know about this one. The failure surfaces as a widget BANNED FROM REPAINTING with `ReferenceError: modulo is not defined` in the error log, i.e. as a screenshot diff. Spell the wrap out (`x += 6 if x < 0`)",
+    re: /%%/ },
   // Comment-hygiene ratchets (2026-07-17 comments cleanup; baselines measured post-cleanup).
   { id: 'comment-meta-edit', baseline: 0, scope: 'comments',
     why: 'a comment arguing with itself ("the below is actually correct", "to be clear") is process residue — state the surviving constraint once, plainly',

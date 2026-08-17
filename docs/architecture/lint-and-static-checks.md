@@ -149,10 +149,10 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   `fg critique` resurfaces it). Baseline 0 = a HARD rule. Scans `src/` only (not the harness — a stink is a statement
   about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines — except a stink declaring
   `scope: 'comments'`, which matches the COMMENT part of each line instead (the comment-hygiene ratchets).
-  **Current stinks — twelve: seven seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its
+  **Current stinks — thirteen: seven seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its
   target `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then), **three comment-hygiene
-  ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09), and `positional-hole`
-  (2026-08-15). One of the original
+  ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09), `positional-hole`
+  (2026-08-15) and `helper-compiling-operator` (2026-08-17). One of the original
   seven, `undefined-literal`, has since been REPLACED rather than removed — see `nil-literal` below. Every baseline was MEASURED by the engine on its seeding day and
   every stink spot-checked against its real hits; they are ratchets recording that day's count, not verdicts — driving
   any of them down is a future arc:
@@ -167,6 +167,7 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   | `math-random` | 5 | breaks byte-exact screenshot determinism in render/layout/input code |
   | `instanceof-type-test` | 87 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
   | `positional-hole` | **0 (HARD)** | a call punching `undefined` through to reach a later argument PROVES the skipped parameter is configuration rather than identity — the decisive **hole test** (R3) of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Driven 51 → 0 family by family by [`../archive/constructor-parameter-conformance-plan.md`](../archive/constructor-parameter-conformance-plan.md). ⚠ A PASS is a FLOOR, not an inventory: the regex needs two `undefined`s adjacent on ONE line, so it is blind to a single-`undefined` hole and to one spread over a multi-line call — sweep a converted family by METHOD NAME across both repos instead |
+  | `helper-compiling-operator` | **0 (HARD)** | CoffeeScript's `%%` compiles to a `modulo` HELPER FUNCTION in the emitted `var` block, and the meta-system STRIPS that block out of every member it compiles (`src/meta/Class.coffee` `_removeHelperFunctions`) — so the operator becomes a call to something that does not exist. **Nothing else catches it:** it parses, so the syntax gate passes it, and the strip's own runtime guard enumerates three helper names (`indexOf`/`hasProp`/`slice`) and does not know this one. The failure surfaces as a widget BANNED FROM REPAINTING with a `ReferenceError` in the error log — i.e. as a screenshot diff, which a mass recapture would bake in. Spell the wrap out (`x += 6 if x < 0`). Found the hard way in connector-arc P6 |
   | `comment-meta-edit` | 0 | HARD: a comment arguing with itself ("the below is actually correct", "to be clear,") is process residue — state the surviving constraint once |
   | `comment-narration` | 103 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS | <!-- narration-ok: this row DEFINES the narration rule, so it must quote its own trigger words -->
   | `commented-out-debug` | 0 | HARD: commented-out `alert(`/`debugger`/`console.log` is dead debug cruft — delete it; git remembers |
