@@ -35,6 +35,9 @@ class MenuItemSpec
   argumentToAction1: undefined
   argumentToAction2: undefined
   representsAWidget: false
+  # a MenuRowReflectionSpec when this row is a VIEW of somebody else's value (a tick, a wording
+  # swap); undefined for an ordinary row whose label is fixed at build time
+  reflection: undefined
 
   constructor: (@label, @target, @action, opts = {}) ->
     @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = opts.closesUnpinnedPopUps ? true
@@ -46,3 +49,4 @@ class MenuItemSpec
     @argumentToAction1 = opts.arg1
     @argumentToAction2 = opts.arg2
     @representsAWidget = opts.representsAWidget ? false
+    @reflection = opts.reflection

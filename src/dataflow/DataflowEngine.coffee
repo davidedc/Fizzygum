@@ -209,6 +209,14 @@ class DataflowEngine
     @lastValues.delete node
     return
 
+  # Is there already an edge producer -> consumer? The reverse index answers it directly. Lets a
+  # consumer that subscribes ONCE PER SOURCE (a menu panel with several rows reflecting the same
+  # object — MenuRowsPanelWdgt._subscribeToReflectedSource) dedup without keeping its own bookkeeping
+  # of what it has subscribed to: the index already knows, and a field would have to be declared,
+  # duplicated and serialized like any other.
+  hasEdge: (producer, consumer) ->
+    (@edgesTo.get consumer)?.has(producer) ? false
+
   # Would adding edge producer->consumer close a directed cycle? True iff consumer already
   # reaches producer over existing edges (or the trivial self-reference producer is consumer —
   # `A1` inside A1). Sheets call this at formula commit to reject a loop (spec §7).

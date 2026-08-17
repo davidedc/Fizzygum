@@ -467,6 +467,28 @@ mark after `add` + `setExtent` adds nothing.
 - **Define `representativeIcon`** when the widget can be referenced from the desktop — a shortcut needs
   a picture.
 - **Set `toolTipMessage`** for anything whose purpose is not obvious from its face.
+- **A row that SHOWS somebody's state must DECLARE it, not paint it once.** [convention] If a row
+  ticks itself, or swaps its wording to report a setting, pass a `reflection:` —
+  `MenuRowReflectionSpec.tickWhen source, "readerName", theValue, theLabel` for the tick case, or the
+  full `{whenValue, labelWhenTrue, labelWhenFalse}` record for a wording swap:
+
+  ```coffee
+  for patternName in @patternNames()
+    menu.addMenuItem patternName, @, "setPatternFromMenu",
+      arg1: patternName
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, patternName
+  ```
+
+  The row is then **born** showing the current value and re-derives it whenever the source announces
+  a change, in *every* open copy of the menu. Writing it by hand instead means a routine that walks
+  `rowsPanel.children` **by index** and can only fix up the one menu that was clicked — so a second
+  open copy disagrees, and so does one open across a change made by a script or the loader. It also
+  breaks the day someone adds a divider.
+  ⚠ **The source must be able to announce.** It needs a reader method and a `world.dataflow.markStale @`
+  where it changes — trivial for a plain collaborator (`Wallpaper`, `PreferencesAndSettings`), but a
+  **Widget cannot do this yet**: `Widget.dataflowValue` is its exported value, so one staleness signal
+  serves the whole object and announcing a property change would also fire the widget's wires. Until
+  that is fixed (connector plan P3), a widget-owned tick stays hand-written.
 
 ---
 

@@ -154,7 +154,11 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see
   (stacked duplicate handles paint near-identically), `assertScreenshotsIdentical` — MANDATORY for every
   within-test byte-equality claim: call it right after the
-  later shot with both full image names, earlier first). All `…_InputEvents`.
+  later shot with both full image names, earlier first). Menu READERS: `tickedRowLabelOfMenu` — the
+  BARE label of a menu's one ticked row (tick prefix stripped), so a test asserts what a ticked menu
+  SHOWS rather than a decorated string; for the ticked-menu family (wallpapers, fonts, any row
+  carrying a `MenuRowReflectionSpec`), where exactly one row is ticked and "which one" is the whole
+  state. All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
   `setControllerTargetToWidgetProperty`, the window-in-window fixture pair, `dwellDragWindowByGrabToEmbed`

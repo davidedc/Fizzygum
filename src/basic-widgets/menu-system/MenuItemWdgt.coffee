@@ -11,6 +11,12 @@ class MenuItemWdgt extends LabelButtonWdgt
   # turns this on for every row
   actionableAsThumbnail: undefined
 
+  # my MenuRowReflectionSpec when I am a VIEW of somebody else's value (a tick, a wording swap):
+  # what my label SAYS is then derived from that value, not fixed when I was built. undefined for an
+  # ordinary row. My owning panel subscribes to the source and calls me back through
+  # MenuRowsPanelWdgt.reconcileReflectedRows.
+  rowReflection: undefined
+
   # The SPEC is the identity — it is what this row IS, and spec.label may be a string, a
   # Widget, a Canvas or an [icon, string] tuple. The rest is the menu-level CONTEXT the owning
   # MenuWdgt supplies (font size / style, centring, and the environment pair), which is the
@@ -19,9 +25,12 @@ class MenuItemWdgt extends LabelButtonWdgt
   # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
   # spec.label falls back to "close".
   constructor: (menuItemSpec, opts = {}) ->
+    @rowReflection = menuItemSpec.reflection
     super menuItemSpec.target, menuItemSpec.action,
       closesUnpinnedPopUps: menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
-      labelString: (menuItemSpec.label or "close")
+      # a REFLECTING row is born showing the current value — no build-then-fix-up dance, and no
+      # placeholder-prefix pass to reserve the label width
+      labelString: (@rowReflection?.currentLabel() ? menuItemSpec.label or "close")
       fontSize: opts.fontSize
       fontStyle: opts.fontStyle
       centered: opts.centered
@@ -93,6 +102,12 @@ class MenuItemWdgt extends LabelButtonWdgt
     @__commitWidth w
     np = @position().add new Point 4, 0
     @label.__commitMoveTo np
+
+  # Re-derive my label from the value I reflect. NoSettle: my caller is the panel's reconciler, which
+  # runs inside a settle (the drain's, or its own) — see MenuRowsPanelWdgt.reconcileReflectedRows.
+  _applyRowReflectionNoSettle: ->
+    return unless @rowReflection?
+    @label._setTextNoSettle @rowReflection.currentLabel()
 
   isTicked: ->
     @label.text.isTicked()

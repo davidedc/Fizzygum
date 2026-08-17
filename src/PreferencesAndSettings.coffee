@@ -89,6 +89,20 @@ class PreferencesAndSettings
       @setTouchInputMode()
     else
       @setMouseInputMode()
+    # ANNOUNCE it: every open menu row that SHOWS the input mode re-derives its wording from the
+    # drain, wherever that row is (MenuRowReflectionSpec / MenuRowsPanelWdgt). Safe to mark myself
+    # stale because I am a plain collaborator, not a Widget — a widget has ONE staleness signal
+    # (Widget.dataflowValue is its exported value), so a widget announcing "one of my properties
+    # changed" would also fire its dataflow WIRES. That is the gap P3 exists to close.
+    world.dataflow.markStale @
+
+  # ── dataflow node protocol ─────────────────────────────────────────────────────────────────
+  # I am a NODE without being a Widget — the protocol is duck-typed (SecondsSource/FrameSource
+  # prove it), which is what lets a menu row subscribe to my input mode.
+  dataflowValue: -> @inputMode
+
+  # what a reflecting menu row reads (MenuRowReflectionSpec.readerName)
+  currentInputMode: -> @inputMode
 
   # Put the bag back the way the constructor left it (mouse mode). This bag is reached as the
   # STATIC WorldWdgt.preferencesAndSettings, so it outlives even a brand-new world: without this,

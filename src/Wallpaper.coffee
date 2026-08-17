@@ -33,22 +33,31 @@ class Wallpaper
   constructor: ->
     @patternName = @pattern1
 
+  # my seven patterns in menu order, as a list rather than seven hand-numbered call sites
+  patternNames: ->
+    [@pattern1, @pattern2, @pattern3, @pattern4, @pattern5, @pattern6, @pattern7]
+
+  # what a reflecting menu row reads to decide whether it is the ticked one
+  # (MenuRowReflectionSpec.readerName)
+  currentPatternName: -> @patternName
+
+  # ── dataflow node protocol ─────────────────────────────────────────────────────────────────
+  # I am a NODE, and I need not be a Widget to be one — the protocol is duck-typed, exactly as
+  # SecondsSource/FrameSource already prove. Being a node is what lets a menu row SUBSCRIBE to my
+  # pattern instead of being fixed up by whoever happened to change it.
+  dataflowValue: -> @patternName
+
   wallpapersMenu: (ignored,targetWidget)->
     menu = new MenuWdgt world, target: targetWidget, title: "Wallpapers"
 
-    # we add the "untick" prefix to all entries
-    # so we allocate the right amount of space for
-    # the labels, we are going to put the
-    # right ticks soon after
-    menu.addMenuItem untick + @pattern1, @, "setPatternFromMenu", arg1: @pattern1
-    menu.addMenuItem untick + @pattern2, @, "setPatternFromMenu", arg1: @pattern2
-    menu.addMenuItem untick + @pattern3, @, "setPatternFromMenu", arg1: @pattern3
-    menu.addMenuItem untick + @pattern4, @, "setPatternFromMenu", arg1: @pattern4
-    menu.addMenuItem untick + @pattern5, @, "setPatternFromMenu", arg1: @pattern5
-    menu.addMenuItem untick + @pattern6, @, "setPatternFromMenu", arg1: @pattern6
-    menu.addMenuItem untick + @pattern7, @, "setPatternFromMenu", arg1: @pattern7
-
-    @updatePatternsMenuEntriesTicks menu
+    # Each row DECLARES that it shows my current pattern; the row is born with the right label and
+    # re-derives it whenever I announce a change, in this menu and in every other open copy
+    # (MenuRowsPanelWdgt._subscribeToReflectedSource). Nothing here indexes rows[1..7] any more —
+    # that hand-numbering broke the day anyone added a divider.
+    for patternName in @patternNames()
+      menu.addMenuItem patternName, @, "setPatternFromMenu",
+        arg1: patternName
+        reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, patternName
 
     menu.popUpAtHand()
 
@@ -63,9 +72,10 @@ class Wallpaper
     # DesktopAppearance reads my patternName)
     world.noteWallpaperChanged()
 
-    # instead of `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
-    if menuItem?.parent? and menuItem.parent.isMenu?()
-      @updatePatternsMenuEntriesTicks menuItem.parent
+    # ANNOUNCE the change: the drain then re-derives every subscribed menu row, wherever it is.
+    # However my pattern changed — this menu, another open copy, a script, the loader — the ticks
+    # follow, because they are views of this value rather than a redraw somebody remembered to do.
+    world.dataflow.markStale @
 
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): a menu action is
   # dispatched as `target[action].call target, dataSource, widgetEnv, arg1, arg2`, so the
@@ -74,40 +84,3 @@ class Wallpaper
     @setPattern thePatternName, menuItem
 
 
-  # cheap way to keep menu consistency when pinned
-  # note that there is no consistency in case
-  # there are multiple copies of this menu changing
-  # the wallpaper, since there is no real subscription
-  # of a menu to react to wallpaper change coming
-  # from other menus or other means (e.g. API)...
-  updatePatternsMenuEntriesTicks: (menu) ->
-    pattern1Tick = pattern2Tick = pattern3Tick =
-    pattern4Tick = pattern5Tick = pattern6Tick =
-    pattern7Tick = untick
-
-    switch @patternName
-      when @pattern1
-        pattern1Tick = tick
-      when @pattern2
-        pattern2Tick = tick
-      when @pattern3
-        pattern3Tick = tick
-      when @pattern4
-        pattern4Tick = tick
-      when @pattern5
-        pattern5Tick = tick
-      when @pattern6
-        pattern6Tick = tick
-      when @pattern7
-        pattern7Tick = tick
-
-    # rows[0] is the menu's title header; rows[1..7] are the seven pattern
-    # items, in wallpapersMenu's add order.
-    rows = menu.rowsPanel.children
-    rows[1].label.setText pattern1Tick + @pattern1
-    rows[2].label.setText pattern2Tick + @pattern2
-    rows[3].label.setText pattern3Tick + @pattern3
-    rows[4].label.setText pattern4Tick + @pattern4
-    rows[5].label.setText pattern5Tick + @pattern5
-    rows[6].label.setText pattern6Tick + @pattern6
-    rows[7].label.setText pattern7Tick + @pattern7

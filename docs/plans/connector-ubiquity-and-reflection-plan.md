@@ -1,7 +1,8 @@
 # Connector ubiquity & the controller-is-a-view law
 
-**STATUS: partly executed. AUTHORED 2026-08-14, owner-gated. TWO steps landed 2026-08-16 — P9**
-(the `@target` disambiguation, §6 step 3) **and P1** (`PinSpec`, §6 step 4). Each section says what
+**STATUS: partly executed. AUTHORED 2026-08-14, owner-gated. THREE steps landed — P9** (the
+`@target` disambiguation, §6 step 3) **and P1** (`PinSpec`, §6 step 4) on 2026-08-16, **and P5+P7**
+(§6 step 1) on 2026-08-17. Each section says what
 actually landed, what deviated from its sketch, and what it deliberately left alone; **read a
 section's "As landed" block before trusting its sketch**. Everything else is still design-stage with
 no code written. §6's steps 1 and 2 (P5+P7, P6) are still open and were *skipped over*, not
@@ -247,8 +248,8 @@ strong and it would fork the mechanism.
 |---|---|---|
 | **G1** | ~~**Write-only pins.**~~ ✅ **CLOSED by P1** (2026-08-16): a `PinSpec` may declare a reader, and `Widget.exportedValue` is now a declared principal pin rather than a duck-typed probe. What remains is populating readers — most pins are still write-only, honestly so. | ~~any generic reverse edge; showing current values; per-property spreadsheet reads~~ |
 | **G2** | **Single-slot, one-way wires.** One `@target`/`@action` ⇒ one out-edge; no un-wire; fan-out only via a non-production widget. | two-way binding (the return wire has nowhere to live); the citizenship doc's own claim |
-| **G3** | **Change announcement is opt-in and rare.** Six classes announce, for one property each. | anything driven by a menu, a script, the loader, or another widget's method call |
-| **G4** | **Non-widget state has no node identity.** Wallpaper, preferences, scroll offset. | the wallpaper-menu complaint outright |
+| **G3** | **Change announcement is opt-in and rare.** Six classes announce, for one property each. ⚠ **PARTLY closed for NON-WIDGET holders by P5+P7** (2026-08-17): `Wallpaper` and `PreferencesAndSettings` now announce, and their menu rows follow from anywhere. For a WIDGET it is still all-or-nothing — one `dataflowValue`, so announcing a property change fires its wires — which makes **P3 a hard prerequisite for the rest of P7**, not an independent proposal. | anything driven by a menu, a script, the loader, or another widget's method call |
+| **G4** | ~~**Non-widget state has no node identity.**~~ ✅ **CLOSED by P5** (2026-08-17) for `Wallpaper` and `PreferencesAndSettings` — both are dataflow nodes now, with zero engine change, exactly as `SecondsSource`/`FrameSource` predicted. Scroll offset remains, and belongs to §P8. | ~~the wallpaper-menu complaint outright~~ — **closed** |
 | **G5** | **Reflection is private field plumbing.** `if @vBar.target == @ … updateSpecs`; `_updateHandlePosition` on one class with one caller. | duplicated/foreign controllers following the value |
 
 Complaint ① is G5 + G1 + G4(scroll). Complaint ② is the *view* half of the law plus G1. Complaint
@@ -429,7 +430,7 @@ Replace the `@target`/`@action` pair with an ordered list of wire records on the
 This is the single change that unblocks the most, and it is the one with real serialization
 surface. It deserves its own arc.
 
-### P5 — Non-widget state becomes nodes (zero engine change)
+### P5 — Non-widget state becomes nodes (zero engine change) — ✅ **LANDED 2026-08-17** (`Wallpaper` + `PreferencesAndSettings`; `ScrollPanelWdgt` stays with §P8)
 
 `SecondsSource`/`FrameSource` prove the node protocol is duck-typed and does not require Widget-ness.
 So:
@@ -487,12 +488,59 @@ the picture without the handle. Give `ColorPickerWdgt` the `ControllerMixin` too
 that cannot be pointed at a target is an odd citizen in a system whose principle is "a colour is
 changed with a picker aimed at the thing".
 
-### P7 — Ticks become a reflection, not a redraw
+### P7 — Ticks become a reflection, not a redraw — ✅ **LANDED 2026-08-17 (for the non-widget half)**
 
 A menu item declares the pin it reflects and the value that ticks it; one shared reconciliation runs
 when that pin's edge delivers. This retires four hand-rolled routines, kills the `rows[1]…rows[7]`
 index fragility, and makes ticks correct across instances, API changes and snapshot loads. It is the
 view half of P5 and should land with it.
+
+#### As landed
+
+`MenuRowReflectionSpec {source, readerName, whenValue, labelWhenTrue, labelWhenFalse}` — carried as a
+`reflection:` opt on `MenuItemSpec`, held by `MenuItemWdgt` (which is BORN showing the current value,
+so the build-then-fix-up dance goes), reconciled by `MenuRowsPanelWdgt._reconcileReflectedRowsConnector`,
+and subscribed by `_subscribeToReflectedSource` — **one edge per PANEL, deduped through the new
+`DataflowEngine.hasEdge`** rather than a bookkeeping field the panel would have to declare, deep-copy
+and serialize.
+
+`readerName` is a METHOD NAME, so a source needs neither `pins()` nor Widget-ness — which is the
+point: `Wallpaper` and `PreferencesAndSettings` are plain collaborators.
+
+**Acceptance (the one the plan named).** `Wallpaper`'s apologetic comment is DELETED, and the probe
+`Fizzygum-tests/.scratch/p5-wallpaper-reflection-probe.js` opens TWO wallpaper menus and changes the
+pattern three ways — through menu A, through the plain API, through menu B. All four snapshots AGREE,
+and the wallpaper carries exactly 2 out-edges (one per panel, not one per row). Under the old
+fix-up only the first case worked, and only for the menu that was clicked; the API case had no
+mechanism at all, which is what the comment was apologising for.
+
+⭐ **`addEdge`, not `ensureWireEdge`.** The fan-out this needs (one source → N open menus) has always
+been supported by the engine's index — `edgesFrom` maps a producer to a **Set** of records. Only
+`ensureWireEdge`, which mirrors a controller's single `@target`, collapses it to one. So gap **G2 is a
+property of the WIRE vocabulary, not of the engine**, and a non-wire client can fan out today.
+
+**Lifecycle needed nothing, and the plan's `resetWorld` caveat is answered.** A closed menu is
+destroyed, `Widget._destroyNoSettle` calls `removeAllEdgesOf`, and `removeEdgesInto` deletes the
+producer's entry outright once its last consumer goes (`@edgesFrom.delete producer if outSet.size is
+0`) — so a `Wallpaper` that is now a live node leaves no residue behind a teardown, and
+`RESETWORLD_INCOMPLETE` stays quiet (the whole suite runs the ratchet).
+
+⚠ **SCOPE CORRECTION — P7 retires ONE of its four hand-rolled routines, not four.** The other three
+are blocked on **P3**, and the plan did not notice:
+
+| site | source | status |
+|---|---|---|
+| `Wallpaper.updatePatternsMenuEntriesTicks` | `Wallpaper` (plain collaborator) | ✅ **retired** |
+| world menu's input-mode row | `PreferencesAndSettings` (plain collaborator) | ✅ **converted** (one row that reflects, instead of two rows chosen by an `if`) |
+| `StringWdgt.updateFontsMenuEntriesTicks` | a **StringWdgt** | ⛔ blocked on P3 |
+| `TextWdgt` "soft wrap" · `ControllerMixin` "fires per event" | a **Widget** | ⛔ blocked on P3 |
+
+The reason is exactly gap **G1/G3**: `Widget.dataflowValue` is `@exportedValue()`, so a widget has
+**ONE** staleness signal. A `TextWdgt` announcing "my `softWrap` changed" would `markStale` itself and
+therefore fire its dataflow WIRES, delivering its *text* to whatever it drives. A non-widget holder
+has no such conflict, which is why P5's own title — *non-widget state becomes nodes* — turns out to be
+the exact boundary of what P7 can convert before P3 lands. **P3 is now a hard prerequisite for the
+rest of P7, not an independent proposal.**
 
 ### P8 — Scroll joins the public wire vocabulary
 
@@ -720,7 +768,7 @@ carry zero engine risk, which makes them the right way to test the law before pa
 
 | step | item | engine change | closes |
 |---|---|---|---|
-| 1 | **P5 + P7** — wallpaper (and input mode) as nodes; ticks as reflection | **none** | complaint ③ |
+| 1 | **P5 + P7** — wallpaper (and input mode) as nodes; ticks as reflection ✅ **LANDED 2026-08-17** | **none** | complaint ③ (the non-widget half; the three WIDGET-owned ticks turned out to need P3 first — see P7 "As landed") |
 | 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) | **none** | complaint ②'s view half |
 | 3 | **P9** — the `@target` renames ✅ **LANDED 2026-08-16** | none | reading hazard |
 | 4 | **P1** — `PinSpec` with readers ✅ **LANDED 2026-08-16** | none (the pull lands with P2) | unblocks 5–6 |

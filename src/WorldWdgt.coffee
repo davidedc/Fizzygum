@@ -2800,10 +2800,16 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
       menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
 
-      if WorldWdgt.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addMenuItem "touch screen settings", WorldWdgt.preferencesAndSettings, "toggleInputMode", toolTip: "bigger menu fonts\nand sliders"
-      else
-        menu.addMenuItem "standard settings", WorldWdgt.preferencesAndSettings, "toggleInputMode", toolTip: "smaller menu fonts\nand sliders"
+      # ONE row that SHOWS the current input mode, rather than two rows chosen by an `if` at
+      # build time: its wording is a view of the value, so it follows a toggle made anywhere —
+      # in another open world menu, or by a script. The tooltip says what the row DOES (it is the
+      # same act either way), so it does not need to reflect anything.
+      menu.addMenuItem "touch screen settings", WorldWdgt.preferencesAndSettings, "toggleInputMode",
+        toolTip: "switch between standard and\ntouch-screen menu fonts and sliders"
+        reflection: new MenuRowReflectionSpec WorldWdgt.preferencesAndSettings, "currentInputMode",
+          whenValue: PreferencesAndSettings.INPUT_MODE_MOUSE
+          labelWhenTrue: "touch screen settings"
+          labelWhenFalse: "standard settings"
       menu.addLine()
     
     if Automator?

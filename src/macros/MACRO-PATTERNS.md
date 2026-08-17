@@ -1614,6 +1614,20 @@ assertion a recapture after a regression silently stores two different hashes an
   any property prompt** — this is that test. Also useful as the template for asserting any prompt-driven property.
   No new verb.
 
+- **A menu row that SHOWS somebody's state follows a change it did not make**
+  (`macroWallpaperMenuFollowsAnApiChange`): open a ticked menu, change the underlying value with NO menu
+  interaction at all — `world.evaluateString "@wallpaper.setPattern @wallpaper.pattern5"` — and the open
+  menu's tick MOVES. The rows carry a `MenuRowReflectionSpec` (they declare that their label reflects a
+  value); the source is a dataflow node that `markStale`s itself on change, and `MenuRowsPanelWdgt`
+  subscribes one edge PER PANEL, so the drain re-derives every subscribed row wherever it is. Assert with
+  `@assertValuesEqual "…", "dots", (@tickedRowLabelOfMenu menu)` — the bare label of the ticked row.
+  ⚠ Grab the menu with `@getMostRecentlyOpenedMenu()` right after it opens, and do NOT pin it unless the
+  test clicks elsewhere (pinning tightens its shadow, changing the pixels). ⭐ The API path is the sharp
+  case and the cheap one: it needs no second-menu choreography, and it is what the hand-rolled tick
+  fix-ups could not do AT ALL (they ran only from the clicked item's own menu). A reflecting row is also
+  BORN correct, so the first screenshot proves the build path with no fix-up pass. No new verb beyond the
+  reader.
+
 ## Rendering & hit-testing
 
 - **Order-dependent transparency compositing** (`macroBoxTransparencyAndColorChanging`): two TRANSLUCENT, differently-coloured

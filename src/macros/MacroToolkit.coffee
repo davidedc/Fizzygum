@@ -816,6 +816,16 @@ class MacroToolkit
   assertValuesEqual: (description, expected, found) ->
     world.automator.player.recordMacroAssertion (found == expected), description, expected, found
 
+  # The BARE label of the one ticked row of a menu -- the tick prefix stripped, so a test can say
+  # what the menu currently SHOWS rather than assert a decorated string. For the ticked-menu family
+  # (wallpapers, fonts, and any row carrying a MenuRowReflectionSpec built by tickWhen): those menus
+  # tick exactly one row, so "which one" is the whole state. undefined when none is ticked.
+  tickedRowLabelOfMenu: (menu) ->
+    for row in menu.rowsPanel.children
+      if row.isTicked?()
+        return row.label.text.replace tick, ""
+    return undefined
+
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
   # ⚠ InspectorWdgt is the LAZY 'meta-tools' part, and this class is the EAGER 'macros' one, so the
