@@ -563,6 +563,26 @@ and append the shared connect block with `@_addTargetConnectionMenuEntries menu`
 read by both halves of the set-target UI — the target-property menu filters by it and the tooltip is
 worded from it — so the two cannot describe different things.
 
+**To drive others AND follow them** — a control that must stay welded to what it drives, like a
+scrollbar and its content — bind with `trackTarget theTarget, action` instead of `wireTo`, and
+implement `reflectTarget` to re-read. Two rules come with it, both learned the hard way:
+
+- **Read back the pin your own `@action` writes** (`@target.pinDrivenBy @action` → its `getterName`),
+  never a second field naming the property. A DUPLICATED control keeps `@target`/`@action` and
+  nothing else, so deriving from them is what makes the copy track what it drives.
+- ⚠ **A tracking bind does not push on connect.** `wireTo` fires your current value at the new
+  target, which is right when you OWN the value and wrong when you MIRROR it — the target is the
+  source of truth, so the initial value must flow target → you. This is not a nicety: a `SliderWdgt`
+  is born at 50 of 1..100, so a scrollbar that pushed on connect scrolled its panel to 50, and
+  because the fire POOLS it landed a cycle later, on a panel that may have gained content in the
+  meantime. `trackTarget` takes the value from the target for exactly this reason.
+
+The reverse channel is an announcement, not a delivery: the producer says *something about me
+changed that is not my value* (`world.dataflow.markNonValueChange @`) and every tracker re-reads. So
+a multi-field update needs no payload machinery at all — the consumer pulls as many fields as it
+likes. Reach for a pushed payload only when the producer emits an EVENT with no readable steady
+state.
+
 ### The pin-setter contract
 
 A pin setter is reached along two paths that put the value in **different argument slots**:

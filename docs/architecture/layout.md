@@ -31,10 +31,24 @@ what makes the pixel-exact SystemTest suite deterministic.
 7. **paint** — `updateBroken()` repaints the dirty rectangles of an already-settled world
 
 **Two parallel drain stations, one-way coupled.** Steps 4 and 5 are deliberate siblings: `recalculateDataflow`
-settles values, `recalculateLayouts` settles geometry. The coupling is **strictly one-way — dataflow may dirty
-layout, never the reverse** — which is why dataflow runs *before* layout: a formula/connection that writes a widget's
-text feeds this frame's geometry settle and paint. (The dataflow engine has its own spec; see
-`docs/specs/dataflow-engine-spec.md` and `src/dataflow/CLAUDE.md`. This doc covers only the layout station.)
+settles values, `recalculateLayouts` settles geometry. The coupling is **one-way for VALUES — dataflow may dirty
+layout, and layout may never mark a value stale** — which is why dataflow runs *before* layout: a
+formula/connection that writes a widget's text feeds this frame's geometry settle and paint.
+
+⚠ **The one narrow exception, and why it is not a hole.** A layout station may announce a **non-value** change
+(`markNonValueChange`), which wakes only the `firesOnAnyChange` edges — consumers that RE-READ the producer rather
+than receive a value. `ScrollPanelWdgt._reLayoutScrollbars` is the one caller: it tells whatever tracks it that its
+scroll geometry settled, so any number of scrollbars follow it rather than the two it holds fields for. This cannot
+re-enter the value settle (nothing is marked stale, no value is pulled) and it cannot loop (the announcement is
+dark unless someone re-reads, and re-reading marks nothing). What it costs is a cadence: an announcement raised
+*inside* `recalculateLayouts` has missed this cycle's dataflow station and is drained by the next one.
+⭐ **Measured, not assumed:** that lag is **zero frames for anything a gesture drives**, because `doOneCycle` plays
+INPUT before the dataflow station — so a wheel/drag/track-click scroll announces itself in time for the same
+cycle's drain — and **exactly one frame** only for a change originating inside the layout pass itself, where
+nothing is in motion. See `docs/plans/connector-ubiquity-and-reflection-plan.md` §P8 "As landed".
+
+(The dataflow engine has its own spec; see `docs/specs/dataflow-engine-spec.md` and `src/dataflow/CLAUDE.md`.
+This doc covers only the layout station.)
 
 **Paint reads layout but never schedules it.** The events→settle→paint boundary is the load-bearing invariant:
 events fix layout step-by-step, the end-of-cycle settle drains the rest, then `updateBroken` paints. There is no

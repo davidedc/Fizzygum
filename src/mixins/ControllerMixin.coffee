@@ -30,6 +30,31 @@ ControllerMixin =
       # this is what a caller building a circuit in code means, and what the menu adapter
       # below reduces to once the dispatcher's slots have been unpacked.
       wireTo: (theTarget, action) ->
+        @_bindTo theTarget, action
+        # reactToTargetConnection is left UNCHANGED across every controller: via _fireConnection it
+        # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
+        # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
+        # Non-forced is sufficient (a fresh wire's producer value differs from the target's, so it propagates).
+        @reactToTargetConnection?()
+
+      # THE RECIPROCAL WIRE (connector plan §P8): I drive `action` on `theTarget` AND I follow it, so
+      # the two stay welded however the property changes. Same binding as wireTo, plus the reverse
+      # edge — and with the on-connect push turned around.
+      #   ⭐ A TRACKING control does NOT push on connect. That is what tracking MEANS: the target owns
+      # the value and I show it, so the initial value flows target → me. Pushing instead is not a
+      # nuance, it is a bug with teeth: a scrollbar's thumb starts wherever its constructor left it
+      # (a SliderWdgt is born at 50 of 1..100), so a connect-time push scrolls the content to a
+      # position nobody asked for — and it lands on the NEXT drain, by which time a panel that had
+      # nothing to scroll at construction may well have gained content.
+      trackTarget: (theTarget, action) ->
+        @tracksTarget = true
+        @_bindTo theTarget, action
+        @_ensureTrackingEdge()
+        @reflectTarget()
+
+      # What both binding verbs share: the two local fields the edges DERIVE from, the legacy
+      # <action>IsConnected flag, and the forward edge itself.
+      _bindTo: (theTarget, action) ->
         @target = theTarget
         @action = action
         if @target[@action + "IsConnected"]?
@@ -39,13 +64,8 @@ ControllerMixin =
         # out-edge first on a re-wire). The index is derived/disposable (spec §2), re-declared by the client on
         # load/copy -- here the client is the wire itself. Declaring EAGERLY here is an optimisation (the edge
         # exists the moment a menu wire is made); _fireConnection re-derives it LAZILY too, which is what covers
-        # the wires that never reach this method (direct @target/@action assignment -- scrollbars, prompt sliders).
+        # the wires that never reach this method (direct @target/@action assignment -- a prompt slider).
         world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
-        # reactToTargetConnection is left UNCHANGED across every controller: via _fireConnection it
-        # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
-        # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
-        # Non-forced is sufficient (a fresh wire's producer value differs from the target's, so it propagates).
-        @reactToTargetConnection?()
 
       # THE MENU ADAPTER. Its first two parameters are not mine to choose: a menu/button
       # action is dispatched as
@@ -79,8 +99,38 @@ ControllerMixin =
         # Without this such a wire would markStale with no out-edge and deliver nothing (silently broken scroll).
         # Idempotent for a menu-wired connection (the eager declaration already matches); no-op mid-drain.
         world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
+        # ...and, for a TRACKING control, the opposite edge from the same local facts (see below).
+        @_ensureTrackingEdge()
         world.dataflow.markStale @
         return
+
+      # ---- tracking: the REVERSE half of a wire (connector plan §P8) -----------------------
+      # A wire is ONE-WAY: I drive `@action` on `@target`. A control that must stay WELDED to what it
+      # drives — a scrollbar and its content — also has to FOLLOW it when the property changes by any
+      # other means. `trackTarget` declares that second, opposite edge: target → me, `firesOnAnyChange`,
+      # so my target's markNonValueChange wakes me too. That announcement is the honest one for a
+      # property that is not the target's VALUE (a scroll panel has no principal pin at all), and it
+      # is why the edge asks to re-read rather than to be handed something.
+      #   I never read the delivered value: `reflectTarget` re-reads the pin MY OWN @action writes.
+      # So a DUPLICATED control — which keeps @target, @action and this flag, and nothing else —
+      # tracks exactly what it drives, with no field naming the property a second time.
+      #   Declared as a PROTOTYPE default, so a plain one-way wire carries no own `tracksTarget`
+      # property and serializes byte-for-byte as before — the same own-only-when-set idiom as
+      # @target / @action / @firesPerEvent.
+      tracksTarget: false
+
+      # Derive the tracking edge from @tracksTarget + @target, exactly the way ensureWireEdge derives
+      # the wire from @target/@action: the index is derived and disposable (dataflow spec §2) and the
+      # client re-declares it, and the client here is me. Idempotent, so it is cheap on every fire and
+      # on every re-add — which is what makes a duplicated or re-parented control re-subscribe with no
+      # bookkeeping of its own to duplicate or serialize.
+      #   Dedup asks the index (hasEdge) rather than keeping a field, as MenuRowsPanelWdgt does. That
+      # reads "is there ANY edge target → me", which is the right question here: a target that drove me
+      # back would be a two-wire ring, which no caller builds and which §P2 will address explicitly.
+      _ensureTrackingEdge: ->
+        return unless @tracksTarget and @target?
+        return if world.dataflow.hasEdge @target, @
+        world.dataflow.addEdge @target, @, action: "reflectTarget", firesOnAnyChange: true
 
       # ---- firesPerEvent: per-wire delivery policy (dataflow; spec §4/§8) ------------------
       # false (default) = POOLED: ten drag events + a tick in one frame collapse to ONE recompute

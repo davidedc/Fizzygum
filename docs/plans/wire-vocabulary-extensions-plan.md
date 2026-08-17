@@ -193,6 +193,16 @@ ring stays 1-pass and frame-identical (regression); (t3) mixed fan-out per D1.
 fires only when a hot edge (typically a per-event `bang`) arrives — the cold-then-hot
 idiom = atomic multi-field events (note-on: cold pitch, cold velocity, hot bang).
 
+⚠ **STILL NO CUSTOMER (checked 2026-08-17).** Connector §P8 was expected to supply the first one —
+a scrollbar's reverse channel carries four numbers (`start`/`stop`/`value`/`size`), which reads
+exactly like cold-then-hot. It did not, and the reason is worth recording because it will recur:
+**the multi-field problem only exists if the values are PUSHED.** §P8's reverse edge is a
+`firesOnAnyChange` subscription — "wake me, I re-read you" — so the consumer PULLS all four at once
+and there is nothing to sequence. Before reaching for cold edges, check whether the consumer could
+simply re-read the producer; the cold-then-hot idiom earns its keep only where the producer
+genuinely emits a multi-field EVENT that has no readable steady state (a note-on), not where it has
+a state a consumer can go and look at.
+
 **Engine sketch (decide at implementation):** the natural shape is: a producer's
 change still *applies* its cold out-edges' values (store via the action's
 `_<action>Connector`/bare-mutator routing, exactly `_applyWireValue`) but cold edges

@@ -92,6 +92,11 @@ class SliderWdgt extends CircleBoxWdgt
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelfAndButton()
+    # A DUPLICATED or re-parented control carries @target/@action/@tracksTarget but NO edges — the
+    # engine's index is derived and never duplicated or serialized, and the client re-declares it
+    # (dataflow spec §2). Joining a live world is the moment a copy can do that, so a duplicated
+    # scrollbar follows its content from the start rather than only from its first drag.
+    @_ensureTrackingEdge()
 
   # Re-lay-out me and my thumb, then repaint -- the couplet every value/geometry change
   # ends with.
@@ -202,6 +207,26 @@ class SliderWdgt extends CircleBoxWdgt
   reactToTargetConnection: ->
     @updateTarget()
 
+  # The REVERSE half of my wire (connector plan §P8): my target announced that something about it
+  # changed, and I RE-READ it instead of being handed a value — a `firesOnAnyChange` edge, the same
+  # shape a reflected menu row uses (MenuRowsPanelWdgt._subscribeToReflectedSource, which likewise
+  # ignores what is delivered). What I re-read is the pin MY OWN @action writes, so I follow exactly
+  # what I drive.
+  #   A target that a slider can be bound to also says what SCALE that pin lives on
+  # (`sliderRangeForPin`, capability-probed — most targets have no answer and want none). Without a
+  # range there is no thumb geometry to derive, so I keep what I have; a degenerate range would
+  # divide by zero in unitSize.
+  #   Public, and sound as the edge's action with no `_<action>Connector` lane: _updateSpecs applies
+  # through the non-notifying re-lay tiers and opens no settle, so it JOINS the drain's pass settle
+  # the way setValue / setColor do (ControllerMixin._fireConnection's note on routing).
+  reflectTarget: ->
+    return unless @target?
+    pin = @target.pinDrivenBy? @action
+    return unless pin?.getterName?
+    range = @target.sliderRangeForPin? pin
+    return unless range?
+    @_updateSpecs range.start, range.stop, @target[pin.getterName](), range.size
+
   # My `value` pin's reader (dataflow spec §9.3), which is also what exportedValue answers because
   # `value` is my principal pin: a slider-valued spreadsheet cell reads as its number, and a
   # reference to that cell yields the number. The duck-typed cluster already probed `x.getValue?()`
@@ -247,9 +272,14 @@ class SliderWdgt extends CircleBoxWdgt
   showValue: ->
     @inform @value
 
-  # once you set all the properties of a slider you
-  # call this method so it updates itself
-  updateSpecs: (start, stop, value, size)->
+  # Adopt a whole scale at once — the APPLY half of reflectTarget, and reflect-without-firing like
+  # _updateHandlePosition above (it deliberately does not call updateTarget: I am SHOWING a value,
+  # not producing one, so announcing would drive my target from my own reflection).
+  #   PRIVATE: the only caller is my own reflectTarget. It was public while a scroll frame pushed
+  # four numbers into the bars it held fields for; the reverse edge (connector §P8) makes the bar
+  # pull instead, so there is no external caller left and the [U] call-separation rule is right to
+  # say so.
+  _updateSpecs: (start, stop, value, size)->
     if start? then @start = start
     if stop? then @stop = stop
     if value? then @value = value
@@ -259,9 +289,8 @@ class SliderWdgt extends CircleBoxWdgt
     @button._reLayoutSelf()
 
     # self + thumb: the re-lays above move/resize the button through
-    # non-notifying tiers. The caller covers its own repaint (a scroll
-    # frame's _reLayoutScrollbars does its own _changed()) — a widget
-    # invalidates only itself (widget-citizenship contract point 2).
+    # non-notifying tiers — a widget invalidates only itself
+    # (widget-citizenship contract point 2).
     @_fullChanged()
   
   # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and

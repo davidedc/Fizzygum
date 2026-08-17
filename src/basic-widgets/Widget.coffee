@@ -4637,10 +4637,14 @@ class Widget extends TreeNode
   # Declaring a reader that isn't there would fabricate a contract (PinSpec's header).
   #
   # ⚠ `width` / `height` are write-only ON PURPOSE even though `width()` and `height()` are right
-  # there. A readable pin is a licence to BIND, and geometry under the one-way layout↔dataflow law
-  # (dataflow may dirty layout, never the reverse) is exactly where that is not affordable -- it is
-  # open owner question 1 of plans/connector-ubiquity-and-reflection-plan.md §8. When that question
-  # is answered, this is the one line that changes.
+  # there. A readable pin is a licence to BIND, and nothing binds these: no consumer has ever wanted
+  # to track a widget's width.
+  #   ⭐ That is a positive choice, not a restriction. The one-way layout↔dataflow law permits a
+  # readable geometry pin: connector §P8 measured and narrowed it to "layout may never markStale, but
+  # it MAY markNonValueChange", and the feared one-frame shear does not occur on any path a gesture
+  # drives (doOneCycle plays input BEFORE the dataflow station). ScrollPanelWdgt's `scroll x` /
+  # `scroll y` are readable on exactly that licence. So the bar for a readable geometry pin is a real
+  # CONSUMER, not the law -- add the reader when something needs to track it.
   pins: ->
     declared = [
       new PinSpec "color",            "color",     set: "setColor"
@@ -4684,13 +4688,18 @@ class Widget extends TreeNode
   # Find one of my pins by its LABEL -- the pin's identity. Every pin has one (a read-only pin has
   # no setter to be named by), it is unique within a widget's pin set, and it is what the menu
   # shows. This is how a class points at its own principal pin.
-  #   The reverse edge will want the OTHER lookup, by setter name ("a wire wrote this action; which
-  # pin did it write?", since a wire stores its `@action` as the setter's name). That is three lines
-  # and it lands with its first caller (connector plan P2/P7), not before: an uncalled method cannot
-  # be verified, and the dead-method gate is right to refuse it.
   pinLabelled: (label) ->
     for pin in @pins()
       return pin if pin.label is label
+    return undefined
+
+  # The OTHER lookup, by setter name: "a wire wrote this action; which pin did it write?" -- since a
+  # wire stores its `@action` as the setter's name. It is what lets a control BOUND to me re-read the
+  # very property it drives, with no second field naming that property: SliderWdgt.reflectTarget, the
+  # reverse half of a scrollbar's wire (connector plan §P8).
+  pinDrivenBy: (setterName) ->
+    for pin in @pins()
+      return pin if pin.setterName is setterName
     return undefined
 
   # The one pin whose value this widget offers when asked for its value with no pin named -- to a

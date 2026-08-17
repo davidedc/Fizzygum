@@ -72,3 +72,37 @@ reference / widget-valued tests:
   recomputes the *downstream closure of what changed this event*, not the sheet/circuit.
 
 No shipped circuit approaches the 1000-pass bound; the drain is O(affected-subgraph) per cycle.
+
+---
+
+## Cadence: does a layout-announced change SHEAR? (2026-08-17, connector §P8)
+
+`ScrollPanelWdgt._reLayoutScrollbars` announces (`markNonValueChange`) from inside the LAYOUT
+station, so its announcement can only be drained by a dataflow station — which raises the question
+the connector plan's §P3 deferred to a measurement: does a scrollbar visibly lag its content?
+
+**Instrument:** `Fizzygum-tests/.scratch/p8-scroll-shear-probe.js` — a 300 px viewport over 3000 px
+of content (scale 0..2700, thumb 29 px, `unitSize` 0.0948 px of thumb per unit), one wheel notch per
+frame (the fastest a real fling can arrive: one input event per painted frame) and again every third
+frame, sampled AFTER each cycle has painted. It compares `panel.getScrollY()` against
+`panel.vBar.value` and converts to thumb pixels by re-deriving the thumb top exactly as
+`SliderButtonWdgt._reLayoutSelf` does.
+⚠ It refuses to report unless the content actually travelled: the wheel's sign depends on
+`invertWheelY`, and `ScrollPanelWdgt.wheel` ESCALATES rather than scrolls when the content is
+already against the edge it is pushed toward — so the wrong sign yields a clean, entirely
+meaningless "lag: 0".
+
+| what moves the scroll | where the announcement is raised | measured lag |
+|---|---|---|
+| a **gesture** — wheel, thumb drag, track click | `_playQueuedEvents`, at the TOP of `doOneCycle` — **before** `recalculateDataflow` | **0 frames** (max, both fling rates) |
+| a **layout re-fit** — content resized, changing the bar's RANGE | inside `recalculateLayouts` — **after** this cycle's station | **1 frame** |
+
+⭐ **The result inverts the objection.** "Announce at the end of layout" was assumed to mean the
+announcement always misses the drain. It does not, because the cycle plays INPUT first — so every
+gesture-driven change is announced in time for the same cycle's drain, and the residual one frame
+falls only where nothing is in motion. A same-frame second drain would add a second
+`recalculateLayouts` to every cycle to buy back a lag that is zero wherever it could be seen.
+
+⚠ The 0 depends on `markNonValueChange` having **no echo rule**: the drag path announces from
+*inside* the drain (the panel is the node being applied into), and it is the next pass of that same
+drain that reaches the other bars.

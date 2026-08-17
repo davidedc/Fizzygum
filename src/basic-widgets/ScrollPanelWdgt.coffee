@@ -64,19 +64,20 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @hBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @hBar._applyHeight @scrollBarsThickness
-
-    @hBar.target = @
     @_addNoSettle @hBar
 
     @vBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
     @vBar._applyWidth @scrollBarsThickness
-    @vBar.target = @
     @_addNoSettle @vBar
 
-    @hBar.target = @
-    @hBar.action = "adjustContentsBasedOnHBar"
-    @vBar.target = @
-    @vBar.action = "adjustContentsBasedOnVBar"
+    # Bind each bar with the PUBLIC wire verb any other citizen would use — the RECIPROCAL one, since
+    # a scrollbar both drives my scroll pin and must follow it. The old direct @target/@action
+    # assignment kept the forward edge outside the wire vocabulary, and made the reverse one a
+    # hand-rolled push into these two fields — which is why only these two bars ever learned anything
+    # (connector plan §P8, complaint ①). trackTarget also takes the initial value FROM me rather than
+    # pushing the bar's constructed default at me.
+    @hBar.trackTarget @, "setScrollX"
+    @vBar.trackTarget @, "setScrollY"
 
     @_reLayoutScrollbars()
 
@@ -92,17 +93,71 @@ class ScrollPanelWdgt extends PanelWdgt
     # `@contents instanceof` tests (type-test-elimination ε)
     @contents?.scrollPanelColloquialName?() ? "scrollable panel"
 
-  adjustContentsBasedOnHBar: (num) ->
-    @contents._applyMoveTo new Point @left() - num, @contents.position().y
-    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
-    @_positionAndResizeChildren()
-    @_reLayoutScrollbars()
+  # ── THE SCROLL PINS ──────────────────────────────────────────────────────────────────────────
+  # How far my content is scrolled inside my viewport, along each axis: 0 at the top/left, growing
+  # to the overflow. These are the numbers my scrollbars drive and show, and until §P8 they were
+  # reachable only by direct assignment — no connect menu offered them, and nothing could read them.
+  #
+  # ⚠ READABLE, where Widget's `width`/`height` deliberately are not (widget-authoring-guidelines
+  # §11): a reader is a licence to BIND, and geometry is where the one-way layout↔dataflow law makes
+  # that expensive. A scrollbar is precisely the case that needs it — it must FOLLOW what it drives —
+  # so §P8 pays that price here and nowhere else, and `_reLayoutScrollbars` below is where the bill
+  # comes due.
 
-  adjustContentsBasedOnVBar: (num) ->
-    @contents._applyMoveTo new Point @contents.position().x, @top() - num
-    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
-    @_positionAndResizeChildren()
+  getScrollX: -> @left() - @contents.left()
+
+  getScrollY: -> @top() - @contents.top()
+
+  # The pin-setter contract (widget-authoring-guidelines §11): the value-giving widget arrives in
+  # SLOT 2 on the menu/prompt path and slot 1 holds the widget being CONFIGURED, so slot 2 is read
+  # first; a wire fills slot 1 only.
+  #   ⚠ CLAMPED, through the same `scrollX`/`scrollY` every other scroll path uses. The predecessor
+  # moved the content raw, which could commit an over-scrolled state no gesture can produce (the
+  # defect `scrollTo`'s own comment records). It also matters now that the bars are really wired: a
+  # bar that is hidden because there is nothing to scroll still holds its constructed default, and
+  # clamping is what makes delivering that a no-op instead of shoving the content off its viewport.
+  setScrollX: (numOrWidgetGivingNum, widgetGivingNum) ->
+    num = widgetGivingNum?.getValue?() ? numOrWidgetGivingNum?.getValue?() ? numOrWidgetGivingNum
+    num = parseFloat num  unless typeof num is "number"
+    return  if isNaN num
+    if @scrollX (@left() - num) - @contents.left()
+      # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
+      @_positionAndResizeChildren()
     @_reLayoutScrollbars()
+    return num
+
+  setScrollY: (numOrWidgetGivingNum, widgetGivingNum) ->
+    num = widgetGivingNum?.getValue?() ? numOrWidgetGivingNum?.getValue?() ? numOrWidgetGivingNum
+    num = parseFloat num  unless typeof num is "number"
+    return  if isNaN num
+    if @scrollY (@top() - num) - @contents.top()
+      # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
+      @_positionAndResizeChildren()
+    @_reLayoutScrollbars()
+    return num
+
+  pins: -> super().concat [
+    new PinSpec "scroll x", "numerical", set: "setScrollX", get: "getScrollX"
+    new PinSpec "scroll y", "numerical", set: "setScrollY", get: "getScrollY"
+  ]
+
+  # What SCALE does this pin of mine live on, for a slider bound to it? (SliderWdgt.reflectTarget.)
+  # The VALUE itself the slider reads through the pin's own reader; these are the three numbers a
+  # thumb needs besides it — which is why the reverse edge carries no payload of its own.
+  sliderRangeForPin: (pin) ->
+    switch pin.label
+      when "scroll x" then @_scrollRangeAlong @width(), @contents.width()
+      when "scroll y" then @_scrollRangeAlong @height(), @contents.height()
+      else undefined
+
+  # One axis' scale: I can be scrolled along it exactly when my content overflows my viewport — the
+  # same test that decides whether the bar shows at all — the scale runs from 0 to that overflow, and
+  # the thumb covers the visible fraction of it. `undefined` when there is nothing to scroll: a bar
+  # showing an empty scale means nothing, and a zero-width one divides by zero in the thumb geometry.
+  _scrollRangeAlong: (viewport, content) ->
+    return undefined unless content >= viewport + 1
+    stop = content - viewport
+    new SliderRange 0, stop, viewport / content * stop
 
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
     aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor
@@ -188,13 +243,14 @@ class ScrollPanelWdgt extends PanelWdgt
         # ScrollPanel, otherwise we don't move it.
         if @hBar.parent == @
           @hBar._applyMoveToBase new Point @left(), @bottom() - @hBar.height()
-        stopValue = @contents.width() - @width()
-        @hBar.updateSpecs(
-          0, # start
-          stopValue, # stop
-          @left() - @contents.left(), # value
-          @width() / @contents.width() * stopValue # size
-        )
+        # I placed and sized the bar through the NON-notifying twins, so re-laying it is MINE to do
+        # -- the same rule I follow for @contents in _positionAndResizeChildren. A slider's THUMB is
+        # derived from its frame (SliderButtonWdgt._reLayoutSelf reads its parent's height and
+        # position), so a bar whose frame I just changed and whose thumb nobody re-lays is left
+        # INTERNALLY INCONSISTENT -- which the arrange-idempotence census correctly reports as a
+        # mover. The retired four-number push happened to do this on its way past; it is a LAYOUT
+        # obligation, not a dataflow one, so it stays here where the frame changes.
+        @hBar._reLayoutSelfAndButton()
       else
         @hBar.hide()
 
@@ -209,15 +265,34 @@ class ScrollPanelWdgt extends PanelWdgt
         # ScrollPanel, otherwise we don't move it.
         if @vBar.parent == @
           @vBar._applyMoveToBase new Point @right() - @vBar.width(), @top()
-        stopValue = @contents.height() - @height()
-        @vBar.updateSpecs(
-          0, # start
-          stopValue, # stop
-          @top() - @contents.top(), # value
-          @height() / @contents.height() * stopValue # size
-        )
+        # same as the hBar above: I changed its frame through the non-notifying twins, so its thumb
+        # is mine to re-lay.
+        @vBar._reLayoutSelfAndButton()
       else
         @vBar.hide()
+
+    # ── THE REVERSE EDGE (connector plan §P8) ────────────────────────────────────────────────
+    # My scroll geometry just settled, so ANNOUNCE it and let whoever tracks me re-read it — instead
+    # of pushing four numbers into the two bars I happen to hold fields for. Everything above this
+    # line is still field business, and rightly: SHOWING, SIZING and PLACING the bars is chrome I own
+    # and only my own two are mine to place. The four NUMBERS are not chrome, they are the state, and
+    # any number of bars may want them — a duplicate, a bar someone unplugged onto the desktop, one
+    # belonging to nobody. That is complaint ① closed.
+    #   markNonValueChange, not markStale: my scroll offset is not my VALUE (I declare no principal
+    # pin — a scroll frame has no one number), and this wakes only the edges that asked to re-read me,
+    # so it is DARK when nothing tracks me.
+    # ⚠ This is a LAYOUT station marking DATAFLOW, which the engine's standing one-way law otherwise
+    # forbids. It is deliberate, and it is option (c) of §P3's reframed table: announce here, drain
+    # whenever the drain next runs.
+    # ⭐ MEASURED (§P8, .scratch/p8-scroll-shear-probe.js), because the objection to (c) was that a
+    # tracking pair would SHEAR by a frame under fast motion. It does not, and the reason is the
+    # CYCLE ORDER read the other way round: doOneCycle plays input BEFORE the dataflow station, so a
+    # scroll driven by a wheel, a thumb drag or a track click announces itself in time for the SAME
+    # cycle's drain — measured lag ZERO frames, at every fling rate. The one-frame lag is real only
+    # for a change that originates INSIDE recalculateLayouts (a content re-fit changing the bar's
+    # RANGE) — measured at exactly 1 frame — which is the case with no motion to shear against.
+    # So (d)'s second drain+layout pass would buy nothing on the only path that moves.
+    world.dataflow.markNonValueChange @
 
   # when you add things to the ScrollPanelWdgt they actually
   # end up in the Panel inside it.

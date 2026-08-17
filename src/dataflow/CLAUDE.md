@@ -150,13 +150,20 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
   with `markStale` would re-deliver the unchanged principal value along every wire — inert for
   an ordinary value pin, a **cascading force-fire** for a `bang` pin. It wakes only the out-edges
   declared **`firesOnAnyChange`** ("my consumer RE-READS the producer rather than receiving its
-  value"), which is what a reflected menu row is; and it is **dark** unless such an edge exists.
-  Spec §3a; connector plan §P3.
+  value"), which is what a reflected menu row is, and what a scrollbar tracking its panel is; and
+  it is **dark** unless such an edge exists. Spec §3a; connector plan §P3, §P8.
+  ⚠ It deliberately carries **no echo rule**, unlike `markStale`. `markStale` drops a re-mark of the
+  node the engine is applying into because the engine already owns that node's value-downstream
+  walk; a non-value announcement wakes a DIFFERENT edge set, which the engine is NOT walking for a
+  node it reached as a wire CONSUMER — so the same guard would DELETE the announcement rather than
+  deduplicate it (measured: a scroll panel driven by one bar never telling its other bars).
 - **`__poolStale(node, forced)`** — the bare atom: push into the stale pool, nothing else.
 - **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle`
   BETWEEN `runChildrensStepFunction` and `recalculateLayouts`. **Two parallel drain stations:
-  dataflow settles VALUES, layout settles GEOMETRY**; the coupling is one-way (dataflow may
-  dirty layout; layout must never mark dataflow stale). Empty-pool early-return keeps it
+  dataflow settles VALUES, layout settles GEOMETRY**; the coupling is one-way FOR VALUES (dataflow
+  may dirty layout; layout must never `markStale`). ⚠ A layout station MAY announce a NON-value
+  change — see `markNonValueChange` above; it marks no value and pulls nothing, so it cannot
+  re-enter the value settle, and its only cost is cadence. Empty-pool early-return keeps it
   dark-cheap. Otherwise drain-until-quiet: each pass snapshots the pool (insertion order =
   event order), computes the downstream closure, orders it (`_orderTopologically`: Kahn +
   one-lap-from-entry remainder), and walks it once — a node runs only if it is a seed or a

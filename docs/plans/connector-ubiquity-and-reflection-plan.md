@@ -740,7 +740,7 @@ which is why P5's own title — *non-widget state becomes nodes* — was the exa
 could convert alone. **P3's answer is `markNonValueChange` + the edge's `firesOnAnyChange`** (see §P3
 "As landed"), which is what unblocked the remaining three.
 
-### P8 — Scroll joins the public wire vocabulary
+### P8 — Scroll joins the public wire vocabulary — ✅ **LANDED 2026-08-17**
 
 `ScrollPanelWdgt` defines **no** setter table override at all today, so its scroll position is not
 offered by any connect menu and `adjustContentsBasedOnHBar` / `adjustContentsBasedOnVBar` are
@@ -771,6 +771,83 @@ structured update. Two options:
   [`wire-vocabulary-extensions-plan.md`](wire-vocabulary-extensions-plan.md) §4.W2 reserves and
   whose open question is "no customer exists yet".** ⭐ **Here is a customer, and it is product code,
   not a hypothetical sequencer.** Whichever option wins, this fact should be recorded in that plan.
+
+#### As landed
+
+**The reverse channel carries NO payload, so the four-number question dissolved rather than being
+answered.** Both options above assume the numbers travel — as one value object, or as four cold pins
+then a hot one. Neither is possible as posed: the engine PULLS one value per node
+(`Widget.dataflowValue` → the principal pin), and a scroll frame has no one number, so a pushed
+payload could not distinguish the horizontal bar's business from the vertical's without inventing
+per-axis sub-nodes. What fits is the shape §P3 already built: **`firesOnAnyChange`, the edge that
+says "wake me, I re-read you"** — the same one a reflected menu row uses. So:
+
+```coffee
+world.dataflow.markNonValueChange @          # ScrollPanelWdgt._reLayoutScrollbars: "my scroll geometry moved"
+world.dataflow.addEdge @target, @, action: "reflectTarget", firesOnAnyChange: true   # the bar subscribes
+```
+
+and the bar re-reads **the pin its own `@action` writes** — `pinDrivenBy(@action)` → the pin's
+`getterName` for the value, plus `sliderRangeForPin` (capability-probed) for the scale. That is what
+lands `Widget.pinDrivenBy`, which `Widget.coffee` had reserved for "its first caller"; this is it.
+⭐ **A duplicated bar therefore tracks what it drives with NO field naming the property twice** — it
+keeps `@target`/`@action`/`@tracksTarget` and re-derives both edges, which is exactly why complaint ①
+closes for a duplicate and not just for the panel's own two bars.
+
+Only the VALUE needed a home, and it already had one; the three-number SCALE became `SliderRange`
+(new, immutable, transient). ⇒ **§8 q5 is answered "neither": the payload question was a consequence
+of assuming a push.** Recorded in `wire-vocabulary-extensions-plan.md` §4.W2 — W2 still has no
+customer.
+
+**⭐⭐ THE MEASUREMENT (§8 q1), and it inverts the objection.** §P3 feared that (c) makes a tracking
+pair shear by a frame under fast motion, and guessed 3–5 px. Measured
+(`Fizzygum-tests/.scratch/p8-scroll-shear-probe.js`, a wheel notch per frame over a 2700 px scale,
+sampled after each cycle has painted):
+
+| what moves the scroll | where the announcement is raised | measured lag |
+|---|---|---|
+| a **gesture** — wheel, thumb drag, track click | `_playQueuedEvents`, at the TOP of `doOneCycle` — **before** `recalculateDataflow` | **0 frames** (max, at every fling rate) |
+| a **layout** re-fit — content resized, so the bar's RANGE changes | inside `recalculateLayouts` — **after** this cycle's dataflow station | **1 frame** |
+
+⇒ **(c), and (d) is closed.** The objection assumed "announce at the end of layout" means the
+announcement always misses the drain. It does not, because the cycle plays INPUT first: every
+gesture-driven scroll is announced in time for the same cycle's drain. **The shear (d) would buy back
+cannot occur on the only path that has motion to shear against**, and the residual one frame falls
+exactly where nothing is moving. (d) would add a second `recalculateLayouts` to every cycle for that.
+
+⚠ **Two bugs found on the way, both worth keeping:**
+
+1. **A TRACKING bind must not push on connect.** `wireTo` fires the controller's current value at its
+   new target, which is right for a control that OWNS the value and wrong for one that MIRRORS it: a
+   `SliderWdgt` is born at 50 of 1..100, so binding a scrollbar scrolled its panel to 50. And because
+   the fire POOLS, it landed on the next drain — by which time a panel that had nothing to scroll at
+   construction had gained content. It cascaded into `RECALC_NONCONVERGENCE` (100 000 re-lays) and
+   `NON_FINITE_GEOMETRY`. ⇒ the reciprocal verb `trackTarget theTarget, action` takes the initial
+   value FROM the target. **The direction of the on-connect push is part of what a bind MEANS**, and
+   §P2 inherits that rule.
+2. **`markNonValueChange` must NOT copy `markStale`'s echo rule.** It did, verbatim. `markStale`
+   drops a re-mark of the node being applied into because the engine already owns that node's
+   VALUE-downstream walk — but a non-value announcement wakes a DIFFERENT edge set (the re-readers),
+   which the engine is not walking for a node it reached as a wire CONSUMER (such a node is not in
+   `noted`). So the guard did not deduplicate the announcement, it **deleted** it: a panel told to
+   scroll never told its OTHER bars. Removed; it now pools and drains on the next pass of the SAME
+   drain, which is also what makes the drag path 0 frames rather than "1 frame, if some later
+   relayout happens to run".
+
+**Also:** `setScrollX`/`setScrollY` (the renamed `adjustContentsBasedOnHBar`/`VBar`) are now CLAMPED
+through the same `scrollX`/`scrollY` every other scroll path uses. The predecessors moved the content
+raw — the over-scroll defect `scrollTo`'s own comment already recorded — and clamping is also what
+makes a stale value from a hidden bar a no-op instead of shoving the content off its viewport.
+
+**Recaptures: the inspector member-list class.** Every `ControllerMixin` member is copied in as an
+OWN member of each controller (`Widget.coffee` says so where it explains why
+`_popUpTargetPropertyMenu` lives on `Widget` instead), so the four new ones shift every inspected
+controller's list. Kept on the mixin regardless: they are about `@target`/`@action`, which is the
+mixin's remit, and recapture churn does not decide placement.
+**`SystemTest_macroInspectorScrollbarUnplugged` is the acceptance test** — it existed to record the
+ASYMMETRY (drag the duplicate and the original follows; drag the original and the duplicate stays
+put). Its final image now shows both knobs meeting. Its four prose fields and its macro comments were
+rewritten to assert the symmetry instead.
 
 ### P10 — Buttons: **NO** to engine delivery, **YES** to the gesture and the index
 
@@ -1016,11 +1093,14 @@ wire-vocabulary plan's W2 is waiting for.
 
 ## 8. Open questions for the owner
 
-1. **Geometry pins** — ⚠ **REFRAMED 2026-08-17 (owner discussion). NOT closed, and NOT "accept
-   write-only".** `width`/`height` are write-only TODAY as a holding position, not as a verdict. Two
-   candidates are live — **(c) notify at the end of layout, drain NEXT frame** and **(d) notify at the
-   end of layout, drain in the SAME frame** — and the choice between them is a MEASUREMENT that §P8
-   will make. See §P3's expanded options.
+1. ~~**Geometry pins**~~ — **ANSWERED 2026-08-17 by MEASUREMENT: (c)**, landed for the scroll pins in
+   §P8, with (d) closed. A tracking pair does NOT shear, because `doOneCycle` plays INPUT before the
+   dataflow station: a gesture-driven change is announced in time for the same cycle's drain (0
+   frames measured), and the one-frame lag falls only on a change originating inside
+   `recalculateLayouts`, where nothing is moving. See §P8 "As landed" for the table and the probe.
+   ⚠ This licenses a READABLE, bindable geometry-ish pin where a consumer needs one — it does not
+   retroactively make `width`/`height` readable: those are still write-only, now as a positive choice
+   (nothing needs to bind them) rather than as a holding position.
 2. ~~**`PinSpec` record vs. keeping parallel arrays** with a third `[readers]` column.~~ **ANSWERED
    2026-08-16 — the record**, and the third column would not have been enough anyway: a reader is
    only one of the two things arrays cannot state (the other is a pin accepting more than one kind,
@@ -1031,9 +1111,11 @@ wire-vocabulary plan's W2 is waiting for.
    all when the colour is not on the surface?~~ **ANSWERED — a distinct rendering, and NEVER a
    snap**, because a snapped ring displays a position the value does not have. As landed it is a
    colour band round the whole field, claiming no position. See P6 "As landed" (ii).
-5. **Scroll's four-number reverse channel** — an immutable `SliderRange` value payload, or the first
-   real use of cold edges (and therefore a decision that belongs jointly to
-   `wire-vocabulary-extensions-plan.md` W2)?
+5. ~~**Scroll's four-number reverse channel**~~ — **ANSWERED 2026-08-17: NEITHER.** The reverse edge
+   carries no payload at all — it wakes the bar and the bar RE-READS (`firesOnAnyChange`), because a
+   node has one value and a scroll frame has no one number. So three of the four travel as a
+   `SliderRange` the consumer PULLS, and the fourth is the pin's own reader. **W2 still has no
+   customer.** See §P8 "As landed".
 6. **Does `@wires` (P4) get a serialization version bump**, or does the `@target`/`@action`
    accessor shim make old snapshots load unchanged?
 7. **Scope of P5** — wallpaper only, or wallpaper + `PreferencesAndSettings` in the same session?

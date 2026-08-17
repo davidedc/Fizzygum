@@ -75,7 +75,13 @@
 # ── WHAT THE ENGINE MUST NOT DO ─────────────────────────────────────────────────────────
 # Never call a public self-settling setter, never call _invalidateLayout, never fire a
 # connection's settling entrypoint. Dataflow settles VALUES; layout settles GEOMETRY; the
-# coupling is one-way (dataflow may dirty layout; layout must never mark dataflow stale).
+# coupling is one-way FOR VALUES (dataflow may dirty layout; layout must never markStale).
+# ⚠ A layout station MAY announce a NON-value change (markNonValueChange) — it wakes only the
+# re-readers, pulls nothing and marks nothing, so it cannot re-enter the value settle. Its one
+# cost is cadence: raised inside recalculateLayouts it has missed this cycle's station. The
+# single caller is ScrollPanelWdgt._reLayoutScrollbars (connector plan §P8, where the resulting
+# lag is measured: zero frames for anything a gesture drives, since input is played before the
+# station; one frame only for a change born inside the layout pass).
 #
 # ── THE INDEX IS DERIVED AND DISPOSABLE ─────────────────────────────────────────────────
 # Edges live LOCALLY on the widgets (a wire's @target/@action) and in formula text (a cell's
@@ -339,8 +345,15 @@ class DataflowEngine
   # callers are plain property setters, which run constantly and are almost never watched.
   markNonValueChange: (node) ->
     return unless @_hasAnyChangeSubscriber node
-    # the echo rule, exactly as markStale states it
-    return if @_recalculatingDataflow and (node is @_applyingNode)
+    # ⚠ NO ECHO RULE HERE, and that asymmetry with markStale is deliberate. markStale's echo drops a
+    # re-mark of the node the engine is APPLYING INTO because the engine already owns that node's
+    # value-downstream traversal — the re-mark is redundant. That reasoning does NOT transfer: a
+    # non-value announcement wakes a DIFFERENT edge set (the `firesOnAnyChange` re-readers), and the
+    # engine is not walking those for a node it reached as a wire CONSUMER — such a node is not in
+    # `noted`. Dropping the announcement therefore loses it outright rather than deduplicating it.
+    # Pooling it instead is drained by the very next pass of the SAME drain (drain-until-quiet), so a
+    # sink that changes something its own re-readers watch — a scroll panel told to scroll, whose
+    # OTHER bars and duplicates must follow — reaches them in this cycle, not the next.
     # a node already pooled as a VALUE change stays one — the stronger announcement wins either order
     @valuelessPool.add node unless @stalePool.has node
     @stalePool.add node
