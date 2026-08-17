@@ -42,6 +42,23 @@
 #   • __poolStale(node, forced) the bare atom: push into the stale pool, nothing else.
 # `forced` (spec §8's bang / force-fire) propagates DESPITE the equal-value cutoff.
 #
+# ── VALUE CHANGES vs NON-VALUE CHANGES, and the edge that asks for both ──────────────────
+# markStale says "MY VALUE CHANGED", and a node has exactly ONE value (a widget's is its
+# principal pin -- Widget.dataflowValue -> exportedValue). But an object has many properties, and
+# a consumer may watch one that is NOT the value: a menu row showing a text's FONT, its soft-wrap
+# state, a wire's firesPerEvent policy. Announcing those with markStale would be a lie, and a
+# measured one -- it fires the node's WIRES, re-delivering the unchanged principal value (inert
+# for a value pin, a cascading FORCE-fire for a `bang` pin).
+#   So there are two announcements, and an edge declares which it listens to:
+#   • markStale(node)            my VALUE changed. Fires every out-edge (the original meaning).
+#   • markNonValueChange(node)   something about me changed that is NOT my value. Fires ONLY the
+#                                out-edges declared `firesOnAnyChange`.
+#   • edge opt firesOnAnyChange  "my consumer RE-READS the producer rather than receiving its
+#                                value, so wake it for either announcement". A reflected menu row
+#                                is the shape (MenuRowsPanelWdgt._subscribeToReflectedSource):
+#                                the delivered value is ignored; the row re-reads via its own
+#                                reader name. Wires leave it false and stay value-only.
+#
 # ── THE DRAIN (recalculateDataflow — runs once per cycle in doOneCycle) ──────────────────
 # Empty-pool early-return first (the dark-phase hot path). Otherwise, drain-until-quiet: each
 # PASS snapshots the pool (insertion order = event order, deterministic), computes the stale
@@ -85,13 +102,17 @@ class DataflowEngine
   dataflowPassesSanityLimit: 1000
 
   constructor: ->
-    # forward adjacency: producer node -> Set of edge records {consumer, action, firesPerEvent, cold}
+    # forward adjacency: producer node -> Set of edge records
+    # {consumer, action, firesPerEvent, cold, firesOnAnyChange}
     @edgesFrom = new Map
     # reverse adjacency: consumer node -> Set of producer nodes
     @edgesTo = new Map
     # the stale pool: insertion-ordered, which IS event order — the drain's determinism leans on it
     @stalePool = new Set
     @forcedPool = new Set
+    # the subset of the stale pool seeded ONLY by markNonValueChange: these nodes wake their
+    # `firesOnAnyChange` edges and nothing else, because their VALUE did not change (see the header).
+    @valuelessPool = new Set
     # node -> last recomputed/observed value. WEAK so a dead node's value is never pinned; the edge
     # Maps are strong, hence the explicit removeAllEdgesOf node-death API below.
     @lastValues = new WeakMap
@@ -113,8 +134,10 @@ class DataflowEngine
 
   # ── EDGE INDEX (derived, disposable; clients re-declare — the engine never serializes it) ──
 
-  # Declare "producer changing must react consumer". opts: {action, firesPerEvent, cold}. The
-  # record shape carries firesPerEvent/cold/action from day one though only Phase 6 reads them.
+  # Declare "producer changing must react consumer". opts: {action, firesPerEvent, cold,
+  # firesOnAnyChange}. The record shape carries firesPerEvent/cold/action from day one though only
+  # Phase 6 reads them; firesOnAnyChange is read by the drain (see the header's two-announcements
+  # section) and by _removeOutgoingWireEdgesOf, which spares such edges.
   addEdge: (producer, consumer, opts = {}) ->
     outSet = @edgesFrom.get producer
     unless outSet?
@@ -125,6 +148,7 @@ class DataflowEngine
       action: (opts.action ? undefined)
       firesPerEvent: (opts.firesPerEvent ? false)
       cold: (opts.cold ? false)
+      firesOnAnyChange: (opts.firesOnAnyChange ? false)
     inSet = @edgesTo.get consumer
     unless inSet?
       inSet = new Set
@@ -153,19 +177,28 @@ class DataflowEngine
     @edgesTo.delete consumer
     return
 
-  # Remove every edge whose PRODUCER is this node — the inverse of removeEdgesInto. Called by ensureWireEdge when
-  # a controller is re-wired (its @target/@action changed): it drops the single old out-edge before declaring the
-  # new one, so a stale edge is never left behind as a ghost (6b/6c).
-  _removeOutgoingEdgesOf: (producer) ->
+  # Remove this node's outgoing WIRE edges — called by ensureWireEdge when a controller is re-wired (its
+  # @target/@action changed), to drop the old wire before declaring the new one so no stale edge is left
+  # behind as a ghost (6b/6c).
+  # ⚠ It spares `firesOnAnyChange` edges, and that exception is load-bearing: a producer owns at most one
+  # WIRE (one @target/@action), but it can carry any number of edges from consumers that merely RE-READ it
+  # (a fonts menu subscribed to a text). Those are not the re-wirer's to revoke — clearing every out-edge
+  # would unsubscribe an open menu the moment its text is re-wired, which is exactly the stale-tick bug
+  # P5/P7 exists to kill.
+  _removeOutgoingWireEdgesOf: (producer) ->
     outSet = @edgesFrom.get producer
     return unless outSet?
     outSet.forEach (rec) =>
-      inSet = @edgesTo.get rec.consumer
-      if inSet?
-        inSet.delete producer
-        @edgesTo.delete rec.consumer if inSet.size is 0
-    @edgesFrom.delete producer
-    # producer just lost all its subscribers; a time source would deregister here (a plain controller no-ops).
+      return if rec.firesOnAnyChange
+      outSet.delete rec
+      # drop the reverse entry only once NO record at all is left from producer to this consumer
+      unless @_edgeRecord producer, rec.consumer
+        inSet = @edgesTo.get rec.consumer
+        if inSet?
+          inSet.delete producer
+          @edgesTo.delete rec.consumer if inSet.size is 0
+    @edgesFrom.delete producer if outSet.size is 0
+    # producer just lost its wire subscribers; a time source would deregister here (a plain controller no-ops).
     @_notifySubscriberCount producer
     return
 
@@ -186,7 +219,7 @@ class DataflowEngine
     return if @_recalculatingDataflow
     existing = @_wireEdgeRecord producer, consumer
     return if existing? and existing.action is (opts.action ? undefined) and existing.firesPerEvent is (opts.firesPerEvent ? false)
-    @_removeOutgoingEdgesOf producer
+    @_removeOutgoingWireEdgesOf producer
     @addEdge producer, consumer, opts
     return
 
@@ -206,6 +239,7 @@ class DataflowEngine
     @removeEdgesInto node
     @stalePool.delete node
     @forcedPool.delete node
+    @valuelessPool.delete node
     @lastValues.delete node
     return
 
@@ -266,11 +300,16 @@ class DataflowEngine
 
   _valuesEqual: (a, b) -> if a?.equals? then a.equals b else a is b
 
-  # ── THE TWO MARKING VERBS (spec §3, §5) ──────────────────────────────────────────────────
+  # ── THE MARKING VERBS (spec §3, §3a, §5) ─────────────────────────────────────────────────
+  # markStale / __poolStale are the public/atom pair (mirroring layout's _invalidateLayout /
+  # __markForRelayout); markNonValueChange is markStale's weaker sibling — see the header.
 
   __poolStale: (node, forced = false) ->
     @stalePool.add node
     @forcedPool.add node if forced
+    # a VALUE mark SUPERSEDES a value-less one raised earlier in the same frame: the value did change
+    # after all, so every out-edge is owed the fire, not just the re-reading ones.
+    @valuelessPool.delete node
     return
 
   markStale: (node, forced = false) ->
@@ -289,6 +328,30 @@ class DataflowEngine
     return if @_recalculatingDataflow and (node is @_applyingNode) and not forced
     @__poolStale node, forced
     return
+
+  # markStale's sibling: "something about me changed that is NOT my value" — a property a consumer
+  # WATCHES without receiving (a menu row showing a text's font, its soft-wrap state, a wire's
+  # firesPerEvent policy). It wakes only the out-edges declared `firesOnAnyChange`, which is what
+  # keeps it honest: a node has ONE value, so announcing a non-value change with markStale would
+  # re-deliver the unchanged principal value along every WIRE — inert for an ordinary value pin, and
+  # for a `bang` pin a spurious FORCE-fire that cascades.
+  #   DARK when nobody re-reads me: no such edge, no pooling, no drain. That matters because the
+  # callers are plain property setters, which run constantly and are almost never watched.
+  markNonValueChange: (node) ->
+    return unless @_hasAnyChangeSubscriber node
+    # the echo rule, exactly as markStale states it
+    return if @_recalculatingDataflow and (node is @_applyingNode)
+    # a node already pooled as a VALUE change stays one — the stronger announcement wins either order
+    @valuelessPool.add node unless @stalePool.has node
+    @stalePool.add node
+    return
+
+  _hasAnyChangeSubscriber: (node) ->
+    outSet = @edgesFrom.get node
+    return false unless outSet?
+    found = false
+    outSet.forEach (rec) -> found = true if rec.firesOnAnyChange
+    found
 
   # ── THE ONCE-PER-CYCLE DRAIN (spec §4.1 / §4.2 / §5) ─────────────────────────────────────
 
@@ -318,8 +381,10 @@ class DataflowEngine
     # staleness raised during this pass accumulates for the NEXT one (drain-until-quiet).
     seeds = Array.from @stalePool
     forcedSet = new Set @forcedPool
+    valuelessSet = new Set @valuelessPool
     @stalePool.clear()
     @forcedPool.clear()
+    @valuelessPool.clear()
     closure = @_computeDownstreamClosure seeds
     ordered = @_orderTopologically closure, seeds
     snapshotSet = new Set seeds
@@ -327,24 +392,32 @@ class DataflowEngine
     # sink application JOINS this window (world._inLayoutMutation), so the pass settles ONCE;
     # _changed()-only sinks add nothing to it. Wrapping the recompute here also makes a
     # geometry-mutating recompute throw (the purity law, spec §9.5) instead of misbehaving.
-    world._settleLayoutsAfter => @_walkOrderedPass ordered, snapshotSet, forcedSet
+    world._settleLayoutsAfter => @_walkOrderedPass ordered, snapshotSet, forcedSet, valuelessSet
     return
 
-  _walkOrderedPass: (ordered, snapshotSet, forcedSet) ->
+  _walkOrderedPass: (ordered, snapshotSet, forcedSet, valuelessSet) ->
     visited = new Set
     changed = new Set     # nodes whose value ACTUALLY changed this pass — drives downstream pruning
+    noted = new Set       # nodes that announced a NON-value change — only firesOnAnyChange edges care
     for node in ordered
       continue if visited.has node
-      continue unless snapshotSet.has(node) or @_hasChangedProducer node, changed
+      continue unless snapshotSet.has(node) or @_hasReactingProducer node, changed, noted
       visited.add node
-      @_processNode node, changed, forcedSet
+      @_processNode node, changed, noted, forcedSet, valuelessSet
     return
 
-  _hasChangedProducer: (node, changed) ->
+  # Would any incoming edge fire into this node? A producer whose VALUE changed fires every edge; one
+  # that announced a non-value change fires only the edges that asked to re-read it.
+  _hasReactingProducer: (node, changed, noted) ->
     producers = @edgesTo.get node
     return false unless producers?
     found = false
-    producers.forEach (p) -> found = true if changed.has p
+    producers.forEach (p) =>
+      return if found
+      if changed.has p
+        found = true
+      else if noted.has p
+        found = @_edgeRecord(p, node)?.firesOnAnyChange ? false
     found
 
   # 6b — apply each incoming WIRE edge (a producer→consumer edge carrying an ACTION) whose producer CHANGED
@@ -353,21 +426,32 @@ class DataflowEngine
   # ControllerMixin._fireConnection uses, so the non-settling connector lane (§1.5/§1.14) is preserved and
   # joins the pass settle. Sheet reference edges carry no action and are skipped, so the spreadsheet client is
   # untouched (only wire edges carry an action).
-  _applyIncomingWireEdges: (consumer, changed) ->
+  _applyIncomingWireEdges: (consumer, changed, noted) ->
     producers = @edgesTo.get consumer
     return unless producers?
     producers.forEach (producer) =>
-      return unless changed.has producer
-      rec = @_wireEdgeRecord producer, consumer
+      rec = @_edgeRecord producer, consumer
       return unless rec?.action?
+      # a value change fires every edge; a non-value change fires only the re-reading ones
+      return unless changed.has(producer) or (noted.has(producer) and rec.firesOnAnyChange)
       @_applyWireValue consumer, rec.action, @pullValue(producer)
     return
 
-  _wireEdgeRecord: (producer, consumer) ->
+  # The edge record from producer to consumer, of ANY kind (a wire, a reflection subscription).
+  _edgeRecord: (producer, consumer) ->
     outSet = @edgesFrom.get producer
     return undefined unless outSet?
     found = undefined
     outSet.forEach (rec) -> found = rec if rec.consumer is consumer
+    found
+
+  # The WIRE record specifically — what ensureWireEdge compares against, so a reflection
+  # subscription to the same consumer can never be mistaken for the wire and re-declared over.
+  _wireEdgeRecord: (producer, consumer) ->
+    outSet = @edgesFrom.get producer
+    return undefined unless outSet?
+    found = undefined
+    outSet.forEach (rec) -> found = rec if rec.consumer is consumer and not rec.firesOnAnyChange
     found
 
   _applyWireValue: (consumer, action, value) ->
@@ -376,16 +460,18 @@ class DataflowEngine
     consumer[actionToCall]?.call consumer, value
     return
 
-  _processNode: (node, changed, forcedSet) ->
+  _processNode: (node, changed, noted, forcedSet, valuelessSet) ->
     # @_applyingNode names the node the engine is applying INTO, so its own onward-fire tail (a ported
     # controller's updateTarget → markStale @) is recognised as the echo and dropped (see markStale).
     @_applyingNode = node
+    # a node seeded ONLY by markNonValueChange announces to its re-readers whatever its value does
+    noted.add node if valuelessSet.has node
     try
       # 6b — CIRCUIT EDGES: before recomputing/reading this node, APPLY each incoming WIRE edge whose
       # producer changed this pass, pushing the producer's pulled value onto this node via the wire's action
       # (routed through the target's _<action>Connector lane, exactly as _fireConnection would). Sheet
       # reference edges carry no action, so they are skipped — the spreadsheet client is unaffected.
-      @_applyIncomingWireEdges node, changed
+      @_applyIncomingWireEdges node, changed, noted
       newVal = undefined
       if node.dataflowRecompute?
         oldVal = @lastValues.get node
@@ -410,8 +496,9 @@ class DataflowEngine
           @lastValues.set node, newVal
         else
           # pure source / seed (a time source, an untargeted seed): no incoming edge to cut off on, so
-          # conservatively always-changed.
-          changed.add node
+          # conservatively always-changed — UNLESS it only announced a non-value change, which is a
+          # claim about a property that is not its value and must not be read as one.
+          changed.add node unless valuelessSet.has node
       # sink application hook — a node applying its OWN value (a cell → its socket/presenter); routes via
       # the node's _<action>Connector lane and joins the pass settle opened by _drainOnePass.
       node.dataflowApply?(newVal)

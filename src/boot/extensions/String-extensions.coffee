@@ -40,6 +40,19 @@ if typeof String::toggleTick == 'undefined'
     else
       return tick + @
 
+# my label without its tick decoration -- what a menu row IS, independently of what it currently
+# SHOWS. A reflected row's prefix follows the value it displays, so anything that matches rows BY
+# NAME (MenuRowsPanelWdgt.removeMenuItem) must compare undecorated or it matches only the spelling
+# that happened to be on screen when it was written.
+if typeof String::withoutTickDecoration == 'undefined'
+  String::withoutTickDecoration = ->
+    if @isTicked()
+      return @slice tick.length
+    else if @startsWith untick
+      return @slice untick.length
+    else
+      return @toString()
+
 if typeof String::isLetter == 'undefined'
   String::isLetter = ->
     @length == 1 && @match /[a-z]/i

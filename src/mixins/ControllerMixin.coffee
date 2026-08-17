@@ -96,17 +96,28 @@ ControllerMixin =
 
       # Flip the per-wire delivery policy (the "✓ fires per event" menu toggle). A plain boolean flip:
       # no layout and no tree mutation, hence no settle (check-layering-clean); nothing visual changes.
+      # ANNOUNCE it so every open menu showing the row re-ticks. markNonValueChange, NOT markStale:
+      # this is a property of my WIRE, emphatically not my value — and I am by definition wired here
+      # (the row only exists once @target is set), so markStale would fire that very wire and re-deliver
+      # my value to my target for a change that was never about it.
       toggleFiresPerEvent: ->
         @firesPerEvent = not @firesPerEvent
+        world.dataflow.markNonValueChange @
+
+      # what a reflecting menu row reads to decide whether it is ticked (MenuRowReflectionSpec.readerName)
+      isFiringPerEvent: -> @firesPerEvent
 
       # The shared connection-menu entry: every controller (SliderWdgt, StringWdgt, the patch nodes, …)
       # calls this right after its own "connect to ➜" / "set target" item, so the toggle lives in one
-      # place. Shown only once a target is wired (firesPerEvent is a property OF a wire); a leading ✓
-      # reflects the current state (String::tick — matched in tests by the "fires per event" substring).
+      # place. Shown only once a target is wired (firesPerEvent is a property OF a wire); the leading ✓
+      # is a REFLECTION of the current state, so the row follows a flip made anywhere rather than
+      # freezing the value it was built from (matched in tests by the "fires per event" substring).
       addFiresPerEventMenuEntry: (menu) ->
         return unless @target?
         label = "fires per event"
-        menu.addMenuItem (if @firesPerEvent then label.tick() else label), @, "toggleFiresPerEvent", toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
+        menu.addMenuItem label, @, "toggleFiresPerEvent",
+          toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
+          reflection: MenuRowReflectionSpec.tickWhen @, "isFiringPerEvent", true, label
 
       # The shared "connect a target" menu block, appended identically by every
       # controller (SliderWdgt, SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and

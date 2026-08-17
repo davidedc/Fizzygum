@@ -61,8 +61,6 @@ class SimpleTextWdgt extends TextWdgt
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "soft wrap"
-    menu.removeMenuItem "soft wrap".tick()
-    menu.removeMenuItem "soft wrap"
 
     menu.removeMenuItem "←☓→ don't expand to fill"
     menu.removeMenuItem "←→ expand to fill"

@@ -142,9 +142,16 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 ## The two verbs, and the drain
 
 - **`markStale(node, forced)`** — the public, policy-aware verb sources call (demotes to the
-  bare pool atom during a drain). The `firesPerEvent` per-event LANE is still DEFERRED —
-  delivery always POOLS regardless of the per-wire flag (which landed dark in 6a); see
-  "Connections client" above and `docs/measurements/dataflow-measurements.md`.
+  bare pool atom during a drain). It means **"my VALUE changed"**. The `firesPerEvent` per-event
+  LANE is still DEFERRED — delivery always POOLS regardless of the per-wire flag (which landed
+  dark in 6a); see "Connections client" above and `docs/measurements/dataflow-measurements.md`.
+- **`markNonValueChange(node)`** — its sibling: *a property that is NOT my value changed* (a
+  text's font, its soft wrap, a wire's delivery policy). A node has ONE value, so saying this
+  with `markStale` would re-deliver the unchanged principal value along every wire — inert for
+  an ordinary value pin, a **cascading force-fire** for a `bang` pin. It wakes only the out-edges
+  declared **`firesOnAnyChange`** ("my consumer RE-READS the producer rather than receiving its
+  value"), which is what a reflected menu row is; and it is **dark** unless such an edge exists.
+  Spec §3a; connector plan §P3.
 - **`__poolStale(node, forced)`** — the bare atom: push into the stale pool, nothing else.
 - **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle`
   BETWEEN `runChildrensStepFunction` and `recalculateLayouts`. **Two parallel drain stations:
@@ -165,6 +172,9 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
   entrypoint. Sinks route via `_<action>Connector` / bare mutators only.
 - Every death path (`removeAllEdgesOf`) drops the node from BOTH adjacency maps and the pools —
   a dead node left in the index is a leak AND a ghost recompute.
+- **A producer's out-edges are not all wires.** It owns at most one WIRE (one `@target`/`@action`)
+  and any number of edges from consumers that merely re-read it, so a re-wire clears the wire only
+  (`_removeOutgoingWireEdgesOf`) — clearing everything would silently unsubscribe an open menu.
 - NOMENCLATURE: no `settle` / `invalidate` / `dirty` / `coalesced` / `announce` / `volatile` in
   dataflow identifiers; "source" stays qualified ("dataflow source", "time source").
 

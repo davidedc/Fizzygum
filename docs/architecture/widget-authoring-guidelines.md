@@ -484,11 +484,17 @@ mark after `add` + `setExtent` adds nothing.
   `rowsPanel.children` **by index** and can only fix up the one menu that was clicked — so a second
   open copy disagrees, and so does one open across a change made by a script or the loader. It also
   breaks the day someone adds a divider.
-  ⚠ **The source must be able to announce.** It needs a reader method and a `world.dataflow.markStale @`
-  where it changes — trivial for a plain collaborator (`Wallpaper`, `PreferencesAndSettings`), but a
-  **Widget cannot do this yet**: `Widget.dataflowValue` is its exported value, so one staleness signal
-  serves the whole object and announcing a property change would also fire the widget's wires. Until
-  that is fixed (connector plan P3), a widget-owned tick stays hand-written.
+  ⚠ **The source must be able to announce, and WHICH announcement it makes matters.** It needs a
+  reader method plus, where the property changes, one of:
+
+  | announce with | when |
+  |---|---|
+  | `world.dataflow.markStale @` | the property IS the source's dataflow value — a plain collaborator whose one value is the thing being shown (`Wallpaper.patternName`) |
+  | `world.dataflow.markNonValueChange @` | the property is **not** the value — every widget-owned case (a text's font, its soft wrap, a wire's `firesPerEvent`), because `Widget.dataflowValue` is the widget's *exported* value and `markStale` would fire its wires with it |
+
+  Getting this wrong is not cosmetic: a spurious wire fire is inert for an ordinary value pin but
+  **cascades** for a `bang` pin, which is a force-fire. See
+  [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md) §3a.
 
 ---
 

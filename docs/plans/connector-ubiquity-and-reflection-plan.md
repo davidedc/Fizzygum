@@ -370,7 +370,7 @@ Open sub-question for the owner: **who wins at bind time.** Both wires would run
 `reactToTargetConnection` and fire; today the second one wired wins. Proposed rule: *the side whose
 menu you opened is the source of truth at bind time* — it pushes, the other reflects.
 
-### P3 — One announcement verb, and where it may not live
+### P3 — One announcement verb, and where it may not live — ✅ **LANDED 2026-08-17**
 
 For a reverse edge to fire, a sink must mark itself stale when its property changes **by any means**.
 Proposal: one intent-named public note, the generalisation of `WorldWdgt.noteWallpaperChanged`:
@@ -385,6 +385,80 @@ _notePinChanged: (pinName) ->
 called from the small set of pin setters (`setColor`, `setBackgroundColor`, `_setTextNoSettle`
 already effectively does it via `updateTarget`, `setPattern`, …). `updateTarget` then reads as the
 special case of `_notePinChanged` for the principal pin.
+
+#### As landed
+
+⚠ **The sketch above ignores its own `pinName`, and that is exactly where it is wrong.** A node has
+ONE value (`Widget.dataflowValue` → `exportedValue()`), so `markStale` can only ever mean *"my value
+changed"*. Announcing a **non-value** property with it is a lie the engine then acts on. **Measured**,
+not argued (`Fizzygum-tests/.scratch/p3-announcement-falsefire-probe.js`) — a naive `markStale @`
+costs a wired widget exactly one spurious apply per wire:
+
+| target pin | what the spurious apply does |
+|---|---|
+| an ordinary value pin (`setValue`) | **inert** — the target re-applies a value it already holds, and its own equal-value cutoff stops the traversal there (0 onward marks) |
+| **`bang`** | **cascades** — `bang` is a FORCE-fire (`markStale @, true`), which is exempt from the cutoff by design, so the spurious fire propagates onward (1 onward mark) |
+
+⇒ the plan's framing ("would deliver its *text* to whatever it drives") is right about the mechanism
+and overstates the general harm while understating the specific one. **What landed is a split, not a
+verb**, and it lives on the engine beside its sibling rather than as a `Widget` wrapper (which would
+be a thin wrap over one engine call, and rightly rejected as one):
+
+```coffee
+markStale node            # my VALUE changed        -> fires EVERY out-edge   (unchanged)
+markNonValueChange node   # a non-value property    -> fires only `firesOnAnyChange` edges
+```
+
+and the matching half on the edge: **`firesOnAnyChange: true`** says *"my consumer RE-READS the
+producer rather than receiving its value, so wake it for either announcement."* That is precisely a
+reflected menu row — it ignores the delivered value and re-reads through its own `readerName` — so
+`MenuRowsPanelWdgt._subscribeToReflectedSource` declares it and wires do not.
+
+**Additive by construction: every existing edge and every existing `markStale` keeps its exact
+meaning, and the new announcement fires strictly FEWER edges.** Before anything declares
+`firesOnAnyChange`, the whole change is a no-op — which is what made it safe to land at the root of
+the drain. `markNonValueChange` is also **dark unless someone re-reads** (`_hasAnyChangeSubscriber`),
+which matters because its callers are ordinary property setters.
+
+**⭐ The trap it exposed, which had nothing to do with the announcement.** `_removeOutgoingEdgesOf`
+cleared **every** out-edge of a re-wired producer, resting on a comment that said why that was safe:
+*"a ControllerMixin producer owns at most one out-edge (one `@target`/`@action`)"*. True until P5/P7
+made a widget subscribable — after which re-wiring a text whose fonts menu is open would **silently
+unsubscribe that menu**, resurrecting the exact stale-tick bug this arc exists to kill. Now
+`_removeOutgoingWireEdgesOf`, which spares `firesOnAnyChange` edges, with `_wireEdgeRecord` (the wire
+specifically) split from `_edgeRecord` (any edge) so a reflection can never be mistaken for the wire.
+
+**Verified, four claims, `Fizzygum-tests/.scratch/p3-nonvalue-announcement-probe.js`:** (A) a
+non-value announcement does not fire a wire — 0 bangs; (B) a value announcement still does — 1 bang;
+(C) a reflecting menu hears the non-value change — the fonts tick moves Arial → Mono on a pure API
+call, with ONE out-edge on the text; (D) a re-wire spares the subscription — old wire dropped, new
+wire present, menu still subscribed AND still following changes.
+
+**P7's remaining three sites are converted** (see §P7's table), which is what P3 was blocking:
+
+| site | reader | retired |
+|---|---|---|
+| `StringWdgt` fonts menu | `currentFontName` | `updateFontsMenuEntriesTicks` + `@FONT_STACK_MENU_ENTRIES` + the `rows[i+1]` indexing + `_setFontNameNoSettle`'s `menuItem` parameter |
+| `TextWdgt` "soft wrap" | `isSoftWrapping` | the build-time `if @softWrap then …tick() else …` fork |
+| `ControllerMixin` "fires per event" | `isFiringPerEvent` | ditto |
+
+⚠ **Not pixel-free, deliberately.** `MenuRowReflectionSpec.tickWhen` pads an unticked label with
+`untick` (four spaces); the two toggle rows previously showed a bare label when off, so they were the
+only ticked-family rows that did not reserve the tick column. They now align like every other one.
+
+**⭐ A second regression, from the same change and nothing to do with announcing.** `SimpleTextWdgt`
+removes the "soft wrap" row it inherits **by its decorated label**, trying three spellings
+(`"soft wrap"`, `"soft wrap".tick()`, and a duplicate of the first). Turning the row into a reflection
+made its unticked spelling `untick + "soft wrap"`, which matches none of them — the row would have
+silently reappeared. Fixed at the root rather than by adding a fourth spelling:
+`MenuRowsPanelWdgt.removeMenuItem` compares **undecorated** on both sides (new
+`String::withoutTickDecoration`), and the three lines collapse to one. ⇒ **Making a label DYNAMIC
+breaks everything that matched it as a CONSTANT.** Two SystemTests were failing on this and pass
+again untouched, which is how it was confirmed rather than assumed.
+
+**Recaptures: 11**, all the inspector member-list class (the list gained `_fontStackMenuEntries` and
+lost `updateFontsMenuEntriesTicks`; every changed region is one row at a fixed coordinate). Discovery
+first reported 13 — the two that dropped out are the `removeMenuItem` repair.
 
 ⚠ **Geometry pins are the genuinely hard case and should be excluded from v1.** `width`/`height`/
 `padding` are pins today (`Widget.pins` → `_applyWidth`, `_applyHeight`, `setPadding` — all
@@ -562,22 +636,23 @@ producer's entry outright once its last consumer goes (`@edgesFrom.delete produc
 0`) — so a `Wallpaper` that is now a live node leaves no residue behind a teardown, and
 `RESETWORLD_INCOMPLETE` stays quiet (the whole suite runs the ratchet).
 
-⚠ **SCOPE CORRECTION — P7 retires ONE of its four hand-rolled routines, not four.** The other three
-are blocked on **P3**, and the plan did not notice:
+⚠ **SCOPE CORRECTION — P7 landed in TWO steps, and the plan did not anticipate the split.** Only the
+non-widget half was convertible with P5; the other three sites needed **P3** first:
 
 | site | source | status |
 |---|---|---|
-| `Wallpaper.updatePatternsMenuEntriesTicks` | `Wallpaper` (plain collaborator) | ✅ **retired** |
-| world menu's input-mode row | `PreferencesAndSettings` (plain collaborator) | ✅ **converted** (one row that reflects, instead of two rows chosen by an `if`) |
-| `StringWdgt.updateFontsMenuEntriesTicks` | a **StringWdgt** | ⛔ blocked on P3 |
-| `TextWdgt` "soft wrap" · `ControllerMixin` "fires per event" | a **Widget** | ⛔ blocked on P3 |
+| `Wallpaper.updatePatternsMenuEntriesTicks` | `Wallpaper` (plain collaborator) | ✅ **retired** with P5 |
+| world menu's input-mode row | `PreferencesAndSettings` (plain collaborator) | ✅ **converted** with P5 (one row that reflects, instead of two rows chosen by an `if`) |
+| `StringWdgt.updateFontsMenuEntriesTicks` | a **StringWdgt** | ✅ **retired** with P3 |
+| `TextWdgt` "soft wrap" · `ControllerMixin` "fires per event" | a **Widget** | ✅ **converted** with P3 |
 
-The reason is exactly gap **G1/G3**: `Widget.dataflowValue` is `@exportedValue()`, so a widget has
-**ONE** staleness signal. A `TextWdgt` announcing "my `softWrap` changed" would `markStale` itself and
-therefore fire its dataflow WIRES, delivering its *text* to whatever it drives. A non-widget holder
-has no such conflict, which is why P5's own title — *non-widget state becomes nodes* — turns out to be
-the exact boundary of what P7 can convert before P3 lands. **P3 is now a hard prerequisite for the
-rest of P7, not an independent proposal.**
+The reason for the split is exactly gap **G1/G3**: `Widget.dataflowValue` is `@exportedValue()`, so a
+widget has **ONE** staleness signal. A `TextWdgt` announcing "my `softWrap` changed" via `markStale`
+fires its dataflow WIRES, delivering its *text* to whatever it drives — measurably a spurious apply,
+and a cascading FORCE-fire when the target pin is `bang`. A non-widget holder has no such conflict,
+which is why P5's own title — *non-widget state becomes nodes* — was the exact boundary of what P7
+could convert alone. **P3's answer is `markNonValueChange` + the edge's `firesOnAnyChange`** (see §P3
+"As landed"), which is what unblocked the remaining three.
 
 ### P8 — Scroll joins the public wire vocabulary
 
@@ -813,6 +888,7 @@ carry zero engine risk, which makes them the right way to test the law before pa
 | step | item | engine change | closes |
 |---|---|---|---|
 | 1 | **P5 + P7** — wallpaper (and input mode) as nodes; ticks as reflection ✅ **LANDED 2026-08-17** | **none** | complaint ③ (the non-widget half; the three WIDGET-owned ticks turned out to need P3 first — see P7 "As landed") |
+| 1b | **P3** — `markNonValueChange` + the edge's `firesOnAnyChange`; P7's remaining three sites ✅ **LANDED 2026-08-17** | the two announcements, additive | complaint ③ (the widget half); unblocks every reverse edge |
 | 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) | **none** | complaint ②'s view half |
 | 3 | **P9** — the `@target` renames ✅ **LANDED 2026-08-16** | none | reading hazard |
 | 4 | **P1** — `PinSpec` with readers ✅ **LANDED 2026-08-16** | none (the pull lands with P2) | unblocks 5–6 |

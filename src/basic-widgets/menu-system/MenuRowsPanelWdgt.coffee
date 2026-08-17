@@ -181,10 +181,16 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # deep-copied and serialized to say something the index already knows.
   #   Lifecycle needs nothing: a closed menu is destroyed, and Widget._destroyNoSettle calls
   # removeAllEdgesOf, which drops me from every producer's out-set.
+  #   firesOnAnyChange says what my rows actually watch. A source's VALUE (its principal pin) is
+  # rarely the property a row shows — a text's font, its soft wrap, a wire's delivery policy are
+  # none of them the text's value — so I must be woken by markNonValueChange too. It is also what
+  # makes me safe to keep: a re-wired controller drops its old WIRE and spares this edge, where the
+  # blunt older removal would have unsubscribed an open menu (DataflowEngine._removeOutgoingWireEdgesOf).
+  # I never read the delivered value; every row re-reads its own source through its readerName.
   _subscribeToReflectedSource: (reflection) ->
     return unless reflection?.source?
     return if world.dataflow.hasEdge reflection.source, @
-    world.dataflow.addEdge reflection.source, @, action: "reconcileReflectedRows"
+    world.dataflow.addEdge reflection.source, @, action: "reconcileReflectedRows", firesOnAnyChange: true
 
   # Re-derive every reflecting row's label from the value it shows.
   #   This is the reactive CONNECTOR lane and it is the only entrypoint: the drain reaches it by the
@@ -204,9 +210,13 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
       row._applyRowReflectionNoSettle?()
     return
 
+  # Drop the row with this label. Matched WITHOUT the tick decoration on either side: a reflecting
+  # row's prefix follows the value it shows, so the spelling on screen is not something a caller
+  # removing a row by name can know. Pass the bare name ("soft wrap"); a decorated one still works.
   removeMenuItem: (label) ->
+    wanted = label.withoutTickDecoration()
     item = @firstChildSuchThat (m) ->
-      m.label? and m.label.text == label
+      m.label? and m.label.text.withoutTickDecoration() == wanted
     if item?
       item.fullDestroy()
 

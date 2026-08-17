@@ -1021,27 +1021,21 @@ class StringWdgt extends Widget
       floorNum: 6
       isRounded: true
 
-  # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters. From a font menu it
-  # ALSO re-ticks the sibling menu items, but updateFontsMenuEntriesTicks does that through the
-  # NON-settling label core (menu.rowsPanel.children[i].label._setTextNoSettle), so it does NOT nest another
-  # settling setter -- the menu items' re-fit rides this single settle (or popUpAtHand's, when the menu
-  # is still being built on the hand).
+  # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters.
   setFontName: (theNewFontName) ->
     @_settleLayoutsAfter => @_setFontNameNoSettle theNewFontName
 
   # The NON-settling core of setFontName -- used by low-level builders that configure a contained text
   # widget while assembling it (e.g. InspectorWdgt's detail pane, inside its own rebuild settle). The public
   # setFontName self-settles over this; low-level code reaches the core directly (cores call cores).
-  # menuItem is the OPTIONAL menu context (only setFontNameFromMenu has one) and rides last, where
-  # omitting it costs no caller an `undefined`.
-  _setFontNameNoSettle: (theNewFontName, menuItem) ->
+  _setFontNameNoSettle: (theNewFontName) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName
       @_changed()
-
-      # instead of `menuItem.parent instanceof MenuWdgt` (type-test-elimination campaign)
-      if menuItem?.parent? and menuItem.parent.isMenu?()
-        @updateFontsMenuEntriesTicks menuItem.parent
+      # ANNOUNCE it, so every open fonts menu re-ticks — this one, another copy, or one left open
+      # while a script changed the font. markNonValueChange rather than markStale: my font is not my
+      # VALUE (my value is my text), and saying otherwise would re-deliver my text along my wire.
+      world.dataflow.markNonValueChange @
     @_reflowContainedTextThenInvalidateLayout()
 
   # THE MENU ADAPTER. A menu/button action is dispatched as
@@ -1050,56 +1044,42 @@ class StringWdgt extends Widget
   # foreign convention is the only reason for the ignored slots — code setting a font wants the
   # plain setFontName above, because passing `undefined, undefined` to reach past a dispatcher's
   # slots is the hole R3 names (docs/architecture/constructor-and-parameter-conventions.md).
-  setFontNameFromMenu: (menuItem, ignored2, theNewFontName) ->
-    @_settleLayoutsAfter => @_setFontNameNoSettle theNewFontName, menuItem
+  setFontNameFromMenu: (ignored, ignored2, theNewFontName) ->
+    @setFontName theNewFontName
 
+  # what a reflecting menu row reads to decide whether it is the ticked one
+  # (MenuRowReflectionSpec.readerName)
+  currentFontName: -> @fontName
+
+  # my font stacks in menu order, paired with the label each shows — a list, so the menu is built by
+  # iterating it instead of nine hand-numbered call sites plus a parallel index table.
+  # NB the "Treby" label intentionally differs from its trebuFontStack property name.
+  _fontStackMenuEntries: ->
+    [
+      [ @justArialFontStack, "Arial"   ]
+      [ @timesFontStack,     "Times"   ]
+      [ @georgiaFontStack,   "Georgia" ]
+      [ @garamoFontStack,    "Garamo"  ]
+      [ @helveFontStack,     "Helve"   ]
+      [ @verdaFontStack,     "Verda"   ]
+      [ @trebuFontStack,     "Treby"   ]
+      [ @heavyFontStack,     "Heavy"   ]
+      [ @monoFontStack,      "Mono"    ]
+    ]
 
   fontsMenu: (ignored,targetWidget)->
     menu = new MenuWdgt @, target: targetWidget, title: "Fonts"
 
-    menu.addMenuItem untick + "Arial", @, "setFontNameFromMenu", arg1: @justArialFontStack
-    menu.addMenuItem untick + "Times", @, "setFontNameFromMenu", arg1: @timesFontStack
-    menu.addMenuItem untick + "Georgia", @, "setFontNameFromMenu", arg1: @georgiaFontStack
-    menu.addMenuItem untick + "Garamo", @, "setFontNameFromMenu", arg1: @garamoFontStack
-    menu.addMenuItem untick + "Helve", @, "setFontNameFromMenu", arg1: @helveFontStack
-    menu.addMenuItem untick + "Verda", @, "setFontNameFromMenu", arg1: @verdaFontStack
-    menu.addMenuItem untick + "Treby", @, "setFontNameFromMenu", arg1: @trebuFontStack
-    menu.addMenuItem untick + "Heavy", @, "setFontNameFromMenu", arg1: @heavyFontStack
-    menu.addMenuItem untick + "Mono", @, "setFontNameFromMenu", arg1: @monoFontStack
-
-    @updateFontsMenuEntriesTicks menu
+    # Each row DECLARES that it shows my current font; it is born with the right tick and re-derives
+    # it whenever I announce a change, here and in every other open copy of this menu. Nothing
+    # indexes rows[1..9] any more — that hand-numbering broke the day anyone added a divider, and it
+    # could only ever fix up the ONE menu whose item had just been clicked.
+    for [ fontStack, menuLabel ] in @_fontStackMenuEntries()
+      menu.addMenuItem menuLabel, @, "setFontNameFromMenu",
+        arg1: fontStack
+        reflection: MenuRowReflectionSpec.tickWhen @, "currentFontName", fontStack, menuLabel
 
     menu.popUpAtHand()
-
-  # [ fontStackPropertyName, menuLabel ] rows in fonts-menu order (menu.rowsPanel.children[1..9]);
-  # drives updateFontsMenuEntriesTicks below. Kept a simple literal for the fragment-compile
-  # gate. NB the index-7 label "Treby" intentionally differs from its trebuFontStack prop name.
-  @FONT_STACK_MENU_ENTRIES: [
-    [ "justArialFontStack", "Arial"   ]
-    [ "timesFontStack",     "Times"   ]
-    [ "georgiaFontStack",   "Georgia" ]
-    [ "garamoFontStack",    "Garamo"  ]
-    [ "helveFontStack",     "Helve"   ]
-    [ "verdaFontStack",     "Verda"   ]
-    [ "trebuFontStack",     "Treby"   ]
-    [ "heavyFontStack",     "Heavy"   ]
-    [ "monoFontStack",      "Mono"    ]
-  ]
-
-  # cheap way to keep menu consistency when pinned
-  # note that there is no consistency in case
-  # there are multiple copies of this menu changing
-  # the property, since there is no real subscription
-  # of a menu to react to property change coming
-  # from other menus or other means (e.g. API)...
-  updateFontsMenuEntriesTicks: (menu) ->
-    # tick the single entry whose font stack equals the current @fontName, untick the rest.
-    # the rows live in the menu's rowsPanel now (index 0 is the title header, 1..9 the font
-    # items) -- the same order the menu's own children had before it composed the panel.
-    rows = menu.rowsPanel.children
-    for [ fontStackProperty, menuLabel ], i in StringWdgt.FONT_STACK_MENU_ENTRIES
-      tickMark = if @fontName == @[fontStackProperty] then tick else untick
-      rows[i + 1].label._setTextNoSettle tickMark + menuLabel
 
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
@@ -1301,7 +1281,7 @@ class StringWdgt extends Widget
   # that must set text WITHOUT opening a settle -- because they run INSIDE another settle or a
   # LAYOUT PASS -- call this directly ("cores call cores"): structural re-titles (FrameWdgt.
   # _addNoSettle / _setEmptyWindowLabelNoSettle), layout code (AxisWdgt._reLayout's tick labels),
-  # menu re-ticking (updateFontsMenuEntriesTicks), per-frame updates (the video time labels). The
+  # menu re-ticking (MenuItemWdgt._applyRowReflectionNoSettle), per-frame updates (the video time labels). The
   # change rides the enclosing settle / the frame's recalculateLayouts. The stringFieldWidget
   # decoding is setText-specific and stays in setText (these callers pass plain text, so the core
   # needs none).

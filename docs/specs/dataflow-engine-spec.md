@@ -123,6 +123,32 @@ This is load-bearing three times over: pooling is lossless (ten markings of one 
 collapse to one; the pull reads the latest value), per-cycle batching needs no merge logic,
 and multi-source events need no token/freshness protocol.
 
+### 3a. Value changes vs non-value changes
+
+`markStale` means **"my VALUE changed"**, and a node has exactly one value (a widget's is its
+principal pin — `Widget.dataflowValue` → `exportedValue()`). But an object has many properties,
+and a consumer may watch one that is *not* the value: a menu row showing a text's font, its
+soft-wrap state, a wire's `firesPerEvent` policy. Announcing those with `markStale` would fire
+the node's **wires**, re-delivering the unchanged principal value — inert for an ordinary value
+pin (the target's equal-value cutoff stops the traversal) and a **cascading force-fire** when the
+target pin is `bang`. So there is a second announcement, and an edge declares which it listens to:
+
+| | meaning | fires |
+|---|---|---|
+| `markStale node` | my VALUE changed | every out-edge |
+| `markNonValueChange node` | a property that is not my value changed | only `firesOnAnyChange` edges |
+| edge opt `firesOnAnyChange` | my consumer **re-reads** the producer rather than receiving its value | both announcements |
+
+A reflected menu row is the shape: it ignores the delivered value entirely and re-reads through
+its own `readerName` (§P7 of `../plans/connector-ubiquity-and-reflection-plan.md`). Wires leave
+the flag false and stay value-only. `markNonValueChange` is **dark** unless the node actually has
+a re-reading subscriber — its callers are ordinary property setters. A value mark **supersedes** a
+non-value one raised earlier in the same frame, in either order.
+
+⚠ Because a wire is not the only kind of out-edge a producer can have, re-wiring a controller
+drops its **wire** edges only (`_removeOutgoingWireEdgesOf`); an edge whose consumer merely
+re-reads the producer is not the re-wirer's to revoke.
+
 ## 4. Delivery: two lanes, one pass algorithm
 
 Per-wire policy **`firesPerEvent`** (default `false`), set from the wire's menu:

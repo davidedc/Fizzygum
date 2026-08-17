@@ -585,15 +585,22 @@ class TextWdgt extends StringWdgt
   toggleSoftWrap: ->
     @softWrap = not @softWrap
     @_changed()
+    # ANNOUNCE it, so every open menu showing this row re-ticks. markNonValueChange rather than
+    # markStale: soft wrap is not my VALUE (my value is my text), and saying otherwise would
+    # re-deliver my text along my wire.
+    world.dataflow.markNonValueChange @
     world.stopEditing()
+
+  # what a reflecting menu row reads to decide whether it is ticked (MenuRowReflectionSpec.readerName)
+  isSoftWrapping: -> @softWrap
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    if @softWrap
-      menu.addMenuItem "soft wrap".tick(), @, "toggleSoftWrap"
-    else
-      menu.addMenuItem "soft wrap", @, "toggleSoftWrap"
+    # the row SHOWS my soft-wrap state rather than being built from a snapshot of it, so a menu left
+    # open while the state changes (another copy of this menu, a script) re-ticks instead of lying
+    menu.addMenuItem "soft wrap", @, "toggleSoftWrap",
+      reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "soft wrap"
     menu.addLine()
 
     # a console contributes its own run-menu entries (run selection / run all); a text not in a
