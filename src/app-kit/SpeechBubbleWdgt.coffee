@@ -30,8 +30,6 @@ class SpeechBubbleWdgt extends Widget
     @extentToGetWhenDraggedFromGlassBox = new Point 105,80
 
 
-  colloquialName: ->
-    "speech bubble"
   
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->

@@ -5,8 +5,6 @@
 
 class ColorPaletteWdgt extends PaletteWdgt
 
-  colloquialName: ->
-    "color palette"
 
   fillPaletteBuffer: (backBufferContext, extent) ->
     for x in [0..extent.x]

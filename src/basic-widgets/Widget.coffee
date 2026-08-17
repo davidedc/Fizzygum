@@ -2995,8 +2995,26 @@ class Widget extends TreeNode
     @_fullChangedIncludingShadowOwner()
     @parent.removeChild @
 
+  # My name in the product's own words: window titles, inspector and console titles, the drag-embed
+  # hint, the shortcut auto-namer, the name a saved file gets.
+  #   DERIVED from my class name, because a name every class has to REMEMBER to write is a name most
+  # of them do not write — 200 of 267 widget classes carry no override, and the flat `"generic
+  # widget"` this replaces was what all 200 of them called themselves, in title bars and file names
+  # alike. Deriving makes the default TRUE instead of merely present, and an override an editorial
+  # improvement rather than the only way to avoid a lie.
+  #   Lowercase words, because that is what every consumer wants: they drop it into a sentence ("drop
+  # it into the …?"), parenthesise it ("Object Inspector (analog clock)"), or prefix it ("Console
+  # for: …", which lowercases defensively today). Override when the derivation reads wrong, or when
+  # the thing has a NAME of its own rather than a description — "Desktop", "Bin", "Fizzytiles",
+  # "Docs Maker".
   colloquialName: ->
-    "generic widget"
+    bareName = @constructor.name.replace /(Wdgt|Morph)$/, ""
+    return "widget" if bareName == ""
+    # split camelCase humps, keeping a run of capitals together as ONE word ("HTMLBox" -> "html box",
+    # not "h t m l box"). A digit stays glued to its word and a digit-then-capital is not a hump, so
+    # "3D" splits wrongly — the three classes that hit it state their name instead.
+    spaced = bareName.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    spaced.toLowerCase()
 
   representativeIcon: ->
     new WidgetIconWdgt
@@ -3573,8 +3591,7 @@ class Widget extends TreeNode
         return
       else
         throw error
-    baseName = (@colloquialName?() or @constructor.name.replace "Wdgt", "") or "widget"
-    FileSaving.saveStringAsFile envelope, baseName + ".fzw.json"
+    FileSaving.saveStringAsFile envelope, @colloquialName() + ".fzw.json"
 
   # Injecting code /////////////////////////////////////////
 

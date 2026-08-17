@@ -8,9 +8,6 @@ class BoxWdgt extends Widget
     super()
     @appearance = new BoxyAppearance @
 
-  colloquialName: ->
-    "box"
-
 
   setCornerRadius: (radiusOrWidgetGivingRadius, widgetGivingRadius) ->
     if widgetGivingRadius?.getValue?

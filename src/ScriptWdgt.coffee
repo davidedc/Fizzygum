@@ -32,8 +32,6 @@ class ScriptWdgt extends CodeAreaWdgt
     super new Point 200,400
     @_buildAndConnectChildren()
 
-  colloquialName: ->
-    "script"
 
   representativeIcon: ->
     new ScriptIconWdgt

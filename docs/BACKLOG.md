@@ -224,9 +224,38 @@ lists, not from how many classes inherit the field.
       `node buildSystem/census-widget-conformance.js --json` (facet 5) before starting, and treat the
       2026-08-14 snapshot as stale. The one thing P1 changed for W6: `exportedValue` no longer probes
       `getValue?()`, so a setter's slot-2 coercion is now the ONLY duck-typed reader left in the family.
-- [ ] **W7 (owner D4) — 164 of 270 widgets answer the base `colloquialName` "generic widget"** and 257
-      answer the base `representativeIcon` (§2.7). The string is DRAWN (window titles, inspector/console
-      titles, drag-embed hint, shortcut auto-namer), so this phase has a real recapture budget.
+- [x] **W7 (owner D4) — ✅ DONE 2026-08-17, DERIVED rather than hand-written.** The plan said "add
+      `colloquialName` to the substantial classes among the 164"; the cheaper and truer answer is that
+      the base should DERIVE it from the class name (split camelCase into lowercase words, drop the
+      `Wdgt`/`Morph` suffix). ⭐ The flat `"generic widget"` default was already **shadowing a
+      derivation the tree had written and forgotten** — the save-to-file auto-namer's
+      `(@colloquialName?() or @constructor.name.replace "Wdgt", "")` could never reach its second arm,
+      so every un-overriding class saved as `generic widget.fzw.json`. ⭐⭐ **The correction that
+      mattered: `colloquialName` is INHERITED and the first survey ignored the chain** — comparing each
+      class's override to its own derivation says nothing about what DELETING it would produce. Resolved
+      properly (`.scratch/w7-colloquial-inheritance-survey.js`): **162 classes gain the derivation**, 38
+      are shadowed by an intermediate override, **10** overrides are exactly reproduced and deleted, and
+      **3 that look redundant would REGRESS** (`SliderWdgt`→`CircleBoxWdgt`, `DividerWdgt`→"rectangle",
+      `SpreadsheetWdgt`→`FrameWdgt`'s "window"). ⭐ Deleting a redundant INTERMEDIATE override is worth
+      more than a leaf one because it UNSHADOWS descendants: `PanelWdgt`'s "panel" was also the answer
+      given by `CanvasWdgt`/`StringFieldWdgt`/`FridgeWdgt`+10, and `BoxWdgt`'s "box" was what
+      `PointerWdgt` called itself — removing three intermediates let 17 descendants derive their own
+      names. Three classes state a name the camelCase split mangles (`Plot3DCreatorButtonWdgt`,
+      `FridgeMagnets3DCanvasWdgt`, `Pencil2IconWdgt`). Verified IN THE RUNNING WORLD
+      (`.scratch/w7-derived-name-probe.js`): the meta-system resolves `constructor.name`, and **0 of 258
+      classes still answer "generic widget"**.
+- [ ] **W7 follow-up — the capitalisation pass (taste call, not structural).** ~11 overrides differ from
+      their derivation only in case (`"Calculating patch node"`, `"Generic panel"`, `"Video player"`,
+      `"Video controls"`, `"Video duration"`, `"Flora icon"`, `"Heart icon"`, `"Simple link"`,
+      `"Diffing patch node"`, `"Error log"`, the three `Example*Plot`s) — habit rather than intent, since
+      the house style is lowercase (`ConsoleWdgt` lowercases defensively; the inspector parenthesises).
+      Genuinely proper nouns to KEEP: `"Desktop"`, `"Bin"`, `"Shelf"`, `"Fizzytiles"`, `"Patch
+      Programming"` and the four `"… Maker"`s. Deferred out of W7 because it has a real recapture cost
+      and no structural content.
+- [ ] **W7 residue — `representativeIcon`.** The other half of §2.7 (257 classes answer the base
+      `new WidgetIconWdgt`) is untouched: unlike a name, an icon cannot be derived from a class name, so
+      it stays the hand-written job the plan described — worth doing only for what can be referenced
+      from the desktop.
 - [ ] **W8 (owner D5) — `LabelButtonWdgt` takes 17 positional slots, `ButtonWdgt` 12 (§2.8)**, and the
       `@param`-shadowing law forces three classes to carry a parallel `iconToolTipMessage` shadow field.
       Precedent: `21d5b64` (SliderWdgt) + `archive/menu-slider-ctor-conversion-plan.md`.

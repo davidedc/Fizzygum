@@ -20,8 +20,6 @@ class ColorPickerWdgt extends Widget
     @_applyExtent new Point 80, 80
     @_buildAndConnectChildren()
 
-  colloquialName: ->
-    "color picker"
 
   # As a menu entry, prefer the width I was BUILT at (the ctor's design extent,
   # or whatever a builder resized me to), frozen at the first ask — byte-what

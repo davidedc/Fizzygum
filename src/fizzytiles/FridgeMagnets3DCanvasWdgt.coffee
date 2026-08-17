@@ -11,6 +11,9 @@
 
 class FridgeMagnets3DCanvasWdgt extends CanvasWdgt
 
+  # stated rather than derived: the camelCase split reads "3" and "D" as separate humps
+  colloquialName: -> "Fizzytiles 3D pane"
+
   # LCL compiler + the current/previous compiled program. The empty prototype
   # graphicsCode below is replaced per-instance by newGraphicsCode once tiles
   # or edited code compile.

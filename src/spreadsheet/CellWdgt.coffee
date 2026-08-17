@@ -84,7 +84,6 @@ class CellWdgt extends Widget
     # (The CanvasGlassTopWdgt idiom — an undefined colour paints nothing.)
     @color = undefined
 
-  colloquialName: -> "cell"
 
   # the owning sheet, re-established on build and on restore re-index (a transient back-ref, so no
   # serialized cell→sheet→cell cycle).

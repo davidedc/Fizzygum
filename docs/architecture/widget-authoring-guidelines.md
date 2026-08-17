@@ -461,9 +461,18 @@ mark after `add` + `setExtent` adds nothing.
   object (`toolTip:`, `arg1:`, `representsAWidget:`, …), never a bare tooltip string.
 - **`@prompt msg, target, "methodName", defaultContents, width, floorNum, ceilingNum, isRounded`** —
   pass the target and the method *name*, not a bound method value.
-- **Define `colloquialName`.** [convention] It is what the product shows: window titles, inspector and
-  console titles, the drag-embed hint, the shortcut auto-namer. A widget without one is labelled
-  *"generic widget"* to the user.
+- **`colloquialName` is DERIVED — override it only to say something better.** [convention] It is what
+  the product shows: window titles, inspector and console titles, the drag-embed hint, the shortcut
+  auto-namer, the name a saved file gets. The base splits your class name into lowercase words
+  (`FolderPanelWdgt` → *"folder panel"*), so a new widget is named correctly for free. Override when
+  the derivation reads wrong (an acronym or digit the camelCase split mangles — `Plot3DCreatorButtonWdgt`)
+  or when the thing has a **name** rather than a description (*"Desktop"*, *"Bin"*, *"Fizzytiles"*,
+  *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence, or
+  parenthesise it as *"Object Inspector (folder panel)"*.
+  ⚠ **An override SHADOWS the derivation for every descendant**, which is how `CanvasWdgt` and
+  `StringFieldWdgt` both used to answer *"panel"*. Before adding one to a class that has subclasses,
+  check you are not renaming them all; before deleting one, check the chain does not fall through to
+  a *different* ancestor's override rather than to the derivation.
 - **Define `representativeIcon`** when the widget can be referenced from the desktop — a shortcut needs
   a picture.
 - **Set `toolTipMessage`** for anything whose purpose is not obvious from its face.

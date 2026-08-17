@@ -18,5 +18,3 @@ class RectangleWdgt extends Widget
     @color = color if color?
     @toolTipMessage = "rectangle"
 
-  colloquialName: ->
-    "rectangle"

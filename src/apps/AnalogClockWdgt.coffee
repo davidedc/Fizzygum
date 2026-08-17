@@ -33,8 +33,6 @@ class AnalogClockWdgt extends Widget
     @cornerSpec = new CornerInternalLayoutSpec 'topRight', 0, 0, new Point world.desktopSidesPadding, world.desktopSidesPadding
     return
 
-  colloquialName: ->
-    "analog clock"
 
   widthWithoutSpacing: ->
     Math.min @width(), @height()

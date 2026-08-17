@@ -60,5 +60,3 @@ class DragChargingRingWdgt extends Widget
     else
       if @lingerOriginWallTime? then (WorldWdgt.dateOfCurrentCycleStart - @lingerOriginWallTime) else 0
 
-  colloquialName: ->
-    "drag charging ring"

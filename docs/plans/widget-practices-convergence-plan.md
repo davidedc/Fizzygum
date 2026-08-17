@@ -1,6 +1,18 @@
 # Widget-practices convergence — acting on the 2026-08-14 survey
 
-**STATUS: AUTHORED 2026-08-14 — NOT STARTED. No source touched. Owner-gated at W3, W4b, W6b, W7, W8.**
+**STATUS — IN PROGRESS, last updated 2026-08-17.**
+
+| phase | state |
+|---|---|
+| W0–W5, W9 | ✅ **DONE 2026-08-16** (Fizzygum `f66da43d` / tests `d3f0a22ff`) |
+| W6a — widen the setters | ✅ **DONE 2026-08-17** (`2b61249a`) — and it was a LIVE BUG: three slider prompts stored the slider's value, not the typed one |
+| W7 — self-description | ✅ **DONE 2026-08-17** — landed **DERIVED**, not hand-written; see §2.7 "As landed" |
+| W6b — idempotence guards | ☐ owner-gated (D3); re-check the P2 interaction first |
+| W8 — constructor shapes | ✅ executed elsewhere, as P3 of `archive/constructor-parameter-conformance-plan.md` |
+| W10 — closeout | ☐ |
+
+⚠ Each phase's section carries an **"As landed"** block where it deviated from the sketch above it —
+read that before trusting the sketch. W7's is the largest deviation in the plan.
 Self-contained / runnable cold. Anchor on **symbol names** (verified 2026-08-14 at `21d5b64` +
 the survey commit); line numbers drift — grep the symbol.
 
@@ -572,6 +584,55 @@ Behaviour change (§4). Run the patch-programming and converter macros explicitl
 the 164 (start with the ~30 non-icon ones listed in survey F21), and `representativeIcon` to anything
 that can be referenced from the desktop. Recapture budget: the window-title and menu lists from W0.3.
 
+#### As landed — 2026-08-17: DERIVED, not hand-written
+
+⚠ **The instruction above — "add `colloquialName` to the substantial classes" — is the expensive way
+to buy the cheap half of this.** `Widget.colloquialName` returned the flat string `"generic widget"`,
+and that truthy default was already **shadowing a derivation the tree had written and forgotten**: the
+save-to-file auto-namer read
+`(@colloquialName?() or @constructor.name.replace "Wdgt", "") or "widget"`, whose second arm could
+never run. So every un-overriding class saved its file as `generic widget.fzw.json`.
+
+What landed instead: **the base DERIVES** from the class name — split camelCase into lowercase words,
+drop the `Wdgt`/`Morph` suffix — so an override becomes an editorial improvement rather than the only
+escape from a lie, and the auto-namer collapses to `@colloquialName()`.
+
+⭐⭐ **The correction that mattered: `colloquialName` is INHERITED, and the first survey ignored the
+chain.** Comparing each class's override to its own derivation says nothing about what deleting it
+would produce. Resolved properly (`Fizzygum-tests/.scratch/w7-colloquial-inheritance-survey.js`):
+
+| | |
+|---|---|
+| classes that GAIN the derivation | **162** (they answered `"generic widget"`) |
+| shadowed by an intermediate override | **38** |
+| overrides the derivation reproduces exactly ⇒ deleted | **10** |
+| overrides that LOOK redundant but would REGRESS if deleted | **3** — `SliderWdgt` falls to `CircleBoxWdgt`, `DividerWdgt` to `"rectangle"`, `SpreadsheetWdgt` to `FrameWdgt`'s `"window"` |
+| deliberate overrides kept | 44 literal + 10 computed |
+
+⭐ **Deleting a redundant intermediate override is worth more than deleting a leaf one, because it
+UNSHADOWS descendants.** `PanelWdgt`'s `"panel"` was exactly its own derivation and was also the
+answer given by `CanvasWdgt`, `StringFieldWdgt`, `FridgeWdgt` and ten others; `BoxWdgt`'s `"box"` was
+what `PointerWdgt` called itself. Removing those three (`PanelWdgt`, `BoxWdgt`, `RectangleWdgt`) let
+17 descendants derive their own names.
+
+**Three classes state a name because the camelCase split mangles it** — `Plot3DCreatorButtonWdgt` and
+`FridgeMagnets3DCanvasWdgt` (the split reads `3` and `D` as separate humps) and `Pencil2IconWdgt` (the
+digit stays glued). The four `Arrow<N|S|E|W>IconWdgt` and `ChapterXIconWdgt` derive a bare letter
+(`"arrow e icon"`) and are left: they are icon leaves whose name rarely surfaces, and the reading is
+still true.
+
+**Verified in the running world** (`.scratch/w7-derived-name-probe.js`), not from the source: the
+meta-system does resolve `constructor.name`, and **0 of 258 classes still answer `"generic widget"`.**
+⚠ That probe reads each class through a bare `Object.create(prototype)`, so the classes whose override
+is COMPUTED from instance state necessarily throw in it — a probe artifact, not a finding.
+
+**DEFERRED, deliberately: the capitalisation pass.** ~11 overrides differ from their derivation only
+in case (`"Calculating patch node"`, `"Generic panel"`, `"Video player"`, `"Flora icon"`, …), which is
+habit rather than intent, while others are genuinely proper nouns (`"Desktop"`, `"Bin"`, `"Shelf"`,
+`"Fizzytiles"`, the four `"… Maker"`s). Normalising the first group is a taste call with a real
+recapture cost and no structural content, so it is a separate, listed follow-up rather than smuggled
+into the mechanism change.
+
 **W8 — constructor shapes.** *Owner-gated* (D5), and the largest blast radius. Order:
 `ButtonWdgt` (12 → essentials + `opts`) → `LabelButtonWdgt` (17 → essentials + `opts`, with
 `MenuItemWdgt`/`MenuItemSpec`) → retire the three `iconToolTipMessage` shadow fields by taking
@@ -805,7 +866,7 @@ Mixin-clobber pre-check (landmine §8) for the other seven: **none** of `toolTip
 declaration cannot clobber a mixin value for any of them. The landmine still applies to whatever W4c
 proposes.
 | D3 | **W6b** — add idempotence guards to the B/C/D setters? (behaviour change: a wired circuit stops re-firing on an equal value) | **Yes, but as its own commit**, after W6a is green, with the patch-programming + converter macros run explicitly. |
-| D4 | **W7** — is the `"generic widget"` label worth a recapture round? | **Yes for the ~30 substantial non-icon classes**, no for the icon leaves (their colloquial name rarely reaches a title bar). |
+| D4 | **W7** — is the `"generic widget"` label worth a recapture round? | **Yes for the ~30 substantial non-icon classes**, no for the icon leaves (their colloquial name rarely reaches a title bar). ⚠ **The premise changed at execution:** the answer assumes the names are HAND-WRITTEN, so each one costs. A DERIVED default costs nothing per class, which is why all 162 got a true name rather than the ~30 — and the recapture round stayed small anyway (16 tests), because only the classes a test actually TITLES on screen move pixels. See §2.7 "As landed". |
 | D5 | **W8** — convert `ButtonWdgt`/`LabelButtonWdgt` to options objects? | **Yes, last**, and only if W1–W6 landed clean: it is the highest-churn item and the one most likely to reveal a call site nobody knew about. |
 | D6 | **F26 colours** — should `PreferencesAndSettings` become a real theme surface (40 classes hard-code channel triples)? | **Park** until there is a second theme to serve. Recorded in §10. |
 
@@ -1047,7 +1108,8 @@ proposes.
   Verification: `fg presuite` 293/294 (the one budgeted test) → `fg recapture --auto`
   **✅ RECAPTURE COMPLETE**, suite green at dpr 1 and dpr 2.
 - W6a widen setters / W6b guards (D3): ☐ ☐
-- W7 self-description (D4): ☐
+- **W7 · DONE — 2026-08-17.** DERIVED, not hand-written: 162 classes gain a true name, 10 redundant overrides deleted (3 unshadowing 17 descendants), 3 stated where the camelCase split mangles them. See §2.7 "As landed". Recapture: the inspector member lists + the window titles that showed "generic widget".
+- W7 residue: the capitalisation pass + `representativeIcon` — both in `docs/BACKLOG.md`.
 - W8 constructor shapes (D5): ☐
 - **W9 · CONVERGED — 2026-08-16.** All three tiers landed, plus the three W5 residue items.
   - **HARD GATE.** §5 proposed `check-menu-actions.js`, which the menu-action wiring arc had already

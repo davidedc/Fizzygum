@@ -25,9 +25,6 @@ class PanelWdgt extends Widget
     if @scrollPanel
       @noticesTransparentClick = false
 
-  colloquialName: ->
-    "panel"
-
   # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at screen point
   # `posOnScreen` land? Returns the sibling insertion index (bumped one past a child whose right half holds
   # the point), or undefined when the point is over no child — callers then fall back to appending at the end.
