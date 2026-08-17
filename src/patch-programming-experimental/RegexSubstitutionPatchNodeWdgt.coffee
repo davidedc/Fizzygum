@@ -15,14 +15,6 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
   input3: undefined
   input4: undefined
 
-  # vestigial: written by ControllerMixin.setTargetAndActionWithOnesPickedFromMenu but read
-  # nowhere -- their reader was the multi-input freshness gate, deleted when any-input-marks-
-  # stale replaced it (PatchNodeWdgt.updateTarget).
-  setInput1IsConnected: false
-  setInput2IsConnected: false
-  setInput3IsConnected: false
-  setInput4IsConnected: false
-
   constructor: (@defaultContents = "") ->
     super new Point 200,400
     @_buildAndConnectChildren()

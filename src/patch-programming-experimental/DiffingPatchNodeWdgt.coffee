@@ -6,14 +6,6 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
   tempPromptEntryField: undefined
   defaultContents: undefined
 
-  # vestigial: written by ControllerMixin.setTargetAndActionWithOnesPickedFromMenu but read
-  # nowhere -- their reader was the multi-input freshness gate, deleted when any-input-marks-
-  # stale replaced it (PatchNodeWdgt.updateTarget).
-  setInput1IsConnected: false
-  setInput2IsConnected: false
-  setInput1HotIsConnected: false
-  setInput2HotConnected: false
-
   constructor: (@defaultContents = "") ->
     super new Point 200,400
     @_buildAndConnectChildren()

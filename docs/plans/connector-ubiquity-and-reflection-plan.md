@@ -1365,7 +1365,10 @@ wire-vocabulary plan's W2 is waiting for.
    for compatibility nobody needs would have bought a migration path to nowhere. An old snapshot's own
    `target`/`action` properties simply restore as inert own-props on a widget that no longer reads
    them. See §P4 "As landed".
-7. **Scope of P5** — wallpaper only, or wallpaper + `PreferencesAndSettings` in the same session?
+7. ~~**Scope of P5** — wallpaper only, or wallpaper + `PreferencesAndSettings` in the same session?~~
+   **ANSWERED BY EVENTS 2026-08-17: both, in one session** — §P5 landed `Wallpaper` and
+   `PreferencesAndSettings` together (`ScrollPanelWdgt`, the third candidate, went with §P8 instead,
+   where its reverse edge belonged). See the §P5 heading.
 8. **Command edges (§P10b)** — index button `@target`s in `world.dataflow` as non-traversed command
    edges, or leave the button edge unindexed until the unified collector arc actually needs it?
 9. **Boolean payloads (§P10d)** — a bound toggle exports `0`/`1` as numerical, or does a fourth

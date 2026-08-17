@@ -88,8 +88,8 @@ ControllerMixin =
         @_addWire theTarget, action
         return
 
-      # The shared body of the binding verbs: find or make the record, set the legacy
-      # <action>IsConnected flag, and mirror the list into the engine index.
+      # The shared body of the binding verbs: find or make the record, and mirror the list into the
+      # engine index.
       #   A wire IS a dataflow edge (spec §8): the index is derived/disposable (spec §2) and re-declared
       # by the client on load/copy -- here the client is the wire list itself. Declaring EAGERLY here is
       # an optimisation (the edge exists the moment a menu wire is made); _fireConnection re-derives
@@ -101,8 +101,6 @@ ControllerMixin =
         unless wire?
           wire = new WireSpec theTarget, action, opts
           @wires.push wire
-        if theTarget[action + "IsConnected"]?
-          theTarget[action + "IsConnected"] = true
         world.dataflow.ensureWireEdges @, @wires
         return wire
 
@@ -239,8 +237,7 @@ ControllerMixin =
       # lane that JOINS an enclosing settle -- Widget._settleLayoutsAfterOrJoinEnclosingPass / check-layering
       # [P]) and to the public action otherwise (setValue / setInput1 / setColor / ... never open a settle, so
       # the public name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). A wire's
-      # action stays the menu-friendly public name everywhere (menus, <action>IsConnected flags, hard-wired
-      # app circuits).
+      # action stays the menu-friendly public name everywhere (menus, hard-wired app circuits).
       _fireConnection: (value) ->
         return unless @wires?.length
         # under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my dataflowValue

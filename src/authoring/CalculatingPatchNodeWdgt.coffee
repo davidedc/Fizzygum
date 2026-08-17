@@ -22,16 +22,6 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   input3: undefined
   input4: undefined
 
-  # ControllerMixin's setTargetAndActionWithOnesPickedFromMenu flips these true when a wire is
-  # connected via the menu (@target[@action + "IsConnected"] = true) -- bookkeeping only,
-  # nothing reads them. The old "wait for all connected inputs before firing" freshness gate
-  # they were for is gone (see PatchNodeWdgt.updateTarget): any input change marks me STALE and
-  # the drain pulls whatever is currently stored.
-  setInput1IsConnected: false
-  setInput2IsConnected: false
-  setInput3IsConnected: false
-  setInput4IsConnected: false
-
   constructor: (@defaultFormulaBoxContents = "# function with formula here e.g.\n# (in1) -> in1 * 2\n") ->
     super new Point 200,400
     @_buildAndConnectChildren()
