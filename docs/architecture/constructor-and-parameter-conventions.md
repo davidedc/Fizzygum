@@ -321,6 +321,12 @@ call. A doc edit in a test must never break a build, so that half is swept by ha
 `census-call-arity.js --holes`, where the prose hits are obvious to a reader and invisible to a
 regex.
 
+⚠ **That hand sweep is load-bearing, and skipping it has already cost once.** Connector §P4
+(2026-08-17) deleted `PaletteWdgt`'s leading `target` parameter — a hole with ELEVEN live call sites,
+every one of them in a macro source, so both automatic checks read clean throughout. The census
+lists all eleven in one run. ⇒ after changing any constructor, run it: the gates answer for `src/`
+and nothing answers for the tests repo.
+
 Everything else here is convention, checked by review. The cap in R1, the vocabulary in R4 and
 the atomicity in R7 are not expressible as a text scan.
 

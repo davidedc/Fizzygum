@@ -357,8 +357,16 @@ assertion a recapture after a regression silently stores two different hashes an
   and the click then lands on whatever is underneath. Underneath is the footer's `add...` button, which opens a
   "new property name:" prompt: two tests (`macroWrappingTextFieldResizesOK`, `macroMultilineTextInputScrollsWell`) carried
   that stray prompt in their committed references until 2026-08-17, when a change to `ControllerMixin`'s member set slid the
-  row and the prompt silently disappeared. ⭐ The general rule: **locating a widget by MEANING and then clicking a fixed pixel
-  offset from it throws away the resilience the lookup just bought** — clamp into the target or bring it into view.
+  row and the prompt silently disappeared. A THIRD (`macroInspectorResizingOKEvenWhenTakenApart`, whose list is DETACHED so
+  there is nothing underneath to react) simply selected NOTHING, and its references had recorded an empty detail pane —
+  against its own comments — for as long as they existed. All three now use the verb.
+  ⭐ The general rule: **locating a widget by MEANING and then clicking a fixed pixel offset from it throws away the
+  resilience the lookup just bought** — clamp into the target or bring it into view. The toolkit had already learned this:
+  `clickOnListItemFromTopInspector_InputEvents` carries a clamp (`Math.max entry.top() + 2, list.top() + 2`) with a
+  2026-08-06 measurement attached; the three tests were hand-rolling the unclamped version.
+  ⇒ ⚠ The hazard is a click at a fixed offset from a widget that a CONTAINER MAY CLIP. Clicking a fixed offset INTO a
+  widget's own box is fine and is a different thing — `str.topLeft().translateBy new Point 3, 8` to drop a caret near the
+  start of a StringWdgt (four `macroStringWdgt*` tests) is nobody's bug: the target is standalone and taller than the offset.
 - **A wrapping text FIELD re-wraps on every container resize** (`macroWrappingTextFieldResizesOK`): the `InspectorWdgt`'s editable
   `@detail` pane is a `ScrollPanelWdgt` holding a `SimpleTextWdgt` (a `TextWdgt`). It defaults to NON-wrapping (long lines
   scroll horizontally); call `detailText.softWrapOn()` (sets the detail scroll panel's `isTextLineWrapping = true`,
