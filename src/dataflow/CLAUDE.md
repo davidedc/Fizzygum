@@ -120,7 +120,7 @@ engine's SECOND client, ported by a strangler. Landed so far:
 An **edge** means "when this changes, that must react". **Notifications carry no values** —
 a source only marks a node **stale**; values are **pulled** from nodes at recompute time. The
 engine keeps only a **derived, disposable** forward+reverse index (`@edgesFrom` / `@edgesTo`);
-edges live locally on the widgets (a wire's `@target`/`@action`) and in formula text (a cell's
+edges live locally on the widgets (a controller's `@wires`, one `WireSpec` each) and in formula text (a cell's
 references), so a duplicated or restored wired structure needs no engine fix-up — the client
 re-declares its edges. Nothing the engine holds is ever serialized.
 
@@ -179,9 +179,16 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
   entrypoint. Sinks route via `_<action>Connector` / bare mutators only.
 - Every death path (`removeAllEdgesOf`) drops the node from BOTH adjacency maps and the pools —
   a dead node left in the index is a leak AND a ghost recompute.
-- **A producer's out-edges are not all wires.** It owns at most one WIRE (one `@target`/`@action`)
-  and any number of edges from consumers that merely re-read it, so a re-wire clears the wire only
-  (`_removeOutgoingWireEdgesOf`) — clearing everything would silently unsubscribe an open menu.
+- **A producer's out-edges are not all wires.** It owns as many WIRES as it has `WireSpec` records
+  (connector plan §P4) plus any number of edges from consumers that merely re-read it, so a re-wire
+  clears the wires only (`_removeOutgoingWireEdgesOf`) — clearing everything would silently
+  unsubscribe an open menu. `ensureWireEdges` mirrors the whole list, which is why removing a record
+  and reconciling IS the un-wire: the edge stops being derivable.
+- **A (producer, consumer) pair can carry SEVERAL records** — two wires onto two pins of one target,
+  or a wire alongside a `firesOnAnyChange` subscription. ⚠ `@edgesTo` maps consumer → a Set of
+  PRODUCERS, so it collapses the pair however many records join them: anything that must see all of
+  them walks the forward set (`_edgeRecords`), never the reverse index. Reading one record per pair
+  delivers one wire and silently drops the rest.
 - NOMENCLATURE: no `settle` / `invalidate` / `dirty` / `coalesced` / `announce` / `volatile` in
   dataflow identifiers; "source" stays qualified ("dataflow source", "time source").
 

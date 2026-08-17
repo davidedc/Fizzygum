@@ -28,9 +28,11 @@ class NumberPromptWdgt extends PromptWdgt
     slider.color = Color.create 225, 225, 225
     slider.button.setColorScheme Color.create 60, 60, 60
     slider.__commitHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
-    slider.target = @
-    slider.argumentToAction = @
-    slider.action = "takeSliderValue"
+    # A named wire verb — a controller owns a LIST of wire records (§P4), so there is no target/action
+    # field pair to assign. The QUIET one, because the field and the slider are already consistent
+    # here — I built the slider from @defaultContents — and firing would round that default away and
+    # open an edit before the prompt is on screen.
+    slider.declareWireTo @, "takeSliderValue"
     panel._addNoSettle slider
 
   takeSliderValue: (num) ->
@@ -41,9 +43,9 @@ class NumberPromptWdgt extends PromptWdgt
   # first). It JOINS the drain's enclosing settle instead of opening its own, so the mid-drain _editNoSettle in the
   # core below is legal (edit() is public/self-settling -- illegal mid-flush; see Widget._settleLayoutsAfter's
   # re-entrancy throw). Same NoSettle core as the public takeSliderValue above -- the setFontSize /
-  # _setFontSizeConnector pattern. NO connectionsCalculation
-  # Token guard: this is a pure SINK (it never calls updateTarget), so a circuit cannot cycle through it; the
-  # dispatch's extra (argumentToAction, token) arguments are simply ignored, exactly as the public entry ignores them.
+  # _setFontSizeConnector pattern. No cycle guard needed: this is a pure SINK (it never calls updateTarget),
+  # so a circuit cannot cycle through it. The engine delivers ONE argument (_applyWireValue passes the pulled
+  # value and nothing else), which is all this takes.
   _takeSliderValueConnector: (num) ->
     @_settleLayoutsAfterOrJoinEnclosingPass => @_takeSliderValueNoSettle num
 

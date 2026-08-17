@@ -997,9 +997,9 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # Patch-programming "set target": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
+    # Patch-programming "connect to ➜": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,
     # SliderWdgt, StringWdgt, … — anything augmented with ControllerMixin) to drive a property of
-    # another widget. Right-click the controller -> "set target" (openTargetSelector) opens a
+    # another widget. Right-click the controller -> "connect to ➜" (openTargetSelector) opens a
     # "choose target:" menu of the widgets whose bounds INTERSECT the controller (so the controller must
     # OVERLAP the intended target), each labelled `target.toString().replace("Wdgt","") + " ➜"`
     # (Wdgt-stripped); pick it by class-name PREFIX. That opens a "choose target property:" menu of the
@@ -1017,11 +1017,31 @@ class MacroToolkit
         if controllerHierarchyPrefix?
           @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
           yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents "set target"
+        @moveToItemOfTopMenuAndClick_InputEvents "connect to ➜"
         yield "waitNoInputsOngoing"
         @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
         yield "waitNoInputsOngoing"
         @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), propertyLabel
+        yield "waitNoInputsOngoing"
+    """
+
+    # The INVERSE gesture (connector plan §P4): cut one of a controller's connections and leave the rest
+    # standing. A controller's own menu carries one row PER LIVE WIRE, labelled by what it drives —
+    # `WireSpec.describeConnection() + " ➜"`, i.e. the Wdgt-stripped target then the PIN's label,
+    # "a Panel . color ➜" — so name the wire by that prefix. The row opens that wire's own little menu
+    # ("fires per event", "disconnect"); this clicks "disconnect".
+    # ⚠ Pass the prefix WITHOUT the trailing " ➜" (prefix matching), and note the pin LABEL is what
+    # appears, not the setter name: "a Panel . color", never "a Panel . setColor".
+    macroSubroutines.add Macro.fromString """
+      disconnectControllerWire_InputEvents_Macro = (controllerWidget, wireRowPrefix, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
+        @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
+        yield "waitNoInputsOngoing"
+        if controllerHierarchyPrefix?
+          @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
+          yield "waitNoInputsOngoing"
+        @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), wireRowPrefix
+        yield "waitNoInputsOngoing"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "disconnect"
         yield "waitNoInputsOngoing"
     """
 

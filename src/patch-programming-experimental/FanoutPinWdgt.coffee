@@ -3,8 +3,6 @@ class FanoutPinWdgt extends Widget
   @augmentWith ControllerMixin
 
   inputValue: undefined
-  target: undefined
-  action: undefined
 
   # I forward whatever I was handed, so I can drive a target pin of ANY kind -- my target-property
   # menu offers all of them, and my set-target tooltip names no kind. Both read this one field.

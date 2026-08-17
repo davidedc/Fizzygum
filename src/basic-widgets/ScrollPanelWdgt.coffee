@@ -229,9 +229,15 @@ class ScrollPanelWdgt extends PanelWdgt
     # this check is to see whether the bar actually belongs to this ScrollPanel: a bar can survive
     # detached from its original ScrollPanel A (it's referenced as a property, not a child, so
     # duplicating A into B does not retarget or duplicate the bar), leaving B referencing A's bar. We
-    # guard on the bar's own `target` before touching it so a stray duplicate never resizes/hides a
-    # scrollbar that belongs to a different panel.
-    if @hBar.target == @
+    # ask the bar whether it drives ME before touching it, so a stray duplicate never resizes/hides a
+    # scrollbar that belongs to a different panel. (`isWiredTo` since §P4 — a controller owns a LIST
+    # of wires, so "do you drive me" is a search, not a field comparison.)
+    #   ⚠ SOAKED, and that is not decoration: this guard is the gate for everything below it, so it has
+    # to answer for a @hBar that is not (yet) a live controller — mid-deserialization a widget reference
+    # can still be unresolved, which is the same case SliderWdgt.unitSize guards for on its own @button.
+    # The field comparison this replaced was total by accident (`<anything>.target == @` is just false);
+    # asking a METHOD is not, and a bar that cannot answer is exactly a bar I must not touch.
+    if @hBar.isWiredTo? @
       if @contents.width() >= @width() + 1
         @hBar.show()
         # chrome I own and place -- apply via the non-notifying twin as above (see the method-top
@@ -255,7 +261,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @hBar.hide()
 
     # see comment on equivalent if line above.
-    if @vBar.target == @
+    if @vBar.isWiredTo? @
       if @contents.height() >= @height() + 1
         @vBar.show()
         # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).

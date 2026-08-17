@@ -253,7 +253,7 @@ strong and it would fork the mechanism.
 | # | Gap | Blocks |
 |---|---|---|
 | **G1** | ~~**Write-only pins.**~~ ✅ **CLOSED by P1** (2026-08-16): a `PinSpec` may declare a reader, and `Widget.exportedValue` is now a declared principal pin rather than a duck-typed probe. What remains is populating readers — most pins are still write-only, honestly so. | ~~any generic reverse edge; showing current values; per-property spreadsheet reads~~ |
-| **G2** | **Single-slot, one-way wires.** One `@target`/`@action` ⇒ one out-edge; no un-wire; fan-out only via a non-production widget. | two-way binding (the return wire has nowhere to live); the citizenship doc's own claim |
+| **G2** | ~~**Single-slot, one-way wires.**~~ ✅ **CLOSED by P4** (2026-08-17): a controller owns an ordered `@wires` list of `WireSpec` records, `wireTo` ADDS, `unwireFrom` removes, and the menu shows one row per live wire with a `disconnect`. The engine mirrors the list (`ensureWireEdges`) and now delivers EVERY record joining a pair, which single-slot wiring had hidden. ⇒ §P2's return wire has a slot, and `FanoutWdgt` is an affordance over a universal capability. | ~~two-way binding (the return wire has nowhere to live); the citizenship doc's own claim~~ — **unblocked** |
 | **G3** | **Change announcement is opt-in and rare.** Six classes announce, for one property each. ⚠ **PARTLY closed for NON-WIDGET holders by P5+P7** (2026-08-17): `Wallpaper` and `PreferencesAndSettings` now announce, and their menu rows follow from anywhere. For a WIDGET it is still all-or-nothing — one `dataflowValue`, so announcing a property change fires its wires — which makes **P3 a hard prerequisite for the rest of P7**, not an independent proposal. | anything driven by a menu, a script, the loader, or another widget's method call |
 | **G4** | ~~**Non-widget state has no node identity.**~~ ✅ **CLOSED by P5** (2026-08-17) for `Wallpaper` and `PreferencesAndSettings` — both are dataflow nodes now, with zero engine change, exactly as `SecondsSource`/`FrameSource` predicted. Scroll offset remains, and belongs to §P8. | ~~the wallpaper-menu complaint outright~~ — **closed** |
 | **G5** | **Reflection is private field plumbing.** `if @vBar.target == @ … updateSpecs`; `_updateHandlePosition` on one class with one caller. | duplicated/foreign controllers following the value |
@@ -521,7 +521,7 @@ build it against (c), drive a fast wheel-scroll, and look.** Do not settle this 
 **⇒ Decision recorded: keep (a) as the holding position; (c) and (d) are the live candidates; (b) and
 (b′) are closed. The deciding experiment belongs to §P8.**
 
-### P4 — A controller owns a LIST of wires
+### P4 — A controller owns a LIST of wires — ✅ **LANDED 2026-08-17**
 
 Replace the `@target`/`@action` pair with an ordered list of wire records on the widget:
 
@@ -546,6 +546,110 @@ Replace the `@target`/`@action` pair with an ordered list of wire records on the
 
 This is the single change that unblocks the most, and it is the one with real serialization
 surface. It deserves its own arc.
+
+#### As landed
+
+**The `@target`/`@action` accessor shim above is NOT BUILDABLE, and finding that out is what shaped
+the arc.** `Class`/`Mixin` emit every declared member as `prototype.<name> = <expr>` — they parse a
+field's source text and assign it — so a getter/setter cannot be *declared* in this codebase at all,
+and there is not one instance accessor anywhere in `src/` (the only `Object.defineProperty` calls
+name a function or patch a vendored SWCanvas prototype). A shim was also the wrong thing on its own
+terms: it would state each wire's target twice, which is the drift `PinSpec`'s own header warns
+about. So there is no migration period — **every site converted in one pass**, which the owner's
+standing constraints (no serialised worlds of interest, recapture churn irrelevant) made free.
+
+The record is a class, **`WireSpec`** (`src/basic-widgets/WireSpec.coffee`, beside `PinSpec`), not a
+bare literal — the layout-spec family is the precedent: one spec object per ATTACHMENT, living on the
+widget, serialized with it, carrying knobs. ⚠ It is explicitly a MUTABLE spec, not an immutable value
+class: `firesPerEvent` is flipped in place by its menu row. Its prototype-level defaults are what keep
+an untoggled wire serializing as just `{target, action}` — the own-only-when-set idiom, one level down
+— and `@wires` itself is a prototype-level `undefined` (never a shared array), so an unwired widget
+serializes byte-for-byte as before and `unwireFrom` `delete`s the field rather than leaving `[]`.
+
+**Both per-wire policies MOVED ONTO the record.** `firesPerEvent` was already documented as "a
+per-wire delivery policy" while living on the controller, where it could only ever be one policy for
+every wire; `tracksTarget` (§P8) became `WireSpec.tracks`, because tracking is a property of the
+RELATIONSHIP — a controller may follow one target while merely driving another. That is what forces
+the menu shape below: with N wires there is no single row for "the" policy.
+
+⭐ **THREE binding verbs now, and the third is §P8's lesson finishing itself.** §P8 established that
+the direction of the on-connect push is part of what a bind MEANS. The full set:
+
+| verb | the wire | on connect |
+|---|---|---|
+| `wireTo` | I drive it | I push MY value (`reactToTargetConnection`) |
+| `trackTarget` | I drive it **and follow it** | I take ITS value (§P8) |
+| `declareWireTo` | I drive it | **nothing moves** |
+
+The third exists because `NumberPromptWdgt` poked `@target`/`@action` directly and therefore never
+fired — silence that was incidental then and is now stated. It is not a nuance: that slider's action
+rewrites the entry field to the ROUNDED slider value and opens an edit on it, so firing at
+construction would round a fractional default away and pop a caret before the prompt is on screen.
+
+**The menu is where G2 actually closes.** `wireTo` ADDS (idempotent per target+action), so
+"connect to ➜" adds a connection, and each live wire gets its OWN row labelled by what it drives —
+`"a Panel . color ➜"`, the target as the connect menus name it plus the PIN's label, not the raw
+setter — opening that wire's little menu of "fires per event" + "disconnect". ⛔ The
+`world.isIndexPage` label fork is deleted: "set target" is the name of a single-slot world and would
+be a false promise once the gesture connects *a* target, one of several. (The fork had already rotted
+— `StringWdgt`'s hand-rolled copy nested `if world.isIndexPage` inside itself, so its "set target"
+branch was unreachable.) ⭐ The rows are the real payoff: a single-slot controller's one connection
+was INVISIBLE and re-targeting silently dropped it; wiring is now legible and reversible.
+
+⭐ **A `WireSpec` is a dataflow node.** Its "fires per event" row is a `MenuRowReflectionSpec` whose
+`source` is the wire itself, so two wires' rows tick independently and a flip made anywhere re-ticks
+every open menu. That needs nothing but a reader method and a `markNonValueChange` — the zero-engine-
+change trick §P5 played for `Wallpaper`, and the reason the node protocol is duck-typed.
+
+⚠⚠ **A LATENT ENGINE DEFECT that P4 makes reachable, found by reading the delivery path.**
+`_applyIncomingWireEdges` walked `edgesTo` — which maps consumer → a Set of **producers**, collapsing
+a pair however many records join them — and then took ONE record per pair via `_edgeRecord`. So two
+wires from one controller onto two different pins of the SAME target would have delivered one and
+silently dropped the other; and where a pair carries a wire *plus* a `firesOnAnyChange` subscription,
+it could pick the valueless record and deliver NEITHER. The RECORD layer always supported many per
+pair — `_removeOutgoingWireEdgesOf` checks "no record at all is left", and `_wireEdgeRecord` existed
+precisely to tell a wire from a subscription — only DELIVERY collapsed them. `_edgeRecord`/
+`_wireEdgeRecord` became `_edgeRecords`/`_wireEdgeRecords` and both readers now walk all of them.
+Unreachable before P4 (one wire per controller), which is why it sat there.
+
+**`ensureWireEdge` → `ensureWireEdges producer, wires`**: the index mirrors the LIST, rebuilt whole on
+any mismatch (`_wireEdgesMatch` counts BOTH ways — a wire with no edge and an edge with no wire are
+equally a mismatch, and it is the second that un-wiring produces). ⭐ So **per-wire removal needed no
+engine verb**: drop the record, reconcile, and the edge is gone because nothing derives it. The one
+addition is `removeAnyChangeEdge`, for the tracking half — an edge OUT of the target that only its
+subscriber can revoke — and it spares wire records in the same direction, which matters the moment
+§P2 binds two widgets to each other.
+
+**`unwireFrom` landed with its first caller already in the tree**: `CellWdgt._reactToChildGrabbed`
+cleared the fields by hand under a comment reading *"no un-wire idiom exists in ControllerMixin —
+verified 2026-07-17"*. Its blanket `removeAllEdgesOf` is gone too — it got away with being blunt only
+because a value-widget in a cell had no other edges to lose.
+
+⚠ **Two vestiges the conversion exposed, both deleted.**
+1. `PaletteWdgt`'s constructor took `@target` as its FIRST parameter — a textbook positional hole
+   (R3): every caller wanting a size passed `undefined` through it, ELEVEN of them in the suite, and
+   the one caller passing a real target wired itself properly a line later anyway. It could not carry
+   an action either, which is why `updateTarget` carried a "default the action to `setColor`" repair —
+   so that repair was load-bearing, not vestigial, and both go together. ⚠ The `positional-hole` stink
+   reads `src/` only, so eleven live holes sat in the tests repo where no gate could see them.
+2. `argumentToAction` — declared on three controllers, written by one site, and read by NOBODY
+   (`_fireConnection` documents that it ignores it). A field that was declared, duplicated and
+   serialized to say nothing.
+
+**Acceptance: `SystemTest_macroPaletteRetargetsToNewWidget` → `macroPaletteFansOutAndDisconnects`.**
+Its stated intent was *"exactly one live target at a time"* — a recording of gap G2, not of a desired
+behaviour — so it was rewritten to assert the capability: wire the palette to a Panel, ALSO wire it to
+a Rectangle (image_3: **both go blue on one click**), then cut the Panel's wire from the palette's own
+menu (image_4: **the Rectangle goes magenta, the Panel stays blue**). Images 1-2 kept their exact
+dataHashes, which is the tidiest possible proof that only the new steps changed. New verb:
+`disconnectControllerWire_InputEvents_Macro`.
+⇒ **a test whose stated intent is a LIMITATION is the acceptance test for the arc that removes it** —
+the §P8 lesson again, and it is worth looking for such a test before writing a new one.
+
+⚠ **What P4 did NOT do.** `FanoutWdgt` is unchanged. The capability it wraps is now universal, so it
+is a visual affordance over one rather than the only way to have one — but rewriting it is not
+required by anything here, and it lives in a part production does not ship. Left for whoever next
+needs it.
 
 ### P5 — Non-widget state becomes nodes (zero engine change) — ✅ **LANDED 2026-08-17** (`Wallpaper` + `PreferencesAndSettings`; `ScrollPanelWdgt` stays with §P8)
 
@@ -1116,8 +1220,16 @@ wire-vocabulary plan's W2 is waiting for.
    node has one value and a scroll frame has no one number. So three of the four travel as a
    `SliderRange` the consumer PULLS, and the fourth is the pin's own reader. **W2 still has no
    customer.** See §P8 "As landed".
-6. **Does `@wires` (P4) get a serialization version bump**, or does the `@target`/`@action`
-   accessor shim make old snapshots load unchanged?
+6. ~~**Does `@wires` (P4) get a serialization version bump**, or does the `@target`/`@action`
+   accessor shim make old snapshots load unchanged?~~ **ANSWERED 2026-08-17: NEITHER, and the question
+   dissolved with its premise.** The accessor shim is not buildable in this codebase (`Class`/`Mixin`
+   emit `prototype.<name> = <expr>`; there is no instance accessor anywhere in `src/`), so there was
+   never a shim to load old snapshots THROUGH. And no bump: `Serializer.FORMAT_VERSION` gates only
+   "newer than this build understands", there is no per-version migration machinery to hang one on,
+   and the owner confirmed (2026-08-17) there are **no serialised worlds of interest** — so paying
+   for compatibility nobody needs would have bought a migration path to nowhere. An old snapshot's own
+   `target`/`action` properties simply restore as inert own-props on a widget that no longer reads
+   them. See §P4 "As landed".
 7. **Scope of P5** — wallpaper only, or wallpaper + `PreferencesAndSettings` in the same session?
 8. **Command edges (§P10b)** — index button `@target`s in `world.dataflow` as non-traversed command
    edges, or leave the button edge unindexed until the unified collector arc actually needs it?

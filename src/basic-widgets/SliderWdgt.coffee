@@ -8,9 +8,6 @@ class SliderWdgt extends CircleBoxWdgt
 
   @augmentWith ControllerMixin
 
-  target: undefined
-  action: undefined
-
   # A slider is editor content when dropped alone (a value control you can select/align), but a scroll
   # panel's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
   # SAME class serves both, so I can't blanket-exclude -- instead I ASK my parent whether it owns me as a
@@ -26,7 +23,6 @@ class SliderWdgt extends CircleBoxWdgt
   size: undefined
   offset: undefined
   button: undefined
-  argumentToAction: undefined
   # my as-built width, frozen at the first menuEntryPreferredWidth ask (see
   # that method); declared so Duplicator duplication carries it.
   menuEntryNaturalWidth: undefined
@@ -92,11 +88,11 @@ class SliderWdgt extends CircleBoxWdgt
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelfAndButton()
-    # A DUPLICATED or re-parented control carries @target/@action/@tracksTarget but NO edges — the
-    # engine's index is derived and never duplicated or serialized, and the client re-declares it
-    # (dataflow spec §2). Joining a live world is the moment a copy can do that, so a duplicated
-    # scrollbar follows its content from the start rather than only from its first drag.
-    @_ensureTrackingEdge()
+    # A DUPLICATED or re-parented control carries its wire records but NO edges — the engine's index
+    # is derived and never duplicated or serialized, and the client re-declares it (dataflow spec §2).
+    # Joining a live world is the moment a copy can do that, so a duplicated scrollbar follows its
+    # content from the start rather than only from its first drag.
+    @_ensureTrackingEdges()
 
   # Re-lay-out me and my thumb, then repaint -- the couplet every value/geometry change
   # ends with.
@@ -201,7 +197,7 @@ class SliderWdgt extends CircleBoxWdgt
 
 
   updateTarget: ->
-    @_fireConnection @value, @argumentToAction
+    @_fireConnection @value
     return
 
   reactToTargetConnection: ->
@@ -210,8 +206,8 @@ class SliderWdgt extends CircleBoxWdgt
   # The REVERSE half of my wire (connector plan §P8): my target announced that something about it
   # changed, and I RE-READ it instead of being handed a value — a `firesOnAnyChange` edge, the same
   # shape a reflected menu row uses (MenuRowsPanelWdgt._subscribeToReflectedSource, which likewise
-  # ignores what is delivered). What I re-read is the pin MY OWN @action writes, so I follow exactly
-  # what I drive.
+  # ignores what is delivered). What I re-read is the pin my TRACKING WIRE's own action writes, so I
+  # follow exactly what I drive.
   #   A target that a slider can be bound to also says what SCALE that pin lives on
   # (`sliderRangeForPin`, capability-probed — most targets have no answer and want none). Without a
   # range there is no thumb geometry to derive, so I keep what I have; a degenerate range would
@@ -220,12 +216,13 @@ class SliderWdgt extends CircleBoxWdgt
   # through the non-notifying re-lay tiers and opens no settle, so it JOINS the drain's pass settle
   # the way setValue / setColor do (ControllerMixin._fireConnection's note on routing).
   reflectTarget: ->
-    return unless @target?
-    pin = @target.pinDrivenBy? @action
+    wire = @_trackingWire()
+    return unless wire?
+    pin = wire.target.pinDrivenBy? wire.action
     return unless pin?.getterName?
-    range = @target.sliderRangeForPin? pin
+    range = wire.target.sliderRangeForPin? pin
     return unless range?
-    @_updateSpecs range.start, range.stop, @target[pin.getterName](), range.size
+    @_updateSpecs range.start, range.stop, wire.target[pin.getterName](), range.size
 
   # My `value` pin's reader (dataflow spec §9.3), which is also what exportedValue answers because
   # `value` is my principal pin: a slider-valued spreadsheet cell reads as its number, and a
@@ -241,7 +238,7 @@ class SliderWdgt extends CircleBoxWdgt
     menu.addMenuItem "floor...", @, "promptForFloor", toolTip: "set the minimum value\nwhich can be selected"
     menu.addMenuItem "ceiling...", @, "promptForCeiling", toolTip: "set the maximum value\nwhich can be selected"
     menu.addMenuItem "button size...", @, "promptForButtonSize", toolTip: "set the range\ncovered by\nthe slider button"
-    @_addTargetConnectionMenuEntries menu, "numerical"
+    @_addTargetConnectionMenuEntries menu
 
   # The three range prompts. ⚠ An action MUST be a STRING method name: ButtonWdgt dispatches
   # `@target[@action]`, so a function literal indexes the target with a stringified function,

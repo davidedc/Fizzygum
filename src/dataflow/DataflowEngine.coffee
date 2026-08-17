@@ -84,7 +84,7 @@
 # station; one frame only for a change born inside the layout pass).
 #
 # ── THE INDEX IS DERIVED AND DISPOSABLE ─────────────────────────────────────────────────
-# Edges live LOCALLY on the widgets (a wire's @target/@action) and in formula text (a cell's
+# Edges live LOCALLY on the widgets (a controller's `@wires`, one WireSpec each) and in formula text (a cell's
 # references); the engine keeps only a derived forward+reverse adjacency index, rebuilt by the
 # clients on load/copy/wire-change/formula-commit. So NONE of the engine's Maps/Sets/WeakMap
 # are serialized — a duplicated or restored wired structure needs no engine fix-up; the client
@@ -183,14 +183,13 @@ class DataflowEngine
     @edgesTo.delete consumer
     return
 
-  # Remove this node's outgoing WIRE edges — called by ensureWireEdge when a controller is re-wired (its
-  # @target/@action changed), to drop the old wire before declaring the new one so no stale edge is left
-  # behind as a ghost (6b/6c).
-  # ⚠ It spares `firesOnAnyChange` edges, and that exception is load-bearing: a producer owns at most one
-  # WIRE (one @target/@action), but it can carry any number of edges from consumers that merely RE-READ it
-  # (a fonts menu subscribed to a text). Those are not the re-wirer's to revoke — clearing every out-edge
+  # Remove this node's outgoing WIRE edges — called by ensureWireEdges to clear the ground before re-declaring
+  # from the live wire list, so no stale edge is left behind as a ghost (6b/6c).
+  # ⚠ It spares `firesOnAnyChange` edges, and that exception is load-bearing: a producer's out-edges are not
+  # all wires — it can carry any number of edges from consumers that merely RE-READ it (a fonts menu subscribed
+  # to a text, a scrollbar tracking its panel). Those are not the re-wirer's to revoke — clearing every out-edge
   # would unsubscribe an open menu the moment its text is re-wired, which is exactly the stale-tick bug
-  # P5/P7 exists to kill.
+  # P5/P7 exists to kill. Revoking one is the subscriber's own business (removeAnyChangeEdge).
   _removeOutgoingWireEdgesOf: (producer) ->
     outSet = @edgesFrom.get producer
     return unless outSet?
@@ -198,7 +197,7 @@ class DataflowEngine
       return if rec.firesOnAnyChange
       outSet.delete rec
       # drop the reverse entry only once NO record at all is left from producer to this consumer
-      unless @_edgeRecord producer, rec.consumer
+      if @_edgeRecords(producer, rec.consumer).length is 0
         inSet = @edgesTo.get rec.consumer
         if inSet?
           inSet.delete producer
@@ -208,25 +207,68 @@ class DataflowEngine
     @_notifySubscriberCount producer
     return
 
-  # Ensure the edge index MIRRORS this live wire (producer's @target/@action) — the TOTAL realisation of spec §8
-  # "edges derive from @target/@action". Idempotent: a no-op when the edge already matches, so it is cheap to
-  # call on every fire. Called both EAGERLY (setTargetAndActionWithOnesPickedFromMenu, so a menu wire's edge
-  # exists the moment it is made) and LAZILY (ControllerMixin._fireConnection, so a wire established by DIRECT
-  # @target/@action assignment — a ScrollPanelWdgt scrollbar, a PromptWdgt slider — that never goes through the
-  # menu still declares its edge the first time it fires; without this it would markStale with NO out-edge and
-  # deliver nothing, silently breaking scroll (what the 6c reconciliation fixed). On a mismatch (a re-wired producer, or a
-  # firesPerEvent toggle) it drops the single old out-edge and re-declares — a ControllerMixin producer owns at
-  # most one out-edge (one @target/@action), so clearing all of them clears exactly the old wire. Skipped mid-
-  # drain (@_recalculatingDataflow): the initiating _fireConnection runs at EVENT time, before the cycle's drain,
-  # so the edge is already declared by the time the drain walks the index; a mid-drain echo-fire (a ring
-  # intermediate's onward tail) is for an already-declared edge, so the drain never mutates the index it is
-  # walking. Wire edges are never cycle-checked (the ring is intentional, spec §7), mirroring addEdge's callers.
-  ensureWireEdge: (producer, consumer, opts = {}) ->
+  # Ensure the edge index MIRRORS this producer's live WIRE LIST (ControllerMixin's `@wires`) — the TOTAL
+  # realisation of spec §8 "edges derive from the wires". Reconciling the whole list rather than one pair is
+  # what makes un-wiring need no engine verb of its own: drop the record from the list, call this, and the
+  # edge is gone because nothing derives it (connector plan §P4).
+  # Idempotent — a no-op when every wire already has its matching edge and no extra wire edge survives — so it
+  # is cheap to call on every fire. Called both EAGERLY (ControllerMixin._addWire, so a menu wire's edge exists
+  # the moment it is made) and LAZILY (_fireConnection, so a wire established by DIRECT construction — the
+  # NumberPromptWdgt slider — that never goes through the menu still declares its edge the first time it fires;
+  # without this it would markStale with NO out-edge and deliver nothing, silently breaking the prompt (what the
+  # 6c reconciliation fixed).
+  # ⚠ It rebuilds from scratch on ANY mismatch rather than diffing record by record: the wire lists in this
+  # tree are one or two entries long, so the diff would be more code than it saves, and a rebuild cannot leave
+  # a ghost behind. `_removeOutgoingWireEdgesOf` spares `firesOnAnyChange` records, so a consumer subscribed to
+  # this producer keeps its subscription across the rebuild.
+  # Skipped mid-drain (@_recalculatingDataflow): the initiating _fireConnection runs at EVENT time, before the
+  # cycle's drain, so the edges are already declared by the time the drain walks the index; a mid-drain
+  # echo-fire (a ring intermediate's onward tail) is for already-declared edges, so the drain never mutates the
+  # index it is walking. Wire edges are never cycle-checked (the ring is intentional, spec §7), mirroring
+  # addEdge's callers.
+  ensureWireEdges: (producer, wires) ->
     return if @_recalculatingDataflow
-    existing = @_wireEdgeRecord producer, consumer
-    return if existing? and existing.action is (opts.action ? undefined) and existing.firesPerEvent is (opts.firesPerEvent ? false)
+    return if @_wireEdgesMatch producer, wires
     @_removeOutgoingWireEdgesOf producer
-    @addEdge producer, consumer, opts
+    return unless wires?
+    @addEdge producer, wire.target, wire.edgeOpts() for wire in wires
+    return
+
+  # Does the index already say exactly what the wire list says? Counted BOTH ways: a wire with no edge and an
+  # edge with no wire are equally a mismatch, and it is the second that un-wiring produces.
+  _wireEdgesMatch: (producer, wires) ->
+    declared = 0
+    outSet = @edgesFrom.get producer
+    outSet?.forEach (rec) -> declared += 1 unless rec.firesOnAnyChange
+    return declared is 0 unless wires?
+    return false unless declared is wires.length
+    for wire in wires
+      matched = false
+      for rec in @_wireEdgeRecords producer, wire.target
+        matched = true if rec.action is wire.action and rec.firesPerEvent is wire.firesPerEvent
+      return false unless matched
+    true
+
+  # Remove the RE-READING edge producer -> consumer (the `firesOnAnyChange` half of a tracking wire),
+  # which is the one kind `_removeOutgoingWireEdgesOf` deliberately spares and so can only be revoked
+  # by the consumer that declared it — ControllerMixin.unwireFrom, when the wire it belonged to goes.
+  # ⚠ It spares WIRE records in the same direction, and that matters as soon as two widgets are bound
+  # to each other (§P2): there, producer -> consumer carries the other side's wire as well as my
+  # subscription, and dropping both would silently cut their wire when I merely stopped following them.
+  removeAnyChangeEdge: (producer, consumer) ->
+    outSet = @edgesFrom.get producer
+    return unless outSet?
+    outSet.forEach (rec) =>
+      return unless rec.consumer is consumer and rec.firesOnAnyChange
+      outSet.delete rec
+    @edgesFrom.delete producer if outSet.size is 0
+    # drop the reverse entry only once NO record at all is left from producer to this consumer
+    if @_edgeRecords(producer, consumer).length is 0
+      inSet = @edgesTo.get consumer
+      if inSet?
+        inSet.delete producer
+        @edgesTo.delete consumer if inSet.size is 0
+    @_notifySubscriberCount producer
     return
 
   # The node-death entry: remove this node as BOTH producer and consumer, and forget any pooled
@@ -430,7 +472,9 @@ class DataflowEngine
       if changed.has p
         found = true
       else if noted.has p
-        found = @_edgeRecord(p, node)?.firesOnAnyChange ? false
+        # ANY record joining the pair may be the re-reading one — a pair can carry a wire and a
+        # subscription at once, and reading only the first would miss the subscription behind a wire.
+        found = @_edgeRecords(p, node).some (rec) -> rec.firesOnAnyChange
     found
 
   # 6b — apply each incoming WIRE edge (a producer→consumer edge carrying an ACTION) whose producer CHANGED
@@ -439,33 +483,39 @@ class DataflowEngine
   # ControllerMixin._fireConnection uses, so the non-settling connector lane (§1.5/§1.14) is preserved and
   # joins the pass settle. Sheet reference edges carry no action and are skipped, so the spreadsheet client is
   # untouched (only wire edges carry an action).
+  # ⚠ EVERY record joining the pair is applied, not one: a controller owning a list of wires (§P4) can
+  # drive two different pins of the SAME target, which is two records with one producer and one
+  # consumer. Reading a single record per pair would deliver one of them and silently drop the other —
+  # and could pick a valueless subscription record and deliver NEITHER.
   _applyIncomingWireEdges: (consumer, changed, noted) ->
     producers = @edgesTo.get consumer
     return unless producers?
     producers.forEach (producer) =>
-      rec = @_edgeRecord producer, consumer
-      return unless rec?.action?
-      # a value change fires every edge; a non-value change fires only the re-reading ones
-      return unless changed.has(producer) or (noted.has(producer) and rec.firesOnAnyChange)
-      @_applyWireValue consumer, rec.action, @pullValue(producer)
+      for rec in @_edgeRecords producer, consumer
+        continue unless rec.action?
+        # a value change fires every edge; a non-value change fires only the re-reading ones
+        continue unless changed.has(producer) or (noted.has(producer) and rec.firesOnAnyChange)
+        @_applyWireValue consumer, rec.action, @pullValue(producer)
     return
 
-  # The edge record from producer to consumer, of ANY kind (a wire, a reflection subscription).
-  _edgeRecord: (producer, consumer) ->
+  # EVERY edge record from producer to consumer. A pair can carry more than one, in two ways that are
+  # both real: a wire alongside a `firesOnAnyChange` subscription in the same direction (a widget that
+  # drives a target AND re-reads it), and — since a controller owns a LIST of wires (connector plan
+  # §P4) — two wires from one controller onto two different PINS of the same target.
+  # ⚠ The reverse index cannot answer this: @edgesTo maps consumer -> a Set of PRODUCERS, so it
+  # collapses a pair to one entry however many records join them. Anything that must see all of them
+  # walks the forward set, which is where the records live.
+  _edgeRecords: (producer, consumer) ->
     outSet = @edgesFrom.get producer
-    return undefined unless outSet?
-    found = undefined
-    outSet.forEach (rec) -> found = rec if rec.consumer is consumer
+    return [] unless outSet?
+    found = []
+    outSet.forEach (rec) -> found.push rec if rec.consumer is consumer
     found
 
-  # The WIRE record specifically — what ensureWireEdge compares against, so a reflection
-  # subscription to the same consumer can never be mistaken for the wire and re-declared over.
-  _wireEdgeRecord: (producer, consumer) ->
-    outSet = @edgesFrom.get producer
-    return undefined unless outSet?
-    found = undefined
-    outSet.forEach (rec) -> found = rec if rec.consumer is consumer and not rec.firesOnAnyChange
-    found
+  # The WIRE records specifically — what ensureWireEdges compares against, so a reflection
+  # subscription to the same consumer can never be mistaken for a wire and re-declared over.
+  _wireEdgeRecords: (producer, consumer) ->
+    rec for rec in @_edgeRecords(producer, consumer) when not rec.firesOnAnyChange
 
   _applyWireValue: (consumer, action, value) ->
     connectorName = "_#{action}Connector"

@@ -10,9 +10,6 @@ class ColorPickerWdgt extends Widget
 
   @augmentWith ControllerMixin
 
-  target: undefined
-  action: undefined
-  argumentToAction: undefined
 
   # I drive colours: what the "choose target property" menu filters the target's pins by, and the
   # adjective in the "set target" tooltip.
@@ -55,12 +52,12 @@ class ColorPickerWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
     @feedback = new RectangleWdgt new Point(20, 20), @choice
-    @colorPalette = new ColorPaletteWdgt @, new Point @width(), 50
-    @grayPalette = new GrayPaletteWdgt @, new Point @width(), 5
+    @colorPalette = new ColorPaletteWdgt new Point @width(), 50
+    @grayPalette = new GrayPaletteWdgt new Point @width(), 5
     # Both palettes drive ME rather than the swatch directly. I am the one that knows a pick has
     # happened, so I can keep the swatch showing it AND fire my own wire onward; aimed at the
-    # swatch they would update it and nothing would ever tell me. wireTo, not an @action
-    # assignment, because it is the named wire verb and it declares the edge there and then.
+    # swatch they would update it and nothing would ever tell me. wireTo, not a hand-built record,
+    # because it is the named wire verb and it declares the edge there and then.
     palette.wireTo @, "setPickedColor" for palette in [@colorPalette, @grayPalette]
     @_addNoSettle @colorPalette
     @_addNoSettle @grayPalette
@@ -92,10 +89,9 @@ class ColorPickerWdgt extends Widget
   principalPinLabel: "picked color"
 
   # the wire verb every controller ends at: fire my picked colour to whatever I am aimed at.
+  # (like PaletteWdgt, no half-built-wire repair at fire time: a WireSpec carries both its target and
+  # its action from construction — §P4)
   updateTarget: ->
-    if !@target? then return
-    if !@action?
-      @action = "setColor"
     @_fireConnection @getColor()
     return
 

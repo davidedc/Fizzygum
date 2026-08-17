@@ -133,6 +133,10 @@ writes on the RAW browser event before construction, which is outside the value;
 `MousemoveInputEvent`'s constructor reads `world` — impure construction, immutable after).
 
 **Deliberately mutable (do not "fix"):** `VerticalStackLayoutSpec` / `FrameContentLayoutSpec`
-(working layout state, written by design), `MultiClickRecognizer` (its header mandates
+(working layout state, written by design), `WireSpec` (a controller's connection — the SAME
+attachment-spec shape as the layout family, serialized with its widget and carrying knobs: its
+`firesPerEvent` is flipped in place by the wire's own menu row. ⚠ It follows that a wire is never
+SHARED between controllers — a duplicated controller deep-copies its records, or toggling one copy's
+policy would reach the other's), `MultiClickRecognizer` (its header mandates
 per-instance mutable state), `PreferencesAndSettings`, all containers
 (`LRUCache`, `DoubleLinkedList`, `TreeNode`, `InputEventsQueue`).

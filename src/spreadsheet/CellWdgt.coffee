@@ -195,9 +195,7 @@ class CellWdgt extends Widget
     return
 
   # The symmetric gesture (runs inside the grab's settle, ActivePointerWdgt.grab): grabbing the
-  # ENTRY widget back out empties the cell — clear the entry, un-wire (bare field-clear; no
-  # un-wire idiom exists in ControllerMixin — verified 2026-07-17 — and the engine edge dies via
-  # the PUBLIC node-death API, equivalent for a value-widget, which has no incoming edges), and
+  # ENTRY widget back out empties the cell — clear the entry, un-wire, and
   # let the widget ride the hand. ⚠ the cached record.value is still this widget — clear it
   # through the normal blank-commit path, or the next recompute's branch-1 reconcile would
   # RE-HOST the widget right off the hand. Guarded on widgetEntry identity: grabbing a PRESENTER
@@ -210,9 +208,12 @@ class CellWdgt extends Widget
     @hostedWidget = undefined if @hostedWidget is grabbedWdgt
     @presentedValue = undefined
     record.widgetEntry = undefined
-    grabbedWdgt.target = undefined
-    grabbedWdgt.action = undefined
-    world.dataflow?.removeAllEdgesOf grabbedWdgt
+    # THE un-wire, which this site hand-rolled as a bare field-clear under a comment reading "no
+    # un-wire idiom exists in ControllerMixin — verified 2026-07-17". §P4 built one, and this was the
+    # caller it was built for: cut exactly the wire I made in wireValueWidget and leave any other
+    # connection this widget carries alone — which the old blanket removeAllEdgesOf could not do, and
+    # got away with only because a value-widget in a cell had no other edges to lose.
+    grabbedWdgt.unwireFrom? this, "cellInput"
     FormulaCompiler.commit record, ""
     world.dataflow?.markStale record
     @_changed()
@@ -228,7 +229,9 @@ class CellWdgt extends Widget
   # the connection target the hosted value-widget fires into: mark this cell's cell STALE so the
   # drain recomputes its dependents (this is a pooled dataflow markStale, NOT a layout settle — so no
   # settle is opened here; the drain owns any settle).
-  cellInput: (value, argumentToAction) ->
+  # (`value` is named but unread — the engine hands it over and the cell answers by pulling, not by
+  # taking; naming it is what tells a reader the argument arrives rather than that it matters.)
+  cellInput: (value) ->
     @_sheetWidget?._markCellStaleFromHostedWidgetNoSettle @address
     return
 

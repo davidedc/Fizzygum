@@ -74,7 +74,7 @@ assume they own the screen. Slogan: **materials, not destinations.**
 
 **6. Pin surface, in both directions.**
 Count what fraction of the interesting behaviour can be advertised as pins (`pins()`, one
-`PinSpec` per pin, plus `@target`/`@action` driving,
+`PinSpec` per pin, plus `@wires` driving — one `WireSpec` per connection,
 [`widget-citizenship.md`](widget-citizenship.md) point 4).
 Then check *direction*: sinks (tempo, transpose, colour) let the world drive the app;
 **sources** (current-step, computed value, detected event) let the app drive the world —

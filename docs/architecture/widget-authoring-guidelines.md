@@ -557,7 +557,8 @@ pins: -> super().concat [
   `consumer[action]?.call` swallows the miss.
 - Dropping `super()` from the chain silently narrows your widget to only its own pins.
 
-**To drive others**, `@augmentWith ControllerMixin`, keep `@target`/`@action`, fire through
+**To drive others**, `@augmentWith ControllerMixin`, bind with `wireTo theTarget, action` (which
+ADDS a `WireSpec` to your `@wires` list — you may hold several, and `unwireFrom` removes one), fire through
 `@_fireConnection value`, declare `producesPinKind: "numerical"` (the kind of value you *produce*),
 and append the shared connect block with `@_addTargetConnectionMenuEntries menu`. That one field is
 read by both halves of the set-target UI — the target-property menu filters by it and the tooltip is
@@ -567,9 +568,9 @@ worded from it — so the two cannot describe different things.
 scrollbar and its content — bind with `trackTarget theTarget, action` instead of `wireTo`, and
 implement `reflectTarget` to re-read. Two rules come with it, both learned the hard way:
 
-- **Read back the pin your own `@action` writes** (`@target.pinDrivenBy @action` → its `getterName`),
-  never a second field naming the property. A DUPLICATED control keeps `@target`/`@action` and
-  nothing else, so deriving from them is what makes the copy track what it drives.
+- **Read back the pin your own wire's action writes** (`wire.target.pinDrivenBy wire.action` → its
+  `getterName`), never a second field naming the property. A DUPLICATED control keeps its wire
+  records and nothing else, so deriving from them is what makes the copy track what it drives.
 - ⚠ **A tracking bind does not push on connect.** `wireTo` fires your current value at the new
   target, which is right when you OWN the value and wrong when you MIRROR it — the target is the
   source of truth, so the initial value must flow target → you. This is not a nicety: a `SliderWdgt`

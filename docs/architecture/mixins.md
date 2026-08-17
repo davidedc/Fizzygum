@@ -226,7 +226,7 @@ objects on the paint path). Three shapes, with costs:
   Byte-identical: full gauntlet, zero recaptures — see
   `docs/architecture/serialization-duplication-reference.md`.
 
-State migration (mixin fields like `@target`/`@action` serialize as widget own-props)
+State migration (mixin fields like `@wires` serialize as widget own-props)
 and by-name dispatch (menus invoke `openTargetSelector` on the widget) are the two
 recurring conversion costs regardless of shape.
 

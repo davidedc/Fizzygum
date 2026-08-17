@@ -22,7 +22,9 @@ Uniting the roles does **not** forfeit MVC's one genuine power, multiple views o
 Fizzygum recovers it where it is actually wanted, through connections rather than class
 structure: any widget can be *targeted* by any number of controllers and observed through
 inspectors (`InspectorWdgt` is a live view onto any object), and the dataflow engine lets many
-widgets derive from one source.
+widgets derive from one source — in BOTH directions, since a controller in turn holds a list of
+wires and drives as many targets as it is connected to (connector plan §P4). Fan-in came free with
+duplication; fan-out is the half that had to be built.
 
 One separation IS kept, inside the object: what a widget *is* (state, geometry, behaviour) is
 distinct from how it *draws* — painting lives in a pluggable `*Appearance` object, so a skin
@@ -91,9 +93,9 @@ citizen:
    is automatically editable and inspectable without any per-widget tooling.
 4. **It exposes pins.** A citizen is *wireable*: it enumerates the properties others may
    drive (`pins()`, one `PinSpec` each — which populate the target-chooser menus)
-   and can itself drive a chosen `@target`/`@action` (`ControllerMixin`). These wires are not
-   decoration: a wire IS a dataflow edge (the engine's edge index derives from
-   `@target`/`@action` — [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)
+   and can itself drive ANY NUMBER of them (`ControllerMixin`'s `@wires`, one `WireSpec` per
+   connection). These wires are not decoration: a wire IS a dataflow edge (the engine's edge index
+   derives from the wire list — [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)
    §8). The standing direction is to prefer such connector endpoints over bespoke
    callbacks/firing methods, because only pins are discoverable, rewireable, and
    serializable by the generic machinery. In patch programming the pins are literal widgets

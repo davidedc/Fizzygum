@@ -1139,13 +1139,14 @@ class StringWdgt extends Widget
     else
       menu.addMenuItem "→⋯← crop to fit", @, "togglefittingSpecWhenBoundsTooSmall"
 
+    # Deliberately NOT routed through ControllerMixin._addTargetConnectionMenuEntries: I offer the
+    # connect item on the index page ONLY, which is the whole reason I build this block by hand.
+    # The wire rows below are unguarded on purpose — a connection I hold is worth showing and cutting
+    # wherever I am, even where I offer no way to make a new one.
     if world.isIndexPage
       menu.addLine()
-      if world.isIndexPage
-        menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-      else
-        menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose numerical property\n will be" + " controlled by this one")
-    @addFiresPerEventMenuEntry menu
+      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
+    @_addWireMenuEntries menu
 
 
   togglefittingSpecWhenBoundsTooSmall: ->

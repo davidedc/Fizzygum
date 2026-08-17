@@ -172,9 +172,10 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # hand-rolled fix-ups this replaces, where a menu could only ever re-tick itself, at the moment it
   # was clicked. N open copies now agree, and so does one open across a change made by a script, the
   # loader, or another menu.
-  #   ⚠ addEdge, NOT ensureWireEdge: ensureWireEdge mirrors a controller's single @target and drops
-  # the producer's other out-edges (gap G2), which is exactly the fan-out we need here. The engine's
-  # index has always supported many out-edges per producer — only the WIRE vocabulary does not.
+  #   ⚠ addEdge, NOT ensureWireEdges: that one MIRRORS a controller's wire list, so it drops any wire
+  # edge the list does not account for — and my subscription is not a wire and is not in anybody's
+  # list. (It survives regardless, because the removal spares firesOnAnyChange records; declaring it
+  # through the wire vocabulary would still be claiming to be something I am not.)
   #   Dedup is mine to do (addEdge appends a fresh record per call, and a seven-row wallpaper menu
   # would otherwise subscribe seven times and be reconciled seven times per change) — asked of the
   # engine's index rather than tracked in a field of my own, which would have to be declared,

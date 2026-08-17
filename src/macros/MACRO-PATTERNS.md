@@ -342,12 +342,23 @@ assertion a recapture after a regression silently stores two different hashes an
   typed TAIL line by line while `_reLayoutScrollbars` materialises the V-bar (button at the BOTTOM). The counter-beat:
   `@dragSliderButtonToFraction_InputEvents pane.vBar, [0.5, 0.05]` drags the scrollbar button back to the top — the first
   lines return WITHOUT recalling the caret (scrolling alone never does). Fixture: the `InspectorWdgt`'s editable `@detail` pane
-  (a `ScrollPanelWdgt` holding a `SimpleTextWdgt`). The detail is editable only AFTER a list-row is selected, so select any
-  property (first row by position), then clear it (`detailText.setText ""`) and focus it with a DIRECT `detailText.edit()`
+  (a `ScrollPanelWdgt` holding a `SimpleTextWdgt`). The detail is editable only AFTER a list-row is selected, so select a
+  property with `bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro "<memberName>"`, then clear it
+  (`detailText.setText ""`) and focus it with a DIRECT `detailText.edit()`
   (`world.edit`, the established idiom for focusing a pane without a click); type ~18 short lines (the detail is taller than the
   old ~3-line work pane, so more lines are needed to overflow it). (Re-authored from the old-inspector work-pane version; the
   recorded original sat on `SWCanvasBrokenTests` because clicking an EMPTY old `TextMorph` crashed SWCanvas's `measureText` —
   the new `TextWdgt` detail focused via `edit()` avoids that and RESTORES SWCanvas coverage.) No new verb.
+- ⚠⚠ **SELECTING AN INSPECTOR MEMBER: use the scroll-it-into-view verb, never a fixed offset from the located row.**
+  `bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro "<memberName>"` scrolls the row into the list's visible
+  area and THEN clicks it. The tempting shorthand — locate the row (`inspector.list.topWdgtSuchThat (m) -> m.text == "…"`)
+  and click `armRow.topLeft().translateBy new Point 10, 2` — is a fixed pixel offset from a widget whose position depends on
+  where the member happens to fall in the list, so it MISSES whenever that row sits at or past the list's clipped bottom edge,
+  and the click then lands on whatever is underneath. Underneath is the footer's `add...` button, which opens a
+  "new property name:" prompt: two tests (`macroWrappingTextFieldResizesOK`, `macroMultilineTextInputScrollsWell`) carried
+  that stray prompt in their committed references until 2026-08-17, when a change to `ControllerMixin`'s member set slid the
+  row and the prompt silently disappeared. ⭐ The general rule: **locating a widget by MEANING and then clicking a fixed pixel
+  offset from it throws away the resilience the lookup just bought** — clamp into the target or bring it into view.
 - **A wrapping text FIELD re-wraps on every container resize** (`macroWrappingTextFieldResizesOK`): the `InspectorWdgt`'s editable
   `@detail` pane is a `ScrollPanelWdgt` holding a `SimpleTextWdgt` (a `TextWdgt`). It defaults to NON-wrapping (long lines
   scroll horizontally); call `detailText.softWrapOn()` (sets the detail scroll panel's `isTextLineWrapping = true`,
@@ -1294,17 +1305,27 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
   "a Panel", "color"` — right-click the controller (a ColorPaletteWdgt / GrayPaletteWdgt / SliderWdgt / … with
-  `ControllerMixin`) → "set target" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
+  `ControllerMixin`) → "connect to ➜" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
   → pick the target by class-name PREFIX → pick the property; thereafter acting on the controller calls `target[setter](value)`.
   4th arg `controllerMenuFraction` (default `[0.5,0.5]`): pass `[0.5,0.85]` for a SLIDER (its button covers the centre at value
   50, so target the LOWER TRACK). 5th arg `controllerHierarchyPrefix`: pass the controller's class-name prefix when it is INSIDE
   a container (right-clicking a non-world child opens the ancestor hierarchy menu); omit for a world-child.
-- **Re-target** (`macroPaletteRetargetsToNewWidget`): run set-target AGAIN — `setTargetAndActionWithOnesPickedFromMenu` OVERWRITES
-  `@target`/`@action`; the old target keeps its value but stops following. Put ONE palette over TWO targets of DIFFERENT classes
-  (PanelWdgt + RectangleWdgt) so each is picked unambiguously by class-name PREFIX; re-target back and forth.
-- **Two controllers share one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteWdgts both set-target'd to the SAME
+- **Fan-OUT: one controller, many targets** (`macroPaletteFansOutAndDisconnects`): run connect AGAIN on a DIFFERENT target —
+  since connector §P4 `wireTo` ADDS a `WireSpec` to the controller's `@wires` list instead of overwriting, so BOTH follow it and
+  one click repaints both. ⚠ This is the OPPOSITE of the pre-§P4 behaviour, where a second connect silently dropped the first.
+  Put ONE palette over TWO targets of DIFFERENT classes (PanelWdgt + RectangleWdgt) so each is picked unambiguously by
+  class-name PREFIX.
+- **Disconnect ONE wire** (`macroPaletteFansOutAndDisconnects`): `disconnectControllerWire_InputEvents_Macro controller,
+  "a Panel . color"` — a controller's own menu carries one row PER LIVE WIRE, labelled `WireSpec.describeConnection() + " ➜"`;
+  the verb picks that row by PREFIX and clicks "disconnect" in the little menu it opens. ⚠ The label is the Wdgt-stripped target
+  plus the **PIN's label**, not the setter name: `"a Panel . color"`, never `"a Panel . setColor"`; pass the prefix WITHOUT the
+  trailing `" ➜"`. Takes the same 3rd/4th `controllerMenuFraction` / `controllerHierarchyPrefix` args as set-target. The same row
+  is also where a wire's **"fires per event"** toggle lives (`macroConnectionFiresPerEventToggle` navigates it by hand: row
+  prefix, then `@moveToItemContainingOfMenuAndClick_InputEvents … "fires per event"` — CONTAINING, because a ticked row carries
+  a leading ✓).
+- **Fan-IN: two controllers, one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteWdgts both connected to the SAME
   panel's "color" (each overlapping the panel but NOT each other); clicking EITHER repaints, both bindings persist (most-recent
-  click wins). One palette/many targets ⇒ re-targeting; many palettes/one target ⇒ shared control.
+  click wins). Fan-in came free from duplication keeping the target reference; fan-out is what §P4 had to build.
 - **Slider drives a target live** (`macroSlidersControlTextWidget`): wire with the 4th/5th args above, then
   `@dragSliderButtonToFraction_InputEvents slider, [0.5, fy]` does a press-drag-release ON the BUTTON (a non-float child drag →
   `SliderButtonWdgt.nonFloatDragging → SliderWdgt.updateValue → setValue → updateTarget`), driving `target[setter](value)` LIVE

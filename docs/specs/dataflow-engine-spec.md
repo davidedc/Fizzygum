@@ -88,8 +88,9 @@ Node roles:
 
 ## 2. Edges live locally; the engine owns only a derived index
 
-- A **wire** is stored on the widget that owns it (today's `@target`/`@action` from
-  `ControllerMixin` — this storage survives).
+- A **wire** is stored on the widget that owns it — one `WireSpec` record in `ControllerMixin`'s
+  ordered `@wires` list, so one controller may hold several (connector plan §P4). This storage
+  survives.
 - A **reference** is stored in the formula text of the cell (discovered by identifier scan,
   §9.2).
 - The engine keeps a **derived, disposable index** of all edges (forward + reverse
@@ -256,8 +257,9 @@ client's:
 
 ## 8. Client: patch programming (migration)
 
-- Edges derive from `@target`/`@action`; the connect-to-➜ menus and wire storage are
-  unchanged. `firesPerEvent` is a new per-wire property with a menu toggle.
+- Edges derive from the owner's `@wires` list; the connect-to-➜ menus and wire storage are
+  unchanged in kind. `firesPerEvent` is a per-wire property (a `WireSpec` field) with a menu toggle
+  on that wire's own row.
 - The multi-input freshness gate (`allConnectedInputsAreFresh`) is **replaced** by
   any-input-marks-stale + pull-the-rest — this fixes the standing deadlock where a node with
   two independently-sourced inputs never fires. If a store-without-firing inlet is ever

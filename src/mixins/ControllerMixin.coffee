@@ -26,11 +26,32 @@ ControllerMixin =
           menu = new MenuWdgt @, target: @, title: "no targets available"
         menu.popUpAtHand()
 
+      # ---- THE WIRES ----------------------------------------------------------------------
+      # An ordered list of WireSpec, one per relationship I drive (connector plan §P4). It REPLACED the
+      # loose @target / @action / @firesPerEvent / @tracksTarget fields, which between them described a
+      # single wire in four places and could describe no second one — gap G2: one out-edge ever, no
+      # un-wire idiom, fan-out only via the unshipped FanoutWdgt.
+      #   ⛔ There is deliberately NO @target/@action compatibility shim. The plan proposed accessors
+      # onto @wires[0], and this codebase cannot express one: Class/Mixin emit every member as
+      # `prototype.<name> = <expr>` (Class.coffee), so a getter/setter is not writable here at all —
+      # there is not one instance accessor in src/. And a shim would state each wire's target twice,
+      # which is the drift PinSpec's own header warns about. So every site converted in one pass.
+      #   Declared as a PROTOTYPE default of `undefined`, NOT an empty array: a shared array on the
+      # prototype would be mutated by whichever controller wired first and seen by every other one.
+      # So an unwired widget carries no own `wires` property and serializes byte-for-byte as before —
+      # the same own-only-when-set idiom @target/@action followed, and why unwireFrom `delete`s the
+      # field rather than leaving an empty array behind.
+      wires: undefined
+
       # THE WIRE VERB — bind me to drive `action` on `theTarget`. Two operands, no holes:
       # this is what a caller building a circuit in code means, and what the menu adapter
       # below reduces to once the dispatcher's slots have been unpacked.
+      #   ⭐ It ADDS a wire; it does not replace my wires. That IS the §P4 capability — a controller
+      # drives as many things as it is connected to, so fan-out stops needing FanoutWdgt — and it is
+      # why the menu item is now "connect to ➜" everywhere and is partnered by "disconnect ➜".
+      # Wiring the same target+action twice is a no-op rather than a second edge (WireSpec.describes).
       wireTo: (theTarget, action) ->
-        @_bindTo theTarget, action
+        @_addWire theTarget, action
         # reactToTargetConnection is left UNCHANGED across every controller: via _fireConnection it
         # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
         # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
@@ -47,25 +68,88 @@ ControllerMixin =
       # position nobody asked for — and it lands on the NEXT drain, by which time a panel that had
       # nothing to scroll at construction may well have gained content.
       trackTarget: (theTarget, action) ->
-        @tracksTarget = true
-        @_bindTo theTarget, action
-        @_ensureTrackingEdge()
+        wire = @_addWire theTarget, action, tracks: true
+        # opts only reach a record being CREATED, so say it again for a plain wire being promoted to a
+        # tracking one — "also follow what you already drive" is a legitimate thing to ask twice.
+        wire.tracks = true
+        @_ensureTrackingEdges()
         @reflectTarget()
 
-      # What both binding verbs share: the two local fields the edges DERIVE from, the legacy
-      # <action>IsConnected flag, and the forward edge itself.
-      _bindTo: (theTarget, action) ->
-        @target = theTarget
-        @action = action
-        if @target[@action + "IsConnected"]?
-          @target[@action + "IsConnected"] = true
-        # a wire IS a dataflow edge (spec §8): declare producer(me) -> target in the engine index, with the
-        # action + the Phase-6a firesPerEvent policy riding the edge record (ensureWireEdge drops my single old
-        # out-edge first on a re-wire). The index is derived/disposable (spec §2), re-declared by the client on
-        # load/copy -- here the client is the wire itself. Declaring EAGERLY here is an optimisation (the edge
-        # exists the moment a menu wire is made); _fireConnection re-derives it LAZILY too, which is what covers
-        # the wires that never reach this method (direct @target/@action assignment -- a prompt slider).
-        world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
+      # THE THIRD BINDING VERB: declare a wire and move NOTHING. §P8 established that the direction of
+      # the on-connect push is part of what a bind MEANS; this is the third answer — no push at all —
+      # and it is what a container wiring up chrome it just BUILT means, since it built the two ends
+      # consistent and has nothing to announce.
+      #   ⚠ Not a nuance for its caller. NumberPromptWdgt's slider drives `takeSliderValue`, whose
+      # connector rewrites the entry field's text to the ROUNDED slider value and opens an edit on it.
+      # Firing that at construction would round a fractional default away and pop a caret before the
+      # prompt is on screen. (Before §P4 this site poked @target/@action directly and so never fired;
+      # that silence was incidental then and is stated here.)
+      declareWireTo: (theTarget, action) ->
+        @_addWire theTarget, action
+        return
+
+      # The shared body of the binding verbs: find or make the record, set the legacy
+      # <action>IsConnected flag, and mirror the list into the engine index.
+      #   A wire IS a dataflow edge (spec §8): the index is derived/disposable (spec §2) and re-declared
+      # by the client on load/copy -- here the client is the wire list itself. Declaring EAGERLY here is
+      # an optimisation (the edge exists the moment a menu wire is made); _fireConnection re-derives
+      # LAZILY too, which is what covers a wire built directly rather than through the menu (the
+      # NumberPromptWdgt slider).
+      _addWire: (theTarget, action, opts = {}) ->
+        @wires ?= []
+        wire = @_wireFor theTarget, action
+        unless wire?
+          wire = new WireSpec theTarget, action, opts
+          @wires.push wire
+        if theTarget[action + "IsConnected"]?
+          theTarget[action + "IsConnected"] = true
+        world.dataflow.ensureWireEdges @, @wires
+        return wire
+
+      # THE UN-WIRE VERB, which single-slot wiring could not have: drop one relationship and leave the
+      # others alone. Its first caller was already in the tree waiting for it — CellWdgt cleared the
+      # fields by hand under a comment reading "no un-wire idiom exists in ControllerMixin"; the
+      # "disconnect ➜" menu item is the second.
+      #   Both halves of a tracking wire go: the forward edge stops being derivable the moment the
+      # record leaves the list (ensureWireEdges reconciles), but the reverse one is an edge OUT of the
+      # target that only I can revoke, so it is dropped explicitly. Then the record itself dies as a
+      # dataflow node, because its menu row subscribed to it.
+      unwireFrom: (theTarget, action) ->
+        wire = @_wireFor theTarget, action
+        return unless wire?
+        @wires = (each for each in @wires when each isnt wire)
+        delete @wires if @wires.length is 0
+        world.dataflow.ensureWireEdges @, @wires
+        world.dataflow.removeAnyChangeEdge theTarget, @ if wire.tracks
+        world.dataflow.removeAllEdgesOf wire
+        return
+
+      # The record for THIS relationship, if I hold it. The identity of a wire is the pair, so
+      # re-wiring the same target and action finds the existing record instead of adding a twin.
+      _wireFor: (theTarget, action) ->
+        return undefined unless @wires?
+        for wire in @wires
+          return wire if wire.describes theTarget, action
+        return undefined
+
+      # Do I drive this widget at all, by any of my wires? The membership question a container asks
+      # about the chrome it holds — "is this scrollbar MINE, or one left pointing at another panel?"
+      # (ScrollPanelWdgt._reLayoutScrollbars). A SEARCH, not a field comparison, because the answer
+      # may live in any of my wires.
+      isWiredTo: (theTarget) ->
+        return false unless @wires?
+        for wire in @wires
+          return true if wire.target is theTarget
+        return false
+
+      # The wire I FOLLOW, for a control that reflects what it drives (SliderWdgt.reflectTarget).
+      # The FIRST one: a slider has one thumb and can only show one value, so tracking a second
+      # target would be a display with no way to render it. Nothing builds such a control today.
+      _trackingWire: ->
+        return undefined unless @wires?
+        for wire in @wires
+          return wire if wire.tracks
+        return undefined
 
       # THE MENU ADAPTER. Its first two parameters are not mine to choose: a menu/button
       # action is dispatched as
@@ -79,104 +163,75 @@ ControllerMixin =
         @wireTo theTarget, action
 
       # A wire's producer marks ITSELF stale -- the ONE onward-fire every controller's updateTarget calls. It
-      # derives the producer->target edge from @target/@action (ensureWireEdge) and marks me stale; the engine's
-      # drain then PULLS my dataflowValue and DELIVERS it to @target (DataflowEngine._applyWireValue), routing to
-      # the target's dedicated _<action>Connector variant when it defines one (the reactive settle lane that
-      # JOINS an enclosing settle -- Widget._settleLayoutsAfterOrJoinEnclosingPass / check-layering [P]) and to
-      # the public @action otherwise (setValue / setInput1 / setColor / ... never open a settle, so the public
-      # name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). @action stays the
-      # menu-friendly public name everywhere (menus, <action>IsConnected flags, hard-wired app circuits).
-      _fireConnection: (value, argumentToAction) ->
-        return unless @target? and @action and @action != ""
+      # derives my producer->target edges from my wire list (ensureWireEdges) and marks me stale; the engine's
+      # drain then PULLS my dataflowValue and DELIVERS it along each edge (DataflowEngine._applyWireValue),
+      # routing to the target's dedicated _<action>Connector variant when it defines one (the reactive settle
+      # lane that JOINS an enclosing settle -- Widget._settleLayoutsAfterOrJoinEnclosingPass / check-layering
+      # [P]) and to the public action otherwise (setValue / setInput1 / setColor / ... never open a settle, so
+      # the public name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). A wire's
+      # action stays the menu-friendly public name everywhere (menus, <action>IsConnected flags, hard-wired
+      # app circuits).
+      _fireConnection: (value) ->
+        return unless @wires?.length
         # under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my dataflowValue
-        # when it delivers along my edge (spec §3, notifications carry no values). So every controller's
+        # when it delivers along my edges (spec §3, notifications carry no values). So every controller's
         # updateTarget (`@_fireConnection <myValue>`) is a markStale with no per-controller change; the pushed
-        # value/argumentToAction are ignored (the pull is the source of truth). markStale is echo-suppressed
-        # while the engine is applying me (DataflowEngine.markStale). A wire-less widget returns above (no fire).
-        #   Derive my edge from @target/@action if it isn't declared yet: a scrollbar (ScrollPanelWdgt) or a
-        # prompt slider (PromptWdgt) wires by DIRECT @target/@action assignment, never through the menu that
-        # declares the edge -- spec §8 says edges DERIVE from @target/@action, so make that derivation total.
-        # Without this such a wire would markStale with no out-edge and deliver nothing (silently broken scroll).
+        # `value` is ignored outright (the pull is the source of truth) and survives only as the caller's
+        # statement of what it thinks it is firing. ONE markStale serves however
+        # many wires I hold — the drain walks my out-edges. markStale is echo-suppressed while the engine is
+        # applying me (DataflowEngine.markStale). A wire-less widget returns above (no fire).
+        #   Derive my edges from the wire list if they aren't declared yet: the NumberPromptWdgt slider is
+        # wired by DIRECT construction, never through the menu that declares them -- spec §8 says edges DERIVE
+        # from the wires, so make that derivation total. Without this such a wire would markStale with no
+        # out-edge and deliver nothing (silently broken prompt).
         # Idempotent for a menu-wired connection (the eager declaration already matches); no-op mid-drain.
-        world.dataflow.ensureWireEdge @, @target, {action: @action, firesPerEvent: @firesPerEvent}
-        # ...and, for a TRACKING control, the opposite edge from the same local facts (see below).
-        @_ensureTrackingEdge()
+        world.dataflow.ensureWireEdges @, @wires
+        # ...and, for a TRACKING control, the opposite edges from the same local facts (see below).
+        @_ensureTrackingEdges()
         world.dataflow.markStale @
         return
 
       # ---- tracking: the REVERSE half of a wire (connector plan §P8) -----------------------
-      # A wire is ONE-WAY: I drive `@action` on `@target`. A control that must stay WELDED to what it
-      # drives — a scrollbar and its content — also has to FOLLOW it when the property changes by any
+      # A wire is ONE-WAY: I drive its `action` on its `target`. A control that must stay WELDED to what
+      # it drives — a scrollbar and its content — also has to FOLLOW it when the property changes by any
       # other means. `trackTarget` declares that second, opposite edge: target → me, `firesOnAnyChange`,
       # so my target's markNonValueChange wakes me too. That announcement is the honest one for a
       # property that is not the target's VALUE (a scroll panel has no principal pin at all), and it
       # is why the edge asks to re-read rather than to be handed something.
-      #   I never read the delivered value: `reflectTarget` re-reads the pin MY OWN @action writes.
-      # So a DUPLICATED control — which keeps @target, @action and this flag, and nothing else —
-      # tracks exactly what it drives, with no field naming the property a second time.
-      #   Declared as a PROTOTYPE default, so a plain one-way wire carries no own `tracksTarget`
-      # property and serializes byte-for-byte as before — the same own-only-when-set idiom as
-      # @target / @action / @firesPerEvent.
-      tracksTarget: false
-
-      # Derive the tracking edge from @tracksTarget + @target, exactly the way ensureWireEdge derives
-      # the wire from @target/@action: the index is derived and disposable (dataflow spec §2) and the
-      # client re-declares it, and the client here is me. Idempotent, so it is cheap on every fire and
-      # on every re-add — which is what makes a duplicated or re-parented control re-subscribe with no
-      # bookkeeping of its own to duplicate or serialize.
+      #   I never read the delivered value: `reflectTarget` re-reads the pin the tracking wire's own
+      # action writes. So a DUPLICATED control — which keeps its wire records and nothing else — tracks
+      # exactly what it drives, with no field naming the property a second time.
+      #   Since §P4 the flag lives on the WIRE rather than on me, which is where it belongs: tracking is
+      # a property of the RELATIONSHIP, so a controller can follow one target while merely driving
+      # another. As a prototype default on WireSpec it costs an ordinary wire no own property.
+      #
+      # Derive the tracking edges from the wire list, exactly the way ensureWireEdges derives the
+      # forward ones: the index is derived and disposable (dataflow spec §2) and the client re-declares
+      # it, and the client here is me. Idempotent, so it is cheap on every fire and on every re-add —
+      # which is what makes a duplicated or re-parented control re-subscribe with no bookkeeping of its
+      # own to duplicate or serialize.
       #   Dedup asks the index (hasEdge) rather than keeping a field, as MenuRowsPanelWdgt does. That
       # reads "is there ANY edge target → me", which is the right question here: a target that drove me
       # back would be a two-wire ring, which no caller builds and which §P2 will address explicitly.
-      _ensureTrackingEdge: ->
-        return unless @tracksTarget and @target?
-        return if world.dataflow.hasEdge @target, @
-        world.dataflow.addEdge @target, @, action: "reflectTarget", firesOnAnyChange: true
+      _ensureTrackingEdges: ->
+        return unless @wires?
+        for wire in @wires when wire.tracks
+          continue if world.dataflow.hasEdge wire.target, @
+          world.dataflow.addEdge wire.target, @, action: "reflectTarget", firesOnAnyChange: true
+        return
 
-      # ---- firesPerEvent: per-wire delivery policy (dataflow; spec §4/§8) ------------------
-      # false (default) = POOLED: ten drag events + a tick in one frame collapse to ONE recompute
-      #   batch, drained once per cycle using final values.
-      # true = PER-EVENT: a synchronous mini-pass inside each event (side-effects-per-event,
-      #   read-your-writes within a frame), at N× the evaluation cost.
-      # The flag rides the edge record's opts (ensureWireEdge). The PER-EVENT lane is still DEFERRED
-      # -- delivery POOLS regardless of the flag (the two are screen-indistinguishable, spec §13); the
-      # menu toggle stores it against the day the mini-pass lands. Declared as a PROTOTYPE default (not
-      # assigned per instance), so an untoggled wire carries NO own `firesPerEvent` property and
-      # serializes byte-for-byte as before -- the same own-only-when-set idiom as @target / @action.
-      firesPerEvent: false
-
-      # Flip the per-wire delivery policy (the "✓ fires per event" menu toggle). A plain boolean flip:
-      # no layout and no tree mutation, hence no settle (check-layering-clean); nothing visual changes.
-      # ANNOUNCE it so every open menu showing the row re-ticks. markNonValueChange, NOT markStale:
-      # this is a property of my WIRE, emphatically not my value — and I am by definition wired here
-      # (the row only exists once @target is set), so markStale would fire that very wire and re-deliver
-      # my value to my target for a change that was never about it.
-      toggleFiresPerEvent: ->
-        @firesPerEvent = not @firesPerEvent
-        world.dataflow.markNonValueChange @
-
-      # what a reflecting menu row reads to decide whether it is ticked (MenuRowReflectionSpec.readerName)
-      isFiringPerEvent: -> @firesPerEvent
-
-      # The shared connection-menu entry: every controller (SliderWdgt, StringWdgt, the patch nodes, …)
-      # calls this right after its own "connect to ➜" / "set target" item, so the toggle lives in one
-      # place. Shown only once a target is wired (firesPerEvent is a property OF a wire); the leading ✓
-      # is a REFLECTION of the current state, so the row follows a flip made anywhere rather than
-      # freezing the value it was built from (matched in tests by the "fires per event" substring).
-      addFiresPerEventMenuEntry: (menu) ->
-        return unless @target?
-        label = "fires per event"
-        menu.addMenuItem label, @, "toggleFiresPerEvent",
-          toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
-          reflection: MenuRowReflectionSpec.tickWhen @, "isFiringPerEvent", true, label
-
-      # The shared "connect a target" menu block, appended identically by every
-      # controller (SliderWdgt, SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and
-      # the patch nodes) right after its `super`: a divider, then the index-page
-      # "connect to ➜" vs in-app "set target" item, then the firesPerEvent toggle.
-      # The only thing that varied between sites was the property-kind word in the
-      # "set target" toolTip, so it is a parameter ("color" or "numerical").
-      # (StringWdgt keeps its own hand-rolled variant — it guards the whole block
-      # behind isIndexPage, so it is deliberately NOT routed through here.)
+      # ---- the connection menu -------------------------------------------------------------
+      # The shared "connect a target" block, appended identically by every controller (SliderWdgt,
+      # SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and the patch nodes) right after its `super`: a
+      # divider, the "connect to ➜" item, then ONE ROW PER LIVE WIRE.
+      #   ⭐ Those rows are the point of §P4. A single-slot controller had nothing to show — its one
+      # connection was invisible, and re-targeting silently dropped it. A controller that owns a list
+      # can SHOW what it drives, and each row opens that wire's own little menu (policy + disconnect),
+      # so wiring is legible and reversible for the first time.
+      #   ⛔ ONE label, deliberately, with no isIndexPage fork: "set target" is the name of a
+      # SINGLE-SLOT world and would be a false promise here, since the gesture connects *a* target,
+      # one of however many I already drive. (StringWdgt keeps its own hand-rolled variant —
+      # it guards the whole block behind isIndexPage, so it is deliberately NOT routed through here.)
       # The kind of property this controller can drive is read from `producesPinKind` -- the SAME
       # declaration its openTargetPropertySelector filters the target's pins by, so the tooltip
       # cannot describe a menu other than the one it opens. Taking the kind as an argument here
@@ -185,10 +240,63 @@ ControllerMixin =
       # "whose property".
       _addTargetConnectionMenuEntries: (menu) ->
         menu.addLine()
-        if world.isIndexPage
-          menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
-        else
-          kindWord = if @producesPinKind? and @producesPinKind isnt "any" then @producesPinKind + " " else ""
-          menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + kindWord + "property\n will be" + " controlled by this one")
-        @addFiresPerEventMenuEntry menu
+        kindWord = if @producesPinKind? and @producesPinKind isnt "any" then @producesPinKind + " " else ""
+        menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + kindWord + "property\n will be" + " controlled by this one")
+        @_addWireMenuEntries menu
+
+      # One row per live wire, each naming what it drives ("a Panel . color") and opening that wire's
+      # own menu. Nothing at all when I am unwired, so an unconnected controller's menu is unchanged.
+      # Shared with StringWdgt, which builds the rest of its connection block by hand.
+      _addWireMenuEntries: (menu) ->
+        return unless @wires?
+        for wire in @wires
+          menu.addMenuItem wire.describeConnection() + " ➜", @, "openWireMenu",
+            toolTip: "what this connection does,\nand how to remove it"
+            arg1: wire
+        return
+
+      # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu):
+      # the per-wire menu behind a connection row. Two entries, because a wire has exactly two things a
+      # user can do to it — change how it delivers, or cut it.
+      openWireMenu: (ignored, ignored2, wire) ->
+        menu = new MenuWdgt @, target: @, title: wire.describeConnection()
+        label = "fires per event"
+        menu.addMenuItem label, @, "toggleFiresPerEventOfWire",
+          toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
+          arg1: wire
+          # ⭐ the row's source is the WIRE ITSELF, not me: the policy is the wire's own state, and the
+          # dataflow node protocol is duck-typed, so a WireSpec can be a node with nothing but a reader
+          # (the trick §P5 played for Wallpaper). Two rows for two wires therefore tick independently.
+          reflection: MenuRowReflectionSpec.tickWhen wire, "isFiringPerEvent", true, label
+        menu.addMenuItem "disconnect", @, "disconnectWire",
+          toolTip: "stop driving\n" + wire.describeConnection()
+          arg1: wire
+        menu.popUpAtHand()
+
+      # ---- firesPerEvent: per-wire delivery policy (dataflow; spec §4/§8) ------------------
+      # false (default) = POOLED: ten drag events + a tick in one frame collapse to ONE recompute
+      #   batch, drained once per cycle using final values.
+      # true = PER-EVENT: a synchronous mini-pass inside each event (side-effects-per-event,
+      #   read-your-writes within a frame), at N× the evaluation cost.
+      # The flag rides the edge record's opts (WireSpec.edgeOpts). The PER-EVENT lane is still DEFERRED
+      # -- delivery POOLS regardless of the flag (the two are screen-indistinguishable, spec §13); the
+      # menu toggle stores it against the day the mini-pass lands.
+      #   Since §P4 the flag lives on the WIRE (WireSpec.firesPerEvent), which is what the docs always
+      # called it: "a per-wire delivery policy". On the controller it could only ever have been one
+      # policy for every wire — a fact stated once for relationships that do not share it.
+      #
+      # Menu-dispatched: flip THIS wire's policy. A plain boolean flip: no layout and no tree mutation,
+      # hence no settle (check-layering-clean); nothing visual changes. Then re-declare, because the
+      # policy rides the edge record and the index must not disagree with the wire. ANNOUNCE it on the
+      # WIRE so every open menu showing that row re-ticks; markNonValueChange, NOT markStale, and now
+      # trivially so — a wire is not a value-bearing node at all, so there is nothing it could
+      # re-deliver.
+      toggleFiresPerEventOfWire: (ignored, ignored2, wire) ->
+        wire.firesPerEvent = not wire.firesPerEvent
+        world.dataflow.ensureWireEdges @, @wires
+        world.dataflow.markNonValueChange wire
+
+      # Menu-dispatched: cut this wire. The un-wire gesture G2 named as missing.
+      disconnectWire: (ignored, ignored2, wire) ->
+        @unwireFrom wire.target, wire.action
 

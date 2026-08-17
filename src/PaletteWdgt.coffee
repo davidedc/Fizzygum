@@ -15,9 +15,6 @@ class PaletteWdgt extends Widget
   @augmentWith ControllerMixin
   @augmentWith BackBufferMixin
 
-  target: undefined
-  action: undefined
-  argumentToAction: undefined
   # The colour picked through me, and undefined until one IS — a real state, not a gap: `bang`
   # declines to fire without a choice, reactToTargetConnection deliberately fires nothing on
   # connect, and my appearance marks nothing.
@@ -32,7 +29,13 @@ class PaletteWdgt extends Widget
   # "set target" tooltip: I drive colours.
   producesPinKind: "color"
 
-  constructor: (@target, sizePoint) ->
+  # ONE operand, my size. A leading `target` parameter sat here until §P4 and was a textbook
+  # POSITIONAL HOLE (docs/architecture/constructor-and-parameter-conventions.md R3): every caller that
+  # wanted a size had to pass `undefined` through it — eleven of them in the test suite do — and the
+  # one caller that passed a real target (ColorPickerWdgt) wired itself properly a line later anyway.
+  # It could not carry an ACTION either, so a palette built that way was half-wired, which is why
+  # updateTarget carried a "default the action to setColor" repair. Wiring is `wireTo`'s job.
+  constructor: (sizePoint) ->
     super()
     @appearance = @createAppearance()
     @__commitExtent sizePoint or @defaultSize()
@@ -166,12 +169,10 @@ class PaletteWdgt extends Widget
     world.dataflow.markStale @, true
     return
 
+  # (no "default my action to setColor if it is unset" repair here: a WireSpec is constructed with
+  # both its target and its action, so "wired, but to nothing in particular" is not a representable
+  # state — §P4)
   updateTarget: ->
-    if !@target? then return
-
-    if !@action?
-      @action = "setColor"
-
     @_fireConnection @choice
     return
 
