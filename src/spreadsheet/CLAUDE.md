@@ -141,11 +141,13 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
 ## Value protocol & presenters (3)
 
 - **Exported value (spec §9.3).** `Widget.exportedValue()` is the unified reader a reference uses
-  when a cell's value is a Widget: `@getColor?() ? @getValue?() ? @text`. Its first live CONSUMER
-  is the Phase-4 reference-read site (`SheetCellRecord._resolveBoundName` → `SheetModel.exportedValueAt`
-  → `SheetCellRecord.exportedCellValue`): a ref to a widget-valued cell yields the widget's exported
-  value (a slider's number), or the widget itself if it exports nothing. `SliderWdgt` gained
-  `getValue: -> @value` in Phase 4 to join the chain.
+  when a cell's value is a Widget: the widget names its PRINCIPAL PIN (`principalPinLabel`) and the
+  pin says how to read it (`PinSpec`'s `get`). Its first live CONSUMER is the Phase-4 reference-read
+  site (`SheetCellRecord._resolveBoundName` → `SheetModel.exportedValueAt` →
+  `SheetCellRecord.exportedCellValue`): a ref to a widget-valued cell yields the widget's exported
+  value (a slider's number), or the widget itself if it exports nothing. ⚠ A widget that declares no
+  principal pin exports NOTHING, which is a different answer from "happens to carry a field of that
+  name" — the distinction a fixed probe order over method names could not make.
 - **The value-class algebra (spec §9.5).** Operations live as METHODS on the value classes, not in
   the sheet: `Color.mixed` (promoted from its old homepage-excluded, unused state — now shipped, and
   routed through the immutable `Color.create` factory), plus new `Color.lighter` / `Color.darker`.

@@ -272,7 +272,7 @@ class SliderWdgt extends CircleBoxWdgt
   #     silently stores my current value instead of what the user typed.
   #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
   # Every other prompt-reached setter in the tree already has this shape; see
-  # docs/plans/widget-practices-convergence-plan.md §2.6.
+  # docs/archive/widget-practices-convergence-plan.md §2.6.
   setStart: (numOrWidgetGivingNum, widgetGivingValue) ->
 
     if widgetGivingValue?.getValue?
@@ -299,7 +299,7 @@ class SliderWdgt extends CircleBoxWdgt
   #     silently stores my current value instead of what the user typed.
   #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
   # Every other prompt-reached setter in the tree already has this shape; see
-  # docs/plans/widget-practices-convergence-plan.md §2.6.
+  # docs/archive/widget-practices-convergence-plan.md §2.6.
   setStop: (numOrWidgetGivingNum, widgetGivingValue) ->
 
     if widgetGivingValue?.getValue?
@@ -341,7 +341,7 @@ class SliderWdgt extends CircleBoxWdgt
   #     silently stores my current value instead of what the user typed.
   #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
   # Every other prompt-reached setter in the tree already has this shape; see
-  # docs/plans/widget-practices-convergence-plan.md §2.6.
+  # docs/archive/widget-practices-convergence-plan.md §2.6.
   setSize: (sizeOrWidgetGivingSize, widgetGivingValue) ->
     if widgetGivingValue?.getValue?
       size = widgetGivingValue.getValue()

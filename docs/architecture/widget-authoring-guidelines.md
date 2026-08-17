@@ -131,7 +131,7 @@ constructor: (backgroundColor) ->
 Do not introduce a parallel shadow field — a second name a subclass sets, copied onto the real field
 after `super` — to dodge a parameter you control: fix the parameter. The tree carries no such field
 today; the worked example, and what removing it took, is
-[`../plans/widget-practices-convergence-plan.md`](../plans/widget-practices-convergence-plan.md)
+[`../archive/widget-practices-convergence-plan.md`](../archive/widget-practices-convergence-plan.md)
 §2.8.
 
 ### 3.3 Call `super` first unless something in the base needs a value
@@ -210,7 +210,10 @@ re-enter anything.
 
 ### 4.1 Declare every instance field at class level
 
-**[convention, load-bearing for three engines]** The duplicator walks **own enumerable properties**
+**[gated — `buildSystem/census-widget-conformance.js --gate`, load-bearing for three engines]** The
+ratchet stands at a true **0**, not a floor: the connector arc's P9 cleared the last exceptions, so a
+new undeclared field fails the build rather than merely raising a count. The duplicator walks
+**own enumerable properties**
 and restores into `Object.create(prototype)`; serialization drives off name strings; the inspector
 lists what it can see. A field that only ever appears as `@foo = …` inside a lazily-run method is
 invisible to all three until that method has run.
@@ -471,7 +474,11 @@ mark after `add` + `setExtent` adds nothing.
   `ButtonWdgt.trigger` throws on it in any build carrying the harness. The fourth slot is the options
   object (`toolTip:`, `arg1:`, `representsAWidget:`, …), never a bare tooltip string.
 - **`@prompt msg, target, "methodName", defaultContents, width, floorNum, ceilingNum, isRounded`** —
-  pass the target and the method *name*, not a bound method value.
+  pass the target and the method *name*, not a bound method value. [gated —
+  `buildSystem/check-menu-actions.js`] `PromptWdgt` hands that callback to a menu item verbatim
+  (`panel.addMenuItem "Ok", @target, @callback`), so it is the SAME slot one hop later and the same
+  proof applies; the gate holds both doors to one standard, and those callbacks also count as
+  menu-dispatched verbs for its unread-parameter ratchet.
 - **`colloquialName` is DERIVED — override it only to say something better.** [convention] It is what
   the product shows: window titles, inspector and console titles, the drag-embed hint, the shortcut
   auto-namer, the name a saved file gets. The base splits your class name into lowercase words
@@ -867,4 +874,4 @@ the debt.
 - [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`mixins.md`](mixins.md) · [`build-and-packaging.md`](build-and-packaging.md).
 - [`lint-and-static-checks.md`](lint-and-static-checks.md) — every gate cited above.
 - [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing 270 widgets score against these rules.
-- [`../plans/widget-practices-convergence-plan.md`](../plans/widget-practices-convergence-plan.md) — the arc bringing the existing tree to these rules.
+- [`../archive/widget-practices-convergence-plan.md`](../archive/widget-practices-convergence-plan.md) — the arc bringing the existing tree to these rules.

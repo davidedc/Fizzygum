@@ -95,9 +95,10 @@ class SheetCellRecord
   dataflowValue: -> @exportedCellValue()
 
   # The value a REFERENCE to this cell yields (spec §9.3): a widget-valued cell exports its widget's
-  # value (getColor?() ?? getValue?() ?? text, via Widget.exportedValue — this is that reader's first
-  # live CONSUMER), or the widget itself if it exports nothing; a scalar / Color / SheetError exports
-  # itself. @value stays the raw widget so the sheet can present it (branch 1); THIS is what flows.
+  # value — read through Widget.exportedValue, i.e. from the widget's declared PRINCIPAL PIN, and
+  # this is that reader's first live CONSUMER — or the widget itself if it exports nothing; a scalar
+  # / Color / SheetError exports itself. @value stays the raw widget so the sheet can present it
+  # (branch 1); THIS is what flows.
   exportedCellValue: ->
     v = @value
     return v unless v instanceof Widget

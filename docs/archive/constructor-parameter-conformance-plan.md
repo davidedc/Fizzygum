@@ -379,7 +379,7 @@ is as often a STRING as a widget (`ButtonWdgt` wraps a string into a centred `St
 field under two names is precisely what a FORWARDED options bag cannot survive — the receiver would
 never read the alias.
 
-⚠ **P3 overlaps `plans/widget-practices-convergence-plan.md` W8** (§2.8, authored the same day from
+⚠ **P3 overlaps `archive/widget-practices-convergence-plan.md` W8** (§2.8, authored the same day from
 the widget survey), which is **owner-gated (D5) and deliberately sequenced LAST** in that arc, after
 its W1–W6, as its highest-churn item. **Same work; do it once** — whichever arc reaches it first
 executes, the other de-scopes to a pointer. Honour W8's gating: if that arc is live, P3 waits for D5

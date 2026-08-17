@@ -1,15 +1,21 @@
 # Widget-practices convergence — acting on the 2026-08-14 survey
 
-**STATUS — IN PROGRESS, last updated 2026-08-17.**
+**STATUS — CLOSED 2026-08-17. Archived with two residual items, both listed in `docs/BACKLOG.md`.**
 
 | phase | state |
 |---|---|
 | W0–W5, W9 | ✅ **DONE 2026-08-16** (Fizzygum `f66da43d` / tests `d3f0a22ff`) |
 | W6a — widen the setters | ✅ **DONE 2026-08-17** (`2b61249a`) — and it was a LIVE BUG: three slider prompts stored the slider's value, not the typed one |
 | W7 — self-description | ✅ **DONE 2026-08-17** — landed **DERIVED**, not hand-written; see §2.7 "As landed" |
-| W6b — idempotence guards | ☐ owner-gated (D3); re-check the P2 interaction first |
 | W8 — constructor shapes | ✅ executed elsewhere, as P3 of `archive/constructor-parameter-conformance-plan.md` |
-| W10 — closeout | ☐ |
+| W10 — closeout | ✅ **DONE 2026-08-17** (`15a439d0`+) |
+| W6b — idempotence guards | ⏸ **RESIDUAL, owner-gated (D3)** — deliberately NOT done here: the engine's equal-value cutoff already covers most of it, and `plans/connector-ubiquity-and-reflection-plan.md` §P2's bind-time precedence rule may change what the guard should do. Re-derive it against P2, do not execute as written |
+| W7's other half — `representativeIcon` | ⏸ **RESIDUAL (D4)** — 257 of 270 answer the base. An icon CANNOT be derived from a class name, so unlike `colloquialName` this stays the hand-written job the plan described, worth doing only for what can be referenced from the desktop |
+
+**Where the numbers ended up:** the survey this plan acts on now carries an appended
+**"state at close"** delta table — `../measurements/widget-practices-survey-2026-08-14.md`. Read that
+rather than the counts in the phase sketches below, several of which the arc moved (and one of
+which, F21's, it INVERTED).
 
 ⚠ Each phase's section carries an **"As landed"** block where it deviated from the sketch above it —
 read that before trusting the sketch. W7's is the largest deviation in the plan.

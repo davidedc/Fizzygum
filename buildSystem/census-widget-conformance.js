@@ -115,10 +115,14 @@ function prologueCopies() {
   return rows;
 }
 
-// ── facet 3 (ADVISORY) — widgets with no colloquialName ─────────────────────────────────────────
-// ⚠ NEVER gate: plenty of internal widgets have no business naming themselves, and a colloquial name
-// is DRAWN (window titles, hierarchy menus), so adding one moves pixels. Plan §2.7 / D4.
-const missingColloquialName = () =>
+// ── facet 3 (ADVISORY) — widgets relying on the DERIVED colloquialName ──────────────────────────
+// ⚠ NEVER gate, and read the number the right way round: since W7 this is NOT a gap count. Widget's
+// colloquialName DERIVES a name from the class name, so a class that declares none still answers a
+// true one and declaring one is an editorial improvement, not a fix. What the number tells you is
+// how much of the tree the derivation is carrying — useful when changing the derivation, useless as
+// a to-do list. A colloquial name is DRAWN (window titles, hierarchy menus), so any change here
+// moves pixels. Plan §2.7 "As landed".
+const derivedColloquialName = () =>
   [...classes.keys()].sort().filter((n) => isWidget(n) && !/^ {2}colloquialName\s*:/m.test(classes.get(n).text));
 
 // ── facet 4 (ADVISORY) — constructor positional-slot counts ─────────────────────────────────────
@@ -200,7 +204,7 @@ if (GATE) {
 
 const slots = constructorSlots();
 const setters = pinSetterShapes();
-const noName = missingColloquialName();
+const derivedName = derivedColloquialName();
 const noHeader = missingHeaderComment();
 const widgetCount = [...classes.keys()].filter(isWidget).length;
 
@@ -213,7 +217,7 @@ if (JSON_OUT) {
       prologueCopies: { count: prologues.length, baseline: BASELINE_PROLOGUE_COPIES, rows: prologues },
     },
     advisory: {
-      missingColloquialName: noName,
+      derivedColloquialName: derivedName,
       constructorsOverFourPositionalSlots: slots,
       pinSetters: setters,
       missingHeaderComment: noHeader,
@@ -229,7 +233,7 @@ for (const r of undeclared) console.log(`       ${r.cls.padEnd(38)} ${r.fields.j
 console.log(`  2. _reLayout prologue copies  : ${prologues.length}  [baseline ${BASELINE_PROLOGUE_COPIES}]`);
 for (const r of prologues) console.log(`       ${r.cls.padEnd(38)} ${r.file}`);
 console.log(`\nADVISORY (heuristics — each has real exceptions; none of these may ever gate)`);
-console.log(`  3. no colloquialName          : ${noName.length} of ${widgetCount}   (DRAWN when added — plan D4)`);
+console.log(`  3. derive colloquialName      : ${derivedName.length} of ${widgetCount}   (NOT a gap — see the facet note)`);
 console.log(`  4. >4 positional ctor slots, no opts bag : ${slots.length}`);
 for (const r of slots) console.log(`       ${r.cls.padEnd(38)} ${r.slots} slots`);
 console.log(`  5. pin setters                : ${setters.length} setter(s) across ${new Set(setters.map((s) => s.cls)).size} class(es)`);

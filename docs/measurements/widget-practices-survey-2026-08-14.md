@@ -718,10 +718,35 @@ per facet. Known limits, all shared with the repo's own scanners:
 
 ---
 
+## Appendix — state at close (2026-08-17), APPENDED
+
+Everything above is the 2026-08-14 snapshot and is left exactly as measured; this appendix records
+where the arc it triggered left each mechanical facet. The re-runnable half is
+`buildSystem/census-widget-conformance.js` — run it rather than trusting these numbers to age well.
+
+| facet | at survey | at close | what moved it |
+|---|---|---|---|
+| instance fields written but never DECLARED (F9/F10) | 9 classes / 11 fields | **0 / 0** | W4 cleared the bulk; the connector arc's **P9** retired the last floor by renaming the `target`/`callback` pair (`referencedWidget` / `inspectedObject`) — which is why this one is now a true inventory rather than a floor |
+| `_reLayout` prologue copies (F13, shape A) | 24 | **8** | W5 took sixteen onto `Widget._reLayoutWithOwnContents`; the eight left are stated exceptions, each named in the census script |
+| `colloquialName` coverage (F21) | **106 / 270** covered (own or inherited below `Widget`); the other **164** answered the base `"generic widget"` | **270 / 270 answer a true name** — 53 from an override of their own, 217 from the derivation | W7 did NOT hand-write names — it made the base **DERIVE** one from the class name. So the census facet inverted: declaring none is now correct, and its raw count went UP (to 217) as redundant overrides were deleted. Note the two denominators are not the same question: the survey measured COVERAGE, the census measures OWN DECLARATIONS, and only the first was ever the defect |
+| `representativeIcon` coverage (F21) | 13 / 270 | **13 / 270 — untouched** | deliberately deferred (D4): an icon cannot be derived from a class name, so it stays the hand-written job, worth doing only for what can be referenced from the desktop. Open in `docs/BACKLOG.md` |
+| pin-setter contract (F22) | PATCHWORK — two argument conventions, 7 controller classes, 8 declaring setter lists | **one contract, `PinSpec`; 70 setters over 30 classes** | **P1** replaced the four parallel setter tables with one record per pin (19 overrides → 9 declarations); **W6a** widened the slot-1-only setters, which is why the arity histogram moved 1→26/2→38 to 1→24/2→42, and it was a live bug |
+| constructors over four positional slots, no options bag | — | **0** | closed entirely by `archive/constructor-parameter-conformance-plan.md`, which is where W8 was executed |
+| class header comment (F3) | THIN, 45% | **148 of 270 without — unmoved** | deliberately untouched: too many legitimate exceptions to chase, and no phase claimed it |
+
+**The one facet the survey got structurally wrong**, recorded because the shape recurs: F21 counted
+`colloquialName` declarations and read the absence as a gap of 164 widgets needing names. The tree
+already contained a derivation that a truthy `"generic widget"` default was suppressing — so the real
+defect was one line, not 164, and the survey's own number pointed away from it.
+⇒ **before sizing a gap by counting missing declarations, check whether a RULE for the thing already
+exists and is being shadowed.**
+
+---
+
 ## See also
 
 - [`../architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) — the prescriptive companion: what a new widget should do, facet by facet.
-- [`../plans/widget-practices-convergence-plan.md`](../plans/widget-practices-convergence-plan.md) — the arc that acts on these findings, in order, with the recapture budget and the owner decisions.
+- [`../archive/widget-practices-convergence-plan.md`](../archive/widget-practices-convergence-plan.md) — the arc that acts on these findings, in order, with the recapture budget and the owner decisions.
 - [`../architecture/widget-citizenship.md`](../architecture/widget-citizenship.md) — the contract these facets serve.
 - [`../architecture/layering-naming-convention.md`](../architecture/layering-naming-convention.md) · [`../architecture/layout.md`](../architecture/layout.md) — the mechanics behind F13–F17.
 - [`../architecture/lint-and-static-checks.md`](../architecture/lint-and-static-checks.md) — every gate named in the scorecard.
