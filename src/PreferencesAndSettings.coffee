@@ -9,6 +9,19 @@ class PreferencesAndSettings
   @INPUT_MODE_MOUSE: 0
   @INPUT_MODE_TOUCH: 1
 
+  # I am a per-world singleton reached as the STATIC WorldWdgt.preferencesAndSettings, and a menu row
+  # holds me: the world menu's input-mode row TARGETS me (toggleInputMode) and SHOWS me (its
+  # MenuRowReflectionSpec reads my currentInputMode). So a duplicated menu must KEEP THE REFERENCE —
+  # without this the copy's row toggles a dead clone instead of the real settings, which is precisely
+  # what the same flag on Wallpaper exists to prevent, and was measurably broken here until
+  # 2026-08-17 (probe: Fizzygum-tests/.scratch/prefs-bag-duplication-probe.js).
+  keptByReferenceOnDeepCopy: true
+
+  # Serialization needs no new arm: WellKnownObjects already matches me BY IDENTITY against
+  # WorldWdgt.preferencesAndSettings and re-binds on restore (its keyFor and resolve both carry
+  # "preferences"). This marker states that key alongside the identity check, as Wallpaper does.
+  wellKnownKey: "preferences"
+
   # all these properties can be modified
   # by the input mode.
   inputMode: undefined
