@@ -153,8 +153,10 @@ sanity-tested 2026-07-14; re-check future releases). What *does* work — nicely
 **The one caveat: line numbers are compiled-JS mirror lines (`jsL…`), not `.coffee` lines.**
 Locate findings by file (one class per file) + `@method` name. Baseline 2026-07-14 (post
 opener-batch dedup): **133 structural matches** at `-t 30`, including families invisible to
-jscpd — a 25× icon `paintFunction` wrapper, an 18× `stringSetters`/`numericalSetters`/
-`colorSetters` boilerplate family, `Widget`-internal `setPadding*` quintuplets.
+jscpd — a 25× icon `paintFunction` wrapper, an 18× setter-table boilerplate family (since
+DISSOLVED: connector P1 replaced the three per-kind tables with one `pins` list, because a pin
+now states its own kinds instead of being repeated once per table), `Widget`-internal
+`setPadding*` quintuplets.
 
 ## The recurring re-audit / re-triage cycle
 

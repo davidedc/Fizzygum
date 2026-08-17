@@ -5,10 +5,10 @@
 # bang) marks itself STALE; the drain then PULLS all stored inputs via dataflowRecompute — a subclass hook
 # that runs the node's own computation (recalculateOutput) and refreshes its on-node display — and delivers
 # @output along the out-edge. This base holds everything the three nodes share verbatim: the dataflow node
-# protocol, the connect-to-target menu wiring, the setter menus, and the _reLayout scaffold. Each subclass
+# protocol, the connect-to-target menu wiring, the input PINS, and the _reLayout scaffold. Each subclass
 # supplies only what actually differs — its constructor / colloquialName / setInput* / recalculateOutput /
 # _buildAndConnectChildrenNoSettle (children) / _layOutOwnContents (child geometry), and, if its inputs differ
-# from the default in1..in4, _inputSetterMenuEntries.
+# from the default in1..in4, _inputPins.
 #
 # NOTE — this base is in the CORE part while half its subclasses are not, and that is deliberate:
 # CalculatingPatchNodeWdgt ships in production and extends this base, so the base has to ship too.
@@ -28,6 +28,10 @@ class PatchNodeWdgt extends Widget
   input1: undefined
   input2: undefined
 
+  # I drive numbers (my computed @output). No principalPinLabel: what I export is @output, which is
+  # not a pin of mine -- nothing drives it, my inputs do -- so dataflowValue answers it directly.
+  producesPinKind: "numerical"
+
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
   # you often set this to zero is because windows already put
@@ -44,8 +48,6 @@ class PatchNodeWdgt extends Widget
   bang: (newvalue) ->
     @updateTarget true
 
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
 
   # any input change (or a bang) marks me STALE — the drain recomputes me via dataflowRecompute (which pulls
   # ALL my stored inputs) then delivers @output along my out-edge. This replaces the legacy multi-input
@@ -74,25 +76,25 @@ class PatchNodeWdgt extends Widget
   dataflowValue: -> @output
 
 
-  # The (menu-label, setter-function-name) pairs this node's inputs contribute to BOTH the string and the
-  # numerical connect-to-target setter menus. The default is in1..in4 (Calculating / Regex); a subclass whose
-  # inputs differ (Diffing's hot inputs) overrides just this — stringSetters / numericalSetters stay shared.
-  _inputSetterMenuEntries: ->
-    [["bang!", "in1", "in2", "in3", "in4"], ["bang", "setInput1", "setInput2", "setInput3", "setInput4"]]
+  # The pins this node's INPUTS contribute. The default is in1..in4 (Calculating / Regex); a subclass
+  # whose inputs differ (Diffing's hot inputs) overrides just this, and `pins` stays shared.
+  # ⚠ The inputs are ["string", "numerical"] and deliberately NOT "any": you can feed a patch node a
+  # number or its string spelling, but a colour is not an operand for the arithmetic and regex nodes
+  # that use these.
+  _inputPins: ->
+    [
+      new PinSpec "bang!", "any",                   set: "bang"
+      new PinSpec "in1",   ["string", "numerical"], set: "setInput1"
+      new PinSpec "in2",   ["string", "numerical"], set: "setInput2"
+      new PinSpec "in3",   ["string", "numerical"], set: "setInput3"
+      new PinSpec "in4",   ["string", "numerical"], set: "setInput4"
+    ]
 
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    [entries, functionNames] = @_inputSetterMenuEntries()
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, entries, functionNames
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    [entries, functionNames] = @_inputSetterMenuEntries()
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, entries, functionNames
+  pins: -> super().concat @_inputPins()
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    @_addTargetConnectionMenuEntries menu, "numerical"
+    @_addTargetConnectionMenuEntries menu
 
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).

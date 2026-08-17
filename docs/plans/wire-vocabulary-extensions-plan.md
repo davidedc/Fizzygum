@@ -61,10 +61,12 @@ work is *landing reserved designs*, not inventing machinery.
 
 ## §1 Current state (verified against src 2026-07-24)
 
-- **Payloads = three setter tables.** `Widget.colorSetters` / `stringSetters` /
-  `numericalSetters` (+ the `allSetters` union) — `src/basic-widgets/Widget.coffee`
-  (~4555–4590) — populate the connect-to-➜ target-chooser menus. Subclasses chain via
-  `super` and `_appendSettersAndDedup` (see `PatchNodeWdgt.stringSetters`).
+- **Payloads = pin KINDS.** ⚠ **Restated 2026-08-16 — connector P1 replaced the three setter
+  tables.** `Widget.pins` returns one `PinSpec {label, kinds, setterName, getterName}` per pin, and
+  `Widget.pinsOfKind kind` filters it for the connect-to-➜ target-chooser menus. Subclasses chain
+  with `super().concat [...]` (see `PatchNodeWdgt._inputPins`). **The kind is now a property of the
+  PIN, not a partition of the tables** — a `PinSpec` takes one kind, an array of them, or `"any"` —
+  which is what makes W2/W3's "add a buffer payload" a smaller change than the note below assumed.
 - **Edge records already carry the policy fields.** `DataflowEngine.addEdge` stores
   `{consumer, action, firesPerEvent, cold}` (constructor comment ~:88, `addEdge`
   ~:118–127). `cold` defaults false and **has zero readers**. `ensureWireEdge` makes
@@ -221,9 +223,11 @@ ordinary current value.
   an in-place-mutated store (a paint surface), the handle carries a `generation` and
   defines `equals` as (backing identity, generation) — the
   `immutableBackBufferGeneration` precedent. Never deep-compare samples.
-- **Discovery:** a fourth setter table `bufferSetters()` on `Widget`, chained exactly
-  like the existing three (and joined into `allSetters`); target-chooser menu offers
-  it only to controllers that produce buffers.
+- **Discovery:** ⚠ **simplified by connector P1 (2026-08-16)** — there is no longer a table per
+  kind to add a fourth to. A buffer pin is just `new PinSpec "…", "buffer", set: "…"`, and a
+  controller that produces buffers declares `producesPinKind: "buffer"`; `pinsOfKind` then offers
+  it exactly to those controllers with no new plumbing. Note `"any"` pins (a bang) match a new kind
+  automatically and BY DESIGN — that is what `"any"` asserts.
 - **Spikes before committing the design:**
   - **S1 serialization:** the serializer has NO typed-array arm today. Decide encoding
     (base64 chunk vs array) + size posture; wire both serialization rigs

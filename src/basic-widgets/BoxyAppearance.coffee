@@ -98,13 +98,9 @@ class BoxyAppearance extends Appearance
     menu.addMenuItem "corner radius...", @, "cornerRadiusPopout", toolTip: "set the corner's\nradius"
     menu
   
-  addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
-    menuEntriesStrings.push "corner radius"
-    functionNamesStrings.push "setCornerRadius"
-    # ⚠ Return the PAIR and stop there. An appearance is not a Widget, so it does not have
-    # deduplicateSettersAndSortByMenuEntryString — calling it here threw for every widget wearing this
-    # appearance. Widget.addShapeSpecificNumericalSetters, the only caller, dedupes what we return.
-    [menuEntriesStrings, functionNamesStrings]
+  # The pins my SHAPE contributes to the widget wearing me (Widget.pins concatenates them). Write-only:
+  # I do have a getCornerRadius, but it is a method on ME and a pin's reader is dispatched on the
+  # WIDGET (`node[pin.getterName]()`), where no such method exists — the setter's twin, `setCornerRadius`,
+  # is on BoxWdgt. Declaring `get: "getCornerRadius"` here would name a method the reader cannot reach.
+  pins: ->
+    [ new PinSpec "corner radius", "numerical", set: "setCornerRadius" ]

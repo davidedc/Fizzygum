@@ -116,11 +116,18 @@ ControllerMixin =
       # "set target" toolTip, so it is a parameter ("color" or "numerical").
       # (StringWdgt keeps its own hand-rolled variant — it guards the whole block
       # behind isIndexPage, so it is deliberately NOT routed through here.)
-      _addTargetConnectionMenuEntries: (menu, propertyKind) ->
+      # The kind of property this controller can drive is read from `producesPinKind` -- the SAME
+      # declaration its openTargetPropertySelector filters the target's pins by, so the tooltip
+      # cannot describe a menu other than the one it opens. Taking the kind as an argument here
+      # instead would let every controller state it twice, in two unrelated places, and nothing
+      # would compare them. A widget that drives any kind names none: the sentence reads
+      # "whose property".
+      _addTargetConnectionMenuEntries: (menu) ->
         menu.addLine()
         if world.isIndexPage
           menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
         else
-          menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + propertyKind + " property\n will be" + " controlled by this one")
+          kindWord = if @producesPinKind? and @producesPinKind isnt "any" then @producesPinKind + " " else ""
+          menu.addMenuItem "set target", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + kindWord + "property\n will be" + " controlled by this one")
         @addFiresPerEventMenuEntry menu
 

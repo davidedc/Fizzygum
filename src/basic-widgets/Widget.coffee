@@ -212,6 +212,22 @@ class Widget extends TreeNode
 
   clickOutsideMeOrAnyOfMeChildrenCallback: [undefined]
 
+  # ── the two per-class halves of the PIN protocol (see `pins`, below) ──────────────────────────
+  # What kind of value I produce when I act as a dataflow SOURCE, which is what decides which of a
+  # target's pins my "choose target property" menu may offer ("numerical" | "string" | "color", or
+  # "any" for a widget that forwards whatever it received). Only controllers declare it.
+  #   ONE declaration feeds both halves of the set-target UI: `openTargetPropertySelector` filters the
+  # target's pins by it, and `ControllerMixin._addTargetConnectionMenuEntries` words its tooltip from
+  # it. Stating the kind separately in each place lets the two drift silently — nothing compares a
+  # tooltip's adjective against the menu it describes.
+  producesPinKind: undefined
+
+  # The LABEL of my principal pin — the one `exportedValue` reads when something asks for my value
+  # without naming a pin (a spreadsheet reference, the dataflow drain). undefined => I export no
+  # value. By label rather than by setter because a principal pin may legitimately be READ-ONLY
+  # (ColorPickerWdgt's picked colour), and then there is no setter to name it by.
+  principalPinLabel: undefined
+
   # hover help text. Declared on the base because this is where its consumer hook
   # lives (startCountdownForBubbleHelp, below) and because HighlightableMixin reads
   # it on whatever it is mixed into — branches that share no ancestor below Widget.
@@ -498,16 +514,7 @@ class Widget extends TreeNode
     return menu
 
 
-  addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
 
-    if @appearance?.addShapeSpecificNumericalSetters?
-      [menuEntriesStrings, functionNamesStrings] = @appearance.addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
-
-  
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
   toString: ->
     if Automator? and Automator.state != Automator.IDLE and Automator.hidingOfWidgetsNumberIDInLabels
@@ -2528,15 +2535,20 @@ class Widget extends TreeNode
 
     return aColor
 
-  # The principal value this widget offers to a spreadsheet reference (dataflow spec §9.3): the
-  # unified reader over today's duck-typed export cluster — a colour picker's colour, a field's
-  # value, else its text. Widgets that export none of these answer undefined here; the reference read then
-  # falls back to the widget itself (that fallback lives at the read site — see the spreadsheet's
-  # widget-valued-cell path, plan Phase 4). Only ColorPickerWdgt defines getColor and only
-  # StringFieldWdgt defines getValue today; SliderWdgt gains getValue when it joins the protocol
-  # (Phase 4), keeping this one uniform chain.
+  # The principal value this widget offers to a spreadsheet reference (dataflow spec §9.3): the value
+  # of my PRINCIPAL PIN. Widgets that declare no principal pin answer undefined here; the reference
+  # read then falls back to the widget itself (that fallback lives at the read site — see the
+  # spreadsheet's widget-valued-cell path).
+  #   The widget SAYS which pin is principal and the pin says how to read it. The alternative — probing
+  # every widget for a few particular method names in a fixed priority order, falling through to a
+  # FIELD — cannot tell "exports nothing" from "happens to carry a field of that name", and the
+  # difference is real: on StringFieldWdgt and MenuHeader `@text` holds a child WIDGET rather than a
+  # string, so a `@text` fallback exports a TextWdgt. StringFieldWdgt's principal pin reads `getValue`
+  # (`@text.text`); MenuHeader declares no pin, so it exports nothing.
   exportedValue: ->
-    @getColor?() ? @getValue?() ? @text
+    pin = @principalPin()
+    return undefined unless pin?.getterName?
+    return @[pin.getterName]?()
 
   # The dataflow node-protocol value reader (spec §3; DataflowEngine header): a widget node's current value IS
   # its exported value, so when a ported wire delivers, the engine PULLS the producer widget's exportedValue,
@@ -4593,103 +4605,105 @@ class Widget extends TreeNode
     @_unlockFromPanels()
     @_setLayoutSpec undefined
 
-  deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
-    menuEntriesStrings = Array.from(new Set(menuEntriesStrings))
-    functionNamesStrings = Array.from(new Set(functionNamesStrings))
+  # ── the PIN protocol ─────────────────────────────────────────────────────────────────────────
+  # A PIN is a named property the dataflow can write, read, or both (PinSpec). `pins` is the whole
+  # declaration: what I offer as a SINK. One list, whatever the kind -- so a pin that accepts any
+  # value is declared once, and a pin that can be READ says so (both impossible to state while the
+  # declaration was one write-only `[labels], [setterMethodNames]` table per kind).
+  #
+  # A subclass declares its own pins by concatenating onto `super`:
+  #     pins: -> super().concat [ new PinSpec "value", "numerical", set: "setValue", get: "getValue" ]
+  #
+  # ⚠ Most of the pins below are WRITE-ONLY, and that is the honest state of the tree, not an
+  # oversight: `@color` / `@alphaScaled` / the paddings are all readable FIELDS, but no reader
+  # METHOD exists for them, and a pin's `get` is a promise the dataflow will dispatch by name.
+  # Declaring a reader that isn't there would fabricate a contract (PinSpec's header).
+  #
+  # ⚠ `width` / `height` are write-only ON PURPOSE even though `width()` and `height()` are right
+  # there. A readable pin is a licence to BIND, and geometry under the one-way layout↔dataflow law
+  # (dataflow may dirty layout, never the reverse) is exactly where that is not affordable -- it is
+  # open owner question 1 of plans/connector-ubiquity-and-reflection-plan.md §8. When that question
+  # is answered, this is the one line that changes.
+  pins: ->
+    declared = [
+      new PinSpec "color",            "color",     set: "setColor"
+      new PinSpec "background color", "color",     set: "setBackgroundColor"
+      new PinSpec "width",            "numerical", set: "_applyWidth"
+      new PinSpec "height",           "numerical", set: "_applyHeight"
+      new PinSpec "alpha 0-100",      "numerical", set: "setAlphaScaled"
+      new PinSpec "padding",          "numerical", set: "setPadding"
+      new PinSpec "padding top",      "numerical", set: "setPaddingTop"
+      new PinSpec "padding bottom",   "numerical", set: "setPaddingBottom"
+      new PinSpec "padding left",     "numerical", set: "setPaddingLeft"
+      new PinSpec "padding right",    "numerical", set: "setPaddingRight"
+    ]
+    # my appearance contributes its shape's own pins (BoxyAppearance's corner radius) -- the shape is
+    # a collaborator, so its pins are declared where the shape is, not repeated on every widget that
+    # can wear it.
+    return declared.concat (@appearance?.pins?() ? [])
 
-    #1) combine the arrays:
-    list = []
-    j = 0
-    while j < menuEntriesStrings.length
-      list.push
-        'menuEntriesStrings': menuEntriesStrings[j]
-        'functionNamesStrings': functionNamesStrings[j]
-      j++
-    #2) sort:
-    list.sort (a, b) ->
-      if a.menuEntriesStrings < b.menuEntriesStrings then -1 else if a.menuEntriesStrings == b.menuEntriesStrings then 0 else 1
-      #Sort could be modified to, for example, sort on the age
-      # if the name is the same.
-    #3) separate them back out:
-    k = 0
-    while k < list.length
-      menuEntriesStrings[k] = list[k].menuEntriesStrings
-      functionNamesStrings[k] = list[k].functionNamesStrings
-      k++
+  # The pins a source of `kind` can actually DRIVE: read-only pins are dropped (nothing can drive
+  # them), duplicates are resolved by SETTER NAME keeping the first (so an inherited declaration
+  # wins over a subclass re-declaration of the same pin), and the result is sorted by label because
+  # that is the order the "choose target property" menu presents.
+  #   Passing no kind (or "any") asks for every drivable pin.
+  # ⚠ Dedup is by setter name ON THE RECORD. The array version deduped its two arrays INDEPENDENTLY
+  # with two separate Sets, so a label repeated against a different setter (or the reverse) shifted
+  # one array and not the other and silently paired every later label with the wrong setter. That
+  # whole failure mode is gone by construction: a pin is one object.
+  pinsOfKind: (kind) ->
+    seenSetterNames = new Set()
+    matching = []
+    for pin in @pins()
+      continue if pin.isReadOnly()
+      continue unless pin.acceptsKind kind
+      continue if seenSetterNames.has pin.setterName
+      seenSetterNames.add pin.setterName
+      matching.push pin
+    matching.sort (a, b) ->
+      if a.label < b.label then -1 else if a.label == b.label then 0 else 1
+    return matching
 
-    return [menuEntriesStrings, functionNamesStrings]
+  # Find one of my pins by its LABEL -- the pin's identity. Every pin has one (a read-only pin has
+  # no setter to be named by), it is unique within a widget's pin set, and it is what the menu
+  # shows. This is how a class points at its own principal pin.
+  #   The reverse edge will want the OTHER lookup, by setter name ("a wire wrote this action; which
+  # pin did it write?", since a wire stores its `@action` as the setter's name). That is three lines
+  # and it lands with its first caller (connector plan P2/P7), not before: an uncalled method cannot
+  # be verified, and the dead-method gate is right to refuse it.
+  pinLabelled: (label) ->
+    for pin in @pins()
+      return pin if pin.label is label
+    return undefined
 
-  # Shared "append my own entries, then dedupe+sort" tail of the connect-to-target property-setter menus. Each
-  # controller's stringSetters / numericalSetters / colorSetters calls `super` (to accumulate the inherited
-  # entries), then adds its OWN entry/function-name pairs; this holds that once-copied append+dedupe tail
-  # (byte-identical across ~19 setter overrides on 9 controllers; PaletteWdgt had already localized it as
-  # addBangSetter). A sibling of deduplicateSettersAndSortByMenuEntryString / _popUpTargetPropertyMenu --
-  # deliberately on Widget (see that method's note: an INHERITED member is hidden from the inspector's default
-  # own-props view). (`super` stays in each override -- it binds to the caller's hierarchy position, not here.)
-  _appendSettersAndDedup: (menuEntriesStrings, functionNamesStrings, entries, functionNames) ->
-    menuEntriesStrings.push entries...
-    functionNamesStrings.push functionNames...
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+  # The one pin whose value this widget offers when asked for its value with no pin named -- to a
+  # spreadsheet reference, or to the dataflow drain. Declared per class as `principalPinLabel`;
+  # a widget that declares none simply has no exported value.
+  principalPin: ->
+    return undefined unless @principalPinLabel?
+    return @pinLabelled @principalPinLabel
 
-  # The shared body of every controller widget's openTargetPropertySelector (Tier H3, 2026-07-03): pop up the
-  # "choose target property" menu -- one item per (label, setter) pair the caller resolved from `theTarget`'s
-  # setter table. WHICH table (stringSetters / numericalSetters / colorSetters / allSetters) is the ONLY thing
-  # the 8 per-class openTargetPropertySelector stubs differ by, so they now each pass their table here and this
-  # holds the once-copied menu-building body. Each item wires @action = that setter onto theTarget via
-  # setTargetAndActionWithOnesPickedFromMenu (a ControllerMixin method -- every caller @augmentWith's it).
-  # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the inspector's
-  # default own-props view, so the 8 controllers' inspected member lists are unshifted -- a ControllerMixin
-  # method would be copied in as an OWN member of all 8 and shift every one of them. (It DOES surface in the
-  # rarer inherited-props inspector view; one such SystemTest, macroDuplicatedInspectorDrivesCopiedTargetOnly,
-  # was recaptured.) The thin per-class openTargetPropertySelector stays (own, menu-dispatched).
-  _popUpTargetPropertyMenu: (theTarget, setters) ->
-    [menuEntriesStrings, functionNamesStrings] = setters
+  # The shared body of every controller widget's openTargetPropertySelector: pop up the "choose
+  # target property" menu, one item per drivable pin of the kind I produce. Each item wires
+  # @action = that pin's setter onto theTarget via setTargetAndActionWithOnesPickedFromMenu (a
+  # ControllerMixin method -- every caller @augmentWith's it).
+  # Deliberately on Widget, NOT ControllerMixin: as an INHERITED member it is hidden from the
+  # inspector's default own-props view, so the controllers' inspected member lists are unshifted --
+  # a ControllerMixin method would be copied in as an OWN member of each and shift every one. (It
+  # DOES surface in the rarer inherited-props inspector view.)
+  _popUpTargetPropertyMenu: (theTarget, pins) ->
     menu = new MenuWdgt @, target: @, title: "choose target property:"
-    for i in [0...menuEntriesStrings.length]
-      menu.addMenuItem menuEntriesStrings[i], @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: functionNamesStrings[i]
-    if menuEntriesStrings.length == 0
+    for pin in pins
+      menu.addMenuItem pin.label, @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: pin.setterName
+    if pins.length == 0
       menu = new MenuWdgt @, target: @, title: "no target properties available"
     menu.popUpAtHand()
 
-  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
-    menuEntriesStrings.push "color", "background color"
-    functionNamesStrings.push "setColor", "setBackgroundColor"
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+  # Menu-dispatched, and now shared by every controller: the per-class stubs differed ONLY by which
+  # of the four setter tables they passed, which `producesPinKind` now states as data instead.
+  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
+    @_popUpTargetPropertyMenu theTarget, theTarget.pinsOfKind @producesPinKind
 
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
-    # we don't add anything so no need to sort/deduplicate
-    return [menuEntriesStrings, functionNamesStrings]
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
-    menuEntriesStrings.push "width", "height", "alpha 0-100", "padding", "padding top", "padding bottom", "padding left", "padding right"
-    functionNamesStrings.push "_applyWidth", "_applyHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"
-
-    if @addShapeSpecificNumericalSetters?
-      [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
-
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
-
-  allSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
-
-    [menuEntriesStrings, functionNamesStrings] = @colorSetters menuEntriesStrings, functionNamesStrings
-    [menuEntriesStrings, functionNamesStrings] = @stringSetters menuEntriesStrings, functionNamesStrings
-    [menuEntriesStrings, functionNamesStrings] = @numericalSetters menuEntriesStrings, functionNamesStrings
-
-    # already sorted and deduplicated by the last of the calls above
-    return [menuEntriesStrings, functionNamesStrings]
-  
   # Widget entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->

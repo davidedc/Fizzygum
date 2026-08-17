@@ -44,10 +44,15 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
     @textWidget._setTextConnector @output
 
   # Diffing's inputs differ from the default in1..in4 (it has in1/in2 + hot inputs), so it overrides ONLY this
-  # data hook; PatchNodeWdgt::stringSetters / numericalSetters (and their `super`-into-Widget chaining) stay
-  # shared and unchanged.
-  _inputSetterMenuEntries: ->
-    [["bang!", "in1", "in2", "in1 hot", "in2 hot"], ["bang", "setInput1", "setInput2", "setInput1Hot", "setInput2Hot"]]
+  # data hook; PatchNodeWdgt::pins (and its `super`-into-Widget chaining) stays shared and unchanged.
+  _inputPins: ->
+    [
+      new PinSpec "bang!",  "any",                   set: "bang"
+      new PinSpec "in1",    ["string", "numerical"], set: "setInput1"
+      new PinSpec "in2",    ["string", "numerical"], set: "setInput2"
+      new PinSpec "in1 hot", ["string", "numerical"], set: "setInput1Hot"
+      new PinSpec "in2 hot", ["string", "numerical"], set: "setInput2Hot"
+    ]
 
   _buildAndConnectChildrenNoSettle: ->
 

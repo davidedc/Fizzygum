@@ -33,6 +33,10 @@ class SliderWdgt extends CircleBoxWdgt
 
   smallestValueIsAtBottomEnd: false
 
+  # I drive numbers, and the number I export is my `value` pin (see `pins`, below).
+  producesPinKind: "numerical"
+  principalPinLabel: "value"
+
   idealRatioWidthToHeight: 1/4
 
   # POSITIONAL for the four numbers, an OPTIONS object for the rest.
@@ -196,11 +200,10 @@ class SliderWdgt extends CircleBoxWdgt
   reactToTargetConnection: ->
     @updateTarget()
 
-  # The exported-value reader (dataflow spec §9.3): a slider joins the spreadsheet value protocol by
-  # exposing its numeric @value, so Widget.exportedValue()'s `getColor?() ? getValue?() ? @text`
-  # chain reads a slider-valued cell as its number (and a reference to that cell yields the number).
-  # The duck-typed cluster already probed `x.getValue?()` at the setStart/setStop/setSize call sites;
-  # this makes a SliderWdgt answer it on itself too.
+  # My `value` pin's reader (dataflow spec §9.3), which is also what exportedValue answers because
+  # `value` is my principal pin: a slider-valued spreadsheet cell reads as its number, and a
+  # reference to that cell yields the number. The duck-typed cluster already probed `x.getValue?()`
+  # at the setStart/setStop/setSize call sites; this makes a SliderWdgt answer it on itself too.
   getValue: -> @value
 
   # SliderWdgt menu:
@@ -326,19 +329,15 @@ class SliderWdgt extends CircleBoxWdgt
   
   # openTargetSelector: -> taken form the ControllerMixin
   
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.numericalSetters()
-
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "value"], ["bang", "setValue"]
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "value", "start", "stop", "size"], ["bang", "setValue", "setStart", "setStop", "setSize"]
-  
-  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
+  # `value` is my principal pin and the only READABLE one here (getValue -> @value). start/stop/size
+  # are write-only for want of readers, not by policy. Each pin states its own kinds, so "a bang takes
+  # anything" and "a value takes a number or the string spelling of one" are said once each.
+  pins: -> super().concat [
+    new PinSpec "bang!", "any",                    set: "bang"
+    new PinSpec "value", ["numerical", "string"],  set: "setValue", get: "getValue"
+    new PinSpec "start", "numerical",              set: "setStart"
+    new PinSpec "stop",  "numerical",              set: "setStop"
+    new PinSpec "size",  "numerical",              set: "setSize"
+  ]
 
   

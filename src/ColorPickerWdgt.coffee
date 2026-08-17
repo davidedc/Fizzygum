@@ -49,7 +49,14 @@ class ColorPickerWdgt extends Widget
 
   getColor: ->
     @feedback.color
-  
+
+  # My principal pin is READ-ONLY. `getColor` reads the colour picked through me (@feedback.color),
+  # while Widget's `color` pin writes @color — my own chrome, which the constructor sets to white and
+  # which has nothing to do with the picked colour. They are two different properties, so pairing them
+  # into one read/write pin would be a lie: a wire writing it would not change what a reader reads.
+  pins: -> super().concat [ new PinSpec "picked color", "color", get: "getColor" ]
+  principalPinLabel: "picked color"
+
 
   # The palette/feedback arrange from my applied frame — the engine's standard
   # re-fit chokepoint (menu-row-conformance plan, Phase 2c: pure extraction from

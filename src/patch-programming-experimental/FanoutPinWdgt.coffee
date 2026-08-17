@@ -6,6 +6,10 @@ class FanoutPinWdgt extends Widget
   target: undefined
   action: undefined
 
+  # I forward whatever I was handed, so I can drive a target pin of ANY kind -- my target-property
+  # menu offers all of them, and my set-target tooltip names no kind. Both read this one field.
+  producesPinKind: "any"
+
   constructor: (@color) ->
     super
     @appearance = new FanoutPinAppearance @
@@ -21,17 +25,7 @@ class FanoutPinWdgt extends Widget
     @inputValue = newvalue
     @updateTarget()
 
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
-
-  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
+  pins: -> super().concat [ new PinSpec "bang!", "any", set: "bang" ]
 
 
   # the bang makes the node fire the current output value
@@ -50,10 +44,8 @@ class FanoutPinWdgt extends Widget
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    @_addTargetConnectionMenuEntries menu, "color"
+    @_addTargetConnectionMenuEntries menu
 
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.allSetters()
 
   reactToTargetConnection: ->
     @parent.updateTarget()

@@ -22,6 +22,13 @@ class StringWdgt extends Widget
   @augmentWith BackBufferMixin
   @augmentWith ControllerMixin
 
+  # I drive text, and the text I export is my `text` pin (see `pins`, below).
+  # ⚠ "string", not "numerical": the target-property menu I open offers my target's STRING pins,
+  # because a text widget drives text. SimpleTextWdgt's set-target tooltip said "numerical" — the
+  # other, disagreeing half of what is now this one declaration.
+  producesPinKind: "string"
+  principalPinLabel: "text"
+
   # clear unadulterated text
   text: ""
   # the text as it actually shows.
@@ -1398,16 +1405,21 @@ class StringWdgt extends Widget
     @_settleLayoutsAfterOrJoinEnclosingPass =>
       @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
 
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.stringSetters()
-  
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["alpha 0-100", "font size", "text"], ["setAlphaScaled", "setFontSize", "setText"]
-  
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!", "text"], ["bang", "setText"]
+  # My `text` pin's reader, and so what exportedValue answers (`text` is my principal pin).
+  # ⚠ It did not exist before: the exported-value chain ended by reading the FIELD `@text` directly,
+  # which is why the two classes where `@text` holds a child WIDGET rather than a string exported a
+  # widget (see Widget.exportedValue). setText's reader twin is now spelled out, so a pin can promise
+  # it and the reverse edge can dispatch it.
+  getText: -> @text
+
+  # `text` accepts a number's string spelling as readily as a string, hence the two kinds.
+  #   ⚠ NOT declared here: `bang!`. `bang` is implemented on SimpleTextWdgt, so declaring the pin on
+  # THIS class would offer a plain StringWdgt/TextWdgt a target property that dispatches to nothing
+  # (`consumer[action]?.call` swallows the miss silently). A pin belongs to the class that has the verb.
+  pins: -> super().concat [
+    new PinSpec "text",      ["string", "numerical"],  set: "setText", get: "getText"
+    new PinSpec "font size", "numerical",              set: "setFontSize"
+  ]
 
   updateTarget: ->
     @_fireConnection @text

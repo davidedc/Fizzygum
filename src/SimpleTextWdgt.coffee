@@ -76,7 +76,7 @@ class SimpleTextWdgt extends TextWdgt
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
 
-    @_addTargetConnectionMenuEntries menu, "numerical"
+    @_addTargetConnectionMenuEntries menu
 
     if @_amIDirectlyInsideScrollPanelWdgt()
       # the caret is a world singleton, compared by identity instead of
@@ -132,6 +132,11 @@ class SimpleTextWdgt extends TextWdgt
     world.dataflow.markStale @, true
     return
 
+  # The bang pin is declared HERE because `bang` is implemented HERE. Declaring it up on StringWdgt
+  # would advertise it for the whole family, including the TextWdgt/StringWdgt that have no `bang` at
+  # all and would silently dispatch to nothing. "any": a bang ignores the value it is handed.
+  pins: -> super().concat [ new PinSpec "bang!", "any", set: "bang" ]
+
   # This is also invoked for example when you take a slider and set it to target this. The box re-flow on a
   # text change is the inherited StringWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
   setText: (theTextContent, stringFieldWidget) ->
@@ -140,12 +145,12 @@ class SimpleTextWdgt extends TextWdgt
     # ~:1258). Removed 2026-07-03 (Tier H1).
     return
 
-  # The whole CONTROLLER surface is inherited from StringWdgt -- updateTarget, reactToTargetConnection,
-  # openTargetPropertySelector and stringSetters were all byte-identical overrides here and were dropped
-  # 2026-07-15. A plain-text controller drives its target exactly the way a StringWdgt does, so there is
-  # nothing to specialise: StringWdgt's stringSetters already contributes the same ["bang!", "text"] pair
-  # (re-adding it here was a no-op -- _appendSettersAndDedup dedupes), and its openTargetPropertySelector
-  # already passes the stringSetters table, which is the right one for this family.
+  # The whole CONTROLLER surface is inherited from StringWdgt -- updateTarget, reactToTargetConnection
+  # and the setter tables were all byte-identical overrides here and were dropped 2026-07-15. A
+  # plain-text controller drives its target exactly the way a StringWdgt does, so there is nothing to
+  # specialise: StringWdgt declares the `text` pin and `producesPinKind: "string"` for the family, and
+  # openTargetPropertySelector is now one shared method on Widget. All this class adds is the `bang`
+  # pin above, because `bang` is the one controller verb that IS specific to it.
 
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the

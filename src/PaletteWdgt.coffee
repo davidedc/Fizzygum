@@ -18,6 +18,11 @@ class PaletteWdgt extends Widget
   argumentToAction: undefined
   choice: undefined
 
+  # I drive colours. No principalPinLabel: the colour I export is @choice, which is not reachable
+  # through any pin of mine (my own `color` pin is my chrome, as on every widget), so dataflowValue
+  # answers it directly — see the note there.
+  producesPinKind: "color"
+
   constructor: (@target, sizePoint) ->
     super()
     @__commitExtent sizePoint or @defaultSize()
@@ -68,23 +73,8 @@ class PaletteWdgt extends Widget
     @choice = @getPixelColor pos
     @updateTarget()
 
-  # the three setter flavours each append the same "bang!" entry on top of the
-  # ControllerMixin's list, then dedupe — factored here to kill the triplication.
-  # (The append+dedupe tail itself is Widget._appendSettersAndDedup, shared with the other controllers.)
-  addBangSetter: (menuEntriesStrings, functionNamesStrings) ->
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["bang!"], ["bang"]
-
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @addBangSetter menuEntriesStrings, functionNamesStrings
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @addBangSetter menuEntriesStrings, functionNamesStrings
-
-  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @addBangSetter menuEntriesStrings, functionNamesStrings
+  # ONE pin: "a bang takes a value of any kind" is a property of the pin, so it is stated on the pin.
+  pins: -> super().concat [ new PinSpec "bang!", "any", set: "bang" ]
 
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
@@ -102,8 +92,10 @@ class PaletteWdgt extends Widget
     @_fireConnection @choice
     return
 
-  # node protocol: a palette's fired value is its picked @choice colour (Widget.exportedValue doesn't cover it
-  # — a palette defines no getColor).
+  # node protocol: a palette's fired value is its picked @choice colour. Widget.exportedValue doesn't
+  # cover it — that reads my PRINCIPAL PIN, and @choice is not a pin: nothing can drive it (you pick a
+  # colour by dragging across me), and a read-only pin would be a pin nobody can wire. So the node
+  # protocol answers it directly, which is exactly the seam dataflowValue exists for.
   dataflowValue: -> @choice
 
   reactToTargetConnection: ->
@@ -111,9 +103,7 @@ class PaletteWdgt extends Widget
   # palette menu:
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    @_addTargetConnectionMenuEntries menu, "color"
+    @_addTargetConnectionMenuEntries menu
 
   # openTargetSelector: -> taken from the ControllerMixin
-
-  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    @_popUpTargetPropertyMenu theTarget, theTarget.colorSetters()
+  # openTargetPropertySelector: -> one shared method on Widget, driven by producesPinKind

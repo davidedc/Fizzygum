@@ -476,19 +476,37 @@ mark after `add` + `setExtent` adds nothing.
 rewireable and serializable by the generic machinery, and a wire *is* a dataflow edge
 ([`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)).
 
-**To be driven by others**, list the properties in `numericalSetters` / `stringSetters` /
-`colorSetters`, always appending to `super`'s lists:
+**To be driven by others**, declare your pins in `pins`, always concatenating onto `super`'s — one
+`PinSpec` per pin, never one entry per kind:
 
 ```coffee
-numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-  [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-  @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings,
-    ["value", "start"], ["setValue", "setStart"]
+pins: -> super().concat [
+  new PinSpec "value", ["numerical", "string"], set: "setValue", get: "getValue"
+  new PinSpec "start", "numerical",             set: "setStart"
+  new PinSpec "bang!", "any",                   set: "bang"
+]
 ```
 
+- `kind` is one kind, an array of them, or `"any"` — the last meaning the pin *ignores* the value's
+  kind (a bang), not "all the kinds that exist today".
+- **`get` is optional and its absence is a statement**: a pin with no reader is WRITE-ONLY — it can
+  be driven and can never be bound two-way. Do not invent a reader method to fill the slot; most of
+  `Widget`'s own pins are write-only because no reader method exists for them, and *that is the
+  honest declaration*. `width`/`height` are write-only **deliberately** even though `width()` and
+  `height()` exist: a readable pin is a licence to bind, and geometry is where the one-way
+  layout↔dataflow law forbids it.
+- **`set` is optional too**: a pin with no setter is READ-ONLY and never appears in a
+  "choose target property" menu, because nothing can drive it (`ColorPickerWdgt`'s picked colour).
+- **Declare a pin on the class that implements its verb.** Declaring it higher advertises it for
+  every subclass, and a target property that dispatches to a missing method fails *silently* —
+  `consumer[action]?.call` swallows the miss.
+- Dropping `super()` from the chain silently narrows your widget to only its own pins.
+
 **To drive others**, `@augmentWith ControllerMixin`, keep `@target`/`@action`, fire through
-`@_fireConnection value`, and append the shared connect block with
-`@_addTargetConnectionMenuEntries menu, "numerical"`.
+`@_fireConnection value`, declare `producesPinKind: "numerical"` (the kind of value you *produce*),
+and append the shared connect block with `@_addTargetConnectionMenuEntries menu`. That one field is
+read by both halves of the set-target UI — the target-property menu filters by it and the tooltip is
+worded from it — so the two cannot describe different things.
 
 ### The pin-setter contract
 
@@ -513,8 +531,12 @@ setFoo: (fooOrWidgetGivingFoo, widgetGivingFoo) ->
 The **idempotence guard is not an optimisation** — it is what stops a wired circuit from re-firing on
 an unchanged value. The **return** is what lets a caller chain off the coerced result.
 
-**Export a value** if the widget is meaningful as a spreadsheet cell's content: `getValue` (or
-`dataflowValue` for a computed one) joins it to the value protocol.
+**Export a value** if the widget is meaningful as a spreadsheet cell's content: name your principal
+pin with `principalPinLabel: "value"`, and `Widget.exportedValue` reads it through that pin's `get`.
+A widget that names none exports nothing — which is the right answer far more often than it looks,
+and is why `MenuHeader` no longer exports the child widget it happens to keep in `@text`. Override
+`dataflowValue` instead only when the exported value is *not* one of your pins at all (a patch node's
+computed `@output`, a palette's picked `@choice` — values nothing can drive).
 
 ---
 
@@ -728,9 +750,18 @@ class FooWdgt extends Widget
     @_fireConnection @level
     return
 
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["level"], ["setLevel"]
+  # what I offer as a SINK, one PinSpec per pin. `get` names a reader that MUST exist — omit it
+  # instead (declaring a WRITE-ONLY pin) rather than inventing one.
+  pins: -> super().concat [
+    new PinSpec "level", "numerical", set: "setLevel", get: "getValue"
+  ]
+
+  # the pin whose value I EXPORT (to a spreadsheet reference, to the drain), named by its label
+  principalPinLabel: "level"
+
+  # what kind of value I produce as a SOURCE — read by BOTH the target-property menu and the
+  # set-target tooltip, so they cannot describe different things
+  producesPinKind: "numerical"
 
   # ---- input + menu --------------------------------------------------------
 

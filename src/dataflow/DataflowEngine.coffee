@@ -250,6 +250,12 @@ class DataflowEngine
   # A node's current value: its own reader if it has one, else the last value the drain stored.
   pullValue: (node) -> node.dataflowValue?() ? @lastValues.get node
 
+  # A pin-aware sibling of pullValue -- "an edge wrote this pin; what does it hold now?", answered
+  # via the target's PinSpec reader (Widget.pinDrivenBy -> getterName) -- is what the REVERSE edge
+  # will pull, and the pin protocol now makes it writable in three lines. It is deliberately NOT here
+  # yet: its first consumer is the `bind` gesture (connector plan P2/P7), and a method with no caller
+  # can neither be verified nor kept honest -- the dead-method gate says so and it is right.
+
   _valuesEqual: (a, b) -> if a?.equals? then a.equals b else a is b
 
   # ── THE TWO MARKING VERBS (spec §3, §5) ──────────────────────────────────────────────────

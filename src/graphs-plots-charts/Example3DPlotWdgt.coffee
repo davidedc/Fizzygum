@@ -49,17 +49,10 @@ class Example3DPlotWdgt extends Widget
   reactToTargetConnection: ->
     @_calculateNewPlotValues()
 
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    if !menuEntriesStrings?
-      menuEntriesStrings = []
-      functionNamesStrings = []
-    menuEntriesStrings.push "param"
-    functionNamesStrings.push "setParameter"
-
-    if @addShapeSpecificNumericalSetters?
-      [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
-
-    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+  # ⚠ `super().concat` — a plot offers its own `param` pin ON TOP OF every inherited one
+  # (width/height/alpha/padding and the appearance's). Dropping the chain here silently narrows a
+  # plot to a single pin, which is a failure that looks exactly like a deliberate declaration.
+  pins: -> super().concat [ new PinSpec "param", "numerical", set: "setParameter" ]
 
   # ---------------------------------------------------------------
   # Outside of a stack, the plot can take any dimension.

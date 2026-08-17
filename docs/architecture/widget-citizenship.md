@@ -90,7 +90,7 @@ citizen:
    is the universal front door (edit, inspect, resize, attach, duplicate…), so every widget
    is automatically editable and inspectable without any per-widget tooling.
 4. **It exposes pins.** A citizen is *wireable*: it enumerates the properties others may
-   drive (`numericalSetters()` / `stringSetters()` — which populate the target-chooser menus)
+   drive (`pins()`, one `PinSpec` each — which populate the target-chooser menus)
    and can itself drive a chosen `@target`/`@action` (`ControllerMixin`). These wires are not
    decoration: a wire IS a dataflow edge (the engine's edge index derives from
    `@target`/`@action` — [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)

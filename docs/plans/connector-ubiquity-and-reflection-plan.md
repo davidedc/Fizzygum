@@ -1,9 +1,13 @@
 # Connector ubiquity & the controller-is-a-view law
 
-**STATUS: design-stage, AUTHORED 2026-08-14. Owner-gated. ONE step executed: P9 LANDED 2026-08-16**
-(the `@target` disambiguation — §6's step 3; see the P9 section for what actually landed and what it
-deliberately left alone). Everything else is still design-stage with no code written.
-Anchor on **symbol names** (verified against `src/` on 2026-08-14); line numbers drift.
+**STATUS: partly executed. AUTHORED 2026-08-14, owner-gated. TWO steps landed 2026-08-16 — P9**
+(the `@target` disambiguation, §6 step 3) **and P1** (`PinSpec`, §6 step 4). Each section says what
+actually landed, what deviated from its sketch, and what it deliberately left alone; **read a
+section's "As landed" block before trusting its sketch**. Everything else is still design-stage with
+no code written. §6's steps 1 and 2 (P5+P7, P6) are still open and were *skipped over*, not
+superseded: they carry no engine risk and remain the cheapest way to test the law.
+Anchor on **symbol names**; §2's current-state survey was verified against `src/` on 2026-08-14 and
+its §2.4 is now history — P1 replaced the write-only tables it describes. Line numbers drift.
 Self-contained.
 
 **Not** a plan to extend the wire *vocabulary* — that arc exists and is untouched by this one
@@ -128,9 +132,14 @@ It exists on one class and has exactly one caller in the whole tree
 (`VideoScrubberWdgt`, `:29`). **The concept "reflect without firing" is already named and is
 already understood; it is simply not a system.**
 
-### 2.4 The pin vocabulary is WRITE-ONLY
+### 2.4 The pin vocabulary is WRITE-ONLY — ⚠ **SUPERSEDED by P1 (landed 2026-08-16)**
 
-`Widget.colorSetters()` / `stringSetters()` / `numericalSetters()` / `allSetters()` return a pair of
+*This section describes the state P1 changed; it is kept because it is the argument FOR P1, and
+because the last paragraph's two riders are the record of what P1 then found. For what the pin
+protocol is now, read P1's "As landed" and
+[`../architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) §11.*
+
+`Widget.colorSetters()` / `stringSetters()` / `numericalSetters()` / `allSetters()` returned a pair of
 parallel arrays — `[labels], [setterMethodNames]` — and that is the entire pin protocol. There is
 **no reader table**. Consequences:
 
@@ -148,7 +157,7 @@ a plot is never one). Both are evidence that the pin protocol is convention rath
 
 ### 2.5 Non-widget state is not addressable at all
 
-Three important state holders are neither widgets nor nodes, appear in no setter table, and
+Three important state holders are neither widgets nor nodes, declare no pins, and
 therefore cannot be wired, read, or observed:
 
 | state | home | how it changes | who is told |
@@ -236,7 +245,7 @@ strong and it would fork the mechanism.
 
 | # | Gap | Blocks |
 |---|---|---|
-| **G1** | **Write-only pins.** Setter tables have no reader twin; a node has one `dataflowValue()`, not a value per pin. | any generic reverse edge; showing current values; per-property spreadsheet reads |
+| **G1** | ~~**Write-only pins.**~~ ✅ **CLOSED by P1** (2026-08-16): a `PinSpec` may declare a reader, and `Widget.exportedValue` is now a declared principal pin rather than a duck-typed probe. What remains is populating readers — most pins are still write-only, honestly so. | ~~any generic reverse edge; showing current values; per-property spreadsheet reads~~ |
 | **G2** | **Single-slot, one-way wires.** One `@target`/`@action` ⇒ one out-edge; no un-wire; fan-out only via a non-production widget. | two-way binding (the return wire has nowhere to live); the citizenship doc's own claim |
 | **G3** | **Change announcement is opt-in and rare.** Six classes announce, for one property each. | anything driven by a menu, a script, the loader, or another widget's method call |
 | **G4** | **Non-widget state has no node identity.** Wallpaper, preferences, scroll offset. | the wallpaper-menu complaint outright |
@@ -251,7 +260,7 @@ Complaint ① is G5 + G1 + G4(scroll). Complaint ② is the *view* half of the l
 
 Ordered by dependency, not by value. §6 gives the recommended landing order, which is different.
 
-### P1 — Pins become readable
+### P1 — Pins become readable — ✅ **LANDED 2026-08-16**
 
 Replace the parallel-array pin tables with a record per pin, the way `MenuItemSpec` already replaced
 a twelve-argument positional list:
@@ -275,6 +284,67 @@ class PinSpec
 
 Cost is real but bounded: ~19 setter overrides on 9 classes. Menu labels are unchanged, so screenshot
 churn should be limited to inspector member-list shifts (the familiar benign recapture class).
+
+#### As landed
+
+`src/basic-widgets/PinSpec.coffee` + `Widget.pins` / `pinsOfKind` / `pinLabelled` / `principalPin`,
+replacing `colorSetters` / `stringSetters` / `numericalSetters` / `allSetters` /
+`deduplicateSettersAndSortByMenuEntryString` / `_appendSettersAndDedup` /
+`addShapeSpecificNumericalSetters` (all DELETED). **19 setter overrides on 9 classes → 9 `pins`
+declarations.**
+
+Six deviations from the sketch above, each because building it made the sketch wrong:
+
+| # | sketch | as landed | why |
+|---|---|---|---|
+| 1 | `@set` / `@get` | `setterName` / `getterName` | they hold method NAMES; `pin.get()` is a call waiting to be written by mistake |
+| 2 | `(label, kind, set, get)` positional | `(label, kind, opts)` with `set`/`get` in `opts` | `set` and `get` are *independently* optional, so positional forces a hole (constructor conventions R3) |
+| 3 | `kind` is one of three strings | one kind, an ARRAY of kinds, or `"any"` | `bang` accepts anything and a patch-node input accepts string-or-numerical. **This is where the 19→9 collapse comes from**: one table per kind meant a pin taking any value had to be declared once per table |
+| 4 | `get: undefined` ⇒ write-only | *plus* `set: undefined` ⇒ READ-ONLY | `ColorPickerWdgt.getColor` reads `@feedback.color` while `Widget.setColor` writes `@color` — different properties. The arrays could not express a readable-but-undrivable pin at all |
+| 5 | principal pin named by setter | named by LABEL (`principalPinLabel`) | a read-only principal pin has no setter to be named by |
+| 6 | `DataflowEngine.pullPinValue` lands here | lands with its first caller (P2/P7) | it has no consumer until the reverse edge, and the dead-method gate is right to refuse an unverifiable method. `Widget.pinLabelled` + `PinSpec.getterName` are the whole mechanism; the pull is three lines on top |
+
+**`producesPinKind` is the other half.** Every controller declared the kind it drives TWICE, in two
+unrelated places — by which setter table its `openTargetPropertySelector` passed, and by the word its
+`_addTargetConnectionMenuEntries` put in a tooltip — and nothing compared them. Two disagreed
+(`SimpleTextWdgt` said "numerical" while offering string pins; `FanoutPinWdgt` said "color" while
+offering all of them). One class-level field now feeds both, which let the 5 per-class
+`openTargetPropertySelector` stubs collapse into one shared method on `Widget`.
+
+**Three defects the arrays were hiding**, each found by having to state a pin exactly once:
+
+1. **`StringWdgt` advertised a `bang` pin it does not implement.** `bang` is on `SimpleTextWdgt`, so
+   wiring anything to a plain `TextWdgt`/`StringWdgt` offered a target property that dispatched to
+   nothing — `consumer[action]?.call` swallows the miss silently. The pin now sits on the class with
+   the verb.
+2. **`Example3DPlotWdgt.numericalSetters` did not call `super`** (the rider the plan predicted): it
+   rebuilt the accumulator from scratch, so a plot advertised `param` and *nothing else* — no
+   width/height/alpha/padding, no shape pins. With parallel arrays, forgetting to chain looks
+   identical to declaring your own table; `super().concat` cannot make that mistake.
+3. **`deduplicateSettersAndSortByMenuEntryString` deduped its two arrays INDEPENDENTLY**, with two
+   separate `Set`s. A label repeated against a different setter (or the reverse) shortened one array
+   and not the other, silently pairing every later label with the wrong setter. Latent, not live —
+   every duplicate in the tree happened to be a 1:1 pair — and gone by construction now that a pin is
+   one object.
+
+**`exportedValue` is now the principal pin's value**, not `getColor?() ? getValue?() ? @text`. The
+old chain's `@text` arm was wrong for the two classes where `@text` holds a child WIDGET
+(`StringFieldWdgt`, `MenuHeader`) and only got `StringFieldWdgt` right by accident, because
+`getValue` came earlier in the probe order. `MenuHeader` now exports nothing, which is correct.
+
+**One cost, measured not assumed.** `exportedValue` is reached by `dataflowValue`, which the drain
+PULLS on every pass — and it now walks `pins()`, which BUILDS its `PinSpec` list per call (~10 for a
+bare widget, ~15 for a slider). The old duck-typed chain was three property lookups and zero
+allocation. Measured: the dpr1 suite ran 64 s against 63 s before, and the paint audit 92 s against
+92 s — no detectable change, which is unsurprising in a tree with 941 `new Point` sites on hotter
+paths than this. **So it is recorded, not optimised.** If it ever does show up, the fix is a per-class
+memo of the DECLARED pins (sound: only the appearance's contribution is instance-dependent, and the
+principal pin is never an appearance pin) — do not reach for it without a measurement that says so.
+
+**Deliberately NOT done:** `width`/`height` stay WRITE-ONLY although `width()`/`height()` are right
+there. A readable pin is a licence to bind, and geometry under the one-way layout↔dataflow law is
+where that is not affordable — §8 open question 1. That is now a one-line change when the owner
+answers it. `ScrollPanelWdgt` still advertises no pins (§P8 owns that).
 
 ### P2 — Reciprocal binding: **two wires, not a new edge kind**
 
@@ -316,7 +386,8 @@ already effectively does it via `updateTarget`, `setPattern`, …). `updateTarge
 special case of `_notePinChanged` for the principal pin.
 
 ⚠ **Geometry pins are the genuinely hard case and should be excluded from v1.** `width`/`height`/
-`padding` are pins today (`Widget.numericalSetters` → `_applyWidth`, `_applyHeight`, `setPadding`),
+`padding` are pins today (`Widget.pins` → `_applyWidth`, `_applyHeight`, `setPadding` — all
+WRITE-ONLY, which is P1's holding position on exactly this question),
 and they are written *inside the layout settle*. The engine's standing law is that the coupling is
 one-way — dataflow may dirty layout; **layout must never mark dataflow stale** (spec §5, the
 `DataflowEngine` class header, the `doOneCycle` comment). A `_notePinChanged` in `_applyWidth`
@@ -462,7 +533,7 @@ law, because "unify the two `@target`/`@action` mechanisms" looks obviously righ
 @target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
 ```
 
-It does **not** `@augmentWith ControllerMixin`, declares no edge, and appears in no setter table. The
+It does **not** `@augmentWith ControllerMixin`, declares no edge, and declares no pins of its own. The
 population is large: `MenuItemWdgt` extends `LabelButtonWdgt` extends `ButtonWdgt`, so **every one of
 the 328 `addMenuItem` call sites in `src/` is a button edge** — roughly two orders of magnitude more
 than the wire edges.
@@ -652,7 +723,7 @@ carry zero engine risk, which makes them the right way to test the law before pa
 | 1 | **P5 + P7** — wallpaper (and input mode) as nodes; ticks as reflection | **none** | complaint ③ |
 | 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) | **none** | complaint ②'s view half |
 | 3 | **P9** — the `@target` renames ✅ **LANDED 2026-08-16** | none | reading hazard |
-| 4 | **P1** — `PinSpec` with readers | pull-a-pin | unblocks 5–6 |
+| 4 | **P1** — `PinSpec` with readers ✅ **LANDED 2026-08-16** | none (the pull lands with P2) | unblocks 5–6 |
 | 5 | **P4** — a controller owns a list of wires | index mirroring; **serialization surface** | G2; frees `FanoutWdgt` |
 | 6 | **P2** — the `bind ⇄` gesture | none (two ordinary wires) | the headline |
 | 7 | **P8** — scroll pins + reverse edge, retire the field plumbing | none, given 1/4/5 | complaint ① |
@@ -693,8 +764,10 @@ wire-vocabulary plan's W2 is waiting for.
 
 1. **Geometry pins** — accept write-only (§P3 option a), or is a bounded exception to the one-way
    layout↔dataflow law worth designing?
-2. **`PinSpec` record vs. keeping parallel arrays** with a third `[readers]` column. The record is
-   the regularity-principles answer; the arrays are the smaller diff.
+2. ~~**`PinSpec` record vs. keeping parallel arrays** with a third `[readers]` column.~~ **ANSWERED
+   2026-08-16 — the record**, and the third column would not have been enough anyway: a reader is
+   only one of the two things arrays cannot state (the other is a pin accepting more than one kind,
+   which is where 19 overrides collapsed to 9). See P1 "As landed".
 3. **Bind-time precedence** — "the side whose menu you opened pushes" (§P2), or an explicit
    source/mirror choice in the gesture?
 4. **Palette off-map colours** — distinct "off-map" marker, nearest-point snap, or no marker at all

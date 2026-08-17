@@ -99,6 +99,13 @@ class StringFieldWdgt extends PanelWdgt
   getValue: ->
     @text.text
 
+  # READ-ONLY principal pin: I hold my string in a child StringWdgt (@text is that WIDGET, not a
+  # string), so getValue reaches through it and there is no one-call setter twin to pair it with.
+  # Declaring the pin is what makes my exported value `@text.text` rather than the child widget
+  # itself — see the warning on Widget.exportedValue.
+  pins: -> super().concat [ new PinSpec "value", "string", get: "getValue" ]
+  principalPinLabel: "value"
+
   mouseClickLeft: (pos)->
     @bringToForeground()
     if @isEditable

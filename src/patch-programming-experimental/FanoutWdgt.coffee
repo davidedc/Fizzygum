@@ -46,17 +46,9 @@ class FanoutWdgt extends Widget
   # @inputValue for the cutoff. (homepage-excluded.)
   dataflowValue: -> @inputValue
 
-  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
-
-  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
-
-  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
-    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    @_appendSettersAndDedup menuEntriesStrings, functionNamesStrings, ["input"], ["setInput"]
+  # ONE pin, "any" kind — a fanout forwards whatever it was handed, so the value's kind is none of
+  # its business.
+  pins: -> super().concat [ new PinSpec "input", "any", set: "setInput" ]
 
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout

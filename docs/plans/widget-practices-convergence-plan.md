@@ -304,12 +304,21 @@ starting W6.**
    setter with an equal value. So a per-setter guard would newly suppress the setter's own side
    effects (its `_changed()` repaint and any onward fire), which is a real behaviour change and the
    reason D3 wants its own commit.
-3. **W6a collides with the sibling arc's P1 in DIRECTION, not just in files.**
+3. **W6a collided with the sibling arc's P1 in DIRECTION, not just in files — ✅ RESOLVED: P1 went
+   first (landed 2026-08-16), on the owner's direction.**
    [`connector-ubiquity-and-reflection-plan.md`](connector-ubiquity-and-reflection-plan.md) §P1
-   replaces the duck-typed `getColor?() ? getValue?() ? @text` coercion with an explicit `@get` on a
-   `PinSpec` record, and costs "~19 setter overrides on 9 classes" — the same overrides W6a would
-   rewrite. If W6a standardises ON the slot-2 duck-typed coercion it entrenches exactly what P1
-   deletes. Sequence P1 first, or make W6a's target shape the one P1 is heading for.
+   replaced the duck-typed `getColor?() ? getValue?() ? @text` coercion with declared `PinSpec`
+   readers, over "~19 setter overrides on 9 classes" — the same overrides W6a would rewrite. Had W6a
+   gone first and standardised ON the slot-2 duck-typed coercion, it would have entrenched what P1
+   deletes, at the cost of a double rewrite.
+   ⚠ **What P1 actually did is NARROWER than that prediction, so re-derive §2.6 rather than assuming
+   it dissolved.** P1 replaced the pin DECLARATION (the four setter tables → one `pins` list of
+   `PinSpec` records) and the exported-value reader — it did **not** touch a single setter BODY. So
+   the five shapes below are all still in the tree and this table is, as far as anything verified,
+   still accurate; re-derive it from `node buildSystem/census-widget-conformance.js --json` (facet 5)
+   before starting, since the counts here are a 2026-08-14 snapshot. The one change that matters to
+   W6: `exportedValue` no longer probes `getValue?()`, so a setter's slot-2 coercion is now the LAST
+   duck-typed reader in this family — which strengthens the case for W6a rather than dissolving it.
    ⚠ Also worth checking before D3: P2's proposed bind-time rule ("the side whose menu you opened
    pushes") depends on both wires FIRING at bind time; an idempotence guard could swallow the second
    fire when the two sides already agree.

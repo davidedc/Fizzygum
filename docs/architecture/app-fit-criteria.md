@@ -73,9 +73,9 @@ assume they own the screen. Slogan: **materials, not destinations.**
 ## B. Connectivity — the mashup dividend
 
 **6. Pin surface, in both directions.**
-Count what fraction of the interesting behaviour can be advertised as pins (the three
-setter tables — `numericalSetters()` / `stringSetters()` / `colorSetters()` — plus
-`@target`/`@action` driving, [`widget-citizenship.md`](widget-citizenship.md) point 4).
+Count what fraction of the interesting behaviour can be advertised as pins (`pins()`, one
+`PinSpec` per pin, plus `@target`/`@action` driving,
+[`widget-citizenship.md`](widget-citizenship.md) point 4).
 Then check *direction*: sinks (tempo, transpose, colour) let the world drive the app;
 **sources** (current-step, computed value, detected event) let the app drive the world —
 rarer and more valuable, because a source turns the app into an instrument for

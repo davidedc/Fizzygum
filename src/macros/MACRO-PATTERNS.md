@@ -1325,7 +1325,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`macroUniqueTargetAndPropertyAreStillPresented`): a lonely ColorPaletteWdgt has exactly ONE plausible target (the world),
   yet `openTargetSelector` still opens the one-item "choose target:" menu (no silent auto-pick); clicking it opens the
   "choose target property:" menu (`ColorPaletteWdgt.openTargetPropertySelector`, `ColorPaletteWdgt.coffee:111`, from
-  `target.colorSetters()` — the world offers "background color" + "color"), and picking "color" yields a binding a palette
+  `target.pinsOfKind "color"` — the world offers "background color" + "color"), and picking "color" yields a binding a palette
   click then proves (the whole desktop recolours). To screenshot BETWEEN the menus, hand-roll the
   `setControllerTargetToWidgetProperty…` chain and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
   after "set target"; `propertyMenu = …` right after the target click), driving later clicks via the captured refs. GOTCHA:

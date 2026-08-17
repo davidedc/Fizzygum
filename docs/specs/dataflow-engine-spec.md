@@ -310,13 +310,14 @@ widget. No marker syntax.
 ### 9.3 Values, exported values, and references
 - A reference yields the referenced cell's **value**.
 - If that value is a **Widget**, the reference yields the widget's **exported value**
-  instead: `Widget.exportedValue()` — the unified reader over today's duck-typed cluster
-  (`getColor()` ?? `getValue()` ?? `@text`). A widget exporting nothing yields itself.
-  The cluster is thinner than the shorthand reads (verified 2026-07-05): only
-  `ColorPickerWdgt` defines `getColor`, only `StringFieldWdgt` defines `getValue`;
-  `SliderWdgt` holds a bare `@value` property — such widgets gain the missing reader
-  (`getValue: -> @value`) when they join the protocol (plan Phase 4), keeping
-  `exportedValue` one uniform chain.
+  instead: `Widget.exportedValue()` — the value of the widget's **principal pin**, named by
+  its `principalPinLabel` and read through that pin's declared getter
+  ([`../architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md)
+  §11). A widget that names no principal pin exports nothing, and the reference then yields
+  the widget itself. Four classes name one today: `SliderWdgt` (`value`), the `StringWdgt`
+  family (`text`), `StringFieldWdgt` and `ColorPickerWdgt` (both READ-ONLY pins — nothing can
+  drive them). A widget whose exported value is not a pin at all overrides `dataflowValue`
+  instead (a patch node's `@output`, a palette's `@choice`).
 - The cell **socket** is the two-way boundary adapter: it mounts the presenter/widget, and
   it is the connection target that interactive widget-sources (slider, picker, clock) fire
   into — each firing is a `markStale` on the cell.
@@ -341,7 +342,7 @@ cell).
 - An optional **`FormulaHelpers`** veneer provides free-function style (`mix A1, B1`),
   bound by the identifier scan; helpers delegate to methods.
 - An **"operate ➜" menu** on a cell enumerates the value class's methods via the meta
-  system (mirror of the `colorSetters`/`numericalSetters` introspection menus) and writes
+  system (mirror of the pin-declaration introspection menus, `Widget.pins`) and writes
   formula text into a new cell.
 - **Purity law (normative):** operations used in formulas return new values and never
   mutate the receiver. `Color` is now officially immutable-and-cached (`Color.create` LRU
