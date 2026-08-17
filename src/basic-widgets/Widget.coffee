@@ -3024,11 +3024,21 @@ class Widget extends TreeNode
   # pointer" demo menu item and PointerWdgt's own restore) are absent there too.
   createPointerWdgt: ->
     return unless PointerWdgt?
+    # a widget with no parent has nowhere to BE replaced, and the add below would throw on it
+    return unless @parent?
     myPosition = @positionAmongSiblings()
     widgetToAdd = new PointerWdgt @
     @parent.add widgetToAdd, atIndex: myPosition
     widgetToAdd.setBounds @position(), new Point 150, 20
-    @removeFromTree()
+    # ⚠ A container may EVICT me as part of accepting my replacement, in which case the add above
+    # has ALREADY done the removal half of this swap and I am parentless: a FrameWdgt holds exactly
+    # ONE content widget and swaps it (FrameWdgt._addNoSettle -- `@removeChild @contents`), so a
+    # receiver that IS a window's content reaches this line already detached. Adding is NOT
+    # universally additive, and a caller that swaps has to say which half of the swap it still owes.
+    #   Asking the container to do the whole swap (`@parent.replaceChild @, widgetToAdd`) is the
+    # tidier shape and deliberately NOT built: it would be a container protocol with exactly one
+    # caller. Introduce it with the SECOND one.
+    @removeFromTree() if @parent?
 
   # THE MENU ADAPTER for the "create shortcut" item — the shape shared with
   # PanelWdgt.makeFolderFromMenu and StringWdgt.setFontNameFromMenu. ButtonWdgt dispatches a FIXED
