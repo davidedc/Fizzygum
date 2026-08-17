@@ -244,14 +244,20 @@ lists, not from how many classes inherit the field.
       `FridgeMagnets3DCanvasWdgt`, `Pencil2IconWdgt`). Verified IN THE RUNNING WORLD
       (`.scratch/w7-derived-name-probe.js`): the meta-system resolves `constructor.name`, and **0 of 258
       classes still answer "generic widget"**.
-- [ ] **W7 follow-up — the capitalisation pass (taste call, not structural).** ~11 overrides differ from
-      their derivation only in case (`"Calculating patch node"`, `"Generic panel"`, `"Video player"`,
-      `"Video controls"`, `"Video duration"`, `"Flora icon"`, `"Heart icon"`, `"Simple link"`,
-      `"Diffing patch node"`, `"Error log"`, the three `Example*Plot`s) — habit rather than intent, since
-      the house style is lowercase (`ConsoleWdgt` lowercases defensively; the inspector parenthesises).
-      Genuinely proper nouns to KEEP: `"Desktop"`, `"Bin"`, `"Shelf"`, `"Fizzytiles"`, `"Patch
-      Programming"` and the four `"… Maker"`s. Deferred out of W7 because it has a real recapture cost
-      and no structural content.
+- [x] **W7 follow-up — the capitalisation pass — ✅ DONE 2026-08-17, owner-confirmed.** 15 overrides
+      lowercased to the house style (`ConsoleWdgt` lowercases defensively; the inspector parenthesises);
+      left capitalised because they are NAMES rather than descriptions: `"Desktop"`, `"Bin"`, `"Shelf"`,
+      `"Fizzytiles"`, `"Patch Programming"`, the four `"… Maker"`s, `"3D plot"`, `"HH:MM:SS label"` and
+      the two quoted-icon names. ⭐ **Not just a re-casing:** lowercasing made **8 of the 15 identical to
+      the derivation**, so they stopped being overrides and were deleted — and `DividerWdgt` became
+      deletable only because W7 had already removed `RectangleWdgt` from its chain. ⇒ a cosmetic
+      normalisation can turn a "deliberate" override into a redundant one; re-run the resolver AFTER the
+      edit. ⚠ **The inheritance trap fired a second time:** `GenericPanelWdgt` lowercased to
+      `"generic panel"` looks identical to its derivation but extends `FrameWdgt`, so deleting it would
+      have answered `"window"` — kept, like `SpreadsheetWdgt`. Verified in the running world
+      (`.scratch/w7-capitalisation-check.js`): all 27 touched/must-not-touch classes resolve as intended,
+      the five `video-player`-part ones covered by a second `--includeVideoPlayer` run rather than left
+      unchecked.
 - [ ] **W7 residue — `representativeIcon`.** The other half of §2.7 (257 classes answer the base
       `new WidgetIconWdgt`) is untouched: unlike a name, an icon cannot be derived from a class name, so
       it stays the hand-written job the plan described — worth doing only for what can be referenced

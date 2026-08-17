@@ -27,7 +27,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @_buildAndConnectChildren()
 
   colloquialName: ->
-    "Error log"
+    "error log"
 
   closeFromContainerFrame: (containerWindow) ->
     @parent.hide()

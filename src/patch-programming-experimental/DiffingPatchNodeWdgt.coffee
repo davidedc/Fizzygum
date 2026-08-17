@@ -20,8 +20,6 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
     @input1 = ""
     @input2 = ""
 
-  colloquialName: ->
-    "Diffing patch node"
 
   setInput1: (newvalue, ignored) ->
     @input1 = newvalue

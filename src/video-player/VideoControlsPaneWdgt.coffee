@@ -15,7 +15,7 @@ class VideoControlsPaneWdgt extends RectangleWdgt
   videoPlayerCanvas: undefined
 
   colloquialName: ->
-    "Video controls"
+    "video controls"
 
   constructor: (@videoPlayerCanvas) ->
     super new Point(20, 20), Color.TRANSPARENT

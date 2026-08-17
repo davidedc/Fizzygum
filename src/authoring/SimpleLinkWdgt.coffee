@@ -22,8 +22,6 @@ class SimpleLinkWdgt extends Widget
     super new Point 405, 50
     @_buildAndConnectChildren()
 
-  colloquialName: ->
-    "Simple link"
 
   # open my link's URL in a new browser tab. The external-link button calls this instead of
   # testing `@parent instanceof SimpleLinkWdgt` and reaching into my outputTextArea.

@@ -626,12 +626,28 @@ meta-system does resolve `constructor.name`, and **0 of 258 classes still answer
 ⚠ That probe reads each class through a bare `Object.create(prototype)`, so the classes whose override
 is COMPUTED from instance state necessarily throw in it — a probe artifact, not a finding.
 
-**DEFERRED, deliberately: the capitalisation pass.** ~11 overrides differ from their derivation only
-in case (`"Calculating patch node"`, `"Generic panel"`, `"Video player"`, `"Flora icon"`, …), which is
-habit rather than intent, while others are genuinely proper nouns (`"Desktop"`, `"Bin"`, `"Shelf"`,
-`"Fizzytiles"`, the four `"… Maker"`s). Normalising the first group is a taste call with a real
-recapture cost and no structural content, so it is a separate, listed follow-up rather than smuggled
-into the mechanism change.
+#### The capitalisation pass — owner-confirmed, landed same day
+
+Split out of the mechanism change above because it is a **taste call** (which names are descriptions
+and which are proper nouns), then confirmed by the owner and applied: 15 overrides lowercased to the
+house style, and these left capitalised because they are NAMES — `"Desktop"`, `"Bin"`, `"Shelf"`,
+`"Fizzytiles"`, `"Patch Programming"`, the four `"… Maker"`s, plus `"3D plot"`, `"HH:MM:SS label"` and
+the two quoted-icon names.
+
+⭐ **It was not just a re-casing.** Lowercasing made **8 of the 15 identical to what the derivation
+produces**, so they stopped being overrides at all and were deleted — and one of those, `DividerWdgt`,
+only became deletable because W7 had already removed `RectangleWdgt`'s override from its chain. ⇒ **A
+cosmetic normalisation can turn a "deliberate" override into a redundant one; re-run the resolver
+after the edit rather than before.**
+
+⚠ **And the inheritance trap fired a second time, in the same shape:** lowercasing `GenericPanelWdgt`
+to `"generic panel"` made it look identical to its derivation, but it **extends `FrameWdgt`** — so
+deleting it would have answered `"window"`. Kept, for the same reason `SpreadsheetWdgt` is.
+
+Verified in the running world (`Fizzygum-tests/.scratch/w7-capitalisation-check.js`): all 27 touched
+or must-not-touch classes resolve exactly as intended. ⚠ Five of them live in the `video-player` PART,
+so a default build legitimately has none of them — that leg was covered by a second run against
+`--includeVideoPlayer` rather than left as an unchecked `<absent>`.
 
 **W8 — constructor shapes.** *Owner-gated* (D5), and the largest blast radius. Order:
 `ButtonWdgt` (12 → essentials + `opts`) → `LabelButtonWdgt` (17 → essentials + `opts`, with

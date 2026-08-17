@@ -36,8 +36,6 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     super new Point 200,400
     @_buildAndConnectChildren()
 
-  colloquialName: ->
-    "Calculating patch node"
 
   setInput1: (newvalue, ignored) ->
     @input1 = Number(newvalue)

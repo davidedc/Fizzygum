@@ -70,6 +70,8 @@ class SliderWdgt extends CircleBoxWdgt
     @button = new SliderButtonWdgt
     @_addNoSettle @button
 
+  # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
+  # produce, but I extend CircleBoxWdgt -- so without it the chain answers "circle-box".
   colloquialName: ->
     "slider"
 

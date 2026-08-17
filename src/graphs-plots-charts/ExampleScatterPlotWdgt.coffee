@@ -3,7 +3,7 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
   fps: 1
 
   colloquialName: ->
-    "Scatter plot"
+    "scatter plot"
 
 
   # The paint scaffold is GraphsPlotsChartsAppearance, inherited via

@@ -11,6 +11,9 @@ class SpreadsheetWdgt extends FrameWdgt
   constructor: ->
     super new SimpleSpreadsheetWdgt
 
+  # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
+  # produce, but I extend FrameWdgt -- so without it the chain answers FrameWdgt's "window", not the
+  # derivation, and the title below goes with it. (GenericPanelWdgt sits in the same trap.)
   colloquialName: ->
     "spreadsheet"
 

@@ -7,8 +7,6 @@ class VideoPlayerWdgt extends Widget
   internalPadding: 5
   padding: undefined
 
-  colloquialName: ->
-    "Video player"
 
   constructor: ->
     super new Point 300, 300

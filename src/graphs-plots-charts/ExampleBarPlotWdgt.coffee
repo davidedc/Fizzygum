@@ -3,7 +3,7 @@ class ExampleBarPlotWdgt extends GraphsPlotsChartsWdgt
   fps: 0.5
 
   colloquialName: ->
-    "Bar plot"
+    "bar plot"
 
 
   # The paint scaffold is GraphsPlotsChartsAppearance, inherited via

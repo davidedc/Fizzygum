@@ -3,7 +3,7 @@ class ExampleFunctionPlotWdgt extends GraphsPlotsChartsWdgt
   fps: 2
 
   colloquialName: ->
-    "Function plot"
+    "function plot"
 
 
   # The paint scaffold is GraphsPlotsChartsAppearance, inherited via

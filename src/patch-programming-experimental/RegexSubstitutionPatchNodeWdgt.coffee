@@ -28,7 +28,7 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
     @_buildAndConnectChildren()
 
   colloquialName: ->
-    "Regex subst. patch node"
+    "regex subst. patch node"
 
   setInput1: (newvalue, ignored) ->
     @input1 = newvalue

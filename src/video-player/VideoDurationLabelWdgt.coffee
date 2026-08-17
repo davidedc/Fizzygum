@@ -3,7 +3,7 @@ class VideoDurationLabelWdgt extends HhmmssLabelWdgt
   videoPlayerCanvas: undefined
 
   colloquialName: ->
-    "Video duration"
+    "video duration"
 
   constructor: (@videoPlayerCanvas) ->
     super "n/a", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize

@@ -23,8 +23,11 @@ class GenericPanelWdgt extends FrameWdgt
   _makeStartingPayload: ->
     new StretchableWidgetContainerWdgt
 
+  # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
+  # produce, but I extend FrameWdgt -- so without it the chain answers FrameWdgt's "window", not the
+  # derivation, and the title below goes with it. (SpreadsheetWdgt sits in the same trap.)
   colloquialName: ->
-    "Generic panel"
+    "generic panel"
 
   # the kind names the window -- the base hook would title from the payload's
   # colloquialName ("stretchable panel")

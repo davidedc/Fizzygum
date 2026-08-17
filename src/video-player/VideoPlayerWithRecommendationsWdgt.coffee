@@ -20,8 +20,6 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
   recommendationsPage: 0
 
-  colloquialName: ->
-    "Video player with recommendations"
 
   constructor: ->
     super new Point 300, 300

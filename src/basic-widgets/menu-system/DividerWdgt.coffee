@@ -18,8 +18,6 @@ class DividerWdgt extends RectangleWdgt
     @color = Color.create 230,230,230
     @_applyHeight height + 2
 
-  colloquialName: ->
-    "divider"
 
   # Role query for removeConsecutiveLines' "is this row a divider?" test, dispatched
   # via ?() so non-divider rows (which do not answer it) read falsy -- a duck-typed
