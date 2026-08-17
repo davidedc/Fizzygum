@@ -343,9 +343,9 @@ memo of the DECLARED pins (sound: only the appearance's contribution is instance
 principal pin is never an appearance pin) — do not reach for it without a measurement that says so.
 
 **Deliberately NOT done:** `width`/`height` stay WRITE-ONLY although `width()`/`height()` are right
-there. A readable pin is a licence to bind, and geometry under the one-way layout↔dataflow law is
-where that is not affordable — §8 open question 1. That is now a one-line change when the owner
-answers it. `ScrollPanelWdgt` still advertises no pins (§P8 owns that).
+there — a HOLDING position, not a verdict. It costs nothing today (no binding exists and no menu shows
+current values) and is one line to reverse. §8 q1 was reframed on 2026-08-17: the live candidates are
+(c) and (d), and §P8 is the experiment that chooses between them. `ScrollPanelWdgt` still advertises no pins (§P8 owns that).
 
 ### P2 — Reciprocal binding: **two wires, not a new edge kind**
 
@@ -402,7 +402,44 @@ would break it. Options, none free:
 - (c) a deferred announcement drained on the *next* cycle — reintroduces the one-cadence lag the
   drain placement was chosen to avoid (spec §4.1).
 
-**Recommend (a) for v1**, and record (b)/(c) as considered-and-deferred so nobody re-derives them.
+#### ⚠ REFRAMED 2026-08-17 after an owner challenge — the earlier "recommend (a)" was under-argued
+
+**The one-way law is a consequence of the CYCLE ORDER, not a preference.** `doOneCycle` runs
+`recalculateDataflow()` (values) and *then* `recalculateLayouts()` (geometry). So dataflow→layout
+lands in the SAME frame's paint, while anything layout marks stale has already missed the dataflow
+station. That is the whole content of "layout must never mark dataflow stale".
+
+**Two facts weaken the case for (a) as a permanent answer, and both were missed above:**
+
+1. **Layout ALREADY notifies dependents.** `ScrollPanelWdgt._reLayoutScrollbars` does
+   `if @hBar.target == @ … @hBar.updateSpecs start, stop, value, size` — literally "the layout
+   settled, tell the bound thing", done synchronously and by hand to one hard-coded object. That is
+   gap **G5**. Routing it through the drain GENERALISES a direction the system already has; it does
+   not invent one.
+2. **"It would be a second cadence model" is a weak objection.** The engine already has ordered
+   settle stations. *"Values derived from geometry arrive one station later"* is a statable rule.
+
+**The one real cost is narrower than "a lag": a TRACKING PAIR shears by one frame under fast
+motion.** A monitor showing a window's width does not care about 16 ms. A scrollbar tracking its
+content does — and that is complaint ① exactly. Today the bar and content are welded within a frame
+because `updateSpecs` is synchronous.
+
+**⭐ Whether the shear is VISIBLE is unknown and measurable, and that is the deciding fact.** The
+thumb moves proportionally less than the content (a 300 px content move might be 20 px of thumb), so
+one frame at speed is perhaps 3–5 px. **§P8 is the first real consumer and therefore the experiment:
+build it against (c), drive a fast wheel-scroll, and look.** Do not settle this from priors.
+
+| option | what it costs |
+|---|---|
+| **(a) write-only** | no geometry binding; no current values in connect menus. **The HOLDING position, not the answer** — costs nothing today because neither consumer exists yet, and is one line to reverse |
+| **(b) announce from the desired funnel** | ⛔ **does not work**: `_moveToNoSettle`/`__commitExtent` are the leaves BOTH paths funnel through (a stack arrange calls `_applyWidth` → `__commitExtent` on its children), so it announces from inside the settle — the violation itself |
+| **(b′) announce unless `world._recalculatingLayouts`** | ⛔ **REJECTED PERMANENTLY.** Works for gesture-driven changes and is SILENTLY WRONG for engine-driven ones (resize a window ⇒ its stacked children's widths change inside the settle ⇒ nothing announces). A reader that is right *sometimes*, with the asymmetry invisible to the author, is worse than none — §P1's own "name the asymmetry, do not fake a reader" |
+| **(c) notify at end of layout, drain NEXT frame** | 🟢 **LIVE.** One frame of lag; no extra work. Cost falls only on tracking pairs (see the shear measurement) |
+| **(d) notify at end of layout, drain SAME frame** | 🟢 **LIVE.** No lag; needs a second `recalculateLayouts` in the same cycle (the re-entrancy guard throws only on re-entry from INSIDE a pass, so a sequential second call is legal). `layout → dataflow → layout` is a fixpoint one level up from what each station already does. Wants a cap, as the drain has `DATAFLOW_NONCONVERGENCE` |
+| **(e) readable-for-display, not bindable** | orthogonal and cheap: a menu showing current values needs a PULL, not an announcement, so geometry could answer it with no law involvement. Needs `PinSpec` to separate "has a reader" from "can be bound" — **introduce it with P2**, which must answer "which pins can be bound?" anyway, rather than before a caller exists |
+
+**⇒ Decision recorded: keep (a) as the holding position; (c) and (d) are the live candidates; (b) and
+(b′) are closed. The deciding experiment belongs to §P8.**
 
 ### P4 — A controller owns a LIST of wires
 
@@ -554,6 +591,13 @@ reachable only by direct assignment. Proposal:
 - **retire `_reLayoutScrollbars`'s `if @hBar.target == @ … updateSpecs` field plumbing** in favour of
   the reverse edge, so any number of bars — including duplicates and bars belonging to nobody —
   follow the content. That is complaint ① closed.
+
+⭐ **§P8 IS THE EXPERIMENT that settles §8 q1 (geometry pins).** It is the first real tracking pair —
+a bar that must stay welded to its content — so it is where "does a one-frame lag SHEAR visibly?" gets
+measured rather than argued. Build the reverse channel against **(c)** (notify at the end of layout,
+drain next frame), drive a fast wheel-scroll, and look at the bar. If it shears, **(d)** (same-frame
+drain + a second bounded `recalculateLayouts`) is the answer; if it does not, (c) is, and it is the
+cheaper one. Record the measurement either way — that question has been argued from priors twice.
 
 ⚠ **`updateSpecs` carries four numbers, not one** (`start`, `stop`, `value`, `size`): the bar's
 *range* changes when the content resizes, not only its value. So the reverse channel is genuinely a
@@ -810,8 +854,11 @@ wire-vocabulary plan's W2 is waiting for.
 
 ## 8. Open questions for the owner
 
-1. **Geometry pins** — accept write-only (§P3 option a), or is a bounded exception to the one-way
-   layout↔dataflow law worth designing?
+1. **Geometry pins** — ⚠ **REFRAMED 2026-08-17 (owner discussion). NOT closed, and NOT "accept
+   write-only".** `width`/`height` are write-only TODAY as a holding position, not as a verdict. Two
+   candidates are live — **(c) notify at the end of layout, drain NEXT frame** and **(d) notify at the
+   end of layout, drain in the SAME frame** — and the choice between them is a MEASUREMENT that §P8
+   will make. See §P3's expanded options.
 2. ~~**`PinSpec` record vs. keeping parallel arrays** with a third `[readers]` column.~~ **ANSWERED
    2026-08-16 — the record**, and the third column would not have been enough anyway: a reader is
    only one of the two things arrays cannot state (the other is a pin accepting more than one kind,
