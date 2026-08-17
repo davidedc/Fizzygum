@@ -99,7 +99,7 @@ CLOSED 2026-08-12 — executed in full the day it was authored; residue in `arch
 - [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.
 - [ ] **FOUND BY P1's recapture, pre-existing, owner-gated: a hand-carried window's pixels are NOT refreshed when a pending glyph atlas arrives mid-drag** — on a cold page the carry freezes placeholder blocks and `waitForScreenshotReady` truthfully reports settled (the live text DID settle; the carried pixels are stale), so the screenshot gate cannot see it. User-visible product behavior (drag a window before fonts settle), and the deterministic face of the open flake-A class (`suite-nondeterminism-flakes-arc`): solo-cadence repro = revert the pre-carry settle yield in `SystemTest_macroDragEmbedWindowTransitNeverArms` and run it on a fresh page. Test-side mitigation landed (that yield); the sibling mid-carry-screenshot tests share the race and can get the same wait if it ever bites.
 
-### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W5 + W9 DONE 2026-08-16; only W6/W7 (owner-gated) and the W10 closeout remain
+### `plans/widget-practices-convergence-plan.md` — IN PROGRESS: W0–W5 + W9 DONE 2026-08-16, **W6a DONE 2026-08-17**; only W6b/D3 + W7 (owner-gated) and the W10 closeout remain
 Acts on `measurements/widget-practices-survey-2026-08-14.md` (28 facets over all 270 widget classes);
 target state is `architecture/widget-authoring-guidelines.md`. Ordered by (defect severity x safety);
 four phases are owner-gated. Plan §9 holds the six decisions (D1 and D2 now DECIDED and executed);
@@ -194,11 +194,28 @@ lists, not from how many classes inherit the field.
       toggles `showingInherited` on. Owner-approved budget: 1 test / 4 refs; A/B with one unrelated
       class proved the code motion inert. `check-relayout-bounds-first.js` was extended in the same
       commit — it scans only `_reLayout` bodies and would otherwise have gone silently blind on all 16.
-- [ ] **W6a — pin setters use FIVE argument shapes across the tree (§2.6).** A wire delivers the value in
+- [x] **W6a — pin setters use FIVE argument shapes across the tree (§2.6). ✅ DONE 2026-08-17** (re-derived to three setters + a live bug; see below). A wire delivers the value in
       slot 1, a menu/prompt/button delivers the value-giving widget in slot 2; most setters handle only
       one. Widening is additive. **W6b (owner D3)** adds the idempotence guards — a real behaviour change
       (a wired circuit stops re-firing on an equal value).
-      ⚠ **UNBLOCKED but NOT ready to execute as written — connector P1 landed 2026-08-16.** The owner's
+      ⭐ **RE-DERIVED 2026-08-17 (the owner-requested step after P1) — W6a is THREE SETTERS AND A LIVE BUG,
+      not 19 setters across five shapes.** Measured with a probe that drives the real prompt end-to-end
+      (`Fizzygum-tests/.scratch/w6-prompt-slot-probe.js`): `SliderWdgt`'s "floor" / "ceiling" / "button size"
+      prompts **discard what you type and store the slider's current value instead** (typed 25 → start became
+      50). Shape A (arity 2, coerces slot 2) is correct and works for wires too; shape B (arity 1, coerces
+      slot 1) is simply wrong; shapes C and D need NOTHING (C is wire-only — `setValue`/`setInput*` are never
+      prompt-reached — and D already digs slot 2). The contrast case `setFontSize` (arity 2) takes the typed
+      value correctly through the identical dispatch, which is the proof the cause is the slot-1 coercion.
+      ⚠ It is silent because `SliderWdgt.getValue` was added for the SPREADSHEET protocol (dataflow Phase 4):
+      before it existed the probe missed and the prompt visibly did nothing — **adding a reader for one
+      subsystem changed an unrelated subsystem's duck-typed coercion from a visible failure into a plausible
+      wrong answer.** ✅ **FIXED 2026-08-17** (owner-approved as a bug fix): the three setters now take
+      `(numOrWidget, widgetGivingValue)` and check slot 2 first, then slot 1, then the raw value — so both the
+      prompt and the wire path work. Guard: **`SystemTest_macroSliderFloorPromptTakesTypedValue`**, confirmed to
+      FAIL against the planted bug (`expected: 25 found: 50`, plus an image_3 mismatch) before being trusted.
+      ⚠ There was **no test over any property prompt** before it — which, more than the setter shapes, is why
+      this survived. W6b/D3 (idempotence guards) is untouched and stays gated separately.
+      ⚠ **Original note, still true — connector P1 landed 2026-08-16.** The owner's
       2026-08-16 direction was: run P1 first, then RE-DERIVE §2.6, because W6a as specified would
       standardise on the duck-typed `getValue?()` coercion P1 was expected to delete. **What P1 actually
       did is narrower than that prediction**: it replaced the pin DECLARATION (the setter tables) and the

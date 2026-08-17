@@ -510,11 +510,23 @@ worded from it — so the two cannot describe different things.
 
 ### The pin-setter contract
 
-A pin setter is reached along two paths that put the value in **different argument slots**: a wire
-delivers the raw value in slot 1 (`consumer[action] value`), while a menu, prompt or button delivers
-the value-giving *widget* in slot 2 (`@target[@action].call @target, dataSource, widgetEnv, …`). A
-setter that handles only one of them works only from one half of the system. Write both, plus the
-guard and the return:
+A pin setter is reached along two paths that put the value in **different argument slots**:
+
+| path | slot 1 | slot 2 |
+|---|---|---|
+| **wire** — `consumer[action] value` | the raw VALUE | *(nothing)* |
+| **menu / prompt / button** — `@target[@action].call @target, dataSource, widgetEnv, …` | **the widget being CONFIGURED** | the value-giving WIDGET |
+
+⚠ **Read slot 2 FIRST, then fall through to slot 1.** The trap is slot 1 on the second path: it is
+not empty, it is *the widget you are setting a property on* (for a prompt,
+`MenuRowsPanelWdgt.createMenuItem` fills `dataSource` from the panel's target and `widgetEnv` from
+the entry field). So a setter that only coerces slot 1 does not merely "work from one half of the
+system" — it receives the configured widget, and **if that widget happens to answer `getValue` the
+duck-typed probe SUCCEEDS and stores the wrong value silently.** That was a live defect in
+`SliderWdgt`'s floor/ceiling/button-size prompts: they stored the slider's current value instead of
+the typed number, and it only became silent-instead-of-visible when `SliderWdgt.getValue` was added
+for an unrelated subsystem (the spreadsheet value protocol). Write both slots, plus the guard and
+the return:
 
 ```coffee
 setFoo: (fooOrWidgetGivingFoo, widgetGivingFoo) ->

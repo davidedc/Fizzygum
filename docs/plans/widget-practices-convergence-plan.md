@@ -287,6 +287,75 @@ A pin setter is reached along two paths that put the value in **different argume
 Secondary divergence: the **idempotence guard** (`return if @color?.equals aColor`) and the
 **return-the-coerced-value tail** exist in shape A and are absent from B, C and D.
 
+#### ⭐ RE-DERIVED 2026-08-17, after connector P1 — W6 is THREE SETTERS AND A LIVE BUG
+
+The owner's direction was to re-derive this table once P1 landed. Done, with a probe that drives the
+REAL prompt end-to-end (open it, type, click Ok) rather than reading signatures. **The table above is
+still accurate — P1 touched no setter body — but its framing was wrong: this is not an inconsistency
+to tidy, it is a user-visible defect in three menu items.**
+
+**What actually reaches a setter, measured.** Of 60 distinct setter names, only **8** are reachable
+by BOTH paths. The second path is `@prompt` / `@pickColor` — *not* `addMenuItem`, which is why a
+first pass looking for menu actions found none. `ButtonWdgt.trigger` dispatches
+`@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, …`, and for a prompt
+`MenuRowsPanelWdgt.createMenuItem` sets `dataSource: @target` (the widget being configured) and
+`widgetEnv: @environment` (the entry field). So **slot 1 = the target widget, slot 2 = the
+value-giving field** — the table's claim, confirmed.
+
+| shape | prompt-reached? | verdict |
+|---|---|---|
+| **A** — arity 2, coerces slot 2 | yes: `setAlphaScaled`, `setCornerRadius`, `setFontSize`, the four layout-spec setters | ✅ **correct, and correct for wires too** (a wire leaves slot 2 undefined, so it falls through to slot 1) |
+| **B** — arity 1, coerces slot 1 | yes: `SliderWdgt.setStart`, `setStop`, `setSize` | ❌ **BROKEN — see below** |
+| **C** — `(newvalue, ignored)` | **no** — `setValue`, `setInput*`, `setInput` are reached only by `wireTo` | ✅ no change needed; discarding a slot nobody fills is harmless |
+| **D** — digs `.text.text` out of slot 2 | yes: `setText` | ✅ handles the prompt path, and has a `_setTextConnector` lane for wires |
+| **E** — plain value | pure sink | ✅ as the table already said |
+
+⇒ **Shape A is simply the correct shape, and B is simply wrong.** C and D need nothing.
+
+**The live bug (verified, `Fizzygum-tests/.scratch/w6-prompt-slot-probe.js`).** `SliderWdgt`'s three
+prompts — "floor", "ceiling", "button size" — **discard what you type and store the slider's current
+value instead**:
+
+```
+setStart   typed 25, slider value 50 → start became 50   (slot1 = the SliderWdgt itself)
+setStop    typed 75, slider value 50 → stop  became 50
+setSize    typed 30, slider value 50 → size  became 50
+setFontSize typed 22               → fontSize became 22   ← the arity-2 CONTRAST: works
+```
+
+Same prompt, same dispatch, same slots; the only difference is which slot the setter coerces. That
+is the proof that the cause is precisely the slot-1 coercion.
+
+⚠ **Why it is silent rather than loud, and the general lesson.** `numOrWidgetGivingNum.getValue?()`
+is a duck-typed probe. `SliderWdgt.getValue` did not exist until it was added for the SPREADSHEET
+value protocol (dataflow Phase 4, `getValue: -> @value`). Before that the probe missed, the slider
+object fell through to `parseFloat`, and the prompt visibly did nothing. **Adding a reader for one
+subsystem silently changed the behaviour of an unrelated subsystem's duck-typed coercion, turning a
+visible failure into a plausible wrong answer.** This is the same class of hazard connector P1
+removed from `exportedValue` — and it is the strongest argument against W6a standardising ON slot-2
+duck-typing rather than reducing it.
+
+**Revised W6a scope: three setters** (`SliderWdgt.setStart` / `setStop` / `setSize`) widened to the
+shape-A signature `(numOrWidget, widgetGivingValue)` and coercing slot 2 first. Not 19 setters, not
+five shapes. **W6b/D3 (idempotence guards) is unaffected and stays gated separately.**
+
+#### ✅ W6a LANDED 2026-08-17 (owner-approved as a bug fix)
+
+The three setters now check slot 2 first, then slot 1, then the raw value — so the prompt path and
+the wire path both work (a wire leaves slot 2 undefined and falls through). Verified with the probe
+that found the bug: `0 → 25`, `100 → 75`, `10 → 30`, all taking the typed value.
+
+**Regression guard: `SystemTest_macroSliderFloorPromptTakesTypedValue`** — opens a slider's
+"floor..." prompt, types 25, clicks Ok, asserts `slider.start == 25`. ⭐ **Confirmed to FAIL against
+the bug before being trusted**: with the pre-fix slot-1 reading planted back it reports
+`FAIL … expected: 25 found: 50` *and* image_3 mismatches (the thumb neither moves nor grows). It
+catches the defect by assertion and by pixels.
+
+⚠ **There was no test over ANY property prompt before this one.** That is the whole reason a
+user-visible defect in three shipping menu items survived indefinitely — not the shape of the
+setters. Worth remembering when judging the rest of §2.6: an inconsistency nothing exercises is
+indistinguishable from a bug nothing exercises.
+
 **⚠ Three corrections to this section, measured 2026-08-16 while running W0–W2. Read them before
 starting W6.**
 

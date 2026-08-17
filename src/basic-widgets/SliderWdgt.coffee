@@ -262,9 +262,20 @@ class SliderWdgt extends CircleBoxWdgt
     # invalidates only itself (widget-citizenship contract point 2).
     @_fullChanged()
   
-  setStart: (numOrWidgetGivingNum) ->
+  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and
+  # slot 2 is checked FIRST. Both of my callers depend on it:
+  #   • a PROMPT dispatches `@target[@action].call @target, dataSource, widgetEnv, …` where
+  #     dataSource is the widget being configured (ME) and widgetEnv is the entry field. Reading
+  #     slot 1 here reads MYSELF, and since I answer `getValue` (for the spreadsheet protocol) that
+  #     silently stores my current value instead of what the user typed.
+  #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
+  # Every other prompt-reached setter in the tree already has this shape; see
+  # docs/plans/widget-practices-convergence-plan.md §2.6.
+  setStart: (numOrWidgetGivingNum, widgetGivingValue) ->
 
-    if numOrWidgetGivingNum.getValue?
+    if widgetGivingValue?.getValue?
+      num = widgetGivingValue.getValue()
+    else if numOrWidgetGivingNum?.getValue?
       num = numOrWidgetGivingNum.getValue()
     else
       num = numOrWidgetGivingNum
@@ -278,9 +289,20 @@ class SliderWdgt extends CircleBoxWdgt
     @updateTarget()
     @_reLayoutSelfAndButton()
   
-  setStop: (numOrWidgetGivingNum) ->
+  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and
+  # slot 2 is checked FIRST. Both of my callers depend on it:
+  #   • a PROMPT dispatches `@target[@action].call @target, dataSource, widgetEnv, …` where
+  #     dataSource is the widget being configured (ME) and widgetEnv is the entry field. Reading
+  #     slot 1 here reads MYSELF, and since I answer `getValue` (for the spreadsheet protocol) that
+  #     silently stores my current value instead of what the user typed.
+  #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
+  # Every other prompt-reached setter in the tree already has this shape; see
+  # docs/plans/widget-practices-convergence-plan.md §2.6.
+  setStop: (numOrWidgetGivingNum, widgetGivingValue) ->
 
-    if numOrWidgetGivingNum.getValue?
+    if widgetGivingValue?.getValue?
+      num = widgetGivingValue.getValue()
+    else if numOrWidgetGivingNum?.getValue?
       num = numOrWidgetGivingNum.getValue()
     else
       num = numOrWidgetGivingNum
@@ -309,8 +331,19 @@ class SliderWdgt extends CircleBoxWdgt
       @escalateEvent "mouseDownLeft", pos
     
 
-  setSize: (sizeOrWidgetGivingSize) ->
-    if sizeOrWidgetGivingSize.getValue?
+  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and
+  # slot 2 is checked FIRST. Both of my callers depend on it:
+  #   • a PROMPT dispatches `@target[@action].call @target, dataSource, widgetEnv, …` where
+  #     dataSource is the widget being configured (ME) and widgetEnv is the entry field. Reading
+  #     slot 1 here reads MYSELF, and since I answer `getValue` (for the spreadsheet protocol) that
+  #     silently stores my current value instead of what the user typed.
+  #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
+  # Every other prompt-reached setter in the tree already has this shape; see
+  # docs/plans/widget-practices-convergence-plan.md §2.6.
+  setSize: (sizeOrWidgetGivingSize, widgetGivingValue) ->
+    if widgetGivingValue?.getValue?
+      size = widgetGivingValue.getValue()
+    else if sizeOrWidgetGivingSize?.getValue?
       size = sizeOrWidgetGivingSize.getValue()
     else
       size = sizeOrWidgetGivingSize
