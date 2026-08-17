@@ -260,6 +260,15 @@ client's:
 - Edges derive from the owner's `@wires` list; the connect-to-➜ menus and wire storage are
   unchanged in kind. `firesPerEvent` is a per-wire property (a `WireSpec` field) with a menu toggle
   on that wire's own row.
+- **A reciprocal BIND is two ordinary wires and nothing else** (connector plan §P2) — no bind record,
+  no bind attribute on an edge, no engine involvement. The `bind ⇄` gesture makes both at once; a pair
+  wired by hand in two gestures is the same thing. Termination is the cycle machinery already
+  specified in §7 (visit-once, the equal-value cutoff, and the echo drop of §1.13 for the node being
+  applied into), measured at one lap — the same guarantee the six-node °C↔°F ring relies on.
+  ⭐ Because a wire delivers the producer's PRINCIPAL value (§9.3), a bind is necessarily
+  **principal ⇄ principal**: the two granularities at which a relationship can be two-way are the
+  NODE (a pair of wires) and the PIN (a wire plus a `firesOnAnyChange` re-read, §3a), and a binding of
+  one widget's value to some *other* property of another is the second, not the first.
 - The multi-input freshness gate (`allConnectedInputsAreFresh`) is **replaced** by
   any-input-marks-stale + pull-the-rest — this fixes the standing deadlock where a node with
   two independently-sourced inputs never fires. If a store-without-firing inlet is ever

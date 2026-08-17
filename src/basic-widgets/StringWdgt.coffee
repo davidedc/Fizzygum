@@ -1145,7 +1145,10 @@ class StringWdgt extends Widget
     # wherever I am, even where I offer no way to make a new one.
     if world.isIndexPage
       menu.addLine()
-      menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: "connect to\nanother widget"
+      # ONE row for the gestures, as the shared block does it: the submenu behind it offers "connect
+      # to ➜" and — when something can actually be bound to — "bind ⇄". Grouping is what keeps a
+      # second gesture from costing every controller's menu a second row.
+      menu.addMenuItem "connect ➜", @, "openConnectionGestureMenu", toolTip: "connect to\nanother widget"
     @_addWireMenuEntries menu
 
 

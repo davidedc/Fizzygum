@@ -353,7 +353,7 @@ there — a HOLDING position, not a verdict. It costs nothing today (no binding 
 current values) and is one line to reverse. §8 q1 was reframed on 2026-08-17: the live candidates are
 (c) and (d), and §P8 is the experiment that chooses between them. `ScrollPanelWdgt` still advertises no pins (§P8 owns that).
 
-### P2 — Reciprocal binding: **two wires, not a new edge kind**
+### P2 — Reciprocal binding: **two wires, not a new edge kind** — ✅ **LANDED 2026-08-17**
 
 The tempting move is a `reflects: true` attribute on the edge record (which already carries
 `{consumer, action, firesPerEvent, cold}`). **Recommend against it.** The system already has a
@@ -375,6 +375,137 @@ already wired. That is why P4 comes before P2 in dependency order even though P2
 Open sub-question for the owner: **who wins at bind time.** Both wires would run their
 `reactToTargetConnection` and fire; today the second one wired wins. Proposed rule: *the side whose
 menu you opened is the source of truth at bind time* — it pushes, the other reflects.
+
+#### As landed
+
+**"Given a pin on each side" is NOT expressible with two ordinary wires, and that is what shaped the
+gesture.** A wire delivers its producer's PRINCIPAL value — `DataflowEngine.pullValue` →
+`Widget.dataflowValue` → `exportedValue` → the principal pin's reader — and the pin chosen on the
+receiving side supplies only the SETTER. So a return wire aimed at anything but the initiator's
+principal pin would carry a quantity its producer does not own. A bind is therefore **principal ⇄
+principal**, both pins are forced, and `bind ⇄` has **no property step at all** — pick a target and you
+are done, where `connect to ➜` still has to ask which pin.
+
+⭐ **The engine has exactly TWO production granularities, and a bind exists at each — both already
+built.** This is the frame the sketch was missing:
+
+| granularity | announce verb | the edge | the consumer |
+|---|---|---|---|
+| the **NODE** — *"a node has exactly ONE value"* | `markStale` | a wire | is HANDED the value |
+| a **PIN** — *"an object has many properties… announcing those with markStale would be a lie"* | `markNonValueChange` | `firesOnAnyChange` | RE-READS the producer |
+
+A bind at node granularity **is two wires** (this section). A bind at pin granularity **is
+`trackTarget`** (§P8), whose reverse half asks its consumer to re-read. There is no third thing to
+build, which is why nothing was added to the engine, to serialization, or to the failure modes — as
+promised, though not for the reason given.
+
+⭐⭐ **Restricting to principal ⇄ principal is what makes the offer HONEST, and that is the real
+argument for it.** The precondition "both sides announce when their value changes" has no declaration
+behind it — nothing on a `PinSpec` says *"I announce"* — so a pin-to-pin gesture could offer binds
+whose reverse half silently never fires. At node granularity the precondition is **equivalent to a
+checkable one**: a widget with a read/write principal pin *and* the `ControllerMixin` verbs is exactly
+a widget that announces (verified across all four: `SliderWdgt`, `StringWdgt`/`SimpleTextWdgt`,
+`PaletteWdgt`, `ColorPickerWdgt` — each `updateTarget` → `_fireConnection` → `markStale`). So
+`ControllerMixin.canBind` is not a proxy for the property that matters; it IS that property.
+
+⇒ **`DataflowEngine`'s reserved pin-aware `pullValue` sibling is ANSWERED, not consumed.** Its comment
+named "the `bind` gesture (P2/P7)" as the first caller it was waiting for. The pin-aware pull belongs
+to the RE-READ edge, which already has it (`Widget.pinDrivenBy` → `getterName`, landed with §P8), so
+the reservation is deleted rather than fulfilled — a method with no caller still cannot be kept honest.
+
+**The shape.** `bindTo` is the fourth binding verb, and it is where §8 q3 gets its answer:
+
+```coffee
+@wireTo theTarget, theTarget.principalPin().setterName      # I push MY value
+theTarget.declareWireTo @, @principalPin().setterName        # the return wire moves nothing
+```
+
+⇒ **§8 q3 ANSWERED: the side whose menu you opened pushes** — and P4's third verb is what makes it
+*exact* rather than aspirational. Two pushes would merely let the later one win, which is an accident;
+`declareWireTo` states the rule. The alternative (an explicit source/mirror step) was rejected on two
+grounds: every other connect gesture already takes the opened menu as its subject, so bind would be
+the only one asking again; and the choice's consequence is invisible one frame later, since the pair
+is then equal. The tooltip carries it instead.
+
+**The target chooser FILTERS, where `connect to ➜` defers to a property menu.** Four conditions, one
+per thing that must hold for both wires to be real (`_canBindTo`): not myself, each side owns a
+read/write principal pin, it can hold a wire back (`declareWireTo?` — a capability probe), and each
+principal pin accepts the kind the other produces. Widgets whose value is COMPUTED — `PatchNodeWdgt`,
+`FanoutWdgt`, `FanoutPinWdgt` — declare no principal pin and so never offer or accept a bind, which is
+correct: there is nothing to write back into. ⭐ A free side-effect: the filter DISSOLVES the "a
+Slider" / "a SliderButton" prefix ambiguity that forces the older patch-cycle tests to pick their
+target by meaning — a `SliderButtonWdgt` owns no value, so it is never listed.
+  The same list decides whether the ITEM appears at all: `bind ⇄` is absent when nothing can be bound
+to, which is `canBind`'s rule applied to the world rather than to the subject. The asymmetry with the
+always-offered `connect to ➜` is earned — almost anything has a drivable pin, so connecting is nearly
+always possible, whereas binding needs the other side to own a value of a matching kind, which is rare
+among the widgets one happens to overlap. Asking inside the submenu rather than in the enclosing menu
+also keeps the candidate walk on a CLICK instead of on every context menu a controller opens.
+
+⭐ **`⇄` is DERIVED, and that is the whole design.** A wire's row is drawn `⇄` when the relationship
+carries values both ways — `wire.tracks`, or the target holds a wire back onto my principal pin
+(`isWiredToActionOf`, a public reader added because the `[U]` rule rightly forbids reaching into
+another object's `_wireFor`). Nothing records that a pair is bound. Three consequences fall out and
+none of them needed code: a pair wired BY HAND in two separate `connect to ➜` gestures *is* bound and
+reads as bound (the gesture is a shortcut, not a distinct object); a 3-node ring correctly reads
+one-way at every row; and DUPLICATING half a bound pair yields a copy that drives the original while
+nothing drives the copy — whose row says `➜` with no bookkeeping to have gone stale.
+
+**`disconnect` ends the relationship in BOTH directions**, and this is a consequence of P4 rather than
+a new rule: `unwireFrom` already revokes the reverse edge of a *tracking* wire. The row named a
+two-way relationship, so ending it leaves neither half — otherwise the surviving wire is invisible
+from the menu you cut it in. The reciprocal call needs no guard (`unwireFrom` returns at once when
+there is no such record) and cannot recur (it is `unwireFrom` being called, not `disconnectWire`).
+
+⚠⚠ **THE GESTURES ARE GROUPED BEHIND ONE `connect ➜` ROW, and that is not cosmetic — it is what makes a
+second gesture affordable.** The first shape gave `bind ⇄` its own top-level row beside `connect to ➜`,
+and that row broke a test by making a menu item UNREACHABLE: **a pop-up taller than the world has no
+handling at all.** `PopUpWdgt.popUp` clamps a pop-up's POSITION (`_moveWithin`) and can do nothing for
+one that does not FIT, so the overflow is simply drawn past the bottom edge. A `SimpleTextWdgt` inside a
+scroll panel already builds a merged menu of exactly full height, so one added row pushed its last item
+(`soft wrap`) off the edge — the macro's click missed, the toggle never happened, and the test STALLED
+rather than merely mismatching. Owner call (2026-08-17): group them. `connect ➜` opens a submenu of
+`connect to ➜` + `bind ⇄`, so the enclosing menu gains **zero** rows, and the split is honest on its own
+terms — the gesture rows are the things you can DO, the wire rows below are things that ARE.
+⇒ **a feature that costs every context menu a row is charging rent against a budget nothing measures**;
+ask what the row costs before asking whether the feature is worth it. The overflow itself is filed
+(BACKLOG) as its own arc: the next row anyone adds re-arms it, and no gate watches for it.
+
+⚠ **The grouped row must REPLACE its parent menu, not stack on it** — it deliberately does not pass
+`closesUnpinnedPopUps: false`, unlike the `wallpapers ➜` / `test menu ➜` submenu convention it otherwise
+follows. `openTargetSelector` enumerates world widgets, so a parent menu left standing offers its own
+`MenuItem`/`Text` children as plausible targets: the chooser filled with `a Menu ➜ | a MenuRowsPanel ➜ |
+a MenuItem ➜ …`. ⇒ **a menu is part of the world it is a menu for**, so any gesture that ENUMERATES
+widgets must run with the menus already gone. This was caught only because three tests
+(`macroLonelySliderTargetsWorldOnly`, `macroUniqueTargetAndPropertyAreStillPresented`,
+`macroAttachTargetExcludesClippedWidget`) assert the chooser's contents BY STRING — a screenshot-only
+test would have baselined a chooser full of menu internals as "the new look".
+
+⚠ **A copy-paste that the acceptance test caught, worth keeping.** The bind chooser's items first
+carried `closesUnpinnedPopUps: false`, lifted from `openTargetSelector` without asking what it is FOR:
+there the click opens a SECOND menu (the property chooser) that must stack on a chooser still standing
+underneath. A bind target item is TERMINAL, so the flag stranded the menu open — visible in the
+reference image as a live menu and a still-highlighted target (a `representsAWidget` item's
+`mouseLeave`, which clears the highlight, cannot fire on an item destroyed by the click).
+⇒ **an option copied from a sibling call site is a claim about THIS call site**, and the two differ
+exactly when one gesture continues and the other completes.
+
+**Acceptance: `SystemTest_macroBindTwoSlidersAndUnbind`** (new). Two sliders started at DIFFERENT
+values, so the precedence rule is PHOTOGRAPHED rather than asserted — image_2 shows B jumping up to
+meet A. Then B drives A (the direction a one-way wire cannot carry), and after `disconnect` the
+discriminating image is **A** dragged, not B: A's wire is the half a one-sided cut would leave
+standing. ⚠ Its `⇄` assertion is a LABEL-STRING match, not a pixel: under SWCanvas neither `➜` nor
+`⇄` is in the bitmap font and both render as the same box glyph, so the screenshot proves the row
+exists and is unique and nothing more. The match was verified to bite by planting the wrong arrow —
+the macro stops short and the harness's MACRO INCOMPLETE guard fails the test.
+⇒ **when a distinction lives in a glyph, assert the STRING** — a reference image cannot see the
+difference between two characters the font does not have.
+
+⚠ **What P2 did NOT do: the pin-granularity GESTURE.** Binding a slider to a panel's `scroll y` from a
+menu stays unavailable; `trackTarget` reaches it from code only. Offering it honestly needs one new
+thing — a `PinSpec` declaration that a pin ANNOUNCES — audited across every pin in the tree, because
+getting it wrong ships a bind whose reverse half is silently dead. That audit is the work, not the
+gesture. Filed in `BACKLOG.md`.
 
 ### P3 — One announcement verb, and where it may not live — ✅ **LANDED 2026-08-17**
 
@@ -1209,8 +1340,12 @@ wire-vocabulary plan's W2 is waiting for.
    2026-08-16 — the record**, and the third column would not have been enough anyway: a reader is
    only one of the two things arrays cannot state (the other is a pin accepting more than one kind,
    which is where 19 overrides collapsed to 9). See P1 "As landed".
-3. **Bind-time precedence** — "the side whose menu you opened pushes" (§P2), or an explicit
-   source/mirror choice in the gesture?
+3. ~~**Bind-time precedence** — "the side whose menu you opened pushes" (§P2), or an explicit
+   source/mirror choice in the gesture?~~ **ANSWERED 2026-08-17: the side whose menu you opened
+   pushes**, spelled `wireTo` + `declareWireTo` — P4's third verb is what makes the rule exact instead
+   of leaving the later wire to win by accident. The explicit choice was rejected because every other
+   connect gesture already takes the opened menu as its subject, and because the answer stops being
+   observable one frame later, when the two are equal. See §P2 "As landed".
 4. ~~**Palette off-map colours** — distinct "off-map" marker, nearest-point snap, or no marker at
    all when the colour is not on the surface?~~ **ANSWERED — a distinct rendering, and NEVER a
    snap**, because a snapped ring displays a position the value does not have. As landed it is a

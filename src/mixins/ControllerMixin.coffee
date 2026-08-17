@@ -124,6 +124,76 @@ ControllerMixin =
         world.dataflow.removeAllEdgesOf wire
         return
 
+      # ---- THE BIND GESTURE (connector plan §P2) --------------------------------------------
+      # A BIND IS TWO ORDINARY WIRES — mine onto you, yours onto me — and nothing else. There is no
+      # bind record, no bind edge and no bind flag: "these two are bound" is a QUESTION asked of the
+      # two wire lists and answered fresh every time (_isTwoWayWire below). One consequence is worth
+      # stating, because it is the proof the model is honest rather than a shortcut: a pair someone
+      # wires by hand in two separate "connect to ➜" gestures IS bound, and reads as bound. The
+      # gesture saves clicks and picks the pins correctly; it does not create a different kind of
+      # thing.
+      #   ⭐ IT BINDS VALUE TO VALUE, and can bind nothing else. A wire delivers its producer's
+      # PRINCIPAL value (DataflowEngine.pullValue → Widget.dataflowValue), so a return wire aimed at
+      # any other pin would carry a quantity its producer does not own. That is not a restriction to
+      # lift later — the engine has exactly two production granularities, and this is the NODE one
+      # ("a node has exactly ONE value"). The PIN one is the tracking wire (trackTarget, §P8), whose
+      # reverse half asks its consumer to RE-READ rather than handing it a value.
+      #   ⭐ Which is also what makes the offer honest. A widget with a read/write principal pin AND
+      # these verbs is precisely a widget that ANNOUNCES when its value changes, so both halves of
+      # the bind are live. Nothing on a PinSpec declares "I announce", so binding an arbitrary pin
+      # could promise a reverse direction that silently never fires.
+      bindTo: (theTarget) ->
+        # PRECEDENCE (plan §8 q3): the side whose menu opened the gesture is the source of truth, so
+        # I push my value and the return wire moves nothing. declareWireTo is what makes that exact —
+        # with two pushes the later one would simply win, which is an accident, not a rule.
+        @wireTo theTarget, theTarget.principalPin().setterName
+        theTarget.declareWireTo @, @principalPin().setterName
+        return
+
+      # Can I be bound at all? Only if my own value is both readable and writable: the forward wire
+      # READS it and the return wire WRITES it. A widget whose value is COMPUTED — a patch node's
+      # output, a fanout's input — declares no principal pin and so never offers this, which is
+      # right: there is nothing to write back into.
+      #   Public because it is asked of a candidate TARGET as well as of myself.
+      canBind: ->
+        pin = @principalPin()
+        return pin?.setterName? and pin?.getterName?
+
+      # Can I bind to THIS widget? Four conditions, one per thing that must be true for BOTH wires to
+      # be real: neither of us is the other, each of us owns a read/write value, it can hold a wire
+      # back (a capability probe, not a class test — widget-citizenship), and each principal pin
+      # accepts the kind the other produces. The kind is checked twice because a bind is two wires and
+      # each one has to be acceptable to the pin it writes.
+      _canBindTo: (theTarget) ->
+        return false if theTarget is @
+        return false unless @canBind()
+        return false unless theTarget.declareWireTo? and theTarget.canBind?()
+        return false unless theTarget.principalPin().acceptsKind @producesPinKind
+        return false unless @principalPin().acceptsKind theTarget.producesPinKind
+        return true
+
+      # Is this wire TWO-WAY — does the relationship it describes carry values in both directions?
+      # Two shapes answer yes, and they are the engine's two production granularities:
+      #   • a TRACKING wire (§P8): I drive its pin and re-read that same pin. Its reverse half is a
+      #     firesOnAnyChange edge I declared, not a record the target holds.
+      #   • a BOUND pair (§P2): the target holds a wire back onto MY principal pin.
+      # Derived, never stored. A fact stated twice will disagree (PinSpec's header), and here the
+      # drift is reachable in one gesture: duplicate half of a bound pair and the copy drives the
+      # original while nothing drives the copy. Asked fresh, its row says ➜ and tells the truth with
+      # no bookkeeping to duplicate, serialize or forget.
+      _isTwoWayWire: (wire) ->
+        return true if wire.tracks
+        return false unless @canBind()
+        return true if wire.target.isWiredToActionOf? @, @principalPin().setterName
+        return false
+
+      # Do I hold a wire driving `action` on `theTarget`? The PUBLIC sibling of _wireFor, and it
+      # exists because this is a question another widget asks ME — "do you drive me back?" — which is
+      # how a bind is recognised without either side recording that it is bound. Reaching into
+      # _wireFor across objects is exactly what the [U] call-separation rule forbids.
+      isWiredToActionOf: (theTarget, action) ->
+        return (@_wireFor theTarget, action)?
+
       # The record for THIS relationship, if I hold it. The identity of a wire is the pair, so
       # re-wiring the same target and action finds the existing record instead of adding a twin.
       _wireFor: (theTarget, action) ->
@@ -223,34 +293,97 @@ ControllerMixin =
       # ---- the connection menu -------------------------------------------------------------
       # The shared "connect a target" block, appended identically by every controller (SliderWdgt,
       # SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and the patch nodes) right after its `super`: a
-      # divider, the "connect to ➜" item, then ONE ROW PER LIVE WIRE.
+      # divider, the "connect ➜" gesture submenu, then ONE ROW PER LIVE WIRE.
       #   ⭐ Those rows are the point of §P4. A single-slot controller had nothing to show — its one
       # connection was invisible, and re-targeting silently dropped it. A controller that owns a list
       # can SHOW what it drives, and each row opens that wire's own little menu (policy + disconnect),
       # so wiring is legible and reversible for the first time.
-      #   ⛔ ONE label, deliberately, with no isIndexPage fork: "set target" is the name of a
-      # SINGLE-SLOT world and would be a false promise here, since the gesture connects *a* target,
-      # one of however many I already drive. (StringWdgt keeps its own hand-rolled variant —
-      # it guards the whole block behind isIndexPage, so it is deliberately NOT routed through here.)
-      # The kind of property this controller can drive is read from `producesPinKind` -- the SAME
+      #   ⛔ NO isIndexPage label fork: "set target" is the name of a SINGLE-SLOT world and would be a
+      # false promise here, since the gesture connects *a* target, one of however many I already
+      # drive. (StringWdgt keeps its own hand-rolled variant — it guards the whole block behind
+      # isIndexPage, so it is deliberately NOT routed through here.)
+      #   ⭐ The GESTURES are grouped behind one submenu row, and the live wires are not. That split is
+      # the meaning of the two halves: "connect ➜" opens the things I can DO, while a wire row is a
+      # thing that IS — a status line you read, and cut from where you read it.
+      #   Grouping also costs the enclosing menu ZERO rows for the second gesture, which is what makes
+      # a second one affordable at all. A context menu here has no answer for being taller than the
+      # world — `PopUpWdgt.popUp` clamps a pop-up's POSITION (`_moveWithin`) and can do nothing for
+      # one that does not FIT — and a `SimpleTextWdgt` inside a scroll panel already builds a merged
+      # menu of exactly full height, so a second top-level row pushed its last item off the bottom
+      # edge, unclickable. (The overflow itself is a standing gap, filed in BACKLOG; not being the
+      # thing that trips it is this block's business.)
+      _addTargetConnectionMenuEntries: (menu) ->
+        menu.addLine()
+        menu.addMenuItem "connect ➜", @, "openConnectionGestureMenu", toolTip: "connect this widget\nto another one"
+        @_addWireMenuEntries menu
+
+      # The two ways to relate myself to another widget, one level down. They belong together: both
+      # answer "which widget, and how", and they differ only in how many directions the relationship
+      # carries values.
+      #   The kind of property this controller can drive is read from `producesPinKind` -- the SAME
       # declaration its openTargetPropertySelector filters the target's pins by, so the tooltip
       # cannot describe a menu other than the one it opens. Taking the kind as an argument here
       # instead would let every controller state it twice, in two unrelated places, and nothing
       # would compare them. A widget that drives any kind names none: the sentence reads
       # "whose property".
-      _addTargetConnectionMenuEntries: (menu) ->
-        menu.addLine()
+      #   ⭐ `bind ⇄` appears only when there is something to bind to: the same rule `canBind` applies
+      # to the SUBJECT, applied to the WORLD. The asymmetry with the always-offered "connect to ➜" is
+      # earned rather than sloppy — almost anything has a drivable pin, so connecting is nearly always
+      # possible, whereas binding needs the OTHER side to own a value of a matching kind, which is
+      # rare and rarer still among the widgets I overlap. An item that is nearly always a dead end is
+      # worse than no item. Asking here rather than in the enclosing menu also means the candidate
+      # walk runs on a CLICK, not on every context menu a controller opens.
+      openConnectionGestureMenu: ->
+        menu = new MenuWdgt @, target: @, title: "connect:"
         kindWord = if @producesPinKind? and @producesPinKind isnt "any" then @producesPinKind + " " else ""
         menu.addMenuItem "connect to ➜", @, "openTargetSelector", toolTip: ("choose another widget\nwhose " + kindWord + "property\n will be" + " controlled by this one")
-        @_addWireMenuEntries menu
+        if @canBind() and @_bindableTargets().length > 0
+          menu.addMenuItem "bind ⇄", @, "openBindSelector", toolTip: "keep this widget's value\nand another's in step,\nboth ways"
+        menu.popUpAtHand()
+
+      # The bind target chooser. "connect to ➜" lists every plausible widget and filters PROPERTIES in
+      # the menu after it; a bind has no property step — both pins are forced — so the filtering has
+      # to happen HERE instead. A widget that cannot be bound therefore never appears, rather than
+      # appearing and then having nothing to offer.
+      # The widgets I could bind to right now: the same overlap-based candidate walk "connect to ➜"
+      # uses, narrowed by the four conditions above. Asked TWICE per gesture — once to decide whether
+      # to offer the item at all, once when the chooser opens — deliberately, rather than caching the
+      # first answer on me: the world can change between building a menu and clicking its row, and a
+      # stale list would offer a target that has moved away or died.
+      _bindableTargets: ->
+        each for each in world.plausibleTargetAndDestinationWidgets @ when @_canBindTo each
+
+      openBindSelector: ->
+        choices = @_bindableTargets()
+        # the empty branch is not dead: the item is only offered when this list was non-empty, but
+        # that was at menu-BUILD time, and a target can be dragged away or destroyed before the click.
+        if choices.length > 0
+          menu = new MenuWdgt @, target: @, title: "bind with:"
+          # ⚠ TERMINAL, so it closes the pop-ups — unlike openTargetSelector's twin, which passes
+          # closesUnpinnedPopUps: false because ITS click opens a second menu (the property chooser)
+          # that has to stack on a chooser still standing underneath. Picking a bind target completes
+          # the gesture, so leaving the cascade open would strand a menu with nothing left to do.
+          choices.forEach (each) =>
+            menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ⇄", @, "bindToOnePickedFromMenu", arg1: each, representsAWidget: true
+        else
+          menu = new MenuWdgt @, target: @, title: "nothing to bind with"
+        menu.popUpAtHand()
+
+      # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu).
+      bindToOnePickedFromMenu: (ignored, ignored2, theTarget) ->
+        @bindTo theTarget
 
       # One row per live wire, each naming what it drives ("a Panel . color") and opening that wire's
       # own menu. Nothing at all when I am unwired, so an unconnected controller's menu is unchanged.
       # Shared with StringWdgt, which builds the rest of its connection block by hand.
+      #   The ARROW is the whole reading of the relationship's direction: ➜ for a wire that only
+      # drives, ⇄ for one that also carries values back — a tracking wire or half of a bound pair.
+      # Derived per row at open time, so a menu never shows a direction that has stopped being true.
       _addWireMenuEntries: (menu) ->
         return unless @wires?
         for wire in @wires
-          menu.addMenuItem wire.describeConnection() + " ➜", @, "openWireMenu",
+          arrow = if @_isTwoWayWire wire then " ⇄" else " ➜"
+          menu.addMenuItem wire.describeConnection() + arrow, @, "openWireMenu",
             toolTip: "what this connection does,\nand how to remove it"
             arg1: wire
         return
@@ -297,6 +430,17 @@ ControllerMixin =
         world.dataflow.markNonValueChange wire
 
       # Menu-dispatched: cut this wire. The un-wire gesture G2 named as missing.
+      #   ⭐ A TWO-WAY relationship ends in BOTH directions, because that is the relationship the row
+      # named. Cutting only my half would leave a wire that still reads as a connection from the
+      # OTHER widget's menu and cannot be seen at all from this one. A tracking wire already behaves
+      # this way — unwireFrom revokes the reverse edge it declared — so this is the same rule reaching
+      # the other kind of two-way wire, not a second rule.
+      #   The reciprocal call is unconditional and needs no guard: unwireFrom returns at once when
+      # there is no such record, so a one-way wire simply loses its one half. It also cannot recur —
+      # it is unwireFrom being called, not disconnectWire.
       disconnectWire: (ignored, ignored2, wire) ->
-        @unwireFrom wire.target, wire.action
+        theTarget = wire.target
+        myPin = @principalPin()
+        @unwireFrom theTarget, wire.action
+        theTarget.unwireFrom? @, myPin.setterName if myPin?.setterName?
 

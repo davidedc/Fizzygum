@@ -1331,6 +1331,33 @@ assertion a recapture after a regression silently stores two different hashes an
   is also where a wire's **"fires per event"** toggle lives (`macroConnectionFiresPerEventToggle` navigates it by hand: row
   prefix, then `@moveToItemContainingOfMenuAndClick_InputEvents … "fires per event"` — CONTAINING, because a ticked row carries
   a leading ✓).
+- ⚠ **BOTH connection gestures live one level down, behind a single `"connect ➜"` row** (connector §P2). A hand-rolled
+  chain must click that row FIRST and then `"connect to ➜"` / `"bind ⇄"` in the submenu it opens
+  (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
+  ⭐ The reason is a hard constraint worth knowing before adding ANY menu row: **a pop-up taller than the world has no
+  handling at all** — `PopUpWdgt.popUp` clamps a pop-up's POSITION (`_moveWithin`) and can do nothing for one that does not
+  FIT, so its last items are simply unreachable. A `SimpleTextWdgt` inside a scroll panel already builds a merged menu of
+  exactly full height. Grouping keeps the second gesture free. ⚠ The `"connect ➜"` row deliberately does NOT pass
+  `closesUnpinnedPopUps: false`, i.e. it REPLACES its parent menu rather than stacking on it: `openTargetSelector`
+  enumerates world widgets, so a menu left standing would list its own `MenuItem`/`Text` children as plausible targets
+  (caught only because three tests assert the chooser's contents BY STRING).
+- **BIND two widgets so each drives the other** (`macroBindTwoSlidersAndUnbind`): `bindControllerTo_InputEvents_Macro
+  controller, "a Slider"` — connector §P2's `bind ⇄`, which makes BOTH wires in one gesture and so takes **no property
+  argument**: a wire delivers its producer's PRINCIPAL value, so each side's pin is forced to be its principal one. Same
+  3rd/4th `controllerMenuFraction` / `controllerHierarchyPrefix` args as the connect verb. ⚠ The item is offered only when
+  something can ACTUALLY be bound to, so a fixture with no bindable neighbour shows no `bind ⇄` at all. ⭐ The chooser lists only widgets
+  that can ACTUALLY be bound (read/write principal pin + `ControllerMixin` + matching kinds), which is why `"a Slider"` is an
+  unambiguous prefix here even though it also prefixes `"a SliderButton"` — the button owns no value, so it is never offered.
+  That is the trap the older patch-cycle tests dodge by picking their target by meaning. ⚠ PRECEDENCE is observable: the
+  controller whose menu you open PUSHES its value, so start the two at different values if you want to photograph it.
+- **A two-way wire's row reads `⇄`, and cutting it cuts BOTH halves** (`macroBindTwoSlidersAndUnbind`): the arrow is DERIVED
+  (a tracking wire, or a target that wires back onto my principal pin), so a pair wired by hand in two `connect to ➜` gestures
+  reads `⇄` too, and a 3-node ring correctly reads `➜` at every row. `disconnect` on such a row removes the wire held by the
+  OTHER widget as well. ⚠⚠ **Do not try to assert the arrow from a SCREENSHOT: under SWCanvas neither `➜` nor `⇄` is in the
+  bitmap font, so both render as the same box glyph.** Assert it on the LABEL STRING instead — match the row with a prefix
+  that INCLUDES the arrow (`"a Slider . value ⇄"`); a wrong arrow then finds no item, the macro stops short, and the
+  harness's MACRO INCOMPLETE guard fails the test. (Verified by planting the wrong arrow.) The shared
+  `disconnectControllerWire_InputEvents_Macro` matches WITHOUT the arrow and is deliberately blind to direction.
 - **Fan-IN: two controllers, one target** (`macroTwoPalettesShareOneTarget`): two ColorPaletteWdgts both connected to the SAME
   panel's "color" (each overlapping the panel but NOT each other); clicking EITHER repaints, both bindings persist (most-recent
   click wins). Fan-in came free from duplication keeping the target reference; fan-out is what §P4 had to build.

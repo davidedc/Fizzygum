@@ -584,6 +584,28 @@ a multi-field update needs no payload machinery at all — the consumer pulls as
 likes. Reach for a pushed payload only when the producer emits an EVENT with no readable steady
 state.
 
+**To keep two widgets' VALUES equal**, `bindTo theTarget` — the fourth binding verb, and the one the
+`bind ⇄` menu item makes (one level down, behind the shared block's single `connect ➜` row: both
+connection gestures are grouped there so that having two costs a controller's menu no extra height —
+⚠ a pop-up taller than the world has no handling at all, so a row is a real cost). It is simply two wires (mine onto you, yours onto me), so it adds no
+mechanism; what it adds is that both pins are chosen for you and the precedence is stated: **I push my
+value, and the return wire moves nothing.** Two things follow that are worth knowing before reaching
+for it:
+
+- **It binds VALUE to VALUE, never value to an arbitrary pin.** A wire delivers its producer's
+  PRINCIPAL value, so the pin on each side is forced to be that side's principal pin — which is why
+  the gesture has no property step. Binding your value to some *other* property of a target is the
+  TRACKING case above, not this one.
+- **A widget is bindable iff it owns a value**: a read/write principal pin plus these verbs
+  (`canBind`). That test is not a proxy — it is equivalent to "this widget announces when its value
+  changes", which is what both halves of a bind actually need. A widget whose value is COMPUTED
+  declares no principal pin and correctly neither offers nor accepts a bind.
+
+Nothing records that two widgets are bound: "this wire is two-way" is DERIVED by asking whether the
+target wires back (and it is what draws a connection row `⇄` rather than `➜`). So a pair you wire by
+hand in two ordinary gestures is bound in exactly the same sense, and a duplicate of one half reports
+itself one-way with no bookkeeping to have gone stale.
+
 ### The pin-setter contract
 
 A pin setter is reached along two paths that put the value in **different argument slots**:

@@ -157,6 +157,14 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
   walk; a non-value announcement wakes a DIFFERENT edge set, which the engine is NOT walking for a
   node it reached as a wire CONSUMER — so the same guard would DELETE the announcement rather than
   deduplicate it (measured: a scroll panel driven by one bar never telling its other bars).
+  ⭐ **These two verbs are the engine's two PRODUCTION GRANULARITIES, and each has its own kind of
+  two-way relationship** — which is why binding needed no new edge kind (connector plan §P2). At NODE
+  granularity (`markStale`, a wire, the value HANDED over) a bind is simply two wires, one each way;
+  at PIN granularity (`markNonValueChange`, `firesOnAnyChange`, the consumer RE-READS) it is a tracking
+  wire (`trackTarget`). ⇒ Because a wire delivers the producer's PRINCIPAL value, a two-wire bind is
+  necessarily **principal ⇄ principal**; binding one widget's value to some OTHER property of another
+  is the second shape, not the first. A pin-aware `pullValue` sibling would be a value edge at pin
+  granularity — the thing this split exists to keep apart — so it is not wanted and was not added.
 - **`__poolStale(node, forced)`** — the bare atom: push into the stale pool, nothing else.
 - **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle`
   BETWEEN `runChildrensStepFunction` and `recalculateLayouts`. **Two parallel drain stations:

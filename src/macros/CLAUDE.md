@@ -161,7 +161,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   state. All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
-  `setControllerTargetToWidgetProperty`, `disconnectControllerWire` (its inverse — pick a controller's per-wire
+  `setControllerTargetToWidgetProperty`, `bindControllerTo` (its TWO-WAY sibling — `bind ⇄`, which takes no
+  property argument because a bind's pins are forced to be the two widgets' principal ones),
+  `disconnectControllerWire` (the inverse of both — pick a controller's per-wire
   menu row by prefix, then "disconnect"), the window-in-window fixture pair, `dwellDragWindowByGrabToEmbed`
   (float-drag a WINDOW by a grab point and DWELL-ARM-embed it at a destination — press, drag, non-scaled
   linger past `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip).

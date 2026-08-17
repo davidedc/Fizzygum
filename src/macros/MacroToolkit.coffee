@@ -1017,7 +1017,9 @@ class MacroToolkit
         if controllerHierarchyPrefix?
           @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
           yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents "connect to ➜"
+        @moveToItemOfTopMenuAndClick_InputEvents "connect ➜"
+        yield "waitNoInputsOngoing"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "connect to ➜"
         yield "waitNoInputsOngoing"
         @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
         yield "waitNoInputsOngoing"
@@ -1025,13 +1027,35 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
+    # The TWO-WAY gesture (connector plan §P2): bind this controller's value to another widget's, so
+    # each drives the other. Shorter than the connect gesture above because a bind has NO property
+    # step — both pins are forced to be the two widgets' principal ones — and the target menu lists
+    # only widgets that can actually be bound. The controller whose menu is opened is the one whose
+    # value wins at bind time.
+    macroSubroutines.add Macro.fromString """
+      bindControllerTo_InputEvents_Macro = (controllerWidget, targetClassNamePrefix, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
+        @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
+        yield "waitNoInputsOngoing"
+        if controllerHierarchyPrefix?
+          @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), controllerHierarchyPrefix
+          yield "waitNoInputsOngoing"
+        @moveToItemOfTopMenuAndClick_InputEvents "connect ➜"
+        yield "waitNoInputsOngoing"
+        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "bind ⇄"
+        yield "waitNoInputsOngoing"
+        @moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), targetClassNamePrefix
+        yield "waitNoInputsOngoing"
+    """
+
     # The INVERSE gesture (connector plan §P4): cut one of a controller's connections and leave the rest
     # standing. A controller's own menu carries one row PER LIVE WIRE, labelled by what it drives —
-    # `WireSpec.describeConnection() + " ➜"`, i.e. the Wdgt-stripped target then the PIN's label,
+    # `WireSpec.describeConnection()` plus an arrow, i.e. the Wdgt-stripped target then the PIN's label,
     # "a Panel . color ➜" — so name the wire by that prefix. The row opens that wire's own little menu
     # ("fires per event", "disconnect"); this clicks "disconnect".
-    # ⚠ Pass the prefix WITHOUT the trailing " ➜" (prefix matching), and note the pin LABEL is what
-    # appears, not the setter name: "a Panel . color", never "a Panel . setColor".
+    # ⚠ Pass the prefix WITHOUT the trailing arrow (prefix matching), which is also what makes this verb
+    # blind to the arrow's DIRECTION: a two-way wire's row ends " ⇄" rather than " ➜" (§P2), and cutting
+    # one ends the relationship in both directions.
+    # ⚠ The pin LABEL is what appears, not the setter name: "a Panel . color", never "a Panel . setColor".
     macroSubroutines.add Macro.fromString """
       disconnectControllerWire_InputEvents_Macro = (controllerWidget, wireRowPrefix, controllerMenuFraction = [0.5, 0.5], controllerHierarchyPrefix) ->
         @moveToAndClickAtFractionOf_InputEvents controllerWidget, controllerMenuFraction, "right button"
