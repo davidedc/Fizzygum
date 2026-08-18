@@ -216,10 +216,16 @@ paint-readonly gates and wired into `fg gauntlet`:
 the whole suite, these BOOT A PAGE and drive one mechanism to exhaustion — each the runtime half of a static gate whose
 blind spot is structural:
 - **menu sweep** (`Fizzygum-tests/scripts/menu-click-sweep-headless.js`, `npm run menu-sweep`, `fg menusweep`) —
-  DISPATCHES EVERY MENU ACTION and fails on a throw; the other half of `check-menu-actions.js`, which cannot see a
-  parameter that is read as the wrong THING. ⚠ Its own blind spot: it dispatches ONE step. A gesture that opens a PROMPT
-  is covered only as far as the prompt appearing — pressing its Ok is a second dispatch it never makes, and that is
-  exactly where the corner-radius crash below lived.
+  DISPATCHES EVERY MENU ACTION **and presses every prompt's Ok**, failing on a throw from either; the other half of
+  `check-menu-actions.js`, which cannot see a parameter that is read as the wrong THING. ⭐ The prompt step is the one
+  that matters for an item ending in `"..."`: such an item does its real work in the prompt's callback, dispatched as
+  `@target[@callback].call` with NO `?.`, so a rig that stops at the menu action covers it only as far as the prompt
+  APPEARING — which is the point at which everything still looks fine. A prompt is not a `MenuWdgt` (both descend from
+  `PopUpWdgt`), so the submenu walk cannot reach one and it needs its own query. Ok is pressed with the prompt's own
+  default contents, so this asks "does the callback resolve and run", never "is this a good value".
+  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 17 roots, so a class not among them is unreached. That is why
+  it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
+  catches 2 of the 16 affected classes and the pin sweep catches all 16.
 - **pin sweep** (`Fizzygum-tests/scripts/pin-sweep-headless.js`, `npm run pin-sweep`) — EVERY PIN A CLASS ADVERTISES
   MUST BE SERVICEABLE. A `PinSpec` names its setter/getter by STRING and the dataflow dispatches them as
   `consumer[name]?.call`, so an unresolved one is offered in the choose-target-property menu, accepts a wire, and
