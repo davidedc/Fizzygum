@@ -205,8 +205,17 @@ prior arcs; §5 of the latter is the as-built dispatch record) ·
 
 ## §9 STATUS BOX
 
-- Phase 0: not started.
-- Phase 1 (owner decision): pending Phase 0.
+- Phase 0: **DONE 2026-08-18** — deliverable `docs/measurements/dispatch-slot-census-2026-08-18.md`
+  (631 pairs → 208 methods, bucket (e) = 0). Headline: the two fill configurations partition
+  EXACTLY by delivery family (menu rows 594/594 env-absent, prompt Oks 37/37 env-present, zero
+  shared verbs, statically total — only the three prompt classes ever write `environment`), and
+  83% of verbs declare no parameters; per-family slot meanings are ALREADY stable at every
+  reachable reader. Verdict: GO — O4-shaped (make the family split explicit), near-zero verb
+  migration. Two by-catch findings recorded in the deliverable: the header lib's
+  space-before-colon blind spot (13 methods invisible to every gate), and a LIVE bug confirmed in
+  isolation (`WidgetHolderWithCaptionWdgt.setColor` sets `icon.color` to the widget itself from
+  the colour prompt).
+- Phase 1 (owner decision on §4): **pending — STOPPED here per §6.**
 - Phases 2–3: pending Phase 1.
 
 ## §10 Cold-start prompt (paste into a fresh session)
