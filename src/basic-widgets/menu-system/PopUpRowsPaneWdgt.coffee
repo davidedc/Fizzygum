@@ -9,9 +9,12 @@
 # ⚠ `alpha = 0` is about PAINTING, not hit-testing. The question the pointer puts is
 # `catchesPointerAt`; the members below are how I answer it. An appearance-less widget is
 # opaque by an explicit `? false` (Widget.isTransparentAt), and a PanelWdgt is worse than
-# appearance-less: its RectangularAppearance answers OPAQUE regardless of alpha. So a panel
-# spanning a pop-up's whole rect catches every click that ought to fall THROUGH the pop-up's
-# rounded corners to whatever is behind — which is exactly what MenuWdgt.isTransparentAt
+# appearance-less: RectangularAppearance.isTransparentAt returns false for ANY point inside
+# the tight bounding box, before it looks at anything — no transparency field reaches that
+# branch (`backgroundTransparency` only decides the padding halo OUTSIDE the tight box, and
+# `alpha` is never consulted at all). So a panel spanning a pop-up's whole rect catches every
+# click that ought to fall THROUGH the pop-up's rounded corners to whatever is behind, and no
+# amount of turning it invisible changes that — which is exactly what MenuWdgt.isTransparentAt
 # exists to prevent, and whose absence that class's own comment records: "a submenu popped
 # over a parent menu stopped the parent's item from staying hover-highlighted".
 

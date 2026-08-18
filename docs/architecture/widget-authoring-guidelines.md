@@ -319,9 +319,15 @@ into the one thing `ActivePointerWdgt` actually asks: *does a pointer here stop 
 answer it.** A widget can paint nothing at all and still catch every click — that is
 `noticesTransparentClick`, and it is why a `StringWdgt` stays clickable between its glyphs (measured:
 97% of a string's box is ink-free). A widget can be fully opaque in `@alpha` terms and catch nothing —
-a menu, whose body is drawn by a child. And ⚠⚠ **`alpha = 0` does not make a widget transparent to the
-pointer**: `RectangularAppearance` answers OPAQUE regardless of alpha, so a panel with `alpha = 0`
-still swallows every click over its rect.
+a menu, whose body is drawn by a child.
+
+⚠⚠ **NO transparency field makes a rectangular widget click-through — you have to SAY so.**
+`RectangularAppearance.isTransparentAt` returns `false` for any point inside the tight bounding box
+*before it examines anything*: `@alpha` is never consulted at all, and `backgroundTransparency` only
+decides the padding halo OUTSIDE the tight box (and then only when a `backgroundColor` is set). So a
+`PanelWdgt` at `alpha = 0` is invisible and still swallows every click over its rect. A container
+that must let clicks through declares `isTransparentAt: -> true` per class, as `MenuWdgt`,
+`PromptWdgt`, `FrameBarWdgt` and the pop-up rows chrome all do.
 
 ---
 
