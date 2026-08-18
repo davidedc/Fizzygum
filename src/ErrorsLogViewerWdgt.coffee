@@ -17,7 +17,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   # and gets its real size from the window that wraps it, createErrorConsole.)
   # ALL options, no operand: the error console is opened by the world with nothing to
   # configure. It carries no target/callback pair -- an error log reports, it does not commit a
-  # value back to anyone, so my ok button closes (closeFromContainerFrame) and the
+  # value back to anyone, so my ok button just hides my window (hideLog) and the
   # deliverValue path belongs to CodePromptWdgt alone.
   # defaultContents is read GUARDED so absence leaves the class-level "" standing: a bare
   # @param would overwrite it with undefined (R5).
@@ -29,8 +29,15 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   colloquialName: ->
     "error log"
 
-  closeFromContainerFrame: (containerWindow) ->
+  # HIDE, never close: destroying the error console swallows every later paint error in the
+  # session (the teardown-shared-core lesson), so dismissing it by any route just hides its window.
+  hideLog: ->
     @parent.hide()
+
+  # the window-chrome close chain (FrameWdgt.close -> contents.closeFromContainerFrame frame)
+  # routes to the same hide.
+  closeFromContainerFrame: (containerWindow) ->
+    @hideLog()
 
   addText: (newLog) ->
     if @textWidget.text.length != 0
@@ -74,7 +81,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
     @pauseToggle = new ToggleButtonWdgt pauseButton, unpauseButton, if @paused then 1 else 0
     @_addNoSettle @pauseToggle
 
-    @okButton = new SimpleButtonWdgt @, "closeFromContainerFrame", face: "ok"
+    @okButton = new SimpleButtonWdgt @, "hideLog", face: "ok"
     @_addNoSettle @okButton
 
     @_invalidateLayout()

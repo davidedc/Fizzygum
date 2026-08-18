@@ -702,6 +702,10 @@ class InspectorWdgt extends Widget
     @notifyInstancesOfSourceChange([prop, propertyName])
   
   renamePropertyPopout: ->
+    # nothing selected = nothing to rename: a fresh inspector has NO default selection
+    unless @list?.selected?
+      world.inform "select a\nproperty first"
+      return
     propertyName = @list.selected.labelString
     @prompt "property name:", @, "renameProperty", defaultContents: propertyName
   
@@ -713,6 +717,10 @@ class InspectorWdgt extends Widget
     @inspectedObject.removeOwnProperty propertyName
 
   removeProperty: ->
+    # nothing selected = nothing to remove (see renamePropertyPopout)
+    unless @list?.selected?
+      world.inform "select a\nproperty first"
+      return
     propertyName = @list.selected.labelString
 
     @_applyPropertyRemoval propertyName

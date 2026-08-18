@@ -584,6 +584,11 @@ class Widget extends TreeNode
     else
       world.inform "There is no\nbin to go in!"
 
+  # ⚠ A DIRECT-CALL protocol, never a button action: the container window passes ITSELF
+  # (FrameWdgt.close -> @contents?.closeFromContainerFrame @), and the parameter is read. Wiring
+  # this name into a ButtonWdgt would hand it the BUTTON in slot 1 (trigger passes itself) and
+  # silently close the button. A chrome button that means "dismiss" dispatches a zero-parameter
+  # verb of its own (ErrorsLogViewerWdgt.hideLog is the worked example).
   closeFromContainerFrame: (containerWindow) ->
     containerWindow.close()
 
