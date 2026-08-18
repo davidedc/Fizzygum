@@ -37,15 +37,15 @@ class Appearance
   isTransparentAt: (aPoint) ->
 
   # The key-values half of the paint preamble: bail (undefined) if there is nothing to draw, else return
-  # the [area,sl,st,al,at,w,h] key-values (undefined when the widget is sub-pixel / off-clip). ZERO draw
+  # the [damageBox,sl,st,al,at,w,h] key-values (undefined when the widget is sub-pixel / off-clip). ZERO draw
   # ops. _paintInLocalScope below consumes it; RectangularAppearance's paint also calls it directly
   # as an early bail that gates its post-scope stroke + wallpaper epilogues.
   _calculateKeyValuesOrNil: (aContext, clippingRectangle) ->
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return undefined
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    return undefined if w < 1 or h < 1 or area.isEmpty()
-    return [area,sl,st,al,at,w,h]
+    [damageBox,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
+    return undefined if w < 1 or h < 1 or damageBox.isEmpty()
+    return [damageBox,sl,st,al,at,w,h]
 
   # THE one appearance paint scope (the appearance paint convention): undefined when there is nothing
   # to draw, else runs
@@ -73,7 +73,7 @@ class Appearance
   _paintInLocalScope: (aContext, clippingRectangle, appliedShadow, bodyFn) ->
     keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
     return undefined unless keyValues?
-    [area,sl,st,al,at,w,h] = keyValues
+    [damageBox,sl,st,al,at,w,h] = keyValues
 
     # soft hook, only CaretWdgt defines it (the inert paint-time re-place); same slot it always
     # ran in: after the key values, before any ctx op
@@ -101,7 +101,7 @@ class Appearance
     widgetPosition = @widget.position()
     aContext.translate widgetPosition.x, widgetPosition.y
 
-    bodyFn aContext, area.translateBy(widgetPosition.neg()), appliedShadow
+    bodyFn aContext, damageBox.translateBy(widgetPosition.neg()), appliedShadow
 
     aContext.restore()
 

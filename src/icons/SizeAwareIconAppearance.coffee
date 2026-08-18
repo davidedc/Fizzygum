@@ -34,7 +34,7 @@ class SizeAwareIconAppearance extends IconAppearance
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     keyValues = @_calculateKeyValuesOrNil aContext, clippingRectangle
     return undefined unless keyValues?
-    [area,sl,st,al,at,w,h] = keyValues
+    [damageBox,sl,st,al,at,w,h] = keyValues
 
     # the icon art (_paintSizeAware) sets its own colours, so the shadow pass renders it to
     # a scratch and blits the black silhouette (the shadow-pass paint contract). In that

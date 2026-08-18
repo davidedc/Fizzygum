@@ -15,8 +15,8 @@ class AnalogClockAppearance extends Appearance
     if @widget.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
 
-    [area,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
+    [damageBox,sl,st,al,at,w,h] = @widget.calculateKeyValues aContext, clippingRectangle
+    if damageBox.isNotEmpty()
       if w < 1 or h < 1
         return undefined
 

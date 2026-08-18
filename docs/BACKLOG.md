@@ -493,6 +493,62 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 
 ## Residual / parked items (owning doc archived)
 
+### Naming-gloss audit 2026-08-18 — names the comments had to apologise for
+Session-scoped audit (no plan doc; detectors in `Fizzygum-tests/.scratch/naming-gloss-audit.js` +
+`naming-dup-comments.js`), prompted by the `localArea` → `localDamageBox` rename: a comment that
+must TRANSLATE a name into a different noun phrase at the point of use is a vote that the phrase
+is right and the name is not — and the strongest signature is the WARNING comment ("X is NOT the
+Y"). Eleven detectors over the 20k comment lines; 234 glossed identifiers triaged, most glosses
+being legitimate role-explanations rather than name-apologies. Discipline: per the
+menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling the name a defect.
+- [x] **✅ EXECUTED 2026-08-18 — seven renames, both repos, zero recaptures expected (no pixels move):**
+      `srcBrokenRect`/`dstBrokenRect` → `srcBrokenRectIndex`/`dstBrokenRectIndex` (they hold INDICES
+      into `world.broken` — the assignment `= @broken.length`, every read `@broken[w.srcBrokenRectIndex]`,
+      and the transients comment's own "the src/dst indices" all said so; a field named `Rect` holding
+      an integer is a type-lie); `maxShadowSize` → `brokenRectMargin` (its own comment warned it "need
+      not capture the biggest shadow" — it is the flat margin every damage rect is grown by; shadows
+      are covered exactly by `shadowExtendedRect`); `checkDraggingTreshold` → `checkDraggingThreshold`
+      (typo — the same file spells `displacementDueToGrabDragThreshold` correctly); `SliderButtonWdgt
+      @offset` → `@dragTargetPosition` (two comments in the file both glossed it "a plane-local
+      position": it is pointer-in-my-plane minus the within-thumb grab point, i.e. where the thumb
+      should go); `world._dirtyDescendantFlagged` → `_widgetsFlaggedHasDirtyDescendant` (read as a
+      boolean flag, holds the LIST of flagged nodes); `SheetHeaderCellWdgt @index` → `@viewportSlot`
+      (the comment had to warn "the viewport SLOT" — the name was true only at scroll origin 0);
+      and `area` → `damageBox` through the `calculateKeyValues` tuple at all 14 destructure sites
+      (it IS `localDamageBox` before the translate — the sanctioned rename's source, completing it).
+      The device-px `sl,st,al,at` stay terse: blit-geometry idiom, documented at use, never seen by
+      paint bodies.
+- [ ] ⛔ OWNER-GATED — **the dispatch-slot family (`dataSource`/`dataSourceWidgetForTarget` +
+      `widgetEnv`, and `MenuRowsPanelWdgt`'s `@target`→`dataSource` / `@environment`→`widgetEnv`
+      CROSSOVER) is a PROTOCOL question, not a rename.** The evidence of the disease is maximal —
+      the identical ⚠ SHAPE gloss copy-pasted THREE times in `SliderWdgt`, the CROSSOVER warning at
+      `createMenuItem`, six live bugs in the menu-action-wiring arc all reducible to "nothing at the
+      call site says what the slots hold" — but the slots have NO stable meaning to name: with a
+      panel environment slot 1 = the panel's target and slot 2 = the environment; without one
+      slot 1 = the item itself and slot 2 = the panel's target (the CONDITIONAL fact,
+      menu-subject-routing arc). The honest names come only after stabilising the slot semantics
+      (e.g. a fixed subject/context pair) — an arc with ~40 src + ~25 tests sites, adjacent to the
+      falsified-residue minefield above. ⚠ `widgetOpeningThePopUp` stays ⛔ FALSIFIED — verified
+      NOT re-filed here.
+- [ ] ⛔ OWNER-GATED — **three words for the repaint region: `broken` (169) / `dirty` (76) /
+      `damage` (66).** Cleanly layered today — broken = the world's rect machinery, dirty = the
+      island-buffer lists (`TransformFrameWdgt`), damage = the appearance vocabulary
+      (`localDamageBox`/`clipsToDamageBox`/`_damageSuppressionDepth`) — but it is drift, and
+      `brokenRectMargin` above had to pick a side (it picked the machinery's word). Options: unify
+      on "damage" (~170-site churn) or add a three-line vocabulary map to
+      `architecture/appearance-paint-convention.md` and declare the layering deliberate.
+- [ ] Take-it-or-leave-it: **`p0` ×4 files, each glossed "p0 is the origin"** (`SimpleDropletAppearance`,
+      `LayoutElementAdderOrDropletWdgt`, `StretchableWidgetContainerWdgt`, `GenericObjectIconWdgt`).
+      Weak: `p0` MUTATES through the narration ("now the origin is…"), so `origin` would be wrong
+      half the time too; the honest name is a construction-cursor name (`anchor`) with the
+      narration kept.
+- Declined, with reasons (do not re-file): `island`/`action`/`pin`/`gotoSlot`/`enableDrops`/
+  `footprint` — their glosses are role-explanations or gate-sanctions on good vocabulary;
+  `TreeNode.atIndex` — the comment IS the record of a deliberate rename (R4); icon-geometry terse
+  names (`cxc`, `S`, `td`) — dense local math with adjacent glosses; `checkIfTextContentWasModifiedFromTextAtStart`
+  — `check` as a query verb, conventional; the scare-quoted-concept sweep came back dry (every
+  recurring phrase already has an identifier).
+
 ### `archive/dropped-background-fill-investigation.md` — closed out 2026-08-13 (both items done)
 - [x] **SWCanvas does not validate `globalAlpha` per HTML5** — ✅ FIXED upstream 2026-08-13
       (SWCanvas `e1d8c4a`, vendored + pin bumped). The spec says an infinite/NaN/out-of-range

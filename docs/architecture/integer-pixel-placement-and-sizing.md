@@ -50,7 +50,7 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   `_applyWidth` / `_applyHeight` / `setExtent` all funnel through it), so *every* size
   change is rounded.
 - **The device blit coordinates** derived from bounds are integer too:
-  `Widget.calculateKeyValues` rounds the visible area and multiplies by
+  `Widget.calculateKeyValues` rounds the visible damage box and multiplies by
   `ceilPixelRatio`, so `al/at/sl/st/w/h` (the drawImage/fillRect args) are integer device
   pixels.
 - **The arrange-APPLY path rounds AT THE PRODUCER.** `_moveToNoSettle` / `__commitExtent` above are

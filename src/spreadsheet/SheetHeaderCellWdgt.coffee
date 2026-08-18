@@ -5,7 +5,7 @@
 # escalates to the sheet exactly as a data-cell click does (today's behaviour, unchanged);
 # column/row SELECTION semantics are a deliberate later arc, not part of the widgetisation.
 #
-# DERIVED chrome: carries no document state (@kind/@index are construction facts re-derivable
+# DERIVED chrome: carries no document state (@kind/@viewportSlot are construction facts re-derivable
 # from the sheet's geometry constants), so the restore/duplicate re-index DESTROYS and
 # REBUILDS header cells rather than adopting them (SimpleSpreadsheetWdgt._reindexCellsNoSettle).
 #
@@ -27,17 +27,17 @@ class SheetHeaderCellWdgt extends Widget
   # "column" | "row" | "corner"
   kind: undefined
   # 0-based viewport SLOT index (the label = view origin + slot, F1); undefined for the corner
-  index: undefined
+  viewportSlot: undefined
   # back-ref to the owning SimpleSpreadsheetWdgt (set by attachSheet)
   _sheetWidget: undefined
   # the label child (a passive StringWdgt); undefined for the corner
   _labelWdgt: undefined
 
-  constructor: (kind, index) ->
+  constructor: (kind, viewportSlot) ->
     super()
     @appearance = new SheetHeaderCellAppearance @
     @kind = kind
-    @index = index
+    @viewportSlot = viewportSlot
     @_sheetWidget = undefined
     @_labelWdgt = undefined
     # transparent by default — every visible pixel is painted explicitly by
@@ -52,13 +52,13 @@ class SheetHeaderCellWdgt extends Widget
     @_sheetWidget = sheetWidget
     return
 
-  # @index is the viewport SLOT; the label derives from the sheet's view origin + slot at
-  # label-sync time (F1) — scrolling relabels the frozen headers in place (cell-quantized
-  # scroll means they never move). At origin 0 this is the identity.
+  # The label derives from the sheet's view origin + my slot at label-sync time (F1) —
+  # scrolling relabels the frozen headers in place (cell-quantized scroll means they never
+  # move). At origin 0 slot and model index coincide.
   _labelText: ->
     switch @kind
-      when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @index)
-      when "row"    then "" + (@_sheetWidget.viewOriginRow + @index + 1)
+      when "column" then @_sheetWidget.model.colToLetters (@_sheetWidget.viewOriginCol + @viewportSlot)
+      when "row"    then "" + (@_sheetWidget.viewOriginRow + @viewportSlot + 1)
       else undefined
 
   # Keep my label child in sync (create / retext / place) — called from the sheet's chrome

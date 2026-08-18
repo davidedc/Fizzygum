@@ -68,7 +68,7 @@ class Widget extends TreeNode
     # the triggering click's bringToForeground marks the menu dirty right before the save runs).
     "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged"
     "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
-    "srcBrokenRect", "dstBrokenRect"
+    "srcBrokenRectIndex", "dstBrokenRectIndex"
   ]
 
   appearance: undefined
@@ -311,8 +311,8 @@ class Widget extends TreeNode
   cachedIsInCollapsedSubtree: undefined
   checkIsInCollapsedSubtreeCache: undefined
 
-  srcBrokenRect: undefined
-  dstBrokenRect: undefined
+  srcBrokenRectIndex: undefined
+  dstBrokenRectIndex: undefined
 
   layoutIsValid: true
   # (ordered down-walk Stage B2 — docs/archive/ordered-downwalk-stage-b-plan.md) FLUSH-LOCAL dirty-path
@@ -321,7 +321,7 @@ class Widget extends TreeNode
   # nodes). Derived FRESH each settle round from the work-list itself
   # (__flagHasDirtyDescendantUpwards, called only by _recalculateLayoutsBody's derivation — never
   # at enqueue/attach time), and cleared wholesale when the flush completes (recalculateLayouts'
-  # finally, via world._dirtyDescendantFlagged). Outside a flush every flag is false — which is why
+  # finally, via world._widgetsFlaggedHasDirtyDescendant). Outside a flush every flag is false — which is why
   # it must stay in @serializationTransients even though its resting own-value is false.
   hasDirtyDescendant: false
   # The ACTIVE layout spec (a LayoutSpec-family object) — HOW I participate in my
@@ -2636,21 +2636,21 @@ class Widget extends TreeNode
     @bounds.isIntersecting aWdgt.bounds
 
   calculateKeyValues: (aContext, clippingRectangle) ->
-    area = clippingRectangle.intersect(@bounds).round()
+    damageBox = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
-    if area.isNotEmpty()
+    if damageBox.isNotEmpty()
       delta = @position().neg()
-      src = area.translateBy(delta).round()
+      src = damageBox.translateBy(delta).round()
 
       sl = src.left() * ceilPixelRatio
       st = src.top() * ceilPixelRatio
-      al = area.left() * ceilPixelRatio
-      at = area.top() * ceilPixelRatio
+      al = damageBox.left() * ceilPixelRatio
+      at = damageBox.top() * ceilPixelRatio
       w = Math.min(src.width() * ceilPixelRatio, @width() * ceilPixelRatio - sl)
       h = Math.min(src.height() * ceilPixelRatio, @height() * ceilPixelRatio - st)
 
-    return [area,sl,st,al,at,w,h]
+    return [damageBox,sl,st,al,at,w,h]
 
   # EPHEMERAL capability (owner's term). An ephemeral is a transient overlay owned wholly by the
   # per-cycle reconciler (WorldWdgt.addHighlightingWidgets / PinoutsOverlay.reconcile): it is
@@ -2909,8 +2909,8 @@ class Widget extends TreeNode
   # on the common path.
   _paintEditorSelectionOverlayIfSelected: (aContext, clippingRectangle, appliedShadow) ->
     return if appliedShadow? or !@_showsSelectionOverlay()
-    [area, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
-    return unless area? and area.isNotEmpty() and w >= 1 and h >= 1
+    [damageBox, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
+    return unless damageBox? and damageBox.isNotEmpty() and w >= 1 and h >= 1
     @_drawSelectionOverlay aContext, al, at, w, h
 
   # ... when you want to hide something
@@ -4945,14 +4945,14 @@ class Widget extends TreeNode
   # (WorldWdgt._recalculateLayoutsBody), never at enqueue/attach time: the flags are FLUSH-LOCAL
   # scratch (parent pointers cannot change mid-flush, so a derived chain stays true for the whole
   # flush; outside a flush every flag is false). Every node flagged here is recorded on
-  # world._dirtyDescendantFlagged so recalculateLayouts' finally can clear exactly the flagged set.
+  # world._widgetsFlaggedHasDirtyDescendant so recalculateLayouts' finally can clear exactly the flagged set.
   # Pure bookkeeping: never schedules layout.
   __flagHasDirtyDescendantUpwards: ->
     return unless world?
     ancestor = @
     while ancestor? and not ancestor.hasDirtyDescendant
       ancestor.hasDirtyDescendant = true
-      world._dirtyDescendantFlagged.push ancestor
+      world._widgetsFlaggedHasDirtyDescendant.push ancestor
       ancestor = ancestor.parent
     return
 

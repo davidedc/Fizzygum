@@ -348,13 +348,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   binWdgt: undefined
   shelfWdgt: undefined
 
-  # Since a shadow is just a "rendering" effect there is no widget for it; the shadow area is
-  # cleaned up by growing broken rects. maxShadowSize is the flat margin every damage rect gets
-  # (AA fringe + slack); the shadow itself is covered EXACTLY, whatever its size or direction,
-  # by the pre-map shadow extension in the widget's own plane — Widget.shadowExtendedRect at
-  # the record site (source side) and at the flesh-out destination lanes — so this constant
-  # need not capture the biggest shadow in the product.
-  maxShadowSize: 6
+  # The flat margin every broken/damage rect is grown by (AA fringe + slack). Shadows are NOT
+  # covered by this margin: a shadow is covered EXACTLY, whatever its size or direction, by the
+  # pre-map shadow extension in the widget's own plane — Widget.shadowExtendedRect at the record
+  # site (source side) and at the flesh-out destination lanes.
+  brokenRectMargin: 6
 
   inputEventsQueue: undefined
 
@@ -446,7 +444,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # Widget.__flagHasDirtyDescendantUpwards as it sets each flag, so the flush that drains
   # widgetsThatMaybeChangedLayout can clear exactly the flagged set (recalculateLayouts' finally).
   # The two lists share one lifecycle: dirt appears -> both grow; drain completes -> both empty.
-  _dirtyDescendantFlagged: []
+  _widgetsFlaggedHasDirtyDescendant: []
   # (ordered down-walk Stage B2) re-lays performed by the current flush's down-walk; reset at each
   # _recalculateLayoutsBody entry. Feeds the RECALC_NONCONVERGENCE never-fire assert and the
   # zero-progress stuck-detection (DOWNWALK_UNREACHABLE_CHAINTOP).
@@ -855,9 +853,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @numberOfDuplicatedBrokenRects++
     else
       if isSrc
-        brokenWidget.srcBrokenRect = @broken.length
+        brokenWidget.srcBrokenRectIndex = @broken.length
       else
-        brokenWidget.dstBrokenRect = @broken.length
+        brokenWidget.dstBrokenRectIndex = @broken.length
       if !theRect?
         debugger
       @broken.push theRect
@@ -881,59 +879,59 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     while brokenWidgetAncestor.parent?
       brokenWidgetAncestor = brokenWidgetAncestor.parent
-      if brokenWidgetAncestor.srcBrokenRect?
-        if !@broken[brokenWidgetAncestor.srcBrokenRect]?
+      if brokenWidgetAncestor.srcBrokenRectIndex?
+        if !@broken[brokenWidgetAncestor.srcBrokenRectIndex]?
           debugger
-        if @broken[brokenWidgetAncestor.srcBrokenRect].containsRectangle aRect
+        if @broken[brokenWidgetAncestor.srcBrokenRectIndex].containsRectangle aRect
           if isSrc
-            @broken[brokenWidget.srcBrokenRect] = undefined
-            brokenWidget.srcBrokenRect = undefined
+            @broken[brokenWidget.srcBrokenRectIndex] = undefined
+            brokenWidget.srcBrokenRectIndex = undefined
           else
-            @broken[brokenWidget.dstBrokenRect] = undefined
-            brokenWidget.dstBrokenRect = undefined
-        else if aRect.containsRectangle @broken[brokenWidgetAncestor.srcBrokenRect]
-          @broken[brokenWidgetAncestor.srcBrokenRect] = undefined
-          brokenWidgetAncestor.srcBrokenRect = undefined
+            @broken[brokenWidget.dstBrokenRectIndex] = undefined
+            brokenWidget.dstBrokenRectIndex = undefined
+        else if aRect.containsRectangle @broken[brokenWidgetAncestor.srcBrokenRectIndex]
+          @broken[brokenWidgetAncestor.srcBrokenRectIndex] = undefined
+          brokenWidgetAncestor.srcBrokenRectIndex = undefined
 
-      if brokenWidgetAncestor.dstBrokenRect?
-        if !@broken[brokenWidgetAncestor.dstBrokenRect]?
+      if brokenWidgetAncestor.dstBrokenRectIndex?
+        if !@broken[brokenWidgetAncestor.dstBrokenRectIndex]?
           debugger
-        if @broken[brokenWidgetAncestor.dstBrokenRect].containsRectangle aRect
+        if @broken[brokenWidgetAncestor.dstBrokenRectIndex].containsRectangle aRect
           if isSrc
-            @broken[brokenWidget.srcBrokenRect] = undefined
-            brokenWidget.srcBrokenRect = undefined
+            @broken[brokenWidget.srcBrokenRectIndex] = undefined
+            brokenWidget.srcBrokenRectIndex = undefined
           else
-            @broken[brokenWidget.dstBrokenRect] = undefined
-            brokenWidget.dstBrokenRect = undefined
-        else if aRect.containsRectangle @broken[brokenWidgetAncestor.dstBrokenRect]
-          @broken[brokenWidgetAncestor.dstBrokenRect] = undefined
-          brokenWidgetAncestor.dstBrokenRect = undefined
+            @broken[brokenWidget.dstBrokenRectIndex] = undefined
+            brokenWidget.dstBrokenRectIndex = undefined
+        else if aRect.containsRectangle @broken[brokenWidgetAncestor.dstBrokenRectIndex]
+          @broken[brokenWidgetAncestor.dstBrokenRectIndex] = undefined
+          brokenWidgetAncestor.dstBrokenRectIndex = undefined
 
 
   _rectAlreadyIncludedInParentBrokenWidget: ->
     for brokenWidget in @widgetsWithMaybeChangedPaintBounds
-        if brokenWidget.srcBrokenRect?
-          aRect = @broken[brokenWidget.srcBrokenRect]
+        if brokenWidget.srcBrokenRectIndex?
+          aRect = @broken[brokenWidget.srcBrokenRectIndex]
           @_checkARectWithHierarchy aRect, brokenWidget, true
-        if brokenWidget.dstBrokenRect?
-          aRect = @broken[brokenWidget.dstBrokenRect]
+        if brokenWidget.dstBrokenRectIndex?
+          aRect = @broken[brokenWidget.dstBrokenRectIndex]
           @_checkARectWithHierarchy aRect, brokenWidget, false
 
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-        if brokenWidget.srcBrokenRect?
-          aRect = @broken[brokenWidget.srcBrokenRect]
+        if brokenWidget.srcBrokenRectIndex?
+          aRect = @broken[brokenWidget.srcBrokenRectIndex]
           @_checkARectWithHierarchy aRect, brokenWidget
-        if brokenWidget.dstBrokenRect?
-          aRect = @broken[brokenWidget.dstBrokenRect]
+        if brokenWidget.dstBrokenRectIndex?
+          aRect = @broken[brokenWidget.dstBrokenRectIndex]
           @_checkARectWithHierarchy aRect, brokenWidget
 
   _cleanupSrcAndDestRectsOfWidgets: ->
     for brokenWidget in @widgetsWithMaybeChangedPaintBounds
-      brokenWidget.srcBrokenRect = undefined
-      brokenWidget.dstBrokenRect = undefined
+      brokenWidget.srcBrokenRectIndex = undefined
+      brokenWidget.dstBrokenRectIndex = undefined
     for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-      brokenWidget.srcBrokenRect = undefined
-      brokenWidget.dstBrokenRect = undefined
+      brokenWidget.srcBrokenRectIndex = undefined
+      brokenWidget.dstBrokenRectIndex = undefined
 
 
   _fleshOutBroken: ->
@@ -956,7 +954,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
           # The record is also SHADOW-INCLUSIVE (extended by the shadow that painted), so the grow here is
           # pure margin — a shadow term would double-cover and hide a record-time regression.
-          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @brokenRectMargin
 
       # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullBroken). Consumed by
       # whichever lane runs first (_fleshOutFullBroken is called before _fleshOutBroken); the field is
@@ -984,7 +982,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # The shadow of what is about to be painted is applied PRE-map, in the widget's own
           # plane (shadowExtendedRect: the map composes island scale and rotation over it), which
           # also makes the island deposits shadow-inclusive; the post-map grow is pure margin.
-          destinationBroken = (brokenWidget.mapRectToScreen (brokenWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @maxShadowSize
+          destinationBroken = (brokenWidget.mapRectToScreen (brokenWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @brokenRectMargin
 
       if sourceBroken? and destinationBroken?
         @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
@@ -1012,7 +1010,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # true rotated footprint, not the un-transformed slot. Off any island it is the raw rect ⇒ dormant-identical.
           # The record is also SHADOW-INCLUSIVE (extended by the shadow that painted), so the grow here is
           # pure margin — a shadow term would double-cover and hide a record-time regression.
-          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @maxShadowSize
+          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @brokenRectMargin
 
       # §4.4 island buffer cache — source (old-position) lane: erase the vacated buffer region of a
       # widget that MOVED within (or was removed from) its stationary island. The stashed island stays
@@ -1033,7 +1031,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
           # affine transforms (§4.5): map to screen before spread/expand/margin-grow, before merge (identity → unchanged).
           # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
           # Shadow applied PRE-map in the widget's own plane (see the twin note in _fleshOutBroken).
-          destinationBroken = (brokenWidget.mapRectToScreen (brokenWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @maxShadowSize
+          destinationBroken = (brokenWidget.mapRectToScreen (brokenWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @brokenRectMargin
 
       if sourceBroken? and destinationBroken?
         @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
@@ -1118,9 +1116,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       # also covers resetWorld: the teardown rides a settle, so its flush lands here with the
       # work-list drained, leaving both structures empty for the next test (no state leak).
       if @widgetsThatMaybeChangedLayout.length == 0
-        for w in @_dirtyDescendantFlagged
+        for w in @_widgetsFlaggedHasDirtyDescendant
           w.hasDirtyDescendant = false
-        @_dirtyDescendantFlagged = []
+        @_widgetsFlaggedHasDirtyDescendant = []
 
   # (ordered down-walk Stage B2, 2026-07-16 -- docs/archive/ordered-downwalk-stage-b-plan.md §4-B2) The
   # settle is now a ROOT-DOWN VISITATION of the dirty tree. The old shape (pop the work-list from

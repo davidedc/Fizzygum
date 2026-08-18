@@ -281,14 +281,14 @@ class SimpleSpreadsheetWdgt extends Widget
     @_cellsPanel._applyBounds (@position().add new Point @headerColWidth, @headerRowHeight), new Point (@width() - @headerColWidth), (@height() - @headerRowHeight)
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
-    # (kind, topLeftOffset, extent, index): the four loose geometry numbers are the two Point
-    # tuples they always were, and `index` moved to the TAIL because the corner header has none
+    # (kind, topLeftOffset, extent, viewportSlot): the four loose geometry numbers are the two Point
+    # tuples they always were, and `viewportSlot` moved to the TAIL because the corner header has none
     # -- with it in slot 2 the corner call had to write `undefined` past it to reach the
     # geometry (R3). Allocation is unchanged: the two Points were already being minted here.
-    buildHeader = (kind, topLeftOffset, extent, index) =>
-      key = kind + ":" + (index ? "")
+    buildHeader = (kind, topLeftOffset, extent, viewportSlot) =>
+      key = kind + ":" + (viewportSlot ? "")
       unless @_headerCells.has key
-        header = new SheetHeaderCellWdgt kind, index
+        header = new SheetHeaderCellWdgt kind, viewportSlot
         header.attachSheet this
         @_addNoSettle header
         @_headerCells.set key, header

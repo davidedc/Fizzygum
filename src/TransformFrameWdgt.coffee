@@ -441,7 +441,7 @@ class TransformFrameWdgt extends PanelWdgt
     # old fringe ghosts under the partial rebuild — the byte-identity gate would catch it).
     # Clamped to the slot in _refreshIslandBuffer. Kept virtual (this island's plane) — the
     # composite maps it to screen.
-    dirty = aRect.expandBy(1).growBy world.maxShadowSize
+    dirty = aRect.expandBy(1).growBy world.brokenRectMargin
     if !@_islandBufferDirtyRect?
       @_islandBufferDirtyRect = [dirty]
       return

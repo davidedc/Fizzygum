@@ -19,9 +19,10 @@ class SliderButtonWdgt extends CircleBoxWdgt
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
-  # grab offset held for the duration of a knob drag: a plane-local position, mapped
-  # through the (possibly rotated) island so it stays consistent with my own plane
-  offset: undefined
+  # the thumb's grab-corrected target POSITION (pointer mapped into my plane, minus the
+  # within-thumb grab point), held for the duration of a knob drag — plane-local, so it
+  # stays consistent with my own plane under a (possibly rotated) island
+  dragTargetPosition: undefined
 
   constructor: ->
     super
@@ -89,9 +90,9 @@ class SliderButtonWdgt extends CircleBoxWdgt
     # for a slider inside a non-identity island the two live in different planes, so the un-mapped
     # difference — and the clamp against the slider's VIRTUAL @parent.top()/bottom()/left()/right() below —
     # drifts with rotation and pins the value to an extreme near 45° (owner report: the C<->F converter's
-    # sliders). Mapping both operands into MY plane makes @offset a virtual-plane position, consistent with
+    # sliders). Mapping both operands into MY plane makes @dragTargetPosition a virtual-plane position, consistent with
     # the clamp bounds. Off every island screenPointToMyPlane returns the same point ⇒ byte-identical (dormant).
-    @offset = (@screenPointToMyPlane pos).subtract nonFloatDragPositionWithinWdgtAtStart
+    @dragTargetPosition = (@screenPointToMyPlane pos).subtract nonFloatDragPositionWithinWdgtAtStart
     if world.hand.mouseButton and
     @visibleBasedOnIsVisibleProperty() and
     !@isInCollapsedSubtree()
@@ -99,16 +100,16 @@ class SliderButtonWdgt extends CircleBoxWdgt
       if @parent.autoOrientation() is "vertical"
         newX = @left()
         newY = Math.max(
-          Math.min(@offset.y,
+          Math.min(@dragTargetPosition.y,
           @parent.bottom() - @height()), @parent.top())
 
       else
         newY = @top()
         newX = Math.max(
-          Math.min(@offset.x,
+          Math.min(@dragTargetPosition.x,
           @parent.right() - @width()), @parent.left())
 
-      # Integer placement (Layer A): @offset is a plane-local position mapped through the (possibly rotated)
+      # Integer placement (Layer A): @dragTargetPosition is a plane-local position mapped through the (possibly rotated)
       # island's inverse transform, so it is fractional; the thumb's committed @bounds must be integer -- round
       # the target once, and hand the SAME rounded point to updateValue so the derived value stays consistent
       # with what was applied. docs/archive/fractional-widget-bounds-investigation-plan.md (Path 2).

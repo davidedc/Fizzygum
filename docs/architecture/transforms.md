@@ -410,7 +410,7 @@ on; the OFF path is byte-identical to the pre-cache rebuild-every-time.
 invariant: buffer content depends only on virtual content; the matrix affects only compositing).
 Content-dirty rects are deposited **only** from the two damage flesh-out lanes
 (`Widget::mapRectToScreen` with `depositBufferDirty = true`, and the source lane) via
-`_depositIslandBufferDirtyRect`, which grows each rect by `expandBy(1).growBy world.maxShadowSize`
+`_depositIslandBufferDirtyRect`, which grows each rect by `expandBy(1).growBy world.brokenRectMargin`
 (a child's shadow + AA fringe) and coalesces the disjoint list. A cost ceiling
 (`_coalesceDirtyList`, gated by `WorldWdgt.dirtyRectListEnabled` and the class constants
 `ISLAND_DIRTY_MAX_RECTS` / `ISLAND_DIRTY_AREA_FRACTION`) collapses the list to its bounding box

@@ -12,10 +12,10 @@ class SheetHeaderCellAppearance extends Appearance
   # the TOP edge is dark on the outer-top boundary (column headers, corner) or on the
   # under-letter-header separator (row 0). Everything else is the plain gridline colour.
   _leftEdgeIsDark: ->
-    @widget.kind is "row" or @widget.kind is "corner" or (@widget.kind is "column" and @widget.index is 0)
+    @widget.kind is "row" or @widget.kind is "corner" or (@widget.kind is "column" and @widget.viewportSlot is 0)
 
   _topEdgeIsDark: ->
-    @widget.kind is "column" or @widget.kind is "corner" or (@widget.kind is "row" and @widget.index is 0)
+    @widget.kind is "column" or @widget.kind is "corner" or (@widget.kind is "row" and @widget.viewportSlot is 0)
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     # shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the

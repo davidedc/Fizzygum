@@ -64,24 +64,24 @@ BackBufferMixin =
       # Hence, these values are only good outside of the
       # scope of the scaling due to the ceilPixelRatio
       calculateKeyValues: (aContext, clippingRectangle) ->
-        area = clippingRectangle.intersect(@boundingBox()).round()
+        damageBox = clippingRectangle.intersect(@boundingBox()).round()
         # test whether anything that we are going to be drawing
         # is visible (i.e. within the clippingRectangle)
-        if area.isNotEmpty()
+        if damageBox.isNotEmpty()
           delta = @position().neg()
-          src = area.translateBy(delta).round()
+          src = damageBox.translateBy(delta).round()
           
           # the " * ceilPixelRatio " multiplications
           # transform logical pixels into actual pixels.
           sl = src.left() * ceilPixelRatio
           st = src.top() * ceilPixelRatio
-          al = area.left() * ceilPixelRatio
-          at = area.top() * ceilPixelRatio
+          al = damageBox.left() * ceilPixelRatio
+          at = damageBox.top() * ceilPixelRatio
           # @backBuffer.width and @backBuffer.height are already in
           # physical coordinates so no need to adjust for pixelratio
           w = Math.min(src.width() * ceilPixelRatio, @backBuffer.width - sl)
           h = Math.min(src.height() * ceilPixelRatio, @backBuffer.height - st)
-        return [area,sl,st,al,at,w,h]
+        return [damageBox,sl,st,al,at,w,h]
 
       isTransparentAt: (aPoint) ->
         if @boundsContainPoint aPoint
@@ -135,8 +135,8 @@ BackBufferMixin =
         if !@backBuffer?
           return undefined
 
-        [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-        return undefined if w < 1 or h < 1 or area.isEmpty()
+        [damageBox,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+        return undefined if w < 1 or h < 1 or damageBox.isEmpty()
 
         aContext.save()
 

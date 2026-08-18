@@ -957,7 +957,7 @@ class ActivePointerWdgt extends Widget
 
     @dispatchEventsFollowingMouseMove mouseOverNew
 
-  checkDraggingTreshold: ->
+  checkDraggingThreshold: ->
     # UNFORTUNATELY OLD tests didn't take the correction into account,
     # pointers inevitably have some "noise", so to avoid that
     # a simple clicking (which could be done for example for
@@ -1000,9 +1000,9 @@ class ActivePointerWdgt extends Widget
       if @wdgtToGrab
         
         # Grab/drag threshold, computed ONCE for all three arms below (was duplicated in the
-        # two float-drag arms). checkDraggingTreshold is a pure read; the non-float else-arm
+        # two float-drag arms). checkDraggingThreshold is a pure read; the non-float else-arm
         # ignores the result, exactly as before (it never gated on the threshold).
-        [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
+        [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingThreshold()
 
         # these first two cases are for float dragging
         # the third case is non-float drag
@@ -1052,7 +1052,7 @@ class ActivePointerWdgt extends Widget
           # byte-identical (dormant).
           @nonFloatDragPositionWithinWdgtAtStart =
             # if we ever will need to compensate for the grab/drag
-            # treshold here, just add .subtract displacementDueToGrabDragThreshold
+            # threshold here, just add .subtract displacementDueToGrabDragThreshold
             (@nonFloatDraggedWdgt.screenPointToMyPlane(pos).subtract @nonFloatDraggedWdgt.position())
 
 
