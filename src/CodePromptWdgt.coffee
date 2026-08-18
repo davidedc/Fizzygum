@@ -1,6 +1,8 @@
 class CodePromptWdgt extends CodeAreaWdgt
 
-  # the DISPATCH pair: on Ok I call @target[@callback].call @target, @textWidget
+  # the DISPATCH pair: on save/Ok I call @target[@callback].call @target, @_promptValue()
+  # — ONE argument, the composed source text, the same value delivery every prompt makes
+  # (the pin-setter contract, widget-authoring-guidelines.md §11).
   target: undefined
   callback: undefined
 
@@ -39,10 +41,10 @@ class CodePromptWdgt extends CodeAreaWdgt
     
     @saveTextWdgt = new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize
     @saveTextWdgt.alignCenter()
-    @saveButton = new SimpleButtonWdgt @, "informTarget", face: @saveTextWdgt
+    @saveButton = new SimpleButtonWdgt @, "deliverValue", face: @saveTextWdgt
     @_addNoSettle @saveButton
 
-    @okButton = new SimpleButtonWdgt @, "notifyTargetAndClose", face: "ok"
+    @okButton = new SimpleButtonWdgt @, "deliverValueAndClose", face: "ok"
     @_addNoSettle @okButton
     # ---------------------------------------
 
@@ -60,13 +62,23 @@ class CodePromptWdgt extends CodeAreaWdgt
     @saveTextWdgt.setColor Color.create 200, 200, 200
 
 
-  # The callback is invoked with what it actually needs. It is NOT a menu action: nothing
-  # dispatches it through ButtonWdgt's fixed 4-slot convention, so it carries no leading
-  # dispatcher slots and no caller has to punch `undefined` past them (R3).
-  informTarget: ->
-    @target[@callback].call @target, @textWidget
+  # my value is the composed source text. Same verb pair as PromptWdgt (a prompt by ROLE —
+  # the isMenu? idiom): shared names for the shared delivery convention, no shared ancestry.
+  _promptValue: ->
+    @textWidget.text
+
+  # The save adapter: deliver the value, then reset the modified-content tracking so the save
+  # button re-disables until the text diverges again. It is NOT a menu action: nothing dispatches
+  # it through ButtonWdgt's fixed 4-slot convention, so it carries no leading dispatcher slots and
+  # no caller has to punch `undefined` past them (R3).
+  deliverValue: ->
+    @target[@callback].call @target, @_promptValue()
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+
+  deliverValueAndClose: ->
+    @deliverValue()
+    @close()
 
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout

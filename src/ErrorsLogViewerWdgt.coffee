@@ -18,7 +18,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   # ALL options, no operand: the error console is opened by the world with nothing to
   # configure. It carries no target/callback pair -- an error log reports, it does not commit a
   # value back to anyone, so my ok button closes (closeFromContainerFrame) and the
-  # notifyTargetAndClose path belongs to CodePromptWdgt alone.
+  # deliverValue path belongs to CodePromptWdgt alone.
   # defaultContents is read GUARDED so absence leaves the class-level "" standing: a bare
   # @param would overwrite it with undefined (R5).
   constructor: (opts = {}) ->

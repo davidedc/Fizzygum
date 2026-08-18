@@ -679,9 +679,10 @@ itself one-way with no bookkeeping to have gone stale.
 **Every delivery path passes a pin setter ONE argument: the value.** A wire calls
 `consumer[action] value`; a controller's `updateTarget` calls `target[setter](value)`; a prompt's
 Ok extracts the value from its own editor and delivers it (`PromptWdgt.deliverValue` →
-`@target[@callback].call @target, @_promptValue()`). There is no delivery that hands a setter a
-widget to interrogate, so a setter never probes its argument for `getValue`/`getColor` — it
-coerces, clamps, and stores:
+`@target[@callback].call @target, @_promptValue()`; the code prompt's save/Ok,
+`CodePromptWdgt.deliverValue`, delivers its composed source text the same way). There is no
+delivery that hands a setter a widget to interrogate, so a setter never probes its argument for
+`getValue`/`getColor` — it coerces, clamps, and stores:
 
 ```coffee
 setFoo: (foo) ->

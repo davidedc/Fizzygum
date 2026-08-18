@@ -33,8 +33,8 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   injectCodeIntoTarget: ->
     @wdgtToBeNotifiedForNewCode.resolveInjectionTarget?()?.injectProperties @sourceCodeToBeInjected
 
-  # The textPrompt callback: called straight by CodePromptWdgt.informTarget, not dispatched
-  # as a menu action, so it takes only what it uses.
-  modifyCodeToBeInjected: (textWidget) ->
-    @sourceCodeToBeInjected = textWidget.text
+  # The textPrompt callback: the prompt delivers ONE argument, the composed source text
+  # (CodePromptWdgt.deliverValue — the same value delivery every prompt makes).
+  modifyCodeToBeInjected: (newSource) ->
+    @sourceCodeToBeInjected = newSource
     @wdgtToBeNotifiedForNewCode.newCodeToInjectFromButton? @

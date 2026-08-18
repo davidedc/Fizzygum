@@ -2,14 +2,14 @@
 # ConsoleWdgt ("dev -> console"), ScriptWdgt (a standalone script on the desktop),
 # CodePromptWdgt (the code-entry popup) and ErrorsLogViewerWdgt (the error log).
 # It carries what is byte-identical across the family: the code-area fields + the
-# two paddings, the build settle-wrapper, the two code-area builder variants (the
-# EDITABLE white panel with modified-content tracking -- Script/CodePrompt -- and
-# the plain mono panel -- Console/ErrorsLog), and the notify-and-close commit
-# plumbing. Everything that differs per class stays on the subclass: the
-# constructor signature, the button row and what its actions DO, informTarget's
-# tail, and the _reLayout geometry (2 vs 3 buttons, row heights, damage handling
-# -- the four _reLayouts are deliberately NOT folded: a verbatim diff shows they
-# differ beyond the button fields).
+# two paddings, the build settle-wrapper, and the two code-area builder variants
+# (the EDITABLE white panel with modified-content tracking -- Script/CodePrompt --
+# and the plain mono panel -- Console/ErrorsLog). Everything that differs per
+# class stays on the subclass: the constructor signature, the button row and what
+# its actions DO (CodePromptWdgt alone carries a target/callback pair, delivered
+# through its deliverValue pair), and the _reLayout geometry (2 vs 3 buttons, row
+# heights, damage handling -- the four _reLayouts are deliberately NOT folded: a
+# verbatim diff shows they differ beyond the button fields).
 class CodeAreaWdgt extends Widget
 
   tempPromptEntryField: undefined
@@ -57,9 +57,3 @@ class CodeAreaWdgt extends Widget
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
-  # the commit plumbing shared by the prompt-shaped members of the family
-  # (CodePromptWdgt / ErrorsLogViewerWdgt): informTarget itself differs per class
-  # and stays on the subclass.
-  notifyTargetAndClose: ->
-    @informTarget()
-    @close()

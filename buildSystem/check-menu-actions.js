@@ -20,8 +20,9 @@
 // clicks a slider's "floor..." — three such items sat broken behind that tripwire. A build-time
 // check needs no one to click.
 // RULE 1 has TWO doors, because there are two ways into a name-dispatched slot. Besides
-// addMenuItem/prependMenuItem, `prompt` / `textPrompt` take a `callback` that the prompt's Ok
-// dispatches by name (`PromptWdgt.deliverValue`: `@target[@callback].call @target, @_promptValue()`)
+// addMenuItem/prependMenuItem, `prompt` / `textPrompt` take a `callback` that the prompt's save/Ok
+// dispatches by name (`PromptWdgt.deliverValue` / `CodePromptWdgt.deliverValue`:
+// `@target[@callback].call @target, @_promptValue()`)
 // — the same proof one hop later, so the callbacks count as menu-dispatched verbs for RULE 3 as well.
 //
 // ── RULE 2 (HARD, sound) — the options bag is an object.
@@ -104,7 +105,8 @@ for (const p of files) {
   const allLines = fs.readFileSync(p, 'utf8').split('\n');
   // ---- RULE 1, second door: prompt / textPrompt -------------------------------------------
   // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — the prompt's
-  // Ok does, by name (`PromptWdgt.deliverValue`: `@target[@callback].call @target, @_promptValue()`),
+  // save/Ok does, by name (`PromptWdgt.deliverValue` / `CodePromptWdgt.deliverValue`:
+  // `@target[@callback].call @target, @_promptValue()`),
   // so the callback slot IS an action slot and a function literal there is wrong for exactly the same
   // reason, one hop later. Same proof, same severity, so it lives here rather than in its own gate.
   // ⓘ Deliberately NOT the stricter "the 3rd argument must be a string LITERAL": that would flag a
