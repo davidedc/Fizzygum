@@ -32,3 +32,4 @@ getWorldMatrix
 _setFontSizeConnector    # reactive connector for setFontSize; reached only via @target["_setFontSizeConnector"] computed dispatch
 _takeSliderValueConnector # reactive connector for takeSliderValue (PromptWdgt prompt slider); reached only via @target["_takeSliderValueConnector"] computed dispatch
 _applyRowReflectionConnector  # reactive connector lane: reached by the computed name `_#{action}Connector` from a reflected-row edge (MenuItemWdgt._subscribeToMyReflectedSource), invisible to a static scan
+_setToggleStateConnector  # reactive connector for setToggleState (SwitchButtonWdgt's `shown button` pin); reached only via @target["_setToggleStateConnector"] computed dispatch

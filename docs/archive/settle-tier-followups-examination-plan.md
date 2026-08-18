@@ -1,4 +1,4 @@
-> **ARCHIVED — COMPLETE (2026-07-17 restructure).** Topics 1,2,4,5 resolved 2026-06-30/07-01; Topic 3 (NoSettle naming-coverage audit) never started Campaign closed per ledger; Topic 3 residual tracked in docs/BACKLOG.md.
+> **ARCHIVED — COMPLETE.** Topics 1,2,4,5 resolved 2026-06-30/07-01 (2026-07-17 restructure); Topic 3 (NoSettle naming-coverage audit) resolved 2026-08-18 — see the BACKLOG ledger at the tail. Nothing of this plan remains open in docs/BACKLOG.md.
 > Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
 
 # Examination plan — settle-tier follow-ups (post orphan-settledness)
@@ -240,7 +240,18 @@ code: the thing it exempted may be gone/fixed, so the marker (or allowlist line)
 
 **Sequence (owner, 2026-06-30): 5+2 → 4 → [3, 1 remain].** ✅ DONE: **Topic 5 + Topic 2** (sanitized allowlist +
 symmetry-aware dead-methods gate, `f35d7021`); **Topic 4 rename** (`buildAndConnectChildren` → private `_…`, `a51d9d57`);
-**Topic 4 part 2** (all constructors settle — see the banner above; HELD pending review/commit). **STILL OPEN:
-Topic 3** (every non-settling private fn named `*NoSettle` — the naming-coverage audit, never started) and **Topic 1**
+**Topic 4 part 2** (all constructors settle — see the banner above; HELD pending review/commit). **Topic 3 resolved
+2026-08-18** (see the ledger below). **STILL OPEN elsewhere: Topic 1's underlying flake class**
 (determinism `speed=normal`/parallel-load flake, PRE-EXISTING — the highest-rigor separate track; start by reading
 `Fizzygum-tests/DETERMINISM.md` and reproducing with a FRESH torture `--out`). All gates green at `speed=fastest`.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] Topic 3: audit that every non-settling private fn is named *NoSettle — **DONE 2026-08-18.** The census the
+  item asked for exists as `Fizzygum/buildSystem/census-nosettle-naming.js` (advisory, re-runnable; reuses
+  check-layering.js's parse): it asserts the negative (a `*NoSettle` def that settles — 0 found) and shortlists
+  settle-closures delegating to a plain `_` method. The shortlist yielded exactly ONE genuine mis-named core,
+  `SwitchButtonWdgt._setToggleState`, resolved not by a bare rename but by full grammar conformance: funnel core
+  `_setToggleStateNoSettle` (coercion folded in), public `setToggleState` the canonical thin settle, new
+  `_setToggleStateConnector` for the drain lane, every caller moved to its correct tier. The remaining shortlist
+  rows are named families / plain helpers by design (the plan's own Topic-3 refinement: not a blanket rename).

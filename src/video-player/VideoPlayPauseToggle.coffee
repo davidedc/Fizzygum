@@ -39,10 +39,10 @@ class VideoPlayPauseToggle extends ToggleButtonWdgt
       if (!@timeWhenPlayPauseButtonWasLastClicked?) or (Date.now() - @timeWhenPlayPauseButtonWasLastClicked) > 250
         if @videoPlayerCanvas.video.paused
           # show the play button
-          @_setToggleState 1
+          @_setToggleStateNoSettle 1
         else
           # show the pause button
-          @_setToggleState 0
+          @_setToggleStateNoSettle 0
 
   # pause/play are the SimpleButtonWdgt action targets, dispatched BY NAME from
   # ButtonWdgt.trigger (as target[action]) -- external entry points, so no

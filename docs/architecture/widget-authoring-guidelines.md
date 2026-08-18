@@ -672,6 +672,19 @@ setFoo: (foo) ->
 The **idempotence guard is not an optimisation** — it is what stops a wired circuit from re-firing on
 an unchanged value. The **return** is what lets a caller chain off the coerced result.
 
+`setFoo` above is the PAINT-ONLY shape — its mutation reaches `_changed()` and nothing else, so there
+is no layout to settle and one method is the whole setter. **A pin setter that mutates LAYOUT follows
+the settle grammar like any other public mutator, in three parts:** the `_<set>NoSettle` FUNNEL core
+(coercion, clamp, idempotence guard, mutation, announce — shared by every entry), the public `<set>`
+as the canonical thin settle over it (`@_settleLayoutsAfter => @_<set>NoSettle v` — the direct/API
+entry, settled world on return), and a `_<set>Connector` twin that JOINS the drain's open settle
+(`_settleLayoutsAfterOrJoinEnclosingPass`) — the engine's `DataflowEngine._applyWireValue` prefers
+`_<action>Connector` when one exists, so a wired delivery never reaches the settling wrapper
+mid-window. Worked examples: `StringWdgt.setText`/`setFontSize` (the pattern's origin) and
+`SwitchButtonWdgt.setToggleState`. ⚠ The connector is dispatched only by the computed name
+`"_#{action}Connector"`, invisible to the dead-method scan — add it to
+`buildSystem/dead-method-allowlist.txt` with that reason.
+
 **Export a value** if the widget is meaningful as a spreadsheet cell's content: name your principal
 pin with `principalPinLabel: "value"`, and `Widget.exportedValue` reads it through that pin's `get`.
 A widget that names none exports nothing, which is the right answer far more often than it looks. A

@@ -18,9 +18,9 @@ class SwitchButtonWdgt extends Widget
   # question of a fourth kind for one widget does not arise (connector plan §P10(d), answered by the
   # GENERAL class rather than by the toggle).
   #   It ANNOUNCES, and what earns that is the funnel below: every path that moves @buttonShown — a
-  # click, a reflect from elsewhere, the reset on being added — goes through _setToggleState, which is
-  # the one place that tells the dataflow. A pin that announced from only some of its write paths
-  # would leave a follower silently stale exactly when it mattered.
+  # click, a reflect from elsewhere, the reset on being added — goes through _setToggleStateNoSettle,
+  # which is the one place that tells the dataflow. A pin that announced from only some of its write
+  # paths would leave a follower silently stale exactly when it mattered.
   pins: -> super().concat [
     new PinSpec "shown button", "numerical", set: "setToggleState", get: "getToggleState", announces: true
   ]
@@ -87,33 +87,45 @@ class SwitchButtonWdgt extends Widget
   # i.e. clicking the button
   # This is useful when the switch needs to reflect the
   # state of something that has been independently changed
-  # (i.e. changed by something else than the user clicking this switch) --
-  # including CROSS-OBJECT (the paint toolbar reflects arm/disarm on its tool
-  # toggles, §5.D), hence the public wrap over the private core.
-  #   It is also my `shown button` pin's setter, so it reads BOTH argument slots (the pin-setter
-  # contract in docs/architecture/widget-authoring-guidelines.md) and clamps: a wire or a formula can
-  # deliver any number at all, and an out-of-range index would show no button whatsoever. Clamping
-  # rather than wrapping, because "show button 7" from outside means the last one, while the WRAP
-  # belongs to the click below, where cycling is the gesture.
+  # (i.e. changed by something else than the user clicking this switch).
+  #   It is also my `shown button` pin's setter (the pin-setter contract in
+  # docs/architecture/widget-authoring-guidelines.md): the canonical thin settle over the funnel
+  # core below, returning the clamped index through it. The engine's edge apply never lands HERE
+  # (DataflowEngine._applyWireValue prefers the _setToggleStateConnector twin), and in-flush
+  # reflectors (the paint toolbar's mode hooks, my own click/reset) reach the core directly --
+  # this wrapper is the DIRECT entry (an in-world script, discrete framework code), which gets a
+  # settled world on return like every public setter.
   setToggleState: (whichOne) ->
+    @_settleLayoutsAfter => @_setToggleStateNoSettle whichOne
+
+  # The reactive-CONNECTOR entrypoint (check-layering [P]; the setFontSize/_setFontSizeConnector
+  # pattern): the dataflow engine delivers wired "setToggleState" deliveries HERE, JOINING the
+  # drain's enclosing settle instead of opening a nested one (which the public wrapper's
+  # _settleLayoutsAfter would reject mid-window). No cycle guard: the core's announce is
+  # markStale, which the engine echo-suppresses for the node it is applying into; downstream
+  # delivery belongs to the drain's own ordered walk.
+  _setToggleStateConnector: (whichOne) ->
+    @_settleLayoutsAfterOrJoinEnclosingPass => @_setToggleStateNoSettle whichOne
+
+  # THE ONE PLACE @buttonShown MOVES — see the `announces` note on the pin. Every other path routes
+  # here, so the announcement cannot be forgotten by a path added later. Coercion lives at the
+  # funnel too, so no path can write an out-of-range index (a wire or a formula can deliver any
+  # number at all, and an out-of-range index would show no button whatsoever): CLAMPING rather
+  # than wrapping, because "show button 7" from outside means the last one — the WRAP belongs to
+  # the click below, where cycling is the gesture (it takes its modulo before calling in).
+  _setToggleStateNoSettle: (whichOne) ->
     return unless isFinite whichOne
     whichOne = Math.round whichOne
     whichOne = 0 if whichOne < 0
     whichOne = @buttons.length - 1 if whichOne > @buttons.length - 1
-    @_setToggleState whichOne
-    return whichOne
-
-  # THE ONE PLACE @buttonShown MOVES — see the `announces` note on the pin. Every other path routes
-  # here, so the announcement cannot be forgotten by a path added later.
-  _setToggleState: (whichOne) ->
-    return if @buttonShown == whichOne
-    @buttonShown = whichOne
-    @_invalidateLayout()
-    # markStale, not markNonValueChange: this pin IS my principal one, so what changed is my VALUE,
-    # and the stronger verb wakes the re-readers too (DataflowEngine header: markStale fires EVERY
-    # out-edge, the firesOnAnyChange ones included).
-    world.dataflow.markStale @
-    return
+    if @buttonShown != whichOne
+      @buttonShown = whichOne
+      @_invalidateLayout()
+      # markStale, not markNonValueChange: this pin IS my principal one, so what changed is my VALUE,
+      # and the stronger verb wakes the re-readers too (DataflowEngine header: markStale fires EVERY
+      # out-edge, the firesOnAnyChange ones included).
+      world.dataflow.markStale @
+    whichOne
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     # SELF-SETTLE the toggle (end-of-cycle-flush drawdown convert 2026-06-25): a discrete click is an
@@ -123,10 +135,10 @@ class SwitchButtonWdgt extends Widget
     # re-enter this flush. Safe because the layout-pass collapse decisions it can trigger now route to the
     # idempotent _collapseNoSettle / _unCollapseNoSettle cores (no public re-entrant settle).
     @_settleLayoutsAfter =>
-      @_setToggleState (@buttonShown + 1) % @buttons.length
+      @_setToggleStateNoSettle (@buttonShown + 1) % @buttons.length
     # TODO gross pattern break - usually mouseClickLeft has 9 params
     # none of which is a widget
     @escalateEvent "mouseClickLeft", @
 
   _resetSwitchButton: ->
-    @_setToggleState 0
+    @_setToggleStateNoSettle 0

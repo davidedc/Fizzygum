@@ -369,17 +369,19 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   # idempotently re-driven (e.g. the edit-button recreate on window uncollapse
   # reflects the CURRENT mode) -- only a real mode TRANSITION may re-arm, or an
   # uncollapse would clobber a user-selected brush back to pencil.
-  # ⚠ Neither hook may fire a button action: a toggle() escalation reaches
+  # ⚠ Neither hook may fire a button action OR a settling setter: a toggle() escalation reaches
   # SwitchButtonWdgt's SELF-SETTLING mouseClickLeft inside the content's
   # enable/disable flush (the transitive-settle trap that forced the retired
-  # editor's detach-then-teardown dance). Injection is settle-free and
-  # setToggleState only flips the shown face.
+  # editor's detach-then-teardown dance), and the public setToggleState is the
+  # self-settling wrapper, equally illegal mid-flush. Injection is settle-free,
+  # and flipping the shown face routes through the non-settling funnel core
+  # (_setToggleStateNoSettle -- "cores call cores").
   reactToEditModeInFrame: ->
     return if @_armed
     @_armed = true
     @resolveInjectionTarget()?.injectProperties PaintToolbarWdgt.PENCIL_TOOL_SOURCE
     for toggle in @_toolToggles()
-      toggle.setToggleState (if toggle == @pencilToolButton then 1 else 0)
+      toggle._setToggleStateNoSettle (if toggle == @pencilToolButton then 1 else 0)
     return
 
   reactToViewModeInFrame: ->
@@ -387,7 +389,7 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
     @_armed = false
     @resolveInjectionTarget()?.injectProperties PaintToolbarWdgt.TOOL_OFF_SOURCE
     for toggle in @_toolToggles()
-      toggle.setToggleState 0
+      toggle._setToggleStateNoSettle 0
     return
 
   _toolToggles: ->
@@ -467,9 +469,10 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
     @_addNoSettle @eraserToolButton
 
     # shown selected to match the born-armed payload (ImageWdgt injects the
-    # pencil source at build) -- a DISPLAY write, no action fires, so there is
-    # no settle to defer and no attach-last dance.
-    @pencilToolButton.setToggleState 1
+    # pencil source at build) -- a DISPLAY write inside this build core, so it
+    # reaches the non-settling funnel (cores call cores); no action fires and
+    # no attach-last dance.
+    @pencilToolButton._setToggleStateNoSettle 1
     @_invalidateLayout()
 
   # ===== the slot's synchronous chrome drive (the FrameBarWdgt pattern) =====
