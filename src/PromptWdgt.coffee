@@ -88,10 +88,13 @@ class PromptWdgt extends PopUpWdgt
     # lay the panel out at my origin, then hug it — the down-walk settles parent
     # before child, so I size to the panel's freshly-laid-out extent HERE (as
     # ListWdgt lays out its listContents at build) rather than reading it mid-pass.
-    @rowsPanel.__commitMoveTo @position()
+    # The rows go into the shared scroll frame, ALWAYS (PopUpWdgt
+    # ._buildRowsScrollFrameNoSettle), so a prompt too tall for the world scrolls
+    # rather than running off the bottom edge, exactly like a menu.
+    @_buildRowsScrollFrameNoSettle()
     @rowsPanel._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
-    @_addNoSettle @rowsPanel
-    @_applyExtent @rowsPanel.extent()
+    @_refitRowsScrollFrameNoSettle()
+    @_applyExtent @rowsScrollFrame.extent()
     # surface the panel's title header as my own .label (the drag/pin-by-header handle).
     @label = @rowsPanel.label
 

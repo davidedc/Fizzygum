@@ -550,8 +550,22 @@ assertion a recapture after a regression silently stores two different hashes an
   accessor rather than by searching the subtree for a palette. Each palette also draws a ring where its own current
   choice sits on it, so a screenshot of a picked palette shows the pick, not just the field. transparency:
   `"transparency..."` opens a `PromptWdgt` —
-  `@clickOnSliderTrackAtFraction_InputEvents prompt.topWdgtSuchThat((m)-> m instanceof SliderWdgt), [fx,0.5]` then "Ok".
+  `@clickOnSliderTrackAtFraction_InputEvents (prompt.rowsPanel.children.filter((m)-> m instanceof SliderWdgt))[0], [fx,0.5]`
+  then "Ok". ⚠⚠ **Scope a slider search to `rowsPanel.children`, never the pop-up's whole subtree.** A pop-up keeps its
+  rows in a scroll frame, so its subtree ALSO holds that frame's two scrollbars — themselves `SliderWdgt`s — and a
+  `topWdgtSuchThat`/subtree search silently picks one of those. It fails SILENTLY in the worst way: the gesture "works",
+  the prompt closes on "Ok", and only the target's unchanged alpha shows it (a box that should be translucent stays
+  opaque). Same rule for any "find the widget of kind K inside this pop-up" search.
 
+- **Reach a row in an OVER-TALL menu** (`macroOverTallMenuScrollsToReachItsLastRow`): a pop-up is bounded to the world
+  and SCROLLS its rows, so a menu with more rows than fit is capped at the world's height and grows a vertical
+  scrollbar (`PopUpWdgt._refitRowsScrollFrameNoSettle`). ⚠ **A macro must scroll before clicking a row near the bottom
+  of a long menu** — `@wheelOn_InputEvents menu, 400` — because the item is LOCATED by a tree walk (which finds it
+  wherever it is, on-world or not) but CLICKED at its coordinates, which must be on-world; an unscrolled click lands on
+  the desktop, which merely dismisses the menu. Prefer a wheel delta far larger than the overflow so the menu lands at
+  its travel limit whatever its exact row count — then the test asserts "scrolled to the end" rather than becoming a
+  tripwire for anyone who adds an unrelated menu row. Which menus overflow at the 960×440 harness: `TextWdgt` (40 rows)
+  and `StringWdgt` (36) do; `SimpleTextWdgt`/`TitleWdgt` (33) clear it by ~23px.
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
   world edge — it is shifted to stay fully visible. `PopUpWdgt.popUp` (`:143`) puts the popup's top-left at the requested
   point, then `@_moveWithin world` (`:153` → `Widget._moveWithin`, `:1337`) CLAMPS it into the world
@@ -1334,10 +1348,12 @@ assertion a recapture after a regression silently stores two different hashes an
 - ⚠ **BOTH connection gestures live one level down, behind a single `"connect ➜"` row** (connector §P2). A hand-rolled
   chain must click that row FIRST and then `"connect to ➜"` / `"bind ⇄"` in the submenu it opens
   (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
-  ⭐ The reason is a hard constraint worth knowing before adding ANY menu row: **a pop-up taller than the world has no
-  handling at all** — `PopUpWdgt.popUp` clamps a pop-up's POSITION (`_moveWithin`) and can do nothing for one that does not
-  FIT, so its last items are simply unreachable. A `SimpleTextWdgt` inside a scroll panel already builds a merged menu of
-  exactly full height. Grouping keeps the second gesture free. ⚠ The `"connect ➜"` row deliberately does NOT pass
+  Grouping keeps the second gesture free of menu height, which is now a readability question rather than a correctness
+  one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpWdgt._refitRowsScrollFrameNoSettle`),
+  so a row past the fold is reached with the wheel instead of being lost. ⚠ **A macro must therefore scroll before
+  clicking a row near the bottom of a long menu** — `@wheelOn_InputEvents menu, <delta>` — because the item is located by
+  a tree walk (which finds it wherever it is) but CLICKED at its coordinates (which must be on-world). See
+  `macroOverTallMenuScrollsToReachItsLastRow`. ⚠ The `"connect ➜"` row deliberately does NOT pass
   `closesUnpinnedPopUps: false`, i.e. it REPLACES its parent menu rather than stacking on it: `openTargetSelector`
   enumerates world widgets, so a menu left standing would list its own `MenuItem`/`Text` children as plausible targets
   (caught only because three tests assert the chooser's contents BY STRING).
@@ -1630,7 +1646,8 @@ assertion a recapture after a regression silently stores two different hashes an
   button whose slider's parent is a `PromptWdgt` starts a NON-float drag (`SliderWdgt.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
   `SliderButtonWdgt.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP `cleanupMenuWdgts` is SKIPPED
   while a non-float drag is in progress. Open a RectangleWdgt's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
-  `slider = (prompt.children.filter (c) -> c instanceof SliderWdgt)[0]`, then press-drag-release its button to a point far OUTSIDE
+  `slider = (prompt.rowsPanel.children.filter (c) -> c instanceof SliderWdgt)[0]` (the ROWS, not `prompt.children` — a pop-up's
+  direct child is its scroll frame, and that frame's own scrollbars are SliderWdgts too), then press-drag-release its button to a point far OUTSIDE
   the popover. The alpha commits on "Ok", so only the value FIELD changes live. The INVERSE of dismiss-on-mousedown-outside.
 - **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
   its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never

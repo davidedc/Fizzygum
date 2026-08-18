@@ -215,6 +215,19 @@ paint-readonly gates and wired into `fg gauntlet`:
 They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
 dispatch). Full description: `docs/architecture/layering-naming-convention.md`.
 
+**The ALWAYS-ON runtime asserts (no flag, no prelude — they run in every build).** A handful of invariants
+are cheap enough to check inline and are caught nowhere else, so they `console.error` a TOKEN that both
+headless runners fail on (`run-all-headless.js`, `run-macro-test-headless.js`). Each exists because the
+screenshot suite structurally cannot see the violation:
+- `NON_FINITE_GEOMETRY` / `NON_INTEGER_GEOMETRY` — `Widget._assertBoundsWellFormed`, see
+  [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md).
+- `RESETWORLD_INCOMPLETE` — the world-teardown completeness ratchet (a leak only bites the NEXT test in
+  the shard, so no single test's pixels reveal it).
+- `POPUP_LARGER_THAN_WORLD` — `PopUpWdgt._assertFitsInTheWorld`: a pop-up bigger than the world has rows
+  nothing can click. A reference image disagrees only if a macro happens to click the row that went
+  missing, which is exactly why menus shipped rows off the bottom edge unnoticed for years — so the
+  invariant is asserted rather than left to be noticed.
+
 ---
 
 ## 3b. The THREE tiers, and which one a new rule belongs in (severity policy)

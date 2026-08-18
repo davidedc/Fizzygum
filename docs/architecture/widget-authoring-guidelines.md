@@ -587,7 +587,8 @@ state.
 **To keep two widgets' VALUES equal**, `bindTo theTarget` — the fourth binding verb, and the one the
 `bind ⇄` menu item makes (one level down, behind the shared block's single `connect ➜` row: both
 connection gestures are grouped there so that having two costs a controller's menu no extra height —
-⚠ a pop-up taller than the world has no handling at all, so a row is a real cost). It is simply two wires (mine onto you, yours onto me), so it adds no
+a menu row is cheap now that an over-tall pop-up scrolls rather than spilling off the world, but a
+shorter menu is still the better menu). It is simply two wires (mine onto you, yours onto me), so it adds no
 mechanism; what it adds is that both pins are chosen for you and the precedence is stated: **I push my
 value, and the return wire moves nothing.** Two things follow that are worth knowing before reaching
 for it:

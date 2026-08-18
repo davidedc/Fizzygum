@@ -468,6 +468,10 @@ rather than merely mismatching. Owner call (2026-08-17): group them. `connect �
 `connect to ➜` + `bind ⇄`, so the enclosing menu gains **zero** rows, and the split is honest on its own
 terms — the gesture rows are the things you can DO, the wire rows below are things that ARE.
 ⇒ **a feature that costs every context menu a row is charging rent against a budget nothing measures**;
+(⚠ **the budget is measured now**: the pop-up-overflow arc bounds a pop-up to the world and scrolls the
+overflow, so a menu row no longer costs reachability — see `docs/BACKLOG.md`. The grouping stands on its
+own terms, and the same arc found that the constraint recorded here was already being VIOLATED in the
+shipped build by two other menus, which is why "the trip-wire is not armed" below was wrong.)
 ask what the row costs before asking whether the feature is worth it. The overflow itself is filed
 (BACKLOG) as its own arc: the next row anyone adds re-arms it, and no gate watches for it.
 

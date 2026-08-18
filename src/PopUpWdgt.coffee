@@ -36,6 +36,9 @@ class PopUpWdgt extends Widget
   # one and delegate/compose against it; the shared lay-and-hug + membership-
   # change absorber below work off it. Free-floating, so it co-moves with me.
   rowsPanel: undefined
+  # the ScrollPanelWdgt my rows live in — ALWAYS, not only when they overflow. See
+  # _buildRowsScrollFrameNoSettle for why it is unconditional.
+  rowsScrollFrame: undefined
 
   constructor: (@widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
     super()
@@ -43,18 +46,89 @@ class PopUpWdgt extends Widget
     world.freshlyCreatedPopUps.add @
     world.openPopUps.add @
 
-  # Lay my rows-panel out at my origin and hug its extent. The panel is a
-  # vertical stack (§5.2e): its re-fit chokepoint _reLayoutChildren lays the rows
-  # out and self-sizes it via immediate mutators (FLOWRULE-safe); I then hug its
-  # final extent via the non-notifying _applyExtentBase twin. MenuWdgt drives
-  # this at popUp (_reactToBeingAdded); PromptWdgt lays inline at build. The
-  # panel is free-floating, so it co-moves with me if I am later dragged or
-  # clamped on-screen.
+  # ── LAY OUT THE ROWS, AND NEVER GROW PAST THE WORLD ──────────────────────────
+  # Lay my rows-panel out and take its size, bounded by the world. The
+  # panel is a vertical stack (§5.2e): its re-fit chokepoint _reLayoutChildren
+  # lays the rows out and self-sizes it via immediate mutators (FLOWRULE-safe); I
+  # then take that extent — bounded — via the non-notifying _applyExtentBase twin.
+  # MenuWdgt drives this at popUp (_reactToBeingAdded); PromptWdgt lays inline at
+  # build; popUp itself drives it once more so both kinds pass through the cap.
+  #   The cap is what keeps me REACHABLE, and position alone cannot deliver that:
+  # popUp's `_moveWithin world` clamps a POSITION, so for a pop-up taller than the
+  # world it can only pin my top-left, leaving every row past the bottom edge
+  # drawn where nothing can click it. The margins are thin enough for that to be
+  # an everyday case rather than a pathological one — against the 440px test world
+  # a plain TextWdgt's own context menu wants 498px (three rows over) and a
+  # StringWdgt's 462px, while the menus that do fit clear it by a handful of pixels.
+  # Bounded here, the overflow becomes scrollable instead of lost.
   _layOutAndHugRowsPanel: ->
     return unless @rowsPanel?
-    @rowsPanel.__commitMoveTo @position()
     @rowsPanel._reLayoutChildren()
-    @_applyExtentBase @rowsPanel.extent()
+    @_refitRowsScrollFrameNoSettle()
+    @_applyExtentBase @rowsScrollFrame.extent()
+
+  # THE ONE PLACE MY SIZE IS DECIDED: my rows' natural extent, bounded by the world on
+  # BOTH axes. That bound is the whole mechanism — whatever does not fit becomes
+  # scrollable instead of unreachable — and it is both axes because the defect is not
+  # about height: a pop-up wider than the world loses its right-hand columns exactly
+  # as one taller than it loses its bottom rows, and `_moveWithin` can no more fix the
+  # one than the other. The frame's own horizontal bar covers that case for free.
+  #   The frame is chrome I own and place from my own size, so this uses the
+  # NON-notifying arrange twins (§4.2 structural arrange), exactly as ScrollPanelWdgt
+  # places its own bars. Shared by every pop-up that re-takes its size: the lay-out
+  # above, PromptWdgt's inline build, and SaveShortcutPromptWdgt's widening.
+  _refitRowsScrollFrameNoSettle: ->
+    @rowsScrollFrame._applyMoveToBase @position()
+    @rowsScrollFrame._applyExtentBase new Point (Math.min @rowsPanel.width(), world.width()),
+                                                (Math.min @rowsPanel.height(), world.height())
+    @rowsScrollFrame._reLayoutChildren()
+
+  # My rows ALWAYS live in a scroll frame — there is no over-tall case and no
+  # ordinary case, just the one structure that fits either. A conditional frame
+  # would buy a few widgets per menu at the price of a THRESHOLD, and a threshold
+  # is a state transition somebody has to get right: a menu composed short and
+  # grown later (addMenuItem on an open menu) would have to restructure itself
+  # mid-life, in the middle of the very membership change that provoked it. With
+  # the frame always present there is nothing to cross — a menu that fits simply
+  # has nothing to scroll, and ScrollPanelWdgt hides a bar with nothing to show.
+  #   The composition is the one ListWdgt uses: a ScrollPanelWdgt keeping its own
+  # default plain-PanelWdgt contents, with the rows panel placed INSIDE that.
+  #   ⛔ Do NOT "simplify" this by making the rows panel BE the frame's contents.
+  # That shape does not terminate: ScrollPanelWdgt._positionAndResizeChildren has a
+  # `@contents instanceof SimpleVerticalStackPanelWdgt` branch that constrains the
+  # stack's width to the viewport, while MenuRowsPanelWdgt._positionAndResizeChildren
+  # hugs its width back to its widest row — the two fight and recalculateLayouts
+  # raises RECALC_NONCONVERGENCE. A menu OWNS its width, so it can never be the
+  # width-constrained contents of anything, which is why ListWdgt is built this way
+  # too.
+  #   ⚠ EVERY FACT THE TWO ADDED WIDGETS NEED IS A PER-CLASS DECLARATION, which is why
+  # they are classes (PopUpRowsScrollFrameWdgt / PopUpRowsPaneWdgt) rather than a
+  # configured ScrollPanelWdgt: a plain panel's inherited answers are wrong on all of
+  # them — it claims to be an editing surface, a drop target, a thing you can drag a
+  # child out of, and a HIT TARGET. Each wrong answer showed up as a different visible
+  # defect; see those two classes.
+  #   The one fact that stays MINE is the rows panel's, because the panel is a shared
+  # class I am re-homing: dragging a pop-up by its header must move the POP-UP, and a
+  # child of a panel detaches instead unless it locks to panels. ListWdgt does exactly
+  # this to its own rows panel, for exactly this reason.
+  _buildRowsScrollFrameNoSettle: ->
+    @rowsScrollFrame = new PopUpRowsScrollFrameWdgt()
+    @rowsPanel.isLockingToPanels = true
+    @_addNoSettle @rowsScrollFrame
+    @rowsScrollFrame.contents._addNoSettle @rowsPanel
+
+  # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
+  # than the world is a pop-up with rows nothing can click. It needs a guard of its own
+  # because NO screenshot test reliably catches one — a reference disagrees only if a macro
+  # happens to click the row that went missing, which is why menus were shipping rows off
+  # the bottom edge unnoticed. The headless runners fail-gate on this token (like
+  # NON_INTEGER_GEOMETRY), so the invariant is checked by every test that opens any pop-up
+  # rather than by remembering to look.
+  _assertFitsInTheWorld: ->
+    return unless world?
+    return unless @width() > world.width() or @height() > world.height()
+    console.error "POPUP_LARGER_THAN_WORLD -- #{@constructor.name} is #{@width()}x#{@height()} in a #{world.width()}x#{world.height()} world, so part of it cannot be reached"
+    return
 
   # The designed membership-change seam (see the stack's _reactToChildRemoved /
   # _reactToChildDropped): when my rows-panel's membership changes (e.g.
@@ -188,6 +262,12 @@ class PopUpWdgt extends Widget
   popUp: (pos, widgetToAttachTo) ->
     @__commitMoveTo pos
     widgetToAttachTo.add @
+    # Cap-then-clamp, and in that order: laying out decides how TALL I may be (bounded
+    # by the world), clamping decides WHERE that fits. Doing it here as well as in
+    # _reactToBeingAdded covers the pop-ups that lay themselves out inline at build
+    # (PromptWdgt) alongside the ones that lay out at add (MenuWdgt) — this is the one
+    # moment every pop-up passes through. Idempotent, so the menu path pays a re-fit.
+    @_layOutAndHugRowsPanel()
     # the @_moveWithin method
     # needs to know the extent of the widget
     # so it must be called after the widgetToAttachTo.add
@@ -195,6 +275,7 @@ class PopUpWdgt extends Widget
     # nopainting happening and the widget doesn't
     # know its extent.
     @_moveWithin world
+    @_assertFitsInTheWorld()
     # shadow must be added after the widget
     # has been placed somewhere because
     # otherwise there is no visible image
