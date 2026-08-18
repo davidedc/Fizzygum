@@ -579,6 +579,21 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
       `leftEdgeMiddle`, identical flap constants, one calls `drawArrow`, the other `doPath`). A
       small shared glyph-helper would fold both pairs. Work it only when one of these files is
       next touched for its own reasons — standalone it is churn without a consumer.
+- [x] **✅ F3 re-sweep 2026-08-18 (post-dispatch-slot-arc): the slot-1 reader naming split is a
+      MEASURED KEEP; the popout VERB family is unified.** The question was whether
+      `widgetOpeningThePopUp` vs `menuItem` (both receiving trigger's slot 1, the fired button)
+      should unify. Measured: they mark two GENUINE consumer roles — the pop-up openers pass the
+      value onward as the next pop-up's opener (the ⛔-falsified consumer contract), while the 12
+      `menuItem` readers (the census saw only 3 — its roots bounded the count, rule 4 again) use
+      it AS a menu row (`menuItem.parent.title` for the prompt's message, or menu context) and
+      never as an opener (`Widget.prompt` passes `@` for that). Each verb is named for the role it
+      actually reads; unification would REDUCE honesty. KEEP both. ⚠ The sweep instead exposed a
+      real drift among the popout verb NAMES — 8× `*Popout`, 2× `*Popup`, 3× `promptFor*`, three
+      spellings for one role — unified onto the dominant `*Popout`: `fontSizePopup`→
+      `fontSizePopout`, `editPopup`→`editPopout`, `promptForFloor`→`floorPopout`,
+      `promptForCeiling`→`ceilingPopout`, `promptForButtonSize`→`buttonSizePopout` (labels
+      untouched, zero pixels). Fresh-drift sweep over the dispatch arc's ~30 touched files:
+      clean (the three NOT-warnings there are true structural facts on good names).
 - Declined, with reasons (do not re-file): `island`/`action`/`pin`/`gotoSlot`/`enableDrops`/
   `footprint` — their glosses are role-explanations or gate-sanctions on good vocabulary;
   `TreeNode.atIndex` — the comment IS the record of a deliberate rename (R4); icon-geometry terse

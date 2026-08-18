@@ -157,7 +157,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the below-text-strip entry above NEUTRALISES it with FLOAT for the opposite reason (a fixture constant). No new verb.
 - **Editing a CROPPED string defers to the "edit:" prompt** (`macroStringWdgtEditDefersToPromptWhenCropped`):
   `StringWdgt.edit` (`:1145-1150`) compares the rendered text with the full transformed text — equal → `world.edit @`
-  (inline caret); different (the CROP spec ellipsised it) → `editPopup()` (`:873-882`), the "edit:" `PromptWdgt` whose
+  (inline caret); different (the CROP spec ellipsised it) → `editPopout()` (`:873-882`), the "edit:" `PromptWdgt` whose
   field is preloaded with `@text` and whose "Ok" commits via `setText` ("Close" discards — anchor that byte-exactly: a
   cancelled prompt leaves zero residue, same dataHash as the pre-prompt shot with the pointer parked). So the SAME click
   yields a caret or a modal purely by whether the text currently fits; widen the box (`_applyExtent`) and the click takes
@@ -1723,7 +1723,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A property PROMPT must store the TYPED value — which slot the value arrives in**
   (`macroSliderFloorPromptTakesTypedValue`): drive a "…" property prompt end-to-end and ASSERT what it stored.
   `clickMenuItemOfWidget_InputEvents_Macro` / `@moveToItemOfTopMenuAndClick_InputEvents "floor..."` opens a
-  `NumberPromptWdgt` (`SliderWdgt.promptForFloor` → `Widget.prompt msg, target, "setStart", opts`); `Widget.prompt`
+  `NumberPromptWdgt` (`SliderWdgt.floorPopout` → `Widget.prompt msg, target, "setStart", opts`); `Widget.prompt`
   already puts the caret in the entry field, so `Meta+a` then `@syntheticEventsStringKeys_InputEvents "25"` replaces
   the default contents; then `@moveToItemOfMenuAndClick_InputEvents prompt, "Ok"` and
   `@assertValuesEqual "…", 25, slider.start`. ⚠ CAPTURE the prompt with `@getMostRecentlyOpenedMenu()` the moment it

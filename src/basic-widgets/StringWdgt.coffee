@@ -1003,14 +1003,14 @@ class StringWdgt extends Widget
     # answer the slot (index) indicating the EOL for the given slot
     @textPossiblyCroppedToFit.length
 
-  fontSizePopup: (menuItem)->
+  fontSizePopout: (menuItem)->
     @prompt menuItem.parent.title + "\nfont\nsize:", @, "setFontSize",
       defaultContents: @originallySetFontSize.toString()
       floorNum: 6
       ceilingNum: 500
       isRounded: true
 
-  editPopup: (menuItem)->
+  editPopout: (menuItem)->
     if menuItem?
       title = menuItem.parent.title + "\nedit:"
     else
@@ -1085,8 +1085,8 @@ class StringWdgt extends Widget
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "edit...", @, "editPopup", toolTip: "set this String's\ncontent"
-    menu.addMenuItem "font size...", @, "fontSizePopup", toolTip: "set this String's\nfont point size"
+    menu.addMenuItem "edit...", @, "editPopout", toolTip: "set this String's\ncontent"
+    menu.addMenuItem "font size...", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
 
     menu.addMenuItem "font ➜", @, "fontsMenu", closesUnpinnedPopUps: false, toolTip: "pick a font"
 
@@ -1413,7 +1413,7 @@ class StringWdgt extends Widget
     true
 
   # StringWdgt editing:
-  # thin-wrap-exempt: edit BRANCHES (inline world.edit when the text fits, else editPopup) and returns a fit
+  # thin-wrap-exempt: edit BRANCHES (inline world.edit when the text fits, else editPopout) and returns a fit
   # flag -- not the bare @_settleLayoutsAfter => @_editNoSettle wrap. Its NoSettle sibling _editNoSettle below
   # mirrors the branch, routing the inline case to world._editNoSettle (the drain-safe caret core).
   edit: ->
@@ -1421,28 +1421,28 @@ class StringWdgt extends Widget
       world.edit @
       return true
     else
-      @editPopup()
+      @editPopout()
       return undefined
 
   # The NoSettle sibling of edit, for a caller already inside a layout flush/pass -- a dataflow connection sink
   # delivering into a prompt slider's editable field (PromptWdgt._takeSliderValueConnector). Routes the
   # inline-edit case to world._editNoSettle (the non-settling caret core, joining the enclosing settle); the
-  # overflow branch hands off to editPopup exactly as edit does (not reached for a short prompt value, which
+  # overflow branch hands off to editPopout exactly as edit does (not reached for a short prompt value, which
   # fits inline).
   _editNoSettle: ->
     if @alwaysEditsInline or @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world._editNoSettle @
       return true
     else
-      @editPopup()
+      @editPopout()
       return undefined
 
   # When inline editing and the just-grown text no longer fits a CROP-overflow field, abandon inline
   # editing and hand off to the pop-out editor (stopEditing tears down the inline caret; edit() then
-  # routes to editPopup() because the text no longer fits). Returns true if it handed off. PURE
+  # routes to editPopout() because the text no longer fits). Returns true if it handed off. PURE
   # PREDICATE, OFF the layout flush: called from CaretWdgt.insert (the only place editing can GROW
   # the text) right after setText, at event time -- edit() on an already-overflowing field goes
-  # straight to editPopup(), so insert is the only way to exceed CROP inline. History (why this
+  # straight to editPopout(), so insert is the only way to exceed CROP inline. History (why this
   # moved off slotCoordinates): see docs/archive/layout-system-architecture-assessment.md.
   handOffToPopoutEditorIfOverflowing: ->
     return false if @alwaysEditsInline

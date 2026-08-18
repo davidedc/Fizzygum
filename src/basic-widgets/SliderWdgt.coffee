@@ -245,9 +245,9 @@ class SliderWdgt extends CircleBoxWdgt
     super
     menu.addLine()
     menu.addMenuItem "show value", @, "showValue", toolTip: "display a dialog box\nshowing the selected number"
-    menu.addMenuItem "floor...", @, "promptForFloor", toolTip: "set the minimum value\nwhich can be selected"
-    menu.addMenuItem "ceiling...", @, "promptForCeiling", toolTip: "set the maximum value\nwhich can be selected"
-    menu.addMenuItem "button size...", @, "promptForButtonSize", toolTip: "set the range\ncovered by\nthe slider button"
+    menu.addMenuItem "floor...", @, "floorPopout", toolTip: "set the minimum value\nwhich can be selected"
+    menu.addMenuItem "ceiling...", @, "ceilingPopout", toolTip: "set the maximum value\nwhich can be selected"
+    menu.addMenuItem "button size...", @, "buttonSizePopout", toolTip: "set the range\ncovered by\nthe slider button"
     @_addTargetConnectionMenuEntries menu
 
   # The three range prompts. ⚠ An action MUST be a STRING method name: ButtonWdgt dispatches
@@ -255,21 +255,21 @@ class SliderWdgt extends CircleBoxWdgt
   # finds nothing, and throws (its own dev tripwire says so). These read the menu's title from
   # the dispatcher's first slot — the MENU ITEM — which is the same idiom
   # Widget.transparencyPopout uses, and `item.parent.title` is the rows panel's copy of it.
-  promptForFloor: (menuItem) ->
+  floorPopout: (menuItem) ->
     @prompt menuItem.parent.title + "\nfloor:", @, "setStart",
       defaultContents: @start.toString()
       floorNum: 0
       ceilingNum: @stop - @size
       isRounded: true
 
-  promptForCeiling: (menuItem) ->
+  ceilingPopout: (menuItem) ->
     @prompt menuItem.parent.title + "\nceiling:", @, "setStop",
       defaultContents: @stop.toString()
       floorNum: @start + @size
       ceilingNum: @size * 100
       isRounded: true
 
-  promptForButtonSize: (menuItem) ->
+  buttonSizePopout: (menuItem) ->
     @prompt menuItem.parent.title + "\nbutton size:", @, "setSize",
       defaultContents: @size.toString()
       floorNum: 1
