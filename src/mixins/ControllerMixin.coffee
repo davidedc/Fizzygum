@@ -291,7 +291,7 @@ ControllerMixin =
       # it, and the client here is me. Idempotent, so it is cheap on every fire and on every re-add —
       # which is what makes a duplicated or re-parented control re-subscribe with no bookkeeping of its
       # own to duplicate or serialize.
-      #   Dedup asks the index (hasEdge) rather than keeping a field, as MenuRowsPanelWdgt does. That
+      #   Dedup asks the index (hasEdge) rather than keeping a field of my own. That
       # reads "is there ANY edge target → me", which is the right question here: a target that drove me
       # back would be a two-wire ring, which no caller builds and which §P2 will address explicitly.
       _ensureTrackingEdges: ->

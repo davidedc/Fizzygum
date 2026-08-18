@@ -31,4 +31,4 @@ getWorldMatrix
 #     method name never appears as a token. See connection-cascade-settle-fix-plan.md. ---
 _setFontSizeConnector    # reactive connector for setFontSize; reached only via @target["_setFontSizeConnector"] computed dispatch
 _takeSliderValueConnector # reactive connector for takeSliderValue (PromptWdgt prompt slider); reached only via @target["_takeSliderValueConnector"] computed dispatch
-_reconcileReflectedRowsConnector  # reactive connector lane: reached by the computed name `_#{action}Connector` from a reflected-row edge (MenuRowsPanelWdgt._subscribeToReflectedSource), invisible to a static scan
+_applyRowReflectionConnector  # reactive connector lane: reached by the computed name `_#{action}Connector` from a reflected-row edge (MenuItemWdgt._subscribeToMyReflectedSource), invisible to a static scan

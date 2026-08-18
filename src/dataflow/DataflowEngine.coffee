@@ -55,7 +55,7 @@
 #                                out-edges declared `firesOnAnyChange`.
 #   • edge opt firesOnAnyChange  "my consumer RE-READS the producer rather than receiving its
 #                                value, so wake it for either announcement". A reflected menu row
-#                                is the shape (MenuRowsPanelWdgt._subscribeToReflectedSource):
+#                                is the shape (MenuItemWdgt._subscribeToMyReflectedSource):
 #                                the delivered value is ignored; the row re-reads via its own
 #                                reader name. Wires leave it false and stay value-only.
 #
@@ -292,10 +292,10 @@ class DataflowEngine
     return
 
   # Is there already an edge producer -> consumer? The reverse index answers it directly. Lets a
-  # consumer that subscribes ONCE PER SOURCE (a menu panel with several rows reflecting the same
-  # object — MenuRowsPanelWdgt._subscribeToReflectedSource) dedup without keeping its own bookkeeping
-  # of what it has subscribed to: the index already knows, and a field would have to be declared,
-  # duplicated and serialized like any other.
+  # consumer that may be asked to subscribe to the same source more than once (a controller
+  # re-deriving its tracking edges, ControllerMixin._ensureTrackingEdges) dedup without keeping its
+  # own bookkeeping of what it has subscribed to: the index already knows, and a field would have to
+  # be declared, duplicated and serialized like any other.
   hasEdge: (producer, consumer) ->
     (@edgesTo.get consumer)?.has(producer) ? false
 

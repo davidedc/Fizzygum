@@ -205,7 +205,7 @@ class SliderWdgt extends CircleBoxWdgt
 
   # The REVERSE half of my wire (connector plan §P8): my target announced that something about it
   # changed, and I RE-READ it instead of being handed a value — a `firesOnAnyChange` edge, the same
-  # shape a reflected menu row uses (MenuRowsPanelWdgt._subscribeToReflectedSource, which likewise
+  # shape a reflected menu row uses (MenuItemWdgt._subscribeToMyReflectedSource, which likewise
   # ignores what is delivered). What I re-read is the pin my TRACKING WIRE's own action writes, so I
   # follow exactly what I drive.
   #   A target that a slider can be bound to also says what SCALE that pin lives on

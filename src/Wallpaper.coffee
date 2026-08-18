@@ -52,7 +52,7 @@ class Wallpaper
 
     # Each row DECLARES that it shows my current pattern; the row is born with the right label and
     # re-derives it whenever I announce a change, in this menu and in every other open copy
-    # (MenuRowsPanelWdgt._subscribeToReflectedSource). Nothing here indexes rows[1..7] any more —
+    # (MenuItemWdgt._subscribeToMyReflectedSource). Nothing here indexes rows[1..7] any more —
     # that hand-numbering broke the day anyone added a divider.
     for patternName in @patternNames()
       menu.addMenuItem patternName, @, "setPatternFromMenu",

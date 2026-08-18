@@ -13,8 +13,15 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # my MenuRowReflectionSpec when I am a VIEW of somebody else's value (a tick, a wording swap):
   # what my label SAYS is then derived from that value, not fixed when I was built. undefined for an
-  # ordinary row. My owning panel subscribes to the source and calls me back through
-  # MenuRowsPanelWdgt.reconcileReflectedRows.
+  # ordinary row.
+  #   I SUBSCRIBE MYSELF to the source (see the constructor), because the reflection is mine and not
+  # my panel's: all of reflecting is `@label._setTextNoSettle @rowReflection.currentLabel()` on ME,
+  # reading MY source through MY readerName. Subscribing the PANEL instead is the tempting shape and
+  # it is worse in three ways — it wakes rows that reflect nothing, it needs its own dedup (several
+  # rows commonly share one source: seven wallpapers, nine fonts), and it makes a row's liveness a
+  # property of where the row currently SITS, so a row moved out of its menu freezes at whatever
+  # label it was carrying. One edge per reflecting row is at most nine, and wakes exactly the row
+  # whose value moved.
   rowReflection: undefined
 
   # The SPEC is the identity — it is what this row IS, and spec.label may be a string, a
@@ -45,6 +52,25 @@ class MenuItemWdgt extends LabelButtonWdgt
       arg2: menuItemSpec.argumentToAction2
       representsAWidget: menuItemSpec.representsAWidget
     @actionableAsThumbnail = true
+    @_subscribeToMyReflectedSource()
+
+  # One edge source -> me, waking me whenever the value I show changes by ANY route (a gesture, a
+  # script, the loader, another menu). firesOnAnyChange because what I show is almost never the
+  # source's VALUE — a text's font, its soft wrap, a wire's delivery policy are none of them their
+  # owner's value — so markNonValueChange has to reach me too. I never read what is delivered; I
+  # re-read my own source through my reflection's readerName.
+  #   No dedup needed and none possible to need: I hold ONE reflection, so I make ONE edge. Several
+  # rows sharing a source (the seven wallpapers, the nine fonts) are several DISTINCT consumers.
+  #   Lifecycle needs nothing: Widget._destroyNoSettle calls removeAllEdgesOf, so a closed menu's
+  # rows drop themselves from the producer's out-set as they are destroyed.
+  #   ⚠ addEdge, NOT ensureWireEdges: that one MIRRORS a controller's wire list and drops any wire
+  # edge the list does not account for — my subscription is not a wire and is in nobody's list.
+  #   ⚠ And firesOnAnyChange is what keeps me SAFE as well as what wakes me: a re-wired controller
+  # drops its old wire through _removeOutgoingWireEdgesOf, which spares firesOnAnyChange records —
+  # a blunter removal there would silently unsubscribe every open menu showing that controller.
+  _subscribeToMyReflectedSource: ->
+    return unless @rowReflection?.source?
+    world.dataflow.addEdge @rowReflection.source, @, action: "applyRowReflection", firesOnAnyChange: true
 
   # As a menu/list ROW I am the selectable UNIT (and I stretch FULL-WIDTH in a list), but a click lands on
   # my tight LABEL child. So the editor-focus selection frame must hug ME, not the label's text bounds
@@ -103,8 +129,19 @@ class MenuItemWdgt extends LabelButtonWdgt
     np = @position().add new Point 4, 0
     @label.__commitMoveTo np
 
-  # Re-derive my label from the value I reflect. NoSettle: my caller is the panel's reconciler, which
-  # runs inside a settle (the drain's, or its own) — see MenuRowsPanelWdgt.reconcileReflectedRows.
+  # THE REACTIVE LANE, and the only entrypoint: the drain reaches it by the computed name
+  # `_#{action}Connector` from my edge's action, and it JOINS the pass's settle rather than opening
+  # one (a sink must never open a settle mid-drain — dataflow rules; the engine has already opened
+  # one for the pass). check-layering rule [P] sanctions _settleLayoutsAfterOrJoinEnclosingPass for
+  # exactly this shape, which is why it is a `_<name>Connector` and not a "simpler" public method.
+  #   There is deliberately no public twin: nothing calls one. A row is born showing the right value
+  # (the constructor reads the reflection into its labelString), so the only re-derive that ever has
+  # to happen is the reactive one.
+  _applyRowReflectionConnector: (ignored) ->
+    @_settleLayoutsAfterOrJoinEnclosingPass => @_applyRowReflectionNoSettle()
+
+  # Re-derive my label from the value I reflect. NoSettle: every caller runs inside a settle — the
+  # connector lane above joins the drain's.
   _applyRowReflectionNoSettle: ->
     return unless @rowReflection?
     @label._setTextNoSettle @rowReflection.currentLabel()

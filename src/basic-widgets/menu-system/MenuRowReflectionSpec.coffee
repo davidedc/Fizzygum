@@ -6,7 +6,7 @@
 # its OWN rows, at the moment it was clicked, by walking `rowsPanel.children` by INDEX — so a second
 # open copy of the same menu disagrees, and so does one open across a change made by a script, the
 # loader, or another menu. This record says instead: *my label is a function of that object's value*,
-# and one shared reconciliation (MenuRowsPanelWdgt.reconcileReflectedRows) runs whenever the value
+# and each reflecting row re-reads it (MenuItemWdgt._applyRowReflectionConnector) whenever the value
 # announces itself through the dataflow drain.
 #
 # SHALLOWLY IMMUTABLE (docs/architecture/immutable-value-classes.md): the fields are never written

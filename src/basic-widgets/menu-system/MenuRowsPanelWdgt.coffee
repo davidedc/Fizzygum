@@ -153,7 +153,6 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # named options now make visible where positional slots hid it: this panel's @target is the
   # item's dataSource, and this panel's @environment is the item's widgetEnv.
   createMenuItem: (menuItemSpec) ->
-    @_subscribeToReflectedSource menuItemSpec.reflection
     item = new MenuItemWdgt menuItemSpec,
       fontSize: (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize)
       fontStyle: WorldWdgt.preferencesAndSettings.menuFontName
@@ -165,51 +164,11 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
     item
 
-  # ── REFLECTED ROWS: a row that SHOWS somebody else's value (MenuRowReflectionSpec) ──────────
-  # Subscribe me, once, to each distinct source among my reflecting rows: a dataflow edge
-  # source → me whose action is my reconciler. Then when that source announces itself (markStale),
-  # the drain delivers to EVERY subscribed panel — which is the whole difference from the
-  # hand-rolled fix-ups this replaces, where a menu could only ever re-tick itself, at the moment it
-  # was clicked. N open copies now agree, and so does one open across a change made by a script, the
-  # loader, or another menu.
-  #   ⚠ addEdge, NOT ensureWireEdges: that one MIRRORS a controller's wire list, so it drops any wire
-  # edge the list does not account for — and my subscription is not a wire and is not in anybody's
-  # list. (It survives regardless, because the removal spares firesOnAnyChange records; declaring it
-  # through the wire vocabulary would still be claiming to be something I am not.)
-  #   Dedup is mine to do (addEdge appends a fresh record per call, and a seven-row wallpaper menu
-  # would otherwise subscribe seven times and be reconciled seven times per change) — asked of the
-  # engine's index rather than tracked in a field of my own, which would have to be declared,
-  # deep-copied and serialized to say something the index already knows.
-  #   Lifecycle needs nothing: a closed menu is destroyed, and Widget._destroyNoSettle calls
-  # removeAllEdgesOf, which drops me from every producer's out-set.
-  #   firesOnAnyChange says what my rows actually watch. A source's VALUE (its principal pin) is
-  # rarely the property a row shows — a text's font, its soft wrap, a wire's delivery policy are
-  # none of them the text's value — so I must be woken by markNonValueChange too. It is also what
-  # makes me safe to keep: a re-wired controller drops its old WIRE and spares this edge, where the
-  # blunt older removal would have unsubscribed an open menu (DataflowEngine._removeOutgoingWireEdgesOf).
-  # I never read the delivered value; every row re-reads its own source through its readerName.
-  _subscribeToReflectedSource: (reflection) ->
-    return unless reflection?.source?
-    return if world.dataflow.hasEdge reflection.source, @
-    world.dataflow.addEdge reflection.source, @, action: "reconcileReflectedRows", firesOnAnyChange: true
-
-  # Re-derive every reflecting row's label from the value it shows.
-  #   This is the reactive CONNECTOR lane and it is the only entrypoint: the drain reaches it by the
-  # computed name `_#{action}Connector` from the edge's action, and it JOINS the pass's settle
-  # instead of opening one (a sink must never open a settle mid-drain — dataflow rules; the engine
-  # has already opened one for the pass). check-layering rule [P] sanctions
-  # _settleLayoutsAfterOrJoinEnclosingPass for exactly this shape and nothing else, so a "simpler"
-  # single public method using it is rejected — correctly.
-  #   There is deliberately no public `reconcileReflectedRows` twin: nothing calls one. Rows are born
-  # showing the right value (MenuItemWdgt's constructor reads the reflection), so the only re-derive
-  # that ever has to happen is the reactive one.
-  _reconcileReflectedRowsConnector: (ignored) ->
-    @_settleLayoutsAfterOrJoinEnclosingPass => @_reconcileReflectedRowsNoSettle()
-
-  _reconcileReflectedRowsNoSettle: ->
-    for row in @children
-      row._applyRowReflectionNoSettle?()
-    return
+  # ── REFLECTED ROWS are not mine ─────────────────────────────────────────────────────────────
+  # A row that SHOWS somebody else's value (MenuRowReflectionSpec) subscribes ITSELF to that source
+  # and re-reads it on delivery: MenuItemWdgt._subscribeToMyReflectedSource, and the
+  # _applyRowReflectionConnector lane the drain calls. I hold no edge and take no part — what
+  # reflects is the ROW, so a row keeps showing its value wherever it goes, including out of me.
 
   # Drop the row with this label. Matched WITHOUT the tick decoration on either side: a reflecting
   # row's prefix follows the value it shows, so the spelling on screen is not something a caller
