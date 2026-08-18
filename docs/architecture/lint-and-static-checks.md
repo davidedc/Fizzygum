@@ -434,7 +434,18 @@ the NAME alone, so it cannot tell two same-named methods on unrelated classes ap
 direction it claims** (what it flags really is dead) **and silently incomplete in the other**; do not
 read a green run as "no dead methods". Making it class-aware is not obviously right — the dynamic
 dispatch that forces name-keying would then start producing false positives — so this is recorded as
-a stated blind spot rather than a defect to fix blind (`docs/BACKLOG.md`).
+a stated blind spot rather than a defect to fix blind — a conclusion now MEASURED rather than
+assumed (`docs/BACKLOG.md`): only 10% of references to a colliding name carry any class information,
+so class-awareness would flag 543 pairs to find a handful; and excluding prose reveals nothing,
+because the real survivors are LOCAL VARIABLES sharing a method's name (`for toggle in …`) and
+human-readable strings sitting exactly where a string dispatch sits.
+⭐⭐ **What makes that the right answer rather than a shrug: the methods a static reference scan
+cannot see are precisely the ones the two RUNTIME sweeps above already cover.** Every one of the 21
+methods reachable only by a bare word is string-dispatched — a `PinSpec` setter or an
+`addMenuItem`/`wireTo` action — and the pin sweep proves those setters RESOLVE while the menu sweep
+proves those actions do. "It resolves when dispatched" is strictly stronger than "the name appears
+somewhere in the tree", so the coverage is not merely equivalent, it is better, and it lives in the
+place that can actually establish it.
 
 ---
 
