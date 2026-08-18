@@ -95,24 +95,10 @@ fixed, the latent `triggeringWidget` mis-feed given its adapters).
   a move is diffed, not argued about. (Detail: `archive/menu-subject-routing-plan.md` §5.2.)
 
 ### `archive/constructor-parameter-conformance-plan.md` — **CLOSED, P0–P9 all landed**
-Brought `src/` onto the constructor convention stated in
-`architecture/constructor-and-parameter-conventions.md` (positional head for identity, one trailing
-`opts` for configuration; the hole test decisive) — constructors AND methods. ⚠⚠ **Archived as
-COMPLETE once and re-opened the same day** — `positional-hole` read 0 while ~50 holes stood, because
-its regex needs two `undefined`s adjacent on ONE line. That produced the arc's main lesson (**a green
-ratchet is a floor, never an inventory**; and **a phase is not done when its own layer is converted,
-but when the layer it delegates to is checked too**) and the gate that now measures honestly:
-`buildSystem/check-argument-holes.js`, sharing `census-call-arity.js`'s parser, ratcheted at **2** —
-its FLOOR, since both survivors are `undefined`-as-a-VALUE and annotated as such.
-- ⚖ **ONE open question, deliberately left (plan §7d-D).** `Widget.textPrompt` keeps a `msg` operand
-  its only receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The
-  dead FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.
-- ⚖ **The sibling tests repo stays UNGATED, by decision (plan §7d-C).** Its `SystemTest_*.js`
-  metadata is English prose inside string literals, and an identifier sweep reads a sentence like
-  *"…is never undefined, on the two classes that break it…"* as a four-argument call — so a gate
-  there would fail builds over prose edits. Sweep it by hand with `census-call-arity.js --holes`;
-  the genuine remainder is small (`setValue` ×5, `processKeyDown` ×2 in the serialization rig).
-⚠⚠ Standing, and learned TWICE in this arc (P3, then P8 item 3 in the same class family): **"I checked the callers" is HALF a sweep — a signature is owned by its call sites AND its `super` sites.** `grep -rn "extends <Class>\b" src/`, then RECURSE, however small the caller count looks. P9 adds the companion: **sweep by the FAMILY name, not the one method the count flagged** — two flagged holes in `_createReferenceAndCloseNoSettle` turned out to be six methods sharing one core, all three implementations carrying the same triplicated type-sniff that a single menu item had forced on them. Also: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run); sweep BOTH repos incl. the harness `.coffee`; reference churn is a red flag, not an expected cost.
+The arc's narrative, decisions and standing lessons live in that plan's BACKLOG ledger.
+- [ ] Plan §7d-D, deliberately left open: `Widget.textPrompt` keeps a `msg` operand its only
+  receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead
+  FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12
