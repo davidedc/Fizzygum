@@ -26,7 +26,7 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # The SPEC is the identity — it is what this row IS, and spec.label may be a string, a
   # Widget, a Canvas or an [icon, string] tuple. The rest is the menu-level CONTEXT the owning
-  # MenuWdgt supplies (font size / style, centring, and the environment pair), which is the
+  # MenuWdgt supplies (font size / style, centring, and the subject), which is the
   # same for every row, so it rides `opts`.
   #
   # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
@@ -41,8 +41,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       fontSize: opts.fontSize
       fontStyle: opts.fontStyle
       centered: opts.centered
-      dataSource: opts.dataSource
-      widgetEnv: opts.widgetEnv
+      subject: opts.subject
       toolTip: menuItemSpec.toolTipMessage
       color: menuItemSpec.color
       bold: menuItemSpec.bold

@@ -6,7 +6,7 @@
 # `action` reference live widgets (see docs/architecture/immutable-value-classes.md).
 #
 # Note what is NOT here: the menu-level context (font, and the menu's
-# environment) is supplied by the owning MenuWdgt when it builds the
+# subject) is supplied by the owning MenuWdgt when it builds the
 # MenuItemWdgt -- it is the same for every row, so it does not belong on a
 # per-row spec.
 #

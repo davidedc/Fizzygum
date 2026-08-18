@@ -33,7 +33,7 @@ class LabelButtonWdgt extends ButtonWdgt
   # It passes no `face`: a label button draws its own @label. An absent `face` and an
   # explicitly-undefined one are the same thing to ButtonWdgt, so there is nothing to say.
   #
-  # ⚠ ONE field, ONE name: ButtonWdgt's `dataSourceWidgetForTarget` is `dataSource` here too.
+  # ⚠ ONE field, ONE name: ButtonWdgt's `subjectOfAction` rides the `subject` option here too.
   # A second alias for it is exactly what an options vocabulary cannot afford (R4), because a
   # forwarded bag would then carry a key the receiver never reads.
   constructor: (target, action, opts = {}) ->

@@ -39,7 +39,6 @@
 class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
 
   target: undefined
-  environment: undefined
   fontSize: undefined
   title: undefined
   label: undefined
@@ -89,7 +88,6 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     # is set right here.
     super padding: 2
     @target = opts.target
-    @environment = opts.environment
     @fontSize = opts.fontSize
     @title = opts.title
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
@@ -172,20 +170,13 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
     @__add item, atIndex: 0
 
   # Builds a MenuItemWdgt from a MenuItemSpec and this panel's context: the font (this panel's
-  # @fontSize, or the global default) and the environment pair. ⚠ Note the CROSSOVER, which the
-  # named options now make visible where positional slots hid it: this panel's @target is the
-  # item's dataSource, and this panel's @environment is the item's widgetEnv.
-  createMenuItem: (menuItemSpec) ->
-    item = new MenuItemWdgt menuItemSpec,
+  # @fontSize, or the global default) and the subject — every row of mine acts ABOUT my @target,
+  # however the row's own receiver is wired.
+  _createMenuItem: (menuItemSpec) ->
+    new MenuItemWdgt menuItemSpec,
       fontSize: (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize)
       fontStyle: WorldWdgt.preferencesAndSettings.menuFontName
-      dataSource: @target
-      widgetEnv: @environment
-    if !@environment?
-      item.dataSourceWidgetForTarget = item
-      item.widgetEnv = @target
-
-    item
+      subject: @target
 
   # ── REFLECTED ROWS are not mine ─────────────────────────────────────────────────────────────
   # A row that SHOWS somebody else's value (MenuRowReflectionSpec) subscribes ITSELF to that source
@@ -220,10 +211,10 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   # label / target / action are the everyday positional arguments; the rest ride
   # an opts object (the spec's own constructor defaults fill any omitted opt).
   addMenuItem: (label, target, action, opts = {}) ->
-    @__add @createMenuItem @_menuItemSpecFrom label, target, action, opts
+    @__add @_createMenuItem @_menuItemSpecFrom label, target, action, opts
 
   prependMenuItem: (label, target, action, opts = {}) ->
-    @__add (@createMenuItem @_menuItemSpecFrom label, target, action, opts), atIndex: 0
+    @__add (@_createMenuItem @_menuItemSpecFrom label, target, action, opts), atIndex: 0
 
   # The spec takes the SAME label/target/action head and the SAME opts vocabulary
   # this method is handed, so it forwards rather than transcribes -- an opt added

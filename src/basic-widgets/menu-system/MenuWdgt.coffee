@@ -19,7 +19,6 @@ class MenuWdgt extends PopUpWdgt
 
   target: undefined
   title: undefined
-  environment: undefined
   fontSize: undefined
   # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
   # shared with PromptWdgt, along with the lay-and-hug + membership absorber.)
@@ -61,13 +60,12 @@ class MenuWdgt extends PopUpWdgt
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
   # (P5 arg-object conversion). Defaults match the old positional signature: killOutside /
-  # killOnTriggers true; target / title / environment / fontSize undefined.
+  # killOnTriggers true; target / title / fontSize undefined.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
     @target = opts.target
     @killThisPopUpIfClickOutsideDescendants = opts.killOutside ? true
     @killThisPopUpIfClickOnDescendantsTriggers = opts.killOnTriggers ? true
     @title = opts.title
-    @environment = opts.environment
     @fontSize = opts.fontSize
     if @killThisPopUpIfClickOutsideDescendants
       @onClickOutsideMeOrAnyOfMyChildren "close"
@@ -85,7 +83,7 @@ class MenuWdgt extends PopUpWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    @rowsPanel = new MenuRowsPanelWdgt target: @target, title: @title, environment: @environment, fontSize: @fontSize
+    @rowsPanel = new MenuRowsPanelWdgt target: @target, title: @title, fontSize: @fontSize
     # my rows go into the shared scroll frame, ALWAYS — see PopUpWdgt
     # ._buildRowsScrollFrameNoSettle for why there is no over-tall special case.
     @_buildRowsScrollFrameNoSettle()

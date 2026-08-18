@@ -12,8 +12,11 @@ class ButtonWdgt extends Widget
 
   target: undefined
   action: undefined
-  dataSourceWidgetForTarget: undefined
-  widgetEnv: undefined
+  # the widget my @action is ABOUT — trigger's slot 2. A menu row's panel fills it with its own
+  # target (the widget the whole menu is about), which is how a row wired at a DIFFERENT receiver
+  # (an attach candidate, a choose-target entry) still knows its subject. undefined on a button
+  # whose action has no subject.
+  subjectOfAction: undefined
  
  
   doubleClickAction: undefined
@@ -59,8 +62,7 @@ class ButtonWdgt extends Widget
   constructor: (@target, @action, opts = {}) ->
     @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = opts.closesUnpinnedPopUps ? true
     @faceWidget = opts.face
-    @dataSourceWidgetForTarget = opts.dataSource
-    @widgetEnv = opts.widgetEnv
+    @subjectOfAction = opts.subject
     @toolTipMessage = opts.toolTip if opts.toolTip?
     @doubleClickAction = opts.doubleClickAction
     @argumentToAction1 = opts.arg1
@@ -110,7 +112,9 @@ class ButtonWdgt extends Widget
     super
     @_markLayoutAsFixed()
 
-  # trigger button action:
+  # trigger button action. The four slots have FIXED meanings at every dispatch:
+  #   slot 1 = the button that fired (myself — the pop-up openers read it to build their
+  #            parent chain), slot 2 = @subjectOfAction, slots 3-4 = the per-row payload.
   trigger: ->
     if @action? and @action != ""
       # dev-build type tripwire (2026-07-06 incident: an @action passed as a function CLOSURE fails
@@ -119,7 +123,7 @@ class ButtonWdgt extends Widget
       # from a production build like all test-only code (the Automator is the harness part).
       if Automator? and typeof @action isnt 'string'
         throw new Error "ButtonWdgt action must be a STRING method name on the target (dispatched as @target[@action]) — got #{typeof @action}"
-      @target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
+      @target[@action].call @target, @, @subjectOfAction, @argumentToAction1, @argumentToAction2
     return
 
   triggerDoubleClick: ->

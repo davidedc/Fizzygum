@@ -1039,7 +1039,7 @@ class StringWdgt extends Widget
     @_reflowContainedTextThenInvalidateLayout()
 
   # THE MENU ADAPTER. A menu/button action is dispatched as
-  #   target[action].call target, dataSource, widgetEnv, arg1, arg2   (ButtonWdgt)
+  #   target[action].call target, theButton, subject, arg1, arg2   (ButtonWdgt)
   # so the picked font necessarily rides slot 3 and the menu item arrives in slot 1. That fixed
   # foreign convention is the only reason for the ignored slots — code setting a font wants the
   # plain setFontName above, because passing `undefined, undefined` to reach past a dispatcher's

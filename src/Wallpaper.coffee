@@ -78,7 +78,7 @@ class Wallpaper
     world.dataflow.markStale @
 
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): a menu action is
-  # dispatched as `target[action].call target, dataSource, widgetEnv, arg1, arg2`, so the
+  # dispatched as `target[action].call target, theButton, subject, arg1, arg2`, so the
   # picked pattern rides slot 3 and the item itself slot 1.
   setPatternFromMenu: (menuItem, ignored2, thePatternName) ->
     @setPattern thePatternName, menuItem

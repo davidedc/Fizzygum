@@ -137,7 +137,7 @@ under two names, because the receiver never reads the alias.
 
 ⭐⭐ **A MENU/TRIGGER ADAPTER IS NOT THE VERB — and wiring a menu item straight to a verb taxes
 every override of it.** `ButtonWdgt` dispatches a fixed four-slot convention
-(`@target[@action].call @target, dataSource, env, arg1, arg2`), so an item carrying no arguments
+(`@target[@action].call @target, theButton, subject, arg1, arg2`), so an item carrying no arguments
 still arrives with *widgets* in the leading slots. A verb wired directly to a menu has to defend
 itself — and since a bare `super` forwards the raw `arguments` rather than the parameters that
 defence just rebound, **every override needs its own copy of it**. `createReference` is the worked

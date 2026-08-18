@@ -1728,19 +1728,15 @@ assertion a recapture after a regression silently stores two different hashes an
   the default contents; then `@moveToItemOfMenuAndClick_InputEvents prompt, "Ok"` and
   `@assertValuesEqual "…", 25, slider.start`. ⚠ CAPTURE the prompt with `@getMostRecentlyOpenedMenu()` the moment it
   opens — every mouseUp clears `world.freshlyCreatedPopUps`, and its "Ok" is clicked several steps later.
-  ⭐ **THE MECHANIC WORTH KNOWING: which argument slot the value arrives in.** The prompt's "Ok" is an ordinary menu
-  row, so it dispatches through `ButtonWdgt.trigger` as
-  `@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, arg1, arg2`, and
-  `MenuRowsPanelWdgt.createMenuItem` fills those from the prompt panel — `dataSource: @target` (the widget being
-  CONFIGURED) and `widgetEnv: @environment` (`PromptWdgt._buildAndAddEntryFieldInto` sets it to the
-  `StringFieldWdgt`). So **slot 1 = the widget you are configuring, slot 2 = the value-giving field** — the reverse of
-  a WIRE, which calls `consumer[action] value` with the raw value in slot 1 and nothing in slot 2. A pin setter must
-  therefore read slot 2 FIRST and fall through to slot 1 (the shape
-  `(valueOrWidget, widgetGivingValue)`); a slot-1-only reading receives the configured widget itself, and if that
-  widget happens to answer `getValue` the duck-typed probe SUCCEEDS and stores the wrong number silently. That was a
-  live defect in the slider's floor/ceiling/button-size prompts until 2026-08-17, invisible because **no test covered
-  any property prompt** — this is that test. Also useful as the template for asserting any prompt-driven property.
-  No new verb.
+  ⭐ **THE MECHANIC WORTH KNOWING: the prompt delivers the VALUE.** The prompt's "Ok" targets the PROMPT itself:
+  `PromptWdgt.deliverValue` extracts the composed value from the prompt's own editor (`_promptValue` — the entry
+  field's string, or `ColorPromptWdgt`'s picker Color) and calls `@target[@callback].call @target, value` — the same
+  one-value shape a WIRE delivers by (`consumer[action] value`). So a prompt-reached setter takes ONE argument, the
+  value (`SliderWdgt.setStart(num)` — the pin-setter contract, `widget-authoring-guidelines.md` §11), and this test
+  asserts the TYPED number is what lands: the failure mode it guards is any delivery that hands the setter a widget
+  answering `getValue` (the slider itself does), which a duck-typed probe would silently read instead of the typed
+  number. The fixture keeps the slider's value (50) different from the typed 25 so that wrong answer is detectable.
+  Also useful as the template for asserting any prompt-driven property. No new verb.
 
 - **A menu row that SHOWS somebody's state follows a change it did not make**
   (`macroWallpaperMenuFollowsAnApiChange`): open a ticked menu, change the underlying value with NO menu

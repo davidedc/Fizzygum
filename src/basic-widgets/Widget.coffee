@@ -3073,7 +3073,7 @@ class Widget extends TreeNode
 
   # THE MENU ADAPTER for the "create shortcut" item — the shape shared with
   # PanelWdgt.makeFolderFromMenu and StringWdgt.setFontNameFromMenu. ButtonWdgt dispatches a FIXED
-  # 4-slot convention (`@target[@action].call @target, dataSource, env, arg1, arg2`), so a menu item
+  # 4-slot convention (`@target[@action].call @target, theButton, subject, arg1, arg2`), so a menu item
   # carrying no arguments of its own still arrives with WIDGETS in the leading slots. Keeping the
   # adapter separate from the verb is what lets createReference take the parameters IT wants: a menu
   # click means "a shortcut to me, on the desktop, auto-named", which is exactly the no-argument call.
@@ -4349,7 +4349,7 @@ class Widget extends TreeNode
       # adds a public member to every widget's prototype -- which the inspector faithfully lists, so
       # it churns the inspector-list reference screenshots for a method that has nothing to do with
       # the widget being inspected. The menu machinery passes the widget through the ARGUMENTS
-      # (`@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv`) rather than
+      # (`@target[@action].call @target, @, @subjectOfAction`) rather than
       # through the target, so the door receives the same widget whatever the target is.
       menu.addMenuItem "test menu ➜", world, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
       menu.addMenuItem "destroy", @, "fullDestroy"
@@ -4537,7 +4537,7 @@ class Widget extends TreeNode
 
   # THE MENU ADAPTERS for the "enable editing" / "disable editing" lock entries — the shape of
   # createReferenceFromMenu above. ButtonWdgt dispatches a FIXED 4-slot convention
-  # (`@target[@action].call @target, dataSource, env, arg1, arg2`), so an item carrying no arguments
+  # (`@target[@action].call @target, theButton, subject, arg1, arg2`), so an item carrying no arguments
   # of its own still arrives with WIDGETS in the leading slots. Here that matters because the four
   # container overrides of these verbs (FrameWdgt, ScrollPanelWdgt, StretchablePanelWdgt,
   # StretchableWidgetContainerWdgt) read slot 1 as `triggeringWidget` — the widget whose own toggle

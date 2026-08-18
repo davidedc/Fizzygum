@@ -221,7 +221,7 @@ ControllerMixin =
 
       # THE MENU ADAPTER. Its first two parameters are not mine to choose: a menu/button
       # action is dispatched as
-      #   target[action].call target, dataSource, widgetEnv, arg1, arg2   (ButtonWdgt)
+      #   target[action].call target, theButton, subject, arg1, arg2   (ButtonWdgt)
       # so the picked target and property necessarily ride slots 3 and 4. That fixed foreign
       # convention is the ONLY reason this signature has leading ignored slots — a caller
       # wiring a circuit in code wants wireTo above, because passing `undefined, undefined`

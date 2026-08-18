@@ -3,9 +3,9 @@
 //
 // A menu item is dispatched by ButtonWdgt through a FIXED four-slot convention:
 //
-//     @target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
+//     @target[@action].call @target, @, @subjectOfAction, @argumentToAction1, @argumentToAction2
 //
-// and for an ordinary menu (MenuRowsPanelWdgt.createMenuItem, no environment) those slots are
+// so at every dispatch
 //     slot 1 = the MENU ITEM itself      slot 2 = the widget the menu is about      slots 3-4 = arg1/arg2
 //
 // That convention is invisible at the call site — `menu.addMenuItem "label", target, "verb"` says
@@ -19,10 +19,10 @@
 // tripwire for it, but a runtime tripwire only fires when something CLICKS, and nothing in the suite
 // clicks a slider's "floor..." — three such items sat broken behind that tripwire. A build-time
 // check needs no one to click.
-// RULE 1 has TWO doors, because there are two ways into that slot. Besides addMenuItem/prependMenuItem,
-// `prompt` / `textPrompt` take a `callback` that PromptWdgt hands to a menu item verbatim
-// (`panel.addMenuItem "Ok", @target, @callback`) — the same slot, one hop later, so the same proof
-// applies and the callbacks count as menu-dispatched verbs for RULE 3 as well.
+// RULE 1 has TWO doors, because there are two ways into a name-dispatched slot. Besides
+// addMenuItem/prependMenuItem, `prompt` / `textPrompt` take a `callback` that the prompt's Ok
+// dispatches by name (`PromptWdgt.deliverValue`: `@target[@callback].call @target, @_promptValue()`)
+// — the same proof one hop later, so the callbacks count as menu-dispatched verbs for RULE 3 as well.
 //
 // ── RULE 2 (HARD, sound) — the options bag is an object.
 // A string literal where `opts` goes is provably wrong for the same reason: `opts.toolTip` on a
@@ -103,8 +103,8 @@ for (const p of files) {
   const rel = path.relative(SRC, p);
   const allLines = fs.readFileSync(p, 'utf8').split('\n');
   // ---- RULE 1, second door: prompt / textPrompt -------------------------------------------
-  // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — it hands it
-  // straight to a menu item (`PromptWdgt._buildButtonRow`: `panel.addMenuItem "Ok", @target, @callback`),
+  // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — the prompt's
+  // Ok does, by name (`PromptWdgt.deliverValue`: `@target[@callback].call @target, @_promptValue()`),
   // so the callback slot IS an action slot and a function literal there is wrong for exactly the same
   // reason, one hop later. Same proof, same severity, so it lives here rather than in its own gate.
   // ⓘ Deliberately NOT the stricter "the 3rd argument must be a string LITERAL": that would flag a
@@ -123,7 +123,7 @@ for (const p of files) {
     const cb = parts[2].trim();
     if (/^\(?\s*(?:\(|->|=>)/.test(cb)) {
       hard.push({ rel, line: i + 1, rule: 1, text: raw.trim(),
-        why: 'a FUNCTION LITERAL in the prompt CALLBACK slot — it is handed to `addMenuItem "Ok", @target, @callback`, so dispatch is `@target[@callback]` and this throws on Ok' });
+        why: 'a FUNCTION LITERAL in the prompt CALLBACK slot — the prompt\'s Ok dispatches it as `@target[@callback]` (PromptWdgt.deliverValue), so this throws on Ok' });
       return;
     }
     // a prompt callback is a menu-dispatched verb like any other: let RULE 3 see it too

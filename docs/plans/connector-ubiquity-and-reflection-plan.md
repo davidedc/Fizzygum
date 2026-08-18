@@ -1111,12 +1111,12 @@ Owner question, 2026-08-14: *"buttons don't connect to their destinations using 
 system. Should they?"* The honest answer splits three ways, and the split is worth recording as a
 law, because "unify the two `@target`/`@action` mechanisms" looks obviously right and is not.
 
-**Current state.** `ButtonWdgt` holds `@target` / `@action` / `@doubleClickAction` /
-`@argumentToAction1` / `@argumentToAction2` / `@dataSourceWidgetForTarget` / `@widgetEnv`, and
-`trigger()` is one synchronous call inside the click handler:
+**Current state (dispatch shape as of the 2026-08-18 dispatch-slot protocol arc).** `ButtonWdgt`
+holds `@target` / `@action` / `@doubleClickAction` / `@argumentToAction1` / `@argumentToAction2` /
+`@subjectOfAction`, and `trigger()` is one synchronous call inside the click handler:
 
 ```coffee
-@target[@action].call @target, @dataSourceWidgetForTarget, @widgetEnv, @argumentToAction1, @argumentToAction2
+@target[@action].call @target, @, @subjectOfAction, @argumentToAction1, @argumentToAction2
 ```
 
 It does **not** `@augmentWith ControllerMixin`, declares no edge, and declares no pins of its own. The
