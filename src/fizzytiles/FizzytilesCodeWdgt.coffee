@@ -8,8 +8,7 @@ class FizzytilesCodeWdgt extends TextWdgt
   showCompiledCode: (theTextContent) ->
     @_setTextNoSettle theTextContent
 
-  setText: (theTextContent, stringFieldWidget, skipCompilation) ->
-    super theTextContent, stringFieldWidget
-    if !skipCompilation?
-      @fridgeMagnetsCanvas?.newGraphicsCode @text
+  setText: (theTextContent) ->
+    super theTextContent
+    @fridgeMagnetsCanvas?.newGraphicsCode @text
 

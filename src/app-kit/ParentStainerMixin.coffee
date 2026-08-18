@@ -6,6 +6,6 @@ ParentStainerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      setColor: (theColor, ignored) ->
-        super theColor, ignored
-        @parent?.setColor theColor, ignored
+      setColor: (theColor) ->
+        super theColor
+        @parent?.setColor theColor

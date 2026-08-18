@@ -98,9 +98,7 @@ class PromptWdgt extends PopUpWdgt
     # surface the panel's title header as my own .label (the drag/pin-by-header handle).
     @label = @rowsPanel.label
 
-  # Subclass hook: build the type-specific editor and add it to the panel. The
-  # editor also becomes the panel's `environment` (the button rows resolve their
-  # widgetEnv from it, mirroring the old MenuWdgt environment-slot arg).
+  # Subclass hook: build the type-specific editor and add it to the panel.
   _buildAndAddValueEditorInto: (panel) ->
 
   # The shared core of the text-bearing editors (Text / Number): build the
@@ -114,23 +112,37 @@ class PromptWdgt extends PopUpWdgt
       fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
       fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName
       isNumeric: isNumericField
-    panel.environment = @tempPromptEntryField
     panel._addNoSettle @tempPromptEntryField
     # _addNoSettle skips the child's calculateAndUpdateExtent (which measures the
     # text and applies width >= minTextWidth, feeding the panel's width via
     # menuEntryPreferredWidth); run it explicitly.
     @tempPromptEntryField.calculateAndUpdateExtent()
 
-  # The everyday button row: a divider then "Ok" (fires the caller's callback on
-  # the target) and "Close" (dismisses this prompt). SaveShortcutPromptWdgt
-  # overrides with its own three buttons and no leading divider.
+  # The everyday button row: a divider then "Ok" (delivers the composed value to
+  # the caller's callback, via deliverValue below) and "Close" (dismisses this
+  # prompt). SaveShortcutPromptWdgt overrides with its own three buttons and no
+  # leading divider.
   _addButtonsInto: (panel) ->
     panel.addLine 2
-    panel.addMenuItem "Ok", @target, @callback
+    panel.addMenuItem "Ok", @, "deliverValue"
     # we name the button "Close" instead of "Cancel" because we are not undoing
     # any change we made -- that would be difficult with multiple prompts pinned
     # down and changing the property concurrently.
     panel.addMenuItem "Close", @, "close"
+
+  # The Ok adapter: a prompt delivers ONE argument — the value composed in its
+  # editor — to the caller's callback verb on the target, the same one-value
+  # convention a wire delivers by (`consumer[action] value`). Delivery is the
+  # whole job: closing belongs to the pop-up teardown (an unpinned prompt dies on
+  # the click; a pinned one stays and can deliver again).
+  deliverValue: ->
+    @target[@callback].call @target, @_promptValue()
+
+  # What my editor currently holds. The text-bearing prompts deliver the field's
+  # string (value-consuming setters parse/clamp their own property's type);
+  # ColorPromptWdgt overrides to deliver the picker's Color.
+  _promptValue: ->
+    @tempPromptEntryField.getValue()
 
   # Deliberately EMPTY: suppresses the base Widget._reactToBeingAdded -> @_reLayoutSelf
   # add-time self-heal. A prompt's body is laid ONCE at build

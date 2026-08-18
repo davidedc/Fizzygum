@@ -173,9 +173,12 @@ wire-style VALUE delivery.** Three honest sub-protocols:
 - **Wires** — unchanged `(value)`; the former SHAPE setters become exact convergence instead of a
   bridged mismatch.
 
-`argumentToAction1/2` collapse to one `actionArgument` (one reachable consumer in the tree,
-position 4 never filled — re-verify direct callers before deleting). Phase 3's checkable
-invariant: a prompt-reached setter with more than one parameter is a gate failure.
+`argumentToAction1/2` STAY (the census's "one reachable consumer" measured only the menusweep
+roots): the P2c re-verification found two real two-payload consumers behind the choose-target
+UI — `addPropertyToMixin (…, prop, mixinGlobalName)` and
+`setTargetAndActionWithOnesPickedFromMenu (…, theTarget, setterName)` — both filling `arg1:` and
+`arg2:`. Phase 3's checkable invariant: a prompt-reached setter with more than one parameter is a
+gate failure.
 
 ## §5 Central risks
 

@@ -108,16 +108,14 @@ class ScrollPanelWdgt extends PanelWdgt
 
   getScrollY: -> @top() - @contents.top()
 
-  # The pin-setter contract (widget-authoring-guidelines §11): the value-giving widget arrives in
-  # SLOT 2 on the menu/prompt path and slot 1 holds the widget being CONFIGURED, so slot 2 is read
-  # first; a wire fills slot 1 only.
+  # The pin-setter contract (widget-authoring-guidelines §11): every delivery passes ONE argument,
+  # the value.
   #   ⚠ CLAMPED, through the same `scrollX`/`scrollY` every other scroll path uses. The predecessor
   # moved the content raw, which could commit an over-scrolled state no gesture can produce (the
   # defect `scrollTo`'s own comment records). It also matters now that the bars are really wired: a
   # bar that is hidden because there is nothing to scroll still holds its constructed default, and
   # clamping is what makes delivering that a no-op instead of shoving the content off its viewport.
-  setScrollX: (numOrWidgetGivingNum, widgetGivingNum) ->
-    num = widgetGivingNum?.getValue?() ? numOrWidgetGivingNum?.getValue?() ? numOrWidgetGivingNum
+  setScrollX: (num) ->
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
     if @scrollX (@left() - num) - @contents.left()
@@ -126,8 +124,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutScrollbars()
     return num
 
-  setScrollY: (numOrWidgetGivingNum, widgetGivingNum) ->
-    num = widgetGivingNum?.getValue?() ? numOrWidgetGivingNum?.getValue?() ? numOrWidgetGivingNum
+  setScrollY: (num) ->
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
     if @scrollY (@top() - num) - @contents.top()
@@ -167,21 +164,21 @@ class ScrollPanelWdgt extends PanelWdgt
     stop = content - viewport
     new SliderRange 0, stop, viewport / content * stop
 
-  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
-    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor
+  setColor: (aColor) ->
+    aColor = super aColor
     # keep in sync the color of the content.
     # Note that the container ScrollPanel.
     # is actually not painted.
-    @contents.setColor aColorOrAWidgetGivingAColor, widgetGivingColor
+    @contents.setColor aColor
     return aColor
 
-  setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
+  setAlphaScaled: (alpha) ->
     alpha = super
     # update the alpha of the ScrollPanel - note
     # that we are never going to paint the ScrollPanel
     # we are updating the alpha so that its value is the same as the
     # contained Panel
-    @contents.setAlphaScaled alphaOrWidgetGivingAlpha, widgetGivingAlpha
+    @contents.setAlphaScaled alpha
     return alpha
 
   anyScrollBarShowing: ->

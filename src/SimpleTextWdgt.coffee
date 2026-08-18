@@ -137,8 +137,8 @@ class SimpleTextWdgt extends TextWdgt
 
   # This is also invoked for example when you take a slider and set it to target this. The box re-flow on a
   # text change is the inherited StringWdgt::setText (gated by FIT_BOX_TO_TEXT), reached via super.
-  setText: (theTextContent, stringFieldWidget) ->
-    super theTextContent, stringFieldWidget
+  setText: (theTextContent) ->
+    super theTextContent
     # No trailing @updateTarget() here: super -> StringWdgt::_setTextNoSettle already fires it (StringWdgt
     # ~:1258). Removed 2026-07-03 (Tier H1).
     return

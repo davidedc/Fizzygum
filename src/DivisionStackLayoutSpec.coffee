@@ -126,14 +126,9 @@ class DivisionStackLayoutSpec extends LayoutSpec
       isRounded: true
 
   # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
-  # Prompt-adapter signature (value-or-widget-giving-value), like VerticalStackLayoutSpec.setDesiredWidth.
-  setDesiredMainDim: (dimOrWidgetGivingDim, widgetGivingDim) ->
-    @element._settleLayoutsAfter => @_setDesiredMainDimNoSettle dimOrWidgetGivingDim, widgetGivingDim
-  _setDesiredMainDimNoSettle: (dimOrWidgetGivingDim, widgetGivingDim) ->
-    if widgetGivingDim?.getValue?
-      newDim = widgetGivingDim.getValue()
-    else
-      newDim = dimOrWidgetGivingDim
+  setDesiredMainDim: (newDim) ->
+    @element._settleLayoutsAfter => @_setDesiredMainDimNoSettle newDim
+  _setDesiredMainDimNoSettle: (newDim) ->
     newDim = Math.round newDim
     return unless newDim
     if @axis == 'y'
@@ -154,14 +149,9 @@ class DivisionStackLayoutSpec extends LayoutSpec
       isRounded: true
 
   # thin-wrap-exempt: settles on @element (not @) — not a Widget; canonical otherwise (see above).
-  # Prompt-adapter signature (value-or-widget-giving-value), like VerticalStackLayoutSpec.setDesiredWidth.
-  setMaxMainDim: (dimOrWidgetGivingDim, widgetGivingDim) ->
-    @element._settleLayoutsAfter => @_setMaxMainDimNoSettle dimOrWidgetGivingDim, widgetGivingDim
-  _setMaxMainDimNoSettle: (dimOrWidgetGivingDim, widgetGivingDim) ->
-    if widgetGivingDim?.getValue?
-      newDim = widgetGivingDim.getValue()
-    else
-      newDim = dimOrWidgetGivingDim
+  setMaxMainDim: (newDim) ->
+    @element._settleLayoutsAfter => @_setMaxMainDimNoSettle newDim
+  _setMaxMainDimNoSettle: (newDim) ->
     newDim = Math.round newDim
     return unless newDim
     if @axis == 'y'

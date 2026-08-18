@@ -95,8 +95,7 @@ class SwitchButtonWdgt extends Widget
   # deliver any number at all, and an out-of-range index would show no button whatsoever. Clamping
   # rather than wrapping, because "show button 7" from outside means the last one, while the WRAP
   # belongs to the click below, where cycling is the gesture.
-  setToggleState: (whichOneOrWidgetGivingIt, widgetGivingIt) ->
-    whichOne = widgetGivingIt?.getValue?() ? whichOneOrWidgetGivingIt?.getValue?() ? whichOneOrWidgetGivingIt
+  setToggleState: (whichOne) ->
     return unless isFinite whichOne
     whichOne = Math.round whichOne
     whichOne = 0 if whichOne < 0

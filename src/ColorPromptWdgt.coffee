@@ -15,8 +15,11 @@ class ColorPromptWdgt extends PromptWdgt
 
   _buildAndAddValueEditorInto: (panel) ->
     @colorPicker = new ColorPickerWdgt @defaultContents
-    panel.environment = @colorPicker
     panel._addNoSettle @colorPicker
     # _addNoSettle skips the child's calculateAndUpdateExtent (which the old bare
     # @__add ran to size the picker into the panel's width); run it explicitly.
     @colorPicker.calculateAndUpdateExtent?()
+
+  # my value is the picker's colour, not an entry field's string.
+  _promptValue: ->
+    @colorPicker.getColor()

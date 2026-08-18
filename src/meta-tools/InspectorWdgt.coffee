@@ -667,11 +667,8 @@ class InspectorWdgt extends Widget
     @inspectedObject.injectProperty propertyName, txt
 
 
-  addProperty: (ignored, widgetWithProperty) ->
-    prop = widgetWithProperty.text.text
+  addProperty: (prop) ->
     if prop?
-      if prop.getValue?
-        prop = prop.getValue()
       @_addNamedProperty prop
 
   # the add core, past the prompt: the popout flow (addProperty) and the class
@@ -697,12 +694,8 @@ class InspectorWdgt extends Widget
   _applyPropertyRename: (oldName, newName) ->
     @inspectedObject.renameOwnProperty oldName, newName
 
-  renameProperty: (ignored, widgetWithProperty) ->
+  renameProperty: (prop) ->
     propertyName = @list.selected.labelString
-    prop = widgetWithProperty.text.text
-    if prop.getValue?
-      prop = prop.getValue()
-
     @_applyPropertyRename propertyName, prop
 
     @_buildAndConnectChildren()

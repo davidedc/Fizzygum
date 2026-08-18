@@ -2534,15 +2534,9 @@ class Widget extends TreeNode
   # "corner radius..." prompt. Both dispatch on the WIDGET — a pin's setter is called as
   # `consumer[pin.setterName]` and the prompt as `@widget[action]` — which is why this must live
   # where every wearer can answer it, not on the one subclass that happened to introduce it.
-  #   The pin-setter contract (widget-authoring-guidelines §11): a wire puts the VALUE in slot 1,
-  # the prompt dispatch puts the widget being configured there and the value-giving widget in
-  # slot 2, so slot 2 is read first.
-  setCornerRadius: (radiusOrWidgetGivingRadius, widgetGivingRadius) ->
-    if widgetGivingRadius?.getValue?
-      radius = widgetGivingRadius.getValue()
-    else
-      radius = radiusOrWidgetGivingRadius
-
+  #   The pin-setter contract (widget-authoring-guidelines §11): every delivery — wire, prompt Ok,
+  # controller — passes ONE argument, the value.
+  setCornerRadius: (radius) ->
     if typeof radius is "number"
       @cornerRadius = Math.max radius, 0
     else
@@ -2551,26 +2545,17 @@ class Widget extends TreeNode
         @cornerRadius = Math.max newRadius, 0
     @_changed()
 
-  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
-    if widgetGivingColor?.getColor?
-      aColor = widgetGivingColor.getColor()
-    else
-      aColor = aColorOrAWidgetGivingAColor
-
+  setColor: (aColor) ->
     if aColor
       if @color?.equals aColor
         return
 
       @color = aColor
       @_changed()
-        
+
     return aColor
-  
-  setBackgroundColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
-    if widgetGivingColor?.getColor?
-      aColor = widgetGivingColor.getColor()
-    else
-      aColor = aColorOrAWidgetGivingAColor
+
+  setBackgroundColor: (aColor) ->
     if aColor
 
       if @backgroundColor?.equals aColor
@@ -4424,12 +4409,7 @@ class Widget extends TreeNode
         unscaled = newAlpha / 100
         return Math.min Math.max(unscaled, 0.1), 1
 
-  setPadding: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
-    if widgetGivingPadding?.getValue?
-      padding = widgetGivingPadding.getValue()
-    else
-      padding = paddingOrWidgetGivingPadding
-
+  setPadding: (padding) ->
     if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
       @paddingTop = padding
       @paddingBottom = padding
@@ -4439,12 +4419,7 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingTop: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
-    if widgetGivingPadding?.getValue?
-      padding = widgetGivingPadding.getValue()
-    else
-      padding = paddingOrWidgetGivingPadding
-
+  setPaddingTop: (padding) ->
     if padding
       unless @paddingTop == padding
         @paddingTop = padding
@@ -4452,12 +4427,7 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingBottom: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
-    if widgetGivingPadding?.getValue?
-      padding = widgetGivingPadding.getValue()
-    else
-      padding = paddingOrWidgetGivingPadding
-
+  setPaddingBottom: (padding) ->
     if padding
       unless @paddingBottom == padding
         @paddingBottom = padding
@@ -4465,12 +4435,7 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingLeft: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
-    if widgetGivingPadding?.getValue?
-      padding = widgetGivingPadding.getValue()
-    else
-      padding = paddingOrWidgetGivingPadding
-
+  setPaddingLeft: (padding) ->
     if padding
       unless @paddingLeft == padding
         @paddingLeft = padding
@@ -4478,12 +4443,7 @@ class Widget extends TreeNode
 
     return padding
 
-  setPaddingRight: (paddingOrWidgetGivingPadding, widgetGivingPadding) ->
-    if widgetGivingPadding?.getValue?
-      padding = widgetGivingPadding.getValue()
-    else
-      padding = paddingOrWidgetGivingPadding
-
+  setPaddingRight: (padding) ->
     if padding
       unless @paddingRight == padding
         @paddingRight = padding
@@ -4491,12 +4451,7 @@ class Widget extends TreeNode
 
     return padding
 
-  setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
-    if widgetGivingAlpha?.getValue?
-      alpha = widgetGivingAlpha.getValue()
-    else
-      alpha = alphaOrWidgetGivingAlpha
-
+  setAlphaScaled: (alpha) ->
     if alpha
       alpha = @calculateAlphaScaled alpha
       unless @alpha == alpha

@@ -21,10 +21,10 @@ class GenericCompositeIconWdgt extends Widget
   # the composite's parts all change color at the same time -- e.g. the
   # reference widget's "reference arrow" and "document" icons stain
   # together (on hover or click).
-  setColor: (theColor, ignored) ->
-    super theColor, ignored
+  setColor: (theColor) ->
+    super theColor
     for w in @children
-      w.setColor theColor, ignored
+      w.setColor theColor
 
   widthWithoutSpacing: ->
     Math.min @width(), @height()

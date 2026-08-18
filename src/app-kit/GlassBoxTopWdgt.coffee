@@ -22,5 +22,5 @@ class GlassBoxTopWdgt extends Widget
   findRootForGrab: ->
     return @parent.children[0]
 
-  setColor: (theColor, ignored) ->
-    @parent?.setColor theColor, ignored
+  setColor: (theColor) ->
+    @parent?.setColor theColor

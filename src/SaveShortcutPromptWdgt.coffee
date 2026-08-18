@@ -35,7 +35,6 @@ class SaveShortcutPromptWdgt extends PromptWdgt
       minTextWidth: 150
       fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
       fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName
-    panel.environment = @tempPromptEntryField
     panel._addNoSettle @tempPromptEntryField
     # _addNoSettle skips calculateAndUpdateExtent (which measures the text and
     # applies width >= minTextWidth); run it explicitly.
@@ -53,5 +52,5 @@ class SaveShortcutPromptWdgt extends PromptWdgt
   # deliberately NOT the family verb's — an arity-0 method called createReferenceAndClose would
   # SHADOW Widget.createReferenceAndClose on every instance of this class.
   createReferenceAndCloseFromMenu: ->
-    @target.createReferenceAndClose @wdgtWhereReferenceWillGo, @tempPromptEntryField.text.text
+    @target.createReferenceAndClose @wdgtWhereReferenceWillGo, @_promptValue()
     @close()

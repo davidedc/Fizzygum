@@ -150,7 +150,7 @@ class SliderWdgt extends CircleBoxWdgt
     @value = Number(newvalue)
     @_reLayoutSelfAndButton()
 
-  setValue: (newvalue, ignored) ->
+  setValue: (newvalue) ->
     @value = Number(newvalue)
     @updateTarget()
     @_reLayoutSelfAndButton()
@@ -187,7 +187,7 @@ class SliderWdgt extends CircleBoxWdgt
     newvalue = Math.round relPos / @unitSize() + @start
 
     if @value != newvalue
-      @setValue newvalue, undefined
+      @setValue newvalue
 
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
@@ -300,24 +300,7 @@ class SliderWdgt extends CircleBoxWdgt
     # (widget-citizenship contract point 2).
     @_fullChanged()
   
-  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and
-  # slot 2 is checked FIRST. Both of my callers depend on it:
-  #   • a PROMPT dispatches `@target[@action].call @target, dataSource, widgetEnv, …` where
-  #     dataSource is the widget being configured (ME) and widgetEnv is the entry field. Reading
-  #     slot 1 here reads MYSELF, and since I answer `getValue` (for the spreadsheet protocol) that
-  #     silently stores my current value instead of what the user typed.
-  #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
-  # Every other prompt-reached setter in the tree already has this shape; see
-  # docs/archive/widget-practices-convergence-plan.md §2.6.
-  setStart: (numOrWidgetGivingNum, widgetGivingValue) ->
-
-    if widgetGivingValue?.getValue?
-      num = widgetGivingValue.getValue()
-    else if numOrWidgetGivingNum?.getValue?
-      num = numOrWidgetGivingNum.getValue()
-    else
-      num = numOrWidgetGivingNum
-
+  setStart: (num) ->
     if typeof num is "number"
       @start = Math.min Math.max(num, 0), @stop - @size
     else
@@ -327,24 +310,7 @@ class SliderWdgt extends CircleBoxWdgt
     @updateTarget()
     @_reLayoutSelfAndButton()
   
-  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and
-  # slot 2 is checked FIRST. Both of my callers depend on it:
-  #   • a PROMPT dispatches `@target[@action].call @target, dataSource, widgetEnv, …` where
-  #     dataSource is the widget being configured (ME) and widgetEnv is the entry field. Reading
-  #     slot 1 here reads MYSELF, and since I answer `getValue` (for the spreadsheet protocol) that
-  #     silently stores my current value instead of what the user typed.
-  #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
-  # Every other prompt-reached setter in the tree already has this shape; see
-  # docs/archive/widget-practices-convergence-plan.md §2.6.
-  setStop: (numOrWidgetGivingNum, widgetGivingValue) ->
-
-    if widgetGivingValue?.getValue?
-      num = widgetGivingValue.getValue()
-    else if numOrWidgetGivingNum?.getValue?
-      num = numOrWidgetGivingNum.getValue()
-    else
-      num = numOrWidgetGivingNum
-
+  setStop: (num) ->
     if typeof num is "number"
       @stop = Math.max num, @start + @size
     else
@@ -369,23 +335,7 @@ class SliderWdgt extends CircleBoxWdgt
       @escalateEvent "mouseDownLeft", pos
     
 
-  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the value-giving widget arrives in SLOT 2, and
-  # slot 2 is checked FIRST. Both of my callers depend on it:
-  #   • a PROMPT dispatches `@target[@action].call @target, dataSource, widgetEnv, …` where
-  #     dataSource is the widget being configured (ME) and widgetEnv is the entry field. Reading
-  #     slot 1 here reads MYSELF, and since I answer `getValue` (for the spreadsheet protocol) that
-  #     silently stores my current value instead of what the user typed.
-  #   • a WIRE calls `consumer[action] value` — slot 2 is undefined, so it falls through to slot 1.
-  # Every other prompt-reached setter in the tree already has this shape; see
-  # docs/archive/widget-practices-convergence-plan.md §2.6.
-  setSize: (sizeOrWidgetGivingSize, widgetGivingValue) ->
-    if widgetGivingValue?.getValue?
-      size = widgetGivingValue.getValue()
-    else if sizeOrWidgetGivingSize?.getValue?
-      size = sizeOrWidgetGivingSize.getValue()
-    else
-      size = sizeOrWidgetGivingSize
-
+  setSize: (size) ->
     if typeof size is "number"
       @size = Math.min Math.max(size, 1), @stop - @start
     else

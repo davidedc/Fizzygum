@@ -143,15 +143,10 @@ class VerticalStackLayoutSpec extends LayoutSpec
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   # The prompt's adapter: the user-facing "elasticity" knob speaks 0..100, the model's grow
-  # is 0..1 -- this converts and delegates (StringFieldWdgt-value-aware, the prompt's
-  # calling convention).
-  setGrowFromPercent: (percentOrWidgetGivingPercent, widgetGivingPercent) ->
-    @element._settleLayoutsAfter => @_setGrowFromPercentNoSettle percentOrWidgetGivingPercent, widgetGivingPercent
-  _setGrowFromPercentNoSettle: (percentOrWidgetGivingPercent, widgetGivingPercent) ->
-    if widgetGivingPercent?.getValue?
-      percent = widgetGivingPercent.getValue()
-    else
-      percent = percentOrWidgetGivingPercent
+  # is 0..1 -- this converts and delegates.
+  setGrowFromPercent: (percent) ->
+    @element._settleLayoutsAfter => @_setGrowFromPercentNoSettle percent
+  _setGrowFromPercentNoSettle: (percent) ->
     @_setGrowNoSettle Number(percent) / 100
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
@@ -173,19 +168,14 @@ class VerticalStackLayoutSpec extends LayoutSpec
 
   # thin-wrap-exempt: settles on @element (not @) -- not a Widget; canonical otherwise (see setAlignmentToLeft).
   # (pre-U4 name: setWidthOfElementWhenAdded; the user-facing prompt still says "base width".)
-  setDesiredWidth: (desiredWidthOrWidgetGivingDesiredWidth, widgetGivingDesiredWidth) ->
-    @element._settleLayoutsAfter => @_setDesiredWidthNoSettle desiredWidthOrWidgetGivingDesiredWidth, widgetGivingDesiredWidth
+  setDesiredWidth: (newDesiredWidth) ->
+    @element._settleLayoutsAfter => @_setDesiredWidthNoSettle newDesiredWidth
   # An explicit base-width edit PINS the element (grow 0): "I want THIS width" — under the grow
   # model a desired width is moot at grow 1 (the element fills regardless), so without the pin
   # the menu's base-width knob would silently do nothing on a fill-class element (the old
   # proportional model re-anchored the ratio instead, so the knob always bit). The user can
   # raise elasticity again afterwards — the knobs stay independent edits.
-  _setDesiredWidthNoSettle: (desiredWidthOrWidgetGivingDesiredWidth, widgetGivingDesiredWidth) ->
-    if widgetGivingDesiredWidth?.getValue?
-      newDesiredWidth = widgetGivingDesiredWidth.getValue()
-    else
-      newDesiredWidth = desiredWidthOrWidgetGivingDesiredWidth
-
+  _setDesiredWidthNoSettle: (newDesiredWidth) ->
     newDesiredWidth = Math.round(newDesiredWidth)
 
     if newDesiredWidth

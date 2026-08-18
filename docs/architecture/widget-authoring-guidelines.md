@@ -676,31 +676,19 @@ itself one-way with no bookkeeping to have gone stale.
 
 ### The pin-setter contract
 
-A pin setter is reached along two paths that put the value in **different argument slots**:
-
-| path | slot 1 | slot 2 |
-|---|---|---|
-| **wire** — `consumer[action] value` | the raw VALUE | *(nothing)* |
-| **menu / prompt / button** — `@target[@action].call @target, dataSource, widgetEnv, …` | **the widget being CONFIGURED** | the value-giving WIDGET |
-
-⚠ **Read slot 2 FIRST, then fall through to slot 1.** The trap is slot 1 on the second path: it is
-not empty, it is *the widget you are setting a property on* (for a prompt,
-`MenuRowsPanelWdgt.createMenuItem` fills `dataSource` from the panel's target and `widgetEnv` from
-the entry field). So a setter that only coerces slot 1 does not merely "work from one half of the
-system" — it receives the configured widget, and **if that widget happens to answer `getValue` the
-duck-typed probe SUCCEEDS and stores the wrong value silently.** That was a live defect in
-`SliderWdgt`'s floor/ceiling/button-size prompts: they stored the slider's current value instead of
-the typed number, and it only became silent-instead-of-visible when `SliderWdgt.getValue` was added
-for an unrelated subsystem (the spreadsheet value protocol). Write both slots, plus the guard and
-the return:
+**Every delivery path passes a pin setter ONE argument: the value.** A wire calls
+`consumer[action] value`; a controller's `updateTarget` calls `target[setter](value)`; a prompt's
+Ok extracts the value from its own editor and delivers it (`PromptWdgt.deliverValue` →
+`@target[@callback].call @target, @_promptValue()`). There is no delivery that hands a setter a
+widget to interrogate, so a setter never probes its argument for `getValue`/`getColor` — it
+coerces, clamps, and stores:
 
 ```coffee
-setFoo: (fooOrWidgetGivingFoo, widgetGivingFoo) ->
-  foo = widgetGivingFoo?.getValue?() ? fooOrWidgetGivingFoo?.getValue?() ? fooOrWidgetGivingFoo
-  foo = parseFloat foo  unless typeof foo is "number"
+setFoo: (foo) ->
+  foo = parseFloat foo  unless typeof foo is "number"     # a wire may deliver a string spelling
   return  if isNaN foo
-  foo = Math.min Math.max(foo, @fooFloor), @fooCeiling      # clamp to the property's own range
-  return @foo  if @foo is foo                               # idempotence: a wired circuit must settle
+  foo = Math.min Math.max(foo, @fooFloor), @fooCeiling    # clamp to the property's own range
+  return @foo  if @foo is foo                             # idempotence: a wired circuit must settle
   @foo = foo
   @_changed()
   return foo
@@ -914,8 +902,7 @@ class FooWdgt extends Widget
 
   getValue: -> @level
 
-  setLevel: (levelOrWidgetGivingLevel, widgetGivingLevel) ->
-    level = widgetGivingLevel?.getValue?() ? levelOrWidgetGivingLevel?.getValue?() ? levelOrWidgetGivingLevel
+  setLevel: (level) ->
     level = parseFloat level  unless typeof level is "number"
     return  if isNaN level
     return @level  if @level is level

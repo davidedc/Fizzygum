@@ -1317,33 +1317,23 @@ class StringWdgt extends Widget
   # and set it to target this.
   #
   # SELF-SETTLES via the single @_settleLayoutsAfter -- the ordinary self-settling-setter convention.
-  # It is thin-wrap-exempt only because it does arg-decoding FIRST (the stringFieldWidget unwrap), so it
-  # is not the BARE canonical wrap. Single is SAFE here because the one
+  # Single is SAFE here because the one
   # flow that used to reach setText MID-PASS -- a window RE-TITLING its label from inside an add's settle
   # -- now calls @_setTextNoSettle DIRECTLY (see FrameWdgt._addNoSettle), so NO flow reaches setText
   # under a layout pass anymore (VERIFIED: full suite green with the single settler). The single settler's
   # flow-violation throw stays as the NET: if some future caller (e.g. a connection's updateTarget
   # dynamically dispatching to setText) reaches it mid-pass, it SURFACES the violation rather than
   # silently deferring it.
-  # thin-wrap-exempt: decodes the stringFieldWidget arg before the single-settle delegate.
-  setText: (theTextContent, stringFieldWidget) ->
-    if stringFieldWidget?
-      # in this case, the stringFieldWidget has a
-      # string widget in "text". The string widget has the
-      # "text" inside it.
-      theTextContent = stringFieldWidget.text.text
-    @_settleLayoutsAfter =>
-      @_setTextNoSettle theTextContent
+  setText: (theTextContent) ->
+    @_settleLayoutsAfter => @_setTextNoSettle theTextContent
 
   # The reactive-CONNECTOR entrypoint for setText (the connection lane -- see Widget.
-  # _settleLayoutsAfterOrJoinEnclosingPass and check-layering [P]). IDENTICAL to the public setText -- same
-  # stringFieldWidget decode -- EXCEPT it JOINS an already-open layout pass instead of opening a nested settle
+  # _settleLayoutsAfterOrJoinEnclosingPass and check-layering [P]). IDENTICAL to the public setText
+  # EXCEPT it JOINS an already-open layout pass instead of opening a nested settle
   # (which the public setText's _settleLayoutsAfter would reject mid-pass). The engine's edge apply
   # (DataflowEngine._applyWireValue) routes wired "setText" deliveries here; direct/API callers keep using the
   # public setText.
-  _setTextConnector: (theTextContent, stringFieldWidget) ->
-    if stringFieldWidget?
-      theTextContent = stringFieldWidget.text.text
+  _setTextConnector: (theTextContent) ->
     @_settleLayoutsAfterOrJoinEnclosingPass =>
       @_setTextNoSettle theTextContent
 
@@ -1357,12 +1347,7 @@ class StringWdgt extends Widget
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
-  _setFontSizeNoSettle: (sizeOrWidgetGivingSize, widgetGivingSize) ->
-    if widgetGivingSize?.getValue?
-      size = widgetGivingSize.getValue()
-    else
-      size = sizeOrWidgetGivingSize
-
+  _setFontSizeNoSettle: (size) ->
     if typeof size is "number"
       newSize = Math.round Math.min Math.max(size, 4), 500
     else
@@ -1380,14 +1365,14 @@ class StringWdgt extends Widget
       @_changed()
     @_reflowContainedTextThenInvalidateLayout()
 
-  setFontSize: (sizeOrWidgetGivingSize, widgetGivingSize) ->
-    @_settleLayoutsAfter => @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
+  setFontSize: (size) ->
+    @_settleLayoutsAfter => @_setFontSizeNoSettle size
 
   # The reactive-CONNECTOR entrypoint for setFontSize (see _setTextConnector above / check-layering [P]).
   # setFontSize is a SINK -- it never calls updateTarget, so a circuit cannot cycle through it.
-  _setFontSizeConnector: (sizeOrWidgetGivingSize, widgetGivingSize) ->
+  _setFontSizeConnector: (size) ->
     @_settleLayoutsAfterOrJoinEnclosingPass =>
-      @_setFontSizeNoSettle sizeOrWidgetGivingSize, widgetGivingSize
+      @_setFontSizeNoSettle size
 
   # My `text` pin's reader, and so what exportedValue answers (`text` is my principal pin).
   # ⚠ It did not exist before: the exported-value chain ended by reading the FIELD `@text` directly,

@@ -58,8 +58,8 @@ class PanelWdgt extends Widget
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
-  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
-    aColor = super aColorOrAWidgetGivingAColor, widgetGivingColor
+  setColor: (aColor) ->
+    aColor = super aColor
     # keep in sync the value of the container scrollPanel
     # if there is one. A bare field sync: the container scrollPanel
     # is never painted (alpha 0, mimics the contained panel's values),
@@ -73,8 +73,8 @@ class PanelWdgt extends Widget
     return aColor
 
 
-  setAlphaScaled: (alphaOrWidgetGivingAlpha, widgetGivingAlpha) ->
-    alpha = super(alphaOrWidgetGivingAlpha, widgetGivingAlpha)
+  setAlphaScaled: (alpha) ->
+    alpha = super(alpha)
     if @scrollPanel
       unless @scrollPanel.alpha == alpha
         @scrollPanel.alpha = alpha

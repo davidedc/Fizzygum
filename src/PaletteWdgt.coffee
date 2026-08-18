@@ -154,15 +154,10 @@ class PaletteWdgt extends Widget
   # re-readers and hands them nothing, so it is not the echo the refusal above is aimed at. Refusing
   # both was one refusal too many — my choice really did change, and anything FOLLOWING this pin has
   # to hear about it however the colour arrived. Dark when nobody follows me.
-  #   Both argument slots, as every pin setter must (the pin-setter contract in
-  # docs/architecture/widget-authoring-guidelines.md): a wire puts the VALUE in slot 1, while the
-  # menu/prompt dispatch puts the widget being configured there and the value-giving widget in
-  # slot 2. Same shape as Widget.setColor, which this is the picked-colour twin of.
-  setChoice: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
-    if widgetGivingColor?.getColor?
-      aColor = widgetGivingColor.getColor()
-    else
-      aColor = aColorOrAWidgetGivingAColor
+  #   ONE argument, the value, as every pin setter takes (the pin-setter contract in
+  # docs/architecture/widget-authoring-guidelines.md). Same shape as Widget.setColor, which this
+  # is the picked-colour twin of.
+  setChoice: (aColor) ->
     if !aColor? then return
     if @choice?.equals aColor then return
     @choice = aColor

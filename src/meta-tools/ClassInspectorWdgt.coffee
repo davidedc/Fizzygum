@@ -62,14 +62,11 @@ class ClassInspectorWdgt extends InspectorWdgt
   # can receive the new member either on itself or on one of its mixins (a member
   # added to a mixin appears on every non-shadowing consumer class and is logged
   # for snapshot replay). An unaugmented class keeps the base single-step flow.
-  addProperty: (ignored, widgetWithProperty) ->
+  addProperty: (prop) ->
     augmentations = @inspectedObject.constructor.class?.augmentedWith
     if !augmentations? or augmentations.length is 0
       super
       return
-    prop = widgetWithProperty.text.text
-    if prop?.getValue?
-      prop = prop.getValue()
     return unless prop
     menu = new MenuWdgt @, target: @, title: "add \"" + prop + "\" to:"
     menu.addMenuItem @inspectedObject.constructor.name, @, "addPropertyToClass", arg1: prop
