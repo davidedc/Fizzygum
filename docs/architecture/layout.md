@@ -55,7 +55,7 @@ dark unless someone re-reads, and re-reading marks nothing). What it costs is a 
 ⭐ **Measured, not assumed:** that lag is **zero frames for anything a gesture drives**, because `doOneCycle` plays
 INPUT before the dataflow station — so a wheel/drag/track-click scroll announces itself in time for the same
 cycle's drain — and **exactly one frame** only for a change originating inside the layout pass itself, where
-nothing is in motion. See `docs/plans/connector-ubiquity-and-reflection-plan.md` §P8 "As landed".
+nothing is in motion. See `docs/archive/connector-ubiquity-and-reflection-plan.md` §P8 "As landed".
 
 (The dataflow engine has its own spec; see `docs/specs/dataflow-engine-spec.md` and `src/dataflow/CLAUDE.md`.
 This doc covers only the layout station.)

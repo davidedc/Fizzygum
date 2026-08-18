@@ -288,3 +288,12 @@ reference prompts/sliders)
   parallel WebKit re-run 243/243 (20:17:58), and passed both Chrome legs with the same
   code. `fg homepage` green (20:15:40). Suite BYTE-IDENTICAL throughout the arc — zero
   recaptures, zero reference changes.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/menu-slider-ctor-conversion-plan.md` §0 non-goals: WorldWdgt dev-menu show-all/hide-all removal — DONE 2026-07-12 (`c82e0bcc`, "delete the dead \"show all\" / \"hide all\" noOperation items"); neither label nor any `showAll`/`hideAll` member survives in `src/`, and the feared 12-macro recapture never materialised.

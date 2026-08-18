@@ -776,3 +776,63 @@ untouched, since `whenOptionalPartsLoaded` delegates straight to `whenAllLoaded`
 - `buildSystem/check-part-edges.js` — the gate that produced §2.2; read its header before trusting a
   grep over it
 - memory: `build-arc-5-packaging-profiles-arc.md`, `build-arc-4-dynamic-parts-arc.md`
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### `archive/core-app-slices-partition-plan.md` — ✅ ALL PHASES DONE (0/0.5/1/2/3/4)
+- [x] ⚠ **FOUND IN PHASE 3, NOT CAUSED BY IT — two CORE doors were dead on a `lean` tree; FIXED.**
+      `DashboardsApp.launch`/`SimpleSlideApp.launch` used `whenAllLoaded ["maps", …]` while
+      `createDesktop` creates their openers unguarded, so on a profile shipping neither part the icon
+      existed and its click REJECTED with `no such part 'maps' in this build`, opening nothing
+      (arrived with `eed2f2f2`/`058ea35f`; verified empirically both before and after — plan §13.7).
+      Fix names the rule: `PartsRegistry.whenOptionalPartsLoaded`. ⚖ **Required vs optional is now a
+      deliberate choice at every door** (`architecture/build-and-packaging.md` §2): `whenAllLoaded`
+      when the part CONSTITUTES the result (a `Sample*App` builds plots — rejecting is right),
+      `whenOptionalPartsLoaded` when it merely ENRICHES it (a palette with fewer tools).
+Owner answered P0: omit-a-slice **yes, `maps` only** · sample content **demo material, but production
+KEEPS it** · **lazy**. That triple is a third end state the plan's §1 did not enumerate and is
+coherent — production must *have* `maps` (the samples build maps), but a lazy part is absent from
+`js/pre-compiled.js`, so the Examples folder survives *and* the artwork leaves the first load.
+- [x] Phase 0 — the three `Sample*App` → a new **`samples`** part, named in `homepage.json`.
+      ⚠ NOT folded into `demos`: naming that in production would have added `DemoMenus` + the
+      bouncer/pen/pointer widgets. Two species of demo, two parts.
+- [x] Phase 0.5 — measured: §2.5's "~42 KB for maps" was **33% understated**; the real figure is 55.8 KB.
+- [x] Phase 1 — `src/maps/` → a **lazy `maps`** part, with the two map creator buttons moved *into*
+      it (a creator button has no async seam, so it cannot await from outside).
+- [x] Phase 4 — `architecture/build-and-packaging.md`, `explainers/build-and-packaging.html`, profiles.
+- [x] Phase 2 — `plots` extracted and LAZY (2nd session), with the palette and its opener moved in
+      too: every item of `PlotsToolbarWdgt` is a plot button, so filtering it would pop an empty window.
+- [x] `meta-tools` (the inspectors) made LAZY — not a phase of this plan; they were already a part.
+- [x] Phase 3 — **`spreadsheet` extracted and LAZY**, with the fizzytiles-style LAUNCHER SPLIT it
+      needed: `SpreadsheetApp` moved to `src/spreadsheet-launcher/`, its own EAGER part, because
+      `createDesktop` places the Examples icon at boot. Production names both parts; `lean` names
+      NEITHER (an eager launcher without its engine is an icon whose click can only reject).
+- [x] Phase 3 — **`dataflow` DELIBERATELY NOT EXTRACTED** (owner decision, reversing the plan's §4).
+      The R-2 enumeration is the reason: 14 call sites, almost all core (`ControllerMixin.ensureWireEdge`
+      = how any widget wires to any other, sliders, patch nodes, `doOneCycle`'s every-cycle drain).
+      They soak SYNTACTICALLY (`world.dataflow?.…`) but not semantically — absence means wires
+      silently never fire, which is broken rather than reduced, failing arc 4's absence-is-a-no-op
+      rule. It is the wiring substrate, not an app slice. **Do not re-attempt** (plan §4 Phase 3).
+- **Result:** production image 1,101,733 → **955,796 B (−145.9 KB, −13.3%)**; `lean` 1,074,170 →
+  945,796 B (−128.4 KB, −12.0%); production tree 30 files / 3.51 MB, `lean` 10 / 1.20 MB. Examples
+  folder unchanged, zero reference churn throughout. Commits `eed2f2f2`, `058ea35f`, tests `3741b855b`
+  (+ the Phase 3 commit).
+- ⚠⚠ **Phase 3's finding: the payoff estimator is broken, and §13 records why.** §12.4 predicted
+  ~68 KB off the image; the truth is **33.7 KB**. `src/spreadsheet` is **72.1% comment bytes** where
+  `src/maps` — the slice the ratio was calibrated on — is **2.5%**, and comments never reach a
+  compiled image. The same estimator was 33% LOW for maps and 50% HIGH here. ⚖ Estimate from CODE
+  bytes, and treat that as a guess until two builds have been fingerprinted.
+- ⚠ `fg homepage`'s lazy-part probe took the FIRST lazy part in a `sort_keys=True` manifest — always
+  `maps` — so `spreadsheet` would have shipped never once loaded by a gate. It now LOOPS over every
+  lazy part (twelve on production). Only the first load proves the §11.5 meta-system bootstrap; the rest
+  prove absent-at-boot / all-classes-arrive / zero-eager-batches.
+- ⚠⚠ §11 of the plan records the four authored facts execution falsified — chief among them that the
+  **derived part→part `requires` mechanism does not exist**, so part dependencies are honoured by hand
+  at call sites and no gate checks them — plus **§11.5, a defect that SHIPPED in `eed2f2f2`**: a lazy
+  part cannot ingest on a precompiled tree until `ensureMetaSystemLoaded()` runs, and no gate loaded a
+  lazy part on such a tree. Fixed, and `fg homepage` now asserts it (proven against a planted defect).

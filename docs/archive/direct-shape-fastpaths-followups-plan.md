@@ -344,3 +344,17 @@ Weave — never bolt on (see the `docs-sync` skill if available; else follow
   home + the crisp-spelling comment).
 - Fizzygum-tests: commits `7c5d21c73` (harness budget), `0b8f823e3` (re-baseline);
   `DETERMINISM.md`.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] P1 upstream SWCanvas: circle-path hardening — tier-0 clip wiring for CircleOps + crisp-contract probes + doc truth-up (SWCanvas `277e8e3`; also fixed a latent fillStroke_Any off-surface span-wrap corruption). ⚡ The "relax CircleOps' transform" premise was FALSIFIED at authoring: circles already fast-path under Fizzygum's transforms; the doc was stale.
+- [x] P2 upstream SWCanvas: stadium/capsule primitive (SWCanvas `af9af84`: `fillStadium` over a new `StadiumOps`; RoundedRectOpsAA-at-max-radius delegation was measured and REJECTED — its edge-sampled corner extents lose a horizontal stadium's apex columns).
+- [x] P3 Fizzygum: sliders = ONE `fillStadium`, rings = ONE `strokeCircle`, plus the owner-directed direct-rect/circle icon sweep; owner-eyeballed diff pages (two defects caught + fixed: black dash via the fillStyle side-effect, vanished hairline handle ring → reverted); 133-test recapture COMPLETE dpr1+2; gauntlet 14/14.
+- [x] P4 upstream SWCanvas: `fillStroke_AA_Any` tier-0 + radius<1 fill clip-drop fix (SWCanvas `7414c35`).
+- [x] P5 docs-sync: crisp-spelling contract → `architecture/integer-pixel-placement-and-sizing.md` §7; harness budget gotcha → tests CLAUDE.md; plan archived + INDEX'd.
+- [x] P6 (added in execution, owner-directed): uniform-scale gate on all six SWCanvas circle/arc entries — non-uniform transforms render the correct ellipse via the generic pipeline (test 054; zero churn for eligible callers).

@@ -554,10 +554,14 @@ mark after `add` + `setExtent` adds nothing.
 
 **Prefer connector endpoints over bespoke callbacks.** [convention] Only pins are discoverable,
 rewireable and serializable by the generic machinery, and a wire *is* a dataflow edge
-([`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)).
+([`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md)). The incidents that produced
+the ⚠ rules below are kept as case law in
+[`../archive/connector-ubiquity-and-reflection-plan.md`](../archive/connector-ubiquity-and-reflection-plan.md),
+"Case law" §, cited here as *§CL1*–*§CL9*.
 
 **To be driven by others**, declare your pins in `pins`, always concatenating onto `super`'s — one
-`PinSpec` per pin, never one entry per kind:
+`PinSpec` per pin, never one entry per kind. Dropping `super()` from the chain silently narrows your
+widget to only its own pins.
 
 ```coffee
 pins: -> super().concat [
@@ -567,138 +571,92 @@ pins: -> super().concat [
 ]
 ```
 
-- `kind` is one kind, an array of them, or `"any"` — the last meaning the pin *ignores* the value's
-  kind (a bang), not "all the kinds that exist today".
-- **`get` is optional and its absence is a statement**: a pin with no reader is WRITE-ONLY — it can
-  be driven and can never be bound two-way. Do not invent a reader method to fill the slot; most of
-  `Widget`'s own pins are write-only because no reader method exists for them, and *that is the
-  honest declaration*. `width`/`height` are write-only **deliberately** even though `width()` and
-  `height()` exist: a readable pin is a licence to bind, and nothing has ever wanted to track a
-  widget's width. That is a positive choice, not a prohibition: connector §P8 narrowed the one-way
-  law to "layout may never `markStale`, but it MAY `markNonValueChange`", which is the licence
-  `ScrollPanelWdgt`'s readable `scroll x` / `scroll y` run on. The bar for a readable geometry pin is
-  a real CONSUMER — add the reader when something needs to track it.
-- **`set` is optional too**: a pin with no setter is READ-ONLY and never appears in a
-  "choose target property" menu, because nothing can drive it (`StringFieldWdgt`'s `value` — the
-  field reports what was typed into it and is not driven from outside).
-- **`announces` is the third fact, and it is a promise about EVERY write path**, not about your
-  setter: *whenever this pin changes, by a gesture, a script, the loader or another widget's method
-  call, I tell the dataflow*. It defaults false, and a pin that does not declare it can be DRIVEN but
-  never FOLLOWED (§ *To drive others AND follow them* below) — which is the point: a follower offered
-  a pin that goes quiet just goes silently stale. Declaring it on a pin with no reader is refused at
-  construction, since there would be nothing to re-read.
-  ⚠ **Read the section below before ticking it.** The word looks obvious for any pin whose setter
-  fires, and it is a promise about every OTHER path too — which is why only a handful of pins in the
-  tree carry it. `Fizzygum-tests/scripts/pin-sweep-headless.js` enumerates them and drives each one's
-  setter as a necessary-condition check; ask it rather than counting by hand.
+- **`kind`** is one kind, an array of them, or `"any"` — the last meaning the pin *ignores* the
+  value's kind (a bang), not "all the kinds that exist today".
+- **No `get` declares a WRITE-ONLY pin**: it can be driven and can never be bound two-way. Do not
+  invent a reader to fill the slot — `get` promises the dataflow will dispatch *that method* by name,
+  so a readable *field* with no reader *method* is honestly write-only. `width`/`height` are
+  write-only on purpose: a readable pin is a licence to bind, and the bar for a readable geometry pin
+  is a real CONSUMER — add the reader when something needs to track it. [§CL1]
+- **No `set` declares a READ-ONLY pin**, which never appears in a "choose target property" menu
+  because nothing can drive it (`StringFieldWdgt`'s `value`). A `PinSpec` with neither half is
+  refused at construction.
+- **`announces` is a promise about EVERY write path** — a gesture, a script, the loader, another
+  widget's method call — not about your setter. It defaults false, and a pin that does not declare it
+  can be DRIVEN but never FOLLOWED: a follower offered a pin that goes quiet just goes silently
+  stale. Declaring it on a pin with no reader is refused at construction.
+  ⚠ **It is a claim about a FUNNEL — audit every write path before ticking it**, and if the writes do
+  not all end at one place, build that funnel or leave the flag alone. Never name its carriers in
+  prose; `fg pinsweep` enumerates them. [§CL2, §CL6]
 - **Declare a pin on the class that implements its verb.** Declaring it higher advertises it for
-  every subclass, and a target property that dispatches to a missing method fails *silently* —
-  `consumer[action]?.call` swallows the miss. The runtime gate for this is
-  `Fizzygum-tests/scripts/pin-sweep-headless.js` (`npm run pin-sweep`): a pin must resolve on every
-  class that is a leaf or is somewhere `new`-ed, so a base that declares pins for its subclasses to
-  implement is fine and a concrete class inheriting one it does not implement is not.
-- ⚠ **An APPEARANCE's pins are serviced by the WIDGET, not by the appearance.** `Widget.pins`
-  concatenates `@appearance?.pins?()`, and a pin's setter is dispatched on the widget — so declaring
-  a pin on a shape is a demand on *everything that wears it*, including subclasses of the wearers.
-  `corner radius` was declared by three appearances and implemented on one class, which left sixteen
-  advertising a control that could not work; the field and its setter now live on `Widget`, beside
-  `appearance`, because the shape reads `@widget.cornerRadius` unconditionally and so the property
-  was always part of that contract. If you give a shape a pin, put its verb where every wearer can
-  answer it.
-- Dropping `super()` from the chain silently narrows your widget to only its own pins.
+  every subclass, and a target property whose dispatch finds no method fails *silently* —
+  `consumer[action]?.call` swallows the miss.
+- ⚠ **An APPEARANCE's pins are serviced by the WIDGET.** `Widget.pins` concatenates
+  `@appearance?.pins?()` and dispatches a pin's setter on the widget, so giving a shape a pin is a
+  demand on *everything that wears it*, subclasses of the wearers included. Put the verb where every
+  wearer can answer it. [§CL3]
 
-**To drive others**, `@augmentWith ControllerMixin`, bind with `wireTo theTarget, action` (which
-ADDS a `WireSpec` to your `@wires` list — you may hold several, and `unwireFrom` removes one), fire through
-`@_fireConnection value`, declare `producesPinKind: "numerical"` (the kind of value you *produce*),
-and append the shared connect block with `@_addTargetConnectionMenuEntries menu`. That one field is
-read by both halves of the set-target UI — the target-property menu filters by it and the tooltip is
-worded from it — so the two cannot describe different things.
+**[gated — `fg pinsweep`]** Every advertised pin must RESOLVE on every class that is a leaf or is
+somewhere `new`-ed, so a base declaring pins for its subclasses to implement passes and a concrete
+class inheriting one it does not implement does not; the sweep also checks appearance-contributed
+pins on their wearers and demands a live fixture for every `announces`. It is a runtime sweep rather
+than a text scan because `pins()` is composed and a subclass may narrow it
+([`lint-and-static-checks.md`](lint-and-static-checks.md)).
 
-**To drive others AND follow them** — a control that must stay welded to what it drives, like a
-scrollbar and its content — bind with `trackTarget theTarget, action` instead of `wireTo`, and
-implement `reflectTarget` to re-read. Two rules come with it, both learned the hard way:
+**To drive others**, `@augmentWith ControllerMixin`, declare `producesPinKind: "numerical"` (the kind
+of value you *produce* — one field read by both halves of the set-target UI, so its property-menu
+filter and its tooltip cannot describe different things), fire through `@_fireConnection value`, and
+append the shared connect block with `@_addTargetConnectionMenuEntries menu`. Your wires are a LIST
+(`@wires`, one `WireSpec` each), so you drive as many things as you are connected to. Pick the
+binding verb by **which way the value moves when the wire is made**:
 
-- **Read back the pin your own wire's action writes** (`wire.target.pinDrivenBy wire.action` → its
-  `getterName`), never a second field naming the property. A DUPLICATED control keeps its wire
-  records and nothing else, so deriving from them is what makes the copy track what it drives.
-- ⚠ **A tracking bind does not push on connect.** `wireTo` fires your current value at the new
-  target, which is right when you OWN the value and wrong when you MIRROR it — the target is the
-  source of truth, so the initial value must flow target → you. This is not a nicety: a `SliderWdgt`
-  is born at 50 of 1..100, so a scrollbar that pushed on connect scrolled its panel to 50, and
-  because the fire POOLS it landed a cycle later, on a panel that may have gained content in the
-  meantime. `trackTarget` takes the value from the target for exactly this reason.
+| verb | when it is the right one |
+|---|---|
+| `wireTo theTarget, action` | you OWN the value and drive somebody with it: adds a wire, and fires your current value at the new target |
+| `trackTarget theTarget, action` | you MIRROR what you drive and must stay welded to it (a scrollbar and its content): the same binding plus the reverse half, with the initial value flowing target → you. Implement `reflectTarget` to re-read |
+| `bindTo theTarget` | two widgets' VALUES must stay equal: two ordinary wires, mine onto you and yours onto me, with the precedence stated — I push my value, and the return wire (`declareWireTo`) moves nothing |
+| `unwireFrom theTarget, action` | drop ONE relationship and leave the others alone; it revokes a tracking wire's reverse edge too |
 
-The reverse channel is an announcement, not a delivery: the producer says *something about me
-changed that is not my value* (`world.dataflow.markNonValueChange @`) and every tracker re-reads. So
-a multi-field update needs no payload machinery at all — the consumer pulls as many fields as it
-likes. Reach for a pushed payload only when the producer emits an EVENT with no readable steady
-state.
-
-**A user reaches this from the wire's own menu row — "follows it too" — which promotes a wire they
-already made.** There is no separate "bind a pin" chooser and there should not be: "connect to ➜"
-already offers every drivable pin, so the wire exists; what the gesture adds is the reverse half. It
-is offered only where all three preconditions hold, each asked of whoever owns the answer — the pin
-is readable and `announces` (the `PinSpec`), the follower can render *that* pin
-(`SliderWdgt._canReflectPin` wants a `SliderRange`), and the follower is not already following
-something else (one thumb, one value).
-
-⚠ **`announces` is a claim about a FUNNEL, not a property of your setter — audit every write path
-before declaring it.** `ScrollPanelWdgt` can claim it because it is built so that it can: wheel,
-thumb drag, track click, caret-into-view, a drop that re-fits it, `scrollTo`, both setters — every
-path that moves its content ends at `_reLayoutScrollbars`, and the announcement is raised there. If
-your pin has no funnel, build one or leave the flag alone.
-
-⚠ **Announcing and firing onward are DIFFERENT refusals, and conflating them silences pins that
-should speak.** `markNonValueChange` wakes only the re-readers and hands them nothing, so it is never
-the echo a sink is right to avoid. Two places got this wrong and are worth knowing as case law:
-
-- `ControllerMixin._fireConnection` used to make the announcement a side effect of the DELIVERY, so
-  its "do I have wires?" guard silenced both. A follower is precisely a widget that subscribes
-  without being driven, so an unwired controller changed its value to an audience of nobody. It now
-  separates the two: an unwired controller `markNonValueChange`s and returns, and a wired one
-  `markStale`s — which wakes the same re-readers on its way to the wires. Two jobs, and the wire
-  guard sits only on the one that needs it.
-- `PaletteWdgt.setChoice` refuses to fire a value delivered TO it (that would make it an echo) and
-  used to refuse to announce as well — one refusal too many, since its choice really did change.
-
-⚠ **A REFLECTION path is the one place silence is still right, and it needs more than a flag.** A
-slider's `_updateHandlePosition` / `_updateSpecs` show a value they do not own. Announcing there
-without an equal-value cutoff re-fires on every drain pass — a self-sustaining loop with no cycle in
-it — which is why `SliderWdgt`'s `value` is the one readable pin in the tree that cannot yet declare
-`announces`. If you write a reflector, give it the cutoff first.
-
-**To keep two widgets' VALUES equal**, `bindTo theTarget` — the fourth binding verb, and the one the
-`bind ⇄` menu item makes (one level down, behind the shared block's single `connect ➜` row: both
-connection gestures are grouped there so that having two costs a controller's menu no extra height —
-a menu row is cheap now that an over-tall pop-up scrolls rather than spilling off the world, but a
-shorter menu is still the better menu). It is simply two wires (mine onto you, yours onto me), so it adds no
-mechanism; what it adds is that both pins are chosen for you and the precedence is stated: **I push my
-value, and the return wire moves nothing.** Two things follow that are worth knowing before reaching
-for it:
-
-- **It binds VALUE to VALUE, never value to an arbitrary pin.** A wire delivers its producer's
-  PRINCIPAL value, so the pin on each side is forced to be that side's principal pin — which is why
-  the gesture has no property step. Binding your value to some *other* property of a target is the
-  TRACKING case above, not this one.
-- **A widget is bindable iff it owns a value**: a read/write principal pin plus these verbs
-  (`canBind`). That test is not a proxy — it is equivalent to "this widget announces when its value
-  changes", which is what both halves of a bind actually need. A widget whose value is COMPUTED
+- ⚠ **A tracking bind must not push on connect**: pushing is right when you OWN the value and wrong
+  when you MIRROR it, since the target is the source of truth. [§CL4]
+- **A tracking control reads back the pin its own wire's action writes**
+  (`wire.target.pinDrivenBy wire.action` → its `getterName`), never a second field naming the
+  property — a DUPLICATED control keeps its wire records and nothing else, so deriving from them is
+  what makes the copy track what it drives.
+- **The reverse channel is an announcement, not a delivery**: the producer says *something about me
+  changed that is not my value* (`world.dataflow.markNonValueChange @`) and every tracker re-reads,
+  so a multi-field update needs no payload machinery — the consumer pulls as many fields as it likes.
+  Reach for a pushed payload only when the producer emits an EVENT with no readable steady state.
+- ⚠ **Announcing and firing onward are DIFFERENT refusals.** `markNonValueChange` wakes only the
+  re-readers and hands them nothing, so it is never the echo a sink is right to avoid: a setter that
+  rightly declines to fire a value delivered TO it must still announce that its value changed. [§CL7]
+- ⚠ **A reflector needs an equal-value cutoff before it may announce.** A path that shows a value it
+  does not own otherwise re-fires on every drain pass — a self-sustaining loop with no cycle in it.
+  Write the cutoff first. [§CL8]
+- **`bindTo` binds VALUE to VALUE, never value to an arbitrary pin**, because a wire delivers its
+  producer's PRINCIPAL value — which is why the gesture has no property step. Binding your value to
+  some *other* property of a target is the TRACKING case. **A widget is bindable iff it owns a
+  value**: a read/write principal pin plus these verbs (`canBind`), which is not a proxy but is
+  equivalent to "this widget announces when its value changes". A widget whose value is COMPUTED
   declares no principal pin and correctly neither offers nor accepts a bind.
-
-Nothing records that two widgets are bound: "this wire is two-way" is DERIVED by asking whether the
-target wires back (and it is what draws a connection row `⇄` rather than `➜`). So a pair you wire by
-hand in two ordinary gestures is bound in exactly the same sense, and a duplicate of one half reports
-itself one-way with no bookkeeping to have gone stale.
+  [§CL9 — why the gesture costs a controller's menu no extra row]
+- **Two-wayness is DERIVED, never recorded** — answered by asking whether the target wires back, and
+  it is what draws a connection row `⇄` rather than `➜`. So a pair wired by hand in two ordinary
+  gestures is bound in the same sense, and a duplicate of one half tells the truth with no
+  bookkeeping to have gone stale.
+- **A follower relationship is a PROMOTION of a wire that already exists** — the wire's own menu row,
+  "follows it too" — offered only where the pin is readable and `announces`, the follower can render
+  *that* pin, and the follower is not already following something else. [§CL5]
 
 ### The pin-setter contract
 
 **Every delivery path passes a pin setter ONE argument: the value.** A wire calls
-`consumer[action] value`; a controller's `updateTarget` calls `target[setter](value)`; a prompt's
-Ok extracts the value from its own editor and delivers it (`PromptWdgt.deliverValue` →
-`@target[@callback].call @target, @_promptValue()`; the code prompt's save/Ok,
-`CodePromptWdgt.deliverValue`, delivers its composed source text the same way). There is no
-delivery that hands a setter a widget to interrogate, so a setter never probes its argument for
-`getValue`/`getColor` — it coerces, clamps, and stores:
+`consumer[action] value`, a controller's `updateTarget` calls `target[setter](value)`, and a prompt's
+Ok extracts the value from its own editor before delivering it. No delivery hands a setter a widget
+to interrogate, so a setter never probes its argument for `getValue`/`getColor` — it coerces, clamps,
+and stores. (A pin setter reached as a MENU action instead takes its subject from dispatch **slot 2**
+— the enclosing panel's target, not the row's: the slot law is
+[`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md) §R3.)
 
 ```coffee
 setFoo: (foo) ->
@@ -716,10 +674,10 @@ an unchanged value. The **return** is what lets a caller chain off the coerced r
 
 **Export a value** if the widget is meaningful as a spreadsheet cell's content: name your principal
 pin with `principalPinLabel: "value"`, and `Widget.exportedValue` reads it through that pin's `get`.
-A widget that names none exports nothing — which is the right answer far more often than it looks,
-and is why `MenuHeader` no longer exports the child widget it happens to keep in `@text`. Override
-`dataflowValue` instead only when the exported value is *not* one of your pins at all (a patch node's
-computed `@output`, a palette's picked `@choice` — values nothing can drive).
+A widget that names none exports nothing, which is the right answer far more often than it looks. A
+principal pin may legitimately be READ-ONLY (`StringFieldWdgt`'s `value`), which is why it is named
+by label rather than by setter. Override `dataflowValue` instead only when the exported value is
+*not* one of your pins at all — a patch node's computed `@output`.
 
 ---
 
@@ -844,7 +802,8 @@ right for inclusion and wrong for laziness — it silently swallows the user's c
 - [ ] Public mutators are thin wraps over `*NoSettle` cores; callbacks stay settle-neutral
 - [ ] Handlers use the `pos` parameter and escalate what is not theirs
 - [ ] `addWidgetSpecificMenuEntries` calls `super`; menu actions are string method names
-- [ ] Pins declared; setters honour both argument paths, guard on equality, return the value
+- [ ] Pins declared on the class that implements each verb; `announces` only where every write path funnels
+- [ ] Pin setters take ONE argument — the value — coerce it, guard on equality, return it
 - [ ] Stepping via `world.steppingWdgts`, at the slowest workable `fps`
 - [ ] Cleanup in `_destroyNoSettle`
 

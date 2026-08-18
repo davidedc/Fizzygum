@@ -201,3 +201,12 @@ Every §1.5 item: the Widget/WorldWdgt comment rewrites ride §4.1; `Fizzygum/CL
 ### Ready-to-paste start prompt for a fresh session
 
 > Run the repaint-as-one-unit plan: `Fizzygum/docs/plans/repaint-as-one-unit-plan.md` — read it fully and follow its §0.5 protocol. Cold start: `fg status` first (repos clean at/past Fizzygum `3b68e1b3`), re-verify §1 with fresh greps (the six `trackChanges` touchpoints, the 26 idiom sites and their four shapes, the INV-1 gate header, the three fail-gate scripts, the serialization-rig corruption line and the smoke's stack check). Then: land the construct + counter + tripwire; convert the 26 sites in batches with `fg build` between; delete the verbs, tombstone INV-1, edit the rig + smoke in the same step; run the four §5 probes (the tripwire plant must prove a RUNNER fails, and is never committed); docs-sync per §4.7; close with full `fg gauntlet`. Zero reference churn expected everywhere — any pixel shift is a bug, never a recapture. Commits via `git commit -F` per repo (both Fizzygum and Fizzygum-tests change), WAIT for owner OK, never push autonomously.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/repaint-as-one-unit-plan.md`: the paired `disableTrackChanges`/`maybeEnableTrackChanges` suppression idiom dissolved into ONE self-covering private block `Widget._repaintAsOneUnit` (cover + depth-restore in `finally`) — **EXECUTED IN FULL + CLOSED 2026-08-11, same day as authored.** All 26 sites converted (healing the three no-cover `_reLayout`s); the boolean stack → `world._damageSuppressionDepth`; the De-Morgan-dead flush assert → a LIVE self-healing `DAMAGE_SUPPRESSION_UNBALANCED` token in both runners' fail-gates (plant-proven: 8 corrupted shards, screenshots all fine because the tripwire healed first, runner still exits 1); verbs DELETED; INV-1 → retired-verbs tombstone; rig corrupts the raw field in the same JS turn as the load; smoke checks the depth. Gauntlet 14/14 all-in-wave + fg homepage + four probes green. ONE reference churn, root-caused (prototype-method addition shifts the inspector member census → scrollbar-drag quantization; the test's own comment documents the class) and recaptured COMPLETE. Case law: `archive/INDEX.md`.

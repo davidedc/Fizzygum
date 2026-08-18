@@ -6,7 +6,7 @@
 # ⚠ The value is deliberately NOT here. A bound slider reads it through the pin's own reader
 # (PinSpec.getterName), which is the vocabulary the pin protocol already has; only the scale needed
 # a home. So the reverse edge carries no payload at all — it wakes the slider, and the slider pulls
-# both halves. See docs/plans/connector-ubiquity-and-reflection-plan.md §P8.
+# both halves. See docs/archive/connector-ubiquity-and-reflection-plan.md §P8.
 #
 # IMMUTABLE (docs/architecture/immutable-value-classes.md): the fields are never written after
 # construction, and a different scale means a new instance. It is a transient — derived on demand,

@@ -3053,3 +3053,12 @@ banked (not a prerequisite). Phase 1 authorized.
   `Math.floor`, `:24575-24577`); `run-all-headless.js:112` uses `?sw=1&dpr=…&speed=…` (0e,
   exact). SWCanvas Core API used: `Core.Surface(w,h).data`, `createCanvas().getContext('2d')`
   (setTransform/rect/clip/drawImage/getImageData/toDataURL all present).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+One closed item relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18, so that file can go
+back to being an index of OPEN work only (`docs/README.md` filing rule 2). This plan is still
+ACTIVE: §7.1–§7.4 remain open and stay listed in `docs/BACKLOG.md`. The landing itself is
+already recorded in §7 banked-item 8 — this is the BACKLOG line that pointed at it.
+
+- [x] §7.8: SWCanvas bilinear drawImage — **BOTH halves DONE.** Rotation half: `archive/swcanvas-bilinear-rotated-composite-plan.md` (SWCanvas `619dc1c`). Scale half: `archive/swcanvas-scale-path-smoothing-plan.md` (2026-08-13): smooth when the effective sample step ≠ 1, `imageSmoothingEnabled` implemented (default true, both API layers), step-1 blits byte-exact by construction, `_compositeScaleOnly` re-shaped to whole-mapping+damage-clip (strip seams byte-identical to full composites), owner D2a policy = INTEGER-scale islands opt out to crisp NN via the standard flag on both backends. Follow-up (small, owner-gated): extend the crisp-NN policy to 90°-multiple ROTATED islands at integer scale — needs quadrant-exact `TransformSpec._cosSin` ({0,±1} at 90° multiples) first, because NN through the current ~1e-16 residue matrices floor-picks wrong texels; note that exactness change re-baselines existing 90° rotation refs, so it is its own mini-arc.

@@ -618,3 +618,12 @@ cannot break the build (never wired). `fg` edits: local file, revert by hand.
   (github.com/pharo-project/pharo, packages `General-Rules`/`Renraku`); *Pharo with Style*
   (S. Ducasse); Renraku paper (Tymchuk et al., IWST 2017). The mechanism map and the
   carried/rejected rule triage live in the 2026-07-15 session that authored this plan.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/lint-generic-rules-carryover-plan.md` §8.1 A2: action-string dispatch resolution — BUILT as a RUNTIME sweep, not a static gate: `menu-click-sweep-headless.js`'s `UNRESOLVED_ACTION` and `pin-sweep-headless.js`'s `NO_SETTER`/`NO_GETTER` resolve every menu action and every `PinSpec` setter/getter (both gauntlet wave-A legs). A static resolver cannot see a computed-name dispatch; §8.1's premise was that it could.

@@ -1,13 +1,13 @@
 # The widget graph — three edge kinds, one lifecycle
 
 **STATUS: AUTHORED 2026-07-18 — §4.1 (the `@target` → `referencedWidget` rename) LANDED 2026-08-16,
-executed as part of the sibling [`connector-ubiquity-and-reflection-plan.md`](connector-ubiquity-and-reflection-plan.md)'s
+executed as part of the sibling [`connector-ubiquity-and-reflection-plan.md`](../archive/connector-ubiquity-and-reflection-plan.md)'s
 P9 (that plan's P9 section carries the full receipt — it also renamed the inspector's overload to
 `inspectedObject`). §4.2 (one edge vocabulary) and §4.3 (whole-graph collector) remain design-stage,
 exploratory, owner-gated.**
 Anchor on **symbol names** (verified 2026-07-18); line numbers drift. Self-contained.
 
-Part of one program with [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md),
+Part of one program with [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md),
 [`container-regularization-plan.md`](../archive/container-regularization-plan.md) (closed + archived),
 [`creation-and-templates-plan.md`](creation-and-templates-plan.md), and
 [`reference-widgets-plan.md`](reference-widgets-plan.md). **This arc supersedes the referent-link rename +
@@ -139,10 +139,18 @@ a UI needs them (e.g. an icon must update), never for GC.
 
 ## 7. Cross-links
 - Supersedes: reference-plan referent-link rename + GC (see [`reference-widgets-plan.md`](reference-widgets-plan.md)).
-- Program siblings: [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md),
+- Program siblings: [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md),
   [`creation-and-templates-plan.md`](creation-and-templates-plan.md),
   [`container-regularization-plan.md`](../archive/container-regularization-plan.md) (closed + archived).
 - Architecture: `docs/architecture/serialization-duplication-reference.md`,
   `docs/specs/dataflow-engine-spec.md`; determinism: `Fizzygum-tests/DETERMINISM.md`;
   case-law: `docs/archive/upedge-endgame-plan.md`.
-```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+One closed item relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18, so that file can go
+back to being an index of OPEN work only (`docs/README.md` filing rule 2). This plan is still
+ACTIVE: §4.2–§4.4 remain open and stay listed in `docs/BACKLOG.md`. The landing belongs with
+§4.1, which already carries its own ✅ LANDED stamp.
+
+- [x] §4.1: reference link `@target` → `referencedWidget` — DONE 2026-08-16 by connector §P9 (`34adb216`), 21 sites + 2 cross-file readers; the dataflow and dispatch meanings KEEP the name. ⇒ §4.2 is the next unstarted step.

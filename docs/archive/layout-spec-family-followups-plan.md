@@ -524,3 +524,32 @@ copies) · `docs/plans/onion-widget-composition-plan.md` §5.C (dock/toolbar flo
   held, census zero movers, BOTH serialization rigs green (the spec's widget back-ref serializes/
   duplicates cleanly on the VSLS precedent), webkit green. **F1 CLOSED 19:54: `fg homepage` GREEN**
   (45 PASS lines, snapshot round-trip clean, dev build restored). Zero recaptures in the phase.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### `archive/layout-spec-family-followups-plan.md` — discovered en route (not caused by the arc)
+- [x] **A context menu taller than the world leaves its tail permanently unreachable** (F1 find) —
+      ✅ FIXED 2026-08-17 by the pop-up-overflow arc, which found and filed the same defect
+      independently from §P2 (see that entry for the fix). ⚠ Worth keeping from THIS filing, because
+      it is the part §P2's did not know: the defect had already been absorbed into the MACRO
+      VOCABULARY as a workaround — `toggleSoftWrap()` is a sanctioned DIRECT call precisely because
+      "soft wrap" was off-canvas, and "shrink to fit" joined that class when division cells gained
+      their submenu. Now that menus scroll, those rows are clickable again, so the sanctioned direct
+      calls can be re-derived as real gestures; that is a follow-up, not part of the fix.
+- [x] **The in-world error console commits degenerate child bounds while being built** (F2 find) —
+      ✅ FIXED 2026-08-05. Root cause (probe-reproduced: 49 guard hits per create+pop, zero after):
+      `ErrorsLogViewerWdgt`'s button row divided its width `/3` UNROUNDED — fractional button
+      widths and origins on almost every width (`ConsoleWdgt`/`ScriptWdgt` had already been fixed
+      to round; this class and `CodePromptWdgt` had not) — and its text-panel height went negative
+      at transient degenerate sizes mid window-negotiation, inverting child rects (the ctor's
+      `super new Point 200,400` was also a DEAD argument — Widget's ctor takes none — so the
+      console was born 50×40 and crammed a full row pass at that size). Fix at the producers,
+      family-precedent shape: `Math.round` the `/3` + `Math.max 0` the panel height, in BOTH
+      remaining carriers. Pinned by `SystemTest_macroErrorConsolePopsClean` (suite 278): the
+      geometry guards are wired into the runners' fail-gate, so any recurrence fails the test
+      structurally; its screenshot is also the console's first pixel coverage anywhere.

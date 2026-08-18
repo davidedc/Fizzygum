@@ -369,3 +369,13 @@ status stamp, `archive/INDEX.md` line, BACKLOG updated).
 - `docs/architecture/build-and-packaging.md` §2 — the boot/open/click tiers, `isAvailable` vs
   `whenAllLoaded`, and why an already-loaded await must stay synchronous.
 - `Fizzygum-tests/DETERMINISM.md` — why that last point is correctness, not economy.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### ~~`plans/folder-population-entry-points-plan.md`~~ → `archive/`
+- [x] **A lazily-populated folder no longer depends on WHICH ritual showed it.** DONE 2026-08-02. `ExamplesFolderWindowWdgt` registers in `world.steppingWdgts` while it still owes itself content and populates from `step` the first time `@root() == world`, unregistering on that one shot; `whenReadyToBeBroughtUp` (awaited by the shortcut click, so that path still never flashes an empty folder) is unchanged. ⚠⚠ The §6.1 spike found the documented KNOWN LIMIT unreachable *as written* — `world.shelfWdgt` is never added to a parent, so nothing can be dragged out of the shelf — and the route that IS reachable, the BIN, was worse than the comment claimed: delete the folder's shortcut → the storage sorter drains it to the bin → opening the bin paints it EMPTY, with no shortcut left to ever fill it. Driven end to end on `index.html` with a real synthesised drag before any code was written. ⚖ The spike also moved the fix off §4.C: the folder is painted-empty *inside the bin window* before any drag, so hooking the bin's revival path would have been insufficient, not merely awkward. ⚖ Both of the plan's feared costs shrank — stepping is opt-IN, so the per-cycle cost ends at the first fill, and `_playQueuedEvents` runs earlier in the same cycle as the step seam, so an already-fetched part fills the folder before that cycle's paint. Gate: six new assertions in `scripts/parts-lazy-icons-headless.js` (`fg lazyprobe`, gauntlet `parts` leg), proven non-vacuous against a runtime-neutered build.

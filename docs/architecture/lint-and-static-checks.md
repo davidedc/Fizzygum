@@ -467,7 +467,8 @@ direction it claims** (what it flags really is dead) **and silently incomplete i
 read a green run as "no dead methods". Making it class-aware is not obviously right — the dynamic
 dispatch that forces name-keying would then start producing false positives — so this is recorded as
 a stated blind spot rather than a defect to fix blind — a conclusion now MEASURED rather than
-assumed (`docs/BACKLOG.md`): only 10% of references to a colliding name carry any class information,
+assumed (the measurement is in `../archive/connector-ubiquity-and-reflection-plan.md`'s BACKLOG
+ledger): only 10% of references to a colliding name carry any class information,
 so class-awareness would flag 543 pairs to find a handful; and excluding prose reveals nothing,
 because the real survivors are LOCAL VARIABLES sharing a method's name (`for toggle in …`) and
 human-readable strings sitting exactly where a string dispatch sits.

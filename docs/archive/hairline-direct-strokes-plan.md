@@ -391,3 +391,15 @@ Run in order; each phase lands (owner-gated) before the next starts.
 > the §0.5 shas are ancestors of the current heads before trusting §1; re-grep every
 > cited symbol before editing. Start with H1. All commits, pushes, the H2 diff-page
 > eyeball and the H2 recapture are owner gates — present and wait.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### `archive/hairline-direct-strokes-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-09 (H1–H3)
+- [x] H1 upstream SWCanvas: the sub-pixel faint rule as a hairline branch in ALL five direct stroke dispatchers, incl. the rotated branches (SWCanvas `d6e6765`; core test 055; 540-case sweeps byte-identical for lw≥1; + two consistency fixes surfaced in execution: ArcOps opaque-1px walk canonicalized, rotated-rect 1px DDA corner dedup).
+- [x] H2 Fizzygum: pin bump; rotate-handle knob ring re-converted to `strokeCircle` (the prior arc's revert, unblocked); 16-test owner-eyeballed diffpage → recapture COMPLETE dpr1+2 → gauntlet 14/14 incl. WebKit.
+- [x] H3 docs-sync (integer-pixel §7 hairline faintness rule — deliberately NOT named anti-aliasing) + archive/close loop.

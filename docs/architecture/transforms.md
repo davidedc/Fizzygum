@@ -269,9 +269,13 @@ island's `_reactToChildAdded` nudges `FrameWdgt.noteContentsNameMayHaveChanged()
 intent-named public note, the `noteWallpaperChanged` idiom) once the content arrives.
 
 Pinned by `SystemTest_macroIslandLensWindowHeightLock` (identity + name oracles, the
-wrapped-resize height-lock, the bar reading "analog clock" while wrapped); the
-sharing/coexistence probes that proved the ONE-OBJECT identity are recorded, with their C/D/E
-sections, in `docs/archive/island-content-preferences-plan.md`.
+wrapped-resize height-lock, the bar reading "analog clock" while wrapped) and — since the
+ONE-OBJECT identity is a duplication/serialization property no pixel can show — by the
+`island.keptSpec.*` checks in `Fizzygum-tests/scripts/serialization-roundtrip-headless.js` (the
+gauntlet's serialization leg), which hold that identity across materialize, dissolve, `fullCopy`
+and a whole-world snapshot round-trip, and alongside a container's own record riding the slot;
+their C/D/E derivation from the sharing/coexistence probes is recorded in
+`docs/archive/island-content-preferences-plan.md`.
 
 ---
 
@@ -476,7 +480,8 @@ guarantees the warp touches only the damage region.
   edge-clamps — ~1px of extra anti-aliasing; 90°-multiple ROTATED islands take the
   smoothing sampler even at integer scale (the spec matrix carries ~1e-16 trig residues
   at quadrant angles, and NN's floor through a residue-skewed inverse picks wrong texels
-  — extending the crisp policy there needs quadrant-exact `_cosSin`, see `docs/BACKLOG.md`);
+  — extending the crisp policy there needs quadrant-exact `_cosSin`, see
+  `../plans/affine-transforms-plan.md` §7 banked item 8);
   and bilinear minification below ~0.5× aliases (native's bilinear tier does too — a
   box-filter/mipmap tier is future work).
 - **Whole-buffer warp (v1).** `_compositeTransformed` warps the entire buffer under the clip

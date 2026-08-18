@@ -223,3 +223,12 @@ oracle; its two wrapped shots recaptured COMPLETE at dpr 1+2 (the gate's full-su
 prove no other test sees the name change — consumer census: bar titles, inspector/console
 titles, the naming service; hierarchy/menus are CLASS-named and never ask). Gauntlet 14/14
 (5m44s) + homepage green again.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] Island content-stack preferences — the LENS decision. **RATIFIED + EXECUTED 2026-08-06** (`archive/island-content-preferences-plan.md`): a `TransformFrameWdgt` island's content-stack preferences ARE its content's knob — the two initialiser overrides DELEGATE creation to `_soleContent()`'s own initialiser and SHARE the object, completing the island's "invisible plumbing" doctrine family (transforms.md §5.4); a rotated clock's window is height-locked again while wrapped, a rotated stack element applies the content's alignment/grow edits — modeled behavior, not compat. ⚠ ONE seam asks while the island is still EMPTY (the materialize homes the island into a FrameWdgt parent BEFORE reparenting the content — the load-bearing skin-derivation order — and the mount guard initialises right then): the materialize PRE-SEEDS the island's field with the content's knob. Suite 282 → 283 (`macroIslandLensWindowHeightLock` — identity oracles + wrapped-resize height-lock, non-vacuous by pre-seed plant: exactly the two sharing asserts + the pixels flip); both kept-spec probes extended (E sections) and green.

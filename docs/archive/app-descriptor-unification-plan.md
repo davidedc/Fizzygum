@@ -552,3 +552,13 @@ reacting either way, and never recapture to make an unexplained diff go away.
 - `Fizzygum-tests/DETERMINISM.md` — why an already-loaded await path must stay SYNCHRONOUS
   (`whenAllLoaded` runs inline when the parts are in; a microtask moves the effect a whole world cycle
   and the suite measures cycles). Relevant if you touch `launch`.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### ~~`plans/app-descriptor-unification-plan.md`~~ → `archive/`
+- [x] **An app's identity was stated TWICE and the second copy was already incomplete.** DONE 2026-08-02. `src/AppCatalog.coffee` is now the one entry per app (caption, art, tooltip), keyed by class NAME, and both launcher modes read it through a single `_fromCatalogEntry`. `title` / `buildIcon` / `toolTip` deleted from all 14 app classes and the base. ⚠⚠ It had already SHIPPED a bug, and note the shape: the copies did not DISAGREE, the lazy path simply lacked `toolTip`, so the "Super Toolbar" and "Fizzytiles" desktop icons drew without bubble help — invisible to review and to every gate (no SystemTest asserts a tooltip), which is why the fix is one reader rather than a check that two copies agree. ⛔ The catalog may NOT live on the app class: reading a field off an app at boot is the reachability the boot-cost arc removed. ⚖ One name per app, no label override (§5.1). Churn was exactly the one PREDICTED test, recaptured `COMPLETE`. Gauntlet 14/14, lazyprobe/homepage/lean green.

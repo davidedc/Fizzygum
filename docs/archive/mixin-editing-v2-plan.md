@@ -169,3 +169,12 @@ label, and the P1 button pixels.
   save button; P3 add gesture = destination step in the existing `add…` popout. All 5
   points pre-approved.
 - Docs to touch at close: `mixins.md` §2/§7/§8, reference doc §12, this plan → archive.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/mixin-editing-v2-plan.md` "Residual discovered during T": field parity for donor attribution — DONE 2026-07-26, owner-directed (ClassInspectorWdgt._sourceForFieldMember; Class.applyMemberEdit keeps `<name>_source` for every member kind; class-scope field records; SystemTest_macroMixinFieldEditDonorAndOverride).

@@ -338,7 +338,8 @@ carries none of it — and the artifact still offers everything it always did.
 ⚠⚠ **A consequence worth knowing before you reason about either profile: `homepage` and `lean` now
 emit a BYTE-IDENTICAL `js/pre-compiled.js`.** The image contains only what is EAGER, and after the
 launcher parts were dissolved that set is exactly `core` in both. The two artifacts differ in what
-they can FETCH (production ships twelve lazy parts and 2.20 MB of source text; the appliance ships
+they can FETCH (production ships twelve lazy parts and ≈2.5 MB of source text — measure it on a built
+tree, `du` over `js/coffeescript-sources/`, rather than quoting it; the appliance ships
 neither), not in what they start from. So an image-size measurement cannot distinguish them, and a
 change that moves a class between core and any lazy part moves BOTH numbers identically.
 
@@ -404,7 +405,7 @@ Facts worth knowing before touching any of this:
   them. So steps 1–3 are factored out as `ensureMetaSystemLoaded()` (~39 KB: the two meta sources plus
   `dependencies-finding-min.js`), and `PartsRegistry._loadPartPromise` awaits **that**, never
   `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch: on production that is the whole
-  of core's source text, i.e. the bulk of the tree's 2.20 MB, which is the entire saving that made the part lazy.
+  of core's source text, ≈1.9 MB of the tree's ≈2.5 MB, which is the entire saving that made the part lazy.
   Both are memoized, so a part load and a later inspector open share one fetch.
   Before this split existed, any lazy part on a production tree died with `findLoadOrder is not defined`; nothing
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs

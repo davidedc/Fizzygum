@@ -263,3 +263,15 @@ internals directly, per the tests repo's CLAUDE.md).
   `byte-identical-not-sacred-for-benign-inspector-recapture`, `dont-let-recapture-churn-dictate-design`.
 - `Fizzygum-tests/.scratch/rectprobe-stroke-decision.png` + `rectprobe-Bstroke/` (the P1.0 A/B pair).
 - `Fizzygum-tests/scripts/run-sequence-headless.js` (P2's runner), `scripts/recapture.js` (P1.4).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] P1: §4.4(B) flip — border AND teal editor-selection overlay → 1 LOGICAL px (raw Boxy spelling; 139-test dpr2-only recapture COMPLETE; dpr1 byte-invariance verified; the full color-pair sweep of all 454 changed refs superseded the planned spot-check)
+- [x] P2: `fracplane` presuite rider leg (umbrella `fg`, presuite-only; plant-proven dpr1:PASS + fracplane:FAIL)
+- [x] P3: `SystemTest_macroDropStrokedRectIntoRotatedPanel` (stroke × fractional figure position, dpr 1+2)
+- [x] **FOUND BY P3, pre-existing: every THIN STROKE inside a compensating wrapper rasterized DASHED on the thresholded SWCanvas backend** — FIXED AT THE COMPOSITOR (`archive/swcanvas-bilinear-rotated-composite-plan.md`): SWCanvas's transformed `drawImage` now samples bilinear on non-axis-aligned transforms (SWCanvas `619dc1c`; premultiplied, dest-pixel-center, zero-fraction pure-texel fast path), so a thin feature cannot drop out at the warp — once or twice-resampled. Root cause was NEVER stroke rasterization (buffers are solid — render-straight-then-warp; body-side snapping proven byte-identical and reverted, case law stays in `RectangularAppearance.paintStroke`). Continuity pinned by `SystemTest_macroDropStrokedRectIntoRotatedPanel` + `SystemTest_macroRotatedStrokedRectSingleComposite` refs; contract law in `architecture/transforms.md` §8.

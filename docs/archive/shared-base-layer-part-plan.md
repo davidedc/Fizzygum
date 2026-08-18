@@ -424,3 +424,13 @@ door, so it is worth seeing once.
   class is item 6 here.
 - **Owner standing rule — "don't let recapture churn dictate design."** Pick the right boundary, then
   recapture what moves.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] **The shared base layer got a part of its own: `app-kit`** (9 classes, 23.3 KB). ⚖ THE REFRAME that unlocked it: they looked immovable only because `fg whatpins` prices `authoring` as their home, which would have made `plots`/`maps` declare `requires: ["authoring"]` — 225.5 KB fetched on a chart click. They are not authoring's classes (44 inheritance edges from 11 parts); they are the layer authoring itself derives from. `fg whatpins` now reports **2 movable, and 202 reached-from-boot UNCHANGED**.
+- [x] **⚠⚠ Gate gap found in passing, PROVEN, and FIXED in the same arc: `check-part-edges.js` let an EAGER part's `requires` excuse its references, contradicting its own header.** `declaredRequires` handed every owner its full list, and that set is tested BEFORE the inheritance check — so an eager part declaring `requires` on a lazy one could both reference and `extends` its classes with the build staying green, which is exactly the catastrophe the gate exists for. ⚖ The fix is narrower than "eager owners get nothing", and the distinction is the point: **`requires` always promises the other part SHIPS, but promises it has ARRIVED only when the OWNER is lazy** (there `PartsRegistry` orders the load). So `declaredRequires` now drops LAZY requirements for an eager owner and keeps EAGER ones — `harness requires ["macros"]` is still fully covered, `dev-tools requires ["demos", "app-kit"]` is now discounted and its three awaits are what carry it. Proven in both directions: planting an unguarded `new SpeechBubbleWdgt` and an `@augmentWith ParentStainerMixin` in `dev-tools` reported `0 / 0` before and fails with a named site after.

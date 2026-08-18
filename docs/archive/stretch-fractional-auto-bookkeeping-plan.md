@@ -479,3 +479,13 @@ prove-the-gate-fails discipline) · `docs/archive/proper-layouts-4.2-structural-
   scrollbar-thumb geometry (8-16px bboxes). No structural/layout diff anywhere. All 15
   recaptured via the gated `fg recapture` (owner's standing benign-inspector-recapture
   rule), result recorded below.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### ~~`plans/stretch-fractional-auto-bookkeeping-plan.md`~~ → `archive/` — ✅ EXECUTED IN FULL 2026-08-05 (same day as authoring, P0→P4)
+Fractional bookkeeping is FRAMEWORK-OWNED: fill-only deferred seed at reparent + the F6 RE-RECORD family (drop/duplicate/load/re-home/spawnNextTo/uncollapse/handle-release); 33/41 manual calls DELETED, the Widget TODO retired; FOUND+FIXED the handle-resize snap-back product bug (`HandleWdgt.mouseUpLeft` → post-flush re-record drain); suite 278→280 (`macroStretchPanelChildrenReflowOnResize` + `macroStretchChildHandleResizeSurvivesReflow`, both proven non-vacuous — the only gates that pin fraction VALUES); 15 benign inspector recaptures (seeded fields visible in lists). Gauntlet 14/14 + homepage. Case law in `archive/INDEX.md`.

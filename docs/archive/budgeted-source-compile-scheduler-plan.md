@@ -469,3 +469,16 @@ frame of network time), with its comment corrected to "batch fetches only".
 - Memory notes (session-local): `boot-cost-reduction-arc`, `core-app-slices-partition-arc`
   (`whenAllLoaded` fast path is CORRECTNESS), `build-arc-4-dynamic-parts-arc` (dep scanner blind
   spots).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### `archive/budgeted-source-compile-scheduler-plan.md` — ✅ EXECUTED + CLOSED 2026-08-04
+- [x] Both one-class-per-turn ingest pacings replaced by ONE `SourceCompileScheduler` (end-of-frame
+      budget drain, per-line EWMA estimator, dev-boot chunk pump). Dev boot 3219→946 ms; gauntlet
+      14/14, zero churn. ⚠⚠ case law: 40 ms sync chunks collapsed the parallel test wave — chunks
+      stay ≤10 ms (`measurements/budgeted-compile-scheduler-2026-08-04.md`).

@@ -227,8 +227,8 @@ class PartsRegistry
     # ordering them means findLoadOrder -- and a PRECOMPILED tree has none of the three until
     # something asks: Class and Mixin are the only two classes absent from js/pre-compiled.js.
     # ⚠⚠ Do NOT "simplify" this to ensureReflectiveLayerLoaded(): that also fetches every EAGER
-    # part's batches (2.29 MB on production), which is the entire saving this part being lazy
-    # bought. ~39 KB versus 2.29 MB. A compile-at-boot tree has already loaded it, and the
+    # part's batches (core's numbered batches, ≈1.9 MB on production), which is the entire saving
+    # this part being lazy bought. ~39 KB versus ≈1.9 MB. A compile-at-boot tree has already loaded it, and the
     # promise is memoized, so there it costs nothing.
     chain = ensureMetaSystemLoaded()
     # 1. vendor payloads next: a part's classes may need them at first use.

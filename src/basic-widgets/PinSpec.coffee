@@ -7,7 +7,7 @@
 #   • a pin can be READ, so something can answer "what is the target's `color` right now?" in the
 #     same vocabulary that wrote it. That answer is what a reverse edge is built out of, and what
 #     lets a widget's exported value be a DECLARED pin rather than a duck-typed probe for a few
-#     well-known method names. See plans/connector-ubiquity-and-reflection-plan.md G1.
+#     well-known method names. See archive/connector-ubiquity-and-reflection-plan.md G1.
 #   • a pin can accept MORE THAN ONE kind, stated on the pin. One table per kind can only say it by
 #     repetition -- the same pin appended to two or three tables, in two or three overrides.
 #

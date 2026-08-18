@@ -124,7 +124,7 @@ loadJSFilePromise = (fileName) ->
 # js/pre-compiled.js, and findLoadOrder ships in a file nothing has injected yet. A lazy part loading
 # on such a tree therefore died with "findLoadOrder is not defined" until this split existed.
 # PartsRegistry._loadPartPromise awaits this, and MUST NOT await the whole reflective layer instead:
-# step 4 below is every eager batch, 2.29 MB on production, which would hand back the entire saving
+# step 4 below is every eager batch — core's numbered batches, ≈1.9 MB on production — which would hand back the entire saving
 # that made the part lazy. These three files are ~39 KB.
 loadMetaSystemPromise = ->
   Promise.all [

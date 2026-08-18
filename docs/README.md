@@ -25,7 +25,10 @@ all arcs, each linking to the plan section that owns the detail).
    history and concrete facts needed to execute cold.
 2. **Arc closes → `git mv` the plan to `archive/`**, stamp a status header
    (COMPLETE/FALSIFIED/PARKED + date + one line), add its line to
-   `archive/INDEX.md`, and remove its items from `BACKLOG.md`.
+   `archive/INDEX.md`, and remove its items from `BACKLOG.md` — closed entries
+   move VERBATIM into a trailing `## BACKLOG ledger (closed items, moved from
+   docs/BACKLOG.md)` section of the owning plan (or, plan-less, into
+   `archive/backlog-closed-items-ledger.md`).
 3. **Durable residue goes to `architecture/`.** If an arc changed how a
    subsystem works, update that subsystem's architecture doc in the same arc —
    present tense, no changelog prose. The plan keeps the history; the

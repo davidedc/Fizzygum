@@ -539,4 +539,21 @@ click/hover pixel tests.
   `docs/archive/god-class-decomposition-plan.md` (`MenusHelper` split),
   `docs/archive/coalesced-nomenclature-rename-plan.md` (the menu-takeover homonym caution).
 - Architecture: `docs/architecture/{layering-naming-convention,layout,lint-and-static-checks}.md`.
-```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### `archive/container-regularization-plan.md` — ✅ COMPLETE 2026-07-19 (all sections landed)
+AUTHORED+FLESHED 2026-07-18; de-byzantinate Menu/List/Prompt/Divider. Key finding: menu-ness already lives in `PopUpWdgt`, so the untie is a LAYOUT extraction, not a behaviour one. **§5.1 + §5.2a–c LANDED 2026-07-18 (gauntlet 11/11, byte-identical bar 1 benign inspector recapture); `instanceof` baseline ratcheted 97→95. §5.3 (prompt family) LANDED 2026-07-18 — full re-base off `PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; gauntlet 11/11 incl. revisits+census, byte-identical bar 1 conscious save-as recapture + 1 test-structure edit.** Remaining: owner-gated tail (§5.2d/§5.2e/§5.4) — §5.2d is now a clean drop-in (the shared titled-rows body is built) that also kills a temporary `_reLayoutSelf` duplication.
+- [x] §5.1 [H]: extract `DividerWdgt` (retire inline-`RectangleWdgt` dividers) — DONE, byte-identical; `isDivider` role query
+- [x] §5.2a: extract `MenuRowsPanelWdgt` (byte-preserving row-stack lift) — DONE (landed with 5.2b)
+- [x] §5.2b [C]: `ListWdgt` uses `MenuRowsPanelWdgt` not `MenuWdgt`; `isListItem` → `selectsItemsOnClick?()` — DONE, byte-identical (Inspector green, zero recapture)
+- [x] §5.2c: retire the `isListContents` flag (no readers left after 5.2b) — DONE, byte-identical
+- [x] §5.3 [E]: prompt family — `PromptWdgt extends PopUpWdgt` composing a titled `MenuRowsPanelWdgt`; `Text/Number/ColorPromptWdgt`; `pickColor` folded; `SaveShortcutPromptWdgt` re-homed; `SelectPromptWdgt` BANKED (font selectors are editor-integrated menus, not value prompts) — DONE, green (1 conscious save-as recapture + 1 popover test-structure edit)
+- [x] §5.2d [B]: recompose `MenuWdgt` = `PopUpWdgt` composing a titled `MenuRowsPanelWdgt` — DONE 2026-07-18 (gauntlet 11/11 incl. revisits(0)+census(0); net −55 lines; 8 menu tests recaptured — invisible corner AA). ⚠⚠ NOT a clean drop-in: 4 real regressions from the extra panel layer (empty-render, ±1px oscillation, transparent-corner hover, inform centering) + 2 `menu.children[N]`→`menu.rowsPanel.children[N]` production sites — see plan §5.2d
+- [x] §5.2e: re-base `MenuRowsPanelWdgt` on `SimpleVerticalStackPanelWdgt` — LANDED 2026-07-19 (`3bd49ca1`; revisits/census clean)
+- [x] §5.4 [F]: deliberate NON-merge of "one container becomes a window" — RULED + RECORDED 2026-07-18 (`architecture/layering-naming-convention.md` §6)

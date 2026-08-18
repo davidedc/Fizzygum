@@ -35,7 +35,7 @@ two-step, and new code is expected to follow it from the start:
 ## The frame model — content vs chrome
 
 The same law applies to content vs chrome (the frame model, see
-[`../plans/onion-widget-composition-plan.md`](../plans/onion-widget-composition-plan.md)). The
+[`../archive/onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md)). The
 vocabulary below is the convention for all new code:
 
 - **`Simple*Wdgt` — naked capability.** Data plus a self-mutation API, no chrome; a payload.

@@ -3,7 +3,7 @@
 **STATUS: AUTHORED 2026-07-18 — design-stage, exploratory. NO code written yet. Owner-gated execution.**
 Anchor on **symbol names** (verified 2026-07-18); line numbers drift. Self-contained.
 
-Part of one program with [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md),
+Part of one program with [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md),
 [`container-regularization-plan.md`](container-regularization-plan.md),
 [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md), and
 [`reference-widgets-plan.md`](reference-widgets-plan.md). **This arc supersedes the launcher/Factory section
@@ -24,7 +24,7 @@ mechanisms, from the *Reference morphs* note's Apps-vs-Files framing:
   converter, or instantiates an Inspector).
 
 And the definition we settled in the Frame model: **an "App" is just a Factory that opens an empty framed
-`*Wdgt` in edit mode** (per [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md) §1.3).
+`*Wdgt` in edit mode** (per [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md) §1.3).
 
 The *Reference morphs* note's "Apps vs Files" observation is the frame: everything is an object with its own
 methods, so the App/File distinction is a convenience — a "File" is classic user data; an "App" is a
@@ -123,7 +123,7 @@ the "new empty text" defaults), and a Factory always stamps the current template
 
 ## 7. Cross-links
 - Supersedes: reference-plan launcher/Factory section (see [`reference-widgets-plan.md`](reference-widgets-plan.md)).
-- Program siblings: [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md) (App = Factory over
+- Program siblings: [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md) (App = Factory over
   an empty framed `*Wdgt`), [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) (a
   Factory is a reference; creation enters the graph),
   [`container-regularization-plan.md`](container-regularization-plan.md).

@@ -214,7 +214,7 @@
       <text class="m" x="24" y="66">3. fetch dependencies-finding (findLoadOrder)</text>
 
       <rect x="500" y="10" width="310" height="76" rx="9" fill="var(--wash-s2)" stroke="var(--s2)"/>
-      <text class="t" x="514" y="30">…the rest of the layer  ·  ≈2.2 MB</text>
+      <text class="t" x="514" y="30">…the rest of the layer  ·  ≈1.9 MB on production</text>
       <text class="m" x="514" y="49">4. every EAGER part's source batches</text>
       <text class="m" x="514" y="66">5. ingest them against the running classes</text>
 
@@ -236,7 +236,7 @@
   <table>
     <tr><th><code>sources</code></th><th>Behaviour</th><th>Who ships it</th></tr>
     <tr><td class="k">background</td><td>fetch it once the world is up, off the critical path</td><td>the historical default</td></tr>
-    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (≈2.2 MB, roughly 70% of the tree, that a normal visit never downloads)</td></tr>
+    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (≈2.5 MB, roughly 72% of the tree, that a normal visit never downloads)</td></tr>
     <tr><td class="k">none</td><td>never; ship none of it. No inspectors; class-level edits in a snapshot are refused with one clear report</td><td>the <code>lean</code> appliance</td></tr>
   </table>
   </div>

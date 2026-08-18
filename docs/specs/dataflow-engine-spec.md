@@ -141,7 +141,7 @@ target pin is `bang`. So there is a second announcement, and an edge declares wh
 | edge opt `firesOnAnyChange` | my consumer **re-reads** the producer rather than receiving its value | both announcements |
 
 A reflected menu row is the shape: it ignores the delivered value entirely and re-reads through
-its own `readerName` (§P7 of `../plans/connector-ubiquity-and-reflection-plan.md`). Wires leave
+its own `readerName` (§P7 of `../archive/connector-ubiquity-and-reflection-plan.md`). Wires leave
 the flag false and stay value-only. `markNonValueChange` is **dark** unless the node actually has
 a re-reading subscriber — its callers are ordinary property setters. A value mark **supersedes** a
 non-value one raised earlier in the same frame, in either order.

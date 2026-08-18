@@ -242,3 +242,88 @@ inspector churn, and the prediction was checked rather than trusted:
   exists to assert is untouched: left inspector `alpha = 0.25`, right `alpha = 0.6`, i.e. the
   inspector still drives the COPIED target only. ⚠ `fg classify` called it REVIEW, not BENIGN?; that
   verdict is advisory and reading the pixels is what settles it.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### Menu-dispatch residue — left by `archive/menu-subject-routing-plan.md`
+⚠⚠ **Five items were filed here at the arc's close; on verification TWO were plain wrong and a third
+was wrong about its own remedy.** They are kept with their refutations rather than deleted, because a
+falsified item silently removed is an item somebody re-files. The common cause of both bad ones: a
+defect inferred from the four-slot dispatch fact without reading the CONSUMER — **the dispatch fact
+tells you what a slot HOLDS, never whether the receiving parameter is wrong to want it.** One item
+remains open (the audit-prelude tag). Law: `architecture/constructor-and-parameter-conventions.md` R3.
+- ⛔ **FALSIFIED, do not re-open: `widgetOpeningThePopUp` is NOT a misnomer.** It was filed as one on
+      the reasoning that dispatch slot 1 holds a `MenuItemWdgt` — but the consumer settles it the other
+      way. `PopUpWdgt` uses the value for exactly one purpose,
+      `getParentPopUp: -> @widgetOpeningThePopUp.firstParentThatIsAPopUp()` (`PopUpWdgt.coffee:107`,
+      and menus hang off the WORLD rather than their opener, which is why the link must be stored at
+      all). For a submenu opened by clicking a row, the menu item IS the widget that opened it, and its
+      `firstParentThatIsAPopUp()` is the parent menu — passing "the widget the menu is about" instead
+      would break the pop-up parent chain. 103 sites across 31 files, all correct. ⚠ The general
+      lesson: **the dispatch fact tells you what slot 1 HOLDS, never whether the receiving parameter is
+      WRONG to want it** — check the consumer before calling a name a defect.
+- ✅ **DONE (2026-08-16): `triggeringWidget` now exists only where it is read.** It was declared in TEN
+      members across FOUR classes and read in exactly ONE place —
+      `BubblesEditModeToCoordinatorMixin`'s `@parent != triggeringWidget`, which is the CORE of the two
+      Stretchables and of nothing else. Dropped from `FrameWdgt`'s four members and `ScrollPanelWdgt`'s
+      four (including its two dead `if !triggeringWidget? then triggeringWidget = @` lines, which
+      assigned a value nothing consulted), and the mixin's `super @` became `super()` now that every
+      core it can reach takes none. KEPT where live: the mixin's two cores and the four public wrappers
+      on the two Stretchables that feed them — and the `@` passed DOWN to `@contents`, which is a
+      different value entirely and reaches mixin-cored contents that DO read it. ⚠ The predecessor
+      plan's "do NOT delete it from the four overrides, `editButtonPressedFromFrameBar` genuinely
+      passes `@`" was only HALF right: the caller does pass `@`, but only a receiver whose core READS
+      it can care. Suite 294/294 with no recapture — removing a parameter cannot move the inspector's
+      member list, which is also the proof it changed no behaviour.
+- ⛔ **FALSIFIED, do not re-open: `menusHelper.testMenuForMacros?()` is not a dead call.** The method
+      lives in the TESTS repo (`Automator-and-test-harness-src/MenusHelperTestSupport.coffee:22`) and is
+      installed onto `MenusHelper`'s prototype at boot; the `?` soak is the deliberate part-absence
+      idiom that makes F2 inert in a build shipping no harness, and the call site says so. ⚠ Filed from
+      a `Fizzygum/src`-only grep — the "sweep BOTH repos" rule exists for exactly this.
+- ✅ **DONE (2026-08-16), with a stated limit.** The layout-audit prelude tagged
+      `Widget.prototype.disableDragsDropsAndEditing`, which all four containers OVERRIDE — and
+      `tagWrap` assigns `proto[name]`, so an instance resolved its own override and the wrapper could
+      never run. The four overriders are now tagged too. ⚠ **Verified structurally, NOT observably:**
+      both SystemTests that drive a container's edit-mode toggle
+      (`macroLockedDocumentRejectsDrop`, `macroEditModeTogglePencilEyeGlyph`) produce
+      `recs=0` — zero end-of-cycle records — so there is currently nothing on that path to attribute,
+      which is the HEALTHY state (it self-settles). The fix costs nothing and removes a blind spot:
+      the moment such a record does appear it lands on its trigger instead of in the untagged
+      residual, which the survey reads as "Phase-S missed it". ⚠ Safe to change because this prelude
+      feeds only the MANUAL survey (`run-audit-loop.sh` / `aggregate-layout-audit.js`) — no gauntlet
+      leg and no committed baseline consumes it.
+- ✅ **DONE (2026-08-16): stale dead-method allowlist entry removed.** `identifyBlockEnd` sat in
+      `buildSystem/dead-method-allowlist.txt` naming a method the conformance arc had already deleted,
+      so every build printed `[dead-methods] NOTE — 1 allowlist entry is no longer dead`. ⚠ Worth
+      knowing why it was hard to find: the allowlist is a **`.txt`**, so a `--include='*.js'
+      --include='*.coffee'` sweep sees nothing and the name looks like it exists nowhere at all.
+- ✅ **DONE (2026-08-16): the five `[H] early-return-before-settle` layering warnings are sanctioned,
+      not restructured.** Each was read and each guard turned out to belong exactly where it is:
+      `StorageSorter.drainPendingSort` runs from `doOneCycle` EVERY cycle and the guard's whole job is
+      to stay dark-cheap when nothing is pending; `WorldWdgt.loadWorldSnapshot`'s guards are a format
+      check, a user confirm that may decline, and a lazy-part branch that RE-ENTERS the public method
+      — none can live in a core that runs only after the teardown they exist to prevent;
+      `SimpleSpreadsheetWdgt.startEditAtPointer` guards an address that resolves to no cell on a
+      pointer path; `acceptCellEdit`/`cancelCellEdit` are ESCALATION handlers whose documented no-op
+      case must not open a settle. All five carry `# early-return-sanctioned: <why>`; the gate is now
+      silent with 0 violations. ⭐ A non-fatal warning class can be entirely legitimate — the value of
+      [H] was making someone read the five, not that any needed moving.
+- ✅ **DONE (2026-08-16), but NOT as filed — and the difference is the point.** Filed as "`fg classify`
+      cannot recognise a list SCROLLED by N rows, teach it that shape". ⛔ **That request is wrong and
+      must not be re-attempted:** the `BENIGN?(row-shift)` path already exists, and `classify-diff.js`'s
+      own MEASURED RECALL header records (probed 2026-07-14, real data, both column edges swept) that
+      the real inspector artifact provably does NOT fit it — adding a member makes the list TALLER, so
+      the scroll moves by LESS than one row, no whole row cleanly inserts or drops, the re-clipped
+      edges show new glyph fragments and the moved selection re-renders interior rows. Making it call
+      that BENIGN would invert the tool's founding safety asymmetry (a false REVIEW costs a minute; a
+      false BENIGN bakes a regression into the references). **What was actually wrong, and is now
+      fixed:** the `INSPECTOR_CHURN_SET` corroboration fired only on the BENIGN path, while real
+      inspector churn lands on REVIEW — so the tool knew the test was a member-list renderer and never
+      said so. REVIEW now carries that corroboration plus the raw hunk composition, changing NO
+      verdict, pinned by four new `classify-diff-selftest.js` checks (the last of which asserts the
+      verdict is unchanged — decoration must never move the ship gate).

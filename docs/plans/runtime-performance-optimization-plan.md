@@ -838,3 +838,12 @@ Everything needed to re-run the measurements ships in [`docs/profiling/`](profil
 
 - 2026-07-07 — Authored from the first full profiling campaign (counters ×3 configs,
   CPU profiles ×3, boot profile, S1 A/B ×2 densities, method-level framework profile).
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+One closed item relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18, so that file can go
+back to being an index of OPEN work only (`docs/README.md` filing rule 2). This plan is still
+ACTIVE: O3, O4b, §8/S2/S6b/F1 and §5 F3 remain open and stay listed in `docs/BACKLOG.md`. The
+landing belongs with §5B O4 and §8's post-landing measurement ledger.
+
+- [x] §5B O4a: spreadsheet text de-directified — LANDED 2026-07-24 as "scalar text is a StringWdgt child, period" (owner design decision; cells + headers hold passive StringWdgt children, (+4,+2) inset = byte-identical, zero recaptures; StringWdgt buffers cache for free; renders −96–99%, dpr1 wall-clock within noise); the A/B CORRECTED the O4 attribution (shadow "73%" ≈ atlas-warm-up storms) — `measurements/drawimage-blit-attribution-2026-07-24.md` ⚠ + final-shape sections

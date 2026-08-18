@@ -4,7 +4,7 @@
 # drives. Gathering a wire's four facts into a record is what lets there be a SECOND one: the
 # alternative is four loose fields on the controller — target, action, delivery policy, tracking flag
 # — describing a single relationship in four places, with no slot for another and nothing to remove
-# when un-wiring. That is gap G2 in plans/connector-ubiquity-and-reflection-plan.md (one out-edge
+# when un-wiring. That is gap G2 in archive/connector-ubiquity-and-reflection-plan.md (one out-edge
 # ever, no un-wire idiom, fan-out only via the unshipped FanoutWdgt), and §P4 closes it here.
 #
 # WHY A CLASS AND NOT A BARE {target, action} LITERAL. The tree's own precedent is the layout-spec

@@ -9,7 +9,7 @@ Anchor on **symbol names** (verified 2026-07-18); line numbers drift. Self-conta
 rename, the 3-edge model, the unified collector), and the *launcher/Factory* half moved to
 [`creation-and-templates-plan.md`](creation-and-templates-plan.md) (App = Factory). What remains here is the
 **visible reference-widget UI and the desktop lifecycle *areas*** — built *on top of* those two mechanisms.
-Part of one program with [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md) and
+Part of one program with [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md) and
 [`container-regularization-plan.md`](container-regularization-plan.md). North star: orthogonalisation,
 de-byzantination, regularity.
 
@@ -129,7 +129,7 @@ arc-(b) edge model — a "duplicate-contents" is a copy that follows containment
 ## 7. Cross-links
 - Depends on: [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) (edges + GC),
   [`creation-and-templates-plan.md`](creation-and-templates-plan.md) (launcher/Factory).
-- Program siblings: [`onion-widget-composition-plan.md`](onion-widget-composition-plan.md),
+- Program siblings: [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md),
   [`container-regularization-plan.md`](container-regularization-plan.md).
 - Landed history: `docs/archive/duplication-and-save-preserve-transforms-plan.md`,
   `docs/archive/drag-embed-implementation-plan.md`, `docs/archive/upedge-endgame-plan.md`.

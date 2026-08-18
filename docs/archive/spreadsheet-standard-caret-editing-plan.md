@@ -318,3 +318,16 @@ child, period").
 - Memory: `runtime-performance-optimization-plan.md` (O4a final shape + edit-bar blocks);
   MEMORY.md "NEXT ARC" line. Standing gotchas: raw-pointer gate; macro rule [D]
   (`# macro-private-call-sanctioned:` on oracle reads); recapture via `fg recapture` only.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### ~~`plans/spreadsheet-standard-caret-editing-plan.md`~~ → `archive/`
+EXECUTED IN FULL + gauntlet-green 2026-07-24 (same-day author→execute); archived with the
+per-phase STATUS BOX ledger. Deliberate residuals (variants, not debts): click-on-already-
+selected as an edit gesture; Excel-style Tab commit-and-advance; drag-select inside the
+editor (blocked by cell solidity — see the archive INDEX ⚖ bullets).

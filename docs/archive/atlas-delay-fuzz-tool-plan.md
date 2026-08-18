@@ -385,3 +385,12 @@ Authored 2026-07-29 immediately after the prototype's first serious outing: 7 su
 injection (3 valid/clean, 4 invalid), which validated flake A's fix under fault conditions and
 exposed the `probeTotalTests` readiness defect. Every trap in §4 was hit that morning. **No tool
 code has been written** — only the gitignored `.scratch/` prototype described in §1/§2.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/atlas-delay-fuzz-tool-plan.md`: promote the glyph-atlas delay injector from a gitignored `.scratch/` prototype to `scripts/audit-preludes/atlas-delay-prelude.js` + `scripts/run-atlas-fuzz.js` + a local `fg fuzz`. **✅ EXECUTED 2026-07-29 — built, gated, verified** (plan §9). Fault-injects the lazy-atlas timing to find pixel reads NOT covered by the text-settle gate — the invariant has been violated 3× (DETERMINISM.md §3g ×2 rigs, §3i). ⚠ the non-negotiable piece is the VALIDITY GATE (3-state PASS/FAIL/INVALID + mandatory proof-of-injection): the prototype produced 4 invalid runs in one morning, 3 of them printing `failed: 0`. ⛔ NOT a gauntlet leg (owner-declined 2026-07-29: nondeterministic by construction). Extension §3.4 covers the two serialization rigs, the paths that actually broke.

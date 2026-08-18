@@ -433,3 +433,13 @@ and its ratchet), the in-code comments on `_resetWorldNoSettle` /
 `_auditWorldResetCompletenessNoSettle` / `_worldStateAuditExemptions`, and the `Fizzygum/CLAUDE.md`
 Testing entry for the new gate. The one deliberate carry-forward is the product-side twin (§7.5's
 "DELIBERATELY NOT DONE"), tracked in `docs/BACKLOG.md`.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/resetworld-teardown-completeness-audit-plan.md`: audit `WorldWdgt._resetWorldNoSettle` for completeness. DONE 2026-07-29 — 26 rows inventoried and decided; **14 further leaks found and fixed**, several worse than the two that prompted it (`numberOfIconsOnDesktop` = the desktop grid cursor, a GEOMETRY leak; the world's own extent; the 5 app slots + `simpleEditorTemplates`; `errorConsole`; `wdgtsWithOngoingScrollMomentum` ⇒ later tests STALL; the static prefs bag; `isDevMode`; tooltip/pop-up sets; the `trackChanges` stack). Structural guard delivered: `WorldWdgt._auditWorldResetCompletenessNoSettle` emits `RESETWORLD_INCOMPLETE`, gated by both headless runners, allow-list `_worldStateAuditExemptions` (each exception carries its reason). Ratchet proved by planting a leak (suite failed 188 tests), then removed. ⛔ s1 stayed an audit tool, not a gate, per the owner call.
+- [x] `archive/resetworld-teardown-completeness-audit-plan.md` §7.5 "DELIBERATELY NOT DONE" — the PRODUCT-side twin. SUBSUMED and CLOSED by the shared-core arc above (DONE 2026-07-29): every gap it listed (`errorConsole`, `wdgtsWithOngoingScrollMomentum`, the tooltip/pop-up/handle sets, `lastEditedText`) is fixed by the shared core, and its "checked and NOT a gap" call on `numberOfIconsOnDesktop` was re-confirmed empirically by the Phase 0 spike.

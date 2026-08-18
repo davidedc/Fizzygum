@@ -1,3 +1,10 @@
+> **ARCHIVED — COMPLETE (2026-07-20).** The Frame-model flagship arc (phases A · C · B · D · E): a
+> naked capability widget becomes a manipulable citizen by being wrapped in ONE frame that owns the
+> chrome, the toolbar slot and the close policy — `ReconfigurablePaintWdgt` and
+> `StretchableEditableWdgt` deleted, focus unified as a POLICY, close policy a tracked field.
+> Follow-ons (E1 no-pencil readOnly, the info-widget factory collapse) are owner-gated on `BACKLOG.md`.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # The Frame model — naked capability → manipulable citizen → App
 
 **STATUS: AUTHORED 2026-07-18, REVISED 2026-07-18, RE-VERIFIED 2026-07-19. EXECUTING: Phase A ✅ COMPLETE
@@ -35,9 +42,9 @@ Self-contained: embeds the load-bearing current-state facts so it runs cold. Par
 [`container-regularization-plan.md`](container-regularization-plan.md) (**✅ COMPLETE 2026-07-19**, incl.
 its [`menu-row-conformance-plan.md`](menu-row-conformance-plan.md) follow-on — the menu system is now a
 genuine stack client),
-[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md),
-[`creation-and-templates-plan.md`](creation-and-templates-plan.md), and
-[`reference-widgets-plan.md`](reference-widgets-plan.md). Shared north star: orthogonalisation,
+[`graph-edges-and-lifecycle-plan.md`](../plans/graph-edges-and-lifecycle-plan.md),
+[`creation-and-templates-plan.md`](../plans/creation-and-templates-plan.md), and
+[`reference-widgets-plan.md`](../plans/reference-widgets-plan.md). Shared north star: orthogonalisation,
 de-byzantination, regularity — **the name encodes the role.**
 
 ---
@@ -117,7 +124,7 @@ matching the content (text toolbar for text, paint toolbar for an image). A nake
 
 An **App** = a launcher/**Factory** that opens an **empty framed `*Wdgt` in edit mode** (e.g. "Docs" opens
 an empty `DocumentWdgt` with the text toolbar showing). It is *not* a widget layer. Creation/Factory is its
-own arc — [`creation-and-templates-plan.md`](creation-and-templates-plan.md).
+own arc — [`creation-and-templates-plan.md`](../plans/creation-and-templates-plan.md).
 
 ---
 
@@ -295,7 +302,7 @@ CHANGE how B lands (each woven into the §5.B design):
 ### 3.6 App/launcher
 `IconicDesktopSystemWindowedApp` (plain factory) + 14 `*App` subclasses; `buildWindow` calls
 `world.openWindowWith(content, …)`. The on-screen app = a `WindowWdgt` wrapping content. (Creation unified
-in [`creation-and-templates-plan.md`](creation-and-templates-plan.md).)
+in [`creation-and-templates-plan.md`](../plans/creation-and-templates-plan.md).)
 
 ---
 
@@ -1531,11 +1538,32 @@ standing convention, already partly true; the frame model itself graduates there
 - Program siblings: [`container-regularization-plan.md`](container-regularization-plan.md) (✅ COMPLETE
   2026-07-19) + its follow-on [`menu-row-conformance-plan.md`](menu-row-conformance-plan.md) (✅ COMPLETE
   2026-07-19 — the §5.2e stack-client precedent cited in §3.1),
-  [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md),
-  [`creation-and-templates-plan.md`](creation-and-templates-plan.md),
-  [`reference-widgets-plan.md`](reference-widgets-plan.md).
+  [`graph-edges-and-lifecycle-plan.md`](../plans/graph-edges-and-lifecycle-plan.md),
+  [`creation-and-templates-plan.md`](../plans/creation-and-templates-plan.md),
+  [`reference-widgets-plan.md`](../plans/reference-widgets-plan.md).
 - Architecture: `docs/architecture/{layering-naming-convention,layout,transforms,lint-and-static-checks}.md`.
 - Landed history: `docs/archive/drag-embed-implementation-plan.md` (internal/external skin derivation),
   `docs/archive/pencil-eye-edit-mode-toggle-plan.md`, `docs/archive/disable-editing-family-convert-plan.md`,
   `docs/archive/god-class-decomposition-plan.md` (mixins→OO-delegation precedent).
-```
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] §5 P0: `architecture/regularity-principles.md` — LANDED 2026-07-19
+- [x] §5.A: `WindowWdgt` → `FrameWdgt` rename + de-inherit + `FrameBarWdgt` bar composition — PHASE A COMPLETE 2026-07-19
+- [x] §5.C: one shared `ToolbarWdgt` per content type + the frame toolbar-slot — PHASE C COMPLETE 2026-07-19 (C1 `1e06b79f`, C2 `74322e1d`, C3 `3e8eecd6`); paint toolbar QUARANTINED in `ReconfigurablePaintWdgt` for §5.D; slot guard test landed (tests `24bfa3882`)
+- [x] §5.B: payload/citizen split — PHASE B COMPLETE 2026-07-19 (B1 `fe76f679` substrate, B2 `79eaaf9c` SimpleTextWdgt+TitleWdgt, B3 `4dcfbc4c` DocumentWdgt, B4 `19b13d9d` GenericPanelWdgt family, B5+B6 spreadsheet/image renames — execution design + case law in plan §5.B)
+- [x] §5.C follow-ons: undock-to-float context-menu entry (D9 tail) + `right`/`bottom` dock arranges — ✅ CLOSED 2026-08-05 by `archive/layout-spec-family-followups-plan.md` F4: transpose twins through the one-home chrome math, "float the toolbar" on the frame's context menu (in-place pop-out into the creator-button float home), resizer-overlap ruling recorded in the arrange comment + that plan's §8 ledger; pinned by `SystemTest_macroDocsToolbarDockSidesAndFloat` (suite 277)
+- [x] §5.C dock tail — ✅ CLOSED 2026-08-05, same day as F4 (owner-directed follow-on): the frame's "dock the toolbar ➜" context-menu popout re-sides a docked strip (current side omitted; four named wrappers over one `FrameWdgt._dockToolbarAtNoSettle` core) and, over an EMPTY slot while editing, RE-DOCKS a FRESH variant at the chosen side (toolbars are identity-free — one construction, focus-bound buttons — so re-dock deliberately never reclaims the floated instance, which stays a normal toolbar window; no tracked back-ref). D9 honored: menu entries, never bar buttons. Pinned by `SystemTest_macroDocsToolbarDockSidesAndFloat` (every dock change now drives the REAL menu; image_3 = the re-dock beat; images 0-2 re-captured byte-identical, proving menu-driven == mode-roundtrip-driven states)
+- [x] build tooling: shippable-vs-`find src` coverage check — DONE 2026-07-20 (`bd62beb6`): `buildSystem/check-shippable-coverage.js` FAILS the build on a `src/` directory no part claims, and arc 4's `parts.json` retired the hand-maintained glob list the gap lived in (the gap cost one red presuite in C1; runtime symptom `<NewClass> is not defined`)
+- [x] census blind spot (pre-existing, exposed then re-masked in B) ✅ CLOSED 2026-08-05 — `archive/census-as-built-extension-plan.md` (its §8 ledger is the record). The census now certifies AS-BUILT (before any moveTo/setExtent) and POST-RESIZE separately (`asBuiltMovers`/`postResizeMovers`), proven non-vacuous by re-planting the defect. The one as-built mover's producer fixed: `ScrollPanelWdgt.scrollTo` was the ONE unclamped scroll path — the sample slide's pin request (calibrated off a state itself over-scrolled by the 27px edit→view container shift) committed a 27px over-scroll, the map visibly short of its window edge; scrollTo now routes through the clamped `scrollX`/`scrollY` + the standard re-fit pair. Gauntlet 14/14 (census leg still ~9s) + homepage; ONE gated recapture (macroSampleSlideEditViewToggle)
+- [x] §5.D: D-1 paint-on-focus — execution design + S1 spike ✅ 2026-07-20 (spike ALL PASS, evidence in plan §5.D D-iii); D1b landing = `ImageWdgt` + `PaintToolbarWdgt` + press-time `paintingOverlay()` resolution, `ReconfigurablePaintWdgt` + `StretchableEditableWdgt` DELETED
+- [x] §5.D: D-2 focus-policy unification ✅ 2026-07-20 — the mandated four-way (caret + paint tool-head + focus pointer + `StringWdgt.selection`) abstraction was FALSIFIED as structure-without-a-consumer (D-1 dissolved the paint half into per-image injected handlers — nothing world-level left to unify); honest scope landed = D2a one editor-chrome capability (`excludedFromEditorFocusTracking`, the `editorContentPropertyChangerButton` field retired), D2b destroy-time focus hygiene, D2c rename `lastNonTextPropertyChangerButtonClickedOrDropped`→`editorFocusWdgt` (plan §5.D D-2-i…D-2-v)
+- [x] §5.D D-3: VISIBLE editor-focus indicator — ✅ PUSHED 2026-07-20 (`6f1514b4` + tests `05f8e2bb5`), ⚠ overlay-WIDGET approach SUPERSEDED (see `selection-overlay-unification-plan.md`). As-landed: `WorldWdgt.addEditorFocusIndicatorWidget` reconciler draws ONE `HighlighterWdgt` teal OUTLINE (D19, `Color 38,166,154`) around `_widgetBeingEdited()` — `editorFocusWdgt` WHEN a caret targets it (text) OR `providesAmenitiesForEditing`+`dragsDropsAndEditingEnabled` (citizen); load-bearing world-guard (desktop click focuses the world, a PanelWdgt with both flags). ⚖ OWNER RULING: KEEP BOTH branches (D18). The predicate SEMANTICS (incl. D21 selected-item branch + spreadsheet opt-out) are KEPT; the world-attached indicator WIDGET is being replaced by a per-widget PAINT-TIME overlay (owner: "not a widget… draw on top of the buffer") — fixes the z-order bug (bringToForeground buries the world-child indicator) + chrome-framing + spreadsheet double-selection. D-2 re-open RESOLVED (four-way `FocusWdgt` stays CLOSED)
+- [x] §5.E ✅ 2026-07-20 — most of §5.E was ALREADY DELIVERED by A/B/D (thread 1 uniform-content-entry done: no `FrameWdgt.setContents(x,N)`, `defaultContents` placeholder exists; the read-only INHERITANCE smell removed by B: info-widgets are factories). Landed deliverable = E2 `closeFromFrameBarPolicy` tracked field (`saveOrAsk`/`close`/`destroy`) replacing 6 per-instance `closeFromFrameBar` monkey-patches (DocumentWdgt._buildInfoDocNextTo's own TODO) + deduping the twin citizen bodies onto `FrameWdgt._saveOrAskThenCloseCitizen` (plan §5.E E-vi). ⇒ FRAME-MODEL FLAGSHIP ARC (A·C·B·D·E) COMPLETE
+- [x] §5.E follow-on (E1) — ⛔ REJECTED 2026-07-20 (owner): a no-pencil `readOnly`/locked-view-mode capability will NOT be built. Fizzygum glorifies direct-manipulation authoring, so locked-in-view-mode content goes against the spirit — everything stays editable via the pencil (the D8 view-mode-WITH-pencil model is the intended one, not a compromise). Do not re-propose. (Supersedes the plan §5.E E-iii/E-D19 "deferred" framing.)
+- [x] §5.E E3 ✅ 2026-07-20 — info-widget factory collapse LANDED (Option A "closure table", Sonnet subagent): the 9 shared-builder `info-widgets/*` classes collapsed into `src/apps/InfoDocs.coffee` (`@REGISTRY` of build closures keyed by kind + `@createNextTo(key, nextTo)`; `_buildInfoDocNextTo` moved off `DocumentWdgt`). Every construction is a LITERAL `new X`, so the regex dep-finder keeps all load-order edges — no `REQUIRES` markers needed. `WelcomeMessageInfoWdgt` stays standalone (large bespoke `@create`). 9 classes deleted, 1 added; 9 call sites re-pointed

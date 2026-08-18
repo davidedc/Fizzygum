@@ -389,3 +389,44 @@ recaptured to the CORRECT render. The open question is the mechanism.
 > when you finish.
 
 Run this in a FRESH session — it needs a clean context and its own time budget.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+### ~~`archive/dropped-background-fill-investigation.md`~~ → `archive/` — ✅ EXECUTED IN FULL 2026-08-13
+The MECHANISM question left by the SWCanvas one-rect-fill campaign (itself `✅ EXECUTED IN FULL`;
+SWCanvas `16e4ed9` / Fizzygum `fb087298` / Fizzygum-tests `10af6a144`) — **answered, and in Fizzygum,
+not the rasteriser.**
+- [x] **A `SimpleTextWdgt`'s explicitly-specified `backgroundColor` was silently never painted.**
+      ROOT CAUSE: `TextWdgt`/`SimpleTextWdgt` declared `@backgroundColor` / `@backgroundTransparency`
+      as constructor **`@`-parameters**, which assign UNCONDITIONALLY and therefore SHADOW the
+      class-level defaults — so constructing without them wrote `undefined` over the prototype's
+      values, `undefined` reached `ctx.globalAlpha`, and the fill composited at NaN coverage with no
+      error anywhere. ⭐ Two lessons outlived the bug and are now doctrine: the **`@`-param trap** (see
+      the constructor section of `../CLAUDE.md`), and that **an invalid value on ANY canvas property is
+      IGNORED per HTML5**, so a bogus `fillStyle`/`globalAlpha` paints silently wrong. ⚠ Both of the
+      plan's authored "critical reframes" were FALSIFIED en route — the third sighting of a stale
+      `swcanvas.min.js` producing a phantom all-green.
+### `archive/dropped-background-fill-investigation.md` — closed out 2026-08-13 (both items done)
+- [x] **SWCanvas does not validate `globalAlpha` per HTML5** — ✅ FIXED upstream 2026-08-13
+      (SWCanvas `e1d8c4a`, vendored + pin bumped). The spec says an infinite/NaN/out-of-range
+      assignment is IGNORED (the previous value stands); `globalAlpha` was a plain public field,
+      so it was stored raw and every downstream `(color.a / 255) * globalAlpha` went NaN — a fill
+      covered ZERO pixels with correct fillStyle, geometry, clip and CTM, and nothing threw. It is
+      now a validated accessor pair in the same style as `lineWidth`. SWCanvas test 070 pins the
+      contract (invalid ignored in readback AND pixels; 0 and 1 still apply; `globalAlpha` 0 still
+      draws nothing, so it was not "fixed" by clamping; save/restore round-trips) and was verified
+      to fail without the fix.
+- [x] **Other `@backgroundTransparency` readers had no undefined-safe path** — ✅ ADDRESSED 2026-08-13.
+      `Appearance.coffee` (the `backgroundTransparencyNormalPass` policy) and
+      `AnalogClockAppearance.coffee` assigned it straight to `globalAlpha`; both now coerce with
+      `? 1` like `StringWdgt::_prepareTextBufferContext`. ⚠ The original entry mis-stated the other
+      three: `RectangularAppearance` / `SimpleImageWdgt` / `VideoPlayerCanvasWdgt` use it in
+      **`isTransparentAt` (hit-testing)**, not in a background fill, and their
+      `backgroundTransparency?` existence check was VACUOUS rather than buggy (`undefined > 0` is already
+      false, so the outcome never differed). With the field now an invariant, that dead check is
+      collapsed into the meaningful `> 0` test.

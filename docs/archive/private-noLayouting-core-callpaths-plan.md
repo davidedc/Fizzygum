@@ -311,3 +311,13 @@ of timers/frame-counts/intermediate passes (`Fizzygum-tests/DETERMINISM.md`).
 `childBeingCollapsed` ~:245/:249/:253/:257 · `resetToDefaultContents` ~:297 · `buildAndConnectChildren`/
 `_buildAndConnectChildrenCore` ~:360/:363 (the `@add` calls ~:351,381,387,394,400,414,433).
 `buildSystem/check-layering.js`: rule [A] ~:170 · `isLowLevel` ~:54 · `PUBLIC_SETTERS` ~:40 · the marker mechanism ~:160-165.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/private-noLayouting-core-callpaths-plan.md` §5: static lint for a low-level method calling a public settling method — ALREADY BUILT (`buildSystem/check-layering.js` rules [A] + [G], hard and build-failing, since 2026-06-19 `817c2ce4`); indexed in `architecture/lint-and-static-checks.md`.
+- [x] `archive/private-noLayouting-core-callpaths-plan.md` top banner: Plan 2 — rename 'Core'→'NoLayouting' — DONE via the layout-settle-tier rename: zero `*Core:` method headers survive in `src/` against 155 `*NoSettle:` ones, which is the item's own "verify, then drop" satisfied.

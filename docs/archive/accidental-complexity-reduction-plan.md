@@ -569,3 +569,12 @@ MenusHelper: 53 hand-written create methods      CREATABLE table + one generic a
 - ⚠ Method renames/extractions in inspected classes churn the 15-test inspector set — `fg recapture-inspector` once per batch if flagged.
 - If the public/private call-separation sweep is still uncommitted when this plan starts, coordinate: land that first (its ~81 renames move many of the line numbers above) or rebase this plan's greps after it lands.
 - Commit policy: present summary + message, wait for explicit approval; never claim "verified"/"pixel-identical" in docs or commit messages before the suite has actually passed.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/accidental-complexity-reduction-plan.md` P5 Family 4 note: optional [U] gate baseline tighten — DONE 2026-07-15 and ratcheted seven times since; `check-call-separation.js`'s `BASELINE_U_QUERY` carries the ledger in its own comment and is at 125.

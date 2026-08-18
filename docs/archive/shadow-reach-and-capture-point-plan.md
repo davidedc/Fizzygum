@@ -147,3 +147,12 @@ The read moves one frame later relative to every existing reference (pump-of-N r
 ### Ready-to-paste start prompt for a fresh session
 
 > Run the shadow-reach + capture-point arc: `Fizzygum/docs/plans/shadow-reach-and-capture-point-plan.md` — read it fully and follow its §0.5 cold-execution protocol. Start with `fg status` (all three repos should be clean), re-verify the plan's §1 claims against current src (grep method names, don't trust line numbers). Phase 1 first: Phase 0 reproduces BOTH shadow residuals with probes before any fix; Spike S1 (scale composition) gates the record-time change; `fg presuite` inner loop, full `fg gauntlet` to close, zero reference churn expected (a pixel shift = stop and investigate); propose the Phase 1 commit and WAIT. Phase 2 (one end-of-cycle seam for ALL pixel reads, latch deleted): run Spike S2 first and follow its decision gate — nonzero churn is an OWNER decision, and `fg fuzz` is mandatory on adoption. Present commits and wait for owner OK — never push autonomously.
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
+that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
+arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this
+arc still OPEN stayed in `docs/BACKLOG.md`.
+
+- [x] `archive/shadow-reach-and-capture-point-plan.md`: BOTH PHASES LANDED 2026-08-10. Phase 1 — both shadow-allowance residuals closed by construction (shadow-INCLUSIVE recorded footprints + PRE-map own-plane destination reach via `Widget.paintedShadowReach`; the authored post-map grow was falsified by rotation), three diff-oracle SystemTests, one benign inspector recapture, gauntlet 14/14. Phase 2 — ONE end-of-cycle pixel-read seam (`MacroToolkit.captureAtEndOfCycle`, drained right after `_updateBroken`) for macro captures AND both serialization rigs; `warmRepaintFlushPending` latch DELETED; Spike S2 measured ZERO sampling-shift churn across the suite; seam position fuzz-proven load-bearing; fg fuzz + gauntlet green on the final tree. Case law in `archive/INDEX.md`.
