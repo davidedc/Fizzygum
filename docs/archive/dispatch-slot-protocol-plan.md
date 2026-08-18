@@ -1,8 +1,7 @@
 # Dispatch-slot protocol — give ButtonWdgt's four slots stable meanings, then honest names
 
-**PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-**STATUS: AUTHORED 2026-08-18. Spike-first: Phase 0 is a MEASUREMENT with a hard go/no-go — do not
-write a line of protocol code before its census is on the table.**
+**STATUS: EXECUTED IN FULL AND CLOSED 2026-08-18 (authored, censused, decided, executed and gated
+the same day). Kept verbatim below as authored; the as-built record is §4's DECIDED block + §9.**
 
 **Mandate:** eliminate the conditional slot semantics — not document them better, not rename around
 them. The end state is a dispatch whose every slot has ONE meaning at every call site, and names
@@ -243,11 +242,25 @@ prior arcs; §5 of the latter is the as-built dispatch record) ·
   the colour prompt).
 - Phase 1: **DECIDED 2026-08-18** — O4 + value-delivery convergence; the full shape is recorded in
   §4's DECIDED block. By-catch fixes landed first (header-lib space-colon guard + 13
-  normalizations + the holder setColor forward, all gate-verified).
-- Phase 2: **IN EXECUTION** — order: (P2a) prompt self-delivery + setter collapse + environment
-  removal, (P2b) trigger reshape (pass `@`, subject rename, crossover death), (P2c)
-  argument collapse + cross-repo rename/doc sweep. Gates per §6.
-- Phase 3: pending Phase 2.
+  normalizations + the holder setColor forward, all gate-verified) — Fizzygum `11c5a06c`.
+- Phase 2: **EXECUTED 2026-08-18.** P2a (`1bca55d9`): prompts deliver the VALUE
+  (`PromptWdgt.deliverValue` + per-subclass `_promptValue`; `panel.environment` dead at all three
+  writers), all 33 giver-shaped setters + the `ignored`-named overrides collapsed to one value
+  parameter, the ⚠ SHAPE convention deleted, `widget-authoring-guidelines.md` §11 rewritten.
+  P2b (`a1ad3476` + tests `a040d6a81`): `trigger` passes ITSELF as slot 1 and the panel-filled
+  `@subjectOfAction` as slot 2; the crossover, the `if !@environment?` fork and `environment` on
+  `MenuWdgt`/`MenuRowsPanelWdgt` deleted; `_createMenuItem` `_`-tier; comment/doc sweep both
+  repos. ZERO verb migrations (as the census predicted); the only recaptures were the two
+  ClassInspector-on-ButtonWdgt tests' member lists (diffpage-reviewed, gated recapture COMPLETE).
+  `argumentToAction1/2` kept — see §4's correction.
+- Phase 3: **EXECUTED 2026-08-18** (tests `4a74ac5c2`): menusweep fails on a prompt callback
+  declaring >1 parameter (PROMPT_CALLBACK_ARITY, read off the live composed method; proven on a
+  planted violation, silent on a healthy one; the real sweep is green tree-wide).
+- Close gates: build 0 violations ×4, menusweep/pinsweep green throughout, presuite green,
+  **gauntlet 16/16 all in-wave (276s)**, **fg homepage BOOT OK** incl. the production snapshot
+  round-trip over the reshaped classes. Census deliverable:
+  `../measurements/dispatch-slot-census-2026-08-18.md`. By-catch live bug (holder setColor) fixed
+  and isolation-verified.
 
 ## §10 Cold-start prompt (paste into a fresh session)
 

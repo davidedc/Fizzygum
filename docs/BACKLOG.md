@@ -518,22 +518,29 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
       (it IS `localDamageBox` before the translate — the sanctioned rename's source, completing it).
       The device-px `sl,st,al,at` stay terse: blit-geometry idiom, documented at use, never seen by
       paint bodies.
-- [ ] ⛔ OWNER-GATED — **the dispatch-slot family (`dataSource`/`dataSourceWidgetForTarget` +
-      `widgetEnv`, and `MenuRowsPanelWdgt`'s `@target`→`dataSource` / `@environment`→`widgetEnv`
-      CROSSOVER) is a PROTOCOL question, not a rename.** The evidence of the disease is maximal —
-      the identical ⚠ SHAPE gloss copy-pasted THREE times in `SliderWdgt`, the CROSSOVER warning at
-      `createMenuItem`, six live bugs in the menu-action-wiring arc all reducible to "nothing at the
-      call site says what the slots hold" — but the slots have NO stable meaning to name: with a
-      panel environment slot 1 = the panel's target and slot 2 = the environment; without one
-      slot 1 = the item itself and slot 2 = the panel's target (the CONDITIONAL fact,
-      menu-subject-routing arc). The honest names come only after stabilising the slot semantics
-      (e.g. a fixed subject/context pair) — an arc with ~40 src + ~25 tests sites, adjacent to the
-      falsified-residue minefield above. ⚠ `widgetOpeningThePopUp` stays ⛔ FALSIFIED — verified
-      NOT re-filed here. ⇒ **PLAN AUTHORED 2026-08-18: `plans/dispatch-slot-protocol-plan.md`** —
-      spike-first (Phase 0 = the reader census: what every reachable verb's first two parameters
-      DECLARE and READ, crossed against the two fill configurations and the wire family), then a
-      hard STOP for the owner's design decision (§4 options O1/O2/O4; O3 rename-only is
-      pre-falsified). Execution belongs to a fresh session via the plan's §10 cold-start prompt.
+- [x] **✅ EXECUTED IN FULL 2026-08-18 — the dispatch-slot protocol is FIXED; the conditionality
+      is dead.** Phase 0 (the reader census, `measurements/dispatch-slot-census-2026-08-18.md`:
+      631 reachable pairs → 208 methods, bucket (e)=0) found the decisive structure nobody had
+      measured: the two fill configurations partitioned EXACTLY by delivery family (menu rows
+      594/594 env-absent, prompt Oks 37/37 env-present, zero shared verbs, statically total — only
+      the three prompt classes ever wrote `environment`), and 83% of verbs declared no parameters.
+      The owner chose O4 + value-delivery convergence, executed same-day
+      (`archive/dispatch-slot-protocol-plan.md`): prompts deliver the VALUE
+      (`PromptWdgt.deliverValue` → `@target[@callback] value`; per-subclass `_promptValue`), every
+      pin setter takes ONE argument (33 giver-shaped headers + the `ignored`-named overrides
+      collapsed; the ⚠ SHAPE convention and its three-leg interrogation are deleted;
+      `widget-authoring-guidelines.md` §11 rewritten), and `ButtonWdgt.trigger` passes ITSELF as
+      slot 1 with slot 2 the panel-filled `@subjectOfAction` — the crossover, the
+      `if !@environment?` fork, and `environment` on `MenuWdgt`/`MenuRowsPanelWdgt` are deleted.
+      Zero reachable verbs migrated (the census proved their readings already matched). By-catch:
+      a LIVE user-facing bug (the colour prompt on `WidgetHolderWithCaptionWdgt` set `icon.color`
+      to the widget itself — confirmed in isolation, fixed), and the header lib's
+      space-before-colon blind spot (13 methods invisible to every gate; normalized + guard
+      extended). Phase 3: menusweep now fails on a prompt callback declaring >1 parameter
+      (PROMPT_CALLBACK_ARITY, proven on a planted violation). `argumentToAction1/2` STAY — the
+      census's collapse idea fell to two real two-payload consumers behind the choose-target UI.
+      ⚠ `widgetOpeningThePopUp` stays ⛔ FALSIFIED and is untouched — under the fixed protocol its
+      name is simply TRUE at every dispatch.
 - [x] **✅ EXECUTED 2026-08-18 (owner-directed, same day): the three-word repaint-region split is
       UNIFIED — pixels say "damage", layout says "dirty".** Measurement first overturned this
       item's own "cleanly layered" framing: the strata are ERA-correlated, not
