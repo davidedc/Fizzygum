@@ -30,18 +30,11 @@ class GenericObjectIconWdgt extends GenericCompositeIconWdgt
 
     squareDim = Math.min width, height
 
-     # p0 is the origin, the origin being in the top-left corner
-    p0 = @topLeft()
-
-    # now the origin is in the middle of the widget
-    centerPoint = p0.add new Point width/2, height/2
-    p0 = centerPoint
-
-    # now the origin is in the top left corner of the
-    # square centered in the widget
-    p0 = p0.subtract new Point squareDim/2, squareDim/2
+    centerPoint = @topLeft().add new Point width/2, height/2
+    # the top-left corner of the squareDim-sized square centered in the widget
+    inscribedSquareTopLeft = centerPoint.subtract new Point squareDim/2, squareDim/2
 
     @icon._applyBounds ((centerPoint.subtract new Point squareDim*25/100, squareDim*25/100).round()), (new Point squareDim*50/100, squareDim*50/100).round()
 
 
-    @objectIcon._applyBounds p0, (new Point squareDim, squareDim).round()
+    @objectIcon._applyBounds inscribedSquareTopLeft, (new Point squareDim, squareDim).round()

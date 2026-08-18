@@ -200,18 +200,16 @@ class StretchableWidgetContainerWdgt extends Widget
       widthBasedOnHeight = height * @ratio
       heightBasedOnWidth = width / @ratio
 
-       # p0 is the origin, the origin being in the top-left corner
-      p0 = @topLeft()
-
+      # letterbox the ratio-box in my frame: center it on the axis with spare room
       if widthBasedOnHeight <= width
-        p0 = p0.add new Point (width - widthBasedOnHeight) / 2 , 0
+        contentsTopLeft = @topLeft().add new Point (width - widthBasedOnHeight) / 2 , 0
         newExtent = new Point widthBasedOnHeight, height
 
       else if heightBasedOnWidth <= height
-        p0 = p0.add new Point 0 , (height - heightBasedOnWidth) / 2
+        contentsTopLeft = @topLeft().add new Point 0 , (height - heightBasedOnWidth) / 2
         newExtent = new Point width, heightBasedOnWidth
 
-      newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
+      newBounds = (new Rectangle contentsTopLeft).setBoundsWidthAndHeight newExtent
       @contents._reLayout newBounds.round()
 
     else

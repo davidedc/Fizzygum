@@ -544,11 +544,22 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
       `architecture/appearance-paint-convention.md` § "The vocabulary law". ⚠ The one
       distinction worth a boundary — pixels vs layout — existed before only by accident; the
       unification is what makes "dirty" mean exactly one thing.
-- [ ] Take-it-or-leave-it: **`p0` ×4 files, each glossed "p0 is the origin"** (`SimpleDropletAppearance`,
-      `LayoutElementAdderOrDropletWdgt`, `StretchableWidgetContainerWdgt`, `GenericObjectIconWdgt`).
-      Weak: `p0` MUTATES through the narration ("now the origin is…"), so `origin` would be wrong
-      half the time too; the honest name is a construction-cursor name (`anchor`) with the
-      narration kept.
+- [x] **✅ EXECUTED 2026-08-18 (owner-directed): the `p0` idiom is GONE — every block became one
+      well-named expression.** The filing's "×4" was an UNDERCOUNT: the detector only saw blocks
+      carrying the literal "p0 is the origin" gloss; the idiom lived in TEN blocks across NINE
+      files (`SimpleDropletAppearance`, `LayoutElementAdderOrDropletWdgt` ×2 — the arrow block
+      continued the cursor — `StretchableWidgetContainerWdgt`, `GenericObjectIconWdgt`,
+      `WidgetHolderWithCaptionWdgt`, `HandleAppearance` ×2, `LayoutSpacerWdgt`,
+      `GenericShortcutIconWdgt`, `FanoutWdgt`). Shape: mutating cursor-walks collapse to a single
+      arithmetically-identical expression named for where the point IS
+      (`inscribedSquareLeftMiddle`, `inscribedSquareLeftAtThirdHeight`, `inscribedSquareTopLeft`,
+      `contentsTopLeft`, `leftEdgeMiddle`, `bottomMiddle`, `squareTopLeft`, `arrowRowLeft`);
+      no-mutation aliases rename or inline. ⚠ The refactor caught a LYING narration comment:
+      `LayoutElementAdderOrDropletWdgt`'s second hop claimed "now the origin is in the middle
+      height" while the arithmetic put it at one-THIRD height — copy-paste residue from the
+      droplet sibling, exactly the failure mode a narrated cursor invites. The tests-repo macro
+      `p0..p3` corner quartet (`macroGeometryApiTwoVocabularies`) is a fine name in context and
+      stays.
 - Declined, with reasons (do not re-file): `island`/`action`/`pin`/`gotoSlot`/`enableDrops`/
   `footprint` — their glosses are role-explanations or gate-sanctions on good vocabulary;
   `TreeNode.atIndex` — the comment IS the record of a deliberate rename (R4); icon-geometry terse

@@ -28,9 +28,9 @@ class GenericShortcutIconWdgt extends GenericCompositeIconWdgt
     # reference-arrow overlay sits in its bottom-left corner
     square = @boundingBox().largestCenteredSquare()
     squareDim = square.width()
-    p0 = square.topLeft()
+    squareTopLeft = square.topLeft()
 
-    @icon._applyBounds p0.round(), (new Point squareDim, squareDim).round()
+    @icon._applyBounds squareTopLeft.round(), (new Point squareDim, squareDim).round()
 
 
-    @referenceArrowIcon._applyBounds ((p0.add new Point 0, squareDim*7/10).round()), (new Point squareDim*3/10, squareDim*3/10).round()
+    @referenceArrowIcon._applyBounds ((squareTopLeft.add new Point 0, squareDim*7/10).round()), (new Point squareDim*3/10, squareDim*3/10).round()

@@ -23,21 +23,14 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
 
     squareDim = Math.min width/2, height/2
 
-    # p0 is the origin, the origin being in the bottom-left corner
-    p0 = @bottomLeft().subtract(@position())
+    # the plus sign's anchor: one third down the widget (height - ceil 2/3 height), on the
+    # left edge of the squareDim-wide square centered in the widget (widget-local coords)
+    inscribedSquareLeftAtThirdHeight = new Point (width - squareDim)/2, height - Math.ceil 2 * height/3
 
-    # now the origin if on the left edge, in the top 2/3 of the widget
-    p0 = p0.subtract new Point 0, Math.ceil 2 * height/3
-    
-    # now the origin is in the middle height of the widget,
-    # on the left edge of the square inscribed in the widget
-    p0 = p0.add new Point (width -  squareDim)/2, 0
-
-    
-    plusSignLeft = p0.add new Point Math.ceil(squareDim/15), 0
-    plusSignRight = p0.add new Point squareDim - Math.ceil(squareDim/15), 0
-    plusSignTop = p0.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
-    plusSignBottom = p0.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
+    plusSignLeft = inscribedSquareLeftAtThirdHeight.add new Point Math.ceil(squareDim/15), 0
+    plusSignRight = inscribedSquareLeftAtThirdHeight.add new Point squareDim - Math.ceil(squareDim/15), 0
+    plusSignTop = inscribedSquareLeftAtThirdHeight.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
+    plusSignBottom = inscribedSquareLeftAtThirdHeight.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
 
     context.beginPath()
     context.moveTo 0.5 + plusSignLeft.x, 0.5 + plusSignLeft.y
@@ -45,12 +38,11 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
     context.moveTo 0.5 + plusSignTop.x, 0.5 + plusSignTop.y
     context.lineTo 0.5 + plusSignBottom.x, 0.5 + plusSignBottom.y
 
-    # now the new origin is in the lower part of the widget, so
-    # we can put an arrow there.
-    p0 = p0.add new Point 0, Math.ceil 1*height/3
+    # the arrow sits one third of the widget height below the plus sign, on the same left edge
+    arrowRowLeft = inscribedSquareLeftAtThirdHeight.add new Point 0, Math.ceil 1*height/3
     arrowFlapSize = Math.ceil squareDim/8
-    arrowSignLeft = p0.add new Point arrowFlapSize, 0
-    arrowSignRight = p0.add new Point squareDim - arrowFlapSize, 0
+    arrowSignLeft = arrowRowLeft.add new Point arrowFlapSize, 0
+    arrowSignRight = arrowRowLeft.add new Point squareDim - arrowFlapSize, 0
     arrowUp = arrowSignRight.add new Point -arrowFlapSize, -arrowFlapSize
     arrowDown = arrowSignRight.add new Point -arrowFlapSize, arrowFlapSize
     context.moveTo 0.5 + arrowSignLeft.x, 0.5 + arrowSignLeft.y

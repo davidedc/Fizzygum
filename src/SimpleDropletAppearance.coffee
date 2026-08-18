@@ -18,21 +18,14 @@ class SimpleDropletAppearance extends RectangularAppearance
 
     squareDim = Math.min width/2, height/2
 
-    # p0 is the origin, the origin being in the bottom-left corner (widget-local)
-    p0 = new Point 0, height
+    # the plus sign's anchor: mid-height on the left edge of the squareDim-wide
+    # square centered in the widget (widget-local coords)
+    inscribedSquareLeftMiddle = new Point (width - squareDim)/2, height - Math.ceil height/2
 
-    # now the origin if on the left edge, in the middle height of the widget
-    p0 = p0.subtract new Point 0, Math.ceil height/2
-
-    # now the origin is in the middle height of the widget,
-    # on the left edge of the square inscribed in the widget
-    p0 = p0.add new Point (width -  squareDim)/2, 0
-
-
-    plusSignLeft = p0.add new Point Math.ceil(squareDim/15), 0
-    plusSignRight = p0.add new Point squareDim - Math.ceil(squareDim/15), 0
-    plusSignTop = p0.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
-    plusSignBottom = p0.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
+    plusSignLeft = inscribedSquareLeftMiddle.add new Point Math.ceil(squareDim/15), 0
+    plusSignRight = inscribedSquareLeftMiddle.add new Point squareDim - Math.ceil(squareDim/15), 0
+    plusSignTop = inscribedSquareLeftMiddle.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
+    plusSignBottom = inscribedSquareLeftMiddle.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
 
     color = Color.WHITE
 

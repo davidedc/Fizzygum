@@ -41,12 +41,12 @@ class HandleAppearance extends Appearance
 
     # horizontal arrow
     if @widget.type is "resizeHorizontalHandle" or @widget.type is "moveHandle"
-      p0 = @widget.bottomLeft().subtract(@widget.position())
-      p0 = p0.subtract new Point 0, Math.ceil(@widget.height()/2)
+      # mid-height on my left edge (widget-local)
+      leftEdgeMiddle = new Point 0, @widget.height() - Math.ceil(@widget.height()/2)
 
-      leftArrowPoint = p0.add new Point Math.ceil(@widget.width()/15), 0
+      leftArrowPoint = leftEdgeMiddle.add new Point Math.ceil(@widget.width()/15), 0
 
-      rightArrowPoint = p0.add new Point @widget.width() - Math.ceil(@widget.width()/14), 0
+      rightArrowPoint = leftEdgeMiddle.add new Point @widget.width() - Math.ceil(@widget.width()/14), 0
       arrowPieceLeftUp = new Point Math.ceil(@widget.width()/5),-Math.ceil(@widget.height()/5)
       arrowPieceLeftDown = new Point Math.ceil(@widget.width()/5),Math.ceil(@widget.height()/5)
       arrowPieceRightUp = new Point -Math.ceil(@widget.width()/5),-Math.ceil(@widget.height()/5)
@@ -55,11 +55,11 @@ class HandleAppearance extends Appearance
 
     # vertical arrow
     if @widget.type is "resizeVerticalHandle" or @widget.type is "moveHandle"
-      p0 = @widget.bottomCenter().subtract @widget.position()
+      bottomMiddle = @widget.bottomCenter().subtract @widget.position()
 
-      leftArrowPoint = p0.add new Point 0, -Math.ceil(@widget.height()/14)
+      leftArrowPoint = bottomMiddle.add new Point 0, -Math.ceil(@widget.height()/14)
 
-      rightArrowPoint = p0.add new Point 0, -@widget.height() + Math.ceil(@widget.height()/15)
+      rightArrowPoint = bottomMiddle.add new Point 0, -@widget.height() + Math.ceil(@widget.height()/15)
       arrowPieceLeftUp = new Point -Math.ceil(@widget.width()/5), -Math.ceil(@widget.height()/5)
       arrowPieceLeftDown = new Point Math.ceil(@widget.width()/5), -Math.ceil(@widget.height()/5)
       arrowPieceRightUp = new Point -Math.ceil(@widget.width()/5), Math.ceil(@widget.height()/5)

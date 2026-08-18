@@ -110,7 +110,6 @@ class WidgetHolderWithCaptionWdgt extends Widget
     labelBand = Math.min height, @_labelBandHeight()
     iconBand = height - labelBand
 
-    p0 = @topLeft()
-    @icon._applyBounds p0, (new Point width, iconBand).round()
-    @label._applyBounds (p0.add new Point 0, iconBand), (new Point width, labelBand).round()
+    @icon._applyBounds @topLeft(), (new Point width, iconBand).round()
+    @label._applyBounds (@topLeft().add new Point 0, iconBand), (new Point width, labelBand).round()
 

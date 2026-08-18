@@ -61,7 +61,7 @@ class FanoutWdgt extends Widget
     # four pins sit at its edge midpoints
     square = @boundingBox().largestCenteredSquare()
     squareDim = square.width()
-    p0 = square.topLeft()
+    squareTopLeft = square.topLeft()
 
     pinSize = (new Point 22 * squareDim/100, 22*squareDim/100).round()
 
@@ -70,8 +70,8 @@ class FanoutWdgt extends Widget
     @pinLeft._applyExtent pinSize
     @pinRight._applyExtent pinSize
 
-    @pinUp._applyMoveTo (p0.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
-    @pinDown._applyMoveTo (p0.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
-    @pinLeft._applyMoveTo (p0.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
-    @pinRight._applyMoveTo (p0.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
+    @pinUp._applyMoveTo (squareTopLeft.add new Point 39 * squareDim/100, 1 * squareDim/100).round()
+    @pinDown._applyMoveTo (squareTopLeft.add new Point 39 * squareDim/100, 77 * squareDim/100).round()
+    @pinLeft._applyMoveTo (squareTopLeft.add new Point 1 * squareDim/100, 39 * squareDim/100).round()
+    @pinRight._applyMoveTo (squareTopLeft.add new Point 77 * squareDim/100, 39 * squareDim/100).round()
 

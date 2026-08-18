@@ -55,12 +55,12 @@ class LayoutSpacerWdgt extends LayoutChromeWdgt
     context.stroke()
 
   drawReplacerWidget: (context) ->
-    p0 = @bottomLeft().subtract @position()
-    p0 = p0.subtract new Point 0, Math.ceil @height()/2
-    
-    leftArrowPoint = p0.add new Point Math.ceil(@width()/15), 0
+    # mid-height on my left edge (widget-local)
+    leftEdgeMiddle = new Point 0, @height() - Math.ceil @height()/2
 
-    rightArrowPoint = p0.add new Point @width() - Math.ceil(@width()/14), 0
+    leftArrowPoint = leftEdgeMiddle.add new Point Math.ceil(@width()/15), 0
+
+    rightArrowPoint = leftEdgeMiddle.add new Point @width() - Math.ceil(@width()/14), 0
     arrowPieceLeftUp = new Point Math.ceil(@width()/5), -Math.ceil(@height()/5)
     arrowPieceLeftDown = new Point Math.ceil(@width()/5), Math.ceil(@height()/5)
     arrowPieceRightUp = new Point -Math.ceil(@width()/5), -Math.ceil(@height()/5)
