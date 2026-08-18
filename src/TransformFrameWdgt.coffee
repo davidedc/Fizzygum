@@ -79,8 +79,9 @@ class TransformFrameWdgt extends PanelWdgt
     # reaches the frame — the sole-content sugar-figure case — it continues up the parent
     # chain past it, like any other non-accepting widget).
     @_acceptsDrops = false
-    # The island is invisible PLUMBING and never claims a pointer hit itself (isTransparentAt
-    # true + noticesTransparentClick false); its CONTENT provides the clickable surface. See
+    # The island is invisible PLUMBING and never claims a pointer hit itself — i.e.
+    # catchesPointerAt is false everywhere on me; its CONTENT provides the clickable
+    # surface. The two members below are how that answer is composed. See
     # docs/architecture/transforms.md §7.
     @noticesTransparentClick = false
     if contentWidget?

@@ -6,13 +6,14 @@
 # they are not an editing surface, not a drop target, not draggable out, and — the one that
 # is easy to miss — not a HIT TARGET.
 #
-# ⚠ `alpha = 0` is about PAINTING, not hit-testing. An appearance-less widget is opaque by
-# an explicit `? false` (Widget.isTransparentAt), and a PanelWdgt is worse than appearance-
-# less: its RectangularAppearance answers OPAQUE regardless of alpha. So a panel spanning a
-# pop-up's whole rect catches every click that ought to fall THROUGH the pop-up's rounded
-# corners to whatever is behind — which is exactly what MenuWdgt.isTransparentAt exists to
-# prevent, and whose absence that class's own comment records: "a submenu popped over a
-# parent menu stopped the parent's item from staying hover-highlighted".
+# ⚠ `alpha = 0` is about PAINTING, not hit-testing. The question the pointer puts is
+# `catchesPointerAt`; the members below are how I answer it. An appearance-less widget is
+# opaque by an explicit `? false` (Widget.isTransparentAt), and a PanelWdgt is worse than
+# appearance-less: its RectangularAppearance answers OPAQUE regardless of alpha. So a panel
+# spanning a pop-up's whole rect catches every click that ought to fall THROUGH the pop-up's
+# rounded corners to whatever is behind — which is exactly what MenuWdgt.isTransparentAt
+# exists to prevent, and whose absence that class's own comment records: "a submenu popped
+# over a parent menu stopped the parent's item from staying hover-highlighted".
 
 class PopUpRowsPaneWdgt extends PanelWdgt
 

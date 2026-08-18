@@ -308,9 +308,20 @@ delegation to `@appearance`, purely to un-shadow the mixin's own member — a cl
 out-ranks a mixin's. ⚠ Anything the live half draws INSIDE the buffer's opaque footprint adds no
 coverage, so skip it on the shadow pass rather than paying for a silhouette that cannot differ.
 
-**Hit-testing follows the shape.** If the widget's silhouette is the appearance's business, implement
-`isTransparentAt` on the appearance; implement it on the widget only when the answer depends on widget
-state the appearance does not hold.
+**Hit-testing follows the shape — but the question the pointer asks is `catchesPointerAt`.** If the
+widget's silhouette is the appearance's business, implement `isTransparentAt` on the appearance;
+implement it on the widget only when the answer depends on widget state the appearance does not hold.
+`isTransparentAt` is INK COVERAGE — is there nothing of me drawn here — and it is only half the hit
+test. The other half is `noticesTransparentClick`, and `Widget.catchesPointerAt` is the two composed
+into the one thing `ActivePointerWdgt` actually asks: *does a pointer here stop on me?*
+
+⚠ **The two halves are a trap in both directions, so ask the composite and set the halves only to
+answer it.** A widget can paint nothing at all and still catch every click — that is
+`noticesTransparentClick`, and it is why a `StringWdgt` stays clickable between its glyphs (measured:
+97% of a string's box is ink-free). A widget can be fully opaque in `@alpha` terms and catch nothing —
+a menu, whose body is drawn by a child. And ⚠⚠ **`alpha = 0` does not make a widget transparent to the
+pointer**: `RectangularAppearance` answers OPAQUE regardless of alpha, so a panel with `alpha = 0`
+still swallows every click over its rect.
 
 ---
 

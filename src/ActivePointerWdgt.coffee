@@ -105,7 +105,7 @@ class ActivePointerWdgt extends Widget
       m.clippedThroughBounds().containsPoint(mappedPointerPosition) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isInCollapsedSubtree() and
-        (m.noticesTransparentClick or (not m.isTransparentAt(mappedPointerPosition))) and
+        m.catchesPointerAt(mappedPointerPosition) and
         # we exclude the Caret here because
         #  a) it messes up things on double-click as it appears under
         #     the mouse after the first clicks

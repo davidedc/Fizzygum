@@ -440,8 +440,7 @@ class Widget extends TreeNode
       goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
 
-  # Transparent-to-clicks test, consumed ONLY by ActivePointerWdgt.topWdgtUnderPointer
-  # (`noticesTransparentClick or not isTransparentAt(pos)`). The appearance answers
+  # INK COVERAGE: is there nothing of me drawn at this point? The appearance answers
   # for widgets that draw; an appearance-LESS widget is OPAQUE — explicitly (`? false`):
   # most appearance-less widgets are hit-targets that must catch clicks, PROVEN when
   # the opposite default ("appearance-less means transparent") was tried and regressed
@@ -451,6 +450,20 @@ class Widget extends TreeNode
   # behaviour rode an accident — `not undefined === true` at the consumer.
   isTransparentAt: (aPoint) ->
     (@appearance?.isTransparentAt aPoint) ? false
+
+  # THE QUESTION THE POINTER ACTUALLY ASKS: does a pointer at this point stop on me?
+  # It resolves the PAIR (@noticesTransparentClick, @isTransparentAt) into the one thing
+  # the hit test wants, and it exists because that pair is a trap in both directions.
+  #   Reading it: hit-testing is not "am I see-through here". A widget can paint nothing
+  # at all and still catch every click (@noticesTransparentClick, which is how a string
+  # stays clickable between its glyphs — measured 97% ink-free), and a widget can be fully
+  # opaque in @alpha terms and catch nothing (a menu, whose body is drawn by a child).
+  #   Writing it: one behaviour is composed from BOTH members, so stating either alone says
+  # half of what you mean — TransformFrameWdgt's constructor spells that pairing out longhand.
+  # Ask THIS, and set the two only as the way to answer it.
+  catchesPointerAt: (aPoint) ->
+    return true  if @noticesTransparentClick
+    not @isTransparentAt aPoint
 
   # Selection overlay (selection-overlay-unification arc, supersedes the §5.D D-3/D21 world-attached
   # HighlighterWdgt). The editor-focus selection is a per-widget decoration drawn ON TOP of the selected
