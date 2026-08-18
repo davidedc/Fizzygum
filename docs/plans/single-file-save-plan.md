@@ -5,9 +5,10 @@
 teardown-shared-core arc all landed; head at revision `4daded29`+): every §2/§4 fact re-verified
 against current code, corrections woven in place (the partial syncs the arcs themselves made are
 retained). Anchor on quoted **method names** first; line numbers are hints.
-⚠ Cold-executor cautions: `Fizzygum-builds/CLAUDE.md` and the `pre-compiled.js` stub comment are
-STALE (pre-program — they still describe `--homepage`, `_coffeSource` globals, a zip download); do
-not source facts from them. The present-tense build reference is
+⚠ Cold-executor caution: the `pre-compiled.js` stub comment (`auxiliary files/pre-compiled.js`) is
+STALE (pre-program — it still describes a `--homepage` flag and a zip download); the image is now
+harvested headlessly by `../Fizzygum-tests/scripts/generate-pre-compiled-headless.js`. Do not source
+build facts from that comment: the present-tense build reference is
 `docs/architecture/build-and-packaging.md`.
 
 This plan is self-contained: it embeds the load-bearing findings of the 2026-07-10 research pass
@@ -28,7 +29,7 @@ source edits all survive into the next generation).
 | # | Decision | Choice |
 |---|---|---|
 | D1 | Rendering backends in the single file | **Native HTML5-Canvas only.** `[REVISED 2026-07-30 — the original premise dissolved; upgrade owner-sanctioned during the program]` The single file embeds the NATIVE bundle (`fizzygum-boot-native-min.js`, **18,386 B** — boot JS only: SourceVault + parts manifest + globalFunctions + extensions; no SWCanvas 2D engine, no det-trig, no fonts). There is nothing to "hard-disable": `?sw=1` no longer exists anywhere (arc 2 deleted it); the page simply presets `window.FIZZYGUM_USE_SWCANVAS = false` like every native entry page does. The fizzytiles 3D vendor payload (`vendor-parts/fizzytiles-3d.js`, 18,879 B) rides only when that part is embedded. |
-| D2 | Code representation | **Compile-at-boot v1** (source strings + in-browser compiler, exactly like today's dev build; a few seconds behind the spinner). A `--homepage`-style precompiled image inside the single file is a **later option**, not v1. |
+| D2 | Code representation | **Compile-at-boot v1** (source strings + in-browser compiler, exactly like today's dev build; a few seconds behind the spinner). A precompiled image inside the single file (the `homepage` profile's `form: "precompiled"` shape) is a **later option**, not v1. |
 | D3 | Source code in the file | **KEEP the sources.** They are only ~2.5 MB, they are what makes in-system live editing work in the saved artifact, and they are already in memory for free. (Owner had offered to drop them; research showed no need.) |
 | D4 | Where "save as single page" is available | **Every build.** The build embeds the boot-bundle, compiler, helper and per-part vendor-payload texts as wrapped strings (`[REVISED 2026-07-30]` **~235 KB** extra — bundle 18 KB + compiler 209 KB + helpers ~8 KB, +19 KB per 3D-carrying part — §4.4), so the menu item works from the normal dev build too, not just from single-file pages. |
 | D5 | Save mechanism v1 | **Blob + `<a download>`** via the existing `FileSaving.saveStringAsFile` (universal, works over `file://` in all engines, Safari `data:` fallback already implemented). |

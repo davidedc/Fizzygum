@@ -67,7 +67,7 @@ in ~1.5 s, and v4 stays on the same Node toolchain as the rest of the repo (`cof
 
 ## Configuration
 
-Defaults live in [`.jscpd.json`](../.jscpd.json) (repo root); any CLI flag forwarded by the
+Defaults live in [`.jscpd.json`](../../.jscpd.json) (repo root); any CLI flag forwarded by the
 script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
 
 | Key | Value | Why |
@@ -92,10 +92,11 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
 ## Gotchas
 
 1. **jscpd SILENTLY skips files over `maxLines`/`maxSize`** (defaults: 1000 lines / 100 KB).
-   With the defaults that excluded the seven biggest files — `Widget.coffee` (4922 lines!),
-   `WorldWdgt.coffee`, `LCLCodePreprocessor.coffee`, `MacroToolkit.coffee`, `StringWdgt.coffee`,
-   `ActivePointerWdgt.coffee`, `SimpleUSAMapIconAppearance.coffee` — i.e. exactly where
-   duplication hides. `.jscpd.json` raises the caps to 20000 / 2mb; if a source file ever
+   With the defaults, every file over 1000 lines drops out — today `Widget.coffee` (5400+ and
+   still growing!), `WorldWdgt.coffee`, `SimpleUSAMapIconAppearance.coffee`,
+   `LCLCodePreprocessor.coffee`, `StringWdgt.coffee`, `ActivePointerWdgt.coffee`,
+   `FrameWdgt.coffee` and `MacroToolkit.coffee` — i.e. exactly where duplication hides.
+   `.jscpd.json` raises the caps to 20000 / 2mb; if a source file ever
    outgrows those, raise them again. **Coverage audit:** "Files analyzed" in
    `duplication-report/jscpd-report.md` should equal `find src -name '*.coffee' | wc -l`
    minus the handful of stub files shorter than `minLines` (2026-07: 478 analyzed = 484 − 6
@@ -191,7 +192,8 @@ EXACT clones 104 → 45, duplicated lines 3.4% → ~1.4%). The loop:
 is gitignored. The scan reports are disposable (one command away). **`triage-report.md` and
 `llm-triage-prompt.md` are NOT** — they are the campaign's accumulated judgment, and an
 untracked file is one `git clean -fdx` from oblivion. Convention: when a campaign arc closes,
-snapshot the ledger to `docs/done/duplication-triage-<date>.md` and commit it; the LEAVE-ALONE
+snapshot the ledger into `docs/archive/duplication-triage-<date>.md`, stamp it per the archive
+convention (`docs/README.md`) and add its line to `archive/INDEX.md`; the LEAVE-ALONE
 list and case law are what future rounds must not re-litigate.
 
 Baseline history (per-scan totals, for trend context):
@@ -239,7 +241,7 @@ construction and can never be gates (`docs/architecture/lint-and-static-checks.m
 
 Closed-arc snapshot with the full case law (the removability test, the inspector-churn finding, the
 `super`-chaining trap, the four census exclusions, the write-only/enumeration rule):
-[`docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md`](done/duplication-triage-2026-07-15-hierarchy-round4.md).
+[`docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md`](../archive/duplication-triage-2026-07-15-hierarchy-round4.md).
 
 \* pre-fix numbers: structural scans before `fc0aef7c`-era tooling silently excluded the two
 `Inspector*` files (gotcha 5 below), and the first tests scans were ad-hoc CLI runs.

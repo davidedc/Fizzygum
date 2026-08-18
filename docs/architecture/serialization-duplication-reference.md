@@ -11,24 +11,24 @@ Companion: `docs/archive/serialization-deserialization-plan.md` is the phased ex
 owner-resolved decisions, landed-status). This reference is the *durable* description of
 how the machinery works; the plan is the *build order*.
 
-> **Implementation status.** Markers below say what is live vs planned:
-> **[LIVE]** in the build · **[Ph N]** lands in plan Phase N. As of **Phase 5**: the whole
-> widget serialization round-trip is **LIVE and wired** — `Widget.serialize` →
+> **All of it ships.** The widget round-trip is wired end to end — `Widget.serialize` →
 > `Serializer.serializeWidget` (the §3 envelope), `Widget.deserialize` / `world.deserialize`
-> → `Deserializer.deserialize`; duplication lives in the `Duplicator` engine (`src/duplication/`).
-> Restored widgets are byte-identical to the originals (same-page AND cross-session). **File
-> save/load over `file://` (§10) is LIVE** — `Widget.saveToFile` / `FileSaving`, the
-> `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`. **The whole-world
-> snapshot (§11) is LIVE** — `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot`,
+> → `Deserializer.deserialize` — and duplication lives in the `Duplicator` engine
+> (`src/duplication/`); restored widgets are byte-identical to the originals (same-page AND
+> cross-session). So do file save/load over `file://` (§10 — `Widget.saveToFile` / `FileSaving`,
+> the `WorldWdgt` drop handler / `FileLoading`, `*.fzw.json` routed on `kind`), the whole-world
+> snapshot (§11 — `WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot`,
 > `Serializer.serializeWorld`, `WellKnownObjects.resolveApp`, `FileLoading`'s `kind:"world"`
-> branch; pixel-identical desktop round-trip same-page + cross-session at dpr 1/2. **Source-edit
-> capture (§12) is LIVE** — `SourceEditsRegistry` at `world.sourceEditsRegistry`, hooked at
-> `Widget.injectProperty` + `ClassInspectorWdgt.applyPropertyEdit`, embedded in and replayed from
-> the world snapshot. The whole serialization / deserialization / duplication arc is now LIVE.
+> branch; pixel-identical desktop round-trip same-page + cross-session at dpr 1/2), and
+> source-edit capture (§12 — `SourceEditsRegistry` at `world.sourceEditsRegistry`, hooked at
+> `Widget.injectProperty` + `ClassInspectorWdgt.applyPropertyEdit`, embedded in and replayed
+> from the world snapshot). The phase ledger that tracked its construction is history — it
+> lives in the companion plan above, with the decisions it resolved.
 >
-> NB: `buildSystem/build.py` discovers sources via an explicit directory allowlist — any new
-> `src/` subdirectory (like `src/serialization/`) must be added there or its classes never
-> enter the build.
+> NB: every shipping `src/` directory must be claimed by exactly one **part** in
+> `buildSystem/parts.json` (`src/serialization` and `src/duplication` both sit in `core`). A
+> new subdirectory no part claims does not silently vanish — `buildSystem/check-shippable-coverage.js`
+> FAILS the build.
 
 ---
 
@@ -37,7 +37,7 @@ how the machinery works; the plan is the *build order*.
 Fizzygum has two object-graph walkers over the same graph shapes:
 
 - **Duplication — the `Duplicator` engine (`src/duplication/Duplicator.coffee`),
-  [LIVE], load-bearing.** `Widget.fullCopy` → `new Duplicator(allWidgetsInStructure)
+  load-bearing.** `Widget.fullCopy` → `new Duplicator(allWidgetsInStructure)
   .duplicate @`. One engine instance per copy run carries the original→clone identity
   map; it clones a widget subtree into live sibling widgets, and the SystemTest suite
   bakes its exact pixels in. The walk lives in ONE home rather than being spread across
@@ -63,7 +63,7 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 
 ---
 
-## 2. The traversal contract (shared) — **[LIVE]**
+## 2. The traversal contract (shared)
 
 `src/duplication/Duplicator.coffee` walks an object graph cycle-safely:
 
@@ -74,12 +74,18 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 - **`own` enumerable properties only** are walked (`Duplicator._cloneContentInto`). Inherited
   prototype methods/fields are not copied — the shell is created with
   `Object.create(Class.prototype)` so they come from the prototype.
-- A property whose value has a **`rebuildDerivedValue`** method is a *derived* value: it
-  is skipped and later regenerated (only canvas 2D contexts define it — they rebuild from
-  their sibling canvas by naming convention).
+- A property whose value has a **`rebuildDerivedValue`** method is a *derived* value and is
+  skipped by BOTH walkers. Only DUPLICATION regenerates it (`Duplicator._rebuildDerivedValues`
+  asks the ORIGINAL's value to rebuild onto the clone). SERIALIZATION drops it and does not
+  restore it — the field comes back `undefined`, so a derived value a restored widget still
+  needs must be rebuilt in that class's `_afterDeserialization`. Canvas 2D contexts define
+  `rebuildDerivedValue` on their prototype (they rebuild from their sibling canvas by naming
+  convention); a class may also STAMP a no-op one onto a runtime-only object to keep it out of
+  both walks (§5).
 - A property whose value is flagged **`keptByReferenceOnDeepCopy`** is kept by reference
   on duplication. Two kinds of class declare it: world-level shared singletons
-  (`Wallpaper`, `WidgetFactory`, `IconicDesktopSystemWindowedApp`, `DataflowEngine`) —
+  (`Wallpaper`, `WidgetFactory`, `IconicDesktopSystemWindowedApp`, `DataflowEngine`,
+  `PreferencesAndSettings`) —
   which the serializer *independently* encodes as well-known `{"$wk"}` refs (§4, matched
   by identity, not by this flag) — and immutable value classes (`Point`, `Rectangle`,
   `ShadowInfo`, `TransformSpec`, `SheetError`), which serialize as ordinary values
@@ -93,20 +99,20 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 
 The constructor is **never re-run** on a clone/restored shell (`Object.create` of the
 prototype). Classes needing post-construction fixup use hooks (`_reactToBeingCopied` on
-duplication; the new `_afterDeserialization` on restore — [Ph 3]).
+duplication; `_afterDeserialization` on restore).
 
 ---
 
-## 3. Envelope format — **[Ph 2]**
+## 3. Envelope format
 
-The new serializer replaces the JSON-lines-with-comments format with a single versioned
+The serializer replaces the old JSON-lines-with-comments format with a single versioned
 JSON document. One table entry per non-primitive (so sharing/cycles keep working):
 
 ```jsonc
 {
   "format": "fizzygum",
   "formatVersion": 1,
-  "kind": "widget",                  // or "world" (whole-snapshot, [Ph 5])
+  "kind": "widget",                  // or "world" (the whole-world snapshot, §11)
   "savedAt": "…",                    // informational
   "build": "…",                      // build stamp, informational
   "root": 0,                         // index into objects
@@ -124,14 +130,15 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
     { "class": "$Map",    "entries": [ [k, v], … ] },
     { "class": "$Set",    "items": [ … ] }
   ],
-  "world": { … }                     // kind:"world" only ([Ph 5])
+  "world": { … }                     // kind:"world" only (§11)
 }
 ```
 
 - **References are structured values, never in-band strings** — this is what fixes the old
   format's silent corruption of any user string starting with `$`. The three reference
-  forms (§4) are `{"$r":n}`, `{"$wk":key}`, `{"$src":coffee}` (plus `{"$ext":id}` used
-  internally by the world snapshot). A plain JSON object as a *value* is always a table
+  forms (§4) are `{"$r":n}`, `{"$wk":key}`, `{"$src":coffee}` (plus `{"$ext":id}`, the token
+  the tolerant `onExternalPointer:"record"` mode emits — resolvable by unique-id on restore,
+  but no shipped caller selects that mode). A plain JSON object as a *value* is always a table
   slot (`$Object`), so a `props` value is unambiguously one of the reference forms by
   construction; plain user strings need no escaping.
 - **Native types carry `$`-prefixed class tags** (`$Array`/`$Date`/`$Canvas`/`$Image`/
@@ -147,7 +154,7 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
 
 ---
 
-## 4. Reference policy — **[Ph 2 encode] / [Ph 3 resolve]**
+## 4. Reference policy
 
 At serialize time each encountered object is classified, in order:
 
@@ -158,15 +165,17 @@ At serialize time each encountered object is classified, in order:
    (menu action / drop handler / snapshot loader) decides where to attach.
 4. **Anything else** → **`SerializationError`** (§8) carrying the root, the full property
    path to the offending reference, a description of the offender, and remediation hints.
-   An options bag `onExternalPointer: "throw" (default) | "nullify" | "record"` supports
-   tolerant callers; `"record"` emits `{"$ext": id}` for same-world re-linking — used
-   internally by the world snapshot, where a second pass resolves it because *everything*
-   is in-structure.
+   An options bag `onExternalPointer: "throw" (widget default) | "capture" (world default) |
+   "nullify" | "record"` supports tolerant callers. `"capture"` pulls the off-tree widget into
+   the table as its own record — this is what the world snapshot uses (§11), and why a settled
+   snapshot contains no `{"$ext"}` at all. `"record"` emits `{"$ext": id}` for same-world
+   re-linking (resolved by unique-id on restore) and `"nullify"` writes `null`; neither has a
+   shipped caller today.
 
 Function-valued own properties are handled by the function policy (§5), not this
 classification. Transient fields (§5) never reach classification at all.
 
-### 4a. WellKnownObjects — **[LIVE] (registry) / [Ph 3+ consumers]**
+### 4a. WellKnownObjects
 
 `src/serialization/WellKnownObjects.coffee` is a two-way symbolic registry for the
 singletons present in every world: `world`, `hand`, `wallpaper`, `widgetFactory`,
@@ -184,20 +193,23 @@ world) and — crucially — correct for cross-session restore: a key binds to t
 session's singletons, not to a stale map. The per-world singletons are matched by identity
 against the live world in `keyFor`; the `wellKnownKey` marker on the collaborator classes
 (`Wallpaper` → `"wallpaper"`, `WidgetFactory` → `"widgetFactory"`, `DataflowEngine` →
-`"dataflow"`, `IconicDesktopSystemWindowedApp` → `"app:" + @constructor.name`) is the
-general fallback
+`"dataflow"`, `PreferencesAndSettings` → `"preferences"`, `IconicDesktopSystemWindowedApp` →
+`"app:" + @constructor.name`) is the general fallback
 and documents intent (it is the eventual replacement for `keptByReferenceOnDeepCopy`).
-App-singleton resolution (`resolveApp`) is stubbed until the whole-world snapshot phase.
+`WellKnownObjects.resolveApp(className)` completes the `app:` branch: it `new`s the named
+`IconicDesktopSystemWindowedApp` subclass and MEMOIZES one instance per class
+(`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
+window lives on `world[@slot]`, not on the app (§11).
 
 The link is symbolic and reconstructable — it preserves identity, which a bare opaque
 `"$EXTERNAL"` marker cannot.
 
 ---
 
-## 5. Transients, derived values, and functions — **[LIVE] (protocol) / [Ph 2] (consumed)**
+## 5. How a class declares what NOT to serialize
 
-New per-class protocol, additive and inherited (merged up the chain like the codebase's
-other class-body conventions):
+The routine way to keep a field out of a saved file is a class-body declaration, additive and
+inherited (merged up the chain like the codebase's other class-body conventions):
 
 ```coffee
 class Widget extends TreeNode
@@ -208,8 +220,10 @@ class Widget extends TreeNode
   unioning each class's own `@serializationTransients` into one Set of names to skip. A
   subclass ADDS to (never shadows) its ancestors' declarations.
 - **Derived values** keep the existing `rebuildDerivedValue` protocol (canvas 2D
-  contexts): the serializer skips them; the deserializer runs `rebuildDerivedValues` to
-  regenerate them ([Ph 3]).
+  contexts): both walkers SKIP them, and only duplication rebuilds. The deserializer does
+  NOT — its pass-4(b) branch reads a `record.derived` list the serializer has never emitted,
+  so it is dead code. Rebuild what a restored widget needs in that class's
+  `_afterDeserialization`.
   - ⚠ **The two mechanisms do NOT cover each other** (2026-07-08 SW3D-port incident, ~1 h):
     `@serializationTransients` is read by the FILE Serializer ONLY. The in-memory
     **Duplicator** skips a property iff its **VALUE** exposes `rebuildDerivedValue` — a
@@ -219,7 +233,7 @@ class Widget extends TreeNode
     `rebuildDerivedValue` on the runtime-only object itself** (that both skips the copy
     and marks it derived); listing it in `@serializationTransients` as well is correct but
     not sufficient.
-- **Functions** ([Ph 2] policy): for an own function-valued property `foo` —
+- **Functions**: for an own function-valued property `foo` —
   - if a `foo_source` sibling exists (a user-injected method) → serialize `{"$src":
     <source>}` and let `foo_source` ride as a normal string; restore recompiles via the
     existing `injectProperty`/`evaluateString` path.
@@ -228,19 +242,21 @@ class Widget extends TreeNode
     `@step` closures simply stop, which is correct for a settled restore).
   - else → `SerializationError` with the property path (never a silent drop).
 
-**Seed transients (Phase 1, grown as the serializer meets the long tail):**
+**The declarations whose REASON is not obvious from the field name:**
 
 | Class | Transients | Why |
 |---|---|---|
-| `Widget` | `lastTime`; the geometry caches `cachedFullBounds`/`checkFullBoundsCache`, `cachedFullClippedBounds`/`checkFullClippedBoundsCache`, `cachedVisibleBasedOnIsVisibleProperty`/`checkVisibleBasedOnIsVisiblePropertyCache`, `cachedClippedThroughBounds`/`checkClippedThroughBoundsCache`, `cachedClipThrough`/`checkClipThroughCache`, `cachedIsInCollapsedSubtree`/`checkIsInCollapsedSubtreeCache`, `childrenBoundsUpdatedAt` | frame timing + `WorldWdgt.geometryVersion`-keyed derived caches; re-derived on demand after restore |
+| `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the `WorldWdgt.geometryVersion`-keyed geometry caches (`cachedFullBounds`, `cachedFullClippedBounds`, `cachedVisibleBasedOnIsVisibleProperty`, `cachedClippedThroughBounds`, `cachedClipThrough`, `cachedIsInCollapsedSubtree` — each with its `check…Cache` twin — plus `childrenBoundsUpdatedAt`); the `root()` cache `cachedRoot`/`checkRootCache`; the island-buffer source lane `_islandBufferSourceIsland`/`_islandBufferSourceVirtualRect`; the flush-scoped `hasDirtyDescendant` | frame timing + derived caches, all re-derived on demand after restore. ⚠ `cachedRoot` is the one whose absence bit: `root()` itself never reads it stale (it checks `structureVersion`) but the SERIALIZER walks the raw field, so a stale pointer dragged destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `PopUpWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
 
-(Further seeds — `ScrollPanelWdgt.@step`, `RasterImageWdgt` onload bookkeeping,
-`WorldWdgt`'s ~25 transient Sets/queues/caches — are added as Phases 2/5 consume them.)
+The declarations are the inventory — `grep -rn "@serializationTransients" src/` lists all
+eleven classes that carry one, and the table above keeps only the rows a reader could not
+have guessed. `WorldWdgt` deliberately has none: its transient surface is never visited,
+because the world is not a table record (§11).
 
 **Instance-assigned handler functions are BANNED as a state idiom** (2026-07-23): a mode a
 widget can be in must be a serializable FIELD consumed by prototype methods, never a pair
@@ -253,27 +269,28 @@ USER-authored instance methods: it stores the `<name>_source` sibling that seria
 
 ---
 
-## 6. Per-type handlers — **[LIVE] (dup) / [Ph 2] (serialize encoders)**
+## 6. Per-type handlers
 
 Native / special types the walkers special-case (duplication: the `Duplicator`'s
 `_copy*` handlers; serialization: the `$`-tagged record encoders — both recognising
-types through the shared `NativeValueKinds`, which duck-types the canvas/gradient
-kinds so the SWCanvas variants are caught too):
+types through the shared `NativeValueKinds`, which duck-types the canvas kind so the
+SWCanvas variant is caught too; its gradient predicate is duplication-only — see the
+gradient row):
 
-| Type | Serialize record ([Ph 2]) | Notes |
+| Type | Serialize record | Notes |
 |---|---|---|
 | `Array` | `$Array` `items` | element-wise; own table slot; can be shared between properties |
 | `Date` | `$Date` `ms` | the tagged record is what keeps it restorable — a raw `Date` stringifies to a bare ISO string and cannot be deserialized back |
-| `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise ([Ph 3]) |
+| `Image` | `$Image` `src` | async decode on restore → the `whenReady` promise |
 | `HTMLCanvasElement` | `$Canvas` `w`/`h`/`data`(dataURL) | SWCanvas decode is async → `whenReady`; factory yields the SWCanvas variant when `FIZZYGUM_USE_SWCANVAS` |
 | `HTMLVideoElement` | `$Video` `src`/`autoplay`/`currentTime` | tagged on its own record; mis-tagging it as a canvas crashes the restore |
-| `CanvasGradient` | `undefined` (both modes) | context-bound; consumers rebuild — keep |
+| `CanvasGradient` | *(no encoder)* | DUPLICATION clones it as `undefined` (`Duplicator._copyGradient`, via `NativeValueKinds.isGradientLike` — its one caller) and consumers rebuild. The SERIALIZER has no gradient branch: a gradient in an own property is emitted as an ordinary class record under the native backend, and raises the unrecognized-type `SerializationError` under SWCanvas. Keep gradients out of serialized own properties, or declare the property transient. |
 | plain `{}` / `Map` / `Set` | `$Object` / `$Map` / `$Set` | each has its own encoder; without one the walker throws |
 | `Color` | `Color` `rgba` | restored through `Color.create` (immutable dedupe) |
 
 ---
 
-## 7. Identity across modes — **[LIVE] (dup) / [Ph 2-3] (serialize/restore)**
+## 7. Identity across modes
 
 Per-class static counters (`Widget.instancesCounter`, `Widget.lastBuiltInstanceNumericID`)
 and per-class `instances` Sets; `assignUniqueID` stamps `instanceNumericID`; IDs are
@@ -282,15 +299,15 @@ session-local (creation-order dependent, reset by `WorldWdgt.fullDestroyChildren
 - **Duplication / `kind:"widget"` restore** assign **fresh** IDs (a restored widget coexists
   with live widgets — collisions must be impossible). A saved `#n` differing from the
   restored `#n` is accepted (owner decision, plan §8.5).
-- **The new serializer is side-effect-free** — it builds records directly, creating no
+- **The serializer is side-effect-free** — it builds records directly, creating no
   shells, so it advances no counters and leaks no phantom `instances` entries; output is
   deterministic. `iid` in each record carries the original's ID.
-- **`kind:"world"` restore** ([Ph 5]) restores `iid` and the per-class counters into a
+- **`kind:"world"` restore** restores `iid` and the per-class counters into a
   freshly-reset (empty) ID space.
 
 ---
 
-## 8. Errors & UX — **[LIVE] (type) / [Ph 2+] (raised)**
+## 8. Errors & UX
 
 `src/serialization/SerializationError.coffee` — a plain class (not `extends Error`, to
 avoid a phantom boot dependency) carrying `name`, human `message`, and the structured
@@ -301,34 +318,36 @@ message; headless rigs assert on the structured fields. The old `debugger`/`cons
 
 ---
 
-## 9. Deserializer — **[Ph 3]**
+## 9. Deserializer
 
 `src/serialization/Deserializer.coffee`, five passes: (1) instantiate shells /
 native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$src`/`$ext` at any
 nesting depth; (3) identity & registration (`registerThisInstance`); (4) fixups
-(`rebuildDerivedValues`, compile `$src`, decode async assets into one `whenReady` promise,
+(compile `$src`, decode async assets into one `whenReady` promise,
 re-register `memberships`, per-class `_afterDeserialization` hook); (5) deliver a detached
 `{ widget, whenReady }` for the caller to attach. `Widget.deserialize` /
 `world.deserialize` become thin delegates.
 
 ---
 
-## 10. File save/load over `file://` — **[LIVE]**
+## 10. File save/load over `file://`
 
 `FileSaving.coffee` (`Blob` → `URL.createObjectURL` → synthetic `<a download>` → revoke;
 Safari `data:` fallback) and `FileLoading.coffee` (drag-drop via `WorldWdgt`'s drop
 handler + a hidden `<input type=file>`; envelope-sniff router on the `kind` field). Single
 extension `*.fzw.json` for both widget and world files (owner decision, plan §8.3);
-routing is on `kind`, never the filename. **Ships in all builds incl. `--homepage`** — no
-homepage-strip markers (it is a product feature). `file://` capability map: works — Blob
+routing is on `kind`, never the filename. **Ships in every profile** — `src/serialization` is
+`core`-part code and file save/load is a product feature (`buildSystem/parts.json`).
+`file://` capability map: works — Blob
 download, `input type=file`, drag-drop + FileReader, `data:` URLs, script-tag injection;
 does NOT work — `fetch`/XHR of local files.
 
 ---
 
-## 11. Whole-world snapshot (`kind:"world"`) — **[LIVE]**
+## 11. Whole-world snapshot (`kind:"world"`)
 
-`WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot` (both PRODUCT — ship in `--homepage`).
+`WorldWdgt.serializeWorldSnapshot` / `loadWorldSnapshot` (both PRODUCT — `core`-part code, so
+every profile ships them).
 Save downloads `world.fzw.json` ("save world snapshot…" world menu); load routes through the
 `kind` field (the drop handler / "open from file…").
 
@@ -371,16 +390,30 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 **Restore** — `loadWorldSnapshot(envelope, {skipConfirm})` — a PUBLIC orchestrator (like
 `resetWorld`), so its `setColor`/`_settleLayoutsAfter` calls are the sanctioned public path:
 1. Confirm (a file/menu load warns it replaces the desktop AND can run code — §4.12; the rig /
-   a macro pass `skipConfirm`).
+   a macro pass `skipConfirm`), then **pre-load what the file needs, before touching anything** —
+   two bail-out-then-re-enter guards, in that order. Their POSITION is the whole correctness
+   argument: step 2 destroys the desktop, so anything that fails to load must leave the user's
+   world intact, and they sit after the confirm so the user is asked exactly once (the re-entry
+   passes `skipConfirm` for that reason and no other).
+   - **Lazy parts.** `Serializer.classNamesIn` reads the envelope (a pure read) for record classes
+     and `app:` well-known keys; any class living in a LAZY part this page has never loaded is
+     fetched via `world.parts.ensureAllLoaded`, and the loader then RE-ENTERS itself.
+   - **The META-SYSTEM, same shape.** On a `sources: "lazy"` build whose file carries class- or
+     mixin-scope source edits, `ensureReflectiveLayerLoaded()` then re-enter. A build that can
+     NEVER load it (`sources: "none"`) does not come through here at all — it takes the refusal
+     instead, telling the user once, before the world is rebuilt, how many class-level edits it
+     cannot re-apply (`SourceEditsRegistry.unreplayableSourceEditsCount` — §12).
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
-   the homepage-stripped test teardown (`_resetWorldNoSettle`) both call. Its contract: after
+   the TEST-REPO teardown (`_resetWorldNoSettle`, in
+   `Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee`, which travels with
+   the `harness` part) both call. Its contract: after
    `fullDestroyChildren`, the world holds no reference to anything just destroyed, and no
    bookkeeping that assumed it still exists — the tree, `binWdgt`/`shelfWdgt`, the app slots +
    `simpleEditorTemplates`, the highlight tracking structures, `errorConsole` /
    `lastEditedText` / `_editorSelectedWidget`, the tooltip / pop-up / clicked-hierarchy / handle /
-   scroll-momentum / paint-error collections, the `trackChanges` stack, and the one-shot
-   `infoDoc*` flags. Restoring what the world should LOOK like afterwards is the CALLER's job,
-   which is what steps 3-8 below are. `fullDestroyChildren` also zeroes every per-class
+   scroll-momentum / paint-error collections, the `_damageSuppressionDepth` counter, and the
+   one-shot `infoDoc*` flags. Restoring what the world should LOOK like afterwards is the
+   CALLER's job, which is what steps 3-5 below are. `fullDestroyChildren` also zeroes every per-class
    `lastBuiltInstanceNumericID`, giving the clean id space the restored iids need.
    ⚠ The `infoDoc*` clear is load-bearing for step 4: that restore is **additive only**, so a flag
    the live world has and the file lacks can only be removed here. The rig gate is
@@ -418,10 +451,10 @@ wallpaper): `serialization-roundtrip-headless.js`'s world leg.
 
 ---
 
-## 12. Source-edit capture — **[LIVE]**
+## 12. Source-edit capture
 
 `SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in the WorldWdgt
-ctor; a PRODUCT collaborator — ships in `--homepage`). It logs in-world SOURCE edits so a
+ctor; a PRODUCT collaborator in the `core` part, so every profile ships it). It logs in-world SOURCE edits so a
 whole-world snapshot can carry and replay them. Record: `{scope, className|mixinName,
 uniqueID?, propertyName, source}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
 
@@ -432,7 +465,7 @@ ones):
   ALSO ride serialization on their own: the widget carries a `<name>_source` string →
   `{"$src"}` → re-injected on restore (§5). The registry adds auditability.
 - **class** — `ClassInspectorWdgt.applyPropertyEdit` records `recordClassEdit(prototype, name,
-  txt)` (its `@target` is the class prototype — `new ClassInspectorWdgt window[className].prototype`)
+  txt)` (its `@inspectedObject` is the class prototype — `new ClassInspectorWdgt window[className].prototype`)
   for EVERY member kind, methods and fields alike (both apply via `Class.applyMemberEdit`, which
   keeps the `<name>_source` sibling for both). This is the ESSENTIAL case: a prototype edit
   mutates the live class but leaves no other serializable trace (§2.7).
@@ -452,8 +485,14 @@ ones):
 BEFORE deserialization** (`replayMixinEdits` then `replayClassEdits` — mixin first, the
 boot-order analogy: `augmentWith` runs before class-body assignments, so a class-scope edit
 of the same member keeps winning), so a shell (`Object.create(prototype)`) already sees the
-edited methods; an edit that no longer compiles is logged, not fatal. Instance-scope edits
-ride the normal `{"$src"}` path on their own widget. The rebuilt registry is installed AFTER deserialize (so the
+edited methods; an edit that no longer compiles is logged, not fatal. Both replays are gated on
+`SourceEditsRegistry.canReplaySourceEdits()` — class- and mixin-scope replay drives the
+META-SYSTEM (`Class.applyMemberEdit`, `Mixin.allMixines`), and `Class`/`Mixin` arrive only with
+the class SOURCE TEXT. An artifact built `sources: "none"` therefore cannot replay them at all,
+and says so once (`unreplayableSourceEditsCount` → one `inform`) rather than dropping the user's
+class edits silently. Instance-scope edits
+ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
+they need only the compiler every profile ships. The rebuilt registry is installed AFTER deserialize (so the
 `$src` re-injections don't double-log into it). A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session: an `injectProperty` method
 edit and a `ClassInspectorWdgt` prototype edit both survive into a fresh page where the prototype

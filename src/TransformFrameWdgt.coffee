@@ -371,16 +371,16 @@ class TransformFrameWdgt extends PanelWdgt
     @transformSpec = @transformSpec.withAnchor @transformSpec.anchor.add delta if @transformSpec?.anchor? and !delta.isZero()
 
   # §7.5 Bug G (reparent-transparency, PICK-UP NORMALIZATION): re-express a PINNED anchor
-  # (Bug-D anchor-stability, set by a tracked resize) as the equivalent UNDEFINED-anchor similitude before
+  # (Bug-D anchor-stability, set by a tracked resize) as the equivalent ABSENT-anchor similitude before
   # this figure travels across planes. An (anchor A, slot B) similitude renders identically to
   # (anchor undefined, whole figure translated by t = (I − sR)(A − centre)) — the Bug-D compensation algebra,
   # inverted, computed by TransformSpec._nilAnchorEquivalentTranslation (the spec owns its own
   # algebra). Every hand-carry apply-site assumes the pivot IS the slot centre (the 2b-i relative
-  # re-spec, the 4D-1 slot-centre placement, the Bug-F pick re-home): true only for undefined anchors, so the
-  # pick-up seam normalizes once and they all stay in their simple exact math. ORDER MATTERS: undefined the
-  # anchor FIRST — the move-level anchor-ride overrides above would otherwise drag A along with the
-  # compensating translate and void the algebra. Integer rounding of t ⇒ ≤1px, acceptable at a grab
-  # (a new state). No-op for undefined anchors (every un-resized figure) and at identity (anchor is inert).
+  # re-spec, the 4D-1 slot-centre placement, the Bug-F pick re-home): true only for an ABSENT anchor, so the
+  # pick-up seam normalizes once and they all stay in their simple exact math. ORDER MATTERS: CLEAR the
+  # anchor FIRST (`withAnchor undefined`) — the move-level anchor-ride overrides above would otherwise drag
+  # A along with the compensating translate and void the algebra. Integer rounding of t ⇒ ≤1px, acceptable
+  # at a grab (a new state). No-op for an absent anchor (every un-resized figure) and at identity (anchor is inert).
   _normalizePinnedAnchorNoSettle: ->
     return if !@transformSpec?.anchor? or @transformSpec.isIdentity()
     t = @transformSpec._nilAnchorEquivalentTranslation @bounds   # read t while the anchor is still pinned

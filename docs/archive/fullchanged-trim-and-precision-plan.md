@@ -1,3 +1,10 @@
+> **ARCHIVED — CLOSED (2026-08-11).** All six findings executed (P0–P6): four invalidation sites
+> unified onto the shadow-owner walk, two redundant trailing calls deleted, the
+> `bringToForeground` guard fixed, three stale-check oracles swapped, the atlas-warm hammer
+> replaced by surgical cold-glyph attribution, and P6 (the coalescing collector) refused with the
+> measurement on record. Zero reference churn across the arc except P1's own new test.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # `_fullChanged` trim & precision: six findings, executed — the invalidation machinery never needs a hammer
 
 **STATUS: CLOSED 2026-08-11 — ALL SIX FINDINGS EXECUTED (P0–P6).** P1 four sites unified onto the shadow-owner walk (+ plant-proven test, suite 290); P2 two redundant trailing calls deleted; P3 the `bringToForeground` guard (incl. the parentless-world clause); P4 three oracles swapped, one refused with reasons; P5 the atlas-warm hammer replaced by surgical cold-glyph attribution (+ upstream SWCanvas status-swallow fix); P6 collector NOT PURSUED — the mandated opening breakdown falsified the area-GO (hand-window instrument artifact; see the P6 ledger + §5) — and the hand's no-op suppress window deleted (−99.4% of all coalescing windows). Final tree: presuite + instrumented suite + gauntlet 14/14 green (fg fuzz verdict recorded in the P6 ledger), zero reference churn across the whole arc except P1's own new test. Case law: `archive/INDEX.md`; memory note `fullchanged-trim-arc`.

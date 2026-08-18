@@ -1,3 +1,8 @@
+> **ARCHIVED — CLOSED (2026-08-17).** All phases (W0–W10) landed except two owner-gated residuals
+> tracked in `docs/BACKLOG.md`: W6b (idempotence guards) and W7's other half
+> (`representativeIcon`, hand-written for what the desktop can reference).
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Widget-practices convergence — acting on the 2026-08-14 survey
 
 **STATUS — CLOSED 2026-08-17. Archived with two residual items, both listed in `docs/BACKLOG.md`.**

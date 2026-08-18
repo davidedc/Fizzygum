@@ -4,7 +4,8 @@
 instructions. The tooling measures **what reaches the per-frame end-of-cycle layout flush** (the queue
 `world.widgetsThatMaybeChangedLayout` drained once/frame at `WorldWdgt.doOneCycle → recalculateLayouts`), attributes
 each origin to the action that caused it, and rolls it up by action — so you can see which deferred mutations
-*should* self-settle. Background on the engine itself: `end-of-cycle-flush-inventory.md`.
+*should* self-settle. Background on the engine itself: `../archive/end-of-cycle-flush-inventory.md` (archived —
+the survey campaign it documents is complete).
 
 ## Where it lives (committed, reusable)
 
@@ -16,14 +17,15 @@ each origin to the action that caused it, and rolls it up by action — so you c
   boot/interaction boundary at each test transition, so a sharded run (one browser plays many tests) segments + classifies
   exactly like the per-test loop (record TOTALS are identical either way; the cross-check confirmed 10/8/1 byte-for-byte). **Inspector-invisible** (audit state
   in a `WeakMap` off the widgets; a closure tag, not a window global) and **proven pixel-neutral** (the instrumented
-  suite stays 165/165). Isolates the end-of-cycle flush via `!world._inLayoutMutation` at `recalculateLayouts` entry
+  suite still passes in full). Isolates the end-of-cycle flush via `!world._inLayoutMutation` at `recalculateLayouts` entry
   (the two self-settling callers set that flag first; `doOneCycle` doesn't). Distinguishes ORIGIN from climbed
   ancestor via an `invalidateLayout` re-entrancy depth counter.
 - **`audit-one.sh`** — one test headless at dpr1 with the prelude + `LOG_FILE`; emits `PASS/FAIL inst=YES/NO recs=N`.
-- **`run-audit-loop.sh`** — all 165 tests **SHARDED** (`bash run-audit-loop.sh [shards=6]`): the SAME one-browser-per-
+- **`run-audit-loop.sh`** — the whole suite **SHARDED** (`bash run-audit-loop.sh [shards=6]`): the SAME one-browser-per-
   shard model as the suite (`run-all-headless.js`, via its `AUDIT_PRELUDE`/`AUDIT_DIR` hook), so the prelude is injected
-  once per shard and its `LAYOUTAUDIT` stream segmented into the same per-test logs. **~1.5 min** (was ~20 min / 165 cold
-  browser boots). A shard the 8-way cold-boot race drops is recovered per-test (audit-one.sh). Logs to the gitignored
+  once per shard and its `LAYOUTAUDIT` stream segmented into the same per-test logs. **~1.5–2 min**, and it stays there as
+  the suite grows — the per-test path it replaced cost one cold browser boot per test (~20 min), i.e. it scaled linearly.
+  A shard the 8-way cold-boot race drops is recovered per-test (audit-one.sh). Logs to the gitignored
   `scripts/.scratch/audit/`. (`audit-one.sh` is still the per-test path for single-test debugging.)
 - **`aggregate-layout-audit.js`** — parses the logs → `_SUMMARY.{md,json}` (a **by-action** rollup + per-test +
   headline interaction-frame count). Pass the audit dir as arg 1.
@@ -36,13 +38,14 @@ From `Fizzygum-tests/`:
 # (optional) snapshot the current inventory as the BEFORE baseline to diff against:
 node scripts/end-of-cycle-audit/aggregate-layout-audit.js scripts/.scratch/audit/ 2>/dev/null \
   && cp scripts/.scratch/audit/_SUMMARY.json scripts/.scratch/audit/_SUMMARY_baseline.json
-bash scripts/end-of-cycle-audit/run-audit-loop.sh                    # ~1.5 min, SHARDED (6) + per-test recovery
+bash scripts/end-of-cycle-audit/run-audit-loop.sh                    # ~1.5-2 min, SHARDED (6) + per-test recovery
 # (aggregate runs automatically at the end of run-audit-loop.sh; or re-run it standalone:)
 node scripts/end-of-cycle-audit/aggregate-layout-audit.js scripts/.scratch/audit/   # -> _SUMMARY.{md,json}
 ```
 
-**Neutrality check (mandatory):** the aggregate must report `installed OK: 165/165` and the sharded runner `tests: 165
-| failed: 0`. Anything else means the prelude perturbed something — fix before trusting the data.
+**Neutrality check (mandatory):** the aggregate must report `installed OK: <N>/<N>` for every test in the suite, and the
+sharded runner `tests: <N> | failed: 0` for that same N (`fg status` prints the live suite size). Anything else means the
+prelude perturbed something — fix before trusting the data.
 
 **Before→after diff** (paste-ready):
 ```sh
@@ -58,14 +61,19 @@ The origin's `(ctor, spec)` names *which* widget reached end-of-cycle; the **tag
 a newly-suspected method, add it to the prelude's `tagClass(...)` block (section `(d)` of
 `layout-audit-prelude.js`), rebuild, and re-run. Untagged origins fall back to `(ctor, sig)`.
 
-## Reference numbers (the campaign so far)
+## Reference numbers (snapshot: measured 2026-06-23, at a 165-test suite)
+
+These are a historical marker of the campaign's first two steps, not the current inventory — the suite has since
+grown well past the 165 tests they were measured over, which moves both totals. Re-run `run-audit-loop.sh` to
+refresh them against today's suite.
 
 - **Baseline survey: 1244 interaction records** across 69 origin groups, 735 non-empty frames.
 - **After the `Widget.destroy` freefloating-skip + chrome-label self-settle: 564 records (−55%)** — `Widget.destroy`
-  505 → 16. See `end-of-cycle-flush-inventory.md` §5b and `end-of-cycle-self-settle-conversion-plan.md`.
+  505 → 16. See `../archive/end-of-cycle-flush-inventory.md` §5b and
+  `../archive/end-of-cycle-self-settle-conversion-plan.md`.
 
 ## Output / housekeeping
 
 The audit OUTPUT (`*.log`, `_SUMMARY*`, `_progress.log`) goes to `Fizzygum-tests/scripts/.scratch/audit/`, which is
-**gitignored** (throwaway). Only the four tool files under `scripts/end-of-cycle-audit/` are committed. To re-baseline,
+**gitignored** (throwaway). Only the tool files under `scripts/end-of-cycle-audit/` are committed. To re-baseline,
 re-run and `cp _SUMMARY.json _SUMMARY_baseline.json`.

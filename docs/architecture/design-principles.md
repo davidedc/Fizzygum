@@ -76,11 +76,11 @@ through source. This trade-off is accepted, not solved.
 ## Duplication as a first-class power
 
 Any widget, group, or whole application can be duplicated, and the copy is *alive*:
-state, in-group wiring, and ongoing processes come along (the one graph copier,
-`DeepCopierMixin`). Duplication is therefore also the safety valve of liveness: experiment
-aggressively on a copy, keep it if it's better. And since each object or assembly carries its
-own state (see [`widget-citizenship.md`](widget-citizenship.md)), copies don't tread on their
-originals.
+state, in-group wiring, and ongoing processes come along (the one graph copier, the
+`Duplicator` engine, `src/duplication/`). Duplication is therefore also the safety valve of
+liveness: experiment aggressively on a copy, keep it if it's better. And since each object or
+assembly carries its own state (see [`widget-citizenship.md`](widget-citizenship.md)), copies
+don't tread on their originals.
 
 ## Connections over wiring code
 

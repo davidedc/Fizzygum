@@ -51,7 +51,7 @@ manipulate brushes and the canvas widget, not pixels.
 The acid test, sharpened: name three parts of the proposed app, and for each part name
 a *second* app that wants it. Tenori-on → step-clock (also drives slideshows, animation,
 automaton generations), toggle-grid (also a boolean-matrix and pixel-icon editor),
-synth voice (also playable from a keyboard widget, a spreadsheet, a `MouseSensorWdgt`).
+synth voice (also playable from a keyboard widget, a spreadsheet, a bare click/drag surface).
 Doom → camera, BSP renderer, monster AI: zero second customers. No second customers ⇒
 the proposal is a chiselled monolith, against composition-over-chiselling
 ([`design-principles.md`](design-principles.md)).
@@ -194,12 +194,15 @@ The whole system stays understandable and modifiable by one person
 ([`design-principles.md`](design-principles.md)); every admission spends a share of
 that budget, and an estimated line count is the cheapest honest proxy — make the
 estimate part of evaluating the idea, not a discovery after landing it. In-repo
-calibration anchors (source `.coffee` lines):
+calibration anchors (source `.coffee` lines) — illustrative and drifting, because the
+composition-over-chiselling this doc argues for keeps moving code out from under a leaf
+widget while subsystems grow, so re-measure (`find src -iname "<Class>.coffee" | xargs
+wc -l`) rather than quoting a number from here:
 
-- **~50–150 — a trivial citizen**: `BouncerWdgt` (~50), `MouseSensorWdgt` (~50),
-  `PenWdgt` (~150).
-- **~300 — a typical self-contained widget**: `AnalogClockWdgt` (~290),
-  `SliderWdgt` (~340).
+- **~50–150 — a trivial citizen**: `BouncerWdgt` (~50), `PenWdgt` (~85),
+  `AnalogClockWdgt` (~105).
+- **~300 — a typical self-contained widget**: `Example3DPlotWdgt` (~285),
+  `SliderWdgt` (~370).
 - **~10 — an app that is honest composition**: `FizzyPaintApp` (~10 lines — a
   launcher wiring existing citizens). This is what "app" should usually price at.
 - **~600–1800 — a subsystem serving many clients**: the dataflow engine (~600),

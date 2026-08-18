@@ -1,3 +1,9 @@
+> **ARCHIVED — DONE (2026-08-13).** The `nil = undefined` global alias, used in place of
+> `null`/`undefined` at ~2000 sites across both repos, is retired; landed in five commits across
+> `Fizzygum` and `Fizzygum-tests`. Present-tense residue: the undefined-is-the-one-absence-value
+> convention and the `nil-literal`/`null-literal` stinks.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # `nil` global — retirement
 
 **Status: DONE, 2026-08-13.** Landed in five commits across two repos:

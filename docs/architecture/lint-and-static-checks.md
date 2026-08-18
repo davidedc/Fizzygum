@@ -11,7 +11,7 @@ the convergence loop, and the invariant these gates protect, see **`docs/archive
 that built rule [G] and these notes is recorded in **`docs/archive/lint-ratchet-static-checks-plan.md`** (STATUS: EXECUTED),
 which now points *here* for current state and keeps only the execution / rejected-transitive history.
 
-> **Orientation.** Fizzygum ships its ~470 class/mixin sources as escaped TEXT and compiles them *in-browser* at boot
+> **Orientation.** Fizzygum ships its ~490 class/mixin sources as escaped TEXT and compiles them *in-browser* at boot
 > (no module system; every class is a global). The build only runs `coffee` over `src/boot/*`. So a green build had,
 > historically, never checked the *syntax* — let alone the *flow soundness* — of the class files; a fault surfaced only
 > when a human opened the build in a browser. These gates close that gap at build time. They are **pure tooling**
@@ -36,8 +36,8 @@ setters, which schedule nothing. (Depth: `docs/archive/layout-system-architectur
 
 | Runtime throw | Where (grep the symbol; lines drift) | Fires when | Static twin |
 |---|---|---|---|
-| One-flush re-entrancy | `Widget.coffee` `_settleLayoutsAfter` (~:813) | a public geometry setter is reached on an *attached* widget while `_inLayoutMutation`/`_recalculatingLayouts` is already true | rules **[A]/[G]** (low-level code must not reach the public/wrapper layer) |
-| `FLOWRULE_VIOLATION` | `Widget.coffee` `_invalidateLayout` (~:3848) | an immediate-mutator corner/convenience (`_apply*`/`_commit*`/`_move*`) schedules layout during a pass | rule **[E]** |
+| One-flush re-entrancy | `Widget.coffee` `_settleLayoutsAfter` (~:928) | a public geometry setter is reached on an *attached* widget while `_inLayoutMutation`/`_recalculatingLayouts` is already true | rules **[A]/[G]** (low-level code must not reach the public/wrapper layer) |
+| `FLOWRULE_VIOLATION` | `Widget.coffee` `_invalidateLayout` (~:4919) | an immediate-mutator corner/convenience (`_apply*`/`_commit*`/`_move*`) schedules layout during a pass | rule **[E]** |
 
 The gates "cannot be spoofed" (they read all shipped source, not a runtime token) but only see what a NAME scanner can;
 the throws see the real dynamic receiver but only on tested paths. They are complementary.
@@ -76,25 +76,38 @@ rule **[I]**. Full convention + rationale: `docs/architecture/layering-naming-co
 
 All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates, `Fizzygum-tests/scripts/`), wired into
 `build_it_please.sh` with the **same shape**: behind `if ! $noSyntaxCheck`, an explicit `$?` check, and a loud
-`exit 1` on failure. **Exit codes:** `0` clean · `1` violation · `2` operational error. **Shared escape hatch:**
+`exit 1` on failure. (Most carry their own `if` block; the seven small ones from trailing-whitespace to part-edges share
+one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.) **Exit codes:** `0` clean · `1` violation
+· `2` operational error. **Shared escape hatch:**
 `--noSyntaxCheck` skips *every* gate (use to bisect a gate bug; never to ship).
 
-| Gate | File | Wired (`build_it_please.sh`) | Enforces | Ratchet mechanism |
+| Gate | File | Wired (`build_it_please.sh` — grep `check-<name>.js`; lines drift) | Enforces | Ratchet mechanism |
 |---|---|---|---|---|
-| syntax | `buildSystem/check-coffee-syntax.js` | ~:260 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
-| **layering** | **`buildSystem/check-layering.js`** | **~:305** | **flow soundness + the naming convention — rules [A]–[O] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
-| **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:324** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged` since 2026-07-22) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (9 sites: the structural add/drop/z-order/shadow dispatchers, the selection-overlay reconciler, FileLoading's async-asset repaint, MenuItemWdgt's own-sub-part label marks) |
-| dead-method | `buildSystem/check-dead-methods.js` | ~:342 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
-| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:363** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
-| stinks | `buildSystem/check-stinks.js` | ~:382 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
-| thin-wrap | `buildSystem/check-thin-wraps.js` | ~:400 | a public method owning a `_<name>NoSettle` twin is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
-| **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:455** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/`@__add`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist; currently ZERO — the 4 menu/slider-family `@__add` ctors were converted 2026-07-12, `docs/archive/menu-slider-ctor-conversion-plan.md`) |
-| **call-separation** | **`buildSystem/check-call-separation.js`** | **~:477** | **rules [S]/[U]: [S] a private method must not `@`-self-call a public COMMAND (settling/effectful callee; queries + `changed`/`fullChanged` stay free); [U] a public method referenced ONLY by `@`-self calls is not external API and must be `_`-tier. Measurement engine: `census-public-private-calls.js`. [U] self-skips without the sibling tests repo** | inline count baselines (`BASELINE_S_*`/`BASELINE_U_*`, the stinks idiom); per-caller `# public-call-sanctioned: <why>` for [S]; `public-api-allowlist.txt` for [U] (deliberate end-user inspector/scripting API) |
-| relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:496 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake). Also follows the own-contents TEMPLATE: a `_reLayout` delegating to `Widget._reLayoutWithOwnContents` is apply-first by construction (counted separately, never as "positions no children"), and a `_layOutOwnContents` reading own geometry without that delegation is a violation. ⚠ Blind to a file defining the hook and NO `_reLayout` — it inherits one this line-scanner cannot follow | `# relayout-bounds-first-exempt: <reason>` above the method header |
-| relayout-repaints [INV-1 tombstone] | `buildSystem/check-relayout-repaints.js` | ~:516 | the RETIRED paired suppression verbs (`disableTrackChanges`/`maybeEnableTrackChanges` — the arc that removed them is [`../archive/repaint-as-one-unit-plan.md`](../archive/repaint-as-one-unit-plan.md)) must not reappear in src or harness src — [INV-1]'s covering-repaint obligation is now STRUCTURAL in `Widget._repaintAsOneUnit` (the `finally` restores the suppression depth and fires the covering `_fullChanged` — skipped only when provably vacuous: zero suppressed mark attempts inside the unit and fn completed; runtime twin = the paint-truthfulness audit, unchanged) | — (no exemption: a suppression window IS `@_repaintAsOneUnit`) |
-| raw-pointer-reads | `buildSystem/check-raw-pointer-reads.js` | ~:537 | a pointer-event HANDLER body (`mouse*`/`wheel`/`nonFloatDragging`/…, closures included) must not consume the raw SCREEN-plane `world.hand.position()` unmapped — consume the plane-mapped `pos` PARAMETER the dispatcher hands every handler (affine 4A), or map the sample at the read site (`screenPointToMyPlane` on the same line, the drag-scroll idiom). Off-island the mapped point IS the raw point, so the bug class is invisible until a widget is TILTED (the 2026-07-17 spreadsheet tilted-selection bug). Helpers a handler calls are NOT scanned (heuristic tripwire — the deliberate raw-screen rotate-angle helper lives in one); `ActivePointerWdgt` itself skipped | `# raw-screen-pointer-sanctioned: <reason>` above the handler header (currently ZERO sites) |
-| test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:556 | JS syntax of the macro SystemTest `.js` files the build is about to serve | — (self-skips on `--homepage`/`--notests`/absent sibling) |
-| ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:579 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate) |
+| syntax | `buildSystem/check-coffee-syntax.js` | ~:343 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
+| shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
+| **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
+| **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged` since 2026-07-22) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (11 sites: the structural add/drop/z-order/shadow dispatchers, the world's atlas-warm orchestration and its selection-overlay reconciler, FileLoading's async-asset repaint, and the own-sub-part marks in MenuItemWdgt and PopUpWdgt) |
+| dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
+| **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:446** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
+| stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
+| argument-holes | `buildSystem/check-argument-holes.js` | ~:486 | calls punching a bare `undefined` through to a later argument (R3) — the decisive **hole test** of [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only, deliberately: the tests repo's `SystemTest_*.js` metadata is PROSE in string literals, and a doc edit must never break a build | inline `BASELINE = 2` (the measured floor of the conformance arc). ⚠ It is a REGRESSION alarm, not an inventory — the honest tree-wide count is `census-call-arity.js --holes` (§3c) |
+| **menu-actions** | **`buildSystem/check-menu-actions.js`** | **~:509** | **menu-item wiring. A menu action is dispatched through ButtonWdgt's fixed four-slot convention (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), which the call site never names. HARD (sound): a function literal in the action slot (`@target[@action]` coerces it to a string key, so the click throws) and a string literal where `opts` goes. RATCHET at 0: an UNREAD parameter on a menu-dispatched verb must be NAMED as unread (`ignored`/`unused`) — padding a signature to reach the slot you want puts widgets into parameters whose names promise otherwise, and forces every other caller to punch `undefined` through.** ⚠ TWO blind spots, both structural: it cannot see whether a parameter that IS read is read as the right THING, and it cannot see a parameter that is MISSING — a verb needing a subject it never declares reads as clean, because there is nothing unread to flag. Both are the class of bug only a rig that CLICKS the item can catch, which is why `fg menusweep` exists beside it. ⓘ RULE 1 has TWO DOORS: besides `addMenuItem`/`prependMenuItem`, `prompt`/`textPrompt` take a `callback` that `PromptWdgt` hands to a menu item verbatim (`panel.addMenuItem "Ok", @target, @callback`) — same slot one hop later, so the same proof applies, and those callbacks count as menu-dispatched verbs for the RULE 3 ratchet too | rules 1–2 are HARD; the unread-parameter rule is the inline `RULE3_BASELINE = 0` ratchet |
+| thin-wrap | `buildSystem/check-thin-wraps.js` | ~:527 | a method owning a `_<name>NoSettle` twin — public `<name>` or private `_<name>` — is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
+| trailing-whitespace | `buildSystem/check-trailing-whitespace.js` | ~:546 | no trailing whitespace on a line that has CONTENT (`/\S[ \t]+$/`) — a trailing space after a bare `super` once silently dropped forwarded args | — (whitespace-only lines are deliberately NOT flagged: invisible, harmless, and in the hundreds) |
+| scheduled-checks | `buildSystem/check-scheduled-checks.js` | ~:555 | a `# CHECK AFTER <date>` time-bomb reminder must not be OVERDUE — nor unparseable, since one that can never fire defeats the purpose | — (act on it, then delete the marker or push the date forward) |
+| stringified-scripts | `buildSystem/check-stringified-scripts.js` | ~:564 | `new ScriptWdgt """…"""` stringified code belongs in USER code, not the core framework; core is at 0 and stays there | `# stringified-script-sanctioned: <reason>` on the line or in the comment block directly above |
+| region-markers [tombstone] | `buildSystem/check-region-markers.js` | ~:573 | the per-REGION `# »>>` text-exclusion mechanism (retired in arc 3, after it was found stripping PRODUCT code out of production) must stay at zero, and an opener must never be unpaired | inline per-kind `baseline`, all three at 0 = HARD |
+| source-vault [tombstone] | `buildSystem/check-source-vault.js` | ~:582 | the retired per-class `window.<Name>_coffeSource` global + the `Object.keys(window)` suffix scan in `src/boot/**` (arc 4) must not return; sources arrive only through `SourceVault.store` | — (forbidden outright, comments included — the conversion completed inside its own phase) |
+| whole-file-markers [tombstone] | `buildSystem/check-whole-file-markers.js` | ~:591 | the per-FILE exclusion comments (`# this file is excluded from the fizzygum homepage build`, the Macros and VideoPlayer twins) must stay at zero (arc 4); parts + profiles say the same thing visibly and at slice granularity | inline per-kind `baseline`, all three at 0 = HARD. ⛔ Do not invent a replacement marker syntax |
+| part-edges | `buildSystem/check-part-edges.js` | ~:603 | CORE must never name a PART's class unguarded — the one structural defence for an artifact built without that part (the suite runs the harness page, which carries every part; the smoke never opens the menu item that would throw). A REFERENCE is fixable in place (`if DemoMenus?` / `world.pinouts?.…` / an `ensureLoaded` await); `extends`/`@augmentWith` is not guardable at all and means the PARTITION is wrong | `buildSystem/lib/part-edge-scan.js` is the shared scanner; a guard IS the exemption, and an eager part's `declaredRequires` discounts the parts it legitimately depends on |
+| **constructor-build** | **`buildSystem/check-constructors-build.js`** | **~:623** | a `constructor:` body must not build its own children inline — `@add`/`@addMany`/`@addNoSettle`/`@_addNoSettle`/`@__add`/… on `this` belong in `_buildAndConnectChildrenNoSettle`, reached via the settling wrapper | per-constructor `# constructor-build-exempt: <reason>` (no central allowlist; currently ZERO — the 4 menu/slider-family `@__add` ctors were converted 2026-07-12, `docs/archive/menu-slider-ctor-conversion-plan.md`) |
+| **call-separation** | **`buildSystem/check-call-separation.js`** | **~:645** | **rules [S]/[U]: [S] a private method must not `@`-self-call a public COMMAND (settling/effectful callee; queries + `changed`/`fullChanged` stay free); [U] a public method referenced ONLY by `@`-self calls is not external API and must be `_`-tier. Measurement engine: `census-public-private-calls.js`. [U] self-skips without the sibling tests repo** | inline count baselines (`BASELINE_S_*`/`BASELINE_U_*`, the stinks idiom); per-caller `# public-call-sanctioned: <why>` for [S]; `public-api-allowlist.txt` for [U] (deliberate end-user inspector/scripting API) |
+| relayout-bounds-first | `buildSystem/check-relayout-bounds-first.js` | ~:664 | a `_reLayout` override must APPLY its own bounds before its first own-geometry read (else children lay out against the previous pass's frame — the "one-cadence-lag" flake). Also follows the own-contents TEMPLATE: a `_reLayout` delegating to `Widget._reLayoutWithOwnContents` is apply-first by construction (counted separately, never as "positions no children"), and a `_layOutOwnContents` reading own geometry without that delegation is a violation. ⚠ Blind to a file defining the hook and NO `_reLayout` — it inherits one this line-scanner cannot follow | `# relayout-bounds-first-exempt: <reason>` above the method header |
+| widget-conformance `--gate` | `buildSystem/census-widget-conformance.js --gate` | ~:686 | the two OBJECTIVE facets of the widget-practices survey: **instance fields written but never DECLARED at class level** (until declared, a lazily-initialised field is invisible to duplication, serialization and the inspector) and **`_reLayout` prologue copies** (classes not taking `Widget._reLayoutWithOwnContents`). Mixin-aware: a field a mixin donates counts as declared, and re-declaring it in the class body would CLOBBER the donated value. Its default, gate-less run is the advisory census (§3c) | inline `BASELINE_UNDECLARED_CLASSES`/`_FIELDS` = **0/0** and `BASELINE_PROLOGUE_COPIES` = **8**. ⚠ **A BASELINE HERE IS A FLOOR, NOT A ZERO** — undeclared fields reached a true 0/0, so that one IS an inventory; prologue copies stay at 8 (two deliberate non-conversions plus six genuinely different shapes), each named in the script |
+| relayout-repaints [INV-1 tombstone] | `buildSystem/check-relayout-repaints.js` | ~:710 | the RETIRED paired suppression verbs (`disableTrackChanges`/`maybeEnableTrackChanges` — the arc that removed them is [`../archive/repaint-as-one-unit-plan.md`](../archive/repaint-as-one-unit-plan.md)) must not reappear in src or harness src — [INV-1]'s covering-repaint obligation is now STRUCTURAL in `Widget._repaintAsOneUnit` (the `finally` restores the suppression depth and fires the covering `_fullChanged` — skipped only when provably vacuous: zero suppressed mark attempts inside the unit and fn completed; runtime twin = the paint-truthfulness audit, unchanged) | — (no exemption: a suppression window IS `@_repaintAsOneUnit`) |
+| raw-pointer-reads | `buildSystem/check-raw-pointer-reads.js` | ~:731 | a pointer-event HANDLER body (`mouse*`/`wheel`/`nonFloatDragging`/…, closures included) must not consume the raw SCREEN-plane `world.hand.position()` unmapped — consume the plane-mapped `pos` PARAMETER the dispatcher hands every handler (affine 4A), or map the sample at the read site (`screenPointToMyPlane` on the same line, the drag-scroll idiom). Off-island the mapped point IS the raw point, so the bug class is invisible until a widget is TILTED (the 2026-07-17 spreadsheet tilted-selection bug). Helpers a handler calls are NOT scanned (heuristic tripwire — the deliberate raw-screen rotate-angle helper lives in one); `ActivePointerWdgt` itself skipped | `# raw-screen-pointer-sanctioned: <reason>` above the handler header (currently ZERO sites) |
+| test-.js syntax | `Fizzygum-tests/scripts/check-tests-syntax.js` | ~:750 | JS syntax of the macro SystemTest `.js` files the build is about to serve | — (self-skips unless `$PROFILE_SHIPS_TESTS`, or when the sibling repo is absent) |
+| ref-image integrity | `Fizzygum-tests/scripts/check-refs.js` | ~:773 | >1 `dataHash` per `(test,image,dpr,OS)` or an orphaned `.js`/`.png` reference | — (self-skips like the test gate). Its PIXEL half, `--pixels`, is deliberately NOT on the build: it runs as the gauntlet's `refs` leg |
 
 **Per-gate notes:**
 
@@ -116,7 +129,7 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   self-calls are dotless and never match, so only dotted receivers are judged. Harvests every identifier used where a method could be CALLED — across src
   `.coffee`, the harness `.coffee`, and the macro `.js` (whose `mainMacroSource` strings carry the verbs they call). A
   name that appears ONLY on its own def header (and comments) is DEAD. Fizzygum's dynamic dispatch is *property*-based
-  (DeepCopierMixin walks `@[property]`), not name-built, so the false-positive rate is low; genuine exceptions go in
+  (the `Duplicator` engine walks `@[property]`), not name-built, so the false-positive rate is low; genuine exceptions go in
   `dead-method-allowlist.txt`. `--update-allowlist` re-seeds the baseline. Needs the sibling tests repo for an accurate
   reference set; SKIPS (not false-fails) if it is absent.
 - **unresolved-sends (`check-unresolved-sends.js`).** The exact INVERSE of the dead-method gate (that one: defined but
@@ -177,10 +190,12 @@ All gates are plain Node line-scanners in `buildSystem/` (or, for the test gates
   `"null"` inside a string as readily as a real `null`. That is ACCEPTED, not a bug: a ratchet measures REGRESSION, not an absolute. (Upgrading it
   to the shared `stripLine` masking is banked as §8.8 of the carryover plan.) There is also no multi-line matcher — an
   empty-catch stink would need one (§8.9).
-- **thin-wrap (`check-thin-wraps.js`).** For a private `_<name>NoSettle`, the public `<name>` in the SAME class must be,
-  after comments/blanks: `[zero+ return if/unless guards]` then `@_settleLayoutsAfter => @_<name>NoSettle <args>` — it
-  does no work of its own. Complements `check-layering` (which enforces the CORE reaches no public setter). A twinless
-  `_<name>NoSettle` (e.g. `_addInPseudoRandomPositionNoSettle`) is SKIPPED — no public twin to constrain.
+- **thin-wrap (`check-thin-wraps.js`).** For a private `_<name>NoSettle`, its settling twin in the SAME class — the
+  public `<name>` (e.g. `setLabel`) OR a private `_<name>` (e.g. the construction wrapper `_buildAndConnectChildren`,
+  which is exactly what the constructor-build gate sends every widget author to) — must be, after comments/blanks:
+  `[zero+ return if/unless guards]` then `@_settleLayoutsAfter => @_<name>NoSettle <args>` — it does no work of its own.
+  Complements `check-layering` (which enforces the CORE reaches no public setter). A twinless
+  `_<name>NoSettle` (e.g. `_addInPseudoRandomPositionNoSettle`) is SKIPPED — no twin to constrain.
 - **constructor-build (`check-constructors-build.js`).** Locks in the "all constructors settle" end-state (Topic 4
   part 2): a `constructor:` body must NOT build its own children inline. An `inctor` state machine (set on `constructor:`,
   cleared by the next 2-space class header — so it handles multi-line ctor headers, mirroring the FNR audit awk) scans
@@ -223,21 +238,22 @@ blind spot is structural:
   APPEARING — which is the point at which everything still looks fine. A prompt is not a `MenuWdgt` (both descend from
   `PopUpWdgt`), so the submenu walk cannot reach one and it needs its own query. Ok is pressed with the prompt's own
   default contents, so this asks "does the callback resolve and run", never "is this a good value".
-  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 18 roots, so a class not among them is unreached. That is why
+  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 20 roots (two world roots, 16 representative widget classes,
+  the inspector pair — whose prompts open from a BUTTON row no menu walk can reach), so a class not among them is
+  unreached. That is why
   it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
   catches 2 of the 16 affected classes and the pin sweep catches all 16.
-  ⚠⚠ **A menu built behind a BRANCH is only swept in the branch the rig happens to be standing in.** The desktop's own
-  menu is two different menus — `WorldWdgt.buildContextMenu` opens `if @isIndexPage … return menu` with a four-row
-  product menu, and `isIndexPage` is true on every page but the harness, this rig's `index-sw.html` included. So the
-  world root walked 4 of the desktop's 13 rows, and the `world.isDevMode = true` the rig sets to reach the demo tree was
-  reaching nothing at all: the branch it enables sat behind that early return. It hid a dispatch to `WorldWdgt.about`, a
-  method deleted in 2017 whose menu row stayed — nine years of a row that throws, in the first menu anyone opens. Both
-  branches are now swept as two roots (`world[product]`, `world[desktop]`). ⇒ **when a rig STATES a coverage, check the
-  statement**: this one's own comment called the world root "the door to the demo tree" while walking four rows of it.
-  A second-order consequence, also now handled: an action can flip the very flags that decide a menu's shape (`switch to
-  user mode` dispatches `toggleDevMode`), so `sweepRoot` restores `isDevMode`/`isIndexPage` per root — without that, one
-  root's click left every later widget menu EMPTY and reported as "no menu returned".
-- **pin sweep** (`Fizzygum-tests/scripts/pin-sweep-headless.js`, `npm run pin-sweep`) — EVERY PIN A CLASS ADVERTISES
+  ⚠⚠ **A menu built behind a BRANCH is only swept in the branch the rig happens to be standing in**, and an action can
+  flip the very flag that decides the shape (`switch to user mode` dispatches `toggleDevMode`) — so `sweepRoot` restores
+  `isDevMode`/`isIndexPage` per root; without that, one root's click left every later widget menu EMPTY and was reported
+  as "no menu returned". The desktop menu is now ONE list gated per item (`@isDevMode`, `world.parts.isAvailable
+  "demos"`, `Automator?`) rather than forked on which page booted the world, and the rig sweeps it as two roots
+  (`world[product]`, `world[desktop]`) so both dev-mode shapes are walked. ⇒ **when a rig STATES a coverage, check the
+  statement**: for as long as the desktop menu forked on `isIndexPage`, the world root walked 4 of its 13 rows while the
+  rig's own comment called it "the door to the demo tree" — which is how a dispatch to `WorldWdgt.about`, a method
+  deleted in 2017 whose menu row stayed, survived nine years in the first menu anyone opens.
+- **pin sweep** (`Fizzygum-tests/scripts/pin-sweep-headless.js`, `npm run pin-sweep`, `fg pinsweep`; a gauntlet wave-A
+  leg beside `menusweep`) — EVERY PIN A CLASS ADVERTISES
   MUST BE SERVICEABLE. A `PinSpec` names its setter/getter by STRING and the dataflow dispatches them as
   `consumer[name]?.call`, so an unresolved one is offered in the choose-target-property menu, accepts a wire, and
   silently does nothing forever. It is a sweep rather than a scan for the same reason the menu one is: `pins()` is
@@ -253,18 +269,29 @@ blind spot is structural:
 They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
 dispatch). Full description: `docs/architecture/layering-naming-convention.md`.
 
-**The ALWAYS-ON runtime asserts (no flag, no prelude — they run in every build).** A handful of invariants
-are cheap enough to check inline and are caught nowhere else, so they `console.error` a TOKEN that both
-headless runners fail on (`run-all-headless.js`, `run-macro-test-headless.js`). Each exists because the
-screenshot suite structurally cannot see the violation:
+**The ALWAYS-ON runtime asserts (no flag, no prelude).** A handful of invariants are cheap enough to check
+inline and are caught nowhere else, so they `console.error` a TOKEN that both headless runners fail on
+(`run-all-headless.js`, `run-macro-test-headless.js` — seven tokens on that gate today). Each exists because
+the screenshot suite structurally cannot see the violation:
 - `NON_FINITE_GEOMETRY` / `NON_INTEGER_GEOMETRY` — `Widget._assertBoundsWellFormed`, see
   [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md).
-- `RESETWORLD_INCOMPLETE` — the world-teardown completeness ratchet (a leak only bites the NEXT test in
-  the shard, so no single test's pixels reveal it).
 - `POPUP_LARGER_THAN_WORLD` — `PopUpWdgt._assertFitsInTheWorld`: a pop-up bigger than the world has rows
   nothing can click. A reference image disagrees only if a macro happens to click the row that went
   missing, which is exactly why menus shipped rows off the bottom edge unnoticed for years — so the
   invariant is asserted rather than left to be noticed.
+- `DOWNWALK_UNREACHABLE_CHAINTOP` — `WorldWdgt`: a settle round made no progress with widgets still
+  invalid; the convergence loop's own non-termination alarm.
+- `DAMAGE_SUPPRESSION_UNBALANCED` — `WorldWdgt`: a non-zero `_damageSuppressionDepth` at cycle end. The
+  structural half of [INV-1] lives in `Widget._repaintAsOneUnit`'s `finally`; this is the tripwire that
+  says it was bypassed.
+- `STORAGE_INVARIANT` — `StorageSorter`: a destroyed / misclassified / parent-desynced resident in the bin
+  or on the shelf (its from-scratch twin is the gauntlet's `storage` leg).
+
+⚠ One more token rides the same fail-gate but is NOT shipping code: `RESETWORLD_INCOMPLETE`, the
+world-teardown completeness ratchet, lives in
+`Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee` (arc 3 moved the test-only teardown
+out of core), so it fires only on a build whose profile ships the `harness` part. A leak bites the NEXT test
+in the shard, so no single test's pixels reveal it.
 
 ---
 
@@ -307,11 +334,15 @@ is NOT narration and is skipped; `<!-- narration-ok: reason -->` exempts a line 
 trigger words. Fenced blocks and inline code are stripped before matching, so file paths and SHAs
 cannot trip it. Not on the build — docs prose should not block a build; run it with `fg doc-narration`.
 
-## 3c. The ANALYSIS tools (censuses — never gates)
+## 3c. The ANALYSIS tools (advisory censuses — never gates)
 
-Four read-only censuses, all exit 0 (2 on operational error), all `--json`-capable, all ≲1 s — though the fourth,
-`census-widget-conformance.js`, ALSO has a `--gate` mode that the build runs (see its row). Run them from `Fizzygum/`
-— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~2 s, read-only). It deliberately
+**§3 is everything that can fail your build; this section is everything that cannot** — the split that §3b's severity
+policy prescribes. Five read-only censuses, all exit 0 (2 on operational error), all ≲1 s. Four are `--json`-capable and print
+SUMMARY COUNTS by default, with `--full` for the lists; `census-call-arity.js` is the exception — it is query-shaped
+(`--holes` / `--call=` / `--super=` / bare `new <Class>` names) and prints only what you asked for. One of them,
+`census-widget-conformance.js`, ALSO has a `--gate` mode that the build runs — that half is a gate and lives in §3's
+table. Run them from `Fizzygum/`
+— or all at once, with every ratchet's "tighten me" note, via **`fg critique`** (~5 s, read-only). It deliberately
 excludes jscpd/jsinspect (minutes-slow — those stay on-demand behind `./find_duplicated_code.sh` /
 `./find_similar_code.sh`).
 
@@ -319,7 +350,9 @@ excludes jscpd/jsinspect (minutes-slow — those stay on-demand behind `./find_d
 `fg critique` does not exist in a fresh checkout — only the `node ./buildSystem/census-*.js` commands below do. That is
 by design, but it means this doc, not `fg`, is the durable description. `fg critique` runs, in order: `check-stinks`,
 `check-dead-methods`, `check-unresolved-sends`, `check-call-separation` (reprinting only each one's `UNDER` / stale-entry
-NOTE), then the three censuses' summary counts, then an advisory-only footer.
+NOTE), then the FIVE censuses' summary counts — `census-public-private-calls`, `census-hierarchy-duplication`,
+`census-property-placement`, `census-widget-conformance` (its advisory view), and `census-call-arity --holes`, the honest
+hole count the `positional-hole` stink cannot see — then an advisory-only footer.
 
 **When do these run?** The GATES run automatically on every build (any `build_it_please.sh`, `fg build/presuite/gauntlet`,
 `build_and_test.sh`, the save-watcher) — there is no CI here, so "automatic" means the build on your machine, and
@@ -331,17 +364,16 @@ human asks (`fg critique`, or directly). The clone scanners are on-demand only (
 | `census-public-private-calls.js` | public/private SELF-call mixing (R1–R4) | ALSO the measurement ENGINE behind the [S]/[U] gate. Its `runCensus()` exports the whole-system **class model** (`classInfo` / `chainOf` / `resolve` — parent + `@augmentWith` mixins + methods + resolution order) and `maskLine`; the two censuses below REUSE it rather than re-implement it. |
 | `census-hierarchy-duplication.js` | overrides that add nothing: `IDENTICAL-TO-INHERITED`, `SHADOWS-MIXIN`, `JUST-SENDS-SUPER` | Pharo `ReEquivalentSuperclassMethods`/`ReJustSendsSuper`/`ReLocalMethodsSameThanTrait`. The hierarchy-aware complement to jscpd/jsinspect, which know nothing of inheritance and so can never say "REMOVABLE". |
 | `census-property-placement.js` | properties at the wrong level (`PULL-UP`) or wrong scope (`DEMOTE`) | Pharo `ReInstVarInSubclasses`/`ReVariableReferencedOnce`. |
-| `check-argument-holes.js` | **GATE (ratcheted, on the build)** — calls punching a bare `undefined` through to a later argument (R3). Shares `census-call-arity.js`'s parser, so gate and census cannot disagree. `src/` only: the tests repo's `SystemTest_*.js` metadata is PROSE in string literals, and a doc edit must never break a build |
-| `check-menu-actions.js` | **GATE (on the build)** — menu-item wiring. A menu action is dispatched through ButtonWdgt's fixed four-slot convention (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), which the call site never names. **HARD (sound):** a function literal in the action slot (`@target[@action]` coerces it to a string key, so the click throws) and a string literal where `opts` goes. **RATCHET at 0:** an UNREAD parameter on a menu-dispatched verb must be NAMED as unread (`ignored`/`unused`) — padding a signature to reach the slot you want puts widgets into parameters whose names promise otherwise, and forces every other caller to punch `undefined` through. ⚠ TWO blind spots, both structural: it cannot see whether a parameter that IS read is read as the right THING, and it cannot see a parameter that is MISSING — a verb needing a subject it never declares reads as clean, because there is nothing unread to flag. Both are the class of bug only a rig that CLICKS the item can catch. ⓘ RULE 1 has TWO DOORS: besides `addMenuItem`/`prependMenuItem`, `prompt`/`textPrompt` take a `callback` that `PromptWdgt` hands to a menu item verbatim (`panel.addMenuItem "Ok", @target, @callback`) — same slot one hop later, so the same proof applies, and those callbacks count as menu-dispatched verbs for the RULE 3 ratchet too |
-| `census-widget-conformance.js` | **CENSUS + GATE (`--gate`, on the build)** — re-derives the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md` so that survey is re-runnable rather than a one-off. Default run is ADVISORY (exit 0, `--json`) and prints six facets; only the two objective ones are ratcheted by `--gate`: **instance fields written but never DECLARED at class level** (until declared, a lazily-initialised field is invisible to duplication, serialization and the inspector) and **`_reLayout` prologue copies** (classes not taking `Widget._reLayoutWithOwnContents`). Mixin-aware: a field a mixin donates counts as declared, and re-declaring it in the class body would CLOBBER the donated value. ⚠ **A BASELINE HERE IS A FLOOR, NOT A ZERO** — undeclared fields reached a true **0/0** when the connector arc's P9 renamed the `target`/`callback` pair away (so that one IS an inventory now), while prologue copies stay at **8** (two deliberate non-conversions plus six genuinely different shapes), each named in the script. Green means "nothing got worse"; only a baseline of 0 also means "nothing is left". ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left |
+| `census-widget-conformance.js` | the mechanical facets of `measurements/widget-practices-survey-2026-08-14.md`, so that survey is re-runnable rather than a one-off | Its ADVISORY run (exit 0, `--json`) prints six facets; the two OBJECTIVE ones are what `--gate` ratchets on the build (§3). ⚠ Facets 3–6 are heuristics with real exceptions and must NEVER gate — and facet 3 in particular is **not a gap count**: since the widget arc's W7 made `colloquialName` DERIVE from the class name, a class declaring none still answers a true name, so the number says how much of the tree the derivation carries, not how much work is left. On the gated pair: green means "nothing got worse"; only a baseline of 0 also means "nothing is left" |
 | `census-call-arity.js` | call sites + top-level argument arity; `--holes` lists calls punching a bare `undefined` through to a later argument (R3) | ⚠⚠ **The real hole count — `positional-hole` sees only the two-adjacent-`undefined` subset and reads 0 while 50 stand.** Paren/quote-aware, joins continuation lines, scans BOTH repos. `--call=<method>` / `--super=<class>` / `new <Class>` modes; excludes `.call`/`.apply`/`.bind`, where `undefined` is a foreign API's *this*-arg. |
 
-**Why those two can never be promoted to gates** — the reasons are specific, not ceremonial:
+**Why the hierarchy-duplication and property-placement censuses can never be promoted to gates** — the reasons are
+specific, not ceremonial:
 - **`super` is META-COMPILED** (`src/meta/Class.coffee` `_equivalentforSuper` rewrites every super form at fragment
   compile time; a trailing space after a bare `super` once silently dropped forwarded args — the reason
   `check-trailing-whitespace.js` exists). So textual body equivalence is **not** dispatch equivalence.
-- **Property access is partly DYNAMIC** (`DeepCopierMixin` walks `@[property]`; serialization drives off name STRINGS),
-  so "unused" is never statically provable.
+- **Property access is partly DYNAMIC** (the `Duplicator` engine walks `@[property]`; serialization drives off name
+  STRINGS), so "unused" is never statically provable.
 
 Both censuses therefore carry SOUNDNESS RULES earned from false positives they actually produced — documented in their
 headers and in the `duplication-report/triage-report.md` ROUND-4/4b sections. Do not "simplify" them away: the method
@@ -374,7 +406,7 @@ instruction.** Full case law (14 entries): `docs/archive/duplication-triage-2026
 **The DEMOTE rule requires the property to be READ.** As
 originally shipped it did not, so a **WRITE-ONLY** field was reported as demotable. That was wrong twice: demoting a
 write-only field makes it **dead**, not local; and a write-only field is usually **enumeration payload** — reached by
-`JSON.stringify(obj)` / `DeepCopierMixin`'s `@[property]` walk / the serializer, none of which a name scanner sees
+`JSON.stringify(obj)` / the `Duplicator` engine's `@[property]` walk / the serializer, none of which a name scanner sees
 (the census's KNOWN BLIND SPOT, now stated in its header). It cost **16 false positives out of 36 findings**, of which
 **12 were `SystemInfo` fields that ARE the reference-image identity** — `SystemTestsReferenceImage.coffee:31` hashes
 `JSON.stringify(@systemInfo)` into every reference filename's `systemInfoHash`, so acting on them would have
@@ -406,7 +438,7 @@ separating dead state from enumeration payload needs exactly the analysis a name
   Full evidence: carryover plan §8.6.
 - Anything **TRANSITIVE** — already rejected as intractable, see §7.
 
-**On `census-public-private-calls.js` specifically** (the oldest of the three, and the only one that is also a gate
+**On `census-public-private-calls.js` specifically** (the oldest of the five, and the only one that is also a gate
 ENGINE): it measures public/private SELF-call mixing — private→public-command calls, double-settle shapes, and public
 methods only ever `@`-self-called (privatization candidates). `check-call-separation.js` requires it as a module and
 enforces the [S]/[U] count baselines on its numbers, and rule [T] (in `check-layering.js`) is the static twin of its
@@ -461,10 +493,10 @@ lint works at all (§6).
 | Rule | Subject | Forbids | Why | Runtime twin | Marker |
 |---|---|---|---|---|---|
 | **[A]** | `isLowLevel` method | calling a public geometry setter (`setExtent`/`moveTo`/`setBounds`/`setWidth`/`setHeight`), a single-settling text setter (`setText`/`setFontSize`/`setFontName`/`toggleShowBlanks`/`toggleWeight`/`toggleItalic`/`toggleIsPassword`), or `recalculateLayouts` | low-level code mutates immediately and must never reach UP into the self-flushing layer | the one-flush throw | — (fix the code: use the `_<name>NoSettle` core / an apply corner) |
-| **[B]** | any method not in `{doOneCycle, _settleLayoutsAfter, _settleLayoutsAfterBatch}` | calling `recalculateLayouts()` | only the frame and the settle tiers may drive a flush | — | — |
+| **[B]** | any method not in `RECALC_WHITELIST` = `{doOneCycle, _settleLayoutsAfter, _settleLayoutsAfterOrJoinEnclosingPass}` | calling `recalculateLayouts()` | only the frame and the two settle tiers — the single-mutation tier and the reactive-connection lane (rule [P]) — may drive a flush | — | — |
 | **[C]** | a public geometry setter | calling another public geometry setter | would flush more than once per logical mutation | — | — |
 | **[D]** | a SystemTest macro (`Fizzygum-tests/tests/**/*_automationCommands.js`) + the `Macro.fromString` heredocs in `src/macros/MacroToolkit.coffee` | calling a `_private` method or a `raw*` (pixel) accessor | macros must drive only the public surface (the gate that would have caught the original 16-macro mess) | — | — (HARD ban; the construction measure-and-size carve-out is now CLOSED — attach the widget first, then public setters, see §7) |
-| **[E]** | `isImmediateMutator` (the `_apply*`/`_commit*` corners + the `_move*`/`_set*`/`_resize*` convenience) | calling `_invalidateLayout` | an immediate mutator may MUTATE geometry, never SCHEDULE a layout — scheduling during a pass re-dirties a container mid-pass and the convergence loop never terminates (the Phase-3b app-freeze) | `FLOWRULE_VIOLATION` (~:3848) | — |
+| **[E]** | `isImmediateMutator` (the `_apply*`/`_commit*` corners + the `_move*`/`_set*`/`_resize*` convenience) | calling `_invalidateLayout` | an immediate mutator may MUTATE geometry, never SCHEDULE a layout — scheduling during a pass re-dirties a container mid-pass and the convergence loop never terminates (the Phase-3b app-freeze) | `FLOWRULE_VIOLATION` (`Widget._invalidateLayout`) | — |
 | **[F]** | a method that is NEITHER low-level NOR an immediate mutator (handler / property setter / menu action / gesture / constructor) | calling a container-refit apply (`_reLayoutChildren`/`_positionAndResizeChildren`/`_reLayoutScrollbars`/`_reLayout`) synchronously OFF-settle | such a handler must DEFER (record intent via `_invalidateLayout`; let the cycle apply it), unless the apply is genuinely AT a settle point / a documented determinism-exempt family | — | **`# layout-apply-sanctioned: <why>`** |
 | **[G]** | `isLowLevel` method (not a settle tier) | calling a STRUCTURAL self-settling wrapper — discovered structurally as the `_settleLayoutsAfter` callers (`destroy`/`close`/`fullDestroy`/`createReference*`/`grab`/`drop`/`slideBackTo`/`setLabel`/`buildAndConnectChildren`/`resetWorld`/`sizeToTextAndDisableFitting`) — OR the unambiguous self-add `@add` | the structural-wrapper extension of [A]: each wrapper self-settles via `_settleLayoutsAfter`, so reaching one from a core/raw/pass re-enters the flush; low-level code must call the `_<name>NoSettle` core | the one-flush throw | **`# nosettle-sanctioned: <why>`** |
 | **[H]** *(WARNING, non-fatal)* | a method that self-settles via `@_settleLayoutsAfter` | a GUARD `return` / `return if\|unless …` BEFORE the settle | a public settle-wrapper should be THIN; that early-return guard belongs INSIDE the `_<name>NoSettle` core (else the "already in this state" skip is split across wrapper + core) | — | **`# early-return-sanctioned: <why>`** |
@@ -476,12 +508,14 @@ lint works at all (§6).
 | **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — |
 | **[O]** | any method NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}`) | a `[@.]…Coalesced` CALL to a `*Coalesced` entrypoint (`_setMaxDimCoalesced`/`_setExtentCoalesced`/`_moveToCoalesced`/`_setWidthCoalesced`/`_setHeightCoalesced`) | a `*Coalesced` entrypoint DEFERS its layout settle to the ONE end-of-cycle flush — byte-identical (sound) only for a per-event STREAM handler that never reads back the settled layout mid-cycle; a discrete caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them) | — | — (add a genuine new stream handler's method name to `COALESCED_CALLER_ALLOWLIST`) |
 | **[P]** | any method whose name does NOT end `Connector` | a `[@.]_settleLayoutsAfterOrJoinEnclosingPass` CALL | `_settleLayoutsAfterOrJoinEnclosingPass` is the reactive-connection settle lane — reached mid-pass it JOINS the open layout pass instead of throwing (so a wired reactive circuit — the °C↔°F converter — settles once); sound ONLY for a dedicated `_<name>Connector` entrypoint carrying the `connectionsCalculationToken` cycle-guard. A general/internal caller must use the self-settling `_settleLayoutsAfter` (surfaces the flow violation) or a `_<name>NoSettle` core | `Widget._settleLayoutsAfter` throw (§1) | — |
+| **[Q]** | any method NOT in `CONNECTOR_CALLER_ALLOWLIST` (seeded `{recalculateOutput}`) | a hard-coded textual `[@.]_<name>Connector(` CALL | the connector lane JOINS an already-open pass instead of throwing ([P]), so a textual call to one smuggles a never-throwing setter past the flow guard. The reactive dispatch resolves the connector name at RUNTIME and needs no textual call — only a sanctioned mid-cascade self-render (a patch node's `recalculateOutput`) may call one directly | `Widget._settleLayoutsAfter` throw (§1) | — (add a genuine mid-cascade render's method name to `CONNECTOR_CALLER_ALLOWLIST`) |
+| **[R]** | a method in a `USERLAND_FILES` file (the standard-user-use exemplars: the menu-built windows/panels of `MenusHelper`) | calling another widget's immediate cores (`<recv>._apply*`/`._move*` — a `@`-self call has no identifier+dot and is not matched) | userland is the worked example of the PUBLIC self-settling API (`setBounds`/`moveTo`/`setExtent`/`setWidth`/`setHeight`/`moveWithin`); the immediate cores are reserved for low-level / in-pass code | — | **`# private-use-sanctioned: <why>`** (per LINE) |
 | **[T]** | a method whose own body calls `@_settleLayoutsAfter` (the same textual subject `discoverSettlingWrappers` keys off; the settle tiers in `RECALC_WHITELIST` are exempt) | ALSO `@`-self-calling a settling public method — a geometry setter, a text setter, a discovered settling wrapper (name-qualified via `nearestDefinerKind` like [G]), or the self-add `@add` | two flushes for one logical mutation — the whole-settling-surface generalization of [C]. `@`-self-scoped (a dotted receiver settles ANOTHER widget — untypeable). Branch-exclusive pairs (one flush per path, sound) are textually indistinguishable → marker. At rule birth (2026-07-12) exactly 3 sites, all conscious+marked: `grab` (hand-rolled sequential gesture settles) and `newParentChoice{,WithHorizLayout}` (documented idempotent re-fit flush after `@add`) | the one-flush throw | **`# double-settle-sanctioned: <why>`** |
 
 **[G] specifics.** The wrapper set is **discovered**, never hand-listed: `discoverSettlingWrappers` collects every method
-whose body calls `@_settleLayoutsAfter` (the SINGLE-mutation tier only — a `_settleLayoutsAfterBatch` wrapper ABSORBS
-nested settles and is safe), minus the geometry/text setters ([A] reports those, sharper) and minus `WRAPPER_EXCLUDED`
-(§7). So a NEW single-settling wrapper is auto-covered. The `@add` self-form is checked separately (`SELF_ADD_CALL =
+whose body calls `@_settleLayoutsAfter` (`SETTLE_CALL` anchors on that exact name, so the reactive-connection
+`…OrJoinEnclosingPass` lane is not swept in), minus the geometry/text setters ([A] reports those, sharper) and minus
+`WRAPPER_EXCLUDED` (§7). So a NEW single-settling wrapper is auto-covered. The `@add` self-form is checked separately (`SELF_ADD_CALL =
 /@\s*add\b/`): inside a Widget method `@` is a Widget, so `@add child` is unambiguously `Widget.add` — the `\b` excludes
 `@addMany`/`@_addNoSettle`, and the leading `@` (not `.`) excludes the Point#add-ambiguous member form.
 
@@ -490,7 +524,7 @@ nested settles and is safe), minus the geometry/text setters ([A] reports those,
 ## 5. The in-code markers + the two ratchet idioms
 
 **Markers — "the justification lives AT the method, no central allowlist."** Each exempts a single method/line via a
-comment, with a *required reason*:
+comment carrying a reason. All fourteen, in one place:
 
 | Marker | Gate / rule | Exempts |
 |---|---|---|
@@ -499,10 +533,29 @@ comment, with a *required reason*:
 | `# early-return-sanctioned: <why>` | `check-layering` [H] *(warning)* | a public settle-wrapper that consciously keeps a guard `return` BEFORE its `_settleLayoutsAfter` (suppresses the non-fatal [H] warning) |
 | `# double-settle-sanctioned: <why>` | `check-layering` [T] | a directly-settling method that consciously ALSO `@`-calls a settling public method — a deliberate sequential-flush design (`grab`, `newParentChoice`) or a branch-exclusive pair the line scanner cannot tell apart |
 | `# public-call-sanctioned: <why>` | `check-call-separation` [S] | a private method consciously `@`-self-calling a public COMMAND (the census subtracts the site; use sparingly — the default fix is rename-to-`_` or the `_<name>NoSettle` core) |
-| `# thin-wrap-exempt: <reason>` | `check-thin-wraps` | a public method that owns a `_<name>NoSettle` twin but legitimately cannot be the canonical mechanical wrap |
+| `# macro-private-call-sanctioned: <reason>` | `check-layering` [D] | one macro/heredoc LINE calling a `_private` verb — a test ORACLE that must reach ground truth (`world._fullChanged()`) |
+| `# private-use-sanctioned: <why>` | `check-layering` [R] | one line in a userland exemplar file reaching another widget's private core |
+| `# thin-wrap-exempt: <reason>` | `check-thin-wraps` | a method that owns a `_<name>NoSettle` twin but legitimately cannot be the canonical mechanical wrap |
+| `# cross-invalidation-sanctioned: <reason>` | `check-invalidation-receivers` | one line marking ANOTHER widget changed (the structural dispatchers, the world's atlas-warm and selection-overlay reconcilers, an async-asset repaint, own-sub-part marks) |
+| `# relayout-bounds-first-exempt: <reason>` | `check-relayout-bounds-first` | a `_reLayout` that consciously reads its own geometry before applying its own bounds |
+| `# raw-screen-pointer-sanctioned: <reason>` | `check-raw-pointer-reads` | a pointer handler that genuinely wants the raw SCREEN-plane sample (currently ZERO sites) |
+| `# constructor-build-exempt: <reason>` | `check-constructors-build` | a `constructor:` that legitimately must build its children inline (currently ZERO) |
+| `# stringified-script-sanctioned: <reason>` | `check-stringified-scripts` | one `new ScriptWdgt """…"""` line in core |
+| `<!-- narration-ok: reason -->` | `check-doc-narration` | one docs LINE that must quote the narration trigger words (this doc's stink table does) |
 
-A marker is detected anywhere in the method's body (it resets at each method header). The reason is mandatory — a bare
-marker does not exempt.
+**Placement is per-gate, and it is not decorative.** The `check-layering` per-method markers ([F]/[G]/[H]/[T]) and
+`# public-call-sanctioned` are detected anywhere in the method's body and reset at each method header.
+`# thin-wrap-exempt`, `# relayout-bounds-first-exempt` and `# raw-screen-pointer-sanctioned` are read ONLY from the
+contiguous comment block *directly above the header* — one in the body does not exempt; `# constructor-build-exempt`
+is read from either. The rest are per-LINE: `# cross-invalidation-sanctioned`, `# macro-private-call-sanctioned` and
+`# stringified-script-sanctioned` on the line or the comment line(s) directly above it, `# private-use-sanctioned` and
+`<!-- narration-ok -->` on the line itself.
+
+⚠ **The reason is required by convention everywhere, but only some gates enforce it.** Seven match
+`<marker>:\s*\S` and so reject a bare marker (thin-wrap, relayout-bounds-first, raw-screen-pointer,
+constructor-build, cross-invalidation, stringified-script, and [D]'s macro marker); the six `check-layering`/
+call-separation per-method markers match the bare string, so nothing but review makes you write the *why*.
+Write it anyway — a marker without a reason is exactly the silent allowlist this idiom exists to avoid.
 
 **Two ratchet idioms** (a convention that isn't a gate rots; new rules should use one so they land green today and
 tighten incrementally):
@@ -516,9 +569,9 @@ tighten incrementally):
   `buildSystem/public-api-allowlist.txt` (call-separation [U]: deliberate end-user inspector/scripting API).
   Each of those gates prints a **stale-entry NOTE** when an entry stops being needed — `fg critique` is the one place
   that resurfaces every such note at once.
-- **per-method marker** (`# layout-apply-sanctioned`, `# nosettle-sanctioned`, `# early-return-sanctioned`, `# thin-wrap-exempt`): the justification
+- **per-method / per-line marker** (the thirteen in-code markers tabled above): the justification
   lives at the method, no central list; a NEW unmarked violation fails the build. Best when the exception is a property
-  of one method, not a count.
+  of one method or one line, not a count.
 
 ---
 
@@ -547,8 +600,9 @@ geometry-apply **2×2** + the notification **(perspective × phase)** grid) and 
 
 ## 6b. What "this line defines a method" means — ONE shared matcher, and its guard
 
-Six gates group a `.coffee` file into methods: `census-public-private-calls`, `check-dead-methods`,
-`check-raw-pointer-reads`, `check-layering`, `check-relayout-bounds-first`, `check-thin-wraps`. They all
+Seven gates group a `.coffee` file into methods: `census-public-private-calls`, `check-dead-methods`,
+`check-raw-pointer-reads`, `check-layering`, `check-relayout-bounds-first`, `check-thin-wraps`,
+`check-menu-actions`. They all
 take that definition from **`buildSystem/lib/coffee-method-header.js`** (`METHOD_HEADER` /
 `MIXIN_METHOD_HEADER`). Do not re-declare it locally — the module exists because six copies of one regex
 had drifted into a shared blind spot nobody could see.
@@ -618,7 +672,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
 ## 8. How-to
 
 **Add a new `check-layering` rule.** (1) Add the call-detecting regex/predicate near the other constants, comment the
-rule (subject / forbidden / why / runtime twin / marker) the way [A]–[O] are. (2) Add the check inside `checkFile`'s
+rule (subject / forbidden / why / runtime twin / marker) the way [A]–[T] are. (2) Add the check inside `checkFile`'s
 per-method loop, under the right tier guard (`isLowLevel(method)` / `isImmediateMutator(method)` / the non-mutator
 branch). (3) If it needs an escape hatch, add a per-method marker (mirror the `methodNoSettleMarked` logic) rather than a
 central allowlist. (4) Update the summary line + the failure footer to name the new letter. (5) **Land it green** — see
@@ -641,8 +695,10 @@ if ! $noSyntaxCheck ; then
   echo "... <thing> OK"
 fi
 ```
-Place it among the other gates (~:255–390). If it scans the sibling tests, guard it
-(`&& ! $homepage && ! $notests && [ -d ../Fizzygum-tests ]`) so a tests-stripped build self-skips.
+Place it among the other gates (~:337–780). If it scans the sibling tests, guard it
+(`&& $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ]`) so a build whose profile omits the `harness` part self-skips —
+that derived fact is the same one that writes `BUILDFLAG_LOAD_TESTS`, so gate and world can never disagree about
+whether this build has tests.
 
 **Add an advisory census.** `require('./census-public-private-calls.js')` and call `runCensus()` — it hands you the
 whole-system class model (`classInfo` / `chainOf` / `resolve`), `allMethods` with per-method body lines and markers, and
@@ -685,8 +741,10 @@ source to satisfy a new rule.
   [G] constants); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_POLY_APPLY` ([K]);
   `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED` ([M]);
   `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
+  `CONNECTOR_CALL`/`CONNECTOR_CALLER_ALLOWLIST` ([Q]); `USERLAND_FILES`/`USERLAND_PRIVATE_CALL`/`PRIVATE_USE_MARKER`
+  ([R]);
   `stripLine` / `METHOD_HEADER` / `methodBoundary` (mixin-DSL aware); `discoverSettlingWrappers`; `checkFile` (rules
-  [A]–[O]); `checkMacroFile` (rule [D]); `DOUBLE_SETTLE_MARKER`/`T_SELF_PUB_CALL`/`checkDoubleSettle` ([T]).
+  [A]–[T]); `checkMacroFile` (rule [D]); `DOUBLE_SETTLE_MARKER`/`T_SELF_PUB_CALL`/`checkDoubleSettle` ([T]).
 - `buildSystem/check-call-separation.js` — `BASELINE_S_SETTLING`/`BASELINE_S_EFFECTFUL` ([S]) +
   `BASELINE_U_EFFECTFUL`/`BASELINE_U_QUERY` ([U]) inline ratchets; reads `public-api-allowlist.txt`;
   requires `census-public-private-calls.js` (`runCensus`, `PUBLIC_CALL_MARKER`).
@@ -696,14 +754,22 @@ source to satisfy a new rule.
 - `buildSystem/check-unresolved-sends.js` + `buildSystem/unresolved-sends-allowlist.txt` — `DEF_FORMS` (the
   over-approximated implementor harvest) / `CALL_RE` / `BUILTINS` / `stripLine` + `interpolatedCode`; `--self-test`.
 - `buildSystem/check-stinks.js` — the inline `baseline` per stink; `--list <id>` enumerates one stink's sites.
+- `buildSystem/check-part-edges.js` + `buildSystem/lib/part-edge-scan.js` — `codePartOf` / `guardedPartsPerLine` /
+  `declaredRequires` (the eager-vs-lazy discount).
+- the three retirement tombstones — `buildSystem/check-region-markers.js` (`# »>>`), `check-source-vault.js`
+  (`_coffeSource` + boot-layer `Object.keys(window)`), `check-whole-file-markers.js` (the per-file exclusion comments):
+  each an inline per-kind `baseline`, all at 0.
+- `buildSystem/check-shippable-coverage.js` — `ALLOWLIST_PREFIXES`; shells `build.py --list-shippable` for the
+  partition's own answer.
 - `buildSystem/census-hierarchy-duplication.js` — `bodyTextOf` / `signatureOf` / `signatureHasEffect`.
 - `buildSystem/census-property-placement.js` — `STRING_WORDS` / `MEMBER_FILES` + `readAsMemberElsewhere` (the three
   exclusions); `lineOwnerOf` (the `@classlevel` attribution).
 - `buildSystem/check-coffee-syntax.js` — loads `src/meta/Class.coffee`/`Mixin.coffee` to compile fragmented.
 - `Fizzygum-tests/scripts/check-tests-syntax.js`, `Fizzygum-tests/scripts/check-refs.js`.
-- `build_it_please.sh` — gate wiring (~:255–390), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`.
-- `src/basic-widgets/Widget.coffee` — `_settleLayoutsAfter` (the one-flush throw ~:813); `_invalidateLayout`
-  (`FLOWRULE_VIOLATION` ~:3848); the immediate-mutator apply corners (`_apply*`/`_commit*`) + the `_<name>NoSettle` cores.
+- `build_it_please.sh` — gate wiring (~:337–780), each `if ! $noSyntaxCheck` + `$?`-gated `exit 1`; the two test gates
+  additionally `&& $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ]`.
+- `src/basic-widgets/Widget.coffee` — `_settleLayoutsAfter` (~:928; the one-flush throw ~:952); `_invalidateLayout`
+  (~:4919; `FLOWRULE_VIOLATION` ~:4959); the immediate-mutator apply corners (`_apply*`/`_commit*`) + the `_<name>NoSettle` cores.
 
 ## See also
 - `docs/architecture/layering-naming-convention.md` — the full naming convention (the geometry-apply 2×2 + the notification
@@ -718,7 +784,7 @@ source to satisfy a new rule.
 - `docs/archive/public-private-call-separation-plan.md` — the AUTHORED (not started) command/query call-separation
   campaign: planned rules [S] (private must not self-call a public command) / [T] (a settling method must not
   call another settling public method) / [U] (self-only public methods must be `_`-tier), sized by
-  `buildSystem/census-public-private-calls.js` (the analysis tool noted in §3).
+  `buildSystem/census-public-private-calls.js` (the analysis tool noted in §3c).
 - `docs/archive/end-of-cycle-flush-drawdown-plan.md` / `end-of-cycle-flush-inventory.md` — the campaign that owns the
   collapse/unCollapse convert.
 - Memory `fizzygum-layering-naming-tiers` — the tier predicates + the `NoSettle` convention.

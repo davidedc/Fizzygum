@@ -29,7 +29,7 @@ it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
 - **6b** — engine delivery behind an A/B switch (`world.dataflowWiresEnabled`, default OFF); the ECHO (a
   ported controller's onward-fire tail re-marking the node being applied) is suppressed via `@_applyingNode`
   ⇒ a driven ring is 1 pass (measured — `docs/measurements/dataflow-measurements.md`).
-- **6c** — `DataflowEngine.ensureWireEdge` makes "edges derive from `@target`/`@action`" TOTAL (covers wires
+- **6c** — `DataflowEngine.ensureWireEdges` makes "edges derive from `@target`/`@action`" TOTAL (covers wires
   set by DIRECT assignment — scrollbars, the prompt slider — not only menu-wired ones); the prompt slider's
   `edit()` action was made drain-safe via the standard `_*NoSettle` lattice (`WorldWdgt.edit`/`_editNoSettle`;
   `PromptWdgt.reactToSliderAction`→`takeSliderValue`, off the reserved `reactTo*` prefix).
@@ -97,8 +97,8 @@ Node roles:
   adjacency), rebuilt on load, on copy, on wire creation/removal, on formula commit.
 
 **Rationale (decisive):** widget-stored references already survive both structure-copy
-mechanisms for free — duplication (`DeepCopierMixin` remaps in-structure object references
-and keeps external ones) and serialization (`src/serialization/` encodes in-structure
+mechanisms for free — duplication (the `Duplicator` engine, `src/duplication/`, remaps
+in-structure object references and keeps external ones) and serialization (`src/serialization/` encodes in-structure
 references as `{"$r": n}` and world-singleton references as well-known keys `{"$wk": …}` —
 see `docs/architecture/serialization-duplication-reference.md`). A centrally-owned edge list would break
 every duplication/save of a wired structure. Corollary: duplicating a circuit or a sheet
@@ -162,6 +162,9 @@ Per-wire policy **`firesPerEvent`** (default `false`), set from the wire's menu:
   in-place settle. This preserves legacy connection call-stack shape and serves genuinely
   event-hungry consumers (counters, bang-driven patches). Mixed fan-out is per-wire: one
   slider can feed a per-event counter and a pooled label, each with its own semantics.
+  ⚠ This lane is **STILL DEFERRED** (the deviation at the top of the file): the per-wire flag
+  rides the edge record and the wire's menu toggles it, but delivery POOLS regardless — so this
+  bullet describes what lands the day the scoped mini-pass is built, not what runs today.
 
 On screen the lanes are indistinguishable (paint happens once per cycle); per-event buys
 side-effects-per-event and read-your-writes within a frame, at N× the evaluation cost.
@@ -169,21 +172,28 @@ side-effects-per-event and read-your-writes within a frame, at N× the evaluatio
 ### 4.1 The drain station in `doOneCycle`
 
 ```
-playQueuedEvents            ← per-event mini-passes run in here, inside their events
-runChildrensStepFunction    ← stepping: time sources mark themselves stale
-recalculateDataflow         ← NEW: drain the stale pool (this spec)
-recalculateLayouts          ← layout's end-of-cycle flush
-hand hover re-sync          ← reads SETTLED geometry (moved after the flush, 2026-07-04)
-updateBroken                ← paint
+_playQueuedEvents                        ← per-event mini-passes run in here, inside their events
+_runChildrensStepFunction                ← stepping: time sources mark themselves stale
+dataflow.recalculateDataflow             ← drain the dataflow stale pool (this spec)
+storageSorter.drainPendingSort           ← bin/shelf eager-sort drain (unrelated pool)
+_drainPendingFractionalBookkeepingSeeds  ← fractional-bookkeeping drain (unrelated pool)
+recalculateLayouts                       ← layout's end-of-cycle flush
+hand hover re-sync                       ← reads SETTLED geometry (moved after the flush, 2026-07-04)
+_repaintDamagedRects                     ← paint
 ```
 
 - **After stepping**, so this frame's ticks join this frame's batch.
 - **Before `recalculateLayouts`**, so sink applications feed this frame's settle and paint
   (running after layouts would reintroduce the one-cadence-lag bug class).
-- Nothing else sits between the two drains: since the hover re-sync moved after the
-  end-of-cycle flush (hover-resync-after-flush, 2026-07-04), it reads the settled fixed
-  point that paint reads — which now automatically includes dataflow-driven geometry
-  changes, with no dataflow-specific handling needed.
+- **Two more drain stations sit between the two**, both dark-cheap and both draining
+  unrelated pools: `storageSorter.drainPendingSort` (bin/shelf eager sorting) and
+  `_drainPendingFractionalBookkeepingSeeds` (fractional-bookkeeping seeds). Both run
+  *after* `recalculateDataflow`, and neither marks anything dataflow-stale, so they
+  neither feed nor disturb this spec's drain.
+- Since the hover re-sync moved after the end-of-cycle flush
+  (hover-resync-after-flush, 2026-07-04), it reads the settled fixed point that paint
+  reads — which automatically includes dataflow-driven geometry changes, with no
+  dataflow-specific handling needed.
 
 ### 4.2 One recompute pass
 
@@ -351,10 +361,11 @@ widget. No marker syntax.
   its `principalPinLabel` and read through that pin's declared getter
   ([`../architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md)
   §11). A widget that names no principal pin exports nothing, and the reference then yields
-  the widget itself. Four classes name one today: `SliderWdgt` (`value`), the `StringWdgt`
-  family (`text`), `StringFieldWdgt` and `ColorPickerWdgt` (both READ-ONLY pins — nothing can
-  drive them). A widget whose exported value is not a pin at all overrides `dataflowValue`
-  instead (a patch node's `@output`, a palette's `@choice`).
+  the widget itself. Six classes name one today: `SliderWdgt` (`value`), the `StringWdgt`
+  family (`text`), `StringFieldWdgt` (`value` — a READ-ONLY pin, nothing can drive it),
+  `ColorPickerWdgt` and `PaletteWdgt` (both `picked color`), and `SwitchButtonWdgt`
+  (`shown button`). A widget whose exported value is not a pin at all overrides
+  `dataflowValue` instead (a patch node's `@output`).
 - The cell **socket** is the two-way boundary adapter: it mounts the presenter/widget, and
   it is the connection target that interactive widget-sources (slider, picker, clock) fire
   into — each firing is a `markStale` on the cell.

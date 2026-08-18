@@ -1,5 +1,3 @@
-# Menu-action wiring — the four-slot convention, and the six live bugs it hid
-
 > **ARCHIVED 2026-08-16 — COMPLETE, authored and executed the same day.** A short successor to
 > [`constructor-parameter-conformance-plan.md`](constructor-parameter-conformance-plan.md), which
 > closed with the observation that ONE menu item had shaped six `createReference` signatures. This
@@ -9,6 +7,9 @@
 > and `Fizzygum-tests/scripts/menu-click-sweep-headless.js` (runtime, a gauntlet leg);
 > the law it serves is
 > [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md).
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
+# Menu-action wiring — the four-slot convention, and the six live bugs it hid
 
 ## 0. The convention, and why it goes wrong silently
 

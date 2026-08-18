@@ -47,9 +47,10 @@ Owner decisions baked in (2026-07-05; **items 4 and 7 were later revised — see
 
 **Fizzygum** = CoffeeScript GUI framework on one `<canvas>` (Morphic.js descendant); "web operating system"
 with windows, desktop, drag-and-drop, live in-system editing. Umbrella `/Users/davidedellacasa/code/Fizzygum-all/`
-(NOT a git repo) holds sibling repos `Fizzygum/` (source, ~470 `.coffee`), `Fizzygum-tests/` (~180 byte-exact
-screenshot macro SystemTests), `Fizzygum-builds/` (generated — never edit). `undefined` == `undefined`; one class per
-file; no imports (every class a global). Commands via `./fg` from the umbrella root: `./fg build` · `./fg suite`
+(NOT a git repo) holds sibling repos `Fizzygum/` (source, ~510 `.coffee`), `Fizzygum-tests/` (byte-exact
+screenshot macro SystemTests, one directory per test under `tests/`), `Fizzygum-builds/` (generated — never
+edit). `undefined` is the one absence value; one class per file; no imports (every class a global).
+Commands via `./fg` from the umbrella root: `./fg build` · `./fg suite`
 · `./fg gauntlet` (build + dpr1 + dpr2 + webkit + apps + gates) · `./fg test <name>`. Determinism doctrine:
 render/layout/input must be a pure function of the **event stream** — never wall-clock (`Fizzygum-tests/DETERMINISM.md`).
 
@@ -134,10 +135,11 @@ Tier membership is *computed*, not a new stored flag: eager/willing = `wantsDrop
 predicate); reluctant = the §5 climb found no acceptor but passed a widget with
 `providesAmenitiesForEditing and !dragsDropsAndEditingEnabled`; refusing = neither.
 
-**Owner decision 4 lands here:** dashboards default to edit-ON. Concretely: the dashboard construction path
-stops calling `disableDragsDropsAndEditing()` at build time (grep `SampleDashboardApp` — the call is in its
-window-assembly tail, ~`SampleDashboardApp.coffee:113-120`), while `SampleSlideApp.coffee:73` and
-`InfoDocs._buildInfoDocNextTo` (the shared info-doc builder) keep theirs (slides/docs still open in view mode).
+**Owner decision 4 was REVERSED 2026-07-06** (owner "keep view-locked" — see the deviations note at the top):
+dashboards stay view-locked at construction, exactly like slides and docs. `SampleDashboardApp` keeps the
+`slideWdgt.disableDragsDropsAndEditing()` call in its window-assembly tail, as `SampleSlideApp` and
+`InfoDocs._buildInfoDocNextTo` (the shared info-doc builder) keep theirs. Only the payload-class dwell rule
+above changed; no app's default editing state changed as part of this arc.
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)
 
@@ -206,7 +208,7 @@ Transitions:
 | `DWELL_ARM_MS` | 450 | Snappy end of the spring-loaded-folder range; consistent with the codebase's two 500ms dwells |
 | `LINGER_RADIUS_PX` | 7 | = `grabDragThreshold` — reuse the constant, one notion of "stationary" |
 | `RING_STEPS` | 5 | quantized progress (90ms/step) — discrete steps; ring animates via stepping (clock pattern), decision is event-time |
-| `OFFSET_LANDING_PX` | 24 | §8 refused-drop offset — big enough to read as "outside", small enough to stay local |
+| ~~`OFFSET_LANDING_PX`~~ | 24 | **DROPPED with §8/§9** (2026-07-06) — never implemented, and no such constant exists in the tree; a refused release lands where it was released, with no offset (§7) |
 
 Optional refinement, banked not specced: a size sanity check (window payload ≤ ~⅔ of candidate area to arm).
 Deterministic and cheap; add only if real-world accidents demand it.
@@ -332,7 +334,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 | Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | Neutral gray outline on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |
 | §9 teaching hint | **EPHEMERAL — text type.** Non-interactability is exactly right here: it is click-THROUGH (the next click acts on the world AND dismisses it — the pointer-down handler drops the declaration) | One line near the landing; no buttons, no timeout |
 | §8 land-and-offer pill | **NOT an ephemeral — it has buttons.** Interactability violates the ephemeral definition; it is a real transient widget of the menu family (menus already own dismiss-on-outside-click) | See §8 |
-| Refused-landing nudge | **Neither** — a transient movement of the real landed widget (2-frame quantized), not an overlay | OFFSET_LANDING_PX displacement (§7) |
+| ~~Refused-landing nudge~~ | **DROPPED with §8** — it was to be neither an ephemeral nor a widget of its own, but a transient movement of the real landed widget (2-frame quantized) | Moot: a refused release lands where it was released, unnudged (§7) |
 
 Implementation note (when code opens up): the drag ephemerals are PRODUCT features — they must follow the
 `addHighlightingWidgets` shipped path, NOT the homepage-excluded `addPinoutingWidgets` debug path.
@@ -362,12 +364,15 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   destination through §6.1 wheel-scrolling and through any layout settle FOR FREE — no per-event visual
   bookkeeping. And since ephemerals are hit-test-excluded, no overlay can ever perturb candidate resolution,
   `mouseEnter` dispatch, or the drop climb (no feedback loops between feedback and input).
-- **Proposed unification (small refactor, when code opens up): an `isEphemeral` capability** (base class or
-  mixin adopting the owner's term). Today `topWdgtUnderPointer` enumerates per-type marker predicates
-  (`wdgtThisWdgtIsHighlighting?` / `wdgtThisWdgtIsPinouting?`, `ActivePointerWdgt.coffee:105-106`); this spec
-  adds ~4 new ephemeral types (ring, label, badge, hint), which would grow that list per type. One capability
-  check consolidates: hit-test exclusion + `skipsAddShadowManagement` + serialization exclusion + "reconciler-
-  owned lifecycle" in one place. (Capability, not `instanceof` — per the type-test-elimination convention.)
+- **Landed (Phase 1): the `isEphemeral` capability** (the owner's term, as a capability on `Widget`).
+  `Widget.isEphemeral()` — backed by the per-instance `@_ephemeralOverlay` flag — is the ONE check behind
+  hit-test exclusion, `skipsAddShadowManagement`, serialization exclusion (the world serializer skips
+  ephemeral world children) and "reconciler-owned lifecycle". `topWdgtUnderPointer` reads the single
+  `!m.isEphemeral()` where it used to enumerate per-type marker predicates
+  (`wdgtThisWdgtIsHighlighting?` / `wdgtThisWdgtIsPinouting?`), which survive only as the overlays'
+  back-references to their targets, not as the hit-test gate — so this spec's own new ephemeral types
+  (ring, label, badge, hint) cost that list nothing. (Capability, not `instanceof` — per the
+  type-test-elimination convention.)
 - **Event-time decision, clock-driven feedback**: the arming DECISION derives only from input-event
   timestamps (macro tests synthesize them, so arm/re-anchor/disarm are exactly testable at `speed=fastest`
   with speed-invariant references); the ring/pulse ANIMATIONS ride the stepping + `animationsPacingControl`

@@ -17,22 +17,32 @@ what makes the pixel-exact SystemTest suite deterministic.
 
 ## 1. The world cycle
 
-`WorldWdgt.doOneCycle` (`src/WorldWdgt.coffee`) runs, in order, every frame:
+`WorldWdgt.doOneCycle` (`src/WorldWdgt.coffee`) runs every frame, in four phases. The stations named here are the
+ones layout drives or is driven by; `doOneCycle` runs others (macro-step pacing, the end-of-cycle pixel-read seam,
+the budgeted source-compile station) that are outside this doc's scope — read the method rather than treat this as
+the whole cycle:
 
-1. update time references; surface errors deferred out of the previous cycle's repaint and settle
-   (`_showErrorsHappenedInRepaintingStepInPreviousCycle`, `_showLayoutErrorsFromPreviousCycle`)
-2. **process input** — `_playQueuedEvents` drains the *whole* event backlog this frame, returning only at a
-   future-timed event
-3. **step functions** — `_runChildrensStepFunction` (animation, stepping widgets), test replay, frame-paced loads
-4. **dataflow drain (VALUES)** — `world.dataflow.recalculateDataflow()` (`src/dataflow/DataflowEngine.coffee`)
-5. **layout settle (GEOMETRY)** — `recalculateLayouts()`
-6. **hover re-sync** — `hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()`
-   (`src/ActivePointerWdgt.coffee`), which reads the *settled* geometry paint will read
-7. **paint** — `updateBroken()` repaints the damage rectangles of an already-settled world
+- **(a) surface deferred errors** — the errors pushed out of the *previous* cycle's repaint and settle
+  (`_showErrorsHappenedInRepaintingStepInPreviousCycle`, `_showLayoutErrorsFromPreviousCycle`), because neither
+  pass may report from inside itself.
+- **(b) input + stepping** — `_playQueuedEvents` drains the *whole* event backlog this frame, returning only at a
+  future-timed event; then the test replay, `progressFramePacedActions` (the frame-paced source-batch fetch that
+  brings a lazy part in) and `_runChildrensStepFunction` (animation, stepping widgets).
+- **(c) the settle block** — the drains, the geometry settle, and the two reads that must see it:
+  `world.dataflow.recalculateDataflow()` (`src/dataflow/DataflowEngine.coffee`) · `storageSorter.drainPendingSort()` ·
+  `_drainPendingFractionalBookkeepingSeeds()` → **`recalculateLayouts()`** →
+  `hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()` (`src/ActivePointerWdgt.coffee`), which
+  reads the *settled* geometry paint will read → `_drainPendingFractionalReRecords()`, which re-records against
+  that same settled geometry.
+- **(d) overlay reconcilers + paint** — `pinouts?.reconcile()`, `addHighlightingWidgets()`,
+  `_updateEditorSelectionOverlay()`, `addDragAffordanceWidgets()`, then **`_repaintDamagedRects()`** repaints the
+  damage rectangles of an already-settled world.
 
-**Two parallel drain stations, one-way coupled.** Steps 4 and 5 are deliberate siblings: `recalculateDataflow`
-settles values, `recalculateLayouts` settles geometry. The coupling is **one-way for VALUES — dataflow may dirty
-layout, and layout may never mark a value stale** — which is why dataflow runs *before* layout: a
+**Four drain stations, one-way coupled.** Phase (c) opens with three cheap value/bookkeeping drains before the
+geometry one: `recalculateDataflow` settles VALUES, `storageSorter.drainPendingSort` reclassifies bin/shelf
+residents (which may dirty real layout), `_drainPendingFractionalBookkeepingSeeds` fills the `__add` fraction seed
+(bookkeeping writes only) — then `recalculateLayouts` settles GEOMETRY. The coupling is **one-way for VALUES —
+dataflow may dirty layout, and layout may never mark a value stale** — which is why dataflow runs *before* layout: a
 formula/connection that writes a widget's text feeds this frame's geometry settle and paint.
 
 ⚠ **The one narrow exception, and why it is not a hole.** A layout station may announce a **non-value** change
@@ -51,7 +61,7 @@ nothing is in motion. See `docs/plans/connector-ubiquity-and-reflection-plan.md`
 This doc covers only the layout station.)
 
 **Paint reads layout but never schedules it.** The events→settle→paint boundary is the load-bearing invariant:
-events fix layout step-by-step, the end-of-cycle settle drains the rest, then `updateBroken` paints. There is no
+events fix layout step-by-step, the end-of-cycle settle drains the rest, then `_repaintDamagedRects` paints. There is no
 caret step in `doOneCycle` — a caret move self-settles its scroll-follow in-place during its own event, and paint-time
 caret work is the *inert* re-sync `CaretWdgt.justBeforeBeingPainted → _adjustAccordingToTargetText`, which schedules no
 layout. The "paint never schedules layout" boundary is enforced by a dynamic gate (see §7).
@@ -159,12 +169,12 @@ Two facts make this a *fixed-point* loop, not a fixed count of passes:
    case a localized change is **climb up once, walk down once**: one top-down arrange. Each `_reLayout` ends in
    `_markLayoutAsFixed`, so the next round drops the entry.
 
-2. **A settle can re-dirty something outside the subtree it just settled — the settle-time up-edge.** After a chain-top
-   settles, `Widget._reFitMyTrackingContainerAfterSettle` re-fits its size-tracking container via `_reFitContainer`,
-   **iff the chain-top's frame actually changed** (a no-op early-return otherwise). Because the container reads the
-   chain-top's *final*, just-settled geometry, it re-fits correctly in one visit. This is the only source of genuine
-   iteration, and it is concentrated at container boundaries that re-dirty each other (free-floating content ↔ its
-   tracking container).
+2. **A settle can re-dirty something outside the subtree it just settled — the settle-time up-edge.** After the walk
+   settles ANY node, `Widget._reFitMyTrackingContainerAfterSettle` re-fits that node's size-tracking container via
+   `_reFitContainer`, **iff the node's frame actually changed** (a no-op early-return otherwise). Because the
+   container reads the node's *final*, just-settled geometry, it re-fits correctly in one visit. This is the only
+   source of genuine iteration, and it is concentrated at container boundaries that re-dirty each other
+   (free-floating content ↔ its tracking container).
 
 **Order-independence.** Settled layout is a pure function of geometry-at-that-instant and converges to the same fixed
 point regardless of iteration order — that is what licenses the ordered down-walk and the fact that a heavy frame's
@@ -397,8 +407,8 @@ The layout system holds three empty/zero baselines. A layout change that breaks 
 
 - **Zero careless end-of-cycle pushes — the end-of-cycle capstone gate.** A public mutator that *defers* to the
   end-of-cycle flush instead of self-settling is a "careless" leak; the careless subset of that population is driven
-  to zero and held there. Legitimate riders remain: declared-coalesced streams, orphan/construction deferrals, and the
-  in-pass re-fit seam.
+  to zero and held there. Legitimate riders remain: declared deferred-settle streams (the `*DeferredSettle`
+  entrypoints), orphan/construction deferrals, and the in-pass re-fit seam.
 - **Empty settle-re-visit baseline (`fg revisits`).** Every widget is visited **at most once per flush**, suite-wide —
   the committed baseline is empty. Any new re-visit means an arrange that is not idempotent, reads half-applied state,
   or is a genuinely new up-edge that must be argued into the baseline consciously.
@@ -453,12 +463,13 @@ answering subclass defines) over an `instanceof`/type test. Full gate list, pred
 
 ## 9. Invalidation and repaint — and what settle does NOT do
 
-Layout settle computes **geometry only**. It does not paint. Repaint is a separate *damage-rectangles* (dirty-region)
-loop:
+Layout settle computes **geometry only**. It does not paint. Repaint is a separate *damage-rectangles* loop (pixels
+say "damage"; "dirty" names layout invalidation and nothing else — the vocabulary law lives in
+`docs/architecture/appearance-paint-convention.md`):
 
 - `Widget._changed()` invalidates just this widget's rectangle; `Widget._fullChanged()` invalidates it plus its subtree.
-- `WorldWdgt.updateBroken()` repaints the accumulated damage rectangles once per frame, at the tail of `doOneCycle`,
-  against already-settled geometry.
+- `WorldWdgt._repaintDamagedRects()` repaints the accumulated damage rectangles once per frame, at the tail of
+  `doOneCycle`, against already-settled geometry.
 - Widgets opting into `BackBufferMixin` (`src/mixins/BackBufferMixin.coffee`) cache themselves to an offscreen canvas;
   pluggable `*Appearance` objects do the drawing. (Integer placement is *necessary but not sufficient* for a back
   buffer to be byte-identical to a direct draw — see the integer-placement doc.)

@@ -395,7 +395,8 @@ recapture serially, one name per invocation, until fg grows an arg loop/guard.)
     `close/editButtonInBarPressed` and gains `collapse/uncollapseButtonInBarPressed`
     (`-> @contents.collapse()/unCollapse()` — the frame owns what its bar buttons mean); the two
     collapse buttons change to `@parent.parent.<x>ButtonInBarPressed?()` (parent.parent = the bar).
-    Non-bar `CloseIconButtonWdgt` uses (PointerWdgt, MenusHelper) keep the `.close()` fallback.
+    Non-bar `CloseIconButtonWdgt` uses (`PointerWdgt`, and the demo-menu creator arc 3 moved into
+    `DemoMenus`) keep the `.close()` fallback.
   - **⚠ Drag-by-titlebar constraint:** the grab climb (`findFirstLooseWidget`) stops at a child whose
     parent is a `PanelWdgt` — so `FrameBarWdgt` MUST be a plain non-`PanelWdgt` `Widget` with
     `grabsToParentWhenDragged()` true (the inherited default), or dragging by label /
@@ -679,7 +680,7 @@ in both modes.
 **EXECUTION DESIGN (2026-07-19, substrate re-verified against src @ `10aa3342`; §3.4 holds the five-site
 embedded inventory + the six floating creators):**
 
-**C-i. The class: `ToolbarWdgt` + one subclass per palette (new folder `src/toolbars/`).**
+**C-i. The class: `ToolbarWdgt` + one subclass per palette (a folder of their own — landed as `src/toolbars/`; the packaging arcs since dissolved that folder, so the base `ToolbarWdgt` now lives in the shared-base-layer part `src/app-kit/` and each palette subclass sits in its app's part, e.g. `src/authoring/`, `src/graphs-plots-charts/`).**
 `class ToolbarWdgt extends ScrollPanelWdgt`, ctor `super new ToolPanelWdgt` then
 `@_buildAndConnectChildren()` — byte-for-byte the PROVEN `SlidesToolPanelWdgt` shape (extraction precedent,
 incl. the check-constructors-build contract and the `_addManyNoSettle` batch add, which `ScrollPanelWdgt`
@@ -914,7 +915,7 @@ D-2's design space, and per-image armed-handler state leaves nothing world-level
    - Per-kind declarations: `colloquialName "Drawings Maker"` (D14), `representativeIcon
      PaintBucketIconWdgt`, `buildToolbar: -> new PaintToolbarWdgt`. Close / reset-guard / title /
      changed-check: INHERITED from `GenericPanelWdgt` (D-i #7); `providesAmenitiesForEditing` likewise.
-2. **`PaintToolbarWdgt`** (`src/toolbars/`): the RADIO-TOOL palette. **NOT a `ToolbarWdgt` subclass**
+2. **`PaintToolbarWdgt`** (`src/authoring/`): the RADIO-TOOL palette. **NOT a `ToolbarWdgt` subclass**
    (owner decision D10): its items are stateful radio TOGGLES with editable-mark annotations, not
    drag-out creator thumbnails — forcing them into the ScrollPanel(ToolPanel) grid would demand new
    radio-capable thumbnail machinery AND churn proven pixels for no semantic gain. Shape:
@@ -1213,7 +1214,7 @@ focus — would revive the abstraction question WITH a consumer in hand.)
   -exec perl … {} +` is the robust batch form (verify no de-indent with a paired -/+ whitespace-only
   diff scan afterwards — perl-on-.coffee is the standing hazard).
 
-### D-3 — visible editor-focus indicator (✅ LANDED 2026-07-20; the D-2 re-open trigger, resolved)
+### D-3 — visible editor-focus indicator (✅ LANDED 2026-07-20; the D-2 re-open trigger, resolved — the overlay MECHANISM was superseded 2026-07-21, see D-3-v; the semantics stand)
 
 **Problem.** Nothing on screen shows WHICH content a floating toolbar will act on. Post-D-2 the target is
 `world.editorFocusWdgt` (the sticky focus pointer, set on every content click/drop), and the toolbar
@@ -1292,7 +1293,16 @@ unification still isn't warranted — the consumer only needs the pointer.)
   image with a text toolbar open still sees the image framed; focus ≠ what a given toolbar edits, and that
   is fine / honest.)
 
-**D-3-v. Landing (2026-07-20; one landing on the D-2/E base @ `99ff86ce`).** As-built:
+**D-3-v. Landing (2026-07-20; one landing on the D-2/E base @ `99ff86ce`).**
+⚠ **The MECHANISM below was SUPERSEDED the next day (2026-07-21) by
+`docs/archive/selection-overlay-unification-plan.md`:** the world-child `HighlighterWdgt` reconciler gave
+way to a per-widget PAINT-TIME overlay. `WorldWdgt._widgetBeingEdited()` survives as the predicate —
+resolved once per cycle by `_updateEditorSelectionOverlay` and drawn through `paintHighlight` — while the
+`editorFocusIndicatorWdgt` field, the `addEditorFocusIndicatorWidget()` reconciler and
+`HighlighterWdgt.editorFocusOutlineStyle` no longer exist. What SURVIVES is the SEMANTICS: D18's
+edit-mode trigger, D19's teal outline, D20's any-focused-widget specificity, and the pinned predicate's
+two branches + world-guard. Read the rest of this subsection as the as-built record of the FIRST
+mechanism. As-built:
 - **HighlighterWdgt** — `@editorFocusOutlineStyle: -> {form:"outline", color: Color.create(38,166,154,1),
   alpha:1}` (D19 = the THIRD distinct colour, a calm teal; hover=blue-fill, drag=yellow/gray-outline were
   taken). Reuses the existing `applyHighlightStyle` outline form; no new class was needed.
@@ -1396,7 +1406,7 @@ asserted) — deferred, not built (E1).
 - **E2 (the deliverable) — close-from-frame-bar policy as a tracked capability.** ⚠ CORRECTED design
   (the base `FrameWdgt.closeFromFrameBar` does NOT save-or-ask — it DELEGATES to the content:
   `@contents?.closeFromContainerFrame @`, the live plain-frame path for `ScriptWdgt`/`ErrorsLogViewer`/
-  `BasementWdgt`/generic windows whose content's `closeFromContainerFrame` decides. Only the citizens
+  `BinWdgt`/generic windows whose content's `closeFromContainerFrame` decides. Only the citizens
   override with save-or-ask. So the base default must NOT become save-or-ask). Shape:
   - Introduce ONE FrameWdgt field `closeFromFrameBarPolicy` (`'saveOrAsk'` default / `'close'` /
     `'destroy'`; churn-free — no inspector test inspects a FrameWdgt's own members: they inspect

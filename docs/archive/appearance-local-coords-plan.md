@@ -1,3 +1,8 @@
+> **ARCHIVED — ✅ COMPLETE (2026-08-12).** Tiers 1–4 of the Appearance local/global coordinate
+> conversion (affine plan §7.7) all landed — byte-identical everywhere except one benign
+> inspector-recapture — and the close-gauntlet also caught and fixed one real dpr2-only regression.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Appearance local-logical-coordinates conversion (affine plan §7.7)
 
 > **STATUS 2026-08-12: ✅ COMPLETE — Tiers 1–4 all LANDED. The COORDINATE CONVERSION (Tiers

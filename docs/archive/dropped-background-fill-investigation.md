@@ -1,3 +1,9 @@
+> **ARCHIVED — ✅ EXECUTED IN FULL (2026-08-13).** Root cause found (a constructor `@`-param
+> unconditionally overwrote `backgroundTransparency` with `nil`, reaching an invalid `globalAlpha`
+> that HTML5 says to ignore but some engine builds composite as NaN coverage), fixed, and
+> regression-tested.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # A specified widget background that silently never painted — find the mechanism
 
 > ## ✅ EXECUTED IN FULL — 2026-08-13. Root cause found, fixed, regression-tested.

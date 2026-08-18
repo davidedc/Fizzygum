@@ -41,7 +41,7 @@ tempting. It is rejected as the universal rule for three reasons, in descending 
    documented idiom in `src/macros/MACRO-PATTERNS.md`. These spellings are a published surface.
 3. **It allocates.** Every call mints a second short-lived object. Irrelevant next to what a
    widget constructor already does (it allocates the widget, its appearance, usually children);
-   **not** irrelevant for value classes minted per-frame — `new Point` alone has **941** call
+   **not** irrelevant for value classes minted per-frame — `new Point` alone has **~960** call
    sites in `src/`.
 
 So the shape is a hybrid, and §3 draws the boundary conservatively: where the allocation
@@ -58,7 +58,7 @@ A positional parameter must pass **all** of these:
   established convention like `target, action`);
 - it is **not** a bare `true`/`false` at most call sites.
 
-Four is the hard cap, and four is already generous — 117 of the 139 constructors in `src/`
+Four is the hard cap, and four is already generous — 137 of the 144 constructors in `src/`
 take four or fewer. If a fifth operand is genuinely required and genuinely ordered, that is a
 strong hint the class is doing two jobs; look there before widening the head.
 
@@ -152,17 +152,17 @@ to take the parameters it should have had. ⚠ It applies in reverse too: never 
 verb's own name — an arity-0 `createReferenceAndClose` menu action on a prompt class SHADOWS
 `Widget.createReferenceAndClose` on every instance of that class.
 
-⭐⭐ **AND THE SLOTS ARE NOT WHAT THEY LOOK LIKE: slot 2 is the ENCLOSING PANEL's target, not the
-row's own.** `MenuRowsPanelWdgt.createMenuItem` fills an ordinary (environment-free) row with slot 1 =
-**the `MenuItemWdgt` itself** and slot 2 = **the widget the enclosing menu was built about**; only a
-panel carrying an `environment` puts the panel target in slot 1 and that environment in slot 2. So a
-verb taking its SUBJECT from slot 2 — `MenusHelper.popUpDevToolsMenu`, and every pin setter (see
-`widget-authoring-guidelines.md`, "The pin-setter contract") — is right exactly when the menu it sits
-in was built *about* that subject, and silently receives something else everywhere else. Two
-consequences: a menu with subject-hungry rows must be built `target: <that subject>` (Widget's own
-"dev ➜" is the pattern), and a row cannot be copied into another menu without first checking what
-THAT panel's target is. ⚠ A row wired to a **different** receiver than the panel does not opt out of
-this — the receiver comes from the row, the two leading arguments still come from the panel.
+⭐⭐ **AND THE SLOTS ARE NOT WHAT THEY LOOK LIKE: slot 2 is the ENCLOSING PANEL's target,
+unconditionally — not the row's own.** `MenuRowsPanelWdgt._createMenuItem` builds every row with
+`subject: @target`: slot 1 of a menu dispatch is always the button that fired (`ButtonWdgt` passes
+itself), slot 2 is always the subject the *enclosing panel* was built about, with no special case
+left for a "which panel" fork. So a verb taking its SUBJECT from slot 2 —
+`MenusHelper.popUpDevToolsMenu`, and every pin setter (see `widget-authoring-guidelines.md`, "The
+pin-setter contract") — is right exactly when the menu it sits in was built `target: <that subject>`
+(Widget's own "dev ➜" is the pattern), and reads something else whenever it wasn't. A row therefore
+cannot be copied into another menu without first checking what THAT panel's target is. ⚠ A row wired
+to a **different** receiver than the panel does not opt out of this — the receiver comes from the
+row, the two leading dispatch arguments still come from the panel.
 
 ### R4 — Option keys are the caller's vocabulary, not the field's name.
 
@@ -266,11 +266,11 @@ hole test (R3) is answered by reordering, not by an options bag.
 
 | # | Exempt | Why | Evidence |
 |---|---|---|---|
-| E1 | **Value / geometry tuples** — `Point`, `Rectangle`, `Color` | canonical order; an options object would double the allocation on the hottest construction path in the system | 941 `new Point`, 94 `new Rectangle` in `src/` |
+| E1 | **Value / geometry tuples** — `Point`, `Rectangle`, `Color` | canonical order; an options object would double the allocation on the hottest construction path in the system | ~960 `new Point`, 95 `new Rectangle` in `src/` |
 | E2 | **Per-frame construction** generally | same allocation argument, wherever it actually applies | — |
-| E3 | **Records mirroring a foreign API** — the `events-input/` family | fields and their order come from the DOM event, not from us; the *named* entry point is the `fromBrowserEvent` static factory, and every runtime site uses it | 7 classes, 8–11 params; `WorldWdgt:2129-2263` all go through the factory |
+| E3 | **Records mirroring a foreign API** — the `events-input/` family | fields and their order come from the DOM event, not from us; the *named* entry point is the `fromBrowserEvent` static factory, and every runtime site uses it | 5 classes, 7–11 params (two more in the family are already ≤4 on their own); `WorldWdgt`'s DOM handlers all go through the factory |
 | E4 | **Published user-facing spellings** | a spreadsheet formula is typed by a user; changing the spelling breaks saved documents | `new SliderWdgt 0, 100, 30, 10` via `FormulaCompiler` |
-| E5 | **Arity ≤ 3, all required** | nothing to separate | 107 of 139 constructors |
+| E5 | **Arity ≤ 3, all required** | nothing to separate | 129 of 144 constructors |
 
 **E3 is the pattern worth generalising**: when a long positional list is unavoidable, give it a
 **named static factory** and make that the door. `Color.create r, g, b, a` is the same move —
@@ -304,10 +304,10 @@ HARD rule — there is no site left to grandfather.
 
 ⚠⚠ **A green gate is a floor, not a proof.** The regex needs two `undefined`s *adjacent on one
 line*, so it is blind to the two commonest holes: a **single** `undefined` (`holder.add w,
-undefined, w.divisionBox()` — 67 such sites in `src/` and 41 in the macros, none of them ever
-counted), and a hole spread over a **multi-line** call. It is a regression alarm for the worst
-shape, not an inventory. When you convert a family, sweep it by METHOD NAME across both repos and
-read the call list; do not ask the gate whether you are done.
+undefined, w.divisionBox()`) and a hole spread over a **multi-line** call — the shapes that let the
+conformance arc be archived as complete once and re-opened the same day. It is a regression alarm for
+the worst shape, not an inventory. When you convert a family, sweep it by METHOD NAME across both
+repos and read the call list; do not ask the gate whether you are done.
 
 **`buildSystem/check-argument-holes.js` is the honest count**, and it also runs on every build. It
 shares `census-call-arity.js`'s paren-aware parser — so the gate and the advisory view

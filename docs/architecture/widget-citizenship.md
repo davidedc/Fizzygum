@@ -60,7 +60,8 @@ What the system may assume of every widget, and what a new widget must provide t
 citizen:
 
 1. **It carries its own state.** Everything the widget needs to function travels with it:
-   duplicating any widget or subtree (the one graph copier, `DeepCopierMixin`) yields an
+   duplicating any widget or subtree (the one graph copier, the `Duplicator` engine —
+   `src/duplication/Duplicator.coffee`) yields an
    independent working copy — state, connections among the copied group, and ongoing
    processes included — and serialization ships the same closure to disk. A widget that
    quietly depends on state parked elsewhere breaks both.

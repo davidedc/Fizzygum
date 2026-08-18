@@ -1,12 +1,16 @@
 # Connector ubiquity & the controller-is-a-view law
 
-**STATUS: partly executed. AUTHORED 2026-08-14, owner-gated. THREE steps landed — P9** (the
-`@target` disambiguation, §6 step 3) **and P1** (`PinSpec`, §6 step 4) on 2026-08-16, **and P5+P7**
-(§6 step 1) on 2026-08-17. Each section says what
-actually landed, what deviated from its sketch, and what it deliberately left alone; **read a
-section's "As landed" block before trusting its sketch**. Everything else is still design-stage with
-no code written. §6's steps 1 and 2 (P5+P7, P6) are still open and were *skipped over*, not
-superseded: they carry no engine risk and remain the cheapest way to test the law.
+**STATUS: executed except one parked item. AUTHORED 2026-08-14, owner-gated. P1–P9 ALL LANDED**
+between 2026-08-16 and 2026-08-18, and so is **P10(d)** (2026-08-18 — a switch is a view of a value;
+the open question dissolved rather than got decided) and **P10(c)** (re-aimed by measurement on
+2026-08-18 — the gap is a LIFETIME, not a vocabulary: drag a menu row out and keep it — and closed
+the same day). **What is left is P10(b) alone** (index button `@target`s as non-traversed command
+edges), and it is parked where it belongs: it rides
+[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md)
+§4.2, not this arc. P10(a) is a recorded REFUSAL, not an open step. **§6's sequencing table is the
+status ledger — read it first**, and then a section's **"As landed"** block before trusting its
+sketch: each says what actually landed, what deviated from its sketch, and what it deliberately left
+alone.
 Anchor on **symbol names**; §2's current-state survey was verified against `src/` on 2026-08-14 and
 its §2.4 is now history — P1 replaced the write-only tables it describes. Line numbers drift.
 Self-contained.
@@ -1106,6 +1110,7 @@ put). Its final image now shows both knobs meeting. Its four prose fields and it
 rewritten to assert the symmetry instead.
 
 ### P10 — Buttons: **NO** to engine delivery, **YES** to the gesture and the index
+*(a) REFUSED · (b) OPEN, parked on the graph-edges plan · (c) + (d) ✅ **LANDED 2026-08-18***
 
 Owner question, 2026-08-14: *"buttons don't connect to their destinations using the connection
 system. Should they?"* The honest answer splits three ways, and the split is worth recording as a
@@ -1174,7 +1179,7 @@ excluded from the downstream closure** — indexed, never traversed, never deliv
 mechanically the same exclusion `cold` needs (W2), reached from a different direction. Zero change
 to invocation; the payoff is discoverability, GC reachability, and the ability to *draw* the wiring.
 
-#### (c) The gesture: YES, and this is the real gap
+#### (c) The gesture: YES, and this is the real gap — RE-AIMED then ✅ **CLOSED 2026-08-18**
 
 You can point a slider at any widget through `connect to ➜` and pick a pin. **You cannot point a
 button at anything** — a button's `@target`/`@action` is set at construction, in code, always. There
@@ -1200,7 +1205,23 @@ fan-out to several targets) for the subset of actions that are drain-safe — wi
 being exactly the switch that makes it legal. That is the honest dependency: **W1 is the
 prerequisite for buttons ever joining the engine, and until it lands the answer is no.**
 
-#### (d) Toggles and switches: here the answer flips to YES
+**As re-aimed and landed 2026-08-18 — the gap is a LIFETIME, not a vocabulary, and the command table
+above is NOT what got built.** Measured what such a table would curate FROM (402 methods on a plain
+`Widget`, 517 on `WorldWdgt`, 6923 across 15 representative classes) and what already curates it (the
+context menu: 234 commands on those same classes, labelled, per-class, chaining through `super`,
+well-formed at 273/274). ⭐ **The decisive fact is that a context menu is not a TABLE of commands — it
+is a PANEL OF BUTTONS ALREADY POINTED AT THINGS** (`MenuItemWdgt extends LabelButtonWdgt extends
+ButtonWdgt`, 328 sites). Pointing a button at something is therefore not missing; it happens every
+time a menu opens. What is missing is that the button is DESTROYED when the menu closes — precisely
+what citizenship point 5's "in principle" is describing. ⇒ the arc became **drag a menu row out and
+keep it**: no second declaration of the same fact at 328 sites (§P1's "a fact stated twice will
+disagree"), no harvesting API, and no menu row spent (§P2's rent law). Two things were built — the
+`rejectDrags` opt-out (buttons are deliberately slippery so menus can be swiped, so a **pinned** menu
+is what gives up its rows, composing two existing gestures with no new mode) and the row-owned
+reflection subscription (a reflecting row `addEdge`s for itself, so an extracted row keeps ticking
+after its menu is destroyed).
+
+#### (d) Toggles and switches: here the answer flips to YES — ✅ **LANDED 2026-08-18**
 
 `ToggleButtonWdgt` / `SwitchButtonWdgt` are a different animal and belong in the value world:
 `@buttonShown` **is state**, and a toggle **is a view of a boolean**. Today they advertise no pins,
@@ -1220,6 +1241,26 @@ three tables are colour/string/numerical, and **there is no boolean**. Decide wh
 exports `0`/`1` as numerical (cheap, honest enough) or whether a fourth kind is warranted (probably
 not — per facet 9, payloads are the cheap axis but a kind that only one widget uses is not worth its
 menu).
+
+**As landed 2026-08-18.** `SwitchButtonWdgt` declares `shown button` — the **INDEX** of the button it
+shows — as its `principalPinLabel` (`numerical`, `setToggleState`/`getToggleState`, `announces: true`),
+so a toggle is driven through the ordinary "set target" gesture with no machinery of its own, and
+`exportedValue()` answers `0` where it answered `undefined`.
+  ⭐ **The payload question DISSOLVED rather than got decided**, and the general class is where it
+dissolves: a switch is n-way and its state is an index into `@buttons` — a boolean is only what the
+n=2 case looks like from outside. Hence the pin sits on `SwitchButtonWdgt` rather than the two-button
+subclass, an ordinary numerical wire drives it, the setter CLAMPS, and no fourth kind is invented for
+one widget.
+  ⚠⚠ **The sketch above was wrong on two of its three claims**, measured on a live instance before
+anything changed: the "non-firing reflect path" it calls missing is `setToggleState`/`_setToggleState`,
+which exist, work and provably fire nothing (5 call sites); the "no reader" is `isSelected`, which
+`RadioButtonsHolderWdgt` uses. What was genuinely missing was the pin — and the FUNNEL that earns its
+`announces`: `@buttonShown` had THREE write paths and now has one, because a pin announcing from only
+some of its write paths leaves a follower silently stale exactly when it matters. ⇒ the
+`ToggleButtonWdgt.select`/`.toggle` pair quoted above as the tell is DELETED (zero callers).
+  ⚠ Deliberately NOT done: `sliderRangeForPin`, which would let a slider FOLLOW a toggle and scale to
+it — that belongs to the parked FOLLOWER arc, where the cycle rule a two-way pin relationship needs
+also lives.
 
 ### P9 — Naming: `@target` means four different things — ✅ **LANDED 2026-08-16**
 
@@ -1311,16 +1352,16 @@ carry zero engine risk, which makes them the right way to test the law before pa
 | 2 | **P6** — the palette's marker (+ the two riders, + picker gets `ControllerMixin`) ✅ **LANDED 2026-08-17** | **none** | complaint ②'s view half |
 | 3 | **P9** — the `@target` renames ✅ **LANDED 2026-08-16** | none | reading hazard |
 | 4 | **P1** — `PinSpec` with readers ✅ **LANDED 2026-08-16** | none (the pull lands with P2) | unblocks 5–6 |
-| 5 | **P4** — a controller owns a list of wires | index mirroring; **serialization surface** | G2; frees `FanoutWdgt` |
-| 6 | **P2** — the `bind ⇄` gesture | none (two ordinary wires) | the headline |
-| 7 | **P8** — scroll pins + reverse edge, retire the field plumbing | none, given 1/4/5 | complaint ① |
-| 8 | **P10(d)** — toggle/switch gain a value pin and a non-firing reflect path | none, given 4 | the `mouseClickLeft()`-to-set-state smell |
-| — | **P10(b)** — index button edges as command edges | index only, no delivery | rides `graph-edges-and-lifecycle-plan.md` §4.2, not this arc |
-| — | **P10(c)** — a command table + "make this button do X to Y" gesture | none | its own arc; needs P1's shape first |
+| 5 | **P4** — a controller owns a list of wires ✅ **LANDED 2026-08-17** | index mirroring; **serialization surface** | G2; frees `FanoutWdgt` |
+| 6 | **P2** — the `bind ⇄` gesture ✅ **LANDED 2026-08-17** | none (two ordinary wires) | the headline |
+| 7 | **P8** — scroll pins + reverse edge, retire the field plumbing ✅ **LANDED 2026-08-17** | none, given 1/4/5 | complaint ① |
+| 8 | **P10(d)** — switch gains a value pin (the INDEX of the button it shows) ✅ **LANDED 2026-08-18** | none, given 4 | the `mouseClickLeft()`-to-set-state smell |
+| — | **P10(b)** — index button edges as command edges | index only, no delivery | rides [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.2, not this arc — **the one step still open** |
+| — | **P10(c)** — RE-AIMED then ✅ **CLOSED 2026-08-18**: not a command table — drag a menu row out and keep it | none | citizenship point 5's "in principle" |
 
-Steps 1 and 2 are each a self-contained session. Step 5 is its own arc and needs the serialization
-round-trip legs. Step 7 needs the `updateSpecs` payload decision (§P8), which is also the answer the
-wire-vocabulary plan's W2 is waiting for.
+Steps 1 and 2 were each a self-contained session; step 5 was its own arc and needed the serialization
+round-trip legs; step 7 needed the `updateSpecs` payload decision (§P8), which answered NO payload at
+all — and is also the answer the wire-vocabulary plan's W2 is still waiting for a customer for.
 
 ---
 
@@ -1392,8 +1433,14 @@ wire-vocabulary plan's W2 is waiting for.
    where its reverse edge belonged). See the §P5 heading.
 8. **Command edges (§P10b)** — index button `@target`s in `world.dataflow` as non-traversed command
    edges, or leave the button edge unindexed until the unified collector arc actually needs it?
-9. **Boolean payloads (§P10d)** — a bound toggle exports `0`/`1` as numerical, or does a fourth
-   payload kind earn its menu?
+   **The one question still open here**, and it travels with §P10(b) to
+   [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.2 — whose own scope
+   decision (its G1) is itself still owner-pending.
+9. ~~**Boolean payloads (§P10d)** — a bound toggle exports `0`/`1` as numerical, or does a fourth
+   payload kind earn its menu?~~ **DISSOLVED 2026-08-18 rather than decided:** a switch is n-way and
+   its state is an INDEX into `@buttons`, so a boolean is only the n=2 case seen from outside. The pin
+   is an ordinary numerical one on `SwitchButtonWdgt` whose setter clamps; no fourth kind. See
+   §P10(d) "As landed".
 
 ---
 

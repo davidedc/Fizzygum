@@ -69,7 +69,7 @@ either between paints, so each is a class-level fact:
 is also where the `_paintInLocalScope` call lives, so the field cannot reach a subclass whose paint
 the declaration was not already deciding. Check that before adding a third knob.
 
-`@clipsToLocalArea: false` skips the scope's damage clip — for a body whose every draw provably
+`@clipsToDamageBox: false` skips the scope's damage clip — for a body whose every draw provably
 bounds itself to damage∩tight (`RectangularAppearance`: its fills and stroke are exact rects,
 and its droplet hook self-clips). This is not an optimization but a PIXEL contract: in an
 island buffer the ambient translate can be FRACTIONAL (a rotated-container payload's figure

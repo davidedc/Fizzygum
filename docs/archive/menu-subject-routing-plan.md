@@ -1,3 +1,8 @@
+> **ARCHIVED — COMPLETE (2026-08-16).** P1 landed as shape (a); P2 landed as the two adapters —
+> the two menu-dispatch findings left open by `menu-action-wiring-plan.md` about how a
+> menu-dispatched verb learns which widget it acts on.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Menu subject routing — how a menu-dispatched verb learns WHICH widget it acts on
 
 **STATUS: COMPLETE (2026-08-16). P1 landed as shape (a); P2 landed as the two adapters.** Two

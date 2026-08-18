@@ -1,3 +1,8 @@
+> **ARCHIVED — ✅ COMPLETE (2026-08-12).** SWCanvas's transformed `drawImage` now samples at the
+> dest pixel center with texel centers at +0.5 (native semantics), fixing thin-feature dropout in
+> rotated island composites; all gates green (gauntlet 14/14 incl. webkit, `fg homepage` OK).
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Thin-feature dropout in rotated island composites — bilinear sampling for SWCanvas's transformed drawImage
 
 > **STATUS 2026-08-12: ✅ COMPLETE — executed the same day as authored, all gates green

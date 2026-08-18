@@ -46,9 +46,12 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   ```coffee
   aPoint = aPoint.round()
   ```
-  `__commitExtent` is the single bottom of the extent-apply path (`_applyExtent` /
-  `_applyWidth` / `_applyHeight` / `setExtent` all funnel through it), so *every* size
-  change is rounded.
+  `__commitExtent` is the bottom of the extent-apply path (`_applyExtent` / `_applyWidth` /
+  `_applyHeight` / `setExtent` all funnel through it). Its two single-axis siblings
+  `__commitWidth` / `__commitHeight` are separate commit leaves — called directly by
+  `ToolTipWdgt`, `MenuItemWdgt`, `NumberPromptWdgt` — and round identically
+  (`Math.max Math.round(width or 0), 0`), so *every* size change is rounded whichever leaf it
+  lands on. Three leaves, one rule.
 - **The device blit coordinates** derived from bounds are integer too:
   `Widget.calculateKeyValues` rounds the visible damage box and multiplies by
   `ceilPixelRatio`, so `al/at/sl/st/w/h` (the drawImage/fillRect args) are integer device
@@ -69,11 +72,15 @@ Rounding happens at the geometry-commit points, not scattered through callers:
   `debugIfFloats` hooks — a real integer assertion 2015→2018, silently stubbed to a no-op in 2018,
   and deleted in 2026 (`fbc2a3a4`) — restoring the enforcement that had lapsed for ~8 years.
 
-Empirically confirmed: with the guard hard-gated, a full suite run (native + SWCanvas,
-dpr 1 & 2, plus WebKit) reports **zero** `NON_INTEGER_GEOMETRY` — every widget's applied `@bounds`
-is integer. (The earlier evidence was narrower: instrumenting `AnalogClockWdgt`'s paint logged
+Empirically confirmed: with the guard hard-gated, the full suite reports **zero**
+`NON_INTEGER_GEOMETRY` on every leg it has — SWCanvas at dpr 1 and dpr 2, plus the WebKit
+cross-engine run — so every widget's applied `@bounds` is integer. (There is no native suite leg:
+the backend is baked into the entry page, and the suite drives `worldWithSystemTestHarness.html`,
+which IS the SWCanvas page. The native page is covered instead by the boot-smoke gate, which boots
+both shipped interactive entry pages and fails on any console error — this guard's included.)
+The earlier evidence was narrower: instrumenting `AnalogClockWdgt`'s paint logged
 `@position()` always integer with an identity CTM — true, but it only exercised the desired funnel,
-not the arrange-apply path, which is how the ~2018→2025 fractional-placement gap went unnoticed.)
+not the arrange-apply path, which is how the ~2018→2025 fractional-placement gap went unnoticed.
 
 ## 3. Fractional geometry "on the side" (Layer B)
 
@@ -124,8 +131,9 @@ These are equal in exact arithmetic but **IEEE-754 addition is not associative**
 differ by ≤1px when the endpoint sits near a pixel boundary. It is **size- and
 dpr-dependent**: for the clock, byte-exact at 70/130px on dpr 1, but 130px diverges on dpr 2
 (867/900 offsets) and the 200px default diverges on both — which is exactly why the resize
-and nested-window clock tests passed at dpr 1 yet failed at dpr 2. (Isolated repro:
-`scratchpad/clock-sweep.js` + `clock-dpr.js` at the time of writing.)
+and nested-window clock tests passed at dpr 1 yet failed at dpr 2. (The measured sweep
+is in `docs/archive/interactive-render-perf-A-C-plan.md` §3.1; the throwaway repro
+scripts behind it were session scratch and are not kept.)
 
 **Consequences / guidance for future back-buffer conversions:**
 

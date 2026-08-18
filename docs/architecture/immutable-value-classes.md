@@ -23,7 +23,7 @@ Consequences, all load-bearing:
   identity fast path. Nothing in src or tests may rely on two logically-equal values being
   distinct instances, or on two calls returning the same instance.
 - **Enforcement is by convention + the byte-exact suite** — `# IMMUTABLE` headers, this doc,
-  and the fact that a violation shows up as pixel drift or state corruption under the 270+
+  and the fact that a violation shows up as pixel drift or state corruption under the 300+
   SystemTests. Deliberately NO `Object.freeze` (in non-strict mode a write to a frozen object
   no-ops silently, so a dev-only freeze would make dev and prod BEHAVE DIFFERENTLY on a
   violation) and no grep-gate (plain `{x,y}` literals — e.g. `WorldWdgt.getCanvasPosition`'s
@@ -65,22 +65,28 @@ Type-dispatch inside guards is **duck-typed, not `instanceof`** (`delta.isZero?(
 | `Color.ALICEBLUE` … `Color.TRANSPARENT` (137 lines) | deferred statics via `Color.createConstant` |
 | `ShadowInfo.NO_SHADOW` (what `ShadowInfo.noShadow()` returns) | lazy memo on first `noShadow()` call |
 
-The **deferred-static mechanism** (`src/meta/Class.coffee`, `getSourceOfAllProperties`): a
-class-level value whose source matches `new <OwnClass> …` or `<OwnClass>.create*(…)` is
-initialised right AFTER the class exists instead of during its definition. Two spelling rules:
+The **deferred-static mechanism** (`src/meta/Class.coffee`, the static-field loop in the `Class`
+constructor): a class-level value whose source matches `new <OwnClass> …` or
+`<OwnClass>.create*(…)` is held back in `JS_staticConstantsBuiltWithClassItself_definitions` and
+emitted after the rest of the class, so it initialises right AFTER the class exists instead of
+during its definition. Two spelling rules:
 the `new <OwnClass>` form must use **space-call style** (`new Point 0, 0` — a paren directly
 after the class name defeats the regex), and factory names must start with `create`
 (the regex is `\.create\w*`).
 
 ⚠ **A class-level constant must not reference ANOTHER class** unless a load-order edge
 guarantees that class is already loaded — and the boot dependency scanner
-(`src/boot/dependencies-finding.coffee`, `CONSTRUCTION_IN_CLASS_DECLARATION`) only sees
-`new X` edges in **class-declaration-level initializers** (never constructor defaults or
-method bodies). This is why `ShadowInfo.NO_SHADOW` is a lazy memo inside `noShadow()`
-rather than a class-level `new ShadowInfo Point.ZERO, 0`: ShadowInfo's only Point mentions
-are scanner-invisible, so on the interactive dev page ShadowInfo can class-eval before
-Point exists (it did — a boot hang caught by the smoke). Self-references are always safe
-(the deferral runs right after the class's own definition).
+(`src/boot/dependencies-finding.coffee`) sees only what a **class-declaration-level initializer
+line begins with**: `CONSTRUCTION_IN_CLASS_DECLARATION` (`foo: new X …`) and
+`CLASS_USE_IN_CLASS_DECLARATION` (`foo: X.…`). It never reads constructor defaults or method
+bodies, and it never looks PAST the first term — a `new X` NESTED inside another initializer is
+invisible. (`REQUIRES X` in a comment is the hand-written escape hatch for everything it cannot
+see.) That nesting blind spot is why `ShadowInfo.NO_SHADOW` is a lazy memo inside `noShadow()`
+rather than a class-level `@NO_SHADOW: new ShadowInfo new Point(0, 0), 0`: the Point mention
+would sit nested inside the initializer, so no ShadowInfo→Point edge would exist, and on the
+interactive dev page ShadowInfo can class-eval before Point exists (it did — a boot hang caught
+by the smoke). Self-references are always safe (the deferral runs right after the class's own
+definition).
 
 **`Color` interning is two-tier:** `Color.create` consults the permanent table
 (`Color._permanent`, seeded by `createConstant` — never evicted) and then the LRU
@@ -120,7 +126,9 @@ dedupe.
 
 **Immutable by declaration (no shortcut machinery — small or cold):** `Point3D` (every op
 returns a fresh instance), `TextEditingState` (undo snapshot), `MenuItemSpec` (SHALLOWLY
-immutable — its `target`/`action` fields reference live widgets), `PinSpec` (SHALLOWLY
+immutable — its `target`/`action` fields reference live widgets), `MenuRowReflectionSpec`
+(SHALLOWLY immutable — `source` is a live object and `readerName` a METHOD NAME resolved late
+against it), `PinSpec` (SHALLOWLY
 immutable — inert strings, but they are METHOD NAMES resolved late against a live widget),
 `SliderRange` (a TRANSIENT: derived on demand by `sliderRangeForPin`, applied, and dropped —
 never stored, so nothing serializes or duplicates it, and it deliberately has no `equals`

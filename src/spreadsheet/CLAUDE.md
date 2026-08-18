@@ -27,7 +27,8 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
 `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging.md` §2.
 
 ## What's here (grows per phase)
-- `SpreadsheetWdgt.coffee` — the grid owner (Phases 2a/2b/8 + follow-ons F5/F1/F6): it paints
+- `SimpleSpreadsheetWdgt.coffee` — the naked grid: the model owner / formula scope / keyboard
+  receiver / geometry authority (Phases 2a/2b/8 + follow-ons F5/F1/F6). It paints
   NOTHING (undefined appearance) — every visible thing is a child widget (see `SheetCellsPanelWdgt` /
   `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
   `ClippingAtRectangularBoundsMixin`, cropping partial-edge headers; the panel crops partial
@@ -45,6 +46,9 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
   `acceptCellEdit`/`cancelCellEdit`, and an edit COMMITS before any scroll), houses the
   shared edge-stroke helper `paintGridEdges` (the edge-ownership colours + the crossing rule),
   owns `@model` and is the formula SCOPE (`@` inside a formula is this widget).
+- `SpreadsheetWdgt.coffee` — the FRAMED citizen (Frame-model §5.B, owner decision D2): a truly
+  thin `FrameWdgt` over the naked grid — ctor, `colloquialName`, the title hook, and a
+  teardown-guarded payload reset, nothing else. `SpreadsheetApp` opens this one.
 - `SheetCellsPanelWdgt.coffee` (F5) — the TRANSPARENT `PanelWdgt` subclass spanning the data
   region and hosting the `CellWdgt`s (owner direction: cells attach into a container
   subclass). Undefined appearance (the sheet never painted a data background — the backdrop shows
@@ -116,7 +120,7 @@ compiles once, then `world.dataflow.markStale cell`; the once-per-cycle dataflow
 stepping and layout in `doOneCycle`) calls `cell.dataflowRecompute()`, which runs
 `@compiledFn.apply sheetWidget, boundValues` and caches `@value`; the grid repaints it — all in
 the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formula is the
-`SpreadsheetWdgt` (full world access, no sandbox — spec §9.2).
+`SimpleSpreadsheetWdgt` (full world access, no sandbox — spec §9.2).
 
 ## References, errors & duplication (2c)
 
@@ -154,7 +158,7 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   `FormulaHelpers.mix` is a thin free-function veneer that delegates to `Color.mixed`. Adding a
   method to a value class (even live, via the class inspector) makes it available to the next
   recompute, since formulas compile from source.
-- **Classify → present (spec §9.4), in `SpreadsheetWdgt`.** Per recompute, `_cacheValue` calls
+- **Classify → present (spec §9.4), in `SimpleSpreadsheetWdgt`.** Per recompute, `_cacheValue` calls
   `_reconcileCellNoSettle`, which routes the value into the cell's (always-present) `CellWdgt`: a value
   that answers `cellPresenter()` (a `Color` → a `RectangleWdgt` swatch) is hosted (branch 2); a value
   that IS a Widget is hosted live (branch 1 — see the Phase-4 section below); anything else the cell
@@ -191,22 +195,23 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   Phase 8's scroll-virtualisation will reuse. The widget is (re)built only on first mount or a class
   change.
 - **Interactivity IN (spec §9.3 Scenario A).** The cell wires an interactive value-widget
-  (`wireValueWidget` → `setTargetAndActionWithOnesPickedFromMenu undefined, undefined, cell, "cellInput"`): a
-  drag fires `cellInput` → `SpreadsheetWdgt._markCellStaleFromHostedWidgetNoSettle` → `markStale` on the
+  (`wireValueWidget` → `widget.wireTo? this, "cellInput"` — the two-operand wire verb, not the menu
+  adapter): a
+  drag fires `cellInput` → `SimpleSpreadsheetWdgt._markCellStaleFromHostedWidgetNoSettle` → `markStale` on the
   cell → the pooled drain recomputes the cell (retaining the widget) and its dependents in one cycle.
   A presenter (branch 2) is "one-way glass" and is NOT wired. Drag-and-DROP of desktop widgets INTO
   cells is OUT of Phase-4 scope (deferred).
 - **`SliderWdgt.getValue: -> @value`** joins the export chain (§1.15) — without it `exportedValue`
-  falls through for a slider. `SpreadsheetWdgt.hostedWidgetAt address` is the PUBLIC reach into a
+  falls through for a slider. `SimpleSpreadsheetWdgt.hostedWidgetAt address` is the PUBLIC reach into a
   mounted cell widget (a macro drags `sheet.hostedWidgetAt "A1"`, never the private `_cells`).
 - **Save/load semantics — retain-and-remount (decided, spec §13).** The cell serializes its
   `@address` + its hosted widget, so a widget-valued cell's live widget (with its dragged position)
-  RIDES the tree. On restore `recommitAllCells` RE-INDEXES the cells (address→`CellWdgt`) and recompute
+  RIDES the tree. On restore `_recommitAllCells` RE-INDEXES the cells (address→`CellWdgt`) and recompute
   RETAINS the restored widget (class match) instead of rebuilding it to the formula default — a moved
   slider comes back moved. The alternative (recompute-and-replace, discarding runtime state) was
   rejected: retain-and-remount is the same rule the live drag and Phase 8 scroll use, so save/load and
-  scroll are one problem. The cell's wiring (`@target`/`@action`) serialises too, so a restored
-  slider is still live. (Pinned by the serialization rig's `sliderRetain` check: drag→77, save, load,
+  scroll are one problem. The wiring serialises too — it is a `WireSpec` record in the hosted
+  widget's own `@wires` list — so a restored slider is still live. (Pinned by the serialization rig's `sliderRetain` check: drag→77, save, load,
   assert 77 survived — and its `grid` check: 84 cells materialised both ways, rich cells host.)
 - **v1 limitation (documented).** The retain check re-CONSTRUCTS a throwaway widget each recompute (to
   read its class) — a minor v1 cost. (Phase 8 RESOLVED the old "freefloating sockets left behind when
@@ -225,13 +230,15 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   `widgetEntry`** (pure source machinery). SET by the drop (`CellWdgt._reactToChildDropped`:
   re-host through `hostNoSettle` — which tolerates the already-a-child dropped widget — wire,
   blank-commit the source, set the entry, mark stale). CLEARED by (a) a USER edit-commit on
-  the cell (`SpreadsheetWdgt._commitEditNoSettle`) — typed content of ANY kind, including
+  the cell (`SimpleSpreadsheetWdgt._commitEditNoSettle`) — typed content of ANY kind, including
   blank, replaces the dropped widget, which is DESTROYED with the unhost exactly like a
   formula-widget class change (eject-to-world instead was considered and REJECTED for v1
   scope) — and (b) the drag-OUT (`CellWdgt._reactToChildGrabbed`): grabbing the entry widget
-  back out empties the cell — entry + wiring cleared (bare `@target`/`@action` field-clear;
-  the engine edge dies via the public `world.dataflow.removeAllEdgesOf`, equivalent for a
-  value-widget, which has no incoming edges), and ⚠ the cached `record.value` is cleared
+  back out empties the cell — entry + wiring cleared: `grabbedWdgt.unwireFrom this, "cellInput"`
+  (§P4's un-wire verb) drops exactly the wire the cell made in `wireValueWidget` and leaves any
+  other connection the widget carries alone — which the old blanket `removeAllEdgesOf` could not
+  do, and got away with only because a value-widget in a cell had no other edges to lose. ⚠ The
+  cached `record.value` is cleared
   through the normal blank-commit path — without that the next recompute's branch-1 reconcile
   would RE-HOST the widget right off the hand. Dependents see `undefined` next drain; the widget
   lands wherever dropped.
@@ -503,4 +510,4 @@ sources arrive in Phase 5, and those enter only through the engine).
 
 `fg build` (0 violations / `done!!!`) + `fg suite` (dpr1). New behaviour ⇒ new
 `SystemTest_macro*` tests in the sibling repo (author per `../macros/CLAUDE.md` +
-`MACRO-PATTERNS.md`); recaptures are WebKit-verified.
+`../macros/MACRO-PATTERNS.md`); recaptures are WebKit-verified.

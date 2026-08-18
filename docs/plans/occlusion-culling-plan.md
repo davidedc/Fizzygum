@@ -15,7 +15,10 @@ counters + new `covered` phase). **P0→P3 LANDED 2026-07-09** (Avenue A, top-le
 benign inspector member-list recapture (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2/3
 — `opaqueCoveredRect` joins the inspected widget's inherited-method list). Same-build cull off→on
 (2 reps): drag ~3.0×, draw ~2.1×, covered ~4.3×; fire-rate 72/68/99%; scan not a hotspot. The
-shipped feature is distilled in [`docs/architecture/occlusion-culling.md`](occlusion-culling.md). **Remaining
+shipped feature is distilled in [`docs/architecture/occlusion-culling.md`](../architecture/occlusion-culling.md).
+⚠ One §1 fact has MOVED since: the nine widget-level custom painters the identity gate was written
+against now live on the Appearance side, so P4/P5 must re-derive the exclusion set from the current
+`*Appearance` classes (§1). **Remaining
 P4/P5/P5b/P5c below are OWNER-GATED and NOT started** (Avenue B maintained list; descend /
 per-widget partial coverage; hand-carried drag coverer). **Self-contained: a fresh session executes
 §4 P0→P3 and stops** (already done — this banner records the outcome).
@@ -31,9 +34,9 @@ this AVOIDS painting occluded widgets at all).
 ## 0. Orientation — read this first if you are executing cold
 
 **Workspace**: `/Users/davidedellacasa/code/Fizzygum-all/` is an UMBRELLA directory (NOT itself a
-git repo) holding three sibling git repos: **`Fizzygum/`** (framework source, ~470 CoffeeScript
+git repo) holding three sibling git repos: **`Fizzygum/`** (framework source, ~510 CoffeeScript
 files under `src/` — the ONLY place this plan edits), **`Fizzygum-tests/`** (the screenshot-diff
-SystemTest suite, currently 196 tests), **`Fizzygum-builds/`** (generated build output — NEVER
+SystemTest suite, 300+ tests — `fg status` prints the live count), **`Fizzygum-builds/`** (generated build output — NEVER
 hand-edit; regenerated wholesale on every build). Read the umbrella `CLAUDE.md` and
 `Fizzygum/CLAUDE.md` before coding. This plan touches Fizzygum ONLY — no SWCanvas change (⇒ no
 re-vendor) and no tests-repo change expected.
@@ -49,13 +52,16 @@ rather than cd-chains for git):
   and run `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_<name>')` in the console.
 - Profiling: `node docs/profiling/prof-interactive.js --sw` from `Fizzygum/docs/profiling/`
   (busy-desktop drag; see `docs/profiling/README.md`; the harness is committed). ⚠ ALWAYS pass
-  `--sw`: the owner runs the world with `?sw=1` (SWCanvas software renderer) — that backend IS
+  `--sw` (it picks the SWCanvas entry page — the backend is a build-time property of the page, so
+  there is no `?sw=` switch): the owner runs the world on `index-sw.html` (SWCanvas software
+  renderer) — that backend IS
   the felt performance; a native-canvas profile measures the wrong thing (memory:
   `fizzygum-runtime-backend-swcanvas`). **The full measurement methodology for this plan —
   which harness, which extensions, what to report — is §6.**
 
-**Codebase conventions that bite here**: `nil` means `undefined` (a Fizzygum global — use it, not
-null); one class per file, filename == class name; NO import/require — every class is a global, so
+**Codebase conventions that bite here**: `undefined` is the ONE absence value (the `nil = undefined`
+global is RETIRED — a bare `nil` is a `ReferenceError`, and the `nil-literal` stink holds it at zero);
+one class per file, filename == class name; NO import/require — every class is a global, so
 new code in Widget/WorldWdgt referencing `RectangularAppearance`/`BoxyAppearance`/`Rectangle` by
 bare name just works (the load-order regex scan only matters for `extends`/`@augmentWith`/`new X`
 at class-definition time — none of which this plan adds); sources ship as escaped text and compile
@@ -86,8 +92,8 @@ skips painting all children in its shadow — NB its gate is `@alpha != 1` ALONE
 imitate it, it ignores `@color._a`). There is currently NO such skip for CONTENT painting.
 
 **Paint recursion is back-to-front (confirmed):**
-- `WorldWdgt.doOneCycle` (`src/WorldWdgt.coffee:1454`) → `@updateBroken()` (`:1514`).
-- `WorldWdgt.updateBroken` (`:1085`) drives `@broken.forEach (rect) => @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect` (`:1119-1124`).
+- `WorldWdgt.doOneCycle` (`src/WorldWdgt.coffee:1808`) → `@_repaintDamagedRects()` (`:1886`).
+- `WorldWdgt._repaintDamagedRects` (`:1341`) drives `@damageRects.forEach (rect) => @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect` (`:1374-1385`).
 - `WorldWdgt.fullPaintIntoAreaOrBlitFromBackBuffer` (`:688`) → `super` — which is the
   `ClippingAtRectangularBoundsMixin` override (`:104`), NOT Widget's directly: it supers into
   Widget's and then re-paints the panel stroke on top of the content (`:112-116`). The world then
@@ -124,26 +130,30 @@ provably paints fully opaque (its *covered-rect*), by CURRENT appearance:
   `@widget.cornerRadius ? 4`, `BoxyAppearance.coffee:3-7`; the straight edges between corner arcs
   fill crisply to the bounds, only the arcs anti-alias, so radius+1 is conservative). **This case
   is NOT optional** — free desktop windows ARE Boxy (below) and are the dominant occluders.
-- Anything else → nil: `BackBufferMixin` blits (per-pixel opacity unknown; its users today are
-  `StringWdgt`, `CanvasWdgt`, `PaletteWdgt` — NOT WindowWdgt/PanelWdgt, verified), gradient/pattern
+- Anything else → undefined: `BackBufferMixin` blits (per-pixel opacity unknown; its users today are
+  `StringWdgt`, `CanvasWdgt`, `PaletteWdgt` — NOT FrameWdgt/PanelWdgt, verified), gradient/pattern
   fills, unknown appearance subclasses (check the appearance by EXACT class / constructor identity,
   not instanceof — subclasses can add arbitrary drawing e.g. via `drawAdditionalPartsOnBaseShape`).
 
 Widget-level gates on top, ALL evaluated at RUNTIME (never baked per class):
 - **The paint route must be the plain appearance delegation**:
   `@paintIntoAreaOrBlitFromBackBuffer is Widget::paintIntoAreaOrBlitFromBackBuffer` —
-  `Widget.coffee:401-402` is pure delegation to `@appearance`, but NINE widget classes override it
-  to draw directly (`HandleWdgt`, `LayoutChromeWdgt`, `LabelButtonWdgt`, `PenWdgt`, `CellWdgt`,
-  `SpreadsheetWdgt`, `AnalogClockWdgt`, `Example3DPlotWdgt`, `GraphsPlotsChartsWdgt` — verified by
-  grep 2026-07-09) plus `BackBufferMixin` (`BackBufferMixin.coffee:98`), and any of them may hold a
-  Rectangular-style `@appearance` while painting arbitrary pixels. The one prototype-identity check
-  excludes them ALL (it subsumes the back-buffer exclusion — no per-mixin probe needed).
+  `Widget.coffee:510-511` is pure delegation to `@appearance`, and every widget class now routes
+  through it: the NINE custom painters this gate was first written against (`HandleWdgt`,
+  `LayoutChromeWdgt`, `LabelButtonWdgt`, `PenWdgt`, `CellWdgt`, `SpreadsheetWdgt`, `AnalogClockWdgt`,
+  `Example3DPlotWdgt`, `GraphsPlotsChartsWdgt`) each moved their override into their OWN
+  `*Appearance` subclass, where the exact-class appearance dispatch below excludes them instead —
+  an appearance subclass may paint arbitrary pixels while claiming a Rectangular-style base. What
+  the prototype-identity check still catches is `BackBufferMixin` (`BackBufferMixin.coffee:117`),
+  whose blit shadows Widget's body in its consumers: one check, no per-mixin probe. ⚠ Whoever
+  revives P4/P5 must re-derive the exclusion set from the CURRENT `*Appearance` classes, not from
+  that nine-widget list.
 - `@alpha == 1`
 (`Widget.coffee:77-78`; the fill runs at `globalAlpha = @alpha`, `RectangularAppearance.coffee:60`);
 `@color._a == 1` (else fillStyle emits `rgba(`, `Color.coffee:201-209`; `Color.create` defaults
 `a = 1`, `:187`); `not @isEphemeral()`. Dispatch on the CURRENT `@appearance` object, never on
-widget class — appearances are SWAPPED at runtime: `WindowWdgt._deriveAndSetBodyAppearance`
-(`WindowWdgt.coffee:431-435`, re-run on every re-parenting via `_reactToBeingAdded:411-416`) gives
+widget class — appearances are SWAPPED at runtime: `FrameWdgt._deriveAndSetBodyAppearance`
+(`FrameWdgt.coffee:875-879`, re-run on every re-parenting via `_reactToBeingAdded:848`) gives
 a nested window flat `RectangularAppearance` and a free desktop window `BoxyAppearance`.
 
 ⚠ **Inheritance trap (why the runtime gates are mandatory)**: `HighlighterWdgt extends
@@ -153,14 +163,14 @@ DIFFERENT gates: the fill wash only by `@alpha` (`setAlphaScaled 50`), the outli
 `@color._a == 0` (its `@alpha` is 1 — `HighlighterWdgt.coffee:43-54`). A per-class opt-in on
 RectangleWdgt would silently include it; the `isEphemeral()` gate is the belt to those suspenders.
 
-Concrete coverers on a busy desktop: free `WindowWdgt`s (Boxy; `@color` opaque 248,248,248,
-`WindowWdgt.coffee:122`; cornerRadius default 4 → inscribed box ≈ bounds inset 5px), INTERNAL
+Concrete coverers on a busy desktop: free `FrameWdgt`s (Boxy; `@color` opaque 248,248,248,
+`FrameWdgt.coffee:287`; cornerRadius default 4 → inscribed box ≈ bounds inset 5px), INTERNAL
 window bodies and `PanelWdgt`s generally (flat rect; default panel colour opaque 255,250,245,
 `PreferencesAndSettings.coffee:130`; PanelWdgt uses RectangularAppearance, `PanelWdgt.coffee:20`),
 plain `RectangleWdgt`s (`RectangleWdgt.coffee:12-18`).
 
 **Coverage test** (logical px; `Rectangle.containsRectangle` exists — inclusive containment,
-`Rectangle.coffee:296-298`): first clamp `testRect = brokenRect.intersect world.boundingBox()` —
+`Rectangle.coffee:296-298`): first clamp `testRect = damageRect.intersect world.boundingBox()` —
 damage rects are PADDED (next paragraph) and overflow the screen at desktop edges, where a
 maximized window would otherwise NEVER qualify; the canvas clips those pixels anyway. Then a widget
 occludes iff `opaqueCoveredRect().containsRectangle testRect.expandBy(1)` — the covered-rect from
@@ -171,13 +181,14 @@ above, with a +1px margin because painting rounds on the logical grid (`calculat
 BONUS: it returns `Rectangle.EMPTY` for orphaned / hidden / collapsed widgets, `:1200-1202`, so
 the visibility gate comes for free).
 
-**Broken rects are per-widget but PADDED +7 logical px per side.** Each broken widget contributes
+**Damage rects are per-widget but PADDED +7 logical px per side.** Each damaged widget contributes
 src (where it was last painted) and/or dst (current clipped bounds) rects, every one
-`.expandBy(1).growBy @maxShadowSize` with `maxShadowSize: 6` (`WorldWdgt.coffee:263`, applied at
-`:829,846,877,888`) — so the rect for a widget-change is that widget's clipped bounds grown ~7px
+`.expandBy(1).growBy @damageRectMargin` with `damageRectMargin: 6` (`WorldWdgt.coffee:355`, applied at
+`:957,985,1013,1034`) — so the rect for a widget-change is that widget's clipped bounds grown ~7px
 on every side, and the coverer must contain THAT. Consolidation is limited: exact-duplicate dedup
-(`:722-735`), per-widget src/dst merge-if-close (`:740-750`), drop-if-contained-in-an-ANCESTOR's
-rect (`checkARectWithHierarchy`, `:753-802`) — no global merging. **So a single opaque widget
+(`_pushDamageRect`, `:851`), per-widget src/dst merge-if-close (`_mergeDamageRectsIfCloseOrPushBoth`,
+`:866`), drop-if-contained-in-an-ANCESTOR's
+rect (`_checkARectWithHierarchy`, `:877`) — no global merging. **So a single opaque widget
 covering an ENTIRE damage rect is COMMON when the change originates inside or behind an opaque
 window** (a button repaint inside a window body; an animating widget behind a front window —
 everything beneath, in that small rect, is pure overdraw). It is NOT the shape of a window-drag's
@@ -187,34 +198,34 @@ only by a substantially BIGGER window behind — see §4 P5b/P5c for the drag-ca
 ## 1b. The one paint-pass side effect a skip must respect (verified 2026-07-09)
 
 Painting on the world canvas RECORDS where each widget was painted:
-`recordDrawnAreaForNextDamageRects` (`Widget.coffee:1924-1928`; called from `Widget.coffee:1980-1981`
-and the panel path `ClippingAtRectangularBoundsMixin.coffee:173-174`; at most once per frame per
+`_recordDrawnAreaForNextDamageRects` (`Widget.coffee:2702`; called from Widget's paint body
+and the panel path `ClippingAtRectangularBoundsMixin.coffee:145`; at most once per frame per
 widget, only when `aContext == world.worldCanvasContext`). The damage system CONSUMES these records
-as the SRC damage rects (`WorldWdgt.coffee:827-829`, `:875-877`) and NILs them after consumption
-(`:860`, `:902`). Records refresh ONLY via paint-touch — `__commitMoveBy` / `_applyMoveBy` and the
+as the SRC damage rects (`WorldWdgt.coffee:957`, `:1013`) and CLEARS them to `undefined` after
+consumption (`:996`, `:1045`). Records refresh ONLY via paint-touch — `__commitMoveBy` / `_applyMoveBy` and the
 panel-scroll fast path never touch them.
 
 Skipping an occluded widget also skips its record refresh. This is SAFE, by this invariant: the
-record's contract is "every on-screen pixel of mine lies inside my recorded rect; a nil record
-means no pixel of mine has been painted since it was nil'd". A skip happens only when an opaque
+record's contract is "every on-screen pixel of mine lies inside my recorded rect; a CLEARED record
+means no pixel of mine has been painted since it was cleared". A skip happens only when an opaque
 coverer owns every pixel of the damage rect, so the skipped widget contributes NO new on-screen
 pixels there; on-screen pixels can only be created by actually painting, which always refreshes
 the record first. A stale record is therefore a SUPERSET-of-visible claim → costs at most a
-redundant repaint later, never a dropped pixel. Worked nil-record case: widget W moves (src pushed
-from record, record nil'd at `:860`, dst pushed) → W is skipped in its dst rect because window F
-covers it → record stays nil → W moves again → NO src rect is pushed this time — and that is
+redundant repaint later, never a dropped pixel. Worked cleared-record case: widget W moves (src pushed
+from record, record cleared at `:996`, dst pushed) → W is skipped in its dst rect because window F
+covers it → record stays cleared → W moves again → NO src rect is pushed this time — and that is
 CORRECT: W's pixels are nowhere on screen (its old area was repainted without it; its dst area
 shows F). When F later moves away, the revealed-area repaint paints W and refreshes the record then.
 
 Implementation consequences: (a) do NOT walk skipped subtrees just to refresh records — the
 invariant holds without it, and the walk would eat the win; (b) the WORLD's own record MUST still
-refresh when its self-paint is bypassed (one direct `@recordDrawnAreaForNextDamageRects()` call —
-the world can itself be a brokenWidget, e.g. on wallpaper change); (c) the pixel-exact suite is the
+refresh when its self-paint is bypassed (one direct `@_recordDrawnAreaForNextDamageRects()` call —
+the world can itself be a damagedWidget, e.g. on wallpaper change); (c) the pixel-exact suite is the
 empirical proof of (a). Also skipped along with the paint: the `justBeforeBeingPainted?()`
-pre-paint hook (`RectangularAppearance.coffee:57`) — sole implementor is the caret
+pre-paint hook (`Appearance.coffee:80`) — sole implementor is the caret
 (`CaretWdgt.coffee:50`, blink bookkeeping); skipping it for a fully-occluded caret is harmless
-(nothing of it shows). The repaint-error fallback (`updateBroken:1139-1140`,
-`findOutAllOtherOffendingWidgetsAndPaintWholeScreen`) needs no special-casing: a whole-screen rect
+(nothing of it shows). The repaint-error fallback (inside `_repaintDamagedRects`,
+`_findOutAllOtherOffendingWidgetsAndPaintWholeScreen`) needs no special-casing: a whole-screen rect
 simply fails the containment test against everything but a maximized window, which is a valid skip.
 
 ## 2. Design — two avenues
@@ -230,7 +241,7 @@ Both need the **coverage notion** derived in §1 (no `isOpaque` flag exists). Tw
 - `Widget::paintsOpaqueFillCovering(rect)` → boolean (does this widget paint a solid opaque fill
   that contains `rect`?). Used by Avenue A.
 - `Widget::opaqueCoveredRect()` → the maximal axis-aligned rectangle this widget paints FULLY
-  OPAQUE (or `nil`). Used by Avenue B. See the covered-rect note below.
+  OPAQUE (or `undefined`). Used by Avenue B. See the covered-rect note below.
 A false positive in either silently drops pixels (only the pixel-exact SystemTests catch it), so
 both must be CONSERVATIVE — err to `false` / a smaller rect.
 
@@ -241,22 +252,24 @@ frontmost `paintsOpaqueFillCovering(rect)`.
   is back-to-front, §1); the first non-ephemeral child whose covered-rect (tight box OR Boxy
   inscribed box, §1) contains the clamped rect wins; skip the desktop self-paint and every child
   behind it. ⚠ **Rect-only coverage would capture ~NOTHING at top level**: free desktop windows
-  are Boxy (`WindowWdgt.coffee:431-435`) and flat-rect (internal) windows are by definition NESTED
+  are Boxy (`FrameWdgt._deriveAndSetBodyAppearance`) and flat-rect (internal) windows are by
+  definition NESTED
   — so the Boxy inscribed-rect case must ship in P1, or P2/P3 measures zero on the busy desktop.
 - **Concrete P2 mechanics** (world-level only, no mixin change): in
-  `WorldWdgt.fullPaintIntoAreaOrBlitFromBackBuffer` (`:688`), before `super`: compute
-  `dirtyPart = aRect.intersect @boundingBox()` (identical to the mixin's narrowing at `:169`);
+  `WorldWdgt.fullPaintIntoAreaOrBlitFromBackBuffer` (`:773`), before `super`: compute
+  `damagedPart = aRect.intersect @boundingBox()` (identical to the mixin's own narrowing);
   reverse-scan for the frontmost coverer index k; if none → `super` exactly as today. If found:
-  (1) `@recordDrawnAreaForNextDamageRects()` — preserve the world's own bookkeeping, §1b;
+  (1) `@_recordDrawnAreaForNextDamageRects()` — preserve the world's own bookkeeping, §1b;
   (2) `for child in @children[k..]` → `child.fullPaintIntoAreaOrBlitFromBackBuffer aContext,
-  dirtyPart` — byte-identical child trajectory to the mixin's own loop (`:179-180`);
-  (3) replicate the mixin's trailing `@paintStroke aContext, aRect` (`:112-116`; a no-op for the
+  damagedPart` — byte-identical child trajectory to the mixin's own loop;
+  (3) replicate the mixin's trailing `@paintStroke aContext, aRect`
+  (`ClippingAtRectangularBoundsMixin.coffee:110-112`; a no-op for the
   world unless a strokeColor is ever set — `RectangularAppearance.paintStroke` gates on
-  `@widget.strokeColor?` at `:135`); then `:702` paints the hand as today. The world has no
-  `shadowInfo`, so bypassing Widget's shadow branch (`Widget.coffee:1975`) loses nothing. Ephemeral
+  `@widget.strokeColor?`); then the hand paints as today (`WorldWdgt.coffee:793`). The world has no
+  `shadowInfo`, so bypassing Widget's shadow branch loses nothing. Ephemeral
   overlays need no special handling for PAINTING: the reconcilers append them as topmost
-  `world.children` right before `updateBroken` (`WorldWdgt.coffee:1508-1511`, adders at
-  `:1265,1295,1320`), so they sit at indices ≥ any coverer and always get painted.
+  `world.children` right before `_repaintDamagedRects` (`WorldWdgt.coffee:1880-1886`), so they sit
+  at indices ≥ any coverer and always get painted.
 - **Cost**: stateless (no bookkeeping, never stale); the scan is O(|world.children|) cheap
   rectangle/property tests per damage rect (tens of children × tens of rects/frame — noise next to
   the fills it avoids). Only a later DESCEND into nested coverers pays a real traversal (no
@@ -267,20 +280,21 @@ Keep a persistent, incrementally-maintained list of the SIZABLE opaque widgets, 
 the **rectangle it completely covers** (`opaqueCoveredRect()`, in world/device space, already
 intersected with its `clippedThroughBounds()` so an ancestor clip can't over-claim) plus a z-order
 key. Then repainting a damage rect is a fast scan of this SHORT list: find the frontmost entry
-whose covered-rect `containsRectangle(brokenRect)`, start painting from that widget, and paint
+whose covered-rect `containsRectangle(damageRect)`, start painting from that widget, and paint
 only the widgets IN FRONT of it. This is the "top-n biggest opaque widgets" idea the TODO already
 suggests (`ClippingAtRectangularBoundsMixin.coffee:156`), made precise.
 - **The covered-rect is the key idea** — track the rectangle a widget *completely* covers, NOT its
   bounds, so **non-rectangular opaque shapes still participate** via their INSCRIBED opaque
   rectangle and every check stays a cheap rectangle-containment test. The geometry and gates are
   EXACTLY §1's `opaqueCoveredRect()` (tight box / full bounds with opaque backgroundColor / Boxy
-  radius+1 inset / nil) — one definition, defined once in P1, shared by both avenues; do not fork it.
+  radius+1 inset / undefined) — one definition, defined once in P1, shared by both avenues; do not
+  fork it.
 - **"Sizable"** = covered-rect area above a threshold (small widgets aren't worth tracking; the win
   is big background rects/windows). Keeps the list short → O(list) per damage rect.
 - **Maintenance / invalidation** (the cost of this avenue): the list entry for a widget is
   (re)computed only when something that affects its coverage changes — add/remove, move/resize,
   alpha/color/backgroundColor/cornerRadius/padding change, **appearance swap** (a re-parented
-  window flips Rectangular↔Boxy, `WindowWdgt.coffee:411-435` — easy to miss because it is not a
+  window flips Rectangular↔Boxy, `FrameWdgt.coffee:848-879` — easy to miss because it is not a
   geometry or colour change), re-parenting (which changes `clippedThroughBounds` and z-order),
   and show/hide. Hook these off the existing `_changed()` /
   layout / add-remove paths rather than rebuilding per frame. Z-order key: for top-level widgets
@@ -300,7 +314,8 @@ assert B's chosen start-widget matches A's) during bring-up.
 
 1. **Correctness is a one-way trap** — a false "covers" drops pixels invisibly (only caught by the
    pixel-exact SystemTests). Gates (ALL runtime, §1): plain-paint-route prototype identity
-   (excludes the nine widget-level paint overrides AND BackBufferMixin in one check), exact-class
+   (excludes BackBufferMixin's consumers — the nine custom painters it was written against now sit
+   on the Appearance side, where the exact-class dispatch excludes them, §1), exact-class
    appearance dispatch, `@alpha == 1`, `@color._a == 1`, `not @isEphemeral()`,
    `clippedThroughBounds` containment (ancestor clip hasn't cut the fill), +1px rounding margin,
    Boxy inset = radius+1. Padding≠0 and a translucent `backgroundColor` are NOT exclusions — the
@@ -314,12 +329,12 @@ assert B's chosen start-widget matches A's) during bring-up.
    opaque fill. The corollary stands: the coverer's shadow ring outside its bounds must never
    count as coverage (it doesn't — the covered-rect is derived from the fill, not fullBounds).
 3. **Ephemeral overlays** (highlights, pinouts, drag affordances) are reconciled into place every
-   cycle right before paint (`doOneCycle:1508-1511`) as TOPMOST world children and are translucent
+   cycle right before paint (`doOneCycle:1880-1886`) as TOPMOST world children and are translucent
    (highlight wash alpha 50, `Widget.coffee:1851`) — "always painted" falls out of z-order (they
    sit in front of any coverer, §2A); "never occluders" needs the runtime gates + `isEphemeral()`,
    and beware the inheritance trap: `HighlighterWdgt extends RectangleWdgt`, and its OUTLINE style
    is excluded only by the `@color._a` gate (§1). The **hand/cursor** paints unconditionally last
-   (`WorldWdgt.coffee:702`) — outside the skip; fine (and see §4 P5b for using it AS a coverer).
+   (`WorldWdgt.coffee:793`) — outside the skip; fine (and see §4 P5b for using it AS a coverer).
 4. **No maintained global `fullBounds` index** (issue #150, `Widget.coffee:1938-1941`) — a
    DESCEND-into-subtrees scan costs a traversal (top-level-only doesn't); `PanelWdgt` clipping
    already prunes most of it. Measure that scan cost stays below the savings — if it doesn't,
@@ -332,7 +347,7 @@ assert B's chosen start-widget matches A's) during bring-up.
    over-invalidation (drop the entry on any doubt → falls back to painting, never to dropping).
    The inscribed covered-rect for rounded/Boxy shapes must be inset conservatively (never include
    an anti-aliased corner pixel).
-6. **Paint-pass bookkeeping** — the skip bypasses `recordDrawnAreaForNextDamageRects` for skipped
+6. **Paint-pass bookkeeping** — the skip bypasses `_recordDrawnAreaForNextDamageRects` for skipped
    widgets; §1b proves this safe (and requires the world's own record call in the bypass path).
    Any future consumer of `clippedBoundsWhenLastPainted` / `fullClippedBoundsWhenLastPainted` must
    preserve the §1b invariant.
@@ -345,9 +360,10 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
 0. **P0 — baseline + re-anchor (before ANY edit to `src/`).** `./fg build` + `./fg suite` must be
    green BEFORE you change anything (if not: STOP and report — you may be sitting on another
    session's in-flight state; `git -C Fizzygum status` to check). Re-locate the plan's anchors by
-   SYMBOL (lines drift): `updateBroken`, `fullPaintIntoAreaOrBlitFromBackBuffer` (WorldWdgt +
-   Widget + ClippingAtRectangularBoundsMixin), `recordDrawnAreaForNextDamageRects`,
-   `fleshOutBroken` / `fleshOutFullBroken`, `_deriveAndSetBodyAppearance`, `maxShadowSize`;
+   SYMBOL (lines drift): `_repaintDamagedRects`, `fullPaintIntoAreaOrBlitFromBackBuffer` (WorldWdgt +
+   Widget + ClippingAtRectangularBoundsMixin), `_recordDrawnAreaForNextDamageRects`,
+   `_fleshOutDamage` / `_fleshOutFullDamage`, `_deriveAndSetBodyAppearance` (on `FrameWdgt`),
+   `damageRectMargin`;
    confirm no `opaqueCoveredRect`/`paintsOpaqueFillCovering` exists yet. If any §1 fact no longer
    holds, STOP and re-derive before proceeding. Then do the MEASUREMENT-ONLY harness extension of
    `docs/profiling/prof-interactive.js` per §6 (`--cull` axis, `--occl` counters, `covered`
@@ -362,16 +378,16 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
 
    ```coffee
    # Occlusion culling (docs/plans/occlusion-culling-plan.md): the axis-aligned rectangle this widget
-   # provably paints FULLY OPAQUE, in logical px world coords, or nil. CONSERVATIVE by design:
-   # any uncertainty must yield nil — a wrong rect silently drops pixels under the coverer.
+   # provably paints FULLY OPAQUE, in logical px world coords, or undefined. CONSERVATIVE by design:
+   # any uncertainty must yield undefined — a wrong rect silently drops pixels under the coverer.
    opaqueCoveredRect: ->
-     # paint must route through the plain appearance delegation (Widget:401-402): widget-level
-     # overrides (AnalogClockWdgt, CellWdgt, SpreadsheetWdgt, HandleWdgt, BackBufferMixin, ...)
-     # draw arbitrary pixels regardless of what @appearance claims
-     return nil if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
-     return nil if @isEphemeral()
-     return nil if @alpha != 1
-     return nil if !@color? or @color._a != 1
+     # paint must route through the plain appearance delegation (Widget::paintIntoAreaOrBlit-
+     # FromBackBuffer): BackBufferMixin blits a buffer of unknown per-pixel opacity regardless of
+     # what @appearance claims
+     return undefined if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
+     return undefined if @isEphemeral()
+     return undefined if @alpha != 1
+     return undefined if !@color? or @color._a != 1
      switch @appearance?.constructor
        when RectangularAppearance
          if @backgroundColor? and @backgroundColor._a == 1
@@ -382,7 +398,7 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
          # inscribed box: corner arcs anti-alias, straight edges fill crisply -> radius+1 inset
          @boundingBox().insetBy Math.max(@appearance.getCornerRadius(), 0) + 1
        else
-         nil                     # incl. DesktopAppearance -- the world occludes nothing (§1)
+         undefined               # incl. DesktopAppearance -- the world occludes nothing (§1)
    ```
 
    Notes: `insetBy`/`expandBy` take a plain Number (`Rectangle.coffee:202,219`); an over-inset
@@ -397,7 +413,7 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
    §2A, shaped as:
 
    ```coffee
-   # WorldWdgt -- restructure fullPaintIntoAreaOrBlitFromBackBuffer (:688; keep its comment block)
+   # WorldWdgt -- restructure fullPaintIntoAreaOrBlitFromBackBuffer (:773; keep its comment block)
    fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
      if !@_paintedFromFrontmostCoverer aContext, aRect
        super aContext, aRect
@@ -409,30 +425,30 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
    _paintedFromFrontmostCoverer: (aContext, aRect) ->
      return false if !WorldWdgt.occlusionCullingEnabled
      return false if aContext != @worldCanvasContext    # cull ONLY the live screen paint
-     dirtyPart = aRect.intersect @boundingBox()         # == the mixin's own narrowing (§2A)
-     return false if dirtyPart.isEmpty()
-     testRect = dirtyPart.expandBy 1                    # +1px rounding margin (§1)
-     covererIndex = nil
+     damagedPart = aRect.intersect @boundingBox()       # == the mixin's own narrowing (§2A)
+     return false if damagedPart.isEmpty()
+     testRect = damagedPart.expandBy 1                  # +1px rounding margin (§1)
+     covererIndex = undefined
      for i in [@children.length - 1 .. 0] by -1         # front-to-back (array is back-to-front)
        child = @children[i]
        coveredRect = child.opaqueCoveredRect()
        if coveredRect? and coveredRect.containsRectangle(testRect) and
-           child.clippedThroughBounds().containsRectangle dirtyPart
+           child.clippedThroughBounds().containsRectangle damagedPart
          covererIndex = i
          break
      return false if !covererIndex?
-     @recordDrawnAreaForNextDamageRects()               # §1b(b): world's own bookkeeping must stay
+     @_recordDrawnAreaForNextDamageRects()              # §1b(b): world's own bookkeeping must stay
      for i in [covererIndex ... @children.length]
-       @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPart
+       @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPart
      @paintStroke aContext, aRect                       # replicate the mixin's trailing stroke (§2A)
      return true
    ```
 
-   Notes: `dirtyPart` already equals §1's world-clamp, so no separate clamp; ephemerals and
-   hidden/collapsed widgets exclude themselves (`opaqueCoveredRect` → nil,
+   Notes: `damagedPart` already equals §1's world-clamp, so no separate clamp; ephemerals and
+   hidden/collapsed widgets exclude themselves (`opaqueCoveredRect` → undefined,
    `clippedThroughBounds` → EMPTY); the world has no `shadowInfo`, so bypassing Widget's shadow
    branch loses nothing; `world.paintingWidget` error-attribution is set by every painted child
-   itself (`Widget.coffee:1968`), and `updateBroken`'s try/catch is unaffected. Optional dev-only
+   itself, and `_repaintDamagedRects`'s try/catch is unaffected. Optional dev-only
    skip-rate instrumentation: a counter — but ⚠ never rely on `console.log` in shipped paths (the
    homepage minifier strips it via drop_console; memory: S1 lesson).
 3. **P3 — verify A, then measure per §6.** Full `./fg gauntlet` (all legs green) + `./fg
@@ -451,7 +467,7 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
    top-level widgets + their `opaqueCoveredRect()` + z-index, with the full invalidation wiring
    (§3-5, incl. appearance swap). Replace the per-rect traversal with the O(list) rectangle scan.
    Bring-up safety: run BOTH avenues and assert B's chosen start-widget matches A's, then drop A.
-   Re-verify gauntlet + re-measure (expect the scan cost to fall vs P2, especially with many broken
+   Re-verify gauntlet + re-measure (expect the scan cost to fall vs P2, especially with many damage
    rects/frame).
 5. **P5 — (optional) descend.** Extend either avenue to nested opaque panels/bodies (needs the
    ancestor z-order chain; internal window bodies and PanelWdgts are clean flat-rect coverers, §1)
@@ -545,7 +561,8 @@ PERCENTAGES there — the shadow build inflates absolute ms ~3×). Expect the ra
 at the 2026-07-08 baseline) to shrink in culled phases, and the new scan (`opaqueCoveredRect` /
 `_paintedFromFrontmostCoverer`) NOT to appear as a hotspot.
 
-**Secondary corroboration (optional, cheap)**: `prof-run.js --sw=1 --dpr=2 --tests=all` suite
+**Secondary corroboration (optional, cheap)**: `prof-run.js --dpr=2 --tests=all` (no backend axis —
+the harness page is SWCanvas by construction) suite
 wall-clock before/after — dpr2 is CPU-bound and responds ~1:1 (dpr1 wall time is frame-count
 bound, do NOT use it); and/or `--counters` (draw-call totals should drop suite-wide; the
 instrumented run still passing every test is itself a pixel-transparency proof). The full
@@ -560,7 +577,7 @@ asks for a ledger-grade refresh.
   (`HTMLCanvasElement.createOfPhysicalDimensions`, honouring the backend switch) and byte-compare
   the R region; `debugger`/alert on mismatch. Sound because BOTH paints fully determine every
   pixel of R (normal path: the desktop fill covers R first; culled path: the coverer does), and
-  scratch painting cannot disturb the damage bookkeeping (`recordDrawnAreaForNextDamageRects`
+  scratch painting cannot disturb the damage bookkeeping (`_recordDrawnAreaForNextDamageRects`
   gates on `aContext == world.worldCanvasContext`, §1b). Run the suite + prof-interactive once
   with it on; ship default-off.
 - **`torture-headless.js` overnight sample** (tests repo; the generic nondeterminism hunter): the

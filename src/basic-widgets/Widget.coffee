@@ -1997,7 +1997,7 @@ class Widget extends TreeNode
   # The bare move primitives _applyMoveByBase / _applyMoveToBase, used by the top-down arrange for LEAF children: translate me
   # + my children + repaint via the UNIFORM base translate. A leaf child is placed through these rather than
   # _applyMoveBy / _applyMoveTo precisely so its move takes the base path and NOT the
-  # ClippingAtRectangularBoundsMixin / ActivePointerWdgt override those polymorphic names dispatch to (see the
+  # ClippingAtRectangularBoundsMixin / TransformFrameWdgt overrides _applyMoveBy dispatches to (see the
   # _applyMoveBy note above -- that override difference is why the two are not collapsible). _applyMoveByBase is
   # the shared move core (returns true iff it actually moved).
   _applyMoveByBase: (delta) ->

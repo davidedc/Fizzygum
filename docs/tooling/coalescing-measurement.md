@@ -6,9 +6,11 @@ key-repeat), is it worth *coalescing* its mutations onto the **one** end-of-cycl
 coalescing is `(mutations-per-frame − 1)` flushes saved per `doOneCycle`. If a gesture only ever produces ~1
 mutation per frame, coalescing saves nothing and the call should just use the public self-settling setter
 (simpler, and it keeps "public methods self-settle" honest). If it produces many per frame, coalescing is
-warranted and wants an explicit, auditable home (a `_`-private, stream-handler-restricted `*Coalesced` entrypoint
-— see check-layering rule [O] — / a `world.coalescing => …` scope) rather than feature code reaching into a
-private `_<name>NoSettle` core.
+warranted and wants an explicit, auditable home (a `_`-private, stream-handler-restricted `*DeferredSettle`
+entrypoint — see check-layering rule [O] and its `DEFERRED_SETTLE_CALLER_ALLOWLIST` — / a `world.coalescing => …`
+scope) rather than feature code reaching into a private `_<name>NoSettle` core. Once a stream is on a
+`*DeferredSettle` entrypoint the A/B is a switch rather than an edit: `world.deferredSettlingEnabled = false`
+makes each call self-settle again, exactly as the public setter would.
 
 This is a **performance** question, never a correctness one: the suite is byte-deterministic and render happens
 once per frame *after* all events, so coalesced-vs-self-settle is byte-identical — only the flush count per
@@ -56,9 +58,11 @@ Watched `_setMaxDimNoSettle` (the core `StackElementsSizeAdjustingWdgt.nonFloatD
 mutations per frame — each move fires ~3 `setMaxDim` (left cell + right cell + a revert) and ~6 moves drain per
 cycle — so coalescing collapses ~16 settles/frame into 1. Without it, a drag would run 16–56 `recalculateLayouts`
 per frame; cheap here (qlen 3 ≈ ms-scale) but it scales linearly with stack size. So this is a "design the
-coalescing strategy" case (an explicit `_setMaxDimCoalesced` — `_`-private, restricted to this drag handler by
-check-layering [O] — / `world.coalescing => …` that *declares* the coalescing so the end-of-cycle settle can
-tell intentional-coalesced from a careless leak), **not** a "just use the public `setMaxDim`" case.
+coalescing strategy" case, **not** a "just use the public `setMaxDim`" case — and the divider drag goes through
+exactly that shape today: `StackElementsSizeAdjustingWdgt.nonFloatDragging` calls `_setMaxDimDeferredSettle`
+(`_`-private, restricted to `nonFloatDragging` by check-layering [O]'s `DEFERRED_SETTLE_CALLER_ALLOWLIST`), which
+*declares* the deferred settle so the end-of-cycle flush can tell an intentional deferred-settle mutation from a
+careless leak. The watch above still fires under it: the entrypoint bottoms out in the same `_setMaxDimNoSettle`.
 
 Side note the harness surfaced: ~half of those 718 mutations are **set-then-reverted within the same frame**
 (`nonFloatDragging`'s `if prev != newone` revert) — a separate efficiency question from coalescing.

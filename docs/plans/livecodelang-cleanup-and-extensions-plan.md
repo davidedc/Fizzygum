@@ -1,6 +1,10 @@
 # LiveCodeLang (Fizzytiles DSL) — deep analysis + ranked cleanup / improvement / extension plan
 
 Status: **AUTHORED 2026-07-07, NOT STARTED.** Owner-initiated execution only.
+⚠ Not started does not mean untouched: outside work has since overtaken parts of it —
+`FridgeMagnetsCanvasWdgt` was deleted (§2.1/§2.6/§8) and most of R11's dead code went
+with the sibling accidental-complexity batch (see R11). Re-read those two spots before
+costing the plan.
 
 This plan is self-contained and cold-executable: every claim below was verified
 against the working tree on 2026-07-07 (file:line receipts inline), and the
@@ -20,11 +24,12 @@ be executed first; T1/T2 here don't touch any file the SW3D plan rewrites
 resolved in R14).
 
 **Relationship to `docs/archive/accidental-complexity-reduction-plan.md` (authored
-2026-07-07 in a parallel session, also not started):** small overlap on dead
-code. Its commented-code table already lists `adjustPostfixNotations`
-(:496-510) and the commented regex corpses in `transformTimesSyntax` /
-`rearrangeColorCommands` — same targets as R11 here (whichever plan executes
-first does them; the other skips). It HOLDs `LCLTransforms` pending the SW3D
+2026-07-07 in a parallel session, EXECUTED 2026-07-13 — `3267b0dd` — and since
+archived):** small overlap on dead code. Its commented-code table already listed
+`adjustPostfixNotations` (:496-510) and the commented regex corpses in
+`transformTimesSyntax` / `rearrangeColorCommands` — same targets as R11 here
+(whichever plan executes first does them; the other skips). **It went first, so
+R11 skips those** — see R11 for what is left. It HOLDs `LCLTransforms` pending the SW3D
 decision — consistent with this plan (SW3D D4 owns it). ONE conflict: its
 keep-list marks `LCLProgramRunner.runProgram`/`runLastWorkingProgram` as
 "subsystem entry points — NOT dead". That was a method-level judgment; the
@@ -76,7 +81,7 @@ machine-generated from tile positions *and* hand-editable in the code pane.
 | `LCLTransforms.coffee` | 347 | 4×4 matrix-stack runtime draft | **DEAD — zero references, crashes if called** (SW3D plan D4 owns repair) |
 | `FridgeMagnetsWdgt.coffee` | 206 | 4-pane app widget | LIVE |
 | `FridgeWdgt.coffee` | 185 | tile canvas + `putIntoWords` transliteration | LIVE |
-| `FridgeMagnetsCanvasWdgt.coffee` | 258 | 2D runtime scope (runs programs; ctx transforms) | dormant (commented out at `FridgeMagnetsWdgt.coffee:39`) |
+| ~~`FridgeMagnetsCanvasWdgt.coffee`~~ | 258 | 2D runtime scope (runs programs; ctx transforms) | **GONE — DELETED 2026-07-14** (`864ec80e`, outside this plan: it was dead, its only instantiation already commented out) |
 | `FridgeMagnets3DCanvasWdgt.coffee` | 571 | 3D pane; hard-coded twgl demo, **never calls `@graphicsCode`** | LIVE (SW3D plan rewrites) |
 | `FizzytilesCodeWdgt.coffee` | 17 | code pane; manual edits recompile | LIVE |
 | `MagnetWdgt.coffee` | 26 | draggable tile | LIVE |
@@ -84,7 +89,10 @@ machine-generated from tile positions *and* hand-editable in the code pane.
 
 Plus `src/boot/numbertimes.coffee`: `Number::times`/`Number::timesWithVariable`
 global prototype extensions (`(scope, func)` signature — scope passed because
-Fizzygum commands are widget methods, not globals; file is homepage-excluded).
+Fizzygum commands are widget methods, not globals). It is the `bootPrelude` of
+the lazy `fizzytiles` part (`buildSystem/parts.json`), so it ships exactly where
+that part ships — the per-file "excluded from the homepage build" marker it used
+to carry is retired.
 
 ### 2.2 Compile pipeline end-to-end
 
@@ -190,7 +198,8 @@ silently corrupted — there is no rejection check.
 
 ### 2.6 Runtime scope implementations (for reference)
 
-2D `FridgeMagnetsCanvasWdgt` implements `scale/rotate/move` as ctx transforms
+2D `FridgeMagnetsCanvasWdgt` — **deleted 2026-07-14, so the receipts below read
+against `864ec80e^`, not the working tree** — implemented `scale/rotate/move` as ctx transforms
 with the LCL appended-function protocol (save → run chained fns via
 `.apply @` → restore; `!result?` → "fake function" undo, :74-204), `box` stub
 (fixed `rect -50,-50,100,100`, args computed then ignored, :206-257), `pulse`
@@ -199,7 +208,10 @@ stack (dead+broken: `@scaleMatrix` called at :254 but `scaleMatrix` is a
 class-body closure `=` var :35 → TypeError; `@backBufferContext` leftovers
 :290,:331; bare `discardPushedMatrix()` :303,:344; `makeTranslation`
 row-major :188-206 vs column-major everywhere else; third copy of `pulse`
-:210-221). `pulse` exists 3×, `commonPrimitiveDrawingLogic`+`box` 2×.
+:210-221). `pulse` existed 3× and `commonPrimitiveDrawingLogic`+`box` 2× when
+this was surveyed; the 2D class's copies went with it, and today `LCLTransforms`
+(itself dead) holds the tree's only `pulse` — R12's dedupe target shrank
+accordingly.
 
 ---
 
@@ -276,10 +288,12 @@ function `a` is "already found" if `ab` was seen. Fix = `===` / `includes`.
 closure locals, never instance state; its `addToScope` calls a
 `scope.addFunction` API that exists nowhere in Fizzygum. `LCLTransforms` —
 dead + 5 distinct crashes/wrongness (§2.6; SW3D D4 owns repair).
-`adjustPostfixNotations`, `identifyBlockEnd` — dead. `checkBasicSyntax` /
-`checkBasicErrorsWithTimes` set a `programHasBasicError` var that's never
-read (:457, :698). Stale header comment (§2.5). `FridgeWdgt.tabs: []`
-class-level shared field is shadowed by a local and dead (:5 vs :138).
+~~`adjustPostfixNotations`, `identifyBlockEnd` — dead.~~ **Both already DELETED
+2026-07-13** by the sibling `accidental-complexity-reduction-plan.md` (`3267b0dd`),
+which executed first — see the header note above. Still standing:
+`checkBasicSyntax` / `checkBasicErrorsWithTimes` set a `programHasBasicError` var
+that's never read (:452, :661). Stale header comment (§2.5). `FridgeWdgt.tabs: []`
+class-level shared field is shadowed by a local and dead (:3 vs :137).
 
 **D11 ○ O(n²) char-by-char scans.** `doesProgramContainStringsOrComments`
 (:324-336) and `checkBasicSyntax` (:438-452) loop `code.slice(1)` per
@@ -393,12 +407,16 @@ M ≈ 1 day, L = multi-day. Each tier ends with the full gate (§6.1).
 
 ### T3 — Dead weight & duplication (no behavior change; corpus must stay 300/0)
 
-- **R11 (S) Delete dead code:** `adjustPostfixNotations` (:496-510),
-  `identifyBlockEnd` (:1883-1904), `programHasBasicError` writes,
-  `FridgeWdgt.tabs` class field, the `#@codePreprocessor` duplicate line
-  (`LCLCodeCompiler.coffee:25`), commented-out regex corpses in
-  `rearrangeColorCommands`/`evaluateAllExpressions` (keep the *explanatory*
-  comments — they're breadcrumbs; delete only dead executable lines).
+- **R11 (S) Delete dead code — MOSTLY DONE ELSEWHERE, two items left.** The sibling
+  `accidental-complexity-reduction-plan.md` executed first on 2026-07-13 (`3267b0dd`) and
+  took `adjustPostfixNotations`, `identifyBlockEnd` and the commented-out regex corpses in
+  `rearrangeColorCommands`/`evaluateAllExpressions` with it — exactly the header's "whichever
+  plan executes first does them; the other skips" — and a later comments audit (`62a11244`)
+  removed the duplicate `#@codePreprocessor` line. **Still standing:** the `programHasBasicError`
+  writes (`LCLCodePreprocessor.coffee:452`, `:661` — the var is still never read) and
+  the `FridgeWdgt.tabs` class field (`:3`, still shadowed by the local at `:137`).
+  When deleting comments here, keep the *explanatory* ones — they're breadcrumbs;
+  delete only dead executable lines.
 - **R12 (M) Deduplicate the runtime protocol helpers:** one `pulse` (per SW3D
   D6 it becomes the widget-clock version), one
   `commonPrimitiveDrawingLogic`/appended-function argument-classifier shared
@@ -593,7 +611,8 @@ iii. **LCLTransforms repair checklist gains one item** beyond D4's list:
 - Autocoder, sound (`bpm`/`play` stay no-op stubs), code sharing — paper §14
   directions, out of scope.
 - doOnce tick-writeback round-trip into `FizzytilesCodeWdgt` (R18 descopes).
-- 2D `FridgeMagnetsCanvasWdgt` revival (stays dormant).
+- 2D `FridgeMagnetsCanvasWdgt` revival — moot: the class was **DELETED 2026-07-14** (`864ec80e`,
+  outside this plan), so there is nothing left to revive or leave dormant.
 - On-the-fly symbol swaps (`->`→è etc.), camelCase autocorrect (paper §14).
 - Web-Worker translation (paper §7 note) — pointless at Fizzytiles sizes.
 

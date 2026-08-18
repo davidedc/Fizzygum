@@ -1,3 +1,9 @@
+> **ARCHIVED — ✅ CLOSED (2026-08-12).** P1+P2+P3 all landed the same day as authored: strokes
+> flip to logical thickness, dpr2 fractional-plane coverage lands, and P3 exposed (and ledgered,
+> owner-gated) a pre-existing rasterization class where thin strokes inside a compensating
+> wrapper render dashed on thresholded SWCanvas.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Stroke flip to logical thickness (§4.4(B)) + fractional-plane dpr2 coverage
 
 > **STATUS 2026-08-12: ✅ CLOSED — P1+P2+P3 all LANDED, same day as authored.** P1 landed as

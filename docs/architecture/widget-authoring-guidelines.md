@@ -5,7 +5,7 @@ author actually faces, each stating the rule, the reason, the sanctioned excepti
 it. It is the prescriptive companion to
 [`widget-citizenship.md`](widget-citizenship.md) (what the system may *assume* of a widget) and to
 [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md)
-(what the 270 existing widgets actually do, facet by facet, with counts).
+(what the widget tree actually does, facet by facet, with counts, as measured on 2026-08-14).
 
 **What this is NOT.** It is not the mechanics of the subsystems it points at. The settle engine, the
 sizing model and the layout-spec family are [`layout.md`](layout.md); the `_`/`__` tier scheme and the
@@ -39,9 +39,9 @@ Two questions settle most cases:
 For a whole application rather than a widget, grade it first against
 [`app-fit-criteria.md`](app-fit-criteria.md).
 
-**Do not add to `Widget`.** The base carries 228 public methods and is the tree's one god class.
-Behaviour that varies by type goes on the type that varies (§14); a shared default may land on a
-*narrow family base* where one exists, never on `Widget`.
+**Do not add to `Widget`.** The base already carries well over two hundred public methods and is the
+tree's one god class. Behaviour that varies by type goes on the type that varies (§14); a shared
+default may land on a *narrow family base* where one exists, never on `Widget`.
 
 ---
 
@@ -89,7 +89,7 @@ constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, opts = {}) ->
 
 The same shape is already the norm one level up in the API: `add aWdgt, opts` funnels into
 `_addNoSettle aWdgt, opts` sharing one key vocabulary, and `addMenuItem label, target, action, opts`
-serves 326 call sites with named knobs.
+serves three hundred-odd call sites with named knobs.
 
 ⚠ **Choosing the head across a FAMILY is stricter than choosing it for one class.** Once there is a
 trailing `opts = {}`, an operand can no longer be omitted — reaching the tail means filling it — so
@@ -136,9 +136,9 @@ today; the worked example, and what removing it took, is
 
 ### 3.3 Call `super` first unless something in the base needs a value
 
-**[convention]** Two reasons justify work before `super()`: a field something on the base's own
-construction path reads (`HandleWdgt` seeds a default `@inset` that its corner spec then consumes),
-and option-object unpacking standing in for the parameters an all-positional signature would have
+**[convention]** Two reasons justify work before `super()`: a value the base constructor is HANDED,
+built in place (`FolderWindowWdgt` constructs the `ScrollPanelWdgt` it passes to `FrameWdgt`), and
+option-object unpacking standing in for the parameters an all-positional signature would have
 bound at the same moment (`SliderWdgt`'s `opts.color` / `opts.smallestValueIsAtBottomEnd`). Everything
 else — appearance, colours, sizing, registrations, child building — goes after.
 
@@ -174,8 +174,10 @@ _buildAndConnectChildrenNoSettle: ->
 
 The wrapper's one-line body is not decoration: the settle tier **flushes** a top-level `new X()` and
 **auto-defers** one constructed inside another mutation's flush, so the same code is correct in both
-contexts. Use the canonical names — an ad-hoc alias hides the child-building from the gate. Give a
-distinct name only for the `super()`-dispatch reason in §3.3, and say so in a comment.
+contexts. Use the canonical names. No gate reads them — `check-constructors-build.js` only asks
+whether the CONSTRUCTOR builds inline — so they are held by review alone, and they are what tells the
+next reader that this pair is the standard shape rather than a bespoke one. Give a distinct name only
+for the `super()`-dispatch reason in §3.3, and say so in a comment.
 
 ### 3.5 `new X()` returns a settled widget
 
@@ -284,8 +286,8 @@ it stores the `<name>_source` sibling that serializes.
 ```
 
 Three payoffs. The dependency edge stays visible to the boot loader. A subclass reskins by overriding
-one line — 67 icon classes are nothing but `colloquialName` + `createAppearance`, and the base
-constructor needs no knowledge of them. And a widget that legitimately swaps skins at runtime — a
+one line — 63 icon classes are nothing but `createAppearance` (their name is derived, §10), and the
+base constructor needs no knowledge of them. And a widget that legitimately swaps skins at runtime — a
 frame flipping rectangular/boxy by parentage, an edit button flipping pencil/eye by mode — does so
 without changing class.
 
@@ -302,11 +304,15 @@ the ctx matrix, inside `Appearance._paintInLocalScope`. Device-space business be
 one canvas (`world.cacheForImmutableBackBuffers`); nothing that differs between two such widgets can
 be painted into it. The shape is two layers in one appearance: `@widget.blitBackBufferInto` for the
 cached half, in device space, then the per-instance half inside `_paintInLocalScope`. `PaletteWdgt`
-(its choice marker over the shared colour field) and `AnalogClockWdgt` (its hands over the cached
-face) are the two. Such a widget also defines `paintIntoAreaOrBlitFromBackBuffer` as the plain
-delegation to `@appearance`, purely to un-shadow the mixin's own member — a class-body member
-out-ranks a mixin's. ⚠ Anything the live half draws INSIDE the buffer's opaque footprint adds no
-coverage, so skip it on the shadow pass rather than paying for a silhouette that cannot differ.
+is the one widget on that shape today: its choice marker rides over the shared colour field, and it
+defines `paintIntoAreaOrBlitFromBackBuffer` as the plain delegation to `@appearance`, purely to
+un-shadow the mixin's own member — a class-body member out-ranks a mixin's. ⚠ Anything the live half
+draws INSIDE the buffer's opaque footprint adds no coverage, so skip it on the shadow pass rather
+than paying for a silhouette that cannot differ.
+
+⚠ **A cache does not have to be the MIXIN's.** `AnalogClockAppearance` keys its static tick-mark face
+into the same `world.cacheForImmutableBackBuffers` by class + extent and draws the hands live over
+it, without `BackBufferMixin` at all. The rule is about the raster, not the mechanism.
 
 **Hit-testing follows the shape — but the question the pointer asks is `catchesPointerAt`.** If the
 widget's silhouette is the appearance's business, implement `isTransparentAt` on the appearance;
@@ -490,12 +496,14 @@ mark after `add` + `setExtent` adds nothing.
   A function closure fails obscurely (`@target[<function>]` coerces to an undefined key) and
   `ButtonWdgt.trigger` throws on it in any build carrying the harness. The fourth slot is the options
   object (`toolTip:`, `arg1:`, `representsAWidget:`, …), never a bare tooltip string.
-- **`@prompt msg, target, "methodName", defaultContents, width, floorNum, ceilingNum, isRounded`** —
-  pass the target and the method *name*, not a bound method value. [gated —
-  `buildSystem/check-menu-actions.js`] `PromptWdgt` hands that callback to a menu item verbatim
-  (`panel.addMenuItem "Ok", @target, @callback`), so it is the SAME slot one hop later and the same
-  proof applies; the gate holds both doors to one standard, and those callbacks also count as
-  menu-dispatched verbs for its unread-parameter ratchet.
+- **`@prompt msg, target, "methodName", opts`** — three operands then the options bag
+  (`defaultContents:`, `intendedWidth:`, `floorNum:`, `ceilingNum:`, `isRounded:`); pass the target and
+  the method *name*, not a bound method value. [gated — `buildSystem/check-menu-actions.js`]
+  `PromptWdgt`'s Ok row targets the prompt itself (`panel.addMenuItem "Ok", @, "deliverValue"`) and
+  `deliverValue` dispatches your callback by name one hop later
+  (`@target[@callback].call @target, @_promptValue()`) — the same slot, so the same proof applies; the
+  gate holds both doors to one standard, and those callbacks also count as menu-dispatched verbs for
+  its unread-parameter ratchet.
 - **`colloquialName` is DERIVED — override it only to say something better.** [convention] It is what
   the product shows: window titles, inspector and console titles, the drag-embed hint, the shortcut
   auto-namer, the name a saved file gets. The base splits your class name into lowercase words
@@ -565,10 +573,14 @@ pins: -> super().concat [
   be driven and can never be bound two-way. Do not invent a reader method to fill the slot; most of
   `Widget`'s own pins are write-only because no reader method exists for them, and *that is the
   honest declaration*. `width`/`height` are write-only **deliberately** even though `width()` and
-  `height()` exist: a readable pin is a licence to bind, and geometry is where the one-way
-  layout↔dataflow law forbids it.
+  `height()` exist: a readable pin is a licence to bind, and nothing has ever wanted to track a
+  widget's width. That is a positive choice, not a prohibition: connector §P8 narrowed the one-way
+  law to "layout may never `markStale`, but it MAY `markNonValueChange`", which is the licence
+  `ScrollPanelWdgt`'s readable `scroll x` / `scroll y` run on. The bar for a readable geometry pin is
+  a real CONSUMER — add the reader when something needs to track it.
 - **`set` is optional too**: a pin with no setter is READ-ONLY and never appears in a
-  "choose target property" menu, because nothing can drive it (`ColorPickerWdgt`'s picked colour).
+  "choose target property" menu, because nothing can drive it (`StringFieldWdgt`'s `value` — the
+  field reports what was typed into it and is not driven from outside).
 - **`announces` is the third fact, and it is a promise about EVERY write path**, not about your
   setter: *whenever this pin changes, by a gesture, a script, the loader or another widget's method
   call, I tell the dataflow*. It defaults false, and a pin that does not declare it can be DRIVEN but
@@ -576,7 +588,9 @@ pins: -> super().concat [
   a pin that goes quiet just goes silently stale. Declaring it on a pin with no reader is refused at
   construction, since there would be nothing to re-read.
   ⚠ **Read the section below before ticking it.** The word looks obvious for any pin whose setter
-  fires, and today exactly one class in the tree can honestly claim it.
+  fires, and it is a promise about every OTHER path too — which is why only a handful of pins in the
+  tree carry it. `Fizzygum-tests/scripts/pin-sweep-headless.js` enumerates them and drives each one's
+  setter as a necessary-condition check; ask it rather than counting by hand.
 - **Declare a pin on the class that implements its verb.** Declaring it higher advertises it for
   every subclass, and a target property that dispatches to a missing method fails *silently* —
   `consumer[action]?.call` swallows the miss. The runtime gate for this is
@@ -641,7 +655,9 @@ the echo a sink is right to avoid. Two places got this wrong and are worth knowi
 - `ControllerMixin._fireConnection` used to make the announcement a side effect of the DELIVERY, so
   its "do I have wires?" guard silenced both. A follower is precisely a widget that subscribes
   without being driven, so an unwired controller changed its value to an audience of nobody. It now
-  announces first and delivers second — one event, two jobs, one guard on the job that needs it.
+  separates the two: an unwired controller `markNonValueChange`s and returns, and a wired one
+  `markStale`s — which wakes the same re-readers on its way to the wires. Two jobs, and the wire
+  guard sits only on the one that needs it.
 - `PaletteWdgt.setChoice` refuses to fire a value delivered TO it (that would make it an echo) and
   used to refuse to announce as well — one refusal too many, since its choice really did change.
 
@@ -798,7 +814,7 @@ right for inclusion and wrong for laziness — it silently swallows the user's c
 ## 17. Checklist for a new widget
 
 **Identity**
-- [ ] `Foo Wdgt` name; file named for the class; header comment saying what it is
+- [ ] `FooWdgt` name; file named for the class; header comment saying what it is
 - [ ] `colloquialName`; `representativeIcon` if it can be referenced; `toolTipMessage` if its face is not self-explanatory
 
 **Construction**
@@ -941,7 +957,7 @@ class FooWdgt extends Widget
     super
     menu.addLine()
     menu.addMenuItem "reset", @, "resetLevel", toolTip: "set the level\nback to zero"
-    @_addTargetConnectionMenuEntries menu, "numerical"
+    @_addTargetConnectionMenuEntries menu
 
   resetLevel: ->
     @setLevel 0
@@ -972,5 +988,5 @@ the debt.
 - [`layering-naming-convention.md`](layering-naming-convention.md) · [`layout.md`](layout.md) · [`transforms.md`](transforms.md) · [`appearance-paint-convention.md`](appearance-paint-convention.md) · [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md) — the mechanics.
 - [`serialization-duplication-reference.md`](serialization-duplication-reference.md) · [`immutable-value-classes.md`](immutable-value-classes.md) · [`mixins.md`](mixins.md) · [`build-and-packaging.md`](build-and-packaging.md).
 - [`lint-and-static-checks.md`](lint-and-static-checks.md) — every gate cited above.
-- [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing 270 widgets score against these rules.
+- [`../measurements/widget-practices-survey-2026-08-14.md`](../measurements/widget-practices-survey-2026-08-14.md) — how the existing widget population scores against these rules (dated snapshot; re-run `buildSystem/census-widget-conformance.js` for the mechanical facets).
 - [`../archive/widget-practices-convergence-plan.md`](../archive/widget-practices-convergence-plan.md) — the arc bringing the existing tree to these rules.

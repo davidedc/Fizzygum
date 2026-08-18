@@ -1,3 +1,9 @@
+> **ARCHIVED — ✅ COMPLETE (2026-08-13).** Axis-aligned scale-path smoothing lands for SWCanvas's
+> `drawImage` (the bilinear arc's D2); integer scales and 90°-multiple grid transforms stay
+> nearest-neighbour by policy, everything else composites through one bilinear mapping under a
+> rect damage clip. All gates green (gauntlet 14/14 incl. webkit, `fg homepage` OK).
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Axis-aligned SCALE-path smoothing for SWCanvas's drawImage (the bilinear arc's D2)
 
 > **STATUS 2026-08-13: ✅ COMPLETE — executed the day after authoring, all gates green

@@ -47,7 +47,8 @@ owner chose OPTION B (2026-07-12), LANDED + PUSHED (Fizzygum `62577d03` / tests 
 See the "EXPLICIT-ISLAND CLOSE dossier" in §7.5 for the as-built record.**
 REMAINING
 = ONLY the BIG §7 items (7.1 policy engine, 7.2 leaf self-warp, 7.3 quad damage+occlusion, 7.4 density folding
-[owner-downgraded], 7.8 SWCanvas bilinear [separate repo]) — each design-first, owner-gated, its own plan doc.
+[owner-downgraded]) — each design-first, owner-gated, its own plan doc. (§7.7 appearance local-coords
+LANDED 2026-08-12 and §7.8 SWCanvas bilinear LANDED 2026-08-12/13, both halves — see items 7 and 8.)
 See the per-phase §6 banners for hashes + gate results
 (they are the authority on status). Owner-gated; a standing
 grant to "commit + continue while all gates pass" is in force as of 2026-07-10. Original design
@@ -196,10 +197,10 @@ the affected section before proceeding.
   `world.widgetsWithMaybeChangedPaintBounds` / `...FullPaintBounds`; rects are computed later
   as `clippedThroughBounds()` (`:1196`) / `fullClippedBounds()` (`:1160`), both intersected
   with `clipThrough()` (`:1223`) which walks up to `firstParentClippingAtBounds`, else world.
-- The world merges axis-aligned damage rects: `broken` (`src/WorldWdgt.coffee:215`),
-  `pushBrokenRect` (`:772`), `mergeBrokenRectsIfCloseOrPushBoth` (`:790`),
-  `fleshOutBroken` (`:863`), `fleshOutFullBroken` (`:914`), consumed in `updateBroken`
-  (`:1135`, paint call at `:1174`).
+- The world merges axis-aligned damage rects: `damageRects` (`src/WorldWdgt.coffee:293`),
+  `_pushDamageRect` (`:851`), `_mergeDamageRectsIfCloseOrPushBoth` (`:866`),
+  `_fleshOutDamage` (`:937`), `_fleshOutFullDamage` (`:1000`), consumed in `_repaintDamagedRects`
+  (`:1341`, paint call at `:1374`).
 - Recursive paint is back-to-front: `fullPaintIntoAreaOrBlitFromBackBuffer`
   (`Widget.coffee:2003`, content recursion at `:2051`), leaf paint via
   `paintIntoAreaOrBlitFromBackBuffer` (`:401`) → the widget's `Appearance`.
@@ -209,7 +210,7 @@ the affected section before proceeding.
   `src/` draw a widget's OWN buffer content (icons `src/icons/IconAppearance.coffee:99-101`,
   `src/StretchableCanvasWdgt.coffee:62,126`, clock hands `src/apps/AnalogClockWdgt.coffee`).
 - Scroll-frame clipping is **rectangle intersection of paint areas**, not `ctx.clip()`:
-  `src/mixins/ClippingAtRectangularBoundsMixin.coffee:169` narrows `dirtyPartOfFrame` and
+  `src/mixins/ClippingAtRectangularBoundsMixin.coffee:167` narrows `damagedPartOfFrame` and
   passes it down. (`clipsAtRectangularBounds: true` at `:9`.)
 - Back-buffered widgets (`src/mixins/BackBufferMixin.coffee`) blit equal-extent, integer,
   axis-aligned: `paintIntoAreaOrBlitFromBackBuffer` (`:98`), the `drawImage` at `:116`.
@@ -290,7 +291,7 @@ the native path; measurement is cached via `world.canvasContextForTextMeasuremen
   > being patched is fragile". That instruction was followed (`TransformSpec._cosSin`,
   > `HandleWdgt._pointerAngleToTargetAnchorDegrees`) and it SHIPPED A BUG: build arc 2 gave the native
   > entry page its own boot bundle WITHOUT the det-trig prelude, so `DetTrig` is undefined there and
-  > every rotation on `index.html` / any `--homepage` build threw `DetTrig is not defined`. The global
+  > every rotation on `index.html` / any `homepage`-profile build threw `DetTrig is not defined`. The global
   > is not universally available; only the SWCanvas-bearing pages define it.
   > **The rule is now the opposite: call `Math.cos/sin/atan2`.** Determinism still holds exactly where
   > it is asserted, because the SWCanvas pages' prelude runs `DetTrig.install(Math)` before a single
@@ -415,7 +416,7 @@ Inner widgets damage themselves exactly as today; because the island
 island's slot box (fact 3.2; and ONLY the slot box — see the plane-purity rule, §4.11). The
 single new step: **when the world fleshes out a damage rect whose widget's parent chain
 crosses one or more islands, map the rect to screen space through each island's forward
-matrix (corner-map, §4.3) before pushing it into `world.broken`**, and also record the
+matrix (corner-map, §4.3) before pushing it into `world.damageRects`**, and also record the
 pre-mapping virtual rect on each crossed island as a buffer-damage region.
 
 Implementation shape and ordering (verified against the flesh-out code, fresh-eyes pass
@@ -426,17 +427,17 @@ Implementation shape and ordering (verified against the flesh-out code, fresh-ey
   with that island's ancestor screen clips (§4.11). Identity chain returns `r` unchanged
   (fast path: a cached "am I inside any non-identity island" flag, invalidated on
   reparent/spec change).
-- Both flesh-out lanes need it: `fleshOutBroken` (`src/WorldWdgt.coffee:863`, uses
-  `clippedBoundsWhenLastPainted` + `clippedThroughBounds()`) and `fleshOutFullBroken`
-  (`:914`, uses `fullClippedBoundsWhenLastPainted` + `fullClippedBounds()`). Both the
+- Both flesh-out lanes need it: `_fleshOutDamage` (`src/WorldWdgt.coffee:937`, uses
+  `clippedBoundsWhenLastPainted` + `clippedThroughBounds()`) and `_fleshOutFullDamage`
+  (`:1000`, uses `fullClippedBoundsWhenLastPainted` + `fullClippedBounds()`). Both the
   *source* (last-painted snapshot) and *destination* (current) rects are per-widget and
   virtual for island descendants — map BOTH.
-- **Map BEFORE any merge/dedupe.** `mergeBrokenRectsIfCloseOrPushBoth` (`:790`) and the
-  hierarchy dedupe (`checkARectWithHierarchy` `:803` /
-  `rectAlreadyIncludedInParentBrokenWidget`) must only ever see post-mapping screen rects;
+- **Map BEFORE any merge/dedupe.** `_mergeDamageRectsIfCloseOrPushBoth` (`:866`) and the
+  hierarchy dedupe (`_checkARectWithHierarchy` `:877` /
+  `_rectAlreadyIncludedInParentDamagedWidget`) must only ever see post-mapping screen rects;
   mixing planes in the merge logic silently drops or bloats damage.
-- Shadow accounting is already handled: both lanes do `.expandBy(1).growBy @maxShadowSize`
-  (`:879,896,927,938`) — apply that AFTER mapping (the shadow offset is a screen-space
+- Shadow accounting is already handled: both lanes do `.expandBy(1).growBy @damageRectMargin`
+  (`:957,985,1013,1034`) — apply that AFTER mapping (the shadow offset is a screen-space
   phenomenon).
 - Clean invariant (document in code): **buffer content depends only on virtual content; the
   matrix affects only compositing.** A transform change therefore damages the SCREEN
@@ -447,10 +448,10 @@ Implementation shape and ordering (verified against the flesh-out code, fresh-ey
   NOT push two explicit rects. `_transformChangedNoSettle` (`TransformFrameWdgt.coffee`) queues a single
   `_fullChanged()`; the OLD footprint rides the **last-painted-snapshot lane**
   (`fullClippedBoundsWhenLastPainted`, frozen in screen coords at paint time by
-  `recordDrawnAreaForNextDamageRects`) as the flesh-out SOURCE rect, and the NEW footprint is the current
+  `_recordDrawnAreaForNextDamageRects`) as the flesh-out SOURCE rect, and the NEW footprint is the current
   bounds as the DESTINATION rect. This equivalence is now **trace-proven** (2026-07-10, §7.5 Bug C forensics),
   including the hard **destroy-in-same-batch** case (de-tilt → dematerialize → `_destroyNoSettle` all in one
-  NoSettle batch): the instrumented `fleshOutFullBroken` showed both the island and its content push the
+  NoSettle batch): the instrumented `_fleshOutFullDamage` showed both the island and its content push the
   correct rotated source rect. So a future reader who notices the "deviation" from an explicit `old ∪ new`
   push must NOT add redundant damage to this proven path.
 
@@ -500,7 +501,8 @@ against `w.screenPointToMyPlane(screenPoint)`:
   changing the attachment model): (1) handles **scale with the island** (double-size at scale 2, tiny
   at 0.5) — the design-tool "screen-constant handle" compensation is local (a handle sizes its own
   extent by the inverse accumulated ancestor scale) and is BANKED (§7.9), not built now; (2) handle
-  glyphs rotate and are nearest-neighbor-chunky on SW (fine under the 0f verdict). The one genuinely
+  glyphs rotate (chunky on SW under the 0f verdict until §7.8's bilinear landing smoothed them —
+  §7 item 8). The one genuinely
   missing piece is **4A-2**: `nonFloatDragging` computes `pos − startOffset` in screen space and
   writes it into `@target`'s virtual-plane bounds — deltas are VECTORS, so they map through the
   inverse of the LINEAR PART ONLY of the accumulated matrix. That is exactly why Phase 1 guards
@@ -540,7 +542,7 @@ widgets then blit with `globalAlpha = appliedShadow.alpha * @alpha`,
 `BackBufferMixin.coffee:113`). The island simply honors `appliedShadow` in its composite
 (§4.2 shadow pass): the result is a warped, faint copy at the shadow offset — i.e. a
 **correctly rotated shadow, for free, inside the unified mechanism**. Damage accounting
-already grows all damage rects by `world.maxShadowSize` (§4.5). No quad-silhouette special
+already grows all damage rects by `world.damageRectMargin` (§4.5). No quad-silhouette special
 case, no suppression fallback. Phase 2 adds a macro that shows a rotated island's shadow.
 
 ### 4.9 Layout coupling — `claimsSpace` (the Lively-breakage firewall)
@@ -887,7 +889,7 @@ discussion.
 > **STAGE B (§4.5 damage hook) — LANDED + VERIFIED.** `Widget::mapRectToScreen` (walks the
 > parent chain, maps through each non-identity island's forward matrix, ∩ outermost island's
 > screen clip; returns the SAME object when not inside an island ⇒ dormant byte-identical);
-> both flesh-out lanes (`fleshOutBroken`/`fleshOutFullBroken`) map BOTH source-snapshot AND
+> both flesh-out lanes (`_fleshOutDamage`/`_fleshOutFullDamage`) map BOTH source-snapshot AND
 > destination rects BEFORE merge/dedupe; `world.paintingIntoIslandBuffer` lets island
 > descendants record their virtual last-painted bounds while they paint into the buffer.
 > Proven by `macroTransformFrameScaledTextEditRepaints` (grow-then-shrink text inside a scale-2
@@ -1411,7 +1413,7 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 > non-identity island** (`Widget._enclosingNonIdentityIsland`, or the world when there is none). The island
 > paints all its children into the buffer (`_refreshIslandBuffer` iterates every child) and composites through
 > the matrix, so the highlight **warps + clips with the target for free**; its damage maps to screen correctly
-> (`fleshOutBroken` already runs island-interior damage through `mapRectToScreen`). Off any island ⇒ world
+> (`_fleshOutDamage` already runs island-interior damage through `mapRectToScreen`). Off any island ⇒ world
 > parent ⇒ BYTE-IDENTICAL dormant (verified). Three edits + one lifecycle fix + one hardening:
 > - `HighlighterWdgt` gains `isLayoutInert: -> true` (it is layout-inert chrome exactly like `HandleWdgt`/
 >   `CaretWdgt`). This excludes it from `childrenNotHandlesNorCarets` / `subWidgetsMergedFullBounds`, so it can
@@ -1891,8 +1893,8 @@ See §7. None of these block declaring the feature shipped.
    use case demands it (projector/presentation world-zoom, accessibility zoom on non-retina);
    until then the standing 0f verdict (accept soft) covers scale too, and the soft-then-snap
    policy above stays pre-decided at zero cost (without §7.4 there is no density to snap —
-   scale just warps, as today). Downscale-warp under NEAREST sampling is speckly — §7.8
-   bilinear makes it properly good (strengthens the case for §7.8).
+   scale just warps, as today). Downscale-warp under NEAREST sampling was speckly — §7.8 bilinear
+   (LANDED 2026-08-12/13, item 8) removed that, so the speckle no longer argues for §7.4 either.
 5. **Native crisp-rotated-text mode** — render-through on the native backend only;
    pixel-test-excluded by construction. Low priority; Squeak-soft is the accepted look.
 6. **Container-level "freeze" veto** for `claimsSpace` (presentation mode: treat all children
@@ -1906,19 +1908,23 @@ See §7. None of these block declaring the feature shipped.
    `docs/architecture/appearance-paint-convention.md`. The original "legacy integer path
    kept as the identity fast path" clause proved MOOT: SWCanvas fast paths never gated on
    identity, so there is no second path. Vector-replay (§7.1/§7.2) is now unblocked.
-8. **Bilinear (fixed-point) sampling for SWCanvas transformed `drawImage`** — SWCanvas
-   currently samples nearest-neighbor by design (`swcanvas.js:1837-1838`; Phase 0f). A
-   fixed-point-weight bilinear path (weights quantized so results are integer-exact →
-   determinism preserved) would close most of the SW-vs-native visual gap for rotated
-   composites AND improve the existing text slow path. SWCanvas-repo work, owner-gated;
-   promoted to a prerequisite only if Phase 0f is rejected.
+8. **Bilinear (fixed-point) sampling for SWCanvas transformed `drawImage` — ✅ LANDED 2026-08-12/13
+   (both halves; `docs/archive/swcanvas-bilinear-rotated-composite-plan.md` +
+   `docs/archive/swcanvas-scale-path-smoothing-plan.md`).** SWCanvas sampled nearest-neighbor by
+   design (Phase 0f); the fixed-point-weight bilinear path (weights quantized so results are
+   integer-exact → determinism preserved) shipped in two SWCanvas pin bumps: `2e8e3e10` (pin
+   `619dc1c`) gives rotated composites bilinear sampling, and `f9cb20a5` smooths the SCALE path too
+   (`imageSmoothingEnabled`, with an integer-scale crisp opt-out). Most of the SW-vs-native visual
+   gap for rotated composites is closed, and the downscale-warp speckle item 4 flagged is gone. The
+   as-built behaviour is documented in `docs/architecture/transforms.md` §8/§9.
 9. **Screen-constant handle size under transform** — inside-attached handles scale with their island
    (§4.6 halo model): double-size at scale 2, small hit targets at 0.5. Design tools keep handles
    screen-constant. Compensation is LOCAL and needs no architecture change: a handle sizes its own
    extent by the inverse of the accumulated ancestor-island scale (query the chain via the same walk
    as `_isInsideNonIdentityIsland`). Bank until a real need; the v1 accepted look is Squeak-consistent
-   (handles are part of the transformed figure). Glyph rotation + nearest-neighbor chunkiness on SW is
-   the same accepted 0f trade-off, no compensation planned.
+   (handles are part of the transformed figure). Glyph rotation on SW is the same accepted 0f
+   trade-off — the nearest-neighbor chunkiness it used to carry is gone since §7.8 landed (item 8) —
+   no compensation planned.
 10. **Explicit hugging island for content-resize — ✅ PROBE-RESOLVED 2026-07-12 (residuals sweep): the
    capability ALREADY EXISTS and works end-to-end; no code needed, owner decision reduced to
    defaults/documentation.** An explicitly-authored BASE island (`new TransformFrameWdgt content, spec`) is
@@ -1950,7 +1956,7 @@ See §7. None of these block declaring the feature shipped.
    the sugar island's sole-content predicate (`childrenNotHandlesNorCarets`) and grow a tracking island's slot.
    The R2 pattern is right only for overlays that COVER the target's box. **Shipped fix: SCREEN-anchoring** —
    `peekThroughBox = target.mapRectToScreen target.clippedThroughBounds()` in both reconciler branches (the same
-   composition the paint lane uses at `recordDrawnAreaForNextDamageRects`); identity ⇒ mapRectToScreen returns
+   composition the paint lane uses at `_recordDrawnAreaForNextDamageRects`); identity ⇒ mapRectToScreen returns
    the box unchanged, so untransformed pinout is byte-identical (macro's identity control asserts EXACT legacy
    position). **Same one-line idiom applied to the drag-embed LOCK BADGE** (`addDragAffordanceWidgets`,
    world-child badge at the drop target's box right−70/top+4 — reachable when a view-only window sits inside a
@@ -2126,7 +2132,9 @@ pinned-anchor interplay line).**
   now-EMPTY sugar island is left ORPHANED in the world).
 - **Root cause (two parts):**
   1. **Close** — `Widget._closeNoSettle` (`Widget.coffee:473`) re-homes `@` (the WINDOW, which is the sugar
-     island's content) to the basement via `world.basementWdgt._addLostWidgetNoSettle @`. The window LEAVES the
+     island's content) to the basement via `world.basementWdgt._addLostWidgetNoSettle @` (as spelled in
+     2026-07; the store has since been renamed and SPLIT — closing now files into Bin or Shelf through
+     `StorageSorter`, so grep `world.binWdgt` / `_addRestingWidgetNoSettle` in today's src). The window LEAVES the
      island ⇒ un-rotated; the empty sugar island is left behind in the world (a leak). The rotation lived ONLY on
      the transient sugar island (dormant-guarantee: rotation is not a stored property of the widget), so it is lost.
   2. **Re-open** — `IconicDesktopSystemWindowedApp.launch` (`IconicDesktopSystemWindowedApp.coffee:50-56`) for a
@@ -2235,24 +2243,24 @@ pinned-anchor interplay line).**
 - **Root cause (evidence, not inference): a PHASE ERROR in the audit, not a damage-rect bug and not test hygiene.**
   Paint is frame-cadenced BY DESIGN: a public mutator self-settles LAYOUT (geometry converges on return via
   `recalculateLayouts`), but `_changed()`/`_fullChanged()` only QUEUE damage rects — pixels update once per frame when
-  `doOneCycle` reaches `updateBroken()`. So a settled world with queued-but-unpainted damage is the NORMAL mid-frame
+  `doOneCycle` reaches `_repaintDamagedRects()`. So a settled world with queued-but-unpainted damage is the NORMAL mid-frame
   state every mutation passes through, NOT something a macro must clean up. `AutomatorPlayer.checkPaintTruthfulness`
   fingerprinted the live canvas at `stopTestPlaying` — which can land INSIDE the frame (after the last mutation,
-  before that frame's paint) — then did `_fullChanged()+updateBroken()` and compared. When the last mutation was still
+  before that frame's paint) — then did `_fullChanged()+_repaintDamagedRects()` and compared. When the last mutation was still
   mid-frame, the audit's own repaint painted it ⇒ before≠after ⇒ FALSE ghost. `takeScreenshot` never had this
   problem: it force-settles via `readyForMacroScreenshot` first. The screenshot path encoded "complete the frame
   before observing pixels"; the audit path forgot it. Proven with a minimal control (`SystemTest_macroGateFixVerify`,
   deleted): a value-assert-ending macro with a final `world.add` and NO trailing yield FAILED the old audit and
   PASSES the fixed one.
 - **THE FIX (gate, not tests): `checkPaintTruthfulness` now COMPLETES THE FRAME before baselining** —
-  `world.recalculateLayouts()` (also flushes the deferred-settle input lanes) + `world.updateBroken()`, then the
+  `world.recalculateLayouts()` (also flushes the deferred-settle input lanes) + `world._repaintDamagedRects()`, then the
   before-fingerprint. Strictly one-sided: an already-settled test is unaffected (no-ops); a merely-pending frame is
   completed, not flagged; a REAL stale region survives settling by definition (stale pixels are exactly the ones
   nothing queued for repaint). ~2 lines in `AutomatorPlayer.coffee` (guarded on `_recalculatingLayouts`; only ever
   runs under `FIZZYGUM_PAINT_AUDIT`). Macros need NO knowledge of paint — Test 2 ends on its value assertions like
   any other macro (its earlier trailing-settle + self-assert compensations were REMOVED).
 - **The de-tilt / dematerialize path is CLEAN (independently established).** The instrumented flesh-out trace
-  (temporary log in `WorldWdgt.fleshOutFullBroken`, reverted) showed the de-tilt correctly pushes BOTH the island's
+  (temporary log in `WorldWdgt._fleshOutFullDamage`, reverted) showed the de-tilt correctly pushes BOTH the island's
   and the content's frozen 40° footprint (`fullClippedBoundsWhenLastPainted` = `[410@177|110@106]`) as the erase
   source; a step-by-step empty-world diff of the whole round-trip was **0 at every step**.
 - **⚠ Measurement note (rigor):** the "~150 px ghost" in the earlier `index.html?sw=1` probes was LOCATED at box
@@ -2563,12 +2571,12 @@ pinned-anchor interplay line).**
 - **Damage-on-detach erases the un-transformed slot** (bug fix 2026-07-10, Fizzygum `86d3ee5e`) — closing/
   destroying (or reparenting-OUT) an island-interior widget left stale pixels in its rotated footprint:
   `_closeNoSettle`/`_destroyNoSettle` call `_fullChanged()` while attached, then sever `@parent`; the erase-rect
-  is computed LATER in `fleshOut(Full)Broken` via `mapRectToScreen(...WhenLastPainted)`, which walks the
-  now-severed chain → identity → erases only the un-transformed slot. FIX: `recordDrawnAreaForNextDamageRects`
-  now freezes the SCREEN footprint at PAINT time (`mapRectToScreen` while attached); `fleshOutBroken`/
-  `fleshOutFullBroken` use it directly (byte-identical dormant + attached-island). Owner-reported via a tilted
+  is computed LATER in `_fleshOut(Full)Damage` via `mapRectToScreen(...WhenLastPainted)`, which walks the
+  now-severed chain → identity → erases only the un-transformed slot. FIX: `_recordDrawnAreaForNextDamageRects`
+  now freezes the SCREEN footprint at PAINT time (`mapRectToScreen` while attached); `_fleshOutDamage`/
+  `_fleshOutFullDamage` use it directly (byte-identical dormant + attached-island). Owner-reported via a tilted
   DegreesConverterApp inner-window close.
-- **⚠ A SCREENSHOT MACRO CANNOT CATCH BROKEN-RECT STALENESS** (bug fix 2026-07-10) — `readyForMacroScreenshot`
+- **⚠ A SCREENSHOT MACRO CANNOT CATCH DAMAGE-RECT STALENESS** (bug fix 2026-07-10) — `readyForMacroScreenshot`
   (`MacroToolkit:227`) forces `world._fullChanged()` (a full repaint) before EVERY capture, erasing incremental
   damage-rect staleness. To test a damage-rect bug: read the INCREMENTAL canvas pixels right after the gesture
   (`world.worldCanvasContext.getImageData`, NO `takeScreenshot`), then `world._fullChanged()` + settle and read
@@ -2577,10 +2585,10 @@ pinned-anchor interplay line).**
   (no animated clock) so the fixed-build diff is exactly 0.
 - **⚠ PAINT IS FRAME-CADENCED; the paint audit OBSERVES POST-FRAME STATE by construction** (2026-07-10, §7.5 Bug
   C). A public mutator self-settles LAYOUT, but `_changed()`/`_fullChanged()` only QUEUE damage — pixels land once
-  per frame at `updateBroken()`. So pending paint at macro end is the NORMAL mid-frame state, NOT an offender, and
+  per frame at `_repaintDamagedRects()`. So pending paint at macro end is the NORMAL mid-frame state, NOT an offender, and
   a macro needs NO knowledge of paint (no trailing `yield` "to settle the canvas"). The suite-wide
   **paint-truthfulness audit** (`AutomatorPlayer.checkPaintTruthfulness`, run at `stopTestPlaying` when
-  `FIZZYGUM_PAINT_AUDIT`) was fixed 2026-07-10 to COMPLETE the frame (`recalculateLayouts()` + `updateBroken()`)
+  `FIZZYGUM_PAINT_AUDIT`) was fixed 2026-07-10 to COMPLETE the frame (`recalculateLayouts()` + `_repaintDamagedRects()`)
   before baselining — matching what `takeScreenshot`/`readyForMacroScreenshot` always did. (Earlier it fingerprinted
   mid-frame → false ghosts; that cost a full Bug-C forensic pass — do NOT re-chase it or re-impose a "macros must
   end settled" rule.) The ONLY real macro-side settle obligation is EVENT-DRAIN sequencing: `yield
@@ -2654,14 +2662,16 @@ islands — nested islands concatenate.
 
 - **[OK]** Overlapping virtual planes are harmless: nothing does global spatial queries on raw
   coordinates; hit-testing is a tree descent (`TreeNode.coffee:546`), damage is mapped
-  per-widget through its own chain, and `world.broken` only ever holds post-mapping screen
+  per-widget through its own chain, and `world.damageRects` only ever holds post-mapping screen
   rects (§4.5).
 - **[FIX → §4.6]** Cross-plane actors enumerated and dispositioned: `HandleWdgt` (world-parked,
   manipulates `@target` — restricted in Phase 1, delta-mapped in Phase 4); `CaretWdgt`
   (expected in-plane, verify); menus (hand-positioned — fine). Verified there is NO visual
   connector widget ("Connector" = dataflow method-lane naming).
-- **[OK]** Fractional machinery (`desiredExtent`/`desiredPosition`,
-  `positionFractionalInHoldingPanel`) is in-plane, unaffected.
+- **[OK]** Fractional machinery (`desiredExtent`/`desiredPosition`, and the stretch edge
+  fractions — `StretchLayoutSpec`'s `leftFraction`/`topFraction`/`rightFraction`/`bottomFraction`,
+  which absorbed the old `positionFractionalInHoldingPanel` trio; `docs/architecture/layout.md`
+  §4.2) is in-plane, unaffected.
 - Float hygiene: inverse-mapped points are floats; floor at the `getImageData` boundary
   (§4.6); mapped rects floor/ceil+pad at the damage boundary (§4.3). The MODEL stays integer
   (slot boxes) / exact (scalars) — approximation is confined to composite/hit instants.
@@ -2675,12 +2685,12 @@ damage `oldFootprint ∪ newFootprint` and never dirty the buffer (§4.5 invaria
 - **[FIX → §4.2]** The composite MUST clip to `damageRect ∩ footprint` (path clip): the
   damage-rect contract forbids painting outside the rect (front content isn't repainted
   there — spill = z-order corruption). This was the largest hole in the first draft.
-- **[FIX → §4.5]** Both flesh-out lanes (`fleshOutBroken` `WorldWdgt.coffee:863`,
-  `fleshOutFullBroken` `:914`) consume per-widget virtual rects in BOTH the source
+- **[FIX → §4.5]** Both flesh-out lanes (`_fleshOutDamage` `WorldWdgt.coffee:937`,
+  `_fleshOutFullDamage` `:1000`) consume per-widget virtual rects in BOTH the source
   (`*BoundsWhenLastPainted` snapshots) and destination lanes — both are mapped; mapping runs
-  before `mergeBrokenRectsIfCloseOrPushBoth`/`checkARectWithHierarchy` so merge logic never
+  before `_mergeDamageRectsIfCloseOrPushBoth`/`_checkARectWithHierarchy` so merge logic never
   sees mixed planes.
-- **[OK]** Shadow growth (`.growBy @maxShadowSize`, `:879-938`) is screen-space and applies
+- **[OK]** Shadow growth (`.growBy @damageRectMargin`, `:957-1034`) is screen-space and applies
   after mapping — no per-widget shadow-rect work needed.
 - **[OK]** The 2015 notes' "third damage option" (AABB of the transformed damage ∩ clip) is
   exactly what corner-mapping the already-clipped virtual rect produces — at option-4 cost,
@@ -2769,11 +2779,12 @@ path `clip` (native trivially; SWCanvas `Transform2D` `swcanvas.js:1088`, `Polyg
 `ClipMask` `:18607,18617`). SWCanvas's own text slow path IS the design's primitive, shipped
 (`TextRenderer.fillText` `:23559`).
 
-- **[FIX → Phase 0f, §7.8]** SWCanvas `drawImage` is **nearest-neighbor by design**
-  (`swcanvas.js:1837-1838`): SW rotated composites are deterministic but aliased; native is
-  smoothed. The cross-backend visual gap is therefore bigger than "Squeak-soft" — owner
-  acceptance is now an explicit Phase 0 decision, with fixed-point bilinear banked as the
-  fix.
+- **[FIXED → Phase 0f, §7.8]** SWCanvas `drawImage` sampled **nearest-neighbor by design** when
+  this dossier was written: SW rotated composites were deterministic but aliased while native was
+  smoothed, so the cross-backend visual gap was bigger than "Squeak-soft" — owner acceptance was an
+  explicit Phase 0 decision, with fixed-point bilinear banked as the fix. That fix LANDED
+  2026-08-12/13 (§7 item 8): SWCanvas now samples bilinear on rotation and on the scale path, so
+  the gap is largely closed — the current contract is `docs/architecture/transforms.md` §8/§9.
 - **[OK]** Test strategy unaffected: the suite is SW-only (`?sw=1`,
   `run-all-headless.js:112`); SW is the pixel truth, native is eyeball-verified (Phase 0d).
 - **[OK]** No wrapper-class work: the backend split is the canvas factory + prototype

@@ -187,14 +187,20 @@ A fresh session executes this plan as follows:
 - Build: `fg build` → `Fizzygum-builds/latest/`. Non-boot classes ship as escaped source
   strings compiled in-browser; the build-time syntax gate fragment-compiles each file. New
   class files are auto-discovered (class-per-file, filename = class name).
-- **Homepage exclusion markers**: 20 files under `icons/` (the 10 Wdgt+Appearance pairs:
-  ChapterX, ChapterXX, ChapterXXX, FridgeMagnets, Information, RasterPic, Save, Script,
-  Trashcan, UnderCarpet) carry the file-level marker comment
-  `# this file is excluded from the fizzygum homepage build` (matched byte-verbatim by
-  `buildSystem/build.py:54`). **Any rewrite of these files must preserve the marker
-  byte-verbatim as its own line.**
-- Tests: 196 SystemTests; references are per-backend (native: PNG-string hash; SWCanvas:
-  raw-pixel SHA-256) and per-density (dpr 1 and 2); ~1,542 reference images; the WebKit
+- **What ships is a PARTS question, not a per-file marker.** The file-level comment
+  `# this file is excluded from the fizzygum homepage build` that these icon files used to
+  carry is **RETIRED** and gated at zero (`buildSystem/check-whole-file-markers.js`) —
+  ⛔ do not re-add it to any file you rewrite; the build fails. Exclusion now lives in
+  `buildSystem/parts.json` + `buildSystem/profiles/*.json`: the seven dev-only pairs
+  (ChapterX, ChapterXX, ChapterXXX, Information, RasterPic, Save, UnderCarpet) moved to
+  `src/icons-dev/` (the `dev-icons` part), FridgeMagnets and Script stayed in `src/icons/`
+  (core), and the Trashcan pair was deleted outright (the Bin icon is the one bin glyph).
+  A new icon file must land in a directory some part claims, or `check-shippable-coverage.js`
+  fails the build. See `docs/architecture/build-and-packaging.md`.
+- Tests: 300+ SystemTests (`fg status` prints the live count — it moves weekly); references
+  are per-backend (native: PNG-string hash; SWCanvas:
+  raw-pixel SHA-256) and per-density (dpr 1 and 2) — ~1,800 reference images in the tree
+  today (`find ../Fizzygum-tests/tests -name '*.png' | wc -l` for the live figure); the WebKit
   gauntlet leg **reuses** the SWCanvas references (no separate baseline). Recapture:
   `fg recapture <name>` (runs the tests repo's `capture-macro-test-references.js <name>
   --clean --dprs=1,2` full flow). `fg diffpage <names...>` builds a ref|now|diff review page.
@@ -422,7 +428,10 @@ contact sheet:
 
 **Converts: everything else — ~79 appearance files.** The paired `*IconWdgt` files are NOT
 touched (class names and `createAppearance` bodies unchanged). Regenerate the worklist cold:
-`ls src/icons/*IconAppearance.coffee src/maps/*IconAppearance.coffee` minus the table above.
+`find src -name '*IconAppearance.coffee'` minus the table above. (⚠ Use `find`, not a two-directory
+`ls`: the packaging arcs split the fleet across the part directories that own each icon —
+`icons/`, `icons-dev/`, `authoring-icons/`, `demos-icons/`, `examples-icons/`, `maps/`,
+`graphs-plots-charts/`, `meta-tools/` — and the total is still 91 files.)
 
 **Grid-subset cohorts** (initial guidance; P3 finalizes a per-icon table with all drafts in
 hand — same-context icons MUST share a subset, §4.2):
@@ -430,7 +439,7 @@ hand — same-context icons MUST share a subset, §4.2):
 |---|---|
 | Title-bar / tiny chrome (Close, Collapse, Uncollapse, CollapsedState, UncollapsedState, …) | `pixels16` (+`pixels32` if also used large) |
 | Toolbar & creator-button glyphs, format buttons (Bold/Italic/Align*/font-size), all arrows | `pixels32` + `pixels16` — no 48 (simple glyphs gain nothing at 48; these render small) |
-| Desktop / app / document icons (Typewriter, Basement, Welcome, Folder, Trashcan, shortcut badges, …) | `pixels48` + `pixels32` (+`pixels16` where they also appear in small chrome) |
+| Desktop / app / document icons (Welcome, the app/document glyphs, … — Typewriter, Folder, Bin and the shortcut badge already went size-aware instead, §5b) | `pixels48` + `pixels32` (+`pixels16` where they also appear in small chrome) |
 
 ## §5b Size-aware vector icons — a PROVEN third path (typewriter, landed 2026-07-21)
 

@@ -22,15 +22,15 @@ in the first; anything about the boot sequence, the reflective layer's arrival o
   up and how code arrives afterwards: the entry page's two presets, the boot bundle's
   load-bearing order, the two boot paths (compile-at-boot vs pre-compiled image), the
   reflective layer and the meta-system split inside it, `PartsRegistry` loading a part
-  on demand behind a running world, the four questions and the method that answers
-  each, the three traps peculiar to lazy parts, and the Node rigs that cover what the
+  on demand behind a running world, the six questions and the method that answers
+  each, the five traps peculiar to lazy parts, and the Node rigs that cover what the
   SystemTest suite structurally cannot. Companion to
   `../architecture/build-and-packaging.md` §2 and §5 (authoritative).
 
 - [`build-and-packaging.html`](build-and-packaging.html) — how an artifact is
   assembled and selected: the partition (`parts.json`), the profiles, what a build
   derives rather than declares, the reflective layer and the `sources` axis, lazy
-  parts (and the two traps peculiar to them), the gates, and the add-a-thing
+  parts (and the three traps peculiar to them), the gates, and the add-a-thing
   recipes. Companion to
   `../architecture/build-and-packaging.md` (authoritative). The program that
   produced this shape lives in `../archive/build-arc-1…5-*.md`; the earlier

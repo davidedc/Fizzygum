@@ -28,7 +28,7 @@ at all.
 ## 1. The problem it solves
 
 Painting is a recursive, **back-to-front** walk driven by the damage system
-(`WorldWdgt.updateBroken` → `fullPaintIntoAreaOrBlitFromBackBuffer` per damage rect). For each
+(`WorldWdgt._repaintDamagedRects` → `fullPaintIntoAreaOrBlitFromBackBuffer` per damage rect). For each
 damage rect the world paints its own desktop fill, then every top-level widget from rearmost to
 frontmost (`world.children` is a back-to-front array), each painting its whole subtree; later =
 on top. When an opaque window sits in front of that rect, the desktop fill and every rearward
@@ -50,11 +50,15 @@ evaluated at runtime (never baked per class — appearances are swapped live, e.
 window flips Rectangular↔Boxy):
 
 1. **Plain appearance-delegation paint route** —
-   `@paintIntoAreaOrBlitFromBackBuffer is Widget::paintIntoAreaOrBlitFromBackBuffer`. Nine widget
-   classes override paint to draw arbitrary pixels (`HandleWdgt`, `LayoutChromeWdgt`,
-   `LabelButtonWdgt`, `PenWdgt`, `CellWdgt`, `SheetHeaderCellWdgt`, `AnalogClockWdgt`,
-   `Example3DPlotWdgt`, `GraphsPlotsChartsWdgt`), and `BackBufferMixin` blits an offscreen buffer
-   of unknown per-pixel opacity. This one prototype-identity check excludes them all.
+   `@paintIntoAreaOrBlitFromBackBuffer is Widget::paintIntoAreaOrBlitFromBackBuffer`.
+   `BackBufferMixin` overrides that method to blit an offscreen buffer of unknown per-pixel
+   opacity; this one prototype-identity check excludes its consumers. Nine widget classes that
+   draw arbitrary pixels — `HandleWdgt`, `LayoutChromeWdgt`, `LabelButtonWdgt`, `PenWdgt`,
+   `CellWdgt`, `SheetHeaderCellWdgt`, `AnalogClockWdgt`, `Example3DPlotWdgt`,
+   `GraphsPlotsChartsWdgt` — do so through their own `*Appearance` subclass rather than a paint
+   override, so they pass this gate and are excluded by gate 4 instead (their appearance is
+   neither `RectangularAppearance` nor `BoxyAppearance`, so the exact-class switch falls to
+   `undefined`).
 2. **Not ephemeral** (`not @isEphemeral()`) — highlights / drag affordances are translucent
    screen-toppers, never coverers.
 3. **Opaque** — `@alpha == 1` and `@color._a == 1` (a translucent colour makes `fillStyle` emit
@@ -80,15 +84,15 @@ painted on top as before. It:
 
 1. bails if `WorldWdgt.occlusionCullingEnabled` is off, or the context is not the live screen
    (scratch / back-buffer contexts and their bookkeeping are left untouched);
-2. narrows the rect to the desktop: `dirtyPart = aRect ∩ boundingBox()`; bails if empty;
+2. narrows the rect to the desktop: `damagedPart = aRect ∩ boundingBox()`; bails if empty;
 3. **reverse-scans `world.children`** (back-to-front array ⇒ reverse = front-to-back): the first
-   child whose `opaqueCoveredRect()` contains `dirtyPart` (with a **+1px** margin for logical-grid
-   rounding) **and** whose `clippedThroughBounds()` contains `dirtyPart` (so an ancestor clip
-   hasn't cut the fill) is the coverer;
+   child whose `opaqueCoveredRect()` contains `damagedPart` (with a **+1px** margin for
+   logical-grid rounding) **and** whose `clippedThroughBounds()` contains `damagedPart` (so an
+   ancestor clip hasn't cut the fill) is the coverer;
 4. if found: preserves the world's own paint-record bookkeeping
-   (`recordDrawnAreaForNextDamageRects` — the world can itself be a broken widget, e.g. on a
+   (`_recordDrawnAreaForNextDamageRects` — the world can itself be a damagedWidget, e.g. on a
    wallpaper change), then paints the coverer **and everything in front of it** (`children[k..]`)
-   narrowed to `dirtyPart`, replicates the trailing panel stroke, and returns `true`;
+   narrowed to `damagedPart`, replicates the trailing panel stroke, and returns `true`;
 5. else returns `false` → the caller paints the normal full-depth way.
 
 ## 3. Why it is safe
@@ -96,11 +100,11 @@ painted on top as before. It:
 When a coverer is found, its opaque fill covers every pixel of the damage rect, so anything
 skipped beneath it would have been overpainted anyway — the final pixels are identical to the
 full-depth pass. This holds even for the coverer's own drop shadow: all painting is clipped to
-`dirtyPart`, and the coverer's fill (which contains `dirtyPart + 1px`) overpaints its own
+`damagedPart`, and the coverer's fill (which contains `damagedPart + 1px`) overpaints its own
 pre-content shadow. The only way to be wrong is to *over-claim* a covered rect, and every gate in
-§2a guards against that by yielding `undefined` / a smaller rect on any doubt. The byte-exact SystemTest
-suite (265 tests × dpr1/dpr2/WebKit) is the proof; it also empirically covers the paint-record
-skip.
+§2a guards against that by yielding `undefined` / a smaller rect on any doubt. The byte-exact
+SystemTest suite (300+ tests × dpr1/dpr2/WebKit — `fg status` prints the live count) is the proof;
+it also empirically covers the paint-record skip.
 
 ## 4. The control flag
 

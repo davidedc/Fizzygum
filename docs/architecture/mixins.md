@@ -26,7 +26,7 @@ The policy:
 - **Single-consumer / single-subtree mixins are misfiled** — fold them into the consumer
   or a shared base (§4).
 - **A full-removal campaign is explicitly rejected** — the arithmetic in §5 and §7: it
-  would trade the one-line `@augmentWith` declarations (31 consumer files) for ~100+ forwarding stubs or
+  would trade the one-line `@augmentWith` declarations (the consumer count in §3) for ~100+ forwarding stubs or
   hierarchy surgery across the paint/input/clipping/copy subsystems (the most
   determinism-critical, screenshot-baked code), to delete ~350 lines of stable machinery
   whose worst failure mode (the regex `super` rewriter) survives in `Class.coffee`
@@ -68,7 +68,7 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     manual `if !param?` defaulting in the method body).
 - **Override semantics: the class body wins.** The boot emitter outputs the
   `augmentWith(...)` calls BEFORE the class's own prototype assignments
-  (`Class.coffee` `for eachAugmentation in @augmentedWith`, ~:349), so a class-body
+  (`Class.coffee` `for eachAugmentation in @augmentedWith`, ~:386), so a class-body
   method with the same name as a mixin method shadows it. This is deliberate and now
   gate-visible: `census-hierarchy-duplication.js` reports `SHADOWS-MIXIN`, and the
   case law is recorded in `docs/architecture/lint-and-static-checks.md` (a "redundant"
@@ -126,8 +126,8 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     (re-copies onto every consumer CONSTRUCTOR, shadow-guarded by the consumer's own
     class-side statics; registry records carry `static: true`).
 - **Build/boot cost** — mixin sources ship as escaped text and are batched identically
-  to classes; in the `--homepage` precompiled image the compile/eval/super-rewrite is
-  baked in and only the cheap regex field-split runs per boot. Negligible either way.
+  to classes; in the **`homepage` profile's** precompiled image the compile/eval/super-rewrite
+  is baked in and only the cheap regex field-split runs per boot. Negligible either way.
 - **Tooling that understands the mixin DSL** (the recurring tax, but paid and working):
   the syntax gate drives every mixin through the real `Mixin` class
   (`check-coffee-syntax.js`); `check-layering.js` attributes methods defined inside
@@ -135,20 +135,20 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
   whole-system class model INCLUDING `@augmentWith` resolution order, which the
   hierarchy-duplication census reuses for `SHADOWS-MIXIN`.
 
-## 3. Inventory (verified 2026-08-16; 8 mixins, 687 L, 32 consumer slots across 26 files)
+## 3. Inventory (verified 2026-08-18; 8 mixins, 1091 L, 33 consumer slots across 27 files)
 
 Six live in `src/mixins/`; `ParentStainerMixin` and `WidgetCreatorAndSmartPlacerOnClickMixin` live
-in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 32 is the
-sum of the per-mixin consumer counts below, spread over 26 distinct files: `CreatorButtonWdgt` takes
+in `src/app-kit/`, beside the creator-button family that is their only consumer group. The 33 is the
+sum of the per-mixin consumer counts below, spread over 27 distinct files: `CreatorButtonWdgt` takes
 three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 `EditorContentPropertyChangerButtonWdgt` take two each.
 
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
 | `ClippingAtRectangularBoundsMixin` | 195 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
-| `ControllerMixin` | 126 | 7 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
+| `ControllerMixin` | 516 | 8 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
 | `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `IconicDesktopSystemLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
-| `BackBufferMixin` | 148 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
+| `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `SimpleVerticalStackScrollPanelWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ScrollPanelWdgt`) | unrelated branches (ScrollPanel / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
@@ -271,7 +271,7 @@ Costs of removing (why it loses):
   executes;
 - both escape hatches violate standing doctrine (shrink `Widget`; capability methods on
   the answering subclass, never a base default);
-- ~350 L of machinery deleted, ~642 L of behaviour merely relocated, net LOC likely UP;
+- ~350 L of machinery deleted, and §3's whole line total merely relocated, net LOC likely UP;
 - no active campaign is blocked by mixins (verified across all plan docs);
 - the equilibrium is healthy on its own terms: delegate what delegates
   (serializer), inject what injects (dataflow client protocol), delete what's dead.

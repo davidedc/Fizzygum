@@ -38,14 +38,16 @@ both.
 Creation is scattered across at least five bespoke paths:
 
 - **App launchers:** `IconicDesktopSystemWindowedApp` (plain factory base) + 14 `*App` subclasses; each
-  `buildWindow` news-up a content widget and calls `world.openWindowWith(...)`. The desktop launcher widget
+  `buildWindow` news-up a content widget and calls `world.openFrameWith(...)`. The desktop launcher widget
   is `IconicDesktopSystemWindowedAppLauncherWdgt` (double-click → `app.launch()`).
-- **Creator buttons:** `CreatorButtonWdgt` (`buttons/`, `extends Widget`) + subclasses (the
+- **Creator buttons:** `CreatorButtonWdgt` (`app-kit/`, `extends Widget`) + subclasses (the
   `*CreatorButtonWdgt` "switcheroo" creators, the `ToolbarCreatorButtonWdgt` family) that spawn widgets on
   click.
 - **`WidgetFactory`** (`WidgetFactory.coffee`) — a direct construction helper.
-- **`MenusHelper`** — "new X" / `createEmptyWindow*` menu entries (already God-class-split out of
-  `WorldWdgt`, `docs/archive/god-class-decomposition-plan.md`).
+- **`DemoMenus`** (`demos/`) — the "new X" / `createEmptyWindow*` menu entries; **`MenusHelper`** keeps
+  `newScriptWindow` (+ `popUpDevToolsMenu`, `binIconAndText`). Both were God-class-split out of `WorldWdgt`
+  (`docs/archive/god-class-decomposition-plan.md`), and arc 3 then lifted the 131-member demo half out of
+  `MenusHelper` into `DemoMenus` (`docs/archive/build-arc-3-world-harmonization-plan.md`).
 - **Paint tool injection** — `CodeInjectingSimpleRectangularButtonWdgt` injects behaviour into a target
   (a different, code-injection flavour of "make something new happen").
 
@@ -93,7 +95,7 @@ subclasses become thin Factory declarations (template + icon + title). This ties
 "App = launcher" definition to a real mechanism.
 
 ### 4.3 Route the creator zoo through the two primitives.
-Fold `CreatorButtonWdgt`/`*CreatorButtonWdgt`, `WidgetFactory`, and `MenusHelper`'s "new X" entries onto
+Fold `CreatorButtonWdgt`/`*CreatorButtonWdgt`, `WidgetFactory`, and `DemoMenus`' "new X" entries onto
 `FactoryWdgt`/`ScriptRunnerWdgt` (a creator button *is* a Factory or ScriptRunner with a click affordance).
 Retire the bespoke paths as each is proven equivalent. The paint code-injection stays separate (it mutates
 an existing target, not "creation") unless it fits the ScriptRunner shape.

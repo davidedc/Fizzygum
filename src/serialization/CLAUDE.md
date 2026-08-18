@@ -1,8 +1,10 @@
 # CLAUDE.md — src/serialization/
 
 The `Serializer` / `Deserializer` pair, the `SerializationError` type, the
-`WellKnownObjects` registry, the `@serializationTransients` protocol, file save/load
-(`FileSaving` / `FileLoading`), and the source-edits registry live here.
+`WellKnownObjects` registry, `NativeValueKinds` (the ONE native-type taxonomy, shared with
+`src/duplication/`'s `Duplicator` so the two graph walkers cannot drift), the
+`@serializationTransients` protocol, file save/load (`FileSaving` / `FileLoading`), and the
+source-edits registry live here.
 
 **All serialization / deserialization / duplication documentation — the format spec, the
 traversal contract shared with `Duplicator` duplication (`src/duplication/`), the per-class protocol, the

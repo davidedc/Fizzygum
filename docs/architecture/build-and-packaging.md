@@ -105,21 +105,25 @@ valid ingest order.
 ⚠ **A per-site await is the finer instrument, and `requires` is the one that reaches where an await
 cannot.** Prefer the await when the reference sits somewhere with a seam: `demos` names `plots` from
 six menu actions, each of which awaits, so opening a demo menu does not drag the charting part in.
-But `demos` declares `requires: ["authoring", "maps"]`, and that is FORCED rather than chosen —
-14 widgets in `src/demos-icons` reach their appearance through `createAppearance`, whose value
-`CreatorButtonWdgt`'s constructor consumes synchronously (the no-async-seam rule below). At a site
-with no seam there is nothing to await *in*, so ordering the load is the only mechanism left. The
-rule that falls out: **a per-site await where a seam exists; `requires` where one does not, or where
-a base class crosses the boundary.** Deciding it by taste instead is how a door ends up awaiting a
-part it cannot wait for.
+But `demos` declares `requires: ["dev-icons", "patch-programming-experimental", "authoring", "maps",
+"examples-icons", "app-kit"]`, and only the first two are a bare inclusion statement — both are
+EAGER, so shipping-together is the whole of what could go wrong. The lazy four are FORCED rather
+than chosen: 14 widgets in `src/demos-icons` reach their appearance through `createAppearance`, whose
+value `CreatorButtonWdgt`'s constructor consumes synchronously (the no-async-seam rule below), and
+`CFDegreesConverterIconAppearance` `extends` a class in `examples-icons`, which no await can order at
+all. At a site with no seam there is nothing to await *in*, so ordering the load is the only
+mechanism left. The rule that falls out: **a per-site await where a seam exists; `requires` where one
+does not, or where a base class crosses the boundary.** Deciding it by taste instead is how a door
+ends up awaiting a part it cannot wait for.
 
 ⭐ **A SHARED BASE LAYER IS ITSELF A PART — `app-kit` — and it is the configuration `requires` was
 built for.** Nine classes are not any app's: the app protocol `IconicDesktopSystemWindowedApp`, the
 toolbar/creator-button family (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt`, `CreatorButtonWdgt` and the
-two mixins they are made of), the tool-panel grid a toolbar lays its buttons out in, and
-`SpeechBubbleWdgt`. **Nine** parts DERIVE from them across 44 inheritance edges, and eleven declare
-`requires` (`demos` and `dev-tools` merely reference). They sat in `core` for
-two arcs, and the reason is worth keeping because it is a *reasoning* failure rather than an oversight:
+two mixins they are made of), the tool-panel grid a toolbar lays its buttons out in (`ToolPanelWdgt`
+and its `GlassBoxTopWdgt` template header), and `SpeechBubbleWdgt`. **Nine** parts DERIVE from them
+across 44 inheritance edges, and eleven declare `requires` (`demos` and `dev-tools` merely
+reference). They sat in `core` for two arcs, and the reason is worth keeping because it is a
+*reasoning* failure rather than an oversight:
 
 - **Nothing at boot reaches them.** `fg whatpins` reported exactly these, every run.
 - **They were priced against the wrong home.** The analyser names the part that mentions a class most
@@ -166,11 +170,12 @@ named:
 | `whenAllLoaded [names], -> …` | REJECTS; the callback never runs | the part CONSTITUTES the result — a `Sample*App` document that *builds* plots is broken without them, not reduced, so it must fail loudly rather than open half-assembled |
 | `whenOptionalPartsLoaded [names], -> …` | loads what IS here, runs the callback anyway | the part ENRICHES the result — `DashboardsApp`/`SimpleSlideApp` merely offer its tools in a docked palette, and the toolbars already filter their own contents by class existence |
 
-The failure mode is worth stating because it shipped: `DashboardsApp` and `SimpleSlideApp` are CORE
-classes whose desktop openers `createDesktop` creates unguarded, and they used `whenAllLoaded ["maps",
-…]`. On `lean`, which ships neither `maps` nor `plots`, the icon was therefore present and its click
-could only reject — no window, ever, and an unhandled promise rejection. The distinction has a name so
-that the next door has to choose deliberately.
+The failure mode is worth stating because it shipped: `DashboardsApp` and `SimpleSlideApp` have
+desktop openers, and they used `whenAllLoaded ["maps", …]`. On `lean`, which ships neither `maps` nor
+`plots`, the icon was therefore present and its click could only reject — no window, ever, and an
+unhandled promise rejection. (Both halves have since moved on: the apps live in `authoring` and name
+those parts in `optionalParts`, and the icon is drawn behind `canEverProvideClass`. The distinction
+still has a name so that the next door has to choose deliberately.)
 
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
 cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and `Widget.grabbedWidgetSwitcheroo`
@@ -204,9 +209,11 @@ Two things follow, and they are the ones to get right:
 
 ⚠ **The lazy mode is also what makes a part per DOOR worth having.** The part is the loading unit, so
 the Examples folder's five doors are five ONE-CLASS parts: with all five in one part, opening any one
-would fetch the other four. The nine desktop Makers are the opposite case and live *inside*
+would fetch the other four. The eight desktop Makers are the opposite case and live *inside*
 `authoring` — they all declare `requiredParts: ["authoring"]` and build its widgets, so a click loads
-that part regardless and separate parts would buy nothing while costing nine manifest entries.
+that part regardless and separate parts would buy nothing while costing eight manifest entries.
+(The desktop's ninth opener, `FridgeMagnetsApp`, is the door shape again rather than an exception: it
+lives in `fizzytiles`, the part it opens.)
 
 ⚠ **The EAGER mode is still live and still correct** — `IconicDesktopSystemWindowedApp.createOpener`
 hands over a live app singleton, which is what `DemoMenus`' "launcher" menu items use. Choose it when
@@ -245,7 +252,7 @@ the await, because the await IS the declaration. ⚠ Only `requiredParts` satisf
 part may genuinely be absent, so references to one still need a guard where they stand.
 
 ⚠ **AN AWAIT IN ANOTHER METHOD IS INVISIBLE TO THE GATE, so a class in core cannot await its way
-into a part.** The nine Maker apps had a correct
+into a part.** The Maker apps had a correct
 `launch: -> world.parts.whenAllLoaded ["authoring"], => super()` and the part still could not be
 extracted, because each one's `buildWindow: -> world.openFrameWith (new DocumentWdgt), …` is an
 unguarded core→part reference three lines below the await, and `check-part-edges.js` reads one line
@@ -309,8 +316,18 @@ ARE its world, so it has no policy to state, and a field that can hold only one 
 |---|---|---|---|---|---|
 | `dev` (default) | all | compile-at-boot | — | all | the inner loop and the whole SystemTest suite |
 | `dev-notests` | all except `harness` | compile-at-boot | — | all | dev without the test machinery |
+| `dev-precompiled` | all | precompiled | `lazy` | `index.html` | the dev world booted from an image — 59 ms instead of 3219; opt-in, never the default |
 | `homepage` | `core` + LAZY `app-kit` `meta-tools` `examples-icons` `example-degrees-converter` `example-doc` `example-slide` `example-dashboard` `example-sheet` `authoring` `maps` `plots` `spreadsheet` | precompiled | `lazy` | `index.html` | **production** |
 | `lean` | `core` | precompiled | `none` | `index.html` | the appliance |
+
+⚠ **`dev-precompiled` ships `index.html` ALONE, and that is FORCED rather than a simplification.** An
+image is harvested by booting ONE page, and it then contains exactly the classes that page loads;
+`index-sw.html` and `worldWithSystemTestHarness.html` preset `FIZZYGUM_EAGER_ALL_PARTS`, so on them
+the ingest pass would set `.class` on a class the image never defined. One image cannot serve two
+pages with different eagerness — which is also why production ships one entry. ⇒ the suite does not
+run on this tree and does not need to: `dev` stays the default and stays compile-at-boot, so the
+inner loop pays nothing. This is the profile for the human who opens `index.html` and drives the
+world by hand.
 
 ⭐ **Production names TWELVE parts beside core, and EVERY ONE OF THEM IS LAZY.** That is the whole
 shape of production now: `app-kit`, `meta-tools`, `maps`, `plots`, `spreadsheet`, `authoring`,
@@ -386,15 +403,16 @@ Facts worth knowing before touching any of this:
   `new Mixin`, and ordering them means `findLoadOrder` — none of which a precompiled tree has until something fetches
   them. So steps 1–3 are factored out as `ensureMetaSystemLoaded()` (~39 KB: the two meta sources plus
   `dependencies-finding-min.js`), and `PartsRegistry._loadPartPromise` awaits **that**, never
-  `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch, 2.20 MB, handing back the entire
-  saving that made the part lazy. Both are memoized, so a part load and a later inspector open share one fetch.
+  `ensureReflectiveLayerLoaded()` — which would also fetch step 4, every eager batch: on production that is the whole
+  of core's source text, i.e. the bulk of the tree's 2.20 MB, which is the entire saving that made the part lazy.
+  Both are memoized, so a part load and a later inspector open share one fetch.
   Before this split existed, any lazy part on a production tree died with `findLoadOrder is not defined`; nothing
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs
   run compile-at-boot where the meta-system is present anyway. `fg homepage` now asserts it (§8).
 - Its entire runtime consumer surface is **`Mixin.allMixines` in the two inspectors** (`meta-tools`) and in core's
   `SourceEditsRegistry`. There is no runtime `new Class`/`new Mixin` anywhere outside boot.
 - **`compileFGCode` is NOT part of it.** It is defined in the same file the layer fetches
-  (`js/src/loading-and-compiling-coffeescript-sources-min.js`) but `ScriptWdgt`, `Widget.evaluateStringAsScript` and
+  (`js/src/loading-and-compiling-coffeescript-sources-min.js`) but `ScriptWdgt`, `Widget.evaluateString` and
   the spreadsheet's `FormulaCompiler` all call it at runtime, in core, in every profile — runtime compilation is
   product behaviour, not a dev affordance. That file and `logging-div` always load.
 - **The compiler ships in EVERY profile** for the same reason: FizzyPaint tools, spreadsheet formulas (including
@@ -419,52 +437,44 @@ asymmetry is why the build refuses `sources: "none"` together with a lazy part.
 
 For **eager** parts there is nothing worth dividing: on production, `core` IS the only eager part, so there is no split
 to make. The levers that pay are `lazy` (the whole layer) and making MORE parts lazy — which yields per-part loading for
-free, and is partition work rather than loading work. Core is **58.8% of all shippable source bytes** (72.7% of what
-production ships), down from ~80% before the slices below — the ratio is worth re-measuring rather than quoting, since
-every slice moves it.
+free, and is partition work rather than loading work. Core is about **62% of all shippable source bytes** (about **75%**
+of what production ships), down from ~80% before the app-like slices were taken — measure it rather than quote it, since
+every slice moves it down and core's own growth moves it back: sum each part's `dirs` from `parts.json`.
 
 That partition work has now been done for every app-like slice that was worth extracting — `maps`, `plots`,
-`spreadsheet` and `authoring` — and the numbers are worth keeping, because they say what the lever is really worth and
-how badly it can be mis-estimated. ⚠ Note first where the saving comes from: **not** from the source bytes — production is
-`sources: "lazy"`, so nobody was downloading those anyway — but from the **IMAGE**, because a lazy part's classes are
-absent from `js/pre-compiled.js`.
+`spreadsheet` and `authoring` — plus the icon rounds and the base layer behind them. **The per-slice receipts are in
+[`docs/measurements/partition-slices-2026-08.md`](../measurements/partition-slices-2026-08.md)**: what each one moved,
+what it took off the image, and the four mis-estimates that produced the rules below. ⚠ Note first where the saving
+comes from: **not** from the source bytes — production is `sources: "lazy"`, so nobody was downloading those anyway —
+but from the **IMAGE**, because a lazy part's classes are absent from `js/pre-compiled.js`.
 
-| Slice | Classes | Source text moved behind an on-demand fetch | Off production's `pre-compiled.js` |
-|---|---:|---|---|
-| `maps` | 4 | 95.0 KB (97.5% code) | **−55.8 KB (−5.1%)** |
-| `spreadsheet` | 12 | 119.4 KB (27.9% code) | **−33.7 KB (−3.4%)** |
-| `authoring` | 54 | 94.3 KB (75.3% code) | **−91.9 KB (−9.8%)** |
-| unpinning what only lazy parts named | 81 | 100.6 KB (71.8% code) | **−119.5 KB (−14.15%)** |
-| the Examples folder's five doors | 5 | 19.7 KB (64% code) | **−11.7 KB (−1.62%)** |
-| every remaining app icon + the folder's own art | 11 | 29.3 KB | **−14.0 KB (−1.97%)** |
-| what no boot path reaches (`fg whatpins`) | 9 | 20.1 KB (12.2 KB code) | **−16.8 KB (−2.46%)** |
-| the shared base layer → `app-kit` | 9 | 23.3 KB (9.8 KB code) | **−13.2 KB (−1.93%)** |
+The rules that came out of it are the whole of what the next slice needs:
 
-⚠⚠ **The third row broke the estimator a second time, in the OTHER direction — the image cost tracks
-CLASS COUNT at least as much as code bytes.** `authoring` and `maps` move almost exactly the same
-source (94.3 vs 95.0 KB), yet `authoring` takes 1.65× as much off the image. It has 54 classes to
-maps' 4, and every class compiles to its own prototype scaffolding, which the source bytes do not
-show. Estimating `authoring` from maps' KB-of-code ratio predicted −42 KB against an actual −91.9 KB:
-**2.2× LOW**, having been 33% low for maps and 50% high for the spreadsheet. The fourth row confirms
-the class-count reading a second time and missed the same way (predicted order −70 KB, measured
-−119.5 KB): 81 mostly one-method icon classes, the smallest-per-class slice yet, took the most off
-the image of any of them. Four slices, four misses, in both directions. ⇒ **Do not promise a number
-before the two builds are fingerprinted** (§8) — and when you must guess, a many-small-classes slice
-will beat its byte estimate and a heavily-commented one will fall short of it.
+⚠⚠ **THE IMAGE COST TRACKS CLASS COUNT AT LEAST AS MUCH AS CODE BYTES.** Every class compiles to its
+own prototype scaffolding, which the source bytes do not show, so `authoring` and `maps` move almost
+exactly the same source and `authoring` takes 1.65× as much off the image — it has 54 classes to
+maps' 4. The extreme case is an icon round: mostly one-method classes, the smallest-per-class slice
+there is, taking the most off the image of any of them. ⇒ **Do not promise a number before the two
+builds are fingerprinted** (§8) — and when you must guess, a many-small-classes slice will beat its
+byte estimate and a heavily-commented one will fall short of it.
 
-⚠ **The last row is the first prediction that landed** — stated in words before the build ("−12 to
-−16 KB, on the class-count reading") against a measured −13.2 KB, and the boot bundle's +369 B against
-a predicted +250–450 B. Five misses then a hit is not a calibrated estimator; it is one slice that
-happened to resemble the row above it (9 classes both times). The rule stands: **predict in words,
-then fingerprint, and treat any unpredicted FILE as a finding** — which is the half that actually
-paid here, since the source-batch repacking it surfaced (one batch replaced, seven rewritten) is
-exactly the kind of churn a size-only check would have read straight past.
+⚠⚠ **SOURCE BYTES DO NOT PREDICT IMAGE BYTES, and the ratio between them varies by 2.5×.** `maps` is vector-path
+artwork — 2.5% comment bytes, essentially all code. `src/spreadsheet` is 72.1% COMMENT bytes, and comments never reach a
+compiled, minified image. So a per-KB-of-source estimate calibrated on one slice was 33% LOW for `maps` and 50% HIGH for
+`spreadsheet`. **Estimate from a slice's CODE bytes, and treat even that as a guess until the two builds have been
+diffed** (`scripts/build-tree-fingerprint.js`, §8).
 
-⚠ **A class is pinned to `core` by being named there, so a slice UNPINS more than it moves.** The
-fourth row is not an app slice at all: it is the classes whose only namers were already-lazy parts,
-which stayed in `core` only because moving them would have made an unordered cross-part edge — the
-thing `requires` now orders. Because each mover takes its own references with it, the pinned set is a
-**FIXPOINT**: 48 files qualified, moving them qualified 28 more, then 4, then 1. Re-run
+⚠ **PREDICT IN WORDS, THEN FINGERPRINT, AND TREAT ANY UNPREDICTED FILE AS A FINDING.** Four slices
+estimated, four misses in both directions, then one hit — which is not a calibrated estimator, it is
+one slice that happened to resemble the round before it. The half of the discipline that actually
+pays is the FILE half: the source-batch repacking one slice surfaced (one batch replaced, seven
+rewritten) is exactly the kind of churn a size-only check would have read straight past.
+
+⚠ **A class is pinned to `core` by being named there, so a slice UNPINS more than it moves.** One
+whole round was not an app slice at all: it moved the classes whose only namers were already-lazy
+parts, which had stayed in `core` only because moving them would have made an unordered cross-part
+edge — the thing `requires` now orders. Because each mover takes its own references with it, the
+pinned set is a **FIXPOINT** that converges over several rounds rather than one. Re-run
 `buildSystem/pinned-by-lazy-parts.js` after every round.
 
 ⚠⚠ **"WHO NAMES IT" IS A WEAKER QUESTION THAN "WHAT REACHES IT", and the gap has a body count.**
@@ -480,12 +490,12 @@ second list is QUESTIONS, not findings: its top entries (`WorldWdgt`, `Widget`) 
 is what its `refs` column is for. And it is honest about its own ceiling — no static tool over the old
 partition could have called that art movable, because the app really was eager and "pinned" really was
 the right verdict. What it can do is price the pinning so the design question gets asked.
-The sixth row is its first harvest. ⚠ Its seventh and eighth rows are the same tool's list read
-twice, and the difference between them is the lesson: `ToolbarWdgt`, `ToolbarCreatorButtonWdgt` and
-`IconicDesktopSystemWindowedApp` were left behind on the seventh with a stated reason — moving them
-would oblige `plots requires ["authoring"]` for 1.2 KB — and the eighth moved all nine of them by
-rejecting the assumed home rather than the move (`app-kit`, §2). **A tool that ranks candidate homes
-can only price the homes that exist**, so "movable but not free" is a verdict about the current
+⚠ Its own output read twice, one round apart, is where the lesson lives: `ToolbarWdgt`,
+`ToolbarCreatorButtonWdgt` and `IconicDesktopSystemWindowedApp` were left behind the first time with
+a stated reason — moving them would oblige `plots requires ["authoring"]` for 1.2 KB — and the next
+round moved all nine of them by rejecting the assumed home rather than the move (`app-kit`, §2).
+**A tool that ranks candidate homes can only price the homes that exist**, so "movable but not free"
+is a verdict about the current
 partition and never about the classes. Read it as a prompt to ask whether the right home has been
 invented yet.
 
@@ -493,60 +503,57 @@ invented yet.
 `CanvasWdgt` and `PatchNodeWdgt` — 4.3 KB — and they are blocked **by rule, not by cost**: the EAGER
 `video-player` part extends `CanvasWdgt` and the EAGER `patch-programming-experimental` part extends
 `PatchNodeWdgt`, and an eager part cannot extend a lazy part's class at all (§2). Unblocking either
-means making those parts lazy, and neither is a packaging question:
+means making those parts lazy, and the two are no longer the same question:
 
 - `video-player` is **auto-launched at boot** (`WorldWdgt`: `if window.VideoPlayerWithRecommendationsWdgt?
   then world.draftRunVideoPlayer()`). A part that runs at boot is eager by definition, so the change
   is a product decision about whether a flag-gated draft feature should launch itself.
-- `patch-programming-experimental` is **entangled with core**: `FanoutWdgt` is named by `ScriptWdgt`,
-  `CodePromptWdgt` and `ToolPanelWdgt`, and `FanoutPinWdgt` by `ControllerMixin` — the dataflow wiring
-  substrate. Those core sites are guarded, which is right for an *absent* part and wrong for a *lazy*
-  one (a guard swallows the wire instead of fetching it), and `ControllerMixin.ensureWireEdge` has no
-  async seam to convert them into. Same reasoning as "What is deliberately NOT a part", below.
+- `patch-programming-experimental` **no longer has a core entanglement to point at**, and that is
+  worth knowing before the next round: nothing in core names `FanoutWdgt` or `FanoutPinWdgt` in CODE
+  any more — both survive only as prose in `WireSpec`/`ControllerMixin` — and the one live
+  construction site, `DemoMenus`, sits in a lazy part that already `requires` this one. What is left
+  is a flag-less unfinished experiment that ships eagerly, so making it lazy is now a partition
+  decision rather than a blocked one. 4.3 KB is still not the reason to take it.
 
 ⚠ Independently of the blocker, `CanvasWdgt` is defensible core material on layering merits: it is in
 `src/basic-widgets/` and three different parts' canvas widgets derive from it. **"No boot path reaches
 it" is not the same as "it does not belong in core"** — the analyser answers the first question only.
 
-⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle.** The runtime parts
-manifest carries each part's `classes` name list — it must, since the vault cannot answer
-"which part owns this class?" before the part loads — so extracting `authoring` grew
-`js/fizzygum-boot-native-min.js` by **1,857 bytes** (17,158 → 19,015; the manifest is 3,554 B of it).
-That is a 2% toll on the thing that must arrive first, to take 92 KB off the thing that arrives
-next, so it is a good trade at this size — but it scales with class count, and a partition of many
-tiny parts would eventually spend more on the manifest than it saves. Moving 81 more classes into
-existing parts cost another **1,935 B** (19,158 → 21,093) without creating a single new part: the
-toll is per CLASS NAME, not per part. On `lean`, which ships no lazy part and therefore no such list,
-the same change moved the boot bundle by **−3 B** — which is the cleanest statement of where the
-cost actually lives. ⚠ Six MORE parts (five one-class doors plus `examples-icons`) then cost only
-**+397 B** between them, which is what settles the "many tiny parts" worry at this scale: the
-per-part overhead is a name and a batch list, and it is the CLASS names that dominate.
+⚠ **A lazy part is not free on the critical path: it ADDS to the boot bundle, per CLASS NAME rather
+than per part.** The runtime parts manifest carries each part's `classes` name list — it must, since
+the vault cannot answer "which part owns this class?" before the part loads. So extracting one
+54-class part and moving 81 classes into parts that already existed cost `js/fizzygum-boot-native-min.js`
+about the same (~1.9 KB each), six MORE parts cost a few hundred bytes between them, and on `lean` —
+which ships no lazy part and therefore no such list — the same change moved the bundle by 3 bytes.
+That is a low-single-digit-percent toll on the thing that must arrive first, to take tens of KB off
+the thing that arrives next: a good trade at this size, but one that scales with class count, so a
+partition of very many tiny classes would eventually spend more on the manifest than it saves. The
+per-part overhead is only a name and a batch list. (Figures:
+`docs/measurements/partition-slices-2026-08.md`.)
 
-⭐ **Cumulatively, `js/pre-compiled.js` went 936,920 → 669,855 B — −28.5% — and production's eager
-image is now exactly core, with nothing left in it that no boot path reaches except the two named
-above.**
+⭐ **Production's eager image is now exactly core** — the slices took `js/pre-compiled.js` down by
+more than a quarter cumulatively — **with nothing left in it that no boot path reaches except the two
+named above.**
 
-⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×.** Measured
-2026-07-31 (`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in
-**54 ms**, of which the whole image parse+execute is ~46 ms — so a further slice worth ~1.6% of the
-image buys about half a millisecond, and there is nothing to win. The **compile-at-boot `dev`
-`index.html`** takes **3219 ms**, 97% of it compiling, ~8.6 ms per source — so laziness genuinely
-helps *there*, bounded by a measured floor of 2680 ms (core alone is 389 of the 452 sources and
-cannot be lazy). ⚠ The SystemTest suite benefits either way: the harness and SWCanvas pages preset
-`FIZZYGUM_EAGER_ALL_PARTS`, so they compile everything regardless. ⇒ extract further parts for
-download size, partition uniformity, or dev-page boot — not for production startup.
-
-⚠⚠ **Those two rows are the warning: source bytes do not predict image bytes, and the ratio between them varies by
-2.5×.** `maps` is vector-path artwork — 2.5% comment bytes, essentially all code. `src/spreadsheet` is 72.1% COMMENT
-bytes, and comments never reach a compiled, minified image. So a per-KB-of-source estimate calibrated on one slice was
-33% LOW for `maps` and 50% HIGH for `spreadsheet`. **Estimate from a slice's CODE bytes, and treat even that as a
-guess until the two builds have been diffed** (`scripts/build-tree-fingerprint.js`, §8).
+⚠⚠ **THE BOOT-SPEED PAYOFF DEPENDS ENTIRELY ON WHICH PAGE, AND THE TWO DIFFER BY 60×**
+(`docs/measurements/boot-timing-2026-07-31.md`): **production** reaches world-ready in **54 ms**, of
+which the whole image parse+execute is ~46 ms — so a further slice worth ~1.6% of the image buys
+about half a millisecond, and there is nothing to win. The **compile-at-boot `dev` `index.html`**
+takes **3219 ms**, 97% of it compiling, ~8.6 ms per source — so laziness genuinely helps *there*,
+bounded by a floor that is core's own compile: core cannot be lazy, and it is 215 of the 264 sources
+that page still compiles at boot. That floor drops with every slice (it was 2680 ms when core was 389
+of 452), so re-derive it rather than quoting one. ⚠ The SystemTest suite benefits either way: the
+harness and SWCanvas pages preset `FIZZYGUM_EAGER_ALL_PARTS`, so they compile everything regardless.
+⇒ extract further parts for download size, partition uniformity, or dev-page boot — not for
+production startup.
 
 **What is deliberately NOT a part.** `src/dataflow/` looks like the obvious fourth slice and is not one: it is the
-wiring substrate (`ControllerMixin.ensureWireEdge` is how any widget wires to any other, and `WorldWdgt.doOneCycle`
-drains it every cycle), and all 14 of its call sites are already written `world.dataflow?.…` — so its absence would be
-silently ACCEPTED rather than caught. Wires would simply stop firing. That fails the absence-must-be-a-no-op rule in §2,
-which is the test for whether something can be a part at all; the same judgment keeps `src/meta` out. Recorded so it is
+wiring substrate (`DataflowEngine.ensureWireEdges` is how any widget wires to any other, and `WorldWdgt.doOneCycle`
+drains it every cycle), and its absence survives at no call site in either direction. A handful are written
+`world.dataflow?.…`, where a missing engine is silently ACCEPTED and the wire simply never fires; the ~thirty others
+name it bare — `ControllerMixin` a dozen times, `doOneCycle` on the cycle itself — where the first cycle throws.
+Quietly dead or loudly fatal; neither is the NO-OP the absence rule in §2 requires, which is the test for whether
+something can be a part at all — the same judgment keeps `src/meta` out. Recorded so it is
 not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 
 ---
@@ -557,6 +564,7 @@ not re-attempted: `docs/archive/core-app-slices-partition-plan.md` §4 Phase 3.
 ./build_it_please.sh                                  # the dev profile
 ./build_it_please.sh --profile homepage               # production
 ./build_it_please.sh --profile lean                   # the appliance
+./build_it_please.sh --profile dev-precompiled        # the dev world, booted from an image
 ./build_it_please.sh --includeVideoPlayer --includeVideos
 ./build_it_please.sh --noSyntaxCheck                  # a gate switch, NOT a profile field:
                                                       # a profile describes an artifact, not how
@@ -581,13 +589,16 @@ There are **no flavour flags**. An unknown argument is a hard error that lists t
 
 ## 8. Verifying a packaging change
 
-`fg build` runs the gates. `fg gauntlet` is the behavioural gate but **never builds a production tree**, so it says
-nothing about packaging on its own. The ones that do:
+`fg build` runs the gates. `fg gauntlet` never BUILDS a production tree, so it says nothing about the production
+artifact; but its `parts` leg is where the lazy-part machinery is actually exercised, on the one page where laziness is
+real. The commands that speak to packaging:
 
 | Command | What it proves |
 |---|---|
-| `fg homepage` | the ONLY gate that exercises a production tree: boots it, asserts `preCompiled === true`, no SWCanvas payload, a whole-world snapshot round-trip, and (when the tree says `BUILDFLAG_SOURCES === "lazy"`) that nothing is fetched at boot AND an inspector works after one open. ⚠ It also **loads a LAZY PART** — whichever the manifest says is lazy — and asserts it was absent at boot, that all its classes arrive, and that **zero eager batches** came with it. That check runs BEFORE the inspector one on purpose: opening an inspector pulls the meta-system in on its way past and would mask a broken part load entirely |
-| `build_and_smoke.sh --profile lean` | the appliance boots and ships no source text |
+| `fg homepage` | the gate that exercises a PRODUCTION tree (the `lean` row below is the appliance's own): boots it, asserts `preCompiled === true`, no SWCanvas payload, a whole-world snapshot round-trip, and (when the tree says `BUILDFLAG_SOURCES === "lazy"`) that nothing is fetched at boot AND an inspector works after one open. ⚠ It also **loads EVERY lazy part the manifest declares**, one on-demand load each, and asserts each was absent at boot, that all its classes arrive, and that **zero eager batches** came with it. (Only the FIRST load runs on a tree with no meta-system yet, so only it proves the bootstrap; the rest prove the three things that regress per part — hence the loop rather than a sample, since a part added after the gate was written is otherwise untested by construction.) That check runs BEFORE the inspector one on purpose: opening an inspector pulls the meta-system in on its way past and would mask a broken part load entirely |
+| `fg gauntlet`'s `parts` leg (`parts-lazy-load` → `parts-snapshot-load` → `parts-lazy-icons`) | on the dev `index.html`: a part loads through the PRODUCT's own launcher (not a hand-rolled `ensureLoaded`), a snapshot naming a not-yet-loaded part's class loads — and a REJECTED load leaves the desktop standing, which is what locates the bail-out above `loadWorldSnapshot`'s teardown — and every app icon is drawn with no app class defined, the Examples folder's three tiers included |
+| `fg lazyprobe` | the icon rig `--exhaustive`: it CLICKS every icon (each needs a fresh page, so the gauntlet samples three shapes) and asserts each click fetches no more than its own app. `createDesktop` runs only on `index.html` and the two SWCanvas pages preset `FIZZYGUM_EAGER_ALL_PARTS`, so a green suite is NOT evidence that an on-demand path works |
+| `build_and_smoke.sh --profile lean` | the appliance boots and ships no source text. It IS a production tree — every `--production` assertion applies — plus the one thing only it forbids: any class source text at all |
 | `node scripts/build-tree-fingerprint.js compare <a> <b>` (tests repo) | tree equivalence: the stored-source multiset + every file's size and hash |
 
 ⚠ **How to use the fingerprint.** Take baselines for every flavour a change can reach BEFORE touching anything, state

@@ -692,15 +692,19 @@ if ! $noSyntaxCheck ; then
   echo "... widget-conformance check OK"
 fi
 
-# --- build-time RELAYOUT-REPAINTS gate ([INV-1]) --------------------------------------
-# Static sibling to the runtime paint-truthfulness capstone (Fizzygum-tests/scripts/run-paint-audit.js).
-# Enforces [INV-1] (docs/layout-regressions-2026-07-icons-plots-editghosts-plan.md): a `_reLayoutSelf` that
-# opens a `world.disableTrackChanges()` frame MUST issue a covering `@fullChanged()` after its LAST
-# `world.maybeEnableTrackChanges()` -- else a raw-applied child move made inside the suppressed frame leaves
-# a stale/"ghost" region (the 2026-07 D2 edit/view-toggle ghosts, Fizzygum a88a1673). Scoped to _reLayoutSelf
-# (the covering-repaint owner); genuine exceptions carry a `# relayout-repaint-exempt: <reason>` marker.
+# --- build-time RELAYOUT-REPAINTS gate (TOMBSTONE) ------------------------------------
+# Static sibling to the runtime paint-truthfulness capstone (Fizzygum-tests/scripts/run-paint-audit.js),
+# which is unchanged. [INV-1] -- a `_reLayoutSelf` that suppresses change-tracking MUST issue a covering
+# `_fullChanged()` after its last re-enable (born from the 2026-07 D2 edit/view-toggle ghosts,
+# docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md) -- is now STRUCTURAL: bulk child
+# positioning coalesces through `Widget._repaintAsOneUnit fn`, whose `finally` both restores
+# `world._damageSuppressionDepth` and issues the owner's covering repaint, so neither half can be forgotten
+# or lost to an exception. What is left to lint is only that nobody resurrects the retired imperative
+# spelling: `disableTrackChanges` / `maybeEnableTrackChanges` must not reappear. Like check-region-markers.js
+# and check-whole-file-markers.js, the gate slot stays occupied so the retirement cannot silently un-happen.
 # (buildSystem/check-relayout-repaints.js -- same --noSyntaxCheck escape hatch + explicit $? abort as the
-# gates above; scans src/ only, so it runs for every build flavour incl. production.)
+# gates above; scans src/ plus the harness src, which compiles into the same world, so it runs for every
+# build flavour incl. production.)
 if ! $noSyntaxCheck ; then
   echo "checking tracking-suppressing _reLayoutSelf issues its covering fullChanged ([INV-1]) ..."
   node ./buildSystem/check-relayout-repaints.js

@@ -686,9 +686,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
     # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED
-    # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). So the Makers' nine app classes sit
-    # in the lazy 'authoring' part they already build from, FridgeMagnetsApp sits in lazy
-    # 'fizzytiles', and a session that never opens a Maker never downloads or compiles one.
+    # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). So the Makers' eight app classes sit
+    # in the lazy 'authoring' part they already build from, the ninth opener's FridgeMagnetsApp sits
+    # in lazy 'fizzytiles', and a session that never opens a Maker never downloads or compiles one.
     # ⇒ what forces an eager launcher is BOOT-TIME REACHABILITY, and an icon is not its app: reading
     # a name at boot is not reaching the class. (Before this, an eager sliver part existed for each
     # lazy app precisely because createDesktop constructed the app to ask it for its title and icon.)
@@ -2497,9 +2497,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # (the rig, a macro) pass opts.skipConfirm. This is a PUBLIC orchestrator (like resetWorld):
   # it sequences self-settling operations at the top level, so its setColor / _settleLayoutsAfter
   # calls are the sanctioned public path. NB the teardown is the SHARED shipping core
-  # (_teardownWorldStructureNoSettle) — NOT the homepage-stripped resetWorld/_resetWorldNoSettle,
-  # which this could never call — and every step below is one half of that core's split contract:
-  # the core drops all references to what it destroyed, and this method fills the world back in.
+  # (_teardownWorldStructureNoSettle) — NOT the TEST-REPO resetWorld/_resetWorldNoSettle, which
+  # lives in ../Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee and travels
+  # with the `harness` part, so this could never call it — and every step below is one half of that
+  # core's split contract: the core drops all references to what it destroyed, and this method fills
+  # the world back in.
   # Does restoring this snapshot need a reflective layer that is NOT here yet but still could be?
   # True only on a `sources: "lazy"` build, before anything has asked for it, for a file that
   # actually carries class- or mixin-scope source edits -- so no other build ever pays a wait.
@@ -2654,9 +2656,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # the dangling refs", so the obligation kept being satisfied on one path and forgotten on the
   # other. The two drifted twice in two days, in OPPOSITE directions. A shared core makes "did the
   # other teardown get this too?" un-askable, which is the point; hand-synchronised twins are what
-  # this replaces. It SHIPS (no strip markers) because loadWorldSnapshot is a product feature and
-  # _resetWorldNoSettle is homepage-stripped — so the stripped one could never have been the shared
-  # one. Every leak below was measured surviving a real loadWorldSnapshot, not argued.
+  # this replaces. It SHIPS in every profile — it is `core`-part code, and loadWorldSnapshot is a
+  # product feature — while _resetWorldNoSettle lives in the tests repo
+  # (../Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee) and travels with the
+  # `harness` part, so the test-only one could never have been the shared one. Every leak below was
+  # measured surviving a real loadWorldSnapshot, not argued.
   #
   # NoSettle tier: BOTH callers already wrap this in exactly ONE @_settleLayoutsAfter, so no
   # self-settling public setter may move in here. setColor / wallpaper setPattern stay with the

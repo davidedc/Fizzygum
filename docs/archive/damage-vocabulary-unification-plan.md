@@ -1,3 +1,7 @@
+> **ARCHIVED — EXECUTED IN FULL (2026-08-18).** All three phases of the damage/dirty vocabulary
+> split landed the same session as authoring; kept as the rename ledger.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Damage-vocabulary unification — pixels say "damage", layout says "dirty"
 
 **EXECUTED IN FULL + CLOSED 2026-08-18 (all three phases, same session as authoring). Kept as the rename ledger.**

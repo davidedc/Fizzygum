@@ -170,7 +170,7 @@
     <div class="seg world">world exists → doOneCycle</div>
   </div>
 
-  <p class="tl-label">form: precompiled &nbsp;— production and the appliance</p>
+  <p class="tl-label">form: precompiled &nbsp;— production, the appliance, and the precompiled dev tree</p>
   <div class="trow">
     <div class="seg">boot bundle</div>
     <div class="seg">pre-compiled.js <em>(the real image)</em> + compiler</div>
@@ -214,13 +214,13 @@
       <text class="m" x="24" y="66">3. fetch dependencies-finding (findLoadOrder)</text>
 
       <rect x="500" y="10" width="310" height="76" rx="9" fill="var(--wash-s2)" stroke="var(--s2)"/>
-      <text class="t" x="514" y="30">…the rest of the layer  ·  2.20 MB</text>
+      <text class="t" x="514" y="30">…the rest of the layer  ·  ≈2.2 MB</text>
       <text class="m" x="514" y="49">4. every EAGER part's source batches</text>
       <text class="m" x="514" y="66">5. ingest them against the running classes</text>
 
       <rect class="box" x="10" y="112" width="800" height="52"/>
       <text class="t" x="24" y="133">Why the split exists</text>
-      <text class="m" x="24" y="151">Class and Mixin are the only two classes ABSENT from the image — they compiled everything else, so nothing accumulated them into it.</text>
+      <text class="m" x="24" y="151">Of the classes this boot loads, Class and Mixin are the only two ABSENT from the image — they compiled everything else, not themselves.</text>
     </svg>
     <figcaption>A lazy part must ingest its own sources, which means <code>new Class</code> /
     <code>new Mixin</code> and <code>findLoadOrder</code> — none of which a precompiled tree has until
@@ -236,7 +236,7 @@
   <table>
     <tr><th><code>sources</code></th><th>Behaviour</th><th>Who ships it</th></tr>
     <tr><td class="k">background</td><td>fetch it once the world is up, off the critical path</td><td>the historical default</td></tr>
-    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (2.20 MB, 70.9% of the tree, that a normal visit never downloads)</td></tr>
+    <tr><td class="k">lazy</td><td>fetch on first demand — opening an inspector, or restoring a snapshot with class-level edits</td><td><strong>production</strong> (≈2.2 MB, roughly 70% of the tree, that a normal visit never downloads)</td></tr>
     <tr><td class="k">none</td><td>never; ship none of it. No inspectors; class-level edits in a snapshot are refused with one clear report</td><td>the <code>lean</code> appliance</td></tr>
   </table>
   </div>
@@ -295,7 +295,7 @@
   and a name that is <em>already</em> defined must not be re-ingested, because <code>new Class</code>
   would redefine a live class underneath running instances.</p>
 
-  <h2>6 · Four questions, four different methods</h2>
+  <h2>6 · Six questions, six different methods</h2>
 
   <p>This is the part most worth getting right, because <strong>a class-existence check answers none
   of these questions correctly for a lazy part</strong>: an undefined class means both "this artifact
@@ -315,6 +315,13 @@
         <td>loads what is here, runs the callback regardless. Right when the part merely <em>enriches</em> the result</td></tr>
     <tr><td>Construct a class core is not allowed to name</td><td class="k">launch "TheClass"</td>
         <td>names it as DATA — <code>new (window[className])</code>, the edge gate's sanctioned blind spot</td></tr>
+    <tr><td>Can this artifact EVER produce this class?</td><td class="k">canEverProvideClass name</td>
+        <td>asked when deciding whether to draw a control at all — <code>createDesktop</code> asks it per
+        icon, so a profile that ships neither the door nor its app draws none rather than icons whose
+        click could only reject</td></tr>
+    <tr><td>Run this with that class present</td><td class="k">whenClassAvailable name, -&gt; …</td>
+        <td>the CLASS-keyed twin of <code>whenAllLoaded</code>: the caller names a class, never a part.
+        Inline when the class is already defined</td></tr>
     <tr><td>Which parts does this snapshot need?</td><td class="k">partsNeededFor [classNames]</td>
         <td>reads the build MANIFEST, never the SourceVault — the vault only knows sources already loaded, so for a lazy part it cannot answer before the load, which is exactly when it is asked</td></tr>
   </table>
@@ -326,9 +333,10 @@
   merely offers a part's tools in a docked palette is fine without them — the toolbars already filter
   their own contents by class existence — so <code>whenOptionalPartsLoaded</code> is right there. Using
   the wrong one is invisible until a profile actually drops the part: <code>DashboardsApp</code> and
-  <code>SimpleSlideApp</code> are core classes whose desktop icons always ship, and with
-  <code>whenAllLoaded</code> their icons on a <code>lean</code> tree could only reject — no window,
-  ever.</p>
+  <code>SimpleSlideApp</code> ship inside <code>authoring</code>, but their palettes offer
+  <code>maps</code> and <code>plots</code> tools a profile may leave out — so those two declare them
+  as <code>optionalParts</code>, and with <code>whenAllLoaded</code> a Maker icon on a tree that
+  shipped <code>authoring</code> without <code>maps</code> could only reject — no window, ever.</p>
 
   <h2>7 · Traps peculiar to lazy parts</h2>
 
@@ -351,7 +359,7 @@
     pop an empty window.</p>
 
     <p style="margin:0 0 10px"><strong>3 · ⭐ An icon is not its app.</strong> <code>createDesktop</code>
-    places every desktop and Examples icon at boot and <b>constructs no app to do it</b>: an icon is
+    places every DESKTOP icon at boot and <b>constructs no app to do it</b>: an icon is
     built from CORE art plus the app's class NAME. So the launcher holds <code>appClassName</code> as a
     <b>string</b> and, on the click, asks <code>PartsRegistry</code> which part owns that name, fetches
     it, and only then constructs and launches. There are no launcher parts — an app needs no eager
@@ -403,7 +411,7 @@
     core. And <b>a shared base layer wants a part of its own</b>: when several parts derive from one
     group of classes, no existing part is the right home, because putting them in the biggest
     consumer makes every other consumer <code>requires</code> that consumer and fetch all of it.
-    Fizzygum's is <code>app-kit</code> — nine classes, 23.3 KB, required by eleven parts.</p>
+    Fizzygum's is <code>app-kit</code> — nine classes, 22.6 KB, required by eleven parts.</p>
   </div>
 
   <h3>A saved world that names a lazy part's classes</h3>
@@ -415,13 +423,19 @@
 
   <h2>8 · What proves any of this still works</h2>
 
-  <p>Since the suite can never observe laziness (§1), the coverage lives in Node rigs:</p>
+  <p>Since the suite can never observe laziness (§1), the coverage lives in Node rigs — the
+  gauntlet's <code>parts</code> leg runs the first three, and <code>fg lazyprobe</code> runs the icon
+  rig exhaustively:</p>
 
   <div class="tablewrap">
   <table>
     <tr><th>Rig</th><th>What it proves</th></tr>
     <tr><td class="k">parts-lazy-load-headless.js</td>
         <td>boots <code>index.html</code>, asserts the part is genuinely absent, drives the launcher, and waits for the pane's FIRST FRAME before reading pixels</td></tr>
+    <tr><td class="k">parts-lazy-icons-headless.js</td>
+        <td>the ⭐ above, as a pair: every app icon is DRAWN while no app class is DEFINED — then the
+        Examples folder's three tiers (empty at boot, art on open, one app per click), and that
+        clicking one door leaves the other four undefined</td></tr>
     <tr><td class="k">parts-snapshot-load-headless.js</td>
         <td>round-trips a snapshot CONTAINING a lazy part's widgets — the only path that exercises the pre-scan; also that a rejected load leaves the old world standing</td></tr>
     <tr><td class="k">smoke-boot-headless.js --production</td>

@@ -2,7 +2,7 @@
 
 Node/Puppeteer tooling that measures where the running Fizzygum world actually spends CPU,
 by driving the built SystemTest harness headless. It produced every number in
-[`../runtime-performance-optimization-plan.md`](../runtime-performance-optimization-plan.md)
+[`../plans/runtime-performance-optimization-plan.md`](../plans/runtime-performance-optimization-plan.md)
 (campaign of 2026-07-07). It is read-only with respect to all three repos: it never edits
 source and never touches `Fizzygum-builds/` (the unminified "shadow build" lives under `/tmp`
 and symlinks the real build's assets).
@@ -130,5 +130,5 @@ Notes / gotchas learned during the campaign:
   Framework-vs-SWCanvas split comes from bucketing that profile instead.
 - dpr1 suite wall time is FRAME-COUNT bound (~57fps): judge optimizations by busy-CPU delta,
   or run the A/B at dpr2 (CPU-bound; wall responds ~1:1).
-- All instrumented/profiled runs must still pass 190/190 — that's the proof the
-  instrumentation (or an A/B build change) is pixel-transparent.
+- All instrumented/profiled runs must still pass the WHOLE suite (`failed: 0`, every test
+  run) — that's the proof the instrumentation (or an A/B build change) is pixel-transparent.

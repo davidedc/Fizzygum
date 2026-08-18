@@ -164,7 +164,9 @@ class PartsRegistry
   # by class existence — and there `whenAllLoaded` would turn a shipped desktop icon into one whose
   # click can only reject: no window, ever, and an unhandled rejection. That is the trap this method
   # exists to close, and it is only reachable when the DOOR always ships while its parts may not
-  # (DashboardsApp and SimpleSlideApp are core, with unguarded openers, naming parts `lean` omits).
+  # (DashboardsApp and SimpleSlideApp ship inside the lazy `authoring` part — so wherever their
+  # opener is drawn they are there — while the `maps`/`plots` tools their palettes offer are parts
+  # a profile may leave out; hence `optionalParts` on both, `["maps", "plots"]` and `["maps"]`).
   # A door behind a guarded opener cannot hit it, because the opener is absent with the part.
   #
   # It is a method rather than a comprehension copied into each door for the reason the whole class

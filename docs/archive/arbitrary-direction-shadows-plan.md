@@ -1,3 +1,8 @@
+> **ARCHIVED — COMPLETE (2026-08-11).** All three ShadowInfo direction defects fixed as specced
+> (vector `offset.neg()` at both cull sites, the union in `fullImage`, the `color` param deleted);
+> gauntlet 14/14, zero reference churn outside the new test's own captures.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Arbitrary-direction shadows: any ShadowInfo offset paints, erases, and images correctly
 
 **STATUS: COMPLETE — LANDED 2026-08-11 (archived; authored, executed and closed within a day; the 2026-08-11 Fizzygum + tests commits).**

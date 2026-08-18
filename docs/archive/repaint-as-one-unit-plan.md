@@ -1,3 +1,10 @@
+> **ARCHIVED — CLOSED (2026-08-11).** `Widget._repaintAsOneUnit` (cover + depth-restore in
+> `finally`) replaces the paired damage-suppression verbs at all 26 sites; the boolean stack is a
+> depth counter, and a live `DAMAGE_SUPPRESSION_UNBALANCED` tripwire watches the one remaining
+> corruption path. Gates: presuite, gauntlet 14/14, `fg homepage`, four probes all pass; one
+> benign reference churn, recaptured.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Repaint-as-one-unit: the suppression window becomes a self-balancing, self-covering block
 
 **STATUS: CLOSED 2026-08-11 — EXECUTED IN FULL, same day as authored.** `Widget._repaintAsOneUnit` (cover + depth-restore in `finally`) replaces the paired verbs at all 26 sites (healing the three no-cover `_reLayout`s); the boolean stack is a depth counter; the dead assert is a LIVE self-healing `DAMAGE_SUPPRESSION_UNBALANCED` tripwire wired into the headless fail-gates (runner-fails plant-proven); INV-1 reduced to a tombstone; rig + smoke re-spelled. Gates: presuite, gauntlet 14/14 all-in-wave (338s), fg homepage, four probes ALL PASS. One reference churn, root-caused as the documented benign member-census class and recaptured COMPLETE (see §6.5 ledger). Case law: `archive/INDEX.md`; memory note `repaint-as-one-unit-arc`.

@@ -23,7 +23,9 @@ transform+modulo+floor+clamp, tile row constant per scanline + tile column incre
 fill now **4.3 ns/px = SOLID speed** (17.7→3.82 ms/fill; 858%→23% of a 60 Hz frame; **37.5× vs the
 original**). Byte-identical (218 + 13-scene A/B vs the ORIGINAL path incl. fall-back cases + gauntlet +
 homepage, zero churn). Patterned wallpaper is now as cheap as `plain` → resolves the sluggishness.
-SWCanvas pin now `60ba1a3`. Remaining overall: S2 Tier 2, S6b, F1, F3. See §8 ledger + §7.
+SWCanvas pin now `60ba1a3`. Remaining overall: S2 Tier 2, S6b, F1, F3 — plus, from the later §5B
+re-profile, **O3 (per-widget / descend occlusion), the largest open lever** (O1 and O4a landed;
+O4b is DE-URGENTED). See §8 ledger + §7 + §5B.
 
 **INTERACTIVE (busy-desktop) profiling — 2026-07-08.** A new felt-cost harness
 (`docs/profiling/prof-interactive.js`, documented in `docs/profiling/README.md`) drove a busy
@@ -40,7 +42,8 @@ SWCanvas pin now `60ba1a3`. Remaining overall: S2 Tier 2, S6b, F1, F3. See §8 l
   optimization is a documented TODO (issue #149, `ClippingAtRectangularBoundsMixin.coffee:152-159`).
   **✅ Avenue A LANDED 2026-07-09** (Fizzygum `1c3daece`; drag ~3.0× / draw ~2.1× / covered ~4.3×).
   The busy desktop was then **re-profiled** to find the next levers — see **§5B (new items O1–O4)**;
-  the fill cluster is still ~62%, and **O1 (`data32.fill()` for opaque spans) is IN PROGRESS**.
+  the fill cluster is still ~62%, and **O1 (`data32.fill()` for opaque spans) LANDED 2026-07-09**
+  (modest: ~4–6% full-frame — §5B O1 + the §8 ledger row).
 **⚠️ Verified-fact correction (2026-07-08):** S1's headline "−33% busy / −8.3% wall" is an artifact
 of the **unminified profiling build only** — the shipped build strips the log via minification and
 never pays it. See the S1 section in §5 and the methodology note below. This does NOT affect any
@@ -521,7 +524,10 @@ those; keep the per-pixel path for gradients/patterns only.
 
 **Where**: `build_it_please.sh` (ships the stub `js/pre-compiled.js`), boot logic in
 `src/boot/globalFunctions.coffee:276-324` (already loads and prefers `window.preCompiled`),
-generation via `?generatePreCompiled` (downloads a zip today, homepage-build flow).
+generation via `?generatePreCompiled` — since build arc 2 that is a headless Node harvest,
+`../Fizzygum-tests/scripts/generate-pre-compiled-headless.js`, which any `form: "precompiled"`
+profile invokes (the `dev-precompiled` profile already boots `index.html` from an image; the
+harness page is the piece still compiling at boot).
 
 **Why**: every harness page spends 3.5–3.7s compiling ~470 classes before the first test
 (≈1.0–1.5s pure compiler CPU + eval + dependency scan). The parallel suite pays it per shard
@@ -536,7 +542,7 @@ tests (sources still ship; the meta system already handles the pre-compiled+sour
 `JSSourcesContainer.content` is populated either way).
 **Risks/opens**: (a) build time grows by one headless boot (~5s) — acceptable next to the
 test-copy step; (b) verify the handful of tests that live-edit classes still pass (they
-compile from source at edit time regardless); (c) the `--homepage` generation flow must not
+compile from source at edit time regardless); (c) the `homepage` profile's generation flow must not
 fork — reuse one code path.
 **Payoff**: ≈2.5–3s off EVERY headless page boot — suite wall −~5% per shard, single-test
 inner loop noticeably snappier, browser-watched runs boot near-instantly.

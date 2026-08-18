@@ -19,7 +19,7 @@ de-byzantination, regularity.
 
 A **reference widget** is the *visible* thing that points at another widget to bring it up. Six desktop
 concepts are one visual/interaction family (the *Reference morphs* note's taxonomy), all riding the
-`referencedWidget` edge from arc (b):
+`referencedWidget` edge (already landed — see §2):
 
 ```
 Reference (visible icon/bar pointing via `referencedWidget`)
@@ -35,21 +35,31 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
 
 ---
 
-## 2. Current-state truth (verified 2026-07-18)
+## 2. Current-state truth (first verified 2026-07-18; the shortcut, folder and storage bullets re-verified against src 2026-08-18)
 
 - **Shortcuts (visible) EXIST:** `WidgetHolderWithCaptionWdgt` (`isDesktopIcon`) → `IconicDesktopSystemLinkWdgt`
   → `IconicDesktopSystemShortcutWdgt` (+ Document/Folder/Script subclasses); `bringUpTarget()` re-summons.
-  (Referent link = the overloaded `@target` today → becomes `referencedWidget` in arc (b).)
-- **Folders EXIST:** `FolderWindowWdgt` (`extends WindowWdgt`) + `FolderPanelWdgt` (`extends PanelWdgt`);
-  dropping a widget makes a reference and moves the real widget to the basement.
-- **Basement = trash/"under the carpet" (unified today):** `BasementWdgt` (`extends BoxWdgt`) holds
-  closed/"lost" widgets + an incremental GC + a "only show lost items" toggle; `Widget.close` scatters a
-  widget here via `world.basementWdgt._addLostWidgetNoSettle @_enclosingIslandFigure()`.
+  (Referent link = `referencedWidget` — the rename off the overloaded `@target` LANDED, but through the
+  connector campaign's P9 (`34adb216`, 2026-08-16), not through arc (b);
+  [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.1's version of the item is
+  therefore already done.)
+- **Folders EXIST:** `FolderWindowWdgt` (`extends FrameWdgt`) + `FolderPanelWdgt`
+  (`extends IconicDesktopSystemPanelWdgt`); dropping a real widget makes a reference and files the widget
+  itself to the SHELF (`_createReferenceAndCloseNoSettle` — the fresh reference keeps it reachable).
+- **Storage = Bin + Shelf (SPLIT since this section was written):** `BasementWdgt` was renamed `BinWdgt`
+  and then split — `world.shelfWdgt` (`ShelfWdgt`) holds everything REACHABLE, `world.binWdgt` (`BinWdgt`)
+  only what is LOST, kept eagerly by `StorageSorter`'s per-cycle drain (no on-open GC, and no "only show
+  lost items" toggle any more). `Widget.close` files the figure via
+  `restingContainer._addRestingWidgetNoSettle @_enclosingIslandFigure()` — the bin by default, the shelf
+  directly on the save-close path. (`docs/archive/basement-to-bin-plan.md`,
+  `docs/archive/bin-shelf-eager-sorting-plan.md`.)
 - **MISSING (this arc's work):**
   1. **Minimise-to-a-bar** — today the window title-bar collapse button does **collapse-in-place** (shrink
      to the title bar, stay in the tree). There is **no** placeholder bar / dock and no minimise-as-reference.
-  2. **A distinct "recently closed" area** — closing scatters into the single `BasementWdgt`; the note wanted
-     RecentlyClosed (auto, on close) and Trash (explicit) as separate areas (or at least distinct views).
+  2. **A distinct "recently closed" area** — the Bin/Shelf split above divides storage by REACHABILITY, not
+     by the auto-vs-explicit distinction the note wanted (RecentlyClosed = auto on close, Trash = explicit);
+     the bin remains one undifferentiated "lost items" store. ⚠ Needs an owner pass before §4.3 is executed:
+     does the landed split satisfy this ask, or is the distinction still wanted on top of it?
   3. **The unified reference-widget UI taxonomy** — the classes share the verbose `IconicDesktopSystem*`
      lineage but aren't a clean `Reference*` UI family.
   4. **Duplicate vs duplicate-contents** for references isn't an exposed distinction.
@@ -58,8 +68,9 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
 
 ## 3. Architecture we MUST respect
 
-- **Builds on arc (b):** references point via `referencedWidget`; reachability/GC is the 3-edge collector —
-  do **not** re-implement GC here.
+- **Builds on arc (b):** references point via `referencedWidget` (landed already, §2); reachability is
+  `StorageSorter`'s eager classifier today and the 3-edge collector is arc (b)'s generalisation of it — do
+  **not** re-implement either here.
 - **⚠ World-level reference/bin/shelf state is test-sensitive** — survives `ResetWorld`, prior
   gate-false-positive case-law (`docs/archive/upedge-endgame-plan.md`); keep teardown honest.
 - **Reparent/close take the figure** — `_enclosingIslandFigure()` (as `Widget.close` already does).
@@ -86,15 +97,18 @@ restored. Owner decides (R2) whether the title-bar up-triangle *becomes* minimis
 note's literal mapping) or minimise is a separate affordance and the button stays collapse.
 
 ### 4.3 RecentlyClosed vs Trash — one store, two views first. *Lifecycle areas.*
-Expose a `move to trash` command distinct from `close`; back both by the `BasementWdgt` store but with two
-**views/filters** (RecentlyClosed = auto-on-close, reachable, auto-orphaned when stale; Trash = explicit,
+Expose a `move to trash` command distinct from `close`; back both by the bin store (`world.binWdgt`) but with
+two **views/filters** (RecentlyClosed = auto-on-close, reachable, auto-orphaned when stale; Trash = explicit,
 destroyed after empty+orphan+unreferenced). Promote to two real areas only if the single-store UX confuses.
+⚠ Re-scope this against the landed Bin/Shelf split first (§2 and §2's MISSING item 2): the eager sorter
+already routes anything still reachable to the shelf, so "RecentlyClosed = reachable" partly overlaps it.
 **Do not** auto-create a shortcut on every close (the note rejected this as messy) — reachability prevents loss.
 
 ### 4.4 Duplicate vs duplicate-contents for references. *Copy semantics.*
 Expose two copy semantics on reference widgets: default user **"duplicate"** recursively duplicates the
 *referent's contents* (duplicating a folder duplicates what's in it); **"pure duplicate"** (share the same
-referent) is **dev-only**. Build on `DeepCopierMixin` + `docs/archive/duplication-and-save-preserve-transforms-plan.md`;
+referent) is **dev-only**. Build on the `Duplicator` engine (`src/duplication/Duplicator.coffee`) +
+`docs/archive/duplication-and-save-preserve-transforms-plan.md`;
 the reference class overrides the copy hook to choose referent-share vs referent-recurse. (Informed by the
 arc-(b) edge model — a "duplicate-contents" is a copy that follows containment+reference edges.)
 

@@ -125,7 +125,10 @@ review, with file:line receipts)*
    *runtime dependency resolution*, not at the gate — add the glob line in the SAME commit
    that creates the directory.
 2. **Class conventions:** one class per file; **filename must equal the class name**; no
-   imports (all globals); `nil` not `null`/`undefined`; load order is auto-discovered by
+   imports (all globals); **`undefined` is the one absence value, never `null`** — ⚠ the
+   `nil = undefined` global this plan was written against is RETIRED and gated at zero by the
+   `nil-literal` stink, so a bare `nil` is a `ReferenceError` today: read every `nil` in the
+   snippets below as `undefined` and write `undefined`; load order is auto-discovered by
    `src/boot/dependencies-finding.coffee` regex-scanning for the literal forms
    `extends X`, `@augmentWith X`, `new X` — always reference classes with those literal
    forms.
@@ -215,7 +218,7 @@ review, with file:line receipts)*
 | Phase | New files | Modified files |
 |---|---|---|
 | 1 | `src/dataflow/DataflowEngine.coffee`, `src/dataflow/CLAUDE.md` | `WorldWdgt.coffee` (ctor + doOneCycle), `WellKnownObjects.coffee` (keyFor AND resolve), `buildSystem/build.py`, `docs/architecture/serialization-duplication-reference.md` (well-known row) |
-| 2 | `src/spreadsheet/SpreadsheetApp.coffee`, `SpreadsheetWdgt.coffee`, `SheetModel.coffee`, `SheetCellRecord.coffee`, `SheetError.coffee`, `FormulaCompiler.coffee`, `FormulaHelpers.coffee`, icon widget, `src/spreadsheet/CLAUDE.md` | `build.py`, `WorldWdgt.coffee` (launcher), `MenusHelper.coffee` (menu entry) |
+| 2 | `src/spreadsheet/SpreadsheetApp.coffee`, `SpreadsheetWdgt.coffee`, `SheetModel.coffee`, `SheetCellRecord.coffee`, `SheetError.coffee`, `FormulaCompiler.coffee`, `FormulaHelpers.coffee`, icon widget, `src/spreadsheet/CLAUDE.md` | `build.py`, `WorldWdgt.coffee` (launcher), `DemoMenus.coffee` (menu entry — the "new X"/launcher family lives there since build arc 3, and this entry is still deferred) |
 | 3 | — | `Widget.coffee` (`exportedValue`), `Color.coffee` (`cellPresenter`, `lighter`, `darker`; promote `mixed`), `SpreadsheetWdgt`/presenter chain |
 | 4 | (maybe) `CellSocketWdgt.coffee` | `SpreadsheetWdgt`, `SheetCellRecord`, `SliderWdgt.coffee` (`getValue`, §1.15) |
 | 5 | `src/dataflow/SecondsSource.coffee`, `FrameSource.coffee` | `FormulaCompiler` (bindings), `DataflowEngine` (subscription-count hooks), `../Fizzygum-tests/DETERMINISM.md` (time-source rule) |
@@ -423,10 +426,17 @@ docs are a per-phase deliverable, not a Phase 7 chore.
 
 **2a — shell, painted grid, selection.**
 - `SpreadsheetApp extends IconicDesktopSystemWindowedApp` (`title: "Spreadsheet"`,
-  `slot: nil` — multiple sheets allowed; `buildIcon`; `buildWindow` wraps a
-  `SpreadsheetWdgt` in a `WindowWdgt` — model: `DegreesConverterApp.buildWindow`).
-  Register a launcher at the WorldWdgt boot site (grep `createOpener` there) and/or a
-  `MenusHelper` entry (grep `"Simple doc launcher"` for the pattern).
+  `slot: undefined` — multiple sheets allowed; `buildIcon`; `buildWindow` opens the citizen —
+  model: `DegreesConverterApp.buildWindow`). Register a launcher at the WorldWdgt boot site
+  (grep `createOpener` there) and/or a `DemoMenus` entry (grep `"document launcher"` for the
+  pattern — the "new X"/launcher family moved out of `MenusHelper` into `DemoMenus` in build
+  arc 3).
+  ⇒ **As landed the framing INVERTED:** the naked painted grid is `SimpleSpreadsheetWdgt extends
+  Widget` and `SpreadsheetWdgt` IS the framed citizen (`extends FrameWdgt`), so nothing wraps it —
+  `buildWindow` is one `world.openFrameWith (new SpreadsheetWdgt), …`. Read the two bullets below
+  as the sketch they were: the grid-pane responsibilities they give `SpreadsheetWdgt` belong to
+  `SimpleSpreadsheetWdgt` today. The door itself also moved out of `src/spreadsheet/` into its own
+  lazy one-class part (`example-sheet`), with the grid in the lazy `spreadsheet` part.
 - `SpreadsheetWdgt extends Widget` hosting a `ScrollPanelWdgt` whose contents is the grid
   pane. The grid pane paints EVERYTHING itself in
   `paintIntoAreaOrBlitFromBackBuffer` (model: `AnalogClockWdgt`'s custom paint): gridlines,
@@ -464,7 +474,8 @@ launcher registration. Decisions/deviations recorded per rules 7/8:
   `measureText` — a later polish.
 - **Placeholder icon** (`GenericShortcutIconWdgt`+`TypewriterIconWdgt`); custom `SpreadsheetIconWdgt`
   deferred. **Launcher in the examples folder** (not the desktop) so it doesn't shift the
-  desktop icon grid (mass recapture); tests open via `launch()`. MenusHelper entry deferred.
+  desktop icon grid (mass recapture); tests open via `launch()`. Menu entry (now a `DemoMenus`
+  one) deferred.
 - **Keyboard focus-on-click**: `mouseClickLeft` reads `world.hand.position()` for cell
   hit-testing and registers the sheet in `world.keyboardEventsReceivers`; `processKeyDown`
   moves the single-cell selection on `ArrowLeft/Right/Up/Down` (key-based, CaretWdgt
@@ -524,6 +535,14 @@ rules 7/8:
   → caches `@value` → repaints, in the SAME `doOneCycle` as the Enter event. `sheetScope` (`@` in
   a formula) = the `SpreadsheetWdgt` (full world access, no sandbox).
 - **Buffer-driven overlay editor, NO caret** — DEVIATION from "reuse the caret / StringWdgt.edit".
+  ⚠ **SUPERSEDED 2026-07-24 — this mechanism no longer exists** (`cbdbaea7`, "Spreadsheet
+  standard-caret cell editing: the buffer edit model dies"): the cell's overlay editor is now a
+  genuine editable `StringWdgt` that the sheet enters through `world._editNoSettle`, so the
+  standard `CaretWdgt` does the typing, click-positioning, selection and mid-string insertion, and
+  the sheet's append/Backspace buffer, its editing-mode key handling and
+  `StringWdgt.showsEndOfTextBar` are deleted. Read the current mechanism in
+  `src/spreadsheet/CellWdgt.coffee` (`_editorWdgt`, around `world._editNoSettle`). What follows is
+  the 2b-era reasoning, kept because it records why the buffer was chosen first:
   The framework has NO built-in Enter-commits/Escape-reverts (no `accept`/`cancel` handlers exist
   in the tree — only `CaretWdgt` escalates them, to nobody; text live-updates as you type), and a
   live caret is a keyboard receiver that BLINKS (non-deterministic under a screenshot). So the
@@ -538,7 +557,7 @@ rules 7/8:
   `_x` calling self-settling wrappers) — restructured to this; green.
 - **`SheetCellRecord.@serializationTransients = ["compiledFn","boundNames","value","errorFlag"]`**
   (mandatory, §1.16 — the serializer THROWS on an undeclared function-valued own-prop; the
-  transients check runs BEFORE that). DeepCopier copies a function prop by reference (harmless;
+  transients check runs BEFORE that). The duplicator copies a function prop by reference (harmless;
   overwritten by the 2c recommit-on-copy). `SpreadsheetWdgt` also declares the transient editing
   fields.
 - **`SheetError` created in 2b** (minimal — the `#SYNTAX` path needs it); 2c grows `#ERR`/`#LOOP`
@@ -612,9 +631,13 @@ cat line); `src/spreadsheet/CLAUDE.md` grown. Decisions/deviations per rules 7/8
   and `_afterDeserialization` (restore) both call `recommitAllCells` (recommit all → mark all
   stale → one drain), so a copied/restored sheet re-declares its OWN edges — the engine index is
   never serialized/copied (`keptByReferenceOnDeepCopy`). This needed the plain data classes to be
-  deep-copyable: `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`, `SheetError`
-  `keptByReferenceOnDeepCopy` (immutable), and a NEW general `Map::deepCopy`/`Set::deepCopy`
-  (parallel to `Array::deepCopy`; the serializer already handled `$Map`/`$Set`).
+  deep-copyable: at the time `SheetModel`/`SheetCellRecord` `@augmentWith DeepCopierMixin`,
+  `SheetError` `keptByReferenceOnDeepCopy` (immutable), and a general Map/Set copy beside the array
+  one (the serializer already handled `$Map`/`$Set`). ⇒ **Since then the mixin and the per-type
+  `::deepCopy` methods are RETIRED**: the standalone `Duplicator` engine (`src/duplication/`) walks
+  every value generically — `_copyArray`/`_copyMap` are its own — so a plain data class needs **no
+  opt-in at all**, only the `keptByReferenceOnDeepCopy` / transient declarations that say what NOT
+  to walk.
 - **Single-sheet keyboard focus** (a fix the Duplicate test surfaced, not conjecture): the copier's
   `alignCopiedWidgetToKeyboardEventsReceiversSet` puts a duplicated sheet in the receivers set too,
   so typing hit BOTH sheets (the copy committed a stray literal). `_takeKeyboardFocus` now removes
@@ -820,8 +843,9 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   must equal the dependent count.
 - **Testing & determinism:** time-driven cells are EXCLUDED from pixel assertions unless
   the macro drives ticks: for tests, set the source's value injection via macro
-  (`world.dataflow` exposing a test hook is acceptable if guarded `if Automator?` so
-  `--homepage` strips it — established precedent, e.g. `StretchablePanelWdgt` ~82).
+  (`world.dataflow` exposing a test hook is acceptable if guarded `if Automator?`, so a profile
+  that omits the `harness` part never defines it — established precedent, any harness-only test
+  hook).
   Author `SystemTest_macroSpreadsheetSecondsCell` only if the macro-driven tick hook is
   built; otherwise verify by hand and record that in the ledger.
 - **Docs (same commit):** add the time-source rule to `../Fizzygum-tests/DETERMINISM.md`
@@ -1696,7 +1720,7 @@ candidate-highlight visuals during drags for free (any `wantsDropOfChild`-true w
 - **Model — the entry-kind field:** `SheetCellRecord` gains PERSISTENT `widgetEntry: nil`
   (prototype default, own-only-when-set — the 6a idiom; NOT in `@serializationTransients` ~44).
   It serializes as an in-structure `$r` reference to the widget, which rides the tree as the
-  cell's hosted child; `DeepCopierMixin` remaps it to the copy — both copy mechanisms free,
+  cell's hosted child; the `Duplicator` engine remaps it to the copy — both copy mechanisms free,
   spec §2's rationale working again. Semantics:
   - `dataflowRecompute` (~56): `return @_cacheValue @widgetEntry if @widgetEntry?` FIRST — a
     widget-entry cell has no formula; the branch-1 reconcile RETAINS the mounted instance

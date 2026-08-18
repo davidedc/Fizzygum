@@ -38,7 +38,9 @@ synthesises the real input events. Resilient to layout change.
    via **`world.macroToolkit.evaluateString`** — so the whole macro runs with **`@` = the MacroToolkit instance**.
 4. Each `WorldWdgt.doOneCycle` calls `@macroToolkit?.progressOnMacroSteps()` — the pump — which advances the
    generator whenever the previous `yield` is satisfied: `"waitNoInputsOngoing"` (the input queue drained),
-   `"waitForScreenshotReady"` (SWCanvas settled + warm), or `<number>` (ms). Each step pushes timed synthetic
+   `"waitForScreenshotReady"` (SWCanvas settled + warm), `"waitForScreenshotHash"` (the ASYNC SWCanvas
+   screenshot digest has resolved and its verdict is recorded, so a later `assertScreenshotsIdentical` sees the
+   fingerprint — emitted by the `takeScreenshot` verb itself), or `<number>` (ms). Each step pushes timed synthetic
    events onto `world.inputEventsQueue`; `playQueuedEvents` (also in `doOneCycle`) executes them.
 5. **Harness bridge:** while a macro runs `world.macroToolkit.aMacroIsRunning` is true and
    `AutomatorPlayer.replayTestCommands` pauses until the generator reports done, then ends the test. Screenshots:
@@ -100,7 +102,8 @@ by `(` into a `yield from`. (So the assertion sink is reachable only from inside
 ## Playback speed (one global level — tests say NOTHING about it)
 
 A single global level **`MacroToolkit.speed ∈ {normal, fast, fastest}`** controls how fast the event generators
-play. It is set once at boot from **`?speed=`** (parsed in `src/boot/globalFunctions.coffee` like `?sw`/`?dpr`):
+play. It is set once at boot from **`?speed=`** (parsed in `src/boot/globalFunctions.coffee` alongside `?dpr`/`?intro`;
+the rendering backend is NOT a query param — it is baked into the entry page at build time):
 a browser run defaults to **`normal`** (watchable); the headless runner requests **`fastest`**. `fastest` alone
 brings a single-process full-suite sweep from ~33 min to ~15 min; the headless runner then ALSO drops the per-test
 intro slide (`?intro=0`, ~−2.5 s/test) and the per-test fixed image-load wait (AutomatorLoader now proceeds on the
@@ -140,17 +143,20 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 **`MACRO-PATTERNS.md`**. The families:
 
 - **L1 primitives** (`syntheticEvents…_InputEvents`): `MouseMove`, `MouseClick`, `MouseShiftClick`,
-  `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseUp`, `Wheel`, `ConsecutiveLeftClicks`, `StringKeys`,
+  `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseDown`, `MouseUp`, `Wheel`, `ConsecutiveLeftClicks`, `StringKeys`,
   `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
 - **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
   `world.getWidgetViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
-  `getTextMenuItemFromMenu{,ByPrefix,ByContains}`.
+  `getTextMenuItemFromMenu{,ByPrefix,ByContains}`; plus the SCREEN-family pair for widgets inside an affine island —
+  `screenPointAtFractionOf` and its action twin `moveToAndClickAtScreenFractionOf_InputEvents` (the plane-local
+  `pointAtFractionOf` would aim at the un-mapped box).
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
   `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`,
   `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
-  `dragWindowResizerTo`); assertions (`assertTopMenuItemCount`, `assertTopMenuItemStrings`,
+  `dragWindowResizerTo`); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
+  claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings`,
   `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see
   (stacked duplicate handles paint near-identically), `assertScreenshotsIdentical` — MANDATORY for every
   within-test byte-equality claim: call it right after the
@@ -166,7 +172,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `disconnectControllerWire` (the inverse of both — pick a controller's per-wire
   menu row by prefix, then "disconnect"), the window-in-window fixture pair, `dwellDragWindowByGrabToEmbed`
   (float-drag a WINDOW by a grab point and DWELL-ARM-embed it at a destination — press, drag, non-scaled
-  linger past `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip).
+  linger past `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip),
+  `buildOverflowingScrollPanelWithText` (the shared overflowing-`ScrollPanelWdgt` fixture, returned for the
+  caller to drive — the DRY form for the drag-vs-scroll family).
 
 ## Adding to the toolkit
 
@@ -186,19 +194,25 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 ## Authoring gotchas (fixture + menu)
 
 - **Direct construction differs from the demo path.** A directly-built `StringWdgt`/`TextWdgt` has `isEditable =
-  false` (`:43`) — set `txt.isEditable = true` before clicking it. A `SliderWdgt` defaults to `alpha 0.1`; a
+  false` (`StringWdgt.coffee:50`) — set `txt.isEditable = true` before clicking it. A `SliderWdgt` defaults to `alpha 0.1`; a
   `CanvasWdgt` ships no default extent. A morph made via the demo menu (`world.create`, floats on the hand) is
   initialised differently from `new …; world.add` and can inspect differently — reproduce the menu path when it's load-bearing.
-- **`moveTo` vs `_applyMoveTo`.** Before `world.add` (nothing painted yet) a raw `_applyMoveTo` is fine; to move a
-  widget ALREADY in the world use **`moveTo`** (a proper damage-rect repaint of both regions) — `_applyMoveTo` only
-  dirties the OLD bounds.
+- **Always `moveTo`/`setExtent`, never the `_apply*` cores.** A macro drives the world through the PUBLIC API:
+  `buildSystem/check-layering.js` rule [D] FAILS THE BUILD on any `._x()`/`.raw*()` call in macro source (a test's
+  `_automationCommands.js` and the `Macro.fromString` heredocs in `MacroToolkit.coffee` alike) unless the line carries
+  `# macro-private-call-sanctioned: <reason>`, which is for test ORACLES only. Public setters self-settle, so
+  sizing/positioning before OR after `world.add` both work; for measure-then-size, attach first and let `setWidth`
+  settle so the wrapped height is readable.
 - **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents`.
 - **Right-clicking a non-world child opens the ANCESTOR hierarchy menu** ("a X ➜" per ancestor) — navigate by class-name
   prefix to reach the desired ancestor's own menu (and note "pick up" lives in a morph's own hierarchy submenu, not top-level).
-- **Menu/target labels STRIP "Wdgt" from the class name** (`toString()/getTextDescription()` do `.replace("Wdgt","")`), so a
-  `FrameWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜`. Navigate hierarchy /
-  "set target" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). `findTopWidgetByClassNameOrClass` and
+- **Menu/target labels STRIP "Wdgt" from the class name** — the strip is applied where the menu is BUILT
+  (`Widget.buildHierarchyMenu`, `ControllerMixin`'s choosers, `WireSpec.describeConnection`) and by
+  `getTextDescription()`; `toString()` itself does NOT strip it, so a chooser built from a bare `toString()`
+  (`Widget._attachToChosenParent`'s "choose new parent:") shows the full class name. Where it IS stripped a
+  `FrameWdgt` reads `a Window ➜`, a `StringWdgt` reads `a String ➜`, a `TextWdgt` reads `a Text ➜` — navigate hierarchy /
+  "connect to ➜" menus by the **Wdgt-stripped** name (`"a Text"`, not `"a TextWdgt"`). `findTopWidgetByClassNameOrClass` and
   `instanceof`, by contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
 - **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
   a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
@@ -266,8 +280,8 @@ contribute that verb via the `extraSubroutineSources` merge-seam.
 
 ## Build-exclusion contract (part membership)
 
-- This directory IS the **`macros` part**, declared `"inHomepage": false` in `buildSystem/parts.json`. A
-  production profile does not name the part, so both files are absent. A new file added here is covered automatically
+- This directory IS the **`macros` part** (`buildSystem/parts.json`). No production profile names it, so
+  both files are absent. A new file added here is covered automatically
   (the part owns the directory, not a file list).
   ⛔ It used to work the other way round: each file's first line carried
   `# this file is only needed for Macros` and `build.py` matched it with a regex. That whole-file

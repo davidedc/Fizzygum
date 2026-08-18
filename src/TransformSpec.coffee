@@ -151,11 +151,11 @@ class TransformSpec
     @anchor
 
   # §7.5 Bug G backing math: the translation that re-expresses a PINNED-anchor similitude as its
-  # rendering-identical UNDEFINED-anchor (slot-centre) form — t = (I − sR)(A − centre), the Bug-D
-  # compensation algebra inverted. A plane-local vector (anchor and slot both live in the island's
-  # own plane, hence no `screen` in the name). Caller contract (TransformFrameWdgt.
-  # _normalizePinnedAnchorNoSettle): read t while the anchor is still PINNED, then undefined the anchor,
-  # THEN translate — the ordering lives at the caller, this method only computes.
+  # rendering-identical ABSENT-anchor (undefined ⇒ slot-centre) form — t = (I − sR)(A − centre), the
+  # Bug-D compensation algebra inverted. A plane-local vector (anchor and slot both live in the
+  # island's own plane, hence no `screen` in the name). Caller contract (TransformFrameWdgt.
+  # _normalizePinnedAnchorNoSettle): read t while the anchor is still PINNED, then CLEAR the anchor
+  # (`withAnchor undefined`), THEN translate — the ordering lives at the caller, this method only computes.
   _nilAnchorEquivalentTranslation: (slotBounds) ->
     [c, s] = @_cosSin()
     sc = @scale

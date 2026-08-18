@@ -13,16 +13,20 @@ node-protocol contract.
 It looks like an app slice (it sits next to `src/spreadsheet/`, which IS a lazy part), and it is
 not one. **Owner decision, 2026-07-30**, with the enumeration behind it in
 `../../docs/archive/core-app-slices-partition-plan.md` §4 Phase 3: dataflow is the **wiring
-substrate**, not an app. `ControllerMixin.ensureWireEdge` is how ANY widget wires itself to any
-other, `WorldWdgt.doOneCycle` drains it EVERY cycle, and its 14 call sites are already written
-`world.dataflow?.…` — so its absence would be silently **accepted** rather than caught: wires would
-simply never fire, sliders would stop driving their targets, patch nodes would go dead. That is
-broken rather than reduced, which fails the rule that a part's absence must be a NO-OP at every call
-site (`../../docs/architecture/build-and-packaging.md` §2) — the test for whether something can be a
+substrate**, not an app. `ControllerMixin`'s wire verbs (`wireTo` / `trackTarget` /
+`declareWireTo`) are how ANY widget wires itself to any other — each mirroring its list into the
+engine through `DataflowEngine.ensureWireEdges` — and `WorldWdgt.doOneCycle` drains it EVERY cycle.
+`ControllerMixin` alone reaches `world.dataflow` UNGUARDED at 13 sites; only the six
+spreadsheet/teardown reaches are optional-chained. Its absence would therefore be a boot-time throw
+or a dead wire, never a reduction: wires would never fire, sliders would stop driving their targets,
+patch nodes would go dead. That is broken rather than reduced, which fails the rule that a part's
+absence must be a NO-OP at every call site
+(`../../docs/architecture/build-and-packaging.md` §2) — the test for whether something can be a
 part at all. The same judgment keeps `src/meta` out.
 
-⇒ The spreadsheet's lazy-part door therefore names ONE part, and the absent part→part `requires`
-mechanism does not matter to it.
+⇒ The spreadsheet's lazy-part door names ONE part in its `requiredParts` (`SpreadsheetApp`),
+awaited inside `launch`. Its parts.json `requires: ["app-kit"]` is the opposite case — what the
+door is MADE OF, ingested before the class exists — and neither reaches dataflow, which is core.
 
 ## What's here
 
@@ -30,13 +34,17 @@ mechanism does not matter to it.
   as `world.dataflow` (the MacroToolkit / WidgetFactory pattern). Ships in every build (a
   product feature, and core in every profile — see the packaging note above), so WorldWdgt
   constructs it UNGUARDED.
+- `DataflowSource.coffee` — the shared base of the time sources: the subscriber-count field, the
+  `subscriberCountChanged` stepping-loop registration (add while depended-upon, delete at zero)
+  and the `step -> markStale this` tick. Each subclass carries only its cadence and its pulled
+  value.
 - `SecondsSource.coffee` / `FrameSource.coffee` — the two **time sources** (spec §6). Plain
   non-serialized singletons the engine builds LAZILY (`world.dataflow.secondsSource()` /
-  `.frameSource()`) on the first `seconds` / `frame` subscription. Each is a **pure dataflow
-  source** (has `dataflowValue`, no `dataflowRecompute`) that registers in `world.steppingWdgts`
-  (`fps:1` synchronised / `fps:0`) and marks ITSELF stale each tick — **only while a cell depends
-  on it** (see below). The pulled value is a NUMBER: `seconds` = epoch seconds from
-  `WorldWdgt.dateOfCurrentCycleStart`; `frame` = `WorldWdgt.frameCount`.
+  `.frameSource()`) on the first `seconds` / `frame` subscription, each a **pure dataflow source**
+  (has `dataflowValue`, no `dataflowRecompute`) — so they tick **only while a cell depends on
+  them** (see below). Cadence: `fps:1` synchronised / `fps:0`. The pulled value is a NUMBER:
+  `seconds` = epoch seconds from `WorldWdgt.dateOfCurrentCycleStart`; `frame` =
+  `WorldWdgt.frameCount`.
 
 (The spreadsheet client lives in `../spreadsheet/`.)
 
@@ -53,31 +61,38 @@ edges through `removeEdgesInto`, so deleting a `seconds` cell decrements its sou
 
 ## Connections client — patch-programming migration (spec §8, plan Phase 6)
 
-The patch-programming circuits (widgets wired by `@target`/`@action` via `ControllerMixin`) are the
-engine's SECOND client, ported by a strangler. Landed so far:
+The patch-programming circuits (widgets wired by a controller's wire list — `@wires`, one
+`WireSpec` each, via `ControllerMixin`) are the engine's SECOND client, ported by a strangler.
+Landed so far:
 
-- **6a — `firesPerEvent` (DARK).** A per-wire delivery policy now lives on `ControllerMixin`
-  (`firesPerEvent`, default `false` = **pooled**: one drain per cycle using final values; `true` =
-  **per-event**: a synchronous mini-pass inside each event, spec §4). It is flipped by the shared
-  "✓ fires per event" connection-menu toggle (`addFiresPerEventMenuEntry` → `toggleFiresPerEvent`,
-  offered by every controller — SliderWdgt, StringWdgt, the patch nodes, … — once a target is
-  wired). Declared as a PROTOTYPE default, so an untoggled wire carries no own property and
-  serializes exactly as before (the `@target`/`@action` own-only-when-set idiom). 6a is DARK:
-  **nothing reads the flag yet** — legacy `_fireConnection` delivery still runs, pixels unchanged.
-  Phase 6b's engine delivery (behind `world.dataflowWiresEnabled`) reads it when it declares the
-  edge, letting the policy ride the edge record's opts.
+- **6a — `firesPerEvent` (DARK).** A per-wire delivery policy: default `false` = **pooled** (one
+  drain per cycle using final values); `true` = **per-event** (a synchronous mini-pass inside each
+  event, spec §4). It lives on the wire record — `WireSpec.firesPerEvent`, surfaced as `edgeOpts()`
+  and `isFiringPerEvent()` — as a PROTOTYPE default, so an untoggled wire carries no own property
+  and serializes as target + action alone (the own-only-when-set idiom, one level down from where
+  the loose `@target`/`@action` fields used to keep it). It is flipped by the "✓ fires per event"
+  row the shared connection menu grows for EACH live wire
+  (`ControllerMixin._addTargetConnectionMenuEntries` → `toggleFiresPerEventOfWire`, which flips the
+  flag on the WIRE and announces it with `markNonValueChange`), offered by every controller —
+  SliderWdgt, StringWdgt, the patch nodes, … — once a target is wired. 6a is DARK: **nothing reads
+  the flag yet** — legacy `_fireConnection` delivery still runs, pixels unchanged. Phase 6b's
+  engine delivery (behind `world.dataflowWiresEnabled`) reads it when it declares the edge, letting
+  the policy ride the edge record's opts.
 
 - **6b — engine delivery behind `world.dataflowWiresEnabled` (default OFF).** When ON, a wire IS a
-  dataflow edge: `ControllerMixin.setTargetAndActionWithOnesPickedFromMenu` declares `addEdge producer →
-  target {action, firesPerEvent}` (re-wiring first `removeOutgoingEdgesOf`), and `_fireConnection` becomes
+  dataflow edge: `ControllerMixin`'s wire verbs declare `addEdge producer → wire.target
+  wire.edgeOpts()` through `ensureWireEdges`, which reconciles the whole list (re-wiring first
+  `_removeOutgoingWireEdgesOf`, which spares `firesOnAnyChange` records), and `_fireConnection` becomes
   `markStale @` (a wire carries no value; the drain PULLS `dataflowValue`). **Edges are applied BY THE
   ENGINE**: `_processNode` → `_applyIncomingWireEdges` pushes each changed producer's value onto the consumer
   via the wire action, routed through the target's `_<action>Connector` lane (same routing `_fireConnection`
   used, joins the pass settle). A widget SINK then takes the equal-value cutoff on its pulled `dataflowValue`
-  (`Widget.dataflowValue -> @exportedValue()`; patch nodes override → `@output`, palette → `@choice`, fanout
-  → `@inputValue`); a pure source stays always-changed. The **echo** (a ported controller's `updateTarget`
+  (`Widget.dataflowValue -> @exportedValue()`, which resolves through the widget's declared principal pin —
+  the palette's reads `@choice` that way; patch nodes and the fanout family override outright, → `@output` /
+  `@inputValue`); a pure source stays always-changed. The **echo** (a ported controller's `updateTarget`
   tail re-marking the node the engine is applying) is DROPPED via `@_applyingNode` — so a driven ring is ONE
-  pass. The 3 calc-style patch nodes gain `dataflowRecompute` (run the formula over stored inputs → `@output`)
+  pass. The calc-style patch nodes gain `dataflowRecompute` on their shared base (`PatchNodeWdgt` — run the
+  node's computation over the stored inputs → `@output`)
   and DELETE their `allConnectedInputsAreFresh` freshness gate (the §8 deadlock) on the ON path. Node death
   (`Widget._destroyNoSettle`) → `removeAllEdgesOf @`. Sheet reference edges (no `action`) are skipped, so the
   spreadsheet is untouched. Everything is switch-gated → switch-OFF is byte-identical legacy. The `firesPerEvent`
@@ -87,15 +102,16 @@ engine's SECOND client, ported by a strangler. Landed so far:
 
 - **6c — default ON + reconciliation.** `world.dataflowWiresEnabled` now DEFAULTS ON, so the whole suite
   runs engine delivery. Flipping it exposed that 6b declared the edge ONLY in the connect-to-➜ menu path,
-  so wires set up by DIRECT `@target`/`@action` assignment (a `ScrollPanelWdgt` scrollbar, the prompt
-  slider) had no edge and delivered nothing. Fix: **`DataflowEngine.ensureWireEdge`** — the total
-  realisation of spec §8 "edges derive from `@target`/`@action`" — called eagerly by
-  `setTargetAndActionWithOnesPickedFromMenu` AND lazily by `_fireConnection` (no-op mid-drain), so every
+  so wires set up by DIRECT construction in code (a `ScrollPanelWdgt` scrollbar —
+  `@hBar.trackTarget @, "setScrollX"` — and the prompt slider — `slider.declareWireTo @,
+  "takeSliderValue"`) had no edge and delivered nothing. Fix: **`DataflowEngine.ensureWireEdges`** — the
+  total realisation of spec §8 "edges derive from the wire list" — called eagerly by the wire verbs
+  AND lazily by `_fireConnection` (no-op mid-drain), so every
   wire declares its edge however established; engine-delivered scroll is frame-identical to legacy. The
   prompt slider's action reaches `edit()` (public/self-settling, illegal mid-drain-flush), so it was made
   drain-safe with the standard `_*NoSettle` lattice: `WorldWdgt.edit`/`_editNoSettle` share a body via a
   teardown/add strategy thunk (`edit` keeps its exact self-settling behaviour), `StringWdgt._editNoSettle`,
-  and `PromptWdgt`'s action `takeSliderValue` (renamed off the reserved `reactTo*` notification prefix) as
+  and `NumberPromptWdgt`'s action `takeSliderValue` (renamed off the reserved `reactTo*` notification prefix) as
   a `public / _NoSettle / _Connector` trio that JOINS the drain settle. Kept the switch as a 1-release
   kill-switch; 6d (below) deletes it + the token machinery. 11 benign inspector recaptures (`_editNoSettle`
   on the inspected `StringWdgt`).
@@ -106,7 +122,8 @@ engine's SECOND client, ported by a strangler. Landed so far:
   (the per-value cycle-guard), `WorldWdgt.makeNewConnectionsCalculationToken`, the `connectionsCalculationToken`
   prototype default + the per-input token fields on the patch nodes, and the trailing token args on every
   connection setter (`setValue` / `setText` / `setColor` / `setInput1..4` / `bang` / …). `_fireConnection` is
-  now unconditionally `ensureWireEdge` + `markStale @`; the calc/diff/regex nodes' `updateTarget` is
+  now `ensureWireEdges` + `_ensureTrackingEdges` + `markStale @` for a wired controller, and a bare
+  `markNonValueChange @` for an unwired one; the calc/diff/regex nodes' `updateTarget` is
   unconditionally `markStale` (the legacy `allConnectedInputsAreFresh` freshness gate — the spec-§8 deadlock —
   is gone, with it the per-input `updateTarget(token,…)` threading). Behaviour-invariant: with the switch
   already ON since 6c, every live token was already `undefined` (the `Widget.connectionsCalculationToken: 0`
@@ -114,6 +131,12 @@ engine's SECOND client, ported by a strangler. Landed so far:
   engine's visit-once + equal-value cutoff provide cascade termination (spec §8 "tokens retire last"). The only
   screenshot movement is BENIGN inspector member-list shifts (a deleted inspected member = one fewer row, the
   6c-class recapture).
+
+⇒ Those four steps are the strangler's LEDGER, stated in today's vocabulary: the ONE `@target` /
+`@action` pair each of them actually manipulated became a LIST of `WireSpec` records at connector
+§P4, so a controller now drives as many targets as it is wired to and there is deliberately no
+`@target`/`@action` shim to read them through. "The model in one breath" and "Rules for engine code"
+below are the as-built form.
 
 ## The model in one breath
 
@@ -132,7 +155,7 @@ A node is any object held by identity. It MAY implement:
 |---|---|
 | `dataflowRecompute() -> value` | a COMPUTING node's thunk (a cell's formula, a calc patch node). Absence = a pure source/sink. |
 | `dataflowValue() -> value` | current value, pulled by consumers and by the cutoff for non-computing nodes (Phase 6b → a widget's `exportedValue()`). |
-| `dataflowApply(value)` | a SINK hook — apply a value onto a plain property, routing via the target's `_<action>Connector` lane or a bare mutator, NEVER a public self-settling setter. |
+| `dataflowApply(value)` | a RESERVED sink hook — no node implements it today; wire delivery goes through the engine's own `_applyWireValue` instead. If ever implemented it must route via the target's `_<action>Connector` lane or a bare mutator, NEVER a public self-settling setter. |
 | `dataflowNoteError(error) -> value` | optional: turn a mid-recompute throw into the node's own error VALUE (a cell → a `SheetError`). |
 
 A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **always-changed**
@@ -166,9 +189,10 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
   is the second shape, not the first. A pin-aware `pullValue` sibling would be a value edge at pin
   granularity — the thing this split exists to keep apart — so it is not wanted and was not added.
 - **`__poolStale(node, forced)`** — the bare atom: push into the stale pool, nothing else.
-- **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle`
-  BETWEEN `runChildrensStepFunction` and `recalculateLayouts`. **Two parallel drain stations:
-  dataflow settles VALUES, layout settles GEOMETRY**; the coupling is one-way FOR VALUES (dataflow
+- **`recalculateDataflow()`** — the once-per-cycle drain, called from `WorldWdgt.doOneCycle` right
+  after `_runChildrensStepFunction` and before `recalculateLayouts` (two more bookkeeping drains —
+  the storage sorter and the fractional seeds — sit between it and the geometry settle).
+  **Dataflow settles VALUES, layout settles GEOMETRY**; the coupling is one-way FOR VALUES (dataflow
   may dirty layout; layout must never `markStale`). ⚠ A layout station MAY announce a NON-value
   change — see `markNonValueChange` above; it marks no value and pulls nothing, so it cannot
   re-enter the value settle, and its only cost is cadence. Empty-pool early-return keeps it

@@ -1,3 +1,8 @@
+> **ARCHIVED — COMPLETE (2026-08-10).** Both phases landed the same day as authored — Phase 1
+> (shadow reach) and Phase 2 (capture seam + latch deletion) — recording what was painted and
+> threading what will be painted so pixels are read at one seam; gauntlet 14/14 + `fg fuzz` OK.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Shadow reach + capture point: record what was painted, thread what will be painted, read pixels at ONE seam
 
 **STATUS: COMPLETE — BOTH PHASES LANDED 2026-08-10 (archived; authored, executed and closed the same day).**

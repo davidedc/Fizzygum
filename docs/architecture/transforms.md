@@ -66,8 +66,11 @@ this widget as sole content), applies the partial spec change, and:
 - If none exists and the target is non-identity, **materializes** one in place
   (`_materializeSugarIslandNoSettle`): creates a `TrackingTransformFrameWdgt`, sets
   `_materializedBySugar = true`, homes it into the widget's former parent slot + layoutSpec
-  (position-invariant — no z-order raise), then reparents the widget into it as a free-floating
-  child (holding-panel / stack bookkeeping rides across via `_moveHoldingPanelBookkeepingTo`).
+  (position-invariant — no z-order raise; the placement spec rides across as `_addNoSettle`'s
+  `layoutSpec:` argument, and the content-stack knob is pre-seeded onto the still-empty island
+  before the homing — §5.4), then reparents the widget into it as a free-floating child. There is
+  no hand-carry method: container-side reads resolve the shared knob SLOT-FIRST through
+  `Widget::contentStackSpec`, which is what retired it.
 - **Dematerializes** the island if the spec returned to identity
   (`_dematerializeSugarIslandIfIdentityNoSettle`), reparenting the widget back at the island's
   index + layoutSpec and dropping the empty island — restoring the exact pre-materialize structure.
@@ -114,8 +117,9 @@ demand and never stored as truth.**
     layout/moveTo. Kept as a parallel method so `mapRect`'s proven damage padding stays
     byte-untouched.
 - **Trig.** `_cosSin` returns exact `[1,0]` with **no trig call** for a zero angle (identity
-  and pure-scale specs have no trig dependency); a non-zero angle goes through the shared
-  deterministic `DetTrig` port (§9). `Math.PI` and `Math.sqrt` are IEEE-exact across engines,
+  and pure-scale specs have no trig dependency); a non-zero angle calls plain `Math.cos/sin` —
+  which on the reference-matched pages IS the shared deterministic fdlibm port, and on the native
+  page is the platform's own (§9). `Math.PI` and `Math.sqrt` are IEEE-exact across engines,
   so the sweep-square and matrix `e/f` terms are deterministic.
 
 ---
@@ -224,12 +228,15 @@ stack never stretches on a container resize.
   (`_reLayoutChildren true`, arrange-driven).
 - The **stack protocol trio** — `preferredExtentForWidth` / `_setWidthSizeHeightAccordingly` /
   `getMinimumExtent` — **is** mode-gated (the S2 mode gate): under `slot` they forward
-  transparently to the content; under a coupled mode ('footprint'/'sweep') they fall back via
-  `super` to fixed-figure behaviour — `preferredExtentForWidth` reports the claimed extent
-  (the base island's override), while the other two fall through to the plain `Widget`
-  defaults (`getMinimumExtent` reads the stored `@minimumExtent` field). So the coupled
-  island measures as a fixed figure, and the `footprint` default reaches the mainstream case
-  (a halo-rotated image in a document is a sugar = tracking island).
+  transparently to the content; under a coupled mode ('footprint'/'sweep') they answer as a fixed
+  figure. Two of them do it by deferring: `preferredExtentForWidth` takes `super` into the base
+  island's claim-reporting override, `getMinimumExtent` takes `super` into the plain `Widget`
+  default (the stored `@minimumExtent` field). `_setWidthSizeHeightAccordingly` cannot — a stack
+  advances its row cursor by the height this RETURNS — so it computes and returns the claimed
+  height itself (`claimedExtentFor(@bounds).y`), ignoring the offered width exactly as the base
+  island's measure ignores `availW`. So the coupled island measures as a fixed figure, and the
+  `footprint` default reaches the mainstream case (a halo-rotated image in a document is a sugar =
+  tracking island).
 
 The **content→slot** hugging direction (`_reLayout` sync-settles a pending content, then
 `_reLayoutChildren` re-hugs) stays for all modes. Slot-set is `@bounds = newSlot` directly (the
@@ -262,18 +269,19 @@ island's `_reactToChildAdded` nudges `FrameWdgt.noteContentsNameMayHaveChanged()
 intent-named public note, the `noteWallpaperChanged` idiom) once the content arrives.
 
 Pinned by `SystemTest_macroIslandLensWindowHeightLock` (identity + name oracles, the
-wrapped-resize height-lock, the bar reading "analog clock" while wrapped) and the two
-`.scratch` kept-spec probes' C/D/E sections.
+wrapped-resize height-lock, the bar reading "analog clock" while wrapped); the
+sharing/coexistence probes that proved the ONE-OBJECT identity are recorded, with their C/D/E
+sections, in `docs/archive/island-content-preferences-plan.md`.
 
 ---
 
 ## 6. Pinned anchors
 
-The `anchor` is `undefined` (⇒ slot-box centre) for the entire un-resized population. A `undefined` anchor
-derives from the slot centre and rides moves for free. But a resize of a rotated figure would
-move the derived centre and rigidly translate every persisting screen point by `(I − sR)·delta`
-— the title bar of a collapsed tilted window would visibly jump. The fix (§7.5 **Bug D**) is to
-**pin** the anchor at its current absolute point across extent changes:
+The `anchor` is `undefined` (⇒ slot-box centre) for the entire un-resized population. An **absent**
+anchor (`undefined`) derives from the slot centre and rides moves for free. But a resize of a
+rotated figure would move the derived centre and rigidly translate every persisting screen point
+by `(I − sR)·delta` — the title bar of a collapsed tilted window would visibly jump. The fix
+(§7.5 **Bug D**) is to **pin** the anchor at its current absolute point across extent changes:
 
 - **Set/pin.** `TrackingTransformFrameWdgt._reLayoutChildren` pins the anchor on a
   **content-driven** extent change (`@transformSpec.anchor = @transformSpec._anchorFor @bounds`)
@@ -286,14 +294,14 @@ move the derived centre and rigidly translate every persisting screen point by `
 - **Pinned anchors ride moves.** A pinned anchor is an absolute plane point, so it must ride a
   rigid translation of the island. `TransformFrameWdgt` overrides the three distinct move
   primitives — `_applyMoveBy`, `_applyMoveByBase`, `__commitMoveBy` — each adding `delta` to the
-  anchor. Dormant off pinned anchors (the guard skips a `undefined` anchor).
+  anchor. Dormant off pinned anchors (the guard skips an absent anchor).
 - **Pick-up normalization** (§7.5 **Bug G**). Before a figure travels across planes,
   `_normalizePinnedAnchorNoSettle` re-expresses a pinned-anchor similitude as its rendering-
-  identical **undefined-anchor** form (translate the whole figure by
+  identical **absent-anchor** form (translate the whole figure by
   `t = (I − sR)(A − centre)`, computed by `TransformSpec._nilAnchorEquivalentTranslation`).
-  **Order matters:** read `t` while the anchor is still pinned, undefined the anchor, *then* translate
-  — else the move-level anchor-rides would drag `A` along and void the algebra. Integer rounding
-  of `t` costs ≤1px, accepted at a grab (a new state).
+  **Order matters:** read `t` while the anchor is still pinned, CLEAR the anchor
+  (`withAnchor undefined`), *then* translate — else the move-level anchor-rides would drag `A`
+  along and void the algebra. Integer rounding of `t` costs ≤1px, accepted at a grab (a new state).
 
 ---
 
@@ -413,7 +421,7 @@ Content-damage rects are deposited **only** from the two damage flesh-out lanes
 `_depositIslandBufferDamageRect`, which grows each rect by `expandBy(1).growBy world.damageRectMargin`
 (a child's shadow + AA fringe) and coalesces the disjoint list. A cost ceiling
 (`_coalesceDamageList`, gated by `WorldWdgt.damageRectListEnabled` and the class constants
-`ISLAND_DIRTY_MAX_RECTS` / `ISLAND_DIRTY_AREA_FRACTION`) collapses the list to its bounding box
+`ISLAND_DAMAGE_MAX_RECTS` / `ISLAND_DAMAGE_AREA_FRACTION`) collapses the list to its bounding box
 when N clipped subtree walks would cost more than one bbox walk
 (`docs/archive/island-buffer-cache-rectlist-plan.md`). The identity path never reads the buffer,
 so returning to identity drops it (`_dropIslandBufferIfIdentity`).
@@ -448,11 +456,16 @@ guarantees the warp touches only the damage region.
   V8 vs JavaScriptCore disagree by ~1 ULP on 10–20% of trig values — which shifts SWCanvas'
   rotated output a pixel or two per engine and breaks the exact SHA reference match. The fix is
   `DetTrig`, a faithful JS port of SunPro's **fdlibm** computed only with `+ − × ÷` and
-  `Math.sqrt` (`runtime-prelude/deterministic-trig.js`). The build prepends the shim to the boot
-  bundle and runs `DetTrig.install(Math)` **before** SWCanvas loads (`build_it_please.sh`), so
-  every rotated composite is engine-independent. `TransformSpec._cosSin` routes non-zero angles
-  through it; the zero-angle fast path takes no trig at all. (`HandleWdgt` likewise uses `DetTrig`
-  for its rotate-angle math.)
+  `Math.sqrt` (`runtime-prelude/deterministic-trig.js`). Determinism is a property of the ENTRY
+  PAGE, not of the build: `build_it_please.sh` prepends the shim and runs `DetTrig.install(Math)`
+  into the **SW boot bundle only**, ahead of SWCanvas and of every class compile, so the
+  reference-matched pages (`worldWithSystemTestHarness.html`, `index-sw.html`) rotate
+  engine-independently, while `index.html` installs nothing and rotates with the platform's own
+  trig — deliberately, since its pixels match no reference (owner call). ⛔ No source may NAME
+  `DetTrig`: `TransformSpec._cosSin` and `HandleWdgt._pointerAngleToTargetAnchorDegrees` call plain
+  `Math.cos/sin/atan2`, which resolve to the port exactly where it is installed; a named reference
+  throws `DetTrig is not defined` on the native page the moment a widget is rotated (the boot-smoke
+  gate rotates one there to keep that honest). The zero-angle fast path takes no trig at all.
 - **Sampling: smooth whenever the draw resamples; integer zooms crisp by policy.** SWCanvas
   `drawImage` samples bilinear on rotation AND on axis-aligned draws whose effective sample
   step ≠ 1 (§8 sampling contract); step-1 blits stay byte-exact nearest-neighbor.

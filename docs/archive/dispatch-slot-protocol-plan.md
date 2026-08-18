@@ -1,3 +1,8 @@
+> **ARCHIVED — EXECUTED IN FULL (2026-08-18).** ButtonWdgt's four dispatch slots got stable
+> meanings and honest names, authored, censused, decided, executed and gated the same day; the
+> as-built record is §4's DECIDED block + §9.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
 # Dispatch-slot protocol — give ButtonWdgt's four slots stable meanings, then honest names
 
 **STATUS: EXECUTED IN FULL AND CLOSED 2026-08-18 (authored, censused, decided, executed and gated

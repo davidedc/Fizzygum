@@ -1,5 +1,3 @@
-# Constructor-parameter conformance — combing the codebase onto the head/tail convention
-
 > **ARCHIVED 2026-08-16 — COMPLETE (P0–P9).** Kept verbatim as the arc's record. The living law is
 > [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md);
 > the standing enforcement is `buildSystem/check-argument-holes.js` (at its FLOOR of 2) plus the
@@ -10,6 +8,9 @@
 > ⚠ This plan was archived ONCE BEFORE, prematurely, on the strength of a green ratchet — see the
 > re-opening note below. This archiving is backed by an accounting of **every** surviving hole site
 > in both repos, not by a gate reading zero.
+> Historical record + case law; do not execute. Index: `docs/archive/INDEX.md`.
+
+# Constructor-parameter conformance — combing the codebase onto the head/tail convention
 
 **STATUS: COMPLETE — P0–P9 all landed.** `positional-hole` 51 → 0 (HARD); the honest count —
 `buildSystem/check-argument-holes.js`, which the arc built after discovering the stink was blind to
