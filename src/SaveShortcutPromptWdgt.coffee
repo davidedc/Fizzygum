@@ -23,15 +23,11 @@ class SaveShortcutPromptWdgt extends PromptWdgt
       defaultContents: defaultContents
       intendedWidth: opts.intendedWidth ? 100
     @_buildAndConnectChildren()
-    # widen the rows, then re-take my size THROUGH the scroll frame the rows live in
-    # (PopUpWdgt._buildRowsScrollFrameNoSettle) — hugging the panel directly would
-    # leave the frame at the pre-widening width and clip its own contents.
-    @rowsPanel._applyWidth 150
-    # layout-apply-sanctioned: constructor build point (orphan-settledness) — I am not in the
-    # tree yet, so this re-fit reaches nothing but my own freshly-built innards, exactly like
-    # the _applyExtent below it that has always run here.
-    @_refitRowsScrollFrameNoSettle()
-    @_applyExtent @rowsScrollFrame.extent()
+    # NO width poke here: my rows hug their widest row all by themselves, and that comes out
+    # WIDER (154) than the 150 a poke would ask for — so setting it only to have the very next
+    # arrange hug back over it bought nothing. Set minTextWidth on the entry field (below) if
+    # this prompt ever needs to be wider; the hug then follows it, which is the mechanism the
+    # rows panel already has rather than a value fighting it.
     @tempPromptEntryField.text.edit()
 
   _buildAndAddValueEditorInto: (panel) ->

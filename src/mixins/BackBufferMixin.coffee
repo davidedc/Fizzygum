@@ -86,9 +86,13 @@ BackBufferMixin =
       isTransparentAt: (aPoint) ->
         if @boundsContainPoint aPoint
           return false  if @texture
-          data = @getPixelColor aPoint
-          # check the 4th byte - the Alpha (RGBA)
-          return data.a is 0
+          # ASK THE COLOUR — and mind the spelling, because the wrong one is silent. A Color
+          # keeps its alpha in `_a` and publishes no `a`, so a `data.a is 0` test reads
+          # `undefined is 0`: false for every pixel, reporting every back-buffered widget
+          # (StringWdgt, CanvasWdgt, PaletteWdgt) OPAQUE at every point inside its bounds, so
+          # a click on a see-through pixel of a string or a canvas never passes through to
+          # what is behind it. isFullyTransparent is the question this wants to ask.
+          return @getPixelColor(aPoint).isFullyTransparent()
         false
 
       # Widget pixel access:
