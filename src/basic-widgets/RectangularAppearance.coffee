@@ -1,7 +1,7 @@
 class RectangularAppearance extends Appearance
 
   # the legacy device paint bounds its own fills/stroke to damage∩tight; see Appearance.
-  clipsToLocalArea: false
+  clipsToDamageBox: false
 
   isTransparentAt: (aPoint) ->
     if @widget.boundingBoxTight().containsPoint aPoint
@@ -33,7 +33,7 @@ class RectangularAppearance extends Appearance
     # stroke + pattern-fill epilogues, so it runs here too (pure, cheap)
     return undefined unless (@_calculateKeyValuesOrNil aContext, clippingRectangle)?
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       if !@widget.color? then debugger
 
       # paint the background: the whole damage box (the padding halo beyond the tight box)
@@ -42,11 +42,11 @@ class RectangularAppearance extends Appearance
         if appliedShadow?
           color = Color.BLACK
         ctx.fillStyle = color.toString()
-        @_fillLocalRectSnappedToDevicePixels ctx, localArea
+        @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
       # now paint the actual widget, which is a rectangle
       # (potentially inset because of the padding): the damage box ∩ the tight box
-      toBePainted = localArea.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
+      toBePainted = localDamageBox.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
 
       color = @widget.color
       if appliedShadow?
@@ -56,7 +56,7 @@ class RectangularAppearance extends Appearance
         ctx.fillStyle = color.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
 
-      @drawAdditionalPartsOnBaseShape? appliedShadow, ctx, localArea
+      @drawAdditionalPartsOnBaseShape? appliedShadow, ctx, localDamageBox
 
     # the stroke re-derives its own key values (it is also a standalone entry — see paintStroke),
     # so it runs after the scope, not inside it
@@ -98,11 +98,11 @@ class RectangularAppearance extends Appearance
     # bodyFn is required. It is therefore NOT a hole under R3 and must not be "fixed" into one
     # (docs/architecture/constructor-and-parameter-conventions.md; buildSystem/check-argument-holes.js
     # counts it because a regex cannot tell an absent value from a skipped parameter).
-    @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, undefined, (ctx, localDamageBox) =>
       return unless @widget.strokeColor?
 
       # clip to the damage ∩ tight box (the stroke must not paint into the padding halo)
-      toBePainted = localArea.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
+      toBePainted = localDamageBox.intersect @widget.boundingBoxTight().translateBy @widget.position().neg()
 
       ctx.beginPath()
       ctx.rect Math.round(toBePainted.left()),

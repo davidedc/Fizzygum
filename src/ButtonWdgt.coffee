@@ -158,6 +158,16 @@ class ButtonWdgt extends Widget
   # control panel), and a spreadsheet CellWdgt's hosted payload.
   rejectDrags: ->
     return false if @parent == world
-    return false if @parent?.wantsDetachOfChild? @
+    return false if @isDetachablePayloadOfMyParent()
     return @defaultRejectDrags
+
+  # Does my container hand me out — am I a payload it holds, rather than a part of it? ONE
+  # statement of that fact, because more than one thing turns on it: the drag above, and the
+  # GRIP that LabelButtonAppearance draws so a liftable row says so before you try
+  # (design-principles: an affordance the user has to be told about is not one).
+  #   Deliberately narrower than rejectDrags. Resting on the desktop also makes me draggable,
+  # but it does not make me a payload of anything, and it needs no grip: everything loose on a
+  # desktop is draggable, so marking it would say nothing.
+  isDetachablePayloadOfMyParent: ->
+    (@parent?.wantsDetachOfChild? @) ? false
 

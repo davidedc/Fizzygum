@@ -17,11 +17,11 @@ class GraphsPlotsChartsAppearance extends Appearance
     # contract (Widget.coffee "How the shadow painting works"): in the shadow pass drawPlot's
     # simpleShadow fills the WHOLE box black at the shadow alpha, so the coloured background
     # underneath is skipped (painting it too would tint and double-darken through accumulation).
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       # (backgroundColor is undefined unless the user sets one — the base Widget default — so this
       # fill is usually skipped; drawPlot's own background-clean fill paints the plot box)
       if !appliedShadow? and @widget.backgroundColor?
         ctx.fillStyle = @widget.backgroundColor.toString()
-        @_fillLocalRectSnappedToDevicePixels ctx, localArea
+        @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
       @widget.drawPlot ctx, Color.WHITE, appliedShadow

@@ -13,7 +13,8 @@ before writing or modifying any `*Appearance` paint body, and together with
 > (save → damage clip → alpha → `useLogicalPixelsUntilRestore` → translate to widget position).
 > Damage clipping, the shadow-silhouette fallback, and back-buffer/pattern blitting are the
 > PREAMBLE's device-space business — a body never touches `al/at/sl/st`. The body receives the
-> damage box as a LOCAL rect for partial-repaint fills.
+> damage box as a LOCAL rect (`localDamageBox`) — **fills may be sized to it, art may not be
+> placed relative to it**: art takes its geometry from the widget and lets the clip bound it.
 > Exception, by declaration only: a body may draw in integer DEVICE pixels anchored at the
 > widget origin when its art is dpr-conditional pixel work (the SizeAware family) — such a body
 > documents it and never reads `al/at`.
@@ -24,9 +25,33 @@ before writing or modifying any `*Appearance` paint body, and together with
 
 `Appearance._paintInLocalScope aContext, clippingRectangle, appliedShadow, bodyFn`
 (`src/Appearance.coffee`) is the single spelling of the scope. It returns undefined when there is
-nothing to draw, else runs `bodyFn ctx, localArea, appliedShadow` inside the scope and restores.
-`localArea` = the damage box translated to widget-local logical coordinates (integer — both the
-damage box and the widget position are integer by the placement law).
+nothing to draw, else runs `bodyFn ctx, localDamageBox, appliedShadow` inside the scope and
+restores. `localDamageBox` = the damage box translated to widget-local logical coordinates
+(integer — both the damage box and the widget position are integer by the placement law).
+
+### ⚠⚠ `localDamageBox` is NOT the widget's own rect
+
+On a partial repaint it is a SUB-RECT of the widget — whatever region is being redrawn this pass.
+That distinction is invisible when a body only fills: painting one colour over exactly the damaged
+part gives the same picture however large that part is, which is why the six background fills in
+the tree pass it straight to `_fillLocalRectSnappedToDevicePixels` and are right to.
+
+**Art is different.** Geometry placed relative to `localDamageBox` lands wherever the damage
+happened to start, so the same widget draws differently depending on what else moved. Take art
+geometry from the widget — origin `(0,0)`, extent `@widget.width()`/`@widget.height()` — and paint
+the whole of it; the scope has already clipped to the damage box, so the partial case costs
+nothing and needs no arithmetic. `SimpleDropletAppearance.drawAdditionalPartsOnBaseShape` is the
+model: its plus-sign is sized from `@widget`, and it touches the damage box only to clip.
+
+⚠ **A screenshot test cannot see this class of bug** — it settles the world before capturing, and a
+full repaint hides it. The instrument is the **paint-truthfulness gate** (`fg presuite` /
+`fg gauntlet`'s `paint` leg), which forces a full repaint of each test's settled end-state and
+compares. It is what caught a menu-row grip placed this way: six pixels, on the one path where a
+row moved up because a neighbour was dragged out of the menu.
+
+Related: the parameter was called `localArea` until the same trap was walked into; the name is now
+the fact, because two independent comments already had to gloss it as "the damage box" at the point
+of use. The class-level knob is `@clipsToDamageBox`.
 
 The block is the LAST argument, which is what the CoffeeScript idiom needs. The scope's two knobs
 are therefore **declared by the appearance class**, not passed per call — no appearance varies

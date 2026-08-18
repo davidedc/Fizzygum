@@ -2761,66 +2761,74 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @binWdgt?.empty()
     @shelfWdgt?.empty()
 
+  # ONE desktop menu, with no fork on which HTML file booted the world. What a desktop can offer
+  # does not depend on the page: it depends on which PARTS shipped and whether dev mode is on, and
+  # both of those are asked directly below, per item, where they are true facts about capability.
+  #   ⚠ `isIndexPage` is false ONLY on the test harness, so a fork on it is a fork between "the
+  # product" and "the tests" — a distinction the menu has no business drawing. It also compounded
+  # rather than composed with the dev-mode gate: the six items its own comment called
+  # "unconditional now, so the homepage gains them" sat inside `if @isDevMode` AND behind the
+  # fork's early return, so a product desktop offered four rows, gained nothing from dev mode, and
+  # had no row with which to turn dev mode on in the first place.
+  #   ⚠ The per-item guards are deliberate rather than one contributor list appended at the end,
+  # because the items INTERLEAVE (the demo tree before inspect, the test menu straight after it)
+  # and a single append point cannot reproduce that order.
   buildContextMenu: ->
 
-    if @isIndexPage
-      menu = new MenuWdgt @, target: @, title: "Desktop"
-      menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
-      menu.addMenuItem "new folder", @, "makeFolderFromMenu"
-      menu.addMenuItem "save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
-      menu.addMenuItem "open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
-      return menu
-
-    if @isDevMode
-      menu = new MenuWdgt @, target: @, title: (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+    # ⚠ the title is computed into a local FIRST. An `if` expression written directly as an
+    # implicit-object value on its own line does not become that value — the menu comes out
+    # title-less, which costs it its whole MenuHeader row, and with it the thing you click to
+    # drag the menu and the thing you click to pin it.
+    title = if @isDevMode
+      @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
     else
-      menu = new MenuWdgt @, target: @, title: "Widgetic"
+      "Desktop"
+    menu = new MenuWdgt @, target: @, title: title
 
-    # The world's own dev-mode section. Arc 3 SPLIT what used to be one homepage-stripped block:
-    # the six items a product desktop legitimately wants (inspect, fit whole page, colour, the
-    # wallpaper picker, the input-mode toggle) are unconditional now, so the homepage gains them;
-    # the demo and test entries are gated on their FAMILY being present, which is what replaces the
-    # strip. `DemoMenus?` is false in a production build (whole-file-marked, and `demoMenus` is not
-    # constructed), so those items simply are not offered there.
-    #
-    # ⚠ The guards are per-item ON PURPOSE, rather than one contributor list appended at the end:
-    # the items INTERLEAVE (demo before inspect, test menu after it), and a single append point
-    # cannot reproduce that order. Preserving the exact order is what makes this phase pixel-neutral.
-    # Phase 7 redesigns this topology with the owner and can introduce a proper contribution point
-    # then, since it is closed by a recapture wave anyway.
+    # DEV ONLY — the demo tree, and the bulk operations that reach every widget in the world.
+    # `world.parts.isAvailable "demos"` is false in a production build, so those two are not
+    # offered there even with dev mode on: the part gate is about what SHIPPED, the dev gate about
+    # what is being SHOWN, and an item can need both.
     if @isDevMode
       menu.addMenuItem "demo ➜", @, "popUpDemoMenu", closesUnpinnedPopUps: false, toolTip: "sample widgets"  if world.parts.isAvailable "demos"
       menu.addLine()
       menu.addMenuItem "delete all", @, "closeChildren"
       menu.addMenuItem "move all inside", @, "keepAllSubwidgetsWithin", toolTip: "keep all subwidgets\nwithin and visible"
-      menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
-      menu.addMenuItem "test menu ➜", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if world.parts.isAvailable "demos"
-      menu.addLine()
-      menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
-      menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
-      menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
 
-      # ONE row that SHOWS the current input mode, rather than two rows chosen by an `if` at
-      # build time: its wording is a view of the value, so it follows a toggle made anywhere —
-      # in another open world menu, or by a script. The tooltip says what the row DOES (it is the
-      # same act either way), so it does not need to reflect anything.
-      menu.addMenuItem "touch screen settings", WorldWdgt.preferencesAndSettings, "toggleInputMode",
-        toolTip: "switch between standard and\ntouch-screen menu fonts and sliders"
-        reflection: new MenuRowReflectionSpec WorldWdgt.preferencesAndSettings, "currentInputMode",
-          whenValue: PreferencesAndSettings.INPUT_MODE_MOUSE
-          labelWhenTrue: "touch screen settings"
-          labelWhenFalse: "standard settings"
-      menu.addLine()
-    
+    # EVERY DESKTOP — look at it, size it, colour it, paper it, and say how you are driving it.
+    # None of these is a developer's tool: they are what owning a desktop means.
+    menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window on\nall properties"
+    menu.addMenuItem "test menu ➜", @, "popUpDemoTestMenu", closesUnpinnedPopUps: false, toolTip: "debugging and testing operations"  if @isDevMode and world.parts.isAvailable "demos"
+    menu.addLine()
+    menu.addMenuItem "fit whole page", @, "stretchWorldToFillEntirePage", toolTip: "let the World automatically\nadjust to browser resizings"
+    menu.addMenuItem "color...", @, "popUpColorSetter", toolTip: "choose the World's\nbackground color"
+    menu.addMenuItem "wallpapers ➜", @wallpaper, "wallpapersMenu", closesUnpinnedPopUps: false, toolTip: "choose a wallpaper for the Desktop"
+
+    # ONE row that SHOWS the current input mode, rather than two rows chosen by an `if` at
+    # build time: its wording is a view of the value, so it follows a toggle made anywhere —
+    # in another open world menu, or by a script. The tooltip says what the row DOES (it is the
+    # same act either way), so it does not need to reflect anything.
+    menu.addMenuItem "touch screen settings", WorldWdgt.preferencesAndSettings, "toggleInputMode",
+      toolTip: "switch between standard and\ntouch-screen menu fonts and sliders"
+      reflection: new MenuRowReflectionSpec WorldWdgt.preferencesAndSettings, "currentInputMode",
+        whenValue: PreferencesAndSettings.INPUT_MODE_MOUSE
+        labelWhenTrue: "touch screen settings"
+        labelWhenFalse: "standard settings"
+    menu.addLine()
+
     if Automator?
       menu.addMenuItem "system tests ➜", @, "popUpSystemTestsMenu", closesUnpinnedPopUps: false, toolTip: ""
 
+    # the door, and it swings both ways from every page — a desktop that cannot be switched INTO
+    # dev mode is a desktop whose developer affordances do not exist
     if @isDevMode
       menu.addMenuItem "switch to user mode", @, "toggleDevMode", toolTip: "disable developers'\ncontext menus"
     else
       menu.addMenuItem "switch to dev mode", @, "toggleDevMode"
 
     menu.addMenuItem "new folder", @, "makeFolderFromMenu"
+    menu.addMenuItem "save world snapshot…", @, "saveWorldSnapshotToFile", toolTip: "save the whole desktop\nto a *.fzw.json file"
+    menu.addMenuItem "open from file…", @, "openFromFile", toolTip: "load a widget or world\nfrom a *.fzw.json file"
     menu
 
 

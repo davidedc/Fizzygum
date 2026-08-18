@@ -19,12 +19,12 @@ class Appearance
   #               plot family: in the shadow pass the body's simpleShadow sets its own)
   alphaPolicy: undefined
   #
-  # @clipsToLocalArea — does the scope clip to the damage box? RectangularAppearance declares FALSE:
+  # @clipsToDamageBox — RectangularAppearance declares FALSE:
   # its legacy device paint never clipped (its fills/stroke bound themselves to damage∩tight), and
   # adding the clip is NOT free of pixels — in an island buffer the ambient translate can be
   # FRACTIONAL (a fractional slot origin), where the clip's own boundary quantization differs from
   # the fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
-  clipsToLocalArea: true
+  clipsToDamageBox: true
   # the ownColorInsteadOfWidgetColor is used for buttons
   # with icons on a glass bottom: the glass bottom has
   # to change the color on hover, so the icon_button on it
@@ -49,15 +49,22 @@ class Appearance
 
   # THE one appearance paint scope (the appearance paint convention): undefined when there is nothing
   # to draw, else runs
-  #   bodyFn aContext, localArea, appliedShadow
+  #   bodyFn aContext, localDamageBox, appliedShadow
   # inside save → damage clip → alpha → logical pixels → translate to the widget position, then
   # restores. The body draws the widget's OWN pixels in widget-local LOGICAL coordinates through
-  # the ctx matrix; localArea is the damage box as a widget-local logical rect (integer) for
-  # partial-repaint fills. Device-space business (the damage clip here, back-buffer blits, the
-  # shadow-silhouette fallback) stays OUT of bodies — a body never sees al/at.
+  # the ctx matrix; localDamageBox is a widget-local logical rect (integer), handed over so a body
+  # can fill exactly the part of itself being repainted.
+  #   ⚠⚠ IT IS NOT THE WIDGET'S OWN RECT, and on a partial repaint it is a sub-rect of it. Fills may
+  # use it, because painting one colour over exactly the damaged part gives the same picture either
+  # way. ART MAY NOT: geometry placed relative to it lands wherever the damage happened to start.
+  # Take art geometry from the widget (`@widget.width()`/`height()`, origin 0,0) and let the clip
+  # bound it — SimpleDropletAppearance's plus-sign is the model, and a grip that ignored this came
+  # back three pixels short whenever a neighbouring row was removed.
+  #   Device-space business (the damage clip here, back-buffer blits, the shadow-silhouette
+  # fallback) stays OUT of bodies — a body never sees al/at.
   # (IconAppearance keeps its own scope: a different translate+scale into its 200×200 spec space.)
   #
-  # The two knobs are DECLARED BY THE CLASS (@alphaPolicy / @clipsToLocalArea below), not passed per
+  # The two knobs are DECLARED BY THE CLASS (@alphaPolicy / @clipsToDamageBox below), not passed per
   # call, because no appearance varies them between paints — each one wants a fixed policy for its
   # whole life. Declaring them keeps this signature at four operands with the block LAST, which is
   # what the CoffeeScript block idiom needs; carrying them as a bag in front of the block instead
@@ -76,7 +83,7 @@ class Appearance
 
     # clip out the dirty rectangle as we are
     # going to paint the whole of the box.
-    if @clipsToLocalArea
+    if @clipsToDamageBox
       aContext.clipToRectangle al,at,w,h
 
     if @alphaPolicy == "backgroundTransparencyNormalPass"

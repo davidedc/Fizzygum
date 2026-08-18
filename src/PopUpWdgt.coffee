@@ -205,6 +205,21 @@ class PopUpWdgt extends Widget
     # leave the menu attached to whatever it's attached,
     # just change the shadow.
     @_updatePopUpShadow()
+    @_invalidateRowsAfterPinChange()
+
+  # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
+  # being pinned is what makes it liftable (ButtonWdgt.isDetachablePayloadOfMyParent →
+  # MenuRowsPanelWdgt.wantsDetachOfChild). That is a fact about ME which they read, so nothing
+  # marks them stale unless I do — and the shadow swap above cannot stand in for it: it marks
+  # ME, which re-blits my buffer without re-rendering the rows inside it, and on a pop-up pinned
+  # into a non-world parent it drops the shadow instead and may not mark anything at all.
+  #   No self-marking twin on the row can replace this: a verb whose only job is "repaint
+  # yourself" is the general-purpose public repaint verb the invalidation-privacy campaign
+  # removed, and the row has no way to notice a flag flipped on me.
+  _invalidateRowsAfterPinChange: ->
+    # cross-invalidation-sanctioned: own sub-parts — my rows' paint derives from the pinned flags I just flipped
+    row._changed() for row in (@rowsPanel?.children ? [])
+    return
 
 
   fullCopy: ->

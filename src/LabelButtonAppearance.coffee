@@ -12,7 +12,7 @@ class LabelButtonAppearance extends Appearance
     if !@widget.visibleBasedOnIsVisibleProperty() or @widget.isInCollapsedSubtree()
       return undefined
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       if appliedShadow?
         color = Color.BLACK
       else
@@ -26,4 +26,29 @@ class LabelButtonAppearance extends Appearance
 
       if color?
         ctx.fillStyle = color.toString()
-        @_fillLocalRectSnappedToDevicePixels ctx, localArea
+        @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
+
+      @_paintLiftableGrip ctx  unless appliedShadow?
+
+  # A short bar down my left edge, drawn only when my container has declared me a payload it
+  # hands out (ButtonWdgt.isDetachablePayloadOfMyParent — the SAME declaration the grab reads,
+  # so the mark and the behaviour cannot disagree). Today that means a command row in a PINNED
+  # menu: pin a menu and its rows visibly become things you can pull off it.
+  #   DRAWN, not a character in the label. A glyph would have to exist in the bitmap-font atlas
+  # (many do not, and an absent one renders as a black box), and — the heavier reason — the
+  # label STRING is an identity: menus are driven, swept and tested by matching it, so decorating
+  # it would rename every row it marks.
+  #   Nothing on the SHADOW pass: the grip sits inside a rectangle that pass has already filled
+  # solid black, so it would be painting black on black.
+  #   ⚠ The geometry comes from MY WIDGET, never from the scope's `localDamageBox` — the law is on
+  # Appearance._paintInLocalScope. Painting my whole rect is safe because the scope has already
+  # clipped to the damage box (`clipsToDamageBox` is true here). Found the hard way: a row that
+  # moved up when its neighbour was dragged out came back three pixels short, which the
+  # paint-truthfulness gate caught and no screenshot did.
+  _paintLiftableGrip: (ctx) ->
+    return unless @widget.isDetachablePayloadOfMyParent?()
+    # 2px wide, inset 1px, and stopping 3px short top and bottom so consecutive rows read as
+    # separate grips rather than one continuous rule down the menu's edge
+    return if @widget.height() <= 6
+    ctx.fillStyle = Color.DARKGRAY.toString()
+    @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle 1, 3, 3, (@widget.height() - 3)

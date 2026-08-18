@@ -12,14 +12,14 @@ class LayoutChromeAppearance extends Appearance
     if @widget.thisSpacerIsTransparent
       return
 
-    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localArea) =>
+    @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>
       # Shadow-pass paint contract (Widget.coffee "How the shadow painting works"): the box
       # is opaque, so its BLACK version is the complete silhouette — the chrome art drawn
       # inside it adds no coverage and is skipped, like the hover highlight (not ink).
       boxColor = if appliedShadow? then Color.BLACK else @widget.color
       if boxColor?
         ctx.fillStyle = boxColor.toString()
-        @_fillLocalRectSnappedToDevicePixels ctx, localArea
+        @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
       if !appliedShadow?
         @widget.drawLayoutChrome ctx

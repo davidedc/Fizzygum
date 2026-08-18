@@ -6,7 +6,7 @@ class SimpleDropletAppearance extends RectangularAppearance
   # false — its fills self-bound), so this hook clips its strokes to the damage box itself,
   # as its legacy device-space self-clip did.
 
-  drawAdditionalPartsOnBaseShape: (appliedShadow, context, localArea) ->
+  drawAdditionalPartsOnBaseShape: (appliedShadow, context, localDamageBox) ->
 
     # we refuse to paint the shadow of the plus sign
     # in the middle of a black rectangle. Just, no.
@@ -39,7 +39,7 @@ class SimpleDropletAppearance extends RectangularAppearance
     context.save()
 
     # bound the affordance to the damage box (the legacy self-clip, now in local coords)
-    context.clipToRectangle localArea.left(), localArea.top(), localArea.width(), localArea.height()
+    context.clipToRectangle localDamageBox.left(), localDamageBox.top(), localDamageBox.width(), localDamageBox.height()
 
     context.lineWidth = 1
     context.lineCap = "round"
