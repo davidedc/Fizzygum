@@ -529,7 +529,11 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
       menu-subject-routing arc). The honest names come only after stabilising the slot semantics
       (e.g. a fixed subject/context pair) — an arc with ~40 src + ~25 tests sites, adjacent to the
       falsified-residue minefield above. ⚠ `widgetOpeningThePopUp` stays ⛔ FALSIFIED — verified
-      NOT re-filed here.
+      NOT re-filed here. ⇒ **PLAN AUTHORED 2026-08-18: `plans/dispatch-slot-protocol-plan.md`** —
+      spike-first (Phase 0 = the reader census: what every reachable verb's first two parameters
+      DECLARE and READ, crossed against the two fill configurations and the wire family), then a
+      hard STOP for the owner's design decision (§4 options O1/O2/O4; O3 rename-only is
+      pre-falsified). Execution belongs to a fresh session via the plan's §10 cold-start prompt.
 - [x] **✅ EXECUTED 2026-08-18 (owner-directed, same day): the three-word repaint-region split is
       UNIFIED — pixels say "damage", layout says "dirty".** Measurement first overturned this
       item's own "cleanly layered" framing: the strata are ERA-correlated, not
@@ -560,6 +564,14 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
       droplet sibling, exactly the failure mode a narrated cursor invites. The tests-repo macro
       `p0..p3` corner quartet (`macroGeometryApiTwoVocabularies`) is a fine name in context and
       stays.
+- [ ] **Glyph-drawing duplication the p0 collapse made visible** (filed 2026-08-18; NEW filing, not
+      a reopening of the closed duplication campaign): `SimpleDropletAppearance` and
+      `LayoutElementAdderOrDropletWdgt` draw a near-identical plus sign (same `squareDim/15` flap
+      arithmetic, same `0.5 +` stroke idiom), and `HandleAppearance.drawHandle`'s horizontal-arrow
+      arm is the same drawing as `LayoutSpacerWdgt.drawReplacerWidget` (identical anchor
+      `leftEdgeMiddle`, identical flap constants, one calls `drawArrow`, the other `doPath`). A
+      small shared glyph-helper would fold both pairs. Work it only when one of these files is
+      next touched for its own reasons — standalone it is churn without a consumer.
 - Declined, with reasons (do not re-file): `island`/`action`/`pin`/`gotoSlot`/`enableDrops`/
   `footprint` — their glosses are role-explanations or gate-sanctions on good vocabulary;
   `TreeNode.atIndex` — the comment IS the record of a deliberate rename (R4); icon-geometry terse
