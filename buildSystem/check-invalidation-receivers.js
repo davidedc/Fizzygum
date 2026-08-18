@@ -5,15 +5,15 @@
 // THE RULE (docs/architecture/widget-citizenship.md, contract point 2). A widget invalidates
 // only itself: `@_changed()` / `@_fullChanged()` — PRIVATE since the 2026-07-22 phase-2
 // rename (invalidation is not exposed as API anywhere; the only external callers are the
-// test ORACLES, sanctioned by name). The paint executor `_updateBroken` (the world's
-// once-per-cycle broken-rect flush) is in the same private family and gated here too — only
+// test ORACLES, sanctioned by name). The paint executor `_repaintDamagedRects` (the world's
+// once-per-cycle damage-rect flush) is in the same private family and gated here too — only
 // the world's own cycle runs it; the harness paint audit is its one sanctioned outside caller.
 // If A's action affects B's pixels, B marks itself changed inside
 // the method A invoked on it — A never reaches over with `B._changed()`. The pattern below
 // also matches the pre-rename public spellings so a legacy-name call cannot slip back in.
 // The 2026-07-22 audit found the reaching-over form was almost always either
 // (a) REDUNDANT — the structural dispatcher (`_addNoSettle`, `drop`) already fullChanges the
-// widget being moved, and broken rects are fleshed out at end-of-cycle flush from
+// widget being moved, and damage rects are fleshed out at end-of-cycle flush from
 // last-painted + current bounds, so one mark per cycle covers every same-cycle mutation — or
 // (b) a missing receiver-side self-invalidation (e.g. `getContextForPainting` now marks its
 // own canvas).

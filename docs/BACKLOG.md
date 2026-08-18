@@ -530,13 +530,20 @@ menu-dispatch-residue lesson, every candidate's CONSUMER was read before calling
       (e.g. a fixed subject/context pair) — an arc with ~40 src + ~25 tests sites, adjacent to the
       falsified-residue minefield above. ⚠ `widgetOpeningThePopUp` stays ⛔ FALSIFIED — verified
       NOT re-filed here.
-- [ ] ⛔ OWNER-GATED — **three words for the repaint region: `broken` (169) / `dirty` (76) /
-      `damage` (66).** Cleanly layered today — broken = the world's rect machinery, dirty = the
-      island-buffer lists (`TransformFrameWdgt`), damage = the appearance vocabulary
-      (`localDamageBox`/`clipsToDamageBox`/`_damageSuppressionDepth`) — but it is drift, and
-      `brokenRectMargin` above had to pick a side (it picked the machinery's word). Options: unify
-      on "damage" (~170-site churn) or add a three-line vocabulary map to
-      `architecture/appearance-paint-convention.md` and declare the layering deliberate.
+- [x] **✅ EXECUTED 2026-08-18 (owner-directed, same day): the three-word repaint-region split is
+      UNIFIED — pixels say "damage", layout says "dirty".** Measurement first overturned this
+      item's own "cleanly layered" framing: the strata are ERA-correlated, not
+      subsystem-correlated (WorldWdgt mixed b=160/d=39/dmg=14, Widget b=38/d=22/dmg=25,
+      TransformFrameWdgt b=7/d=38/dmg=17), so the synonym-map option would have rationalised
+      noise, and the owner chose unification. Plan + locked name table + the law:
+      `archive/damage-vocabulary-unification-plan.md` (33 identifiers incl. `world.broken` →
+      `@damageRects`, `_updateBroken` → `_repaintDamagedRects`, the island buffer's
+      `_islandBufferDirtyRect` → `_islandBufferDamageRects` — fixing its singular-list lie —
+      and `brokenRectMargin` → `damageRectMargin`; the layout-dirty family and the text-atlas
+      settle-gate booleans deliberately KEPT). The law now lives in
+      `architecture/appearance-paint-convention.md` § "The vocabulary law". ⚠ The one
+      distinction worth a boundary — pixels vs layout — existed before only by accident; the
+      unification is what makes "dirty" mean exactly one thing.
 - [ ] Take-it-or-leave-it: **`p0` ×4 files, each glossed "p0 is the origin"** (`SimpleDropletAppearance`,
       `LayoutElementAdderOrDropletWdgt`, `StretchableWidgetContainerWdgt`, `GenericObjectIconWdgt`).
       Weak: `p0` MUTATES through the narration ("now the origin is…"), so `origin` would be wrong

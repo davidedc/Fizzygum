@@ -455,7 +455,7 @@ answer and the tree uses it five times less often. When a sequence of writes wou
 storm of marks, wrap it in `@_repaintAsOneUnit => …`, which restores the suppression depth and fires
 the covering repaint in a `finally`.
 
-One redundancy worth knowing, so you do not add dead weight: broken rects are fleshed out at the
+One redundancy worth knowing, so you do not add dead weight: damage rects are fleshed out at the
 end-of-cycle flush from the *recorded* paint-time bounds and the *current* bounds, so a single
 `_fullChanged()` anywhere in the cycle already covers every same-cycle geometry mutation. A trailing
 mark after `add` + `setExtent` adds nothing.

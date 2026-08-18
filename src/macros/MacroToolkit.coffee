@@ -208,10 +208,10 @@ class MacroToolkit
   # predicate also covers a landed atlas whose placeholder-clearing refresh has
   # not been APPLIED yet). The refresh-APPLIED-but-repaint-not-yet-painted
   # window needs no gate term: every pixel read rides the end-of-cycle seam
-  # (captureAtEndOfCycle below, delivered after _updateBroken), so any repaint
+  # (captureAtEndOfCycle below, delivered after _repaintDamagedRects), so any repaint
   # requested earlier in the read's cycle has landed by the read. Deliberately
   # NO forced pre-capture full repaint: the capture reads the INCREMENTAL
-  # (broken-rect) canvas, keeping screenshots sensitive to repaint/staleness
+  # (damage-rect) canvas, keeping screenshots sensitive to repaint/staleness
   # defects a forced full repaint would erase. This is the single SWCanvas
   # screenshot settle gate.
   readyForMacroScreenshot: ->
@@ -224,7 +224,7 @@ class MacroToolkit
     return true
 
   # The END-OF-CYCLE pixel-read seam: a caller registers a capture thunk and doOneCycle
-  # delivers every pending one right after _updateBroken — so a delivered thunk reads a
+  # delivers every pending one right after _repaintDamagedRects — so a delivered thunk reads a
   # fully-flushed, just-painted frame, with any repaint requested earlier in the SAME cycle
   # (e.g. a warm-atlas cache reset) already landed. Registered by the macro screenshot verb
   # (which routes compareScreenshots through it) and callable from page-side riggery as
@@ -1161,7 +1161,7 @@ class MacroToolkit
       takeScreenshot_InputEvents_Macro = (screenShotImageName) ->
         yield "waitNoInputsOngoing"
         yield "waitForScreenshotReady"
-        # capture at the END of this cycle (right after _updateBroken) — the natural end of
+        # capture at the END of this cycle (right after _repaintDamagedRects) — the natural end of
         # a painted frame. The hash wait below cannot pass before the capture ran: the pump
         # re-checks it only next cycle, and the pending count increments synchronously
         # inside the delivered compareScreenshots.

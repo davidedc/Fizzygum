@@ -104,7 +104,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   _undeclaredEndOfCyclePushes: undefined
 
   # PAINT must be READ-ONLY: the cycle PROCESSES EVENTS (fixing layouts step by step) -> FIXES the deferred-settle
-  # layouts (recalculateLayouts) -> PAINTS (_updateBroken), with NO layout work at paint. auditPaintTimeLayout-
+  # layouts (recalculateLayouts) -> PAINTS (_repaintDamagedRects), with NO layout work at paint. auditPaintTimeLayout-
   # Scheduling (DEBUG, default off) turns on the check that LOGS every layout (re-)schedule reached DURING the
   # paint pass (healingRectanglesPhase true) -- i.e. a widget that scheduled layout while being painted, crossing
   # the render/layout boundary. The caret's paint-time scroll-follow (the original offender) was moved off paint
@@ -218,13 +218,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # TransformFrameWdgt::cachesBuffer; the cache is active iff BOTH are on.
   @islandBufferCacheEnabled: true
 
-  # §4.4 rect-list dirty coalescing A/B (docs/archive/island-buffer-cache-rectlist-plan.md). Default ON: a frame
+  # §4.4 rect-list damage coalescing A/B (docs/archive/island-buffer-cache-rectlist-plan.md). Default ON: a frame
   # damaging several disjoint content regions rebuilds only those sub-rects. Flip OFF to force the v1
   # policy (collapse every deposit to one bounding box) — the instrument that proves the rect-list is
   # byte-identical to the bbox policy (macroIslandBufferCacheByteIdentity CASE 9) and measures the
   # multi-region win. Runtime-flippable; a flip is pixel-invisible (both policies keep the coverage
   # invariant). Class property, like islandBufferCacheEnabled.
-  @dirtyRectListEnabled: true
+  @damageRectListEnabled: true
 
   # §4.4 island buffer cache — the async-atlas invalidation epoch. SWCanvas loads glyph atlases
   # asynchronously; until warm, text rasterises as placeholder BLOCKS into cached back buffers
@@ -243,7 +243,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # the test ground-truth oracles, and swCanvasScheduleTextRefresh's UNATTRIBUTED fallback — the
   # attributed atlas-warm path is the surgical noteColdGlyphRegionsWarm below. The requested repaint
   # needs no capture-side flag: every pixel read rides the end-of-cycle seam
-  # (MacroToolkit.captureAtEndOfCycle, delivered after _updateBroken), so a read can never land
+  # (MacroToolkit.captureAtEndOfCycle, delivered after _repaintDamagedRects), so a read can never land
   # between this request and its flush.
   resetImmutableBackBuffersCache: ->
     @cacheForImmutableBackBuffers?.reset?()
@@ -269,10 +269,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       w._fullChangedIncludingShadowOwner()
     return
 
-  # PUBLIC notification — a widget currently marked in my broken-bookkeeping lists was
+  # PUBLIC notification — a widget currently marked in my damage-bookkeeping lists was
   # deep-copied: the copy must inherit the mark (it will paint this cycle exactly where the
   # original would). I mutate MY OWN lists here, in the method the widget's deep-copy hook
-  # (Widget.alignCopiedWidgetToBrokenInfoDataStructures) invokes on me — widgets never push
+  # (Widget.alignCopiedWidgetToDamageInfoDataStructures) invokes on me — widgets never push
   # onto my lists directly (widget-citizenship point 2).
   noteWidgetCopied: (originalWidget, copiedWidget) ->
     if @widgetsWithMaybeChangedPaintBounds.includes(originalWidget) and
@@ -290,9 +290,9 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   noteWallpaperChanged: ->
     @_changed()
 
-  broken: undefined
-  duplicatedBrokenRectsTracker: undefined
-  numberOfDuplicatedBrokenRects: 0
+  damageRects: undefined
+  duplicatedDamageRectsTracker: undefined
+  numberOfDuplicatedDamageRects: 0
 
   # target -> style descriptor (HighlighterWdgt.fillStyle / — Phase 2 — outline styles). A Map, not
   # a Set: the drag-embed arc needs per-target highlight styles (the style channel). The two tracking
@@ -348,11 +348,11 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   binWdgt: undefined
   shelfWdgt: undefined
 
-  # The flat margin every broken/damage rect is grown by (AA fringe + slack). Shadows are NOT
+  # The flat margin every damage rect is grown by (AA fringe + slack). Shadows are NOT
   # covered by this margin: a shadow is covered EXACTLY, whatever its size or direction, by the
   # pre-map shadow extension in the widget's own plane — Widget.shadowExtendedRect at the record
   # site (source side) and at the flesh-out destination lanes.
-  brokenRectMargin: 6
+  damageRectMargin: 6
 
   inputEventsQueue: undefined
 
@@ -425,7 +425,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # damage-suppression nesting depth (Widget._repaintAsOneUnit): while > 0,
   # _changed/_fullChanged marks are dropped — the unit's owner issues the one
   # covering mark at close. Transient (never serialized, like the trackChanges
-  # stack it replaced); the teardown re-zeroes it, and _updateBroken self-heals
+  # stack it replaced); the teardown re-zeroes it, and _repaintDamagedRects self-heals
   # + reports DAMAGE_SUPPRESSION_UNBALANCED (a headless fail-gate token) if it
   # is ever nonzero at flush.
   _damageSuppressionDepth: 0
@@ -551,7 +551,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # The DOM <canvas id="world"> (@worldCanvas) stays the event target. Under the
     # SWCanvas backend all rendering goes to a separate software render canvas
     # (@worldRenderCanvas), whose pixels are blitted onto the DOM canvas once per
-    # painted frame (see _updateBroken / blitRenderCanvasToDOM). When the flag is
+    # painted frame (see _repaintDamagedRects / blitRenderCanvasToDOM). When the flag is
     # off, the render canvas IS the DOM canvas and there is no blit, so behaviour
     # is identical to before.
     if window.FIZZYGUM_USE_SWCANVAS and window.SWCanvas?
@@ -773,7 +773,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
     # invokes the Widget's fullPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
     #  * the default one by Widget which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
-    #  * the interesting one in PanelWdgt which a) narrows the dirty
+    #  * the interesting one in PanelWdgt which a) narrows the damage
     #    rectangle (intersecting it with its border
     #    since the PanelWdgt clips at its border) and b) stops recursion on all
     #    the children that are outside such intersection.
@@ -782,7 +782,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     #    is painted on top of everything.
     #
     # Occlusion culling (docs/plans/occlusion-culling-plan.md P2): if some top-level opaque widget fully
-    # covers this broken rect, paint STARTING FROM it (skipping the desktop fill + every child behind
+    # covers this damage rect, paint STARTING FROM it (skipping the desktop fill + every child behind
     # it, within this rect) instead of the full back-to-front super() pass. _paintedFromFrontmostCoverer
     # returns true iff it did that painting; otherwise we fall back to the normal super() path.
     if !@_paintedFromFrontmostCoverer aContext, aRect
@@ -794,7 +794,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   # Occlusion culling (docs/plans/occlusion-culling-plan.md P2, Avenue A -- a stateless per-rect pre-scan).
   # Reverse-scan world.children (the array is BACK-to-front, so reverse = front-to-back) for the
-  # frontmost widget that provably paints a fully-opaque fill covering the WHOLE broken rect; if one
+  # frontmost widget that provably paints a fully-opaque fill covering the WHOLE damage rect; if one
   # is found, paint only it and the widgets in front of it -- skipping the desktop self-paint and
   # every child behind the coverer (all pure overdraw in this rect). Returns true iff it painted (the
   # caller then skips super()); false = no coverer, caller paints the normal full-depth way.
@@ -805,26 +805,26 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # cull ONLY the live on-screen paint; scratch / back-buffer contexts (and their damage
     # bookkeeping) must be left exactly as they are
     return false if aContext != @worldCanvasContext
-    dirtyPart = aRect.intersect @boundingBox()          # identical to the mixin's narrowing of the dirty rect to the desktop
-    return false if dirtyPart.isEmpty()
-    testRect = dirtyPart.expandBy 1                      # +1px margin: painting rounds on the logical grid (calculateKeyValues)
+    damagedPart = aRect.intersect @boundingBox()          # identical to the mixin's narrowing of the damage rect to the desktop
+    return false if damagedPart.isEmpty()
+    testRect = damagedPart.expandBy 1                      # +1px margin: painting rounds on the logical grid (calculateKeyValues)
     covererIndex = undefined
     for i in [@children.length - 1 .. 0] by -1          # front-to-back
       child = @children[i]
       coveredRect = child.opaqueCoveredRect()
       if coveredRect? and coveredRect.containsRectangle(testRect) and
-          child.clippedThroughBounds().containsRectangle dirtyPart
+          child.clippedThroughBounds().containsRectangle damagedPart
         covererIndex = i
         break
     return false if !covererIndex?
-    # A coverer owns every pixel of dirtyPart. Preserve the world's OWN paint-record bookkeeping even
-    # though its self-paint is bypassed -- the world can itself be a brokenWidget (e.g. wallpaper
+    # A coverer owns every pixel of damagedPart. Preserve the world's OWN paint-record bookkeeping even
+    # though its self-paint is bypassed -- the world can itself be a damagedWidget (e.g. wallpaper
     # change), see occlusion-culling-plan.md §1b(b).
-    @_recordDrawnAreaForNextBrokenRects()
-    # paint the coverer and everything in front of it, narrowed to dirtyPart (byte-identical child
+    @_recordDrawnAreaForNextDamageRects()
+    # paint the coverer and everything in front of it, narrowed to damagedPart (byte-identical child
     # trajectory to the mixin's own children loop, which narrows to the same rect)
     for i in [covererIndex ... @children.length]
-      @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPart
+      @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPart
     # replicate the mixin's trailing panel-stroke pass (a no-op for the world unless a strokeColor is
     # ever set -- RectangularAppearance.paintStroke gates on @widget.strokeColor?)
     @paintStroke aContext, aRect
@@ -848,219 +848,219 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   SLOWclipThrough: ->
     return @boundingBox()
 
-  _pushBrokenRect: (brokenWidget, theRect, isSrc) ->
-    if @duplicatedBrokenRectsTracker[theRect.toString()]?
-      @numberOfDuplicatedBrokenRects++
+  _pushDamageRect: (damagedWidget, theRect, isSrc) ->
+    if @duplicatedDamageRectsTracker[theRect.toString()]?
+      @numberOfDuplicatedDamageRects++
     else
       if isSrc
-        brokenWidget.srcBrokenRectIndex = @broken.length
+        damagedWidget.srcDamageRectIndex = @damageRects.length
       else
-        brokenWidget.dstBrokenRectIndex = @broken.length
+        damagedWidget.dstDamageRectIndex = @damageRects.length
       if !theRect?
         debugger
-      @broken.push theRect
-    @duplicatedBrokenRectsTracker[theRect.toString()] = true
+      @damageRects.push theRect
+    @duplicatedDamageRectsTracker[theRect.toString()] = true
 
   # both lanes produced a rect for this widget (e.g. it moved in place): push ONE merged
   # rect when merging wastes little area — the dominant case in practice — else push both
-  _mergeBrokenRectsIfCloseOrPushBoth: (brokenWidget, sourceBroken, destinationBroken) ->
-    mergedBrokenRect = sourceBroken.merge destinationBroken
-    mergedBrokenRectArea = mergedBrokenRect.area()
-    sumArea = sourceBroken.area() + destinationBroken.area()
-    if mergedBrokenRectArea < sumArea + sumArea/10
-      @_pushBrokenRect brokenWidget, mergedBrokenRect, true
+  _mergeDamageRectsIfCloseOrPushBoth: (damagedWidget, sourceDamageRect, destinationDamageRect) ->
+    mergedDamageRect = sourceDamageRect.merge destinationDamageRect
+    mergedDamageRectArea = mergedDamageRect.area()
+    sumArea = sourceDamageRect.area() + destinationDamageRect.area()
+    if mergedDamageRectArea < sumArea + sumArea/10
+      @_pushDamageRect damagedWidget, mergedDamageRect, true
     else
-      @_pushBrokenRect brokenWidget, sourceBroken, true
-      @_pushBrokenRect brokenWidget, destinationBroken, false
+      @_pushDamageRect damagedWidget, sourceDamageRect, true
+      @_pushDamageRect damagedWidget, destinationDamageRect, false
 
 
-  _checkARectWithHierarchy: (aRect, brokenWidget, isSrc) ->
-    brokenWidgetAncestor = brokenWidget
+  _checkARectWithHierarchy: (aRect, damagedWidget, isSrc) ->
+    damagedWidgetAncestor = damagedWidget
 
-    while brokenWidgetAncestor.parent?
-      brokenWidgetAncestor = brokenWidgetAncestor.parent
-      if brokenWidgetAncestor.srcBrokenRectIndex?
-        if !@broken[brokenWidgetAncestor.srcBrokenRectIndex]?
+    while damagedWidgetAncestor.parent?
+      damagedWidgetAncestor = damagedWidgetAncestor.parent
+      if damagedWidgetAncestor.srcDamageRectIndex?
+        if !@damageRects[damagedWidgetAncestor.srcDamageRectIndex]?
           debugger
-        if @broken[brokenWidgetAncestor.srcBrokenRectIndex].containsRectangle aRect
+        if @damageRects[damagedWidgetAncestor.srcDamageRectIndex].containsRectangle aRect
           if isSrc
-            @broken[brokenWidget.srcBrokenRectIndex] = undefined
-            brokenWidget.srcBrokenRectIndex = undefined
+            @damageRects[damagedWidget.srcDamageRectIndex] = undefined
+            damagedWidget.srcDamageRectIndex = undefined
           else
-            @broken[brokenWidget.dstBrokenRectIndex] = undefined
-            brokenWidget.dstBrokenRectIndex = undefined
-        else if aRect.containsRectangle @broken[brokenWidgetAncestor.srcBrokenRectIndex]
-          @broken[brokenWidgetAncestor.srcBrokenRectIndex] = undefined
-          brokenWidgetAncestor.srcBrokenRectIndex = undefined
+            @damageRects[damagedWidget.dstDamageRectIndex] = undefined
+            damagedWidget.dstDamageRectIndex = undefined
+        else if aRect.containsRectangle @damageRects[damagedWidgetAncestor.srcDamageRectIndex]
+          @damageRects[damagedWidgetAncestor.srcDamageRectIndex] = undefined
+          damagedWidgetAncestor.srcDamageRectIndex = undefined
 
-      if brokenWidgetAncestor.dstBrokenRectIndex?
-        if !@broken[brokenWidgetAncestor.dstBrokenRectIndex]?
+      if damagedWidgetAncestor.dstDamageRectIndex?
+        if !@damageRects[damagedWidgetAncestor.dstDamageRectIndex]?
           debugger
-        if @broken[brokenWidgetAncestor.dstBrokenRectIndex].containsRectangle aRect
+        if @damageRects[damagedWidgetAncestor.dstDamageRectIndex].containsRectangle aRect
           if isSrc
-            @broken[brokenWidget.srcBrokenRectIndex] = undefined
-            brokenWidget.srcBrokenRectIndex = undefined
+            @damageRects[damagedWidget.srcDamageRectIndex] = undefined
+            damagedWidget.srcDamageRectIndex = undefined
           else
-            @broken[brokenWidget.dstBrokenRectIndex] = undefined
-            brokenWidget.dstBrokenRectIndex = undefined
-        else if aRect.containsRectangle @broken[brokenWidgetAncestor.dstBrokenRectIndex]
-          @broken[brokenWidgetAncestor.dstBrokenRectIndex] = undefined
-          brokenWidgetAncestor.dstBrokenRectIndex = undefined
+            @damageRects[damagedWidget.dstDamageRectIndex] = undefined
+            damagedWidget.dstDamageRectIndex = undefined
+        else if aRect.containsRectangle @damageRects[damagedWidgetAncestor.dstDamageRectIndex]
+          @damageRects[damagedWidgetAncestor.dstDamageRectIndex] = undefined
+          damagedWidgetAncestor.dstDamageRectIndex = undefined
 
 
-  _rectAlreadyIncludedInParentBrokenWidget: ->
-    for brokenWidget in @widgetsWithMaybeChangedPaintBounds
-        if brokenWidget.srcBrokenRectIndex?
-          aRect = @broken[brokenWidget.srcBrokenRectIndex]
-          @_checkARectWithHierarchy aRect, brokenWidget, true
-        if brokenWidget.dstBrokenRectIndex?
-          aRect = @broken[brokenWidget.dstBrokenRectIndex]
-          @_checkARectWithHierarchy aRect, brokenWidget, false
+  _rectAlreadyIncludedInParentDamagedWidget: ->
+    for damagedWidget in @widgetsWithMaybeChangedPaintBounds
+        if damagedWidget.srcDamageRectIndex?
+          aRect = @damageRects[damagedWidget.srcDamageRectIndex]
+          @_checkARectWithHierarchy aRect, damagedWidget, true
+        if damagedWidget.dstDamageRectIndex?
+          aRect = @damageRects[damagedWidget.dstDamageRectIndex]
+          @_checkARectWithHierarchy aRect, damagedWidget, false
 
-    for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-        if brokenWidget.srcBrokenRectIndex?
-          aRect = @broken[brokenWidget.srcBrokenRectIndex]
-          @_checkARectWithHierarchy aRect, brokenWidget
-        if brokenWidget.dstBrokenRectIndex?
-          aRect = @broken[brokenWidget.dstBrokenRectIndex]
-          @_checkARectWithHierarchy aRect, brokenWidget
+    for damagedWidget in @widgetsWithMaybeChangedFullPaintBounds
+        if damagedWidget.srcDamageRectIndex?
+          aRect = @damageRects[damagedWidget.srcDamageRectIndex]
+          @_checkARectWithHierarchy aRect, damagedWidget
+        if damagedWidget.dstDamageRectIndex?
+          aRect = @damageRects[damagedWidget.dstDamageRectIndex]
+          @_checkARectWithHierarchy aRect, damagedWidget
 
   _cleanupSrcAndDestRectsOfWidgets: ->
-    for brokenWidget in @widgetsWithMaybeChangedPaintBounds
-      brokenWidget.srcBrokenRectIndex = undefined
-      brokenWidget.dstBrokenRectIndex = undefined
-    for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-      brokenWidget.srcBrokenRectIndex = undefined
-      brokenWidget.dstBrokenRectIndex = undefined
+    for damagedWidget in @widgetsWithMaybeChangedPaintBounds
+      damagedWidget.srcDamageRectIndex = undefined
+      damagedWidget.dstDamageRectIndex = undefined
+    for damagedWidget in @widgetsWithMaybeChangedFullPaintBounds
+      damagedWidget.srcDamageRectIndex = undefined
+      damagedWidget.dstDamageRectIndex = undefined
 
 
-  _fleshOutBroken: ->
-    for brokenWidget in @widgetsWithMaybeChangedPaintBounds
+  _fleshOutDamage: ->
+    for damagedWidget in @widgetsWithMaybeChangedPaintBounds
       # fresh per widget: a value carried over from a previous iteration would be
       # re-pushed attributed to THIS widget — spurious extra repaint area (any widget
       # lacking one of its own rects would consume its predecessor's)
-      sourceBroken = undefined
-      destinationBroken = undefined
+      sourceDamageRect = undefined
+      destinationDamageRect = undefined
 
-      # let's see if this Widget that marked itself as broken
+      # let's see if this Widget that marked itself as damaged
       # was actually painted in the past frame.
       # If it was then we have to clean up the "before" area
       # even if the Widget is not visible anymore
-      if brokenWidget.clippedBoundsWhenLastPainted?
-        if brokenWidget.clippedBoundsWhenLastPainted.isNotEmpty()
+      if damagedWidget.clippedBoundsWhenLastPainted?
+        if damagedWidget.clippedBoundsWhenLastPainted.isNotEmpty()
           # affine transforms (§4.5): clippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
-          # (_recordDrawnAreaForNextBrokenRects mapped it at paint time, while the widget was still attached),
+          # (_recordDrawnAreaForNextDamageRects mapped it at paint time, while the widget was still attached),
           # so a widget detached between paint and flush (close/destroy) still erases its true rotated
           # footprint. Off any island the recorded rect is the raw rect ⇒ byte-identical dormant.
           # The record is also SHADOW-INCLUSIVE (extended by the shadow that painted), so the grow here is
           # pure margin — a shadow term would double-cover and hide a record-time regression.
-          sourceBroken = brokenWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @brokenRectMargin
+          sourceDamageRect = damagedWidget.clippedBoundsWhenLastPainted.expandBy(1).growBy @damageRectMargin
 
-      # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullBroken). Consumed by
-      # whichever lane runs first (_fleshOutFullBroken is called before _fleshOutBroken); the field is
+      # §4.4 island buffer cache — source (old-position) lane (see _fleshOutFullDamage). Consumed by
+      # whichever lane runs first (_fleshOutFullDamage is called before _fleshOutDamage); the field is
       # cleared on consumption so this second lane is a no-op when the full lane already handled it.
-      if brokenWidget._islandBufferSourceIsland?
-        brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
-        brokenWidget._islandBufferSourceIsland = undefined
+      if damagedWidget._islandBufferSourceIsland?
+        damagedWidget._islandBufferSourceIsland._depositIslandBufferDamageRect damagedWidget._islandBufferSourceVirtualRect
+        damagedWidget._islandBufferSourceIsland = undefined
 
-      # for the "destination" broken rectangle we can actually
+      # for the "destination" damage rectangle we can actually
       # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
-      unless brokenWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
+      unless damagedWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
         # @clippedThroughBounds() should be smaller area
         # than bounds because it clips
         # the bounds based on the clipping widgets up the
         # hierarchy
-        boundsToBeChanged = brokenWidget.clippedThroughBounds()
+        boundsToBeChanged = damagedWidget.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
           # affine transforms (§4.5): map the current (virtual for island descendants)
           # rect to screen BEFORE spread/expand/margin-grow. Mapped BEFORE the merge/
           # dedupe below so those never see mixed planes. Identity → unchanged object.
-          # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto the island (§4.4).
+          # depositBufferDamage=true deposits the NEW (destination) virtual footprint onto the island (§4.4).
           # The shadow of what is about to be painted is applied PRE-map, in the widget's own
           # plane (shadowExtendedRect: the map composes island scale and rotation over it), which
           # also makes the island deposits shadow-inclusive; the post-map grow is pure margin.
-          destinationBroken = (brokenWidget.mapRectToScreen (brokenWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @brokenRectMargin
+          destinationDamageRect = (damagedWidget.mapRectToScreen (damagedWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @damageRectMargin
 
-      if sourceBroken? and destinationBroken?
-        @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
-      else if sourceBroken? or destinationBroken?
-        if sourceBroken?
-          @_pushBrokenRect brokenWidget, sourceBroken, true
+      if sourceDamageRect? and destinationDamageRect?
+        @_mergeDamageRectsIfCloseOrPushBoth damagedWidget, sourceDamageRect, destinationDamageRect
+      else if sourceDamageRect? or destinationDamageRect?
+        if sourceDamageRect?
+          @_pushDamageRect damagedWidget, sourceDamageRect, true
         else
-          @_pushBrokenRect brokenWidget, destinationBroken, true
+          @_pushDamageRect damagedWidget, destinationDamageRect, true
 
-      brokenWidget.paintBoundsMaybeChanged = false
-      brokenWidget.clippedBoundsWhenLastPainted = undefined
+      damagedWidget.paintBoundsMaybeChanged = false
+      damagedWidget.clippedBoundsWhenLastPainted = undefined
 
     
 
-  _fleshOutFullBroken: ->
-    for brokenWidget in @widgetsWithMaybeChangedFullPaintBounds
-      # fresh per widget: see the twin note in _fleshOutBroken
-      sourceBroken = undefined
-      destinationBroken = undefined
+  _fleshOutFullDamage: ->
+    for damagedWidget in @widgetsWithMaybeChangedFullPaintBounds
+      # fresh per widget: see the twin note in _fleshOutDamage
+      sourceDamageRect = undefined
+      destinationDamageRect = undefined
 
-      if brokenWidget.fullClippedBoundsWhenLastPainted?
-        if brokenWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
+      if damagedWidget.fullClippedBoundsWhenLastPainted?
+        if damagedWidget.fullClippedBoundsWhenLastPainted.isNotEmpty()
           # affine transforms (§4.5): fullClippedBoundsWhenLastPainted is ALREADY the screen-plane footprint
           # (mapped at paint time), so a widget detached between paint and flush (close/destroy) erases its
           # true rotated footprint, not the un-transformed slot. Off any island it is the raw rect ⇒ dormant-identical.
           # The record is also SHADOW-INCLUSIVE (extended by the shadow that painted), so the grow here is
           # pure margin — a shadow term would double-cover and hide a record-time regression.
-          sourceBroken = brokenWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @brokenRectMargin
+          sourceDamageRect = damagedWidget.fullClippedBoundsWhenLastPainted.expandBy(1).growBy @damageRectMargin
 
       # §4.4 island buffer cache — source (old-position) lane: erase the vacated buffer region of a
       # widget that MOVED within (or was removed from) its stationary island. The stashed island stays
-      # alive even when the widget detached, so removal is ghost-free (_recordDrawnAreaForNextBrokenRects).
-      if brokenWidget._islandBufferSourceIsland?
-        brokenWidget._islandBufferSourceIsland._depositIslandBufferDirtyRect brokenWidget._islandBufferSourceVirtualRect
-        brokenWidget._islandBufferSourceIsland = undefined
+      # alive even when the widget detached, so removal is ghost-free (_recordDrawnAreaForNextDamageRects).
+      if damagedWidget._islandBufferSourceIsland?
+        damagedWidget._islandBufferSourceIsland._depositIslandBufferDamageRect damagedWidget._islandBufferSourceVirtualRect
+        damagedWidget._islandBufferSourceIsland = undefined
 
-      # for the "destination" broken rectangle we can actually
+      # for the "destination" damage rectangle we can actually
       # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
-      unless brokenWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
+      unless damagedWidget.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
 
-        boundsToBeChanged = brokenWidget.fullClippedBounds()
+        boundsToBeChanged = damagedWidget.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
           # affine transforms (§4.5): map to screen before spread/expand/margin-grow, before merge (identity → unchanged).
-          # depositBufferDirty=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
-          # Shadow applied PRE-map in the widget's own plane (see the twin note in _fleshOutBroken).
-          destinationBroken = (brokenWidget.mapRectToScreen (brokenWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @brokenRectMargin
+          # depositBufferDamage=true deposits the NEW (destination) virtual footprint onto each crossed island (§4.4).
+          # Shadow applied PRE-map in the widget's own plane (see the twin note in _fleshOutDamage).
+          destinationDamageRect = (damagedWidget.mapRectToScreen (damagedWidget.shadowExtendedRect boundsToBeChanged), true).spread().expandBy(1).growBy @damageRectMargin
 
-      if sourceBroken? and destinationBroken?
-        @_mergeBrokenRectsIfCloseOrPushBoth brokenWidget, sourceBroken, destinationBroken
-      else if sourceBroken? or destinationBroken?
-        if sourceBroken?
-          @_pushBrokenRect brokenWidget, sourceBroken, true
+      if sourceDamageRect? and destinationDamageRect?
+        @_mergeDamageRectsIfCloseOrPushBoth damagedWidget, sourceDamageRect, destinationDamageRect
+      else if sourceDamageRect? or destinationDamageRect?
+        if sourceDamageRect?
+          @_pushDamageRect damagedWidget, sourceDamageRect, true
         else
-          @_pushBrokenRect brokenWidget, destinationBroken, true
+          @_pushDamageRect damagedWidget, destinationDamageRect, true
 
-      brokenWidget.fullPaintBoundsMaybeChanged = false
-      brokenWidget.fullClippedBoundsWhenLastPainted = undefined
+      damagedWidget.fullPaintBoundsMaybeChanged = false
+      damagedWidget.fullClippedBoundsWhenLastPainted = undefined
 
 
-  _showBrokenRects: (aContext) ->
+  _showDamageRects: (aContext) ->
     aContext.save()
     aContext.globalAlpha = 0.5
     aContext.useLogicalPixelsUntilRestore()
  
-    for eachBrokenRect in @broken
-      if eachBrokenRect?
+    for eachDamageRect in @damageRects
+      if eachDamageRect?
         randomR = Math.round Math.random() * 255
         randomG = Math.round Math.random() * 255
         randomB = Math.round Math.random() * 255
 
         aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")"
-        aContext.fillRect  Math.round(eachBrokenRect.origin.x),
-            Math.round(eachBrokenRect.origin.y),
-            Math.round(eachBrokenRect.width()),
-            Math.round(eachBrokenRect.height())
+        aContext.fillRect  Math.round(eachDamageRect.origin.x),
+            Math.round(eachDamageRect.origin.y),
+            Math.round(eachDamageRect.width()),
+            Math.round(eachDamageRect.height())
     aContext.restore()
 
 
@@ -1338,14 +1338,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     for m in @widgetsWithMaybeChangedFullPaintBounds
       m.fullPaintBoundsMaybeChanged = false
 
-  _updateBroken: ->
-    @broken = []
-    @duplicatedBrokenRectsTracker = {}
-    @numberOfDuplicatedBrokenRects = 0
+  _repaintDamagedRects: ->
+    @damageRects = []
+    @duplicatedDamageRectsTracker = {}
+    @numberOfDuplicatedDamageRects = 0
 
-    @_fleshOutFullBroken()
-    @_fleshOutBroken()
-    @_rectAlreadyIncludedInParentBrokenWidget()
+    @_fleshOutFullDamage()
+    @_fleshOutDamage()
+    @_rectAlreadyIncludedInParentDamagedWidget()
     @_cleanupSrcAndDestRectsOfWidgets()
 
     @clearPaintBoundsMaybeChangedFlags()
@@ -1354,13 +1354,13 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @widgetsWithMaybeChangedPaintBounds = []
     @widgetsWithMaybeChangedFullPaintBounds = []
 
-    # each broken rectangle requires traversing the scenegraph to
+    # each damage rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Widgets are traversed
     # in particular the following can stop the recursion:
     #  - invisible Widgets
-    #  - PanelWdgts that don't overlap the broken rectangle
+    #  - PanelWdgts that don't overlap the damage rectangle
     # Since potentially there is a lot of traversal ongoing for
-    # each broken rectangle, one might want to consolidate overlapping
+    # each damage rectangle, one might want to consolidate overlapping
     # and nearby rectangles.
 
     @healingRectanglesPhase = true
@@ -1371,7 +1371,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # errors, but a throw from the whole-screen error recovery (or any other escape) would
     # otherwise leave the flag stuck true across frames
     try
-      @broken.forEach (rect) =>
+      @damageRects.forEach (rect) =>
         if !rect?
           return
         if rect.isNotEmpty()
@@ -1398,15 +1398,15 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
         @_findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
 
       if @showRedraws
-        @_showBrokenRects @worldCanvasContext
+        @_showDamageRects @worldCanvasContext
 
       # Under the SWCanvas backend, everything above painted into the software
       # render surface; lift it onto the DOM <canvas id="world"> so it becomes
       # visible. Only when something was actually painted this cycle.
-      if @domBlitContext? and @broken.length != 0
+      if @domBlitContext? and @damageRects.length != 0
         @blitRenderCanvasToDOM()
 
-      @_resetDataStructuresForBrokenRects()
+      @_resetDataStructuresForDamageRects()
     finally
       @healingRectanglesPhase = false
 
@@ -1433,7 +1433,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @_damageSuppressionDepth = 0
 
   # SWCanvas backend only: copy the whole software render surface onto the DOM
-  # <canvas id="world"> so the frame becomes visible. (Per-broken-rect partial
+  # <canvas id="world"> so the frame becomes visible. (Per-damage-rect partial
   # blits via the putImageData dirty-rect overload are a future optimization.)
   blitRenderCanvasToDOM: ->
     w = @worldRenderCanvas.width
@@ -1524,10 +1524,10 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @widgetsGivingErrorWhileRepainting.push @paintingWidget
       @paintingWidget.__hide()
 
-  _resetDataStructuresForBrokenRects: ->
-    @broken = []
-    @duplicatedBrokenRectsTracker = {}
-    @numberOfDuplicatedBrokenRects = 0
+  _resetDataStructuresForDamageRects: ->
+    @damageRects = []
+    @duplicatedDamageRectsTracker = {}
+    @numberOfDuplicatedDamageRects = 0
 
   
   addHighlightingWidgets: ->
@@ -1673,7 +1673,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # Recompute, once per cycle just before paint, which widget is generically SELECTED for editing
   # (_widgetBeingEdited, §5.D D-3/D21) and cache it for the per-widget paint-time selection overlay
   # (Widget._drawSelectionOverlay). On a CHANGE (retarget, or on/off) invalidate BOTH the old and new
-  # widgets so their paint (hence the after-subtree overlay draw) re-runs and the broken-rect repaint
+  # widgets so their paint (hence the after-subtree overlay draw) re-runs and the damage-rect repaint
   # clears the old outline / draws the new one -- the selection-change invalidation the old HighlighterWdgt
   # used to get from its own _changed()/fullDestroy(). A MOVING target needs no handling here: moving a widget already
   # invalidates it, so its overlay follows for free (unlike the old reconciler, which had to re-bounds).
@@ -1685,7 +1685,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     previous = @_editorSelectedWidget
     @_editorSelectedWidget = target
     # only invalidate a still-attached previous widget: a destroyed one already invalidated its region on
-    # fullDestroy, and _changed() on a detached widget can't reach the broken-rect list anyway.
+    # fullDestroy, and _changed() on a detached widget can't reach the damage-rect list anyway.
     # cross-invalidation-sanctioned: selection-overlay reconciler — PULL model (D-3-iii), no
     # method ever runs on the old/new target in which it could self-invalidate
     previous._changed() if previous? and previous.root() is @
@@ -1857,7 +1857,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # frame's SETTLED geometry -- the same fixed point paint reads -- so hover never lags geometry within
     # a painted frame (pre-swap it read pre-flush bounds, one stage too early; deferred-settle drag geometry
     # was still unapplied). Handlers fired here write paint-layer state and at most SELF-SETTLING
-    # mutations (tooltip fullDestroy), so the world is settled again before _updateBroken; a careless
+    # mutations (tooltip fullDestroy), so the world is settled again before _repaintDamagedRects; a careless
     # (off-settle) push from a hover handler would be caught by the end-of-cycle capstone gate.
     # See docs/archive/hover-resync-after-flush-plan.md.
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
@@ -1883,7 +1883,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     @addDragAffordanceWidgets()
 
     # here is where the repainting on screen happens
-    @_updateBroken()
+    @_repaintDamagedRects()
 
     # END-OF-CYCLE pixel-read seam: deliver pending capture requests (macro screenshots,
     # page-side rig reads) now that this cycle's damage — including any repaint a cache
@@ -2740,7 +2740,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # deliberately) leaves it nonzero, and Widget._changed() drops marks while it is —
     # so a stuck depth means damage stops being recorded and the world stops repainting.
     # It is not serialized and not restored by the loader, so re-zeroing it is the only
-    # thing that can put a loaded world back on its feet (the _updateBroken tripwire
+    # thing that can put a loaded world back on its feet (the _repaintDamagedRects tripwire
     # heals mid-life corruption the same way).
     @_damageSuppressionDepth = 0
     # the one-shot "this info doc was already created" flags (InfoDocs.REGISTRY entries, set as

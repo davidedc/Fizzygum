@@ -80,7 +80,7 @@ class Serializer
   #
   # The world is DELIBERATELY NOT a table record. Serializing the world widget's own props
   # would drag in ~50 transient fields (the render/measure canvases + contexts, seven
-  # LRUCaches, the input-event queue, the hand, the caret, the broken-rect trackers, and a
+  # LRUCaches, the input-event queue, the hand, the caret, the damage-rect trackers, and a
   # dozen event-listener CLOSURES) — the walker would crash on the first one (a CanvasPattern
   # on @appearance, exactly defect D8). Instead the genuine world state is captured in an
   # explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS — the desktop

@@ -405,6 +405,11 @@ Archived docs are immutable history — the current-state truth lives in
   - ⚖ Capability-named queries legitimate where behaviour can't move — 5c's flaw was faithfulness, not queries
   - ⚖ ε LEAVE example: SliderButtonWdgt identity shape falsified by documented detach-then-duplicate state
 
+- **`damage-vocabulary-unification-plan.md`** — EXECUTED IN FULL 2026-08-18 (same day as authoring). Unifies the three-word repaint-region split: pixels say DAMAGE (`world.damageRects`, `_repaintDamagedRects`, `_fleshOut(Full)Damage`, `_islandBufferDamageRects`, `damageRectMargin`, 33-name table), DIRTY survives only as layout invalidation; the law lives in `architecture/appearance-paint-convention.md` § "The vocabulary law".
+  - ⚖ the "cleanly layered" synonym-map option was REJECTED BY MEASUREMENT: the strata are era-correlated, not subsystem-correlated (the three core files mixed all three words)
+  - ⚠ scoped OUT deliberately: text-atlas `*Dirty` settle-gate booleans, `SWCanvasBrokenTests` (broken = failing), English "is broken" alerts, TextWdgt line-"breaking" prose
+  - ⚖ `@damageQueue` was wrong: the list is rebuilt each cycle inside the paint station, nothing queues across cycles
+
 ## Features & apps
 
 - **`basement-to-bin-plan.md`** — COMPLETE (executed same day, 2026-07-22). Basement→Bin conversion: unpinned pop-ups DESTROY on dismissal (one `PopUpWdgt._closeNoSettle` override covers all four paths), doGC marks world-slot furniture reachable, permanent lost-only view + confirmed Empty bin, full Bin rename (classes/files/keys, both repos), TrashcanIconWdgt deleted. Its §6 "physically split the roles" rejection was SUPERSEDED the next day by `bin-shelf-eager-sorting-plan.md`.

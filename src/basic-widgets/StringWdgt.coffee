@@ -806,7 +806,7 @@ class StringWdgt extends Widget
       # backBuffer but here we are interested in
       # knowing whether the buffer we are gonna paint
       # is the same as the one being shown now. If
-      # not, then we mark the caret as broken.
+      # not, then we mark the caret as damaged.
       if @backBuffer != cacheHit[0]
         world.caret?.noteTextChanged()
       return cacheHit

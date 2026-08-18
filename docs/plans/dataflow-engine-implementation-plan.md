@@ -2092,7 +2092,7 @@ default grid is exact: 442×300 content = 34+6·68 × 20+14·20 (no residual pix
   HEADERS are direct sheet children, OUTSIDE the panel, and would paint past the sheet's
   edge unclipped. Give the SHEET `clipsAtRectangularBounds` (one clip for everything)
   — V3 verifies: (a) byte-identity at the default size (the clip crops nothing when
-  everything fits — but a clipping widget changes clippedThroughBounds/broken-rect/shadow
+  everything fits — but a clipping widget changes clippedThroughBounds/damage-rect/shadow
   paths, so PROVE it with the full suite, not by argument; note `firstParentOwningMyShadow`
   stops at clipping widgets — grid children carry no shadows, verify nothing else in the
   window does); (b) the clipped-partial look at a non-quantized size (eyeball via

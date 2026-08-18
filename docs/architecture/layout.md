@@ -28,7 +28,7 @@ what makes the pixel-exact SystemTest suite deterministic.
 5. **layout settle (GEOMETRY)** — `recalculateLayouts()`
 6. **hover re-sync** — `hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()`
    (`src/ActivePointerWdgt.coffee`), which reads the *settled* geometry paint will read
-7. **paint** — `updateBroken()` repaints the dirty rectangles of an already-settled world
+7. **paint** — `updateBroken()` repaints the damage rectangles of an already-settled world
 
 **Two parallel drain stations, one-way coupled.** Steps 4 and 5 are deliberate siblings: `recalculateDataflow`
 settles values, `recalculateLayouts` settles geometry. The coupling is **one-way for VALUES — dataflow may dirty
@@ -453,11 +453,11 @@ answering subclass defines) over an `instanceof`/type test. Full gate list, pred
 
 ## 9. Invalidation and repaint — and what settle does NOT do
 
-Layout settle computes **geometry only**. It does not paint. Repaint is a separate *broken-rectangles* (dirty-region)
+Layout settle computes **geometry only**. It does not paint. Repaint is a separate *damage-rectangles* (dirty-region)
 loop:
 
 - `Widget._changed()` invalidates just this widget's rectangle; `Widget._fullChanged()` invalidates it plus its subtree.
-- `WorldWdgt.updateBroken()` repaints the accumulated dirty rectangles once per frame, at the tail of `doOneCycle`,
+- `WorldWdgt.updateBroken()` repaints the accumulated damage rectangles once per frame, at the tail of `doOneCycle`,
   against already-settled geometry.
 - Widgets opting into `BackBufferMixin` (`src/mixins/BackBufferMixin.coffee`) cache themselves to an offscreen canvas;
   pluggable `*Appearance` objects do the drawing. (Integer placement is *necessary but not sufficient* for a back

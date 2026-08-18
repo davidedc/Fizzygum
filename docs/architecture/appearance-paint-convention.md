@@ -123,6 +123,19 @@ back-ref checks) stay in the caller, before the scope call.
   appearance bodies; they keep their device spelling (only the stroke THICKNESS is logical —
   `lineWidth ceilPixelRatio`, matching the rectangular-family border).
 
+## The vocabulary law: pixels say "damage", layout says "dirty"
+
+- **damage** names a pixel REGION needing repaint, in any of its three lives: the world's
+  per-cycle rect list (`world.damageRects`, derived by the flesh-out and repainted by
+  `_repaintDamagedRects`), the in-flight clip descending the paint recursion
+  (`damageBox`/`localDamageBox` — the damage-box law above), and a kept surface's invalidated
+  regions (`TransformFrameWdgt._islandBufferDamageRects`).
+- **dirty** names layout-engine invalidation state and nothing else (`hasDirtyDescendant`,
+  `dirtyRoots`, the dirty-tree climb).
+- Deliberately neither: the text-atlas settle-gate booleans (`anyTextDirty` family — "needs
+  recomposite" state, the screenshot-ready gate's vocabulary) and English "broken" meaning
+  NOT WORKING (the invariant `alert "... is broken"` probes; a failing test).
+
 ## Related spellings
 
 - `IconAppearance` keeps its own scope: a different translate+scale into its 200×200 spec

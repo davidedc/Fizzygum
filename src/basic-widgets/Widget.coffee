@@ -59,16 +59,16 @@ class Widget extends TreeNode
     # work-list's lifecycle and is cleared when the drain completes, so persisting it would only
     # bake a stale own-property into saved files (a restored flag has no matching work-list entry).
     "hasDirtyDescendant"
-    # per-frame broken-rect damage bookkeeping — every field pairs with world-level per-flush
+    # per-frame damage-rect bookkeeping — every field pairs with world-level per-flush
     # state that is never serialized: the _changed()/_fullChanged() dedupe flags mirror membership
     # in world.widgetsWithMaybeChanged(Full)PaintBounds, the *WhenLastPainted footprints and the
     # src/dst indices are consumed by the flesh-out. A restored `true` dedupe flag has no matching
     # work-list entry, so it would permanently SUPPRESS damage reporting on the restored widget
     # (the menu a world snapshot was saved from came back leaving repaint artifacts when moved —
-    # the triggering click's bringToForeground marks the menu dirty right before the save runs).
+    # the triggering click's bringToForeground marks the menu damaged right before the save runs).
     "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged"
     "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
-    "srcBrokenRectIndex", "dstBrokenRectIndex"
+    "srcDamageRectIndex", "dstDamageRectIndex"
   ]
 
   appearance: undefined
@@ -266,8 +266,8 @@ class Widget extends TreeNode
   # children are NOT set this flag. This flag is set
   # only for the parent widget, and it's important that
   # it stays that way for how the mechanism for fleshing out
-  # the broken rectangles works. We flesh out the rectangles
-  # of the "fully broken" widgets separately looking at this
+  # the damage rectangles works. We flesh out the rectangles
+  # of the "fully damaged" widgets separately looking at this
   # flag, and we remove the rectangles of the sub-widgets that
   # have a parent with this flag since we know that they are
   # already covered.
@@ -287,7 +287,7 @@ class Widget extends TreeNode
 
   # §4.4 island buffer cache — the "source" (old-position) lane. When this widget last painted INTO
   # an island's buffer, these hold the PRE-mapping virtual full-bounds and that island, so a later
-  # move-within-island can erase the vacated buffer region (_recordDrawnAreaForNextBrokenRects sets
+  # move-within-island can erase the vacated buffer region (_recordDrawnAreaForNextDamageRects sets
   # them; the flesh-out source lane consumes+clears them). undefined on every ordinary (non-island) paint.
   _islandBufferSourceIsland: undefined
   _islandBufferSourceVirtualRect: undefined
@@ -311,8 +311,8 @@ class Widget extends TreeNode
   cachedIsInCollapsedSubtree: undefined
   checkIsInCollapsedSubtreeCache: undefined
 
-  srcBrokenRectIndex: undefined
-  dstBrokenRectIndex: undefined
+  srcDamageRectIndex: undefined
+  dstDamageRectIndex: undefined
 
   layoutIsValid: true
   # (ordered down-walk Stage B2 — docs/archive/ordered-downwalk-stage-b-plan.md) FLUSH-LOCAL dirty-path
@@ -1103,10 +1103,10 @@ class Widget extends TreeNode
 
   # both methods invoked in here
   # are cached
-  # used in the method _fleshOutBroken
-  # to skip the "destination" broken rects
+  # used in the method _fleshOutDamage
+  # to skip the "destination" damage rects
   # for widgets that marked themselves
-  # as broken but at moment of destination
+  # as damaged but at moment of destination
   # might be invisible
   surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage: ->
     if !@isVisible
@@ -1297,7 +1297,7 @@ class Widget extends TreeNode
 
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
-  # find the smallest broken rectangle created by
+  # find the smallest damage rectangle created by
   # a _fullChanged(), which means that really we
   # are interested in what's visible on screen so
   # we do take into account orphanage and
@@ -1333,7 +1333,7 @@ class Widget extends TreeNode
   
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
-  # find the smallest broken rectangle created by
+  # find the smallest damage rectangle created by
   # a _changed(), which means that really we
   # are interested in what's visible on screen so
   # we do take into account orphanage and
@@ -1360,7 +1360,7 @@ class Widget extends TreeNode
   
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
-  # find the "smallest broken rectangles"
+  # find the "smallest damage rectangles"
   # which means that really we
   # are interested in what's visible on screen so
   # we do take into account orphanage and
@@ -1397,14 +1397,14 @@ class Widget extends TreeNode
   # TransformFrameWdgt ("island") on my parent chain that currently has a
   # non-identity transform. A widget not inside any non-identity island — the
   # overwhelming common case, and ALWAYS when the feature is dormant — gets its rect
-  # back UNCHANGED (same object), so the broken-rect machinery stays byte-identical.
+  # back UNCHANGED (same object), so the damage-rect machinery stays byte-identical.
   # The pre-image is an axis-aligned virtual-plane rect; each island maps it to an
   # integer axis-aligned AABB (§4.3), so the result is a plain Rectangle safe to feed
   # the existing merge/dedupe. The mapped inner damage is clipped in the correct
   # (screen) plane against the OUTERMOST island's own visible rect (= its footprint ∩
   # its ancestor screen clips) — clipping the pre-image plane would not commute with
   # the transform (§4.11).
-  mapRectToScreen: (aRect, depositBufferDirty = false) ->
+  mapRectToScreen: (aRect, depositBufferDamage = false) ->
     result = aRect
     outermostIsland = undefined
     ancestor = @parent
@@ -1414,11 +1414,11 @@ class Widget extends TreeNode
         # THIS island's virtual (buffer) plane, so it is exactly the region this widget now occupies
         # in the island's buffer — and the damage lanes pass it already grown by the widget's
         # shadowExtendedRect, so it covers the shadow px in every crossed plane too. Deposit it as
-        # content-dirty. Only the two damage-flesh-out lanes pass depositBufferDirty=true; the OTHER
-        # caller (_recordDrawnAreaForNextBrokenRects, the paint-time snapshot) passes false, so a
+        # content-damage. Only the two damage-flesh-out lanes pass depositBufferDamage=true; the OTHER
+        # caller (_recordDrawnAreaForNextDamageRects, the paint-time snapshot) passes false, so a
         # mere repaint never dirties the buffer. Depositing on EACH crossed island handles nesting
         # for free. Zero dormant cost (off-island never enters).
-        ancestor._depositIslandBufferDirtyRect result if depositBufferDirty
+        ancestor._depositIslandBufferDamageRect result if depositBufferDamage
         result = ancestor.transformSpec.mapRect result, ancestor.bounds
         outermostIsland = ancestor
       ancestor = ancestor.parent
@@ -1983,7 +1983,7 @@ class Widget extends TreeNode
   # it is the polymorphic DISPATCH POINT for the ClippingAtRectangularBoundsMixin scroll-optimization OVERRIDE
   # (which repaints via @_changed, not @_fullChanged) and TransformFrameWdgt's anchor-ride override, whereas bare _applyMoveByBase
   # is the uniform base translate the top-down arrange calls for leaf children. Folding the overrides onto _applyMoveByBase
-  # would route arrange moves through them on clipping panels and change their dirty regions -- so the two names are a
+  # would route arrange moves through them on clipping panels and change their damage regions -- so the two names are a
   # genuine dispatch distinction, not redundant twins. (Only the truly-redundant SILENT-commit twins collapsed in that
   # pass: _commitExtentAndNotify folded into the __commitExtent leaf, _commitBoundsAndNotify + _applyGrantedBounds into _commitBounds.)
   _applyMoveBy: (delta) ->
@@ -2189,7 +2189,7 @@ class Widget extends TreeNode
     # Clamp me inside aWdgt via the ONE clamp home, then bake the move (immediate twin).
     # Net translation is identical to the old per-axis _applyMoveBy quartet (per-axis,
     # right/bottom first + left/top last-wins); one _applyMoveTo replaces four incremental
-    # bakes -- intermediate broken-rects differ, but repaint is idempotent over the settled world.
+    # bakes -- intermediate damage-rects differ, but repaint is idempotent over the settled world.
     @_applyMoveTo @_clampedPositionWithin aWdgt, @position(), @extent()
     return
 
@@ -2323,7 +2323,7 @@ class Widget extends TreeNode
   # fail on (see Fizzygum-tests). console.error, NOT throw -- non-fatal, so the guard never itself becomes
   # the crash it guards against. Born from the 2026-07-15 plot-uncollapse NaN
   # (KeepsRatioWhenInVerticalStackMixin returned undefined -> FrameWdgt `stackHeight += undefined` -> NaN
-  # window height -> NaN dirty rect). (This supersedes the old dormant no-op Point/Rectangle `debugIfFloats`
+  # window height -> NaN damage rect). (This supersedes the old dormant no-op Point/Rectangle `debugIfFloats`
   # hooks, deleted in the same arc: a per-accessor check there was too hot AND would false-positive on the
   # legitimate fractional values that flow through those accessors; the never-legitimate non-finite case is
   # better caught once, HERE, at the bounds-commit source with the owning widget in hand.)
@@ -2694,7 +2694,7 @@ class Widget extends TreeNode
 
     # The two LIVE-TREE visibility gates apply when painting the world canvas
     # OR a TransformFrameWdgt island buffer (a live-tree render through a
-    # transform island -- same idiom as the broken-rects recording below): a
+    # transform island -- same idiom as the damage-rects recording below): a
     # hidden or collapsed widget must not appear just because its ancestors are
     # tilted. Conditioned (not unconditional) because SCRATCH renders --
     # icon/thumbnail canvases painting detached widgets -- legitimately paint
@@ -2709,7 +2709,7 @@ class Widget extends TreeNode
 
     return false
 
-  _recordDrawnAreaForNextBrokenRects: ->
+  _recordDrawnAreaForNextDamageRects: ->
     if @childrenBoundsUpdatedAt < WorldWdgt.frameCount
       @childrenBoundsUpdatedAt = WorldWdgt.frameCount
       # Affine transforms: record the SCREEN footprint (mapped through my ancestor islands WHILE I am still
@@ -2732,7 +2732,7 @@ class Widget extends TreeNode
       # §4.4 buffer cache — the "source" (old-position) lane. When painting INTO an island buffer,
       # stash the PRE-mapping virtual full-bounds (shadow-inclusive, per the above) and the island.
       # If this widget later MOVES within (or is removed from) the stationary island, the flesh-out
-      # source lane deposits this OLD footprint as buffer-dirty so the partial rebuild erases the
+      # source lane deposits this OLD footprint as buffer-damage so the partial rebuild erases the
       # vacated region — the buffer-plane twin of the screen-footprint erase above (the NEW footprint
       # rides the mapRectToScreen deposit).
       # undefined on every ordinary (non-island) paint ⇒ dormant-free; consumed+cleared at flesh-out.
@@ -2744,7 +2744,7 @@ class Widget extends TreeNode
 
   # Occlusion culling (docs/plans/occlusion-culling-plan.md P1): the axis-aligned rectangle this widget
   # provably paints FULLY OPAQUE, in LOGICAL px world coordinates, or undefined. It is the geometry both
-  # avenues of the plan share (Avenue A scans it per broken rect; Avenue B would cache it).
+  # avenues of the plan share (Avenue A scans it per damage rect; Avenue B would cache it).
   # CONSERVATIVE BY DESIGN: any uncertainty MUST yield undefined -- a wrong (too-big) rect silently drops
   # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
   # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
@@ -2858,7 +2858,7 @@ class Widget extends TreeNode
       # missing. world.paintingIntoIslandBuffer is undefined on every ordinary paint, so
       # this is byte-identical when the feature is dormant.
       if aContext == world.worldCanvasContext or world.paintingIntoIslandBuffer?
-        @_recordDrawnAreaForNextBrokenRects()
+        @_recordDrawnAreaForNextDamageRects()
       @_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow aContext, clippingRectangle, appliedShadow
 
 
@@ -2915,7 +2915,7 @@ class Widget extends TreeNode
 
   # ... when you want to hide something
   # but you don't want to generate any
-  # broken rectangles
+  # damage rectangles
   __hide: ->
     if !@isVisible
       return
@@ -3009,7 +3009,7 @@ class Widget extends TreeNode
   # via noteStructureChange -- so the stamp invalidates in exactly the situations the
   # walk's inputs can change, and moves never touch it (no empty-hand interaction).
   # Measured before caching (2026-07-03): 310k node-visits / ~149 ms in one menu-hover
-  # test -- an uncached O(depth) walk on every hit-test / broken-rect guard.
+  # test -- an uncached O(depth) walk on every hit-test / damage-rect guard.
   isInCollapsedSubtree: ->
     if @checkIsInCollapsedSubtreeCache == WorldWdgt.visibilityVersion
       result = @cachedIsInCollapsedSubtree
@@ -3226,7 +3226,7 @@ class Widget extends TreeNode
   # paints, so an ancestor island's map then composes scale AND rotation over it exactly (a
   # post-map grow cannot: rotation turns the offset's screen direction, scale multiplies it).
   # Consumed by the flesh-out DESTINATION lanes and my own painted-footprint record
-  # (_recordDrawnAreaForNextBrokenRects); the flesh-out SOURCE lanes need no shadow term
+  # (_recordDrawnAreaForNextDamageRects); the flesh-out SOURCE lanes need no shadow term
   # because that record is already shadow-inclusive — adding one there would double-cover and
   # hide a record-time regression from the fixtures. (The shadow PAINTER is equally
   # direction-agnostic — the cull and ctx translates are vectors — so this rect is exact
@@ -3241,7 +3241,7 @@ class Widget extends TreeNode
   _changed: ->
     # dropped while a _repaintAsOneUnit block is open: the unit's owner issues
     # the one covering mark at close, so per-child marks inside it would only
-    # proliferate redundant broken rects. Each drop is COUNTED (monotonic, on
+    # proliferate redundant damage rects. Each drop is COUNTED (monotonic, on
     # the world) so the closing unit can tell a vacuous body from one that
     # tried to mark — see _repaintAsOneUnit's skip condition.
     if world._damageSuppressionDepth > 0
@@ -3571,10 +3571,10 @@ class Widget extends TreeNode
     aFullCopy?.pickUp()
 
   # in case we copy a widget, if the original was in some
-  # data structures related to broken widgets, then
+  # data structures related to damaged widgets, then
   # we have to add the copy too.
-  alignCopiedWidgetToBrokenInfoDataStructures: (copiedWidget) ->
-    # the world owns its broken-bookkeeping lists — it inherits the mark onto the
+  alignCopiedWidgetToDamageInfoDataStructures: (copiedWidget) ->
+    # the world owns its damage-bookkeeping lists — it inherits the mark onto the
     # copy itself in this public notification (widget-citizenship point 2); this
     # deep-copy hook used to push onto world.widgetsWithMaybeChanged* directly
     world.noteWidgetCopied @, copiedWidget
@@ -3596,7 +3596,7 @@ class Widget extends TreeNode
   # widget in whatever other data structures where the
   # original widget was.
   # For example, if the Widget appeared in a data
-  # structure related to the broken rectangles mechanism,
+  # structure related to the damage rectangles mechanism,
   # we should place the copied widget there.
   fullCopy: ->
     if @destroyed
@@ -4998,7 +4998,7 @@ class Widget extends TreeNode
     if world?._recalculatingLayouts
       throw new Error "FLOWRULE_VIOLATION: _invalidateLayout() during a layout pass by " + (@constructor?.name) + " -- an immediate geometry mutator (an _apply*/_commit*/__commit* corner or _move*/_set* convenience) must not schedule layout (task #17)"
     # DEBUG (WorldWdgt.auditPaintTimeLayoutScheduling, default off): PAINT must be READ-ONLY. healingRectangles-
-    # Phase is true only inside _updateBroken's paint pass; reaching here then means a widget SCHEDULED layout while
+    # Phase is true only inside _repaintDamagedRects's paint pass; reaching here then means a widget SCHEDULED layout while
     # being painted -- crossing the render/layout boundary. Record its ctor for the per-frame paint-schedules log.
     # (The caret's paint-time scroll-follow, the original such offender, was moved to a post-flush pre-paint step.)
     if world?.healingRectanglesPhase and world.auditPaintTimeLayoutScheduling and not @isOrphan()

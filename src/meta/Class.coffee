@@ -110,7 +110,7 @@ class Class
   # prototype from CoffeeScript source, with the SAME compile shape the mixin twin
   # uses -- a bare global-assignment eval, NOT Widget.evaluateString: that method's
   # relayout/repaint tail treats its receiver as a WIDGET, and run on a PROTOTYPE
-  # it stamps widget-lifecycle fields (cachedRoot, dstBrokenRectIndex, ...) onto the
+  # it stamps widget-lifecycle fields (cachedRoot, dstDamageRectIndex, ...) onto the
   # prototype as own properties, polluting every later member listing of the class.
   # (The compiled output may re-declare the CoffeeScript helper vars -- indexOf etc.
   # -- at global scope; harmless, the globals already hold exactly those values.)

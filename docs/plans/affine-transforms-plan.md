@@ -190,7 +190,7 @@ the affected section before proceeding.
   `docs/architecture/integer-pixel-placement-and-sizing.md` for the whole invariant. Fractional *desired*
   geometry lives separately (`desiredExtent`/`desiredPosition`, `Widget.coffee:74-75`).
 
-### 3.2 Paint: broken-rect repaint; rect-intersection clipping; back buffers blitted axis-aligned
+### 3.2 Paint: damage-rect repaint; rect-intersection clipping; back buffers blitted axis-aligned
 
 - Damage: `_changed()` (`Widget.coffee:2369`) / `_fullChanged()` (`:2414`) queue the widget on
   `world.widgetsWithMaybeChangedPaintBounds` / `...FullPaintBounds`; rects are computed later
@@ -332,7 +332,7 @@ it is also a candidate for deletion in `docs/archive/accidental-complexity-reduc
 
 Per repaint of a screen damage rect that intersects the island's **outer AABB** (§4.3):
 
-1. Refresh the island buffer: replay any accumulated virtual-plane dirty rects by painting the
+1. Refresh the island buffer: replay any accumulated virtual-plane damage rects by painting the
    content subtree into the island's back buffer (children's normal
    `fullPaintIntoAreaOrBlitFromBackBuffer` with the buffer context pre-translated by
    `(-slotLeft * ceilPixelRatio, -slotTop * ceilPixelRatio)`; the clock precedent (fact 3.2,
@@ -342,7 +342,7 @@ Per repaint of a screen damage rect that intersects the island's **outer AABB** 
    see below); `ctx.setTransform(...)` to (device matrix) × (island matrix);
    `drawImage(buffer, srcSubRect → dstSubRect)`; `ctx.restore()`.
    - **Why the clip is mandatory (correctness, not hygiene):** the repaint contract is that
-     painting a broken rect never touches pixels OUTSIDE it — widgets in front are only
+     painting a damage rect never touches pixels OUTSIDE it — widgets in front are only
      repainted inside the rect, so any spill paints the island OVER front content that isn't
      being repainted this cycle (z-order corruption). Axis-aligned widgets satisfy this via
      rect-intersected `drawImage`/`fillRect` (`calculateKeyValues`); a transformed `drawImage`
@@ -393,7 +393,7 @@ inverse:  p = A + (1/s) · Rot(−θ) · (p' − A)      (same closed form with 
 - **Rect mapping (damage, footprint):** transform the 4 corners of the rect, take
   `minX/minY/maxX/maxY`, then `Math.floor` the mins, `Math.ceil` the maxes, then
   `expandBy 1` (AA coverage bleeds < 1px past the geometric edge). Result is an integer
-  axis-aligned `Rectangle` — safe to feed into the existing broken-rect machinery unchanged.
+  axis-aligned `Rectangle` — safe to feed into the existing damage-rect machinery unchanged.
 - **Identity test:** `rotationDegrees % 360 == 0 and scale == 1` (exact comparison on the
   canonical scalars — this is why scalars, not matrices, are the source of truth).
 - **Sweep bound (for `claimsSpace:'sweep'`):** radius `r = max over corners c of |c − A|`;
@@ -405,7 +405,7 @@ inverse:  p = A + (1/s) · Rot(−θ) · (p' − A)      (same closed form with 
 Model on `BackBufferMixin` (fact 3.2) but with a custom composite step (§4.2): buffer of
 physical size `slotExtent × ceilPixelRatio` (Phase 1; rasterization-scale folding for crisp
 zoom is §7.4), a validity checker keyed on slot extent + content version, and a list of
-virtual-plane dirty rects accumulated between composites. Drop the buffer when the island
+virtual-plane damage rects accumulated between composites. Drop the buffer when the island
 returns to identity AND memory matters (v1: keep it; eviction policy is banked §7.1).
 
 ### 4.5 Damage routing (the one world-side hook)
@@ -416,7 +416,7 @@ island's slot box (fact 3.2; and ONLY the slot box — see the plane-purity rule
 single new step: **when the world fleshes out a damage rect whose widget's parent chain
 crosses one or more islands, map the rect to screen space through each island's forward
 matrix (corner-map, §4.3) before pushing it into `world.broken`**, and also record the
-pre-mapping virtual rect on each crossed island as a buffer-dirty region.
+pre-mapping virtual rect on each crossed island as a buffer-damage region.
 
 Implementation shape and ordering (verified against the flesh-out code, fresh-eyes pass
 2026-07-09 — see §10.2):
@@ -447,7 +447,7 @@ Implementation shape and ordering (verified against the flesh-out code, fresh-ey
   NOT push two explicit rects. `_transformChangedNoSettle` (`TransformFrameWdgt.coffee`) queues a single
   `_fullChanged()`; the OLD footprint rides the **last-painted-snapshot lane**
   (`fullClippedBoundsWhenLastPainted`, frozen in screen coords at paint time by
-  `recordDrawnAreaForNextBrokenRects`) as the flesh-out SOURCE rect, and the NEW footprint is the current
+  `recordDrawnAreaForNextDamageRects`) as the flesh-out SOURCE rect, and the NEW footprint is the current
   bounds as the DESTINATION rect. This equivalence is now **trace-proven** (2026-07-10, §7.5 Bug C forensics),
   including the hard **destroy-in-same-batch** case (de-tilt → dematerialize → `_destroyNoSettle` all in one
   NoSettle batch): the instrumented `fleshOutFullBroken` showed both the island and its content push the
@@ -540,7 +540,7 @@ widgets then blit with `globalAlpha = appliedShadow.alpha * @alpha`,
 `BackBufferMixin.coffee:113`). The island simply honors `appliedShadow` in its composite
 (§4.2 shadow pass): the result is a warped, faint copy at the shadow offset — i.e. a
 **correctly rotated shadow, for free, inside the unified mechanism**. Damage accounting
-already grows all broken rects by `world.maxShadowSize` (§4.5). No quad-silhouette special
+already grows all damage rects by `world.maxShadowSize` (§4.5). No quad-silhouette special
 case, no suppression fallback. Phase 2 adds a macro that shows a rotated island's shadow.
 
 ### 4.9 Layout coupling — `claimsSpace` (the Lively-breakage firewall)
@@ -694,7 +694,7 @@ EXCLUSION: no inspector change (a future item).
 
 1. **Full Lively conversion (parent-relative coordinates + matrix on every widget).**
    Rejected 2026-07-09 by cost/risk analysis: it changes the meaning of `bounds` across ~470
-   files and forces re-derivation of the settle engine, `geometryVersion` caches, broken-rect
+   files and forces re-derivation of the settle engine, `geometryVersion` caches, damage-rect
    merging, occlusion culling, per-pixel hit sampling, and serialization — and it STILL needs
    buffer-warp for text (fact 3.7), so it is a superset of this plan, not an alternative.
    The islands built here do not foreclose it; they would become its compositor layer if it
@@ -967,7 +967,7 @@ Steps:
    chain-flag caches (same invalidation family as a move — bump sites precedent:
    `Widget.coffee:1304`, `WorldWdgt.coffee:203,207`).
 3. Damage hook per §4.5 (`mapRectToScreen` + BOTH flesh-out lanes, source AND destination
-   rects, mapped BEFORE merge/dedupe + the inside-an-island cached flag + buffer-dirty
+   rects, mapped BEFORE merge/dedupe + the inside-an-island cached flag + buffer-damage
    accumulation).
 4. Pointer mapping per §4.6 (`screenPointToMyPlane`, predicate changes at
    `ActivePointerWdgt.coffee:96` and `Widget.coffee:323`, island containment refinement,
@@ -1010,7 +1010,7 @@ GATES (all must pass before Phase 1 is declared done — verify, don't assert):
 >   Phase-1 `_compositeScaleOnly` fast path (unchanged, so Phase-1 scale refs stay byte-identical);
 >   rotation → the new `_compositeTransformed`. That path is render-straight-then-warp: `save`;
 >   `clipToRectangle(visibleDst × cpr)` (the MANDATORY §4.2 real path clip — a transformed
->   `drawImage` cannot express the broken-rect clip via src/dst rects); `transform(cpr·matrix)`
+>   `drawImage` cannot express the damage-rect clip via src/dst rects); `transform(cpr·matrix)`
 >   (⚠ `transform` = COMPOSE, **not** `setTransform` — so the unified shadow pass' pre-applied
 >   offset-translate CTM is honoured, giving a correctly rotated shadow for free, §4.8; on the
 >   normal pass the incoming CTM is identity so it equals setTransform); `drawImage(buffer, full →
@@ -1950,7 +1950,7 @@ See §7. None of these block declaring the feature shipped.
    the sugar island's sole-content predicate (`childrenNotHandlesNorCarets`) and grow a tracking island's slot.
    The R2 pattern is right only for overlays that COVER the target's box. **Shipped fix: SCREEN-anchoring** —
    `peekThroughBox = target.mapRectToScreen target.clippedThroughBounds()` in both reconciler branches (the same
-   composition the paint lane uses at `recordDrawnAreaForNextBrokenRects`); identity ⇒ mapRectToScreen returns
+   composition the paint lane uses at `recordDrawnAreaForNextDamageRects`); identity ⇒ mapRectToScreen returns
    the box unchanged, so untransformed pinout is byte-identical (macro's identity control asserts EXACT legacy
    position). **Same one-line idiom applied to the drag-embed LOCK BADGE** (`addDragAffordanceWidgets`,
    world-child badge at the drop target's box right−70/top+4 — reachable when a view-only window sits inside a
@@ -2016,11 +2016,11 @@ See §7. None of these block declaring the feature shipped.
    races the re-render (an `anyTextDirty()` gate fixed Chrome but flipped WebKit). ⚠ The "identity
    blit==replay" / "tiling stays raster-under-warp" guards belong to §7.1/§7.2 (vector-replay), NOT here.
    - **§4.4 rect-list dirty refinement — ✅ LANDED 2026-07-11, its own doc:
-     `docs/archive/island-buffer-cache-rectlist-plan.md`.** v1 kept ONE merged bounding dirty-rect; v2 keeps a
+     `docs/archive/island-buffer-cache-rectlist-plan.md`.** v1 kept ONE merged bounding damage-rect; v2 keeps a
      COALESCED DISJOINT rect-LIST so a frame damaging several far-apart regions rebuilds only those
-     sub-rects (a bounded cost ceiling — `_coalesceDirtyList` collapses to the bounding box past
+     sub-rects (a bounded cost ceiling — `_coalesceDamageList` collapses to the bounding box past
      `ISLAND_DIRTY_MAX_RECTS`/`ISLAND_DIRTY_AREA_FRACTION` so worst case == v1). No new instance fields ⇒
-     ZERO recaptures; A/B via `WorldWdgt.dirtyRectListEnabled`; byte-identity macro CASE 8/9; measured
+     ZERO recaptures; A/B via `WorldWdgt.damageRectListEnabled`; byte-identity macro CASE 8/9; measured
      2.75× on a two-far-apart-edits scenario. Correctness is cost-only by the coverage invariant (the
      list's union only grows).
 
@@ -2232,7 +2232,7 @@ pinned-anchor interplay line).**
   tripped the **paint-truthfulness gate** (`fg gauntlet` `--paint` leg, `run-paint-audit.js`). Owner (design-first)
   called for forensics BEFORE assuming a framework damage bug, or that Bug B was independent, or (a later trap) that
   the macro was at fault — each demand of evidence was correct, and each successive framing was too pessimistic.
-- **Root cause (evidence, not inference): a PHASE ERROR in the audit, not a broken-rect bug and not test hygiene.**
+- **Root cause (evidence, not inference): a PHASE ERROR in the audit, not a damage-rect bug and not test hygiene.**
   Paint is frame-cadenced BY DESIGN: a public mutator self-settles LAYOUT (geometry converges on return via
   `recalculateLayouts`), but `_changed()`/`_fullChanged()` only QUEUE damage rects — pixels update once per frame when
   `doOneCycle` reaches `updateBroken()`. So a settled world with queued-but-unpainted damage is the NORMAL mid-frame
@@ -2258,7 +2258,7 @@ pinned-anchor interplay line).**
 - **⚠ Measurement note (rigor):** the "~150 px ghost" in the earlier `index.html?sw=1` probes was LOCATED at box
   `[1127,44→1160,72]` — the animated desktop **CLOCK** (top-right), NOT the widget (40° footprint at `[409,176]`);
   the "~84 px" case was the same contamination by INFERENCE (not separately located), but the empty-world zeros carry
-  the conclusion regardless. Measure broken-rect diffs in the EMPTY harness world, never `index.html?sw=1`.
+  the conclusion regardless. Measure damage-rect diffs in the EMPTY harness world, never `index.html?sw=1`.
 - **Bug B:** no shared framework damage bug exists, AND the close-path footprint erase already has its own
   regression macro (`macroClosingRotatedIslandChildClearsFootprint`) — enough to proceed; phrased as what was shown,
   not "confirmed independent" in the abstract.
@@ -2564,13 +2564,13 @@ pinned-anchor interplay line).**
   destroying (or reparenting-OUT) an island-interior widget left stale pixels in its rotated footprint:
   `_closeNoSettle`/`_destroyNoSettle` call `_fullChanged()` while attached, then sever `@parent`; the erase-rect
   is computed LATER in `fleshOut(Full)Broken` via `mapRectToScreen(...WhenLastPainted)`, which walks the
-  now-severed chain → identity → erases only the un-transformed slot. FIX: `recordDrawnAreaForNextBrokenRects`
+  now-severed chain → identity → erases only the un-transformed slot. FIX: `recordDrawnAreaForNextDamageRects`
   now freezes the SCREEN footprint at PAINT time (`mapRectToScreen` while attached); `fleshOutBroken`/
   `fleshOutFullBroken` use it directly (byte-identical dormant + attached-island). Owner-reported via a tilted
   DegreesConverterApp inner-window close.
 - **⚠ A SCREENSHOT MACRO CANNOT CATCH BROKEN-RECT STALENESS** (bug fix 2026-07-10) — `readyForMacroScreenshot`
   (`MacroToolkit:227`) forces `world._fullChanged()` (a full repaint) before EVERY capture, erasing incremental
-  broken-rect staleness. To test a broken-rect bug: read the INCREMENTAL canvas pixels right after the gesture
+  damage-rect staleness. To test a damage-rect bug: read the INCREMENTAL canvas pixels right after the gesture
   (`world.worldCanvasContext.getImageData`, NO `takeScreenshot`), then `world._fullChanged()` + settle and read
   again, and assert 0 RGB-differing pixels (assertion-only, no references) — proven by
   `macroClosingRotatedIslandChildClearsFootprint` (diff 0 fixed / 5257 un-fixed). Use the EMPTY harness world
@@ -2585,7 +2585,7 @@ pinned-anchor interplay line).**
   mid-frame → false ghosts; that cost a full Bug-C forensic pass — do NOT re-chase it or re-impose a "macros must
   end settled" rule.) The ONLY real macro-side settle obligation is EVENT-DRAIN sequencing: `yield
   "waitNoInputsOngoing"` between steps when a later step reads state that earlier SYNTHESIZED input events produce —
-  unrelated to paint. Also: measure broken-rect diffs in the EMPTY harness world, never `index.html?sw=1` — the
+  unrelated to paint. Also: measure damage-rect diffs in the EMPTY harness world, never `index.html?sw=1` — the
   desktop CLOCK (top-right) ticks between reads and contaminates the diff (LOCATED at box `[1127,44]`, nowhere near
   the widget). Suite-wide lesson mirrored in `Fizzygum-tests/DETERMINISM.md`.
 - **Rotation input is SCREEN-plane** (4B) — the rotate handle reads `world.hand.position()` (raw) and
@@ -2669,11 +2669,11 @@ islands — nested islands concatenate.
 ### 10.2 Damage rects and redraw
 
 Behavior: inner widgets damage themselves unchanged; rects are plane-mapped at flesh-out,
-before any merge/dedupe; the island accumulates virtual buffer-dirty rects; transform changes
+before any merge/dedupe; the island accumulates virtual buffer-damage rects; transform changes
 damage `oldFootprint ∪ newFootprint` and never dirty the buffer (§4.5 invariant).
 
 - **[FIX → §4.2]** The composite MUST clip to `damageRect ∩ footprint` (path clip): the
-  broken-rect contract forbids painting outside the rect (front content isn't repainted
+  damage-rect contract forbids painting outside the rect (front content isn't repainted
   there — spill = z-order corruption). This was the largest hole in the first draft.
 - **[FIX → §4.5]** Both flesh-out lanes (`fleshOutBroken` `WorldWdgt.coffee:863`,
   `fleshOutFullBroken` `:914`) consume per-widget virtual rects in BOTH the source

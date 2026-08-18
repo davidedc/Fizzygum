@@ -114,7 +114,7 @@ A fresh session executes this plan as follows:
   - `calculateRectangleOfIcon()` — aspect-fits `preferredSize` into the widget's bounds
     (logical px), centers, `.round()`s. Used by paint AND by layout (below).
   - `paintIntoAreaOrBlitFromBackBuffer(aContext, clippingRectangle, appliedShadow)` — clips
-    to the dirty rect, sets `globalAlpha` from shadow × `@widget.alpha`, calls
+    to the damage rect, sets `globalAlpha` from shadow × `@widget.alpha`, calls
     `useLogicalPixelsUntilRestore()`, translates/scales design space → widget box, calls
     `@paintFunction aContext`.
   - `_iconColorString()` → `(@ownColorInsteadOfWidgetColor ? @widget.color).toString()`;
@@ -165,8 +165,8 @@ A fresh session executes this plan as follows:
 
 - `Widget.calculateKeyValues` (`src/basic-widgets/Widget.coffee:2551`) returns
   **integer device pixels**: rounds the visible area and multiplies by `ceilPixelRatio`
-  (global; 1 or 2). `al,at,w,h` are the dirty-rect blit coords in device px.
-- ⚠ **Partial-repaint trap**: `al,at` are the **dirty rect's** corner, NOT the widget's. The
+  (global; 1 or 2). `al,at,w,h` are the damage-rect blit coords in device px.
+- ⚠ **Partial-repaint trap**: `al,at` are the **damage rect's** corner, NOT the widget's. The
   vector path centers via `calculateRectangleOfIcon()` (absolute widget coords); the pixel
   rasterizer must likewise anchor to the widget's own origin (§4), never to `al,at`.
 - Integer-placement policy (`docs/architecture/integer-pixel-placement-and-sizing.md`): every
@@ -315,11 +315,11 @@ loudly at first paint, and the boot-smoke gate will catch anything on the defaul
     [area,sl,st,al,at,w,h] = keyValues
 
     aContext.save()
-    aContext.clipToRectangle al,at,w,h    # dirty-rect clip, as the vector path does
+    aContext.clipToRectangle al,at,w,h    # damage-rect clip, as the vector path does
     aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @widget.alpha
     # deliberately NO useLogicalPixelsUntilRestore(): we draw in integer DEVICE pixels
 
-    # anchor to the WIDGET box, not the dirty rect (partial-repaint trap, §1) —
+    # anchor to the WIDGET box, not the damage rect (partial-repaint trap, §1) —
     # bounds are integer logical px (integer-placement policy) so these are exact ints:
     wl = @widget.left()   * ceilPixelRatio
     wt = @widget.top()    * ceilPixelRatio
@@ -465,7 +465,7 @@ of this section.
    excellent cheap regression gate — a DIFFER means something non-integer was drawn. A
    side effect, not the objective (see the statement above). It also pre-validates this
    plan's P0 expectation (§3.3) — the P0 spike can cite it.
-2. **Anchor to the widget origin, never the dirty rect** (`al/at` shift under partial
+2. **Anchor to the widget origin, never the damage rect** (`al/at` shift under partial
    repaints); widget bounds are integer logical px (placement policy) so
    `left()*ceilPixelRatio` is an exact device integer.
 3. **The border idiom**: paint each region as a solid-ink silhouette, then repaint its

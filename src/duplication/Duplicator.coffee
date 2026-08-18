@@ -13,7 +13,7 @@
 # Note 1: we deep-copy all kinds of data structures, not just widgets.
 # Note 2: the copying mechanism also takes care of inserting the copied widget
 # in whatever other data structures the original widget was in (the
-# alignCopiedWidgetTo* hooks: broken rectangles, stepping, reference tracker,
+# alignCopiedWidgetTo* hooks: damage rectangles, stepping, reference tracker,
 # keyboard receivers).
 class Duplicator
 
@@ -145,7 +145,7 @@ class Duplicator
     @_rebuildDerivedValues cloneOfMe, obj
 
     # align the copy into the world-level trackers the original was in (Note 2).
-    obj.alignCopiedWidgetToBrokenInfoDataStructures? cloneOfMe
+    obj.alignCopiedWidgetToDamageInfoDataStructures? cloneOfMe
     obj.alignCopiedWidgetToSteppingStructures? cloneOfMe
     obj.alignCopiedWidgetToReferenceTracker? cloneOfMe
     obj.alignCopiedWidgetToKeyboardEventsReceiversSet? cloneOfMe

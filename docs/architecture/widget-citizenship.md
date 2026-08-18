@@ -83,10 +83,10 @@ citizen:
    `ActivePointerWdgt.noteCarriedWidgetChanged`). And invalidation is PRIVATE (the 2026-07-22
    rename): `_changed`/`_fullChanged` are not exposed as API anywhere, and there is
    deliberately NO general-purpose repaint verb (the old "restore display" menu entry was
-   removed with the rename — owner decision). The paint executor `_updateBroken` (the world's
-   once-per-cycle broken-rect flush) is private under the same rule. The only external callers
+   removed with the rename — owner decision). The paint executor `_repaintDamagedRects` (the world's
+   once-per-cycle damage-rect flush) is private under the same rule. The only external callers
    are the test oracles that force a ground-truth full repaint
-   (`world._fullChanged()` + `world._updateBroken()`), each under an explained sanction marker
+   (`world._fullChanged()` + `world._repaintDamagedRects()`), each under an explained sanction marker
    (see `check-layering.js` rule [D] and the harness paint audit's in-file sanction).
 3. **It handles its own input**, and exposes its affordances uniformly: the right-click menu
    is the universal front door (edit, inspect, resize, attach, duplicate…), so every widget

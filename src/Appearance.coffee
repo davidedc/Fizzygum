@@ -81,7 +81,7 @@ class Appearance
 
     aContext.save()
 
-    # clip out the dirty rectangle as we are
+    # clip out the damage rectangle as we are
     # going to paint the whole of the box.
     if @clipsToDamageBox
       aContext.clipToRectangle al,at,w,h

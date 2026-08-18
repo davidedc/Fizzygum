@@ -10,11 +10,11 @@ at all.
 
 ## TL;DR
 
-- The canvas repaints dirty regions ("broken rectangles") **back-to-front**. If some widget in
-  the paint stack draws a **solid opaque fill that fully covers** the broken rect, everything
+- The canvas repaints damage regions ("damage rectangles") **back-to-front**. If some widget in
+  the paint stack draws a **solid opaque fill that fully covers** the damage rect, everything
   painted *beneath* it in that rect is wasted overdraw (profiling: ~35% of a busy-drag frame was
   raw fill rasterization, much of it hidden behind opaque windows).
-- **The fix**: before painting a broken rect, find the frontmost widget that provably paints an
+- **The fix**: before painting a damage rect, find the frontmost widget that provably paints an
   opaque fill covering the whole rect, and **start painting from there** — skipping the desktop
   fill and every widget behind it, within that rect.
 - **Correctness is a one-way trap**: a wrong "it's covered" silently drops pixels (caught only by
@@ -28,8 +28,8 @@ at all.
 ## 1. The problem it solves
 
 Painting is a recursive, **back-to-front** walk driven by the damage system
-(`WorldWdgt.updateBroken` → `fullPaintIntoAreaOrBlitFromBackBuffer` per broken rect). For each
-broken rect the world paints its own desktop fill, then every top-level widget from rearmost to
+(`WorldWdgt.updateBroken` → `fullPaintIntoAreaOrBlitFromBackBuffer` per damage rect). For each
+damage rect the world paints its own desktop fill, then every top-level widget from rearmost to
 frontmost (`world.children` is a back-to-front array), each painting its whole subtree; later =
 on top. When an opaque window sits in front of that rect, the desktop fill and every rearward
 widget are painted and then **completely overpainted** — pure overdraw.
@@ -86,14 +86,14 @@ painted on top as before. It:
    rounding) **and** whose `clippedThroughBounds()` contains `dirtyPart` (so an ancestor clip
    hasn't cut the fill) is the coverer;
 4. if found: preserves the world's own paint-record bookkeeping
-   (`recordDrawnAreaForNextBrokenRects` — the world can itself be a broken widget, e.g. on a
+   (`recordDrawnAreaForNextDamageRects` — the world can itself be a broken widget, e.g. on a
    wallpaper change), then paints the coverer **and everything in front of it** (`children[k..]`)
    narrowed to `dirtyPart`, replicates the trailing panel stroke, and returns `true`;
 5. else returns `false` → the caller paints the normal full-depth way.
 
 ## 3. Why it is safe
 
-When a coverer is found, its opaque fill covers every pixel of the broken rect, so anything
+When a coverer is found, its opaque fill covers every pixel of the damage rect, so anything
 skipped beneath it would have been overpainted anyway — the final pixels are identical to the
 full-depth pass. This holds even for the coverer's own drop shadow: all painting is clipped to
 `dirtyPart`, and the coverer's fill (which contains `dirtyPart + 1px`) overpaints its own
@@ -131,7 +131,7 @@ fire-rate} counters + a scan-call count; the `covered` phase parks a large windo
 
 ## 6. Scope and future work
 
-What ships is **top-level, whole-rect** culling: it skips a broken rect's overdraw only when a
+What ships is **top-level, whole-rect** culling: it skips a damage rect's overdraw only when a
 single **top-level** `world.children` widget covers the **entire** rect. Deferred (owner-gated,
 detailed in the plan):
 

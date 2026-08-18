@@ -7,7 +7,7 @@
 #
 # These widgets are transparently/automatically added/removed by the
 # addHighlightingWidgets function in doOneCycle -- one of the per-cycle
-# reconciler steps that all run before the @_updateBroken() call.
+# reconciler steps that all run before the @_repaintDamagedRects() call.
 #
 # That addHighlightingWidgets function RECONCILES: it only adds/modifies/removes
 # the HighlighterWdgts that are new, need to change position, or need to go away

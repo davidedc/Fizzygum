@@ -137,18 +137,18 @@ ClippingAtRectangularBoundsMixin =
         # necessarily contain all the subwidgets in its boundaries like
         # the PanelWdgt does)
         # So, check which part of the Frame should be redrawn:
-        dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
+        damagedPartOfFrame = @boundingBox().intersect clippingRectangle
         
-        if !dirtyPartOfFrame.isEmpty()
+        if !damagedPartOfFrame.isEmpty()
         
           if aContext == world.worldCanvasContext
-            @_recordDrawnAreaForNextBrokenRects()
+            @_recordDrawnAreaForNextDamageRects()
 
           # this draws the background of the Panel itself
-          @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
+          @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
           @children.forEach (child) =>
-            child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
+            child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
       _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
         # the culling rect moves OPPOSITE the paint (a pixel at P shows the shadow of
@@ -164,16 +164,16 @@ ClippingAtRectangularBoundsMixin =
           # since the whole point of the Panel is to clip everything to a specific
           # rectangle.
           # So, check which part of the Frame should be redrawn:
-          dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
+          damagedPartOfFrame = @boundingBox().intersect clippingRectangle
           
-          # if there is no dirty part in the Panel then do nothing
-          if !dirtyPartOfFrame.isEmpty()
+          # if there is no damaged part in the Panel then do nothing
+          if !damagedPartOfFrame.isEmpty()
 
             aContext.save()
             aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
           
             # this draws the background of the Panel itself
-            @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
+            @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
             # since the widget clips at its boundaries, then we know that all of
             # its children are inside. Hence, if the Panel is fully opaque, then
@@ -181,7 +181,7 @@ ClippingAtRectangularBoundsMixin =
             # draw the shadow of the Panel itself and skip all of the children.
             if @alpha != 1
               @children.forEach (child) =>
-                child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
+                child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
             aContext.restore()
 

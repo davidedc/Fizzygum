@@ -32,10 +32,10 @@ class TransformFrameWdgt extends PanelWdgt
 
   # §4.4 island buffer cache: the fields below are DERIVED render state (never truth) ->
   # serializationTransients below; a deepCopy drops them (see _reactToBeingCopied). Mechanism +
-  # rebuild/reuse/dirty-rect policy: docs/architecture/transforms.md §8.1.
+  # rebuild/reuse/damage-rect policy: docs/architecture/transforms.md §8.1.
   _islandBuffer: undefined                 # the kept content canvas (physical pixels), or undefined
   _islandBufferSlotExtent: undefined       # Point: the slot extent the buffer was built at (the realloc key)
-  _islandBufferDirtyRect: undefined        # undefined (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
+  _islandBufferDamageRects: undefined        # undefined (clean) | Array<Rectangle> (coalesced disjoint, VIRTUAL coords) | "all"
   _islandBufferGeneration: -1        # WorldWdgt.immutableBackBufferGeneration the buffer was built at
                                      # (async glyph-atlas warmup invalidation; -1 ⇒ never built)
   _islandShadowSilhouette: undefined       # black-silhouette twin of _islandBuffer for the shadow pass, or undefined
@@ -44,10 +44,10 @@ class TransformFrameWdgt extends PanelWdgt
   # property WorldWdgt.islandBufferCacheEnabled.
   cachesBuffer: true
 
-  # §4.4 rect-list dirty coalescing: cost-ceiling tunables for the coalesced disjoint dirty-rect list
+  # §4.4 rect-list damage coalescing: cost-ceiling tunables for the coalesced disjoint damage-rect list
   # (docs/archive/island-buffer-cache-rectlist-plan.md; mechanism: docs/architecture/transforms.md §8.1).
-  @ISLAND_DIRTY_MAX_RECTS: 8
-  @ISLAND_DIRTY_AREA_FRACTION: 0.75
+  @ISLAND_DAMAGE_MAX_RECTS: 8
+  @ISLAND_DAMAGE_AREA_FRACTION: 0.75
 
   # Serialization: _lastClaimedExtent and _lastScrollOverflowBox are pure reflow/refit memos
   # (re-derived on the next preferredExtentForWidth / _reFitScrollFrameIfReachChangedNoSettle), NOT
@@ -61,7 +61,7 @@ class TransformFrameWdgt extends PanelWdgt
     "_lastScrollOverflowBox"
     "_islandBuffer"
     "_islandBufferSlotExtent"
-    "_islandBufferDirtyRect"
+    "_islandBufferDamageRects"
     "_islandBufferGeneration"
     "_islandShadowSilhouette"
   ]
@@ -229,7 +229,7 @@ class TransformFrameWdgt extends PanelWdgt
   _transformChangedNoSettle: ->
     # §4.5 invariant (buffer cache): a transform change damages the SCREEN (old ∪ new footprint),
     # NEVER the buffer -- buffer content depends only on VIRTUAL content, the matrix affects only
-    # compositing. So we deliberately do NOT deposit a buffer-dirty rect here. The one exception is
+    # compositing. So we deliberately do NOT deposit a buffer-damage rect here. The one exception is
     # hygiene: if the spec just returned to IDENTITY, the identity composite path bypasses the buffer
     # entirely, so drop it (else a window-sized canvas would linger on a de-tilted explicit island).
     @_dropIslandBufferIfIdentity()
@@ -247,7 +247,7 @@ class TransformFrameWdgt extends PanelWdgt
   _dropIslandBuffer: ->
     @_islandBuffer = undefined
     @_islandBufferSlotExtent = undefined
-    @_islandBufferDirtyRect = undefined
+    @_islandBufferDamageRects = undefined
     @_islandBufferGeneration = -1
     @_islandShadowSilhouette = undefined
 
@@ -420,7 +420,7 @@ class TransformFrameWdgt extends PanelWdgt
   _islandBufferCacheActive: ->
     WorldWdgt.islandBufferCacheEnabled and @cachesBuffer
 
-  # §3.2 invalidation: record a content-dirty region (VIRTUAL coords, THIS island's plane) to be
+  # §3.2 invalidation: record a content-damage region (VIRTUAL coords, THIS island's plane) to be
   # re-rasterised at the next composite. v2 keeps a COALESCED DISJOINT rect-LIST (rects that touch are
   # merged), so a frame damaging several far-apart regions rebuilds only those instead of one bounding
   # box that spans them (docs/archive/island-buffer-cache-rectlist-plan.md §3.2). The "all" sentinel forces a
@@ -429,45 +429,45 @@ class TransformFrameWdgt extends PanelWdgt
   # transform change damages the screen, not the buffer). Coverage invariant (§3.0): the list's union
   # only ever GROWS, so it always ⊇ every deposited grown rect ⇒ the partial rebuild stays byte-identical
   # to a full rebuild for any coalesce policy.
-  _depositIslandBufferDirtyRect: (aRect) ->
+  _depositIslandBufferDamageRect: (aRect) ->
     return if !@_islandBufferCacheActive()
-    return if @_islandBufferDirtyRect == "all"
+    return if @_islandBufferDamageRects == "all"
     return if !aRect? or aRect.isEmpty()
     # The incoming rect is SHADOW-INCLUSIVE in this buffer's plane: both damage lanes grow it by
     # the depositing child's paintedShadowReach in the child's own plane before it reaches here
     # (destination via mapRectToScreen's pre-grown input, source via the shadow-inclusive stash of
-    # _recordDrawnAreaForNextBrokenRects), so an oversized shadow's band is covered exactly. The
+    # _recordDrawnAreaForNextDamageRects), so an oversized shadow's band is covered exactly. The
     # fixed grow below is the AA-fringe/margin floor (AA touches a 1px fringe; without margin the
     # old fringe ghosts under the partial rebuild — the byte-identity gate would catch it).
     # Clamped to the slot in _refreshIslandBuffer. Kept virtual (this island's plane) — the
     # composite maps it to screen.
-    dirty = aRect.expandBy(1).growBy world.brokenRectMargin
-    if !@_islandBufferDirtyRect?
-      @_islandBufferDirtyRect = [dirty]
+    damage = aRect.expandBy(1).growBy world.damageRectMargin
+    if !@_islandBufferDamageRects?
+      @_islandBufferDamageRects = [damage]
       return
-    # Fold every rect `dirty` touches into it, keeping the rest disjoint. Repeat to a fixpoint: a merge
-    # grows `dirty` and may make it touch a rect that was clear before. isIntersecting is edge-inclusive
-    # so adjacent rects coalesce too. Then apply the cost-ceiling collapse (_coalesceDirtyList).
-    remainder = @_islandBufferDirtyRect
+    # Fold every rect `damage` touches into it, keeping the rest disjoint. Repeat to a fixpoint: a merge
+    # grows `damage` and may make it touch a rect that was clear before. isIntersecting is edge-inclusive
+    # so adjacent rects coalesce too. Then apply the cost-ceiling collapse (_coalesceDamageList).
+    remainder = @_islandBufferDamageRects
     loop
-      touching = (r for r in remainder when dirty.isIntersecting r)
+      touching = (r for r in remainder when damage.isIntersecting r)
       break if touching.length == 0
-      remainder = (r for r in remainder when not dirty.isIntersecting r)
-      dirty = touching.reduce ((acc, r) -> acc.merge r), dirty
-    remainder.push dirty
-    @_islandBufferDirtyRect = @_coalesceDirtyList remainder
+      remainder = (r for r in remainder when not damage.isIntersecting r)
+      damage = touching.reduce ((acc, r) -> acc.merge r), damage
+    remainder.push damage
+    @_islandBufferDamageRects = @_coalesceDamageList remainder
 
   # Cost ceiling for the rect-list (§3.4): a disjoint list in, the list to store out. NEVER shrinks
   # coverage — only trades separate rects for their single bounding box, so byte-identity is preserved.
   # Collapses to the bounding box when the rect-list is disabled (the A/B baseline = v1 policy), when the
   # list grows past MAX_RECTS (N clipped subtree walks would cost more than one bbox walk), or when the
   # rects already cover AREA_FRACTION of their bounding box (one bbox walk is then as cheap).
-  _coalesceDirtyList: (list) ->
-    return [@_boundingBoxOfRects list] if !WorldWdgt.dirtyRectListEnabled
+  _coalesceDamageList: (list) ->
+    return [@_boundingBoxOfRects list] if !WorldWdgt.damageRectListEnabled
     bbox = @_boundingBoxOfRects list
-    return [bbox] if list.length > TransformFrameWdgt.ISLAND_DIRTY_MAX_RECTS
+    return [bbox] if list.length > TransformFrameWdgt.ISLAND_DAMAGE_MAX_RECTS
     totalArea = list.reduce ((a, r) -> a + r.area()), 0
-    return [bbox] if totalArea >= TransformFrameWdgt.ISLAND_DIRTY_AREA_FRACTION * bbox.area()
+    return [bbox] if totalArea >= TransformFrameWdgt.ISLAND_DAMAGE_AREA_FRACTION * bbox.area()
     list
 
   _boundingBoxOfRects: (list) ->
@@ -477,11 +477,11 @@ class TransformFrameWdgt extends PanelWdgt
   # resolution, exactly as Widget#…RenderCanvas does for a subtree snapshot. §4.4 cache:
   #  - cache OFF  -> a fresh throwaway buffer every composite (byte-identical to the pre-cache code).
   #  - no buffer / slot EXTENT changed (realloc) -> full rebuild into a NEW canvas.
-  #  - dirty       -> partial rebuild: clear + clipped repaint of the dirty sub-rect (or the whole
+  #  - damaged     -> partial rebuild: clear + clipped repaint of the damage sub-rect (or the whole
   #                   slot for the "all" sentinel), INTO the kept canvas.
   #  - clean       -> reuse as-is (the transform-animation fast path: ZERO rasterisation). Each
   #                   damaged frame composites the island twice (shadow pass, then normal pass); the
-  #                   first refresh cleans the dirty state so the second reuses — no special-casing.
+  #                   first refresh clears the recorded damage so the second reuses — no special-casing.
   # A pure slot MOVE keeps the buffer: content and origin move together and the per-refresh ctx
   # translate uses the CURRENT origin, so the cached pixels stay valid (§3.2).
   _refreshIslandBuffer: ->
@@ -500,18 +500,18 @@ class TransformFrameWdgt extends PanelWdgt
       @_islandBuffer = @_rasterizeIslandContent slot, physExtent, undefined
       @_islandBufferSlotExtent = slotExtent
       @_islandBufferGeneration = WorldWdgt.immutableBackBufferGeneration
-    else if @_islandBufferDirtyRect?
-      # "all" -> one whole-slot rebuild; otherwise clear+HARD-clip+repaint EACH disjoint dirty rect (each
+    else if @_islandBufferDamageRects?
+      # "all" -> one whole-slot rebuild; otherwise clear+HARD-clip+repaint EACH disjoint damage rect (each
       # reuses the same per-rect path that is already byte-identical to a full rebuild). N is capped by
-      # _coalesceDirtyList so this never costs more than one bbox walk.
-      if @_islandBufferDirtyRect == "all"
+      # _coalesceDamageList so this never costs more than one bbox walk.
+      if @_islandBufferDamageRects == "all"
         @_rasterizeIslandContent slot, physExtent, slot
       else
-        for dirtyRect in @_islandBufferDirtyRect
-          clip = dirtyRect.intersect slot
+        for damageRect in @_islandBufferDamageRects
+          clip = damageRect.intersect slot
           @_rasterizeIslandContent slot, physExtent, clip if clip.isNotEmpty()
     # else: clean -> reuse @_islandBuffer as-is.
-    @_islandBufferDirtyRect = undefined
+    @_islandBufferDamageRects = undefined
     @_islandBuffer
 
   # Rasterise the content subtree into the buffer, UN-transformed at device resolution. clip undefined =>
@@ -536,7 +536,7 @@ class TransformFrameWdgt extends PanelWdgt
     bctx.save()
     bctx.translate -slot.origin.x * ceilPixelRatio, -slot.origin.y * ceilPixelRatio
     if clip?
-      # clear the dirty region to transparent before repaint (device px; the translate above is
+      # clear the damage region to transparent before repaint (device px; the translate above is
       # already applied, so this is the VIRTUAL rect × ceilPixelRatio). No appliedShadow here —
       # shadow faintness is applied at composite time.
       bctx.clearRect clipRect.left() * ceilPixelRatio, clipRect.top() * ceilPixelRatio, clipRect.width() * ceilPixelRatio, clipRect.height() * ceilPixelRatio
@@ -552,10 +552,10 @@ class TransformFrameWdgt extends PanelWdgt
       @children.forEach (child) =>
         child.fullPaintIntoAreaOrBlitFromBackBuffer bctx, clipRect, undefined
     finally
-      # restore in `finally`: a throwing child paint propagates to _updateBroken's per-rect
+      # restore in `finally`: a throwing child paint propagates to _repaintDamagedRects's per-rect
       # catch, and a skipped restore would leave the world flag stuck on this island (every
-      # later ordinary paint would stash spurious buffer-dirty deposits against it via
-      # Widget._recordDrawnAreaForNextBrokenRects) and the buffer ctx clipped
+      # later ordinary paint would stash spurious buffer-damage deposits against it via
+      # Widget._recordDrawnAreaForNextDamageRects) and the buffer ctx clipped
       world.paintingIntoIslandBuffer = prevIslandBuffer
       bctx.restore()
     buffer
@@ -643,7 +643,7 @@ class TransformFrameWdgt extends PanelWdgt
   # §4.2 general warp path (Phase 2 — rotation, and rotation+scale): render-straight-then-warp,
   # composing onto the incoming CTM (transform, not setTransform) so the shadow pass' offset
   # translate warps correctly for free. A REAL path clip to (damage ∩ screen footprint) is
-  # MANDATORY — a transformed drawImage can't express the broken-rect clip via src/dst rects, and
+  # MANDATORY — a transformed drawImage can't express the damage-rect clip via src/dst rects, and
   # a spill would paint over un-repainted front content (z-order corruption). Full mechanism,
   # nearest-neighbour sampling, and the whole-buffer-warp v1 trade-off:
   # docs/architecture/transforms.md §8, §9.

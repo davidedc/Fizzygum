@@ -1860,7 +1860,7 @@ assertion a recapture after a regression silently stores two different hashes an
   "waitNoInputsOngoing"` before a screenshot.
 - **Staleness diff-oracles: incremental-vs-full and incremental-vs-REBUILD** (`macroClosingRotatedIslandChildClearsFootprint`,
   `macroOversizedShadowRemovalLeavesNoGhost`, `macroOversizedShadowChildIn{,Scaled}IslandRepaintsBuffer`,
-  `macroShadowAnyDirectionRendersAndErases`, `macroShadowAsymmetricInIslandRepaintsBuffer`): pin a broken-rect
+  `macroShadowAnyDirectionRendersAndErases`, `macroShadowAsymmetricInIslandRepaintsBuffer`): pin a damage-rect
   invariant DIRECTLY, reference-independent — gesture/mutation, `yield "waitNoInputsOngoing"` + `yield "waitForScreenshotReady"`,
   `getImageData` read A off `world.worldCanvasContext` (NO takeScreenshot — a capture-side repaint would hide the bug), then the
   oracle, yield(s), read B, `@assertValuesEqual` an exact-0 RGB-differing-pixel count. TWO oracles, pick by WHERE the staleness
@@ -1883,7 +1883,7 @@ assertion a recapture after a regression silently stores two different hashes an
   dead, an oversized shadow is never fully PAINTED in a quiescent world, so under-paint and under-erase cancel exactly at the
   remove step and the test passes vacuously); (3) an ASYMMETRIC-shadow staleness fixture must pick an offset whose shadow-pass
   mis-cull error (|offset.x − offset.y|, shifting the effective paint window by (0, y−x)) EXCEEDS the flesh-out lanes'
-  `.expandBy(1).growBy WorldWdgt.brokenRectMargin` slack in the direction it shifts — that slack is corner-ward (≈+7px
+  `.expandBy(1).growBy WorldWdgt.damageRectMargin` slack in the direction it shifts — that slack is corner-ward (≈+7px
   bottom-right, +1 top-left), so (12,4) (window shifts UP 8) is fully absorbed and passes vacuously under a scalar-cull plant,
   while (−12,4) (window shifts DOWN 16 into 1px of top slack) fails it with a ~120-px stale band (measured, arbitrary-direction-shadows
   arc Phase 0). Inside `fullImage` there is no such margin, so probe-level checks there catch even the absorbed offsets.

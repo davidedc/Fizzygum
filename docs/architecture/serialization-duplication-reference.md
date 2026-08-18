@@ -233,7 +233,7 @@ class Widget extends TreeNode
 | Class | Transients | Why |
 |---|---|---|
 | `Widget` | `lastTime`; the geometry caches `cachedFullBounds`/`checkFullBoundsCache`, `cachedFullClippedBounds`/`checkFullClippedBoundsCache`, `cachedVisibleBasedOnIsVisibleProperty`/`checkVisibleBasedOnIsVisiblePropertyCache`, `cachedClippedThroughBounds`/`checkClippedThroughBoundsCache`, `cachedClipThrough`/`checkClipThroughCache`, `cachedIsInCollapsedSubtree`/`checkIsInCollapsedSubtreeCache`, `childrenBoundsUpdatedAt` | frame timing + `WorldWdgt.geometryVersion`-keyed derived caches; re-derived on demand after restore |
-| `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcBrokenRectIndex`, `dstBrokenRectIndex` | per-frame broken-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
+| `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
 | `PopUpWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
@@ -334,7 +334,7 @@ Save downloads `world.fzw.json` ("save world snapshot…" world menu); load rout
 
 **The world is DELIBERATELY NOT a table record.** Serializing the world *widget's* own props
 would drag in ~50 transient fields (the render/measure canvases + contexts, seven LRUCaches,
-the input-event queue, the hand, the caret, the broken-rect trackers, a dozen event-listener
+the input-event queue, the hand, the caret, the damage-rect trackers, a dozen event-listener
 CLOSURES, `@appearance`'s `CanvasPattern`) — the walker crashes on the first, exactly defect
 D8. So the world's genuine state goes into an explicit, greppable **`world` envelope section**,
 and only the SNAPSHOT ROOTS are walked into the object table. This is why the world needs no

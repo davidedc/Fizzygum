@@ -56,7 +56,7 @@ class SizeAwareIconAppearance extends IconAppearance
   _paintColoredIcon: (aContext, al, at, w, h) ->
     aContext.save()
 
-    # clip out the dirty rectangle as we are
+    # clip out the damage rectangle as we are
     # going to paint the whole of the box
     aContext.clipToRectangle al,at,w,h
 
@@ -64,7 +64,7 @@ class SizeAwareIconAppearance extends IconAppearance
 
     # deliberately NO useLogicalPixelsUntilRestore(): subclasses draw in
     # integer DEVICE pixels, anchored to the widget's own origin — never to the
-    # dirty rect's corner (al/at), which shifts under partial repaints. The
+    # damage rect's corner (al/at), which shifts under partial repaints. The
     # widget's bounds are integer logical px (integer-placement policy), so
     # these products are exact integers.
     @_paintSizeAware aContext,

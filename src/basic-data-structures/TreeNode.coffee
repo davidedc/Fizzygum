@@ -6,7 +6,7 @@
 # OUT OF SCOPE:
 # It's important to note that this layer
 # knows nothing about visibility, targets,
-# image buffers, dirty rectangles, events,
+# image buffers, damage rectangles, events,
 # position and extent (and hence bounds).
 # Please no invocations to changed or fullChanged
 # or updateBackBuffer in here, and no

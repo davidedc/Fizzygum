@@ -52,10 +52,10 @@ class CaretWdgt extends BlinkerWdgt
 
   # PUBLIC notification — some String/Text widget's rendering changed (buffer swap, reflow, any
   # invalidation). My position/size DERIVE from a text at paint time (justBeforeBeingPainted
-  # re-places me AFTER broken rects were already fleshed out), so a text change must pre-break my
+  # re-places me AFTER damage rects were already fleshed out), so a text change must pre-break my
   # footprint or my old pixels ghost. I invalidate MYSELF here, in the method the text invokes on
   # me (widget-citizenship point 2) — texts never reach into my _changed(). Conservatively fires on
-  # ANY text's change, not just my @target's (a needless extra broken rect is harmless; filtering
+  # ANY text's change, not just my @target's (a needless extra damage rect is harmless; filtering
   # on @target is a possible future tightening).
   noteTextChanged: ->
     @_changed()

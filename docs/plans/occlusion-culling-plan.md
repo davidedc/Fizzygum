@@ -1,11 +1,11 @@
-# Occlusion culling in the broken-rectangles repaint — feasibility + plan
+# Occlusion culling in the damage-rectangles repaint — feasibility + plan
 
 **Status**: AUTHORED 2026-07-08 (feasibility established), VERIFIED + CORRECTED 2026-07-09
 (every file:line claim re-checked against source; key corrections: Boxy inscribed-rect coverage is
 REQUIRED from P1 — free desktop windows are rounded, so a rect-only predicate captures ~nothing at
 top level; `HighlighterWdgt extends RectangleWdgt` inheritance trap; a plain-paint-route identity
 gate excludes the nine widget-level paint overrides + BackBufferMixin; the paint pass has a damage-
-bookkeeping side effect analysed in §1b; broken rects are padded +7px/side), then HARDENED FOR COLD
+bookkeeping side effect analysed in §1b; damage rects are padded +7px/side), then HARDENED FOR COLD
 EXECUTION (full orientation §0, P0 re-anchor phase, code sketches in P1/P2, binding verification
 protocol §5, measurement methodology §6 — prof-interactive `--cull` flag A/B + `--occl` fire-rate
 counters + new `covered` phase). **P0→P3 LANDED 2026-07-09** (Avenue A, top-level, stateless):
@@ -19,8 +19,8 @@ shipped feature is distilled in [`docs/architecture/occlusion-culling.md`](occlu
 P4/P5/P5b/P5c below are OWNER-GATED and NOT started** (Avenue B maintained list; descend /
 per-widget partial coverage; hand-carried drag coverer). **Self-contained: a fresh session executes
 §4 P0→P3 and stops** (already done — this banner records the outcome).
-**Idea (owner, 2026-07-08)**: when a broken rectangle is repainted back-to-front, if some widget
-in the paint stack draws a SOLID OPAQUE rect that fully covers the broken rect, everything
+**Idea (owner, 2026-07-08)**: when a damage rectangle is repainted back-to-front, if some widget
+in the paint stack draws a SOLID OPAQUE rect that fully covers the damage rect, everything
 painted BENEATH it is wasted — detect that and skip painting what's underneath.
 **Provenance**: interactive profiling (2026-07-08) showed ~35% of a busy-drag frame is raw fill
 rasterization (`_fillPolygonsDirect`/`_fillAxisAlignedRect`/`fill_AA_Opaq`/`_fillPixelSpan`) —
@@ -101,7 +101,7 @@ imitate it, it ignores `@color._a`). There is currently NO such skip for CONTENT
   frontmost-coverer pre-scan therefore iterates the array in REVERSE. Z-order between whole
   top-level SUBTREES is strict: an earlier sibling's entire subtree paints beneath a later sibling.
 
-**Existing pruning (none is content occlusion):** `PanelWdgt` narrows the dirty rect to its box
+**Existing pruning (none is content occlusion):** `PanelWdgt` narrows the damage rect to its box
 + stops recursion on children outside it (`ClippingAtRectangularBoundsMixin.coffee:119,169-171`);
 `preliminaryCheckNothingToDraw` (`Widget.coffee:1905`) is a pure visibility gate (invisible / empty
 clip / orphan) with no opacity notion. No `isOpaque`/`covers`/`occlus` flag exists in `src/`.
@@ -161,7 +161,7 @@ plain `RectangleWdgt`s (`RectangleWdgt.coffee:12-18`).
 
 **Coverage test** (logical px; `Rectangle.containsRectangle` exists — inclusive containment,
 `Rectangle.coffee:296-298`): first clamp `testRect = brokenRect.intersect world.boundingBox()` —
-broken rects are PADDED (next paragraph) and overflow the screen at desktop edges, where a
+damage rects are PADDED (next paragraph) and overflow the screen at desktop edges, where a
 maximized window would otherwise NEVER qualify; the canvas clips those pixels anyway. Then a widget
 occludes iff `opaqueCoveredRect().containsRectangle testRect.expandBy(1)` — the covered-rect from
 above, with a +1px margin because painting rounds on the logical grid (`calculateKeyValues` does
@@ -178,7 +178,7 @@ src (where it was last painted) and/or dst (current clipped bounds) rects, every
 on every side, and the coverer must contain THAT. Consolidation is limited: exact-duplicate dedup
 (`:722-735`), per-widget src/dst merge-if-close (`:740-750`), drop-if-contained-in-an-ANCESTOR's
 rect (`checkARectWithHierarchy`, `:753-802`) — no global merging. **So a single opaque widget
-covering an ENTIRE broken rect is COMMON when the change originates inside or behind an opaque
+covering an ENTIRE damage rect is COMMON when the change originates inside or behind an opaque
 window** (a button repaint inside a window body; an animating widget behind a front window —
 everything beneath, in that small rect, is pure overdraw). It is NOT the shape of a window-drag's
 OWN rects: those are window-sized-plus-7px, so the dragged window's src/dst rects are contained
@@ -187,17 +187,17 @@ only by a substantially BIGGER window behind — see §4 P5b/P5c for the drag-ca
 ## 1b. The one paint-pass side effect a skip must respect (verified 2026-07-09)
 
 Painting on the world canvas RECORDS where each widget was painted:
-`recordDrawnAreaForNextBrokenRects` (`Widget.coffee:1924-1928`; called from `Widget.coffee:1980-1981`
+`recordDrawnAreaForNextDamageRects` (`Widget.coffee:1924-1928`; called from `Widget.coffee:1980-1981`
 and the panel path `ClippingAtRectangularBoundsMixin.coffee:173-174`; at most once per frame per
 widget, only when `aContext == world.worldCanvasContext`). The damage system CONSUMES these records
-as the SRC broken rects (`WorldWdgt.coffee:827-829`, `:875-877`) and NILs them after consumption
+as the SRC damage rects (`WorldWdgt.coffee:827-829`, `:875-877`) and NILs them after consumption
 (`:860`, `:902`). Records refresh ONLY via paint-touch — `__commitMoveBy` / `_applyMoveBy` and the
 panel-scroll fast path never touch them.
 
 Skipping an occluded widget also skips its record refresh. This is SAFE, by this invariant: the
 record's contract is "every on-screen pixel of mine lies inside my recorded rect; a nil record
 means no pixel of mine has been painted since it was nil'd". A skip happens only when an opaque
-coverer owns every pixel of the broken rect, so the skipped widget contributes NO new on-screen
+coverer owns every pixel of the damage rect, so the skipped widget contributes NO new on-screen
 pixels there; on-screen pixels can only be created by actually painting, which always refreshes
 the record first. A stale record is therefore a SUPERSET-of-visible claim → costs at most a
 redundant repaint later, never a dropped pixel. Worked nil-record case: widget W moves (src pushed
@@ -208,7 +208,7 @@ shows F). When F later moves away, the revealed-area repaint paints W and refres
 
 Implementation consequences: (a) do NOT walk skipped subtrees just to refresh records — the
 invariant holds without it, and the walk would eat the win; (b) the WORLD's own record MUST still
-refresh when its self-paint is bypassed (one direct `@recordDrawnAreaForNextBrokenRects()` call —
+refresh when its self-paint is bypassed (one direct `@recordDrawnAreaForNextDamageRects()` call —
 the world can itself be a brokenWidget, e.g. on wallpaper change); (c) the pixel-exact suite is the
 empirical proof of (a). Also skipped along with the paint: the `justBeforeBeingPainted?()`
 pre-paint hook (`RectangularAppearance.coffee:57`) — sole implementor is the caret
@@ -220,7 +220,7 @@ simply fails the containment test against everything but a maximized window, whi
 ## 2. Design — two avenues
 
 The recursion is top-down back-to-front, so when a subtree starts you don't yet know a LATER
-sibling covers it. Both avenues fix this by, before painting a broken rect, finding the frontmost
+sibling covers it. Both avenues fix this by, before painting a damage rect, finding the frontmost
 widget that fully+opaquely covers it and beginning actual painting from THERE (skipping everything
 behind it, within that rect). They differ in HOW they find that widget — a stateless per-rect scan
 vs a maintained coverage list. They are complementary and can coexist (start with Avenue A; Avenue
@@ -234,8 +234,8 @@ Both need the **coverage notion** derived in §1 (no `isOpaque` flag exists). Tw
 A false positive in either silently drops pixels (only the pixel-exact SystemTests catch it), so
 both must be CONSERVATIVE — err to `false` / a smaller rect.
 
-### Avenue A — stateless front-to-back pre-scan per broken rect
-Before painting each broken rect, walk the overlapping widgets front-to-back and start from the
+### Avenue A — stateless front-to-back pre-scan per damage rect
+Before painting each damage rect, walk the overlapping widgets front-to-back and start from the
 frontmost `paintsOpaqueFillCovering(rect)`.
 - **Start: top-level only, but BOTH coverage shapes.** Scan `world.children` in REVERSE (the array
   is back-to-front, §1); the first non-ephemeral child whose covered-rect (tight box OR Boxy
@@ -247,7 +247,7 @@ frontmost `paintsOpaqueFillCovering(rect)`.
   `WorldWdgt.fullPaintIntoAreaOrBlitFromBackBuffer` (`:688`), before `super`: compute
   `dirtyPart = aRect.intersect @boundingBox()` (identical to the mixin's narrowing at `:169`);
   reverse-scan for the frontmost coverer index k; if none → `super` exactly as today. If found:
-  (1) `@recordDrawnAreaForNextBrokenRects()` — preserve the world's own bookkeeping, §1b;
+  (1) `@recordDrawnAreaForNextDamageRects()` — preserve the world's own bookkeeping, §1b;
   (2) `for child in @children[k..]` → `child.fullPaintIntoAreaOrBlitFromBackBuffer aContext,
   dirtyPart` — byte-identical child trajectory to the mixin's own loop (`:179-180`);
   (3) replicate the mixin's trailing `@paintStroke aContext, aRect` (`:112-116`; a no-op for the
@@ -258,7 +258,7 @@ frontmost `paintsOpaqueFillCovering(rect)`.
   `world.children` right before `updateBroken` (`WorldWdgt.coffee:1508-1511`, adders at
   `:1265,1295,1320`), so they sit at indices ≥ any coverer and always get painted.
 - **Cost**: stateless (no bookkeeping, never stale); the scan is O(|world.children|) cheap
-  rectangle/property tests per broken rect (tens of children × tens of rects/frame — noise next to
+  rectangle/property tests per damage rect (tens of children × tens of rects/frame — noise next to
   the fills it avoids). Only a later DESCEND into nested coverers pays a real traversal (no
   maintained global `fullBounds` index — issue #150; `PanelWdgt` clipping already prunes most of it).
 
@@ -266,7 +266,7 @@ frontmost `paintsOpaqueFillCovering(rect)`.
 Keep a persistent, incrementally-maintained list of the SIZABLE opaque widgets, each paired with
 the **rectangle it completely covers** (`opaqueCoveredRect()`, in world/device space, already
 intersected with its `clippedThroughBounds()` so an ancestor clip can't over-claim) plus a z-order
-key. Then repainting a broken rect is a fast scan of this SHORT list: find the frontmost entry
+key. Then repainting a damage rect is a fast scan of this SHORT list: find the frontmost entry
 whose covered-rect `containsRectangle(brokenRect)`, start painting from that widget, and paint
 only the widgets IN FRONT of it. This is the "top-n biggest opaque widgets" idea the TODO already
 suggests (`ClippingAtRectangularBoundsMixin.coffee:156`), made precise.
@@ -276,7 +276,7 @@ suggests (`ClippingAtRectangularBoundsMixin.coffee:156`), made precise.
   EXACTLY §1's `opaqueCoveredRect()` (tight box / full bounds with opaque backgroundColor / Boxy
   radius+1 inset / nil) — one definition, defined once in P1, shared by both avenues; do not fork it.
 - **"Sizable"** = covered-rect area above a threshold (small widgets aren't worth tracking; the win
-  is big background rects/windows). Keeps the list short → O(list) per broken rect.
+  is big background rects/windows). Keeps the list short → O(list) per damage rect.
 - **Maintenance / invalidation** (the cost of this avenue): the list entry for a widget is
   (re)computed only when something that affects its coverage changes — add/remove, move/resize,
   alpha/color/backgroundColor/cornerRadius/padding change, **appearance swap** (a re-parented
@@ -286,9 +286,9 @@ suggests (`ClippingAtRectangularBoundsMixin.coffee:156`), made precise.
   layout / add-remove paths rather than rebuilding per frame. Z-order key: for top-level widgets
   it's the `world.children` index; nested coverers need the ancestor chain's order (defer to a
   later phase — start with top-level coverers only, same as Avenue A's simple start).
-- **Cost**: O(short-list) rectangle checks per broken rect (no traversal), at the price of
+- **Cost**: O(short-list) rectangle checks per damage rect (no traversal), at the price of
   maintenance + a staleness surface (a missed invalidation → dropped pixels). Favoured when there
-  are many broken rects per frame and few large opaque widgets — exactly the busy-desktop drag.
+  are many damage rects per frame and few large opaque widgets — exactly the busy-desktop drag.
 
 **Recommendation**: implement Avenue A first (stateless, no staleness surface, easiest to prove
 correct against the pixel-exact suite). Then add Avenue B as the scaling path once the predicate +
@@ -306,7 +306,7 @@ assert B's chosen start-widget matches A's) during bring-up.
    Boxy inset = radius+1. Padding≠0 and a translucent `backgroundColor` are NOT exclusions — the
    tight-box covered-rect already accounts for both (§1). Prefer false negatives.
 2. **Shadows paint OUTSIDE bounds** (`Widget.coffee:1975`, subtree re-painted offset/faint behind
-   itself). The containment predicate already makes this safe: ALL painting during a broken-rect
+   itself). The containment predicate already makes this safe: ALL painting during a damage-rect
    pass is confined to that rect (every paint path intersects the passed clip; the shadow path
    translates ctx AND clip together, `Widget.coffee:1995-2004`, so its screen footprint stays
    inside the rect), and requiring coveredRect ⊇ rect means every skipped pixel — including any of
@@ -332,7 +332,7 @@ assert B's chosen start-widget matches A's) during bring-up.
    over-invalidation (drop the entry on any doubt → falls back to painting, never to dropping).
    The inscribed covered-rect for rounded/Boxy shapes must be inset conservatively (never include
    an anti-aliased corner pixel).
-6. **Paint-pass bookkeeping** — the skip bypasses `recordDrawnAreaForNextBrokenRects` for skipped
+6. **Paint-pass bookkeeping** — the skip bypasses `recordDrawnAreaForNextDamageRects` for skipped
    widgets; §1b proves this safe (and requires the world's own record call in the bypass path).
    Any future consumer of `clippedBoundsWhenLastPainted` / `fullClippedBoundsWhenLastPainted` must
    preserve the §1b invariant.
@@ -346,7 +346,7 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
    green BEFORE you change anything (if not: STOP and report — you may be sitting on another
    session's in-flight state; `git -C Fizzygum status` to check). Re-locate the plan's anchors by
    SYMBOL (lines drift): `updateBroken`, `fullPaintIntoAreaOrBlitFromBackBuffer` (WorldWdgt +
-   Widget + ClippingAtRectangularBoundsMixin), `recordDrawnAreaForNextBrokenRects`,
+   Widget + ClippingAtRectangularBoundsMixin), `recordDrawnAreaForNextDamageRects`,
    `fleshOutBroken` / `fleshOutFullBroken`, `_deriveAndSetBodyAppearance`, `maxShadowSize`;
    confirm no `opaqueCoveredRect`/`paintsOpaqueFillCovering` exists yet. If any §1 fact no longer
    holds, STOP and re-derive before proceeding. Then do the MEASUREMENT-ONLY harness extension of
@@ -405,7 +405,7 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
      @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
    # Occlusion culling (docs/plans/occlusion-culling-plan.md §2A): if the frontmost opaque coverer of
-   # this broken rect exists, paint starting FROM it and report true; else false (normal path).
+   # this damage rect exists, paint starting FROM it and report true; else false (normal path).
    _paintedFromFrontmostCoverer: (aContext, aRect) ->
      return false if !WorldWdgt.occlusionCullingEnabled
      return false if aContext != @worldCanvasContext    # cull ONLY the live screen paint
@@ -421,7 +421,7 @@ optional follow-ons gated on P3's measurements AND an explicit owner go-ahead.
          covererIndex = i
          break
      return false if !covererIndex?
-     @recordDrawnAreaForNextBrokenRects()               # §1b(b): world's own bookkeeping must stay
+     @recordDrawnAreaForNextDamageRects()               # §1b(b): world's own bookkeeping must stay
      for i in [covererIndex ... @children.length]
        @children[i].fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPart
      @paintStroke aContext, aRect                       # replicate the mixin's trailing stroke (§2A)
@@ -528,7 +528,7 @@ minifier-drop_console trap that voided the S1 "win").
    fully over the AnalogClock window (locate it the way `fizzyPaintCanvasArea` locates FizzyPaint;
    drag it there or move it via the public API), release, then hold ~180 input-free frames. The
    clock still animates every cycle (post-Item-C1 its face is back-buffered but the hands repaint
-   live), producing small broken rects fully inside the covering window — the exact §1 sweet spot;
+   live), producing small damage rects fully inside the covering window — the exact §1 sweet spot;
    expect a high fire-rate here. Update the report loop's phase list (`['drag','draw']`) to
    include it.
 
@@ -560,11 +560,11 @@ asks for a ledger-grade refresh.
   (`HTMLCanvasElement.createOfPhysicalDimensions`, honouring the backend switch) and byte-compare
   the R region; `debugger`/alert on mismatch. Sound because BOTH paints fully determine every
   pixel of R (normal path: the desktop fill covers R first; culled path: the coverer does), and
-  scratch painting cannot disturb the damage bookkeeping (`recordDrawnAreaForNextBrokenRects`
+  scratch painting cannot disturb the damage bookkeeping (`recordDrawnAreaForNextDamageRects`
   gates on `aContext == world.worldCanvasContext`, §1b). Run the suite + prof-interactive once
   with it on; ship default-off.
 - **`torture-headless.js` overnight sample** (tests repo; the generic nondeterminism hunter): the
   feature adds a geometry-dependent BRANCH to the paint path — under load/dpr2 the per-cycle
-  event drain shifts WHICH broken rects exist and hence which get culled, and the pixels must
+  event drain shifts WHICH damage rects exist and hence which get culled, and the pixels must
   stay invariant regardless. A few-hour `node scripts/torture-headless.js --speeds=fast,fastest
   --shards=2,4` after landing samples exactly that claim. Not a gate; a confidence-builder.

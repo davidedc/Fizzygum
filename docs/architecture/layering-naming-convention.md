@@ -169,7 +169,7 @@ The valve `_reFitContainer` and the react-down `_reLayoutChildren` are the apply
 layout-method family) — retained, now driven by the up-edge rather than by the mutators.
 
 ### 2.7 PaintBounds — the repaint dirty-region vocabulary
-The broken-rectangles repaint loop uses a **`PaintBounds`** vocabulary (`paintBoundsMaybeChanged` /
+The damage-rectangles repaint loop uses a **`PaintBounds`** vocabulary (`paintBoundsMaybeChanged` /
 `hasMaybeChangedPaintBounds` / the `Full` variants / `widgetsWithMaybeChangedPaintBounds`). This keeps three formerly
 collision-named "dirty" subsystems self-evident:
 - **PaintBounds** — repaint dirty-regions (this vocabulary);

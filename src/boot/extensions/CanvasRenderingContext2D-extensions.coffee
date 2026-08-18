@@ -12,7 +12,7 @@ CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName
   objectIBelongTo[myPropertyName] = objectIBelongTo[myPropertyName.replace "Context", ""].getContext "2d"
 
 # used to clip any subsequent drawing on the context
-# to the dirty rectangle.
+# to the damage rectangle.
 CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
   @beginPath()
   @moveTo Math.round(al), Math.round(at)

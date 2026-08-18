@@ -108,7 +108,7 @@ demand and never stored as truth.**
 - **Rect maps — two twins:**
   - `mapRect` (via `_mapRectWithMatrix`) → the **integer, padded** AABB of the 4 transformed
     corners (floor mins, ceil maxes, **+1px** for AA bleed). This is the **damage / footprint**
-    box, safe to feed the broken-rect machinery unchanged.
+    box, safe to feed the damage-rect machinery unchanged.
   - `mapRectExact` (via `_mapRectExactWithMatrix`) → the **exact, unpadded, possibly-fractional**
     AABB of the same corners. This is the **screen-family** backing store — never fed to
     layout/moveTo. Kept as a parallel method so `mapRect`'s proven damage padding stays
@@ -344,7 +344,7 @@ invisible-panel blit; else → `_compositeIslandBuffer`. Three composite paths, 
 - **rotation** (`_compositeTransformed`) — render-straight-then-warp: `ctx.transform` composes
   `(device × island matrix)` onto the incoming CTM and `drawImage`s the buffer onto the slot box
   under a **mandatory** real path clip to `(damage ∩ screen footprint)`. A transformed
-  `drawImage` cannot express the broken-rect clip via src/dst rects, and a spill would paint over
+  `drawImage` cannot express the damage-rect clip via src/dst rects, and a spill would paint over
   un-repainted front content (z-order corruption). v1 warps the **whole** buffer under the clip
   (correctness-first).
 
@@ -389,7 +389,7 @@ dirty sub-rect. Fields on `TransformFrameWdgt` (all **derived render state**, li
 - `_islandBuffer` — the kept content canvas (physical pixels).
 - `_islandBufferSlotExtent` — the slot extent it was built at (the realloc key; a slot **extent**
   change forces a full rebuild, a pure move keeps the buffer).
-- `_islandBufferDirtyRect` — `undefined` (clean) | a **coalesced disjoint rect-list** (virtual coords) |
+- `_islandBufferDamageRects` — `undefined` (clean) | a **coalesced disjoint rect-list** (virtual coords) |
   `"all"`.
 - `_islandBufferGeneration` — the `WorldWdgt.immutableBackBufferGeneration` the buffer was built
   at.
@@ -408,17 +408,17 @@ on; the OFF path is byte-identical to the pre-cache rebuild-every-time.
 
 **A transform change never dirties the buffer** (`_transformChangedNoSettle` — the §4.5
 invariant: buffer content depends only on virtual content; the matrix affects only compositing).
-Content-dirty rects are deposited **only** from the two damage flesh-out lanes
-(`Widget::mapRectToScreen` with `depositBufferDirty = true`, and the source lane) via
-`_depositIslandBufferDirtyRect`, which grows each rect by `expandBy(1).growBy world.brokenRectMargin`
+Content-damage rects are deposited **only** from the two damage flesh-out lanes
+(`Widget::mapRectToScreen` with `depositBufferDamage = true`, and the source lane) via
+`_depositIslandBufferDamageRect`, which grows each rect by `expandBy(1).growBy world.damageRectMargin`
 (a child's shadow + AA fringe) and coalesces the disjoint list. A cost ceiling
-(`_coalesceDirtyList`, gated by `WorldWdgt.dirtyRectListEnabled` and the class constants
+(`_coalesceDamageList`, gated by `WorldWdgt.damageRectListEnabled` and the class constants
 `ISLAND_DIRTY_MAX_RECTS` / `ISLAND_DIRTY_AREA_FRACTION`) collapses the list to its bounding box
 when N clipped subtree walks would cost more than one bbox walk
 (`docs/archive/island-buffer-cache-rectlist-plan.md`). The identity path never reads the buffer,
 so returning to identity drops it (`_dropIslandBufferIfIdentity`).
 
-### 8.2 Shadows and broken-rect under rotation
+### 8.2 Shadows and damage-rect under rotation
 
 The island is transparent (`@appearance = undefined`), so it casts its **content's** shadow, not a box
 silhouette: `_fullPaintIntoAreaOrBlitFromBackBufferJustShadow` reverts to the base `Widget`
@@ -517,7 +517,7 @@ window is seen as a window by drop policy). Full serialization internals:
 - Archived closed plans (see `docs/archive/INDEX.md`):
   - `affine-geometry-api-plan.md` — the two-vocabulary API + `mapRectExact` (full table).
   - `island-buffer-cache-plan.md` + `island-buffer-cache-rectlist-plan.md` — the buffer cache and
-    disjoint dirty rect-list.
+    disjoint damage rect-list.
   - `drop-into-rotated-container-layout-transparency-plan.md` — island layout transparency on
     resize.
   - `duplication-and-save-preserve-transforms-plan.md` — the enclosing-island figure lookup at

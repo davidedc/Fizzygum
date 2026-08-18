@@ -216,7 +216,7 @@ class TransformSpec
   # Map a Rectangle through `m` and return the integer, axis-aligned AABB of the
   # 4 transformed corners: floor the mins, ceil the maxes, then pad by 1px (AA
   # coverage bleeds < 1px past the geometric edge). Safe to feed into the existing
-  # broken-rect machinery unchanged (plan §4.3). For a pure uniform scale (Phase 1)
+  # damage-rect machinery unchanged (plan §4.3). For a pure uniform scale (Phase 1)
   # the pre-image stays axis-aligned so this is exact-ish; padding is conservative.
   _mapRectWithMatrix: (m, r) ->
     xs = [r.left(), r.right(), r.left(),  r.right()]
