@@ -1345,6 +1345,19 @@ assertion a recapture after a regression silently stores two different hashes an
   is also where a wire's **"fires per event"** toggle lives (`macroConnectionFiresPerEventToggle` navigates it by hand: row
   prefix, then `@moveToItemContainingOfMenuAndClick_InputEvents … "fires per event"` — CONTAINING, because a ticked row carries
   a leading ✓).
+- **Reach a SHAPE's own menu item ("corner radius...")** (`macroCornerRadiusPromptOnANonBoxWidget`): an appearance
+  contributes items to its widget's menu (`Widget.addShapeSpecificMenuItems` delegates), so they sit LAST. Two traps make
+  the fixture, not the navigation, the hard part:
+  ⚠⚠ **A right-click lands on the TOPMOST widget under it, and a widget with children answers with the ancestor
+  HIERARCHY menu of the child** ("a String ➜" / "a SimpleButton ➜"), not its own flat one. A `SimpleButtonWdgt` carrying a
+  face is therefore two hops from its own items, and so is any widget inside a container — the flat menu is what a
+  childless DIRECT world child gives you. Pick the fixture that gives you the menu you mean, or navigate the hierarchy
+  row first with `@moveToItemStartingWithOfMenuAndClick_InputEvents`.
+  ⚠ **`ButtonWdgt`'s shape is `(target, action, opts)`** — a face is the `opts` key `face` holding a WIDGET. A third
+  positional string is silently accepted (it just becomes `opts`) and yields a button with no face at all: no throw,
+  nothing drawn.
+  ⚠ A prompt opens with an edit already on its entry field and the CURRENT value in it, so
+  `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` before typing, or the new digits join the old.
 - **PROMOTE a wire to two-way — "follows it too"** (`macroSliderPromotedToFollowAScrollPanel`, connector §A2): the SAME row,
   one item further down. A wire only DRIVES; this makes the controller follow the pin it drives as well, so a slider wired onto
   a `ScrollPanelWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "fires per event" — row prefix, then

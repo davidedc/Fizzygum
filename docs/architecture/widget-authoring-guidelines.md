@@ -579,7 +579,18 @@ pins: -> super().concat [
   fires, and today exactly one class in the tree can honestly claim it.
 - **Declare a pin on the class that implements its verb.** Declaring it higher advertises it for
   every subclass, and a target property that dispatches to a missing method fails *silently* —
-  `consumer[action]?.call` swallows the miss.
+  `consumer[action]?.call` swallows the miss. The runtime gate for this is
+  `Fizzygum-tests/scripts/pin-sweep-headless.js` (`npm run pin-sweep`): a pin must resolve on every
+  class that is a leaf or is somewhere `new`-ed, so a base that declares pins for its subclasses to
+  implement is fine and a concrete class inheriting one it does not implement is not.
+- ⚠ **An APPEARANCE's pins are serviced by the WIDGET, not by the appearance.** `Widget.pins`
+  concatenates `@appearance?.pins?()`, and a pin's setter is dispatched on the widget — so declaring
+  a pin on a shape is a demand on *everything that wears it*, including subclasses of the wearers.
+  `corner radius` was declared by three appearances and implemented on one class, which left sixteen
+  advertising a control that could not work; the field and its setter now live on `Widget`, beside
+  `appearance`, because the shape reads `@widget.cornerRadius` unconditionally and so the property
+  was always part of that contract. If you give a shape a pin, put its verb where every wearer can
+  answer it.
 - Dropping `super()` from the chain silently narrows your widget to only its own pins.
 
 **To drive others**, `@augmentWith ControllerMixin`, bind with `wireTo theTarget, action` (which

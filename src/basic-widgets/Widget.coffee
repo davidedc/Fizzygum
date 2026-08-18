@@ -73,6 +73,17 @@ class Widget extends TreeNode
 
   appearance: undefined
 
+  # HOW ROUND MY CORNERS ARE, when I wear an appearance that has any. It lives HERE rather than on
+  # BoxWdgt because it is part of the widget↔appearance contract and always was: every rounded
+  # appearance reads `@widget.cornerRadius` unconditionally and supplies its own default when the
+  # widget declares none (BoxyAppearance.getCornerRadius). Undeclared, that read was the only
+  # statement of the contract — and its setter twin lived on ONE subclass, so the "corner radius..."
+  # prompt and the `corner radius` pin that every rounded widget offers reached nothing on the
+  # sixteen classes that are not BoxWdgts.
+  #   `undefined` means "I have no opinion, use the shape's default" — which is why the field is not
+  # given a number here.
+  cornerRadius: undefined
+
   dragsDropsAndEditingEnabled: true
 
   # we conveniently keep all geometry information
@@ -2518,6 +2529,28 @@ class Widget extends TreeNode
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
+  # The write half of the `corner radius` pin an appearance contributes (BoxyAppearance /
+  # BubblyAppearance / MenuAppearance all declare it), and the target of that shape's
+  # "corner radius..." prompt. Both dispatch on the WIDGET — a pin's setter is called as
+  # `consumer[pin.setterName]` and the prompt as `@widget[action]` — which is why this must live
+  # where every wearer can answer it, not on the one subclass that happened to introduce it.
+  #   The pin-setter contract (widget-authoring-guidelines §11): a wire puts the VALUE in slot 1,
+  # the prompt dispatch puts the widget being configured there and the value-giving widget in
+  # slot 2, so slot 2 is read first.
+  setCornerRadius: (radiusOrWidgetGivingRadius, widgetGivingRadius) ->
+    if widgetGivingRadius?.getValue?
+      radius = widgetGivingRadius.getValue()
+    else
+      radius = radiusOrWidgetGivingRadius
+
+    if typeof radius is "number"
+      @cornerRadius = Math.max radius, 0
+    else
+      newRadius = parseFloat radius
+      if !isNaN newRadius
+        @cornerRadius = Math.max newRadius, 0
+    @_changed()
+
   setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
     if widgetGivingColor?.getColor?
       aColor = widgetGivingColor.getColor()

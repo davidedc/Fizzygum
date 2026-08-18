@@ -2,23 +2,10 @@
 
 class BoxWdgt extends Widget
 
-  cornerRadius: undefined
-
+  # `cornerRadius` and its setter live on Widget: every rounded appearance reads
+  # `@widget.cornerRadius`, so the property belongs to the widget↔appearance contract rather than to
+  # me. What is mine is the DEFAULT — a box is round-cornered unless told otherwise, where a plain
+  # widget has no opinion and takes the shape's own default.
   constructor: (@cornerRadius = 4) ->
     super()
     @appearance = new BoxyAppearance @
-
-
-  setCornerRadius: (radiusOrWidgetGivingRadius, widgetGivingRadius) ->
-    if widgetGivingRadius?.getValue?
-      radius = widgetGivingRadius.getValue()
-    else
-      radius = radiusOrWidgetGivingRadius
-
-    if typeof radius is "number"
-      @cornerRadius = Math.max radius, 0
-    else
-      newRadius = parseFloat radius
-      if !isNaN newRadius
-        @cornerRadius = Math.max newRadius, 0
-    @_changed()

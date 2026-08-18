@@ -212,6 +212,27 @@ paint-readonly gates and wired into `fg gauntlet`:
   premise "any nested settle in a callback would re-enter/throw" is false for an orphan. It still catches the INDIRECT
   attached leak the static [J] cannot follow.)
 
+**Two RUNTIME WIRING sweeps (on-demand / gauntlet legs, NOT build-time).** Where the audits above wrap prototypes over
+the whole suite, these BOOT A PAGE and drive one mechanism to exhaustion — each the runtime half of a static gate whose
+blind spot is structural:
+- **menu sweep** (`Fizzygum-tests/scripts/menu-click-sweep-headless.js`, `npm run menu-sweep`, `fg menusweep`) —
+  DISPATCHES EVERY MENU ACTION and fails on a throw; the other half of `check-menu-actions.js`, which cannot see a
+  parameter that is read as the wrong THING. ⚠ Its own blind spot: it dispatches ONE step. A gesture that opens a PROMPT
+  is covered only as far as the prompt appearing — pressing its Ok is a second dispatch it never makes, and that is
+  exactly where the corner-radius crash below lived.
+- **pin sweep** (`Fizzygum-tests/scripts/pin-sweep-headless.js`, `npm run pin-sweep`) — EVERY PIN A CLASS ADVERTISES
+  MUST BE SERVICEABLE. A `PinSpec` names its setter/getter by STRING and the dataflow dispatches them as
+  `consumer[name]?.call`, so an unresolved one is offered in the choose-target-property menu, accepts a wire, and
+  silently does nothing forever. It is a sweep rather than a scan for the same reason the menu one is: `pins()` is
+  COMPOSED (`super().concat @_inputPins()`) and a subclass can NARROW it, so a textual analysis reports pins a class does
+  not have. The rule resolves DOWNWARD with no `isAbstract` marker — a pin must resolve on every class that is a LEAF or
+  is somewhere `new`-ed, so a base declaring pins for its subclasses is skipped by what the class graph already states.
+  Two extra sections: appearance-contributed pins (invisible to a bare prototype, since `@appearance` is assigned in a
+  constructor) checked on the classes that WEAR the appearance; and `announces`, checked by a per-pin FIXTURE that drives
+  the setter and watches for a dataflow mark — a NECESSARY condition, never a proof, since no analysis can enumerate a
+  pin's write paths. ⭐ Its first run found `corner radius` advertised by 16 classes with no `setCornerRadius`, which was
+  also a hard THROW in the shape's own prompt.
+
 They verify the *behaviour* the names promise (the ground truth the static scanner can't follow through dynamic
 dispatch). Full description: `docs/architecture/layering-naming-convention.md`.
 
