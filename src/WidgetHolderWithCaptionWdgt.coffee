@@ -63,8 +63,11 @@ class WidgetHolderWithCaptionWdgt extends Widget
     true
 
 
-  setColor: (theColor, ignored) ->
-    @icon.setColor theColor
+  # ⚠ SHAPE: `(valueOrWidget, widgetGivingValue)` — the colour prompt delivers the picker in SLOT 2
+  # (slot 1 holds this holder itself), a wire delivers the bare colour in slot 1. Both slots must
+  # forward so the icon's own setColor resolves whichever leg is filled.
+  setColor: (aColorOrAWidgetGivingAColor, widgetGivingColor) ->
+    @icon.setColor aColorOrAWidgetGivingAColor, widgetGivingColor
 
   # width → height rule: the icon band scales with the width (60/95 of it, the
   # standard extent's proportion) while the caption band is font-fixed.

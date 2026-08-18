@@ -52,10 +52,15 @@ const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (?:(?:\(.*?\)\s*)?[-=]>|\($
 // ⚠ (b) tests paren BALANCE, not merely `: (`, so it cannot fire on an option-object key whose value
 // is a parenthesised expression (`defaultContents: ((@grow ? 1) * 100).toString()`) — those close on
 // the line. An earlier draft of this guard omitted the balance test and flagged nine of them.
+// ⚠ The precondition admits a SPACE before the colon (`name : ->`) precisely so such a line reaches
+// the arrow test below and FAILS the gate: that spelling is a third header variation METHOD_HEADER
+// does not match, found live on 13 methods by the 2026-08-18 dispatch-slot census — and an earlier
+// precondition (`\w*: \S`) skipped those lines entirely, making the guard blind to exactly the bug
+// class it exists to catch. The canonical spelling is colon flush against the name.
 function unseenMethodHeaders(lines) {
   const out = [];
   lines.forEach((raw, i) => {
-    if (!/^  [A-Za-z_]\w*: \S/.test(raw)) return;         // a class-level key with a value
+    if (!/^  [A-Za-z_]\w*\s*: \S/.test(raw)) return;      // a class-level key with a value
     if (METHOD_HEADER.test(raw)) return;                  // …that we can already see
     const code = raw.replace(/#.*$/, '');
     let depth = 0;

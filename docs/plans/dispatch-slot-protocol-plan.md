@@ -154,6 +154,29 @@ are the conditionality. The names (`dataSource`/`widgetEnv` → whatever the sta
 land in the SAME arc, with the naming-audit discipline (both repos, docs, zero-leftover
 absolute-path greps).
 
+**DECIDED 2026-08-18 (owner-approved, census attached): O4 with the prompt family converging on
+wire-style VALUE delivery.** Three honest sub-protocols:
+
+- **Menu rows** — `ButtonWdgt.trigger` passes the button ITSELF as slot 1 (`@target[@action].call
+  @target, @, @subjectOfAction, @actionArgument`): the stored self-pointer fill
+  (`item.dataSourceWidgetForTarget = item`) is redundant state and dies; slot 2 is the panel's
+  target under its honest name (the menu's subject); the census proves every reachable menu reader
+  already treats the slots exactly this way, so ZERO menu verbs migrate.
+- **Prompts** — the Ok row targets the PROMPT itself (`addMenuItem "Ok", @, "fireCallback"`);
+  `PromptWdgt.fireCallback` extracts the value from its own editor (per-subclass `_promptValue`:
+  entry field / picker) and calls `@target[@callback].call @target, value`. `panel.environment`
+  dies at its three writers, so `environment` leaves `MenuWdgt`/`MenuRowsPanelWdgt` wholesale and
+  the crossover collapses. Every prompt-reached setter then takes ONE honest value parameter —
+  the ⚠ SHAPE convention (slider setters' three-leg interrogation included) dies with it. The
+  census's finding-2 bug is the evidence for this direction: its author wrote the setter the way
+  the protocol naturally reads, and value delivery makes that natural expectation the contract.
+- **Wires** — unchanged `(value)`; the former SHAPE setters become exact convergence instead of a
+  bridged mismatch.
+
+`argumentToAction1/2` collapse to one `actionArgument` (one reachable consumer in the tree,
+position 4 never filled — re-verify direct callers before deleting). Phase 3's checkable
+invariant: a prompt-reached setter with more than one parameter is a gate failure.
+
 ## §5 Central risks
 
 1. **This is the six-live-bugs neighbourhood.** Every change risks re-introducing exactly the bug
@@ -215,8 +238,13 @@ prior arcs; §5 of the latter is the as-built dispatch record) ·
   space-before-colon blind spot (13 methods invisible to every gate), and a LIVE bug confirmed in
   isolation (`WidgetHolderWithCaptionWdgt.setColor` sets `icon.color` to the widget itself from
   the colour prompt).
-- Phase 1 (owner decision on §4): **pending — STOPPED here per §6.**
-- Phases 2–3: pending Phase 1.
+- Phase 1: **DECIDED 2026-08-18** — O4 + value-delivery convergence; the full shape is recorded in
+  §4's DECIDED block. By-catch fixes landed first (header-lib space-colon guard + 13
+  normalizations + the holder setColor forward, all gate-verified).
+- Phase 2: **IN EXECUTION** — order: (P2a) prompt self-delivery + setter collapse + environment
+  removal, (P2b) trigger reshape (pass `@`, subject rename, crossover death), (P2c)
+  argument collapse + cross-repo rename/doc sweep. Gates per §6.
+- Phase 3: pending Phase 2.
 
 ## §10 Cold-start prompt (paste into a fresh session)
 

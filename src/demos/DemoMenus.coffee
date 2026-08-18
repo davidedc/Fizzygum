@@ -265,40 +265,40 @@ class DemoMenus
 
     menu.popUpAtHand()
 
-  createFizzygumLogoWithTextIconWdgt : ->
+  createFizzygumLogoWithTextIconWdgt: ->
     world.create new FizzygumLogoWithTextIconWdgt
 
-  createVaporwaveBackgroundIconWdgt : ->
+  createVaporwaveBackgroundIconWdgt: ->
     world.create new VaporwaveBackgroundIconWdgt
 
-  createCFDegreesConverterIconWdgt : ->
+  createCFDegreesConverterIconWdgt: ->
     world.create new CFDegreesConverterIconWdgt
 
-  createFizzygumLogoIconWdgt : ->
+  createFizzygumLogoIconWdgt: ->
     world.create new FizzygumLogoIconWdgt
 
-  createVaporwaveSunIconWdgt : ->
+  createVaporwaveSunIconWdgt: ->
     world.create new VaporwaveSunIconWdgt
 
-  createLittleWorldIconWdgt : ->
+  createLittleWorldIconWdgt: ->
     world.create new LittleWorldIconWdgt
 
-  createChangeFontIconWdgt : ->
+  createChangeFontIconWdgt: ->
     world.create new ChangeFontIconWdgt
 
-  createSimpleSlideIconWdgt : ->
+  createSimpleSlideIconWdgt: ->
     world.create new SimpleSlideIconWdgt
 
-  createTypewriterIconWdgt : ->
+  createTypewriterIconWdgt: ->
     world.create new TypewriterIconWdgt
 
-  createLittleUSAIconWdgt : ->
+  createLittleUSAIconWdgt: ->
     world.create new LittleUSAIconWdgt
 
-  createMapPinIconWdgt : ->
+  createMapPinIconWdgt: ->
     world.create new MapPinIconWdgt
 
-  createSaveIconWdgt : ->
+  createSaveIconWdgt: ->
     world.create new SaveIconWdgt
 
   popUpArrowsIconsMenu: (widgetOpeningThePopUp) ->

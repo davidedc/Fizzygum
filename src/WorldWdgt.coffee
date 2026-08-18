@@ -1824,7 +1824,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @automator.player.replayTestCommands()
     
     # currently unused
-    @runOtherTasksStepFunction()
+    @_runOtherTasksStepFunction()
     
     # paces the FETCHING of coffeescript source batches, one per frame (early in
     # the cycle so a fetch gets the whole frame of network time); compiling them
@@ -1983,7 +1983,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       @errorConsole.contents.showUpWithError err
 
   
-  runOtherTasksStepFunction : ->
+  _runOtherTasksStepFunction: ->
     for task in @otherTasksToBeRunOnStep
       task()
 
