@@ -85,7 +85,10 @@ class ColorPickerWdgt extends Widget
   # reads.) The names are asymmetric because each is fixed from its own side: `getColor` is the
   # duck-typed spelling Widget.setColor and the spreadsheet's cell reader both look for, and
   # `setColor` was already taken by the chrome.
-  pins: -> super().concat [ new PinSpec "picked color", "color", set: "setPickedColor", get: "getColor" ]
+  # `picked color` ANNOUNCES: `setPickedColor` is the ONLY write path (audited — `@feedback` is mine
+  # alone, no other class touches it, and the constructor runs before anyone can be following me), and
+  # it raises `updateTarget`, which announces whether or not I drive anything.
+  pins: -> super().concat [ new PinSpec "picked color", "color", set: "setPickedColor", get: "getColor", announces: true ]
   principalPinLabel: "picked color"
 
   # the wire verb every controller ends at: fire my picked colour to whatever I am aimed at.

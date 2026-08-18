@@ -224,6 +224,16 @@ class SliderWdgt extends CircleBoxWdgt
     return unless range?
     @_updateSpecs range.start, range.stop, wire.target[pin.getterName](), range.size
 
+  # Could I FOLLOW this pin of this target — is there a thumb geometry to derive?
+  # (ControllerMixin._canTrackWire, which asks this of the follower because only the follower knows
+  # what it can render.) A scale is what I need and what most targets have no answer for, so this is
+  # the condition that keeps the "follows it too" row off almost every wire.
+  #   ⚠ Asked again at fire time by reflectTarget, deliberately rather than cached: a menu is built
+  # at one moment and clicked at another, and a target can be re-sized or emptied in between — the
+  # same reasoning _bindableTargets states for the bind chooser.
+  _canReflectPin: (theTarget, pin) ->
+    return (theTarget.sliderRangeForPin? pin)?
+
   # My `value` pin's reader (dataflow spec §9.3), which is also what exportedValue answers because
   # `value` is my principal pin: a slider-valued spreadsheet cell reads as its number, and a
   # reference to that cell yields the number. The duck-typed cluster already probed `x.getValue?()`
@@ -393,6 +403,16 @@ class SliderWdgt extends CircleBoxWdgt
   # `value` is my principal pin and the only READABLE one here (getValue -> @value). start/stop/size
   # are write-only for want of readers, not by policy. Each pin states its own kinds, so "a bang takes
   # anything" and "a value takes a number or the string spelling of one" are said once each.
+  # ⚠ `value` is the ONE readable pin in the tree that cannot declare `announces`, and the reason is
+  # worth keeping because the answer looks like "obviously yes". Every value-PRODUCING path
+  # (setValue / setStart / setStop) does announce — but my two value-SHOWING paths do not, and must
+  # not yet: `_updateHandlePosition` and `_updateSpecs` are how I REFLECT a target, and an
+  # announcement there would re-fire on every drain pass, because neither has an equal-value cutoff.
+  # That is a self-sustaining loop with no cycle in it at all.
+  #   ⇒ closing it is the follower arc's business, not a one-liner: those two need the cutoff first,
+  # and the only thing it would buy is a follower OF a follower — which needs a second reflector to
+  # exist, since I am the only one and I can only render a pin whose target answers
+  # `sliderRangeForPin`. Filed in BACKLOG.
   pins: -> super().concat [
     new PinSpec "bang!", "any",                    set: "bang"
     new PinSpec "value", ["numerical", "string"],  set: "setValue", get: "getValue"

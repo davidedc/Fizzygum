@@ -135,9 +135,12 @@ class PaletteWdgt extends Widget
   #   Being driveable is what gives positionForColor its purpose: a colour arriving over this pin
   # owes me nothing, so it need not be one of my own pixels — and then I say so instead of pretending
   # (PaletteAppearance).
+  # `picked color` ANNOUNCES: both write paths say so. A pick goes through `_rememberColorPickedAt`
+  # and the gesture's own `updateTarget`; a colour arriving from anywhere else goes through
+  # `setChoice`, which announces without firing (see its note — those are different refusals).
   pins: -> super().concat [
     new PinSpec "bang!", "any", set: "bang"
-    new PinSpec "picked color", "color", set: "setChoice", get: "getChoice"
+    new PinSpec "picked color", "color", set: "setChoice", get: "getChoice", announces: true
   ]
   principalPinLabel: "picked color"
 
@@ -147,6 +150,10 @@ class PaletteWdgt extends Widget
   # A colour arriving from OUTSIDE me: a wire, a script, a restored snapshot. Deliberately does NOT
   # fire onward — a value delivered TO me is not a pick, and re-firing it would make me an echo. It
   # does repaint, my marker being the only visible trace my choice has.
+  #   ⭐ It DOES announce, and the difference is the whole point: `markNonValueChange` wakes only the
+  # re-readers and hands them nothing, so it is not the echo the refusal above is aimed at. Refusing
+  # both was one refusal too many — my choice really did change, and anything FOLLOWING this pin has
+  # to hear about it however the colour arrived. Dark when nobody follows me.
   #   Both argument slots, as every pin setter must (the pin-setter contract in
   # docs/architecture/widget-authoring-guidelines.md): a wire puts the VALUE in slot 1, while the
   # menu/prompt dispatch puts the widget being configured there and the value-giving widget in
@@ -160,6 +167,7 @@ class PaletteWdgt extends Widget
     if @choice?.equals aColor then return
     @choice = aColor
     @_changed()
+    world.dataflow.markNonValueChange @
     return aColor
 
   # the bang makes the node fire the current output value

@@ -136,9 +136,17 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutScrollbars()
     return num
 
+  # ⭐ Both ANNOUNCE, and the audit behind that word is short only because the class is built so that
+  # it can be: EVERY path that moves my content — a wheel, a thumb drag, a track click, a caret
+  # scrolled into view, a drop that re-fits me, `scrollTo`, `scrollToBottom`, the two setters above —
+  # ends at `_reLayoutScrollbars`, and that is where the announcement is raised. So a follower is
+  # woken whatever moved the scroll, which is exactly the promise `announces` makes.
+  #   ⚠ The promise is about the FUNNEL, not about the setters. A class whose setter announces but
+  # whose gesture path does not would be announcing a subset and saying so with the same word — see
+  # PaletteWdgt, whose own audit found precisely that shape.
   pins: -> super().concat [
-    new PinSpec "scroll x", "numerical", set: "setScrollX", get: "getScrollX"
-    new PinSpec "scroll y", "numerical", set: "setScrollY", get: "getScrollY"
+    new PinSpec "scroll x", "numerical", set: "setScrollX", get: "getScrollX", announces: true
+    new PinSpec "scroll y", "numerical", set: "setScrollY", get: "getScrollY", announces: true
   ]
 
   # What SCALE does this pin of mine live on, for a slider bound to it? (SliderWdgt.reflectTarget.)

@@ -69,6 +69,10 @@ class WireSpec
   # (MenuRowReflectionSpec.readerName — the row's source is this wire)
   isFiringPerEvent: -> @firesPerEvent
 
+  # the same, for my "follows it too" row: whether I also carry values BACK
+  # (ControllerMixin.toggleTrackingOfWire)
+  isTracking: -> @tracks
+
   # How a menu names me: the target as the connect menus name it, then the PIN's label rather than
   # the raw setter — "a Panel . color", not "a Panel . setColor". The user picked the pin by that
   # word, so it is the word that identifies the wire back to them; the setter name is the fallback

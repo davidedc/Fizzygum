@@ -38,6 +38,20 @@
 #     setter twin to pair it with. The arrays could not express this at all.
 #
 # A pin with NEITHER is meaningless and is refused at construction rather than silently ignored.
+#
+# THE THIRD FACT: `announces`. Reading a pin answers "what is it NOW"; announcing is the promise that
+# whoever cares will be TOLD when it changes, whatever moved it — a gesture, a script, the loader,
+# another widget's method call. The two are independent, and only the pair makes a control that
+# FOLLOWS this pin possible: without a reader there is nothing to re-read, and without the
+# announcement the re-read never happens and the follower goes quietly stale.
+#   It is declared rather than derived because it is a fact about the WIDGET's write paths — every
+# one of them — and no analysis of this record can see them. Default false: a pin that says nothing
+# promises nothing, so a follower is never offered a relationship whose reverse half is dead. That
+# default is the whole reason the flag exists (connector plan §P2: "a pin-to-pin gesture could offer
+# binds whose reverse half silently never fires").
+#   ⚠ It is NOT what `bind ⇄` consults. A bind at NODE granularity is two ordinary wires and its
+# reverse half fires from `updateTarget`; `announces` is the PIN-granularity precondition, read by
+# ControllerMixin.canTrackWire. The two granularities keep their own machinery (§P2's table).
 
 class PinSpec
 
@@ -49,6 +63,8 @@ class PinSpec
   setterName: undefined
   # name of the method that READS this pin; undefined => write-only
   getterName: undefined
+  # does my widget tell the dataflow whenever this pin changes, by WHATEVER path? see the header
+  announces: false
 
   # `kind` is a kind string, an array of them, or "any". "any" is not shorthand for "all the kinds
   # that exist today" -- it is a statement that the pin ignores the value's kind (a bang), so it
@@ -57,8 +73,16 @@ class PinSpec
     @kinds = if Array.isArray kind then kind else [kind]
     @setterName = opts.set
     @getterName = opts.get
+    # assigned only when asked for, so an ordinary pin carries no own property for it (WireSpec's
+    # own-only-when-set idiom)
+    @announces = opts.announces if opts.announces?
     if !@setterName? and !@getterName?
       throw new Error "PinSpec \"#{@label}\" declares neither a setter nor a getter"
+    # a sound negative: announcing a pin nothing can READ promises to wake a re-reader that has
+    # nothing to re-read. Refused at construction, like the neither-half case above, rather than
+    # sitting there as a flag with no meaning.
+    if @announces and !@getterName?
+      throw new Error "PinSpec \"#{@label}\" declares `announces` but has no getter to re-read"
 
   # can a source of `kind` drive this pin? An undefined kind asks for no filtering at all (the
   # "every pin" query behind the old allSetters).

@@ -103,6 +103,8 @@ class StringFieldWdgt extends PanelWdgt
   # string), so getValue reaches through it and there is no one-call setter twin to pair it with.
   # Declaring the pin is what makes my exported value `@text.text` rather than the child widget
   # itself — see the warning on Widget.exportedValue.
+  # (no `announces` question here: a follower follows the pin its own wire DRIVES, and a wire's
+  # action is a setter — a read-only pin can never be one, so it is unfollowable by construction.)
   pins: -> super().concat [ new PinSpec "value", "string", get: "getValue" ]
   principalPinLabel: "value"
 

@@ -1400,8 +1400,11 @@ class StringWdgt extends Widget
   #   ⚠ NOT declared here: `bang!`. `bang` is implemented on SimpleTextWdgt, so declaring the pin on
   # THIS class would offer a plain StringWdgt/TextWdgt a target property that dispatches to nothing
   # (`consumer[action]?.call` swallows the miss silently). A pin belongs to the class that has the verb.
+  # `text` ANNOUNCES, and it is the funnel that earns the word: every post-construction write goes
+  # through `setText` — the caret's edits included — and `setText` raises `updateTarget`, which
+  # announces whether or not I drive anything.
   pins: -> super().concat [
-    new PinSpec "text",      ["string", "numerical"],  set: "setText", get: "getText"
+    new PinSpec "text",      ["string", "numerical"],  set: "setText", get: "getText", announces: true
     new PinSpec "font size", "numerical",              set: "setFontSize"
   ]
 

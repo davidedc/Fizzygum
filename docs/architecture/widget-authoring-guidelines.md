@@ -569,6 +569,14 @@ pins: -> super().concat [
   layout↔dataflow law forbids it.
 - **`set` is optional too**: a pin with no setter is READ-ONLY and never appears in a
   "choose target property" menu, because nothing can drive it (`ColorPickerWdgt`'s picked colour).
+- **`announces` is the third fact, and it is a promise about EVERY write path**, not about your
+  setter: *whenever this pin changes, by a gesture, a script, the loader or another widget's method
+  call, I tell the dataflow*. It defaults false, and a pin that does not declare it can be DRIVEN but
+  never FOLLOWED (§ *To drive others AND follow them* below) — which is the point: a follower offered
+  a pin that goes quiet just goes silently stale. Declaring it on a pin with no reader is refused at
+  construction, since there would be nothing to re-read.
+  ⚠ **Read the section below before ticking it.** The word looks obvious for any pin whose setter
+  fires, and today exactly one class in the tree can honestly claim it.
 - **Declare a pin on the class that implements its verb.** Declaring it higher advertises it for
   every subclass, and a target property that dispatches to a missing method fails *silently* —
   `consumer[action]?.call` swallows the miss.
@@ -600,6 +608,37 @@ changed that is not my value* (`world.dataflow.markNonValueChange @`) and every 
 a multi-field update needs no payload machinery at all — the consumer pulls as many fields as it
 likes. Reach for a pushed payload only when the producer emits an EVENT with no readable steady
 state.
+
+**A user reaches this from the wire's own menu row — "follows it too" — which promotes a wire they
+already made.** There is no separate "bind a pin" chooser and there should not be: "connect to ➜"
+already offers every drivable pin, so the wire exists; what the gesture adds is the reverse half. It
+is offered only where all three preconditions hold, each asked of whoever owns the answer — the pin
+is readable and `announces` (the `PinSpec`), the follower can render *that* pin
+(`SliderWdgt._canReflectPin` wants a `SliderRange`), and the follower is not already following
+something else (one thumb, one value).
+
+⚠ **`announces` is a claim about a FUNNEL, not a property of your setter — audit every write path
+before declaring it.** `ScrollPanelWdgt` can claim it because it is built so that it can: wheel,
+thumb drag, track click, caret-into-view, a drop that re-fits it, `scrollTo`, both setters — every
+path that moves its content ends at `_reLayoutScrollbars`, and the announcement is raised there. If
+your pin has no funnel, build one or leave the flag alone.
+
+⚠ **Announcing and firing onward are DIFFERENT refusals, and conflating them silences pins that
+should speak.** `markNonValueChange` wakes only the re-readers and hands them nothing, so it is never
+the echo a sink is right to avoid. Two places got this wrong and are worth knowing as case law:
+
+- `ControllerMixin._fireConnection` used to make the announcement a side effect of the DELIVERY, so
+  its "do I have wires?" guard silenced both. A follower is precisely a widget that subscribes
+  without being driven, so an unwired controller changed its value to an audience of nobody. It now
+  announces first and delivers second — one event, two jobs, one guard on the job that needs it.
+- `PaletteWdgt.setChoice` refuses to fire a value delivered TO it (that would make it an echo) and
+  used to refuse to announce as well — one refusal too many, since its choice really did change.
+
+⚠ **A REFLECTION path is the one place silence is still right, and it needs more than a flag.** A
+slider's `_updateHandlePosition` / `_updateSpecs` show a value they do not own. Announcing there
+without an equal-value cutoff re-fires on every drain pass — a self-sustaining loop with no cycle in
+it — which is why `SliderWdgt`'s `value` is the one readable pin in the tree that cannot yet declare
+`announces`. If you write a reflector, give it the cutoff first.
 
 **To keep two widgets' VALUES equal**, `bindTo theTarget` — the fourth binding verb, and the one the
 `bind ⇄` menu item makes (one level down, behind the shared block's single `connect ➜` row: both

@@ -407,6 +407,9 @@ checkable one**: a widget with a read/write principal pin *and* the `ControllerM
 a widget that announces (verified across all four: `SliderWdgt`, `StringWdgt`/`SimpleTextWdgt`,
 `PaletteWdgt`, `ColorPickerWdgt` — each `updateTarget` → `_fireConnection` → `markStale`). So
 `ControllerMixin.canBind` is not a proxy for the property that matters; it IS that property.
+⚠ **This was true for a BIND and false for a FOLLOW until 2026-08-18** — `_fireConnection` was silent
+while the widget held no wires, which is exactly a follower's situation. See the residue note at the
+end of this section.
 
 ⇒ **`DataflowEngine`'s reserved pin-aware `pullValue` sibling is ANSWERED, not consumed.** Its comment
 named "the `bind` gesture (P2/P7)" as the first caller it was waiting for. The pin-aware pull belongs
@@ -505,11 +508,25 @@ the macro stops short and the harness's MACRO INCOMPLETE guard fails the test.
 ⇒ **when a distinction lives in a glyph, assert the STRING** — a reference image cannot see the
 difference between two characters the font does not have.
 
-⚠ **What P2 did NOT do: the pin-granularity GESTURE.** Binding a slider to a panel's `scroll y` from a
-menu stays unavailable; `trackTarget` reaches it from code only. Offering it honestly needs one new
-thing — a `PinSpec` declaration that a pin ANNOUNCES — audited across every pin in the tree, because
-getting it wrong ships a bind whose reverse half is silently dead. That audit is the work, not the
-gesture. Filed in `BACKLOG.md`.
+⚠ **What P2 did NOT do: the pin-granularity GESTURE — ✅ LANDED 2026-08-18, and it turned out not to
+be a gesture at all.** `PinSpec` gains `announces`; the reachable gesture is the row **"follows it
+too"** in a WIRE's own menu, promoting a wire that already exists rather than choosing a new target —
+because `pinsOfKind` has always offered `scroll y`, so "connect to ➜" could already build that wire
+and only its reverse half was missing. `trackTarget` was written for this caller before it had one.
+⭐ **The audit was the work, and its domain was TWO PINS.** Of 40 `PinSpec`s, 33 are write-only (this
+section's own reverse half is not expressible for them) and six of the seven readable ones are
+PRINCIPAL pins that this section already covers — so every readable non-principal pin in the tree is
+`ScrollPanelWdgt`'s `scroll x`/`scroll y`.
+⭐⭐ **And the equivalence this section leaned on was narrower than it reads — it named a DEFECT.**
+*"A widget with a read/write principal pin and the `ControllerMixin` verbs is exactly a widget that
+announces"* held for a BIND, whose reverse half is an ordinary wire the target holds, and failed for a
+FOLLOW: `_fireConnection` made the announcement a side effect of the DELIVERY, so its wire guard
+silenced both — and a follower subscribes without being driven. **One event, two jobs, one guard on
+the wrong one.** Fixed here: it announces first and delivers second, and `StringWdgt` `text` plus both
+`picked color` pins now declare `announces: true` truthfully. `SliderWdgt.value` still cannot — its
+REFLECTION paths have no equal-value cutoff, so announcing there would re-fire every drain pass with
+no cycle involved — and that, the second reflector it would serve, and the mutual-tracking cycle rule
+are one arc, filed in `BACKLOG.md`.
 
 ### P3 — One announcement verb, and where it may not live — ✅ **LANDED 2026-08-17**
 

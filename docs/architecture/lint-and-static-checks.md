@@ -376,6 +376,14 @@ narrowed-R2 report. The campaign that owns the drawdown is **`docs/archive/publi
 the census at every tranche start. Methodology and blind spots are in the tool's header. Run from `Fizzygum/`:
 `node ./buildSystem/census-public-private-calls.js [--full|--json out.json|--self-test]`.
 
+⚠ **One blind spot worth knowing before you chase a phantom [U] NOTE: naming a method inside a macro
+source's COMMENT counts as a reference to it.** R4's reference set is harvested from the sibling tests
+repo, and a macro lives inside a JS template literal — so from the `.js` file's point of view the
+whole CoffeeScript body, `#` comments included, is string content, which is exactly what R4 must scan
+(a real call in a macro is string content too). The symptom is a `[U] allowlist entry is no longer
+self-only-public` NOTE appearing on a commit that added only a test. It is advisory, never a build
+failure — but the honest fix is to reword the comment, not to delete the allowlist entry.
+
 ---
 
 ## 4. `check-layering.js` rules

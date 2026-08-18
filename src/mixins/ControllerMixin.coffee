@@ -239,7 +239,21 @@ ControllerMixin =
       # the public name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). A wire's
       # action stays the menu-friendly public name everywhere (menus, hard-wired app circuits).
       _fireConnection: (value) ->
-        return unless @wires?.length
+        # ⭐ TWO JOBS, and the wire check belongs to only ONE of them. DELIVERING needs wires;
+        # ANNOUNCING does not — a widget can be WATCHED by something it does not drive (a
+        # firesOnAnyChange re-reader, §P8), which is exactly a FOLLOWER's situation. While the
+        # announcement was a side effect of the delivery, removing the delivery removed it too, so an
+        # unwired controller changed its value in total silence and nothing tracking it ever learned.
+        # That is the hole `PinSpec.announces` would otherwise have had to describe on four pins
+        # instead of being true of them.
+        #   markNonValueChange rather than markStale, and here the two are behaviourally IDENTICAL: with
+        # no wires there is no wire EDGE, so the only out-edges I can have are the re-reading ones, and
+        # both verbs wake those. What differs is the cost of saying it to nobody — markNonValueChange
+        # returns before pooling anything unless someone re-reads me, and these callers are plain
+        # setters that run on every keystroke and are almost never watched.
+        unless @wires?.length
+          world.dataflow.markNonValueChange @
+          return
         # under the engine a wire carries NO value: it only marks me STALE, and the drain PULLS my dataflowValue
         # when it delivers along my edges (spec §3, notifications carry no values). So every controller's
         # updateTarget (`@_fireConnection <myValue>`) is a markStale with no per-controller change; the pushed
@@ -287,6 +301,57 @@ ControllerMixin =
           world.dataflow.addEdge wire.target, @, action: "reflectTarget", firesOnAnyChange: true
         return
 
+      # ---- THE FOLLOW GESTURE (connector plan §P2 residue) --------------------------------
+      # PIN granularity's answer to `bind ⇄`, and it is not a second chooser: the wire the gesture
+      # needs ALREADY EXISTS. "connect to ➔" offers every drivable pin, so a slider can already be
+      # wired onto a scroll frame's `scroll y` today — what it cannot do is FOLLOW it. So the gesture
+      # is a promotion of a wire you are already looking at, and it lands in that wire's own menu
+      # beside "fires per event", costing the enclosing menu no row at all.
+      #   ⭐ `trackTarget` was built to be its verb before it had one: its own note reads "say it
+      # again for a plain wire being promoted to a tracking one — 'also follow what you already
+      # drive' is a legitimate thing to ask twice". This is that caller.
+      #   ⛔ What it is NOT is `bind ⇄` with a wider filter. §P2 restricted itself to principal ⇄
+      # principal because at NODE granularity the precondition is equivalent to a checkable one; at
+      # PIN granularity that equivalence breaks, so the precondition has to be ASKED, which is what
+      # the three conditions below do.
+      #
+      # Can this wire also carry values BACK? Three things must hold, and each is asked of the party
+      # that owns the answer:
+      #   • I can only SHOW one value, so a second tracking wire would be a display with no way to
+      #     render it (_trackingWire takes the first). One follow at a time.
+      #   • the pin must be READABLE — there is nothing to re-read otherwise — and it must ANNOUNCE,
+      #     or the re-read never happens and the follower goes quietly stale. Both are declared on
+      #     the PinSpec, and `announces` exists for exactly this question.
+      #   • I must be able to render THAT pin, which only I know (SliderWdgt._canReflectPin). A
+      #     controller that declares no answer follows nothing, which is why the row is absent from
+      #     every controller but the slider today.
+      _canTrackWire: (wire) ->
+        alreadyTracking = @_trackingWire()
+        return false if alreadyTracking? and alreadyTracking isnt wire
+        pin = wire.target.pinDrivenBy? wire.action
+        return false unless pin?.getterName? and pin.announces
+        return false unless @_canReflectPin?
+        return @_canReflectPin wire.target, pin
+
+      # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu):
+      # promote this wire to a tracking one, or demote it back to one-way.
+      #   Promotion goes through the PUBLIC verb, so it takes the initial value FROM the target the
+      # way every tracking bind does — the thumb jumps to where the content already is rather than
+      # scrolling the content to where the thumb happened to be.
+      #   Demotion revokes the reverse edge explicitly, exactly as unwireFrom does: the forward edge
+      # is derived from the wire list and reconciles itself, but the re-reading one is an edge OUT of
+      # the target that only I can revoke.
+      # ANNOUNCE on the WIRE so every open menu showing the row re-ticks (a wire is not a
+      # value-bearing node, so markNonValueChange is the only honest mark — see
+      # toggleFiresPerEventOfWire).
+      toggleTrackingOfWire: (ignored, ignored2, wire) ->
+        if wire.tracks
+          wire.tracks = false
+          world.dataflow.removeAnyChangeEdge wire.target, @
+        else
+          @trackTarget wire.target, wire.action
+        world.dataflow.markNonValueChange wire
+
       # ---- the connection menu -------------------------------------------------------------
       # The shared "connect a target" block, appended identically by every controller (SliderWdgt,
       # SimpleTextWdgt, PaletteWdgt, FanoutPinWdgt and the patch nodes) right after its `super`: a
@@ -302,13 +367,12 @@ ControllerMixin =
       #   ⭐ The GESTURES are grouped behind one submenu row, and the live wires are not. That split is
       # the meaning of the two halves: "connect ➜" opens the things I can DO, while a wire row is a
       # thing that IS — a status line you read, and cut from where you read it.
-      #   Grouping also costs the enclosing menu ZERO rows for the second gesture, which is what makes
-      # a second one affordable at all. A context menu here has no answer for being taller than the
-      # world — `PopUpWdgt.popUp` clamps a pop-up's POSITION (`_moveWithin`) and can do nothing for
-      # one that does not FIT — and a `SimpleTextWdgt` inside a scroll panel already builds a merged
-      # menu of exactly full height, so a second top-level row pushed its last item off the bottom
-      # edge, unclickable. (The overflow itself is a standing gap, filed in BACKLOG; not being the
-      # thing that trips it is this block's business.)
+      #   Grouping also costs the enclosing menu ZERO rows for the second gesture, and that thrift is
+      # still worth keeping even though an over-tall pop-up now SCROLLS its rows rather than putting
+      # them out of reach: a `SimpleTextWdgt` inside a scroll panel builds a merged menu of about full
+      # height, so every top-level row this block adds is one the reader has to scroll past. Rows are
+      # affordable here; free they are not. (The third gesture, "follows it too", costs nothing at
+      # all — it lives in the wire's own menu, one level further down.)
       _addTargetConnectionMenuEntries: (menu) ->
         menu.addLine()
         menu.addMenuItem "connect ➜", @, "openConnectionGestureMenu", toolTip: "connect this widget\nto another one"
@@ -386,8 +450,10 @@ ControllerMixin =
         return
 
       # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu):
-      # the per-wire menu behind a connection row. Two entries, because a wire has exactly two things a
-      # user can do to it — change how it delivers, or cut it.
+      # the per-wire menu behind a connection row. Three entries at most: change how it delivers,
+      # make it two-way, or cut it. The middle one appears only when the relationship can really
+      # carry values back (_canTrackWire) — the same rule `bind ⇄` follows, and for the same reason:
+      # an item that is nearly always a dead end is worse than no item.
       openWireMenu: (ignored, ignored2, wire) ->
         menu = new MenuWdgt @, target: @, title: wire.describeConnection()
         label = "fires per event"
@@ -398,6 +464,13 @@ ControllerMixin =
           # dataflow node protocol is duck-typed, so a WireSpec can be a node with nothing but a reader
           # (the trick §P5 played for Wallpaper). Two rows for two wires therefore tick independently.
           reflection: MenuRowReflectionSpec.tickWhen wire, "isFiringPerEvent", true, label
+        if @_canTrackWire wire
+          followLabel = "follows it too"
+          menu.addMenuItem followLabel, @, "toggleTrackingOfWire",
+            toolTip: "also FOLLOW this property,\nso the two stay in step\nhowever either one moves"
+            arg1: wire
+            # ticks off the WIRE, like the row above: tracking is a property of the relationship
+            reflection: MenuRowReflectionSpec.tickWhen wire, "isTracking", true, followLabel
         menu.addMenuItem "disconnect", @, "disconnectWire",
           toolTip: "stop driving\n" + wire.describeConnection()
           arg1: wire

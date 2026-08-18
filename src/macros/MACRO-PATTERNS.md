@@ -1345,6 +1345,23 @@ assertion a recapture after a regression silently stores two different hashes an
   is also where a wire's **"fires per event"** toggle lives (`macroConnectionFiresPerEventToggle` navigates it by hand: row
   prefix, then `@moveToItemContainingOfMenuAndClick_InputEvents … "fires per event"` — CONTAINING, because a ticked row carries
   a leading ✓).
+- **PROMOTE a wire to two-way — "follows it too"** (`macroSliderPromotedToFollowAScrollPanel`, connector §A2): the SAME row,
+  one item further down. A wire only DRIVES; this makes the controller follow the pin it drives as well, so a slider wired onto
+  a `ScrollPanelWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "fires per event" — row prefix, then
+  CONTAINING `"follows it too"` — and click it again to demote.
+  ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerMixin._canTrackWire`): the pin must be readable
+  AND declare `announces` on its `PinSpec`, the controller must be able to render that pin (`SliderWdgt._canReflectPin` wants a
+  `SliderRange`, which today only a scroll frame answers), and it must not already be following another wire. So a macro that
+  expects the row must pick a target that qualifies — a scroll frame — and `@assertTopMenuItemStrings` is how to prove it is
+  there (or absent): `["    fires per event", "    follows it too", "disconnect"]`, four-space `String::untick` prefixes and
+  all, becoming `"✓ follows it too"` once promoted.
+  ⚠⚠ **Assert the arrow BY STRING, never by pixel.** A wire row reads `… ➜` one-way and `… ⇄` two-way, and NEITHER glyph is in
+  the SWCanvas bitmap font — both render as the same box, so a reference image cannot tell them apart (connector §P2's lesson).
+  ⚠ **Promoting PULLS: it takes the target's value and scale and moves the target not at all.** A macro asserting the effect
+  should compare the target before/after (unchanged) and the controller before/after (adopted) — that pair is the whole proof.
+  ⚠ **Drain after wiring before measuring anything**: making a wire fires the controller's connect-push, which is delivered on
+  the NEXT drain, so a `yield "waitNoInputsOngoing"` must sit between the wiring and any reading of the target — otherwise the
+  controller's constructed default lands on the target after your gesture and the numbers read as a coincidence.
 - ⚠ **BOTH connection gestures live one level down, behind a single `"connect ➜"` row** (connector §P2). A hand-rolled
   chain must click that row FIRST and then `"connect to ➜"` / `"bind ⇄"` in the submenu it opens
   (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
