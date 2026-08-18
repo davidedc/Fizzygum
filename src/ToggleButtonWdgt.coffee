@@ -17,10 +17,3 @@ class ToggleButtonWdgt extends SwitchButtonWdgt
           return
 
     super
-
-  select: (whichOne) ->
-    if @buttonShown != whichOne
-      @buttons[@buttonShown].mouseClickLeft()
-
-  toggle: ->
-    @buttons[@buttonShown].mouseClickLeft()

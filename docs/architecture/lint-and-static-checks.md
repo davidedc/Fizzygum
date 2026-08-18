@@ -223,9 +223,20 @@ blind spot is structural:
   APPEARING — which is the point at which everything still looks fine. A prompt is not a `MenuWdgt` (both descend from
   `PopUpWdgt`), so the submenu walk cannot reach one and it needs its own query. Ok is pressed with the prompt's own
   default contents, so this asks "does the callback resolve and run", never "is this a good value".
-  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 17 roots, so a class not among them is unreached. That is why
+  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 18 roots, so a class not among them is unreached. That is why
   it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
   catches 2 of the 16 affected classes and the pin sweep catches all 16.
+  ⚠⚠ **A menu built behind a BRANCH is only swept in the branch the rig happens to be standing in.** The desktop's own
+  menu is two different menus — `WorldWdgt.buildContextMenu` opens `if @isIndexPage … return menu` with a four-row
+  product menu, and `isIndexPage` is true on every page but the harness, this rig's `index-sw.html` included. So the
+  world root walked 4 of the desktop's 13 rows, and the `world.isDevMode = true` the rig sets to reach the demo tree was
+  reaching nothing at all: the branch it enables sat behind that early return. It hid a dispatch to `WorldWdgt.about`, a
+  method deleted in 2017 whose menu row stayed — nine years of a row that throws, in the first menu anyone opens. Both
+  branches are now swept as two roots (`world[product]`, `world[desktop]`). ⇒ **when a rig STATES a coverage, check the
+  statement**: this one's own comment called the world root "the door to the demo tree" while walking four rows of it.
+  A second-order consequence, also now handled: an action can flip the very flags that decide a menu's shape (`switch to
+  user mode` dispatches `toggleDevMode`), so `sweepRoot` restores `isDevMode`/`isIndexPage` per root — without that, one
+  root's click left every later widget menu EMPTY and reported as "no menu returned".
 - **pin sweep** (`Fizzygum-tests/scripts/pin-sweep-headless.js`, `npm run pin-sweep`) — EVERY PIN A CLASS ADVERTISES
   MUST BE SERVICEABLE. A `PinSpec` names its setter/getter by STRING and the dataflow dispatches them as
   `consumer[name]?.call`, so an unresolved one is offered in the choose-target-property menu, accepts a wire, and
@@ -410,6 +421,20 @@ whole CoffeeScript body, `#` comments included, is string content, which is exac
 (a real call in a macro is string content too). The symptom is a `[U] allowlist entry is no longer
 self-only-public` NOTE appearing on a commit that added only a test. It is advisory, never a build
 failure — but the honest fix is to reword the comment, not to delete the allowlist entry.
+
+⚠⚠ **The same harvesting rule gives `check-dead-methods` a blind spot it cannot close: a method whose
+NAME is an ordinary English word is effectively unkillable.** The gate is NAME-keyed — it has to be,
+since a computed-name dispatch can name any method — and it harvests every identifier from every line
+of `src/`, the harness and the test `.js` files, with comments NOT stripped on the `.js` side. So a
+sentence like *"toggle its window-bar edit button OFF then ON"* in a test's `description` counts as a
+reference to `toggle`, and `ToggleButtonWdgt.toggle`/`.select` sat dead and invisible until they were
+found by hand (2026-08-18, connector §P10(d)). There is a second, independent half: the gate keys on
+the NAME alone, so it cannot tell two same-named methods on unrelated classes apart — a LIVE
+`ListWdgt.select` covers a DEAD `ToggleButtonWdgt.select` on its own. ⇒ **the gate is sound in the
+direction it claims** (what it flags really is dead) **and silently incomplete in the other**; do not
+read a green run as "no dead methods". Making it class-aware is not obviously right — the dynamic
+dispatch that forces name-keying would then start producing false positives — so this is recorded as
+a stated blind spot rather than a defect to fix blind (`docs/BACKLOG.md`).
 
 ---
 

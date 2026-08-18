@@ -12,6 +12,20 @@ class SwitchButtonWdgt extends Widget
   # overrides to superclass
   color: Color.WHITE
 
+  # WHICH of my buttons is showing IS my value, and it is an INDEX into @buttons. That is why there is
+  # no boolean payload kind here: a switch is n-way, and a boolean is only what the n=2 case looks
+  # like from outside, so the two-button subclass exports 0 or 1 as an ordinary number and the whole
+  # question of a fourth kind for one widget does not arise (connector plan §P10(d), answered by the
+  # GENERAL class rather than by the toggle).
+  #   It ANNOUNCES, and what earns that is the funnel below: every path that moves @buttonShown — a
+  # click, a reflect from elsewhere, the reset on being added — goes through _setToggleState, which is
+  # the one place that tells the dataflow. A pin that announced from only some of its write paths
+  # would leave a follower silently stale exactly when it mattered.
+  pins: -> super().concat [
+    new PinSpec "shown button", "numerical", set: "setToggleState", get: "getToggleState", announces: true
+  ]
+  principalPinLabel: "shown button"
+
   constructor: (@buttons) ->
 
     super()
@@ -66,6 +80,9 @@ class SwitchButtonWdgt extends Widget
   isSelected: ->
     return @buttonShown != 0
 
+  getToggleState: ->
+    @buttonShown
+
   # changes the shown button without firing the action
   # i.e. clicking the button
   # This is useful when the switch needs to reflect the
@@ -73,13 +90,31 @@ class SwitchButtonWdgt extends Widget
   # (i.e. changed by something else than the user clicking this switch) --
   # including CROSS-OBJECT (the paint toolbar reflects arm/disarm on its tool
   # toggles, §5.D), hence the public wrap over the private core.
-  setToggleState: (whichOne) ->
+  #   It is also my `shown button` pin's setter, so it reads BOTH argument slots (the pin-setter
+  # contract in docs/architecture/widget-authoring-guidelines.md) and clamps: a wire or a formula can
+  # deliver any number at all, and an out-of-range index would show no button whatsoever. Clamping
+  # rather than wrapping, because "show button 7" from outside means the last one, while the WRAP
+  # belongs to the click below, where cycling is the gesture.
+  setToggleState: (whichOneOrWidgetGivingIt, widgetGivingIt) ->
+    whichOne = widgetGivingIt?.getValue?() ? whichOneOrWidgetGivingIt?.getValue?() ? whichOneOrWidgetGivingIt
+    return unless isFinite whichOne
+    whichOne = Math.round whichOne
+    whichOne = 0 if whichOne < 0
+    whichOne = @buttons.length - 1 if whichOne > @buttons.length - 1
     @_setToggleState whichOne
+    return whichOne
 
+  # THE ONE PLACE @buttonShown MOVES — see the `announces` note on the pin. Every other path routes
+  # here, so the announcement cannot be forgotten by a path added later.
   _setToggleState: (whichOne) ->
-    if @buttonShown != whichOne
-      @buttonShown = whichOne
-      @_invalidateLayout()
+    return if @buttonShown == whichOne
+    @buttonShown = whichOne
+    @_invalidateLayout()
+    # markStale, not markNonValueChange: this pin IS my principal one, so what changed is my VALUE,
+    # and the stronger verb wakes the re-readers too (DataflowEngine header: markStale fires EVERY
+    # out-edge, the firesOnAnyChange ones included).
+    world.dataflow.markStale @
+    return
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     # SELF-SETTLE the toggle (end-of-cycle-flush drawdown convert 2026-06-25): a discrete click is an
@@ -89,13 +124,10 @@ class SwitchButtonWdgt extends Widget
     # re-enter this flush. Safe because the layout-pass collapse decisions it can trigger now route to the
     # idempotent _collapseNoSettle / _unCollapseNoSettle cores (no public re-entrant settle).
     @_settleLayoutsAfter =>
-      @buttonShown++
-      @buttonShown = @buttonShown % @buttons.length
-      @_invalidateLayout()
+      @_setToggleState (@buttonShown + 1) % @buttons.length
     # TODO gross pattern break - usually mouseClickLeft has 9 params
     # none of which is a widget
     @escalateEvent "mouseClickLeft", @
 
   _resetSwitchButton: ->
-    @buttonShown = 0
-    @_invalidateLayout()
+    @_setToggleState 0

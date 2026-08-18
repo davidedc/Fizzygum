@@ -2821,7 +2821,6 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
       menu.addMenuItem "switch to dev mode", @, "toggleDevMode"
 
     menu.addMenuItem "new folder", @, "makeFolderFromMenu"
-    menu.addMenuItem "about Fizzygum...", @, "about"
     menu
 
 

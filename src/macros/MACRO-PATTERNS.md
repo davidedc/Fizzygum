@@ -1325,6 +1325,28 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Controllers (patch-programming)
 
+- **Drive a TOGGLE like any other property** (`macroSliderDrivesAToggleButton`): a `SwitchButtonWdgt` declares
+  `shown button` — the INDEX of the button it is showing — as its principal pin (`setToggleState`/`getToggleState`,
+  `announces`), so a toggle is wired with the ordinary verb and needs nothing of its own:
+  `setControllerTargetToWidgetProperty_InputEvents_Macro slider, "a Toggle", "shown button", [0.5,0.85]`. The index is
+  why a NUMERICAL wire drives it and there is no boolean payload kind — a two-button toggle is just the n=2 case — and
+  the setter CLAMPS, so a slider running 0..100 lands on a real button at both extremes. Build the toggle with two
+  visibly different faces (`new ToggleButtonWdgt (new SimpleButtonWdgt undefined, undefined, face: "OFF"), (…face: "ON")`)
+  or the flip is invisible in the references. GOTCHA: binding PUSHES the controller's current value, so the toggle moves
+  ON CONNECT before any drag — that shot is the one that proves the wire is live, so take it.
+- ⚠⚠ **THE `@` RULE, and the suffix tells you which: a `*_Macro` verb is a SUBROUTINE and takes NO `@`; a verb without
+  the `_Macro` suffix is a `MacroToolkit` METHOD and takes `@`.** So
+  `takeScreenshot_InputEvents_Macro "…"` and `setControllerTargetToWidgetProperty_InputEvents_Macro …` are bare, while
+  `@dragSliderButtonToFraction_InputEvents`, `@moveToAndClick_InputEvents` and `@assertValuesEqual` carry it. (The
+  subroutines are the ones `MacroToolkit.standardMacroSubroutines` adds as `Macro.fromString` bodies; the methods are
+  the ones declared on the class.) Getting it wrong compiles fine and fails at RUN time with the thoroughly unhelpful
+  `Cannot read properties of undefined (reading 'call')` — `yield*`-ing an undefined subroutine — attributed to your own
+  macro body at a line number in the COMPILED generator, which is not the line you wrote.
+- ⚠ **A multi-line double-quoted string inside `world.evaluateString` FOLDS its newlines into spaces** (CoffeeScript
+  string semantics), so a several-statement fixture becomes one unparseable line and fails at COMPILE time with
+  `unexpected identifier`. Use `"""…"""`, or — better and what the fixtures here do — just build the widgets directly in
+  the macro body, which is CoffeeScript already.
+
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
   "a Panel", "color"` — right-click the controller (a ColorPaletteWdgt / GrayPaletteWdgt / SliderWdgt / … with
   `ControllerMixin`) → "connect to ➜" (`openTargetSelector` lists only bounds-INTERSECTING widgets, so it MUST OVERLAP the target)
