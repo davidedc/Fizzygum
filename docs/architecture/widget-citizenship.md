@@ -103,9 +103,11 @@ citizen:
 5. **It composes, and decomposes.** Any widget can contain widgets and be contained
    (`TreeNode` → `Widget` is the whole ontology); a composite behaves like an atomic widget.
    The flip side is mandatory: parts can be *taken out* and reused in other combinations —
-   e.g. menu entries are widgets, so handy commands can in principle be extracted into a
-   custom control panel. A widget that only works inside the assembly it was born in is a
-   bad citizen.
+   e.g. menu entries are widgets, so a handy command is dragged off a PINNED menu and kept,
+   and goes on working as a standalone button on a control panel of your own
+   (`MenuRowsPanelWdgt.wantsDetachOfChild`, and the parent-side opt-in `ButtonWdgt.rejectDrags`
+   consults to know a payload from a part). A widget that only works inside the assembly it
+   was born in is a bad citizen.
 6. **It doesn't bake in its editing chrome.** Content, manipulation chrome, and editing
    tools are separate citizens (the `Simple*` / plain / `FrameWdgt` tiers —
    [`regularity-principles.md`](regularity-principles.md)): a `Simple*Wdgt` is a naked

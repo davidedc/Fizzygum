@@ -46,6 +46,18 @@ class PopUpRowsPaneWdgt extends PanelWdgt
 
   _acceptsDrops: false
 
+  # The membership-change absorb query, forwarded. SimpleVerticalStackPanelWdgt._reactToChildRemoved
+  # puts it to its DIRECT parent, which is me — and I am not the widget a lost row resizes: I am
+  # sized by my frame and the frame by the pop-up. PopUpWdgt._reLayOutAfterContainedPanelChange does
+  # the whole job (re-lay the rows panel, re-fit the frame, re-take the pop-up's own extent), so the
+  # question goes there, and its answer — was it absorbed — is the one the stack is waiting for.
+  #   Without this a row leaving a LIVE menu leaves the pop-up drawn at its old height, with a blank
+  # strip where the row was. Nothing showed it before rows could be dragged out: every
+  # removeMenuItem call in the tree runs inside an addWidgetSpecificMenuEntries override, while the
+  # menu is still being composed and before it has popped up.
+  _reLayOutAfterContainedPanelChange: ->
+    @firstParentThatIsAPopUp()._reLayOutAfterContainedPanelChange?() ? false
+
   # I am an implementation detail of a pop-up, so stay OUT of the ancestor
   # hierarchy-disambiguation menu, exactly as MenuRowsPanelWdgt does.
   hiddenFromHierarchyMenu: ->

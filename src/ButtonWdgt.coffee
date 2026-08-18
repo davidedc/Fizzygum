@@ -146,9 +146,18 @@ class ButtonWdgt extends Widget
   # your mind on pressing it)
   # and you shouldn't be able to drag the button away either
   # so the drag is entirely rejected
+  #   UNLESS MY PARENT SAYS I AM A PAYLOAD RATHER THAN A PART. Slipperiness protects a
+  # COMPOUND — it assumes the button is a piece of the thing containing it — so a container
+  # that declares the opposite about me is answering the very question slipperiness assumes.
+  # `wantsDetachOfChild` is the existing parent-side opt-in, and reusing it is the point:
+  # Widget.grabsToParentWhenDragged consults the same declaration, so the two questions a grab
+  # asks — "is this drag cancelled" and "does it lift my parent instead" — now read ONE fact
+  # and cannot disagree. Resting on the desktop is the same statement, made by the one parent
+  # with no reason to spell it out.
+  #   Clients: a MenuRowsPanelWdgt whose pop-up is PINNED (dragging a command onto your own
+  # control panel), and a spreadsheet CellWdgt's hosted payload.
   rejectDrags: ->
-    if @parent == world
-      return false
-    else
-      return @defaultRejectDrags
+    return false if @parent == world
+    return false if @parent?.wantsDetachOfChild? @
+    return @defaultRejectDrags
 

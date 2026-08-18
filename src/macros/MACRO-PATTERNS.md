@@ -1270,7 +1270,8 @@ assertion a recapture after a regression silently stores two different hashes an
   is purely the raw-pixel `dataHash`.)
 - **A BARE button float-drags by its body and does NOT trigger mid-drag** (`macroBareButtonFloatDragsWithoutTriggering`): the third
   button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameWidgetMouseUp`).
-  `ButtonWdgt.rejectDrags` returns false ONLY when the parent is the WORLD (`:128-132`), so a world-parented button does NOT arm its
+  `ButtonWdgt.rejectDrags` returns false when the parent is the WORLD (and when the parent DECLARES the button a detachable payload —
+  `wantsDetachOfChild`, which nothing in this fixture does), so a world-parented button does NOT arm its
   trigger on press: `Widget.findFirstLooseWidget` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
   `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
@@ -1836,7 +1837,23 @@ assertion a recapture after a regression silently stores two different hashes an
   land on the SAME morph (`ActivePointerWdgt.processMouseUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   (@pointAtFractionOf button, [0.5,0.5]), (new Point X, Y)`. Parent the button INSIDE a container (window/panel), NOT bare on the
-  world (`ButtonWdgt.rejectDrags` is false only when the parent is the world, so a loose button float-drags on the press).
+  world (`ButtonWdgt.rejectDrags` is false when the parent is the world — or when the parent declares the button a detachable payload
+  via `wantsDetachOfChild` — so a loose button float-drags on the press instead).
+- **Drag a COMMAND out of a pinned menu and keep it** (`macroExtractMenuRowFromPinnedMenu`): a menu row IS a button already pointed at
+  something (`MenuItemWdgt extends LabelButtonWdgt extends ButtonWdgt`, four dispatch slots resolved at construction against the TARGET,
+  not the menu), so extracting one needs no new machinery — only permission. `MenuRowsPanelWdgt.wantsDetachOfChild` grants it for a row
+  carrying an `action` when the enclosing pop-up `isPopUpPinned()`, and both halves of a grab read that one declaration
+  (`ButtonWdgt.rejectDrags` for "is this drag cancelled", `Widget.grabsToParentWhenDragged` for "does it lift my parent instead"). The
+  gesture is therefore: `@openMenuOf_InputEvents widget` → capture `menu = @getMostRecentlyOpenedMenu()` → `@clickMenuHeaderToPin_InputEvents
+  menu` → `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf (@getTextMenuItemFromMenu menu, "hide"), [0.5,0.5]),
+  dropSpot`. The dropped row is an ordinary world child: click it with `@moveToAndClick_InputEvents row` and it fires at its original
+  target. No new verb — every step is an existing one.
+  ⚠⚠ **The unpinned CONTRAST costs you the menu**: a press-drag-release whose RELEASE lands off an unpinned menu dismisses it (that release
+  IS a click outside), so the two halves cannot share one menu and the shots are NOT a byte-identical no-op pair — open the menu, attempt
+  the drag (menu vanishes, desktop stays bare), then RE-OPEN and pin. Assert the real question at meaning level instead, with
+  `@assertValuesEqual`, over `(child for child in world.children when child instanceof MenuItemWdgt).length` — 0 unpinned, 1 pinned.
+  ⚠ Park the pointer at a fixed empty-desktop spot before EVERY shot: a row under the pointer draws highlighted, so otherwise a shot
+  differs merely by where the mouse stopped.
 - **In-system eval** (`macroEvaluateString`): `world.evaluateString "code"` runs arbitrary CoffeeScript against the live world
   INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield

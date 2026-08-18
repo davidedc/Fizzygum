@@ -60,6 +60,29 @@ class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
   releasesRatioConstraintOnGrabbedChildren: ->
     false
 
+  # THE ROW-EXTRACTION OPT-IN — the parent-side query that Widget.grabsToParentWhenDragged and
+  # ButtonWdgt.rejectDrags both consult, so one declaration answers both halves of a grab. A
+  # command row may be dragged off a PINNED pop-up and kept — the decomposition half of
+  # widget citizenship (docs/architecture/widget-citizenship.md, point 5: a part can be taken
+  # OUT and reused). Nothing has to be done TO the row: it is already a ButtonWdgt
+  # holding a four-slot dispatch resolved at construction against the TARGET rather than against
+  # me, and it already owns whatever value it reflects (MenuItemWdgt).
+  #   PINNED IS THE WHOLE CONDITION, and it is not a new mode. An unpinned pop-up IS mid-gesture
+  # UI — you skid a drag across its rows while making up your mind, which is what slipperiness
+  # buys — and a pinned one IS desktop furniture; PopUpWdgt draws exactly that distinction and
+  # the serializer already turns on it. You cannot take a part off something mid-gesture; you can
+  # take a part off furniture. So the deliberate act is the pinning, which already exists and
+  # already means "this menu stays", and extraction costs no new gesture and no menu row.
+  #   A COMMAND row only. My header is the drag HANDLE — dragging a pinned menu by it is the only
+  # way to move the menu, and handing it out would tear it off — and a divider is punctuation.
+  # Carrying an `action` is what separates them, and it is the fact that MATTERS rather than a
+  # proxy for the row's class: what survives extraction is a button that still does something.
+  #   A ListWdgt's rows panel needs no exception: it sits in no pop-up, so the climb reaches the
+  # world, which holds no opinion about being pinned.
+  wantsDetachOfChild: (aWdgt) ->
+    return false unless aWdgt.action?
+    @firstParentThatIsAPopUp().isPopUpPinned?() ? false
+
   constructor: (opts = {}) ->
     # padding 2 = the menu's tight border; rows stack FLUSH inside it (see
     # interElementGap below). No extent/color through the base ctor — the look
