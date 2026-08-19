@@ -7,6 +7,7 @@ build and the runtime enforce. Written to be picked up cold. It points rather th
 - naming tiers (the `_`/`__` scheme, the geometry-apply 2×2, the notification grid) → `docs/architecture/layering-naming-convention.md`
 - the build-time gates and run-time censuses → `docs/architecture/lint-and-static-checks.md`
 - integer placement policy, the back-buffer caveat, the plane-local vs `screen*` two-vocabulary law → `docs/architecture/integer-pixel-placement-and-sizing.md`
+- the scrolling-container family (the viewport chrome composite, the plane role, `scrollPolicy`, the scrolled-content contract) → `docs/architecture/viewports-and-planes.md`
 
 **The one principle everything below is a corollary of.** Layout is a *pure function of the event stream and the
 final geometry* — never of wall-clock timers, frame counts, or intermediate passes. A widget **measures** (no side
@@ -137,10 +138,10 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayout(newBounds)` | the per-node **arrange**: position self, apply own extent, place corner/edge-internal children, mark fixed, re-lay any child the arrange moved |
 | `_reLayoutSelf` | self-only heal hook (empty on base `Widget`); fired by `_applyExtentBase` when a widget's own extent commits |
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
-| `_positionAndResizeChildren` | the actual measure-and-place-children body — seven definers: `SimpleVerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the scroll panel respectively |
+| `_positionAndResizeChildren` | the actual measure-and-place-children body — the definers: `SimpleVerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the viewport respectively |
 
-`_reLayoutChildren` is defined by every size-tracking container and nothing else — ten definers: the
-stack and scroll panels, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its
+`_reLayoutChildren` is defined by every size-tracking container and nothing else — the definers: the
+stack panel and the viewport, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its
 own) plus its title bar, the docked paint toolbar, and the size-tracking menu-row
 widgets (slider / string-field / colour-picker / menu-header). Anything without it is not a
 size-tracking container, and the re-fit machinery (§3) is a no-op on it.
@@ -171,7 +172,7 @@ Two facts make this a *fixed-point* loop, not a fixed count of passes:
 
 2. **A settle can re-dirty something outside the subtree it just settled — the settle-time up-edge.** After the walk
    settles ANY node, `Widget._reFitMyTrackingContainerAfterSettle` re-fits that node's size-tracking container via
-   `_reFitContainer`, **iff the node's frame actually changed** (a no-op early-return otherwise). Because the
+   `_reFitContainer`, **iff the node's frame actually changed** (the settle step gates the call on the frame delta). Because the
    container reads the node's *final*, just-settled geometry, it re-fits correctly in one visit. This is the only
    source of genuine iteration, and it is concentrated at container boundaries that re-dirty each other
    (free-floating content ↔ its tracking container).
@@ -185,7 +186,7 @@ through the no-climb atom `__markForRelayout`, aimed at the one directly-affecte
 mid-pass (§2.2). The sanctioned mid-pass writers all route through the shared phase-valve
 `_scheduleRelayoutRespectingPhase` (`if world._recalculatingLayouts then @__markForRelayout() else @_invalidateLayout()`):
 the settle-time up-edge, the collapse-by-width valve, the composite schedule-valve in
-`_applyExtent`, and the scroll-panel commit-seam. (The caret's scroll-follow is not one of them: it enqueues itself
+`_applyExtent`, and the viewport commit-seam. (The caret's scroll-follow is not one of them: it enqueues itself
 via `_invalidateLayout`, whose inert-receiver branch handles it, and the follow then runs as the caret's own
 `_reLayout` inside the draining flush.) A crashing `_reLayout` cannot wedge the drain: the loop's catch
 force-marks the thrower fixed and hides it, deferring the report to the next cycle — outside the flush.

@@ -10,15 +10,17 @@ rationale trail, the falsified alternatives, and the member-audit tables.
 A scrolling container decomposes into three responsibilities, each with an honest home:
 
 1. **The viewport** — `ViewportWdgt extends Widget` (NOT a panel: its children are chrome, not
-   content). An invisible composite (`alpha 0`, never paints itself; a `RectangularAppearance`
-   for hit-testing only) wearing `ClippingAtRectangularBoundsMixin` directly and owning three
-   pieces of chrome: the contents panel and two `SliderWdgt` bars. `add` redirects any
-   non-chrome child into the contents (chrome self-identifies via
-   `attachesToViewportDirectly?()`). Scrolling physically MOVES the contents panel (absolute
-   coordinates, the Morphic inheritance); the scroll offset is derived
-   (`getScrollX/getScrollY`), the bars are wired through the public pin vocabulary, and every
-   scroll path funnels through the `scrollX`/`scrollY` movement cores and announces at
-   `_reLayoutScrollbars`.
+   content). An invisible-in-effect composite: its color/alpha MIMIC the plane's, so its own
+   painted rect always lies under the plane, indistinguishable (only the pop-up pair pins a
+   true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It wears
+   `ClippingAtRectangularBoundsMixin` directly and owns three pieces of chrome: the contents
+   panel and two `SliderWdgt` bars. `add` redirects any non-chrome child into the contents
+   (chrome self-identifies via `attachesToViewportDirectly?()`). Scrolling physically MOVES
+   the contents panel (absolute coordinates, the Morphic inheritance); the scroll offset is
+   derived (`getScrollX/getScrollY`), the bars are wired through the public pin vocabulary,
+   and every scroll path announces at `_reLayoutScrollbars` — all but the caret follow
+   (`scrollCaretIntoView` moves the plane directly, refusing `'never'` at its own gate) route
+   through the `scrollX`/`scrollY` movement cores.
 2. **The plane** — the panel the viewport clips and scrolls, the coordinate surface content
    actually lives on. Plane-ness is a ROLE, not a class: the default `ScrolledPaneWdgt`, a
    `FolderPanelWdgt`, a `ToolPanelWdgt` or a vertical stack all play it. Every topology
@@ -32,14 +34,18 @@ A scrolling container decomposes into three responsibilities, each with an hones
    - `hidesContainedWidgetFromHierarchyMenu(aWdgt)` — internal structure stays out of the
      hierarchy (disambiguation) menu; `FolderWindowWdgt` declares the same for its viewport.
    `ScrolledPaneWdgt` carries what is true of the default plane by construction: it never
-   notices transparent clicks, keeps the viewport's mimic paint values true via the
-   `_reactToChildColorChanged`/`_reactToChildAlphaChanged` up-relays, relays membership
-   changes to the viewport's HOLDER (`_reactToChild*InViewport` — the bin is the one
-   implementor), forwards an empty-area click to a lone editable text child, and owns the
-   FIT_BOX_TO_TEXT re-wrap (`_reWrapTextChildrenTo`).
+   notices transparent clicks, relays membership changes to the viewport's HOLDER
+   (`_reactToChild*InViewport` — the bin is the one implementor), forwards an empty-area
+   click to a lone editable text child, and owns the FIT_BOX_TO_TEXT re-wrap
+   (`_reWrapTextChildrenTo`). The color/alpha up-relays that keep the viewport's mimic true
+   are NOT here — every panel-family plane relays, so they live on `PanelWdgt` (see
+   Boundaries).
 3. **`PanelWdgt`** — purely the SURFACE class: a clipping, drop-accepting, free-placement
    editing surface (the desktop family, the shelf, transform islands, the spreadsheet cells
-   plane). It has no scroll personality: no back-pointer, no plane-conditional branches.
+   plane). It has no scroll personality of its own: no back-pointer, no stored role — where
+   plane-ness matters (the detach/grab-to-parent policy, the up-relays, the measure) it asks
+   the parent per query (`_amITheContentsPanelOfAViewport`), inert under any non-viewport
+   parent.
 
 ## Scroll policy — behavior is POLICY, never structure
 
@@ -69,7 +75,9 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
 - `managesOwnScrollPinning()` — a wrapping stack's position belongs to the arrange's clamp,
   so the reset-scroll-on-resize pin skips it.
 
-Capability ABSENCE is the panel default — there are no base-class stubs. A width-OWNING
+For the three boolean queries capability ABSENCE is the panel default — there are no
+base-class stubs; the measure alone has a real base implementation
+(`PanelWdgt.scrolledContentMeasure`), which the stack overrides. A width-OWNING
 content (a menu's rows panel hugging its widest row) must never be the width-constrained
 contents of anything: that shape does not terminate (`RECALC_NONCONVERGENCE`), which is why a
 pop-up interposes `PopUpRowsPaneWdgt` between its rows panel and its `PopUpRowsViewportWdgt`.
@@ -80,9 +88,10 @@ The construct family is role-named: `ViewportWdgt`, `ScrolledPaneWdgt`,
 `PopUpRowsViewportWdgt`, `SimpleVerticalStackViewportWdgt`, `SimpleTextViewportWdgt`,
 `SimpleDocumentViewportWdgt`, and the already-role-named `ListWdgt`/`ToolbarWdgt`. "Scroll"
 survives only where it names actual scrolling (`scrollX`, the scroll pins,
-`_reLayoutScrollbars`, `isMyScrollBar`). ⛔ "Frame" is the window vocabulary (`FrameWdgt`) and
-never names this family. Colloquials: a generic viewport is "viewport"; composites take their
-contents' name (`viewportColloquialName` — "folder", "toolbar").
+`_reLayoutScrollbars`, `isMyScrollBar`). ⛔ "Frame" belongs to other constructs (the window
+`FrameWdgt`, the island `TransformFrameWdgt`) and never names this family. Colloquials: a
+generic viewport is "viewport"; composites take their contents' name
+(`viewportColloquialName` — "folder", "toolbar").
 
 ## Boundaries and horizons
 
