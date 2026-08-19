@@ -91,16 +91,17 @@ class PopUpWdgt extends Widget
   # mid-life, in the middle of the very membership change that provoked it. With
   # the frame always present there is nothing to cross — a menu that fits simply
   # has nothing to scroll, and ViewportWdgt hides a bar with nothing to show.
-  #   The composition is the one ListWdgt uses: a ViewportWdgt keeping its own
-  # default plain-PanelWdgt contents, with the rows panel placed INSIDE that.
+  #   The composition is the one ListWdgt uses: a ViewportWdgt keeping its own content
+  # pane (mine is a PopUpRowsPaneWdgt), with the rows panel placed INSIDE that.
   #   ⛔ Do NOT "simplify" this by making the rows panel BE the frame's contents.
-  # That shape does not terminate: ViewportWdgt._positionAndResizeChildren has a
-  # `@contents instanceof SimpleVerticalStackPanelWdgt` branch that constrains the
-  # stack's width to the viewport, while MenuRowsPanelWdgt._positionAndResizeChildren
-  # hugs its width back to its widest row — the two fight and recalculateLayouts
-  # raises RECALC_NONCONVERGENCE. A menu OWNS its width, so it can never be the
-  # width-constrained contents of anything, which is why ListWdgt is built this way
-  # too.
+  # That shape does not terminate, EVEN WITH the scrolled-content contract fully
+  # declared (width-ownership, content-sizing, the absorb forward): the viewport is
+  # its plane's sole frame committer and writes the pure measure, while
+  # MenuRowsPanelWdgt is a SELF-frame-writing plane — its arrange re-applies its hug
+  # (widest row + 2*padding, tight height) — so the two writers disagree by a constant
+  # and oscillate forever (RECALC_NONCONVERGENCE). A menu OWNS its frame, so it can
+  # never be the committed contents of anything, which is why ListWdgt is built this
+  # way too. Falsification record + probe: the §7.2 line in docs/BACKLOG.md.
   #   ⚠ EVERY FACT THE TWO ADDED WIDGETS NEED IS A PER-CLASS DECLARATION, which is why
   # they are classes (PopUpRowsViewportWdgt / PopUpRowsPaneWdgt) rather than a
   # configured ViewportWdgt: a plain panel's inherited answers are wrong on all of

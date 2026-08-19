@@ -77,10 +77,15 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
 
 For the three boolean queries capability ABSENCE is the panel default — there are no
 base-class stubs; the measure alone has a real base implementation
-(`PanelWdgt.scrolledContentMeasure`), which the stack overrides. A width-OWNING
-content (a menu's rows panel hugging its widest row) must never be the width-constrained
-contents of anything: that shape does not terminate (`RECALC_NONCONVERGENCE`), which is why a
-pop-up interposes `PopUpRowsPaneWdgt` between its rows panel and its `PopUpRowsViewportWdgt`.
+(`PanelWdgt.scrolledContentMeasure`), which the stack overrides. The contract's core split
+is frame OWNERSHIP: the viewport is its plane's sole frame committer. A SELF-frame-writing
+content — one whose own arrange re-applies its extent, as a menu's rows panel hugs its
+widest row — must therefore never be the contents of anything: two frame writers with
+different arithmetic oscillate forever (`RECALC_NONCONVERGENCE`; probed and re-falsified
+with the full contract declared — the BACKLOG's §7.2 refusal holds the measured record),
+which is why a pop-up interposes `PopUpRowsPaneWdgt` between its rows panel and its
+`PopUpRowsViewportWdgt`. A free-width stack is fine as direct contents: it owns its width
+PASSIVELY (the declaration turns the normalization off) without ever writing its own frame.
 
 ## Naming
 
