@@ -1536,12 +1536,16 @@ class WorldWdgt extends IconGridPanelWdgt
       if @widgetsToBeHighlighted.has target
         if target.hasMaybeChangedPaintBounds()
           # R2 (§6 affine): keep the highlight parented in the TARGET'S PLANE — inside its innermost
-          # enclosing non-identity island — so it composites through the transform (rotates + clips with
-          # the target for free, §4.6). Re-derived each update so a mid-hover rotate/unwrap re-homes it;
-          # a target off any island resolves to the world ⇒ byte-identical dormant. add() re-parents and
-          # (highlighter having no intrinsic layoutSpec) keeps it free-floating; the common static case
-          # is already home, so this only fires on an actual island-membership transition.
-          desiredParent = target._enclosingNonIdentityIsland() ? @
+          # MAPPING ancestor (a non-identity island; a scrolled pane's viewport once the paint-time-
+          # scroll model is live) — so it composites through the mapping (rotates/translates + clips
+          # with the target for free, §4.6). Re-derived each update so a mid-hover rotate/unwrap
+          # re-homes it; a target off any mapped plane resolves to the world ⇒ byte-identical dormant.
+          # add() re-parents and (highlighter having no intrinsic layoutSpec) keeps it free-floating;
+          # the common static case is already home, so this only fires on a membership transition.
+          # ⚠ for a VIEWPORT root, add() redirects into its contents, so this parent-equality check
+          # must compare against the redirect target when the scroll arm gains live providers
+          # (paint-time-scroll-translation plan Phase 2c) — else it re-adds every cycle.
+          desiredParent = target._enclosingMappedPlaneRoot() ? @
           desiredParent.add eachHighlightingWidget  if eachHighlightingWidget.parent != desiredParent
           eachHighlightingWidget._applyBounds target.clippedThroughBounds()
       else
@@ -1553,10 +1557,11 @@ class WorldWdgt extends IconGridPanelWdgt
     @widgetsToBeHighlighted.forEach (styleDescriptor, eachWidgetNeedingHighlight) =>
       unless @widgetsBeingHighlighted.has eachWidgetNeedingHighlight
         hM = new HighlighterWdgt
-        # R2 (§6 affine): parent the highlight into the target's innermost enclosing non-identity island
-        # (its virtual plane) so it warps + clips with the target; the world when there is none (dormant
+        # R2 (§6 affine): parent the highlight into the target's innermost MAPPING ancestor (island,
+        # or a scrolled pane's viewport — whose add() redirects onto the scrolled plane) so it
+        # warps/translates + clips with the target; the world when there is none (dormant
         # ⇒ byte-identical to the prior @add hM).
-        (eachWidgetNeedingHighlight._enclosingNonIdentityIsland() ? @).add hM
+        (eachWidgetNeedingHighlight._enclosingMappedPlaneRoot() ? @).add hM
         hM.wdgtThisWdgtIsHighlighting = eachWidgetNeedingHighlight
         hM._applyBounds eachWidgetNeedingHighlight.clippedThroughBounds()
         hM.applyHighlightStyle styleDescriptor

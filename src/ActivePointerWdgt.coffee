@@ -449,21 +449,24 @@ class ActivePointerWdgt extends Widget
 
       target._beforeChildDropped? wdgtToDrop
 
-      # Affine transforms 4D-1 (§6): DROP-IN into a widget that lives inside a non-identity island.
+      # Affine transforms 4D-1 (§6): DROP-IN into a widget whose plane is MAPPED — inside a
+      # non-identity island, or (once the paint-time-scroll model is live) inside a scrolled pane.
       # The payload arrives in SCREEN space (it was float-dragged on the hand, a world-level widget),
-      # but once it becomes target's child it composites THROUGH target's plane transform — so its
-      # bounds must be re-expressed in that plane or the island's transform double-applies and the
-      # payload jumps off the release point (lands rotated/scaled away from where it was dropped).
+      # but once it becomes target's child it renders THROUGH target's plane mapping — so its
+      # bounds must be re-expressed in that plane or the mapping double-applies and the
+      # payload jumps off the release point (lands rotated/scaled/offset away from where it was dropped).
       # Preserve the on-screen CENTRE (drag continuity): map it into target's plane and re-home the
       # payload's UNCHANGED-size bounds there, so it appears at its native virtual size, correctly
       # rotated/scaled, centred where it was released. (Centre-preserving, NOT a corner-bbox
       # inverseMapRect: a rotated rect's screen-corner bounding box would inflate + mis-centre — the
       # same reason 4A-2 point-maps instead of adding an inverseMapVector; extent is deliberately left
       # native, the payload simply becomes content of the transformed thing.) screenPointToMyPlane
-      # composes ALL ancestor islands (N-deep) and returns the point UNCHANGED off any island, so the
-      # whole block is a no-op when dormant (byte-identical). NoSettle mutator — the target.add below
+      # composes ALL mapping ancestors (N-deep) and returns the point UNCHANGED off any mapped
+      # plane, so the whole block is a no-op when dormant (byte-identical). The GATE stays (unlike
+      # the always-mapped positionOnScreen below) because the block's _applyMoveTo is a real
+      # mutation the common unmapped drop must not pay. NoSettle mutator — the target.add below
       # carries the single settle.
-      if target._isInsideNonIdentityIsland()
+      if target._isInsideMappedPlane()
         # §7.5 Bug-D interplay: an undefined anchor makes center() the rotation fixed point, so it IS the on-screen
         # visual centre — but a figure picked up after a resize can carry a PINNED anchor (anchor-stability),
         # and then its bounds center() is spun about the pinned anchor and is NOT the visual centre. Map the
@@ -477,13 +480,14 @@ class ActivePointerWdgt extends Widget
       # Affine transforms §7.13: positionOnScreen is consumed by the stack/menu panels
       # (VerticalStackPanelWdgt / ToolPanelWdgt) to derive a
       # child-INSERT index by comparing against their children's PLANE-LOCAL spans — for a target
-      # inside a non-identity island the raw screen point picks the wrong slot (a 180°-tilted stack
-      # inverts the visual order, so a drop on the first child inserted after the last). Same gate +
-      # mapping as the 4D-1 block above; dormant path passes @position() through, byte-identical.
+      # inside a non-identity island or a scrolled pane the raw screen point picks the wrong slot
+      # (a 180°-tilted stack inverts the visual order, so a drop on the first child inserted after
+      # the last). ALWAYS mapped, no gate: screenPointToMyPlane is the identity (same object) off
+      # any mapped plane, so the dormant path still passes @position() through, byte-identical.
       # This one call addresses every container in the add family: a receiver that does not read
       # positionOnScreen simply ignores it, which is what the options tail buys over the six
       # positional slots (four of them holes) this used to need.
-      dropPositionInTargetPlane = if target._isInsideNonIdentityIsland() then target.screenPointToMyPlane @position() else @position()
+      dropPositionInTargetPlane = target.screenPointToMyPlane @position()
       target.add wdgtToDrop, beingDropped: true, positionOnScreen: dropPositionInTargetPlane
       # Affine transforms 4D-2b (§6): the UNWRAP half of the re-expression. _reExpressFigureForPlaneOfNoSettle
       # above re-spec'd a dropped sugar figure to its RELATIVE similitude; when that was identity the figure is

@@ -201,6 +201,31 @@ class ViewportWdgt extends Widget
 
   getScrollY: -> @top() - @contents.top()
 
+  # ── THE STORED SCROLL OFFSET (paint-time-scroll-translation plan §3.1) ────────────────────
+  # How far the view has scrolled into the content, per axis: INTEGER, ≥ 0, clamped to
+  # [0, max(0, contentExtent − windowExtent)]. Two scalar prototype defaults — scalars, NOT a
+  # Point (⛔ a class-level constant may never reference another class,
+  # docs/architecture/immutable-value-classes.md §3), and scalars serialize own-only-when-
+  # scrolled (the spreadsheet's viewOriginCol/Row pattern). While the moved-plane model is
+  # live these stay 0 — the offset is still DERIVED (getScrollX/Y above) and scrolling still
+  # physically moves the plane; the movement cores start clamping and writing these when the
+  # plan's Phase 2 pins the plane.
+  scrollOffsetX: 0
+  scrollOffsetY: 0
+
+  # The per-child-edge capability hook the screen↔plane walks ask of every ancestor they
+  # climb through (plan §3.2; the walks: Widget's mapRectToScreen / screenPointToMyPlane /
+  # localPointToScreen / screenBounds / _enclosingMappedPlaneRoot). Answers ONLY for my
+  # contents edge — my bars are FIXED children of the same parent, so the §7.6
+  # fixed-vs-scrolled-children split is answered structurally, per child edge, with no stored
+  # role — and ONLY when scrolled: at offset (0,0) the answer is `undefined`, the walks
+  # contribute nothing, and their same-object dormant returns are preserved. The returned
+  # Point is the translation applied to the contents SUBTREE when mapping plane→screen.
+  scrollTranslationOfChild: (child) ->
+    return undefined unless child is @contents
+    return undefined if @scrollOffsetX is 0 and @scrollOffsetY is 0
+    new Point -@scrollOffsetX, -@scrollOffsetY
+
   # The pin-setter contract (widget-authoring-guidelines §11): every delivery passes ONE argument,
   # the value.
   #   ⚠ CLAMPED, through the same `scrollX`/`scrollY` every other scroll path uses. The predecessor

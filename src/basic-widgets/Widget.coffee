@@ -1464,9 +1464,19 @@ class Widget extends TreeNode
   # (screen) plane against the OUTERMOST island's own visible rect (= its footprint ∩
   # its ancestor screen clips) — clipping the pre-image plane would not commute with
   # the transform (§4.11).
+  # Every screen↔plane walk here is TWO-ARM (docs/plans/paint-time-scroll-translation-plan.md
+  # §3.2): the island arm (a non-identity TransformFrameWdgt ancestor — similitude verbs) and
+  # the translation arm (any ancestor answering `scrollTranslationOfChild(child)` for the child
+  # edge just climbed through — an integer-Point translate applied to that child's subtree when
+  # mapping plane→screen; `previous` tracks the edge so the question is per-child: a viewport
+  # answers only for its contents, so its bars stay FIXED chrome with no stored role). An
+  # ancestor with no non-identity island and no translation provider contributes nothing, so
+  # off any mapped plane every walk still returns its input UNCHANGED (same object) — the
+  # dormant guarantee the byte-exact suite stands on.
   mapRectToScreen: (aRect, depositBufferDamage = false) ->
     result = aRect
-    outermostIsland = undefined
+    outermostIslandClip = undefined
+    previous = @
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
@@ -1480,10 +1490,20 @@ class Widget extends TreeNode
         # for free. Zero dormant cost (off-island never enters).
         ancestor._depositIslandBufferDamageRect result if depositBufferDamage
         result = ancestor.transformSpec.mapRect result, ancestor.bounds
-        outermostIsland = ancestor
+        # the OUTERMOST island's visible rect clips the mapped damage (§4.11) — read it at the
+        # crossing (pure per geometryVersion, so the value equals an after-the-loop read) and let
+        # any LATER translation step carry it along, so the final intersect happens with both
+        # rects expressed in the same (screen) plane even when an island sits inside a scrolled
+        # pane. Each crossing overwrites: only the outermost island's clip applies, as before.
+        outermostIslandClip = ancestor.clippedThroughBounds()
+      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
+        # translation arm: EXACT translate — no ±1px AA pad (nothing resamples), no buffer deposit
+        result = result.translateBy translation
+        outermostIslandClip = outermostIslandClip.translateBy translation if outermostIslandClip?
+      previous = ancestor
       ancestor = ancestor.parent
-    if outermostIsland?
-      result = result.intersect outermostIsland.clippedThroughBounds()
+    if outermostIslandClip?
+      result = result.intersect outermostIslandClip
     result
 
   # Affine transforms (§4.6): map a SCREEN point down into THIS widget's plane, by
@@ -1494,17 +1514,27 @@ class Widget extends TreeNode
   # bounds/pixel test runs in the plane where its (virtual) geometry lives; corner
   # fall-through and per-pixel transparency then come out exact for free (§10.4).
   screenPointToMyPlane: (aPoint) ->
-    islands = undefined
+    # two-arm (see mapRectToScreen's header note): a step is an island (inverse similitude)
+    # or a scroll translation (a bare Point, inverted by subtract)
+    steps = undefined
+    previous = @
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
-        islands ?= []
-        islands.push ancestor            # innermost first
+        steps ?= []
+        steps.push ancestor              # innermost first
+      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
+        steps ?= []
+        steps.push translation
+      previous = ancestor
       ancestor = ancestor.parent
-    return aPoint if !islands?
+    return aPoint if !steps?
     result = aPoint
-    for island in islands by -1          # apply inverses outermost → innermost
-      result = island.transformSpec.inverseMapPoint result, island.bounds
+    for step in steps by -1              # apply inverses outermost → innermost
+      if step.transformSpec?             # an island step (a translation step is a bare Point)
+        result = step.transformSpec.inverseMapPoint result, step.bounds
+      else
+        result = result.subtract step
     result
 
   # Affine transforms (§4.6): the exact inverse of screenPointToMyPlane — map a point in THIS
@@ -1516,10 +1546,14 @@ class Widget extends TreeNode
   # position, so `.center()` alone would click the wrong pixel (and miss).
   localPointToScreen: (aPoint) ->
     result = aPoint
+    previous = @
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
         result = ancestor.transformSpec.mapPoint result, ancestor.bounds
+      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
+        result = result.add translation
+      previous = ancestor
       ancestor = ancestor.parent
     result
 
@@ -1540,6 +1574,30 @@ class Widget extends TreeNode
     ancestor = @parent
     while ancestor?
       return ancestor if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+      ancestor = ancestor.parent
+    undefined
+
+  # The GENERAL siblings of the pair above (paint-time-scroll-translation plan §3.2): is any
+  # MAPPING ancestor — a non-identity island OR a scroll-translation provider for the child
+  # edge crossed — between me and the screen plane? The island pair stays for ROTATION-specific
+  # policy (handles refuse, float-drag escalates, pick-out/re-express); this pair is for
+  # PLANE-MAPPING policy — the call sites that must re-express coordinates or re-home overlay
+  # chrome whenever my plane is mapped at all, however it is mapped (the drop re-centre gate,
+  # the highlight re-home). Off any mapped plane: false / undefined — byte-identical dormant.
+  _isInsideMappedPlane: ->
+    @_enclosingMappedPlaneRoot()?
+
+  # The INNERMOST mapping ancestor (island or translation provider), or undefined. For an
+  # island the root is the island itself (overlay chrome parented into it composites through
+  # the transform); for a scrolled pane it is the VIEWPORT — whose add() redirects non-chrome
+  # into its contents, i.e. onto the scrolled plane.
+  _enclosingMappedPlaneRoot: ->
+    previous = @
+    ancestor = @parent
+    while ancestor?
+      return ancestor if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
+      return ancestor if ancestor.scrollTranslationOfChild?(previous)?
+      previous = ancestor
       ancestor = ancestor.parent
     undefined
 
@@ -1571,10 +1629,14 @@ class Widget extends TreeNode
   # its OWN transform (which applies to its CONTENT, not its slot box) is correctly excluded.
   screenBounds: ->
     result = @boundingBox()
+    previous = @
     ancestor = @parent
     while ancestor?
       if ancestor instanceof TransformFrameWdgt and !ancestor.transformSpec.isIdentity()
         result = ancestor.transformSpec.mapRectExact result, ancestor.bounds
+      else if (translation = ancestor.scrollTranslationOfChild?(previous))?
+        result = result.translateBy translation
+      previous = ancestor
       ancestor = ancestor.parent
     result
 
@@ -1595,6 +1657,8 @@ class Widget extends TreeNode
   # and my own sugar island IS an ancestor, so my own transform is included. ONE greppable
   # accumulation shared with the pick-out (_pickOutRotatedFigureNoSettle) and drop-re-express
   # (_reExpressFigureForPlaneOfNoSettle) verbs. Off any island ⇒ 0 / 1.
+  # Deliberately NO translation arm (unlike the mapping walks above): a scroll translation
+  # contributes no rotation and no scale, so these two are complete as they are.
   accumulatedRotationDegrees: ->
     total = 0
     ancestor = @parent

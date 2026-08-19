@@ -4,9 +4,9 @@
 > Authored 2026-08-19 against Fizzygum master `44bba15e` / Fizzygum-tests master `6da0e1300`
 > (both pushed; gauntlet 17/17 at these heads). Every `file:line` here is a hint that WILL
 > drift — the method name and the quoted code are authoritative; grep them fresh before
-> trusting any line number. STATUS: **Phase 0 DONE (all three spikes GREEN, 2026-08-19,
-> at `a535b7d1` — see the STATUS BOX below); Phase 1 not started, awaiting the owner's
-> go.**
+> trusting any line number. STATUS: **Phases 0 AND 1 DONE (2026-08-19, spikes all GREEN,
+> Phase 1 landed zero-behavior-change with gauntlet 17/17 — see the STATUS BOX below);
+> next is Phase 2a.**
 
 ## STATUS BOX
 
@@ -15,7 +15,7 @@
 | **0 — S1 pixel identity** | ✅ **BYTE-IDENTICAL, 18/18 A/B pairs, dpr1 AND dpr2** | Moved-plane vs pinned+translate renders compared by raw-pixel SHA-256 on 8 real test worlds (probe: `Fizzygum-tests/.scratch/s1-pixel-identity-probe.js`): DocumentViewportWdgt ×3 (text, and the mixed-text-AND-CLOCKS world — rotated stroke hands, the C1 FP-risk class), ListWdgt ×2 (one both-axes), TextAreaWdgt, VerticalStackViewportWdgt (X axis), ViewportWdgt ×2 (wrapped text; the transform-island test world). Zero diffs ⇒ **predicted recapture budget for pure integer-offset scroll relocation: ZERO** (risk 2 did not materialize in any probed world). |
 | **0 — S2 walk generalization** | ✅ **suite 305/305 byte-identical, wall-clock within noise** | Two-arm walk (island arm + `scrollTranslationOfChild?(previous)` translation arm, `previous` child-edge tracking) prototyped in `screenPointToMyPlane` + `mapRectToScreen` — the two HOTTEST walks — with a live provider on every ViewportWdgt (answering undefined at offset 0, i.e. a harder perf test than Phase 1's zero-providers). Suite: baseline 1.14 min → spiked 1.12 min, 305/305, zero failures (byte-exact by the suite's own contract). |
 | **0 — S3 gated call sites** | ✅ **all four behave exactly as §1.4/§1.5 predicts** | Probe: `.scratch/s3-gated-call-sites-probe.js`, spike offset live on a real pane. **Drop**: lands INSIDE the scrolled pane (targeting through the generalized walks is already correct) but at the RAW SCREEN point in plane coords — visually offset-high by exactly the offset ⇒ the ActivePointerWdgt gate must generalize (2c). **Highlight**: HighlighterWdgt parented to the world at the target's PLANE box — visually offset-low by exactly the offset ⇒ the WorldWdgt re-home gate must generalize (2c). **Font menu** (`ChangeFontButtonWdgt` reparented into the pane): menu opens at the button's PLANE y, not its visual y ⇒ the popUp own-position emission needs `localPointToScreen` (2c). **Caret follow**: `scrollCaretIntoView` PHYSICALLY moved the plane under a live offset (hybrid state, pinned invariant broken) ⇒ the 2b rewrite is required, as planned. No additional misbehavior class surfaced. |
-| 1 — mapping protocol | not started (⛔ owner gate: Phase-0 verdicts presented, awaiting go) | — |
+| **1 — mapping protocol** | ✅ **DONE 2026-08-19** (zero behavior change, gauntlet 17/17 at 343s incl. webkit; suite wall-clock 1.12 min vs 1.14 baseline) | The four value walks (`mapRectToScreen`, `screenPointToMyPlane`, `localPointToScreen`, `screenBounds`) are two-arm with `previous` child-edge tracking; `_isInsideMappedPlane`/`_enclosingMappedPlaneRoot` added beside the island-specific pair (which stays for rotation policy); the four gated call sites moved over — the 4D-1 re-centre block keeps its gate generalized (its `_applyMoveTo` is a real mutation), the `positionOnScreen` site is now ALWAYS-mapped (the map is the identity off-plane); `ViewportWdgt` carries `scrollOffsetX/Y: 0` + the real `scrollTranslationOfChild` provider (dormant at 0,0 — the exact configuration S2 measured). `accumulated*` deliberately gained NO translation arm (translations contribute no rotation/scale). `mapRectToScreen`'s outermost-island clip is read at the crossing and rides later translation steps (value-identical today, correct under island-inside-scrolled-pane once providers go live). `instanceof-type-test` baseline 77→78 (the new predicate's island test). ONE benign recapture: `macroDuplicatedInspectorDrivesCopiedTargetOnly` (inspector member-list churn from the new Widget members — eyeballed: one-row list shift, behavior intact; gated recapture COMPLETE at dpr1+2, webkit re-verified by the gauntlet). ⚠ §1.3/§1.4 describe the PRE-Phase-1 state — the walks are now two-arm; a Phase-2 executor re-greps per §0.5 anyway. |
 | 2 — offset model | not started | — |
 | 3 — retirement + truth | not started | — |
 | 4 — property-of-every-panel | ⛔ OWNER-GATED | — |
@@ -381,7 +381,10 @@ and `.scratch/s3-gated-call-sites-probe.js`; src hacks reverted, clean tree rebu
 **Phase 1 — the mapping protocol, zero behavior change.** Reshape the 7 walks onto the
 two-arm form (+ the child-edge tracking); add the general predicates; move the four gated
 call sites onto them; islands re-expressed, translation arm EXISTS but has zero providers.
-Gate: `fg gauntlet` byte-identical (no recaptures allowed in this phase), suite wall-clock
+Gate: `fg gauntlet` byte-identical (no recaptures allowed in this phase — EXCEPT the
+pre-authorized benign inspector member-list churn: ANY new member lengthens the inspector
+list regardless of behavior, and adding the provider/fields/predicates is Phase 1's whole
+point; eyeball + gated recapture + webkit re-verify, the standing flow), suite wall-clock
 within noise.
 
 **Phase 2 — the offset model on ViewportWdgt.** In sub-steps, each suite-gated:
