@@ -193,7 +193,9 @@ AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory �
 - [x] §4.1: prefix retired 2026-08-19 — owner-ratified SHORT ROLE NAMES (`ShortcutWdgt`, `AppLauncherWdgt`, `WindowedApp`, …; the `Reference*` sketch was rejected — launcher ≠ reference); table in the plan's §4.1 as-executed block
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
 - [x] §4.3: trash — RATIFIED 2026-08-18 as sever+close (one store, no views) and EXECUTED 2026-08-19 (`Widget.moveToTrash`, referent-death sever, conditional menu row, `fg graph` §5) + the R3 `bringUpReferencedWidget` rename
-- [ ] §4.4: duplicate vs duplicate-contents for references (second wave)
+- [ ] §4.3/R5: drop into the OPEN BIN = trash intent (ratified 2026-08-19: run the same sever as the menu row so the drop sticks) — in execution
+- [ ] §4.4: the ARROW CONTRACT — ratified + pressure-tested 2026-08-19 (glyph = copy semantics; per-instance declaration; deep closure feeds Duplicator AND serializeWidget structure; 6/16 icons de-arrow; referent copies filed to shelf) — plan §4.4 is cold-executable
+- [ ] §4.4 follow-up: what does save-to-file mean for an ARROW'D shortcut (today: friendly error — no cross-file identity for a dangling-`.lnk` restore; needs its own decision)
 
 ## Residual / parked items (owning doc archived)
 

@@ -104,6 +104,20 @@ class BinWdgt extends Widget
   _reactToChildAddedInScrollPanel: (child) ->
     world.noteStorageMembershipMayHaveChanged()
 
+  # AN EXPLICIT DROP INTO MY OPEN WINDOW CARRIES TRASH INTENT (reference-widgets plan R5,
+  # ratified 2026-08-19): run the same sever the "move to trash" menu row runs, so the drop
+  # STICKS -- without it, a still-referenced widget put in the bin is re-filed to the shelf by
+  # the very next drain and visibly escapes the bin, silently overriding the user's gesture.
+  # This hook fires ONLY for user drops (the drop-specific relay in
+  # PanelWdgt._reactToChildDropped): close filing and the drain's own moves arrive through
+  # _addNoSettle and never reach it, so an automatic filing can never sever anything.
+  # Dropping a SHORTCUT here severs edges into the SHORTCUT itself (usually none) and leaves
+  # its referent alone -- trashing an alias never touches the thing it points at; the referent
+  # stays reachable through the bin-held holder until the bin is emptied.
+  # Runs inside the drop's single settle -> the non-settling sever core.
+  _reactToChildDroppedInScrollPanel: (child) ->
+    world._severLivenessEdgesIntoWdgtNoSettle child._enclosingIslandFigure()
+
   # a pickup/departure out of the open bin window is the symmetric membership
   # event (e.g. a shortcut dragged out re-seeds its target's reachability while
   # still in the hand) -- mark-only; the end-of-cycle drain sorts.

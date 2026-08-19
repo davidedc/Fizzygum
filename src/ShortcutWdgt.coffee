@@ -73,7 +73,8 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # the caption and the click all exist to re-summon the referent — so severing it means dying,
   # not blanking (a blanked shortcut would be a lying icon whose click can only apologise).
   # Dispatched by the two sever chokepoints — world._severLivenessEdgesIntoWdgtNoSettle (the
-  # "move to trash" gesture) and Widget._destroyNoSettle (referent death) — WITHOUT `?.`: a
+  # trash gestures: the "move to trash" row and both bin drop surfaces, plan R5) and
+  # Widget._destroyNoSettle (referent death) — WITHOUT `?.`: a
   # future class that emits reference edges must decide its own sever behaviour, and a loud
   # throw at the sever site beats silently destroying a widget richer than a shortcut.
   _severReferenceEdgeToNoSettle: (referent) ->

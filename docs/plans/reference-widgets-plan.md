@@ -176,13 +176,79 @@ quadrant); two real intent areas (re-litigates the landed, gated split).
   ways, referent-death sever, tracker corpse-freedom; 31 checks total, STORAGE_INVARIANT and
   console clean throughout.
 
-### 4.4 Duplicate vs duplicate-contents for references. *Copy semantics.*
-Expose two copy semantics on reference widgets: default user **"duplicate"** recursively duplicates the
-*referent's contents* (duplicating a folder duplicates what's in it); **"pure duplicate"** (share the same
-referent) is **dev-only**. Build on the `Duplicator` engine (`src/duplication/Duplicator.coffee`) +
-`docs/archive/duplication-and-save-preserve-transforms-plan.md`;
-the reference class overrides the copy hook to choose referent-share vs referent-recurse. (Informed by the
-arc-(b) edge model — a "duplicate-contents" is a copy that follows containment+reference edges.)
+### 4.4 The arrow contract: glyph = copy semantics. *RATIFIED 2026-08-19, pressure-tested same day.*
+
+**The owner-ratified model (supersedes the original "flip the default + dev-only pure duplicate"
+sketch, which is RETIRED — the default was only ever wrong on icons that should not have presented
+as shortcuts):** the little arrow badge is a SEMANTIC CONTRACT, exactly as on Windows/mac.
+- **Arrow ⇒ the icon is a reference** (a shortcut): duplicating it duplicates the REFERENCE only —
+  both copies point at the same referent. This is today's behaviour and today's doctrine
+  (`ShortcutWdgt`'s header); it does not change.
+- **No arrow ⇒ the icon IS the thing** (it represents the actual contents): duplicating it
+  duplicates the CONTENTS — for the reference-implemented desktop/folder icons that means
+  following the `referencedWidget` edge into the copy.
+- **The bin gets no arrow and refuses duplication** (one singleton; `BinOpenerWdgt` is already
+  outside the reference tracker).
+- **Launchers get no arrow and need no declaration** — they hold no `referencedWidget` at all;
+  duplicating one yields another independent factory (already correct:
+  `WindowedApp.keptByReferenceOnDeepCopy: true` shares the app singleton on copy, and the lazy
+  mode copies a class-name string).
+
+**Current-state census (2026-08-19): 6 of the fresh world's 16 icons wear the arrow, and all six
+are WRONG under this model** — the bin, the folder, and the four wrapped Examples doors
+(`AppCatalog`'s `GenericShortcutIconWdgt`-wrapped entries), while the 9 desktop Makers are
+already bare. The badge today tracks which section of AppCatalog built the icon — provenance,
+not meaning. A fresh world under this model shows ZERO arrows; the badge appears only when a
+user creates a shortcut. (One extra glyph liar to sweep: DemoMenus' "Welcome" icon is a
+`DocumentShortcutWdgt` — a real reference — built with a bare icon.)
+
+**The declaration is PER-INSTANCE, set at creation — not a class split.** Both kinds of
+in-folder icon are the same class today, built through two different paths: dropping a real
+widget into a folder FILES it (`_createReferenceAndCloseNoSettle` — widget to the shelf, icon
+left behind ⇒ presents as CONTENT, no arrow, deep copy), while "create shortcut"
+(`createReference`) makes a deliberate alias (⇒ arrow, shallow copy). One boolean field (e.g.
+`representsContents`), assigned in the constructor from the creation path, drives BOTH the icon
+assembly (arrow'd `GenericShortcutIconWdgt` composite vs bare inner icon — the 9 Makers prove
+the bare path) and the copy closure below. An own field, so it rides serialization and
+duplication untouched. The primary folder icon and the bin opener declare content at their
+creation sites. ⛔ The declaration must NEVER feed liveness: to the storage classifier, the
+close-path query and the trash sever, a content-presenting icon is an ordinary reference edge
+(verified composition: trashing an open folder window severs its content-presenting desktop
+icon — the representation dies with the thing, correctly).
+
+**Mechanics (pressure-tested against the engines 2026-08-19 — no engine changes needed):**
+- `Widget.fullCopy` is `new Duplicator(@allChildrenBottomToTop()).duplicate @`, and the
+  Duplicator's own contract is: a Widget OUTSIDE `widgetsInStructure` is kept as a live shared
+  pointer, one inside CLONES, and `alignCopiedWidgetToReferenceTracker` enrolls fresh references
+  automatically. Shallow-vs-deep is therefore purely WHICH WIDGETS JOIN THE SET before the walk:
+  deep = *subtree ∪ (each in-structure icon that presents-as-content contributes its referent's
+  figure, recursively)*. In-folder arrow'd shortcuts need no special case — their referents stay
+  outside the set, so the copied folder shares them, per their own glyph.
+- ⭐ The closure computation needs a VISITED-SET fixpoint of its own (folder-in-folder filings
+  make reference-through-containment cycles constructible; the Duplicator's identity map handles
+  cycles inside the walk, not in the set computation before it).
+- ⭐ **Placement rule: the referent's copy is explicitly FILED to the shelf** after the
+  duplicate — the drain will not home it (a reachable orphan is homeless, not misfiled), and the
+  folder copy must not appear open on the desktop even when the original's window is open. The
+  icon copy lands wherever the gesture puts it, as today.
+- **The same closure should feed `Serializer.serializeWidget`'s structure**: today the
+  Serializer HARD-FAILS on any external non-well-known widget, and `saveToFile` shows that as a
+  friendly error — so "save to file…" on any shortcut, or any figure containing one, simply
+  errors today. With the closure, content-presenting figures become genuinely saveable
+  (referents embedded). Saving an ARROW'D shortcut stays an error for now — Fizzygum has no
+  cross-file identity that would make a dangling-`.lnk` restore meaningful — filed as its own
+  follow-up decision, not solved in this arc.
+
+**Known-and-accepted (pre-existing, noted during the pressure test, NOT this arc's scope):**
+deleting a filed icon parks the ICON in the bin (its document rests on the shelf, reachable
+through it); emptying the bin destroys the icon, the document becomes lost, and it surfaces in
+the just-emptied bin. Graph-honest and data-protective — the document was never explicitly
+condemned — but worth knowing.
+
+Verification: extend `fg graph` with a §6 (deep copy of a folder ⇒ fresh referent copies on the
+shelf + fresh tracker enrollments + the original untouched; shallow copy of an arrow'd shortcut
+⇒ shared referent; bin opener refuses duplication), plus the intended glyph recapture (the 6
+de-arrowed icons churn every screenshot showing them).
 
 ---
 
@@ -191,6 +257,8 @@ arc-(b) edge model — a "duplicate-contents" is a copy that follows containment
 |---|---|---|
 | R1 | Scope for v1 | ✅ **RESOLVED 2026-08-19: §4.3 landed first (its semantics were ratified first), §4.1 same day with the owner-ratified short role names** (the `Reference*` sketch rejected — see §4.1). Remaining wave: §4.2 (needs R2), §4.4. |
 | R2 | Minimise semantics | Recommend minimise as a **separate** affordance (don't repurpose the tested collapse button) — unless owner wants the note's literal up-triangle mapping. |
+| R4 | §4.4 copy semantics | ✅ **RATIFIED 2026-08-19: the arrow contract** (arrow = reference, copy shares; no arrow = the thing itself, copy deepens; bin arrow-less + duplication refused; launchers arrow-less, no declaration needed). Per-instance declaration set at creation (filed vs created-shortcut). See §4.4. |
+| R5 | Drop into the open bin | ✅ **RATIFIED 2026-08-19: (b) — an explicit drop into the bin window carries trash intent** and runs the same sever as the `move to trash` row, so the drop STICKS instead of the drain re-filing the widget shelf-ward. (Alternatives weighed: status quo — drop is silently overridden; refuse-with-inform — a nag that kicks the decision down the road. Undo/redo, when it lands, further de-risks the severed-shortcut cost.) |
 | R3 | RecentlyClosed vs Trash | ✅ **RATIFIED 2026-08-18: sever + close, one store, no views** — and **EXECUTED 2026-08-19** together with the residue rename `bringUpTarget` → `bringUpReferencedWidget` (cross-repo sweep per the P9 lesson, incl. `Fizzygum-tests/scripts/` and the call-separation allowlist). See §4.3's as-executed block. |
 
 ## 6. Risks & non-goals

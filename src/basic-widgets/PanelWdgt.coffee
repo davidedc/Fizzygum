@@ -121,7 +121,13 @@ class PanelWdgt extends Widget
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
   # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
-  _reactToChildDropped: ->
+  _reactToChildDropped: (droppedWidget) ->
+    # notify the scroll panel's holder that a USER DROP arrived -- the third member of the
+    # _reactToChild*InScrollPanel relay family (Added/Removed above/below). Drop-specific on
+    # purpose: the close-filing and storage-drain arrivals come through _addNoSettle and never
+    # reach this hook, so a holder that means to react to deliberate gestures only (the bin's
+    # drop-as-trash-intent, reference-widgets plan R5) can, without hearing machinery moves.
+    @parent?.parent?._reactToChildDroppedInScrollPanel? droppedWidget
     @_reFitContainer @parent
 
   _reactToChildRemoved: (child) ->
