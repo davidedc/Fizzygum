@@ -1,6 +1,6 @@
 # A TransformFrameWdgt that TRACKS its single content child's SIZE — a "hugging" island whose slot
 # (@bounds) follows the wrapped widget's bounds. This is a CAPABILITY VARIANT of the base island, the
-# same shape as FrameWdgt / SimpleVerticalStackPanelWdgt / ScrollPanelWdgt each being a size-tracking
+# same shape as FrameWdgt / SimpleVerticalStackPanelWdgt / ViewportWdgt each being a size-tracking
 # container: in this layout architecture the tracking-container capability is a CLASS, never a per-widget
 # flag (a freefloating child's _invalidateLayout climbs THROUGH to its parent iff the parent DEFINES
 # _reLayoutChildren — the freefloating gate in Widget._invalidateLayout — a method-existence check, i.e. class identity).
@@ -20,10 +20,10 @@
 
 class TrackingTransformFrameWdgt extends TransformFrameWdgt
 
-  # Canonical tracking-container shape (Stack/ScrollPanel): super places me, then _reLayoutChildren
+  # Canonical tracking-container shape (Stack/Viewport): super places me, then _reLayoutChildren
   # re-fits my slot to the just-settled content. implementsDeferredLayout is pinned false so defining
   # _reLayout does not flip the (@_reLayout != Widget::_reLayout) classification — the SAME reason
-  # SimpleVerticalStackPanelWdgt / ScrollPanelWdgt pin it — keeping subWidgetsMergedFullBounds and the
+  # SimpleVerticalStackPanelWdgt / ViewportWdgt pin it — keeping subWidgetsMergedFullBounds and the
   # resize classification exactly as the base fixed-figure island's.
   #
   # (up-edge endgame V1-c, docs/archive/upedge-endgame-plan.md §9) SYNC-SETTLE a PENDING content before the
@@ -115,7 +115,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # to my content; the existing CONTENT→SLOT tracking re-fit (_reLayoutChildren above, incl. the Bug-D
   # anchor-pinning) then re-hugs the slot, so I settle AT the requested extent. The content's own
   # subtree is re-laid-out by its OWN polymorphic _applyExtent override (StretchablePanel / Stack /
-  # ScrollPanel / TextWdgt all override it), which content._applyExtent dispatches to — so no explicit
+  # Viewport / TextWdgt all override it), which content._applyExtent dispatches to — so no explicit
   # content._reLayout() forward is needed.
   #
   # DORMANT GUARANTEE: IDENTITY (or EMPTY, no content) ⇒ super on every override, byte-identical to the
@@ -147,7 +147,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # (_soleContent lives on the base TransformFrameWdgt — hoisted with the lens overrides.)
 
   # Parent arrange sizes ME → size my content, then re-hug the slot to it. I override the POLYMORPHIC
-  # _applyExtent (like StretchablePanel / Stack / ScrollPanel / TextWdgt add their re-fit here), NOT the
+  # _applyExtent (like StretchablePanel / Stack / Viewport / TextWdgt add their re-fit here), NOT the
   # bypass twin _applyExtentBase — a _apply*Base must bypass the override, never route the apply back
   # through the polymorphic _applyExtent (layering rule [K]); and the arrange sizes a tracking island
   # (a _reLayoutChildren? child) only through _applyExtent / _setWidthSizeHeightAccordingly, never a

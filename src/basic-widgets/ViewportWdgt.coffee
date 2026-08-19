@@ -4,7 +4,7 @@
 # content, while my children are chrome — my content lives one level down, on the plane — so
 # the panel-family answers (its menu rows, its lock-granting, its drop slots) are wrong here,
 # and the few panel facts I do mean are stated explicitly below (scroll-frame role plan P4).
-class ScrollPanelWdgt extends Widget
+class ViewportWdgt extends Widget
 
   # I clip my chrome (and through it the scrolled content) at my bounds — the same mixin
   # PanelWdgt wears, taken directly now (as FrameWdgt does). It also decides hit-testing
@@ -42,7 +42,7 @@ class ScrollPanelWdgt extends Widget
   # Flipped live via setScrollPolicy (menu: toggleScrollPolicyFromMenu) with
   # no widget-tree change — policy over structure, the same verdict the
   # pop-ups reached for their unconditional rows frame
-  # (PopUpWdgt._buildRowsScrollFrameNoSettle).
+  # (PopUpWdgt._buildRowsViewportNoSettle).
   scrollPolicy: 'auto'
 
   # Only the GENERIC scrollable panel offers the crop⇄scroll flip in its menu:
@@ -65,7 +65,7 @@ class ScrollPanelWdgt extends Widget
 
   # Role query, the plane-side twin of isMyScrollBar: is aWdgt the contents panel I clip and
   # scroll? THE one place the scroll-frame topology is stated — the chokepoints
-  # (_amITheContentsPanelOfAScrollPanelWdgt, _amIDirectlyInsideScrollPanelWdgt, the hierarchy
+  # (_amITheContentsPanelOfAViewport, _amIDirectlyInsideViewport, the hierarchy
   # menu) ask this rather than pattern-matching the composite's shape, so ANY class serving as
   # my plane (the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt, a stack)
   # answers uniformly. (scroll-frame role plan P3; type-test-elimination ε.)
@@ -76,7 +76,7 @@ class ScrollPanelWdgt extends Widget
   # scroll-or-detach, a caret follows into view, a lone text child offers soft-wrap for, a
   # container re-fit climbs through? True for a generic scroll frame; a ListWdgt answers false —
   # its pane holds the list's own rows machinery, not loose content — which is the exclusion
-  # `_amIDirectlyInsideScrollPanelWdgt`'s consumers relied on as `!(instanceof ListWdgt)`.
+  # `_amIDirectlyInsideViewport`'s consumers relied on as `!(instanceof ListWdgt)`.
   contentsPanelHoldsLooseContent: ->
     true
 
@@ -104,7 +104,7 @@ class ScrollPanelWdgt extends Widget
       @alpha = alpha
 
   # there are several ways in which we allow
-  # scrolling when a ScrollPanel is scrollable
+  # scrolling when a Viewport is scrollable
   # (i.e. the scrollbars are showing).
   # You can choose to scroll it by dragging the
   # contents or by dragging the background,
@@ -119,36 +119,36 @@ class ScrollPanelWdgt extends Widget
     @sliderColor
     ) ->
     # alpha 0: I never paint myself — the plane and bars are the visible thing, and my own
-    # values just MIMIC the plane's (see _buildScrollFrameNoSettle)
+    # values just MIMIC the plane's (see _buildViewportChromeNoSettle)
     @alpha = 0
     super()
     # the appearance is for HIT-TESTING parity, not painting (alpha 0): an appearance-bearing
     # widget answers opaque inside its tight bounds; the colors seed the mimic until
-    # _buildScrollFrameNoSettle adopts the contents' own
+    # _buildViewportChromeNoSettle adopts the contents' own
     @appearance = new RectangularAppearance @
     @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
     @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
-    @_buildScrollFrame()
+    @_buildViewportChrome()
 
   # Build the scroll frame (contents + h/v scrollbars) via the NoSettle core, settling ONCE at the end
-  # (orphan-settledness: `new ScrollPanelWdgt` returns settled). The name is deliberately DISTINCT from the
-  # leaf builder `_buildAndConnectChildren`: ScrollPanelWdgt is a base whose subclass ListWdgt OVERRIDES
+  # (orphan-settledness: `new ViewportWdgt` returns settled). The name is deliberately DISTINCT from the
+  # leaf builder `_buildAndConnectChildren`: ViewportWdgt is a base whose subclass ListWdgt OVERRIDES
   # `_buildAndConnectChildren` to build its list CONTENTS, and CoffeeScript binds a subclass's constructor
   # params (@elements, …) only AFTER super(). If THIS base constructor called the (virtual)
   # `_buildAndConnectChildren`, `new ListWdgt` would dispatch into ListWdgt's contents-core during super()
   # with @elements still undefined → crash. So the base builds only the frame here (a name ListWdgt does not
   # override); ListWdgt's constructor builds its contents via `_buildAndConnectChildren` AFTER super().
-  _buildScrollFrame: ->
-    @_settleLayoutsAfter => @_buildScrollFrameNoSettle()
+  _buildViewportChrome: ->
+    @_settleLayoutsAfter => @_buildViewportChromeNoSettle()
 
-  _buildScrollFrameNoSettle: ->
+  _buildViewportChromeNoSettle: ->
     @contents = new ScrolledPaneWdgt() unless @contents?
     # _addNoSettle (NOT the self-settling public add): we are building our own innards
     # during construction; the panel is not parented yet, so a flush here would be a
     # redundant whole-world relayout (and would throw if we are built during a layout pass).
     @_addNoSettle @contents
 
-    # the ScrollPanel is never going to paint itself,
+    # the Viewport is never going to paint itself,
     # but its values are going to mimic the values of the
     # contained Panel
     @color = @contents.color
@@ -177,13 +177,13 @@ class ScrollPanelWdgt extends Widget
     # the CONTENTS vetoes raw drops into its frame (a folder's contents are managed by the
     # folder-window machinery) — capability via ?(), instead of `@contents instanceof FolderPanelWdgt`
     # (type-test-elimination ε)
-    return false if @contents?.vetoesScrollPanelDrops?()
+    return false if @contents?.vetoesViewportDrops?()
     return @_acceptsDrops
 
   colloquialName: ->
     # the CONTENTS names the construct ("folder"/"toolbar") — capability via ?(), was two
     # `@contents instanceof` tests (type-test-elimination ε)
-    @contents?.scrollPanelColloquialName?() ? "scrollable panel"
+    @contents?.viewportColloquialName?() ? "viewport"
 
   # ── THE SCROLL PINS ──────────────────────────────────────────────────────────────────────────
   # How far my content is scrolled inside my viewport, along each axis: 0 at the top/left, growing
@@ -282,15 +282,15 @@ class ScrollPanelWdgt extends Widget
   setColor: (aColor) ->
     aColor = super aColor
     # keep in sync the color of the content.
-    # Note that the container ScrollPanel.
+    # Note that the container Viewport.
     # is actually not painted.
     @contents.setColor aColor
     return aColor
 
   setAlphaScaled: (alpha) ->
     alpha = super
-    # update the alpha of the ScrollPanel - note
-    # that we are never going to paint the ScrollPanel
+    # update the alpha of the Viewport - note
+    # that we are never going to paint the Viewport
     # we are updating the alpha so that its value is the same as the
     # contained Panel
     @contents.setAlphaScaled alpha
@@ -304,14 +304,14 @@ class ScrollPanelWdgt extends Widget
 
   # The width my @contents must lay itself out within: my viewport width. Asked via ?() by
   # content that wraps to its container (ToolPanelWdgt's row-wrap). Capability, was
-  # `parent instanceof ScrollPanelWdgt` at the caller (type-test-elimination ε).
+  # `parent instanceof ViewportWdgt` at the caller (type-test-elimination ε).
   widthContentsMustFitWithin: ->
     @width()
 
   # Pressing a slider's TRACK jump-drags the button to the press point when the slider is
   # chrome its parent owns (my scrollbars) — SliderWdgt.mouseDownLeft asks its parent via ?().
   # PromptWdgt gives its input slider the same policy. Capability, was
-  # `(parent instanceof ScrollPanelWdgt) or (parent instanceof PromptWdgt)` (type-test-elimination ε).
+  # `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)` (type-test-elimination ε).
   sliderTrackPressJumpsButton: ->
     true
 
@@ -321,7 +321,7 @@ class ScrollPanelWdgt extends Widget
 
   # Am I a content-sizing scroll frame — one whose content frame derives from a PURE measure
   # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? The two dedicated
-  # subclasses (SimpleTextScrollPanelWdgt / SimpleVerticalStackScrollPanelWdgt) always
+  # subclasses (SimpleTextViewportWdgt / SimpleVerticalStackViewportWdgt) always
   # are; a plain frame is when text-wrapping. Class-level query, was two self-instanceof
   # tests at the arrange site (type-test-elimination ε).
   isContentSizing: ->
@@ -344,8 +344,8 @@ class ScrollPanelWdgt extends Widget
 
     @_changed()
 
-    # this check is to see whether the bar actually belongs to this ScrollPanel: a bar can survive
-    # detached from its original ScrollPanel A (it's referenced as a property, not a child, so
+    # this check is to see whether the bar actually belongs to this Viewport: a bar can survive
+    # detached from its original Viewport A (it's referenced as a property, not a child, so
     # duplicating A into B does not retarget or duplicate the bar), leaving B referencing A's bar. We
     # ask the bar whether it drives ME before touching it, so a stray duplicate never resizes/hides a
     # scrollbar that belongs to a different panel. (`isWiredTo` since §P4 — a controller owns a LIST
@@ -366,7 +366,7 @@ class ScrollPanelWdgt extends Widget
         @hBar._applyExtentBase new Point(hWidth, @hBar.height())  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
-        # ScrollPanel, otherwise we don't move it.
+        # Viewport, otherwise we don't move it.
         if @hBar.parent == @
           @hBar._applyMoveToBase new Point @left(), @bottom() - @hBar.height()
         # I placed and sized the bar through the NON-notifying twins, so re-laying it is MINE to do
@@ -389,7 +389,7 @@ class ScrollPanelWdgt extends Widget
         @vBar._applyExtentBase new Point(@vBar.width(), vHeight)  if @vBar.height() isnt vHeight
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
-        # ScrollPanel, otherwise we don't move it.
+        # Viewport, otherwise we don't move it.
         if @vBar.parent == @
           @vBar._applyMoveToBase new Point @right() - @vBar.width(), @top()
         # same as the hBar above: I changed its frame through the non-notifying twins, so its thumb
@@ -421,7 +421,7 @@ class ScrollPanelWdgt extends Widget
     # So (d)'s second drain+layout pass would buy nothing on the only path that moves.
     world.dataflow.markNonValueChange @
 
-  # when you add things to the ScrollPanelWdgt they actually
+  # when you add things to the ViewportWdgt they actually
   # end up in the Panel inside it.
   # This would also apply to resizing handles - so we need to
   # correct for that case
@@ -430,7 +430,7 @@ class ScrollPanelWdgt extends Widget
     # (type-test-elimination campaign). Keyed off the WIDGET, not the layoutSpec argument:
     # handles are added with no explicit spec (defaultLayoutSpecWhenAddedTo resolves it inside
     # the add), so the argument is undefined exactly for the widgets this must catch.
-    if aWdgt.attachesToScrollFrameDirectly?()
+    if aWdgt.attachesToViewportDirectly?()
       super
     else
       @contents.add aWdgt, opts
@@ -665,12 +665,12 @@ class ScrollPanelWdgt extends Widget
     # Always run this check even when @contents.boundingBox() already equals newBounds: a stack can
     # resize itself in the foreach loop above without changing the outer frame, so the view can still
     # need fixing. Cheap to check when there's nothing to do.
-    @keepContentsInScrollPanelWdgt()
+    @keepContentsInViewport()
 
   # §4.2 Stage 3 (structural arrange): the position clamp keeping my content snug against my viewport edges. I
   # OWN this position, so apply each nudge via the NON-notifying move twin -- the old _applyMoveBy fired the
   # re-fit seam back at ME (part of the scroll panel's Intent-2 self-re-enqueue), redundant since I am the clamper.
-  keepContentsInScrollPanelWdgt: ->
+  keepContentsInViewport: ->
     if @contents.left() > @left()
       @contents._applyMoveByBase new Point @left() - @contents.left(), 0
     if @contents.right() < @right()
@@ -680,7 +680,7 @@ class ScrollPanelWdgt extends Widget
     if @contents.bottom() < @bottom()
       @contents._applyMoveByBase new Point 0, @bottom() - @contents.bottom()
   
-  # ScrollPanelWdgt scrolling by floatDragging:
+  # ViewportWdgt scrolling by floatDragging:
   scrollX: (steps) ->
     # under 'never' every scroll path refuses HERE, at the movement core: the
     # pin setters, scrollTo/scrollToBottom, the edge auto-scroll and the
@@ -748,7 +748,7 @@ class ScrollPanelWdgt extends Widget
     else
       return false
   
-  # Float-dragging a ScrollPanel's contents scrolls it (particularly useful on touch devices); the same
+  # Float-dragging a Viewport's contents scrolls it (particularly useful on touch devices); the same
   # gesture works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
   # scroll panel anchored to a non-draggable background, such as a color palette).
   mouseDownLeft: (pos) ->
@@ -878,7 +878,7 @@ class ScrollPanelWdgt extends Widget
   
   # During a float-drag, if I want the dragged widget and the pointer is in my edge band, I
   # auto-scroll. ActivePointerWdgt calls this instead of testing `newWdgt instanceof
-  # ScrollPanelWdgt` and driving the wantsDropOfChild / edge / startAutoScrolling logic itself.
+  # ViewportWdgt` and driving the wantsDropOfChild / edge / startAutoScrolling logic itself.
   # (type-test-elimination campaign)
   maybeStartAutoScrollForDraggedWidget: (widgetBeingFloatDragged, pointerPosition) ->
     # a 'never' panel accepts the drop but does not creep toward it
@@ -935,7 +935,7 @@ class ScrollPanelWdgt extends Widget
       @_positionAndResizeChildren()
       @_reLayoutScrollbars()
   
-  # ScrollPanelWdgt scrolling when editing text
+  # ViewportWdgt scrolling when editing text
   # so to bring the caret fully into view.
   scrollCaretIntoView: (caretWidget) ->
     # a 'never' panel clips its caret like any other overflow — WYSIWYG of the
@@ -970,7 +970,7 @@ class ScrollPanelWdgt extends Widget
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
-  # ScrollPanelWdgt events.
+  # ViewportWdgt events.
   wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
 
     x = xArg
@@ -991,7 +991,7 @@ class ScrollPanelWdgt extends Widget
       # WITHOUT wheel, by just touch-dragging the contents...
       #
       # Escalate the scroll in case we are in a nested
-      # ScrollPanel situation and we already
+      # Viewport situation and we already
       # scrolled this inner one "up/down to the end".
       # In such case, the outer one has to scroll...
       #
@@ -1015,7 +1015,7 @@ class ScrollPanelWdgt extends Widget
         @scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY
     if x != 0
       # similar to the vertical case, escalate the scroll in case
-      # we are in a nested ScrollPanel situation ('never' escalates too — see
+      # we are in a nested Viewport situation ('never' escalates too — see
       # the vertical case)
       if @scrollPolicy is 'never' or
        (x > 0 and @contents.left() >= @left()) or
@@ -1069,7 +1069,7 @@ class ScrollPanelWdgt extends Widget
   # ⚠ NO `triggeringWidget` parameter here — see the note on FrameWdgt's pair. It is read in exactly
   # one place tree-wide, BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget`, and that
   # mixin is the core of the two Stretchables, not of a scroll panel. (A subclass whose core IS the
-  # mixin — SimpleVerticalStackScrollPanelWdgt — still `super`s into this one; the argument it hands
+  # mixin — SimpleVerticalStackViewportWdgt — still `super`s into this one; the argument it hands
   # over is simply ignored, which is the honest outcome for a value nothing here consults.)
   enableDragsDropsAndEditing: ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()

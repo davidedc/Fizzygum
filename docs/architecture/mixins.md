@@ -161,7 +161,7 @@ three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 | `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
-| `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `SimpleVerticalStackScrollPanelWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ScrollPanelWdgt`) | unrelated branches (ScrollPanel / Panel / Widget) | yes |
+| `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `SimpleVerticalStackViewportWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ViewportWdgt`) | unrelated branches (Viewport / Panel / Widget) | yes |
 | `WidgetCreatorAndSmartPlacerOnClickMixin` | 33 | 2 — `CreatorButtonWdgt`, `GlassBoxTopWdgt` | unrelated leaves | no |
 | `ParentStainerMixin` | 11 | 2 — `CreatorButtonWdgt`, `EditorContentPropertyChangerButtonWdgt` | unrelated leaves | yes |
 
@@ -182,7 +182,7 @@ The test: consumers on unrelated branches AND behaviour that overrides framework
   `ClippingAtRectangularBoundsMixin` (overrides the geometry protocol — `fullBounds`,
   cache-invalidation super-chains; the `ClippingBoxWdgt` diamond: `BoxWdgt` painting +
   panel clipping), `BubblesEditModeToCoordinatorMixin` (the edit-mode-toggle cores
-  bubbling to a coordinating parent, across ScrollPanel/Panel/Widget branches),
+  bubbling to a coordinating parent, across Viewport/Panel/Widget branches),
   `KeepsRatioWhenInVerticalStackMixin`,
   `WidgetCreatorAndSmartPlacerOnClickMixin`, `ParentStainerMixin` (barely — 2 unrelated
   leaves each).

@@ -36,9 +36,9 @@ class PopUpWdgt extends Widget
   # one and delegate/compose against it; the shared lay-and-hug + membership-
   # change absorber below work off it. Free-floating, so it co-moves with me.
   rowsPanel: undefined
-  # the ScrollPanelWdgt my rows live in — ALWAYS, not only when they overflow. See
-  # _buildRowsScrollFrameNoSettle for why it is unconditional.
-  rowsScrollFrame: undefined
+  # the ViewportWdgt my rows live in — ALWAYS, not only when they overflow. See
+  # _buildRowsViewportNoSettle for why it is unconditional.
+  rowsViewport: undefined
 
   constructor: (@widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
     super()
@@ -64,8 +64,8 @@ class PopUpWdgt extends Widget
   _layOutAndHugRowsPanel: ->
     return unless @rowsPanel?
     @rowsPanel._reLayoutChildren()
-    @_refitRowsScrollFrameNoSettle()
-    @_applyExtentBase @rowsScrollFrame.extent()
+    @_refitRowsViewportNoSettle()
+    @_applyExtentBase @rowsViewport.extent()
 
   # THE ONE PLACE MY SIZE IS DECIDED: my rows' natural extent, bounded by the world on
   # BOTH axes. That bound is the whole mechanism — whatever does not fit becomes
@@ -74,14 +74,14 @@ class PopUpWdgt extends Widget
   # as one taller than it loses its bottom rows, and `_moveWithin` can no more fix the
   # one than the other. The frame's own horizontal bar covers that case for free.
   #   The frame is chrome I own and place from my own size, so this uses the
-  # NON-notifying arrange twins (§4.2 structural arrange), exactly as ScrollPanelWdgt
+  # NON-notifying arrange twins (§4.2 structural arrange), exactly as ViewportWdgt
   # places its own bars. Shared by every pop-up that re-takes its size: the lay-out
   # above, PromptWdgt's inline build, and SaveShortcutPromptWdgt's widening.
-  _refitRowsScrollFrameNoSettle: ->
-    @rowsScrollFrame._applyMoveToBase @position()
-    @rowsScrollFrame._applyExtentBase new Point (Math.min @rowsPanel.width(), world.width()),
+  _refitRowsViewportNoSettle: ->
+    @rowsViewport._applyMoveToBase @position()
+    @rowsViewport._applyExtentBase new Point (Math.min @rowsPanel.width(), world.width()),
                                                 (Math.min @rowsPanel.height(), world.height())
-    @rowsScrollFrame._reLayoutChildren()
+    @rowsViewport._reLayoutChildren()
 
   # My rows ALWAYS live in a scroll frame — there is no over-tall case and no
   # ordinary case, just the one structure that fits either. A conditional frame
@@ -90,11 +90,11 @@ class PopUpWdgt extends Widget
   # grown later (addMenuItem on an open menu) would have to restructure itself
   # mid-life, in the middle of the very membership change that provoked it. With
   # the frame always present there is nothing to cross — a menu that fits simply
-  # has nothing to scroll, and ScrollPanelWdgt hides a bar with nothing to show.
-  #   The composition is the one ListWdgt uses: a ScrollPanelWdgt keeping its own
+  # has nothing to scroll, and ViewportWdgt hides a bar with nothing to show.
+  #   The composition is the one ListWdgt uses: a ViewportWdgt keeping its own
   # default plain-PanelWdgt contents, with the rows panel placed INSIDE that.
   #   ⛔ Do NOT "simplify" this by making the rows panel BE the frame's contents.
-  # That shape does not terminate: ScrollPanelWdgt._positionAndResizeChildren has a
+  # That shape does not terminate: ViewportWdgt._positionAndResizeChildren has a
   # `@contents instanceof SimpleVerticalStackPanelWdgt` branch that constrains the
   # stack's width to the viewport, while MenuRowsPanelWdgt._positionAndResizeChildren
   # hugs its width back to its widest row — the two fight and recalculateLayouts
@@ -102,8 +102,8 @@ class PopUpWdgt extends Widget
   # width-constrained contents of anything, which is why ListWdgt is built this way
   # too.
   #   ⚠ EVERY FACT THE TWO ADDED WIDGETS NEED IS A PER-CLASS DECLARATION, which is why
-  # they are classes (PopUpRowsScrollFrameWdgt / PopUpRowsPaneWdgt) rather than a
-  # configured ScrollPanelWdgt: a plain panel's inherited answers are wrong on all of
+  # they are classes (PopUpRowsViewportWdgt / PopUpRowsPaneWdgt) rather than a
+  # configured ViewportWdgt: a plain panel's inherited answers are wrong on all of
   # them — it claims to be an editing surface, a drop target, a thing you can drag a
   # child out of, and a HIT TARGET. Each wrong answer showed up as a different visible
   # defect; see those two classes.
@@ -111,11 +111,11 @@ class PopUpWdgt extends Widget
   # class I am re-homing: dragging a pop-up by its header must move the POP-UP, and a
   # child of a panel detaches instead unless it locks to panels. ListWdgt does exactly
   # this to its own rows panel, for exactly this reason.
-  _buildRowsScrollFrameNoSettle: ->
-    @rowsScrollFrame = new PopUpRowsScrollFrameWdgt()
+  _buildRowsViewportNoSettle: ->
+    @rowsViewport = new PopUpRowsViewportWdgt()
     @rowsPanel.isLockingToPanels = true
-    @_addNoSettle @rowsScrollFrame
-    @rowsScrollFrame.contents._addNoSettle @rowsPanel
+    @_addNoSettle @rowsViewport
+    @rowsViewport.contents._addNoSettle @rowsPanel
 
   # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
   # than the world is a pop-up with rows nothing can click. It needs a guard of its own

@@ -9,7 +9,7 @@ VIEW-only refactor — the engine/model/value-protocol/serialization design belo
 it depended on landed in `docs/archive/coalesced-nomenclature-rename-plan.md`.
 
 **Deviations decided during execution** (each recorded in its phase's commit message):
-- **2a** — direct-paint viewport, no `ScrollPanelWdgt` yet; fixed-size window content (elasticity 0) for a
+- **2a** — direct-paint viewport, no `ViewportWdgt` yet; fixed-size window content (elasticity 0) for a
   one-cycle settle (determinism).
 - **2b** — a buffer-driven overlay editor, NO caret (deterministic Enter-commits / Escape-cancels; the
   framework provided no accept/cancel handlers, and the caret was believed to blink under a screenshot).
@@ -315,7 +315,7 @@ client's:
   bullet)*: the sheet widget's appearance paints gridlines, headers, and plain text/number values
   directly; a live child widget (the **socket**) exists only for cells that hold/present rich widgets
   or are currently selected/being edited. This sidesteps the framework's lack of widget virtualization
-  (paint is already clipped; layout and memory stay bounded). Hosted in a `ScrollPanelWdgt`.
+  (paint is already clipped; layout and memory stay bounded). Hosted in a `ViewportWdgt`.
 - **Widgetized viewport over painted chrome** *(Phase 8; itself SUPERSEDED by F5 — see next
   bullet)*: the sheet paints only the chrome (gridlines, headers, selection); every VISIBLE cell is a
   real `CellWdgt` child that renders its own value (painted scalar text, or a hosted value-widget /

@@ -47,7 +47,7 @@ formula/connection that writes a widget's text feeds this frame's geometry settl
 
 ⚠ **The one narrow exception, and why it is not a hole.** A layout station may announce a **non-value** change
 (`markNonValueChange`), which wakes only the `firesOnAnyChange` edges — consumers that RE-READ the producer rather
-than receive a value. `ScrollPanelWdgt._reLayoutScrollbars` is the one caller: it tells whatever tracks it that its
+than receive a value. `ViewportWdgt._reLayoutScrollbars` is the one caller: it tells whatever tracks it that its
 scroll geometry settled, so any number of scrollbars follow it rather than the two it holds fields for. This cannot
 re-enter the value settle (nothing is marked stale, no value is pulled) and it cannot loop (the announcement is
 dark unless someone re-reads, and re-reading marks nothing). What it costs is a cadence: an announcement raised
@@ -137,7 +137,7 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayout(newBounds)` | the per-node **arrange**: position self, apply own extent, place corner/edge-internal children, mark fixed, re-lay any child the arrange moved |
 | `_reLayoutSelf` | self-only heal hook (empty on base `Widget`); fired by `_applyExtentBase` when a widget's own extent commits |
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
-| `_positionAndResizeChildren` | the actual measure-and-place-children body — seven definers: `SimpleVerticalStackPanelWdgt`, `ScrollPanelWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the scroll panel respectively |
+| `_positionAndResizeChildren` | the actual measure-and-place-children body — seven definers: `SimpleVerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the scroll panel respectively |
 
 `_reLayoutChildren` is defined by every size-tracking container and nothing else — ten definers: the
 stack and scroll panels, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its

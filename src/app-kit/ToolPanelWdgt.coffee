@@ -5,8 +5,8 @@ class ToolPanelWdgt extends PanelWdgt
   thumbnailSize: 30
 
   # my enclosing scroll frame borrows my colloquial name (type-test-elimination ε; see
-  # ScrollPanelWdgt.colloquialName)
-  scrollPanelColloquialName: ->
+  # ViewportWdgt.colloquialName)
+  viewportColloquialName: ->
     "toolbar"
 
   # ONE settle over the whole bundle; each core's _invalidateLayout is deduped by
@@ -33,7 +33,7 @@ class ToolPanelWdgt extends PanelWdgt
 
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
-    if aWdgt.attachesToScrollFrameDirectly?()
+    if aWdgt.attachesToViewportDirectly?()
       super aWdgt, opts
     else
       # if aWdgt specifies a non-default switcharoo then it
@@ -91,7 +91,7 @@ class ToolPanelWdgt extends PanelWdgt
     # A scroll-panel parent resizes while keeping its contents' width fixed, and the
     # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
     # the scroll frame's content width, read via the widthContentsMustFitWithin?
-    # capability, not `instanceof ScrollPanelWdgt` (type-test-elimination ε): only a scroll
+    # capability, not `instanceof ViewportWdgt` (type-test-elimination ε): only a scroll
     # frame answers the question; any other parent (or no parent) leaves my own width.
     widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
 

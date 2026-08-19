@@ -127,7 +127,7 @@ const isLowLevel = (name) =>
 // the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
 // deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
 // TERMINAL, single-container apply (TextWdgt._applyExtent->@_reLayoutSelf, StretchablePanelWdgt.
-// _applyExtent->@_reLayout, ScrollPanelWdgt/SimpleVerticalStackPanelWdgt._applyExtent->@_reLayoutChildren). Those
+// _applyExtent->@_reLayout, ViewportWdgt/SimpleVerticalStackPanelWdgt._applyExtent->@_reLayoutChildren). Those
 // applies are SANCTIONED (see those overrides' comments) -- only the SCHEDULE below is forbidden.
 // Forbidding the _reLayoutChildren apply by name was assessed and DECLINED as cosmetic: it does the
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a
@@ -253,7 +253,7 @@ const GUARD_RETURN = /\breturn\b\s*(if\b|unless\b|$)/;
 // [L] the notification-callback NAME convention (layering/naming convention §3/§4), checked at the method DEF.
 // A callback uses the fully-derivable (perspective × phase) scheme _(reactTo|before)(Being|Child|HolderFrame)<Event>
 // (SELF = Being, CONTAINER = Child, third-party = HolderFrame; <Event> a PascalCase verb, optionally qualified
-// e.g. _reactToChildAddedInScrollPanel / _reactToBeingDroppedIntoFolder). Two static name checks:
+// e.g. _reactToChildAddedInViewport / _reactToBeingDroppedIntoFolder). Two static name checks:
 //   * any _reactTo*/_before* def MUST match CALLBACK_SHAPE and must NOT carry NoSettle -- a callback is a
 //     settle-neutral core by definition (the dispatcher owns the one settle, rule [J]); the NoSettle suffix is
 //     reserved for the public-setter cores of §3d-settle, never a callback;

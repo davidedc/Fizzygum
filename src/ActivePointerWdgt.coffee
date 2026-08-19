@@ -344,13 +344,13 @@ class ActivePointerWdgt extends Widget
       aWdgt.addShadow new Point(6, 6), 0.1
       
       @_fullChanged()
-      # Notify the old parent so it can re-fit itself (e.g. a ScrollPanelWdgt re-snugs its contents +
+      # Notify the old parent so it can re-fit itself (e.g. a ViewportWdgt re-snugs its contents +
       # scrollbars when you take a widget out of it). A grab is one discrete re-parent gesture, so settle it
       # HERE -- consistent on return, not on the next doOneCycle. This is the SYMMETRIC twin of the drop
       # (see ActivePointerWdgt.drop): @add above already self-settled the re-home (its _addNoSettle captured
       # the OLD container's _reactToChildRemoved re-fit inside add's settle), and this SINGLE settle flushes the
       # _reactToChildGrabbed re-fit once. Every _reactToChildGrabbed override re-fits through NON-settling paths -- Panel
-      # Wdgt / ScrollPanelWdgt via _reFitContainer (a raw invalidate, no public setter), FridgeWdgt via
+      # Wdgt / ViewportWdgt via _reFitContainer (a raw invalidate, no public setter), FridgeWdgt via
       # compileTiles -> FizzytilesCodeWdgt.showCompiledCode -> _setTextNoSettle (core) -- so nothing re-enters
       # the flush guard mid-pass; the single tier flushes ONCE and THROWS if a future override sneaks in a
       # public setter (the wanted cores-call-cores discipline).
@@ -1185,7 +1185,7 @@ class ActivePointerWdgt extends Widget
         # proxy — a rotated window must not edge-auto-scroll either. The GEOMETRY arg below keeps the figure.
         if not widgetBeingFloatDragged._dropPolicyProxy().requiresDeliberateEmbedding()
           # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
-          # (instead of an inline `newWdgt instanceof ScrollPanelWdgt` check + the
+          # (instead of an inline `newWdgt instanceof ViewportWdgt` check + the
           # wantsDropOfChild / edge / start logic here). (type-test-elimination campaign)
           newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()
 

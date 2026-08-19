@@ -80,7 +80,7 @@ class MacroToolkit
   @clickGuardWindowMs: 350
 
   # NON-scaled FLOOR on a press-drag-release's drag span. Some handlers sample the hand
-  # once per FRAME (ScrollPanelWdgt's scroll-on-drag; drag-enter/leave on drop targets),
+  # once per FRAME (ViewportWdgt's scroll-on-drag; drag-enter/leave on drop targets),
   # so a drag whose compressed span drains in <2 frames mis-scrolls / skips its target.
   # Flooring the drag span keeps it spanning several real frames at every speed; the
   # event path (and dedup) is unchanged so the gesture's RESULT is identical to a slow
@@ -193,10 +193,10 @@ class MacroToolkit
     true
 
   # "no inputs ongoing" = the queue is drained AND no scroll-momentum glide is
-  # still settling: a ScrollPanelWdgt's post-release glide is frame-cadence
+  # still settling: a ViewportWdgt's post-release glide is frame-cadence
   # driven and outlives the input queue, so without this gate a screenshot
   # races it (under the pacing control the glide is suppressed at the source —
-  # ScrollPanelWdgt.mouseDownLeft — and this set stays empty; the gate is
+  # ViewportWdgt.mouseDownLeft — and this set stays empty; the gate is
   # defense-in-depth for any momentum that does run).
   noInputsOngoing: ->
     world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing()
@@ -549,7 +549,7 @@ class MacroToolkit
   # hand. First a no-button move positions the pointer over the widget (so the fake playback pointer
   # shows and mouseEnter/hover fire, exactly as for a user), then a queued WheelInputEvent scrolls the
   # nearest scrollable under the pointer (ActivePointerWdgt.processWheel walks up to the nearest `wheel`
-  # owner; ScrollPanelWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
+  # owner; ViewportWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -557,14 +557,14 @@ class MacroToolkit
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
-  # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ScrollPanelWdgt's @vBar
+  # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ViewportWdgt's @vBar
   # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.mouseDownLeft,
-  # when the slider's parent is a ScrollPanelWdgt (or PromptWdgt), non-float-drags the button to the
+  # when the slider's parent is a ViewportWdgt (or PromptWdgt), non-float-drags the button to the
   # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
   # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the
   # track); for a horizontal one [0.8, 0.5]. Queues input events — follow with `yield
   # "waitNoInputsOngoing"`. A slider NOT parented to a scroll panel ignores the track click (it escalates
-  # the event) — that is the negative companion behaviour (sliderNotOnScrollPanelBackground…). Composes
+  # the event) — that is the negative companion behaviour (sliderNotOnViewportBackground…). Composes
   # moveToAndClickAtFractionOf_InputEvents; sliderOrIdentifier may be a widget reference (e.g. doc.vBar)
   # or a recorded text-description identifier.
   clickOnSliderTrackAtFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -577,7 +577,7 @@ class MacroToolkit
   # updateTarget every frame the value changes — so if the slider has a controller target set (via
   # "set target"), it drives target[setter](value) LIVE as it is dragged. This is the controller-DRAG
   # sibling of clickOnSliderTrackAtFraction_InputEvents (which only JUMPS the button via a track click, and
-  # only when the slider is parented to a ScrollPanelWdgt/PromptWdgt); a free-standing controller slider
+  # only when the slider is parented to a ViewportWdgt/PromptWdgt); a free-standing controller slider
   # responds to dragging its button, not to track clicks. `fraction` is a [fx, fy] point of the SLIDER's
   # bounds = the destination of the drag along the track (for a vertical slider, vary fy; default sliders
   # have smallestValueIsAtBottomEnd false, so a larger fy = a larger value). Queues input events — follow
@@ -638,7 +638,7 @@ class MacroToolkit
   # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at
   # the widget's centre and drags past the grab threshold so the widget is picked up onto the hand, then
   # releases over the destination. Use it to drop a widget INTO a container that accepts drops — e.g. a
-  # SimpleDocumentScrollPanel with editing enabled re-parents the dropped widget as a flowing paragraph.
+  # SimpleDocumentViewport with editing enabled re-parents the dropped widget as a flowing paragraph.
   dragWidgetTo_InputEvents: (widgetOrIdentifier, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     source = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
       @findWidgetByTextDescription widgetOrIdentifier
@@ -940,7 +940,7 @@ class MacroToolkit
 
     slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "SimpleTextScrollPanelWdgt"
+    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "SimpleTextViewportWdgt"
     textWidget = inspectorNaked.textWidget
 
     vBar = textScrollPane.vBar
@@ -1131,13 +1131,13 @@ class MacroToolkit
 
     # Overflowing-scroll-panel fixture, SHARED by the scroll-panel drag-behaviour tests (default → the panel MOVES;
     # locked-to-desktop → the contents SCROLL; in a window → the WINDOW moves) so the setup lives in ONE place. Builds a
-    # ScrollPanelWdgt with a tall wrapping TextWdgt so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
+    # ViewportWdgt with a tall wrapping TextWdgt so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
     # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).
     macroSubroutines.add Macro.fromString """
-      buildOverflowingScrollPanelWithText_Macro = (topLeftPoint) ->
+      buildOverflowingViewportWithText_Macro = (topLeftPoint) ->
         # Build entirely through the PUBLIC widget API (macros must not use the private / low-level _-prefixed API):
         # attach first, so the public setExtent/setWidth/moveTo SELF-SETTLE and apply in place.
-        panel = new ScrollPanelWdgt
+        panel = new ViewportWdgt
         world.add panel
         panel.setBounds topLeftPoint, new Point 270, 200
         text = new TextWdgt "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer rhoncus pharetra nulla, vel maximus lectus posuere a. Phasellus finibus blandit ex vitae varius. Vestibulum blandit velit elementum, ornare ipsum sollicitudin, blandit nunc. Mauris a sapien nibh. Nulla nec bibendum quam, eu condimentum nisl. Cras consequat efficitur nisi sed ornare. Pellentesque vitae urna vitae libero malesuada pharetra. Pellentesque commodo, nulla mattis vulputate porttitor, elit augue vestibulum est, nec congue ex dui a velit. Nullam lectus leo, lobortis eget erat ac, lobortis dignissim magna. Morbi ac odio in purus blandit dignissim. Maecenas at sagittis odio."

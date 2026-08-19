@@ -103,7 +103,7 @@ Landed so far:
 
 - **6c — default ON + reconciliation.** `world.dataflowWiresEnabled` now DEFAULTS ON, so the whole suite
   runs engine delivery. Flipping it exposed that 6b declared the edge ONLY in the connect-to-➜ menu path,
-  so wires set up by DIRECT construction in code (a `ScrollPanelWdgt` scrollbar —
+  so wires set up by DIRECT construction in code (a `ViewportWdgt` scrollbar —
   `@hBar.trackTarget @, "setScrollX"` — and the prompt slider — `slider.declareWireTo @,
   "takeSliderValue"`) had no edge and delivered nothing. Fix: **`DataflowEngine.ensureWireEdges`** — the
   total realisation of spec §8 "edges derive from the wire list" — called eagerly by the wire verbs

@@ -203,7 +203,7 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
   too — 2026-07-12; the menu/slider-family ctors that built through it were converted the same day,
   `docs/archive/menu-slider-ctor-conversion-plan.md`). The child-building belongs in
   `_buildAndConnectChildrenNoSettle`, reached from the ctor via the settling wrapper `@_buildAndConnectChildren()` (or
-  `@_buildScrollFrame()` for the ScrollPanelWdgt base) — so the settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS
+  `@_buildViewportChrome()` for the ViewportWdgt base) — so the settle-tier FLUSHES a top-level `new X()` and AUTO-DEFERS
   one built in-flush (inside a callback). Building INTO a sub-child (`@contents._addNoSettle …`) is NOT matched — that
   `.`-qualified form is not `@`-prefixed. Genuine exceptions carry `# constructor-build-exempt: <reason>` (in the body or
   the comment block directly above the header); no central allowlist.

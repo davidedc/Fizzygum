@@ -1,6 +1,6 @@
 # The framed DOCUMENT citizen (Frame-model plan §5.B, owner decision D2): a
 # text document IS its window. This FrameWdgt subclass builds its naked
-# payload (a SimpleDocumentScrollPanelWdgt seeded with one editable starting
+# payload (a SimpleDocumentViewportWdgt seeded with one editable starting
 # paragraph) and declares only the per-kind knowledge: the text toolbar
 # variant, the "Docs Maker" identity, and the save-or-destroy close policy.
 # The frame does ALL the chrome work, and the PAYLOAD's own enable/disable
@@ -22,14 +22,14 @@ class DocumentWdgt extends FrameWdgt
   # (bare-panel fixtures depend on that), so the CITIZEN seeds the starting
   # paragraph -- exactly what the fused class's build core did.
   _makeStartingPayload: ->
-    scrollPanel = new SimpleDocumentScrollPanelWdgt
+    viewport = new SimpleDocumentViewportWdgt
     startingContent = new SimpleTextWdgt @startingText,
       backgroundColor: WorldWdgt.preferencesAndSettings.editableItemBackgroundColor
       backgroundTransparency: 1
-    scrollPanel.setContents startingContent, 5
+    viewport.setContents startingContent, 5
     startingContent.isEditable = true
     startingContent.enableSelecting()
-    scrollPanel
+    viewport
 
   colloquialName: ->
     "Docs Maker"

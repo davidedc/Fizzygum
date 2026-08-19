@@ -49,7 +49,7 @@ on any hot path when no non-identity island exists. This is why the subsystem ca
 - **`TrackingTransformFrameWdgt`** (`src/TrackingTransformFrameWdgt.coffee`) — a *size-
   tracking* variant whose slot (`@bounds`) **hugs** its content child's bounds. It defines
   `_reLayout`/`_reLayoutChildren`, so it participates in the settle loop's ordered up-edge
-  like `SimpleVerticalStackPanelWdgt`/`ScrollPanelWdgt` (tracking-container capability is a
+  like `SimpleVerticalStackPanelWdgt`/`ViewportWdgt` (tracking-container capability is a
   *class*, never a per-widget flag). It also carries the **layout-transparency** overrides
   (§5). `implementsDeferredLayout` is pinned `false` so defining `_reLayout` does not flip
   its resize classification away from the base island's.
@@ -211,7 +211,7 @@ returns **claimed box ∪ the ink's integer hull** (the unpadded exact mapped AA
 — nested inside the sweep square at every angle). `TransformFrameWdgt` exposes it as
 `scrollOverflowBoundsInParentPlane` (undefined at identity) for the enclosing scroll frame's content-
 extent merge, and re-fits that frame when the box changes
-(`_reFitScrollFrameIfReachChangedNoSettle`, memoized on `_lastScrollOverflowBox`).
+(`_reFitViewportIfReachChangedNoSettle`, memoized on `_lastScrollOverflowBox`).
 
 ### 5.3 Layout transparency (the tracking island)
 

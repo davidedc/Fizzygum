@@ -221,7 +221,7 @@ class CaretWdgt extends BlinkerWdgt
   # SINGLE visit for a caret that only repositions along its line (e.g. typing across a wrapping field -- the common
   # case), and in one move + one confirming visit for a caret that also had to scroll its panel. Two single-pass
   # properties make that hold (both 2026-07-01): (1) _oneScrollCaretIntoViewPassNoSettle places the caret at its
-  # TRUE, un-clamped slot position, so ScrollPanelWdgt.scrollCaretIntoView computes the FULL scroll in ONE call
+  # TRUE, un-clamped slot position, so ViewportWdgt.scrollCaretIntoView computes the FULL scroll in ONE call
   # (previously the caret was clamped to y>=0, so a far scroll advanced only one viewport-step per pass and the
   # content crawled to its mark over many re-visits); (2) convergence is detected on the CONTAINERS, not on the
   # caret's own reposition (which is an exact, idempotent one-shot needing no confirming pass). A move pass that DID
@@ -308,7 +308,7 @@ class CaretWdgt extends BlinkerWdgt
       # position is always in view (positive), so the rendered caret is unchanged.
       @_applyMoveTo new Point (Math.floor pos.x), (Math.floor pos.y)
 
-      if @_amIDirectlyInsideScrollPanelWdgt() and @target.isScrollable
+      if @_amIDirectlyInsideViewport() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @
 
   

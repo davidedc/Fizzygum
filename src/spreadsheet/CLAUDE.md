@@ -373,7 +373,7 @@ widget fills the data background (the backdrop shows through, as it always did).
 
 ## F1 decisions (scroll — landed 2026-07-17; recorded also in plan §3-F)
 
-- **Sheet-owned view origin, NOT a `ScrollPanelWdgt`** (extends the 2a direct-paint deviation
+- **Sheet-owned view origin, NOT a `ViewportWdgt`** (extends the 2a direct-paint deviation
   permanently): frozen headers, the origin-0 byte-identity constraint, and CELL-QUANTIZED
   steps don't fit the scroll panel's pixel model. `viewOriginCol/Row` are PROTOTYPE defaults
   (own-only-when-scrolled — an unscrolled sheet serializes byte-for-byte as pre-F1; a pre-F1
@@ -393,7 +393,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   hidden one right there (widgets ride the TREE, not the model — losing the mount would lose
   the widget on save).
 - **Wheel + keyboard scroll-follow.** `wheel:` on the sheet (the `ActivePointerWdgt.processWheel`
-  climb — cells and the panel deliberately don't implement it) follows the `ScrollPanelWdgt`
+  climb — cells and the panel deliberately don't implement it) follows the `ViewportWdgt`
   model (axis suppression, invertWheel* prefs, per-axis at-limit ESCALATION) but quantizes to
   whole rows/cols; positive raw deltaY scrolls the view DOWN. Arrows clamp to the LOGICAL sheet
   and scroll-follow minimally; starting an edit scroll-follows first (the selection can sit
@@ -439,10 +439,10 @@ widget fills the data background (the backdrop shows through, as it always did).
 
 ## Phase 2a decisions / deviations (recorded also in the plan)
 
-- **Direct-paint, no `ScrollPanelWdgt` yet.** The spec hosts the grid in a `ScrollPanelWdgt`;
+- **Direct-paint, no `ViewportWdgt` yet.** The spec hosts the grid in a `ViewportWdgt`;
   v1 paints a fixed viewport that fits the window and defers scroll until the model exceeds it.
   The paint + hit-test math transplant into a scroll-child unchanged; sockets (2b/4) are
-  unaffected. (F1 later made "no `ScrollPanelWdgt`" permanent — see the F1 section above.)
+  unaffected. (F1 later made "no `ViewportWdgt`" permanent — see the F1 section above.)
 - **Text = 12px Arial.** SWCanvas ships bitmap atlases for Arial/Times/Courier only
   (`src/boot/extensions/SWCanvasElement-extensions.coffee`), so 12px Arial is the deterministic
   choice; left-aligned with a small pad in v1 (centering needs `measureText` — a later polish).

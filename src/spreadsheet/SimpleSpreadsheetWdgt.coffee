@@ -32,9 +32,9 @@
 #     than the viewport (DERIVED from the sheet's extent since F6 — default 6×14, partial
 #     edge cells when the granted extent isn't cell-quantized, backdrop past the sheet edge);
 #     the sheet owns its view origin (viewOriginCol/Row — cell-quantized, never
-#     sub-cell) and scrolls by WHEEL (the `wheel` entry below, with the ScrollPanelWdgt-style
+#     sub-cell) and scrolls by WHEEL (the `wheel` entry below, with the ViewportWdgt-style
 #     at-limit escalation) and by KEYBOARD scroll-follow (arrows past the viewport edge shift
-#     the origin minimally). Deliberately NOT a ScrollPanelWdgt: frozen headers, the origin-0
+#     the origin minimally). Deliberately NOT a ViewportWdgt: frozen headers, the origin-0
 #     byte-identity constraint (an unscrolled sheet renders pixel-for-pixel as pre-F1), and
 #     cell-quantized steps don't fit its pixel model; scrollbar/indicator chrome stays banked.
 #     THE VIEWPORT INVARIANT (maintained by _reconcileViewportNoSettle, re-established on
@@ -529,11 +529,11 @@ class SimpleSpreadsheetWdgt extends Widget
   # deliberately DON'T implement it, so a wheel anywhere over the grid lands here; a hosted
   # value-widget that ever implements `wheel` swallows the scroll over its cell, same as any
   # nested scroll surface — the escalation chain is the general answer). Follows the
-  # ScrollPanelWdgt.wheel model: dominant-axis suppression, the invertWheel* prefs, per-axis
+  # ViewportWdgt.wheel model: dominant-axis suppression, the invertWheel* prefs, per-axis
   # at-limit ESCALATION (a sheet inside a future scroll surface must not swallow its wheel) —
   # but QUANTIZED to whole rows/cols (the cell-quantized deviation from its pixel model): the
   # delta maps to pixels via wheelScale*, then to at least one whole cell step. POST-inversion
-  # sign convention (matches ScrollPanelWdgt.scrollY, where positive steps move the CONTENT
+  # sign convention (matches ViewportWdgt.scrollY, where positive steps move the CONTENT
   # down): y > 0 scrolls the view UP (origin decreases), y < 0 down; x likewise left/right —
   # so a raw POSITIVE deltaY (invertWheelY on) scrolls the view DOWN, as documented on
   # MacroToolkit.wheelOn_InputEvents. An in-progress edit COMMITS first (commit-before-scroll,
@@ -542,9 +542,9 @@ class SimpleSpreadsheetWdgt extends Widget
     x = xArg
     y = yArg
     # if we don't destroy the resizing handles, they'll follow the contents being moved
-    # (the ScrollPanelWdgt.wheel opening move — a hosted value-widget can have handles up)
+    # (the ViewportWdgt.wheel opening move — a hosted value-widget can have handles up)
     world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @
-    # squelch the minor axis + apply the invert preferences (shared with ScrollPanelWdgt)
+    # squelch the minor axis + apply the invert preferences (shared with ViewportWdgt)
     [x, y] = WorldWdgt.preferencesAndSettings.normalizedWheelDeltas x, y
     colDelta = 0
     rowDelta = 0

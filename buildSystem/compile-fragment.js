@@ -17,7 +17,7 @@
 //        node buildSystem/compile-fragment.js --stdin [ClassName]  # a fragment on stdin
 //
 // e.g.  printf 'add: (aWdgt, opts = {}) ->\n  super aWdgt, opts\n' \
-//         | node buildSystem/compile-fragment.js --stdin ScrollPanelWdgt
+//         | node buildSystem/compile-fragment.js --stdin ViewportWdgt
 //
 // ⚠ The super rewrite below is TRANSCRIBED from Class.coffee's _equivalentforSuper, not shared
 // with it — this tool compiles ONE pasted fragment, while check-coffee-syntax.js drives whole

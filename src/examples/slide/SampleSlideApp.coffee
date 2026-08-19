@@ -21,7 +21,7 @@ class SampleSlideApp extends WindowedApp
     container = slideWdgt.contents.contents
     container._applyExtent new Point 575,454
 
-    windowWithScrollingPanel = new FrameWdgt new ScrollPanelWdgt
+    windowWithScrollingPanel = new FrameWdgt new ViewportWdgt
     windowWithScrollingPanel.setTitleWithoutPrependedContentName "New York City"
     windowWithScrollingPanel._applyBounds (container.position().add new Point 28, 43), new Point 322, 268
     container.add windowWithScrollingPanel
@@ -66,7 +66,7 @@ class SampleSlideApp extends WindowedApp
     # turns off and the scroll does not auto-re-derive, so scrolling LAST anchors it in the
     # geometry the user actually sees. Expressed in the pin's OWN content coordinates,
     # targeting (89,23) near the frame's top-left, so it stays correct across the frame's own
-    # position/size (ScrollPanelWdgt.scrollTo is frame-relative and clamped). Horizontally that
+    # position/size (ViewportWdgt.scrollTo is frame-relative and clamped). Horizontally that
     # target lies just past the map's end, so the clamped scroll stops there: the map sits
     # flush with the viewport and the pin lands at (116,23). Calibration history:
     # docs/archive/layout-regressions-2026-07-icons-plots-editghosts-plan.md.

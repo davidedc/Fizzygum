@@ -51,12 +51,12 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @defaultFormulaBoxContents, false, 5
+    @tempPromptEntryField = new SimpleTextViewportWdgt @defaultFormulaBoxContents, false, 5
     @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
-    @outputTextArea = new SimpleTextScrollPanelWdgt "", false, 5
+    @outputTextArea = new SimpleTextViewportWdgt "", false, 5
     @outputTextArea.configureAsMonoTextPanel false
     @outputTextAreaText = @outputTextArea.textWdgt
     @_addNoSettle @outputTextArea

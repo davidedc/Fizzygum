@@ -1,5 +1,5 @@
-# The content pane inside a pop-up's rows scroll frame (PopUpRowsScrollFrameWdgt) — the
-# plain panel a ScrollPanelWdgt scrolls, holding one child: the pop-up's MenuRowsPanelWdgt.
+# The content pane inside a pop-up's rows scroll frame (PopUpRowsViewportWdgt) — the
+# plain panel a ViewportWdgt scrolls, holding one child: the pop-up's MenuRowsPanelWdgt.
 #
 # It exists as a class rather than a configured PanelWdgt because everything it has to say
 # is a per-class DECLARATION that a plain panel gets wrong. A pop-up's innards are CHROME:
@@ -21,7 +21,7 @@
 class PopUpRowsPaneWdgt extends ScrolledPaneWdgt
 
   # I paint nothing — the rows panel inside me draws the pop-up's whole visible body (box,
-  # header, rows). My frame reads this off me at build (ScrollPanelWdgt takes its own paint
+  # header, rows). My frame reads this off me at build (ViewportWdgt takes its own paint
   # values from its contents), so declaring it here settles both of us.
   alpha: 0
 

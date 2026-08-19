@@ -1,9 +1,9 @@
-# The DEFAULT content pane a ScrollPanelWdgt scrolls — the plane its content actually lives
+# The DEFAULT content pane a ViewportWdgt scrolls — the plane its content actually lives
 # on, physically moved by the scroll (children ride along, absolute coordinates). Built by
-# ScrollPanelWdgt._buildScrollFrameNoSettle whenever a caller supplies no contents of its own;
+# ViewportWdgt._buildViewportChromeNoSettle whenever a caller supplies no contents of its own;
 # the plane ROLE itself is broader than this class — a FolderPanelWdgt, ToolPanelWdgt or
 # vertical stack passed as `contents` plays it too, which is why every topology question is a
-# parent-based query (ScrollPanelWdgt.isMyContentsPanel), never a class test.
+# parent-based query (ViewportWdgt.isMyContentsPanel), never a class test.
 #
 # What lives HERE is only what is true of the default plane BY CONSTRUCTION — so PanelWdgt
 # stays purely the SURFACE class, with no plane-conditional second personality (scroll-frame
@@ -22,7 +22,7 @@ class ScrolledPaneWdgt extends PanelWdgt
 
   # keep my frame's mimic values true when I am recolored/faded DIRECTLY (the frame's own
   # setColor/setAlphaScaled already mirror DOWN into me) — see the relay bodies on
-  # ScrollPanelWdgt for the guards' rationale
+  # ViewportWdgt for the guards' rationale
   setColor: (aColor) ->
     aColor = super aColor
     @parent?._reactToChildColorChanged? @, aColor
@@ -38,26 +38,26 @@ class ScrolledPaneWdgt extends PanelWdgt
   # re-files storage on what enters/leaves its open window. BinWdgt is the one implementor.)
 
   _reactToChildDropped: (droppedWidget) ->
-    # a USER DROP arrived — the third member of the _reactToChild*InScrollPanel relay family
+    # a USER DROP arrived — the third member of the _reactToChild*InViewport relay family
     # (Added/Removed below). Drop-specific on purpose: the close-filing and storage-drain
     # arrivals come through _addNoSettle and never reach this hook, so a holder that means to
     # react to deliberate gestures only (the bin's drop-as-trash-intent, reference-widgets
     # plan R5) can, without hearing machinery moves.
-    @parent?.parent?._reactToChildDroppedInScrollPanel? droppedWidget
+    @parent?.parent?._reactToChildDroppedInViewport? droppedWidget
     super
 
   _reactToChildRemoved: (child) ->
     # notify the holder FIRST — super returns early for orphan-rooted panels, and e.g. the bin
     # listens (a pickup out of its open window changes storage membership) whether windowed or
-    # not. Symmetric to the _reactToChildAddedInScrollPanel relay below.
-    @parent?.parent?._reactToChildRemovedInScrollPanel? child
+    # not. Symmetric to the _reactToChildAddedInViewport relay below.
+    @parent?.parent?._reactToChildRemovedInViewport? child
     super
 
   _reactToChildAdded: (child) ->
     # e.g. the bin listens: an add here can flip a widget's storage membership (reachable vs
     # lost) whether windowed or not. Mark-only; the eager StorageSorter drains once per world
     # cycle. (see docs/archive/bin-shelf-eager-sorting-plan.md)
-    @parent?.parent?._reactToChildAddedInScrollPanel? child
+    @parent?.parent?._reactToChildAddedInViewport? child
 
   # Re-wrap my FIT_BOX_TO_TEXT text children to the given width — the text-wrapping half of
   # the scrolled-content contract (scroll-frame role plan P5). The viewport calls this when it
@@ -91,7 +91,7 @@ class ScrolledPaneWdgt extends PanelWdgt
     # TODO the focusing and placing of the caret at the end of
     # the text should happen via API rather than via spoofing
     # a mouse event?
-    if @_amITheContentsPanelOfAScrollPanelWdgt()
+    if @_amITheContentsPanelOfAViewport()
       # the caret is a world singleton, compared by identity instead of
       # `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @children.filter (m) ->

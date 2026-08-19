@@ -22,4 +22,4 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
   # I attach directly to a scroll panel's frame (not its inner contents) when added -- the
   # container add methods key off this instead of `instanceof ModifiedTextTriangleAnnotationWdgt`.
   # (type-test-elimination campaign)
-  attachesToScrollFrameDirectly: -> true
+  attachesToViewportDirectly: -> true

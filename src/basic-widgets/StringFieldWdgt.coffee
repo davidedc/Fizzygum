@@ -6,7 +6,7 @@
 # slider step and must NOT pop the "edit:" prompt).
 # A stringWidget that can "scroll" as the cursor moves along the text
 # but note that there are no scrollbars, since the container
-# is just a Panel not a ScrollPanel.
+# is just a Panel not a Viewport.
 
 class StringFieldWdgt extends PanelWdgt
 

@@ -143,7 +143,7 @@ function constructorSlots() {
 }
 
 // ── facet 5 (ADVISORY) — pin-setter argument shapes ─────────────────────────────────────────────
-// ⚠ NEVER gate: the tree has legitimate variants (ScrollPanelWdgt's conditional forward,
+// ⚠ NEVER gate: the tree has legitimate variants (ViewportWdgt's conditional forward,
 // NumberPromptWdgt's pure sink), and the whole area is mid-flight between this plan's W6 and
 // plans/connector-ubiquity-and-reflection-plan.md. Reported so W6 can re-derive its table, not judged.
 function pinSetterShapes() {

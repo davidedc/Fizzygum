@@ -682,7 +682,7 @@ class FrameWdgt extends Widget
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
-      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
+      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
@@ -700,7 +700,7 @@ class FrameWdgt extends Widget
       # seed (placement-time, fresh widgets only) deliberately does not cover.
       @_rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
-      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
+      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
   # the content owns the slot's occupant, so a content CHANGE retires it -- the
   # rebuild then makes the NEW content's variant (or none)

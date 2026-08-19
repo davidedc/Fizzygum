@@ -245,3 +245,7 @@ unification, the `p0` collapse, the F3 re-sweep and the declined list — is in
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.5 C: per-file metrics ratchet for god-class line counts — not built
 - [ ] `archive/lint-generic-rules-carryover-plan.md` §8.9: empty-catch stink — needs multiline stink-engine extension
 - [ ] `archive/lint-ratchet-static-checks-plan.md` Phase 4: encode tier in underscore prefix on immediate mutators — PARKED, owner-gated, low priority
+- [ ] `archive/scroll-frame-role-architecture-plan.md` §7.6: transform-island scrolling (scroll offset as a clamped paint-time translation, dissolving the moved-plane model; the only route to "scrollability as a property of every panel") — not planned yet, large arc
+- [ ] `archive/scroll-frame-role-architecture-plan.md` §7.2: menu rows panel as direct viewport contents — REVISIT ONLY with the P5 contract's width-owning declaration + its own convergence probe (historically RECALC_NONCONVERGENCE)
+- [ ] `archive/scroll-frame-role-architecture-plan.md` P3.2 note: color/alpha up-relay for NON-default planes (folder/toolbar recolored directly leaves the viewport's mimic stale) — cosmetic, viewport never paints
+- [ ] scroll-frame role arc follow-on: deeper role names for the viewport constructs (SimpleTextViewportWdgt → a TextArea-style name, etc.) — a separate naming decision, not planned

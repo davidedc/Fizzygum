@@ -1,5 +1,5 @@
 # The ONE shared toolbar construction (Frame-model plan §5.C): a scrollable
-# strip of tool thumbnails -- a ScrollPanelWdgt wrapping a ToolPanelWdgt grid.
+# strip of tool thumbnails -- a ViewportWdgt wrapping a ToolPanelWdgt grid.
 # One subclass per palette; a subclass supplies only its item list
 # (_toolbarItems) and, where it differs, its docking defaults. The SAME
 # construction serves both toolbar homes: FLOATING (wrapped in a FrameWdgt by
@@ -8,10 +8,10 @@
 # act on the focused widget or create-by-drag -- which is exactly what lets
 # one construction serve every home.
 #
-# Colloquial name rides the contents: ToolPanelWdgt.scrollPanelColloquialName
+# Colloquial name rides the contents: ToolPanelWdgt.viewportColloquialName
 # names the whole strip "toolbar" in hierarchy menus.
 
-class ToolbarWdgt extends ScrollPanelWdgt
+class ToolbarWdgt extends ViewportWdgt
 
   # D9 (Frame-model plan §5.C): where this toolbar docks when it occupies a
   # frame's toolbar-slot. A per-instance property with a per-TYPE class
@@ -31,7 +31,7 @@ class ToolbarWdgt extends ScrollPanelWdgt
 
   # a toolbar strip's scrolling is part of its design — a docked strip that
   # cannot scroll strands its off-edge buttons (see
-  # ScrollPanelWdgt.offersScrollPolicyToggle)
+  # ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
   constructor: ->

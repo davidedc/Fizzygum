@@ -46,8 +46,8 @@ class WidgetFactory
     newWdgt = new PanelWdgt
     newWdgt._applyExtent new Point 350, 250
     world.create newWdgt
-  createNewScrollPanelWdgt: ->
-    newWdgt = new ScrollPanelWdgt
+  createNewViewportWdgt: ->
+    newWdgt = new ViewportWdgt
     # layout-apply-sanctioned: construction-time dev factory (orphan, no cycle yet)
     newWdgt._positionAndResizeChildren()
     newWdgt._reLayoutScrollbars()

@@ -241,7 +241,7 @@ assertion a recapture after a regression silently stores two different hashes an
   its menu (TextWdgt-family drift). Give it a `backgroundColor` so the float position is visible.
 - **Soft-wrap toggle** (`macroSoftWrapTogglesTextReflow`): `textBox.toggleSoftWrap()` DIRECTLY (the "✓ soft wrap" method) —
   a synthetic right-click on a TextWdgt does NOT open a usable context menu in a macro (it does on plain widgets; and
-  INSIDE a ScrollPanelWdgt the panel's MERGED menu does open fine, with `SimpleTextWdgt`'s own `softWrapOff/On`
+  INSIDE a ViewportWdgt the panel's MERGED menu does open fine, with `SimpleTextWdgt`'s own `softWrapOff/On`
   items — see the Scroll section's in-panel soft-wrap entry).
   NB the box does NOT grow on toggle: the overflowing no-wrap line CROPS with an ellipsis at the unchanged box width
   (the default CROP spec) — see the desktop-editing entry below for the SCALEDOWN/editing interplay.
@@ -322,17 +322,17 @@ assertion a recapture after a regression silently stores two different hashes an
   (`MenuItemWdgt` is the button-family widget that carries an
   editable label; the deprecated `TriggerMorph` it once extended was deleted and folded into `ButtonWdgt`.)
 - **Caret brought into view only when MOVED** (`macroDocumentCaretBroughtIntoViewWhenMoved`): in a scrollable document the panel
-  scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ScrollPanelWdgt.scrollCaretIntoView` (`:504`)
+  scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ViewportWdgt.scrollCaretIntoView` (`:504`)
   repositions the contents so `world.caret` sits in the viewport; it is called from `CaretWdgt.gotoSlot` (`:147`, gated on the caret
   being directly inside a scrollable panel), which fires on a click-placement or an arrow key — not on a wheel. Fixture: a small `new
-  SimpleDocumentScrollPanelWdgt` + `doc.addNormalParagraph lorem` ×N so it OVERFLOWS; place the caret in the default (editable) paragraph
+  SimpleDocumentViewportWdgt` + `doc.addNormalParagraph lorem` ×N so it OVERFLOWS; place the caret in the default (editable) paragraph
   (`@moveToAndClickAtFractionOf_InputEvents (doc.contents.childrenNotHandlesNorCarets())[0], [fx,fy]`), then `@wheelOn_InputEvents doc,
   bigDelta` scrolls the caret OUT of view (it STAYS out — the scroll did not recall it), and `@syntheticEventsShortcutsAndSpecialKeys_InputEvents
   "ArrowRight"` MOVES it → the document scrolls back to reveal it. First caret-auto-scroll test.
-- **Caret stays visible while EDITING in a scroll panel** (`macroEditingStringInScrollablePanelCaretAlwaysVisible`): the bare-`ScrollPanelWdgt`
-  sibling of the document caret-into-view above — the SAME `ScrollPanelWdgt.scrollCaretIntoView` (`:504`) / `CaretWdgt.gotoSlot` (`:147`) path,
+- **Caret stays visible while EDITING in a scroll panel** (`macroEditingStringInScrollablePanelCaretAlwaysVisible`): the bare-`ViewportWdgt`
+  sibling of the document caret-into-view above — the SAME `ViewportWdgt.scrollCaretIntoView` (`:504`) / `CaretWdgt.gotoSlot` (`:147`) path,
   but a large-font string overflows a small panel and the caret is WALKED with ArrowRight so the panel auto-scrolls HORIZONTALLY to keep it in
-  view. Fixture: `panel = new ScrollPanelWdgt; panel.setExtent (new Point 300,140); panel.add str` where
+  view. Fixture: `panel = new ViewportWdgt; panel.setExtent (new Point 300,140); panel.add str` where
   `str = (new StringWdgt "Hello, World!", fontSize: 60).sizeToTextAndDisableFitting()` (~5× the default font → overflows
   the viewport) with `str.isEditable = true` (a directly-built StringWdgt defaults `isEditable=false`,
   `StringWdgt.coffee:50`). Drive: `@moveToAndClickAtFractionOf_InputEvents str, [0.04,0.5]` (click
@@ -342,7 +342,7 @@ assertion a recapture after a regression silently stores two different hashes an
   unreachable (the PANEL does the clipping and scrolling). A single-line StringWdgt is `isScrollable`, so `gotoSlot`'s
   scroll-panel branch fires; drive the moves via the input-event verbs (never poke `world.caret`) so `scrollCaretIntoView` genuinely fires;
   the caret is non-blinking only under the `TurnOnAnimationsPacingControl` preamble (`BlinkerWdgt.coffee:21-24`). The VERTICAL sibling
-  (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ScrollPanelWdgt`
+  (`macroScrollPanelCaretBroughtIntoViewWhenMoved`) exercises the SAME path via the V-branch (`:514-521`) and is the bare-`ViewportWdgt`
   counterpart of `macroDocumentCaretBroughtIntoViewWhenMoved`: an editable string at the TOP + a tall `RectangleWdgt` below it overflow
   VERTICALLY (a V-scrollbar); `@wheelOn_InputEvents panel, +Δ` scrolls the string+caret OUT of view above the viewport (the wheel alone does NOT
   recall it — `scrollCaretIntoView` fires on a caret MOVE, not a scroll), then `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowRight"`
@@ -352,12 +352,12 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Typing multiline text AUTO-SCROLLS its input area** (`macroMultilineTextInputScrollsWell`): the growth variant of the
   caret-into-view family above — those MOVE the caret through non-growing content; here the CONTENT GROWS under the caret.
   Typing line after line (`@syntheticEventsStringKeys_InputEvents` + `"Enter"`) into an editable `TextWdgt` inside a
-  `ScrollPanelWdgt` makes every keystroke run `CaretWdgt.gotoSlot`'s scroll-panel branch (`amIDirectlyInsideScrollPanelWdgt
+  `ViewportWdgt` makes every keystroke run `CaretWdgt.gotoSlot`'s scroll-panel branch (`amIDirectlyInsideViewport
   → @parent.parent.scrollCaretIntoView`, `CaretWdgt.coffee:147-148`), so once the text outgrows the pane the view tracks the
   typed TAIL line by line while `_reLayoutScrollbars` materialises the V-bar (button at the BOTTOM). The counter-beat:
   `@dragSliderButtonToFraction_InputEvents pane.vBar, [0.5, 0.05]` drags the scrollbar button back to the top — the first
   lines return WITHOUT recalling the caret (scrolling alone never does). Fixture: the `InspectorWdgt`'s editable `@detail` pane
-  (a `ScrollPanelWdgt` holding a `SimpleTextWdgt`). The detail is editable only AFTER a list-row is selected, so select a
+  (a `ViewportWdgt` holding a `SimpleTextWdgt`). The detail is editable only AFTER a list-row is selected, so select a
   property with `bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro "<memberName>"`, then clear it
   (`detailText.setText ""`) and focus it with a DIRECT `detailText.edit()`
   (`world.edit`, the established idiom for focusing a pane without a click); type ~18 short lines (the detail is taller than the
@@ -383,11 +383,11 @@ assertion a recapture after a regression silently stores two different hashes an
   widget's own box is fine and is a different thing — `str.topLeft().translateBy new Point 3, 8` to drop a caret near the
   start of a StringWdgt (four `macroStringWdgt*` tests) is nobody's bug: the target is standalone and taller than the offset.
 - **A wrapping text FIELD re-wraps on every container resize** (`macroWrappingTextFieldResizesOK`): the `InspectorWdgt`'s editable
-  `@detail` pane is a `ScrollPanelWdgt` holding a `SimpleTextWdgt` (a `TextWdgt`). It defaults to NON-wrapping (long lines
+  `@detail` pane is a `ViewportWdgt` holding a `SimpleTextWdgt` (a `TextWdgt`). It defaults to NON-wrapping (long lines
   scroll horizontally); call `detailText.softWrapOn()` (sets the detail scroll panel's `isTextLineWrapping = true`,
   `SimpleTextWdgt.coffee:103-109` — the method the "soft wrap" menu item calls; driven directly because a synthetic right-click
   on a `TextWdgt` can't open that menu) so the typed text wraps to the pane width. Then EVERY resize of the inspector WINDOW
-  re-wraps it: drag the window resizer → `InspectorWdgt._reLayout` resizes the pane → `ScrollPanelWdgt._positionAndResizeChildren` re-fits
+  re-wraps it: drag the window resizer → `InspectorWdgt._reLayout` resizes the pane → `ViewportWdgt._positionAndResizeChildren` re-fits
   the wrapping text to the new pane width → `_reLayoutScrollbars` shows the V-bar when it no longer fits. Probe with a wide → narrow+tall
   progression: WIDTH changes re-break the lines. To type into the detail it must first be EDITABLE — select a property to arm it,
   clear it (`setText ""`) and focus with `detailText.edit()`; drop the caret with `world.stopEditing()` before the shots. (Re-authored
@@ -412,7 +412,7 @@ assertion a recapture after a regression silently stores two different hashes an
   and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
   ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleWdgts with no `labelString`).
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
-  `SimpleDocumentScrollPanelWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
+  `SimpleDocumentViewportWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
   (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
   `"a SimpleText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptWdgt
   (narrows the box), `"align right"` (setAlignmentToRight) moves the box to the document's right edge; then click in, `Meta+a`, and type
@@ -453,12 +453,12 @@ assertion a recapture after a regression silently stores two different hashes an
   `toString().replace("Wdgt","")` so a FrameWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
   to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector part, …).
 - **A merging scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelMergesChildMenu`): the inverse of the
-  rule above. A `SimpleTextScrollPanelWdgt` sets `takesOverAndMergesChildrensMenus = true` (`SimpleTextScrollPanelWdgt.coffee:25`),
+  rule above. A `SimpleTextViewportWdgt` sets `takesOverAndMergesChildrensMenus = true` (`SimpleTextViewportWdgt.coffee:25`),
   so `Widget.buildContextMenu` (`:2905-2908`) finds that ancestor and returns the PANEL'S OWN menu — right-clicking the inner text
   blurb produces no "a X ➜" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
   the baseline visible: pair it with a plain `PanelWdgt` + `RectangleWdgt` child whose right-click DOES build the 2-item hierarchy
   menu (`@assertTopMenuItemStrings ["a Rectangle ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
-  `new SimpleTextScrollPanelWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
+  `new SimpleTextViewportWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
   image_1 (the panel's own merged menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
   clicked point on click (the menu item's `trigger`, inherited from the `ButtonWdgt` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
@@ -509,9 +509,9 @@ assertion a recapture after a regression silently stores two different hashes an
   sub-menu cascading beside the empty panel → image_2 MID-DRAG floating on top, unclipped/overflowing → image_3 dropped+pinned, now
   clipped, world menu STILL up → image_4 world menu dismissed (only then), sub-menu survives. Drop high (~`[0.5,0.1]`) so the overflow
   (floating) vs clip-at-the-edge (dropped) difference is pronounced.
-- **A menu pinned in a SCROLLABLE panel is live scrolling content** (`macroMenuPinnedInScrollPanel`): the ScrollPanelWdgt
-  sibling of the drop-pin entry above. Drop the demo sub-menu into the demo "scrollable panel" (350x250 `ScrollPanelWdgt`
-  via `world.create`; locate it with `@findTopWidgetByClassNameOrClass ScrollPanelWdgt` — its getTextDescription says
+- **A menu pinned in a SCROLLABLE panel is live scrolling content** (`macroMenuPinnedInScrollPanel`): the ViewportWdgt
+  sibling of the drop-pin entry above. Drop the demo sub-menu into the demo "viewport" (350x250 `ViewportWdgt`
+  via `world.create`; locate it with `@findTopWidgetByClassNameOrClass ViewportWdgt` — its getTextDescription says
   "Panel", so pass the CLASS, not the string) and the taller-than-viewport menu is CLIPPED and makes the panel's own
   `panel.vBar` appear. Thereafter it behaves as ordinary content that is still a LIVE menu: move the panel by an empty
   corner (`[0.93,0.05]` — the spare width right of the ~140px menu is the clean grab area; don't narrow the panel) and the
@@ -577,7 +577,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Reach a row in an OVER-TALL menu** (`macroOverTallMenuScrollsToReachItsLastRow`): a pop-up is bounded to the world
   and SCROLLS its rows, so a menu with more rows than fit is capped at the world's height and grows a vertical
-  scrollbar (`PopUpWdgt._refitRowsScrollFrameNoSettle`). ⚠ **A macro must scroll before clicking a row near the bottom
+  scrollbar (`PopUpWdgt._refitRowsViewportNoSettle`). ⚠ **A macro must scroll before clicking a row near the bottom
   of a long menu** — `@wheelOn_InputEvents menu, 400` — because the item is LOCATED by a tree walk (which finds it
   wherever it is, on-world or not) but CLICKED at its coordinates, which must be on-world; an unscrolled click lands on
   the desktop, which merely dismisses the menu. Prefer a wheel delta far larger than the overflow so the menu lands at
@@ -726,13 +726,13 @@ assertion a recapture after a regression silently stores two different hashes an
   window AROUND the re-wrapped cell, dropping an icon ON a cell inserts it AFTER the cell whose span contains the drop point
   (the document-stack insertion rule) and GROWS the window, Enter×3 at a caret inside a cell grows it again, and deleting the
   cell through its hierarchy menu (right-click the nested cell → "a SimpleText ➜" → "delete") COLLAPSES the window
-  around what remains. The CONTRAST: a `SimpleVerticalStackScrollPanelWdgt` content (its ctor SEEDS a default "A small
+  around what remains. The CONTRAST: a `SimpleVerticalStackViewportWdgt` content (its ctor SEEDS a default "A small
   string / here another." paragraph, calls `disableDrops()` on the panel so drops route to the inner stack, and sets the
   inner stack `isLockingToPanels = true` so dragging it carries the WHOLE panel) absorbs overflow by CLIPPING — drop a big
   lorem after the seeded paragraph and the window's bounds are IDENTICAL before/after (no scrollbar at rest; the windowed
   scroll panel also adds the pencil/editing chrome to the titlebar). Fixture via the very creator methods the menu items
   call (they live on the guarded dev-only `DemoMenus` collaborator, reached as the `demoMenus` global):
-  `demoMenus.createSimpleVerticalStackPanelWdgt()` ((35,30) 370×325), `demoMenus.createSimpleVerticalStackScrollPanelWdgt()`
+  `demoMenus.createSimpleVerticalStackPanelWdgt()` ((35,30) 370×325), `demoMenus.createSimpleVerticalStackViewportWdgt()`
   ((430,25) 370×325), `demoMenus.createNewWrappingSimpleTextWdgtWithBackground()`, and `world.create new HeartIconWdgt`
   (carried on the hand exactly like the "Heart icon" menu item — drop it with a no-button move +
   `@syntheticEventsMouseClick_InputEvents()`). No new verb.
@@ -804,36 +804,36 @@ assertion a recapture after a regression silently stores two different hashes an
 
 ## Scroll & scrollbars
 
-- **ListWdgt wheel scroll** (`macroListWdgtWheelScroll`): a `ListWdgt` (extends ScrollPanelWdgt) is a clipped column of rows.
+- **ListWdgt wheel scroll** (`macroListWdgtWheelScroll`): a `ListWdgt` (extends ViewportWdgt) is a clipped column of rows.
   Build standalone — `new ListWdgt ["Item 01", …]` (the ctor is `(@elements = [], opts = {})`) — `setExtent` SHORTER than its content so it overflows + shows
   a scrollbar; `@wheelOn_InputEvents list, deltaY` scrolls it (positive deltaY = DOWN). Tune the delta to the overflow (drop it
   if two later shots stop changing). Row-click highlight is NOT a reliable screenshot signal; scrolling is.
 - **Slider/scrollbar TRACK click** (`macroSliderTrackClickMovesButton`): `@clickOnSliderTrackAtFraction_InputEvents doc.vBar,
-  [0.5, fy]` clicks a SliderWdgt's TRACK (background, OUTSIDE the button) to JUMP the button there — for a ScrollPanelWdgt's
+  [0.5, fy]` clicks a SliderWdgt's TRACK (background, OUTSIDE the button) to JUMP the button there — for a ViewportWdgt's
   `@vBar`/`@hBar` this scrolls the content (`SliderWdgt.mouseDownLeft` non-float-drags the button to the click when the
-  slider's parent is a ScrollPanelWdgt OR PromptWdgt; a slider parented to neither IGNORES it — the negative case). Click the
+  slider's parent is a ViewportWdgt OR PromptWdgt; a slider parented to neither IGNORES it — the negative case). Click the
   TRACK not the button (a click ON the button just grabs it) — give enough overflow that the button is small.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
-  to the nearest `wheel` handler; `ScrollPanelWdgt.wheel` scrolls itself UNLESS at the travel limit, then `escalateEvent 'wheel'`).
+  to the nearest `wheel` handler; `ViewportWdgt.wheel` scrolls itself UNLESS at the travel limit, then `escalateEvent 'wheel'`).
   Hold the pointer STILL near the inner's top (one `@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf inner, [0.5,0.15]),
   "no button"`) then fire repeated `@syntheticEventsWheel_InputEvents 0, bigDelta` (the L1 primitive, NOT `wheelOn` which re-moves):
-  the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `SimpleDocumentScrollPanelWdgt` (`outer.add inner`
+  the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `SimpleDocumentViewportWdgt` (`outer.add inner`
   between two `outer.addNormalParagraph "…"`) holding a fixed-height `ListWdgt` (the stack constrains only WIDTH, so the inner
   keeps its height and overflows). FLANK the inner above AND below so it stays VISIBLE when the outer is fully scrolled.
-- **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ScrollPanelWdgt._reLayoutScrollbars` (`:124`) shows the hBar
+- **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ViewportWdgt._reLayoutScrollbars` (`:124`) shows the hBar
   only when `contents.width() >= width()+1` and the vBar only when `contents.height() >= height()+1`, sizing each thumb to the
   viewport/content ratio and positioning it by the scroll offset. Add a wrapping `SimpleTextWdgt` as a real SUBMORPH of the
   inner `@contents` (`panel.add text`); NARROW it via the public `text.setWidth` (re-wraps it taller, since
   it is `FIT_BOX_TO_TEXT` with `softWrap` on) → vBar appears; MOVE it toward the bottom-right (`text.moveTo`) → hBar appears + vBar thumb shrinks.
   No manual recompute: each public setter's settle re-fits the enclosing panel (`_positionAndResizeChildren` +
   `_reLayoutScrollbars`) automatically. TRAP: a single-widget contents (`new
-  ScrollPanelWdgt child`) has no submorphs, so `_positionAndResizeChildren` re-fits it back to the viewport (undoing the overflow) —
+  ViewportWdgt child`) has no submorphs, so `_positionAndResizeChildren` re-fits it back to the viewport (undoing the overflow) —
   use a real submorph.
 - **Adding a child to a ListWdgt recomputes its scroll** (`macroAddingWidgetToListUpdatesScroll`): the recompute-on-ADD
-  sibling of the content-change entry above (which recomputes on child MUTATION). `ScrollPanelWdgt.add` (`:186-194`) routes
+  sibling of the content-change entry above (which recomputes on child MUTATION). `ViewportWdgt.add` (`:186-194`) routes
   a non-handle widget into `@contents` and then AUTOMATICALLY calls `@_positionAndResizeChildren()` + `@_reLayoutScrollbars()` — so
-  adding a tall morph to a `ListWdgt` (extends ScrollPanelWdgt) that previously just fit its rows makes a vertical
+  adding a tall morph to a `ListWdgt` (extends ViewportWdgt) that previously just fit its rows makes a vertical
   scrollbar APPEAR, with NO manual recompute call (the recorded "attach...→a List" gesture IS exactly this `@add` +
   recompute, `Widget.newParentChoice`). Build a standalone `new ListWdgt [rows]` sized to ≈ its rows' height
   (so no scrollbar yet) + a distinct `RectangleWdgt` positioned to PARTIALLY OVERLAP the list's lower edge and HANG BELOW
@@ -842,7 +842,7 @@ assertion a recapture after a regression silently stores two different hashes an
   "attach..."` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "a List"`
   (class-name PREFIX). The OVERLAP is REQUIRED — `"attach..."` lists only bounds-intersecting targets
   (`world.plausibleTargetAndDestinationWidgets`), so a non-overlapping rect would not be offered the list. Widget.attach →
-  list.add (ScrollPanelWdgt.add) re-parents the rect into `@contents` + auto-recomputes → image_2 shows the rect CLIPPED to
+  list.add (ViewportWdgt.add) re-parents the rect into `@contents` + auto-recomputes → image_2 shows the rect CLIPPED to
   the list (its hanging part cropped — proof it is now a child) AND a scrollbar APPEARED; then `@wheelOn_InputEvents list,
   delta` → rows + rect scroll together (image_3). Fills the gap `macroListWdgtWheelScroll` explicitly LEFT OPEN (it
   distilled the same recording family to just the wheel-scroll core). GOTCHAS: size the list height ≈ its rows' height (so
@@ -850,10 +850,10 @@ assertion a recapture after a regression silently stores two different hashes an
   rect's CENTRE on the part HANGING BELOW the list so the right-click lands cleanly on the rect, not the list. No new verb.
 - **Add/remove at the document's END — the viewport stays ANCHORED to the end**
   (`macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument`): the anchoring sibling of the
-  two recompute entries above. Every paragraph DROP into / float-GRAB out of a `SimpleDocumentScrollPanelWdgt` re-runs
-  `_positionAndResizeChildren` + `_reLayoutScrollbars` (`ScrollPanelWdgt._reactToChildDropped`/`_reactToChildGrabbed`, `:236/:240`);
+  two recompute entries above. Every paragraph DROP into / float-GRAB out of a `SimpleDocumentViewportWdgt` re-runs
+  `_positionAndResizeChildren` + `_reLayoutScrollbars` (`ViewportWdgt._reactToChildDropped`/`_reactToChildGrabbed`, `:236/:240`);
   `_positionAndResizeChildren` (`:244`) shrink-wraps the stack to its content (its `:277-290` comment NAMES the
-  remove-at-the-bottom scenario) and `keepContentsInScrollPanelWdgt` (`:328`) clamps the view: while content overflows the
+  remove-at-the-bottom scenario) and `keepContentsInViewport` (`:328`) clamps the view: while content overflows the
   BOTTOM-clamp keeps a fully-scrolled viewport pinned to the document's END (no vacant space in view); once content fits,
   the stack is grown to viewport height (`:302`) and the TOP-clamp re-anchors at the top — and `_reLayoutScrollbars` hides the
   bar entirely. Fixture trick: use IDENTICAL lorem paragraphs (the Batch-47 document idiom — doc recipe at (35,30) 370×325
@@ -869,18 +869,18 @@ assertion a recapture after a regression silently stores two different hashes an
   and wrap-toggle twins of this clamp resolution are the next two entries. No new verb.
 - **Font-size change under an END-SCROLLED viewport — the clamp re-anchors at the top**
   (`macroWrappingSimpleTextScrollPanelResizesCorrectlyAsTexSizeIsChangedPartTwo`): the FONT-driven sibling of the
-  end-anchoring entry above, on a `SimpleTextScrollPanelWdgt`. `SimpleTextWdgt.setFontSize` (inherited from
+  end-anchoring entry above, on a `SimpleTextViewportWdgt`. `SimpleTextWdgt.setFontSize` (inherited from
   `StringWdgt`, not overridden on this class) re-breaks the text (`TextWdgt::_reLayoutSelf`: wrapped height = lineCount × fontHeight)
   and refreshes the enclosing panel, so the same `_positionAndResizeChildren` clamps resolve the new content extent: ENLARGING
   under a top-anchored view just grows the content downward (the V-bar appears, thumb at the top, viewport unmoved);
   SHRINKING back to the default WHILE FULLY SCROLLED DOWN makes the end offset impossible — the content fits again, so
   grow-to-viewport + TOP-clamp re-anchor the view at the top and `_reLayoutScrollbars` hides the bar, BYTE-identical to the
   pristine fixture (the retired no-wrap flavour restored byte-for-byte too — the clamp path is wrap-agnostic). FIXTURE:
-  the 'simple plain text scrollpanel wrapping' demo recipe (`demoMenus.createWrappingSimpleTextScrollPanelWdgt`,
+  the 'simple plain text scrollpanel wrapping' demo recipe (`demoMenus.createWrappingSimpleTextViewportWdgt`,
   `DemoMenus.coffee:609` —
   (20,25) 390×305, padding 10, one wrapping lorem at the default font 12, which FITS: no bar at baseline). MENU
   DISCOVERY: the text is `lockToPanels`'d and the panel sets `takesOverAndMergesChildrensMenus`
-  (`SimpleTextScrollPanelWdgt.coffee:25`), so a right-click opens ONE merged menu with 'font size...' at TOP
+  (`SimpleTextViewportWdgt.coffee:25`), so a right-click opens ONE merged menu with 'font size...' at TOP
   level — NO hierarchy descent (unlike a document paragraph); then the banked Meta+a-overtype prompt dance. While
   end-scrolled the tall text's centre is above the viewport clip — right-click a bottom FRACTION (`[0.5, 0.95]`).
   No new verb.
@@ -900,7 +900,7 @@ assertion a recapture after a regression silently stores two different hashes an
   exactly reversible: the wheel-to-end after the toggle round trip is byte-identical to the pre-toggle end view (this
   macro reproduced its recording's reference pixels hash-for-hash at both densities). No new verb.
 - **A nested WINDOW's lifecycle re-syncs its scroll panel** (`macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`):
-  the window-lifecycle sibling of the two recompute entries above. A `FrameWdgt` nested INSIDE a ScrollPanelWdgt refreshes it:
+  the window-lifecycle sibling of the two recompute entries above. A `FrameWdgt` nested INSIDE a ViewportWdgt refreshes it:
   `_reactToChildCollapsed`/`_reactToChildUnCollapsed` both END with `@_invalidateLayout()` — the uniform dirty-tree climb (plus a direct
   grandparent invalidate when directly inside a non-text-wrapping scroll panel; the old announce-up helper was deleted 2026-07-01) —
   and the panel's `_positionAndResizeChildren` + `_reLayoutScrollbars` then run at settle
@@ -915,12 +915,12 @@ assertion a recapture after a regression silently stores two different hashes an
   three-gesture order, decoded by pixel-diffing its references). Anchor a byte-equality on two shots produced by the SAME switch click
   (here both UNCOLLAPSE clicks: image_7 == image_5) — the last-clicked switch's hover + tooltip are part of macro shots, so equality
   pairs with different last gestures (the recording's bar-state pair) would differ by exactly that hover. Fixture: the demo
-  "scrollable panel" via the real menu path + carry-drop (same as macroMenuPinnedInScrollPanel). No new verb.
+  "viewport" via the real menu path + carry-drop (same as macroMenuPinnedInScrollPanel). No new verb.
 - **Window CELLS in a constrained scroll-STACK: collapse/close reflow + live width tracking**
   (`macroWindowCellsInConstrainedScrollStackReflow`): the STACK-branch sibling of the entry above. The same
   `@_invalidateLayout()` climb reaches a STACK parent too (the settle re-runs the stack's `_positionAndResizeChildren`):
   collapsing/uncollapsing/closing a window CELL slides the cells below up/down and re-derives the enclosing panel's scrollbars.
-  Fixture: a `SimpleVerticalStackScrollPanelWdgt` (a ScrollPanelWdgt whose contents is a constraining stack with
+  Fixture: a `SimpleVerticalStackViewportWdgt` (a ViewportWdgt whose contents is a constraining stack with
   `isLockingToPanels` — grabbing its interior grabs the WHOLE composite, which is how it drops into an outer window; clear its
   default `SimpleTextWdgt` first) + internal windows that adopt COLOURED RECTANGLES — the rectangles carry the width,
   because an adopting window WRAPS to its content (a preset extent is discarded), and they must be WIDER than the stack so the
@@ -931,7 +931,7 @@ assertion a recapture after a regression silently stores two different hashes an
   The collapse round trip byte-anchor needs a SECOND round trip (post-repaint states match each other; the FIRST restore differs
   from the pristine shot by exactly the `HighlightableMixin` pristine-vs-repaint glyph rule of the nested-collapse entry). Park
   the pointer on one clear spot before every shot. No new verb.
-- **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ScrollPanelWdgt auto-scrolls when a
+- **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ViewportWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOfChild` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
   yield generously. MUST hold long enough that the `autoScroll` 500ms `Date.now()` settle elapses and the scroll CLAMPS — via a
@@ -961,8 +961,8 @@ assertion a recapture after a regression silently stores two different hashes an
   EVERY shot (a no-button `@syntheticEventsMouseMove_InputEvents`) so hover state can never break the equality. No
   new verb.
 - **A document flows, clips and scrolls live non-text widgets** (`macroDocumentScrollsMixedTextAndClocks`): a
-  `SimpleDocumentScrollPanelWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
-  inner `SimpleVerticalStackPanelWdgt` content stack (`ScrollPanelWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
+  `SimpleDocumentViewportWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
+  inner `SimpleVerticalStackPanelWdgt` content stack (`ViewportWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
   ClippingAtRectangularBoundsMixin` clips to the panel box. On insert the stack re-squares an `AnalogClockWdgt` to its remembered width
   (`VerticalStackLayoutSpec.rememberInitialDimensions` + `AnalogClockWdgt._setWidthSizeHeightAccordingly`); getWidthInStack DISPLAYS
   that remembered width CLAMPED to the current column — so clocks added at distinct sizes stay distinct, one wider than the column is shown
@@ -970,7 +970,7 @@ assertion a recapture after a regression silently stores two different hashes an
   relaxes). Build the fixture DIRECTLY (`doc.addNormalParagraph "…"` + `doc.add clock`): the test targets the
   SCROLL/FLOW/CLIP of mixed content, not the drop GESTURE (covered by macroIconDroppedIntoDocumentFlows — and dragging several
   oversized clocks by hand is needless flakiness: a mis-grabbed big clock leaks onto the desktop). `@wheelOn_InputEvents doc, delta`
-  scrolls (positive = down; `ScrollPanelWdgt.scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
+  scrolls (positive = down; `ViewportWdgt.scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
   clocks freeze (`new Date 2011,10,30`) during playback, so a LIVE dynamic widget is a safe screenshot fixture (precedent:
   macroAnalogClockInspectEdit). Interleave a tall text paragraph BEFORE and AFTER the clocks so the narrow-document scroll positions
   (top / oversized-clock-clipped / bottom-with-trailing-text) are distinct. Then `doc.setExtent` to near-fullscreen (a fixture-state
@@ -979,9 +979,9 @@ assertion a recapture after a regression silently stores two different hashes an
   test. No new verb.
 - **No SPURIOUS scrollbars on resize** (`macroNoSpuriousScrollbarsOnScrollPanelResize`): the NEGATIVE of
   `macroScrollBarsTrackContentChange` — a bar appears ONLY when content overflows, so moving content around inside a panel and
-  RESIZING it while the content still FITS must spawn NONE. Same `_reLayoutScrollbars` gate (`ScrollPanelWdgt.coffee:114`; hBar
+  RESIZING it while the content still FITS must spawn NONE. Same `_reLayoutScrollbars` gate (`ViewportWdgt.coffee:114`; hBar
   `:143-160` / vBar `:163-180`), re-evaluated on `_applyExtent` (`:232-233`) AND on entering resize/move mode
-  (`showResizeAndMoveHandlesAndLayoutAdjusters` override, `:204-207`). Build `new ScrollPanelWdgt` + a default `new BoxWdgt`
+  (`showResizeAndMoveHandlesAndLayoutAdjusters` override, `:204-207`). Build `new ViewportWdgt` + a default `new BoxWdgt`
   (Widget defaults: 50×40, dark, fits with room to spare) added via `panel.add box` (routes into `@contents`); move the box around
   with `@dragWidgetTo_InputEvents box, pt` (re-drop re-parents into `@contents`, re-runs the gate — still fits, no bar); then
   `@openMenuOf_InputEvents panel` → `@moveToItemOfTopMenuAndClick_InputEvents "resize/move..."` → `@dragResizeMoveHandleTo_InputEvents
@@ -990,29 +990,29 @@ assertion a recapture after a regression silently stores two different hashes an
   extends the world's scrollable extent → perturbs the SWCanvas frame; compute `dest` from `panel.bottomRight()` minus a positive
   delta). No new verb.
 - **A wheel-scroll DESTROYS the temporary resize/move handles** (`macroResizingScrollFrameThenImmediatelyScrollingTheHandlesDontStickToScrollPanelContent`):
-  the handles-vs-scroll guard — `ScrollPanelWdgt.wheel`'s FIRST act, before any scrolling or limit escalation, is
-  `world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @` (`ScrollPanelWdgt.coffee:540-542`; the src
+  the handles-vs-scroll guard — `ViewportWdgt.wheel`'s FIRST act, before any scrolling or limit escalation, is
+  `world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @` (`ViewportWdgt.coffee:540-542`; the src
   comment names the regression: "if we don't destroy the resizing handles, they'll follow the contents being moved!"). The
   handle life cycle: "resize/move..." runs `showResizeAndMoveHandlesAndLayoutAdjusters` (`Widget.coffee:2767-2790`) — a
   FREEFLOATING widget gets the four handles into `world.temporaryHandlesAndLayoutAdjusters`, a non-freefloating one RECURSES to
-  its parent, so invoking it from a document's menu parks the handles on the freefloating scroll FRAME; `ScrollPanelWdgt.add`'s
+  its parent, so invoking it from a document's menu parks the handles on the freefloating scroll FRAME; `ViewportWdgt.add`'s
   HandleWdgt carve-out (`:186-194`) keeps them direct children of the frame (NOT inside the scrolled `@contents`); any
   mouse-DOWN on a non-handle also destroys them (`ActivePointerWdgt.coffee:378` — how a desktop click exits the mode). Fixture =
-  the document-drop idiom (a `demoMenus.createSimpleDocumentScrollPanelWdgt` doc + two `demoMenus.createNewWrappingSimpleTextWdgtWithBackground`
+  the document-drop idiom (a `demoMenus.createSimpleDocumentViewportWdgt` doc + two `demoMenus.createNewWrappingSimpleTextWdgtWithBackground`
   yellow texts dragged in with `@dragWidgetTo_InputEvents`; the stack inserts a drop AFTER the sibling whose vertical span
   contains the drop point — crib `macroIconDroppedIntoDocumentFlows`). MENU GOTCHA: the doc's stack cells are width-constrained
   to the FULL content width, so virtually any right-click inside the doc hits a CELL and opens the hierarchy/disambiguation
   menu (the recording threaded the few-pixel inter-cell gap to hit the stack directly — do NOT try to reproduce that); navigate
   it instead — `@openMenuOf_InputEvents firstElement` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()),
-  "a SimpleDocumentScrollPanel"` → `"resize/move..."` (the stack panel itself is EXCLUDED from the hierarchy menu as redundant,
+  "a SimpleDocumentViewport"` → `"resize/move..."` (the stack panel itself is EXCLUDED from the hierarchy menu as redundant,
   `Widget.getHierarchyMenuWidgets:2955`). Assert by screenshot pair: handles parked on the frame, then `@wheelOn_InputEvents text, deltaY`
   twice → handles GONE + content scrolled; pick deltas that overshoot so the view CLAMPS at the content bottom (robust to small
   delta drift). No new verb.
 - **Free-width scroll-stack shows a HORIZONTAL scrollbar** (`macroFreeWidthScrollStackShowsHorizontalScrollbar`): the FIRST
-  horizontal-bar macro (every other scroll macro is vertical). `new SimpleVerticalStackScrollPanelWdgt false` (the
-  `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`SimpleVerticalStackScrollPanelWdgt.coffee:6-7`),
+  horizontal-bar macro (every other scroll macro is vertical). `new SimpleVerticalStackViewportWdgt false` (the
+  `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`SimpleVerticalStackViewportWdgt.coffee:6-7`),
   so a NON-wrapping child keeps its natural width (`SimpleVerticalStackPanelWdgt.coffee:92-104` left-aligns + skips the width clamp)
-  → `@contents.width()` exceeds the viewport → `_reLayoutScrollbars` shows the hBar (`ScrollPanelWdgt.coffee:143-145`, the
+  → `@contents.width()` exceeds the viewport → `_reLayoutScrollbars` shows the hBar (`ViewportWdgt.coffee:143-145`, the
   `contents.width() >= width()+1` gate). Append a wide non-wrapping `SimpleTextWdgt` with `para.softWrap = false`
   (the wrap-OFF idiom — `softWrap` replaced the retired `maxTextWidth`; cribbed from `macroNonWrappingTextResizesToContent`),
   then `panel.add para`, whose settle re-measures it at its natural un-wrapped width — its long lines CLIP at the right edge. Scroll horizontally with `@wheelOn_InputEvents panel, 0, deltaX`
@@ -1128,11 +1128,11 @@ assertion a recapture after a regression silently stores two different hashes an
   <desktop|panel>" items appear only when the morph's parent is a PanelWdgt (the world is one). A locked morph's drag grabs its
   PARENT (`grabsToParentWhenDragged → @isLockingToPanels`), so `@dragWidgetTo_InputEvents` leaves it put; unlock and it moves.
 - **Contents-lock REJECTS drops** (`macroLockedDocumentRejectsDrop`): the drop-side sibling of the drag-lock above. A
-  `SimpleDocumentScrollPanelWdgt` (ships its own default text; `new …; world.add`) accepts a dropped widget into its vertical
-  stack while editing is ENABLED. Its "disable editing" item → `disableDragsDropsAndEditing` (`SimpleVerticalStackScrollPanelWdgt.coffee:34`
-  → `ScrollPanelWdgt.coffee:630` → `disableDrops`) clears the inner content panel's `_acceptsDrops`; now
+  `SimpleDocumentViewportWdgt` (ships its own default text; `new …; world.add`) accepts a dropped widget into its vertical
+  stack while editing is ENABLED. Its "disable editing" item → `disableDragsDropsAndEditing` (`SimpleVerticalStackViewportWdgt.coffee:34`
+  → `ViewportWdgt.coffee:630` → `disableDrops`) clears the inner content panel's `_acceptsDrops`; now
   `ActivePointerWdgt.dropTargetFor` walks PAST the locked doc up to the WORLD, so the next drop lands as a world child ON TOP of the
-  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a SimpleDocumentScrollPanel ➜"`
+  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a SimpleDocumentViewport ➜"`
   → `"disable editing"`). Make the negative meaningful with the accepted-vs-rejected contrast: a blue box dropped while enabled
   flows into the stack (image_1), a red box dropped while locked floats over the doc (image_2). The accepted box uses
   `@dragWidgetTo_InputEvents box1, doc` (drops at the centre, flows in); **drop the REJECTED box STRADDLING the doc's right edge**
@@ -1151,7 +1151,7 @@ assertion a recapture after a regression silently stores two different hashes an
   fit side by side, so a single inspector window + a dropped box shows the same pane-rejects-drops law more cleanly; the old `@work` pane is gone.)
   image_1 inspector + box apart → image_2/3 box dropped straddling the detail/list pane edge, each landing full-size + overhanging.
 - **Disassemble an inspector — pick its PANES out onto the desktop** (`macroPickingUpPartsFromInspector`): the `InspectorWdgt` is built from
-  independent part widgets (a left `@list`, a right `@detail` ScrollPanelWdgt, plus hierarchy buttons, toggles and an add/rename/remove/save
+  independent part widgets (a left `@list`, a right `@detail` ViewportWdgt, plus hierarchy buttons, toggles and an add/rename/remove/save
   footer). `Widget.pickUp` (`world.hand.grab @` on the receiver itself — what the part's hierarchy-menu "pick up" item calls; contrast "duplicate"
   = `fullCopy().pickUp()`, which grabs a COPY) detaches the REAL part. So dropping a picked-up part on the bare desktop leaves a standalone widget
   and a GAP in the gutted inspector, which re-flows its REMAINING parts (`_reLayout` guards each with `if part.parent == @`). Pull the two big
@@ -1172,7 +1172,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (~content − padding − scrollbar) so none is capped. A clean directly-built fixture sidesteps the recording's ambiguous
   duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
-- **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentScrollPanelWdgt` can host
+- **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentViewportWdgt` can host
   the inspector window. KEY: a WINDOW nests into a container only after the DWELL-TO-ARM gesture (drag-embed spec §6) — there is no internal/external
   gate any more (Phase 3 removed it; Phase 5 deleted the toggle button, and a window's skin is now DERIVED from parentage via `FrameWdgt.isInternal`).
   Drag the inspector window by its TITLE (a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) and linger past `dwellToArmMs`
@@ -1200,7 +1200,7 @@ assertion a recapture after a regression silently stores two different hashes an
   moved by a centre press — that lands on the value-50 BUTTON and non-float-drags it; grab a clear TRACK point
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.08, 0.5]), dest`).
 - **The drag-to-scroll FLAGS — background pans, foreground pans** (`macroScrollPanelDragToScrollFlags`): two dedicated
-  `ScrollPanelWdgt` flags, default false (`ScrollPanelWdgt.coffee:23-24`), distinct from the LOCK path:
+  `ViewportWdgt` flags, default false (`ViewportWdgt.coffee:23-24`), distinct from the LOCK path:
   `canScrollByDraggingBackground` makes a held BACKGROUND drag pan the contents (`PanelWdgt.coffee:143`), and
   `canScrollByDraggingForeground` makes a held drag ON A CONTENT WIDGET pan too instead of float-dragging it out
   (`Widget.coffee:2520`). GOTCHAS: both are gated on `anyScrollBarShowing()` — and bars hide the moment the content fits
@@ -1219,10 +1219,10 @@ assertion a recapture after a regression silently stores two different hashes an
   SATURATES (drag well past the clamp; the saturated state is the clamp's unique fixed point) or is exactly ZERO. And press
   the true background: the panel's bottom strip is the H-scrollbar, a press there silently does nothing.
 - **Scroll-panel drag behaviour — default MOVES, locked SCROLLS, in-a-window moves the WINDOW** (`macroScrollPanelNotMovedViaNonFloatDragChild`
-  / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ScrollPanelWdgt`'s
+  / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ViewportWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseWidget` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
-  `new ScrollPanelWdgt` ships `canScrollByDraggingBackground=false` — never set true): the climb reaches the ScrollPanelWdgt, which
-  `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ScrollPanelWdgt.mouseDownLeft`'s drag-scroll step is
+  `new ViewportWdgt` ships `canScrollByDraggingBackground=false` — never set true): the climb reaches the ViewportWdgt, which
+  `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ViewportWdgt.mouseDownLeft`'s drag-scroll step is
   gated on `!wdgtToGrab.detachesWhenDragged()`, false here). Dragging a plain child (the panel's `TextWdgt`) **DETACHES** it; dragging a
   `nonFloatDragging` child (a `ColorPaletteWdgt`) does NEITHER — it colour-picks (the `Widget.coffee:2549` short-circuit) — so the panel
   can't be dragged via the palette (image_1==image_2) while a background drag moves it (contrast). **LOCKED** (`panel.lockToPanels()` →
@@ -1320,8 +1320,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A composite drags as one unit into/out of a scroll panel, clipped inside** (`macroCompositeDragsAsUnitIntoScrollPanel`): a
   composite (boxes parented under one top box) crosses a clipping container's boundary as a single assembly. A child parented under a
   non-world morph has `grabsToParentWhenDragged` true (`Widget.coffee:2513-2533`), so dragging any part climbs via `findFirstLooseWidget`
-  (`:2545`) to the top box and carries the WHOLE subtree (children keep their relative offsets). A plain `new ScrollPanelWdgt` already accepts drops (`_acceptsDrops:true` via PanelWdgt — no
-  enableDrops) and clips at its bounds; dropping the composite over it routes `ActivePointerWdgt.drop → ScrollPanelWdgt.add` (`:186`),
+  (`:2545`) to the top box and carries the WHOLE subtree (children keep their relative offsets). A plain `new ViewportWdgt` already accepts drops (`_acceptsDrops:true` via PanelWdgt — no
+  enableDrops) and clips at its bounds; dropping the composite over it routes `ActivePointerWdgt.drop → ViewportWdgt.add` (`:186`),
   which re-homes the whole composite into `@contents` (clipped where it overhangs), and `Widget.add` REMOVES the desktop shadow on the
   non-world re-parent (`removeShadow`, `:3206`) / RESTORES it on a world re-parent (`addShadow`, `:3196`). So dragging ANY of the three boxes (each by its exposed
   TOP-RIGHT corner — the part not overlapped by a sibling) carries the whole composite, demonstrated in THREE in/out cycles (grab the 1st,
@@ -1412,7 +1412,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"` before typing, or the new digits join the old.
 - **PROMOTE a wire to two-way — "follows it too"** (`macroSliderPromotedToFollowAScrollPanel`, connector §A2): the SAME row,
   one item further down. A wire only DRIVES; this makes the controller follow the pin it drives as well, so a slider wired onto
-  a `ScrollPanelWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "fires per event" — row prefix, then
+  a `ViewportWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "fires per event" — row prefix, then
   CONTAINING `"follows it too"` — and click it again to demote.
   ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerMixin._canTrackWire`): the pin must be readable
   AND declare `announces` on its `PinSpec`, the controller must be able to render that pin (`SliderWdgt._canReflectPin` wants a
@@ -1431,7 +1431,7 @@ assertion a recapture after a regression silently stores two different hashes an
   chain must click that row FIRST and then `"connect to ➜"` / `"bind ⇄"` in the submenu it opens
   (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
   Grouping keeps the second gesture free of menu height, which is now a readability question rather than a correctness
-  one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpWdgt._refitRowsScrollFrameNoSettle`),
+  one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpWdgt._refitRowsViewportNoSettle`),
   so a row past the fold is reached with the wheel instead of being lost. ⚠ **A macro must therefore scroll before
   clicking a row near the bottom of a long menu** — `@wheelOn_InputEvents menu, <delta>` — because the item is located by
   a tree walk (which finds it wherever it is) but CLICKED at its coordinates (which must be on-world). See
@@ -1674,7 +1674,7 @@ assertion a recapture after a regression silently stores two different hashes an
   The machinery is exactly reversible — assert the round-trips BY BYTE-EQUALITY: a wheel-down tour + wheel-back-to-top
   reproduces the pre-tour shot's dataHash (the clamp lands exactly on offset 0), and setting the size back to the DEFAULT 12
   reproduces the pre-change shot's dataHash pixel-for-pixel. FIXTURE: the document demo is just `new
-  SimpleDocumentScrollPanelWdgt` at (35,30) 370×325 (`demoMenus.createSimpleDocumentScrollPanelWdgt`, `DemoMenus.coffee:651` — it ships with the
+  SimpleDocumentViewportWdgt` at (35,30) 370×325 (`demoMenus.createSimpleDocumentViewportWdgt`, `DemoMenus.coffee:651` — it ships with the
   default "A small string…" paragraph); drop-to-insert puts a dropped widget AFTER the sibling whose span contains the drop Y,
   appending below everything (`SimpleVerticalStackPanelWdgt.add:17`) — three authored drops produce lorem/small/lorem,
   including a REORDER of an existing paragraph by dropping it onto another paragraph's span (pick a drop Y inside that span
@@ -1694,9 +1694,9 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A lone centered widget stays centered** (`macroCenteredWidgetStaysCenteredWhenAlone`): a stack child's
   `VerticalStackLayoutSpec.alignment` (`"left"|"center"|"right"`, default left) drives its horizontal placement; `setAlignmentToCenter`
   is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpec.setAlignmentToCenter()` is the direct
-  equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ScrollPanelWdgt._positionAndResizeChildren`
+  equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ViewportWdgt._positionAndResizeChildren`
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
-  HeartIconWdgt (Color…)` into a `SimpleDocumentScrollPanelWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
+  HeartIconWdgt (Color…)` into a `SimpleDocumentViewportWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
   to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
 - **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfWidget`): a RectangleWdgt paints
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
@@ -1738,17 +1738,17 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
   its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never
   pages its button — a slider sitting on a panel/scroll-panel is NOT that panel's scrollbar. A standalone slider's track-press
-  escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ScrollPanelWdgt`/`PromptWdgt` parent) and the float-drag
+  escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ViewportWdgt`/`PromptWdgt` parent) and the float-drag
   grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseWidget` returns the slider) — so the slider moves and
   its button rides along, never calling `updateValue`. CRUX: dropping onto the scroll panel re-parents the slider into the panel's
-  inner `@contents` (`ScrollPanelWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later
+  inner `@contents` (`ViewportWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later
   track-grab still doesn't page. Grabbing the BUTTON instead would non-float-drag it and PAGE the value
   (`SliderButtonWdgt.nonFloatDragging`) — so grab a track point OFF the button. There is NO from-a-fraction drag verb
   (`@dragWidgetTo_InputEvents` grabs at `center()` = the button), so compose the primitive:
   `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf slider, [0.5, 0.15]), dropPoint` (one held drag-move
   is enough; the playback skips the grab threshold). Build a standalone vertical `new SliderWdgt 1, 100, 50, 10` + `slider.alpha = 1`
   (ctor defaults `@alpha = 0.1` ≈ invisible, `:38`) + `setExtent 22×130` (height>width ⇒ vertical) + a `PanelWdgt` + an EMPTY
-  `ScrollPanelWdgt` (empty ⇒ no bars ⇒ no extent growth). The button stays mid-track across all four shots = the proof. (The
+  `ViewportWdgt` (empty ⇒ no bars ⇒ no extent growth). The button stays mid-track across all four shots = the proof. (The
   recorded original's DIGEST mislabels the drag source as the panel; its 4 screenshots show the SLIDER is the moving object —
   trust the screenshots. Don't over-distill to a bare track-CLICK no-op: the recording's real demonstration is this
   drag-across-surfaces, the scroll-panel surface being the crux.) No new verb.
@@ -1951,7 +1951,7 @@ assertion a recapture after a regression silently stores two different hashes an
   park at the same spot before the pre-flip and post-round-trip shots and assert those identical too (there the reference
   dataHashes collapsing to one is corroboration; the in-run assertion is the check). Flip the mode through the real menu:
   a right-click on the construct lands on a CONTAINED widget, so the ancestor hierarchy menu opens first — navigate with
-  `@moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "a ScrollPanel"` (class-name prefix,
+  `@moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "a Viewport"` (class-name prefix,
   Wdgt-stripped), then click the policy row on the construct's own menu. No new verb.
 
 ## Affine transforms (islands)
@@ -1996,7 +1996,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the THIRD argument — there is no hole to skip) or right after a sugar materialize (`w.setRotationDegrees 30` then
   `w.parent.setClaimsSpace "slot"`). Testing the DEFAULT'S reach = drive the property sugar on a plain stack element with NOTHING
   set (the tracking island must read 'footprint' — assert `pic.parent.transformSpec.claimsSpace`). Scroll-reachability fixtures (D2)
-  use a PLAIN freshly-built free-floating `ScrollPanelWdgt` (`panel.add island`; NEVER the bin — complected) sized so the
+  use a PLAIN freshly-built free-floating `ViewportWdgt` (`panel.add island`; NEVER the bin — complected) sized so the
   rotated ink pokes past the viewport while the slot box stays inside: assert the vBar visibility rule
   (`panel.contents.height() >= panel.height() + 1`), wheel to prove the ink reachable, and assert the rotate-back round-trip
   byte-identical (`@assertScreenshotsIdentical`). Sweep spin-stability asserts EXACT integer equality of
@@ -2074,7 +2074,7 @@ assertion a recapture after a regression silently stores two different hashes an
   test that edits a mixin or a class prototype must restore the same way.
 - **`macroCanMoveAndResizeColorPaletteWdgt`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
   then drag a corner handle; click empty desktop to exit before the screenshot.
-- **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentScrollPanelWdgt`
+- **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentViewportWdgt`
   — one fills it via `doc.add`, the other by DRAGGING two desktop text widgets in (`@dragWidgetTo_InputEvents`) — then wheel-scroll.
   GOTCHA: `SimpleTextWdgt` width floors ~330px, so narrow the doc and place draggables SIDE BY SIDE (stacking overlaps them).
 - **`macroDemoMenuCatalogueParade`** (from the recorded buildAllWidgets, 70 steps → 1 shot): the whole-catalogue construction smoke —

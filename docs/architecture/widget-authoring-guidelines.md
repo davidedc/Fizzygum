@@ -137,14 +137,14 @@ today; the worked example, and what removing it took, is
 ### 3.3 Call `super` first unless something in the base needs a value
 
 **[convention]** Two reasons justify work before `super()`: a value the base constructor is HANDED,
-built in place (`FolderWindowWdgt` constructs the `ScrollPanelWdgt` it passes to `FrameWdgt`), and
+built in place (`FolderWindowWdgt` constructs the `ViewportWdgt` it passes to `FrameWdgt`), and
 option-object unpacking standing in for the parameters an all-positional signature would have
 bound at the same moment (`SliderWdgt`'s `opts.color` / `opts.smallestValueIsAtBottomEnd`). Everything
 else — appearance, colours, sizing, registrations, child building — goes after.
 
 ⚠ A base constructor that calls a **virtual** method runs it before the subclass constructor's own
-body has done anything past `super` — which is why `ScrollPanelWdgt` builds through a
-distinctly-named `_buildScrollFrame`, `MenuRowsPanelWdgt` through `_buildMenuLabel`, and
+body has done anything past `super` — which is why `ViewportWdgt` builds through a
+distinctly-named `_buildViewportChrome`, `MenuRowsPanelWdgt` through `_buildMenuLabel`, and
 `PromptWdgt` leaves `@_buildAndConnectChildren()` to each subclass's own constructor.
 
 ⚠ What that base DOES see is the subclass's `@param` fields, already assigned:
@@ -741,7 +741,7 @@ Set `@fps` to the slowest rate that looks right, and `@synchronisedStepping = tr
 should align to wall-clock boundaries rather than to construction time (a clock's second hand).
 
 **Prefer demand-driven subscription** — join when there is something to animate, leave when there is
-not, as `DataflowSource`, `ScrollPanelWdgt`'s momentum and `SimpleImageWdgt` do. A permanent
+not, as `DataflowSource`, `ViewportWdgt`'s momentum and `SimpleImageWdgt` do. A permanent
 constructor-time subscription is acceptable for a widget that genuinely always animates, and costs a
 slot in the once-per-cycle walk otherwise.
 
@@ -769,7 +769,7 @@ about (a reference tracker, an open-pop-up set, an app slot). What it does not: 
    `if x instanceof Foo then x.bar()` with an unconditional `x.bar?()`. Branching on self: have the
    base call `@hook?()` and implement `hook` on the subclass.
 2. **A capability query named for the CAPABILITY, not the class.** `isLayoutInert`,
-   `attachesToScrollFrameDirectly`, `sliderTrackPressJumpsButton`, `hostsContentStackDropSlots`.
+   `attachesToViewportDirectly`, `sliderTrackPressJumpsButton`, `hostsContentStackDropSlots`.
    Never `isScrollPanel` — a type-named predicate is only cosmetically better than the type test.
 3. **Singleton identity** — `@parent == world`, `m != world.caret` — for "is it *the* unique X".
 4. **Leave it**, with a comment saying why, when there is genuinely no behaviour to move.
@@ -978,7 +978,7 @@ class FooWdgt extends Widget
 Every rule above has cases it does not fit, and the codebase is full of good deviations. What
 separates a deviation from a scar is that the deviation **says why, in the code, where the next reader
 will be**: `SliderWdgt` argues its mixed constructor shape, `FrameWdgt` argues its trailing public
-`setExtent`, `ScrollPanelWdgt` argues its differently-named builder, `PanelWdgt` argues the one place
+`setExtent`, `ViewportWdgt` argues its differently-named builder, `PanelWdgt` argues the one place
 that tests a class. A gated rule additionally has a marker for this
 (`# layout-apply-sanctioned:`, `# nosettle-sanctioned:`, `# cross-invalidation-sanctioned:`,
 `# constructor-build-exempt:`, …) — each takes a reason, and the reason is the point.

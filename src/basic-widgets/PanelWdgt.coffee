@@ -63,13 +63,13 @@ class PanelWdgt extends Widget
   scrolledContentMeasure: (widthHint) ->
     @subWidgetsMergedPreferredBounds widthHint
 
-  # The panel-side scroll-topology chokepoint (mirror of Widget._amIDirectlyInsideScrollPanelWdgt,
+  # The panel-side scroll-topology chokepoint (mirror of Widget._amIDirectlyInsideViewport,
   # which asks the same question from a CONTENT widget's viewpoint): am I the panel a scroll
-  # frame clips and scrolls? Asked of the PARENT as a role query (ScrollPanelWdgt.isMyContentsPanel
+  # frame clips and scrolls? Asked of the PARENT as a role query (ViewportWdgt.isMyContentsPanel
   # — scroll-frame role plan P3), so it is true for ANY panel-family class serving as a plane
   # (the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt), and the two policy
   # callers below (detach refusal, grab-to-parent) read as intent.
-  _amITheContentsPanelOfAScrollPanelWdgt: ->
+  _amITheContentsPanelOfAViewport: ->
     (@parent?.isMyContentsPanel? @) ? false
 
   # Do my direct children get the "lock to panel/desktop" menu toggle? Panels are lockable
@@ -90,7 +90,7 @@ class PanelWdgt extends Widget
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
   # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
-  # (the scroll-holder relays — _reactToChild*InScrollPanel — live on ScrolledPaneWdgt, which
+  # (the scroll-holder relays — _reactToChild*InViewport — live on ScrolledPaneWdgt, which
   # supers into these; scroll-frame role plan P3)
   _reactToChildDropped: (droppedWidget) ->
     @_reFitContainer @parent
@@ -102,7 +102,7 @@ class PanelWdgt extends Widget
     return if @isOrphan()
     @_reFitContainer @parent
 
-  # puts the widget in the ScrollPanel
+  # puts the widget in the Viewport
   # in some sparse manner and keeping it
   # "in view"
   # NON-settling: every caller (a drop into the bin via BinOpenerWdgt._reactToChildDropped, the
@@ -128,8 +128,8 @@ class PanelWdgt extends Widget
     if @parent?
 
       # otherwise you could detach a Frame contained in a
-      # ScrollPanelWdgt which is very strange
-      if @_amITheContentsPanelOfAScrollPanelWdgt()
+      # ViewportWdgt which is very strange
+      if @_amITheContentsPanelOfAViewport()
         return false
 
       return super
@@ -138,8 +138,8 @@ class PanelWdgt extends Widget
     if @parent?
 
       # otherwise you could detach a Frame contained in a
-      # ScrollPanelWdgt which is very strange
-      if @_amITheContentsPanelOfAScrollPanelWdgt()
+      # ViewportWdgt which is very strange
+      if @_amITheContentsPanelOfAViewport()
         if @parent.canScrollByDraggingBackground and @parent.anyScrollBarShowing()
           return false
         else

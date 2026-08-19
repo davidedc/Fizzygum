@@ -1,6 +1,14 @@
 # Scroll-frame role architecture — the Panel/ScrollPanel refactor
 
-**STATUS BOX** (update per phase)
+**STATUS: ✅ EXECUTED IN FULL AND CLOSED 2026-08-19 — all phases P0–P6 landed the same day the
+plan was authored, each closed by a full 17-leg gauntlet (final: 17/17, 291s). The only pixel
+churn in the whole arc was the 8 menu-label tests P6's rename retitled (gated recapture, green
+at dpr1+2, webkit-reverified). Durable residue: `docs/architecture/viewports-and-planes.md`;
+deferred items are in `docs/BACKLOG.md` (transform-island scrolling §7.6, the menu-sandwich
+revisit §7.2, the non-default-plane up-relay, deeper role names). The old→new tables below are
+the rename's record — this archived text deliberately keeps the pre-rename vocabulary.**
+
+**STATUS BOX** (per-phase ledger, as executed)
 - P0 re-verification: ✅ DONE 2026-08-19 — zero drift (plan authored same day from the same greps);
   P0.2 verified: no PanelWdgt-subclass constructor forwards an argument to `super` (the bare-`super`
   hits are in `add`/`_reactToChild*` methods, and `CanvasWdgt`'s ctor takes no params); P0.3
@@ -66,7 +74,28 @@
   ⚠ gate catch: the contract move left `subWidgetsMergedPreferredBounds` with only self-calls
   (both contract impls call it on THEMSELVES) → rule U; allowlisted as the pure-measure API
   sibling of the cross-called `subWidgetsMergedFullBounds`.
-- P2, P6: not started. P2's owner decisions (which product name/icon survives) still open.
+- P2 product collapse: ✅ DONE 2026-08-19 (owner decided: one button, viewport body at 'auto',
+  tooltip "panel", the scrolling icon; `WindowWithScrollPanelCreatorButtonWdgt` +
+  `WindowWithCroppingPanelIconAppearance` DELETED; WidgetFactory keeps both dev entries;
+  GenericPanelWdgt checked — its payload is a StretchableWidgetContainerWdgt, out of scope).
+  Presuite PASS 115s with ZERO recaptures — no reference shows the windows-toolbar roster.
+  Close gate folded into P6's final gauntlet.
+- P6 rename: IN PROGRESS 2026-08-19 (owner decided: Option A, ViewportWdgt). Two-pass sweep + a
+  third for `\b`-resistant tokens; 176+53+8 files across both repos; classes
+  (ViewportWdgt / PopUpRowsViewportWdgt / SimpleVerticalStackViewportWdgt / SimpleTextViewportWdgt /
+  SimpleDocumentViewportWdgt, files git-mv'd), the member lexicon (…InViewport relays,
+  _amIDirectlyInsideViewport, _amITheContentsPanelOfAViewport, keepContentsInViewport,
+  vetoesViewportDrops, viewportColloquialName, attachesToViewportDirectly, _buildViewportChrome*,
+  _buildRowsViewportNoSettle, _refitRowsViewportNoSettle, rowsViewport, the bin's `viewport` field,
+  createNew/demo-creator methods, buildOverflowingViewportWithText_Macro,
+  _reFitViewportIfReachChangedNoSettle, sliderNotOnViewportBackground), drawn strings
+  ("viewport", "menu rows viewport", "a Viewport" prefixes), docs/architecture+specs+CLAUDE/
+  MACRO-PATTERNS prose. ⚠ SWEEP LESSONS: (a) a `\b` anchor cannot see a mid-token rename target —
+  enumerate ALL tokens first with `grep -ohE "[A-Za-z_]*(ScrollPanel|ScrollFrame)[A-Za-z_]*" | sort -u`
+  and write one row per token (the `_Macro`-suffixed verb slipped the first two passes); (b) this
+  plan file is EXCLUDED from sweeps (its old→new tables would self-mangle — naming-audit case law).
+  KEPT verbatim: retired-method history (`amIPanelOfScrollPanelWdgt`, check-layering's "ex …" note),
+  recorded-era test names in provenance prose, and all SystemTest_* directory names (test identity).
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-19. Nothing in this plan has been executed. Every `file:line` reference was

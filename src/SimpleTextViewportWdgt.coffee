@@ -1,15 +1,15 @@
-# The SimpleTextScrollPanelWdgt allows you show/edit ONE
+# The SimpleTextViewportWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or
 # other Widgets like the SimpleVerticalStackPanelWdgt/DocumentWdgt do.
 #
-# However, what the SimpleTextScrollPanelWdgt DOES
+# However, what the SimpleTextViewportWdgt DOES
 # in respect to the SimpleVerticalStackPanelWdgt/DocumentWdgt is to
 # view/edit UNWRAPPED text, which is quite important for
 # code, since really code must have the option of an
 # unwrapped view.
 
-class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
+class SimpleTextViewportWdgt extends ViewportWdgt
 
   textWdgt: undefined
   modifiedTextTriangleAnnotation: undefined
@@ -17,7 +17,7 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
 
   # a text panel's scroll behavior is intrinsic (the unwrapped code view exists
   # to scroll horizontally); belt+braces — my menus are taken over by the text
-  # anyway (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  # anyway (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
   constructor: (
@@ -66,7 +66,7 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
     return "text"
 
   # always content-sizing, wrap on or off (type-test-elimination ε; see
-  # ScrollPanelWdgt.isContentSizing)
+  # ViewportWdgt.isContentSizing)
   isContentSizing: ->
     true
 

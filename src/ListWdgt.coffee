@@ -1,4 +1,4 @@
-class ListWdgt extends ScrollPanelWdgt
+class ListWdgt extends ViewportWdgt
 
   # The label rule when a caller supplies none. A STATIC, so every list shares the
   # one function object rather than each instance carrying its own closure.
@@ -8,13 +8,13 @@ class ListWdgt extends ScrollPanelWdgt
     element.toString()
 
   # a list IS its scrolling — cropping an inspector's property pane would hide
-  # entries with no cue (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  # entries with no cue (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
   # my pane holds the list's own rows machinery (@listContents), not loose scrollable
   # content — so the loose-content policies (drag-scroll-vs-detach, caret follow, the
   # soft-wrap menu row, container re-fit climbs) must not treat my innards as content
-  # (the exclusion Widget._amIDirectlyInsideScrollPanelWdgt consults; scroll-frame role
+  # (the exclusion Widget._amIDirectlyInsideViewport consults; scroll-frame role
   # plan P3).
   contentsPanelHoldsLooseContent: ->
     false
@@ -63,11 +63,11 @@ class ListWdgt extends ScrollPanelWdgt
     @color = Color.WHITE
     @_buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
-    # instead of undefined because the scrollbars (inherited from ScrollPanel)
+    # instead of undefined because the scrollbars (inherited from Viewport)
     # need the step function to react to mouse floatDrag.
   
   # builds the list contents, via the _buildAndConnectChildren wrapper + NoSettle-core pattern. ListWdgt extends
-  # ScrollPanelWdgt, whose `add` is a CUSTOM override that redirects a non-frame child into @contents; the
+  # ViewportWdgt, whose `add` is a CUSTOM override that redirects a non-frame child into @contents; the
   # non-settling twin of that redirect is `@contents._addNoSettle` (NOT the base `@_addNoSettle`, which would
   # wrongly attach @listContents to the scroll frame itself and break every InspectorWdgt's property pane --
   # the reason the orphan-settledness sweep left this unconverted). The core builds via @contents._addNoSettle

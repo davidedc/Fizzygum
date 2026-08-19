@@ -1,5 +1,5 @@
 # TODO the SimpleTextPanelWdgt can't quite stand on its own,
-# it's really meant to be inside a ScrollPanel.
+# it's really meant to be inside a Viewport.
 #
 # The analogous VerticalStackPanel is better engineered,
 # that one can indeed stand on its own.

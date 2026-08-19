@@ -142,7 +142,7 @@ class TreeNode
     @parent?.parent?.parent == world.binWdgt
 
   # check if the widget rests on the shelf on its own (the shelf holds its
-  # residents DIRECTLY -- a bare, never-viewed panel; no scrollPanel/contents
+  # residents DIRECTLY -- a bare, never-viewed panel; no viewport/contents
   # sandwich like the bin's)
   isDirectlyInShelf: ->
     @parent == world.shelfWdgt

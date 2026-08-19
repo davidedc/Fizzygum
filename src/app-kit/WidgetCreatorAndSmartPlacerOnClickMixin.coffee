@@ -20,7 +20,7 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         # The contents-type branching that used to be here is now polymorphic:
         # acceptsSmartPlacedWidgets / smartPlace live on the content widgets
         # (the citizens' StretchableWidgetContainerWdgt payload, and a
-        # DocumentWdgt's SimpleDocumentScrollPanelWdgt payload -- §5.B).
+        # DocumentWdgt's SimpleDocumentViewportWdgt payload -- §5.B).
         where = world.topmostChildSuchThat (w) ->
           # instead of `w instanceof FrameWdgt` (type-test-elimination campaign)
           w.isFrame?() and w.contents?.acceptsSmartPlacedWidgets?()

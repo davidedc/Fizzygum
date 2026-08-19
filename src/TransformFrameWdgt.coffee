@@ -50,7 +50,7 @@ class TransformFrameWdgt extends PanelWdgt
   @ISLAND_DAMAGE_AREA_FRACTION: 0.75
 
   # Serialization: _lastClaimedExtent and _lastScrollOverflowBox are pure reflow/refit memos
-  # (re-derived on the next preferredExtentForWidth / _reFitScrollFrameIfReachChangedNoSettle), NOT
+  # (re-derived on the next preferredExtentForWidth / _reFitViewportIfReachChangedNoSettle), NOT
   # truth -- skip them so a restored island carries no stale memo. The _islandBuffer* fields are
   # DERIVED render state (a canvas + its cache keys) that a restored island rebuilds on first
   # composite -- never persist a canvas. transformSpec (the only real serialized state) round-trips
@@ -221,7 +221,7 @@ class TransformFrameWdgt extends PanelWdgt
     @__breakMoveResizeCaches()
     @_fullChanged()
     @_invalidateLayout()
-    @_reFitScrollFrameIfReachChangedNoSettle()
+    @_reFitViewportIfReachChangedNoSettle()
 
   # The immediate (no-settle) transform-change core: invalidates the version-keyed bounds caches
   # exactly as a move does (__breakMoveResizeCaches bumps WorldWdgt.geometryVersion), queues the
@@ -237,7 +237,7 @@ class TransformFrameWdgt extends PanelWdgt
     @__breakMoveResizeCaches()
     @_fullChanged()
     @_reflowIfClaimChangedNoSettle()
-    @_reFitScrollFrameIfReachChangedNoSettle()
+    @_reFitViewportIfReachChangedNoSettle()
 
   # §3.6 lifecycle: release the cached buffer when the island is identity (the identity path never
   # reads it) or on any teardown. Cheap; keeps a de-tilted explicit island from pinning a big canvas.
@@ -294,11 +294,11 @@ class TransformFrameWdgt extends PanelWdgt
   # TransformSpec.scrollOverflowBoxFor), so a spinning sweep island keeps a perfectly still
   # scrollbar. A stale memo (after a plain move — the move paths deliberately don't maintain it)
   # can only FALSE-FIRE, never false-skip; the extra re-fit is idempotent recorded intent.
-  _reFitScrollFrameIfReachChangedNoSettle: ->
+  _reFitViewportIfReachChangedNoSettle: ->
     newBox = if @transformSpec.isIdentity() then @bounds else @transformSpec.scrollOverflowBoxFor @bounds
     return if @_lastScrollOverflowBox? and newBox.equals @_lastScrollOverflowBox
     @_lastScrollOverflowBox = newBox
-    @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+    @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingViewport()
 
   # D2 (claimsSpace arc plan §4.1): my contribution to an enclosing scroll frame's content
   # extent — claimed box ∪ ink hull in the PARENT plane (integer; deliberately neither the

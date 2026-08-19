@@ -202,16 +202,16 @@ class Widget extends TreeNode
   # Otherwise, without merging, there would FIRST be a
   # multiple-selection menu to spacially demultiplex which
   # widget is the one of interest
-  # (the text widget, or the Panel, or the ScrollPanelWdgt?). And
+  # (the text widget, or the Panel, or the ViewportWdgt?). And
   # if the user wanted to resize the scroll text, which Widget
   # would the user have to pick? It would be very confusing.
   #
   # Instead, in this example above, one can naturally
-  # resize the ScrollPanel, or change its color, or delete it,
+  # resize the Viewport, or change its color, or delete it,
   # instead of operating on the text content.
   #
   # Note that, on the other side, for this to work the menu of
-  # the ScrollPanelWdgt has to give menu entries "peeking" them
+  # the ViewportWdgt has to give menu entries "peeking" them
   # from the text widget it contains, e.g. to change the font size
   #
   # Note that this mechanism could be overridden for "advanced"
@@ -638,7 +638,7 @@ class Widget extends TreeNode
 
   # The shared "enable/disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
-  # SimpleVerticalStackScrollPanelWdgt). The children list varies by
+  # SimpleVerticalStackViewportWdgt). The children list varies by
   # container (the scroll panel sources it from @contents), so it is passed in.
   _addEditingLockMenuEntries: (menu, childrenNotHandlesNorCarets) ->
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
@@ -897,7 +897,7 @@ class Widget extends TreeNode
   #    _invalidateLayout would, for a non-freefloating deferred-layout child, CLIMB back and
   #    re-dirty the container in the SAME pass -> the until-loop never converges. So settle
   #    this child IN PLACE with a synchronous @_reLayout() (no invalidate, no climb), making
-  #    the container's _reLayout a FIXED POINT -- the same outcome ScrollPanelWdgt reaches via
+  #    the container's _reLayout a FIXED POINT -- the same outcome ViewportWdgt reaches via
   #    the non-notifying _apply*Base twins. (See docs/archive/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
   # (FrameWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
@@ -1266,7 +1266,7 @@ class Widget extends TreeNode
 
   # for PanelWdgt scrolling support
   # (D4, sizing-model unification U3-A) THE ONE NAMED STATE-READ of the layout system --
-  # reclassified, kept. Single consumer: ScrollPanelWdgt's NON-content-sizing (folder /
+  # reclassified, kept. Single consumer: ViewportWdgt's NON-content-sizing (folder /
   # toolbar) frame-fit branch. Its children there are USER-PLACED free-floating widgets:
   # their positions are genuine STATE (not derivable from any spec or measure -- §4.1 proved
   # a measure pass alone could not replace this read), and that arrange never mutates them
@@ -1285,9 +1285,9 @@ class Widget extends TreeNode
     result = undefined
     @children.forEach (child) ->
       # we exclude the HandleWdgts because they
-      # mangle how the Panel inside ScrollPanelWdgts
+      # mangle how the Panel inside ViewportWdgts
       # calculate their size when they are resized
-      # (remember that the resizing handle of ScrollPanelWdgts
+      # (remember that the resizing handle of ViewportWdgts
       # actually end up in the Panel inside them.)
       # HIDDEN children are deliberately NOT excluded (owner ruling, 2026-07-23,
       # reverting a short-lived bin-era filter): visibility is a PAINT/INPUT
@@ -2293,7 +2293,7 @@ class Widget extends TreeNode
 
   # Widget accessing - dimensional changes requiring a complete redraw
   # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / ListWdgt /
-  # TrackingTransformFrameWdgt / ScrollPanelWdgt specialize it for their own,
+  # TrackingTransformFrameWdgt / ViewportWdgt specialize it for their own,
   # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
   # body per behaviour, two names for dispatch; the bare twin is the override-BYPASSING base apply the
   # top-down arrange uses) PLUS the SCHEDULE-VALVE (B4 hook retirement §9-N1, gate made STRUCTURAL by
@@ -2460,11 +2460,11 @@ class Widget extends TreeNode
   _reFitMyTrackingContainerAfterSettle: ->
     return if @isLayoutInert?()
     return unless @parent?
-    @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingScrollPanelWdgt()
+    @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingViewport()
     @_reFitContainer @parent
 
   # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
-  # the drag/drop gesture handlers (PanelWdgt / ScrollPanelWdgt / SimpleVerticalStackPanelWdgt
+  # the drag/drop gesture handlers (PanelWdgt / ViewportWdgt / SimpleVerticalStackPanelWdgt
   # _reactToChildDropped / _reactToChildGrabbed / _reactToChildRemoved), the ORDERED settle-time re-fit
   # (_reFitMyTrackingContainerAfterSettle above, called by the settle loop after each chain-top settles), the
   # attach re-fit, and the newParentChoice* menu actions all route through here. Two states:
@@ -2473,7 +2473,7 @@ class Widget extends TreeNode
   #    _invalidateLayout the atom neither throws (the freeze guard, see _invalidateLayout below) nor climbs to
   #    ancestors; it enqueues only the directly-affected container.
   #  - OUTSIDE a pass: _invalidateLayout() so the next doOneCycle re-fits the container.
-  # Gated on _reLayoutChildren? so only a tracking container (Window / Stack / ScrollPanel -- the only
+  # Gated on _reLayoutChildren? so only a tracking container (Window / Stack / Viewport -- the only
   # classes that define it) reacts; any other widget is a no-op. Low-level (leading underscore) so lint
   # rule [F] exempts it, and the callers read as pure intent (@_reFitContainer @parent / @_reFitContainer()).
   # DETERMINISM: the gesture + menu callers fire OUTSIDE passes, so their in-pass arm is dead (kept uniform
@@ -3866,7 +3866,7 @@ class Widget extends TreeNode
       if @parent == world
         return @isLockingToPanels
 
-      if @_amIDirectlyInsideScrollPanelWdgt()
+      if @_amIDirectlyInsideViewport()
         if @parent.parent.canScrollByDraggingForeground and @parent.parent.anyScrollBarShowing()
           return true
         else
@@ -3947,13 +3947,13 @@ class Widget extends TreeNode
   # frame clips and scrolls (any plane class: the default ScrolledPaneWdgt, a folder/tool
   # panel, a stack) — and contentsPanelHoldsLooseContent, which a ListWdgt answers false to
   # (its pane holds rows machinery, not loose content).
-  _amIDirectlyInsideScrollPanelWdgt: ->
+  _amIDirectlyInsideViewport: ->
     if @parent?.parent?.isMyContentsPanel? @parent
       return @parent.parent.contentsPanelHoldsLooseContent()
     return false
 
-  _amIDirectlyInsideNonTextWrappingScrollPanelWdgt: ->
-    if @_amIDirectlyInsideScrollPanelWdgt()
+  _amIDirectlyInsideNonTextWrappingViewport: ->
+    if @_amIDirectlyInsideViewport()
       if !@parent.parent.isTextLineWrapping
         return true
     return false
@@ -4154,7 +4154,7 @@ class Widget extends TreeNode
   # SELF-SETTLES (one flush per outermost public mutation). The handles attach via _addNoSettle (_addAndTrackHandle /
   # addAsSibling*), which only RIDE a settle; the trigger chain (mouseClickLeft -> trigger) provided none, so the
   # _addNoSettle invalidate rode the per-frame end-of-cycle flush. The recursion to @parent goes through the
-  # NON-settling core so the whole show-handles tree flushes ONCE. (ScrollPanelWdgt overrides the core, not this.)
+  # NON-settling core so the whole show-handles tree flushes ONCE. (ViewportWdgt overrides the core, not this.)
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     @_settleLayoutsAfter => @_showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
@@ -4317,9 +4317,9 @@ class Widget extends TreeNode
     # check if a parent wants to take over my menu (and hopefully
     # merge some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
-    # a ScrollPanelWdgt).
-    # the FIELD is the single truth (Widget default false; SimpleTextScrollPanelWdgt sets
-    # it true) — the `instanceof ScrollPanelWdgt` qualifier is dropped, and the one non-scroll
+    # a ViewportWdgt).
+    # the FIELD is the single truth (Widget default false; SimpleTextViewportWdgt sets
+    # it true) — the `instanceof ViewportWdgt` qualifier is dropped, and the one non-scroll
     # writer (SimpleTextPanelWdgt's dead constructor write) deleted with it; old saved
     # documents are normalized at load (type-test-elimination ε; see
     # SimpleTextPanelWdgt._afterDeserialization)
@@ -4441,7 +4441,7 @@ class Widget extends TreeNode
     menu.addMenuItem "inspect", @, "inspect", toolTip: "open a window\non all properties"
     menu.addLine()
 
-    # capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
+    # capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ViewportWdgt)`
     # (type-test-elimination ε) — see PanelWdgt.childrenCanLockToMe
     if @parent?.childrenCanLockToMe?()
       if @parent == world
@@ -4512,7 +4512,7 @@ class Widget extends TreeNode
   # The edit-layout toggle pair, on whatever widget OWNS the scaffold — called on self by
   # the gate above, and by a SCROLL FRAME on its contained stack (a document surfaces the
   # toggle on its own menu while the entries TARGET the inner stack, which is what the
-  # user means by "the document's layout" — SimpleVerticalStackScrollPanelWdgt).
+  # user means by "the document's layout" — SimpleVerticalStackViewportWdgt).
   addLayoutEditingMenuEntries: (menu) ->
     menu.addLine()
     if @_showsAdders
@@ -4594,7 +4594,7 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     # double-settle-sanctioned: deliberate SEQUENTIAL pair — @add self-settles the attach, then the
-    # trailing settle flushes the ScrollPanel re-fit once; one extra flush, idempotent with @add's
+    # trailing settle flushes the Viewport re-fit once; one extra flush, idempotent with @add's
     # (see the long CONVERT comment below).
     @add theWidgetToBeAttached
     # I just attached the selected widget; if I am a scroll panel my contents changed, so re-fit my contents +
@@ -4602,8 +4602,8 @@ class Widget extends TreeNode
     # mutation, so the re-fit must flush at the action, not ride the per-frame end-of-cycle flush. @add already
     # self-settled the attach; the _reFitContainer re-fit (NEEDED when the widget attaches directly, so @add took
     # the no-re-fit `super` path) now self-settles too -- one extra flush, idempotent with @add's. The
-    # _reLayoutChildrenAndScrollbars? pre-guard keeps this ScrollPanel-only -- only ScrollPanelWdgt + subclasses
-    # (incl. ListWdgt) define it; any other widget is a no-op (replacing `if @ instanceof ScrollPanelWdgt`). NB it
+    # _reLayoutChildrenAndScrollbars? pre-guard keeps this Viewport-only -- only ViewportWdgt + subclasses
+    # (incl. ListWdgt) define it; any other widget is a no-op (replacing `if @ instanceof ViewportWdgt`). NB it
     # is intentionally narrower than _reFitContainer's own _reLayoutChildren? gate (which also matches Window/Stack).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
 
@@ -4613,7 +4613,7 @@ class Widget extends TreeNode
     # double-settle-sanctioned: deliberate SEQUENTIAL pair, exactly as newParentChoice above.
     @add theWidgetToBeAttached, layoutSpec: theWidgetToBeAttached._ensureDivisionBox()
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
-    # ScrollPanel-only pre-guard; @add already self-settled the attach).
+    # Viewport-only pre-guard; @add already self-settled the attach).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
 
   # Shared body of attach / attachWithHorizLayout: a menu of the plausible new parents (minus the current
@@ -4669,7 +4669,7 @@ class Widget extends TreeNode
   # createReferenceFromMenu above. ButtonWdgt dispatches a FIXED 4-slot convention
   # (`@target[@action].call @target, theButton, subject, arg1, arg2`), so an item carrying no arguments
   # of its own still arrives with WIDGETS in the leading slots. Here that matters because the four
-  # container overrides of these verbs (FrameWdgt, ScrollPanelWdgt, StretchablePanelWdgt,
+  # container overrides of these verbs (FrameWdgt, ViewportWdgt, StretchablePanelWdgt,
   # StretchableWidgetContainerWdgt) read slot 1 as `triggeringWidget` — the widget whose own toggle
   # must not be echoed back at it (BubblesEditModeToCoordinatorMixin). A menu click has no such
   # widget, which is exactly what those cores' `if !triggeringWidget? then triggeringWidget = @`
@@ -4783,7 +4783,7 @@ class Widget extends TreeNode
   #   ⭐ That is a positive choice, not a restriction. The one-way layout↔dataflow law permits a
   # readable geometry pin: connector §P8 measured and narrowed it to "layout may never markStale, but
   # it MAY markNonValueChange", and the feared one-frame shear does not occur on any path a gesture
-  # drives (doOneCycle plays input BEFORE the dataflow station). ScrollPanelWdgt's `scroll x` /
+  # drives (doOneCycle plays input BEFORE the dataflow station). ViewportWdgt's `scroll x` /
   # `scroll y` are readable on exactly that licence. So the bar for a readable geometry pin is a real
   # CONSUMER, not the law -- add the reader when something needs to track it.
   pins: ->

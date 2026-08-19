@@ -129,7 +129,7 @@ hover bubble). Use the verb's gesture `milliseconds` (scaled) for cosmetic gestu
 
 **Per-verb floors** keep a few frame-cadence-sensitive handlers correct at `fastest` (the verbs apply them; tests
 need do nothing): a press-drag-release floors its drag SPAN (`@dragFloorMs`, count held constant) so a per-frame
-sampler (`ScrollPanelWdgt` scroll-on-drag; drag-enter/leave) sees several frames; a single click floors its
+sampler (`ViewportWdgt` scroll-on-drag; drag-enter/leave) sees several frames; a single click floors its
 down→up HOLD (`@clickHoldFloorMs`) so a held-button frame is sampled (a slider track-click's hover resolves on it).
 Multi-click recognition is purely proximity + the hand's 300ms EVENT-TIME window: each click candidate is
 forgotten when the next click's `event.time` is > the window past it (deterministic — `ActivePointerWdgt`
@@ -173,7 +173,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   menu row by prefix, then "disconnect"), the window-in-window fixture pair, `dwellDragWindowByGrabToEmbed`
   (float-drag a WINDOW by a grab point and DWELL-ARM-embed it at a destination — press, drag, non-scaled
   linger past `dwellToArmMs`, release; use wherever a window must NEST after the drag-embed rule flip),
-  `buildOverflowingScrollPanelWithText` (the shared overflowing-`ScrollPanelWdgt` fixture, returned for the
+  `buildOverflowingViewportWithText` (the shared overflowing-`ViewportWdgt` fixture, returned for the
   caller to drive — the DRY form for the drag-vs-scroll family).
 
 ## Adding to the toolkit

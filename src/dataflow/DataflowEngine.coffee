@@ -79,7 +79,7 @@
 # ⚠ A layout station MAY announce a NON-value change (markNonValueChange) — it wakes only the
 # re-readers, pulls nothing and marks nothing, so it cannot re-enter the value settle. Its one
 # cost is cadence: raised inside recalculateLayouts it has missed this cycle's station. The
-# single caller is ScrollPanelWdgt._reLayoutScrollbars (connector plan §P8, where the resulting
+# single caller is ViewportWdgt._reLayoutScrollbars (connector plan §P8, where the resulting
 # lag is measured: zero frames for anything a gesture drives, since input is played before the
 # station; one frame only for a change born inside the layout pass).
 #

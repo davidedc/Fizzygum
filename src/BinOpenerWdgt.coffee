@@ -62,10 +62,10 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # the "move to trash" row runs -- BEFORE filing it, so the bin keeps it: otherwise a
   # still-referenced widget escapes to the shelf on the next drain and the gesture silently
   # meant nothing. (Dropping a shortcut trashes the ALIAS only, never its referent -- see
-  # BinWdgt._reactToChildDroppedInScrollPanel, this gesture's open-window twin.)
+  # BinWdgt._reactToChildDroppedInViewport, this gesture's open-window twin.)
   _reactToChildDropped: (droppedWidget) ->
     world._severLivenessEdgesIntoWdgtNoSettle droppedWidget._enclosingIslandFigure()
-    @target.scrollPanel.contents._addInPseudoRandomPositionNoSettle droppedWidget
+    @target.viewport.contents._addInPseudoRandomPositionNoSettle droppedWidget
 
   wantsToBeDropped: ->
     false

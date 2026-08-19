@@ -27,13 +27,13 @@ class FolderPanelWdgt extends IconGridPanelWdgt
 
   # I manage my contents through the folder machinery (shortcut-creation on drop, grid
   # positioning), so my enclosing scroll frame must refuse RAW drops — it asks via ?()
-  # (type-test-elimination ε; see ScrollPanelWdgt.wantsDropOfChild).
-  vetoesScrollPanelDrops: ->
+  # (type-test-elimination ε; see ViewportWdgt.wantsDropOfChild).
+  vetoesViewportDrops: ->
     true
 
   # ...and it borrows my colloquial name (type-test-elimination ε; see
-  # ScrollPanelWdgt.colloquialName).
-  scrollPanelColloquialName: ->
+  # ViewportWdgt.colloquialName).
+  viewportColloquialName: ->
     "folder"
 
   # A dropped widget that is not already a shortcut is moved off the origin

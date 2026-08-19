@@ -10,7 +10,7 @@
 // (the 2026-07-17 spreadsheet tilted-selection bug; the invisible-until-tilted bug class this gate
 // exists to kill). So inside a handler body, `world.hand.position()` may appear ONLY mapped at the
 // read site — `screenPointToMyPlane` on the SAME line (the per-frame sampling idiom: a drag-scroll
-// step legitimately samples the hand each frame, but must map each sample — ScrollPanelWdgt). A
+// step legitimately samples the hand each frame, but must map each sample — ViewportWdgt). A
 // handler that needs the pointer as a position should otherwise consume its `pos` PARAMETER.
 //
 // SCOPE. Method bodies (2-space-indent headers, span until the next header) whose names are the

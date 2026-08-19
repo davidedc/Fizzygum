@@ -54,7 +54,7 @@ class StorageSorter
       # themselves are never marked -- markItAndItsParentsAsReachable stops at
       # the storage boundary). Destroyed residents are skipped defensively (the
       # audit below screams about them; the drain must not resurrect them).
-      for w in world.binWdgt.scrollPanel.contents.children.slice()
+      for w in world.binWdgt.viewport.contents.children.slice()
         continue if w.destroyed
         if w.isInStorageButReachable newGcSessionId
           world.shelfWdgt._addRestingWidgetNoSettle w
@@ -142,7 +142,7 @@ class StorageSorter
   # iterates and the drain re-files.
   _storageResidents: ->
     residents = []
-    binContents = world.binWdgt?.scrollPanel?.contents
+    binContents = world.binWdgt?.viewport?.contents
     residents.push binContents.children... if binContents?
     residents.push world.shelfWdgt.children... if world.shelfWdgt?
     residents
@@ -157,7 +157,7 @@ class StorageSorter
   # guard): it is only ever called from the drain station -- which never runs
   # mid-teardown -- and from resetWorld's end, after the world is consistent.
   _auditStorageNoSettle: (justComputedGcSessionId) ->
-    binContents = world.binWdgt?.scrollPanel?.contents
+    binContents = world.binWdgt?.viewport?.contents
     if binContents?
       for w in binContents.children
         if w.destroyed

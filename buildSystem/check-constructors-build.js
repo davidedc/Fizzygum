@@ -2,7 +2,7 @@
 // check-constructors-build.js — build lint: a constructor MUST NOT build its own children inline.
 // Child-building called on `this` (@add / @addMany / @addNoSettle / @_addNoSettle / @_addManyNoSettle / …)
 // belongs in the _buildAndConnectChildrenNoSettle core, reached from the constructor via the settling
-// wrapper @_buildAndConnectChildren() (or, for the ScrollPanelWdgt base, @_buildScrollFrame()). That is
+// wrapper @_buildAndConnectChildren() (or, for the ViewportWdgt base, @_buildViewportChrome()). That is
 // what makes EVERY constructor settle uniformly: the settle-tier FLUSHES a top-level `new X()` and
 // AUTO-DEFERS one built in-flush, i.e. inside a callback (Widget._settleLayoutsAfter:
 // `return coreThunk() if @isOrphan()`). This locks in the "all constructors settle" end-state

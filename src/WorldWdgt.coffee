@@ -324,7 +324,7 @@ class WorldWdgt extends IconGridPanelWdgt
   steppingWdgts: new Set
 
   # scroll panels whose post-release MOMENTUM glide is still running
-  # (ScrollPanelWdgt's drag-to-scroll step decaying its last delta by
+  # (ViewportWdgt's drag-to-scroll step decaying its last delta by
   # friction each frame). Wall-clock/frame-cadence driven, so the macro
   # pump holds "waitNoInputsOngoing" and screenshots until this drains —
   # the same idea as waiting for font atlases before a capture.
@@ -1284,7 +1284,7 @@ class WorldWdgt extends IconGridPanelWdgt
       # sizes a non-tracking child via the override-BYPASSING _applyExtentBase/_applyMoveToBase and
       # never calls the child's _reLayout: a leaf heals (the base fires _reLayoutSelf) but a
       # composite that places ITS children inside _reLayout stayed stale — the census's shipping
-      # BinWdgt instance (scrollPanel ~100px short after the bin opens). The predicate is
+      # BinWdgt instance (viewport ~100px short after the bin opens). The predicate is
       # PER-CHILD frame delta (not my own frame delta, which the plan sketched): a divider drag
       # redistributes children while MY frame stays put, so gating on me would miss it. Snapshot
       # EVERY valid child (§9-N4, 2026-07-16: the _placesChildrenInLayout capability gate is GONE —
@@ -2911,7 +2911,7 @@ class WorldWdgt extends IconGridPanelWdgt
     menu.addLine()
     menu.addMenuItem "slider", @widgetFactory, "createNewSliderWdgt"
     menu.addMenuItem "panel", @widgetFactory, "createNewPanelWdgt"
-    menu.addMenuItem "scrollable panel", @widgetFactory, "createNewScrollPanelWdgt"
+    menu.addMenuItem "viewport", @widgetFactory, "createNewViewportWdgt"
     menu.addMenuItem "canvas", @widgetFactory, "createNewCanvas"
     menu.addMenuItem "handle", @widgetFactory, "createNewHandle"
     menu.addLine()
@@ -3079,7 +3079,7 @@ class WorldWdgt extends IconGridPanelWdgt
     for slot in Serializer.WORLD_APP_SLOTS
       roots.push @[slot] if @[slot]?
     roots.push @simpleEditorTemplates if @simpleEditorTemplates?
-    binContents = @binWdgt?.scrollPanel?.contents
+    binContents = @binWdgt?.viewport?.contents
     roots.push binContents.children... if binContents?
     roots.push @shelfWdgt.children... if @shelfWdgt?
     for eachRoot in roots

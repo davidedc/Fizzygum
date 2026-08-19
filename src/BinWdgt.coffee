@@ -5,7 +5,7 @@
 class BinWdgt extends Widget
 
   # panes:
-  scrollPanel: undefined
+  viewport: undefined
   emptyBinButton: undefined
 
   externalPadding: 0
@@ -39,7 +39,7 @@ class BinWdgt extends Widget
   # this -- with it stripped, "open from file…" on a homepage build crashed
   # at teardown.
   empty: ->
-    @scrollPanel?.contents?.fullDestroyChildren()
+    @viewport?.contents?.fullDestroyChildren()
   
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -47,14 +47,14 @@ class BinWdgt extends Widget
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @scrollPanel = new ScrollPanelWdgt
+    @viewport = new ViewportWdgt
     # a white content pane, like the inspector's list/detail panes and the text
     # panels (orphan-construction field writes; PanelWdgt.setColor keeps the
     # pair in sync from then on). Drops stay ENABLED: dropping things into the
     # open bin is how you throw them away.
-    @scrollPanel.color = Color.WHITE
-    @scrollPanel.contents.color = Color.WHITE
-    @_addNoSettle @scrollPanel
+    @viewport.color = Color.WHITE
+    @viewport.contents.color = Color.WHITE
+    @_addNoSettle @viewport
 
     @emptyBinButton = new SimpleButtonWdgt @, "emptyBinRequested", face: "Empty bin"
     @_addNoSettle @emptyBinButton
@@ -79,7 +79,7 @@ class BinWdgt extends Widget
   # lost shortcut is itself lost, so it already sits in this same sweep.
   emptyBin: ->
     world.storageSorter.drainPendingSort()
-    for w in @scrollPanel.contents.children.slice()
+    for w in @viewport.contents.children.slice()
       continue if w.destroyed
       w.fullDestroy()
 
@@ -87,7 +87,7 @@ class BinWdgt extends Widget
   # from close()'s private chain (_closeNoSettle) and the storage sorter's drain, invoking
   # a core, with no settle (the close/drain batch settles).
   _addRestingWidgetNoSettle: (w) ->
-    @scrollPanel.contents._addInPseudoRandomPositionNoSettle w
+    @viewport.contents._addInPseudoRandomPositionNoSettle w
 
   # is w currently sitting in the bin's contents? §7.5 Bug B (model a) + latent 2 (Option B): a
   # tilted/scaled or explicitly-islanded widget is re-homed to the bin AS ITS FIGURE (w.parent is then
@@ -96,12 +96,12 @@ class BinWdgt extends Widget
   # would go false while w is demonstrably in the bin.
   holds: (w) ->
     p = w._parentThroughIslands()
-    p? and p == @scrollPanel.contents
+    p? and p == @viewport.contents
 
   # an arrival (close filing or a drop into the open bin window) may change
   # storage membership -- mark-only; the end-of-cycle drain sorts. (The sorter
   # suppresses the echo of its own drain moves through this relay.)
-  _reactToChildAddedInScrollPanel: (child) ->
+  _reactToChildAddedInViewport: (child) ->
     world.noteStorageMembershipMayHaveChanged()
 
   # AN EXPLICIT DROP INTO MY OPEN WINDOW CARRIES TRASH INTENT (reference-widgets plan R5,
@@ -115,13 +115,13 @@ class BinWdgt extends Widget
   # its referent alone -- trashing an alias never touches the thing it points at; the referent
   # stays reachable through the bin-held holder until the bin is emptied.
   # Runs inside the drop's single settle -> the non-settling sever core.
-  _reactToChildDroppedInScrollPanel: (child) ->
+  _reactToChildDroppedInViewport: (child) ->
     world._severLivenessEdgesIntoWdgtNoSettle child._enclosingIslandFigure()
 
   # a pickup/departure out of the open bin window is the symmetric membership
   # event (e.g. a shortcut dragged out re-seeds its target's reachability while
   # still in the hand) -- mark-only; the end-of-cycle drain sorts.
-  _reactToChildRemovedInScrollPanel: (child) ->
+  _reactToChildRemovedInViewport: (child) ->
     world.noteStorageMembershipMayHaveChanged()
 
 
@@ -137,8 +137,8 @@ class BinWdgt extends Widget
     mainPaneHeight = @height() - 2 * @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize
     mainPaneBottom = @top() + @externalPadding + mainPaneHeight
 
-    if @scrollPanel.parent == @
-      @scrollPanel._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainPaneHeight
+    if @viewport.parent == @
+      @viewport._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, mainPaneHeight
 
     # the Empty-bin button sits at the LEFT of the bottom row (owner-placed:
     # destructive action away from the sizing-handle corner) at its NATURAL

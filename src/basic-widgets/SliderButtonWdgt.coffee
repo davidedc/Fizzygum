@@ -1,6 +1,6 @@
 # This is the handle in the middle of any slider.
 # Sliders (and hence this button)
-# are also used in the ScrollPanelWdgts.
+# are also used in the ViewportWdgts.
 
 class SliderButtonWdgt extends CircleBoxWdgt
 

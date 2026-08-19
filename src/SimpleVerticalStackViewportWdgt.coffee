@@ -1,9 +1,9 @@
-class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
+class SimpleVerticalStackViewportWdgt extends ViewportWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
   # a stack/document's height IS its content — cropping it silently hides
-  # paragraphs (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  # paragraphs (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
   constructor: (@isTextLineWrapping = true) ->
@@ -29,7 +29,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     "stack"
 
   # always content-sizing, wrap on or off (type-test-elimination ε; see
-  # ScrollPanelWdgt.isContentSizing)
+  # ViewportWdgt.isContentSizing)
   isContentSizing: ->
     true
 

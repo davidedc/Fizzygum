@@ -45,7 +45,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @subWidgetsMergedPreferredBounds @width()
 
   # my scroll position is managed by the arrange's clamp — a wrapping viewport's
-  # reset-scroll-on-resize must not touch it (see ScrollPanelWdgt._applyExtent)
+  # reset-scroll-on-resize must not touch it (see ViewportWdgt._applyExtent)
   managesOwnScrollPinning: ->
     true
 
@@ -137,7 +137,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     @_positionAndResizeChildren()
 
   # ===== Phase 3b (Slice 2): re-fit on the _reLayout cycle =====
-  # Mirror of ScrollPanelWdgt's Slice-1 pair (see there). super applies my own bounds first
+  # Mirror of ViewportWdgt's Slice-1 pair (see there). super applies my own bounds first
   # (DETERMINISM.md case-3c), then I re-lay-out my stacked contents. (FrameWdgt carries the
   # same stack-pattern _reLayout of its own since the A2a de-inherit.)
   # This is a fixed point ONLY because _positionAndResizeChildren sizes its (deferred-layout)
@@ -165,7 +165,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   # polymorphic replacement for `if @amIPanelOfScrollPanelWdgt()` -- the stack
   # no longer asks where it sits in the scroll structure; it just notifies, and
   # only a (non-List) scroll panel reacts. See
-  # ScrollPanelWdgt._reLayOutAfterContainedPanelChange.
+  # ViewportWdgt._reLayOutAfterContainedPanelChange.
   # Membership-change re-fit. The absorb query (_reLayOutAfterContainedPanelChange) STAYS synchronous --
   # its truthy answer decides whether I skip my own re-fit (return-value contract). If not absorbed, my
   # own re-fit DEFERS to the cycle (else arm; my _reLayout is 'super; @_reLayoutChildren'). These run
@@ -325,7 +325,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
         # Size the child at the recommended width -- two paths by child KIND, neither of
         # which notifies anyone (the notify-by-mutation seam was deleted 2026-07-01; my
         # container re-fits at settle time via the up-edge):
-        #  - a TRACKING-CONTAINER child (`_reLayoutChildren?` -- Window / Stack / ScrollPanel)
+        #  - a TRACKING-CONTAINER child (`_reLayoutChildren?` -- Window / Stack / Viewport)
         #    goes through _setWidthSizeHeightAccordingly: applying its width must ALSO
         #    arrange its own subtree at that width (a pure measure cannot apply a subtree
         #    arrange), and the call HANDS the resulting height forward (Path B), so I never

@@ -5,6 +5,5 @@ class WindowsToolbarWdgt extends ToolbarWdgt
   _toolbarItems: -> [
     new EmptyWindowCreatorButtonWdgt
     new WindowWithPanelCreatorButtonWdgt
-    new WindowWithScrollPanelCreatorButtonWdgt
     new ElasticWindowCreatorButtonWdgt
   ]

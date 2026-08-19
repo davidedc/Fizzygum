@@ -1,5 +1,5 @@
 # Sliders (and hence slider button widgets)
-# are also used in the ScrollPanelWdgts .
+# are also used in the ViewportWdgts .
 
 # The orientation is auto-derived from my geometry (taller-than-wide = vertical);
 # a user-forced orientation existed once and was simplified away as uncommon.
@@ -11,7 +11,7 @@ class SliderWdgt extends CircleBoxWdgt
   # A slider is editor content when dropped alone (a value control you can select/align), but a scroll
   # panel's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
   # SAME class serves both, so I can't blanket-exclude -- instead I ASK my parent whether it owns me as a
-  # scrollbar (ScrollPanelWdgt.isMyScrollBar, dispatched via ?() so a non-scroll-panel parent answers
+  # scrollbar (ViewportWdgt.isMyScrollBar, dispatched via ?() so a non-scroll-panel parent answers
   # undefined). A content slider -- even one dropped INTO a scroll panel's content -- is never the panel's
   # vBar/hBar, so it stays framable; only the actual bars are excluded.
   excludedFromEditorFocusTracking: ->
@@ -322,7 +322,7 @@ class SliderWdgt extends CircleBoxWdgt
   
   mouseDownLeft: (pos) ->
     # jump-drag policy is the OWNING CONTEXT's (scroll frame / prompt) — capability via ?(),
-    # instead of `(parent instanceof ScrollPanelWdgt) or (parent instanceof PromptWdgt)`
+    # instead of `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)`
     # (type-test-elimination ε)
     if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
       world.hand.nonFloatDragWdgtFarAwayToHere @button, pos

@@ -46,7 +46,7 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
 
   _buildAndConnectChildrenNoSettle: ->
 
-    @tempPromptEntryField = new SimpleTextScrollPanelWdgt @defaultContents, false, 5
+    @tempPromptEntryField = new SimpleTextViewportWdgt @defaultContents, false, 5
     @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField

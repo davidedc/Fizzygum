@@ -3,7 +3,7 @@
 # follows the wrapped content, which is what "normal" text editing / a text
 # document paragraph looks like. (A bare TextWdgt is FIT_TEXT_TO_BOX by default and
 # just blurts itself out across the screen; for one-off long text scroll it in a
-# SimpleTextScrollPanelWdgt.)
+# SimpleTextViewportWdgt.)
 #
 # SimpleTextWdgt is a THIN specialization of TextWdgt: its ctor just opts
 # into FIT_BOX_TO_TEXT (the contained-text mode) — see TextWdgt::_reLayoutSelf and the
@@ -79,7 +79,7 @@ class SimpleTextWdgt extends TextWdgt
 
     @_addTargetConnectionMenuEntries menu
 
-    if @_amIDirectlyInsideScrollPanelWdgt()
+    if @_amIDirectlyInsideViewport()
       # the caret is a world singleton, compared by identity instead of
       # `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
       childrenNotCarets = @parent.children.filter (m) ->

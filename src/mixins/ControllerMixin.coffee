@@ -237,7 +237,7 @@ ControllerMixin =
 
       # Do I drive this widget at all, by any of my wires? The membership question a container asks
       # about the chrome it holds — "is this scrollbar MINE, or one left pointing at another panel?"
-      # (ScrollPanelWdgt._reLayoutScrollbars). A SEARCH, not a field comparison, because the answer
+      # (ViewportWdgt._reLayoutScrollbars). A SEARCH, not a field comparison, because the answer
       # may live in any of my wires.
       isWiredTo: (theTarget) ->
         return false unless @wires?

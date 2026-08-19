@@ -5,7 +5,7 @@ class FolderWindowWdgt extends FrameWdgt
   internal: undefined
 
   constructor: (@closeButton, @contents, @internal = false) ->
-    @contents = new ScrollPanelWdgt new FolderPanelWdgt
+    @contents = new ViewportWdgt new FolderPanelWdgt
     super @contents, closeButton: @closeButton
     # wide enough for a 3-column icon grid at the desktop-icon pitch
     # (3 × 105 + the grid's edge padding + window chrome); overrides the
@@ -21,7 +21,7 @@ class FolderWindowWdgt extends FrameWdgt
 
   # my scroll frame is internal structure — hide it from the ancestor hierarchy
   # (disambiguation) menu, exactly as a scroll frame hides its own contents panel
-  # (see ScrollPanelWdgt.hidesContainedWidgetFromHierarchyMenu; asked by
+  # (see ViewportWdgt.hidesContainedWidgetFromHierarchyMenu; asked by
   # Widget.hierarchyMenuWidgets via ?()).
   hidesContainedWidgetFromHierarchyMenu: (aWdgt) ->
     aWdgt is @contents

@@ -40,7 +40,7 @@ class StretchableWidgetContainerWdgt extends Widget
   add: (aWdgt, opts = {}) ->
     # annotation + handle both attach to the scroll frame directly (was their two instanceof)
     # (type-test-elimination campaign)
-    if !@contents? or aWdgt.attachesToScrollFrameDirectly?()
+    if !@contents? or aWdgt.attachesToViewportDirectly?()
       super
     else
       @contents.add aWdgt, opts

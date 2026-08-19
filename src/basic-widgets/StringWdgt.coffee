@@ -65,7 +65,7 @@ class StringWdgt extends Widget
 
   # Used for when the cursor movement causes the
   # text to scroll, so that the caret is in-view when
-  # used, say, on a text in a ScrollPanelWdgt.
+  # used, say, on a text in a ViewportWdgt.
   isScrollable: true
 
   # When true, the box re-sizes itself to its text on every setText ("box hugs

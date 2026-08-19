@@ -85,8 +85,8 @@ class MenuWdgt extends PopUpWdgt
   _buildAndConnectChildrenNoSettle: ->
     @rowsPanel = new MenuRowsPanelWdgt target: @target, title: @title, fontSize: @fontSize
     # my rows go into the shared scroll frame, ALWAYS — see PopUpWdgt
-    # ._buildRowsScrollFrameNoSettle for why there is no over-tall special case.
-    @_buildRowsScrollFrameNoSettle()
+    # ._buildRowsViewportNoSettle for why there is no over-tall special case.
+    @_buildRowsViewportNoSettle()
     # DELIBERATELY do NOT lay out / hug here: like the old self-laying menu, I stay
     # at my default (zero) extent until popUp lays me out (via _reactToBeingAdded).
     # This matters for popUpCenteredAtHand (inform), which offsets by @extent()/2 --
