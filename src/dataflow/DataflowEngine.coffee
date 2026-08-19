@@ -418,7 +418,7 @@ class DataflowEngine
     # engine is not walking those for a node it reached as a wire CONSUMER — such a node is not in
     # `noted`. Dropping the announcement therefore loses it outright rather than deduplicating it.
     # Pooling it instead is drained by the very next pass of the SAME drain (drain-until-quiet), so a
-    # sink that changes something its own re-readers watch — a scroll panel told to scroll, whose
+    # sink that changes something its own re-readers watch — a viewport told to scroll, whose
     # OTHER bars and duplicates must follow — reaches them in this cycle, not the next.
     # a node already pooled as a VALUE change stays one — the stronger announcement wins either order
     @valuelessPool.add node unless @stalePool.has node

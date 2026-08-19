@@ -1,6 +1,5 @@
-# this wraps the functionality of the
-# VerticalStackViewportWdgt into something that has
-# a more human name. Also provides additional document-oriented
+# DocumentWdgt's viewport (extends VerticalStackViewportWdgt) -- named for that role, not
+# just for having "a more human name". Also provides additional document-oriented
 # features such as for adding divider lines, bullets etc.
 
 class DocumentViewportWdgt extends VerticalStackViewportWdgt
@@ -11,8 +10,8 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
   # Smart-placement protocol (see WidgetCreatorAndSmartPlacerOnClickMixin):
   # the placer routes a creator-button click to a frame's CONTENT --
   # `where.contents.smartPlace` -- and for a DocumentWdgt that content is this
-  # panel: append the click-created widget and scroll it into view. (§5.B: was
-  # on the fused SimpleDocumentWdgt, which only relayed to this panel.)
+  # viewport: append the click-created widget and scroll it into view. (§5.B: was
+  # on the fused SimpleDocumentWdgt, which only relayed to this viewport.)
   acceptsSmartPlacedWidgets: ->
     @dragsDropsAndEditingEnabled
 

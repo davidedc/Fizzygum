@@ -25,8 +25,8 @@ class VerticalStackPanelWdgt extends Widget
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
-  # ── the scrolled-content contract (scroll-frame role plan P5): what a scroll frame asks
-  # its contents instead of testing `instanceof VerticalStackPanelWdgt` ──
+  # ── the scrolled-content contract (scroll-frame role plan P5): what a viewport asks
+  # its contents instead of testing instanceof VerticalStackPanelWdgt ──
 
   # a WIDTH-CONSTRAINING stack's width is the VIEWPORT's contract (it tracks the viewport);
   # a FREE-width stack (constrainContentWidth false) OWNS its width — the whole point of the
@@ -97,11 +97,8 @@ class VerticalStackPanelWdgt extends Widget
     else
       super aWdgt, opts
 
-  # ALL options, no operand. `extent` reads like the natural first one, but only 4 of
-  # ~15 sites pass it (fails R1's "the typical caller passes it") and the two that want
-  # a later knob without it — MenuRowsPanelWdgt's super and DemoMenus' free-width demo —
-  # had to punch `undefined` past it to get there (R3). MenuRowsPanelWdgt already took
-  # exactly this shape; the base now matches its own subclass.
+  # ALL options, no operand — a positional-hole-test call (R1/R3); see
+  # docs/archive/constructor-parameter-conformance-plan.md.
   constructor: (opts = {}) ->
     extent = opts.extent
     color = opts.color
@@ -173,11 +170,11 @@ class VerticalStackPanelWdgt extends Widget
     false
 
   # When my membership changes, tell my container its contained panel changed.
-  # If the container absorbs that (a scroll panel re-fits me + its scrollbars,
+  # If the container absorbs that (a viewport re-fits me + its scrollbars,
   # returning true), I'm done; otherwise I re-lay-out myself. This is the
-  # polymorphic replacement for `if @amIPanelOfScrollPanelWdgt()` -- the stack
+  # polymorphic replacement for if @amIPanelOfScrollPanelWdgt() -- the stack
   # no longer asks where it sits in the scroll structure; it just notifies, and
-  # only a (non-List) scroll panel reacts. See
+  # only a (non-List) viewport reacts. See
   # ViewportWdgt._reLayOutAfterContainedPanelChange.
   # Membership-change re-fit. The absorb query (_reLayOutAfterContainedPanelChange) STAYS synchronous --
   # its truthy answer decides whether I skip my own re-fit (return-value contract). If not absorbed, my
@@ -248,12 +245,12 @@ class VerticalStackPanelWdgt extends Widget
   # mirroring _positionAndResizeChildren's arithmetic. Each child measures via its OWN
   # preferredExtentForWidth (text wrap / clock square / ratio); a child without one (a plain widget
   # whose height is width-independent) falls back to its current height. NO mutation, NO seam --
-  # this is the composable container measure a parent (the scroll panel, Stage C) will consume
+  # this is the composable container measure a parent (the viewport, Stage C) will consume
   # instead of the subWidgetsMergedFullBounds applied-bounds read-back. FrameWdgt (not a stack)
   # has its own content+chrome measure (Stage D). Proven byte-exact suite-wide: 3252
   # measure-vs-committed-height differentials, 0 mismatches. CONSUMED by
   # FrameWdgt.preferredExtentForWidth (a window recursing into its stack content) and by any
-  # enclosing stack/scroll measuring a nested stack.
+  # enclosing stack/viewport measuring a nested stack.
   preferredExtentForWidth: (availW) ->
     availForContents = availW - 2 * @padding
     children = @childrenNotHandlesNorCarets()
@@ -273,13 +270,13 @@ class VerticalStackPanelWdgt extends Widget
   # §4.1 Stage C (proper-layouts) override of Widget.subWidgetsMergedPreferredBounds: my children's merged
   # bounds derived PURELY from measures -- I compute each child's SIZE (preferredExtentForWidth) AND POSITION
   # (the SAME cumulative-stack + alignment arithmetic as _positionAndResizeChildren below, but WITHOUT
-  # applying it), so a scroll-panel parent can size its content frame without my children having been
+  # applying it), so a viewport parent can size its content frame without my children having been
   # resized+moved first. Unlike the base (which reads stable applied positions of a non-laying-out panel's
   # children), a stack's child positions are layout-derived, so they are RE-DERIVED here from measured
   # heights. availW = my available width (I subtract my own padding, exactly as the arrange does). Sizes are
   # min-extent-clamped to match __commitExtent. Byte-identical to subWidgetsMergedFullBounds at the fixed
   # point (Stage-C probe: 0/1429 converged mismatches). NB the tight=false viewport grow in
-  # preferredExtentForWidth is deliberately NOT applied here -- the scroll panel does its own viewport grow,
+  # preferredExtentForWidth is deliberately NOT applied here -- the viewport does its own viewport grow,
   # and the frame wants the NATURAL children union.
   subWidgetsMergedPreferredBounds: (availW) ->
     kids = @childrenNotHandlesNorCarets()
@@ -338,7 +335,7 @@ class VerticalStackPanelWdgt extends Widget
         # Size the child at the recommended width -- two paths by child KIND, neither of
         # which notifies anyone (the notify-by-mutation seam was deleted 2026-07-01; my
         # container re-fits at settle time via the up-edge):
-        #  - a TRACKING-CONTAINER child (`_reLayoutChildren?` -- Window / Stack / Viewport)
+        #  - a TRACKING-CONTAINER child (_reLayoutChildren? -- Window / Stack / Viewport)
         #    goes through _setWidthSizeHeightAccordingly: applying its width must ALSO
         #    arrange its own subtree at that width (a pure measure cannot apply a subtree
         #    arrange), and the call HANDS the resulting height forward (Path B), so I never
@@ -348,8 +345,8 @@ class VerticalStackPanelWdgt extends Widget
         #    text / clock square / ratio), proven byte-exact vs the old mutate-and-read-back
         #    by the §4.1 Stage-A/B differential probes -- applied through the
         #    override-bypassing _applyExtentBase.
-        # (NB do NOT use `implementsDeferredLayout()` as the discriminator -- it is pinned
-        # false on Window/Stack/Scroll precisely so it doesn't flip their read sites, so it
+        # (NB do NOT use implementsDeferredLayout() as the discriminator -- it is pinned
+        # false on Window/Stack/Viewport precisely so it doesn't flip their read sites, so it
         # would mis-route them to the leaf branch.)
         if widget._reLayoutChildren?
           elementHeight = widget._setWidthSizeHeightAccordingly recommendedElementWidth

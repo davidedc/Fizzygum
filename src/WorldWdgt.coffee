@@ -323,7 +323,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   steppingWdgts: new Set
 
-  # scroll panels whose post-release MOMENTUM glide is still running
+  # viewports whose post-release MOMENTUM glide is still running
   # (ViewportWdgt's drag-to-scroll step decaying its last delta by
   # friction each frame). Wall-clock/frame-cadence driven, so the macro
   # pump holds "waitNoInputsOngoing" and screenshots until this drains —

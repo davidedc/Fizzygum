@@ -682,7 +682,7 @@ class FrameWdgt extends Widget
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
       @_reLayoutChildren()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
-      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
+      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the viewport grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
@@ -700,7 +700,7 @@ class FrameWdgt extends Widget
       # seed (placement-time, fresh widgets only) deliberately does not cover.
       @_rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
-      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the scroll-panel grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
+      @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the viewport grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
   # the content owns the slot's occupant, so a content CHANGE retires it -- the
   # rebuild then makes the NEW content's variant (or none)
@@ -865,7 +865,7 @@ class FrameWdgt extends Widget
     @_destroyToolbarNoSettle()
     @contents = theWidget
     # (A2a, was the stack super) membership-change re-fit: if my container absorbs the
-    # change (a scroll panel re-fits me + its scrollbars), skip my own re-fit; else it
+    # change (a viewport re-fits me + its scrollbars), skip my own re-fit; else it
     # DEFERS to the cycle. My own bookkeeping below runs either way, as it always did.
     unless @parent?._reLayOutAfterContainedPanelChange?()
       @_reFitContainer()
@@ -1013,8 +1013,8 @@ class FrameWdgt extends Widget
     super
     @_contentStackSpec.canSetHeightFreely = false
 
-  # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
-  # inherited VerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
+  # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via my own
+  # _reLayoutChildren (above, FrameWdgt's own -- A2a de-inherited the stack base), which dispatches straight here.
   # duringReInflation: passed true ONLY by _reactToChildUnCollapsed's synchronous re-fit -- see
   # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
   _positionAndResizeChildren: (duringReInflation = false) ->
@@ -1092,7 +1092,7 @@ class FrameWdgt extends Widget
         # content settles independently LATER (as its own settle-loop chain-top) and its settle-time re-fit
         # re-VISITS me to re-fit -- the residual FrameWdgt content-negotiation re-visits. This is the SAME
         # _reLayout() the settle loop would call on the content's own turn, pulled one iteration earlier, so it
-        # is byte-exact. _setWidthSizeHeightAccordingly already settles DEFERRED-layout content (a scroll panel);
+        # is byte-exact. _setWidthSizeHeightAccordingly already settles DEFERRED-layout content (a viewport);
         # a stack pins implementsDeferredLayout false, so we settle it here. EXCLUDES content that re-fits its OWN
         # width when re-laid (a nested window, _reLayoutMayResizeOwnWidth): settling THAT early re-negotiates its
         # width and diverges from its normal independent settle -- its re-visit is a GENUINE width<->height
@@ -1146,7 +1146,7 @@ class FrameWdgt extends Widget
     # flank sharing the content's vertical span (stackHeight is the content
     # height this pass just derived, so every placement is pass-local -- no
     # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
-    # the same drive as @bar above -- a scroll panel's _reLayout applies its
+    # the same drive as @bar above -- a viewport's _reLayout applies its
     # own bounds THEN re-fits its contents+scrollbars, so a width change that
     # re-wraps the tool grid converges IN THIS PASS. (A bare
     # _applyMoveTo/_applyExtent drive commits the viewport but re-fits

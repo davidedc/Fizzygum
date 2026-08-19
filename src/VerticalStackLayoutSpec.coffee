@@ -105,7 +105,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
   # public setter is JUST the settle over its _<name>NoSettle core, and ALL the work -- INCLUDING the
   # already-in-this-state guard -- lives in the core, so no wrapper hides a pre-settle early return
   # (check-layering rule [H]). Each core sets its property then calls @element._invalidateLayout() -- the
-  # uniform dirty-tree climb (element -> stack -> D1 scroll panel) that replaced the deleted property re-fit
+  # uniform dirty-tree climb (element -> stack -> D1 viewport) that replaced the deleted property re-fit
   # seam (a freefloating child's invalidate climbs THROUGH the freefloating boundary to its size-tracking
   # container off-pass). (Off-world content hits _settleLayoutsAfter's orphan early-return, so it still just
   # defers, unchanged.) (end-of-cycle-flush-drawdown -- CONVERT)
@@ -132,7 +132,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
   _setAlignmentNoSettle: (newAlignment) ->
     if @alignment isnt newAlignment
       @alignment = newAlignment
-      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport
 
   growPopout: (menuItem)->
     @element.prompt menuItem.parent.title + "\nelasticity:", @, "setGrowFromPercent",
@@ -157,7 +157,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
   _setGrowNoSettle: (newGrow) ->
     unless @grow == newGrow
       @grow = newGrow
-      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
+      @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport
 
   desiredWidthPopout: (menuItem)->
     @element.prompt menuItem.parent.title + "\nbase width:", @, "setDesiredWidth",
@@ -182,4 +182,4 @@ class VerticalStackLayoutSpec extends LayoutSpec
       unless @desiredWidth == newDesiredWidth and @grow == 0
         @desiredWidth = newDesiredWidth
         @grow = 0
-        @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) scroll panel
+        @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport

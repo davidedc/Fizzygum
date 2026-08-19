@@ -61,7 +61,6 @@ class StringFieldWdgt extends PanelWdgt
 
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
-    # note: StringWdgt takes isHeaderLine as its 6th arg, so isNumeric is the 7th
     text = new StringWdgt txt,
       fontSize: @fontSize
       fontName: @fontStyle
@@ -85,7 +84,7 @@ class StringFieldWdgt extends PanelWdgt
         bold: @isBold
         italic: @isItalic
         numeric: @isNumeric
-      @text.isNumeric = @isNumeric # for whichever reason...
+      @text.isNumeric = @isNumeric
       @text.isEditable = @isEditable
       @text.enableSelecting()
       @text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

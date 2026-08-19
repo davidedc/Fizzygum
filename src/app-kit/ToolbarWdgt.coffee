@@ -65,7 +65,7 @@ class ToolbarWdgt extends ViewportWdgt
     # lock, so the build applies it once instead of each call site.
     @_disableDragsDropsAndEditingNoSettle()
 
-  # A width change re-WRAPS the grid, and the base scroll-panel re-fit is
+  # A width change re-WRAPS the grid, and the base viewport re-fit is
   # measure-then-commit: it reads the items' APPLIED bounds, commits the
   # contents frame from them, and only then re-places the items -- so wrapping
   # at a NEW width converges one pass late, leaving a stale contents frame at

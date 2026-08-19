@@ -28,8 +28,8 @@ class SimpleTextPanelWdgt extends PanelWdgt
     @color = Color.WHITE
     @_buildAndConnectChildren()
 
-  # (type-test-elimination ε) My constructor's `@takesOverAndMergesChildrensMenus = true` write
-  # was DELETED — it was dead (both read sites were scroll-frame-scoped), and Widget's menu
+  # (type-test-elimination ε) My constructor's @takesOverAndMergesChildrensMenus = true write
+  # was DELETED — it was dead (both read sites were viewport-scoped), and Widget's menu
   # take-over read is now field-only. A document saved BEFORE that change carries the flag as a
   # serialized own-property, which would newly make ME (the nearest matching parent) hijack my
   # text's context menu on load — strip it, restoring the class default (false) and the old

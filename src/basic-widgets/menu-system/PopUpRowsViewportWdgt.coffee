@@ -1,4 +1,4 @@
-# The scroll frame a pop-up keeps its rows in — ALWAYS, not only when they overflow
+# The rows viewport a pop-up keeps its rows in — ALWAYS, not only when they overflow
 # (PopUpWdgt._buildRowsViewportNoSettle explains why it is unconditional).
 #
 # It is what makes a pop-up bigger than the world REACHABLE: `popUp`'s `_moveWithin world`
@@ -15,7 +15,7 @@
 # it can never be the width-constrained contents of anything.
 #
 # Like my pane (PopUpRowsPaneWdgt), everything I have to say is a per-class declaration a
-# plain scroll panel gets wrong — see that class for the hit-testing one, which is the
+# plain viewport gets wrong — see that class for the hit-testing one, which is the
 # subtle member of the set.
 
 class PopUpRowsViewportWdgt extends ViewportWdgt

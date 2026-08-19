@@ -101,7 +101,7 @@ class TransformSpec
     slotBounds.topLeft().subtract @_claimedBoxFor(slotBounds).topLeft()
 
   # D2 scroll reachability (docs/archive/claimsspace-footprint-default-and-scroll-reachability-plan.md):
-  # the box a scroll frame must make reachable = claimed box ∪ the ink's integer hull, in the
+  # the box a viewport must make reachable = claimed box ∪ the ink's integer hull, in the
   # slot box's own (parent-plane) coordinates. LAYOUT and REACHABILITY answer different
   # questions ('slot' claims nothing from siblings yet its rotated ink must still be
   # scrollable-to), so this deliberately does NOT reuse _claimedBoxFor alone. The ink term is

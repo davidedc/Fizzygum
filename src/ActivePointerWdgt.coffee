@@ -1091,7 +1091,7 @@ class ActivePointerWdgt extends Widget
         @nonFloatDraggedWdgt.nonFloatDragging?(@nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall)
     
 
-  # this is used by the scroll panel: clicking on the slider
+  # this is used by the viewport: clicking on the slider
   # (but OUTSIDE of the button), the (center of the) button
   # is immediately non-float dragged to where clicked.
   nonFloatDragWdgtFarAwayToHere: (wdgtFarAway, pos) ->
@@ -1105,7 +1105,7 @@ class ActivePointerWdgt extends Widget
     # for example in case of a SliderWdgt invoking this on its
     # button, this causes the movement of the button
     # and adjusting of the Slider values and potentially
-    # adjusting scrollpanel etc.
+    # adjusting the viewport etc.
     @determineGrabs pos, wdgtFarAway, mouseOverNew
 
     # The teleported widget is now under the (stationary) pointer. Resolve the
@@ -1176,7 +1176,7 @@ class ActivePointerWdgt extends Widget
       # autoScrolling support:
       if @isThisPointerFloatDraggingSomething()
         widgetBeingFloatDragged = @children[0]
-        # Window payloads never edge-auto-scroll a scroll panel (spec §12): dragging a window across a
+        # Window payloads never edge-auto-scroll a viewport (spec §12): dragging a window across a
         # big panel must not scroll it — the mouse wheel is the explicit, first-class way to reach an
         # off-view insertion point mid-drag (§6.1). Plain payloads keep edge-auto-scroll. (Was
         # `wantsToBeDropped()` — the old internal/external gate; the flip to the payload-class capability
@@ -1184,7 +1184,7 @@ class ActivePointerWdgt extends Widget
         # §6 4D-2b: a tilted WINDOW rides the hand as a sugar wrapper, so classify through the payload-policy
         # proxy — a rotated window must not edge-auto-scroll either. The GEOMETRY arg below keeps the figure.
         if not widgetBeingFloatDragged._dropPolicyProxy().requiresDeliberateEmbedding()
-          # a scroll panel decides whether to auto-scroll for the dragged widget near its edge
+          # a viewport decides whether to auto-scroll for the dragged widget near its edge
           # (instead of an inline `newWdgt instanceof ViewportWdgt` check + the
           # wantsDropOfChild / edge / start logic here). (type-test-elimination campaign)
           newWdgt.maybeStartAutoScrollForDraggedWidget? widgetBeingFloatDragged, @position()

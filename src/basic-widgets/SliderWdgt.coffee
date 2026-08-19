@@ -8,11 +8,11 @@ class SliderWdgt extends CircleBoxWdgt
 
   @augmentWith ControllerMixin
 
-  # A slider is editor content when dropped alone (a value control you can select/align), but a scroll
-  # panel's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
+  # A slider is editor content when dropped alone (a value control you can select/align), but a
+  # viewport's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
   # SAME class serves both, so I can't blanket-exclude -- instead I ASK my parent whether it owns me as a
-  # scrollbar (ViewportWdgt.isMyScrollBar, dispatched via ?() so a non-scroll-panel parent answers
-  # undefined). A content slider -- even one dropped INTO a scroll panel's content -- is never the panel's
+  # scrollbar (ViewportWdgt.isMyScrollBar, dispatched via ?() so a non-viewport parent answers
+  # undefined). A content slider -- even one dropped INTO a viewport's content -- is never the viewport's
   # vBar/hBar, so it stays framable; only the actual bars are excluded.
   excludedFromEditorFocusTracking: ->
     @parent?.isMyScrollBar?(@) is true
@@ -282,7 +282,7 @@ class SliderWdgt extends CircleBoxWdgt
   # Adopt a whole scale at once — the APPLY half of reflectTarget, and reflect-without-firing like
   # _updateHandlePosition above (it deliberately does not call updateTarget: I am SHOWING a value,
   # not producing one, so announcing would drive my target from my own reflection).
-  #   PRIVATE: the only caller is my own reflectTarget. It was public while a scroll frame pushed
+  #   PRIVATE: the only caller is my own reflectTarget. It was public while a viewport pushed
   # four numbers into the bars it held fields for; the reverse edge (connector §P8) makes the bar
   # pull instead, so there is no external caller left and the [U] call-separation rule is right to
   # say so.
@@ -321,7 +321,7 @@ class SliderWdgt extends CircleBoxWdgt
     @_reLayoutSelfAndButton()
   
   mouseDownLeft: (pos) ->
-    # jump-drag policy is the OWNING CONTEXT's (scroll frame / prompt) — capability via ?(),
+    # jump-drag policy is the OWNING CONTEXT's (viewport / prompt) — capability via ?(),
     # instead of `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)`
     # (type-test-elimination ε)
     if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
@@ -348,7 +348,6 @@ class SliderWdgt extends CircleBoxWdgt
     #@updateTarget()
     @_reLayoutSelfAndButton()
   
-  # openTargetSelector: -> taken form the ControllerMixin
   
   # `value` is my principal pin and the only READABLE one here (getValue -> @value). start/stop/size
   # are write-only for want of readers, not by policy. Each pin states its own kinds, so "a bang takes

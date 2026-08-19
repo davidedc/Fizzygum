@@ -4,7 +4,7 @@
 # menu-ness of its own: no pop-up membership, no click-outside-to-close, no
 # shadow. What a wrapping PopUpWdgt (a MenuWdgt or a PromptWdgt) owns is the
 # transient/pin behaviour + shadow; what a ListWdgt owns is the surrounding
-# scroll frame. Either way the visible body — box, optional title header, and the
+# viewport. Either way the visible body — box, optional title header, and the
 # rows — is drawn HERE.
 #
 # Two knobs shape a panel to its client:
@@ -47,8 +47,8 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # framework's other cornerRadius lives.
   cornerRadius: undefined
   _selectsItemsOnClick: false
-  # A menu / list-contents row-stack is the internal body of a pop-up or scroll
-  # frame — it accepts no drops and imposes no width ratio on its rows, unlike a
+  # A menu / list-contents row-stack is the internal body of a pop-up or viewport
+  # — it accepts no drops and imposes no width ratio on its rows, unlike a
   # general VerticalStackPanelWdgt (which does both). Suppress the inherited
   # container behaviours.
   _acceptsDrops: false
@@ -125,13 +125,13 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
 
   # I am the internal body of a menu / prompt / list -- an implementation detail,
   # not a widget the user picks. Stay OUT of the ancestor hierarchy-disambiguation
-  # menu (Widget.getHierarchyMenuWidgets), like a stack inside a stack-scroll-panel
+  # menu (Widget.getHierarchyMenuWidgets), like a stack inside a viewport
   # or a PanelWdgt inside a ViewportWdgt. Capability ?() at the call site, so no
   # instanceof there (type-test-elimination convention).
   hiddenFromHierarchyMenu: ->
     true
 
-  # My input slider's track press jump-drags its button, like a scroll frame's
+  # My input slider's track press jump-drags its button, like a viewport's
   # scrollbars do — SliderWdgt.mouseDownLeft asks its parent via ?(); see
   # ViewportWdgt.sliderTrackPressJumpsButton (type-test-elimination ε).
   sliderTrackPressJumpsButton: ->
@@ -244,7 +244,7 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # (which _childWidthInStack then hands to every row, mirroring the arrange).
   # The panel is a hug-class stack on BOTH axes — the base already hugs height
   # (tight: true); these make the width story symmetric. (No consumer exists
-  # today — ListWdgt opts out of the scroll-stack refit — so this is model
+  # today — ListWdgt opts out of the viewport's refit — so this is model
   # honesty for the next consumer, not a behaviour change.)
   preferredExtentForWidth: (availW) ->
     hugW = @maxWidthOfMenuEntries() + 2 * @padding

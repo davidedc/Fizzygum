@@ -557,13 +557,13 @@ class MacroToolkit
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
-  # length, to JUMP the slider button there. For a scroll panel's scrollbar — a ViewportWdgt's @vBar
+  # length, to JUMP the slider button there. For a viewport's scrollbar — a ViewportWdgt's @vBar
   # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.mouseDownLeft,
   # when the slider's parent is a ViewportWdgt (or PromptWdgt), non-float-drags the button to the
   # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
   # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the
   # track); for a horizontal one [0.8, 0.5]. Queues input events — follow with `yield
-  # "waitNoInputsOngoing"`. A slider NOT parented to a scroll panel ignores the track click (it escalates
+  # "waitNoInputsOngoing"`. A slider NOT parented to a viewport ignores the track click (it escalates
   # the event) — that is the negative companion behaviour (sliderNotOnViewportBackground…). Composes
   # moveToAndClickAtFractionOf_InputEvents; sliderOrIdentifier may be a widget reference (e.g. doc.vBar)
   # or a recorded text-description identifier.
@@ -1129,7 +1129,7 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # Overflowing-scroll-panel fixture, SHARED by the scroll-panel drag-behaviour tests (default → the panel MOVES;
+    # Overflowing-viewport fixture, SHARED by the viewport drag-behaviour tests (default → the panel MOVES;
     # locked-to-desktop → the contents SCROLL; in a window → the WINDOW moves) so the setup lives in ONE place. Builds a
     # ViewportWdgt with a tall wrapping TextWdgt so it OVERFLOWS (a vertical scrollbar shows), adds it to the world at
     # topLeftPoint, and RETURNS the panel. Takes NO screenshots (only a test's own sources are scanned for reference names).

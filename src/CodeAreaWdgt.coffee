@@ -27,7 +27,7 @@ class CodeAreaWdgt extends Widget
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
-  # the EDITABLE code-area variant (ScriptWdgt / CodePromptWdgt): white scroll panel,
+  # the EDITABLE code-area variant (ScriptWdgt / CodePromptWdgt): white viewport,
   # drops disabled, modified-content indicator, transparent mono editable text with
   # selection enabled.
   _buildEditableCodeAreaNoSettle: (initialText) ->

@@ -178,11 +178,11 @@ class CaretWdgt extends BlinkerWdgt
     # shifts the result (macroStringWdgtInlineTypingRefitsUnderFittingModes). One pass suffices where the
     # follow converges immediately (e.g. a single-line horizontal scroll) ...
     @_oneScrollCaretIntoViewPassNoSettle()
-    # ... and ENQUEUE the caret for the follow for the cases that need MORE than one pass (a scroll panel's
+    # ... and ENQUEUE the caret for the follow for the cases that need MORE than one pass (a viewport's
     # vertical follow advances only partway per pass): the caret's _reLayout runs the follow on settled geometry
     # and the until-loop iterates it to convergence, drained by the next IN-PLACE settle (the discrete move's own,
     # or the editing handler's tail). The wheel/scroll path does NOT come through here, so it never enqueues a
-    # follow -- the panel chases the caret only when the caret MOVES.
+    # follow -- the viewport chases the caret only when the caret MOVES.
     @_requestScrollFollow()
 
     if becauseOfMouseClick and @target.undoHistory?.length == 0
@@ -219,15 +219,15 @@ class CaretWdgt extends BlinkerWdgt
   # The caret's layout step IS the scroll-follow. It does ONE pass of _oneScrollCaretIntoViewPassNoSettle then marks
   # itself layout-fixed once no CORRECTIVE container move was needed (see the stable check below). It settles in a
   # SINGLE visit for a caret that only repositions along its line (e.g. typing across a wrapping field -- the common
-  # case), and in one move + one confirming visit for a caret that also had to scroll its panel. Two single-pass
+  # case), and in one move + one confirming visit for a caret that also had to scroll its viewport. Two single-pass
   # properties make that hold (both 2026-07-01): (1) _oneScrollCaretIntoViewPassNoSettle places the caret at its
   # TRUE, un-clamped slot position, so ViewportWdgt.scrollCaretIntoView computes the FULL scroll in ONE call
   # (previously the caret was clamped to y>=0, so a far scroll advanced only one viewport-step per pass and the
   # content crawled to its mark over many re-visits); (2) convergence is detected on the CONTAINERS, not on the
   # caret's own reposition (which is an exact, idempotent one-shot needing no confirming pass). A move pass that DID
-  # scroll re-enqueues the scroll panel (via the settle-time re-fit that succeeded the deleted geometry seam --
+  # scroll re-enqueues the viewport (via the settle-time re-fit that succeeded the deleted geometry seam --
   # _reFitMyTrackingContainerAfterSettle / __markForRelayout, in-pass) AHEAD of the caret, and the caret stays
-  # layoutIsValid==false so the loop re-runs it AFTER the panel settles, confirming convergence. This iterates via
+  # layoutIsValid==false so the loop re-runs it AFTER the viewport settles, confirming convergence. This iterates via
   # the flush's until-loop, not a hand-rolled loop; it is deterministic (same settled geometry in => same passes)
   # and bounded (only a true NON-TERMINATING cycle would ever hit WorldWdgt._recalculateLayoutsBody's sanity-limit
   # assert). The caret is isLayoutInert + childless, so there is no base _reLayout work to do (no bounds to fit,
@@ -237,19 +237,19 @@ class CaretWdgt extends BlinkerWdgt
     beforeTargetT = @target?.top() ; beforeTargetL = @target?.left()
     @_oneScrollCaretIntoViewPassNoSettle()
     # converged when no CORRECTIVE CONTAINER move was needed this pass -- neither the scroll container (my parent =
-    # the scroll panel's contents) nor the target text had to move to keep me in view. The caret's OWN reposition
+    # the viewport's contents) nor the target text had to move to keep me in view. The caret's OWN reposition
     # to its slot is an exact, idempotent one-shot, so a pass that ONLY repositioned the caret is already at the
     # fixed point and needs no confirming re-visit.
     #   INVARIANT this leans on: placing the caret at slotCoordinates is idempotent (a direct absolute move), and my
-    #   target/panel settle BEFORE me (the flush drains parent-first; the caret is freefloating + inert, drained
-    #   last). Marking fixed here can only REDUCE settle iterations vs the old "did anything move" check -- it can
-    #   never ADD a cycle. If a future text-relayout change ever broke that invariant (so my slot moved AFTER I
-    #   marked fixed), TWO backstops catch it, NEITHER silent: (1) a wrong caret position fails the byte-exact
-    #   SystemTest suite -- the caret is screenshotted in ~a dozen tests (macroWrappingTextFieldResizesOK,
-    #   macroMultilineTextInputScrollsWell, the *CaretBroughtIntoView* pair, macroTextWdgtCaretResizing, ...); and
-    #   (2) an actual non-terminating cycle throws RECALC_NONCONVERGENCE at WorldWdgt._recalculateLayoutsBody's
-    #   sanity limit, naming this widget (and the determinism torture greps for that token). So a regression here
-    #   surfaces loudly and is diagnosable -- it does not hang the tab or render 1px-off unnoticed.
+    # target/panel settle BEFORE me (the flush drains parent-first; the caret is freefloating + inert, drained
+    # last). Marking fixed here can only REDUCE settle iterations vs the old "did anything move" check -- it can
+    # never ADD a cycle. If a future text-relayout change ever broke that invariant (so my slot moved AFTER I
+    # marked fixed), TWO backstops catch it, NEITHER silent: (1) a wrong caret position fails the byte-exact
+    # SystemTest suite -- the caret is screenshotted in ~a dozen tests (macroWrappingTextFieldResizesOK,
+    # macroMultilineTextInputScrollsWell, the *CaretBroughtIntoView* pair, macroTextWdgtCaretResizing, ...); and
+    # (2) an actual non-terminating cycle throws RECALC_NONCONVERGENCE at WorldWdgt._recalculateLayoutsBody's
+    # sanity limit, naming this widget (and the determinism torture greps for that token). So a regression here
+    # surfaces loudly and is diagnosable -- it does not hang the tab or render 1px-off unnoticed.
     stable = @parent?.top() == beforeParentT and @parent?.left() == beforeParentL and @target?.top() == beforeTargetT and @target?.left() == beforeTargetL
     if stable
       @_markLayoutAsFixed()
@@ -276,7 +276,7 @@ class CaretWdgt extends BlinkerWdgt
 
   # A SINGLE scroll-follow pass (see _reLayout, which iterates this to a fixed point via the flush). Re-derives
   # pos from the current (settled) geometry, applies the horizontal clamp (which scrolls @target and adjusts where
-  # the caret lands), re-places the caret, then asks the scroll panel to scroll it vertically into view.
+  # the caret lands), re-places the caret, then asks the viewport to scroll it vertically into view.
   # thin-wrap-exempt: one convergence pass driven by the caret's _reLayout (no public twin -- settling is provided
   # by the flush, not a self-settling wrapper).
   _oneScrollCaretIntoViewPassNoSettle: ->

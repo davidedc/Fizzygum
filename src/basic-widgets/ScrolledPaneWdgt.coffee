@@ -2,30 +2,30 @@
 # on, physically moved by the scroll (children ride along, absolute coordinates). Built by
 # ViewportWdgt._buildViewportChromeNoSettle whenever a caller supplies no contents of its own;
 # the plane ROLE itself is broader than this class — a FolderPanelWdgt, ToolPanelWdgt or
-# vertical stack passed as `contents` plays it too, which is why every topology question is a
+# vertical stack passed as contents plays it too, which is why every topology question is a
 # parent-based query (ViewportWdgt.isMyContentsPanel), never a class test.
 #
 # What lives HERE is only what is true of the default plane BY CONSTRUCTION — so PanelWdgt
 # stays purely the SURFACE class, with no plane-conditional second personality (scroll-frame
 # role plan P3):
-#   - it never notices transparent clicks (its frame handles those);
-#   - its membership changes are relayed to the scroll frame's HOLDER (the bin listens);
+#   - it never notices transparent clicks (its viewport handles those);
+#   - its membership changes are relayed to the viewport's HOLDER (the bin listens);
 #   - a click on its empty part forwards the caret to a lone editable text child.
-# (The color/alpha up-relays that keep the frame's mimic paint values true are NOT here —
+# (The color/alpha up-relays that keep the viewport's mimic paint values true are NOT here —
 # they live on PanelWdgt, because every panel-family plane deserves them, not just the
 # default one; the stack declares its own pair.)
 
 class ScrolledPaneWdgt extends PanelWdgt
 
-  # my frame catches what needs catching; a plane spanning the viewport must not
+  # my viewport catches what needs catching; a plane spanning the viewport must not
   # intercept clicks that mean "the content behind the pixels"
   noticesTransparentClick: false
 
-  # (the color/alpha up-relays that keep my frame's mimic values true live on PanelWdgt now —
+  # (the color/alpha up-relays that keep my viewport's mimic values true live on PanelWdgt now —
   # every panel-family plane relays, not just me)
 
-  # ── the membership relays to the scroll frame's HOLDER ────────────────────────────────────
-  # (@parent = the scroll frame, @parent.parent = whoever holds it — e.g. the bin, which
+  # ── the membership relays to the viewport's HOLDER ────────────────────────────────────────
+  # (@parent = the viewport, @parent.parent = whoever holds it — e.g. the bin, which
   # re-files storage on what enters/leaves its open window. BinWdgt is the one implementor.)
 
   _reactToChildDropped: (droppedWidget) ->

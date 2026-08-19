@@ -21,7 +21,7 @@ class TransformFrameWdgt extends PanelWdgt
   # default since the D1 flip (claimsSpace arc, 2026-07-17; TransformSpec.claimsSpace).
   _lastClaimedExtent: undefined
   # D2 scroll reachability (claimsSpace arc): last claimed ∪ ink box handed to an enclosing
-  # scroll frame, for refit-on-change detection — the REACHABILITY twin of _lastClaimedExtent
+  # viewport, for refit-on-change detection — the REACHABILITY twin of _lastClaimedExtent
   # (claim → sibling layout; union → scroll extent: two questions, two memos, two edges).
   _lastScrollOverflowBox: undefined
   # Phase 4C (§6): true when this island was MATERIALIZED by the Widget-level property sugar
@@ -283,7 +283,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   # D2 scroll reachability (claimsSpace arc plan §4.1/F2): the REACHABILITY twin of the claim
   # reflow above — when my claimed ∪ ink box changed, ask the enclosing NON-content-sizing
-  # scroll frame to re-fit its content frame, so my rotated ink stays reachable by scrolling in
+  # viewport to re-fit its content frame, so my rotated ink stays reachable by scrolling in
   # EVERY mode including 'slot' (whose claim never changes). Deliberately NOT the climbing
   # _invalidateLayout: a free-floating child's climb DROPS at the frame's non-tracking @contents
   # PanelWdgt (Widget._invalidateLayout's freefloating gate). _reFitContainer is the sanctioned
@@ -300,7 +300,7 @@ class TransformFrameWdgt extends PanelWdgt
     @_lastScrollOverflowBox = newBox
     @_reFitContainer @parent.parent if @_amIDirectlyInsideNonTextWrappingViewport()
 
-  # D2 (claimsSpace arc plan §4.1): my contribution to an enclosing scroll frame's content
+  # D2 (claimsSpace arc plan §4.1): my contribution to an enclosing viewport's content
   # extent — claimed box ∪ ink hull in the PARENT plane (integer; deliberately neither the
   # layout-box family, which stays the slot box, nor the screen family, which is
   # fractional/global — docs/archive/affine-geometry-api-plan.md). Per-class capability (`?()` dispatch,

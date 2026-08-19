@@ -19,8 +19,8 @@ class FolderWindowWdgt extends FrameWdgt
   representativeIcon: ->
     new FolderIconWdgt
 
-  # my scroll frame is internal structure — hide it from the ancestor hierarchy
-  # (disambiguation) menu, exactly as a scroll frame hides its own contents panel
+  # my viewport is internal structure — hide it from the ancestor hierarchy
+  # (disambiguation) menu, exactly as a viewport hides its own contents panel
   # (see ViewportWdgt.hidesContainedWidgetFromHierarchyMenu; asked by
   # Widget.hierarchyMenuWidgets via ?()).
   hidesContainedWidgetFromHierarchyMenu: (aWdgt) ->

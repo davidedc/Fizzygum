@@ -4,7 +4,7 @@ class ToolPanelWdgt extends PanelWdgt
   externalPadding: 10
   thumbnailSize: 30
 
-  # my enclosing scroll frame borrows my colloquial name (type-test-elimination ε; see
+  # my enclosing viewport borrows my colloquial name (type-test-elimination ε; see
   # ViewportWdgt.colloquialName)
   viewportColloquialName: ->
     "toolbar"
@@ -31,7 +31,7 @@ class ToolPanelWdgt extends PanelWdgt
   _addNoSettle: (aWdgt, opts = {}) ->
     positionOnScreen = opts.positionOnScreen
 
-    # annotation + handle both attach to the scroll frame directly (was their two instanceof)
+    # annotation + handle both attach to the viewport directly (was their two instanceof)
     # (type-test-elimination campaign)
     if aWdgt.attachesToViewportDirectly?()
       super aWdgt, opts
@@ -88,11 +88,11 @@ class ToolPanelWdgt extends PanelWdgt
     scanningChildrenY = 0
     numberOfEntries = 0
 
-    # A scroll-panel parent resizes while keeping its contents' width fixed, and the
+    # A viewport parent resizes while keeping its contents' width fixed, and the
     # toolpanel must never scroll horizontally (only vertically) -- so fit my width to
-    # the scroll frame's content width, read via the widthContentsMustFitWithin?
-    # capability, not `instanceof ViewportWdgt` (type-test-elimination ε): only a scroll
-    # frame answers the question; any other parent (or no parent) leaves my own width.
+    # the viewport's content width, read via the widthContentsMustFitWithin?
+    # capability, not `instanceof ViewportWdgt` (type-test-elimination ε): only a
+    # viewport answers the question; any other parent (or no parent) leaves my own width.
     widthINeedToFitContentIn = @parent?.widthContentsMustFitWithin?() ? @width()
 
     for w in childrenNotHandlesNorCarets

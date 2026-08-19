@@ -19,7 +19,7 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
     @__commitExtent new Point size, size
     parent?.add @, layoutSpec: @cornerSpec
 
-  # I attach directly to a scroll panel's frame (not its inner contents) when added -- the
-  # container add methods key off this instead of `instanceof ModifiedTextTriangleAnnotationWdgt`.
+  # I attach directly to a viewport (not its plane / inner contents) when added -- the
+  # container add methods key off this instead of instanceof ModifiedTextTriangleAnnotationWdgt.
   # (type-test-elimination campaign)
   attachesToViewportDirectly: -> true

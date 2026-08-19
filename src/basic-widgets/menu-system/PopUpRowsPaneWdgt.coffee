@@ -1,4 +1,4 @@
-# The content pane inside a pop-up's rows scroll frame (PopUpRowsViewportWdgt) — the
+# The content pane inside a pop-up's rows viewport (PopUpRowsViewportWdgt) — the
 # plain panel a ViewportWdgt scrolls, holding one child: the pop-up's MenuRowsPanelWdgt.
 #
 # It exists as a class rather than a configured PanelWdgt because everything it has to say
@@ -21,7 +21,7 @@
 class PopUpRowsPaneWdgt extends ScrolledPaneWdgt
 
   # I paint nothing — the rows panel inside me draws the pop-up's whole visible body (box,
-  # header, rows). My frame reads this off me at build (ViewportWdgt takes its own paint
+  # header, rows). My viewport reads this off me at build (ViewportWdgt takes its own paint
   # values from its contents), so declaring it here settles both of us.
   alpha: 0
 
@@ -48,8 +48,8 @@ class PopUpRowsPaneWdgt extends ScrolledPaneWdgt
 
   # The membership-change absorb query, forwarded. VerticalStackPanelWdgt._reactToChildRemoved
   # puts it to its DIRECT parent, which is me — and I am not the widget a lost row resizes: I am
-  # sized by my frame and the frame by the pop-up. PopUpWdgt._reLayOutAfterContainedPanelChange does
-  # the whole job (re-lay the rows panel, re-fit the frame, re-take the pop-up's own extent), so the
+  # sized by my viewport and the viewport by the pop-up. PopUpWdgt._reLayOutAfterContainedPanelChange does
+  # the whole job (re-lay the rows panel, re-fit the viewport, re-take the pop-up's own extent), so the
   # question goes there, and its answer — was it absorbed — is the one the stack is waiting for.
   #   Without this a row leaving a LIVE menu leaves the pop-up drawn at its old height, with a blank
   # strip where the row was. Nothing showed it before rows could be dragged out: every

@@ -56,7 +56,7 @@ class ListWdgt extends ViewportWdgt
     #    non-italic) will be assigned.
     #
     #    An example of how to use formats can be found in the InspectorWdgt's
-    #    "markOwnProperties" mechanism.
+    #    "_filterProperties" mechanism.
     #
     super()
     @contents.disableDrops()
@@ -69,7 +69,7 @@ class ListWdgt extends ViewportWdgt
   # builds the list contents, via the _buildAndConnectChildren wrapper + NoSettle-core pattern. ListWdgt extends
   # ViewportWdgt, whose `add` is a CUSTOM override that redirects a non-frame child into @contents; the
   # non-settling twin of that redirect is `@contents._addNoSettle` (NOT the base `@_addNoSettle`, which would
-  # wrongly attach @listContents to the scroll frame itself and break every InspectorWdgt's property pane --
+  # wrongly attach @listContents to the viewport itself and break every InspectorWdgt's property pane --
   # the reason the orphan-settledness sweep left this unconverted). The core builds via @contents._addNoSettle
   # with the same default free-floating attachment the public redirect passes, so behaviour is byte-
   # identical and the wrapper settles once -- `new ListWdgt` still returns settled.
@@ -110,7 +110,7 @@ class ListWdgt extends ViewportWdgt
 
     @contents._addNoSettle @listContents
 
-  # A ListWdgt is excluded from the "scroll panel re-fits its contained stack
+  # A ListWdgt is excluded from the "viewport re-fits its contained stack
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for
   # lists): opt OUT so a contained panel re-lays out itself, as before. This
   # opt-out is NARROW -- a list still re-fits on its own drops/grabs/attaches

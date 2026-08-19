@@ -196,7 +196,7 @@ class Widget extends TreeNode
   # apart or mess with its parts.
   #
   # The best example is scrollable text: when one right-clicks
-  # on scrollable text, the menu OF THE SCROLLFRAME that
+  # on scrollable text, the menu OF THE VIEWPORT that
   # contains it takes over.
   #
   # Otherwise, without merging, there would FIRST be a
@@ -639,7 +639,7 @@ class Widget extends TreeNode
   # The shared "enable/disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
   # VerticalStackViewportWdgt). The children list varies by
-  # container (the scroll panel sources it from @contents), so it is passed in.
+  # container (the viewport sources it from @contents), so it is passed in.
   _addEditingLockMenuEntries: (menu, childrenNotHandlesNorCarets) ->
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
@@ -1310,7 +1310,7 @@ class Widget extends TreeNode
   # §4.1 Stage C (proper-layouts): the side-effect-free counterpart of subWidgetsMergedFullBounds above --
   # the merged bounds of my children with each child's SIZE taken from its pure preferredExtentForWidth
   # measure (min-extent-clamped, as __commitExtent applies on commit) instead of its just-mutated applied
-  # extent, at the child's current position. A scroll panel consumes this to size its content frame WITHOUT
+  # extent, at the child's current position. A viewport consumes this to size its content frame WITHOUT
   # first resizing my children and reading the result back -- the mutate-then-read-back the re-fit seam exists
   # for (assessment §2.4). KEEPS the historical child[0] seed (contributes even if inert) that
   # subWidgetsMergedFullBounds dropped in its 2026-07-22 rewrite -- re-aligning this one would shift real
@@ -2452,7 +2452,7 @@ class Widget extends TreeNode
   # WorldWdgt._recalculateLayoutsBody.) The immediate mutators are now PURE (no layout side effect) -- what the
   # FLOWRULE always wanted. Reverse-probe: OLD-seam OFF + this up-edge = 165/165 byte-exact at dpr1/dpr2/webkit,
   # so §8's "irreducible in-pass seam" verdict was over-general. Both containers are covered: a NON-text-wrapping
-  # scroll panel a level up past my non-tracking @contents PanelWdgt (@parent.parent), and my direct parent
+  # viewport a level up past my non-tracking @contents PanelWdgt (@parent.parent), and my direct parent
   # (stack/window). _reFitContainer gates on _reLayoutChildren?, so a non-tracking parent is a no-op. OVERLAY
   # CHROME (carets, resize handles -- isLayoutInert) is excluded from every container's content-bounds
   # (TreeNode.childrenNotHandlesNorCarets), so re-fitting for it would be pure waste -- skip it. (Capability
@@ -3942,9 +3942,9 @@ class Widget extends TreeNode
   whenReadyToBeBroughtUp: (callback) ->
     callback()
 
-  # Am I loose content living directly on a scroll frame's plane? Two role queries on the
+  # Am I loose content living directly on a viewport's plane? Two role queries on the
   # grandparent (scroll-frame role plan P3): isMyContentsPanel — is my parent the panel that
-  # frame clips and scrolls (any plane class: the default ScrolledPaneWdgt, a folder/tool
+  # the viewport clips and scrolls (any plane class: the default ScrolledPaneWdgt, a folder/tool
   # panel, a stack) — and contentsPanelHoldsLooseContent, which a ListWdgt answers false to
   # (its pane holds rows machinery, not loose content).
   _amIDirectlyInsideViewport: ->
@@ -4364,8 +4364,8 @@ class Widget extends TreeNode
       if (each.buildWidgetContextMenu) and (each isnt world) and (!each.anyParentPopUpMarkedForClosure())
         # leave out a construct's internal structure — there is no need for the user to know
         # or have access to it. Two declarations decide (scroll-frame role plan P3):
-        # * the PARENT hides a contained widget (a scroll frame hides its contents panel —
-        #   plain pane or stack alike — and a folder window hides its scroll frame): the
+        # * the PARENT hides a contained widget (a viewport hides its contents panel —
+        #   plain pane or stack alike — and a folder window hides its viewport): the
         #   hidesContainedWidgetFromHierarchyMenu ?() query;
         # * the widget hides ITSELF (a MenuRowsPanelWdgt, the internal body of a menu /
         #   prompt / list): the hiddenFromHierarchyMenu ?() query.
@@ -4510,7 +4510,7 @@ class Widget extends TreeNode
       @addLayoutEditingMenuEntries menu
 
   # The edit-layout toggle pair, on whatever widget OWNS the scaffold — called on self by
-  # the gate above, and by a SCROLL FRAME on its contained stack (a document surfaces the
+  # the gate above, and by a VIEWPORT on its contained stack (a document surfaces the
   # toggle on its own menu while the entries TARGET the inner stack, which is what the
   # user means by "the document's layout" — VerticalStackViewportWdgt).
   addLayoutEditingMenuEntries: (menu) ->
@@ -4597,7 +4597,7 @@ class Widget extends TreeNode
     # trailing settle flushes the Viewport re-fit once; one extra flush, idempotent with @add's
     # (see the long CONVERT comment below).
     @add theWidgetToBeAttached
-    # I just attached the selected widget; if I am a scroll panel my contents changed, so re-fit my contents +
+    # I just attached the selected widget; if I am a viewport my contents changed, so re-fit my contents +
     # scrollbars. SELF-SETTLE it (CONVERT, end-of-cycle-flush-drawdown): this menu action is a DISCRETE public
     # mutation, so the re-fit must flush at the action, not ride the per-frame end-of-cycle flush. @add already
     # self-settled the attach; the _reFitContainer re-fit (NEEDED when the widget attaches directly, so @add took

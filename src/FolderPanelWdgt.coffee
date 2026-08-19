@@ -26,7 +26,7 @@
 class FolderPanelWdgt extends IconGridPanelWdgt
 
   # I manage my contents through the folder machinery (shortcut-creation on drop, grid
-  # positioning), so my enclosing scroll frame must refuse RAW drops — it asks via ?()
+  # positioning), so my enclosing viewport must refuse RAW drops — it asks via ?()
   # (type-test-elimination ε; see ViewportWdgt.wantsDropOfChild).
   vetoesViewportDrops: ->
     true

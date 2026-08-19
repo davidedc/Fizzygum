@@ -71,7 +71,7 @@ class PanelWdgt extends Widget
     return alpha
 
   # The panel half of the scrolled-content contract (scroll-frame role plan P5): the PURE
-  # measure of my children for a content-sizing scroll frame, at the width the viewport gives
+  # measure of my children for a content-sizing viewport, at the width the viewport gives
   # me (its viewport minus scroll padding — the same width the text re-wrap uses). A stack
   # overrides to measure at its OWN width; a folder/toolbar plane is never content-sizing, so
   # the viewport reads its applied bounds back instead of asking this.
@@ -79,8 +79,8 @@ class PanelWdgt extends Widget
     @subWidgetsMergedPreferredBounds widthHint
 
   # The panel-side scroll-topology chokepoint (mirror of Widget._amIDirectlyInsideViewport,
-  # which asks the same question from a CONTENT widget's viewpoint): am I the panel a scroll
-  # frame clips and scrolls? Asked of the PARENT as a role query (ViewportWdgt.isMyContentsPanel
+  # which asks the same question from a CONTENT widget's viewpoint): am I the panel a viewport
+  # clips and scrolls? Asked of the PARENT as a role query (ViewportWdgt.isMyContentsPanel
   # — scroll-frame role plan P3), so it is true for ANY panel-family class serving as a plane
   # (the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt), and the two policy
   # callers below (detach refusal, grab-to-parent) read as intent.
@@ -88,7 +88,7 @@ class PanelWdgt extends Widget
     (@parent?.isMyContentsPanel? @) ? false
 
   # Do my direct children get the "lock to panel/desktop" menu toggle? Panels are lockable
-  # surfaces (the world included); a scroll frame doesn't define this capability at all — its
+  # surfaces (the world included); a viewport doesn't define this capability at all — its
   # direct children are chrome — while children INSIDE the scrolled contents get the toggle
   # from their own PanelWdgt parent. Capability via ?() at the lock-menu site
   # (type-test-elimination ε).

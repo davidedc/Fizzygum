@@ -74,8 +74,8 @@ class HandleWdgt extends Widget
   # `?()` at the call sites, so no default lands on the Widget base.
   isLayoutInert: -> true
 
-  # I attach directly to a scroll panel's frame (not its inner contents) when added -- the
-  # container add methods key off this instead of `instanceof HandleWdgt`. (type-test-elimination campaign)
+  # I attach directly to a viewport (not its plane / inner contents) when added -- the
+  # container add methods key off this instead of instanceof HandleWdgt. (type-test-elimination campaign)
   attachesToViewportDirectly: -> true
 
   detachesWhenDragged: ->
@@ -84,13 +84,8 @@ class HandleWdgt extends Widget
     else
       return false
 
-  # HandleWdgts are one of the few widgets that
-  # by default don't stick to their parents.
-  # Also SliderButtonWdgts tend do the same (if
-  # they are attached to a SliderWdgt)
-  # The "move" HandleWdgt COULD grab to its
-  # parent, in fact it would be easier, however for
-  # uniformity we don't do that
+  # HandleWdgts (and SliderButtonWdgts attached to a SliderWdgt) don't grab to their parent
+  # when dragged, by default. The move handle could too, but stays uniform with the rest instead.
   grabsToParentWhenDragged: ->
     return false
 

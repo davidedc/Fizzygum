@@ -38,7 +38,7 @@ class StretchableWidgetContainerWdgt extends Widget
   # actually
   # ends up in the Panel inside it
   add: (aWdgt, opts = {}) ->
-    # annotation + handle both attach to the scroll frame directly (was their two instanceof)
+    # annotation + handle both attach to the viewport directly (was their two instanceof)
     # (type-test-elimination campaign)
     if !@contents? or aWdgt.attachesToViewportDirectly?()
       super
@@ -214,7 +214,7 @@ class StretchableWidgetContainerWdgt extends Widget
 
     else
       @contents._reLayout @bounds
-  # same as simpledocumentscrollpanel, you can lock the contents.
+  # same as VerticalStackViewportWdgt, you can lock the contents.
   # worth factoring it out as a mixin?
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

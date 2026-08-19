@@ -98,8 +98,6 @@ class TreeNode
     if idx == -1
       return
 
-    # check if already last child
-    # i.e. topmost
     if @isLastChild()
       return
 
@@ -472,46 +470,29 @@ class TreeNode
   # (in reverse order though, see below)
   # and stop at the first widget that satisfies the test.
   topWdgtSuchThat: (predicate) ->
-    # base case - I am a leaf child, so I just test
-    # the predicate on myself and return myself
-    # if I satisfy, else I return undefined
+    # base case: a leaf tests only itself.
     if @children.length == 0
       if predicate.call undefined, @
         return @
       else
         return undefined
-    # if I have children, then start to test from
-    # the top one (the last one in the array)
-    # and proceed to test "towards the back" i.e.
-    # testing elements of the array towards 0
-    # If you find any widget satisfying, the search is
-    # over.
+    # children tested top-to-bottom (last array index = topmost); first match wins.
     for widgetNumber in [@children.length-1..0] by -1
       widget = @children[widgetNumber]
       foundWidget = widget.topWdgtSuchThat predicate
       if foundWidget?
         return foundWidget
-    # now that all children are tested, test myself
     if predicate.call undefined, @
       return @
 
-    # ok none of my children nor me test positive,
-    # so return undefined.
     return undefined
 
   topmostChildSuchThat: (predicate) ->
-    # start to test from
-    # the top one (the last one in the array)
-    # and proceed to test "towards the back" i.e.
-    # testing elements of the array towards 0
-    # If you find any child that satisfies, the search is
-    # over.
+    # tested top-to-bottom (last index = topmost); first match wins.
     for widgetNumber in [@children.length-1..0] by -1
       widget = @children[widgetNumber]
       if predicate.call undefined, widget
         return widget
-    # ok none of my children test positive,
-    # so return undefined.
     return undefined
 
   collectAllChildrenBottomToTopSuchThat: (predicate) ->

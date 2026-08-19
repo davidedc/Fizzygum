@@ -18,7 +18,7 @@ class DocumentWdgt extends FrameWdgt
   constructor: ->
     super @_makeStartingPayload()
 
-  # The naked document payload. The scroll-panel class stays generic/UNSEEDED
+  # The naked document payload. The viewport class stays generic/UNSEEDED
   # (bare-panel fixtures depend on that), so the CITIZEN seeds the starting
   # paragraph -- exactly what the fused class's build core did.
   _makeStartingPayload: ->

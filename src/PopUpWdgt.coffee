@@ -72,8 +72,8 @@ class PopUpWdgt extends Widget
   # scrollable instead of unreachable — and it is both axes because the defect is not
   # about height: a pop-up wider than the world loses its right-hand columns exactly
   # as one taller than it loses its bottom rows, and `_moveWithin` can no more fix the
-  # one than the other. The frame's own horizontal bar covers that case for free.
-  #   The frame is chrome I own and place from my own size, so this uses the
+  # one than the other. The viewport's own horizontal bar covers that case for free.
+  #   The viewport is chrome I own and place from my own size, so this uses the
   # NON-notifying arrange twins (§4.2 structural arrange), exactly as ViewportWdgt
   # places its own bars. Shared by every pop-up that re-takes its size: the lay-out
   # above, PromptWdgt's inline build, and SaveShortcutPromptWdgt's widening.
@@ -83,13 +83,13 @@ class PopUpWdgt extends Widget
                                                 (Math.min @rowsPanel.height(), world.height())
     @rowsViewport._reLayoutChildren()
 
-  # My rows ALWAYS live in a scroll frame — there is no over-tall case and no
-  # ordinary case, just the one structure that fits either. A conditional frame
+  # My rows ALWAYS live in a viewport — there is no over-tall case and no
+  # ordinary case, just the one structure that fits either. A conditional viewport
   # would buy a few widgets per menu at the price of a THRESHOLD, and a threshold
   # is a state transition somebody has to get right: a menu composed short and
   # grown later (addMenuItem on an open menu) would have to restructure itself
   # mid-life, in the middle of the very membership change that provoked it. With
-  # the frame always present there is nothing to cross — a menu that fits simply
+  # the viewport always present there is nothing to cross — a menu that fits simply
   # has nothing to scroll, and ViewportWdgt hides a bar with nothing to show.
   #   The composition is the one ListWdgt uses: a ViewportWdgt keeping its own content
   # pane (mine is a PopUpRowsPaneWdgt), with the rows panel placed INSIDE that.

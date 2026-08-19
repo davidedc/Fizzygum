@@ -88,7 +88,7 @@ class PromptWdgt extends PopUpWdgt
     # lay the panel out at my origin, then hug it — the down-walk settles parent
     # before child, so I size to the panel's freshly-laid-out extent HERE (as
     # ListWdgt lays out its listContents at build) rather than reading it mid-pass.
-    # The rows go into the shared scroll frame, ALWAYS (PopUpWdgt
+    # The rows go into the shared rows viewport, ALWAYS (PopUpWdgt
     # ._buildRowsViewportNoSettle), so a prompt too tall for the world scrolls
     # rather than running off the bottom edge, exactly like a menu.
     @_buildRowsViewportNoSettle()

@@ -65,7 +65,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # let an asymmetric grow re-centre the figure via the undefined slot-centre anchor — was superseded by the
   # §7.5 Bug-D anchor-stability rule below: persisting content must stay screen-still across a re-fit.)
   # arrangeDriven distinguishes the TWO re-fit regimes on an EXTENT change (follow-up F1,
-  # docs/…-layout-transparency-plan.md §9): a CONTENT-driven re-fit (bare call — the settle-loop
+  # docs/archive/drop-into-rotated-container-layout-transparency-plan.md §9): a CONTENT-driven re-fit (bare call — the settle-loop
   # up-edge, my own _reLayout) keeps the Bug-D pin so a user handle-resizing the wrapped widget
   # sees persisting screen points stay still; an ARRANGE-driven re-fit (true — forwarded from my
   # §5a _applyExtent / _setWidthSizeHeightAccordingly under a laying-out parent) clears the anchor,
@@ -99,7 +99,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     @__breakMoveResizeCaches()
     @_lastClaimedExtent = undefined
     # D2: the re-hug moved/resized the slot, so the reachability memo is stale too. Just undefined it
-    # (pure bookkeeping — legal mid-pass): the scroll frame's re-fit for a slot change rides the
+    # (pure bookkeeping — legal mid-pass): the viewport's re-fit for a slot change rides the
     # engine's frame-change up-edge, and the next transform change recomputes the memo fresh.
     @_lastScrollOverflowBox = undefined
     @_fullChanged()

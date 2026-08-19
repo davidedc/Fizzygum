@@ -315,7 +315,7 @@ ControllerMixin =
       # it drives — a scrollbar and its content — also has to FOLLOW it when the property changes by any
       # other means. `trackTarget` declares that second, opposite edge: target → me, `firesOnAnyChange`,
       # so my target's markNonValueChange wakes me too. That announcement is the honest one for a
-      # property that is not the target's VALUE (a scroll panel has no principal pin at all), and it
+      # property that is not the target's VALUE (a viewport has no principal pin at all), and it
       # is why the edge asks to re-read rather than to be handed something.
       #   I never read the delivered value: `reflectTarget` re-reads the pin the tracking wire's own
       # action writes. So a DUPLICATED control — which keeps its wire records and nothing else — tracks
@@ -342,7 +342,7 @@ ControllerMixin =
       # ---- THE FOLLOW GESTURE (connector plan §P2 residue) --------------------------------
       # PIN granularity's answer to `bind ⇄`, and it is not a second chooser: the wire the gesture
       # needs ALREADY EXISTS. "connect to ➔" offers every drivable pin, so a slider can already be
-      # wired onto a scroll frame's `scroll y` today — what it cannot do is FOLLOW it. So the gesture
+      # wired onto a viewport's `scroll y` today — what it cannot do is FOLLOW it. So the gesture
       # is a promotion of a wire you are already looking at, and it lands in that wire's own menu
       # beside "fires per event", costing the enclosing menu no row at all.
       #   ⭐ `trackTarget` was built to be its verb before it had one: its own note reads "say it
@@ -362,7 +362,7 @@ ControllerMixin =
       #     the PinSpec, and `announces` exists for exactly this question.
       #   • I must be able to render THAT pin, which only I know (SliderWdgt._canReflectPin). A
       #     controller that declares no answer follows nothing, which is why the row is absent from
-      #     every controller but the slider today.
+      # every controller but the slider today.
       _canTrackWire: (wire) ->
         alreadyTracking = @_trackingWire()
         return false if alreadyTracking? and alreadyTracking isnt wire
@@ -407,7 +407,7 @@ ControllerMixin =
       # thing that IS — a status line you read, and cut from where you read it.
       #   Grouping also costs the enclosing menu ZERO rows for the second gesture, and that thrift is
       # still worth keeping even though an over-tall pop-up now SCROLLS its rows rather than putting
-      # them out of reach: a `SimpleTextWdgt` inside a scroll panel builds a merged menu of about full
+      # them out of reach: a `SimpleTextWdgt` inside a viewport builds a merged menu of about full
       # height, so every top-level row this block adds is one the reader has to scroll past. Rows are
       # affordable here; free they are not. (The third gesture, "follows it too", costs nothing at
       # all — it lives in the wire's own menu, one level further down.)

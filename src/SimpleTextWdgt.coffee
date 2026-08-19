@@ -15,7 +15,7 @@
 # TextWdgt (not just this one) can be contained text.
 # What's left specific to THIS class: pinning
 # _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
-# scroll-panel soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
+# viewport soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
 # (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
 # chrome (wire verbs, the "connect to ➜" menu) is INHERITED — base StringWdgt
 # carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
@@ -97,7 +97,7 @@ class SimpleTextWdgt extends TextWdgt
   softWrapOn:  -> @setSoftWrap true
   softWrapOff: -> @setSoftWrap false
 
-  # Toggle soft-wrap for a text inside a scroll panel. The directions are deliberately ASYMMETRIC: wrap ON
+  # Toggle soft-wrap for a text inside a viewport. The directions are deliberately ASYMMETRIC: wrap ON
   # re-constrains the content to the viewport (inside setTextLineWrapping) and lets the layout re-wrap; wrap
   # OFF must _reLayoutSelf the text to its NATURAL un-wrapped width so the panel scrolls horizontally --
   # because TextWdgt::_reLayoutSelf wraps to the current extent when @softWrap, but measures the full
@@ -107,7 +107,7 @@ class SimpleTextWdgt extends TextWdgt
   # setTextLineWrapping + an explicit _reLayoutSelf) instead of the framework's deferred _invalidateLayout()
   # pattern: the deferred mechanism is half-built (geometry accessors read applied @bounds only), and
   # soft-wrap has an EXTRA blocker -- the content/text are free-floating (undefined layoutSpec) (so _invalidateLayout()
-  # never climbs to the scroll panel) and the wrap geometry lives in _positionAndResizeChildren, off the
+  # never climbs to the viewport) and the wrap geometry lives in _positionAndResizeChildren, off the
   # _reLayout cycle. Completing the deferred model stays the goal -- see
   # docs/archive/softwrap-deferred-layout-conversion-plan.md for the obstacle map and what a conversion
   # would take.
@@ -125,7 +125,7 @@ class SimpleTextWdgt extends TextWdgt
     @_reLayoutSelf() unless wrap
     # (property sub-seam deletion) I re-laid MYSELF above; now climb so my tracking container re-fits -- via the
     # parent with me as trigger (NOT @_invalidateLayout, which re-marks me redundantly), the uniform-climb seam replacement.
-    @parent?.parent?._invalidateLayout()   # (proper-layouts) re-fit the scroll-panel grandparent; the trigger form @parent._invalidateLayout(@) gets dropped at the non-tracking @contents PanelWdgt, so reach past it (bare)
+    @parent?.parent?._invalidateLayout()   # (proper-layouts) re-fit the viewport grandparent; the trigger form @parent._invalidateLayout(@) gets dropped at the non-tracking @contents PanelWdgt, so reach past it (bare)
 
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
@@ -156,7 +156,7 @@ class SimpleTextWdgt extends TextWdgt
   # setText (above) + the inherited setFontSize / setFontName / toggleShowBlanks /
   # toggleWeight / toggleItalic / toggleIsPassword all re-flow the box AND nudge the
   # container via StringWdgt::_reflowContainedTextThenInvalidateLayout (gated by FIT_BOX_TO_TEXT).
-  # softWrapOn/Off (above) are scroll-panel-specific (they flip
+  # softWrapOn/Off (above) are viewport-specific (they flip
   # @parent.parent.isTextLineWrapping).
 
   blendInWithPanelColor: ->
