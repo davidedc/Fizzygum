@@ -1,5 +1,5 @@
 # The WorldWdgt takes over the canvas on the page
-class WorldWdgt extends IconicDesktopSystemPanelWdgt
+class WorldWdgt extends IconGridPanelWdgt
 
   # We need to add and remove
   # the event listeners so we are
@@ -686,7 +686,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
     # ⚠⚠ EVERY DESKTOP ICON IS BUILT WITHOUT ITS APP. An icon needs its ART -- all of it core, below
     # -- and the app's class NAME; the launcher resolves that name to a part when it is CLICKED
-    # (IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode). So the Makers' eight app classes sit
+    # (AppLauncherWdgt's lazy mode). So the Makers' eight app classes sit
     # in the lazy 'authoring' part they already build from, the ninth opener's FridgeMagnetsApp sits
     # in lazy 'fizzytiles', and a session that never opens a Maker never downloads or compiles one.
     # ⇒ what forces an eager launcher is BOOT-TIME REACHABILITY, and an icon is not its app: reading
@@ -702,7 +702,7 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     # place either is written down; naming them again here is how one of the two loses a field --
     # tooltips. The app class itself is NOT touched — that is what keeps every app lazy.
     addOpener = (appClassName) ->
-      IconicDesktopSystemWindowedAppLauncherWdgt.addToDesktop appClassName
+      AppLauncherWdgt.addToDesktop appClassName
     addOpener "HowToSaveMessageApp"
     menusHelper.binIconAndText()
     addOpener "SimpleDocumentApp"

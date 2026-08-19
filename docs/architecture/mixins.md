@@ -158,7 +158,7 @@ three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 |---|---|---|---|---|
 | `ClippingAtRectangularBoundsMixin` | 195 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
 | `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
-| `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `IconicDesktopSystemLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
+| `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `DesktopLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |
 | `BubblesEditModeToCoordinatorMixin` | 51 | 3 — `SimpleVerticalStackScrollPanelWdgt`, `StretchablePanelWdgt`, `StretchableWidgetContainerWdgt` (injects only the `_enable/_disableDragsDropsAndEditingNoSettle` cores; the public settle-wraps stay on the consumers/`ScrollPanelWdgt`) | unrelated branches (ScrollPanel / Panel / Widget) | yes |
@@ -192,7 +192,7 @@ The test: consumers on unrelated branches AND behaviour that overrides framework
   the receiver; a class member is fully first-class). Where each went:
   - `GridPositioningOfAddedShortcutsMixin` + `KeepIconicDesktopSystemLinksBackMixin`
     (both exactly {`FolderPanelWdgt`,`WorldWdgt`}) → the shared base
-    `IconicDesktopSystemPanelWdgt extends PanelWdgt` (both consumers now extend it).
+    `IconGridPanelWdgt extends PanelWdgt` (both consumers now extend it).
     `WorldWdgt`'s former SHADOWS-MIXIN grid-field overrides are now ordinary base-class
     shadowing; the deliberate no-super replacement of `PanelWdgt._reactToChildAdded`
     (suppressing the scroll-panel-holder relay) is preserved and commented in place.

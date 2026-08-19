@@ -23,7 +23,7 @@
 # which the Serializer encodes symbolically as {"$wk":"app:<ClassName>"} and re-resolves on load;
 # the lazy mode stores the same information as a plain field, so a saved world carries the icon
 # without carrying — or needing — the app.
-class IconicDesktopSystemWindowedAppLauncherWdgt extends IconicDesktopSystemLinkWdgt
+class AppLauncherWdgt extends DesktopLinkWdgt
 
   # the DISPATCH pair, live only in the EAGER mode -- see appClassName below, whose presence
   # means the app class has not arrived yet and these two are undefined

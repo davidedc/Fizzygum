@@ -4,7 +4,7 @@
 # on top of a window (unless during a drag), so in that sense
 # the desktop system links live in their own "layer"
 
-class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
+class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
 
   @augmentWith HighlightableMixin, @name
 
@@ -12,8 +12,8 @@ class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
   color_pressed: Color.GRAY
   color_normal: Color.BLACK
 
-  # the link's caption text. Declared HERE rather than on IconicDesktopSystemShortcutWdgt
-  # because IconicDesktopSystemWindowedAppLauncherWdgt is a sibling of that class, not a
+  # the link's caption text. Declared HERE rather than on ShortcutWdgt
+  # because AppLauncherWdgt is a sibling of that class, not a
   # subclass — this is the tightest base that covers all five writers.
   title: undefined
 
@@ -31,10 +31,10 @@ class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
       @parent.children.unshift @
 
   # When dropped into a folder I move directly into its contents (I am a desktop icon),
-  # rather than the default "create a reference". IconicDesktopSystemFolderShortcutWdgt
-  # keys its drop off this instead of `instanceof IconicDesktopSystemLinkWdgt`.
+  # rather than the default "create a reference". FolderShortcutWdgt
+  # keys its drop off this instead of `instanceof DesktopLinkWdgt`.
   # (type-test-elimination campaign)
-  # Only called from IconicDesktopSystemFolderShortcutWdgt._reactToChildDropped, inside the drop's single
+  # Only called from FolderShortcutWdgt._reactToChildDropped, inside the drop's single
   # settle, so add through the non-settling core.
   _reactToBeingDroppedIntoFolder: (folderContents) ->
     folderContents._addNoSettle @

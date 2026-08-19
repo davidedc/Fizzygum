@@ -41,7 +41,7 @@ class ScriptWdgt extends CodeAreaWdgt
   # instead of testing `@contents instanceof ScriptWdgt`; other contents don't define it and
   # fall to the default reference. (type-test-elimination campaign)
   specialFrameReferenceShortcut: (window, referenceName) ->
-    new IconicDesktopSystemScriptShortcutWdgt window, referenceName
+    new ScriptShortcutWdgt window, referenceName
 
   closeFromContainerFrame: (containerWindow) ->
     if !world.anyReferenceOrWireIntoWdgt containerWindow

@@ -39,7 +39,7 @@ Creation is scattered across at least five bespoke paths:
 
 - **App launchers:** `IconicDesktopSystemWindowedApp` (plain factory base) + 14 `*App` subclasses; each
   `buildWindow` news-up a content widget and calls `world.openFrameWith(...)`. The desktop launcher widget
-  is `IconicDesktopSystemWindowedAppLauncherWdgt` (double-click → `app.launch()`).
+  is `AppLauncherWdgt` (double-click → `app.launch()`).
 - **Creator buttons:** `CreatorButtonWdgt` (`app-kit/`, `extends Widget`) + subclasses (the
   `*CreatorButtonWdgt` "switcheroo" creators, the `ToolbarCreatorButtonWdgt` family) that spawn widgets on
   click.

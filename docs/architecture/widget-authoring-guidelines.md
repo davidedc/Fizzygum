@@ -707,7 +707,7 @@ graphEdgesOut: ->
 The protocol is DERIVED — it reads fields that already exist and persist; never build a standing
 index behind it (decision G4 there), and never enumerate containment (the tree is its own API).
 Existing contributors: `ControllerMixin` (wires → flow), `ButtonWdgt` (`@target` → command),
-`IconicDesktopSystemShortcutWdgt` (`referencedWidget` → reference). Ephemeral chrome pointers — a
+`ShortcutWdgt` (`referencedWidget` → reference). Ephemeral chrome pointers — a
 handle's, a prompt's, a caret's, a menu spec's `target` — are deliberately NOT edges: enumeration
 covers the durable widget graph. Liveness POLICY sits on top, in the protocol's consumers, and
 they agree (that plan's decisions G5/G8): the storage classifier (`StorageSorter._runClassifier`),

@@ -4,7 +4,7 @@
 # builds its window inline in buildWindow; the base owns the launcher/opener + the
 # bring-up-or-create launch logic, and AppCatalog (keyed by class name) holds its
 # launcher title/icon. Its opener is on the DESKTOP (no folder), so WorldWdgt's
-# createDesktop adds it by name (IconicDesktopSystemWindowedAppLauncherWdgt.addToDesktop
+# createDesktop adds it by name (AppLauncherWdgt.addToDesktop
 # "HowToSaveMessageApp") without ever constructing this class. The window body was folded
 # in verbatim from the former HowToSaveMessageInfoWdg.create (a single-use factory-
 # namespace class, now removed -- which also fixes its filename/classname mismatch).

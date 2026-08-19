@@ -961,7 +961,7 @@ class SimpleSpreadsheetWdgt extends Widget
   # (fullDestroyChildren / _fullDestroyNoSettle / resetWorld) recurses core-to-core and never
   # touches the public verb, so cleanup hung there is skipped in exactly the case that needs it —
   # a whole subtree containing a sheet going away. Same rule, same reason, as
-  # IconicDesktopSystemShortcutWdgt's tracker cleanup.
+  # ShortcutWdgt's tracker cleanup.
   # The @model? guard covers the deserialization path, where an Object.create'd instance can be
   # destroyed before its model lands; forEachCell over an empty Map is a no-op, and
   # removeAllEdgesOf is cheap for a cell that was never a node.

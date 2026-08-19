@@ -3,7 +3,7 @@
 # However here we make an exception and instead of doing that,
 # we actually ask the referred ScriptWdgt to run the its code.
 
-class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutWdgt
+class ScriptShortcutWdgt extends ShortcutWdgt
 
   constructor: (@referencedWidget, @title, @icon) ->
     if !@icon?

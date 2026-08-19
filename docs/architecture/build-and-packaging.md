@@ -191,7 +191,7 @@ runs at boot and places every desktop and in-folder app icon, and it **construct
 an icon is built from CORE art plus the app's class **NAME**, which `AppCatalog` supplies. An icon
 needs only what it draws and what it points at, and neither is the app. ⇒ **what forces eagerness is
 boot-time REACHABILITY, and reading a name is not reaching a class.**
-`IconicDesktopSystemWindowedAppLauncherWdgt`'s **lazy mode** therefore holds `appClassName` as a
+`AppLauncherWdgt`'s **lazy mode** therefore holds `appClassName` as a
 string and, on the click, asks `PartsRegistry` which part owns that name, fetches it, and only then
 constructs and launches. There are no launcher parts: every app class lives in the lazy part it
 opens from, and a session that never clicks an icon never downloads or compiles the app behind it.
@@ -221,7 +221,7 @@ the app class is already in hand; choose the lazy mode when its arrival is the p
 
 ⭐ **BOTH MODES READ ONE DESCRIPTOR: `AppCatalog`.** What an app looks like as a desktop citizen — its
 caption, its art, its tooltip — is written once, in `src/AppCatalog.coffee`, keyed by class NAME, and
-both modes reach it through the single `IconicDesktopSystemWindowedAppLauncherWdgt._fromCatalogEntry`
+both modes reach it through the single `AppLauncherWdgt._fromCatalogEntry`
 path. ⚠⚠ **One reader, not two copies that must agree** — because the failure a second copy produces
 is not disagreement but **INCOMPLETENESS**: a field present in one and simply absent from the other,
 which reads as correct and is invisible to every gate (nothing asserts a tooltip). A checker that
@@ -265,7 +265,7 @@ the `whenAllLoaded` callback rather than in a tidier `_populate` helper, because
 methods from the await it depends on is indistinguishable from an unguarded one.
 
 ⚠ **A FOLDER IS A DOOR, and that is a third moment worth having.** Desktop icons are drawn at boot;
-a folder's contents are not drawn until it is opened, and `IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget`
+a folder's contents are not drawn until it is opened, and `ShortcutWdgt.bringUpReferencedWidget`
 is fire-and-forget, so it can await. `ExamplesFolderWindowWdgt` therefore fills itself on first open,
 which buys a tier the desktop cannot have — the art that ONLY that folder draws
 (`examples-icons`, 9.5 KB of C-F glyph) stays out of the boot image entirely:

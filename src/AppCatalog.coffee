@@ -10,7 +10,7 @@
 #
 # ⚠⚠ WHY ONE PLACE AND NOT TWO. An app's identity is read by two launcher modes -- the EAGER one
 # (a live app singleton in hand) and the LAZY one (a class name only) -- and one entry serves both,
-# through the single reader IconicDesktopSystemWindowedAppLauncherWdgt._fromCatalogEntry. The point
+# through the single reader AppLauncherWdgt._fromCatalogEntry. The point
 # is not tidiness. Split this across the two modes and the defect you get is not that the copies
 # DISAGREE, it is that one is INCOMPLETE -- a field present in one and simply absent from the other,
 # which reads as correct and which no gate can see (nothing asserts a tooltip, and a checker that

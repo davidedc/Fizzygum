@@ -3163,7 +3163,7 @@ class Widget extends TreeNode
       if w.isShortcutTo?(@)
         return
 
-    widgetToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName
+    widgetToAdd = new DocumentShortcutWdgt @, referenceName
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
@@ -3173,7 +3173,7 @@ class Widget extends TreeNode
     @bringToForeground()
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
-  # (IconicDesktopSystemFolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
+  # (FolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
   createReferenceAndClose: (placeToDropItIn = world, referenceName) ->
     @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle placeToDropItIn, referenceName
 
@@ -3863,7 +3863,7 @@ class Widget extends TreeNode
   findRootForGrab: ->
     return @findFirstLooseWidget()
 
-  # Asked by IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget before I am shown: do I owe myself any
+  # Asked by ShortcutWdgt.bringUpReferencedWidget before I am shown: do I owe myself any
   # CONTENT first? Almost nothing does — a widget resting in storage is already whole — so the
   # default runs the callback INLINE. That is correctness rather than economy: going through a
   # promise regardless would defer every shortcut click by a microtask, moving the open a whole

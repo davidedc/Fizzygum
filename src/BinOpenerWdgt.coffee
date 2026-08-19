@@ -1,4 +1,4 @@
-class BinOpenerWdgt extends IconicDesktopSystemLinkWdgt
+class BinOpenerWdgt extends DesktopLinkWdgt
 
   # the bin I open. NOT a tracked reference edge (I am not in
   # world.widgetsReferencingOtherWidgets) -- I am a fixed opener for the one bin singleton.

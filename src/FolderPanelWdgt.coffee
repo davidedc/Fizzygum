@@ -20,10 +20,10 @@
 # doesn't need 3)
 #
 # (2 - the grid positioning, plus keeping links in the background - lives
-# in the shared IconicDesktopSystemPanelWdgt base, common with the
+# in the shared IconGridPanelWdgt base, common with the
 # desktop; 1 and 3 are mine.)
 
-class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
+class FolderPanelWdgt extends IconGridPanelWdgt
 
   # I manage my contents through the folder machinery (shortcut-creation on drop, grid
   # positioning), so my enclosing scroll frame must refuse RAW drops — it asks via ?()
@@ -44,7 +44,7 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
   _beforeChildDropped: (child) ->
     # a shortcut (already a reference) just fits within; a real dropped widget is offset so
     # the folder panel doesn't resize and scroll (instead of `instanceof
-    # IconicDesktopSystemShortcutWdgt`; type-test-elimination campaign)
+    # ShortcutWdgt`; type-test-elimination campaign)
     if child.isDesktopShortcut?()
       child._moveWithin @
     else
@@ -53,7 +53,7 @@ class FolderPanelWdgt extends IconicDesktopSystemPanelWdgt
   _reactToChildDropped: (droppedWidget) ->
     super
     # a real widget (not already a shortcut) leaves a reference behind and closes
-    # (instead of `!(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)`;
+    # (instead of `!(droppedWidget instanceof ShortcutWdgt)`;
     # type-test-elimination campaign)
     # _reactToChildDropped runs inside the drop's single settle -> the non-settling core.
     if !droppedWidget.isDesktopShortcut?()

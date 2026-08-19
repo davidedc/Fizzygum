@@ -1,11 +1,11 @@
-class IconicDesktopSystemFolderShortcutWdgt extends IconicDesktopSystemShortcutWdgt
+class FolderShortcutWdgt extends ShortcutWdgt
 
   _acceptsDrops: true
 
   _reactToChildDropped: (droppedWidget) ->
     # a desktop icon (link) moves itself into the folder; anything else makes a reference.
     # The dropped widget decides via _reactToBeingDroppedIntoFolder instead of
-    # `droppedWidget instanceof IconicDesktopSystemLinkWdgt`. (type-test-elimination campaign)
+    # `droppedWidget instanceof DesktopLinkWdgt`. (type-test-elimination campaign)
     if droppedWidget._reactToBeingDroppedIntoFolder?
       droppedWidget._reactToBeingDroppedIntoFolder @referencedWidget.contents.contents
     else

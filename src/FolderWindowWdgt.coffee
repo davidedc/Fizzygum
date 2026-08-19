@@ -36,7 +36,7 @@ class FolderWindowWdgt extends FrameWdgt
   # the rest of the family (Widget.createReference), so the menu adapter's no-argument call lands
   # the shortcut on the desktop here exactly as it does everywhere else.
   createReference: (placeToDropItIn = world, referenceName) ->
-    widgetToAdd = new IconicDesktopSystemFolderShortcutWdgt @, referenceName
+    widgetToAdd = new FolderShortcutWdgt @, referenceName
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     placeToDropItIn.add widgetToAdd

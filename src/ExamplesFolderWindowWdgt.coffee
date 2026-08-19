@@ -12,7 +12,7 @@
 # ⚠ WHY THIS CAN BE LAZY AT ALL, when a desktop icon's app cannot be deferred the same way: a FOLDER
 # IS A DOOR. WorldWdgt.createDesktop constructs every desktop icon at boot, but nothing here is
 # reached until the folder's shortcut is clicked, and
-# IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget is fire-and-forget (ButtonWdgt discards a click
+# ShortcutWdgt.bringUpReferencedWidget is fire-and-forget (ButtonWdgt discards a click
 # action's return value), so it CAN await. ⇒ boot-time REACHABILITY is what forces eagerness.
 #
 # ⚠ ONLY THE C-F ART MOVED, and that is not an oversight. The folder's other four icons — the
@@ -61,8 +61,8 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
         @populated = true
         # ⚠ ORDER IS THE LAYOUT: the folder panel places icons in call order on a grid, so this
         # sequence is what the user sees. Each opener names its app as a STRING and resolves it on
-        # click — see IconicDesktopSystemWindowedAppLauncherWdgt's lazy mode.
-        L = IconicDesktopSystemWindowedAppLauncherWdgt
+        # click — see AppLauncherWdgt's lazy mode.
+        L = AppLauncherWdgt
         # ⚠ THE ONE ICON OVERRIDE IN THE SYSTEM, and it is forced rather than preferred: this art is
         # the LAZY `examples-icons` part, and only a line inside this awaited scope may legally name
         # it — check-part-edges.js reads one line at a time, so the same thunk written in AppCatalog

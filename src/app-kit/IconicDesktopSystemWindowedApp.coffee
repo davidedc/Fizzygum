@@ -4,7 +4,7 @@
 # used to be copy-pasted across ~12 MenusHelper methods into ONE place. A subclass
 # declares the parts its window is built from (and, for a singleton app, the world
 # slot that holds its one window) and implements buildWindow; this base owns:
-#   - createOpener: builds the IconicDesktopSystemWindowedAppLauncherWdgt (the
+#   - createOpener: builds the AppLauncherWdgt (the
 #     desktop or in-folder shortcut) pointing at this app's "launch" action, and
 # ⚠ WHAT AN APP LOOKS LIKE IS NOT DECLARED HERE. Its caption, icon and tooltip live
 # in AppCatalog, keyed by class NAME, because the desktop draws an app's icon at BOOT
@@ -56,10 +56,10 @@ class IconicDesktopSystemWindowedApp
   # (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), so any parameter here would
   # receive a WIDGET from a click. A verb that takes nothing cannot be mis-fed by the dispatcher.
   # ⚠ The in-folder variant lives on the launcher class as
-  # IconicDesktopSystemWindowedAppLauncherWdgt.addToFolder — go there rather than re-growing a
+  # AppLauncherWdgt.addToFolder — go there rather than re-growing a
   # parameter here; note the two add/size ORDERS are not interchangeable, which that pair documents.
   createOpener: ->
-    launcher = IconicDesktopSystemWindowedAppLauncherWdgt.forApp @
+    launcher = AppLauncherWdgt.forApp @
     return unless launcher?
     # desktop launcher: add first (smart grid placement), then size
     world.add launcher

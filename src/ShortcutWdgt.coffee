@@ -11,7 +11,7 @@
 # and opening both copies spawns two entirely separate, independently-alive
 # instances that can be shown at the same time.
 
-class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
+class ShortcutWdgt extends DesktopLinkWdgt
 
   # The REFERENCE edge, and deliberately not called `target`: `@target` elsewhere in the tree means
   # information flow (a dataflow consumer, a dispatch receiver), and reading one as the other is the
@@ -41,7 +41,7 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
 
   # I am a desktop shortcut (a reference), not a real widget being dropped in. A folder's drop
   # handling positions/references me accordingly, asking this instead of testing
-  # `instanceof IconicDesktopSystemShortcutWdgt`; inherited by all shortcut subclasses.
+  # `instanceof ShortcutWdgt`; inherited by all shortcut subclasses.
   # (type-test-elimination campaign)
   isDesktopShortcut: ->
     true

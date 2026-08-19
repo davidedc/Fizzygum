@@ -781,7 +781,7 @@ class DemoMenus
 
   createWelcomeMessageWindowAndShortcut: ->
     wm = WelcomeMessageInfoWdgt.create()
-    readmeLauncher = new IconicDesktopSystemDocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
+    readmeLauncher = new DocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add readmeLauncher

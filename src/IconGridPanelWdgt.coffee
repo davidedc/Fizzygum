@@ -4,7 +4,7 @@
 # auto-placement of freshly-created icons (add) and keeping desktop links
 # layered behind the other content (_reactToChildAdded /
 # _reactToChildMovedToFront). Never instantiated directly.
-class IconicDesktopSystemPanelWdgt extends PanelWdgt
+class IconGridPanelWdgt extends PanelWdgt
 
   numberOfIconsOnDesktop: 0
   laysIconsHorizontallyInGrid: true
@@ -40,7 +40,7 @@ class IconicDesktopSystemPanelWdgt extends PanelWdgt
   # re-layering.
   # only a desktop link knows how to layer itself above the other references; non-links
   # have no moveOnTopOfTopReference, so `?()` fires for exactly the old
-  # `instanceof IconicDesktopSystemLinkWdgt`. (type-test-elimination campaign)
+  # `instanceof DesktopLinkWdgt`. (type-test-elimination campaign)
   _reactToChildAdded: (theWidget) ->
     theWidget.moveOnTopOfTopReference?()
 

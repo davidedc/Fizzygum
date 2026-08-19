@@ -1,7 +1,7 @@
 # This is a reference to any type of document, be it a script, or an image
 # or a slide or a note etc. etc.
 
-class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcutWdgt
+class DocumentShortcutWdgt extends ShortcutWdgt
 
   _reactToChildDropped: (droppedWidget) ->
 

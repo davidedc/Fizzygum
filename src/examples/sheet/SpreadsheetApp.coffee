@@ -14,7 +14,7 @@
 # separate lazy 'spreadsheet' part. Two layers, two moments: opening the folder fetches this class
 # and the four beside it, and NOTHING else; clicking this icon fetches the grid, through the
 # `requiredParts` below that the inherited `launch` awaits. That works because a FOLDER IS A DOOR —
-# its contents are invisible until it is opened, and IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget is
+# its contents are invisible until it is opened, and ShortcutWdgt.bringUpReferencedWidget is
 # fire-and-forget, so it can await. See ExamplesFolderWindowWdgt and WorldWdgt.createDesktop — no
 # icon, desktop or folder, needs an eager app sliver any more (docs/archive/app-descriptor-unification-plan.md).
 
