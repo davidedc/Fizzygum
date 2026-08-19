@@ -99,8 +99,9 @@ class TransformFrameWdgt extends PanelWdgt
   # EMPTY (the homing order), so when my content arrives, nudge a labeling parent to
   # re-derive. Intent-named public note on the receiver (the noteWallpaperChanged idiom);
   # runs inside the add's settle, so the receiver uses its non-settling label core.
+  # no super: the notification hook is ?.-dispatched with no base implementation — the
+  # scroll-holder relay lives on ScrolledPaneWdgt, a plane role an island never plays
   _reactToChildAdded: (aWdgt) ->
-    super
     @parent?.noteContentsNameMayHaveChanged?() unless aWdgt.isLayoutInert?()
 
   # Phase 4B-universal (§6): an EXPLICIT island drives the halo rotation protocol against its OWN spec

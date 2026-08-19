@@ -7,23 +7,17 @@ class PanelWdgt extends Widget
 
   @augmentWith ClippingAtRectangularBoundsMixin, @name
 
-  scrollPanel: undefined
   extraPadding: 0
   _acceptsDrops: true
   providesAmenitiesForEditing: true
 
-  # if this Panel belongs to a ScrollPanel, then
-  # the @scrollPanel points to it
-  constructor: (@scrollPanel) ->
+  constructor: ->
     super()
     @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @
 
     @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
     @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
-
-    if @scrollPanel
-      @noticesTransparentClick = false
 
   # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at screen point
   # `posOnScreen` land? Returns the sibling insertion index (bumped one past a child whose right half holds
@@ -61,101 +55,52 @@ class PanelWdgt extends Widget
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
-  setColor: (aColor) ->
-    aColor = super aColor
-    # keep in sync the value of the container scrollPanel
-    # if there is one. A bare field sync: the container scrollPanel
-    # is never painted (alpha 0, mimics the contained panel's values),
-    # so there is nothing of it to invalidate — my own super's _changed()
-    # already covers every visible recoloured pixel.
-    if @scrollPanel
-      if @scrollPanel.color?.equals aColor
-        return
-      @scrollPanel.color = aColor
-
-    return aColor
-
-
-  setAlphaScaled: (alpha) ->
-    alpha = super(alpha)
-    if @scrollPanel
-      unless @scrollPanel.alpha == alpha
-        @scrollPanel.alpha = alpha
-    return alpha
-
+  # The panel half of the scrolled-content contract (scroll-frame role plan P5): the PURE
+  # measure of my children for a content-sizing scroll frame, at the width the viewport gives
+  # me (its viewport minus scroll padding — the same width the text re-wrap uses). A stack
+  # overrides to measure at its OWN width; a folder/toolbar plane is never content-sizing, so
+  # the viewport reads its applied bounds back instead of asking this.
+  scrolledContentMeasure: (widthHint) ->
+    @subWidgetsMergedPreferredBounds widthHint
 
   # The panel-side scroll-topology chokepoint (mirror of Widget._amIDirectlyInsideScrollPanelWdgt,
-  # which asks the same question from a CONTENT widget's viewpoint): is my parent a scroll frame —
-  # i.e. am I the panel it clips and scrolls? ONE place tests the class; the three policy callers
-  # (click-to-caret forward, detach refusal, grab-to-parent) read as intent.
-  # (type-test-elimination ε: LEAVE-with-cleanup — see the plan's LEAVE section.)
+  # which asks the same question from a CONTENT widget's viewpoint): am I the panel a scroll
+  # frame clips and scrolls? Asked of the PARENT as a role query (ScrollPanelWdgt.isMyContentsPanel
+  # — scroll-frame role plan P3), so it is true for ANY panel-family class serving as a plane
+  # (the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt), and the two policy
+  # callers below (detach refusal, grab-to-parent) read as intent.
   _amITheContentsPanelOfAScrollPanelWdgt: ->
-    @parent? and @parent instanceof ScrollPanelWdgt
+    (@parent?.isMyContentsPanel? @) ? false
 
   # Do my direct children get the "lock to panel/desktop" menu toggle? Panels are lockable
-  # surfaces (the world included); a scroll frame opts OUT — its direct children are chrome,
-  # while children INSIDE the scrolled contents get the toggle from their own PanelWdgt parent.
-  # Capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ScrollPanelWdgt)`
-  # at the lock-menu site (type-test-elimination ε).
+  # surfaces (the world included); a scroll frame doesn't define this capability at all — its
+  # direct children are chrome — while children INSIDE the scrolled contents get the toggle
+  # from their own PanelWdgt parent. Capability via ?() at the lock-menu site
+  # (type-test-elimination ε).
   childrenCanLockToMe: ->
     true
 
+  # (the click-to-caret forward for a scrolled pane holding one text lives on
+  # ScrolledPaneWdgt.mouseClickLeft, which supers into this)
   mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForeground()
-
-    # when you click on an "empty" part of a Panel that contains
-    # a piece of text, we pass the click on to the text to it
-    # puts the caret at the end of the text.
-    # TODO the focusing and placing of the caret at the end of
-    # the text should happen via API rather than via spoofing
-    # a mouse event?
-    if @_amITheContentsPanelOfAScrollPanelWdgt()
-      # the caret is a world singleton, compared by identity instead of
-      # `!(m instanceof CaretWdgt)` (type-test-elimination campaign)
-      childrenNotCarets = @children.filter (m) ->
-        m != world.caret
-      if childrenNotCarets.length == 1
-        item = @firstChildSuchThat (m) ->
-          (m instanceof SimpleTextWdgt) and m.isEditable
-        item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
 
 
   # Gesture-driven re-fit of my enclosing container (@parent): DEFER to the cycle. Dispatched from
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
   # container so its _reLayout re-fits on the cycle. Gated on @parent?._reLayoutChildren? to preserve the
   # original "only a tracking container reacts" semantics. (fam 2 -- deferred-layout-residuals-audit.md)
+  # (the scroll-holder relays — _reactToChild*InScrollPanel — live on ScrolledPaneWdgt, which
+  # supers into these; scroll-frame role plan P3)
   _reactToChildDropped: (droppedWidget) ->
-    # notify the scroll panel's holder that a USER DROP arrived -- the third member of the
-    # _reactToChild*InScrollPanel relay family (Added/Removed above/below). Drop-specific on
-    # purpose: the close-filing and storage-drain arrivals come through _addNoSettle and never
-    # reach this hook, so a holder that means to react to deliberate gestures only (the bin's
-    # drop-as-trash-intent, reference-widgets plan R5) can, without hearing machinery moves.
-    @parent?.parent?._reactToChildDroppedInScrollPanel? droppedWidget
     @_reFitContainer @parent
 
   _reactToChildRemoved: (child) ->
-    # notify the scroll panel's holder FIRST -- the guards below return early
-    # for orphan-rooted panels, and e.g. the bin listens (a pickup out of its
-    # open window changes storage membership) whether windowed or not.
-    # Symmetric to the _reactToChildAddedInScrollPanel relay in _reactToChildAdded.
-    @parent?.parent?._reactToChildRemovedInScrollPanel? child
     return unless @parent?
     # Skip the re-fit when @isOrphan() -- SAFE ONLY at this REMOVAL seam (not a blanket rule: a shared
     # orphan-skip in _invalidateLayout broke 63 tests). Attached removals re-fit as before -- see docs/archive/end-of-cycle-flush-endgame-plan.md.
     return if @isOrphan()
     @_reFitContainer @parent
-
-  _reactToChildAdded: (child) ->
-    # notify the scroll panel's holder -- e.g. the bin listens, because an add
-    # here can flip a widget's storage membership (reachable vs lost) whether
-    # windowed or not. Mark-only; the eager StorageSorter drains once per world
-    # cycle, re-filing anything reachable to the shelf and anything lost to the
-    # bin. Symmetric to the removal relay in _reactToChildRemoved above.
-    # (see docs/archive/bin-shelf-eager-sorting-plan.md)
-    if @parent?
-      if @parent.parent?
-        if @parent.parent._reactToChildAddedInScrollPanel?
-          @parent.parent._reactToChildAddedInScrollPanel child
 
   # puts the widget in the ScrollPanel
   # in some sparse manner and keeping it

@@ -25,6 +25,30 @@ class SimpleVerticalStackPanelWdgt extends Widget
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
+  # ── the scrolled-content contract (scroll-frame role plan P5): what a scroll frame asks
+  # its contents instead of testing `instanceof SimpleVerticalStackPanelWdgt` ──
+
+  # a WIDTH-CONSTRAINING stack's width is the VIEWPORT's contract (it tracks the viewport);
+  # a FREE-width stack (constrainContentWidth false) OWNS its width — the whole point of the
+  # horizontal scrollbar
+  viewportConstrainsMyWidth: ->
+    @constrainContentWidth
+
+  # the viewport delegates my interior arrange to me (I place my own children); it still owns
+  # my FRAME either way, sizing it from the pure measure below
+  arrangesOwnScrolledChildren: ->
+    true
+
+  # I measure at my OWN width — I subtract my own padding (§4.1 Stage C); the viewport-derived
+  # width hint is for planes whose children wrap to the viewport
+  scrolledContentMeasure: (ignored_widthHint) ->
+    @subWidgetsMergedPreferredBounds @width()
+
+  # my scroll position is managed by the arrange's clamp — a wrapping viewport's
+  # reset-scroll-on-resize must not touch it (see ScrollPanelWdgt._applyExtent)
+  managesOwnScrollPinning: ->
+    true
+
   # opts.positionOnScreen -- where the widget was released on SCREEN, so the stack can work out which
   # sibling it landed between. Distinct from opts.atIndex, which names that slot outright.
   # A key this receiver does not read (opts.notContent, which only the frame acts on) is simply

@@ -29,6 +29,11 @@ class ToolbarWdgt extends ScrollPanelWdgt
   # read it (§6.1 rule 1), so it must not depend on laid-out extents.
   dockThickness: 95
 
+  # a toolbar strip's scrolling is part of its design — a docked strip that
+  # cannot scroll strands its off-edge buttons (see
+  # ScrollPanelWdgt.offersScrollPolicyToggle)
+  offersScrollPolicyToggle: false
+
   constructor: ->
     super new ToolPanelWdgt
     @_buildAndConnectChildren()

@@ -18,7 +18,7 @@
 # exists to prevent, and whose absence that class's own comment records: "a submenu popped
 # over a parent menu stopped the parent's item from staying hover-highlighted".
 
-class PopUpRowsPaneWdgt extends PanelWdgt
+class PopUpRowsPaneWdgt extends ScrolledPaneWdgt
 
   # I paint nothing — the rows panel inside me draws the pop-up's whole visible body (box,
   # header, rows). My frame reads this off me at build (ScrollPanelWdgt takes its own paint

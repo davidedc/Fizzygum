@@ -36,6 +36,11 @@ class PopUpRowsScrollFrameWdgt extends ScrollPanelWdgt
 
   providesAmenitiesForEditing: undefined
 
+  # a pop-up's REACHABILITY depends on scrolling (that is this class's whole
+  # reason to exist), and I am transparent chrome no menu opens on anyway
+  # (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  offersScrollPolicyToggle: false
+
   # drag me and you mean the pop-up (see the pane)
   isLockingToPanels: true
 

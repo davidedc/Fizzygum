@@ -21,8 +21,9 @@ class StretchablePanelWdgt extends PanelWdgt
       if childrenNotHandlesNorCarets.length == 0
         @parent.resetRatio()
 
+  # no super: the notification hook is ?.-dispatched with no base implementation — the
+  # scroll-holder relay lives on ScrolledPaneWdgt, a plane role a stretchable never plays
   _reactToChildAdded: (child) ->
-    super
     # only set ratio with the first added child
     # the following ones don't change it
     if @parent?.setRatio? and !@parent.ratio?

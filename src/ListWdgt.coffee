@@ -7,6 +7,18 @@ class ListWdgt extends ScrollPanelWdgt
     return element.toSource()  if element.toSource
     element.toString()
 
+  # a list IS its scrolling — cropping an inspector's property pane would hide
+  # entries with no cue (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  offersScrollPolicyToggle: false
+
+  # my pane holds the list's own rows machinery (@listContents), not loose scrollable
+  # content — so the loose-content policies (drag-scroll-vs-detach, caret follow, the
+  # soft-wrap menu row, container re-fit climbs) must not treat my innards as content
+  # (the exclusion Widget._amIDirectlyInsideScrollPanelWdgt consults; scroll-frame role
+  # plan P3).
+  contentsPanelHoldsLooseContent: ->
+    false
+
   elements: undefined
   labelGetter: undefined
   format: undefined

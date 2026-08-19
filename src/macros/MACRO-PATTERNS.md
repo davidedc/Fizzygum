@@ -1942,6 +1942,17 @@ assertion a recapture after a regression silently stores two different hashes an
   assert the structural fact in-run with `@assertHandleCountOn rect, 5` before AND after, plus
   `@assertScreenshotsIdentical` for the pixel half. Guard under test: the early return in
   `Widget._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle` (bails when a child is already a tracked temporary handle).
+- **A REFUSED gesture / a mode round-trip, proven by byte-identical shots** (`macroScrollPolicyNeverFlip`): to assert a
+  gesture does NOTHING (a 'never'-policy scroll panel refusing a wheel), the two shots around it must differ only if the
+  gesture moved something — so park the pointer ONCE (`@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf w, [fx,fy]),
+  "no button"`), screenshot, fire the L1 wheel `@syntheticEventsWheel_InputEvents 0, delta` (the L1 primitive does NOT
+  re-move the pointer; `@wheelOn_InputEvents` does and would shift the playback pointer between shots), screenshot,
+  `@assertScreenshotsIdentical`. The same parking discipline proves a MODE ROUND-TRIP restores the exact prior pixels:
+  park at the same spot before the pre-flip and post-round-trip shots and assert those identical too (there the reference
+  dataHashes collapsing to one is corroboration; the in-run assertion is the check). Flip the mode through the real menu:
+  a right-click on the construct lands on a CONTAINED widget, so the ancestor hierarchy menu opens first — navigate with
+  `@moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "a ScrollPanel"` (class-name prefix,
+  Wdgt-stripped), then click the policy row on the construct's own menu. No new verb.
 
 ## Affine transforms (islands)
 

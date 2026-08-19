@@ -2,6 +2,10 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
+  # a stack/document's height IS its content — cropping it silently hides
+  # paragraphs (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  offersScrollPolicyToggle: false
+
   constructor: (@isTextLineWrapping = true) ->
     VS = new SimpleVerticalStackPanelWdgt
 
@@ -31,7 +35,6 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    menu.removeMenuItem "move all inside"
 
     if @contents?
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets @contents

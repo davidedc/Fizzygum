@@ -15,6 +15,11 @@ class SimpleTextScrollPanelWdgt extends ScrollPanelWdgt
   modifiedTextTriangleAnnotation: undefined
   widgetToBeNotifiedOfTextModificationChange: undefined
 
+  # a text panel's scroll behavior is intrinsic (the unwrapped code view exists
+  # to scroll horizontally); belt+braces — my menus are taken over by the text
+  # anyway (see ScrollPanelWdgt.offersScrollPolicyToggle)
+  offersScrollPolicyToggle: false
+
   constructor: (
     textAsString,
     wraps,

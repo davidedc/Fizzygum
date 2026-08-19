@@ -1,10 +1,56 @@
-class ScrollPanelWdgt extends PanelWdgt
+# The scrolling VIEWPORT — an invisible composite (alpha 0, never paints itself) owning three
+# pieces of chrome: the contents panel (the PLANE its content lives on, physically moved by the
+# scroll) and two SliderWdgt bars. NOT a PanelWdgt: a panel is a SURFACE whose children are
+# content, while my children are chrome — my content lives one level down, on the plane — so
+# the panel-family answers (its menu rows, its lock-granting, its drop slots) are wrong here,
+# and the few panel facts I do mean are stated explicitly below (scroll-frame role plan P4).
+class ScrollPanelWdgt extends Widget
+
+  # I clip my chrome (and through it the scrolled content) at my bounds — the same mixin
+  # PanelWdgt wears, taken directly now (as FrameWdgt does). It also decides hit-testing
+  # together with the RectangularAppearance the constructor sets: opaque inside my bounds,
+  # even though alpha 0 means I never paint a pixel.
+  @augmentWith ClippingAtRectangularBoundsMixin, @name
+
+  # the panel facts I genuinely mean, restated off PanelWdgt:
+  # around-the-content padding a caller can add via setContents (reads: the arrange,
+  # scrollCaretIntoView)
+  extraPadding: 0
+  # an EMPTY generic scroll frame accepts drops (wantsDropOfChild consults the contents' veto)
+  _acceptsDrops: true
+  # a scroll frame is an editing surface: FrameWdgt shows the pencil off its contents'
+  # answer, and the edit-mode focus walk climbs to the first opinion
+  providesAmenitiesForEditing: true
 
   autoScrollTrigger: undefined
   hasVelocity: true
   padding: 0 # around the scrollable area
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
+
+  # ── SCROLL POLICY ──────────────────────────────────────────────────────────
+  # 'auto'  — scroll iff content overflows. Bars are not a mode, they are the
+  #           visible CONSEQUENCE of overflow: a fitting frame already hides
+  #           both bars and escalates every wheel, so it is behaviorally a
+  #           plain panel with nothing to flip.
+  # 'never' — behave as a plain cropping panel: every scroll path refuses at
+  #           the movement cores (scrollX/scrollY), the bars never show, the
+  #           wheel always escalates, and no scroll gesture engages. Contents
+  #           sizing is DELIBERATELY unchanged — the contents panel still
+  #           grows to its merged bounds and the overflow is clipped at my
+  #           viewport, which IS plain-frame semantics.
+  # Flipped live via setScrollPolicy (menu: toggleScrollPolicyFromMenu) with
+  # no widget-tree change — policy over structure, the same verdict the
+  # pop-ups reached for their unconditional rows frame
+  # (PopUpWdgt._buildRowsScrollFrameNoSettle).
+  scrollPolicy: 'auto'
+
+  # Only the GENERIC scrollable panel offers the crop⇄scroll flip in its menu:
+  # the dedicated subclasses (list, toolbar, text, stack, pop-up rows) design
+  # their scroll behavior in, so there the row would be menu rent plus a
+  # footgun (cropping an inspector's list pane hides properties with no cue).
+  # Each opts out with a one-line reason at its own declaration.
+  offersScrollPolicyToggle: true
   scrollBarsThickness: undefined
   contents: undefined
   vBar: undefined
@@ -16,6 +62,46 @@ class ScrollPanelWdgt extends PanelWdgt
   # framable. See SliderWdgt.excludedFromEditorFocusTracking.
   isMyScrollBar: (aWdgt) ->
     aWdgt is @vBar or aWdgt is @hBar
+
+  # Role query, the plane-side twin of isMyScrollBar: is aWdgt the contents panel I clip and
+  # scroll? THE one place the scroll-frame topology is stated — the chokepoints
+  # (_amITheContentsPanelOfAScrollPanelWdgt, _amIDirectlyInsideScrollPanelWdgt, the hierarchy
+  # menu) ask this rather than pattern-matching the composite's shape, so ANY class serving as
+  # my plane (the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt, a stack)
+  # answers uniformly. (scroll-frame role plan P3; type-test-elimination ε.)
+  isMyContentsPanel: (aWdgt) ->
+    aWdgt is @contents
+
+  # Do my plane's DIRECT children live there as LOOSE scrollable content — things a drag may
+  # scroll-or-detach, a caret follows into view, a lone text child offers soft-wrap for, a
+  # container re-fit climbs through? True for a generic scroll frame; a ListWdgt answers false —
+  # its pane holds the list's own rows machinery, not loose content — which is the exclusion
+  # `_amIDirectlyInsideScrollPanelWdgt`'s consumers relied on as `!(instanceof ListWdgt)`.
+  contentsPanelHoldsLooseContent: ->
+    true
+
+  # My contents panel is internal structure — hide it from the ancestor hierarchy
+  # (disambiguation) menu. Asked by Widget.hierarchyMenuWidgets via ?(); replaces two of its
+  # structural exclusions (plain-panel-in-scroll-frame, stack-in-stack-scroll-frame — the
+  # stack IS its frame's contents). FolderWindowWdgt declares the third the same way.
+  hidesContainedWidgetFromHierarchyMenu: (aWdgt) ->
+    @isMyContentsPanel aWdgt
+
+  # ── the plane's up-relays (scroll-frame role plan P3) ─────────────────────────────────────
+  # My paint values MIMIC my contents' (I never paint — alpha 0 — but menus and readers see my
+  # fields), and the plane keeps them true by notifying me when it is recolored directly. Bare
+  # field writes: there is nothing of me to invalidate — I am never painted, and the plane's
+  # own super covers every visible recoloured pixel. Guarded on a real value: Widget.setColor
+  # returns undefined on a no-change call, and writing that through would clobber the mimic.
+  _reactToChildColorChanged: (child, aColor) ->
+    return unless child is @contents and aColor?
+    return if @color?.equals aColor
+    @color = aColor
+
+  _reactToChildAlphaChanged: (child, alpha) ->
+    return unless child is @contents and alpha?
+    unless @alpha == alpha
+      @alpha = alpha
 
   # there are several ways in which we allow
   # scrolling when a ScrollPanel is scrollable
@@ -32,10 +118,16 @@ class ScrollPanelWdgt extends PanelWdgt
     @scrollBarsThickness = (WorldWdgt.preferencesAndSettings.scrollBarsThickness),
     @sliderColor
     ) ->
-    # super() paints the ScrollPanel, which we don't want,
-    # so we set 0 opacity here.
+    # alpha 0: I never paint myself — the plane and bars are the visible thing, and my own
+    # values just MIMIC the plane's (see _buildScrollFrameNoSettle)
     @alpha = 0
     super()
+    # the appearance is for HIT-TESTING parity, not painting (alpha 0): an appearance-bearing
+    # widget answers opaque inside its tight bounds; the colors seed the mimic until
+    # _buildScrollFrameNoSettle adopts the contents' own
+    @appearance = new RectangularAppearance @
+    @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
+    @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
     @_buildScrollFrame()
 
   # Build the scroll frame (contents + h/v scrollbars) via the NoSettle core, settling ONCE at the end
@@ -50,7 +142,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @_settleLayoutsAfter => @_buildScrollFrameNoSettle()
 
   _buildScrollFrameNoSettle: ->
-    @contents = new PanelWdgt @ unless @contents?
+    @contents = new ScrolledPaneWdgt() unless @contents?
     # _addNoSettle (NOT the self-settling public add): we are building our own innards
     # during construction; the panel is not parented yet, so a flush here would be a
     # redundant whole-world relayout (and would throw if we are built during a layout pass).
@@ -160,9 +252,32 @@ class ScrollPanelWdgt extends PanelWdgt
   # the thumb covers the visible fraction of it. `undefined` when there is nothing to scroll: a bar
   # showing an empty scale means nothing, and a zero-width one divides by zero in the thumb geometry.
   _scrollRangeAlong: (viewport, content) ->
+    # under 'never' there is no scale to live on — a bound external slider gets
+    # the same "nothing to scroll" answer as the fitting case
+    return undefined if @scrollPolicy is 'never'
     return undefined unless content >= viewport + 1
     stop = content - viewport
     new SliderRange 0, stop, viewport / content * stop
+
+  # The runtime crop⇄scroll flip: validate, assign, then INVALIDATE inside a
+  # settle — the flush re-lays me (my _reLayout is 'super; @_reLayoutChildren'),
+  # so a flip on a live overflowing frame shows/hides its bars and re-clamps
+  # its contents in one pass, through the standard deferred shape. The scroll
+  # pins stay advertised under 'never' (a policy flip mid-life must not sever
+  # wires) — a delivery simply no-ops at the refused cores.
+  setScrollPolicy: (policy) ->
+    return unless policy is 'auto' or policy is 'never'
+    return policy if policy is @scrollPolicy
+    @scrollPolicy = policy
+    @_settleLayoutsAfter => @_invalidateLayout()
+    return policy
+
+  # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): the
+  # menu items carry no arguments, and dispatch fills the leading slots with
+  # the menu item + the enclosing panel's target, so the real setter must not
+  # be wired directly.
+  toggleScrollPolicyFromMenu: (ignored, ignored2) ->
+    @setScrollPolicy (if @scrollPolicy is 'never' then 'auto' else 'never')
 
   setColor: (aColor) ->
     aColor = super aColor
@@ -200,11 +315,9 @@ class ScrollPanelWdgt extends PanelWdgt
   sliderTrackPressJumpsButton: ->
     true
 
-  # My direct children are chrome (contents panel + scrollbars), not user-lockable content —
-  # opt OUT of the "lock to panel" menu toggle; see PanelWdgt.childrenCanLockToMe
-  # (type-test-elimination ε).
-  childrenCanLockToMe: ->
-    false
+  # (no childrenCanLockToMe here: my direct children are chrome, not user-lockable content, and
+  # the lock-menu row keys on the capability EXISTING — see PanelWdgt.childrenCanLockToMe —
+  # so a viewport simply not defining it is the opt-out)
 
   # Am I a content-sizing scroll frame — one whose content frame derives from a PURE measure
   # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? The two dedicated
@@ -243,7 +356,9 @@ class ScrollPanelWdgt extends PanelWdgt
     # The field comparison this replaced was total by accident (`<anything>.target == @` is just false);
     # asking a METHOD is not, and a bar that cannot answer is exactly a bar I must not touch.
     if @hBar.isWiredTo? @
-      if @contents.width() >= @width() + 1
+      # a 'never' panel shows no bars whatever the overflow — same hide arm the
+      # fitting case takes
+      if @scrollPolicy isnt 'never' and @contents.width() >= @width() + 1
         @hBar.show()
         # chrome I own and place -- apply via the non-notifying twin as above (see the method-top
         # comment). _applyExtentBase == _applyWidth/Height minus the seam; preserves height/width by
@@ -267,7 +382,8 @@ class ScrollPanelWdgt extends PanelWdgt
 
     # see comment on equivalent if line above.
     if @vBar.isWiredTo? @
-      if @contents.height() >= @height() + 1
+      # 'never' shows no bars — see the hBar above
+      if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1
         @vBar.show()
         # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).
         @vBar._applyExtentBase new Point(@vBar.width(), vHeight)  if @vBar.height() isnt vHeight
@@ -373,10 +489,11 @@ class ScrollPanelWdgt extends PanelWdgt
   # enters _reLayout with the extent already committed, so an extent-delta gate inside _reLayout
   # structurally cannot see an immediate resize. Pinning BEFORE super is safe (an extent commit
   # never changes my origin); the arrange that follows (via the resize re-lay) then anchors and
-  # clamps off the pinned position. Wrapping-STACK contents are excluded (the arrange's clamp
-  # manages their position).
+  # clamps off the pinned position. A plane that manages its own scroll pinning (a wrapping
+  # STACK, whose position the arrange's clamp owns) declares itself out —
+  # managesOwnScrollPinning, the P5 contract.
   _applyExtent: (aPoint) ->
-    if !aPoint.equals(@extent()) and @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
+    if !aPoint.equals(@extent()) and @isTextLineWrapping and !@contents.managesOwnScrollPinning?()
       @contents._applyMoveTo @position()
     super aPoint
 
@@ -453,45 +570,29 @@ class ScrollPanelWdgt extends PanelWdgt
     padding = Math.floor @extraPadding + @padding
     totalPadding = 2*padding
 
-    if @contents instanceof SimpleVerticalStackPanelWdgt
+    # The scrolled-content CONTRACT (scroll-frame role plan P5): the plane DECLARES its sizing
+    # relationship to me — width ownership, interior-arrange delegation, the measure — and I
+    # read declarations here instead of testing its class.
+    if @contents.arrangesOwnScrolledChildren?()
       # (schedule-valve V1) a WIDTH-CONSTRAINING stack's width is MY contract (it tracks the
       # viewport; macroWindowCellsInConstrainedScrollStackReflow regressed without this), its
-      # height falls out of the merge-commit below. A FREE-width stack
-      # (constrainContentWidth false) OWNS its width -- the whole point of the horizontal scrollbar
-      # -- so normalizing it would valve-schedule a re-grow every arrange and ping-pong onto the
-      # end-of-cycle flush (the capstone gate caught exactly that on
-      # macroFreeWidthScrollStackShowsHorizontalScrollbar). Width-only: nothing between here and
-      # the commit reads the stack's height.
-      if @contents.constrainContentWidth and @contents.width() != @width()
+      # height falls out of the merge-commit below. A FREE-width stack OWNS its width -- the
+      # whole point of the horizontal scrollbar -- so normalizing it would valve-schedule a
+      # re-grow every arrange and ping-pong onto the end-of-cycle flush (the capstone gate
+      # caught exactly that on macroFreeWidthScrollStackShowsHorizontalScrollbar). Width-only:
+      # nothing between here and the commit reads the stack's height.
+      if @contents.viewportConstrainsMyWidth?() and @contents.width() != @width()
         @contents._applyWidth @width()
       # arrange the content stack's children; I OWN its frame regardless (I size it from the §4.1 pure
       # measure -- subBounds -> the frame commit below), and the stack's terminal self-resize notifies nobody
       # (the notify-by-mutation seam is deleted).
       @contents._positionAndResizeChildren()
-    else if @isTextLineWrapping and @contents instanceof PanelWdgt
-      @contents.children.forEach (widget) =>
-        if widget.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
-          # contained text that OPTED INTO FIT_BOX_TO_TEXT (a SimpleTextWdgt or
-          # a bare TextWdgt put into that mode) fits its BOX to the TEXT: reassert
-          # soft-wrap, then feed it the width — _applyWidth re-lays-out the text to
-          # that width (height = wrapped line count), and that new height drives the
-          # vertical slider below. We RESPECT the mode (a non-text child or a
-          # FIT_TEXT_TO_BOX widget is skipped).
-          widget.softWrap = true
-          # (schedule-valve V1) wrap width derives from MY viewport, not @contents.width(): the two are
-          # equal at the fixpoint (the merge-commit below pins contents width to mine for wrap panels),
-          # but mid-transient — my frame just resized, contents not yet re-committed — only @width() is
-          # current.
-          textWidth = @width() - totalPadding
-          widget._applyWidth textWidth
-          # (Phase C, proper-layouts) We only RE-WRAP the text child here (_applyWidth -> height = wrapped
-          # line count); paint + the caret's synchronous @wrappedLines read need that committed, and the new
-          # height then flows into subBounds below. We do NOT prime the contents FRAME height here: the
-          # merged-bounds commit at the end of this method is the SINGLE owner of @contents' extent -- an
-          # earlier priming here disagreed with that commit by ~totalPadding and flip-flopped the frame
-          # height every pass (see docs/archive/proper-layouts-eliminate-suppression-booleans-plan.md).
-          # The genuine content-height read-back is subBounds itself, retired only when a later phase gives
-          # the arrange a pure measure of its children.
+    else if @isTextLineWrapping
+      # (schedule-valve V1) wrap width derives from MY viewport, not @contents.width(): the two are
+      # equal at the fixpoint (the merge-commit below pins contents width to mine for wrap panels),
+      # but mid-transient — my frame just resized, contents not yet re-committed — only @width() is
+      # current. The re-wrap itself is the plane's (?.-dispatched; only a default plane defines it).
+      @contents._reWrapTextChildrenTo? @width() - totalPadding
 
     # §4.1 Stage C (proper-layouts): a content-sizing scroll panel (text-wrapping / vertical-stack / plain-text)
     # derives its content frame from a PURE measure of @contents's children (subWidgetsMergedPreferredBounds)
@@ -501,14 +602,12 @@ class ScrollPanelWdgt extends PanelWdgt
     # probe 0/1429 converged mismatches). The stack measures at its own width (it subtracts its own padding);
     # a bare text panel measures its children at the scroll-padding-inset width (== the _applyWidth re-wrap
     # above). The else-branch (folder / toolbar) is NOT a content-sizing target and keeps the applied read-back.
-    # class-level query, was two self-instanceof tests here (type-test-elimination ε)
+    # The MEASURE is the plane's own declaration (scrolledContentMeasure — a stack measures at
+    # its own width, a plain plane at the hint; the P5 contract), the width hint is mine.
     isContentSizing = @isContentSizing()
     if isContentSizing
-      if @contents instanceof SimpleVerticalStackPanelWdgt
-        subBounds = @contents.subWidgetsMergedPreferredBounds(@contents.width())?.ceil()
-      else
-        # (schedule-valve V1) same viewport-derived width as the re-wrap above — see that comment.
-        subBounds = @contents.subWidgetsMergedPreferredBounds(@width() - totalPadding)?.ceil()
+      # (schedule-valve V1) same viewport-derived width hint as the re-wrap above — see that comment.
+      subBounds = (@contents.scrolledContentMeasure? @width() - totalPadding)?.ceil()
     else
       # (D4, U3-A) the ONE named state-read: user-placed free-floating children's positions
       # are state, and nothing above mutated them -- see subWidgetsMergedFullBounds's comment.
@@ -583,6 +682,11 @@ class ScrollPanelWdgt extends PanelWdgt
   
   # ScrollPanelWdgt scrolling by floatDragging:
   scrollX: (steps) ->
+    # under 'never' every scroll path refuses HERE, at the movement core: the
+    # pin setters, scrollTo/scrollToBottom, the edge auto-scroll and the
+    # momentum glide all route through this pair, and callers read the boolean
+    # as "did the content actually move".
+    return false if @scrollPolicy is 'never'
     cl = @contents.left()
     l = @left()
     cw = @contents.width()
@@ -624,6 +728,8 @@ class ScrollPanelWdgt extends PanelWdgt
     @_reLayoutScrollbars()
   
   scrollY: (steps) ->
+    # 'never' refuses at the core — see scrollX.
+    return false if @scrollPolicy is 'never'
     ct = @contents.top()
     t = @top()
     ch = @contents.height()
@@ -647,6 +753,9 @@ class ScrollPanelWdgt extends PanelWdgt
   # scroll panel anchored to a non-draggable background, such as a color palette).
   mouseDownLeft: (pos) ->
 
+    # a 'never' panel takes no scroll gestures at all — fall through to the
+    # normal grab/detach recognition instead of installing a dead step
+    return undefined  if @scrollPolicy is 'never'
     return undefined  unless @isScrollingByfloatDragging
 
     oldPos = pos
@@ -772,6 +881,8 @@ class ScrollPanelWdgt extends PanelWdgt
   # ScrollPanelWdgt` and driving the wantsDropOfChild / edge / startAutoScrolling logic itself.
   # (type-test-elimination campaign)
   maybeStartAutoScrollForDraggedWidget: (widgetBeingFloatDragged, pointerPosition) ->
+    # a 'never' panel accepts the drop but does not creep toward it
+    return if @scrollPolicy is 'never'
     if @wantsDropOfChild widgetBeingFloatDragged
       if !@boundingBox().insetBy(WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3).containsPoint pointerPosition
         @startAutoScrolling()
@@ -827,6 +938,9 @@ class ScrollPanelWdgt extends PanelWdgt
   # ScrollPanelWdgt scrolling when editing text
   # so to bring the caret fully into view.
   scrollCaretIntoView: (caretWidget) ->
+    # a 'never' panel clips its caret like any other overflow — WYSIWYG of the
+    # policy (a text panel that wants the caret in view wants 'auto')
+    return if @scrollPolicy is 'never'
     txt = caretWidget.target
     ft = @top() + @padding
     fb = @bottom() - @padding
@@ -889,7 +1003,11 @@ class ScrollPanelWdgt extends PanelWdgt
       # Exact comparisons: geometry is integer by invariant (Widget._assertBoundsWellFormed),
       # and a tolerance here would hand a 1px-shy inner panel's last wheel step to the outer
       # panel instead of letting the inner one reach its edge.
-      if (y > 0 and @contents.top() >= @top()) or
+      # 'never' escalates HERE, not at the refused core — the else arm would
+      # otherwise mark scrollbarJustChanged and swallow the wheel dead over a
+      # cropping panel instead of handing it to an enclosing scroller.
+      if @scrollPolicy is 'never' or
+       (y > 0 and @contents.top() >= @top()) or
        (y < 0 and @contents.bottom() <= @bottom())
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
@@ -897,8 +1015,10 @@ class ScrollPanelWdgt extends PanelWdgt
         @scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY
     if x != 0
       # similar to the vertical case, escalate the scroll in case
-      # we are in a nested ScrollPanel situation
-      if (x > 0 and @contents.left() >= @left()) or
+      # we are in a nested ScrollPanel situation ('never' escalates too — see
+      # the vertical case)
+      if @scrollPolicy is 'never' or
+       (x > 0 and @contents.left() >= @left()) or
        (x < 0 and @contents.right() <= @right())
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
@@ -919,6 +1039,11 @@ class ScrollPanelWdgt extends PanelWdgt
         childrenNotHandlesNorCarets[0].addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
     else
       super
+      if @offersScrollPolicyToggle
+        if @scrollPolicy is 'never'
+          menu.addMenuItem "allow scrolling", @, "toggleScrollPolicyFromMenu", toolTip: "let the contents scroll\nwhen they overflow"
+        else
+          menu.addMenuItem "don't scroll (crop)", @, "toggleScrollPolicyFromMenu", toolTip: "crop the contents at my\nedges instead of scrolling"
   
   # Set this scroll panel's text-line-wrapping state; turning wrapping ON fills
   # the content to the panel's bounds. (Called by SimpleTextWdgt's soft-wrap

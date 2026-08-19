@@ -19,6 +19,13 @@ class FolderWindowWdgt extends FrameWdgt
   representativeIcon: ->
     new FolderIconWdgt
 
+  # my scroll frame is internal structure — hide it from the ancestor hierarchy
+  # (disambiguation) menu, exactly as a scroll frame hides its own contents panel
+  # (see ScrollPanelWdgt.hidesContainedWidgetFromHierarchyMenu; asked by
+  # Widget.hierarchyMenuWidgets via ?()).
+  hidesContainedWidgetFromHierarchyMenu: (aWdgt) ->
+    aWdgt is @contents
+
   # A folder always has real content, so no "nothing to save" branch (§5.E E2:
   # the 'saveOrAsk' hook, routed through FrameWdgt.closeFromFrameBar's dispatch).
   _closeFromFrameBarWhenSaveOrAsk: ->

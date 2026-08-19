@@ -3942,12 +3942,14 @@ class Widget extends TreeNode
   whenReadyToBeBroughtUp: (callback) ->
     callback()
 
+  # Am I loose content living directly on a scroll frame's plane? Two role queries on the
+  # grandparent (scroll-frame role plan P3): isMyContentsPanel — is my parent the panel that
+  # frame clips and scrolls (any plane class: the default ScrolledPaneWdgt, a folder/tool
+  # panel, a stack) — and contentsPanelHoldsLooseContent, which a ListWdgt answers false to
+  # (its pane holds rows machinery, not loose content).
   _amIDirectlyInsideScrollPanelWdgt: ->
-    if @parent?
-      if (@parent instanceof PanelWdgt) or (@parent instanceof SimpleVerticalStackPanelWdgt)
-        if @parent.parent?
-          if (@parent.parent instanceof ScrollPanelWdgt) and !(@parent.parent instanceof ListWdgt)
-            return true
+    if @parent?.parent?.isMyContentsPanel? @parent
+      return @parent.parent.contentsPanelHoldsLooseContent()
     return false
 
   _amIDirectlyInsideNonTextWrappingScrollPanelWdgt: ->
@@ -4360,20 +4362,14 @@ class Widget extends TreeNode
       # leave out the world itself and the widgets that are about
       # to be destroyed
       if (each.buildWidgetContextMenu) and (each isnt world) and (!each.anyParentPopUpMarkedForClosure())
-        # * leave out SimpleVerticalStackPanelWdgt when
-        #   inside a SimpleVerticalStackScrollPanelWdgt
-        # * also leave out PanelWdgt when
-        #   inside a ScrollPanelWdgt
-        # * also leave out ScrollPanelWdgt when
-        #   inside a FolderWindowWdgt
-        # * also leave out a MenuRowsPanelWdgt (the internal body of a menu /
-        #   prompt / list -- it answers hiddenFromHierarchyMenu?())
-        # ...because they would be redundant - there is no need for the
-        # user to know or have access to the internal structure of
-        # those constructs
-        if (!((each instanceof SimpleVerticalStackPanelWdgt) and (each.parent instanceof SimpleVerticalStackScrollPanelWdgt))) and
-         (!((each instanceof PanelWdgt) and (each.parent instanceof ScrollPanelWdgt))) and
-         (!((each instanceof ScrollPanelWdgt) and (each.parent instanceof FolderWindowWdgt))) and
+        # leave out a construct's internal structure — there is no need for the user to know
+        # or have access to it. Two declarations decide (scroll-frame role plan P3):
+        # * the PARENT hides a contained widget (a scroll frame hides its contents panel —
+        #   plain pane or stack alike — and a folder window hides its scroll frame): the
+        #   hidesContainedWidgetFromHierarchyMenu ?() query;
+        # * the widget hides ITSELF (a MenuRowsPanelWdgt, the internal body of a menu /
+        #   prompt / list): the hiddenFromHierarchyMenu ?() query.
+        if (!(each.parent?.hidesContainedWidgetFromHierarchyMenu? each)) and
          (!each.hiddenFromHierarchyMenu?())
           hierarchyMenuWidgets.push each
 
