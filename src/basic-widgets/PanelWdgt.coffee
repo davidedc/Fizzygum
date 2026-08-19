@@ -59,7 +59,7 @@ class PanelWdgt extends Widget
   # DIRECTLY — a parent-soaked notification, a no-op under any non-viewport parent
   # (ViewportWdgt._reactToChildColorChanged guards on `child is @contents`). Living here, every
   # panel-family plane relays — the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt
-  # alike; SimpleVerticalStackPanelWdgt (a Widget, not a panel) declares the same pair itself.
+  # alike; VerticalStackPanelWdgt (a Widget, not a panel) declares the same pair itself.
   setColor: (aColor) ->
     aColor = super aColor
     @parent?._reactToChildColorChanged? @, aColor

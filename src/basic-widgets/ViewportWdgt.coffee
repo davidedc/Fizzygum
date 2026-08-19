@@ -321,7 +321,7 @@ class ViewportWdgt extends Widget
 
   # Am I a content-sizing scroll frame — one whose content frame derives from a PURE measure
   # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? The two dedicated
-  # subclasses (SimpleTextViewportWdgt / SimpleVerticalStackViewportWdgt) always
+  # subclasses (TextAreaWdgt / VerticalStackViewportWdgt) always
   # are; a plain frame is when text-wrapping. Class-level query, was two self-instanceof
   # tests at the arrange site (type-test-elimination ε).
   isContentSizing: ->
@@ -551,7 +551,7 @@ class ViewportWdgt extends Widget
   # its set of children changed, so I re-fit. I return true so the panel knows I
   # took over its re-layout (my _positionAndResizeChildren already re-lays my contents
   # out) and needn't do its own. This is the polymorphic replacement for
-  # SimpleVerticalStackPanelWdgt testing `@amIPanelOfScrollPanelWdgt()`: the
+  # VerticalStackPanelWdgt testing `@amIPanelOfScrollPanelWdgt()`: the
   # stack just notifies its parent, and only a scroll panel reacts. NB kept
   # SEPARATE from _reLayoutChildrenAndScrollbars / _reactToChildDropped / _reactToChildGrabbed on
   # purpose -- a ListWdgt opts OUT of THIS notification (see ListWdgt) yet still
@@ -1069,7 +1069,7 @@ class ViewportWdgt extends Widget
   # ⚠ NO `triggeringWidget` parameter here — see the note on FrameWdgt's pair. It is read in exactly
   # one place tree-wide, BubblesEditModeToCoordinatorMixin's `@parent != triggeringWidget`, and that
   # mixin is the core of the two Stretchables, not of a scroll panel. (A subclass whose core IS the
-  # mixin — SimpleVerticalStackViewportWdgt — still `super`s into this one; the argument it hands
+  # mixin — VerticalStackViewportWdgt — still `super`s into this one; the argument it hands
   # over is simply ignored, which is the honest outcome for a value nothing here consults.)
   enableDragsDropsAndEditing: ->
     @_settleLayoutsAfter => @_enableDragsDropsAndEditingNoSettle()

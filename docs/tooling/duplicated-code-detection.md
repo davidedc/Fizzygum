@@ -34,7 +34,7 @@ Run both: they see different things. The exact scan misses a clone the moment on
 is renamed — or when an interleaved comment breaks the token run, or when CoffeeScript's
 terseness keeps a whole duplicated method under the token window. The structural scan
 (section below) catches those; on 2026-07-14 it found 125 matches the exact scan was blind to
-(verified example: `SimpleVerticalStackPanelWdgt`'s `add`/`_addNoSettle` ≈ `ToolPanelWdgt`'s).
+(verified example: `VerticalStackPanelWdgt`'s `add`/`_addNoSettle` ≈ `ToolPanelWdgt`'s).
 
 Scans `src/**/*.coffee` for copy/paste duplication with [jscpd](https://github.com/kucherenko/jscpd)
 (pinned devDependency — `npm install` once) and writes reports to `duplication-report/`

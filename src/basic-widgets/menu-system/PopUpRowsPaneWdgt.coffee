@@ -46,7 +46,7 @@ class PopUpRowsPaneWdgt extends ScrolledPaneWdgt
 
   _acceptsDrops: false
 
-  # The membership-change absorb query, forwarded. SimpleVerticalStackPanelWdgt._reactToChildRemoved
+  # The membership-change absorb query, forwarded. VerticalStackPanelWdgt._reactToChildRemoved
   # puts it to its DIRECT parent, which is me — and I am not the widget a lost row resizes: I am
   # sized by my frame and the frame by the pop-up. PopUpWdgt._reLayOutAfterContainedPanelChange does
   # the whole job (re-lay the rows panel, re-fit the frame, re-take the pop-up's own extent), so the

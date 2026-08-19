@@ -90,8 +90,8 @@ PASSIVELY (the declaration turns the normalization off) without ever writing its
 ## Naming
 
 The construct family is role-named: `ViewportWdgt`, `ScrolledPaneWdgt`,
-`PopUpRowsViewportWdgt`, `SimpleVerticalStackViewportWdgt`, `SimpleTextViewportWdgt`,
-`SimpleDocumentViewportWdgt`, and the already-role-named `ListWdgt`/`ToolbarWdgt`. "Scroll"
+`PopUpRowsViewportWdgt`, `VerticalStackViewportWdgt`, `TextAreaWdgt`,
+`DocumentViewportWdgt`, and the already-role-named `ListWdgt`/`ToolbarWdgt`. "Scroll"
 survives only where it names actual scrolling (`scrollX`, the scroll pins,
 `_reLayoutScrollbars`, `isMyScrollBar`). ⛔ "Frame" belongs to other constructs (the window
 `FrameWdgt`, the island `TransformFrameWdgt`) and never names this family. Colloquials: a

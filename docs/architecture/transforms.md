@@ -49,7 +49,7 @@ on any hot path when no non-identity island exists. This is why the subsystem ca
 - **`TrackingTransformFrameWdgt`** (`src/TrackingTransformFrameWdgt.coffee`) — a *size-
   tracking* variant whose slot (`@bounds`) **hugs** its content child's bounds. It defines
   `_reLayout`/`_reLayoutChildren`, so it participates in the settle loop's ordered up-edge
-  like `SimpleVerticalStackPanelWdgt`/`ViewportWdgt` (tracking-container capability is a
+  like `VerticalStackPanelWdgt`/`ViewportWdgt` (tracking-container capability is a
   *class*, never a per-widget flag). It also carries the **layout-transparency** overrides
   (§5). `implementsDeferredLayout` is pinned `false` so defining `_reLayout` does not flip
   its resize classification away from the base island's.

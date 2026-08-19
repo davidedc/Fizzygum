@@ -270,7 +270,7 @@ Ten-second triage for any candidate:
 - **Logic-gate / circuit toy** — sibling of `src/patch-programming/`; wholly scalar
   wires; editing is using.
 - **Kanban / card wall** — cards are widgets, columns are stacks
-  (`SimpleVerticalStackPanelWdgt`); almost pure composition; gestures coincide
+  (`VerticalStackPanelWdgt`); almost pure composition; gestures coincide
   perfectly.
 - **Physics toy (masses/springs)** — `BouncerWdgt` is a seed; parameters as pins;
   editing mid-flight is the whole show; the Morphic-lineage classic.

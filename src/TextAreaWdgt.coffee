@@ -1,15 +1,15 @@
-# The SimpleTextViewportWdgt allows you show/edit ONE
+# The TextAreaWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or
-# other Widgets like the SimpleVerticalStackPanelWdgt/DocumentWdgt do.
+# other Widgets like the VerticalStackPanelWdgt/DocumentWdgt do.
 #
-# However, what the SimpleTextViewportWdgt DOES
-# in respect to the SimpleVerticalStackPanelWdgt/DocumentWdgt is to
+# However, what the TextAreaWdgt DOES
+# in respect to the VerticalStackPanelWdgt/DocumentWdgt is to
 # view/edit UNWRAPPED text, which is quite important for
 # code, since really code must have the option of an
 # unwrapped view.
 
-class SimpleTextViewportWdgt extends ViewportWdgt
+class TextAreaWdgt extends ViewportWdgt
 
   textWdgt: undefined
   modifiedTextTriangleAnnotation: undefined

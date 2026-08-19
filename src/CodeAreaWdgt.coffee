@@ -31,7 +31,7 @@ class CodeAreaWdgt extends Widget
   # drops disabled, modified-content indicator, transparent mono editable text with
   # selection enabled.
   _buildEditableCodeAreaNoSettle: (initialText) ->
-    @tempPromptEntryField = new SimpleTextViewportWdgt initialText, false, 5
+    @tempPromptEntryField = new TextAreaWdgt initialText, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = Color.WHITE
@@ -52,7 +52,7 @@ class CodeAreaWdgt extends Widget
 
   # the plain mono-panel variant (ConsoleWdgt / ErrorsLogViewerWdgt)
   _buildMonoCodeAreaNoSettle: (initialText) ->
-    @tempPromptEntryField = new SimpleTextViewportWdgt initialText, false, 5
+    @tempPromptEntryField = new TextAreaWdgt initialText, false, 5
     @tempPromptEntryField.configureAsMonoTextPanel true
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField

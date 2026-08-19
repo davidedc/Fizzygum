@@ -1,9 +1,9 @@
 # this wraps the functionality of the
-# SimpleVerticalStackViewportWdgt into something that has
+# VerticalStackViewportWdgt into something that has
 # a more human name. Also provides additional document-oriented
 # features such as for adding divider lines, bullets etc.
 
-class SimpleDocumentViewportWdgt extends SimpleVerticalStackViewportWdgt
+class DocumentViewportWdgt extends VerticalStackViewportWdgt
 
   colloquialName: ->
     "document"

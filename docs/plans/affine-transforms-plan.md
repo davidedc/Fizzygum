@@ -1980,9 +1980,9 @@ See §7. None of these block declaring the feature shipped.
 13. **Stack/menu drop insert-index in a rotated island — ✅ LANDED + PUSHED 2026-07-12 (residuals sweep, Fizzygum `316a1814` / tests `7681f416d`), macro
    `SystemTest_macroDropIntoTiltedStackInsertsAtVisualSlot` (stash-verified: fails un-fixed, index 3 vs 1).**
    The drop passed the RAW screen `@position()` as the 6th `add` arg (`positionOnScreen`), which the stack/menu
-   panels (`SimpleVerticalStackPanelWdgt`, `ToolPanelWdgt`, `HorizontalMenuPanelWdgt`) compare against their
+   panels (`VerticalStackPanelWdgt`, `ToolPanelWdgt`, `HorizontalMenuPanelWdgt`) compare against their
    children's PLANE-LOCAL spans to compute the child-insert INDEX. **⚠ The banked reachability doubt ("those
-   panels don't enableDrops() by default") was WRONG: `SimpleVerticalStackPanelWdgt._acceptsDrops` is `true` by
+   panels don't enableDrops() by default") was WRONG: `VerticalStackPanelWdgt._acceptsDrops` is `true` by
    default** — any user who tilts a stack (public halo/sugar gesture) reaches this path. Shipped fix (the banked
    one-liner, at the drop site right above `target.add`): `dropPositionInTargetPlane = if
    target._isInsideNonIdentityIsland() then target.screenPointToMyPlane @position() else @position()` — dormant

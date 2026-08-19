@@ -1,5 +1,5 @@
 # TemplatesWindowWdgt -- builds the editor's "useful snippets" templates window:
-# a SimpleDocumentViewportWdgt pre-filled with one of every document building
+# a DocumentViewportWdgt pre-filled with one of every document building
 # block (headings, paragraphs, a quote, links, spacers, dividers, the special-
 # characters paragraph) turned into draggable templates, wrapped in a FrameWdgt.
 # Lifted verbatim out of MenusHelper.createNewTemplatesWindow as a per-app
@@ -13,7 +13,7 @@
 class TemplatesWindowWdgt extends FrameWdgt
 
   @create: ->
-    sdspw = new SimpleDocumentViewportWdgt
+    sdspw = new DocumentViewportWdgt
 
     sdspw._applyExtent new Point 365, 335
 

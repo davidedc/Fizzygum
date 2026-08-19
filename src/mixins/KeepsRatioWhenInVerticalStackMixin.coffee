@@ -37,7 +37,7 @@ KeepsRatioWhenInVerticalStackMixin =
       new Point availW, Math.round availW * (@height()/@width())
 
     _reactToHolderFrameGrabbed: (whereFrom) ->
-      # capability query replaces `whereFrom instanceof SimpleVerticalStackPanelWdgt`
+      # capability query replaces `whereFrom instanceof VerticalStackPanelWdgt`
       # (type-test-elimination campaign)
       if whereFrom?.releasesRatioConstraintOnGrabbedChildren?()
         @_freeFromRatioConstraints()
@@ -53,7 +53,7 @@ KeepsRatioWhenInVerticalStackMixin =
           @parent._moveWithin world
 
     _reactToHolderFrameDropped: (whereIn) ->
-      # capability query replaces `(whereIn instanceof SimpleVerticalStackPanelWdgt) and
+      # capability query replaces `(whereIn instanceof VerticalStackPanelWdgt) and
       # !(whereIn instanceof FrameWdgt)` (type-test-elimination campaign)
       if whereIn?.imposesRatioConstraintOnDroppedChildren?()
         @_constrainToRatio()

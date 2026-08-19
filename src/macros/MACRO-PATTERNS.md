@@ -325,7 +325,7 @@ assertion a recapture after a regression silently stores two different hashes an
   scrolls to keep the caret visible — but ONLY on a caret MOVE, not on a wheel scroll. `ViewportWdgt.scrollCaretIntoView` (`:504`)
   repositions the contents so `world.caret` sits in the viewport; it is called from `CaretWdgt.gotoSlot` (`:147`, gated on the caret
   being directly inside a scrollable panel), which fires on a click-placement or an arrow key — not on a wheel. Fixture: a small `new
-  SimpleDocumentViewportWdgt` + `doc.addNormalParagraph lorem` ×N so it OVERFLOWS; place the caret in the default (editable) paragraph
+  DocumentViewportWdgt` + `doc.addNormalParagraph lorem` ×N so it OVERFLOWS; place the caret in the default (editable) paragraph
   (`@moveToAndClickAtFractionOf_InputEvents (doc.contents.childrenNotHandlesNorCarets())[0], [fx,fy]`), then `@wheelOn_InputEvents doc,
   bigDelta` scrolls the caret OUT of view (it STAYS out — the scroll did not recall it), and `@syntheticEventsShortcutsAndSpecialKeys_InputEvents
   "ArrowRight"` MOVES it → the document scrolls back to reveal it. First caret-auto-scroll test.
@@ -412,7 +412,7 @@ assertion a recapture after a regression silently stores two different hashes an
   and adds the "…selection" items, muddying the empty-vs-filled contrast; re-click the field before typing (dismissing the first menu
   ends editing); screenshot-only (an exact menu-strings assertion is brittle — `evaluationMenu` prepends separator RectangleWdgts with no `labelString`).
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
-  `SimpleDocumentViewportWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
+  `DocumentViewportWdgt` ships ONE editable default paragraph ("A small string … here another.") as its first content child
   (`(doc.contents.childrenNotHandlesNorCarets())[0]`) — reformat THAT (add a Lorem paragraph below for reflow context). Drive its
   `"a SimpleText ➜"` → `"layout in stack ➜"` submenu (`VerticalStackLayoutSpec.coffee:42-53`): `"base width..."` opens a PromptWdgt
   (narrows the box), `"align right"` (setAlignmentToRight) moves the box to the document's right edge; then click in, `Meta+a`, and type
@@ -453,12 +453,12 @@ assertion a recapture after a regression silently stores two different hashes an
   `toString().replace("Wdgt","")` so a FrameWdgt reads "a Window ➜"). Navigate to the desired ancestor by class-name PREFIX
   to open ITS own menu (used to resize a content-covered panel, duplicate a nested widget, "pick up" an inspector part, …).
 - **A merging scroll panel SUPPRESSES its child's hierarchy menu** (`macroScrollPanelMergesChildMenu`): the inverse of the
-  rule above. A `SimpleTextViewportWdgt` sets `takesOverAndMergesChildrensMenus = true` (`SimpleTextViewportWdgt.coffee:25`),
+  rule above. A `TextAreaWdgt` sets `takesOverAndMergesChildrensMenus = true` (`TextAreaWdgt.coffee:25`),
   so `Widget.buildContextMenu` (`:2905-2908`) finds that ancestor and returns the PANEL'S OWN menu — right-clicking the inner text
   blurb produces no "a X ➜" disambiguation at all (the blurb is never offered as a separate target). A NEGATIVE assertion needs
   the baseline visible: pair it with a plain `PanelWdgt` + `RectangleWdgt` child whose right-click DOES build the 2-item hierarchy
   menu (`@assertTopMenuItemStrings ["a Rectangle ➜", "a Panel ➜"]`) — same gesture, opposite menu. Build the panel directly:
-  `new SimpleTextViewportWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
+  `new TextAreaWdgt "text", false, 5` (ctor `(textAsString, wraps, padding)` auto-builds the inner blurb).
   image_1 (the panel's own merged menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
   clicked point on click (the menu item's `trigger`, inherited from the `ButtonWdgt` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
@@ -721,18 +721,18 @@ assertion a recapture after a regression silently stores two different hashes an
   `@dragWidgetTo_InputEvents text, window`, then `text.setText longerString` ⇒ window grows, `shorterString` ⇒ shrinks. No caret
   editing — `setText` is enough. The content-driven converse of the handle-driven window resize.
 - **Window with COMPOSITE (stack) content follows EVERY mutation; a SCROLL-panel content follows NONE**
-  (`macroWindowWithSimpleVerticalPanelResizesAsContentChanges`): with a `SimpleVerticalStackPanelWdgt` as window content the
+  (`macroWindowWithSimpleVerticalPanelResizesAsContentChanges`): with a `VerticalStackPanelWdgt` as window content the
   chain is cell → stack wraps its cells → `_positionAndResizeChildren` wraps the window: dropping a wrapping lorem in resizes the
   window AROUND the re-wrapped cell, dropping an icon ON a cell inserts it AFTER the cell whose span contains the drop point
   (the document-stack insertion rule) and GROWS the window, Enter×3 at a caret inside a cell grows it again, and deleting the
   cell through its hierarchy menu (right-click the nested cell → "a SimpleText ➜" → "delete") COLLAPSES the window
-  around what remains. The CONTRAST: a `SimpleVerticalStackViewportWdgt` content (its ctor SEEDS a default "A small
+  around what remains. The CONTRAST: a `VerticalStackViewportWdgt` content (its ctor SEEDS a default "A small
   string / here another." paragraph, calls `disableDrops()` on the panel so drops route to the inner stack, and sets the
   inner stack `isLockingToPanels = true` so dragging it carries the WHOLE panel) absorbs overflow by CLIPPING — drop a big
   lorem after the seeded paragraph and the window's bounds are IDENTICAL before/after (no scrollbar at rest; the windowed
   scroll panel also adds the pencil/editing chrome to the titlebar). Fixture via the very creator methods the menu items
   call (they live on the guarded dev-only `DemoMenus` collaborator, reached as the `demoMenus` global):
-  `demoMenus.createSimpleVerticalStackPanelWdgt()` ((35,30) 370×325), `demoMenus.createSimpleVerticalStackViewportWdgt()`
+  `demoMenus.createVerticalStackPanelWdgt()` ((35,30) 370×325), `demoMenus.createVerticalStackViewportWdgt()`
   ((430,25) 370×325), `demoMenus.createNewWrappingSimpleTextWdgtWithBackground()`, and `world.create new HeartIconWdgt`
   (carried on the hand exactly like the "Heart icon" menu item — drop it with a no-button move +
   `@syntheticEventsMouseClick_InputEvents()`). No new verb.
@@ -818,7 +818,7 @@ assertion a recapture after a regression silently stores two different hashes an
   to the nearest `wheel` handler; `ViewportWdgt.wheel` scrolls itself UNLESS at the travel limit, then `escalateEvent 'wheel'`).
   Hold the pointer STILL near the inner's top (one `@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf inner, [0.5,0.15]),
   "no button"`) then fire repeated `@syntheticEventsWheel_InputEvents 0, bigDelta` (the L1 primitive, NOT `wheelOn` which re-moves):
-  the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `SimpleDocumentViewportWdgt` (`outer.add inner`
+  the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `DocumentViewportWdgt` (`outer.add inner`
   between two `outer.addNormalParagraph "…"`) holding a fixed-height `ListWdgt` (the stack constrains only WIDTH, so the inner
   keeps its height and overflows). FLANK the inner above AND below so it stays VISIBLE when the outer is fully scrolled.
 - **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ViewportWdgt._reLayoutScrollbars` (`:124`) shows the hBar
@@ -850,7 +850,7 @@ assertion a recapture after a regression silently stores two different hashes an
   rect's CENTRE on the part HANGING BELOW the list so the right-click lands cleanly on the rect, not the list. No new verb.
 - **Add/remove at the document's END — the viewport stays ANCHORED to the end**
   (`macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument`): the anchoring sibling of the
-  two recompute entries above. Every paragraph DROP into / float-GRAB out of a `SimpleDocumentViewportWdgt` re-runs
+  two recompute entries above. Every paragraph DROP into / float-GRAB out of a `DocumentViewportWdgt` re-runs
   `_positionAndResizeChildren` + `_reLayoutScrollbars` (`ViewportWdgt._reactToChildDropped`/`_reactToChildGrabbed`, `:236/:240`);
   `_positionAndResizeChildren` (`:244`) shrink-wraps the stack to its content (its `:277-290` comment NAMES the
   remove-at-the-bottom scenario) and `keepContentsInViewport` (`:328`) clamps the view: while content overflows the
@@ -869,18 +869,18 @@ assertion a recapture after a regression silently stores two different hashes an
   and wrap-toggle twins of this clamp resolution are the next two entries. No new verb.
 - **Font-size change under an END-SCROLLED viewport — the clamp re-anchors at the top**
   (`macroWrappingSimpleTextScrollPanelResizesCorrectlyAsTexSizeIsChangedPartTwo`): the FONT-driven sibling of the
-  end-anchoring entry above, on a `SimpleTextViewportWdgt`. `SimpleTextWdgt.setFontSize` (inherited from
+  end-anchoring entry above, on a `TextAreaWdgt`. `SimpleTextWdgt.setFontSize` (inherited from
   `StringWdgt`, not overridden on this class) re-breaks the text (`TextWdgt::_reLayoutSelf`: wrapped height = lineCount × fontHeight)
   and refreshes the enclosing panel, so the same `_positionAndResizeChildren` clamps resolve the new content extent: ENLARGING
   under a top-anchored view just grows the content downward (the V-bar appears, thumb at the top, viewport unmoved);
   SHRINKING back to the default WHILE FULLY SCROLLED DOWN makes the end offset impossible — the content fits again, so
   grow-to-viewport + TOP-clamp re-anchor the view at the top and `_reLayoutScrollbars` hides the bar, BYTE-identical to the
   pristine fixture (the retired no-wrap flavour restored byte-for-byte too — the clamp path is wrap-agnostic). FIXTURE:
-  the 'simple plain text scrollpanel wrapping' demo recipe (`demoMenus.createWrappingSimpleTextViewportWdgt`,
+  the 'simple plain text scrollpanel wrapping' demo recipe (`demoMenus.createWrappingTextAreaWdgt`,
   `DemoMenus.coffee:609` —
   (20,25) 390×305, padding 10, one wrapping lorem at the default font 12, which FITS: no bar at baseline). MENU
   DISCOVERY: the text is `lockToPanels`'d and the panel sets `takesOverAndMergesChildrensMenus`
-  (`SimpleTextViewportWdgt.coffee:25`), so a right-click opens ONE merged menu with 'font size...' at TOP
+  (`TextAreaWdgt.coffee:25`), so a right-click opens ONE merged menu with 'font size...' at TOP
   level — NO hierarchy descent (unlike a document paragraph); then the banked Meta+a-overtype prompt dance. While
   end-scrolled the tall text's centre is above the viewport clip — right-click a bottom FRACTION (`[0.5, 0.95]`).
   No new verb.
@@ -920,7 +920,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`macroWindowCellsInConstrainedScrollStackReflow`): the STACK-branch sibling of the entry above. The same
   `@_invalidateLayout()` climb reaches a STACK parent too (the settle re-runs the stack's `_positionAndResizeChildren`):
   collapsing/uncollapsing/closing a window CELL slides the cells below up/down and re-derives the enclosing panel's scrollbars.
-  Fixture: a `SimpleVerticalStackViewportWdgt` (a ViewportWdgt whose contents is a constraining stack with
+  Fixture: a `VerticalStackViewportWdgt` (a ViewportWdgt whose contents is a constraining stack with
   `isLockingToPanels` — grabbing its interior grabs the WHOLE composite, which is how it drops into an outer window; clear its
   default `SimpleTextWdgt` first) + internal windows that adopt COLOURED RECTANGLES — the rectangles carry the width,
   because an adopting window WRAPS to its content (a preset extent is discarded), and they must be WIDER than the stack so the
@@ -961,8 +961,8 @@ assertion a recapture after a regression silently stores two different hashes an
   EVERY shot (a no-button `@syntheticEventsMouseMove_InputEvents`) so hover state can never break the equality. No
   new verb.
 - **A document flows, clips and scrolls live non-text widgets** (`macroDocumentScrollsMixedTextAndClocks`): a
-  `SimpleDocumentViewportWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
-  inner `SimpleVerticalStackPanelWdgt` content stack (`ViewportWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
+  `DocumentViewportWdgt` is a general widget container, not just a text flow. `doc.add widget` re-parents any widget into its
+  inner `VerticalStackPanelWdgt` content stack (`ViewportWdgt.add → @contents.add`, `:186-194`), which `@augmentWith
   ClippingAtRectangularBoundsMixin` clips to the panel box. On insert the stack re-squares an `AnalogClockWdgt` to its remembered width
   (`VerticalStackLayoutSpec.rememberInitialDimensions` + `AnalogClockWdgt._setWidthSizeHeightAccordingly`); getWidthInStack DISPLAYS
   that remembered width CLAMPED to the current column — so clocks added at distinct sizes stay distinct, one wider than the column is shown
@@ -998,20 +998,20 @@ assertion a recapture after a regression silently stores two different hashes an
   its parent, so invoking it from a document's menu parks the handles on the freefloating scroll FRAME; `ViewportWdgt.add`'s
   HandleWdgt carve-out (`:186-194`) keeps them direct children of the frame (NOT inside the scrolled `@contents`); any
   mouse-DOWN on a non-handle also destroys them (`ActivePointerWdgt.coffee:378` — how a desktop click exits the mode). Fixture =
-  the document-drop idiom (a `demoMenus.createSimpleDocumentViewportWdgt` doc + two `demoMenus.createNewWrappingSimpleTextWdgtWithBackground`
+  the document-drop idiom (a `demoMenus.createDocumentViewportWdgt` doc + two `demoMenus.createNewWrappingSimpleTextWdgtWithBackground`
   yellow texts dragged in with `@dragWidgetTo_InputEvents`; the stack inserts a drop AFTER the sibling whose vertical span
   contains the drop point — crib `macroIconDroppedIntoDocumentFlows`). MENU GOTCHA: the doc's stack cells are width-constrained
   to the FULL content width, so virtually any right-click inside the doc hits a CELL and opens the hierarchy/disambiguation
   menu (the recording threaded the few-pixel inter-cell gap to hit the stack directly — do NOT try to reproduce that); navigate
   it instead — `@openMenuOf_InputEvents firstElement` → `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()),
-  "a SimpleDocumentViewport"` → `"resize/move..."` (the stack panel itself is EXCLUDED from the hierarchy menu as redundant,
+  "a DocumentViewport"` → `"resize/move..."` (the stack panel itself is EXCLUDED from the hierarchy menu as redundant,
   `Widget.getHierarchyMenuWidgets:2955`). Assert by screenshot pair: handles parked on the frame, then `@wheelOn_InputEvents text, deltaY`
   twice → handles GONE + content scrolled; pick deltas that overshoot so the view CLAMPS at the content bottom (robust to small
   delta drift). No new verb.
 - **Free-width scroll-stack shows a HORIZONTAL scrollbar** (`macroFreeWidthScrollStackShowsHorizontalScrollbar`): the FIRST
-  horizontal-bar macro (every other scroll macro is vertical). `new SimpleVerticalStackViewportWdgt false` (the
-  `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`SimpleVerticalStackViewportWdgt.coffee:6-7`),
-  so a NON-wrapping child keeps its natural width (`SimpleVerticalStackPanelWdgt.coffee:92-104` left-aligns + skips the width clamp)
+  horizontal-bar macro (every other scroll macro is vertical). `new VerticalStackViewportWdgt false` (the
+  `isTextLineWrapping=false` ctor arg) sets the inner stack's `constrainContentWidth=false` (`VerticalStackViewportWdgt.coffee:6-7`),
+  so a NON-wrapping child keeps its natural width (`VerticalStackPanelWdgt.coffee:92-104` left-aligns + skips the width clamp)
   → `@contents.width()` exceeds the viewport → `_reLayoutScrollbars` shows the hBar (`ViewportWdgt.coffee:143-145`, the
   `contents.width() >= width()+1` gate). Append a wide non-wrapping `SimpleTextWdgt` with `para.softWrap = false`
   (the wrap-OFF idiom — `softWrap` replaced the retired `maxTextWidth`; cribbed from `macroNonWrappingTextResizesToContent`),
@@ -1025,10 +1025,10 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Drag a widget into a container** (`macroSimpleDocumentManualBuildAndScroll`, `macroIconDroppedIntoDocumentFlows`):
   `@dragWidgetTo_InputEvents widget, target` float-grabs at the widget's centre (press-drag past the grab threshold) and drops it
-  at a Point or onto a widget's centre. A SimpleDocument's INNER content panel (`SimpleVerticalStackPanelWdgt`,
+  at a Point or onto a widget's centre. A SimpleDocument's INNER content panel (`VerticalStackPanelWdgt`,
   `_acceptsDrops:true`) flows arbitrary widgets, so a drop over its content area re-parents the widget as a flowing paragraph —
   no "enable editing" needed (the OUTER scroll panel's `@disableDrops` only gates its chrome). INSERTION INDEX ↔ drop Y:
-  `SimpleVerticalStackPanelWdgt.add` (`:34-42`) inserts AFTER the sibling whose vertical span contains the drop Y, APPENDS if the
+  `VerticalStackPanelWdgt.add` (`:34-42`) inserts AFTER the sibling whose vertical span contains the drop Y, APPENDS if the
   Y is in a gap/below all — **index 0 is unreachable**; aim at a sibling's `.center()` for "after it", `lastEl.bottom()+N` to append.
 - **`@dragWidgetTo_InputEvents` grabs the CENTRE — which may be a sub-widget.** For a SliderWdgt (button at the centre at value 50)
   it grabs/moves the BUTTON, not the slider (the drop silently does nothing). Drop such a widget programmatically: `widget.pickUp()`
@@ -1128,11 +1128,11 @@ assertion a recapture after a regression silently stores two different hashes an
   <desktop|panel>" items appear only when the morph's parent is a PanelWdgt (the world is one). A locked morph's drag grabs its
   PARENT (`grabsToParentWhenDragged → @isLockingToPanels`), so `@dragWidgetTo_InputEvents` leaves it put; unlock and it moves.
 - **Contents-lock REJECTS drops** (`macroLockedDocumentRejectsDrop`): the drop-side sibling of the drag-lock above. A
-  `SimpleDocumentViewportWdgt` (ships its own default text; `new …; world.add`) accepts a dropped widget into its vertical
-  stack while editing is ENABLED. Its "disable editing" item → `disableDragsDropsAndEditing` (`SimpleVerticalStackViewportWdgt.coffee:34`
+  `DocumentViewportWdgt` (ships its own default text; `new …; world.add`) accepts a dropped widget into its vertical
+  stack while editing is ENABLED. Its "disable editing" item → `disableDragsDropsAndEditing` (`VerticalStackViewportWdgt.coffee:34`
   → `ViewportWdgt.coffee:630` → `disableDrops`) clears the inner content panel's `_acceptsDrops`; now
   `ActivePointerWdgt.dropTargetFor` walks PAST the locked doc up to the WORLD, so the next drop lands as a world child ON TOP of the
-  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a SimpleDocumentViewport ➜"`
+  doc, NOT in its flow. Reach "disable editing" by the hierarchy drill (right-click a doc blurb → `"a DocumentViewport ➜"`
   → `"disable editing"`). Make the negative meaningful with the accepted-vs-rejected contrast: a blue box dropped while enabled
   flows into the stack (image_1), a red box dropped while locked floats over the doc (image_2). The accepted box uses
   `@dragWidgetTo_InputEvents box1, doc` (drops at the centre, flows in); **drop the REJECTED box STRADDLING the doc's right edge**
@@ -1172,7 +1172,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (~content − padding − scrollbar) so none is capped. A clean directly-built fixture sidesteps the recording's ambiguous
   duplicated-heart targets. The size-preserving sibling of the flow-in (`macroIconDroppedIntoDocumentFlows`) and reject
   (`macroLockedDocumentRejectsDrop`) document-drop facets.
-- **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `SimpleDocumentViewportWdgt` can host
+- **A document HOSTS the inspector as flowing content** (`macroSimpleDocumentHandlesOldInspector`): a `DocumentViewportWdgt` can host
   the inspector window. KEY: a WINDOW nests into a container only after the DWELL-TO-ARM gesture (drag-embed spec §6) — there is no internal/external
   gate any more (Phase 3 removed it; Phase 5 deleted the toggle button, and a window's skin is now DERIVED from parentage via `FrameWdgt.isInternal`).
   Drag the inspector window by its TITLE (a per-test `dragWindowByTitleTo` helper; pressing a pane would grab the pane) and linger past `dwellToArmMs`
@@ -1192,7 +1192,7 @@ assertion a recapture after a regression silently stores two different hashes an
   detail newly overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2 (the known SWCanvas thumb flake),
   whereas a width shrink keeps the detail fitting and the resize shot deterministic. No new verb.
 - **The constraining stack CAPS oversized drops to its full width — it never stretches up**
-  (`macroConstrainingStackForcesDroppedWidgetsToFullWidth`): `SimpleVerticalStackPanelWdgt`'s default
+  (`macroConstrainingStackForcesDroppedWidgetsToFullWidth`): `VerticalStackPanelWdgt`'s default
   (`constrainContentWidth = true`) runs `_setWidthSizeHeightAccordingly(getWidthInStack())` on every child, and
   `getWidthInStack` returns the remembered DROP-time width capped at the content width — so small widgets keep their sizes
   (`macroDocumentPreservesDroppedWidgetSizes`) and OVERSIZED ones come out at exactly ONE shared width (texts also get
@@ -1644,20 +1644,20 @@ assertion a recapture after a regression silently stores two different hashes an
   locate holders as `world.children.filter (c) -> c instanceof RectangleWdgt and c.children.length > 0`, each handle a HandleWdgt
   among the holder's OWN children. DRIFT: the current layout settles a stretched stack's cells at DESIRED width, so two holders
   match ONLY if their cells share a desired size — pick the two desired-30 holders differing in spreadability (MEDIUM vs NONE).
-- **Stack grows with content** (`macroVerticalStackPanelGrowsWithContent`): a `SimpleVerticalStackPanelWdgt`
+- **Stack grows with content** (`macroVerticalStackPanelGrowsWithContent`): a `VerticalStackPanelWdgt`
   (`constrainContentWidth` defaults true) stacks children, constrains each child's WIDTH to the panel, and — being `tight` —
-  grows its HEIGHT to the children (`_positionAndResizeChildren`, `SimpleVerticalStackPanelWdgt.coffee`: re-wraps each
+  grows its HEIGHT to the children (`_positionAndResizeChildren`, `VerticalStackPanelWdgt.coffee`: re-wraps each
   FIT_BOX_TO_TEXT text child to the available width via `softWrap` — the retired `maxTextWidth`'s replacement — sums child heights into `_applyHeight`). Reproduce the demo widgets exactly (`new
-  SimpleVerticalStackPanelWdgt` at 370×325 = `demoMenus.createSimpleVerticalStackPanelWdgt`; each text = `demoMenus.createNewWrappingSimpleTextWdgtWithBackground`,
+  VerticalStackPanelWdgt` at 370×325 = `demoMenus.createVerticalStackPanelWdgt`; each text = `demoMenus.createNewWrappingSimpleTextWdgtWithBackground`,
   a 2-paragraph Lorem + cream bg); DROP each in with `@dragWidgetTo_InputEvents text, panel` (fires `_reactToChildDropped →
   _positionAndResizeChildren`), so a second drop ~doubles the height. (A tight EMPTY box taller than one child SHRINKS on the first add
   — start from substantial content.) The reusable fixture for the big `Width*VerticalStackPanel` family.
 - **Stack SHRINKS when a child is removed** (`macroVerticalStackPanelShrinksOnParagraphRemoval`): the SHRINK complement of the
-  grows entry above — a tight, width-constraining `SimpleVerticalStackPanelWdgt` tracks its height DOWN as well as up. Removing a
-  child fires `_reactToChildRemoved → _positionAndResizeChildren` (`SimpleVerticalStackPanelWdgt.coffee:52-57`), which re-sums the (now fewer)
+  grows entry above — a tight, width-constraining `VerticalStackPanelWdgt` tracks its height DOWN as well as up. Removing a
+  child fires `_reactToChildRemoved → _positionAndResizeChildren` (`VerticalStackPanelWdgt.coffee:52-57`), which re-sums the (now fewer)
   child heights with NO floor while tight & non-empty (`:130-131`) → the panel snaps down to hug the remaining paragraph. The
   removal hook fires when the dragged-out child is re-parented to the world (`Widget.coffee:2249-2250`). Build like the grows
-  fixture (bare `new SimpleVerticalStackPanelWdgt`, two yellow wrapping `SimpleTextWdgt` dropped in via
+  fixture (bare `new VerticalStackPanelWdgt`, two yellow wrapping `SimpleTextWdgt` dropped in via
   `@dragWidgetTo_InputEvents text, panel`), then REMOVE the last. KEY GESTURE: a child of a TIGHT stack is NOT independently
   float-draggable (a float-drag grabs the whole STACK — eyeball-caught: dragging the paragraph moved the entire stack), so detach
   it through its hierarchy menu's "pick up", reusing `pickUpPartToDesktop_InputEvents_Macro part, "a SimpleText", dropPoint`
@@ -1674,9 +1674,9 @@ assertion a recapture after a regression silently stores two different hashes an
   The machinery is exactly reversible — assert the round-trips BY BYTE-EQUALITY: a wheel-down tour + wheel-back-to-top
   reproduces the pre-tour shot's dataHash (the clamp lands exactly on offset 0), and setting the size back to the DEFAULT 12
   reproduces the pre-change shot's dataHash pixel-for-pixel. FIXTURE: the document demo is just `new
-  SimpleDocumentViewportWdgt` at (35,30) 370×325 (`demoMenus.createSimpleDocumentViewportWdgt`, `DemoMenus.coffee:651` — it ships with the
+  DocumentViewportWdgt` at (35,30) 370×325 (`demoMenus.createDocumentViewportWdgt`, `DemoMenus.coffee:651` — it ships with the
   default "A small string…" paragraph); drop-to-insert puts a dropped widget AFTER the sibling whose span contains the drop Y,
-  appending below everything (`SimpleVerticalStackPanelWdgt.add:17`) — three authored drops produce lorem/small/lorem,
+  appending below everything (`VerticalStackPanelWdgt.add:17`) — three authored drops produce lorem/small/lorem,
   including a REORDER of an existing paragraph by dropping it onto another paragraph's span (pick a drop Y inside that span
   under BOTH the pre- and post-grab layouts — the flow tightens the moment the grabbed paragraph leaves it). GOTCHA: after the
   font change a paragraph's CENTRE can lie below the viewport clip, so `@openMenuOf_InputEvents` (a centre right-click) would
@@ -1684,19 +1684,19 @@ assertion a recapture after a regression silently stores two different hashes an
   0.04], "right button"`. A paragraph inside a document opens the HIERARCHY menu — descend via the "a SimpleText" prefix.
   No new verb.
 - **Stack loose when empty, tight when filled — via the resize HANDLE** (`macroStackPanelLooseWhenEmptyTightWhenFilled`): a
-  width-constraining `SimpleVerticalStackPanelWdgt` resizes COMPLETELY FREELY (both dims) while EMPTY but only in WIDTH once
+  width-constraining `VerticalStackPanelWdgt` resizes COMPLETELY FREELY (both dims) while EMPTY but only in WIDTH once
   filled (HEIGHT fixed to the wrapped text). `_positionAndResizeChildren` (`:73`) sums child heights, then `if !@tight or
   childrenNotHandlesNorCarets.length == 0: newHeight = Math.max newHeight, @height()` (`:130-131`) keeps the dragged height ONLY
   when loose or EMPTY. Resize via the real HANDLE: `@openMenuOf_InputEvents panel` → "resize/move..." →
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`. KEY: once filled the text COVERS the panel, so bring up
-  its handles via the text's "a SimpleVerticalStackPanel ➜" hierarchy submenu. Screenshot WITH the handles showing, then click
+  its handles via the text's "a VerticalStackPanel ➜" hierarchy submenu. Screenshot WITH the handles showing, then click
   empty desktop to exit. `world.add text` to detach the content and empty the stack.
 - **A lone centered widget stays centered** (`macroCenteredWidgetStaysCenteredWhenAlone`): a stack child's
   `VerticalStackLayoutSpec.alignment` (`"left"|"center"|"right"`, default left) drives its horizontal placement; `setAlignmentToCenter`
   is what the "a X ➜ → layout in stack → align center" menu item calls — `heart.layoutSpec.setAlignmentToCenter()` is the direct
   equivalent (sets the field AND relayouts). The centering SURVIVES the child becoming the only element: `ViewportWdgt._positionAndResizeChildren`
   has dedicated lone-centered-child support (`:288-303`) that keeps it centered instead of snapping its left to the viewport. Drop a `new
-  HeartIconWdgt (Color…)` into a `SimpleDocumentViewportWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
+  HeartIconWdgt (Color…)` into a `DocumentViewportWdgt`, center it, then `@dragWidgetTo_InputEvents defaultText, (a desktop point)`
   to remove the default text — the heart stays centered alone. GOTCHA: a widget has NO `.remove()`; drag it out (or re-parent via `world.add`).
 - **Padding is real morph area — sliders + palette-reveal + drag-by-the-band** (`macroPaddingAreaIsPartOfWidget`): a RectangleWdgt paints
   two layers (`RectangularAppearance.coffee:71-88`) — `backgroundColor` over the FULL bounds, `color` over the padding-inset tight region
@@ -2074,7 +2074,7 @@ assertion a recapture after a regression silently stores two different hashes an
   test that edits a mixin or a class prototype must restore the same way.
 - **`macroCanMoveAndResizeColorPaletteWdgt`** (from 523 cmds): enter resize/move mode (`@openMenuOf_InputEvents` → "resize/move...")
   then drag a corner handle; click empty desktop to exit before the screenshot.
-- **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `SimpleDocumentViewportWdgt`
+- **`macroSimpleDocumentProgrammaticBuildAndScroll` / `…ManualBuildAndScroll`**: build the SAME scrollable `DocumentViewportWdgt`
   — one fills it via `doc.add`, the other by DRAGGING two desktop text widgets in (`@dragWidgetTo_InputEvents`) — then wheel-scroll.
   GOTCHA: `SimpleTextWdgt` width floors ~330px, so narrow the doc and place draggables SIDE BY SIDE (stacking overlaps them).
 - **`macroDemoMenuCatalogueParade`** (from the recorded buildAllWidgets, 70 steps → 1 shot): the whole-catalogue construction smoke —

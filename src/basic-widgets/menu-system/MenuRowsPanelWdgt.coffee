@@ -20,7 +20,7 @@
 # dividers are DividerWdgt. Rows are added by the owner after construction
 # (addMenuItem / addLine), matching MenuWdgt's compose-after-build protocol.
 #
-# LAYOUT (§5.2e): the panel IS a SimpleVerticalStackPanelWdgt — the ONE vertical-
+# LAYOUT (§5.2e): the panel IS a VerticalStackPanelWdgt — the ONE vertical-
 # stack engine lays the rows out (the optional MenuHeader is just child 0, stacked
 # like any row). Menu-ness enters only through the base's own policy seams:
 #  - border 2 / gap 0: the stack's padding knob set tight, with the new
@@ -36,20 +36,20 @@
 # re-arrange it via the engine; the wrapping MenuWdgt / PromptWdgt absorbs those
 # through _reLayOutAfterContainedPanelChange (re-lay + re-hug), see PopUpWdgt.
 
-class MenuRowsPanelWdgt extends SimpleVerticalStackPanelWdgt
+class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
 
   target: undefined
   fontSize: undefined
   title: undefined
   label: undefined
   # the rounding of the panel's own corners. Declared per class rather than pulled up:
-  # this class extends SimpleVerticalStackPanelWdgt, not BoxWdgt, which is where the
+  # this class extends VerticalStackPanelWdgt, not BoxWdgt, which is where the
   # framework's other cornerRadius lives.
   cornerRadius: undefined
   _selectsItemsOnClick: false
   # A menu / list-contents row-stack is the internal body of a pop-up or scroll
   # frame — it accepts no drops and imposes no width ratio on its rows, unlike a
-  # general SimpleVerticalStackPanelWdgt (which does both). Suppress the inherited
+  # general VerticalStackPanelWdgt (which does both). Suppress the inherited
   # container behaviours.
   _acceptsDrops: false
 

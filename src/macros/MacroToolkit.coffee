@@ -638,7 +638,7 @@ class MacroToolkit
   # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at
   # the widget's centre and drags past the grab threshold so the widget is picked up onto the hand, then
   # releases over the destination. Use it to drop a widget INTO a container that accepts drops — e.g. a
-  # SimpleDocumentViewport with editing enabled re-parents the dropped widget as a flowing paragraph.
+  # DocumentViewport with editing enabled re-parents the dropped widget as a flowing paragraph.
   dragWidgetTo_InputEvents: (widgetOrIdentifier, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     source = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
       @findWidgetByTextDescription widgetOrIdentifier
@@ -940,7 +940,7 @@ class MacroToolkit
 
     slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "SimpleTextViewportWdgt"
+    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "TextAreaWdgt"
     textWidget = inspectorNaked.textWidget
 
     vBar = textScrollPane.vBar

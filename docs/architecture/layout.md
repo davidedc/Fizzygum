@@ -138,7 +138,7 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayout(newBounds)` | the per-node **arrange**: position self, apply own extent, place corner/edge-internal children, mark fixed, re-lay any child the arrange moved |
 | `_reLayoutSelf` | self-only heal hook (empty on base `Widget`); fired by `_applyExtentBase` when a widget's own extent commits |
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
-| `_positionAndResizeChildren` | the actual measure-and-place-children body — the definers: `SimpleVerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the viewport respectively |
+| `_positionAndResizeChildren` | the actual measure-and-place-children body — the definers: `VerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the viewport respectively |
 
 `_reLayoutChildren` is defined by every size-tracking container and nothing else — the definers: the
 stack panel and the viewport, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its
@@ -209,7 +209,7 @@ A container that must size itself to its content therefore cannot ask "how big w
 
 Every width→height widget defines a side-effect-free
 **`preferredExtentForWidth(availW) → Point`** — "what extent would I take at this width, without touching `@bounds`."
-It is overridden on `TextWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `AnalogClockWdgt`,
+It is overridden on `TextWdgt`, `VerticalStackPanelWdgt`, `FrameWdgt`, `AnalogClockWdgt`,
 `KeepsRatioWhenInVerticalStackMixin`, `TransformFrameWdgt` (and more); the base `Widget` default returns current
 height (width-invariant). A container measures its subtree with `Widget.subWidgetsMergedPreferredBounds` — the pure
 twin of the applied-bounds `subWidgetsMergedFullBounds`.
@@ -265,7 +265,7 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
 - **`VerticalStackLayoutSpec`** — `desiredWidth` (the width wish, captured at placement) + `grow`
   (0..1 share of extra space) + `alignment`, with
   `width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )` — the content
-  stack's cross-axis FIT law (`SimpleVerticalStackPanelWdgt`; the main axis hugs content).
+  stack's cross-axis FIT law (`VerticalStackPanelWdgt`; the main axis hugs content).
   LIFECYCLE: a carrier-owned KNOB (`Widget._contentStackSpec`) whose placement values are
   captured at each adoption — the object survives detachment, so explicit grow/alignment edits
   survive a grab-out-and-drop-back (and a desktop sojourn, where a stretch record occupies the

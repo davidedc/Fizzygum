@@ -484,44 +484,44 @@ class DemoMenus
 
   popUpVerticalStackMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Vertical stack"
-    menu.addMenuItem "vertical stack constrained contents width", demoMenus, "createSimpleVerticalStackPanelWdgt"
-    menu.addMenuItem "vertical stack scrollpanel constrained contents width", demoMenus, "createSimpleVerticalStackViewportWdgt"
-    menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", demoMenus, "createSimpleVerticalStackPanelWdgtAndViewport"
-    menu.addMenuItem "vertical stack free contents width", demoMenus, "createSimpleVerticalStackPanelWdgtFreeContentsWidth"
-    menu.addMenuItem "vertical stack scrollpanel free contents width", demoMenus, "createSimpleVerticalStackViewportWdgtFreeContentsWidth"
-    menu.addMenuItem "vertical stack panel and scrollpanel free contents width", demoMenus, "createSimpleVerticalStackPanelWdgtAndViewportFreeContentsWidth"
+    menu.addMenuItem "vertical stack constrained contents width", demoMenus, "createVerticalStackPanelWdgt"
+    menu.addMenuItem "vertical stack scrollpanel constrained contents width", demoMenus, "createVerticalStackViewportWdgt"
+    menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", demoMenus, "createVerticalStackPanelWdgtAndViewport"
+    menu.addMenuItem "vertical stack free contents width", demoMenus, "createVerticalStackPanelWdgtFreeContentsWidth"
+    menu.addMenuItem "vertical stack scrollpanel free contents width", demoMenus, "createVerticalStackViewportWdgtFreeContentsWidth"
+    menu.addMenuItem "vertical stack panel and scrollpanel free contents width", demoMenus, "createVerticalStackPanelWdgtAndViewportFreeContentsWidth"
 
     menu.popUpAtHand()
 
-  createSimpleVerticalStackPanelWdgt: ->
-    svspw = new SimpleVerticalStackPanelWdgt
+  createVerticalStackPanelWdgt: ->
+    svspw = new VerticalStackPanelWdgt
     world.add svspw
     svspw.setBounds new Point(35, 30), new Point(370, 325)
 
-  createSimpleVerticalStackViewportWdgt: ->
-    svsspw = new SimpleVerticalStackViewportWdgt
+  createVerticalStackViewportWdgt: ->
+    svsspw = new VerticalStackViewportWdgt
     world.add svsspw
     # public setters on the ATTACHED panel self-settle in place (was _applyMoveTo/_applyExtent, whose raw
     # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
     svsspw.setBounds (new Point 430, 25), new Point 370, 325
 
-  createSimpleVerticalStackPanelWdgtAndViewport: ->
-    @createSimpleVerticalStackPanelWdgt()
-    @createSimpleVerticalStackViewportWdgt()
+  createVerticalStackPanelWdgtAndViewport: ->
+    @createVerticalStackPanelWdgt()
+    @createVerticalStackViewportWdgt()
 
-  createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
-    svspw = new SimpleVerticalStackPanelWdgt constrainContentWidth: false
+  createVerticalStackPanelWdgtFreeContentsWidth: ->
+    svspw = new VerticalStackPanelWdgt constrainContentWidth: false
     world.add svspw
     svspw.setBounds new Point(35, 30), new Point(370, 325)
 
-  createSimpleVerticalStackViewportWdgtFreeContentsWidth: ->
-    svsspw = new SimpleVerticalStackViewportWdgt false
+  createVerticalStackViewportWdgtFreeContentsWidth: ->
+    svsspw = new VerticalStackViewportWdgt false
     world.add svsspw
     svsspw.setBounds new Point(430, 25), new Point(370, 325)
 
-  createSimpleVerticalStackPanelWdgtAndViewportFreeContentsWidth: ->
-    @createSimpleVerticalStackPanelWdgt()
-    @createSimpleVerticalStackViewportWdgt()
+  createVerticalStackPanelWdgtAndViewportFreeContentsWidth: ->
+    @createVerticalStackPanelWdgt()
+    @createVerticalStackViewportWdgt()
 
   popUpIconsMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "icons"
@@ -606,21 +606,21 @@ class DemoMenus
     @createNewWrappingSimpleTextWdgtWithBackground()
     @createNewNonWrappingSimpleTextWdgtWithBackground()
 
-  createWrappingSimpleTextViewportWdgt: ->
-    SfA = new SimpleTextViewportWdgt(
+  createWrappingTextAreaWdgt: ->
+    SfA = new TextAreaWdgt(
       @LOREM_LONG,true, 10)
     world.add SfA
     SfA.setBounds new Point(20, 25), new Point(390, 305)
 
-  createNonWrappingSimpleTextViewportWdgt: ->
-    SfB = new SimpleTextViewportWdgt(
+  createNonWrappingTextAreaWdgt: ->
+    SfB = new TextAreaWdgt(
       @LOREM_SHORT,false, 10)
     world.add SfB
     SfB.setBounds new Point(430, 25), new Point(390, 305)
 
-  createWrappingAndNonWrappingSimpleTextViewportWdgt: ->
-    @createWrappingSimpleTextViewportWdgt()
-    @createNonWrappingSimpleTextViewportWdgt()
+  createWrappingAndNonWrappingTextAreaWdgt: ->
+    @createWrappingTextAreaWdgt()
+    @createNonWrappingTextAreaWdgt()
 
   # this is provided for completeness, however see the
   # note in SimpleTextPanelWdgt about how this is
@@ -648,8 +648,8 @@ class DemoMenus
     @createNonWrappingSimpleTextPanelWdgt()
 
 
-  createSimpleDocumentViewportWdgt: ->
-    sdspw = new SimpleDocumentViewportWdgt
+  createDocumentViewportWdgt: ->
+    sdspw = new DocumentViewportWdgt
     world.add sdspw
     # public setters on the ATTACHED panel self-settle in place (was _applyMoveTo/_applyExtent, whose raw
     # resize on an attached panel used to trip the now-deleted _announceGeometryChangeToContainer geom seam into an off-settle re-fit)
@@ -657,7 +657,7 @@ class DemoMenus
 
   popUpDocumentMenu: (widgetOpeningThePopUp) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: @, title: "Document"
-    menu.addMenuItem "simple document scrollpanel", demoMenus, "createSimpleDocumentViewportWdgt"
+    menu.addMenuItem "simple document scrollpanel", demoMenus, "createDocumentViewportWdgt"
     menu.addMenuItem "document", demoMenus, "createDocumentWdgt"
     menu.popUpAtHand()
 
@@ -669,9 +669,9 @@ class DemoMenus
     menu.addMenuItem "simple plain text panel wrapping", demoMenus, "createWrappingSimpleTextPanelWdgt"
     menu.addMenuItem "simple plain text panel not wrapping", demoMenus, "createNonWrappingSimpleTextPanelWdgt"
     menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingSimpleTextPanelWdgt"
-    menu.addMenuItem "simple plain text scrollpanel wrapping", demoMenus, "createWrappingSimpleTextViewportWdgt"
-    menu.addMenuItem "simple plain text scrollpanel not wrapping", demoMenus, "createNonWrappingSimpleTextViewportWdgt"
-    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingSimpleTextViewportWdgt"
+    menu.addMenuItem "simple plain text scrollpanel wrapping", demoMenus, "createWrappingTextAreaWdgt"
+    menu.addMenuItem "simple plain text scrollpanel not wrapping", demoMenus, "createNonWrappingTextAreaWdgt"
+    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", demoMenus, "createWrappingAndNonWrappingTextAreaWdgt"
 
     menu.popUpAtHand()
 

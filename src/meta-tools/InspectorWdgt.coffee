@@ -296,7 +296,7 @@ class InspectorWdgt extends Widget
 
 
     # details pane
-    @detail = new SimpleTextViewportWdgt "", false, 5
+    @detail = new TextAreaWdgt "", false, 5
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.color = Color.WHITE

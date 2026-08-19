@@ -127,7 +127,7 @@ const isLowLevel = (name) =>
 // the container; its synchronous childGeometryChanged climb arm was retired and that orphaned method
 // deleted). What an immediate mutator legitimately MAY do is APPLY a re-fit synchronously IN PLACE -- a
 // TERMINAL, single-container apply (TextWdgt._applyExtent->@_reLayoutSelf, StretchablePanelWdgt.
-// _applyExtent->@_reLayout, ViewportWdgt/SimpleVerticalStackPanelWdgt._applyExtent->@_reLayoutChildren). Those
+// _applyExtent->@_reLayout, ViewportWdgt/VerticalStackPanelWdgt._applyExtent->@_reLayoutChildren). Those
 // applies are SANCTIONED (see those overrides' comments) -- only the SCHEDULE below is forbidden.
 // Forbidding the _reLayoutChildren apply by name was assessed and DECLINED as cosmetic: it does the
 // identical work to the blessed _reLayoutSelf/_reLayout applies, so a name-based ban would just force a

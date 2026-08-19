@@ -795,3 +795,24 @@ end-of-arc review; proposed commit messages; wait for owner.
 > `fg presuite` + `fg gauntlet` and a proposed commit — ask the owner before every commit/push,
 > and stop for the owner decisions the plan marks OWNER-GATED (Phase 2 product/icon choice,
 > Phase 6 rename).
+
+---
+
+## BACKLOG ledger (items this plan owned, closed after archiving)
+
+- **Deeper role names for the viewport constructs — EXECUTED 2026-08-19** (was a BACKLOG
+  follow-on, "not planned"): owner-approved DTRT package. `SimpleTextViewportWdgt` →
+  **`TextAreaWdgt`** (role name, the List/Toolbar convention; consumers already spoke it),
+  `SimpleDocumentViewportWdgt` → **`DocumentViewportWdgt`**, and — dead-"Simple" removal
+  extended to the mirrored pair — `SimpleVerticalStackViewportWdgt` → **`VerticalStackViewportWdgt`**
+  + `SimpleVerticalStackPanelWdgt` → **`VerticalStackPanelWdgt`** ("Vertical" kept: the stack
+  engine is axis-parameterized, so the axis is information; "Simple" distinguished nothing —
+  it is load-bearing only on `SimpleTextWdgt`, which coexists with `TextWdgt` and keeps it).
+  Enumerate-tokens-first sweep (7 ordered rules, 24 token shapes, 544 replacements / 142 files
+  across both repos); test names, provenance prose, `docs/archive`, `docs/measurements`, and
+  the BACKLOG's dated 2026-08-18 absorb audit kept verbatim.
+- **§7.2 menu-sandwich revisit — RE-FALSIFIED 2026-08-19**, converted to a ⛔ RECORDED REFUSAL
+  in `docs/BACKLOG.md` (which holds the measured two-writer oscillation record and the probe
+  path). The sharpened mechanism — frame OWNERSHIP, not width-constrain — is woven into
+  `docs/architecture/viewports-and-planes.md` and the guard comment at
+  `PopUpWdgt._buildRowsViewportNoSettle`.

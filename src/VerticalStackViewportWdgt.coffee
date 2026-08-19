@@ -1,4 +1,4 @@
-class SimpleVerticalStackViewportWdgt extends ViewportWdgt
+class VerticalStackViewportWdgt extends ViewportWdgt
 
   @augmentWith BubblesEditModeToCoordinatorMixin, @name
 
@@ -7,7 +7,7 @@ class SimpleVerticalStackViewportWdgt extends ViewportWdgt
   offersScrollPolicyToggle: false
 
   constructor: (@isTextLineWrapping = true) ->
-    VS = new SimpleVerticalStackPanelWdgt
+    VS = new VerticalStackPanelWdgt
 
     if !@isTextLineWrapping
       VS.constrainContentWidth = false

@@ -1280,7 +1280,7 @@ class WorldWdgt extends IconGridPanelWdgt
       # (ordered down-walk Stage B3 — THE PAYOFF, docs/archive/ordered-downwalk-stage-b-plan.md §4-B3) the
       # ENGINE now guarantees what the per-class INV-2 idiom could not: a child-placing composite
       # whose frame my arrange is about to move or resize gets its OWN layout re-run afterwards.
-      # This kills the bypass staleness class — SimpleVerticalStackPanelWdgt (and any arrange)
+      # This kills the bypass staleness class — VerticalStackPanelWdgt (and any arrange)
       # sizes a non-tracking child via the override-BYPASSING _applyExtentBase/_applyMoveToBase and
       # never calls the child's _reLayout: a leaf heals (the base fires _reLayoutSelf) but a
       # composite that places ITS children inside _reLayout stayed stale — the census's shipping

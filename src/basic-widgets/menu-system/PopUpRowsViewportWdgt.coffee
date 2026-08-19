@@ -9,7 +9,7 @@
 # The composition is the one ListWdgt uses: a ViewportWdgt keeping its own plain content
 # pane, with the pop-up's MenuRowsPanelWdgt placed INSIDE that pane. ⛔ The rows panel must
 # NOT be my `contents` directly: ViewportWdgt._positionAndResizeChildren constrains a
-# contained SimpleVerticalStackPanelWdgt's width to the viewport, while
+# contained VerticalStackPanelWdgt's width to the viewport, while
 # MenuRowsPanelWdgt._positionAndResizeChildren hugs its width back to its widest row — the
 # two fight and recalculateLayouts raises RECALC_NONCONVERGENCE. A menu OWNS its width, so
 # it can never be the width-constrained contents of anything.

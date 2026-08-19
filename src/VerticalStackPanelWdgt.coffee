@@ -1,4 +1,4 @@
-class SimpleVerticalStackPanelWdgt extends Widget
+class VerticalStackPanelWdgt extends Widget
 
   # stacks don't necessarily enforce a width on contents
   # so the contents could stick out, so we clip at the bounds
@@ -16,7 +16,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
 
   # A vertical stack constrains a dropped child to its width/height ratio, and frees that
   # constraint when the child is grabbed back out. These container capabilities replace the
-  # `whereIn/whereFrom instanceof SimpleVerticalStackPanelWdgt` tests in the ratio mixin and
+  # `whereIn/whereFrom instanceof VerticalStackPanelWdgt` tests in the ratio mixin and
   # Example3DPlotWdgt; FrameWdgt declares its own pair (imposes false / releases true) --
   # a frame does NOT impose the ratio on its contents. (type-test-elimination campaign)
   imposesRatioConstraintOnDroppedChildren: ->
@@ -26,7 +26,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
     true
 
   # ── the scrolled-content contract (scroll-frame role plan P5): what a scroll frame asks
-  # its contents instead of testing `instanceof SimpleVerticalStackPanelWdgt` ──
+  # its contents instead of testing `instanceof VerticalStackPanelWdgt` ──
 
   # a WIDTH-CONSTRAINING stack's width is the VIEWPORT's contract (it tracks the viewport);
   # a FREE-width stack (constrainContentWidth false) OWNS its width — the whole point of the

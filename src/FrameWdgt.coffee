@@ -1014,7 +1014,7 @@ class FrameWdgt extends Widget
     @_contentStackSpec.canSetHeightFreely = false
 
   # The re-fit chokepoint for a window (no scrollbars): re-fit chrome + content. Reached via the
-  # inherited SimpleVerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
+  # inherited VerticalStackPanelWdgt._reLayoutChildren, which dispatches back here.
   # duringReInflation: passed true ONLY by _reactToChildUnCollapsed's synchronous re-fit -- see
   # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
   _positionAndResizeChildren: (duringReInflation = false) ->

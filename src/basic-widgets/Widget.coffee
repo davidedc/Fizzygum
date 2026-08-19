@@ -638,7 +638,7 @@ class Widget extends TreeNode
 
   # The shared "enable/disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
-  # SimpleVerticalStackViewportWdgt). The children list varies by
+  # VerticalStackViewportWdgt). The children list varies by
   # container (the scroll panel sources it from @contents), so it is passed in.
   _addEditingLockMenuEntries: (menu, childrenNotHandlesNorCarets) ->
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
@@ -900,7 +900,7 @@ class Widget extends TreeNode
   #    the container's _reLayout a FIXED POINT -- the same outcome ViewportWdgt reaches via
   #    the non-notifying _apply*Base twins. (See docs/archive/deferred-layout-refit-and-add-design.md, "Phase 3b -- Slice 2".)
   # RETURNS the RESULTING height (Path B de-read-back). A container re-fit that sizes a child this way
-  # (FrameWdgt / SimpleVerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
+  # (FrameWdgt / VerticalStackPanelWdgt _positionAndResizeChildren) must NOT then read the child's
   # geometry back to learn its new height -- that synchronous mutate-then-read-back is exactly what forces
   # the container re-fit to stay on the synchronous seam (it broke C1; see
   # docs/archive/softwrap-deferred-layout-conversion-plan.md §6b + docs/archive/deferred-layout-OVERVIEW.md §5). Instead it
@@ -920,7 +920,7 @@ class Widget extends TreeNode
   # re-fit seam, so a parent can MEASURE a child instead of sizing-it-then-reading-the-height-back. The
   # BASE default is for a widget whose height is INVARIANT under width (a plain box, an icon, a menu): its
   # height at any width is just its current height. Width->height-coupled widgets OVERRIDE it with their
-  # real measure -- TextWdgt (wrapped-text height), SimpleVerticalStackPanelWdgt (Sigma of children's),
+  # real measure -- TextWdgt (wrapped-text height), VerticalStackPanelWdgt (Sigma of children's),
   # FrameWdgt (content + chrome), AnalogClockWdgt / KeepsRatioWhenInVerticalStackMixin (aspect). Reading
   # @height()/@width() here is allowed: those are STABLE applied geometry, NOT a mutate-then-read-back.
   preferredExtentForWidth: (availW) ->
@@ -1317,7 +1317,7 @@ class Widget extends TreeNode
   # content-sizing measurements, so the divergence is deliberate; visibility-blind like it (and fullBounds).
   # Byte-identical to the applied fit at the fixed point, where measured extent
   # == applied extent (Stage-C probe: 0/1429 converged mismatches). childMeasureWidth = the width to measure
-  # each child at (the caller subtracts its own padding). SimpleVerticalStackPanelWdgt overrides this to also
+  # each child at (the caller subtracts its own padding). VerticalStackPanelWdgt overrides this to also
   # derive child POSITIONS from measures (its children's positions are layout-derived, not stable state).
   subWidgetsMergedPreferredBounds: (childMeasureWidth) ->
     result = undefined
@@ -2418,7 +2418,7 @@ class Widget extends TreeNode
   # Base extent-apply WITHOUT the polymorphic override: commit @bounds + @_changed repaint + @_reLayoutSelf. THE
   # single body of the extent-apply pair -- the polymorphic _applyExtent base is a pure pass-through to
   # this. A container arranging a child top-down uses this to apply the child's measured extent while BYPASSING
-  # the child's own _applyExtent override (e.g. SimpleVerticalStackPanelWdgt applies its arranged height
+  # the child's own _applyExtent override (e.g. VerticalStackPanelWdgt applies its arranged height
   # via _applyExtentBase so it does NOT re-enter its own _reLayoutChildren -- the frame commit that follows handles
   # that). The re-fit seam this pair used to differ on is gone (2026-07-01); the override-bypass keeps the two
   # NAMES distinct.
@@ -2464,7 +2464,7 @@ class Widget extends TreeNode
     @_reFitContainer @parent
 
   # The ONE phase-dispatch primitive for the whole "re-fit a container at the next settle point" family:
-  # the drag/drop gesture handlers (PanelWdgt / ViewportWdgt / SimpleVerticalStackPanelWdgt
+  # the drag/drop gesture handlers (PanelWdgt / ViewportWdgt / VerticalStackPanelWdgt
   # _reactToChildDropped / _reactToChildGrabbed / _reactToChildRemoved), the ORDERED settle-time re-fit
   # (_reFitMyTrackingContainerAfterSettle above, called by the settle loop after each chain-top settles), the
   # attach re-fit, and the newParentChoice* menu actions all route through here. Two states:
@@ -4318,7 +4318,7 @@ class Widget extends TreeNode
     # merge some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
     # a ViewportWdgt).
-    # the FIELD is the single truth (Widget default false; SimpleTextViewportWdgt sets
+    # the FIELD is the single truth (Widget default false; TextAreaWdgt sets
     # it true) — the `instanceof ViewportWdgt` qualifier is dropped, and the one non-scroll
     # writer (SimpleTextPanelWdgt's dead constructor write) deleted with it; old saved
     # documents are normalized at load (type-test-elimination ε; see
@@ -4512,7 +4512,7 @@ class Widget extends TreeNode
   # The edit-layout toggle pair, on whatever widget OWNS the scaffold — called on self by
   # the gate above, and by a SCROLL FRAME on its contained stack (a document surfaces the
   # toggle on its own menu while the entries TARGET the inner stack, which is what the
-  # user means by "the document's layout" — SimpleVerticalStackViewportWdgt).
+  # user means by "the document's layout" — VerticalStackViewportWdgt).
   addLayoutEditingMenuEntries: (menu) ->
     menu.addLine()
     if @_showsAdders
@@ -5511,7 +5511,7 @@ class Widget extends TreeNode
   # TWO flavours share it, and they want DISJOINT tails — which is why the knobs ride an options
   # bag (R3) rather than two positional slots: the DIVISION reconciler (_addOrRemoveAdders — member
   # = division element, adders join the division on the given `axis`, default membership) and the
-  # content-stack reconciler (SimpleVerticalStackPanelWdgt._reconcileContentDropSlots — its own
+  # content-stack reconciler (VerticalStackPanelWdgt._reconcileContentDropSlots — its own
   # `isMember` predicate, and no axis at all, so the adder stays spec-less for the stack's arrange
   # to adopt). ⚠ NO default for the axis: its ABSENCE is meaningful (content mode).
   #

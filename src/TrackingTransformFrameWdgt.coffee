@@ -1,6 +1,6 @@
 # A TransformFrameWdgt that TRACKS its single content child's SIZE — a "hugging" island whose slot
 # (@bounds) follows the wrapped widget's bounds. This is a CAPABILITY VARIANT of the base island, the
-# same shape as FrameWdgt / SimpleVerticalStackPanelWdgt / ViewportWdgt each being a size-tracking
+# same shape as FrameWdgt / VerticalStackPanelWdgt / ViewportWdgt each being a size-tracking
 # container: in this layout architecture the tracking-container capability is a CLASS, never a per-widget
 # flag (a freefloating child's _invalidateLayout climbs THROUGH to its parent iff the parent DEFINES
 # _reLayoutChildren — the freefloating gate in Widget._invalidateLayout — a method-existence check, i.e. class identity).
@@ -23,7 +23,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # Canonical tracking-container shape (Stack/Viewport): super places me, then _reLayoutChildren
   # re-fits my slot to the just-settled content. implementsDeferredLayout is pinned false so defining
   # _reLayout does not flip the (@_reLayout != Widget::_reLayout) classification — the SAME reason
-  # SimpleVerticalStackPanelWdgt / ViewportWdgt pin it — keeping subWidgetsMergedFullBounds and the
+  # VerticalStackPanelWdgt / ViewportWdgt pin it — keeping subWidgetsMergedFullBounds and the
   # resize classification exactly as the base fixed-figure island's.
   #
   # (up-edge endgame V1-c, docs/archive/upedge-endgame-plan.md §9) SYNC-SETTLE a PENDING content before the
@@ -173,7 +173,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     @_reLayoutChildren true    # ARRANGE-driven re-fit: undefined the anchor so the render stays glued to the slot (F1)
 
   # Path B (the width→height container protocol a vertical stack drives its tracking-container children
-  # through, SimpleVerticalStackPanelWdgt._positionAndResizeChildren): size my content to the width by
+  # through, VerticalStackPanelWdgt._positionAndResizeChildren): size my content to the width by
   # ITS OWN width→height policy (text wrap / clock square / ratio) and HAND BACK the resulting height —
   # in my plane that IS my slot height after the re-hug (the slot being content-coincident), = the
   # content height. EVERY _setWidthSizeHeightAccordingly override must return its height (the historical
@@ -205,7 +205,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     return super availW if @transformSpec.isIdentity() or !content? or @transformSpec.claimsSpace != "slot"
     content.preferredExtentForWidth availW
 
-  # The stack min-clamps a child's measured extent to its getMinimumExtent (SimpleVerticalStackPanelWdgt.
+  # The stack min-clamps a child's measured extent to its getMinimumExtent (VerticalStackPanelWdgt.
   # _childMeasuredExtentInStack); forward my content's minimum so measure and arrange clamp to the SAME
   # value (the arrange applies through content._applyExtent, whose __commitExtent clamps to the content's
   # own min). Dormant at identity/empty (super ⇒ @minimumExtent). My OWN __commitExtent reads the
