@@ -4,8 +4,29 @@
 > Authored 2026-08-19 against Fizzygum master `44bba15e` / Fizzygum-tests master `6da0e1300`
 > (both pushed; gauntlet 17/17 at these heads). Every `file:line` here is a hint that WILL
 > drift — the method name and the quoted code are authoritative; grep them fresh before
-> trusting any line number. STATUS: **no phase started; Phase 0 spikes are MANDATORY before
-> any later phase.**
+> trusting any line number. STATUS: **Phase 0 DONE (all three spikes GREEN, 2026-08-19,
+> at `a535b7d1` — see the STATUS BOX below); Phase 1 not started, awaiting the owner's
+> go.**
+
+## STATUS BOX
+
+| Phase | State | Evidence |
+|---|---|---|
+| **0 — S1 pixel identity** | ✅ **BYTE-IDENTICAL, 18/18 A/B pairs, dpr1 AND dpr2** | Moved-plane vs pinned+translate renders compared by raw-pixel SHA-256 on 8 real test worlds (probe: `Fizzygum-tests/.scratch/s1-pixel-identity-probe.js`): DocumentViewportWdgt ×3 (text, and the mixed-text-AND-CLOCKS world — rotated stroke hands, the C1 FP-risk class), ListWdgt ×2 (one both-axes), TextAreaWdgt, VerticalStackViewportWdgt (X axis), ViewportWdgt ×2 (wrapped text; the transform-island test world). Zero diffs ⇒ **predicted recapture budget for pure integer-offset scroll relocation: ZERO** (risk 2 did not materialize in any probed world). |
+| **0 — S2 walk generalization** | ✅ **suite 305/305 byte-identical, wall-clock within noise** | Two-arm walk (island arm + `scrollTranslationOfChild?(previous)` translation arm, `previous` child-edge tracking) prototyped in `screenPointToMyPlane` + `mapRectToScreen` — the two HOTTEST walks — with a live provider on every ViewportWdgt (answering undefined at offset 0, i.e. a harder perf test than Phase 1's zero-providers). Suite: baseline 1.14 min → spiked 1.12 min, 305/305, zero failures (byte-exact by the suite's own contract). |
+| **0 — S3 gated call sites** | ✅ **all four behave exactly as §1.4/§1.5 predicts** | Probe: `.scratch/s3-gated-call-sites-probe.js`, spike offset live on a real pane. **Drop**: lands INSIDE the scrolled pane (targeting through the generalized walks is already correct) but at the RAW SCREEN point in plane coords — visually offset-high by exactly the offset ⇒ the ActivePointerWdgt gate must generalize (2c). **Highlight**: HighlighterWdgt parented to the world at the target's PLANE box — visually offset-low by exactly the offset ⇒ the WorldWdgt re-home gate must generalize (2c). **Font menu** (`ChangeFontButtonWdgt` reparented into the pane): menu opens at the button's PLANE y, not its visual y ⇒ the popUp own-position emission needs `localPointToScreen` (2c). **Caret follow**: `scrollCaretIntoView` PHYSICALLY moved the plane under a live offset (hybrid state, pinned invariant broken) ⇒ the 2b rewrite is required, as planned. No additional misbehavior class surfaced. |
+| 1 — mapping protocol | not started (⛔ owner gate: Phase-0 verdicts presented, awaiting go) | — |
+| 2 — offset model | not started | — |
+| 3 — retirement + truth | not started | — |
+| 4 — property-of-every-panel | ⛔ OWNER-GATED | — |
+
+**Phase-0 implementation notes for Phase 1/2 (learned from the spikes, all verified in-tree):**
+- **⚠ ViewportWdgt cannot `super` into the mixin's paint override.** `ClippingAtRectangularBoundsMixin` is injected onto ViewportWdgt's OWN prototype (augmentWith runs before class-body assignments; the class body wins), so in a class-body `_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow` override, `super` binds to base `Widget`'s un-clipping version. The dormant path must delegate explicitly — `PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow.call @, …` (same injected function object; the `TransformFrameWdgt` grandparent-delegation idiom).
+- **⚠ The `instanceof-type-test` stink ratchets at its baseline** (77): the walks' inverse loop must distinguish an island step from a translation step by duck (`step.transformSpec?` — a translation step is a bare Point), or the baseline must be consciously raised. The spike used the duck test; the build passed all 25 gates untouched.
+- **⚠ `mapRectToScreen`'s outermost-island clip is applied AFTER the whole climb** (`result.intersect outermostIsland.clippedThroughBounds()`), so under interleaving (island inside a scrolled pane) the already-translated rect would be intersected with a plane-coords box. Phase 1 must either apply the clip at the right point in the chain or generalize `clipThrough`/`clippedThroughBounds` in the same pass (they are §1.3's uncovered seams anyway — Phase 2 needs them for correct culling of scrolled-out DAMAGE; note the PAINT path needs nothing: `preliminaryCheckNothingToDraw` never consults screen-plane clips, culling there is purely descending-rect ∩ `@bounds`).
+- **⚠ Detaching a caret changes the measured text extent** (`stopEditing` → text re-fit, ~3px), and the re-measure only materializes on the next scroll-moving arrange — an A/B or test that straddles it sees a moved clamp limit. Bit the S1 probe (a 3500px false DIFF); relevant to 2b's caret work and to any offset-clamp test design.
+- The S1 paint interception needed NO clip hack beyond the shadow-pass two-step: descend `cull.translateBy(+offset)` ∩ (translated window box), `ctx.translate(−offset·dpr)` around the contents recursion only; bars and self paint in place; `clipToRectangle` builds its path through the current CTM so the ambient translate composes exactly (integer × dpr ⇒ exact FP).
+- The S3 drag probe idiom for driving real gestures outside macro playback: set `WorldWdgt.dateOfCurrentCycleStart = new Date(now)` before queueing (at `speed=fastest`, `queueInputEvent` reads it as the compression base) and pass the same `now` as the gesture's `startTime`.
 >
 > This is the BACKLOG item `archive/scroll-frame-role-architecture-plan.md` §7.6
 > ("transform-island scrolling"). ⚠ That alias is a MISNOMER the fact-check falsified: the
@@ -340,6 +361,9 @@ scroll engine (nothing calls it for scroll any more) and needs no change itself.
 ## §5 Phases
 
 **Phase 0 — spikes (MANDATORY, throwaway, `.scratch` + uncommitted src hacks; revert after).**
+✅ **DONE 2026-08-19 — all three spikes GREEN; verdicts + implementation notes in the STATUS
+BOX at the top. The probes are kept in `Fizzygum-tests/.scratch/s1-pixel-identity-probe.js`
+and `.scratch/s3-gated-call-sites-probe.js`; src hacks reverted, clean tree rebuilt.**
 - **S1 pixel-identity probe**: hack the paint interception (§3.3) + a hardcoded offset onto
   a ViewportWdgt in a headless boot; render a scrolled state both ways (moved-plane vs
   pinned+translate) on 2–3 real scroll tests' worlds; pixel-diff. Decides: the recapture
