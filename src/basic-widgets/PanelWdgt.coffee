@@ -55,6 +55,21 @@ class PanelWdgt extends Widget
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
+  # Keep an enclosing viewport's MIMIC paint values true when a plane is recolored/faded
+  # DIRECTLY — a parent-soaked notification, a no-op under any non-viewport parent
+  # (ViewportWdgt._reactToChildColorChanged guards on `child is @contents`). Living here, every
+  # panel-family plane relays — the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt
+  # alike; SimpleVerticalStackPanelWdgt (a Widget, not a panel) declares the same pair itself.
+  setColor: (aColor) ->
+    aColor = super aColor
+    @parent?._reactToChildColorChanged? @, aColor
+    return aColor
+
+  setAlphaScaled: (alpha) ->
+    alpha = super alpha
+    @parent?._reactToChildAlphaChanged? @, alpha
+    return alpha
+
   # The panel half of the scrolled-content contract (scroll-frame role plan P5): the PURE
   # measure of my children for a content-sizing scroll frame, at the width the viewport gives
   # me (its viewport minus scroll padding — the same width the text re-wrap uses). A stack

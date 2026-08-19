@@ -49,6 +49,19 @@ class SimpleVerticalStackPanelWdgt extends Widget
   managesOwnScrollPinning: ->
     true
 
+  # keep an enclosing viewport's MIMIC paint values true when I am recolored/faded DIRECTLY —
+  # the same parent-soaked pair PanelWdgt gives every panel-family plane (I extend Widget, so
+  # I declare it myself); a no-op under any non-viewport parent.
+  setColor: (aColor) ->
+    aColor = super aColor
+    @parent?._reactToChildColorChanged? @, aColor
+    return aColor
+
+  setAlphaScaled: (alpha) ->
+    alpha = super alpha
+    @parent?._reactToChildAlphaChanged? @, alpha
+    return alpha
+
   # opts.positionOnScreen -- where the widget was released on SCREEN, so the stack can work out which
   # sibling it landed between. Distinct from opts.atIndex, which names that slot outright.
   # A key this receiver does not read (opts.notContent, which only the frame acts on) is simply

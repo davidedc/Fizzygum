@@ -9,10 +9,11 @@
 # stays purely the SURFACE class, with no plane-conditional second personality (scroll-frame
 # role plan P3):
 #   - it never notices transparent clicks (its frame handles those);
-#   - it keeps its frame's mimic paint values true via the up-relays (the frame never paints —
-#     alpha 0 — but menus and readers see its fields);
 #   - its membership changes are relayed to the scroll frame's HOLDER (the bin listens);
 #   - a click on its empty part forwards the caret to a lone editable text child.
+# (The color/alpha up-relays that keep the frame's mimic paint values true are NOT here —
+# they live on PanelWdgt, because every panel-family plane deserves them, not just the
+# default one; the stack declares its own pair.)
 
 class ScrolledPaneWdgt extends PanelWdgt
 
@@ -20,18 +21,8 @@ class ScrolledPaneWdgt extends PanelWdgt
   # intercept clicks that mean "the content behind the pixels"
   noticesTransparentClick: false
 
-  # keep my frame's mimic values true when I am recolored/faded DIRECTLY (the frame's own
-  # setColor/setAlphaScaled already mirror DOWN into me) — see the relay bodies on
-  # ViewportWdgt for the guards' rationale
-  setColor: (aColor) ->
-    aColor = super aColor
-    @parent?._reactToChildColorChanged? @, aColor
-    return aColor
-
-  setAlphaScaled: (alpha) ->
-    alpha = super alpha
-    @parent?._reactToChildAlphaChanged? @, alpha
-    return alpha
+  # (the color/alpha up-relays that keep my frame's mimic values true live on PanelWdgt now —
+  # every panel-family plane relays, not just me)
 
   # ── the membership relays to the scroll frame's HOLDER ────────────────────────────────────
   # (@parent = the scroll frame, @parent.parent = whoever holds it — e.g. the bin, which

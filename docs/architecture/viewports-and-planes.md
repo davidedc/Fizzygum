@@ -90,7 +90,8 @@ contents' name (`viewportColloquialName` — "folder", "toolbar").
   a paint-time translation (the transform-island machinery; UIScrollView's `bounds.origin`
   model) would make scrollability a property of every panel and dissolve the middle node —
   a separate large arc; see `docs/BACKLOG.md`.
-- The color/alpha up-relay serves the default plane only (matching the historical behavior);
-  a folder/toolbar plane recolored directly does not update the viewport's mimic fields.
+- The color/alpha up-relay serves EVERY plane: the pair lives on `PanelWdgt` (parent-soaked,
+  a no-op under any non-viewport parent), and the stack — a `Widget`, not a panel — declares
+  its own; only `ViewportWdgt` implements the receiving hooks.
 - Viewport-anchored vs plane-anchored children is answered STRUCTURALLY: a child of the
   viewport is fixed chrome, a child of the plane scrolls.
