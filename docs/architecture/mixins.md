@@ -66,6 +66,17 @@ A class opts in with a single class-body line: `@augmentWith SomethingMixin`.
     exists for classes too; it is a cost of fragment-wise compilation, only partly a mixin cost.
   - default parameter values don't survive the mixin field parser (the workaround is
     manual `if !param?` defaulting in the method body).
+  - ⛔ **one mixin, one level per inheritance chain — enforced at boot.** A mixin's members
+    are compiled ONCE into shared function objects, so injecting the same mixin into a class
+    AND one of its ancestors puts the *same function* at two prototype levels, and the
+    instance-resolved `_class_injected_in` marker makes the ancestor-level `super` call
+    re-resolve to itself: any super-calling member recurses forever. This was latent for
+    years (no doubly-injected member called `super`) and surfaced 2026-08-19 when
+    `graphEdgesOut` — a `super`-composed protocol — reached `SimpleTextWdgt`, which
+    re-augmented `ControllerMixin` over base `StringWdgt`'s injection. The redundant
+    augment is removed and `addInstanceProperties` (`src/boot/extensions/Object-extensions.coffee`)
+    now throws on injection of an already-inherited mixin function, so the mistake fails the
+    boot loudly instead of looping at first call.
 - **Override semantics: the class body wins.** The boot emitter outputs the
   `augmentWith(...)` calls BEFORE the class's own prototype assignments
   (`Class.coffee` `for eachAugmentation in @augmentedWith`, ~:386), so a class-body
@@ -146,7 +157,7 @@ three, and `PaletteWdgt`, `StringWdgt`, `GlassBoxTopWdgt` and
 | Mixin | L | Consumers (files) | Branch topology | fake-`super`? |
 |---|---|---|---|---|
 | `ClippingAtRectangularBoundsMixin` | 195 | 5 — `PanelWdgt` (base of the panel subtree), `ClippingBoxWdgt`, `SimpleVerticalStackPanelWdgt`, `FrameWdgt`, `SimpleSpreadsheetWdgt` | base class + unrelated branches | yes |
-| `ControllerMixin` | 516 | 8 — `SliderWdgt`, `StringWdgt`, `SimpleTextWdgt`, `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | no |
+| `ControllerMixin` | 516 | 7 — `SliderWdgt`, `StringWdgt` (whence `TextWdgt`/`SimpleTextWdgt` inherit it — SimpleTextWdgt's own augment was the double-injection the boot guard now forbids), `PaletteWdgt`, `ColorPickerWdgt`, `FanoutWdgt`, `FanoutPinWdgt`, `PatchNodeWdgt` (base for 3 node classes) | 2 subsystems, ≥4 branches | yes — `graphEdgesOut` (super-composed, graph-edges §4.2) |
 | `HighlightableMixin` | 54 | 7 — `ButtonWdgt`, `CreatorButtonWdgt`, `GlassBoxTopWdgt`, `SimpleDropletWdgt`, `IconicDesktopSystemLinkWdgt` (base of the 3-subclass desktop-link family: bin opener, shortcuts, app launchers), 2 icon-button classes | ≥4 branches | yes |
 | `BackBufferMixin` | 162 | 3 — `CanvasWdgt`, `StringWdgt`, `PaletteWdgt` | unrelated branches | no |
 | `KeepsRatioWhenInVerticalStackMixin` | 69 | 3 — `GraphsPlotsChartsWdgt`, `PlotWithAxesWdgt`, `IconWdgt`. Deliberate NON-consumers: `Example3DPlotWdgt` and `StretchableWidgetContainerWdgt` carry pinned-`@ratio` VARIANTS of this protocol (field-based, super-fallback) — see their in-file comments; do not "convert" them | unrelated leaves | no |

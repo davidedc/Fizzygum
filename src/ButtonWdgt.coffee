@@ -133,7 +133,7 @@ class ButtonWdgt extends Widget
     @target[@doubleClickAction]()
 
   # My COMMAND edge (Widget.graphEdgesOut -- the three-edge model,
-  # docs/plans/graph-edges-and-lifecycle-plan.md §4.2): the widget my @action is dispatched at.
+  # docs/archive/graph-edges-and-lifecycle-plan.md §4.2): the widget my @action is dispatched at.
   # ONE edge however many verbs share the receiver (@doubleClickAction dispatches at the same
   # @target). The gate is a CAPABILITY probe, and the capability is the protocol itself: a
   # dispatch receiver may be any object (a layout spec's menu popout, a helper), and exactly the

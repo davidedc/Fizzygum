@@ -3044,18 +3044,48 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
 
   # Chokepoint mark for the eager storage sort (StorageSorter): called after
   # any event that may change which storage container a widget belongs in --
-  # the reference tracker's mutations, close filing, arrivals into/departures
-  # from an open bin window, app-slot writes, snapshot restore. Mark-only and
-  # O(1), so it is safe inside bulk destroy storms; the sort itself drains once
-  # per cycle in doOneCycle.
+  # the reference tracker's mutations, wire add / un-wire / wire-holder death
+  # (liveness follows wires too -- graph-edges plan §4.3), close filing,
+  # arrivals into/departures from an open bin window, app-slot writes,
+  # snapshot restore. Mark-only and O(1), so it is safe inside bulk destroy
+  # storms; the sort itself drains once per cycle in doOneCycle.
   noteStorageMembershipMayHaveChanged: ->
     @storageSorter.noteMembershipMayHaveChanged()
 
-  anyReferenceToWdgt: (whichWdgt) ->
-    # go through all the references and check whether they reference
-    # the wanted widget. Note that the reference could itself be
-    # unreachable (e.g. sitting in the bin)
-    for eachReferencingWdgt from @widgetsReferencingOtherWidgets
-      if eachReferencingWdgt.referencedWidget == whichWdgt
-        return true
+  # Is any liveness edge -- a REFERENCE or a declared WIRE (flow), the same two
+  # kinds that confer reachability in the storage classifier (graph-edges plan
+  # §4.3, decisions G5/G8 there) -- aimed at this widget or anything inside it,
+  # from OUTSIDE it? The close paths ask this to decide park-vs-destroy: an
+  # inbound edge means something out there can still reach me, so park (the
+  # storage drain then shelves whatever stays reachable). Internal wiring (a
+  # window's own scrollbars track its panels) must not count, hence the
+  # outside-the-figure test; and edges held by storage residents DO count --
+  # the holder itself resting in the bin only means the rescue is one step
+  # further away.
+  # A tree walk, not an index read: wires live on each controller's own @wires
+  # list and the engine index is derived lazily, so only the walk answers
+  # completely. O(everything widget-bearing), and close is a user gesture, so
+  # that is fine.
+  anyReferenceOrWireIntoWdgt: (whichWdgt) ->
+    roots = [@, @hand]
+    for slot in Serializer.WORLD_APP_SLOTS
+      roots.push @[slot] if @[slot]?
+    roots.push @simpleEditorTemplates if @simpleEditorTemplates?
+    binContents = @binWdgt?.scrollPanel?.contents
+    roots.push binContents.children... if binContents?
+    roots.push @shelfWdgt.children... if @shelfWdgt?
+    for eachRoot in roots
+      return true if @_anyLivenessEdgeIntoWdgtWithin eachRoot, whichWdgt
+    return false
+
+  _anyLivenessEdgeIntoWdgtWithin: (subtreeRoot, whichWdgt) ->
+    return false if subtreeRoot == @binWdgt or subtreeRoot == @shelfWdgt
+    # a holder inside the asked-about figure is internal wiring, not an inbound edge
+    return false if subtreeRoot == whichWdgt
+    for edge in subtreeRoot.graphEdgesOut()
+      continue unless edge.kind == 'flow' or edge.kind == 'reference'
+      continue unless edge.to? and !edge.to.destroyed
+      return true if edge.to == whichWdgt or whichWdgt.isAncestorOf edge.to
+    for child in subtreeRoot.children
+      return true if @_anyLivenessEdgeIntoWdgtWithin child, whichWdgt
     return false

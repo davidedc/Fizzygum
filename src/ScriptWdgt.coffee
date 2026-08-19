@@ -44,7 +44,7 @@ class ScriptWdgt extends CodeAreaWdgt
     new IconicDesktopSystemScriptShortcutWdgt window, referenceName
 
   closeFromContainerFrame: (containerWindow) ->
-    if !world.anyReferenceToWdgt containerWindow
+    if !world.anyReferenceOrWireIntoWdgt containerWindow
       prompt = new SaveShortcutPromptWdgt @, containerWindow
       prompt.popUpAtHand()
     else

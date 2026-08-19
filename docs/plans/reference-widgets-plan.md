@@ -5,7 +5,7 @@ Owner-gated execution.**
 Anchor on **symbol names** (verified 2026-07-18); line numbers drift. Self-contained.
 
 **Re-scope note:** the *link/GC* half of this arc moved to
-[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) (the `@target`→`referencedWidget`
+[`graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md) (the `@target`→`referencedWidget`
 rename, the 3-edge model, the unified collector), and the *launcher/Factory* half moved to
 [`creation-and-templates-plan.md`](creation-and-templates-plan.md) (App = Factory). What remains here is the
 **visible reference-widget UI and the desktop lifecycle *areas*** — built *on top of* those two mechanisms.
@@ -41,7 +41,7 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
   → `IconicDesktopSystemShortcutWdgt` (+ Document/Folder/Script subclasses); `bringUpTarget()` re-summons.
   (Referent link = `referencedWidget` — the rename off the overloaded `@target` LANDED, but through the
   connector campaign's P9 (`34adb216`, 2026-08-16), not through arc (b);
-  [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) §4.1's version of the item is
+  [`graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md) §4.1's version of the item is
   therefore already done.)
 - **Folders EXIST:** `FolderWindowWdgt` (`extends FrameWdgt`) + `FolderPanelWdgt`
   (`extends IconicDesktopSystemPanelWdgt`); dropping a real widget makes a reference and files the widget
@@ -105,8 +105,9 @@ as a reference lives, the eager sorter re-files the resident to the shelf every 
 binward would break the gated `STORAGE_INVARIANT` (reachable-in-bin). So:
 - **`move to trash` = sever inbound reference edges + close.** The widget becomes genuinely lost and lands
   in the bin *by graph truth* — no intent tag, no invariant carve-out, no second store. (Severing needs
-  "who references me": `world.anyReferenceToWdgt`'s tracker scan, generalized per the graph-edges plan's
-  G8 when that arc's §4.3 lands.)
+  "who references me": the tracker scan `world.widgetsReferencingOtherWidgets` still answers that directly;
+  note the close paths' park-vs-destroy question is since graph-edges §4.3 the walk-based
+  `world.anyReferenceOrWireIntoWdgt` — trash's sever should stay consistent with it.)
 - **"RecentlyClosed" is not an area and not a view-filter — it is the bin's arrival ordering.** With sever
   semantics no residual trashed-vs-closed-and-lost distinction is worth machinery; if auto-purge is ever
   wanted, an intent tag can be added then, with a use case in hand.
@@ -138,7 +139,7 @@ arc-(b) edge model — a "duplicate-contents" is a copy that follows containment
 - **Non-goals:** the edge model + GC (arc (b)); the launcher/Factory mechanism (arc (c)).
 
 ## 7. Cross-links
-- Depends on: [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) (edges + GC),
+- Depends on: [`graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md) (edges + GC),
   [`creation-and-templates-plan.md`](creation-and-templates-plan.md) (launcher/Factory).
 - Program siblings: [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md),
   [`container-regularization-plan.md`](container-regularization-plan.md).

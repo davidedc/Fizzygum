@@ -5,9 +5,10 @@
 # to the bin's lazy sort-at-open view.)
 #
 # HOW: reachability changes only at a small set of events, all funnelled
-# through chokepoints (the reference tracker's three mutation sites, close
-# filing, arrivals into / departures from an open bin window, the app-slot
-# writes, snapshot restore). Each chokepoint calls the mark-only
+# through chokepoints (the reference tracker's three mutation sites, wire
+# add / un-wire / wire-holder death — liveness follows wires too, graph-edges
+# plan §4.3 — close filing, arrivals into / departures from an open bin
+# window, the app-slot writes, snapshot restore). Each chokepoint calls the mark-only
 # world.noteStorageMembershipMayHaveChanged() -- O(1), safe inside bulk destroy
 # storms -- and the pending sort DRAINS once per world cycle in doOneCycle,
 # between the dataflow drain and the layout flush (the dataflow-station
@@ -65,58 +66,86 @@ class StorageSorter
     finally
       @_draining = false
 
-  # The reachability classifier -- the bin's old doGC re-derived STORAGE-AWARE
-  # (plan Phase 0, spike-proven equivalent to the open-bin classification), so
-  # it is correct with every storage container off-tree. It marks everything
-  # reachable with a fresh gc session id; placement is then read per-resident
-  # via isInStorageButReachable. Internal to the drain: placement queries
-  # outside it use the containers' holds().
+  # The reachability classifier -- the STANDING STORAGE INVARIANT computed over
+  # the full widget graph: containment ∪ flow (wires) ∪ reference, enumerated
+  # per-widget by the graphEdgesOut protocol (graph-edges plan §4.3; it
+  # supersedes the tracker-only classifier the bin's old doGC became). It marks
+  # everything reachable with a fresh gc session id; placement is then read
+  # per-resident via isInStorageButReachable. Internal to the drain: placement
+  # queries outside it use the containers' holds().
+  #
+  # WHICH edge kinds confer: containment is the walk itself; a declared wire
+  # (flow) and a reference confer -- the serialized truth (decision G5 there);
+  # a COMMAND edge (a button's @target) is enumerated but confers NOTHING --
+  # button chrome is ephemeral (G8's ruling), and an open menu on a bin
+  # resident must not shelf it. A firesOnAnyChange subscription lives only in
+  # the engine index and is never enumerated at all.
   _runClassifier: ->
     world.incrementalGcSessionId++
     newGcSessionId = world.incrementalGcSessionId
 
-    # pass 1: an orphan reference NOT resting in storage is unreachable by
-    # definition and cannot make its target reachable -- discard. An orphan
-    # reference IN storage is a potential RELAY through a chain, resolved by
-    # the pass-3 fixpoint. (The old classifier discarded ALL orphans, which is
-    # why it carried the "bin must be on-screen" precondition: with the bin
-    # off-tree its residents are orphans, and chains through them broke.)
-    for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
-      if eachReferencingWdgt.isOrphan() and !eachReferencingWdgt.isInStorage()
-        eachReferencingWdgt.markReferenceAsVisited newGcSessionId
+    # phase A -- the attached forest: every liveness edge held anywhere in the
+    # world tree or on the hand seeds reachability at its target. An orphan
+    # subtree is never walked, so its edges confer nothing -- the old
+    # registry-scan's explicit orphan discard, now structural.
+    @_seedFromSubtreeEdges world, newGcSessionId
+    @_seedFromSubtreeEdges world.hand, newGcSessionId if world.hand?
 
-    # pass 2: the remaining not-in-storage references are reachable from the
-    # desktop or the hand -- seed reachability from their targets (which MIGHT
-    # rest in storage).
-    for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
-      if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
-        if !eachReferencingWdgt.isInStorage()
-          eachReferencingWdgt.referencedWidget.markItAndItsParentsAsReachable newGcSessionId
-          eachReferencingWdgt.markReferenceAsVisited newGcSessionId
-
-    # system furniture parked in storage is reachable through WORLD FIELDS, not
-    # the tracker: the app singletons (world[slot], revived by their launchers)
-    # and the editor templates window (revived by TemplatesButtonWdgt). Marked
-    # before the fixpoint so references held INSIDE them relay like any other
-    # reachable resident.
+    # phase B -- system furniture parked in storage is reachable through WORLD
+    # FIELDS: the app singletons (world[slot], revived by their launchers) and
+    # the editor templates window (revived by TemplatesButtonWdgt). Marked
+    # before the fixpoint so edges held INSIDE them relay like any other
+    # reachable resident's.
     for slot in Serializer.WORLD_APP_SLOTS
       world[slot]?.markItAndItsParentsAsReachable newGcSessionId
     world.simpleEditorTemplates?.markItAndItsParentsAsReachable newGcSessionId
 
-    # pass 3 fixpoint: a storage-resting reference whose ancestors became
-    # reachable relays reachability to its own target; chains resolve
-    # progressively until no new reference is uncovered.
-    newReachableReferencesUncovered = true
-    while newReachableReferencesUncovered
-      newReachableReferencesUncovered = false
-      for eachReferencingWdgt from world.widgetsReferencingOtherWidgets
-        if !eachReferencingWdgt.wasReferenceVisited newGcSessionId
-          if eachReferencingWdgt.isInStorageButReachable newGcSessionId
-            newReachableReferencesUncovered = true
-            eachReferencingWdgt.referencedWidget.markItAndItsParentsAsReachable newGcSessionId
-            eachReferencingWdgt.markReferenceAsVisited newGcSessionId
+    # phase C fixpoint: a storage resident whose chain became reachable relays
+    # its subtree's edges to ITS targets; chains resolve progressively until no
+    # new resident activates.
+    relayedResidents = new Set()
+    newReachableResidentsUncovered = true
+    while newReachableResidentsUncovered
+      newReachableResidentsUncovered = false
+      for eachResident in @_storageResidents()
+        continue if relayedResidents.has eachResident
+        continue if eachResident.destroyed
+        if eachResident.isInStorageButReachable newGcSessionId
+          relayedResidents.add eachResident
+          @_seedFromSubtreeEdges eachResident, newGcSessionId
+          newReachableResidentsUncovered = true
 
     return newGcSessionId
+
+  # Follow every LIVENESS edge (flow + reference) held anywhere in this
+  # subtree, seeding reachability at each target (markItAndItsParentsAsReachable
+  # -- marks UP the chain, stopping at the storage boundary, so an edge INTO a
+  # nested widget shelves the whole containing resident). Never descends into
+  # the storage containers themselves: their residents confer only once the
+  # fixpoint proves them reachable -- the same boundary the marking climb holds
+  # from the other side, and what keeps a LOST bin resident's own edges from
+  # shelving its targets while the open bin window has the container on-tree.
+  # A destroyed or unset target confers nothing (a dangling referencedWidget is
+  # the referent-death model until the reference plan's trash arc severs
+  # inbound references).
+  _seedFromSubtreeEdges: (subtreeRoot, newGcSessionId) ->
+    return if subtreeRoot == world.binWdgt or subtreeRoot == world.shelfWdgt
+    for edge in subtreeRoot.graphEdgesOut()
+      continue unless edge.kind == 'flow' or edge.kind == 'reference'
+      continue unless edge.to? and !edge.to.destroyed
+      edge.to.markItAndItsParentsAsReachable newGcSessionId
+    for child in subtreeRoot.children
+      @_seedFromSubtreeEdges child, newGcSessionId
+    return
+
+  # The top-level storage residents of both containers -- what the fixpoint
+  # iterates and the drain re-files.
+  _storageResidents: ->
+    residents = []
+    binContents = world.binWdgt?.scrollPanel?.contents
+    residents.push binContents.children... if binContents?
+    residents.push world.shelfWdgt.children... if world.shelfWdgt?
+    residents
 
   # ---- Tier A: the always-on storage-invariant guard ----
   # Runs at drain exit (with the drain's fresh session id) and at the

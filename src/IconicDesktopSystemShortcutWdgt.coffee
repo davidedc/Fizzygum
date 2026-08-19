@@ -47,7 +47,7 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     true
 
   # My REFERENCE edge (Widget.graphEdgesOut -- the three-edge model,
-  # docs/plans/graph-edges-and-lifecycle-plan.md §4.2): the referent I point at and can re-summon.
+  # docs/archive/graph-edges-and-lifecycle-plan.md §4.2): the referent I point at and can re-summon.
   # Inherited by all shortcut subclasses. The guard covers a deserialization shell mid-restore,
   # where the referent property may not be re-bound yet.
   graphEdgesOut: ->

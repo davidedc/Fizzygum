@@ -21,6 +21,18 @@ Object::augmentWith = (obj, fromClass) ->
 # these are added to the prototype
 Object::addInstanceProperties = (fromClass, obj) ->
   for own key, value of obj when key not in MixedClassKeywords
+    # ⛔ same-mixin-twice-in-one-chain guard. A mixin's members are compiled ONCE and the
+    # resulting function objects are SHARED by every consumer, so finding this very function
+    # already reachable through the prototype chain means the same mixin sits on an ancestor.
+    # That is never meaningful (the members are already inherited) and it BREAKS the emulated
+    # `super` (Mixin._equivalentforSuper): super resolves through the INSTANCE's nearest
+    # `_class_injected_in` marker, so with two injection levels the ancestor-level call
+    # re-resolves to itself and any super-calling member recurses forever — measured with
+    # ControllerMixin.graphEdgesOut when SimpleTextWdgt re-augmented over StringWdgt's mixin.
+    # Fail the boot loudly instead of leaving the loop latent until something calls the member.
+    if typeof(value) is "function" and @::[key] is value
+      throw new Error "mixin double-injection: " + (fromClass or @name) +
+        " already inherits '" + key + "' from the same mixin — remove the redundant augmentWith"
     # Assign properties to the prototype
     @::[key] = value
 

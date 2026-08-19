@@ -1,8 +1,11 @@
 # The widget graph — three edge kinds, one lifecycle
 
-**Written to be executed COLD by an LLM/engineer with ZERO prior context. The §5 owner decisions
-are RATIFIED (2026-08-18); §4.2 LANDED the same day (see its "As landed" block). What remains is
-§4.3 — the whole-graph collector, the second wave (G3: own session).**
+**PLAN COMPLETE 2026-08-19 — every proposal landed; archived.** §4.1 landed 2026-08-16 (connector
+§P9), §4.2 landed 2026-08-18, §4.3 landed 2026-08-19 (see its "As landed" block: the whole-graph
+collector, wire death hygiene, the G8 close-site generalization — plus the mixin double-injection
+framework bug the collector surfaced), §4.4 is a recorded ruling. Gate proof at close: `fg
+gauntlet` 16/16 in-wave (storage + serialization legs included), collector/mixin/dead-target
+probes all green, 7 benign inspector recaptures (dpr 1+2, pixel-verified).
 
 **STATUS: AUTHORED 2026-07-18; §4.1 (the `@target` → `referencedWidget` rename) LANDED 2026-08-16
 via the sibling [`connector-ubiquity-and-reflection-plan.md`](../archive/connector-ubiquity-and-reflection-plan.md)'s
@@ -237,7 +240,35 @@ the right index for that query — leave it); the real (c) deliverable is docume
 a constructed fixture (wire + button + shortcut), and a `widget-authoring-guidelines.md` §-entry
 ("declaring an edge kind" = contribute to `graphEdgesOut`). No behaviour change anywhere in 4.2.
 
-### 4.3 One reachability collector over the union. *The payoff — second wave (G3).*
+### 4.3 One reachability collector over the union. *The payoff — second wave (G3).* ✅ **LANDED 2026-08-19.**
+
+As landed: `StorageSorter._runClassifier` is now three phases over the widget graph — **A:** walk
+the attached forest (world + hand) following every liveness edge via `graphEdgesOut` (an orphan
+subtree is never walked, so the old pass-1 orphan discard is structural); **B:** the furniture
+marks, unchanged; **C:** the same fixpoint, over storage RESIDENTS instead of tracker members. The
+tracker iteration left the classifier entirely (the Set remains for serialization membership,
+destroy-hook hygiene and the audit; `markReferenceAsVisited`/`wasReferenceVisited`/`isInStorage` +
+the session-mark field are DELETED). ⭐ **The landed union is containment ∪ flow ∪ reference —
+command is enumerated but confers nothing**, one edge-kind narrower than this section's original
+text: G8's ratified rationale (button chrome is ephemeral) applies to FILING verbatim — a menu row
+IS a ButtonWdgt, so command-confers-filing would let an open context menu on a bin resident shelf
+it mid-gesture, buying nothing (persistent command edges are intra-subtree, hence inert for
+filing). New membership chokepoints: `_addWire`, `unwireFrom`, wire-holder death. The dead-target
+raggedness resolved as **prune-at-death + fire-time self-heal** (one invariant, two chokepoints:
+`DataflowEngine.severWiresIntoDyingNode` from `_destroyNoSettle`, +
+`ControllerMixin._pruneWiresOntoDestroyedTargets` covering the lazily-declared index hole) — the
+spike first PROVED the raggedness live (the drain silently delivered `_setTextConnector` into a
+destroyed widget; the tracking lane re-subscribed FROM it). G8's close sites:
+`world.anyReferenceOrWireIntoWdgt` (walk-based, me-or-descendant, outside-the-figure, bin-held
+edges count) replaces `anyReferenceToWdgt` at all three sites, so close and filing agree. ⭐
+Surfaced + fixed a LATENT framework bug: same-mixin-twice-in-one-chain makes the emulated mixin
+`super` recurse forever (shared compiled function + instance-resolved marker); SimpleTextWdgt's
+redundant re-augment removed, `addInstanceProperties` now throws on double injection
+(`docs/architecture/mixins.md` §2). Probes: `.scratch/graph-collector-probe.js` 14/14 (re-file
+both directions, nested, fixpoint relay, command inert, close-query semantics),
+`.scratch/dead-target-wire-spike.js` before/after, `.scratch/mixin-super-chain-probe.js` 3/3.
+
+The original spec (executed as written, minus the command-edge narrowing argued above):
 
 Generalize `StorageSorter._runClassifier` from "reference tracker only" to **containment ∪ flow ∪
 command ∪ reference**, keeping its station, its session-id marking, and its filing semantics:
@@ -336,12 +367,14 @@ reference *or wire* keeping me alive" when §4.3 is worked.
   [`../archive/bin-shelf-eager-sorting-plan.md`](../archive/bin-shelf-eager-sorting-plan.md) (the
   classifier + drain station this plan generalizes).
 
-## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+## BACKLOG ledger (closed items; the plan's whole `docs/BACKLOG.md` section dissolved at close)
 
-One closed item relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18, so that file can go
-back to being an index of OPEN work only (`docs/README.md` filing rule 2). This plan is still
-ACTIVE: §4.2–§4.4 remain open and stay listed in `docs/BACKLOG.md`. The landing belongs with
-§4.1, which already carries its own ✅ LANDED stamp.
+Closed items relocated from `docs/BACKLOG.md` so that file stays an index of OPEN work only
+(`docs/README.md` filing rule 2). With §4.3 landed 2026-08-19 the plan is COMPLETE and its
+remaining BACKLOG section is deleted — this ledger is the record.
 
 - [x] §4.1: reference link `@target` → `referencedWidget` — DONE 2026-08-16 by connector §P9 (`34adb216`), 21 sites + 2 cross-file readers; the dataflow and dispatch meanings KEEP the name.
-- [x] P10(b) (ex-connector, absorbed here as decision G4): index button `@target`s as non-traversed COMMAND edges — **ANSWERED + LANDED 2026-08-18 with §4.2**: no index; the command edge is enumerated lazily by `ButtonWdgt.graphEdgesOut` behind the capability probe `@target?.graphEdgesOut?`. An eager `world.dataflow` index is a recorded rejected alternative (§7): no `@target` write funnel exists, menu chrome would churn it, and no reverse-query consumer exists — revisit only with a named consumer in hand. ⇒ §4.3 (the whole-graph collector, G3: own session) is the next unstarted step.
+- [x] P10(b) (ex-connector, absorbed here as decision G4): index button `@target`s as non-traversed COMMAND edges — **ANSWERED + LANDED 2026-08-18 with §4.2**: no index; the command edge is enumerated lazily by `ButtonWdgt.graphEdgesOut` behind the capability probe `@target?.graphEdgesOut?`. An eager `world.dataflow` index is a recorded rejected alternative (§7): no `@target` write funnel exists, menu chrome would churn it, and no reverse-query consumer exists — revisit only with a named consumer in hand.
+- [x] §4.2: the three edges as one vocabulary — LANDED 2026-08-18 (`2747c4d9`): `Widget.graphEdgesOut` + three contributors, capability probe over `instanceof`, probe 10/10.
+- [x] §4.3: the whole-graph collector — LANDED 2026-08-19 (see the §4.3 As-landed block): classifier over containment ∪ flow ∪ reference, wire death hygiene (sever + self-heal), `anyReferenceOrWireIntoWdgt` at the three close sites, the mixin double-injection boot guard.
+- [x] §4.4: reference-counting is NOT the mechanism — a recorded ruling; the ban stands in §4.4 and §7.

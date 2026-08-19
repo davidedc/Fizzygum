@@ -101,6 +101,10 @@ ControllerMixin =
         unless wire?
           wire = new WireSpec theTarget, action, opts
           @wires.push wire
+          # a new wire can make its target REACHABLE — storage liveness follows wires
+          # (graph-edges plan §4.3) — so mark the membership chokepoint. O(1), drains once
+          # per cycle.
+          world.noteStorageMembershipMayHaveChanged()
         world.dataflow.ensureWireEdges @, @wires
         return wire
 
@@ -120,10 +124,30 @@ ControllerMixin =
         world.dataflow.ensureWireEdges @, @wires
         world.dataflow.removeAnyChangeEdge theTarget, @ if wire.tracks
         world.dataflow.removeAllEdgesOf wire
+        # the cut wire may have been what kept its target reachable — storage liveness
+        # follows wires (graph-edges plan §4.3) — so mark the membership chokepoint.
+        world.noteStorageMembershipMayHaveChanged()
+        return
+
+      # THE UN-WIRE VERB's death-driven sibling: drop every wire whose TARGET is destroyed,
+      # with unwireFrom's full hygiene. Sever-at-death (DataflowEngine.severWiresIntoDyingNode)
+      # prunes these eagerly through the engine's reverse index, but that index is derived
+      # LAZILY — a restored controller declares its edges on first fire — so a target destroyed
+      # before my edges were ever declared leaves a record death could not see. Healing at the
+      # same funnel that derives the edges (_fireConnection) makes the invariant total: no wire
+      # record outlives its target, so no derivation can re-declare an edge onto a corpse and
+      # nothing can deliver into one.
+      _pruneWiresOntoDestroyedTargets: ->
+        return unless @wires?
+        for wire in @wires.slice() when wire.target?.destroyed
+          # public-call-sanctioned: unwireFrom is THE one un-wire verb and is settle-neutral
+          # (pure list + engine-index bookkeeping, no geometry); duplicating its hygiene here
+          # would state the un-wire protocol twice.
+          @unwireFrom wire.target, wire.action
         return
 
       # My declared wires, as FLOW edges (Widget.graphEdgesOut -- the three-edge model,
-      # docs/plans/graph-edges-and-lifecycle-plan.md §4.2). The SERIALIZED truth, not the engine's
+      # docs/archive/graph-edges-and-lifecycle-plan.md §4.2). The SERIALIZED truth, not the engine's
       # derived records: the index also carries consumer-declared firesOnAnyChange subscriptions
       # (a menu tracking a text) that are nobody's declared relationship and confer nothing
       # (decision G5 there).
@@ -250,6 +274,9 @@ ControllerMixin =
       # the public name is already sound -- census: connection-cascade-settle-fix-plan.md fact 13). A wire's
       # action stays the menu-friendly public name everywhere (menus, hard-wired app circuits).
       _fireConnection: (value) ->
+        # heal before deriving: a wire whose target DIED must neither re-declare its edge nor
+        # count as "I have wires" (see _pruneWiresOntoDestroyedTargets).
+        @_pruneWiresOntoDestroyedTargets()
         # ⭐ TWO JOBS, and the wire check belongs to only ONE of them. DELIVERING needs wires;
         # ANNOUNCING does not — a widget can be WATCHED by something it does not drive (a
         # firesOnAnyChange re-reader, §P8), which is exactly a FOLLOWER's situation. While the

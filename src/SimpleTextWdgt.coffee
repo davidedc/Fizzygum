@@ -13,14 +13,17 @@
 # live on the base StringWdgt: its seven text setters self-settle and call the
 # non-settling StringWdgt::_reflowContainedTextThenInvalidateLayout core (gated by the mode), so ANY
 # TextWdgt (not just this one) can be contained text.
-# What's left specific to THIS class is its CONTROLLER chrome: pinning
+# What's left specific to THIS class: pinning
 # _contentStackSpec.canSetHeightFreely = false (height is content-driven), the
-# scroll-panel soft-wrap toggle (softWrapOn/Off), the "set target" controller menu +
-# the dataflow plumbing (updateTarget + bang), and the panel-colour blend helpers.
+# scroll-panel soft-wrap toggle (softWrapOn/Off), the dataflow plumbing
+# (updateTarget + bang), and the panel-colour blend helpers. The CONTROLLER
+# chrome (wire verbs, the "connect to ➜" menu) is INHERITED — base StringWdgt
+# carries ControllerMixin. ⛔ Do not re-augment it here: a mixin's compiled
+# members are ONE shared function object, so injecting the same mixin at two
+# levels of one chain makes every super-calling member (graphEdgesOut) recurse
+# forever — the addInstanceProperties guard now fails the boot on it.
 
 class SimpleTextWdgt extends TextWdgt
-
-  @augmentWith ControllerMixin
 
   # Same head and same opts vocabulary as TextWdgt -> StringWdgt, which does all the assigning
   # (see the note in TextWdgt's constructor for why nothing here is a `@param`).

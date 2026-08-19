@@ -22,7 +22,7 @@ class FolderWindowWdgt extends FrameWdgt
     # public-call-sanctioned + nosettle-sanctioned: this IS the close-from-bar
     # action; @close is the public self-settling close verb it legitimately
     # triggers (as the public closeFromFrameBar it replaced did).
-    if !world.anyReferenceToWdgt @
+    if !world.anyReferenceOrWireIntoWdgt @
       prompt = new SaveShortcutPromptWdgt @, @
       prompt.popUpAtHand()
     else

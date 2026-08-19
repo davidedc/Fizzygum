@@ -5,7 +5,7 @@ Anchor on **symbol names** (verified 2026-07-18); line numbers drift. Self-conta
 
 Part of one program with [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md),
 [`container-regularization-plan.md`](container-regularization-plan.md),
-[`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md), and
+[`graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md), and
 [`reference-widgets-plan.md`](reference-widgets-plan.md). **This arc supersedes the launcher/Factory section
 of the reference plan.** North star: orthogonalisation, de-byzantination, regularity.
 
@@ -73,7 +73,7 @@ launcher/creator/factory paths don't share a base; "App" isn't formally "a Facto
   through the self-settling `_buildAndConnectChildren` path, not inline construction.
 - **Determinism:** creation must be a pure function of the event stream (no wall-clock in what gets built
   or its ids); id assignment already flows through `assignUniqueID`/`idCounters` (serialized).
-- **This arc pairs with the graph-edge model** ([`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md)):
+- **This arc pairs with the graph-edge model** ([`graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md)):
   a Factory/launcher on the desktop is itself a **reference** (a launcher points at what it creates), and a
   freshly-created object enters the graph as a new containment root — so creation and lifecycle share the
   edge vocabulary.
@@ -124,7 +124,7 @@ the "new empty text" defaults), and a Factory always stamps the current template
 ## 7. Cross-links
 - Supersedes: reference-plan launcher/Factory section (see [`reference-widgets-plan.md`](reference-widgets-plan.md)).
 - Program siblings: [`onion-widget-composition-plan.md`](../archive/onion-widget-composition-plan.md) (App = Factory over
-  an empty framed `*Wdgt`), [`graph-edges-and-lifecycle-plan.md`](graph-edges-and-lifecycle-plan.md) (a
+  an empty framed `*Wdgt`), [`graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md) (a
   Factory is a reference; creation enters the graph),
   [`container-regularization-plan.md`](container-regularization-plan.md).
 - Architecture: `docs/architecture/serialization-duplication-reference.md`; determinism:

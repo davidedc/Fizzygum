@@ -639,10 +639,19 @@ class Widget extends TreeNode
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     world.keyboardEventsReceivers.delete @
-    # a connection-bearing widget that became a dataflow node drops its edges from the shared engine index on
-    # death — a dead node left in @edgesFrom/@edgesTo is a leak AND a ghost recompute (spec §2, the node-death
-    # API). A cheap no-op for a widget that was never a node.
+    # node-death, both halves (spec §2 + graph-edges plan §4.3). First SEVER the wires still
+    # aiming at me: they live on each living producer's own @wires list, which the engine's
+    # reverse index — still populated at this point — can find; left in place, the producer's
+    # next fire would re-declare an edge onto my corpse and the drain would deliver into it
+    # (the dead-target-wire spike). Then drop my own edges from the shared index — a dead node
+    # left in @edgesFrom/@edgesTo is a leak AND a ghost recompute. Both are cheap no-ops for a
+    # widget that was never a node.
+    world.dataflow?.severWiresIntoDyingNode @
     world.dataflow?.removeAllEdgesOf @
+    # my own wires die with me: anything only I was driving may just have become lost
+    # (storage liveness follows wires — graph-edges plan §4.3), so mark the membership
+    # chokepoint. O(1) and drain-suppressed, so it is safe inside bulk destroy storms.
+    world.noteStorageMembershipMayHaveChanged() if @wires?
 
     @destroyed = true
     # FREEFLOATING-skip is centralized in _invalidateLayout(triggeringChild): passing @ lets the
@@ -4726,7 +4735,7 @@ class Widget extends TreeNode
     return @pinLabelled @principalPinLabel
 
   # The GRAPH EDGES I hold OUT of myself, as [{kind, to}] with kind one of 'flow' | 'command' |
-  # 'reference' and `to` another WIDGET (docs/plans/graph-edges-and-lifecycle-plan.md §4.2, the
+  # 'reference' and `to` another WIDGET (docs/archive/graph-edges-and-lifecycle-plan.md §4.2, the
   # three-edge model). DERIVED on demand from the fields that already persist -- a controller's
   # wire list, a button's target, a shortcut's referent -- and deliberately backed by NO standing
   # edge index (decision G4 there: `@target` has no write funnel to hook one to, menu chrome would
@@ -4735,7 +4744,10 @@ class Widget extends TreeNode
   # (children/parent), and every consumer of this protocol treats the subtree specially anyway.
   #   ⚠ Enumeration is honest; POLICY is not decided here. An ephemeral holder (a menu row is a
   # ButtonWdgt) truthfully reports its command edge -- which kinds confer liveness from which
-  # holders is the §4.3 collector's question (decisions G5/G8), not this protocol's.
+  # holders is the consumers' question, not this protocol's. The two consumers agree on the
+  # answer (decisions G5/G8 there): the storage classifier (StorageSorter._runClassifier) and
+  # the close paths' park-vs-destroy query (WorldWdgt.anyReferenceOrWireIntoWdgt) both follow
+  # flow + reference and let command confer nothing.
   graphEdgesOut: -> []
 
   # The shared body of every controller widget's openTargetPropertySelector: pop up the "choose

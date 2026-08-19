@@ -94,7 +94,8 @@ Landed so far:
   pass. The calc-style patch nodes gain `dataflowRecompute` on their shared base (`PatchNodeWdgt` — run the
   node's computation over the stored inputs → `@output`)
   and DELETE their `allConnectedInputsAreFresh` freshness gate (the §8 deadlock) on the ON path. Node death
-  (`Widget._destroyNoSettle`) → `removeAllEdgesOf @`. Sheet reference edges (no `action`) are skipped, so the
+  (`Widget._destroyNoSettle`) → `removeAllEdgesOf @` (since graph-edges §4.3 preceded by
+  `severWiresIntoDyingNode @` — see "Rules for engine code"). Sheet reference edges (no `action`) are skipped, so the
   spreadsheet is untouched. Everything is switch-gated → switch-OFF is byte-identical legacy. The `firesPerEvent`
   PER-EVENT synchronous mini-pass is DEFERRED (the flag rides the edge record; delivery pools — screen-
   indistinguishable, spec §13). Acceptance: the °C↔°F ring is frame-identical ON≡OFF both directions, 1 pass,
@@ -209,8 +210,14 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 
 - Never call a public self-settling setter, `_invalidateLayout`, or a connection's settling
   entrypoint. Sinks route via `_<action>Connector` / bare mutators only.
-- Every death path (`removeAllEdgesOf`) drops the node from BOTH adjacency maps and the pools —
-  a dead node left in the index is a leak AND a ghost recompute.
+- **Node death is TWO verbs, in order** (`Widget._destroyNoSettle` calls both):
+  `severWiresIntoDyingNode` first — every producer the reverse index knows un-wires the dying
+  target, because a wire record left on a LIVING controller's `@wires` would be faithfully
+  re-declared by the next derivation and the drain would deliver into the corpse — then
+  `removeAllEdgesOf`, which drops the node from BOTH adjacency maps and the pools (a dead node
+  left in the index is a leak AND a ghost recompute). The index is derived lazily, so sever alone
+  is partial; `ControllerMixin._pruneWiresOntoDestroyedTargets` (fire-time) is the same
+  invariant's other chokepoint: no wire record outlives its target.
 - **A producer's out-edges are not all wires.** It owns as many WIRES as it has `WireSpec` records
   (connector plan §P4) plus any number of edges from consumers that merely re-read it, so a re-wire
   clears the wires only (`_removeOutgoingWireEdgesOf`) — clearing everything would silently

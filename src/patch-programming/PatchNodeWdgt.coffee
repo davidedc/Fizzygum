@@ -58,11 +58,8 @@ class PatchNodeWdgt extends Widget
     world.dataflow.markStale @, (fireBecauseBang is true)
     return
 
-  fireOutputToTarget: ->
-    @_fireConnection @output
-
   reactToTargetConnection: ->
-    @fireOutputToTarget()
+    @_fireConnection @output
 
   # ── dataflow node protocol (spec §8) ─────────────────────────────────────────────────────
   # A COMPUTING node: recompute = run the node's own computation over the stored inputs (recalculateOutput, a

@@ -45,8 +45,6 @@ class TreeNode
   checkFirstParentClippingAtBoundsCache: undefined
   cachedFirstParentClippingAtBounds: undefined
 
-  gcReferenceExaminedSessionIdMark: 0
-
   constructor: (@parent, @children = []) ->
 
   
@@ -118,12 +116,6 @@ class TreeNode
     @children.remove node
     node.parent = undefined
 
-  markReferenceAsVisited: (newGcSessionId) ->
-    @gcReferenceExaminedSessionIdMark = newGcSessionId
-
-  wasReferenceVisited: (newGcSessionId) ->
-    @gcReferenceExaminedSessionIdMark == newGcSessionId
-
   markItAndItsParentsAsReachable: (newGcSessionId) ->
     @gcSessionId = newGcSessionId
     if @parent?
@@ -154,14 +146,6 @@ class TreeNode
   # sandwich like the bin's)
   isDirectlyInShelf: ->
     @parent == world.shelfWdgt
-
-  # STORAGE = the bin or the shelf: the two off-tree resting containers. The
-  # storage-aware classifier (StorageSorter pass 1) keys off this -- an orphan
-  # tracker member resting in storage is a potential relay, not unreachable junk.
-  isInStorage: ->
-    thereCouldBeOne = @allParentsBottomToTopSuchThat (eachWdgt) ->
-      eachWdgt == world.binWdgt or eachWdgt == world.shelfWdgt
-    return thereCouldBeOne.length == 1
 
   # was this storage resident marked reachable by the given classification
   # session (itself, or through a marked ancestor)? Same climb for both

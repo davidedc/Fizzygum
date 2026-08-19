@@ -291,6 +291,30 @@ class DataflowEngine
     @lastValues.delete node
     return
 
+  # Node-death, the WIRE-LIST half (graph-edges plan §4.3): removeAllEdgesOf clears the dying
+  # node out of the derived INDEX, but the wires still aiming at it live on each living
+  # producer's own @wires list — and any later derivation (ensureWireEdges /
+  # _ensureTrackingEdges) faithfully re-declares an edge onto the corpse, which the drain then
+  # delivers into, silently (measured: the dead-target-wire spike). A dead relationship must
+  # leave the MODEL, not just the index, so death severs it at the owning end: every producer
+  # the reverse index knows un-wires the dying target with full unwireFrom hygiene (list
+  # record, tracking reverse edge, the wire record's own node death, membership chokepoint).
+  # ⚠ The reverse index is derived LAZILY (a restored controller declares its edges on first
+  # fire), so a producer that never fired since load is invisible here — the fire-time
+  # self-heal (ControllerMixin._pruneWiresOntoDestroyedTargets) is the same invariant's other
+  # chokepoint; together they are total.
+  # Called from Widget._destroyNoSettle BEFORE removeAllEdgesOf clears the index this reads.
+  severWiresIntoDyingNode: (node) ->
+    producers = @edgesTo.get node
+    return unless producers?
+    # snapshot both levels: unwireFrom reconciles the very sets this walk reads
+    producersSnapshot = []
+    producers.forEach (p) -> producersSnapshot.push p
+    for producer in producersSnapshot
+      for rec in @_wireEdgeRecords producer, node
+        producer.unwireFrom? node, rec.action
+    return
+
   # Is there already an edge producer -> consumer? The reverse index answers it directly. Lets a
   # consumer that may be asked to subscribe to the same source more than once (a controller
   # re-deriving its tracking edges, ControllerMixin._ensureTrackingEdges) dedup without keeping its

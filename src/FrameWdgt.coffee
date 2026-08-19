@@ -419,9 +419,9 @@ class FrameWdgt extends Widget
     # public closeFromFrameBar it was extracted from did (this dedup only moved the
     # shared body down a level). Reaching the NoSettle cores would leave the world
     # unsettled after a top-level bar press.
-    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt @
+    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceOrWireIntoWdgt @
       @fullDestroy()
-    else if !world.anyReferenceToWdgt @
+    else if !world.anyReferenceOrWireIntoWdgt @
       prompt = new SaveShortcutPromptWdgt @, @
       prompt.popUpAtHand()
     else

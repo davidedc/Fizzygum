@@ -181,12 +181,6 @@ Naked `Simple*` capability → framed `*Wdgt` citizen (`FrameWdgt`, was `WindowW
 - [ ] §5.B follow-ons: `DeckWdgt` = D2 reserved name, no substrate yet. Creation-menu wording ✅ 2026-07-20 — the citizen-creator dev-menu labels renamed to the kind ("simple document"→"document", "Simple slide"→"slide", + the two launchers "document launcher"/"slide launcher"); recapture-FREE (those labels are dev-menu-only, navigated/screenshotted by no test). The `simple plain text …` dev-menu cluster left as-is (out of scope, owner kept it tight)
 - [ ] §5.D follow-ons: a load-image-FILE flow into `ImageWdgt` (owner decision D13: `SimpleImageWdgt`, the bitmap loader, stays a sibling payload with its one button-face consumer until such a flow exists — the stamp drop-flow already imports pixels). ⚠ 2026-08-02: `SimpleImageWdgt` moved out of core into the `video-player` part (nothing on the boot path reached it; its only consumers are that part's). Since `video-player` is `requiresFlag`-gated, it now ships ONLY with `--includeVideoPlayer` — so building this flow means first deciding where the loader belongs. The ungrammatical "a Image" hierarchy row ✅ FIXED 2026-07-20 — `Widget.toString` now derives the article ("an" before a vowel-initial class name, else "a"); probe-verified (`an Image`/`an AnalogClock`/`a Rectangle`), zero recaptures (no test screenshots a vowel-initial menu label)
 
-### `plans/graph-edges-and-lifecycle-plan.md`
-AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; unify containment/target/reference edges; GC = reachability over their union. Supersedes the reference plan's link-rename + GC. §4.1 (the reference-edge rename) LANDED 2026-08-16 via connector §P9 — its entry is in this plan's § "BACKLOG ledger" — so §4.2 is the next unstarted step.
-- [ ] §4.2: name the 3 edges as one vocabulary; reuse the dataflow index for target edges
-- [ ] §4.3: one incremental whole-graph collector (containment ∪ target ∪ reference) — second wave
-- [ ] §4.4: (bank) record that reference-counting is NOT the mechanism
-
 ### `plans/creation-and-templates-plan.md`
 AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a-template (Factory) | run-an-assembler (ScriptRunner); App = a Factory over an empty framed `*Wdgt` in edit mode. Supersedes the reference plan's launcher/Factory.
 - [ ] §4.1: name `FactoryWdgt`/`ScriptRunnerWdgt` (use `isTemplate` + the `Duplicator`)

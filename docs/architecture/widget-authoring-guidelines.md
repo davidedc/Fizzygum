@@ -696,7 +696,7 @@ by label rather than by setter. Override `dataflowValue` instead only when the e
 
 **A widget that holds a durable pointer at another widget declares it by contributing to
 `graphEdgesOut`** — the three-edge enumeration protocol (`{kind, to}`, kind `'flow'` / `'command'` /
-`'reference'`; [`../plans/graph-edges-and-lifecycle-plan.md`](../plans/graph-edges-and-lifecycle-plan.md)
+`'reference'`; [`../archive/graph-edges-and-lifecycle-plan.md`](../archive/graph-edges-and-lifecycle-plan.md)
 §4.2). Contribute by concatenating onto `super`, exactly like `pins`:
 
 ```coffee
@@ -709,7 +709,13 @@ index behind it (decision G4 there), and never enumerate containment (the tree i
 Existing contributors: `ControllerMixin` (wires → flow), `ButtonWdgt` (`@target` → command),
 `IconicDesktopSystemShortcutWdgt` (`referencedWidget` → reference). Ephemeral chrome pointers — a
 handle's, a prompt's, a caret's, a menu spec's `target` — are deliberately NOT edges: enumeration
-covers the durable widget graph, and liveness policy on top of it belongs to that plan's §4.3.
+covers the durable widget graph. Liveness POLICY sits on top, in the protocol's two consumers, and
+they agree (that plan's decisions G5/G8): the storage classifier (`StorageSorter._runClassifier`)
+and the close paths' park-vs-destroy query (`WorldWdgt.anyReferenceOrWireIntoWdgt`) both follow
+**flow + reference** and let **command** confer nothing — declare honestly and let the consumers
+decide. A flow edge also obliges hygiene the framework already provides: a destroyed target's wires
+are severed at death (`DataflowEngine.severWiresIntoDyingNode` + the fire-time self-heal), so no
+wire record outlives its target.
 
 ---
 
