@@ -1,9 +1,9 @@
 # FizzyPaintApp -- the "Draw" launcher app: opens a fresh ImageWdgt (the framed
 # paintable-image citizen, §5.D) + its info widget on each launch. An
-# IconicDesktopSystemWindowedApp (Phase 6 6c.4); the base owns the
+# WindowedApp (Phase 6 6c.4); the base owns the
 # launcher/opener + launch, and the openFrameWith passthrough hands the citizen
 # through.
-class FizzyPaintApp extends IconicDesktopSystemWindowedApp
+class FizzyPaintApp extends WindowedApp
 
   requiredParts: ["authoring"]
 

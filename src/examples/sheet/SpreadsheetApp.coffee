@@ -1,5 +1,5 @@
 # SpreadsheetApp — the desktop launcher/opener for the spreadsheet (one of the
-# IconicDesktopSystemWindowedApp subclasses; the DegreesConverterApp shape). Its title/icon are
+# WindowedApp subclasses; the DegreesConverterApp shape). Its title/icon are
 # read from AppCatalog (keyed by class name, not by this class); this file only builds the window --
 # the base owns createOpener + launch. `slot: undefined`
 # ⇒ a FRESH window every launch (multiple sheets allowed — the sheet is NOT a world singleton).
@@ -18,7 +18,7 @@
 # fire-and-forget, so it can await. See ExamplesFolderWindowWdgt and WorldWdgt.createDesktop — no
 # icon, desktop or folder, needs an eager app sliver any more (docs/archive/app-descriptor-unification-plan.md).
 
-class SpreadsheetApp extends IconicDesktopSystemWindowedApp
+class SpreadsheetApp extends WindowedApp
 
   requiredParts: ["spreadsheet"]
 

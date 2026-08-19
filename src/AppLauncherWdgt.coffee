@@ -1,6 +1,6 @@
 # The desktop / in-folder icon that opens a windowed app. Two modes, one click path:
 #
-#   EAGER — built by IconicDesktopSystemWindowedApp.createOpener, which hands over the live app
+#   EAGER — built by WindowedApp.createOpener, which hands over the live app
 #           singleton as @target and the method to call on it. The app class is already here (it had
 #           to be, to build this icon at all), so the click is a plain call.
 #   LAZY  — built from the app's class NAME as a string. Nothing of the app exists yet. On the click
@@ -54,7 +54,7 @@ class AppLauncherWdgt extends DesktopLinkWdgt
     folder.contents.contents.add launcher
 
   # Same, onto the desktop. ⚠ The two orders are NOT interchangeable and never were (this pair is
-  # lifted verbatim from IconicDesktopSystemWindowedApp.createOpener's two arms): the desktop places
+  # lifted verbatim from WindowedApp.createOpener's two arms): the desktop places
   # by smart grid ON ADD, so it must be added before it is sized, while a folder's grid reads the
   # extent as it adds.
   @addToDesktop: (appClassName) ->

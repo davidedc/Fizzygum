@@ -32,7 +32,7 @@
     "reads each class's `requiredParts` against this list.",
     "",
     "'app-kit' is the SHARED BASE LAYER every one of those parts is built out of -- the app protocol",
-    "IconicDesktopSystemWindowedApp, the toolbar/creator-button family and the two mixins they are",
+    "WindowedApp, the toolbar/creator-button family and the two mixins they are",
     "made of. Naming it is not a choice: 'authoring', 'plots', 'maps' and all five doors declare",
     "`requires: [\"app-kit\"]` because they EXTEND its classes, and buildProfile.py fails a profile",
     "that ships a part without what it requires. It is LAZY like the rest, so it costs the image",

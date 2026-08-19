@@ -1,8 +1,8 @@
 # ToolbarsApp -- the "Super Toolbar" launcher app: opens the SuperToolbarWdgt
 # palette (the toolbar-creator buttons) + its info widget on each launch.
-# IconicDesktopSystemWindowedApp (Phase 6 6c.4). The window wrap is the shared
+# WindowedApp (Phase 6 6c.4). The window wrap is the shared
 # world.openFrameWith.
-class ToolbarsApp extends IconicDesktopSystemWindowedApp
+class ToolbarsApp extends WindowedApp
 
   requiredParts: ["authoring"]
 

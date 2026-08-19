@@ -37,7 +37,7 @@ both.
 
 Creation is scattered across at least five bespoke paths:
 
-- **App launchers:** `IconicDesktopSystemWindowedApp` (plain factory base) + 14 `*App` subclasses; each
+- **App launchers:** `WindowedApp` (plain factory base) + 14 `*App` subclasses; each
   `buildWindow` news-up a content widget and calls `world.openFrameWith(...)`. The desktop launcher widget
   is `AppLauncherWdgt` (double-click → `app.launch()`).
 - **Creator buttons:** `CreatorButtonWdgt` (`app-kit/`, `extends Widget`) + subclasses (the
@@ -89,7 +89,7 @@ Introduce **`FactoryWdgt`** (duplicates a pristine `isTemplate` object via the `
 template/script). Document the contract: *create = duplicate-template | run-assembler*.
 
 ### 4.2 Redefine "App" as a Factory over an empty framed `*Wdgt` in edit mode.
-Re-express `IconicDesktopSystemWindowedApp` as a **Factory** whose template is an empty framed `*Wdgt`
+Re-express `WindowedApp` as a **Factory** whose template is an empty framed `*Wdgt`
 (`DocumentWdgt`/`ImageWdgt`/`SlideWdgt`/…) and whose post-create step is "open in edit mode." The 14 `*App`
 subclasses become thin Factory declarations (template + icon + title). This ties the Frame model's
 "App = launcher" definition to a real mechanism.

@@ -117,7 +117,7 @@ does not, or where a base class crosses the boundary.** Deciding it by taste ins
 ends up awaiting a part it cannot wait for.
 
 ⭐ **A SHARED BASE LAYER IS ITSELF A PART — `app-kit` — and it is the configuration `requires` was
-built for.** Nine classes are not any app's: the app protocol `IconicDesktopSystemWindowedApp`, the
+built for.** Nine classes are not any app's: the app protocol `WindowedApp`, the
 toolbar/creator-button family (`ToolbarWdgt`, `ToolbarCreatorButtonWdgt`, `CreatorButtonWdgt` and the
 two mixins they are made of), the tool-panel grid a toolbar lays its buttons out in (`ToolPanelWdgt`
 and its `GlassBoxTopWdgt` template header), and `SpeechBubbleWdgt`. **Nine** parts DERIVE from them
@@ -183,7 +183,7 @@ both consume `createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there 
 through. The resolution is partition, not cleverness — put the button in the part it creates from
 (`maps` owns `USAMapCreatorButtonWdgt`), so the button's mere EXISTENCE proves its part is loaded and
 a core toolbar can filter it with a plain `if USAMapCreatorButtonWdgt?`. An app is the easy case by
-contrast, because `IconicDesktopSystemWindowedApp.launch` is fire-and-forget (the launcher invokes it
+contrast, because `WindowedApp.launch` is fire-and-forget (the launcher invokes it
 by reflection and ignores the result).
 
 ⭐ **AN ICON IS NOT ITS APP — which is why there are no launcher parts.** `WorldWdgt.createDesktop`
@@ -215,7 +215,7 @@ that part regardless and separate parts would buy nothing while costing eight ma
 (The desktop's ninth opener, `FridgeMagnetsApp`, is the door shape again rather than an exception: it
 lives in `fizzytiles`, the part it opens.)
 
-⚠ **The EAGER mode is still live and still correct** — `IconicDesktopSystemWindowedApp.createOpener`
+⚠ **The EAGER mode is still live and still correct** — `WindowedApp.createOpener`
 hands over a live app singleton, which is what `DemoMenus`' "launcher" menu items use. Choose it when
 the app class is already in hand; choose the lazy mode when its arrival is the point.
 
@@ -242,7 +242,7 @@ next line — or an entry wrapped onto a second — has nothing to attach to. It
 fragmented compile the browser uses, so `coffee -c` on the file passes and the build's syntax gate is
 what catches it.
 
-⚠ **A launcher declares its parts as DATA, and the door is inherited.** `IconicDesktopSystemWindowedApp`
+⚠ **A launcher declares its parts as DATA, and the door is inherited.** `WindowedApp`
 owns `launch`, which awaits `requiredParts` (and then `optionalParts`) before building the window, so a
 subclass writes `requiredParts: ["authoring"]` and nothing else. That one line has two readers — the
 await, and `check-part-edges.js`, which treats it as satisfying every reference the class makes into
@@ -492,7 +492,7 @@ is what its `refs` column is for. And it is honest about its own ceiling — no 
 partition could have called that art movable, because the app really was eager and "pinned" really was
 the right verdict. What it can do is price the pinning so the design question gets asked.
 ⚠ Its own output read twice, one round apart, is where the lesson lives: `ToolbarWdgt`,
-`ToolbarCreatorButtonWdgt` and `IconicDesktopSystemWindowedApp` were left behind the first time with
+`ToolbarCreatorButtonWdgt` and `WindowedApp` were left behind the first time with
 a stated reason — moving them would oblige `plots requires ["authoring"]` for 1.2 KB — and the next
 round moved all nine of them by rejecting the assumed home rather than the move (`app-kit`, §2).
 **A tool that ranks candidate homes can only price the homes that exist**, so "movable but not free"

@@ -425,7 +425,7 @@ commit (shell + painted-grid model + socket philosophy) and grow it in 2b/2c/4 �
 docs are a per-phase deliverable, not a Phase 7 chore.
 
 **2a — shell, painted grid, selection.**
-- `SpreadsheetApp extends IconicDesktopSystemWindowedApp` (`title: "Spreadsheet"`,
+- `SpreadsheetApp extends WindowedApp` (`title: "Spreadsheet"`,
   `slot: undefined` — multiple sheets allowed; `buildIcon`; `buildWindow` opens the citizen —
   model: `DegreesConverterApp.buildWindow`). Register a launcher at the WorldWdgt boot site
   (grep `createOpener` there) and/or a `DemoMenus` entry (grep `"document launcher"` for the

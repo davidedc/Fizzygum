@@ -2100,7 +2100,7 @@ pinned-anchor interplay line).**
   greppable re-home verb, sibling of 4D-2a's `_resolvePickOutFigureNoSettle` (pick-OUT extracts; re-home never
   does). `Widget._closeNoSettle` swaps ONLY its `_addLostWidgetNoSettle` argument to `@_enclosingSugarFigure()`
   (my own close bookkeeping still runs on me; `_beforeChildClosed` is a dead no-op hook, never defined).
-  `IconicDesktopSystemWindowedApp.launch` re-homes + repositions the FIGURE (`existingWindow._enclosingSugarFigure()`)
+  `WindowedApp.launch` re-homes + repositions the FIGURE (`existingWindow._enclosingSugarFigure()`)
   not the plane-resident bare window. **Classification look-through unified:** `Widget._parentThroughSugarIslands`
   (= `_enclosingSugarFigure().parent`) is the ONE idiom for "where does this widget really live"; `BasementWdgt.holds`
   now uses it (else a tilted widget in the basement reads not-held), and `WindowWdgt.isInternal` (Bug A) was
@@ -2137,7 +2137,7 @@ pinned-anchor interplay line).**
      `StorageSorter`, so grep `world.binWdgt` / `_addRestingWidgetNoSettle` in today's src). The window LEAVES the
      island ⇒ un-rotated; the empty sugar island is left behind in the world (a leak). The rotation lived ONLY on
      the transient sugar island (dormant-guarantee: rotation is not a stored property of the widget), so it is lost.
-  2. **Re-open** — `IconicDesktopSystemWindowedApp.launch` (`IconicDesktopSystemWindowedApp.coffee:50-56`) for a
+  2. **Re-open** — `WindowedApp.launch` (`WindowedApp.coffee:50-56`) for a
      singleton (`@slot` set, e.g. `degreesConverterWindow`) does `existingWindow = world[@slot]; world.add
      existingWindow; …` — re-parents the SAME (already-straight) window to the world. No rotation restored.
 - **✅ DESIGN LOCKED by owner 2026-07-10 — MODEL (a) "move the FIGURE", GENERIC scope, SEQUENCED AFTER the 4E
@@ -2180,7 +2180,7 @@ pinned-anchor interplay line).**
 > **AS-BUILT:** the verb family is generalized to SOLE-CONTENT islands and renamed for honesty —
 > `Widget._enclosingSoleContentIsland` (new predicate: `_enclosingSugarIsland` minus the `_materializedBySugar`
 > requirement), `_enclosingSugarFigure` → **`_enclosingIslandFigure`**, `_parentThroughSugarIslands` →
-> **`_parentThroughIslands`**; the 4 call sites (`Widget._closeNoSettle`, `IconicDesktopSystemWindowedApp.launch`,
+> **`_parentThroughIslands`**; the 4 call sites (`Widget._closeNoSettle`, `WindowedApp.launch`,
 > `WindowWdgt.isInternal`, `BasementWdgt.holds`) follow. Sugar-only machinery (`_enclosingSugarIsland`,
 > materialize/dissolve/unwrap, halo anchor, `_dropPolicyProxy`) deliberately untouched — an explicit island never
 > auto-dissolves and never re-expresses on drop. Probes re-run green: figure travels WHOLE (zero stranded
@@ -2207,7 +2207,7 @@ pinned-anchor interplay line).**
   SOLE-CONTENT transform island — sugar or explicit — is transform plumbing around one figure, not a nesting
   container the user put the widget "inside".
 - **Blast radius (grepped 2026-07-12): exactly 4 consumer sites** — `Widget._closeNoSettle` (re-home target,
-  `Widget.coffee:500`), `IconicDesktopSystemWindowedApp.launch` reopen (`:59`), `WindowWdgt.isInternal` (`:191`),
+  `Widget.coffee:500`), `WindowedApp.launch` reopen (`:59`), `WindowWdgt.isInternal` (`:191`),
   `BasementWdgt.holds` (`:150`). Sugar-ONLY machinery (`_enclosingSugarIsland`, materialize/dissolve/unwrap,
   halo anchor) is NOT touched by either option below.
 - **OPTION A (conservative): destroy-when-emptied-by-close.** In `_closeNoSettle`, after re-homing the figure,

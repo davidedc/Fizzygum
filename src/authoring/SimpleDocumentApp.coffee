@@ -1,7 +1,7 @@
 # SimpleDocumentApp -- the "Docs Maker" launcher app: opens a fresh DocumentWdgt
-# (+ its info widget) on each launch. An IconicDesktopSystemWindowedApp (Phase 6 6c.4).
+# (+ its info widget) on each launch. An WindowedApp (Phase 6 6c.4).
 # Distinct from SampleDocApp, which opens a filled sample document.
-class SimpleDocumentApp extends IconicDesktopSystemWindowedApp
+class SimpleDocumentApp extends WindowedApp
 
   requiredParts: ["authoring"]
 

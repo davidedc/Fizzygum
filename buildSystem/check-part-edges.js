@@ -72,7 +72,7 @@
  *      click instead of fetching. ⚠ whenOptionalPartsLoaded does NOT count: it runs its callback
  *      even when the part never arrives, so those references still need their own guard.
  *   7. A CLASS-LEVEL `requiredParts: [...]` covers the whole file. It is the list an
- *      IconicDesktopSystemWindowedApp's inherited `launch` awaits before calling buildWindow, so
+ *      WindowedApp's inherited `launch` awaits before calling buildWindow, so
  *      the declaration and the await cannot drift -- the await IS the declaration. This exists
  *      because the gate reads one line at a time and can never see that a `launch` three methods
  *      up already awaited; before it, nine apps awaited correctly and still failed the gate, which
@@ -189,7 +189,7 @@ for (const rel of scanned) {
   const satisfied = declaredRequires(owner);
 
   // A CLASS-LEVEL DECLARATION covers the whole file. `requiredParts: ["authoring"]` on an
-  // IconicDesktopSystemWindowedApp subclass is the list its inherited `launch` awaits before it
+  // WindowedApp subclass is the list its inherited `launch` awaits before it
   // calls buildWindow, so every reference in that class runs with those parts in. The gate reads
   // one line at a time and could never infer that; reading the declaration is how it learns.
   // ⚠ `optionalParts` deliberately does NOT count -- that idiom runs the callback even when the

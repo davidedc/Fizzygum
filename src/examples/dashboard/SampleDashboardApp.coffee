@@ -1,6 +1,6 @@
 # SampleDashboardApp -- the "sample dashboard" example app (an interactive dashboard
 # of plots, maps, sliders and speech bubbles). One of the per-app
-# IconicDesktopSystemWindowedApp subclasses (Phase 6 step 6c.3): it declares the parts
+# WindowedApp subclasses (Phase 6 step 6c.3): it declares the parts
 # its window needs and the singleton world slot, and builds its window inline in
 # buildWindow; the base owns the launcher/opener + bring-up-or-create launch logic, and
 # AppCatalog (keyed by class name) holds its launcher title/icon.
@@ -8,7 +8,7 @@
 # createSampleDashboardWindowOrBringItUpIfAlreadyCreated (minus the final world-slot
 # assignment, now done by the base's launch).
 
-class SampleDashboardApp extends IconicDesktopSystemWindowedApp
+class SampleDashboardApp extends WindowedApp
 
   requiredParts: ["maps", "plots", "authoring"]
 

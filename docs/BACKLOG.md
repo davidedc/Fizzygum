@@ -190,7 +190,7 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
-- [ ] §4.1: clean `Reference*` UI family (retire the verbose `IconicDesktopSystem*` prefix)
+- [x] §4.1: prefix retired 2026-08-19 — owner-ratified SHORT ROLE NAMES (`ShortcutWdgt`, `AppLauncherWdgt`, `WindowedApp`, …; the `Reference*` sketch was rejected — launcher ≠ reference); table in the plan's §4.1 as-executed block
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
 - [x] §4.3: trash — RATIFIED 2026-08-18 as sever+close (one store, no views) and EXECUTED 2026-08-19 (`Widget.moveToTrash`, referent-death sever, conditional menu row, `fg graph` §5) + the R3 `bringUpReferencedWidget` rename
 - [ ] §4.4: duplicate vs duplicate-contents for references (second wave)

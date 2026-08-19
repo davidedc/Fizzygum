@@ -1,4 +1,4 @@
-# IconicDesktopSystemWindowedApp -- base class for the desktop's windowed "apps"
+# WindowedApp -- base class for the desktop's windowed "apps"
 # (Draw, Docs Maker, Slides Maker, the sample doc/slide/dashboard examples, the
 # degrees converter, ...). It lifts the launch / opener / bring-up apparatus that
 # used to be copy-pasted across ~12 MenusHelper methods into ONE place. A subclass
@@ -17,7 +17,7 @@
 # deep-copyable desktop widgets, so this declares keptByReferenceOnDeepCopy: true
 # (the Duplicator then keeps the per-app singleton by reference instead of cloning
 # it -- the same guardrail Wallpaper/WidgetFactory use). OO-backlog Phase 6 step 6c.
-class IconicDesktopSystemWindowedApp
+class WindowedApp
 
   keptByReferenceOnDeepCopy: true
 

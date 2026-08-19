@@ -1,7 +1,7 @@
 # SimpleSlideApp -- the "Slides Maker" launcher app: opens a fresh SimpleSlide window
-# (+ its info widget) on each launch. An IconicDesktopSystemWindowedApp (Phase 6 6c.4).
+# (+ its info widget) on each launch. An WindowedApp (Phase 6 6c.4).
 # Distinct from SampleSlideApp, which opens the filled NYC sample slide.
-class SimpleSlideApp extends IconicDesktopSystemWindowedApp
+class SimpleSlideApp extends WindowedApp
 
   requiredParts: ["authoring"]
   optionalParts: ["maps"]

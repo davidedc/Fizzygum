@@ -84,7 +84,7 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   both walks (§5).
 - A property whose value is flagged **`keptByReferenceOnDeepCopy`** is kept by reference
   on duplication. Two kinds of class declare it: world-level shared singletons
-  (`Wallpaper`, `WidgetFactory`, `IconicDesktopSystemWindowedApp`, `DataflowEngine`,
+  (`Wallpaper`, `WidgetFactory`, `WindowedApp`, `DataflowEngine`,
   `PreferencesAndSettings`) —
   which the serializer *independently* encodes as well-known `{"$wk"}` refs (§4, matched
   by identity, not by this flag) — and immutable value classes (`Point`, `Rectangle`,
@@ -193,11 +193,11 @@ world) and — crucially — correct for cross-session restore: a key binds to t
 session's singletons, not to a stale map. The per-world singletons are matched by identity
 against the live world in `keyFor`; the `wellKnownKey` marker on the collaborator classes
 (`Wallpaper` → `"wallpaper"`, `WidgetFactory` → `"widgetFactory"`, `DataflowEngine` →
-`"dataflow"`, `PreferencesAndSettings` → `"preferences"`, `IconicDesktopSystemWindowedApp` →
+`"dataflow"`, `PreferencesAndSettings` → `"preferences"`, `WindowedApp` →
 `"app:" + @constructor.name`) is the general fallback
 and documents intent (it is the eventual replacement for `keptByReferenceOnDeepCopy`).
 `WellKnownObjects.resolveApp(className)` completes the `app:` branch: it `new`s the named
-`IconicDesktopSystemWindowedApp` subclass and MEMOIZES one instance per class
+`WindowedApp` subclass and MEMOIZES one instance per class
 (`@_appSingletons`), which is safe because such an app is a stateless config holder — its one
 window lives on `world[@slot]`, not on the app (§11).
 
@@ -439,7 +439,7 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
    Never a raw layout core (DETERMINISM.md risk 4).
 
 `WellKnownObjects.resolveApp(className)` returns a **memoized fresh app singleton** — an
-`IconicDesktopSystemWindowedApp` subclass is a stateless config holder (its one window lives on
+`WindowedApp` subclass is a stateless config holder (its one window lives on
 `world[@slot]`, not on the app), so a fresh instance is behaviourally identical and safe to
 `new` during a restore. `world.serialize()` is a **guided `SerializationError`** pointing at
 `serializeWorldSnapshot`.

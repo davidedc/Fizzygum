@@ -15,7 +15,7 @@
     "    `{\"$src\"}` function edits are UNAFFECTED -- those only need the compiler, which every",
     "    profile ships (arc 5 PR-D3).",
     "  - NO 'app-kit', which is the shared base layer the app parts derive from -- the app protocol",
-    "    IconicDesktopSystemWindowedApp, the toolbar/creator-button family and their two mixins. That",
+    "    WindowedApp, the toolbar/creator-button family and their two mixins. That",
     "    is the CONSEQUENCE of the two lines below rather than a separate loss: this profile ships no",
     "    part that derives from it, so the layer would be code with nothing built on it. ⚠ It is also",
     "    the reason nothing here draws a Maker or an Examples icon -- createDesktop asks",

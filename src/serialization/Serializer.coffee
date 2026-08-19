@@ -16,7 +16,7 @@ class Serializer
 
   # The world slots that each hold (at most) one singleton-app window. A slot may be undefined, or
   # hold an ORPHANED-but-revivable window (the app's launch() checks parent?). See
-  # IconicDesktopSystemWindowedApp and the world snapshot (§11).
+  # WindowedApp and the world snapshot (§11).
   @WORLD_APP_SLOTS: [
     "degreesConverterWindow"
     "howToSaveDocWindow"

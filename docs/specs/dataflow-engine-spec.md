@@ -302,7 +302,7 @@ client's:
 ## 9. Client: spreadsheet
 
 ### 9.1 Shell and grid
-- App shell: `IconicDesktopSystemWindowedApp` subclass + a content `*Wdgt` in a
+- App shell: `WindowedApp` subclass + a content `*Wdgt` in a
   `FrameWdgt` (the `DegreesConverterApp` shape).
 - Columns lettered, rows numbered. **Sparse model**: a dictionary keyed `"A1"`; a cell
   record holds `{source, kind-of-entry metadata}` plus derived state

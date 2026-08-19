@@ -18,7 +18,7 @@
 # the NEW session's singletons, not to a stale map captured when the file was written.
 #
 # The `wellKnownKey` marker on the collaborator classes (Wallpaper, WidgetFactory,
-# IconicDesktopSystemWindowedApp) documents intent and is the general fallback for
+# WindowedApp) documents intent and is the general fallback for
 # keyFor; the per-world singletons are matched primarily by identity against the live
 # world, so keyFor is robust even where no marker is declared.
 class WellKnownObjects
@@ -62,7 +62,7 @@ class WellKnownObjects
           undefined
 
   # Resolve the per-app singleton for a windowed-app class name (e.g. the target of a
-  # deserialized desktop launcher). An IconicDesktopSystemWindowedApp subclass is a
+  # deserialized desktop launcher). An WindowedApp subclass is a
   # STATELESS config holder — it declares a title/icon/slot and a launch()/buildWindow()
   # apparatus, but keeps no per-world mutable state (the one window it opens lives on
   # world[@slot], not on the app object). So a fresh instance is behaviourally identical to

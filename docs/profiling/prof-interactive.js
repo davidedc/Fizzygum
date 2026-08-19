@@ -169,7 +169,7 @@ async function setPhase(page,ph){ await page.evaluate(p=>{window.__phase=p;},ph)
 async function openAllApps(page){
   return await page.evaluate(async ()=>{
     const names=Object.getOwnPropertyNames(window).filter(k=>{let C;try{C=window[k]}catch(e){return false}
-      return typeof C==='function'&&typeof IconicDesktopSystemWindowedApp!=='undefined'&&C.prototype instanceof IconicDesktopSystemWindowedApp}).sort();
+      return typeof C==='function'&&typeof WindowedApp!=='undefined'&&C.prototype instanceof WindowedApp}).sort();
     const opened=[]; const errs=[];
     for(const n of names){ try{ (new window[n]()).launch(); opened.push(n); }catch(e){ errs.push(n+': '+(e&&e.message||e)); }
       await new Promise(r=>setTimeout(r,120)); }
