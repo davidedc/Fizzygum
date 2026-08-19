@@ -54,7 +54,10 @@ class PanelWdgt extends Widget
   makeFolder: (name, folderWindow) ->
     newFolderWindow = folderWindow ? new FolderWindowWdgt
     newFolderWindow.close()
-    newFolderWindow.createReference @, (name or world.untitledNamingService.getNextUntitledFolderShortcutName())
+    # close + reference = the FILING ritual, so the icon left behind is the folder's PRIMARY
+    # representation: content-presenting under the arrow contract (reference-widgets plan §4.4)
+    # — bare folder art, and a copy of it deep-copies the folder.
+    newFolderWindow.createReference @, (name or world.untitledNamingService.getNextUntitledFolderShortcutName()), representsContents: true
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 

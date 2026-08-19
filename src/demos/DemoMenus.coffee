@@ -781,7 +781,10 @@ class DemoMenus
 
   createWelcomeMessageWindowAndShortcut: ->
     wm = WelcomeMessageInfoWdgt.create()
-    readmeLauncher = new DocumentShortcutWdgt wm, "Welcome", new WelcomeIconWdgt
+    # content-presenting (the arrow contract, reference-widgets plan §4.4): this icon is the
+    # welcome message's one representation, created beside it — bare WelcomeIconWdgt art (as it
+    # always drew), and duplicating the icon duplicates the message.
+    readmeLauncher = new DocumentShortcutWdgt wm, "Welcome", icon: (new WelcomeIconWdgt), representsContents: true
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add readmeLauncher

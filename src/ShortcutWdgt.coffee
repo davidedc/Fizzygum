@@ -1,15 +1,21 @@
-# A shortcut is a REFERENCE to another widget, not an independent copy.
-# Duplicating a shortcut duplicates the reference: both copies still point
-# at, and open, the SAME referenced widget -- and since only one instance of a
-# widget can be shown at once, opening either one is likely to relocate it
-# from wherever it currently sits.
+# A shortcut is a REFERENCE to another widget. What a COPY of it means is
+# declared by THE ARROW CONTRACT (reference-widgets plan §4.4), per instance:
 #
-# To get an independent copy, duplicate the referencED widget itself and
-# create a fresh reference for the copy.
+#   ARROW (representsContents false, the default -- a deliberate alias made by
+#   "create shortcut"): duplicating it duplicates the REFERENCE only -- both
+#   copies point at, and open, the SAME referenced widget, and since only one
+#   instance of a widget can be shown at once, opening either one is likely to
+#   relocate it from wherever it currently sits.
+#
+#   NO ARROW (representsContents true -- the icon a FILING left behind, the
+#   widget's primary representation): the icon IS the thing, so duplicating it
+#   duplicates the CONTENTS -- the copy closure (Widget.fullCopy) follows the
+#   referencedWidget edge and clones the referent too.
 #
 # Contrast: a launcher icon is NOT a reference -- duplicating a launcher
 # and opening both copies spawns two entirely separate, independently-alive
-# instances that can be shown at the same time.
+# instances that can be shown at the same time. (Launchers are arrow-less and
+# need no declaration: they hold no referencedWidget at all.)
 
 class ShortcutWdgt extends DesktopLinkWdgt
 
@@ -19,17 +25,57 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # the storage sorter walks to keep a referent reachable.
   referencedWidget: undefined
 
+  # THE ARROW CONTRACT declaration (plan §4.4): true = I present as the referent's CONTENTS
+  # (no arrow badge; copy and save deepen through the reference edge), false = I am a deliberate
+  # alias (arrow badge; copy shares the referent). Set ONCE at creation from the creation path
+  # (filing declares content, "create shortcut" declares reference) and never mutated -- an own
+  # field, so it rides serialization and duplication untouched. ⛔ It must NEVER feed liveness:
+  # to the storage classifier, the close-path query and the trash sever I am an ordinary
+  # reference edge either way (graphEdgesOut below does not read it).
+  representsContents: false
+
   _reactToChildDropped: (droppedWidget) ->
 
-  constructor: (@referencedWidget, @title, @icon) ->
+  constructor: (@referencedWidget, @title, opts = {}) ->
+    @representsContents = opts.representsContents ? false
     if !@title?
       @title = @referencedWidget.colloquialName()
 
-    super @title, @icon
+    # THE ONE ICON-ASSEMBLY SITE: the glyph is derived from the declaration, so it structurally
+    # cannot lie -- a reference wears the arrow composite, a content-presenting icon shows the
+    # bare art. A caller-supplied opts.icon replaces the INNER art only (e.g. DemoMenus'
+    # "Welcome" WelcomeIconWdgt); the arrow decision stays mine.
+    innerIcon = opts.icon ? @_defaultInnerIcon()
+    icon = if @representsContents then innerIcon else new GenericShortcutIconWdgt innerIcon
+
+    super @title, icon
     world.widgetsReferencingOtherWidgets.add @
     # NB at this instant I am still an orphan (my attach follows in the same
     # gesture) -- which is exactly why the mark below is mark-only and the sort
     # drains at end-of-cycle, never per-event.
+    world.noteStorageMembershipMayHaveChanged()
+
+  # the default INNER art (what shows bare on a content-presenting icon, and inside the arrow
+  # composite on a reference): the generic object composite around the referent's own
+  # representative art. Folder/Script subclasses override with their own art.
+  _defaultInnerIcon: ->
+    new GenericObjectIconWdgt @referencedWidget.representativeIcon()
+
+  # THE RESTORE HALF of the content-copy closure (plan §4.4): a content-presenting icon's
+  # referent rides its *.fzw.json envelope as an embedded, detached second root (the Serializer
+  # clears its parent exactly like the envelope root's). Home it to the SHELF -- the plan's
+  # placement rule: a restored referent never appears open, and a reachable orphan is homeless
+  # (the storage drain only re-files existing residents, it cannot home an orphan). The
+  # attached-in-truth check keeps this a no-op in a world-snapshot restore (there the shelf is a
+  # serialized root and the figure is restored as its genuine child) and idempotent across two
+  # icons sharing one referent.
+  _afterDeserialization: ->
+    return unless @representsContents and @referencedWidget? and !@referencedWidget.destroyed
+    figure = @referencedWidget._enclosingIslandFigure()
+    p = figure.parent
+    return if p? and p.children? and p.children.indexOf(figure) != -1
+    return unless world?.shelfWdgt?
+    world.shelfWdgt._addRestingWidgetNoSettle figure
     world.noteStorageMembershipMayHaveChanged()
 
   # Capability query (replaces an `instanceof` test plus a referent comparison in

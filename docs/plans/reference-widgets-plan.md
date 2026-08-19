@@ -2,8 +2,9 @@
 
 **STATUS: AUTHORED 2026-07-18, RE-SCOPED 2026-07-18. §4.3 (trash = sever + close) EXECUTED
 2026-08-19 along with the R3 rename — see the as-executed block in §4.3. §4.1 (family rename)
-EXECUTED 2026-08-19 — see its as-executed block. §4.2 / §4.4 remain design-stage, owner-gated
-(R2 open).**
+EXECUTED 2026-08-19 — see its as-executed block. §4.4 (the arrow contract) EXECUTED 2026-08-19
+— see its as-executed block. §4.2 (minimise-to-a-bar) is the ONE remaining item, design-stage,
+owner-gated (R2 open).**
 Anchor on **symbol names** (verified 2026-07-18); line numbers drift. Self-contained.
 
 **Re-scope note:** the *link/GC* half of this arc moved to
@@ -68,7 +69,9 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
      `IconicDesktopSystem*` prefix is retired for short role names (`ShortcutWdgt`,
      `AppLauncherWdgt`, …). The `Reference*`-family sketch was rejected at ratification —
      see §4.1's as-executed block for the table and the argument.
-  4. **Duplicate vs duplicate-contents** for references isn't an exposed distinction.
+  4. ✅ **Duplicate vs duplicate-contents — RESOLVED by §4.4's execution (2026-08-19)**: the
+     distinction is not a second verb but the icon's own per-instance arrow-contract
+     declaration — one "duplicate" action, whose depth the glyph already states.
 
 ---
 
@@ -176,7 +179,7 @@ quadrant); two real intent areas (re-litigates the landed, gated split).
   ways, referent-death sever, tracker corpse-freedom; 31 checks total, STORAGE_INVARIANT and
   console clean throughout.
 
-### 4.4 The arrow contract: glyph = copy semantics. *RATIFIED 2026-08-19, pressure-tested same day.*
+### 4.4 The arrow contract: glyph = copy semantics. *RATIFIED 2026-08-19, pressure-tested same day — EXECUTED same day (as-executed block at the end of this section).*
 
 **The owner-ratified model (supersedes the original "flip the default + dev-only pure duplicate"
 sketch, which is RETIRED — the default was only ever wrong on icons that should not have presented
@@ -250,6 +253,75 @@ shelf + fresh tracker enrollments + the original untouched; shallow copy of an a
 ⇒ shared referent; bin opener refuses duplication), plus the intended glyph recapture (the 6
 de-arrowed icons churn every screenshot showing them).
 
+**✅ EXECUTED 2026-08-19 — as landed:**
+- **The declaration**: `ShortcutWdgt.representsContents` (class default `false`, own-assigned in
+  the constructor from `opts.representsContents`). The constructor is THE ONE icon-assembly
+  site: `innerIcon = opts.icon ? @_defaultInnerIcon()`, then content ⇒ the bare inner art,
+  reference ⇒ `new GenericShortcutIconWdgt innerIcon` — so the glyph structurally cannot lie,
+  even for a caller-supplied inner icon. `_defaultInnerIcon` is the subclass seam
+  (base/Document: the `GenericObjectIconWdgt` object composite around
+  `@referencedWidget.representativeIcon()`; Folder: `FolderIconWdgt`; Script: `ScriptIconWdgt`)
+  — the three subclass constructors and their triplicated wrap logic are DELETED. The family
+  ctor is `(referencedWidget, title, opts = {})` (`opts.icon`, `opts.representsContents` — no
+  positional holes).
+- **The threading**: the `createReference` family gained a trailing `opts` —
+  `Widget.createReference/_createReferenceNoSettle`, `FolderWindowWdgt.createReference`,
+  `FrameWdgt.createReference` (rides through to super). The FILING rituals pass
+  `representsContents: true`: `_createReferenceAndCloseNoSettle` (covering folder drops AND the
+  SaveShortcutPromptWdgt "Ok" path, which routes through `createReferenceAndClose`) and
+  `PanelWdgt.makeFolder` (close + reference = filing). The menu's "create shortcut"
+  (`createReferenceFromMenu`) defaults to the arrow'd alias. `ScriptWdgt`'s special shortcut
+  stays an alias (menu-only path).
+- **The six de-arrows**: the four `AppCatalog` Examples entries draw bare art; `BinOpenerWdgt`
+  passes bare `BinIconWdgt`; `FolderWindowWdgt.representativeIcon` is bare `FolderIconWdgt`
+  (representativeIcon = the content's ART, never a badge decision); the makeFolder folder icon
+  is content-presenting (covers the desktop's Examples folder). DemoMenus' "Welcome" is
+  DECLARED content (`representsContents: true`) — its bare `WelcomeIconWdgt` pixels were
+  already right, only the declaration was missing.
+- **The copy closure**: `Widget.allWidgetsInStructureForCopy` — subtree ∪ (each in-structure
+  content icon contributes `referencedWidget._enclosingIslandFigure()`'s subtree), visited-set
+  fixpoint, returning `{structure, referentFigures}`. `fullCopy` feeds `structure` to the
+  Duplicator and then files each contributed figure's clone to the SHELF
+  (`_fileCopiedReferentFiguresToShelfNoSettle`, settle-wrapped, via the new
+  `Duplicator.cloneOf`) — no Duplicator engine change; tracker enrollment is the existing
+  `alignCopiedWidgetToReferenceTracker` hook. The clone's copied `parent` pointer needs no
+  surgery: `_addRestingWidgetNoSettle`'s add chain re-homes it, exactly as `world.add` does
+  for every ordinary duplicate's root today.
+- **The save closure**: `Serializer.buildEnvelope` consumes THE SAME closure — contributed
+  referent figures ride the envelope as embedded DETACHED second roots (`_buildObjectTable`'s
+  `root` param generalized to a `detachRoots` set; each serializes `parent: null` like the
+  envelope root). The restore half is `ShortcutWdgt._afterDeserialization`: an
+  attached-in-truth check (`parent` unset, or parent's children don't contain the figure) homes
+  the restored figure to the shelf + marks the storage sort — a no-op in world-snapshot
+  restores, idempotent across two icons sharing a referent. Tracker re-entry was already
+  handled (the `referenceTracker` membership rejoin). ONE ill-posed shape is refused up front
+  with a clear SerializationError: an icon saved from INSIDE the container it presents
+  (`buildEnvelope`'s ancestor guard — duplication handles that same shape fine, a copy is one
+  live structure, not two envelope roots). An ARROW'D shortcut's save still errors (external
+  referent — the friendly `saveToFile` dialog; cross-file identity = BACKLOG).
+- **Bin refuses duplication**: `BinOpenerWdgt._refusesDuplication` (an opt-out capability,
+  `?()`-dispatched, nothing on Widget) suppresses the "duplicate" row in
+  `Widget.buildBaseWidgetClassContextMenu`.
+- **Liveness untouched, verified**: the declaration is read ONLY by the icon assembly and the
+  closure — `graphEdgesOut`, the classifier, the close query and the trash sever never see it
+  (gate §6 proves deep-copied referent figures STAY on the shelf across a real drain, i.e. the
+  copies are kept by their reference edges, not by the declaration). Doc:
+  `widget-authoring-guidelines.md` §"Declaring a graph edge" now states the
+  presentation-must-not-feed-liveness rule; `serialization-duplication-reference.md` §2/§4
+  document the closure + detach-roots.
+- **Gates**: build green (25 static gates); `fg graph` grew 36 → **55 checks** (§6: glyph +
+  declaration both ways, deep copy with the transitive in-folder hop, shelf filing, tracker
+  growth exactly +2, original untouched, drain stability, shared-referent shallow copy, the
+  bin's menu suppression vs a plain widget's row); the serialization rig grew 48 → **52** and
+  64 → **68** checks (content-icon save embeds the referent, restore homes it to the shelf +
+  re-enrolls the tracker, arrow'd-alias save still errors — both backends). Suite churn was
+  exactly TWO tests, pixel-verified via diffpage before recapture: the intended
+  `SystemTest_macroDesktopShortcutIcons` de-arrow (its five fixture icons — prose re-pointed;
+  the arrow composite's D1 raw-resize guard rests with `SystemTest_macroSavedDocumentShortcutIcon`,
+  whose created-shortcut icon rightly keeps the badge and did not churn) and the benign
+  known-class inspector list shift (`allWidgetsInStructureForCopy` sorts directly above the
+  `alpha` row `macroDuplicatedInspectorDrivesCopiedTargetOnly` selects).
+
 ---
 
 ## 5. Owner decisions
@@ -257,7 +329,7 @@ de-arrowed icons churn every screenshot showing them).
 |---|---|---|
 | R1 | Scope for v1 | ✅ **RESOLVED 2026-08-19: §4.3 landed first (its semantics were ratified first), §4.1 same day with the owner-ratified short role names** (the `Reference*` sketch rejected — see §4.1). Remaining wave: §4.2 (needs R2), §4.4. |
 | R2 | Minimise semantics | Recommend minimise as a **separate** affordance (don't repurpose the tested collapse button) — unless owner wants the note's literal up-triangle mapping. |
-| R4 | §4.4 copy semantics | ✅ **RATIFIED 2026-08-19: the arrow contract** (arrow = reference, copy shares; no arrow = the thing itself, copy deepens; bin arrow-less + duplication refused; launchers arrow-less, no declaration needed). Per-instance declaration set at creation (filed vs created-shortcut). See §4.4. |
+| R4 | §4.4 copy semantics | ✅ **RATIFIED 2026-08-19: the arrow contract** (arrow = reference, copy shares; no arrow = the thing itself, copy deepens; bin arrow-less + duplication refused; launchers arrow-less, no declaration needed). Per-instance declaration set at creation (filed vs created-shortcut). **EXECUTED same day — see §4.4's as-executed block.** |
 | R5 | Drop into the open bin | ✅ **RATIFIED 2026-08-19: (b) — an explicit drop into the bin window carries trash intent** and runs the same sever as the `move to trash` row, so the drop STICKS instead of the drain re-filing the widget shelf-ward. (Alternatives weighed: status quo — drop is silently overridden; refuse-with-inform — a nag that kicks the decision down the road. Undo/redo, when it lands, further de-risks the severed-shortcut cost.) |
 | R3 | RecentlyClosed vs Trash | ✅ **RATIFIED 2026-08-18: sever + close, one store, no views** — and **EXECUTED 2026-08-19** together with the residue rename `bringUpTarget` → `bringUpReferencedWidget` (cross-repo sweep per the P9 lesson, incl. `Fizzygum-tests/scripts/` and the call-separation allowlist). See §4.3's as-executed block. |
 

@@ -306,7 +306,9 @@ class FrameWdgt extends Widget
   # a special type of reference that has a slightly different icon
   # and when double-clicked actually runs the script rather than
   # bringing up the script
-  createReference: (placeToDropItIn = world, referenceName) ->
+  # (the trailing opts rides through to super — the arrow-contract declaration, plan §4.4; the
+  # special script-shortcut arm stays a deliberate alias, so it takes no declaration)
+  createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
     # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
     # any other content falls to the default reference via super. The content type decides via
     # specialFrameReferenceShortcut instead of `@contents instanceof ScriptWdgt`.

@@ -32,6 +32,12 @@ class Duplicator
   duplicate: (value) ->
     @_duplicate value
 
+  # PUBLIC lookup after a run: the clone made for `original` (undefined if the walk never
+  # reached it). Widget.fullCopy uses this to find the fresh copies of the referent figures
+  # its arrow-contract closure contributed, to file them to the shelf.
+  cloneOf: (original) ->
+    @clonesByOriginal.get original
+
   # The dispatch core every handler recurses through. undefined normalizes to undefined;
   # boolean, number, bigint, string, symbol and function values ride along
   # uncopied.

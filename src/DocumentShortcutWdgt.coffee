@@ -3,13 +3,11 @@
 
 class DocumentShortcutWdgt extends ShortcutWdgt
 
+  # (icon assembly -- bare object composite vs the arrow'd wrap -- lives in ShortcutWdgt's
+  # constructor, driven by the per-instance arrow-contract declaration; my inner art is the
+  # base's default, the object composite around the referent's representative icon)
+
   _reactToChildDropped: (droppedWidget) ->
-
-  constructor: (@referencedWidget, @title, @icon) ->
-    if !@icon?
-      @icon = new GenericShortcutIconWdgt new GenericObjectIconWdgt @referencedWidget.representativeIcon()
-
-    super @referencedWidget, @title, @icon
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

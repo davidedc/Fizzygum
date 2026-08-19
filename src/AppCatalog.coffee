@@ -49,6 +49,11 @@ class AppCatalog
   # this CORE file would be an unguarded core->lazy reference and fail the build whenever the thunk
   # would actually run. ExamplesFolderWindowWdgt passes that icon in from inside the `whenAllLoaded`
   # scope that makes naming it legal — the only override in the system.
+  #
+  # Every icon here is BARE — no GenericShortcutIconWdgt arrow wrap: a launcher is not a
+  # reference (it spawns independent instances), and under the arrow contract
+  # (reference-widgets plan §4.4) the arrow badge is reserved for genuine widget references
+  # made by "create shortcut".
   @entries: ->
     "HowToSaveMessageApp": {title: "How to save?",      icon: (-> new FloppyDiskIconWdgt)}
     "SimpleDocumentApp":   {title: "Docs Maker",        icon: (-> new TypewriterIconWdgt)}
@@ -60,10 +65,10 @@ class AppCatalog
     "ToolbarsApp":         {title: "Super Toolbar",     icon: (-> new ToolbarsIconWdgt), toolTip: "a toolbar to rule them all"}
     "FridgeMagnetsApp":    {title: "Fizzytiles",        icon: (-> new FridgeMagnetsIconWdgt), toolTip: "fridge magnets"}
     "DegreesConverterApp": {title: "C-F converter"}
-    "SampleSlideApp":      {title: "Slide",             icon: (-> new GenericShortcutIconWdgt new SimpleSlideIconWdgt)}
-    "SampleDashboardApp":  {title: "Dashboard",         icon: (-> new GenericShortcutIconWdgt new DashboardsIconWdgt)}
-    "SampleDocApp":        {title: "Document",          icon: (-> new GenericShortcutIconWdgt new TypewriterIconWdgt)}
-    "SpreadsheetApp":      {title: "Spreadsheet",       icon: (-> new GenericShortcutIconWdgt new TypewriterIconWdgt)}
+    "SampleSlideApp":      {title: "Slide",             icon: (-> new SimpleSlideIconWdgt)}
+    "SampleDashboardApp":  {title: "Dashboard",         icon: (-> new DashboardsIconWdgt)}
+    "SampleDocApp":        {title: "Document",          icon: (-> new TypewriterIconWdgt)}
+    "SpreadsheetApp":      {title: "Spreadsheet",       icon: (-> new TypewriterIconWdgt)}
 
   @get: (appClassName) ->
     @entries()[appClassName]

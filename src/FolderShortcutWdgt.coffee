@@ -12,8 +12,10 @@ class FolderShortcutWdgt extends ShortcutWdgt
       # runs inside the drop's single settle -> the non-settling core
       droppedWidget._createReferenceAndCloseNoSettle @referencedWidget.contents.contents
 
-  constructor: (@referencedWidget, @title) ->
-    super @referencedWidget, @title, new GenericShortcutIconWdgt new FolderIconWdgt
+  # my inner art (bare on the primary folder icon a makeFolder leaves behind, arrow'd on a
+  # deliberate "create shortcut" alias -- the assembly lives in ShortcutWdgt's constructor)
+  _defaultInnerIcon: ->
+    new FolderIconWdgt
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

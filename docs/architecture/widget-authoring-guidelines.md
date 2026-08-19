@@ -721,6 +721,13 @@ pointing at it (`Widget._destroyNoSettle` dispatches `_severReferenceEdgeToNoSet
 emitting reference edges must implement it and choose what severing means for it; a shortcut
 dies with its edge), so no edge record of either kind outlives its target.
 
+⛔ **Presentation must not feed liveness.** A shortcut's arrow-contract declaration
+(`ShortcutWdgt.representsContents` — arrow'd alias vs content-presenting icon; reference-widgets
+plan §4.4) drives its GLYPH and its COPY/SAVE closure (`Widget.allWidgetsInStructureForCopy`)
+and nothing else: to `graphEdgesOut` and every liveness consumer above, both kinds are the same
+ordinary reference edge. A new presentation-side flag on any edge-holding class must keep that
+separation — the classifier, the close query and the trash sever never read it.
+
 ---
 
 ## 12. Stepping

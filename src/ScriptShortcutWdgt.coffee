@@ -5,11 +5,9 @@
 
 class ScriptShortcutWdgt extends ShortcutWdgt
 
-  constructor: (@referencedWidget, @title, @icon) ->
-    if !@icon?
-      @icon = new GenericShortcutIconWdgt new ScriptIconWdgt
-    
-    super @referencedWidget, @title, @icon
+  # my inner art (the assembly -- arrow'd wrap vs bare -- lives in ShortcutWdgt's constructor)
+  _defaultInnerIcon: ->
+    new ScriptIconWdgt
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

@@ -91,10 +91,22 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   `ShadowInfo`, `TransformSpec`, `SheetError`), which serialize as ordinary values
   (sharing round-trips via the identity-keyed object table). See
   `docs/architecture/immutable-value-classes.md` §4.
-- A `Widget` NOT in `allWidgetsInStructure` (the set of widgets in the subtree being
-  copied) is **external**: duplication keeps the live reference (so a duplicate can stay
-  wired to an outside widget); serialization cannot keep a live pointer, so this is where
-  the well-known / error policy applies (§4).
+- A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
+  reference (so a duplicate can stay wired to an outside widget); serialization cannot
+  keep a live pointer, so this is where the well-known / error policy applies (§4).
+- **The in-structure set is the ARROW-CONTRACT closure, one computation for both walkers**
+  (`Widget.allWidgetsInStructureForCopy`, reference-widgets plan §4.4): the root's subtree
+  PLUS, through every in-structure icon that presents as content
+  (`ShortcutWdgt.representsContents`), the referent's whole figure, recursively
+  (visited-set fixpoint — folder-in-folder filings make cycles constructible). An ARROW'D
+  shortcut's referent stays external — a copy shares it, and a save of it errors (no
+  cross-file identity; BACKLOG). The contributed referent figures are placed by policy:
+  `fullCopy` files each fresh copy to the SHELF
+  (`Widget._fileCopiedReferentFiguresToShelfNoSettle`, via `Duplicator.cloneOf`);
+  serialization encodes each as a **detached embedded second root** (parent `null`, like
+  the envelope root — `_buildObjectTable`'s `detachRoots`) and the restore homes it to the
+  shelf in `ShortcutWdgt._afterDeserialization` (attached-in-truth guarded, so a
+  world-snapshot restore — where the shelf is itself a serialized root — is a no-op).
 - `instanceNumericID` is never copied (clones get fresh identity — §7).
 
 The constructor is **never re-run** on a clone/restored shell (`Object.create` of the
@@ -158,11 +170,16 @@ JSON document. One table entry per non-primitive (so sharing/cycles keep working
 
 At serialize time each encountered object is classified, in order:
 
-1. **In-structure** (a widget in `allWidgetsInStructure`, or any non-widget reached by the
-   walk) → table slot, `{"$r": n}`.
+1. **In-structure** (a widget in the arrow-contract closure — §2, or any non-widget
+   reached by the walk) → table slot, `{"$r": n}`.
 2. **Well-known** → `{"$wk": key}`, via `WellKnownObjects` (§4a).
-3. **Root's `parent`** → `null`. Deserialization returns a *detached* widget; the caller
-   (menu action / drop handler / snapshot loader) decides where to attach.
+3. **A detach-root's `parent`** → `null` — the envelope root plus any embedded referent
+   figures the closure contributed. Deserialization returns the root *detached* (the
+   caller — menu action / drop handler / snapshot loader — decides where to attach it);
+   an embedded referent figure restores detached too and is homed to the shelf by
+   `ShortcutWdgt._afterDeserialization` (§2). One shape is refused up front: an icon saved
+   from INSIDE the container it presents (`buildEnvelope`'s ancestor guard) — the file
+   would have to embed its own root's ancestor as a detached sibling.
 4. **Anything else** → **`SerializationError`** (§8) carrying the root, the full property
    path to the offending reference, a description of the offender, and remediation hints.
    An options bag `onExternalPointer: "throw" (widget default) | "capture" (world default) |

@@ -3150,20 +3150,25 @@ class Widget extends TreeNode
   # untitledNamingService; with the name in front, the two drop recipients have to skip a slot to
   # reach the place they care about (R3's hole test, whose remedy for a two-slot list is this
   # reorder rather than an options bag). The whole family shares the one order.
-  createReference: (placeToDropItIn = world, referenceName) ->
-    @_settleLayoutsAfter => @_createReferenceNoSettle placeToDropItIn, referenceName
+  # opts.representsContents — THE ARROW CONTRACT declaration (reference-widgets plan §4.4),
+  # threaded to the shortcut's constructor: the FILING paths (createReferenceAndClose,
+  # PanelWdgt.makeFolder) pass true (the icon left behind IS the widget's primary
+  # representation — bare art, deep copy), while this default — the deliberate
+  # "create shortcut" alias — stays a reference (arrow badge, shallow copy).
+  createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
+    @_settleLayoutsAfter => @_createReferenceNoSettle placeToDropItIn, referenceName, opts
 
   # The COMPLETE createReference minus the settle. add -> _addNoSettle and setExtent -> _applyExtent
   # (the shortcut is freshly added freefloating, so the immediate raw size is byte-identical to the
   # deferred desired-extent path; same add-then-size order as the public version, so the icon grid
   # positions identically once the enclosing settle re-fits).
-  _createReferenceNoSettle: (placeToDropItIn = world, referenceName) ->
+  _createReferenceNoSettle: (placeToDropItIn = world, referenceName, opts = {}) ->
     # don't create new reference if it exists already
     for w in placeToDropItIn.children
       if w.isShortcutTo?(@)
         return
 
-    widgetToAdd = new DocumentShortcutWdgt @, referenceName
+    widgetToAdd = new DocumentShortcutWdgt @, referenceName, representsContents: opts.representsContents
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
@@ -3174,11 +3179,13 @@ class Widget extends TreeNode
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
   # (FolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).
+  # This is a FILING ritual (the SaveShortcutPromptWdgt "Ok" path routes here too), so the icon
+  # left behind declares content — no arrow, deep copy — per the arrow contract (plan §4.4).
   createReferenceAndClose: (placeToDropItIn = world, referenceName) ->
     @_settleLayoutsAfter => @_createReferenceAndCloseNoSettle placeToDropItIn, referenceName
 
   _createReferenceAndCloseNoSettle: (placeToDropItIn = world, referenceName) ->
-    @_createReferenceNoSettle placeToDropItIn, referenceName
+    @_createReferenceNoSettle placeToDropItIn, referenceName, representsContents: true
     # the reference just created (or already existing -- the create dedups)
     # keeps me reachable, so file straight to the SHELF
     @_closeNoSettle world.shelfWdgt
@@ -3636,6 +3643,38 @@ class Widget extends TreeNode
     if world.keyboardEventsReceivers.has @
       world.keyboardEventsReceivers.add copiedWidget
 
+  # THE ARROW CONTRACT's copy closure (reference-widgets plan §4.4): the set of widgets that
+  # count as IN-STRUCTURE for a copy or a save of me — my own subtree, PLUS, through every
+  # in-structure icon that presents as content (ShortcutWdgt.representsContents), the referent's
+  # whole FIGURE (island included, the same resolution close/trash use), recursively. The
+  # visited-set fixpoint matters: folder-in-folder filings make reference-through-containment
+  # cycles constructible, and the Duplicator's identity map only handles cycles INSIDE the walk,
+  # not in this set computation before it. An ARROW'D in-structure shortcut contributes nothing —
+  # its referent stays outside the set, so a copy shares it, per its own glyph.
+  # Returns {structure, referentFigures}: `structure` feeds the Duplicator's in-structure set and
+  # the Serializer's object table (Serializer.buildEnvelope is the second consumer — one closure,
+  # so copy and save cannot disagree about what a content icon carries); `referentFigures` are
+  # the contributed figures, which the copy path files to the SHELF (fullCopy below) and the save
+  # path encodes as detached embedded roots (their restore homing lives in
+  # ShortcutWdgt._afterDeserialization).
+  allWidgetsInStructureForCopy: ->
+    structure = @allChildrenBottomToTop()
+    inStructure = new Set structure
+    referentFigures = []
+    i = 0
+    while i < structure.length
+      w = structure[i]
+      i++
+      continue unless w.representsContents and w.referencedWidget? and !w.referencedWidget.destroyed
+      figure = w.referencedWidget._enclosingIslandFigure()
+      continue if inStructure.has figure
+      referentFigures.push figure
+      for member in figure.allChildrenBottomToTop()
+        continue if inStructure.has member
+        inStructure.add member
+        structure.push member
+    {structure, referentFigures}
+
   # note that the entire copying mechanism
   # should also take care of inserting the copied
   # widget in whatever other data structures where the
@@ -3643,13 +3682,30 @@ class Widget extends TreeNode
   # For example, if the Widget appeared in a data
   # structure related to the damage rectangles mechanism,
   # we should place the copied widget there.
+  # double-settle-sanctioned: branch-exclusive — the destroyed arm informs and returns before
+  # the settle-wrapped referent filing can run.
   fullCopy: ->
     if @destroyed
       @inform "The item you are\ntrying to copy\nis dead!"
       return undefined
-    allWidgetsInStructure = @allChildrenBottomToTop()
-    copiedWidget = new Duplicator(allWidgetsInStructure).duplicate @
+    {structure, referentFigures} = @allWidgetsInStructureForCopy()
+    duplicator = new Duplicator structure
+    copiedWidget = duplicator.duplicate @
+    if referentFigures.length > 0
+      @_settleLayoutsAfter => @_fileCopiedReferentFiguresToShelfNoSettle duplicator, referentFigures
     return copiedWidget
+
+  # The copy-side placement rule (plan §4.4): each contributed referent's fresh copy is
+  # explicitly FILED to the shelf — the drain cannot home it (a reachable orphan is homeless,
+  # not misfiled), and the copy must not appear open on the desktop even when the original's
+  # window is open. The icon copy itself lands wherever the gesture puts it, as today. The
+  # copied shortcuts' tracker enrollment is the Duplicator's own
+  # alignCopiedWidgetToReferenceTracker hook, which also marks the storage sort.
+  _fileCopiedReferentFiguresToShelfNoSettle: (duplicator, referentFigures) ->
+    for figure in referentFigures
+      world.shelfWdgt._addRestingWidgetNoSettle duplicator.cloneOf figure
+    world.noteStorageMembershipMayHaveChanged()
+    return
 
   # Serialization — delegates to the src/serialization/ Serializer. Unlike the old dev-only
   # prototype this replaced, serialize/deserialize SHIP in all builds (including production):
@@ -4369,7 +4425,11 @@ class Widget extends TreeNode
     menu.addMenuItem "transparency...", @, "transparencyPopout", toolTip: "set this widget's\nalpha value"
     menu.addMenuItem "resize/move...", @, "showResizeAndMoveHandlesAndLayoutAdjusters", toolTip: ("show a handle\nwhich can be floatDragged\nto change this widget's" + " extent")
     menu.addLine()
-    menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
+    # opt-out capability (?-dispatched, nothing on Widget): the bin opener refuses duplication —
+    # the bin is one singleton, so a second opener could only alias it while its arrow-less icon
+    # promises the thing itself (the arrow contract, reference-widgets plan §4.4).
+    if !@_refusesDuplication?()
+      menu.addMenuItem "duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
     menu.addMenuItem "save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
     menu.addMenuItem "create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"
     menu.addMenuItem "pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"

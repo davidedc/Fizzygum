@@ -10,7 +10,9 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   cornerSpec: undefined
 
   constructor: ->
-    super "Bin", new GenericShortcutIconWdgt new BinIconWdgt
+    # BARE art, no arrow composite (the arrow contract, reference-widgets plan §4.4): I am not a
+    # reference to the bin, I AM the desktop's bin — the one representation of the one singleton.
+    super "Bin", new BinIconWdgt
     @target = world.binWdgt
     # my corner KNOB (carrier-owned, like HandleWdgt.cornerSpec): bottom-right of the
     # desktop, desktopSidesPadding inside, ZERO size declared -- the corner pass places
@@ -25,6 +27,13 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # `!(aWdgt instanceof BinOpenerWdgt)` exclusion). (type-test-elimination campaign)
   participatesInIconGrid: ->
     false
+
+  # The arrow contract (reference-widgets plan §4.4): the bin refuses duplication. There is ONE
+  # bin singleton; a copy of me could only be a second alias to it, while my arrow-less icon
+  # promises the thing itself. Consulted by Widget's context-menu assembly (?-dispatched,
+  # nothing on Widget), which drops the "duplicate" row.
+  _refusesDuplication: ->
+    true
 
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation

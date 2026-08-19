@@ -61,9 +61,34 @@ class Serializer
   @buildEnvelope: (root, opts = {}) ->
     onExternal = opts.onExternalPointer or "throw"
     rootDescription = if root.uniqueIDString? then root.uniqueIDString() else root.constructor.name
-    # the set of widgets that count as "in-structure" (O(1) membership); includes root.
-    widgetSet = new Set root.allChildrenBottomToTop()
-    table = @_buildObjectTable widgetSet, onExternal, rootDescription, root
+    # the set of widgets that count as "in-structure" (O(1) membership); includes root — plus,
+    # through the arrow contract's copy closure (Widget.allWidgetsInStructureForCopy, the ONE
+    # closure fullCopy also consumes, so copy and save cannot disagree — reference-widgets plan
+    # §4.4), the referent FIGURES of content-presenting icons: they ride the envelope as
+    # embedded DETACHED second roots (parent cleared like the envelope root's; their restore
+    # homing to the shelf is ShortcutWdgt._afterDeserialization). An ARROW'D shortcut's
+    # referent stays external, so saving one still errors — Fizzygum has no cross-file
+    # identity that would make a dangling-alias restore meaningful (BACKLOG follow-up).
+    if root.allWidgetsInStructureForCopy?
+      {structure, referentFigures} = root.allWidgetsInStructureForCopy()
+    else
+      structure = root.allChildrenBottomToTop()
+      referentFigures = []
+    # the one ill-posed shape: an icon saved from INSIDE the very container it presents — the
+    # file would have to embed its own root's ancestor as a detached sibling, which no envelope
+    # can restore coherently. (Duplication handles this same shape fine — a copy is one live
+    # structure, not two envelope roots.)
+    for figure in referentFigures
+      if figure is root or figure.isAncestorOf root
+        throw new SerializationError "this icon presents the contents of a container it sits inside",
+          rootDescription: rootDescription
+          path: rootDescription
+          offender: figure.uniqueIDString() + " (a " + figure.constructor.name + ")"
+          remediation: "Save the enclosing container itself instead of this icon."
+    widgetSet = new Set structure
+    detachRoots = new Set referentFigures
+    detachRoots.add root
+    table = @_buildObjectTable widgetSet, onExternal, rootDescription, detachRoots
     rootIndex = table.encodeToSlot root, rootDescription
 
     envelope =
@@ -217,9 +242,11 @@ class Serializer
   # --- the shared object-table encoder -----------------------------------------------------
   # Builds `objects` (the versioned record table) for a set of in-structure widgets, and
   # returns the encoding primitives used by BOTH serializeWidget and serializeWorld so the
-  # two share one walker and cannot drift. `root` is the single detach-root (its `parent`
-  # serializes as null) or undefined (world snapshot: top children keep parent = {"$wk":"world"}).
-  @_buildObjectTable: (widgetSet, onExternal, rootDescription, root) ->
+  # two share one walker and cannot drift. `detachRoots` is the set of detach-roots — the
+  # envelope root plus any embedded referent figures the arrow-contract closure contributed
+  # (each serializes `parent` as null; the caller/restore policy decides where each attaches)
+  # — or undefined (world snapshot: top children keep parent = {"$wk":"world"}).
+  @_buildObjectTable: (widgetSet, onExternal, rootDescription, detachRoots) ->
     objects = []
     slotOf = new Map          # live object -> table index (identity; cycle/sharing safe)
 
@@ -285,14 +312,15 @@ class Serializer
       populateRecord record, obj, path
       idx
 
-    encodeOwnProps = (obj, path, isRoot) ->
+    encodeOwnProps = (obj, path, isDetachRoot) ->
       transients = Serializer.transientsForClass obj.constructor
       props = {}
       for own name of obj
         continue if name is "instanceNumericID" or name is "className"
         continue if transients.has name
-        if isRoot and name is "parent"
-          # the restored root is DETACHED; the caller decides where to attach it.
+        if isDetachRoot and name is "parent"
+          # a detach-root restores DETACHED; the caller (envelope root) or the restore
+          # policy (an embedded referent figure — homed to the shelf) decides where it goes.
           props.parent = null
           continue
         value = obj[name]
@@ -374,7 +402,7 @@ class Serializer
       if obj instanceof Widget
         m = membershipsFor obj
         record.memberships = m if m.length
-      record.props = encodeOwnProps obj, path, (root? and obj is root)
+      record.props = encodeOwnProps obj, path, (detachRoots? and detachRoots.has obj)
       return
 
     {objects: objects, refFor: refFor, encodeToSlot: encodeToSlot}
