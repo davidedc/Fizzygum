@@ -12,7 +12,7 @@
 # ⚠ WHY THIS CAN BE LAZY AT ALL, when a desktop icon's app cannot be deferred the same way: a FOLDER
 # IS A DOOR. WorldWdgt.createDesktop constructs every desktop icon at boot, but nothing here is
 # reached until the folder's shortcut is clicked, and
-# IconicDesktopSystemShortcutWdgt.bringUpTarget is fire-and-forget (ButtonWdgt discards a click
+# IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget is fire-and-forget (ButtonWdgt discards a click
 # action's return value), so it CAN await. ⇒ boot-time REACHABILITY is what forces eagerness.
 #
 # ⚠ ONLY THE C-F ART MOVED, and that is not an oversight. The folder's other four icons — the
@@ -38,7 +38,7 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
   # ⚠ Not derived from "is the folder empty?" — a user who empties the folder means it.
   populated: false
 
-  # The one-shot bringUpTarget asks about before showing me. Runs the callback INLINE once populated,
+  # The one-shot bringUpReferencedWidget asks about before showing me. Runs the callback INLINE once populated,
   # which after the first open is every time — deferring by even a microtask would move the open a
   # whole world cycle later, and the SystemTest suite measures cycles
   # (../Fizzygum-tests/DETERMINISM.md). Same fast-path rule as PartsRegistry.whenAllLoaded.
@@ -76,7 +76,7 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
       callback()
 
   # ⚠⚠ POPULATION MUST NOT DEPEND ON WHICH RITUAL SHOWED ME — hence the step below, and this
-  # registration to feed it. bringUpTarget awaits the protocol above BEFORE showing me, which is why
+  # registration to feed it. bringUpReferencedWidget awaits the protocol above BEFORE showing me, which is why
   # the shortcut click never flashes an empty folder; but it is not the only way I reach the tree.
   # DELETE my desktop shortcut and I become unreachable, the storage sorter drains me to the BIN, and
   # opening the bin PAINTS me — empty, with no shortcut left to ever fill me. That route is driven

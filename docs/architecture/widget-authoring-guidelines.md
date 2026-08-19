@@ -709,13 +709,17 @@ index behind it (decision G4 there), and never enumerate containment (the tree i
 Existing contributors: `ControllerMixin` (wires → flow), `ButtonWdgt` (`@target` → command),
 `IconicDesktopSystemShortcutWdgt` (`referencedWidget` → reference). Ephemeral chrome pointers — a
 handle's, a prompt's, a caret's, a menu spec's `target` — are deliberately NOT edges: enumeration
-covers the durable widget graph. Liveness POLICY sits on top, in the protocol's two consumers, and
-they agree (that plan's decisions G5/G8): the storage classifier (`StorageSorter._runClassifier`)
-and the close paths' park-vs-destroy query (`WorldWdgt.anyReferenceOrWireIntoWdgt`) both follow
-**flow + reference** and let **command** confer nothing — declare honestly and let the consumers
-decide. A flow edge also obliges hygiene the framework already provides: a destroyed target's wires
-are severed at death (`DataflowEngine.severWiresIntoDyingNode` + the fire-time self-heal), so no
-wire record outlives its target.
+covers the durable widget graph. Liveness POLICY sits on top, in the protocol's consumers, and
+they agree (that plan's decisions G5/G8): the storage classifier (`StorageSorter._runClassifier`),
+the close paths' park-vs-destroy query (`WorldWdgt.anyReferenceOrWireIntoWdgt`) and the trash
+sever that rides the same walk (`WorldWdgt._severLivenessEdgesIntoWdgtNoSettle`, behind
+`Widget.moveToTrash`) all follow **flow + reference** and let **command** confer nothing —
+declare honestly and let the consumers decide. Both liveness kinds also oblige hygiene the
+framework already provides: a destroyed target's wires are severed at death
+(`DataflowEngine.severWiresIntoDyingNode` + the fire-time self-heal) and so are the shortcuts
+pointing at it (`Widget._destroyNoSettle` dispatches `_severReferenceEdgeToNoSettle` — a class
+emitting reference edges must implement it and choose what severing means for it; a shortcut
+dies with its edge), so no edge record of either kind outlives its target.
 
 ---
 

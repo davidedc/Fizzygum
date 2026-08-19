@@ -265,7 +265,7 @@ the `whenAllLoaded` callback rather than in a tidier `_populate` helper, because
 methods from the await it depends on is indistinguishable from an unguarded one.
 
 ⚠ **A FOLDER IS A DOOR, and that is a third moment worth having.** Desktop icons are drawn at boot;
-a folder's contents are not drawn until it is opened, and `IconicDesktopSystemShortcutWdgt.bringUpTarget`
+a folder's contents are not drawn until it is opened, and `IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget`
 is fire-and-forget, so it can await. `ExamplesFolderWindowWdgt` therefore fills itself on first open,
 which buys a tier the desktop cannot have — the art that ONLY that folder draws
 (`examples-icons`, 9.5 KB of C-F glyph) stays out of the boot image entirely:
@@ -280,7 +280,7 @@ which buys a tier the desktop cannot have — the art that ONLY that folder draw
 dashboards, the generic shortcut frame) are drawn by desktop icons and by
 `FolderWindowWdgt`/`BinOpenerWdgt` at boot, so they are core whatever the folder does.
 ⚠ BEING SHOWN is what obliges the folder to fill itself, not the ritual that showed it, so it has
-TWO entry points. `bringUpTarget` (the shortcut click) awaits `whenReadyToBeBroughtUp` *before*
+TWO entry points. `bringUpReferencedWidget` (the shortcut click) awaits `whenReadyToBeBroughtUp` *before*
 showing it, which is why that path never flashes an empty folder; and a `step` catches every other
 way it reaches the tree — in practice the BIN, since deleting the folder's shortcut makes it
 unreachable, drains it there, and opening the bin paints it with no shortcut left to ever fill it.

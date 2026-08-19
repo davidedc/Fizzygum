@@ -592,6 +592,39 @@ class Widget extends TreeNode
   closeFromContainerFrame: (containerWindow) ->
     containerWindow.close()
 
+  # "move to trash" (reference-widgets plan §4.3, ratified sever-and-close): close, but FIRST cut
+  # every liveness edge aimed at my figure — shortcuts pointing at me die, wires into me are
+  # revoked — so the close's bin filing STICKS: nothing reachable is left to make the end-of-cycle
+  # drain re-file me to the shelf. Where no such edge exists this is exactly close-to-bin, which is
+  # why the menu only offers it when _wouldTrashSeverAnything says it differs.
+  moveToTrash: ->
+    # SELF-SETTLE (single-mutation tier): sever + close share the one settle batch.
+    @_settleLayoutsAfter => @_moveToTrashNoSettle()
+
+  _moveToTrashNoSettle: ->
+    # trashing window content: the WINDOW is what gets trashed — the same one-step redirect
+    # _closeNoSettle makes (which then sees a frame and does not redirect again).
+    if !@isFrame?() and @parent?.isFrame?()
+      # private chain: the core, not public moveToTrash() -- we are already inside its settle batch.
+      @parent._moveToTrashNoSettle()
+      return
+    world._severLivenessEdgesIntoWdgtNoSettle @_enclosingIslandFigure()
+    @_closeNoSettle()
+
+  # Does "move to trash" differ from plain close/delete for me right now? — i.e. is there an
+  # inbound liveness edge the sever would cut. Asked by the context-menu builder so the trash row
+  # only appears when it MEANS something (a row on every menu is rent nothing measures); the walk
+  # is O(everything widget-bearing) but menu-opening is a user gesture, like the close sites' ask.
+  # Redirects like _closeNoSettle/_moveToTrashNoSettle so the question is asked about the same
+  # figure the trash would file.
+  _wouldTrashSeverAnything: ->
+    if !@isFrame?() and @parent?.isFrame?()
+      # private chain: the same one-step contents-to-window redirect as _moveToTrashNoSettle.
+      return @parent._wouldTrashSeverAnything()
+    # public-call-sanctioned: anyReferenceOrWireIntoWdgt is a pure read (a tree walk that
+    # mutates nothing and settles nothing), the same ask the close sites make.
+    world.anyReferenceOrWireIntoWdgt @_enclosingIslandFigure()
+
   # The window title-bar "edit" (pencil) button announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
   # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt
@@ -652,6 +685,19 @@ class Widget extends TreeNode
     # (storage liveness follows wires — graph-edges plan §4.3), so mark the membership
     # chokepoint. O(1) and drain-suppressed, so it is safe inside bulk destroy storms.
     world.noteStorageMembershipMayHaveChanged() if @wires?
+
+    # THE REFERENCE HALF of node-death (reference-widgets plan §4.3): no reference edge
+    # outlives its referent, the twin of the wire invariant above — a shortcut left pointing
+    # at my corpse is a dead door whose click can only apologise. The tracker enumerates
+    # every holder wherever it lives (orphans and storage residents included), so this is
+    # total where the classifier's walk is deliberately not. Terminates: a referent is
+    # ctor-fixed, so every reference edge points at an OLDER widget — the reference graph is
+    # a DAG — and the destroyed guard covers diamonds. O(tracker) per death, tracker is
+    # small, so bulk destroy storms stay cheap.
+    if world.widgetsReferencingOtherWidgets.size > 0
+      for eachHolder in Array.from world.widgetsReferencingOtherWidgets
+        continue if eachHolder.destroyed or eachHolder.referencedWidget != @
+        eachHolder._severReferenceEdgeToNoSettle @
 
     @destroyed = true
     # FREEFLOATING-skip is centralized in _invalidateLayout(triggeringChild): passing @ lets the
@@ -3817,7 +3863,7 @@ class Widget extends TreeNode
   findRootForGrab: ->
     return @findFirstLooseWidget()
 
-  # Asked by IconicDesktopSystemShortcutWdgt.bringUpTarget before I am shown: do I owe myself any
+  # Asked by IconicDesktopSystemShortcutWdgt.bringUpReferencedWidget before I am shown: do I owe myself any
   # CONTENT first? Almost nothing does — a widget resting in storage is already whole — so the
   # default runs the callback INLINE. That is correctness rather than economy: going through a
   # promise regardless would defer every shortcut click by a microtask, moving the open a whole
@@ -4352,6 +4398,12 @@ class Widget extends TreeNode
       menu.addMenuItem "close", @, "close"
     else
       menu.addMenuItem "delete", @, "close"
+
+    # only when it DIFFERS from the row above: with no inbound liveness edge, close/delete
+    # already files binward and the drain keeps it there — the row would be a synonym paying
+    # menu rent (reference-widgets plan §4.3; the P2 bind-row lesson).
+    if @_wouldTrashSeverAnything()
+      menu.addMenuItem "move to trash", @, "moveToTrash", toolTip: "sever every shortcut and wire\npointing at this widget,\nthen file it in the bin"
 
     # The dev/test tail. Each entry is gated on what makes it MEANINGFUL rather than on which page
     # we are: "dev ➜" and "destroy" on dev mode, "test menu ➜" on the demo family actually shipping

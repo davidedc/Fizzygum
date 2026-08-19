@@ -3067,6 +3067,14 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
   # completely. O(everything widget-bearing), and close is a user gesture, so
   # that is fine.
   anyReferenceOrWireIntoWdgt: (whichWdgt) ->
+    @_livenessEdgesIntoWdgt(whichWdgt).length > 0
+
+  # The shared enumeration under the query above AND the trash sever below — ONE walk, so the
+  # two can never disagree about which edges exist: whatever the query counts is exactly what
+  # the sever cuts, which is what makes "move to trash" land in the bin by graph truth rather
+  # than by an intent tag (reference-widgets plan §4.3). Returns [{holder, edge}].
+  _livenessEdgesIntoWdgt: (whichWdgt) ->
+    found = []
     roots = [@, @hand]
     for slot in Serializer.WORLD_APP_SLOTS
       roots.push @[slot] if @[slot]?
@@ -3075,17 +3083,38 @@ class WorldWdgt extends IconicDesktopSystemPanelWdgt
     roots.push binContents.children... if binContents?
     roots.push @shelfWdgt.children... if @shelfWdgt?
     for eachRoot in roots
-      return true if @_anyLivenessEdgeIntoWdgtWithin eachRoot, whichWdgt
-    return false
+      @_collectLivenessEdgesIntoWdgtWithin eachRoot, whichWdgt, found
+    found
 
-  _anyLivenessEdgeIntoWdgtWithin: (subtreeRoot, whichWdgt) ->
-    return false if subtreeRoot == @binWdgt or subtreeRoot == @shelfWdgt
+  _collectLivenessEdgesIntoWdgtWithin: (subtreeRoot, whichWdgt, found) ->
+    return if subtreeRoot == @binWdgt or subtreeRoot == @shelfWdgt
     # a holder inside the asked-about figure is internal wiring, not an inbound edge
-    return false if subtreeRoot == whichWdgt
+    return if subtreeRoot == whichWdgt
     for edge in subtreeRoot.graphEdgesOut()
       continue unless edge.kind == 'flow' or edge.kind == 'reference'
       continue unless edge.to? and !edge.to.destroyed
-      return true if edge.to == whichWdgt or whichWdgt.isAncestorOf edge.to
+      found.push {holder: subtreeRoot, edge: edge} if edge.to == whichWdgt or whichWdgt.isAncestorOf edge.to
     for child in subtreeRoot.children
-      return true if @_anyLivenessEdgeIntoWdgtWithin child, whichWdgt
-    return false
+      @_collectLivenessEdgesIntoWdgtWithin child, whichWdgt, found
+    return
+
+  # THE TRASH SEVER (reference-widgets plan §4.3): cut every liveness edge the walk above can
+  # see into `whichWdgt`'s subtree, so the close that follows files it to the bin and the
+  # end-of-cycle drain KEEPS it there — genuinely lost, by graph truth. A REFERENCE edge is
+  # severed by its holder's own protocol (a shortcut dies with its edge; dispatched without
+  # `?.` so a future emitter class must choose rather than silently inherit destruction); a
+  # FLOW edge is derived from the holder's own wire records, so every record aimed at that
+  # target is revoked through the one un-wire verb. Holders destroyed by an earlier
+  # iteration's cascade are skipped — their edges died with them.
+  _severLivenessEdgesIntoWdgtNoSettle: (whichWdgt) ->
+    for {holder, edge} in @_livenessEdgesIntoWdgt whichWdgt
+      continue if holder.destroyed
+      if edge.kind == 'reference'
+        holder._severReferenceEdgeToNoSettle edge.to
+      else
+        continue unless holder.wires?
+        for wire in holder.wires.slice() when wire.target == edge.to
+          # public-call-sanctioned: unwireFrom is THE one un-wire verb and is settle-neutral
+          # (pure list + engine-index bookkeeping, no geometry).
+          holder.unwireFrom wire.target, wire.action
+    return

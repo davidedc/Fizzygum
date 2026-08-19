@@ -29,4 +29,4 @@ class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutW
     menu
 
   editScript: ->
-    @bringUpTarget()
+    @bringUpReferencedWidget()

@@ -192,7 +192,7 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
 - [ ] §4.1: clean `Reference*` UI family (retire the verbose `IconicDesktopSystem*` prefix)
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
-- [ ] §4.3: RecentlyClosed vs Trash — one store / two views first (second wave)
+- [x] §4.3: trash — RATIFIED 2026-08-18 as sever+close (one store, no views) and EXECUTED 2026-08-19 (`Widget.moveToTrash`, referent-death sever, conditional menu row, `fg graph` §5) + the R3 `bringUpReferencedWidget` rename
 - [ ] §4.4: duplicate vs duplicate-contents for references (second wave)
 
 ## Residual / parked items (owning doc archived)

@@ -69,12 +69,22 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     world.widgetsReferencingOtherWidgets.add cloneOfMe
     world.noteStorageMembershipMayHaveChanged()
 
-  # The shared "bring the referenced target up onto the desktop" ritual, used verbatim by
+  # Sever my REFERENCE edge to `referent` (trash arc): my whole meaning IS that edge — the icon,
+  # the caption and the click all exist to re-summon the referent — so severing it means dying,
+  # not blanking (a blanked shortcut would be a lying icon whose click can only apologise).
+  # Dispatched by the two sever chokepoints — world._severLivenessEdgesIntoWdgtNoSettle (the
+  # "move to trash" gesture) and Widget._destroyNoSettle (referent death) — WITHOUT `?.`: a
+  # future class that emits reference edges must decide its own sever behaviour, and a loud
+  # throw at the sever site beats silently destroying a widget richer than a shortcut.
+  _severReferenceEdgeToNoSettle: (referent) ->
+    @_fullDestroyNoSettle()
+
+  # The shared "bring the referenced widget up onto the desktop" ritual, used verbatim by
   # the Document/Folder click handlers and the Script "edit script" action: guard against a
-  # dead / already-containing target, un-hide it, find its grabbable root (or the target
+  # dead / already-containing referent, un-hide it, find its grabbable root (or the referent
   # itself when it sits directly in the bin), and spawn that next to this shortcut.
   # Public, not _-tier: it drives other widgets' public settling API. [call-separation A]
-  bringUpTarget: ->
+  bringUpReferencedWidget: ->
     if @referencedWidget.destroyed
       @inform "The referenced item\nis dead!"
       return
@@ -83,11 +93,11 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
       @inform "The referenced item is\nalready open and containing\nwhat you just clicked on!"
       return
 
-    # A target may owe itself some CONTENT before it can be shown — the desktop's Examples folder
+    # A referent may owe itself some CONTENT before it can be shown — the desktop's Examples folder
     # builds its five openers here rather than at boot, because a folder is the door that makes them
     # lazy at all (ExamplesFolderWindowWdgt). Widget's default runs the callback inline, so every
     # other shortcut in the system pays nothing and stays in this same cycle.
-    # ⚠ THIS IS NOT THE ONLY WAY A TARGET REACHES THE TREE, and it never was — so a target that owes
+    # ⚠ THIS IS NOT THE ONLY WAY A REFERENT REACHES THE TREE, and it never was — so a referent that owes
     # itself content cannot rely on this ritual alone. Delete a folder's desktop shortcut and the
     # folder becomes unreachable, the storage sorter drains it to the BIN, and opening the bin paints
     # it with NO shortcut left to ever click: "shows empty once" would in fact be empty for good.
@@ -96,16 +106,16 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     # nothing can be dragged out of it by hand. The bin is the one that is a real view.
     # ⇒ ExamplesFolderWindowWdgt ALSO fills itself from a `step`, which is the settle-safe seam for
     # building content; _reactToBeingAdded is not, since it fires INSIDE the add's own settle.
-    @referencedWidget.whenReadyToBeBroughtUp => @_bringUpTargetNow()
+    @referencedWidget.whenReadyToBeBroughtUp => @_bringUpReferencedWidgetNow()
 
-  # nosettle-exempt: not a _NoSettle twin — this is the second half of bringUpTarget, split out so
-  # the content-readiness seam above has something to call back into. It settles exactly as the
-  # undivided method did, through spawnNextTo.
-  _bringUpTargetNow: ->
+  # nosettle-exempt: not a _NoSettle twin — this is the second half of bringUpReferencedWidget,
+  # split out so the content-readiness seam above has something to call back into. It settles
+  # exactly as the undivided method did, through spawnNextTo.
+  _bringUpReferencedWidgetNow: ->
     whatToBringUp = @referencedWidget.findRootForGrab()
     # findRootForGrab can return undefined (e.g. a draggable graph has no grabbable
-    # root); when the target itself rests DIRECTLY in the bin or shelf it is
-    # its own root for this purpose. A target that is merely part of a larger
+    # root); when the referent itself rests DIRECTLY in the bin or shelf it is
+    # its own root for this purpose. A referent that is merely part of a larger
     # widget resting in storage has no such direct root -- bringing it up
     # would tear it off its container, which this path must not do.
     if !whatToBringUp? and (@referencedWidget.isDirectlyInBin() or @referencedWidget.isDirectlyInShelf())

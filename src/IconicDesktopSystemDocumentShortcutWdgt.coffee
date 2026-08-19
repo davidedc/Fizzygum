@@ -15,6 +15,6 @@ class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcu
     if doubleClickInvocation
       return
 
-    @bringUpTarget()
+    @bringUpReferencedWidget()
 
 
