@@ -4725,6 +4725,19 @@ class Widget extends TreeNode
     return undefined unless @principalPinLabel?
     return @pinLabelled @principalPinLabel
 
+  # The GRAPH EDGES I hold OUT of myself, as [{kind, to}] with kind one of 'flow' | 'command' |
+  # 'reference' and `to` another WIDGET (docs/plans/graph-edges-and-lifecycle-plan.md §4.2, the
+  # three-edge model). DERIVED on demand from the fields that already persist -- a controller's
+  # wire list, a button's target, a shortcut's referent -- and deliberately backed by NO standing
+  # edge index (decision G4 there: `@target` has no write funnel to hook one to, menu chrome would
+  # churn it, and no reverse-query consumer exists). A contributor concatenates onto `super`
+  # exactly as `pins` does. Containment is NOT enumerated here: the tree is its own, richer API
+  # (children/parent), and every consumer of this protocol treats the subtree specially anyway.
+  #   ⚠ Enumeration is honest; POLICY is not decided here. An ephemeral holder (a menu row is a
+  # ButtonWdgt) truthfully reports its command edge -- which kinds confer liveness from which
+  # holders is the §4.3 collector's question (decisions G5/G8), not this protocol's.
+  graphEdgesOut: -> []
+
   # The shared body of every controller widget's openTargetPropertySelector: pop up the "choose
   # target property" menu, one item per drivable pin of the kind I produce. Each item wires
   # @action = that pin's setter onto theTarget via setTargetAndActionWithOnesPickedFromMenu (a

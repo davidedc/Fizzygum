@@ -132,6 +132,16 @@ class ButtonWdgt extends Widget
     return  unless @doubleClickAction
     @target[@doubleClickAction]()
 
+  # My COMMAND edge (Widget.graphEdgesOut -- the three-edge model,
+  # docs/plans/graph-edges-and-lifecycle-plan.md §4.2): the widget my @action is dispatched at.
+  # ONE edge however many verbs share the receiver (@doubleClickAction dispatches at the same
+  # @target). The gate is a CAPABILITY probe, and the capability is the protocol itself: a
+  # dispatch receiver may be any object (a layout spec's menu popout, a helper), and exactly the
+  # receivers that answer graphEdgesOut are graph citizens my edge can point into -- everything
+  # else is outside the widget graph by definition, no type test needed.
+  graphEdgesOut: ->
+    if @target?.graphEdgesOut? then super().concat [{kind: 'command', to: @target}] else super()
+
   
   mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked

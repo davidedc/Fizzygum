@@ -1,7 +1,8 @@
 # The widget graph — three edge kinds, one lifecycle
 
-**PLAN ONLY — design-stage, owner-gated. Written to be executed COLD by an LLM/engineer with ZERO
-prior context, but NOT to be executed before the §5 owner decisions are taken.**
+**Written to be executed COLD by an LLM/engineer with ZERO prior context. The §5 owner decisions
+are RATIFIED (2026-08-18); §4.2 LANDED the same day (see its "As landed" block). What remains is
+§4.3 — the whole-graph collector, the second wave (G3: own session).**
 
 **STATUS: AUTHORED 2026-07-18; §4.1 (the `@target` → `referencedWidget` rename) LANDED 2026-08-16
 via the sibling [`connector-ubiquity-and-reflection-plan.md`](../archive/connector-ubiquity-and-reflection-plan.md)'s
@@ -9,7 +10,7 @@ P9 (that plan's P9 section carries the full receipt — it also renamed the insp
 `inspectedObject`). REVISED TO EXECUTABLE SHAPE 2026-08-18: every §2 claim re-verified against src,
 and the connector arc's re-homed **§P10(b) (command-edge indexing) now lives HERE, as §4.2(b) /
 decision G4** — the archived connector plan's open question 8 says it "is answered there or
-nowhere". §4.2 and §4.3 remain unstarted.**
+nowhere", and it is now answered (G4, no index; landed with §4.2). §4.3 remains unstarted.**
 Anchor on **symbol names** (all verified 2026-08-18); line numbers drift — grep the quoted symbol
 fresh before trusting any location. Self-contained.
 
@@ -174,7 +175,20 @@ plan's P9 (which disambiguated all four `@target` meanings in one sweep, `inspec
 inspector's) — `IconicDesktopSystemShortcutWdgt.coffee` now declares `referencedWidget` and constructs from
 it. Nothing of 4.1 is left to do.
 
-### 4.2 Name the three edges as one vocabulary. *Consolidation — v1.*
+### 4.2 Name the three edges as one vocabulary. *Consolidation — v1.* ✅ **LANDED 2026-08-18.**
+
+As landed: `Widget.graphEdgesOut` (base, `[]`, beside the pins protocol) + three contributors —
+`ControllerMixin` (wires → flow; the mixin-DSL `super()` resolves through `Mixin._equivalentforSuper`
+to the injected class's superclass, so the chain composes), `ButtonWdgt` (command — gated by the
+CAPABILITY probe `@target?.graphEdgesOut?`, not `instanceof`: exactly the receivers that answer the
+protocol are graph citizens, and a dispatch receiver may be any object), and
+`IconicDesktopSystemShortcutWdgt` (reference — guarded for the deserialization shell). The
+`target:`-field sweep (14 declarations) confirms the contributor set: `WireSpec.target` rides the
+flow contributor; the rest are ephemeral chrome pointers (HandleWdgt, PromptWdgt/CodePromptWdgt,
+CaretWdgt, ListWdgt, MenuItemSpec/MenuRowsPanelWdgt, ConsoleWdgt) or documented-outside cases
+(BinOpenerWdgt, the launcher — WORLD_APP_SLOTS furniture — and the demo PointerWdgt), deliberately
+not edges. Probe: `Fizzygum-tests/.scratch/graph-edges-probe.js` (10 assertions incl. the G5
+subscription exclusion and the capability gate — all green); guideline § "Declaring a graph edge".
 
 **(a) The edge-enumeration protocol.** One composed, queryable protocol on `Widget`, mirroring the
 `pins()` composition precedent (a subclass/mixin contributes via `super`):
@@ -264,6 +278,13 @@ a UI needs them (e.g. an icon must update), never for GC.
 
 ## 5. Owner decisions
 
+**RATIFIED 2026-08-18 (owner), all as recommended.** G8's final form: split by edge kind — a live
+**wire** into a closing widget argues *park, don't destroy* (user-authored, serialized state); a
+**command** edge does not (button chrome is ephemeral, and the closing gesture's own button targets
+the widget, so "any command edge into me?" is self-referentially true at close time and can never
+gate anything). Concretely: `anyReferenceToWdgt` at the three close sites generalizes to "any
+reference *or wire* keeping me alive" when §4.3 is worked.
+
 | # | Decision | Recommendation |
 |---|---|---|
 | G1 | Scope for v1 | **4.2 only** (protocol + contributors + probe + docs; 4.1 already landed). 4.3 is the second wave. |
@@ -322,4 +343,5 @@ back to being an index of OPEN work only (`docs/README.md` filing rule 2). This 
 ACTIVE: §4.2–§4.4 remain open and stay listed in `docs/BACKLOG.md`. The landing belongs with
 §4.1, which already carries its own ✅ LANDED stamp.
 
-- [x] §4.1: reference link `@target` → `referencedWidget` — DONE 2026-08-16 by connector §P9 (`34adb216`), 21 sites + 2 cross-file readers; the dataflow and dispatch meanings KEEP the name. ⇒ §4.2 is the next unstarted step.
+- [x] §4.1: reference link `@target` → `referencedWidget` — DONE 2026-08-16 by connector §P9 (`34adb216`), 21 sites + 2 cross-file readers; the dataflow and dispatch meanings KEEP the name.
+- [x] P10(b) (ex-connector, absorbed here as decision G4): index button `@target`s as non-traversed COMMAND edges — **ANSWERED + LANDED 2026-08-18 with §4.2**: no index; the command edge is enumerated lazily by `ButtonWdgt.graphEdgesOut` behind the capability probe `@target?.graphEdgesOut?`. An eager `world.dataflow` index is a recorded rejected alternative (§7): no `@target` write funnel exists, menu chrome would churn it, and no reverse-query consumer exists — revisit only with a named consumer in hand. ⇒ §4.3 (the whole-graph collector, G3: own session) is the next unstarted step.

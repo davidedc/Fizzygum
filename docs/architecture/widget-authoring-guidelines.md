@@ -692,6 +692,25 @@ principal pin may legitimately be READ-ONLY (`StringFieldWdgt`'s `value`), which
 by label rather than by setter. Override `dataflowValue` instead only when the exported value is
 *not* one of your pins at all — a patch node's computed `@output`.
 
+### Declaring a graph edge
+
+**A widget that holds a durable pointer at another widget declares it by contributing to
+`graphEdgesOut`** — the three-edge enumeration protocol (`{kind, to}`, kind `'flow'` / `'command'` /
+`'reference'`; [`../plans/graph-edges-and-lifecycle-plan.md`](../plans/graph-edges-and-lifecycle-plan.md)
+§4.2). Contribute by concatenating onto `super`, exactly like `pins`:
+
+```coffee
+graphEdgesOut: ->
+  if @myReferent? then super().concat [{kind: 'reference', to: @myReferent}] else super()
+```
+
+The protocol is DERIVED — it reads fields that already exist and persist; never build a standing
+index behind it (decision G4 there), and never enumerate containment (the tree is its own API).
+Existing contributors: `ControllerMixin` (wires → flow), `ButtonWdgt` (`@target` → command),
+`IconicDesktopSystemShortcutWdgt` (`referencedWidget` → reference). Ephemeral chrome pointers — a
+handle's, a prompt's, a caret's, a menu spec's `target` — are deliberately NOT edges: enumeration
+covers the durable widget graph, and liveness policy on top of it belongs to that plan's §4.3.
+
 ---
 
 ## 12. Stepping

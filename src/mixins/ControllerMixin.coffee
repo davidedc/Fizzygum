@@ -122,6 +122,17 @@ ControllerMixin =
         world.dataflow.removeAllEdgesOf wire
         return
 
+      # My declared wires, as FLOW edges (Widget.graphEdgesOut -- the three-edge model,
+      # docs/plans/graph-edges-and-lifecycle-plan.md §4.2). The SERIALIZED truth, not the engine's
+      # derived records: the index also carries consumer-declared firesOnAnyChange subscriptions
+      # (a menu tracking a text) that are nobody's declared relationship and confer nothing
+      # (decision G5 there).
+      graphEdgesOut: ->
+        edges = super()
+        if @wires?
+          edges.push {kind: 'flow', to: wire.target} for wire in @wires
+        edges
+
       # ---- THE BIND GESTURE (connector plan §P2) --------------------------------------------
       # A BIND IS TWO ORDINARY WIRES — mine onto you, yours onto me — and nothing else. There is no
       # bind record, no bind edge and no bind flag: "these two are bound" is a QUESTION asked of the

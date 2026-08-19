@@ -46,6 +46,13 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
   isDesktopShortcut: ->
     true
 
+  # My REFERENCE edge (Widget.graphEdgesOut -- the three-edge model,
+  # docs/plans/graph-edges-and-lifecycle-plan.md §4.2): the referent I point at and can re-summon.
+  # Inherited by all shortcut subclasses. The guard covers a deserialization shell mid-restore,
+  # where the referent property may not be re-bound yet.
+  graphEdgesOut: ->
+    if @referencedWidget? then super().concat [{kind: 'reference', to: @referencedWidget}] else super()
+
   # Bookkeeping lives in the CORE, not the public destroy() wrapper: bulk paths
   # (fullDestroy / fullDestroyChildren / teardown) recurse core-to-core and
   # never touch the public wrapper -- an override there leaves every

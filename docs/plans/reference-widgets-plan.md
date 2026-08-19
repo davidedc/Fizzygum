@@ -57,9 +57,10 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
   1. **Minimise-to-a-bar** — today the window title-bar collapse button does **collapse-in-place** (shrink
      to the title bar, stay in the tree). There is **no** placeholder bar / dock and no minimise-as-reference.
   2. **A distinct "recently closed" area** — the Bin/Shelf split above divides storage by REACHABILITY, not
-     by the auto-vs-explicit distinction the note wanted (RecentlyClosed = auto on close, Trash = explicit);
-     the bin remains one undifferentiated "lost items" store. ⚠ Needs an owner pass before §4.3 is executed:
-     does the landed split satisfy this ask, or is the distinction still wanted on top of it?
+     by the auto-vs-explicit distinction the note wanted (RecentlyClosed = auto on close, Trash = explicit).
+     ✅ **The owner pass happened (2026-08-18) and the answer is in §4.3 below**: the two axes are
+     ORTHOGONAL, the conflict quadrant (explicitly trashed + still referenced) is unexpressible under
+     the landed invariant, and the ratified design is sever-and-close with the bin as the one store.
   3. **The unified reference-widget UI taxonomy** — the classes share the verbose `IconicDesktopSystem*`
      lineage but aren't a clean `Reference*` UI family.
   4. **Duplicate vs duplicate-contents** for references isn't an exposed distinction.
@@ -96,13 +97,23 @@ with a `MinimisedReferenceWdgt` (a placeholder bar / dock entry) whose `referenc
 restored. Owner decides (R2) whether the title-bar up-triangle *becomes* minimise (the *Overview on windows*
 note's literal mapping) or minimise is a separate affordance and the button stays collapse.
 
-### 4.3 RecentlyClosed vs Trash — one store, two views first. *Lifecycle areas.*
-Expose a `move to trash` command distinct from `close`; back both by the bin store (`world.binWdgt`) but with
-two **views/filters** (RecentlyClosed = auto-on-close, reachable, auto-orphaned when stale; Trash = explicit,
-destroyed after empty+orphan+unreferenced). Promote to two real areas only if the single-store UX confuses.
-⚠ Re-scope this against the landed Bin/Shelf split first (§2 and §2's MISSING item 2): the eager sorter
-already routes anything still reachable to the shelf, so "RecentlyClosed = reachable" partly overlaps it.
+### 4.3 Trash = sever + close; the bin is the one store. *Lifecycle areas — RATIFIED 2026-08-18.*
+The reconciliation against the landed Bin/Shelf split resolved this (owner-ratified). The landed axis
+(reachability, automatic) and the note's axis (intent: auto-close vs explicit trash) are ORTHOGONAL, and
+the conflict quadrant — *explicitly trashed but still referenced* — is structurally unexpressible: as long
+as a reference lives, the eager sorter re-files the resident to the shelf every drain, and forcing it
+binward would break the gated `STORAGE_INVARIANT` (reachable-in-bin). So:
+- **`move to trash` = sever inbound reference edges + close.** The widget becomes genuinely lost and lands
+  in the bin *by graph truth* — no intent tag, no invariant carve-out, no second store. (Severing needs
+  "who references me": `world.anyReferenceToWdgt`'s tracker scan, generalized per the graph-edges plan's
+  G8 when that arc's §4.3 lands.)
+- **"RecentlyClosed" is not an area and not a view-filter — it is the bin's arrival ordering.** With sever
+  semantics no residual trashed-vs-closed-and-lost distinction is worth machinery; if auto-purge is ever
+  wanted, an intent tag can be added then, with a use case in hand.
+- **Retention: manual empty only** — destruction stays a user act (aligned with graph-edges G6).
 **Do not** auto-create a shortcut on every close (the note rejected this as messy) — reachability prevents loss.
+Rejected: intent tags + two views over one store ("I trashed it but it's not in the trash" at the conflict
+quadrant); two real intent areas (re-litigates the landed, gated split).
 
 ### 4.4 Duplicate vs duplicate-contents for references. *Copy semantics.*
 Expose two copy semantics on reference widgets: default user **"duplicate"** recursively duplicates the
@@ -119,7 +130,7 @@ arc-(b) edge model — a "duplicate-contents" is a copy that follows containment
 |---|---|---|
 | R1 | Scope for v1 | **4.1** (name the UI family) — concrete, low-risk. 4.2/4.3/4.4 second wave. |
 | R2 | Minimise semantics | Recommend minimise as a **separate** affordance (don't repurpose the tested collapse button) — unless owner wants the note's literal up-triangle mapping. |
-| R3 | RecentlyClosed vs Trash | **One store, two views** first; split later only if warranted. |
+| R3 | RecentlyClosed vs Trash | ✅ **RATIFIED 2026-08-18: sever + close, one store, no views** — see §4.3. Also ratified: the residue rename `bringUpTarget` → `bringUpReferencedWidget` rides whichever arc touches the class first (cross-repo grep per the P9 lesson). |
 
 ## 6. Risks & non-goals
 - **Test-state leaks** (world-level reference/bin/shelf state surviving `ResetWorld`) — top risk.
