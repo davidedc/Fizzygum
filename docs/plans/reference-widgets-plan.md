@@ -302,6 +302,20 @@ de-arrowed icons churn every screenshot showing them).
 - **Bin refuses duplication**: `BinOpenerWdgt._refusesDuplication` (an opt-out capability,
   `?()`-dispatched, nothing on Widget) suppresses the "duplicate" row in
   `Widget.buildBaseWidgetClassContextMenu`.
+- **The shortcut-class SEAM (same-day follow-up, found in the execution's caller census)**:
+  `Widget._buildShortcutWidget(referenceName, opts)` — THE ONE place deciding which shortcut
+  class represents a widget, consulted by `_createReferenceNoSettle` — so the answer holds on
+  EVERY creation path. Overridden by `FrameWdgt` (consults the content's
+  `specialFrameReferenceShortcut`, now opts-threaded) and `FolderWindowWdgt` (a folder
+  shortcut; its public `createReference` routes through the seam too, so the class fact is
+  stated once). This closes a pre-existing gap: the filing paths
+  (`_createReferenceAndCloseNoSettle` — folder drops AND the save-close prompt) bypassed the
+  public `FrameWdgt.createReference` override, so a filed script window became a plain
+  document shortcut, losing its run-on-double-click script-ness; a folder window filed into
+  another folder likewise fell to a document shortcut, losing the drop-into-me affordance.
+  The menu path's 95×92 sizing and the core's 75×75 are deliberately untouched (the
+  filed-icon size matches every other filed icon; `macroSavedDocumentShortcutIcon`'s prose
+  pins the 75×75 raw-resize).
 - **Liveness untouched, verified**: the declaration is read ONLY by the icon assembly and the
   closure — `graphEdgesOut`, the classifier, the close query and the trash sever never see it
   (gate §6 proves deep-copied referent figures STAY on the shelf across a real drain, i.e. the

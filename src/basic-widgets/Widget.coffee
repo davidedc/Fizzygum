@@ -3168,7 +3168,7 @@ class Widget extends TreeNode
       if w.isShortcutTo?(@)
         return
 
-    widgetToAdd = new DocumentShortcutWdgt @, referenceName, representsContents: opts.representsContents
+    widgetToAdd = @_buildShortcutWidget referenceName, opts
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn._addNoSettle widgetToAdd
@@ -3176,6 +3176,14 @@ class Widget extends TreeNode
     # public-call-sanctioned: bringToForeground is the heavily-public z-order verb (macros/user
     # code drive it) — settle-free, consciously reused by this core.
     @bringToForeground()
+
+  # THE ONE seam deciding WHICH shortcut class represents me, consulted by the core above — so
+  # the answer holds on EVERY creation path: the menu's "create shortcut", a folder-drop filing,
+  # and the save-close prompt all reach it. Overridden by FrameWdgt (its CONTENT may specialize
+  # — a script window yields a run-on-double-click ScriptShortcutWdgt) and FolderWindowWdgt
+  # (a folder shortcut). Pure builder: the core places and sizes what this returns.
+  _buildShortcutWidget: (referenceName, opts) ->
+    new DocumentShortcutWdgt @, referenceName, representsContents: opts.representsContents
 
   # PUBLIC self-settling entry; _createReferenceAndCloseNoSettle is the core a drop recipient calls
   # (FolderShortcutWdgt / FolderPanelWdgt._reactToChildDropped, inside the drop's settle).

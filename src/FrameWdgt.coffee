@@ -306,14 +306,13 @@ class FrameWdgt extends Widget
   # a special type of reference that has a slightly different icon
   # and when double-clicked actually runs the script rather than
   # bringing up the script
-  # (the trailing opts rides through to super — the arrow-contract declaration, plan §4.4; the
-  # special script-shortcut arm stays a deliberate alias, so it takes no declaration)
+  # (the trailing opts rides through — the arrow-contract declaration, plan §4.4)
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
     # ScriptWdgt content yields a special script shortcut (runs the script on double-click);
     # any other content falls to the default reference via super. The content type decides via
     # specialFrameReferenceShortcut instead of `@contents instanceof ScriptWdgt`.
     # (type-test-elimination campaign)
-    widgetToAdd = @contents?.specialFrameReferenceShortcut?(@, referenceName)
+    widgetToAdd = @contents?.specialFrameReferenceShortcut?(@, referenceName, opts)
     if widgetToAdd?
       # this "add" is going to try to position the reference
       # in some smart way (i.e. according to a grid)
@@ -322,6 +321,14 @@ class FrameWdgt extends Widget
       @bringToForeground()
     else
       super
+
+  # The core's shortcut-class seam (Widget._buildShortcutWidget): my content's specialization
+  # must hold on the paths that never reach the menu override above — a folder-drop FILING and
+  # the save-close prompt both route through _createReferenceAndCloseNoSettle, so a filed script
+  # window keeps its script-ness (a run-on-double-click ScriptShortcutWdgt, not a plain document
+  # shortcut). Content without a specialization falls to the base document shortcut.
+  _buildShortcutWidget: (referenceName, opts) ->
+    @contents?.specialFrameReferenceShortcut?(@, referenceName, opts) ? super referenceName, opts
 
 
   # A window is "internal" -- drawn with the flat, embedded title-bar skin and called an

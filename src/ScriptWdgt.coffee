@@ -37,11 +37,14 @@ class ScriptWdgt extends CodeAreaWdgt
     new ScriptIconWdgt
 
   # As window content I yield a SPECIAL desktop reference -- a script shortcut that runs the
-  # script on double-click, not a plain window reference. FrameWdgt.createReference calls this
-  # instead of testing `@contents instanceof ScriptWdgt`; other contents don't define it and
-  # fall to the default reference. (type-test-elimination campaign)
-  specialFrameReferenceShortcut: (window, referenceName) ->
-    new ScriptShortcutWdgt window, referenceName
+  # script on double-click, not a plain window reference. FrameWdgt consults this (from its menu
+  # createReference AND its _buildShortcutWidget core seam, so a FILED script window keeps its
+  # script-ness) instead of testing `@contents instanceof ScriptWdgt`; other contents don't
+  # define it and fall to the default reference. (type-test-elimination campaign)
+  # opts.representsContents = the arrow-contract declaration (plan §4.4), threaded exactly as in
+  # the base shortcut builder: a filing declares content, "create shortcut" stays an alias.
+  specialFrameReferenceShortcut: (window, referenceName, opts = {}) ->
+    new ScriptShortcutWdgt window, referenceName, representsContents: opts.representsContents
 
   closeFromContainerFrame: (containerWindow) ->
     if !world.anyReferenceOrWireIntoWdgt containerWindow

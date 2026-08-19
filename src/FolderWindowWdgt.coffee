@@ -43,10 +43,17 @@ class FolderWindowWdgt extends FrameWdgt
   # representation (bare art, deep copy) — while the menu's "create shortcut" defaults to a
   # deliberate arrow'd alias.
   createReference: (placeToDropItIn = world, referenceName, opts = {}) ->
-    widgetToAdd = new FolderShortcutWdgt @, referenceName, representsContents: opts.representsContents
+    widgetToAdd = @_buildShortcutWidget referenceName, opts
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     placeToDropItIn.add widgetToAdd
     widgetToAdd.setExtent WidgetHolderWithCaptionWdgt.standardDesktopIconExtent()
     @bringToForeground()
+
+  # the core's shortcut-class seam (Widget._buildShortcutWidget): a folder's shortcut is a
+  # folder shortcut on EVERY creation path — the menu override above, makeFolder's filing, and
+  # a folder WINDOW filed into another folder (which otherwise falls to the base document
+  # shortcut, losing the drop-into-me affordance).
+  _buildShortcutWidget: (referenceName, opts) ->
+    new FolderShortcutWdgt @, referenceName, representsContents: opts.representsContents
 
