@@ -76,7 +76,10 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
 (`_positionAndResizeChildren` / `_applyExtent`):
 
 - `viewportConstrainsMyWidth()` — a width-constraining stack tracks the viewport; a
-  free-width stack owns its width (the point of the horizontal bar).
+  free-width stack owns its width (the point of the horizontal bar). The menu rows panel
+  decouples the two facts: its INTERIOR width-distribution stays on
+  (`constrainContentWidth` true — row equalization rides it) while this viewport-facing
+  answer is false — its width is the hug.
 - `arrangesOwnScrolledChildren()` — the viewport delegates the interior arrange (stacks);
   it owns the plane's FRAME either way.
 - `scrolledContentMeasure(widthHint)` — the §4.1 pure measure: `PanelWdgt` measures its
@@ -102,8 +105,9 @@ is frame OWNERSHIP — and its precise law is AGREEMENT, not exclusivity. The vi
 commits its plane's frame at arrange time, and a stack plane's own arrange also self-writes
 (the base stack hugs its height; a menu's rows panel hugs both axes), so two writers exist
 for every stack-under-viewport: what keeps that sound is that at the fixpoint they write
-byte-the-same box (the §4.1 measures mirror the arrange's arithmetic exactly, and the
-commit's `unless equals` guard then skips). A self-writer whose box the committer's
+byte-the-same box — the §4.1 measures answer what the arrange will commit (mirrored
+arithmetic, or saturation at the same window bound for a `tight: false` plane under
+grow-to-fill), and the commit's `unless equals` guard then skips. A self-writer whose box the committer's
 arithmetic does NOT reproduce oscillates forever (`RECALC_NONCONVERGENCE`) — the menu rows
 panel was exactly that (the base children-union measure misses its bottom border, and the
 window-floor/grow-to-fill adjustments fight its tight hug; the BACKLOG's §7.2 record holds

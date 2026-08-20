@@ -53,6 +53,14 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # container behaviours.
   _acceptsDrops: false
 
+  # I am structure, not an editing surface. PanelWdgt says `true`, and the editor
+  # SELECTION walk (WorldWdgt._widgetBeingEdited, the D21 selected-item branch) climbs
+  # to the first ancestor with an OPINION — inheriting that answer would frame a
+  # pencil-engaged click on a menu/list row as a selected item inside an editor.
+  # `undefined` = no opinion: the walk passes through me (and the rows viewport, which
+  # declares the same) to the world, and frames nothing.
+  providesAmenitiesForEditing: undefined
+
   imposesRatioConstraintOnDroppedChildren: ->
     false
 
