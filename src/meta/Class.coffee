@@ -10,7 +10,6 @@
 
 class Class
 
-  @allClasses: []
   nonStaticPropertiesSources: undefined
   staticPropertiesSources: undefined
   name: ""
@@ -464,8 +463,8 @@ class Class
     # (or if already created anyways, in pre-compiled mode)
     # then add the .class field
     window[@name].class = @
-    if @superclass?
-      @superclass.subClasses.add @
+    if @superClass?
+      @superClass.subClasses.add @
 
 
 

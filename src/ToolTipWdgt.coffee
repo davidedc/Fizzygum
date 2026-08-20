@@ -50,10 +50,14 @@ class ToolTipWdgt extends Widget
      Automator.state != Automator.IDLE
         @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
     else
-      @ongoingTimeouts.add setTimeout (=>
+      # the set tracks PENDING timeouts only (cancelAllScheduledToolTips clears them):
+      # a fired timeout removes itself, otherwise the set grows for the life of the page
+      timeoutID = setTimeout (=>
+        @ongoingTimeouts.delete timeoutID
         @createBubbleHelpIfHandStillOnWidget contents, widgetInvokingThis
         )
         , delay
+      @ongoingTimeouts.add timeoutID
   
   openAt: (pos) ->
     @_buildAndConnectChildren()
