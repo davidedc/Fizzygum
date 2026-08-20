@@ -348,11 +348,14 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseMove_InputEvents: whichButton is unknown"
 
+    # a WIDGET target aims at its on-screen centre: the plane centre mapped up through
+    # every mapping ancestor (island transforms AND scroll translations) — identity (same
+    # point) for the common unmapped widget, the on-screen pixel for a scrolled/tilted one
     if dest instanceof Widget
-      dest = dest.center()
+      dest = dest.localPointToScreen dest.center()
 
     if orig instanceof Widget
-      orig = orig.center()
+      orig = orig.localPointToScreen orig.center()
 
     # where the pointer ends up — read by the click verbs as the click position for the
     # false-double-click guard (a click lands wherever the last move left the pointer)
@@ -451,10 +454,13 @@ class MacroToolkit
       @findWidgetByTextDescription widgetOrIdentifier
     else
       widgetOrIdentifier
+    # PLANE-local by contract — macros consume this as a geometry VALUE (e.g. deriving an
+    # expected caret slot from the same virtual point they click). AIMING always goes
+    # through screenPointAtFractionOf / the Screen verbs, which map this up to the pixel.
     new Point (Math.round(widget.width() * fraction[0]) + widget.left()), (Math.round(widget.height() * fraction[1]) + widget.top())
 
   moveToAndClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @moveToAndClick_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
+    @moveToAndClick_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), whichButton, milliseconds, startTime
 
   # Affine transforms (docs/plans/affine-transforms-plan.md §4.6): the SCREEN-plane point at
   # fractional position [fx,fy] inside a widget. pointAtFractionOf gives the point in the
@@ -523,7 +529,7 @@ class MacroToolkit
     # public-call-sanctioned: syntheticEventsMouseMove_InputEvents is an L1 event-synthesis primitive (it
     # pushes a queued mouse-move, not any settling/orchestration) — this is the SAME call the public
     # double/tripleClick verbs made inline before their shared body was factored here; behaviour is unchanged.
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
+    @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
     @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100
 
   # SHIFT+left-click at a fractional point inside a located widget — move the pointer there (no button),
@@ -532,7 +538,7 @@ class MacroToolkit
   # the anchor caret, then one or more shiftClickAtFractionOf to grow the selection. The selection-extend
   # sibling of the double-/triple-click verbs. Queues input events — follow with `yield "waitNoInputsOngoing"`.
   shiftClickAtFractionOf_InputEvents: (widgetOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
+    @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
     @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
 
   # Push ONE synthetic WheelInputEvent onto the input queue — the queued primitive behind
@@ -553,7 +559,7 @@ class MacroToolkit
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
+    @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
@@ -588,8 +594,8 @@ class MacroToolkit
       @findWidgetByTextDescription sliderOrIdentifier
     else
       sliderOrIdentifier
-    buttonCentre = @pointAtFractionOf slider.button, [0.5, 0.5]
-    trackPoint = @pointAtFractionOf slider, fraction
+    buttonCentre = @screenPointAtFractionOf slider.button, [0.5, 0.5]
+    trackPoint = @screenPointAtFractionOf slider, fraction
     @syntheticEventsMouseMovePressDragRelease_InputEvents buttonCentre, trackPoint, milliseconds, startTime
 
   # Clipboard CUT / COPY / PASTE for the active editing caret, driven through the INPUT-EVENT QUEUE like
@@ -644,8 +650,8 @@ class MacroToolkit
       @findWidgetByTextDescription widgetOrIdentifier
     else
       widgetOrIdentifier
-    dropPoint = if destination instanceof Point then destination else @pointAtFractionOf destination, [0.5, 0.5]
-    @syntheticEventsMouseMovePressDragRelease_InputEvents source.center(), dropPoint, milliseconds, startTime
+    dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
+    @syntheticEventsMouseMovePressDragRelease_InputEvents (source.localPointToScreen source.center()), dropPoint, milliseconds, startTime
 
   openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
@@ -675,8 +681,8 @@ class MacroToolkit
   # several windows each have one). destination may be a Point or another widget (dragged to its centre).
   # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    dropPoint = if destination instanceof Point then destination else @pointAtFractionOf destination, [0.5, 0.5]
-    @syntheticEventsMouseMovePressDragRelease_InputEvents windowWidget.resizer.center(), dropPoint, milliseconds, startTime
+    dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
+    @syntheticEventsMouseMovePressDragRelease_InputEvents (windowWidget.resizer.localPointToScreen windowWidget.resizer.center()), dropPoint, milliseconds, startTime
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
@@ -865,9 +871,13 @@ class MacroToolkit
 
     handleCenterRange = lowestHandleCenterPosition - highestHandleCenterPosition
 
-    handleCenterOffset = Math.round index * handleCenterRange / (total-1)
+    # a one-line content collapses the fraction to 0/0 — the top of the (zero) travel
+    handleCenterOffset = if total > 1 then Math.round index * handleCenterRange / (total-1) else 0
 
-    [vBarHandleCenter, vBarHandleCenter.translateBy new Point(0,handleCenterOffset)]
+    # geometry above is the BAR's plane; the returned pair AIMS a drag, so map both
+    # endpoints to the screen (identity unless the bar's viewport is itself on a mapped plane)
+    [(vBarHandle.localPointToScreen vBarHandleCenter),
+     (vBarHandle.localPointToScreen vBarHandleCenter.translateBy new Point(0,handleCenterOffset))]
 
   # Robustly scroll an inspector member/property `list` so `itemString`'s row lands a couple of rows
   # BELOW the pane's top edge -- clear of both clip edges and reliably clickable -- regardless of how
@@ -893,7 +903,9 @@ class MacroToolkit
     handleTravel = (vBar.bottom() - vBarHandle.height()) - vBar.top()
     handleTargetCenterY = vBar.top() + Math.round(scrollFraction * handleTravel) + vBarHandle.height()/2
     handleCurrentCenter = vBarHandle.center()
-    @syntheticEventsMouseMovePressDragRelease_InputEvents handleCurrentCenter, (new Point handleCurrentCenter.x, handleTargetCenterY)
+    # bar-plane geometry aimed at the screen (identity unless the bar's viewport is nested
+    # on a mapped plane)
+    @syntheticEventsMouseMovePressDragRelease_InputEvents (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
 
   bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
     inspectorNaked = @_findTopInspector()
@@ -916,9 +928,13 @@ class MacroToolkit
     # and selects nothing (measured 2026-08-06, kept-spec arc P1, via the inspector-alpha
     # test's local twin of this click). Identical to the plain top-edge click whenever
     # the row is fully visible.
-    clickY = Math.max (entry.top() + 2), (list.top() + 2)
+    # the clamp compares the row's PLANE geometry with the pane's visible window, so express
+    # the window's top in the ROW'S plane (screenPointToMyPlane — identity when the list is
+    # unscrolled), do the arithmetic there, and AIM at the resulting point's on-screen pixel
+    windowTopInEntryPlane = (entry.screenPointToMyPlane new Point list.left(), list.top()).y
+    clickY = Math.max (entry.top() + 2), (windowTopInEntryPlane + 2)
     clickY = Math.min clickY, (entry.bottom() - 2)
-    @moveToAndClick_InputEvents (new Point (entry.left() + 10), clickY), "left button", milliseconds, startTime
+    @moveToAndClick_InputEvents (entry.localPointToScreen new Point (entry.left() + 10), clickY), "left button", milliseconds, startTime
 
 
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -926,7 +942,9 @@ class MacroToolkit
 
     slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    clickPosition = inspectorNaked.textWidget.slotCoordinates(slotCoords).translateBy new Point 3,3
+    # slotCoordinates is PLANE-local to the detail text — aim at its on-screen pixel
+    # (identity when the detail pane is unscrolled)
+    clickPosition = inspectorNaked.textWidget.localPointToScreen inspectorNaked.textWidget.slotCoordinates(slotCoords).translateBy new Point 3,3
 
     @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
@@ -1094,7 +1112,7 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       dropInternalWindowIntoExternalWindow_InputEvents_Macro = (extWin, intWin) ->
         intWin.pickUp()
-        @syntheticEventsMouseMove_InputEvents (@pointAtFractionOf extWin, [0.5, 0.55]), "no button", 700
+        @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf extWin, [0.5, 0.55]), "no button", 700
         yield "waitNoInputsOngoing"
         # Phase 3 (drag-embed dwell-to-arm, spec section 6): a WINDOW payload embeds only after the dwell.
         # The window is now held STILL over the external window's content, so a NON-SCALED linger past

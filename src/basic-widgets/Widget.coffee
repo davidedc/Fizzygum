@@ -1254,6 +1254,12 @@ class Widget extends TreeNode
     if !firstClipping?
       firstClipping = world
     upstream = firstClipping.SLOWclipThrough()
+    # translation edge — kept in lockstep with clipThrough above
+    if firstClipping.scrollTranslationOfChild?
+      edgeChild = @
+      edgeChild = edgeChild.parent while edgeChild.parent? and edgeChild.parent != firstClipping
+      if (translation = firstClipping.scrollTranslationOfChild edgeChild)?
+        upstream = upstream.translateBy translation.neg()
     if @clipsAtRectangularBounds
       @boundingBox().intersect upstream
     else
@@ -1438,6 +1444,17 @@ class Widget extends TreeNode
       if !firstParentClippingAtBounds?
         firstParentClippingAtBounds = world
       firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
+      # translation edge (paint-time scroll, plan §3.2): the upstream clip lives in the clipping
+      # parent's plane; when that parent scroll-translates the subtree I reach it through, the
+      # clip must be expressed in MY plane (screen box B constrains plane points p with
+      # p + t ∈ B ⇔ p ∈ B − t). The edge is the clipping parent's DIRECT child on my ancestor
+      # chain (a non-clipping plane — a stack — can sit between me and the clipping viewport),
+      # so climb to it before asking. Absent provider / zero translation: same object through.
+      if firstParentClippingAtBounds.scrollTranslationOfChild?
+        edgeChild = @
+        edgeChild = edgeChild.parent while edgeChild.parent? and edgeChild.parent != firstParentClippingAtBounds
+        if (translation = firstParentClippingAtBounds.scrollTranslationOfChild edgeChild)?
+          firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBoundsClipThroughBounds.translateBy translation.neg()
       @checkClipThroughCache = WorldWdgt.geometryVersion
       if @clipsAtRectangularBounds
         @cachedClipThrough = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds
@@ -1838,7 +1855,16 @@ class Widget extends TreeNode
   # the extraction's re-fit of my former container.
   _resolvePickOutFigureNoSettle: ->
     island = @_enclosingNonIdentityIsland()
-    return @ if !island?
+    if !island?
+      # paint-time scroll (plan Phase 2c): grabbed OUT of a scrolled plane (no island on my
+      # chain), my bounds are plane-local while the hand carries me on the SCREEN plane —
+      # re-home me at my on-screen position so the lift has no jump (the translation-only
+      # analogue of the island pick-out's centre-preserving re-home below). Dormant path:
+      # off any mapped plane localPointToScreen returns the SAME object, so nothing moves.
+      planePos = @position()
+      screenPos = @localPointToScreen planePos
+      @_applyMoveTo screenPos.round() if screenPos isnt planePos
+      return @
     kids = island.childrenNotHandlesNorCarets()
     if kids? and kids.length == 1 and kids[0] == @
       # sole content: reuse; climb to the outermost island of the sole-content chain
@@ -2276,10 +2302,7 @@ class Widget extends TreeNode
   
   _moveRightSideTo: (x) ->
     @_applyMoveTo new Point x - @width(), @top()
-  
-  _moveTopSideTo: (y) ->
-    @_applyMoveTo new Point @left(), y
-  
+
   _moveBottomSideTo: (y) ->
     @_applyMoveTo new Point @left(), y - @height()
   

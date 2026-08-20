@@ -34,7 +34,11 @@ class ToolTipWdgt extends Widget
     # mapping returns the same point; the raw-pointer lint's same-line shape).
     if widgetInvokingThis.root() == world and widgetInvokingThis.boundsContainPoint (widgetInvokingThis.screenPointToMyPlane world.hand.position())
       theBubble = new @ contents, widgetInvokingThis: widgetInvokingThis
-      theBubble.openAt widgetInvokingThis.topRight()
+      # the bubble is a WORLD child pointing at a widget whose plane may be MAPPED (scrolled
+      # pane, tilted island) — aim at the widget's on-screen corner, not its plane corner
+      # (identity for the common unmapped widget). Screen-family points can be FRACTIONAL
+      # under a tilt: round before the integer placement funnel.
+      theBubble.openAt (widgetInvokingThis.localPointToScreen widgetInvokingThis.topRight()).round()
 
   @cancelAllScheduledToolTips: ->
     @ongoingTimeouts.forEach (eachTimeout) =>

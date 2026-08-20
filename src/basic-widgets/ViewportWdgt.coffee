@@ -197,34 +197,74 @@ class ViewportWdgt extends Widget
   # so §P8 pays that price here and nowhere else, and `_reLayoutScrollbars` below is where the bill
   # comes due.
 
-  getScrollX: -> @left() - @contents.left()
+  getScrollX: -> @scrollOffsetX
 
-  getScrollY: -> @top() - @contents.top()
+  getScrollY: -> @scrollOffsetY
 
   # ── THE STORED SCROLL OFFSET (paint-time-scroll-translation plan §3.1) ────────────────────
-  # How far the view has scrolled into the content, per axis: INTEGER, ≥ 0, clamped to
-  # [0, max(0, contentExtent − windowExtent)]. Two scalar prototype defaults — scalars, NOT a
-  # Point (⛔ a class-level constant may never reference another class,
-  # docs/architecture/immutable-value-classes.md §3), and scalars serialize own-only-when-
-  # scrolled (the spreadsheet's viewOriginCol/Row pattern). While the moved-plane model is
-  # live these stay 0 — the offset is still DERIVED (getScrollX/Y above) and scrolling still
-  # physically moves the plane; the movement cores start clamping and writing these when the
-  # plan's Phase 2 pins the plane.
+  # THE scroll state: how far the visible window sits into the content FRAME, per axis —
+  # `windowOrigin_in_plane = @contents.position() + offset`. INTEGER, ≥ 0, clamped to
+  # [0, max(0, contentExtent − windowExtent)] (_keepScrollOffsetInBounds). Scrolling never moves
+  # the plane: children keep their plane coordinates forever, and the offset is applied as a
+  # paint-time translation (the content-recursion override below) and consumed by the
+  # screen↔plane mapping walks through scrollTranslationOfChild. Two scalar prototype
+  # defaults — scalars, NOT a Point (⛔ a class-level constant may never reference another
+  # class, docs/architecture/immutable-value-classes.md §3), and scalars serialize
+  # own-only-when-scrolled (the spreadsheet's viewOriginCol/Row pattern).
   scrollOffsetX: 0
   scrollOffsetY: 0
 
+  # The plane→screen translation for my contents subtree: the visible window's plane rect is
+  # [contents.position() + offset, … + my extent] and it renders at my own box, so a plane
+  # point p appears at p + t with t below. Measured from the FRAME's origin (not my own
+  # position) so a frame the arrange legitimately extends above/left of my origin — loose
+  # content dragged past the top edge — keeps its old reachability arithmetic: the offset
+  # grows with the frame (the arrange's origin-shift bookkeeping) and t stays 0 until a real
+  # scroll happens.
+  _scrollTranslation: ->
+    new Point @left() - (@contents.left() + @scrollOffsetX), @top() - (@contents.top() + @scrollOffsetY)
+
   # The per-child-edge capability hook the screen↔plane walks ask of every ancestor they
   # climb through (plan §3.2; the walks: Widget's mapRectToScreen / screenPointToMyPlane /
-  # localPointToScreen / screenBounds / _enclosingMappedPlaneRoot). Answers ONLY for my
-  # contents edge — my bars are FIXED children of the same parent, so the §7.6
-  # fixed-vs-scrolled-children split is answered structurally, per child edge, with no stored
-  # role — and ONLY when scrolled: at offset (0,0) the answer is `undefined`, the walks
-  # contribute nothing, and their same-object dormant returns are preserved. The returned
-  # Point is the translation applied to the contents SUBTREE when mapping plane→screen.
+  # localPointToScreen / screenBounds / _enclosingMappedPlaneRoot, and the clipThrough
+  # translation edge). Answers ONLY for my contents edge — my bars are FIXED children of the
+  # same parent, so the §7.6 fixed-vs-scrolled-children split is answered structurally, per
+  # child edge, with no stored role — and ONLY when the translation is real: at (0,0) the
+  # answer is `undefined`, the walks contribute nothing, and their same-object dormant
+  # returns are preserved.
   scrollTranslationOfChild: (child) ->
     return undefined unless child is @contents
-    return undefined if @scrollOffsetX is 0 and @scrollOffsetY is 0
-    new Point -@scrollOffsetX, -@scrollOffsetY
+    t = @_scrollTranslation()
+    return undefined if t.x is 0 and t.y is 0
+    t
+
+  # The paint-time scroll (plan §3.3), intercepted at the same content-recursion point the
+  # island composites at: self (the mimic rect) and the BAR children paint in place; the
+  # CONTENTS subtree paints through the scroll translation — the shadow-pass two-step (cull
+  # rect moved opposite the paint, ctx translated with it; both integer × dpr, so the CTM
+  # composition is FP-exact). Culling needs nothing more: each descendant intersects the
+  # descending rect with its own plane-local bounds, so scrolled-out content prunes exactly
+  # as clipped-out content does. Zero translation takes the stock clipping path — dormancy —
+  # via PanelWdgt's injected mixin copy (`super` here would bind to base Widget's un-clipping
+  # version: the mixin is injected onto THIS prototype, and a class-body member shadows it).
+  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
+    t = @_scrollTranslation()
+    if t.x is 0 and t.y is 0
+      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow.call @, aContext, clippingRectangle, appliedShadow
+    damagedPartOfFrame = @boundingBox().intersect clippingRectangle
+    if !damagedPartOfFrame.isEmpty()
+      if aContext == world.worldCanvasContext
+        @_recordDrawnAreaForNextDamageRects()
+      @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+      translatedCull = damagedPartOfFrame.translateBy t.neg()
+      @children.forEach (child) =>
+        if child is @contents
+          aContext.save()
+          aContext.translate t.x * ceilPixelRatio, t.y * ceilPixelRatio
+          child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, translatedCull, appliedShadow
+          aContext.restore()
+        else
+          child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
   # The pin-setter contract (widget-authoring-guidelines §11): every delivery passes ONE argument,
   # the value.
@@ -236,7 +276,7 @@ class ViewportWdgt extends Widget
   setScrollX: (num) ->
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
-    if @scrollX (@left() - num) - @contents.left()
+    if @scrollX @scrollOffsetX - num
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
     @_reLayoutScrollbars()
@@ -245,7 +285,7 @@ class ViewportWdgt extends Widget
   setScrollY: (num) ->
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
-    if @scrollY (@top() - num) - @contents.top()
+    if @scrollY @scrollOffsetY - num
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
     @_reLayoutScrollbars()
@@ -501,6 +541,8 @@ class ViewportWdgt extends Widget
     # it instead would file unreferenced debris into the bin on every panel build.
     @contents.fullDestroyChildren()
     @contents._applyMoveTo @position()
+    # fresh content: any prior scroll state is meaningless
+    @_writeScrollOffset 0, 0
 
     aWdgt._applyMoveTo @position().add @padding + @extraPadding
 
@@ -519,7 +561,7 @@ class ViewportWdgt extends Widget
   # managesOwnScrollPinning, the P5 contract.
   _applyExtent: (aPoint) ->
     if !aPoint.equals(@extent()) and @isTextLineWrapping and !@contents.managesOwnScrollPinning?()
-      @contents._applyMoveTo @position()
+      @_writeScrollOffset 0, 0
     super aPoint
 
 
@@ -648,9 +690,9 @@ class ViewportWdgt extends Widget
       if isContentSizing
         newBounds = subBounds.expandBy(padding).ceil()
 
-        # Anchor to the viewport's own left/top even when subBounds starts elsewhere (e.g. a single
+        # Anchor to the frame's own left/top even when subBounds starts elsewhere (e.g. a single
         # centered icon) -- otherwise merging bounds that start off-origin would shift the panel so
-        # the icon's left aligns with the viewport's left, un-centering it. The merge rect spans my
+        # the icon's left aligns with the frame's left, un-centering it. The merge rect spans my
         # full width but only 1px of height, so it also guarantees newBounds.width() >= @width() --
         # only the height may still fall short of the viewport:
         newBounds = newBounds.merge new Rectangle @contents.left(), @contents.top(), @contents.left() + @width(), @contents.top() + 1
@@ -658,11 +700,25 @@ class ViewportWdgt extends Widget
         if newBounds.height() < @height()
           newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
       else
-        newBounds = subBounds.expandBy(padding).merge @boundingBox()?.ceil()
+        # the frame must cover at least the visible WINDOW, expressed in the frame's plane
+        # (frame origin + offset — identical to my own box when unscrolled with the frame
+        # at my origin, which is the common resting state). A frame extending above/left of
+        # my origin is a designed state (the D2 island-overhang scroll-reachability), which
+        # is why the offset is measured from the FRAME origin rather than mine.
+        windowInPlane = new Rectangle @contents.left() + @scrollOffsetX, @contents.top() + @scrollOffsetY,
+          @contents.left() + @scrollOffsetX + @width(), @contents.top() + @scrollOffsetY + @height()
+        newBounds = subBounds.expandBy(padding).merge windowInPlane.ceil()
     else
       newBounds = @boundingBox()?.ceil()
 
     unless @contents.boundingBox().equals newBounds
+      # frame-origin bookkeeping (paint-time scroll): the window's plane position is
+      # frame origin + offset, so a commit that MOVES the frame's origin (content grew
+      # above/left of it, or shrank away from the top) must slide the offset by the same
+      # amount to keep the VISIBLE window put — the moved-plane model got this for free.
+      # A resulting negative offset is the _keepScrollOffsetInBounds clamp's business (below).
+      originShift = @contents.position().subtract newBounds.origin
+      @_writeScrollOffset @scrollOffsetX + originShift.x, @scrollOffsetY + originShift.y
       # §4.2 Stage 3 (structural arrange): I OWN my content's frame -- I computed newBounds from the §4.1 pure
       # measure (subBounds), so apply it via the NON-notifying twin. The old _commitBounds fired the re-fit
       # seam back at ME (Intent-2 self-re-enqueue = the capstone's Pattern D), redundant since I am the one sizing
@@ -688,21 +744,36 @@ class ViewportWdgt extends Widget
     # Always run this check even when @contents.boundingBox() already equals newBounds: a stack can
     # resize itself in the foreach loop above without changing the outer frame, so the view can still
     # need fixing. Cheap to check when there's nothing to do.
-    @keepContentsInViewport()
+    @_keepScrollOffsetInBounds()
 
-  # §4.2 Stage 3 (structural arrange): the position clamp keeping my content snug against my viewport edges. I
-  # OWN this position, so apply each nudge via the NON-notifying move twin -- the old _applyMoveBy fired the
-  # re-fit seam back at ME (part of the viewport's Intent-2 self-re-enqueue), redundant since I am the clamper.
-  keepContentsInViewport: ->
-    if @contents.left() > @left()
-      @contents._applyMoveByBase new Point @left() - @contents.left(), 0
-    if @contents.right() < @right()
-      @contents._applyMoveByBase new Point @right() - @contents.right(), 0
-    if @contents.top() > @top()
-      @contents._applyMoveByBase new Point 0, @top() - @contents.top()
-    if @contents.bottom() < @bottom()
-      @contents._applyMoveByBase new Point 0, @bottom() - @contents.bottom()
-  
+  # THE offset write funnel (paint-time scroll): every `@scrollOffsetX/Y` change in the class
+  # routes through here. The offset is MAPPING state — part of the screen↔plane translation the
+  # version-keyed derived-geometry caches (clipThrough / clippedThroughBounds / fullClippedBounds)
+  # fold in — so a change must break them exactly as a bounds write does (__breakMoveResizeCaches).
+  # Paint needs no such break (it reads the offset live), but HIT-TESTING reads those caches:
+  # a scrolled row whose stale clip box is EMPTY paints perfectly and is hit-INVISIBLE — clicks
+  # fall through to the viewport (measured on the inspector list, plan §3.2). Never write the
+  # fields bare and rely on a neighboring bounds commit to bump the version: whether one happens
+  # is accidental (a 1-px scroll may not move the quantized thumb; the clamp fires on unchanged
+  # frames too). Returns whether the offset actually moved — the cores' caller contract.
+  _writeScrollOffset: (newX, newY) ->
+    return false if newX is @scrollOffsetX and newY is @scrollOffsetY
+    @scrollOffsetX = newX
+    @scrollOffsetY = newY
+    WorldWdgt.geometryVersion++
+    @_changed()
+    true
+
+  # §4.2 Stage 3 (structural arrange): the SCROLL CLAMP keeping the visible window inside the
+  # content frame — the offset stays in [0, max(0, content − window)] per axis, so a shrink
+  # at the bottom scrolls back up (no vacant space revealed) and fitting content rests at 0.
+  # The plane itself never moves; only the offset clamps. Callers pair with
+  # _reLayoutScrollbars as every scroll path does.
+  _keepScrollOffsetInBounds: ->
+    newX = Math.min (Math.max 0, @scrollOffsetX), (Math.max 0, @contents.width() - @width())
+    newY = Math.min (Math.max 0, @scrollOffsetY), (Math.max 0, @contents.height() - @height())
+    @_writeScrollOffset newX, newY
+
   # ViewportWdgt scrolling by floatDragging:
   scrollX: (steps) ->
     # under 'never' every scroll path refuses HERE, at the movement core: the
@@ -710,20 +781,15 @@ class ViewportWdgt extends Widget
     # momentum glide all route through this pair, and callers read the boolean
     # as "did the content actually move".
     return false if @scrollPolicy is 'never'
-    cl = @contents.left()
-    l = @left()
-    cw = @contents.width()
-    r = @right()
-    newX = cl + steps
-    newX = r - cw  if newX + cw < r
-    newX = l  if newX > l
-    # Return true iff the content actually moved -- callers use this to decide whether to trigger the
+    # positive steps scroll the view back toward the content origin (the historical
+    # "move the contents right" direction); the offset moves opposite the steps.
+    # Math.round at the write funnel: the offset is INTEGER by contract (plan §4.3 —
+    # fractional offsets are the fracplane bug class), and glide deltas arrive decayed.
+    newX = Math.round @scrollOffsetX - steps
+    newX = Math.min (Math.max 0, newX), (Math.max 0, @contents.width() - @width())
+    # Return true iff the view actually moved -- callers use this to decide whether to trigger the
     # content/scrollbar update.
-    if newX isnt cl
-      @contents._moveLeftSideTo newX
-      return true
-    else
-      return false
+    @_writeScrollOffset newX, @scrollOffsetY
 
   # Scroll so CONTENT-point `whereTo` sits at my top-left. FRAME-RELATIVE (offset from my own
   # origin), so the result is independent of where I am in the world -- a caller's scroll survives
@@ -737,8 +803,8 @@ class ViewportWdgt extends Widget
   # no longer covering the viewport (the arrange's own fit rule). After a real scroll, re-fit
   # contents + scrollbars, the standard post-scroll pair.
   scrollTo: (whereTo) ->
-    scrolledX = @scrollX @left() - whereTo.x - @contents.left()
-    scrolledY = @scrollY @top() - whereTo.y - @contents.top()
+    scrolledX = @scrollX @scrollOffsetX - whereTo.x
+    scrolledY = @scrollY @scrollOffsetY - whereTo.y
     if scrolledX or scrolledY
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
@@ -751,25 +817,14 @@ class ViewportWdgt extends Widget
     @_reLayoutScrollbars()
   
   scrollY: (steps) ->
-    # 'never' refuses at the core — see scrollX.
+    # 'never' refuses at the core — see scrollX (which also explains the sign and the
+    # integer-offset rounding).
     return false if @scrollPolicy is 'never'
-    ct = @contents.top()
-    t = @top()
-    ch = @contents.height()
-    b = @bottom()
-    newY = ct + steps
-    if newY + ch < b
-      newY = b - ch
-    # prevents content to be scrolled to my
-    # bottom if the content is otherwise empty
-    newY = t  if newY > t
-    # Return true iff the content actually moved -- callers use this to decide whether to trigger the
+    newY = Math.round @scrollOffsetY - steps
+    newY = Math.min (Math.max 0, newY), (Math.max 0, @contents.height() - @height())
+    # Return true iff the view actually moved -- callers use this to decide whether to trigger the
     # content/scrollbar update.
-    if newY isnt ct
-      @contents._moveTopSideTo newY
-      return true
-    else
-      return false
+    @_writeScrollOffset @scrollOffsetX, newY
   
   # Float-dragging a Viewport's contents scrolls it (particularly useful on touch devices); the same
   # gesture works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
@@ -781,7 +836,14 @@ class ViewportWdgt extends Widget
     return undefined  if @scrollPolicy is 'never'
     return undefined  unless @isScrollingByfloatDragging
 
-    oldPos = pos
+    # ⚠ Do NOT seed oldPos from the `pos` parameter: a press on my scrolled CONTENT dispatches
+    # to the row (base Widget.mouseDownLeft) which ESCALATES here with the pos still in the
+    # ROW'S plane — offset-pixels away from mine (paint-time scroll; pre-offset-model the two
+    # planes coincided, so the escalated value was right by coincidence). The step's per-frame
+    # samples below are in MY plane, and one cross-plane oldPos makes the first frame's delta
+    # equal the whole offset — the drag slams to the clamp on a stationary click (measured).
+    # Re-derive the press point from the hand with the same mapped read the step uses.
+    oldPos = @screenPointToMyPlane world.hand.position()
     deltaX = 0
     deltaY = 0
     friction = 0.8
@@ -804,7 +866,7 @@ class ViewportWdgt extends Widget
         # site (the raw-pointer lint enforces exactly this shape), so the containment gate
         # compares like planes and the deltas below are in-plane — a tilted viewport drag-scrolls
         # along its own axes. Off any island the mapping returns the same point (dormant
-        # byte-identical). The press point (oldPos = the handler's `pos`) arrives pre-mapped.
+        # byte-identical). The press point (oldPos) is seeded by the SAME mapped read above.
         @boundsContainPoint(@screenPointToMyPlane world.hand.position())
           wasScrollDragging = true
           newPos = @screenPointToMyPlane world.hand.position()
@@ -960,36 +1022,41 @@ class ViewportWdgt extends Widget
   
   # ViewportWdgt scrolling when editing text
   # so to bring the caret fully into view.
+  # The caret is a resident of my PLANE (its parent is my contents), so its coordinates are
+  # plane-local and never move on a scroll; bringing it into view means moving the OFFSET
+  # until the caret's plane position falls inside the visible window's plane rect. The full
+  # delta lands in ONE core call per axis (the single-pass law: CaretWdgt places itself at
+  # its true, un-clamped slot position before asking), and the caret itself is never moved —
+  # its screen appearance follows through the paint-time translation.
   scrollCaretIntoView: (caretWidget) ->
     # a 'never' viewport clips its caret like any other overflow — WYSIWYG of the
     # policy (a text viewport that wants the caret in view wants 'auto')
     return if @scrollPolicy is 'never'
-    txt = caretWidget.target
-    ft = @top() + @padding
-    fb = @bottom() - @padding
-    fl = @left() + @padding
-    fr = @right() - @padding
     # layout-apply-sanctioned: scroll-input (caret-into-view), determinism-exempt (residuals-audit fam 1)
     @_positionAndResizeChildren()
+    # the visible window's padded interior, expressed in the caret's plane
+    # (frame origin + offset)
+    ft = @contents.top() + @scrollOffsetY + @padding
+    fb = @contents.top() + @scrollOffsetY + @height() - @padding
+    fl = @contents.left() + @scrollOffsetX + @padding
+    fr = @contents.left() + @scrollOffsetX + @width() - @padding
     marginAroundCaret = @padding
     if @extraPadding?
       marginAroundCaret += @extraPadding
+    # DIRECT, deliberately UN-clamped offset writes (the follow's one licence — the movement
+    # cores clamp to the content frame, but a caret at the very end of the content needs the
+    # window to overshoot by its margin): the arrange below then GROWS the frame to cover the
+    # overshot window (the window-in-plane merge) and its bookkeeping+clamp normalize the
+    # offset against the grown frame, so the overshoot STICKS exactly as far as the margin —
+    # the same fixpoint the moved-plane follow reached by moving the plane un-clamped.
     if caretWidget.top() < ft
-      newT = @contents.top() + ft - caretWidget.top()
-      @contents._moveTopSideTo newT + marginAroundCaret
-      caretWidget._moveTopSideTo ft
+      @_writeScrollOffset @scrollOffsetX, (Math.round @scrollOffsetY - (ft - caretWidget.top() + marginAroundCaret))
     else if caretWidget.bottom() > fb
-      newB = @contents.bottom() + fb - caretWidget.bottom()
-      @contents._moveBottomSideTo newB - marginAroundCaret
-      caretWidget._moveBottomSideTo fb
+      @_writeScrollOffset @scrollOffsetX, (Math.round @scrollOffsetY + (caretWidget.bottom() - fb + marginAroundCaret))
     if caretWidget.left() < fl
-      newL = @contents.left() + fl - caretWidget.left()
-      @contents._moveLeftSideTo newL + marginAroundCaret
-      caretWidget._moveLeftSideTo fl
+      @_writeScrollOffset (Math.round @scrollOffsetX - (fl - caretWidget.left() + marginAroundCaret)), @scrollOffsetY
     else if caretWidget.right() > fr
-      newR = @contents.right() + fr - caretWidget.right()
-      @contents._moveRightSideTo newR - marginAroundCaret
-      caretWidget._moveRightSideTo fr
+      @_writeScrollOffset (Math.round @scrollOffsetX + (caretWidget.right() - fr + marginAroundCaret)), @scrollOffsetY
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
@@ -1023,15 +1090,16 @@ class ViewportWdgt extends Widget
       # if scrolling down and the content bottom is already at (or above) the bottom
       #  THEN
       # escalate the method up, since there might be another scrollbar catching it.
-      # Exact comparisons: geometry is integer by invariant (Widget._assertBoundsWellFormed),
-      # and a tolerance here would hand a 1px-shy inner viewport's last wheel step to the outer
-      # viewport instead of letting the inner one reach its edge.
+      # Exact comparisons: the offset is integer by contract (the movement cores round at
+      # the write funnel), and a tolerance here would hand a 1px-shy inner viewport's last
+      # wheel step to the outer viewport instead of letting the inner one reach its edge.
       # 'never' escalates HERE, not at the refused core — the else arm would
       # otherwise mark scrollbarJustChanged and swallow the wheel dead over a
       # cropping viewport instead of handing it to an enclosing scroller.
+      # at-top ⇔ offset 0; at-end ⇔ offset at the clamp limit (fitting content is both).
       if @scrollPolicy is 'never' or
-       (y > 0 and @contents.top() >= @top()) or
-       (y < 0 and @contents.bottom() <= @bottom())
+       (y > 0 and @scrollOffsetY <= 0) or
+       (y < 0 and @scrollOffsetY >= @contents.height() - @height())
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
@@ -1041,8 +1109,8 @@ class ViewportWdgt extends Widget
       # we are in a nested Viewport situation ('never' escalates too — see
       # the vertical case)
       if @scrollPolicy is 'never' or
-       (x > 0 and @contents.left() >= @left()) or
-       (x < 0 and @contents.right() <= @right())
+       (x > 0 and @scrollOffsetX <= 0) or
+       (x < 0 and @scrollOffsetX >= @contents.width() - @width())
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true

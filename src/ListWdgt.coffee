@@ -130,9 +130,14 @@ class ListWdgt extends ViewportWdgt
   _applyExtent: (aPoint) ->
     unless aPoint.equals @extent()
       lb = @listContents.boundingBox()
-      nb = @bounds.origin.corner @bounds.origin.add aPoint
-      if nb.right() > lb.right() and nb.width() <= lb.width()
-        @listContents._moveRightSideTo nb.right()
-      if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-        @listContents._moveBottomSideTo nb.bottom()
+      # anti-vacant-space on growth: if my grown window would reach past the rows' far edge
+      # (and the rows are still bigger than the window), drag the rows' edge to the window's.
+      # The rows live on my PLANE, so the comparison runs in plane coordinates — the window's
+      # plane rect is frame origin + offset + my new extent (paint-time scroll model).
+      windowRight = @contents.left() + @scrollOffsetX + aPoint.x
+      windowBottom = @contents.top() + @scrollOffsetY + aPoint.y
+      if windowRight > lb.right() and aPoint.x <= lb.width()
+        @listContents._moveRightSideTo windowRight
+      if windowBottom > lb.bottom() and aPoint.y <= lb.height()
+        @listContents._moveBottomSideTo windowBottom
       super aPoint
