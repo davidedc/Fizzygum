@@ -62,8 +62,10 @@ class VerticalStackPanelWdgt extends Widget
     @parent?._reactToChildAlphaChanged? @, alpha
     return alpha
 
-  # opts.positionOnScreen -- where the widget was released on SCREEN, so the stack can work out which
-  # sibling it landed between. Distinct from opts.atIndex, which names that slot outright.
+  # opts.positionInPlane -- where the widget was released, expressed in MY plane (the drop
+  # dispatcher maps it through screenPointToMyPlane before handing it over -- ActivePointerWdgt
+  # .drop), so the stack can compare it against its children's plane-local spans to work out
+  # which sibling it landed between. Distinct from opts.atIndex, which names that slot outright.
   # A key this receiver does not read (opts.notContent, which only the frame acts on) is simply
   # ignored -- which is why one drop-site call can address any container in the add family.
   add: (aWdgt, opts = {}) ->
@@ -73,7 +75,7 @@ class VerticalStackPanelWdgt extends Widget
   # work (_resizeToWithoutSpacing + sibling-position computation) only uses immediate mutators / structural
   # cores, so build-time / layout-time / teardown adders can call it directly without flushing layouts.
   _addNoSettle: (aWdgt, opts = {}) ->
-    positionOnScreen = opts.positionOnScreen
+    positionInPlane = opts.positionInPlane
     aWdgt._resizeToWithoutSpacing()
 
     # find out WHERE to add the widget. Find the existing widget in the
@@ -85,11 +87,11 @@ class VerticalStackPanelWdgt extends Widget
     # The vertical stack lays children in sibling order, so inserting means counting up to the child
     # at the same height and inserting after it -- opts.atIndex names that slot outright.
     positionNumberAmongSiblings = undefined
-    if (childrenNotHandlesNorCarets.length > 0) and (positionOnScreen instanceof Point)
+    if (childrenNotHandlesNorCarets.length > 0) and (positionInPlane instanceof Point)
       positionNumberAmongSiblings = 0
       for w in childrenNotHandlesNorCarets
         positionNumberAmongSiblings++
-        if w.top() < positionOnScreen.y and w.bottom() > positionOnScreen.y
+        if w.top() < positionInPlane.y and w.bottom() > positionInPlane.y
           break
 
     if positionNumberAmongSiblings?

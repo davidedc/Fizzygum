@@ -463,7 +463,7 @@ class ActivePointerWdgt extends Widget
       # native, the payload simply becomes content of the transformed thing.) screenPointToMyPlane
       # composes ALL mapping ancestors (N-deep) and returns the point UNCHANGED off any mapped
       # plane, so the whole block is a no-op when dormant (byte-identical). The GATE stays (unlike
-      # the always-mapped positionOnScreen below) because the block's _applyMoveTo is a real
+      # the always-mapped positionInPlane below) because the block's _applyMoveTo is a real
       # mutation the common unmapped drop must not pay. NoSettle mutator — the target.add below
       # carries the single settle.
       if target._isInsideMappedPlane()
@@ -477,7 +477,7 @@ class ActivePointerWdgt extends Widget
         virtualCentre = target.screenPointToMyPlane payloadVisualCentre
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
 
-      # Affine transforms §7.13: positionOnScreen is consumed by the stack/menu panels
+      # Affine transforms §7.13: positionInPlane is consumed by the stack/menu panels
       # (VerticalStackPanelWdgt / ToolPanelWdgt) to derive a
       # child-INSERT index by comparing against their children's PLANE-LOCAL spans — for a target
       # inside a non-identity island or a scrolled pane the raw screen point picks the wrong slot
@@ -485,10 +485,10 @@ class ActivePointerWdgt extends Widget
       # the last). ALWAYS mapped, no gate: screenPointToMyPlane is the identity (same object) off
       # any mapped plane, so the dormant path still passes @position() through, byte-identical.
       # This one call addresses every container in the add family: a receiver that does not read
-      # positionOnScreen simply ignores it, which is what the options tail buys over the six
+      # positionInPlane simply ignores it, which is what the options tail buys over the six
       # positional slots (four of them holes) this used to need.
       dropPositionInTargetPlane = target.screenPointToMyPlane @position()
-      target.add wdgtToDrop, beingDropped: true, positionOnScreen: dropPositionInTargetPlane
+      target.add wdgtToDrop, beingDropped: true, positionInPlane: dropPositionInTargetPlane
       # Affine transforms 4D-2b (§6): the UNWRAP half of the re-expression. _reExpressFigureForPlaneOfNoSettle
       # above re-spec'd a dropped sugar figure to its RELATIVE similitude; when that was identity the figure is
       # now a _materializedBySugar island at identity NESTED in target, so the 4C auto-unwrap dissolves it in

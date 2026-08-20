@@ -29,7 +29,7 @@ class ToolPanelWdgt extends PanelWdgt
     @_settleLayoutsAfter => @_addNoSettle aWdgt, opts
 
   _addNoSettle: (aWdgt, opts = {}) ->
-    positionOnScreen = opts.positionOnScreen
+    positionInPlane = opts.positionInPlane
 
     # annotation + handle both attach to the viewport directly (was their two instanceof)
     # (type-test-elimination campaign)
@@ -65,7 +65,7 @@ class ToolPanelWdgt extends PanelWdgt
 
       childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
 
-      dropSlot = @_findDropSlot positionOnScreen, childrenNotHandlesNorCarets
+      dropSlot = @_findDropSlot positionInPlane, childrenNotHandlesNorCarets
 
       if dropSlot?
         super aWdgt, Object.assign {}, opts, atIndex: dropSlot

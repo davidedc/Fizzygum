@@ -19,16 +19,17 @@ class PanelWdgt extends Widget
     @color = WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor
     @strokeColor = WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor
 
-  # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at screen point
-  # `posOnScreen` land? Returns the sibling insertion index (bumped one past a child whose right half holds
+  # Where among `children` (a childrenNotHandlesNorCarets list) does a payload dropped at `posInPlane`
+  # — the release point expressed in MY plane (the drop dispatcher maps it, ActivePointerWdgt.drop) —
+  # land? Returns the sibling insertion index (bumped one past a child whose right half holds
   # the point), or undefined when the point is over no child — callers then fall back to appending at the end.
   # Pure computation; used verbatim by ToolPanelWdgt._addNoSettle.
-  _findDropSlot: (posOnScreen, children) ->
-    return undefined unless posOnScreen? and children.length > 0
+  _findDropSlot: (posInPlane, children) ->
+    return undefined unless posInPlane? and children.length > 0
     positionNumberAmongSiblings = 0
     for w in children
-      if w.bounds.growBy(@internalPadding).containsPoint posOnScreen
-        if w.bounds.growBy(@internalPadding).rightHalf().containsPoint posOnScreen
+      if w.bounds.growBy(@internalPadding).containsPoint posInPlane
+        if w.bounds.growBy(@internalPadding).rightHalf().containsPoint posInPlane
           positionNumberAmongSiblings++
         return positionNumberAmongSiblings
       positionNumberAmongSiblings++

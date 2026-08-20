@@ -268,6 +268,38 @@ class ViewportWdgt extends Widget
         else
           child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
+  # The SHADOW-pass twin of the interception above (paint-time scroll review F3): the mixin's
+  # own-shadow entry enumerates children itself — bypassing the content pass — so without this
+  # a viewport wearing its OWN shadow, painting translucent (alpha != 1, the one case whose
+  # silhouette depends on the children), while scrolled, would silhouette the UNTRANSLATED
+  # content. Same two-step around the contents child, same dormant delegation to the injected
+  # mixin copy (`super` would bind to base Widget's un-clipping version).
+  _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
+    t = @_scrollTranslation()
+    if t.x is 0 and t.y is 0
+      return PanelWdgt::_fullPaintIntoAreaOrBlitFromBackBufferJustShadow.call @, aContext, clippingRectangle, appliedShadow
+    # from here: the mixin's JustShadow body (kept in lockstep with it), with the contents
+    # child painted through the scroll translation
+    clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
+    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
+      damagedPartOfFrame = @boundingBox().intersect clippingRectangle
+      if !damagedPartOfFrame.isEmpty()
+        aContext.save()
+        aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
+        @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+        # opaque short-circuit as in the mixin: a fully opaque box's silhouette IS its box
+        if @alpha != 1
+          shadowTranslatedCull = damagedPartOfFrame.translateBy t.neg()
+          @children.forEach (child) =>
+            if child is @contents
+              aContext.save()
+              aContext.translate t.x * ceilPixelRatio, t.y * ceilPixelRatio
+              child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, shadowTranslatedCull, appliedShadow
+              aContext.restore()
+            else
+              child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+        aContext.restore()
+
   # The pin-setter contract (widget-authoring-guidelines §11): every delivery passes ONE argument,
   # the value.
   #   ⚠ CLAMPED, through the same `scrollX`/`scrollY` every other scroll path uses. The predecessor
@@ -500,6 +532,13 @@ class ViewportWdgt extends Widget
     if aWdgt.attachesToViewportDirectly?()
       super
     else
+      # crossing the plane edge: opts.positionInPlane arrives expressed in MY plane (the drop
+      # dispatcher maps it for the drop TARGET, which is me on this path) — re-express it in
+      # the CONTENTS plane, or a scrolled plane's insert-index compare is short by exactly the
+      # scroll translation (paint-time scroll review F2). Inverse = subtract, the same
+      # arithmetic screenPointToMyPlane applies at this edge; no-op when unscrolled.
+      if opts.positionInPlane? and (translation = @scrollTranslationOfChild @contents)?
+        opts = Object.assign {}, opts, positionInPlane: opts.positionInPlane.subtract translation
       @contents.add aWdgt, opts
       # Intentional synchronous APPLY (not an off-settle trigger to defer): add / addMany /
       # showResizeAndMoveHandlesAndLayoutAdjusters are public content-change ENDPOINTS, idempotent
@@ -823,8 +862,12 @@ class ViewportWdgt extends Widget
 
 
   scrollToBottom: ->
-    @scrollY -100000
-    # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
+    if @scrollY -100000
+      # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
+      # — the same moved-gated post-scroll arrange every other scroll path runs (scrollTo, the
+      # pin setters, the drag step); the non-content-sizing arrange folds the offset into its
+      # window merge, so it must re-run after a real scroll
+      @_positionAndResizeChildren()
     @_reLayoutScrollbars()
   
   scrollY: (steps) ->

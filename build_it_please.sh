@@ -737,6 +737,26 @@ if ! $noSyntaxCheck ; then
   echo "... raw-pointer-reads check OK"
 fi
 
+# --- plane-discipline gate (paint-time scroll model) --------------------------------
+# Three statically-checkable rules of the stored-offset model (viewports-and-planes.md):
+# A) scrollOffsetX/Y written ONLY through the _writeScrollOffset funnel (a bare write skips
+#    the geometryVersion bump -- the measured hit-invisible-scrolled-row class); B) a count
+# ratchet over lines mixing two receivers' POSITIONAL geometry with no mapping call (the
+# silent dormant-at-offset-0 class -- new lines must be classified, drops ratchet down);
+# C) a positional pointer handler on a scroll-translation provider must re-derive its pos
+#    (escalateEvent forwards descendant-plane args verbatim). (buildSystem/
+# check-plane-discipline.js -- same --noSyntaxCheck escape hatch as the gates above.)
+if ! $noSyntaxCheck ; then
+  echo "checking plane discipline (offset funnel / positional mixing / escalation boundary) ..."
+  node ./buildSystem/check-plane-discipline.js
+  if [ "$?" != "0" ]; then
+    tput bel
+    echo "!!!!!!!!!!! error: plane-discipline gate failed -- aborting build." 1>&2
+    exit 1
+  fi
+  echo "... plane-discipline check OK"
+fi
+
 # --- build-time test-.js syntax gate (only when tests are part of this build) ---------
 # Each SystemTest's _automationCommands.js carries its macro inside a backtick-delimited JS
 # template literal; a stray backtick silently corrupts the file so the test never loads (with

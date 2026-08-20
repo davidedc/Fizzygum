@@ -28,6 +28,10 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
         if where?
           where.contents.smartPlace widgetToBePlaced, @
         else
-          widgetToBePlaced._applyMoveTo @topRight().add new Point 20,-40
+          # the new widget is a WORLD child placed beside ME, and I live on a toolbar's
+          # scrolled plane — emit my corner through the plane→screen map (identity when
+          # unscrolled/untilted, rounded because screen-family values may be fractional
+          # under tilt), never the raw plane-local @topRight() (paint-time scroll review F1).
+          widgetToBePlaced._applyMoveTo (@localPointToScreen @topRight()).round().add new Point 20, -40
           widgetToBePlaced._moveWithin world
           world.add widgetToBePlaced

@@ -4,7 +4,11 @@ class ToolbarCreatorButtonWdgt extends CreatorButtonWdgt
     if partOfDoubleClick
       return
     windowToBePlaced = @createWidgetToBeHandled()
-    windowToBePlaced._applyMoveTo @topRight().add new Point 20,-40
+    # the new window is a WORLD child placed beside ME, and I live on a toolbar's scrolled
+    # plane — emit my corner through the plane→screen map (identity when unscrolled/untilted,
+    # rounded because screen-family values may be fractional under tilt), never the raw
+    # plane-local @topRight() (paint-time scroll review F1).
+    windowToBePlaced._applyMoveTo (@localPointToScreen @topRight()).round().add new Point 20, -40
     world.add windowToBePlaced
     windowToBePlaced._moveWithin world
 

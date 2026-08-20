@@ -2456,10 +2456,15 @@ class WorldWdgt extends IconGridPanelWdgt
     # (Dismissed unpinned pop-ups die the same way -- PopUpWdgt._closeNoSettle's
     # dismissal policy.)
 
+    # Unconditional, deliberately: a click dismisses every tooltip, hovered or not — the
+    # conventional behavior. (⛔ do not guard this with `boundsContainPoint @position()`:
+    # on the WORLD that tests the world's own origin, not the pointer, so it keeps nothing
+    # except — leakily — a tooltip overlapping the top-left corner. A keep-the-hovered-
+    # tooltip policy, if ever wanted, tests the HAND's position mapped into the tooltip's
+    # plane.)
     @toolTipsList.forEach (tooltip) =>
-      unless tooltip.boundsContainPoint @position()
-        tooltip.fullDestroy()
-        @toolTipsList.delete tooltip
+      tooltip.fullDestroy()
+      @toolTipsList.delete tooltip
   
 
   # "open from file…" world-menu action: pop the file picker; FileLoading routes the chosen

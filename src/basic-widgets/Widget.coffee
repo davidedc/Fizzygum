@@ -3540,12 +3540,12 @@ class Widget extends TreeNode
   # fallback twice — and since the base answer IS undefined, it also called the resolver twice per
   # add: once here, then again in the core because `?` saw the undefined it had just produced.
   # The options bag is handed to the core UNCHANGED, so the two faces of the same operation share
-  # one vocabulary; the overrides below add keys (notContent, positionOnScreen) that only their own
+  # one vocabulary; the overrides below add keys (notContent, positionInPlane) that only their own
   # cores read, and a key its receiver does not read is simply ignored -- which is what lets one
   # caller write the same add against any container in the family.
   # opts.atIndex -- WHERE AMONG THE SIBLINGS, an integer index into @children (it reaches
   #   TreeNode._addChild as `@children.splice atIndex, 0, node`), NOT a screen position: a
-  #   container that wants the latter takes opts.positionOnScreen.
+  #   container that wants the latter takes opts.positionInPlane.
   # opts.layoutSpec -- the attachment; absent means ask the widget (see the core).
   # opts.beingDropped -- true only on the drop path, so a receiver can tell a user gesture from a
   #   programmatic add.
