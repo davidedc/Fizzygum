@@ -1487,7 +1487,7 @@ class Widget extends TreeNode
   # (screen) plane against the OUTERMOST island's own visible rect (= its footprint ∩
   # its ancestor screen clips) — clipping the pre-image plane would not commute with
   # the transform (§4.11).
-  # Every screen↔plane walk here is TWO-ARM (docs/plans/paint-time-scroll-translation-plan.md
+  # Every screen↔plane walk here is TWO-ARM (docs/archive/paint-time-scroll-translation-plan.md
   # §3.2): the island arm (a non-identity TransformFrameWdgt ancestor — similitude verbs) and
   # the translation arm (any ancestor answering `scrollTranslationOfChild(child)` for the child
   # edge just climbed through — an integer-Point translate applied to that child's subtree when

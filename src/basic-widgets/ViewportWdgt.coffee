@@ -1,7 +1,9 @@
 # The scrolling VIEWPORT — invisible in EFFECT, not by abstention: my color/alpha MIMIC the
 # plane's (see _buildViewportChromeNoSettle), so my own painted rect always lies under the
 # plane, indistinguishable. I own three pieces of chrome: the contents panel (the PLANE its
-# content lives on, physically moved by the scroll) and two SliderWdgt bars. NOT a PanelWdgt: a
+# content lives on — PINNED: scrolling never moves it; the stored scrollOffsetX/Y applies as
+# a paint-time translation, see _writeScrollOffset/_scrollTranslation) and two SliderWdgt
+# bars. NOT a PanelWdgt: a
 # panel is a SURFACE whose children are content, while my children are chrome — my content
 # lives one level down, on the plane — so the panel-family answers (its menu rows, its
 # lock-granting, its drop slots) are wrong here, and the few panel facts I do mean are stated
@@ -550,15 +552,17 @@ class ViewportWdgt extends Widget
 
 
   # SCROLL-POSITION POLICY, not a child re-lay (schedule-valve V1): a REAL immediate resize of a
-  # text-wrapping viewport re-pins its contents to my origin (the shipped reset-scroll-on-resize
-  # behaviour), while a re-lay at an unchanged viewport must never touch the scroll position. The pin
-  # lives AT the resize event because only the event knows the delta — a scheduled/settle re-lay
-  # enters _reLayout with the extent already committed, so an extent-delta gate inside _reLayout
-  # structurally cannot see an immediate resize. Pinning BEFORE super is safe (an extent commit
-  # never changes my origin); the arrange that follows (via the resize re-lay) then anchors and
-  # clamps off the pinned position. A plane that manages its own scroll pinning (a wrapping
-  # STACK, whose position the arrange's clamp owns) declares itself out —
-  # managesOwnScrollPinning, the P5 contract.
+  # text-wrapping viewport resets its scroll to the content origin (offset := 0 — the shipped
+  # reset-scroll-on-resize behaviour; re-wrapped text re-reads from the top), while a re-lay at an
+  # unchanged viewport must never touch the scroll position. The reset lives AT the resize event
+  # because only the event knows the delta — a scheduled/settle re-lay enters _reLayout with the
+  # extent already committed, so an extent-delta gate inside _reLayout structurally cannot see an
+  # immediate resize. Resetting BEFORE super is safe (the plane never moves; only the offset
+  # zeroes); the arrange that follows (via the resize re-lay) then merges and clamps as usual.
+  # A plane that keeps its scroll across resizes (a wrapping STACK, whose scroll position the
+  # arrange's clamp owns and normalizes) declares itself out — managesOwnScrollPinning, the P5
+  # contract: under the offset model the seam is purely this reset POLICY per plane kind, no
+  # longer a question of who may write the plane's position (nobody moves a plane any more).
   _applyExtent: (aPoint) ->
     if !aPoint.equals(@extent()) and @isTextLineWrapping and !@contents.managesOwnScrollPinning?()
       @_writeScrollOffset 0, 0

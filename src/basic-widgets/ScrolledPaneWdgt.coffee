@@ -1,5 +1,7 @@
 # The DEFAULT content pane a ViewportWdgt scrolls — the plane its content actually lives
-# on, physically moved by the scroll (children ride along, absolute coordinates). Built by
+# on. The plane is PINNED: scrolling never moves it or its children; the viewport's stored
+# offset translates the whole subtree at paint time (ViewportWdgt._scrollTranslation), and
+# the screen↔plane walks carry the same translation for input/hit-testing. Built by
 # ViewportWdgt._buildViewportChromeNoSettle whenever a caller supplies no contents of its own;
 # the plane ROLE itself is broader than this class — a FolderPanelWdgt, ToolPanelWdgt or
 # vertical stack passed as contents plays it too, which is why every topology question is a

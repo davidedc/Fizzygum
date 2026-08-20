@@ -2,8 +2,10 @@
 
 Present-tense reference for the container family around `ViewportWdgt` / `PanelWdgt` /
 `ScrolledPaneWdgt`. As-built by the scroll-frame role arc
-(`docs/archive/scroll-frame-role-architecture-plan.md`, 2026-08-19); read that plan for the
-rationale trail, the falsified alternatives, and the member-audit tables.
+(`docs/archive/scroll-frame-role-architecture-plan.md`, 2026-08-19) and the paint-time
+scroll-translation arc (`docs/archive/paint-time-scroll-translation-plan.md` — the stored-offset
+model); read those for the rationale trails, the falsified alternatives, and the member-audit
+tables.
 
 ## The three roles
 
@@ -15,12 +17,20 @@ A scrolling container decomposes into three responsibilities, each with an hones
    true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It wears
    `ClippingAtRectangularBoundsMixin` directly and owns three pieces of chrome: the contents
    panel and two `SliderWdgt` bars. `add` redirects any non-chrome child into the contents
-   (chrome self-identifies via `attachesToViewportDirectly?()`). Scrolling physically MOVES
-   the contents panel (absolute coordinates, the Morphic inheritance); the scroll offset is
-   derived (`getScrollX/getScrollY`), the bars are wired through the public pin vocabulary,
-   and every scroll path announces at `_reLayoutScrollbars` — all but the caret follow
-   (`scrollCaretIntoView` moves the plane directly, refusing `'never'` at its own gate) route
-   through the `scrollX`/`scrollY` movement cores.
+   (chrome self-identifies via `attachesToViewportDirectly?()`). Scrolling never moves the
+   plane: the offset is STORED TRUTH — two integer scalars `scrollOffsetX/Y`, frame-relative
+   (the visible window's plane rect is `contents.position() + offset .. + my extent`) —
+   applied as a paint-time translation around the contents recursion
+   (`_scrollTranslation`; dormant, same-object/stock-path, at zero) and carried identically
+   by the screen↔plane walks for input, hit-testing, damage and clipping. Every offset write
+   goes through the one funnel `_writeScrollOffset` (clamped by the movement cores
+   `scrollX`/`scrollY`, which refuse under `'never'`; the offset is MAPPING state, so the
+   funnel breaks the `geometryVersion`-keyed caches exactly as a bounds write does), the
+   getters read the fields, the bars are wired through the public pin vocabulary, and every
+   scroll path announces at `_reLayoutScrollbars`. The caret follow (`scrollCaretIntoView`,
+   refusing `'never'` at its own gate) writes offsets directly and deliberately UN-clamped:
+   the arrange's window merge then grows the frame and the tail clamp normalizes, so the
+   follow's margin overshoot sticks — the one licensed bypass of the cores' clamp.
 2. **The plane** — the panel the viewport clips and scrolls, the coordinate surface content
    actually lives on. Plane-ness is a ROLE, not a class: the default `ScrolledPaneWdgt`, a
    `FolderPanelWdgt`, a `ToolPanelWdgt` or a vertical stack all play it. Every topology
@@ -72,8 +82,11 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
 - `scrolledContentMeasure(widthHint)` — the §4.1 pure measure: `PanelWdgt` measures its
   children at the viewport's hint, a stack at its own width; a folder/toolbar plane is never
   content-sizing, so the viewport reads applied bounds back (`isContentSizing`).
-- `managesOwnScrollPinning()` — a wrapping stack's position belongs to the arrange's clamp,
-  so the reset-scroll-on-resize pin skips it.
+- `managesOwnScrollPinning()` — the reset-scroll-on-resize POLICY: a real resize of a
+  wrapping viewport zeroes the offset (re-wrapped text re-reads from the top) unless the
+  plane declares it keeps its scroll across resizes (the wrapping stack — its scroll
+  position belongs to the arrange's clamp). Under the offset model this is purely policy:
+  nobody writes a plane's position on a scroll any more.
 
 For the three boolean queries capability ABSENCE is the panel default — there are no
 base-class stubs; the measure alone has a real base implementation
@@ -100,10 +113,20 @@ generic viewport is "viewport"; composites take their contents' name
 
 ## Boundaries and horizons
 
-- Scrolling = physically moving the plane, because coordinates are absolute. Scroll offset as
-  a paint-time translation (the transform-island machinery; UIScrollView's `bounds.origin`
-  model) would make scrollability a property of every panel and dissolve the middle node —
-  a separate large arc; see `docs/BACKLOG.md`.
+- Scrolling = a stored offset applied at paint time (UIScrollView's `bounds.origin` model);
+  the plane is pinned and `_applyMoveBy` moves whole panels/windows, never a scroll step.
+  The `screenPointToMyPlane`/`localPointToScreen`/`mapRectToScreen`/`screenBounds` walks are
+  TWO-ARM — an island step (affine) and a translation step (scroll) share one climb, each
+  ancestor answering per child edge via `scrollTranslationOfChild?(child)` — so a plane's
+  residents keep integer plane-local `@bounds` while their screen positions are derived, the
+  same two-vocabulary law the islands introduced. ⚠ One rule this imposes on INPUT handlers:
+  `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
+  is still plane-local to the SENDER — a pos-consuming handler on a plane's ancestor must
+  re-derive (`@screenPointToMyPlane world.hand.position()`, as `ViewportWdgt.mouseDownLeft`
+  does), never trust the parameter. The remaining horizon — lifting the offset + paint
+  interception from `ViewportWdgt` to the clipping-mixin level, making scrollability a
+  property of every panel — is designed but deliberately unlifted until a second user
+  exists (the plan's owner-gated Phase 4).
 - The color/alpha up-relay serves EVERY plane: the pair lives on `PanelWdgt` (parent-soaked,
   a no-op under any non-viewport parent), and the stack — a `Widget`, not a panel — declares
   its own; only `ViewportWdgt` implements the receiving hooks.

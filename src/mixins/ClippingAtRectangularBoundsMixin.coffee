@@ -188,7 +188,10 @@ ClippingAtRectangularBoundsMixin =
             aContext.restore()
 
 
-      # PanelWdgt scrolling optimization:
+      # Fast whole-subtree translate for MOVING a clipping panel (a window drag, a
+      # programmatic reposition): one bounds rewrite per node, no per-child re-layout.
+      # NOT a scroll path: scrolling is a stored offset applied as a paint-time
+      # translation (ViewportWdgt._writeScrollOffset) and never moves the plane.
       _applyMoveBy: (delta) ->
         @bounds = @bounds.translateBy delta
         @__breakMoveResizeCaches()

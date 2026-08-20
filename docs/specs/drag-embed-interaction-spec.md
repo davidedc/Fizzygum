@@ -234,8 +234,9 @@ edge-auto-scroll OFF for them (explicit intent replaces implicit surprise). Rule
    container → charge/armed persist. Two genuine candidate changes, both handled by the general
    reset-on-candidate-change rule (the highlight announces them):
    - a *nested* receptive container scrolls under the cursor → candidate switches to it, charge resets;
-   - **scroll-chaining** (inner panel at limit escalates to an outer panel, §2) physically moves the candidate
-     away from under the cursor → disarm. Correct: the thing being aimed at literally left.
+   - **scroll-chaining** (inner panel at limit escalates to an outer panel, §2) carries the candidate
+     away from under the cursor (its on-screen position rides the outer scroll) → disarm. Correct: the
+     thing being aimed at literally left.
 4. **View-mode (reluctant) destinations still scroll.** View mode locks *editing*, not reading; wheel over
    them behaves as today, with the lock cue simply staying up.
 5. In flowing documents the insertion point at release follows the cursor position within the (now scrolled)

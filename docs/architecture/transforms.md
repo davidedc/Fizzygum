@@ -209,8 +209,8 @@ Layout and *reachability* answer different questions: even a `slot` island claim
 siblings, yet its rotated ink must still be scrollable-to. `TransformSpec.scrollOverflowBoxFor`
 returns **claimed box ∪ the ink's integer hull** (the unpadded exact mapped AABB, floor/ceil'd
 — nested inside the sweep square at every angle). `TransformFrameWdgt` exposes it as
-`scrollOverflowBoundsInParentPlane` (undefined at identity) for the enclosing scroll frame's content-
-extent merge, and re-fits that frame when the box changes
+`scrollOverflowBoundsInParentPlane` (undefined at identity) for the enclosing viewport's content-
+extent merge, and re-fits that content frame when the box changes
 (`_reFitViewportIfReachChangedNoSettle`, memoized on `_lastScrollOverflowBox`).
 
 ### 5.3 Layout transparency (the tracking island)
