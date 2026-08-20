@@ -101,7 +101,18 @@ class Deserializer
         for name in record.derived
           canvas = shells[i][name.replace "Context", ""]
           shells[i][name] = canvas.getContext "2d" if canvas?.getContext?
-    # (c) re-register world-set memberships recorded at serialize time
+    # (c) re-register world-set memberships recorded at serialize time.
+    # ⚠ Re-registration hands the shell to machinery that reads its fields, so every marker
+    # carries a verdict against the transients this restore just dropped: STEPPING's loop
+    # re-seeds the dropped lastTime itself (a restored throttled stepper NaN-stalled until it
+    # did — see _runChildrensStepFunction); the KEYBOARD dispatch reads only the prototype
+    # method, and the one receiver with transient state (the spreadsheet) rebuilds it in the
+    # per-class hook, pass (d) below, before any event can arrive; the REFERENCE TRACKER's
+    # consumers read destroyed + referencedWidget, both serialized (ShortcutWdgt declares no
+    # transients); the OPENPOPUPS consumers read isOrphan()/instanceNumericID (re-derived /
+    # serialized), and the dropped closure mark restores false — the correct state for a
+    # pinned pop-up. A NEW marker must state its verdict here: what does the re-registered
+    # machinery read, and is any of it transient-dropped?
     if world?
       for record, i in records when record.memberships?
         shell = shells[i]
