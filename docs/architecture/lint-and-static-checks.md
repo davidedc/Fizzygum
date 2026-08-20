@@ -294,6 +294,14 @@ world-teardown completeness ratchet, lives in
 out of core), so it fires only on a build whose profile ships the `harness` part. A leak bites the NEXT test
 in the shard, so no single test's pixels reveal it.
 
+Beside that ratchet, at the same seam and in the same fail-gate, sits the object-lifetime audit's
+`WORLD_INVENTORY_*` token family (`_DRIFT`/`_ESCAPED`/`_ZOMBIE`, emitted by
+`WorldTestSupport._auditWorldInventoryNoSettle` driving `src/dev-tools/WorldInventory.coffee`) — it covers
+exactly what the ratchet is structurally blind to: class statics, collaborator internals, module state, the
+DOM, and widget IDENTITY. Doctrine + how to read a failure:
+[`world-lifetime-and-inventory.md`](world-lifetime-and-inventory.md). (The runners consume the one shared
+token list, `Fizzygum-tests/scripts/lib/gate-tokens.js`.)
+
 ---
 
 ## 3b. The THREE tiers, and which one a new rule belongs in (severity policy)

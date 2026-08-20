@@ -225,7 +225,7 @@ add delete has get set clear next done readAsDataURL readAsText readAsArrayBuffe
 log warn error info debug trace group groupEnd table time timeEnd assert dir count
 open close write send setRequestHeader overrideMimeType getResponseHeader abort
 postMessage item namedItem contains matches closest remove append prepend before after
-isInteger isFinite isNaN parseFloat parseInt charCode keyCode preventExtensions
+isInteger isFinite isNaN parseFloat parseInt charCode keyCode preventExtensions isView
 stopImmediate propagation getTime getFullYear getMonth getDate getHours getMinutes getSeconds getMilliseconds getDay toISOString toUTCString getTimezoneOffset
 requestFullscreen exitFullscreen webkitRequestFullscreen mozRequestFullScreen msRequestFullscreen
 `.trim().split(/\s+/));

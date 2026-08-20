@@ -11,12 +11,22 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
-### `plans/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (plan AUTHORED 2026-08-20, not yet executed)
+### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)
 The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the
 two-lifetimes reset-by-reconstruction) is stated in that plan's §0; Phase-0 repairs (tooltip timeout
 self-removal, dead `Class.allClasses`, the `@superClass` fix that makes `Class.subClasses` populate)
 landed with the plan.
-- [ ] Execute Arc A (fresh session; start-prompt in the plan's authoring session record).
+- [x] Arc A EXECUTED IN FULL 2026-08-20 (all phases incl. both D5 prove-it-fails plants;
+      gauntlet 16/16) — doctrine doc: `architecture/world-lifetime-and-inventory.md`; execution
+      ledger: the plan's STATUS box + §5.1/§5.2. Archive the plan at the close ritual.
+- [ ] StorageSorter-roots unification (plan D2's stated non-goal): `StorageSorter._runClassifier`'s
+      phases build their own root/marking enumeration — examine folding it onto
+      `WorldWdgt.graphLivenessRoots()` in a dedicated pass, NOT by side-effect of another arc.
+- [ ] Arc A rider (from the program memory): swap the two `Object.keys(window)` Wdgt/Widget
+      SUFFIX scans (`WorldWdgt.fullDestroyChildren` id-zeroing — which provably MISSES
+      `FrameContentsPlaceholderText`, measured in the Arc A spikes — and
+      `Serializer.collectIdCounters`) onto the `.instances`-marker class sweep `WorldInventory`
+      now demonstrates.
 - [ ] Author + run Arc B (plan §0): forced-GC heap-slope gate, `queryObjects` cross-check,
       `FinalizationRegistry` oracle, heap-snapshot forensic script.
 - [ ] Author + run Arc C (plan §0): two-lifetimes doctrine, `resetWorld` = destroy + `new WorldWdgt`,

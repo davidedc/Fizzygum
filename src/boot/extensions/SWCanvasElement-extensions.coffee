@@ -100,6 +100,20 @@ swCanvasPoisonedCacheKeys = []     # immutable-back-buffer cache keys set during
 swCanvasColdGlyphUnattributed = false
 swCanvasPoisonedKeyRecorderOn = false
 
+# Read-only porthole for the WorldInventory (docs/archive/world-inventory-instruments-plan.md
+# D4): the module-scope text/atlas state above is otherwise unreachable to any out-of-module
+# accounting, and two of these stores hold LIVE WIDGET REFS between a cold glyph draw and the
+# atlas refresh. Returns the live objects, not copies — callers must not mutate. A function,
+# not a snapshot: two of the bindings are REASSIGNED on refresh, so only a call-time read
+# sees the current ones.
+window.swCanvasTextStateForAudit = ->
+  {
+    atlasRequested: swCanvasAtlasRequested
+    missingAtlases: swCanvasMissingAtlases
+    coldGlyphWidgets: swCanvasColdGlyphWidgets
+    poisonedCacheKeys: swCanvasPoisonedCacheKeys
+  }
+
 swCanvasColdWindowOpen = ->
   swCanvasAtlasPending > 0 or swCanvasRefreshScheduled or
     swCanvasColdGlyphWidgets.length > 0 or swCanvasColdGlyphUnattributed

@@ -79,6 +79,10 @@ do ->
   stringHashCache = new Map()
   MAX_CACHED_HASHES = 16384
   CACHEABLE_MAX_LEN = 2048
+  # Read-only porthole for the WorldInventory (docs/archive/world-inventory-instruments-plan.md
+  # D6): the memo Map is closure-scoped, so only this accessor lets the accounting see its
+  # size and enforce the declared cap. Returns the live Map — callers must not mutate.
+  window.stringHashCacheForAudit = -> stringHashCache
   Object::hashCode = ->
     stringToBeHashed = @toString()
     len = stringToBeHashed.length
