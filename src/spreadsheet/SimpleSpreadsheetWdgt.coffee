@@ -840,6 +840,11 @@ class SimpleSpreadsheetWdgt extends Widget
     # branch 1 — a live Widget value
     if value instanceof Widget
       if cellWdgt.hostedWidget? and cellWdgt.hostedWidget.constructor is value.constructor
+        # RETAIN discards the recompute's just-constructed throwaway -- destroy it, or the
+        # instances registry keeps one full widget assembly alive PER RECOMPUTE, forever
+        # (never mounted, never wired: a pure orphan). NEVER on the F4 widget-entry path,
+        # where the value IS the mounted instance itself (identity match, not a throwaway).
+        value._fullDestroyNoSettle() unless value is cellWdgt.hostedWidget
         return cellWdgt.hostedWidget               # RETAIN (drag/restore keep the live instance)
       cellWdgt.hostNoSettle value
       cellWdgt.wireValueWidget value

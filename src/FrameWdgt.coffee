@@ -641,6 +641,11 @@ class FrameWdgt extends Widget
     @_reFitContainer()
 
   _beforeChildDestroyed: (child) ->
+    # NOT while I myself am being torn down: the rebuild would re-title a bar the
+    # destroy-until-empty iteration has already destroyed and detached, and mount a
+    # placeholder that iteration can never reach -- alive, unowned, and pinned forever
+    # by the instances registry.
+    return if @_beingFullDestroyed
     if child == @contents
       @_resetToDefaultContents()
 
@@ -808,16 +813,21 @@ class FrameWdgt extends Widget
     floatHome._applyMoveTo stripPosition.subtract new Point floatHome.padding, floatHome._titlebarHeight() + floatHome.padding
     floatHome._moveWithin world
 
-  # A framed CITIZEN's _resetToDefaultContents consults this flag (§5.B): a
-  # payload dying because the WHOLE frame is going away must NOT be replaced --
-  # a citizen constructs a FRESH payload per reset, and each fresh child
-  # re-enters the destroy-until-empty iteration, an unbounded rebuild-destroy
-  # loop. Set here at the subtree's destroy ENTRY so every teardown path
-  # (resetWorld's fullDestroyChildren, a direct fullDestroy, the bin)
+  # Consulted at the child-death hook (_beforeChildDestroyed: a mid-teardown rebuild
+  # strands fresh chrome on already-destroyed parts of me) and by a framed CITIZEN's
+  # _resetToDefaultContents (§5.B): a payload dying because the WHOLE frame is going
+  # away must NOT be replaced -- a citizen constructs a FRESH payload per reset, and
+  # each fresh child re-enters the destroy-until-empty iteration, an unbounded
+  # rebuild-destroy loop. Set here at the subtree's destroy ENTRY so every teardown
+  # path (resetWorld's fullDestroyChildren, a direct fullDestroy, the bin)
   # covers the whole recursion.
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true
     super
+    # the spare placeholder is an OFF-TREE collaborator (mounted as a child only while
+    # the window is empty): when it is unmounted at teardown, the destroy-until-empty
+    # iteration cannot reach it, and the instances registry would keep it alive forever.
+    @defaultContents._fullDestroyNoSettle() if @defaultContents? and !@defaultContents.destroyed
 
   _resetToDefaultContents: ->
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and

@@ -19,12 +19,19 @@ class DoubleLinkedList
     else
       @tailNode = node.pre
 
+  # ⚠ must clear the node's OWN links first: moveToHead re-inserts a node that still
+  # carries its old pre/next, and a stale `pre` makes the NEXT remove of that node
+  # rewire the wrong neighbor -- the tail then names an already-evicted entry, the
+  # LRU's eviction no-ops, and (its size check being exact equality) the cache grows
+  # UNBOUNDED. Measured: capacity 20, size 4999 under set/get churn.
   insertBeginning: (node) ->
+    node.pre = undefined
     if @headNode
       node.next = @headNode
       @headNode.pre = node
       @headNode = node
     else
+      node.next = undefined
       @headNode = @tailNode = node
 
   moveToHead: (node) ->

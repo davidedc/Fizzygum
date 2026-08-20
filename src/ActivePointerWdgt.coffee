@@ -47,6 +47,30 @@ class ActivePointerWdgt extends Widget
     @minimumExtent = new Point 0,0
     @_commitBounds Rectangle.EMPTY
 
+  # Forget every widget-referencing piece of gesture bookkeeping. The hand OUTLIVES a
+  # world teardown, so anything here would otherwise keep DEAD references to widgets the
+  # teardown just destroyed -- and the armed multi-click records could even RECOGNIZE
+  # across worlds once the event clock rewinds. Called from the shared teardown core
+  # (WorldWdgt._teardownWorldStructureNoSettle), which BOTH teardown callers reach; the
+  # error-recovery _softResetWorld keeps its own narrower clears. Plain scalars
+  # (mouseButton, positions) are left alone: they hold no references and every gesture
+  # start re-establishes them.
+  _forgetGestureBookkeepingNoSettle: ->
+    @mouseDownWdgt = undefined
+    @wdgtToGrab = undefined
+    @grabOrigin = undefined
+    @dragEmbedCandidate = undefined
+    @dragEmbedReluctant = undefined
+    @_dragEmbedOutlinedWdgt = undefined
+    @dragEmbedLingerOriginPoint = undefined
+    @dragEmbedLingerOriginEventTime = undefined
+    @dragEmbedLingerOriginWallTime = undefined
+    @mouseOverList.clear()
+    @nonFloatDraggedWdgt = undefined
+    @doubleClick.forget()
+    @tripleClick.forget()
+    return
+
   # Capability query (with CanvasWdgt; replaces `whereTo instanceof ActivePointerWdgt or ... CanvasWdgt`
   # in PenWdgt._reactToBeingAdded): "can a pen draw onto me?" -- the hand counts because a pen mid-drag
   # lives on it. Dispatched via ?() (nothing on Widget). (type-test-elimination campaign)

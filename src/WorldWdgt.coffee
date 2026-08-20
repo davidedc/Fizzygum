@@ -1169,7 +1169,10 @@ class WorldWdgt extends IconGridPanelWdgt
       # so they land on the new array and are seen by the next round's sweep.
       stillInvalid = []
       for w in @widgetsThatMaybeChangedLayout
-        stillInvalid.push w unless w.layoutIsValid
+        # a DESTROYED entry has no layout to settle -- and laying out a corpse re-marks
+        # paint damage on it (a teardown-then-flush would zombie the damage queues with
+        # the widgets the teardown just destroyed)
+        stillInvalid.push w unless w.layoutIsValid or w.destroyed
       @widgetsThatMaybeChangedLayout = stillInvalid
       break if stillInvalid.length == 0
 
@@ -2758,6 +2761,19 @@ class WorldWdgt extends IconGridPanelWdgt
     # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
     # list never was, so it accumulated dead widgets for the whole life of the page.
     @widgetsGivingErrorWhileRepainting = []
+    # the current-event time register (the event-time clock the input consumers read --
+    # multi-click staleness, the drag-charging ring's linger): between events it is stale
+    # by definition, and across a teardown the next world's event clock may even REWIND
+    # (synthetic test clocks restart) -- back to the declared "no event being processed"
+    # default. A world STATIC, so the world-field ratchet cannot see it; the inventory
+    # audit is what catches it drifting.
+    WorldWdgt.timeOfEventBeingProcessed = undefined
+    # the HAND's gesture bookkeeping: the hand itself survives this teardown, so its
+    # grab/press/drag-embed fields and armed multi-click records would keep DEAD
+    # references to widgets fullDestroyChildren just destroyed -- and with the event
+    # clock rewinding (above), a stale armed record could even RECOGNIZE a multi-click
+    # across worlds. One verb owns the family (see its comment).
+    @hand._forgetGestureBookkeepingNoSettle()
     # the damage-suppression depth: direct tampering (the serialization rig does it
     # deliberately) leaves it nonzero, and Widget._changed() drops marks while it is —
     # so a stuck depth means damage stops being recorded and the world stops repainting.
@@ -2780,6 +2796,20 @@ class WorldWdgt extends IconGridPanelWdgt
     # so we need to clean them up separately
     @binWdgt?.empty()
     @shelfWdgt?.empty()
+    # the per-cycle damage queues (drained by the next _repaintDamagedRects) still hold
+    # widgets destroyed above -- and destruction itself RE-MARKS them (a dying widget posts
+    # damage so its pixels get erased), so this filter must be the teardown's LAST act,
+    # after the bin/shelf empties directly above have destroyed their residents too. The
+    # seam contract ("no reference to anything just destroyed") wants the dead entries gone
+    # NOW, not next frame. A filter, not a clear: a live entry (notably the world's own
+    # whole-screen mark, posted by the reset caller BEFORE this teardown runs) must keep
+    # its pending damage or the reset repaints nothing.
+    @widgetsWithMaybeChangedPaintBounds = (w for w in @widgetsWithMaybeChangedPaintBounds when !w.destroyed)
+    @widgetsWithMaybeChangedFullPaintBounds = (w for w in @widgetsWithMaybeChangedFullPaintBounds when !w.destroyed)
+    # the currently-painting register: nothing is painting at this seam, but the paint
+    # loop's ERROR path can leave the last (possibly just-destroyed) painter here -- a
+    # dead ref the seam contract forbids.
+    @paintingWidget = undefined
 
   # ONE desktop menu, with no fork on which HTML file booted the world. What a desktop can offer
   # does not depend on the page: it depends on which PARTS shipped and whether dev mode is on, and
@@ -3087,12 +3117,13 @@ class WorldWdgt extends IconGridPanelWdgt
   anyReferenceOrWireIntoWdgt: (whichWdgt) ->
     @_livenessEdgesIntoWdgt(whichWdgt).length > 0
 
-  # The shared enumeration under the query above AND the trash sever below — ONE walk, so the
-  # two can never disagree about which edges exist: whatever the query counts is exactly what
-  # the sever cuts, which is what makes "move to trash" land in the bin by graph truth rather
-  # than by an intent tag (reference-widgets plan §4.3). Returns [{holder, edge}].
-  _livenessEdgesIntoWdgt: (whichWdgt) ->
-    found = []
+  # THE one enumeration of the world's liveness roots — shared by the trash-liveness
+  # query/sever pair below AND the WorldInventory's containment reachability, so trash
+  # logic and leak accounting structurally cannot disagree about what a root is. Note the
+  # bin and shelf CONTAINERS are deliberately not roots (residency in the bin must not
+  # read as an inbound edge) while their RESIDENTS are; an accounting consumer that must
+  # also reach the containers' own chrome appends them itself (WorldInventory does).
+  graphLivenessRoots: ->
     roots = [@, @hand]
     for slot in Serializer.WORLD_APP_SLOTS
       roots.push @[slot] if @[slot]?
@@ -3100,7 +3131,16 @@ class WorldWdgt extends IconGridPanelWdgt
     binContents = @binWdgt?.viewport?.contents
     roots.push binContents.children... if binContents?
     roots.push @shelfWdgt.children... if @shelfWdgt?
-    for eachRoot in roots
+    roots
+
+  # The shared enumeration under the query above AND the trash sever below — ONE walk, so the
+  # two can never disagree about which edges exist: whatever the query counts is exactly what
+  # the sever cuts, which is what makes "move to trash" land in the bin by graph truth rather
+  # than by an intent tag (reference-widgets plan §4.3). Returns [{holder, edge}].
+  _livenessEdgesIntoWdgt: (whichWdgt) ->
+    found = []
+    # public-call-sanctioned: graphLivenessRoots is a pure read (no settle, no mutation).
+    for eachRoot in @graphLivenessRoots()
       @_collectLivenessEdgesIntoWdgtWithin eachRoot, whichWdgt, found
     found
 

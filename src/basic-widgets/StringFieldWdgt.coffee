@@ -61,17 +61,21 @@ class StringFieldWdgt extends PanelWdgt
 
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
-    text = new StringWdgt txt,
+    measuringText = new StringWdgt txt,
       fontSize: @fontSize
       fontName: @fontStyle
       bold: @isBold
       italic: @isItalic
       numeric: @isNumeric
-    text.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    measuringText.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
     # THIS is the field's natural-width derivation — capture it for
     # menuEntryPreferredWidth at the source rather than reading applied
     # geometry back later (menu-row-conformance plan, Phase 1).
-    @menuEntryNaturalWidth = Math.max @minTextWidth, text.width()
+    @menuEntryNaturalWidth = Math.max @minTextWidth, measuringText.width()
+    # the measurer is an orphan INSTRUMENT, never a child: destroy it (through the
+    # non-settling core -- this runs inside the prompt build's settle) or the
+    # instances registry keeps it alive forever, one leaked StringWdgt per prompt.
+    measuringText._fullDestroyNoSettle()
     @_applyWidth @menuEntryNaturalWidth
 
   _reLayoutSelf: ->
