@@ -182,7 +182,7 @@ class TreeNode
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWroot()
         debugger
-        alert "root is broken"
+        console.error "CACHED_DERIVATION_DIVERGED -- root is broken"
 
     return result
 
@@ -427,7 +427,7 @@ class TreeNode
       if world.doubleCheckCachedMethodsResults
         if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds()
           debugger
-          alert "firstParentClippingAtBounds is broken (cached)"
+          console.error "CACHED_DERIVATION_DIVERGED -- firstParentClippingAtBounds is broken (cached)"
       return @cachedFirstParentClippingAtBounds
 
     if @parent?
@@ -441,7 +441,7 @@ class TreeNode
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWfirstParentClippingAtBounds()
         debugger
-        alert "firstParentClippingAtBounds is broken (uncached)"
+        console.error "CACHED_DERIVATION_DIVERGED -- firstParentClippingAtBounds is broken (uncached)"
 
     @checkFirstParentClippingAtBoundsCache = WorldWdgt.structureVersion
     @cachedFirstParentClippingAtBounds = result

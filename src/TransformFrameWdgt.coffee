@@ -710,7 +710,7 @@ class TransformFrameWdgt extends PanelWdgt
     if world.doubleCheckCachedMethodsResults
       if !result.equals @SLOWclipThrough()
         debugger
-        alert "clipThrough is broken (island)"
+        console.error "CACHED_DERIVATION_DIVERGED -- clipThrough is broken (island)"
     return result
 
   SLOWclipThrough: ->
@@ -735,7 +735,7 @@ class TransformFrameWdgt extends PanelWdgt
     if world.doubleCheckCachedMethodsResults
       if !result.equals @SLOWclippedThroughBounds()
         debugger
-        alert "clippedThroughBounds is broken (island)"
+        console.error "CACHED_DERIVATION_DIVERGED -- clippedThroughBounds is broken (island)"
     return result
 
   SLOWclippedThroughBounds: ->

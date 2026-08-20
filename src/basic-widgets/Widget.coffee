@@ -47,6 +47,11 @@ class Widget extends TreeNode
     # subtrees in and crashed on their unserializable handler functions (found by the
     # bin/shelf probe's mid-sort snapshot check, 2026-07-23). Recomputed on demand.
     "cachedRoot", "checkRootCache"
+    # the firstParentClippingAtBounds() cache (TreeNode) — the SAME identity-cache hazard as
+    # cachedRoot above (it points at a WIDGET, and the serializer walks the raw field), found
+    # missing here by the 2026-08-20 twins-rider review while fixing the Duplicator's copy of
+    # the whole cache family. Recomputed on demand.
+    "cachedFirstParentClippingAtBounds", "checkFirstParentClippingAtBoundsCache"
     "cachedFullClippedBounds", "checkFullClippedBoundsCache"
     "cachedVisibleBasedOnIsVisibleProperty", "checkVisibleBasedOnIsVisiblePropertyCache"
     "cachedClippedThroughBounds", "checkClippedThroughBoundsCache"
@@ -1222,7 +1227,7 @@ class Widget extends TreeNode
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWvisibleBasedOnIsVisibleProperty()
         debugger
-        alert "visibleBasedOnIsVisibleProperty is broken"
+        console.error "CACHED_DERIVATION_DIVERGED -- visibleBasedOnIsVisibleProperty is broken"
 
     return result
 
@@ -1353,7 +1358,7 @@ class Widget extends TreeNode
       if world.doubleCheckCachedMethodsResults
         if !@cachedFullBounds.equals @SLOWfullBounds()
           debugger
-          alert "fullBounds is broken (cached)"
+          console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (cached)"
       return @cachedFullBounds
 
     result = @bounds
@@ -1364,7 +1369,7 @@ class Widget extends TreeNode
     if world.doubleCheckCachedMethodsResults
       if !result.equals @SLOWfullBounds()
         debugger
-        alert "fullBounds is broken (uncached)"
+        console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (uncached)"
 
     @checkFullBoundsCache = WorldWdgt.geometryVersion
     @cachedFullBounds = result
@@ -1384,7 +1389,7 @@ class Widget extends TreeNode
         if world.doubleCheckCachedMethodsResults
           if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
             debugger
-            alert "fullClippedBounds is broken"
+            console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
         return @cachedFullClippedBounds
 
       # you'd be thinking this is the same as
@@ -1400,7 +1405,7 @@ class Widget extends TreeNode
     if world.doubleCheckCachedMethodsResults
       if !result.equals @SLOWfullClippedBounds()
         debugger
-        alert "fullClippedBounds is broken"
+        console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
 
     @checkFullClippedBoundsCache = WorldWdgt.geometryVersion
     @cachedFullClippedBounds = result
@@ -1428,7 +1433,7 @@ class Widget extends TreeNode
     if world.doubleCheckCachedMethodsResults
       if !result.equals @SLOWclippedThroughBounds()
         debugger
-        alert "clippedThroughBounds is broken"
+        console.error "CACHED_DERIVATION_DIVERGED -- clippedThroughBounds is broken"
 
     return result
   
@@ -1473,7 +1478,7 @@ class Widget extends TreeNode
     if world.doubleCheckCachedMethodsResults
       if !result.equals @SLOWclipThrough()
         debugger
-        alert "clipThrough is broken"
+        console.error "CACHED_DERIVATION_DIVERGED -- clipThrough is broken"
 
     return result
 
@@ -3163,7 +3168,7 @@ class Widget extends TreeNode
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWisInCollapsedSubtree()
         debugger
-        alert "isInCollapsedSubtree is broken"
+        console.error "CACHED_DERIVATION_DIVERGED -- isInCollapsedSubtree is broken"
 
     return result
   

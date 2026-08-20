@@ -63,7 +63,7 @@ ClippingAtRectangularBoundsMixin =
           if world.doubleCheckCachedMethodsResults
             if !@cachedFullBounds.equals @SLOWfullBounds()
               debugger
-              alert "fullBounds is broken (cached)"
+              console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (cached)"
           return @cachedFullBounds
 
         result = @bounds
@@ -71,7 +71,7 @@ ClippingAtRectangularBoundsMixin =
         if world.doubleCheckCachedMethodsResults
           if !result.equals @SLOWfullBounds()
             debugger
-            alert "fullBounds is broken (uncached)"
+            console.error "CACHED_DERIVATION_DIVERGED -- fullBounds is broken (uncached)"
 
         @checkFullBoundsCache = WorldWdgt.geometryVersion
         @cachedFullBounds = result
@@ -85,7 +85,7 @@ ClippingAtRectangularBoundsMixin =
               if world.doubleCheckCachedMethodsResults
                 if !@cachedFullClippedBounds.equals @SLOWfullClippedBounds()
                   debugger
-                  alert "fullClippedBounds is broken"
+                  console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
               return @cachedFullClippedBounds
 
           result = @clippedThroughBounds()
@@ -93,7 +93,7 @@ ClippingAtRectangularBoundsMixin =
         if world.doubleCheckCachedMethodsResults
           if !result.equals @SLOWfullClippedBounds()
             debugger
-            alert "fullClippedBounds is broken"
+            console.error "CACHED_DERIVATION_DIVERGED -- fullClippedBounds is broken"
 
         @checkFullClippedBoundsCache = WorldWdgt.geometryVersion
         @cachedFullClippedBounds = result

@@ -185,6 +185,14 @@ class Duplicator
     # re-assigned (the JS runtime has a copy-on-write mechanism when you change
     # the properties of an object). Also includes the "parent" property.
     for own property of obj
+      # the version-keyed derived-cache pairs (cached* / check*Cache, plus the frame-stamped
+      # childrenBoundsUpdatedAt) are NEVER copied: a field-copied cache arrives stamped at the
+      # CURRENT version yet holds the ORIGINAL's value — measured by the settle leg's
+      # CACHED_DERIVATION_DIVERGED rider: a mid-assembly clone's root() answered the ORIGINAL's
+      # world (cachedRoot kept-by-reference + checkRootCache verbatim). Left unset, the clone
+      # re-derives on first read — the same rule Widget.serializationTransients states for the
+      # serializer, keyed here on the cache pairs' naming convention.
+      continue if /^cached[A-Z]/.test(property) or /^check[A-Z].*Cache$/.test(property) or property is "childrenBoundsUpdatedAt"
       value = obj[property]
       if !value?
         # undefined, null, undefined
