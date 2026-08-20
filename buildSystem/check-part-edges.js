@@ -34,11 +34,14 @@
  *   3. the same line carries `SomeClass?` (covers `… if TheClass?`, `if TheClass? then …`,
  *      `TheClass?.something`, `(new TheClass) if TheClass?`);
  *   4. it is INSIDE THE SCOPE of such a guard — i.e. on a following line indented deeper than the
- *      guard's own line. That one rule covers both shapes the tree actually uses:
+ *      guard's own line. That one rule covers both shapes the tree actually uses — SKETCHED below
+ *      rather than quoted: what the rule turns on is the INDENTATION relationship, and the real
+ *      sites say more on the guarded line than fits here:
  *        if Automator?                     |  if Automator? and
- *          @automator = new Automator      |      Automator.animationsPacingControl and
+ *          @automator = …Automator…        |      Automator.animationsPacingControl and
  *                                          |      Automator.state == Automator.PLAYING
- *      the guarded block, and the multi-line boolean continuation;
+ *      the guarded block (any number of deeper-indented lines, comments among them), and the
+ *      multi-line boolean continuation;
  *   5. the enclosing method opens with a `return unless TheClass?` / `return if !TheClass?` bail-out
  *      (the idiom Widget.becomeAPointer uses), which guards the whole rest of the method.
  *

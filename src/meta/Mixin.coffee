@@ -46,24 +46,41 @@ class Mixin
     aString = aString.replace(/super\(/g, mixinSuperBase + ".call(this, ")
     aString = aString.replace(/super /g, mixinSuperBase + ".call this, ")
 
-  # Coffeescript adds some helper functions at the top of the compiled code:
+  # CoffeeScript declares its helpers at the top of whatever it compiles:
   #
   #  slice = [].slice
   #  indexOf = [].indexOf
   #  hasProp = {}.hasOwnProperty
   #
-  # here we remove them them all, because they mangle the code,
-  # also we just have them all in the global scope by now so
-  # they are not needed multiple times
-
+  # We take the DECLARATIONS out and leave every USE in the body alone, so a compiled member
+  # reaches all three as FREE identifiers and resolves them against the three page-lifetime
+  # globals boot installs -- the contract stated in full at
+  # src/boot/loading-and-compiling-coffeescript-sources.coffee ("THE THREE COFFEESCRIPT HELPER
+  # GLOBALS"). One shared definition, rather than one per compiled fragment.
+  #
+  # ⚠ WHY ONE PATTERN PER HELPER, where Class.coffee cuts the whole `var` head out in one go:
+  # a mixin compiles as a WHOLE source, so its own name is the FIRST declarator of that very
+  # statement and the helpers ride on its continuation lines --
+  #
+  #     var SomeMixin,
+  #       hasProp = {}.hasOwnProperty,
+  #       indexOf = [].indexOf;
+  #
+  # -- so removing the head wholesale would take `var SomeMixin` with it. Each helper's
+  # declarator is overwritten in place with a placeholder ($$$ once replace() has folded the
+  # doubled $) rather than deleted, because deleting one would leave a dangling comma.
   _removeHelperFunctions: (aString) ->
-    aString = aString.replace /indexOf = [].indexOf/, "$$$$$$"
-    aString = aString.replace /hasProp = {}.hasProp/, "$$$$$$"
-    aString = aString.replace /slice = [].slice/, "$$$$$$"
+    aString = aString.replace /indexOf = \[\]\.indexOf/, "$$$$$$"
+    aString = aString.replace /hasProp = \{\}\.hasOwnProperty/, "$$$$$$"
+    aString = aString.replace /slice = \[\]\.slice/, "$$$$$$"
 
-    if (aString.includes "[].indexOf") or
-     (aString.includes "{}.hasProp") or
-     (aString.includes "[].slice")
+    # TRIPWIRE for a helper declaration the three patterns above did not match -- a shape only
+    # a compiler change can produce. ⚠ It keys off the emitted `var` STATEMENT (anchored at
+    # column 0, which only a top-level declaration is, and reaching to the `;` because the
+    # helpers ride on continuation lines), NOT off the bare `[].indexOf` expressions: those
+    # occur in THIS method's own compiled body -- the patterns just above are literals in it --
+    # so an expression-shaped detector reports the stripper itself, on every build.
+    if /^var\b[^;]*\b(hasProp|indexOf|slice)\s*=/m.test aString
       console.error "code contains a helper var, it shouldn't: " +  aString
       debugger
 

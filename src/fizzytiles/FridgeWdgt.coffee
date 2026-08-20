@@ -1,6 +1,5 @@
 class FridgeWdgt extends PanelWdgt
 
-  tabs: []
   sourceCodeHolder: undefined
   fridgeMagnetsCanvas: undefined
 
@@ -134,6 +133,8 @@ class FridgeWdgt extends PanelWdgt
 
   putIntoWords: ->
     translitteration = ""
+    # the indentation columns discovered so far, PER CALL: every translitteration re-derives
+    # them from where the magnets are NOW, so this is deliberately a local and never a field.
     tabs = []
     @clearUpTranslitteratedFlags()
 

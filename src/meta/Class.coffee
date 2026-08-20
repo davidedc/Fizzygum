@@ -112,22 +112,33 @@ class Class
       console.error "could not give the constructor of " + @name + " a parse-time name: " + aString
     named
 
-  # Coffeescript adds some helper functions at the top of the compiled code:
+  # CoffeeScript declares its helpers at the top of whatever it compiles:
   #
   #  slice = [].slice
   #  indexOf = [].indexOf
   #  hasProp = {}.hasOwnProperty
   #
-  # here we remove them them all, because they mangle the code,
-  # also we just have them all in the global scope by now so
-  # they are not needed multiple times
-
+  # We take the DECLARATIONS out and leave every USE in the body alone, so a compiled member
+  # reaches all three as FREE identifiers and resolves them against the three page-lifetime
+  # globals boot installs -- the contract stated in full at
+  # src/boot/loading-and-compiling-coffeescript-sources.coffee ("THE THREE COFFEESCRIPT HELPER
+  # GLOBALS"). One shared definition, rather than one per compiled fragment.
+  #
+  # A class member compiles to a bare function expression, so the whole `var` head belongs to
+  # the helpers and goes in one cut, whatever it happened to declare -- helper-AGNOSTIC, which
+  # is what that boot comment relies on. (Mixin's twin cannot do this: a mixin compiles as a
+  # whole source, so its own name shares the statement -- see there.)
   _removeHelperFunctions: (aString) ->
     aString = aString.replace /^var(.|\n)*?\(function/, "(function"
 
-    if (aString.includes "[].indexOf") or
-     (aString.includes "{}.hasProp") or
-     (aString.includes "[].slice")
+    # TRIPWIRE for a helper declaration the cut above did not reach -- a fragment that declares
+    # helpers without opening on `(function`. ⚠ It keys off the emitted `var` STATEMENT
+    # (anchored at column 0, which only a top-level declaration is, and reaching to the `;`
+    # because the helpers may ride on continuation lines), NOT off the bare `[].indexOf`
+    # expressions: those occur in the compiled body of this method and of Mixin's twin -- their
+    # patterns are literals in it -- so an expression-shaped detector reports the stripper
+    # itself, on every build.
+    if /^var\b[^;]*\b(hasProp|indexOf|slice)\s*=/m.test aString
       console.error "code contains a helper var, it shouldn't: " +  aString
       debugger
 

@@ -43,6 +43,10 @@ class WindowedApp
   # `optionalParts` merely ENRICH it (a docked palette offers fewer tools, which is reduced rather
   # than broken). ⚠ Only `requiredParts` satisfies the gate -- an optional part may genuinely be
   # absent, so a reference to one still has to be guarded where it stands.
+  # ⚠ CLASS-LEVEL CONSTANT LISTS, never mutated: a subclass states its own by SHADOWING these
+  # with its own class-body declaration, and the two readers (launch below, and the build gates
+  # that read the declaration as text) only ever iterate them. The class body compiles to ONE
+  # array on the prototype, so an in-place push here would edit every app that inherits it.
   requiredParts: []
   optionalParts: []
 

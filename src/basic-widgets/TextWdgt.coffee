@@ -7,8 +7,18 @@
 
 class TextWdgt extends StringWdgt
 
-  wrappedLines: []
-  wrappedLineSlots: []
+  # The wrapped-text render model: wrappedLines is one string per rendered line,
+  # wrappedLineSlots one entry LONGER (getTextWrappingData's header has the worked example).
+  # ⚠ BOTH ARE REPLACED WHOLESALE AND NEVER MUTATED IN PLACE -- reflowText and _reLayoutSelf
+  # destructure a fresh pair straight over them -- and that is load-bearing:
+  # the arrays breakTextIntoLines hands back come straight out of
+  # world.cacheForTextWrappingData, so they are SHARED with every other widget wrapping the
+  # same text at the same measure. A push/splice here would edit that cache entry for all of
+  # them. They are per-instance (built in the constructor, not class-body `[]`, which would be
+  # ONE array on the prototype shared by every TextWdgt ever made) so that the reads before the
+  # first reflow -- the caret's slot math, the paint height -- see an empty text.
+  wrappedLines: undefined
+  wrappedLineSlots: undefined
   softWrap: true
 
   backgroundColor: undefined
@@ -23,7 +33,8 @@ class TextWdgt extends StringWdgt
 
   # Same head and same opts vocabulary as StringWdgt, which does all the assigning: every
   # option this class accepts is one StringWdgt already knows, and every default except the
-  # placeholder text is StringWdgt's own. So the whole constructor is one forward.
+  # placeholder text is StringWdgt's own. So this constructor assigns no option of its own: it
+  # builds the wrapped-text model (above) and forwards.
   #
   # NOTHING here is a `@param`. A `@param` assigns its field unconditionally, so
   # `@backgroundTransparency = undefined` shadowed Widget's class-level default of 1 on every
@@ -32,6 +43,11 @@ class TextWdgt extends StringWdgt
   # (docs/archive/dropped-background-fill-investigation.md). Options are immune by
   # construction — StringWdgt reads them in its body, behind a visible guard.
   constructor: (text, opts = {}) ->
+    # the wrapped-text model is per-instance and exists for the whole of construction, the
+    # inherited constructors included -- nothing in the chain may find it absent (declarations
+    # above). ⚠ Built HERE rather than in the class body, so it must precede the forward below.
+    @wrappedLines = []
+    @wrappedLineSlots = []
     super (text ? "TextWdgt"), opts
     # override inherited properties:
     @markedTextColor = Color.WHITE
