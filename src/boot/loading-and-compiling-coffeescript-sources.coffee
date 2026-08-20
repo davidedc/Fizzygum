@@ -271,10 +271,27 @@ storeSourcesAndPotentiallyCompileThemAndExecuteThem = (justIngestSources) ->
   loadOrder = findLoadOrder()
 
 
-  # We remove these Coffeescript helper functions from
-  # all compiled code, so make sure that they are available.
-  # It's rather crude to add them to the global scope but
-  # it works.
+  # THE THREE COFFEESCRIPT HELPER GLOBALS — the ONE shared definition every compiled member body
+  # resolves against, and page-lifetime by design.
+  # CoffeeScript emits `hasProp`/`indexOf`/`slice` as a `var` block at the head of whatever it
+  # compiles (`for own` wants hasProp, `x in list` wants indexOf, `[a, b..., c] = arr` wants slice),
+  # and the meta-compiler STRIPS that block out of every fragment while keeping the USES in the body
+  # (src/meta/Class.coffee _removeHelperFunctions). So a compiled member reaches all three as FREE
+  # identifiers, resolved in the global scope its fragment is eval'd into (`eval.call window, …`) —
+  # which is what these three assignments are here to be. They cannot be taken back down afterwards
+  # either: the world compiles members long after boot (live class editing, a lazily arriving part).
+  # ⚠ ALL THREE, including one no current source happens to need: the strip is helper-AGNOSTIC — it
+  # removes the whole `var` block whatever that block declared — so dropping a global arms a
+  # ReferenceError for the first member written in the shape that wants it.
+  # ⚠ And the list is CLOSED at what CoffeeScript declares in that block. A helper NOT defined here
+  # is stripped just the same and then missing: `%%` compiles to a `modulo` helper nobody defines,
+  # which is why check-stinks.js's `helper-compiling-operator` bans that operator outright.
+  # (`extend`, the fourth helper name emitted class code calls, is not one of these — globalFunctions
+  # defines it as a real function.)
+  # ⚠ THIS IS THE COMPILE-AT-BOOT PATH. A precompiled artifact runs js/pre-compiled.js — the same
+  # stripped bodies — before it reaches here, and on a `sources: "lazy"` profile may never reach here
+  # at all; there the free `hasProp`/`indexOf` land on the boot bundle's own top-level `var` block
+  # (the boot sources use `for own` and `in` too), which is a property of that code, not a guarantee.
   window.hasProp = {}.hasOwnProperty
   window.indexOf = [].indexOf
   window.slice = [].slice

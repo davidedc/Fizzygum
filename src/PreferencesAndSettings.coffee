@@ -9,6 +9,14 @@ class PreferencesAndSettings
   @INPUT_MODE_MOUSE: 0
   @INPUT_MODE_TOUCH: 1
 
+  # The ONE probe per PAGE. getMinimumFontHeight rasterises a glyph and reads the pixels back,
+  # and that read's answer depends on how warm the SWCanvas glyph atlas is (DETERMINISM.md §3g):
+  # a cold-atlas probe at boot and a warm re-probe later answer DIFFERENT numbers. So the probe
+  # runs exactly once per page -- lazily (?=) at the first construction, which IS boot, on a cold
+  # atlas -- and every PreferencesAndSettings built afterwards reads that boot measurement here
+  # instead of measuring again.
+  @probedMinimumFontHeight: undefined
+
   # I am a per-world singleton reached as the STATIC WorldWdgt.preferencesAndSettings, and a menu row
   # holds me: the world menu's input-mode row TARGETS me (toggleInputMode) and SHOWS me (its
   # MenuRowReflectionSpec reads my currentInputMode). So a duplicated menu must KEEP THE REFERENCE —
@@ -124,16 +132,14 @@ class PreferencesAndSettings
   # WorldWdgt._resetWorldNoSettle -- the reset knowledge lives HERE, with the owner, like
   # UntitledNamingService.resetCounters.
   #
-  # Self-guarded, so the ordinary teardown does no work at all, and minimumFontHeight is CARRIED
-  # OVER rather than re-derived: it measures the BROWSER's smallest renderable glyph, not the
-  # input mode, and setMouseInputMode re-probes it by rasterising a glyph and reading the pixels
-  # back -- a read whose answer depends on how warm the SWCanvas glyph atlas is (DETERMINISM.md
-  # §3g), so re-probing mid-run could hand the next test a different number than boot measured.
+  # Self-guarded, so the ordinary teardown does no work at all. minimumFontHeight needs no
+  # carry-over of its own: it measures the BROWSER's smallest renderable glyph, not the input
+  # mode, and both mode setters read it from the page-lifetime probedMinimumFontHeight memo
+  # rather than re-probing -- so the boot measurement carries over STRUCTURALLY, and nothing
+  # mid-run can hand the next test a different number than boot measured (DETERMINISM.md §3g).
   resetToBootInputMode: ->
     return if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE
-    probedMinimumFontHeight = @minimumFontHeight
     @setMouseInputMode()
-    @minimumFontHeight = probedMinimumFontHeight
 
 
   # answer the height of the smallest font renderable in pixels
@@ -160,7 +166,7 @@ class PreferencesAndSettings
 
   setMouseInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_MOUSE
-    @minimumFontHeight = @getMinimumFontHeight() # browser settings
+    @minimumFontHeight = PreferencesAndSettings.probedMinimumFontHeight ?= @getMinimumFontHeight() # browser settings
     @menuFontName = "sans-serif"
     @menuFontSize = 12 # 14
     @menuHeaderFontSize = 12 # 13
@@ -218,7 +224,7 @@ class PreferencesAndSettings
 
   setTouchInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_TOUCH
-    @minimumFontHeight = @getMinimumFontHeight()
+    @minimumFontHeight = PreferencesAndSettings.probedMinimumFontHeight ?= @getMinimumFontHeight()
     @menuFontName = "sans-serif"
     @menuFontSize = 24
     @bubbleHelpFontSize = 18

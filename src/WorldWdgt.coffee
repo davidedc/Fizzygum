@@ -56,7 +56,6 @@ class WorldWdgt extends IconGridPanelWdgt
 
   dragoverEventListener: undefined
   resizeBrowserEventListener: undefined
-  otherTasksToBeRunOnStep: []
   dropBrowserEventListener: undefined
 
   # these variables shouldn't be static to the WorldWdgt, because
@@ -175,13 +174,13 @@ class WorldWdgt extends IconGridPanelWdgt
   # constructor's own sizing branch, so for the index page the captured value is the latched true).
   _bootAutoAdjustToFillEntireBrowserAlsoOnResize: undefined
 
-  wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: new Set
-  hierarchyOfClickedWdgts: new Set
-  hierarchyOfClickedMenus: new Set
-  popUpsMarkedForClosure: new Set
-  freshlyCreatedPopUps: new Set
-  openPopUps: new Set
-  toolTipsList: new Set
+  wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: undefined
+  hierarchyOfClickedWdgts: undefined
+  hierarchyOfClickedMenus: undefined
+  popUpsMarkedForClosure: undefined
+  freshlyCreatedPopUps: undefined
+  openPopUps: undefined
+  toolTipsList: undefined
 
   @frameCount: 0
   # Monotonic GEOMETRY-CACHE VERSIONS (integers; replaced the four numberOf* counters
@@ -297,9 +296,9 @@ class WorldWdgt extends IconGridPanelWdgt
   # target -> style descriptor (HighlighterWdgt.fillStyle / — Phase 2 — outline styles). A Map, not
   # a Set: the drag-embed arc needs per-target highlight styles (the style channel). The two tracking
   # sets below stay Sets (membership only).
-  widgetsToBeHighlighted: new Map
-  currentHighlightingWidgets: new Set
-  widgetsBeingHighlighted: new Set
+  widgetsToBeHighlighted: undefined
+  currentHighlightingWidgets: undefined
+  widgetsBeingHighlighted: undefined
 
   # --- drag-embed affordance overlays (docs/specs/drag-embed-interaction-spec.md §6/§11) --------
   # The hand's state machine sets the *Declared slots each cycle (undefined = not wanted); the pre-paint
@@ -321,26 +320,26 @@ class WorldWdgt extends IconGridPanelWdgt
   # O(1) _isEditorSelected identity check (never the tree-walking _widgetBeingEdited).
   _editorSelectedWidget: undefined
 
-  steppingWdgts: new Set
+  steppingWdgts: undefined
 
   # viewports whose post-release MOMENTUM glide is still running
   # (ViewportWdgt's drag-to-scroll step decaying its last delta by
   # friction each frame). Wall-clock/frame-cadence driven, so the macro
   # pump holds "waitNoInputsOngoing" and screenshots until this drains —
   # the same idea as waiting for font atlases before a capture.
-  wdgtsWithOngoingScrollMomentum: new Set
+  wdgtsWithOngoingScrollMomentum: undefined
 
   # widgets that entered a fractional-consuming holder (me, or a StretchablePanelWdgt) this
   # turn and whose proportional bookkeeping the drain station derives once their builder is
   # done placing them -- the __add seed (stretch-fractional auto-bookkeeping arc). Cleared
   # in the world teardown like every other world-level ephemeral collection.
-  pendingFractionalBookkeepingSeeds: new Set
+  pendingFractionalBookkeepingSeeds: undefined
 
   # widgets whose fractional bookkeeping must be RE-derived because an external gesture just
   # changed their geometry (a resize/move HandleWdgt release -- the F6 re-record family,
   # deferred because the handle's writes are deferred-settle). Drained AFTER the geometry
   # flush, so the re-record reads the settled fixed point. Cleared in the world teardown.
-  pendingFractionalReRecords: new Set
+  pendingFractionalReRecords: undefined
 
   anyScrollMomentumOngoing: ->
     @wdgtsWithOngoingScrollMomentum.size > 0
@@ -356,7 +355,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   inputEventsQueue: undefined
 
-  widgetsReferencingOtherWidgets: new Set
+  widgetsReferencingOtherWidgets: undefined
   incrementalGcSessionId: 0
   desktopSidesPadding: 10
 
@@ -364,15 +363,15 @@ class WorldWdgt extends IconGridPanelWdgt
   laysIconsHorizontallyInGrid: false
   iconsLayingInGridWrapCount: 5
 
-  errorsWhileRepainting: []
+  errorsWhileRepainting: undefined
   paintingWidget: undefined
-  widgetsGivingErrorWhileRepainting: []
+  widgetsGivingErrorWhileRepainting: undefined
 
   # errors thrown by a _reLayout() DURING the recalculateLayouts flush. We can't build the
   # error console there: createErrorConsole uses the public, self-flushing geometry setters,
   # which would re-enter recalculateLayouts and throw. So we stash them here and report them
   # next cycle, outside the flush -- exactly like errorsWhileRepainting. (task #18)
-  layoutErrorsToReport: []
+  layoutErrorsToReport: undefined
 
   # this one is so we can left/center/right align in
   # a document editor the last widget that the user "touched"
@@ -437,14 +436,14 @@ class WorldWdgt extends IconGridPanelWdgt
   # name in the tests' world-state fingerprint audit.
   _suppressedMarkAttempts: 0
 
-  widgetsWithMaybeChangedPaintBounds: []
-  widgetsWithMaybeChangedFullPaintBounds: []
-  widgetsThatMaybeChangedLayout: []
+  widgetsWithMaybeChangedPaintBounds: undefined
+  widgetsWithMaybeChangedFullPaintBounds: undefined
+  widgetsThatMaybeChangedLayout: undefined
   # (ordered down-walk Stage B1) the nodes currently flagged hasDirtyDescendant, recorded by
   # Widget.__flagHasDirtyDescendantUpwards as it sets each flag, so the flush that drains
   # widgetsThatMaybeChangedLayout can clear exactly the flagged set (recalculateLayouts' finally).
   # The two lists share one lifecycle: dirt appears -> both grow; drain completes -> both empty.
-  _widgetsFlaggedHasDirtyDescendant: []
+  _widgetsFlaggedHasDirtyDescendant: undefined
   # (ordered down-walk Stage B2) re-lays performed by the current flush's down-walk; reset at each
   # _recalculateLayoutsBody entry. Feeds the RECALC_NONCONVERGENCE never-fire assert and the
   # zero-progress stuck-detection (DOWNWALK_UNREACHABLE_CHAINTOP).
@@ -475,6 +474,33 @@ class WorldWdgt extends IconGridPanelWdgt
     # will reference that global world variable, so it needs to be set
     # very early
     window.world = @
+
+    # The world's mutable containers are per-instance and must exist before super():
+    # the ancestor constructors and the sizing/extent calls below already mark damage
+    # and layout dirtiness into them, and a class-body initializer would be a
+    # prototype-level object shared by every world ever constructed on the page.
+    @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren = new Set
+    @hierarchyOfClickedWdgts = new Set
+    @hierarchyOfClickedMenus = new Set
+    @popUpsMarkedForClosure = new Set
+    @freshlyCreatedPopUps = new Set
+    @openPopUps = new Set
+    @toolTipsList = new Set
+    @widgetsToBeHighlighted = new Map
+    @currentHighlightingWidgets = new Set
+    @widgetsBeingHighlighted = new Set
+    @steppingWdgts = new Set
+    @wdgtsWithOngoingScrollMomentum = new Set
+    @pendingFractionalBookkeepingSeeds = new Set
+    @pendingFractionalReRecords = new Set
+    @widgetsReferencingOtherWidgets = new Set
+    @errorsWhileRepainting = []
+    @widgetsGivingErrorWhileRepainting = []
+    @layoutErrorsToReport = []
+    @widgetsWithMaybeChangedPaintBounds = []
+    @widgetsWithMaybeChangedFullPaintBounds = []
+    @widgetsThatMaybeChangedLayout = []
+    @_widgetsFlaggedHasDirtyDescendant = []
 
     if window.location.href.includes "worldWithSystemTestHarness"
       @isIndexPage = false
@@ -514,7 +540,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
     @initEventListeners()
     if Automator?
-      @automator = new Automator
+      # the page's ONE automator (Automator.current) -- a reconstructed world re-aims at it, never replaces it
+      @automator = Automator.current ?= new Automator
     if MacroToolkit?
       @macroToolkit = new MacroToolkit
     @untitledNamingService = new UntitledNamingService
@@ -1830,10 +1857,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # replays test actions at the right time
     if AutomatorPlayer? and Automator.state == Automator.PLAYING
       @automator.player.replayTestCommands()
-    
-    # currently unused
-    @_runOtherTasksStepFunction()
-    
+
     # paces the FETCHING of coffeescript source batches, one per frame (early in
     # the cycle so a fetch gets the whole frame of network time); compiling them
     # happens at the end-of-frame compile station below
@@ -1997,11 +2021,6 @@ class WorldWdgt extends IconGridPanelWdgt
       @_softResetWorld()
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
-
-  
-  _runOtherTasksStepFunction: ->
-    for task in @otherTasksToBeRunOnStep
-      task()
 
   stretchWorldToFillEntirePage: ->
     # once you call this, the world will forever take the whole page
@@ -2389,6 +2408,72 @@ class WorldWdgt extends IconGridPanelWdgt
     @_initClipboardEventListeners()
     @_initOtherMiscEventListeners()
 
+  # Detach every browser event listener the _init*EventListeners family attached.
+  #
+  # This is the DETACH half of a PAIR: initEventListeners above (plus _initVirtualKeyboard) is the one
+  # place listeners are attached and this is the one place they are detached, so the two must enumerate
+  # the SAME listener set — a listener added in an _init* and forgotten here leaks on every
+  # detach/attach cycle.
+  #
+  # ⚠ THIS IS A DETERMINISM MECHANISM, NOT MEMORY CLEANUP. Its only caller is
+  # AutomatorPlayer.startTestPlaying, which calls it at the START of every SystemTest so that the
+  # macro's synthetic events are the ONLY input: a listener that survives here can push a REAL browser
+  # event into @inputEventsQueue mid-test and break the byte-exact contract (../Fizzygum-tests/DETERMINISM.md).
+  #
+  # ⚠⚠ EVERY LISTENER MUST BE REMOVED FROM THE SAME TARGET IT WAS ADDED TO — the listeners are spread
+  # over THREE targets (@worldCanvas / document.body / window) and removeEventListener on the wrong
+  # target is a SILENT NO-OP: no error, nothing removed, nothing logged. That is exactly the bug this
+  # method shipped with (fixed 2026-07-15): it removed all 20 from `canvas`, so the 7 that had been
+  # added to document.body (cut/copy/paste) or window (scroll/dragover/drop/resize) were never
+  # detached at all, and stayed live through every test — including @resizeBrowserEventListener, which
+  # pushes a ResizeInputEvent into the queue.
+  #
+  # So: keep the GROUPS below in sync with their _init* counterparts, and match the target exactly.
+  removeEventListeners: ->
+    canvas = @worldCanvas
+
+    # ── added to @worldCanvas ──────────────────────────────────────────────────────────────────────
+    # canvas.removeEventListener 'dblclick', @dblclickEventListener
+    canvas.removeEventListener 'mousedown', @mousedownBrowserEventListener
+    canvas.removeEventListener 'mouseup', @mouseupBrowserEventListener
+    canvas.removeEventListener 'mousemove', @mousemoveBrowserEventListener
+    canvas.removeEventListener 'contextmenu', @contextmenuEventListener
+
+    canvas.removeEventListener "touchstart", @touchstartBrowserEventListener
+    canvas.removeEventListener "touchend", @touchendBrowserEventListener
+    canvas.removeEventListener "touchmove", @touchmoveBrowserEventListener
+    canvas.removeEventListener "gesturestart", @gesturestartBrowserEventListener
+    canvas.removeEventListener "gesturechange", @gesturechangeBrowserEventListener
+
+    canvas.removeEventListener 'keydown', @keydownBrowserEventListener
+    canvas.removeEventListener 'keyup', @keyupBrowserEventListener
+    canvas.removeEventListener 'keypress', @keypressBrowserEventListener
+    canvas.removeEventListener 'wheel', @wheelBrowserEventListener
+
+    # ── added to document.body by _initClipboardEventListeners ─────────────────────────────────────
+    document.body.removeEventListener 'cut', @cutBrowserEventListener
+    document.body.removeEventListener 'copy', @copyBrowserEventListener
+    document.body.removeEventListener 'paste', @pasteBrowserEventListener
+
+    # ── added to window by _initOtherMiscEventListeners ────────────────────────────────────────────
+    # the mobile-Safari fake-wheel workaround; guarded to mirror the add site (removing a listener
+    # that was never added is a harmless no-op, but keep the pair symmetric so the reason stays visible)
+    if Utils.runningInMobileSafari()
+      window.removeEventListener 'scroll', @wheelBrowserEventListener
+    window.removeEventListener 'dragover', @dragoverEventListener
+    window.removeEventListener 'drop', @dropBrowserEventListener
+    window.removeEventListener 'resize', @resizeBrowserEventListener
+
+    # ── added to @inputDOMElementForVirtualKeyboard by _initVirtualKeyboard ────────────────────────
+    # Defensive completeness, not a leak fix: that hidden input only exists on a touch device with
+    # useVirtualKeyboard AND an open caret, and closing the caret already removes it from the DOM and
+    # clears it (taking its listeners to GC), so this is a no-op in every environment tests run in.
+    # It is here so the "detach everything" contract holds if a touch-device test ever exists.
+    if @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard.removeEventListener 'keydown', @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener
+      @inputDOMElementForVirtualKeyboard.removeEventListener 'keyup', @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener
+      @inputDOMElementForVirtualKeyboard.removeEventListener 'keypress', @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener
+
   mouseDownLeft: ->
     noOperation
   
@@ -2449,10 +2534,16 @@ class WorldWdgt extends IconGridPanelWdgt
       if typeof eachClassFunction.lastBuiltInstanceNumericID is "number"
         eachClassFunction.lastBuiltInstanceNumericID = 0
 
-    if Automator?
-      Automator.animationsPacingControl = false
-      Automator.hidingOfWidgetsContentExtractInLabels = false
-      Automator.hidingOfWidgetsNumberIDInLabels = false
+    # The per-test automator display/pacing toggles come back to their defaults here, through an
+    # existence-soaked hook the harness installs (WorldTestSupport._resetAutomatorTogglesNoSettle).
+    # WHICH toggles exist is the harness's knowledge, not the world's — shipping code does not write
+    # a harness class's statics — and an artifact without the harness has no toggles to reset, so the
+    # soak is the whole conditional.
+    # ⚠ THE CALL SITS HERE, not in the test teardown, because BOTH callers of the shared teardown
+    # core reach it through this method: a serialization test loads a whole-world snapshot MID-test,
+    # and the toggles must flip at exactly the same moment on that path as on the test reset —
+    # otherwise macro pacing changes under a running test and its references churn.
+    @_resetAutomatorTogglesNoSettle?()
 
     super()
 
@@ -2746,6 +2837,11 @@ class WorldWdgt extends IconGridPanelWdgt
     #                             so the macro pump's waitNoInputsOngoing never settles and every
     #                             later test in the page STALLS rather than fails
     @toolTipsList.clear()
+    # ...and the tooltips not yet BORN: a scheduled creation timer closes over the widget that
+    # invited it, so clearing the list above (which only knows tips already open) leaves the corpse
+    # pinned until the timer fires -- and it then aims a fresh tip at a destroyed widget. ToolTipWdgt
+    # is core, so no existence soak; cancelling with nothing pending is a no-op.
+    ToolTipWdgt.cancelAllScheduledToolTips()
     @openPopUps.clear()
     @freshlyCreatedPopUps.clear()
     @popUpsMarkedForClosure.clear()
@@ -2793,6 +2889,15 @@ class WorldWdgt extends IconGridPanelWdgt
     # so we need to clean them up separately
     @binWdgt?.empty()
     @shelfWdgt?.empty()
+    # the SWCanvas cold-glyph store holds LIVE WIDGET REFS between a cold placeholder draw and the
+    # atlas-warm refresh that drains it -- a module-level array outside the world entirely, so
+    # nothing above can have emptied it, and on a page whose atlases are all warm the drain may
+    # never come. It sits BESIDE the damage-queue filter below rather than after it: both must
+    # follow every destroy (the bin/shelf empties directly above included), but unlike the damage
+    # queues this store feeds no repaint the reset caller is depending on, so their ordering
+    # constraint neither reaches it nor is disturbed by it. Soaked because it is a boot-bundle
+    # facility, reached the same way anyTextDirty reaches swCanvasAnyTextDirty.
+    window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()
     # the per-cycle damage queues (drained by the next _repaintDamagedRects) still hold
     # widgets destroyed above -- and destruction itself RE-MARKS them (a dying widget posts
     # damage so its pixels get erased), so this filter must be the teardown's LAST act,

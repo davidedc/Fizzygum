@@ -83,6 +83,35 @@ class Class
     aString = aString.replace(/super\(/g, superBase + ".call(this, ")
     aString = aString.replace(/super /g, superBase + ".call this, ")
 
+  # THE CLASS NAME MUST BE IN THE PARSED SOURCE, not patched on afterwards.
+  #
+  # A heap snapshot names an object's node after its constructor, and DevTools names a
+  # RemoteObject's className the same way -- and BOTH read V8's PARSE-TIME function name:
+  # the identifier V8 saw in the text it compiled. A later `Object.defineProperty(fn,
+  # 'name', ...)` sets the `.name` PROPERTY and reaches neither. Measured: with only that
+  # patch, every widget snapshots as a bare `object "Object"` and `world`'s className reads
+  # as an unrelated class, while `.name` is right everywhere -- so object-lifetime forensics
+  # cannot name a single retained widget.
+  #
+  # So we turn the ANONYMOUS function expression CoffeeScript emitted into a NAMED one,
+  # inside the string that gets eval'd. Both emit shapes arrive here having opened their
+  # function with `function (`, and in both the constructor's own `function` is the first
+  # in the text:
+  #   explicit constructor source   ->  `(function(a, b) { ... });`
+  #   synthesized constructor       ->  `window.<Name> = function() { ... };`
+  #
+  # The name binding a named function expression creates INSIDE its own scope is safe here:
+  # it makes the class name resolve, within the constructor body, to the very function that
+  # `window.<Name>` holds -- `extend` returns the same object it is handed -- which is what
+  # `_equivalentforSuper`'s bare `<Name>.__super__.constructor` already resolved to through
+  # the global. No emitted constructor declares a local of its own class's name, so nothing
+  # shadows it.
+  _nameTheConstructorFunction: (aString) ->
+    named = aString.replace /function[ \t]*\(/, => "function " + @name + "("
+    if named is aString
+      console.error "could not give the constructor of " + @name + " a parse-time name: " + aString
+    named
+
   # Coffeescript adds some helper functions at the top of the compiled code:
   #
   #  slice = [].slice
@@ -351,13 +380,21 @@ class Class
         if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorDeclaration
         constructorDeclaration = compileFGCode constructorDeclaration, true
 
+      # give the constructor function the class's name AT PARSE TIME -- see
+      # _nameTheConstructorFunction: this is the only spelling heap snapshots and
+      # DevTools can read, and it has to be in the text we are about to hand to eval.
+      constructorDeclaration = @_nameTheConstructorFunction constructorDeclaration
+
       if window.srcLoadCompileDebugWrites then console.log "constructor declaration JS: " + constructorDeclaration
       JS_string_definitions += constructorDeclaration + "\n"
 
-      # if you declare a constructor (i.e. a Function) like this then you don't
-      # get the "name" property set as it normally is when
-      # defining functions in ways that specify the name, so
-      # we add the name manually here.
+      # ...and PIN the `.name` PROPERTY, which is a different fact from the parse-time name
+      # above and is separately load-bearing: `obj.constructor.name` is what the Serializer
+      # writes as a figure's class, what the hierarchy/menu labels strip "Wdgt" off, and what
+      # every NON_INTEGER_GEOMETRY-style diagnostic prints. Pinning it here keeps that fact
+      # true no matter what shape a future CoffeeScript release emits for the constructor.
+      # (Redefining an existing `name` with only a `value:` leaves it configurable, as it
+      # already is on a named function expression.)
       # the name property is tricky, see:
       # see http://stackoverflow.com/questions/5871040/how-to-dynamically-set-a-function-object-name-in-javascript-as-it-is-displayed-i
       # just doing this is not sufficient: window[@name].name = @name

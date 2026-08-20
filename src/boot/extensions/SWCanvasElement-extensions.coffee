@@ -98,7 +98,13 @@ swCanvasMissingAtlases = {}       # idString -> true (warn once per missing atla
 swCanvasColdGlyphWidgets = []      # widgets that drew NO_ATLAS placeholders since the last refresh
 swCanvasPoisonedCacheKeys = []     # immutable-back-buffer cache keys set during the cold window
 swCanvasColdGlyphUnattributed = false
-swCanvasPoisonedKeyRecorderOn = false
+# The latch is the WRAPPED CACHE ITSELF, not a boolean: the recorder below is an INSTANCE wrap on
+# one cacheForImmutableBackBuffers, so it says nothing about any other cache. A world that is
+# reconstructed rather than reset brings a FRESH cache, and a boolean latch (once true, true for
+# the life of the page) would leave that one un-instrumented forever — poisoned entries silently
+# unrecorded, no error anywhere. Identity answers the question the installer actually asks: is the
+# cache I am about to wrap the one I already wrapped?
+swCanvasPoisonedKeyRecorderInstalledOnCache = undefined
 
 # Read-only porthole for the WorldInventory (docs/archive/world-inventory-instruments-plan.md
 # D4): the module-scope text/atlas state above is otherwise unreachable to any out-of-module
@@ -114,15 +120,32 @@ window.swCanvasTextStateForAudit = ->
     poisonedCacheKeys: swCanvasPoisonedCacheKeys
   }
 
+# The teardown's MUTATING counterpart to the porthole above (which is read-only, and says so):
+# a world teardown destroys the widgets recorded here, and their corpses would then sit in this
+# module until the next atlas-warm refresh happens to drain it — which on a page whose atlases are
+# all warm is never. The refresh's consumer (world.noteColdGlyphRegionsWarm) already skips an entry
+# that is not rooted in the world, so this drops a SUBSET of what that consumer would drop anyway,
+# only at the seam where the world's contract ("no reference to anything just destroyed") requires
+# it. Destroyed, not detached, is the test: a detached-but-alive widget can be re-added before the
+# refresh and still wants its repaint, while a destroyed one never comes back.
+# On window because the teardown is product code OUTSIDE this module, which has no other way to
+# reach these bindings. Like the refresh, it REASSIGNS the binding rather than splicing, so a
+# caller holding the old array must re-read it through the porthole.
+# swCanvasPoisonedCacheKeys is deliberately untouched: its entries are the content-key STRINGS the
+# caching widgets build (createBufferCacheKey), never widget refs, so no corpse can hide in it.
+window.swCanvasDropDestroyedColdGlyphEntriesForTeardown = ->
+  swCanvasColdGlyphWidgets = (w for w in swCanvasColdGlyphWidgets when w? and not w.destroyed)
+  return
+
 swCanvasColdWindowOpen = ->
   swCanvasAtlasPending > 0 or swCanvasRefreshScheduled or
     swCanvasColdGlyphWidgets.length > 0 or swCanvasColdGlyphUnattributed
 
 swCanvasInstallPoisonedKeyRecorder = ->
-  return if swCanvasPoisonedKeyRecorderOn
   cache = window.world?.cacheForImmutableBackBuffers
   return unless cache?
-  swCanvasPoisonedKeyRecorderOn = true
+  return if cache == swCanvasPoisonedKeyRecorderInstalledOnCache
+  swCanvasPoisonedKeyRecorderInstalledOnCache = cache
   # instance wrap, serialization-safe: the world is deliberately not a table record,
   # so its caches (and this closure) never meet the serializer's walker
   originalCacheSet = cache.set

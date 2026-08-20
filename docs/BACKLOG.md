@@ -50,12 +50,20 @@ landed with the plan.
       assertion-only macro test (6 assertions: registry populated, parent-knows-child,
       inherited-property propagation fires, the redefinition guard holds and is non-vacuous),
       running on both engines in every suite pass.
-- [ ] FILED during the 2026-08-20 investigation, not fixed: the in-browser compile path leaks the
-      CoffeeScript helpers `hasProp`/`indexOf`/`slice` onto `window`
-      (`src/boot/loading-and-compiling-coffeescript-sources.coffee`, grep the three assignments).
-- [ ] FILED same investigation: `WorldWdgt.fullDestroyChildren` mutates `Automator.*` statics —
-      shipping-shaped code writing a harness class's state (grep `Automator.animationsPacingControl`
-      in `src/WorldWdgt.coffee`); re-home when Arc C reshapes the teardown.
+- [x] DONE 2026-08-20 (D-P2f): the `hasProp`/`indexOf`/`slice` window globals are NOT a leak — they
+      are LOAD-BEARING and stay. `Class._removeHelperFunctions` strips CoffeeScript's helper `var`
+      block out of every compiled fragment while keeping the uses, so member bodies reach all three
+      as free identifiers resolved in the global scope the fragment is eval'd into (measured by
+      driving the real meta-compiler over the tree: free `hasProp` and `indexOf` uses in shipped src
+      AND harness classes; `slice` has none today but its declaration is stripped just the same, so
+      the first splat destructuring would want it). The contract is now stated at the three
+      assignments in `src/boot/loading-and-compiling-coffeescript-sources.coffee`.
+- [x] DONE 2026-08-20 (D-P2f): `WorldWdgt.fullDestroyChildren` no longer writes `Automator.*`. It
+      calls the existence-soaked `@_resetAutomatorTogglesNoSettle?()`, defined by the harness in
+      `Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee`. The call stays in
+      `fullDestroyChildren` rather than moving to `_resetWorldNoSettle` because both callers of the
+      shared teardown core need the reset at that moment — a serialization test loads a whole-world
+      snapshot mid-test.
 
 ### `archive/direct-shape-fastpaths-followups-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-08 (P1–P6)
 - [ ] FOLLOW-UP (owner, 2026-08-08): redesign the rotate-handle glyph as the four-swirlies square (the classic rotate glyph: square outline with four curled arrows at the corners — owner supplied reference screenshots). The current knob-ring paint in `HandleAppearance` is a single `strokeCircle` at the hairline `lineWidth` 0.5 (H1 made that sound — see `archive/hairline-direct-strokes-plan.md` § "BACKLOG ledger": a sub-1px direct stroke rasterizes as 1px geometry at opacity proportional to the true DEVICE width, so the ring's faintness scales with the island); the redesign replaces that paint wholesale. Candidate flow: the size-aware icon workflow.

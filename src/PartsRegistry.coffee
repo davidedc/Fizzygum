@@ -31,14 +31,36 @@ class PartsRegistry
   LOADING: 1
   LOADED: 2
 
+  # ⚠⚠ WHICH LAZY PARTS THIS PAGE HAS ALREADY INGESTED. A CLASS static, not a field of any one
+  # registry, because "part X's classes are defined in this page" is a fact about the page's CODE
+  # and code is not world state: a part loads monotonically and is never unloaded (see the header),
+  # so the fact outlives every world that observed it -- including a world REPLACED by a fresh one.
+  # `@_state` below is the per-world VIEW of the same truth, rebuilt from scratch by every
+  # constructor; this is the truth itself, and a registry that could not consult it would re-fetch
+  # and re-ingest a sources batch this page already has. (`_ingestPartPromise`'s
+  # `when not window[name]?` filter keeps a re-ingest from redefining a live class, so forgetting
+  # costs a fetch and a frame-paced compile pass rather than corruption -- but that is waste on the
+  # one path whose entire reason to exist is being cheap.)
+  #
+  # ⚠ ONLY A COMPLETED INGEST BELONGS HERE. Eagerness is not recorded: `_isEagerHere` re-derives it
+  # from the manifest and the entry page, and a fact stated twice will eventually disagree. Nor is a
+  # STARTING load recorded: a part written down when its load begins reads LOADED forever after that
+  # load fails, and a record that can be wrong is worse than one that is merely incomplete. So the
+  # single write is in ensureLoaded's success continuation, and every path that concludes "this part
+  # is now present" reaches it through there.
+  @ingestedParts: new Set
+
   constructor: ->
     # part name -> NOT_LOADED | LOADING | LOADED. Every part the build put in this artifact is
     # listed; the eager ones are already in, because boot loaded their batches before the world
-    # existed (see loading-and-compiling-coffeescript-sources.coffee).
+    # existed (see loading-and-compiling-coffeescript-sources.coffee) -- and so is any part a
+    # PREVIOUS world in this page already ingested, which is what @ingestedParts remembers on the
+    # page's behalf. Two facts, one view: this map is derived, never a fresh start.
     @_state = {}
     @_promises = {}
     for own partName, spec of (window.FIZZYGUM_PARTS ? {})
-      @_state[partName] = if @_isEagerHere spec then @LOADED else @NOT_LOADED
+      alreadyHere = @_isEagerHere(spec) or PartsRegistry.ingestedParts.has partName
+      @_state[partName] = if alreadyHere then @LOADED else @NOT_LOADED
 
   # ⚠ ONE definition of "is this part here at boot?", shared with the boot batch loader that
   # actually fetches them (window.fizzygumPartIsEagerHere, in
@@ -121,6 +143,14 @@ class PartsRegistry
         @_loadPartPromise partName
     @_promises[partName] = withRequirements.then =>
       @_state[partName] = @LOADED
+      # ⚠ THE ONE PLACE A PART BECOMES PRESENT, so the one place the page-lifetime record is
+      # written. `ensureAllLoaded`, `whenAllLoaded`, `whenOptionalPartsLoaded`, `launch`,
+      # `whenClassAvailable` and the snapshot loader's pre-scan all reach a part through
+      # `ensureLoaded`, and a required part is loaded by its own trip through it -- so one write
+      # here covers every caller AND the transitive closure. A path that ever flips a part to
+      # LOADED without coming through this continuation must record it here too, or a later world
+      # in this page will re-fetch what the page already holds.
+      PartsRegistry.ingestedParts.add partName
       delete @_promises[partName]
       return
     , (err) =>

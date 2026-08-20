@@ -39,7 +39,7 @@ class WorldInventory
     {match: /^statics\.Color\._cache$/, policy: "bounded", cap: 300, reason: "the Color intern LRU"}
     {match: /^hashCode\.stringHashCache$/, policy: "bounded", cap: 16384, reason: "the Object::hashCode memo; self-clears at cap"}
     {match: /^swCanvasText\.(atlasRequested|missingAtlases)$/, policy: "monotonic-ok", reason: "one entry per atlas id, requested/warned once per page"}
-    {match: /^swCanvasText\.(coldGlyphWidgets|poisonedCacheKeys)$/, policy: "bounded", reason: "per-refresh transients: recorded at cold glyph draws, drained wholesale at the atlas-warm refresh (whose consumer skips destroyed/detached entries)"}
+    {match: /^swCanvasText\.(coldGlyphWidgets|poisonedCacheKeys)$/, policy: "bounded", reason: "per-refresh transients: recorded at cold glyph draws, drained wholesale at the atlas-warm refresh (whose consumer skips destroyed/detached entries); the world teardown additionally drops destroyed entries at its seam"}
     {match: /\.instancesCounter$/, policy: "monotonic-ok", reason: "lifetime allocation counter, never reset by design"}
     {match: /\.lastBuiltInstanceNumericID$/, policy: "monotonic-ok", reason: "zeroed by fullDestroyChildren's sweep, re-advanced by teardown-time re-construction"}
     {match: /^statics\.WorldWdgt\.(frameCount|geometryVersion|structureVersion|visibilityVersion|immutableBackBufferGeneration)$/, policy: "monotonic-ok", reason: "world cycle/version/generation counters"}

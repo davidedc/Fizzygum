@@ -27,6 +27,9 @@ class VideoPlayerWithRecommendationsWdgt extends Widget
 
     (loadJSFilePromise "./videos/Fizzygum-videos-private/privateVideosManifest.js").then \
       (result) =>
+        # door-callback law (PartsRegistry's header): the manifest fetch is exactly when I can
+        # be closed and destroyed, and enrolling a corpse in steppingWdgts pins it there forever
+        return if @destroyed
         @_parseVideosIndex()
         # TODO id: NO_STEPPING_ONLY_ONCE_TO_HANDLE_CALLBACK date: 6-May-2023
         world.steppingWdgts.add @

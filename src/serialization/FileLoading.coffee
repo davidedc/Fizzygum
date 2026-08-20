@@ -58,10 +58,14 @@ class FileLoading
         # fractional bookkeeping serialized in its previous life, which the fill-only seed
         # respects -- re-derive at the landing position explicitly.
         widget._rememberFractionalSituationInHoldingPanel?()
-        # cross-invalidation-sanctioned: load orchestration — a deferred repaint once async
-        # image/canvas assets have decoded; the deserializer restores fields directly, so
-        # there is no receiver-side method seam for this
-        result.whenReady?.then? -> widget._fullChanged?()
+        result.whenReady?.then? ->
+          # door-callback law (PartsRegistry's header): the decode is exactly when the freshly
+          # landed widget can be closed and destroyed, and the tail must not invalidate a corpse
+          return if widget.destroyed
+          # cross-invalidation-sanctioned: load orchestration — a deferred repaint once async
+          # image/canvas assets have decoded; the deserializer restores fields directly, so
+          # there is no receiver-side method seam for this
+          widget._fullChanged?()
       when "world"
         if world.loadWorldSnapshot?
           world.loadWorldSnapshot envelope
