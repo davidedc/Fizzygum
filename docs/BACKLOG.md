@@ -37,6 +37,14 @@ landed with the plan.
 - [ ] Author + run Arc C (plan §0): two-lifetimes doctrine, `resetWorld` = destroy + `new WorldWdgt`,
       WeakRef-collectibility invariant. Sized by what A/B find. Arc B's D2 WeakRef+forced-GC
       machinery IS the oracle Arc C's acceptance invariant needs, hardened against 307 tests.
+- [ ] FILED 2026-08-20 (Arc B observation): meta-built constructors are ANONYMOUS to V8's
+      parse-time debug metadata — heap-snapshot widget nodes read `"Object"` and RemoteObject
+      classNames are plain wrong (`world` reads as `IconGridPanelWdgt`); only the `.name`
+      property is right. If `Class`'s eval'd source carried a NAMED constructor function,
+      heap snapshots and DevTools would name every widget — upgrading `heap-forensics.js`
+      from id-mapping to readable-by-name and helping all live debugging. Small spike, but it
+      touches the meta-system + the precompile path: wants its own gauntlet-gated pass
+      (natural early Arc C rider, since it directly aids C's forensics).
 - [x] DONE 2026-08-20 (post-arc rider): the REACTIVATED `Class.subClasses` propagation now has
       durable regression coverage — `SystemTest_macroClassSubclassesPropagation`, an
       assertion-only macro test (6 assertions: registry populated, parent-knows-child,
