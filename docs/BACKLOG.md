@@ -22,20 +22,20 @@ landed with the plan.
 - [ ] StorageSorter-roots unification (plan D2's stated non-goal): `StorageSorter._runClassifier`'s
       phases build their own root/marking enumeration — examine folding it onto
       `WorldWdgt.graphLivenessRoots()` in a dedicated pass, NOT by side-effect of another arc.
-- [ ] Arc A rider (from the program memory): swap the two `Object.keys(window)` Wdgt/Widget
-      SUFFIX scans (`WorldWdgt.fullDestroyChildren` id-zeroing — which provably MISSES
-      `FrameContentsPlaceholderText`, measured in the Arc A spikes — and
-      `Serializer.collectIdCounters`) onto the `.instances`-marker class sweep `WorldInventory`
-      now demonstrates.
+- [x] DONE 2026-08-20 (post-arc rider): the two `Object.keys(window)` Wdgt/Widget SUFFIX scans
+      (`WorldWdgt.fullDestroyChildren` id-zeroing — which provably MISSED
+      `FrameContentsPlaceholderText` — and `Serializer.collectIdCounters`) now consume THE one
+      marker enumeration, boot's `allClassFunctions()` (`src/boot/globalFunctions.coffee`), which
+      `WorldInventory`'s roots consume too — three consumers, one definition of "a class".
 - [ ] Author + run Arc B (plan §0): forced-GC heap-slope gate, `queryObjects` cross-check,
       `FinalizationRegistry` oracle, heap-snapshot forensic script.
 - [ ] Author + run Arc C (plan §0): two-lifetimes doctrine, `resetWorld` = destroy + `new WorldWdgt`,
       WeakRef-collectibility invariant. Sized by what A/B find.
-- [ ] Regression coverage for the REACTIVATED `Class.subClasses` propagation (the Phase-0
-      `@superClass` fix): today the only proof is a gitignored scratch probe
-      (`Fizzygum-tests/.scratch/subclasses-probe.js`). Give it a durable home — either a small
-      in-world class-edit SystemTest or an assertion inside an existing headless rig — during
-      Arc A execution or as a standalone micro-task.
+- [x] DONE 2026-08-20 (post-arc rider): the REACTIVATED `Class.subClasses` propagation now has
+      durable regression coverage — `SystemTest_macroClassSubclassesPropagation`, an
+      assertion-only macro test (6 assertions: registry populated, parent-knows-child,
+      inherited-property propagation fires, the redefinition guard holds and is non-vacuous),
+      running on both engines in every suite pass.
 - [ ] FILED during the 2026-08-20 investigation, not fixed: the in-browser compile path leaks the
       CoffeeScript helpers `hasProp`/`indexOf`/`slice` onto `window`
       (`src/boot/loading-and-compiling-coffeescript-sources.coffee`, grep the three assignments).

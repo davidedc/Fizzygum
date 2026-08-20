@@ -222,18 +222,13 @@ class WorldInventory
     enqueue window.menusHelper, "menusHelper"
     enqueue window.demoMenus, "demoMenus"
 
-    # every class, found by the marker every class carries (Class stamps
-    # window.<Class>.instances) -- never a name-suffix scan
-    classNames = []
-    for own globalName of window
-      candidate = undefined
-      try
-        candidate = window[globalName]
-      continue unless typeof candidate is "function" and NativeValueKinds.isSet candidate.instances
-      classNames.push globalName
-    report["classes.count"] = classNames.length
-    for className in classNames
-      ctor = window[className]
+    # every class, via THE shared marker enumeration (boot's allClassFunctions --
+    # the same one the teardown's id-zeroing and the serializer's counter
+    # collection consume, so the three cannot disagree about what a class is)
+    classFunctions = allClassFunctions()
+    report["classes.count"] = classFunctions.length
+    for ctor in classFunctions
+      className = ctor.name
       instanceCount = ctor.instances.size
       report["instances." + className] = instanceCount if instanceCount > 0
       for staticName in Object.getOwnPropertyNames ctor

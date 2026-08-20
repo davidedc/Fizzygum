@@ -51,6 +51,21 @@ noOperation = ->
 window.fizzygumPartIsEagerHere = (spec) ->
   spec.eager or window.FIZZYGUM_EAGER_ALL_PARTS is true
 
+# THE class enumeration: every class the meta-system defines carries an `instances` Set
+# (the marker is IN each class's emitted JS, so it is present on pre-compiled pages too,
+# even before the reflective layer arrives -- which is why this lives in the boot bundle,
+# present on every page, and not on `Class`). Never enumerate classes by a NAME-SUFFIX
+# scan: that misses any class whose name lacks the Wdgt/Widget suffix (measured:
+# FrameContentsPlaceholderText, whose id counter the old scans silently skipped).
+# Consumers: WorldWdgt.fullDestroyChildren's id-zeroing, Serializer.collectIdCounters,
+# WorldInventory's roots.
+window.allClassFunctions = ->
+  result = []
+  for own name of window
+    candidate = window[name]
+    result.push candidate if typeof candidate is "function" and NativeValueKinds.isSet candidate.instances
+  result
+
 # Helper function to use Promise style
 # instead of callback style when loading a JS
 loadJSFilePromise = (fileName) ->

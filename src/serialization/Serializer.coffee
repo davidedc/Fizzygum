@@ -195,16 +195,18 @@ class Serializer
     envelope.build = window.FIZZYGUM_BUILD if window.FIZZYGUM_BUILD?
     if opts.prettyPrint then JSON.stringify(envelope, null, 2) else JSON.stringify(envelope)
 
-  # The per-class ID counters to restore. Mirrors WorldWdgt.fullDestroyChildren's class
-  # sweep (any global whose name ends in Wdgt/Widget), skipping WorldWdgt (the live world
-  # keeps its own id — fullDestroyChildren never zeroes it) and any counter still at 0 (the
-  # freshly-reset ID space is already 0 there, so recording it would be redundant).
+  # The per-class ID counters to restore. The SAME enumeration as
+  # WorldWdgt.fullDestroyChildren's id-zeroing (allClassFunctions — the `instances`-Set
+  # marker, never a name-suffix scan, which silently skipped any class whose name lacks
+  # the Wdgt/Widget suffix: a restored FrameContentsPlaceholderText's id space collided).
+  # Skips WorldWdgt (the live world keeps its own id — fullDestroyChildren never zeroes
+  # it) and any counter still at 0 (the freshly-reset ID space is already 0 there, so
+  # recording it would be redundant).
   @collectIdCounters: ->
     counters = {}
-    for name in Object.keys(window) when (name.endsWith("Wdgt") or name.endsWith("Widget")) and name isnt "WorldWdgt"
-      klass = window[name]
-      if klass? and (typeof klass.lastBuiltInstanceNumericID is "number") and klass.lastBuiltInstanceNumericID > 0
-        counters[name] = klass.lastBuiltInstanceNumericID
+    for klass in allClassFunctions() when klass isnt WorldWdgt
+      if (typeof klass.lastBuiltInstanceNumericID is "number") and klass.lastBuiltInstanceNumericID > 0
+        counters[klass.name] = klass.lastBuiltInstanceNumericID
     counters
 
   # Every class name an envelope references, so a loader can find out what it will NEED before it

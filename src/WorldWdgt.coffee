@@ -2439,18 +2439,15 @@ class WorldWdgt extends IconGridPanelWdgt
   # counts and IDs of all the subsequent
   # widgets to start from scratch again.
   fullDestroyChildren: ->
-    # Check which objects end with the word Widget
-    theWordWdgt = "Wdgt"
-    theWordWidget = "Widget"
-    ListOfWidgets = (Object.keys(window)).filter (i) ->
-      i.includes(theWordWdgt, i.length - theWordWdgt.length) or
-      i.includes(theWordWidget, i.length - theWordWidget.length)
-    for eachWidgetClass in ListOfWidgets
-      if eachWidgetClass != "WorldWdgt"
-        # the actual count is in another variable "instancesCounter"
-        # but all labels are built using instanceNumericID
-        # which is set based on lastBuiltInstanceNumericID
-        window[eachWidgetClass].lastBuiltInstanceNumericID = 0
+    # Zero every per-class id counter (the actual population count is `instancesCounter`;
+    # labels are built from instanceNumericID, set from lastBuiltInstanceNumericID) --
+    # enumerated by the `instances`-Set marker every class carries (allClassFunctions),
+    # NEVER by a name-suffix scan, which misses e.g. FrameContentsPlaceholderText. Only
+    # widget-chain classes carry the field (declared on Widget); everything else skips.
+    for eachClassFunction in allClassFunctions()
+      continue if eachClassFunction is WorldWdgt   # the live world keeps its own id
+      if typeof eachClassFunction.lastBuiltInstanceNumericID is "number"
+        eachClassFunction.lastBuiltInstanceNumericID = 0
 
     if Automator?
       Automator.animationsPacingControl = false
