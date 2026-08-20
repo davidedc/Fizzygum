@@ -1139,15 +1139,17 @@ class Widget extends TreeNode
   # Pure query, no side effects.
   # The overlap test runs in the SCREEN plane: either side can live on a mapped plane (a scrolled
   # pane's residents, an island's), where its @bounds are plane-local and a raw cross-plane
-  # isIntersecting compares apples to oranges — screenBounds() is the identity (same object) off
-  # any mapped plane, so the unmapped world pays nothing. (A clipped-out-yet-overlapping child
-  # can still false-match exactly as it always could — that hole predates the mapped planes and
-  # is unchanged by this test.)
+  # isIntersecting compares apples to oranges. MY side is the mapped VISIBLE box —
+  # clippedThroughBounds (plane box ∩ every ancestor clip, EMPTY when I'm scrolled/clipped
+  # out of view) mapped to screen — so a widget the user cannot SEE is never offered as an
+  # attach/set-target candidate; theWidget's side stays its full mapped box (the subject being
+  # attached may itself poke out of a pane and still probes with all of itself). Both are the
+  # identity (same object) off any mapped plane, so the unmapped world pays nothing.
   _isSelfPlausibleAttachTargetFor: (theWidget) ->
     @visibleBasedOnIsVisibleProperty() and
       !@isInCollapsedSubtree() and
       !theWidget.isAncestorOf(@) and
-      (@screenBounds().isIntersecting theWidget.screenBounds()) and
+      ((@mapRectToScreen @clippedThroughBounds()).isIntersecting theWidget.screenBounds()) and
       !@anyParentPopUpMarkedForClosure()
 
   plausibleTargetAndDestinationWidgets: (theWidget) ->
