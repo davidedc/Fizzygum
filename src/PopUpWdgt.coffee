@@ -17,6 +17,9 @@ class PopUpWdgt extends Widget
   # must not persist — a triggering menu-item click marks its menu BEFORE running the action,
   # so e.g. a menu-driven save would otherwise bake the mark into the file. (__add also clears
   # it on attach, but the file should not carry it in the first place.)
+  # A deep-copied true mark (the same menu action can duplicate its own menu) is inert on the
+  # clone: it is never in the world's set (no aligner puts it there), and that same __add clear
+  # wipes the field on the clone's first attach.
   @serializationTransients: ["isPopUpMarkedForClosure"]
   # the widgetOpeningThePopUp is only useful to get the "parent" pop-up.
   # the "parent" pop-up is the menu that this menu is attached to,

@@ -7,6 +7,9 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   # and recalculateOutput re-derives this from it on every recompute), so it is
   # never serialized: an own function property has no editable source and would
   # crash the serializer; the restored node recompiles at its first recalculation.
+  # A deep copy briefly SHARES it (the Duplicator passes functions through) --
+  # harmless: it is closure-free, invoked with `.call world`, and the clone's own
+  # first recalculateOutput overwrites it with its own compile.
   @serializationTransients: ["functionFromCompiledCode"]
   functionFromCompiledCode: undefined
 

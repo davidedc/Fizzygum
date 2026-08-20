@@ -193,6 +193,14 @@ class Duplicator
       # re-derives on first read — the same rule Widget.serializationTransients states for the
       # serializer, keyed here on the cache pairs' naming convention.
       continue if /^cached[A-Z]/.test(property) or /^check[A-Z].*Cache$/.test(property) or property is "childrenBoundsUpdatedAt"
+      # the island source-lane stash (Widget._islandBufferSourceIsland/-VirtualRect, transforms §8.1)
+      # is per-frame paint state that persists until a damage flush consumes it or the next
+      # non-island paint clears it, so a copy CAN observe a live one — and when the enclosing
+      # island is OUTSIDE the copied structure the clone would keep it as a LIVE reference, so the
+      # clone's first damage flush would deposit a false "vacated" rect onto a buffer it never
+      # painted into (a spurious partial rebuild) and pin the island until then. A clone has never
+      # painted: drop the stash — its dormant state, the same rule serializationTransients states.
+      continue if /^_islandBufferSource/.test property
       value = obj[property]
       if !value?
         # undefined, null, undefined

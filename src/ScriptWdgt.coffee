@@ -24,7 +24,10 @@ class ScriptWdgt extends CodeAreaWdgt
   savedScript: undefined
   # the saved script COMPILED -- a derived Function (@savedScript is the truth),
   # never serialized: an own function property has no editable source and would
-  # crash the serializer; doAll recompiles it on demand after a restore.
+  # crash the serializer; doAll recompiles it on demand after a restore. A deep
+  # copy SHARES it (the Duplicator passes functions through): safe, because it is
+  # a closure-free `new Function` invoked with `.call world` -- a pure derivative
+  # of the same script text both widgets hold; a re-save recompiles per-widget.
   @serializationTransients: ["functionFromCompiledCode"]
   functionFromCompiledCode: undefined
 

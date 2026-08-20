@@ -33,6 +33,11 @@ class Widget extends TreeNode
   # after a restore). Merged up the class chain by Serializer.transientsForClass; a
   # subclass ADDS to this list. See docs/architecture/serialization-duplication-reference.md §5.
   @serializationTransients: [
+    # frame timing for throttled stepping (fps > 0, non-synchronised: BlinkerWdgt, the video
+    # widgets) — wall-clock, so it cannot ride a file. The DUPLICATOR must COPY it, and does:
+    # clones skip the constructor (the Date.now() seed never runs), so a dropped lastTime would
+    # leave _runChildrensStepFunction computing NaN milliseconds-remaining and the clone would
+    # never step; the copied value keeps a throttled clone's cadence in phase with its original.
     "lastTime"
     # the back-buffer render cache (BackBufferMixin) — rebuilt on demand by
     # _createRefreshOrGetBackBuffer, so it is never serialized; the restored widget
@@ -59,10 +64,15 @@ class Widget extends TreeNode
     "cachedIsInCollapsedSubtree", "checkIsInCollapsedSubtreeCache"
     # §4.4 island buffer cache source-lane fields: ephemeral per-frame paint state (a widget ref +
     # a virtual rect), consumed at flesh-out — never persist them (a snapshot must not pin an island).
+    # The Duplicator drops them too (a clone never painted into any buffer; a copied stash would
+    # deposit a false "vacated" rect onto the ORIGINAL's island and pin it — see _cloneContentInto).
     "_islandBufferSourceIsland", "_islandBufferSourceVirtualRect"
     # flush-scoped settle-engine bookkeeping (ordered down-walk Stage B1): the flag mirrors the
     # work-list's lifecycle and is cleared when the drain completes, so persisting it would only
     # bake a stale own-property into saved files (a restored flag has no matching work-list entry).
+    # Duplication needs no handling: outside a layout flush every flag is false
+    # (__flagHasDirtyDescendantUpwards is flush-local scratch) and a copy cannot run mid-flush
+    # (recalculateLayouts' re-entrancy guard), so a field-copy only ever copies false.
     "hasDirtyDescendant"
     # per-frame damage-rect bookkeeping — every field pairs with world-level per-flush
     # state that is never serialized: the _changed()/_fullChanged() dedupe flags mirror membership
@@ -71,6 +81,12 @@ class Widget extends TreeNode
     # work-list entry, so it would permanently SUPPRESS damage reporting on the restored widget
     # (the menu a world snapshot was saved from came back leaving repaint artifacts when moved —
     # the triggering click's bringToForeground marks the menu damaged right before the save runs).
+    # Duplication keeps the whole family consistent without dropping anything: world.noteWidgetCopied
+    # (the alignCopiedWidgetToDamageInfoDataStructures aligner) inherits work-list membership, so a
+    # copied true dedupe flag always has its matching entry; the copied *WhenLastPainted footprints
+    # are truthful for a copy born at the original's position (worst case an over-erase of the
+    # original's box — extra repaint, never lost damage); and the src/dst indices are flush-local
+    # (_cleanupSrcAndDestRectsOfWidgets), undefined whenever a copy can run.
     "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged"
     "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
     "srcDamageRectIndex", "dstDamageRectIndex"
