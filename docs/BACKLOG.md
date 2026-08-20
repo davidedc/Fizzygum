@@ -11,6 +11,28 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
+### `plans/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (plan AUTHORED 2026-08-20, not yet executed)
+The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the
+two-lifetimes reset-by-reconstruction) is stated in that plan's §0; Phase-0 repairs (tooltip timeout
+self-removal, dead `Class.allClasses`, the `@superClass` fix that makes `Class.subClasses` populate)
+landed with the plan.
+- [ ] Execute Arc A (fresh session; start-prompt in the plan's authoring session record).
+- [ ] Author + run Arc B (plan §0): forced-GC heap-slope gate, `queryObjects` cross-check,
+      `FinalizationRegistry` oracle, heap-snapshot forensic script.
+- [ ] Author + run Arc C (plan §0): two-lifetimes doctrine, `resetWorld` = destroy + `new WorldWdgt`,
+      WeakRef-collectibility invariant. Sized by what A/B find.
+- [ ] Regression coverage for the REACTIVATED `Class.subClasses` propagation (the Phase-0
+      `@superClass` fix): today the only proof is a gitignored scratch probe
+      (`Fizzygum-tests/.scratch/subclasses-probe.js`). Give it a durable home — either a small
+      in-world class-edit SystemTest or an assertion inside an existing headless rig — during
+      Arc A execution or as a standalone micro-task.
+- [ ] FILED during the 2026-08-20 investigation, not fixed: the in-browser compile path leaks the
+      CoffeeScript helpers `hasProp`/`indexOf`/`slice` onto `window`
+      (`src/boot/loading-and-compiling-coffeescript-sources.coffee`, grep the three assignments).
+- [ ] FILED same investigation: `WorldWdgt.fullDestroyChildren` mutates `Automator.*` statics —
+      shipping-shaped code writing a harness class's state (grep `Automator.animationsPacingControl`
+      in `src/WorldWdgt.coffee`); re-home when Arc C reshapes the teardown.
+
 ### `archive/direct-shape-fastpaths-followups-plan.md` — ✅ EXECUTED IN FULL + CLOSED 2026-08-08 (P1–P6)
 - [ ] FOLLOW-UP (owner, 2026-08-08): redesign the rotate-handle glyph as the four-swirlies square (the classic rotate glyph: square outline with four curled arrows at the corners — owner supplied reference screenshots). The current knob-ring paint in `HandleAppearance` is a single `strokeCircle` at the hairline `lineWidth` 0.5 (H1 made that sound — see `archive/hairline-direct-strokes-plan.md` § "BACKLOG ledger": a sub-1px direct stroke rasterizes as 1px geometry at opacity proportional to the true DEVICE width, so the ring's faintness scales with the island); the redesign replaces that paint wholesale. Candidate flow: the size-aware icon workflow.
 
