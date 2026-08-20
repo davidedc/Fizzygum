@@ -694,15 +694,22 @@ class ViewportWdgt extends Widget
       if isContentSizing
         newBounds = subBounds.expandBy(padding).ceil()
 
-        # Anchor to the frame's own left/top even when subBounds starts elsewhere (e.g. a single
-        # centered icon) -- otherwise merging bounds that start off-origin would shift the panel so
-        # the icon's left aligns with the frame's left, un-centering it. The merge rect spans my
-        # full width but only 1px of height, so it also guarantees newBounds.width() >= @width() --
-        # only the height may still fall short of the viewport:
-        newBounds = newBounds.merge new Rectangle @contents.left(), @contents.top(), @contents.left() + @width(), @contents.top() + 1
+        # A plane whose measure IS its whole frame (a tight both-axes hug — MenuRowsPanelWdgt,
+        # the P5 contract's scrolledContentMeasureIsMyFrame declaration) gets the measure
+        # committed VERBATIM: the width floor and grow-to-fill below suit a tight:false plane,
+        # and against a tight hug they manufacture a two-writer fight whenever the viewport is
+        # transiently larger than the hug (measured in the menu-sandwich dissolution's Phase 0:
+        # menu-compose and duplication livelocks).
+        unless @contents.scrolledContentMeasureIsMyFrame?()
+          # Anchor to the frame's own left/top even when subBounds starts elsewhere (e.g. a single
+          # centered icon) -- otherwise merging bounds that start off-origin would shift the panel so
+          # the icon's left aligns with the frame's left, un-centering it. The merge rect spans my
+          # full width but only 1px of height, so it also guarantees newBounds.width() >= @width() --
+          # only the height may still fall short of the viewport:
+          newBounds = newBounds.merge new Rectangle @contents.left(), @contents.top(), @contents.left() + @width(), @contents.top() + 1
 
-        if newBounds.height() < @height()
-          newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
+          if newBounds.height() < @height()
+            newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
       else
         # the frame must cover at least the visible WINDOW, expressed in the frame's plane
         # (frame origin + offset — identical to my own box when unscrolled with the frame

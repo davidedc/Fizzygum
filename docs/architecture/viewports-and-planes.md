@@ -87,18 +87,36 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
   plane declares it keeps its scroll across resizes (the wrapping stack — its scroll
   position belongs to the arrange's clamp). Under the offset model this is purely policy:
   nobody writes a plane's position on a scroll any more.
+- `scrolledContentMeasureIsMyFrame()` — a plane whose measure is its WHOLE frame (a tight
+  both-axes hug: `MenuRowsPanelWdgt` as a pop-up's rows plane) gets the measure committed
+  VERBATIM — the content-sizing commit's window-width floor and grow-to-fill are skipped,
+  because those adjustments suit a `tight: false` plane and against a tight hug they
+  manufacture a two-writer fight in any state where the viewport is transiently larger
+  than the hug (measured: menu-compose and duplication livelocks, the menu-sandwich
+  dissolution's Phase 0).
 
-For the three boolean queries capability ABSENCE is the panel default — there are no
+For the boolean queries capability ABSENCE is the panel default — there are no
 base-class stubs; the measure alone has a real base implementation
 (`PanelWdgt.scrolledContentMeasure`), which the stack overrides. The contract's core split
-is frame OWNERSHIP: the viewport is its plane's sole frame committer. A SELF-frame-writing
-content — one whose own arrange re-applies its extent, as a menu's rows panel hugs its
-widest row — must therefore never be the contents of anything: two frame writers with
-different arithmetic oscillate forever (`RECALC_NONCONVERGENCE`; probed and re-falsified
-with the full contract declared — the BACKLOG's §7.2 refusal holds the measured record),
-which is why a pop-up interposes `PopUpRowsPaneWdgt` between its rows panel and its
-`PopUpRowsViewportWdgt`. A free-width stack is fine as direct contents: it owns its width
-PASSIVELY (the declaration turns the normalization off) without ever writing its own frame.
+is frame OWNERSHIP — and its precise law is AGREEMENT, not exclusivity. The viewport
+commits its plane's frame at arrange time, and a stack plane's own arrange also self-writes
+(the base stack hugs its height; a menu's rows panel hugs both axes), so two writers exist
+for every stack-under-viewport: what keeps that sound is that at the fixpoint they write
+byte-the-same box (the §4.1 measures mirror the arrange's arithmetic exactly, and the
+commit's `unless equals` guard then skips). A self-writer whose box the committer's
+arithmetic does NOT reproduce oscillates forever (`RECALC_NONCONVERGENCE`) — the menu rows
+panel was exactly that (the base children-union measure misses its bottom border, and the
+window-floor/grow-to-fill adjustments fight its tight hug; the BACKLOG's §7.2 record holds
+the falsification history), until `scrolledContentMeasureIsMyFrame` + its full-self-box
+`scrolledContentMeasure` made the committer's box identical to the hug in every state —
+which is what let the pop-up's rows panel become its viewport's DIRECT contents (the
+menu-sandwich dissolution; `PopUpRowsPaneWdgt` is deleted). A free-width stack is fine as
+direct contents with no such declaration: it owns its width PASSIVELY (the declaration
+turns the normalization off), and its `tight: false` height AGREES with grow-to-fill by
+construction. ⚠ `ListWdgt` keeps the interposed-pane shape deliberately: its design sizes
+the rows panel PAST the hug (anti-vacant-space, `ListWdgt._applyExtent`), so the panel's
+unconditional hug self-write and the list's committed frame structurally disagree — there
+the pane IS the second surface that keeps the writers apart.
 
 ## Naming
 

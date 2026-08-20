@@ -243,15 +243,39 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # the arrange will commit. Height rides the base measure AT the hug width
   # (which _childWidthInStack then hands to every row, mirroring the arrange).
   # The panel is a hug-class stack on BOTH axes — the base already hugs height
-  # (tight: true); these make the width story symmetric. (No consumer exists
-  # today — ListWdgt opts out of the viewport's refit — so this is model
-  # honesty for the next consumer, not a behaviour change.)
+  # (tight: true); these make the width story symmetric. THE consumer is the
+  # pop-up rows viewport's frame committer, through scrolledContentMeasure
+  # below (the menu-sandwich dissolution).
   preferredExtentForWidth: (availW) ->
     hugW = @maxWidthOfMenuEntries() + 2 * @padding
     new Point hugW, (super hugW).y
 
   subWidgetsMergedPreferredBounds: (availW) ->
     super (@maxWidthOfMenuEntries() + 2 * @padding)
+
+  # ── as the pop-up rows viewport's DIRECT contents (menu-sandwich dissolution) ─
+  # My width is content-driven (the hug) — the committer must not width-normalize
+  # me. NB constrainContentWidth itself stays true: it drives my INTERIOR
+  # arithmetic (row equalization via _childWidthInStack and the pure measures'
+  # per-child branch), not this viewport-facing fact.
+  viewportConstrainsMyWidth: ->
+    false
+
+  # The committer's measure answers my FULL self-box — hug width, and the
+  # preferredExtentForWidth height (top AND bottom border included), i.e.
+  # byte-what my own arrange self-writes — not the base's children union, which
+  # misses the bottom border and would disagree by 2px in the world-capped state.
+  scrolledContentMeasure: (ignored_widthHint) ->
+    e = @preferredExtentForWidth undefined
+    new Rectangle @left(), @top(), @left() + e.x, @top() + e.y
+
+  # My measure IS my frame, verbatim — the committer must not floor my width at the
+  # window's nor grow-to-fill my height (those adjustments suit a tight:false plane;
+  # against my tight hug they manufacture a two-writer fight in ANY state where the
+  # viewport is transiently larger than the hug — measured twice in the dissolution's
+  # Phase 0: a compose-time livelock and a duplication-path RECALC_NONCONVERGENCE).
+  scrolledContentMeasureIsMyFrame: ->
+    true
 
   # My preferred row width: the widest child's PURE content measure. Every row
   # kind that contributes a width answers menuEntryPreferredWidth() — MenuItemWdgt

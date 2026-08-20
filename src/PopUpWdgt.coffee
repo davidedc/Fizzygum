@@ -34,7 +34,8 @@ class PopUpWdgt extends Widget
   # the MenuRowsPanelWdgt that is this pop-up's whole visible body (box, optional
   # title header, and the rows) — both subclasses (MenuWdgt / PromptWdgt) build
   # one and delegate/compose against it; the shared lay-and-hug + membership-
-  # change absorber below work off it. Free-floating, so it co-moves with me.
+  # change absorber below work off it. It is the rows viewport's contents plane
+  # (see _buildRowsViewportNoSettle), so it co-moves with me through the viewport.
   rowsPanel: undefined
   # the ViewportWdgt my rows live in — ALWAYS, not only when they overflow. See
   # _buildRowsViewportNoSettle for why it is unconditional.
@@ -91,32 +92,35 @@ class PopUpWdgt extends Widget
   # mid-life, in the middle of the very membership change that provoked it. With
   # the viewport always present there is nothing to cross — a menu that fits simply
   # has nothing to scroll, and ViewportWdgt hides a bar with nothing to show.
-  #   The composition is the one ListWdgt uses: a ViewportWdgt keeping its own content
-  # pane (mine is a PopUpRowsPaneWdgt), with the rows panel placed INSIDE that.
-  #   ⛔ Do NOT "simplify" this by making the rows panel BE the frame's contents.
-  # That shape does not terminate, EVEN WITH the scrolled-content contract fully
-  # declared (width-ownership, content-sizing, the absorb forward): the viewport is
-  # its plane's sole frame committer and writes the pure measure, while
-  # MenuRowsPanelWdgt is a SELF-frame-writing plane — its arrange re-applies its hug
-  # (widest row + 2*padding, tight height) — so the two writers disagree by a constant
-  # and oscillate forever (RECALC_NONCONVERGENCE). A menu OWNS its frame, so it can
-  # never be the committed contents of anything, which is why ListWdgt is built this
-  # way too. Falsification record + probe: the §7.2 line in docs/BACKLOG.md.
-  #   ⚠ EVERY FACT THE TWO ADDED WIDGETS NEED IS A PER-CLASS DECLARATION, which is why
-  # they are classes (PopUpRowsViewportWdgt / PopUpRowsPaneWdgt) rather than a
-  # configured ViewportWdgt: a plain panel's inherited answers are wrong on all of
-  # them — it claims to be an editing surface, a drop target, a thing you can drag a
-  # child out of, and a HIT TARGET. Each wrong answer showed up as a different visible
-  # defect; see those two classes.
+  #   The rows panel IS the viewport's contents plane, directly — no intermediate
+  # pane. That is legal for this self-sizing panel because its hug is also a PURE
+  # MEASURE the committer commits VERBATIM (MenuRowsPanelWdgt.scrolledContentMeasure
+  # + scrolledContentMeasureIsMyFrame), so the panel's own arrange and the
+  # viewport's frame commit write byte-the-same box in EVERY state and there is no
+  # two-writer fight. Both halves are load-bearing: with the committer's default
+  # window-floor/grow-to-fill adjustments live, or with a committed frame the hug
+  # disagrees with, the pair oscillates (RECALC_NONCONVERGENCE) — measured through
+  # three routes: the direct-contents shape without the measure redesign (twice,
+  # the docs/BACKLOG.md §7.2 record), menu compose at the viewport's default build
+  # extent, and the duplication path (menu-sandwich dissolution plan, Phase 0).
+  #   EVERY FACT THE VIEWPORT NEEDS IS A PER-CLASS DECLARATION, which is why it is
+  # a class (PopUpRowsViewportWdgt) rather than a configured ViewportWdgt: a plain
+  # viewport's inherited answers are wrong on all of them — it claims to be an
+  # editing surface, a drop target, a HIT TARGET, and a holder of loose scrollable
+  # content someone may drag a row out of. Each wrong answer showed up as a
+  # different visible defect; see that class.
   #   The one fact that stays MINE is the rows panel's, because the panel is a shared
   # class I am re-homing: dragging a pop-up by its header must move the POP-UP, and a
   # child of a panel detaches instead unless it locks to panels. ListWdgt does exactly
   # this to its own rows panel, for exactly this reason.
   _buildRowsViewportNoSettle: ->
-    @rowsViewport = new PopUpRowsViewportWdgt()
     @rowsPanel.isLockingToPanels = true
+    @rowsViewport = new PopUpRowsViewportWdgt @rowsPanel
     @_addNoSettle @rowsViewport
-    @rowsViewport.contents._addNoSettle @rowsPanel
+    # refit NOW, not first at popUp: a settle between build and popUp must find the
+    # viewport already sized/placed to the panel (vp = min(hug, world)), never at its
+    # meaningless default build extent.
+    @_refitRowsViewportNoSettle()
 
   # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
   # than the world is a pop-up with rows nothing can click. It needs a guard of its own

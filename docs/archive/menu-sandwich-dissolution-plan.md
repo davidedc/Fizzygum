@@ -1,21 +1,25 @@
 # Menu-sandwich dissolution — the rows panel as the viewport's own contents
 
-> **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-> Authored 2026-08-20 against Fizzygum master `89db5c88` / Fizzygum-tests master `5afa6e4b3`
-> (both pushed; gauntlet 17/17, suite 306 at these heads). Every `file:line` here is a hint
-> that WILL drift — the method name and the quoted code are authoritative; grep them fresh
-> before trusting any line number. STATUS: **not started; Phase 0 spikes MANDATORY before
-> any phase executes.**
+> **ARCHIVED — EXECUTED IN FULL 2026-08-20 (same day as authoring), Phases 0–3.**
+> Authored against Fizzygum master `89db5c88` / Fizzygum-tests master `5afa6e4b3`; executed
+> from `fe2dd4bd`. Outcome: `PopUpRowsPaneWdgt` deleted, `MenuRowsPanelWdgt` is the rows
+> viewport's DIRECT contents, byte-identically — suite 306/306 with ZERO recaptures, zero
+> tests-repo changes; close gauntlet 17/17 (278s, no flake retries). The executed fix shape
+> is **§3-CORRECTED** (not §3 items 1/4); the STATUS BOX below is the ledger, including the
+> two Phase-0-found defects (header TEAR via `contentsPanelHoldsLooseContent`; duplication
+> livelock ⇒ the verbatim-commit re-frame). Living truth:
+> `docs/architecture/viewports-and-planes.md` (the scrolled-content contract's
+> agreement-at-fixpoint law); resolution record: `docs/BACKLOG.md` §7.2 lines.
 
 ## STATUS BOX
 
 | Phase | State | Evidence |
 |---|---|---|
-| 0 — S1 residual-oscillation probe | not started | — |
-| 0 — S2 pixel-identity A/B | not started | — |
-| 1 — the dissolution (pop-ups) | not started | — |
-| 2 — ListWdgt uniformity (ASSESS-first) | not started | — |
-| 3 — retirement + truth | not started | — |
+| 0 — S1 residual-oscillation probe | **PASS 2026-08-20** (with two §3 corrections, see §3-CORRECTED below) | probe `Fizzygum-tests/.scratch/sandwich-dissolution-s1-probe.js` on the Shape-B spike build: zero `RECALC_NONCONVERGENCE`, zero `POPUP_LARGER_THAN_WORLD`, 0 writer disagreements in every steady state (small menu / live 40-row grow / world-capped sweep at vp 94x440 / 35-row absorb / 20-cycle soak); the FIRST iteration (no refit-at-build) livelocked 21↔40 during menu compose — the arrange's grow-to-fill vs the tight hug at the viewport's default build extent — fixed by `_refitRowsViewportNoSettle()` at the end of `_buildRowsViewportNoSettle` |
+| 0 — S2 pixel-identity A/B | **PASS 2026-08-20 — round 2: 306/306, ZERO fails, zero recaptures (byte-identity)** — green light per §5's own gate. Round 1 (7/306) follows: | (1) `macroEmbeddedDuplicateButtonReduplicates`: `RECALC_NONCONVERGENCE` via the DUPLICATION path — second falsification of point-preventing `vp > hug` states ⇒ re-framed to the STATE-INDEPENDENT committer (`scrolledContentMeasureIsMyFrame` declaration; the arrange's width-floor + grow-to-fill suit a tight:false plane only). (2) the six drag/pin tests: dragging a menu by its header TORE the header out — the plane's direct children are now the rows, and `ViewportWdgt.contentsPanelHoldsLooseContent` defaults true (drag-may-detach); fixed with the ListWdgt opt-out on `PopUpRowsViewportWdgt` — eyeballed: the "icons" title strip standalone at the drag target, headerless body re-hugged in place, "others" grab missed |
+| 1 — the dissolution (pop-ups) | **EXECUTED 2026-08-20** (per §3-CORRECTED + two Phase-0-found declarations: `contentsPanelHoldsLooseContent false` on the rows viewport, `scrolledContentMeasureIsMyFrame` + the guarded verbatim-commit in the arrange) | `PopUpRowsPaneWdgt.coffee` DELETED (zero references in src/buildSystem/tests); comments finalized (the ⛔ litigation comment is now the positive agreement statement); presuite green (dpr1 306/306 + paint + fracplane); close gauntlet **17/17, 278s, no flake retries** (dpr1/dpr2/webkit + apps + parts + menusweep + pinsweep + graph + paint + tiernaming/settle/capstone/revisits + refs + census + serialization + storage) |
+| 2 — ListWdgt uniformity (ASSESS-first) | **ASSESSED 2026-08-20 — verdict: KEEP** | The list's pane is load-bearing, not residue: `ListWdgt._applyExtent` deliberately sizes the rows panel PAST its hug (anti-vacant-space edge-dragging in plane coordinates), so the panel's unconditional hug self-write and the list's committed frame structurally DISAGREE whenever window > hug — dissolving there would require making the shared panel's self-write host-conditional (the conditional-semantics anti-pattern) for zero visible payoff. The §7.2 original falsification was measured on exactly the list-shaped default committer. |
+| 3 — retirement + truth | **DONE 2026-08-20** (archive move rides the close commit) | `viewports-and-planes.md` scrolled-content contract: agreement-at-fixpoint law + the `scrolledContentMeasureIsMyFrame` declaration + the ListWdgt keep note; BACKLOG §7.2 rewritten RESOLVED with the falsification record preserved verbatim; memory note updated |
 
 ## §0 Orientation
 
@@ -237,6 +241,58 @@ assume uniformity, and do not let Phase 1 grow List work.
    Owner standing rule: NO serialization compat obligations — old snapshots restoring a pane
    are out of scope; verify the two serialization rigs + the pop-up snapshot-hygiene gates
    pass (they ride `fg gauntlet`).
+
+## §3-CORRECTED — the fix shape as actually spiked (Phase 0, 2026-08-20; AUTHORITATIVE for Phase 1)
+
+§3 items 1 and 4 above are **superseded before execution** on two code facts found while
+re-verifying §1 at head, plus one S1-measured repair; §3 items 2/3/5 stand as written.
+
+**Code fact 1 — `constrainContentWidth` is the wrong knob.** It drives THREE things, not one:
+the viewport-facing `viewportConstrainsMyWidth()` (the stack derives it), the stack's interior
+arrange (`_positionAndResizeChildren`'s per-child branch — `_childWidthInStack` row
+equalization runs ONLY in the constrain branch), and the pure measures' per-child branch
+(`subWidgetsMergedPreferredBounds` / `preferredExtentForWidth` fall back to applied
+`widget.width()`/`height()` read-back when false). Declaring it false would gut menu row
+equalization and the honest measures. The correction: override **only**
+`viewportConstrainsMyWidth: -> false` on `MenuRowsPanelWdgt`; `constrainContentWidth` stays
+inherited-true for the interior arithmetic.
+
+**Code fact 2 — the self-write cannot be deleted, and does not need to be.** (a)
+`ListWdgt._buildAndConnectChildrenNoSettle` sizes its `@listContents` through the panel's
+self-sizing re-fit (`@listContents._reLayoutChildren()`) — deleting the self-write from the
+shared class breaks every inspector list, and List is Phase 2's ASSESS-first subject, not
+Phase 1's. (b) The base `VerticalStackPanelWdgt._positionAndResizeChildren` **itself
+self-writes its height** (the `@_applyExtentBase new Point @width(), newHeight` tail), so
+every stack committed as a viewport's contents is ALREADY a second frame-writer today: the
+in-tree invariant is **agreement-at-fixpoint**, not sole-committer. The reopen condition is
+met by making the committer's measure answer byte-what the panel self-writes.
+
+**The executed shape (all uncommitted spike edits, patch:
+`scratchpad/spike-shapeB.patch` of the authoring session; re-derive from this list cold):**
+1. `MenuRowsPanelWdgt`: ADD `viewportConstrainsMyWidth: -> false`; ADD
+   `scrolledContentMeasure: (ignored) -> ` a Rectangle at `@position()` of extent
+   `@preferredExtentForWidth undefined` — the FULL self-box (hug width, height including
+   top AND bottom border). The base's children-union measure misses the bottom border
+   (2px) and would disagree with the self-write in the world-capped state. The self-write
+   STAYS.
+2. `PopUpRowsViewportWdgt`: ctor becomes `(rowsPanel) -> super rowsPanel; @alpha = 0` (the
+   base ctor adopts a ctor-param plane directly — NO scaffold pane is ever built; NB
+   `setContents` does NOT replace the plane, it empties it and adds INTO it, so the ctor
+   param is the right spelling); ADD `isContentSizing: -> true` (else the arrange takes the
+   applied-read-back branch — base answers `@isTextLineWrapping` = false); ADD the absorb
+   forward `_reLayOutAfterContainedPanelChange: -> @firstParentThatIsAPopUp()._reLayOutAfterContainedPanelChange?() ? false`.
+3. `PopUpWdgt._buildRowsViewportNoSettle`: set `isLockingToPanels` first, build
+   `new PopUpRowsViewportWdgt @rowsPanel`, `@_addNoSettle @rowsViewport`, then
+   **`@_refitRowsViewportNoSettle()` — mandatory**: a settle must never see the viewport at
+   its default build extent; with a tight-hug plane as contents, a viewport TALLER than the
+   hug makes the arrange's grow-to-fill inflate the committed frame while the hug snaps it
+   back — the S1 first-iteration livelock (21↔40, menu compose). Refit pins
+   `vp = min(hug, world) ≤ hug` at every quiescent point, so grow-to-fill and the
+   window-width floor structurally never fire.
+4. `_layOutAndHugRowsPanel` needs NO re-derivation (§3.4 withdrawn): the panel still
+   self-sizes in its own `_reLayoutChildren()`, so the existing read order is correct; the
+   committer confirms the identical box (the arrange's `unless boundingBox().equals
+   newBounds` guard skips the commit at fixpoint) and acts only on transients.
 
 ## §4 Central risks
 
