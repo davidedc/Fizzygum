@@ -1937,6 +1937,14 @@ class WorldWdgt extends IconGridPanelWdgt
             millisecondsRemainingToWaitedFrame = 0
           eachSteppingWidget.previousMillisecondsRemainingToWaitedFrame = millisecondsRemainingToWaitedFrame
         else
+          # a RESTORED stepper has no lastTime: the "stepping" membership marker re-adds it
+          # here, but lastTime is serialization-transient (a wall-clock instant) and the
+          # deserializer's Object.create skips the constructor's Date.now() seed — without
+          # this re-seed the subtraction below is NaN, "NaN <= 0" never fires, and the
+          # widget silently never steps again (measured: a snapshot-restored fps-5 blinker
+          # fired 0 steps while a fresh control fired 12). Treating "now" as its last step
+          # is exactly the fresh-construction semantics.
+          eachSteppingWidget.lastTime ?= timeOfCurrentCycleStart
           elapsedMilliseconds = timeOfCurrentCycleStart - eachSteppingWidget.lastTime
           millisecondsRemainingToWaitedFrame = millisBetweenSteps - elapsedMilliseconds
       

@@ -243,13 +243,28 @@ class Widget extends TreeNode
   `_afterDeserialization`.
   - ⚠ **The two mechanisms do NOT cover each other** (2026-07-08 SW3D-port incident, ~1 h):
     `@serializationTransients` is read by the FILE Serializer ONLY. The in-memory
-    **Duplicator** skips a property iff its **VALUE** exposes `rebuildDerivedValue` — a
-    property that is only listed in `@serializationTransients` still gets deep-copied, and
-    a runtime-only object there crashes the copy on the Duplicator's closed-set guard
-    ("cannot duplicate a value of unrecognized type"). **Fix: stamp a no-op
-    `rebuildDerivedValue` on the runtime-only object itself** (that both skips the copy
-    and marks it derived); listing it in `@serializationTransients` as well is correct but
-    not sufficient.
+    **Duplicator** never consults it — its coverage comes from five mechanisms of its own:
+    a NAME-convention skip in `_cloneContentInto` (the version-keyed cache pairs
+    `cached*`/`check*Cache` plus `childrenBoundsUpdatedAt`, and the island source-lane
+    `_islandBufferSource*` pair), the VALUE-carried `rebuildDerivedValue` skip-and-rebuild,
+    `keptByReferenceOnDeepCopy`, the `alignCopiedWidgetTo*` world-set aligners, and the
+    per-class `_reactToBeingCopied` hook. A property covered by none of these gets
+    deep-copied — and a runtime-only object there crashes the copy on the Duplicator's
+    closed-set guard ("cannot duplicate a value of unrecognized type"). **Fix: stamp a
+    no-op `rebuildDerivedValue` on the runtime-only object itself** (that both skips the
+    copy and marks it derived); listing it in `@serializationTransients` as well is
+    correct but not sufficient.
+  - **Declaring a new transient therefore means deciding BOTH sides.** For the serializer:
+    list it. For the Duplicator: pick the coverage — skip / rebuild / align / share / or
+    field-copy WITH a stated reason it is safe on a clone; every current family carries
+    that verdict as a comment at its declaration. Two rules of thumb from walking all of
+    them: a per-frame field consumed by the flush must be either provably flush-cleared
+    (`hasDirtyDescendant`, the damage-rect indices) or Duplicator-dropped (the island
+    source-lane stash); and a field a constructor seeds must be COPIED or re-seeded
+    lazily, because clones and restored shells never run the constructor (`lastTime`: the
+    serializer drops it and the "stepping" membership marker still re-registers the
+    restored widget, so the stepping loop re-seeds it on first sight — without that, a
+    snapshot-restored throttled stepper never stepped again).
 - **Functions**: for an own function-valued property `foo` —
   - if a `foo_source` sibling exists (a user-injected method) → serialize `{"$src":
     <source>}` and let `foo_source` ride as a normal string; restore recompiles via the
