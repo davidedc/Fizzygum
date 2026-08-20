@@ -147,6 +147,18 @@ class PartsRegistry
   #
   # ⚠ Ask `isAvailable` FIRST at any door that a profile may not ship at all: this method assumes the
   # parts exist and will reject (via ensureLoaded) if they do not.
+  #
+  # ⚠⚠ THE DOOR-CALLBACK LAW: a callback that acts ON A WIDGET must open with a
+  # destroyed-check (`return if theWidget.destroyed`) — the wait is exactly when the subject
+  # can die (the user closes the window while the part is in flight), and acting anyway
+  # silently mutates a corpse: measured on index.html, editLayout + destroy-mid-load BUILT
+  # fresh chrome on the destroyed widget — an escaped widget no destroy cascade can ever
+  # reach, pinning its corpse parent, with no error anywhere
+  # (docs/archive/world-vm-truth-riders-plan.md §5 S3; the runtime gate is the
+  # destroy-mid-load race in ../Fizzygum-tests/scripts/parts-lazy-load-headless.js). The
+  # guard lives at the CALLBACK head, not here: only the call site knows its subject (some
+  # have two, spawnInspector's acts after a second await), and on the all-eager pages the
+  # inline fast path makes the check dead weight this funnel would pay on every door.
   whenAllLoaded: (partNames, thenDo) ->
     for eachName in partNames
       return @ensureAllLoaded(partNames).then thenDo unless @_isLoaded eachName

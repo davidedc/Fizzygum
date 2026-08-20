@@ -27,10 +27,16 @@ landed with the plan.
       `FrameContentsPlaceholderText` — and `Serializer.collectIdCounters`) now consume THE one
       marker enumeration, boot's `allClassFunctions()` (`src/boot/globalFunctions.coffee`), which
       `WorldInventory`'s roots consume too — three consumers, one definition of "a class".
-- [ ] Author + run Arc B (plan §0): forced-GC heap-slope gate, `queryObjects` cross-check,
-      `FinalizationRegistry` oracle, heap-snapshot forensic script.
+- [x] Arc B EXECUTED 2026-08-20 (plan: `archive/world-vm-truth-riders-plan.md`; doctrine:
+      `architecture/world-lifetime-and-inventory.md` §6): the `fg vmtruth` gauntlet leg
+      (`vm-truth-gate.js` — forced-GC collectibility oracle + post-GC heap-floor gate +
+      INVALID-on-unmeasured), the `heap-forensics.js` four-lens tool (incl. `--selftest`),
+      the destroy-mid-load door race repaired at five funnel callbacks + gated in the
+      `parts` leg. (The named FinalizationRegistry oracle was ABSORBED by the WeakRef
+      sweep — same oracle made synchronous; see the plan's §8.)
 - [ ] Author + run Arc C (plan §0): two-lifetimes doctrine, `resetWorld` = destroy + `new WorldWdgt`,
-      WeakRef-collectibility invariant. Sized by what A/B find.
+      WeakRef-collectibility invariant. Sized by what A/B find. Arc B's D2 WeakRef+forced-GC
+      machinery IS the oracle Arc C's acceptance invariant needs, hardened against 307 tests.
 - [x] DONE 2026-08-20 (post-arc rider): the REACTIVATED `Class.subClasses` propagation now has
       durable regression coverage — `SystemTest_macroClassSubclassesPropagation`, an
       assertion-only macro test (6 assertions: registry populated, parent-knows-child,

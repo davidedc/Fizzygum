@@ -111,6 +111,64 @@ green suite):
   cold-glyph window stores are counted but not walked and are declared per-refresh
   transients (their drain's consumer skips destroyed entries).
 - Both engines run the same gate: the instrument is plain in-page JS, so the WebKit suite
-  leg exercises it identically. VM-truth riders (forced GC, heap slope, `queryObjects`
-  cross-checks) are Arc B, Chrome-only by nature, and ADD closure-visibility rather than
-  replacing any of this.
+  leg exercises it identically. The VM-truth tier below is Chrome-only by nature and ADDS
+  closure-visibility rather than replacing any of this.
+
+## 6. The VM-truth tier (Arc B): the closures the walk cannot see
+
+The inventory walks PROPERTIES — it deliberately counts functions and never walks them, so
+a widget pinned by a closure, listener, or promise reaction is invisible to it BY DESIGN.
+The VM-truth tier asks V8 instead. Chrome-only by nature (forced GC, `queryObjects`, heap
+snapshots are V8/CDP rails); the webkit leg keeps cross-engine coverage via the in-band
+gate above. Program plan: `docs/archive/world-vm-truth-riders-plan.md` (its §5 carries the
+measured numbers).
+
+**The gate** — `Fizzygum-tests/scripts/vm-truth-gate.js` (the `fg vmtruth` gauntlet leg):
+runs the full suite with `scripts/audit-preludes/vm-truth-prelude.js` injected and Chrome
+launched with `--js-flags=--expose-gc --enable-precise-memory-info` (both flags are the
+dose: without the second, `performance.memory` is quantized and the floor gate is blind).
+The prelude records a `WeakRef` for every widget at `unregisterThisInstance` (the moment it
+leaves the live registry and is supposed to be garbage) and, at each `resetWorld` — after
+the teardown and the in-band audits — forces a double GC and asserts, with THREE verdicts:
+
+- `LAYOUTAUDIT VMTRUTH uncollected:<Class>#<id> destroyedDuring:<test>` — a destroyed
+  widget is still VM-alive **one full teardown later**. The grace period is load-bearing:
+  a heavy teardown leaves hundreds of destroyed widgets alive through the immediate GC
+  (the sweep runs inside the world cycle and V8's conservative stack scanning sees the
+  live frames above it) and all of them collect by the next sweep; a real leak survives
+  every later sweep and still fires. There is NO exemption table on purpose — the green
+  suite measures zero. Attribution: the line fires during the INCOMING test's opening
+  reset, so the leaker is the PREVIOUS test on that shard page (same semantics as every
+  reset-seam gate); the last test of a shard is never swept (same stated hole as the
+  storage prelude).
+- **Heap floor** — one post-GC `usedJSHeapSize` sample per teardown
+  (`LAYOUTAUDIT VMHEAP`); per page, `min(last 10) − min(samples 3..15)` must stay ≤ 96 MB
+  (green-suite worst: +44 MB — the heap legitimately balloons and deflates with test
+  composition, so only the FLOOR is a leak signal; endpoint statistics are noise).
+- **INVALID (exit 2)** — any test bucket without a heap sample means the run measured
+  NOTHING (prelude not installed, or no `window.gc`): never read its green suite as a
+  pass.
+
+**The forensic tool** — `Fizzygum-tests/scripts/heap-forensics.js`
+(`--test=<name>` / `--tests=A,B` / `--boot-only`, `--snapshot` for retainer paths): four
+lenses over the world a test leaves behind — the in-band anatomy (escaped widgets with
+parent chains), the WeakRef collectibility sweep, the `Runtime.queryObjects` registry
+cross-check (VM-alive ∖ `Widget.instances` = retained corpses; the reverse would be a
+registration hole), and heap-snapshot retainer paths whose `context:<var>` edges name the
+exact closure variable holding a corpse. Two mechanism facts it encodes (measured): widget
+instances are ANONYMOUS in heap snapshots (the meta-system's eval-built constructors leave
+V8 no reliable inferred name — suspects are mapped by `HeapProfiler.getHeapObjectId`,
+never by node name), and heap object ids are assigned lazily (the snapshot must be taken
+FIRST or every id answers "0"). `--selftest` plants a closure-held destroyed widget and
+requires itself to find it end-to-end while the in-band gate stays silent on it — run it
+after touching the tool.
+
+**The door-callback law this tier enforced into the code** (found by the Arc B probe): a
+lazy-part door callback that acts ON A WIDGET must open with a destroyed-check — the wait
+is exactly when the subject can die, and acting anyway silently mounts fresh chrome on a
+corpse the destroy cascade can never reach (measured on `index.html`: `editLayout` +
+destroy-mid-load left a permanent escaped widget pinning its corpse parent, with zero
+errors). The guards live at each funnel-callback head (`Widget.editLayout`,
+`spawnInspector`/`createConsole`, `ExamplesFolderWindowWdgt.whenReadyToBeBroughtUp`,
+`WorldWdgt.popUpDemoTestMenu`); the runtime gate is the destroy-mid-load race in
+`Fizzygum-tests/scripts/parts-lazy-load-headless.js` (the `parts` leg).

@@ -4395,6 +4395,10 @@ class Widget extends TreeNode
   spawnInspector: (inspectee) ->
     return unless world.parts.isAvailable "meta-tools"
     openTheInspector = ->
+      # door-callback law (PartsRegistry's header), guarding here rather than at the
+      # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
+      # layer) — one guard at the acting site covers both waits
+      return if inspectee.destroyed
       inspector = new (window["InspectorWdgt"]) inspectee
       world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
     world.parts.whenAllLoaded ["meta-tools"], ->
@@ -4405,6 +4409,8 @@ class Widget extends TreeNode
   createConsole: ->
     return unless world.parts.isAvailable "meta-tools"
     openTheConsole = =>
+      # door-callback law (PartsRegistry's header): I can die while the part is in flight
+      return if @destroyed
       consoleWdgt = new (window["ConsoleWdgt"]) @
       world.openFrameWith consoleWdgt, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
     world.parts.whenAllLoaded ["meta-tools"], openTheConsole
@@ -5571,8 +5577,14 @@ class Widget extends TreeNode
   # menu): fetch the LAZY authoring part that carries the adder/droplet chrome, THEN show
   # the drop-slots. An existence guard here would silently swallow the click — inclusion
   # guards are for the arranges, ensureLoaded is for user entry points.
+  # ⚠ The destroyed-check is the door-callback law (PartsRegistry's header): the wait is
+  # exactly when I can die (close/destroy while the part is in flight), and showAdders on a
+  # corpse silently BUILDS chrome on it — an escaped widget no destroy cascade can reach,
+  # pinning the corpse (measured: docs/archive/world-vm-truth-riders-plan.md §5 S3).
   editLayout: ->
-    world.parts.ensureLoaded('authoring').then => @showAdders(@_divisionChildrenAxis() ? 'x')
+    world.parts.ensureLoaded('authoring').then =>
+      return if @destroyed
+      @showAdders(@_divisionChildrenAxis() ? 'x')
 
   # canonical public wrapper / _NoSettle-core split (rule [H]: all logic in the core) —
   # like removeAdders below; a menu-driven discrete mutation must self-settle, not ride

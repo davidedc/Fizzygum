@@ -2945,6 +2945,9 @@ class WorldWdgt extends IconGridPanelWdgt
   # and this whole path stays byte-identical to what the suite has always measured.
   popUpDemoTestMenu: (widgetOpeningThePopUp, targetWidget) ->
     world.parts.whenAllLoaded ["demos"], ->
+      # door-callback law (PartsRegistry's header): both subjects can die during the fetch,
+      # and a menu built for a corpse dispatches its every row at a destroyed widget
+      return if widgetOpeningThePopUp?.destroyed or targetWidget?.destroyed
       window.demoMenus ?= new (window["DemoMenus"])
       window.demoMenus.testMenu widgetOpeningThePopUp, targetWidget
 

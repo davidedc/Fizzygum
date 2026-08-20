@@ -56,6 +56,9 @@ class ExamplesFolderWindowWdgt extends FolderWindowWdgt
     # dead icon. (isAvailable = "did this build ship it"; whenAllLoaded = "get it here".)
     return callback() unless world.parts.isAvailable "examples-icons"
     world.parts.whenAllLoaded ["examples-icons"], =>
+      # door-callback law (PartsRegistry's header): the folder can be closed-and-destroyed
+      # while the art is in flight, and populating a corpse builds openers on it
+      return if @destroyed
       # a second click while the first fetch was still in flight must not build the contents twice
       unless @populated
         @populated = true
