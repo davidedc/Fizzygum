@@ -1137,11 +1137,17 @@ class Widget extends TreeNode
   # verbatim by plausibleTargetAndDestinationWidgets below and by its clipping variant in
   # ClippingAtRectangularBoundsMixin (the two differ only in whether they recurse into the children).
   # Pure query, no side effects.
+  # The overlap test runs in the SCREEN plane: either side can live on a mapped plane (a scrolled
+  # pane's residents, an island's), where its @bounds are plane-local and a raw cross-plane
+  # isIntersecting compares apples to oranges — screenBounds() is the identity (same object) off
+  # any mapped plane, so the unmapped world pays nothing. (A clipped-out-yet-overlapping child
+  # can still false-match exactly as it always could — that hole predates the mapped planes and
+  # is unchanged by this test.)
   _isSelfPlausibleAttachTargetFor: (theWidget) ->
     @visibleBasedOnIsVisibleProperty() and
       !@isInCollapsedSubtree() and
       !theWidget.isAncestorOf(@) and
-      @areBoundsIntersecting(theWidget) and
+      (@screenBounds().isIntersecting theWidget.screenBounds()) and
       !@anyParentPopUpMarkedForClosure()
 
   plausibleTargetAndDestinationWidgets: (theWidget) ->
@@ -2763,9 +2769,6 @@ class Widget extends TreeNode
   
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
-
-  areBoundsIntersecting: (aWdgt) ->
-    @bounds.isIntersecting aWdgt.bounds
 
   calculateKeyValues: (aContext, clippingRectangle) ->
     damageBox = clippingRectangle.intersect(@bounds).round()

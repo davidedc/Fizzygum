@@ -184,13 +184,26 @@ All in `src/basic-widgets/ViewportWdgt.coffee` unless noted.
 > (`_keepScrollOffsetInBounds`), `_applyExtent`/`setContents` resets, the arrange (window merge +
 > origin-shift bookkeeping), `ListWdgt._applyExtent`, grab-OUT re-home, serialization (two
 > scalars, own-only-when-scrolled), the macro-toolkit plane sweep, and `_applyMoveBy` retired as
-> the per-scroll-step engine. STILL OPEN (2b/2c) — `ChangeFontButtonWdgt` + the `popUp
-> .*position()` sweep, `plausibleTargetAndDestinationWidgets`'s mapped probe rect, the edge
-> auto-scroll band's DESIGN half (nested viewports), the highlight re-home + drop-INTO re-express
-> verifications under live offsets, the `CaretWdgt._reLayout` convergence-probe re-read (its
-> plane-motion probe is trivially stable under a pinned plane — suite-green today, re-derive it
-> against the offset), the `managesOwnScrollPinning` seam-dissolution question, and the
-> `escalateEvent` plane-local-args audit item.
+> the per-scroll-step engine.
+>
+> **2b/2c residue CLOSED (2026-08-20, probe = `Fizzygum-tests/.scratch/p2b-gated-sites-probe.js`,
+> run on a pane in the general O ≠ P frame state, translation (485,13)):** drop-INTO re-express
+> VERIFIED CORRECT (plane = screen − t through the generalized 4D-1 gate); highlight re-home
+> VERIFIED CORRECT (the highlighter re-homes INTO the scrolled plane at the target's plane box —
+> same plane ⇒ rides the translation, aligned even mid-scroll); `ChangeFontButtonWdgt` FIXED
+> (`_menuPopUpPoint` = mapped+rounded own position; the `popUp .*position()` sweep found no other
+> own-bounds emitters — the remaining popUp sites use the hand); `plausibleTargetAndDestination
+> Widgets` maps BOTH sides to screen boxes (`screenBounds()`, identity off any mapped plane;
+> `areBoundsIntersecting` thereby orphaned and DELETED — its list-churn re-recaptured Duplicated;
+> ⚠ the clipped-out-yet-overlapping false-match hole predates mapped planes and is unchanged);
+> the edge auto-scroll band maps its pointer reads into MY plane (trigger + step + autoScroll
+> arithmetic — the nested-viewport case, identity for top-level panes); the `CaretWdgt._reLayout`
+> convergence probe is CORRECT AS-IS (its parent-motion check now fires exactly on real
+> frame-origin corrections; a plane-local scroll leaves the slot exact after one pass — the
+> `revisits` leg's empty baseline confirms live). STILL OPEN: the `managesOwnScrollPinning`
+> seam-dissolution question (Phase 3 material) and the `escalateEvent` plane-local-args class
+> (surveyed 2a: ViewportWdgt was the one cross-plane pos consumer, fixed; any NEW pos-consuming
+> handler on a plane ancestor must re-derive — a rulebook line for Phase 3's docs sweep).
 
 | Consumer | What it does today | Verdict |
 |---|---|---|

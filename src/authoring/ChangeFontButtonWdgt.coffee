@@ -16,12 +16,19 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
+  # the menu is a WORLD child, so it opens at my on-SCREEN position — my own @position()
+  # is plane-local and lands offset-pixels away when I sit in a scrolled pane (or inside an
+  # island); mapped + rounded because the screen family can be fractional under tilt and
+  # popUp commits integer bounds (same shape as ToolTipWdgt's bubble).
+  _menuPopUpPoint: ->
+    (@localPointToScreen @position()).round().subtract new Point 80, 0
+
   mouseClickLeft: ->
     # if there is already a font selection menu for the editor,
     # bring that one up, otherwise create one and remember that we created it
     if @fontSelectionMenuHolder.fontSelectionMenu? and
      !@fontSelectionMenuHolder.fontSelectionMenu.destroyed
-      @fontSelectionMenuHolder.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
+      @fontSelectionMenuHolder.fontSelectionMenu.popUp @_menuPopUpPoint(), world
     else
       menu = new MenuWdgt @, target: @, title: "Fonts"
       menu.addMenuItem "Arial", @, "setFontNameFromMenu", arg1: "justArialFontStack"
@@ -34,7 +41,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
       menu.addMenuItem "Heavy", @, "setFontNameFromMenu", arg1: "heavyFontStack"
       menu.addMenuItem "Mono", @, "setFontNameFromMenu", arg1: "monoFontStack"
 
-      menu.popUp @position().subtract(new Point 80,0), world
+      menu.popUp @_menuPopUpPoint(), world
 
       # editor CHROME: applying a font must act on the focused text without
       # stealing the focus pointer or ending the edit (§5.D D2a). The menu

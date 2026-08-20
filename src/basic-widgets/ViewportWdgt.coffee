@@ -969,7 +969,10 @@ class ViewportWdgt extends Widget
     # a 'never' viewport accepts the drop but does not creep toward it
     return if @scrollPolicy is 'never'
     if @wantsDropOfChild widgetBeingFloatDragged
-      if !@boundingBox().insetBy(WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3).containsPoint pointerPosition
+      # the caller hands the hand's SCREEN position; my box is plane-local (I can myself be a
+      # resident of a scrolled pane / island), so map the pointer into MY plane for the band
+      # test — the identity (same object) for an un-nested viewport
+      if !@boundingBox().insetBy(WorldWdgt.preferencesAndSettings.scrollBarsThickness * 3).containsPoint @screenPointToMyPlane pointerPosition
         @startAutoScrolling()
 
   startAutoScrolling: ->
@@ -988,7 +991,9 @@ class ViewportWdgt extends Widget
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     world.steppingWdgts.add @
     @step = =>
-      pos = hand.position()
+      # mapped like every per-frame hand sample (identity for an un-nested viewport) — the
+      # band test and autoScroll's delta arithmetic below both run in MY plane
+      pos = @screenPointToMyPlane hand.position()
       inner = @boundingBox().insetBy inset
       if @boundsContainPoint(pos) and
         !inner.containsPoint(pos) and

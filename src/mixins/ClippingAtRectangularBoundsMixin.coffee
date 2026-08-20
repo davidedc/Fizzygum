@@ -32,7 +32,9 @@ ClippingAtRectangularBoundsMixin =
         # hence *actually* not overlapping with theWidget.
         # So continue checking the children only if the
         # Panel itself actually overlaps.
-        if @areBoundsIntersecting theWidget
+        # SCREEN-plane boxes on both sides, like the shared predicate above: this panel can
+        # itself be a resident of a scrolled pane / island, and theWidget likewise.
+        if @screenBounds().isIntersecting theWidget.screenBounds()
           @children.forEach (child) ->
             result = result.concat child.plausibleTargetAndDestinationWidgets theWidget
 
