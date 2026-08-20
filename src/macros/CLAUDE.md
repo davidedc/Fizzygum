@@ -147,9 +147,14 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
 - **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
   `world.getWidgetViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
-  `getTextMenuItemFromMenu{,ByPrefix,ByContains}`; plus the SCREEN-family pair for widgets inside an affine island —
+  `getTextMenuItemFromMenu{,ByPrefix,ByContains}`; plus the SCREEN-family pair for widgets on any MAPPED
+  plane — inside an affine island OR a resident of a SCROLLED pane (paint-time scroll: a plane's widgets
+  never move when it scrolls, so their plane-local geometry sits offset-pixels away from the pixels) —
   `screenPointAtFractionOf` and its action twin `moveToAndClickAtScreenFractionOf_InputEvents` (the plane-local
-  `pointAtFractionOf` would aim at the un-mapped box).
+  `pointAtFractionOf` would aim at the un-mapped box). ⚠ AIMING vs VALUES: map only what feeds an input
+  event (`localPointToScreen`/`screenPointAtFractionOf` at the aim site); `pointAtFractionOf` stays a
+  plane-local VALUE by contract — macros consume it in plane arithmetic, and mapping it wholesale broke
+  a caret-slot test (the arc's falsified shape).
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
   `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`,

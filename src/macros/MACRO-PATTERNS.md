@@ -1988,6 +1988,18 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsMouseMovePressDragRelease_InputEvents (adj.localPointToScreen adj.center()), (from.add new Point dx, dy)` drives the
   non-float drag stream through the island's hit-testing; assert the resize DIRECTION (grew/shrank) rather than magnitudes (the
   adjuster's transfer function is nonlinear).
+- **Scrolled-pane aiming discipline** (the scroll twin of the island rules above; case law:
+  `macroDuplicatedInspectorDrivesCopiedTargetOnly`, `macroMixinEditDonorAndOverride`,
+  `macroSimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument` — all three carried
+  in-plane aims that silently missed once the offset model landed): a scrolled plane's residents NEVER move when
+  the pane scrolls (paint-time scroll — the viewport's stored offset translates them at paint), so `row.top()`,
+  `w.center()` etc. are PLANE values sitting offset-pixels away from the pixels. Every point fed to an input verb
+  must be mapped at the AIM SITE (`w.localPointToScreen p` / `@screenPointAtFractionOf w, [fx,fy]`) — the identity
+  (same object) when nothing is scrolled, so mapping costs nothing where it isn't needed. Same law for
+  CONTAINMENT guards: never compare a plane point against a viewport's screen box
+  (`list.bounds.containsPoint row.center()` is false for every scrolled-to row — the click silently SKIPS);
+  map the point first (`list.bounds.containsPoint (row.localPointToScreen row.center())`). Keep plane values
+  un-mapped where they feed plane arithmetic (slot math, extent asserts) — map only what aims.
 - **claimsSpace-mode fixtures** (`macroTransformFrameFootprintDefaultSugarInStack`, `macroTransformFrameSlotScrollReachability`,
   `macroTransformFrameSweepScrollSpinStable`; re-points in `macroTransformFrameFootprintReflow`/`macroTransformFrameSweepReserve`/
   `macroRotateChildInsideStretchablePanelThenResize`): **'footprint' is the DEFAULT claimsSpace** (owner decision D1 2026-07-17) — a

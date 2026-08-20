@@ -633,6 +633,17 @@ its own fix, instead of another silent hole.
 
 What the layering gate deliberately does NOT cover, and why — so a maintainer reads a reasoned boundary, never a hole:
 
+- **`escalateEvent`'s plane-local arguments have NO gate — the discipline is a stated rule, enforced by review.**
+  Base `Widget.mouseDownLeft`/`mouseClickLeft` escalate their `pos` up the parent chain verbatim, so a pos that
+  crosses a mapped-plane boundary (out of a scrolled pane or an island) is still plane-local to the SENDER; a
+  pos-consuming handler on a plane's ancestor must re-derive its point (`@screenPointToMyPlane
+  world.hand.position()`, as `ViewportWdgt.mouseDownLeft` does — the paint-time-scroll arc's case law: a
+  stationary click on scrolled content slammed the drag-to-scroll to its clamp). No sound static check exists:
+  whether a handler consumes `pos` GEOMETRICALLY (vs ignoring it, vs plane-safe same-plane use) is semantic, and
+  the receiver set ("can this class sit above a mapped plane?") is a tree property no text scan sees. The rule
+  lives in `docs/architecture/viewports-and-planes.md` (Boundaries and horizons); the raw-pointer lint covers the
+  adjacent-but-different shape (raw `hand.position()` reads at band/containment sites).
+
 - **The `.add` MEMBER form (`expr.add` / `@expr().add`) is excluded; the `@add` SELF form IS covered.** `.add` collides
   with `Point#add`/`Rectangle#add` (vector arithmetic, ubiquitous: `@topLeft().add pt`); a name scanner cannot tell a
   Widget structural add from a Point add on an expression without type inference (29 of 35 census hits were `Point#add`).
