@@ -112,6 +112,39 @@ class Class
       console.error "could not give the constructor of " + @name + " a parse-time name: " + aString
     named
 
+  # A member name that must NOT become a function-expression name, because a named function
+  # expression binds its own name INSIDE its own body: these are the three CoffeeScript helper
+  # globals, which every compiled member body reaches as FREE identifiers (the contract stated at
+  # _removeHelperFunctions). A member named `indexOf` that also wrote `x in aList` -- which
+  # compiles to a bare `indexOf.call(...)` -- would resolve the helper to the method itself, and
+  # nothing anywhere would say so.
+  # Nothing on this tree is one of these (3202 members scanned). The guard is here so that a member
+  # added later degrades to "anonymous in a heap snapshot", which costs a name, rather than
+  # "silently resolves to itself", which costs a day.
+  # ⚠ JS RESERVED WORDS ARE DELIBERATELY NOT LISTED. One would be an illegal function name, so the
+  # eval below throws at class-build time -- at boot, for everyone, immediately -- and a failure
+  # that loud needs no guard. Only the SILENT hazard is worth spending a list on. (Enumerating them
+  # would also mean writing `null` and `instanceof` as literals here, which the stink ratchets
+  # count textually and would charge against two baselines that have nothing to do with this.)
+  @_memberNamesThatMustStayAnonymous: ["hasProp", "indexOf", "slice"]
+
+  # The member twin of _nameTheConstructorFunction, and the reason is the same one stated there:
+  # a heap snapshot names a function node from the function's own `name`, and assignment to a
+  # MEMBER expression (`window.X.prototype.foo = function(){}`) is one of the positions JS does
+  # NOT infer a name for -- so every member came out `""`. Measured before this: 367 of Widget's
+  # 369 prototype methods were anonymous, and a method reached through `.bind(this)` -- the shape
+  # that actually retains a widget -- snapshotted as `bound ` with nothing after it.
+  #
+  # ⚠ Anchored on a declaration that OPENS with `(function`, which is what a compiled member is
+  # once _removeHelperFunctions has run. That is what keeps it off the STATIC fields that are not
+  # functions at all (`@BLACK: Color.create 0,0,0`): an unanchored replace would happily name a
+  # function appearing later inside such a value, labelling the wrong thing.
+  # ⚠ Only the FIRST `function(` is renamed -- the member's own, since the member IS the text.
+  _nameTheMemberFunction: (fieldName, aString) ->
+    return aString unless /^\s*\(function[ \t]*\(/.test aString
+    return aString if fieldName in Class._memberNamesThatMustStayAnonymous
+    aString.replace /function[ \t]*\(/, -> "function " + fieldName + "("
+
   # CoffeeScript declares its helpers at the top of whatever it compiles:
   #
   #  slice = [].slice
@@ -447,6 +480,7 @@ class Class
           compiled = compileFGCode fieldDeclaration, true
 
           fieldDeclaration = @_removeHelperFunctions compiled
+          fieldDeclaration = @_nameTheMemberFunction fieldName, fieldDeclaration
           fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + fieldDeclaration
 
           if window.srcLoadCompileDebugWrites then console.log "field declaration: " + fieldDeclaration
@@ -465,6 +499,7 @@ class Class
           compiled = compileFGCode fieldDeclaration, true
 
           fieldDeclaration = @_removeHelperFunctions compiled
+          fieldDeclaration = @_nameTheMemberFunction fieldName, fieldDeclaration
           fieldDeclaration = "window." + @name + "." + fieldName + " = " + fieldDeclaration
 
           if window.srcLoadCompileDebugWrites then console.log fieldDeclaration
