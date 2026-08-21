@@ -1,7 +1,7 @@
 # World reset by reconstruction — Arc C of the object-lifetime program
 
-**STATUS: PHASES 1–4 EXECUTED AND PUSHED (plan authored 2026-08-20; 1+2 same day, 3+4 on
-2026-08-21). Phase 5 is all that remains.**
+**STATUS: ARC CLOSED 2026-08-21 — all five phases executed and pushed.** This box is the ledger.
+Plan authored 2026-08-20 (phases 1+2 same day); phases 3, 4 and 5 on 2026-08-21.
 Phase 1 (spikes, results in §5): verdict GO — S1: reconstruction +0.4–0.7 % suite
 wall-clock; corpse cycle-tail paint-inert by measured mechanism; old-world
 collectibility blocked SOLELY by the prototype-shared arrays (ablation-proven); warm
@@ -34,8 +34,17 @@ retaining heap edge, so the gate was rebuilt to ask REACHABILITY in two tiers an
 was DELETED (Fizzygum `054e7580` + `9f53e38c`, tests `98f38a592` + `8b89c9be2`; gauntlet 18/18
 TWICE, `fg homepage` twice, zero recaptures). D4c fixed. D4 CLOSED. D5: all four plants proven and
 removed, both repos clean after — and plant (3) returned a FINDING instead of a confirmation, D5c.
-NEXT: Phase 5 — D6 (promotion) + D7 (docs) + close ritual. Owner decisions outstanding: the
-`RESETWORLD_INCOMPLETE` rename/retire call (§6), and D5c's two (dead flags, capstone coverage).
+**Phase 5 — EXECUTED + PUSHED 2026-08-21.** D6: `WorldInventory` promoted into core as a pure
+`git mv` with ZERO `parts.json` change (`core` already claims `src/`), the harness's now-dead
+existence guard removed, `fg homepage` green with production carrying the class. D7: every doc still
+arguing the pre-flip reset repaired rather than annotated — `DETERMINISM.md` §2d (heading included)
+and §3h, `Fizzygum/CLAUDE.md`'s two teardown bullets, this doctrine's §1, `heapsnapshot.js`'s stale
+anonymity note. Then D5c's two decisions taken (above), and A7 fixed with a gate proven non-vacuous.
+⛔ ONE ITEM DELIBERATELY NOT TAKEN, and it is the owner's call: the `RESETWORLD_INCOMPLETE`
+rename/retire (§6). The ratchet asserts construction determinism but still carries the reset-era
+name in its method AND its token; renaming ripples through `lib/gate-tokens.js`, three runners, the
+fuzz parser regexes and its selftest, which must move in LOCKSTEP or the gate goes quietly blind.
+That is a focused cross-repo sweep, not an end-of-arc tail. Filed in `docs/BACKLOG.md`.
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-20 against heads Fizzygum `ffec2ab8` / Fizzygum-tests `e0b00702f`;
@@ -988,13 +997,36 @@ SIX instruments, and for two of them the work was moot because the flag does not
 `auditPaintTimeLayoutScheduling`, is live product code but its own gate re-implements the predicate
 rather than reading it.
 
-**Disposition — owner decisions, filed in `docs/BACKLOG.md`, not taken here:** (i) delete the two
-dead flags (declaration + comment in `WorldWdgt.coffee`, both arming lines, both
-`_worldStateAuditExemptions` entries, the two stale shell headers) — this is exactly the
-exemption-list pruning §6 lists as an end-of-arc call; (ii) give the capstone gate a real
-positive-coverage assertion, symmetric with `run-paint-audit.js`'s `checked == expectedTotal`, so
-arming loss cannot pass silently. Neither is required for Arc C to close; both are cheap and the
-measurement above is the argument for them.
+**Disposition — BOTH TAKEN 2026-08-21, owner-approved.**
+
+**(i) The two dead flags are DELETED**, with their arming lines, the log lines that echoed them,
+their `_worldStateAuditExemptions` entries, and the two shell headers that claimed each gate "flips
+on" its flag. ⭐ The blast radius was wider than the finding recorded: `layering-naming-convention.md`
+§5.1/§5.2 were TITLED after the flags and its §5 preamble taught the flag as the mechanism, and
+`lint-and-static-checks.md` identified both gates by flag — the docs were propagating the false
+model, which is the real cost of a vestigial name. All now describe the wrapping, and `WorldWdgt`
+carries the rule in place of the fields: any flag in this family needs a READER first.
+⚠ `doubleCheckCachedMethodsResults` and `auditPaintTimeLayoutScheduling` STAY — the first has 17+
+product readers; the second is live product code even though its own gate re-implements the predicate.
+
+**(ii) The capstone gate now has a real positive-coverage assertion, and it is proven both ways.**
+The prelude emits one `LAYOUTAUDIT capstone-armed` line per test, read off THE WORLD THE CYCLE IS
+RUNNING ON, and `run-capstone-gate.sh` requires that count to equal the per-test log count —
+symmetric with `run-paint-audit.js`'s `checked == expectedTotal`. Measured:
+
+| arm | `flag armed` | `careless pushes` | verdict |
+|---|---|---|---|
+| as shipped | **307/307** | 0 | ✓ PASSED |
+| arming lost on reconstructed worlds | **6/307** | 0 | **✗ FAILED — "the audit measured nothing there"** |
+
+⇒ the configuration that previously reported `✓ CAPSTONE GATE PASSED` on 307 real careless pushes
+now fails, naming the blindness. Both arms still print `prelude installed=307/307`, which is the
+point: that number is synthesised per test by the runner and can never see an unarmed flag. (The 6
+are each shard's boot world, before its first reset.)
+⚠ The other legs sharing the shape — `tiernaming`, `settle`, `storage`, `revisits` — are NOT fixed
+here. Two of them no longer have a flag to lose at all (i); the remaining question is whether a
+leg with no non-zero-expectation assertion of any kind should acquire one, which is a design
+question about those gates rather than a residue of this arc.
 
 ### D6 — WorldInventory production promotion (Phase 5, separable)
 

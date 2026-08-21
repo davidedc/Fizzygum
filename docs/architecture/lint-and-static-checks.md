@@ -211,15 +211,16 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 
 **Two RUNTIME naming-audit gates (suite-run, NOT build-time).** The naming convention also carries two off-by-default
 runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh`) — each an injected prelude that wraps
-prototypes at boot behind a `WorldWdgt` flag, with a standalone `run-*-gate.sh`, siblings of the end-of-cycle /
-paint-readonly gates and wired into `fg gauntlet`:
-- **tier-naming** (`Fizzygum-tests/scripts/tier-naming-audit/`, flag `auditTierAndApplyNaming`) — the dynamic twin of
+prototypes before the page's own scripts run, with a standalone `run-*-gate.sh`, siblings of the end-of-cycle /
+paint-readonly gates and wired into `fg gauntlet`. ⚠ Unlike those siblings, neither carries a `WorldWdgt` audit flag:
+all their observation lives in the prelude's own wrappers, so there is nothing for a flag to switch (the two vestigial
+flags were deleted once measurement showed nothing read them):
+- **tier-naming** (`Fizzygum-tests/scripts/tier-naming-audit/`) — the dynamic twin of
   rules [I]/[K]: HARD-fails a `__commit*` leaf or an arrange `_apply*Base` bypass twin that fires the seam/react at
   runtime; reports the polymorphic `_apply*`→seam coverage as INFORMATIONAL (a runtime observation can't soundly
   distinguish a mislabel from an unexercised seam path — and it is now vacuously 0, the `_announce*` seam having been
   deleted 2026-07-01).
-- **notification-settle** (`Fizzygum-tests/scripts/notification-settle-audit/`, flag
-  `auditNotificationSettleNeutrality`) — the dynamic twin of rule [J]: HARD-fails a `_reactTo*`/`_before*` callback that
+- **notification-settle** (`Fizzygum-tests/scripts/notification-settle-audit/`) — the dynamic twin of rule [J]: HARD-fails a `_reactTo*`/`_before*` callback that
   OPENS A FLUSH — an ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It PERMITS an
   ORPHAN-receiver `_settleLayoutsAfter` reached in a callback: that is a constructor settling its own orphan (the window
   chrome buttons `FrameWdgt._reactToChildDropped` rebuilds), which provably takes the in-flush+orphan auto-defer branch
