@@ -229,6 +229,22 @@ flags were deleted once measurement showed nothing read them):
   premise "any nested settle in a callback would re-enter/throw" is false for an orphan. It still catches the INDIRECT
   attached leak the static [J] cannot follow.)
 
+⭐ **A gate must be able to tell BLINDNESS from CLEANLINESS, and most of these cannot yet.** Every gate here passes on
+"zero findings", which measuring nothing satisfies perfectly — so a prelude that fails to install, a wrapper that stops
+matching after a rename, or an audit flag lost on a reconstructed world all read as GREEN. Measured 2026-08-21: with
+`auditUndeclaredEndOfCycle` lost on reconstructed worlds, 307 real careless pushes produced a green capstone run. Two
+gates now carry a POSITIVE-COVERAGE assertion that closes this — `capstone` and `paint-readonly` each emit a per-test
+"the flag is armed on THIS world" line and require the count to equal the test count, the same shape as
+`run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths. ⚠ `tiernaming`,
+`settle`, `storage` and `revisits` do NOT yet: they can still go quietly blind. Adding one is cheap and the pattern is
+above; the standing rule is the fuzz/vmtruth doctrine — **an unmeasured run is not a pass**.
+⭐ **And a gate must not restate a rule the product already owns.** `paint-readonly` used to carry its own copy of
+`Widget._invalidateLayout`'s predicate; the two had silently diverged (the copy excluded freefloating-triggered
+schedules, the product's never did) while its comment claimed to record "the EXACT set". The prelude now observes the
+product's DECISION — whether the call appended to `world._paintTimeLayoutSchedules` — so there is one definition, in
+the product, and the gate reads it. That is why its coverage assertion is not optional: the observation is now only as
+alive as the flag.
+
 **Two RUNTIME WIRING sweeps (on-demand / gauntlet legs, NOT build-time).** Where the audits above wrap prototypes over
 the whole suite, these BOOT A PAGE and drive one mechanism to exhaustion — each the runtime half of a static gate whose
 blind spot is structural:
