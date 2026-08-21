@@ -86,7 +86,7 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:343 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
 | **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
-| **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged` since 2026-07-22) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (11 sites: the structural add/drop/z-order/shadow dispatchers, the world's atlas-warm orchestration and its selection-overlay reconciler, FileLoading's async-asset repaint, and the own-sub-part marks in MenuItemWdgt and PopUpWdgt) |
+| **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (11 sites: the structural add/drop/z-order/shadow dispatchers, the world's atlas-warm orchestration and its selection-overlay reconciler, FileLoading's async-asset repaint, and the own-sub-part marks in MenuItemWdgt and PopUpWdgt) |
 | dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:446** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
 | stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
@@ -164,8 +164,7 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
   `fg critique` resurfaces it). Baseline 0 = a HARD rule. Scans `src/` only (not the harness — a stink is a statement
   about the SHIPPED framework's idiom), per-LINE, over `#`-comment-stripped lines — except a stink declaring
   `scope: 'comments'`, which matches the COMMENT part of each line instead (the comment-hygiene ratchets).
-  **Current stinks — thirteen: seven seeded 2026-07-15** (the original `settle-batch-with-core` stink was retired when its
-  target `_settleLayoutsAfterBatch` was deleted, leaving the table empty until then), **three comment-hygiene
+  **Current stinks — thirteen: seven seeded 2026-07-15**, **three comment-hygiene
   ratchets added at the 2026-07-17 comments cleanup**, `comment-past-receipt` (2026-08-09), `positional-hole`
   (2026-08-15) and `helper-compiling-operator` (2026-08-17). One of the original
   seven, `undefined-literal`, has since been REPLACED rather than removed — see `nil-literal` below. Every baseline was MEASURED by the engine on its seeding day and
@@ -214,13 +213,11 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 runtime audits that run over the WHOLE SystemTest suite (not `build_it_please.sh`) — each an injected prelude that wraps
 prototypes before the page's own scripts run, with a standalone `run-*-gate.sh`, siblings of the end-of-cycle /
 paint-readonly gates and wired into `fg gauntlet`. ⚠ Unlike those siblings, neither carries a `WorldWdgt` audit flag:
-all their observation lives in the prelude's own wrappers, so there is nothing for a flag to switch (the two vestigial
-flags were deleted once measurement showed nothing read them):
+all their observation lives in the prelude's own wrappers, so there is nothing for a flag to switch:
 - **tier-naming** (`Fizzygum-tests/scripts/tier-naming-audit/`) — the dynamic twin of
   rules [I]/[K]: HARD-fails a `__commit*` leaf or an arrange `_apply*Base` bypass twin that fires the seam/react at
   runtime; reports the polymorphic `_apply*`→seam coverage as INFORMATIONAL (a runtime observation can't soundly
-  distinguish a mislabel from an unexercised seam path — and it is now vacuously 0, the `_announce*` seam having been
-  deleted 2026-07-01).
+  distinguish a mislabel from an unexercised seam path — and it is vacuously 0, there being no `_announce*` seam).
 - **notification-settle** (`Fizzygum-tests/scripts/notification-settle-audit/`) — the dynamic twin of rule [J]: HARD-fails a `_reactTo*`/`_before*` callback that
   OPENS A FLUSH — an ATTACHED-receiver `_settleLayoutsAfter` (it would throw) or any `recalculateLayouts`. It PERMITS an
   ORPHAN-receiver `_settleLayoutsAfter` reached in a callback: that is a constructor settling its own orphan (the window
@@ -256,7 +253,7 @@ All of these mirror `run-paint-audit.js`'s `checked == expectedTotal` and `vm-tr
 doctrine — **an unmeasured run is NEVER a pass**.
 ⚠ A coverage shortfall exits **2 = INVALID** everywhere, so a runner or wrapper that greps verdict lines must know the
 word (the local `fg` wrapper's `leg_headline` does; `fg` is uncommitted workspace tooling, so that is not in git).
-⭐ **And a gate must not restate a rule the product already owns.** `paint-readonly` used to carry its own copy of
+⭐ **And a gate must not restate a rule the product already owns.** `paint-readonly` used to carry its own copy of <!-- narration-ok: the lesson IS the divergence: a gate that copied a product predicate drifted from it -->
 `Widget._invalidateLayout`'s predicate; the two had silently diverged (the copy excluded freefloating-triggered
 schedules, the product's never did) while its comment claimed to record "the EXACT set". The prelude now observes the
 product's DECISION — whether the call appended to `world._paintTimeLayoutSchedules` — so there is one definition, in
@@ -369,11 +366,15 @@ and NOTHING else: `specs/` is excluded because a spec's change/landing statement
 (owner direction), and `plans/`, `archive/` and `measurements/` are chronological BY DESIGN — archive
 is immutable past tense, plans are future tense, measurements are dated snapshots.
 
-**It is a RATCHET, not a zero-baseline gate** (same shape as `check-stinks.js`): a per-file baseline in
-`buildSystem/check-doc-narration-baseline.json`, failing only when a file's count RISES or a new file
-starts narrating. Accretion stops immediately; the pre-existing debt — concentrated in this doc and
-`layering-naming-convention.md`, where a ban is often explained by narrating what it removed — burns
-down deliberately, banked with `--write-baseline`. A provenance stamp ("verified against `src/` <date>")
+**It is a RATCHET at a HARD ZERO** — the per-file baseline in
+`buildSystem/check-doc-narration-baseline.json` is EMPTY, so any narrating line in these buckets fails
+it. It was seeded as a burn-down ratchet (19 lines, concentrated here and in
+`layering-naming-convention.md`, where a ban is often explained by narrating what it removed); the debt
+is paid, and an empty baseline is the honest end state — a number nobody can justify is a number nobody
+defends. ⚠ Zero does NOT mean the buckets contain no history: five lines carry
+`<!-- narration-ok: reason -->` because the ban or warning they state has no force without naming what
+it bans. Reach for that hatch — with a real reason — rather than `--write-baseline`, which would bank
+drift as accepted. A provenance stamp ("verified against `src/` <date>")
 is NOT narration and is skipped; `<!-- narration-ok: reason -->` exempts a line that must quote the
 trigger words. Fenced blocks and inline code are stripped before matching, so file paths and SHAs
 cannot trip it. Not on the build — docs prose should not block a build; run it with `fg doc-narration`.
@@ -547,10 +548,10 @@ lint works at all (§6).
 | **[H]** *(WARNING, non-fatal)* | a method that self-settles via `@_settleLayoutsAfter` | a GUARD `return` / `return if\|unless …` BEFORE the settle | a public settle-wrapper should be THIN; that early-return guard belongs INSIDE the `_<name>NoSettle` core (else the "already in this state" skip is split across wrapper + core) | — | **`# early-return-sanctioned: <why>`** |
 | **[I]** | a `__` leaf method (HARD-FAIL) | `@`-self-calling the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`/`changed`/`fullChanged`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter | a `__` leaf is a true bottom — it triggers NO orchestration (the lowest tier of the naming convention, §1) | tier-naming runtime audit | — (DENYLIST; `@`-self-scoped) |
 | **[J]** | a notification callback (`_reactTo*`/`_before*`) | calling `_settleLayoutsAfter` | a callback is a settle-neutral core; the gesture/structural DISPATCHER owns the one settle | notification-settle runtime audit | — |
-| **[K]** | a 2×2 apply CORNER (`_apply<Geom>` polymorphic / `_apply<Geom>Base` override-bypass twin / `_commit<Geom>AndNotify` notify-only) | a `_apply*Base` bypass twin firing the container re-fit seam (`_reFitContainer*`/`_announce*`) or DISPATCHING to its polymorphic `_apply*` sibling; a `_commit*AndNotify` corner reacting (`changed`/`_reLayout*`) | post-Tier-B the corners are REACT × DISPATCH: a `_apply*Base` reacts but must BYPASS the override — not fire the seam, not route the arrange apply back through `_apply*`; the notify-only corner must not react. The two statically-sound NEGATIVES; the old positive "*AndNotify reaches the seam" is retired with the seam (deleted 2026-07-01) | tier-naming runtime audit (now vacuous) | — |
-| **[L]** | a notification callback DEF (`_reactTo*`/`_before*`) | a name not matching `_(reactTo\|before)(Being\|Child\|HolderFrame)<Event>`, a `NoSettle` suffix, or a legacy fragment (`childX`/`justBeen`/`iHaveBeen`/`aboutTo`/`prepareTo`) | callbacks follow the derivable (perspective × phase) scheme; the legacy spellings were retired | — | — |
-| **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw`, unconditionally (the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA` live in the tests-repo harness, never scanned — the old allowlist never matched anything in src and was removed) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
-| **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — |
+| **[K]** | a 2×2 apply CORNER (`_apply<Geom>` polymorphic / `_apply<Geom>Base` override-bypass twin / `_commit<Geom>AndNotify` notify-only) | a `_apply*Base` bypass twin firing the container re-fit seam (`_reFitContainer*`/`_announce*`) or DISPATCHING to its polymorphic `_apply*` sibling; a `_commit*AndNotify` corner reacting (`changed`/`_reLayout*`) | post-Tier-B the corners are REACT × DISPATCH: a `_apply*Base` reacts but must BYPASS the override — not fire the seam, not route the arrange apply back through `_apply*`; the notify-only corner must not react. The two statically-sound NEGATIVES; the old positive "*AndNotify reaches the seam" is retired with the seam (deleted 2026-07-01) | tier-naming runtime audit (now vacuous) | — | <!-- narration-ok: the seam's absence is why this positive check is vacuous; without it the row reads as a live check -->
+| **[L]** | a notification callback DEF (`_reactTo*`/`_before*`) | a name not matching `_(reactTo\|before)(Being\|Child\|HolderFrame)<Event>`, a `NoSettle` suffix, or a legacy fragment (`childX`/`justBeen`/`iHaveBeen`/`aboutTo`/`prepareTo`) | callbacks follow the derivable (perspective × phase) scheme | — | — |
+| **[M]** | any method DEF | a retired geometry/structural naming fragment as the name — `raw[A-Z]…` / `^silent[A-Z]` / `^fullRaw`, unconditionally (the raw-PIXEL accessors `rawPixelInfo`/`rawPixelHash`/`rawRGBA` live in the tests-repo harness, never scanned) | the `raw*`/`silent*`/`fullRaw*` geometry+structural prefixes were eliminated (§2 of the convention); lock them out — note `full[A-Z]` stays legitimate (`fullBounds`/`fullPaintInto`/…) | — | — |
+| **[N]** | any method DEF | a name matching `/^_announce\w*ToContainer$/` (the retired notify-by-mutation container seam) | the mutation-time re-fit seam was deleted 2026-07-01 and replaced by the settle-time up-edge `_reFitMyTrackingContainerAfterSettle`; this bans reviving the announce-up verbs on the DEF side (the CALL side is already [I]/[K]) | — | — | <!-- narration-ok: this rule exists to stop a deleted seam being revived, so it must name what it bans -->
 | **[O]** | any method NOT in `COALESCED_CALLER_ALLOWLIST` (seeded `{nonFloatDragging}`) | a `[@.]…Coalesced` CALL to a `*Coalesced` entrypoint (`_setMaxDimCoalesced`/`_setExtentCoalesced`/`_moveToCoalesced`/`_setWidthCoalesced`/`_setHeightCoalesced`) | a `*Coalesced` entrypoint DEFERS its layout settle to the ONE end-of-cycle flush — byte-identical (sound) only for a per-event STREAM handler that never reads back the settled layout mid-cycle; a discrete caller must use the self-settling setter. These entrypoints are `_`-private for the same reason (only stream handlers may reach them) | — | — (add a genuine new stream handler's method name to `COALESCED_CALLER_ALLOWLIST`) |
 | **[P]** | any method whose name does NOT end `Connector` | a `[@.]_settleLayoutsAfterOrJoinEnclosingPass` CALL | `_settleLayoutsAfterOrJoinEnclosingPass` is the reactive-connection settle lane — reached mid-pass it JOINS the open layout pass instead of throwing (so a wired reactive circuit — the °C↔°F converter — settles once); sound ONLY for a dedicated `_<name>Connector` entrypoint carrying the `connectionsCalculationToken` cycle-guard. A general/internal caller must use the self-settling `_settleLayoutsAfter` (surfaces the flow violation) or a `_<name>NoSettle` core | `Widget._settleLayoutsAfter` throw (§1) | — |
 | **[Q]** | any method NOT in `CONNECTOR_CALLER_ALLOWLIST` (seeded `{recalculateOutput}`) | a hard-coded textual `[@.]_<name>Connector(` CALL | the connector lane JOINS an already-open pass instead of throwing ([P]), so a textual call to one smuggles a never-throwing setter past the flow guard. The reactive dispatch resolves the connector name at RUNTIME and needs no textual call — only a sanctioned mid-cascade self-render (a patch node's `recalculateOutput`) may call one directly | `Widget._settleLayoutsAfter` throw (§1) | — (add a genuine mid-cascade render's method name to `CONNECTOR_CALLER_ALLOWLIST`) |
@@ -696,7 +697,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   form and construction-time `add()` on an orphan.
 - **`collapse`/`unCollapse` are now COVERED by [G]** (they were once in `WRAPPER_EXCLUDED`). They appeared in layout
   passes (`FrameWdgt._positionAndResizeChildren`'s editButton/internalExternalSwitchButton); the end-of-cycle-flush drawdown convert routed those call-sites to the
-  idempotent `_collapseNoSettle`/`_unCollapseNoSettle` cores, so they were removed from `WRAPPER_EXCLUDED` and [G] now
+  idempotent `_collapseNoSettle`/`_unCollapseNoSettle` cores, so `WRAPPER_EXCLUDED` does not carry them and [G] now
   guards them like any other wrapper. `WRAPPER_EXCLUDED` now holds only `add` (the `Point#add`-ambiguous member form, above).
 - **The TRANSITIVE closure of [G] was prototyped and REJECTED as intractable — DO NOT re-attempt.** A name-based
   backward-reachability fixpoint ("a low-level method must not REACH a settling method by any path") balloons to
@@ -720,7 +721,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   `Widget.implementsDeferredLayout` (`@_reLayout != Widget::_reLayout`, a method-REFERENCE comparison) to non-low-level
   makes it an `[F]` subject, and its `@_reLayout` would false-match `APPLY_CALL`. So the arm removal was PAIRED with a
   second `APPLY_CALL` lookahead that skips a comparison / `is` / `isnt` right after the name (a value compared, never
-  applied), and the now-unnecessary `# nosettle-sanctioned` marker on `newParentChoiceWithHorizLayout` was retired.
+  applied), so `newParentChoiceWithHorizLayout` needs no `# nosettle-sanctioned` marker.
   Self-tested: `[F]` still flags a real `@_reLayout()` apply, skips `@_reLayout != Widget::_reLayout`. Gate green + suite
   165/165 byte-identical + apps 12/12.
 

@@ -513,7 +513,7 @@ mark after `add` + `setExtent` adds nothing.
   *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence, or
   parenthesise it as *"Object Inspector (folder panel)"*.
   ⚠ **An override SHADOWS the derivation for every descendant**, which is how `CanvasWdgt` and
-  `StringFieldWdgt` both used to answer *"panel"*. Before adding one to a class that has subclasses,
+  `StringFieldWdgt` both used to answer *"panel"*. Before adding one to a class that has subclasses, <!-- narration-ok: the warning IS that two classes once collided on one name; the collision is the thing to avoid -->
   check you are not renaming them all; before deleting one, check the chain does not fall through to
   a *different* ancestor's override rather than to the derivation.
 - **Define `representativeIcon`** when the widget can be referenced from the desktop — a shortcut needs
