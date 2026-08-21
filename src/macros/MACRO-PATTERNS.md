@@ -21,7 +21,7 @@ also not a plain call — it compiles text, evals it, then re-lays-out AND DAMAG
 step written that way forces a full repaint and MASKS a missing self-invalidation in whatever it just drove
 (screenshots read the incremental damage-rect canvas precisely to stay sensitive to that). A test may call
 `world.evaluateString` only if the eval is genuinely its SUBJECT, and it says so by carrying the `evaluateString`
-tag in its metadata — which is what the build's `check-macro-eval-discipline` gate enforces, along with the harder
+tag in its metadata — which is what the build's `check-macro-source-discipline` gate enforces, along with the harder
 rule that `@evaluateString` (MacroToolkit's own, `@` bound to the toolkit) is always wrong. `fg status` counts the
 tests; the gate counts the declarations. Neither number belongs in this sentence.
 

@@ -100,7 +100,7 @@ not a plain call: `Widget.evaluateString` compiles, evals, then `_reLayoutSelf()
 so `world.evaluateString` damages the WHOLE world — a fixture step written that way forces a full repaint and masks a
 missing self-invalidation in whatever it just drove, which is exactly what the incremental damage-rect screenshots
 exist to catch. A test may call it only where the eval is genuinely its SUBJECT, and declares that by carrying the
-`evaluateString` tag in its metadata — enforced on the build by `check-macro-eval-discipline`
+`evaluateString` tag in its metadata — enforced on the build by `check-macro-source-discipline`
 ([`docs/architecture/lint-and-static-checks.md`](../../docs/architecture/lint-and-static-checks.md)), which also
 holds the harder rule that `@evaluateString` is ALWAYS wrong (it is `MacroToolkit`'s own, a different method).
 

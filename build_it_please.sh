@@ -783,21 +783,21 @@ fi
 # form DAMAGES THE WHOLE WORLD — a fixture step written that way forces a full repaint that masks
 # a missing self-invalidation in whatever it just drove, which is exactly the defect class the
 # suite's incremental damage-rect screenshots exist to catch. The gate holds two rules over the
-# macro sources ONLY (see ../Fizzygum-tests/scripts/check-macro-eval-discipline.js): `@evaluateString`
+# macro sources ONLY (see ../Fizzygum-tests/scripts/check-macro-source-discipline.js): `@evaluateString`
 # is always wrong (that is MacroToolkit's own, a different method), and `world.evaluateString` is
 # allowed only where the test DECLARES the eval as its subject via its `evaluateString` tag —
 # a declaration rather than a count, so there is no baseline number to rot. Its own acceptance
-# corpus is scripts/check-macro-eval-discipline-selftest.js, in `npm run selftest`. Pure text,
+# corpus is scripts/check-macro-source-discipline-selftest.js, in `npm run selftest`. Pure text,
 # milliseconds. Same --noSyntaxCheck escape hatch / $? check / ships-tests + sibling guard as above.
 if ! $noSyntaxCheck && $PROFILE_SHIPS_TESTS && [ -d ../Fizzygum-tests ] ; then
-  echo "checking macro sources for eval discipline ..."
-  node ../Fizzygum-tests/scripts/check-macro-eval-discipline.js
+  echo "checking macro sources for source discipline ..."
+  node ../Fizzygum-tests/scripts/check-macro-source-discipline.js
   if [ "$?" != "0" ]; then
     tput bel
-    echo "!!!!!!!!!!! error: macro eval-discipline check failed -- aborting build." 1>&2
+    echo "!!!!!!!!!!! error: macro source-discipline check failed -- aborting build." 1>&2
     exit 1
   fi
-  echo "... macro eval discipline OK"
+  echo "... macro source discipline OK"
 fi
 
 # --- build-time SWCanvas reference-image gate (only when tests are part of this build) ---------
