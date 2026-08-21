@@ -233,11 +233,18 @@ flags were deleted once measurement showed nothing read them):
 "zero findings", which measuring nothing satisfies perfectly — so a prelude that fails to install, a wrapper that stops
 matching after a rename, or an audit flag lost on a reconstructed world all read as GREEN. Measured 2026-08-21: with
 `auditUndeclaredEndOfCycle` lost on reconstructed worlds, 307 real careless pushes produced a green capstone run. Two
-gates now carry a POSITIVE-COVERAGE assertion that closes this — `capstone` and `paint-readonly` each emit a per-test
-"the flag is armed on THIS world" line and require the count to equal the test count, the same shape as
-`run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths. ⚠ `tiernaming`,
-`settle`, `storage` and `revisits` do NOT yet: they can still go quietly blind. Adding one is cheap and the pattern is
-above; the standing rule is the fuzz/vmtruth doctrine — **an unmeasured run is not a pass**.
+gates now carry a POSITIVE-COVERAGE assertion that closes this, in two shapes worth copying:
+- **The flag is armed on THIS world** (`capstone`, `paint-readonly`) — one per-test line emitted only when the CURRENT
+  world carries the audit flag, and the gate requires that count to equal the test count. Use this when the recording
+  lives in product code behind a flag, since a reconstructed world must come up armed.
+- **The audit RAN TO COMPLETION** (`storage`) — the prelude emits one marker per bucket at the END of the audit, and a
+  distinct `…-SKIPPED:<what was missing>` line on the early return that would otherwise make the whole audit a silent
+  no-op. Use this when the audit is a function that can decline to run. ⚠ Keep the marker OFF the finding channel:
+  `LAYOUTAUDIT STORAGE-AUDITED` deliberately has no space after `STORAGE`, so the findings regex cannot match it.
+  A shortfall exits **2 = INVALID**, not 1 — the absence of a measurement is not a finding about the product.
+Both mirror `run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths.
+⚠ `tiernaming`, `settle` and `revisits` do NOT yet have one and can still go quietly blind; the standing rule is the
+fuzz/vmtruth doctrine — **an unmeasured run is NEVER a pass**.
 ⭐ **And a gate must not restate a rule the product already owns.** `paint-readonly` used to carry its own copy of
 `Widget._invalidateLayout`'s predicate; the two had silently diverged (the copy excluded freefloating-triggered
 schedules, the product's never did) while its comment claimed to record "the EXACT set". The prelude now observes the
