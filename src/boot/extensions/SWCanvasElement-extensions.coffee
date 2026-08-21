@@ -98,13 +98,6 @@ swCanvasMissingAtlases = {}       # idString -> true (warn once per missing atla
 swCanvasColdGlyphWidgets = []      # widgets that drew NO_ATLAS placeholders since the last refresh
 swCanvasPoisonedCacheKeys = []     # immutable-back-buffer cache keys set during the cold window
 swCanvasColdGlyphUnattributed = false
-# The latch is the WRAPPED CACHE ITSELF, not a boolean: the recorder below is an INSTANCE wrap on
-# one cacheForImmutableBackBuffers, so it says nothing about any other cache. A world that is
-# reconstructed rather than reset brings a FRESH cache, and a boolean latch (once true, true for
-# the life of the page) would leave that one un-instrumented forever — poisoned entries silently
-# unrecorded, no error anywhere. Identity answers the question the installer actually asks: is the
-# cache I am about to wrap the one I already wrapped?
-swCanvasPoisonedKeyRecorderInstalledOnCache = undefined
 
 # Read-only porthole for the WorldInventory (docs/archive/world-inventory-instruments-plan.md
 # D4): the module-scope text/atlas state above is otherwise unreachable to any out-of-module
@@ -144,8 +137,20 @@ swCanvasColdWindowOpen = ->
 swCanvasInstallPoisonedKeyRecorder = ->
   cache = window.world?.cacheForImmutableBackBuffers
   return unless cache?
-  return if cache == swCanvasPoisonedKeyRecorderInstalledOnCache
-  swCanvasPoisonedKeyRecorderInstalledOnCache = cache
+  # ASK THE CACHE RATHER THAN KEEPING A NOTE ABOUT IT. The wrap below installs `set` and `get` as
+  # OWN properties, and an uninstrumented LRUCache carries both only on its prototype — so an own
+  # `set` IS the record that this cache is wrapped, kept by the object the fact is about.
+  # ⚠ It has to be per-CACHE, not a boolean: this is an INSTANCE wrap, so it says nothing about any
+  # other cache, and a world that is reconstructed rather than reset brings a FRESH one that a
+  # once-true boolean would leave un-instrumented forever — poisoned entries silently unrecorded,
+  # no error anywhere. Asking the cache in front of us is what keeps that one instrumented.
+  # ⚠ A module-level note naming the wrapped cache answers the same question and costs two things
+  # this does not. It can DISAGREE with reality, because a note outlives anything that replaces the
+  # methods it describes; and it PINS the cache it names — a note is only overwritten when a later
+  # cold-glyph draw installs onto a DIFFERENT cache, and this installer runs only from
+  # swCanvasRecordColdGlyphDraw, so on a warm-atlas page that may never come and a dead world's
+  # LRUCache (capacity 1000) would sit here, entries and all, for the life of the page.
+  return if Object.prototype.hasOwnProperty.call(cache, "set")
   # instance wrap, serialization-safe: the world is deliberately not a table record,
   # so its caches (and this closure) never meet the serializer's walker
   originalCacheSet = cache.set
