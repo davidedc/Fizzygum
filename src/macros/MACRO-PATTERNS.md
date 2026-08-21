@@ -19,8 +19,11 @@ CoffeeScript: anything the string could say can be a statement instead, and the 
 for the widget, is covered by the syntax gate, and carries a name a rename sweep can find. `evaluateString` is
 also not a plain call — it compiles text, evals it, then re-lays-out AND DAMAGES THE WHOLE WORLD, so a fixture
 step written that way forces a full repaint and MASKS a missing self-invalidation in whatever it just drove
-(screenshots read the incremental damage-rect canvas precisely to stay sensitive to that). There is exactly ONE
-`world.evaluateString` call in the suite — in `macroEvaluateString`, where the eval IS the feature under test.
+(screenshots read the incremental damage-rect canvas precisely to stay sensitive to that). A test may call
+`world.evaluateString` only if the eval is genuinely its SUBJECT, and it says so by carrying the `evaluateString`
+tag in its metadata — which is what the build's `check-macro-eval-discipline` gate enforces, along with the harder
+rule that `@evaluateString` (MacroToolkit's own, `@` bound to the toolkit) is always wrong. `fg status` counts the
+tests; the gate counts the declarations. Neither number belongs in this sentence.
 
 Byte-equality pairs (the no-op / round-trip idiom many entries below lean on) are ASSERTED IN-RUN, not just
 claimed: every within-test "image_A is byte-identical to image_B" MUST call
@@ -1895,9 +1898,10 @@ assertion a recapture after a regression silently stores two different hashes an
 - **In-system eval** (`macroEvaluateString`): `world.evaluateString "code"` runs arbitrary CoffeeScript against the live world
   INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
-  "waitNoInputsOngoing"` before a screenshot. ⭐ **This is the suite's ONLY `world.evaluateString` call, and the only one
-  that should ever exist**: here the eval IS the feature under test. Everywhere else the string is just code that lost its
-  bindings — see the ⛔ rule in the preamble.
+  "waitNoInputsOngoing"` before a screenshot. ⭐ **A test may call `world.evaluateString` only where the eval IS the
+  subject, as here** — this one and `macroEvaluateStringReturnsItsValue` are the tests that qualify, and each says so
+  with the `evaluateString` tag the build gate reads. Everywhere else the string is just code that lost its bindings —
+  see the ⛔ rule in the preamble.
 - **Staleness diff-oracles: incremental-vs-full and incremental-vs-REBUILD** (`macroClosingRotatedIslandChildClearsFootprint`,
   `macroOversizedShadowRemovalLeavesNoGhost`, `macroOversizedShadowChildIn{,Scaled}IslandRepaintsBuffer`,
   `macroShadowAnyDirectionRendersAndErases`, `macroShadowAsymmetricInIslandRepaintsBuffer`): pin a damage-rect

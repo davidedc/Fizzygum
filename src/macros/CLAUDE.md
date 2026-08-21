@@ -99,7 +99,10 @@ name a cross-repo rename sweep can find — a string does none of the three and 
 not a plain call: `Widget.evaluateString` compiles, evals, then `_reLayoutSelf()` **and `_changed()` on the receiver**,
 so `world.evaluateString` damages the WHOLE world — a fixture step written that way forces a full repaint and masks a
 missing self-invalidation in whatever it just drove, which is exactly what the incremental damage-rect screenshots
-exist to catch. The suite holds ONE such call, in `macroEvaluateString`, where the eval is the feature under test.
+exist to catch. A test may call it only where the eval is genuinely its SUBJECT, and declares that by carrying the
+`evaluateString` tag in its metadata — enforced on the build by `check-macro-eval-discipline`
+([`docs/architecture/lint-and-static-checks.md`](../../docs/architecture/lint-and-static-checks.md)), which also
+holds the harder rule that `@evaluateString` is ALWAYS wrong (it is `MacroToolkit`'s own, a different method).
 
 **3. "Macro" only as a trailing suffix** in any verb/subroutine name (or token in macro source). A *mid-name*
 "Macro" (`takeScreenshotForMacro_…`, or `recordMacroAssertion` written in macro source) is mangled by

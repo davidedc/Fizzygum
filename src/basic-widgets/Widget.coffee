@@ -5066,11 +5066,19 @@ class Widget extends TreeNode
   
   
   # Widget eval. Used by the Inspector and the text widget.
+  # ⚠ The result is returned EXPLICITLY, and must stay that way. The relayout/repaint tail has to
+  # run AFTER the eval, so without this line CoffeeScript returns `_changed()`'s value — `true` or
+  # `undefined` — and the eval's own value is computed and dropped on the floor. Three callers read
+  # what comes back: the evaluation menu's "show selection" and "inspect selection"
+  # (`TextWdgt`) and `Deserializer.compileFunction`, which needs the live function it compiled.
+  # None of them throws when handed the wrong thing, so `fg menusweep` cannot see a regression here
+  # — this comment is the guard, together with `SystemTest_macroEvaluateStringReturnsItsValue`.
   evaluateString: (codeSource) ->
     JSCode = compileFGCode codeSource, true
     result = eval JSCode
     @_reLayoutSelf()
     @_changed()
+    result
   
   
 
