@@ -4315,12 +4315,17 @@ class Widget extends TreeNode
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   
+  # Pop a one-line bubble showing a VALUE. ⚠ The empty case is ABSENCE, not falsiness: `0`, `""`
+  # and `false` are values somebody asked to see — the evaluation menu's "show selection" hands
+  # this whatever the selected snippet evaluated to — so this tests `msg?`, never `msg`. Absence
+  # is spelled the way the language spells it, as everywhere else in the codebase.
+  # The `toString?` arm is not defensiveness about ordinary values: an object built with a null
+  # prototype has no `toString` at all, and `String x` THROWS on it rather than answering.
   inform: (msg) ->
-    text = msg
-    if msg
-      text = msg.toString()  if msg.toString
-    else
-      text = "NULL"
+    text =
+      if not msg?           then "undefined"
+      else if msg.toString? then msg.toString()
+      else Object.prototype.toString.call msg
     m = new MenuWdgt @, target: @, title: text
     m.addMenuItem "Ok"
     m.popUpCenteredAtHand world
