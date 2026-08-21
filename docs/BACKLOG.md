@@ -11,21 +11,6 @@ per README rules 2 and 5.
 
 ## Open items by owning arc
 
-### `plans/inspector-read-only-subjects-plan.md` — the inspector on a subject it cannot EDIT
-The evaluateString return-value fix (Fizzygum `efe40f2e`) made the evaluation menu's "inspect
-selection" reach `spawnInspector` with a REAL value, exposing that `InspectorWdgt` assumed a Widget.
-Phase 1 LANDED: naming is a service (`Utils.derivedColloquialName` / `colloquialNameOf`), so an
-inspector now opens on a number / string / Point. ⭐ Measurement then shrank the rest to ONE thing —
-display and the member list are already generic (20 rows for `42`, 50 for a `Point`), so all that is
-left is that the four EDIT controls are offered to subjects that cannot service them.
-- [ ] §4: build + lay out the edit row only when `subjectIsEditable()`. ⚠⚠ The row is LOAD-BEARING
-      IN THE LAYOUT — `_reLayout` chains each button off the previous one's `right()`, and
-      `ClassInspectorWdgt` reaches across it (`@removePropertyButton.right()` … `@saveButton.left()`),
-      so simply not building them null-derefs both. Treat the row as ONE unit. §3 has the detail.
-- [ ] §5: promote `.scratch/b-inspector-on-nonwidget-probe.js` to an assertion-only SystemTest —
-      asserting the controls are ABSENT on a primitive AND PRESENT on a widget (both halves, or it
-      passes for the wrong reason).
-
 ### `archive/world-inventory-instruments-plan.md` — Arc A of the object-lifetime program (IN EXECUTION 2026-08-20; phases 1–4 done, see the plan's STATUS box)
 The three-arc program (A in-band inventory instruments · B Chrome-only VM-truth riders · C the
 two-lifetimes reset-by-reconstruction) is stated in that plan's §0; Phase-0 repairs (tooltip timeout

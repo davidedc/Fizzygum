@@ -5,6 +5,15 @@ citing before re-attempting anything it rejected. Stamped 2026-07-17.
 Archived docs are immutable history — the current-state truth lives in
 `docs/architecture/`; open work is indexed in `docs/BACKLOG.md`.
 
+
+## Meta-tools
+
+- **`inspector-read-only-subjects-plan.md`** — COMPLETE. An inspector opened on a value that cannot service an EDIT (a number, a string, a Point) presents a read-only inspector instead of controls that throw. Naming became a service (`Utils.derivedColloquialName` / `colloquialNameOf`); the bottom edit row is built, laid out and reached-into as ONE conditional unit.
+  - ⚖ `colloquialName` was NOT extractable-and-deletable: ~50 classes override it, several answering what only that object knows (a transform frame returns its sole content's name). The polymorphism is load-bearing — hence a derive-only base plus an ask-then-derive service, not one function.
+  - ⚖ A `ClassInspectorWdgt`'s subject is a PROTOTYPE and is NOT always editable — `Point.prototype` does not inherit the edit verbs. Measured; reasoning from "classes carry the meta verbs" gets it backwards.
+  - ⚖ Capability query (`injectProperty?`), never `instanceof Widget`: the question is whether the subject services the protocol.
+  - ⚖ Display was generic ALL ALONG — the member list already populated for primitives, so the planned third phase was a no-op. Census before scoping.
+
 ## Layout & settle campaigns
 
 - **`all-constructors-settle-plan.md`** — COMPLETE. Converts ~27 inline-building constructors to the uniform self-settling _buildAndConnectChildren wrapper/core pattern.

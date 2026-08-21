@@ -261,16 +261,7 @@ class InspectorWdgt extends Widget
 
     @_buildAndConnectObjOwnPropsButton()
 
-    @addPropertyButton = new SimpleButtonWdgt @, "addPropertyPopout", face: "add..."
-    @_addNoSettle @addPropertyButton
-    @renamePropertyButton = new SimpleButtonWdgt @, "renamePropertyPopout", face: "rename..."
-    @_addNoSettle @renamePropertyButton
-    @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "remove"
-    @_addNoSettle @removePropertyButton
-
-    @saveTextWdgt = (new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
-    @saveButton = new SimpleButtonWdgt @, "save", face: @saveTextWdgt
-    @_addNoSettle @saveButton
+    @_buildAndConnectEditRow() if @_subjectIsEditable()
 
 
 
@@ -312,7 +303,7 @@ class InspectorWdgt extends Widget
     # and disable the "save" button
     if !@list.selected?
       @detail.modifiedTextTriangleAnnotation?.hide()
-      @saveTextWdgt.setColor Color.create 200, 200, 200
+      @_showSaveButtonAsEnabled false
 
     # register this wdgt as one to be notified when the text
     # changes/unchanges from "reference" content
@@ -354,18 +345,47 @@ class InspectorWdgt extends Widget
     # update layout
     @_invalidateLayout()
 
+  # The save button's enabled LOOK, in ONE place. A READ-ONLY inspector has no save button at all,
+  # so there is nothing to reflect and this is a no-op — stated here rather than as a `?.` at each
+  # of the three callers, which would be the same fact spelled three times.
+  # TODO this stands in for enabling/disabling the button: the colour changes but the button still
+  # works. Needs real enabling/disabling.
+  _showSaveButtonAsEnabled: (enabled) ->
+    @saveTextWdgt?.setColor if enabled then Color.BLACK else Color.create 200, 200, 200
+
   textContentModified: ->
-    # TODO this would stand for enabling/disabling the button
-    # but really we are just changing the color and the button
-    # still works. Need some better enabling/disabling
-    @saveTextWdgt.setColor Color.BLACK
+    @_showSaveButtonAsEnabled true
 
   textContentUnmodified: ->
-    # TODO this would stand for enabling/disabling the button
-    # but really we are just changing the color and the button
-    # still works. Need some better enabling/disabling
-    @saveTextWdgt.setColor Color.create 200, 200, 200
+    @_showSaveButtonAsEnabled false
 
+
+  # Can this subject SERVICE an edit? An inspector is handed whatever the user asked to inspect,
+  # and only some of those implement the edit protocol — `injectProperty` / `removeOwnProperty` /
+  # `renameOwnProperty` / `sourceChanged`, which arrive together on Widget. A number, a string, a
+  # Point cannot: you cannot inject a property into 42. ⚠ A CAPABILITY query, never `instanceof
+  # Widget` — the question is "does it service the protocol", so a future non-widget that
+  # implements the four should get an editable inspector. The four always co-occur, so one probe
+  # answers for the row.
+  _subjectIsEditable: ->
+    @inspectedObject.injectProperty?
+
+  # The bottom EDIT ROW, as ONE unit — built, laid out and reached into together, so it exists or
+  # it does not. An inspector on a subject that cannot service an edit is a READ-ONLY inspector,
+  # which is the honest presentation rather than a degraded one; offering controls that could only
+  # refuse is worse than offering none (the same reasoning `createDesktop` uses to skip an app icon
+  # a profile cannot provide). Its layout twin is the guarded span in `_reLayout`.
+  _buildAndConnectEditRow: ->
+    @addPropertyButton = new SimpleButtonWdgt @, "addPropertyPopout", face: "add..."
+    @_addNoSettle @addPropertyButton
+    @renamePropertyButton = new SimpleButtonWdgt @, "renamePropertyPopout", face: "rename..."
+    @_addNoSettle @renamePropertyButton
+    @removePropertyButton = new SimpleButtonWdgt @, "removeProperty", face: "remove"
+    @_addNoSettle @removePropertyButton
+
+    @saveTextWdgt = (new StringWdgt "save", fontSize: WorldWdgt.preferencesAndSettings.textInButtonsFontSize).alignCenter()
+    @saveButton = new SimpleButtonWdgt @, "save", face: @saveTextWdgt
+    @_addNoSettle @saveButton
 
   _buildAndConnectObjOwnPropsButton: ->
     showOwnPropsOnlyOnButton = new SimpleButtonWdgt @, "hideOwnPropsOnly", face: "obj own props only: on"
@@ -572,7 +592,10 @@ class InspectorWdgt extends Widget
       @layoutOwnPropsOnlyToggle @propertyHeaderString.bottom() + @internalPadding, listWidth, detailWidth
 
       # list
-      listHeight = (@bottom() - @externalPadding - @internalPadding - 15) - (@showMethodsToggle.bottom() + @internalPadding)
+      # the trailing 15 is the EDIT ROW's height; a read-only inspector has no such row, so the
+      # list claims that band rather than leaving a strip of empty chrome under itself
+      heightOfEditRow = if @_subjectIsEditable() then 15 else 0
+      listHeight = (@bottom() - @externalPadding - @internalPadding - heightOfEditRow) - (@showMethodsToggle.bottom() + @internalPadding)
       if @list.parent == @
         @list._applyBounds (new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding), new Point listWidth, listHeight
 
@@ -580,25 +603,31 @@ class InspectorWdgt extends Widget
       if @detail.parent == @
         @detail._applyBounds (new Point @list.right() + @internalPadding, @list.top()), (new Point detailWidth, listHeight).round()
 
-      widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
+      # The EDIT ROW's layout twin: it is laid out exactly when it was built (`_subjectIsEditable`,
+      # the SAME query as the build — a second spelling would be a fact stated twice, and two facts
+      # will disagree). Nothing below may deref a button that was never built, and that includes
+      # `_layoutOverrideInThisClassButton`, whose ClassInspectorWdgt override reaches ACROSS this
+      # row for the gap between `remove` and `save`.
+      if @_subjectIsEditable()
+        widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
 
-      buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-      @addPropertyButton._reLayout buttonBounds
+        buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
+        @addPropertyButton._reLayout buttonBounds
 
-      buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-      @renamePropertyButton._reLayout buttonBounds
+        buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
+        @renamePropertyButton._reLayout buttonBounds
 
-      buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
-      @removePropertyButton._reLayout buttonBounds
+        buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
+        @removePropertyButton._reLayout buttonBounds
 
-      buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
-      @saveButton._reLayout buttonBounds
+        buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldWdgt.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
+        @saveButton._reLayout buttonBounds
 
-      @_layoutOverrideInThisClassButton()
+        @_layoutOverrideInThisClassButton()
 
     super
     @_markLayoutAsFixed()

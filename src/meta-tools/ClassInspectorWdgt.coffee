@@ -13,14 +13,20 @@ class ClassInspectorWdgt extends InspectorWdgt
   _buildAndConnectChildrenNoSettle: ->
     super
     @lastLabelInHierarchy._setTextNoSettle "this class"
-    @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "override in this class"
-    @_addNoSettle @overrideInThisClassButton
-    @overrideInThisClassButton.hide()
+    # part of the base's bottom EDIT ROW, so it exists on the same condition the rest of that row
+    # does: a class whose prototype cannot service an edit (a Point, a Color — anything off the
+    # Widget branch, reachable now that an inspector opens on any value) gets a read-only inspector
+    # with no bottom row at all, and this button is one of its members.
+    if @_subjectIsEditable()
+      @overrideInThisClassButton = new SimpleButtonWdgt @, "overrideInThisClass", face: "override in this class"
+      @_addNoSettle @overrideInThisClassButton
+      @overrideInThisClassButton.hide()
 
   # a mixin-donated INSTANCE member gets the second save destination offered; any
   # other selection hides it (a static's override would need a constructor-side
-  # assignment -- not offered). (Visibility is not a layout input: the button is
-  # laid out unconditionally in _layoutOverrideInThisClassButton.)
+  # assignment -- not offered). (Visibility is not a layout input: whenever the button EXISTS it is
+  # laid out, in _layoutOverrideInThisClassButton, shown or not. Existence is the separate question
+  # the edit row answers -- a read-only subject has no bottom row, hence the `?.` here.)
   selectionFromList: (selected) ->
     super
     if @currentPropertySourceMixin? and !@currentPropertySourceIsStatic
@@ -127,7 +133,7 @@ class ClassInspectorWdgt extends InspectorWdgt
     return if @currentPropertySourceIsStatic
     theMixinName = @currentPropertySourceMixin.name
     @currentPropertySourceMixin = undefined
-    @overrideInThisClassButton.hide()
+    @overrideInThisClassButton?.hide()
     # the donor label follows the attribution: the member is class-owned now
     @mixinDonorLabel?.setText ""
     @save()

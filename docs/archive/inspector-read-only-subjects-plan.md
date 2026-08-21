@@ -1,5 +1,20 @@
 # PLAN — the object inspector on a subject it cannot EDIT (a read-only inspector)
 
+> **STATUS: EXECUTED and CLOSED, 2026-08-21.** Both phases landed. Phase 1 (naming as a service)
+> and Phase 2 (the edit row as one conditional unit) are in `src/meta-tools/InspectorWdgt.coffee`
+> and `ClassInspectorWdgt.coffee`; the behaviour is pinned by
+> `SystemTest_macroInspectorOnNonWidgetIsReadOnly` (12 assertions, no reference images).
+> **Two things the execution learned that this plan did not predict, kept here as case law:**
+> (1) §3's open question — "is a ClassInspectorWdgt's subject ALWAYS editable?" — measured **NO**:
+> `openClassInspector` passes `window[className].prototype`, and `Point.prototype` / `Color.prototype`
+> do NOT inherit the edit verbs, so that layout needed the guard after all. Reasoning from "classes
+> always carry the meta verbs" gets this backwards.
+> (2) A **fourth** deref site the §3 census missed: three places recolour `@saveTextWdgt` to show the
+> save button enabled/disabled, and all three assumed it exists. Folded into one
+> `_showSaveButtonAsEnabled`, which is also where the triplicated grey literal went.
+> ⚠ §5's "the freed height" question was decided by looking: the list claims the band (measured
+> gap under the list 20px → 5px).
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 
 **Mandate:** eliminate the problem, not bury it — an inspector opened on a value it cannot edit
