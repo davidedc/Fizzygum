@@ -242,9 +242,19 @@ gates now carry a POSITIVE-COVERAGE assertion that closes this, in two shapes wo
   no-op. Use this when the audit is a function that can decline to run. ⚠ Keep the marker OFF the finding channel:
   `LAYOUTAUDIT STORAGE-AUDITED` deliberately has no space after `STORAGE`, so the findings regex cannot match it.
   A shortfall exits **2 = INVALID**, not 1 — the absence of a measurement is not a finding about the product.
-Both mirror `run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths.
-⚠ `tiernaming`, `settle` and `revisits` do NOT yet have one and can still go quietly blind; the standing rule is the
-fuzz/vmtruth doctrine — **an unmeasured run is NEVER a pass**.
+- **The WRAPPERS actually fired** (`tiernaming`, `settle`, `revisits`) — the shape-2 variant for a gate whose whole
+  verdict comes from prototype wrappers rather than from product code. Their install-time counts prove only that the
+  wrappers were ATTACHED; a rename that stopped them matching, or a prelude installed against the wrong prototypes,
+  leaves every count full and every finding list empty. Each prelude now emits one `…-OBSERVED` line per test on the
+  first real firing (a wrapped corner, a wrapped `_reactTo*`/`_before*` callback, a flush that visited any widget), and
+  the gate requires it in every bucket.
+All of these mirror `run-paint-audit.js`'s `checked == expectedTotal` and `vm-truth-gate.js`'s three INVALID paths.
+⭐ **Every suite-wide audit gate now carries one**, and each was proven by plant in both directions — armed/firing gives
+`307/307` and the normal verdict; wrappers suppressed gives `0/307` and INVALID, while `prelude installed` still reads
+`307/307`, which is precisely why the install count was never coverage. The standing rule is the fuzz/vmtruth
+doctrine — **an unmeasured run is NEVER a pass**.
+⚠ A coverage shortfall exits **2 = INVALID** everywhere, so a runner or wrapper that greps verdict lines must know the
+word (the local `fg` wrapper's `leg_headline` does; `fg` is uncommitted workspace tooling, so that is not in git).
 ⭐ **And a gate must not restate a rule the product already owns.** `paint-readonly` used to carry its own copy of
 `Widget._invalidateLayout`'s predicate; the two had silently diverged (the copy excluded freefloating-triggered
 schedules, the product's never did) while its comment claimed to record "the EXACT set". The prelude now observes the
