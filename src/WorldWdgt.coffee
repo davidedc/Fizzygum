@@ -2933,16 +2933,36 @@ class WorldWdgt extends IconGridPanelWdgt
     super
 
   # --- THE SHARED STRUCTURAL TEARDOWN ----------------------------------------------------------
-  # ONE core, two callers: the test teardown (_resetWorldNoSettle) and the snapshot loader
-  # (loadWorldSnapshot). Its contract is exactly one thing:
+  # ONE core, two callers: resetWorld (which dissolves this world after it returns and constructs
+  # the replacement) and loadWorldSnapshot (which KEEPS this world and refills it from the file).
+  # It discharges TWO obligations. They have different lifetimes, different failure modes and
+  # different gates, so a line added here belongs to one of them and should say which:
   #
-  #   after fullDestroyChildren(), the world holds NO reference to anything that was just
-  #   destroyed, and no bookkeeping that assumed it still exists.
+  #   (A) THE WORLD DROPS EVERY REFERENCE TO WHAT fullDestroyChildren() JUST DESTROYED, and every
+  #       piece of bookkeeping that assumed it still exists. Only observable where the world
+  #       SURVIVES, so loadWorldSnapshot is the enforcer and world.teardownHygiene.* in
+  #       ../Fizzygum-tests/scripts/serialization-roundtrip-headless.js is the measurement. On the
+  #       resetWorld path these are free — that world is dissolved and, per fg vmtruth's
+  #       reachability gate, unreachable — which is not the same as optional: the OTHER caller has
+  #       no reconstruction to hide behind, and this is the half that rots if anyone forgets that.
   #
-  # Restoring what the world should LOOK like afterwards is the CALLER's job — pristine grey and
-  # the harness resolution for the test path, the file's contents for the loader. That split is
-  # what lets one core serve both, and it is the whole reason the two used to look unrelated: only
-  # the LOOK half is product-vs-test, and the reference-dropping half never was.
+  #   (B) PAGE-LIFETIME STATE LETS GO OF WHAT WAS JUST DESTROYED. Class statics, class-level timer
+  #       registries and module-level stores outlive every world the page builds, so discarding a
+  #       world does not touch them: (B) is owed on BOTH paths, and a miss pins a corpse for the
+  #       life of the page rather than merely dangling inside one world. The object-lifetime tier
+  #       enforces it — the WORLD_INVENTORY_* audits and fg vmtruth. There are three (B) items
+  #       below, each marked at its line.
+  #
+  # Each obligation has a plant that proves it is load-bearing where it claims to be. Removing
+  # `@errorConsole = undefined` leaves a 3-test reset sequence green and fails the snapshot rig on
+  # teardownHygiene.noDanglingSlots; removing `WorldWdgt.timeOfEventBeingProcessed = undefined`
+  # fails the RESET path with WORLD_INVENTORY_DRIFT, even though that world is discarded a phase
+  # later. Neither result is reachable by reading the contract — measure before trusting either.
+  #
+  # Restoring what the world should LOOK like afterwards is the CALLER's business, and since Arc C
+  # the two answer it differently: resetWorld restores nothing at all, because its replacement is
+  # born correct; the loader paints the file's contents back on. That split is what lets one core
+  # serve both.
   #
   # WHY IT IS SHARED RATHER THAN MIRRORED. fullDestroyChildren() is what creates the dangling
   # references, and both callers run it — but neither caller's name said "and I am responsible for
@@ -2950,15 +2970,16 @@ class WorldWdgt extends IconGridPanelWdgt
   # other. The two drifted twice in two days, in OPPOSITE directions. A shared core makes "did the
   # other teardown get this too?" un-askable, which is the point; hand-synchronised twins are what
   # this replaces. It SHIPS in every profile — it is `core`-part code, and loadWorldSnapshot is a
-  # product feature — while _resetWorldNoSettle lives in the tests repo
-  # (../Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee) and travels with the
-  # `harness` part, so the test-only one could never have been the shared one. Every leak below was
-  # measured surviving a real loadWorldSnapshot, not argued.
+  # product feature — whereas the harness's own seats at this reset travel with the `harness` part
+  # (../Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee), so a test-only verb
+  # could never have been the shared one. Every (A) leak below was measured surviving a real
+  # loadWorldSnapshot, not argued.
   #
   # NoSettle tier: BOTH callers already wrap this in exactly ONE @_settleLayoutsAfter, so no
-  # self-settling public setter may move in here. setColor / wallpaper setPattern stay with the
-  # test caller (which sanctions them explicitly); the loader calls them OUTSIDE its settle wrap on
-  # purpose. Mixing tiers here is how the flow-violation throw gets reintroduced.
+  # self-settling public setter may move in here. The loader calls setColor / wallpaper setPattern
+  # OUTSIDE its settle wrap on purpose, and resetWorld needs neither — it builds a fresh world
+  # rather than repainting this one. Mixing tiers here is how the flow-violation throw gets
+  # reintroduced.
   _teardownWorldStructureNoSettle: ->
     # destroys the widget TREE and zeroes every per-class lastBuiltInstanceNumericID, giving the
     # clean id space a snapshot's restored iids need. Everything after it exists because it CANNOT
@@ -3021,10 +3042,13 @@ class WorldWdgt extends IconGridPanelWdgt
     #                             so the macro pump's waitNoInputsOngoing never settles and every
     #                             later test in the page STALLS rather than fails
     @toolTipsList.clear()
-    # ...and the tooltips not yet BORN: a scheduled creation timer closes over the widget that
-    # invited it, so clearing the list above (which only knows tips already open) leaves the corpse
-    # pinned until the timer fires -- and it then aims a fresh tip at a destroyed widget. ToolTipWdgt
-    # is core, so no existence soak; cancelling with nothing pending is a no-op.
+    # ...and the tooltips not yet BORN. ⭐ OBLIGATION (B): the pending timers live in a CLASS-level
+    # set (ToolTipWdgt.ongoingTimeouts), which outlives every world the page builds, so unlike the
+    # list above this is owed on the resetWorld path too — discarding the world cancels nothing. A
+    # scheduled creation timer closes over the widget that invited it, so clearing the list above
+    # (which only knows tips already open) leaves the corpse pinned until the timer fires -- and it
+    # then aims a fresh tip at a destroyed widget. ToolTipWdgt is core, so no existence soak;
+    # cancelling with nothing pending is a no-op.
     ToolTipWdgt.cancelAllScheduledToolTips()
     @openPopUps.clear()
     @freshlyCreatedPopUps.clear()
@@ -3066,8 +3090,10 @@ class WorldWdgt extends IconGridPanelWdgt
     # multi-click staleness, the drag-charging ring's linger): between events it is stale
     # by definition, and across a teardown the next world's event clock may even REWIND
     # (synthetic test clocks restart) -- back to the declared "no event being processed"
-    # default. A world STATIC, so the world-field ratchet cannot see it; the inventory
-    # audit is what catches it drifting.
+    # default. ⭐ OBLIGATION (B): a world STATIC, so it survives the world being discarded and is
+    # owed on both paths. The world-field ratchet cannot see it (it reads world FIELDS); the
+    # inventory audit is what catches it drifting, and removing this line fires
+    # WORLD_INVENTORY_DRIFT on the reset path.
     WorldWdgt.timeOfEventBeingProcessed = undefined
     # the HAND's gesture bookkeeping: the hand itself survives this teardown, so its
     # grab/press/drag-embed fields and armed multi-click records would keep DEAD
@@ -3098,9 +3124,10 @@ class WorldWdgt extends IconGridPanelWdgt
     @binWdgt?.empty()
     @shelfWdgt?.empty()
     # the SWCanvas cold-glyph store holds LIVE WIDGET REFS between a cold placeholder draw and the
-    # atlas-warm refresh that drains it -- a module-level array outside the world entirely, so
-    # nothing above can have emptied it, and on a page whose atlases are all warm the drain may
-    # never come. It sits BESIDE the damage-queue filter below rather than after it: both must
+    # atlas-warm refresh that drains it. ⭐ OBLIGATION (B): a module-level array outside the world
+    # entirely, so nothing above can have emptied it, discarding the world does not empty it either,
+    # and on a page whose atlases are all warm the drain may never come.
+    # It sits BESIDE the damage-queue filter below rather than after it: both must
     # follow every destroy (the bin/shelf empties directly above included), but unlike the damage
     # queues this store feeds no repaint the reset caller is depending on, so their ordering
     # constraint neither reaches it nor is disturbed by it. Soaked because it is a boot-bundle
