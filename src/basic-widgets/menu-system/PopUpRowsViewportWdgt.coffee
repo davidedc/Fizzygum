@@ -51,15 +51,17 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   _reLayOutAfterContainedPanelChange: ->
     @firstParentThatIsAPopUp()._reLayOutAfterContainedPanelChange?() ? false
 
-  # ⚠ `alpha = 0` is about PAINTING, not hit-testing: the pointer asks `catchesPointerAt`,
-  # and a RectangularAppearance widget answers opaque for ANY point inside its tight box
-  # before consulting any transparency field. So without this, a viewport spanning the
-  # pop-up's whole rect catches every click that ought to fall THROUGH the pop-up's rounded
-  # corners to whatever is behind. My rows panel is opaque where the menu body is, so rows
-  # still take their own clicks; everywhere else the hit falls through me as it falls
-  # through the pop-up (mirrors MenuWdgt/PromptWdgt, the other transparent overlays).
-  isTransparentAt: (aPoint) ->
-    true
+  # ⚠ `alpha = 0` is about PAINTING, not hit-testing: my RectangularAppearance is SHAPED over my
+  # whole tight box whatever my alpha, because alpha changes how a shape is painted and never
+  # where it is. So without this, a viewport spanning the pop-up's whole rect would catch every
+  # click that ought to fall THROUGH the pop-up's rounded corners to whatever is behind. My rows
+  # panel is shaped where the menu body is, so rows still take their own clicks; everywhere else
+  # the hit falls through me as it falls through the pop-up (mirrors MenuWdgt/PromptWdgt).
+  #   ⓘ I am the one widget that overrides this while carrying an appearance that would answer:
+  # my shape genuinely is that rect, and what I am declaring here is a ROLE — invisible chrome,
+  # never a pointer target — which is a widget's business, not a shape's.
+  catchesPointerAt: (aPoint) ->
+    false
 
   # I am structure, not an editing surface. ViewportWdgt says `true`, and the editor
   # SELECTION walk (WorldWdgt._widgetBeingEdited) climbs to the first ancestor with an

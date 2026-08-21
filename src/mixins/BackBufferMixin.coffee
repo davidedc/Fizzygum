@@ -83,17 +83,24 @@ BackBufferMixin =
           h = Math.min(src.height() * ceilPixelRatio, @backBuffer.height - st)
         return [damageBox,sl,st,al,at,w,h]
 
-      isTransparentAt: (aPoint) ->
-        if @boundsContainPoint aPoint
-          return false  if @texture
-          # ASK THE COLOUR — and mind the spelling, because the wrong one is silent. A Color
-          # keeps its alpha in `_a` and publishes no `a`, so a `data.a is 0` test reads
-          # `undefined is 0`: false for every pixel, reporting every back-buffered widget
-          # (StringWdgt, CanvasWdgt, PaletteWdgt) OPAQUE at every point inside its bounds, so
-          # a click on a see-through pixel of a string or a canvas never passes through to
-          # what is behind it. isFullyTransparent is the question this wants to ask.
-          return @getPixelColor(aPoint).isFullyTransparent()
-        false
+      # My surface IS my raster, so the pointer question is answered PER PIXEL rather than by a
+      # shape: a click lands on me only where I actually drew something. (A subclass whose raster
+      # is known to fill its box overrides this back to a plain bounds test — cheaper, and the
+      # honest answer for an image or a video frame; a class-body member out-ranks a mixin's.)
+      #   ⚠ MIND THE SPELLING, because the wrong one is silent: a Color keeps its alpha in `_a`
+      # and publishes no `a`, so a `data.a is 0` test reads `undefined is 0` — false for every
+      # pixel, which makes every back-buffered widget catch the pointer everywhere inside its
+      # bounds and a click on a see-through pixel of a string or a canvas never fall through.
+      # isFullyTransparent is the question this wants to ask.
+      catchesPointerAt: (aPoint) ->
+        return false  unless @boundsContainPoint aPoint
+        not @getPixelColor(aPoint).isFullyTransparent()
+
+      # An offscreen buffer has unknown per-pixel opacity, so I make no coverage claim to the
+      # occlusion culler — which is why Widget.opaqueCoveredRect needs no test of its own for
+      # how a widget's paint is routed.
+      opaqueCoveredRect: ->
+        undefined
 
       # Widget pixel access:
       getPixelColor: (aPoint) ->

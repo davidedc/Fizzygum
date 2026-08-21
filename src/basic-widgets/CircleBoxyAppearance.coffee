@@ -28,21 +28,21 @@ class CircleBoxyAppearance extends Appearance
         new Point(radius, 0)).corner(@widget.bottomRight().subtract(new Point(radius, 0)))
     return [radius,center1,center2,rect]
 
-  isTransparentAt: (aPoint) ->
+  # The stadium: the middle rect plus the two semicircular caps. (No opaqueCoveredRect claim:
+  # the inscribed rect is available from calculateKeyPoints, but the culler has never asked a
+  # stadium and adding a claim is new behaviour, not a rename — left for whoever needs it.)
+  shapeContainsPoint: (aPoint) ->
     # first quickly check if the point is even
     # within the bounding box
     if !@widget.boundsContainPoint aPoint
-      return true
+      return false
 
     [radius,center1,center2,rect] = @calculateKeyPoints()
 
-    if center1.distanceTo(aPoint) < radius or
-    center2.distanceTo(aPoint) < radius or
-    rect.containsPoint aPoint
-      return false
+    center1.distanceTo(aPoint) < radius or
+      center2.distanceTo(aPoint) < radius or
+      rect.containsPoint aPoint
 
-    return true
-  
   # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
@@ -60,5 +60,5 @@ class CircleBoxyAppearance extends Appearance
       # ONE stadium fill covering exactly the widget box, both orientations —
       # a single primitive rather than the old two-arcs+rectangle path, so the
       # shadow pass (which fills at globalAlpha < 1) blends every pixel once.
-      # (calculateKeyPoints stays as the hit test's — isTransparentAt — geometry.)
+      # (calculateKeyPoints stays as the hit test's — shapeContainsPoint — geometry.)
       ctx.fillStadium 0, 0, @widget.width(), @widget.height()

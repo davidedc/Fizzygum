@@ -16,9 +16,17 @@ benign inspector member-list recapture (`macroDuplicatedInspectorDrivesCopiedTar
 — `opaqueCoveredRect` joins the inspected widget's inherited-method list). Same-build cull off→on
 (2 reps): drag ~3.0×, draw ~2.1×, covered ~4.3×; fire-rate 72/68/99%; scan not a hotspot. The
 shipped feature is distilled in [`docs/architecture/occlusion-culling.md`](../architecture/occlusion-culling.md).
-⚠ One §1 fact has MOVED since: the nine widget-level custom painters the identity gate was written
-against now live on the Appearance side, so P4/P5 must re-derive the exclusion set from the current
-`*Appearance` classes (§1). **Remaining
+⚠⚠ **§1's PREDICATE SHAPE IS SUPERSEDED — read
+[`docs/architecture/occlusion-culling.md`](../architecture/occlusion-culling.md) §2a before executing
+P4/P5, not §1 below.** The coverage predicate now answers at TWO layers: `Widget.opaqueCoveredRect`
+keeps only the widget-side gates (not ephemeral; `@alpha == 1`; `@color._a == 1`) and then asks
+`@appearance?.opaqueCoveredRect()`, where the GEOMETRY lives beside the paint that creates it. Three
+§1 facts are therefore dead: the plain-paint-route **prototype-identity gate** is gone (the
+`BackBufferMixin` consumers it excluded now decline the claim themselves), the **exact-class
+`switch`** is gone, and with it the "deliberately NON-polymorphic" argument — a claim IS inherited
+now, so a subclass that changes the outline must refuse it explicitly (`BubblyAppearance` does; its
+tail strip would otherwise be over-claimed). The nine widget-level custom painters this was written
+against had already moved to the Appearance side and take the base's `undefined`. **Remaining
 P4/P5/P5b/P5c below are OWNER-GATED and NOT started** (Avenue B maintained list; descend /
 per-widget partial coverage; hand-carried drag coverer). **Self-contained: a fresh session executes
 §4 P0→P3 and stops** (already done — this banner records the outcome).

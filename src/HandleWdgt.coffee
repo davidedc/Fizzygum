@@ -21,6 +21,13 @@ class HandleWdgt extends Widget
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
 
+  # My whole box is the grab area, though HandleAppearance only paints the striped
+  # bottom-right triangle: a resize corner you can only catch on its stripes is a resize corner
+  # you keep missing. (SystemTest_macroHandleWdgtIsItselfResizable and macroHandleAttachedToNothing
+  # both press on the painted part, but they say in their own comments that the box is what counts.)
+  catchesPointerAt: (aPoint) ->
+    @boundsContainPoint aPoint
+
   # Resize / move / rotate handles are CHROME, never editor content (§5.D D-3/D21). Clicking or dragging a
   # handle to reshape a widget must NOT make the handle world.editorFocusWdgt -- otherwise the editor-focus
   # SELECTION overlay frames the HANDLE (it sits inside the reshaped widget's editing-amenity frame, so the
@@ -41,7 +48,6 @@ class HandleWdgt extends Widget
     super()
     @appearance = new HandleAppearance @
     @color = Color.WHITE
-    @noticesTransparentClick = true
 
     @cornerSpec = new CornerInternalLayoutSpec @_anchorForType(), 0, WorldWdgt.preferencesAndSettings.handleSize, @inset
 

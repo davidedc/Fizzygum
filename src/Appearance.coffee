@@ -34,7 +34,36 @@ class Appearance
 
   constructor: (@widget, @ownColorInsteadOfWidgetColor) ->
 
-  isTransparentAt: (aPoint) ->
+  # ===== the two SHAPE questions an appearance answers about a point / a rect =====
+  # Both are about the OUTLINE I draw, not about how see-through the drawing is: neither
+  # consults @widget.alpha, and neither is a claim about ink. That separation is the point —
+  # `alpha` and `backgroundTransparency` change how a shape is PAINTED, never where it IS.
+
+  # Does my outline contain this point? (widget-plane logical coordinates.)
+  #   TOTAL: every implementation must answer for EVERY point, false outside the widget's
+  # bounds included — a caller may hold no bounds test of its own. The base claims the whole
+  # box: an appearance that does not describe an outline is taken to fill the box it is given,
+  # which is what an icon glyph, a clock face or a label button all want. ⚠ That default is
+  # DECLARED here rather than left to a hole, because 104 of the 112 appearance classes take it:
+  # an unanswered predicate hands `undefined` to a caller expecting a boolean, and a whole
+  # subsystem then rides on how the caller happens to coerce it.
+  #   ⚠ A subclass that changes the OUTLINE must re-answer: BubblyAppearance's tail leaves the
+  # bottom fifth of the box outside the rounded body, so inheriting BoxyAppearance's test
+  # over-claims there (see its own note).
+  shapeContainsPoint: (aPoint) ->
+    @widget.boundsContainPoint aPoint
+
+  # The axis-aligned rectangle my paint provably fills FULLY OPAQUE, in LOGICAL px world
+  # coordinates — or undefined for "I make no claim". The occlusion-culling pre-scan
+  # (WorldWdgt._paintedFromFrontmostCoverer) skips everything behind a widget whose rect
+  # covers the damage, so this is the one answer here that must be CONSERVATIVE: a too-big
+  # rect silently drops pixels painted beneath, caught only by the pixel-exact SystemTests.
+  #   The widget-side gates (alpha, colour opacity, ephemerality) live on Widget.opaqueCoveredRect,
+  # which asks this only once they pass. ⚠ Same non-inheritance warning as above, and here it
+  # has teeth: a subclass whose outline leaves part of the box unfilled MUST override back to
+  # undefined, or the culler will drop real pixels.
+  opaqueCoveredRect: ->
+    undefined
 
   # The key-values half of the paint preamble: bail (undefined) if there is nothing to draw, else return
   # the [damageBox,sl,st,al,at,w,h] key-values (undefined when the widget is sub-pixel / off-clip). ZERO draw

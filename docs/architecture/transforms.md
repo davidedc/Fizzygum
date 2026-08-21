@@ -247,7 +247,7 @@ content stops clipping at the frozen footprint.
 
 The content-stack spec (layout.md §4.2) holds preferences about the DISPLAYED thing's nature
 ("empty vertical space around a clock is meaningless") — and the island displays exactly that
-thing, transformed; it has no content-nature of its own. Same doctrine as `isTransparentAt` /
+thing, transformed; it has no content-nature of its own. Same doctrine as `catchesPointerAt` /
 the escalate-only click / `resolvesEditorSelectionToContent`: the invisible wrapper adds no
 behavior of its own. So base `TransformFrameWdgt` overrides the two content-stack initialisers
 (`initialiseDefaultFrameContentLayoutSpec` / `initialiseDefaultVerticalStackLayoutSpec`) to
@@ -316,12 +316,12 @@ Pointer events are **plane-mapped** before they reach a handler. The dispatcher
 **parameter**, and hit-testing runs in the plane where a widget's virtual geometry lives:
 `w.screenPointToMyPlane(@position())` maps the raw screen pointer down through each ancestor
 island's inverse transform, so a widget's bounds test, corner fall-through, and per-pixel
-transparency (`isTransparentAt`) come out exact for free. Off every island `screenPointToMyPlane`
+surface test (`catchesPointerAt`) come out exact for free. Off every island `screenPointToMyPlane`
 returns the same point ⇒ byte-identical dormant.
 
-The island itself is invisible plumbing and never claims a hit: `isTransparentAt` returns `true`
-and `noticesTransparentClick` is `false`, so the hit-test predicate never selects the frame — a
-click descends into content first, then falls through empty content to what is behind.
+The island itself is invisible plumbing and never claims a hit: it declares `catchesPointerAt: ->
+false`, so `Widget.isPointerTargetAt` never selects the frame — a click descends into content
+first, then falls through empty content to what is behind.
 
 **Gate.** A build-time lint (`buildSystem/check-raw-pointer-reads.js`, in the static-check
 suite — see `docs/architecture/lint-and-static-checks.md`) **bans** a pointer-event handler body

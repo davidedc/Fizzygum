@@ -8,12 +8,9 @@ class ModifiedTextTriangleAnnotationWdgt extends Widget
   constructor: (parent, proportionOfParent = 0, fixedSize = 10) ->
     super()
     @cornerSpec = new CornerInternalLayoutSpec 'topLeft', proportionOfParent, fixedSize
+    # my shape is a triangle, and reacting to the pointer only within that triangle
+    # follows from the appearance answering shapeContainsPoint -- nothing to declare here
     @appearance = new UpperRightTriangleAppearance @, @positionWithinParent
-
-    # this widget has triangular shape and we want it
-    # to only react to pointer events happening
-    # within tha shape
-    @noticesTransparentClick = false
 
     size = WorldWdgt.preferencesAndSettings.handleSize
     @__commitExtent new Point size, size

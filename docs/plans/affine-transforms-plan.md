@@ -45,6 +45,18 @@ owner chose OPTION B (2026-07-12), LANDED + PUSHED (Fizzygum `62577d03` / tests 
 (`_enclosingIslandFigure` / `_parentThroughIslands`), macro `macroExplicitIslandTravelsWholeThroughCloseReopen`
 (stash-verified); §7.10 owner-confirmed "fixed + test" → lock-in macro `macroExplicitIslandFixedVsTrackingResize`.
 See the "EXPLICIT-ISLAND CLOSE dossier" in §7.5 for the as-built record.**
+⚠ **VOCABULARY DRIFT SINCE — the analysis below names three members that no longer exist.** The
+pointer hit test is now `Widget.isPointerTargetAt` (the whole question, one call in
+`ActivePointerWdgt.topWdgtUnderPointer`) → `Widget.catchesPointerAt` (does my surface stop the
+pointer here, TOTAL — false outside my bounds) → `Appearance.shapeContainsPoint` (my outline).
+`isTransparentAt` and the `noticesTransparentClick` flag are GONE: an island now declares
+`catchesPointerAt: -> false` (one member, not a pair), a whole-box catcher declares
+`catchesPointerAt: (p) -> @boundsContainPoint p`, and `BackBufferMixin` answers per pixel under the
+new name. The plane-mapping facts (3.4, §4.6) are unaffected — the point handed in is still
+`screenPointToMyPlane`-mapped. Occlusion (§7.3) also moved: see
+[`docs/architecture/occlusion-culling.md`](../architecture/occlusion-culling.md) §2a.
+Living truth: [`docs/architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) §5.
+
 REMAINING
 = ONLY the BIG §7 items (7.1 policy engine, 7.2 leaf self-warp, 7.3 quad damage+occlusion, 7.4 density folding
 [owner-downgraded]) — each design-first, owner-gated, its own plan doc. (§7.7 appearance local-coords

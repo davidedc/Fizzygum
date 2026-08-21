@@ -53,7 +53,6 @@ class TextWdgt extends StringWdgt
     @markedTextColor = Color.WHITE
     @markedBackgroundColor = Color.create 60, 60, 120
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
-    @noticesTransparentClick = true
 
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP

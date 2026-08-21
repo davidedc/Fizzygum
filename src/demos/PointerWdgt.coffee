@@ -7,11 +7,15 @@ class PointerWdgt extends BoxWdgt
   # world.widgetsReferencingOtherWidgets); I re-point myself from its own createPointerWdgt.
   target: undefined
 
+  # my whole box takes the pointer, corners included, rather than the rounded box my
+  # BoxyAppearance draws — I am a label you point at, not a shape you aim for
+  catchesPointerAt: (aPoint) ->
+    @boundsContainPoint aPoint
+
   constructor: (@target) ->
     super()
 
     @color = Color.create 160, 160, 160
-    @noticesTransparentClick = true
 
     @_buildAndConnectChildren()
 
@@ -25,7 +29,6 @@ class PointerWdgt extends BoxWdgt
     lmContent1 = new CollapsedStateIconWdgt
     lmContent2 = new StringWdgt @target.toString(), color: Color.WHITE
     # override inherited properties:
-    lmContent2.noticesTransparentClick = true
     lmContent2.isEditable = false
 
     lmContent2.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP

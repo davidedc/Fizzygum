@@ -35,6 +35,17 @@ class CaretWdgt extends BlinkerWdgt
   # Widget.add (instead of `instanceof CaretWdgt` there; type-test-elimination campaign)
   skipsAddShadowManagement: -> true
 
+  # THE POINTER NEVER LANDS ON ME, anywhere. Two reasons, both about how I appear:
+  #  a) I show up UNDER the mouse right after the first click of a double-click, so I would
+  #     swallow the second one;
+  #  b) I vanish as soon as a menu opens, so "the widget you clicked" being a caret would be
+  #     confusing even when it worked.
+  # I am not an ephemeral (Widget.isEphemeral) — I am the editing cursor, not reconciler-owned
+  # chrome — so I state this myself rather than borrowing that capability, and I state it HERE
+  # rather than letting the hit test single me out by comparing against the `world.caret`
+  # singleton: the reason belongs on the class it is about (type-test-elimination convention).
+  isPointerTargetAt: (aPoint) -> false
+
   # The INERT re-sync of the caret to its target: re-size it to the target's font height and re-place it
   # on the target's CURRENT slot coordinate. The caret is isLayoutInert, so this schedules / mutates NO
   # layout -- it is READ-ONLY w.r.t. the layout tree and therefore safe to run at PAINT time

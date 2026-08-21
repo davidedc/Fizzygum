@@ -314,26 +314,49 @@ than paying for a silhouette that cannot differ.
 into the same `world.cacheForImmutableBackBuffers` by class + extent and draws the hands live over
 it, without `BackBufferMixin` at all. The rule is about the raster, not the mechanism.
 
-**Hit-testing follows the shape — but the question the pointer asks is `catchesPointerAt`.** If the
-widget's silhouette is the appearance's business, implement `isTransparentAt` on the appearance;
-implement it on the widget only when the answer depends on widget state the appearance does not hold.
-`isTransparentAt` is INK COVERAGE — is there nothing of me drawn here — and it is only half the hit
-test. The other half is `noticesTransparentClick`, and `Widget.catchesPointerAt` is the two composed
-into the one thing `ActivePointerWdgt` actually asks: *does a pointer here stop on me?*
+**Hit-testing is THREE members, and which one you touch depends on what you are saying.** Say it in
+the layer that owns the fact:
 
-⚠ **The two halves are a trap in both directions, so ask the composite and set the halves only to
-answer it.** A widget can paint nothing at all and still catch every click — that is
-`noticesTransparentClick`, and it is why a `StringWdgt` stays clickable between its glyphs (measured:
-97% of a string's box is ink-free). A widget can be fully opaque in `@alpha` terms and catch nothing —
-a menu, whose body is drawn by a child.
+| you want to say | write | where |
+|---|---|---|
+| "my outline is *this*" | `shapeContainsPoint: (aPoint) -> …` | your **Appearance** |
+| "my whole box takes the pointer" / "I take it nowhere" | `catchesPointerAt: (aPoint) -> …` | your **Widget** |
+| "the pointer never targets me at all" | `isPointerTargetAt: (aPoint) -> false` | your **Widget** |
 
-⚠⚠ **NO transparency field makes a rectangular widget click-through — you have to SAY so.**
-`RectangularAppearance.isTransparentAt` returns `false` for any point inside the tight bounding box
-*before it examines anything*: `@alpha` is never consulted at all, and `backgroundTransparency` only
-decides the padding halo OUTSIDE the tight box (and then only when a `backgroundColor` is set). So a
-`PanelWdgt` at `alpha = 0` is invisible and still swallows every click over its rect. A container
-that must let clicks through declares `isTransparentAt: -> true` per class, as `MenuWdgt`,
-`PromptWdgt`, `FrameBarWdgt` and the pop-up rows chrome all do.
+- **`Appearance.shapeContainsPoint(aPoint)`** — geometry: is this point inside the outline I draw.
+  Four shapes answer it (rectangular, rounded-box, stadium, triangle); the base claims the widget's
+  whole box, which is what an icon glyph, a clock face or a label button want. **TOTAL** — `false`
+  outside the widget's bounds, always, so it is safe to ask on its own.
+- **`Widget.catchesPointerAt(aPoint)`** — does my surface stop the pointer here. Defaults to my
+  appearance's shape (my whole box if I have no appearance). Override it when your **role**, not
+  your shape, decides: `-> false` for a structural wrapper that draws nothing of its own
+  (`MenuWdgt`, `PromptWdgt`, `FrameBarWdgt`, `PopUpRowsViewportWdgt`, `TransformFrameWdgt`), or
+  `-> @boundsContainPoint aPoint` for a widget whose whole box must be grabbable whatever it paints
+  (`StringWdgt`, `HandleWdgt`, `SliderButtonWdgt`, `StackElementsSizeAdjustingWdgt`,
+  `CanvasGlassTopWdgt` …).
+- **`Widget.isPointerTargetAt(aPoint)`** — the whole question `ActivePointerWdgt.topWdgtUnderPointer`
+  asks: clipped bounds ∧ shown ∧ not collapsed ∧ `catchesPointerAt` ∧ not ephemeral. Override only to
+  remove yourself from targeting entirely; `CaretWdgt` is the one class that does.
+
+⚠ **"Does the pointer stop here" is NOT "am I see-through here", and the trap runs in both
+directions.** A widget can paint almost nothing and still stop the pointer everywhere: a `StringWdgt`
+is **97% ink-free** (measured) and stays clickable between its glyphs, because clicking text means
+clicking the line, not the strokes. And a widget can be as opaque as you like and stop nothing: a
+`MenuWdgt`'s body is drawn by a child, so the menu itself catches at no point.
+
+⚠⚠ **NO transparency field takes a point out of a shape — you have to SAY so.** Neither
+`shapeContainsPoint` nor `catchesPointerAt` ever consults `@alpha`; a `PanelWdgt` at `alpha = 0` is
+invisible and still stops every click over its rect. `backgroundTransparency` decides only the
+padding halo OUTSIDE `RectangularAppearance`'s tight box, and then only when a `backgroundColor` is
+set. That is deliberate: alpha and transparency change how a shape is **painted**, never where it
+**is**. A container that must let the pointer through declares `catchesPointerAt: -> false`.
+
+⚠ **A shape answer IS inherited, so an appearance subclass that changes the OUTLINE must re-answer.**
+`BubblyAppearance` extends `BoxyAppearance` but its rounded body occupies only the top `h - h/5` of
+the box (the rest is the tail strip) — it re-answers `opaqueCoveredRect` for that reason, and its
+`shapeContainsPoint` is a documented over-claim. The same rule is why the default is stated in
+`Appearance` rather than left as an unimplemented method: an unanswered predicate hands `undefined`
+to a caller expecting a boolean, and a whole subsystem then rides on how the caller coerces it.
 
 ---
 

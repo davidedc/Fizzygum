@@ -4,9 +4,13 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   category: 'Widgetic-Layouts'
 
 
+  # I am a 5×5 grab strip between stacked elements, and LayoutChromeAppearance paints only a
+  # hint inside it: every pixel of that strip has to drag, or the divider is unusable.
+  catchesPointerAt: (aPoint) ->
+    @boundsContainPoint aPoint
+
   constructor: ->
     super()
-    @noticesTransparentClick = true
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 

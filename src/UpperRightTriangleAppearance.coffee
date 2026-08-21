@@ -42,19 +42,18 @@ class UpperRightTriangleAppearance extends Appearance
 
     context.restore()
 
-  isTransparentAt: (aPoint) ->
+  # The triangular half of the box, which is the whole reason the two triangle widgets carry
+  # this appearance: they react to the pointer over the drawn half only, and that is stated
+  # HERE, in the shape, rather than on the widgets.
+  shapeContainsPoint: (aPoint) ->
     # first quickly check if the point is even
     # within the bounding box
     if !@widget.boundsContainPoint aPoint
-      return true
- 
+      return false
+
     thisWidgetPosition = @widget.position()
- 
+
     relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
 
-    if relativePoint.x / relativePoint.y < @widget.width()/@widget.height()
-      return true
-
-
-    return false
+    relativePoint.x / relativePoint.y >= @widget.width()/@widget.height()
 

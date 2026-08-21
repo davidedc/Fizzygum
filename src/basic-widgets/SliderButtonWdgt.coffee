@@ -19,6 +19,11 @@ class SliderButtonWdgt extends CircleBoxWdgt
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
+  # The whole thumb box grabs, not just the stadium my CircleBoxyAppearance draws inside it: a
+  # slider you have to hit on the rounded cap is a slider that slips out of your hand.
+  catchesPointerAt: (aPoint) ->
+    @boundsContainPoint aPoint
+
   # the thumb's grab-corrected target POSITION (pointer mapped into my plane, minus the
   # within-thumb grab point), held for the duration of a knob drag — plane-local, so it
   # stays consistent with my own plane under a (possibly rotated) island
@@ -28,7 +33,6 @@ class SliderButtonWdgt extends CircleBoxWdgt
     super
     @isLockingToPanels = false
     @color = @normalColor
-    @noticesTransparentClick = true
     @alpha = 0.4
 
   # Derive the button's colour states from one base colour: resting = base,

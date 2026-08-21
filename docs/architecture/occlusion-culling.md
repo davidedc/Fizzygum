@@ -45,36 +45,56 @@ Two pieces, both in the framework source:
 ### 2a. `Widget::opaqueCoveredRect()` — the coverage predicate
 
 Returns the axis-aligned rectangle this widget **provably paints fully opaque**, in logical px
-world coordinates, or `undefined`. It is the single geometry the whole feature rests on. Gates, ALL
+world coordinates, or `undefined`. It is the single geometry the whole feature rests on, and it is
+answered at **two layers**: the widget decides whether its paint is *modulated* out of a claim, and
+the **appearance** supplies the claim's *geometry*, beside the paint that creates it. Everything is
 evaluated at runtime (never baked per class — appearances are swapped live, e.g. a re-parented
-window flips Rectangular↔Boxy):
+window flips Rectangular↔Boxy).
 
-1. **Plain appearance-delegation paint route** —
-   `@paintIntoAreaOrBlitFromBackBuffer is Widget::paintIntoAreaOrBlitFromBackBuffer`.
-   `BackBufferMixin` overrides that method to blit an offscreen buffer of unknown per-pixel
-   opacity; this one prototype-identity check excludes its consumers. Nine widget classes that
-   draw arbitrary pixels — `HandleWdgt`, `LayoutChromeWdgt`, `LabelButtonWdgt`, `PenWdgt`,
-   `CellWdgt`, `SheetHeaderCellWdgt`, `AnalogClockWdgt`, `Example3DPlotWdgt`,
-   `GraphsPlotsChartsWdgt` — do so through their own `*Appearance` subclass rather than a paint
-   override, so they pass this gate and are excluded by gate 4 instead (their appearance is
-   neither `RectangularAppearance` nor `BoxyAppearance`, so the exact-class switch falls to
-   `undefined`).
-2. **Not ephemeral** (`not @isEphemeral()`) — highlights / drag affordances are translucent
+**`Widget::opaqueCoveredRect()` — the widget-side gates**, then `@appearance?.opaqueCoveredRect()`:
+
+1. **Not ephemeral** (`not @isEphemeral()`) — highlights / drag affordances are translucent
    screen-toppers, never coverers.
-3. **Opaque** — `@alpha == 1` and `@color._a == 1` (a translucent colour makes `fillStyle` emit
+2. **Opaque** — `@alpha == 1` and `@color._a == 1` (a translucent colour makes `fillStyle` emit
    `rgba(…)`).
-4. **Exact-class appearance dispatch** (a subclass may add arbitrary drawing, so it must NOT
-   inherit a coverage claim):
-   - `RectangularAppearance` → the **tight box** (bounds minus the four paddings — the main fill
-     clips there), or the **full bounds** if there is an opaque `backgroundColor` (which fills the
-     whole clipped bounds, padding ring included);
-   - `BoxyAppearance` (rounded windows) → the **inscribed box**: bounds inset by
-     `cornerRadius + 1` on every side (the straight edges fill crisply; only the corner arcs
-     anti-alias, so +1 is conservative);
-   - anything else (gradients, `DesktopAppearance`, unknown subclasses) → `undefined`.
+
+**`Appearance::opaqueCoveredRect()` — the shape-side geometry.** The base answers `undefined`: a
+shape makes no coverage claim unless it states one. Two state one:
+
+- `RectangularAppearance` → the **tight box** (bounds minus the four paddings — the main fill clips
+  there), or the **full bounds** if there is an opaque `backgroundColor` (which fills the whole
+  clipped bounds, padding ring included);
+- `BoxyAppearance` (rounded windows) → the **inscribed box**: bounds inset by `cornerRadius + 1` on
+  every side (the straight edges fill crisply; only the corner arcs anti-alias, so +1 is
+  conservative).
+
+⚠⚠ **A claim is inherited, and a subclass that changes the OUTLINE must therefore refuse it.**
+`BubblyAppearance` does: its rounded body occupies only the top `h - h/5` of the box (the rest is
+the tail strip), so `BoxyAppearance`'s inscribed box reaches below the fill for any bubble taller
+than about `5×(cornerRadius+1)` — and a `ToolTipWdgt` is a direct child of the world, so it *is*
+asked. It overrides back to `undefined`. `DesktopAppearance` and `SimpleDropletAppearance` inherit
+the rectangular claim correctly (a wallpaper tile and a plus-sign glyph both sit *on* the full
+fill), as `MenuAppearance` does the boxy one.
+
+ⓘ The `BackBufferMixin` consumers (`StringWdgt`, `CanvasWdgt`, `PaletteWdgt` and their subclasses)
+blit an offscreen buffer of unknown per-pixel opacity: the mixin answers `undefined` for itself, so
+nothing at the widget layer has to test how a widget's paint is routed. Every other class that
+draws arbitrary pixels — `HandleWdgt`, `LayoutChromeWdgt`, `LabelButtonWdgt`, `PenWdgt`,
+`CellWdgt`, `SheetHeaderCellWdgt`, `AnalogClockWdgt`, `Example3DPlotWdgt`,
+`GraphsPlotsChartsWdgt` — does so through its own `*Appearance` subclass, which takes the base's
+`undefined`.
+
+ⓘ The scan runs over `world.children`, so only **desktop-level** widgets are ever asked; the world
+itself never is.
 
 Padding ≠ 0 and a *translucent* `backgroundColor` are **not** exclusions — the tight-box result
 already accounts for both.
+
+**Its sibling predicate is [`shapeContainsPoint`](widget-authoring-guidelines.md#5-appearance)**,
+the pointer's shape question, which shares no code with this one on purpose: this one is about how
+much a widget *paints* (and so consults `@alpha` and colour opacity, and must be conservative in
+the direction of claiming less), while that one is about where a widget *is* (and so consults
+neither, and is exact).
 
 ### 2b. `WorldWdgt::_paintedFromFrontmostCoverer(aContext, aRect)` — the per-rect skip
 

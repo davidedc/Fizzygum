@@ -79,11 +79,6 @@ class TransformFrameWdgt extends PanelWdgt
     # reaches the frame — the sole-content sugar-figure case — it continues up the parent
     # chain past it, like any other non-accepting widget).
     @_acceptsDrops = false
-    # The island is invisible PLUMBING and never claims a pointer hit itself — i.e.
-    # catchesPointerAt is false everywhere on me; its CONTENT provides the clickable
-    # surface. The two members below are how that answer is composed. See
-    # docs/architecture/transforms.md §7.
-    @noticesTransparentClick = false
     if contentWidget?
       @wrapContent contentWidget
 
@@ -122,10 +117,11 @@ class TransformFrameWdgt extends PanelWdgt
   rotationHalo_apply: (deg) ->
     @setRotation deg
 
-  # never a hit target itself (see the ctor note): the descent still recurses into
-  # the content subtree, whose widgets ARE hit-tested (with the plane-mapped point).
-  isTransparentAt: (aPoint) ->
-    true
+  # I am invisible PLUMBING and never claim a pointer hit anywhere: my CONTENT provides the
+  # clickable surface. The descent still recurses into that content subtree, whose widgets ARE
+  # hit-tested (against the point mapped into their plane). See docs/architecture/transforms.md §7.
+  catchesPointerAt: (aPoint) ->
+    false
 
   # Bug-E fix (interaction transparency): PanelWdgt.mouseClickLeft raises on
   # click (bringToForeground) -- a behavior the WRAPPED content never had (FrameWdgt's
@@ -153,7 +149,7 @@ class TransformFrameWdgt extends PanelWdgt
   # The content-stack spec holds preferences about the DISPLAYED thing's nature ("empty
   # vertical space around a clock is meaningless", "this paragraph centers") — and the
   # island displays exactly that thing, transformed; it has no content-nature of its own.
-  # Same doctrine as isTransparentAt / the escalate-only click /
+  # Same doctrine as catchesPointerAt / the escalate-only click /
   # resolvesEditorSelectionToContent: the invisible wrapper adds no behavior of its own.
   # Creation DELEGATES to the content's own class-specific initialiser (a clock content
   # yields clock defaults) and the OBJECT is SHARED — identity-mapped by both graph

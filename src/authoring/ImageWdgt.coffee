@@ -39,11 +39,6 @@ class ImageWdgt extends GenericPanelWdgt
     overlayCanvas.disableDrops()
     mainCanvas.add overlayCanvas
 
-    # the overlay clears to fully transparent, and transparent pixels are not
-    # otherwise treated as pointer-over -- without this flag hover would stop
-    # registering inside the canvas (any slight tint would also do).
-    overlayCanvas.noticesTransparentClick = true
-
     overlayCanvas.injectProperty "mouseLeave", """
         # don't leave any trace behind then the pointer
         # moves out.

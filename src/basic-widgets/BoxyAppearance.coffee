@@ -9,40 +9,49 @@ class BoxyAppearance extends Appearance
   constructor: (widget) ->
     super widget
 
-  isTransparentAt: (aPoint) ->
+  # The rounded box: the bounding box MINUS the four quarter-disc cut-outs the rounding
+  # takes off the corners. A big cornerRadius therefore leaves a genuinely pointer-through
+  # notch at each corner (SystemTest_macroRoundedBoxCornerClickThrough is exactly that).
+  shapeContainsPoint: (aPoint) ->
     # first quickly check if the point is even
     # within the bounding box
     if !@widget.boundsContainPoint aPoint
-      return true
- 
+      return false
+
     thisWidgetPosition = @widget.position()
     radius = Math.max @getCornerRadius(), 0
- 
+
     relativePoint = new Point aPoint.x - thisWidgetPosition.x, aPoint.y - thisWidgetPosition.y
 
     # top left corner
     if relativePoint.x < radius and relativePoint.y < radius
       if relativePoint.distanceTo(new Point radius,radius) > radius
-        return true
+        return false
 
     # top right corner
     else if relativePoint.x > @widget.width() - radius and relativePoint.y < radius
       if relativePoint.distanceTo(new Point @widget.width() - radius,radius) > radius
-        return true
+        return false
 
     # bottom left corner
     else if relativePoint.x < radius and relativePoint.y > @widget.height() - radius
       if relativePoint.distanceTo(new Point radius, @widget.height() - radius) > radius
-        return true
+        return false
 
     # bottom right corner
     else if relativePoint.x > @widget.width() - radius and relativePoint.y > @widget.height() - radius
       if relativePoint.distanceTo(new Point @widget.width() - radius, @widget.height() - radius) > radius
-        return true
+        return false
 
 
-    return false
-  
+    return true
+
+  # The inscribed box: the straight edges between the corners fill crisply to the bounds, and
+  # the corner areas are cut away by the rounding (anti-aliased on native, hard-edged on
+  # SWCanvas) -> inset every side by cornerRadius + 1, conservatively.
+  opaqueCoveredRect: ->
+    @widget.boundingBox().insetBy Math.max(@getCornerRadius(), 0) + 1
+
   # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which

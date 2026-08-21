@@ -115,7 +115,6 @@ class Widget extends TreeNode
   minimumExtent: undefined
   color: Color.create 80, 80, 80
   strokeColor: undefined
-  texture: undefined # optional url of a fill-image
 
   lastTime: undefined
   # when you use the high-level geometry-change APIs
@@ -172,7 +171,6 @@ class Widget extends TreeNode
   # right click and then "duplicate..."
   isTemplate: false
   _acceptsDrops: false
-  noticesTransparentClick: false
   fps: 0
 
   # usually Widgets can be detached from Panels
@@ -472,30 +470,45 @@ class Widget extends TreeNode
       goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
 
-  # INK COVERAGE: is there nothing of me drawn at this point? The appearance answers
-  # for widgets that draw; an appearance-LESS widget is OPAQUE — explicitly (`? false`):
-  # most appearance-less widgets are hit-targets that must catch clicks, PROVEN when
-  # the opposite default ("appearance-less means transparent") was tried and regressed
-  # ~70 tests (container arc §5.6). The appearance-less widgets that genuinely ARE
-  # transparent overlays declare it per-class (MenuWdgt / PromptWdgt → true;
-  # TransformFrameWdgt delegates into its subtree). Before the `? false` this same
-  # behaviour rode an accident — `not undefined === true` at the consumer.
-  isTransparentAt: (aPoint) ->
-    (@appearance?.isTransparentAt aPoint) ? false
+  # ===== the pointer hit test: TWO questions, and this is the outer one =====
 
-  # THE QUESTION THE POINTER ACTUALLY ASKS: does a pointer at this point stop on me?
-  # It resolves the PAIR (@noticesTransparentClick, @isTransparentAt) into the one thing
-  # the hit test wants, and it exists because that pair is a trap in both directions.
-  #   Reading it: hit-testing is not "am I see-through here". A widget can paint nothing
-  # at all and still catch every click (@noticesTransparentClick, which is how a string
-  # stays clickable between its glyphs — measured 97% ink-free), and a widget can be fully
-  # opaque in @alpha terms and catch nothing (a menu, whose body is drawn by a child).
-  #   Writing it: one behaviour is composed from BOTH members, so stating either alone says
-  # half of what you mean — TransformFrameWdgt's constructor spells that pairing out longhand.
-  # Ask THIS, and set the two only as the way to answer it.
+  # IS THE POINTER'S TARGET ME, HERE? The whole question ActivePointerWdgt.topWdgtUnderPointer
+  # asks of every candidate, in ONE place and under a name — so that a class can state its own
+  # answer (CaretWdgt does) and any other subsystem can ask exactly what the pointer asks,
+  # neither of which a conjunction spelled out at the call site allows.
+  # aPoint is in MY plane (the caller maps it through screenPointToMyPlane).
+  #   The conjuncts are AM-I-THERE (clipped bounds), AM-I-SHOWN (visible, not collapsed),
+  # DOES-MY-SURFACE-STOP-IT (catchesPointerAt) and AM-I-EVEN-MATERIAL (ephemerals — highlights,
+  # pinout markers, drag affordances — are reconciler-owned overlays, non-interactable by
+  # definition; the isEphemeral() capability replaced the two former per-marker predicates).
+  # CaretWdgt overrides the whole thing to false, with its own reason.
+  isPointerTargetAt: (aPoint) ->
+    @clippedThroughBounds().containsPoint(aPoint) and
+      @visibleBasedOnIsVisibleProperty() and
+      not @isInCollapsedSubtree() and
+      @catchesPointerAt(aPoint) and
+      not @isEphemeral()
+
+  # DOES MY SURFACE STOP THE POINTER HERE? The inner half: purely about the surface I present,
+  # with no say about visibility, materiality or z-order. TOTAL — false outside my bounds — so
+  # it is safe to ask on its own.
+  #   ⚠ THIS IS NOT "AM I SEE-THROUGH HERE", and the trap runs in both directions. A widget can
+  # paint almost nothing and still stop the pointer everywhere: a StringWdgt is ~97% ink-free
+  # (measured) and stays clickable between its glyphs, because clicking text means clicking the
+  # LINE, not the strokes. And a widget can be as opaque as you like and stop nothing: a MenuWdgt
+  # is a pure structural wrapper whose body is drawn by a child, so it declares `-> false` and the
+  # hit falls through to that child (and, at the rounded corners, past it). Neither is a statement
+  # about @alpha, which this NEVER consults — an alpha-0 panel is invisible and still stops clicks.
+  #   The default follows the SHAPE, which is the appearance's business (Appearance.shapeContainsPoint);
+  # an appearance-LESS widget claims its whole box. That default is load-bearing, not a convenience:
+  # flipping it to "appearance-less means pointer-through" was tried and regressed ~70 tests
+  # (docs/archive/container-regularization-plan.md §5.6) — menus, inspectors, spreadsheets and
+  # sliders all rely on a plain widget catching clicks over its bounds.
   catchesPointerAt: (aPoint) ->
-    return true  if @noticesTransparentClick
-    not @isTransparentAt aPoint
+    if @appearance?
+      @appearance.shapeContainsPoint aPoint
+    else
+      @boundsContainPoint aPoint
 
   # Selection overlay (selection-overlay-unification arc, supersedes the §5.D D-3/D21 world-attached
   # HighlighterWdgt). The editor-focus selection is a per-widget decoration drawn ON TOP of the selected
@@ -2907,38 +2920,21 @@ class Widget extends TreeNode
   # pixels of whatever is painted beneath the coverer, caught only by the pixel-exact SystemTests.
   # Every gate is evaluated at RUNTIME (never baked per class): appearances are swapped live
   # (e.g. FrameWdgt._deriveAndSetBodyAppearance flips Rectangular<->Boxy on re-parenting).
+  # ⓘ The scan runs over world.children, so only DESKTOP-level widgets are ever asked — the world
+  # itself never is, which is why DesktopAppearance may simply inherit the rectangular claim.
+  # These three gates are WIDGET facts — how the widget's own paint is modulated — so they live
+  # here; the GEOMETRY of the claim belongs to the shape and lives on the appearance
+  # (Appearance.opaqueCoveredRect), beside the paint that creates it. Nothing here needs to test
+  # HOW a widget's paint is routed: a BackBufferMixin consumer blits a buffer of unknown
+  # per-pixel opacity, and the mixin declines the claim for itself.
   opaqueCoveredRect: ->
-    # (1) The paint must route through the plain appearance delegation. Widget::paintIntoAreaOrBlit-
-    # FromBackBuffer just delegates to @appearance (every widget class now routes through it — the
-    # former nine custom painters each moved their override into their own Appearance subclass, whose
-    # constructors fall to this switch's else -> undefined), but BackBufferMixin still overrides it to blit
-    # an offscreen buffer of unknown per-pixel opacity. This prototype-identity check excludes its
-    # consumers.
-    return undefined if @paintIntoAreaOrBlitFromBackBuffer isnt Widget::paintIntoAreaOrBlitFromBackBuffer
-    # (2) ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
+    # ephemeral overlays (highlights, drag affordances) are translucent screen-toppers, never coverers
     return undefined if @isEphemeral()
-    # (3) the fill runs at globalAlpha = @alpha (RectangularAppearance), and (4) @color must be a
-    # solid opaque colour (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1)
+    # the fill runs at globalAlpha = @alpha, and @color must be a solid opaque colour
+    # (else fillStyle emits rgba(...) -- Color.toString gates on _a == 1)
     return undefined if @alpha != 1
     return undefined if !@color? or @color._a != 1
-    # Dispatch on the EXACT appearance class (CoffeeScript switch compares with ===): a subclass
-    # appearance may add arbitrary drawing (drawAdditionalPartsOnBaseShape) and must NOT inherit a
-    # coverage claim. DesktopAppearance falls to the else -> undefined (the world occludes nothing).
-    switch @appearance?.constructor
-      when RectangularAppearance
-        if @backgroundColor? and @backgroundColor._a == 1
-          # an opaque backgroundColor fills the FULL clipped bounds, padding ring included
-          @boundingBox()
-        else
-          # the main @color fill clips to the tight box (bounds inset by the four paddings)
-          @boundingBoxTight()
-      when BoxyAppearance
-        # inscribed box: the straight edges between corners fill crisply to the bounds; the corner
-        # areas are cut away by the rounding (anti-aliased on native, hard-edged on SWCanvas)
-        # -> inset every side by cornerRadius + 1 (conservative)
-        @boundingBox().insetBy Math.max(@appearance.getCornerRadius(), 0) + 1
-      else
-        undefined
+    @appearance?.opaqueCoveredRect()
 
   # in general, the children of a Widget could be outside the
   # bounds of the parent (they could also be much larger

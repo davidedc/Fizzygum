@@ -3,16 +3,29 @@ class RectangularAppearance extends Appearance
   # the legacy device paint bounds its own fills/stroke to damage∩tight; see Appearance.
   clipsToDamageBox: false
 
-  isTransparentAt: (aPoint) ->
-    if @widget.boundingBoxTight().containsPoint aPoint
-      return false
-    # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
-    # leaves it undefined) — so only the "is it actually opaque enough to catch a click" test
-    # remains; the old `backgroundTransparency?` existence check was vacuous.
-    if @widget.backgroundColor? and @widget.backgroundTransparency > 0
-      if @widget.boundsContainPoint aPoint
-        return false
-    return true
+  # ⚠⚠ NO transparency field takes a point out of a rectangle's shape. The TIGHT box (bounds
+  # inset by the four paddings) is mine outright — @alpha is never consulted, so a widget at
+  # alpha 0 is invisible and still shaped. Only the padding HALO around it is conditional, and
+  # only on there being a backgroundColor to fill it: backgroundTransparency is an INVARIANT
+  # (Widget defaults it to 1 and no constructor leaves it undefined), so `> 0` is the whole
+  # test and the old `backgroundTransparency?` existence check was vacuous.
+  #   A rectangular container that must let the pointer THROUGH says so itself — it declares
+  # `catchesPointerAt: -> false` (MenuWdgt, PromptWdgt, FrameBarWdgt, PopUpRowsViewportWdgt,
+  # TransformFrameWdgt all do) — because that is a statement about its ROLE, not about its shape.
+  shapeContainsPoint: (aPoint) ->
+    return true  if @widget.boundingBoxTight().containsPoint aPoint
+    return true  if @widget.backgroundColor? and @widget.backgroundTransparency > 0 and
+                    @widget.boundsContainPoint aPoint
+    false
+
+  # The main @color fill clips to the tight box; an opaque backgroundColor fills the FULL
+  # bounds, padding ring included (see the paint below — the background goes down over the
+  # whole damage box, then the colour over damage ∩ tight).
+  opaqueCoveredRect: ->
+    if @widget.backgroundColor? and @widget.backgroundColor._a == 1
+      @widget.boundingBox()
+    else
+      @widget.boundingBoxTight()
 
   # This method only paints this very widget
   # i.e. it doesn't descend the children

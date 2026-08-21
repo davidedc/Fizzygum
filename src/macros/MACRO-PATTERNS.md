@@ -1251,7 +1251,7 @@ assertion a recapture after a regression silently stores two different hashes an
   HandleWdgt` (exactly what the demo "handle" item does — `world.widgetFactory.createNewHandle`, `WidgetFactory.coffee:60`;
   give it a `setExtent` so the
   striped-triangle glyph is visible), `@moveToAndClickAtFractionOf_InputEvents handle, [0.72,0.75], "right button"` (it
-  sets `noticesTransparentClick`, so any point in its box works; the painted part is the bottom-right) → "resize/move..."
+  declares `catchesPointerAt` over its whole box, so any point in it works; the painted part is the bottom-right) → "resize/move..."
   → `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", dest`; click empty desktop to leave the mode.
   DISAMBIGUATION: the target handle ALSO has `type == "resizeBothDimensionsHandle"`, but `topWdgtSuchThat` tests the
   sub-handle (a child, added later → frontmost) BEFORE the target, so the verb grabs the resizer, not the target.
@@ -1843,9 +1843,10 @@ assertion a recapture after a regression silently stores two different hashes an
   bare-world-child float-drag + held-button mid-drag idiom follow `macroBareButtonFloatDragsWithoutTriggering`; the
   rest -> lifted -> rest three-shot follows `macroMenuShadowCorrectWhileAndAfterDrag`. Three distinct dataHashes (the shadow
   genuinely changes); no `@assertScreenshotsIdentical` (the states must DIFFER). No new verb.
-- **Shape hit-test / click-through** (`macroRoundedBoxCornerClickThrough`): the pointer resolves to a morph by SHAPE, not bounding
-  box — `ActivePointerWdgt.topWdgtUnderPointer` skips any morph that `isTransparentAt` the pointer (`:48`). A `BoxWdgt` with a
-  large `cornerRadius` is transparent at its corners (`BoxyAppearance.isTransparentAt` outside the rounded arc). Put a
+- **Shape hit-test / click-through** (`macroRoundedBoxCornerClickThrough`): the pointer resolves to a widget by SHAPE, not bounding
+  box — `ActivePointerWdgt.topWdgtUnderPointer` keeps only widgets that answer `isPointerTargetAt` the pointer, whose surface half
+  is `catchesPointerAt`. A `BoxWdgt` with a large `cornerRadius` catches nothing at its corners
+  (`BoxyAppearance.shapeContainsPoint` is false outside the rounded arc). Put a
   RectangleWdgt backdrop behind a `new BoxWdgt 55`, then `@moveToAndClickAtFractionOf_InputEvents box, [0.96,0.96]` (a corner —
   click passes THROUGH, backdrop comes forward) vs `[0.1,0.4]` (the body — box comes forward). The z-order flip on left-click
   (`bringToForeground`) is the observable.

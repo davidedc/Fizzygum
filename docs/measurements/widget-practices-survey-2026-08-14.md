@@ -325,6 +325,12 @@ Cosmetic tail: `new FooAppearance @` (paren-free, 31 sites) vs `new CircleBoxyAp
 
 ### F12 — Where hit-testing lives · **SPLIT (7 widget-side vs 5 appearance-side), rule unstated**
 
+> **RESOLVED since this snapshot** (pointer hit-test rework): the rule is now stated and the members
+> are split by what they mean — `Appearance.shapeContainsPoint` (outline), `Widget.catchesPointerAt`
+> (does my surface stop the pointer) and `Widget.isPointerTargetAt` (the whole question). See
+> [`../architecture/widget-authoring-guidelines.md`](../architecture/widget-authoring-guidelines.md) §5.
+> The measurement below stands as the dated snapshot that prompted it.
+
 `isTransparentAt` is implemented **7 times on widgets** (`Widget`, `FrameBarWdgt`, `MenuWdgt`,
 `PromptWdgt`, `SimpleImageWdgt`, `TransformFrameWdgt`, `VideoPlayerCanvasWdgt`) and **5 times on
 appearances** (`Appearance`, `RectangularAppearance`, `BoxyAppearance`, `CircleBoxyAppearance`,
@@ -660,7 +666,7 @@ but is adopted by few.
 | F9 | Class-level field declaration | PATCHWORK (58%) | — |
 | F10 | Serialization transients / copy hooks | THIN | production smoke round-trip |
 | F11 | Appearance wiring | TWO IDIOMS | — |
-| F12 | `isTransparentAt` placement | TWO IDIOMS (rule unstated) | — |
+| F12 | `isTransparentAt` placement | TWO IDIOMS (rule unstated) — **RESOLVED since**, see F12 | `widget-authoring-guidelines.md` §5 |
 | F13 | `_reLayout` override shape | TWO IDIOMS + duplicated prologue | `check-relayout-bounds-first.js` (half of it) |
 | F14 | `_reLayoutChildren` as the container marker | CONVERGED | `layout.md` §2.4 |
 | F15 | Pure-measure protocol | CONVERGED | — |

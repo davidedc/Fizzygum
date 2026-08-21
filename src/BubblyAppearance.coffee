@@ -6,6 +6,24 @@ class BubblyAppearance extends BoxyAppearance
   # `(widget) -> super widget` this would otherwise need (both call sites pass one
   # argument). Dedup case law: docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md.
 
+  # ===== the two shape answers, because my OUTLINE is not my superclass's =====
+  # My rounded body occupies only the top (h - h/5) of the box; the bottom fifth is the tail
+  # strip, empty except for the spike itself.
+  #
+  # ⛔ opaqueCoveredRect MUST be undefined, not inherited. BoxyAppearance claims
+  # `boundingBox().insetBy cornerRadius + 1`, whose bottom edge sits BELOW my body for any
+  # bubble taller than about 5×(cornerRadius+1) — the occlusion culler would then skip
+  # everything behind that strip and drop real pixels there. A ToolTipWdgt is a direct child
+  # of the world, so it is asked.
+  opaqueCoveredRect: ->
+    undefined
+
+  # shapeContainsPoint is deliberately NOT overridden: I inherit BoxyAppearance's rounded-box
+  # test, which OVER-claims the tail strip (a click in the empty corner beside the spike stops
+  # on the bubble instead of falling through). Harmless today — bubbles and tooltips are not
+  # things you click past — and correcting it means an analytic body+spike test, which is a
+  # behaviour change, not a rename. Named here so it is a known approximation, not a silence.
+
   # The bubble outline (rounded box + tail spike) is not a roundRect, so unlike
   # BoxyAppearance both of these paint through the generic path pipeline. Fill
   # and stroke share the one path — this outline never applied the boxy

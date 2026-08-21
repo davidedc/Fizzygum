@@ -391,8 +391,9 @@ loudly at first paint, and the boot-smoke gate will catch anything on the defaul
 - **Transforms**: under rotated/tilted contexts (TransformFrame islands) the fillRects go
   through the same buffer-transform path as all content; crispness and cross-backend identity
   are only claimed for the axis-aligned case — exactly today's situation for vector icons.
-- **Hit-testing/highlight**: no icon overrides `isTransparentAt` today, and `paintHighlight`
-  is commented out in the vector path — no pixel-side work needed.
+- **Hit-testing/highlight**: no icon appearance overrides `shapeContainsPoint` (they take the
+  base's "my whole box" answer), and `paintHighlight` is commented out in the vector path — no
+  pixel-side work needed.
 
 ### 4.4 What "settings" means (kept simple, per owner)
 

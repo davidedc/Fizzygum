@@ -126,22 +126,7 @@ class ActivePointerWdgt extends Widget
       # widget NOT inside an island (⇒ always, when dormant) mappedPointerPosition IS
       # @position(), so this is byte-identical.
       mappedPointerPosition = m.screenPointToMyPlane @position()
-      m.clippedThroughBounds().containsPoint(mappedPointerPosition) and
-        m.visibleBasedOnIsVisibleProperty() and
-        !m.isInCollapsedSubtree() and
-        m.catchesPointerAt(mappedPointerPosition) and
-        # we exclude the Caret here because
-        #  a) it messes up things on double-click as it appears under
-        #     the mouse after the first clicks
-        #  b) the caret disappears as soon as a menu appears, so it
-        #     would be confusing to select a caret.
-        # the caret is a world singleton.
-        (m != world.caret) and
-        # exclude EPHEMERAL overlays (highlight / pinout / drag affordances): reconciler-owned,
-        # non-interactable by definition. The isEphemeral() capability replaces the two former
-        # per-marker predicates (!m.wdgtThisWdgtIsHighlighting? / !m.wdgtThisWdgtIsPinouting?); the
-        # markers survive as the overlays' back-references to their targets, no longer as the gate.
-        !m.isEphemeral()
+      m.isPointerTargetAt mappedPointerPosition
     if result?
       return result
     else

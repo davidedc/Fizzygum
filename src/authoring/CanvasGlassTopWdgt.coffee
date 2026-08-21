@@ -3,10 +3,18 @@ class CanvasGlassTopWdgt extends CanvasWdgt
   underlyingCanvasWdgt: undefined
   defaultRejectDrags: true
 
+  # I clear myself to FULLY TRANSPARENT, so BackBufferMixin's per-pixel answer (which I would
+  # otherwise inherit from CanvasWdgt) is "the pointer is never on me" — and hover would stop
+  # registering the moment the paint surface is clean. My whole box takes the pointer instead:
+  # that is what makes me the glass over the canvas. ⚠ It belongs HERE and not in whichever
+  # client builds me (ImageWdgt today) — set from outside, a second client, or one dropped line,
+  # silently gets a dead paint surface.
+  catchesPointerAt: (aPoint) ->
+    @boundsContainPoint aPoint
+
   # paintingOverlay() capability chain (§5.D): I AM the injection target --
-  # the focused widget after a click on the paint surface is me (I notice
-  # transparent clicks over the whole canvas), and the tools' handlers live
-  # on me, painting through @underlyingCanvasWdgt.
+  # the focused widget after a click on the paint surface is me -- and the
+  # tools' handlers live on me, painting through @underlyingCanvasWdgt.
   isPaintingOverlay: ->
     true
 

@@ -45,17 +45,16 @@ class FrameBarWdgt extends Widget
   # themselves via IconButtonWdgt).
   excludedFromEditorFocusTracking: -> true
 
-  # I draw NOTHING myself -- my titlebarBackground piece draws the strip -- so I am
-  # transparent EVERYWHERE and hit-testing must fall THROUGH me: to my pieces (opaque
-  # where the strip is drawn), to the frame body at the 1px border the background
-  # doesn't cover, and -- at the frame's transparent rounded-corner notches -- on
-  # through to whatever is BEHIND the frame. Without this the base answers OPAQUE
-  # (the explicit appearance-less default) and I would intercept hits at those corner
-  # pixels the frame's own appearance reports transparent -- observed as the desktop
-  # folder shortcut losing its pointer-under state when its window spawns at the
-  # click point (same corner story as MenuWdgt / PromptWdgt, container arc §5.6).
-  isTransparentAt: (aPoint) ->
-    true
+  # I present NO SURFACE OF MY OWN -- my titlebarBackground piece draws the strip -- so the
+  # pointer falls THROUGH me: to my pieces (shaped where the strip is drawn), to the frame body
+  # at the 1px border the background doesn't cover, and -- at the frame's rounded-corner notches
+  # -- on through to whatever is BEHIND the frame. Without this the base claims my whole box (the
+  # appearance-less default) and I would intercept hits at exactly those corner pixels the
+  # frame's own shape excludes -- observed as the desktop folder shortcut losing its
+  # pointer-under state when its window spawns at the click point (same corner story as
+  # MenuWdgt / PromptWdgt, container arc §5.6).
+  catchesPointerAt: (aPoint) ->
+    false
 
   # The internal structure of a window's chrome, not a user-meaningful target:
   # excluded from the right-click hierarchy/disambiguation menu exactly like

@@ -10,7 +10,6 @@
 # What lives HERE is only what is true of the default plane BY CONSTRUCTION — so PanelWdgt
 # stays purely the SURFACE class, with no plane-conditional second personality (scroll-frame
 # role plan P3):
-#   - it never notices transparent clicks (its viewport handles those);
 #   - its membership changes are relayed to the viewport's HOLDER (the bin listens);
 #   - a click on its empty part forwards the caret to a lone editable text child.
 # (The color/alpha up-relays that keep the viewport's mimic paint values true are NOT here —
@@ -18,10 +17,6 @@
 # default one; the stack declares its own pair.)
 
 class ScrolledPaneWdgt extends PanelWdgt
-
-  # my viewport catches what needs catching; a plane spanning the viewport must not
-  # intercept clicks that mean "the content behind the pixels"
-  noticesTransparentClick: false
 
   # (the color/alpha up-relays that keep my viewport's mimic values true live on PanelWdgt now —
   # every panel-family plane relays, not just me)

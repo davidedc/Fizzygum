@@ -39,17 +39,16 @@ class PromptWdgt extends PopUpWdgt
   isMenu: ->
     true
 
-  # Like MenuWdgt, I draw NOTHING myself -- my rowsPanel draws the box -- so I am
-  # transparent EVERYWHERE and hit-testing must fall THROUGH me to my panel (and, at my
-  # transparent rounded corners / padding, on through to whatever is behind me). Without
-  # this the base answers OPAQUE (the explicit appearance-less default -- most
-  # appearance-less widgets are hit-targets, see Widget.isTransparentAt); transparency
-  # stays a per-class override, with the owner-accepted consequence that a resting
-  # pointer over a prompt corner hover-highlights the widget behind (e.g.
-  # macroSaveAsPromptAboveTiltedWindow's close button). Why the base DEFAULT was not
-  # flipped instead: docs/archive/container-regularization-plan.md §5.6.
-  isTransparentAt: (aPoint) ->
-    true
+  # Like MenuWdgt, I present NO SURFACE OF MY OWN -- my rowsPanel draws the box -- so the pointer
+  # falls THROUGH me to my panel (and, at my empty rounded corners / padding, on through to
+  # whatever is behind me). Without this the base claims my whole box (the appearance-less
+  # default -- most appearance-less widgets ARE hit targets, see Widget.catchesPointerAt). This
+  # stays a per-class statement, with the owner-accepted consequence that a resting pointer over
+  # a prompt corner hover-highlights the widget behind (e.g. macroSaveAsPromptAboveTiltedWindow's
+  # close button). Why the base DEFAULT was not flipped instead:
+  # docs/archive/container-regularization-plan.md §5.6.
+  catchesPointerAt: (aPoint) ->
+    false
 
   colloquialName: ->
     if @msg then "\"" + @msg + "\" prompt" else "prompt"

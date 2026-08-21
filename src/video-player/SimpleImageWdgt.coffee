@@ -104,22 +104,9 @@ class SimpleImageWdgt extends CanvasWdgt
     @_changed()
     world.steppingWdgts.delete @
 
-  # TODO You should override isTransparentAt much much more extensively, because
-  # having the mouse reading pixels via @getPixelColorAt: (aPoint)
-  # is not very efficient. You should console.out whenever that happens and see if it
-  # happens too often, and avoid that from happening.
-  #
-  # A widget-side copy of RectangularAppearance.isTransparentAt; its twin lives on
-  # VideoPlayerCanvasWdgt. Deliberately NOT unified: both classes paint via
-  # BackBufferMixin (no appearance object), and assigning a RectangularAppearance
-  # just for hit-testing would also leak its shape-specific menu entries.
-  isTransparentAt: (aPoint) ->
-    if @boundingBoxTight().containsPoint aPoint
-      return false
-    # backgroundTransparency is an INVARIANT (Widget defaults it to 1 and no constructor
-    # leaves it undefined) — so only the "is it actually opaque enough to catch a click" test
-    # remains; the old `backgroundTransparency?` existence check was vacuous.
-    if @backgroundColor? and @backgroundTransparency > 0
-      if @boundsContainPoint aPoint
-        return false
-    return true
+  # My raster fills my box — @_paintImageOnBackBuffer draws the image across the whole
+  # @width()×@height() — so the pointer question has a constant answer and there is no reason to
+  # pay for BackBufferMixin's per-pixel probe (getPixelColor allocates an ImageData per hover
+  # sample). VideoPlayerCanvasWdgt says the same thing about its frames.
+  catchesPointerAt: (aPoint) ->
+    @boundsContainPoint aPoint

@@ -44,19 +44,17 @@ class MenuWdgt extends PopUpWdgt
   excludedFromEditorFocusTracking: ->
     @actsAsEditorChrome
 
-  # I draw NOTHING myself -- my rowsPanel draws the box (and my shadow is my only
-  # paint). So I am transparent EVERYWHERE: hit-testing must fall THROUGH me to my
-  # panel (which is opaque where the box is, so topWdgtSuchThat finds it first) and,
-  # where the panel does not cover (its rounded corners / the padding), on through to
-  # whatever is behind me. Without this, the base answers OPAQUE (the explicit
-  # appearance-less default -- most appearance-less widgets are hit-targets, see
-  # Widget.isTransparentAt) -- so my transparent corners would intercept a click meant
-  # for a menu BEHIND me (a submenu popped over a parent menu stopped the parent's
-  # item from staying hover-highlighted). The MenuAppearance the old self-laying menu
-  # carried reported this correctly; the panel now carries it, and I must report
-  # transparent to match.
-  isTransparentAt: (aPoint) ->
-    true
+  # I present NO SURFACE OF MY OWN -- my rowsPanel draws the box (my shadow is my only paint) --
+  # so the pointer never stops on me: it falls THROUGH to my panel (which is shaped where the box
+  # is, so topWdgtSuchThat finds it first) and, where the panel does not reach (its rounded
+  # corners / my padding), on through to whatever is behind me. Without this the base claims my
+  # whole box (the appearance-less default -- most appearance-less widgets ARE hit targets, see
+  # Widget.catchesPointerAt) and my empty corners would intercept a click meant for a menu BEHIND
+  # me: a submenu popped over a parent menu stops the parent's item staying hover-highlighted.
+  # The MenuAppearance that shapes the box belongs to the PANEL, so the panel is what answers
+  # for it, and I answer for nothing.
+  catchesPointerAt: (aPoint) ->
+    false
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
   # (P5 arg-object conversion). Defaults match the old positional signature: killOutside /
