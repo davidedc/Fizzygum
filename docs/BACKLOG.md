@@ -192,10 +192,9 @@ Authored 2026-08-14; the law it landed is **a controller is a view of the value 
 stays one however that value changes**. Every landed step, and every defect found while landing
 one, is in that plan's "As landed" blocks and in its § "BACKLOG ledger" — read those before
 trusting any section's original sketch (§2.4 in particular is history: P1 replaced the write-only
-tables it surveys). Not the wire *vocabulary* (that is the plan above). What stayed open is one
-by-catch defect, five follow-ons that each want their own decision or arc, and the two
-re-homed/refused items:
-- [ ] **`getPixelColor` returns a `Color` whose alpha is in the WRONG UNITS** (found alongside the `BackBufferMixin` per-pixel hit-test fix — `catchesPointerAt` today — in that plan's § "BACKLOG ledger"; NOT fixed). `Color._a` is documented as "opacity as a number between 0.0 and 1.0", but `getPixelColor` does `Color.create data.data[0], data.data[1], data.data[2], data.data[3]`, passing the raw 0..255 byte into a parameter declared `a = 1`, and `Color.create` does not normalise. Harmless for the fully-transparent test (0 is 0) but it hands every other consumer an out-of-contract value — `PaletteWdgt.pickColor` takes its picked colour straight from here, so a picked colour carries `_a: 255` instead of `1`. Check what that reaches before changing it: the divisor is a one-line fix, the blast radius is whoever compares or serializes that alpha.
+tables it surveys). Not the wire *vocabulary* (that is the plan above). What stayed open is
+five follow-ons that each want their own decision or arc, and the two re-homed/refused items
+(its one by-catch defect, the `getPixelColor` alpha units, is CLOSED — see that plan's ledger):
 - [ ] **THE SHADOW PASS HAS THREE COVERAGE STRATEGIES AND THEY DISAGREE** (found while landing the pop-up-overflow arc; owner-raised). `Widget.coffee` states the contract at the shadow entry point — *"a shadow is the caster's per-pixel COVERAGE"* — and coverage is an OPACITY, so two coincident opaque widgets have coverage 1, not 1.36. Three implementations exist: **(1) recursive re-paint** (the general path) draws every descendant as shadow, so overlapping opaque children STACK — 0.2 over 0.2 composites to 0.36, which is a visible doubly-dark core in the band under every menu and prompt; **(2) the opaque-panel short-circuit** (`ClippingAtRectangularBoundsMixin`, `if @alpha != 1` — a fully opaque clipping panel draws ONE rectangle and skips its children); **(3) the silhouette blit** (`HTMLCanvasElement.blackSilhouetteOf`, used by `BackBufferMixin` and the transform islands). ⭐ **The "optimisation" (2) and the buffer path (3) are the only ones that honour the contract; the general path (1) is the broken one** — so the shadow a subtree casts today depends on whether an ancestor happens to be an opaque clipping panel, which is not a property anyone reasons about. ⇒ unify on the silhouette. ⚠ Own arc: it changes EVERY shadow in the system (removing every doubled band), so it needs its own before/after evidence and a deliberate mass recapture, not a side effect of something else.
 - [ ] **Menu LENGTH is now a pure UX question, and worth its own arc.** Widget context menus run 19–42 rows (measured 2026-08-17 at the harness world: `TextWdgt` 40, `StringWdgt` 36, `SimpleTextWdgt`/`TitleWdgt` 33, `SliderWdgt` 26, `RectangleWdgt` 19). Nobody scans 40 rows. Grouping related rows behind submenus — what §P2 did locally for `connect ➜`/`bind ⇄` — would shorten every menu. Deliberately NOT bundled with the overflow fix (owner call): the fix establishes the invariant so no row count can break reachability again, which is what makes the length question a taste question rather than a correctness one.
 - [ ] **A2 residue — `SliderWdgt.value` is the one readable pin that still cannot declare `announces`, and closing it is the FOLLOWER arc's job.** Its value-producing paths announce; its two value-SHOWING paths (`_updateHandlePosition`, `_updateSpecs`) do not and must not yet — neither has an equal-value cutoff, so an announcement there would re-fire on every drain pass, a self-sustaining loop with **no cycle in it at all**. Three things belong together in that arc and none is worth doing alone: (a) the cutoff on those two; (b) a SECOND reflector — something that shows a value it does not own without needing a `SliderRange`, e.g. a label displaying a widget's value live — which is the only thing (a) would buy anything for; (c) ⚠ **the cycle rule**: two mutually-tracking controllers are prevented today by an ACCIDENT (`SliderWdgt` does not answer `sliderRangeForPin`, so slider-follows-slider cannot be built), not by a rule. The right shape is to refuse the cycle where it would be CREATED — `_canTrackWire` rejects a target that already follows me — rather than keeping the graph deaf so cycles cannot form, which is what the suppressed announcements did by accident.
@@ -217,7 +216,6 @@ P0-P3 (Avenue A) LANDED 2026-07-09; P4/P5/P5b/P5c OWNER-GATED, not started.
 - [ ] P5: descend to nested opaque panels/window bodies — optional, not started
 - [ ] P5b: hand-carried drag coverer (hand paints last, uncounted today) — not started
 - [ ] P5c: fringe decomposition of the dragged window's own rects — not started
-- [ ] **`BubblyAppearance.shapeContainsPoint` OVER-CLAIMS its tail strip** (named in the class, not silent; found while re-homing the shape predicates onto the appearances, 2026-08-21). A bubble's rounded body occupies only the top `h - h/5`; the bottom fifth is empty except for the spike. It inherits `BoxyAppearance`'s rounded-box test, so a click in the empty corner beside the spike stops on the bubble instead of falling through. Harmless today (bubbles and tooltips are not things you click past), and correcting it needs an analytic body+spike point test — a BEHAVIOUR change with hover-pixel churn, not a rename. Its `opaqueCoveredRect` twin was NOT harmless and is already refused (it would have dropped pixels under a `ToolTipWdgt`).
 
 ### `plans/pixel-icons-plan.md`
 AUTHORED 2026-07-18, NOT STARTED; replace ~79 vector `*IconAppearance` files with ASCII index-mask pixel icons (16/32/48 all supported, per-icon subset by usage cohort, coverage-rule variant selection; maps/gradients/logo-with-text stay vector); ⛔ two owner gates (P0 aesthetic, P4 mass recapture).
@@ -285,6 +283,39 @@ unification, the `p0` collapse, the F3 re-sweep and the declined list — is in
       `leftEdgeMiddle`, identical flap constants, one calls `drawArrow`, the other `doPath`). A
       small shared glyph-helper would fold both pairs. Work it only when one of these files is
       next touched for its own reasons — standalone it is churn without a consumer.
+
+### Pointer hit-test rework 2026-08-21 — residue (no plan doc; the arc ran assessment → execution)
+`isTransparentAt` + the `noticesTransparentClick` flag retired for three single-meaning members —
+`Appearance.shapeContainsPoint` (outline) / `Widget.catchesPointerAt` (does my surface stop the
+pointer) / `Widget.isPointerTargetAt` (the whole question) — and `opaqueCoveredRect`'s exact-class
+switch dissolved onto the appearances. Living truth: `architecture/widget-authoring-guidelines.md` §5
+and `architecture/occlusion-culling.md` §2a. Three things it deliberately did not take on:
+- [ ] **`BubblyAppearance.shapeContainsPoint` OVER-CLAIMS its tail strip** (named in the class, not
+      silent). A bubble's rounded body occupies only the top `h - h/5`; the bottom fifth is empty
+      except for the spike. It inherits `BoxyAppearance`'s rounded-box test, so a click in the empty
+      corner beside the spike stops on the bubble instead of falling through. Harmless today (bubbles
+      and tooltips are not things you click past), and correcting it needs an analytic body+spike
+      point test — a BEHAVIOUR change with hover-pixel churn, not a rename. ⭐ Its `opaqueCoveredRect`
+      twin was NOT harmless and is already refused: `BoxyAppearance`'s `insetBy cornerRadius + 1`
+      reaches BELOW the fill for any bubble taller than ~5×(cornerRadius+1), and a `ToolTipWdgt` is a
+      direct child of the world, so the culler asks it and would have dropped real pixels.
+- [ ] **`scripts/recapture.js` CONTRADICTS ITSELF AND EXITS 0** (Fizzygum-tests; found 2026-08-21
+      smoke-testing the `fg recapture` verdict fix). `fg recapture <nonexistent-name>` prints
+      `⚠⚠ 1 test(s) FAILED TO CAPTURE … The completeness gate below will fail them`, and then the gate
+      prints `✅ RECAPTURE COMPLETE` and the process exits 0 — the warning's own prediction is false.
+      Same family as the three false-green defects that tool has already had fixed, and the reason
+      those matter: this tool's whole purpose is to make a silently-incomplete recapture impossible.
+      Harmless in the observed case (a missing directory cleans 0 files, so no reference was lost);
+      UNKNOWN whether a real test whose capture fails twice can reach the same false green.
+- [ ] **A `VideoPlayerCanvasWdgt` with no loadable video is invisible with no visible hider, and
+      `show()`ing it HANGS a headless page** (pre-existing; surfaced 2026-08-21 while giving the two
+      video-player widgets their first-ever runtime exercise). It constructs with an OWN
+      `isVisible = false` (prototype and `Widget` base are both `true`; a plain `CanvasWdgt` is
+      visible) at `video.readyState 0` — yet the only `isVisible = false` in src is `Widget.__hide`,
+      and nothing in `src/video-player/` calls `hide()`/`__hide`, so what hides it is unlocated.
+      Forcing `show()` then hung a headless page (2-min timeout, killed). ⚠ Note the `video-player`
+      part carries `requiresFlag: videoPlayer`, so NO profile builds it by default and NO gate ever
+      runs these classes — anything here is invisible to the suite, the gauntlet and the smoke.
 
 ### One line each — every item names the archived plan and section that owns its detail
 

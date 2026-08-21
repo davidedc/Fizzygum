@@ -1581,6 +1581,28 @@ better menu)
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
+- [x] **`getPixelColor` returned a `Color` whose alpha was in the WRONG UNITS — ✅ FIXED 2026-08-22.**
+      `Color._a` is contracted as "opacity as a number between 0.0 and 1.0", but `getPixelColor` did
+      `Color.create data.data[0], data.data[1], data.data[2], data.data[3]` — passing an `ImageData`
+      byte (0..255) into a parameter declared `a = 1`, which `Color.create` does not normalise. It is
+      the ONLY place in the tree that builds a `Color` from raw image bytes (the one other raw pixel
+      read, `PreferencesAndSettings.getMinimumFontHeight`, tests `data.data[3] isnt 0` directly and
+      never makes a Color), so the fix is the divisor at that single site.
+      ⭐ The filed entry called the fully-transparent test harmless and asked what else it reached.
+      Measured, it reached three things, two of which the entry did not anticipate:
+      (1) `Color.toString` gates its rgb-vs-rgba spelling on `_a == 1`, so a picked colour spelled
+      itself `rgba(r,g,b,255)`; (2) `Color.equals` compares `_a`, so a picked colour was NEVER equal
+      to an authored one of the same RGB — `PaletteWdgt.setChoice`'s `if @choice?.equals aColor then
+      return` guard could not short-circuit across that boundary (now measured true); and
+      (3) `Widget.opaqueCoveredRect` refuses a coverage claim unless `@color._a == 1`, so a widget
+      coloured from a palette pick could never be an occlusion coverer (now measured to claim its
+      full rect). ⚠ One test asserted the buggy value verbatim —
+      `macroSpecifiedBackgroundActuallyPaints` expected `"rgba(230,230,130,255)"` — and was updated to
+      `"rgb(230,230,130)"`, which is the SAME guard strength: `toString` emits the rgb spelling only
+      when `_a == 1`, so it still distinguishes the opaque pixel from the fully transparent one the
+      bug produced. That test's own metadata had already drifted to saying `rgb(230,230,130)`, so the
+      fix made the metadata true rather than needing an edit.
+
 The closed items this plan owned, relocated VERBATIM from `docs/BACKLOG.md` on 2026-08-18 so
 that file can go back to being an index of OPEN work only (`docs/README.md` filing rule 2: an
 arc's items leave BACKLOG when it closes). Nothing above this line changed; any item of this

@@ -112,7 +112,16 @@ BackBufferMixin =
         # For any ordinary (integer-pointer) hit test the product is already integer,
         # so the floor is a no-op ⇒ byte-identical when dormant.
         data = @backBufferContext.getImageData Math.floor(point.x * ceilPixelRatio), Math.floor(point.y * ceilPixelRatio), 1, 1
-        Color.create data.data[0], data.data[1], data.data[2], data.data[3]
+        # ⚠ THE ALPHA CHANGES UNITS HERE, and it is the only place in the tree that a Color is built
+        # from raw image bytes. ImageData carries all four channels as 0..255; Color._a is contracted
+        # as 0.0..1.0 (Color.coffee) and Color.create does not normalise, so the byte must be divided
+        # HERE or every colour this hands out is out of contract by a factor of 255. The is-it-zero
+        # question above cannot see the difference (0 is 0 either way) — what could is everyone else:
+        # Color.toString gates its rgb-vs-rgba spelling on `_a == 1`, Color.equals compares the field,
+        # Widget.opaqueCoveredRect refuses a coverage claim unless `@color._a == 1`, and a picked
+        # colour is serialized. PaletteWdgt.pickColor takes its picked colour straight from here and
+        # pushes it to a target, so an un-normalised 255 rode all the way out to a widget's @color.
+        Color.create data.data[0], data.data[1], data.data[2], data.data[3] / 255
 
 
       # This method only paints this very widget's "image",
