@@ -2898,7 +2898,29 @@ class WorldWdgt extends IconGridPanelWdgt
     # loadWorldSnapshot gets, since that path keeps its world and never dissolves), this one covers
     # the four the core cannot yet see. Idempotent — it rebuilds the array from a predicate.
     window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()
-    # (g) LAST: from here on I am a corpse, and the two damage funnels below drop everything I try
+    # (g) MY OWN DAMAGE QUEUES, for the same reason and at the same seam. The shared core filters
+    # destroyed entries out of them as ITS last act, and destruction RE-MARKS a dying widget (it
+    # posts damage so its pixels get erased) — so the hand, the containers and their subtrees, all
+    # destroyed above, marked their way back in after that filter had already run. EMPTIED rather
+    # than filtered: a dissolved world never repaints, so nothing in here is owed to anyone, and the
+    # queues are exactly the "no reference to anything just destroyed" the lines above promise.
+    # ⭐ It is also what keeps a future finding HONEST. These collections are the only edges from a
+    # world to the off-tree containers that survive @binWdgt = undefined, so while they stand,
+    # anything retaining a dissolved world transitively retains its whole bin subtree — measured
+    # with a planted closure over one world: 8 worlds and 72 widgets reported, every widget reached
+    # ONLY through one of these queues. One defect, ten lines of findings.
+    # ⚠ ALL of them, not the ones that happened to show up in a retainer path: the paint queues and
+    # the layout queue were each found this way in turn, and enumerating "the ones that bite" is how
+    # the next one gets missed. Every widget collection the world owns is reset to its empty shape.
+    @widgetsToBeHighlighted = new Map
+    @widgetsBeingHighlighted = new Set
+    @steppingWdgts = new Set
+    @widgetsReferencingOtherWidgets = new Set
+    @widgetsGivingErrorWhileRepainting = []
+    @widgetsWithMaybeChangedPaintBounds = []
+    @widgetsWithMaybeChangedFullPaintBounds = []
+    @widgetsThatMaybeChangedLayout = []
+    # (h) LAST: from here on I am a corpse, and the two damage funnels below drop everything I try
     # to mark — see the _changed / _fullChanged overrides.
     @_dissolved = true
 

@@ -691,11 +691,25 @@ frames, not stale slots. Do not re-run the scrubber.
 
 ⇒ **Reading: the residue is a GC-timing artifact at the sweep seam, not a product leak.** The objects
 are unreachable when the gate reports them; the forced `gc(); gc()` simply has not reclaimed them
-yet, and a later sweep does. ⚠ ONE THING THIS ACCOUNT DOES NOT EXPLAIN and which is not yet measured:
-why the set is always the BIN's subtree and not also the HAND and the SHELF, which
-`_dissolveWorldNoSettle` destroys in the same three lines. `ShelfWdgt` is never painted and has no
-named-field subtree, so a shelf corpse references nothing and is a single object — but that is a
-hypothesis, not a measurement.
+yet, and a later sweep does.
+
+**⭐ WHY THE SET WAS ALWAYS THE BIN'S SUBTREE — measured, and it is now fixed (D5b).** The set was
+never a coincidence of which objects the collector happened to miss: it is ONE CONNECTED GARBAGE
+CLUSTER. `_dissolveWorldNoSettle` nulls `@binWdgt`/`@shelfWdgt`/`@hand`, but the world's per-cycle
+WIDGET COLLECTIONS still named them — destruction RE-MARKS a dying widget (it posts damage so its
+pixels get erased, and its layout queue entry likewise), and those collections were last filtered by
+the shared teardown core, which runs a whole destroy-phase EARLIER. So a dissolved world reached its
+bin's whole chrome through `widgetsWithMaybeChangedFullPaintBounds` / `widgetsThatMaybeChangedLayout`,
+and world-plus-bin-subtree lived or died together. The HAND and the SHELF are absent for the reason
+their own classes give: neither is ever painted, so destroying them posts no damage and they never
+enter a queue — they are single unconnected corpses, collected independently.
+Proved by the D5 plant: a closure over ONE world reported **8 retained worlds and 72 retained
+widgets**, every widget reached ONLY through one of those queues; with every widget collection reset
+at dissolution the same plant reports **8 worlds and 0 widgets**. ⇒ a retained world is now ONE
+finding instead of ten, and the green suite's tier-1 suspect count fell from 20/50/30 to 7.
+⚠ The fix resets ALL EIGHT of the world's widget collections, not the two that showed up in a
+retainer path: the paint queues and then the layout queue were each found this way in turn, and
+enumerating "the ones that bite" is how the next one is missed.
 
 ⇒ **The fix is instrument-side, and it is not a wider tolerance** — it is the opposite. The sound
 oracle for "is this retained?" is REACHABILITY, not "did the collector get to it?", so the gate now
@@ -745,10 +759,15 @@ keys on `destroyed`, which is only true for them there). It is idempotent — it
 from a predicate — so both calls stand, and neither is redundant: the core's pass covers the tree
 and is the ONLY one `loadWorldSnapshot` gets, since that path keeps its world and never dissolves.
 Both call sites now say which phase they cover.
-⚠ The DAMAGE-QUEUE filter beside it is deliberately NOT duplicated: its queues are world-instance
-fields (`@widgetsWithMaybeChangedPaintBounds`), so on the reset path they die with the world they
-belong to, and on the load path — the one where the world survives — the core's single pass is
-already the last act after every destroy that path makes.
+**And the same defect, in the world's OWN collections (D5b, fixed here too).** The reasoning that
+"the damage queues are world-instance fields, so on the reset path they die with the world" is true
+about RETENTION and false about the seam contract: dissolution promises, in its own comment, to
+"hold no reference to what was just destroyed", and it was holding the hand, the containers and the
+whole bin subtree in eight per-cycle widget collections that the core had filtered a destroy-phase
+too early. It costs real signal — see D4b: it inflated a one-world leak into a ten-object report.
+Dissolution now resets all eight to their empty shapes.
+⚠ On the `loadWorldSnapshot` path nothing changes: that path keeps its world and never dissolves, so
+the core's single pass is still the last act after every destroy it makes.
 
 ⭐⭐⭐ **PRE-EXISTING, and only reconstruction could expose it.** Those closures always pinned the
 boot world; before this arc no world was ever destroyed or unregistered, so nothing ever asked. It
