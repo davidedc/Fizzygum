@@ -40,11 +40,14 @@ existence guard removed, `fg homepage` green with production carrying the class.
 arguing the pre-flip reset repaired rather than annotated — `DETERMINISM.md` §2d (heading included)
 and §3h, `Fizzygum/CLAUDE.md`'s two teardown bullets, this doctrine's §1, `heapsnapshot.js`'s stale
 anonymity note. Then D5c's two decisions taken (above), and A7 fixed with a gate proven non-vacuous.
-⛔ ONE ITEM DELIBERATELY NOT TAKEN, and it is the owner's call: the `RESETWORLD_INCOMPLETE`
-rename/retire (§6). The ratchet asserts construction determinism but still carries the reset-era
-name in its method AND its token; renaming ripples through `lib/gate-tokens.js`, three runners, the
-fuzz parser regexes and its selftest, which must move in LOCKSTEP or the gate goes quietly blind.
-That is a focused cross-repo sweep, not an end-of-arc tail. Filed in `docs/BACKLOG.md`.
+⛔ ONE ITEM DELIBERATELY NOT TAKEN AT THE CLOSE, and it was the owner's call: the
+`RESETWORLD_INCOMPLETE` rename/retire (§6). The ratchet asserts construction determinism but still
+carried the reset-era name in its method AND its token; that is a focused cross-repo sweep, not an
+end-of-arc tail. **TAKEN AND CLOSED 2026-08-21 as a RENAME** (`WORLD_CONSTRUCTION_DRIFT` /
+`_auditWorldConstructionDeterminismNoSettle` / `_firstWorldFingerprint`) — the ledger, including
+what the blast radius filed here got wrong in both directions, is the `docs/BACKLOG.md` DONE line.
+⚠ §6 and the plan body below keep the old spellings: they are the verbatim record of what was true
+when written, and the token they name is the one this plan shipped.
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-20 against heads Fizzygum `ffec2ab8` / Fizzygum-tests `e0b00702f`;

@@ -322,11 +322,11 @@ the screenshot suite structurally cannot see the violation:
 - `STORAGE_INVARIANT` — `StorageSorter`: a destroyed / misclassified / parent-desynced resident in the bin
   or on the shelf (its from-scratch twin is the gauntlet's `storage` leg).
 
-⚠ One more token rides the same fail-gate but is NOT shipping code: `RESETWORLD_INCOMPLETE`, the
-world-teardown completeness ratchet, lives in
+⚠ One more token rides the same fail-gate but is NOT shipping code: `WORLD_CONSTRUCTION_DRIFT`, the
+construction-determinism ratchet, lives in
 `Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee` (arc 3 moved the test-only teardown
-out of core), so it fires only on a build whose profile ships the `harness` part. A leak bites the NEXT test
-in the shard, so no single test's pixels reveal it.
+out of core), so it fires only on a build whose profile ships the `harness` part. Drifted page state reaches
+the NEXT world the page builds, so no single test's pixels reveal it.
 
 Beside that ratchet, at the same seam and in the same fail-gate, sits the object-lifetime audit's
 `WORLD_INVENTORY_*` token family (`_DRIFT`/`_ESCAPED`/`_ZOMBIE`, emitted by

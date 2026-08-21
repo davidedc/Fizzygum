@@ -70,9 +70,9 @@ The identity lists are the instrument's point: "escaped `TextWdgt#14`" is action
 ## 3. The gate and its exemption model
 
 The harness calls `_auditWorldInventoryNoSettle` at the end of every `resetWorld`, beside
-the world-field ratchet (`RESETWORLD_INCOMPLETE`) and covering exactly that ratchet's blind
+the world-field ratchet (`WORLD_CONSTRUCTION_DRIFT`) and covering exactly that ratchet's blind
 spots: class statics, collaborator internals, module state, the DOM, and identity. The first
-teardown takes the baseline; every later one diffs against it and emits, per offence, one of
+reset takes the baseline; every later one diffs against it and emits, per offence, one of
 three console-error tokens the headless runners fail a test on (the shared list:
 `Fizzygum-tests/scripts/lib/gate-tokens.js`):
 
@@ -97,7 +97,7 @@ green suite):
 
 - ⚠ **Attribution:** a `WORLD_INVENTORY_*` line fires during a test's OPENING `resetWorld`, so
   the runner attributes it to the test being loaded — the LEAKER is the PREVIOUS test on that
-  shard page (the same semantics as `RESETWORLD_INCOMPLETE`). Reproduce in isolation
+  shard page (the same semantics as `WORLD_CONSTRUCTION_DRIFT`). Reproduce in isolation
   (`run-sequence-headless.js [predecessor, victim]`) before believing the attributed name.
 - `WORLD_INVENTORY_ESCAPED`: some code removed a widget from the tree without destroying it
   (the classic shape: chrome rebuilt during a destroy cascade, or a spare/off-tree
@@ -116,7 +116,7 @@ green suite):
 
 ## 5. Boundaries and relatives
 
-- The world-field ratchet (`RESETWORLD_INCOMPLETE`) stays as-is beside the inventory: it
+- The world-field ratchet (`WORLD_CONSTRUCTION_DRIFT`) stands beside the inventory: it
   reads EFFECTIVE world-field values shallowly (own + prototype chain) and catches value
   flips the size-oriented inventory does not; the inventory catches everything outside the
   world's own fields. They overlap on world container sizes, harmlessly.
