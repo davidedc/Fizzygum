@@ -71,8 +71,12 @@ class InspectorWdgt extends Widget
   # do need to add some padding...
   classNamesTextPadding: 2
 
+  # ⚠ Through the SERVICE, never `@inspectedObject.colloquialName()`: an inspector is handed
+  # whatever the user asked to inspect, and that is not always a widget — the evaluation menu's
+  # "inspect selection" hands it the VALUE of a snippet, so it can be a number, a string, a Point.
+  # Asking a number for a method is a category error; the service names it from its class instead.
   colloquialName: ->
-    "Object Inspector (" + @inspectedObject.colloquialName() + ")"
+    "Object Inspector (" + (Utils.colloquialNameOf @inspectedObject) + ")"
 
   showFields: ->
     if !@showingFields

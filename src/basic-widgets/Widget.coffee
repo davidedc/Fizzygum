@@ -3211,14 +3211,13 @@ class Widget extends TreeNode
   # for: …", which lowercases defensively today). Override when the derivation reads wrong, or when
   # the thing has a NAME of its own rather than a description — "Desktop", "Bin", "Fizzytiles",
   # "Docs Maker".
+  # The BASE answer, derived from the class name; ~50 classes override this to state their own
+  # (and some to ask a collaborator — a transform frame answers its sole content's name). The
+  # derivation itself lives in Utils because it is not a widget question: the object inspector is
+  # handed values that are not widgets at all, and a number cannot carry a method to ask. Widgets
+  # answer through THIS method, arbitrary values through `Utils.colloquialNameOf`.
   colloquialName: ->
-    bareName = @constructor.name.replace /(Wdgt|Morph)$/, ""
-    return "widget" if bareName == ""
-    # split camelCase humps, keeping a run of capitals together as ONE word ("HTMLBox" -> "html box",
-    # not "h t m l box"). A digit stays glued to its word and a digit-then-capital is not a hump, so
-    # "3D" splits wrongly — the three classes that hit it state their name instead.
-    spaced = bareName.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
-    spaced.toLowerCase()
+    Utils.derivedColloquialName @
 
   representativeIcon: ->
     new WidgetIconWdgt
