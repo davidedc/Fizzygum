@@ -111,21 +111,12 @@ class WorldWdgt extends IconGridPanelWdgt
   auditPaintTimeLayoutScheduling: false
   _paintTimeLayoutSchedules: undefined
 
-  # auditTierAndApplyNaming (DEBUG, default off): the RUNTIME twin of the static [K] apply-2x2 name-consistency lint
-  # (check-layering.js). The static gate enforces the surviving NEGATIVE (a _apply*Base bypass twin must not fire the
-  # container re-fit nor dispatch to its polymorphic _apply* sibling); the live runtime checks are __-leaf-fires-nothing
-  # (a __ leaf is a true bottom) + tier monotonicity (a __ frame calling out reaches only __) -- the dynamic-dispatch
-  # ground truth a name scanner can't follow. The old "*AndNotify reaches the re-fit seam" POSITIVE is retired: the
-  # notify seam was deleted 2026-07-01 (replaced by the settle-time up-edge) and the *AndNotify corners renamed to the
-  # bare polymorphic _apply* 2026-07-02 (Tier B). Driven by Fizzygum-tests/scripts/tier-naming-audit/
-  # run-tier-naming-gate.sh (the prelude installs the wrapping + the per-frame lattice assertions). Off => zero overhead.
-  auditTierAndApplyNaming: false
-
-  # auditNotificationSettleNeutrality (DEBUG, default off): the RUNTIME twin of the static [J] settle-neutral-callback
-  # ban (layering/naming convention §3/§4). Asserts NO nested recalculateLayouts fires INSIDE a _reactTo*/_before*
-  # callback (the dynamic twin of [J], catching dynamic dispatch), and that exactly one settle brackets each
-  # gesture/structural dispatch batch. Driven by notification-settle-audit/run-notification-settle-gate.sh. Off => zero overhead.
-  auditNotificationSettleNeutrality: false
+  # ⛔ The tier-naming and notification-settle gates deliberately have NO flag here, and adding one
+  # is a mistake this note exists to prevent. Both take every observation from their prelude's own
+  # prototype wrappers, which never consult a flag -- so a flag for either would have no reader, and
+  # arming it would be a no-op in both directions (measured; docs/archive/world-reset-by-reconstruction-plan.md §D5c). Any flag in this family
+  # needs a READER in product code first. auditUndeclaredEndOfCycle above is the live member: there
+  # the recording genuinely sits behind it, in Widget._invalidateLayout.
 
   automator: undefined
 
@@ -3044,6 +3035,30 @@ class WorldWdgt extends IconGridPanelWdgt
     @wdgtsWithOngoingScrollMomentum.clear()
     @pendingFractionalBookkeepingSeeds.clear()
     @pendingFractionalReRecords.clear()
+    # ...and the drag-embed affordances, which are the same bug in a shape the list above does not
+    # cover: the three *Declared records name the widget being dragged over, and the three *Wdgt
+    # slots name overlays that ARE tree children, so fullDestroyChildren destroys them and leaves
+    # every slot pointing at a corpse. The reconciler (addDragAffordanceWidgets) reads exactly
+    # these six: a surviving declaration with a destroyed overlay makes it call
+    # updateChargeDeclaration on the corpse, and a cleared declaration with a surviving slot makes
+    # it fullDestroy() something already destroyed. Clearing the declarations alone is NOT enough --
+    # the slots are what the reconciler tests for existence.
+    # ⚠ This restores a CONTRACT; it is not a bug fix, and the difference is worth stating so nobody
+    # re-derives it as a symptom. Three things narrow it: the hand rewrites all three declarations
+    # every cycle it processes and clears them in its else-branch, so outside an in-flight drag all
+    # six are already undefined; on the resetWorld path the world holding any corpses is itself
+    # discarded a phase later; and even after a load-during-a-drag the next cycle SELF-HEALS (the
+    # hand clears the declarations, then the reconciler destroys and nulls the overlay slots). What
+    # is left is a real violation of the core's unconditional promise, observable in the window
+    # between the teardown returning and the next cycle -- which is exactly where
+    # world.teardownHygiene.dragAffordancesCleared reads it, because measured any later the
+    # assertion passes with this clearing removed and is therefore vacuous.
+    @dragEmbedChargeRingDeclared = undefined
+    @dragEmbedLabelDeclared = undefined
+    @dragEmbedLockBadgeDeclared = undefined
+    @dragEmbedChargeRingWdgt = undefined
+    @dragEmbedLabelWdgt = undefined
+    @dragEmbedLockBadgeWdgt = undefined
     # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
     # list never was, so it accumulated dead widgets for the whole life of the page.
     @widgetsGivingErrorWhileRepainting = []
