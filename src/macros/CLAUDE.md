@@ -111,7 +111,8 @@ by `(` into a `yield from`. (So the assertion sink is reachable only from inside
 
 ## Playback speed (one global level — tests say NOTHING about it)
 
-A single global level **`MacroToolkit.speed ∈ {normal, fast, fastest}`** controls how fast the event generators
+A single global level — **`MacroToolkit.currentSpeed()` ∈ `{normal, fast, fastest}`**, resolved lazily against
+`@defaultSpeed` — controls how fast the event generators
 play. It is set once at boot from **`?speed=`** (parsed in `src/boot/globalFunctions.coffee` alongside `?dpr`/`?intro`;
 the rendering backend is NOT a query param — it is baked into the entry page at build time):
 a browser run defaults to **`normal`** (watchable); the headless runner requests **`fastest`**. `fastest` alone
@@ -126,7 +127,7 @@ are **speed-INVARIANT** (the SAME committed images pass at all three levels), so
 
 Two independent axes the generators honour (`MacroToolkit.spanFactor` + the single push chokepoint `queueInputEvent`):
 - **SPAN** = each gesture's time-offsets × `spanFactor` → wall-clock speed (the only real lever; events drain over
-  ~their timestamp span of real wall-clock — see `WorldWdgt.playQueuedEvents`). `normal` = 1.0 (byte-identical to
+  ~their timestamp span of real wall-clock — see `WorldWdgt._playQueuedEvents`). `normal` = 1.0 (byte-identical to
   the old timing), `fast` ≈ 0.3, `fastest` ≈ 0.03.
 - **COUNT** = events-per-millisecond → path sampling. **Deliberately NOT thinned**: it stays full at every level, so
   a gesture emits the SAME deduped pixel path (and final pixel) at every speed — only the timestamps move.
