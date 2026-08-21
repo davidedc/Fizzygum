@@ -199,9 +199,12 @@ class Serializer
   # WorldWdgt.fullDestroyChildren's id-zeroing (allClassFunctions — the `instances`-Set
   # marker, never a name-suffix scan, which silently skipped any class whose name lacks
   # the Wdgt/Widget suffix: a restored FrameContentsPlaceholderText's id space collided).
-  # Skips WorldWdgt (the live world keeps its own id — fullDestroyChildren never zeroes
-  # it) and any counter still at 0 (the freshly-reset ID space is already 0 there, so
-  # recording it would be redundant).
+  # Skips any counter still at 0 (the freshly-reset ID space is already 0 there, so recording it
+  # would be redundant) — and skips WorldWdgt, which holds on BOTH ends of a snapshot: a snapshot is
+  # loaded INTO the live world, which keeps the id it was issued, and fullDestroyChildren's id sweep
+  # skips WorldWdgt for exactly that reason, so there is neither a counter worth recording nor
+  # anything that would read one back. A world only ever gives its id up when it is REPLACED by a
+  # successor, which is WorldWdgt._dissolveWorldNoSettle's business and involves no snapshot.
   @collectIdCounters: ->
     counters = {}
     for klass in allClassFunctions() when klass isnt WorldWdgt

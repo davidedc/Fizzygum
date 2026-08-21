@@ -434,6 +434,41 @@ bootstrapSWCanvasFontsThen = (callback) ->
     console.error "Fizzygum: SWCanvas font bootstrap threw (text may be broken):", err
     finish()
 
+# THE ONE DEFINITION OF "A READY WORLD": what a freshly-constructed WorldWdgt still needs before
+# it is the world a page runs on. EVERY world gets exactly this — the one boot builds below, and
+# every replacement WorldWdgt.resetWorld constructs — which is the whole reason it is a top-level
+# boot function instead of a step inside startWorld. It is `window.`-qualified so a class compiled
+# at runtime out of the SourceVault can reach it by bare name (the window.allClassFunctions
+# precedent, called from WorldWdgt.fullDestroyChildren).
+#
+# ⚠⚠ WHAT MUST NOT BE MOVED IN HERE. Everything else in startWorld below is PAGE-scoped: it
+# happens once per page, and running it a second time is a real bug rather than a wasted call.
+# The two that look harmless are precisely the dangerous ones:
+#   - the `*TestSupport.installOnto` block. installOnto copies statics BY VALUE, and two of the
+#     ones it carries are page-lifetime audit BASELINES (the teardown-completeness fingerprint and
+#     the object-lifetime inventory). Re-copying them re-arms the "this is the first teardown"
+#     branch of both always-on gates, so each would re-baseline against a world that has already
+#     drifted and then report clean for the rest of the page.
+#   - the `animloop` requestAnimationFrame chain. It is a PERMANENT pump; starting a second one
+#     leaves the page with two doOneCycle drivers per frame for the rest of the session.
+# The SystemTests control panel, `menusHelper`, `demoMenus` and the spinner removal are page
+# furniture for the same reason — they are DOM/singleton state that no world owns.
+window.finishWorldSetup = (theWorld) ->
+  # The constructor declares dev mode OFF; boot turns it ON. So THIS is the value a pristine world
+  # has, and the one a reconstructed world is born with — it decides which context menu the world
+  # and every widget build, so it has to be settled before anything can ask for a menu.
+  theWorld.isDevMode = true
+  # The world's two OFF-TREE storage containers (the standing invariant: everything on the shelf is
+  # reachable, everything in the bin is lost). They are world-owned widgets that are never tree
+  # children, so no generic sweep reaches them: the shared teardown empties them BY NAME and
+  # WorldWdgt._dissolveWorldNoSettle destroys them by name.
+  theWorld.binWdgt = new BinWdgt
+  theWorld.shelfWdgt = new ShelfWdgt
+  # The desktop furniture (wallpaper, clock, the bin icon, ...) belongs to the PRODUCT page only.
+  # isIndexPage is false exactly on the test-harness page, which opens on a bare desktop so that
+  # each test's own fixture is the only thing on screen.
+  theWorld.createDesktop() if theWorld.isIndexPage
+
 createWorldAndStartStepping = ->
 
   # ALL world-dependent setup lives here, because under the SWCanvas backend the
@@ -465,7 +500,6 @@ createWorldAndStartStepping = ->
     # Also note that the first thing that this constructor does
     # is to initialise the global "world" variable with... the world.
     new WorldWdgt worldCanvas, !(window.location.href.includes "worldWithSystemTestHarness")
-    world.isDevMode = true
 
     # ref https://www.google.com/search?q=requestanimationframe
     animloop = ->
@@ -494,11 +528,10 @@ createWorldAndStartStepping = ->
     window.demoMenus = new DemoMenus  if DemoMenus?
     world.removeSpinnerAndFakeDesktop()
 
-    world.binWdgt = new BinWdgt
-    world.shelfWdgt = new ShelfWdgt
-
-    if world.isIndexPage
-      world.createDesktop()
+    # ...and everything above this line is PAGE setup, done exactly once. The WORLD half — the
+    # part every world needs, including each one WorldWdgt.resetWorld constructs — is the shared
+    # finishWorldSetup above, so boot and a reset cannot disagree about what a ready world is.
+    finishWorldSetup world
 
   # Under the SWCanvas backend, font metrics must be loaded before the world is
   # built (see bootstrapSWCanvasFontsThen), so world creation is deferred. Return

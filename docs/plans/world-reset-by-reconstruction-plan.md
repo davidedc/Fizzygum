@@ -482,17 +482,39 @@ resetWorld: ->
 
 The prototype seam every prelude wraps (`WorldWdgt.prototype.resetWorld`) is preserved
 by NAME and by semantics (called on the old world, returns having replaced
-`window.world`); `AutomatorEventCommandResetWorld` is unchanged. The harness's
-`_afterWorldReset` carries the three audits (storage Tier A, the reframed ratchet, the
-inventory audit) plus the pristine-look residue that remains meaningful (the 960×440
-extent guard IF the constructor path doesn't already produce it — executor verifies it
-does; `isDevMode = true` moves into `finishWorldSetup` since boot sets it for every
-page). `_resetWorldNoSettle` and its pristine-look block are DELETED (absorbed:
-colour/wallpaper/counters/flags are constructor state now). ⚠ The `id` question is
-DECIDED: `_dissolveWorldNoSettle` zeroes `WorldWdgt.lastBuiltInstanceNumericID` (the
-dying world no longer "keeps its own id" — delete the exemption line in
-`fullDestroyChildren`), so every reconstructed world is `WorldWdgt#1` and world identity
-is run-history-free (the §3h determinism shape, applied to the world itself).
+`window.world`); `AutomatorEventCommandResetWorld` is unchanged.
+`_resetWorldNoSettle` and its pristine-look block are DELETED — every item in it is
+constructor state now (colour, wallpaper, `numberOfIconsOnDesktop`'s class default, a
+fresh `untitledNamingService`, a fresh prefs bag, and the 960×440 extent, which the
+constructor re-establishes through `_sizeCanvasToTestScreenResolution` on the harness
+page) — and `PreferencesAndSettings.resetToBootInputMode` dies with it, its only caller:
+"put the bag back the way the constructor left it" IS construction here. `isDevMode =
+true` moves into `finishWorldSetup`, since boot sets it for every page.
+
+**TWO harness hooks, not one** (decided at execution, correcting this section's earlier
+single-hook shape): `_beforeWorldDissolveNoSettle?()` fires on the OLD world after the
+teardown and carries the **storage Tier A audit**, because that audit asks whether the
+finished test left residue the teardown could not reach — a question about THAT world,
+and vacuous asked of a freshly-built one (it would have audited an empty world and passed
+for ever). `_afterWorldResetNoSettle?()` fires on the NEW world after `finishWorldSetup`
+and carries the reframed ratchet + the inventory audit + the harness's page-scroll
+ergonomic + a re-application of `removeEventListeners` while a test is playing (see the
+determinism note in D3). The teardown core keeps being gated on the old world, which
+matters because `loadWorldSnapshot` still calls it.
+
+`resetWorld` answers `undefined` on purpose: the new world is `window.world`, and
+answering it instead would make every `page.evaluate(-> world.resetWorld())` — the shape
+`heap-forensics.js` already uses — serialise a cyclic widget graph over CDP.
+
+⚠ The `id` question is DECIDED, and its PLACEMENT was corrected at execution:
+`_dissolveWorldNoSettle` zeroes `WorldWdgt.lastBuiltInstanceNumericID`, so every
+reconstructed world is `WorldWdgt#1` and world identity is run-history-free (the §3h
+determinism shape applied to the world itself) — but the `continue if eachClassFunction
+is WorldWdgt` line in `fullDestroyChildren` **STAYS**. Deleting it (the original text
+here) would break the OTHER caller of that sweep: `loadWorldSnapshot` tears down without
+building a successor, so it would leave the counter at 0 under a live `WorldWdgt#1`, and
+nothing could repair it — `Serializer.collectIdCounters` skips `WorldWdgt`, so a snapshot
+carries no counter to restore. Zeroing belongs where a world is actually REPLACED.
 
 ### D2 — `finishWorldSetup`: ONE definition of "a ready world"
 
@@ -528,7 +550,45 @@ if trivially clean. ⚠ Ordering law (from §1.3-4): dissolution completes BEFOR
 `new WorldWdgt` runs — `Widget._destroyNoSettle`'s global-world reads must still see the
 old world while old widgets die.
 
-### D-P3c — instruments survive the flip (same commit as D1–D3)
+Three things this deliverable gained at execution, each from a hazard the spikes could not
+have seen (S1 measured a corpse tail whose hand was still alive):
+- **(ii) is REQUIRED, not optional, and it is a `doOneCycle` seam rather than an early-out
+  at the top.** The corpse's remaining stations include
+  `@hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()`, and (b) has
+  just destroyed the hand. The guard is `return @_closeCycleBookkeepingNoSettle … if
+  @_dissolved` at BOTH stations from which a reset can run — after `_playQueuedEvents`
+  (a menu action) and after `replayTestCommands` (every SystemTest's first command) —
+  with the per-PAGE cycle tail (the compile-budget drain, `frameCount++`, the cycle-date
+  hand-off) extracted into `_closeCycleBookkeepingNoSettle` so a reset landing mid-cycle
+  does not make the page's frame clock skip a beat.
+- **A determinism repair, not a leak repair.** `AutomatorPlayer.startTestPlaying` calls
+  `world.removeEventListeners()` at the start of every test so a macro's synthetic events
+  are the ONLY input; a reconstructed world re-attaches all 20 in its constructor,
+  mid-test. `_afterWorldResetNoSettle` re-applies the detach while `Automator.state is
+  Automator.PLAYING`. Missing this would not leak — it would let a real browser event
+  into a running test, which is the DETERMINISM.md contract, not the lifetime one.
+- **`finishWorldSetup` must NOT carry `startWorld`'s page-scoped block.** `installOnto`
+  copies statics BY VALUE and two of them are the page-lifetime audit baselines (D-P3c),
+  so re-running it would silently re-arm both gates' "first teardown" branch; re-running
+  the `animloop` line would start a second permanent `doOneCycle` pump; and
+  `removeSpinnerAndFakeDesktop` dereferences a `null` on a second call (it gains an
+  idempotence soak regardless, since it is about the loading page, not the world).
+
+### D-P3c — instruments survive the flip (its own commit, landed BEFORE the flip)
+
+**Executed as a separate, independently-gated commit** rather than inside the flip: every
+edit below is bit-for-bit equivalent on a one-world page (a prototype write and an
+instance write have the same effective value at every read; a page-scoped baseline and a
+world-scoped one have the same lifetime when there is one world), so it lands and is
+gated while the old semantics still hold, and the flip commit stays the flip. The census
+behind it found the arming hazard is SIX instruments, not four — the five gate preludes
+(`tier-naming`, `notification-settle` ×2 flags, `paint-readonly`, `eoc-capstone`,
+`cache-oracle`) plus the hand-run `eoc-production-probe` — and that `paint-readonly` is
+the only one that also holds a CAPTURED world inside a permanently-installed wrapper
+(`world.healingRectanglesPhase` in the `_invalidateLayout` wrap), which would have frozen
+its predicate at a dead world's paint phase. ⚠ The two baselines are carried onto
+`WorldWdgt` by `@staticMembersToInstall`, which copies BY VALUE at boot — so nothing may
+ever re-run `installOnto` per world (see D3's third execution note).
 
 (a) The two audit baselines move off the world instance to the harness page scope
 (module-level in `WorldTestSupport`'s install closure or statics carried by
@@ -548,6 +608,124 @@ expected no-op, but VERIFY, do not assume: run `fg vmtruth` + `fg storage` +
 `world.cacheFor*` declaration and the `lastBuiltInstanceNumericID` reason string update
 to the new regime.
 
+### D4a — CLOSED: the retainer was the test loader's never-released `<script>` onload chain
+
+**The answer, from a heap-snapshot retainer path:**
+```
+Window -> BitmapText -> _fontLoader -> FontLoaderBase -> _metricsScriptElement
+  -> HTMLScriptElement -> HTMLScriptElement -> HTMLScriptElement   (the head-script chain)
+  -> EventListener -> V8EventHandlerNonNull
+  -> closure --context:andThen--> "selectTheTestsBasedOnTags"
+  -> closure --context:andThen--> closure
+  -> system / Context --context:this--> WorldWdgt
+```
+`AutomatorLoader.loadTestMetadata` appends one `<script>` per test to `document.head` and never
+releases its `onload`. The element is page-lifetime by design (`WorldInventory`'s `dom.headScripts`
+row declares exactly that), so every one-shot handler keeps its closure — and the closure captures
+`andThen`, the after-selection callback chain, which on the `?startupActions` path ends in
+`WorldTestSupport.nextStartupAction`'s own `=>`, capturing the WORLD it was created on. ~300 head
+scripts therefore pinned one dissolved world, and with it every widget that world had owned — which
+is why the same run reported ~2700 uncollected WIDGETS alongside it. **Both fixed:** the handler
+releases itself (`script.onload = null`, the sanctioned foreign-API spelling), and the startup
+callback became a plain function reading the `world` global at call time instead of capturing `@`.
+⇒ `fg vmtruth`: **OK — every destroyed widget collectible, heap floor flat, 307 buckets, 8 pages.**
+
+**RESIDUE — still open, and stated as measured rather than as the tidy story.** With all three
+handlers released the leg is no longer reliably red, but it is not reliably green either: two
+standalone runs came back OK (`307 test buckets, 8 page series`), a later standalone run reported
+1 world / 9 widgets, and two gauntlet runs reported 2 then 6 world lines from 2 worlds. So it is
+NONDETERMINISTIC AROUND ZERO — 0–2 worlds per run — against 303 worlds reported in every bucket
+before the fix. Whatever is left is a different order of thing, not the same bug in a smaller size.
+⛔ **One calibration was tried and REVERTED, do not re-try it blind:** worlds were given a third
+teardown of grace on the theory that a whole object graph collects one sweep later than a widget.
+It was falsified in the next run — a world reported across FOUR buckets — so the grace is back to
+one full teardown for everything, and the prelude carries that negative result at the test itself.
+⇒ Next: the rig at `.scratch/world-retainer-probe.js` now reproduces nothing (it went clean the
+moment the head-script retainer was fixed), so closing this needs the same move that closed the
+first one — make the probe match the failing configuration (gauntlet-level load is the untested
+axis) and walk a retainer path for a world the gate actually reported.
+
+⭐⭐⭐ **PRE-EXISTING, and only reconstruction could expose it.** Those closures always pinned the
+boot world; before this arc no world was ever destroyed or unregistered, so nothing ever asked. It
+is the Arc B door-callback law's own shape — a one-shot async callback outliving its subject — at
+the one seam Arc B could not see.
+
+⚠⚠ **THE HUNT'S LESSON, worth more than the fix: an instrument that does not reproduce a finding
+may be MISREPORTING ITS OWN CONDITIONS.** Five configurations read CLEAN — `heap-forensics`
+`--boot-only` / one test / three tests, and a purpose-built probe at 40, 60 and 307 tests, with the
+real prelude injected and the real Chrome flags — while `vm-truth-gate.js -- --shards=1` reproduced
+every single time. The difference was never the page, the prelude, the flags, the test count, the
+console listener or parallel load: it was HOW THE TESTS WERE STARTED. Every clean configuration
+called `selectTestsFromTagsOrTestNames(names)` from CDP with **no callback**, so nothing captured a
+world; the runner drives `?startupActions=`, which passes the world-capturing callback. A probe
+that drives the subject differently from the thing it is modelling is not a smaller version of it.
+⛔ Also do not let a probe answer with ITSELF: pinning the survivor to snapshot it made this probe a
+retainer, and the first path it printed was its own array — reached by an `internal:<slot>`
+PropertyCell edge that no edge-NAME filter can catch. Exclude the holder by heap NODE id.
+The rig is kept at `Fizzygum-tests/.scratch/world-retainer-probe.js`.
+
+### D4a (historical) — how the finding read before it was closed
+
+Measured on the flipped tree (full gauntlet, `vmtruth` leg): **17 of 18 legs green; `vmtruth`
+FAILS**, and the failure is sharply bounded. What it says, and what it does not:
+
+- **Almost every reconstructed world is collected**: across ~300 resets per page the oracle
+  reports ONE stuck world per shard page (rarely two), not one per reset.
+- ⚠ **WHICH world sticks is NONDETERMINISTIC** — and this is the finding's most diagnostic
+  property, so it is recorded before any explanation. Run 1's seven `destroyedDuring:` values were
+  each shard's FIRST test, which reads as "the boot world is pinned"; run 2 of the same leg on the
+  same build named nine scattered mid-run tests instead (report counts 380 / 330 / 10, i.e. stuck
+  from early, middle and late in the run). A structural retention would name the same code path
+  every time. ⛔ Do not repeat the mistake this correction records: ONE run of this leg is not
+  enough to characterise it.
+- **It does not accumulate.** `0 heap-floor failure(s)` over the whole suite: the pin is one
+  world, not one per reset. (Contrast S1's pre-repair measurement, +1.7 MB *per swap*.)
+- **The retained set is that world plus its BIN subtree** (`BinWdgt`, `ViewportWdgt`,
+  `ScrolledPaneWdgt`, two `SliderWdgt` + two `SliderButtonWdgt`, `StringWdgt`,
+  `SimpleButtonWdgt`) — the hand and the shelf are NOT retained, which is the discriminating
+  detail any explanation has to account for.
+- **It is newly VISIBLE, not necessarily newly created.** Before this arc no world was ever
+  destroyed or unregistered, so nothing ever asked whether something held the boot world.
+
+⚠ **The forensic tool does not reproduce it**, which is itself the most informative fact:
+`heap-forensics.js --boot-only --snapshot`, `--test=<the first test>` and `--tests=<first three>`
+all report CLEAN (`uncollected 0`, `VM corpses 0`) on the same tree — so from a CLEAN stack the
+boot world IS collectible. Both tools force GC identically (`window.gc(); window.gc()`), so
+collector thoroughness is not the difference. The difference that remains is WHERE the sweep runs:
+`heap-forensics` sweeps from its own `page.evaluate` turn, while the gate's prelude sweeps INSIDE
+`resetWorld`, inside `doOneCycle`, inside the rAF callback.
+**Sharpest characterisation (3 runs): EXACTLY ONE stuck world per shard page, every run.** Run 3
+(8 shards) named exactly 8 distinct worlds — one per page — and 7 of its 8 blamed tests match run
+2's, so the shape is reproducible even though the identity is not fixed. Heap floors across that
+run: +3.7 / +10.2 / −7.8 MB against a 96 MB limit. "Exactly one arbitrary world per page, never
+accumulating" is the shape of a SINGLE-SLOT retainer, and any candidate explanation has to produce
+that shape.
+
+⛔ **THREE MODELS TRIED, ALL FALSIFIED — do not re-run these experiments:**
+1. *"It is the BOOT world"* (run 1 named every shard's first test). Falsified by run 2, which named
+   scattered mid-run tests. Run 1 ran under the gauntlet's 6-shard split, runs 2–3 standalone at 8.
+2. *"It is the gate's SWEEP POSITION — a stale stack slot conservatively scanned"* (the sweep runs
+   inside `resetWorld`, inside `doOneCycle`, with the dissolved world in live frames; and
+   `heap-forensics` sweeping from a clean `page.evaluate` turn reproduces ZERO). **Tested directly:
+   the sweep was deferred off the cycle (`setTimeout 0`, `batch` still advancing per reset) and the
+   result did not move — same ~2990 findings, same one-world-per-page.** The deferral is reverted;
+   the negative result is recorded at `sweepAfterTeardown`'s own comment so it is not re-tried.
+3. *"A cold-glyph module entry pins a widget, and its `cachedRoot` pins the world"* — fits the shape
+   and the retained set (a bin's `StringWdgt` plus its parent/children chain), but
+   `swCanvasDropDestroyedColdGlyphEntriesForTeardown` runs at EVERY teardown, so such an entry
+   cannot survive the next reset. Not excluded as a contributor; insufficient as the mechanism.
+
+⇒ **What the next session needs is an INSTRUMENT, not another hypothesis.** No existing tool
+reproduces it: `heap-forensics` is clean at 1–3 tests, and the gate that sees it cannot name a
+retainer. The decisive rig is the two rails married — run the suite under the vm-truth prelude, and
+when a world is still uncollected two batches on, take a heap snapshot IN THAT PAGE and walk the
+retainer path (`context:<var>` edges name the exact closure variable). That is one focused probe,
+and it answers the question outright instead of narrowing it.
+
+**Owner decision at the checkpoint**, since this is the arc's own acceptance gate: land the flip
+with the finding characterised and D4 owing the sweep-position fix, or hold the commit until the
+rider is built and the leg is green.
+
 ### D4 — the acceptance gate: the world-collectibility rider
 
 Extend `vm-truth-prelude.js`/`vm-truth-gate.js`: at each reset the prelude additionally
@@ -561,6 +739,19 @@ conscious bump (owner-visible if so). Acceptance: `fg vmtruth` green on the flip
 suite; the D5 world-pin plant fails it.
 
 ### D5 — prove the gates FAIL (mandatory, per standing case law)
+
+**Evidence in hand before the plants are written** (first suite run of the flipped tree): the
+reframed ratchet fired 245 times, on ONE field — `lastTime` — with `failed: 0` beside it, i.e.
+every one of the 307 tests rendered byte-identically on a reconstructed world while the ratchet
+loudly reported a construction-time difference. That is the answer to §7's risk 4 for this gate:
+it is diffing, not stuck in its "first teardown" branch. The finding itself is legitimate and now
+exempted with its reason — `Widget`'s constructor seeds `@lastTime = Date.now()` and the world is
+a widget, so two worlds built at two instants always differ there; on the world the field is inert
+(`lastTime` is per-member stepping bookkeeping, read only for `steppingWdgts` members, and the
+world never joins its own set). ⭐ It is the ONE exemption reconstruction itself creates: under a
+reset that REUSED the world object the field was written once at boot and never moved again, so it
+never had to be named. D5(2)'s plant is still owed — this proves the gate is ARMED, not that it
+fails on a planted drift.
 
 Three plants, each proven then removed: (1) **world pin** — a scratch prelude stashes a
 strong ref to the old world at reset (module var); `fg vmtruth` must FAIL with the

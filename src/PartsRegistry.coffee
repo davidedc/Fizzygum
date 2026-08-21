@@ -15,9 +15,10 @@
 # promise per part so concurrent callers coalesce.
 #
 # ⚠ A PART IS CODE, NOT STATE. Parts load monotonically within a page session and are never
-# unloaded: resetWorld resets STATE, and unloading CODE between tests would recompile ~10 classes
-# per test for no isolation gain (all ~500 classes already stay resident across an entire shard).
-# There is deliberately no `unload`.
+# unloaded: resetWorld replaces the WORLD — every bit of state, by reconstruction — while the
+# classes that world is built out of are PAGE-lifetime, shared by every world the page ever has.
+# Unloading CODE between tests would recompile ~10 classes per test for no isolation gain (all ~500
+# classes already stay resident across an entire shard). There is deliberately no `unload`.
 #
 # ⚠ THE TEST PROFILE EAGER-LOADS EVERYTHING. A part arriving mid-test would be ingested under a
 # WALL-CLOCK frame budget -- how many classes land in which cycle depends on machine load -- which
@@ -49,6 +50,23 @@ class PartsRegistry
   # single write is in ensureLoaded's success continuation, and every path that concludes "this part
   # is now present" reaches it through there.
   @ingestedParts: new Set
+
+  # ⚠⚠ THE LOADS CURRENTLY IN FLIGHT, part name -> promise. A CLASS static for the same reason
+  # @ingestedParts above is one, and it closes that record's one hole: a completed ingest is a fact
+  # about the page, but so is an ingest still ON ITS WAY, and resetWorld replaces the world
+  # underneath it (WorldWdgt._dissolveWorldNoSettle). A successor's registry rebuilds @_state from
+  # eagerness plus @ingestedParts, so a part fetched-but-not-yet-ingested at the moment of a reset
+  # would read NOT_LOADED, and the next ask would start the SAME load a second time: two fetches of
+  # one batch, and the same sources enqueued twice (SourceCompileScheduler.enqueueJob does not
+  # dedupe, and `new Class src` on a live class redefines it under the widgets already built from
+  # it). So a load in flight is ADOPTED, never restarted -- which also subsumes, at page level, the
+  # coalescing @_promises does for concurrent callers inside one world.
+  #
+  # ⚠ An entry lives exactly as long as the load: it is deleted on success AND on failure, so a
+  # part whose load failed is askable again rather than pinned to a promise that will never
+  # resolve. (@ingestedParts, by contrast, is written on success only -- a load that failed must
+  # not read as present.)
+  @inFlightLoads: new Map
 
   constructor: ->
     # part name -> NOT_LOADED | LOADING | LOADED. Every part the build put in this artifact is
@@ -135,22 +153,40 @@ class PartsRegistry
       return Promise.reject new Error "Fizzygum: no such part '#{partName}' in this build."
 
     @_state[partName] = @LOADING
-    required = @_requiredPartsOf partName
-    withRequirements =
-      if required.length
-        @ensureAllLoaded(required).then => @_loadPartPromise partName
-      else
-        @_loadPartPromise partName
-    @_promises[partName] = withRequirements.then =>
+    # Adopt the page's in-flight load if there is one (see @inFlightLoads): the fetch-and-ingest
+    # belongs to the page, so a world that arrived mid-load waits on the load already running
+    # rather than starting a second one.
+    inFlight = PartsRegistry.inFlightLoads.get partName
+    unless inFlight?
+      required = @_requiredPartsOf partName
+      withRequirements =
+        if required.length
+          @ensureAllLoaded(required).then => @_loadPartPromise partName
+        else
+          @_loadPartPromise partName
+      inFlight = withRequirements.then ->
+        # ⚠ THE ONE PLACE A PART BECOMES PRESENT, so the one place the page-lifetime record is
+        # written. `ensureAllLoaded`, `whenAllLoaded`, `whenOptionalPartsLoaded`, `launch`,
+        # `whenClassAvailable` and the snapshot loader's pre-scan all reach a part through
+        # `ensureLoaded`, and a required part is loaded by its own trip through it -- so one write
+        # here covers every caller AND the transitive closure. A path that ever flips a part to
+        # LOADED without coming through this continuation must record it here too, or a later world
+        # in this page will re-fetch what the page already holds.
+        PartsRegistry.ingestedParts.add partName
+        PartsRegistry.inFlightLoads.delete partName
+        return
+      , (err) ->
+        # a failed load must leave the part ASKABLE again rather than pinned to a promise that
+        # will never resolve
+        PartsRegistry.inFlightLoads.delete partName
+        throw err
+      PartsRegistry.inFlightLoads.set partName, inFlight
+      # The page-level record is a RECORD, not a caller: every asker chains its own continuation
+      # below and owns the rejection it gets. This no-op handler is what keeps a failed load from
+      # ALSO surfacing as an unhandled rejection, which the headless runners fail a test on.
+      inFlight.catch -> undefined
+    @_promises[partName] = inFlight.then =>
       @_state[partName] = @LOADED
-      # ⚠ THE ONE PLACE A PART BECOMES PRESENT, so the one place the page-lifetime record is
-      # written. `ensureAllLoaded`, `whenAllLoaded`, `whenOptionalPartsLoaded`, `launch`,
-      # `whenClassAvailable` and the snapshot loader's pre-scan all reach a part through
-      # `ensureLoaded`, and a required part is loaded by its own trip through it -- so one write
-      # here covers every caller AND the transitive closure. A path that ever flips a part to
-      # LOADED without coming through this continuation must record it here too, or a later world
-      # in this page will re-fetch what the page already holds.
-      PartsRegistry.ingestedParts.add partName
       delete @_promises[partName]
       return
     , (err) =>

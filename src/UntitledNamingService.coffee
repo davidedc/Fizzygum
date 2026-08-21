@@ -38,10 +38,9 @@ class UntitledNamingService
   noteShortcutCreated: ->
     @howManyUntitledShortcuts++
 
-  # Back to a pristine world's numbering. The counters are per-world (see the class comment),
-  # and a new world gets a new service — but WorldWdgt.resetWorld REUSES the world object, so it
-  # calls this to complete the reset. Without it the counts leak into the next SystemTest in the
-  # same page and a default name renders as "Untitled 2" (DETERMINISM.md §2d).
-  resetCounters: ->
-    @howManyUntitledShortcuts = 0
-    @howManyUntitledFoldersShortcuts = 0
+  # There is deliberately NO resetCounters verb. The counters are per-world (see the class comment)
+  # and every world builds its own service, so pristine numbering is what CONSTRUCTION produces:
+  # WorldWdgt.resetWorld replaces the world outright. What is at stake if that ever stops being
+  # true: numbering that survives into the next SystemTest sharing the page makes a default name
+  # render as "Untitled 2" (DETERMINISM.md §2d), because the counters are consumed just by OPENING
+  # a save prompt.

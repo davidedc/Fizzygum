@@ -125,23 +125,6 @@ class PreferencesAndSettings
   # what a reflecting menu row reads (MenuRowReflectionSpec.readerName)
   currentInputMode: -> @inputMode
 
-  # Put the bag back the way the constructor left it (mouse mode). This bag is reached as the
-  # STATIC WorldWdgt.preferencesAndSettings, so it outlives even a brand-new world: without this,
-  # one "touch screen settings" click leaves every later SystemTest in the same headless page
-  # rendering doubled menu/prompter fonts, sliders and scrollbars. Called from
-  # WorldWdgt._resetWorldNoSettle -- the reset knowledge lives HERE, with the owner, like
-  # UntitledNamingService.resetCounters.
-  #
-  # Self-guarded, so the ordinary teardown does no work at all. minimumFontHeight needs no
-  # carry-over of its own: it measures the BROWSER's smallest renderable glyph, not the input
-  # mode, and both mode setters read it from the page-lifetime probedMinimumFontHeight memo
-  # rather than re-probing -- so the boot measurement carries over STRUCTURALLY, and nothing
-  # mid-run can hand the next test a different number than boot measured (DETERMINISM.md §3g).
-  resetToBootInputMode: ->
-    return if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE
-    @setMouseInputMode()
-
-
   # answer the height of the smallest font renderable in pixels
   getMinimumFontHeight: ->
     str = "I"

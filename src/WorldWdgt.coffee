@@ -36,11 +36,11 @@ class WorldWdgt extends IconGridPanelWdgt
   pasteBrowserEventListener: undefined
   errorConsole: undefined
 
-  # the string for the last serialised widget
-  # is kept in here, to make serialization
-  # and deserialization tests easier.
-  # The alternative would be to refresh and
-  # re-start the tests from where they left...
+  # Scratch buffer holding the last serialised widget's string. It is a CARRIER between two
+  # separate user actions -- the "serialise widget to memory" test-menu row (or a macro's
+  # evaluateString step) writes it, and the "deserialize from memory..." row that follows reads
+  # it back -- which is what lets serialization be driven as two menu picks instead of one
+  # atomic call. Nothing else reads it, and its value means nothing outside the pair.
   lastSerializationString: ""
 
   # Note how there can be two handlers
@@ -163,15 +163,17 @@ class WorldWdgt extends IconGridPanelWdgt
   # automatically adjusts the world size.
   automaticallyAdjustToFillEntireBrowserAlsoOnResize: true
 
-  # The extent the world booted at, remembered at the end of the constructor. The world's own
-  # SIZE is world-level mutable state: "fit whole page" (stretchWorldToFillEntirePage, a dev
-  # context-menu item) resizes the canvas AND the world for good. Nothing put it back, so under
-  # the test harness one such call would render EVERY later test in the same page at the wrong
-  # size. _resetWorldNoSettle compares against this and restores.
-  _bootExtent: undefined
-  # ...and the companion "keep filling the browser on every resize" decision, which
-  # stretchWorldToFillEntirePage latches ON for good. Captured beside _bootExtent (i.e. AFTER the
-  # constructor's own sizing branch, so for the index page the captured value is the latched true).
+  # The "keep filling the browser on every resize" decision the world was BUILT with, recorded at the
+  # end of the constructor — i.e. AFTER the constructor's own sizing branch, so on the index page the
+  # recorded value is the latched true. It is load-bearing at reconstruction: resetWorld hands it to
+  # the replacement's constructor, so the successor is built with the policy BOOT chose rather than
+  # with whatever the finished session left in @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+  # ("fit whole page", the dev context-menu item, latches that ON for good).
+  #   There is deliberately no companion record of the boot EXTENT. A world's size is world-level
+  # mutable state, and coming back from a mid-session resize is CONSTRUCTION's job: the replacement
+  # runs the same sizing branch boot's world ran — size the canvas, then set the bounds from it —
+  # so a remembered extent would be a second, weaker answer to a question construction already
+  # settles.
   _bootAutoAdjustToFillEntireBrowserAlsoOnResize: undefined
 
   wdgtsDetectingClickOutsideMeOrAnyOfMeChildren: undefined
@@ -421,6 +423,13 @@ class WorldWdgt extends IconGridPanelWdgt
 
   healingRectanglesPhase: false
 
+  # a DISSOLVED world is one that resetWorld has already replaced: its tree, hand and listeners are
+  # gone, another WorldWdgt owns the page, and nothing will ever pump this one again. The flag is
+  # what lets the corpse recognise itself at the two seams where it could still act — the damage
+  # funnels below (_changed / _fullChanged) and the cycle it was dissolved in the middle of
+  # (doOneCycle). Set LAST by _dissolveWorldNoSettle, never cleared: nothing revives a world.
+  _dissolved: false
+
   # damage-suppression nesting depth (Widget._repaintAsOneUnit): while > 0,
   # _changed/_fullChanged marks are dropped — the unit's owner issues the one
   # covering mark at close. Transient (never serialized, like the trackChanges
@@ -609,9 +618,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
     @inputEventsQueue = new InputEventsQueue
 
-    # the size the world booted at, and the resize policy that goes with it -- see the
-    # _bootExtent declaration above
-    @_bootExtent = @extent()
+    # the resize policy this world was built with, recorded so a reconstruction can be built with
+    # the same one -- see the _bootAutoAdjustToFillEntireBrowserAlsoOnResize declaration above
     @_bootAutoAdjustToFillEntireBrowserAlsoOnResize = @automaticallyAdjustToFillEntireBrowserAlsoOnResize
 
     @_changed()
@@ -693,12 +701,17 @@ class WorldWdgt extends IconGridPanelWdgt
     @errorConsole.setBounds (new Point 190,10), new Point 550,415
     @errorConsole.hide()
 
+  # Remove the loading spinner and the fake desktop the page paints while the world is still being
+  # built. Both elements belong to the LOADING PAGE, not to any world — which is why this is boot's
+  # business (startWorld calls it) and NOT part of finishWorldSetup: a reconstructed world arrives
+  # long after they are gone, and there is nothing for it to hide.
+  # IDEMPOTENT: both lookups are soaked, so a second call finds nothing to remove rather than a
+  # missing element to dereference.
   removeSpinnerAndFakeDesktop: ->
-    # remove the fake desktop for quick launch and the spinner
     spinner = document.getElementById 'spinner'
-    spinner.parentNode.removeChild spinner
+    spinner?.parentNode?.removeChild spinner
     splashScreenFakeDesktop = document.getElementById 'splashScreenFakeDesktop'
-    splashScreenFakeDesktop.parentNode.removeChild splashScreenFakeDesktop
+    splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
 
   createDesktop: ->
     @setColor Color.create 244,243,244
@@ -1854,9 +1867,25 @@ class WorldWdgt extends IconGridPanelWdgt
 
     @_playQueuedEvents()
 
+    # THE DISSOLUTION SEAM. resetWorld can run from EITHER of the two stations that hand control to
+    # user/test code — a queued event's menu action (just above), or the replayed command every
+    # SystemTest opens with (just below) — and it DESTROYS this world and hands the page to its
+    # replacement. Everything after this point in the cycle belongs to that replacement: this world
+    # has no tree, no hand and no listeners left, and the animation pump gives the new world a whole
+    # cycle of its own at the next frame, so nothing is skipped, only re-aimed.
+    # ⚠ The concrete hazard is not theoretical: the stations below include
+    # @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges(), and dissolution has
+    # destroyed the hand and cleared the field.
+    # The FRAME still has to close out, though — that bookkeeping is the page's, not this world's.
+    return @_closeCycleBookkeepingNoSettle cycleStartPerfMs  if @_dissolved
+
     # replays test actions at the right time
     if AutomatorPlayer? and Automator.state == Automator.PLAYING
       @automator.player.replayTestCommands()
+
+    # the second half of the dissolution seam above: a reset reached from a replayed test command
+    # lands here instead. Same reasoning, same close-out.
+    return @_closeCycleBookkeepingNoSettle cycleStartPerfMs  if @_dissolved
 
     # paces the FETCHING of coffeescript source batches, one per frame (early in
     # the cycle so a fetch gets the whole frame of network time); compiling them
@@ -1925,6 +1954,14 @@ class WorldWdgt extends IconGridPanelWdgt
     # pump: absent from production.
     @macroToolkit?.drainEndOfCycleCaptures()
 
+    @_closeCycleBookkeepingNoSettle cycleStartPerfMs
+
+  # THE PAGE'S SHARE OF A CYCLE, as opposed to the world's: the source-compile budget drain and the
+  # frame clock. It is its own method because a reset DISSOLVES the world half-way through a cycle
+  # (see doOneCycle's dissolution seam) and that frame must still close out — none of this is
+  # per-world. WorldWdgt.frameCount stamps geometry caches, and dateOfPreviousCycleStart paces macro
+  # playback; a frame that silently failed to advance either would stall both.
+  _closeCycleBookkeepingNoSettle: (cycleStartPerfMs) ->
     # END-OF-FRAME compile station: budget-drain pending class-source compiles
     # AFTER paint, so a lazy-part load burst spends only the frame time paint
     # left over -- and at least one source per frame regardless. Guarded: on a
@@ -2529,8 +2566,13 @@ class WorldWdgt extends IconGridPanelWdgt
     # enumerated by the `instances`-Set marker every class carries (allClassFunctions),
     # NEVER by a name-suffix scan, which misses e.g. FrameContentsPlaceholderText. Only
     # widget-chain classes carry the field (declared on Widget); everything else skips.
+    # ⚠ WorldWdgt is SKIPPED because this sweep serves BOTH callers of the shared teardown core, and
+    # loadWorldSnapshot keeps its LIVE world — whose id must stay the one it was issued, since a
+    # snapshot carries no WorldWdgt counter to restore it from (Serializer.collectIdCounters skips
+    # it for the same reason). A world being REPLACED gives its id up in _dissolveWorldNoSettle
+    # instead, which is the only path that builds a successor to hand it to.
     for eachClassFunction in allClassFunctions()
-      continue if eachClassFunction is WorldWdgt   # the live world keeps its own id
+      continue if eachClassFunction is WorldWdgt
       if typeof eachClassFunction.lastBuiltInstanceNumericID is "number"
         eachClassFunction.lastBuiltInstanceNumericID = 0
 
@@ -2748,6 +2790,127 @@ class WorldWdgt extends IconGridPanelWdgt
     @noteStorageMembershipMayHaveChanged()
     return
 
+  # A RESET IS A RECONSTRUCTION, not a cleaning. This world is torn down and DISSOLVED, a
+  # replacement WorldWdgt is constructed over the same canvas, and the page runs on that one from
+  # here on. The point of building rather than scrubbing is that "did the teardown forget field X?"
+  # stops being a question anyone can ask: a world that has just been constructed cannot inherit a
+  # stale field, because it has never had one. What survives a reset survives because it lives OFF
+  # the world — PAGE lifetime: the class functions themselves, the font atlases and the metrics
+  # probed off them, the interned immutables, the monotonic lifetime counters, the page's ONE
+  # Automator (the constructor re-aims at `Automator.current`, it never replaces it) — never
+  # because a cleanup pass happened to spare it. Doctrine:
+  # docs/architecture/world-lifetime-and-inventory.md §1.
+  #   The ONE invariant left is machine-checkable rather than argued: the world we replace must be
+  # COLLECTIBLE. Anything still pinning it is a named bug, and `fg vmtruth`'s WeakRef oracle is
+  # what names it.
+  #
+  # ⚠⚠ THE ORDER IS THE CORRECTNESS ARGUMENT: dissolution completes BEFORE the replacement is
+  # constructed, because CONSTRUCTION is what moves `window.world` (WorldWdgt's constructor, first
+  # statement). Widget._destroyNoSettle reads that global to unregister a dying widget from the
+  # world's collections — so a widget destroyed AFTER the swap would reach into the LIVE world's
+  # collections instead of its own, leaving the corpse's registrations behind in the world that
+  # replaced it and mutating a world it never belonged to.
+  #
+  # The two `?.`-soaked hooks are the harness's seats, and WHERE each sits is its meaning:
+  #   _beforeWorldDissolveNoSettle runs on the world the finished test ran IN. Its question — did
+  #     this test leave residue the teardown could not reach — is about THIS world, and is
+  #     meaningless asked of a world that has existed for no time at all.
+  #   _afterWorldResetNoSettle runs on the world that now owns the page: construction determinism
+  #     and the page-wide object-lifetime audit both need the incoming world, not the outgoing one.
+  # Both are soaked because a product build ships no harness at all.
+  #
+  # SETTLE GRAMMAR — self-settling public API, like loadWorldSnapshot above: a SEQUENCE of
+  # self-settling operations, each flushing once (_settleLayoutsAfter's doc blesses sequential
+  # setters). _softResetWorld stays OUTSIDE the settle because its @hand.drop() is a real
+  # re-parenting drop that self-flushes, and re-entering the flush would throw the flow violation.
+  # @_dissolveWorldNoSettle() is deliberately NOT wrapped either, and for a different reason:
+  # nothing may be laid out after dissolution — there is no tree, no hand and no listeners left —
+  # and any damage mark it could still make is dropped at the funnel (see @_dissolved).
+  #
+  # It answers `undefined` ON PURPOSE. The new world is `window.world`, which is how everything
+  # reaches a world anyway; answering it instead would make every `page.evaluate(-> world.resetWorld())`
+  # serialise a cyclic widget graph over the debugger protocol.
+  # thin-wrap-exempt: softReset (its hand.drop self-flushes) must precede the settle, and the
+  # dissolution + reconstruction follow it, so this is a SEQUENCE, not the bare
+  # @_settleLayoutsAfter => @_<name>NoSettle wrap.
+  resetWorld: ->
+    @_softResetWorld()
+    @_settleLayoutsAfter => @_teardownWorldStructureNoSettle()
+    @_beforeWorldDissolveNoSettle?()
+    @_dissolveWorldNoSettle()
+    # @_bootAutoAdjustToFillEntireBrowserAlsoOnResize is the value BOOT passed (the constructor
+    # records it at its own tail), so the replacement is built the way boot built this one — NOT
+    # with whatever a test happened to leave in @automaticallyAdjustToFillEntireBrowserAlsoOnResize.
+    newWorld = new WorldWdgt @worldCanvas, @_bootAutoAdjustToFillEntireBrowserAlsoOnResize
+    finishWorldSetup newWorld
+    newWorld._afterWorldResetNoSettle?()
+    return
+
+  # DISSOLUTION: the last thing that happens to a world. It follows the shared structural teardown
+  # (which destroys the TREE and drops every reference to what it destroyed) and takes care of the
+  # world's own remains — the things a world holds that are not tree children, and the registrations
+  # that would otherwise outlive it for the life of the page.
+  _dissolveWorldNoSettle: ->
+    # (a) THE BROWSER LISTENERS. All 20 are closures over THIS world pushing into THIS world's
+    # @inputEventsQueue, and their targets (@worldCanvas, document.body, window) outlive every world
+    # the page ever builds — so an undetached set keeps delivering a dead world's events forever.
+    # initEventListeners / removeEventListeners are the attach/detach pair; that method's own comment
+    # carries the target-matching rules.
+    @removeEventListeners()
+    # (b) THE WIDGETS A WORLD OWNS THAT ARE NOT TREE CHILDREN, and which fullDestroyChildren
+    # therefore cannot reach: the hand (built by the constructor) and the two storage containers
+    # (built by finishWorldSetup). Each of them sits in its class's `instances` registry, so leaving
+    # one undestroyed pins it — and the whole object graph it references — for the life of the page.
+    # The teardown core has already EMPTIED the containers of their residents (@binWdgt?.empty() /
+    # @shelfWdgt?.empty()); this destroys the containers themselves.
+    @hand._fullDestroyNoSettle()
+    @binWdgt?._fullDestroyNoSettle()
+    @shelfWdgt?._fullDestroyNoSettle()
+    # ...and then hold no reference to what was just destroyed — the same seam contract the shared
+    # teardown core keeps for the tree.
+    @hand = undefined
+    @binWdgt = undefined
+    @shelfWdgt = undefined
+    # (c) THE WORLD LEAVES ITS OWN CLASS CHAIN'S `instances` SETS. This is also the line that arms
+    # the collectibility oracle for free: `fg vmtruth`'s prelude records a WeakRef at exactly this
+    # seam and asserts, one teardown later, that the VM was allowed to let the object go.
+    @unregisterThisInstance()
+    # (d) EVERY REPLACEMENT IS WorldWdgt#1, exactly as this one was — world identity carries no run
+    # history, and no drawn label shifts because a page has reset a few hundred times (Widget.toString
+    # -> uniqueIDString is DRAWN in re-parent menu rows, wire labels, pinouts and the inspector).
+    # ⚠ It is zeroed HERE and not in fullDestroyChildren's per-class sweep (which skips WorldWdgt)
+    # because this is the one place a world is actually REPLACED. loadWorldSnapshot shares that
+    # sweep and keeps its LIVE world, whose id must stay the one it was issued — and a snapshot
+    # carries no WorldWdgt counter to restore it from (Serializer.collectIdCounters skips it too).
+    WorldWdgt.lastBuiltInstanceNumericID = 0
+    # (e) ...and a world that has been replaced READS as destroyed, like any other widget that has
+    # been torn down. It matters to the liveness instruments rather than to the framework: the
+    # registry cross-check in scripts/heap-forensics.js separates a VM-alive CORPSE (destroyed, out
+    # of the registry — a retention to hunt) from a REGISTRATION HOLE (alive, never registered — a
+    # bug in the meta-system) by exactly this flag, so a dissolved world that left `destroyed`
+    # false would be filed as the second and send the reader looking for the wrong defect.
+    @destroyed = true
+    # (f) LAST: from here on I am a corpse, and the two damage funnels below drop everything I try
+    # to mark — see the _changed / _fullChanged overrides.
+    @_dissolved = true
+
+  # A DISSOLVED WORLD MARKS NO DAMAGE. Every damage funnel routes its mark through the `world`
+  # GLOBAL (Widget._changed pushes onto world.widgetsWithMaybeChangedPaintBounds, Widget._fullChanged
+  # onto world.widgetsWithMaybeChangedFullPaintBounds) — so a mark made by a corpse AFTER the swap
+  # would land a destroyed widget (this one) in the LIVE world's per-cycle queues, which is exactly
+  # what the object-lifetime audit calls a zombie: the new world would then walk a dead world's
+  # geometry on its way to paint.
+  # This is the SECOND lock on that door, not the first — nothing pumps a corpse, because doOneCycle
+  # returns at its dissolution seam and the animation loop reads the global. Both are cheap and the
+  # failure they prevent is silent, so both stay.
+  _changed: ->
+    return if @_dissolved
+    super
+
+  _fullChanged: ->
+    return if @_dissolved
+    super
+
   # --- THE SHARED STRUCTURAL TEARDOWN ----------------------------------------------------------
   # ONE core, two callers: the test teardown (_resetWorldNoSettle) and the snapshot loader
   # (loadWorldSnapshot). Its contract is exactly one thing:
@@ -2903,9 +3066,11 @@ class WorldWdgt extends IconGridPanelWdgt
     # damage so its pixels get erased), so this filter must be the teardown's LAST act,
     # after the bin/shelf empties directly above have destroyed their residents too. The
     # seam contract ("no reference to anything just destroyed") wants the dead entries gone
-    # NOW, not next frame. A filter, not a clear: a live entry (notably the world's own
-    # whole-screen mark, posted by the reset caller BEFORE this teardown runs) must keep
-    # its pending damage or the reset repaints nothing.
+    # NOW, not next frame. A filter, not a clear, because a SURVIVING widget's pending damage is
+    # still owed a repaint: on the load path the restored desktop is painted from marks made after
+    # this, but anything the teardown did not destroy keeps whatever it had queued. (The reset path
+    # does not depend on that -- this world is about to be dissolved, and the world that replaces it
+    # marks its own whole screen in its constructor.)
     @widgetsWithMaybeChangedPaintBounds = (w for w in @widgetsWithMaybeChangedPaintBounds when !w.destroyed)
     @widgetsWithMaybeChangedFullPaintBounds = (w for w in @widgetsWithMaybeChangedFullPaintBounds when !w.destroyed)
     # the currently-painting register: nothing is painting at this seam, but the paint
