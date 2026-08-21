@@ -11,8 +11,16 @@ The `file:line` refs below are HINTS, not addresses: a line number rots with the
 
 Conventions used below: `@x` = a MacroToolkit helper; `world.x` = the live world; a bare `…_InputEvents_Macro`
 call is an L3 verb. Drive every USER input through the event queue (`_InputEvents` verbs); only fixture
-construction and genuinely-blocked UI triggers (`hide()/show()`, `toggleSoftWrap()`, `world.evaluateString`)
-are called directly. See `CLAUDE.md` for those rules.
+construction and genuinely-blocked UI triggers (`hide()/show()`, `toggleSoftWrap()`) are called directly.
+See `CLAUDE.md` for those rules.
+
+⛔ **A direct call is written as CODE, never as a string handed to `world.evaluateString`.** A macro body IS
+CoffeeScript: anything the string could say can be a statement instead, and the statement keeps a real binding
+for the widget, is covered by the syntax gate, and carries a name a rename sweep can find. `evaluateString` is
+also not a plain call — it compiles text, evals it, then re-lays-out AND DAMAGES THE WHOLE WORLD, so a fixture
+step written that way forces a full repaint and MASKS a missing self-invalidation in whatever it just drove
+(screenshots read the incremental damage-rect canvas precisely to stay sensitive to that). There is exactly ONE
+`world.evaluateString` call in the suite — in `macroEvaluateString`, where the eval IS the feature under test.
 
 Byte-equality pairs (the no-op / round-trip idiom many entries below lean on) are ASSERTED IN-RUN, not just
 claimed: every within-test "image_A is byte-identical to image_B" MUST call
@@ -1371,10 +1379,11 @@ assertion a recapture after a regression silently stores two different hashes an
   the ones declared on the class.) Getting it wrong compiles fine and fails at RUN time with the thoroughly unhelpful
   `Cannot read properties of undefined (reading 'call')` — `yield*`-ing an undefined subroutine — attributed to your own
   macro body at a line number in the COMPILED generator, which is not the line you wrote.
-- ⚠ **A multi-line double-quoted string inside `world.evaluateString` FOLDS its newlines into spaces** (CoffeeScript
+- ⚠ **Build fixtures as CODE, not as a string for `world.evaluateString`** (the ⛔ rule in the preamble). Two mechanical
+  traps if you ever write one anyway: a multi-line double-quoted string FOLDS its newlines into spaces (CoffeeScript
   string semantics), so a several-statement fixture becomes one unparseable line and fails at COMPILE time with
-  `unexpected identifier`. Use `"""…"""`, or — better and what the fixtures here do — just build the widgets directly in
-  the macro body, which is CoffeeScript already.
+  `unexpected identifier` (`"""…"""` avoids that); and `@` inside the string is the WORLD while `@` in the macro body is
+  the MacroToolkit — two meanings three characters apart.
 
 - **Set target** (`macroPaletteSetTargetRecolorsPanel`): `setControllerTargetToWidgetProperty_InputEvents_Macro controller,
   "a Panel", "color"` — right-click the controller (a ColorPaletteWdgt / GrayPaletteWdgt / SliderWdgt / … with
@@ -1773,7 +1782,7 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **A menu row that SHOWS somebody's state follows a change it did not make**
   (`macroWallpaperMenuFollowsAnApiChange`): open a ticked menu, change the underlying value with NO menu
-  interaction at all — `world.evaluateString "@wallpaper.setPattern @wallpaper.pattern5"` — and the open
+  interaction at all — `world.wallpaper.setPattern world.wallpaper.pattern5` — and the open
   menu's tick MOVES. The rows carry a `MenuRowReflectionSpec` (they declare that their label reflects a
   value); the source is a dataflow node that `markStale`s itself on change, and `MenuRowsPanelWdgt`
   subscribes one edge PER PANEL, so the drain re-derives every subscribed row wherever it is. Assert with
@@ -1886,7 +1895,9 @@ assertion a recapture after a regression silently stores two different hashes an
 - **In-system eval** (`macroEvaluateString`): `world.evaluateString "code"` runs arbitrary CoffeeScript against the live world
   INLINE (compile, run with `@`=world, relayout/repaint) — this is what the old recorded `AutomatorEventCommandEvaluateString` command did (that command no longer exists).
   Do NOT write `@evaluateString` (MacroToolkit's own binds `@` to the toolkit). No new verb; no input events, so just `yield
-  "waitNoInputsOngoing"` before a screenshot.
+  "waitNoInputsOngoing"` before a screenshot. ⭐ **This is the suite's ONLY `world.evaluateString` call, and the only one
+  that should ever exist**: here the eval IS the feature under test. Everywhere else the string is just code that lost its
+  bindings — see the ⛔ rule in the preamble.
 - **Staleness diff-oracles: incremental-vs-full and incremental-vs-REBUILD** (`macroClosingRotatedIslandChildClearsFootprint`,
   `macroOversizedShadowRemovalLeavesNoGhost`, `macroOversizedShadowChildIn{,Scaled}IslandRepaintsBuffer`,
   `macroShadowAnyDirectionRendersAndErases`, `macroShadowAsymmetricInIslandRepaintsBuffer`): pin a damage-rect

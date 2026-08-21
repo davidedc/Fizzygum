@@ -92,7 +92,14 @@ every speed (recognition is proximity + the hand's 300ms EVENT-TIME window — d
 timer; the verb spaces its clicks inside it) — see
 "Playback speed" below; tests carry NO speed metadata. *Legitimately NOT input* (keep direct): building a fixture (`new …; world.add`,
 positioning) and a behaviour whose UI trigger is genuinely blocked / is an escape hatch (`widget.hide()/show()`,
-`textBox.toggleSoftWrap()`, `world.evaluateString "…"`). Never use a direct call to STAND IN for a real input.
+`textBox.toggleSoftWrap()`). Never use a direct call to STAND IN for a real input.
+⛔ **And write that direct call as CODE, never as a string for `world.evaluateString`.** A macro body is already
+CoffeeScript, so the statement form keeps a real binding for the widget, is covered by the syntax gate, and carries a
+name a cross-repo rename sweep can find — a string does none of the three and fails at RUN time instead. It is also
+not a plain call: `Widget.evaluateString` compiles, evals, then `_reLayoutSelf()` **and `_changed()` on the receiver**,
+so `world.evaluateString` damages the WHOLE world — a fixture step written that way forces a full repaint and masks a
+missing self-invalidation in whatever it just drove, which is exactly what the incremental damage-rect screenshots
+exist to catch. The suite holds ONE such call, in `macroEvaluateString`, where the eval is the feature under test.
 
 **3. "Macro" only as a trailing suffix** in any verb/subroutine name (or token in macro source). A *mid-name*
 "Macro" (`takeScreenshotForMacro_…`, or `recordMacroAssertion` written in macro source) is mangled by
