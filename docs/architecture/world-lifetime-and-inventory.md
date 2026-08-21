@@ -1,13 +1,13 @@
 # World lifetime and the inventory instrument
 
 How Fizzygum accounts for what is alive on a page, and the doctrine that accounting serves.
-Companion code: `src/dev-tools/WorldInventory.coffee` (the instrument),
+Companion code: `src/WorldInventory.coffee` (the instrument),
 `Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee`
 (`_auditWorldInventoryNoSettle`, the gate seam), `WorldWdgt.graphLivenessRoots` (the shared
 root enumeration). Program plan: `docs/archive/world-inventory-instruments-plan.md` (Arc A of
 three; Arcs B and C are future arcs, described there).
 
-## 1. The two-lifetimes doctrine (direction, not yet enforcement)
+## 1. The two-lifetimes doctrine, enforced by construction
 
 Every piece of state on a Fizzygum page belongs to exactly one of two lifetimes:
 
@@ -19,12 +19,31 @@ Every piece of state on a Fizzygum page belongs to exactly one of two lifetimes:
 - **WORLD lifetime** — everything else: widgets, their bookkeeping, collaborator state, app
   slots, DOM side effects. It dies with the world.
 
-Today's `resetWorld` is a *cleanup pass over a reused world object*, so the doctrine is
-enforced by AUDIT rather than by construction. Arc C of the program is the enforcement arc:
-reset becomes *destroy + `new WorldWdgt`*, and the whole question collapses to "is the old
-world collectible" (a `WeakRef` + forced GC check). Until then, the inventory below is the
-conformance instrument: **everything alive after a teardown must be (a) part of the
-post-boot baseline, (b) a declared page-lifetime store, or (c) a bug.**
+**`resetWorld` ENFORCES the split by construction.** It destroys the old world
+(`_dissolveWorldNoSettle`), builds a replacement (`new WorldWdgt` + `finishWorldSetup`) and swaps
+`window.world`. So world-lifetime state does not have to be *remembered* into oblivion by a cleanup
+pass — it dies with the object that owned it, and state survives a reset only when it structurally
+lives somewhere else. The doctrine stopped being a convention that an audit polices and became a
+property of the machinery.
+
+⚠ **That does not retire the inventory, it re-aims it.** Two things construction cannot decide:
+- **Did the old world actually die?** Reconstruction is only enforcement if nothing still holds the
+  corpse — one retained world holds its entire object graph. That is §6's question, and it is asked
+  as REACHABILITY, not as collectibility (see §6: the proxy has false positives by construction).
+- **Is page-lifetime state behaving like page-lifetime state?** Everything OFF the world — class
+  statics, collaborator and module state, caches, the DOM — crosses every reset untouched, and an
+  unbounded or accreting store there is a leak no reconstruction can fix. That is the walk below:
+  **everything alive after a teardown must be (a) part of the post-boot baseline, (b) a declared
+  page-lifetime store, or (c) a bug.**
+
+⭐ **The LRU amendment, and why it belongs in the doctrine rather than in a bug list.** A memo cache
+that is a pure function of its keys is legitimately page-lifetime — but *legitimately page-lifetime*
+is a claim about correctness, not about size. All eight of this page's LRUs (the seven
+`world.cacheFor*` plus `Color._cache`) were unbounded in every long session because a single
+back-pointer bug made eviction a permanent no-op, and no lifetime rule would ever have caught it:
+each cache was doing exactly what its lifetime entitled it to do. ⇒ a page-lifetime store must
+declare a BOUND as well as a reason, and the inventory reports the bulk aggregates so an unbounded
+one is visible even while it stays "correct".
 
 ## 2. What the inventory measures
 

@@ -1,6 +1,7 @@
 # World reset by reconstruction — Arc C of the object-lifetime program
 
-**STATUS: PLAN AUTHORED 2026-08-20; Phases 1 AND 2 EXECUTED same day.**
+**STATUS: PHASES 1–4 EXECUTED AND PUSHED (plan authored 2026-08-20; 1+2 same day, 3+4 on
+2026-08-21). Phase 5 is all that remains.**
 Phase 1 (spikes, results in §5): verdict GO — S1: reconstruction +0.4–0.7 % suite
 wall-clock; corpse cycle-tail paint-inert by measured mechanism; old-world
 collectibility blocked SOLELY by the prototype-shared arrays (ablation-proven); warm
@@ -24,8 +25,17 @@ Phase-closing 18-leg gauntlet 2026-08-20: **GREEN 18/18, 7m27s** (dpr1/dpr2/webk
 suites 307/0/0 · apps · parts · menusweep · pinsweep · graph:PASS-serial-only — the
 known in-wave load-flake shape, machine at loadavg 23.7 · paint · tiernaming · settle ·
 capstone · refs · revisits · census · serialization · storage · vmtruth:PASS(92s)).
-NEXT: Phase 3 (the seam + the flip, ONE commit) → 4 (gates + doctrine) → 5 (promotion).
-Owner checkpoint stands before the Phase 3 flip commit.
+**Phase 3 — THE FLIP — EXECUTED + PUSHED 2026-08-21** (Fizzygum `21c638d7` / tests `43d503c3b`):
+`resetWorld` ships as destroy + `new WorldWdgt` + swap. Suite 307/307 byte-identical, `fg homepage`
+green, gauntlet 17/18, ZERO recaptures. The one red leg (`vmtruth`) is D4a/D4b.
+**Phase 4 — EXECUTED + PUSHED 2026-08-21.** D4a CLOSED (the retainer was the test loader's
+never-released `<script>` onload chain). D4b: the residue that remained is NOT A LEAK — it has no
+retaining heap edge, so the gate was rebuilt to ask REACHABILITY in two tiers and the grace period
+was DELETED (Fizzygum `054e7580` + `9f53e38c`, tests `98f38a592` + `8b89c9be2`; gauntlet 18/18
+TWICE, `fg homepage` twice, zero recaptures). D4c fixed. D4 CLOSED. D5: all four plants proven and
+removed, both repos clean after — and plant (3) returned a FINDING instead of a confirmation, D5c.
+NEXT: Phase 5 — D6 (promotion) + D7 (docs) + close ritual. Owner decisions outstanding: the
+`RESETWORLD_INCOMPLETE` rename/retire call (§6), and D5c's two (dead flags, capstone coverage).
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-20 against heads Fizzygum `ffec2ab8` / Fizzygum-tests `e0b00702f`;
@@ -862,6 +872,14 @@ Heap-floor budget unchanged (96 MB) unless S1's measured reconstruction profile 
 conscious bump (owner-visible if so). Acceptance: `fg vmtruth` green on the flipped
 suite; the D5 world-pin plant fails it.
 
+**CLOSED 2026-08-21 — both halves met.** Green: `fg vmtruth` OK repeatedly on the landed tree
+(and as gauntlet leg 18/18). Fails on the plant: D5(1) above, `FAILED — 8 RETAINED WORLD(s)`,
+one per shard page, the ⭐ REPLACED-WORLD line naming the holder in its retainer path. The rider
+shipped in a different shape than this section anticipated — the world finding is distinguished by
+an `isWorld=true` flag on the tier-2 retainer label rather than by a distinct tier-1 token, because
+the gate's verdict now comes from REACHABILITY (D4b), not from the collectibility proxy this
+section was written against. The budget was not bumped.
+
 ### D5 — prove the gates FAIL (mandatory, per standing case law)
 
 **Evidence in hand before the plants are written** (first suite run of the flipped tree): the
@@ -877,15 +895,106 @@ reset that REUSED the world object the field was written once at boot and never 
 never had to be named. D5(2)'s plant is still owed — this proves the gate is ARMED, not that it
 fails on a planted drift.
 
-Three plants, each proven then removed: (1) **world pin** — a scratch prelude stashes a
-strong ref to the old world at reset (module var); `fg vmtruth` must FAIL with the
-`uncollectedWorld` verdict naming it, while the suite stays green. (2) **construction
-drift** — plant a page-state read into a scratch-patched constructor (e.g. a counter
-that increments per construction and lands in a world field); the reframed ratchet must
-fire `RESETWORLD_INCOMPLETE` on the second reset. (3) **audit-arming regression** — with
-the prototype-default arming (D-P3c), un-arm one flag on a fresh world mid-page in a
-scratch run; the corresponding gate leg must lose its positive-coverage line (proving
-the arming is load-bearing and its loss is visible, not silent).
+**ALL FOUR PLANTS EXECUTED AND REMOVED 2026-08-21; both repos verified clean afterwards
+(`git status --porcelain` empty).** Every plant lives in an injected PRELUDE or a runner's
+`addInitScript`, never in `src/` — the preludes are read from the tests repo at runtime and the
+stale-build guard only hashes `.coffee`, so none of these needed a build.
+
+(0) **Closure retention** (the fourth plant, discharged first because it was also the instrument
+for D4b): a closure over ONE world ⇒ `fg vmtruth` FAILS, path names `--context:plantedWorld-->`.
+Its measured payoff is recorded in D4b: 8 worlds + 72 collateral widgets before the widget-collection
+fix, 8 worlds + 0 after.
+
+(1) **World pin** — `vm-truth-prelude.js` holds the first replaced world of each page in a plain
+`window.__d5PlantedWorld`. ⇒ **`fg vmtruth` exit 1**, `FAILED — 8 RETAINED WORLD(s), 0 retained
+widget(s), 0 heap-floor failure(s)`, one per shard page (the single-slot shape D4a called for), each
+carrying the ⭐ REPLACED-WORLD line and the path
+`synthetic "" --shortcut:2--> object "Window / file://" --property:__d5PlantedWorld--> object
+"WorldWdgt" @id=155937`. The suite stayed green throughout (`failed 0` at every progress line), which
+is the other half of the acceptance. ⇒ **D4's rider is proven armed**, through a `property` edge —
+plant (0) had proven it through a `context` edge, so the two together cover both edge kinds.
+⭐ Two free readings: `0 retained widget(s)` re-confirms the D4b/D5b collateral fix by a different
+route than the one that found it, and the node reads `object "WorldWdgt"` rather than `object ""` —
+D-P2g's named constructors, end-to-end, which is what makes `heap-forensics.js`'s "instances are
+anonymous" note stale (D7).
+⚠ Three ways this plant could have proved the wrong thing, all avoided deliberately: hung off a
+`WorldInventory` walk root it would have failed the SUITE (the gate then exits on "the suite itself
+FAILED" and never reaches its retention verdict); emitting a novel `LAYOUTAUDIT VMTRUTH` line it
+would have failed as an unrecognised token (prelude/gate disagreement, not retention); pinning one
+world PER RESET rather than per page it would also have tripped the heap floor, and which gate bit
+would have been unreadable.
+
+(2) **Construction drift** — a `PRELUDE_JS` pre-hook on `_afterWorldResetNoSettle` writes
+`this.__d5ConstructionSerial = ++n`, so every constructed world fingerprints differently. Run through
+`run-sequence-headless.js` (3 tests, ONE page — the ratchet needs ≥2 diffed worlds, and this is
+seconds rather than a suite). ⇒ **exit 1**, twice:
+`RESETWORLD_INCOMPLETE __d5ConstructionSerial firstWorld=1 thisWorld=2` and `…thisWorld=3` —
+matching the predicted arithmetic exactly (the boot world is never fingerprinted, world #2 takes the
+baseline, world #3 onward is diffed).
+⭐ **With its negative control**: the same plant writing a CONSTANT fires nothing (exit 0, zero
+tokens, `failed: none`). So the ratchet compares VALUES, not presence, and the fire came from the
+drift rather than from the field's mere appearance. Without that arm, a plant that merely ADDED a
+field would have looked like the same success.
+
+(3) **Audit-arming regression — EXECUTED, and it returned a FINDING rather than a confirmation.**
+See D5c: the deliverable's premise ("the corresponding gate leg must lose its positive-coverage
+line") is false for the whole `world.audit*` family, because no such line exists. The intent behind
+it — §7 risk 4, an instrument silently disarmed by a reset must be VISIBLE — was proven instead on
+the one leg that does carry a real coverage ratchet, `fg paint`: disabling only the per-test audit
+tick once the world has been reconstructed (deliberately NOT nuking `world.macroToolkit`, the tick's
+real per-world dependency, which would have broken every macro-driven test and made the gate fail
+from broken tests rather than a coverage hole) gives
+`✗ PAINT-TRUTHFULNESS GATE FAILED: checked 0 != expected 307 — a shard dropped tests (coverage
+hole)`, exit 1, with `audit on : true` proving the page-global half survived. That is risk 4
+defended, loudly and specifically.
+
+### D5c — FINDING: the `world.audit*` family has no arming tripwire, and two of its flags are DEAD
+
+D5(3) set out to prove that losing an instrument's arming is visible. It is not — and the way it is
+not comes in two separable parts, both measured rather than argued.
+
+**(a) A lost flag turns a red gate green, with its coverage line intact.** Measured on `capstone`,
+the leg whose flag (`auditUndeclaredEndOfCycle`) is the one genuinely load-bearing member of the
+family (it gates the recording at `Widget._invalidateLayout`). The experiment separates the VIOLATION
+from its RECORDING exactly as the product does — a careless push happens once per test regardless,
+and only the recording sits behind the flag:
+
+| arm | flag on reconstructed worlds | violations that occurred | `careless pushes` | verdict |
+|---|---|---|---|---|
+| A | armed (as shipped) | 307 | **307** | ✗ FAILED, exit 1 |
+| B | lost (instance write shadows the prototype default) | **307** (logged per test) | **0** | **✓ PASSED, exit 0** |
+
+Both arms report `prelude installed=307/307`. ⇒ **307 real violations, a green gate, and a coverage
+line that never wavered.** The gate's only "coverage" number is a prelude-INSTALL count, and it is
+computed from a synthetic header string `run-all-headless.js` writes itself — so it is blind to the
+flag by construction. The same shape holds for `tiernaming`, `settle`, `storage` and `revisits`
+(none has a non-zero-expectation assertion); `fg paint` and `fg vmtruth` are the only legs in the
+tree that can currently fail for having measured nothing.
+⚠ An intermediate arm B read `6`, not `0`, and the 6 were an ARTEFACT of the plant firing on each
+shard's boot world where the flag was still armed — the refinement was to the plant, not to the
+model. Recorded because "98 % of the signal disappeared" would have been a weaker and slightly
+dishonest way to state a result that is actually total.
+
+**(b) `auditTierAndApplyNaming` and `auditNotificationSettleNeutrality` are read by NOTHING.**
+Grep-verified across `Fizzygum/src` + the harness src + `scripts/` + `tests/`: each appears only at
+its `WorldWdgt` declaration, its prelude arming line, a log line that merely echoes its own value,
+a shell-gate header comment, and `_worldStateAuditExemptions`. Nothing branches on either. Both
+gates take all their observations from the preludes' own prototype wrappers
+(`tier-naming-prelude`'s `wrapCorner`/`wrapMarker`, `notification-settle-prelude`'s
+`wrapCallback`/`wrapSettle`), which never consult the flag. So arming them is a no-op in both
+directions, and the two shell headers asserting the gate "flips on `WorldWdgt.<flag>`" are false.
+⭐ This is a D-P3c residue worth naming: that unit carefully moved arming to prototype defaults for
+SIX instruments, and for two of them the work was moot because the flag does nothing. A third,
+`auditPaintTimeLayoutScheduling`, is live product code but its own gate re-implements the predicate
+rather than reading it.
+
+**Disposition — owner decisions, filed in `docs/BACKLOG.md`, not taken here:** (i) delete the two
+dead flags (declaration + comment in `WorldWdgt.coffee`, both arming lines, both
+`_worldStateAuditExemptions` entries, the two stale shell headers) — this is exactly the
+exemption-list pruning §6 lists as an end-of-arc call; (ii) give the capstone gate a real
+positive-coverage assertion, symmetric with `run-paint-audit.js`'s `checked == expectedTotal`, so
+arming loss cannot pass silently. Neither is required for Arc C to close; both are cheap and the
+measurement above is the argument for them.
 
 ### D6 — WorldInventory production promotion (Phase 5, separable)
 
