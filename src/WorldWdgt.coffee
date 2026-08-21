@@ -2890,7 +2890,15 @@ class WorldWdgt extends IconGridPanelWdgt
     # bug in the meta-system) by exactly this flag, so a dissolved world that left `destroyed`
     # false would be filed as the second and send the reader looking for the wrong defect.
     @destroyed = true
-    # (f) LAST: from here on I am a corpse, and the two damage funnels below drop everything I try
+    # (f) THE PAGE-LIFETIME COLD-GLYPH STORE, AGAIN. The shared teardown core already ran this filter,
+    # but it runs it as ITS last act — and dissolution is a FOURTH destroy phase behind it, so at that
+    # point the hand, the two containers and this world were all still `destroyed == false` and every
+    # one of them survived the pass. The filter keys on `destroyed`, which is only true for them HERE.
+    # Both calls are needed and neither is redundant: the core's covers the tree (and is the only one
+    # loadWorldSnapshot gets, since that path keeps its world and never dissolves), this one covers
+    # the four the core cannot yet see. Idempotent — it rebuilds the array from a predicate.
+    window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()
+    # (g) LAST: from here on I am a corpse, and the two damage funnels below drop everything I try
     # to mark — see the _changed / _fullChanged overrides.
     @_dissolved = true
 
@@ -3060,6 +3068,11 @@ class WorldWdgt extends IconGridPanelWdgt
     # queues this store feeds no repaint the reset caller is depending on, so their ordering
     # constraint neither reaches it nor is disturbed by it. Soaked because it is a boot-bundle
     # facility, reached the same way anyTextDirty reaches swCanvasAnyTextDirty.
+    # ⚠ This pass covers the TREE, which is everything this core destroys — but it is not the last
+    # word on the reset path: _dissolveWorldNoSettle destroys the hand, the two containers and the
+    # world itself AFTER this returns, so those four are still `destroyed == false` right here and
+    # survive the filter. Dissolution runs it a second time, once they are corpses. The load path
+    # keeps its world and never dissolves, so for loadWorldSnapshot this call IS the whole story.
     window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()
     # the per-cycle damage queues (drained by the next _repaintDamagedRects) still hold
     # widgets destroyed above -- and destruction itself RE-MARKS them (a dying widget posts

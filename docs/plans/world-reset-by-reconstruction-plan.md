@@ -630,20 +630,125 @@ releases itself (`script.onload = null`, the sanctioned foreign-API spelling), a
 callback became a plain function reading the `world` global at call time instead of capturing `@`.
 ⇒ `fg vmtruth`: **OK — every destroyed widget collectible, heap floor flat, 307 buckets, 8 pages.**
 
-**RESIDUE — still open, and stated as measured rather than as the tidy story.** With all three
-handlers released the leg is no longer reliably red, but it is not reliably green either: two
-standalone runs came back OK (`307 test buckets, 8 page series`), a later standalone run reported
-1 world / 9 widgets, and two gauntlet runs reported 2 then 6 world lines from 2 worlds. So it is
-NONDETERMINISTIC AROUND ZERO — 0–2 worlds per run — against 303 worlds reported in every bucket
-before the fix. Whatever is left is a different order of thing, not the same bug in a smaller size.
-⛔ **One calibration was tried and REVERTED, do not re-try it blind:** worlds were given a third
-teardown of grace on the theory that a whole object graph collects one sweep later than a widget.
-It was falsified in the next run — a world reported across FOUR buckets — so the grace is back to
-one full teardown for everything, and the prelude carries that negative result at the test itself.
-⇒ Next: the rig at `.scratch/world-retainer-probe.js` now reproduces nothing (it went clean the
-moment the head-script retainer was fixed), so closing this needs the same move that closed the
-first one — make the probe match the failing configuration (gauntlet-level load is the untested
-axis) and walk a retainer path for a world the gate actually reported.
+### D4b — the RESIDUE is not a leak: it has no retainer, and the measurements that establish it
+
+**The finding.** What is left after the head-script fix is NONDETERMINISTIC AROUND ZERO — 0–2 events
+per 307-test run, some runs clean — and every event is the SAME object set: `BinWdgt#1` plus exactly
+its chrome (`ViewportWdgt#1`, `ScrolledPaneWdgt#1`, `SliderWdgt#1/#2`, `SliderButtonWdgt#1/#2`,
+`StringWdgt#1`, `SimpleButtonWdgt#1`), usually with `WorldWdgt#1` alongside. It is held for a bounded
+number of resets (1 bucket in one run, ~8 consecutive in another, ages 2–3 typically) and then
+RELEASES ON ITS OWN. It never accumulates and the heap floor stays flat throughout.
+
+**⭐ IT HAS NO RETAINING HEAP EDGE. Measured three independent times**, with a probe that stops the
+page in the same turn as the detection (`WorldWdgt.prototype.doOneCycle` becomes a no-op, so no JS
+can run to release anything) and only then takes a heap snapshot and walks the retainer path. A V8
+snapshot serialises only REACHABLE objects, and a frozen page cannot drop an edge — so "no path at
+snapshot time" means there was no path at detection time either. Rig:
+`Fizzygum-tests/.scratch/frozen-retainer-probe.js`.
+⚠ **And the instrument proves itself**: it plants a destroyed widget in an ordinary strong global and
+requires its own BFS to name that path in the same run. The control PASSES (`Window --property:__plant-->
+SimpleButtonWdgt`) while every genuine suspect comes back with no path — including while `__stuck`
+holds both, so the holder-exclusion is not what is suppressing the answer. Without that control,
+"no path found" would be unfalsified instrument output rather than evidence.
+⚠ A planted run cannot also MEASURE, and the first one silently did not: the first destroyed
+`SimpleButtonWdgt` on this page IS the bin's "Empty bin" button, whose `@target` is the bin, so the
+plant pinned the very set under measurement and every suspect duly "had a retainer" — the plant's.
+Evidence therefore comes from two populations: unplanted runs measure, planted runs validate.
+
+**Why the corpses survive a forced GC at all — and what the one-teardown grace is actually buying.**
+An A/B over the sweep POSITION (`.scratch/survival-curve-probe.js`, which histograms every corpse at
+every sweep by age instead of waiting for the rare tail event) settles it:
+
+| sweep runs from | corpses alive at age 1 | age ≥2 (what the gate REPORTS) |
+|---|---|---|
+| inline, inside `resetWorld`/`doOneCycle`/rAF (as shipped) | 20781 | 0 that run |
+| a fresh macrotask (`setTimeout 0`) | 40 | 20 |
+
+⇒ the live frames of the world cycle are what keep ~68 corpses per sweep alive through the immediate
+double GC — a ~500× effect, and exactly what `world-lifetime-and-inventory.md` §6 already says the
+grace exists for. ⛔ A refinement of that model — "stale pointers in stack memory below the current
+frame, which is why some persist for several sweeps" — was TESTED AND FALSIFIED: recursing 1500
+frames deep to overwrite that memory before each GC left the count *identically* 20781. It is live
+frames, not stale slots. Do not re-run the scrubber.
+
+**⛔ Models tried and falsified for this residue (do not re-run):**
+1. *Another unreleased one-shot async handler, the family of the head-script fix.* A full sweep of
+   both repos found NO page-lifetime harness slot holding a widget or a world at all — every `world`
+   reference in `Automator-and-test-harness-src` is a bare global read at call time. The three fixed
+   `AutomatorLoader` sites are verified still fixed. `AutomatorPlayer.createImageFromImageData`'s
+   `img.onload`/`onerror` pair is genuinely unreleased but captures no widget, never enters the DOM,
+   and never runs during a suite — tidy-up, not a retainer.
+2. *The sweep's own stack position.* Deferring collapses the age-1 noise but leaves the residue
+   standing (table above), and the frozen-snapshot result holds in both arms.
+3. *The cold-glyph store's ordering defect.* `swCanvasColdGlyphWidgets` is a page-lifetime STRONG
+   array of widgets whose teardown filter runs at the end of `_teardownWorldStructureNoSettle` —
+   one destroy-phase too early, since `_dissolveWorldNoSettle` kills hand/bin/shelf/world after it
+   (see D4c). It predicts this residue exactly. Asked in the detection turn itself, via the module's
+   own `window.swCanvasTextStateForAudit()` porthole, the array is **EMPTY**. REFUTED on its own
+   prediction. (The ordering defect is still real — D4c — it just is not retaining anything today.)
+4. *Widening the grace.* Already falsified upstream: worlds given a third teardown of grace were
+   still reported, across FOUR buckets. The prelude carries that negative result at the test itself.
+
+⇒ **Reading: the residue is a GC-timing artifact at the sweep seam, not a product leak.** The objects
+are unreachable when the gate reports them; the forced `gc(); gc()` simply has not reclaimed them
+yet, and a later sweep does. ⚠ ONE THING THIS ACCOUNT DOES NOT EXPLAIN and which is not yet measured:
+why the set is always the BIN's subtree and not also the HAND and the SHELF, which
+`_dissolveWorldNoSettle` destroys in the same three lines. `ShelfWdgt` is never painted and has no
+named-field subtree, so a shelf corpse references nothing and is a single object — but that is a
+hypothesis, not a measurement.
+
+⇒ **The fix is instrument-side, and it is not a wider tolerance** — it is the opposite. The sound
+oracle for "is this retained?" is REACHABILITY, not "did the collector get to it?", so the gate now
+asks that question and the tolerance becomes unnecessary rather than merely bigger. **The grace
+period is DELETED.** Tier 1 (the prelude) reports a SUSPECT at the first sweep after a widget's
+destroying reset and PINS it so a snapshot can still address it; tier 2 (`run-all-headless.js` under
+`AUDIT_RETAINER_CONFIRM=1`) takes one heap snapshot per shard at shard end, marks forward from the
+GC root with the pin arrays subtracted, and the gate fails only on a suspect that is still reachable
+— printing its retainer path. Landed with the sweep moved OFF the world cycle (the measured
+20781→40 position). Details: `world-lifetime-and-inventory.md` §6.
+⭐ **The nondeterminism did not disappear; it moved to where it belongs.** Three consecutive
+`fg vmtruth` runs on the landed tree raise 20 / 50 / 30 tier-1 suspects — the garbage genuinely does
+vary run to run — and all three clear every one and report OK. The VERDICT is now deterministic
+while the suspect count stays an informational counter, which is the honest shape: the gate no
+longer pretends the variation is not there, it just no longer mistakes it for a leak.
+⚠ Two implementation facts worth keeping, both measured rather than reasoned:
+- **Subtract the pin BY NODE, and subtract it entirely — do not merely refuse to traverse it.** A JS
+  array reaches its elements through an `(object elements)` backing-store node, so walling only the
+  array leaks straight through the store and every suspect comes back retained by the instrument's
+  own pin. A backing store belongs to exactly one object, so dropping the owner drops the store.
+- **The confirmation proves itself** (`.scratch/reachability-selftest.js`, plain node, no browser):
+  a synthetic snapshot in which one target is reachable ONLY through the pin must read UNRETAINED
+  and one also reachable by an ordinary property edge must read RETAINED with that edge named —
+  plus the control that the first target IS reachable when the pin is not subtracted, without which
+  the test would pass vacuously.
+
+### D4c — a live ordering defect the hunt turned up (worth fixing on its own merits)
+
+`_teardownWorldStructureNoSettle` ends with two filters that drop references to what was just
+destroyed — the cold-glyph store (`WorldWdgt.coffee:3063`) and the per-cycle damage queues — and
+both carry comments stating they must be the teardown's LAST act, after every destroy. That was
+true when the teardown WAS the last destroy phase. `resetWorld` now runs a FOURTH:
+
+```
+@_settleLayoutsAfter => @_teardownWorldStructureNoSettle()   # both filters run HERE
+@_beforeWorldDissolveNoSettle?()
+@_dissolveWorldNoSettle()                                    # hand, bin, shelf, WORLD die HERE
+```
+
+so those four are still `destroyed == false` when the filters pass over them and survive both. The
+cold-glyph array happens to be empty at that moment today, so nothing is retained — but the
+invariant each comment states was no longer held by the code, and the next thing to record a widget
+there would have retained it.
+**FIXED:** `_dissolveWorldNoSettle` runs `window.swCanvasDropDestroyedColdGlyphEntriesForTeardown?()`
+as its own last act, once the hand, the two containers and the world are actually corpses (the filter
+keys on `destroyed`, which is only true for them there). It is idempotent — it rebuilds the array
+from a predicate — so both calls stand, and neither is redundant: the core's pass covers the tree
+and is the ONLY one `loadWorldSnapshot` gets, since that path keeps its world and never dissolves.
+Both call sites now say which phase they cover.
+⚠ The DAMAGE-QUEUE filter beside it is deliberately NOT duplicated: its queues are world-instance
+fields (`@widgetsWithMaybeChangedPaintBounds`), so on the reset path they die with the world they
+belong to, and on the load path — the one where the world survives — the core's single pass is
+already the last act after every destroy that path makes.
 
 ⭐⭐⭐ **PRE-EXISTING, and only reconstruction could expose it.** Those closures always pinned the
 boot world; before this arc no world was ever destroyed or unregistered, so nothing ever asked. It

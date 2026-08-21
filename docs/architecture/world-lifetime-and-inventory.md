@@ -131,23 +131,44 @@ The prelude records a `WeakRef` for every widget at `unregisterThisInstance` (th
 leaves the live registry and is supposed to be garbage) and, at each `resetWorld` — after
 the teardown and the in-band audits — forces a double GC and asserts, with THREE verdicts:
 
-- `LAYOUTAUDIT VMTRUTH uncollected:<Class>#<id> destroyedDuring:<test>` — a destroyed
-  widget is still VM-alive **one full teardown later**. The grace period is load-bearing:
-  a heavy teardown leaves hundreds of destroyed widgets alive through the immediate GC
-  (the sweep runs inside the world cycle and V8's conservative stack scanning sees the
-  live frames above it) and all of them collect by the next sweep; a real leak survives
-  every later sweep and still fires. There is NO exemption table on purpose — the green
-  suite measures zero. Attribution: the line fires during the INCOMING test's opening
-  reset, so the leaker is the PREVIOUS test on that shard page (same semantics as every
-  reset-seam gate); the last test of a shard is never swept (same stated hole as the
-  storage prelude).
+- **RETENTION, in two tiers — because the cheap question and the true question are not the
+  same question.** *Tier 1* (in the page, at every `resetWorld`) forces the double GC and
+  collects every widget still alive at the FIRST sweep after the reset that destroyed it,
+  emitting `LAYOUTAUDIT VMTRUTH suspect:<Class>#<id> destroyedDuring:<test>`. Those are
+  **SUSPECTS, not findings**: "the collector has not got to it yet" and "something is
+  holding it" are indistinguishable from inside the page, so tier 1 declares nothing and
+  **pins** each suspect where a heap snapshot can still address it. *Tier 2* (in the
+  runner, `AUDIT_RETAINER_CONFIRM=1`) takes one snapshot per shard at shard end and marks
+  forward from the GC root **with the pin arrays subtracted by NODE** — never by edge name,
+  because an array reaches its elements through a backing store whose edges are numeric
+  slots, and dropping the array's own node is what drops the store with it. A suspect still
+  marked is genuinely retained; the gate fails and **prints its retainer path**, where a
+  `context:<var>` hop names the closure variable holding it.
+  ⚠ **There is NO grace period and NO exemption table, and the absence of the grace is the
+  design rather than an oversight.** A tolerance was there only to absorb tier 1's false
+  positives; reachability has no noise to absorb — an object is retained or it is not,
+  there are no ages and no buckets. Measured, three ways, before the tiers existed: the
+  objects the old proxy reported had **no retaining heap edge at all** — unreachable
+  garbage the forced GC had not reclaimed yet — which is precisely the false-positive class
+  a grace period can only ever hide, never remove.
+  ⚠ **The sweep runs OFF the world cycle** (a `setTimeout 0` macrotask), and that position
+  is measured: run inline — inside `resetWorld`/`doOneCycle`/the rAF callback — V8's
+  conservative stack scanning treats the live frames above it as roots and the forced GC
+  cannot reclaim what they mention, leaving **20781** corpses alive one sweep later across a
+  307-sweep run, against **40** from the deferred position.
+  Attribution: a suspect is raised during the INCOMING test's opening reset, so the leaker
+  is the PREVIOUS test on that shard page (same semantics as every reset-seam gate); the
+  last test of a shard is never swept (same stated hole as the storage prelude).
 - **Heap floor** — one post-GC `usedJSHeapSize` sample per teardown
   (`LAYOUTAUDIT VMHEAP`); per page, `min(last 10) − min(samples 3..15)` must stay ≤ 96 MB
   (green-suite worst: +44 MB — the heap legitimately balloons and deflates with test
   composition, so only the FLOOR is a leak signal; endpoint statistics are noise).
-- **INVALID (exit 2)** — any test bucket without a heap sample means the run measured
-  NOTHING (prelude not installed, or no `window.gc`): never read its green suite as a
-  pass.
+- **INVALID (exit 2)** — the run measured NOTHING and must never read as a pass: a test
+  bucket with no heap sample (prelude not installed, or no `window.gc`), no reset ever
+  observed to REPLACE the world, or — the tier-2 case — **a suspect tier 1 raised that
+  tier 2 never answered**, whether because the confirmation broke on a shard or because it
+  never ran at all. A suspect nobody asked the snapshot about is not a suspect that came
+  back clean.
 
 **The forensic tool** — `Fizzygum-tests/scripts/heap-forensics.js`
 (`--test=<name>` / `--tests=A,B` / `--boot-only`, `--snapshot` for retainer paths): four
