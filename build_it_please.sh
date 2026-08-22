@@ -805,7 +805,7 @@ fi
 # left by a capture undone with `git checkout`, which leaves the new-hash file untracked) would
 # enter the build and let a WRONG render false-PASS (compareScreenshots matches ANY candidate).
 # check-refs.js fails on >1 dataHash per (test,image,dpr,OS) or an orphaned .js/.png BEFORE the
-# build ships them. Structural only, no pixel decode (~0.2s). The PIXEL half — decode all 1542 refs
+# build ships them. Structural only, no pixel decode (~0.2s). The PIXEL half — decode EVERY ref
 # and assert each re-hashes to its stored hashOfData — is `check-refs.js --pixels` (~10s), and is
 # deliberately NOT here: 10s on every inner-loop build to re-check references that only change on a
 # recapture is a bad trade. It runs as the gauntlet's `refs` leg, or by hand via
