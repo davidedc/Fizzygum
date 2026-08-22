@@ -32,7 +32,7 @@ Fizzygum-all/
   Fizzygum/          ← this repo (source only)
   Fizzygum-builds/   ← build output (generated; never hand-edit — created for you if absent)
   Fizzygum-tests/    ← SystemTests + Automator source (separate repo; absent ⇒ no js/tests link
-                       and the two tests-repo gates self-skip)
+                       and the four tests-repo gates self-skip)
 ```
 (`Fizzygum-website/` appears in the build's own abort message and in older docs, but nothing reads it — it is not checked out here and is not needed to build or test.)
 
@@ -54,7 +54,7 @@ Fizzygum-all/
 
 ## Testing
 
-**The build runs 27 project-specific STATIC GATES, and their complete index — what each one checks, what it provably CANNOT see, and how to sanction an exception — is [`docs/architecture/lint-and-static-checks.md`](docs/architecture/lint-and-static-checks.md).** Read it before concluding a class of bug is uncaught, and before writing a new gate. ⚠ Every gate has a stated blind spot, and a RUNTIME twin exists beside a static gate whenever that blind spot is "the name resolves but the thing behind it is wrong": `check-menu-actions.js` catches a menu-dispatched parameter that is UNREAD and structurally cannot catch one read as the wrong THING or one MISSING altogether, so `fg menusweep` clicks every menu item; and no text scan can decide whether an advertised pin is serviceable — a `PinSpec` names its setter by STRING and `pins()` is COMPOSED, so a subclass can NARROW it — so `fg pinsweep` resolves every advertised pin and drives every `announces` fixture. Both are `fg gauntlet` wave-A legs.
+**The build runs 28 project-specific STATIC GATES, and their complete index — what each one checks, what it provably CANNOT see, and how to sanction an exception — is [`docs/architecture/lint-and-static-checks.md`](docs/architecture/lint-and-static-checks.md).** Read it before concluding a class of bug is uncaught, and before writing a new gate. ⚠ Every gate has a stated blind spot, and a RUNTIME twin exists beside a static gate whenever that blind spot is "the name resolves but the thing behind it is wrong": `check-menu-actions.js` catches a menu-dispatched parameter that is UNREAD and structurally cannot catch one read as the wrong THING or one MISSING altogether, so `fg menusweep` clicks every menu item; and no text scan can decide whether an advertised pin is serviceable — a `PinSpec` names its setter by STRING and `pins()` is COMPOSED, so a subclass can NARROW it — so `fg pinsweep` resolves every advertised pin and drives every `announces` fixture. Both are `fg gauntlet` wave-A legs.
 
 Two fast automated checks complement the (manual/browser) SystemTests:
 - **Build-time syntax gate** (`buildSystem/check-coffee-syntax.js`, run automatically by `build_it_please.sh`): since the ~510 class/mixin sources ship as text and compile in-browser, this is what catches CoffeeScript *parse* errors at build time. It LOADS the real `src/meta/Class.coffee`/`Mixin.coffee` and compiles each source the same *fragmented* way the browser does — a whole-file `CoffeeScript.compile(src,{bare:true})` is NOT faithful (it false-fails on most files). Skip with `--noSyntaxCheck`.
