@@ -316,6 +316,16 @@ and `architecture/occlusion-culling.md` §2a. Three things it deliberately did n
       Forcing `show()` then hung a headless page (2-min timeout, killed). ⚠ Note the `video-player`
       part carries `requiresFlag: videoPlayer`, so NO profile builds it by default and NO gate ever
       runs these classes — anything here is invisible to the suite, the gauntlet and the smoke.
+- [x] **Reference filenames no longer encode the capture machine's environment** — DONE. The
+      `-systemInfoHash<h>-` token (a 32-bit hash of ~21 environment fields) is replaced by
+      `-automatorV<M>_<m>_<r>-` across all 3,684 committed reference files. The hash's only movers were
+      `screenWidth`/`screenHeight`/`screenColorDepth` — the capture machine's DISPLAY, which cannot
+      change a reference's pixels (the harness canvas is a constant 960×440 × `ceilPixelRatio` and never
+      reads `window.screen`), so it OSCILLATED between two values as recaptures ran on laptop vs external
+      monitor and renamed byte-identical files forever. Grouping now reads the Automator version off the
+      RECORD (`AutomatorPlayer`) rather than off the filename, and `scripts/lib/refpaths.js` is the sole
+      parser — four bypassing regexes were routed through it. Doctrine: `Fizzygum-tests/CLAUDE.md`
+      § "Test & reference-image layout".
 
 ### One line each — every item names the archived plan and section that owns its detail
 

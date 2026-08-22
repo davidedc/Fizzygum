@@ -1269,8 +1269,7 @@ assertion a recapture after a regression silently stores two different hashes an
   presented inside a `FrameWdgt`, and the WINDOW ships the bottom-right resizer. Inspect a string
   (`bringUpInspector_InputEvents_Macro s` → an `InspectorWdgt` window), park it near the top-left (the 560×410 window only just
   fits the 960×440 canvas, so the resizer stays on-canvas), then SHRINK it via `@dragWindowResizerTo_InputEvents win, dest`
-  (compute `dest` off `win.topLeft()` so it stays in bounds and doesn't extend the world's scrollable extent — the SWCanvas
-  systemInfoHash). The drag runs the window resize → `_positionAndResizeChildren` → `InspectorWdgt._reLayout` re-flows its two panes
+  (compute `dest` off `win.topLeft()` so it stays in bounds and doesn't extend the world's scrollable extent). The drag runs the window resize → `_positionAndResizeChildren` → `InspectorWdgt._reLayout` re-flows its two panes
   (`@list`/`@detail`) + the hierarchy buttons, toggles and add/rename/remove/save footer — the visible proof. Move the pointer
   CLEAR before the post-resize shot (the drag ends on the window — a hover highlight would otherwise vary). (Re-authored from the
   old naked-inspector version, which dragged the inspector's OWN ctor resizer.) No new verb.
@@ -1303,8 +1302,8 @@ assertion a recapture after a regression silently stores two different hashes an
   for nondeterminism: `--clean --no-build` removes the SOURCE refs but leaves STALE refs in the BUILD, and any image whose fresh (correct)
   render happens to match a stale ref is scored PASS during capture and therefore NOT re-saved — so `--clean` leaves it reference-less and
   verify then reports "no screenshots like this one". Use the capture script's own full flow (rebuild→drop refs, capture, rebuild→publish,
-  verify), not a manual `--clean --no-build` + separate rebuild. (The `systemInfoHash` in a reference's filename is just metadata; matching
-  is purely the raw-pixel `dataHash`.)
+  verify), not a manual `--clean --no-build` + separate rebuild. (The `automatorV<M>_<m>_<r>` token in a reference's filename groups
+  references that must agree on pixels; matching itself is purely the raw-pixel `dataHash`.)
 - **A BARE button float-drags by its body and does NOT trigger mid-drag** (`macroBareButtonFloatDragsWithoutTriggering`): the third
   button-negative sibling (after the resize-handle case above and the same-morph-mouseup case `macroButtonTriggersOnlyOnSameWidgetMouseUp`).
   `ButtonWdgt.rejectDrags` returns false when the parent is the WORLD (and when the parent DECLARES the button a detachable payload —

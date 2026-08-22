@@ -453,9 +453,9 @@ originally shipped it did not, so a **WRITE-ONLY** field was reported as demotab
 write-only field makes it **dead**, not local; and a write-only field is usually **enumeration payload** — reached by
 `JSON.stringify(obj)` / the `Duplicator` engine's `@[property]` walk / the serializer, none of which a name scanner sees
 (the census's KNOWN BLIND SPOT, now stated in its header). It cost **16 false positives out of 36 findings**, of which
-**12 were `SystemInfo` fields that ARE the reference-image identity** — `SystemTestsReferenceImage.coffee:31` hashes
-`JSON.stringify(@systemInfo)` into every reference filename's `systemInfoHash`, so acting on them would have
-invalidated the entire committed reference set. The fix is **exclusion 4**: at least one occurrence must be a
+**12 were `SystemInfo` fields that ARE a reference image's recorded provenance** — `SystemTestsReferenceImage.coffee`
+serializes `JSON.stringify(@systemInfo)` into every reference record, so demoting them would have silently emptied that
+blob in every reference captured from then on. The fix is **exclusion 4**: at least one occurrence must be a
 non-assignment. **DEMOTE 36 → 20**; PULL-UP unaffected (byte-identical).
 
 ⚠ The test is *"at least one NON-ASSIGNMENT occurrence"*, **not** the `uses >= 2` originally proposed: `@x = 0` followed

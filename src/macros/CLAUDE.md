@@ -328,7 +328,8 @@ are in **`MACRO-PATTERNS.md`**.
 - (Re)capture SWCanvas references: `node scripts/capture-macro-test-references.js <name> [--clean] [--dprs=1,2]`.
   Run that FULL flow (no `--no-build`). A verify `FAIL - no screenshots like this one` is almost always a
   stale/missing-reference artifact of a hand-rolled `--clean --no-build`, NOT nondeterminism — SWCanvas + the
-  event queue are deterministic and matching is on the raw-pixel `dataHash` (the filename's `systemInfoHash` is
-  unused metadata). The script rebuilds to drop cleaned refs before capture and to publish before verify.
+  event queue are deterministic and matching is on the raw-pixel `dataHash` (the filename's `automatorV<M>_<m>_<r>`
+  token groups references that must agree; it plays no part in matching). The script rebuilds to drop cleaned
+  refs before capture and to publish before verify.
 - In a browser: open the built `worldWithSystemTestHarness.html`, then
   `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_<name>')`.

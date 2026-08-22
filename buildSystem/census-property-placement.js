@@ -51,10 +51,13 @@
  *    positives out of 36 findings. Demoting a write-only field does not make it a local, it makes it
  *    DEAD — and a write-only field is usually not dead at all, it is enumeration payload (the blind
  *    spot above). The decisive case: 12 of those 16 were `SystemInfo` fields, assigned in the ctor
- *    and never read in src because they are read by `JSON.stringify(@systemInfo)` at
- *    Fizzygum-tests/Automator-and-test-harness-src/SystemTestsReferenceImage.coffee:31, whose hash is
- *    the `systemInfoHash` in EVERY reference-image filename. Acting on them would have invalidated
- *    the entire committed reference set. `SystemTestsSystemInfo.coffee` says the mechanism outright:
+ *    and never read in src because they are read by `JSON.stringify(@systemInfo)` in
+ *    Fizzygum-tests/Automator-and-test-harness-src/SystemTestsReferenceImage.coffee — every reference
+ *    record embeds the whole serialized blob (plus its 32-bit `hashOfSystemInfo`) as the provenance of
+ *    the machine that captured it. Demoting them would empty that blob in every reference written from
+ *    then on, silently. (The blob no longer decides any reference's NAME — filenames name the Automator
+ *    version — so it is the RECORD, not the filename, that these fields are payload for.)
+ *    `SystemTestsSystemInfo.coffee` says the mechanism outright:
  *    "cannot just initialise the numbers here cause we are going to make a JSON out of this and these
  *    would not be picked up" — class-body defaults are PROTOTYPE properties and are not serialized;
  *    only the constructor's `@x = …` OWN properties are. Withheld, counted, and printed.
