@@ -119,7 +119,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   desiredMainDimPopout: (menuItem)->
     currentDesired = if @axis == 'y' then @desiredHeight else @desiredWidth
-    @element.prompt menuItem.parent.title + "\ndesired size:", @, "setDesiredMainDim",
+    @element.prompt menuItem.parent.popUpTitle() + "\ndesired size:", @, "setDesiredMainDim",
       defaultContents: currentDesired.toString()
       floorNum: 10
       ceilingNum: 1000
@@ -142,7 +142,7 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   maxMainDimPopout: (menuItem)->
     currentMax = if @axis == 'y' then @maxHeight else @maxWidth
-    @element.prompt menuItem.parent.title + "\nmax size:", @, "setMaxMainDim",
+    @element.prompt menuItem.parent.popUpTitle() + "\nmax size:", @, "setMaxMainDim",
       defaultContents: currentMax.toString()
       floorNum: 10
       ceilingNum: 1000

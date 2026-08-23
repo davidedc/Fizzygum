@@ -69,6 +69,8 @@ class BinWdgt extends Widget
     menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good."
     menu.addMenuItem "Yes, empty it", @, "emptyBin"
     menu.addMenuItem "Cancel"
+    # the pointer rests on the first row -- "Yes, empty it" -- where this confirmation wants it
+    # (see popUpCenteredAtHand).
     menu.popUpCenteredAtHand world
 
   # Destroy every bin resident. By the standing storage invariant everything in

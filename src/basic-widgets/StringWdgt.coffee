@@ -1010,7 +1010,7 @@ class StringWdgt extends Widget
     @textPossiblyCroppedToFit.length
 
   fontSizePopout: (menuItem)->
-    @prompt menuItem.parent.title + "\nfont\nsize:", @, "setFontSize",
+    @prompt menuItem.parent.popUpTitle() + "\nfont\nsize:", @, "setFontSize",
       defaultContents: @originallySetFontSize.toString()
       floorNum: 6
       ceilingNum: 500
@@ -1018,7 +1018,7 @@ class StringWdgt extends Widget
 
   editPopout: (menuItem)->
     if menuItem?
-      title = menuItem.parent.title + "\nedit:"
+      title = menuItem.parent.popUpTitle() + "\nedit:"
     else
       title = "edit:"
 

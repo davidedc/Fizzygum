@@ -135,7 +135,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport
 
   growPopout: (menuItem)->
-    @element.prompt menuItem.parent.title + "\nelasticity:", @, "setGrowFromPercent",
+    @element.prompt menuItem.parent.popUpTitle() + "\nelasticity:", @, "setGrowFromPercent",
       defaultContents: ((@grow ? 1) * 100).toString()
       floorNum: 0
       ceilingNum: 100
@@ -160,7 +160,7 @@ class VerticalStackLayoutSpec extends LayoutSpec
       @element._invalidateLayout()   # (property sub-seam deletion) uniform climb: element -> stack -> (D1) viewport
 
   desiredWidthPopout: (menuItem)->
-    @element.prompt menuItem.parent.title + "\nbase width:", @, "setDesiredWidth",
+    @element.prompt menuItem.parent.popUpTitle() + "\nbase width:", @, "setDesiredWidth",
       defaultContents: @desiredWidth.toString()
       floorNum: 10
       ceilingNum: 1000

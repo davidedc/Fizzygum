@@ -100,8 +100,32 @@ re-argue them.
   uses `_destroyNoSettle` on an icon button owning a `face` widget — the shape that leaked (88
   `WORLD_INVENTORY` tokens) when the close piece was retired the same way; `closeFromFrameBar` needed a
   `public-api-allowlist.txt` entry ([U] sees it as self-only once no prose names it).
-- P3 citizens: not started (S1 GO).
-- P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 ruling still needed). · P6 Liskov walk + docs: not started.
+- P3 citizens, brief (a): **DONE 2026-08-23** (Opus; `fg build` OK, `fg recapture` of 37 tests COMPLETE at dpr 1+2,
+  `fg presuite` 310/0, `fg suite --dpr=2` 310/0, `fg menusweep` OK, `fg census` 0 movers, both serialization
+  rigs + `pinsweep` green). Brief (b) = delete the two shells, `MACRO-PATTERNS.md`/`macros/CLAUDE.md`, gauntlet. Owner rulings at the
+  pixel gate (all 2026-08-23): **(i)** the escape hatch — 31 menu/prompt tests recaptured for the SHADOW
+  alone: a framed pop-up casts ONE clean silhouette like a window (the old per-row silhouettes double-darkened
+  a 1–3 px band at the shadow's right/bottom edge); the pin-state policy is retained and MEASURED on the new
+  renders — transient 5 px @ alpha 0.2, pinned 3 px @ 0.3, drag (6,6)/0.1, none when pinned in a container.
+  **(ii)** the title strip of a world-capped menu is CHROME and stays put while the rows scroll — 3 tests
+  (`macroOverTallMenuScrollsToReachItsLastRow`, `macroFontsMenuFollowsAnApiChange`,
+  `macroFontsMenuTickTracksSelection`). **(iii)** F9's "genuine centring" is DROPPED: centring a hugged
+  bubble lands the pointer on the TITLE strip, where an un-moved click would PIN the bubble instead of hitting
+  "Ok" (today's placement leaves the pointer on the first row — the reference's grey body IS that row's hover
+  highlight, 192). ⚠ "Today's placement" was the ACCIDENT hand − (25,20) — the halves of `Widget`'s 50×40
+  seed extent — and `popUpAtHand` puts the pointer on the bubble's CORNER (measured), so neither reproduces the
+  intent. Coordinator decision: `popUpCenteredAtHand` STAYS with a stated rule — centred on the hand
+  horizontally, the FIRST ROW under the pointer (top-left = hand − (⌊width/2⌋, bar thickness + rows border +
+  1)); `Widget.inform` and `BinWdgt`'s confirm are its two callers. ⇒ the 3 inform tests recapture with a
+  known shift (≈ 14 px left) and the hover highlight intact. Coordinator decisions: pop-ups keep `requiresDeliberateEmbedding
+  → false` until P4 (the dwell is P4's); a transitional `_manifestsAsPopUp()` keeps a pinned menu's skin until
+  P4 lands C4 (P4 deletes it); `PopUpRowsViewportWdgt.catchesPointerAt: false` stays (role reason — it would
+  otherwise claim the frame's corner notches). Three bugs fixed en route: prompt/popout titles read the deleted
+  rows-panel `title` (11 sites); list rows inside a WINDOW gained the extraction grip once
+  `firstParentThatIsAPopUp` stopped at any frame (extraction now asks the holder); a titled rowless menu grew
+  36 px (an empty stack measured its applied height). Found: a subclass's `@serializationTransients` REPLACES
+  the inherited list (tail T16).
+- P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 RULED 2026-08-23: whole collapsed bar expands). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.
 
 **MANDATE: complete elimination of the underlying problem, not mitigation.** The problem is that
@@ -655,8 +679,8 @@ gates of P2/P3/P5.
 
 ### P5 — Docking as placement (1.5–2 days; ONE declared recapture set)
 
-- Precondition: S2 passed; ruling on Rec. C17 obtained (ask the owner at P5 start; default if
-  unanswered: NOT implemented, filed in the ledger).
+- Precondition: S2 passed (P0). C17 RULED 2026-08-23: the whole bar of a collapsed frame expands it — P5
+  implements it for every collapsed manifestation (window strip and docked sliver alike).
 - `EdgeDockLayoutSpec`; host `dockedFrames`; thickness/placement/engaged (§2.5); `wantsDetachOfChild`;
   edge-band drop candidates + `dockSideAt` in the hand's drop resolution (read the drag-embed state
   machine at `ActivePointerWdgt.coffee:190–260` first; a frame payload is dwell-armed already); the new
@@ -675,7 +699,7 @@ gates of P2/P3/P5.
   `fg menusweep` (every new row wired).
 - Commit: "Docked frames: an edge layout spec, four slots, grip drag-out, drop-to-dock; floatToolbar
   dissolved (program C11/C12/C13)".
-- **Delegation (§9):** the coordinator obtains the C17 ruling FIRST, then one Opus worker in three briefs: (a) `EdgeDockLayoutSpec` + host slots/thickness/placement/engaged + `wantsDetachOfChild`, replacing the slot machinery, gate `fg presuite` + `fg census` (the grip does not exist yet — bar axis still horizontal, so this brief is NOT pixel-identical: the docked bar appears; budget = P0(4c)); (b) the bar axis + collapsed-dock geometry; (c) drop-to-dock in the hand + the menu rows + the deletions + the tests (the four new macro tests → Sonnet sub-briefs from step lists the Opus worker writes). Gauntlet after (c).
+- **Delegation (§9):** C17 is ruled (whole collapsed bar expands — lands in brief (b) with the collapsed-dock geometry); one Opus worker in three briefs: (a) `EdgeDockLayoutSpec` + host slots/thickness/placement/engaged + `wantsDetachOfChild`, replacing the slot machinery, gate `fg presuite` + `fg census` (the grip does not exist yet — bar axis still horizontal, so this brief is NOT pixel-identical: the docked bar appears; budget = P0(4c)); (b) the bar axis + collapsed-dock geometry; (c) drop-to-dock in the hand + the menu rows + the deletions + the tests (the four new macro tests → Sonnet sub-briefs from step lists the Opus worker writes). Gauntlet after (c).
 
 ### P6 — The Liskov walk, names, docs (½ day)
 

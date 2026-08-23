@@ -778,17 +778,17 @@ class WorldWdgt extends IconGridPanelWdgt
   # used to close temporary menus
   # thin-wrap-exempt: NOT the canonical wrap over its _NoSettle twin -- the two are PARALLEL closers, not
   # wrapper/core. This one closes each marked popup via the self-settling close() (correct for the top-level
-  # "pin" menu-click path, MenuHeader -> pinPopUp); the twin closes via _closeNoSettle for the drop path
-  # (PopUpWdgt._reactToBeingDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's
+  # "pin" menu-click path, the title-bar tap -> pinPopUp); the twin closes via _closeNoSettle for the drop path
+  # (FrameWdgt._reactToBeingDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's
   # per-popup settle exactly (vs collapsing to one settle). Only TRANSIENT pop-ups ever enter the marked
   # set (propagateKillPopUps gates on the lifetime), so each drained close lands on
-  # PopUpWdgt._closeNoSettle's destroy branch.
+  # FrameWdgt._closeNoSettle's destroy branch.
   closePopUpsMarkedForClosure: ->
     @popUpsMarkedForClosure.forEach (eachWidget) =>
       eachWidget.close()
     @popUpsMarkedForClosure.clear()
 
-  # NON-settling variant for the drop path (PopUpWdgt._reactToBeingDropped -> pinPopUp, inside the drop's
+  # NON-settling variant for the drop path (FrameWdgt._reactToBeingDropped -> pinPopUp, inside the drop's
   # settle): each marked popup closes through the core _closeNoSettle so it rides the drop's single
   # flush instead of re-entering the flush guard. The public version above stays for the top-level
   # menu-click "pin" path, where the self-settling close() is correct.
@@ -2585,7 +2585,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # the next mouse click, or whenever another temporary Widget decides
     # that it needs to remove them.
     # Tooltips are destroyed outright: nothing revives a dismissed tooltip.
-    # (Dismissed unpinned pop-ups die the same way -- PopUpWdgt._closeNoSettle's
+    # (Dismissed transient pop-ups die the same way -- FrameWdgt._closeNoSettle's
     # dismissal policy.)
 
     # Unconditional, deliberately: a click dismisses every tooltip, hovered or not — the
@@ -3171,7 +3171,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
     # ⚠ the title is computed into a local FIRST. An `if` expression written directly as an
     # implicit-object value on its own line does not become that value — the menu comes out
-    # title-less, which costs it its whole MenuHeader row, and with it the thing you click to
+    # title-less, which costs it its whole title bar, and with it the thing you click to
     # drag the menu and the thing you click to pin it.
     title = if @isDevMode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]

@@ -90,6 +90,17 @@ class Widget extends TreeNode
     "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged"
     "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
     "srcDamageRectIndex", "dstDamageRectIndex"
+    # a frame's closure mark (FrameWdgt.isPopUpMarkedForClosure) pairs with the
+    # world.popUpsMarkedForClosure set, which is never serialized, so it must not persist — a
+    # triggering menu-item click marks its menu BEFORE running the action, so a menu-driven save
+    # would otherwise bake the mark into the file. (__add also clears it on attach, but the file
+    # should not carry it in the first place.) A deep-copied true mark (the same menu action can
+    # duplicate its own menu) is inert on the clone: it is never in the world's set (no aligner
+    # puts it there), and that same __add clear wipes the field on the clone's first attach.
+    #   Declared HERE, on the base, rather than on the frame: the meta-system COPIES a class's
+    # statics down to its subclasses, so a subclass's own @serializationTransients REPLACES the
+    # copy it inherited instead of adding to it.
+    "isPopUpMarkedForClosure"
   ]
 
   appearance: undefined
@@ -2775,9 +2786,9 @@ class Widget extends TreeNode
   #   The widget SAYS which pin is principal and the pin says how to read it. The alternative — probing
   # every widget for a few particular method names in a fixed priority order, falling through to a
   # FIELD — cannot tell "exports nothing" from "happens to carry a field of that name", and the
-  # difference is real: on StringFieldWdgt and MenuHeader `@text` holds a child WIDGET rather than a
-  # string, so a `@text` fallback exports a TextWdgt. StringFieldWdgt's principal pin reads `getValue`
-  # (`@text.text`); MenuHeader declares no pin, so it exports nothing.
+  # difference is real: on StringFieldWdgt `@text` holds a child WIDGET rather than a string, so a
+  # `@text` fallback exports a TextWdgt. StringFieldWdgt's principal pin reads `getValue`
+  # (`@text.text`); a widget that declares no pin exports nothing.
   exportedValue: ->
     pin = @principalPin()
     return undefined unless pin?.getterName?
@@ -4336,6 +4347,8 @@ class Widget extends TreeNode
       else Object.prototype.toString.call msg
     m = new MenuWdgt @, target: @, title: text
     m.addMenuItem "Ok"
+    # the pointer comes to rest on the "Ok" row (see popUpCenteredAtHand), so the click that
+    # dismisses this bubble needs no aiming.
     m.popUpCenteredAtHand world
 
   # The door to the Text/Number prompts. msg/callback are operands HERE — every
@@ -4532,7 +4545,7 @@ class Widget extends TreeNode
 
 
   transparencyPopout: (menuItem)->
-    @prompt menuItem.parent.title + "\nalpha\nvalue:", @, "setAlphaScaled",
+    @prompt menuItem.parent.popUpTitle() + "\nalpha\nvalue:", @, "setAlphaScaled",
       defaultContents: (@alpha * 100).toString()
       floorNum: 1
       ceilingNum: 100

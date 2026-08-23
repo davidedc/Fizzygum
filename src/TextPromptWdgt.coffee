@@ -5,7 +5,7 @@ class TextPromptWdgt extends PromptWdgt
 
   constructor: (widgetOpeningThePopUp, target, opts = {}) ->
     super widgetOpeningThePopUp, target, opts
-    @_buildAndConnectChildren()
+    @_buildPromptRows()
 
   _buildAndAddValueEditorInto: (panel) ->
     @_buildAndAddEntryFieldInto panel, false

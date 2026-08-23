@@ -99,29 +99,57 @@ class FrameBarWdgt extends Widget
   # (below). The caller (the frame) passes -- on the first build -- any
   # ctor-supplied close button (FolderWindowWdgt injects its own).
   _buildAndConnectPiecesNoSettle: (suppliedCloseButton) ->
-    if !@titlebarBackground?
-      @_buildTitlebarBackground()
+    spec = @frame._barSpec()
 
-    # label -- tear down through the non-settling core (inside the rebuild's settle)
-    @label?._fullDestroyNoSettle()
-    @label = new StringWdgt "", fontSize: @frame._barSpec().fontSize
-
-    # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
-    # safari's rendering of bright text on dark background is atrocious
-    # so we have to force bold style in the window bars
-    if /^((?!chrome|android).)*safari/i.test navigator.userAgent
-      @label.isBold = true
-    else
-      @label.isBold = WorldWdgt.preferencesAndSettings.titleBarBoldText
-
-    @label.color = Color.WHITE
-    @_addNoSettle @label
+    if "title" in spec.pieces
+      if !@titlebarBackground?
+        @_buildTitlebarBackground()
+      # label -- tear down through the non-settling core (inside the rebuild's settle)
+      @label?._fullDestroyNoSettle()
+      @label = @_buildTitleNoSettle spec
 
     # the upper-left button, often a close button but it can be anything: the
     # frame's ctor-supplied piece is adopted here, and the roster below decides
     # whether the strip carries one at all
     @closeButton ?= suppliedCloseButton
     @_reDeriveRosterNoSettle()
+
+  # The title piece, in the shape its style asks for: a WINDOW's is a plain fitted string the
+  # arrange grants the span between the buttons; a POP-UP HEADER's hugs its own text (the strip
+  # sizes itself to it) and is centred in the header box, white and bold on the header colour.
+  _buildTitleNoSettle: (spec) ->
+    preferences = WorldWdgt.preferencesAndSettings
+    if spec.titleStyle is "menuHeader"
+      # BORN with its text: a multi-line text hugs its box only when told to (its box-hug core
+      # is a one-shot, not a mode the way a plain string's is), so it must have something to
+      # hug at build time. The frame re-asserts the same title right after.
+      title = new TextWdgt (@frame._titleForContents(@frame.contents) ? ""),
+        fontSize: spec.fontSize
+        fontName: preferences.menuFontName
+        bold: preferences.menuHeaderBold
+      title.color = Color.WHITE
+      title.backgroundColor = preferences.menuHeaderColor
+      title.alignCenter()
+      @_addNoSettle title
+      # the modern family does not self-size; make the title hug its text (and KEEP hugging it
+      # through every later setText) so the strip's own thickness and the payload's row-width
+      # floor can be read off it. Use the NoSettle core: the build settles ONCE, at its top.
+      title._sizeToTextAndDisableFittingNoSettle()
+      return title
+
+    title = new StringWdgt "", fontSize: spec.fontSize
+
+    # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
+    # safari's rendering of bright text on dark background is atrocious
+    # so we have to force bold style in the window bars
+    if /^((?!chrome|android).)*safari/i.test navigator.userAgent
+      title.isBold = true
+    else
+      title.isBold = preferences.titleBarBoldText
+
+    title.color = Color.WHITE
+    @_addNoSettle title
+    title
 
   # Build the button pieces the frame's CURRENT bar spec names, and retire the
   # ones it drops -- the edit button's build/retire idiom, generalized to the
@@ -187,7 +215,9 @@ class FrameBarWdgt extends Widget
     # as the window changes from internal to external and vice versa
     # HOWEVER a bunch of tests would fail if I do the proper
     # thing so we are doing this for the time being.
-    if @frame.isInternal()
+    if @frame._barSpec().titleStyle is "menuHeader"
+      @titlebarBackground = new BoxWdgt WorldWdgt.preferencesAndSettings.menuHeaderCornerRadius
+    else if @frame.isInternal()
       @titlebarBackground = new RectangleWdgt
     else
       @titlebarBackground = new BoxWdgt
@@ -195,10 +225,18 @@ class FrameBarWdgt extends Widget
     @_setAppearanceAndColorOfTitleBackground()
     @_addNoSettle @titlebarBackground
 
-  # The title-bar half of the internal/external skin (the body half is
-  # FrameWdgt._deriveAndSetBodyAppearance), re-derived from the frame's
-  # parentage on every (re)parenting.
+  # The title-bar half of my skin (the body half is
+  # FrameWdgt._deriveAndSetBodyAppearance): the pop-up manifestation's header box carries the
+  # menu-header colour and no stroke; a window's is re-derived from the frame's parentage on
+  # every (re)parenting.
   _setAppearanceAndColorOfTitleBackground: ->
+    # an untitled pop-up has no strip at all, so there is no background to skin
+    return unless @titlebarBackground?
+    if @frame._barSpec().titleStyle is "menuHeader"
+      @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
+      @titlebarBackground.setColor WorldWdgt.preferencesAndSettings.menuHeaderColor
+      return
+
     if @frame.isInternal()
       @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
     else
@@ -251,6 +289,9 @@ class FrameBarWdgt extends Widget
 
   _positionAndResizeChildren: ->
     spec = @frame._barSpec()
+    if spec.titleStyle is "menuHeader"
+      @_layOutTitleBox spec
+      return
     pitch = spec.slotSize + spec.padding
 
     titleAt = spec.pieces.indexOf "title"
@@ -297,6 +338,25 @@ class FrameBarWdgt extends Widget
       labelBounds = new Rectangle new Point labelLeft, @top() + spec.padding
       labelBounds = labelBounds.setBoundsWidthAndHeight (labelRight - labelLeft), spec.textHeight
       @label._applyGrantedBounds labelBounds
+
+  # The POP-UP strip: ONE header box, inset from my edges by the padding and as tall as the
+  # strip, with the title text hugging itself and centred in it. An untitled pop-up carries no
+  # pieces at all, so there is nothing to place.
+  _layOutTitleBox: (spec) ->
+    return unless @titlebarBackground? and @label?
+    @titlebarBackground._applyBounds (@position().add new Point spec.padding, spec.padding),
+      (new Point (@width() - 2 * spec.padding), spec.thickness)
+    # Integer placement (Layer A): the box centre is fractional when its extent is odd, so round
+    # the centred title's position to commit an integer @bounds.
+    @label._applyMoveTo (@titlebarBackground.center().subtract @label.extent().floorDivideBy 2).round()
+
+  # A tap on my strip PINS a transient frame — the pop-up manifestation's one bar gesture, and
+  # the counterpart of the drag that moves it: the title is what you take hold of. The pieces
+  # escalate their own clicks to me (they are shaped where they are drawn; I am not a hit
+  # target), so this one handler covers the whole strip.
+  mouseClickLeft: ->
+    super
+    @frame.pinPopUp @ if @frame?.isTransientPopUp()
 
   # A piece occupies its SLOT -- the target box the strip advances by -- and is
   # drawn at the GLYPH dial centred inside it. Two dials, never one (program

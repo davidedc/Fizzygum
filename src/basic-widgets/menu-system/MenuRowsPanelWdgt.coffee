@@ -1,16 +1,12 @@
 # A vertical stack of rows (menu items, dividers, and small editors like
 # sliders / colour-pickers / string fields) — the pure LAYOUT half of a
-# menu, split from the pop-up behaviour (which lives in PopUpWdgt). It carries no
-# menu-ness of its own: no pop-up membership, no click-outside-to-close, no
-# shadow. What a wrapping PopUpWdgt (a MenuWdgt or a PromptWdgt) owns is the
-# transient/pin behaviour + shadow; what a ListWdgt owns is the surrounding
-# viewport. Either way the visible body — box, optional title header, and the
-# rows — is drawn HERE.
+# menu, carrying no menu-ness of its own: no pop-up membership, no
+# click-outside-to-close, no shadow, no title. A pop-up FRAME (a MenuWdgt or a
+# PromptWdgt) owns the transient/pin behaviour, the title strip and the shadow, and
+# paints the box around me; a ListWdgt owns the surrounding viewport and leaves my own
+# box painting me. Either way the ROWS are laid out HERE.
 #
-# Two knobs shape a panel to its client:
-#  - `title`: when given, the panel draws a rounded titled body (a MenuHeader row
-#    at the top, corner radius) — the shape a menu / prompt wants. Omitted, the
-#    panel is a plain square row-stack — the shape a ListWdgt's contents want.
+# One knob shapes a panel to its client:
 #  - `selectsItemsOnClick`: true makes each MenuItemWdgt SELECT on click (a list),
 #    false makes it TRIGGER (a menu / prompt's Ok-Close). MenuItemWdgt.isListItem
 #    dispatches on it via ?(); default false so a plain menu reads falsy.
@@ -21,8 +17,7 @@
 # (addMenuItem / addLine), matching MenuWdgt's compose-after-build protocol.
 #
 # LAYOUT (§5.2e): the panel IS a VerticalStackPanelWdgt — the ONE vertical-
-# stack engine lays the rows out (the optional MenuHeader is just child 0, stacked
-# like any row). Menu-ness enters only through the base's own policy seams:
+# stack engine lays the rows out. Menu-ness enters only through the base's own policy seams:
 #  - border 2 / gap 0: the stack's padding knob set tight, with the new
 #    interElementGap() policy at 0 so rows sit FLUSH inside the 2px border;
 #  - width: a menu SELF-sizes to its widest row (a general stack takes its width
@@ -33,15 +28,13 @@
 #    (menu-row-conformance Phase 2), so no equalization post-pass exists.
 # Unlike a general stack the panel accepts no drops and imposes no width ratio
 # (suppressed below). It IS a size-tracking container now: membership changes
-# re-arrange it via the engine; the wrapping MenuWdgt / PromptWdgt absorbs those
-# through _reLayOutAfterContainedPanelChange (re-lay + re-hug), see PopUpWdgt.
+# re-arrange it via the engine; the viewport I sit in absorbs those through
+# _reLayOutAfterContainedPanelChange (re-lay + re-hug the frame), see PopUpRowsViewportWdgt.
 
 class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
 
   target: undefined
   fontSize: undefined
-  title: undefined
-  label: undefined
   # the rounding of the panel's own corners. Declared per class rather than pulled up:
   # this class extends VerticalStackPanelWdgt, not BoxWdgt, which is where the
   # framework's other cornerRadius lives.
@@ -76,19 +69,18 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # me, and it already owns whatever value it reflects (MenuItemWdgt).
   #   PINNED IS THE WHOLE CONDITION, and it is not a new mode. An unpinned pop-up IS mid-gesture
   # UI — you skid a drag across its rows while making up your mind, which is what slipperiness
-  # buys — and a pinned one IS desktop furniture; PopUpWdgt draws exactly that distinction and
-  # the serializer already turns on it. You cannot take a part off something mid-gesture; you can
-  # take a part off furniture. So the deliberate act is the pinning, which already exists and
-  # already means "this menu stays", and extraction costs no new gesture and no menu row.
-  #   A COMMAND row only. My header is the drag HANDLE — dragging a pinned menu by it is the only
-  # way to move the menu, and handing it out would tear it off — and a divider is punctuation.
-  # Carrying an `action` is what separates them, and it is the fact that MATTERS rather than a
-  # proxy for the row's class: what survives extraction is a button that still does something.
-  #   A ListWdgt's rows panel needs no exception: it sits in no pop-up, so the climb reaches the
-  # world, which holds no opinion about being pinned.
+  # buys — and a pinned one IS desktop furniture; the frame's lifetime state draws exactly that
+  # distinction and the serializer already turns on it. You cannot take a part off something
+  # mid-gesture; you can take a part off furniture. So the deliberate act is the pinning, which
+  # already exists and already means "this menu stays", and extraction costs no new gesture.
+  #   A COMMAND row only — a divider is punctuation. Carrying an `action` is what separates
+  # them, and it is the fact that MATTERS rather than a proxy for the row's class: what
+  # survives extraction is a button that still does something.
+  #   A ListWdgt's rows panel needs no exception: it sits in no pop-up, so it has no holder to
+  # ask (see _holdingPopUp) and answers false.
   wantsDetachOfChild: (aWdgt) ->
     return false unless aWdgt.action?
-    @firstParentThatIsAPopUp().isPopUpPinned?() ? false
+    @_holdingPopUp()?.isPopUpPinned?() ? false
 
   constructor: (opts = {}) ->
     # menuRowsBorder = the menu's tight border; rows stack FLUSH inside it (see
@@ -97,19 +89,29 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
     super padding: WorldWdgt.preferencesAndSettings.menuRowsBorder
     @target = opts.target
     @fontSize = opts.fontSize
-    @title = opts.title
     @_selectsItemsOnClick = opts.selectsItemsOnClick ? false
-    # replace the stack's RectangularAppearance: the panel draws the menu box
-    # (rounded when titled, stroked with the menu stroke).
+    # replace the stack's RectangularAppearance: the panel draws the square menu box,
+    # stroked with the menu stroke. A pop-up frame paints its OWN box around me and turns
+    # mine off (alpha 0) rather than doubling the stroke; a list's panel IS the box.
     @appearance = new MenuAppearance @
     @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
     @color = Color.create 238, 238, 238
-    if @title
-      @cornerRadius = if WorldWdgt.preferencesAndSettings.isFlat then 0 else 5
-    @_buildMenuLabel()
 
   colloquialName: ->
     "menu rows"
+
+  # THE POP-UP FRAME I AM THE BODY OF, or undefined outside one. Asked BY PARENTAGE — my holder
+  # answers, and only a pop-up's rows viewport does — rather than through the pop-up chain,
+  # which answers for any FRAME (a window's list rows are not a pop-up's rows) and which
+  # deliberately steps over a pop-up already marked for closure, exactly when a row's action
+  # runs. A list's rows panel sits in a plain viewport, which answers nothing.
+  _holdingPopUp: ->
+    @parent?.holdingPopUp?()
+
+  # The name of the pop-up I am the body of — what a ROW of mine prefixes its prompt's question
+  # with ("Rectangle\nalpha value:"), so the prompt says WHAT it is about.
+  popUpTitle: ->
+    @_holdingPopUp()?.titleText?()
 
   # menu rows sit FLUSH (contiguous hover highlights); only the outer border
   # keeps the 2px padding. See the base's interElementGap policy comment.
@@ -144,27 +146,6 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # ViewportWdgt.sliderTrackPressJumpsButton (type-test-elimination ε).
   sliderTrackPressJumpsButton: ->
     true
-
-  # Build the title header (when titled) via the NoSettle core, settling ONCE at
-  # the end (orphan-settledness: `new X` returns settled). Only the HEADER is
-  # ctor-built: the ROWS are composed by the owner after construction
-  # (addMenuItem / addLine). Distinct name from `_buildAndConnectChildren` for
-  # the same reason PromptWdgt states: a subclass binds its ctor params only after
-  # super(), so a virtual builder called from a base ctor would dispatch too early.
-  _buildMenuLabel: ->
-    @_settleLayoutsAfter => @_buildMenuLabelNoSettle()
-
-  _buildMenuLabelNoSettle: ->
-    if @title
-      @_createLabel()
-      # the RAW structural add, exactly like the rows (addMenuItem -> __add): the
-      # header is just child 0 of the stack, composed before the driver arranges;
-      # the stack's _addNoSettle insert-by-height + pre-resize protocol is for
-      # interactive drops, not for the menu's compose-after-build protocol.
-      @__add @label
-
-  _createLabel: ->
-    @label = new MenuHeader @title
 
   createLine: (height = 1) ->
     new DividerWdgt height
@@ -256,6 +237,11 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # below (the menu-sandwich dissolution).
   preferredExtentForWidth: (availW) ->
     hugW = @maxWidthOfMenuEntries() + 2 * @padding
+    # WITH NO ROWS AT ALL my hug is just my border: the base stack has nothing to sum and
+    # answers its APPLIED height instead, which is a leftover, not a measure. A titled pop-up
+    # carrying no rows is exactly that case ("no widgets to attach to").
+    if @children.length is 0
+      return new Point hugW, 2 * @padding
     new Point hugW, (super hugW).y
 
   subWidgetsMergedPreferredBounds: (availW) ->
@@ -287,13 +273,14 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
 
   # My preferred row width: the widest child's PURE content measure. Every row
   # kind that contributes a width answers menuEntryPreferredWidth() — MenuItemWdgt
-  # / StringFieldWdgt / ColorPickerWdgt / SliderWdgt and (since the conformance
-  # arc's Phase 1) the MenuHeader too, so the walk is uniform; divider lines
-  # don't answer and are skipped. All the measures are stretch-immune (frozen or
-  # content-derived), so re-arranges can legitimately SHRINK the hug — the old
-  # `@label.width()` read-back special case ratcheted the width up forever.
+  # / StringFieldWdgt / ColorPickerWdgt / SliderWdgt — so the walk is uniform; divider
+  # lines don't answer and are skipped. All the measures are stretch-immune (frozen or
+  # content-derived), so re-arranges can legitimately SHRINK the hug.
+  #   The walk starts at what my HOLDER contributes: a pop-up frame's title is an entry of
+  # mine that happens to live in its chrome, so a menu still widens for a long title. Outside
+  # a pop-up (a list's panel) the climb reaches the world, which contributes nothing.
   maxWidthOfMenuEntries: ->
-    w = 0
+    w = @firstParentThatIsAPopUp()._titleEntryWidth?() ? 0
     @children.forEach (item) ->
       if item.menuEntryPreferredWidth?
         w = Math.max w, item.menuEntryPreferredWidth()

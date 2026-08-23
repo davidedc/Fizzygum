@@ -1,6 +1,6 @@
 # The "save as..." prompt: a text field for the shortcut name over a
 # "Don't save" / "Cancel" / "Ok" button row. A member of the prompt family (it
-# shares PromptWdgt's PopUpWdgt behaviour + composed titled rows-panel); it only
+# shares PromptWdgt's framed pop-up behaviour + composed rows panel); it only
 # swaps in its own three buttons (no leading divider) and edits the field at once.
 
 class SaveShortcutPromptWdgt extends PromptWdgt
@@ -22,7 +22,7 @@ class SaveShortcutPromptWdgt extends PromptWdgt
     super widgetOpeningThePopUp, target,
       defaultContents: defaultContents
       intendedWidth: opts.intendedWidth ? 100
-    @_buildAndConnectChildren()
+    @_buildPromptRows()
     # NO width poke here: my rows hug their widest row all by themselves, and that comes out
     # WIDER (154) than the 150 a poke would ask for — so setting it only to have the very next
     # arrange hug back over it bought nothing. Set minTextWidth on the entry field (below) if
@@ -31,7 +31,7 @@ class SaveShortcutPromptWdgt extends PromptWdgt
     @tempPromptEntryField.text.edit()
 
   _buildAndAddValueEditorInto: (panel) ->
-    @tempPromptEntryField = new StringFieldWdgt @defaultContents,
+    @tempPromptEntryField = new StringFieldWdgt @defaultValue,
       minTextWidth: 150
       fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
       fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName

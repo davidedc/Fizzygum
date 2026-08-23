@@ -49,6 +49,44 @@ class FrameWdgt extends Widget
   # content declares none (plain content, the empty-window placeholder).
   toolbar: undefined
 
+  # ===== LIFETIME: one state, two manifestations of it (program rulings C2/C3) =====
+  # MY ONE LIFETIME STATE, which every transient-vs-furniture branch below reads:
+  #   'transient'  — mid-gesture UI (a menu, a prompt). The next click outside me (or on a
+  #                  descendant that triggers) dismisses me; a world snapshot drops me;
+  #                  dismissal destroys me outright.
+  #   'persistent' — furniture: a window, or a pinned pop-up. Nothing outside me dismisses me,
+  #                  a snapshot saves me, and closing me re-homes me to the bin like any widget.
+  # It CHANGES mid-life — pinning is exactly that change — which is why it is a state on one
+  # class rather than two class hierarchies. Set through setLifetime / _setLifetimeNoSettle,
+  # which is also where every consequence of the change lives. A frame is born furniture; the
+  # pop-up citizens (MenuWdgt / PromptWdgt) declare 'transient' in their own constructors.
+  lifetime: 'persistent'
+  # the closure mark, which pairs with the world.popUpsMarkedForClosure set and is never
+  # serialized — declared in Widget's @serializationTransients (see the reason there).
+  isPopUpMarkedForClosure: false
+  # the widgetOpeningThePopUp is only useful to get the "parent" pop-up.
+  # the "parent" pop-up is the menu that this menu is attached to,
+  # but we need this extra property because it's not the
+  # actual parent. The reason is that menus are actually attached
+  # to the world widget. This is for a couple of reasons:
+  # 1) they can still appear at the top even if the "parent menu"
+  #    or the parent object are not in the foreground. This is
+  #    what happens for example in OSX, you can right-click on a
+  #    widget that is not in the background but the menu that comes up
+  #    will be in the foreground.
+  # 2) they can appear unoccluded if the "parent widget" or "parent object"
+  #    are in a widget that clips at its boundaries.
+  # undefined on a window: nothing opened it.
+  widgetOpeningThePopUp: undefined
+
+  # Do I wear the POP-UP manifestation — the menu box, the title-header strip, the pop-up
+  # shadow policy, no chrome padding and no resize handle? ONE derivation, read by the bar
+  # spec, the body appearance, the chrome padding and the drop hook, so the three never
+  # disagree. A pop-up CITIZEN answers true in either lifetime: pinning a menu changes what
+  # dismisses it, not what it looks like.
+  _manifestsAsPopUp: ->
+    @lifetime is 'transient'
+
   # the geometry remembered ACROSS a collapse, so uncollapsing restores what was there:
   # recorded in _beforeChildCollapsed (the un-collapsed width, and both extents) and in
   # _beforeChildUnCollapsed (the collapsed width). undefined until the first collapse.
@@ -104,12 +142,18 @@ class FrameWdgt extends Widget
   #                 (G3: a target and its mark are separate dials), the gap around and between
   #                 pieces, and the title's height and font size.
   #
-  # The vocabulary also carries the TRANSIENT row -- `pieces: ["title"]` (a tap on it pins the
-  # frame), `naturalWidth: "titleText"`, `thickness` and `fontSize` at the menu-header metrics --
-  # which the bar lays out through the same arrange. The strip's SKIN (its colours and its box
-  # shape) is a separate axis, derived from parentage by _setAppearanceAndColorOfTitleBackground
-  # beside my own _deriveAndSetBodyAppearance.
+  #   titleStyle    how the title strip is built, coloured and laid out: "windowBar" (the strip
+  #                 spans my whole top edge, its background inset a pixel, the title text left-
+  #                 aligned in the span the pieces leave) or "menuHeader" (a rounded header box
+  #                 inset by the padding, the title text hugging itself and centred in it).
+  #
+  # The TRANSIENT row is the pop-up manifestation's -- `pieces: ["title"]` (a tap on it pins the
+  # frame), `naturalWidth: "titleText"`, the menu-header metrics and skin -- laid out by the same
+  # bar through the same arrange. For the window rows the strip's COLOURS are a separate axis,
+  # derived from parentage by _setAppearanceAndColorOfTitleBackground beside my own
+  # _deriveAndSetBodyAppearance.
   _barSpec: ->
+    return @_transientBarSpec() if @_manifestsAsPopUp()
     preferences = WorldWdgt.preferencesAndSettings
     pieces = []
     pieces.push "close" if @isFreeFloating()
@@ -130,6 +174,40 @@ class FrameWdgt extends Widget
     padding: @padding
     textHeight: preferences.titleBarTextHeight
     fontSize: preferences.titleBarTextFontSize
+    titleStyle: "windowBar"
+
+  # The POP-UP row of the same vocabulary: my strip is exactly my title box -- the title text
+  # plus a pixel of air above and below it, inset by the menu border, and a tap on it pins me.
+  # An UNTITLED pop-up carries no strip at all: an empty roster, and a thickness of 0 so my rows
+  # start at my very top edge.
+  #   The strip's thickness is read off the title piece, which hugs its own text and never
+  # stretches (the bar sizes it to text and disables fitting), so this is stable applied
+  # geometry, not a mutate-then-read-back. Before the piece exists -- the appearance derivation
+  # runs in my constructor -- the window title's own height stands in at the same number.
+  _transientBarSpec: ->
+    preferences = WorldWdgt.preferencesAndSettings
+    titled = !!@_titleForContents @contents
+    textHeight = @bar?.label?.height() ? preferences.titleBarTextHeight
+    pieces: (if titled then ["title"] else [])
+    resizer: "none"
+    axis: "horizontal"
+    showsText: true
+    naturalWidth: "titleText"
+    thickness: (if titled then textHeight + 2 else 0)
+    slotSize: preferences.barIconSize
+    glyphSize: preferences.barGlyphSize
+    padding: preferences.menuRowsBorder
+    textHeight: textHeight
+    fontSize: preferences.menuHeaderFontSize
+    titleStyle: "menuHeader"
+
+  # What my title contributes to my payload's OWN row width: a pop-up's rows all equalize to the
+  # widest entry, and its title is one of those entries even though it lives in my chrome (the
+  # spec's "titleText" natural width). The rows panel PULLS this through the pop-up climb, so a
+  # rows panel outside a frame (a list's) simply gets nothing.
+  _titleEntryWidth: ->
+    return 0 unless @_barSpec().naturalWidth is "titleText"
+    (@bar?.label?.width() ? 0) + 2
 
   # Height of the titlebar strip -- the bar spec's own thickness, so the measure, the arrange
   # and the bar itself read ONE number (§6.1 rule 1).
@@ -305,8 +383,6 @@ class FrameWdgt extends Widget
     super()
     @closeButton = opts.closeButton
 
-    @_deriveAndSetBodyAppearance()
-
     @strokeColor = Color.create 125,125,125
 
     @defaultContents = new FrameContentsPlaceholderText
@@ -324,24 +400,45 @@ class FrameWdgt extends Widget
       # unlatched, so this is a no-op for the universal fresh-content case.
       @contents._contentStackSpec.desiredWidth = undefined
 
-    @padding = WorldWdgt.preferencesAndSettings.barPadding
+    @padding = @_chromePadding()
     # TODO this looks better:
     #@padding = 10
     @color = Color.create 248, 248, 248
+    # after my own colours: the pop-up manifestation's body skin brings its own (see there)
+    @_deriveAndSetBodyAppearance()
     @_buildAndConnectChildren()
 
     if @contents == @defaultContents
       @_setEmptyWindowLabelNoSettle()
     else
       @disableDrops()
-      @label.setText @_titleForContents @contents
+      # an UNTITLED pop-up carries no title piece at all, so there is nothing to title
+      @label?.setText @_titleForContents @contents
 
-    # settled-after-new: SETTLE the default extent as the constructor's LAST act (was
+    # settled-after-new: SETTLE the starting extent as the constructor's LAST act (was
     # @_applyExtent, which left a pending re-fit -- and, for default contents, the
     # _setEmptyWindowLabelNoSettle label too -- so `new FrameWdgt` returned UNsettled). This flushes both.
     # Kept on the public setExtent rather than folded into _buildAndConnectChildrenNoSettle: that core is
-    # SHARED with the rebuild-on-drop paths, which must NOT reset a user-resized window back to 300x300.
-    @setExtent new Point 300, 300
+    # SHARED with the rebuild-on-drop paths, which must NOT reset a user-resized window back to its default.
+    @setExtent @_initialExtent()
+
+  # The extent I take at construction. A window opens at a default size the opener then imposes
+  # over; a POP-UP is sized by what it holds from the moment it exists, so `new MenuWdgt` hands
+  # back something with a real extent rather than a placeholder one.
+  _initialExtent: ->
+    if @_manifestsAsPopUp()
+      @preferredExtent()
+    else
+      new Point 300, 300
+
+  # The margin my chrome keeps around my content -- ONE number serving the bar strip's own
+  # padding and the body margin. A POP-UP has none: its rows panel keeps the menu border itself,
+  # and its box IS the panel's box.
+  _chromePadding: ->
+    if @_manifestsAsPopUp()
+      0
+    else
+      WorldWdgt.preferencesAndSettings.barPadding
 
 
   # in general, windows just create a reference of themselves and
@@ -406,6 +503,12 @@ class FrameWdgt extends Widget
     if titleToBeSet == "internal window"
       titleToBeSet = "window with an " + titleToBeSet
     titleToBeSet
+
+  # The name my title strip carries. A ROW of a pop-up asks its pop-up for this to prefix the
+  # question its prompt opens with ("Rectangle\nalpha value:"), which is why it is public: the
+  # asker is the row, several classes away. The citizens answer their own kind of title.
+  titleText: ->
+    @_titleForContents @contents
 
   # Re-derive the bar title from my CURRENT contents' colloquialName. Intent-named public
   # note (the noteWallpaperChanged idiom) for a contents whose ANSWER to colloquialName
@@ -530,8 +633,11 @@ class FrameWdgt extends Widget
   # A window is the DELIBERATE-EMBED payload class (drag-embed spec §4): dropping it into a container
   # must be armed by a dwell (spec §6), so windows are never nested by accident during the constant
   # move-a-window gesture. (Overrides Widget's plain default.)
+  #   A POP-UP is not: carrying a menu into a container IS the pin gesture, deliberate in itself and
+  # the only reason to drag a menu anywhere but the desktop — where a window's drag is the ordinary
+  # move-it-around gesture that happens over containers all day long.
   requiresDeliberateEmbedding: ->
-    return true
+    !@_manifestsAsPopUp()
 
   # A frame does NOT impose its ratio on dropped children (was the
   # `!(whereIn instanceof FrameWdgt)` exclusion in the ratio mixin /
@@ -638,7 +744,8 @@ class FrameWdgt extends Widget
     unless notContent or aWdgt.isLayoutInert?()
       # re-title through the NON-settling label core: _addNoSettle already runs inside the
       # add's settle, so the title change rides that flush instead of opening a nested one.
-      @label._setTextNoSettle @_titleForContents aWdgt
+      # An untitled pop-up carries no title piece, so there is nothing to re-title.
+      @label?._setTextNoSettle @_titleForContents aWdgt
       # (§9.7-Q, owner-decided 2026-07-17) a chrome rebuild (_buildAndConnectChildrenNoSettle,
       # reached from _reactToChildDropped / _resetToDefaultContents) re-adds the widget that
       # is ALREADY my content. That is bookkeeping, not a re-mount: the placement it would
@@ -770,6 +877,10 @@ class FrameWdgt extends Widget
       menu.addMenuItem "dock the toolbar ➜", @, "dockToolbarMenu", closesUnpinnedPopUps: false, toolTip: ""
       if @_dockedToolbarShowing()
         menu.addMenuItem "float the toolbar", @, "floatToolbar", toolTip: "undock the toolbar into its own window"
+    # the pin is offered only while there is something to pin: furniture is already staying
+    if @isTransientPopUp()
+      menu.addLine()
+      menu.addMenuItem "pin", @, "pinPopUp", closesUnpinnedPopUps: false
 
   # Can the empty slot be (re)filled? The content must declare a variant (a
   # framed citizen declares its own -- §5.B), and be EDITING: a fresh dock in
@@ -892,9 +1003,244 @@ class FrameWdgt extends Widget
   _reactToBeingDropped: (whereIn) ->
     super
     @contents?._reactToHolderFrameDropped? whereIn
+    return unless @_manifestsAsPopUp()
+    if whereIn != world
+      # public-call-sanctioned: pinPopUp is BUILT for this caller — its no-arg branch exists
+      # precisely because this hook runs inside the drop's settle, and takes the NoSettle path
+      # (_closePopUpsMarkedForClosureNoSettle) so the closures ride the drop's flush instead of
+      # re-entering the flush guard. See the comment on that branch.
+      @pinPopUp()
+
+    @_updatePopUpShadow()
 
   _reactToBeingGrabbed: (whereFrom) ->
     @contents?._reactToHolderFrameGrabbed? whereFrom
+
+  # ===== the transient policy: registries, dismissal, pinning =====
+
+  hierarchyOfPopUps: ->
+    ascendingWdgts = @
+    hierarchy = new Set [ascendingWdgts]
+    while ascendingWdgts?.getParentPopUp?
+      ascendingWdgts = ascendingWdgts.getParentPopUp()
+      if ascendingWdgts?
+        hierarchy.add ascendingWdgts
+    return hierarchy
+
+  # for pop ups, the propagation happens through the getParentPopUp method
+  # rather than the parent property, but for other normal widgets it goes
+  # up the parent property
+  propagateKillPopUps: ->
+    if @lifetime is 'transient'
+      @getParentPopUp()?.propagateKillPopUps()
+      @_markPopUpForClosure()
+
+  _markPopUpForClosure: ->
+    world.popUpsMarkedForClosure.add @
+    @isPopUpMarkedForClosure = true
+
+  # "Am I furniture?" — the persistent half of the lifetime state, under the name the rows
+  # (MenuRowsPanelWdgt.wantsDetachOfChild), the shadow policy and the close policy ask by.
+  isPopUpPinned: ->
+    @lifetime is 'persistent'
+
+  # Role query for the world snapshot (Serializer.serializeWorld): a TRANSIENT frame is
+  # mid-gesture UI — it auto-closes on the next outside click / item trigger (indeed the very
+  # menu-item click that starts a "save world snapshot…" has already marked its menu for
+  # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PERSISTENT one
+  # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
+  isTransientPopUp: ->
+    @lifetime is 'transient'
+
+  getParentPopUp: ->
+    if @isPopUpPinned()
+      return @parent
+    else
+      if @widgetOpeningThePopUp?
+        return @widgetOpeningThePopUp.firstParentThatIsAPopUp()
+    return undefined
+
+  # The climb STOPS AT ME (the base walks on to the root): I am the pop-up my subtree belongs
+  # to — the rows that ask whether they may be lifted, the hand's dismissal sweep and my own
+  # rows viewport's re-hug all mean ME. A frame MARKED for closure is on its way out, so the
+  # question passes through it to whatever holds it.
+  firstParentThatIsAPopUp: ->
+    if !@isPopUpMarkedForClosure or !@parent? then return @
+    return @parent.firstParentThatIsAPopUp()
+
+  # The public, self-settling half of the lifetime state (the core below does the work).
+  setLifetime: (aLifetime) ->
+    @_settleLayoutsAfter => @_setLifetimeNoSettle aLifetime
+
+  # THE ONE PLACE MY LIFETIME CHANGES, so the one place every consequence of the change lives.
+  #   Entering 'persistent' hands me to the user: the click-outside dismissal callback goes (nothing
+  # outside me may dismiss me any more), my shadow re-derives for furniture, and my rows re-read the
+  # grip fact (see _invalidateRowsAfterPinChange).
+  #   Entering 'transient' makes me mid-gesture UI: I join the open set the world sweeps and arms the
+  # click-outside dismissal that ends me.
+  #   Nothing settles here — the drop path reaches this inside the drop's own settle (see pinPopUp's
+  # no-arg branch), so the settling half is the setLifetime wrapper above.
+  _setLifetimeNoSettle: (aLifetime) ->
+    # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
+    # add/delete on world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren) — it settles nothing and
+    # touches no geometry, so calling it from a NoSettle core is settle-neutral (the same sign-off
+    # Widget._destroyNoSettle carries for the same call).
+    @lifetime = aLifetime
+    if aLifetime is 'persistent'
+      @onClickOutsideMeOrAnyOfMyChildren undefined
+      @_updatePopUpShadow()
+      @_invalidateRowsAfterPinChange()
+    else
+      world.openPopUps.add @
+      @onClickOutsideMeOrAnyOfMyChildren "close"
+    return
+
+  # The user-facing verb for "this pop-up stays" — the header tap, the "pin" row, and a drop into a
+  # container all land here. The pin itself is the lifetime entry above; what belongs to THIS verb is
+  # the sibling sweep: the pop-ups I was opened from are mid-gesture UI that the pin ends, so the
+  # chain above me is marked for closure and drained. It is invoked on the pop-up to be pinned; the
+  # triggering menu item is the first parameter.
+  pinPopUp: (pinMenuItem)->
+    @_setLifetimeNoSettle 'persistent'
+    if pinMenuItem?
+      pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
+      world.closePopUpsMarkedForClosure()
+    else
+      # no-arg caller is _reactToBeingDropped (inside the drop's settle): mark + close the popups through
+      # the non-settling core so they ride the drop's flush rather than re-entering the flush guard.
+      @getParentPopUp()?.propagateKillPopUps()
+      world._closePopUpsMarkedForClosureNoSettle()
+
+  # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
+  # being pinned is what makes it liftable (ButtonWdgt.isDetachablePayloadOfMyParent →
+  # MenuRowsPanelWdgt.wantsDetachOfChild). That is a fact about ME which they read, so nothing
+  # marks them stale unless I do — and the shadow swap above cannot stand in for it: it marks
+  # ME, which re-blits my buffer without re-rendering the rows inside it, and on a pop-up pinned
+  # into a non-world parent it drops the shadow instead and may not mark anything at all.
+  #   No self-marking twin on the row can replace this: a verb whose only job is "repaint
+  # yourself" is the general-purpose public repaint verb the invalidation-privacy campaign
+  # removed, and the row has no way to notice a state change on me.
+  _invalidateRowsAfterPinChange: ->
+    # cross-invalidation-sanctioned: own sub-parts — my rows' paint derives from the lifetime I just set
+    row._changed() for row in (@rowsPanel?.children ? [])
+    return
+
+  # The pop-up shadow policy: mid-gesture UI floats over the desktop, furniture on the desktop
+  # sits closer to it, and furniture nested in a container casts nothing (it is part of what
+  # holds it). A window's only shadow is the hand's, while it is being dragged.
+  _updatePopUpShadow: ->
+    # public-call-sanctioned: addShadow/removeShadow are the public shadow API (also driven
+    # externally, e.g. by the grab gesture) — consciously reused by this shadow-policy core.
+    if @isPopUpPinned()
+      if @parent == world
+        @addShadow()
+      else
+        @removeShadow()
+    else
+      @addShadow()
+
+  # A POP-UP's shadow is its own: mid-gesture UI floats over the desktop at (5,5), furniture
+  # on the desktop sits closer to it at (3,3) and darker. Every other frame takes the shadow
+  # the caller asks for — the desktop shadow Widget's add gives every world child, and the
+  # floaty one the hand adds while dragging (which is why an EXPLICIT offset always wins).
+  addShadow: (offset, alpha) ->
+
+    if @_manifestsAsPopUp()
+      if @isPopUpPinned() and @parent == world
+        super new Point(3, 3), 0.3
+        return
+      super (offset ? new Point 5, 5), (alpha ? 0.2)
+      return
+
+    super offset, alpha
+
+  # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
+  # than the world is a pop-up with rows nothing can click. It needs a guard of its own
+  # because NO screenshot test reliably catches one — a reference disagrees only if a macro
+  # happens to click the row that went missing, which is why menus were shipping rows off
+  # the bottom edge unnoticed. The headless runners fail-gate on this token (like
+  # NON_INTEGER_GEOMETRY), so the invariant is checked by every test that opens any pop-up
+  # rather than by remembering to look.
+  _assertFitsInTheWorld: ->
+    return unless world?
+    return unless @width() > world.width() or @height() > world.height()
+    console.error "POPUP_LARGER_THAN_WORLD -- #{@constructor.name} is #{@width()}x#{@height()} in a #{world.width()}x#{world.height()} world, so part of it cannot be reached"
+    return
+
+  # ===== the placement verbs =====
+
+  # Placed with my FIRST ROW under the pointer, and centred on the hand across: the row a user
+  # is about to want is already where the pointer is, so the click that opened me can dismiss me
+  # without moving. The drop is my own chrome — the title strip plus my rows' border, plus the
+  # one pixel that lands the pointer INSIDE the row rather than on its edge — so it holds for an
+  # untitled pop-up (no strip, thickness 0) exactly as for a titled one. Deliberately never the
+  # strip itself: a tap there PINS me, which is the opposite of dismissing me.
+  popUpCenteredAtHand: (world) ->
+    offset = new Point (Math.floor @width() / 2),
+      (@_barSpec().thickness + WorldWdgt.preferencesAndSettings.menuRowsBorder + 1)
+    @popUp (world.hand.position().subtract offset), world
+
+  popUpAtHand: ->
+    @popUp world.hand.position(), world
+
+  popUp: (pos, widgetToAttachTo) ->
+    @__commitMoveTo pos
+    widgetToAttachTo.add @
+    # the @_moveWithin method
+    # needs to know the extent of the widget
+    # so it must be called after the widgetToAttachTo.add
+    # method: the add's own settle is where my content measure caps me and I take that size,
+    # and clamping decides WHERE that fits.
+    @_moveWithin world
+    @_assertFitsInTheWorld()
+    # shadow must be added after the widget
+    # has been placed somewhere because
+    # otherwise there is no visible image
+    # to base the shadow on
+    # P.S. this is the thing that causes the MenuWdgt buffer
+    # to be painted after the creation.
+    # (addShadow's own _fullChanged closes the invalidation — the add dispatcher
+    # already set the dedup flag, so no trailing repaint call is needed here.)
+    @addShadow()
+
+  # ===== teardown =====
+
+  # Leaving the open set belongs in the CORE, beside the _closeNoSettle half below: bulk teardown
+  # recurses core-to-core (fullDestroyChildren / _fullDestroyNoSettle) and never calls the public
+  # destroy(), so an override there misses every pop-up destroyed as part of a subtree. WorldWdgt's
+  # per-cycle openPopUps sweep already covers the gap, which is why this is a tier correction rather
+  # than a visible-leak fix.
+  _destroyNoSettle: ->
+    super
+    world.openPopUps.delete @
+
+  # Dismissal policy: a PERSISTENT frame is furniture -- closing it is the ordinary
+  # widget close (re-homed to the bin, revivable like any widget). A TRANSIENT one
+  # is mid-gesture UI (menus, prompts, informs): dismissal destroys it outright,
+  # like tooltips -- it is rebuilt fresh by its opener every time, so warehousing it
+  # would only grow the bin and every world snapshot.
+  # Either way I leave the open set here, in the core: the public close() is the
+  # inherited canonical wrap, and the NoSettle drain reaches me directly.
+  # Idempotent (return if @destroyed): a stale widgetOpeningThePopUp chain can re-mark
+  # an already-dismissed pop-up; the destroy branch explicitly no-ops on it.
+  _closeNoSettle: (restingContainer) ->
+    return if @destroyed
+    world.openPopUps.delete @
+    if @isPopUpPinned()
+      super
+    else
+      @_fullDestroyNoSettle()
+
+  # A duplicate is born furniture: nobody is mid-gesture with a copy, so it must not evaporate on
+  # the next click (SystemTest_macroDuplicatedMenuAutoPinsOnDesktop asserts exactly that).
+  # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN
+  # carrying my own shadow verbatim, and the entry's shadow re-derive reads a parent it does not
+  # have yet — the copy takes its shadow from wherever the copy gesture lands it.
+  fullCopy: ->
+    copiedWidget = super
+    copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
+    copiedWidget.lifetime = 'persistent'
+    return copiedWidget
 
   # The whole-window skin follows the window's nesting (isInternal, derived from parentage), so
   # re-apply it whenever the window lands in a new home: a container makes it internal (flat,
@@ -933,12 +1279,28 @@ class FrameWdgt extends Widget
     # as the _resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
 
-  # The window BODY appearance half of the internal/external skin (the title-bar half is
-  # FrameBarWdgt._setAppearanceAndColorOfTitleBackground): flat RectangularAppearance when nested (internal),
-  # boxy BoxyAppearance when free on the desktop (external). Derived from isInternal (parentage),
-  # set at construction and re-derived on every re-parenting by _reactToBeingAdded.
+  # The BODY appearance half of my skin (the title-bar half is
+  # FrameBarWdgt._setAppearanceAndColorOfTitleBackground): the MENU box when I wear the pop-up
+  # manifestation, else flat RectangularAppearance when nested (internal) and boxy
+  # BoxyAppearance when free on the desktop (external). Derived from the manifestation and from
+  # isInternal (parentage), set at construction and re-derived on every re-parenting by
+  # _reactToBeingAdded.
+  #   The pop-up branch carries its own colours: a menu box is grey with the menu stroke, and it
+  # is rounded only when it has a title strip to round (an untitled pop-up takes the boxy
+  # default). Nothing else paints them -- my rows panel is a transparent stack inside me.
   _deriveAndSetBodyAppearance: ->
-    if @isInternal()
+    if @_manifestsAsPopUp()
+      @appearance = new MenuAppearance @
+      @color = Color.create 238, 238, 238
+      @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
+      @cornerRadius =
+        if @_barSpec().pieces.length is 0
+          undefined
+        else if WorldWdgt.preferencesAndSettings.isFlat
+          0
+        else
+          5
+    else if @isInternal()
       @appearance = new RectangularAppearance @
     else
       @appearance = new BoxyAppearance @
@@ -988,7 +1350,12 @@ class FrameWdgt extends Widget
         if !@contents.dragsDropsAndEditingEnabled
           @toolbar._collapseNoSettle()
 
-    if !@resizer?
+    # the resize affordance the spec names: a frame that sizes to what it holds (a pop-up hugs
+    # its rows) offers none. A frame is an ORPHAN while it builds -- hence free-floating, hence
+    # offering the handle -- so a window always gets one and hides it while a host owns its
+    # placement (HandleWdgt.updateVisibility); only a manifestation that says "none" from birth
+    # goes without.
+    if !@resizer? and @_barSpec().resizer isnt "none"
       # Attach the resizer, then record it. @resizer stays undefined DURING its own add so the
       # `@resizer?._moveInFrontOfSiblings()` in _addNoSettle (above) is a no-op for the resizer
       # itself -- it only re-fronts the resizer when LATER content is added. (Byte-identical to the

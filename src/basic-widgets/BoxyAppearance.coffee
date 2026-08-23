@@ -95,7 +95,7 @@ class BoxyAppearance extends Appearance
     # ⚠ through the GETTER, which owns the absent case: this appearance is worn by widgets that
     # never declare a cornerRadius of their own (a frame, a folder window), and reading the field
     # raw threw on every click of this item for those.
-    @widget.prompt menuItem.parent.title + "\ncorner\nradius:", @widget, "setCornerRadius",
+    @widget.prompt menuItem.parent.popUpTitle() + "\ncorner\nradius:", @widget, "setCornerRadius",
       defaultContents: @getCornerRadius().toString()
       floorNum: 0
       ceilingNum: 100

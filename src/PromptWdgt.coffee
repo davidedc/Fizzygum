@@ -1,9 +1,9 @@
-# A prompt is a pop-up that asks for one value and reports it back via a callback.
-# It shares the MENU BEHAVIOUR (transient, closes on click-outside, pinnable,
-# shadowed) through PopUpWdgt — it is NOT a MenuWdgt — and it borrows the menu
-# LOOK/LAYOUT by composing a titled MenuRowsPanelWdgt (the message as its title,
-# then the value editor, a divider, and the "Ok"/"Close" rows). The pop-up wraps
-# that single panel and hugs its size.
+# A prompt is the FRAMED CITIZEN of the prompt kind: it asks for one value and reports it
+# back via a callback. Like a menu (it is NOT a MenuWdgt) it wraps a rows payload — a
+# MenuRowsPanelWdgt inside a PopUpRowsViewportWdgt, holding the value editor, a divider and
+# the "Ok"/"Close" rows — and, like a menu, it is born TRANSIENT: it closes on a click
+# outside it, and pinning it makes it furniture. The frame draws the box, the title strip
+# (from @msg) and the shadow.
 #
 # Per-value-type subclasses fill in only the editor row:
 #   TextPromptWdgt   — a StringFieldWdgt.
@@ -11,26 +11,28 @@
 #   ColorPromptWdgt  — a ColorPickerWdgt (the folded Widget.pickColor).
 # SaveShortcutPromptWdgt re-bases here too, swapping the button row.
 
-class PromptWdgt extends PopUpWdgt
+class PromptWdgt extends FrameWdgt
 
   # pattern: children declared here so a duplicate has the handles to remap
   # (whether they are set in the constructor or lazily).
   target: undefined
   msg: undefined
   callback: undefined
-  defaultContents: undefined
+  # the value my editor OPENS with (the `defaultContents` option every prompt door takes).
+  defaultValue: undefined
   intendedWidth: undefined
-  # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
-  # shared with MenuWdgt, along with the lay-and-hug + membership absorber.)
-  # this pop-up's title bar: the MenuHeader the rows-panel builds from @msg,
-  # surfaced here so `prompt.label` reaches it the same way `menu.label` reaches a
-  # menu's header (the drag/pin-by-header idiom the menu tests share). Storage
-  # lives on the panel; this is the same instance, so `.center()` tracks it live.
-  label: undefined
+  # the MenuRowsPanelWdgt my rows live in, and the viewport that holds it — my @contents.
+  rowsPanel: undefined
+  rowsViewport: undefined
   # the value editor for the text-bearing prompts (Text / Number / SaveShortcut);
   # kept under this conventional name because Widget.prompt and the macro tests
   # reach it as `<prompt>.tempPromptEntryField`.
   tempPromptEntryField: undefined
+
+  # I wear the pop-up manifestation in EITHER lifetime: pinning a prompt changes what
+  # dismisses it, not what it looks like.
+  _manifestsAsPopUp: ->
+    true
 
   # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does. The one isMenu?()
   # consumer is the hand's click-outside dismissal (ActivePointerWdgt.processMouseDown), so a
@@ -39,19 +41,12 @@ class PromptWdgt extends PopUpWdgt
   isMenu: ->
     true
 
-  # Like MenuWdgt, I present NO SURFACE OF MY OWN -- my rowsPanel draws the box -- so the pointer
-  # falls THROUGH me to my panel (and, at my empty rounded corners / padding, on through to
-  # whatever is behind me). Without this the base claims my whole box (the appearance-less
-  # default -- most appearance-less widgets ARE hit targets, see Widget.catchesPointerAt). This
-  # stays a per-class statement, with the owner-accepted consequence that a resting pointer over
-  # a prompt corner hover-highlights the widget behind (e.g. macroSaveAsPromptAboveTiltedWindow's
-  # close button). Why the base DEFAULT was not flipped instead:
-  # docs/archive/container-regularization-plan.md §5.6.
-  catchesPointerAt: (aPoint) ->
-    false
-
   colloquialName: ->
     if @msg then "\"" + @msg + "\" prompt" else "prompt"
+
+  # the KIND names me: my message is my title, not my payload's colloquial name
+  _titleForContents: (unused_aWdgt) ->
+    @msg
 
   # Only widgetOpeningThePopUp and target are OPERANDS: they are the two every
   # member supplies. msg and callback ride opts because SaveShortcutPromptWdgt
@@ -59,45 +54,61 @@ class PromptWdgt extends PopUpWdgt
   # has no callback at all) — as positionals they would force it to punch two
   # `undefined`s through to reach opts, which is exactly the hole R3 forbids
   # (docs/architecture/constructor-and-parameter-conventions.md).
-  constructor: (widgetOpeningThePopUp, target, opts = {}) ->
+  #   The rows payload is built BEFORE super: it IS my frame's content operand, and the
+  # message my strip titles itself from is mine to know first.
+  constructor: (@widgetOpeningThePopUp, target, opts = {}) ->
     # msg is read GUARDED: absence must leave a subclass's class-level default
     # standing (SaveShortcutPromptWdgt's " save as... "), which a bare assignment
     # would overwrite with undefined. The rest have no prototype default to keep.
     @msg = opts.msg if opts.msg?
     @target = target
     @callback = opts.callback
-    @defaultContents = opts.defaultContents
+    @defaultValue = opts.defaultContents
     @intendedWidth = opts.intendedWidth
-    super widgetOpeningThePopUp
-    # a prompt is born mid-gesture UI, like a menu: the lifetime entry enrols me in the open set and
-    # arms the click-outside dismissal that ends me.
+    # a prompt is born mid-gesture UI, like a menu: the lifetime entry enrols me in the open set
+    # and arms the click-outside dismissal that ends me.
     @_setLifetimeNoSettle 'transient'
-    # NOTE: subclasses call @_buildAndConnectChildren() from their OWN constructor,
+    super @_buildRowsPayload()
+    @rowsViewport = @contents
+    @rowsPanel = @rowsViewport.contents
+    @isLockingToPanels = false
+    # freshlyCreatedPopUps is a fact about CONSTRUCTION: the hand skips a pop-up born under the
+    # very click that is still being processed, and clears the set at mouse-up.
+    world.freshlyCreatedPopUps.add @
+    # NOTE: subclasses call @_buildPromptRows() from their OWN constructor,
     # so that a subclass's extra options (e.g. NumberPromptWdgt's ceiling) are read
     # before the editor hook runs — building here would dispatch into the subclass
     # hook while those fields are still unset (same reason MenuRowsPanelWdgt keeps
     # its label build out of a virtual _buildAndConnectChildren).
 
-  # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
+  # My payload: the empty rows panel inside the rows viewport, which is what bounds a prompt
+  # to the world and scrolls whatever does not fit. The ROWS go in through _buildPromptRows.
+  _buildRowsPayload: ->
+    panel = new MenuRowsPanelWdgt target: @target
+    # dragging a prompt by its title must move the PROMPT, and a child of a panel detaches
+    # instead unless it locks to panels.
+    panel.isLockingToPanels = true
+    # the panel is TRANSPARENT chrome: my own box is the prompt box (FrameWdgt
+    # ._deriveAndSetBodyAppearance paints it), and a second box inside it would double the
+    # stroke. Its shape still takes its own clicks — alpha is about painting, never hit-testing.
+    panel.alpha = 0
+    new PopUpRowsViewportWdgt panel
 
-  _buildAndConnectChildrenNoSettle: ->
-    @rowsPanel = new MenuRowsPanelWdgt target: @target, title: (@msg or "")
+  # Compose my rows via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()`
+  # returns settled). Distinct from the frame's own chrome build (_buildAndConnectChildren), which
+  # my constructor has already run: these are my PAYLOAD's rows, and only a concrete subclass
+  # knows what the editor row is.
+  _buildPromptRows: ->
+    @_settleLayoutsAfter => @_buildPromptRowsNoSettle()
+
+  _buildPromptRowsNoSettle: ->
     @_buildAndAddValueEditorInto @rowsPanel
     @_addButtonsInto @rowsPanel
-    # lay the panel out at my origin, then hug it — the down-walk settles parent
-    # before child, so I size to the panel's freshly-laid-out extent HERE (as
-    # ListWdgt lays out its listContents at build) rather than reading it mid-pass.
-    # The rows go into the shared rows viewport, ALWAYS (PopUpWdgt
-    # ._buildRowsViewportNoSettle), so a prompt too tall for the world scrolls
-    # rather than running off the bottom edge, exactly like a menu.
-    @_buildRowsViewportNoSettle()
-    @rowsPanel._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
-    @_refitRowsViewportNoSettle()
-    @_applyExtent @rowsViewport.extent()
-    # surface the panel's title header as my own .label (the drag/pin-by-header handle).
-    @label = @rowsPanel.label
+    # take my size from the rows I have just composed: the viewport's absorb lays the panel out,
+    # re-fits the viewport to its capped measure and re-takes my own extent from it. A prompt is
+    # composed at BUILD time (a menu is composed by its opener, and hugs at popUp instead), so
+    # this is where a prompt reaches its size.
+    @rowsViewport._reLayOutAfterContainedPanelChange()
 
   # Subclass hook: build the type-specific editor and add it to the panel.
   _buildAndAddValueEditorInto: (panel) ->
@@ -108,7 +119,7 @@ class PromptWdgt extends PopUpWdgt
   # panel. isNumericField flips the field's numeric mode — NumberPromptWdgt
   # passes whether a ceiling exists.
   _buildAndAddEntryFieldInto: (panel, isNumericField) ->
-    @tempPromptEntryField = new StringFieldWdgt (@defaultContents or ""),
+    @tempPromptEntryField = new StringFieldWdgt (@defaultValue or ""),
       minTextWidth: @intendedWidth or 100
       fontSize: WorldWdgt.preferencesAndSettings.prompterFontSize
       fontStyle: WorldWdgt.preferencesAndSettings.prompterFontName
@@ -134,7 +145,7 @@ class PromptWdgt extends PopUpWdgt
   # The Ok adapter: a prompt delivers ONE argument — the value composed in its
   # editor — to the caller's callback verb on the target, the same one-value
   # convention a wire delivers by (`consumer[action] value`). Delivery is the
-  # whole job: closing belongs to the pop-up teardown (an unpinned prompt dies on
+  # whole job: closing belongs to the pop-up teardown (a transient prompt dies on
   # the click; a pinned one stays and can deliver again).
   deliverValue: ->
     @target[@callback].call @target, @_promptValue()
@@ -144,11 +155,3 @@ class PromptWdgt extends PopUpWdgt
   # ColorPromptWdgt overrides to deliver the picker's Color.
   _promptValue: ->
     @tempPromptEntryField.getValue()
-
-  # Deliberately EMPTY: suppresses the base Widget._reactToBeingAdded -> @_reLayoutSelf
-  # add-time self-heal. A prompt's body is laid ONCE at build
-  # (_buildAndConnectChildrenNoSettle lays the panel and hugs it BEFORE popUp adds me),
-  # and the panel is free-floating so it co-moves on any later re-parenting (a pinned
-  # prompt dropped into a panel) -- nothing needs re-laying at add time. Contrast
-  # MenuWdgt, whose FIRST layout is deliberately driven from its _reactToBeingAdded.
-  _reactToBeingAdded: (whereTo, beingDropped) ->

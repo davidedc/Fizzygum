@@ -13,7 +13,7 @@ class CodePromptWdgt extends CodeAreaWdgt
   okButton: undefined
   saveTextWdgt: undefined
 
-  # A prompt by role, not by descent (I am a CodeAreaWdgt, not a PopUpWdgt), so I
+  # A prompt by role, not by descent (I am a CodeAreaWdgt, not a PromptWdgt), so I
   # have no widgetOpeningThePopUp operand — but I share the family's opts
   # vocabulary: callback, defaultContents.
   # ⚠ NOT msg: I build my own children and have no title bar to put one in, so the

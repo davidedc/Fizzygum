@@ -11,10 +11,10 @@ class ColorPromptWdgt extends PromptWdgt
 
   constructor: (widgetOpeningThePopUp, target, opts = {}) ->
     super widgetOpeningThePopUp, target, opts
-    @_buildAndConnectChildren()
+    @_buildPromptRows()
 
   _buildAndAddValueEditorInto: (panel) ->
-    @colorPicker = new ColorPickerWdgt @defaultContents
+    @colorPicker = new ColorPickerWdgt @defaultValue
     panel._addNoSettle @colorPicker
     # _addNoSettle skips the child's calculateAndUpdateExtent (which the old bare
     # @__add ran to size the picker into the panel's width); run it explicitly.

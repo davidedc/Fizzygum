@@ -254,23 +254,23 @@ class SliderWdgt extends CircleBoxWdgt
   # `@target[@action]`, so a function literal indexes the target with a stringified function,
   # finds nothing, and throws (its own dev tripwire says so). These read the menu's title from
   # the dispatcher's first slot — the MENU ITEM — which is the same idiom
-  # Widget.transparencyPopout uses, and `item.parent.title` is the rows panel's copy of it.
+  # Widget.transparencyPopout uses: the row climbs to its own pop-up and asks it for its title.
   floorPopout: (menuItem) ->
-    @prompt menuItem.parent.title + "\nfloor:", @, "setStart",
+    @prompt menuItem.parent.popUpTitle() + "\nfloor:", @, "setStart",
       defaultContents: @start.toString()
       floorNum: 0
       ceilingNum: @stop - @size
       isRounded: true
 
   ceilingPopout: (menuItem) ->
-    @prompt menuItem.parent.title + "\nceiling:", @, "setStop",
+    @prompt menuItem.parent.popUpTitle() + "\nceiling:", @, "setStop",
       defaultContents: @stop.toString()
       floorNum: @start + @size
       ceilingNum: @size * 100
       isRounded: true
 
   buttonSizePopout: (menuItem) ->
-    @prompt menuItem.parent.title + "\nbutton size:", @, "setSize",
+    @prompt menuItem.parent.popUpTitle() + "\nbutton size:", @, "setSize",
       defaultContents: @size.toString()
       floorNum: 1
       ceilingNum: @stop - @start

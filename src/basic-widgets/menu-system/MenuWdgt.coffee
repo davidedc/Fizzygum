@@ -1,34 +1,39 @@
-# A MenuWdgt is a pop-up that shows a vertical stack of rows (menu items,
-# dividers, and small editors). It gets its menu BEHAVIOUR (transient, closes on
-# click-outside, pinnable, shadowed) from PopUpWdgt, and its menu LOOK/LAYOUT by
-# composing a titled MenuRowsPanelWdgt — the same split PromptWdgt uses. The panel
-# draws the single titled box and lays out the rows; this pop-up draws nothing but
-# its shadow and hugs the panel's size.
+# A MenuWdgt is the FRAMED CITIZEN of the menu kind (the Frame-model §5.B pattern
+# DocumentWdgt uses): a menu IS its frame, exactly as a document IS its window. The
+# frame does all the chrome work — the title strip, the menu box, the shadow, the
+# lifetime state (a menu is born TRANSIENT: it closes on a click outside, and pinning
+# it makes it furniture) — and this class declares only the per-kind knowledge: the
+# rows payload it wraps, its title, and the row API its openers compose through.
+#
+# The payload is a MenuRowsPanelWdgt (a vertical stack of menu items, dividers and small
+# editors) inside a PopUpRowsViewportWdgt, which is what bounds a menu to the world and
+# scrolls whatever does not fit. The panel paints nothing: the FRAME draws the menu box.
 #
 # The opener composes a menu's ITEMS after construction (addMenuItem / addLine) and
 # then pops it up, so the menu is ALWAYS fully built before it is shown. It therefore
-# lays its panel out + hugs it exactly ONCE, at popUp (see _reactToBeingAdded ->
-# _layOutAndHugRowsPanel) — it is deliberately NOT a size-tracking container: it does
-# NOT define _reLayoutChildren, so its re-layouts are stable base no-ops. (An earlier
-# size-tracking design that re-drove the panel on every settle shifted the menu ±1px
-# and un-hovered the item under the pointer — §5.2d.) The row API is DELEGATED to the
-# panel so the ~380 `menu.addMenuItem` call sites and the MacroToolkit test hooks are
-# untouched.
+# lays its panel out + hugs it exactly ONCE, at popUp (see _reactToBeingAdded) — it is
+# deliberately NOT a size-tracking container of its rows. (An earlier size-tracking design
+# that re-drove the panel on every settle shifted the menu ±1px and un-hovered the item
+# under the pointer — §5.2d.) The row API is DELEGATED to the panel so the ~380
+# `menu.addMenuItem` call sites and the MacroToolkit test hooks are untouched.
 
-class MenuWdgt extends PopUpWdgt
+class MenuWdgt extends FrameWdgt
 
   target: undefined
   title: undefined
   fontSize: undefined
-  # (the rowsPanel field — my whole visible body — is declared on PopUpWdgt,
-  # shared with PromptWdgt, along with the lay-and-hug + membership absorber.)
-  # my title bar: the MenuHeader the rows-panel builds from @title, surfaced here
-  # so `menu.label` reaches it (the drag/pin-by-header idiom the menu tests share).
-  # Same instance as @rowsPanel.label, so `.center()` tracks it live.
-  label: undefined
+  # the MenuRowsPanelWdgt that is my rows' whole visible body, and the viewport it lives
+  # in — my @contents. Declared here so a duplicate has the handles to remap.
+  rowsPanel: undefined
+  rowsViewport: undefined
+
+  # I wear the pop-up manifestation in EITHER lifetime: pinning a menu changes what
+  # dismisses it, not what it looks like.
+  _manifestsAsPopUp: ->
+    true
 
   # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's
-  # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other pop-ups. True here,
+  # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other frames. True here,
   # inherited by PromptWdgt/SaveShortcutPromptWdgt (mirroring the instanceof); dispatched via ?() (nothing
   # on Widget). Parallels isFrame. (type-test-elimination campaign)
   isMenu: ->
@@ -44,20 +49,10 @@ class MenuWdgt extends PopUpWdgt
   excludedFromEditorFocusTracking: ->
     @actsAsEditorChrome
 
-  # I present NO SURFACE OF MY OWN -- my rowsPanel draws the box (my shadow is my only paint) --
-  # so the pointer never stops on me: it falls THROUGH to my panel (which is shaped where the box
-  # is, so topWdgtSuchThat finds it first) and, where the panel does not reach (its rounded
-  # corners / my padding), on through to whatever is behind me. Without this the base claims my
-  # whole box (the appearance-less default -- most appearance-less widgets ARE hit targets, see
-  # Widget.catchesPointerAt) and my empty corners would intercept a click meant for a menu BEHIND
-  # me: a submenu popped over a parent menu stops the parent's item staying hover-highlighted.
-  # The MenuAppearance that shapes the box belongs to the PANEL, so the panel is what answers
-  # for it, and I answer for nothing.
-  catchesPointerAt: (aPoint) ->
-    false
-
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
   # (P5 arg-object conversion): target / title / fontSize, each undefined when absent.
+  # The rows payload is built BEFORE super: it IS the frame's content operand, and the title
+  # my frame reads for its strip is mine to know first.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
     @target = opts.target
     @title = opts.title
@@ -65,31 +60,28 @@ class MenuWdgt extends PopUpWdgt
     # a menu is born mid-gesture UI: the lifetime entry enrols me in the open set and arms the
     # click-outside dismissal that ends me.
     @_setLifetimeNoSettle 'transient'
-    super @widgetOpeningThePopUp
+    super @_buildRowsPayload()
+    @rowsViewport = @contents
+    @rowsPanel = @rowsViewport.contents
     @isLockingToPanels = false
+    # freshlyCreatedPopUps is a fact about CONSTRUCTION: the hand skips a pop-up born under the
+    # very click that is still being processed, and clears the set at mouse-up.
+    world.freshlyCreatedPopUps.add @
 
-    @_buildAndConnectChildren()
-
-  # Build the composed body via the NoSettle core, settling ONCE at the end
-  # (orphan-settledness: `new MenuWdgt` returns settled). Only the PANEL is
-  # ctor-built (empty but for its title header): a menu's ITEMS are composed by
-  # the opener after construction (addMenuItem/addLine) and land in the panel; the
-  # menu lays the panel out + hugs it at popUp (see _reactToBeingAdded).
-  _buildAndConnectChildren: ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
-
-  _buildAndConnectChildrenNoSettle: ->
-    @rowsPanel = new MenuRowsPanelWdgt target: @target, title: @title, fontSize: @fontSize
-    # my rows go into the shared rows viewport, ALWAYS — see PopUpWdgt
-    # ._buildRowsViewportNoSettle for why there is no over-tall special case.
-    @_buildRowsViewportNoSettle()
-    # DELIBERATELY do NOT lay out / hug here: like the old self-laying menu, I stay
-    # at my default (zero) extent until popUp lays me out (via _reactToBeingAdded).
-    # This matters for popUpCenteredAtHand (inform), which offsets by @extent()/2 --
-    # a zero pre-layout extent centres my TOP-LEFT at the hand, byte-identical to the
-    # old menu; a build-time hug would offset by half the real size and mis-place it.
-    # surface the panel's title header as my own .label (the drag/pin-by-header handle).
-    @label = @rowsPanel.label
+  # My payload: the rows panel inside the rows viewport (see the class comment for why the
+  # viewport is unconditional). DELIBERATELY no rows here — a menu's ITEMS are composed by its
+  # opener after construction (addMenuItem/addLine) and land in the panel.
+  _buildRowsPayload: ->
+    panel = new MenuRowsPanelWdgt target: @target, fontSize: @fontSize
+    # dragging a menu by its title must move the MENU, and a child of a panel detaches instead
+    # unless it locks to panels. ListWdgt does exactly this to its own rows panel, for exactly
+    # this reason.
+    panel.isLockingToPanels = true
+    # the panel is TRANSPARENT chrome: my own box is the menu box (FrameWdgt
+    # ._deriveAndSetBodyAppearance paints it), and a second box inside it would double the
+    # stroke. Its shape still takes its own clicks — alpha is about painting, never hit-testing.
+    panel.alpha = 0
+    new PopUpRowsViewportWdgt panel
 
   colloquialName: ->
     if @title
@@ -97,6 +89,13 @@ class MenuWdgt extends PopUpWdgt
     else
       return "menu"
 
+  # the KIND names me: my title is my own, not my payload's colloquial name
+  _titleForContents: (unused_aWdgt) ->
+    @title
+
+  # As another frame's CONTENT (a pinned menu dropped into a window), I keep the size I have
+  # and do not grow in the holder's stack: a menu is its rows, and stretching it would only
+  # add empty box.
   initialiseDefaultFrameContentLayoutSpec: ->
     @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
     @_contentStackSpec.canSetHeightFreely = false
@@ -104,17 +103,14 @@ class MenuWdgt extends PopUpWdgt
   # Lay out at ADD time -- the menu's layout trigger. The opener builds a menu, adds
   # its items (raw __add, no settle -- so the panel never re-lays-out its rows on
   # its own), then popUpAtHand; popUp attaches me to the world, firing this, which
-  # drives the shared PopUpWdgt._layOutAndHugRowsPanel -- exactly as the base
-  # Widget._reactToBeingAdded -> @_reLayoutSelf laid the old self-laying menu's
-  # rows out at popUp. This one-shot-at-popUp model stands because a menu is
-  # always fully composed BEFORE popUp; post-popUp membership changes are
-  # absorbed by the inherited _reLayOutAfterContainedPanelChange (re-lay +
-  # re-hug), NOT by making me a size-tracking container (an on-every-settle
-  # re-drive shifted the menu ±1px, un-hovering the item under the pointer --
-  # §5.2d). Also fires on re-parenting (a pinned menu dropped into a panel),
-  # re-laying at the new origin.
+  # drives the rows viewport's absorb: re-lay the rows, re-fit the viewport to their
+  # measure, re-take my own extent from it. This one-shot-at-popUp model stands because a
+  # menu is always fully composed BEFORE popUp; post-popUp membership changes go through
+  # the SAME absorb, from the stack's own membership seam. Also fires on re-parenting (a
+  # pinned menu dropped into a panel), re-laying at the new origin.
   _reactToBeingAdded: (whereTo, beingDropped) ->
-    @_layOutAndHugRowsPanel()
+    super
+    @rowsViewport._reLayOutAfterContainedPanelChange()
 
   # ===== row API -- delegated to the rows-panel =====
   # The opener composes a menu by calling these on the MENU (dozens of MenusHelper

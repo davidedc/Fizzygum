@@ -14,7 +14,7 @@ class NumberPromptWdgt extends PromptWdgt
     @ceilingNum = opts.ceilingNum
     @isRounded = opts.isRounded
     super widgetOpeningThePopUp, target, opts
-    @_buildAndConnectChildren()
+    @_buildPromptRows()
 
   _buildAndAddValueEditorInto: (panel) ->
     @_buildAndAddEntryFieldInto panel, (@ceilingNum?)
@@ -22,7 +22,7 @@ class NumberPromptWdgt extends PromptWdgt
     slider = new SliderWdgt(
       @floorNum or 0,
       @ceilingNum,
-      parseFloat(@defaultContents),
+      parseFloat(@defaultValue),
       Math.floor((@ceilingNum - @floorNum) / 4))
     slider.alpha = 1
     slider.color = Color.create 225, 225, 225
@@ -30,7 +30,7 @@ class NumberPromptWdgt extends PromptWdgt
     slider.__commitHeight WorldWdgt.preferencesAndSettings.prompterSliderSize
     # A named wire verb — a controller owns a LIST of wire records (§P4), so there is no target/action
     # field pair to assign. The QUIET one, because the field and the slider are already consistent
-    # here — I built the slider from @defaultContents — and firing would round that default away and
+    # here — I built the slider from @defaultValue — and firing would round that default away and
     # open an edit before the prompt is on screen.
     slider.declareWireTo @, "takeSliderValue"
     panel._addNoSettle slider

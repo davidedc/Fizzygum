@@ -46,7 +46,7 @@ class ViewportWdgt extends Widget
   # Flipped live via setScrollPolicy (menu: toggleScrollPolicyFromMenu) with
   # no widget-tree change — policy over structure, the same verdict the
   # pop-ups reached for their unconditional rows viewport
-  # (PopUpWdgt._buildRowsViewportNoSettle).
+  # (PopUpRowsViewportWdgt).
   scrollPolicy: 'auto'
 
   # Only the GENERIC viewport offers the crop⇄scroll flip in its menu:
