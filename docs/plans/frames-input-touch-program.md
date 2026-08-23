@@ -9,7 +9,7 @@ from a design session with the owner; facts verified against Fizzygum `8d9ff3e3`
 archived, this doc moves to `docs/archive/` with an `INDEX.md` entry.
 
 **STATUS BOX** (one line per arc; plans are authored JUST-IN-TIME — see §6)
-- Plan 1 `frame-lifetime-and-docking-plan.md` — AUTHORED 2026-08-23, not started.
+- Plan 1 `frame-lifetime-and-docking-plan.md` — AUTHORED 2026-08-23; P0 DONE 2026-08-23 (S1 GO with two §2.4 amendments, S2 GO, F13 falsified → T11); P1 awaiting the owner's go.
 - Plan 2 Pointer Events — not authored (author when Plan 1 closes).
 - Plan 3 visual wave — not authored (author when Plan 2 closes).
 - Plan 4 gesture grammar + finger harness — not authored (author when Plan 3 closes).
@@ -77,7 +77,7 @@ plan. "Rec." rows are the executor's recommendation still awaiting a ruling.
 
 | ID | Ruling | Reason |
 |---|---|---|
-| **G1** | **ONE geometry for mouse and finger. No per-device redraw.** (`setTouchInputMode` has ZERO callers today — verified — and stays dead on principle.) Only the gesture→intent mapping differs per input, and it is kept as small as possible. | Owner preference; a finger has no wheel/hover/second button, so gestures MUST differ — nothing else may. |
+| **G1** | **ONE geometry for mouse and finger. No per-device redraw.** (⚠ Premise corrected by Plan 1 P0, 2026-08-23: `setTouchInputMode` is NOT dead — the world menu's "touch screen settings" row (`WorldWdgt.coffee:3205` → `PreferencesAndSettings.toggleInputMode` `:108`) flips it live, rewriting `menuFontSize 24` / `handleSize 26` / `scrollBarsThickness 24` / `useSliderForInput`. The ruling stands unchanged: that row and the `inputMode` pair are the per-device redraw G1 forbids and are DELETED in Plan 3 — tail T11.) Only the gesture→intent mapping differs per input, and it is kept as small as possible. | Owner preference; a finger has no wheel/hover/second button, so gestures MUST differ — nothing else may. |
 | **G2** | **Every chrome dimension is a named preference; every thickness is a formula over preferences; no literal in a layout method.** (`CLOSE_ICON_SIZE`, the frame's `padding = 5`, `MenuHeader`'s `super 3`, the rows panel's `padding: 2`, `ToolPanelWdgt`'s 30/5/10, `ToolbarWdgt.dockThickness: 95` are the literals; `dockThickness` must become `rows · (thumb + gap) + 2·externalPadding`.) Lands in Plan 1 Phase 0, pixel-identical. | Makes the single geometry a one-block edit later; §6.1 rule 1 (pure constants, no laid-out extents) still holds. |
 | **G3** | **Three dials, not one**: *targets* ≥ 44 (bar buttons, thumbs, handles), *glyphs* ~24 inset in the target box, *indicators* thin (scrollbars are NOT targets). A widget's hit box may be larger than what it paints (the bar arrange must never equate glyph with box; equal on the desk profile so today's pixels don't move). | Uniform scaling is what looks silly; the HIG scales three kinds of thing differently. |
 | **G4** | **Scrollbars become overlay INDICATORS**: thin, appear during scroll, fade, fatten under a hovering pointer (macOS since Lion). The frame's thickness formulas never add `scrollBarsThickness` (bars overlay the plane — verified in `ViewportWdgt._reLayoutScrollbars`). | The single-interface answer; a fat bar is the per-device one. |
@@ -224,6 +224,7 @@ session:
 | T8 | **`firstParentThatIsAPopUp` naming** (14 refs) — after C1 it climbs to the enclosing FRAME; rename in Plan 1 P6's sweep or file. | session | Plan 1 P6 | open |
 | T9 | **Stale comment** in `PromptWdgt` ("the three isMenu? sites … Wallpaper / StringWdgt tick refresh") — there is ONE consumer (`ActivePointerWdgt:660`). | session | Plan 1 P3 (fix in passing) | open |
 | T10 | **`FrameWdgt.tight`** — set in the ctor, read by nobody on the frame (only `VerticalStackPanelWdgt` reads `@tight`). | session | Plan 1 P1 (delete) | open |
+| T11 | **The live input-mode toggle** — the world menu's "touch screen settings" row, `PreferencesAndSettings.toggleInputMode` / `setTouchInputMode` / `setMouseInputMode` / `inputMode` (+ `INPUT_MODE_*`), which rewrites ~10 preferences per device (the per-device redraw G1 forbids). `fg menusweep` covers the row's removal; `check-dead-methods` the verbs. | Plan 1 P0 (F13 falsified) | Plan 3 (the single geometry replaces it; `isTouchDevice` is T7's business) | open |
 
 ---
 

@@ -9,9 +9,55 @@ plan implements are **owner rulings recorded there (IDs C1–C16, G2, G3)** — 
 re-argue them.
 
 **STATUS BOX** (fill per phase as executed)
-- P0 re-verification + spikes: not started.
-- P1 `lifetime`: not started. · P2 one bar: not started. · P3 citizens: not started.
-- P4 skin/shadow/grab: not started. · P5 docking: not started. · P6 Liskov walk + docs: not started.
+- P0 re-verification + spikes: **DONE 2026-08-23** (coordinator + 4 Sonnet counts + 1 Opus spike worker;
+  baseline = the 18/18 gauntlet of 2026-08-22 18:45 on the same code tree — docs-only commits since;
+  probes in `Fizzygum-tests/.scratch/{h1-menu-dragged-to-desktop,s1-rowsviewport-as-frame-content,
+  s1b-rowsviewport-with-p3-measure,s1c-absorb-residue,s2-toolbar-detach}-probe.js`; nothing committed).
+  - **Facts:** 11/14 HOLD verbatim. F8 count 48 → ~46 (method-dependent; amended). F10 script list
+    amended (`smoke-boot-headless.js` does not name `FrameWdgt`). **F13 FALSIFIED**: `setTouchInputMode`
+    has a live caller — the world menu's "touch screen settings" row (`WorldWdgt.coffee:3205`) → program G1's
+    premise corrected, ruling unchanged, deletion filed as tail **T11** (Plan 3).
+  - **H1 (C8's premise), run:** a menu dragged by its header and dropped on the WORLD **evaporates** on
+    the next click (`isPopUpPinned()` false after the drop; `findRootForGrab` from the header = the menu).
+    C8 stands; the P4 test `macroGrabbedMenuStaysOnDesktop` is genuinely new.
+  - **S1: PASS-WITH-RESIDUE → P3 is GO** with two §2.4 amendments landed: (1) the membership absorb
+    (`_reLayOutAfterContainedPanelChange`) STAYS on the viewport and needs `firstParentThatIsAPopUp` to stop
+    at the frame — with both, grow/shrink converge in ONE cycle, 0 re-visits; (2) the measure caps at
+    world − chrome, not world (else the frame overflows by its chrome and the guard fires). (i) hug both
+    axes PASS. Also measured: the viewport needs the spec + measure to hug at all (a bare one sits at 50×40).
+  - **S2: PASS → P5 is GO.** One `wantsDetachOfChild` declaration lifts the docked toolbar out (today the
+    drag moves the window); no build gate objects. Carry: the host must clear its slot on detach (§2.5).
+  - **Recapture budgets (program §4 rule 2):**
+    **P2 / 4a = 8** — `macroClosingInnerWindowKeepsOuter` ⚠macro clicks the vanishing button (rework),
+    `macroInternalWindowDroppedIntoWindowFits`, `macroResizeWindowContainingInternalWindow`,
+    `macroWindowsNestedCollapsingUncollapsing`, `macroWindowWithAClockInAWindowConstructionTwo`,
+    `macroMenuInWindowInScrollStackStaysLive` (images 2–4), `macroWindowCellsInConstrainedScrollStackReflow`
+    ⚠macro clicks both cells' close buttons (rework), `macroSimpleDocumentHandlesOldInspector` (image_2).
+    NOT in the set (C6 by the spec, not by nesting): a window dropped into a bare `PanelWdgt` gets NO
+    layout spec → stays free-floating → keeps close (`macroInternalVsExternalWindowDrop`,
+    `macroScrollPanelUpdatesCorrectlyOnCollapsingAndUncollapsingAndClosingWindow`, the DragEmbed family).
+    **P3 / 4b = 3** (plan guessed ~5) — `macroInspectorWorkAreaEvaluatesCoffeeScript`,
+    `macroMixinEditDonorAndOverride`, `macroMixinFieldEditDonorAndOverride` (the only `inform`s any test
+    screenshots; `prompt()` and "no widgets to attach to" use `popUpAtHand` — unaffected).
+    **P5 / 4c = 7** (seed 24 files/16 tests, not ~29 — "Patch" over-matched) — `macroDocsToolbarDockSidesAndFloat`
+    (also the only float/re-dock test), `macroDocsToolbarSlotEditViewToggle`, `macroDrawingsMakerReEnableEditing`,
+    `macroEditModeTogglePencilEyeGlyph`, `macroSelectionOverlaySurvivesBringToFront`,
+    `macroSaveAsPromptAboveTiltedWindow` (image_1), `macroSampleSlideEditViewToggle` (image_1). Makers open
+    in EDIT mode with the toolbar docked (the three `Sample*App` doors open in VIEW mode). ⚠ Dashboards and
+    Patch Makers have ZERO docked-toolbar-in-edit-mode coverage — P5's grip has no witness there.
+    **P4 / 4d (grab pins — a set the plan did not list):** a pinned pop-up on the world takes the (3,3)/0.3
+    shadow (`PopUpWdgt.addShadow`), so every test that header-drags a transient pop-up onto the desktop and
+    screenshots after the drop changes — measured list: see the next line.
+  - **P4 / 4d = 3** (14 candidates read; 24 more menu/prompt tests swept, no drag-by-header) —
+    `macroMenuShadowCorrectWhileAndAfterDrag` (image_3), `macroPromptShadowFollowsOnDrag` (images 2–4),
+    `macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly` (images 1–4: ⚠ a PRESENCE change, not a shadow
+    change — `pinPopUp` leaves `world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren`, so the two dragged menus
+    SURVIVE the dismissal click that today wipes the cascade; that is C8's intent, so its assertions/description
+    are rewritten, not just recaptured). Since P4 runs after P2/P3, a grab-pinned pop-up on the world shows the
+    WINDOW manifestation (C4), so these three change more than their shadow. Excluded: the three drop-into-
+    container tests (pin at grab vs at drop is pixel-identical there), header-CLICK pins, duplicate pins.
+- P1 `lifetime`: not started. · P2 one bar: not started. · P3 citizens: not started (S1 GO).
+- P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 ruling still needed). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.
 
 **MANDATE: complete elimination of the underlying problem, not mitigation.** The problem is that
@@ -173,7 +219,9 @@ decides at every gate. **The coordinator does not edit source or run suites itse
   `MenuRowsPanelWdgt.wantsDetachOfChild` (`:89` — rows extractable iff the pop-up is pinned),
   `PopUpRowsViewportWdgt._reLayOutAfterContainedPanelChange` (`:52`), `MenuHeader.mouseClickLeft`,
   the hand (`:660`, `:879`).
-- **F8** `popUp(pos, widgetToAttachTo)` (`PopUpWdgt.coffee:285`): 48 `popUp*` sites; the only direct
+- **F8** `popUp(pos, widgetToAttachTo)` (`PopUpWdgt.coffee:285`): ~46 `popUp*` call sites (44 by
+  `grep -rnE "\.popUpAtHand\b|\.popUpCenteredAtHand\b|\.popUp\b" src`, excluding the `popUpsMarkedForClosure`
+  names — the count depends on the method; P0 re-measured 2026-08-23); the only direct
   `.popUp` callers pass `world` (`ChangeFontButtonWdgt.coffee:31,44`); `popUpAtHand`/`popUpCenteredAtHand`
   attach to `world`. ⇒ C9 ("transient ⇒ world child") is already true.
 - **F9** `popUpCenteredAtHand` centres `@extent()` BEFORE layout, and a menu's pre-layout extent is ZERO
@@ -187,8 +235,9 @@ decides at every gate. **The coordinator does not edit source or run suites itse
   (`SystemTest_macroDocsToolbarDockSidesAndFloat`, `SystemTest_macroDocsToolbarSlotEditViewToggle`).
   Scripts: `serialization-roundtrip-headless.js` reads `world.openPopUps` / `freshlyCreatedPopUps` /
   `popUpsMarkedForClosure` by name (`:133`, `:1336`, `:1370`) and `isTransientPopUp` (`:1251`);
-  `revisit-gate.js`, `staleness-census.js`, `smoke-boot-headless.js`, `revisit-trace-prelude.js` name
-  `FrameWdgt` (the class survives — no impact). **⚠ A cross-repo rename MUST grep `Fizzygum-tests/scripts/`.**
+  `revisit-gate.js` (`:78`), `staleness-census.js` (`:30`, `:105`) and `audit-preludes/revisit-trace-prelude.js`
+  name `FrameWdgt` (the class survives — no impact; `smoke-boot-headless.js` does NOT — its one hit is the
+  substring in `TransformFrameWdgt`). **⚠ A cross-repo rename MUST grep `Fizzygum-tests/scripts/`.**
 - **F11** Serialization: `Serializer.coffee:126` drops `child.isTransientPopUp?()` from a world snapshot;
   `:347` writes an `"openPopUp"` marker for `world.openPopUps` members, `Deserializer.coffee:124` restores
   it; `PopUpWdgt.@serializationTransients = ["isPopUpMarkedForClosure"]`.
@@ -204,7 +253,10 @@ decides at every gate. **The coordinator does not edit source or run suites itse
   externalPadding 10 / thumbnailSize 30` (`:3–5`), `ToolbarWdgt.dockThickness: 95` (`:30`). Preferences
   already hold `titleBarTextFontSize 12`, `titleBarTextHeight 15`, `handleSize 15`, `scrollBarsThickness 10`,
   `menuFontSize 12`, `menuHeaderFontSize 12` (`PreferencesAndSettings.coffee:150–200`). `setTouchInputMode`
-  (`:208`) has ZERO callers.
+  (`:208`) has ONE live caller: `toggleInputMode` (`:108`), wired as the world menu's "touch screen settings"
+  row (`WorldWdgt.coffee:3205`, a reflecting toggle row — not dev-gated). ⚠ P0 (2026-08-23) falsified the
+  "zero callers" claim this plan and ruling G1 carried; the per-device redraw mechanism is LIVE today and
+  G1 schedules its deletion (program tail T11). Nothing in Plan 1 reads `inputMode`.
 - **F14** Frame chrome accounting that P5 generalises: `_titlebarHeight` (`:92`), `_chromeHeight` (`:103`),
   `_chromeWidth` (`:154`), `_topDockThickness`/`_left…`/`_right…`/`_bottom…` (each tests
   `@toolbar.dockSide == side`), the slot placement in `_positionAndResizeChildren` (`:1030`, the
@@ -309,11 +361,21 @@ Everything below is the rulings applied; each bullet names its ruling.
   delegated to the panel (`addMenuItem` … unchanged for the 315 sites).
 - `PopUpRowsViewportWdgt.initialiseDefaultFrameContentLayoutSpec` declares THIS_ONE_I_HAVE_NOW ×2,
   `canSetHeightFreely = false` (moved from `MenuWdgt.coffee:102`), and its pure measure
-  (`preferredExtentForWidth`) answers `min(panel hug, world)` on both axes — the cap (today's
-  `_refitRowsViewportNoSettle` arithmetic). The frame's first-placement branch then hugs it; a row
-  membership change re-fits through the frame's standard `_reactToChildRemoved` / `_reFitContainer`
-  path, which should let `PopUpWdgt._reLayOutAfterContainedPanelChange` and the viewport's
-  `_reLayOutAfterContainedPanelChange` override go (SPIKE S1 decides).
+  (`preferredExtentForWidth`) answers `min(panel hug, world − the frame's own chrome)` on both axes —
+  the cap (today's `_refitRowsViewportNoSettle` arithmetic). ⚠ S1(iii) measured: capping at the bare
+  world extent makes the FRAME (viewport + chrome) overflow the world and `_assertFitsInTheWorld` fires
+  (`78x476 in a 960x440 world`); capping at world − chrome (the frame is 10 wide / 36 high on the desk
+  profile) keeps the frame at exactly the world height with the scrollbar showing and the guard silent.
+  The frame's first-placement branch then hugs it (S1(i) PASS: panel 42×79 → frame 52×115 = viewport +
+  chrome, both axes). **A row membership change does NOT re-fit through the frame's standard
+  `_reactToChildRemoved` / `_reFitContainer` path** — S1(ii) measured a bare frame stuck at the
+  latched `THIS_ONE_I_HAVE_NOW` width through three settles after `addMenuItem` — so the viewport's
+  `_reLayOutAfterContainedPanelChange` absorb STAYS (re-lay the panel → re-fit the viewport to its
+  measure → re-take the frame's extent → re-arm the one-shot), and it works only because
+  `firstParentThatIsAPopUp` stops AT the frame (§2.1's override, which P3 lands together with this —
+  a plain `FrameWdgt` climbs to the world and the absorb answers `false`). With both, grow and shrink
+  each converge in ONE `doOneCycle`, zero re-visits (`.scratch/s1c-absorb-residue-probe.js`).
+  `PopUpWdgt._reLayOutAfterContainedPanelChange` itself folds into the viewport's override.
 - The ctor's closing `@setExtent new Point 300, 300` (`:301`) becomes a hook (`_initialExtent()`,
   300×300 for windows; the menu citizens answer their hugged extent) — a transient frame is sized at
   construction, so `popUpCenteredAtHand` genuinely centres (F9: deliberate pixel change, ~5 tests).
@@ -345,8 +407,12 @@ Everything below is the rulings applied; each bullet names its ruling.
   a mode round-trip, as the toolbar's collapsed flag does today.
 - **Undock by grip drag**: the host answers `wantsDetachOfChild(child) → child is one of my docked
   frames` (F12 — the spreadsheet-cell mechanism; one declaration). The grab pins nothing (already
-  persistent) and the frame leaves the slot → `_reactToChildRemoved` re-fits the host; on the world it
-  is a window (skin by parentage; close + resizer return by C6).
+  persistent) and the frame leaves the slot → `_reactToChildRemoved` re-fits the host AND clears the
+  slot entry in `dockedFrames` (S2 measured that the grab alone leaves the host's slot pointer aimed
+  at the departed child — `win.toolbar` still pointed at the strip on the desktop); on the world it
+  is a window (skin by parentage; close + resizer return by C6). S2 PASS (2026-08-23): the one
+  declaration flips `findRootForGrab` from the host frame to the docked child and the real drag lifts
+  it out while the host stays put; no build gate objects (`.scratch/s2-toolbar-detach-probe.js`).
 - **Dock by drop**: the host's edge BANDS (band width = a preference, ≥ the bar thickness) are drop
   candidates for a frame payload: `wantsDropOfChild` + a new `dockSideAt(point)` query the hand's
   drop-target resolution consults; a frame payload is dwell-armed (spec §4/§6 — a frame
@@ -373,7 +439,7 @@ Everything below is the rulings applied; each bullet names its ruling.
 | `killThisPopUpIf…` ×2, `isPopUpPinned` | → `lifetime` (§2.1) |
 | `isPopUpMarkedForClosure` + `serializationTransients`, `_markPopUpForClosure`, `propagateKillPopUps`, `hierarchyOfPopUps`, `getParentPopUp`, `firstParentThatIsAPopUp`, `widgetOpeningThePopUp` | → `FrameWdgt`, verbatim |
 | `rowsPanel`, `rowsViewport` | → the citizens (`MenuWdgt`/`PromptWdgt`); the viewport IS `@contents` |
-| `_layOutAndHugRowsPanel`, `_refitRowsViewportNoSettle`, `_buildRowsViewportNoSettle`, `_reLayOutAfterContainedPanelChange` | → the rows viewport's measure + the frame's standard re-fit (S1 decides the residue) |
+| `_layOutAndHugRowsPanel`, `_refitRowsViewportNoSettle`, `_buildRowsViewportNoSettle`, `_reLayOutAfterContainedPanelChange` | → the rows viewport's capped measure (world − chrome) for the hug; the membership absorb STAYS as the viewport's `_reLayOutAfterContainedPanelChange` override (S1(ii): the frame's standard re-fit does NOT re-hug a latched width); `_buildRowsViewportNoSettle` → the citizens' ctor |
 | `_assertFitsInTheWorld` | → `FrameWdgt` (C10) |
 | `pinPopUp`, `_invalidateRowsAfterPinChange`, `isTransientPopUp`, `fullCopy`, `addWidgetSpecificMenuEntries` ("pin" row iff transient) | → `FrameWdgt` (§2.1) |
 | `_reactToBeingDropped`, `_updatePopUpShadow`, `addShadow` | → `FrameWdgt` skin/shadow derivation (§2.3) |
@@ -539,7 +605,7 @@ gates of P2/P3/P5.
 - **Gate:** `fg presuite` byte-identical except the one new/changed test; `fg revisits`.
 - Commit: "Frame skin and shadow derived from lifetime × parentage; grabbing a transient frame pins it
   (program C4/C8)".
-- **Delegation (§9):** one Opus worker; the new macro test may be a Sonnet sub-brief from the step list above. Budget: the one new test + the one changed macro.
+- **Delegation (§9):** one Opus worker; the new macro test may be a Sonnet sub-brief from the step list above. Budget: the P0(4d) set + the one new test + the one changed macro.
 
 ### P5 — Docking as placement (1.5–2 days; ONE declared recapture set)
 
