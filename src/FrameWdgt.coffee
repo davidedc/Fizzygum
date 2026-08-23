@@ -80,12 +80,61 @@ class FrameWdgt extends Widget
   # contentsRecursivelyCanSetHeightFreely is width-independent, so testing it here (before the
   # recursion) matches the arrange's post-width-set test. A collapsed window is just its titlebar.
 
-  # Height of the titlebar strip: icon square + a padding above and below. The icon square's
-  # side is the barIconSize preference -- the ONE home the measure and the arrange both read
-  # (§6.1 rule 1). (Rounding the whole sum -- identical to every historical inline form for any
-  # integer @padding.)
+  # THE bar spec -- what my title bar carries, at which metrics, along which axis. ONE
+  # derivation, read by the bar for BOTH its build and its arrange and by my own chrome
+  # accounting, so a manifestation of a frame is a ROSTER OF PIECES and a set of dials, never
+  # a bar subclass (program rulings C5/C6/C13/C15/G2/G3). The fields:
+  #
+  #   pieces        the strip's roster, left to right. The names before "title" lead from the
+  #                 bar's left edge, the ones after it trail from its right edge, "title" takes
+  #                 the span between. A free-floating frame offers "close"; a HOST-OWNED one
+  #                 does not -- a host that owns my placement owns my membership, and you leave
+  #                 such a host by dragging out, with right-click ➜ close as the fallback (C6).
+  #   resizer       which resize affordance the frame offers: "payloadSized" (a handle, iff the
+  #                 payload sizes freely) or "none". The handle answers the same free-floating
+  #                 predicate itself in HandleWdgt.updateVisibility -- ONE home, so this field
+  #                 states the policy the payload half adds to it.
+  #   axis          the direction the strip runs. A free frame's bar is on top, always (C15).
+  #   showsText     whether the title piece carries its text (a bar too thin for text does not).
+  #   naturalWidth  what the bar contributes to its frame's width hug: "none" asks for nothing,
+  #                 "titleText" hugs the title text.
+  #   thickness / slotSize / glyphSize / padding / textHeight / fontSize
+  #                 the metrics, every one of them a preference (G2): the strip's own thickness,
+  #                 the target box a piece advances the strip by, the glyph drawn inside that box
+  #                 (G3: a target and its mark are separate dials), the gap around and between
+  #                 pieces, and the title's height and font size.
+  #
+  # The vocabulary also carries the TRANSIENT row -- `pieces: ["title"]` (a tap on it pins the
+  # frame), `naturalWidth: "titleText"`, `thickness` and `fontSize` at the menu-header metrics --
+  # which the bar lays out through the same arrange. The strip's SKIN (its colours and its box
+  # shape) is a separate axis, derived from parentage by _setAppearanceAndColorOfTitleBackground
+  # beside my own _deriveAndSetBodyAppearance.
+  _barSpec: ->
+    preferences = WorldWdgt.preferencesAndSettings
+    pieces = []
+    pieces.push "close" if @isFreeFloating()
+    pieces.push "collapse"
+    pieces.push "title"
+    pieces.push "edit" if @providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing
+
+    pieces: pieces
+    resizer: if @isFreeFloating() then "payloadSized" else "none"
+    axis: "horizontal"
+    showsText: true
+    naturalWidth: "none"
+    # the strip: icon square + a padding above and below. (Rounding the whole sum -- identical
+    # to every inline form for any integer @padding.)
+    thickness: Math.round preferences.barIconSize + @padding + @padding
+    slotSize: preferences.barIconSize
+    glyphSize: preferences.barGlyphSize
+    padding: @padding
+    textHeight: preferences.titleBarTextHeight
+    fontSize: preferences.titleBarTextFontSize
+
+  # Height of the titlebar strip -- the bar spec's own thickness, so the measure, the arrange
+  # and the bar itself read ONE number (§6.1 rule 1).
   _titlebarHeight: ->
-    Math.round(WorldWdgt.preferencesAndSettings.barIconSize + @padding + @padding)
+    @_barSpec().thickness
 
   # Window chrome height -- everything that is NOT content: the titlebar strip plus the
   # bottom margin, which depends on whether the resizer may overlap the contents. ONE home
@@ -860,6 +909,9 @@ class FrameWdgt extends Widget
   # settles on release, exactly as the old stored flag did.
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
+    # the roster is derived from my ATTACHMENT, not from my parentage, so it holds on the hand
+    # too (a frame in the hand owns its own placement, hence carries its close piece)
+    @_reDeriveBarRosterNoSettle()
     if whereTo isnt world?.hand
       @_deriveAndSetBodyAppearance()
       @bar._setAppearanceAndColorOfTitleBackground()
@@ -945,6 +997,31 @@ class FrameWdgt extends Widget
       @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
 
+  # My bar's roster follows my ATTACHMENT (a host that owns my placement owns my membership,
+  # so a host-owned frame carries no close piece -- ruling C6), so it is re-derived wherever
+  # that attachment can change: at every (re)parenting and at every layout-spec change, the
+  # very seam the resize handle's own visibility rides (HandleWdgt.updateVisibility, driven
+  # from Widget::_setLayoutSpec). Re-points the aliases at what the bar now holds, and
+  # invalidates only when the roster really moved -- a spec-less chrome child rides the
+  # freefloating skip in Widget._addNoSettle's container invalidate, so the frame's own layout
+  # is not reached by the add alone.
+  _reDeriveBarRosterNoSettle: ->
+    return unless @bar?
+    return unless @bar._reDeriveRosterNoSettle()
+    @closeButton = @bar.closeButton
+    @collapseUncollapseSwitchButton = @bar.collapseUncollapseSwitchButton
+    # OFF-PASS the roster change needs a re-lay scheduled. IN-PASS it does not: the only
+    # in-pass reach is an arrange handing my content its frame-content spec, and that same
+    # arrange re-lays my bar a few lines later -- while scheduling mid-pass is the flow-rule
+    # violation (Widget._invalidateLayout reads the same flag for the same reason).
+    @_invalidateLayout() unless world?._recalculatingLayouts
+
+  # A spec that OWNS my placement makes me host-owned, which is exactly what my bar's roster
+  # (and the resize handle's visibility, in the base) turns on.
+  _setLayoutSpec: (newLayoutSpec) ->
+    super
+    @_reDeriveBarRosterNoSettle()
+
   # Reflect the content's edit/view mode in the title-bar edit button. The glyph
   # NAMES the current mode (pencil = editing now, eye = viewing now); the button
   # owns its own rest/hover appearance + colour (monochrome at rest, colour on
@@ -1000,9 +1077,10 @@ class FrameWdgt extends Widget
   _createAndAddEditButton: ->
     # public-call-sanctioned: showEditModeInBar/showViewModeInBar are the window-bar mode PROTOCOL —
     # content widgets drive them cross-object (`@parent?.showEditModeInBar?()`), so they stay public.
-    # A framed CITIZEN provides the amenities itself (its payload may be a plain
-    # Widget container, §5.B); a plain frame asks the content it wraps.
-    if (@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing) and !@editButton?
+    # The roster carries the pencil exactly when the amenities are there to drive — a framed
+    # CITIZEN provides them itself (its payload may be a plain Widget container, §5.B), a plain
+    # frame gets them from the content it wraps — so the spec is the one home for that question.
+    if ("edit" in @_barSpec().pieces) and !@editButton?
       @editButton = @bar._createAndAddEditButtonNoSettle()
 
       if @contents.dragsDropsAndEditingEnabled

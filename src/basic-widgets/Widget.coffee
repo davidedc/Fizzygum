@@ -597,9 +597,11 @@ class Widget extends TreeNode
   # exists, so filing there just skips the bin hop the sort would fix up.
   _closeNoSettle: (restingContainer) ->
 
-    # closing window content: also close the window
-    # UNLESS we are an internal window, in such case
-    # leave the parent one as is
+    # closing a frame's content closes the FRAME: the chrome is there to manipulate what it
+    # holds, so the two leave together. A nested FRAME is not that kind of content -- it is its
+    # own thing, with its own chrome and its own identity -- so it closes ALONE and its host
+    # stays, reverting to an empty frame. ONE step either way: the frame reached here is a
+    # frame, so it does not redirect again.
     if !@isFrame?() and @parent?.isFrame?()
       # private chain: the core, not public close() -- we are already inside close()'s settle batch.
       @parent._closeNoSettle restingContainer
@@ -636,8 +638,9 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_moveToTrashNoSettle()
 
   _moveToTrashNoSettle: ->
-    # trashing window content: the WINDOW is what gets trashed — the same one-step redirect
-    # _closeNoSettle makes (which then sees a frame and does not redirect again).
+    # trashing a frame's content trashes the FRAME — the same one-step redirect _closeNoSettle
+    # makes, and with the same exemption: a nested frame is its own thing and is trashed alone
+    # (the frame reached here is a frame, so it does not redirect again).
     if !@isFrame?() and @parent?.isFrame?()
       # private chain: the core, not public moveToTrash() -- we are already inside its settle batch.
       @parent._moveToTrashNoSettle()
@@ -653,7 +656,8 @@ class Widget extends TreeNode
   # figure the trash would file.
   _wouldTrashSeverAnything: ->
     if !@isFrame?() and @parent?.isFrame?()
-      # private chain: the same one-step contents-to-window redirect as _moveToTrashNoSettle.
+      # private chain: the same one-step content-to-frame redirect as _moveToTrashNoSettle,
+      # nested frames exempt for the same reason.
       return @parent._wouldTrashSeverAnything()
     # public-call-sanctioned: anyReferenceOrWireIntoWdgt is a pure read (a tree walk that
     # mutates nothing and settles nothing), the same ask the close sites make.

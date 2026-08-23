@@ -85,7 +85,22 @@ re-argue them.
   unless a variant declares its own (`TextToolbarWdgt` 40, `PaintToolbarWdgt` 103). → P5 decides the dock
   thickness when the docked frame declares it (C12/C13); `barGlyphSize`/`toolRows` have no consumer until
   the bar spec / P5.
-- P2 bar + C6: not started. · P3 citizens: not started (S1 GO).
+- P2 bar + C6: **DONE 2026-08-23** (Opus; `fg build` OK, `fg recapture` of the 4a set COMPLETE at dpr 1+2,
+  `fg presuite` 310/0, `fg menusweep` OK, `fg census` 0 movers). `FrameWdgt._barSpec()` (11 fields: pieces,
+  resizer, axis, showsText, naturalWidth, thickness, slotSize, glyphSize, padding, textHeight, fontSize) feeds
+  the bar's build AND arrange; roster re-derived at every (re)parenting and `_setLayoutSpec`
+  (`_reDeriveBarRosterNoSettle`); the transient row is defined, not wired (P3). Recaptured EXACTLY the 8
+  tests of 4a (consequence pixels eyeballed by the coordinator: inner bar loses ⊗, collapse+title slide one
+  slot; `macroSimpleDocumentHandlesOldInspector` img3's re-ejected window sits 11 px right because the drag
+  grabs the label whose centre moved). ⚠ **Ruling C6 AMENDED** (owner, ruling B): the `!@isFrame?()`
+  conjunct in `Widget._closeNoSettle`/`_moveToTrashNoSettle`/`_wouldTrashSeverAnything` STAYS — it is close
+  SEMANTICS (a nested frame closes alone), not the button; deleting it sent the whole assembly to the bin
+  and falsified "right-click → close is the universal fallback". The two 4a macros that clicked the vanished
+  button now close through the hierarchy menu. Residue for P4/P6: `FrameBarWdgt._destroyEditButtonNoSettle`
+  uses `_destroyNoSettle` on an icon button owning a `face` widget — the shape that leaked (88
+  `WORLD_INVENTORY` tokens) when the close piece was retired the same way; `closeFromFrameBar` needed a
+  `public-api-allowlist.txt` entry ([U] sees it as self-only once no prose names it).
+- P3 citizens: not started (S1 GO).
 - P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 ruling still needed). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.
 
@@ -590,10 +605,10 @@ gates of P2/P3/P5.
   frame side only).
 - **C6:** the close piece is built/shown iff `@isFreeFloating()`; the resizer already hides itself.
   Re-derive at `_reactToBeingAdded` and at `_setLayoutSpec` (a spec change flips free-floating — the
-  same trigger `HandleWdgt.updateVisibility` uses). Delete the `UNLESS we are an internal window`
-  redirect exception in `Widget._closeNoSettle` (`:603`), and the twin shapes in `_moveToTrashNoSettle`
-  (`:641`) and `_wouldTrashSeverAnything` (`:655`) — verify each's comment describes the remaining
-  one-step redirect in the present tense.
+  same trigger `HandleWdgt.updateVisibility` uses). The `!@isFrame?()` conjunct in `Widget._closeNoSettle`
+  (`:603`) and its twins in `_moveToTrashNoSettle` (`:641`) / `_wouldTrashSeverAnything` (`:655`) STAY
+  (C6 as amended 2026-08-23: they are close SEMANTICS — a nested frame closes alone — not the button);
+  their comments state that in the present tense.
 - **Expected pixels:** ONLY the P0(4a) set (inner close buttons vanish). `fg diffpage <set>`; eyeball
   each; `fg recapture` the set; COMPLETE.
 - **Gate:** `fg presuite` green with exactly that set recaptured; `fg census`; `fg menusweep` (no menu

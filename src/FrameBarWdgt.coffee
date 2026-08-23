@@ -1,7 +1,11 @@
-# The title bar of a FrameWdgt -- ONE child that owns the five title-strip
-# pieces (titlebarBackground, label, close button, collapse/uncollapse switch,
+# The title bar of a FrameWdgt -- ONE child that owns the title-strip pieces
+# (titlebarBackground, label, close button, collapse/uncollapse switch,
 # pencil-eye edit button), their strip arrange, and the title half of the
-# window/card skin (the body half stays on the frame). The frame keeps ALIAS
+# window/card skin (the body half stays on the frame). WHICH pieces the strip
+# carries, at what metrics, and along which axis is NOT mine to decide: the
+# frame derives all of it in one place (FrameWdgt._barSpec) and I build and lay
+# out whatever that spec names -- so a manifestation is a ROSTER, never a bar
+# subclass. The frame keeps ALIAS
 # fields pointing at the same piece instances -- `win.label` / `win.closeButton`
 # / `win.editButton` / `win.collapseUncollapseSwitchButton` /
 # `win.titlebarBackground` are load-bearing contracts (MacroToolkit, the macro
@@ -89,18 +93,18 @@ class FrameBarWdgt extends Widget
     super
 
   # ===== build =====
-  # Mirrors the frame's historical chrome build exactly: background and the two
-  # buttons are keep-if-exist (rebuilds re-add the same instances), the label is
-  # destroyed + rebuilt every time, born blank -- every build path immediately
-  # re-derives its text from the content. The caller (the frame) passes -- on the
-  # first build -- any ctor-supplied close button (FolderWindowWdgt injects its own).
+  # The background is keep-if-exist and the label is destroyed + rebuilt every
+  # time, born blank -- every build path immediately re-derives its text from the
+  # content. The button pieces are whatever the frame's CURRENT bar spec names
+  # (below). The caller (the frame) passes -- on the first build -- any
+  # ctor-supplied close button (FolderWindowWdgt injects its own).
   _buildAndConnectPiecesNoSettle: (suppliedCloseButton) ->
     if !@titlebarBackground?
       @_buildTitlebarBackground()
 
     # label -- tear down through the non-settling core (inside the rebuild's settle)
     @label?._fullDestroyNoSettle()
-    @label = new StringWdgt "", fontSize: WorldWdgt.preferencesAndSettings.titleBarTextFontSize
+    @label = new StringWdgt "", fontSize: @frame._barSpec().fontSize
 
     # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
     # safari's rendering of bright text on dark background is atrocious
@@ -113,17 +117,62 @@ class FrameBarWdgt extends Widget
     @label.color = Color.WHITE
     @_addNoSettle @label
 
-    # upper-left button, often a close button
-    # but it can be anything
-    if !@closeButton?
-      @closeButton = suppliedCloseButton ? new CloseIconButtonWdgt
-    @_addNoSettle @closeButton
+    # the upper-left button, often a close button but it can be anything: the
+    # frame's ctor-supplied piece is adopted here, and the roster below decides
+    # whether the strip carries one at all
+    @closeButton ?= suppliedCloseButton
+    @_reDeriveRosterNoSettle()
 
-    if !@collapseUncollapseSwitchButton?
-      collapseButton = new CollapseIconButtonWdgt
-      uncollapseButton = new UncollapseIconButtonWdgt
-      @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
-    @_addNoSettle @collapseUncollapseSwitchButton
+  # Build the button pieces the frame's CURRENT bar spec names, and retire the
+  # ones it drops -- the edit button's build/retire idiom, generalized to the
+  # whole roster. The roster follows the frame's ATTACHMENT: a host that owns a
+  # frame's placement owns its membership, so a host-owned frame carries no
+  # close piece (program ruling C6, the same isFreeFloating() predicate the
+  # resize handle answers) -- hence the frame re-runs this at every (re)parenting
+  # and every layout-spec change. Answers whether the roster actually CHANGED, so
+  # the frame invalidates its layout only when it did (a spec-less chrome child
+  # rides the freefloating skip in Widget._addNoSettle's container invalidate, and
+  # an unconditional invalidate mid-arrange would cost a settle re-visit).
+  _reDeriveRosterNoSettle: ->
+    pieces = @frame._barSpec().pieces
+    rosterChanged = false
+
+    if "close" in pieces
+      if !@closeButton? or @closeButton.parent isnt @
+        @closeButton ?= new CloseIconButtonWdgt
+        @_addNoSettle @closeButton
+        rosterChanged = true
+    else if @closeButton?
+      # the SUBTREE, through the non-settling core (the label/background idiom above): an
+      # icon button owns a face widget, and destroying the button alone would leave that face
+      # alive and off-tree -- an escaped widget the instances registry pins forever.
+      @closeButton._fullDestroyNoSettle()
+      @closeButton = undefined
+      rosterChanged = true
+
+    if "collapse" in pieces
+      if !@collapseUncollapseSwitchButton? or @collapseUncollapseSwitchButton.parent isnt @
+        if !@collapseUncollapseSwitchButton?
+          collapseButton = new CollapseIconButtonWdgt
+          uncollapseButton = new UncollapseIconButtonWdgt
+          @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
+        @_addNoSettle @collapseUncollapseSwitchButton
+        rosterChanged = true
+    else if @collapseUncollapseSwitchButton?
+      # the SUBTREE, as above: the switch owns the two glyph buttons it toggles between.
+      @collapseUncollapseSwitchButton._fullDestroyNoSettle()
+      @collapseUncollapseSwitchButton = undefined
+      rosterChanged = true
+
+    rosterChanged
+
+  # The roster names pieces; this is the one place a name meets its instance.
+  _pieceNamed: (pieceName) ->
+    switch pieceName
+      when "close" then @closeButton
+      when "collapse" then @collapseUncollapseSwitchButton
+      when "title" then @label
+      when "edit" then @editButton
 
   _buildTitlebarBackground: ->
     if @titlebarBackground?
@@ -180,6 +229,12 @@ class FrameBarWdgt extends Widget
   # its own arrange via `@bar._reLayout barBounds`), so all the piece math
   # reads off MY origin/extent -- the same absolute pixels the frame's flat
   # arrange produced.
+  #
+  # The roster is a LIST, not a set of fixed slots: the pieces named BEFORE
+  # "title" lead from my left edge in order, the ones named AFTER it trail from
+  # my right edge, and the title takes the span left between them -- so dropping
+  # a piece closes its gap instead of leaving a hole. Every number comes from the
+  # spec (which reads preferences), never from a literal here.
 
   _reLayoutChildren: ->
     @_positionAndResizeChildren()
@@ -195,51 +250,60 @@ class FrameBarWdgt extends Widget
     false
 
   _positionAndResizeChildren: ->
-    closeIconSize = WorldWdgt.preferencesAndSettings.barIconSize
-    padding = @frame.padding
+    spec = @frame._barSpec()
+    pitch = spec.slotSize + spec.padding
 
-    # close button
-    if @closeButton? and @closeButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + padding, @top() + padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @closeButton._reLayout buttonBounds
-
-    # collapse/uncollapse button
-    if @collapseUncollapseSwitchButton? and @collapseUncollapseSwitchButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + closeIconSize + 2 * padding, @top() + padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @collapseUncollapseSwitchButton._reLayout buttonBounds
-
-    @titlebarBackground._applyBounds (@position().add new Point 1,1), (new Point @width(), closeIconSize + 2 * padding).subtract new Point 2,2
-    # TODO this looks better:
-    #@titlebarBackground._applyExtent (new Point @width(), closeIconSize + 2 * padding).subtract new Point 4,4
-    #@titlebarBackground._applyMoveTo @position().add new Point 2,2
+    titleAt = spec.pieces.indexOf "title"
+    leadingPieces = spec.pieces.slice 0, titleAt
+    trailingPieces = spec.pieces.slice titleAt + 1
 
     # NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching the
     # self-settling wrapper would re-enter the flush. The cores are idempotent, so an already-correct
     # button is a no-op exactly as the public guards made it. (check-layering [G])
-    # The edit button is the rightmost title-bar button, so it collapses at
-    # narrow widths to leave the label room.
-    if @width() < 3 * (closeIconSize + padding) + padding
-      @editButton?._collapseNoSettle()
-    else
-      @editButton?._unCollapseNoSettle()
+    # A trailing button is what a narrow strip gives up first, so the title keeps its room.
+    stripFitsWholeRoster = @width() >= (leadingPieces.length + trailingPieces.length) * pitch + spec.padding
+    for pieceName in trailingPieces
+      piece = @_pieceNamed pieceName
+      continue unless piece?
+      if stripFitsWholeRoster
+        piece._unCollapseNoSettle()
+      else
+        piece._collapseNoSettle()
 
-    # label
-    if @label? and @label.parent == @
-      labelLeft = @left() + padding + 2 * (closeIconSize + padding)
-      labelTop = @top() + padding
-      labelRight = @right() - padding
-      if @editButton? and !@editButton.isInCollapsedSubtree()
-        labelRight -= 1 * (closeIconSize + padding)
-      labelWidth = labelRight - labelLeft
+    for pieceName, slotIndex in leadingPieces
+      piece = @_pieceNamed pieceName
+      continue unless piece? and piece.parent == @
+      @_layOutPieceInSlot piece, (@left() + spec.padding + slotIndex * pitch), spec
 
-      labelBounds = new Rectangle new Point labelLeft, labelTop
-      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, WorldWdgt.preferencesAndSettings.titleBarTextHeight
+    for pieceName, slotIndex in trailingPieces
+      piece = @_pieceNamed pieceName
+      continue unless piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
+      @_layOutPieceInSlot piece, (@right() - (trailingPieces.length - slotIndex) * pitch), spec
+
+    @titlebarBackground._applyBounds (@position().add new Point 1,1), (new Point @width(), spec.thickness).subtract new Point 2,2
+    # TODO this looks better:
+    #@titlebarBackground._applyExtent (new Point @width(), spec.thickness).subtract new Point 4,4
+    #@titlebarBackground._applyMoveTo @position().add new Point 2,2
+
+    # the title takes the span between the leading pieces and the trailing ones
+    # that are actually showing
+    if spec.showsText and @label? and @label.parent == @
+      labelLeft = @left() + spec.padding + leadingPieces.length * pitch
+      labelRight = @right() - spec.padding
+      for pieceName in trailingPieces
+        piece = @_pieceNamed pieceName
+        labelRight -= pitch if piece? and !piece.isInCollapsedSubtree()
+
+      labelBounds = new Rectangle new Point labelLeft, @top() + spec.padding
+      labelBounds = labelBounds.setBoundsWidthAndHeight (labelRight - labelLeft), spec.textHeight
       @label._applyGrantedBounds labelBounds
 
-    # edit button -- the sole right-hand title-bar button, in the rightmost slot.
-    if @editButton? and !@editButton.isInCollapsedSubtree() and @editButton.parent == @
-      buttonBounds = new Rectangle new Point @right() - 1 * (closeIconSize + padding), @top() + padding
-      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
-      @editButton._reLayout buttonBounds
+  # A piece occupies its SLOT -- the target box the strip advances by -- and is
+  # drawn at the GLYPH dial centred inside it. Two dials, never one (program
+  # ruling G3): a target and the mark inside it scale differently. They are equal
+  # on the desk profile, so a piece fills its slot exactly.
+  _layOutPieceInSlot: (piece, slotLeft, spec) ->
+    glyphInset = Math.round (spec.slotSize - spec.glyphSize) / 2
+    glyphSide = spec.slotSize - 2 * glyphInset
+    pieceBounds = new Rectangle new Point slotLeft + glyphInset, @top() + spec.padding + glyphInset
+    piece._reLayout pieceBounds.setBoundsWidthAndHeight glyphSide, glyphSide
