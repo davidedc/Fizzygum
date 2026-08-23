@@ -49,9 +49,6 @@ class FrameWdgt extends Widget
   # content declares none (plain content, the empty-window placeholder).
   toolbar: undefined
 
-  # does the window hug its content (a "tight" frame) rather than keeping a size of its own
-  tight: undefined
-
   # the geometry remembered ACROSS a collapse, so uncollapsing restores what was there:
   # recorded in _beforeChildCollapsed (the un-collapsed width, and both extents) and in
   # _beforeChildUnCollapsed (the collapsed width). undefined until the first collapse.
@@ -264,7 +261,6 @@ class FrameWdgt extends Widget
     @_deriveAndSetBodyAppearance()
 
     @strokeColor = Color.create 125,125,125
-    @tight = true
 
     @defaultContents = new FrameContentsPlaceholderText
     if !@contents?

@@ -780,8 +780,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # wrapper/core. This one closes each marked popup via the self-settling close() (correct for the top-level
   # "pin" menu-click path, MenuHeader -> pinPopUp); the twin closes via _closeNoSettle for the drop path
   # (PopUpWdgt._reactToBeingDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's
-  # per-popup settle exactly (vs collapsing to one settle). Only UNPINNED pop-ups ever enter the marked
-  # set (propagateKillPopUps gates on the kill flags), so each drained close lands on
+  # per-popup settle exactly (vs collapsing to one settle). Only TRANSIENT pop-ups ever enter the marked
+  # set (propagateKillPopUps gates on the lifetime), so each drained close lands on
   # PopUpWdgt._closeNoSettle's destroy branch.
   closePopUpsMarkedForClosure: ->
     @popUpsMarkedForClosure.forEach (eachWidget) =>

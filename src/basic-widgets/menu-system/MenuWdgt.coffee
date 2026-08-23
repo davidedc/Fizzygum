@@ -57,17 +57,15 @@ class MenuWdgt extends PopUpWdgt
     false
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
-  # (P5 arg-object conversion). Defaults match the old positional signature: killOutside /
-  # killOnTriggers true; target / title / fontSize undefined.
+  # (P5 arg-object conversion): target / title / fontSize, each undefined when absent.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
     @target = opts.target
-    @killThisPopUpIfClickOutsideDescendants = opts.killOutside ? true
-    @killThisPopUpIfClickOnDescendantsTriggers = opts.killOnTriggers ? true
     @title = opts.title
     @fontSize = opts.fontSize
-    if @killThisPopUpIfClickOutsideDescendants
-      @onClickOutsideMeOrAnyOfMyChildren "close"
-    super @widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
+    # a menu is born mid-gesture UI: the lifetime entry enrols me in the open set and arms the
+    # click-outside dismissal that ends me.
+    @_setLifetimeNoSettle 'transient'
+    super @widgetOpeningThePopUp
     @isLockingToPanels = false
 
     @_buildAndConnectChildren()

@@ -10,8 +10,15 @@
 
 class PopUpWdgt extends Widget
 
-  killThisPopUpIfClickOnDescendantsTriggers: true
-  killThisPopUpIfClickOutsideDescendants: true
+  # MY ONE LIFETIME STATE, which every transient-vs-furniture branch below reads:
+  #   'transient'  — mid-gesture UI. The next click outside me (or on a descendant that triggers)
+  #                  dismisses me; a world snapshot drops me; dismissal destroys me outright.
+  #   'persistent' — desktop furniture. Nothing outside me dismisses me, a snapshot saves me, and
+  #                  closing me re-homes me to the bin like any widget.
+  # It CHANGES mid-life — pinning is exactly that change — which is why it is a state on one class
+  # rather than two classes. Set through setLifetime / _setLifetimeNoSettle, which is also where
+  # every consequence of the change lives.
+  lifetime: 'transient'
   isPopUpMarkedForClosure: false
   # the closure mark pairs with the world.popUpsMarkedForClosure set (never serialized), so it
   # must not persist — a triggering menu-item click marks its menu BEFORE running the action,
@@ -44,11 +51,14 @@ class PopUpWdgt extends Widget
   # _buildRowsViewportNoSettle for why it is unconditional.
   rowsViewport: undefined
 
-  constructor: (@widgetOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true) ->
+  # freshlyCreatedPopUps is a fact about CONSTRUCTION (the hand skips a pop-up born under the very
+  # click that is still being processed, and clears the set at mouse-up), so it is enrolled here;
+  # membership of the open set rides the lifetime instead, and my citizens declare that in their
+  # own constructors (see _setLifetimeNoSettle).
+  constructor: (@widgetOpeningThePopUp) ->
     super()
     @isLockingToPanels = false
     world.freshlyCreatedPopUps.add @
-    world.openPopUps.add @
 
   # ── LAY OUT THE ROWS, AND NEVER GROW PAST THE WORLD ──────────────────────────
   # Lay my rows-panel out and take its size, bounded by the world. The
@@ -161,7 +171,7 @@ class PopUpWdgt extends Widget
   # rather than the parent property, but for other normal widgets it goes
   # up the parent property
   propagateKillPopUps: ->
-    if @killThisPopUpIfClickOnDescendantsTriggers
+    if @lifetime is 'transient'
       @getParentPopUp()?.propagateKillPopUps()
       @_markPopUpForClosure()
 
@@ -169,10 +179,10 @@ class PopUpWdgt extends Widget
     world.popUpsMarkedForClosure.add @
     @isPopUpMarkedForClosure = true
 
-  # why introduce a new flag when you can calculate
-  # from existing flags?
+  # "Am I furniture?" — the persistent half of the lifetime state, under the name the rows
+  # (MenuRowsPanelWdgt.wantsDetachOfChild), the shadow policy and the close policy ask by.
   isPopUpPinned: ->
-    return !(@killThisPopUpIfClickOnDescendantsTriggers or @killThisPopUpIfClickOutsideDescendants)
+    @lifetime is 'persistent'
 
   # Role query for the world snapshot (Serializer.serializeWorld): an UNPINNED pop-up is
   # mid-gesture UI — it auto-closes on the next outside click / item trigger (indeed the very
@@ -180,7 +190,7 @@ class PopUpWdgt extends Widget
   # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PINNED pop-up
   # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
   isTransientPopUp: ->
-    not @isPopUpPinned()
+    @lifetime is 'transient'
 
   getParentPopUp: ->
     if @isPopUpPinned()
@@ -194,13 +204,40 @@ class PopUpWdgt extends Widget
     if !@isPopUpMarkedForClosure or !@parent? then return @
     return @parent.firstParentThatIsAPopUp()
 
-  # this is invoked on the menu widget to be
-  # pinned. The triggering menu item is the first
-  # parameter.
+  # The public, self-settling half of the lifetime state (the core below does the work).
+  setLifetime: (aLifetime) ->
+    @_settleLayoutsAfter => @_setLifetimeNoSettle aLifetime
+
+  # THE ONE PLACE MY LIFETIME CHANGES, so the one place every consequence of the change lives.
+  #   Entering 'persistent' hands me to the user: the click-outside dismissal callback goes (nothing
+  # outside me may dismiss me any more), my shadow re-derives for furniture, and my rows re-read the
+  # grip fact (see _invalidateRowsAfterPinChange).
+  #   Entering 'transient' makes me mid-gesture UI: I join the open set the world sweeps and arms the
+  # click-outside dismissal that ends me.
+  #   Nothing settles here — the drop path reaches this inside the drop's own settle (see pinPopUp's
+  # no-arg branch), so the settling half is the setLifetime wrapper above.
+  _setLifetimeNoSettle: (aLifetime) ->
+    # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
+    # add/delete on world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren) — it settles nothing and
+    # touches no geometry, so calling it from a NoSettle core is settle-neutral (the same sign-off
+    # Widget._destroyNoSettle carries for the same call).
+    @lifetime = aLifetime
+    if aLifetime is 'persistent'
+      @onClickOutsideMeOrAnyOfMyChildren undefined
+      @_updatePopUpShadow()
+      @_invalidateRowsAfterPinChange()
+    else
+      world.openPopUps.add @
+      @onClickOutsideMeOrAnyOfMyChildren "close"
+    return
+
+  # The user-facing verb for "this pop-up stays" — the header tap, the "pin" row, and a drop into a
+  # container all land here. The pin itself is the lifetime entry above; what belongs to THIS verb is
+  # the sibling sweep: the pop-ups I was opened from are mid-gesture UI that the pin ends, so the
+  # chain above me is marked for closure and drained. It is invoked on the pop-up to be pinned; the
+  # triggering menu item is the first parameter.
   pinPopUp: (pinMenuItem)->
-    @killThisPopUpIfClickOnDescendantsTriggers = false
-    @killThisPopUpIfClickOutsideDescendants = false
-    @onClickOutsideMeOrAnyOfMyChildren undefined
+    @_setLifetimeNoSettle 'persistent'
     if pinMenuItem?
       pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
       world.closePopUpsMarkedForClosure()
@@ -210,11 +247,6 @@ class PopUpWdgt extends Widget
       @getParentPopUp()?.propagateKillPopUps()
       world._closePopUpsMarkedForClosureNoSettle()
 
-    # leave the menu attached to whatever it's attached,
-    # just change the shadow.
-    @_updatePopUpShadow()
-    @_invalidateRowsAfterPinChange()
-
   # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
   # being pinned is what makes it liftable (ButtonWdgt.isDetachablePayloadOfMyParent →
   # MenuRowsPanelWdgt.wantsDetachOfChild). That is a fact about ME which they read, so nothing
@@ -223,18 +255,22 @@ class PopUpWdgt extends Widget
   # into a non-world parent it drops the shadow instead and may not mark anything at all.
   #   No self-marking twin on the row can replace this: a verb whose only job is "repaint
   # yourself" is the general-purpose public repaint verb the invalidation-privacy campaign
-  # removed, and the row has no way to notice a flag flipped on me.
+  # removed, and the row has no way to notice a state change on me.
   _invalidateRowsAfterPinChange: ->
-    # cross-invalidation-sanctioned: own sub-parts — my rows' paint derives from the pinned flags I just flipped
+    # cross-invalidation-sanctioned: own sub-parts — my rows' paint derives from the lifetime I just set
     row._changed() for row in (@rowsPanel?.children ? [])
     return
 
 
+  # A duplicate is born furniture: nobody is mid-gesture with a copy, so it must not evaporate on
+  # the next click (SystemTest_macroDuplicatedMenuAutoPinsOnDesktop asserts exactly that).
+  # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN
+  # carrying my own shadow verbatim, and the entry's shadow re-derive reads a parent it does not
+  # have yet — the copy takes its shadow from wherever the copy gesture lands it.
   fullCopy: ->
     copiedWidget = super
     copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
-    copiedWidget.killThisPopUpIfClickOnDescendantsTriggers = false
-    copiedWidget.killThisPopUpIfClickOutsideDescendants = false
+    copiedWidget.lifetime = 'persistent'
     return copiedWidget
 
 

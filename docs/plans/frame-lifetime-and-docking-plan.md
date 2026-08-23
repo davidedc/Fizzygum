@@ -56,7 +56,20 @@ re-argue them.
     are rewritten, not just recaptured). Since P4 runs after P2/P3, a grab-pinned pop-up on the world shows the
     WINDOW manifestation (C4), so these three change more than their shadow. Excluded: the three drop-into-
     container tests (pin at grab vs at drop is pixel-identical there), header-CLICK pins, duplicate pins.
-- P1 `lifetime`: not started. · P2 one bar: not started. · P3 citizens: not started (S1 GO).
+- P1 `lifetime`: **DONE 2026-08-23** (Opus worker; `fg build` OK, `fg presuite` byte-identical — 309/0 failed,
+  paint 0 offenders — both serialization rigs green: 53 native + 69 SWCanvas + 7 file checks; zero recaptures).
+  `lifetime` literal branch sites: 4 (§3 threshold ~8). Findings: (1) F10's script list was incomplete —
+  `serialization-roundtrip-headless.js:1265` WROTE the kill flags to fake a pinned menu (now
+  `_setLifetimeNoSettle 'persistent'`); (2) `fullCopy` sets the field directly — routing it through the
+  entry would strip the orphan copy's shadow (a pixel change); (3) `constructor-and-parameter-conventions.md`
+  used `opts.killOutside` as its worked example (swapped for `closesUnpinnedPopUps`); (4) ⚠ **the pop-up's own
+  "pin" context-menu row has been DEAD since 2018-02-09** (`db62bddf` renamed `pin` → `pinPopUp`, the action
+  string stayed `"pin"` → `TypeError` on click): a THIRD `check-menu-actions` blind spot (a string action the
+  target does not define) that `menusweep` cannot see either — it sweeps no pop-up root. Fixed as P1's
+  follow-on commit (action → `"pinPopUp"`, `MenuWdgt`/`PromptWdgt` roots in `menu-click-sweep-headless.js`
+  proven by plant); the static rule is tail T12. Residual prose: `SystemTest_macroMenuPinnedByHeaderClick`'s
+  `intent` still names the kill flags (P6 sweep, with its `visualisation.html`).
+- P2 one bar: not started. · P3 citizens: not started (S1 GO).
 - P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 ruling still needed). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.
 
@@ -542,7 +555,9 @@ gates of P2/P3/P5.
 - Delete `FrameWdgt.tight` (T10). Resolve T9 (the stale `PromptWdgt` comment — present tense: "the one
   `isMenu?()` consumer is the hand's click-outside dismissal").
 - Tests-repo: `serialization-roundtrip-headless.js:1251` reads `isTransientPopUp` — unchanged API.
-- **Gate:** `fg presuite` byte-identical (zero recaptures); `fg serialization` (both rigs) green.
+- **Gate:** `fg presuite` byte-identical (zero recaptures); the two serialization rigs green — there is NO
+  `fg serialization` subcommand (it is a gauntlet leg): `cd Fizzygum-tests && node scripts/serialization-roundtrip-headless.js
+  && node scripts/serialization-file-roundtrip-headless.js` (exit 0 each; the first prints its own check count).
 - Commit: "PopUpWdgt: one `lifetime` state replaces the two kill flags (program C2/C3)".
 - **Delegation (§9):** one Opus worker, whole phase. Budget: zero recaptures.
 
@@ -588,7 +603,7 @@ gates of P2/P3/P5.
   before running the suite. **Escape hatch, owner-decided at the time:** if identity proves unreasonable
   after two honest attempts (rule 5 of §0.5), a UNIFORM, explained metric offset across all menu tests
   may land as a reviewed recapture — never an unexplained one.
-- **Gate:** `fg gauntlet` 18/18 (this is a phase close); `fg serialization`; `fg storage` (transient →
+- **Gate:** `fg gauntlet` 18/18 (this is a phase close — its `serialization` leg runs both rigs); `fg storage` (transient →
   destroy, persistent → bin); `fg vmtruth` (the deleted class must leave no retained closures);
   `fg menusweep` + `fg pinsweep`.
 - Commit: "Menus and prompts are framed citizens; PopUpWdgt deleted (program C1/C14)".
@@ -740,7 +755,7 @@ work and for docs edits to disjoint files.
 |---|---|---|---|---|---|
 | P0 counts + F-facts | Sonnet ×2–3 | yes (read-only) | the F1–F14 grep commands; the three P0(4) seed greps | none | records counts into the STATUS box |
 | P0 H1 probe, S1, S2 | Opus ×1 | no (S2 builds) | the assertion lists of P0 steps 3, 5, 6 | `fg test …`, scratch builds, `fg revisits` semantics for S1(ii) | go/no-go for P3 (S1) and P5 (S2); §1 amendments |
-| P1 | Opus ×1 | no | §2.1 + F1, F11; tests-scripts file list F10 | `fg presuite` byte-identical; `fg serialization` | commit proposal |
+| P1 | Opus ×1 | no | §2.1 + F1, F11; tests-scripts file list F10 | `fg presuite` byte-identical; the two serialization rigs (from `Fizzygum-tests/`) | commit proposal |
 | P2 constants | Sonnet ×1 | no | the F13 literal→preference table, G2/G3 | `fg presuite` byte-identical; `fg census` | commit proposal |
 | P2 bar + C6 | Opus ×1 | no | §2.2; the P0(4a) list as the ONLY allowed pixel set | `fg presuite`; `fg diffpage <4a list>`; `fg menusweep` | eyeballs the diffpage; approves `fg recapture`; commit |
 | P3 | Opus ×1 (two briefs) | no | §2.4, §2.6, S1's findings; the P0(4b) list | `fg presuite` per brief; `fg gauntlet` at close; `fg storage`, `fg vmtruth`, `fg menusweep`, `fg pinsweep` | the escape hatch (with the owner); commit |

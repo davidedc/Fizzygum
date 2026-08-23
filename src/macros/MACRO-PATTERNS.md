@@ -502,13 +502,13 @@ assertion a recapture after a regression silently stores two different hashes an
   sub-menu reference fresh right after the item click that opens it (a straight DESCEND, unlike hopping, leaves
   getMostRecentlyOpenedMenu valid). No new verb.
 - **Pin a menu by its header** (`macroMenuPinnedByHeaderClick`): `@clickMenuHeaderToPin_InputEvents menu` clicks the menu's
-  title bar (`.label` MenuHeader → `pinPopUp`) — drops the kill-on-click-outside flags (and tightens the shadow), so a later
+  title bar (`.label` MenuHeader → `pinPopUp`) — takes the lifetime to `'persistent'` (and tightens the shadow), so a later
   desktop click no longer dismisses it. The inverse of cascade auto-close.
 - **A pop-up dropped INTO a panel auto-pins itself** (`macroSubMenuDroppedIntoPanelPinsItself`): the pin-on-drop sibling of the
   header-click pin above. Float-drag an unpinned pop-up (here the world menu's "demo ➜" sub-menu, titled "make a morph") OUT of its
   parent by its HEADER and release it INSIDE a `PanelWdgt`: `ActivePointerWdgt.drop` re-parents it under the panel (`_acceptsDrops:true`)
-  and fires `PopUpWdgt._reactToBeingDropped(whereIn)` (`PopUpWdgt.coffee:105`), which — because `whereIn != world` — calls `pinPopUp()`, clearing
-  the menu's kill-on-click-outside flags. So the sub-menu becomes a PINNED child of the panel and SURVIVES the later dismissal of the
+  and fires `PopUpWdgt._reactToBeingDropped(whereIn)` (`PopUpWdgt.coffee:105`), which — because `whereIn != world` — calls `pinPopUp()`,
+  taking the menu's lifetime to `'persistent'`. So the sub-menu becomes a PINNED child of the panel and SURVIVES the later dismissal of the
   parent menu (a drop onto the bare world, `whereIn == world`, would NOT pin). Open the sub-menu with
   `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "demo"` and capture `subMenu =
   @getMostRecentlyOpenedMenu()` while fresh, HOLDING the reference (the next mouseUp clears `freshlyCreatedPopUps`). **The
@@ -617,7 +617,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
   ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
   duplicate — `Widget.duplicateMenuAction`, which adds the copy to the world at the original's position + (10,10) and leaves it
-  there. `PopUpWdgt.fullCopy` (`:92-97`) clears the copy's kill-on-click-outside flags, so `isPopUpPinned()` (`:59`) is true the
+  there. `PopUpWdgt.fullCopy` sets the copy's lifetime to `'persistent'`, so `isPopUpPinned()` is true the
   instant the copy exists — pinned from birth, with no drop involved. Show the differential with an explicit unpinned FOIL: leave the
   duplicate standing where it was born (top-left), re-open a NORMAL world menu on the right
   (`@moveToAndClick_InputEvents pt, "right button"`), screenshot the two menus, then ONE

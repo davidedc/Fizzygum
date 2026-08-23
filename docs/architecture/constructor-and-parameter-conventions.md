@@ -67,7 +67,7 @@ strong hint the class is doing two jobs; look there before widening the head.
 One trailing parameter, spelled `opts = {}`, read guarded:
 
 ```coffee
-@killThisPopUpIfClickOutsideDescendants = opts.killOutside ? true
+@ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = opts.closesUnpinnedPopUps ? true
 @title = opts.title
 ```
 
@@ -171,7 +171,6 @@ it lands in. This is established practice, not a liberty:
 
 | Option key | Field it sets |
 |---|---|
-| `opts.killOutside` | `@killThisPopUpIfClickOutsideDescendants` |
 | `opts.closesUnpinnedPopUps` | `ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked` |
 | `opts.toolTip` | `toolTipMessage` |
 | `opts.arg1` / `opts.arg2` | `argumentToAction1` / `argumentToAction2` |

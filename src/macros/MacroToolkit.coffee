@@ -746,8 +746,8 @@ class MacroToolkit
     @moveToAndClick_InputEvents theItem
 
   # Click a menu's title bar (its MenuHeader, reachable as menu.label) to PIN the menu open.
-  # MenuHeader.mouseClickLeft -> firstParentThatIsAPopUp().pinPopUp: a pinned menu clears its
-  # kill-on-click-outside flags and removes itself from world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren,
+  # MenuHeader.mouseClickLeft -> firstParentThatIsAPopUp().pinPopUp: pinning takes the menu's lifetime
+  # to 'persistent' and removes it from world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren,
   # so a subsequent click on the empty desktop no longer dismisses it (an UNpinned menu would vanish);
   # the pinned menu also gets a tighter shadow. Pass a menu reference (e.g. getMostRecentlyOpenedMenu()).
   clickMenuHeaderToPin_InputEvents: (theMenu) ->

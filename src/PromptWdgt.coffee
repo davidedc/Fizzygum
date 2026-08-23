@@ -32,10 +32,10 @@ class PromptWdgt extends PopUpWdgt
   # reach it as `<prompt>.tempPromptEntryField`.
   tempPromptEntryField: undefined
 
-  # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does, so
-  # the three isMenu? sites (ActivePointerWdgt's click-outside menu dismissal,
-  # Wallpaper / StringWdgt tick refresh) treat it exactly as the old
-  # `PromptWdgt extends MenuWdgt` did.
+  # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does. The one isMenu?()
+  # consumer is the hand's click-outside dismissal (ActivePointerWdgt.processMouseDown), so a
+  # mouse-down landing inside a prompt counts as a click inside menu chrome and does NOT fire the
+  # sweep that dismisses every menu, freshly created ones included.
   isMenu: ->
     true
 
@@ -69,7 +69,9 @@ class PromptWdgt extends PopUpWdgt
     @defaultContents = opts.defaultContents
     @intendedWidth = opts.intendedWidth
     super widgetOpeningThePopUp
-    @onClickOutsideMeOrAnyOfMyChildren "close"
+    # a prompt is born mid-gesture UI, like a menu: the lifetime entry enrols me in the open set and
+    # arms the click-outside dismissal that ends me.
+    @_setLifetimeNoSettle 'transient'
     # NOTE: subclasses call @_buildAndConnectChildren() from their OWN constructor,
     # so that a subclass's extra options (e.g. NumberPromptWdgt's ceiling) are read
     # before the editor hook runs — building here would dispatch into the subclass
