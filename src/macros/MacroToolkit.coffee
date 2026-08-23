@@ -745,8 +745,9 @@ class MacroToolkit
     theItem = @getTextMenuItemFromMenuByContains theMenu, theSubstring
     @moveToAndClick_InputEvents theItem
 
-  # Click a menu's title bar (its MenuHeader, reachable as menu.label) to PIN the menu open.
-  # MenuHeader.mouseClickLeft -> firstParentThatIsAPopUp().pinPopUp: pinning takes the menu's lifetime
+  # Click a menu's title bar (its frame bar's title piece, reachable as menu.label) to PIN the menu open.
+  # The piece escalates its click to the strip, and FrameBarWdgt.mouseClickLeft -> frame.pinPopUp on a
+  # transient frame: pinning takes the menu's lifetime
   # to 'persistent' and removes it from world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren,
   # so a subsequent click on the empty desktop no longer dismisses it (an UNpinned menu would vanish);
   # the pinned menu also gets a tighter shadow. Pass a menu reference (e.g. getMostRecentlyOpenedMenu()).

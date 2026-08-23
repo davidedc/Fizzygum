@@ -194,6 +194,19 @@ class FrameBarWdgt extends Widget
 
     rosterChanged
 
+  # Does my built strip disagree with the roster my frame's spec names? The pure question, asked
+  # by a frame whose layout spec just changed: the answer decides whether that change is worth a
+  # re-lay at all, and the re-lay is where the mutating half above runs (a gained piece is
+  # CONSTRUCTED, which is a settling operation outside a flush). Same two names, same
+  # membership test, so the two halves cannot drift apart.
+  _rosterDisagreesWithSpec: ->
+    pieces = @frame._barSpec().pieces
+    closeWanted = "close" in pieces
+    collapseWanted = "collapse" in pieces
+    return true if closeWanted isnt (@closeButton? and @closeButton.parent is @)
+    return true if collapseWanted isnt (@collapseUncollapseSwitchButton? and @collapseUncollapseSwitchButton.parent is @)
+    false
+
   # The roster names pieces; this is the one place a name meets its instance.
   _pieceNamed: (pieceName) ->
     switch pieceName

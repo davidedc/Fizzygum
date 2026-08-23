@@ -1385,9 +1385,23 @@ class FrameWdgt extends Widget
 
   # A spec that OWNS my placement makes me host-owned, which is exactly what my bar's roster
   # (and the resize handle's visibility, in the base) turns on.
+  #   THE PRINCIPLE: deriving the roster CONSTRUCTS a gained piece, and a widget constructor
+  # settles — so the derive runs ONLY inside a flush. Two tiers, split by the world's own pass
+  # state (the same discriminator the derive's invalidate reads):
+  #   IN-PASS — a host handing me a spec mid-arrange, after my own arrange has already run in this
+  # pass — derive NOW: the fresh piece is an orphan, so its constructor's settle is the auto-defer
+  # (Widget._settleLayoutsAfter) and the derive is settle-neutral by construction.
+  #   OUT-OF-PASS — a notification callback dropping my spec on a grab
+  # (Widget._beforeBeingGrabbed), and every other spec change outside a flush — MARK only: a
+  # callback owns no settle (layering rule [J]), and my arrange derives at its top on the flush the
+  # gesture's own settle supplies. The mark is worth making only when the strip actually disagrees
+  # with the spec, which is what the bar's query answers.
   _setLayoutSpec: (newLayoutSpec) ->
     super
-    @_reDeriveBarRosterNoSettle()
+    if world?._recalculatingLayouts
+      @_reDeriveBarRosterNoSettle()
+      return
+    @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
 
   # Reflect the content's edit/view mode in the title-bar edit button. The glyph
   # NAMES the current mode (pencil = editing now, eye = viewing now); the button
@@ -1467,6 +1481,13 @@ class FrameWdgt extends Widget
   # duringReInflation: passed true ONLY by _reactToChildUnCollapsed's synchronous re-fit -- see
   # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
   _positionAndResizeChildren: (duringReInflation = false) ->
+
+    # The roster is my spec's consequence and lands HERE, at the top of the arrange, because
+    # gaining a piece CONSTRUCTS one: inside this flush the piece is an orphan and its
+    # constructor's settle defers, while every other reach — a notification callback dropping my
+    # spec on a grab — would open a flush of its own. The strip is laid out a few lines below, so
+    # a piece gained here is placed in this same pass.
+    @_reDeriveBarRosterNoSettle()
 
     closeIconSize = WorldWdgt.preferencesAndSettings.barIconSize
 

@@ -339,11 +339,17 @@ class ActivePointerWdgt extends Widget
         aWdgt._applyMoveTo aWdgt.position().add displacementDueToGrabDragThreshold
 
       @grabOrigin = aWdgt.situation()
-      aWdgt._beforeBeingGrabbed?()
+      # I OWN the settle around this callback: _beforeBeingGrabbed releases the widget from its
+      # host's layout (it unlocks from panels and drops its layout spec), which marks the widget
+      # AND the holder chain it is leaving. A notification callback declares no settle of its own
+      # (layering rule [J]), so without this the marks are an undeclared end-of-cycle push — the
+      # dispatcher is the one that knows the gesture is one discrete mutation.
+      @_settleLayoutsAfter => aWdgt._beforeBeingGrabbed?()
 
-      # double-settle-sanctioned: the grab gesture hand-rolls TWO deliberate sequential flushes — @add
-      # self-settles the re-home into the hand, then the trailing @_settleLayoutsAfter flushes the old
-      # parent's _reactToChildGrabbed re-fit once (the drop's symmetric twin — see the comment there).
+      # double-settle-sanctioned: the grab gesture hand-rolls THREE deliberate sequential flushes —
+      # the release above, then @add self-settling the re-home into the hand, then the trailing
+      # @_settleLayoutsAfter flushing the old parent's _reactToChildGrabbed re-fit once (the drop's
+      # symmetric twin — see the comment there).
       @add aWdgt
       aWdgt._reactToBeingGrabbed? oldParent
       # The shadow must be added after @add -- it needs the widget's painted image, which @add may

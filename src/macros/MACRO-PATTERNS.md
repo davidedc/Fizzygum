@@ -473,7 +473,7 @@ assertion a recapture after a regression silently stores two different hashes an
   image_1 (the panel's own merged menu) vs image_2 (the 2-item hierarchy menu) is the proof.
 - **Submenu hopping — keep the common chain open** (`macroHoppingBetweenSubMenus`): an arrow item opens a submenu AT the
   clicked point on click (the menu item's `trigger`, inherited from the `ButtonWdgt` family). Clicking ANY item KEEPS the menus in its ASCENDING hierarchy
-  (`PopUpWdgt.hierarchyOfPopUps`) and DISMISSES the DOWNSTREAM submenus — so re-click a world-menu sibling IN THE CHAIN to
+  (`FrameWdgt.hierarchyOfPopUps`) and DISMISSES the DOWNSTREAM submenus — so re-click a world-menu sibling IN THE CHAIN to
   swap the branch under it; the world menu survives every hop until one final desktop click. **OCCLUSION:** a submenu pops at
   the clicked point and covers the sibling triggers, so click each world-menu sibling at its LEFT
   (`@moveToAndClickAtFractionOf_InputEvents sibling, [0.3,0.5]`, further left `[0.1,0.5]` for deeper hops); descend with a
@@ -487,7 +487,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Right-click an UPSTREAM menu item closes its DOWNSTREAM submenus** (`macroRightClickClosesDownstreamSubMenus`): the right-click
   sibling of submenu-hopping. With a deep cascade open (world > test menu > others 2 > icons), a right-click (a mouse-DOWN) on an
   item in an UPSTREAM menu runs `cleanupMenuWdgts`, which KEEPS the pop-ups in that item's ASCENDING hierarchy
-  (`PopUpWdgt.hierarchyOfPopUps`, walks `getParentPopUp` UP) and DISMISSES its DESCENDANTS — so the world menu + test menu stay
+  (`FrameWdgt.hierarchyOfPopUps`, walks `getParentPopUp` UP) and DISMISSES its DESCENDANTS — so the world menu + test menu stay
   while others-2 + icons close; the SAME right-click also opens the item's own hierarchy context menu (a Text / a MenuItem
   / a MenuWdgt, `Widget.buildContextMenu`/`buildHierarchyMenu`). Descend by labelString prefix (reuse the hopping pattern), then
   `@moveToAndClickAtFractionOf_InputEvents item, [0.35,0.5], "right button"` (LEFT-ish fraction — submenus pop at the clicked point).
@@ -502,12 +502,13 @@ assertion a recapture after a regression silently stores two different hashes an
   sub-menu reference fresh right after the item click that opens it (a straight DESCEND, unlike hopping, leaves
   getMostRecentlyOpenedMenu valid). No new verb.
 - **Pin a menu by its header** (`macroMenuPinnedByHeaderClick`): `@clickMenuHeaderToPin_InputEvents menu` clicks the menu's
-  title bar (`.label` MenuHeader → `pinPopUp`) — takes the lifetime to `'persistent'` (and tightens the shadow), so a later
+  title bar (`.label`, the frame bar's title piece, whose click escalates to the strip → `pinPopUp`) — takes the lifetime
+  to `'persistent'` (and tightens the shadow), so a later
   desktop click no longer dismisses it. The inverse of cascade auto-close.
 - **A pop-up dropped INTO a panel auto-pins itself** (`macroSubMenuDroppedIntoPanelPinsItself`): the pin-on-drop sibling of the
   header-click pin above. Float-drag an unpinned pop-up (here the world menu's "demo ➜" sub-menu, titled "make a morph") OUT of its
   parent by its HEADER and release it INSIDE a `PanelWdgt`: `ActivePointerWdgt.drop` re-parents it under the panel (`_acceptsDrops:true`)
-  and fires `PopUpWdgt._reactToBeingDropped(whereIn)` (`PopUpWdgt.coffee:105`), which — because `whereIn != world` — calls `pinPopUp()`,
+  and fires `FrameWdgt._reactToBeingDropped(whereIn)`, which — because `whereIn != world` — calls `pinPopUp()`,
   taking the menu's lifetime to `'persistent'`. So the sub-menu becomes a PINNED child of the panel and SURVIVES the later dismissal of the
   parent menu (a drop onto the bare world, `whereIn == world`, would NOT pin). Open the sub-menu with
   `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "demo"` and capture `subMenu =
@@ -542,14 +543,14 @@ assertion a recapture after a regression silently stores two different hashes an
   desktop. GOTCHA: the header-drag's RELEASE point must be clear of every menu of the still-open world-menu cascade — a release
   over the cascade silently re-absorbs the dragged sub-menu (unpinned) and the later dismissal click destroys it. No new verb.
 - **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptWdgt` (extends MenuWdgt extends
-  PopUpWdgt) casts a drop shadow like every pop-up (`PopUpWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
+  FrameWdgt) casts a drop shadow like every pop-up (`FrameWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
-  pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). On drop `PopUpWdgt._reactToBeingDropped`
-  re-runs `updatePopUpShadow`, so the shadow renders correctly at every position. Capture `prompt` fresh right after it opens.
+  pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). On drop `FrameWdgt._reactToBeingDropped`
+  re-runs `_updatePopUpShadow`, so the shadow renders correctly at every position. Capture `prompt` fresh right after it opens.
 - **Menu shadow is correct WHILE dragging and AFTER drop** (`macroMenuShadowCorrectWhileAndAfterDrag`): the mid-drag companion of the
-  prompt-shadow entry above. A popped-up unpinned menu casts the at-rest pop-up shadow (`PopUpWdgt.addShadow` → offset (5,5) α0.2); while
+  prompt-shadow entry above. A popped-up unpinned menu casts the at-rest pop-up shadow (`FrameWdgt.addShadow` → offset (5,5) α0.2); while
   it is FLOAT-DRAGGED the grab swaps in the lifted drag shadow (`ActivePointerWdgt.grab` → addShadow offset (6,6) α0.1 — larger and
-  fainter); on drop `PopUpWdgt._reactToBeingDropped` restores the at-rest shadow. The difference is an OFFSET/ALPHA change on pickup, NOT clipping
+  fainter); on drop `FrameWdgt._reactToBeingDropped` restores the at-rest shadow. The difference is an OFFSET/ALPHA change on pickup, NOT clipping
   at the screen corner (the positive down-right offset is never clipped at the top-left). CAPTURE THE MID-DRAG FRAME with the held-button
   idiom: `@moveToAndMouseDown_InputEvents menu.label.center()` (press the header — a press-then-MOVE is a grab; a CLICK would PIN it) →
   `@syntheticEventsMouseMove_InputEvents dest, "left button"` (move while held → grabs+carries the menu) → screenshot (button STILL held)
@@ -560,8 +561,9 @@ assertion a recapture after a regression silently stores two different hashes an
   completes the shadow trio (drag + prompt entries above). Raising a pinned menu must repaint the SAME tight pinned shadow,
   not re-apply the loose unpinned one. The user raise is a click on the menu's HEADER: `Widget.mouseDownLeft` (`:2678`) calls
   `bringToForeground` (`:2664`, `rootForFocus().moveAsLastChild()` — so any click on the menu raises the WHOLE menu), and the
-  click's `pinPopUp` re-run is idempotent (`PopUpWdgt.coffee:77` — flags already clear, `updatePopUpShadow` re-applies the
-  same shadow). Two observables: with NOTHING overlapping, the raise is a pixel-perfect NO-OP (before/after shots share a
+  strip's own pin gesture (`FrameBarWdgt.mouseClickLeft` → `frame.pinPopUp`) fires only while the frame is TRANSIENT, so a
+  click on an ALREADY-pinned menu raises it and leaves its lifetime — and its shadow — exactly as they are.
+  Two observables: with NOTHING overlapping, the raise is a pixel-perfect NO-OP (before/after shots share a
   dataHash — aim every header click at the header's CENTRE so the pointer ends identically placed, no parking moves needed);
   then a rectangle made the user's way (a second world menu → "demo ➜" → "rectangle") is carry-dropped OVERLAPPING the menu,
   and one more header click lifts the menu above it with the tight shadow painted over the rectangle. The on-menu drop is
@@ -588,7 +590,8 @@ assertion a recapture after a regression silently stores two different hashes an
 
 - **Reach a row in an OVER-TALL menu** (`macroOverTallMenuScrollsToReachItsLastRow`): a pop-up is bounded to the world
   and SCROLLS its rows, so a menu with more rows than fit is capped at the world's height and grows a vertical
-  scrollbar (`PopUpWdgt._refitRowsViewportNoSettle`). ⚠ **A macro must scroll before clicking a row near the bottom
+  scrollbar (`PopUpRowsViewportWdgt.preferredExtentForWidth` caps the rows' hug at the world minus the frame's own
+  chrome, and the frame sizes itself from that measure). ⚠ **A macro must scroll before clicking a row near the bottom
   of a long menu** — `@wheelOn_InputEvents menu, 400` — because the item is LOCATED by a tree walk (which finds it
   wherever it is, on-world or not) but CLICKED at its coordinates, which must be on-world; an unscrolled click lands on
   the desktop, which merely dismisses the menu. Prefer a wheel delta far larger than the overflow so the menu lands at
@@ -596,17 +599,17 @@ assertion a recapture after a regression silently stores two different hashes an
   tripwire for anyone who adds an unrelated menu row. Which menus overflow at the 960×440 harness: `TextWdgt` (40 rows)
   and `StringWdgt` (36) do; `SimpleTextWdgt`/`TitleWdgt` (33) clear it by ~23px.
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
-  world edge — it is shifted to stay fully visible. `PopUpWdgt.popUp` (`:143`) puts the popup's top-left at the requested
-  point, then `@_moveWithin world` (`:153` → `Widget._moveWithin`, `:1337`) CLAMPS it into the world
+  world edge — it is shifted to stay fully visible. `FrameWdgt.popUp` puts the popup's top-left at the requested
+  point, then `@_moveWithin world` (→ `Widget._moveWithin`, `:1337`) CLAMPS it into the world
   rectangle (right/bottom shifted in first, top/left nudged last so a too-big popup still shows its top-left). It is
-  unconditional, self-protecting (can't end up off-screen), and universal to every PopUpWdgt. Demonstrate with the
+  unconditional, self-protecting (can't end up off-screen), and universal to every pop-up. Demonstrate with the
   bare-desktop right-click (the world menu) at three points via `@moveToAndClick_InputEvents pt, "right button"` using the
   LIVE `world.right()`/`world.bottom()`: comfortable (menu at the pointer, the baseline), near the right edge (menu shifts
   LEFT), near the bottom-right corner (menu shifts UP and LEFT). The shift away from the pointer is what proves it.
   (Distinct from `macroMenuFromFramedItemNotClipped`, where a popup escapes a CONTAINER frame's clip — not the screen edge.)
 - **Menu from a framed item is not clipped by the frame** (`macroMenuFromFramedItemNotClipped`): a context menu opened
   from a widget INSIDE a clipping frame overflows the frame and is drawn in FULL — a context menu is a WORLD-level popup
-  (`ActivePointerWdgt.openContextMenuAtPointer` `:104` → `buildContextMenu()` → `popUpAtHand()` → `PopUpWdgt.popUp(hand,
+  (`ActivePointerWdgt.openContextMenuAtPointer` `:104` → `buildContextMenu()` → `popUpAtHand()` → `FrameWdgt.popUp(hand,
   world)`, attached to the WORLD), and clipping (`ClippingAtRectangularBoundsMixin`) only crops a frame's own DESCENDANTS,
   so a world-level sibling menu drawn over the frame is never clipped by it. Build a narrow `PanelWdgt` (a clipping frame)
   with a child straddling an edge (cropped → proves the clip is active) and an inner item; `@moveToAndClickAtFractionOf_InputEvents
@@ -617,7 +620,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
   ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
   duplicate — `Widget.duplicateMenuAction`, which adds the copy to the world at the original's position + (10,10) and leaves it
-  there. `PopUpWdgt.fullCopy` sets the copy's lifetime to `'persistent'`, so `isPopUpPinned()` is true the
+  there. `FrameWdgt.fullCopy` sets the copy's lifetime to `'persistent'`, so `isPopUpPinned()` is true the
   instant the copy exists — pinned from birth, with no drop involved. Show the differential with an explicit unpinned FOIL: leave the
   duplicate standing where it was born (top-left), re-open a NORMAL world menu on the right
   (`@moveToAndClick_InputEvents pt, "right button"`), screenshot the two menus, then ONE
@@ -1442,7 +1445,7 @@ assertion a recapture after a regression silently stores two different hashes an
   chain must click that row FIRST and then `"connect to ➜"` / `"bind ⇄"` in the submenu it opens
   (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
   Grouping keeps the second gesture free of menu height, which is now a readability question rather than a correctness
-  one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpWdgt._refitRowsViewportNoSettle`),
+  one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpRowsViewportWdgt.preferredExtentForWidth`),
   so a row past the fold is reached with the wheel instead of being lost. ⚠ **A macro must therefore scroll before
   clicking a row near the bottom of a long menu** — `@wheelOn_InputEvents menu, <delta>` — because the item is located by
   a tree walk (which finds it wherever it is) but CLICKED at its coordinates (which must be on-world). See

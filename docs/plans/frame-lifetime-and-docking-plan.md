@@ -100,9 +100,26 @@ re-argue them.
   uses `_destroyNoSettle` on an icon button owning a `face` widget — the shape that leaked (88
   `WORLD_INVENTORY` tokens) when the close piece was retired the same way; `closeFromFrameBar` needed a
   `public-api-allowlist.txt` entry ([U] sees it as self-only once no prose names it).
-- P3 citizens, brief (a): **DONE 2026-08-23** (Opus; `fg build` OK, `fg recapture` of 37 tests COMPLETE at dpr 1+2,
+- P3 citizens — **DONE 2026-08-23** (two briefs). Brief (a): (Opus; `fg build` OK, `fg recapture` of 37 tests COMPLETE at dpr 1+2,
   `fg presuite` 310/0, `fg suite --dpr=2` 310/0, `fg menusweep` OK, `fg census` 0 movers, both serialization
-  rigs + `pinsweep` green). Brief (b) = delete the two shells, `MACRO-PATTERNS.md`/`macros/CLAUDE.md`, gauntlet. Owner rulings at the
+  rigs + `pinsweep` green).
+- P3 brief (b) — **PHASE CLOSE DONE 2026-08-23, `fg gauntlet` 18/18** (`PopUpWdgt.coffee` + `MenuHeader.coffee`
+  deleted; `MACRO-PATTERNS.md` + 16 tests' metadata rewritten to the frame model, pages regenerated — two prose
+  facts CORRECTED, not renamed: a header click on an already-pinned menu does not re-run `pinPopUp`, and the rows
+  cap lives in `PopUpRowsViewportWdgt.preferredExtentForWidth`). The first gauntlet over the P2-bar/P3 code
+  surfaced ONE P2 defect in two legs (`presuite` runs neither): **`settle`** — the bar-roster re-derive reached
+  from the grab callback (`_beforeBeingGrabbed` → `_setLayoutSpec` → `_reDeriveBarRosterNoSettle`) CONSTRUCTED
+  a `CloseIconButtonWdgt`, whose ctor self-settles → a settle inside a notification callback. Two fix shapes
+  falsified ("defer to the arrange": over-invalidation, then a mid-pass spec change landing one pass late);
+  re-framed as a PRINCIPLE: the derive constructs, so it runs only inside a flush — an in-pass caller derives
+  now (construction auto-defers), an out-of-pass caller only MARKS and the arrange derives at its top.
+  **`capstone`** then reported 3 careless end-of-cycle pushes (the mark settled by nobody): the grab
+  DISPATCHER now owns the settle around `_beforeBeingGrabbed` (`ActivePointerWdgt`, a third deliberate flush in
+  the grab gesture) — a public mutator self-settling, never the callback. Residue for P6's name sweep: 26
+  `PopUpWdgt`/`MenuHeader` hits in 14 macro-source COMMENTS (`*_automationCommands.js`), 5 in two tests-repo
+  scripts (`menu-click-sweep-headless.js` ×4, `serialization-roundtrip-headless.js` ×1), 9 in 4 architecture
+  docs (`layering-naming-convention`, `viewports-and-planes`, `lint-and-static-checks`,
+  `serialization-duplication-reference`); `docs/specs` clean. Owner rulings at the
   pixel gate (all 2026-08-23): **(i)** the escape hatch — 31 menu/prompt tests recaptured for the SHADOW
   alone: a framed pop-up casts ONE clean silhouette like a window (the old per-row silhouettes double-darkened
   a 1–3 px band at the shadow's right/bottom edge); the pin-state policy is retained and MEASURED on the new
@@ -672,7 +689,10 @@ gates of P2/P3/P5.
   `SystemTest_macroGrabbedMenuStaysOnDesktop` (drag by header to the desktop, click elsewhere, the menu
   persists with the window roster). `SystemTest_macroSubMenuDroppedIntoPanelPinsItself` gains the dwell
   (its macro changes; its reference likely not).
-- **Gate:** `fg presuite` byte-identical except the one new/changed test; `fg revisits`.
+- **Gate:** `fg presuite` byte-identical except the declared set; `fg revisits`; **and `fg gauntlet` 18/18** — P4 adds
+  a HOOK path (the grab pins), and P3's close showed that `presuite` runs neither the `settle` nor the `capstone`
+  leg, which is where a hook that settles (or leaves a mark nobody settles) is caught; a phase that touches a
+  callback never closes on `presuite` alone.
 - Commit: "Frame skin and shadow derived from lifetime × parentage; grabbing a transient frame pins it
   (program C4/C8)".
 - **Delegation (§9):** one Opus worker; the new macro test may be a Sonnet sub-brief from the step list above. Budget: the P0(4d) set + the one new test + the one changed macro.
