@@ -67,8 +67,12 @@ re-argue them.
   string stayed `"pin"` → `TypeError` on click): a THIRD `check-menu-actions` blind spot (a string action the
   target does not define) that `menusweep` cannot see either — it sweeps no pop-up root. Fixed as P1's
   follow-on commit (action → `"pinPopUp"`, `MenuWdgt`/`PromptWdgt` roots in `menu-click-sweep-headless.js`
-  proven by plant); the static rule is tail T12. Residual prose: `SystemTest_macroMenuPinnedByHeaderClick`'s
-  `intent` still names the kill flags (P6 sweep, with its `visualisation.html`).
+  proven by plant — and the rig now RESOLVES every row's action before its liveness skip, so the 55+ rows
+  a green sweep skips as stale are resolution-checked too); the static rule is tail T12. The two new
+  roots then exposed **T13**, a real crash (deleting a pop-up "attach…"ed into its own shortcut icon
+  recursed forever) — fixed in the same commit (closed in the ledger). Residual prose:
+  `SystemTest_macroMenuPinnedByHeaderClick`'s `intent` still names the kill flags (P6 sweep, with its
+  `visualisation.html`).
 - P2 one bar: not started. · P3 citizens: not started (S1 GO).
 - P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 ruling still needed). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.

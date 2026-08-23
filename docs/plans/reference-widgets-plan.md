@@ -164,9 +164,16 @@ quadrant); two real intent areas (re-litigates the landed, gated split).
 - **Referent DEATH severs its dangling shortcuts too** — `Widget._destroyNoSettle` runs the
   reference half of "no edge outlives its target", the twin of
   `DataflowEngine.severWiresIntoDyingNode`. Enumerated over the tracker (total — orphans and
-  storage residents included, where the trash walk is deliberately attached-only). Terminates
-  because a referent is ctor-fixed: every reference edge points at an older widget, so the
-  reference graph is a DAG; a destroyed-holder guard covers diamonds.
+  storage residents included, where the trash walk is deliberately attached-only). It runs LAST
+  in `_destroyNoSettle` — after the widget is marked destroyed, detached from its parent and
+  emptied of children — and that placement is what makes it terminate: a severed shortcut
+  destroys its own SUBTREE, and a holder may CONTAIN its referent (a widget dropped or
+  "attach…"ed into its own shortcut icon), so the recursion walks reference edges and
+  containment edges together and their union has a two-cycle there. Reference edges alone are
+  a DAG (a referent is ctor-fixed, so every edge points at an older widget) and the
+  destroyed-holder guard covers diamonds among holders; neither closes that cycle — removing the
+  containment edge into the dying widget before the first sever does. Regression test:
+  `SystemTest_macroDeletingMenuNestedInShortcutIconTerminates`.
 - **The menu row is CONDITIONAL** — `"move to trash"` appears (beside close/delete, via
   `Widget._wouldTrashSeverAnything`, which redirects like the close core) only when an inbound
   liveness edge makes it differ from plain close: with no such edge, close/delete already files

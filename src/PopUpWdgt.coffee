@@ -277,7 +277,7 @@ class PopUpWdgt extends Widget
   addWidgetSpecificMenuEntries: (unused_widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "pin", @, "pin", closesUnpinnedPopUps: false
+    menu.addMenuItem "pin", @, "pinPopUp", closesUnpinnedPopUps: false
  
   _reactToBeingDropped: (whereIn) ->
     super

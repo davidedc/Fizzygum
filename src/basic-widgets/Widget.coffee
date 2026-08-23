@@ -720,19 +720,6 @@ class Widget extends TreeNode
     # chokepoint. O(1) and drain-suppressed, so it is safe inside bulk destroy storms.
     world.noteStorageMembershipMayHaveChanged() if @wires?
 
-    # THE REFERENCE HALF of node-death (reference-widgets plan §4.3): no reference edge
-    # outlives its referent, the twin of the wire invariant above — a shortcut left pointing
-    # at my corpse is a dead door whose click can only apologise. The tracker enumerates
-    # every holder wherever it lives (orphans and storage residents included), so this is
-    # total where the classifier's walk is deliberately not. Terminates: a referent is
-    # ctor-fixed, so every reference edge points at an OLDER widget — the reference graph is
-    # a DAG — and the destroyed guard covers diamonds. O(tracker) per death, tracker is
-    # small, so bulk destroy storms stay cheap.
-    if world.widgetsReferencingOtherWidgets.size > 0
-      for eachHolder in Array.from world.widgetsReferencingOtherWidgets
-        continue if eachHolder.destroyed or eachHolder.referencedWidget != @
-        eachHolder._severReferenceEdgeToNoSettle @
-
     @destroyed = true
     # FREEFLOATING-skip is centralized in _invalidateLayout(triggeringChild): passing @ lets the
     # parent skip when I'm freefloating (removing a freefloating child can't change the parent's
@@ -784,8 +771,30 @@ class Widget extends TreeNode
     if @children.length != 0
       @children = []
 
+    # THE REFERENCE HALF of node-death (reference-widgets plan §4.3): no reference edge
+    # outlives its referent, the twin of the wire invariant above — a shortcut left pointing
+    # at my corpse is a dead door whose click can only apologise. The tracker enumerates
+    # every holder wherever it lives (orphans and storage residents included), so this is
+    # total where the classifier's walk is deliberately not. O(tracker) per death, the tracker
+    # is small, so bulk destroy storms stay cheap.
+    #   ⚠ IT GOES LAST, and that placement is what makes it TERMINATE. Severing is not an edge
+    # rewrite: a shortcut's whole meaning IS the edge, so it answers by destroying its own
+    # SUBTREE — and a holder is free to CONTAIN its referent (drop a widget onto its own
+    # shortcut icon, or reparent it in there with "attach..."), which points that cascade back
+    # down at me. The recursion therefore walks inbound-REFERENCE edges and CONTAINMENT edges
+    # together, and their union holds a two-cycle exactly there; reference edges alone are a
+    # DAG (a referent is ctor-fixed, so every edge points at an OLDER widget) and the
+    # destroyed-holder guard below only covers diamonds among holders, so neither closes it.
+    # From here I am already marked destroyed, already detached from my parent and already
+    # emptied of children: the containment edge into me is gone before the first sever fires,
+    # so the cycle cannot close and every holder still dies.
+    if world.widgetsReferencingOtherWidgets.size > 0
+      for eachHolder in Array.from world.widgetsReferencingOtherWidgets
+        continue if eachHolder.destroyed or eachHolder.referencedWidget != @
+        eachHolder._severReferenceEdgeToNoSettle @
+
     return undefined
-  
+
   # destroys the whole tree
   # from the bottom (leaf widgets, drawn on top
   # of everything) to the top
