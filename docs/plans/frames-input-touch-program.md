@@ -124,6 +124,59 @@ plan. "Rec." rows are the executor's recommendation still awaiting a ruling.
 review + tail; Plan 4 ≈ 2–3 + tail. The viewport role-architecture arc (six phases, ~1,000 lines
 across two classes) took one session-day; Plan 1 is roughly three to four of those.
 
+### 3.1 Execution model — a coordinator and cheaper workers (owner ruling, 2026-08-23)
+
+**The owner's ruling:** the session model (Fable) is expensive and **coordinates**; the work is done
+by **workers on cheaper models — Opus by default, Sonnet for mechanical sub-steps**. This is a cost
+rule, not a parallelism rule: most of the program is sequential (one shared tree, one build output),
+and a worker executing a phase alone is the normal case. Every plan in this program carries a
+**delegation map** (Plan 1 §9) saying, per phase, which model does it, what the brief contains, what
+the worker returns, and what the coordinator checks.
+
+**Why this works at all:** a worker is a FRESH agent with zero conversation context (the `Agent` tool
+with `subagent_type: general-purpose` and a `model` override — `fork` inherits the expensive model and
+is never used for cost delegation). It can only execute what is written down. That is exactly the
+cold-executability this program's plans are written for: the plan section + the ledger IDs ARE the
+brief. A plan that cannot be handed to a fresh Opus worker is not finished.
+
+**Division of labour:**
+
+| role | model | does | does NOT |
+|---|---|---|---|
+| **Coordinator** | Fable (the session) | reads the plan and the worker REPORTS; decides go/no-go at spikes and gates; interprets a gate failure the worker could not; amends the plan when a premise is falsified (§1 drift); eyeballs the `fg diffpage` evidence and approves recaptures; writes commit proposals and talks to the owner; runs the close-arc ritual; keeps the tail ledger | edit source files; run suites; re-read file dumps a worker already summarised; re-do a worker's work after a refusal |
+| **Worker — phase** | Opus | executes ONE phase (or one sub-step) end to end from its brief: edits, builds, runs the phase gate, debugs failures **up to two falsified fix shapes**, writes the new/changed tests, returns a report | decide to recapture; change a ruling; start the next phase; keep going after the second falsification |
+| **Worker — mechanical** | Sonnet | enumerated, gate-checked sweeps from an explicit spec: constants extraction with a literal→preference table; rename sweeps from an enumerated token list; weaving a given paragraph into a given doc section; writing a macro test from a step-by-step macro spec; grep counts and read-only censuses; drafting a probe script from a stated assertion list | anything needing a judgement about the design; anything whose spec says "find out" |
+
+**Rules of engagement:**
+1. **One code worker at a time.** The three repos share one tree and one build output
+   (`Fizzygum-builds/latest`); two builds collide. ⛔ Never give a worker `isolation: worktree` — the
+   build hard-codes the `Fizzygum-all/` sibling layout and the tests symlink, and a worktree elsewhere
+   does not build. Parallel workers are allowed ONLY for read-only work (counts, censuses, reading) and
+   for docs edits to DISJOINT files.
+2. **The brief is the plan section, not a paraphrase.** A brief names: the plan file + the phase (the
+   worker reads it itself), the ledger IDs it implements, the exact gate command(s) and the expected
+   verdict, the recapture budget (which tests MAY change — anything else is a bug), the stop rules (below),
+   and the report template. The coordinator does not re-explain the design in the brief; if the plan is
+   not enough, the plan is fixed first.
+3. **Stop rules for a worker** (return to the coordinator, do not improvise): a §1 fact turns out false
+   (a count, a symbol, a behaviour); a fix shape is falsified twice; a gate fails for a reason the worker
+   cannot state in one sentence; a pixel diff appears outside the recapture budget; the phase needs a
+   decision the ledger does not cover. The report says which rule fired.
+4. **Reports are compact and verifiable** (≤ ~60 lines): files changed (`git diff --stat`), gate verdicts
+   with the literal line from `/tmp/fg-<cmd>.verdict`, counts measured, tests added/changed, open
+   questions, which stop rule fired (if any). The coordinator checks the verdict files and `git status`
+   itself — cheaply — rather than trusting prose, and reads the diff only where the report raises a flag.
+5. **Long ops inside a worker:** launch `fg presuite`/`fg gauntlet` with the Bash tool's
+   `run_in_background` and wait for the task notification — never poll (the guard hook blocks pollers),
+   never pipe the gating call.
+6. **A worker never commits or pushes.** The coordinator proposes the commit to the owner (message via
+   `git commit -F <file>`) after checking the report; the owner approves.
+7. **Plans 2–4 are DRAFTED by an Opus worker** (fact-check the tree, apply the ledger, follow the
+   `author-plan` skill's shape) and **reviewed/amended by the coordinator** before the owner sees them.
+8. **Escalate the model, not the effort.** If an Opus worker stops on rule 3 twice on the same step, the
+   coordinator re-frames (re-reads the evidence, amends the plan) and re-briefs — it does not do the
+   phase itself unless the remaining work is a few lines.
+
 ---
 
 ## §4 Recapture policy
@@ -188,6 +241,9 @@ the same day). A plan authored against a tree that an earlier arc is about to ch
 class names (`PopUpWdgt`), flags and adapters that no longer exist when it is executed. Each plan
 is therefore written **against the tree as it stands when its arc starts**, by the `author-plan`
 skill, with this ledger as its decisions input — the author fact-checks the tree, not this doc.
+Per §3.1 rule 7 the draft is an **Opus worker's** (briefed with: this doc, the skill, the arc's
+scope line in §3, and the previous plan's §9 delegation map as the shape to copy); the
+coordinator reviews it for falsified premises and missing stop rules before it is presented.
 
 ---
 

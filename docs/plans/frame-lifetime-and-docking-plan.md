@@ -85,6 +85,15 @@ container peer.
 
 ## §0.5 Cold-execution protocol
 
+**Who executes (owner ruling, program §3.1):** this plan is run by a **COORDINATOR** (the expensive
+session model) that **delegates every phase to a WORKER on a cheaper model** — Opus for phase
+execution, Sonnet for the mechanical sub-steps — through the `Agent` tool (`subagent_type:
+general-purpose`, `model: "opus"` / `"sonnet"`; never `fork`, never `isolation: worktree`). §9 is
+the delegation map: per phase, the worker model, what the brief contains, the stop rules, the
+report, and what the coordinator checks. The steps below are written for the WORKER (it is the one
+reading files and running gates); the coordinator runs step 1, briefs per §9, reads reports, and
+decides at every gate. **The coordinator does not edit source or run suites itself.**
+
 1. `/Users/davidedellacasa/code/Fizzygum-all/fg status` — orient (heads, build freshness, test
    count, zombie browsers → `fg killz`). Expect heads at or after the ones in the header.
 2. Read this plan in full, then the program doc's §2 ledger. Then read, in this order (all under
@@ -455,6 +464,8 @@ gates of P2/P3/P5.
    frame). Revert. This proves the one declaration P5 relies on.
 7. Write the answers into the STATUS box. Commit nothing (P0 is read-only except scratch files).
 
+**Delegation (§9):** steps 2 and 4 → Sonnet (read-only, parallelisable with each other); step 3 and spikes S1/S2 → ONE Opus worker in sequence (S2 needs a scratch build); the go/no-go on S1/S2 and any §1 amendment → the coordinator.
+
 ### P1 — `lifetime` replaces the two flags (½ day; pixel-identical)
 
 - Add `lifetime` + `setLifetime`/`_setLifetimeNoSettle` on `PopUpWdgt` FIRST (the class still exists in
@@ -467,6 +478,7 @@ gates of P2/P3/P5.
 - Tests-repo: `serialization-roundtrip-headless.js:1251` reads `isTransientPopUp` — unchanged API.
 - **Gate:** `fg presuite` byte-identical (zero recaptures); `fg serialization` (both rigs) green.
 - Commit: "PopUpWdgt: one `lifetime` state replaces the two kill flags (program C2/C3)".
+- **Delegation (§9):** one Opus worker, whole phase. Budget: zero recaptures.
 
 ### P2 — One bar, derived roster, close iff free-floating (1 day; ONE declared recapture set)
 
@@ -491,6 +503,7 @@ gates of P2/P3/P5.
   action wiring changes yet, but the bar's pieces are menu-reachable).
 - Commit (two): the constants sub-step; then "FrameBarWdgt: roster, metrics and axis derived from a bar
   spec; close iff free-floating (program C5/C6/G2)".
+- **Delegation (§9):** the constants sub-step → Sonnet from the F13 literal→preference table (gate: `fg presuite` byte-identical + `fg census`); the bar + C6 → one Opus worker. Budget: the P0(4a) list only; the coordinator eyeballs the `fg diffpage` output before approving the recapture.
 
 ### P3 — `MenuWdgt`/`PromptWdgt` as framed citizens; `PopUpWdgt` deleted (1–1.5 days)
 
@@ -513,6 +526,7 @@ gates of P2/P3/P5.
   destroy, persistent → bin); `fg vmtruth` (the deleted class must leave no retained closures);
   `fg menusweep` + `fg pinsweep`.
 - Commit: "Menus and prompts are framed citizens; PopUpWdgt deleted (program C1/C14)".
+- **Delegation (§9):** one Opus worker, the whole phase, in TWO briefs if it runs long (a: `FrameWdgt` takes §2.6 + the viewport spec/measure + the citizens re-base, gate `fg presuite`; b: appearance/bar-spec pixel identity + deletions + gauntlet). The escape hatch is the coordinator's to invoke with the owner — the worker reports the residual diff, it never recaptures. Budget: the P0(4b) inform set only.
 
 ### P4 — Skin + shadow derivation unified; grab pins (½ day; pixel-identical)
 
@@ -525,6 +539,7 @@ gates of P2/P3/P5.
 - **Gate:** `fg presuite` byte-identical except the one new/changed test; `fg revisits`.
 - Commit: "Frame skin and shadow derived from lifetime × parentage; grabbing a transient frame pins it
   (program C4/C8)".
+- **Delegation (§9):** one Opus worker; the new macro test may be a Sonnet sub-brief from the step list above. Budget: the one new test + the one changed macro.
 
 ### P5 — Docking as placement (1.5–2 days; ONE declared recapture set)
 
@@ -548,6 +563,7 @@ gates of P2/P3/P5.
   `fg menusweep` (every new row wired).
 - Commit: "Docked frames: an edge layout spec, four slots, grip drag-out, drop-to-dock; floatToolbar
   dissolved (program C11/C12/C13)".
+- **Delegation (§9):** the coordinator obtains the C17 ruling FIRST, then one Opus worker in three briefs: (a) `EdgeDockLayoutSpec` + host slots/thickness/placement/engaged + `wantsDetachOfChild`, replacing the slot machinery, gate `fg presuite` + `fg census` (the grip does not exist yet — bar axis still horizontal, so this brief is NOT pixel-identical: the docked bar appears; budget = P0(4c)); (b) the bar axis + collapsed-dock geometry; (c) drop-to-dock in the hand + the menu rows + the deletions + the tests (the four new macro tests → Sonnet sub-briefs from step lists the Opus worker writes). Gauntlet after (c).
 
 ### P6 — The Liskov walk, names, docs (½ day)
 
@@ -574,6 +590,7 @@ gates of P2/P3/P5.
   production-tree snapshot gate).
 - Then the **close-arc ritual** (the `close-arc` skill): final gate, memory note, end-of-arc review,
   proposed commit messages, wait. Then the **tail session** (program §5).
+- **Delegation (§9):** the Liskov walk → Opus (it returns a verdict table, one row per site, with the quoted code); the docs weaving → Sonnet, one brief per doc file, parallel (disjoint files), each brief quoting the exact target section and the present-tense paragraph to weave; the close-arc ritual and the review → the coordinator; the tail → per-item briefs from the ledger.
 
 ---
 
@@ -641,10 +658,67 @@ gates of P2/P3/P5.
 
 ---
 
-## §9 References
+## §9 Delegation map — coordinator and workers (program §3.1)
+
+The coordinator (the session) never edits source or runs suites; it briefs, reads reports, checks
+verdict files, decides at gates, and talks to the owner. Workers are fresh agents with no
+conversation context: `Agent` with `subagent_type: general-purpose`, `model: "opus"` (phase work)
+or `"sonnet"` (mechanical work). ⛔ Never `fork` (inherits the expensive model), never
+`isolation: worktree` (the build needs the `Fizzygum-all/` sibling layout + the tests symlink).
+**One code worker at a time** — one tree, one build output. Parallel workers only for read-only
+work and for docs edits to disjoint files.
+
+### 9.1 Per-phase map
+
+| phase | worker | parallel? | brief = plan section + | gate the worker runs | coordinator decides |
+|---|---|---|---|---|---|
+| P0 counts + F-facts | Sonnet ×2–3 | yes (read-only) | the F1–F14 grep commands; the three P0(4) seed greps | none | records counts into the STATUS box |
+| P0 H1 probe, S1, S2 | Opus ×1 | no (S2 builds) | the assertion lists of P0 steps 3, 5, 6 | `fg test …`, scratch builds, `fg revisits` semantics for S1(ii) | go/no-go for P3 (S1) and P5 (S2); §1 amendments |
+| P1 | Opus ×1 | no | §2.1 + F1, F11; tests-scripts file list F10 | `fg presuite` byte-identical; `fg serialization` | commit proposal |
+| P2 constants | Sonnet ×1 | no | the F13 literal→preference table, G2/G3 | `fg presuite` byte-identical; `fg census` | commit proposal |
+| P2 bar + C6 | Opus ×1 | no | §2.2; the P0(4a) list as the ONLY allowed pixel set | `fg presuite`; `fg diffpage <4a list>`; `fg menusweep` | eyeballs the diffpage; approves `fg recapture`; commit |
+| P3 | Opus ×1 (two briefs) | no | §2.4, §2.6, S1's findings; the P0(4b) list | `fg presuite` per brief; `fg gauntlet` at close; `fg storage`, `fg vmtruth`, `fg menusweep`, `fg pinsweep` | the escape hatch (with the owner); commit |
+| P4 | Opus ×1 (+ Sonnet for the test) | no | §2.3, C8; the macro step list for the new test | `fg presuite`; `fg revisits` | commit |
+| P5 | Opus ×1 (three briefs) + Sonnet for 4 tests | no | §2.5, C12/C13/C17 ruling, S2's findings; the P0(4c) list | `fg presuite` + `fg census` per brief; `fg gauntlet` after (c); `fg menusweep` | C17 ruling obtained first; eyeballs P0(4c) diffpage; commit |
+| P6 Liskov walk | Opus ×1 | no | the 9 + 14 consumer sites | builds only | reads the verdict table |
+| P6 docs | Sonnet ×N | yes (disjoint files) | per file: the section to edit + the present-tense paragraph | `fg doc-narration` | reviews the diffs |
+| P6 close | coordinator | — | — | `fg gauntlet`, `fg homepage` | close-arc ritual, memory, owner |
+| tail | per item | per item | the ledger row + its destination | as the item needs | ledger bookkeeping |
+
+### 9.2 The worker brief (template — copy, fill the ⟨⟩, nothing else)
+
+```
+You are executing ⟨phase/sub-step⟩ of Fizzygum/docs/plans/frame-lifetime-and-docking-plan.md.
+Read that plan's §0, §0.5 and §⟨phase⟩ in full, then Fizzygum/docs/plans/frames-input-touch-program.md
+§2 for rulings ⟨IDs⟩. Also read Fizzygum-all/CLAUDE.md and Fizzygum/CLAUDE.md. All commands through
+/Users/davidedellacasa/code/Fizzygum-all/fg by absolute path. Probes under Fizzygum-tests/.scratch/.
+Do: ⟨the phase's step list, or "every step of §⟨phase⟩"⟩.
+Gate: ⟨exact fg command(s)⟩ → expected ⟨verdict⟩. Launch long ops with run_in_background and wait for
+the notification; never poll; never pipe the gating call.
+Pixel budget: ONLY these tests may change: ⟨list or "none"⟩. Any other diff = STOP (rule 3).
+Stop and report (do not improvise) if: a §1 fact is false; a fix shape is falsified twice; a gate
+fails for a reason you cannot state in one sentence; a diff appears outside the budget; you need a
+decision the ledger does not cover. Never recapture, never commit, never push.
+Comments you write: present tense only, no history narration (the build's comment-smell ratchet fails
+on it). `undefined` is the one absence value.
+Report (≤ 60 lines): files changed (git diff --stat); each gate's literal /tmp/fg-<cmd>.verdict line;
+counts measured; tests added/changed; open questions; which stop rule fired, if any.
+```
+
+### 9.3 What the coordinator checks on every report (cheap, never a re-do)
+
+1. `cat /tmp/fg-<cmd>.verdict` for each gate the report claims — the literal line, not the prose.
+2. `git -C <repo> status --short` and `git diff --stat` — the changed-file list matches the phase.
+3. If the report names a pixel diff: `fg diffpage` was produced → look at it (this is the one
+   visual judgement the coordinator keeps).
+4. If a stop rule fired: read ONLY the evidence the report quotes; amend §1 or the brief; re-brief.
+   Two stops on the same step → re-frame (rule 5 of §0.5 applies to the coordinator too).
+5. Then: commit proposal to the owner, or the next brief.
+
+## §10 References
 
 - Program: [`frames-input-touch-program.md`](frames-input-touch-program.md) — rulings, sequencing,
-  recapture policy, tail ledger.
+  recapture policy, tail ledger, **§3.1 the execution model this §9 instantiates**.
 - Living truth to update at P6: [`../architecture/regularity-principles.md`](../architecture/regularity-principles.md),
   [`../architecture/widget-citizenship.md`](../architecture/widget-citizenship.md),
   [`../architecture/viewports-and-planes.md`](../architecture/viewports-and-planes.md),
