@@ -165,6 +165,13 @@ The arc's narrative, decisions and standing lessons live in that plan's BACKLOG 
   receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead
   FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.
 
+### `plans/frames-input-touch-program.md` — PROGRAM doc (four sibling plans, authored just-in-time) + `plans/frame-lifetime-and-docking-plan.md` (Plan 1, AUTHORED 2026-08-23, not started)
+One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifestations derived from lifetime × parentage (menu / window / card; docked = card + edge spec); menus and prompts become framed citizens, `PopUpWdgt` is deleted; then Pointer Events, the single-geometry visual wave, and the finger gesture grammar + harness. Rulings live in the program doc's §2 ledger; deferred items in its §5 tail ledger (the program closes when that table is empty).
+- [ ] Plan 1 P0–P6 (see the plan's STATUS box), then its tail
+- [ ] Plan 2 Pointer Events — author when Plan 1 closes
+- [ ] Plan 3 single-geometry visual wave — author when Plan 2 closes
+- [ ] Plan 4 gesture grammar + finger harness — author when Plan 3 closes
+
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12
 (`archive/appearance-local-coords-plan.md` — every appearance body now draws through the ctx matrix,
