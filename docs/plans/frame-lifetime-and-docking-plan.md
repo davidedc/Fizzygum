@@ -73,7 +73,19 @@ re-argue them.
   recursed forever) — fixed in the same commit (closed in the ledger). Residual prose:
   `SystemTest_macroMenuPinnedByHeaderClick`'s `intent` still names the kill flags (P6 sweep, with its
   `visualisation.html`).
-- P2 one bar: not started. · P3 citizens: not started (S1 GO).
+- P2 constants sub-step (G2): **DONE 2026-08-23** (Sonnet; `fg build` OK, `fg census` 0 movers, `fg presuite`
+  byte-identical 310/0). Preferences landed in `setMouseInputMode` only: `barIconSize 16`, `barPadding 5`,
+  `barGlyphSize 16`, `menuHeaderCornerRadius 3` (⚠ F13 mislabelled `MenuHeader`'s `super 3` a padding — it is
+  `BoxWdgt`'s corner radius; named for what it IS), `menuRowsBorder 2`, `toolThumbnailSize 30`,
+  `toolInternalPadding 5`, `toolExternalPadding 10`, `toolRows 2`, and **`toolbarDockThickness 95` as a
+  RESIDUE**: no formula over the grid metrics reproduces 95 (the plan's sketch gives 90; the honest grid
+  formula 2·30 + 1·5 + 2·10 gives 85; the 95 is byte-parity with a `StretchableEditableWdgt` arm that no
+  longer exists — `docs/archive/onion-widget-composition-plan.md:708`). `FrameWdgt.CLOSE_ICON_SIZE` static
+  deleted (3 readers → the preference). `ToolbarWdgt.dockThickness` is ctor-initialised from the preference
+  unless a variant declares its own (`TextToolbarWdgt` 40, `PaintToolbarWdgt` 103). → P5 decides the dock
+  thickness when the docked frame declares it (C12/C13); `barGlyphSize`/`toolRows` have no consumer until
+  the bar spec / P5.
+- P2 bar + C6: not started. · P3 citizens: not started (S1 GO).
 - P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 ruling still needed). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.
 

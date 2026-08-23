@@ -195,7 +195,7 @@ class FrameBarWdgt extends Widget
     false
 
   _positionAndResizeChildren: ->
-    closeIconSize = FrameWdgt.CLOSE_ICON_SIZE
+    closeIconSize = WorldWdgt.preferencesAndSettings.barIconSize
     padding = @frame.padding
 
     # close button

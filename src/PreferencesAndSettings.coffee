@@ -55,6 +55,23 @@ class PreferencesAndSettings
   handleSize: undefined
   scrollBarsThickness: undefined
 
+  # Chrome-geometry constants (program ruling G2): the bar button's hit box, the bar's own
+  # padding, the glyph inset within a bar button's box, a menu header's corner rounding, a
+  # menu/list rows-panel's border, and a toolbar grid's cell side / inter-cell gap / outer
+  # margin / row count. Each chrome layout site reads the matching name here; no chrome
+  # dimension lives as a literal in a layout method. Set only by setMouseInputMode --
+  # setTouchInputMode does not touch this group.
+  barIconSize: undefined
+  barPadding: undefined
+  barGlyphSize: undefined
+  menuHeaderCornerRadius: undefined
+  menuRowsBorder: undefined
+  toolThumbnailSize: undefined
+  toolInternalPadding: undefined
+  toolExternalPadding: undefined
+  toolRows: undefined
+  toolbarDockThickness: undefined
+
   # (no outlineColor field: it is a local in setMouseInputMode -- nothing but the
   # outlineColorString shortcut below ever reads the Color object itself.)
   outlineColorString: undefined
@@ -193,6 +210,31 @@ class PreferencesAndSettings
     # each other
     @handleSize = 15
     @scrollBarsThickness = 10
+
+    # a frame bar's button (close / collapse / edit) is a barIconSize square; its glyph paints
+    # inset by barGlyphSize within that square -- equal today, so the button's hit box and its
+    # drawn glyph are the same size and no pixel moves. Kept as two preferences because a touch
+    # target and its glyph are different dials (G3), even though the desk profile ties them.
+    @barIconSize = 16
+    @barGlyphSize = 16
+    # barPadding is the frame's own chrome padding: it sets the titlebar strip's height
+    # (barIconSize + 2 * barPadding) and the frame body's margin around its content.
+    @barPadding = 5
+
+    # the header box's own corner rounding.
+    @menuHeaderCornerRadius = 3
+    # the border width a menu/list rows panel keeps around its flush-stacked rows.
+    @menuRowsBorder = 2
+
+    # a toolbar grid's thumbnail cell: side length, the gap between cells, and the margin
+    # around the whole grid; toolRows is how many cells a docked strip's cross-axis fits.
+    @toolThumbnailSize = 30
+    @toolInternalPadding = 5
+    @toolExternalPadding = 10
+    @toolRows = 2
+    # a docked ToolbarWdgt's own cross-axis extent -- an independent constant, not a formula
+    # over the grid metrics above (ToolbarWdgt reads it directly for its base dockThickness).
+    @toolbarDockThickness = 95
 
     @wheelScaleX = 1
     @wheelScaleY = 1

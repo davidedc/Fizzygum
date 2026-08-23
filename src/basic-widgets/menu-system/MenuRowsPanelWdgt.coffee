@@ -91,10 +91,10 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
     @firstParentThatIsAPopUp().isPopUpPinned?() ? false
 
   constructor: (opts = {}) ->
-    # padding 2 = the menu's tight border; rows stack FLUSH inside it (see
+    # menuRowsBorder = the menu's tight border; rows stack FLUSH inside it (see
     # interElementGap below). No extent/color through the base ctor — the look
     # is set right here.
-    super padding: 2
+    super padding: WorldWdgt.preferencesAndSettings.menuRowsBorder
     @target = opts.target
     @fontSize = opts.fontSize
     @title = opts.title

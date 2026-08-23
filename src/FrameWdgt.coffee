@@ -80,14 +80,12 @@ class FrameWdgt extends Widget
   # contentsRecursivelyCanSetHeightFreely is width-independent, so testing it here (before the
   # recursion) matches the arrange's post-width-set test. A collapsed window is just its titlebar.
 
-  # The titlebar icon square (close / collapse / edit buttons) -- ONE home for the
-  # literal 16 the measure and the arrange both used to declare locally.
-  @CLOSE_ICON_SIZE: 16
-
-  # Height of the titlebar strip: icon square + a padding above and below. (Rounding the
-  # whole sum -- identical to every historical inline form for any integer @padding.)
+  # Height of the titlebar strip: icon square + a padding above and below. The icon square's
+  # side is the barIconSize preference -- the ONE home the measure and the arrange both read
+  # (§6.1 rule 1). (Rounding the whole sum -- identical to every historical inline form for any
+  # integer @padding.)
   _titlebarHeight: ->
-    Math.round(FrameWdgt.CLOSE_ICON_SIZE + @padding + @padding)
+    Math.round(WorldWdgt.preferencesAndSettings.barIconSize + @padding + @padding)
 
   # Window chrome height -- everything that is NOT content: the titlebar strip plus the
   # bottom margin, which depends on whether the resizer may overlap the contents. ONE home
@@ -277,7 +275,7 @@ class FrameWdgt extends Widget
       # unlatched, so this is a no-op for the universal fresh-content case.
       @contents._contentStackSpec.desiredWidth = undefined
 
-    @padding = 5
+    @padding = WorldWdgt.preferencesAndSettings.barPadding
     # TODO this looks better:
     #@padding = 10
     @color = Color.create 248, 248, 248
@@ -1025,7 +1023,7 @@ class FrameWdgt extends Widget
   # contentsRecursivelyCanSetHeightFreely (up-edge endgame V1-d).
   _positionAndResizeChildren: (duringReInflation = false) ->
 
-    closeIconSize = FrameWdgt.CLOSE_ICON_SIZE
+    closeIconSize = WorldWdgt.preferencesAndSettings.barIconSize
 
     stackHeight = 0
 

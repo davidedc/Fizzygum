@@ -26,8 +26,11 @@ class ToolbarWdgt extends ViewportWdgt
 
   # The strip's cross-axis size when docked: width for left/right, height for
   # top/bottom. A CONSTANT, never a laid-out size -- the frame's PURE measures
-  # read it (§6.1 rule 1), so it must not depend on laid-out extents.
-  dockThickness: 95
+  # read it (§6.1 rule 1), so it must not depend on laid-out extents. The base
+  # value is the toolbarDockThickness preference (no formula over the grid
+  # metrics reproduces it -- see the constructor); a variant's own class-level
+  # override (e.g. TextToolbarWdgt's 40) still wins.
+  dockThickness: undefined
 
   # a toolbar strip's scrolling is part of its design — a docked strip that
   # cannot scroll strands its off-edge buttons (see
@@ -36,6 +39,9 @@ class ToolbarWdgt extends ViewportWdgt
 
   constructor: ->
     super new ToolPanelWdgt
+    # guarded: a variant declares its own dockThickness at the class level (read through the
+    # prototype chain before this line runs), which must keep winning over the base's preference.
+    @dockThickness = WorldWdgt.preferencesAndSettings.toolbarDockThickness unless @dockThickness?
     @_buildAndConnectChildren()
 
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the

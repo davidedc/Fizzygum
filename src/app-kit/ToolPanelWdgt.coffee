@@ -1,8 +1,19 @@
 class ToolPanelWdgt extends PanelWdgt
 
-  internalPadding: 5
-  externalPadding: 10
-  thumbnailSize: 30
+  # the grid's cell gap / outer margin / cell side -- read from the toolInternalPadding /
+  # toolExternalPadding / toolThumbnailSize preferences in the constructor rather than declared
+  # as literals here, because a caller (e.g. TextToolbarWdgt) writes these fields directly on an
+  # instance to retune its own strip -- an instance field a subclass overrides after construction,
+  # not a class-level constant.
+  internalPadding: undefined
+  externalPadding: undefined
+  thumbnailSize: undefined
+
+  constructor: ->
+    super()
+    @internalPadding = WorldWdgt.preferencesAndSettings.toolInternalPadding
+    @externalPadding = WorldWdgt.preferencesAndSettings.toolExternalPadding
+    @thumbnailSize = WorldWdgt.preferencesAndSettings.toolThumbnailSize
 
   # my enclosing viewport borrows my colloquial name (type-test-elimination ε; see
   # ViewportWdgt.colloquialName)

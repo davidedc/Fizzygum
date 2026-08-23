@@ -3,7 +3,7 @@ class MenuHeader extends BoxWdgt
   text: undefined
 
   constructor: (textContents) ->
-    super 3
+    super WorldWdgt.preferencesAndSettings.menuHeaderCornerRadius
     @color = WorldWdgt.preferencesAndSettings.menuHeaderColor
 
     @text = new TextWdgt textContents,
