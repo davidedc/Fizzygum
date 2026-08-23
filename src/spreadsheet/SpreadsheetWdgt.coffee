@@ -28,6 +28,6 @@ class SpreadsheetWdgt extends FrameWdgt
   # never terminates).
   _resetToDefaultContents: ->
     return if @_beingFullDestroyed
-    @_destroyToolbarNoSettle()
+    @_retireDockedFramesNoSettle()
     @contents = new SimpleSpreadsheetWdgt
     @_buildAndConnectChildrenNoSettle()

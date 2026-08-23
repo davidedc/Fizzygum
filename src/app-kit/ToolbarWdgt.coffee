@@ -2,9 +2,9 @@
 # strip of tool thumbnails -- a ViewportWdgt wrapping a ToolPanelWdgt grid.
 # One subclass per palette; a subclass supplies only its item list
 # (_toolbarItems) and, where it differs, its docking defaults. The SAME
-# construction serves both toolbar homes: FLOATING (wrapped in a FrameWdgt by
-# the toolbar creator buttons / ToolbarsApp) and DOCKED (a FrameWdgt's
-# toolbar-slot). The buttons inside don't bind to an editor instance -- they
+# construction serves both toolbar homes, and in BOTH it is a FrameWdgt's content: FLOATING (a
+# window on the desktop, built by the toolbar creator buttons / ToolbarsApp) and DOCKED (a band
+# in a host frame's edge slot). The buttons inside don't bind to an editor instance -- they
 # act on the focused widget or create-by-drag -- which is exactly what lets
 # one construction serve every home.
 #
@@ -13,20 +13,18 @@
 
 class ToolbarWdgt extends ViewportWdgt
 
-  # D9 (Frame-model plan §5.C): where this toolbar docks when it occupies a
-  # frame's toolbar-slot. A per-instance property with a per-TYPE class
-  # default, user-adjustable per frame via the frame's "dock the toolbar ➜"
-  # context-menu popout. All four sides ('top' / 'left' / 'right' / 'bottom')
-  # have frame-arrange support. FLOATING is not a slot state this field
-  # records: a floating toolbar is a window's CONTENT -- the home the toolbar
-  # creator buttons build, and where the frame's "float the toolbar"
-  # context-menu entry re-homes a docked one (FrameWdgt.floatToolbar; the
-  # same menu re-docks a FRESH variant afterwards).
+  # MY DEFAULT SIDE: which of a host frame's four edge slots my band takes when the host docks
+  # me. A per-instance property with a per-TYPE class default, user-adjustable per frame via the
+  # frame's "dock the toolbar ➜" context-menu popout, which edits the band's own edge spec.
+  # FLOATING is not a state this field records: I am a PAYLOAD either way (program ruling C11) --
+  # what docks and floats is the frame around me, and dragging its grip onto the desktop is
+  # exactly what turns a band into a window.
   dockSide: 'left'
 
-  # The strip's cross-axis size when docked: width for left/right, height for
-  # top/bottom. A CONSTANT, never a laid-out size -- the frame's PURE measures
-  # read it (§6.1 rule 1), so it must not depend on laid-out extents. The base
+  # MY CROSS-AXIS SIZE when docked: width for left/right, height for top/bottom -- what I ask the
+  # band to grant me, which the band then wraps in its own chrome. A CONSTANT, never a laid-out
+  # size -- the host's PURE measures read it through the band's spec (§6.1 rule 1), so it must not
+  # depend on laid-out extents. The base
   # value is the toolbarDockThickness preference (no formula over the grid
   # metrics reproduces it -- see the constructor); a variant's own class-level
   # override (e.g. TextToolbarWdgt's 40) still wins.

@@ -71,6 +71,7 @@ class PreferencesAndSettings
   toolExternalPadding: undefined
   toolRows: undefined
   toolbarDockThickness: undefined
+  dockBandDepth: undefined
 
   # (no outlineColor field: it is a local in setMouseInputMode -- nothing but the
   # outlineColorString shortcut below ever reads the Color object itself.)
@@ -235,6 +236,11 @@ class PreferencesAndSettings
     # a docked ToolbarWdgt's own cross-axis extent -- an independent constant, not a formula
     # over the grid metrics above (ToolbarWdgt reads it directly for its base dockThickness).
     @toolbarDockThickness = 95
+    # how deep a frame's edge DROP BANDS reach in from its body's edges: the strip in which
+    # releasing a dragged frame docks it there instead of dropping it into the content. At least a
+    # bar thickness (barIconSize + 2*barPadding = 26), so a band is never thinner than the grip
+    # the drop produces.
+    @dockBandDepth = 30
 
     @wheelScaleX = 1
     @wheelScaleY = 1

@@ -18,6 +18,7 @@ class ActivePointerWdgt extends Widget
   # Live only while float-dragging a payload; all cleared by _endDragEmbedInteraction on release.
   dragEmbedCandidate: undefined              # innermost receptive widget under the cursor (undefined = none / world)
   dragEmbedReluctant: undefined              # innermost view-mode editing-amenity widget, when NO candidate
+  dragEmbedDockBand: undefined               # {host, side} when the candidate is a host's EDGE BAND, not its body
   dragEmbedLingerOriginPoint: undefined      # pointer position where the current linger began
   dragEmbedLingerOriginEventTime: undefined  # EVENT.time (never wall-clock) at that origin — the arm clock
   dragEmbedLingerOriginWallTime: undefined   # wall time at that origin (ring animation only, never the decision)
@@ -197,10 +198,32 @@ class ActivePointerWdgt extends Widget
   # Resolve the candidates on the parent-climb from the cursor hit (spec §5): the innermost widget that
   # wantsDropOfChild wins (world is never a candidate); else the innermost view-mode editing-amenity
   # widget is the reluctant cue. Same climb dropTargetFor uses, so preview and outcome cannot disagree.
+  # THE EDGE BAND under the pointer, if a host offers one there for THIS payload — the dock offer,
+  # consulted BEFORE the ordinary drop climb below. Only a FRAME is ever offered a band (a band
+  # holds chrome, not loose content), and a host never offers one to something it lives inside.
+  # The point is handed to each host in ITS OWN plane, so a host inside a rotated island answers
+  # about the band the user is actually pointing at.
+  _dockBandUnderPointerFor: (payload) ->
+    payloadPolicy = payload._dropPolicyProxy()
+    return undefined unless payloadPolicy.isFrame?()
+    wdgt = @topWdgtUnderPointer()
+    while wdgt? and wdgt isnt world
+      if wdgt.dockSideAt? and not payloadPolicy.isAncestorOf wdgt
+        side = wdgt.dockSideAt wdgt.screenPointToMyPlane @position()
+        return {host: wdgt, side: side} if side?
+      wdgt = wdgt.parent
+    undefined
+
   resolveDragEmbedCandidates: (payload) ->
     # §6 4D-2b: match candidates by the payload's real class (see dropTargetFor) so the dwell preview and the
     # drop outcome agree for a tilted window too.
     payloadPolicy = payload._dropPolicyProxy()
+    # the DOCK OFFER wins where it applies: a band is a strip of a host's own body that the host
+    # has declared means "place me here", so a frame released over one docks instead of landing in
+    # the content underneath. Everything else — every plain payload, and a frame anywhere but a
+    # band — resolves exactly as it always has.
+    band = @_dockBandUnderPointerFor payload
+    return {candidate: band.host, reluctant: undefined, dockBand: band} if band?
     wdgt = @topWdgtUnderPointer()
     reluctant = undefined
     while wdgt? and wdgt isnt world
@@ -219,14 +242,17 @@ class ActivePointerWdgt extends Widget
   updateDragEmbedStateMachine: ->
     payload = @children[0]
     return unless payload?
-    {candidate, reluctant} = @resolveDragEmbedCandidates payload
+    {candidate, reluctant, dockBand} = @resolveDragEmbedCandidates payload
     eventTime = WorldWdgt.timeOfEventBeingProcessed
 
-    # candidate change => reset the linger + disarm (spec §5: per-candidate dwell, full reset)
-    if candidate isnt @dragEmbedCandidate
+    # candidate change => reset the linger + disarm (spec §5: per-candidate dwell, full reset).
+    # Moving between two BANDS of the same host is a candidate change too — they are different
+    # offers, so each earns its own dwell.
+    if candidate isnt @dragEmbedCandidate or dockBand?.side isnt @dragEmbedDockBand?.side
       @dragEmbedCandidate = candidate
       @_reAnchorDragEmbedLinger eventTime
       @dragEmbedArmed = false
+    @dragEmbedDockBand = dockBand
     @dragEmbedReluctant = if candidate? then undefined else reluctant
 
     if candidate? and payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: a tilted WINDOW still needs the dwell
@@ -251,8 +277,18 @@ class ActivePointerWdgt extends Widget
   _declareDragEmbedEphemerals: (payload) ->
     isFrame = payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: window affordances for a tilted window too
 
+    # 0. the DOCK BAND, outlined WHOLE: over a band the offer is the strip, not the host, so the
+    # host's own outline stands down and the band's rectangle takes its place (declared in the
+    # host's plane; the reconciler maps it).
+    if @dragEmbedDockBand?
+      world.dragEmbedDockBandDeclared =
+        host: @dragEmbedDockBand.host
+        box: @dragEmbedDockBand.host.dockBandBoxAt @dragEmbedDockBand.side
+    else
+      world.dragEmbedDockBandDeclared = undefined
+
     # 1. candidate (accent) or reluctant (neutral) outline via the highlight style channel
-    outlineTarget = @dragEmbedCandidate ? @dragEmbedReluctant
+    outlineTarget = if @dragEmbedDockBand? then undefined else (@dragEmbedCandidate ? @dragEmbedReluctant)
     if outlineTarget isnt @_dragEmbedOutlinedWdgt
       world.widgetsToBeHighlighted.delete @_dragEmbedOutlinedWdgt if @_dragEmbedOutlinedWdgt?
       @_dragEmbedOutlinedWdgt = outlineTarget
@@ -277,9 +313,10 @@ class ActivePointerWdgt extends Widget
     # 3. armed label — window payload, armed
     if isFrame and @dragEmbedArmed and @dragEmbedCandidate?
       candidateTitle = @_dragEmbedCandidateTitle()   # hoisted out of the string so the ref is visible
+      bandSide = @dragEmbedDockBand?.side            # ditto
       world.dragEmbedLabelDeclared =
         point: new Point(payload.left(), affordanceTop)
-        text: "Drop to insert into '#{candidateTitle}'"
+        text: if bandSide? then "Drop to dock at the #{bandSide} of '#{candidateTitle}'" else "Drop to insert into '#{candidateTitle}'"
     else
       world.dragEmbedLabelDeclared = undefined
 
@@ -301,6 +338,8 @@ class ActivePointerWdgt extends Widget
     world.dragEmbedChargeRingDeclared = undefined
     world.dragEmbedLabelDeclared = undefined
     world.dragEmbedLockBadgeDeclared = undefined
+    world.dragEmbedDockBandDeclared = undefined
+    @dragEmbedDockBand = undefined
     @dragEmbedCandidate = undefined
     @dragEmbedReluctant = undefined
     @dragEmbedLingerOriginPoint = undefined
@@ -407,7 +446,11 @@ class ActivePointerWdgt extends Widget
       @updateDragEmbedStateMachine()
       wasArmed = @dragEmbedArmed
       overReluctantOnly = @dragEmbedReluctant?
+      # the band the release resolved to, captured beside the arm verdict for the same reason: the
+      # teardown below clears the state both are read from
+      releasedOverBand = @dragEmbedDockBand
       @_endDragEmbedInteraction()
+      dockSide = undefined
 
       # §6 4D-2b: the window-vs-plain drop decision keys off the payload's real class -- a tilted window rides
       # the hand as a sugar TransformFrameWdgt, so look THROUGH it (dropPolicy) for requiresDeliberateEmbedding /
@@ -424,7 +467,12 @@ class ActivePointerWdgt extends Widget
         # — the dwell alone decides (spec §7). Armed → embed at the resolved candidate (the SAME climb
         # the preview used, so preview and outcome cannot disagree); not armed → plain move-over, lands
         # on the world at the release point (this IS the common gesture — no bounce, no scold).
-        if wasArmed
+        if wasArmed and releasedOverBand?
+          # DOCK: the armed release was over an edge band, so the frame takes that slot. The side
+          # is the DROP's, never the payload's own default — you docked it there.
+          target = releasedOverBand.host
+          dockSide = releasedOverBand.side
+        else if wasArmed
           target = @dropTargetFor wdgtToDrop
         else
           # STICKY RE-EMBED (spec §7, Phase 3.5): an unarmed window normally lands on the world, but
@@ -467,7 +515,9 @@ class ActivePointerWdgt extends Widget
       # that contract explicit to the end-of-cycle capstone audit instead of implicit.
       wdgtToDrop = wdgtToDrop._deferredSettleDeclare => wdgtToDrop._reExpressFigureForPlaneOfNoSettle target
 
-      target._beforeChildDropped? wdgtToDrop
+      # a DOCK is not a content drop, so the content pre-hook (which clears the target's current
+      # payload to make room) does not apply: the band takes a slot the target keeps beside it.
+      target._beforeChildDropped? wdgtToDrop unless dockSide?
 
       # Affine transforms 4D-1 (§6): DROP-IN into a widget whose plane is MAPPED — inside a
       # non-identity island, or (once the paint-time-scroll model is live) inside a scrolled pane.
@@ -508,7 +558,9 @@ class ActivePointerWdgt extends Widget
       # positionInPlane simply ignores it, which is what the options tail buys over the six
       # positional slots (four of them holes) this used to need.
       dropPositionInTargetPlane = target.screenPointToMyPlane @position()
-      target.add wdgtToDrop, beingDropped: true, positionInPlane: dropPositionInTargetPlane
+      # dockSide (undefined on every ordinary drop) routes the add into the target's EDGE SLOT
+      # instead of its content slot — one structural entry either way.
+      target.add wdgtToDrop, beingDropped: true, positionInPlane: dropPositionInTargetPlane, dockSide: dockSide
       # Affine transforms 4D-2b (§6): the UNWRAP half of the re-expression. _reExpressFigureForPlaneOfNoSettle
       # above re-spec'd a dropped sugar figure to its RELATIVE similitude; when that was identity the figure is
       # now a _materializedBySugar island at identity NESTED in target, so the 4C auto-unwrap dissolves it in

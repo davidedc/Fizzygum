@@ -1,12 +1,17 @@
-# TODO: when floating, windows should really be able to
-# accommodate any extent always, because really windows should
-# be stackable and dockable in any place...
-# ...and that's now how we do it now, for example a window
-# with a clock right now keeps ratio...
-# Only when being part of other layouts e.g. stacks the
-# windows should keep a ratio etc...
-# So I'm inclined to think that a window should do what the
-# StretchableWidgetContainerWdgt does...
+# THE ONE CHROME CONTAINER. A frame wraps ONE payload (@contents) in the manipulation chrome a
+# user handles it by — a title strip, a resize affordance, four edge slots — and MANIFESTS
+# differently according to two runtime facts and nothing else (program rulings C1/C4/C12):
+#
+#   my LIFETIME    'persistent' (furniture: a window, a card, a docked band) or 'transient'
+#                  (mid-gesture UI: a menu, a prompt). It changes mid-life — pinning IS that
+#                  change — which is why it is a state here and not a class hierarchy.
+#   my ATTACHMENT  free-floating on the desktop (a window: boxy skin, close, resizer), nested in
+#                  a container (a card: flat skin, no close), or held by a host's edge spec (a
+#                  docked band: a grip across it, no close, no resizer).
+#
+# So a window, a card, a menu, a prompt and a docked toolbar are the SAME class in five states;
+# a frame is stackable and dockable anywhere, and every transition (pin, nest, dock, undock,
+# duplicate) is a state change or a reparent, never a rebuild.
 
 class FrameWdgt extends Widget
 
@@ -15,6 +20,10 @@ class FrameWdgt extends Widget
   # _applyMoveTo scroll-optimization override -- the repaint path a parent stack
   # takes when it moves this frame as a tracking-container child.
   @augmentWith ClippingAtRectangularBoundsMixin, @name
+
+  # my four edge slots, in the order my arrange places them: the two full-width bands first, so
+  # the flank columns share the vertical span left between them
+  @DOCK_SIDES: ["top", "bottom", "left", "right"]
 
   # TODO we already have the concept of "droplet" widget
   # so probably we should re-use that. The current drop
@@ -42,12 +51,15 @@ class FrameWdgt extends Widget
   padding: undefined
   contents: undefined
   defaultContents: undefined
-  # the toolbar-slot's occupant (Frame-model plan §5.C): a ToolbarWdgt the
-  # CONTENT declares (@contents.buildToolbar?()), docked per its dockSide,
-  # STABLE across mode flips -- shown in edit mode, COLLAPSED (not removed) in
-  # view mode, so flipping the pencil never churns the tree. undefined when the
-  # content declares none (plain content, the empty-window placeholder).
-  toolbar: undefined
+  # MY FOUR EDGE SLOTS: a `side -> FrameWdgt` map, at most one docked frame per side (program
+  # ruling C12). The occupant is an ordinary frame carrying an EdgeDockLayoutSpec of mine — no
+  # type test, no docked SKIN: the spec owns its placement, and its card skin, its grip and its
+  # missing close/resizer all derive from that. A content that declares a toolbar variant
+  # (@contents.buildToolbar?()) gets it docked here at construction, and the occupant is STABLE
+  # across mode flips: view mode DISENGAGES the dock (zero layout contribution, hidden) instead
+  # of churning the tree. Built per instance in the constructor -- a class-level object literal
+  # would be ONE map shared by every frame.
+  dockedFrames: undefined
 
   # ===== LIFETIME: one state, two manifestations of it (program rulings C2/C3) =====
   # MY ONE LIFETIME STATE, which every transient-vs-furniture branch below reads:
@@ -153,12 +165,19 @@ class FrameWdgt extends Widget
     pieces.push "close" if @isFreeFloating()
     pieces.push "collapse"
     pieces.push "title"
-    pieces.push "edit" if @providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing
+    # A DOCKED band's strip is a GRIP: take hold of it, or collapse it, and nothing else (program
+    # ruling C12) -- editing what a band holds is not a band gesture, and a host that owns my
+    # placement owns what my strip offers, exactly as it owns my close piece. Set free on the
+    # desktop I am an ordinary window again and carry the pencil my payload's amenities call for
+    # (ruling C5).
+    pieces.push "edit" if !@_myEdgeDockSpec()? and (@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
 
+    axis = @_barAxis()
     pieces: pieces
     resizer: if @isFreeFloating() then "payloadSized" else "none"
-    axis: "horizontal"
-    showsText: true
+    axis: axis
+    # a strip running along my side is too narrow for a title, so it carries pieces only
+    showsText: axis is "horizontal"
     naturalWidth: "none"
     # the strip: icon square + a padding above and below. The strip's own padding is the bar
     # preference (G2), NOT my body margin: the two coincide on a frame whose payload takes the
@@ -171,6 +190,31 @@ class FrameWdgt extends Widget
     textHeight: preferences.titleBarTextHeight
     fontSize: preferences.titleBarTextFontSize
     titleStyle: "windowBar"
+
+  # WHICH DIRECTION MY STRIP RUNS (program rulings C13/C15). A free frame's bar is on TOP, always
+  # -- no per-frame orientation knob, because a window whose bar could be anywhere costs more
+  # predictability than it buys. A DOCKED frame's follows the shape the band gives it, and the
+  # frame's shape is what changes, never the bar's meaning:
+  #   EXPANDED, the strip runs ACROSS the band at its leading end -- vertical at the left end of
+  # a top/bottom band, horizontal at the top of a left/right one -- so the band's thickness stays
+  # the payload's alone and the grip costs only along the edge.
+  #   COLLAPSED, I AM my bar, so it spans the axis the band keeps: a full-width strip for a
+  # top/bottom dock, a full-height sliver for a side one.
+  _barAxis: ->
+    dockSpec = @_myEdgeDockSpec()
+    return "horizontal" unless dockSpec?
+    bandRunsHorizontally = dockSpec.side is "top" or dockSpec.side is "bottom"
+    if @contents?.collapsed
+      if bandRunsHorizontally then "horizontal" else "vertical"
+    else
+      if bandRunsHorizontally then "vertical" else "horizontal"
+
+  # The edge spec a HOST handed me, if I am docked in one of its slots; undefined otherwise (a
+  # desktop window, a card in a stack, a pop-up). The one place the "am I a band?" question is
+  # asked, through the spec family's duck-typed capability query.
+  _myEdgeDockSpec: ->
+    return @layoutSpec if @layoutSpec?.isEdgeDock?()
+    undefined
 
   # The POP-UP row of the same vocabulary: my strip is exactly my title box -- the title text
   # plus a pixel of air above and below it, inset by the menu border, and a tap on it pins me.
@@ -205,9 +249,17 @@ class FrameWdgt extends Widget
     return 0 unless @_barSpec().naturalWidth is "titleText"
     (@bar?.label?.width() ? 0) + 2
 
-  # Height of the titlebar strip -- the bar spec's own thickness, so the measure, the arrange
-  # and the bar itself read ONE number (§6.1 rule 1).
+  # What the titlebar strip takes out of my HEIGHT -- the bar spec's own thickness when the strip
+  # runs across my top, nothing when it runs down my side. The measure, the arrange and the bar
+  # itself read ONE number (§6.1 rule 1).
   _titlebarHeight: ->
+    return 0 unless @_barSpec().axis is "horizontal"
+    @_barSpec().thickness
+
+  # The WIDTH twin: what a strip running down my side takes out of my width, and nothing when it
+  # runs across my top. Exactly one of the two is ever non-zero -- a strip has one direction.
+  _titlebarWidth: ->
+    return 0 unless @_barSpec().axis is "vertical"
     @_barSpec().thickness
 
   # Window chrome height -- everything that is NOT content: the titlebar strip plus the
@@ -224,53 +276,62 @@ class FrameWdgt extends Widget
     else
       @_titlebarHeight() + 3 * @padding + WorldWdgt.preferencesAndSettings.handleSize + @_topDockThickness() + @_bottomDockThickness()
 
-  # ===== the toolbar-slot's layout terms (§5.C) =====
-  # The docked toolbar occupies layout space exactly when it is HERE and SHOWN
-  # (view mode collapses it to a zero contribution). Pure reads -- the measures
-  # consume these, so they must never read a laid-out extent (dockThickness is
-  # a class constant on the toolbar).
-  _dockedToolbarShowing: ->
-    @toolbar? and @toolbar.parent == @ and !@toolbar.collapsed
+  # ===== the four edge slots' layout terms =====
+  # The frame docked at one of my edges, WHEN IT COUNTS: the slot's occupant, still my child, its
+  # dock engaged (view mode disengages every dock), and my body actually there to hold it -- a
+  # collapsed frame is just its titlebar, so it has no body and no bands. Pure reads: the measures
+  # consume these, so they never touch a laid-out extent (the band's thickness is recorded on the
+  # spec).
+  _dockedFrameAt: (side) ->
+    return undefined if @contents?.collapsed
+    dockedFrame = @dockedFrames?[side]
+    return undefined unless dockedFrame? and dockedFrame.parent == @
+    return undefined unless dockedFrame._myEdgeDockSpec()?.engaged
+    dockedFrame
 
-  # Vertical chrome a TOP-docked toolbar adds (strip + the gap to the content);
-  # 0 when hidden or docked elsewhere. Folded into _chromeHeight above.
+  # What a docked frame takes out of my body at `side`: the band it occupies plus the gap between
+  # the band and my content. 0 for an empty, disengaged or collapsed-away slot.
+  _dockThicknessAt: (side) ->
+    dockedFrame = @_dockedFrameAt side
+    return 0 unless dockedFrame?
+    dockedFrame._dockedBandThickness() + @padding
+
+  # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, the spec's
+  # thickness -- what the band grants my payload -- plus my own body margin around it, so the
+  # payload gets exactly the extent it asked for and my grip, running ACROSS the band, adds
+  # nothing; collapsed, I AM my bar, so the band is the strip's thickness (never 0 -- there has to
+  # be something left to tap). 0 when I am not docked at all.
+  _dockedBandThickness: ->
+    dockSpec = @_myEdgeDockSpec()
+    return 0 unless dockSpec?
+    return @_barSpec().thickness if @contents?.collapsed
+    if dockSpec.side is "top" or dockSpec.side is "bottom"
+      dockSpec.thickness + @_chromeHeight @contents.contentStackSpec()
+    else
+      dockSpec.thickness + @_chromeWidth()
+
+  # The four named terms my chrome accounting reads (one home each side, so _chromeHeight and
+  # _chromeWidth stay readable).
   _topDockThickness: ->
-    if @_dockedToolbarShowing() and @toolbar.dockSide == 'top'
-      @toolbar.dockThickness + @padding
-    else
-      0
-
-  # Horizontal chrome a LEFT-docked toolbar adds; 0 when hidden or docked
-  # elsewhere. Folded into _chromeWidth below.
-  _leftDockThickness: ->
-    if @_dockedToolbarShowing() and @toolbar.dockSide == 'left'
-      @toolbar.dockThickness + @padding
-    else
-      0
-
-  # The right/bottom twins (layout follow-ups plan F4): same contract as their
-  # left/top mirrors -- a pure read the measures consume, 0 when hidden or
-  # docked elsewhere. A frame has ONE toolbar, so at most one of the four is
-  # ever non-zero.
-  _rightDockThickness: ->
-    if @_dockedToolbarShowing() and @toolbar.dockSide == 'right'
-      @toolbar.dockThickness + @padding
-    else
-      0
+    @_dockThicknessAt "top"
 
   _bottomDockThickness: ->
-    if @_dockedToolbarShowing() and @toolbar.dockSide == 'bottom'
-      @toolbar.dockThickness + @padding
-    else
-      0
+    @_dockThicknessAt "bottom"
+
+  _leftDockThickness: ->
+    @_dockThicknessAt "left"
+
+  _rightDockThickness: ->
+    @_dockThicknessAt "right"
 
   # Frame chrome WIDTH -- everything that is not content width: the side
-  # paddings plus a side-docked shown toolbar. The width sibling of
+  # paddings, a strip running down my side, and the bands docked on either
+  # flank. The width sibling of
   # _chromeHeight, and the ONE home the measures and the arrange both read
   # (§6.1 rule 1): availableWidthForContents, the width negotiation and the
   # first-placement hug all route through it.
   _chromeWidth: ->
-    2 * @padding + @_leftDockThickness() + @_rightDockThickness()
+    2 * @padding + @_titlebarWidth() + @_leftDockThickness() + @_rightDockThickness()
 
   # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
   # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
@@ -396,6 +457,7 @@ class FrameWdgt extends Widget
       # unlatched, so this is a no-op for the universal fresh-content case.
       @contents._contentStackSpec.desiredWidth = undefined
 
+    @dockedFrames = {}
     @padding = @_chromePadding()
     # TODO this looks better:
     #@padding = 10
@@ -656,10 +718,11 @@ class FrameWdgt extends Widget
   # would open a nested settle mid-pass. (The label is FIT_TEXT_TO_BOX, so the text swap changes
   # no geometry anyway; @_changed() in the core repaints it.)
   _setEmptyWindowLabelNoSettle: ->
+    # a strip too narrow for text carries no title piece, so there is nothing to title
     if @isInternal()
-      @label._setTextNoSettle "empty internal window"
+      @label?._setTextNoSettle "empty internal window"
     else
-      @label._setTextNoSettle "empty window"
+      @label?._setTextNoSettle "empty window"
 
   # Polymorphic replacement for `instanceof FrameWdgt`: lets Widget / the smart-placer
   # ask "are you a window?" without naming this subclass. Defined ONLY here -- there is NO
@@ -697,8 +760,8 @@ class FrameWdgt extends Widget
   # (FrameContentLayoutSpec / VerticalStackLayoutSpec call
   # `@stack.availableWidthForContents()`, and for frame content that "@stack" IS
   # this frame). (A2a: was inherited from the stack.) Routed through
-  # _chromeWidth so a left-docked shown toolbar narrows the content everywhere
-  # the specs read it (§5.C).
+  # _chromeWidth so a band docked on either flank -- and a strip running down my
+  # own side -- narrows the content everywhere the specs read it.
   availableWidthForContents: ->
     @width() - @_chromeWidth()
 
@@ -734,6 +797,11 @@ class FrameWdgt extends Widget
   # directly (A2a de-inherit), all non-settling. Adding @contents through THIS core (vs
   # the bare base _addNoSettle) is exactly what keeps the content wired by the deferred re-fit.
   _addNoSettle: (aWdgt, opts = {}) ->
+    # opts.dockSide -- the incoming widget takes one of my EDGE SLOTS, not my content slot: the
+    # hand's drop-to-dock names the side the release resolved to, and the dock core arms the edge
+    # spec that places it. One structural entry, one option, so a docked arrival is the same add
+    # every other arrival is.
+    return @_dockFrameNoSettle aWdgt, opts.dockSide if opts.dockSide?
     notContent = opts.notContent
     # the polymorphic strip-spacing hook (a base no-op; some widget types override
     # it) runs on every add, mirroring the stack's add core.
@@ -756,9 +824,8 @@ class FrameWdgt extends Widget
       # that still belongs to ANOTHER parent would clobber that parentage --
       # Widget._addNoSettle below would then see no previousParent, so the real
       # old parent would neither be notified (_reactToChildRemoved, its re-fit)
-      # nor have its children list cleaned by __add. Latent while every ctor
-      # caller passed orphans; floatToolbar (F4) is the first to wrap a
-      # still-parented widget.
+      # nor have its children list cleaned by __add. It matters wherever a ctor
+      # is handed a widget that still has a home.
       @removeChild @contents if @contents.parent == @
       @contents = aWdgt
       # Deferred-layout (capstone probe): the window-content re-fit now DEFERS to the settle cycle
@@ -784,9 +851,19 @@ class FrameWdgt extends Widget
 
   # (A2a, was inherited from the stack) membership-change re-fit -- same
   # absorb-or-refit contract as the inline in _reactToChildDropped below.
+  #   A departing SLOT OCCUPANT frees its slot here: the grab that lifts a docked frame out
+  # re-homes it and notifies me, and a slot still pointing at a child that lives somewhere else
+  # would reserve a band for it forever.
   _reactToChildRemoved: (child) ->
+    @_freeDockSlotOf child
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
+
+  # Forget a slot's occupant, wherever it went (dragged out, destroyed, re-docked elsewhere).
+  _freeDockSlotOf: (child) ->
+    for side in FrameWdgt.DOCK_SIDES
+      delete @dockedFrames[side] if @dockedFrames?[side] == child
+    return
 
   _beforeChildDestroyed: (child) ->
     # NOT while I myself am being torn down: the rebuild would re-title a bar the
@@ -816,20 +893,18 @@ class FrameWdgt extends Widget
       # single-mutation tier. The enclosing collapse settle covers the re-layout.
       @bar._destroyEditButtonNoSettle()
       @editButton = undefined
-      # a collapsed window is JUST its titlebar -- the docked toolbar hides with
-      # the content (restored per the content's mode on uncollapse below)
-      @toolbar?._collapseNoSettle()
 
   _beforeChildUnCollapsed: (child) ->
     if child == @contents
       @widthWhenCollapsed = @width()
-      if @contents.dragsDropsAndEditingEnabled
-        @toolbar?._unCollapseNoSettle()
 
     @_createAndAddEditButton()
 
   _reactToChildCollapsed: (child) ->
     if child == @contents
+      # a collapsed window is JUST its titlebar, so its bands are gone with its body
+      # (_dockedFrameAt already reads them out of the layout; the pixels follow here)
+      @_reflectDockVisibilityNoSettle()
       if @widthWhenCollapsed?
         @_applyWidth @widthWhenCollapsed
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
@@ -839,6 +914,8 @@ class FrameWdgt extends Widget
 
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
+      # my body is back, so the bands engaged in it are back with it
+      @_reflectDockVisibilityNoSettle()
       @_applyExtent @extentWhenCollapsed
       @contents._applyExtent @contentsExtentWhenCollapsed
       if @widthWhenUnCollapsed?
@@ -855,11 +932,152 @@ class FrameWdgt extends Widget
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
       @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the viewport grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
 
+  # ===== the slots' occupants =====
+
+  # THE DOCK OFFER. WHICH edge band, if any, is at this point of my body — 'top' | 'bottom' |
+  # 'left' | 'right', or undefined for a point that belongs to my content. My bands are the strips
+  # `dockBandDepth` deep along the four edges of the region my content otherwise fills; releasing a
+  # dragged FRAME in one docks it there instead of dropping it into that content, which is the whole
+  # of what a band is (program ruling C12 — no type test on WHAT docks, only on where it lands).
+  #   PUBLIC because the asker is the hand: its drop resolution consults every frame on the climb
+  # from the pointer, handing each the point IN THAT FRAME'S OWN PLANE. Mid-gesture UI offers no
+  # bands (a menu is not furniture to dock into), and neither does a collapsed frame — it has no
+  # body to give away.
+  dockSideAt: (aPointInMyPlane) ->
+    return undefined if @lifetime is 'transient'
+    return undefined if @contents?.collapsed
+    body = @_dockBandsBox()
+    return undefined unless body.containsPoint aPointInMyPlane
+    depth = WorldWdgt.preferencesAndSettings.dockBandDepth
+    # the NEAREST edge wins, so the corners belong to the band whose edge they are closest to and
+    # every point of the body has exactly one answer
+    distances =
+      top: aPointInMyPlane.y - body.top()
+      bottom: body.bottom() - aPointInMyPlane.y
+      left: aPointInMyPlane.x - body.left()
+      right: body.right() - aPointInMyPlane.x
+    nearestSide = undefined
+    for side in FrameWdgt.DOCK_SIDES
+      continue if distances[side] > depth
+      nearestSide = side if !nearestSide? or distances[side] < distances[nearestSide]
+    nearestSide
+
+  # The region my bands divide up: everything inside me that is not my own strip. Pure geometry the
+  # hand's hit resolution and the band highlight both read, so the offer and the picture of it
+  # cannot disagree.
+  _dockBandsBox: ->
+    new Rectangle (new Point @left() + @_titlebarWidth(), @top() + @_titlebarHeight()), @bottomRight()
+
+  # The band rectangle at `side`, in my own plane — what the hand outlines while a frame hovers
+  # over the offer. Same box, same depth, as the answer above.
+  dockBandBoxAt: (side) ->
+    body = @_dockBandsBox()
+    depth = WorldWdgt.preferencesAndSettings.dockBandDepth
+    switch side
+      when 'top' then new Rectangle body.origin, new Point body.right(), Math.min(body.top() + depth, body.bottom())
+      when 'bottom' then new Rectangle (new Point body.left(), Math.max(body.bottom() - depth, body.top())), body.corner
+      when 'right' then new Rectangle (new Point Math.max(body.right() - depth, body.left()), body.top()), body.corner
+      else new Rectangle body.origin, new Point Math.min(body.left() + depth, body.right()), body.bottom()
+
+  # Am I holding this widget in one of my slots? (asked by the content hooks, which must let a band
+  # through: a band is a payload I HOLD, never the payload I WRAP)
+  _isMyDockedFrame: (aWdgt) ->
+    for side in FrameWdgt.DOCK_SIDES
+      return true if @dockedFrames?[side] == aWdgt
+    false
+
+  # THE UNDOCK GESTURE, as one declaration (the container gate of the notification grid): a band
+  # in one of my slots is a payload I HOLD, not a part of me, so a drag on its grip lifts THE BAND
+  # out instead of moving me -- the same parent-side opt-in the spreadsheet's widget-entry cell
+  # uses (Widget.grabsToParentWhenDragged asks its parent this). Everything else about me stays
+  # solid under a drag: my bar, my pieces, my resizer.
+  wantsDetachOfChild: (aWdgt) ->
+    @_isMyDockedFrame aWdgt
+
+  # The public, self-settling dock: the hand's drop lands here (through the add's dockSide option),
+  # and so does the toolbar row on my own menu. A top-level gesture declares its own flush.
+  dockFrame: (aFrame, side) ->
+    @_settleLayoutsAfter => @_dockFrameNoSettle aFrame, side
+
+  # Dock a frame in my slot at `side`. The spec is the whole act: it says WHERE and, through the
+  # thickness it records, HOW MUCH of my body the band gets -- and everything else about the
+  # docked manifestation (card skin, a grip across the band, no close, no resizer) derives from
+  # the frame's no-longer-free-floating attachment. The thickness is what the band grants the
+  # PAYLOAD: the extent the payload declares for itself if it declares one, else the extent it
+  # arrives with. An occupied slot's previous holder is set free first -- one frame per side.
+  _dockFrameNoSettle: (aFrame, side) ->
+    payload = aFrame.contents
+    across = if side is "top" or side is "bottom" then payload.height() else payload.width()
+    dockSpec = new EdgeDockLayoutSpec side, (payload.dockThickness ? across)
+    # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in. A
+    # dock is engaged on arrival; only a host whose payload HAS an edit mode and is currently
+    # viewing lands it disengaged, because that host's view mode is what disengages every dock.
+    dockSpec.engaged = !@contents?.providesAmenitiesForEditing or @contents.dragsDropsAndEditingEnabled == true
+    @dockedFrames[side]?._fullDestroyNoSettle()
+    @_addNoSettle aFrame, notContent: true, layoutSpec: dockSpec
+    # after the add: a re-dock's own departure notification would otherwise free the slot I just filled
+    @dockedFrames[side] = aFrame
+    @_reflectDockVisibilityNoSettle()
+    @_invalidateLayout()
+
+  # Whether a band is DRAWN follows its dock's engagement -- never the other way round, because
+  # visibility is never a layout input (the layout reads the spec, in _dockedFrameAt). One place,
+  # re-driven wherever engagement can change: the mode flip, my own collapse, a fresh dock.
+  _reflectDockVisibilityNoSettle: ->
+    for side in FrameWdgt.DOCK_SIDES
+      dockedFrame = @dockedFrames?[side]
+      continue unless dockedFrame? and dockedFrame.parent == @
+      # public-call-sanctioned: show/hide are the public visibility pair (driven cross-object all
+      # over the system) -- they settle nothing and touch no geometry, so reaching them from a
+      # NoSettle core is settle-neutral.
+      if @_dockedFrameAt(side)? then dockedFrame.show() else dockedFrame.hide()
+    return
+
+  # My mode's half of the same question: editing ENGAGES every dock, viewing disengages it. The
+  # user's own collapse of a band is the band's business and survives the round trip.
+  _engageDocksNoSettle: (engaged) ->
+    changed = false
+    for side in FrameWdgt.DOCK_SIDES
+      dockSpec = @dockedFrames?[side]?._myEdgeDockSpec()
+      continue unless dockSpec? and dockSpec.engaged isnt engaged
+      dockSpec.engaged = engaged
+      changed = true
+    return unless changed
+    @_reflectDockVisibilityNoSettle()
+    @_invalidateLayout()
+
+  # The docked frame holding my content's toolbar variant, and the strip inside it. The strip is
+  # the PAYLOAD (program ruling C11) -- the frame around it is the same chrome any other frame
+  # wears, which is what lets the one object dock and float without being rebuilt.
+  _dockedToolbarFrame: ->
+    for side in FrameWdgt.DOCK_SIDES
+      dockedFrame = @dockedFrames?[side]
+      return dockedFrame if dockedFrame? and dockedFrame.parent == @
+    undefined
+
+  _dockedToolbar: ->
+    @_dockedToolbarFrame()?.contents
+
+  # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A
+  # framed CITIZEN declares its kind's variant itself (§5.B); a plain frame asks the content it
+  # wraps; a content that declares none leaves every slot empty.
+  # `side` overrides the variant's own default (the "toolbar ➜" row names one).
+  _buildDockedToolbarNoSettle: (side) ->
+    toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
+    return unless toolbar?
+    @_dockFrameNoSettle (new FrameWdgt toolbar), (side ? toolbar.dockSide)
+
   # the content owns the slot's occupant, so a content CHANGE retires it -- the
   # rebuild then makes the NEW content's variant (or none)
-  _destroyToolbarNoSettle: ->
-    @toolbar?._destroyNoSettle()
-    @toolbar = undefined
+  _retireDockedFramesNoSettle: ->
+    for side in FrameWdgt.DOCK_SIDES
+      dockedFrame = @dockedFrames?[side]
+      continue unless dockedFrame?
+      delete @dockedFrames[side]
+      # the SUBTREE: a frame owns a bar, its pieces and a payload, and destroying it alone would
+      # leave all of those alive and off-tree -- escaped widgets the instances registry pins forever
+      dockedFrame._fullDestroyNoSettle()
+    return
 
   # The frame's own context-menu entries (on top of the generic Widget set):
   # the toolbar-slot's dock-side chooser and undock action, on the frame's menu
@@ -870,100 +1088,90 @@ class FrameWdgt extends Widget
   # (the re-dock path after "float the toolbar").
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    if @_dockedToolbarShowing() or @_canDockAFreshToolbar()
+    # A BAND's own rows: where it sits, and how to stop being a band at all. They are the band's
+    # because a docked frame owns its own placement question -- the host owns only whether there is
+    # a slot to sit in (program ruling C12).
+    if @_myEdgeDockSpec()?
       menu.addLine()
-      menu.addMenuItem "dock the toolbar ➜", @, "dockToolbarMenu", closesUnpinnedPopUps: false, toolTip: ""
-      if @_dockedToolbarShowing()
-        menu.addMenuItem "float the toolbar", @, "floatToolbar", toolTip: "undock the toolbar into its own window"
+      menu.addMenuItem "dock ➜", @, "dockSideMenu", closesUnpinnedPopUps: false, toolTip: ""
+      menu.addMenuItem "float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
+    # A HOST's row: fill an empty slot with the toolbar my content declares. Offered only while
+    # there IS one to make and no slot already holds it -- you cannot dock a second copy of the
+    # same variant, and DELIBERATELY a menu entry, never a bar button (owner ruling D9: don't spend
+    # bar space on it).
+    if @_offersAFreshToolbar()
+      menu.addLine()
+      menu.addMenuItem "toolbar ➜", @, "toolbarSideMenu", closesUnpinnedPopUps: false, toolTip: ""
     # the pin is offered only while there is something to pin: furniture is already staying
     if @isTransientPopUp()
       menu.addLine()
       menu.addMenuItem "pin", @, "pinPopUp", closesUnpinnedPopUps: false
 
-  # Can the empty slot be (re)filled? The content must declare a variant (a
-  # framed citizen declares its own -- §5.B), and be EDITING: a fresh dock in
-  # view mode would land collapsed, an invisible no-op entry.
-  _canDockAFreshToolbar: ->
-    return false if @toolbar?
-    return false unless @buildToolbar? or @contents?.buildToolbar?
-    @contents?.dragsDropsAndEditingEnabled == true
+  # Is there a toolbar to dock that is not docked already? The content must declare a variant (a
+  # framed citizen declares its own -- §5.B) and no slot may hold one.
+  _offersAFreshToolbar: ->
+    return false if @_dockedToolbarFrame()?
+    (@buildToolbar? or @contents?.buildToolbar?) == true
 
-  # The dock-side chooser popout ("dock the toolbar ➜"): the current side is
-  # omitted when docked (the VSLS-alignment / division-cell menu pattern); ALL
-  # FOUR are offered over an empty slot -- that IS the re-dock path after
-  # "float the toolbar", and it builds a FRESH variant rather than reclaiming
-  # the floated instance: toolbars are identity-free by design (one
-  # construction, buttons duck-type onto the focused widget -- §5.C), so
-  # reclaiming would buy nothing and cost a tracked back-ref; the floated strip
-  # simply stays a normal toolbar window.
-  dockToolbarMenu: (widgetOpeningThePopUp, targetWidget) ->
+  # The BAND's side chooser ("dock ➜"): the three sides I am not on (the VSLS-alignment /
+  # division-cell menu pattern -- the current one is nothing to choose).
+  dockSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    currentSide = if @_dockedToolbarShowing() then @toolbar.dockSide else undefined
-    menu.addMenuItem "top", @, "dockToolbarTop"  if currentSide isnt "top"
-    menu.addMenuItem "left", @, "dockToolbarLeft"  if currentSide isnt "left"
-    menu.addMenuItem "right", @, "dockToolbarRight"  if currentSide isnt "right"
-    menu.addMenuItem "bottom", @, "dockToolbarBottom"  if currentSide isnt "bottom"
+    currentSide = @_myEdgeDockSpec()?.side
+    for side in FrameWdgt.DOCK_SIDES
+      menu.addMenuItem side, @, "dockAtSide", arg1: side  if side isnt currentSide
     menu.popUpAtHand()
 
-  dockToolbarTop: ->
-    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "top"
+  # The HOST's side chooser ("toolbar ➜"): all four, since the slot the row fills is empty.
+  toolbarSideMenu: (widgetOpeningThePopUp, targetWidget) ->
+    menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
+    for side in FrameWdgt.DOCK_SIDES
+      menu.addMenuItem side, @, "addToolbarAtSide", arg1: side
+    menu.popUpAtHand()
 
-  dockToolbarLeft: ->
-    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "left"
+  # Move me to another of my host's slots. A dock IS a placement, so re-siding is an edit to the
+  # spec that places me -- the same frame, the same payload, a different edge. (Menu-dispatched:
+  # the first two slots of the four-slot convention are the row and the menu's subject, and this
+  # verb wants neither.)
+  dockAtSide: (ignored, ignored2, side) ->
+    @_settleLayoutsAfter => @_reSideMyDockNoSettle side
 
-  dockToolbarRight: ->
-    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "right"
+  _reSideMyDockNoSettle: (side) ->
+    dockSpec = @_myEdgeDockSpec()
+    return unless dockSpec?
+    return if dockSpec.side == side
+    host = @parent
+    return unless host?._isMyDockedFrame? @
+    host._freeDockSlotOf @
+    host.dockedFrames[side]?._fullDestroyNoSettle()
+    dockSpec.side = side
+    host.dockedFrames[side] = @
+    host._invalidateLayout()
 
-  dockToolbarBottom: ->
-    @_settleLayoutsAfter => @_dockToolbarAtNoSettle "bottom"
+  # Fill one of my empty slots with my content's toolbar variant, framed. (Menu-dispatched -- see
+  # dockAtSide for the two named-as-unread slots.)
+  addToolbarAtSide: (ignored, ignored2, side) ->
+    @_settleLayoutsAfter => @_buildDockedToolbarNoSettle side
 
-  # ONE parameterized core for the four wrappers above (dockToolbarMenu
-  # addresses them BY NAME). Docked: re-side the existing strip. Empty slot:
-  # build the content's fresh variant at the chosen side -- mirrors the
-  # _buildAndConnectChildrenNoSettle slot build incl. the born-collapsed-when-
-  # viewing rule (the menu gate only offers the empty-slot entries while
-  # editing, but the core stays mode-complete for programmatic callers).
-  # ⚠ the fresh-build arm must invalidate UNCONDITIONALLY: the add alone does
-  # not reach the frame's layout (a spec-less chrome child rides the
-  # freefloating skip in Widget._addNoSettle's container invalidate).
-  _dockToolbarAtNoSettle: (side) ->
-    if @toolbar?
-      return if @toolbar.dockSide == side
-    else
-      @toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
-      return unless @toolbar?
-      @_addNoSettle @toolbar, notContent: true
-      if !@contents.dragsDropsAndEditingEnabled
-        @toolbar._collapseNoSettle()
-    @toolbar.dockSide = side
-    @_invalidateLayout()
-
-  # Undock-to-float (D9 tail): free the docked toolbar into its own floating
-  # window -- the SAME float home the toolbar creator buttons build (one
-  # construction, two homes), placed so the strip pops out IN PLACE: the new
-  # window's content region lands exactly where the docked strip sat, and the
-  # window HUGS the strip's extent (the content spec's THIS_ONE_I_HAVE_NOW
-  # defaults). The slot stays EMPTY afterwards -- a content change rebuilds a
-  # fresh variant -- and the floated toolbar serves any widget via the focus
-  # pointer, like every summoned toolbar.
-  floatToolbar: ->
-    return unless @_dockedToolbarShowing()
-    toolbar = @toolbar
-    stripPosition = toolbar.position()
-    stripExtent = toolbar.extent()
-    @toolbar = undefined
-    # the FrameWdgt ctor re-homes the toolbar out of me (Widget._addNoSettle
-    # notifies my _reactToChildRemoved, so my chrome re-fits over the freed
-    # region)
-    floatHome = new FrameWdgt toolbar
-    world.add floatHome
-    # size the window to WRAP the strip as it was docked -- the creator-button
-    # idiom: the ctor's closing setExtent is a placeholder the caller imposes
-    # over (so no hug survives it); chrome read off the mounted content's own
-    # spec, the one home the measure and arrange share, no literals
-    floatHome.setExtent stripExtent.add new Point floatHome._chromeWidth(), floatHome._chromeHeight floatHome.contents.contentStackSpec()
-    floatHome._applyMoveTo stripPosition.subtract new Point floatHome.padding, floatHome._titlebarHeight() + floatHome.padding
-    floatHome._moveWithin world
+  # LEAVE THE SLOT for the desktop, AS I AM. There is nothing to convert -- I am already a frame,
+  # and everything that made me look docked was my edge spec, which the desktop does not give me:
+  # I land wearing a window's skin, close piece, resize handle and top bar. I pop out IN PLACE (my
+  # payload keeps its own top-left) and my payload serves any widget via the focus pointer, like
+  # every summoned toolbar.
+  floatOutOfDock: ->
+    return unless @_myEdgeDockSpec()?
+    payload = @contents
+    payloadPosition = payload.position()
+    payloadExtent = payload.extent()
+    # the add re-homes me out of my host (Widget._addNoSettle notifies its _reactToChildRemoved,
+    # which frees the slot and re-fits its chrome over the freed region)
+    world.add @
+    # the desktop gives me a window's chrome where the band gave me a grip, so re-wrap my payload
+    # at the extent it had: chrome read off the mounted content's own spec, the one home the
+    # measure and the arrange share, no literals
+    @setExtent payloadExtent.add new Point @_chromeWidth(), @_chromeHeight payload.contentStackSpec()
+    @_applyMoveTo payloadPosition.subtract new Point @padding, @_titlebarHeight() + @padding
+    @_moveWithin world
 
   # Consulted at the child-death hook (_beforeChildDestroyed: a mid-teardown rebuild
   # strands fresh chrome on already-destroyed parts of me) and by a framed CITIZEN's
@@ -985,7 +1193,7 @@ class FrameWdgt extends Widget
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
     # cross-object code drive it) — settle-free, consciously reused here.
     @enableDrops()
-    @_destroyToolbarNoSettle()
+    @_retireDockedFramesNoSettle()
     @contents = @defaultContents
     # Reached only from a child-lifecycle hook (_beforeChildDestroyed/PickedUp/Closed). Rebuild through
     # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
@@ -1273,7 +1481,10 @@ class FrameWdgt extends Widget
       @_changed()
 
   _reactToChildDropped: (theWidget) ->
-    @_destroyToolbarNoSettle()
+    # a band that just landed in one of my slots is a payload I HOLD: it does not become my content,
+    # and it retires nothing of what I already hold (the slot registration is the add's own work)
+    return if @_isMyDockedFrame theWidget
+    @_retireDockedFramesNoSettle()
     @contents = theWidget
     # (A2a, was the stack super) membership-change re-fit: if my container absorbs the
     # change (a viewport re-fits me + its scrollbars), skip my own re-fit; else it
@@ -1350,16 +1561,10 @@ class FrameWdgt extends Widget
 
     @_addNoSettle @contents
 
-    # the toolbar-slot occupant (keep-if-exist like the bar pieces; the
-    # content-CHANGE points destroy it first so a new content gets its own
-    # variant). A framed CITIZEN declares its kind's variant itself (§5.B);
-    # a plain frame asks the content it wraps. Born collapsed when viewing.
-    if !@toolbar?
-      @toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
-      if @toolbar?
-        @_addNoSettle @toolbar, notContent: true
-        if !@contents.dragsDropsAndEditingEnabled
-          @toolbar._collapseNoSettle()
+    # the toolbar's slot occupant (keep-if-exist like the bar pieces; the
+    # content-CHANGE points retire it first so a new content gets its own
+    # variant). Born disengaged when viewing.
+    @_buildDockedToolbarNoSettle() unless @_dockedToolbarFrame()?
 
     # the resize affordance the spec names: a frame that sizes to what it holds (a pop-up hugs
     # its rows) offers none. A frame is an ORPHAN while it builds -- hence free-floating, hence
@@ -1391,6 +1596,11 @@ class FrameWdgt extends Widget
     @label = @bar.label
     @closeButton = @bar.closeButton
     @collapseUncollapseSwitchButton = @bar.collapseUncollapseSwitchButton
+    # the pencil is the one piece whose BUILD carries a mode to reflect, so the bar retires it
+    # with the rest of the roster and I put it back: docking me drops it, setting me free on the
+    # desktop hands it back, showing the mode my payload is in at that moment.
+    @editButton = @bar.editButton
+    @_createAndAddEditButton()
     # OFF-PASS the roster change needs a re-lay scheduled. IN-PASS it does not: the only
     # in-pass reach is an arrange handing my content its frame-content spec, and that same
     # arrange re-lays my bar a few lines later -- while scheduling mid-pass is the flow-rule
@@ -1424,20 +1634,20 @@ class FrameWdgt extends Widget
   # Driven from the enable/disable state-reflection callers, not from clicks.
   showEditModeInBar: ->
       @editButton?.showPencilGlyph()
-      # the toolbar-slot follows the mode: editing shows the docked toolbar.
-      # NoSettle core -- this protocol is driven from inside the content's
-      # enable/disable settle; the collapse cores invalidate, that flush covers it.
-      @toolbar?._unCollapseNoSettle()
+      # my slots follow the mode: editing ENGAGES every dock (the band takes its space back and
+      # is drawn again). NoSettle core -- this protocol is driven from inside the content's
+      # enable/disable settle; the engagement invalidates, and that flush covers it.
+      @_engageDocksNoSettle true
       # a mode-reactive toolbar (PaintToolbarWdgt re-arms/disarms its tools,
       # §5.D) rides the SAME protocol; the hooks transition-guard themselves
       # because this reflector is idempotently re-driven (e.g. the edit-button
       # recreate on window uncollapse).
-      @toolbar?.reactToEditModeInFrame?()
+      @_dockedToolbar()?.reactToEditModeInFrame?()
 
   showViewModeInBar: ->
       @editButton?.showEyeGlyph()
-      @toolbar?._collapseNoSettle()
-      @toolbar?.reactToViewModeInFrame?()
+      @_engageDocksNoSettle false
+      @_dockedToolbar()?.reactToViewModeInFrame?()
 
   # Frame-level edit-mode switch (§5.B): route through the PAYLOAD's own core --
   # the payload owns the canonical dragsDropsAndEditingEnabled flag and its core
@@ -1459,6 +1669,9 @@ class FrameWdgt extends Widget
   _enableDragsDropsAndEditingNoSettle: ->
     @dragsDropsAndEditingEnabled = true
     @contents?._enableDragsDropsAndEditingNoSettle @
+    # public-call-sanctioned: showEditModeInBar is the window-bar mode PROTOCOL, driven
+    # cross-object by content widgets (`@parent?.showEditModeInBar?()`), so it stays public — and
+    # it settles nothing (it marks; my own settling wrapper above flushes the mark)
     @showEditModeInBar()
 
   disableDragsDropsAndEditing: ->
@@ -1467,6 +1680,9 @@ class FrameWdgt extends Widget
   _disableDragsDropsAndEditingNoSettle: ->
     @dragsDropsAndEditingEnabled = false
     @contents?._disableDragsDropsAndEditingNoSettle @
+    # public-call-sanctioned: showViewModeInBar is the window-bar mode PROTOCOL, driven
+    # cross-object by content widgets (`@parent?.showViewModeInBar?()`), so it stays public — and
+    # it settles nothing (it marks; my own settling wrapper above flushes the mark)
     @showViewModeInBar()
 
   _createAndAddEditButton: ->
@@ -1599,11 +1815,11 @@ class FrameWdgt extends Widget
       if @contents.fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
         @contents.softWrap = true
 
-      # centre the content in its REGION -- the frame width minus a side-docked
-      # shown toolbar on either flank (identical to the whole width when none
-      # is docked left/right)
-      contentRegionLeft = @left() + @_leftDockThickness()
-      leftPosition = contentRegionLeft + Math.floor (@width() - @_leftDockThickness() - @_rightDockThickness() - recommendedElementWidth) / 2
+      # centre the content in its REGION -- the frame width minus a strip running down my side
+      # and minus a band docked on either flank (identical to the whole width when there is
+      # neither)
+      contentRegionLeft = @left() + @_titlebarWidth() + @_leftDockThickness()
+      leftPosition = contentRegionLeft + Math.floor (@width() - @_titlebarWidth() - @_leftDockThickness() - @_rightDockThickness() - recommendedElementWidth) / 2
 
       @contents._applyMoveTo new Point leftPosition, @top() + @_titlebarHeight() + @_topDockThickness() + @padding
       stackHeight += desiredHeight
@@ -1612,57 +1828,73 @@ class FrameWdgt extends Widget
       partOfHeightUsedUp = @_titlebarHeight()
 
 
-    newHeight = stackHeight + partOfHeightUsedUp
+    # A strip running down my SIDE spans my whole height, so my height is my HOST's grant, not my
+    # content's sum: a band is exactly as thick as the host reserved for it, whether my payload
+    # fills it or my collapsed body leaves nothing in it at all.
+    if @_barSpec().axis is "vertical"
+      newHeight = @height()
+    else
+      newHeight = stackHeight + partOfHeightUsedUp
 
     @_applyExtentBase new Point @width(), newHeight
 
-    # the title strip: hand the bar its bounds (my top strip at the FINAL width --
-    # the first-placement hug above may have just re-committed it); the bar's own
-    # arrange places the five pieces at the same absolute pixels the flat chrome had.
+    # the title strip: hand the bar its bounds (my top strip at the FINAL width, or my leading
+    # side strip at my final height -- the first-placement hug above may have just re-committed
+    # them); the bar's own arrange places the pieces along whichever direction it runs.
     if @bar? and @bar.parent == @
       barBounds = new Rectangle @position()
-      barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
+      if @_barSpec().axis is "vertical"
+        barBounds = barBounds.setBoundsWidthAndHeight @_titlebarWidth(), @height()
+      else
+        barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
       @bar._reLayout barBounds
 
-    # the toolbar-slot: place the docked toolbar in the padded body, under the
-    # bar -- TOP/BOTTOM: a full-available-width strip the content starts below
+    # the four slots: place each docked band in the padded body, past the
+    # bar -- TOP/BOTTOM: a full-available-width band the content starts below
     # (top) or ends a padding above (bottom); LEFT/RIGHT: a column on that
     # flank sharing the content's vertical span (stackHeight is the content
     # height this pass just derived, so every placement is pass-local -- no
     # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
-    # the same drive as @bar above -- a viewport's _reLayout applies its
-    # own bounds THEN re-fits its contents+scrollbars, so a width change that
+    # the same drive as @bar above -- a band's _reLayout applies its own
+    # bounds THEN re-fits its chrome and payload, and the payload viewport in
+    # turn re-fits its contents+scrollbars, so a width change that
     # re-wraps the tool grid converges IN THIS PASS. (A bare
     # _applyMoveTo/_applyExtent drive commits the viewport but re-fits
     # nothing, leaving the inner panel at a stale wrap height -- fg census
     # caught exactly that: ToolPanel 75 tall inside the 40 strip after a
     # narrow->wide window resize.)
-    # ⚖ The bottom-right RESIZER may OVERLAP a right/bottom dock's far corner
+    # ⚖ The bottom-right RESIZER may OVERLAP a right/bottom band's far corner
     # -- accepted DELIBERATELY (layout follow-ups plan F4), the same trade the
     # content already makes under resizerCanOverlapContents: the resizer is
     # corner-internal, always re-fronted, and the tool grid fills from the
-    # top-left so the covered corner is normally empty strip; an inset dock
-    # would buy that corner at the price of coupling the dock's extent to the
+    # top-left so the covered corner is normally empty strip; an inset band
+    # would buy that corner at the price of coupling the band's extent to the
     # resizer and breaking the left/right, top/bottom mirror symmetry.
-    if @_dockedToolbarShowing()
-      switch @toolbar.dockSide
+    bodyLeft = @left() + @_titlebarWidth() + @padding
+    bodyTop = @top() + @_titlebarHeight() + @padding
+    bodyWidth = @width() - @_titlebarWidth() - 2 * @padding
+    for side in FrameWdgt.DOCK_SIDES
+      dockedFrame = @_dockedFrameAt side
+      continue unless dockedFrame?
+      bandThickness = dockedFrame._dockedBandThickness()
+      switch side
         when 'top'
-          toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding
-          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @width() - 2 * @padding, @toolbar.dockThickness
+          bandBounds = new Rectangle new Point bodyLeft, bodyTop
+          bandBounds = bandBounds.setBoundsWidthAndHeight bodyWidth, bandThickness
         when 'bottom'
-          # just below the content: the strip's bottom lands where the content
+          # just below the content: the band's bottom lands where the content
           # region's bottom sits for the content's spec branch (a padding above
           # the frame bottom, or above the reserved handle row -- _chromeHeight
           # carries the matching reservation either way)
-          toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding + stackHeight + @padding
-          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @width() - 2 * @padding, @toolbar.dockThickness
+          bandBounds = new Rectangle new Point bodyLeft, bodyTop + @_topDockThickness() + stackHeight + @padding
+          bandBounds = bandBounds.setBoundsWidthAndHeight bodyWidth, bandThickness
         when 'right'
-          toolbarBounds = new Rectangle new Point @right() - @padding - @toolbar.dockThickness, @top() + @_titlebarHeight() + @padding
-          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
+          bandBounds = new Rectangle new Point @right() - @padding - bandThickness, bodyTop + @_topDockThickness()
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, stackHeight
         else # 'left'
-          toolbarBounds = new Rectangle new Point @left() + @padding, @top() + @_titlebarHeight() + @padding
-          toolbarBounds = toolbarBounds.setBoundsWidthAndHeight @toolbar.dockThickness, stackHeight
-      @toolbar._reLayout toolbarBounds
+          bandBounds = new Rectangle new Point bodyLeft, bodyTop + @_topDockThickness()
+          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, stackHeight
+      dockedFrame._reLayout bandBounds
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
     # bottom-right with the padding-derived inset, is applied by base _reLayout's corner tail

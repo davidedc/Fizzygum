@@ -877,6 +877,21 @@ class Widget extends TreeNode
 
     @layoutSpec = newLayoutSpec
 
+    # A pending geometry WISH (@desiredExtent / @desiredPosition) is a free-floating-only value:
+    # the five deferred setters that record one (_setExtentNoSettle, _setBoundsNoSettle,
+    # _moveToNoSettle, _setWidthNoSettle, _setHeightNoSettle) all refuse the moment a spec owns
+    # my placement. So a spec that OWNS my placement voids any wish I am still carrying from my
+    # free-floating life -- my holder's grant is the answer to it, and a wish left pending would
+    # fire behind the holder's back at my next UN-granted _reLayout
+    # (__calculateNewBoundsWhenDoingLayout consumes it there), moving me off the frame the
+    # holder just gave me and arming the settle-time up-edge back onto the holder. The FOLLOWER
+    # spec is exempt by the same rule: its carrier stays free-floating and keeps recording
+    # wishes, which is why its consumer clears them per arrange instead
+    # (StretchablePanelWdgt._positionAndResizeChildren).
+    if newLayoutSpec?.ownsPlacement?()
+      @desiredExtent = undefined
+      @desiredPosition = undefined
+
     # The resizing handle becomes visible/invisible
     # when the layout spec of the parent changes
     # (typically it's visible only when freefloating)

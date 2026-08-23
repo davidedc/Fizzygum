@@ -11,6 +11,8 @@
 #                              starting-size sentinels and the height-freedom flag)
 #   CornerInternalLayoutSpec   placed against the parent's frame at one of five
 #                              corner/edge anchors (handles, triangle badges)
+#   EdgeDockLayoutSpec         a DOCKED frame: a band against one of the host's
+#                              four edges, at a thickness the host reserves
 #   StretchLayoutSpec          the child's proportional placement RECORD in a
 #                              fractional-consuming holder (stretch panel / desktop) —
 #                              the one FOLLOWER spec (ownsPlacement false, see below)
@@ -24,7 +26,7 @@
 #   re-lays) — which is what `isFreeFloating()` asks.
 # - which strategy places a child is answered by duck-typed capability queries on its spec
 #   (`isDivisionElement?()`, `isCornerInternal?()`, `isStackElementActive?()`,
-#   `isFrameContentActive?()`, `isStretchElement?()`, …), never by a type test.
+#   `isFrameContentActive?()`, `isStretchElement?()`, `isEdgeDock?()`, …), never by a type test.
 # - LIFECYCLE is exactly TWO kinds. A spec is either a carrier-owned KNOB — an object the
 #   widget owns for its whole life, holding underivable per-class/user preferences, doubling
 #   as the attachment value, armed into the slot at attachment (`Widget._divisionBox`,

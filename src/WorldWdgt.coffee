@@ -300,9 +300,11 @@ class WorldWdgt extends IconGridPanelWdgt
   dragEmbedChargeRingDeclared: undefined
   dragEmbedLabelDeclared: undefined
   dragEmbedLockBadgeDeclared: undefined
+  dragEmbedDockBandDeclared: undefined
   dragEmbedChargeRingWdgt: undefined
   dragEmbedLabelWdgt: undefined
   dragEmbedLockBadgeWdgt: undefined
+  dragEmbedDockBandWdgt: undefined
 
   # --- editor-focus selection (§5.D D-3/D21; selection-overlay-unification arc) --------------------
   # The widget generically SELECTED for editing this cycle, or undefined. PULL model: recomputed each cycle from
@@ -1637,6 +1639,23 @@ class WorldWdgt extends IconGridPanelWdgt
     else if @dragEmbedLockBadgeWdgt?
       @dragEmbedLockBadgeWdgt.fullDestroy()
       @dragEmbedLockBadgeWdgt = undefined
+
+    # dock band — the WHOLE strip a frame would take if released here, outlined in the candidate
+    # accent. A band is a region of its host's body, not a widget, so it is declared as a BOX and
+    # gets a HighlighterWdgt of its own rather than riding the per-widget highlight channel.
+    if @dragEmbedDockBandDeclared?
+      unless @dragEmbedDockBandWdgt?
+        @dragEmbedDockBandWdgt = new HighlighterWdgt
+        @add @dragEmbedDockBandWdgt
+        @dragEmbedDockBandWdgt.applyHighlightStyle HighlighterWdgt.candidateOutlineStyle()
+      # the overlay is a world child, so anchor it to the band's SCREEN footprint — the host can
+      # sit inside a rotated/scaled island, where its own plane-local box is the wrong plane
+      # (off any island mapRectToScreen returns the box unchanged)
+      bandHost = @dragEmbedDockBandDeclared.host
+      @dragEmbedDockBandWdgt._applyBounds bandHost.mapRectToScreen @dragEmbedDockBandDeclared.box
+    else if @dragEmbedDockBandWdgt?
+      @dragEmbedDockBandWdgt.fullDestroy()
+      @dragEmbedDockBandWdgt = undefined
 
   # The widget the editor-focus indicator frames (§5.D D-3, decisions D18/D21), or undefined. editorFocusWdgt
   # is the sticky focus POINTER (the last content clicked/dropped); this narrows it to a SELECTED
@@ -3068,9 +3087,11 @@ class WorldWdgt extends IconGridPanelWdgt
     @dragEmbedChargeRingDeclared = undefined
     @dragEmbedLabelDeclared = undefined
     @dragEmbedLockBadgeDeclared = undefined
+    @dragEmbedDockBandDeclared = undefined
     @dragEmbedChargeRingWdgt = undefined
     @dragEmbedLabelWdgt = undefined
     @dragEmbedLockBadgeWdgt = undefined
+    @dragEmbedDockBandWdgt = undefined
     # paint-error bookkeeping: errorsWhileRepainting is re-emptied every paint, but its companion
     # list never was, so it accumulated dead widgets for the whole life of the page.
     @widgetsGivingErrorWhileRepainting = []

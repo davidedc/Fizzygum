@@ -55,6 +55,6 @@ class GenericPanelWdgt extends FrameWdgt
   # never terminates).
   _resetToDefaultContents: ->
     return if @_beingFullDestroyed
-    @_destroyToolbarNoSettle()
+    @_retireDockedFramesNoSettle()
     @contents = @_makeStartingPayload()
     @_buildAndConnectChildrenNoSettle()

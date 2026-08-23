@@ -177,7 +177,41 @@ re-argue them.
   double chrome becomes the card bar inside the window bar), `macroSubMenuDroppedIntoPanelPinsItself` (+ the
   dwell); plus the NEW `macroGrabbedMenuStaysOnDesktop`. Open at brief time: the skin of a frame whose parent
   is the HAND mid-drag (two mid-drag images) — settled by measurement at the diffpage. No test reads pinned
-  chrome in an assertion (measured); no test pins a PromptWdgt other than by drag (coverage note). · P5 docking: not started (S2 GO; C17 RULED 2026-08-23: whole collapsed bar expands). · P6 Liskov walk + docs: not started.
+  chrome in an assertion (measured); no test pins a PromptWdgt other than by drag (coverage note).
+- P5 briefs (a)+(b): **DONE 2026-08-23** (Opus; `fg build` OK, `fg recapture` of the 4c 7 COMPLETE dpr 1+2,
+  `fg presuite` 312/0, `fg census` 0 movers ×4). `EdgeDockLayoutSpec` (side/thickness/engaged, `ownsPlacement`,
+  world-capable — T5 decided: the world grows no slots, BACKLOG); host `@dockedFrames` (side → frame, the four
+  `_<side>DockThickness` read spec.thickness expanded / bar thickness collapsed / 0 disengaged); the docked
+  thing IS a frame (`buildToolbar` wrapped once, floats and re-docks as the SAME object); view/edit =
+  `spec.engaged` (GHOST-conform; view mode byte-identical); undock = `wantsDetachOfChild` member test + slot
+  cleared at `_reactToChildRemoved`; the float/dock verbs ADAPTED (deletions in (c)). Bar axis (C13): the bar
+  crosses the strip at its leading end, text on horizontal bars only; collapsed dock = the bar as an edge
+  sliver (26 px); C15 free windows bar-on-top. **C17 landed** (whole collapsed bar taps to expand, every
+  manifestation; witness = probe only — no test taps a strip; the 6 collapse tests stay byte-identical).
+  **C13 amended in the ledger** (the payload gets its declared `dockThickness` exactly; the band adds its
+  body margin; the bar adds nothing to thickness). **C12's roster enforced**: a docked band carries NO
+  pencil/eye (the floating form keeps C5's). Consequences accepted: the grip eats strip length → Docs Maker's
+  last tool sits behind the strip's scroll (T2's live motivation); T17 filed (`SwitchButtonWdgt` self-passing
+  escalation defeated the first C17 guard).
+- P5 brief (c): **DONE 2026-08-24, PHASE CLOSE `fg gauntlet` 18/18** (no retries; presuite 316/0 byte-identical,
+  census 0 movers, menusweep 24 roots incl. the band + host dock-menu roots). Drop-to-dock: edge bands
+  (`dockBandDepth 30` preference) consulted FIRST and only for a frame payload, dwell-armed,
+  `dockSideAt` + `wantsDropOfChild`, band-outline highlight; menus: `dockSideMenu`/`dockAtSide`/`floatOutOfDock`
+  on the band, `toolbarSideMenu`/`addToolbarAtSide` on the host — all sweep-dispatched; the nine
+  `floatToolbar`-family names deleted tree-wide (`_destroyToolbarNoSettle` → `_retireDockedFramesNoSettle`);
+  the two toolbar tests rewritten for the real gestures; four new tests (`macroDockedFrameHasNoCloseNoResizer`,
+  `macroCollapsedDockIsAnEdgeSliver` + C17 tap, `macroDockAnyFrame` — a DOCUMENT window docked at a window's
+  left, eyeballed: nested docks compose — `macroViewModeDisengagesDocks`). The gauntlet's `revisits` leg caught
+  ONE convergence defect (22 makers, host arranged twice per flush): a pending `desiredExtent` WISH (the ctor's
+  300×300) survived the arming of a placement-owning spec, so the watched-children heal re-fired it over the
+  host's grant — fixed at the root in `Widget._setLayoutSpec` (arming an `ownsPlacement` spec clears
+  `desiredExtent`/`desiredPosition`; 15 lines; precedent `StretchablePanelWdgt`; the drive-asymmetry hypothesis
+  was FALSIFIED by the trace — the bar and the band share one drive, the bar just carries no wish). Residue
+  filed in the test's provenance: expanding a collapsed dock via the C17 strip tap leaves 46 px unexplained
+  inside the collapse button (two explanations falsified; byte-identity assertion dropped there, puzzle kept).
+  P6 docs additions from P5: `layout.md` §4.2 gains the wish/spec-arming rule; `drag-embed-interaction-spec.md`
+  gains the dock bands as a receptivity tier; `MACRO-PATTERNS.md` gains drop-to-dock. · P6 Liskov walk + docs:
+  not started.
 - Tail (program §5): not started.
 
 **MANDATE: complete elimination of the underlying problem, not mitigation.** The problem is that
