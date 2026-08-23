@@ -5238,6 +5238,18 @@ class Widget extends TreeNode
     if @isFreeFloating() and @isLayoutInert?()
       @__markForRelayout()
       return
+    # PARENTLESS-RECEIVER branch, the same structural argument from the other side: a widget with NO
+    # parent has no container layout to climb into, so the climb below is already a no-op and re-running
+    # its own _reLayout re-fits nothing above it -- which makes the flow-rule throw and the careless-push
+    # audit (which excludes orphans anyway) inapplicable too, exactly as they are for the inert receiver.
+    # Outside a pass this is byte-what the fall-through does; INSIDE one it is what makes "a widget built
+    # inside a flush is layout-neutral because it is an orphan" true of the ENQUEUE as well as of the
+    # settle -- a build core that marks its own fresh layout (ButtonWdgt's face, SwitchButtonWdgt's pair)
+    # is legal wherever a widget may be built, including a chrome strip gaining a piece as its roster is
+    # re-derived at the top of its own arrange.
+    if !@parent?
+      @__markForRelayout()
+      return
     # FLOW-RULE INVARIANT (fail fast): the immediate geometry mutators (the _apply*/_commit* corners, __commit* leaves, _move*/_set*/_resize* convenience)
     # must not SCHEDULE layout -- they only mutate; scheduling a (re-)layout is the public
     # self-settling tier's job. If an invalidate reaches here while recalculateLayouts is running,

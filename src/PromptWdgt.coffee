@@ -29,11 +29,6 @@ class PromptWdgt extends FrameWdgt
   # reach it as `<prompt>.tempPromptEntryField`.
   tempPromptEntryField: undefined
 
-  # I wear the pop-up manifestation in EITHER lifetime: pinning a prompt changes what
-  # dismisses it, not what it looks like.
-  _manifestsAsPopUp: ->
-    true
-
   # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does. The one isMenu?()
   # consumer is the hand's click-outside dismissal (ActivePointerWdgt.processMouseDown), so a
   # mouse-down landing inside a prompt counts as a click inside menu chrome and does NOT fire the
@@ -41,7 +36,11 @@ class PromptWdgt extends FrameWdgt
   isMenu: ->
     true
 
+  # I am a prompt only while I am mid-gesture UI. Pinned I am furniture, and my FRAME names me for
+  # what I then am -- a window on the desktop, an internal window nested in a container (program
+  # ruling C4).
   colloquialName: ->
+    return super() unless @lifetime is 'transient'
     if @msg then "\"" + @msg + "\" prompt" else "prompt"
 
   # the KIND names me: my message is my title, not my payload's colloquial name

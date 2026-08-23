@@ -27,11 +27,6 @@ class MenuWdgt extends FrameWdgt
   rowsPanel: undefined
   rowsViewport: undefined
 
-  # I wear the pop-up manifestation in EITHER lifetime: pinning a menu changes what
-  # dismisses it, not what it looks like.
-  _manifestsAsPopUp: ->
-    true
-
   # Role query (replaces `m instanceof MenuWdgt` in ActivePointerWdgt's
   # click-outside-a-menu dismissal): "am I a menu?" -- distinguishes menus from other frames. True here,
   # inherited by PromptWdgt/SaveShortcutPromptWdgt (mirroring the instanceof); dispatched via ?() (nothing
@@ -83,7 +78,11 @@ class MenuWdgt extends FrameWdgt
     panel.alpha = 0
     new PopUpRowsViewportWdgt panel
 
+  # I am a menu only while I am mid-gesture UI. Pinned I am furniture, and my FRAME names me for
+  # what I then am -- a window on the desktop, an internal window nested in a container (program
+  # ruling C4: there is no such thing as a pinned-menu kind).
   colloquialName: ->
+    return super() unless @lifetime is 'transient'
     if @title
       return "\"" + @title + "\" menu"
     else

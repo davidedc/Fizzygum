@@ -503,26 +503,30 @@ assertion a recapture after a regression silently stores two different hashes an
   getMostRecentlyOpenedMenu valid). No new verb.
 - **Pin a menu by its header** (`macroMenuPinnedByHeaderClick`): `@clickMenuHeaderToPin_InputEvents menu` clicks the menu's
   title bar (`.label`, the frame bar's title piece, whose click escalates to the strip → `pinPopUp`) — takes the lifetime
-  to `'persistent'` (and tightens the shadow), so a later
-  desktop click no longer dismisses it. The inverse of cascade auto-close.
-- **A pop-up dropped INTO a panel auto-pins itself** (`macroSubMenuDroppedIntoPanelPinsItself`): the pin-on-drop sibling of the
-  header-click pin above. Float-drag an unpinned pop-up (here the world menu's "demo ➜" sub-menu, titled "make a morph") OUT of its
-  parent by its HEADER and release it INSIDE a `PanelWdgt`: `ActivePointerWdgt.drop` re-parents it under the panel (`_acceptsDrops:true`)
-  and fires `FrameWdgt._reactToBeingDropped(whereIn)`, which — because `whereIn != world` — calls `pinPopUp()`,
-  taking the menu's lifetime to `'persistent'`. So the sub-menu becomes a PINNED child of the panel and SURVIVES the later dismissal of the
-  parent menu (a drop onto the bare world, `whereIn == world`, would NOT pin). Open the sub-menu with
+  to `'persistent'`, so a later desktop click no longer dismisses it. The inverse of cascade auto-close. ⚠ The pinned menu
+  is then a WINDOW, not a menu with a tighter shadow: skin is `f(lifetime, parentage)` (program ruling C4), so the strip
+  swaps its rounded header for a window title bar with close + collapse, the body swaps the menu box for the boxy one, and
+  the shadow becomes the desktop shadow — expect all of that in the after shot.
+- **A menu carried into a panel becomes a CARD in it** (`macroSubMenuDroppedIntoPanelPinsItself`): the container sibling of the
+  header-click pin above. Float-drag a transient pop-up (here the world menu's "demo ➜" sub-menu, titled "make a morph") OUT of its
+  parent by its HEADER: the GRAB is what takes its lifetime to `'persistent'` (`FrameWdgt._reactToBeingGrabbed`, program ruling C8), so
+  it survives the later dismissal wherever it lands. Release it INSIDE a `PanelWdgt` and `ActivePointerWdgt.drop` re-parents it under the
+  panel (`_acceptsDrops:true`) — but ⚠ **a frame is a deliberate-embed payload, menus included**, so the release must be DWELL-ARMED
+  (`yield 600` before the mouse-up, the non-scaled linger of the window-drop family); an unarmed release lands it on the WORLD at the
+  release point instead. Nested and persistent, it wears the CARD manifestation (flat body, internal strip, no shadow). Open the sub-menu with
   `@moveToItemStartingWithOfMenuAndClick_InputEvents (@getMostRecentlyOpenedMenu()), "demo"` and capture `subMenu =
   @getMostRecentlyOpenedMenu()` while fresh, HOLDING the reference (the next mouseUp clears `freshlyCreatedPopUps`). **The
   FLOATING-vs-CLIPPED transition is the visible tell** (and is what the recording shows): grab by the HEADER and carry it on top of the
   panel with the held-button idiom — `@moveToAndMouseDown_InputEvents subMenu.label.center()` (press the header — a press on the body
   would hit a menu item; a press-then-MOVE is a grab, a CLICK would pin in place) → `@syntheticEventsMouseMove_InputEvents (panel point),
-  "left button"` → screenshot WHILE held (the floating sub-menu is a hand-child drawn UNCLIPPED, overflowing the panel's bottom edge) →
-  `@syntheticEventsMouseUp_InputEvents()` (drops INTO the panel, re-parented + pinned, now CLIPPED by the panel) → screenshot. image_1
-  sub-menu cascading beside the empty panel → image_2 MID-DRAG floating on top, unclipped/overflowing → image_3 dropped+pinned, now
-  clipped, world menu STILL up → image_4 world menu dismissed (only then), sub-menu survives. Drop high (~`[0.5,0.1]`) so the overflow
+  "left button"` → screenshot WHILE held (the floating sub-menu is a hand-child drawn UNCLIPPED, overflowing the panel's bottom edge, and
+  already wearing the window manifestation the grab gave it; the move just re-anchored the dwell, so the charge ring under it is empty) →
+  `yield 600` → `@syntheticEventsMouseUp_InputEvents()` (the release arms and embeds it, now CLIPPED by the panel) → screenshot. image_1
+  sub-menu cascading beside the empty panel → image_2 MID-DRAG floating on top, unclipped/overflowing → image_3 embedded as a card, now
+  clipped, world menu STILL up → image_4 world menu dismissed (only then), the carried menu survives. Drop high (~`[0.5,0.1]`) so the overflow
   (floating) vs clip-at-the-edge (dropped) difference is pronounced.
 - **A menu pinned in a SCROLLABLE panel is live scrolling content** (`macroMenuPinnedInScrollPanel`): the ViewportWdgt
-  sibling of the drop-pin entry above. Drop the demo sub-menu into the demo "viewport" (350x250 `ViewportWdgt`
+  sibling of the carry-into-a-container entry above. Drop the demo sub-menu into the demo "viewport" (350x250 `ViewportWdgt`
   via `world.create`; locate it with `@findTopWidgetByClassNameOrClass ViewportWdgt` — its getTextDescription says
   "Panel", so pass the CLASS, not the string) and the taller-than-viewport menu is CLIPPED and makes the panel's own
   `panel.vBar` appear. Thereafter it behaves as ordinary content that is still a LIVE menu: move the panel by an empty
@@ -533,8 +537,8 @@ assertion a recapture after a regression silently stores two different hashes an
   palette riding the hand onto the desktop. Check the clicked item is INSIDE the viewport after the scroll (a clipped-away
   item can't be hit). No new verb.
 - **A menu in a WINDOW in a scroll-STACK is still a live menu** (`macroMenuInWindowInScrollStackStaysLive`): the
-  double-wrapping composition of the pin-on-drop and in-panel-liveness entries. Drop the demo sub-menu by its HEADER into an
-  empty internal window: the placeholder accepts it, `_reactToChildDropped` adopts + retitles, `_reactToBeingDropped` pins — and the window
+  double-wrapping composition of the carry-into-a-container and in-panel-liveness entries. Drop the demo sub-menu by its HEADER into an
+  empty internal window: the grab has already made it persistent, the placeholder accepts it, `_reactToChildDropped` adopts + retitles — and the window
   WRAPS down around the menu's natural narrow-tall shape (the wrap law applies to menus too; the preset extent is discarded).
   Drag that window by its TITLE BAR into a constrained scroll-stack: the cell's BAR takes the full stack width while the menu
   keeps its natural width inside; the tall cell overflows the viewport (scrollbar appears), a wheel slides the whole cell —
@@ -542,24 +546,26 @@ assertion a recapture after a regression silently stores two different hashes an
   reference captured BEFORE the drop — it survives both re-parentings) still FIRES, the made morph riding the hand to the
   desktop. GOTCHA: the header-drag's RELEASE point must be clear of every menu of the still-open world-menu cascade — a release
   over the cascade silently re-absorbs the dragged sub-menu (unpinned) and the later dismissal click destroys it. No new verb.
-- **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptWdgt` (extends MenuWdgt extends
-  FrameWdgt) casts a drop shadow like every pop-up (`FrameWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
+- **Pop-up (prompt/menu) shadow on drag** (`macroPromptShadowFollowsOnDrag`): a `PromptWdgt` (a framed citizen of `FrameWdgt`)
+  casts a drop shadow like every transient frame (`FrameWdgt.popUp → addShadow`, offset (5,5) α0.2). Drag it by its TITLE
   BAR: `@syntheticEventsMouseMovePressDragRelease_InputEvents prompt.label.center(), dest` (a press-drag GRABS the whole
-  pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). On drop `FrameWdgt._reactToBeingDropped`
-  re-runs `_updatePopUpShadow`, so the shadow renders correctly at every position. Capture `prompt` fresh right after it opens.
+  pop-up; a CLICK on the header would PIN it; dragging the CENTRE hits the inner field/slider). ⚠ That first grab is also what makes it
+  PERSISTENT (C8), so from then on it rests as a WINDOW; on each drop `FrameWdgt._reactToBeingDropped` re-runs `_updatePopUpShadow`, so
+  the shadow renders correctly at every position. Capture `prompt` fresh right after it opens.
 - **Menu shadow is correct WHILE dragging and AFTER drop** (`macroMenuShadowCorrectWhileAndAfterDrag`): the mid-drag companion of the
-  prompt-shadow entry above. A popped-up unpinned menu casts the at-rest pop-up shadow (`FrameWdgt.addShadow` → offset (5,5) α0.2); while
+  prompt-shadow entry above. A popped-up TRANSIENT menu casts the at-rest pop-up shadow (`FrameWdgt.addShadow` → offset (5,5) α0.2); while
   it is FLOAT-DRAGGED the grab swaps in the lifted drag shadow (`ActivePointerWdgt.grab` → addShadow offset (6,6) α0.1 — larger and
-  fainter); on drop `FrameWdgt._reactToBeingDropped` restores the at-rest shadow. The difference is an OFFSET/ALPHA change on pickup, NOT clipping
+  fainter); on drop `FrameWdgt._reactToBeingDropped` derives the shadow the new home calls for — and since the grab already made it
+  furniture, that is the desktop shadow of a WINDOW, not the pop-up one it opened with. The difference is an OFFSET/ALPHA change on pickup, NOT clipping
   at the screen corner (the positive down-right offset is never clipped at the top-left). CAPTURE THE MID-DRAG FRAME with the held-button
   idiom: `@moveToAndMouseDown_InputEvents menu.label.center()` (press the header — a press-then-MOVE is a grab; a CLICK would PIN it) →
   `@syntheticEventsMouseMove_InputEvents dest, "left button"` (move while held → grabs+carries the menu) → screenshot (button STILL held)
-  → `@syntheticEventsMouseUp_InputEvents()` → screenshot. image_2 (held, lifted shadow) and image_3 (dropped, rest shadow) sit at the SAME
-  position so ONLY the shadow differs — the three dataHashes differ, so the subtle shadow change is real and deterministic. (Held-button
+  → `@syntheticEventsMouseUp_InputEvents()` → screenshot. image_2 (held, lifted shadow) and image_3 (dropped, at rest) sit at the SAME
+  position, so what differs between them is the shadow alone — the three dataHashes differ, so the change is real and deterministic. (Held-button
   screenshot idiom proven by `macroSliderButtonStateColors`, which captures a button mid-press/mid-drag.)
 - **A pinned menu's shadow is untouched by bringToForeground** (`macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`):
-  completes the shadow trio (drag + prompt entries above). Raising a pinned menu must repaint the SAME tight pinned shadow,
-  not re-apply the loose unpinned one. The user raise is a click on the menu's HEADER: `Widget.mouseDownLeft` (`:2678`) calls
+  completes the shadow trio (drag + prompt entries above). Raising a pinned menu must repaint the SAME shadow its window
+  manifestation already carries, not re-apply the pop-up one it opened with. The user raise is a click on the menu's HEADER: `Widget.mouseDownLeft` (`:2678`) calls
   `bringToForeground` (`:2664`, `rootForFocus().moveAsLastChild()` — so any click on the menu raises the WHOLE menu), and the
   strip's own pin gesture (`FrameBarWdgt.mouseClickLeft` → `frame.pinPopUp`) fires only while the frame is TRANSIENT, so a
   click on an ALREADY-pinned menu raises it and leaves its lifetime — and its shadow — exactly as they are.

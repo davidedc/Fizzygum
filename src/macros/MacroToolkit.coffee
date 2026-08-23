@@ -749,8 +749,9 @@ class MacroToolkit
   # The piece escalates its click to the strip, and FrameBarWdgt.mouseClickLeft -> frame.pinPopUp on a
   # transient frame: pinning takes the menu's lifetime
   # to 'persistent' and removes it from world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren,
-  # so a subsequent click on the empty desktop no longer dismisses it (an UNpinned menu would vanish);
-  # the pinned menu also gets a tighter shadow. Pass a menu reference (e.g. getMostRecentlyOpenedMenu()).
+  # so a subsequent click on the empty desktop no longer dismisses it (a still-transient menu would vanish);
+  # the pinned menu is then furniture on the desktop and wears the WINDOW manifestation -- window strip with
+  # close and collapse, boxy body, desktop shadow. Pass a menu reference (e.g. getMostRecentlyOpenedMenu()).
   clickMenuHeaderToPin_InputEvents: (theMenu) ->
     @moveToAndClick_InputEvents theMenu.label
 

@@ -346,12 +346,17 @@ class ActivePointerWdgt extends Widget
       # dispatcher is the one that knows the gesture is one discrete mutation.
       @_settleLayoutsAfter => aWdgt._beforeBeingGrabbed?()
 
-      # double-settle-sanctioned: the grab gesture hand-rolls THREE deliberate sequential flushes —
-      # the release above, then @add self-settling the re-home into the hand, then the trailing
-      # @_settleLayoutsAfter flushing the old parent's _reactToChildGrabbed re-fit once (the drop's
-      # symmetric twin — see the comment there).
+      # double-settle-sanctioned: the grab gesture hand-rolls FOUR deliberate sequential flushes —
+      # the release above, then @add self-settling the re-home into the hand, then the grabbed
+      # widget's own reaction below, then the trailing @_settleLayoutsAfter flushing the old parent's
+      # _reactToChildGrabbed re-fit once (the drop's symmetric twin — see the comment there).
       @add aWdgt
-      aWdgt._reactToBeingGrabbed? oldParent
+      # I OWN this callback's settle too, for the same reason as the release above: a TRANSIENT frame
+      # becomes furniture at the grab (program ruling C8), which re-derives its skin and marks its
+      # title strip. A notification callback declares no settle of its own (layering rule [J]), so
+      # the dispatcher declares it — the mark is part of this one discrete mutation, not an
+      # undeclared end-of-cycle push.
+      @_settleLayoutsAfter => aWdgt._reactToBeingGrabbed? oldParent
       # The shadow must be added after @add -- it needs the widget's painted image, which @add may
       # produce for the first time. This grab shadow uses its own "floaty" look (offset/blur/color),
       # distinct from a widget's own per-class shadow (e.g. Menus use a different one).
@@ -540,7 +545,7 @@ class ActivePointerWdgt extends Widget
       # consistent on return, not on the next doOneCycle. SINGLE settle (_settleLayoutsAfter): every
       # _reactToChildDropped / _reactToBeingDropped override re-homes / rebuilds / re-fits through the NON-settling cores
       # (FrameWdgt._buildAndConnectChildrenNoSettle, _fullDestroyNoSettle, _addNoSettle / _addInPseudoRandom
-      # PositionNoSettle, _createReferenceAndCloseNoSettle, _closePopUpsMarkedForClosureNoSettle, and immediate
+      # PositionNoSettle, _createReferenceAndCloseNoSettle, and immediate
       # mutators), so nothing re-enters the flush guard mid-pass; the single tier flushes ONCE at the end and
       # THROWS if a future override sneaks in a public setter (the wanted cores-call-cores discipline -- the
       # batch tier used to silently absorb that).

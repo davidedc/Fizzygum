@@ -119,7 +119,10 @@ re-argue them.
   `PopUpWdgt`/`MenuHeader` hits in 14 macro-source COMMENTS (`*_automationCommands.js`), 5 in two tests-repo
   scripts (`menu-click-sweep-headless.js` ×4, `serialization-roundtrip-headless.js` ×1), 9 in 4 architecture
   docs (`layering-naming-convention`, `viewports-and-planes`, `lint-and-static-checks`,
-  `serialization-duplication-reference`); `docs/specs` clean. Owner rulings at the
+  `serialization-duplication-reference`); `docs/specs` clean. P6 docs also weave the ORPHAN-ENQUEUE rule
+  into `layout.md` (beside the settle-side orphan auto-defer): an orphan's `_invalidateLayout` marks and never
+  climbs/throws — the inert-receiver case law (`unify-layout-enqueue-primitives-plan.md`) applied to
+  `!@parent?` (landed in P4). Owner rulings at the
   pixel gate (all 2026-08-23): **(i)** the escape hatch — 31 menu/prompt tests recaptured for the SHADOW
   alone: a framed pop-up casts ONE clean silhouette like a window (the old per-row silhouettes double-darkened
   a 1–3 px band at the shadow's right/bottom edge); the pin-state policy is retained and MEASURED on the new
@@ -142,7 +145,39 @@ re-argue them.
   `firstParentThatIsAPopUp` stopped at any frame (extraction now asks the holder); a titled rowless menu grew
   36 px (an empty stack measured its applied height). Found: a subclass's `@serializationTransients` REPLACES
   the inherited list (tail T16).
-- P4 skin/shadow/grab: not started (budget = the 4d set + the new test + the one changed macro). · P5 docking: not started (S2 GO; C17 RULED 2026-08-23: whole collapsed bar expands). · P6 Liskov walk + docs: not started.
+- P4 skin/shadow/grab: **DONE 2026-08-23** (Opus; `fg build` OK, `fg recapture` 10 tests COMPLETE dpr 1+2,
+  `fg presuite` 312/0, `fg revisits` OK, `fg gauntlet` 18/18 — `tiernaming` load-flake on an unrelated stretch
+  test, serial PASS). Skin/bar/shadow = f(lifetime, parentage) at `_setLifetimeNoSettle` + `_reactToBeingAdded`;
+  `_manifestsAsPopUp` deleted; grab pins (C8) in `_reactToBeingGrabbed`; pop-ups `requiresDeliberateEmbedding
+  → true` (THREE macros gained the dwell, not one: `macroSubMenuDroppedIntoPanelPinsItself`,
+  `macroMenuInWindowInScrollStackStaysLive`, `macroMenuPinnedInScrollPanel`); T14 closed (one
+  `_fullDestroyNoSettle` retirement path + plant-proven witness `macroRetiredBarPieceTakesItsFaceWithIt`); new
+  `macroGrabbedMenuStaysOnDesktop`. Mid-drag: a grabbed pop-up shows the WINDOW manifestation on the hand
+  (measured — the hand is not a container, so parentage reads "world"). The first gauntlet caught 11 careless
+  pushes (the lifetime mark declared outside any settle on both pin paths) → the P3-close doctrine verbatim:
+  the grab dispatcher settles around `_reactToBeingGrabbed` (four deliberate flushes now) and `pinPopUp` goes
+  through the self-settling `setLifetime` (allowlisted under [U], same shape as `setScrollPolicy`).
+  ⚠ Core change accepted by the coordinator: `Widget._invalidateLayout` gains a PARENTLESS-receiver branch
+  (mark self, skip the climb and the in-pass throw) mirroring the inert-receiver one — a piece built in-pass
+  (ButtonWdgt's face) marks its fresh layout; the gauntlet's settle/capstone/revisits/census legs are its
+  arbiter. Design calls: `_chromePadding` is the PAYLOAD's (`PopUpRowsViewportWdgt.keepsItsOwnChromeMargin`),
+  not the lifetime's; `FrameBarWdgt.titleStyle` rebuilds the strip pieces on a manifestation flip.
+  **For P6:** `lifetime` literal sites = 12 (11 reads, 1 write) — 9 consulting branches beside the two named
+  predicates: §3's ~8 threshold is reached; decide policy objects vs enum there. **Owner ruled 2026-08-23: the
+  persistent citizens answer the TITLED colloquial form** — `'"<title>" window'` when titled (both parentages;
+  the window/card split is visual, not nominal), bare `window`/`internal window` only when untitled — the
+  symmetric twin of the transient `'"<title>" menu'`, and NOT a history leak (the title is the live bar title,
+  the document-names-its-window move). Lands at P6 (menu + prompt `colloquialName`; recapture
+  `macroMenuInWindowInScrollStackStaysLive` ×4 images × 2 dprs; verify no other screenshot lists a pinned
+  pop-up by colloquial name — the 4e census suggests none). **Budget re-measured as 4e = 10** (the plan's "pixel-identical
+  except 4d" under-counted: C4 turns EVERY persistent pop-up at a screenshot into a window/card, not only the
+  grab-pinned ones) — window: `macroMenuPinnedByHeaderClick`, `macroExtractMenuRowFromPinnedMenu`,
+  `macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`, `macroDuplicatedMenuAutoPinsOnDesktop`, the
+  three 4d tests; card: `macroMenuPinnedInScrollPanel`, `macroMenuInWindowInScrollStackStaysLive` (today's
+  double chrome becomes the card bar inside the window bar), `macroSubMenuDroppedIntoPanelPinsItself` (+ the
+  dwell); plus the NEW `macroGrabbedMenuStaysOnDesktop`. Open at brief time: the skin of a frame whose parent
+  is the HAND mid-drag (two mid-drag images) — settled by measurement at the diffpage. No test reads pinned
+  chrome in an assertion (measured); no test pins a PromptWdgt other than by drag (coverage note). · P5 docking: not started (S2 GO; C17 RULED 2026-08-23: whole collapsed bar expands). · P6 Liskov walk + docs: not started.
 - Tail (program §5): not started.
 
 **MANDATE: complete elimination of the underlying problem, not mitigation.** The problem is that

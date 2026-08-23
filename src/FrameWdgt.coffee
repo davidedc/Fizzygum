@@ -79,14 +79,6 @@ class FrameWdgt extends Widget
   # undefined on a window: nothing opened it.
   widgetOpeningThePopUp: undefined
 
-  # Do I wear the POP-UP manifestation — the menu box, the title-header strip, the pop-up
-  # shadow policy, no chrome padding and no resize handle? ONE derivation, read by the bar
-  # spec, the body appearance, the chrome padding and the drop hook, so the three never
-  # disagree. A pop-up CITIZEN answers true in either lifetime: pinning a menu changes what
-  # dismisses it, not what it looks like.
-  _manifestsAsPopUp: ->
-    @lifetime is 'transient'
-
   # the geometry remembered ACROSS a collapse, so uncollapsing restores what was there:
   # recorded in _beforeChildCollapsed (the un-collapsed width, and both extents) and in
   # _beforeChildUnCollapsed (the collapsed width). undefined until the first collapse.
@@ -147,13 +139,15 @@ class FrameWdgt extends Widget
   #                 aligned in the span the pieces leave) or "menuHeader" (a rounded header box
   #                 inset by the padding, the title text hugging itself and centred in it).
   #
-  # The TRANSIENT row is the pop-up manifestation's -- `pieces: ["title"]` (a tap on it pins the
-  # frame), `naturalWidth: "titleText"`, the menu-header metrics and skin -- laid out by the same
-  # bar through the same arrange. For the window rows the strip's COLOURS are a separate axis,
+  # WHICH row applies is my LIFETIME (program ruling C4): a TRANSIENT frame is a menu and wears
+  # the pop-up row -- `pieces: ["title"]` (a tap on it pins the frame), `naturalWidth: "titleText"`,
+  # the menu-header metrics and skin. A PERSISTENT one is furniture and wears the window row,
+  # whatever it was born as: a pinned menu IS a window, down to its strip. Both are laid out by the
+  # same bar through the same arrange. For the window rows the strip's COLOURS are a separate axis,
   # derived from parentage by _setAppearanceAndColorOfTitleBackground beside my own
   # _deriveAndSetBodyAppearance.
   _barSpec: ->
-    return @_transientBarSpec() if @_manifestsAsPopUp()
+    return @_transientBarSpec() if @lifetime is 'transient'
     preferences = WorldWdgt.preferencesAndSettings
     pieces = []
     pieces.push "close" if @isFreeFloating()
@@ -166,12 +160,14 @@ class FrameWdgt extends Widget
     axis: "horizontal"
     showsText: true
     naturalWidth: "none"
-    # the strip: icon square + a padding above and below. (Rounding the whole sum -- identical
-    # to every inline form for any integer @padding.)
-    thickness: Math.round preferences.barIconSize + @padding + @padding
+    # the strip: icon square + a padding above and below. The strip's own padding is the bar
+    # preference (G2), NOT my body margin: the two coincide on a frame whose payload takes the
+    # chrome margin, and a payload that keeps its own border (a rows panel) leaves my body margin
+    # at zero while its window strip stays a window strip.
+    thickness: Math.round preferences.barIconSize + 2 * preferences.barPadding
     slotSize: preferences.barIconSize
     glyphSize: preferences.barGlyphSize
-    padding: @padding
+    padding: preferences.barPadding
     textHeight: preferences.titleBarTextHeight
     fontSize: preferences.titleBarTextFontSize
     titleStyle: "windowBar"
@@ -423,19 +419,21 @@ class FrameWdgt extends Widget
     @setExtent @_initialExtent()
 
   # The extent I take at construction. A window opens at a default size the opener then imposes
-  # over; a POP-UP is sized by what it holds from the moment it exists, so `new MenuWdgt` hands
-  # back something with a real extent rather than a placeholder one.
+  # over; a frame born TRANSIENT is mid-gesture UI, sized by what it holds from the moment it
+  # exists, so `new MenuWdgt` hands back something with a real extent rather than a placeholder one.
   _initialExtent: ->
-    if @_manifestsAsPopUp()
+    if @lifetime is 'transient'
       @preferredExtent()
     else
       new Point 300, 300
 
-  # The margin my chrome keeps around my content -- ONE number serving the bar strip's own
-  # padding and the body margin. A POP-UP has none: its rows panel keeps the menu border itself,
-  # and its box IS the panel's box.
+  # The margin my body keeps around my payload. It is the PAYLOAD's question, not my
+  # manifestation's: a payload that draws its own border (a rows panel keeps the menu border, and
+  # its box IS my box) gets none, because a second margin would only double the first. Everything
+  # else gets the chrome margin preference. Read once, at construction, like the payload it
+  # follows.
   _chromePadding: ->
-    if @_manifestsAsPopUp()
+    if @contents?.keepsItsOwnChromeMargin?()
       0
     else
       WorldWdgt.preferencesAndSettings.barPadding
@@ -630,14 +628,14 @@ class FrameWdgt extends Widget
     return false
 
 
-  # A window is the DELIBERATE-EMBED payload class (drag-embed spec §4): dropping it into a container
-  # must be armed by a dwell (spec §6), so windows are never nested by accident during the constant
+  # A FRAME is the DELIBERATE-EMBED payload class (drag-embed spec §4): dropping one into a container
+  # must be armed by a dwell (spec §6), so a frame is never nested by accident during the constant
   # move-a-window gesture. (Overrides Widget's plain default.)
-  #   A POP-UP is not: carrying a menu into a container IS the pin gesture, deliberate in itself and
-  # the only reason to drag a menu anywhere but the desktop — where a window's drag is the ordinary
-  # move-it-around gesture that happens over containers all day long.
+  #   ONE rule for every frame, whatever it was born as (program ruling C8): taking hold of a menu
+  # already makes it furniture, so carrying it onwards is the same move-it-around gesture a window's
+  # drag is, and it passes over containers on the way exactly as often.
   requiresDeliberateEmbedding: ->
-    !@_manifestsAsPopUp()
+    true
 
   # A frame does NOT impose its ratio on dropped children (was the
   # `!(whereIn instanceof FrameWdgt)` exclusion in the ratio mixin /
@@ -1000,21 +998,21 @@ class FrameWdgt extends Widget
   _beforeChildDropped: (child) ->
     @removeChild @contents
 
+  # Landing decides my shadow: the hand's lifted one goes away with the hand, and where I come to
+  # rest says what I cast instead (see the policy below).
   _reactToBeingDropped: (whereIn) ->
     super
     @contents?._reactToHolderFrameDropped? whereIn
-    return unless @_manifestsAsPopUp()
-    if whereIn != world
-      # public-call-sanctioned: pinPopUp is BUILT for this caller — its no-arg branch exists
-      # precisely because this hook runs inside the drop's settle, and takes the NoSettle path
-      # (_closePopUpsMarkedForClosureNoSettle) so the closures ride the drop's flush instead of
-      # re-entering the flush guard. See the comment on that branch.
-      @pinPopUp()
-
     @_updatePopUpShadow()
 
+  # "You moved it, it stays" (program ruling C8): taking hold of a TRANSIENT frame makes it
+  # furniture at the GRAB, not at the drop — carry a menu anywhere, including straight back onto the
+  # desktop, and it survives the next click. A notification callback declares no settle of its own
+  # (layering rule [J]), so this takes the NoSettle entry and the mark it leaves rides the flush the
+  # grab dispatcher owns around this gesture.
   _reactToBeingGrabbed: (whereFrom) ->
     @contents?._reactToHolderFrameGrabbed? whereFrom
+    @_setLifetimeNoSettle 'persistent' if @lifetime is 'transient'
 
   # ===== the transient policy: registries, dismissal, pinning =====
 
@@ -1074,12 +1072,19 @@ class FrameWdgt extends Widget
 
   # THE ONE PLACE MY LIFETIME CHANGES, so the one place every consequence of the change lives.
   #   Entering 'persistent' hands me to the user: the click-outside dismissal callback goes (nothing
-  # outside me may dismiss me any more), my shadow re-derives for furniture, and my rows re-read the
-  # grip fact (see _invalidateRowsAfterPinChange).
+  # outside me may dismiss me any more) and my rows re-read the grip fact (see
+  # _invalidateRowsAfterPinChange).
   #   Entering 'transient' makes me mid-gesture UI: I join the open set the world sweeps and arms the
   # click-outside dismissal that ends me.
-  #   Nothing settles here — the drop path reaches this inside the drop's own settle (see pinPopUp's
-  # no-arg branch), so the settling half is the setLifetime wrapper above.
+  #   Either way my MANIFESTATION follows (program ruling C4): the body skin and the shadow are
+  # derived here and now, and my strip is re-derived — but a strip that gains or loses a piece
+  # CONSTRUCTS one, so the derive itself runs only inside a flush. In-pass (a lifetime change reached
+  # from an arrange) that flush is the one already running; out of pass I only MARK, and the arrange
+  # derives at its top on the flush the gesture supplies. Same two tiers, same discriminator, as
+  # _setLayoutSpec's roster derive.
+  #   Nothing settles here, so every caller must bring a declared flush for that mark to ride: the
+  # user-facing pins (the strip tap, the "pin" row) come through the setLifetime wrapper above, and
+  # the grab reaches me from a notification callback, whose settle the grab dispatcher owns.
   _setLifetimeNoSettle: (aLifetime) ->
     # public-call-sanctioned: onClickOutsideMeOrAnyOfMyChildren is pure REGISTRY bookkeeping (one
     # add/delete on world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren) — it settles nothing and
@@ -1088,28 +1093,30 @@ class FrameWdgt extends Widget
     @lifetime = aLifetime
     if aLifetime is 'persistent'
       @onClickOutsideMeOrAnyOfMyChildren undefined
-      @_updatePopUpShadow()
       @_invalidateRowsAfterPinChange()
     else
       world.openPopUps.add @
       @onClickOutsideMeOrAnyOfMyChildren "close"
+    @_deriveAndSetBodyAppearance()
+    @_updatePopUpShadow()
+    if world?._recalculatingLayouts
+      @_reDeriveBarRosterNoSettle()
+    else
+      @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
     return
 
-  # The user-facing verb for "this pop-up stays" — the header tap, the "pin" row, and a drop into a
-  # container all land here. The pin itself is the lifetime entry above; what belongs to THIS verb is
-  # the sibling sweep: the pop-ups I was opened from are mid-gesture UI that the pin ends, so the
-  # chain above me is marked for closure and drained. It is invoked on the pop-up to be pinned; the
-  # triggering menu item is the first parameter.
+  # The user-facing verb for "this pop-up stays" — the header tap and the "pin" row land here. The
+  # pin itself is the lifetime entry above; what belongs to THIS verb is the sibling sweep: the
+  # pop-ups I was opened from are mid-gesture UI that the pin ends, so the chain above me is marked
+  # for closure and drained. It is invoked on the pop-up to be pinned; the triggering menu item — the
+  # row or the strip that was tapped — is the first parameter, and it is what the sweep starts from.
+  #   Both callers are top-level gestures, so the pin goes through the SELF-SETTLING lifetime entry:
+  # the change marks my strip, and a public mutator declares its own flush rather than leaving the
+  # mark for the end of the cycle. The sweep that follows settles per closed pop-up, as it always has.
   pinPopUp: (pinMenuItem)->
-    @_setLifetimeNoSettle 'persistent'
-    if pinMenuItem?
-      pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
-      world.closePopUpsMarkedForClosure()
-    else
-      # no-arg caller is _reactToBeingDropped (inside the drop's settle): mark + close the popups through
-      # the non-settling core so they ride the drop's flush rather than re-entering the flush guard.
-      @getParentPopUp()?.propagateKillPopUps()
-      world._closePopUpsMarkedForClosureNoSettle()
+    @setLifetime 'persistent'
+    pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
+    world.closePopUpsMarkedForClosure()
 
   # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
   # being pinned is what makes it liftable (ButtonWdgt.isDetachablePayloadOfMyParent →
@@ -1125,30 +1132,26 @@ class FrameWdgt extends Widget
     row._changed() for row in (@rowsPanel?.children ? [])
     return
 
-  # The pop-up shadow policy: mid-gesture UI floats over the desktop, furniture on the desktop
-  # sits closer to it, and furniture nested in a container casts nothing (it is part of what
-  # holds it). A window's only shadow is the hand's, while it is being dragged.
+  # WHETHER I cast a shadow is my PARENTAGE (program ruling C4): standing on the desktop I float
+  # over it, held in a container I am part of what holds me and cast nothing, and riding the hand I
+  # cast the hand's lifted one, which the hand adds itself right after this. WHAT the desktop
+  # shadow looks like is my lifetime, and that is the addShadow policy below. Orphan: nothing to
+  # cast onto and no home to read — the placement that gives me one asks again.
   _updatePopUpShadow: ->
+    return unless @parent?
     # public-call-sanctioned: addShadow/removeShadow are the public shadow API (also driven
     # externally, e.g. by the grab gesture) — consciously reused by this shadow-policy core.
-    if @isPopUpPinned()
-      if @parent == world
-        @addShadow()
-      else
-        @removeShadow()
-    else
+    if @parent == world
       @addShadow()
+    else
+      @removeShadow()
 
-  # A POP-UP's shadow is its own: mid-gesture UI floats over the desktop at (5,5), furniture
-  # on the desktop sits closer to it at (3,3) and darker. Every other frame takes the shadow
-  # the caller asks for — the desktop shadow Widget's add gives every world child, and the
-  # floaty one the hand adds while dragging (which is why an EXPLICIT offset always wins).
+  # A TRANSIENT frame's own shadow: mid-gesture UI floats over the desktop at (5,5). Furniture
+  # takes the shadow the caller asks for — the desktop shadow Widget's add gives every world child,
+  # and the floaty one the hand adds while dragging — which is why an EXPLICIT offset always wins in
+  # both rows.
   addShadow: (offset, alpha) ->
-
-    if @_manifestsAsPopUp()
-      if @isPopUpPinned() and @parent == world
-        super new Point(3, 3), 0.3
-        return
+    if @lifetime is 'transient'
       super (offset ? new Point 5, 5), (alpha ? 0.2)
       return
 
@@ -1233,13 +1236,19 @@ class FrameWdgt extends Widget
 
   # A duplicate is born furniture: nobody is mid-gesture with a copy, so it must not evaporate on
   # the next click (SystemTest_macroDuplicatedMenuAutoPinsOnDesktop asserts exactly that).
-  # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN
-  # carrying my own shadow verbatim, and the entry's shadow re-derive reads a parent it does not
-  # have yet — the copy takes its shadow from wherever the copy gesture lands it.
+  # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN,
+  # so the entry's registry and strip work has nothing to reach and its shadow derive has no home to
+  # read — the copy carries my shadow verbatim until the copy gesture lands it somewhere. What the
+  # copy DOES need at once is the body skin its new lifetime calls for, so that it never spends the
+  # carry wearing a menu box under a window strip; the strip itself re-derives on the first arrange.
+  # That skin derive is the CHANGE's consequence, so it runs only where there is one — copying
+  # furniture copies its skin along with everything else.
   fullCopy: ->
     copiedWidget = super
+    lifetimeChanges = copiedWidget.lifetime is 'transient'
     copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
     copiedWidget.lifetime = 'persistent'
+    copiedWidget._deriveAndSetBodyAppearance() if lifetimeChanges
     return copiedWidget
 
   # The whole-window skin follows the window's nesting (isInternal, derived from parentage), so
@@ -1280,16 +1289,18 @@ class FrameWdgt extends Widget
     @_buildAndConnectChildrenNoSettle()
 
   # The BODY appearance half of my skin (the title-bar half is
-  # FrameBarWdgt._setAppearanceAndColorOfTitleBackground): the MENU box when I wear the pop-up
-  # manifestation, else flat RectangularAppearance when nested (internal) and boxy
-  # BoxyAppearance when free on the desktop (external). Derived from the manifestation and from
-  # isInternal (parentage), set at construction and re-derived on every re-parenting by
-  # _reactToBeingAdded.
-  #   The pop-up branch carries its own colours: a menu box is grey with the menu stroke, and it
+  # FrameBarWdgt._setAppearanceAndColorOfTitleBackground). THREE manifestations, derived from my
+  # LIFETIME and my PARENTAGE and from nothing else (program ruling C4): transient — the MENU box;
+  # persistent on the desktop — the boxy BoxyAppearance of a window; persistent nested in a real
+  # container — the flat RectangularAppearance of a card. There is deliberately no fourth,
+  # "pinned menu" skin: that would key on what I once was, the one input a derived skin may never
+  # take. Set at construction, re-derived on every re-parenting (_reactToBeingAdded) and on every
+  # lifetime change (_setLifetimeNoSettle).
+  #   The menu branch carries its own colours: a menu box is grey with the menu stroke, and it
   # is rounded only when it has a title strip to round (an untitled pop-up takes the boxy
   # default). Nothing else paints them -- my rows panel is a transparent stack inside me.
   _deriveAndSetBodyAppearance: ->
-    if @_manifestsAsPopUp()
+    if @lifetime is 'transient'
       @appearance = new MenuAppearance @
       @color = Color.create 238, 238, 238
       @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor
@@ -1365,16 +1376,19 @@ class FrameWdgt extends Widget
       @resizer = resizer
 
   # My bar's roster follows my ATTACHMENT (a host that owns my placement owns my membership,
-  # so a host-owned frame carries no close piece -- ruling C6), so it is re-derived wherever
-  # that attachment can change: at every (re)parenting and at every layout-spec change, the
-  # very seam the resize handle's own visibility rides (HandleWdgt.updateVisibility, driven
-  # from Widget::_setLayoutSpec). Re-points the aliases at what the bar now holds, and
-  # invalidates only when the roster really moved -- a spec-less chrome child rides the
-  # freefloating skip in Widget._addNoSettle's container invalidate, so the frame's own layout
-  # is not reached by the add alone.
+  # so a host-owned frame carries no close piece -- ruling C6) and my LIFETIME (a menu wears the
+  # title-only strip, furniture the window strip -- ruling C4), so it is re-derived wherever either
+  # can change: at every (re)parenting, at every layout-spec change -- the very seam the resize
+  # handle's own visibility rides (HandleWdgt.updateVisibility, driven from Widget::_setLayoutSpec)
+  # -- and at every lifetime change. Re-points the aliases at what the bar now holds (a strip that
+  # changes style carries a fresh title piece and background), and invalidates only when the roster
+  # really moved -- a spec-less chrome child rides the freefloating skip in Widget._addNoSettle's
+  # container invalidate, so the frame's own layout is not reached by the add alone.
   _reDeriveBarRosterNoSettle: ->
     return unless @bar?
     return unless @bar._reDeriveRosterNoSettle()
+    @titlebarBackground = @bar.titlebarBackground
+    @label = @bar.label
     @closeButton = @bar.closeButton
     @collapseUncollapseSwitchButton = @bar.collapseUncollapseSwitchButton
     # OFF-PASS the roster change needs a re-lay scheduled. IN-PASS it does not: the only

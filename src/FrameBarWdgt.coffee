@@ -34,6 +34,11 @@ class FrameBarWdgt extends Widget
   closeButton: undefined
   collapseUncollapseSwitchButton: undefined
   editButton: undefined
+  # WHICH style the title pieces I am holding right now were built for. The two styles are two
+  # different pieces -- a rounded header box around a self-hugging TextWdgt, or an inset strip
+  # behind a fitted StringWdgt -- so a frame that changes manifestation needs them REBUILT, not
+  # recoloured, and this is what tells the roster derive that they disagree with the spec.
+  titleStyle: undefined
 
   constructor: (@frame) ->
     super()
@@ -107,6 +112,7 @@ class FrameBarWdgt extends Widget
       # label -- tear down through the non-settling core (inside the rebuild's settle)
       @label?._fullDestroyNoSettle()
       @label = @_buildTitleNoSettle spec
+      @titleStyle = spec.titleStyle
 
     # the upper-left button, often a close button but it can be anything: the
     # frame's ctor-supplied piece is adopted here, and the roster below decides
@@ -162,8 +168,32 @@ class FrameBarWdgt extends Widget
   # rides the freefloating skip in Widget._addNoSettle's container invalidate, and
   # an unconditional invalidate mid-arrange would cost a settle re-visit).
   _reDeriveRosterNoSettle: ->
-    pieces = @frame._barSpec().pieces
+    spec = @frame._barSpec()
+    pieces = spec.pieces
     rosterChanged = false
+
+    # the title pair (strip background + text piece) first: a roster that drops the title retires
+    # both, and a roster that keeps it in a DIFFERENT style rebuilds both, since the two styles are
+    # two different pieces. The text carries over so whatever the frame last titled itself survives
+    # the swap (an empty window keeps saying "empty window").
+    titleWanted = "title" in pieces
+    if @titlebarBackground? and (!titleWanted or @titleStyle isnt spec.titleStyle)
+      titleTextCarriedOver = @label?.text
+      # the SUBTREE, through the non-settling core: the pieces own children of their own, and
+      # destroying a piece alone would leave those alive and off-tree -- escaped widgets the
+      # instances registry pins forever.
+      @titlebarBackground._fullDestroyNoSettle()
+      @titlebarBackground = undefined
+      @label?._fullDestroyNoSettle()
+      @label = undefined
+      @titleStyle = undefined
+      rosterChanged = true
+    if titleWanted and !@titlebarBackground?
+      @_buildTitlebarBackground()
+      @label = @_buildTitleNoSettle spec
+      @label._setTextNoSettle titleTextCarriedOver if titleTextCarriedOver?
+      @titleStyle = spec.titleStyle
+      rosterChanged = true
 
     if "close" in pieces
       if !@closeButton? or @closeButton.parent isnt @
@@ -200,9 +230,13 @@ class FrameBarWdgt extends Widget
   # CONSTRUCTED, which is a settling operation outside a flush). Same two names, same
   # membership test, so the two halves cannot drift apart.
   _rosterDisagreesWithSpec: ->
-    pieces = @frame._barSpec().pieces
+    spec = @frame._barSpec()
+    pieces = spec.pieces
+    titleWanted = "title" in pieces
     closeWanted = "close" in pieces
     collapseWanted = "collapse" in pieces
+    return true if titleWanted isnt (@titlebarBackground? and @titlebarBackground.parent is @)
+    return true if titleWanted and @titleStyle isnt spec.titleStyle
     return true if closeWanted isnt (@closeButton? and @closeButton.parent is @)
     return true if collapseWanted isnt (@collapseUncollapseSwitchButton? and @collapseUncollapseSwitchButton.parent is @)
     false
@@ -271,8 +305,11 @@ class FrameBarWdgt extends Widget
     @_addNoSettle @editButton
     @editButton
 
+  # the SUBTREE, like every other piece I retire: an icon button owns a face widget, and destroying
+  # the button alone leaves that face alive and off-tree -- an escaped widget the instances registry
+  # pins forever. ONE retirement path for the whole roster.
   _destroyEditButtonNoSettle: ->
-    @editButton?._destroyNoSettle()
+    @editButton?._fullDestroyNoSettle()
     @editButton = undefined
 
   # ===== the strip arrange =====

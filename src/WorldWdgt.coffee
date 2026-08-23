@@ -775,26 +775,14 @@ class WorldWdgt extends IconGridPanelWdgt
 
     return mostRecentPopUp
 
-  # used to close temporary menus
-  # thin-wrap-exempt: NOT the canonical wrap over its _NoSettle twin -- the two are PARALLEL closers, not
-  # wrapper/core. This one closes each marked popup via the self-settling close() (correct for the top-level
-  # "pin" menu-click path, the title-bar tap -> pinPopUp); the twin closes via _closeNoSettle for the drop path
-  # (FrameWdgt._reactToBeingDropped -> pinPopUp, inside the drop's settle). Separate keeps the menu path's
-  # per-popup settle exactly (vs collapsing to one settle). Only TRANSIENT pop-ups ever enter the marked
-  # set (propagateKillPopUps gates on the lifetime), so each drained close lands on
+  # used to close temporary menus. Every caller is a top-level gesture -- the "pin" menu row, the
+  # title-strip tap, the hand's own click-outside sweep -- so each marked popup closes via the
+  # self-settling close(), one settle per popup. Only TRANSIENT pop-ups ever enter the marked set
+  # (propagateKillPopUps gates on the lifetime), so each drained close lands on
   # FrameWdgt._closeNoSettle's destroy branch.
   closePopUpsMarkedForClosure: ->
     @popUpsMarkedForClosure.forEach (eachWidget) =>
       eachWidget.close()
-    @popUpsMarkedForClosure.clear()
-
-  # NON-settling variant for the drop path (FrameWdgt._reactToBeingDropped -> pinPopUp, inside the drop's
-  # settle): each marked popup closes through the core _closeNoSettle so it rides the drop's single
-  # flush instead of re-entering the flush guard. The public version above stays for the top-level
-  # menu-click "pin" path, where the self-settling close() is correct.
-  _closePopUpsMarkedForClosureNoSettle: ->
-    @popUpsMarkedForClosure.forEach (eachWidget) =>
-      eachWidget._closeNoSettle()
     @popUpsMarkedForClosure.clear()
   
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of

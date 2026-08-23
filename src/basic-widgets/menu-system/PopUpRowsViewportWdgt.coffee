@@ -120,6 +120,13 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
+  # My rows panel keeps the menu border itself and my box IS its box, so a frame holding me adds no
+  # body margin of its own -- a second margin would only double the first. The capability query a
+  # frame asks its payload for its chrome margin (FrameWdgt._chromePadding); a payload without an
+  # opinion takes the margin preference.
+  keepsItsOwnChromeMargin: ->
+    true
+
   # drag me and you mean the pop-up: my plane holds a pop-up's body, not loose content
   # someone may pull out of me (Widget.grabsToParentWhenDragged)
   isLockingToPanels: true
