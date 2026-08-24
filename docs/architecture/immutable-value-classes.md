@@ -137,8 +137,13 @@ an edge as a value), `SheetError`
 (spec §9.5 purity law), `Macro` (with one sanctioned lazy memo, `_linkedCode` — same pattern
 as `Color._derived_String`), `Grid3D`/`PlaneGrid3D` (index arrays are built before
 construction), the `InputEvent` family (events are values; `WheelInputEvent.fromBrowserEvent`
-writes on the RAW browser event before construction, which is outside the value; 
-`MousemoveInputEvent`'s constructor reads `world` — impure construction, immutable after).
+writes on the RAW browser event before construction, which is outside the value;
+`WheelInputEvent` extends `InputEvent` directly, beside the `PointerInputEvent` family, not
+through it. That family — `PointerdownInputEvent`/`PointermoveInputEvent`/`PointerupInputEvent`/
+`PointercancelInputEvent`, one class per W3C pointer kind of event — has a PURE constructor; the
+impure `world` read (`world.getCanvasPosition()`, to convert page coordinates to world
+coordinates) lives in `PointerInputEvent.fromBrowserEvent`, the one static boundary, not the
+constructor, so construction itself stays pure and every instance is immutable after).
 
 **Deliberately mutable (do not "fix"):** `VerticalStackLayoutSpec` / `FrameContentLayoutSpec`
 (working layout state, written by design), `WireSpec` (a controller's connection — the SAME

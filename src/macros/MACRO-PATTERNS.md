@@ -448,8 +448,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Open a menu / click an item**: `@openMenuOf_InputEvents widget` (right-click) then `@moveToItemOfTopMenuAndClick_InputEvents
   "label"`, or the `clickMenuItemOfWidget_InputEvents_Macro widget, "label"` verb (composes both). Pop the WORLD menu at a
   deliberate spot: `@moveToAndClick_InputEvents (new Point X, Y), "right button"`.
-- **`getMostRecentlyOpenedMenu()` is fresh-only.** It reads `world.freshlyCreatedPopUps`, which **every mouseUp clears**
-  (`ActivePointerWdgt.processMouseUp`). Capture a popup reference RIGHT AFTER it opens and drive its later items through
+- **`getMostRecentlyOpenedMenu()` is fresh-only.** It reads `world.freshlyCreatedPopUps`, which **every pointer-up clears**
+  (`ActivePointerWdgt.processPointerUp`). Capture a popup reference RIGHT AFTER it opens and drive its later items through
   `@moveToItemOfMenuAndClick_InputEvents menu, "label"` whenever you touch the popup more than once (e.g. click a
   slider/palette INSIDE a prompt, THEN its "Ok").
 - **Item-label matching variants**: exact (`moveToItemOfMenuAndClick_InputEvents`), **PREFIX**
@@ -575,7 +575,7 @@ assertion a recapture after a regression silently stores two different hashes an
   and one more header click lifts the menu above it with the tight shadow painted over the rectangle. The on-menu drop is
   safe twice over: a menu does not accept drops (`Widget._acceptsDrops:104` false; `dropTargetFor` walks up to the world, so
   the rectangle lands as a world child ABOVE the menu), and the drop CONSUMES the mouse-down
-  (`ActivePointerWdgt.processMouseDown:372` → `drop()`, button nulled) so no `mouseDownLeft` reaches the menu to raise it
+  (`ActivePointerWdgt.processPointerDown:372` → `drop()`, button nulled) so no `mouseDownLeft` reaches the menu to raise it
   prematurely — while the same drop still dismisses the unpinned creation menus (the pinned one survives). The recording
   drove the raise via a console eval of "@bringToForeground()" — the header click invokes the same method, minus the console
   fixture noise. No new verb.
@@ -1375,7 +1375,7 @@ assertion a recapture after a regression silently stores two different hashes an
   trigger on press: `Widget.findFirstLooseWidget` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
   `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
-  (`ActivePointerWdgt.processMouseUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
+  (`ActivePointerWdgt.processPointerUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
   MenuItemWdgt (new MenuItemSpec "demo", world, "popUpDemoMenu"), fontSize: 24, fontStyle: "sans-serif", centered: true`
   (the ctor is `(menuItemSpec, opts = {})`; the same action the world menu's "demo" item uses,
   `WorldWdgt.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `setExtent` (a standalone
@@ -1957,7 +1957,7 @@ assertion a recapture after a regression silently stores two different hashes an
   macro SOURCE. `macroLonelySliderTargetsWorldOnly`: a lone controller can only target the WORLD — `openTargetSelector` lists
   bounds-intersecting widgets + always the world (`Widget.plausibleTargetAndDestinationWidgets`, `Widget.coffee:1092`); with nothing overlapping, "a World ➜" is the only item.
 - **Button-trigger discipline** (`macroButtonTriggersOnlyOnSameWidgetMouseUp`): a button fires only when mouse-down AND mouse-up
-  land on the SAME morph (`ActivePointerWdgt.processMouseUp` fires only `when w == @mouseDownWdgt`). To show "press then release
+  land on the SAME morph (`ActivePointerWdgt.processPointerUp` fires only `when w == @mouseDownWdgt`). To show "press then release
   elsewhere does NOT trigger", press on the button and release off it: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   (@pointAtFractionOf button, [0.5,0.5]), (new Point X, Y)`. Parent the button INSIDE a container (window/panel), NOT bare on the
   world (`ButtonWdgt.rejectDrags` is false when the parent is the world — or when the parent declares the button a detachable payload

@@ -1,5 +1,10 @@
 # Pointer Events — one input family, one listener set, a real cancel path
 
+**STATUS: EXECUTED AND CLOSED 2026-08-24.** P0–P3 landed and pushed (final gates: `fg gauntlet` 18/18,
+`fg homepage`; suite 318). The LIVING TRUTH is in the code (`src/events-input/`, `ActivePointerWdgt`),
+`docs/architecture/immutable-value-classes.md` and the macro docs — this file is the historical plan
+record; its STATUS box is the arc's as-executed log. Program: `frames-input-touch-program.md`.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-24 against Fizzygum `cada3c1c` / Fizzygum-tests `08fec10fa` (gauntlet 18/18
 green at 08:59, 316 SystemTests, build FRESH). Every `file:line` was verified on that date —
@@ -46,7 +51,15 @@ against the post-Plan-1 tree, per the program's just-in-time rule (§6).
   Observation for the record: a cancelled press leaves a menu item visually pressed until the pointer moves
   (the same hover re-sync) — correct by §2.4, now stated. Process slip declared: one metadata string edited
   mid-presuite (re-verified after — the running-op rule still stands).
-- P3 deletions verified, docs, tail: —
+- P3 deletions verified, docs, tail: **DONE 2026-08-24 — PLAN CLOSED. `fg gauntlet` 18/18 (11:03) +
+  `fg homepage` OK.** Three parallel prose sweeps: (A) the 3 test dirs — and two PRE-EXISTING drifts fixed
+  beside the rename (stale `@drop()` line refs; the auto-scroll mechanism text outdated by the
+  type-test-elimination move into `ViewportWdgt.maybeStartAutoScrollForDraggedWidget`); (B) the 5 src
+  prose files, build green; (C) the 5 living docs — the ONE deliberate residual is I1's dated ledger
+  citation of `MousedownInputEvent.coffee:3` (a decision ledger cites the tree as it stood). `fg
+  doc-narration` 0/0. The first close gauntlet was 17/18: the `refs` leg's `check-visualisations
+  --strict` caught the P2 slip's consequence (metadata reworded after its page was generated) — the
+  gate working as designed; page regenerated, re-run clean. Tail: EMPTY (nothing deferred).
 
 ---
 

@@ -30,7 +30,7 @@ class PromptWdgt extends FrameWdgt
   tempPromptEntryField: undefined
 
   # A prompt is a menu-family pop-up: it answers isMenu? like a MenuWdgt does. The one isMenu?()
-  # consumer is the hand's click-outside dismissal (ActivePointerWdgt.processMouseDown), so a
+  # consumer is the hand's click-outside dismissal (ActivePointerWdgt.processPointerDown), so a
   # mouse-down landing inside a prompt counts as a click inside menu chrome and does NOT fire the
   # sweep that dismisses every menu, freshly created ones included.
   isMenu: ->

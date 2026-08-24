@@ -19,7 +19,7 @@ frame differs. Measure, don't guess.
 ## The harness (`Fizzygum-tests/scripts/coalescing-measure/`)
 
 - `coalescing-measure-prelude.js` — injected via `PRELUDE_JS`. Logs, tagged with `WorldWdgt.frameCount`:
-  `CMEAS MOVE` (a `processMouseMove`), `CMEAS MUT m=<name>` (a watched per-event mutation), and `CMEAS FLUSH
+  `CMEAS MOVE` (a `processPointerMove`), `CMEAS MUT m=<name>` (a watched per-event mutation), and `CMEAS FLUSH
   qlen=<n> inMut=<bool>` (a `recalculateLayouts` — `inMut=true` is a `_settleLayoutsAfter` self-settle,
   `inMut=false` is the doOneCycle end-of-cycle flush). Pure observation. Default watched mutation is
   `_setMaxDimNoSettle`; edit the `watch` default (or the small fallback) to point at the core your gesture uses.

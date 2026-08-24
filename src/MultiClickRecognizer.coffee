@@ -1,4 +1,4 @@
-# Remembers one multi-click candidate for ActivePointerWdgt.processMouseUp: the widget a
+# Remembers one multi-click candidate for ActivePointerWdgt.processPointerUp: the widget a
 # recent click landed on, that click's position, and the EVENT-TIME (never wall-clock) it was
 # armed at. Two of these live on the hand — one for double-click (clickCount 2), one for
 # triple-click (clickCount 3) — replacing six hand-mirrored fields.
@@ -6,7 +6,7 @@
 # Recognition is a same-widget match within a proximity radius; the EVENT-TIME window is
 # applied separately by the caller's forget gate (isStale), keeping that the SINGLE
 # deterministic, load-immune forget the multi-click algorithm relies on (see
-# ActivePointerWdgt.processMouseUp and memory multiclick-event-time-forget).
+# ActivePointerWdgt.processPointerUp and memory multiclick-event-time-forget).
 #
 # A plain state-holder: no settling, no layout, and never serialized/duplicated (it lives on
 # the well-known hand, whose fields are never snapshotted — see Serializer / serialization

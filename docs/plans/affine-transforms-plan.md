@@ -1217,7 +1217,7 @@ lifted by the sub-step named):**
   by construction (`screenPointToMyPlane` returns the same object when not inside an island).
 - **Depends on:** nothing (pure correctness fix; foundation for 4B/4C/4D).
 - **Seams (raw `@position()` handed to handlers — all in `src/ActivePointerWdgt.coffee`):**
-  `processMouseDown` dispatch `w[actualClick] @position()` (`:607`); `processMouseUp` main
+  `processPointerDown` dispatch `w[actualClick] @position()` (`:607`); `processPointerUp` main
   dispatch `w[expectedClick] @position(), …` (`:759`), `mouseUpLeft?/mouseUpRight?` (`:656,658`);
   double/triple-click `mouseDoubleClick/mouseTripleClick @position()` (`:885,894`). Drag
   handler: `HandleWdgt::nonFloatDragging(startOffset, pos, deltaFromPrev)` computes

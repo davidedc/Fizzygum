@@ -36,7 +36,7 @@ class ActivePointerWdgt extends Widget
   tripleClick: undefined
   # The multi-click recognition window: two same-spot left clicks fold into a double-
   # / triple-click only if they land within this many ms of each other. Enforced by the
-  # EVENT-TIME forget gate in processMouseUp (deterministic, load-immune).
+  # EVENT-TIME forget gate in processPointerUp (deterministic, load-immune).
   doubleClickWindowMs: 300
   nonFloatDraggedWdgt: undefined
   nonFloatDragPositionWithinWdgtAtStart: undefined

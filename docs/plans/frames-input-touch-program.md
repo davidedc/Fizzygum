@@ -10,7 +10,7 @@ archived, this doc moves to `docs/archive/` with an `INDEX.md` entry.
 
 **STATUS BOX** (one line per arc; plans are authored JUST-IN-TIME — see §6)
 - Plan 1 `frame-lifetime-and-docking-plan.md` — **EXECUTED AND CLOSED 2026-08-23/24** (P0–P6 + tail: T8–T10, T12–T17 all closed or routed; T11 → Plan 3; T1–T5 in BACKLOG; final gates gauntlet 18/18 + homepage). The plan file moves to `docs/archive/` with the close commit.
-- Plan 2 `pointer-events-plan.md` — **AUTHORED 2026-08-24 by a Fable worker** (per the amended §3.1 rule 7), coordinator-reviewed (4 sharpest facts re-verified in code), awaiting the owner's go. 804 lines, P0–P3, ≈1¼ session-days + tail; recapture budget ZERO; found in authoring: the masked mouse-path double-offset (F9) and the Firefox resize-listener ReferenceError (F21, owner-flagged fix-in-passing).
+- Plan 2 `pointer-events-plan.md` — **EXECUTED AND CLOSED 2026-08-24, same day it was authored** (archived: `../archive/pointer-events-plan.md`; P0 probes GO → P1 the swap pixel-identical → P2 cancel witnessed → P3 sweep + gauntlet 18/18 + homepage; tail EMPTY). Suite 318.
 - Plan 3 visual wave — not authored (author when Plan 2 closes).
 - Plan 4 gesture grammar + finger harness — not authored (author when Plan 3 closes).
 
@@ -35,7 +35,7 @@ one cross-cutting visual event:
 
 Widgets never see input events; the hand sees widgets only through capability queries. The one
 real seam is the pop-up **dismissal code living in `ActivePointerWdgt`** (`cleanupMenuWdgts`,
-the `isMenu?()` check at its `processMouseDown`, `hierarchyOfClickedMenus`): Spine I rewrites
+the `isMenu?()` check at its `processPointerDown`, `hierarchyOfClickedMenus`): Spine I rewrites
 its *logic*, Spine II rewrites its *plumbing*. That is a merge hazard, not a design hazard —
 hence the "never concurrent" constraint in §3.
 

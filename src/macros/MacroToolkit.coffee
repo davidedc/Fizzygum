@@ -74,7 +74,7 @@ class MacroToolkit
     fastest: 0.03
 
   # NON-scaled guard window, comfortably wider than the hand's 300ms EVENT-TIME double-click
-  # recognition window (the forget gate in ActivePointerWdgt.processMouseUp). Two distinct
+  # recognition window (the forget gate in ActivePointerWdgt.processPointerUp). Two distinct
   # same-spot click gestures are spaced at least this far apart so they never fold into a
   # false double-click.
   @clickGuardWindowMs: 350
@@ -449,7 +449,7 @@ class MacroToolkit
   # completes (like moveToAndClick_InputEvents, but with no release). Use it when the press ITSELF produces
   # the state to capture, so the screenshot must be taken before the release: a mouse-DOWN (not the full
   # click) dismisses an unpinned menu cascade (ActivePointerWdgt.cleanupMenuWdgts), and a mouse-DOWN drops a
-  # float-dragged widget (processMouseDown -> drop). Pattern: `@moveToAndMouseDown_InputEvents target` ->
+  # float-dragged widget (processPointerDown -> drop). Pattern: `@moveToAndMouseDown_InputEvents target` ->
   # `yield "waitNoInputsOngoing"` -> `takeScreenshot_InputEvents_Macro "…"` (captures with the button still
   # held) -> `@syntheticEventsMouseUp_InputEvents()` -> `yield "waitNoInputsOngoing"`.
   moveToAndMouseDown_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -502,7 +502,7 @@ class MacroToolkit
   # Push N consecutive left click-pairs (down+up) at the CURRENT pointer position, spaced so the hand
   # recognises them as a double-/triple-click. The hand only counts a fresh click as a double/triple while
   # the previous one is still "remembered" — a 300ms EVENT-TIME window (the forget gate in
-  # ActivePointerWdgt.processMouseUp) — so the click UPs must fall within that window of each other; we space them ~120ms apart. No move
+  # ActivePointerWdgt.processPointerUp) — so the click UPs must fall within that window of each other; we space them ~120ms apart. No move
   # between the clicks (same widget, same point) — recognition also requires the clicks be on the same
   # widget within grabDragThreshold.
   # The APPROACH (startTime) is scaled by the speed level (it follows the scaled positioning move), but the
@@ -730,7 +730,7 @@ class MacroToolkit
   # Move to and click a menu/prompt item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
   # than once (e.g. click a slider/palette INSIDE a prompt, THEN click its "Ok"): getMostRecentlyOpenedMenu
-  # reads world.freshlyCreatedPopUps, which EVERY mouseUp clears (ActivePointerWdgt.processMouseUp), so it
+  # reads world.freshlyCreatedPopUps, which EVERY pointer-up clears (ActivePointerWdgt.processPointerUp), so it
   # is only valid for the FIRST interaction after a popup opens. Capture the popup reference while it is
   # still fresh (right after it opens) and drive its later items through this method.
   moveToItemOfMenuAndClick_InputEvents: (theMenu, theLabel) ->

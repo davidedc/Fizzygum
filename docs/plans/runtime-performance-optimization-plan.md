@@ -210,7 +210,7 @@ clip-mask build 2.8 · compositing-wide 1.3.
 Busy **86.1s** (vs 128.0s ⇒ the log was ≈42s ≈ 33% of busy). Top self (% of busy):
 `_drawImageInternal` 12.4 · `SHA256.hashBytes` 10.3 · `_getBit` 9.6 · `_fillPixelSpan` 7.3 ·
 gc 7.2 · `blendPixel` 5.8 · **`WorldWdgt.getCanvasPosition` 5.8** · `_evaluatePaintSource` 4.3 ·
-`_fillPolygonsDirect` 4.3 · `fillPolygonsToClipMask` 3.2 · `ActivePointerWdgt.processMouseMove`
+`_fillPolygonsDirect` 4.3 · `fillPolygonsToClipMask` 3.2 · `ActivePointerWdgt.processPointerMove`
 1.7 · `WorldWdgt._resetWorldNoSettle` 1.7 (per-test resets) ·
 `SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole` 0.9 ·
 `TextWdgt.breakTextIntoLines` 0.5. Totals: `doOneCycle` 79.3s, of which `updateBroken`
@@ -479,9 +479,9 @@ a reflow on each read) — in production the fixed full-page canvas rarely moves
 suite-CPU win, plus a correct memoisation for production.
 
 **Where**: `src/WorldWdgt.coffee` `getCanvasPosition` (walks `offsetLeft/offsetTop/offsetParent` up the DOM);
-called per synthesized mouse event from `MousemoveInputEvent`'s constructor
-(`src/events-input/MousemoveInputEvent.coffee:13`) and from
-`ActivePointerWdgt.coffee:915/929`.
+called per incoming pointer event from `PointerInputEvent.fromBrowserEvent` — the page → world
+conversion boundary (`src/events-input/PointerInputEvent.coffee:39`) — and from
+`ActivePointerWdgt.coffee:1075` (`processPointerMove`'s Automator pointer-indicator overlay, PLAYING-only).
 
 **Why**: **5.8% of busy CPU** post-S1 — reading `offsetLeft` forces a synchronous style+layout
 pass whenever the DOM is dirty, and the SystemTests control panel writes to the DOM
