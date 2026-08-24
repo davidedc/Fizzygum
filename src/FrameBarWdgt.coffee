@@ -458,19 +458,14 @@ class FrameBarWdgt extends Widget
     @frame.pinPopUp @ if @frame.isTransientPopUp()
 
   # Was this escalated click a BUTTON piece's, rather than the strip's own? (the title text and
-  # the strip background ARE the strip, and answer no.) Two senders, two shapes in the position
-  # slot: the switch button puts ITSELF there (its own documented pattern break), and everything
-  # else puts the click position, which arrives in my plane — the plane my pieces share, so the
-  # pieces' own shapes answer it.
-  _clickCameFromAPiece: (posOrPiece) ->
-    return false unless posOrPiece?
-    senderIsAWidget = posOrPiece.isPointerTargetAt?
+  # the strip background ARE the strip, and answer no.) Every sender puts the click POSITION in
+  # that slot, and it arrives in my plane — the plane my pieces share — so the pieces' own shapes
+  # answer the question.
+  _clickCameFromAPiece: (pos) ->
+    return false unless pos?
     for piece in [@closeButton, @collapseUncollapseSwitchButton, @editButton]
       continue unless piece? and piece.parent == @
-      if senderIsAWidget
-        return true if piece is posOrPiece or piece.isAncestorOf posOrPiece
-      else
-        return true if piece.isPointerTargetAt posOrPiece
+      return true if piece.isPointerTargetAt pos
     false
 
   # A piece occupies its SLOT -- the target box the strip advances by -- and is

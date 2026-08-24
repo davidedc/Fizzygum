@@ -25,6 +25,28 @@
 // `@target[@callback].call @target, @_promptValue()`)
 // — the same proof one hop later, so the callbacks count as menu-dispatched verbs for RULE 3 as well.
 //
+// ── RULE 1b (HARD, sound) — a `@`-targeted STRING action must RESOLVE.
+// RULE 1 proves the action slot holds a name; it says nothing about whether anything answers to that
+// name. A row wired to a verb nobody implements is dead from the day it is written and stays green
+// forever, because the only thing that would notice is a click: `"pin"` on FrameWdgt's own menu was
+// dead from 2018 until Plan 1 P1 read it in 2026 (docs/plans/frames-input-touch-program.md, T12).
+// The general case is unresolvable — `menu.addMenuItem "…", someExpression, "verb"` has a RECEIVER
+// that is a runtime value — but ONE target is knowable at build time: `@`. Inside class C's method,
+// `@` is an instance of C or of something that has C in its chain, so the sound resolution set is the
+// union of `chainOf(X)` over every X whose chain contains C. That union is what this rule resolves
+// against, and a miss is a provable dead row: NO possible receiver implements it.
+//   ⚠ The union is what keeps the rule SOUND rather than merely strict. `Widget` itself wires
+//   `"setTargetAndActionWithOnesPickedFromMenu"` at `@`, and that verb lives in `ControllerMixin` —
+//   only reachable because a `@augmentWith ControllerMixin` class (PaletteWdgt, StringWdgt, …) has
+//   `Widget` in its chain. Resolving against the enclosing class ALONE would false-fail there.
+//   ⓘ The same union covers a call site inside a MIXIN file for free: `@` in `ControllerMixin`'s own
+//   rows is the augmented widget, and every augmenting class has ControllerMixin in its chain.
+//   ⓘ The harness is part of the universe: methods a `*TestSupport` class copies onto a core class
+//   (`WorldTestSupport.installOnto WorldWdgt`, read from src/boot/globalFunctions.coffee) are real
+//   methods of that class on any build shipping the harness part — `WorldWdgt`'s own
+//   `"popUpSystemTestsMenu"` row is one. With the sibling tests repo absent this rule therefore
+//   SKIPS (rules 1/2/3 still run) rather than false-fail a tests-stripped checkout.
+//
 // ── RULE 2 (HARD, sound) — the options bag is an object.
 // A string literal where `opts` goes is provably wrong for the same reason: `opts.toolTip` on a
 // string is undefined.
@@ -44,7 +66,8 @@
 // body did `inWhichFolder.contents.contents`. No text scan can catch that. The mechanism that would
 // is a rig that CLICKS every demo menu item — see the plan's residual.
 //
-// ⚠ AND IT RESOLVES ACTIONS BY NAME, NOT BY RECEIVER, because the receiver of
+// ⚠ AND RULE 3 RESOLVES ACTIONS BY NAME, NOT BY RECEIVER (RULE 1b above is the one receiver-aware
+// rule, and only because `@` names its receiver structurally), because the receiver of
 // `menu.addMenuItem "…", someExpression, "verb"` is a runtime value and this tree dispatches through
 // a string. So a method whose NAME matches a menu action is checked even on a class no menu ever
 // wires — `ToggleButtonWdgt.select(whichOne)` is checked because `ListWdgt` wires a `"select"`. That
@@ -55,8 +78,15 @@
 const fs = require('fs');
 const path = require('path');
 const { METHOD_HEADER } = require('./lib/coffee-method-header.js');
+// The whole-system CLASS MODEL (parent, @augmentWith mixins, methods, resolution order) — RULE 1b's
+// engine, reused wholesale rather than re-derived, exactly as census-hierarchy-duplication.js and
+// census-property-placement.js reuse it. Re-implementing inheritance resolution here would be a
+// second copy of the subtlest part of the tree's static analysis, free to drift.
+const { runCensus } = require('./census-public-private-calls.js');
 
 const SRC = path.resolve(__dirname, '../src');
+const HARNESS = path.resolve(__dirname, '../../Fizzygum-tests/Automator-and-test-harness-src');
+const BOOT_GLOBALS = path.join(SRC, 'boot/globalFunctions.coffee');
 
 // Seeded 2026-08-16 at the count left after the menu-action arc converted the five padded verbs
 // (showOutputPins / removeOutputPins / makeFolderWindow / popUpDemoMenu / dockToolbarMenu). The
@@ -81,6 +111,9 @@ const stripComment = (line) => { const i = line.indexOf('#'); return i < 0 ? lin
 const files = walk(SRC, []);
 const hard = [];        // rule 1 + 2 violations
 const actionNames = new Set();   // every verb reached from a menu
+// RULE 1b's harvest: every row whose TARGET is literally `@`. One class per file, so the enclosing
+// class IS the file's basename. { cls, rel, line, action, door, text }
+const atTargetSites = [];
 
 // ---- pass 1: read every addMenuItem/prependMenuItem call site -------------------------------
 // ⚠ A CALL MAY WRAP, and a scan that reads one line at a time is blind to everything past the
@@ -102,6 +135,7 @@ function joinContinuation(lines, i) {
 
 for (const p of files) {
   const rel = path.relative(SRC, p);
+  const cls = path.basename(p, '.coffee');
   const allLines = fs.readFileSync(p, 'utf8').split('\n');
   // ---- RULE 1, second door: prompt / textPrompt -------------------------------------------
   // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — the prompt's
@@ -130,7 +164,10 @@ for (const p of files) {
     }
     // a prompt callback is a menu-dispatched verb like any other: let RULE 3 see it too
     const nm = /^["']([A-Za-z_]\w*)["']$/.exec(cb);
-    if (nm) actionNames.add(nm[1]);
+    if (nm) {
+      actionNames.add(nm[1]);
+      if (parts[1].trim() === '@') atTargetSites.push({ cls, rel, line: i + 1, action: nm[1], door: 'prompt callback', text: raw.trim() });
+    }
   });
   allLines.forEach((raw, i) => {
     if (!/\b(?:add|prepend)MenuItem\b/.test(stripComment(raw))) return;
@@ -149,7 +186,10 @@ for (const p of files) {
       return;
     }
     const nameMatch = /^["']([A-Za-z_]\w*)["']$/.exec(action);
-    if (nameMatch) actionNames.add(nameMatch[1]);
+    if (nameMatch) {
+      actionNames.add(nameMatch[1]);
+      if (parts[1].trim() === '@') atTargetSites.push({ cls, rel, line: i + 1, action: nameMatch[1], door: 'menu row', text: raw.trim() });
+    }
 
     if (parts.length >= 4) {
       const opts = parts[3].trim();
@@ -208,6 +248,70 @@ for (const p of files) {
   }
 }
 
+// ---- pass 3 (RULE 1b): every `@`-targeted string action must resolve on a possible receiver -----
+// The resolution set for `@` inside class C is the union of `chainOf(X)` over every X whose chain
+// CONTAINS C — that is, C itself, every subclass of C, and every class that `@augmentWith`es C (the
+// census's chainOf already folds both edges into one order). A verb missing from all of them is
+// dispatched at nothing: `@target[@action]` is undefined and the row throws on click.
+let ruleB = { checked: 0, skipped: '' };
+if (!fs.existsSync(HARNESS)) {
+  // Methods a `*TestSupport` class installs onto a core class are real methods of that class
+  // wherever the harness part ships, so without the sibling repo the universe is incomplete and a
+  // miss would not be a proof. Same self-skip as check-dead-methods / check-unresolved-sends.
+  ruleB.skipped = 'sibling Fizzygum-tests not present (its *TestSupport installs are part of the resolution universe)';
+} else {
+  const census = runCensus();
+  const { classInfo, chainOf } = census;
+
+  // harness methods installed onto a core class, read from the ACTUAL boot edges
+  // (`WorldTestSupport.installOnto WorldWdgt` & co in src/boot/globalFunctions.coffee).
+  const installedOn = new Map();   // core class name -> Set(method names)
+  if (fs.existsSync(BOOT_GLOBALS)) {
+    const bootText = fs.readFileSync(BOOT_GLOBALS, 'utf8');
+    const EDGE = /\b([A-Za-z_]\w*)\.installOnto\s+([A-Za-z_]\w*)/g;
+    let e;
+    while ((e = EDGE.exec(bootText)) !== null) {
+      const supportFile = path.join(HARNESS, e[1] + '.coffee');
+      if (!fs.existsSync(supportFile)) continue;
+      if (!installedOn.has(e[2])) installedOn.set(e[2], new Set());
+      const into = installedOn.get(e[2]);
+      for (const l of fs.readFileSync(supportFile, 'utf8').split('\n')) {
+        const h = METHOD_HEADER.exec(l);
+        if (h) into.add(h[1]);
+      }
+    }
+  }
+
+  // C -> every class whose chain contains C (i.e. every class an `@` in C could be an instance of)
+  const receiversOf = new Map();
+  for (const name of classInfo.keys()) {
+    for (const info of chainOf(name)) {
+      if (!receiversOf.has(info.name)) receiversOf.set(info.name, new Set());
+      receiversOf.get(info.name).add(name);
+    }
+  }
+  const definesIt = (clsName, action) => {
+    for (const info of chainOf(clsName)) {
+      if (info.methods.has(action)) return true;
+      const inst = installedOn.get(info.name);
+      if (inst && inst.has(action)) return true;
+    }
+    return false;
+  };
+
+  for (const s of atTargetSites) {
+    if (!classInfo.has(s.cls)) continue;          // not a class file — `@` is not an instance
+    ruleB.checked++;
+    let found = false;
+    for (const receiver of (receiversOf.get(s.cls) || [s.cls])) {
+      if (definesIt(receiver, s.action)) { found = true; break; }
+    }
+    if (found) continue;
+    hard.push({ rel: s.rel, line: s.line, rule: '1b', text: s.text,
+      why: `the ${s.door} targets \`@\` with action "${s.action}", and NO class that \`@\` could be here — ${s.cls}, its subclasses, its mixin consumers, their chains — defines it, so \`@target[@action]\` is undefined and the row throws when clicked` });
+  }
+}
+
 let bad = 0;
 for (const h of hard) {
   console.error(`[menu-actions] RULE ${h.rule} FAIL — ${h.rel}:${h.line}`);
@@ -219,10 +323,13 @@ for (const u of unread) {
   console.log(`  ${u.rel}:${u.line}  ${u.name}  unread parameter \`${u.prm}\``);
 }
 
+if (ruleB.skipped) console.log(`[menu-actions] RULE 1b SKIP — ${ruleB.skipped}.`);
+
 if (bad) {
   console.error(`\n[menu-actions] FAIL — ${bad} provably-wrong menu wiring(s).`);
-  console.error('An action must be a STRING method name on the target, and the 4th argument is the');
-  console.error('options object. Law: docs/architecture/constructor-and-parameter-conventions.md');
+  console.error('An action must be a STRING method name on the target that SOMETHING implements, and');
+  console.error('the 4th argument is the options object.');
+  console.error('Law: docs/architecture/constructor-and-parameter-conventions.md');
   process.exit(1);
 }
 if (unread.length > RULE3_BASELINE) {
@@ -236,5 +343,5 @@ if (unread.length < RULE3_BASELINE) {
   console.log(`\n[menu-actions] ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}) -- UNDER`);
   console.log(`NOTE: tighten RULE3_BASELINE to ${unread.length} in buildSystem/check-menu-actions.js, in THIS commit.`);
 } else {
-  console.log(`\n[menu-actions] OK — ${actionNames.size} menu-dispatched verb(s); 0 provably-wrong wirings; ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}).`);
+  console.log(`\n[menu-actions] OK — ${actionNames.size} menu-dispatched verb(s); ${ruleB.checked} \`@\`-targeted row(s) all resolve; 0 provably-wrong wirings; ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}).`);
 }

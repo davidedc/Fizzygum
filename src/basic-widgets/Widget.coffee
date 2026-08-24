@@ -31,7 +31,8 @@ class Widget extends TreeNode
   # Serialization: own properties the serializer must SKIP (frame timing + the
   # WorldWdgt.geometryVersion-keyed derived geometry caches — all re-derived on demand
   # after a restore). Merged up the class chain by Serializer.transientsForClass; a
-  # subclass ADDS to this list. See docs/architecture/serialization-duplication-reference.md §5.
+  # subclass ADDS to this list, so a subclass declares its OWN fields and nothing else.
+  # See docs/architecture/serialization-duplication-reference.md §5.
   @serializationTransients: [
     # frame timing for throttled stepping (fps > 0, non-synchronised: BlinkerWdgt, the video
     # widgets) — wall-clock, so it cannot ride a file. The DUPLICATOR must COPY it, and does:
@@ -90,17 +91,6 @@ class Widget extends TreeNode
     "paintBoundsMaybeChanged", "fullPaintBoundsMaybeChanged"
     "clippedBoundsWhenLastPainted", "fullClippedBoundsWhenLastPainted"
     "srcDamageRectIndex", "dstDamageRectIndex"
-    # a frame's closure mark (FrameWdgt.isPopUpMarkedForClosure) pairs with the
-    # world.popUpsMarkedForClosure set, which is never serialized, so it must not persist — a
-    # triggering menu-item click marks its menu BEFORE running the action, so a menu-driven save
-    # would otherwise bake the mark into the file. (__add also clears it on attach, but the file
-    # should not carry it in the first place.) A deep-copied true mark (the same menu action can
-    # duplicate its own menu) is inert on the clone: it is never in the world's set (no aligner
-    # puts it there), and that same __add clear wipes the field on the clone's first attach.
-    #   Declared HERE, on the base, rather than on the frame: the meta-system COPIES a class's
-    # statics down to its subclasses, so a subclass's own @serializationTransients REPLACES the
-    # copy it inherited instead of adding to it.
-    "isPopUpMarkedForClosure"
   ]
 
   appearance: undefined

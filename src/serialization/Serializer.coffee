@@ -30,20 +30,48 @@ class Serializer
   # shadows) its ancestors' — mirroring how the codebase's other class-body conventions
   # accumulate up the hierarchy. Pure function of its class argument, so it works for any
   # serializable type (Widget subclasses and the plain non-Widget data classes alike).
+  #
+  # ⚠ WALK THE `__super__` LINK, NOT `Object.getPrototypeOf`. This tree does not build its
+  # classes with ES class inheritance: `extend` (src/boot/globalFunctions.coffee, the classic
+  # CoffeeScript-1 helper) COPIES the parent's statics onto the child and links the two only
+  # through `child.__super__ = parent.prototype`, leaving `Object.getPrototypeOf(child)` at
+  # `Function.prototype`. An earlier walk asked for the prototype chain and therefore stopped at
+  # the first class — so the "merge" was a no-op and a subclass declaring its own list REPLACED
+  # everything above it, silently: `FrameWdgt` declaring one dropped all of Widget's, and only a
+  # rig noticed (docs/plans/frames-input-touch-program.md T16). The copy-down is why a subclass
+  # that declares NOTHING was always fine, and why the bug could sit unseen — it fires only on the
+  # nine classes that declare.
+  # ⓘ A mixin's static is copied onto each consumer constructor as an own property (Mixin's
+  # applyStaticEdit, shadow-guarded), so a mixin-declared list would be found by the very first
+  # step of this walk. None declares one today.
   @transientsForClass: (klass) ->
     merged = new Set
     return merged unless klass?
     ctor = klass
-    # walk the CONSTRUCTOR chain (class -> superclass -> ... ); Object.getPrototypeOf on a
-    # class returns its superclass constructor, and eventually Function/Object.prototype
-    # (for which hasOwnProperty below is false), then null — which ends the loop.
-    while ctor?
+    seen = new Set
+    while ctor? and not seen.has ctor
+      seen.add ctor
       if Object::hasOwnProperty.call ctor, "serializationTransients"
         declared = ctor.serializationTransients
         if declared?
           merged.add name for name in declared
-      ctor = Object.getPrototypeOf ctor
+      ctor = @_superclassOf ctor
     merged
+
+  # The superclass CONSTRUCTOR of a class, or undefined at the top of the chain. `__super__` is
+  # the parent's PROTOTYPE, whose `.constructor` is the parent (`extend` builds the child
+  # prototype so that link holds). A root class carries `__super__ = Object.prototype`, whose
+  # constructor is `Object`, which declares nothing and whose own walk ends immediately. The
+  # `Object.getPrototypeOf` fallback covers a genuinely ES-class-derived type reaching the
+  # serializer (nothing in src is one today, and a foreign one costs only correctness here).
+  @_superclassOf: (ctor) ->
+    parentPrototype = ctor.__super__
+    if parentPrototype?
+      parent = parentPrototype.constructor
+      return parent if (typeof parent is "function") and parent isnt ctor
+    parent = Object.getPrototypeOf ctor
+    return parent if (typeof parent is "function") and parent isnt Function.prototype
+    undefined
 
   # Serialize a widget subtree to a JSON envelope string.
   # opts:

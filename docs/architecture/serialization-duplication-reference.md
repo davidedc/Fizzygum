@@ -233,24 +233,25 @@ class Widget extends TreeNode
   @serializationTransients: ["lastTime", "cachedFullBounds", …]  # skipped at serialize
 ```
 
-- **The reader** is `Serializer.transientsForClass(klass)` — walks the constructor chain,
-  unioning each class's own `@serializationTransients` into one Set of names to skip.
-  ⚠ **In practice a subclass's own declaration REPLACES its ancestors', not adds to them** —
-  the meta-system copies a class's statics DOWN onto each subclass at define time rather
-  than chaining them live, so once a subclass assigns its own `@serializationTransients` the
-  walk never reaches what it silently dropped (`transientsForClass`'s own header comment
-  still claims the opposite — "a subclass ADDS to… never shadows" — which is exactly the
-  belief that let this happen). A subclass extending the exclusions must therefore either
-  re-state the inherited entries in its own declaration, or declare the new name on the base
-  class instead — the fix `FrameWdgt` took for `isPopUpMarkedForClosure` (declared on
-  `Widget`; table below). Verified by grep (`grep -rn "@serializationTransients" src`): nine
-  classes carry their own declaration today besides `Widget` itself — `ScriptWdgt`,
-  `TransformFrameWdgt`, `DesktopAppearance`, `SheetHeaderCellWdgt`, `SimpleSpreadsheetWdgt`,
-  `SheetCellRecord`, `CellWdgt`, `CalculatingPatchNodeWdgt`, `FridgeMagnets3DCanvasWdgt` —
-  each a latent shadow of whatever its ancestor's copied-down list held. Open tail:
-  `docs/plans/frames-input-touch-program.md` T16 (make the serializer MERGE the true chain,
-  or a boot guard forbidding the re-declaration; found when `FrameWdgt` declared its own list
-  during the frame-lifetime plan's P3).
+- **The reader** is `Serializer.transientsForClass(klass)` — walks the class chain, unioning each
+  class's own `@serializationTransients` into one Set of names to skip. **A subclass declares its
+  OWN fields and nothing else**: the merge is the rule, so re-stating an ancestor's entry is
+  duplication, and a subclass can never drop one.
+  ⚠ **The chain to walk is `__super__`, not `Object.getPrototypeOf`.** This tree does not use ES
+  class inheritance: `extend` (`src/boot/globalFunctions.coffee`) COPIES the parent's statics onto
+  the child and links them only through `child.__super__ = parent.prototype`. That copy-down is why
+  a subclass declaring NOTHING inherits the list correctly, and why a subclass declaring its OWN
+  list used to REPLACE everything above it — the old walk asked for the prototype chain, found no
+  parent, and returned the one declaration it could see. Silent by construction: it fires only on
+  the classes that declare, and only on fields those instances happen to own. `FrameWdgt` declaring
+  a list during the frame-lifetime plan's P3 is what surfaced it; the merge landed as its tail item
+  T16, and the frame's `isPopUpMarkedForClosure` moved back onto `FrameWdgt` where it belongs.
+  Verified by grep (`grep -rn "@serializationTransients" src`), ten classes carry their own
+  declaration today besides `Widget` itself: `FrameWdgt`, `ScriptWdgt`, `TransformFrameWdgt`,
+  `DesktopAppearance`, `SheetHeaderCellWdgt`, `SimpleSpreadsheetWdgt`, `SheetCellRecord`,
+  `CellWdgt`, `CalculatingPatchNodeWdgt`, `FridgeMagnets3DCanvasWdgt`. The rig check that holds the
+  merge is in `../Fizzygum-tests/scripts/serialization-roundtrip-headless.js` — it serializes a
+  self-declaring class and asserts an INHERITED transient is absent from the record.
 - **Derived values** keep the existing `rebuildDerivedValue` protocol (canvas 2D
   contexts): both walkers SKIP them, and only duplication rebuilds. The deserializer does
   NOT — its pass-4(b) branch reads a `record.derived` list the serializer has never emitted,
@@ -295,7 +296,7 @@ class Widget extends TreeNode
 |---|---|---|
 | `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the `WorldWdgt.geometryVersion`-keyed geometry caches (`cachedFullBounds`, `cachedFullClippedBounds`, `cachedVisibleBasedOnIsVisibleProperty`, `cachedClippedThroughBounds`, `cachedClipThrough`, `cachedIsInCollapsedSubtree` — each with its `check…Cache` twin — plus `childrenBoundsUpdatedAt`); the `root()` cache `cachedRoot`/`checkRootCache`; the island-buffer source lane `_islandBufferSourceIsland`/`_islandBufferSourceVirtualRect`; the flush-scoped `hasDirtyDescendant` | frame timing + derived caches, all re-derived on demand after restore. ⚠ `cachedRoot` is the one whose absence bit: `root()` itself never reads it stale (it checks `structureVersion`) but the SERIALIZER walks the raw field, so a stale pointer dragged destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
-| `Widget` (frame closure mark) | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. Declared on `Widget` rather than on `FrameWdgt` — the class that actually owns and reads the field — specifically to dodge the REPLACES trap above: a subclass's own `@serializationTransients` would drop its ancestors' entries instead of adding to them |
+| `FrameWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. It sat on `Widget` while the merge was broken (the base was the only place a declaration was safe); with the merge fixed it is declared by the class that owns and reads it |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |

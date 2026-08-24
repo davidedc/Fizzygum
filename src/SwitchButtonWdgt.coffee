@@ -127,7 +127,7 @@ class SwitchButtonWdgt extends Widget
       world.dataflow.markStale @
     whichOne
 
-  mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     # SELF-SETTLE the toggle (end-of-cycle-flush drawdown convert 2026-06-25): a discrete click is an
     # outermost public mutation, so it flushes ONCE on return instead of riding the per-frame end-of-cycle
     # flush (this was the biggest end-of-cycle residual). escalateEvent stays OUTSIDE the settle -- the
@@ -136,9 +136,7 @@ class SwitchButtonWdgt extends Widget
     # idempotent _collapseNoSettle / _unCollapseNoSettle cores (no public re-entrant settle).
     @_settleLayoutsAfter =>
       @_setToggleStateNoSettle (@buttonShown + 1) % @buttons.length
-    # TODO gross pattern break - usually mouseClickLeft has 9 params
-    # none of which is a widget
-    @escalateEvent "mouseClickLeft", @
+    @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   _resetSwitchButton: ->
     @_setToggleStateNoSettle 0

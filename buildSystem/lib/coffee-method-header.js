@@ -18,8 +18,16 @@
 // most of the layout specs' menu popouts. Two independent formatting variations, one shared regex,
 // zero warnings from any of the six gates: that is the shape of the bug, not the individual spellings.
 //
+// AND A THIRD, found 2026-08-24 while extending check-menu-actions with RULE 1b (which needs to know
+// whether a class defines a method at all): the spelling demanded EXACTLY ONE space after the colon,
+// so an author aligning a short body — `softWrapOn:  -> @setSoftWrap true`, `buildWindow:  -> …` —
+// hid the method from every gate. Nine methods on this tree, and the guard below could not see them
+// either, because its own precondition demanded `: \S` and a second space is not `\S`. Same shape,
+// third time: the matcher is now written against the LANGUAGE (`:` then any run of spaces), never
+// against a house formatting habit.
+//
 // WHAT COUNTS AS A HEADER. Either form:
-//   1. closed on the line — `foo: ->`, `foo: (a, b) ->`, `foo: (a)->`, `foo: (a) =>`
+//   1. closed on the line — `foo: ->`, `foo: (a, b) ->`, `foo: (a)->`, `foo: (a) =>`, `foo:  ->`
 //   2. OPENING a wrapped parameter list — `foo: (` with nothing after the paren
 // Form 2's continuation lines need no special handling by the caller: they are indented deeper than
 // the header (or are the closing `) ->`), so every gate's existing "is this a body line?" test already
@@ -33,11 +41,11 @@
 // form matches exactly the 10 wrapped signatures and nothing else, at both indents.
 
 // A 2-space-indent class method header. Name in m[1].
-const METHOD_HEADER = /^  ([A-Za-z_]\w*): (?:(?:\(.*?\)\s*)?[-=]>|\($)/;
+const METHOD_HEADER = /^  ([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\($)/;
 
 // The mixin-DSL variant: methods declared inside a mixin's `onceAddedClassProperties` hash sit one
 // nesting level deeper (4- or 6-space). Indent in m[1], name in m[2].
-const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (?:(?:\(.*?\)\s*)?[-=]>|\($)/;
+const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): +(?:(?:\(.*?\)\s*)?[-=]>|\($)/;
 
 // The regression guard for the blind spot itself. A wrapped signature is only visible above because
 // it breaks immediately after the `(`; a caller that instead writes
@@ -57,10 +65,13 @@ const MIXIN_METHOD_HEADER = /^( {4,})([A-Za-z_]\w*): (?:(?:\(.*?\)\s*)?[-=]>|\($
 // does not match, found live on 13 methods by the 2026-08-18 dispatch-slot census — and an earlier
 // precondition (`\w*: \S`) skipped those lines entirely, making the guard blind to exactly the bug
 // class it exists to catch. The canonical spelling is colon flush against the name.
+// ⚠ It also admits a RUN of spaces after the colon (`: +\S`), for the mirror-image reason: the
+// earlier `: \S` made the guard blind to the aligned `softWrapOn:  ->` spelling, which METHOD_HEADER
+// itself could not see either — nine methods checked by no gate, silently, until 2026-08-24.
 function unseenMethodHeaders(lines) {
   const out = [];
   lines.forEach((raw, i) => {
-    if (!/^  [A-Za-z_]\w*\s*: \S/.test(raw)) return;      // a class-level key with a value
+    if (!/^  [A-Za-z_]\w*\s*: +\S/.test(raw)) return;     // a class-level key with a value
     if (METHOD_HEADER.test(raw)) return;                  // …that we can already see
     const code = raw.replace(/#.*$/, '');
     let depth = 0;
