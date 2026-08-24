@@ -6,8 +6,9 @@ SystemTests, build FRESH, gauntlet-green heads). Every `file:line` was verified 
 **line numbers DRIFT; the method name / quoted code is authoritative, so `grep` before trusting
 a number.** Plan 3 of the program
 [`frames-input-touch-program.md`](frames-input-touch-program.md): the decisions this plan
-implements are **owner rulings recorded there (IDs G1–G7; tail T11, T3-revisit; boundaries T6,
-T7, I2/H2)** — cite them, do not re-argue them. Plans 1 and 2 are EXECUTED AND CLOSED (archived:
+implements are **owner rulings recorded there (IDs G1–G7 — G3/G5/G6 as amended 2026-08-24;
+tail T11, T2-absorbed, T3-ruled; boundaries T6, T7, I2/H2)** — cite them, do not re-argue
+them. Plans 1 and 2 are EXECUTED AND CLOSED (archived:
 `../archive/frame-lifetime-and-docking-plan.md`, `../archive/pointer-events-plan.md`); this plan
 is authored against the post-Plan-2 tree per the program's just-in-time rule (§6).
 
@@ -17,10 +18,19 @@ ledger's dated citations stand as history): the world menu's input-mode row is a
 `PreferencesAndSettings.coffee:126` (G1 cites `:108`).
 
 **STATUS BOX** (fill per phase as executed)
-- P0 re-verification + measurements: —
+- P0 re-verification + measurements: **DONE 2026-08-24** (two Sonnet workers). Census
+  (`Fizzygum-tests/.scratch/geometry-census.js`, harness page): menu row **15 px**, 10-row menu
+  171 px, title strip 17 px, frame bar 26 px, list row 15 px, scrollbar 10 px, over-tall menu
+  clamps to 440. Fact re-verify: 19/20 confirmed; F16 sub-counts corrected (menus 145,
+  windows/frames 182 — "frame" over-matches as a substring — scroll 62; headline 290/287
+  stand). Owner PRE-RULED the P2 queue same day, pre-probe (ledger G3/G5/G6 amendments +
+  T2/T3 rows): `menuRowHeight` 44 · T3 = (a) big glyph · `_makePrettier` fold YES ·
+  `toolRows` 1 with T2's chevron ABSORBED into this plan · G6 factor 2 · prompter/prompt
+  buttons/slider thumbs join the ≥44 rule. P2 remains the eyes-on confirmation; any dial may
+  still be re-turned there.
 - P1 T11 deletion + row-height plumbing (byte-identical): —
-- P2 the probe page + owner rulings (G7 gate): —
-- P3 wave step A — dials + fold + indicators at CONSTANT extent (reviewed recapture): —
+- P2 the probe page + eyes-on confirmation of the pre-ruled dials (G7 gate): —
+- P3 wave step A — dials + fold + indicators + chevron at CONSTANT extent (reviewed recapture): —
 - P4 wave step B — test-world extent + Automator version bump (reviewed recapture): —
 - P5 docs, close, tail: —
 
@@ -35,11 +45,13 @@ whole apparatus GONE (T11: the world-menu row, `toggleInputMode` / `setTouchInpu
 dial, with the suite-vs-product value fork (`_makePrettier`, §1 F4) dissolved into it; the three
 dials turned (G3: targets ≥ 44, glyphs ~24 inset, indicators thin); scrollbars transformed into
 overlay INDICATORS that appear on scroll, fade on the event clock, and fatten under a hovering
-pointer (G4); the test world scaled with the geometry (G6); all of it shown to the owner on a
-probe page BEFORE any reference moves (G7), then landed as the program's ONE sanctioned
-recapture wave (program §4 rule 3). Out of scope, each with its ruled address: the gesture
-grammar (I2 → Plan 4), hover affordances on touch (T6 → Plan 4), `isTouchDevice` / the virtual
-keyboard (T7 → Plan 4), pinch (T4 → BACKLOG), the toolbar overflow chevron (T2 → BACKLOG).
+pointer (G4); the docked toolbar collapsed to ONE row of 44 px tools with an overflow CHEVRON
+popping the remainder as a menu (T2, ABSORBED into this plan 2026-08-24 — §2.7); the test
+world scaled with the geometry (G6); all of it shown to the owner on a probe page BEFORE any
+reference moves (G7), then landed as the program's ONE sanctioned recapture wave (program §4
+rule 3). Out of scope, each with its ruled address: the gesture grammar (I2 → Plan 4), hover
+affordances on touch (T6 → Plan 4), `isTouchDevice` / the virtual keyboard (T7 → Plan 4),
+pinch (T4 → BACKLOG).
 
 ---
 
@@ -88,8 +100,9 @@ geometry (program §3: "3 → 4"), which is why extent and dials must settle her
    colours, …) but runs only from `createDesktop`, which runs only `if theWorld.isIndexPage`
    (`src/boot/globalFunctions.coffee:470`) — and `isIndexPage` is false exactly on the harness
    page. So every committed reference shows chrome NO USER EVER SEES. The wave folds
-   `_makePrettier`'s preference writes into the one block (owner-gated at the probe, §2.2),
-   so the pixels the owner approves on the probe page are the pixels the suite then pins.
+   `_makePrettier`'s preference writes into the one block (RULED 2026-08-24, G5 amendment;
+   §2.2), so the pixels the owner approves on the probe page are the pixels the suite then
+   pins.
 2. **The T11 row appears in ZERO committed references.** No macro ever opens the WORLD's own
    context menu (all 43 `openMenuOf` call sites target widgets — §1 F7), and no test names
    the row or its verbs. So the T11 deletion is a ZERO-recapture structural phase (P1), gated
@@ -129,8 +142,9 @@ review, and talks to the owner. **The coordinator does not edit source or run su
 
 1. `/Users/davidedellacasa/code/Fizzygum-all/fg status` — orient (heads, build freshness, test
    count, zombie browsers → `fg killz`). Expect heads at or after the header's.
-2. Read this plan in full, then the program doc §2.2 (G1–G7) and §5 (T3, T6, T7, T11), §4
-   (recapture policy — rules 2–4 govern P3/P4). Then read, in this order:
+2. Read this plan in full, then the program doc §2.2 (G1–G7, with the 2026-08-24 amendments
+   on G3/G5/G6) and §5 (T2, T3, T6, T7, T11), §4 (recapture policy — rules 2–4 govern
+   P3/P4). Then read, in this order:
    `src/PreferencesAndSettings.coffee` IN FULL (282 lines), `src/WorldWdgt.coffee` — the
    `_makePrettier`/`createDesktop` block (~:658–:770) and the world-menu builder around the
    input-mode row (~:3180–:3240), `src/FrameWdgt.coffee` — the bar-spec family
@@ -140,7 +154,9 @@ review, and talks to the owner. **The coordinator does not edit source or run su
    `src/basic-widgets/menu-system/MenuItemWdgt.coffee` (`_createLabel`),
    `src/basic-widgets/Widget.coffee` — `isPointerTargetAt`/`catchesPointerAt` (~:474–:512),
    `src/DragChargingRingWdgt.coffee` (the dual-clock idiom), `src/HandleWdgt.coffee` +
-   `src/HandleAppearance.coffee`; then
+   `src/HandleAppearance.coffee`, `src/app-kit/ToolbarWdgt.coffee` +
+   `src/app-kit/ToolPanelWdgt.coffee` (the §2.7 chevron seam), `src/PromptWdgt.coffee`
+   (~:136 — the button row is MENU ROWS, F21); then
    `Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee`
    (`_sizeCanvasToTestScreenResolution`),
    `Fizzygum-tests/Automator-and-test-harness-src/SystemTestsSystemInfo.coffee` (the version),
@@ -150,7 +166,8 @@ review, and talks to the owner. **The coordinator does not edit source or run su
 3. Execute phases IN ORDER, P0 → P5. Each phase ends with its own gate (§7) and a proposed
    commit. **Owner preference: ask before every commit/push — present a summary and the
    proposed message (`git commit -F <file>`, never backticks in `-m`), then wait.** P2 ends
-   with OWNER RULINGS, not a commit — nothing lands until the dials are ruled.
+   with the owner's eyes-on CONFIRMATION (and any re-turned dials), not a commit — nothing
+   lands until the owner has seen the ruled geometry live.
 4. Long ops (`fg gauntlet`, `fg presuite`, `fg recapture`): launch ONCE with the Bash tool's
    `run_in_background` redirected to a log; peek `cat /tmp/fg-<cmd>.verdict` at a ~5-min
    cadence; never pipe the gating call through `| tail`/`| grep`; never edit src/tests/fg while
@@ -311,9 +328,12 @@ Each fact records its verification command. Line numbers drift — grep the quot
   ~:3403, virtual-keyboard gating) survive this plan untouched — T7 (Plan 4) owns them. The
   wave deletes only the MODE apparatus (F3). Verify: `grep -rn
   "useSliderForInput\|isTouchDevice" src/ | grep -v PreferencesAndSettings`.
-- **F16 — blast-radius proxies (measured).** 290 of 318 macro sources mention chrome vocabulary
+- **F16 — blast-radius proxies (measured; sub-counts corrected at P0).** 290 of 318 macro
+  sources mention chrome vocabulary
   (`menu|window|frame|toolbar|scroll|handle|resiz|inspector|popup|prompt`, case-insensitive);
-  144 mention menus, 159 windows/frames, 61 scroll, 9 toolbars. 287 tests carry screenshots.
+  145 mention menus, 182 windows/frames (⚠ "frame"/"window" over-match as substrings —
+  an upper bound, not an exact chrome count), 62 scroll, 9 toolbars. 287 tests carry
+  screenshots.
   Expected wave footprint: step A changes SOME screenshot in the large majority of the 287
   (any visible menu row, window bar, list, scrollbar, handle, prompt, inspector moves);
   step B changes ALL 287 tests' 3,756 files (extent) — plus the new G4 witness tests' own
@@ -327,11 +347,14 @@ Each fact records its verification command. Line numbers drift — grep the quot
   So "one window, one menu, one docked toolbar" (G7) is two clicks on the built dev
   `index.html`. The `?startupActions` mechanism is harness-owned test-running vocabulary
   (`WorldTestSupport.nextStartupAction`) — NOT usable to stage the scene on the product page.
-- **F18 — pop-up cap (C10) and where it lives.** The `POPUP_LARGER_THAN_WORLD` guard is
-  `FrameWdgt.coffee:1390`; the rows-viewport cap + scroll carries over-tall menus
-  (`SystemTest_macroOverTallMenuScrollsToReachItsLastRow` exercises it — its comment measures a
-  TextWdgt context menu at ~498px against the 440px world, ≈19–20 px/row including borders,
-  the best current row-height estimate; P0 measures it exactly).
+- **F18 — pop-up cap (C10) and the MEASURED geometry (P0 census, 2026-08-24).** The
+  `POPUP_LARGER_THAN_WORLD` guard is `FrameWdgt.coffee:1390`; the rows-viewport cap + scroll
+  carries over-tall menus (`SystemTest_macroOverTallMenuScrollsToReachItsLastRow` exercises
+  it). The census probe (`Fizzygum-tests/.scratch/geometry-census.js`, run on the BUILT
+  harness page) measured today's suite chrome exactly: **menu row 15 px**, 10-row menu
+  171 px, pop-up title strip 17 px, frame bar 26 px, `ListWdgt` row 15 px, scrollbar width
+  10 px, and an over-tall menu clamped to the 440 px world. These are the numbers §2.6's
+  factor arithmetic stands on.
 - **F19 — serialization posture.** `PreferencesAndSettings` is a well-known object
   (`wellKnownKey: "preferences"`, `keptByReferenceOnDeepCopy: true`, both with doc-comments
   citing the T11 row as their example — the comments need rewording when the row dies, the
@@ -348,6 +371,28 @@ Each fact records its verification command. Line numbers drift — grep the quot
   regenerates pages at the write site), `check-macro-source-discipline` (the new G4 tests),
   `fg doc-narration` (P5 docs sweep). The suite fail-gates `WORLD_CONSTRUCTION_DRIFT` — new
   preference fields are constructor-assigned, so the fingerprint stays deterministic.
+- **F21 — prompt/prompter chrome (the G3-amendment fact-check).** The prompt's Ok/Close
+  buttons are MENU ROWS, not a separate button family: `PromptWdgt`'s button-row builder
+  (~:136–:146) does `panel.addMenuItem "Ok", @, "deliverValue"` (+ "Close"), and
+  `SaveShortcutPromptWdgt` swaps in its own three rows the same way — so the `menuRowHeight`
+  dial covers every prompt confirmation target with ZERO new mechanism. `prompterFontSize`
+  readers: `PromptWdgt.coffee:127`, `SaveShortcutPromptWdgt.coffee:36`. `prompterSliderSize`
+  reader: `NumberPromptWdgt.coffee:30` — `slider.__commitHeight …prompterSliderSize`, i.e.
+  the input slider's CROSS AXIS is its thumb height, so this preference IS the thumb-target
+  dial. Verify: `grep -rn "prompterFontSize\|prompterSliderSize\|addMenuItem \"Ok\"" src/ |
+  grep -v PreferencesAndSettings`.
+- **F22 — the toolbar grid mechanics (the T2-absorption fact-check).** `ToolbarWdgt extends
+  ViewportWdgt` (:14) over a `ToolPanelWdgt extends PanelWdgt` grid. The grid's
+  `_layOutOwnContents` row-wraps its cells at pitch `@thumbnailSize + @internalPadding`,
+  wrapping against `@parent?.widthContentsMustFitWithin?() ? @width()` — "the toolpanel must
+  never scroll horizontally (only vertically)" (its own comment) — and each cell is a
+  `GlassBoxBottomWdgt` square of `@thumbnailSize` wrapped around one tool in `_addNoSettle`.
+  The bar pieces are the `IconButtonWdgt` family (`src/buttons/IconButtonWdgt.coffee:16`;
+  `CloseIconButtonWdgt`/`EditIconButtonWdgt`/…), and `FrameWdgt`'s bar-roster derive already
+  CONSTRUCTS pieces inside the arrange through NoSettle cores ("a piece gained here is placed
+  in this same pass") — the construction idiom §2.7's chevron copies. Verify: `sed -n
+  '90,130p' src/app-kit/ToolPanelWdgt.coffee` and `grep -n "IconButtonWdgt"
+  src/FrameBarWdgt.coffee`.
 
 ### 1.3 Why it is shaped this way
 
@@ -370,11 +415,15 @@ constant — which is why this is the ONE wave and why it is safe to do now.
 
 The wave's step A edits `setMouseInputMode`'s body (folded into the constructor by P1, §2.3)
 and nothing else for values. Columns: today-suite (the constructor block), today-product
-(after `_makePrettier`, F4), proposed. **Every "proposed" value is the author's opening bid;
-the OWNER turns the dials at the probe page (P2) and the ruled values are recorded in the
-STATUS box before P3 briefs.** Rationale anchors: targets ≥ 44 (G3), glyphs ~24 (G3),
-indicators thin (G3/G4), menu row height 44-by-taste-40-floor (G5), bar strip ≈ 50 (Apple
-iPad-bar precedent, program §7).
+(after `_makePrettier`, F4), proposed. **The owner PRE-RULED the headline dials 2026-08-24
+(ledger G3/G5/G6 amendments + T2/T3 rows): `menuRowHeight` 44, T3 = big glyph, the fold,
+`toolRows` 1 + the chevron, factor 2, prompter/prompt targets in. The remaining "proposed"
+values are the author's opening bid; the P2 probe page is the eyes-on confirmation where the
+owner may still re-turn ANY dial — re-turned values are recorded in the STATUS box before P3
+briefs.** Rationale anchors: targets ≥ 44 (G3, amended: prompter family, prompt Ok/Cancel
+buttons and input-slider thumbs are targets — "a confirmation button is the most consequential
+tap in the interface"), glyphs ~24 (G3), indicators thin (G3/G4), menu row height
+44-by-taste-40-floor (G5), bar strip ≈ 50 (Apple iPad-bar precedent, program §7).
 
 | preference | suite today | product today | proposed | note |
 |---|---|---|---|---|
@@ -393,12 +442,11 @@ iPad-bar precedent, program §7).
 | `iconDarkLineColor` | BLACK | 37³ | **37³** | fold |
 | `defaultPanelsBackgroundColor` | 255,250,245 | 249³ | **249³** | fold |
 | `defaultPanelsStrokeColor` | 100³ | 198³ | **198³** | fold |
-| `menuRowHeight` **(NEW, G5)** | — | — | **44** | the owner's taste dial; 40 is the floor |
+| `menuRowHeight` **(NEW, G5)** | — | — | **44** | RULED 2026-08-24 (40 was the floor); also the prompt Ok/Close target — those buttons ARE menu rows (F21) |
 | `barIconSize` | 16 | 16 | **44** | the bar button TARGET box (G3) |
 | `barGlyphSize` | 16 | 16 | **24** | the ink, inset in the box (G3) |
 | `barPadding` | 5 | 5 | **3** | bar strip = 44 + 2·3 = **50** |
-| `handleSize` | 15 | 15 | **44** | the handle TARGET box; see T3 §2.5 |
-| `handleGlyphSize` **(NEW, T3-b)** | — | — | **24** | the drawn grip, corner-anchored in the box |
+| `handleSize` | 15 | 15 | **44** | T3 RULED (a): glyph = box, a 44 px drawn grip (§2.5) |
 | `scrollBarsThickness` | 10 | 10 | **12** | now the FAT (hovered) indicator width |
 | `scrollIndicatorThickness` **(NEW, G4)** | — | — | **4** | the thin overlay width |
 | `scrollIndicatorLingerMs` **(NEW, G4)** | — | — | **800** | full-alpha hold after last scroll activity |
@@ -409,20 +457,24 @@ iPad-bar precedent, program §7).
 | `toolThumbnailSize` | 30 | 30 | **44** | tool thumbs are targets (G3) |
 | `toolInternalPadding` | 5 | 5 | **6** | breathing room at 44 |
 | `toolExternalPadding` | 10 | 10 | **10** | unchanged |
-| `toolRows` | 2 | 2 | **2** | owner may rule 1 at the probe (thickness below halves) |
-| `toolbarDockThickness` | 95 | 95 | **114** | = 2·44 + 6 + 2·10, entered as a VALUE (F2) |
+| `toolRows` | 2 | 2 | **1** | RULED 2026-08-24 (iPad convention); overflow pops via the chevron, §2.7 |
+| `toolbarDockThickness` | 95 | 95 | **70** | = 44 + 6 + 2·10 (thumb + one internalPadding of allowance + margins), entered as a VALUE (F2). The tree's strict 1-row grid is 2·ext + thumb = 64; today's 95 likewise exceeds ITS strict 2·30+5+20 = 85 — the constant has always carried allowance |
 | `dockBandDepth` | 30 | 30 | **50** | ≥ the new bar strip (its own comment's rule) |
+| `prompterFontSize` | 12 | 12 | **14** | prompter family joins the scale (G3 amendment 2026-08-24) |
+| `prompterSliderSize` | 10 | 10 | **44** | the prompt input slider's cross axis IS its thumb target (G3 amendment; F21 — `NumberPromptWdgt` commits it as the slider's height) |
 
-Unchanged on purpose: `shortcutsFontSize`, `textInButtonsFontSize`, `prompterFontSize`,
-`prompterSliderSize` (prompter = the code-prompt family — flagged as an open probe question,
-§5 P2), the window-bar colours, `outlineColorString`, `grabDragThreshold`, `dwellToArmMs`,
-`dwellRingSteps`, `wheel*`, `useSliderForInput`/`useVirtualKeyboard`/`isTouchDevice` (F15).
+Unchanged on purpose: `shortcutsFontSize`, `textInButtonsFontSize`, the window-bar colours,
+`outlineColorString`, `grabDragThreshold`, `dwellToArmMs`, `dwellRingSteps`, `wheel*`,
+`useSliderForInput`/`useVirtualKeyboard`/`isTouchDevice` (F15).
 
 **Derived consequences the reviewer must expect (step A):** window/card bar strips 26 → 50 with
 44-slot buttons drawing 24-glyphs; frame body margin (`_chromePadding` = `barPadding`) 5 → 3;
-menu rows ≈15 → 44 with vertically centred labels; menu title strips floored at the row dial
-(§2.3); the ~10 `handleSize`-band app layouts (F11) thicken; toolbar docks 95 → 114; every
-`ListWdgt` row 44; collapsed frames' tap-bands 50 (C13/C17 carried through the bar formulas).
+menu rows 15 → 44 with vertically centred labels (prompt Ok/Close rows included, F21); menu
+title strips floored at the row dial (§2.3); the ~10 `handleSize`-band app layouts (F11)
+thicken, and the handle draws a 44 px grip (T3-a); docked strips become ONE 44 px row at
+thickness 70 with a trailing chevron wherever tools overflow (§2.7); prompt input sliders
+10 → 44 tall; every `ListWdgt` row 44; collapsed frames' tap-bands 50 (C13/C17 carried
+through the bar formulas).
 
 ### 2.2 The `_makePrettier` fold (the suite finally shows the product)
 
@@ -431,9 +483,8 @@ Delete `WorldWdgt._makePrettier`; its preference assignments become the block's 
 `@setColor Color.create 244,243,244` and RECEIVES `@wallpaper.setPattern "dots"` — today the
 deleted method's last line (desktop furnishing, not a preference, so it MOVES, not folds). Product pages are pixel-UNCHANGED by the fold (they already ran these
 values); the suite moves — which is the point: after the wave, the references pin the chrome
-the owner approved on the probe page (reframe 1). **Owner-gated at P2** (recommended YES;
-a NO leaves the fork alive and obliges the executor to apply every §2.1 dial in BOTH blocks —
-recorded as a standing wart in the program tail if so ruled).
+the owner approved on the probe page (reframe 1). **RULED 2026-08-24: the fold is IN**
+(G5 amendment — recorded in the ledger, not re-arguable here).
 
 ### 2.3 T11 — the per-device toggle deleted (P1, zero-recapture)
 
@@ -527,34 +578,31 @@ behaviours). The one G4-adjacent deferral: on-finger discoverability beyond the 
 (e.g. bounce/rubber-band hints) — not ruled anywhere, goes to the program tail as a Plan 4
 grammar question if the owner wants it at all (§5 P5 tail).
 
-### 2.5 T3 revisited at the probe — the resize handle
+### 2.5 T3 RULED — the resize handle: big glyph, glyph = box
 
-Ledger T3 ("small glyph, large hit zone / edge-grab") is decided BY THE OWNER at P2, on the
-probe page, between:
-- **(a) status quo scaled**: `handleSize 44`, glyph = box (a 44px drawn grip — honest, loud);
-- **(b) small glyph, large hit zone (RECOMMENDED)**: the handle's BOX (and
-  `CornerInternalLayoutSpec` fixedSize) = `handleSize 44`; its appearance paints a
-  `handleGlyphSize 24` grip anchored at the outer corner of the box; the appearance claims the
-  whole box (`shapeContainsPoint` = box), so the hit zone is 44 with 24 of ink — G3's rider,
-  introduced exactly here (F10). Cost, stated: the invisible 20px band over content CATCHES
-  clicks (F10's "alpha never consulted") — acceptable for a corner, and the probe page is
-  where the owner feels it;
-- **(c) edge-grab resizing** (grab any window edge): a new interaction with hand/dispatch
-  work — if ruled, it does NOT ride this wave; it returns to the ledger as its own tail item
-  with a Plan-4-or-BACKLOG address, and (b) lands meanwhile as the wave's shape.
-
-The ~10 `handleSize` layout consumers (F11) follow the ruled BOX value automatically; P2 shows
-one of them (the Bin or the error console) so the owner sees the band cost.
+**RULED 2026-08-24 (owner; ledger T3 row): shape (a) — `handleSize 44` and the drawn grip IS
+the box.** "What you can hit is what you see": no invisible band, no `handleGlyphSize`
+preference, no glyph-inset split on the handle (the ~24-glyph discipline stays for bar
+buttons and the chevron, where the box also paints a background). Weighed and NOT chosen, for
+the record: a small-glyph-large-hit variant (its invisible 20 px band over content would
+catch clicks — F10's "alpha never consulted"), and edge-grab resizing (not wanted; no tail
+row — the ledger says so). The ~10 `handleSize` layout consumers (F11) follow the 44 box
+automatically; `HandleAppearance`'s grip must draw well at 44 (confirmed by eye at the P2
+probe, where one band consumer — the Bin or the error console — is also shown).
 
 ### 2.6 G6 — the test world scales with the geometry (wave step B)
 
-- **The rule:** scale the harness extent by the ROW-HEIGHT ratio, rounded to a crisp integer
-  factor. At the proposed dials the ratio is 44 / ~20 (F18's estimate; P0 measures exactly) ≈
-  2.2 → **factor 2: 960×440 → 1920×880** (CSS strings and the `background` div 960×720 →
-  1920×1440 scale with it). A ten-row 44px menu (440px + header) is then half the world's
-  height — today's proportion for a ten-row menu is ~36%, so meaning is preserved within
-  taste; the exact factor is an owner dial at P2 (fallback offer: 1.5 → 1440×660, cheaper but
-  odd-numbered against dpr2 halving — still integer at cpr 1 and 2, so legal).
+- **The rule, and the ruling:** scale the harness extent with the geometry. **RULED
+  2026-08-24 (G6 amendment): factor 2 — 960×440 → 1920×880** (CSS strings and the
+  `background` div 960×720 → 1920×1440 scale with it). Argued honestly against the census
+  (F18): today's row is 15 px, so the STRICT row ratio is 44/15 ≈ 2.9 → factor 3, which is
+  9× the pixel area — rejected on suite cost (compare/hash/render are per-pixel). At factor 2
+  chrome's share of the world grows rather than holds: a ten-row menu is 171/440 ≈ 39% of the
+  world today and (440 + ~46 header) / 880 ≈ 55% after — within taste, and every
+  overflow/fit fixture keeps its MEANING (what overflowed still overflows, what fit still
+  fits, with room to spare). The ruling is re-turnable at zero cost until P4 lands the extent
+  (nothing before P4 depends on the number); the pre-offered fallback if P4's measured suite
+  cost blows the envelope is 1.5 → 1440×660 (integer at cpr 1 and 2, so legal).
 - **Edit sites (the complete set — F12):** `_sizeCanvasToTestScreenResolution` (the one
   method), the three runner viewports (1100×800 → 2040×1000 at factor 2), and the harness
   comment in `SystemTestsReferenceImage.coffee:45`. Completion check: `grep -rn
@@ -575,7 +623,46 @@ one of them (the Bin or the error console) so the owner sees the band cost.
   `SystemTestsSystemInfo`'s constructor, same commit as the extent change; `check-refs` then
   refuses any straggler at 0.2.0, making the step-B recapture structurally complete.
 
-### 2.7 Disposition table — every current member this plan touches
+### 2.7 T2 ABSORBED — the toolbar overflow chevron (the `toolRows 1` pair)
+
+**RULED 2026-08-24 (ledger T2 row): with `toolRows 1`, the chevron is part of the
+single-geometry toolbar answer, not an optional refinement** — a docked strip shows as many
+44 px tools as fit and a trailing chevron pops the remainder as a menu (macOS/iPad toolbar
+convention; T2's live motivation: the grip bar eats strip length, and today Docs Maker's last
+tool already sits behind the strip's scroll). The mechanics stand on F22.
+
+1. **Fit count is the arrange's own arithmetic.** `ToolPanelWdgt._layOutOwnContents` already
+   computes the wrap against the strip's available run (`widthContentsMustFitWithin?()`,
+   F22). For a one-row strip: fit = `Math.floor((available − 2·externalPadding +
+   internalPadding) / (thumbnailSize + internalPadding))`, reserving the TRAILING slot for
+   the chevron iff cellCount > fit. Cells beyond the visible prefix are hidden BY the layout
+   — visibility as layout OUTPUT is legal (the ghost principle bans it as INPUT); the panel's
+   children list stays the ONE source of truth, nothing reparented or destroyed.
+2. **The chevron is one leaf in the existing icon-button family** —
+   `OverflowChevronButtonWdgt extends IconButtonWdgt` (the bar-piece vocabulary, F22; no new
+   widget family) — laid out as the trailing cell: a `thumbnailSize` (44) target drawing a
+   ~`barGlyphSize` (24) chevron inset (G3). It exists ONLY while fit < count, built and
+   retired by the same layout pass that hides cells, through the NoSettle cores — the
+   `FrameWdgt._reDeriveBarRosterNoSettle` construction idiom (F22); a derive that CONSTRUCTS
+   runs only inside a flush, and P3's gauntlet settle leg is the gate that catches it done
+   wrong. When everything fits there is NO chevron — a control charging rent nothing asks
+   for is the P2 bind-row lesson.
+3. **The remainder menu is a transient `MenuWdgt` DERIVED at pop time**: the chevron's action
+   builds it from the currently hidden cells — one `MenuItemWdgt` per hidden tool, label an
+   `[icon, string]` tuple (`MenuItemSpec` already supports it), target/action = the same
+   dispatch a tap on that grid cell makes. Rows are `menuRowHeight` targets like every other
+   row. NO tracking wiring: derived-at-open + transient lifetime IS the one-staleness-signal
+   answer (the P5/P7 rows-as-views lesson) — a strip that re-arranges under an open remainder
+   menu dismisses it like any transient pop-up, never updates it in place.
+4. **Vertical docks:** a left/right strip is one COLUMN; the fit axis is the strip's own
+   axis — the same arithmetic over height.
+5. **Witness test** (NEW references, `/author-macro-test`):
+   `SystemTest_macroToolbarChevronPopsOverflow` — dock a strip sized so k of n tools fit:
+   chevron present (screenshot); click it: the remainder menu lists exactly n−k tools
+   (assert labels, screenshot); trigger one (assert the tool's action ran); resize so all n
+   fit: chevron GONE (assert absent — the no-rent half).
+
+### 2.8 Disposition table — every current member this plan touches
 
 | today | fate |
 |---|---|
@@ -589,7 +676,10 @@ one of them (the Bin or the error console) so the owner sees the band cost.
 | `FrameWdgt._transientBarSpec.thickness` | floored at `menuRowHeight` (P1 at 0 = identity; live in P3) |
 | `ViewportWdgt` bars (`hBar`/`vBar`, `SliderWdgt`) | KEPT; gain indicator presentation state + dual-clock fade + hover-fatten (P3, §2.4) |
 | `anyScrollBarShowing` consumers (Widget :4007, PanelWdgt :159) | re-keyed to `isScrollableNow()` (P3) |
-| `HandleWdgt`/`HandleAppearance` + `handleSize` consumers | T3 ruling applied (P3, §2.5) |
+| `HandleWdgt`/`HandleAppearance` + `handleSize` consumers | T3(a) applied: 44 box, glyph = box (P3, §2.5) |
+| `ToolPanelWdgt._layOutOwnContents` | one-row fit count + trailing chevron slot + hidden-overflow prefix (P3, §2.7) |
+| (nothing) | NEW: `OverflowChevronButtonWdgt extends IconButtonWdgt` + its pop-time remainder `MenuWdgt` (P3, §2.7) |
+| `PromptWdgt`/`NumberPromptWdgt` prompter chrome | rides the dials — Ok/Close rows via `menuRowHeight` (F21), slider 44 (P3) |
 | `WorldTestSupport._sizeCanvasToTestScreenResolution` + 3 runner viewports | scaled by the ruled factor (P4) |
 | `SystemTestsSystemInfo` version | 0/2/0 → 0/3/0 (P4, with the extent) |
 | every committed reference (3,756 files) | recaptured twice: step A (dials, reviewed via diffpage) and step B (extent, sampled review + version gate) |
@@ -649,7 +739,7 @@ finger tests against a geometry that will not move under it.
 ## §5 Phases
 
 Each phase: goal · steps · pixel impact · gate · commit. **Recapture budget: ZERO in P0–P2;
-P3 = the reviewed step-A set (every diff must be a stated §2.1/§2.4/§2.5 consequence);
+P3 = the reviewed step-A set (every diff must be a stated §2.1/§2.4/§2.5/§2.7 consequence);
 P4 = the whole suite (extent + bump). Anything outside the budget at any gate: STOP (worker
 rule 3) — the coordinator eyeballs `fg diffpage` and takes it to the owner. Never a silent
 recapture.**
@@ -658,13 +748,13 @@ recapture.**
 
 1. `fg status`; a green gauntlet baseline must exist for the current heads (run one in the
    background if the tree moved).
-2. **Sonnet, read-only:** re-verify F1–F20 with the recorded commands; report drift (the
-   coordinator amends §1 before P1 briefs — a plan's premises are hypotheses).
+2. **Sonnet, read-only:** re-verify the §1 facts with the recorded commands; report drift
+   (the coordinator amends §1 before P1 briefs — a plan's premises are hypotheses).
 3. **Sonnet, probe (from this stated spec):** `Fizzygum-tests/.scratch/geometry-census.js` —
    boot the BUILT harness page headless; build a 10-row menu and read
    `row.height()`, `menu.height()`, a `FrameWdgt`'s bar thickness, a `ListWdgt` row height, a
    scrollbar's width; print them. These are the "today" numbers the probe page and the G6
-   factor arithmetic cite (F18's ~19–20px/row estimate becomes exact).
+   factor arithmetic cite (as executed: F18 and the STATUS box carry them — row 15 px).
 4. **Sonnet:** the completion greps into the STATUS box: `anyScrollBarShowing` consumers,
    `handleSize` consumers, `960|440|1100` in the tests repo, `openMenuOf` world-target
    re-check, references count. These are P3/P4/P5's completion checks.
@@ -680,52 +770,52 @@ Commit (coordinator proposes; owner approves).
 
 ### P2 — The probe page (G7) — the owner-review GATE (~½ session-day + owner time)
 
-The probe is **the dev build of the working tree with §2.1's proposed column applied** — no
+The probe is **the dev build of the working tree with §2.1's ruled/proposed column applied** — no
 committed probe artifact, no product-build pollution, no new entry page (F17):
 
-1. **Opus worker:** apply the §2.1 proposed values + the §2.2 fold + a FIRST CUT of §2.4
-   (indicators) and §2.5(b) (handle) to the working tree; `fg build` (dev profile). Report
-   what compiled/renders; do NOT run the suite (pixels are moving by design; nothing commits
-   from this tree state until P3's review).
+1. **Opus worker:** apply the §2.1 ruled/proposed values + the §2.2 fold + a FIRST CUT of
+   §2.4 (indicators), §2.5's 44 px grip and §2.7 (one-row strip + chevron) to the working
+   tree; `fg build` (dev profile). Report what compiled/renders; do NOT run the suite
+   (pixels are moving by design; nothing commits from this tree state until P3's review).
 2. **The owner opens `/Users/davidedellacasa/code/Fizzygum-all/Fizzygum-builds/latest/index.html`**
    (one step — the coordinator hands exactly this path). The scene, two clicks: right-click
-   the desktop → the world menu at the proposed row height; click the "Docs" desktop icon →
-   a `DocumentWdgt` WINDOW with its docked `TextToolbarWdgt` (F17). Scrolling any overflowing
+   the desktop → the world menu at the ruled row height; click the "Docs" desktop icon →
+   a `DocumentWdgt` WINDOW with its docked `TextToolbarWdgt` as a ONE-ROW strip — narrowed
+   until the chevron appears and its remainder menu pops (§2.7). Scrolling any overflowing
    pane shows the indicators live (appear/fade/fatten — wall clock on this page, F14). The
-   window's resizer shows the T3-(b) shape; the Bin/error-console shows the handle-band cost
-   (§2.5).
+   window's resizer shows the T3(a) 44 px grip; the Bin/error-console shows a `handleSize`
+   band consumer (§2.5); a number prompt shows the 44 slider + row-height Ok/Close (F21).
 3. **Iteration loop:** owner asks for a variant → worker edits the block →
    `cd /Users/davidedellacasa/code/Fizzygum-all/Fizzygum && ./build_as_soon_as_anything_changes.sh`
    or `fg build` → reload. (Preference values may
    also be poked live from the devtools console for instant A/B — a human tool, no discipline
    gate applies — with a close-and-reopen of the chrome being inspected.)
-4. **Rulings recorded in the STATUS box before P3** (the ledger's G5/G7/T3 rows get their
-   outcome noted at close, program-doc side, by the coordinator):
-   - `menuRowHeight` — 44 or 40 (G5, the taste dial) — and every other §2.1 dial confirmed
-     or turned;
-   - T3: (a)/(b)/(c) (§2.5); if (c), its tail destination;
-   - the fold (§2.2): yes/no;
-   - the G6 factor: 2 (1920×880) or 1.5 (1440×660);
-   - open value questions the ledger does not cover: do the PROMPTER dials
-     (`prompterFontSize`/`prompterSliderSize`) and prompt Ok-button targets join the 44-target
-     rule now, or stay (they are chrome the HIG would size, but no ruling names them);
-     `toolRows` 2 vs 1.
+4. **The headline dials are PRE-RULED (2026-08-24 — the STATUS box lists them; the ledger's
+   G3/G5/G6 amendments + T2/T3 rows are the record).** P2 is the eyes-on CONFIRMATION (G7):
+   the owner sees every ruled value live and may re-turn ANY dial — a re-turned value is
+   recorded in the STATUS box before P3 briefs, and the coordinator notes it on the ledger
+   row (an owner ruling may overturn a row — recorded there, never re-argued here). The G6
+   factor stays re-turnable at zero cost until P4 lands the extent. The author's opening-bid
+   values that carry no ruling (barPadding 3, indicator timings, `menuHeaderCornerRadius` 4,
+   `toolInternalPadding` 6, `prompterFontSize` 14, …) are confirmed or turned here too.
 5. **Pixel impact: none committed.** The working tree stays dirty into P3 (same worker
    continues) or is stashed by plain file backup (never `git stash` — house ban).
 
-### P3 — Wave step A: dials + fold + indicators + handle, at CONSTANT extent (~1 session-day)
+### P3 — Wave step A: dials + fold + indicators + handle + chevron, at CONSTANT extent (~1½ session-days)
 
 One Opus worker. Steps:
 1. Finalize §2.1 (ruled values), §2.2, §2.4 (all nine points — incl. `isScrollableNow` re-key
-   and transients), §2.5 (ruled shape). The two G4 witness tests authored
+   and transients), §2.5 (the 44 px grip), §2.7 (fit count + chevron + remainder menu). The
+   THREE witness tests authored — the two G4 ones and §2.7's chevron test
    (`/author-macro-test` skill; macro-source discipline: no `world.evaluateString`, "Macro"
    only trailing) with their own references captured at dprs 1+2.
 2. `fg build` (28 gates). Then discovery: `fg suite` in the background → the summary's
    `failed tests (N): [...]` array IS the step-A footprint (expected: most of the 287, F16).
 3. **The review (program §4 rule 2):** `fg diffpage --tests-file=<footprint>` (serial dumps;
    it prints the `fg classify` triage table). The COORDINATOR eyeballs consequence pixels —
-   every diff must read as a §2.1/§2.4/§2.5 consequence (bars 26→50, rows →44, indicators
-   replacing bars, handle bands, folded fonts/colours); `fg classify`'s BENIGN? bucket is a
+   every diff must read as a §2.1/§2.4/§2.5/§2.7 consequence (bars 26→50, rows →44,
+   indicators replacing bars, 44 grips, one-row strips + chevrons, prompt sliders/rows,
+   folded fonts/colours); `fg classify`'s BENIGN? bucket is a
    reading aid, never permission. Anything unexplainable = STOP. A digest (counts per
    consequence family + screenshots of exemplars) goes to the owner with the commit proposal.
 4. `fg recapture --auto --dprs=1,2` (background; ⚠ the build from step 2 must still match the
@@ -764,25 +854,25 @@ One Opus worker. Steps:
    `DETERMINISM.md` extent mentions (960×440 → the new constant; de-count where possible),
    `src/macros/MACRO-PATTERNS.md`'s bar-visibility gotcha (:1281) re-worded to
    `isScrollableNow`, the harness comments P0's grep listed. `fg doc-narration` after.
-2. Program doc (coordinator): STATUS row for Plan 3; G5/T3 outcomes noted on their ledger
-   rows (date + ruling); T11 row → closed; tail entries (below).
+2. Program doc (coordinator): STATUS row for Plan 3; the G3/G5/G6/T3 amendment rows carry
+   their rulings already — note any P2 re-turn on them (date + reason); T11 and T2 rows →
+   closed; tail entries (below).
 3. **Gate:** full `fg gauntlet` (18 legs, background, verdict-file peeks — webkit leg
    revalidates the recaptured references cross-engine) and `fg homepage` (the production page
    boots the folded block + indicator chrome). Commit; coordinator runs the close-arc ritual.
 
 **Tail (drain before Plan 4 starts — program §5 rule 2):**
-- Pre-filed candidates, each with a destination: T3(c) edge-grab IF ruled wanted →
-  its own ledger row (Plan 4 or BACKLOG, owner's call at P2); finger-side scroll
-  discoverability beyond the reveal-flash → Plan 4 (I2 grammar, with T6); prompt/prompter
-  target sizing if the owner defers the P2 question → BACKLOG with the probe-page evidence;
-  `FULL_FAILURE_IMAGE_BUDGET` retune if P4 deferred it → BACKLOG. T2 (overflow chevron)
-  already has a BACKLOG address — P3 merely notes the 44-thumb pressure on its row.
+- Pre-filed candidates, each with a destination: finger-side scroll discoverability beyond
+  the reveal-flash → Plan 4 (I2 grammar, with T6); `FULL_FAILURE_IMAGE_BUDGET` retune if P4
+  deferred it → BACKLOG. (T2 is ABSORBED — §2.7 closes its ledger row with this plan; T3 is
+  ruled with no residue: edge-grab was not wanted and gets no row.)
 - Anything else discovered lands in the program ledger with a destination, per rule 1.
 
-**ETA (owner preference: upfront):** P0 ¼ + P1 ⅓ + P2 ½(+owner) + P3 1 + P4 ½ + P5 ⅓ ≈
-**~2¾–3 session-days + owner review + tail.** The program's rough size (§3: "Plan 3 ≈ 1 +
-owner review + tail") predates G4's promotion from constants to a full behaviour phase — noted
-here as a sizing correction, not a scope change. Status updates every ~5 min during long ops.
+**ETA (owner preference: upfront):** P0 ¼ (done) + P1 ⅓ + P2 ½(+owner) + P3 1½ + P4 ½ + P5 ⅓ ≈
+**~3¼–3½ session-days + owner review + tail.** The program's rough size (§3: "Plan 3 ≈ 1 +
+owner review + tail") predates G4's promotion from constants to a full behaviour phase and
+T2's absorption (+½, ruled 2026-08-24) — noted here as a sizing correction, not a scope
+change. Status updates every ~5 min during long ops.
 
 ---
 
@@ -794,10 +884,12 @@ here as a sizing correction, not a scope change. Status updates every ~5 min dur
 | Indicator fade/hover is nondeterministic under load | P3/P4 | the clock is the event clock under the Automator (F14 idiom), alpha quantized, `_changed()` on step-move only; witness macros advance time by events; `fg recapture`'s UNSTABLE bucket + the torture tool are the detectors; DETERMINISM.md is the playbook |
 | Drag-scroll dies when bars hide | P3 | §2.4 step 5 re-keys the two `anyScrollBarShowing` gates to `isScrollableNow()`; the existing drag-scroll SystemTests are the witnesses (they fail loudly if missed) |
 | The thin indicator steals clicks over content | P3 | `catchesPointerAt` false in thin/hidden state (F10); the fat state alone is interactive; the fatten trigger lives in the viewport's hover pass, not on the bar |
+| The chevron menu goes stale against the strip, or the chevron charges rent | P3 | the remainder menu is DERIVED at pop time and transient — no tracking wiring (§2.7 point 3); the chevron exists only while fit < count, and the witness test asserts both halves (§2.7 point 5) |
+| Chevron construction inside the arrange re-enters the settle | P3 | the NoSettle-core idiom is named (§2.7 point 2, the bar-roster precedent F22); P3's full gauntlet — settle/capstone/revisits legs — is the gate presuite cannot be |
 | T11 deletion silently changes a reference | P1 | F7 measured ZERO exposure; the gate is byte-identical presuite — any diff is a STOP and a premise falsification, not a recapture |
 | An inspector screenshot pins the deleted members | P1 | same byte-identical gate; the known mechanism (member-list churn) is named in §2.3 so the worker recognizes it in one sentence |
 | Step-A review drowns in 287 diffs | P3 | constant extent keeps the blend meaningful; `fg classify` buckets; the review reads by CONSEQUENCE FAMILY (§5 P3.3) with exemplar screenshots to the owner — never "benign churn" |
-| Extent change breaks a fixture's meaning (menu no longer overflows, window no longer fits) | P4 | G6's factor is chosen FROM the measured row ratio (P0), the canary tests are named (§5 P4.3), and macros ask the live world (F12) |
+| Extent change breaks a fixture's meaning (menu no longer overflows, window no longer fits) | P4 | the ruled factor 2 was argued against the measured census (§2.6/F18) and only GROWS chrome's share, the canary tests are named (§5 P4.3), and macros ask the live world (F12) |
 | The bump is forgotten or half-applied | P4 | the bump and the extent share one commit; `check-refs`'s `STALE AUTOMATOR VERSION` fails every subsequent build until zero stragglers |
 | Suite cost at the new extent blows the inner loop | P4 | measured and recorded at P4; the 1.5 fallback factor is pre-offered; an envelope breach returns to the owner (stop rule: unruled decision) |
 | `fg recapture` inconclusive from a stale build | P3/P4 | build-first is a numbered step in both phases and the tool's own guard trips loudly (program §4 rule 4) |
@@ -836,7 +928,14 @@ here as a sizing correction, not a scope change. Status updates every ~5 min dur
 - **A "touch mode" / per-device geometry in any form** — G1 forbids it; T11 deletes the last
   one. Do not reintroduce a mode, a flag, or a per-page preset for geometry.
 - **Keeping `_makePrettier` and dialing both blocks** — two sources for one value re-creates
-  the fork G2 exists to kill; only an explicit owner NO at P2 keeps it, as a recorded wart.
+  the fork G2 exists to kill; the fold is RULED IN (G5 amendment, 2026-08-24).
+- **A live-tracking remainder menu (the chevron's menu wired to the strip)** — a view kept in
+  sync while closed is rent plus a second staleness signal; derived-at-pop + transient
+  lifetime is the P5/P7-compliant shape (§2.7). Likewise a chevron that is always present
+  ("for stability") is the P2 bind-row mistake.
+- **A small-glyph resize handle over an invisible hit band, or edge-grab resizing** — weighed
+  and NOT chosen (T3 ruling, 2026-08-24): the invisible band catches clicks over content, and
+  edge-grab was not wanted (no tail row). Do not re-derive; the ruled shape is glyph = box.
 - **An instant-under-harness fade (or fade disabled for tests)** — a per-page behaviour fork
   and a permanent suite blind spot; the dual clock (F14) costs one helper and forks nothing.
 - **Wall-clock fade timers** — the DETERMINISM.md bug class, verbatim; banned on the suite
@@ -878,11 +977,11 @@ only for read-only work and docs edits to disjoint files.
 
 | phase | worker | parallel? | brief = plan section + | gate the worker runs | coordinator decides |
 |---|---|---|---|---|---|
-| P0 fact re-verify | Sonnet ×1 | yes (read-only) | §1's F1–F20 commands | none | records drift, amends §1 |
+| P0 fact re-verify | Sonnet ×1 | yes (read-only) | §1's fact commands | none | records drift, amends §1 |
 | P0 geometry census probe | Sonnet ×1 | yes (read-only) | §5 P0.3's stated spec | the probe script itself | the "today" numbers into STATUS; G6 arithmetic |
 | P1 T11 + row-height plumbing | Opus ×1 | no | §2.3; F3/F6/F7/F19 | `fg presuite` byte-identical; `fg menusweep` | verdicts; commit proposal |
-| P2 probe-tree prep + variants | Opus ×1 | no | §2.1 proposed column, §2.2, §2.4 first cut, §2.5(b); F17 | `fg build` only | hosts the owner review; records rulings in STATUS |
-| P3 wave step A | same Opus ×1 | no | §2.1 (ruled), §2.2, §2.4 all points, §2.5 (ruled); F8–F11, F15, F19; the witness-test specs | `fg build`; `fg suite` (discovery); `fg recapture --auto --dprs=1,2`; `fg presuite`; sweeps; `fg gauntlet` | THE diffpage review (rule 2); owner digest; commit |
+| P2 probe-tree prep + variants | Opus ×1 | no | §2.1 ruled column, §2.2, §2.4 first cut, §2.5, §2.7; F17 | `fg build` only | hosts the owner review; records re-turned dials in STATUS |
+| P3 wave step A | same Opus ×1 | no | §2.1 (ruled), §2.2, §2.4 all points, §2.5, §2.7; F8–F11, F15, F19, F21, F22; the witness-test specs | `fg build`; `fg suite` (discovery); `fg recapture --auto --dprs=1,2`; `fg presuite`; sweeps; `fg gauntlet` | THE diffpage review (rule 2); owner digest; commit |
 | P4 wave step B | Opus ×1 | no | §2.6; F12/F13; the canary list | `fg build`; `fg recapture --auto --dprs=1,2`; `fg presuite` | sampled review; cost numbers; commit |
 | P5 docs sweep | Sonnet ×N | yes (disjoint files) | per file: the P0 grep list + the present-tense paragraph | `fg doc-narration` | reviews diffs |
 | P5 close | coordinator | — | — | `fg gauntlet`, `fg homepage` | close-arc ritual, program STATUS/tail, memory, owner |
@@ -899,9 +998,10 @@ absolute path. Probes under Fizzygum-tests/.scratch/.
 Do: ⟨the phase's step list, or "every step of §⟨phase⟩"⟩.
 Gate: ⟨exact fg command(s)⟩ → expected ⟨verdict⟩. Launch long ops with run_in_background and wait for
 the notification; never poll; never pipe the gating call. Build BEFORE any fg recapture.
-Pixel budget: ⟨P1: ZERO — any diff is a STOP. P3: every diff must be a stated §2.1/§2.4/§2.5
-consequence; list the footprint, produce fg diffpage, do NOT recapture until the coordinator approves.
-P4: the whole suite; the version bump and the extent share your one commit.⟩
+Pixel budget: ⟨P1: ZERO — any diff is a STOP. P3: every diff must be a stated
+§2.1/§2.4/§2.5/§2.7 consequence; list the footprint, produce fg diffpage, do NOT recapture until
+the coordinator approves. P4: the whole suite; the version bump and the extent share your one
+commit.⟩
 Stop and report (do not improvise) if: a §1 fact is false; a fix shape is falsified twice; a gate
 fails for a reason you cannot state in one sentence; a diff appears outside the budget; you need a
 decision the ledger and the P2 rulings do not cover. Never recapture without the coordinator's
@@ -930,8 +1030,9 @@ open questions; which stop rule fired, if any.
 ## §10 References
 
 - Program: [`frames-input-touch-program.md`](frames-input-touch-program.md) — §2.2 rulings
-  (G1–G7), §3 sequencing + §3.1 execution model, §4 recapture policy (rules 2–4 govern P3/P4),
-  §5 tail rules (T3, T6, T7, T11), §6 just-in-time authoring.
+  (G1–G7; G3/G5/G6 amended 2026-08-24), §3 sequencing + §3.1 execution model, §4 recapture
+  policy (rules 2–4 govern P3/P4), §5 tail rules (T2 absorbed here, T3 ruled, T6, T7, T11),
+  §6 just-in-time authoring.
 - Plans 1–2 (closed): [`../archive/frame-lifetime-and-docking-plan.md`](../archive/frame-lifetime-and-docking-plan.md)
   (the bar-spec family this plan retunes; §9 the delegation-map shape),
   [`../archive/pointer-events-plan.md`](../archive/pointer-events-plan.md) (the §9 this §9
@@ -965,7 +1066,8 @@ open questions; which stop rule fired, if any.
 > §2.2/§3.1/§4/§5. Run `/Users/davidedellacasa/code/Fizzygum-all/fg status` and verify heads ≥
 > the plan header's (Fizzygum `bf6e494e` / tests `341ad470c`); if the tree moved, expect §1
 > drift and re-verify before briefing. Execute per the plan's §9 delegation map, phases P0→P5,
-> one code worker at a time, briefs from the §9.2 template. P2 is an OWNER GATE: the dials, the
-> T3 shape, the fold and the G6 factor are ruled on the probe page before any capture. Pixel
-> budget: zero through P2; P3/P4 are the program's one reviewed recapture wave — you eyeball
-> every diff page yourself. Ask the owner before every commit/push.
+> one code worker at a time, briefs from the §9.2 template. The headline dials are PRE-RULED
+> (2026-08-24 — the STATUS box and the ledger's G3/G5/G6/T2/T3 rows); P2 remains the OWNER
+> GATE where every ruled value is confirmed by eye and may be re-turned before any capture.
+> Pixel budget: zero through P2; P3/P4 are the program's one reviewed recapture wave — you
+> eyeball every diff page yourself. Ask the owner before every commit/push.
