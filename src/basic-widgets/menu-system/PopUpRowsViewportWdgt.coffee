@@ -61,7 +61,7 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # themselves — so the width hint is not consulted.
   preferredExtentForWidth: (ignored_availW) ->
     hug = @contents.preferredExtentForWidth undefined
-    frame = @firstParentThatIsAPopUp()
+    frame = @enclosingFrame()
     chromeWidth = 0
     chromeHeight = 0
     if frame?.isFrame?() and @_contentStackSpec?
@@ -84,9 +84,9 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   # menu leaves the frame drawn at its old height, with a blank strip where the row was: the
   # frame's own re-fit path keeps the width its first placement latched (measured, spike S1).
   #   The frame is reached through the pop-up climb, which STOPS AT IT (FrameWdgt
-  # .firstParentThatIsAPopUp); outside a frame there is nothing to absorb into.
+  # .enclosingFrame); outside a frame there is nothing to absorb into.
   _reLayOutAfterContainedPanelChange: ->
-    frame = @firstParentThatIsAPopUp()
+    frame = @enclosingFrame()
     return false unless frame?.isFrame?() and @_contentStackSpec?
     @contents._reLayoutChildren()
     measure = @preferredExtentForWidth undefined

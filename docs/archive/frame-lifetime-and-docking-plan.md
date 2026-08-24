@@ -1,5 +1,11 @@
 # Frame lifetime and docking — one chrome container, three manifestations
 
+**STATUS: EXECUTED AND CLOSED 2026-08-24.** All phases P0–P6 + the tail landed and pushed (final gates:
+`fg gauntlet` 18/18, `fg homepage`; suite 316). The LIVING TRUTH is in `docs/architecture/`
+(regularity-principles, viewports-and-planes, layout, serialization-duplication-reference,
+lint-and-static-checks) and `docs/specs/drag-embed-interaction-spec.md` — this file is the historical
+plan record; its STATUS box is the arc's as-executed log. Program: `frames-input-touch-program.md`.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 Authored 2026-08-23 against Fizzygum `8d9ff3e3` / Fizzygum-tests `466109712` (gauntlet 18/18
 green, 309 SystemTests). Every `file:line` was verified on that date — **line numbers DRIFT; the
@@ -232,7 +238,11 @@ re-argue them.
   `Widget.coffee:4152`'s comment is false twice over (filed for the rename). P6 close gates GREEN 2026-08-24 01:27:
   `fg gauntlet` 18/18 (no retries) + `fg homepage` (the production round-trip). Plan 1 execution COMPLETE;
   the tail (program §5: T8 ruling, T12, T16, T17) is the arc's remaining work.
-- Tail (program §5): not started.
+- Tail (program §5): **DONE 2026-08-24** — T12 (RULE 1b, plant-proven; + the header-matcher `: +` fix, 9 methods
+  restored to all 7 gates), T16 (the serializer MERGES the `@serializationTransients` chain — the walk follows
+  `__super__`; rig check plant-proven), T17 (the switch forwards the position; 23 escalation sites clean), and
+  the T8 sweep (`firstParentThatIsAPopUp` → `enclosingFrame`, `isPopUpPinned` → `isPersistent`; both → 0
+  everywhere live; presuite byte-identical, gauntlet 18/18). **PLAN CLOSED.**
 
 **MANDATE: complete elimination of the underlying problem, not mitigation.** The problem is that
 one role — the manipulation chrome around a payload — is expressed as two parallel class

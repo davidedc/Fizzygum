@@ -4138,10 +4138,12 @@ class Widget extends TreeNode
 
   # Widget dragging (and dropping) /////////////////////////////////////////
 
-  # finds the first parent that is a PopUp
-  firstParentThatIsAPopUp: ->
+  # The innermost enclosing frame, self included — a frame marked for closure (on its way out)
+  # is transparent to the climb, so it passes through to whatever holds it (FrameWdgt's
+  # override). The root when no frame encloses: this base answer just climbs to the top.
+  enclosingFrame: ->
     if !@parent? then return @
-    return @parent.firstParentThatIsAPopUp()
+    return @parent.enclosingFrame()
 
   anyParentPopUpMarkedForClosure: ->
     if @isPopUpMarkedForClosure

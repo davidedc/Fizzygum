@@ -16,6 +16,11 @@ Archived docs are immutable history — the current-state truth lives in
 
 ## Layout & settle campaigns
 
+- **`frame-lifetime-and-docking-plan.md`** — EXECUTED AND CLOSED 2026-08-24 (Plan 1 of `docs/plans/frames-input-touch-program.md`). ONE chrome container: `FrameWdgt` carries `lifetime 'transient'|'persistent'`; menu/window/card are DERIVED manifestations; `MenuWdgt`/`PromptWdgt` are framed citizens; `PopUpWdgt` + `MenuHeader` deleted; docking = `EdgeDockLayoutSpec` (the same frame docks/floats/re-docks; `floatToolbar` deleted); the climb is `enclosingFrame`, the predicate `isPersistent`.
+  - ⚖ Eight of the plan's own premises were falsified in execution (F13's zero-callers, C6's deletion clause, C13's letter, the dockThickness formula, F9's centring, the 4b/4c counts, "P4 pixel-identical") — the STATUS box is the as-executed log; amend the ledger with date+reason, never silently.
+  - ⚖ The gauntlet caught three real defects presuite structurally cannot see (settle: a derive that CONSTRUCTS runs only inside a flush; capstone: the DISPATCHER owns the callback settle; revisits: arming a placement-owning spec clears pending wishes) — a hook-path phase never closes on presuite alone.
+  - ⚖ Do NOT re-attempt: merge-on-drop, a "pinned menu" skin, a grip class, a per-frame barSide knob, a lifetime policy-object hierarchy (§8 of the plan carries the full list with reasons).
+
 - **`all-constructors-settle-plan.md`** — COMPLETE. Converts ~27 inline-building constructors to the uniform self-settling _buildAndConnectChildren wrapper/core pattern.
   - ⚖ notification-settle gate refined to permit orphan-receiver settle in a callback, not weakened
   - ⚖ ScrollPanelWdgt needed a DISTINCT _buildScrollFrame name, not the shared leaf core name

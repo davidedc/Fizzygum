@@ -80,7 +80,7 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # ask (see _holdingPopUp) and answers false.
   wantsDetachOfChild: (aWdgt) ->
     return false unless aWdgt.action?
-    @_holdingPopUp()?.isPopUpPinned?() ? false
+    @_holdingPopUp()?.isPersistent?() ? false
 
   constructor: (opts = {}) ->
     # menuRowsBorder = the menu's tight border; rows stack FLUSH inside it (see
@@ -280,7 +280,7 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # mine that happens to live in its chrome, so a menu still widens for a long title. Outside
   # a pop-up (a list's panel) the climb reaches the world, which contributes nothing.
   maxWidthOfMenuEntries: ->
-    w = @firstParentThatIsAPopUp()._titleEntryWidth?() ? 0
+    w = @enclosingFrame()._titleEntryWidth?() ? 0
     @children.forEach (item) ->
       if item.menuEntryPreferredWidth?
         w = Math.max w, item.menuEntryPreferredWidth()

@@ -9,7 +9,7 @@ from a design session with the owner; facts verified against Fizzygum `8d9ff3e3`
 archived, this doc moves to `docs/archive/` with an `INDEX.md` entry.
 
 **STATUS BOX** (one line per arc; plans are authored JUST-IN-TIME — see §6)
-- Plan 1 `frame-lifetime-and-docking-plan.md` — AUTHORED 2026-08-23; P0 DONE 2026-08-23 (S1 GO with two §2.4 amendments, S2 GO, F13 falsified → T11); P1 awaiting the owner's go.
+- Plan 1 `frame-lifetime-and-docking-plan.md` — **EXECUTED AND CLOSED 2026-08-23/24** (P0–P6 + tail: T8–T10, T12–T17 all closed or routed; T11 → Plan 3; T1–T5 in BACKLOG; final gates gauntlet 18/18 + homepage). The plan file moves to `docs/archive/` with the close commit.
 - Plan 2 Pointer Events — not authored (author when Plan 1 closes).
 - Plan 3 visual wave — not authored (author when Plan 2 closes).
 - Plan 4 gesture grammar + finger harness — not authored (author when Plan 3 closes).
@@ -171,8 +171,11 @@ brief. A plan that cannot be handed to a fresh Opus worker is not finished.
    never pipe the gating call.
 6. **A worker never commits or pushes.** The coordinator proposes the commit to the owner (message via
    `git commit -F <file>`) after checking the report; the owner approves.
-7. **Plans 2–4 are DRAFTED by an Opus worker** (fact-check the tree, apply the ledger, follow the
-   `author-plan` skill's shape) and **reviewed/amended by the coordinator** before the owner sees them.
+7. **Plans 2–4 are DRAFTED by a FABLE worker** (owner ruling 2026-08-24, amending the original Opus-drafts
+   rule: authoring sets the arc's premises, so it gets the strongest model; implementation stays Opus/Sonnet)
+   — a FRESH agent (never a fork: cold-executability is the point), fact-checking the tree, applying the
+   ledger, following the `author-plan` skill's shape — and **reviewed/amended by the coordinator** before
+   the owner sees them.
 8. **Escalate the model, not the effort.** If an Opus worker stops on rule 3 twice on the same step, the
    coordinator re-frames (re-reads the evidence, amends the plan) and re-briefs — it does not do the
    phase itself unless the remaining work is a few lines.
@@ -221,7 +224,7 @@ session:
 | T5 | **Desktop-edge docking** (the world's edges as dock slots — a taskbar strip). P5 decided 2026-08-23: `EdgeDockLayoutSpec` is world-CAPABLE (names no host type) but the world grows no slots — a desktop dock needs a dock loop in the world's arrange, a fill gesture, and a stated precedence against the `StretchLayoutSpec`s the world already consumes, all unruled. | session | BACKLOG | open |
 | T6 | **Hover-dependent affordances on touch** — toolbar thumbnail tooltips (`GlassBoxTopWdgt.toolTipMessage`), hover highlights, the pointer-under state. | session | Plan 4 (the hold-menu's title can name the widget; rest declared out) | open |
 | T7 | **Virtual keyboard keyed on the `pointerType` of the tap that started the edit** (today keyed on the session-level `isTouchDevice`). | session | Plan 4 tail | open |
-| T8 | **`firstParentThatIsAPopUp` → `enclosingFrame`** — RULED by the owner 2026-08-24 (P6 measured 15 occurrences, all `Fizzygum/src` + docs; candidates weighed in the P6 report). Rider ruled with it: `isPopUpPinned` → `isPersistent` (cross-repo sweep — tests/scripts/harness read it). The base answer for a widget under no frame stays the root (the three tolerant consumers use `?.`); `Widget.coffee:4152`'s false comment goes with the sweep. | session | Plan 1 tail sweep (after T12/T16/T17 land) | ruled, sweep pending |
+| T8 | **`firstParentThatIsAPopUp` → `enclosingFrame`** — RULED by the owner 2026-08-24 (P6 measured 15 occurrences, all `Fizzygum/src` + docs; candidates weighed in the P6 report). Rider ruled with it: `isPopUpPinned` → `isPersistent` (cross-repo sweep — tests/scripts/harness read it). The base answer for a widget under no frame stays the root (the three tolerant consumers use `?.`); `Widget.coffee:4152`'s false comment goes with the sweep. | session | CLOSED 2026-08-24: swept in one pass (both names → 0 across src/tests/scripts/harness/docs-architecture/specs/macros; presuite byte-identical — not even inspector churn; gauntlet 18/18 at 08:59). `Widget`'s climb comment states what the method IS. | **closed** |
 | T9 | **Stale comment** in `PromptWdgt` ("the three isMenu? sites … Wallpaper / StringWdgt tick refresh") — there is ONE consumer (`ActivePointerWdgt:660`). | session | Plan 1 P3 (fix in passing) | open |
 | T10 | **`FrameWdgt.tight`** — set in the ctor, read by nobody on the frame (only `VerticalStackPanelWdgt` reads `@tight`). | session | Plan 1 P1 (delete) | open |
 | T11 | **The live input-mode toggle** — the world menu's "touch screen settings" row, `PreferencesAndSettings.toggleInputMode` / `setTouchInputMode` / `setMouseInputMode` / `inputMode` (+ `INPUT_MODE_*`), which rewrites ~10 preferences per device (the per-device redraw G1 forbids). `fg menusweep` covers the row's removal; `check-dead-methods` the verbs. | Plan 1 P0 (F13 falsified) | Plan 3 (the single geometry replaces it; `isTouchDevice` is T7's business) — **owner-confirmed 2026-08-23** | open |
@@ -248,7 +251,7 @@ the same day). A plan authored against a tree that an earlier arc is about to ch
 class names (`PopUpWdgt`), flags and adapters that no longer exist when it is executed. Each plan
 is therefore written **against the tree as it stands when its arc starts**, by the `author-plan`
 skill, with this ledger as its decisions input — the author fact-checks the tree, not this doc.
-Per §3.1 rule 7 the draft is an **Opus worker's** (briefed with: this doc, the skill, the arc's
+Per §3.1 rule 7 the draft is a **Fable worker's** (briefed with: this doc, the skill, the arc's
 scope line in §3, and the previous plan's §9 delegation map as the shape to copy); the
 coordinator reviews it for falsified premises and missing stop rules before it is presented.
 

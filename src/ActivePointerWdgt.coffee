@@ -720,7 +720,7 @@ class ActivePointerWdgt extends Widget
       # been freshly created or not. This came about because
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
-      if !(w.firstParentThatIsAPopUp()?.isMenu?())
+      if !(w.enclosingFrame()?.isMenu?())
         @cleanupMenuWdgts w, alsoKillFreshMenus: true
 
       @wdgtToGrab = w.findRootForGrab()
@@ -939,9 +939,9 @@ class ActivePointerWdgt extends Widget
     # the bounds of their children: collect all the menus up the hierarchy of the one the user clicked
     # on (including the one the user clicked on) -- note that the hierarchy of the menus is actually
     # via the getParentPopUp method.
-    firstParentThatIsAPopUp = clickedWdgt.firstParentThatIsAPopUp()
-    if firstParentThatIsAPopUp?.hierarchyOfPopUps?
-      world.hierarchyOfClickedMenus = firstParentThatIsAPopUp.hierarchyOfPopUps()
+    enclosingFrame = clickedWdgt.enclosingFrame()
+    if enclosingFrame?.hierarchyOfPopUps?
+      world.hierarchyOfClickedMenus = enclosingFrame.hierarchyOfPopUps()
     
     # go through the widgets that wanted a notification
     # in case there is a click outside of them or any

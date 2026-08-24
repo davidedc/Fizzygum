@@ -76,7 +76,7 @@ world extent, or the frame (viewport + bar) would overflow it by exactly that ch
 `_assertFitsInTheWorld` would fire. A row added or removed mid-life re-fits through the
 viewport's own `_reLayOutAfterContainedPanelChange` override, not the frame's standard
 child-removed path (which would leave the frame latched at its old first-placement width) — and
-that absorb fires only because the pop-up climb (`firstParentThatIsAPopUp`) STOPS at the frame
+that absorb fires only because the pop-up climb (`enclosingFrame`) STOPS at the frame
 instead of walking past it to the world. Test: `SystemTest_macroScrollPolicyNeverFlip`.
 
 ## The scrolled-content contract

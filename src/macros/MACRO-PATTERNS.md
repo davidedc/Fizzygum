@@ -626,7 +626,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A duplicated menu is born pinned** (`macroDuplicatedMenuAutoPinsOnDesktop`): right-clicking a menu ITEM raises that item's
   ancestor hierarchy menu ("a MenuItem ➜" / "a Menu ➜"); drilling "a Menu ➜" → "duplicate" runs the MENU's own
   duplicate — `Widget.duplicateMenuAction`, which adds the copy to the world at the original's position + (10,10) and leaves it
-  there. `FrameWdgt.fullCopy` sets the copy's lifetime to `'persistent'`, so `isPopUpPinned()` is true the
+  there. `FrameWdgt.fullCopy` sets the copy's lifetime to `'persistent'`, so `isPersistent()` is true the
   instant the copy exists — pinned from birth, with no drop involved. Show the differential with an explicit unpinned FOIL: leave the
   duplicate standing where it was born (top-left), re-open a NORMAL world menu on the right
   (`@moveToAndClick_InputEvents pt, "right button"`), screenshot the two menus, then ONE
@@ -1947,7 +1947,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Drag a COMMAND out of a pinned menu and keep it** (`macroExtractMenuRowFromPinnedMenu`): a menu row IS a button already pointed at
   something (`MenuItemWdgt extends LabelButtonWdgt extends ButtonWdgt`, four dispatch slots resolved at construction against the TARGET,
   not the menu), so extracting one needs no new machinery — only permission. `MenuRowsPanelWdgt.wantsDetachOfChild` grants it for a row
-  carrying an `action` when the enclosing pop-up `isPopUpPinned()`, and both halves of a grab read that one declaration
+  carrying an `action` when the enclosing pop-up `isPersistent()`, and both halves of a grab read that one declaration
   (`ButtonWdgt.rejectDrags` for "is this drag cancelled", `Widget.grabsToParentWhenDragged` for "does it lift my parent instead"). The
   gesture is therefore: `@openMenuOf_InputEvents widget` → capture `menu = @getMostRecentlyOpenedMenu()` → `@clickMenuHeaderToPin_InputEvents
   menu` → `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf (@getTextMenuItemFromMenu menu, "hide"), [0.5,0.5]),

@@ -1256,7 +1256,7 @@ class FrameWdgt extends Widget
   #   This and its transient twin below are the ONLY readers of the lifetime field: every branch
   # that turns on the state asks one of them, so the enum's spelling is stated twice and nowhere
   # else, and a question about the state is asked in words rather than by string comparison.
-  isPopUpPinned: ->
+  isPersistent: ->
     @lifetime is 'persistent'
 
   # Role query for the world snapshot (Serializer.serializeWorld): a TRANSIENT frame is
@@ -1264,27 +1264,27 @@ class FrameWdgt extends Widget
   # menu-item click that starts a "save world snapshot…" has already marked its menu for
   # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PERSISTENT one
   # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
-  #   It is also my own branches' reader (see isPopUpPinned above): the strip spec, the birth
+  #   It is also my own branches' reader (see isPersistent above): the strip spec, the birth
   # extent, the dock offer, the grab pin, the closure sweep, the shadow, the skin and the
   # citizens' names all ask HERE rather than comparing the field to a string.
   isTransientPopUp: ->
     @lifetime is 'transient'
 
   getParentPopUp: ->
-    if @isPopUpPinned()
+    if @isPersistent()
       return @parent
     else
       if @widgetOpeningThePopUp?
-        return @widgetOpeningThePopUp.firstParentThatIsAPopUp()
+        return @widgetOpeningThePopUp.enclosingFrame()
     return undefined
 
   # The climb STOPS AT ME (the base walks on to the root): I am the pop-up my subtree belongs
   # to — the rows that ask whether they may be lifted, the hand's dismissal sweep and my own
   # rows viewport's re-hug all mean ME. A frame MARKED for closure is on its way out, so the
   # question passes through it to whatever holds it.
-  firstParentThatIsAPopUp: ->
+  enclosingFrame: ->
     if !@isPopUpMarkedForClosure or !@parent? then return @
-    return @parent.firstParentThatIsAPopUp()
+    return @parent.enclosingFrame()
 
   # The public, self-settling half of the lifetime state (the core below does the work).
   setLifetime: (aLifetime) ->
@@ -1335,7 +1335,7 @@ class FrameWdgt extends Widget
   # mark for the end of the cycle. The sweep that follows settles per closed pop-up, as it always has.
   pinPopUp: (pinMenuItem)->
     @setLifetime 'persistent'
-    pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
+    pinMenuItem.enclosingFrame().propagateKillPopUps()
     world.closePopUpsMarkedForClosure()
 
   # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
@@ -1449,7 +1449,7 @@ class FrameWdgt extends Widget
   _closeNoSettle: (restingContainer) ->
     return if @destroyed
     world.openPopUps.delete @
-    if @isPopUpPinned()
+    if @isPersistent()
       super
     else
       @_fullDestroyNoSettle()
