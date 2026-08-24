@@ -159,7 +159,7 @@ class FrameWdgt extends Widget
   # derived from parentage by _setAppearanceAndColorOfTitleBackground beside my own
   # _deriveAndSetBodyAppearance.
   _barSpec: ->
-    return @_transientBarSpec() if @lifetime is 'transient'
+    return @_transientBarSpec() if @isTransientPopUp()
     preferences = WorldWdgt.preferencesAndSettings
     pieces = []
     pieces.push "close" if @isFreeFloating()
@@ -484,7 +484,7 @@ class FrameWdgt extends Widget
   # over; a frame born TRANSIENT is mid-gesture UI, sized by what it holds from the moment it
   # exists, so `new MenuWdgt` hands back something with a real extent rather than a placeholder one.
   _initialExtent: ->
-    if @lifetime is 'transient'
+    if @isTransientPopUp()
       @preferredExtent()
     else
       new Point 300, 300
@@ -944,7 +944,7 @@ class FrameWdgt extends Widget
   # bands (a menu is not furniture to dock into), and neither does a collapsed frame — it has no
   # body to give away.
   dockSideAt: (aPointInMyPlane) ->
-    return undefined if @lifetime is 'transient'
+    return undefined if @isTransientPopUp()
     return undefined if @contents?.collapsed
     body = @_dockBandsBox()
     return undefined unless body.containsPoint aPointInMyPlane
@@ -1220,7 +1220,7 @@ class FrameWdgt extends Widget
   # grab dispatcher owns around this gesture.
   _reactToBeingGrabbed: (whereFrom) ->
     @contents?._reactToHolderFrameGrabbed? whereFrom
-    @_setLifetimeNoSettle 'persistent' if @lifetime is 'transient'
+    @_setLifetimeNoSettle 'persistent' if @isTransientPopUp()
 
   # ===== the transient policy: registries, dismissal, pinning =====
 
@@ -1237,7 +1237,7 @@ class FrameWdgt extends Widget
   # rather than the parent property, but for other normal widgets it goes
   # up the parent property
   propagateKillPopUps: ->
-    if @lifetime is 'transient'
+    if @isTransientPopUp()
       @getParentPopUp()?.propagateKillPopUps()
       @_markPopUpForClosure()
 
@@ -1247,6 +1247,9 @@ class FrameWdgt extends Widget
 
   # "Am I furniture?" — the persistent half of the lifetime state, under the name the rows
   # (MenuRowsPanelWdgt.wantsDetachOfChild), the shadow policy and the close policy ask by.
+  #   This and its transient twin below are the ONLY readers of the lifetime field: every branch
+  # that turns on the state asks one of them, so the enum's spelling is stated twice and nowhere
+  # else, and a question about the state is asked in words rather than by string comparison.
   isPopUpPinned: ->
     @lifetime is 'persistent'
 
@@ -1255,6 +1258,9 @@ class FrameWdgt extends Widget
   # menu-item click that starts a "save world snapshot…" has already marked its menu for
   # closure) — so a snapshot drops it, exactly like the ephemeral overlays. A PERSISTENT one
   # is desktop furniture and is saved. Dispatched via ?() (nothing on Widget), like isMenu.
+  #   It is also my own branches' reader (see isPopUpPinned above): the strip spec, the birth
+  # extent, the dock offer, the grab pin, the closure sweep, the shadow, the skin and the
+  # citizens' names all ask HERE rather than comparing the field to a string.
   isTransientPopUp: ->
     @lifetime is 'transient'
 
@@ -1359,7 +1365,7 @@ class FrameWdgt extends Widget
   # and the floaty one the hand adds while dragging — which is why an EXPLICIT offset always wins in
   # both rows.
   addShadow: (offset, alpha) ->
-    if @lifetime is 'transient'
+    if @isTransientPopUp()
       super (offset ? new Point 5, 5), (alpha ? 0.2)
       return
 
@@ -1453,7 +1459,7 @@ class FrameWdgt extends Widget
   # furniture copies its skin along with everything else.
   fullCopy: ->
     copiedWidget = super
-    lifetimeChanges = copiedWidget.lifetime is 'transient'
+    lifetimeChanges = copiedWidget.isTransientPopUp()
     copiedWidget.onClickOutsideMeOrAnyOfMyChildren undefined
     copiedWidget.lifetime = 'persistent'
     copiedWidget._deriveAndSetBodyAppearance() if lifetimeChanges
@@ -1511,7 +1517,7 @@ class FrameWdgt extends Widget
   # is rounded only when it has a title strip to round (an untitled pop-up takes the boxy
   # default). Nothing else paints them -- my rows panel is a transparent stack inside me.
   _deriveAndSetBodyAppearance: ->
-    if @lifetime is 'transient'
+    if @isTransientPopUp()
       @appearance = new MenuAppearance @
       @color = Color.create 238, 238, 238
       @strokeColor = WorldWdgt.preferencesAndSettings.menuStrokeColor

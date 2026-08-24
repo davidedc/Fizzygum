@@ -36,11 +36,15 @@ class PromptWdgt extends FrameWdgt
   isMenu: ->
     true
 
-  # I am a prompt only while I am mid-gesture UI. Pinned I am furniture, and my FRAME names me for
-  # what I then am -- a window on the desktop, an internal window nested in a container (program
-  # ruling C4).
+  # I am a prompt only while I am mid-gesture UI. Pinned I am furniture, and I am named for what I
+  # then am -- a window (program ruling C4). My MESSAGE is my title and it crosses that change of
+  # kind: titled, I answer "<msg>" window, the symmetric twin of my transient "<msg>" prompt, in
+  # both parentages (the window/card difference is what I LOOK like, never what I am called).
+  # Untitled I have no name of my own to offer, so my frame's plain window / internal window stands.
   colloquialName: ->
-    return super() unless @lifetime is 'transient'
+    unless @isTransientPopUp()
+      return super() unless @msg
+      return "\"" + @msg + "\" window"
     if @msg then "\"" + @msg + "\" prompt" else "prompt"
 
   # the KIND names me: my message is my title, not my payload's colloquial name

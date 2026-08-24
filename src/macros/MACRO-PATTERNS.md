@@ -821,6 +821,61 @@ assertion a recapture after a regression silently stores two different hashes an
   fixture shot. Fixture: the shared window-in-window verbs + ONE lorem paragraph (same text/colors as
   `createNewWrappingSimpleTextWdgtWithBackground`) dropped into the inner window; drag the composite by its TITLE
   (`extWin.label.center()` + press-drag-release) so taller re-wrapped states stay on-canvas. No new verb.
+- **Drop-to-dock: a frame docks into a host's edge BAND** (`macroDockAnyFrame` — spec
+  `docs/specs/drag-embed-interaction-spec.md` §4.1): a host frame's four edge bands are drop candidates
+  consulted BEFORE its ordinary content, for a FRAME payload only (`FrameWdgt.dockSideAt`), so docking reuses
+  the exact same dwell-to-arm gesture as nesting a window (the DWELL-TO-ARM entries above) — grab the guest by
+  its bar, hold over the band past `dwellToArmMs`, release. Drive it with the SAME verb:
+  `dwellDragWindowByGrabToEmbed_InputEvents_Macro (@pointAtFractionOf guest.bar, [0.5,0.5]), bandPoint` — its
+  `yield 600` non-scaled-linger idiom is unchanged (a scaled `yield` would arm at one speed only). `bandPoint`
+  is an AUTHORED point inside the band: a band is a region of the host's body, not a widget to locate, so
+  derive it from the host's own live bounds (e.g. `new Point (host.left()+12), (host.top()+200)` for the left
+  band) and pre-assert the offer with `host.dockSideAt bandPoint` — it answers the side string over a band,
+  `undefined` over the host's own content (`macroDockAnyFrame` asserts both at the same host). After the drop
+  the docked frame is an ordinary `EdgeDockLayoutSpec` occupant, assertable by MEANING, not pixels:
+  `guest.layoutSpec.side`, `host.dockedFrames[side] == guest`, no close piece (`!guest.closeButton?`), resizer
+  hidden (`guest.resizer.isVisible == false`) — C12's roster-follows-the-spec rule, provable on ANY frame
+  regardless of what it started life as (`macroDockAnyFrame` docks a plain `DocumentWdgt` window into a bare
+  `PanelWdgt` host — no toolbar involved, proving the mechanism has no toolbar-only special case).
+- **Undock by dragging the grip — a PLAIN drag, NO dwell** (`macroDocsToolbarDockSidesAndFloat`): the inverse
+  gesture is not a mirror of the drop above. Leaving a slot is the HOST's own opt-in
+  (`FrameWdgt.wantsDetachOfChild` grants it to members of `@dockedFrames` — the spreadsheet-cell mechanism), so
+  an ordinary `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf band.bar, [0.5,0.5]),
+  destPoint` — no `yield`, no dwell verb — lifts the docked frame straight to the desktop, landing it as an
+  ordinary free-floating window (close piece, resizer and full title bar back the instant it lands — skin is
+  `f(lifetime, parentage)`, same rule as the pin-by-header entries above). Re-docking it is the drop-to-dock
+  gesture again, grabbing the SAME frame's bar. Re-siding WITHOUT detaching is a menu action, not a drag — next.
+- **The band's own context menu: re-side and float, on the BAND, never the host** (`macroDocsToolbarDockSidesAndFloat`):
+  a docked frame owns its own placement question, so "dock ➜ <the other three sides>" (`dockSideMenu` →
+  `dockAtSide`) and "float" (`floatOutOfDock` — the one PROGRAMMATIC undock, for keyboard-free use) live in the
+  DOCKED FRAME's own context menu. Right-clicking its bar lands on a chrome child first, so descend the
+  ancestor HIERARCHY submenu exactly as everywhere else (Wdgt-stripped, "a Frame ➜"):
+  `@openMenuOf_InputEvents band.bar` → `@moveToItemStartingWithOfMenuAndClick_InputEvents
+  (@getMostRecentlyOpenedMenu()), "a Frame"` → `…, "dock"` → `@moveToItemOfMenuAndClick_InputEvents
+  (@getMostRecentlyOpenedMenu()), "right"`. The HOST's complementary row — "toolbar ➜ <side>"
+  (`toolbarSideMenu` → `addToolbarAtSide`), offered only while its content declares `buildToolbar` and no slot
+  already holds that variant — lives on the HOST's own menu instead (right-click the host directly; no
+  hierarchy descent needed for its own top-level menu). Both rows are `check-menu-actions`/`fg menusweep`-gated.
+  No new verb for either.
+- **A collapsed docked frame is an edge SLIVER, not a bar-shaped rectangle** (`macroCollapsedDockIsAnEdgeSliver`):
+  the docked counterpart of the collapsed-window entries above. `@collapseOrUncollapseWindow_InputEvents band`
+  collapses a docked frame exactly like a free window, but a docked frame's collapsed shape follows its dock
+  AXIS: expanded, a TOP-docked band's own bar runs ACROSS it (`band.bar.height() > band.bar.width()` — taller
+  than wide, at the strip's leading end, C13); collapsed, the band IS its bar, so it flips to
+  `band.bar.width() > band.bar.height()` and the whole band shrinks to exactly one bar thick
+  (`band.height() == band.bar.height()`), still spanning the full body width. C17 (tap-anywhere-to-expand)
+  applies here too: `@moveToAndClickAtFractionOf_InputEvents band.titlebarBackground, [0.7,0.5]` (a tap on the
+  strip BACKGROUND, clear of the collapse button) re-expands it to its pre-collapse thickness.
+- **View mode DISENGAGES every dock; the user's own collapse state survives the round trip**
+  (`macroViewModeDisengagesDocks`): a host's mode flip (`@moveToAndClick_InputEvents win.editButton`) sets
+  `dockedFrame.layoutSpec.engaged` for every docked frame — disengaged in view mode (zero layout contribution,
+  content starts higher, `band.isVisible == false`, but the frame STAYS in its slot: `host.dockedFrames[side]
+  == band` throughout), re-engaged back in edit mode. `engaged` (the host's mode) and `collapsed` (the user's
+  own choice) are different questions that survive each other: collapse a band, flip to view then back to edit,
+  and it comes back at its COLLAPSED thickness, not its expanded one — assert the round trip with
+  `@assertScreenshotsIdentical` between the pre-view and post-edit shots (byte-identical, GHOST-conform:
+  visibility never feeds back into state). No new verb (drives the same `editButton` click the pencil/eye
+  entries elsewhere in this file use).
 
 ## Scroll & scrollbars
 

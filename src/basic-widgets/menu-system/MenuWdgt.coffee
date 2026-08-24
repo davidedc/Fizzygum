@@ -78,11 +78,18 @@ class MenuWdgt extends FrameWdgt
     panel.alpha = 0
     new PopUpRowsViewportWdgt panel
 
-  # I am a menu only while I am mid-gesture UI. Pinned I am furniture, and my FRAME names me for
-  # what I then am -- a window on the desktop, an internal window nested in a container (program
-  # ruling C4: there is no such thing as a pinned-menu kind).
+  # I am a menu only while I am mid-gesture UI. Pinned I am furniture, and I am named for what I
+  # then am -- a window (program ruling C4: there is no such thing as a pinned-menu kind).
+  #   My TITLE crosses that change of kind: titled, I answer "<title>" window, the symmetric twin
+  # of my transient "<title>" menu. The title is the name a user gave me, not a record of what I
+  # once was, so it is the document-names-its-window move rather than a history leak. BOTH
+  # parentages answer "window" -- desktop or nested, the window/card difference is what I LOOK
+  # like, never what I am called. Untitled I have no name of my own to offer, so my frame's plain
+  # window / internal window stands.
   colloquialName: ->
-    return super() unless @lifetime is 'transient'
+    unless @isTransientPopUp()
+      return super() unless @title
+      return "\"" + @title + "\" window"
     if @title
       return "\"" + @title + "\" menu"
     else

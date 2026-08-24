@@ -129,6 +129,17 @@ is a real recursion/hang, not purity: a container that re-invalidated itself mid
   cascade once. Reached from inside the flush walk itself it keeps the strict orphan-defer + throw. The lane is opt-in
   per entrypoint and gated by check-layering rule `[P]`.
 
+**The same figure, one step earlier: the enqueue-side orphan.** `_invalidateLayout`'s PARENTLESS-RECEIVER branch (§3)
+is the counterpart on the *invalidation* side rather than the settle side: a widget with no `@parent` marks itself
+(`__markForRelayout`) and returns — there is no ancestor to climb into, so the climb is structurally vacuous, and
+with it the mid-pass FLOWRULE throw (§2.2) and the careless-push audit (§7), which excludes orphans anyway. The
+free-floating layout-inert receiver (caret / handle) reaches the same shape from the other side, for the same
+reason. Both are cases where the guards **pass because they cannot fire, never because they are silenced**
+(`docs/archive/unify-layout-enqueue-primitives-plan.md` §2). This is what makes "a widget built inside a flush is
+layout-neutral because it is an orphan" true of the **enqueue** as well as of the settle above: a build core that
+marks its own fresh layout (a button's face, a switch's paired button) is legal wherever a widget may be built —
+including mid-arrange, as a chrome strip's roster is re-derived.
+
 ### 2.4 The layout-method family
 
 These names are the durable vocabulary (full convention: `docs/architecture/layering-naming-convention.md`):
@@ -233,6 +244,18 @@ geometry — the child stays user-movable, handles show, its mutations don't cli
 a child is answered by duck-typed capability queries on its spec (`isDivisionElement?()`,
 `isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`),
 never a type test.
+
+**A pending geometry WISH is a free-floating-only value.** `@desiredExtent`/`@desiredPosition` are recorded only
+by the deferred setters (`_setExtentNoSettle`, `_setBoundsNoSettle`, `_moveToNoSettle`, `_setWidthNoSettle`,
+`_setHeightNoSettle`), and each of those five refuses the moment a spec owns the child's placement — free-floating
+is the only state a wish can be recorded in. ARMING a placement-owning spec (`_setLayoutSpec`, whenever the
+incoming spec's `ownsPlacement()` is true) therefore CLEARS any wish already pending, because that is the moment
+the wish becomes unanswerable: the holder's grant IS the answer to it now, and a wish left lingering would fire
+behind the holder's back at the child's next un-granted `_reLayout`, moving it off the frame the holder just gave
+it and re-arming the settle-time up-edge (§3) back onto the holder. The one FOLLOWER, `StretchLayoutSpec`, is
+exempt by the same rule: its carrier stays free-floating and keeps recording wishes, which is why its consumer
+clears them itself, once per arrange, rather than once at arming time (`StretchablePanelWdgt._reLayout`, right
+before granting each child's box).
 
 **LIFECYCLE is exactly TWO kinds** — a spec is either a **carrier-owned KNOB** (an object the
 widget owns for its whole life, holding underivable per-class/user preferences, which doubles as

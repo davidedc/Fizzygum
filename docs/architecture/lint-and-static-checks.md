@@ -86,7 +86,7 @@ one — the per-gate `$?`/`exit 1` is the invariant, the block boundary is not.)
 | syntax | `buildSystem/check-coffee-syntax.js` | ~:343 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does | — |
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | ~:366 | every `src/` subdirectory holding `.coffee` files is CLAIMED BY A PART in `parts.json` — a dir no part claims ships NOTHING, exits 0, and surfaces only as a runtime `<NewClass> is not defined` | in-file `ALLOWLIST_PREFIXES`, now down to `src/boot/` alone (compiled by name from the shell script, never globbed) |
 | **layering** | **`buildSystem/check-layering.js`** | **~:388** | **flow soundness + the naming convention — rules [A]–[T] (§4)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
-| **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (11 sites: the structural add/drop/z-order/shadow dispatchers, the world's atlas-warm orchestration and its selection-overlay reconciler, FileLoading's async-asset repaint, and the own-sub-part marks in MenuItemWdgt and PopUpWdgt) |
+| **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **~:407** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. Matches the legacy public spellings too, so they cannot slip back in** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (11 sites: the structural add/drop/z-order/shadow dispatchers, the world's atlas-warm orchestration and its selection-overlay reconciler, FileLoading's async-asset repaint, and the own-sub-part marks in MenuItemWdgt and FrameWdgt) |
 | dead-method | `buildSystem/check-dead-methods.js` | ~:425 | a method defined in src but referenced nowhere (src + harness + macro `.js`) | allowlist `dead-method-allowlist.txt`; fails only on a NEW dead method |
 | **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **~:446** | the INVERSE of dead-method: a CALL `[@.]name(` in src+harness that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API |
 | stinks | `buildSystem/check-stinks.js` | ~:465 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
@@ -269,13 +269,16 @@ blind spot is structural:
   `check-menu-actions.js`, which cannot see a parameter that is read as the wrong THING. ⭐ The prompt step is the one
   that matters for an item ending in `"..."`: such an item does its real work in the prompt's callback, dispatched as
   `@target[@callback].call` with NO `?.`, so a rig that stops at the menu action covers it only as far as the prompt
-  APPEARING — which is the point at which everything still looks fine. A prompt is not a `MenuWdgt` (both descend from
-  `PopUpWdgt`), so the submenu walk cannot reach one and it needs its own query. Ok is pressed with the prompt's own
+  APPEARING — which is the point at which everything still looks fine. A prompt is not a `MenuWdgt` (both are framed
+  citizens of `FrameWdgt` — menus/prompts carry no class of their own beneath it), so the submenu walk cannot reach one
+  and it needs its own query. Ok is pressed with the prompt's own
   default contents, so this asks "does the callback resolve and run", never "is this a good value".
-  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 22 roots (two world roots, 16 representative widget classes,
-  the inspector pair — whose prompts open from a BUTTON row no menu walk can reach — and a `MenuWdgt`/`PromptWdgt` pair,
-  each popped up and right-clicked on ITSELF, since no other root stands in a pop-up and so nothing else walks
-  `PopUpWdgt`'s own entries), so a class not among them is
+  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 24 roots (two world roots, 16 representative widget classes,
+  the inspector pair — whose prompts open from a BUTTON row no menu walk can reach — a `MenuWdgt`/`PromptWdgt` pair,
+  each popped up and right-clicked on ITSELF, since no other root stands in a pop-up and so nothing else walks a
+  transient frame's own entries, and the P5 docking pair (`FrameWdgt[docked band]` / `FrameWdgt[host with an empty
+  slot]` — a Docs Maker's own docked toolbar, built and floated the product way, since a bare `FrameWdgt` representative
+  is free-floating with an empty slot and offers neither side's dock rows)), so a class not among them is
   unreached. That is why
   it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
   catches 2 of the 16 affected classes and the pin sweep catches all 16.
@@ -311,7 +314,7 @@ inline and are caught nowhere else, so they `console.error` a TOKEN that both he
 the screenshot suite structurally cannot see the violation:
 - `NON_FINITE_GEOMETRY` / `NON_INTEGER_GEOMETRY` — `Widget._assertBoundsWellFormed`, see
   [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md).
-- `POPUP_LARGER_THAN_WORLD` — `PopUpWdgt._assertFitsInTheWorld`: a pop-up bigger than the world has rows
+- `POPUP_LARGER_THAN_WORLD` — `FrameWdgt._assertFitsInTheWorld`: a pop-up bigger than the world has rows
   nothing can click. A reference image disagrees only if a macro happens to click the row that went
   missing, which is exactly why menus shipped rows off the bottom edge unnoticed for years — so the
   invariant is asserted rather than left to be noticed.
@@ -669,7 +672,7 @@ exactly two; the module's own header comment carries that account. What widening
 | revealed | what it was |
 |---|---|
 | `Widget.paintRectangle` | dead — a ~30-line legacy device-space paint helper with zero callers anywhere |
-| 2 rule `[S]` sites | `PopUpWdgt._reactToBeingDropped → @pinPopUp`, `Widget._destroyNoSettle → @onClickOutsideMeOrAnyOfMyChildren` — both conscious and correct, now carrying the `# public-call-sanctioned:` marker they could never be asked for |
+| 2 rule `[S]` sites | `FrameWdgt._reactToBeingDropped → @pinPopUp`, `Widget._destroyNoSettle → @onClickOutsideMeOrAnyOfMyChildren` — both conscious and correct, now carrying the `# public-call-sanctioned:` marker they could never be asked for |
 | 1 rule `[U]` site | `InspectorWdgt.filterProperties`, an internal helper wearing a public name — renamed `_filterProperties` |
 | +1 handler body | one pointer handler had never been scanned by `check-raw-pointer-reads` at all |
 

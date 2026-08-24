@@ -141,11 +141,56 @@ dashboards stay view-locked at construction, exactly like slides and docs. `Samp
 `InfoDocs._buildInfoDocNextTo` (the shared info-doc builder) keep theirs. Only the payload-class dwell rule
 above changed; no app's default editing state changed as part of this arc.
 
+### §4.1 — Dock bands: a receptivity tier ahead of the four (`frame-lifetime-and-docking-plan.md` §2.4/§2.5)
+
+A host `FrameWdgt`'s four edge **bands** — strips `dockBandDepth` deep in from its body's edges (the
+preference is 30px, deliberately ≥ the bar thickness of 26px = `barIconSize + 2·barPadding`, so a band is
+never thinner than the grip a drop produces) — are drop candidates `ActivePointerWdgt._dockBandUnderPointerFor`
+checks **before** the tier climb of §4/§5 even starts, and the climb never runs at all once a band answers: a
+host offering a band under the pointer wins outright over its own ordinary content receptivity, whatever tier
+that content is in. Two gates keep the offer narrow:
+- **Frame payload only.** `_dockBandUnderPointerFor` returns nothing unless the payload's real class answers
+  `isFrame?()` (through `_dropPolicyProxy()`, so a tilted window's sugar wrapper is seen through too) — a
+  plain widget never sees a band, and neither does a menu/prompt's own rows-viewport content (only the FRAME
+  itself docks, never what it holds).
+- **Never into your own subtree.** A host skips the offer when the dragged frame is one of ITS OWN
+  ancestors (`not payloadPolicy.isAncestorOf wdgt`) — a frame never offers a slot to something it currently
+  lives inside.
+- Each host answers `dockSideAt(pointInItsOwnPlane)` with the point already mapped into ITS plane
+  (`screenPointToMyPlane`), so a host inside a rotated/scaled island offers the band the user is actually
+  pointing at, not the unmapped screen point.
+
+**Arming reuses §6 verbatim — no new timing constant.** A band candidate is `payload._dropPolicyProxy()
+.requiresDeliberateEmbedding()` exactly like any other frame candidate, so the SAME per-candidate dwell/arm
+state machine applies; a band even counts as its own "candidate" for the reset rule of §5 — moving from one
+band to a different side of the same host, or between a band and the host's ordinary content, re-anchors the
+linger and disarms, precisely as changing candidate widget does. Every frame is `requiresDeliberateEmbedding
+→ true` regardless of `lifetime` (program ruling C8: ONE rule for every frame, whatever it was born as), so a
+still-transient pop-up citizen (a menu, a prompt) is dwell-armed over a band too — but its GRAB has already
+promoted it to `'persistent'` before the drag even begins (`FrameWdgt._reactToBeingGrabbed`: taking hold of a
+menu makes it furniture at the grab, not the drop), so whatever actually lands in a slot is always persistent
+furniture, never mid-gesture UI.
+
+**Candidate highlight = the whole band**, not the host's outline: the reconciler declares
+`world.dragEmbedDockBandDeclared {host, box}` and stands the host's per-widget outline down while the band is
+offered, drawing a dedicated `HighlighterWdgt` around the band's own rectangle instead — the SAME
+candidate-accent style §11's highlight row already specifies (`HighlighterWdgt.candidateOutlineStyle`,
+`248,188,58`), just applied to a region of the host's body rather than to a widget, and mapped through the
+host's screen bounds so it renders correctly inside a rotated/scaled island too (§11).
+
+**Release outcome (§7): docks, not embeds.** An ARMED release resolved to a band skips the ordinary
+`_beforeChildDropped` content hand-off (a dock takes a slot BESIDE the host's content, never instead of it)
+and instead calls `target.add wdgtToDrop, dockSide: <the band's side>`, which arms a fresh
+`EdgeDockLayoutSpec side, thickness` at that side (`FrameWdgt._dockFrameNoSettle`) — the side is always the
+DROP's, never any default the payload might otherwise declare for itself.
+
 ## §5 — Candidate resolution (owner decisions 1 + 3)
 
 Runs on every pointer move while float-dragging (hook: `dispatchEventsFollowingMouseMove` — the existing,
 currently-unimplemented `mouseEnterfloatDragging`/`mouseLeavefloatDragging` dispatch site; the resolver is the
 same climb `dropTargetFor` does at release, so move-time preview and release-time outcome CANNOT disagree).
+**For a frame payload, this entire climb is subordinate to §4.1's dock-band check**, which runs first: a host
+offering a band under the pointer wins outright and the climb below never runs for that event.
 
 - **Anchor = the cursor point** (decision 1). The hit-test is `topWdgtUnderPointer()`; the dragged widget's own
   bounds/center are irrelevant. A huge window dragged by its corner embeds only if the *cursor* is over the
@@ -248,7 +293,7 @@ edge-auto-scroll OFF for them (explicit intent replaces implicit surprise). Rule
 |---|---|
 | `FREE` (no candidate / over world) | Lands on world at release point. Today's move-over, byte-for-byte the goal. |
 | `CANDIDATE`/`CHARGING` (not yet armed) | Lands on world at release point (it IS the common move-over — no bounce, no scold). **EXCEPTION — sticky re-embed (owner-approved 2026-07-06, plan Phase 3.5):** if the resolved container IS the payload's CURRENT parent (a nested window merely being repositioned within its own container), it STAYS nested with no dwell — only embedding into a NEW container requires arming. |
-| `ARMED` | Embeds: same call sequence as today's accepted drop (`_beforeChildDropped` → `add` → settle → `_reactToChildDropped`/`_reactToBeingDropped`, `ActivePointerWdgt.drop`). |
+| `ARMED` | **Over ordinary content:** embeds — same call sequence as today's accepted drop (`_beforeChildDropped` → `add` → settle → `_reactToChildDropped`/`_reactToBeingDropped`, `ActivePointerWdgt.drop`). **Over a dock band instead (§4.1, frame payloads only):** docks — `_beforeChildDropped` is skipped (a dock takes a slot BESIDE the host's content, not instead of it) and `target.add wdgtToDrop, dockSide: <the band's side>` arms a fresh `EdgeDockLayoutSpec` there (`FrameWdgt._dockFrameNoSettle`). |
 | `LOCKED_CUE` (over reluctant only) | Lands on world at the release point — a plain move-over, NO offset. (An earlier draft offset the landing + offered a pill, §8; both were DROPPED 2026-07-06 — the payload just lands normally where released.) |
 
 Plain payloads: unchanged accept behavior (instant embed over eager/willing); over a reluctant (view-mode)
@@ -330,6 +375,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 | Element | Mechanism | Spec |
 |---|---|---|
 | Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the candidate's `clippedThroughBounds`; accent tone (suggest pencil-yellow family `248,188,58`, reduced alpha for willing / full for eager). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
+| Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, `248,188,58`), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
 | Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; under `Automator.animationsPacingControl` follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
 | Lock badge + eye pulse (reluctant) | **EPHEMERAL(s) anchored to the destination's title-bar / eye-button bounds** — deliberately NOT a state change of the real eye button: the pulse never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | Neutral gray outline on the destination + small lock badge at title-bar right; amber pulse over the eye button in 2 quantized steps |

@@ -234,8 +234,23 @@ class Widget extends TreeNode
 ```
 
 - **The reader** is `Serializer.transientsForClass(klass)` — walks the constructor chain,
-  unioning each class's own `@serializationTransients` into one Set of names to skip. A
-  subclass ADDS to (never shadows) its ancestors' declarations.
+  unioning each class's own `@serializationTransients` into one Set of names to skip.
+  ⚠ **In practice a subclass's own declaration REPLACES its ancestors', not adds to them** —
+  the meta-system copies a class's statics DOWN onto each subclass at define time rather
+  than chaining them live, so once a subclass assigns its own `@serializationTransients` the
+  walk never reaches what it silently dropped (`transientsForClass`'s own header comment
+  still claims the opposite — "a subclass ADDS to… never shadows" — which is exactly the
+  belief that let this happen). A subclass extending the exclusions must therefore either
+  re-state the inherited entries in its own declaration, or declare the new name on the base
+  class instead — the fix `FrameWdgt` took for `isPopUpMarkedForClosure` (declared on
+  `Widget`; table below). Verified by grep (`grep -rn "@serializationTransients" src`): nine
+  classes carry their own declaration today besides `Widget` itself — `ScriptWdgt`,
+  `TransformFrameWdgt`, `DesktopAppearance`, `SheetHeaderCellWdgt`, `SimpleSpreadsheetWdgt`,
+  `SheetCellRecord`, `CellWdgt`, `CalculatingPatchNodeWdgt`, `FridgeMagnets3DCanvasWdgt` —
+  each a latent shadow of whatever its ancestor's copied-down list held. Open tail:
+  `docs/plans/frames-input-touch-program.md` T16 (make the serializer MERGE the true chain,
+  or a boot guard forbidding the re-declaration; found when `FrameWdgt` declared its own list
+  during the frame-lifetime plan's P3).
 - **Derived values** keep the existing `rebuildDerivedValue` protocol (canvas 2D
   contexts): both walkers SKIP them, and only duplication rebuilds. The deserializer does
   NOT — its pass-4(b) branch reads a `record.derived` list the serializer has never emitted,
@@ -280,15 +295,28 @@ class Widget extends TreeNode
 |---|---|---|
 | `Widget` (caches) | `lastTime`; the render caches `backBuffer`/`backBufferContext` and their shadow-silhouette twins; the `WorldWdgt.geometryVersion`-keyed geometry caches (`cachedFullBounds`, `cachedFullClippedBounds`, `cachedVisibleBasedOnIsVisibleProperty`, `cachedClippedThroughBounds`, `cachedClipThrough`, `cachedIsInCollapsedSubtree` — each with its `check…Cache` twin — plus `childrenBoundsUpdatedAt`); the `root()` cache `cachedRoot`/`checkRootCache`; the island-buffer source lane `_islandBufferSourceIsland`/`_islandBufferSourceVirtualRect`; the flush-scoped `hasDirtyDescendant` | frame timing + derived caches, all re-derived on demand after restore. ⚠ `cachedRoot` is the one whose absence bit: `root()` itself never reads it stale (it checks `structureVersion`) but the SERIALIZER walks the raw field, so a stale pointer dragged destroyed subtrees — and their unserializable handler functions — into capture-mode world snapshots |
 | `Widget` (damage bookkeeping) | `paintBoundsMaybeChanged`, `fullPaintBoundsMaybeChanged`, `clippedBoundsWhenLastPainted`, `fullClippedBoundsWhenLastPainted`, `srcDamageRectIndex`, `dstDamageRectIndex` | per-frame damage-rect bookkeeping, each field paired with never-serialized world-level flush state (the `widgetsWithMaybeChanged(Full)PaintBounds` work-lists / the flesh-out). A restored `true` dedupe flag has no matching work-list entry, so `_changed()`/`_fullChanged()` would be permanently suppressed on the restored widget — the 2026-07-22 bug: a snapshot saved from a menu click baked the triggering click's `bringToForeground` → `_fullChanged()` mark into the menu's record, and the restored menu left repaint artifacts when moved |
-| `PopUpWdgt` | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs |
+| `Widget` (frame closure mark) | `isPopUpMarkedForClosure` | pairs with the `world.popUpsMarkedForClosure` set; the triggering menu-item click marks its menu for closure before the action runs. Declared on `Widget` rather than on `FrameWdgt` — the class that actually owns and reads the field — specifically to dodge the REPLACES trap above: a subclass's own `@serializationTransients` would drop its ancestors' entries instead of adding to them |
 | `DesktopAppearance` | `pattern`, `currentPattern` | `pattern` is a `CanvasPattern` (the first thing a whole-world serialize crashed on); both re-derive from `world.wallpaper.patternName` |
 | `CalculatingPatchNodeWdgt` | `functionFromCompiledCode` | the user formula COMPILED; `recalculateOutput` re-derives it from the (serialized) formula text on every recompute. Was long documented here as the canonical example yet never actually declared — every snapshot containing a patch-programming window crashed until 2026-07-23 |
 | `ScriptWdgt` | `functionFromCompiledCode` | the saved script COMPILED (`@savedScript` is the truth); `doAll` recompiles it on demand after a restore |
 
 The declarations are the inventory — `grep -rn "@serializationTransients" src/` lists all
-eleven classes that carry one, and the table above keeps only the rows a reader could not
+ten classes that carry one, and the table above keeps only the rows a reader could not
 have guessed. `WorldWdgt` deliberately has none: its transient surface is never visited,
 because the world is not a table record (§11).
+
+**`FrameWdgt.lifetime`** rides a snapshot as an ordinary serialized field — it carries no
+transient declaration of its own. A `'persistent'` frame (window furniture, or a pinned
+pop-up) is just another prop; a `'transient'` frame (an open menu/prompt) never reaches the
+object table at all, because it never reaches a snapshot's ROOTS in the first place —
+`Serializer.serializeWorld`'s children filter drops it via `isTransientPopUp?()`, the
+serializer's own query onto the `lifetime` state (§11). Its `world.openPopUps` membership
+does not ride the field either: membership is captured as an `"openPopUp"` marker in
+`memberships` (§3) and restored by the deserializer's world-set-membership pass. `fullCopy`
+writes `lifetime = 'persistent'` directly rather than going through the `setLifetime` entry
+point — a copy is born furniture (nobody is mid-gesture with a duplicate), and the direct
+write means the clone never spends a moment wearing its original's transient skin before the
+copy call re-derives the persistent one.
 
 **Instance-assigned handler functions are BANNED as a state idiom** (2026-07-23): a mode a
 widget can be in must be a serializable FIELD consumed by prototype methods, never a pair
@@ -392,9 +420,10 @@ and only the SNAPSHOT ROOTS are walked into the object table. This is why the wo
 `@serializationTransients` at all — its transient surface is simply never visited.
 
 **Snapshot roots** (a settled world — the hand-held transient and the caret are dropped by
-construction; EPHEMERAL overlays and open UNPINNED pop-ups/menus are world children, so the
+construction; EPHEMERAL overlays and open TRANSIENT pop-ups/menus (`isTransientPopUp?()`,
+§5) are world children, so the
 children filter drops them explicitly — the very menu whose item triggers the save is still
-attached, and already marked for closure, while the save runs; pinned pop-ups are desktop
+attached, and already marked for closure, while the save runs; PERSISTENT pop-ups are desktop
 furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` and
 `world.shelfWdgt` subtrees (the two STORAGE containers — the eager storage sort keeps the
 shelf holding the reachable residents and the bin the lost ones, `StorageSorter`; a snapshot

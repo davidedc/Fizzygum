@@ -66,9 +66,18 @@ through, bars never show). `setScrollPolicy` flips a LIVE widget with no tree ch
 `toggleScrollPolicyFromMenu` exposes it on the generic viewport's menu only
 (`offersScrollPolicyToggle` — the dedicated subclasses design their scrolling in and opt out
 with stated reasons). The plane is ALWAYS present: a conditional/lazily-materialized frame is
-a threshold somebody must cross mid-life, litigated and rejected in
-`PopUpWdgt._buildRowsViewportNoSettle`'s comment — pop-ups keep their rows in a viewport
-unconditionally for the same reason. Test: `SystemTest_macroScrollPolicyNeverFlip`.
+a threshold somebody must cross mid-life, litigated and rejected in `PopUpRowsViewportWdgt`'s
+own class comment — a menu/prompt frame's rows viewport is ORDINARY `FrameWdgt` content
+(`MenuWdgt`/`PromptWdgt extends FrameWdgt` directly; the viewport IS `@contents`, no separate
+pop-up class in between), and it keeps its rows in a viewport unconditionally for the same
+reason, whatever the frame's `lifetime`. Its pure measure (`preferredExtentForWidth`) is the
+rows' hug capped at the world MINUS the frame's own chrome, in BOTH lifetimes — never the bare
+world extent, or the frame (viewport + bar) would overflow it by exactly that chrome and
+`_assertFitsInTheWorld` would fire. A row added or removed mid-life re-fits through the
+viewport's own `_reLayOutAfterContainedPanelChange` override, not the frame's standard
+child-removed path (which would leave the frame latched at its old first-placement width) — and
+that absorb fires only because the pop-up climb (`firstParentThatIsAPopUp`) STOPS at the frame
+instead of walking past it to the world. Test: `SystemTest_macroScrollPolicyNeverFlip`.
 
 ## The scrolled-content contract
 
@@ -91,12 +100,13 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
   position belongs to the arrange's clamp). Under the offset model this is purely policy:
   nobody writes a plane's position on a scroll any more.
 - `scrolledContentMeasureIsMyFrame()` — a plane whose measure is its WHOLE frame (a tight
-  both-axes hug: `MenuRowsPanelWdgt` as a pop-up's rows plane) gets the measure committed
-  VERBATIM — the content-sizing commit's window-width floor and grow-to-fill are skipped,
-  because those adjustments suit a `tight: false` plane and against a tight hug they
-  manufacture a two-writer fight in any state where the viewport is transiently larger
-  than the hug (measured: menu-compose and duplication livelocks, the menu-sandwich
-  dissolution's Phase 0).
+  both-axes hug: `MenuRowsPanelWdgt` — the untitled plain rows stack a menu/prompt frame's
+  own chrome now owns in its place, no title, no corner radius, no header child of its
+  own — as a pop-up's rows plane) gets the measure committed VERBATIM — the content-sizing
+  commit's window-width floor and grow-to-fill are skipped, because those adjustments suit
+  a `tight: false` plane and against a tight hug they manufacture a two-writer fight in any
+  state where the viewport is transiently larger than the hug (measured: menu-compose and
+  duplication livelocks, the menu-sandwich dissolution's Phase 0).
 
 For the boolean queries capability ABSENCE is the panel default — there are no
 base-class stubs; the measure alone has a real base implementation

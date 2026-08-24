@@ -210,8 +210,28 @@ re-argue them.
   filed in the test's provenance: expanding a collapsed dock via the C17 strip tap leaves 46 px unexplained
   inside the collapse button (two explanations falsified; byte-identity assertion dropped there, puzzle kept).
   P6 docs additions from P5: `layout.md` §4.2 gains the wish/spec-arming rule; `drag-embed-interaction-spec.md`
-  gains the dock bands as a receptivity tier; `MACRO-PATTERNS.md` gains drop-to-dock. · P6 Liskov walk + docs:
-  not started.
+  gains the dock bands as a receptivity tier; `MACRO-PATTERNS.md` gains drop-to-dock.
+- P6 first half: **DONE 2026-08-24** (Opus + 6 parallel Sonnet docs weavers). Liskov walk: **21/21 sites RIGHT**
+  (11+1 `isFrame?` consumers in src + 3 in tests; 15 `firstParentThatIsAPopUp` occurrences, ZERO in the tests
+  repo — T8 is src+docs-only). Titled colloquialName landed (`'"<title>" window'` on the citizens — NOT hoisted:
+  the frame's title is its content's name, and a base hook would churn inspector references); 1-test recapture
+  COMPLETE dpr 1+2 (2 images, not the predicted 4); `isInternal()` value asserts restore the discrimination the
+  retitle removed. Predicate routing: raw `lifetime` reads 15 → 5 survivors (default, the two predicate bodies,
+  the entry write, `fullCopy`'s deliberate orphan write) — §3's threshold moot by construction; ENUM KEPT
+  (recommendation accepted: 8 of 10 branches are not pure functions of lifetime; policy objects would be a
+  method-object refactor + a serialization mapping for nothing). Prose sweeps: `PopUpWdgt`/`MenuHeader` = 0
+  outside docs/archive (macro comments, scripts, SKILL.md, visualisation pages regenerated). Docs weave: 11
+  files across regularity-principles (the full frame model), widget-citizenship p5, viewports-and-planes,
+  layout.md (the orphan-enqueue + wish/spec-arming rules), layering-naming-convention, lint-and-static-checks
+  (menusweep 24 roots), serialization-duplication-reference (lifetime + the REPLACES rule, 9 self-declaring
+  classes — T16 count corrected), drag-embed-interaction-spec §4.1 dock bands, MACRO-PATTERNS (5 dock entries),
+  BACKLOG (T1–T5), both repo CLAUDE.md files; `fg doc-narration` 0/0. Lesson recorded: a census's axis was
+  SCREENSHOTS — an assertion is a second axis nobody swept (`macroGrabbedMenuStaysOnDesktop`'s colloquialName
+  assert). T8 candidates for the owner: `enclosingFrame()` (recommended) / `frameIBelongTo()` /
+  `innermostOpenFrame()`; riders do not lie (`isPopUpPinned` reads oddly — `isPersistent()` would read better);
+  `Widget.coffee:4152`'s comment is false twice over (filed for the rename). P6 close gates GREEN 2026-08-24 01:27:
+  `fg gauntlet` 18/18 (no retries) + `fg homepage` (the production round-trip). Plan 1 execution COMPLETE;
+  the tail (program §5: T8 ruling, T12, T16, T17) is the arc's remaining work.
 - Tail (program §5): not started.
 
 **MANDATE: complete elimination of the underlying problem, not mitigation.** The problem is that

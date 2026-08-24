@@ -104,11 +104,12 @@ citizen:
 5. **It composes, and decomposes.** Any widget can contain widgets and be contained
    (`TreeNode` → `Widget` is the whole ontology); a composite behaves like an atomic widget.
    The flip side is mandatory: parts can be *taken out* and reused in other combinations —
-   e.g. menu entries are widgets, so a handy command is dragged off a PINNED menu and kept,
-   and goes on working as a standalone button on a control panel of your own
-   (`MenuRowsPanelWdgt.wantsDetachOfChild`, and the parent-side opt-in `ButtonWdgt.rejectDrags`
-   consults to know a payload from a part). A widget that only works inside the assembly it
-   was born in is a bad citizen.
+   e.g. menu entries are widgets, so a handy command is dragged off a PERSISTENT frame's rows
+   — a pinned desktop menu, or the same rows nested as a window's content, since
+   `MenuRowsPanelWdgt.wantsDetachOfChild` asks only its immediate holder, never a climb — and
+   kept, going on working as a standalone button on a control panel of your own (the
+   parent-side opt-in `ButtonWdgt.rejectDrags` consults to know a payload from a part). A
+   widget that only works inside the assembly it was born in is a bad citizen.
 6. **It doesn't bake in its editing chrome.** Content, manipulation chrome, and editing
    tools are separate citizens (the `Simple*` / plain / `FrameWdgt` tiers —
    [`regularity-principles.md`](regularity-principles.md)): a `Simple*Wdgt` is a naked
@@ -153,8 +154,10 @@ in [`app-fit-criteria.md`](app-fit-criteria.md).
   inputs and outputs are explicit pins, wired into the same dataflow engine that serves the
   spreadsheet.
 - **`FrameWdgt`** — manipulation chrome as a separate citizen wrapped around content;
-  whether a content type is framed is intrinsic to the type, how the frame is skinned is
-  derived from parentage.
+  whether a content type is framed is intrinsic to the type, while its runtime `lifetime`
+  crossed with parentage derives which of the three manifestations — menu, window, card —
+  the same frame wears, down to `MenuWdgt`/`PromptWdgt` being framed citizens rather than a
+  parallel hierarchy.
 
 See [`design-principles.md`](design-principles.md) for the system-wide principles this
 contract serves, and

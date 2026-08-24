@@ -42,9 +42,37 @@ vocabulary below is the convention for all new code:
 - **Plain `*Wdgt` — manipulable citizen.** A first-class thing you can directly edit, move,
   resize, remove. Plain means *citizen*, not *framed*: a self-affording citizen is naked
   (text), one that isn't self-affording is framed (image).
-- **`FrameWdgt` — the manipulation chrome.** Whether a content type is framed at all is
-  **intrinsic to the type** (settled once, holds everywhere it sits); how an existing frame is
-  **skinned** (window vs card) is **contextual**, derived from parentage.
+- **`FrameWdgt` — the one manipulation chrome.** Whether a content type is framed at all is
+  **intrinsic to the type** (settled once, holds everywhere it sits). Everything else about a
+  frame is a separate axis, never fused into a class or a flag:
+  - `lifetime: 'transient' | 'persistent'` (`setLifetime`) is the one runtime **state**. Pin —
+    a tap on the title, or simply grabbing a transient frame, which pins it at the grab rather
+    than at the drop ("you moved it, it stays") — is the sole user-facing verb that sets it;
+    there is no reverse gesture.
+  - Parentage (on the world vs nested in another container) is **context**.
+  - Crossing lifetime with parentage gives exactly three manifestations — never a stored flag,
+    never a subclass: **menu** (transient, always a world child), **window** (persistent on
+    the world), **card** (persistent, nested). Skin, bar roster, shadow, and colloquial name
+    are all **derived** from the pair, re-derived at every (re)parenting and every lifetime
+    change, never read back from a field.
+  - The bar roster follows the same derivation: transient wears its title alone (tap pins);
+    a free-floating persistent frame wears close + collapse + title + a pencil (iff its
+    payload affords editing); one whose host owns its membership drops close, since you leave
+    by dragging out, not by a button; a docked band goes further and keeps only collapse +
+    title, because editing what a band holds is not a band's gesture. Close button and resize
+    handle show **iff `isFreeFloating()`**; right-click → close stays the universal fallback
+    everywhere, and closes the nested frame **alone** — a frame's own content redirects a
+    close to its frame, but a frame reached that way does not redirect again, so the host
+    reverts to empty rather than leaving with its content.
+  - **Docking is a placement, not a rebuild**: a docked frame is a card under a host-owned
+    `EdgeDockLayoutSpec` (`side` / `thickness` / `engaged`) — the same widget that sits in the
+    slot floats free the moment it is dragged out, because leaving the slot is exactly
+    dropping the spec. The payload receives the spec's `thickness` exactly (its own declared
+    `dockThickness` if it has one); the band contributes only its own margin on top. A
+    collapsed frame **is** its bar, and the whole bar — not just the collapse control — taps
+    to expand it.
+  - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a
+    menu or a prompt is a frame around a rows payload, not a parallel hierarchy alongside it.
 
 ## How to apply it
 

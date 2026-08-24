@@ -315,26 +315,37 @@ have installed on every test (a coverage gap fails the gate, so a silent miss ca
 The same "the name encodes the role" principle governs the CONTAINER classes, and it settles a standing
 proposal. The 2017 ZombieKernel "V2" diagram (row **F** of the container-regularization scorecard,
 `docs/archive/container-regularization-plan.md` §3.7) floated **one general container that becomes a
-window / pinnable-window** via a mode flag. Fizzygum deliberately does **NOT** merge them — the roles are
-kept distinct, each named for what it is:
+window / pinnable-window** via a mode flag — spanning what are now `PanelWdgt` AND `FrameWdgt`. Fizzygum
+deliberately does **NOT** do that merge — the SURFACE role stays distinct from the CHROME role, each named
+for what it is:
 
 - **`PanelWdgt`** — the general **clipping container** (the `ClippingAtRectangularBoundsMixin` home; 12 subclasses).
-  No transient/pin behaviour, no chrome.
-- **`PopUpWdgt`** — `extends Widget`: **transient / pin / drop-shadow** and nothing else. After the container arc
-  (§5.2/§5.3 of the plan) this is the SINGLE shared home of pop-up behaviour: `MenuWdgt` and `PromptWdgt` (with its
-  per-value-type subclasses) each **compose** a `MenuRowsPanelWdgt` for their rows and **extend**
-  `PopUpWdgt` for their menu-ness, instead of re-implementing pop-up / pin / close.
-- **`FrameWdgt`** — `extends Widget`: **chrome / identity**, holding a clipping panel for its content; its
-  internal-vs-external skin is DERIVED from parentage (the drag-embed arc), so "becomes a window when embedded" is
-  already automatic — there is no mode flag and no manual switch.
+  No transient/pin behaviour, no chrome, and never gains either — a panel is not a candidate manifestation
+  of anything else.
+- **`FrameWdgt`** — `extends Widget`: **chrome / identity**, holding a clipping panel for its content. Its
+  internal-vs-external skin, its bar roster, and its shadow are all DERIVED from state and parentage (the
+  frame-lifetime-and-docking arc), so "becomes a window when embedded" or "becomes furniture when pinned" is
+  already automatic — there is no manual switch. The `lifetime` field (`'transient'` / `'persistent'`) IS
+  that state: `MenuWdgt` and `PromptWdgt` (with its per-value-type subclasses) **extend `FrameWdgt`
+  directly** and compose a `MenuRowsPanelWdgt` for their rows — there is no second pop-up hierarchy any
+  more. `PopUpWdgt` (the SINGLE shared home the 2017-onward container arc had consolidated pop-up behaviour
+  into — transient / pin / drop-shadow, `extends Widget`) is **DELETED**: that behaviour absorbed onto
+  `FrameWdgt`'s `lifetime`, because transient-vs-persistent is exactly an axis that changes mid-life (pin,
+  grab, duplicate) — the kind of fact a State field carries, not a second class a citizen would have to
+  extend instead of `FrameWdgt`.
 - **`StretchableWidgetContainerWdgt`** — the stretchable-panel role's chrome; the fractional-consuming container
   itself is its `StretchablePanelWdgt` child.
 
-A single mode-flagged mega-container would re-introduce exactly the per-mode special-casing this whole arc
-REMOVED (the byzantine `isListContents` flag was that same anti-pattern one level down — a container role
-smuggled in as a boolean). The regularity win is **naming the relationship between the container roles**, not
-collapsing them into one flag-driven class. (Re-open only on an explicit owner request → a separate design
-spike, flagged not dropped.)
+A single mode-flagged mega-container spanning the PANEL and CHROME roles would re-introduce exactly the
+per-mode special-casing this whole arc REMOVED (the byzantine `isListContents` flag was that same
+anti-pattern one level down — a container role smuggled in as a boolean). The regularity win is **naming
+the relationship between the container roles**, not collapsing every container into one flag-driven class:
+`lifetime` earns its place on `FrameWdgt` only because transient-vs-persistent is genuinely runtime state on
+ONE role (chrome), never a second structural role — the same hierarchies-vs-tagged-classes argument that
+retired `PopUpWdgt` (`docs/plans/frame-lifetime-and-docking-plan.md` §3) forecloses folding `PanelWdgt` in
+beside it, since a panel's clip-only surface-ness never changes mid-life the way a frame's lifetime does.
+(Re-open the Panel/Frame merge only on an explicit owner request → a separate design spike, flagged not
+dropped.)
 
 ---
 
