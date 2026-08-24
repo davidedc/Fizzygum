@@ -431,6 +431,16 @@ class MacroToolkit
 
     @queueInputEvent (PointerupInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
 
+  # The browser CONFISCATING the stroke in progress (a system gesture takes it over, a palm is
+  # rejected, the tab goes away). It states no place — like a synthesised down/up, so the hand keeps
+  # the position it holds (see PointerInputEvent.worldX) — and no button, because a cancelled stroke
+  # presses nothing any more. The hand ABORTS on it: no click dispatch, no menu dismissal, a
+  # non-float drag ended, a carried payload landed on the world where it visibly is
+  # (ActivePointerWdgt.processPointerCancel). The only synthetic event with no user gesture behind
+  # it — nothing a user does produces a cancel; the browser does.
+  syntheticEventsPointerCancel_InputEvents: (startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @queueInputEvent PointercancelInputEvent.synthetic 0, 0, false, false, false, false, startTime
+
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
     @syntheticEventsMouseClick_InputEvents whichButton, 100, startTime + milliseconds + 100

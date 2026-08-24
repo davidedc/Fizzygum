@@ -34,7 +34,18 @@ against the post-Plan-1 tree, per the program's just-in-time rule (§6).
   additionally clearing `mouseButton`/`previousNonFloatDraggingPos`. F21 fixed in-passing (owner-flagged at the
   commit). Real-browser deltas the suite cannot see (position-carrying down/up; capture) rest on the smoke
   probe until P2's witnesses.
-- P2 the cancel path + witness tests: —
+- P2 the cancel path + witness tests: **DONE 2026-08-24** (Opus; `fg build` 28 gates OK, `fg presuite`
+  318/0 — 316 old BYTE-IDENTICAL + 2 new green — `fg menusweep` OK). New L1
+  `syntheticEventsPointerCancel_InputEvents`; `macroPointerCancelAbortsDragWithoutClick` (11 asserts, 4 images:
+  dwell ARMED at cancel proven by reading `dragEmbedArmed` while the stroke lives; the payload lands on the
+  WORLD over the receptive panel; the unpinned menu SURVIVES the cancel and image_3's ordinary press dismisses
+  it — the non-vacuous contrast) and `macroPointerCancelEndsNonFloatDrag` (6 asserts, 2 images; the first
+  claimed oracle — knob back to black — was FALSIFIED by the run: the per-cycle hover re-sync paints it HOVER
+  blue, which is the SHARPER proof since `mouseMove` early-returns while pressed). `BASELINE_U_QUERY` 124 → 123
+  (the ratchet tightening: `isThisPointerNonFloatDraggingSomething` gained its first external caller).
+  Observation for the record: a cancelled press leaves a menu item visually pressed until the pointer moves
+  (the same hover re-sync) — correct by §2.4, now stated. Process slip declared: one metadata string edited
+  mid-presuite (re-verified after — the running-op rule still stands).
 - P3 deletions verified, docs, tail: —
 
 ---

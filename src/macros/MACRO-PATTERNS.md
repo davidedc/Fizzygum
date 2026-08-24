@@ -1425,6 +1425,24 @@ assertion a recapture after a regression silently stores two different hashes an
   for a free morph not already on the hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
   descendant `MenuItemWdgt` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`_reactToBeingCopied`,
   now on `MenuItemWdgt`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
+- **ABORT a gesture the way a browser does — `pointercancel`** (`macroPointerCancelAbortsDragWithoutClick`,
+  `macroPointerCancelEndsNonFloatDrag`): `@syntheticEventsPointerCancel_InputEvents()` queues a position-less
+  `PointercancelInputEvent`, the one synthetic event with no user gesture behind it — the BROWSER confiscates the
+  stroke (a system gesture, palm rejection, the tab going away). The hand ABORTS
+  (`ActivePointerWdgt.processPointerCancel`): a float-dragged payload lands on the WORLD where it visibly is even
+  when the drag-embed dwell is ARMED, a non-float drag gets its `endOfNonFloatDrag`, and NOTHING that means "the
+  user chose this" happens — no click dispatch, no menu dismissal, no armed multi-click candidate left behind.
+  Use it to test what a half-finished gesture leaves behind. GOTCHAS: (a) the arm must be established BEFORE the
+  cancel, because `processPointerCancel` deliberately does not re-run the dwell state machine the way `drop()`
+  does — so linger with a NON-scaled numeric "yield" and then NUDGE 3px (inside `grabDragThreshold`, so no
+  re-anchor) to fire the one event whose elapsed event-time arms, exactly as `macroDragEmbedWindowLingerArms`
+  does; (b) to keep an open UNPINNED menu alive into the cancel, the press must land INSIDE the menu — a press
+  anywhere outside dismisses it on the DOWN, so a menu item is the only state in which "did the cancel dismiss
+  it?" is a real question; (c) after the abort the pointer still rests where it was, and the per-cycle hover
+  re-sync (`reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges`) then sends `mouseMove` to the widgets
+  under it — so a slider knob reads HOVER, not resting, and that is itself the proof the PRESSED state was
+  cleared (`SliderButtonWdgt.mouseMove` returns early while pressed). Read the hand's state (`dragEmbedArmed`,
+  `doubleClick.wdgt`, `mouseButton`) into a macro-local BEFORE the cancel: the abort clears it.
 
 ## Controllers (patch-programming)
 

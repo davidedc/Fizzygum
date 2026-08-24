@@ -154,8 +154,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 **`MACRO-PATTERNS.md`**. The families:
 
 - **L1 primitives** (`syntheticEvents…_InputEvents`): `MouseMove`, `MouseClick`, `MouseShiftClick`,
-  `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseDown`, `MouseUp`, `Wheel`, `ConsecutiveLeftClicks`, `StringKeys`,
+  `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseDown`, `MouseUp`, `PointerCancel`, `Wheel`,
+  `ConsecutiveLeftClicks`, `StringKeys`,
   `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
+  ⚠ `PointerCancel` is the odd one out: every other primitive replays something a USER does, while a cancel
+  is the BROWSER confiscating the stroke (a system gesture, palm rejection, the tab going away). The hand
+  aborts on it — no click, no menu dismissal, a carried payload landed on the world — so it is the verb for
+  testing what a half-finished gesture leaves behind (`ActivePointerWdgt.processPointerCancel`).
 - **L2 locators**: `findWidgetByTextDescription([desc,occ,total])` (the recorded-identity bridge — wraps
   `world.getWidgetViaTextLabel`), `findTopWidgetByClassNameOrClass`, `pointAtFractionOf`, `getMostRecentlyOpenedMenu`,
   `getTextMenuItemFromMenu{,ByPrefix,ByContains}`; plus the SCREEN-family pair for widgets on any MAPPED
