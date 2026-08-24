@@ -19,8 +19,6 @@ paintFunction             # icon appearances' polymorphic paint hook
 catchesPointerAt          # the widget-authoring pointer-surface hook (12 classes declare it; Widget.isPointerTargetAt is the only in-tree ASK, so this reads self-only) — public because it is what an author states and what an inspector/live-code session asks of a widget, the widget-side twin of the public Appearance.shapeContainsPoint
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
-setMouseInputMode   # PreferencesAndSettings user setting
-setTouchInputMode   # PreferencesAndSettings user setting
 saveScript          # ScriptWdgt user action
 textPrompt          # Widget code-entry prompt door, sibling of prompt/inform/pickColor — inspector / live-code surface
 setProgram          # LCLProgramRunner programming API

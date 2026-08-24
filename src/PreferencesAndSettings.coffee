@@ -6,9 +6,6 @@
 
 class PreferencesAndSettings
 
-  @INPUT_MODE_MOUSE: 0
-  @INPUT_MODE_TOUCH: 1
-
   # The ONE probe per PAGE. getMinimumFontHeight rasterises a glyph and reads the pixels back,
   # and that read's answer depends on how warm the SWCanvas glyph atlas is (DETERMINISM.md §3g):
   # a cold-atlas probe at boot and a warm re-probe later answer DIFFERENT numbers. So the probe
@@ -17,12 +14,10 @@ class PreferencesAndSettings
   # instead of measuring again.
   @probedMinimumFontHeight: undefined
 
-  # I am a per-world singleton reached as the STATIC WorldWdgt.preferencesAndSettings, and a menu row
-  # holds me: the world menu's input-mode row TARGETS me (toggleInputMode) and SHOWS me (its
-  # MenuRowReflectionSpec reads my currentInputMode). So a duplicated menu must KEEP THE REFERENCE —
-  # without this the copy's row toggles a dead clone instead of the real settings, which is precisely
-  # what the same flag on Wallpaper exists to prevent, and was measurably broken here until
-  # 2026-08-17 (probe: Fizzygum-tests/.scratch/prefs-bag-duplication-probe.js).
+  # I am a per-world singleton reached as the STATIC WorldWdgt.preferencesAndSettings: what makes me
+  # ME is that one identity, not my field values. So anything that holds me KEEPS THE REFERENCE
+  # through a deep copy — a copy carrying a clone would read and write settings no world renders
+  # from, which is precisely what the same flag on Wallpaper exists to prevent.
   keptByReferenceOnDeepCopy: true
 
   # Serialization needs no new arm: WellKnownObjects already matches me BY IDENTITY against
@@ -30,9 +25,7 @@ class PreferencesAndSettings
   # "preferences"). This marker states that key alongside the identity check, as Wallpaper does.
   wellKnownKey: "preferences"
 
-  # all these properties can be modified
-  # by the input mode.
-  inputMode: undefined
+  # the typography, colour and sizing settings the whole world renders from.
   minimumFontHeight: undefined
   shortcutsFontSize: undefined
   menuFontName: undefined
@@ -56,14 +49,14 @@ class PreferencesAndSettings
   scrollBarsThickness: undefined
 
   # Chrome-geometry constants (program ruling G2): the bar button's hit box, the bar's own
-  # padding, the glyph inset within a bar button's box, a menu header's corner rounding, a
-  # menu/list rows-panel's border, and a toolbar grid's cell side / inter-cell gap / outer
-  # margin / row count. Each chrome layout site reads the matching name here; no chrome
-  # dimension lives as a literal in a layout method. Set only by setMouseInputMode --
-  # setTouchInputMode does not touch this group.
+  # padding, the glyph inset within a bar button's box, the minimum height a menu/list row
+  # takes, a menu header's corner rounding, a menu/list rows-panel's border, and a toolbar grid's
+  # cell side / inter-cell gap / outer margin / row count. Each chrome layout site reads the
+  # matching name here; no chrome dimension lives as a literal in a layout method.
   barIconSize: undefined
   barPadding: undefined
   barGlyphSize: undefined
+  menuRowHeight: undefined
   menuHeaderCornerRadius: undefined
   menuRowsBorder: undefined
   toolThumbnailSize: undefined
@@ -73,7 +66,7 @@ class PreferencesAndSettings
   toolbarDockThickness: undefined
   dockBandDepth: undefined
 
-  # (no outlineColor field: it is a local in setMouseInputMode -- nothing but the
+  # (no outlineColor field: it is a local in the constructor -- nothing but the
   # outlineColorString shortcut below ever reads the Color object itself.)
   outlineColorString: undefined
 
@@ -120,58 +113,14 @@ class PreferencesAndSettings
   # unless that reset is removed too.
   @decimalFloatFiguresOfFontSizeGranularity: 0
 
+  # ONE geometry serves mouse and finger alike (program ruling G1), so every value below is set
+  # here, once, at construction: there is no per-device redraw to switch between.
   constructor: ->
-    @setMouseInputMode()
-
-  toggleInputMode: ->
-    if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE
-      @setTouchInputMode()
-    else
-      @setMouseInputMode()
-    # ANNOUNCE it: every open menu row that SHOWS the input mode re-derives its wording from the
-    # drain, wherever that row is (MenuRowReflectionSpec / MenuRowsPanelWdgt). Safe to mark myself
-    # stale because I am a plain collaborator, not a Widget — a widget has ONE staleness signal
-    # (Widget.dataflowValue is its exported value), so a widget announcing "one of my properties
-    # changed" would also fire its dataflow WIRES. That is the gap P3 exists to close.
-    world.dataflow.markStale @
-
-  # ── dataflow node protocol ─────────────────────────────────────────────────────────────────
-  # I am a NODE without being a Widget — the protocol is duck-typed (SecondsSource/FrameSource
-  # prove it), which is what lets a menu row subscribe to my input mode.
-  dataflowValue: -> @inputMode
-
-  # what a reflecting menu row reads (MenuRowReflectionSpec.readerName)
-  currentInputMode: -> @inputMode
-
-  # answer the height of the smallest font renderable in pixels
-  getMinimumFontHeight: ->
-    str = "I"
-    size = 50
-    # go through the factory so the SWCanvas backend switch reaches this probe
-    canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point size, size
-    ctx = canvas.getContext "2d", willReadFrequently: true
-    # a THROWAWAY calibration rasterisation: its pixels never reach the screen, so the
-    # SWCanvas cold-glyph recorder must not count its (possibly placeholder) draw
-    # (SWCanvasElement-extensions' surgical atlas-warm attribution reads this flag)
-    ctx.isFizzygumCalibrationProbe = true
-    ctx.font = "1px serif"
-    maxX = Math.ceil ctx.measureText(str).width
-    ctx.fillStyle = Color.BLACK.toString()
-    ctx.textBaseline = "bottom"
-    ctx.fillText str, 0, size
-    for y in [0...size]
-      for x in [0...maxX]
-        data = ctx.getImageData x, y, 1, 1
-        return size - y + 1  if data.data[3] isnt 0
-    0
-
-  setMouseInputMode: ->
-    @inputMode = PreferencesAndSettings.INPUT_MODE_MOUSE
     @minimumFontHeight = PreferencesAndSettings.probedMinimumFontHeight ?= @getMinimumFontHeight() # browser settings
     @menuFontName = "sans-serif"
     @menuFontSize = 12 # 14
     @menuHeaderFontSize = 12 # 13
-    @menuHeaderColor = Color.create 77,77,77 # Color.create 125, 125, 125
+    @menuHeaderColor = Color.create 77,77,77 # Color.create 125, 125, 125
     @menuHeaderBold = true # false
     @menuStrokeColor = Color.create 210, 210, 210 # Color.create 186, 186, 186
     @menuBackgroundColor = Color.create 249, 249, 249 # Color.create 244, 244, 244
@@ -222,6 +171,12 @@ class PreferencesAndSettings
     # (barIconSize + 2 * barPadding) and the frame body's margin around its content.
     @barPadding = 5
 
+    # the MINIMUM height a menu or list row takes, and the floor under a pop-up's title strip
+    # (a title is a tap-to-pin target, ruling C3). A row whose label is taller keeps its label's
+    # height, and the label sits centred in whichever height wins. At 0 the floor never binds and
+    # a row is exactly its label.
+    @menuRowHeight = 0
+
     # the header box's own corner rounding.
     @menuHeaderCornerRadius = 3
     # the border width a menu/list rows panel keeps around its flush-stacked rows.
@@ -253,30 +208,25 @@ class PreferencesAndSettings
     @rasterizeSVGs = false
     @isFlat = false
 
-  setTouchInputMode: ->
-    @inputMode = PreferencesAndSettings.INPUT_MODE_TOUCH
-    @minimumFontHeight = PreferencesAndSettings.probedMinimumFontHeight ?= @getMinimumFontHeight()
-    @menuFontName = "sans-serif"
-    @menuFontSize = 24
-    @bubbleHelpFontSize = 18
-    @prompterFontName = "sans-serif"
-    @prompterFontSize = 24
-    @prompterSliderSize = 20
-
-    # handle and scrollbar should ideally be the
-    # same size because they often show next to
-    # each other
-    @handleSize = 26
-    @scrollBarsThickness = 24
-
-    @wheelScaleX = 1
-    @wheelScaleY = 1
-    @invertWheelX = true
-    @invertWheelY = true
-
-    @useSliderForInput = true
-    @useVirtualKeyboard = true
-    @isTouchDevice = false
-    @rasterizeSVGs = false
-    @isFlat = false
+  # answer the height of the smallest font renderable in pixels
+  getMinimumFontHeight: ->
+    str = "I"
+    size = 50
+    # go through the factory so the SWCanvas backend switch reaches this probe
+    canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point size, size
+    ctx = canvas.getContext "2d", willReadFrequently: true
+    # a THROWAWAY calibration rasterisation: its pixels never reach the screen, so the
+    # SWCanvas cold-glyph recorder must not count its (possibly placeholder) draw
+    # (SWCanvasElement-extensions' surgical atlas-warm attribution reads this flag)
+    ctx.isFizzygumCalibrationProbe = true
+    ctx.font = "1px serif"
+    maxX = Math.ceil ctx.measureText(str).width
+    ctx.fillStyle = Color.BLACK.toString()
+    ctx.textBaseline = "bottom"
+    ctx.fillText str, 0, size
+    for y in [0...size]
+      for x in [0...maxX]
+        data = ctx.getImageData x, y, 1, 1
+        return size - y + 1  if data.data[3] isnt 0
+    0
 

@@ -230,6 +230,8 @@ class FrameWdgt extends Widget
   # stretches (the bar sizes it to text and disables fitting), so this is stable applied
   # geometry, not a mutate-then-read-back. Before the piece exists -- the appearance derivation
   # runs in my constructor -- the window title's own height stands in at the same number.
+  #   A titled strip is floored at menuRowHeight: the tap that pins me lands on it, so it is a
+  # target of the same size as a row (G3/G5), and it is one of my rows in every other respect.
   _transientBarSpec: ->
     preferences = WorldWdgt.preferencesAndSettings
     titled = !!@_titleForContents @contents
@@ -239,7 +241,7 @@ class FrameWdgt extends Widget
     axis: "horizontal"
     showsText: true
     naturalWidth: "titleText"
-    thickness: (if titled then textHeight + 2 else 0)
+    thickness: (if titled then Math.max(textHeight + 2, preferences.menuRowHeight) else 0)
     slotSize: preferences.barIconSize
     glyphSize: preferences.barGlyphSize
     padding: preferences.menuRowsBorder

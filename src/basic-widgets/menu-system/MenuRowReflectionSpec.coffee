@@ -1,8 +1,8 @@
 # What a menu row SHOWS about somebody else's state — the declaration that makes a row a VIEW of a
 # value rather than a label painted once at menu-build time.
 #
-# A row that ticks itself ("✓ circles") or swaps its wording ("touch screen settings" ⇄ "standard
-# settings") is showing state it does not own. Written by hand that is a redraw: each menu fixes up
+# A row that ticks itself ("✓ circles") or otherwise swaps its wording between two spellings is
+# showing state it does not own. Written by hand that is a redraw: each menu fixes up
 # its OWN rows, at the moment it was clicked, by walking `rowsPanel.children` by INDEX — so a second
 # open copy of the same menu disagrees, and so does one open across a change made by a script, the
 # loader, or another menu. This record says instead: *my label is a function of that object's value*,
@@ -14,9 +14,9 @@
 #
 # ⚠ `readerName` is a METHOD NAME on `source`, not a function — the same late binding a wire's
 # `@action` uses, and for the same reasons: it survives serialization and duplication, where a
-# closure would not. The source needs no `pins()` and need not even be a Widget (`Wallpaper` and
-# `PreferencesAndSettings` are plain collaborators), which is the whole point — this reflects a
-# VALUE, and the dataflow node protocol is duck-typed.
+# closure would not. The source needs no `pins()` and need not even be a Widget (`Wallpaper` is a
+# plain collaborator, and a wire row's source is its `WireSpec` record), which is the whole point —
+# this reflects a VALUE, and the dataflow node protocol is duck-typed.
 #
 # CONSTRUCTOR SHAPE (docs/architecture/constructor-and-parameter-conventions.md): `source` and
 # `readerName` are the identity — WHOSE state and HOW to read it — so they stay positional; the

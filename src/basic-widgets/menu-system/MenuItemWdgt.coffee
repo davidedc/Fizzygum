@@ -122,10 +122,18 @@ class MenuItemWdgt extends LabelButtonWdgt
     # _reLayoutSelf (a layout pass), so use the NoSettle core -- the wrapper would throw mid-pass.
     @label._sizeToTextAndDisableFittingNoSettle()
 
+    # menuRowHeight is a MINIMUM, not a height: a row is as tall as its label or as tall as the
+    # dial, whichever is more, so a big label never gets clipped by a small dial and a small label
+    # still offers the full target (G3/G5 -- a row is a tap target, and the prompt's Ok/Close
+    # buttons are menu rows too). The label then sits centred in whatever height wins, rounded
+    # because every widget is placed in integer pixels.
+    labelExtent = @label.extent()
+    rowHeight = Math.max labelExtent.y, WorldWdgt.preferencesAndSettings.menuRowHeight
     w = @width()
-    @__commitExtent @label.extent().add new Point 8, 0
+    @__commitExtent new Point labelExtent.x + 8, rowHeight
     @__commitWidth w
-    np = @position().add new Point 4, 0
+    labelTopInset = Math.round (rowHeight - labelExtent.y) / 2
+    np = @position().add new Point 4, labelTopInset
     @label.__commitMoveTo np
 
   # THE REACTIVE LANE, and the only entrypoint: the drain reaches it by the computed name

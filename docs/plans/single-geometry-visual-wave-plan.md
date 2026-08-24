@@ -28,7 +28,14 @@ ledger's dated citations stand as history): the world menu's input-mode row is a
   `toolRows` 1 with T2's chevron ABSORBED into this plan · G6 factor 2 · prompter/prompt
   buttons/slider thumbs join the ≥44 rule. P2 remains the eyes-on confirmation; any dial may
   still be re-turned there.
-- P1 T11 deletion + row-height plumbing (byte-identical): —
+- P1 T11 deletion + row-height plumbing: **IN PROGRESS 2026-08-24** — reframe 2 FALSIFIED at
+  the gate (the world menu appears in 15 references, opened by raw right-click — invisible to
+  the `openMenuOf` census; F7 corrected, gate re-scoped to a declared 15-test set per program
+  §4 rule 2). Plumbing proven inert (303/318 pass with it in; paint + fracplane green).
+  Deletion complete in-tree (post-edit greps 0/0); build's 28 gates green inside presuite;
+  menusweep OK (3846 items + 53 prompt Oks / 464 menus). Residue noted:
+  `buildSystem/census-property-placement.js` case-law comment names the deleted
+  `@setMouseInputMode` → reworded in P5's sweep.
 - P2 the probe page + eyes-on confirmation of the pre-ruled dials (G7 gate): —
 - P3 wave step A — dials + fold + indicators + chevron at CONSTANT extent (reviewed recapture): —
 - P4 wave step B — test-world extent + Automator version bump (reviewed recapture): —
@@ -103,11 +110,16 @@ geometry (program §3: "3 → 4"), which is why extent and dials must settle her
    `_makePrettier`'s preference writes into the one block (RULED 2026-08-24, G5 amendment;
    §2.2), so the pixels the owner approves on the probe page are the pixels the suite then
    pins.
-2. **The T11 row appears in ZERO committed references.** No macro ever opens the WORLD's own
-   context menu (all 43 `openMenuOf` call sites target widgets — §1 F7), and no test names
-   the row or its verbs. So the T11 deletion is a ZERO-recapture structural phase (P1), gated
-   byte-identical — it does NOT have to ride the wave. Its runtime coverage is `fg menusweep`
-   (which walks the world-menu roots) and the build's `check-dead-methods`.
+2. **The T11 row appears in FIFTEEN committed references** (⚠ this reframe originally claimed
+   ZERO — falsified at the P1 gate 2026-08-24: the `openMenuOf` census could not see the raw
+   right-click-on-empty-desktop idiom that opens the WORLD's menu — a census's axis is its
+   blind spot; corrected inventory in F7). No test names the row or its verbs BY NAME, but 15
+   world-menu-family tests screenshot the menu, and one
+   (`SystemTest_macroCheckNumberOfItemsInWorldMenu`) asserts its item COUNT (17 → 16). So the
+   T11 deletion is a small DECLARED visible change (program §4 rule 2): P1 lands it as its own
+   reviewed 15-test recapture set — it still does not ride the wave, and the row-height
+   plumbing half of P1 is still provably inert (303/318 unchanged with it in). Runtime
+   coverage stays `fg menusweep` + the build's `check-dead-methods`.
 3. **The G6 extent change forces the WHOLE suite to recapture regardless of chrome exposure**
    — a canvas of different dimensions changes every screenshot byte. That is why the wave is
    split into two reviewed capture steps (§5 P3/P4): step A moves the dials at CONSTANT extent,
@@ -253,13 +265,25 @@ Each fact records its verification command. Line numbers drift — grep the quot
   LIST row (`isListItem()` keys on the container), so the dial reaches `ListWdgt` rows too —
   intended (G1: one geometry). Verify: `sed -n '105,130p'
   src/basic-widgets/menu-system/MenuItemWdgt.coffee`.
-- **F7 — no reference shows the world menu or the T11 row.** 43 tests call `openMenuOf` and
-  every first target is a widget, none the world; 0 tests match
-  `touch screen|toggleInputMode|inputMode`; the only 2 `preferencesAndSettings` matches in
-  macro sources are prose comments. `bringUpTestMenu_InputEvents` is an F2-key shortcut to the
-  TEST menu, used by 0 tests. Verify: `cd Fizzygum-tests/tests && grep -il "openMenuOf"
-  */SystemTest_*_automationCommands.js | wc -l` (43) and the per-target sample
-  `grep -H "openMenuOf" …` (targets: rect/txt/win.label/…).
+- **F7 — FIFTEEN references show the world menu (corrected 2026-08-24 at the P1 gate; the
+  fact's first form claimed zero).** The world menu is opened by a raw right-click on empty
+  desktop (`@moveToAndClick_InputEvents (new Point 100, 60), "right button"`), which no
+  `openMenuOf` census can see — the original verification's axis was its blind spot. The
+  15-test world-menu family (measured by running the suite over the row deletion):
+  `macroBasicWorldMenuAndBubble`, `macroCheckNumberOfItemsInWorldMenu` (also asserts
+  `@assertTopMenuItemCount 17` — becomes 16 with the row gone; its comment logs the count's
+  history 19→17→16→15→17), `macroDuplicatedMenuAutoPinsOnDesktop`,
+  `macroGrabbedMenuStaysOnDesktop`, `macroHoppingBetweenSubMenus`, `macroMenuPinnedByHeaderClick`,
+  `macroMenuRepositionsToStayOnScreen`, `macroMenuShadowCorrectWhileAndAfterDrag`,
+  `macroMenusAndSubMenusRemainOpenWhileDraggingMenusOnly`, `macroMenusCloseOnMouseDownOutside`,
+  `macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`,
+  `macroRightClickClosesDownstreamSubMenus`, `macroSubMenuDroppedIntoPanelPinsItself`,
+  `macroWallpaperMenuFollowsAnApiChange`, `macroWallpaperMenuTickTracksSelection`. Still true:
+  0 tests match `touch screen|toggleInputMode|inputMode`; the only 2 `preferencesAndSettings`
+  macro matches are prose; `bringUpTestMenu_InputEvents` is used by 0 tests. Verify by
+  BEHAVIOUR, not text: run the suite over the deletion and read the failed-tests array
+  (`grep -l 'right button' */SystemTest_*_automationCommands.js` over-approximates — any
+  right-click matches, not just desktop ones).
 - **F8 — scrollbars today: two `SliderWdgt` children, PERSISTENT while overflowing, overlaying
   the plane.** `ViewportWdgt` builds `@hBar`/`@vBar` as `new SliderWdgt … color: @sliderColor`,
   applies `scrollBarsThickness` (:160–:166), wires `trackTarget @, "setScrollX"/"setScrollY"`.
@@ -497,8 +521,10 @@ the owner approved on the probe page (reframe 1). **RULED 2026-08-24: the fold i
   unrelated classes' own `dataflowValue`s). Reword the class doc-comment (:20–25) and
   `MenuRowReflectionSpec.coffee:4`'s example (F19: the `keptByReferenceOnDeepCopy` /
   `wellKnownKey` flags STAY).
-- Tests repo: remove the `toggleInputMode` `KNOWN` entry
-  (`scripts/menu-click-sweep-headless.js:64`).
+- Tests repo: remove the `toggleInputMode` entry from the `SKIP` dict
+  (`scripts/menu-click-sweep-headless.js:64`); edit
+  `SystemTest_macroCheckNumberOfItemsInWorldMenu`'s `@assertTopMenuItemCount 17` → `16` and
+  extend its count-history comment the way its existing entries read (F7).
 - **Also in P1: the row-height plumbing at today's pixels.** Introduce `menuRowHeight: 0` and
   make `MenuItemWdgt._createLabel` honour it as a MINIMUM: row height =
   `Math.max @label.height(), preferences.menuRowHeight`, label vertically centred with rounded
@@ -508,10 +534,14 @@ the owner approved on the probe page (reframe 1). **RULED 2026-08-24: the fold i
   the mechanism is proven before the values move. (Do NOT pre-introduce the G4/T3 preferences
   here — fields nothing reads yet say nothing and invite drift; they land with their consumers
   in P3.)
-- Gate: `fg presuite` **byte-identical**, `fg menusweep` green (its breadth count shifts by the
-  removed row — breadth, not a ratchet). If presuite shows ANY diff, the likely mechanism is an
-  inspector member-list churn from the deleted members — that would mean some reference DOES
-  show a prefs inspector, falsifying F7: STOP, re-measure, take it to the coordinator.
+- Gate (amended 2026-08-24 after the original byte-identical gate falsified reframe 2): the
+  suite's failed set must be EXACTLY F7's 15 world-menu tests — one more or one fewer is a
+  STOP. Then the declared-set ritual (program §4 rule 2): `fg diffpage` on the 15, the
+  coordinator eyeballs every crop (expected consequence: the world menu one row shorter —
+  and possibly narrower iff the deleted label was the width-setting row; anything else is
+  outside the budget), `fg recapture --auto` → COMPLETE, `fg presuite` green on the
+  recaptured set, `fg menusweep` green (its breadth count shifts by the removed row —
+  breadth, not a ratchet).
 
 ### 2.4 G4 — scrollbars become overlay indicators (the behaviour half of the wave)
 
@@ -689,9 +719,11 @@ tool already sits behind the strip's scroll). The mechanics stand on F22.
 
 ## §3 The axes (why this shape)
 
-- **Delete the toggle BEFORE the wave, not inside it.** T11 is reference-invisible (reframe 2),
-  so it can gate byte-identical — and a zero-recapture phase is a categorically stronger gate
-  than a reviewed one. Everything that moves pixels is then values-and-behaviour only.
+- **Delete the toggle BEFORE the wave, not inside it.** T11's 15-test footprint (reframe 2 as
+  corrected) is reviewed as its OWN small declared set — 15 diffs whose one consequence (a
+  menu one row shorter) is legible, instead of drowning inside the wave's 287. The row-height
+  plumbing half of P1 still proves itself inert against the other 303 tests. Everything the
+  wave then moves is values-and-behaviour only.
 - **One preference block, then one edit.** The fold (§2.2) is what makes "the wave is a
   one-block edit" TRUE rather than nearly-true; without it every dial is written twice and the
   suite keeps certifying chrome nobody ships.
@@ -738,11 +770,12 @@ finger tests against a geometry that will not move under it.
 
 ## §5 Phases
 
-Each phase: goal · steps · pixel impact · gate · commit. **Recapture budget: ZERO in P0–P2;
-P3 = the reviewed step-A set (every diff must be a stated §2.1/§2.4/§2.5/§2.7 consequence);
-P4 = the whole suite (extent + bump). Anything outside the budget at any gate: STOP (worker
-rule 3) — the coordinator eyeballs `fg diffpage` and takes it to the owner. Never a silent
-recapture.**
+Each phase: goal · steps · pixel impact · gate · commit. **Recapture budget: P0/P2 ZERO;
+P1 = exactly F7's 15-test world-menu set (the declared T11 change — amended 2026-08-24, was
+ZERO until reframe 2 was falsified); P3 = the reviewed step-A set (every diff must be a stated
+§2.1/§2.4/§2.5/§2.7 consequence); P4 = the whole suite (extent + bump). Anything outside the
+budget at any gate: STOP (worker rule 3) — the coordinator eyeballs `fg diffpage` and takes it
+to the owner. Never a silent recapture.**
 
 ### P0 — Re-verification + measurements (~¼ session-day)
 
@@ -760,13 +793,18 @@ recapture.**
    re-check, references count. These are P3/P4/P5's completion checks.
 5. Nothing committed.
 
-### P1 — T11 deletion + row-height plumbing, byte-identical (~⅓ session-day)
+### P1 — T11 deletion (reviewed 15-test set) + row-height plumbing (inert) (~½ session-day)
 
-One Opus worker, one commit. Steps: §2.3 in full (src + the menusweep `KNOWN` entry;
-`MenuRowReflectionSpec`/prefs doc-comments reworded present-tense).
-**Gate:** `fg presuite` **byte-identical** (318/0, zero diffs) + `fg menusweep` OK. The build's
-28 gates run inside presuite (`check-dead-methods`/`check-unresolved-sends` net the verbs).
-Commit (coordinator proposes; owner approves).
+One Opus worker, one commit. Steps: §2.3 in full (src + the menusweep `SKIP` entry + the
+count-assertion edit; `MenuRowReflectionSpec`/prefs doc-comments reworded present-tense).
+**Gate (amended 2026-08-24 — the byte-identical original died with reframe 2):** the failed
+set = EXACTLY F7's 15 world-menu tests; `fg diffpage` on them; the COORDINATOR eyeballs
+(consequence: the menu one row shorter, nothing else); `fg recapture --auto` → COMPLETE;
+`fg presuite` green; `fg menusweep` OK. The row-height plumbing proves itself inert by the
+other 303 tests passing untouched. The build's 28 gates run inside presuite
+(`check-dead-methods`/`check-unresolved-sends` net the verbs).
+Commit — src + the 15 recaptured references + the count edit together, one bisectable step
+(coordinator proposes; owner approves).
 
 ### P2 — The probe page (G7) — the owner-review GATE (~½ session-day + owner time)
 
@@ -853,7 +891,12 @@ One Opus worker. Steps:
    only if a gate's text names deleted members, `Fizzygum-tests/CLAUDE.md` +
    `DETERMINISM.md` extent mentions (960×440 → the new constant; de-count where possible),
    `src/macros/MACRO-PATTERNS.md`'s bar-visibility gotcha (:1281) re-worded to
-   `isScrollableNow`, the harness comments P0's grep listed. `fg doc-narration` after.
+   `isScrollableNow`, the harness comments P0's grep listed, and
+   `buildSystem/census-property-placement.js`'s case-law comment (~:116) reworded so it stops
+   naming the deleted `@setMouseInputMode` (P1 residue), and
+   `SystemTest_macroCheckNumberOfItemsInWorldMenu.js`'s metadata `assertions` prose brought
+   back in step with the macro's count history (P1 found it already two entries stale).
+   `fg doc-narration` after.
 2. Program doc (coordinator): STATUS row for Plan 3; the G3/G5/G6/T3 amendment rows carry
    their rulings already — note any P2 re-turn on them (date + reason); T11 and T2 rows →
    closed; tail entries (below).
