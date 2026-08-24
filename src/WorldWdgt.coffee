@@ -6,14 +6,12 @@ class WorldWdgt extends IconGridPanelWdgt
   # going to put them all in properties
   # here.
   # dblclickEventListener: undefined
-  mousedownBrowserEventListener: undefined
-  mouseupBrowserEventListener: undefined
-  mousemoveBrowserEventListener: undefined
+  pointerdownBrowserEventListener: undefined
+  pointermoveBrowserEventListener: undefined
+  pointerupBrowserEventListener: undefined
+  pointercancelBrowserEventListener: undefined
   contextmenuEventListener: undefined
 
-  touchstartBrowserEventListener: undefined
-  touchendBrowserEventListener: undefined
-  touchmoveBrowserEventListener: undefined
   gesturestartBrowserEventListener: undefined
   gesturechangeBrowserEventListener: undefined
 
@@ -2215,7 +2213,18 @@ class WorldWdgt extends IconGridPanelWdgt
   # -----------------------------------------------------
 
 
-  _initMouseEventListeners: ->
+  # ONE listener set for every pointer kind. A mouse, a pen and a finger all arrive as W3C
+  # Pointer Events carrying pointerType / pointerId / pressure, so the hand reads the kind off
+  # each EVENT — a hybrid device gets every stroke right — and there is one stream to reason
+  # about rather than a real one and an emulated one.
+  #
+  # ⚠ NO preventDefault on any of the four pointer listeners, deliberately. Two reasons, both
+  # load-bearing: (a) the canvas takes keyboard focus by click (it carries tabindex and the
+  # keyboard listeners sit ON it) and engines suppress that focus when a pointerdown is
+  # cancelled, so preventing the default here kills keyboard input; (b) browser panning and
+  # zooming are not preventDefault's to stop under pointer events at all — the canvas's
+  # `touch-action: none` (src/index.html) is what owns them.
+  _initPointerEventListeners: ->
     canvas = @worldCanvas
     # there is indeed a "dblclick" JS event
     # but we reproduce it internally.
@@ -2237,42 +2246,41 @@ class WorldWdgt extends IconGridPanelWdgt
     #  @hand.processDoubleClick event
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
-    @mousedownBrowserEventListener = (event) =>
-      @inputEventsQueue.push MousedownInputEvent.fromBrowserEvent event
+    # The hand is a single-pointer machine, so only each kind's PRIMARY pointer reaches the queue
+    # and the queue stays an honest record of what the world processed.
+    @pointerdownBrowserEventListener = (event) =>
+      return unless event.isPrimary
+      # Capture routes the WHOLE stroke to the canvas: without it a drag that wanders off the
+      # canvas loses its moves and its up (the listeners are ON the canvas), and the hand keeps a
+      # pressed phantom button. A pointerdown made by dispatchEvent has no ACTIVE pointer behind
+      # it, and both engines the suite runs on throw NotFoundError when asked to capture one, so
+      # the call is guarded; real user input always has an active pointer and always captures.
+      try
+        canvas.setPointerCapture event.pointerId
+      catch error
+        # a dispatched pointer has no stroke to route — the page keeps delivering it either way
+      @inputEventsQueue.push PointerdownInputEvent.fromBrowserEvent event
 
-    canvas.addEventListener "mousedown", @mousedownBrowserEventListener, false
+    canvas.addEventListener "pointerdown", @pointerdownBrowserEventListener, false
 
-    
-    @mouseupBrowserEventListener = (event) =>
-      @inputEventsQueue.push MouseupInputEvent.fromBrowserEvent event
+    @pointermoveBrowserEventListener = (event) =>
+      return unless event.isPrimary
+      @inputEventsQueue.push PointermoveInputEvent.fromBrowserEvent event
 
-    canvas.addEventListener "mouseup", @mouseupBrowserEventListener, false
-        
-    @mousemoveBrowserEventListener = (event) =>
-      @inputEventsQueue.push MousemoveInputEvent.fromBrowserEvent event
+    canvas.addEventListener "pointermove", @pointermoveBrowserEventListener, false
 
-    canvas.addEventListener "mousemove", @mousemoveBrowserEventListener, false
+    # no explicit releasePointerCapture: the spec releases an implicit capture on up and on cancel
+    @pointerupBrowserEventListener = (event) =>
+      return unless event.isPrimary
+      @inputEventsQueue.push PointerupInputEvent.fromBrowserEvent event
 
-  _initTouchEventListeners: ->
-    canvas = @worldCanvas
-    
-    @touchstartBrowserEventListener = (event) =>
-      @inputEventsQueue.push TouchstartInputEvent.fromBrowserEvent event
-      event.preventDefault() # (unsure that this one is needed)
+    canvas.addEventListener "pointerup", @pointerupBrowserEventListener, false
 
-    canvas.addEventListener "touchstart", @touchstartBrowserEventListener, false
+    @pointercancelBrowserEventListener = (event) =>
+      return unless event.isPrimary
+      @inputEventsQueue.push PointercancelInputEvent.fromBrowserEvent event
 
-    @touchendBrowserEventListener = (event) =>
-      @inputEventsQueue.push TouchendInputEvent.fromBrowserEvent event
-      event.preventDefault() # prevent mouse events emulation
-
-    canvas.addEventListener "touchend", @touchendBrowserEventListener, false
-        
-    @touchmoveBrowserEventListener = (event) =>
-      @inputEventsQueue.push TouchmoveInputEvent.fromBrowserEvent event
-      event.preventDefault() # (unsure that this one is needed)
-
-    canvas.addEventListener "touchmove", @touchmoveBrowserEventListener, false
+    canvas.addEventListener "pointercancel", @pointercancelBrowserEventListener, false
 
     @gesturestartBrowserEventListener = (event) =>
       # we don't do anything with gestures for the time being
@@ -2425,7 +2433,7 @@ class WorldWdgt extends IconGridPanelWdgt
         FileLoading.loadFile files[0], new Point event.clientX, event.clientY
     window.addEventListener "drop", @dropBrowserEventListener, false
 
-    @resizeBrowserEventListener = =>
+    @resizeBrowserEventListener = (event) =>
       # a window resize can move the canvas within the document even when it does
       # not route through stretchWorldToFillEntirePage — invalidate eagerly
       @invalidateCanvasPositionCache()
@@ -2437,8 +2445,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # note that we don't register the normal click,
   # we figure that out independently.
   initEventListeners: ->
-    @_initMouseEventListeners()
-    @_initTouchEventListeners()
+    @_initPointerEventListeners()
     @_initKeyboardEventListeners()
     @_initClipboardEventListeners()
     @_initOtherMiscEventListeners()
@@ -2458,7 +2465,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # ⚠⚠ EVERY LISTENER MUST BE REMOVED FROM THE SAME TARGET IT WAS ADDED TO — the listeners are spread
   # over THREE targets (@worldCanvas / document.body / window) and removeEventListener on the wrong
   # target is a SILENT NO-OP: no error, nothing removed, nothing logged. That is exactly the bug this
-  # method shipped with (fixed 2026-07-15): it removed all 20 from `canvas`, so the 7 that had been
+  # method shipped with (fixed 2026-07-15): it removed EVERY listener from `canvas`, so the ones
   # added to document.body (cut/copy/paste) or window (scroll/dragover/drop/resize) were never
   # detached at all, and stayed live through every test — including @resizeBrowserEventListener, which
   # pushes a ResizeInputEvent into the queue.
@@ -2469,14 +2476,12 @@ class WorldWdgt extends IconGridPanelWdgt
 
     # ── added to @worldCanvas ──────────────────────────────────────────────────────────────────────
     # canvas.removeEventListener 'dblclick', @dblclickEventListener
-    canvas.removeEventListener 'mousedown', @mousedownBrowserEventListener
-    canvas.removeEventListener 'mouseup', @mouseupBrowserEventListener
-    canvas.removeEventListener 'mousemove', @mousemoveBrowserEventListener
+    canvas.removeEventListener 'pointerdown', @pointerdownBrowserEventListener
+    canvas.removeEventListener 'pointermove', @pointermoveBrowserEventListener
+    canvas.removeEventListener 'pointerup', @pointerupBrowserEventListener
+    canvas.removeEventListener 'pointercancel', @pointercancelBrowserEventListener
     canvas.removeEventListener 'contextmenu', @contextmenuEventListener
 
-    canvas.removeEventListener "touchstart", @touchstartBrowserEventListener
-    canvas.removeEventListener "touchend", @touchendBrowserEventListener
-    canvas.removeEventListener "touchmove", @touchmoveBrowserEventListener
     canvas.removeEventListener "gesturestart", @gesturestartBrowserEventListener
     canvas.removeEventListener "gesturechange", @gesturechangeBrowserEventListener
 
@@ -2849,8 +2854,9 @@ class WorldWdgt extends IconGridPanelWdgt
   # world's own remains — the things a world holds that are not tree children, and the registrations
   # that would otherwise outlive it for the life of the page.
   _dissolveWorldNoSettle: ->
-    # (a) THE BROWSER LISTENERS. All 20 are closures over THIS world pushing into THIS world's
-    # @inputEventsQueue, and their targets (@worldCanvas, document.body, window) outlive every world
+    # (a) THE BROWSER LISTENERS. Every one the _init* family attached is a closure over THIS world,
+    # pushing into THIS world's @inputEventsQueue, and their targets (@worldCanvas, document.body,
+    # window) outlive every world
     # the page ever builds — so an undetached set keeps delivering a dead world's events forever.
     # initEventListeners / removeEventListeners are the attach/detach pair; that method's own comment
     # carries the target-matching rules.

@@ -39,7 +39,11 @@
 		<div id="background" style="position: absolute; left: 0px; top: 0px; width: 1; height: 1;">
 		</div>
 
-		<canvas id="world" tabindex="1" style="position: absolute; left: 0px; top: 0px; outline:none;">
+		<!-- touch-action: none hands every pointer gesture over the canvas to the world. Under
+		Pointer Events this is the ONLY thing that stops the browser panning/zooming the page
+		mid-gesture — preventDefault on a pointer listener does not, and would cost the canvas
+		its click-to-focus (see WorldWdgt._initPointerEventListeners). -->
+		<canvas id="world" tabindex="1" style="position: absolute; left: 0px; top: 0px; outline:none; touch-action: none;">
 			<p>Your browser doesn't support canvas.</p>
 		</canvas>
 

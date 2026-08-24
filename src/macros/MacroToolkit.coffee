@@ -329,7 +329,7 @@ class MacroToolkit
   # in order to do that.
   _syntheticEventsMousePlace_InputEvents: (place = new Point(0,0), scheduledTimeOfEvent = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @currentPointerTarget = place
-    @queueInputEvent new MousemoveInputEvent place.x, place.y, 0, 0, false, false, false, false, true, scheduledTimeOfEvent
+    @queueInputEvent PointermoveInputEvent.synthetic 0, 0, false, false, false, false, scheduledTimeOfEvent, place.x, place.y
 
   # Optional parameters are ordered by how often a caller actually specifies one, most-specified
   # first, so no caller ever has to pass a hole to reach a later argument. `orig` is last because
@@ -372,7 +372,7 @@ class MacroToolkit
       if nextX != prevX or nextY != prevY
         prevX = nextX
         prevY = nextY
-        @queueInputEvent new MousemoveInputEvent nextX, nextY, button, buttons, false, false, false, false, true, scheduledTimeOfEvent
+        @queueInputEvent PointermoveInputEvent.synthetic button, buttons, false, false, false, false, scheduledTimeOfEvent, nextX, nextY
 
   # Schedules the down/up in ABSOLUTE (already-spanFactor-scaled) time and pushes them
   # NON-scaled, so a LEFT click can be pushed past the hand's real double-click window
@@ -387,8 +387,9 @@ class MacroToolkit
     @syntheticEventsMouseUp_InputEvents whichButton, upAbs, true
 
   # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
-  # event's shiftKey flag set (the 4th constructor parameter of Mouse{down,up}InputEvent — button, buttons,
-  # ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time). A click carrying shiftKey makes an editable
+  # event's shiftKey flag set (the 4th parameter of Pointer{down,up}InputEvent.synthetic — button, buttons,
+  # ctrlKey, shiftKey, altKey, metaKey, time, and the optional worldX/worldY a down/up omits: a synthesised
+  # press states no place, so the pointer keeps the position it holds). A click carrying shiftKey makes an editable
   # StringWdgt/TextWdgt EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
   # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
   syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -398,8 +399,8 @@ class MacroToolkit
     downAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     upAbs = downAbs + milliseconds * @spanFactor()
     @_rememberClickGesture upAbs, @currentPointerTarget
-    @queueInputEvent (new MousedownInputEvent 0, 1, false, true, false, false, true, downAbs), true
-    @queueInputEvent (new MouseupInputEvent 0, 0, false, true, false, false, true, upAbs), true
+    @queueInputEvent (PointerdownInputEvent.synthetic 0, 1, false, true, false, false, downAbs), true
+    @queueInputEvent (PointerupInputEvent.synthetic 0, 0, false, true, false, false, upAbs), true
 
   # nonScaled (default false): when true the startTime is already an absolute, scaled
   # time (the click verbs pre-compute it so the false-double-click guard can shift it),
@@ -415,7 +416,7 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseDown_InputEvents: whichButton is unknown"
 
-    @queueInputEvent (new MousedownInputEvent button, buttons, false, false, false, false, true, startTime), nonScaled
+    @queueInputEvent (PointerdownInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
 
   syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
     if whichButton == "left button"
@@ -428,7 +429,7 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseUp_InputEvents: whichButton is unknown"
 
-    @queueInputEvent (new MouseupInputEvent button, buttons, false, false, false, false, true, startTime), nonScaled
+    @queueInputEvent (PointerupInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
 
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime

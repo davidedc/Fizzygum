@@ -4,6 +4,10 @@
 
 class ActivePointerWdgt extends Widget
 
+  # The kind of pointer the stroke in progress belongs to ('mouse' | 'pen' | 'touch'), taken from
+  # every down and every move. It is per-STROKE, not a device setting: a hybrid machine mixes a
+  # trackpad, a pen and a finger in one session and each stroke answers for itself.
+  pointerType: undefined
   mouseButton: undefined
   # used for example to check that
   # mouseDown and mouseUp happen on the
@@ -57,8 +61,7 @@ class ActivePointerWdgt extends Widget
   # (mouseButton, positions) are left alone: they hold no references and every gesture
   # start re-establishes them.
   _forgetGestureBookkeepingNoSettle: ->
-    @mouseDownWdgt = undefined
-    @wdgtToGrab = undefined
+    @_forgetPressBookkeeping()
     @grabOrigin = undefined
     @dragEmbedCandidate = undefined
     @dragEmbedReluctant = undefined
@@ -67,6 +70,15 @@ class ActivePointerWdgt extends Widget
     @dragEmbedLingerOriginEventTime = undefined
     @dragEmbedLingerOriginWallTime = undefined
     @mouseOverList.clear()
+    return
+
+  # The widget-referencing bookkeeping of a PRESS: which widget the button went down on, what a
+  # drag would pick up, what is being non-float-dragged, and the armed multi-click candidates.
+  # Shared by the two occasions a press ends without a release — a world teardown (above) and a
+  # cancelled stroke (processPointerCancel) — each of which then clears what only it owns.
+  _forgetPressBookkeeping: ->
+    @mouseDownWdgt = undefined
+    @wdgtToGrab = undefined
     @nonFloatDraggedWdgt = undefined
     @doubleClick.forget()
     @tripleClick.forget()
@@ -432,71 +444,79 @@ class ActivePointerWdgt extends Widget
     return @nonFloatDraggedWdgt?
 
 
-  drop: ->
+  # `forcedTarget`, when given, IS the destination and the release's own verdict is not consulted
+  # at all — not the dwell, not the dock band, not the sticky re-embed. Its one caller is
+  # processPointerCancel: a confiscated stroke states no intent, so the payload lands on the world
+  # where it visibly is. An ordinary release passes nothing and the dwell state machine decides.
+  drop: (forcedTarget) ->
     if @isThisPointerFloatDraggingSomething()
 
       wdgtToDrop = @children[0]
 
-      # THE RULE FLIP (spec §6/§7). The release is itself an evaluation point for the dwell (§6: the
-      # arm decision is evaluated at EVERY event over the candidate, INCLUDING the release), so re-run
-      # the state machine once more here: a frozen hold that has already reached DWELL_ARM_MS of elapsed
-      # event-time then ARMS exactly on release, with no final micro-move needed — the S2-validated
-      # still-hold case. Capture the verdict, THEN tear the affordances down (teardown clears the state
-      # we just read).
-      @updateDragEmbedStateMachine()
-      wasArmed = @dragEmbedArmed
-      overReluctantOnly = @dragEmbedReluctant?
-      # the band the release resolved to, captured beside the arm verdict for the same reason: the
-      # teardown below clears the state both are read from
-      releasedOverBand = @dragEmbedDockBand
-      @_endDragEmbedInteraction()
       dockSide = undefined
 
-      # §6 4D-2b: the window-vs-plain drop decision keys off the payload's real class -- a tilted window rides
-      # the hand as a sugar TransformFrameWdgt, so look THROUGH it (dropPolicy) for requiresDeliberateEmbedding /
-      # wantsToBeDropped. Geometry + add still use wdgtToDrop (the figure); the @grabOrigin.origin sticky check
-      # below compares the figure's pre-grab parent, which composes for a sole-content window figure (§7.5 brief).
-      dropPolicy = wdgtToDrop._dropPolicyProxy()
-      if overReluctantOnly
-        # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop, so the
-        # payload lands on the WORLD at the release point (a plain move-over, NO offset). Applies to BOTH
-        # window and plain payloads.
-        target = world
-      else if dropPolicy.requiresDeliberateEmbedding()
-        # WINDOW payload over an eager/willing candidate (or nothing): the internal/external gate is GONE
-        # — the dwell alone decides (spec §7). Armed → embed at the resolved candidate (the SAME climb
-        # the preview used, so preview and outcome cannot disagree); not armed → plain move-over, lands
-        # on the world at the release point (this IS the common gesture — no bounce, no scold).
-        if wasArmed and releasedOverBand?
-          # DOCK: the armed release was over an edge band, so the frame takes that slot. The side
-          # is the DROP's, never the payload's own default — you docked it there.
-          target = releasedOverBand.host
-          dockSide = releasedOverBand.side
-        else if wasArmed
-          target = @dropTargetFor wdgtToDrop
-        else
-          # STICKY RE-EMBED (spec §7, Phase 3.5): an unarmed window normally lands on the world, but
-          # merely REPOSITIONING a window within its OWN container must not require a dwell. If the
-          # release resolves (the SAME climb dropTargetFor uses) to the very container the window was
-          # grabbed from, keep it nested there — no dwell, no offset. Embedding into a DIFFERENT
-          # container still needs arming; a release over the world / a non-container still lands on the
-          # world. @grabOrigin.origin is the PRE-GRAB parent (situation() recorded it at grab time,
-          # before @add reparented the payload to the hand — so it is NOT wdgtToDrop.parent, which is
-          # the hand while float-dragging).
-          stickyTarget = @dropTargetFor wdgtToDrop
-          if stickyTarget isnt world and stickyTarget is @grabOrigin?.origin
-            target = stickyTarget
-          else
-            target = world
+      if forcedTarget?
+        target = forcedTarget
       else
-        # Plain payload, not over a view-mode-only target: unchanged accept behavior. Base
-        # wantsToBeDropped is true (instant embed over an eager/willing target via the climb);
-        # BinOpenerWdgt keeps its override that forces itself onto the world. (dropPolicy = the payload's
-        # real class through any sugar wrapper, §6 4D-2b.)
-        if not dropPolicy.wantsToBeDropped()
+        # THE RULE FLIP (spec §6/§7). The release is itself an evaluation point for the dwell (§6: the
+        # arm decision is evaluated at EVERY event over the candidate, INCLUDING the release), so re-run
+        # the state machine once more here: a frozen hold that has already reached DWELL_ARM_MS of elapsed
+        # event-time then ARMS exactly on release, with no final micro-move needed — the S2-validated
+        # still-hold case. Capture the verdict, THEN tear the affordances down (teardown clears the state
+        # we just read).
+        @updateDragEmbedStateMachine()
+        wasArmed = @dragEmbedArmed
+        overReluctantOnly = @dragEmbedReluctant?
+        # the band the release resolved to, captured beside the arm verdict for the same reason: the
+        # teardown below clears the state both are read from
+        releasedOverBand = @dragEmbedDockBand
+        @_endDragEmbedInteraction()
+
+        # §6 4D-2b: the window-vs-plain drop decision keys off the payload's real class -- a tilted window rides
+        # the hand as a sugar TransformFrameWdgt, so look THROUGH it (dropPolicy) for requiresDeliberateEmbedding /
+        # wantsToBeDropped. Geometry + add still use wdgtToDrop (the figure); the @grabOrigin.origin sticky check
+        # below compares the figure's pre-grab parent, which composes for a sole-content window figure (§7.5 brief).
+        dropPolicy = wdgtToDrop._dropPolicyProxy()
+        if overReluctantOnly
+          # LOCKED_CUE (spec §7): the destination is in view mode — it never accepts a mid-drag drop, so the
+          # payload lands on the WORLD at the release point (a plain move-over, NO offset). Applies to BOTH
+          # window and plain payloads.
           target = world
+        else if dropPolicy.requiresDeliberateEmbedding()
+          # WINDOW payload over an eager/willing candidate (or nothing): the internal/external gate is GONE
+          # — the dwell alone decides (spec §7). Armed → embed at the resolved candidate (the SAME climb
+          # the preview used, so preview and outcome cannot disagree); not armed → plain move-over, lands
+          # on the world at the release point (this IS the common gesture — no bounce, no scold).
+          if wasArmed and releasedOverBand?
+            # DOCK: the armed release was over an edge band, so the frame takes that slot. The side
+            # is the DROP's, never the payload's own default — you docked it there.
+            target = releasedOverBand.host
+            dockSide = releasedOverBand.side
+          else if wasArmed
+            target = @dropTargetFor wdgtToDrop
+          else
+            # STICKY RE-EMBED (spec §7, Phase 3.5): an unarmed window normally lands on the world, but
+            # merely REPOSITIONING a window within its OWN container must not require a dwell. If the
+            # release resolves (the SAME climb dropTargetFor uses) to the very container the window was
+            # grabbed from, keep it nested there — no dwell, no offset. Embedding into a DIFFERENT
+            # container still needs arming; a release over the world / a non-container still lands on the
+            # world. @grabOrigin.origin is the PRE-GRAB parent (situation() recorded it at grab time,
+            # before @add reparented the payload to the hand — so it is NOT wdgtToDrop.parent, which is
+            # the hand while float-dragging).
+            stickyTarget = @dropTargetFor wdgtToDrop
+            if stickyTarget isnt world and stickyTarget is @grabOrigin?.origin
+              target = stickyTarget
+            else
+              target = world
         else
-          target = @dropTargetFor wdgtToDrop
+          # Plain payload, not over a view-mode-only target: unchanged accept behavior. Base
+          # wantsToBeDropped is true (instant embed over an eager/willing target via the climb);
+          # BinOpenerWdgt keeps its override that forces itself onto the world. (dropPolicy = the payload's
+          # real class through any sugar wrapper, §6 4D-2b.)
+          if not dropPolicy.wantsToBeDropped()
+            target = world
+          else
+            target = @dropTargetFor wdgtToDrop
 
       @_fullChanged()
 
@@ -608,7 +628,9 @@ class ActivePointerWdgt extends Widget
   
   # ActivePointerWdgt event dispatching:
   #
-  #    mouse events:
+  #    the entry points — processPointerDown, processPointerMove, processPointerUp,
+  #    processPointerCancel and processWheel — each take ONE immutable input event and turn it
+  #    into the widget-facing dispatches below:
   #
   #   mouseDownLeft
   #   mouseDownRight
@@ -691,12 +713,23 @@ class ActivePointerWdgt extends Widget
   _pointerPositionInPlaneOf: (w) ->
     w.screenPointToMyPlane @position()
 
-  processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+  processPointerDown: (e) ->
+    @pointerType = e.pointerType
+    # A pointer down states its own position, and for a finger or a pen it is the FIRST event that
+    # states one — there is no hover to have walked the pointer there. So take the position from
+    # the down itself, by running the move pipeline for it before the press. Skipped when the event
+    # states no place (every synthesised down: see PointerInputEvent.worldX) or the pointer already
+    # stands there, so a mouse stroke — where a move always precedes — is untouched.
+    if e.worldX?
+      pointerPosition = @position()
+      if e.worldX isnt pointerPosition.x or e.worldY isnt pointerPosition.y
+        @processPointerMove e
+
     world.destroyToolTips()
     @wdgtToGrab = undefined
 
     if Automator? and Automator.state == Automator.PLAYING
-      if button is 2 or ctrlKey
+      if e.button is 2 or e.ctrlKey
         Automator.fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       else
         Automator.fade 'leftMouseButtonIndicator', 0, 1, 10, new Date().getTime()
@@ -724,7 +757,7 @@ class ActivePointerWdgt extends Widget
         @cleanupMenuWdgts w, alsoKillFreshMenus: true
 
       @wdgtToGrab = w.findRootForGrab()
-      if button is 2 or ctrlKey
+      if e.button is 2 or e.ctrlKey
         @mouseButton = "right"
         actualClick = "mouseDownRight"
         expectedClick = "mouseClickRight"
@@ -747,11 +780,16 @@ class ActivePointerWdgt extends Widget
         w[actualClick] @_pointerPositionInPlaneOf(w)
   
   
-   # note that the button param is not used,
-   # but adding it for consistency...
-  processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+  processPointerUp: (e) ->
+    # the same position head as the down (a browser pointerup states where it happened; a
+    # synthesised one states no place, and then the pointer keeps the position it holds)
+    if e.worldX?
+      pointerPosition = @position()
+      if e.worldX isnt pointerPosition.x or e.worldY isnt pointerPosition.y
+        @processPointerMove e
+
     if Automator? and Automator.state == Automator.PLAYING
-      if button is 2
+      if e.button is 2
         Automator.fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
       else
         Automator.fade 'leftMouseButtonIndicator', 1, 0, 500, new Date().getTime()
@@ -791,9 +829,9 @@ class ActivePointerWdgt extends Widget
 
           switch expectedClick
             when "mouseClickLeft"
-              w.mouseUpLeft? @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey
+              w.mouseUpLeft? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
             when "mouseClickRight"
-              w.mouseUpRight? @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey
+              w.mouseUpRight? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
 
           # also send doubleclick if the
           # two clicks happen on the same widget
@@ -882,7 +920,7 @@ class ActivePointerWdgt extends Widget
           # editorContentPropertyChangerButton field into this same walk).
           if !(@_excludedFromEditorFocusTrackingByAncestry w)
             world.editorFocusWdgt = w
-          w[expectedClick] @_pointerPositionInPlaneOf(w), button, buttons, ctrlKey, shiftKey, altKey, metaKey, doubleClickInvocation, tripleClickInvocation
+          w[expectedClick] @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey, doubleClickInvocation, tripleClickInvocation
 
           # now send the double/triple clicks
           if doubleClickInvocation
@@ -903,6 +941,34 @@ class ActivePointerWdgt extends Widget
 
     @mouseButton = undefined
     @nonFloatDraggedWdgt = undefined
+
+
+  # An ABORT: the browser confiscated the stroke (a system gesture took it over, a palm was
+  # rejected, the tab went away). The user never released deliberately, so nothing that means "the
+  # user chose this spot / this target" may happen — no click dispatch, no menu dismissal (nothing
+  # was clicked outside anything), no embed and no dock. Its OWN method rather than a flag on
+  # processPointerUp: an up means exactly the thing a cancel does not.
+  #
+  # What the abort still owes is the payload of a float-drag — it may be the only copy of an object
+  # the user made — so it lands on the world where it visibly is. Every decision here is state and
+  # EVENT time only; a cancel reads no clock.
+  processPointerCancel: (e) ->
+    if @isThisPointerFloatDraggingSomething()
+      # the dwell is a statement of INTENT and a confiscated stroke has none, so tear the
+      # interaction down BEFORE the release — that also keeps drop() from re-evaluating the arm
+      # clock at the cancel instant — and then force the landing.
+      @_endDragEmbedInteraction()
+      @drop world
+    else if @isThisPointerNonFloatDraggingSomething()
+      # the same contract processPointerUp honours: the slider button must repaint un-pressed even
+      # though the release happened outside its bounds — or, here, never happened at all.
+      @nonFloatDraggedWdgt.endOfNonFloatDrag?()
+
+    # the stroke is dead: no phantom pressed state may linger, and a later tap must not fold with
+    # this cancelled press into a double-click.
+    @_forgetPressBookkeeping()
+    @mouseButton = undefined
+    @previousNonFloatDraggingPos = undefined
 
 
   # Dismiss the open pop-up cascade around a click on `clickedWdgt`: everything that asked to be
@@ -995,24 +1061,20 @@ class ActivePointerWdgt extends Widget
   
   # ActivePointerWdgt tools
 
-  processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+  processPointerMove: (e) ->
+    @pointerType = e.pointerType
 
-    posInDocument = world.getCanvasPosition()
-    # events from JS arrive in page coordinates,
-    # we turn those into world coordinates
-    # instead.
-    worldX = pageX - posInDocument.x
-    worldY = pageY - posInDocument.y
-
-    pos = new Point worldX, worldY
+    # the event already speaks WORLD coordinates: the page → world conversion happens once, at the
+    # browser boundary (PointerInputEvent.fromBrowserEvent)
+    pos = new Point e.worldX, e.worldY
     @_applyMoveTo pos
 
     if Automator? and Automator.state == Automator.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
       posInDocument = world.getCanvasPosition()
-      mousePointerIndicator.style.left = (posInDocument.x + worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
-      mousePointerIndicator.style.top = (posInDocument.y + worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
+      mousePointerIndicator.style.left = (posInDocument.x + e.worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
+      mousePointerIndicator.style.top = (posInDocument.y + e.worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
     # determine the new mouse-over-list.
     # Spacial multiplexing

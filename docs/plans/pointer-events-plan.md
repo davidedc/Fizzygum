@@ -12,8 +12,28 @@ CLOSED (archived: `../archive/frame-lifetime-and-docking-plan.md`); this plan is
 against the post-Plan-1 tree, per the program's just-in-time rule (§6).
 
 **STATUS BOX** (fill per phase as executed)
-- P0 re-verification + probes: —
-- P1 family + listeners + hand + synthesis: —
+- P0 re-verification + probes: **DONE 2026-08-24, GO.** §1 verified at authoring (same tree) + the
+  coordinator's 4-fact spot check; sweep counts measured (the table is in the P0 Sonnet report; F7/F10
+  byte-exact, **F12 amended** — 3 test dirs/9 files not ~8 dirs, + `affine-transforms-plan.md`, + the
+  program doc's own §1 prose as a P3 target; the profiler snapshot is dated-measurement history, the
+  sweep leaves it). Probe A: 7 dispatches, all 8 fields exact in BOTH engines; `touch-action` supported
+  both. Probe A2: synthetic-dispatch `setPointerCapture` THROWS `NotFoundError` in BOTH engines and
+  SUCCEEDS on trusted input — §2.2's guard is required, and fires only for dispatched events. Probe A3:
+  trusted input fires pointer listeners in both (Chrome CDP mouse AND touch — touch with no compat mouse
+  events; WebKit `page.mouse`); informational for Plan 4: WebKit finger taps need a `hasTouch: true`
+  context (one option in `headless-driver.js`). Probe: `.scratch/pointer-delivery-probe.js` (exit 0/1/2).
+- P1 family + listeners + hand + synthesis: **DONE 2026-08-24** (Opus, briefs (a)+(b); `fg build` 28 gates OK,
+  `fg presuite` 316/0 BYTE-IDENTICAL, WebKit suite 316/0 same references, `build_and_smoke.sh` both pages —
+  ⚠ there is NO `fg smoke` subcommand, §7 corrected by execution). events-input 21 → 18 files; the completion
+  grep: src 44 → 12 (all prose, P3's list), scripts 5 → 0. THREE amendments the gates forced, coordinator-
+  accepted: (1) `@synthetic`'s parameter order is `(button, buttons, mods…, time, worldX, worldY)` — §2.1/§2.6's
+  leading-position spelling trips the HARD `positional-hole` stink; the family's own convention (a hole means
+  REORDER) applies, downs/ups OMIT the pair, semantics identical; (2) cancel's forced landing is `@drop world`
+  via an optional `drop(forcedTarget)` parameter — the extract-a-helper shapes fail [G]/[U] without sanction
+  markers for byte-identical code; (3) `_forgetPressBookkeeping` is the shared clear (teardown + cancel), cancel
+  additionally clearing `mouseButton`/`previousNonFloatDraggingPos`. F21 fixed in-passing (owner-flagged at the
+  commit). Real-browser deltas the suite cannot see (position-carrying down/up; capture) rest on the smoke
+  probe until P2's witnesses.
 - P2 the cancel path + witness tests: —
 - P3 deletions verified, docs, tail: —
 
@@ -225,16 +245,20 @@ Each fact records its verification command. Line numbers drift — grep the quot
   `resetWorld` reconstructs the world, whose ctor re-arms). The harness calls the PAIR by name
   and never enumerates listeners — so the listener-set rewrite does not touch harness CODE,
   only its count-prose comment (F3).
-- **F12 — prose that names the old plumbing.** Test intent/comment prose naming
-  `processMouseUp`/`processMouseDown`/`processMouseMove`: ~8 test dirs (e.g.
-  `SystemTest_macroButtonTriggersOnlyOnSameWidgetMouseUp`,
+- **F12 — prose that names the old plumbing** (re-measured at P0, 2026-08-24 — the authored
+  "~8 test dirs" was FALSE): exactly **3 test dirs / 9 files**
+  (`SystemTest_macroButtonTriggersOnlyOnSameWidgetMouseUp`,
   `SystemTest_macroBareButtonFloatDragsWithoutTriggering`,
-  `SystemTest_macroListWdgtAutoScrollsNearDraggedEdge`, …), `src/macros/MACRO-PATTERNS.md`
-  (~5 sites), `docs/tooling/coalescing-measurement.md`, and the LIVE plan
+  `SystemTest_macroListWdgtAutoScrollsNearDraggedEdge` — intent JSON, visualisation pages,
+  macro comments; zero executable hits), `src/macros/MACRO-PATTERNS.md` (4 sites),
+  `docs/tooling/coalescing-measurement.md`, the LIVE plans
   `docs/plans/runtime-performance-optimization-plan.md` (~:213, ~:482 — also names
-  `MousemoveInputEvent`); `docs/architecture/immutable-value-classes.md` names the family
-  (~:139–150). Archive docs are historical and stay. Verify: `grep -rln
-  "processMouse\|MousemoveInputEvent" Fizzygum/docs Fizzygum/src/macros/MACRO-PATTERNS.md
+  `MousemoveInputEvent`) and `docs/plans/affine-transforms-plan.md` (2 prose hits), the
+  program doc's own §1 seam prose (P3 updates it — the program is living until it closes);
+  `docs/architecture/immutable-value-classes.md` names the family (~:139–150).
+  `docs/profiling/results-2026-07-07/prof-framework.report.txt` is a DATED MEASUREMENT
+  snapshot — immutable like an archive, the sweep leaves it. Archive docs stay. Verify:
+  `grep -rln "processMouse\|MousemoveInputEvent" Fizzygum/docs Fizzygum/src/macros/MACRO-PATTERNS.md
   Fizzygum-tests/tests`.
 - **F13 — Pointer Events are greenfield here, and available.** `grep -rn
   "pointerType\|PointerEvent" src/` → 0. Support: W3C Pointer Events are in Chrome (Puppeteer's

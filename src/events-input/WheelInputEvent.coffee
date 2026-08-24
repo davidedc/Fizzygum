@@ -1,14 +1,24 @@
 # IMMUTABLE — see the InputEvent header. (fromBrowserEvent's deltaX/deltaY writes
 # land on the RAW browser event, before this value object is constructed.)
+# The wheel is a SEPARATE W3C event stream that Pointer Events do not replace, so this class
+# stands beside the PointerInputEvent family and declares the button/modifier fields it needs.
 # see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
-class WheelInputEvent extends MouseInputEvent
+class WheelInputEvent extends InputEvent
 
   deltaX: undefined
   deltaY: undefined
   deltaZ: undefined
 
-  constructor: (@deltaX, @deltaY, @deltaZ, button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time) ->
-    super button, buttons, ctrlKey, shiftKey, altKey, metaKey, isSynthetic, time
+  button: undefined
+  buttons: undefined
+
+  ctrlKey: undefined
+  shiftKey: undefined
+  altKey: undefined
+  metaKey: undefined
+
+  constructor: (@deltaX, @deltaY, @deltaZ, @button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, isSynthetic, time) ->
+    super isSynthetic, time
 
   @fromBrowserEvent: (event, isSynthetic, time) ->
 
