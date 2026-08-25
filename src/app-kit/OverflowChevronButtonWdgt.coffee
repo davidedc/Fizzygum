@@ -45,7 +45,29 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
       tool = cell.glassBoxItem?() ? cell
       menu.addMenuItem (tool.toolTipMessage ? tool.colloquialName()), @, "triggerToolFromMenu",
         arg1: cell
+        icon: @_miniatureOf tool
     menu.popUpAtHand()
+
+  # A ROW SHOWS WHAT ITS TOOL LOOKS LIKE: a picture of the tool at glyph size, beside the name.
+  # The picture is taken HERE, at pop time, from the tool as it stands -- the same derive-at-pop
+  # rule the rest of this menu follows, so a strip that re-arranges never leaves a stale portrait
+  # behind; the menu is transient and goes with the strip.
+  #   A COPY is photographed rather than the tool itself, because fitting it to the glyph box
+  # means resizing it, and the tool on the strip must not move. The copy exists for one shot and
+  # is destroyed straight after: what the row keeps is pixels (InertIconHolderWdgt), which is also
+  # what keeps the row's tap the ROW's -- a live tool held on a row would take the tap itself.
+  #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
+  # costs its row nothing.
+  _miniatureOf: (tool) ->
+    # nosettle-sanctioned: fullCopy has no NoSettle core -- it self-settles only to file copied
+    # referent figures to the shelf, which a toolbar tool contributes none of. I am reached ONLY
+    # from actOnClick, an event-stream handler, so a settle here is legal and never mid-pass.
+    picture = tool.fullCopy?()
+    return undefined unless picture?
+    glyphBox = WorldWdgt.preferencesAndSettings.barGlyphSize
+    icon = new InertIconHolderWdgt picture, fitInto: new Point glyphBox, glyphBox
+    picture._fullDestroyNoSettle()
+    icon
 
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): dispatch fills the
   # leading slots with the menu item + the menu's subject, so the cell this row stands for rides

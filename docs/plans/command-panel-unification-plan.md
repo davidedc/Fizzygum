@@ -64,8 +64,23 @@ tree's):**
   `InertIconHolderWdgt` (menu-system): `catchesPointerAt: -> false` as a ROLE (the
   `PopUpRowsViewportWdgt` precedent), box = the held picture's box. `comment-narration`
   ratchet 100→99. Gate: `fg presuite` BYTE-IDENTICAL — PRESUITE EXIT=0 OK
-  dpr1:PASS/paint:PASS/fracplane:PASS, 321 tests, 0 failed, 0 gate-violations. Commit: —
-- P2 first display-axis consumer — the chevron's remainder rows go icon+label (reviewed set): —
+  dpr1:PASS/paint:PASS/fracplane:PASS, 321 tests, 0 failed, 0 gate-violations. Commit:
+  `7a6b56cd` (pushed, with the authoring commit `65e8815a`).
+- P2 first display-axis consumer — the chevron's remainder rows go icon+label (reviewed set):
+  DONE 2026-08-25. ⭐ The §2.2 holder premise was FALSIFIED by measurement pre-edit
+  (children-first hit test; §2.2/§6 amended) — re-framed to RASTERIZE-ONCE: the holder shows
+  a one-time `fullImage` shot of the sized throwaway copy (no resample — the copy is sized
+  to the 24 box FIRST, the `GlassBoxBottomWdgt` ratio idiom — so no cross-backend resample
+  risk), holds NO live child (hit lands on the row by construction, probe-proven), the copy
+  destroyed in `actOnClick`; serialization rides `$Canvas` free (a pinned remainder menu
+  keeps its icons). New `InertIconAppearance` (no own shadow — the opaque row behind it is
+  the silhouette; paint-audit judged). No witness-test edit needed (its assertions are
+  label/count/parentage). Gates: suite discovery = EXACTLY the P0(a) set (1 test, image_2
+  only, both dprs); coordinator eyeballed the diffpage; OWNER confirmed OD2 on the crops;
+  `fg recapture --auto --dprs=1,2` → ✅ RECAPTURE COMPLETE (recaptured: the witness alone);
+  PRESUITE EXIT=0 OK (dpr1/paint/fracplane); menusweep OK (3753 items + 53 prompt Oks, 464
+  menus, 692 pairs). Ref churn note: image_1/3/4 dpr1 re-encoded byte-wise by the capture,
+  dataHashes UNCHANGED, subpixel-verified identical — not a visual change. Commit: —
 - P3 the panel unification (structural, the migration executed): —
 - P4 the Draw palette rides the unified panel (reviewed set; the 103 dies): —
 - P5 docs + close + tail: —
@@ -450,16 +465,25 @@ UNTOUCHED in every case (C14's letter; 322 sites).
   after it at the shifted offset; `menuEntryPreferredWidth` grows by the icon box + gap and
   **must stop reading `@children[0]`** (F2's positional trap): it reads `@label` and the
   icon slot by name.
-- **The icon child is INERT.** A tap anywhere on the row is the ROW's click. Where the icon
-  is a passive icon widget (the `IconWdgt` families) nothing is needed; where it is derived
-  from a live tool (the chevron's rows — the hidden cell's tool may be a BUTTON), the row
-  wraps it in a pass-through holder that declares `catchesPointerAt: -> false` — a ROLE
-  declaration, the `PopUpRowsViewportWdgt` precedent ("alpha is painting, never
-  hit-testing"; the role is the widget's business).
+- **The icon child is INERT** — AMENDED 2026-08-25 (P2 falsified the original mechanism by
+  measurement: `TreeNode.topWdgtSuchThat` recurses children-first and each widget answers
+  for itself — the only ancestor-climbing hit-test exclusion is `isInCollapsedSubtree()` —
+  so `catchesPointerAt: -> false` on a HOLDER never shields its child; probe
+  `Fizzygum-tests/.scratch/p2-inert-holder-neutralization-probe.js`). The truth: a row
+  never wins the hit test even today — its label (`TextWdgt`) does, and the row acts by
+  ESCALATION (`Widget.mouseClickLeft`). So: a passive icon widget needs NOTHING (it
+  escalates like the label); a LIVE tool's copy — exactly the widget that will not
+  escalate — is made a PICTURE at derive time: rasterized ONCE into the holder, which
+  shows the raster and holds NO live child, so nothing below it exists to catch a tap,
+  act, or leak. The holder's `catchesPointerAt: -> false` stays as its stated role, now
+  true by construction. (Rejected in the re-frame: `_ephemeralOverlay` on the subtree —
+  drags shadow-skip/snapshot semantics along; an ancestor-climbing `isInInertSubtree()`
+  conjunct — a second climb on the hot hit-test path to solve what a picture solves by
+  construction.)
 - **First consumer (P2): the chevron's remainder menu.** `OverflowChevronButtonWdgt
-  .actOnClick` derives, per hidden cell, `icon:` = a neutralized miniature of the cell's
-  tool (`glassBoxItem()`, via `fullCopy()` + the inert holder, sized to the 24 box) beside
-  the existing label. The dispatch is untouched (`triggerToolFromMenu` — F5). This is the
+  .actOnClick` derives, per hidden cell, `icon:` = a rasterized miniature of the cell's
+  tool (`glassBoxItem()`, rendered once at derive time into the holder, fit to the 24 box)
+  beside the existing label. The dispatch is untouched (`triggerToolFromMenu` — F5). This is the
   display axis's live proof, replacing the falsified T1 sentence with a true one.
 - **NOT landed, each with a destination (§5 P5 tail):** icons on ordinary menus (world
   menu, context menus) — owner taste, BACKLOG until asked; the remainder popped AS A GRID
@@ -756,7 +780,7 @@ during long ops.
 | An unguarded core→app-kit edge sneaks in with the grid move | P3 | the hook shape (§2.3) + `check-part-edges` fails the build structurally; the parts/apps gauntlet legs prove the lazy boundary live on `index.html` |
 | The rename breaks a reader no grep found | P3 | P0(c)'s BEHAVIORAL spike (suite over the rename) + F11's enumerated two-repo list + the apps/parts legs (the P9 lesson: `scripts/` reads internals inside `page.evaluate`) |
 | Inspector member-list churn turns the "byte-identical" P3 gate into surprise diffs | P3 | P0(c) measures the set in advance; a declared benign-inspector set is recaptured eyeballed (owner's standing note), an UNdeclared diff is a STOP |
-| The icon copy of a live tool catches clicks or leaks | P1/P2 | the inert holder's `catchesPointerAt` role (the PopUpRowsViewport precedent); rows `_fullDestroy` their subtree; `fg vmtruth` is the lifetime judge |
+| The icon copy of a live tool catches clicks or leaks | P1/P2 | rasterize-once (§2.2 as amended 2026-08-25): no live subtree exists under the holder to catch a tap or leak; rows `_fullDestroy` holder+raster; `fg vmtruth` is the lifetime judge |
 | `menuEntryPreferredWidth`'s `children[0]` assumption breaks under the icon child | P1 | named-field reads land IN P1 while still inert — the byte-identical gate proves the refactor before any icon exists |
 | The remainder-menu set is bigger than the witness test | P2 | P0(a) measures by BEHAVIOUR (the F7 world-menu lesson: a census's axis is its blind spot); the gate requires exact equality with the measured set |
 | The palette conversion breaks arm/injection semantics (first-use, mode flips, docked vs floating) | P4 | the ONE-fact funnel is KEPT, not rebuilt (§2.5); the two Draw tests + `menusweep` + an owner live pass (OD3's checklist names float/re-dock/collapse) are the witnesses; two falsified fixes ⇒ STOP |
