@@ -113,8 +113,8 @@ function collectFiles(dir, ext, acc) {
 // MEMBER_FILES  (exclusion 3) — for each name, the files where it appears as a `.name` MEMBER read.
 //   A property is only "local to one method" if nothing OUTSIDE reads it, and `@prop` self-scans
 //   cannot see a dotted read through a global. Real case: an early cut of this census called 22
-//   PreferencesAndSettings fields demotable because each is only ASSIGNED in @setMouseInputMode —
-//   but they are the global settings surface, read elsewhere as
+//   PreferencesAndSettings fields demotable because each is only ASSIGNED inside that class's own
+//   constructor-time setup — but they are the global settings surface, read elsewhere as
 //   `WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor` (PanelWdgt:22). Demoting one
 //   would have broken rendering. So: a `.name` read in ANY OTHER file vetoes the finding.
 //   Deliberately conservative — a name scanner cannot tell `slider.offset` from `point.offset`, so a

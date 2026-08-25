@@ -79,6 +79,41 @@ child-removed path (which would leave the frame latched at its old first-placeme
 that absorb fires only because the pop-up climb (`enclosingFrame`) STOPS at the frame
 instead of walking past it to the world. Test: `SystemTest_macroScrollPolicyNeverFlip`.
 
+## Scroll indicators — one presentation, over the same two bars
+
+The viewport's two `SliderWdgt` bars (`hBar`/`vBar`) stay the wiring endpoint — `trackTarget`,
+`isWiredTo`, the reverse-edge announcement, serialization — and layer an INDICATOR presentation
+on top of it. Visibility is DERIVED from overflow, never asked of a bar itself:
+`ViewportWdgt.isScrollableNow()` (overflow ∧ `scrollPolicy` isnt `'never'`) is the one
+scrollability question every drag-scroll consumer asks — `grabsToParentWhenDragged`'s
+foreground- and background-drag-scroll branches (`Widget.coffee`/`PanelWdgt.coffee`) among
+them; `anyScrollBarShowing()`, the visibility-as-scrollability proxy, is retired. The derivation is a pure function of layout
+state, nothing time-driven on any path: while content overflows the bar shows THIN
+(`scrollIndicatorThickness`, thumb-only painting, no track) and passes the pointer through to
+the content under it — `SliderWdgt.catchesPointerAt` answers false whenever
+`indicatorIsIntangible()` (thin or hidden; an indicator is not a target); resting the pointer
+within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
+`ViewportWdgt.mouseMove`/`mouseLeave` → `_updatePointerInScrollBand`, since the viewport is
+always in the hand's mouse-over ancestry for content under it) fattens both bars to FAT — full
+painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); leaving the band,
+or the content no longer overflowing, reverts to thin or hidden. No activity stamps, no clock,
+no stepping registration: a capture taken a second after a scroll shows the same pixels as one
+taken at rest, so the indicator carries no determinism question.
+
+The presentation itself lives on `SliderWdgt.indicatorMode` (`'thin' | 'fat' | undefined` —
+`undefined` means "not an indicator", the plain-slider look) as a `@serializationTransients`
+field: a restored world carries no mode, and the owning viewport re-derives thin-or-hidden from
+overflow at its first arrange, exactly as a freshly built one does. Ownership is stated, not
+inferred from the field: `@hBar`/`@vBar` survive a bar being picked up off the viewport (they
+are properties, not children, so `isWiredTo?` still finds the wiring wherever the bar lands),
+but an indicator presentation is something a VIEWPORT IMPOSES ON THE BAR IT HOLDS — a bar
+outside a viewport's children is a plain slider somebody dropped elsewhere, and its look and
+thickness are its own business (`_barIsMineToPresent`: `bar.parent is @`). The moment a bar
+lands anywhere else it reverts to a plain slider (`SliderWdgt._reactToBeingAdded`:
+`showAsScrollIndicator undefined unless whereTo.isMyScrollBar? @`) — a thin, pointer-through
+look must never survive being picked up, or the bar becomes a widget on the desktop nothing can
+click and no scroll band left to hover it back.
+
 ## The scrolled-content contract
 
 The viewport's arrange reads DECLARATIONS off its plane instead of testing classes

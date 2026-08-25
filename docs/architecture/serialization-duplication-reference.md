@@ -240,9 +240,10 @@ class Widget extends TreeNode
   ⚠ **The chain to walk is `__super__`, not `Object.getPrototypeOf`.** This tree does not use ES
   class inheritance: `extend` (`src/boot/globalFunctions.coffee`) COPIES the parent's statics onto
   the child and links them only through `child.__super__ = parent.prototype`. That copy-down is why
-  a subclass declaring NOTHING inherits the list correctly, and why a subclass declaring its OWN
-  list used to REPLACE everything above it — the old walk asked for the prototype chain, found no
-  parent, and returned the one declaration it could see. Silent by construction: it fires only on
+  a subclass declaring NOTHING inherits the list correctly, and why a subclass's OWN list would
+  REPLACE everything above it under a prototype-chain walk (the chain shows no parent there, so
+  such a walk returns the one declaration it can see — the trap the `__super__` walk below
+  exists to avoid). Silent by construction: it fires only on
   the classes that declare, and only on fields those instances happen to own. `FrameWdgt` declaring
   a list during the frame-lifetime plan's P3 is what surfaced it; the merge landed as its tail item
   T16, and the frame's `isPopUpMarkedForClosure` moved back onto `FrameWdgt` where it belongs.

@@ -1278,8 +1278,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `ViewportWdgt` flags, default false (`ViewportWdgt.coffee:23-24`), distinct from the LOCK path:
   `canScrollByDraggingBackground` makes a held BACKGROUND drag pan the contents (`PanelWdgt.coffee:143`), and
   `canScrollByDraggingForeground` makes a held drag ON A CONTENT WIDGET pan too instead of float-dragging it out
-  (`Widget.coffee:2520`). GOTCHAS: both are gated on `anyScrollBarShowing()` — and bars hide the moment the content fits
-  again, so build the fixture content BIGGER than the viewport; pans CLAMP at the content edge — drag TOWARD the unseen
+  (`Widget.coffee:2520`). GOTCHAS: both are gated on `isScrollableNow()` — and that answers false the moment the content
+  fits again, so build the fixture content BIGGER than the viewport; pans CLAMP at the content edge — drag TOWARD the unseen
   overflow or nothing visibly happens. Set the flags directly (the recording's inspector-eval route is covered ground).
   DETERMINISM — three cadence couplings live in the drag-to-scroll step: (1) POST-RELEASE MOMENTUM (a per-frame glide,
   friction 0.8 on the last frame's hand delta until <0.5px; its DISTANCE is cadence-dependent) — suppressed under

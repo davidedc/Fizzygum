@@ -98,10 +98,21 @@ ledger's dated citations stand as history): the world menu's input-mode row is a
   assertion is that the resize does not survive uncollapse); C5's letter + C3's no-rent both
   point the same way. `macroCollapsedWindowBarResizeRevertsOnUncollapse` is repurposed+renamed
   to pin the new semantics; `macroWindowsNestedCollapsingUncollapsing` cases 3/4 resize
-  expanded. Owner veto line rides the commit digest. NEXT: residue recapture → gates →
-  commit proposal.
-- P4 wave step B — test-world extent + Automator version bump (reviewed recapture): —
-- P5 docs, close, tail: —
+  expanded. Owner veto line rides the commit digest. THE FINISH: the residue recapture's
+  heavy-dpr2 wall re-framed TWICE on evidence (retention → protocol ceiling → the REAL
+  mechanism: SWCanvas's pure-JS `PngEncoder` emitting ~36MB uncompressed data URLs per dpr2
+  image; fixed by `AutomatorPlayer.pngDataURLOf` blitting to ONE native scratch canvas —
+  981ms/36MB → 31ms/164KB, pixel-lossless, raw-pixel hashing untouched; the old failure-image
+  budget had been an accidental performance crutch); recapture then COMPLETE (both dprs,
+  tests/ 184MB, 1,898 PNGs at v0_3_0). The gauntlet's deep legs caught THREE more, each fixed
+  first-try: webkit 76→0 (a 2018 UA-sniffing bold-title fork exposed by the fold — deleted;
+  real Safari now shows the ruled titles), revisits (the chevron's in-pass retire re-entered
+  the gesture-removal seam — the arrange owns its own chrome), serialization (the rig
+  expected the pre-fold menuFontSize 14 → 17). **WAVE COMMITTED + PUSHED 2026-08-25:
+  Fizzygum `5a45a135` / tests `530b49d4e`; presuite 321/0, gauntlet 18/18, homepage OK.**
+- P4 (extent + bump): **absorbed into P3's wave** per the merge ruling — verification-only
+  duties (canaries, cost numbers) discharged inside P3's log above.
+- P5 docs + close: IN EXECUTION (docs sweep delegated; close ritual follows).
 
 ---
 
