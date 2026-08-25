@@ -30,15 +30,31 @@ class MenuItemWdgt extends LabelButtonWdgt
   # whose value moved.
   rowReflection: undefined
 
-  # The SPEC is the identity — it is what this row IS, and spec.label may be a string, a
-  # Widget, a Canvas or an [icon, string] tuple. The rest is the menu-level CONTEXT the owning
+  # The widget I show at my left, inside a barGlyphSize box; undefined when I am label-only, which
+  # is every row that carries no picture (ruling G3: the glyph is INSET in the target, and the
+  # target is the whole of me).
+  #   It is a PICTURE and nothing else. A tap anywhere on me is MY click, so an icon derived from a
+  # live thing — a copy of a tool, which is still a button — arrives already inert, wrapped in an
+  # InertIconHolderWdgt by whoever built the spec.
+  icon: undefined
+
+  # THE HORIZONTAL RHYTHM of my contents: the inset I keep at each of my edges and, where I carry
+  # an icon, the gap between the glyph box and the label. One dial, because what a reader sees
+  # across a row — edge, picture, sentence, edge — is one rhythm.
+  CONTENT_INSET: 4
+
+  # The SPEC is the identity — it is what this row IS: spec.label is the STRING I say and
+  # spec.icon the optional widget I show. The rest is the menu-level CONTEXT the owning
   # MenuWdgt supplies (font size / style, centring, and the subject), which is the
   # same for every row, so it rides `opts`.
   #
   # The spec's per-item fields are unpacked onto LabelButtonWdgt's options here; an absent
   # spec.label falls back to "close".
+  #   ⚠ @rowReflection and @icon are read BEFORE super: LabelButtonWdgt's constructor labels itself
+  # (_reLayoutSelf -> _createLabel) as its last act, so both are already needed by the time it runs.
   constructor: (menuItemSpec, opts = {}) ->
     @rowReflection = menuItemSpec.reflection
+    @icon = menuItemSpec.icon
     super menuItemSpec.target, menuItemSpec.action,
       closesUnpinnedPopUps: menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       # a REFLECTING row is born showing the current value — no build-then-fix-up dance, and no
@@ -148,11 +164,35 @@ class MenuItemWdgt extends LabelButtonWdgt
     labelExtent = @label.extent()
     rowHeight = Math.max labelExtent.y, WorldWdgt.preferencesAndSettings.menuRowHeight
     w = @width()
-    @__commitExtent new Point labelExtent.x + 8, rowHeight
+    @__commitExtent new Point (labelExtent.x + 2 * @CONTENT_INSET + @_iconColumnWidth()), rowHeight
     @__commitWidth w
     labelTopInset = Math.round (rowHeight - labelExtent.y) / 2
-    np = @position().add new Point 4, labelTopInset
+    np = @position().add new Point (@CONTENT_INSET + @_iconColumnWidth()), labelTopInset
     @label.__commitMoveTo np
+    @_placeMyIcon rowHeight
+
+  # WHAT MY ICON TAKES from my label: a barGlyphSize glyph box and the gap after it, and nothing
+  # whatever when I show no icon -- which is what keeps a label-only row exactly a label-only row.
+  # Two dials, never one (ruling G3): my height is the TARGET (menuRowHeight), the box is the
+  # GLYPH inset in it.
+  _iconColumnWidth: ->
+    return 0 unless @icon?
+    WorldWdgt.preferencesAndSettings.barGlyphSize + @CONTENT_INSET
+
+  # Place the picture in its glyph box: the box sits at my left inset, my icon centres in it on
+  # both axes, and every number rounds -- a fractional placement fails the suite even where the
+  # pixels match (Widget._assertBoundsWellFormed / NON_INTEGER_GEOMETRY).
+  #   I adopt the icon only while it is not already mine: _createLabel runs again whenever my label
+  # is rebuilt (LabelButtonWdgt._setLabelNoSettle destroys the label alone), and my icon outlives
+  # that -- it belongs to the spec I was built from, not to the label of the moment.
+  _placeMyIcon: (rowHeight) ->
+    return unless @icon?
+    glyphBox = WorldWdgt.preferencesAndSettings.barGlyphSize
+    @_addNoSettle @icon  unless @icon.parent is @
+    iconExtent = @icon.extent()
+    iconLeftInset = @CONTENT_INSET + Math.round (glyphBox - iconExtent.x) / 2
+    iconTopInset = Math.round (rowHeight - iconExtent.y) / 2
+    @icon.__commitMoveTo @position().add new Point iconLeftInset, iconTopInset
 
   # THE REACTIVE LANE, and the only entrypoint: the drain reaches it by the computed name
   # `_#{action}Connector` from my edge's action, and it JOINS the pass's settle rather than opening
@@ -188,14 +228,15 @@ class MenuItemWdgt extends LabelButtonWdgt
       # cross-invalidation-sanctioned: own sub-part — the label's text was poked directly above
       @label._changed()
 
-  # As a menu entry, prefer my (multi-line TextWdgt) label's width plus a little
-  # padding. MenuRowsPanelWdgt.maxWidthOfMenuEntries calls this polymorphically rather
-  # than type-checking the entry. The label is @children[0]; a row somehow built
-  # without one is a BUG -- let the read throw loudly here. (This guard used to
-  # be a `debugger` statement: dead in production, a stealth breakpoint under
-  # devtools.)
+  # As a menu entry, prefer the width of everything I show: my (multi-line TextWdgt) label, my
+  # edge insets, and my icon column when I carry one. MenuRowsPanelWdgt.maxWidthOfMenuEntries calls
+  # this polymorphically rather than type-checking the entry.
+  #   Read by NAME. My parts are @label and @icon, and which CHILD each of them happens to be is an
+  # order I would then have to keep true from two places at once; a row somehow built without a
+  # label is a BUG -- let the read throw loudly here. (This guard is deliberately not a `debugger`
+  # statement: that is dead in production and a stealth breakpoint under devtools.)
   menuEntryPreferredWidth: ->
-    @children[0].width() + 8
+    @label.width() + 2 * @CONTENT_INSET + @_iconColumnWidth()
 
   # MenuItemWdgt events:
   mouseEnter: ->

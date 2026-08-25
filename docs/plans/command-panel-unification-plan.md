@@ -40,8 +40,31 @@ tree's):**
   `CommandSpec` (the rename sweep is declared work) · **OD2 = (a)** the chevron's remainder
   rows go icon+label (the display axis's first consumer; small declared set). OD3 (the Draw
   palette's derived look) stays an eyes-on decision at P4 as authored.
-- P0 re-verification + measurements: —
-- P1 the command record + the display mechanism (inert): —
+- P0 re-verification + measurements: DONE 2026-08-25. All 15 §1 facts CONFIRMED — zero
+  falsified (a program first); §1 amended in place: F11's dir count 4→5, plus two P3-sweep
+  additions (`scripts/serialization-roundtrip-headless.js` names `MenuRowsPanelWdgt`;
+  `scripts/staleness-census.js` mentions `ToolPanelWdgt` prose-only). Counts re-confirmed:
+  `new MenuWdgt` 47, addMenuItem family 322. Behavioral exposure sets (suite over scratch
+  perturbations, 321 tests, 8/8 shards each run): **(a) remainder menu = exactly
+  `SystemTest_macroToolbarChevronPopsOverflow` (1)** — P2's budget; **(b) Draw palette =
+  exactly `SystemTest_macroDrawingsMakerReEnableEditing` +
+  `SystemTest_macroEditModeTogglePencilEyeGlyph` (2)** — P4's budget; **(c) rename
+  rehearsal (`MenuRowsPanelWdgt`→`CommandPanelWdgtX`, 19 src + 11 tests-repo sites incl.
+  the file `git mv`) = ZERO failures and the 28 build gates accept the renamed tree** —
+  P3's declared inspector-churn set is EMPTY. All spikes reverted, final clean build green.
+  Nothing committed.
+- P1 the command record + the display mechanism (inert): DONE 2026-08-25. `MenuItemSpec`
+  grows the optional widget-valued `icon` slot (opts-ridden; `addMenuItem` forwards opts
+  verbatim, so no panel edit); the F3 `[icon, string]`/Widget/Canvas comment lies DELETED —
+  the label stated as a STRING. `MenuItemWdgt` icon-aware: `CONTENT_INSET: 4` the one
+  horizontal-rhythm dial (2·4 and 4+0 reproduce today's 8 and 4 exactly),
+  `_iconColumnWidth`/`_placeMyIcon` (24-box inset in the 44 row per G3, integer-rounded,
+  icon adopted once and surviving label rebuilds), `menuEntryPreferredWidth` reads
+  `@label`/`@icon` by NAME (the `children[0]` trap closed while inert). New core
+  `InertIconHolderWdgt` (menu-system): `catchesPointerAt: -> false` as a ROLE (the
+  `PopUpRowsViewportWdgt` precedent), box = the held picture's box. `comment-narration`
+  ratchet 100→99. Gate: `fg presuite` BYTE-IDENTICAL — PRESUITE EXIT=0 OK
+  dpr1:PASS/paint:PASS/fracplane:PASS, 321 tests, 0 failed, 0 gate-violations. Commit: —
 - P2 first display-axis consumer — the chevron's remainder rows go icon+label (reviewed set): —
 - P3 the panel unification (structural, the migration executed): —
 - P4 the Draw palette rides the unified panel (reviewed set; the 103 dies): —
@@ -331,12 +354,16 @@ Each fact records its verification command. Line numbers drift — grep the quot
   `src/boot/globalFunctions.coffee:490` (the TestSupport class lives in
   `Fizzygum-tests/Automator-and-test-harness-src/`); `scripts/graph-liveness-headless.js:369`
   reads `m.rowsPanel.children` (the FIELD `rowsPanel` on MenuWdgt/PromptWdgt — survives);
-  macros/metadata naming classes: `MenuRowsPanelWdgt` in 4 test dirs (`FontsMenuTick*`,
+  macros/metadata naming classes: `MenuRowsPanelWdgt` in 5 test dirs (`FontsMenuTick*`,
   `WallpaperMenuTick*`, `FontsMenuFollows*`, `WallpaperMenuFollows*`,
-  `ExtractMenuRowFromPinnedMenu`), `ToolPanelWdgt` in 2 (`ToolbarChevronPopsOverflow`,
+  `ExtractMenuRowFromPinnedMenu`; P0 corrected the count from 4 — the five names were
+  already listed), `ToolPanelWdgt` in 2 (`ToolbarChevronPopsOverflow`,
   `DropIntoTiltedStackInsertsAtVisualSlot`), `PaintToolbarWdgt` in 2
   (`DrawingsMakerReEnableEditing`, `EditModeTogglePencilEyeGlyph`), `overflowChevron` in 1.
-  `MenuItemSpec` is named in 2+ test dirs. Verify: `grep -rln "<name>"
+  `MenuItemSpec` is named in 2+ test dirs. Two more P3-sweep entries found in P0:
+  `scripts/serialization-roundtrip-headless.js` names `MenuRowsPanelWdgt` (identifier —
+  must be swept), and `scripts/staleness-census.js` mentions `ToolPanelWdgt` in prose only
+  (glance, no rename needed). Verify: `grep -rln "<name>"
   Fizzygum-tests/tests Fizzygum-tests/scripts Fizzygum-tests/Automator-and-test-harness-src`.
 - **F12 — the G-row dials are LANDED** (`PreferencesAndSettings.coffee`): `menuFontSize 17`
   (:136), `barIconSize 44`/`barGlyphSize 24` (:186–187), `menuRowHeight 44` (:196),

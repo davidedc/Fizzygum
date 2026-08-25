@@ -3,7 +3,7 @@
 # than by a dozen unreadable positional arguments.
 #
 # SHALLOWLY IMMUTABLE — fields are never written after construction, but `target` /
-# `action` reference live widgets (see docs/architecture/immutable-value-classes.md).
+# `action` / `icon` reference live widgets (see docs/architecture/immutable-value-classes.md).
 #
 # Note what is NOT here: the menu-level context (font, and the menu's
 # subject) is supplied by the owning MenuWdgt when it builds the
@@ -12,8 +12,8 @@
 #
 # CONSTRUCTOR SHAPE (docs/architecture/constructor-and-parameter-conventions.md):
 # label / target / action are the identity -- what the row SAYS and what it DOES,
-# passed by every caller -- so they stay positional. The other nine are
-# independently-optional knobs and ride `opts`.
+# passed by every caller -- so they stay positional. EVERY other field is an
+# independently-optional knob and rides `opts`, however many of them there come to be.
 #
 # The opts KEYS are deliberately the ones MenuRowsPanelWdgt.addMenuItem already
 # offers its callers (R4: an option is named for what the caller means, not for
@@ -22,8 +22,13 @@
 
 class MenuItemSpec
 
-  # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
+  # what the row SAYS: a STRING. What it SHOWS beside that is the `icon` slot below -- two named
+  # slots, because a picture and a sentence are two facts and neither can be read out of the other.
   label: undefined
+  # the widget the row shows at its left, inside a glyph box: a paint-only icon widget, or a live
+  # tool's stand-in held inert (InertIconHolderWdgt). undefined for a label-only row, which is what
+  # a row that asks for no picture is.
+  icon: undefined
   ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   target: undefined
   action: undefined
@@ -40,6 +45,7 @@ class MenuItemSpec
   reflection: undefined
 
   constructor: (@label, @target, @action, opts = {}) ->
+    @icon = opts.icon
     @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = opts.closesUnpinnedPopUps ? true
     @toolTipMessage = opts.toolTip
     @color = opts.color
