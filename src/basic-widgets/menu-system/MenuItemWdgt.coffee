@@ -11,6 +11,12 @@ class MenuItemWdgt extends LabelButtonWdgt
   # turns this on for every row
   actionableAsThumbnail: undefined
 
+  # Does a hairline run along my TOP edge? My rows panel DERIVES it at arrange (the row above me
+  # has to be another row) and tells me; I hold the answer and my appearance paints it. Paint
+  # only, never layout: a separator takes no height, so two rows stay flush and no dead zone opens
+  # between two touch targets (ruling G5).
+  _separatorAbove: false
+
   # my MenuRowReflectionSpec when I am a VIEW of somebody else's value (a tick, a wording swap):
   # what my label SAYS is then derived from that value, not fixed when I was built. undefined for an
   # ordinary row.
@@ -84,6 +90,18 @@ class MenuItemWdgt extends LabelButtonWdgt
   # (type-test-elimination campaign)
   isTextSizedGlassBoxItem: ->
     true
+
+  # THE SEPARATOR PAIR. My panel tells me whether a row sits directly above me; my appearance asks
+  # me back when it paints. Both are capability-dispatched (`?()`), so the OTHER row kinds a panel
+  # may hold -- a divider, a slider, a colour picker -- neither hear the statement nor draw a line,
+  # and a menu row outside a panel simply never carries one.
+  showSeparatorAbove: (aBoolean) ->
+    return if @_separatorAbove is aBoolean
+    @_separatorAbove = aBoolean
+    @_changed()
+
+  showsSeparatorAbove: ->
+    @_separatorAbove
 
   # reset my selection highlight (called for every menu child by MenuRowsPanelWdgt.unselectAllItems,
   # replacing its `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)

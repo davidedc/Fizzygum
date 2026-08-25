@@ -21,12 +21,10 @@ class HandleWdgt extends Widget
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
 
-  # My whole box is the grab area, though HandleAppearance only paints the striped
-  # bottom-right triangle: a resize corner you can only catch on its stripes is a resize corner
-  # you keep missing. (SystemTest_macroHandleWdgtIsItselfResizable and macroHandleAttachedToNothing
-  # both press on the painted part, but they say in their own comments that the box is what counts.)
-  catchesPointerAt: (aPoint) ->
-    @boundsContainPoint aPoint
+  # (No catchesPointerAt of my own: WHERE I react is my SHAPE, and the shape is my appearance's
+  # business -- HandleAppearance.shapeContainsPoint answers the striped triangle for the corner
+  # resizer and the box for every other type, the same way the round bar buttons react on their
+  # circles.)
 
   # Resize / move / rotate handles are CHROME, never editor content (§5.D D-3/D21). Clicking or dragging a
   # handle to reshape a widget must NOT make the handle world.editorFocusWdgt -- otherwise the editor-focus
@@ -109,12 +107,16 @@ class HandleWdgt extends Widget
       @cornerSpec.inset = @inset
     @_moveInFrontOfSiblings()
 
+  # WHETHER I SHOW. Two questions, both about my parent: does it own its own placement (a
+  # host-owned widget is sized by its host, so a resizer on it would fight the host), and does it
+  # have anything to size right now? The second is a capability asked via ?(), so only a parent
+  # with an answer -- a frame, which has none while it is collapsed into its bar -- narrows it.
+  # TODO rather than updating the visibility, we could
+  # just make it "inactive" and by drawing it gray, which
+  # would also look better (rather than a hole with
+  # nothing)
   updateVisibility: ->
-    # TODO rather than updating the visibility, we could
-    # just make it "inactive" and by drawing it gray, which
-    # would also look better (rather than a hole with
-    # nothing)
-    if @parent.isFreeFloating()
+    if @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
       @show()
     else
       @hide()

@@ -9,6 +9,17 @@ class SwitchButtonWdgt extends Widget
   
   buttonShown: 0
 
+  # The glyph side my buttons draw at, when whoever places me names one (see IconButtonWdgt's own
+  # field): my buttons wear MY box, so they wear my glyph dial with it.
+  glyphSize: undefined
+
+  # My buttons are MY faces, so whoever owns my drags owns theirs (a chrome strip claims the drags
+  # that start on its pieces -- FrameBarWdgt.ownsDragsOfMyChildren). Passing the question up rather
+  # than answering it myself is what keeps a switch on a strip and a switch anywhere else telling
+  # their buttons two different, correct things.
+  ownsDragsOfMyChildren: ->
+    @parent?.ownsDragsOfMyChildren?() ? false
+
   # overrides to superclass
   color: Color.WHITE
 
@@ -65,6 +76,8 @@ class SwitchButtonWdgt extends Widget
     counter = 0
     for eachButton in @buttons
       if eachButton.parent == @
+        # my buttons take my box, and with it the glyph side that box was granted for
+        eachButton.glyphSize = @glyphSize
         eachButton._reLayout @bounds
         if counter % @buttons.length == @buttonShown
           eachButton.show()
@@ -136,6 +149,11 @@ class SwitchButtonWdgt extends Widget
     # idempotent _collapseNoSettle / _unCollapseNoSettle cores (no public re-entrant settle).
     @_settleLayoutsAfter =>
       @_setToggleStateNoSettle (@buttonShown + 1) % @buttons.length
+      # A RADIO group turns its other switches off when one of them is clicked, and the switch
+      # that WAS clicked is the only widget that knows which one that is — the escalation below
+      # carries the pointer position, never the sender. Capability via ?(), inside my own flush,
+      # so the whole group settles once.
+      @parent?.radioButtonWasSwitched? @
     @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   _resetSwitchButton: ->

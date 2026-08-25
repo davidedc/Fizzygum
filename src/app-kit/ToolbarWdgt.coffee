@@ -22,12 +22,13 @@ class ToolbarWdgt extends ViewportWdgt
   dockSide: 'left'
 
   # MY CROSS-AXIS SIZE when docked: width for left/right, height for top/bottom -- what I ask the
-  # band to grant me, which the band then wraps in its own chrome. A CONSTANT, never a laid-out
-  # size -- the host's PURE measures read it through the band's spec (§6.1 rule 1), so it must not
-  # depend on laid-out extents. The base
-  # value is the toolbarDockThickness preference (no formula over the grid
-  # metrics reproduces it -- see the constructor); a variant's own class-level
-  # override (e.g. TextToolbarWdgt's 40) still wins.
+  # band to grant me, which the band then wraps in its own chrome. DERIVED, in the constructor,
+  # from my grid's own cell metrics (ToolPanelWdgt.naturalGridCrossExtent: one strip-depth of
+  # cells plus the grid's margins) -- the same capability the FLOATING manifestation hugs its
+  # payload with, so a band is exactly as deep as its cells need and no constant anywhere says
+  # otherwise (owner ruling: one criterion for every toolbar, docked or free). Still a CONSTANT
+  # per instance, never a laid-out size -- the host's PURE measures read it through the band's
+  # spec (§6.1 rule 1), so it must not depend on laid-out extents, and cell dials are not.
   dockThickness: undefined
 
   # a toolbar strip's scrolling is part of its design — a docked strip that
@@ -37,9 +38,7 @@ class ToolbarWdgt extends ViewportWdgt
 
   constructor: ->
     super new ToolPanelWdgt
-    # guarded: a variant declares its own dockThickness at the class level (read through the
-    # prototype chain before this line runs), which must keep winning over the base's preference.
-    @dockThickness = WorldWdgt.preferencesAndSettings.toolbarDockThickness unless @dockThickness?
+    @dockThickness = @contents.naturalGridCrossExtent()
     @_buildAndConnectChildren()
 
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
@@ -51,6 +50,16 @@ class ToolbarWdgt extends ViewportWdgt
   # form so the boot dependency finder sees the class edges.
   _toolbarItems: ->
     []
+
+  # THE BOX A FRAME AROUND ME TAKES WHEN I FLOAT -- my grid's own natural box within the `room`
+  # the frame has left after its chrome (owner ruling: a free manifestation HUGS its payload, so
+  # there are no per-toolbar size constants anywhere). Answered as a capability rather than
+  # claimed by a type test, so the frame asks every payload the same question and only a payload
+  # with an answer sizes its window. My DOCKED manifestation asks the same grid the same way --
+  # it takes the cross axis alone (@dockThickness, granted through the edge-dock spec) because
+  # its long axis is the host's to force.
+  naturalPayloadExtentWithin: (room) ->
+    @contents.naturalGridExtentWithin room
 
   # Children are built in the core reached via the settling wrapper (the
   # check-constructors-build contract: a constructor must not @add its own

@@ -6,7 +6,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createWidgetToBeHandled: ->
 
-    switcherooWm = @_buildToolWindow new WindowsToolbarWdgt, new Point 61, 192
+    switcherooWm = @_buildToolWindow new WindowsToolbarWdgt
     readmeWindow = InfoDocs.createNextTo "windowsToolbar", switcherooWm
     readmeWindow?._applyMoveTo new Point 300, 200
 

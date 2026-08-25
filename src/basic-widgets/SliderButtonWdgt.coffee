@@ -21,8 +21,18 @@ class SliderButtonWdgt extends CircleBoxWdgt
 
   # The whole thumb box grabs, not just the stadium my CircleBoxyAppearance draws inside it: a
   # slider you have to hit on the rounded cap is a slider that slips out of your hand.
+  #   UNLESS my slider is a thin scroll INDICATOR, which is not a target at all (ruling G3): the
+  # pointer passes through to the content under the band until a hover fattens the bar.
   catchesPointerAt: (aPoint) ->
+    return false if @parent?.indicatorIsIntangible?()
     @boundsContainPoint aPoint
+
+  # My slider hands me the alpha its indicator presentation puts me at (see
+  # SliderWdgt.showAsScrollIndicator). Colour and state are untouched — only how strongly I show.
+  showAsScrollIndicatorThumb: (alpha) ->
+    return if @alpha == alpha
+    @alpha = alpha
+    @_changed()
 
   # the thumb's grab-corrected target POSITION (pointer mapped into my plane, minus the
   # within-thumb grab point), held for the duration of a knob drag — plane-local, so it
@@ -61,21 +71,26 @@ class SliderButtonWdgt extends CircleBoxWdgt
         sliderValue = 0
 
       orientation = @parent.autoOrientation()
+      # how much of my track's cross axis the surround takes — 2 (1px each side) on an ordinary
+      # slider, 0 on a thin scroll indicator, which paints no track for me to sit inside.
+      # Capability via ?(), so any other parent keeps the surround.
+      surround = @parent.thumbInsetInTrack?() ? 2
+      edge = Math.round surround / 2
       if orientation is "vertical"
-        bw = @parent.width() - 2
+        bw = @parent.width() - surround
         bh = Math.max bw, Math.round @parent.height() * @parent.ratio()
         @__commitExtent new Point bw, bh
-        posX = 1
+        posX = edge
         posY = Math.max(0,Math.min(
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),
           @parent.height() - @height()))
         if @parent.smallestValueIsAtBottomEnd
           posY = @parent.height() - (posY + @height())
       else
-        bh = @parent.height() - 2
+        bh = @parent.height() - surround
         bw = Math.max bh, Math.round @parent.width() * @parent.ratio()
         @__commitExtent new Point bw, bh
-        posY = 1
+        posY = edge
         posX = Math.max(0, Math.min(
           Math.round((sliderValue - @parent.start) * @parent.unitSize()),
           @parent.width() - @width()))

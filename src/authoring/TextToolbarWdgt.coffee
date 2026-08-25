@@ -5,17 +5,10 @@
 
 class TextToolbarWdgt extends ToolbarWdgt
 
-  # text docks TOP (D9): a one-row 30px-thumbnail strip
+  # text docks TOP (D9). The strip's thickness and its grid insets are the shared toolbar
+  # dials (ONE geometry, ruling G1): a text strip is a one-row strip like every other, so its
+  # depth derives from the standard grid metrics rather than from a private pair.
   dockSide: 'top'
-  dockThickness: 40
-
-  constructor: ->
-    super
-    # a one-row strip is 40px at 5px insets -- tighten the grid's 10px default
-    # so the docked strip and the floating grid share one geometry. Safe after
-    # super: the toolbar is an orphan here, every settle defers, so this lands
-    # before the first arrange (on attach).
-    @contents.externalPadding = 5
 
   _toolbarItems: -> [
     # the toolbar itself is the font-menu stash home (re-clicking re-focuses

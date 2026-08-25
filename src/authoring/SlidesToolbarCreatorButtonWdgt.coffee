@@ -5,5 +5,5 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
   createAppearance: -> new SlidesToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    @_buildToolWindow new SlidesToolbarWdgt, new Point 105, 300
+    @_buildToolWindow new SlidesToolbarWdgt
 

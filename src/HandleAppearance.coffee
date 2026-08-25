@@ -5,6 +5,22 @@
 
 class HandleAppearance extends Appearance
 
+  # WHERE THE HANDLE REACTS, stated in the shape rather than on the widget (the
+  # UpperRightTriangleAppearance idiom): the corner resizer reacts on the striped triangle it
+  # draws and nothing else -- at a 44 px box (ruling T3) the square grab area reaches over
+  # whatever sits beside the corner (a strip's last cell, a small frame's bar), and "what you
+  # can hit is what you see" is the single-geometry rule. Every other handle type draws its
+  # arrows / knob ring ACROSS its whole box, so there the box IS the shape.
+  #   TOTAL, like every shapeContainsPoint: false outside the bounds.
+  shapeContainsPoint: (aPoint) ->
+    return false unless @widget.boundsContainPoint aPoint
+    return true unless @widget.type is "resizeBothDimensionsHandle"
+    # drawHandle's stripe loop starts ON the bottom-left→top-right diagonal and sweeps down to
+    # the bottom-right corner, so the ink is the half-plane on the corner's side of it:
+    # x/w + y/h >= 1, cross-multiplied so a zero extent never reaches a divisor.
+    relative = aPoint.subtract @widget.position()
+    (relative.x * @widget.height()) + (relative.y * @widget.width()) >= @widget.width() * @widget.height()
+
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>

@@ -497,6 +497,23 @@ class FrameWdgt extends Widget
     else
       new Point 300, 300
 
+  # SIZE ME TO MY PAYLOAD -- the one derivation a free-floating home with a self-measuring payload
+  # uses instead of a number from its opener (owner ruling: a floating toolbar hugs its cells, one
+  # criterion for every toolbar). The payload names its own box within the ROOM I have left, which
+  # is the world minus my chrome: C10's never-bigger-than-the-world, handed to the payload as a
+  # budget so a payload that must give something up knows exactly how much there is.
+  #   Capability-dispatched (the isFrame?() idiom): a payload with no answer is untouched, so this
+  # is a door a payload opts into, never a type test here.
+  sizeToPayloadNaturalExtent: ->
+    return unless @contents?.naturalPayloadExtentWithin?
+    spec = @contents.contentStackSpec()
+    return unless spec?
+    chromeWidth = @_chromeWidth()
+    chromeHeight = @_chromeHeight spec
+    room = new Point (world.width() - chromeWidth), (world.height() - chromeHeight)
+    payloadExtent = @contents.naturalPayloadExtentWithin room
+    @setExtent new Point (payloadExtent.x + chromeWidth), (payloadExtent.y + chromeHeight)
+
   # The margin my body keeps around my payload. It is the PAYLOAD's question, not my
   # manifestation's: a payload that draws its own border (a rows panel keeps the menu border, and
   # its box IS my box) gets none, because a second margin would only double the first. Everything
@@ -602,13 +619,20 @@ class FrameWdgt extends Widget
       return @contents.representativeIcon()
 
   # paintingOverlay() capability chain (§5.D): a paint toolbar resolving its
-  # injection target at press time asks the frame, which asks its content
+  # injection target asks the frame, which asks its content
   # (container -> canvas -> glass). Frames over non-paintable content answer
-  # undefined through the ?. -- and a FLOATING paint toolbar's own frame answers undefined
-  # too (its content IS the toolbar), which is what routes the floating press
-  # to the focus pointer instead (PaintToolbarWdgt.resolveInjectionTarget).
+  # undefined through the ?.
+  #   A DOCKED BAND answers its HOST'S surface: a band's own content is the toolbar, so asking it
+  # alone would say "nothing paintable" for the one arrangement where the paintable thing is
+  # certain -- the strip is chrome the host is wearing, and the surface its tools act on is the
+  # host's content. A FLOATING toolbar's frame is docked in nothing and still answers undefined,
+  # which is what routes a floating press to the focus pointer instead
+  # (PaintToolbarWdgt.resolveInjectionTarget).
   paintingOverlay: ->
-    @contents?.paintingOverlay?()
+    ownAnswer = @contents?.paintingOverlay?()
+    return ownAnswer if ownAnswer?
+    return undefined unless @_myEdgeDockSpec()?
+    @parent?.paintingOverlay?()
 
   # The close-from-bar POLICY (Frame-model plan §5.E E2): a tracked field replaces
   # the per-instance `closeFromFrameBar = -> …` monkey-patches the sample/info
@@ -908,11 +932,20 @@ class FrameWdgt extends Widget
 
     @_createAndAddEditButton()
 
+  # Do I offer a resize grip right now? Only while my payload is actually SIZING (ruling C5: the
+  # resizer belongs to a frame whose payload sizes freely). Collapsed I AM my bar -- there is
+  # nothing to size, and a grip the size of a touch target would blanket the whole sliver and
+  # defeat the tap that expands it (ruling C17). My resizer's own visibility asks this.
+  offersAResizeHandle: ->
+    !@contents?.collapsed
+
   _reactToChildCollapsed: (child) ->
     if child == @contents
       # a collapsed window is JUST its titlebar, so its bands are gone with its body
       # (_dockedFrameAt already reads them out of the layout; the pixels follow here)
       @_reflectDockVisibilityNoSettle()
+      # ... and so is the resize grip: nothing is sizing, and it would sit over the tap zone
+      @resizer?.updateVisibility()
       if @widthWhenCollapsed?
         @_applyWidth @widthWhenCollapsed
       # layout-apply-sanctioned: collapse re-fit (must stay synchronous, residuals-audit fam 4)
@@ -922,8 +955,9 @@ class FrameWdgt extends Widget
 
   _reactToChildUnCollapsed: (child) ->
     if child == @contents
-      # my body is back, so the bands engaged in it are back with it
+      # my body is back, so the bands engaged in it are back with it -- and the grip that sizes it
       @_reflectDockVisibilityNoSettle()
+      @resizer?.updateVisibility()
       @_applyExtent @extentWhenCollapsed
       @contents._applyExtent @contentsExtentWhenCollapsed
       if @widthWhenUnCollapsed?

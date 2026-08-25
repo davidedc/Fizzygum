@@ -459,6 +459,14 @@ class StringWdgt extends Widget
       return startingText + "…"
     return ""
 
+  # HOW MUCH OF ME SURVIVES THE CROP into the box I hold right now: the number of characters I
+  # would actually draw, the ellipsis itself not counted. A pure query -- it measures, it changes
+  # nothing -- asked by a caller that has to decide whether a cropped text is still worth drawing
+  # at all: a frame bar grades its title on it (ruling C13), because a title cropped to "W…" names
+  # nothing and is worse than no title.
+  numberOfCharactersThatFit: ->
+    (@searchLongestFittingTextByMultiCroppingIt().replace "…", "").length
+
   # what we are tyring to do here is to fit the text into
   # a boundary that potentially is too small. We are not going
   # to fit it by changing the font size, rather we are fitting

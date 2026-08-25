@@ -60,6 +60,26 @@ class ViewportWdgt extends Widget
   vBar: undefined
   hBar: undefined
 
+  # ── THE SCROLL INDICATORS (program ruling G4) ─────────────────────────────────────────────
+  # My two bars are OVERLAY INDICATORS: THIN and untouchable while my content overflows, absent
+  # when it does not, and fattened into real controls while a pointer hovers my scroll band.
+  # Everything here is presentation — what can be SCROLLED is asked of overflow (isScrollableNow),
+  # never of a bar's visibility.
+  #   Visibility is a pure DERIVATION from overflow: no activity stamps, no clock, nothing
+  # time-driven on any path. An indicator on an overflowing pane is therefore the same pixels at
+  # rest as it is a second after a scroll, which is what makes a capture of one reproducible and
+  # what makes scrollability discoverable without a gesture.
+  #
+  # is a pointer hovering my scroll band right now (which fattens the indicators)
+  _pointerInScrollBand: false
+
+  # Hovering does not ride a file: a restored world wakes with no pointer in any band, exactly as
+  # a freshly built one does. (The thin/absent state needs no transient — it is re-derived from
+  # overflow at the first arrange.)
+  @serializationTransients: [
+    "_pointerInScrollBand"
+  ]
+
   # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
   # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay) or content (a dropped
   # value control → framable). Only my actual bars match, so a content slider dropped into my content stays
@@ -395,17 +415,74 @@ class ViewportWdgt extends Widget
     @contents.setAlphaScaled alpha
     return alpha
 
-  anyScrollBarShowing: ->
-    if (@hBar.visibleBasedOnIsVisibleProperty() and !@hBar.isInCollapsedSubtree()) or
-    (@vBar.visibleBasedOnIsVisibleProperty() and !@vBar.isInCollapsedSubtree())
-      return true
-    return false
+  # CAN I be scrolled right now: is there overflow to move, and does my policy allow moving it?
+  # This is the question every scroll GESTURE asks — deliberately NOT "is a bar visible". Under
+  # ruling G4 an indicator is a THIN hairline the pointer passes through, so keying a gesture to
+  # a bar's visibility would key it to presentation.
+  isScrollableNow: ->
+    return false if @scrollPolicy is 'never'
+    (@contents.width() >= @width() + 1) or (@contents.height() >= @height() + 1)
+
+  # ── the indicator derivation (ruling G4) ──────────────────────────────────────────────────
+
+  # thin at rest, my full bar thickness once a hovering pointer has fattened the indicators
+  _indicatorThickness: ->
+    if @_pointerInScrollBand
+      @scrollBarsThickness
+    else
+      WorldWdgt.preferencesAndSettings.scrollIndicatorThickness
+
+  # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
+  # the only one there can be — the look is settled in the same pass that decided which bars show
+  # at all, so there is nothing left for anyone else to advance and nothing steps.
+  _refreshScrollIndicators: ->
+    mode = if @_pointerInScrollBand then 'fat' else 'thin'
+    for bar in [@hBar, @vBar]
+      continue unless bar?.showAsScrollIndicator?
+      continue unless @_barIsMineToPresent bar
+      bar.showAsScrollIndicator mode
+    return
+
+  # Is this bar CHROME I present? My @hBar/@vBar fields deliberately survive the bar being picked
+  # up off me (it keeps driving me from wherever it lands — that is the point of the dataflow
+  # edge), so the field alone does not say. Parentage does: a bar outside my children is a plain
+  # slider somebody put on the desktop, and its look and its thickness are its own business.
+  _barIsMineToPresent: (bar) ->
+    bar.parent is @
+
+  # THE HOVER PASS. A thin indicator is not a target (ruling G3), so it can never notice the
+  # pointer itself — I notice for it, and I can: I am in the hand's mouse-over ancestry for
+  # anything under my content, so I get the moves. A pointer within a fat bar's width of my
+  # scroll edges fattens both indicators; anywhere else, or leaving me, thins them again.
+  #   ⚠ The `pos` parameter is deliberately NOT read: a move over my scrolled CONTENT can
+  # escalate here with the position still in the ROW's plane, offset-pixels away from mine —
+  # the same trap mouseDownLeft documents. Re-derive it from the hand with the mapped read.
+  mouseMove: ->
+    @_updatePointerInScrollBand @screenPointToMyPlane world.hand.position()
+
+  mouseLeave: ->
+    @_updatePointerInScrollBand undefined
+
+  _updatePointerInScrollBand: (pos) ->
+    band = @scrollBarsThickness
+    inBand = pos? and @boundsContainPoint(pos) and
+      ((pos.x >= @right() - band) or (pos.y >= @bottom() - band))
+    return if inBand is @_pointerInScrollBand
+    @_pointerInScrollBand = inBand
+    # the flip changes the bars' THICKNESS as well as their look, so it goes through the
+    # arrange that owns their geometry rather than through _refreshScrollIndicators alone
+    @_reLayoutScrollbars()
 
   # The width my @contents must lay itself out within: my viewport width. Asked via ?() by
   # content that wraps to its container (ToolPanelWdgt's row-wrap). Capability, was
   # `parent instanceof ViewportWdgt` at the caller (type-test-elimination ε).
   widthContentsMustFitWithin: ->
     @width()
+
+  # The height twin, for content that fits to BOTH axes of the box it is given (a toolbar
+  # grid deciding how many cells its strip shows before the rest go behind the chevron).
+  heightContentsMustFitWithin: ->
+    @height()
 
   # Pressing a slider's TRACK jump-drags the button to the press point when the slider is
   # chrome its parent owns (my scrollbars) — SliderWdgt.mouseDownLeft asks its parent via ?().
@@ -441,6 +518,10 @@ class ViewportWdgt extends Widget
     hWidth = @width() - spaceToLeaveOnOneSide
     vHeight = @height() - spaceToLeaveOnOneSide
 
+    # the indicator's CROSS-axis size: thin at rest, my full bar thickness while a hovering
+    # pointer has fattened it back into a control (ruling G4)
+    barThickness = @_indicatorThickness()
+
     @_changed()
 
     # this check is to see whether the bar actually belongs to this Viewport: a bar can survive
@@ -462,7 +543,10 @@ class ViewportWdgt extends Widget
         # chrome I own and place -- apply via the non-notifying twin as above (see the method-top
         # comment). _applyExtentBase == _applyWidth/Height minus the seam; preserves height/width by
         # passing the current other axis.
-        @hBar._applyExtentBase new Point(hWidth, @hBar.height())  if @hBar.width() isnt hWidth
+        # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
+        # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent).
+        hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
+        @hBar._applyExtentBase new Point(hWidth, hThickness)  if @hBar.width() isnt hWidth or @hBar.height() isnt hThickness
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # Viewport, otherwise we don't move it.
@@ -485,7 +569,9 @@ class ViewportWdgt extends Widget
       if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1
         @vBar.show()
         # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).
-        @vBar._applyExtentBase new Point(@vBar.width(), vHeight)  if @vBar.height() isnt vHeight
+        # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
+        vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
+        @vBar._applyExtentBase new Point(vThickness, vHeight)  if @vBar.height() isnt vHeight or @vBar.width() isnt vThickness
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # Viewport, otherwise we don't move it.
@@ -496,6 +582,10 @@ class ViewportWdgt extends Widget
         @vBar._reLayoutSelfAndButton()
       else
         @vBar.hide()
+
+    # the bars that show have just been sized and placed; give them the look that goes with the
+    # state they show in (thin, or fat under a hovering pointer)
+    @_refreshScrollIndicators()
 
     # ── THE REVERSE EDGE (connector plan §P8) ────────────────────────────────────────────────
     # My scroll geometry just settled, so ANNOUNCE it and let whoever tracks me re-read it — instead

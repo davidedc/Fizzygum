@@ -4004,7 +4004,7 @@ class Widget extends TreeNode
         return @isLockingToPanels
 
       if @_amIDirectlyInsideViewport()
-        if @parent.parent.canScrollByDraggingForeground and @parent.parent.anyScrollBarShowing()
+        if @parent.parent.canScrollByDraggingForeground and @parent.parent.isScrollableNow()
           return true
         else
           return @isLockingToPanels
@@ -4162,21 +4162,44 @@ class Widget extends TreeNode
     @moveAsLastChild()
     @_fullChanged()
 
+  # THE POP-UP BAND: my siblings above me that are TRANSIENT pop-ups. Mid-gesture UI floats over
+  # the furniture (frame-lifetime ruling C9 — a menu is a world child so that it shows on top of
+  # the window it was opened from), so the band is neither something a raise has to climb past nor
+  # something a raise may bury: a click on a window's own control opens a menu and then escalates
+  # into that window's raise, and a raise to the very top would put the window over the menu the
+  # click just opened.
+  _transientPopUpsAboveMe: ->
+    return [] unless @parent?
+    siblings = @parent.children
+    (each for each in siblings.slice((siblings.indexOf @) + 1) when each.isTransientPopUp?())
+
+  # Am I at the top of the FURNITURE? Nothing above my focus root, or nothing but the pop-up band.
   isInForeground: ->
-    @rootForFocus()?.isLastChild()
+    root = @rootForFocus()
+    return false unless root?
+    return true if root.isLastChild()
+    return false unless root.parent?
+    siblings = root.parent.children
+    (root._transientPopUpsAboveMe().length) is (siblings.length - (siblings.indexOf root) - 1)
 
   bringToForeground: ->
-    # No-op guards: an already-last focus-root cannot be raised further, and a PARENTLESS
-    # root (the world itself — every empty-desktop click routes here via mouseDownLeft —
+    # No-op guards: a focus root already atop the furniture cannot be raised further, and a
+    # PARENTLESS root (the world itself — every empty-desktop click routes here via mouseDownLeft —
     # or an orphan) has nothing to be raised within. In both cases the raise is structural
     # no-op and the invalidation below a gratuitous full repaint of the root — the
     # overwhelmingly common case, since every left-click press routes here. Suppressing
     # it is pixel-identical: repaint is byte-idempotent.
-    return if @isInForeground() or !@rootForFocus()?.parent?
-    @rootForFocus()?.moveAsLastChild()
+    root = @rootForFocus()
+    return if @isInForeground() or !root?.parent?
+    popUpsAbove = root._transientPopUpsAboveMe()
+    root.moveAsLastChild()
+    # and the band goes back over me, in the order it had: I am raised above the FURNITURE, never
+    # above the mid-gesture UI (C9). Their pixels are unchanged — they were over me before and are
+    # over me after — so the one invalidation below, of the widget that actually moved, covers it.
+    each.moveAsLastChild() for each in popUpsAbove
     # cross-invalidation-sanctioned: z-order structural verb — invalidates the focus-root
     # it just raised (the moved widget), same dispatcher shape as _addNoSettle's
-    @rootForFocus()?._fullChanged()
+    root._fullChanged()
 
 
   # note that "propagateKillPopUps" doesn't necessarily
@@ -4315,13 +4338,21 @@ class Widget extends TreeNode
       @_addAndTrackHandle "resizeHorizontalHandle"
       @_addAndTrackHandle "resizeVerticalHandle"
       @_addAndTrackHandle "moveHandle"
-      @_addAndTrackHandle "resizeBothDimensionsHandle"
       # Affine transforms (§6 Phase 4B-universal): EVERY free-floating widget gets a rotate handle at
       # the top-right of its halo. Dragging it rotates the widget via the halo rotation protocol
       # (rotationHalo_apply → the 4C sugar materialises an island on demand; an explicit island drives
       # its own spec). Requires 4A-2 (drag-delta mapping) so the sibling resize/move handles stay
       # correct once a rotation is in play.
       @_addAndTrackHandle "rotateHandle"
+      # THE CORNER RESIZER GOES ON LAST, and the order is load-bearing: each handle
+      # _moveInFrontOfSiblings as it is added, so the last one added is the one a pointer reaches
+      # first. A halo smaller than twice the handle size has its five corners OVERLAPPING, and there
+      # z-order decides everything — so the handle that goes in front must be the one that takes the
+      # least from the others. That is this one: it alone reacts on a SHAPE that is a proper subset
+      # of its box (the striped triangle, HandleAppearance.shapeContainsPoint), while every other
+      # type claims its whole box. Last also means painted on top, so on such a halo the stripes you
+      # press are the stripes you see.
+      @_addAndTrackHandle "resizeBothDimensionsHandle"
     else
       stackSiblingBefore = @lastSiblingBeforeMeSuchThat (m) -> m.layoutSpec?.isDivisionElement?()
       if stackSiblingBefore? and !@siblingBeforeMeIsA(StackElementsSizeAdjustingWdgt)

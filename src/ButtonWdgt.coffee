@@ -173,6 +173,13 @@ class ButtonWdgt extends Widget
   rejectDrags: ->
     return false if @parent == world
     return false if @isDetachablePayloadOfMyParent()
+    # ... and a CHROME STRIP owns the drags that start on its pieces (program ruling: a bar piece
+    # acts on tap, never on drag). A press that turns into a drag on a close/collapse/pencil glyph
+    # is the user taking hold of the BAR -- moving the window, pulling a docked band out of its
+    # slot -- so I must not cancel it here: I yield, and the climb reaches the strip. Same
+    # parent-side shape as wantsDetachOfChild above; the strip declares it, no piece has to know
+    # which strip it is on, and the hand needs no case for any of it.
+    return false if @parent?.ownsDragsOfMyChildren?()
     return @defaultRejectDrags
 
   # Does my container hand me out — am I a payload it holds, rather than a part of it? ONE

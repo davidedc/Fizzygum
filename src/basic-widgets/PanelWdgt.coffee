@@ -156,7 +156,7 @@ class PanelWdgt extends Widget
       # otherwise you could detach a Frame contained in a
       # ViewportWdgt which is very strange
       if @_amITheContentsPanelOfAViewport()
-        if @parent.canScrollByDraggingBackground and @parent.anyScrollBarShowing()
+        if @parent.canScrollByDraggingBackground and @parent.isScrollableNow()
           return false
         else
           return true

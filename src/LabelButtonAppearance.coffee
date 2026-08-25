@@ -28,7 +28,23 @@ class LabelButtonAppearance extends Appearance
         ctx.fillStyle = color.toString()
         @_fillLocalRectSnappedToDevicePixels ctx, localDamageBox
 
-      @_paintLiftableGrip ctx  unless appliedShadow?
+      unless appliedShadow?
+        @_paintSeparatorAbove ctx
+        @_paintLiftableGrip ctx
+
+  # The hairline along my TOP edge, drawn only while my container has told me the row above me is
+  # another row (MenuItemWdgt.showSeparatorAbove — a rows panel DERIVES adjacency at arrange, so no
+  # row has to know where it sits). PAINT, never layout: the line takes no height, so two rows stay
+  # flush and no dead zone opens between two touch targets.
+  #   Inset a pixel at each end, so it reads as a rhythm mark inside the menu's box rather than as
+  # a second border crossing it.
+  #   Nothing on the SHADOW pass: that pass has already filled my rectangle solid black.
+  #   ⚠ The geometry comes from MY WIDGET, never from the scope's `localDamageBox` — see the grip
+  # below for the law and the bug that proved it.
+  _paintSeparatorAbove: (ctx) ->
+    return unless @widget.showsSeparatorAbove?()
+    ctx.fillStyle = WorldWdgt.preferencesAndSettings.menuRowSeparatorColor.toString()
+    @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle 1, 0, (@widget.width() - 1), 1
 
   # A short bar down my left edge, drawn only when my container has declared me a payload it
   # hands out (ButtonWdgt.isDetachablePayloadOfMyParent — the SAME declaration the grab reads,

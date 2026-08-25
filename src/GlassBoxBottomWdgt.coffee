@@ -21,6 +21,19 @@ class GlassBoxBottomWdgt extends BoxWdgt
   isGlassBoxWrapper: ->
     true
 
+  # The one widget I wrap -- the tool this cell offers, which is what names the cell in a menu.
+  # (GlassBoxTopWdgt's grab reads the same first child.)
+  glassBoxItem: ->
+    @children[0]
+
+  # The widget a TAP on me actually reaches, which is therefore what any PROJECTION of this cell
+  # -- a toolbar overflow menu's row -- must click: one dispatch contract for every tool family.
+  # A tool that is not actionable as a thumbnail wears a LID (ToolPanelWdgt puts one there), and
+  # then the lid is what the pointer lands on and the lid is what carries the click; a tool that
+  # handles its own clicks wears none and catches its taps itself.
+  thumbnailClickReceiver: ->
+    (@firstChildSuchThat (eachChild) -> eachChild.isGlassBoxLid?()) ? @glassBoxItem()
+
   _reLayoutSelf: ->
 
     @_repaintAsOneUnit =>

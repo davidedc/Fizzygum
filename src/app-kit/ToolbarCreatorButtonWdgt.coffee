@@ -14,15 +14,18 @@ class ToolbarCreatorButtonWdgt extends CreatorButtonWdgt
 
   # Shared window-building scaffold for the toolbar creator buttons: take a
   # ready-built, drops/edit-disabled tools panel (each subclass fills and locks
-  # its own), wrap it in a FrameWdgt, place it, add it to the world and size it
-  # to the given extent. Returns the window.
-  # NB PlotsToolbarCreatorButtonWdgt is deliberately NOT routed through here: it
-  # sizes with the public setExtent BEFORE placing, a different op order.
-  _buildToolWindow: (toolsPanel, extent) ->
+  # its own), wrap it in a FrameWdgt that HUGS it, and place it down the left of
+  # the world, centred on whatever height the hug produced. Returns the window.
+  # The palette's size is the ONE payload derivation
+  # (FrameWdgt.sizeToPayloadNaturalExtent) rather than a constant per palette, so
+  # every toolbar this scaffold opens is sized by the same criterion -- which is
+  # also why PlotsToolbarCreatorButtonWdgt comes through here now: its own
+  # size-then-place order had nothing left to differ about.
+  _buildToolWindow: (toolsPanel) ->
     switcherooWm = new FrameWdgt toolsPanel
-    switcherooWm._applyMoveTo new Point 90, Math.floor((world.height()-192)/2)
+    switcherooWm.sizeToPayloadNaturalExtent()
+    switcherooWm._applyMoveTo new Point 90, Math.floor((world.height() - switcherooWm.height()) / 2)
     switcherooWm._moveWithin world
     world.add switcherooWm
-    switcherooWm._applyExtent extent
 
     return switcherooWm

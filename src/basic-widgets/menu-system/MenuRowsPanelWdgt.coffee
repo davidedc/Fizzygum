@@ -224,6 +224,22 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   _positionAndResizeChildren: ->
     @_applyExtentBase new Point (@maxWidthOfMenuEntries() + 2 * @padding), @height()
     super()
+    @_deriveRowSeparators()
+
+  # WHICH of my rows carry a hairline above them (ruling G5, the C5 derive-at-arrange idiom): a row
+  # does exactly when the child before it is another row. So my FIRST row never does -- the line
+  # above it is my own border, or the pop-up title strip sitting on top of me -- and a row just
+  # below a DIVIDER never does either, because the divider already IS that boundary and a hairline
+  # beside it would double it.
+  #   Adjacency is mine to know and no row's: a row that moves, or a row inserted between two
+  # others, changes its neighbours' answers as much as its own, and only I see all three.
+  _deriveRowSeparators: ->
+    previousChildWasARow = false
+    for child in @children
+      childIsARow = child.showSeparatorAbove?
+      child.showSeparatorAbove previousChildWasARow  if childIsARow
+      previousChildWasARow = childIsARow
+    return
 
   # HONEST pure measures (menu-row-conformance Phase 3): my width is
   # CONTENT-driven — the hug the arrange above applies — not container-given,

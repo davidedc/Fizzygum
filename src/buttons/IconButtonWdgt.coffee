@@ -19,6 +19,13 @@ class IconButtonWdgt extends ButtonWdgt
   # field if it wants a different one (e.g. CloseIconButtonWdgt → red).
   iconHoverColor: Color.create 255, 153, 0
 
+  # THE SIDE MY MARK IS DRAWN AT inside my box, read by IconAppearance.calculateRectangleOfIcon.
+  # A chrome button is a TARGET first (ruling G3), so a title strip sizes me to the whole slot it
+  # reserved and names the smaller glyph here: what a finger can hit grows, the ink does not.
+  # Whoever PLACES me writes it (FrameBarWdgt._layOutPieceInSlot); unset -- every button placed by
+  # anything else -- my mark fills my box.
+  glyphSize: undefined
+
   # Frame-bar chrome, never editor content (§5.D D-3/D21 correction 1). This whole family IS the window
   # chrome (close / collapse / uncollapse / edit — the only IconButtonWdgt subclasses). Clicking the
   # eye/pencil to toggle a frame's edit mode, or collapsing/closing it, must NOT set world.editorFocusWdgt
@@ -36,4 +43,11 @@ class IconButtonWdgt extends ButtonWdgt
     super @, 'actOnClick', face: new Widget
     @color_hover = @iconHoverColor
     @color_pressed = @color_hover
+    # MY RESTING COLOUR IS THE ONE I AM BUILT AT. HighlightableMixin repaints me at color_normal
+    # on every mouseLeave and mouseUpLeft, so leaving that at the mixin's generic default while my
+    # own @color says something else means I change colour the first time a pointer visits me and
+    # never change back -- a glyph whose shade records whether anyone ever hovered it. Stating the
+    # two as one value is what makes a pointer visit round-trip to the same pixels. (The same
+    # pairing OverflowChevronButtonWdgt writes out for its own dark mark.)
+    @color_normal = @color
     @appearance = @createAppearance()

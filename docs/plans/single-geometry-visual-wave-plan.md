@@ -28,7 +28,9 @@ ledger's dated citations stand as history): the world menu's input-mode row is a
   `toolRows` 1 with T2's chevron ABSORBED into this plan · G6 factor 2 · prompter/prompt
   buttons/slider thumbs join the ≥44 rule. P2 remains the eyes-on confirmation; any dial may
   still be re-turned there.
-- P1 T11 deletion + row-height plumbing: **IN PROGRESS 2026-08-24** — reframe 2 FALSIFIED at
+- P1 T11 deletion + row-height plumbing: **DONE + PUSHED 2026-08-24** (Fizzygum `2288cb04` /
+  tests `a8740792a`; declared 14-test set recaptured COMPLETE — 72 images, coordinator-
+  eyeballed; presuite 318/0; count assertion 17→16) — reframe 2 FALSIFIED at
   the gate (the world menu appears in 15 references, opened by raw right-click — invisible to
   the `openMenuOf` census; F7 corrected, gate re-scoped to a declared 15-test set per program
   §4 rule 2). Plumbing proven inert (303/318 pass with it in; paint + fracplane green).
@@ -36,8 +38,68 @@ ledger's dated citations stand as history): the world menu's input-mode row is a
   menusweep OK (3846 items + 53 prompt Oks / 464 menus). Residue noted:
   `buildSystem/census-property-placement.js` case-law comment names the deleted
   `@setMouseInputMode` → reworded in P5's sweep.
-- P2 the probe page + eyes-on confirmation of the pre-ruled dials (G7 gate): —
-- P3 wave step A — dials + fold + indicators + chevron at CONSTANT extent (reviewed recapture): —
+- P2 the probe page + eyes-on confirmation of the pre-ruled dials (G7 gate): **DONE
+  2026-08-24 — the owner ruled "the geometry stands"** after SIX iteration rounds closing
+  twenty findings (§2.9 items 1–18 + the r2 docking acceptance + the r6 PaintToolbar routing);
+  every dial confirmed at the §2.1 ruled values (fonts 17/15/19 added at round 2). Build
+  detail of the first probe cut follows — dev build green (28 gates), boot clean, scene verified
+  headless (world menu 13×44 rows; docked strip 70, ONE row, live 44 chevron popping the 6
+  hidden tools; indicators thin-4 → fade → fat-12; handle 44). Coordinator rulings on worker
+  findings: F10's bar-button inference CORRECTED (the piece gets the GLYPH box today —
+  slot-box fix → P3, ruled by G3's letter); `TextToolbarWdgt`'s private `dockThickness: 40`
+  deleted (contradicted the ruled 70); `SliderWdgt` relaxes `minimumExtent` to 1×1 so
+  `scrollIndicatorThickness 4` means what it says; `toolRows` gains its first reader (the
+  strip's cross-axis cap; `heightContentsMustFitWithin` = the width capability's twin);
+  `anyScrollBarShowing` RETIRED (0 askers left). Carried to P3: chevron destroy-in-flush,
+  remainder-menu z-order (pops occluded by its own window — C9), the bar-piece slot fix.
+- P3 wave step A — dials + fold + indicators + chevron at CONSTANT extent (reviewed recapture):
+  **IN EXECUTION 2026-08-24.** Leg 1 DONE: carried edits landed (bar-piece slot fix — ink
+  byte-same; chevron real destroy-in-flush; handle hidden while collapsed; `indicatorMode`
+  transient on `SliderWdgt` — §2.4 pt 7's class corrected); 3 witness tests authored +
+  verified at dprs 1+2; build 28-gates green; discovery: **238/321 = the footprint** (197
+  pixel-producing reviewed via diffpage — 554 REVIEW/18 benign, consequence families as
+  expected; 44 macro deaths = ONE cause: C10's cap CLAMPS the 16-row world menu to the 440
+  world, rows past ~8 unreachable — G6's own argument made flesh; 12 real assertion signals
+  under investigation, 9 of them broken round-trip identities = candidate regressions).
+  **Coordinator structural ruling 2026-08-24: STEP B MERGES INTO THE WAVE COMMIT** — a
+  step-A-only recapture can never COMPLETE with 44 tests dead at 440px, so after the
+  regression investigations resolve, the extent ×2 + Automator 0.2.0→0.3.0 land with the one
+  recapture; the constant-extent REVIEW value is preserved (the 197-test diffpage is that
+  review, produced BEFORE any recapture). P4 thereby collapses into P3's wave; P4's phase
+  becomes verification-only (canaries, cost numbers). One WORLD_INVENTORY escape under load,
+  not reproducible in isolation — vmtruth is the judge; the extent re-run confirmed:
+  gate-violations 0 (load flake). Pre-recapture hardening (2026-08-25, all proven, build+
+  menusweep+apps green at 02:24): the resizer float-drag fixed at the root (MacroToolkit's
+  easing undershoot — `_handlePressAndDropPoints`, 38 tests covered); RULED: a drag beginning
+  on a bar piece is the BAR's drag (`FrameBarWdgt.ownsDragsOfMyChildren`, the rejectDrags
+  parent-side idiom); RULED: the toolkit reaches a named menu row by SCROLLING it into view
+  (`_menuRowScrolledIntoView` via the public scroll pins; already-visible path code-identical
+  — 11 of 16 clamped-menu deaths resurrected); two REGRESSIONS caught at the gate and fixed:
+  the rotate handle (whole-box hit) shadowed the corner resizer's triangle on sub-92px halos
+  — resize presses ROTATED; the resizer is now frontmost (the only handle whose reactive
+  shape is a proper subset of its box; T18 filed for the crowding design question) · a
+  scrollbar picked up onto the desktop stayed indicator-thin and pointer-transparent forever
+  — an indicator presentation is something a viewport imposes on the bar it HOLDS (drop on
+  leaving, impose only on own-parented bars). Three macros de-drifted (raw row-reaching →
+  toolkit locators; `scrollInspectorListItemIntoView` measured the LABEL not the ROW). All
+  321 tests now run to completion; residue: 2 macros carry the same hand-rolled
+  `selectInspectorRow` latently (small indices — converted in the finish leg). Owner gave the
+  wave go 2026-08-25 (+ filed the missing-images BACKLOG item). FINISH LEG: bump 0.3.0; THE
+  recapture ran 5h30m detached (zopflipng single-thread bottleneck — BACKLOG-filed with
+  numbers) → **INCOMPLETE by its own gate**: 287/290 baked clean at v0_3_0 both dprs, 0
+  UNSTABLE, tests/ 39→351MB (~9×, honest number vs the plan's +80–120MB estimate); residue
+  diagnosed: SET F = 5 extent-legitimate macro assertions (fixed, the fixed-fraction/
+  fixed-coordinate family); SET N = NOT nondeterminism — the FULL_FAILURE_IMAGE_BUDGET cap
+  leaked into `--capture-ref` and wrote 53 ZERO-BYTE references for images 9+ of >8-shot
+  tests (root-fixed: the runner lifts the budget via `window.FIZZYGUM_FAILURE_IMAGE_BUDGET`).
+  ⚠ RULING at the residue gate (2026-08-25, completing round-5(b)): **a collapsed frame is
+  not resizable — a drag on its bar MOVES it; uncollapse restores the pre-collapse extent.**
+  The suite pinned collapsed-resize, but as SELF-REVERTING rent (the pinning test's own
+  assertion is that the resize does not survive uncollapse); C5's letter + C3's no-rent both
+  point the same way. `macroCollapsedWindowBarResizeRevertsOnUncollapse` is repurposed+renamed
+  to pin the new semantics; `macroWindowsNestedCollapsingUncollapsing` cases 3/4 resize
+  expanded. Owner veto line rides the commit digest. NEXT: residue recapture → gates →
+  commit proposal.
 - P4 wave step B — test-world extent + Automator version bump (reviewed recapture): —
 - P5 docs, close, tail: —
 
@@ -305,10 +367,15 @@ Each fact records its verification command. Line numbers drift — grep the quot
   ephemeral) and `catchesPointerAt` (:508 — the appearance's `shapeContainsPoint`, "NOT 'am I
   see-through here'… a StringWdgt is ~97% ink-free and stays clickable"). So G3's rider ("a
   widget's hit box may exceed what it paints") holds STRUCTURALLY wherever the appearance
-  claims its box: a 44-slot bar button painting a 24 glyph is hit on the whole slot with no new
-  mechanism. Where the wave must INTRODUCE it: the resize handle (T3, §2.5) and the indicator's
-  thin-state OPT-OUT (a thin indicator must NOT catch the pointer — G3 "indicators are NOT
-  targets"). Verify: `sed -n '474,512p' src/basic-widgets/Widget.coffee`.
+  claims its box. ⚠ Corrected at P2 (2026-08-24): the bar-button INFERENCE was false —
+  `FrameBarWdgt._layOutPieceInSlot` gives the piece the GLYPH box, not the slot box (its own
+  comment claims the opposite of what it does), so a bar button's hit target is the 24 glyph,
+  not the 44 slot. G3's letter ("the bar arrange must never equate glyph with box") rules the
+  fix: the piece takes the SLOT box and its appearance insets the ink — lands in P3,
+  pixel-identical. Where the wave must INTRODUCE hit-beyond-ink: the bar pieces (this fix),
+  the resize handle (T3, §2.5) and the indicator's thin-state OPT-OUT (a thin indicator must
+  NOT catch the pointer — G3 "indicators are NOT targets"). Verify: `sed -n '474,512p'
+  src/basic-widgets/Widget.coffee` + the `_layOutPieceInSlot` body.
 - **F11 — the resize handle today.** `HandleWdgt` sits in a `CornerInternalLayoutSpec` with
   `fixedSize = preferences.handleSize` (15) (`src/HandleWdgt.coffee:52`); ~10 app layouts
   (`BinWdgt`, `ErrorsLogViewerWdgt`, `CodePromptWdgt`, `ConsoleWdgt`, `ScriptWdgt`,
@@ -451,7 +518,7 @@ tap in the interface"), glyphs ~24 (G3), indicators thin (G3/G4), menu row heigh
 
 | preference | suite today | product today | proposed | note |
 |---|---|---|---|---|
-| `menuFontSize` | 12 | 14 | **14** | fold; row height comes from the new dial, not the font |
+| `menuFontSize` | 12 | 14 | **17** | re-proposed at the P2 probe (14 read "ridiculously small" in a 44 row; iOS pairs ~17 with 44); owner confirms by eye |
 | `menuHeaderFontSize` | 12 | 13 | **13** | fold |
 | `menuHeaderBold` | true | false | **false** | fold |
 | `menuHeaderColor` | 77³ | 125³ | **125³** | fold |
@@ -459,8 +526,8 @@ tap in the interface"), glyphs ~24 (G3), indicators thin (G3/G4), menu row heigh
 | `menuBackgroundColor` | 249³ | 250³ | **250³** | fold |
 | `menuButtonsLabelColor` | BLACK | 50³ | **50³** | fold |
 | `normalTextFontSize` | 12 | 13 | **13** | fold |
-| `titleBarTextFontSize` | 12 | 13 | **13** | fold |
-| `titleBarTextHeight` | 15 | 16 | **16** | fold; bar thickness comes from barIconSize |
+| `titleBarTextFontSize` | 12 | 13 | **15** | re-proposed at the P2 probe (13 too small in a 50 bar); centred per §2.9; owner confirms by eye |
+| `titleBarTextHeight` | 15 | 16 | **19** | follows the font re-proposal; bar thickness comes from barIconSize |
 | `titleBarBoldText` | true | false | **false** | fold |
 | `bubbleHelpFontSize` | 10 | 12 | **12** | fold |
 | `iconDarkLineColor` | BLACK | 37³ | **37³** | fold |
@@ -473,16 +540,16 @@ tap in the interface"), glyphs ~24 (G3), indicators thin (G3/G4), menu row heigh
 | `handleSize` | 15 | 15 | **44** | T3 RULED (a): glyph = box, a 44 px drawn grip (§2.5) |
 | `scrollBarsThickness` | 10 | 10 | **12** | now the FAT (hovered) indicator width |
 | `scrollIndicatorThickness` **(NEW, G4)** | — | — | **4** | the thin overlay width |
-| `scrollIndicatorLingerMs` **(NEW, G4)** | — | — | **800** | full-alpha hold after last scroll activity |
-| `scrollIndicatorFadeMs` **(NEW, G4)** | — | — | **250** | quantized fade span |
-| `scrollIndicatorFadeSteps` **(NEW, G4)** | — | — | **4** | alpha quantization (the dwellRingSteps idiom) |
+| `menuRowSeparatorColor` **(NEW, P2 ruling)** | — | — | **faint gray (lighter than `menuStrokeColor` 186³; worker proposes, owner eyes)** | the painted inset hairline between adjacent rows (§2.9) |
+| `barTitleEllipsisMinFraction` **(NEW, C13 amendment)** | — | — | **0.7** | ellipsized title shown only while it keeps ≥ this fraction of the characters (§2.9) |
+| `barTitleEllipsisMinChars` **(NEW, C13 amendment)** | — | — | **5** | … AND at least this many characters; below either → NO title |
 | `menuHeaderCornerRadius` | 3 | 3 | **4** | proportion nudge, owner's taste |
 | `menuRowsBorder` | 2 | 2 | **2** | unchanged |
 | `toolThumbnailSize` | 30 | 30 | **44** | tool thumbs are targets (G3) |
 | `toolInternalPadding` | 5 | 5 | **6** | breathing room at 44 |
 | `toolExternalPadding` | 10 | 10 | **10** | unchanged |
 | `toolRows` | 2 | 2 | **1** | RULED 2026-08-24 (iPad convention); overflow pops via the chevron, §2.7 |
-| `toolbarDockThickness` | 95 | 95 | **70** | = 44 + 6 + 2·10 (thumb + one internalPadding of allowance + margins), entered as a VALUE (F2). The tree's strict 1-row grid is 2·ext + thumb = 64; today's 95 likewise exceeds ITS strict 2·30+5+20 = 85 — the constant has always carried allowance |
+| `toolbarDockThickness` | 95 | 95 | **DELETED (round 6)** | the constant died into the round-5 capability: `ToolbarWdgt.dockThickness` derives as `contents.naturalGridCrossExtent()` = 64 at the ruled dials (band frame 70 with its chrome) — F2 superseded; G2's formula instinct vindicated once there was something to derive from |
 | `dockBandDepth` | 30 | 30 | **50** | ≥ the new bar strip (its own comment's rule) |
 | `prompterFontSize` | 12 | 12 | **14** | prompter family joins the scale (G3 amendment 2026-08-24) |
 | `prompterSliderSize` | 10 | 10 | **44** | the prompt input slider's cross axis IS its thumb target (G3 amendment; F21 — `NumberPromptWdgt` commits it as the slider's height) |
@@ -555,26 +622,17 @@ The spreadsheet has no `SliderWdgt` bars (verified) and is untouched.
    `scrollIndicatorThickness`, thumb-only painting (no track), rounded thumb; fat: today's
    full painting at `scrollBarsThickness`. A separate overlay class was considered and
    rejected (§8).
-2. **Appear on scroll ACTIVITY, never on layout.** The viewport stamps
-   `@_scrollActivityEventTime = WorldWdgt.timeOfEventBeingProcessed` at the USER-scroll entry
-   points only — the wheel handler, slider-thumb/track interaction, drag-scroll
-   (foreground/background), edge auto-scroll, momentum glide steps — never inside
-   `_reLayoutScrollbars` (which resize/arrange also calls, F8). Plus one REVEAL case:
-   when overflow is BORN (a pane first becomes scrollable, incl. an over-tall menu opening),
-   stamp once — the macOS "flash on reveal" that keeps scrollability discoverable (C10's
-   capped menus depend on it).
-3. **Fade on the dual clock (F14's idiom, verbatim shape).** elapsed =
-   event-clock under the Automator, wall-clock in production. Alpha: 1 while
-   elapsed < `scrollIndicatorLingerMs` or the pointer hovers the band or a thumb-drag is live;
-   then `scrollIndicatorFadeSteps` quantized steps across `scrollIndicatorFadeMs`; then
-   hidden. While an indicator is live the bar steps (registered stepping widget, deregistered
-   at hidden — bounded cost) and calls `_changed()` ONLY when its quantized step moves — so
-   between drained events the pixels are FROZEN, and a macro screenshot after a scroll always
-   lands on a deterministic step. **This is the determinism answer, stated:** captures are
-   stable because the fade clock is the event clock under the Automator (frozen between
-   events), the alpha is quantized, and the witness macros advance event time explicitly to
-   reach the faded end-state; no wall-clock decision exists on the suite path
-   (DETERMINISM.md's contract; the analog-clock/charging-ring precedents).
+2. **Visibility is DERIVED from overflow — always on, never fading** (amended 2026-08-24,
+   owner ruling at the P2 probe; the original appear-on-scroll/dual-clock-fade design is
+   superseded, its three `scrollIndicator*Ms/Steps` dials never ship). While content
+   overflows (and `scrollPolicy` ≠ 'never') the indicator shows THIN; no overflow ⇒ hidden.
+   A pure function of layout state: no activity stamps, no clocks, no stepping registration,
+   nothing time-driven on any path — **the determinism question DISSOLVES** (a capture after
+   a scroll shows the same thin indicator every run). Cropping-visibility heuristics ("show
+   only when the crop isn't obvious") were rejected: paint reading content semantics.
+3. *(Dissolved into point 2 by the same 2026-08-24 ruling — the fade, its dials, the
+   activity stamps, the reveal-flash and the stepping registration are all deleted; F14's
+   dual-clock idiom stays available case law but nothing here uses it.)*
 4. **Fatten under the hovering pointer (G4), event-driven.** A thin/hidden indicator must not
    catch the pointer (G3: indicators are NOT targets) — so hover cannot be its own
    `mouseEnter`. The VIEWPORT is always in the hand's mouse-over ancestry for content under
@@ -591,22 +649,23 @@ The spreadsheet has no `SliderWdgt` bars (verified) and is untouched.
 6. **Hit-test opt-out in thin state:** the slider answers `catchesPointerAt` false while
    `indicatorMode` is 'thin'/'hidden' (clicks pass to content under the band) and true when
    'fat' — the F10 members, used as designed.
-7. **Transients:** `_scrollActivityEventTime`, `indicatorMode`, `indicatorAlphaStep` go on the
-   `@serializationTransients` list (F19); a deserialized world wakes with indicators hidden.
+7. **Transients:** `indicatorMode` goes on the `@serializationTransients` list (F19) — on
+   `SliderWdgt`, where the field lives (the point's first form said `ViewportWdgt`; corrected
+   at P3 leg 1); a deserialized world wakes with indicators re-derived from overflow at first
+   arrange.
 8. **The resizer-corner clearance (:440) stays** — bars still shorten to clear the handle.
 9. **Witness tests (NEW references, authored per `/author-macro-test`):**
-   `SystemTest_macroScrollIndicatorAppearsAndFades` — build an overflowing `ListWdgt`; assert
-   hidden-after-settle (event time advanced past linger+fade), wheel it: thin indicator at
-   full alpha (screenshot), advance event time past linger+fade with pointer parked away:
-   gone (screenshot), and the scroll POSITION held; `SystemTest_macroScrollIndicatorFattensAndDrags`
-   — hover into the band: fat (screenshot), thumb-drag scrolls (assert scroll values), leave:
-   thin again. Both macros advance time by queueing events (moves at later event times), never
-   by waiting.
+   `SystemTest_macroScrollIndicatorTracksOverflow` — a pane with no overflow: NO indicator
+   (screenshot); grow the content past the box: thin indicator present (screenshot); shrink
+   it back: gone again (the always-on rule's both halves);
+   `SystemTest_macroScrollIndicatorFattensAndDrags` — hover into the band: fat (screenshot),
+   thumb-drag scrolls (assert scroll values), leave: thin again. No time advancement anywhere
+   — nothing here is time-driven.
 
-**Deliberately NOT deferred:** hover-fatten and the fade are IN this wave (G4 names all three
-behaviours). The one G4-adjacent deferral: on-finger discoverability beyond the reveal-flash
-(e.g. bounce/rubber-band hints) — not ruled anywhere, goes to the program tail as a Plan 4
-grammar question if the owner wants it at all (§5 P5 tail).
+**Deliberately NOT deferred:** hover-fatten is IN this wave. The one G4-adjacent deferral:
+on-finger scroll discoverability refinements (e.g. bounce/rubber-band hints) — not ruled
+anywhere, goes to the program tail as a Plan 4 grammar question if the owner wants it at all
+(§5 P5 tail); the always-on indicator itself already answers the at-rest case.
 
 ### 2.5 T3 RULED — the resize handle: big glyph, glyph = box
 
@@ -715,6 +774,187 @@ tool already sits behind the strip's scroll). The mechanics stand on F22.
 | every committed reference (3,756 files) | recaptured twice: step A (dials, reviewed via diffpage) and step B (extent, sampled review + version gate) |
 | `useSliderForInput`, `isTouchDevice`, `useVirtualKeyboard`, the L1 macro verbs, widget dispatch names | UNTOUCHED (T7 / Plan 4) |
 
+### 2.9 P2-probe refinements (owner rulings 2026-08-24, from the eyes-on review)
+
+The owner's nine probe findings, each with its ruled mechanism — built on the P2 tree in the
+probe-iteration round, inherited by P3:
+
+1. **Chevron post-click visibility** — a state defect (the button vanished after a click until
+   re-hovered); plain fix in the button/appearance state machine.
+2. **Row separators = PAINT, never layout** (G5 amendment): the rows container derives
+   adjacency at arrange (the C5 idiom); each row paints a faint inset hairline at its top
+   edge when told — `menuRowSeparatorColor`. No 1px gaps: gaps make dead zones between touch
+   targets and turn a paint concern into layout. No doubled lines at section boundaries
+   (adjacency derives false across a separator). Same mechanism serves menu AND list rows.
+3. **The graded title rule** (C13 amendment): a bar renders its FULL title when it fits;
+   ellipsized only while the visible prefix keeps ≥ `barTitleEllipsisMinFraction` (0.7) of the
+   characters AND ≥ `barTitleEllipsisMinChars` (5); otherwise the roster derivation drops the
+   title piece entirely — `"World…"`/`"t…"` can never render.
+4. **Bar text centring**: vertically centred in the bar thickness (the old 16px placement in a
+   50px bar was the wonk); horizontally centred in the bar's FULL width, clamped clear of the
+   piece cluster.
+5. **A textless bar centres its piece group along its axis** (C13 amendment) — a side-dock's
+   horizontal bar centres the collapse icon horizontally, a top-dock's vertical bar centres it
+   vertically; falls out for every bar the title rule leaves textless.
+6. **Indicators always-on** — §2.4 point 2 as amended; the fade never ships.
+7. **Fonts re-proposed** (owner confirms by eye): `menuFontSize` 17, `titleBarTextFontSize` 15
+   (+ `titleBarTextHeight` 19). The probe report carries a console poke cheat-sheet so the
+   owner can tune any dial live.
+8. **Bottom/right edge docking** — investigated: NOT a tree defect. All four sides arm and
+   dock (probe-proven: left, bottom, right each armed and landed). The observation was the
+   nearest-edge rule in `FrameWdgt.dockSideAt` (~:954) meeting `dockBandDepth` 50: the grip
+   sits at the band's LEADING end, so a drag straight down/across from it stays nearest the
+   left/top edge for almost the whole path — bottom/right win only in a few-px sliver (drop
+   at the target band's MIDDLE works first time). Whether the corner rule changes (e.g.
+   nearest edge measured from the dragged FRAME'S CENTRE instead of the pointer) is an
+   UNRULED owner decision — queued at the round-2 review. RULED at round 2 (2026-08-24):
+   the owner accepts the rule as-is ("docking works fine"); no change.
+
+Round-2 findings (owner review 2026-08-24, second pass — fixed in the round-3 iteration):
+
+9. **Remainder-menu z-order, now URGENT** (was a P3 carry): the chevron's menu pops occluded
+   by its own window — unusable. C9: transient ⇒ world child, on top; route it through the
+   standard pop-up path (unocclusion included).
+10. **Chrome must not disturb the editing subject**: clicking the chevron (and the remainder
+    menu's rows) DESELECTS the document text, and the row actions then no-op — while the
+    toolbar's own grid cells operate on the selection fine. Find the existing mechanism the
+    toolbar uses to preserve the editing subject and extend it as a DECLARED capability to
+    the chevron button and the derived remainder menu (never a special case); then prove a
+    row action applies to still-selected text.
+11. **Docked collapse/expand regression**: docked toolbars no longer collapse — worked before
+    the round-2 bar rework (suspect: the textless-bar piece re-layout or the title-roster
+    derivation detached the collapse action or C17's tap zone).
+12. **Tool-selection highlight regression**: in the Draw app the initially-selected pencil
+    shows its yellow selection, but selecting another tool never moves the highlight (the
+    tool itself works) — suspect the round-1 `ToolPanelWdgt` arrange rework re-deriving cells
+    without carrying selection state (state belongs to the model/cell, never the paint).
+
+Round-4 findings (owner review 2026-08-24, third pass):
+
+13. **The remainder-menu row must make EXACTLY the call its grid cell makes — for every tool
+    family.** In Slides Maker, tapping a toolbar cell drops the clicked item into the selected
+    slide; the same tool triggered from the chevron's menu does nothing. Round 3's
+    `tool.mouseClickLeft?()` dispatch fits the text-tool family but not the creator family
+    (`ToolbarCreatorButtonWdgt`/the smart-placer mixin — their click path may need position or
+    button context). The generic rule: a projection of a command invokes the SAME action path
+    as the primary projection — one dispatch contract, no per-family cases in the menu.
+14. **First tool switch in Draw binds late**: open Draw (pencil selected), click the toothpaste
+    WITHOUT drawing first — highlight moves (round 3's fix) but drawing still uses the pencil;
+    use the pencil once first and switching then works. The ACTIVE-TOOL binding and the
+    selection highlight are evidently two paths; the first-use case exposes a lazy/ordering
+    defect around the round-3 `radioButtonWasSwitched` sequencing or the app's current-tool
+    initialization. State and highlight must be ONE fact.
+
+Round-5 findings (owner review 2026-08-24, fourth pass):
+
+15. **The piece roster must degrade BY FIT to the very end** (owner-ruled progression): as a
+    window narrows, the bar already drops the title (the graded rule) — but close + collapse
+    then stay past the width that holds them. The derivation continues in priority order:
+    title first, then edit/pencil, then collapse, then close, then NOTHING — the same
+    fit-driven roster mechanism the title uses, extended to every piece (C5: the roster is
+    derived; fit is one of its inputs). Pieces stay centred as they thin out.
+16. **A free-floating toolbar HUGS its payload** (owner-ruled uniform criterion): the Super
+    Toolbar opens too narrow (buttons overflow horizontally, a stray indicator shows) and the
+    toolbars its buttons spawn are inhomogeneous. Rule: the free manifestation's extent
+    DERIVES from the tool grid's natural cell metrics — wide enough that the cells fit
+    centred; tall enough to show ALL cells, capped (C10's never-bigger-than-the-world for
+    hugging payloads), and when capped, quantized DOWN to an integer number of cells (no
+    partial cell showing); the chevron carries the remainder. One criterion for every
+    toolbar; no per-toolbar constants.
+
+Round-6 findings (owner review 2026-08-24, fifth pass):
+
+17. **The handle's reactive surface is its TRIANGLE, not its box** (owner-ruled): at 44 the
+    square hit box is no longer needed for touch; hover and drag react only on the drawn
+    lower-right triangle. The mechanism is F10's own: the appearance's `shapeContainsPoint`
+    (the same one that makes the round close/collapse buttons react on their circles) —
+    `HandleAppearance` answers point-in-triangle; no new hit API. Also softens the round-5
+    owner-eye question (the box half over the last toolbar cell stops catching).
+18. **Docked toolbar bands derive their thickness like free toolbars derive their extent**
+    (owner-ruled cohesion): the four app docks (Patch Programming, Slides Maker, Docs Maker,
+    Dashboard Maker) are too thick — the band takes `toolbarDockThickness 70` while the
+    payload's natural cross extent is 64 — and cells sit wonky. One rule: the band's
+    cross-axis thickness DERIVES from the same `naturalPayloadExtentWithin` capability round
+    5 built (C12's own letter: "the payload's declared dockThickness" — now declared BY
+    DERIVATION from cell metrics, not a constant), cells centred cross-axis; the long axis
+    stays forced by the host. `toolbarDockThickness` the constant dies — G2's original
+    formula instinct, vindicated now that the capability exists (Plan 1 falsified it only
+    because there was nothing to derive from).
+
+Round-6 outcomes (both landed; build 28-gates first-try + menusweep + apps green; proofs in
+`.scratch/probe-shots-r6/`): **17** — the defect was `HandleWdgt.catchesPointerAt` OVERRIDING
+the shape question with `boundsContainPoint`; the override is deleted and
+`HandleAppearance.shapeContainsPoint` answers the painted triangle's own diagonal
+(`rel.x·h + rel.y·w ≥ w·h` for the resize type; box for arrow/ring types) — 1936-point
+sweep, 0 mismatches; hover and drag ride the one test; layout box and scrollbar clearance
+unchanged; the macro verbs' centre press sits ON the diagonal and still resizes. **18** —
+`toolbarDockThickness` DELETED (declaration, assignment, the one read, every comment; 0 hits
+tree-wide); `ToolbarWdgt`'s ctor derives `dockThickness = contents.naturalGridCrossExtent()`
+(the round-5 inverse pair — no second arithmetic); measured: all four app docks
+specThickness 64, band frame 70 (= 64 + band chrome), cell margins 10/10 centred, both
+orientations; collapse→tap-expand green at the new thickness; chevron works in the band; the
+free Super Toolbar identical — docked and free share ONE derivation. ESCALATED and
+coordinator-ROUTED: `PaintToolbarWdgt.dockThickness: 103` (the Draw palette — a
+`RadioButtonsHolderWdgt` on the dock duck contract, no cell grid to derive from; it never
+read the deleted preference) stays a declared constant **with Plan 3.5 as its destination** —
+the command-panel unification absorbs the Draw palette and the derivation comes free there
+(program §5 rule 1: a deferral with an address).
+
+Round-5 outcomes (both landed; build + menusweep + apps green; proofs in
+`.scratch/probe-shots-r5/`): **15** — the old gate was BINARY (`stripFitsWholeRoster`
+collapsed all trailing pieces at once, never a leading one); now `_pieceNamesThatFit` drops
+by `FrameBarWdgt.PIECE_DROP_ORDER: ["edit","collapse","close"]` inside the one arrange
+derivation; survivors stay centred; the empty bar still drags; the item-11 provenance stamp
+self-expires on event time. **16** — SIX per-toolbar extent constants deleted (ToolbarsApp
+60×261, Text 130×156, Slides 105×300, Windows 61×192, Patch 61×192, Plots 60×192 + its
+placement literal and exemption comment); ONE derivation
+`FrameWdgt.sizeToPayloadNaturalExtent` → capability `naturalPayloadExtentWithin` →
+`ToolPanelWdgt.naturalGridExtentWithin`, the exact inverse of the arrange's own
+`_cellPitch`/`_cellsFittingIn` (no second arithmetic); world door `openFrameHuggingPayload`;
+capped height quantizes DOWN to whole cells, the chevron carries the rest; docked bands
+untouched (Docs dock still 70). Two T3-interaction findings surfaced (pre-existing — the 44
+handle vs small frames): (a) on a 70-wide toolbar the corner handle covers the last cell's
+centre — OWNER-EYE question at the next review; (b) a COLLAPSED frame smaller than the handle
+is entirely covered by it, defeating C17's tap-to-expand — coordinator-RULED 2026-08-24 by
+C5's letter (resizer iff the payload sizes freely; a collapsed frame IS its bar, its payload
+is not sizing): **the handle is hidden while collapsed** — implementation carried to P3.
+
+Round-4 outcomes (both fixed at root; build + menusweep + apps green; proofs in
+`.scratch/probe-shots-r4/`; the round-3 Bold proof re-run green): **13** — the item's
+attribution was FALSIFIED 2026-08-24 (the creator family worked from the menu all along; the
+broken family was the LIDDED one — a tap on a non-`actionableAsThumbnail` cell lands on the
+`GlassBoxTopWdgt` LID, which carries the smart-placer's `mouseClickLeft`; the wrapped tool
+carries none, so `tool.mouseClickLeft?()` no-opped). The one-contract fix: the CELL answers
+what a tap on it reaches — `GlassBoxBottomWdgt.thumbnailClickReceiver()` (the lid if
+`isGlassBoxLid`, else the item); the panel hands the chevron CELLS and `triggerToolFromMenu`
+clicks the receiver. No per-family branch anywhere. **14** — two root causes stacked:
+`FrameWdgt.paintingOverlay`'s "my parent is the frame whose content is the image" premise died
+when toolbars became docked BANDS (the band's contents are the toolbar → undefined), and the
+fallback `editorFocusWdgt` at Draw-open is still the desktop LAUNCHER icon — so the first
+click armed nothing while the highlight moved. Fix: a docked band's `paintingOverlay` answers
+its HOST's surface (`_myEdgeDockSpec()` guard; floating still undefined), and tool arming
+rides the ONE selection notification (`PaintToolbarWdgt.radioButtonWasSwitched` →
+`_armSelectedTool`; face buttons unwired; both mode hooks re-routed through the same call) —
+selection and active tool are one fact on one path.
+
+Round-3 outcomes (all four fixed at root, build + menusweep/pinsweep/apps green; proofs in
+`.scratch/probe-shots-r3/`): **9** — `popUpAtHand` was innocent; the window's OWN click
+escalation reached `bringToForeground` and hoisted it over the fresh menu; `bringToForeground`
+/`isInForeground` now treat open transient pop-ups as a BAND above the furniture
+(`Widget._transientPopUpsAboveMe`). **10** — the capability EXISTS
+(`excludedFromEditorFocusTracking`, honoured by ancestry in the hand's focus tracking;
+`IconButtonWdgt` already declares it, so the chevron was never the culprit — item 10's
+attribution was half false); the real defects: the derived menu lacked
+`actsAsEditorChrome = true`, and its row action called a nonexistent `tool.trigger?()` — now
+`tool.mouseClickLeft?()`, what a grid-cell tap makes. **11** — C17's tap-to-expand guard asked
+`_clickCameFromAPiece pos` AFTER the press had re-laid the strip, so geometry lied and the
+same click un-collapsed; replaced by PROVENANCE — the piece forwarders stamp the event time
+and the guard compares it (`_clickIsAPiecePress`); geometry query deleted. **12** — PRE-DATES
+this plan: the Draw palette is a `RadioButtonsHolderWdgt`, whose `mouseClickLeft` read the
+escalated POSITION as the sender-widget (Plan 1 T17's exact class of bug), resetting every
+switch including the clicked one; the switch now names itself
+(`@parent?.radioButtonWasSwitched? @`) inside its own settle.
+
 ---
 
 ## §3 The axes (why this shape)
@@ -733,10 +973,10 @@ tool already sits behind the strip's scroll). The mechanics stand on F22.
   all-different) preserves the only meaningful review the wave can have, and two commits keep
   the batch bisectable (the reference-grammar arc's committed-tolerance lesson). The recapture
   runs are background and cheap relative to a blind wave.
-- **The event clock, not a switch.** The fade could have been "instant under the harness" — a
-  per-page behaviour fork, exactly the class G1 exists to kill, and a suite blind spot. The
-  dual-clock idiom (F14) is already the house answer: same code path, deterministic under
-  capture, animated in production.
+- **No clock at all beats the right clock.** The fade was first designed on the dual-clock
+  idiom (F14) — the house answer when chrome MUST animate. The P2 owner ruling made the
+  indicator a pure function of overflow instead, and the whole time axis left the design:
+  when a behaviour can be a derivation, a derivation is categorically safer than any clock.
 - **Keep the sliders, restyle them.** The bars carry tracking wiring, announcement lanes and
   serialization arms that a parallel overlay class would duplicate line for line (the P5/P7
   "rows as views" lesson: one widget, one staleness signal). Presentation state is cheap;
@@ -842,8 +1082,14 @@ committed probe artifact, no product-build pollution, no new entry page (F17):
 ### P3 — Wave step A: dials + fold + indicators + handle + chevron, at CONSTANT extent (~1½ session-days)
 
 One Opus worker. Steps:
-1. Finalize §2.1 (ruled values), §2.2, §2.4 (all nine points — incl. `isScrollableNow` re-key
-   and transients), §2.5 (the 44 px grip), §2.7 (fit count + chevron + remainder menu). The
+1. Finalize §2.1 (ruled values), §2.2, §2.4 (as amended — always-on indicators, incl.
+   `isScrollableNow` re-key and transients), §2.5 (the 44 px grip), §2.7 (fit count + chevron
+   + remainder menu), §2.9 (the probe refinements, already on the tree). Plus
+   the three items P2 carried here: the F10 bar-piece fix (piece takes the SLOT box,
+   appearance insets the ink — pixel-identical, G3's letter); the chevron's retire path
+   becomes a real destroy inside the layout pass (P2 parks+hides — the settle/capstone/
+   revisits legs gate the destroy); the remainder menu pops AS A WORLD CHILD ON TOP (P2's
+   probe showed it occluded by its own window — C9; the witness test asserts unoccluded). The
    THREE witness tests authored — the two G4 ones and §2.7's chevron test
    (`/author-macro-test` skill; macro-source discipline: no `world.evaluateString`, "Macro"
    only trailing) with their own references captured at dprs 1+2.
@@ -924,7 +1170,7 @@ change. Status updates every ~5 min during long ops.
 | risk | where | bound |
 |---|---|---|
 | A dial value looks wrong only at scale ("silly", G3's fear) | P3 | the probe page shows every dial live BEFORE capture; the owner turns them there (G7 is the gate, not the diff review) |
-| Indicator fade/hover is nondeterministic under load | P3/P4 | the clock is the event clock under the Automator (F14 idiom), alpha quantized, `_changed()` on step-move only; witness macros advance time by events; `fg recapture`'s UNSTABLE bucket + the torture tool are the detectors; DETERMINISM.md is the playbook |
+| Indicator visibility flickers or diverges between runs | P3/P4 | dissolved by the 2026-08-24 always-on ruling: visibility is a pure function of overflow, nothing time-driven exists; `fg recapture`'s UNSTABLE bucket is the detector if a hover-state leak appears (the scroll-thumb dpr2 case law: keep the fat/thin state per-instance and event-driven) |
 | Drag-scroll dies when bars hide | P3 | §2.4 step 5 re-keys the two `anyScrollBarShowing` gates to `isScrollableNow()`; the existing drag-scroll SystemTests are the witnesses (they fail loudly if missed) |
 | The thin indicator steals clicks over content | P3 | `catchesPointerAt` false in thin/hidden state (F10); the fat state alone is interactive; the fatten trigger lives in the viewport's hover pass, not on the bar |
 | The chevron menu goes stale against the strip, or the chevron charges rent | P3 | the remainder menu is DERIVED at pop time and transient — no tracking wiring (§2.7 point 3); the chevron exists only while fit < count, and the witness test asserts both halves (§2.7 point 5) |

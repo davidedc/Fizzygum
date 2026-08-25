@@ -33,6 +33,14 @@ class FrameBarWdgt extends Widget
   # that pair, so the offer-to-collapse glyph is the first.
   @COLLAPSE_GLYPH: 0
 
+  # THE ORDER THE STRIP GIVES ITS PIECES UP as it narrows (owner ruling, the graded roster): the
+  # title goes first (the grade in _layOutTitleInStrip), then the pencil, then the collapse
+  # switch, then the close button, and then the strip carries nothing at all. Least consequential
+  # first -- editing is an amenity, collapsing is a convenience, and closing is the last thing a
+  # window gives up. A roster name absent from this list is dropped after all of them (from the
+  # roster's own tail), so a piece added tomorrow degrades rather than overflowing.
+  @PIECE_DROP_ORDER: ["edit", "collapse", "close"]
+
   frame: undefined
   titlebarBackground: undefined
   label: undefined
@@ -44,6 +52,12 @@ class FrameBarWdgt extends Widget
   # behind a fitted StringWdgt -- so a frame that changes manifestation needs them REBUILT, not
   # recoloured, and this is what tells the roster derive that they disagree with the spec.
   titleStyle: undefined
+
+  # THE EVENT ONE OF MY PIECES ACTED ON — the stamp my own strip gesture reads to know whose click
+  # it is looking at (see mouseClickLeft). Purely about a gesture in flight, so it never belongs in
+  # a snapshot; merged up the chain by Serializer.transientsForClass, which ADDS to Widget's list.
+  @serializationTransients: ["_eventOfAPiecePress"]
+  _eventOfAPiecePress: undefined
 
   constructor: (@frame) ->
     super()
@@ -58,6 +72,19 @@ class FrameBarWdgt extends Widget
   # BY ANCESTRY at ActivePointerWdgt's focus-set sites (the pieces are my children; the buttons also exclude
   # themselves via IconButtonWdgt).
   excludedFromEditorFocusTracking: -> true
+
+  # MY PIECES DO NOT OWN DRAGS -- I DO. A chrome piece acts on a TAP (close, collapse, toggle the
+  # pencil); a press on one that travels past the grab threshold is the user taking hold of the
+  # STRIP, and it must do what a drag on my bare strip does: move a window, pull a docked band out
+  # of its slot. Without this a piece cancels the drag outright (the button family rejects drags
+  # by default) and a strip whose pieces cover it -- a 50 px band grip with a centred 44 px switch
+  # -- becomes undraggable at exactly the place a user grabs it.
+  #   Declared HERE, on the strip, in the parent-side shape wantsDetachOfChild already uses
+  # (ButtonWdgt.rejectDrags consults both): a piece never has to know which strip it sits on, and
+  # nothing in the hand learns a special case. The CLICK path is untouched -- a tap still fires
+  # the button's own action, and the provenance stamp that tells my strip gesture "that was a
+  # piece press" is written by the action, which a drag never reaches.
+  ownsDragsOfMyChildren: -> true
 
   # I present NO SURFACE OF MY OWN -- my titlebarBackground piece draws the strip -- so the
   # pointer falls THROUGH me: to my pieces (shaped where the strip is drawn), to the frame body
@@ -82,18 +109,34 @@ class FrameBarWdgt extends Widget
   # The bar answers its buttons' `@parent.<x>ButtonInBarPressed?()` asks and
   # forwards to the frame, which owns the meaning (close/collapse the CONTENT,
   # toggle its edit mode).
+  #   Every piece press comes through here, which is what makes this the one place that can STAMP
+  # it: the strip's own gesture must know a click was a piece's, and by the time that click has
+  # escalated to me the press has already moved the very pieces a positional test would ask about
+  # (see mouseClickLeft).
 
   closeButtonInBarPressed: ->
+    @_notePiecePress()
     @frame.closeButtonInBarPressed()
 
   editButtonInBarPressed: ->
+    @_notePiecePress()
     @frame.editButtonInBarPressed()
 
   collapseButtonInBarPressed: ->
+    @_notePiecePress()
     @frame.collapseButtonInBarPressed()
 
   uncollapseButtonInBarPressed: ->
+    @_notePiecePress()
     @frame.uncollapseButtonInBarPressed()
+
+  # A piece of mine is acting on THIS event. The EVENT CLOCK, never the wall clock and never a
+  # bare flag: one click is drained under one WorldWdgt.timeOfEventBeingProcessed, so a press and
+  # the escalation it causes share a stamp and no later gesture can. A flag would have to be
+  # cleared by someone, and a press driven straight from code (a macro, a menu sweep) escalates to
+  # nobody — it would leave the flag armed and swallow the next real strip tap forever.
+  _notePiecePress: ->
+    @_eventOfAPiecePress = WorldWdgt.timeOfEventBeingProcessed
 
   # Piece adds mirror the frame's add core (strip-spacing hook first) so a
   # piece type that overrides _resizeToWithoutSpacing behaves identically to
@@ -150,15 +193,15 @@ class FrameBarWdgt extends Widget
 
     title = new StringWdgt "", fontSize: spec.fontSize
 
-    # as of March 2018, Safari 10.1.1 on OSX 10.12.5 :
-    # safari's rendering of bright text on dark background is atrocious
-    # so we have to force bold style in the window bars
-    if /^((?!chrome|android).)*safari/i.test navigator.userAgent
-      title.isBold = true
-    else
-      title.isBold = preferences.titleBarBoldText
+    # the weight the preference block names, on EVERY engine: a bar title is chrome like any
+    # other, and chrome keyed on the user agent renders one world two ways -- which is precisely
+    # what the cross-engine suite leg reads, and reports, as a defect.
+    title.isBold = preferences.titleBarBoldText
 
     title.color = Color.WHITE
+    # a window title reads CENTRED in its strip (ruling C13): the arrange grants me a box centred
+    # on the strip and clear of the pieces at both ends, and the text centres itself within it.
+    title.alignCenter()
     @_addNoSettle title
     title
 
@@ -367,28 +410,24 @@ class FrameBarWdgt extends Widget
     stripStart = if vertical then @top() else @left()
     stripEnd = if vertical then @bottom() else @right()
 
-    # NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching the
-    # self-settling wrapper would re-enter the flush. The cores are idempotent, so an already-correct
-    # button is a no-op exactly as the public guards made it. (check-layering [G])
-    # A trailing button is what a narrow strip gives up first, so the title keeps its room.
-    stripFitsWholeRoster = stripLength >= (leadingPieces.length + trailingPieces.length) * pitch + spec.padding
-    for pieceName in trailingPieces
+    # THE ROSTER, GRADED BY FIT -- ONE derivation, right here, with the strip's length as one of
+    # its inputs (ruling C5). Every piece the strip has no whole slot for gives its slot up, in
+    # the order below, so a narrowing strip thins out to nothing instead of overlapping its own
+    # buttons.
+    #   NON-settling cores (not the public collapse/unCollapse): this is a layout pass, so reaching
+    # the self-settling wrapper would re-enter the flush. The cores are idempotent, so an
+    # already-correct button is a no-op exactly as the public guards made it. (check-layering [G])
+    allPieces = leadingPieces.concat trailingPieces
+    keptPieces = @_pieceNamesThatFit allPieces, stripLength, spec
+    for pieceName in allPieces
       piece = @_pieceNamed pieceName
       continue unless piece?
-      if stripFitsWholeRoster
+      if pieceName in keptPieces
         piece._unCollapseNoSettle()
       else
         piece._collapseNoSettle()
-
-    for pieceName, slotIndex in leadingPieces
-      piece = @_pieceNamed pieceName
-      continue unless piece? and piece.parent == @
-      @_layOutPieceInSlot piece, (stripStart + spec.padding + slotIndex * pitch), spec
-
-    for pieceName, slotIndex in trailingPieces
-      piece = @_pieceNamed pieceName
-      continue unless piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
-      @_layOutPieceInSlot piece, (stripEnd - (trailingPieces.length - slotIndex) * pitch), spec
+    leadingPieces = (pieceName for pieceName in leadingPieces when pieceName in keptPieces)
+    trailingPieces = (pieceName for pieceName in trailingPieces when pieceName in keptPieces)
 
     if vertical
       @titlebarBackground._applyBounds (@position().add new Point 1,1), (new Point spec.thickness, @height()).subtract new Point 2,2
@@ -398,28 +437,115 @@ class FrameBarWdgt extends Widget
     #@titlebarBackground._applyExtent (new Point @width(), spec.thickness).subtract new Point 4,4
     #@titlebarBackground._applyMoveTo @position().add new Point 2,2
 
-    # the title TEXT is what a strip TOO NARROW TO READ gives up -- the same idiom as the trailing
-    # button a short strip gives up above, and for the same reason: the piece stays, so its text
-    # survives to be shown again the moment the strip runs across a frame's top instead of down a
-    # band's side.
-    if @label? and @label.parent == @
-      if spec.showsText
-        @label._unCollapseNoSettle()
-      else
-        @label._collapseNoSettle()
+    # THE TITLE, after the pieces because it takes the span they leave, and it is the FIRST thing
+    # the graded roster gives up: a strip too narrow to READ drops its text the same way the roster
+    # above drops a button, and for the same reason -- the piece stays, so its text survives to be
+    # shown again the moment the strip runs across a frame's top instead of down a band's side. A
+    # title cropped past legibility gives itself up too (see _layOutTitleInStrip).
+    titleShows = @_layOutTitleInStrip spec, leadingPieces, trailingPieces, pitch
 
-    # the title takes the span between the leading pieces and the trailing ones
-    # that are actually showing
-    if spec.showsText and @label? and @label.parent == @
-      labelLeft = @left() + spec.padding + leadingPieces.length * pitch
-      labelRight = @right() - spec.padding
-      for pieceName in trailingPieces
+    if titleShows
+      # the roster reads left to right: the leading pieces from the strip's start, the trailing
+      # ones from its end, and the title in the span between
+      for pieceName, slotIndex in leadingPieces
         piece = @_pieceNamed pieceName
-        labelRight -= pitch if piece? and !piece.isInCollapsedSubtree()
+        continue unless piece? and piece.parent == @
+        @_layOutPieceInSlot piece, (stripStart + spec.padding + slotIndex * pitch), spec
 
-      labelBounds = new Rectangle new Point labelLeft, @top() + spec.padding
-      labelBounds = labelBounds.setBoundsWidthAndHeight (labelRight - labelLeft), spec.textHeight
-      @label._applyGrantedBounds labelBounds
+      for pieceName, slotIndex in trailingPieces
+        piece = @_pieceNamed pieceName
+        continue unless piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
+        @_layOutPieceInSlot piece, (stripEnd - (trailingPieces.length - slotIndex) * pitch), spec
+    else
+      # A TEXTLESS strip centres its piece GROUP along its own axis (ruling C13): with no title
+      # between them the pieces are the whole of what the strip carries, and a lone collapse glyph
+      # pinned to one end of a long empty band reads as an accident rather than as the band's
+      # control. Contiguous, in roster order, in the middle -- a side dock's horizontal bar centres
+      # it horizontally, a top dock's vertical bar vertically, and it is ONE arithmetic either way.
+      showing = @_showingPieces leadingPieces.concat trailingPieces
+      if showing.length > 0
+        groupLength = showing.length * spec.slotSize + (showing.length - 1) * spec.padding
+        groupStart = stripStart + Math.round (stripLength - groupLength) / 2
+        for piece, slotIndex in showing
+          @_layOutPieceInSlot piece, (groupStart + slotIndex * pitch), spec
+
+  # WHICH of `pieceNames` the strip has room for, in roster order. A piece occupies a whole slot
+  # (the target box) and the strip keeps a padding at each end and between neighbours, so the
+  # count that fits is the inverse of the group arithmetic the placement below uses --
+  # n * pitch + padding pixels for n pieces. What falls out goes by PIECE_DROP_ORDER, so the
+  # progression is the ruled one (pencil, collapse, close) rather than "whatever was last".
+  _pieceNamesThatFit: (pieceNames, stripLength, spec) ->
+    pitch = spec.slotSize + spec.padding
+    slotsAvailable = Math.max 0, Math.floor (stripLength - spec.padding) / pitch
+    kept = pieceNames.slice()
+    for pieceName in FrameBarWdgt.PIECE_DROP_ORDER
+      break if kept.length <= slotsAvailable
+      droppedAt = kept.indexOf pieceName
+      kept.splice droppedAt, 1 if droppedAt >= 0
+    # a roster name the drop order does not know still has to fit: the tail goes
+    kept = kept.slice 0, slotsAvailable if kept.length > slotsAvailable
+    kept
+
+  # The pieces of `pieceNames` that are actually on the strip right now -- mine, and not collapsed
+  # away by the roster's fit grade above.
+  _showingPieces: (pieceNames) ->
+    pieces = []
+    for pieceName in pieceNames
+      piece = @_pieceNamed pieceName
+      pieces.push piece if piece? and piece.parent == @ and !piece.isInCollapsedSubtree()
+    pieces
+
+  # PLACE THE TITLE, and answer whether it ends up showing at all.
+  #   Its box is the widest one CENTRED on the strip that stays clear of the pieces at both ends,
+  # so the text reads centred in the strip's FULL width (ruling C13) and can never run under a
+  # button; the box is symmetric because the extra room beside the shorter end is room a centred
+  # title cannot use anyway. Vertically it sits centred in the strip's thickness.
+  #   THE GRADE (ruling C13): a title that fits shows whole; a cropped one shows only while the
+  # visible prefix keeps barTitleEllipsisMinFraction of the characters AND at least
+  # barTitleEllipsisMinChars of them. Below either bar there is no title piece at all -- "World…"
+  # and "t…" name nothing, and an empty strip says more than a garbled one.
+  _layOutTitleInStrip: (spec, leadingPieces, trailingPieces, pitch) ->
+    return false unless @label? and @label.parent == @
+    # a strip running down a band's side is too narrow to read: the piece stays (its text survives
+    # for the moment the strip runs across a top again) but it is collapsed out of the picture
+    unless spec.showsText
+      @label._collapseNoSettle()
+      return false
+    vertical = spec.axis is "vertical"
+    stripLength = if vertical then @height() else @width()
+    stripStart = if vertical then @top() else @left()
+    trailingShowing = (@_showingPieces trailingPieces).length
+
+    centre = stripStart + Math.round stripLength / 2
+    leadEnd = stripStart + spec.padding + leadingPieces.length * pitch
+    trailEnd = stripStart + stripLength - spec.padding - trailingShowing * pitch
+    halfSpan = Math.min (centre - leadEnd), (trailEnd - centre)
+
+    if halfSpan <= 0
+      @label._collapseNoSettle()
+      return false
+
+    # uncollapsed BEFORE the grant: the grade below reads what the label would draw in the box it
+    # is holding, so it must be holding one
+    @label._unCollapseNoSettle()
+    labelTop = @top() + Math.round (spec.thickness - spec.textHeight) / 2
+    labelBounds = new Rectangle new Point (centre - halfSpan), labelTop
+    @label._applyGrantedBounds labelBounds.setBoundsWidthAndHeight (2 * halfSpan), spec.textHeight
+
+    return true if @_titleReadsWellEnough()
+    @label._collapseNoSettle()
+    false
+
+  # Does the title in the box it now holds still SAY the frame's name? Whole, always; cropped, only
+  # while enough of it survives (the two barTitleEllipsis* dials).
+  _titleReadsWellEnough: ->
+    preferences = WorldWdgt.preferencesAndSettings
+    wholeLength = @label.text.length
+    return true if wholeLength is 0
+    keptLength = @label.numberOfCharactersThatFit()
+    return true if keptLength >= wholeLength
+    keptLength >= preferences.barTitleEllipsisMinChars and
+      keptLength >= preferences.barTitleEllipsisMinFraction * wholeLength
 
   # The POP-UP strip: ONE header box, inset from my edges by the padding and as tall as the
   # strip, with the title text hugging itself and centred in it. An untitled pop-up carries no
@@ -437,16 +563,21 @@ class FrameBarWdgt extends Widget
   # ask, for anything a piece could also mean, whether the click was a PIECE's. A piece has
   # already acted by the time it escalates: a press on the collapse button that this handler read
   # as a strip press would undo itself on the spot.
+  #   It asks by PROVENANCE (the press protocol's stamp), never by position, because the press has
+  # already RE-LAID my pieces: collapsing a docked band turns a 50-wide vertical strip into a
+  # band-wide horizontal one, so the collapse glyph is no longer under the point that was clicked
+  # and a positional test answers "not a piece" — which is exactly the tap-anywhere-to-expand case
+  # below, and the collapse undid itself in the same click.
   #   A COLLAPSED frame expands on a tap ANYWHERE on its strip (program ruling C17): collapsed, a
   # frame IS its bar — a window's strip, a band's sliver — and at touch scale a sliver with one
   # small button at its end wastes its own target area.
   #   A tap on an EXPANDED strip keeps its own meaning: it PINS a transient frame — the pop-up
   # manifestation's one bar gesture, and the counterpart of the drag that moves it, since the
   # title is what you take hold of.
-  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+  mouseClickLeft: (ignored_pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     super
     return unless @frame?
-    return if @_clickCameFromAPiece pos
+    return if @_clickIsAPiecePress()
     if @frame.contents?.collapsed
       # a tap on the strip IS a press of the collapse switch, so it must do BOTH halves of one:
       # the switch flips its own glyph on its own click (the frame never drives it), and the
@@ -458,25 +589,21 @@ class FrameBarWdgt extends Widget
     @frame.pinPopUp @ if @frame.isTransientPopUp()
 
   # Was this escalated click a BUTTON piece's, rather than the strip's own? (the title text and
-  # the strip background ARE the strip, and answer no.) Every sender puts the click POSITION in
-  # that slot, and it arrives in my plane — the plane my pieces share — so the pieces' own shapes
-  # answer the question.
-  _clickCameFromAPiece: (pos) ->
-    return false unless pos?
-    for piece in [@closeButton, @collapseUncollapseSwitchButton, @editButton]
-      continue unless piece? and piece.parent == @
-      return true if piece.isPointerTargetAt pos
-    false
+  # the strip background ARE the strip, and answer no.) A piece press stamps the event it acted on
+  # and the click it escalates is that same event, so the two meet here without either the click
+  # or the piece having to say where anything is.
+  _clickIsAPiecePress: ->
+    @_eventOfAPiecePress? and @_eventOfAPiecePress is WorldWdgt.timeOfEventBeingProcessed
 
-  # A piece occupies its SLOT -- the target box the strip advances by -- and is
-  # drawn at the GLYPH dial centred inside it. Two dials, never one (program
-  # ruling G3): a target and the mark inside it scale differently. They are equal
-  # on the desk profile, so a piece fills its slot exactly.
+  # A piece IS its SLOT -- the whole target box the strip advances by -- and DRAWS the glyph dial
+  # centred inside it. Two dials, never one (program ruling G3: the bar arrange must never equate
+  # a glyph with a box), and the piece takes the bigger of them: what a finger can hit is the slot,
+  # while the ink stays the size the eye wants. The inset lives on the appearance, which is where
+  # a shape already decides where it paints inside the box it is given.
   _layOutPieceInSlot: (piece, slotStart, spec) ->
-    glyphInset = Math.round (spec.slotSize - spec.glyphSize) / 2
-    glyphSide = spec.slotSize - 2 * glyphInset
     if spec.axis is "vertical"
-      pieceBounds = new Rectangle new Point @left() + spec.padding + glyphInset, slotStart + glyphInset
+      pieceBounds = new Rectangle new Point @left() + spec.padding, slotStart
     else
-      pieceBounds = new Rectangle new Point slotStart + glyphInset, @top() + spec.padding + glyphInset
-    piece._reLayout pieceBounds.setBoundsWidthAndHeight glyphSide, glyphSide
+      pieceBounds = new Rectangle new Point slotStart, @top() + spec.padding
+    piece.glyphSize = spec.glyphSize
+    piece._reLayout pieceBounds.setBoundsWidthAndHeight spec.slotSize, spec.slotSize

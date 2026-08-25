@@ -6,10 +6,9 @@
 # conforms to the frame slot's duck contract instead (dockSide / dockThickness /
 # the collapse cores / _reLayout / excludedFromEditorFocusTracking).
 #
-# The tools inject their handler source into a painting overlay resolved at
-# PRESS time (resolveInjectionTarget below) -- any paint toolbar can serve any
-# image (owner decision D12: injection stays the arming mechanism in D-1; a
-# world-level tool object is D-2's design space).
+# The tools inject their handler source into a painting overlay resolved when the selection moves
+# (resolveInjectionTarget below) -- any paint toolbar can serve any image (owner decision D12:
+# injection stays the arming mechanism in D-1; a world-level tool object is D-2's design space).
 
 class PaintToolbarWdgt extends RadioButtonsHolderWdgt
 
@@ -354,13 +353,14 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   excludedFromEditorFocusTracking: ->
     true
 
-  # ===== press-time target resolution (§5.D D-ii 3, owner decision D11) =====
-  # DOCKED: my parent is the frame whose content is the image -- act on THIS
-  # image. FLOATING: my parent frame's content is me, so the frame's
-  # paintingOverlay dispatch finds nothing -- fall to the FOCUSED widget.
+  # ===== target resolution (§5.D D-ii 3, owner decision D11) =====
+  # DOCKED: my parent is the band frame holding me, and a band answers with its HOST's surface --
+  # act on THAT image, whether or not anything has been clicked yet. FLOATING: my frame is docked
+  # in nothing and its content is me, so it answers undefined -- fall to the FOCUSED widget, which
+  # is the only thing that says which image a loose palette is aimed at.
   # Either leg resolves through the paintingOverlay() capability chain
-  # (glass / canvas / container / frame); undefined = nothing paintable, the press
-  # is a visual-only radio flip (the text-toolbar no-op contract).
+  # (glass / canvas / container / frame); undefined = nothing paintable, and arming is then a
+  # visual-only radio flip (the text-toolbar no-op contract).
   resolveInjectionTarget: ->
     @parent?.paintingOverlay?() ? world.editorFocusWdgt?.paintingOverlay?()
 
@@ -379,18 +379,41 @@ class PaintToolbarWdgt extends RadioButtonsHolderWdgt
   reactToEditModeInFrame: ->
     return if @_armed
     @_armed = true
-    @resolveInjectionTarget()?.injectProperties PaintToolbarWdgt.PENCIL_TOOL_SOURCE
     for toggle in @_toolToggles()
       toggle._setToggleStateNoSettle (if toggle == @pencilToolButton then 1 else 0)
+    @_armSelectedTool()
     return
 
   reactToViewModeInFrame: ->
     return if !@_armed
     @_armed = false
-    @resolveInjectionTarget()?.injectProperties PaintToolbarWdgt.TOOL_OFF_SOURCE
     for toggle in @_toolToggles()
       toggle._setToggleStateNoSettle 0
+    @_armSelectedTool()
     return
+
+  # ===== the ONE fact: which of my switches is selected =====
+  # The highlight and the ARMED TOOL are two views of that single fact, so they move together, on
+  # the one notification a switch sends when a click flips it. Two separate writes of the same
+  # thing -- a face button arming on its own press while the switch flips underneath it -- can
+  # disagree, and a press whose injection target does not resolve is exactly where they do: the
+  # highlight moves and nothing is armed, so the palette shows a tool the surface does not have.
+  radioButtonWasSwitched: (whichOne) ->
+    super
+    @_armSelectedTool()
+
+  # Put the selected tool's handlers on the painting surface; nothing selected means nothing
+  # paints. The ONE place a tool is armed -- the mode hooks above re-drive the selection and then
+  # come through here too, so no path can arm a tool the palette is not showing as chosen.
+  # undefined target = nothing paintable in reach, and the flip is then a visual-only radio
+  # change (the text-toolbar no-op contract).
+  _armSelectedTool: ->
+    @resolveInjectionTarget()?.injectProperties @_sourceOfSelectedTool()
+
+  # A tool toggle's OFF face is the one carrying that tool's own source (its ON face carries the
+  # disarm, so that clicking a selected tool a second time turns painting off).
+  _sourceOfSelectedTool: ->
+    @whichButtonSelected()?.buttons[0].sourceCodeToBeInjected ? PaintToolbarWdgt.TOOL_OFF_SOURCE
 
   _toolToggles: ->
     (each for each in [@pencilToolButton, @brushToolButton, @toothpasteToolButton, @eraserToolButton] when each?)

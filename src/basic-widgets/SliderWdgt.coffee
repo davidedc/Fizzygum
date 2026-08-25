@@ -29,6 +29,25 @@ class SliderWdgt extends CircleBoxWdgt
 
   smallestValueIsAtBottomEnd: false
 
+  # ── SCROLL-INDICATOR PRESENTATION (program ruling G4) ─────────────────────────────────────
+  # A viewport's scrollbar wears an indicator presentation: 'thin' (thumb only, untouchable) or
+  # 'fat' (the full control, under a hovering pointer). undefined on every OTHER slider — a value
+  # control is not an indicator, and none of this touches it.
+  indicatorMode: undefined
+  # the alphas the two states wear: the track's (fat only — a thin indicator paints no track) and
+  # the thumb's
+  indicatorTrackAlpha: 0.1
+  indicatorThumbAlpha: 0.4
+  # and the pair a PLAIN slider wears — a translucent track and a solid thumb. Named because two
+  # places need them: my constructor, and the return from an indicator presentation.
+  plainTrackAlpha: 0.1
+  plainThumbAlpha: 1
+  # The presentation does not ride a file: my viewport RE-DERIVES it from its own overflow at the
+  # first arrange after a restore, exactly as it does on a freshly built world, so a snapshot
+  # carrying a mode could only ever disagree with it. Merged up the chain by
+  # Serializer.transientsForClass, which ADDS to Widget's list.
+  @serializationTransients: ["indicatorMode"]
+
   # I drive numbers, and the number I export is my `value` pin (see `pins`, below).
   producesPinKind: "numerical"
   principalPinLabel: "value"
@@ -51,7 +70,11 @@ class SliderWdgt extends CircleBoxWdgt
     @color = opts.color ? Color.BLACK
     @smallestValueIsAtBottomEnd = opts.smallestValueIsAtBottomEnd ? false
     super()
-    @alpha = 0.1
+    @alpha = @plainTrackAlpha
+    # a scrollbar wearing its THIN indicator presentation is narrower than the generic 5px
+    # floor every widget carries, and the dial that names that width must mean what it says.
+    # (DividerWdgt relaxes its own minimum the same way, for the same kind of reason.)
+    @_setMinimumExtent new Point 1, 1
     @__commitExtent new Point 20, 100
     @_buildAndConnectChildren()
 
@@ -71,6 +94,36 @@ class SliderWdgt extends CircleBoxWdgt
   colloquialName: ->
     "slider"
 
+  # Wear an indicator presentation (my viewport derives it; see ViewportWdgt._refreshScrollIndicators).
+  # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
+  # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
+  # thumb alone — the track's alpha goes to zero. `undefined` is the third state and means "not an
+  # indicator at all": the plain slider look, and a pointer that stops on me again.
+  showAsScrollIndicator: (mode) ->
+    return if @indicatorMode is mode
+    @indicatorMode = mode
+    @alpha = switch mode
+      when 'fat'  then @indicatorTrackAlpha
+      when 'thin' then 0
+      else             @plainTrackAlpha
+    @button?.showAsScrollIndicatorThumb? (if mode? then @indicatorThumbAlpha else @plainThumbAlpha)
+    @_fullChanged()
+
+  # Am I an indicator the pointer must pass THROUGH? True in every state but 'fat': an indicator
+  # is not a target (ruling G3), so a click over a thin bar reaches the content under it.
+  # Asked by me and by my thumb.
+  indicatorIsIntangible: ->
+    @indicatorMode? and @indicatorMode isnt 'fat'
+
+  catchesPointerAt: (aPoint) ->
+    return false if @indicatorIsIntangible()
+    super
+
+  # How far my thumb sits inside my track, read by the thumb's own arrange. A thin indicator
+  # paints no track for a thumb to sit inside, so there the thumb fills the bar.
+  thumbInsetInTrack: ->
+    if @indicatorIsIntangible() then 0 else 2
+
   # As a menu entry, prefer the width I was BUILT at, frozen at the first ask
   # (a slider is a stretch control with no intrinsic content width, so its
   # natural width IS its as-built width). The first ask happens at the rows-
@@ -88,6 +141,13 @@ class SliderWdgt extends CircleBoxWdgt
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelfAndButton()
+    # An indicator presentation is something a VIEWPORT puts on the bar it HOLDS. Landing anywhere
+    # else — the hand, the desktop, a panel — I am a plain slider again, and a plain slider is a
+    # target: a thin, pointer-through look must not survive being picked up, or the bar becomes a
+    # widget on the desktop that nothing can ever click, with no scroll band left to hover it back.
+    # public-call-sanctioned: showAsScrollIndicator IS the one door onto this presentation (my
+    # viewport comes through it too) and it settles nothing — it writes two alphas and repaints.
+    @showAsScrollIndicator undefined  unless whereTo.isMyScrollBar? @
     # A DUPLICATED or re-parented control carries its wire records but NO edges — the engine's index
     # is derived and never duplicated or serialized, and the client re-declares it (dataflow spec §2).
     # Joining a live world is the moment a copy can do that, so a duplicated scrollbar follows its

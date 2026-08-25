@@ -30,8 +30,17 @@ class IconAppearance extends Appearance
 
 
   calculateRectangleOfIcon: ->
-    height = @widget.height()
-    width = @widget.width()
+    boxHeight = @widget.height()
+    boxWidth = @widget.width()
+
+    # THE INK'S OWN SIDE, where my widget names one: a chrome icon is a TARGET first (ruling G3 --
+    # "the bar arrange must never equate glyph with box"), so a title-strip button sized to the
+    # whole slot the strip reserved for it still draws the smaller glyph, centred in that slot.
+    # A widget naming no glyph side -- a desktop icon, a toolbar thumbnail -- has its mark fill
+    # its box, which is what those want.
+    glyphSide = @widget.glyphSize
+    height = if glyphSide? then Math.min boxHeight, glyphSide else boxHeight
+    width = if glyphSide? then Math.min boxWidth, glyphSide else boxWidth
 
     scaleW = Math.abs(width / @preferredSize.width())
     scaleH = Math.abs(height / @preferredSize.height())
@@ -56,8 +65,9 @@ class IconAppearance extends Appearance
     result = new Rectangle(Math.min(0, @preferredSize.width()), Math.min(0, @preferredSize.height()), Math.abs(@preferredSize.width()), Math.abs(@preferredSize.height()))
     result2W = result.width() * scaleW
     result2H = result.height() * scaleH
-    result2X = @widget.left() + (width - (result2W)) / 2
-    result2Y = @widget.top() + (height - (result2H)) / 2
+    # centred in the WIDGET's box -- the target -- which the ink is free to be smaller than
+    result2X = @widget.left() + (boxWidth - (result2W)) / 2
+    result2Y = @widget.top() + (boxHeight - (result2H)) / 2
 
     result = new Rectangle result2X, result2Y, result2X + result2W, result2Y + result2H
     return result.round()

@@ -20,6 +20,6 @@ class ToolbarsApp extends WindowedApp
 
 
   buildWindow: ->
-    world.openFrameWith new SuperToolbarWdgt, (new Point 60, 261), (new Point 170, 170)
+    world.openFrameHuggingPayload (new SuperToolbarWdgt), (new Point 170, 170)
 
   windowOpened: (wm) -> InfoDocs.createNextTo "superToolbar", wm

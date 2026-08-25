@@ -638,18 +638,43 @@ class MacroToolkit
   pasteText_InputEvents: (text, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @queueInputEvent new PasteInputEvent text, true, startTime
 
+  # WHERE A SYNTHESISED PRESS GRABS A HANDLE, and where its drag must then end. Answers the
+  # [pressPoint, dropPoint] pair both handle-drag verbs push, in SCREEN coordinates.
+  #
+  # A handle reacts on the shape its appearance paints (HandleAppearance.shapeContainsPoint). Every
+  # type but the corner resizer paints its whole box, so its centre is deep inside its shape and the
+  # centre IS the press point — including the rotate handle, whose gesture reads the RAW pointer's
+  # angle about the target's anchor, so moving its press point would move the angle it measures.
+  #
+  # The corner resizer's shape is the striped triangle whose diagonal runs exactly through the box
+  # CENTRE — so there the centre is the shape's BOUNDARY, and a press a single pixel up or left of it
+  # falls through to the frame, which float-drags instead of resizing. A synthesised approach lands
+  # exactly there: syntheticEventsMouseMove_InputEvents samples its easing at i in [0, N), so the
+  # pointer stops ~0.1% of the travel short of its destination — a whole pixel once the travel passes
+  # ~470, which a park-then-aim move across the test world easily does. So aim a quarter-box deeper
+  # into the corner: that clears the diagonal by handleSize/4 on each axis, far past any shortfall.
+  #
+  # The destination shifts by the SAME on-screen vector, so the drag vector — hence the extent the
+  # gesture produces — is the centre-to-destination one the caller asks for, and the handle's CENTRE
+  # still lands on the destination. localPointToScreen forward-maps through any enclosing
+  # non-identity island (affine transforms §6 4A-2), so a handle inside a scaled/rotated island is
+  # pressed where it actually renders and the shift is mapped with it; both operands then carry the
+  # same vector through nonFloatDragging's inverse map, which cancels it exactly.
+  _handlePressAndDropPoints: (handle, destination) ->
+    screenCentre = handle.localPointToScreen handle.center()
+    return [screenCentre, destination]  unless handle.type is "resizeBothDimensionsHandle"
+    pressPoint = handle.localPointToScreen handle.center().add handle.extent().floorDivideBy 4
+    [pressPoint, (destination.add pressPoint.subtract screenCentre)]
+
   # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
-  # item) from its centre to a destination Point. Handles resize/move the target via NON-float
-  # dragging (HandleWdgt.nonFloatDragging → setExtent / moveTo), so this is a real
+  # item) to a destination Point (the handle's centre lands there). Handles resize/move the target
+  # via NON-float dragging (HandleWdgt.nonFloatDragging → setExtent / moveTo), so this is a real
   # press-drag-release. handleType picks the handle: "resizeBothDimensionsHandle" (bottom-right
   # corner — resizes both dimensions), "moveHandle", "resizeHorizontalHandle", "resizeVerticalHandle".
   dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     handle = world.topWdgtSuchThat (item) -> (item instanceof HandleWdgt) and (item.type == handleType)
-    # Press at the handle's ON-SCREEN centre. localPointToScreen forward-maps through any enclosing
-    # non-identity island (affine transforms §6 4A-2), so a handle on a widget inside a scaled/rotated
-    # island is pressed where it actually renders — not at its virtual bounds centre, which would miss.
-    # Off every island localPointToScreen returns the same point ⇒ byte-identical for all existing tests.
-    @syntheticEventsMouseMovePressDragRelease_InputEvents handle.localPointToScreen(handle.center()), destination, milliseconds, startTime
+    [pressPoint, dropPoint] = @_handlePressAndDropPoints handle, destination
+    @syntheticEventsMouseMovePressDragRelease_InputEvents pressPoint, dropPoint, milliseconds, startTime
 
   # Float-DRAG a widget (by reference, or by a recorded text-description identifier) and drop it at a
   # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at
@@ -693,19 +718,64 @@ class MacroToolkit
   # Queues input events — follow with `yield "waitNoInputsOngoing"`.
   dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
-    @syntheticEventsMouseMovePressDragRelease_InputEvents (windowWidget.resizer.localPointToScreen windowWidget.resizer.center()), dropPoint, milliseconds, startTime
+    [pressPoint, dropPoint] = @_handlePressAndDropPoints windowWidget.resizer, dropPoint
+    @syntheticEventsMouseMovePressDragRelease_InputEvents pressPoint, dropPoint, milliseconds, startTime
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
     # (Sets keep order of insertion)
     Array.from(world.freshlyCreatedPopUps).pop()
 
+  # THE ROW LOCATORS' LAST STEP: hand back the row the caller named, at a place the caller can
+  # actually reach it. A pop-up taller (or wider) than the world does not grow past it — its rows
+  # viewport caps itself at the world less the frame's chrome (PopUpRowsViewportWdgt's measure) and
+  # scrolls the remainder — so a row past the fold is fully present in the rows panel (the locators
+  # walk the TREE, which scrolling never moves) yet lies OUTSIDE the viewport's visible box. Its
+  # centre is then a screen pixel the viewport clips away, and the click every caller aims there
+  # lands on whatever sits behind the menu: the submenu never opens and the macro unravels a step
+  # later on the menu that isn't there.
+  #   A user reaches such a row by scrolling it into view first, so the toolkit does the same —
+  # minimally (the row is brought just inside the nearer edge, a row taller than the box aligned to
+  # its top), and through the viewport's own public scroll pin, `setScrollY`/`setScrollX`: the very
+  # setters a scrollbar drag drives, which clamp at the movement cores and re-lay the content and
+  # bars exactly as a gesture does. Never a raw offset write.
+  #   The scroll is CONDITIONAL on the row being out of view, and that is the point: a row inside
+  # the box takes no scroll at all, so every menu that fits behaves as it always has.
+  _menuRowScrolledIntoView: (theItem) ->
+    return theItem unless theItem?
+    foundViewport = theItem.parentThatIsA PopUpRowsViewportWdgt
+    return theItem unless foundViewport?
+    viewport = foundViewport[0]
+    return theItem unless viewport.isScrollableNow()
+    # both boxes expressed on the SCREEN, since the row's plane is the scrolled one and the
+    # viewport's is not — localPointToScreen is what carries the scroll translation between them
+    rowTopLeft = theItem.localPointToScreen new Point theItem.left(), theItem.top()
+    rowBottomRight = theItem.localPointToScreen new Point theItem.right(), theItem.bottom()
+    boxTopLeft = viewport.localPointToScreen new Point viewport.left(), viewport.top()
+    boxBottomRight = viewport.localPointToScreen new Point viewport.right(), viewport.bottom()
+    deltaY = @_scrollDeltaBringingIntoView rowTopLeft.y, rowBottomRight.y, boxTopLeft.y, boxBottomRight.y
+    deltaX = @_scrollDeltaBringingIntoView rowTopLeft.x, rowBottomRight.x, boxTopLeft.x, boxBottomRight.x
+    viewport.setScrollY viewport.getScrollY() + deltaY  if deltaY != 0
+    viewport.setScrollX viewport.getScrollX() + deltaX  if deltaX != 0
+    theItem
+
+  # How far one axis' scroll offset must move so the span [rowStart, rowEnd] lies inside the window
+  # [boxStart, boxEnd]: nothing when it already does; otherwise just enough to bring the overshooting
+  # end back to the window's matching edge. A row LONGER than the window overshoots at BOTH ends and
+  # takes the start arm, so it shows its beginning rather than its end. A positive offset scrolls the
+  # content toward its end, which is why a row past the window's end yields a positive delta.
+  _scrollDeltaBringingIntoView: (rowStart, rowEnd, boxStart, boxEnd) ->
+    return rowStart - boxStart if rowStart < boxStart
+    return rowEnd - boxEnd if rowEnd > boxEnd
+    0
+
   getTextMenuItemFromMenu: (theMenu, theLabel) ->
-    theMenu.topWdgtSuchThat (item) ->
+    theItem = theMenu.topWdgtSuchThat (item) ->
       if item.labelString?
         item.labelString == theLabel
       else
         false
+    @_menuRowScrolledIntoView theItem
 
   # Like getTextMenuItemFromMenu but matches by label PREFIX. Use it when a menu item's full label
   # carries a suffix you should not depend on — e.g. the "attach..." target menu labels each candidate
@@ -714,18 +784,20 @@ class MacroToolkit
   # string, and only the intended target is hit even when the menu also lists the World and the widget's
   # own handle.
   getTextMenuItemFromMenuByPrefix: (theMenu, thePrefix) ->
-    theMenu.topWdgtSuchThat (item) ->
+    theItem = theMenu.topWdgtSuchThat (item) ->
       if item.labelString?
         item.labelString.startsWith thePrefix
       else
         false
+    @_menuRowScrolledIntoView theItem
 
   getTextMenuItemFromMenuByContains: (theMenu, theSubstring) ->
-    theMenu.topWdgtSuchThat (item) ->
+    theItem = theMenu.topWdgtSuchThat (item) ->
       if item.labelString?
         item.labelString.includes theSubstring
       else
         false
+    @_menuRowScrolledIntoView theItem
 
   # Move to and click a menu/prompt item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
@@ -905,8 +977,12 @@ class MacroToolkit
     vBar = list.vBar
     vBarHandle = vBar.children[0]
 
-    # a currently-rendered row gives the true row height (the list shows its top rows before any scroll)
-    sampleRow = list.topWdgtSuchThat (m) -> m.text?
+    # a currently-rendered row gives the true row PITCH (the list shows its top rows before any
+    # scroll). Ask for the ROW — a widget carrying a labelString — and not for the label inside it:
+    # a row is at least menuRowHeight tall while its label is only as tall as its glyphs, so
+    # measuring the label under-counts the pitch and over-counts how many rows the pane shows,
+    # which lands the target well below the fold on any list long enough to need scrolling.
+    sampleRow = list.topWdgtSuchThat (m) -> m.labelString?
     rowHeight = if sampleRow? and sampleRow.height() > 0 then sampleRow.height() else 1
     visibleRows = Math.max 1, Math.floor(list.height() / rowHeight)
     scrollPositions = Math.max 1, list.elements.length - visibleRows

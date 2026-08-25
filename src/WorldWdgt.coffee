@@ -655,32 +655,6 @@ class WorldWdgt extends IconGridPanelWdgt
   colloquialName: ->
     "Desktop"
 
-  _makePrettier: ->
-    WorldWdgt.preferencesAndSettings.menuFontSize = 14
-    WorldWdgt.preferencesAndSettings.menuHeaderFontSize = 13
-    WorldWdgt.preferencesAndSettings.menuHeaderColor = Color.create 125, 125, 125
-    WorldWdgt.preferencesAndSettings.menuHeaderBold = false
-    WorldWdgt.preferencesAndSettings.menuStrokeColor = Color.create 186, 186, 186
-    WorldWdgt.preferencesAndSettings.menuBackgroundColor = Color.create 250, 250, 250
-    WorldWdgt.preferencesAndSettings.menuButtonsLabelColor = Color.create 50, 50, 50
-
-    WorldWdgt.preferencesAndSettings.normalTextFontSize = 13
-    WorldWdgt.preferencesAndSettings.titleBarTextFontSize = 13
-    WorldWdgt.preferencesAndSettings.titleBarTextHeight = 16
-    WorldWdgt.preferencesAndSettings.titleBarBoldText = false
-    WorldWdgt.preferencesAndSettings.bubbleHelpFontSize = 12
-
-
-    WorldWdgt.preferencesAndSettings.iconDarkLineColor = Color.create 37, 37, 37
-
-
-    WorldWdgt.preferencesAndSettings.defaultPanelsBackgroundColor = Color.create 249, 249, 249
-    WorldWdgt.preferencesAndSettings.defaultPanelsStrokeColor = Color.create 198, 198, 198
-
-    @wallpaper.setPattern "dots"
-
-    @_changed()
-
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt()
     wm = new FrameWdgt errorsLogViewerWdgt
@@ -705,8 +679,11 @@ class WorldWdgt extends IconGridPanelWdgt
     splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
 
   createDesktop: ->
+    # the desktop's own furnishing -- its backdrop colour and its wallpaper pattern. Every
+    # chrome DIMENSION and COLOUR lives in the preference block instead, so what a page renders
+    # does not depend on whether this method ran.
     @setColor Color.create 244,243,244
-    @_makePrettier()
+    @wallpaper.setPattern "dots"
 
     acm = new AnalogClockWdgt
     acm._applyExtent new Point 80, 80
@@ -3241,15 +3218,27 @@ class WorldWdgt extends IconGridPanelWdgt
   # A framed CITIZEN (a FrameWdgt subclass that IS its own window -- Frame-model
   # plan §5.B) passes through un-wrapped: it is sized and placed directly.
   openFrameWith: (contentWidget, extent, position) ->
-    if contentWidget.isFrame?()
-      wm = contentWidget
-    else
-      wm = new FrameWdgt contentWidget
+    wm = @_frameAround contentWidget
     wm.setExtent extent
     wm._applyMoveTo position
     wm._moveWithin @
     @add wm
     wm
+
+  # The sibling door for a payload that names its OWN box: the opener says WHERE and the payload
+  # says HOW BIG (FrameWdgt.sizeToPayloadNaturalExtent). Every free-floating toolbar comes through
+  # here, which is what makes ONE derivation serve them all instead of a size constant per
+  # palette. The framed payload then rides the door above, which passes a frame through un-wrapped
+  # and places it exactly as it places any fresh window.
+  openFrameHuggingPayload: (contentWidget, position) ->
+    wm = @_frameAround contentWidget
+    wm.sizeToPayloadNaturalExtent()
+    @openFrameWith wm, wm.extent(), position
+
+  # A framed CITIZEN is already its own window; anything else gets wrapped.
+  _frameAround: (contentWidget) ->
+    return contentWidget if contentWidget.isFrame?()
+    new FrameWdgt contentWidget
 
   # The demo/parts-bin menu and the layout-tests menu. They stay on the WORLD (not in DemoMenus)
   # because they are bound as world ACTIONS: the world menu names them on `@`, and a SystemTest

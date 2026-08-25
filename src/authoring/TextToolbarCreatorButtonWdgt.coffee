@@ -5,4 +5,4 @@ class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
   createAppearance: -> new TextToolbarIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
   createWidgetToBeHandled: ->
-    @_buildToolWindow new TextToolbarWdgt, new Point 130, 156
+    @_buildToolWindow new TextToolbarWdgt
