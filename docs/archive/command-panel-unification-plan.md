@@ -161,8 +161,10 @@ tree's):**
   pre-filed items have destinations; the column `'icon'`-only display KILLED (the grid is
   that projection). Plan archived + INDEX case-law entry. doc-narration 0/0. Close gates
   on the final tree: GAUNTLET EXIT=0 OK(warn) 18/18 (one serial-retry load-flake, dpr1
-  `SliderTrackClickMovesButton` — the known open flake-A family, SECOND sighting today
-  after the P4 webkit leg; passed serially both times, logs kept) + HOMEPAGE EXIT=0 OK
+  `SliderTrackClickMovesButton` — its SECOND sighting today after the P4 webkit leg,
+  serial-pass both times, logs kept; ⚠ NOT flake A — that is
+  `macroClosingRotatedIslandChildClearsFootprint`; the close commit message mis-attributes
+  this, corrected here) + HOMEPAGE EXIT=0 OK
   (the production snapshot round-trip covering the `users` section). Close commit: —
 
 ---
