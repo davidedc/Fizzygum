@@ -119,6 +119,15 @@ class SliderWdgt extends CircleBoxWdgt
     return false if @indicatorIsIntangible()
     super
 
+  # I am CHROME: a drag that starts on me moves my value — that is the whole of what I am — and
+  # nothing competes for it. The hand asks this of a press's ancestry
+  # (ActivePointerWdgt._touchPressArmsAtOnce) to know whether a FINGER must press and hold before its
+  # drag means what a mouse drag means; on a value control it never does (ruling I2: chrome drags
+  # need no hold on either device). True in every presentation I can be pressed IN: a THIN scroll
+  # indicator is intangible (above), so a press only ever reaches me fat or plain. My thumb is
+  # covered by ancestry.
+  ownsDragsStartingOnMe: -> true
+
   # How far my thumb sits inside my track, read by the thumb's own arrange. A thin indicator
   # paints no track for a thumb to sit inside, so there the thumb fills the bar.
   thumbInsetInTrack: ->

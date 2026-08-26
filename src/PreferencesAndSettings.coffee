@@ -106,7 +106,6 @@ class PreferencesAndSettings
 
   useSliderForInput: undefined
   useVirtualKeyboard: undefined
-  isTouchDevice: undefined
   rasterizeSVGs: undefined
   isFlat: undefined
   grabDragThreshold: 7
@@ -118,6 +117,14 @@ class PreferencesAndSettings
   # (presentation only; the arm decision is pure event-time).
   dwellToArmMs: 450
   dwellRingSteps: 5
+
+  # Press-and-hold, the touch grammar's right-click (ruling I2). A TOUCH press that stays within
+  # grabDragThreshold of its origin for pressAndHoldMs of ELAPSED EVENT-TIME opens the pressed
+  # widget's context menu — the very consequence a right-click has — and from that moment the
+  # stroke's drags mean what a mouse's would. The radius REUSES grabDragThreshold, exactly as the
+  # dwell above does: one notion of "stationary" for the whole hand. A mouse or a pen never waits
+  # (it arms at the press), so this dial is a finger's alone.
+  pressAndHoldMs: 500
 
   # decimalFloatFiguresOfFontSizeGranularity would let StringWdgt's
   # searchLargestFittingFont step through sub-points of font size, trading
@@ -237,7 +244,6 @@ class PreferencesAndSettings
 
     @useSliderForInput = false
     @useVirtualKeyboard = true
-    @isTouchDevice = false # turned on by touch events, don't set
     @rasterizeSVGs = false
     @isFlat = false
 

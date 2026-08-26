@@ -423,6 +423,14 @@ class ViewportWdgt extends Widget
     return false if @scrollPolicy is 'never'
     (@contents.width() >= @width() + 1) or (@contents.height() >= @height() + 1)
 
+  # Would a plain drag pressed anywhere in me be MINE — a scroll of my pane? The hand asks this of
+  # a press's ancestry to know whether a finger has to HOLD before its drag can mean what a mouse
+  # drag means (ruling I2: a hold is demanded only where a plain drag already means scroll). It is
+  # the same three facts my scroll-drag step is installed on — I take drags at all, my policy allows
+  # scrolling, and there is overflow to move — asked before the press instead of during it.
+  claimsPlainDragsForScrolling: ->
+    @isScrollingByfloatDragging and @isScrollableNow()
+
   # ── the indicator derivation (ruling G4) ──────────────────────────────────────────────────
 
   # thin at rest, my full bar thickness once a hovering pointer has fattened the indicators
@@ -969,6 +977,25 @@ class ViewportWdgt extends Widget
     # Return true iff the view actually moved -- callers use this to decide whether to trigger the
     # content/scrollbar update.
     @_writeScrollOffset @scrollOffsetX, newY
+
+  # A drag-scroll step handed OUTWARD by a pane inside me that is already at its edge: the drag twin
+  # of the wheel's at-edge escalation, reached by the same parent climb (escalateEvent). I take it as
+  # my own step and hand on whatever I cannot absorb either, so a stack of nested panes passes the
+  # leftover outward one level at a time. Scrolling from here is not inside anyone's step function,
+  # so it settles its own content and bars, exactly as scrollTo does.
+  scrollByDragDelta: (deltaX, deltaY) ->
+    scrolledX = deltaX isnt 0 and @scrollX deltaX
+    scrolledY = deltaY isnt 0 and @scrollY deltaY
+    leftoverX = if scrolledX then 0 else deltaX
+    leftoverY = if scrolledY then 0 else deltaY
+    if leftoverX isnt 0 or leftoverY isnt 0
+      @escalateEvent 'scrollByDragDelta', leftoverX, leftoverY
+    if scrolledX or scrolledY
+      # layout-apply-sanctioned: scroll-input (drag-scroll escalation), determinism-exempt
+      # (residuals-audit fam 1) — the same moved-gated post-scroll arrange every other scroll
+      # path runs
+      @_positionAndResizeChildren()
+      @_reLayoutScrollbars()
   
   # Float-dragging a Viewport's contents scrolls it (particularly useful on touch devices); the same
   # gesture works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
@@ -1004,8 +1031,11 @@ class ViewportWdgt extends Widget
         !world.hand.isThisPointerFloatDraggingSomething() and
         # a float-draggable widget under the hand is probably about to be detached, so hold steady
         # instead of scrolling -- scrolling now would give the wrong cue right before the float-drag
-        # threshold is reached
-        !world.hand.wdgtToGrab?.detachesWhenDragged() and
+        # threshold is reached. A FINGER whose stroke does not mean a mouse drag is the other way
+        # round (ruling I2): over my content a plain finger drag is a scroll whatever it is over, and
+        # the thing under it lifts only once a hold has armed the stroke. A mouse or pen stroke
+        # always means a mouse drag, so for them this reads exactly as the detach test alone.
+        (!world.hand.wdgtToGrab?.detachesWhenDragged() or !world.hand.strokeMeansMouseDrag()) and
         # per-frame samples of the hand are SCREEN-plane; map each into MY plane at the read
         # site (the raw-pointer lint enforces exactly this shape), so the containment gate
         # compares like planes and the deltas below are in-plane — a tilted viewport drag-scrolls
@@ -1018,12 +1048,21 @@ class ViewportWdgt extends Widget
           !@hBar.isInCollapsedSubtree()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
-              scrollbarJustChanged ||= @scrollX deltaX
+              # AT-EDGE ESCALATION, the wheel's rule one gesture over: a step this pane cannot
+              # absorb belongs to whatever scroller encloses it, so a drag inside an exhausted inner
+              # pane keeps moving the outer one instead of dying at the inner clamp. scrollX answers
+              # "did the view actually move", which IS the at-edge test — no second derivation of
+              # the clamp. With no enclosing scroller the climb finds nobody and nothing happens.
+              scrolled = @scrollX deltaX
+              scrollbarJustChanged ||= scrolled
+              @escalateEvent 'scrollByDragDelta', deltaX, 0  unless scrolled
           if @vBar.visibleBasedOnIsVisibleProperty() and
           !@vBar.isInCollapsedSubtree()
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
-              scrollbarJustChanged ||= @scrollY deltaY
+              scrolled = @scrollY deltaY
+              scrollbarJustChanged ||= scrolled
+              @escalateEvent 'scrollByDragDelta', 0, deltaY  unless scrolled
           oldPos = newPos
       else
         # final FLUSH: this step samples the hand once per FRAME, so the tail
@@ -1050,7 +1089,7 @@ class ViewportWdgt extends Widget
         # multi-frame path lands on, now identical at every dpr / speed / engine.
         collapsedScrollDrag = !wasScrollDragging and
           !everFloatDragged and
-          !world.hand.wdgtToGrab?.detachesWhenDragged() and
+          (!world.hand.wdgtToGrab?.detachesWhenDragged() or !world.hand.strokeMeansMouseDrag()) and
           @boundsContainPoint(oldPos)
         if wasScrollDragging or collapsedScrollDrag
           wasScrollDragging = false
@@ -1062,12 +1101,17 @@ class ViewportWdgt extends Widget
             !@hBar.isInCollapsedSubtree()
               deltaX = releasePos.x - oldPos.x
               if deltaX isnt 0
-                scrollbarJustChanged ||= @scrollX deltaX
+                # at-edge escalation, as in the per-frame arm above
+                scrolled = @scrollX deltaX
+                scrollbarJustChanged ||= scrolled
+                @escalateEvent 'scrollByDragDelta', deltaX, 0  unless scrolled
             if @vBar.visibleBasedOnIsVisibleProperty() and
             !@vBar.isInCollapsedSubtree()
               deltaY = releasePos.y - oldPos.y
               if deltaY isnt 0
-                scrollbarJustChanged ||= @scrollY deltaY
+                scrolled = @scrollY deltaY
+                scrollbarJustChanged ||= scrolled
+                @escalateEvent 'scrollByDragDelta', 0, deltaY  unless scrolled
             oldPos = releasePos
         # POST-RELEASE MOMENTUM (the glide): keep scrolling by the last
         # frame's hand delta, decayed by friction each frame, until it fades.
@@ -1225,10 +1269,6 @@ class ViewportWdgt extends Widget
     [x, y] = WorldWdgt.preferencesAndSettings.normalizedWheelDeltas x, y
 
     if y != 0
-      # TODO this escalation should also
-      # be implemented in the touch case... user could scroll
-      # WITHOUT wheel, by just touch-dragging the contents...
-      #
       # Escalate the scroll in case we are in a nested
       # Viewport situation and we already
       # scrolled this inner one "up/down to the end".

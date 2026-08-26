@@ -33,8 +33,42 @@ bar-press handler is its only in-tree caller (same shape as setScrollPolicy abov
   **OD4 = (a)** T18 → BACKLOG paired with the owner-pending G2 halo feel-check (one
   conversation; the P5 row records the pairing). OD3 (the hold dial, proposed 500) is felt
   at P2's eyes-on; OD2/OD5 wait on P3/P0's measured numbers as authored.
-- P0 re-verification + probes + measurements: —
-- P1 the grammar in the hand + T7, MOUSE-INERT: —
+- P0 re-verification + probes + measurements: **DONE 2026-08-26.** Facts 19/19, NO drift (a
+  program first repeated); F20/F21 added (probe-adjacent), F6/F14/F16/OD2 amended dated.
+  Probes A/B/C GREEN both engines (`Fizzygum-tests/.scratch/p0-probe-{a,b,c}-*.js`, exit 0):
+  A = touch delivery to the hand proven end-to-end (H1's listener path; hand.pointerType
+  reads 'touch', press+click dispatched, no right path taken); B = the before-picture pinned
+  (a touch tap clicks; a touch drag over detachable content in a viewport LIFTS like a
+  mouse; dwell arming strictly EVENT-time — 1503 ms wall + 113 per-cycle re-entries did NOT
+  arm, 500 ms event time DID) = OD1(b)'s confirmation evidence; C = per-test 1024×768 extent
+  CLEAN at the reset seam (ZERO gate tokens, no residue; the ratchet is extent-blind by
+  construction) ⇒ **OD5 resolved on the clean branch — tablet-extent set lands per §2.7, no
+  owner decision needed.** Measurements: right-button gestures 194/108 tests, finger hold
+  cost ≈116 s suite-wide / +5.4 s worst test; OD2 storage (a) +168.8 MB +91% · (b) +21 MB
+  +11% · (c) +148.5 MB +80% (capture wall-clock, not storage, is what (c) halves);
+  **scroll-drag edge exposure ZERO at 100% suite coverage** (plant-proven detector; the one
+  token = the wheel's existing F7 escalation in a wheel-only test). Nothing committed
+  (probes/detectors stay in `.scratch/`; plan amendments ride the P1 commit).
+- P1 the grammar in the hand + T7, MOUSE-INERT: **DONE 2026-08-26** (one Opus worker + one
+  corrective bounce). The recognizer on the hand (per-stroke scalars, cleared via
+  `_forgetPressBookkeeping` + at every down; OD1(b) as `_holdDecisionTime` — event time, plus
+  the cycle clock only when the pacing control is idle, the glide's verbatim triple); hold →
+  `openContextMenuAtPointer` on the pressed widget (F2's path verbatim); hold-then-move
+  dismisses via the F18 sweep; hold-consumed up dispatches no click; pre-arm travel commits
+  plain-drag-for-life. Capabilities derived, neither falsified: `ownsDragsStartingOnMe`
+  (FrameBarWdgt + the four `nonFloatDragging` owners: HandleWdgt, SliderWdgt,
+  StackElementsSizeAdjustingWdgt, PaletteWdgt) and `claimsPlainDragsForScrolling`
+  (ViewportWdgt = `@isScrollingByfloatDragging and @isScrollableNow()`), asked in ONE
+  ancestry walk, chrome first. THREE consumers gated on `strokeMeansMouseDrag()` (the third
+  — the pressed-move mouseMove channel, both dispatch sites — added by the corrective after
+  the authored "falls out of the same arming" claim measured FALSE; §2.2/§2.3 amended
+  dated). Scroll-drag at-edge escalation via `scrollByDragDelta` (wheel-rule twin, TODO
+  retired with the mechanism). Touch hover dissolution at up+cancel. T7: both seams keyed on
+  the starting tap's kind; `isTouchDevice` RETIRED. T6-title verification: every
+  hold-reachable menu is the right-click's own (titled); NOTED for the owner — the dev-mode
+  hierarchy-disambiguation menu is untitled (equally so for right-click) and titles use the
+  class-derived name, not `colloquialName()`. Gates: build 28/28 ×2; presuite BYTE-IDENTICAL
+  ×2 (321/0, zero diffs); menusweep OK (3749 items + 53 prompt Oks / 464 menus).
 - P2 grammar witness tests (+ the hold-dial eyes-on): —
 - P3 the finger harness mode + the reference axis: —
 - P4 the finger baseline + the `finger` gauntlet leg: —
@@ -264,7 +298,12 @@ Each fact records its verification command. Line numbers drift — grep the quot
   `world.wdgtsWithOngoingScrollMomentum`, **suppressed under
   `Automator.animationsPacingControl`** so screenshots are event-determined, :1078–1106).
   Doc comment: "Float-dragging a Viewport's contents scrolls it (particularly useful on touch
-  devices)" (:973–975). Verify: read :973–1106.
+  devices)" (:973–975). Verify: read :973–1106. ⭐ P0 side-finding (2026-08-26, the edge
+  detector's plant): pressing a NESTED viewport's background through the real press path
+  resolves `grabsToParentWhenDragged`'s `@parent==world` fast-path differently — the press
+  climbs and float-drags the ENCLOSING panel instead of scrolling the inner pane, a
+  structural reason nested F6 scroll-drags do not arise in committed macros (edge exposure
+  measured ZERO at 100% suite coverage).
 - **F7 — the wheel path and its live touch TODO.** `ViewportWdgt.wheel` (:1213) scrolls with
   at-edge ESCALATION to an enclosing viewport; a 2010s-era TODO right in it: "this escalation
   should also be implemented in the touch case... user could scroll WITHOUT wheel, by just
@@ -337,7 +376,14 @@ Each fact records its verification command. Line numbers drift — grep the quot
   move verbs in **98** (`grep -rl "right button" --include="*_automationCommands.js"
   Fizzygum-tests/tests | wc -l`, etc.). Suite 321 tests / 1,898 reference PNGs at
   Automator 0.3.0 (`ls tests | grep -c ^SystemTest_`; `find tests -name "*-dataHash*.png" |
-  wc -l`; `SystemTestsSystemInfo.coffee:22–24`).
+  wc -l`; `SystemTestsSystemInfo.coffee:22–24`). ⭐ MEASURED at P0 (2026-08-26,
+  `.scratch/gesture-count.py` over the full L1/L2/L3 right-button roster): right-button
+  gesture INVOCATIONS = **194 across 108 tests** (max 9 in one test) — the 55-dir literal
+  grep misses 53 tests that reach a right-click only through `openMenuOf_InputEvents`/L3
+  wrappers that never spell "right button" (the census-axis lesson); wheel = 47 occurrences
+  across 23 tests; plain-move tests = 98. Finger-translation hold cost at a non-scaled
+  500+100 ms window: **≈116 s suite-wide, worst single test +5.4 s** — the known-tolerable
+  cost class.
 - **F15 — the reference machinery a new axis touches.** `refpaths.js` — `parseRefName`
   (filename grammar), `dprFromPath` (finds the `ceilPixRatio_<N>` SEGMENT anywhere in the
   path), `currentAutomatorVersion` (reads the harness source); `check-refs.js` groups by
@@ -357,7 +403,15 @@ Each fact records its verification command. Line numbers drift — grep the quot
   (:127–133); the reference grammar's no-environment-facts law leans on that constancy, and
   the page-scoped `WORLD_CONSTRUCTION_DRIFT` ratchet fingerprints the first reconstructed
   world — **a per-test tablet extent (H2) must prove it does not trip the ratchet or fork
-  the grammar's premise** (P0 probe C; §2.8).
+  the grammar's premise** (P0 probe C; §2.8). ⭐ MEASURED at P0 (2026-08-26, probe C green):
+  the seam takes a mid-page 1024×768 excursion with ZERO gate tokens (no
+  `WORLD_CONSTRUCTION_DRIFT`, no `WORLD_INVENTORY_*`), no residue (the 1920×880 test passes
+  again after), and indifferent manifest/selection machinery — the ratchet is blind to extent
+  BY CONSTRUCTION (`_summariseWorldStateValueNoSettle` reduces `bounds` to
+  `"object:Rectangle"`, so no geometry field enters the fingerprint). OD5's clean branch:
+  the tablet-extent set lands per §2.7, no owner decision needed. ⚠ The loader still OFFERS
+  wrong-extent candidates (matching is by `dataHash` — a wrong-extent reference FAILS rather
+  than being filtered), so extent-declaring tests rely on their own references existing.
 - **F17 — the four stale-open tail rows are CLOSED on this tree** (the header's verification):
   T9 — `sed -n '32,36p' src/PromptWdgt.coffee` (the comment names the one consumer);
   T10 — `grep -c tight src/FrameWdgt.coffee` → 0;
@@ -380,6 +434,17 @@ Each fact records its verification command. Line numbers drift — grep the quot
   (new macros: no `world.evaluateString`, "Macro" only trailing) + `check-refs` +
   `check-visualisations` (new tests regenerate pages). Runtime twins: `fg menusweep` (the
   hold path opens menus), `fg vmtruth` (hold state must not pin widgets), the suite itself.
+- **F20 (added at P0, 2026-08-26 — probe-adjacent) — `WorldWdgt.dateOfCurrentCycleStart` is
+  cleared to `undefined` at the tail of every cycle** (WorldWdgt.coffee :1958–1959), so it
+  reads `undefined` from any `page.evaluate` between cycles: anything driving the queue from
+  OUTSIDE a cycle (probes, page-side tooling) must base its event times on `Date.now()`.
+  Inside the drain, `timeOfEventBeingProcessed` remains the clock (F5).
+- **F21 (added at P0, 2026-08-26 — probe-adjacent) —
+  `AutomatorLoader.selectTestsFromTagsOrTestNames` is ASYNC and its `andThen` callback is the
+  only honest wait**: polling `selectedTestsBasedOnTags.length` observes the PREVIOUS
+  selection and runs the wrong test's commands (the loader's own comment states this; a P0
+  probe draft reproduced it). Any P3/P4 runner or probe that drives selection waits on the
+  callback, never on the array.
 
 ### 1.3 Why it is shaped this way
 
@@ -438,7 +503,7 @@ machine's pattern (F4):
 | plain drag elsewhere (no claiming scroll surface — e.g. the desktop) | float-drag / non-float drag (today) | the SAME as mouse — nothing competes for the drag, so no hold is demanded (I2: hold is required ONLY where a plain drag already means scroll) |
 | drag starting on chrome (bar, grip, handle, slider, fat scrollbar) | chrome's own drag (today) | the SAME — armed at the down (§2.3's capability) |
 | stationary hold | nothing (dwell applies only mid-float-drag) | at `pressAndHoldMs`: **the context menu opens at the press point** — the exact `mouseClickRight` consequence (`openContextMenuAtPointer` on the press target, F2), titled with the widget's name (F8d). The press stays live. |
-| hold, then move (> threshold) | n/a | **the lift**: the just-opened hold menu is dismissed (the F18 sweep, `alsoKillFreshMenus: true`) and the stroke's drag proceeds with MOUSE semantics — detachable content lifts (float-drag, the dwell-to-embed machine downstream unchanged), text extends selection (its `mouseMove` selection path — I2's "hold → select" falls out of the same arming), a value control value-drags |
+| hold, then move (> threshold) | n/a | **the lift**: the just-opened hold menu is dismissed (the F18 sweep, `alsoKillFreshMenus: true`) and the stroke's drag proceeds with MOUSE semantics — detachable content lifts (float-drag, the dwell-to-embed machine downstream unchanged), text extends selection (its `mouseMove` selection path, gated by the same arming — the THIRD consumer, §2.3; AMENDED 2026-08-26 at P1: "falls out of the same arming" was FALSE as authored, the dispatch was unconditional), a value control value-drags |
 | release after hold, no move | n/a | the menu STAYS (it is an ordinary transient menu now — the next outside tap dismisses it; C8/pin rules untouched). **No click is dispatched** for the hold stroke's up — the hold consumed the stroke (the right-click precedent: a right press never fires `mouseClickLeft`). |
 | wheel | scrolls (untouched) | n/a (no wheel exists; the plain drag IS the scroll) |
 | `pointercancel` | the Plan 2 abort (untouched) | the same abort; additionally clears the hold state and any hold-opened menu stays (a cancel is not a click — Plan 2 §2.4's law extends unchanged) |
@@ -451,6 +516,16 @@ Ruled OUT by I3 and not re-derived: axis-locking, scroll-by-background, two-fing
   only when the stroke is ARMED. The non-float arm (sliders/handles — chrome by construction)
   is untouched: reaching it means the press target neither detached nor templated, and a
   touch press on such a target arms at the down (chrome).
+- **The press-move channel (the THIRD consumer — ADDED 2026-08-26 at P1, measured):** the
+  hand's pressed-move `mouseMove` dispatch is unconditional at TWO sites
+  (`determineGrabs`' `topWdgt.mouseMove`, and the over-list `mouseMove` in
+  `dispatchEventsFollowingMouseMove`, which passes `@mouseButton`), and its consumers
+  include text selection (`StringWdgt.mouseMove`) and the paint-tool handlers — so §2.2 row
+  6's authored claim that selection "falls out of the same arming" was FALSE: an un-armed
+  touch drag over text would BOTH scroll and extend selection. RULING (coordinator, from
+  I2's letter): an un-armed touch stroke's press-moves mean SCROLL and nothing else — the
+  pressed-move dispatch is gated on the stroke's arming; mouse/pen byte-identical by
+  `strokeMeansMouseDrag()`'s short-circuit, and hover (no-button) moves are untouched.
 - **`ViewportWdgt`'s scroll-drag step (F6)** — its detach gate widens by the stroke's kind:
   an un-armed TOUCH stroke scrolls even over detachable content (the mouse reading of the
   same gate is byte-identical). The step already handles cadence collapse and the glide;
@@ -618,6 +693,11 @@ same drain. Concretely:
   existing macros replay under the finger" (H2) is then unmeasured forever after.
   (c) dpr2-only finger references (halves both costs; the leg is dpr2 — but no dpr1 finger
   inner loop exists thereafter). The owner rules on numbers, not estimates.
+  ⚠ AMENDED at P0 (2026-08-26, measured): (c) halves CAPTURE wall-clock only — it does NOT
+  halve storage, because dpr2 already carries 88% of committed reference bytes (a dpr2 file
+  averages ~7× a dpr1 file, and each PNG pairs with a base64 `.js` loader; the committed
+  reference footprint is 168.8 MB = 91% of tests/). Measured projections: (a) +168.8 MB
+  (+91% of tests/), (b) ≈40 tests +21 MB (+11%), (c) +148.5 MB (+80%).
 - **OD3 (P2 eyes-on): the hold dial.** `pressAndHoldMs` proposed **500** (iOS long-press
   convention); the owner feels it on the dev build at the P2 witness review and may re-turn
   (a pure-constant re-turn; the witness tests' references are captured after the ruling).

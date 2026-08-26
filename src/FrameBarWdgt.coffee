@@ -86,6 +86,16 @@ class FrameBarWdgt extends Widget
   # piece press" is written by the action, which a drag never reaches.
   ownsDragsOfMyChildren: -> true
 
+  # I AM CHROME, so a drag that starts on me is MY gesture and nothing competes for it: dragging a
+  # window by its title strip means move the window, whatever the finger is doing elsewhere. The
+  # hand asks this of a press's ancestry (ActivePointerWdgt._touchPressArmsAtOnce) to know whether a
+  # FINGER has to press and hold before its drag can mean what a mouse drag means — on me it never
+  # does (ruling I2: chrome drags need no hold on either device). My pieces are covered by ancestry,
+  # like every other policy I declare for the strip.
+  #   Distinct from ownsDragsOfMyChildren above, which says WHOSE drag a press on a piece is; this
+  # says what a drag starting anywhere on the strip MEANS to a finger.
+  ownsDragsStartingOnMe: -> true
+
   # I present NO SURFACE OF MY OWN -- my titlebarBackground piece draws the strip -- so the
   # pointer falls THROUGH me: to my pieces (shaped where the strip is drawn), to the frame body
   # at the 1px border the background doesn't cover, and -- at the frame's rounded-corner notches

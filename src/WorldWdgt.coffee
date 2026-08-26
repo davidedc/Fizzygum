@@ -2143,11 +2143,17 @@ class WorldWdgt extends IconGridPanelWdgt
   
   # WorldWdgt events:
 
+  # The hidden DOM input the on-screen keyboard types into. It exists for the STROKE that opened
+  # the edit: a finger has no physical keyboard behind it, so a tap into a text field summons one,
+  # while a mouse or pen click leaves the canvas's own keyboard listeners to do the typing. A
+  # machine that mixes the two answers per stroke — @hand.pointerType is the stroke's own fact,
+  # never a device setting (ruling G1). useVirtualKeyboard is the opt-out for a touch machine that
+  # has a real keyboard anyway.
   _initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = undefined
-    unless (WorldWdgt.preferencesAndSettings.isTouchDevice and WorldWdgt.preferencesAndSettings.useVirtualKeyboard)
+    unless (@hand.pointerType is 'touch' and WorldWdgt.preferencesAndSettings.useVirtualKeyboard)
       return
     @inputDOMElementForVirtualKeyboard = document.createElement "input"
     @inputDOMElementForVirtualKeyboard.type = "text"
@@ -2493,10 +2499,10 @@ class WorldWdgt extends IconGridPanelWdgt
     window.removeEventListener 'resize', @resizeBrowserEventListener
 
     # ── added to @inputDOMElementForVirtualKeyboard by _initVirtualKeyboard ────────────────────────
-    # Defensive completeness, not a leak fix: that hidden input only exists on a touch device with
-    # useVirtualKeyboard AND an open caret, and closing the caret already removes it from the DOM and
-    # clears it (taking its listeners to GC), so this is a no-op in every environment tests run in.
-    # It is here so the "detach everything" contract holds if a touch-device test ever exists.
+    # Defensive completeness, not a leak fix: that hidden input only exists for an edit a TOUCH
+    # stroke opened, with useVirtualKeyboard on and a caret still up, and closing the caret already
+    # removes it from the DOM and clears it (taking its listeners to GC), so this is a no-op in every
+    # environment tests run in. It is here so the "detach everything" contract holds regardless.
     if @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard.removeEventListener 'keydown', @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener
       @inputDOMElementForVirtualKeyboard.removeEventListener 'keyup', @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener
@@ -3395,7 +3401,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # the only place where the caret is added to the keyboardEventsReceivers
     @keyboardEventsReceivers.add @caret
 
-    if WorldWdgt.preferencesAndSettings.isTouchDevice and WorldWdgt.preferencesAndSettings.useVirtualKeyboard
+    # THE STARTING TAP DECIDES: an edit begun by a finger summons the on-screen keyboard, one begun
+    # by a mouse or a pen does not (see _initVirtualKeyboard, which keys the same way).
+    if @hand.pointerType is 'touch' and WorldWdgt.preferencesAndSettings.useVirtualKeyboard
       @_initVirtualKeyboard()
       # For touch devices, giving focus on the textbox causes
       # the keyboard to slide up, and since the page viewport

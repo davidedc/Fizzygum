@@ -95,6 +95,12 @@ class PaletteWdgt extends Widget
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry
 
+  # I am CHROME: a drag that starts on me sweeps my colours to pick one, which is the only thing I am
+  # for, and nothing competes for it. The hand asks this of a press's ancestry
+  # (ActivePointerWdgt._touchPressArmsAtOnce) to know whether a FINGER must press and hold before its
+  # drag means what a mouse drag means — on a picking surface it never does (ruling I2).
+  ownsDragsStartingOnMe: -> true
+
   nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
     # Affine transforms (§6 R4 audit tail): map the drag sample point into MY plane before reading the
     # pixel. getPixelColor does aPoint.toLocalCoordinatesOf @ and samples my OWN un-rotated backbuffer, so

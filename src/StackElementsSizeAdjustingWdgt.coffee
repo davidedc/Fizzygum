@@ -24,6 +24,12 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   grabsToParentWhenDragged: ->
     return false
 
+  # I am CHROME: a drag that starts on me re-apportions the split I sit in, which is the only thing I
+  # am for, and nothing competes for it. The hand asks this of a press's ancestry
+  # (ActivePointerWdgt._touchPressArmsAtOnce) to know whether a FINGER must press and hold before its
+  # drag means what a mouse drag means — on a divider it never does (ruling I2).
+  ownsDragsStartingOnMe: -> true
+
   # Re-apportion the split so my left edge lands EXACTLY where the pointer says -- solved in closed
   # form, not approached by an empirical gain.
   #

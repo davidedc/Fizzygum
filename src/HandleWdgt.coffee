@@ -93,6 +93,12 @@ class HandleWdgt extends Widget
   grabsToParentWhenDragged: ->
     return false
 
+  # I am CHROME: a drag that starts on me is the reshape/move/rotate gesture I exist for, and nothing
+  # competes for it. The hand asks this of a press's ancestry (ActivePointerWdgt._touchPressArmsAtOnce)
+  # to know whether a FINGER must press and hold before its drag means what a mouse drag means — on a
+  # handle it never does (ruling I2: chrome drags need no hold on either device).
+  ownsDragsStartingOnMe: -> true
+
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
     # Adopt whoever I was just added to as my resize/move @target -- UNLESS I landed free-floating (on the
