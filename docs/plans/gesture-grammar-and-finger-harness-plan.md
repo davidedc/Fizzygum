@@ -69,7 +69,33 @@ bar-press handler is its only in-tree caller (same shape as setScrollPolicy abov
   hierarchy-disambiguation menu is untitled (equally so for right-click) and titles use the
   class-derived name, not `colloquialName()`. Gates: build 28/28 ×2; presuite BYTE-IDENTICAL
   ×2 (321/0, zero diffs); menusweep OK (3749 items + 53 prompt Oks / 464 menus).
-- P2 grammar witness tests (+ the hold-dial eyes-on): —
+- P2 grammar witness tests (+ the hold-dial eyes-on): **DONE 2026-08-26** (same Opus worker,
+  two coordinator-ruled follow-ups). §2.6 landed as `@syntheticTouch` (a SIBLING factory,
+  not a kind argument — the per-kind DEVICE constants are the factory's content) + four L1
+  touch verbs (tap / hold with `alsoRelease:` / drag / drag-from-held-press; the composed
+  hold-then-drag verb DELETED as dead — the split pair is what lets a witness screenshot the
+  held state). Per-test extent declaration `testScreenExtent` honoured by the reset seam
+  (default 1920×880 byte-identical). EIGHT witness tests (the five planned + assertion-only
+  keyboard + THREE tablet-extent at 1024×768 — owner ruled the third, the docked-toolbar
+  chevron, in). All six gesture tests declare `grabDragThreshold: true` (the Automator's
+  threshold skip would grab before a hold fires — the P1 report's trap, handled test-side).
+  **OWNER RULINGS at eyes-on: OD3 = keep 500 ms; the dev-mode hierarchy-disambiguation menu
+  STAYS UNTITLED (its committed reference shows it — right-click parity).** Two product
+  defects found and fixed by the witnesses: the hold's drag guard read the desktop press's
+  no-op world booking as "already dragging" (silenced the desktop hold — Automator-only
+  manifestation); the virtual-keyboard DOM input was never removed from the page (class-(B)
+  page-lifetime leak; cleared in `_dissolveWorldNoSettle`, `vmtruth` green twice). One plan
+  gap measured and ruled mid-phase: the §2.4(4) sweep alone was UNDONE by the per-cycle
+  re-sync (a touch tap's reference grew a tooltip) ⇒ the **pointer-absence state** (§2.4(4)
+  as amended; one field, five sites; only the chevron's image_2 recaptured — the other
+  seven tests' pixels never carried a hover artifact). Captures: 8 tests × dpr1+2, ~104
+  files, visualisation pages generated, `check-refs` clean. Gates: build 28/28; presuite
+  ALL 329 green with 321 pre-existing byte-identical (×3 through the phase); menusweep OK;
+  P2-close gauntlet 18/18 twice — second run `OK(warn)`: the `serialization` leg failed
+  in-wave and passed alone (file-save reads under wave load — the sanctioned load-flake
+  path; not attributable to this delta: the prior gauntlet passed that leg in-wave on
+  near-identical code; log kept at `/tmp/fg-serialization.parallel-fail.log`). Tail row
+  filed: the boot-smoke does not cover the harness page (BACKLOG at P5).
 - P3 the finger harness mode + the reference axis: —
 - P4 the finger baseline + the `finger` gauntlet leg: —
 - P5 T18 decision, docs, close, tail — and the PROGRAM close: —
@@ -566,6 +592,17 @@ Ruled OUT by I3 and not re-derived: axis-locking, scroll-by-background, two-fing
    survive (`world.destroyToolTips()` already runs at down/up). Mouse strokes keep today's
    persistent pointer-under state byte-identically. (This is also what makes finger runs'
    pixels differ from mouse runs' — the H2 axis's raison d'être.)
+   ⚠ AMENDED 2026-08-26 at P2 (measured: a touch tap's committed reference grew a TOOLTIP —
+   the sweep alone is UNDONE one cycle later, because the hand stays parked at the tapped
+   point and the per-cycle hover re-sync re-enters whatever is under it): the mechanism is
+   the sweep PLUS a between-strokes **pointer-absence state** — set at a touch stroke's up
+   and cancel (after the dissolution), cleared by the next `processPointerDown` of any kind
+   (the down states a position: the pointer is back) and by any hover-capable move (a
+   mouse/pen move — a real pointer returned). While absent, the per-cycle re-sync and the
+   move pipeline dispatch NO enters/moves and the over-list stays empty: nothing is under a
+   pointer that is not there. Mouse strokes never set it — byte-identical. §2.4(2)'s
+   "tooltips: no code change" stands: the tooltip machinery is untouched; absence starves it
+   of the spurious enter.
 
 ### 2.5 T7 resolved — the virtual keyboard keys on the STARTING tap
 
@@ -918,7 +955,10 @@ the new leg. Commit (the finger references + declarations + the leg).
    for the PROGRAM, not just the plan.
 
 **Tail (program §5 rule 2 — drain before the program closes):** pre-filed candidates, each
-with a destination: multi-user input attribution (BACKLOG — the Plan 3.5 `User` model's
+with a destination: `smoke-boot-headless.js` does not boot `worldWithSystemTestHarness.html`,
+so a harness-page-only boot breakage is invisible to build+smoke and surfaces only on a real
+test run (found at P2: two such breakages cost the worker a debug loop) — BACKLOG at P5, a
+cheap third leg for the smoke; multi-user input attribution (BACKLOG — the Plan 3.5 `User` model's
 "Plan 4 at the earliest" marker is discharged by an explicit row: strokes carry `pointerId`
 now, a User-per-pointer mapping is designed when a second input DEVICE exists); pinch/T4
 (BACKLOG row already exists — unchanged); T5 (BACKLOG — unchanged); tablet-extent tests if

@@ -96,6 +96,14 @@ class MacroToolkit
   # click's effect is unchanged, so no reference moves.
   @clickHoldFloorMs: 100
 
+  # NON-scaled SLACK a finger's press-and-hold schedules past pressAndHoldMs before it counts on
+  # the hold having fired, and again before the release that follows it. The hold window is a
+  # RECOGNITION window, exactly like the multi-click one @clickGuardWindowMs guards, so the speed
+  # lever must not compress it: a window that shrank with the gesture would be recognised at one
+  # speed and not another. The recognizer decides on each event's OWN time, so the slack only has
+  # to make the crossing unambiguous.
+  @holdWindowMarginMs: 60
+
   # The active speed level (a key of @spanFactors). Read LAZILY from
   # window.FIZZYGUM_MACRO_SPEED (set at boot from ?speed=), validated against
   # @spanFactors, falling back to @defaultSpeed — so an absent/invalid value is
@@ -348,22 +356,36 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseMove_InputEvents: whichButton is unknown"
 
-    # a WIDGET target aims at its on-screen centre: the plane centre mapped up through
-    # every mapping ancestor (island transforms AND scroll translations) — identity (same
-    # point) for the common unmapped widget, the on-screen pixel for a scrolled/tilted one
-    if dest instanceof Widget
-      dest = dest.localPointToScreen dest.center()
-
-    if orig instanceof Widget
-      orig = orig.localPointToScreen orig.center()
+    dest = @_screenPointOfTarget dest
+    orig = @_screenPointOfTarget orig
 
     # where the pointer ends up — read by the click verbs as the click position for the
     # false-double-click guard (a click lands wherever the last move left the pointer)
     @currentPointerTarget = dest
 
-    # Math.round so a drag's span-floored fractional events-per-ms still yields EXACTLY the
-    # un-floored integer sample count (so expoOut samples the identical path). A no-op for
-    # the ordinary whole-number cases.
+    @_sampleMovePath orig, dest, milliseconds, startTime, numberOfEventsPerMillisecond, (scheduledTimeOfEvent, nextX, nextY) =>
+      @queueInputEvent PointermoveInputEvent.synthetic button, buttons, false, false, false, false, scheduledTimeOfEvent, nextX, nextY
+
+  # WHERE A GESTURE AIMS, resolved to a screen point. A WIDGET aims at its on-screen centre: the
+  # plane centre mapped up through every mapping ancestor (island transforms AND scroll
+  # translations) — identity (the same point) for the common unmapped widget, the on-screen pixel
+  # for a scrolled or tilted one. A Point is taken as given. Every verb that accepts either kind of
+  # target asks this, so a mouse gesture and a finger's aim at exactly the same pixel.
+  _screenPointOfTarget: (positionOrWidget) ->
+    if positionOrWidget instanceof Widget
+      positionOrWidget.localPointToScreen positionOrWidget.center()
+    else
+      positionOrWidget
+
+  # THE SAMPLED PATH of a pointer move, written once: expoOut-eased, rounded to whole pixels and
+  # DEDUPED, one call to `queueOneSample (time, x, y)` per surviving sample. What differs between a
+  # mouse's move and a finger's is only how a sample is queued — which KIND constructs it, and
+  # whether its time is scaled — so the caller hands that one step in and both kinds follow the
+  # identical trajectory, which is what lets a test contrast them.
+  #   Math.round on the count so a drag's span-floored fractional events-per-ms still yields EXACTLY
+  # the un-floored integer sample count (so expoOut samples the identical path). A no-op for the
+  # ordinary whole-number cases.
+  _sampleMovePath: (orig, dest, milliseconds, startTime, numberOfEventsPerMillisecond, queueOneSample) ->
     numberOfEvents = Math.round(milliseconds * numberOfEventsPerMillisecond)
     for i in [0...numberOfEvents]
       scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
@@ -372,7 +394,8 @@ class MacroToolkit
       if nextX != prevX or nextY != prevY
         prevX = nextX
         prevY = nextY
-        @queueInputEvent PointermoveInputEvent.synthetic button, buttons, false, false, false, false, scheduledTimeOfEvent, nextX, nextY
+        queueOneSample scheduledTimeOfEvent, nextX, nextY
+    return
 
   # Schedules the down/up in ABSOLUTE (already-spanFactor-scaled) time and pushes them
   # NON-scaled, so a LEFT click can be pushed past the hand's real double-click window
@@ -440,6 +463,94 @@ class MacroToolkit
   # it — nothing a user does produces a cancel; the browser does.
   syntheticEventsPointerCancel_InputEvents: (startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @queueInputEvent PointercancelInputEvent.synthetic 0, 0, false, false, false, false, startTime
+
+  # ── THE FINGER'S PRIMITIVES ─────────────────────────────────────────────────────────────────
+  # A finger's stroke is not a mouse's, in three ways these verbs reproduce faithfully:
+  #  - EVERY event states its own place, and no positioning move precedes a press. There is no
+  #    hover to have walked the pointer there, so the down carries the position (the position head
+  #    in ActivePointerWdgt.processPointerDown is what consumes it).
+  #  - The KIND rides each event (PointerInputEvent.syntheticTouch), so the hand answers per
+  #    STROKE — which is the whole of the gesture grammar's key (ruling I2).
+  #  - The whole stroke is scheduled in ABSOLUTE (already-scaled) time and pushed NON-SCALED, the
+  #    click verbs' idiom one gesture wider: a finger's press-and-hold must cross
+  #    `pressAndHoldMs` of REAL time, and a recognition window the speed lever compressed would be
+  #    recognised at one speed and not another.
+
+  # The three one-event pushes every touch verb below composes. Each states its place, and each
+  # takes an ABSOLUTE time its caller has already scaled (hence the non-scaled push).
+  _queueTouchDown: (place, timeAbs) ->
+    @queueInputEvent (PointerdownInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, place.x, place.y), true
+
+  _queueTouchMove: (place, timeAbs) ->
+    @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, place.x, place.y), true
+
+  _queueTouchUp: (place, timeAbs) ->
+    @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, false, false, false, timeAbs, place.x, place.y), true
+
+  # A TAP: a position-carrying down and up with nothing before either — the grammar's "a tap is a
+  # click" row. Guarded and hold-floored exactly like a mouse click, so two taps in the same spot
+  # never fold into a false double-click and the pressed frame is still sampled.
+  # Returns the absolute time of the release (a caller sequencing a later gesture reads it).
+  syntheticEventsTouchTap_InputEvents: (positionOrWidget, milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    place = @_screenPointOfTarget positionOrWidget
+    @currentPointerTarget = place
+    downAbs = @guardedClickStart (@scaledAbs startTime), place
+    upAbs = downAbs + @clickHoldWithFloor milliseconds
+    @_rememberClickGesture upAbs, place
+    @_queueTouchDown place, downAbs
+    @_queueTouchUp place, upAbs
+    upAbs
+
+  # A PRESS-AND-HOLD: the down, then a SAME-POSITION move scheduled past `pressAndHoldMs` of real
+  # time. That move is the drained event whose own time crosses the window, and crossing it is what
+  # fires the hold — the recognizer decides at every drained event and at every cycle re-entry
+  # (ActivePointerWdgt), so a stationary finger needs an event to decide ON.
+  # `alsoRelease` (default true) ends the stroke with the up; pass false to keep the finger down —
+  # the hold-then-drag verb below does. Returns the absolute time of the last event scheduled.
+  syntheticEventsTouchHold_InputEvents: (positionOrWidget, alsoRelease = true, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    place = @_screenPointOfTarget positionOrWidget
+    @currentPointerTarget = place
+    downAbs = @scaledAbs startTime
+    holdCrossedAbs = downAbs + WorldWdgt.preferencesAndSettings.pressAndHoldMs + MacroToolkit.holdWindowMarginMs
+    @_queueTouchDown place, downAbs
+    @_queueTouchMove place, holdCrossedAbs
+    return holdCrossedAbs unless alsoRelease
+    upAbs = holdCrossedAbs + MacroToolkit.holdWindowMarginMs
+    @_queueTouchUp place, upAbs
+    upAbs
+
+  # A DRAG: the down, the sampled path to the destination, the up there. The span is floored to
+  # @dragFloorMs — DIRECTLY, not through dragSpanWithFloor, which inflates a span so it survives
+  # the speed lever and would inflate a non-scaled one into seconds — so the per-frame samplers a
+  # drag drives (a viewport's scroll step above all) see several frames whatever the speed.
+  # Returns the absolute time of the release.
+  syntheticEventsTouchDrag_InputEvents: (orig, dest, millisecondsForDrag = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    downAbs = @scaledAbs startTime
+    @_queueTouchDown (@_screenPointOfTarget orig), downAbs
+    @_dragTouchFromHeldPress orig, dest, millisecondsForDrag, downAbs + MacroToolkit.holdWindowMarginMs, numberOfEventsPerMillisecond
+
+  # CARRY A FINGER THAT IS ALREADY DOWN, then let go — the second half of the grammar's LIFT.
+  # HOLD-THEN-DRAG is these two verbs in sequence and deliberately NOT one composed verb: hold with
+  # `alsoRelease` false, drain the queue, assert or screenshot the open menu, then continue THE SAME
+  # stroke with this (no release happens in between, which is the whole point — a released-and-
+  # re-pressed pair would witness nothing). `orig` is where the press is standing (a Widget resolves
+  # to its centre, as everywhere else).
+  # Returns the absolute time of the release.
+  syntheticEventsTouchDragFromHeldPress_InputEvents: (orig, dest, millisecondsForDrag = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    @_dragTouchFromHeldPress orig, dest, millisecondsForDrag, (@scaledAbs startTime), numberOfEventsPerMillisecond
+
+  # The move stream + release shared by the drag verbs above: the press is already down and
+  # held at `orig` when this runs, so it only carries the finger and lets go.
+  _dragTouchFromHeldPress: (orig, dest, millisecondsForDrag, moveStartAbs, numberOfEventsPerMillisecond) ->
+    origPlace = @_screenPointOfTarget orig
+    destPlace = @_screenPointOfTarget dest
+    dragSpan = Math.max millisecondsForDrag, MacroToolkit.dragFloorMs
+    @_sampleMovePath origPlace, destPlace, dragSpan, moveStartAbs, numberOfEventsPerMillisecond, (timeAbs, x, y) =>
+      @_queueTouchMove (new Point x, y), timeAbs
+    @currentPointerTarget = destPlace
+    upAbs = moveStartAbs + dragSpan + MacroToolkit.holdWindowMarginMs
+    @_queueTouchUp destPlace, upAbs
+    upAbs
 
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime

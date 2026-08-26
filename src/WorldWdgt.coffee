@@ -2861,6 +2861,14 @@ class WorldWdgt extends IconGridPanelWdgt
     # initEventListeners / removeEventListeners are the attach/detach pair; that method's own comment
     # carries the target-matching rules.
     @removeEventListeners()
+    # (a2) THE DOM NODE A WORLD PUT IN THE PAGE. The on-screen keyboard's hidden input is appended
+    # to document.body, which outlives every world, so a world that built one takes it away again —
+    # otherwise each world leaves another invisible input behind, and the last one to be FOCUSED
+    # keeps the keystrokes a later world's canvas expects. Its listeners are already off (the
+    # detach above); this is the node itself.
+    if @inputDOMElementForVirtualKeyboard
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = undefined
     # (b) THE WIDGETS A WORLD OWNS THAT ARE NOT TREE CHILDREN, and which fullDestroyChildren
     # therefore cannot reach: the hand (built by the constructor) and the two storage containers
     # (built by finishWorldSetup). Each of them sits in its class's `instances` registry, so leaving

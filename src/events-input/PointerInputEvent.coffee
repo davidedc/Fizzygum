@@ -47,3 +47,12 @@ class PointerInputEvent extends InputEvent
   # above), so no caller passes a hole to reach a later argument.
   @synthetic: (button, buttons, ctrlKey, shiftKey, altKey, metaKey, time, worldX, worldY) ->
     new @ worldX, worldY, 'mouse', 1, true, 0, button, buttons, ctrlKey, shiftKey, altKey, metaKey, true, time
+
+  # THE SAME BOUNDARY FOR A FINGER — one factory per KIND, rather than one factory taking a kind,
+  # because what differs is precisely the DEVICE constants each bakes: a finger reports a pressure
+  # where a mouse reports none. The argument list is the mouse factory's, unchanged, so a caller
+  # learns nothing new to synthesise the other kind. `worldX`/`worldY` are effectively required
+  # here: a finger's every event states its own place, because there is no hover to have walked
+  # the pointer there (the position head in ActivePointerWdgt.processPointerDown).
+  @syntheticTouch: (button, buttons, ctrlKey, shiftKey, altKey, metaKey, time, worldX, worldY) ->
+    new @ worldX, worldY, 'touch', 1, true, 0.5, button, buttons, ctrlKey, shiftKey, altKey, metaKey, true, time

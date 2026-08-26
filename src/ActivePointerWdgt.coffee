@@ -38,6 +38,10 @@ class ActivePointerWdgt extends Widget
   _pressHoldFired: false                     # the hold opened its menu, so this stroke owes no click
   _pressHoldMenuStands: false                # that menu is still up, and a move dismisses it
   _pressLeftHoldRadius: false                # the press travelled: it is a plain drag for its whole life
+  # THE FINGER LEFT THE GLASS: between touch strokes NO pointer rests anywhere, and while that is
+  # true nothing is under one. A mouse or a pen never leaves — it stops — so this is false for
+  # their whole life and every path they take is the path they always took.
+  _pointerIsAbsent: false
   mouseOverList: undefined
   # One multi-click candidate each — widget + position + EVENT-TIME armed; see
   # MultiClickRecognizer. Replaces the six hand-mirrored double/triple fields. Instantiated
@@ -80,6 +84,9 @@ class ActivePointerWdgt extends Widget
     @dragEmbedLingerOriginEventTime = undefined
     @dragEmbedLingerOriginWallTime = undefined
     @mouseOverList.clear()
+    # a replacement world has been walked over by nobody, so the hand meets it as it meets a fresh
+    # page: whatever the last stroke left is not a fact about this world
+    @_pointerIsAbsent = false
     return
 
   # The widget-referencing bookkeeping of a PRESS: which widget the button went down on, what a
@@ -813,9 +820,14 @@ class ActivePointerWdgt extends Widget
       return
 
     return if @_pressHoldFired or @_pressLeftHoldRadius
-    # a press that has become a drag belongs to what it is dragging — the dwell machine owns a
-    # float-drag, a value control owns its own — so a hold never fires on top of one.
-    return if @isThisPointerDraggingSomething()
+    # A press that has become a REAL drag belongs to what it is dragging — the dwell machine owns a
+    # float-drag, a value control owns its own — so a hold never fires on top of one. The non-float
+    # side asks whether the booked widget actually TAKES drag steps, and that precision is
+    # load-bearing: a press on bare desktop books the WORLD as the non-float target and nothing
+    # whatever follows from it (the world has no nonFloatDragging to receive), so reading that as a
+    # drag would silence exactly the hold that opens the desktop's own menu.
+    return if @isThisPointerFloatDraggingSomething()
+    return if @nonFloatDraggedWdgt?.nonFloatDragging?
 
     decisionTime = @_holdDecisionTime()
     return unless decisionTime?
@@ -850,6 +862,10 @@ class ActivePointerWdgt extends Widget
       old.mouseLeave?()
       old.mouseLeavefloatDragging?()  if @mouseButton
     @mouseOverList.clear()
+    # ...and the glass STAYS empty until a pointer comes back. Emptying the list alone would not
+    # last: the per-cycle hover re-sync re-derives the set from where the hand happens to stand, so
+    # a cycle later it would enter every widget the finger just left, tooltip and highlight and all.
+    @_pointerIsAbsent = true
     return
 
   processPointerDown: (e) ->
@@ -857,6 +873,9 @@ class ActivePointerWdgt extends Widget
     # a press begins: whatever the previous stroke recognized is spent (the press below re-establishes
     # it), and the position head right after must not advance a recognizer belonging to a dead stroke
     @_forgetPressAndHoldRecognition()
+    # THE POINTER IS BACK — a down states where it is. The position head below then rebuilds the
+    # over-list at the press point, which is the truth from here on.
+    @_pointerIsAbsent = false
     # A pointer down states its own position, and for a finger or a pen it is the FIRST event that
     # states one — there is no hover to have walked the pointer there. So take the position from
     # the down itself, by running the move pipeline for it before the press. Skipped when the event
@@ -1228,6 +1247,10 @@ class ActivePointerWdgt extends Widget
 
   processPointerMove: (e) ->
     @pointerType = e.pointerType
+    # A HOVER-CAPABLE POINTER HAS COME BACK: a mouse or a pen moving states that something rests on
+    # the glass again, wherever it goes. A finger's own moves say nothing of the sort — they belong
+    # to a press, which ended the absence at its down.
+    @_pointerIsAbsent = false  if e.pointerType isnt 'touch'
 
     # the event already speaks WORLD coordinates: the page → world conversion happens once, at the
     # browser boundary (PointerInputEvent.fromBrowserEvent)
@@ -1466,6 +1489,13 @@ class ActivePointerWdgt extends Widget
     @dispatchEventsFollowingMouseMove mouseOverNew
 
   dispatchEventsFollowingMouseMove: (mouseOverNew) ->
+
+    # NOTHING IS UNDER A POINTER THAT IS NOT THERE. While the glass is empty (a touch stroke ended
+    # and none has begun), the widgets the last stroke walked over stay LEFT: no enter, no move, and
+    # an over-list that stays empty — so the per-cycle re-sync cannot undo, a cycle later, the sweep
+    # that stroke's own end performed. The press machinery at the tail runs either way: a live press
+    # cleared the absence at its down, so this can never starve one.
+    mouseOverNew = new Set  if @_pointerIsAbsent
 
     @mouseOverList.forEach (old) =>
       unless mouseOverNew.has old
