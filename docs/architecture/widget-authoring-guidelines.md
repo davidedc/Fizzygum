@@ -144,8 +144,8 @@ else — appearance, colours, sizing, registrations, child building — goes aft
 
 ⚠ A base constructor that calls a **virtual** method runs it before the subclass constructor's own
 body has done anything past `super` — which is why `ViewportWdgt` builds through a
-distinctly-named `_buildViewportChrome`, `MenuRowsPanelWdgt` through `_buildMenuLabel`, and
-`PromptWdgt` leaves `@_buildAndConnectChildren()` to each subclass's own constructor.
+distinctly-named `_buildViewportChrome`, and `PromptWdgt` leaves `@_buildAndConnectChildren()` to
+each subclass's own constructor.
 
 ⚠ What that base DOES see is the subclass's `@param` fields, already assigned:
 [`constructor-and-parameter-conventions.md` R6](constructor-and-parameter-conventions.md) has the

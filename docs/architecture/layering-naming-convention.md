@@ -327,7 +327,7 @@ for what it is:
   frame-lifetime-and-docking arc), so "becomes a window when embedded" or "becomes furniture when pinned" is
   already automatic — there is no manual switch. The `lifetime` field (`'transient'` / `'persistent'`) IS
   that state: `MenuWdgt` and `PromptWdgt` (with its per-value-type subclasses) **extend `FrameWdgt`
-  directly** and compose a `MenuRowsPanelWdgt` for their rows — there is no second pop-up hierarchy any
+  directly** and compose a `CommandPanelWdgt` for their rows — there is no second pop-up hierarchy any
   more. `PopUpWdgt` (the SINGLE shared home the 2017-onward container arc had consolidated pop-up behaviour
   into — transient / pin / drop-shadow, `extends Widget`) is **DELETED**: that behaviour absorbed onto
   `FrameWdgt`'s `lifetime`, because transient-vs-persistent is exactly an axis that changes mid-life (pin,

@@ -135,7 +135,7 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
   position belongs to the arrange's clamp). Under the offset model this is purely policy:
   nobody writes a plane's position on a scroll any more.
 - `scrolledContentMeasureIsMyFrame()` — a plane whose measure is its WHOLE frame (a tight
-  both-axes hug: `MenuRowsPanelWdgt` — the untitled plain rows stack a menu/prompt frame's
+  both-axes hug: `CommandPanelWdgt`'s `'column'` arrangement — the untitled plain rows stack a menu/prompt frame's
   own chrome now owns in its place, no title, no corner radius, no header child of its
   own — as a pop-up's rows plane) gets the measure committed VERBATIM — the content-sizing
   commit's window-width floor and grow-to-fill are skipped, because those adjustments suit

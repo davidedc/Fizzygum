@@ -153,7 +153,7 @@ verb's own name — an arity-0 `createReferenceAndClose` menu action on a prompt
 `Widget.createReferenceAndClose` on every instance of that class.
 
 ⭐⭐ **AND THE SLOTS ARE NOT WHAT THEY LOOK LIKE: slot 2 is the ENCLOSING PANEL's target,
-unconditionally — not the row's own.** `MenuRowsPanelWdgt._createMenuItem` builds every row with
+unconditionally — not the row's own.** `CommandPanelWdgt._createMenuItem` builds every row with
 `subject: @target`: slot 1 of a menu dispatch is always the button that fired (`ButtonWdgt` passes
 itself), slot 2 is always the subject the *enclosing panel* was built about, with no special case
 left for a "which panel" fork. So a verb taking its SUBJECT from slot 2 —
@@ -246,11 +246,11 @@ to avoid.
 
 An `opts` literal is consumed immediately and discarded. When the same bundle is **passed
 around, stored, or built by one party and consumed by another**, it has become a value in its
-own right and gets a named class — `MenuItemSpec`, `TransformSpec`, the layout-spec family. A
+own right and gets a named class — `CommandSpec`, `TransformSpec`, the layout-spec family. A
 spec class is documented, has defaults in one place, and can be type-checked by eye at the call
 site.
 
-Note the corollary, visible in `MenuItemSpec`'s own header: the menu-level context (font,
+Note the corollary, visible in `CommandSpec`'s own header: the menu-level context (font,
 environment — the same for every row) is supplied by the owning `MenuWdgt`, *not* carried on
 the per-row spec. A spec holds what varies per instance; what is constant across instances
 belongs to the owner.
@@ -362,7 +362,7 @@ the face**, and sweep by the FAMILY name rather than the one method that showed 
 Landed conversions, in order: the `addMenuItem`/`prependMenuItem` family, the `MenuWdgt` and
 `FrameWdgt` constructors, and the four `_addNoSettle` overrides
 ([`../archive/accidental-complexity-reduction-plan.md`](../archive/accidental-complexity-reduction-plan.md) P5);
-then `SliderWdgt`, `MenuItemSpec`, the text family (`StringWdgt` / `TextWdgt` / `SimpleTextWdgt`,
+then `SliderWdgt`, `CommandSpec`, the text family (`StringWdgt` / `TextWdgt` / `SimpleTextWdgt`,
 all three to `(text, opts = {})`), the button family, the prompt family
 (`(widgetOpeningThePopUp, target, opts = {})`), the stragglers, the **method** families, the
 polymorphic **`add`** family — 7 overrides of inconsistent arity (4, 5 and 6 slots) collapsed to one

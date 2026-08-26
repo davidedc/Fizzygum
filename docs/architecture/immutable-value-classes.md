@@ -125,8 +125,8 @@ dedupe.
 `docs/architecture/transforms.md` §2).
 
 **Immutable by declaration (no shortcut machinery — small or cold):** `Point3D` (every op
-returns a fresh instance), `TextEditingState` (undo snapshot), `MenuItemSpec` (SHALLOWLY
-immutable — its `target`/`action` fields reference live widgets), `MenuRowReflectionSpec`
+returns a fresh instance), `TextEditingState` (undo snapshot), `CommandSpec` (SHALLOWLY
+immutable — its `target`/`action`/`icon` fields reference live widgets), `MenuRowReflectionSpec`
 (SHALLOWLY immutable — `source` is a live object and `readerName` a METHOD NAME resolved late
 against it), `PinSpec` (SHALLOWLY
 immutable — inert strings, but they are METHOD NAMES resolved late against a live widget),

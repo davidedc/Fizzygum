@@ -146,8 +146,24 @@ tree's):**
   GAUNTLET 18/18 OK(warn) — settle/capstone/vmtruth/serialization(both rigs)/storage all
   first-try; two serial-retry load-flakes on UNRELATED tests (webkit
   `SliderTrackClickMovesButton`, revisits `InspectorResizingOKEvenWhenTakenApart` —
-  documented flake class, logs kept). Commits: —
-- P5 docs + close + tail: —
+  documented flake class, logs kept). Commits: Fizzygum `97a7a647` + tests `b6912bc54`,
+  both pushed.
+- P5 docs + close + tail: DONE 2026-08-26. Living docs woven to the as-landed truth (9
+  files; the partial-sweep lesson bit again — the enumerated list missed 8 stale mentions
+  in 5 more architecture docs, caught by the worker's own zero-check and woven in a
+  follow-up; `layout.md`'s `_positionAndResizeChildren` definers list re-derived from a
+  live grep — the palette no longer defines it; one pre-existing drift fixed en route:
+  `widget-authoring-guidelines` still cited `_buildMenuLabel`, dead since the
+  framed-citizens arc). BACKLOG: stale T1/T2 rows retired, THREE rows added (icons on
+  ordinary menus — owner taste; remainder alternative projections — by derivation;
+  the mis-homed `PaintToolbarWdgt.queue` declaration — P4 execution note). Program
+  ledger: T1 CLOSED with both premise corrections dated; roster row 3.5. Tail: all
+  pre-filed items have destinations; the column `'icon'`-only display KILLED (the grid is
+  that projection). Plan archived + INDEX case-law entry. doc-narration 0/0. Close gates
+  on the final tree: GAUNTLET EXIT=0 OK(warn) 18/18 (one serial-retry load-flake, dpr1
+  `SliderTrackClickMovesButton` — the known open flake-A family, SECOND sighting today
+  after the P4 webkit leg; passed serially both times, logs kept) + HOMEPAGE EXIT=0 OK
+  (the production snapshot round-trip covering the `users` section). Close commit: —
 
 ---
 

@@ -149,7 +149,7 @@ These names are the durable vocabulary (full convention: `docs/architecture/laye
 | `_reLayout(newBounds)` | the per-node **arrange**: position self, apply own extent, place corner/edge-internal children, mark fixed, re-lay any child the arrange moved |
 | `_reLayoutSelf` | self-only heal hook (empty on base `Widget`); fired by `_applyExtentBase` when a widget's own extent commits |
 | `_reLayoutChildren` | the **container arrange chokepoint** — the marker that a container *tracks its content's size*; the stack/scroll containers dispatch it to `_positionAndResizeChildren`, the tracking island's override does its own content-hug math |
-| `_positionAndResizeChildren` | the actual measure-and-place-children body — the definers: `VerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, `PaintToolbarWdgt`, plus `MenuRowsPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the viewport respectively |
+| `_positionAndResizeChildren` | the actual measure-and-place-children body — the definers: `VerticalStackPanelWdgt`, `ViewportWdgt`, `FrameWdgt`, `FrameBarWdgt`, plus `CommandPanelWdgt` and `ToolbarWdgt`, which override only the body and inherit the marker from the stack and the viewport respectively |
 
 `_reLayoutChildren` is defined by every size-tracking container and nothing else — the definers: the
 stack panel and the viewport, the tracking-transform island, `FrameWdgt` (which `extends Widget` and defines its

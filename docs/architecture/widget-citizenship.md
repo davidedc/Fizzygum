@@ -106,7 +106,7 @@ citizen:
    The flip side is mandatory: parts can be *taken out* and reused in other combinations —
    e.g. menu entries are widgets, so a handy command is dragged off a PERSISTENT frame's rows
    — a pinned desktop menu, or the same rows nested as a window's content, since
-   `MenuRowsPanelWdgt.wantsDetachOfChild` asks only its immediate holder, never a climb — and
+   `CommandPanelWdgt.wantsDetachOfChild` asks only its immediate holder, never a climb — and
    kept, going on working as a standalone button on a control panel of your own (the
    parent-side opt-in `ButtonWdgt.rejectDrags` consults to know a payload from a part). A
    widget that only works inside the assembly it was born in is a bad citizen.
