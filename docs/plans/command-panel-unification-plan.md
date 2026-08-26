@@ -103,8 +103,50 @@ tree's):**
   rename-only). Gates: PRESUITE EXIT=0 OK BYTE-IDENTICAL (dpr1/paint/fracplane, 00:05);
   GAUNTLET EXIT=0 OK 18/18 ALL FIRST-TRY, no flake retries (00:12, 421s) — both
   serialization rigs, menusweep's pop-up roots, pinsweep, and the index.html apps/parts
-  legs (the P9 blind spot — the boot install line changed) all green. Commits: —
-- P4 the Draw palette rides the unified panel (reviewed set; the 103 dies): —
+  legs (the P9 blind spot — the boot install line changed) all green. Commits:
+  Fizzygum `8ac5d256` + tests `54f20ab34`, both pushed.
+- P4 the Draw palette rides the unified panel (reviewed set; the 103 dies): IN PROGRESS.
+  Conversion LANDED 2026-08-26 (build green): `PaintToolbarWdgt extends ToolbarWdgt`, four
+  commands via `_toolbarItems` (`CodeInjectingSimpleRectangularButtonWdgt` + the icon art;
+  sources = the statics re-referenced), selection ONE field + the byte-kept arm funnel,
+  highlight derived at arrange, `EditableMarkWdgt` per cell, `dockThickness: 103` +
+  `internalPadding: 5` + 93×55 DELETED (zero declared dock-thickness constants tree-wide),
+  `RadioButtonsHolderWdgt` DELETED (consumer-less, grep-proven; `radioButtonWasSwitched`
+  survives for F8's other consumers); call-separation U-query baseline 123→121. **OD3
+  geometry: owner-approved 2026-08-26 ("geometry speaking this is fine").**
+  **OWNER DIRECTION at OD3 (2026-08-26) — the selection's HOME moves to a USER model:** a
+  toolbar is a destination-generic instrument; a stored selection made the Draw palette
+  owner-specific by accident — the armed tool is the USER's fact (a hand holding a pencil).
+  Build: core `User` model (collaborator idiom, not a widget), `world.users` (one today) +
+  `world.user`; first resident `armedDrawingTool` (a tool KEY or undefined); tap →
+  `world.user.armDrawingTool key` (re-press toggles undefined); the User ANNOUNCES on the
+  reflection seam (P5/P7 — the wallpaper-menu double-link, its second consumer, one level
+  up); every palette holds one subscription edge and on announce re-derives its highlight
+  AND re-drives its own mode-guarded arm funnel into its own `resolveInjectionTarget()`
+  (arming anywhere arms everywhere — you draw with the pencil you are holding); the User
+  serializes with the world. Multi-user input attribution explicitly OUT (Plan 4 at the
+  earliest); `editorFocusWdgt`/caret named as future kin, not moved. ⚠ Mechanism fact to
+  MEASURE first: can a non-widget be an announce SOURCE on the dataflow reflection seam —
+  if not, that finding comes back for ruling. USER MODEL LANDED 2026-08-26: the seam
+  answered YES with a live precedent (`DataflowSource` — a non-widget `markStale`/`
+  markNonValueChange` source; the engine holds nodes by identity, capability-guarded);
+  core `src/User.coffee` (collaborator idiom; born default `armedDrawingTool: 'pencil'`;
+  `armDrawingTool` an IDEMPOTENT setter — the second-tap-disarms meaning lives at the
+  GESTURE site, `PaintToolbarWdgt.selectTool`, so a restored snapshot can never read as a
+  re-press); one dataflow edge per palette (made at build, re-made on
+  deserialize/duplicate, severed by the widget's own destroy — vmtruth-judged);
+  serialization = an explicit world `users` section (the `untitledNamingCounters` idiom);
+  teardown contract (A)-nothing-owed (Users hold KEY STRINGS, never widgets). Born-with
+  RULED (owner 2026-08-26): a new drawing is born painting the HELD tool, pencil on an
+  empty hand (the fallback is the drawing's birth choice, never an arming) —
+  `PaintToolbarWdgt.sourceForToolKey` is the ONE key→source table, read by both the cells
+  and `ImageWdgt`. The two Draw tests' metadata prose trued up (descriptive fields only).
+  CLOSE GATES all green 2026-08-26: RECAPTURE COMPLETE (exactly the 2-test budget, both
+  dprs; image_1 dataHash-stable); PRESUITE OK; menusweep OK (3744+53); pinsweep OK;
+  GAUNTLET 18/18 OK(warn) — settle/capstone/vmtruth/serialization(both rigs)/storage all
+  first-try; two serial-retry load-flakes on UNRELATED tests (webkit
+  `SliderTrackClickMovesButton`, revisits `InspectorResizingOKEvenWhenTakenApart` —
+  documented flake class, logs kept). Commits: —
 - P5 docs + close + tail: —
 
 ---

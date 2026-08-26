@@ -49,9 +49,11 @@ class ImageWdgt extends GenericPanelWdgt
             @_changed()
     """
 
-    # born ARMED with the pencil (parity with the retired editor, whose build
-    # auto-selected pencil): the toolbar variant is built showing pencil
-    # selected to match (its _armed default).
-    overlayCanvas.injectProperties PaintToolbarWdgt.PENCIL_TOOL_SOURCE
+    # Born painting WHAT THE HAND HOLDS (User.armedDrawingTool): open a drawing while holding the
+    # brush and it hands you the brush, which is what a destination-generic instrument means. An
+    # EMPTY hand falls back to the pencil, because a new drawing must always be immediately
+    # paintable -- and that fallback is THIS drawing's birth choice, never an arming: it puts
+    # nothing in the person's hand, so a hand deliberately emptied stays empty everywhere else.
+    overlayCanvas.injectProperties PaintToolbarWdgt.sourceForToolKey (world.user?.armedDrawingTool ? 'pencil')
 
     container

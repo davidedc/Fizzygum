@@ -393,6 +393,12 @@ class WorldWdgt extends IconGridPanelWdgt
   untitledNamingService: undefined
   widgetFactory: undefined
 
+  # THE PEOPLE AT THIS WORLD and the one who is acting (User): the modal state a person carries
+  # from one widget to the next -- today, the drawing tool in their hand. A list because the
+  # concept is per-person; ONE member, because attributing input to more than one is out of scope.
+  users: undefined
+  user: undefined
+
   # world.parts — the runtime loader for lazily-loadable PARTS of the system
   # (buildSystem/parts.json), and world.dataflow / world.storageSorter / world.sourceEditsRegistry,
   # the three other shipped product collaborators. All four are constructed unguarded.
@@ -545,6 +551,11 @@ class WorldWdgt extends IconGridPanelWdgt
     if MacroToolkit?
       @macroToolkit = new MacroToolkit
     @untitledNamingService = new UntitledNamingService
+    # world.users / world.user — the person at the machine and what they are holding (User). A
+    # shipped product collaborator, constructed unguarded, before anything a person can act with:
+    # a palette subscribes to the acting user as it is built.
+    @users = [new User]
+    @user = @users[0]
     # the per-world log of in-world source edits (instance + class scope), embedded in and
     # replayed from a whole-world snapshot. A product collaborator (ships in production).
     @sourceEditsRegistry = new SourceEditsRegistry
@@ -2729,6 +2740,12 @@ class WorldWdgt extends IconGridPanelWdgt
     if section.untitledNamingCounters? and @untitledNamingService?
       @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
       @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
+    # the people at this world: the file's state onto the LIVE users, positionally. Through the
+    # write VERB, so the announcement reaches every palette the load has just restored -- and the
+    # verb is idempotent (User.armDrawingTool states a fact), so re-stating a hand the live user
+    # already holds is simply quiet.
+    for eachRecord, i in (section.users or [])
+      @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
     # 6. swap in the restored (self-contained, off-tree) storage containers so every $r
     #    pointer at them (the bin opener's target, ...) stays consistent, and re-bind the
     #    app-slot / templates windows (orphaned-but-revivable — NOT re-attached to the

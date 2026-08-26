@@ -193,6 +193,10 @@ class Serializer
     section.untitledNamingCounters =
       howManyUntitledShortcuts: uns?.howManyUntitledShortcuts or 0
       howManyUntitledFoldersShortcuts: uns?.howManyUntitledFoldersShortcuts or 0
+    # the people at this world (User) — plain delegated collaborators like the naming service, so
+    # their state is captured by NAME here rather than through the object table. The armed drawing
+    # tool is a KEY, so it captures as itself; a restore applies it to the live users positionally.
+    section.users = ({armedDrawingTool: eachUser.armedDrawingTool} for eachUser in (theWorld.users or []))
     # app-slot windows + the templates window (may be orphaned-but-revivable).
     appSlots = {}
     for slot in Serializer.WORLD_APP_SLOTS
