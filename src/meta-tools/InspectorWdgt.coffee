@@ -283,7 +283,7 @@ class InspectorWdgt extends Widget
       doubleClickAction: doubleClickAction
     @list.disableDrops()
 
-    # @list.listContents (the MenuRowsPanelWdgt holding this list's items) never animates, so it's
+    # @list.listContents (the CommandPanelWdgt holding this list's items) never animates, so it's
     # dropped from world.steppingWdgts here. ListWdgt itself still steps (its scrollbars need it).
     world.steppingWdgts.delete @list.listContents
     @_addNoSettle @list

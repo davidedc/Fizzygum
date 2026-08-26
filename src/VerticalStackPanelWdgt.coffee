@@ -113,7 +113,7 @@ class VerticalStackPanelWdgt extends Widget
 
   # Capability query (duck-typed at the call sites): may "edit layout" show content
   # drop-slots between my elements? Follows my drop gate — slots are DROP targets, so a
-  # stack that refuses drops (MenuRowsPanelWdgt: menus are not user-editable layouts)
+  # stack that refuses drops (CommandPanelWdgt: menus are not user-editable layouts)
   # refuses slots for the same reason.
   hostsContentStackDropSlots: ->
     @_acceptsDrops
@@ -201,7 +201,7 @@ class VerticalStackPanelWdgt extends Widget
   # The gap between two consecutive stacked elements. Historically the ONE
   # @padding knob served as BOTH the border inset and the inter-element gap;
   # they are distinct layout roles (CSS padding vs gap), so the gap is now its
-  # own policy method for a subclass to set apart — MenuRowsPanelWdgt stacks its
+  # own policy method for a subclass to set apart — CommandPanelWdgt stacks its
   # rows FLUSH (gap 0) inside a 2px border. Default: the border padding,
   # preserving every existing stack byte-identically. Mirrored in the three
   # walkers (_positionAndResizeChildren / preferredExtentForWidth /

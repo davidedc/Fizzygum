@@ -1288,7 +1288,7 @@ class FrameWdgt extends Widget
     @isPopUpMarkedForClosure = true
 
   # "Am I furniture?" — the persistent half of the lifetime state, under the name the rows
-  # (MenuRowsPanelWdgt.wantsDetachOfChild), the shadow policy and the close policy ask by.
+  # (CommandPanelWdgt.wantsDetachOfChild), the shadow policy and the close policy ask by.
   #   This and its transient twin below are the ONLY readers of the lifetime field: every branch
   # that turns on the state asks one of them, so the enum's spelling is stated twice and nowhere
   # else, and a question about the state is asked in words rather than by string comparison.
@@ -1376,7 +1376,7 @@ class FrameWdgt extends Widget
 
   # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
   # being pinned is what makes it liftable (ButtonWdgt.isDetachablePayloadOfMyParent →
-  # MenuRowsPanelWdgt.wantsDetachOfChild). That is a fact about ME which they read, so nothing
+  # CommandPanelWdgt.wantsDetachOfChild). That is a fact about ME which they read, so nothing
   # marks them stale unless I do — and the shadow swap above cannot stand in for it: it marks
   # ME, which re-blits my buffer without re-rendering the rows inside it, and on a pop-up pinned
   # into a non-world parent it drops the shadow instead and may not mark anything at all.

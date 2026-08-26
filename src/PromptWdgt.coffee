@@ -1,6 +1,6 @@
 # A prompt is the FRAMED CITIZEN of the prompt kind: it asks for one value and reports it
 # back via a callback. Like a menu (it is NOT a MenuWdgt) it wraps a rows payload — a
-# MenuRowsPanelWdgt inside a PopUpRowsViewportWdgt, holding the value editor, a divider and
+# CommandPanelWdgt inside a PopUpRowsViewportWdgt, holding the value editor, a divider and
 # the "Ok"/"Close" rows — and, like a menu, it is born TRANSIENT: it closes on a click
 # outside it, and pinning it makes it furniture. The frame draws the box, the title strip
 # (from @msg) and the shadow.
@@ -21,7 +21,7 @@ class PromptWdgt extends FrameWdgt
   # the value my editor OPENS with (the `defaultContents` option every prompt door takes).
   defaultValue: undefined
   intendedWidth: undefined
-  # the MenuRowsPanelWdgt my rows live in, and the viewport that holds it — my @contents.
+  # the CommandPanelWdgt my rows live in, and the viewport that holds it — my @contents.
   rowsPanel: undefined
   rowsViewport: undefined
   # the value editor for the text-bearing prompts (Text / Number / SaveShortcut);
@@ -81,13 +81,13 @@ class PromptWdgt extends FrameWdgt
     # NOTE: subclasses call @_buildPromptRows() from their OWN constructor,
     # so that a subclass's extra options (e.g. NumberPromptWdgt's ceiling) are read
     # before the editor hook runs — building here would dispatch into the subclass
-    # hook while those fields are still unset (same reason MenuRowsPanelWdgt keeps
+    # hook while those fields are still unset (same reason CommandPanelWdgt keeps
     # its label build out of a virtual _buildAndConnectChildren).
 
   # My payload: the empty rows panel inside the rows viewport, which is what bounds a prompt
   # to the world and scrolls whatever does not fit. The ROWS go in through _buildPromptRows.
   _buildRowsPayload: ->
-    panel = new MenuRowsPanelWdgt target: @target
+    panel = new CommandPanelWdgt target: @target
     # dragging a prompt by its title must move the PROMPT, and a child of a panel detaches
     # instead unless it locks to panels.
     panel.isLockingToPanels = true

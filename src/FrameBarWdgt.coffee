@@ -99,7 +99,7 @@ class FrameBarWdgt extends Widget
 
   # The internal structure of a window's chrome, not a user-meaningful target:
   # excluded from the right-click hierarchy/disambiguation menu exactly like
-  # MenuRowsPanelWdgt (see Widget.getHierarchyMenuWidgets) -- every action a
+  # CommandPanelWdgt (see Widget.getHierarchyMenuWidgets) -- every action a
   # user takes on the title strip belongs to the WINDOW ("a Frame" stays the
   # entry they navigate).
   hiddenFromHierarchyMenu: ->

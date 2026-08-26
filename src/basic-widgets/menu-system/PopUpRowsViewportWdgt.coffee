@@ -16,7 +16,7 @@
 # fit is the FRAME (viewport + strip), not me: capped at the bare world extent, the frame
 # overflows by exactly its chrome and its own _assertFitsInTheWorld fires.
 #
-# My contents plane IS the pop-up's MenuRowsPanelWdgt, directly — no intermediate pane.
+# My contents plane IS the pop-up's CommandPanelWdgt, directly — no intermediate pane.
 # That is legal for that self-sizing panel because its hug is also a pure measure I commit
 # VERBATIM (its scrolledContentMeasure + scrolledContentMeasureIsMyFrame declarations), so
 # its arrange and my frame commit write byte-the-same box in every state; the two-writer
@@ -134,14 +134,14 @@ class PopUpRowsViewportWdgt extends ViewportWdgt
   _acceptsDrops: false
 
   # I am an implementation detail of a pop-up, so stay OUT of the ancestor
-  # hierarchy-disambiguation menu, exactly as MenuRowsPanelWdgt does.
+  # hierarchy-disambiguation menu, exactly as CommandPanelWdgt does.
   hiddenFromHierarchyMenu: ->
     true
 
   colloquialName: ->
     "menu rows viewport"
 
-  # The pop-up frame my rows belong to (see MenuRowsPanelWdgt._holdingPopUp): my parent, because
+  # The pop-up frame my rows belong to (see CommandPanelWdgt._holdingPopUp): my parent, because
   # I am its content. A plain viewport does not answer this at all, which is how a list's rows
   # panel learns it is in no pop-up.
   holdingPopUp: ->

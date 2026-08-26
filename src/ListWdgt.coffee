@@ -22,7 +22,7 @@ class ListWdgt extends ViewportWdgt
   elements: undefined
   labelGetter: undefined
   format: undefined
-  listContents: undefined # a MenuRowsPanelWdgt with the contents of the list
+  listContents: undefined # a CommandPanelWdgt with the contents of the list
   selected: undefined # actual element currently selected
   active: undefined # menu item representing the selected element
   action: undefined
@@ -77,12 +77,12 @@ class ListWdgt extends ViewportWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    # a MenuRowsPanelWdgt: the pure row-stack, NOT a pop-up menu -- a List holds
+    # a CommandPanelWdgt: the pure row-stack, NOT a pop-up menu -- a List holds
     # rows, not a (crippled) menu. No pop-up lifetime (not a pop-up: nothing
     # dismisses these rows on a click outside them), no title (a plain square
     # body), and selectsItemsOnClick so a click SELECTS a row rather than
     # triggering it.
-    @listContents = new MenuRowsPanelWdgt target: @, selectsItemsOnClick: true
+    @listContents = new CommandPanelWdgt target: @, selectsItemsOnClick: true
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
     @_repaintAsOneUnit =>

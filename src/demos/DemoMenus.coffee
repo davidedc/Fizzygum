@@ -755,7 +755,7 @@ class DemoMenus
   # ⚠ THIS menu's panel target is the widget the menu is about, where the sibling above uses `@`.
   # The "dev tools ➜" row reaches `menusHelper.popUpDevToolsMenu`, which takes its subject from the
   # SECOND dispatch slot — and that slot holds the ENCLOSING PANEL's target, not the row's own
-  # (MenuRowsPanelWdgt fills every row's subject from its own @target). Building this panel about `@`
+  # (CommandPanelWdgt fills every row's subject from its own @target). Building this panel about `@`
   # would hand `demoMenus` to a verb that wants a widget. Every other row here takes
   # `(widgetOpeningThePopUp)` only and so cannot tell the difference; the sibling above can keep
   # `target: @` because its one widget-hungry row ("make pointer") routes through the ROW's target

@@ -4550,7 +4550,7 @@ class Widget extends TreeNode
         # * the PARENT hides a contained widget (a viewport hides its contents panel —
         #   plain pane or stack alike — and a folder window hides its viewport): the
         #   hidesContainedWidgetFromHierarchyMenu ?() query;
-        # * the widget hides ITSELF (a MenuRowsPanelWdgt, the internal body of a menu /
+        # * the widget hides ITSELF (a CommandPanelWdgt, the internal body of a menu /
         #   prompt / list): the hiddenFromHierarchyMenu ?() query.
         if (!(each.parent?.hidesContainedWidgetFromHierarchyMenu? each)) and
          (!each.hiddenFromHierarchyMenu?())

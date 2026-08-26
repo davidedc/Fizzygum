@@ -1,6 +1,23 @@
-# A parameter object for a single menu row: it bundles the per-item fields that
-# MenuItemWdgt's constructor needs, so a row is described by named slots rather
-# than by a dozen unreadable positional arguments.
+# THE COMMAND RECORD: one thing a user can ask for -- what it SAYS, what it SHOWS, and what it
+# DOES -- described by named slots rather than by a dozen unreadable positional arguments. It
+# bundles the per-item fields MenuItemWdgt's constructor needs, and a menu row is the PROJECTION
+# of it that CommandPanelWdgt builds. A toolbar's grid cell is the other projection of the same
+# idea, arrived at from the other end: a cell shows a tool rather than a record. What makes the
+# two one model rather than two families is the law below -- they agree about what ACTING means.
+#
+# ── THE DISPATCH CONTRACT (this model's law) ────────────────────────────────────────────────
+# A PROJECTION OF A COMMAND INVOKES THE SAME ACTION PATH AS THE PRIMARY PROJECTION. There is no
+# second way to act and no per-family case; two implementations answer it:
+#  - a spec-built ROW runs the four-slot dispatch this record carries (target / action /
+#    argumentToAction1 / argumentToAction2) -- MenuItemWdgt, on the ButtonWdgt trigger;
+#  - a grid CELL answers `thumbnailClickReceiver()` (src/GlassBoxBottomWdgt.coffee): the widget a
+#    TAP on the cell actually reaches, which is the LID over a drag-out thumbnail, or the tool
+#    itself where the tool handles its own clicks.
+# So a surface RE-projecting somebody else's commands asks the cell what a tap on it reaches and
+# clicks THAT, instead of reaching past it for the tool -- which would leave every lid-covered
+# tool inert. The live consumer is OverflowChevronButtonWdgt.triggerToolFromMenu
+# (src/app-kit/OverflowChevronButtonWdgt.coffee), which projects a strip's hidden cells as rows
+# of this record. A NEW projection surface belongs on this law, not beside it.
 #
 # SHALLOWLY IMMUTABLE — fields are never written after construction, but `target` /
 # `action` / `icon` reference live widgets (see docs/architecture/immutable-value-classes.md).
@@ -15,12 +32,12 @@
 # passed by every caller -- so they stay positional. EVERY other field is an
 # independently-optional knob and rides `opts`, however many of them there come to be.
 #
-# The opts KEYS are deliberately the ones MenuRowsPanelWdgt.addMenuItem already
+# The opts KEYS are deliberately the ones CommandPanelWdgt.addMenuItem already
 # offers its callers (R4: an option is named for what the caller means, not for
-# the field it lands in), which is what lets `_menuItemSpecFrom` forward its opts
+# the field it lands in), which is what lets `_commandSpecFrom` forward its opts
 # straight through instead of transcribing it into positional slots.
 
-class MenuItemSpec
+class CommandSpec
 
   # what the row SAYS: a STRING. What it SHOWS beside that is the `icon` slot below -- two named
   # slots, because a picture and a sentence are two facts and neither can be read out of the other.

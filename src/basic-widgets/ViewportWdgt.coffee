@@ -823,7 +823,7 @@ class ViewportWdgt extends Widget
       if isContentSizing
         newBounds = subBounds.expandBy(padding).ceil()
 
-        # A plane whose measure IS its whole frame (a tight both-axes hug — MenuRowsPanelWdgt,
+        # A plane whose measure IS its whole frame (a tight both-axes hug — CommandPanelWdgt,
         # the P5 contract's scrolledContentMeasureIsMyFrame declaration) gets the measure
         # committed VERBATIM: the width floor and grow-to-fill below suit a tight:false plane,
         # and against a tight hug they manufacture a two-writer fight whenever the viewport is

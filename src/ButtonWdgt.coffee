@@ -168,7 +168,7 @@ class ButtonWdgt extends Widget
   # asks — "is this drag cancelled" and "does it lift my parent instead" — now read ONE fact
   # and cannot disagree. Resting on the desktop is the same statement, made by the one parent
   # with no reason to spell it out.
-  #   Clients: a MenuRowsPanelWdgt whose pop-up is PINNED (dragging a command onto your own
+  #   Clients: a CommandPanelWdgt whose pop-up is PINNED (dragging a command onto your own
   # control panel), and a spreadsheet CellWdgt's hosted payload.
   rejectDrags: ->
     return false if @parent == world

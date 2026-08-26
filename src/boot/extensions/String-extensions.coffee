@@ -42,7 +42,7 @@ if typeof String::toggleTick == 'undefined'
 
 # my label without its tick decoration -- what a menu row IS, independently of what it currently
 # SHOWS. A reflected row's prefix follows the value it displays, so anything that matches rows BY
-# NAME (MenuRowsPanelWdgt.removeMenuItem) must compare undecorated or it matches only the spelling
+# NAME (CommandPanelWdgt.removeMenuItem) must compare undecorated or it matches only the spelling
 # that happened to be on screen when it was written.
 if typeof String::withoutTickDecoration == 'undefined'
   String::withoutTickDecoration = ->

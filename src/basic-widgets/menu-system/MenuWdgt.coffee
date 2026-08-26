@@ -5,7 +5,7 @@
 # it makes it furniture) — and this class declares only the per-kind knowledge: the
 # rows payload it wraps, its title, and the row API its openers compose through.
 #
-# The payload is a MenuRowsPanelWdgt (a vertical stack of menu items, dividers and small
+# The payload is a CommandPanelWdgt (a vertical stack of menu items, dividers and small
 # editors) inside a PopUpRowsViewportWdgt, which is what bounds a menu to the world and
 # scrolls whatever does not fit. The panel paints nothing: the FRAME draws the menu box.
 #
@@ -22,7 +22,7 @@ class MenuWdgt extends FrameWdgt
   target: undefined
   title: undefined
   fontSize: undefined
-  # the MenuRowsPanelWdgt that is my rows' whole visible body, and the viewport it lives
+  # the CommandPanelWdgt that is my rows' whole visible body, and the viewport it lives
   # in — my @contents. Declared here so a duplicate has the handles to remap.
   rowsPanel: undefined
   rowsViewport: undefined
@@ -67,7 +67,7 @@ class MenuWdgt extends FrameWdgt
   # viewport is unconditional). DELIBERATELY no rows here — a menu's ITEMS are composed by its
   # opener after construction (addMenuItem/addLine) and land in the panel.
   _buildRowsPayload: ->
-    panel = new MenuRowsPanelWdgt target: @target, fontSize: @fontSize
+    panel = new CommandPanelWdgt target: @target, fontSize: @fontSize
     # dragging a menu by its title must move the MENU, and a child of a panel detaches instead
     # unless it locks to panels. ListWdgt does exactly this to its own rows panel, for exactly
     # this reason.

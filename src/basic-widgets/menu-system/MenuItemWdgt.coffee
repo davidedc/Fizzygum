@@ -52,26 +52,26 @@ class MenuItemWdgt extends LabelButtonWdgt
   # spec.label falls back to "close".
   #   ⚠ @rowReflection and @icon are read BEFORE super: LabelButtonWdgt's constructor labels itself
   # (_reLayoutSelf -> _createLabel) as its last act, so both are already needed by the time it runs.
-  constructor: (menuItemSpec, opts = {}) ->
-    @rowReflection = menuItemSpec.reflection
-    @icon = menuItemSpec.icon
-    super menuItemSpec.target, menuItemSpec.action,
-      closesUnpinnedPopUps: menuItemSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
+  constructor: (commandSpec, opts = {}) ->
+    @rowReflection = commandSpec.reflection
+    @icon = commandSpec.icon
+    super commandSpec.target, commandSpec.action,
+      closesUnpinnedPopUps: commandSpec.ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       # a REFLECTING row is born showing the current value — no build-then-fix-up dance, and no
       # placeholder-prefix pass to reserve the label width
-      labelString: (@rowReflection?.currentLabel() ? menuItemSpec.label or "close")
+      labelString: (@rowReflection?.currentLabel() ? commandSpec.label or "close")
       fontSize: opts.fontSize
       fontStyle: opts.fontStyle
       centered: opts.centered
       subject: opts.subject
-      toolTip: menuItemSpec.toolTipMessage
-      color: menuItemSpec.color
-      bold: menuItemSpec.bold
-      italic: menuItemSpec.italic
-      doubleClickAction: menuItemSpec.doubleClickAction
-      arg1: menuItemSpec.argumentToAction1
-      arg2: menuItemSpec.argumentToAction2
-      representsAWidget: menuItemSpec.representsAWidget
+      toolTip: commandSpec.toolTipMessage
+      color: commandSpec.color
+      bold: commandSpec.bold
+      italic: commandSpec.italic
+      doubleClickAction: commandSpec.doubleClickAction
+      arg1: commandSpec.argumentToAction1
+      arg2: commandSpec.argumentToAction2
+      representsAWidget: commandSpec.representsAWidget
     @actionableAsThumbnail = true
     @_subscribeToMyReflectedSource()
 
@@ -119,7 +119,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   showsSeparatorAbove: ->
     @_separatorAbove
 
-  # reset my selection highlight (called for every menu child by MenuRowsPanelWdgt.unselectAllItems,
+  # reset my selection highlight (called for every menu child by CommandPanelWdgt.unselectAllItems,
   # replacing its `if item instanceof MenuItemWdgt`). (type-test-elimination campaign)
   unselect: ->
     @state = @STATE_NORMAL
@@ -229,7 +229,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       @label._changed()
 
   # As a menu entry, prefer the width of everything I show: my (multi-line TextWdgt) label, my
-  # edge insets, and my icon column when I carry one. MenuRowsPanelWdgt.maxWidthOfMenuEntries calls
+  # edge insets, and my icon column when I carry one. CommandPanelWdgt.maxWidthOfMenuEntries calls
   # this polymorphically rather than type-checking the entry.
   #   Read by NAME. My parts are @label and @icon, and which CHILD each of them happens to be is an
   # order I would then have to keep true from two places at once; a row somehow built without a
@@ -279,7 +279,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     super
 
   isListItem: ->
-    # true when my container selects rows on click (a MenuRowsPanelWdgt used as a
+    # true when my container selects rows on click (a CommandPanelWdgt used as a
     # ListWdgt's contents) rather than triggering them (a MenuWdgt). Dispatched via
     # ?() so a plain menu, which does not answer it, reads falsy.
     return @parent.selectsItemsOnClick?()  if @parent

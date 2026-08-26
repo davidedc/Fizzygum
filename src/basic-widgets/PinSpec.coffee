@@ -1,6 +1,6 @@
 # One PIN of a widget: a named property the dataflow can WRITE, READ, or both.
 #
-# One record per pin, the way MenuItemSpec describes a menu row -- rather than a pair of parallel
+# One record per pin, the way CommandSpec describes a command -- rather than a pair of parallel
 # arrays of labels and setter names, per kind. Two facts a record can carry and parallel arrays
 # structurally cannot:
 #

@@ -31,7 +31,7 @@
 # re-arrange it via the engine; the viewport I sit in absorbs those through
 # _reLayOutAfterContainedPanelChange (re-lay + re-hug the frame), see PopUpRowsViewportWdgt.
 
-class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
+class CommandPanelWdgt extends VerticalStackPanelWdgt
 
   target: undefined
   fontSize: undefined
@@ -158,11 +158,11 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
     item = @createLine height
     @__add item, atIndex: 0
 
-  # Builds a MenuItemWdgt from a MenuItemSpec and this panel's context: the font (this panel's
+  # Builds a MenuItemWdgt from a CommandSpec and this panel's context: the font (this panel's
   # @fontSize, or the global default) and the subject — every row of mine acts ABOUT my @target,
   # however the row's own receiver is wired.
-  _createMenuItem: (menuItemSpec) ->
-    new MenuItemWdgt menuItemSpec,
+  _createMenuItem: (commandSpec) ->
+    new MenuItemWdgt commandSpec,
       fontSize: (@fontSize or WorldWdgt.preferencesAndSettings.menuFontSize)
       fontStyle: WorldWdgt.preferencesAndSettings.menuFontName
       subject: @target
@@ -200,16 +200,16 @@ class MenuRowsPanelWdgt extends VerticalStackPanelWdgt
   # label / target / action are the everyday positional arguments; the rest ride
   # an opts object (the spec's own constructor defaults fill any omitted opt).
   addMenuItem: (label, target, action, opts = {}) ->
-    @__add @_createMenuItem @_menuItemSpecFrom label, target, action, opts
+    @__add @_createMenuItem @_commandSpecFrom label, target, action, opts
 
   prependMenuItem: (label, target, action, opts = {}) ->
-    @__add (@_createMenuItem @_menuItemSpecFrom label, target, action, opts), atIndex: 0
+    @__add (@_createMenuItem @_commandSpecFrom label, target, action, opts), atIndex: 0
 
   # The spec takes the SAME label/target/action head and the SAME opts vocabulary
   # this method is handed, so it forwards rather than transcribes -- an opt added
   # to one is available on the other with no edit here.
-  _menuItemSpecFrom: (label, target, action, opts) ->
-    new MenuItemSpec label, target, action, opts
+  _commandSpecFrom: (label, target, action, opts) ->
+    new CommandSpec label, target, action, opts
 
   # The stack arrange, specialized by ONE menu policy: a menu SELF-sizes its
   # width to its widest row + border (a general stack takes its width from its

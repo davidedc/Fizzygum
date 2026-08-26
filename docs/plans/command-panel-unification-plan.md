@@ -80,8 +80,30 @@ tree's):**
   `fg recapture --auto --dprs=1,2` → ✅ RECAPTURE COMPLETE (recaptured: the witness alone);
   PRESUITE EXIT=0 OK (dpr1/paint/fracplane); menusweep OK (3753 items + 53 prompt Oks, 464
   menus, 692 pairs). Ref churn note: image_1/3/4 dpr1 re-encoded byte-wise by the capture,
-  dataHashes UNCHANGED, subpixel-verified identical — not a visual change. Commit: —
-- P3 the panel unification (structural, the migration executed): —
+  dataHashes UNCHANGED, subpixel-verified identical — not a visual change. Commits:
+  Fizzygum `89e7098b` + tests `2276fd8ab`, both pushed.
+- P3 the panel unification (structural, the migration executed): IN PROGRESS 2026-08-25.
+  ⭐⭐ **The merged-class shape (§2.3's proposed answer) is FALSIFIED and the pre-authorized
+  FALLBACK is TAKEN (owner-ruled 2026-08-25).** The measured fork: attempt 1 (thin leaf,
+  base hosts the grid arrange) failed the `relayout-bounds-first` gate; attempt 2 (base
+  forks `_reLayout` on a class-level `arrangement`) built green but the "thin leaf" premise
+  collapsed — the leaf needed **17 friction members** (8 contract DENIALS of its own stack
+  base, 3 `Widget::` parent-SKIPS over the base's head, 6 core `PanelWdgt` behaviours
+  COPIED into app-kit — duplication of a core base, against the closed duplication arc),
+  proving the two arrangements share ARITHMETIC and a MODEL, not an is-a through the stack
+  engine (the merge also bought P4 nothing — the palette rides `ToolPanelWdgt` either way).
+  As executed: `CommandPanelWdgt` = the renamed column panel (column face verbatim);
+  `ToolPanelWdgt` stays `extends PanelWdgt` with its grid members home; the §2.4 dispatch
+  law lives on `CommandSpec` (the record both projections consume); both renames + the
+  boot/harness re-target stand as OD1 ruled. Sweep + gates: DONE 2026-08-26 — the
+  mechanical sweep landed the enumerated two-repo list (harness class →
+  `CommandPanelTestSupport.coffee`, 5 macro test dirs, the serialization rig's
+  `o.class` filter, the authoring skill; zero-greps clean repo-wide, no dated-history
+  exceptions); column face byte-verbatim vs HEAD modulo identifiers (6 hunks, all
+  rename-only). Gates: PRESUITE EXIT=0 OK BYTE-IDENTICAL (dpr1/paint/fracplane, 00:05);
+  GAUNTLET EXIT=0 OK 18/18 ALL FIRST-TRY, no flake retries (00:12, 421s) — both
+  serialization rigs, menusweep's pop-up roots, pinsweep, and the index.html apps/parts
+  legs (the P9 blind spot — the boot install line changed) all green. Commits: —
 - P4 the Draw palette rides the unified panel (reviewed set; the 103 dies): —
 - P5 docs + close + tail: —
 
@@ -492,6 +514,12 @@ UNTOUCHED in every case (C14's letter; 322 sites).
   exactly that.
 
 ### 2.3 The arrangement axis — the MIGRATION question, answered
+
+> ⚠ **AS EXECUTED (2026-08-25): the proposed one-class shape below was FALSIFIED in P3 and
+> the pre-authorized FALLBACK was taken, owner-ruled — both classes stand, the unification
+> is the MODEL (record + dispatch law + display axis). The measured evidence and the
+> as-landed shape are in the STATUS box's P3 entry; the text below is kept as the weighed
+> design it was.**
 
 **The question, explicitly:** do `MenuRowsPanelWdgt` and `ToolPanelWdgt` survive as names,
 or dissolve into one class? **Proposed answer (OD1 confirms naming; the SHAPE is the

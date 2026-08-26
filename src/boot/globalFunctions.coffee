@@ -487,7 +487,7 @@ createWorldAndStartStepping = ->
     WorldTestSupport.installOnto WorldWdgt  if WorldTestSupport?
     WidgetTestSupport.installOnto Widget  if WidgetTestSupport?
     MenuTestSupport.installOnto MenuWdgt  if MenuTestSupport?
-    MenuRowsPanelTestSupport.installOnto MenuRowsPanelWdgt  if MenuRowsPanelTestSupport?
+    CommandPanelTestSupport.installOnto CommandPanelWdgt  if CommandPanelTestSupport?
     MenusHelperTestSupport.installOnto MenusHelper  if MenusHelperTestSupport?
 
     # "false" as second parameter below

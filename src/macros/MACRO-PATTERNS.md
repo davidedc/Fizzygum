@@ -324,7 +324,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Edit a button's text label in place** (`macroEditButtonLabelText`): clicking a button TRIGGERS it, so call
   `button.label.edit()` DIRECTLY (`= world.edit label`, sets `world.caret`, no isEditable gate — the "edit" item's method),
   then reuse the caret verbs (`"Meta+a"` → `@syntheticEventsStringKeys_InputEvents "new"`) and `world.stopEditing()` to
-  commit. Use a `MenuItemWdgt` — `new MenuItemWdgt (new MenuItemSpec "Click me"), fontSize: 24, fontStyle: "sans-serif",
+  commit. Use a `MenuItemWdgt` — `new MenuItemWdgt (new CommandSpec "Click me"), fontSize: 24, fontStyle: "sans-serif",
   centered: true` — because its label is a self-sizing modern `TextWdgt` that re-measures on setText (a
   `SimpleButtonWdgt`'s `StringWdgt` face crops instead); `world.add` then `setExtent` a proper button face over the
   text-sized default. After each edit call `button.label.sizeToTextAndDisableFitting()` to re-hug the box to the new
@@ -1376,8 +1376,8 @@ assertion a recapture after a regression silently stores two different hashes an
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
   `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processPointerUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
-  MenuItemWdgt (new MenuItemSpec "demo", world, "popUpDemoMenu"), fontSize: 24, fontStyle: "sans-serif", centered: true`
-  (the ctor is `(menuItemSpec, opts = {})`; the same action the world menu's "demo" item uses,
+  MenuItemWdgt (new CommandSpec "demo", world, "popUpDemoMenu"), fontSize: 24, fontStyle: "sans-serif", centered: true`
+  (the ctor is `(commandSpec, opts = {})`; the same action the world menu's "demo" item uses,
   `WorldWdgt.coffee:1940`; `popUpDemoMenu` self-pops at the hand, `:2241`) + `world.add` + `setExtent` (a standalone
   item doesn't size its box to its label, so set the extent; a CENTERED `LabelButtonWdgt` re-centres its big 24pt label
   automatically on resize — `LabelButtonWdgt._reLayout` — so no explicit re-centre is needed).
@@ -1868,7 +1868,7 @@ assertion a recapture after a regression silently stores two different hashes an
   (`macroWallpaperMenuFollowsAnApiChange`): open a ticked menu, change the underlying value with NO menu
   interaction at all — `world.wallpaper.setPattern world.wallpaper.pattern5` — and the open
   menu's tick MOVES. The rows carry a `MenuRowReflectionSpec` (they declare that their label reflects a
-  value); the source is a dataflow node that `markStale`s itself on change, and `MenuRowsPanelWdgt`
+  value); the source is a dataflow node that `markStale`s itself on change, and `CommandPanelWdgt`
   subscribes one edge PER PANEL, so the drain re-derives every subscribed row wherever it is. Assert with
   `@assertValuesEqual "…", "dots", (@tickedRowLabelOfMenu menu)` — the bare label of the ticked row.
   ⚠ Grab the menu with `@getMostRecentlyOpenedMenu()` right after it opens, and do NOT pin it unless the
@@ -1964,7 +1964,7 @@ assertion a recapture after a regression silently stores two different hashes an
   via `wantsDetachOfChild` — so a loose button float-drags on the press instead).
 - **Drag a COMMAND out of a pinned menu and keep it** (`macroExtractMenuRowFromPinnedMenu`): a menu row IS a button already pointed at
   something (`MenuItemWdgt extends LabelButtonWdgt extends ButtonWdgt`, four dispatch slots resolved at construction against the TARGET,
-  not the menu), so extracting one needs no new machinery — only permission. `MenuRowsPanelWdgt.wantsDetachOfChild` grants it for a row
+  not the menu), so extracting one needs no new machinery — only permission. `CommandPanelWdgt.wantsDetachOfChild` grants it for a row
   carrying an `action` when the enclosing pop-up `isPersistent()`, and both halves of a grab read that one declaration
   (`ButtonWdgt.rejectDrags` for "is this drag cancelled", `Widget.grabsToParentWhenDragged` for "does it lift my parent instead"). The
   gesture is therefore: `@openMenuOf_InputEvents widget` → capture `menu = @getMostRecentlyOpenedMenu()` → `@clickMenuHeaderToPin_InputEvents
