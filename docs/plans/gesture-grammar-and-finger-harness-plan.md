@@ -96,7 +96,39 @@ bar-press handler is its only in-tree caller (same shape as setScrollPolicy abov
   path; not attributable to this delta: the prior gauntlet passed that leg in-wave on
   near-identical code; log kept at `/tmp/fg-serialization.parallel-fail.log`). Tail row
   filed: the boot-smoke does not cover the harness page (BACKLOG at P5).
-- P3 the finger harness mode + the reference axis: —
+- P3 the finger harness mode + the reference axis: **DONE 2026-08-26** (Sonnet runner flags +
+  one fresh Opus, two ruling rounds). The mode: `?pointer=finger` → `FIZZYGUM_POINTER_KIND`
+  (F13 pattern), toolkit reads lazily; `--pointer=` on run-all / run-macro / capture /
+  run-sequence, `recapture.js` REFUSES it loudly (mouse-only until finger refs exist). The
+  translation lives in the L1/L2 bodies (the per-verb table is in the P3 worker report;
+  verb names + all committed macros untouched): click→tap, right family→hold,
+  press-drag-release→hold-then-drag, wheel→plain drag (successive clamped swipes — a wheel
+  notch has unlimited reach, a finger does not: `maxScrollSwipes`), no-button moves→aim only
+  (no hover) EXCEPT a carried payload (a buttonless CARRY stream — `pickUp()` then move must
+  still travel), chrome-locating drags (handles/thumbs/resizers)→plain drag no hold. The
+  axis: `…/ceilPixRatio_<N>/finger/` through `refpaths.js` (the ONE parser); the loader
+  REQUIRES/EXCLUDES the segment both ways (F15 closed); capture writers kind-scoped (⚠
+  un-scoped `--clean` would have deleted mouse refs); visualisation excludes finger;
+  manifests structural. Mouse-only-by-meaning: `pointerKinds`+`mouseOnlyReason`, loader
+  filter in finger runs. THREE touch-gated product amendments ruled + landed in the hand
+  (one shape falsified BY MEASUREMENT first — the categorical zero-delta-never-grabs form
+  moved 41 mouse references, NOT recaptured, re-shaped per-kind): a touch stroke's
+  zero-displacement move never grabs; the desktop instant-grab carve-out is mouse/pen-only
+  (touch always takes `grabDragThreshold`); a booked-but-unmoved non-float target does not
+  suppress the hold. DISCOVERY (full corpus, dpr1): **(i)=326 translate fine · (ii)=9
+  declared with reasons** (4 hover/contrast incl. two of P2's own witnesses, 3
+  spreadsheet-wheel — the sheet takes no drag-scroll, a finger-scrollable sheet is a
+  PRODUCT feature → tail candidate — wheel-refusal, rotated-island hover delivery) **·
+  (iii)=0 named causes**; finger selection 320; dpr1 finger wall-clock 1.96 min. ⚠ THREE
+  load-sensitive tests (SimpleDocumentAllReflows, SimpleTextScrollPanel…,
+  TiltedWindowDropRequiresDwell) fail ONLY in the sharded finger suite — deterministic
+  under load, clean in isolation AND in sequence-repro (predecessor leak structurally
+  excluded for one) — DEFERRED to P4's verify run per the timebox, unresolved on purpose.
+  OD2 numbers over (i)=326: (a) dpr1+2 +170 MB (+90% of tests/ 189 MB) · (b) ~40-test
+  subset +21 MB · (c) dpr2-only +149 MB (capture halves, storage only −12%) · capture 5–6 h.
+  Gates: build 28/28; presuite BYTE-IDENTICAL 329/329 (×3); lint OK; ZERO reference diffs
+  (the structural no-bump proof). The fg `finger` leg drafted (webkit+dpr2, own wave) —
+  coordinator applies at P4.
 - P4 the finger baseline + the `finger` gauntlet leg: —
 - P5 T18 decision, docs, close, tail — and the PROGRAM close: —
 

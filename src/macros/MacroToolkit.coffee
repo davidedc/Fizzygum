@@ -38,6 +38,16 @@ class MacroToolkit
   lastClickGesturePosition: undefined
   currentPointerTarget: undefined
 
+  # FINGER MODE ONLY: the absolute time at which the press a right-button down translated into
+  # (a press-and-hold) crosses pressAndHoldMs, so the matching up can wait for it. undefined
+  # between such a press and its release, and again after it.
+  pendingTouchHoldCrossedTime: undefined
+
+  # FINGER MODE ONLY: the pop-up watermark taken when the last press-and-hold was SCHEDULED — what
+  # tells the menu that hold opened from one that was already standing (see
+  # getMostRecentlyOpenedMenu). undefined until a hold is scheduled.
+  popUpIdWhenHoldScheduled: undefined
+
   # ─── Global playback SPEED ──────────────────────────────────────────────────
   # ONE global, three-level speed control the macro EVENT GENERATORS honour.
   # Set once at boot from ?speed=normal|fast|fastest (parsed in
@@ -104,6 +114,14 @@ class MacroToolkit
   # to make the crossing unambiguous.
   @holdWindowMarginMs: 60
 
+  # A finger's scroll has a REACH a wheel notch does not: one swipe cannot travel further than the
+  # pane it is inside. A translated wheel therefore delivers a long scroll in successive swipes,
+  # `scrollSwipeMarginPx` clear of the pane's edges (so every sample is inside the box the pane
+  # samples), and `maxScrollSwipes` bounds that loop — a request no number of swipes can satisfy
+  # has hit the content's end, where the at-edge escalation takes over.
+  @maxScrollSwipes: 12
+  @scrollSwipeMarginPx: 2
+
   # The active speed level (a key of @spanFactors). Read LAZILY from
   # window.FIZZYGUM_MACRO_SPEED (set at boot from ?speed=), validated against
   # @spanFactors, falling back to @defaultSpeed — so an absent/invalid value is
@@ -115,6 +133,31 @@ class MacroToolkit
   # The active spanFactor (falls back to normal=1.0 for an unknown level).
   spanFactor: ->
     MacroToolkit.spanFactors[MacroToolkit.currentSpeed()] ? 1.0
+
+  # ─── The run's POINTER KIND ─────────────────────────────────────────────────
+  # ONE global saying which DEVICE is driving this run's macros — set once at boot from
+  # ?pointer=mouse|finger (src/boot/globalFunctions.coffee) and read LAZILY here, exactly as
+  # @currentSpeed reads ?speed=, so an absent or unknown value is "mouse" and a console tweak
+  # to the global takes effect.
+  #   The kind does NOT change a single verb NAME, and no macro source mentions it: a verb's
+  # name states the user's INTENT ("click this", "open this widget's menu", "drag this there",
+  # "scroll this pane"), and under a finger the verb's BODY produces the touch gesture that
+  # carries the same intent — a tap for a click, a press-and-hold for a right-click, a drag for
+  # a wheel, nothing at all for a hover (a finger has none). That is why the whole committed
+  # corpus replays under either device with no per-test edit.
+  #   A finger run's pixels legitimately DIFFER from a mouse run's (no hover highlights, hold
+  # menus where right-click menus were), so finger runs match references on their own directory
+  # axis — see Fizzygum-tests/CLAUDE.md's reference-image layout.
+  @pointerKinds: ["mouse", "finger"]
+  @defaultPointerKind: "mouse"
+
+  @currentPointerKind: ->
+    requested = window.FIZZYGUM_POINTER_KIND
+    if requested? and (requested in MacroToolkit.pointerKinds) then requested else MacroToolkit.defaultPointerKind
+
+  # Is a FINGER driving this run? The one predicate every translating verb below asks.
+  fingerMode: ->
+    MacroToolkit.currentPointerKind() is "finger"
 
   # The SINGLE push chokepoint for every synthetic input event the toolkit queues.
   # It compresses the event's time-OFFSET from the current cycle start by the active
@@ -186,6 +229,15 @@ class MacroToolkit
     scaled = requestedMs * sf
     return scaled if sf >= 1
     Math.max scaled, MacroToolkit.clickHoldFloorMs
+
+  # The drag SPAN a TRANSLATED mouse gesture hands its finger. A finger's stroke is scheduled in
+  # absolute (already-scaled) time and pushed non-scaled, so the speed lever has to be applied
+  # here, once, exactly as the mouse's own path applies it — otherwise a drag the mouse plays in
+  # 30 ms at `fastest` would take a full second as a finger. The touch drag then floors what comes
+  # out at @dragFloorMs of REAL time, which is the same floor the mouse's dragSpanWithFloor
+  # arrives at from the other side, so both devices drag over the same number of frames.
+  _touchDragSpanFor: (requestedMs) ->
+    requestedMs * @spanFactor()
 
   # Install the linked macro code (pump header + linked verbs) with `@` = this
   # MacroToolkit instance, so the generator and the verbs it calls resolve their
@@ -310,7 +362,20 @@ class MacroToolkit
         @queueInputEvent new KeyupInputEvent "Shift", "ShiftLeft", false, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
+  # PRESS A THING AND PUT IT SOMEWHERE ELSE — the verb's name states a MOVE, so a finger takes the
+  # gesture the grammar gives a finger that wants to move something: press, HOLD past
+  # pressAndHoldMs so the stroke arms, then carry and let go (ruling I2 — over a surface that
+  # would take a plain finger drag for a scroll, only a held press means "take this with you").
+  # The hold arms a stroke that is armed at the down anyway where nothing competes (the open
+  # desktop) or where chrome owns the press, and there the L2 verbs that KNOW they press chrome —
+  # a handle, a slider's button, a scrollbar's thumb — send a plain drag instead (see
+  # dragResizeMoveHandleTo_InputEvents and its siblings): a hold on chrome would open that
+  # surface's own menu for the split second before the move dismissed it again.
   syntheticEventsMouseMovePressDragRelease_InputEvents: (orig, dest, millisecondsForDrag = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    if @fingerMode()
+      holdCrossedAbs = @syntheticEventsTouchHold_InputEvents orig, false, startTime
+      return @_dragTouchFromHeldPress orig, dest, (@_touchDragSpanFor millisecondsForDrag),
+        (holdCrossedAbs + MacroToolkit.holdWindowMarginMs), numberOfEventsPerMillisecond
     # Floor the drag SPAN (so it spans enough real frames — see @dragFloorMs) while keeping
     # the event COUNT identical (drop events-per-ms by the same ratio): a floored drag must
     # follow the SAME deduped pixel path and land on the SAME final pixel, or the dropped
@@ -327,6 +392,11 @@ class MacroToolkit
   # then just use syntheticEventsMouseMovePressDragRelease_InputEvents
   # same optional-parameter ordering as syntheticEventsMouseMove_InputEvents, which this delegates to
   syntheticEventsMouseMoveWhileDragging_InputEvents: (dest, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1, orig = world.hand.position()) ->
+    # A finger CARRIES: this is one leg of a gesture already in flight, so it is the touch move
+    # stream and nothing else — no release, because the stroke goes on (a released-and-re-pressed
+    # pair would be a different gesture, and the arming the press earned would be gone with it).
+    if @fingerMode()
+      return @_queueTouchMovePath orig, dest, (@_touchDragSpanFor milliseconds), (@scaledAbs startTime), numberOfEventsPerMillisecond
     # floor the span, keep the count constant (see syntheticEventsMouseMovePressDragRelease)
     flooredMs = @dragSpanWithFloor milliseconds
     dragEventsPerMs = numberOfEventsPerMillisecond * milliseconds / flooredMs
@@ -335,8 +405,12 @@ class MacroToolkit
   # mouse moves need an origin and a destination, so we
   # need to place the mouse in _some_ place to begin with
   # in order to do that.
+  # A finger is never "placed": it is not on the glass between strokes, so there is no pointer to
+  # park anywhere and the macro's opening placement emits nothing — it only records where an
+  # unaimed first gesture would land.
   _syntheticEventsMousePlace_InputEvents: (place = new Point(0,0), scheduledTimeOfEvent = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @currentPointerTarget = place
+    return if @fingerMode()
     @queueInputEvent PointermoveInputEvent.synthetic 0, 0, false, false, false, false, scheduledTimeOfEvent, place.x, place.y
 
   # Optional parameters are ordered by how often a caller actually specifies one, most-specified
@@ -363,6 +437,22 @@ class MacroToolkit
     # false-double-click guard (a click lands wherever the last move left the pointer)
     @currentPointerTarget = dest
 
+    if @fingerMode()
+      # A FINGER HAS NO HOVER. A no-button move is a mouse WALKING to where it will act; a finger
+      # simply arrives, and every touch event states its own place — so the move emits nothing and
+      # only records where the next gesture lands. A move made with the button DOWN is a different
+      # thing: it is the carrying half of a stroke in flight, so it becomes the finger's own move
+      # stream at the same sampled positions.
+      #   ⚠ EXCEPT while the hand is CARRYING a payload. A widget picked up onto the hand rides it
+      # whether or not anything is touching the glass, so the move that walks it to its destination
+      # is the gesture itself and not a hover — it is emitted, buttonless, exactly as the mouse
+      # emits it. Without this a carried window never travels and is dropped where it was picked up.
+      if whichButton is "no button"
+        return unless world.hand.isThisPointerFloatDraggingSomething()
+        return @_queueTouchMovePath orig, dest, (@_touchDragSpanFor milliseconds), (@scaledAbs startTime),
+          numberOfEventsPerMillisecond, @_queueTouchCarryMove
+      return @_queueTouchMovePath orig, dest, (@_touchDragSpanFor milliseconds), (@scaledAbs startTime), numberOfEventsPerMillisecond
+
     @_sampleMovePath orig, dest, milliseconds, startTime, numberOfEventsPerMillisecond, (scheduledTimeOfEvent, nextX, nextY) =>
       @queueInputEvent PointermoveInputEvent.synthetic button, buttons, false, false, false, false, scheduledTimeOfEvent, nextX, nextY
 
@@ -376,6 +466,16 @@ class MacroToolkit
       positionOrWidget.localPointToScreen positionOrWidget.center()
     else
       positionOrWidget
+
+  # WHICH WIDGET a verb was aimed at: a widget reference as given, or the one a recorded
+  # text-description identifier names (the [description, occurrence, total] triple, or a bare
+  # description string). Every verb that accepts either spelling asks this, so "which widget" is
+  # decided in ONE place rather than re-spelled at each of them.
+  _widgetOfTarget: (widgetOrIdentifier) ->
+    if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
+      @findWidgetByTextDescription widgetOrIdentifier
+    else
+      widgetOrIdentifier
 
   # THE SAMPLED PATH of a pointer move, written once: expoOut-eased, rounded to whole pixels and
   # DEDUPED, one call to `queueOneSample (time, x, y)` per surviving sample. What differs between a
@@ -401,8 +501,15 @@ class MacroToolkit
   # NON-scaled, so a LEFT click can be pushed past the hand's real double-click window
   # of a previous same-spot click (the false-double-click guard). Right clicks don't fold,
   # so they skip the guard. At normal (spanFactor 1) this is byte-identical to before.
+  #   A FINGER: a left click is a TAP (the grammar's "a tap is a click" row) and a right click is a
+  # PRESS-AND-HOLD — the grammar's context-menu trigger, since a finger has no second button and
+  # a tablet no ctrl key, so the hold is how it reaches the very menu the right button reaches
+  # (ruling I2; the hold fires openContextMenuAtPointer, the exact method mouseClickRight fires).
   syntheticEventsMouseClick_InputEvents: (whichButton = "left button", milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     isLeft = (whichButton == "left button")
+    if @fingerMode()
+      return @syntheticEventsTouchTap_InputEvents @currentPointerTarget, milliseconds, startTime if isLeft
+      return @syntheticEventsTouchHold_InputEvents @currentPointerTarget, true, startTime
     downAbs = if isLeft then (@guardedClickStart (@scaledAbs startTime), @currentPointerTarget) else (@scaledAbs startTime)
     upAbs = downAbs + @clickHoldWithFloor milliseconds
     if isLeft then @_rememberClickGesture upAbs, @currentPointerTarget
@@ -422,6 +529,14 @@ class MacroToolkit
     downAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     upAbs = downAbs + milliseconds * @spanFactor()
     @_rememberClickGesture upAbs, @currentPointerTarget
+    if @fingerMode()
+      # A TAP WITH SHIFT HELD: the modifier is a keyboard state, not a pointer one — a tablet with
+      # a keyboard attached has both — so the finger's tap carries the same flag the mouse's click
+      # does. Built here rather than through the tap verb because that verb bakes no modifiers.
+      place = @currentPointerTarget
+      @queueInputEvent (PointerdownInputEvent.syntheticTouch 0, 1, false, true, false, false, downAbs, place.x, place.y), true
+      @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, true, false, false, upAbs, place.x, place.y), true
+      return
     @queueInputEvent (PointerdownInputEvent.synthetic 0, 1, false, true, false, false, downAbs), true
     @queueInputEvent (PointerupInputEvent.synthetic 0, 0, false, true, false, false, upAbs), true
 
@@ -439,6 +554,19 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseDown_InputEvents: whichButton is unknown"
 
+    # A FINGER'S PRESS states its own place (there is no hover to have walked it there), so it lands
+    # where the last aiming verb pointed. A RIGHT-button press has no finger equivalent as an event
+    # — it is the START of a press-and-hold, so the same-position move that crosses pressAndHoldMs
+    # is scheduled with it and the matching up is held back past the crossing.
+    if @fingerMode()
+      pressAbs = if nonScaled then startTime else @scaledAbs startTime
+      @_queueTouchDown @currentPointerTarget, pressAbs
+      return if whichButton == "left button"
+      @popUpIdWhenHoldScheduled = @_highestOpenPopUpId()
+      @pendingTouchHoldCrossedTime = pressAbs + WorldWdgt.preferencesAndSettings.pressAndHoldMs + MacroToolkit.holdWindowMarginMs
+      @_queueTouchMove @currentPointerTarget, @pendingTouchHoldCrossedTime
+      return
+
     @queueInputEvent (PointerdownInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
 
   syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
@@ -452,6 +580,18 @@ class MacroToolkit
       debugger
       throw "syntheticEventsMouseUp_InputEvents: whichButton is unknown"
 
+    # The finger lifts where it is standing. After a right-button press (a press-and-hold, see the
+    # down above) the release must land AFTER the window the hold crosses, or the stroke would end
+    # before it was ever recognised — so it waits for the crossing whatever time the caller asked
+    # for. The pending crossing is consumed here: one press, one release.
+    if @fingerMode()
+      releaseAbs = if nonScaled then startTime else @scaledAbs startTime
+      if @pendingTouchHoldCrossedTime?
+        releaseAbs = Math.max releaseAbs, @pendingTouchHoldCrossedTime + MacroToolkit.holdWindowMarginMs
+        @pendingTouchHoldCrossedTime = undefined
+      @_queueTouchUp @currentPointerTarget, releaseAbs
+      return
+
     @queueInputEvent (PointerupInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
 
   # The browser CONFISCATING the stroke in progress (a system gesture takes it over, a palm is
@@ -461,7 +601,13 @@ class MacroToolkit
   # non-float drag ended, a carried payload landed on the world where it visibly is
   # (ActivePointerWdgt.processPointerCancel). The only synthetic event with no user gesture behind
   # it — nothing a user does produces a cancel; the browser does.
+  # A finger's stroke is confiscated the same way (a system edge-swipe, a palm rejected), and the
+  # cancel must carry the stroke's OWN kind: the hand clears its press-and-hold state on a touch
+  # cancel, which it has no reason to do for a mouse.
   syntheticEventsPointerCancel_InputEvents: (startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    if @fingerMode()
+      place = @currentPointerTarget ? world.hand.position()
+      return @queueInputEvent PointercancelInputEvent.syntheticTouch 0, 0, false, false, false, false, startTime, place.x, place.y
     @queueInputEvent PointercancelInputEvent.synthetic 0, 0, false, false, false, false, startTime
 
   # ── THE FINGER'S PRIMITIVES ─────────────────────────────────────────────────────────────────
@@ -478,14 +624,27 @@ class MacroToolkit
 
   # The three one-event pushes every touch verb below composes. Each states its place, and each
   # takes an ABSOLUTE time its caller has already scaled (hence the non-scaled push).
+  #   ⚠ THE PLACE IS ROUNDED HERE, at the synthesis boundary, exactly as the browser boundary rounds
+  # it (PointerInputEvent.fromBrowserEvent: "a pointer position can be fractional — a finger, a
+  # scaled page — and the rest of the system has no use for fractional input positions"). A finger's
+  # every event states its own place, and a place is very often a widget's `center()`, which is
+  # fractional for any odd extent; the hand MOVES ITSELF to the position an event states, so an
+  # unrounded one lands the hand on fractional bounds and NON_INTEGER_GEOMETRY fires. A mouse never
+  # meets this: its down/up state no place at all, and its move samples are rounded as they are
+  # eased. Rounding at these three pushes is the same rule in the same place for both devices.
   _queueTouchDown: (place, timeAbs) ->
-    @queueInputEvent (PointerdownInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, place.x, place.y), true
+    @queueInputEvent (PointerdownInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
   _queueTouchMove: (place, timeAbs) ->
-    @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, place.x, place.y), true
+    @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
+
+  # A move with NOTHING pressed — what walks a payload already riding the hand to where it is
+  # dropped. Same event, `buttons` 0, because no finger is on the glass during a carry.
+  _queueTouchCarryMove: (place, timeAbs) ->
+    @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 0, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
   _queueTouchUp: (place, timeAbs) ->
-    @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, false, false, false, timeAbs, place.x, place.y), true
+    @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
   # A TAP: a position-carrying down and up with nothing before either — the grammar's "a tap is a
   # click" row. Guarded and hold-floored exactly like a mouse click, so two taps in the same spot
@@ -510,6 +669,8 @@ class MacroToolkit
   syntheticEventsTouchHold_InputEvents: (positionOrWidget, alsoRelease = true, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     place = @_screenPointOfTarget positionOrWidget
     @currentPointerTarget = place
+    # the watermark this hold's menu will be told apart by (see getMostRecentlyOpenedMenu)
+    @popUpIdWhenHoldScheduled = @_highestOpenPopUpId()
     downAbs = @scaledAbs startTime
     holdCrossedAbs = downAbs + WorldWdgt.preferencesAndSettings.pressAndHoldMs + MacroToolkit.holdWindowMarginMs
     @_queueTouchDown place, downAbs
@@ -542,15 +703,31 @@ class MacroToolkit
   # The move stream + release shared by the drag verbs above: the press is already down and
   # held at `orig` when this runs, so it only carries the finger and lets go.
   _dragTouchFromHeldPress: (orig, dest, millisecondsForDrag, moveStartAbs, numberOfEventsPerMillisecond) ->
+    destPlace = @_screenPointOfTarget dest
+    moveEndAbs = @_queueTouchMovePath orig, dest, millisecondsForDrag, moveStartAbs, numberOfEventsPerMillisecond
+    upAbs = moveEndAbs + MacroToolkit.holdWindowMarginMs
+    @_queueTouchUp destPlace, upAbs
+    upAbs
+
+  # JUST THE CARRYING, no release: the sampled touch-move stream from `orig` to `dest` of a finger
+  # that is already down. Split out of _dragTouchFromHeldPress because a gesture built in several
+  # LEGS (a mouse macro's move-while-dragging, translated) carries the finger without letting go,
+  # and the finger must not be released between legs. Floors the span at @dragFloorMs DIRECTLY (not
+  # through dragSpanWithFloor, which inflates a span so it survives the speed lever and would
+  # inflate a non-scaled one into seconds), so the per-frame samplers a drag drives — a viewport's
+  # scroll step above all — see several frames whatever the speed.
+  # Returns the absolute time of the last move.
+  # `queueOneMove` says WHICH move each sample is — a pressed one (the default: a stroke in flight)
+  # or a buttonless carry (_queueTouchCarryMove, a payload riding the hand). The path is the same
+  # either way, which is what lets one sampler serve both.
+  _queueTouchMovePath: (orig, dest, millisecondsForDrag, moveStartAbs, numberOfEventsPerMillisecond, queueOneMove = @_queueTouchMove) ->
     origPlace = @_screenPointOfTarget orig
     destPlace = @_screenPointOfTarget dest
     dragSpan = Math.max millisecondsForDrag, MacroToolkit.dragFloorMs
     @_sampleMovePath origPlace, destPlace, dragSpan, moveStartAbs, numberOfEventsPerMillisecond, (timeAbs, x, y) =>
-      @_queueTouchMove (new Point x, y), timeAbs
+      queueOneMove.call @, (new Point x, y), timeAbs
     @currentPointerTarget = destPlace
-    upAbs = moveStartAbs + dragSpan + MacroToolkit.holdWindowMarginMs
-    @_queueTouchUp destPlace, upAbs
-    upAbs
+    moveStartAbs + dragSpan
 
   moveToAndClick_InputEvents: (positionOrWidget, whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @syntheticEventsMouseMove_InputEvents positionOrWidget, "no button", milliseconds, startTime
@@ -572,10 +749,7 @@ class MacroToolkit
   # so it follows the widget if it has moved/resized. Shared by the fractional click/double/triple-click
   # verbs (and any other verb that needs to aim at a point inside a widget).
   pointAtFractionOf: (widgetOrIdentifier, fraction) ->
-    widget = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
-      @findWidgetByTextDescription widgetOrIdentifier
-    else
-      widgetOrIdentifier
+    widget = @_widgetOfTarget widgetOrIdentifier
     # PLANE-local by contract — macros consume this as a geometry VALUE (e.g. deriving an
     # expected caret slot from the same virtual point they click). AIMING always goes
     # through screenPointAtFractionOf / the Screen verbs, which map this up to the pixel.
@@ -595,10 +769,7 @@ class MacroToolkit
   # un-mapped bounds — that is the whole point: only the inverse-mapped hit-test (§4.6) lands it
   # back on the widget, so a click here is a genuine click-THROUGH test.
   screenPointAtFractionOf: (widgetOrIdentifier, fraction) ->
-    widget = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
-      @findWidgetByTextDescription widgetOrIdentifier
-    else
-      widgetOrIdentifier
+    widget = @_widgetOfTarget widgetOrIdentifier
     widget.localPointToScreen (@pointAtFractionOf widget, fraction)
 
   # Move to a widget's SCREEN point at fraction [fx,fy] (default its centre) and click — the
@@ -669,8 +840,76 @@ class MacroToolkit
   # processEvent calls world.hand.processWheel. The wheel is dispatched to whatever scrollable is under
   # the pointer WHEN THE EVENT IS CONSUMED, so position the pointer first (a queued move). A POSITIVE
   # deltaY scrolls content DOWN. isSynthetic=true so it is not re-recorded.
+  #   A FINGER HAS NO WHEEL, and needs none: the plain finger drag IS the scroll (ruling I2), so the
+  # verb's intent — move this pane's content by this much — becomes a touch drag over the pane the
+  # pointer is aimed at, carrying the content exactly as far as the wheel would have scrolled it.
   syntheticEventsWheel_InputEvents: (deltaX = 0, deltaY = 0, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    if @fingerMode()
+      return @_touchScrollBy @currentPointerTarget, deltaX, deltaY, startTime
     @queueInputEvent new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
+
+  # THE FINGER'S SCROLL, expressed as the wheel deltas a translated verb hands it. A drag moves the
+  # content WITH the finger — ViewportWdgt's scroll-drag step feeds its own per-frame delta straight
+  # to scrollY/scrollX — while a wheel's delta reaches those same cores through the wheel's minor-axis
+  # squelch, its invert preferences and its scale, so the drag vector is exactly the normalized,
+  # scaled deltas the wheel would have applied. Asking PreferencesAndSettings for the normalization
+  # rather than restating it keeps one statement of what a wheel notch means.
+  #   `bounds` (a widget, when the caller has one) keeps the whole gesture inside the pane it is
+  # scrolling: a drag that wandered out of the box would stop being sampled by that pane's step and
+  # the scroll would truncate. The pair is SHIFTED, never shortened, so the distance travelled — and
+  # therefore the scroll — is the one asked for; a delta longer than the box itself is all a single
+  # drag can carry and reaches the pane's edge, where the escalation rule takes over.
+  _touchScrollBy: (aimPoint, deltaX, deltaY, startTime, bounds) ->
+    prefs = WorldWdgt.preferencesAndSettings
+    [normalizedX, normalizedY] = prefs.normalizedWheelDeltas deltaX, deltaY
+    remaining = new Point (Math.round normalizedX * prefs.wheelScaleX), (Math.round normalizedY * prefs.wheelScaleY)
+    aim = @_screenPointOfTarget aimPoint
+    box = undefined
+    if bounds?
+      # the box on the SCREEN, since the pane may itself sit on a scrolled or tilted plane — the
+      # same two-corner mapping the menu-row scroller uses
+      box = [(bounds.localPointToScreen new Point bounds.left(), bounds.top()),
+             (bounds.localPointToScreen new Point bounds.right(), bounds.bottom())]
+    timeAbs = @scaledAbs startTime
+    swipes = 0
+    while swipes < MacroToolkit.maxScrollSwipes
+      leg = @_swipeLegWithin remaining, box
+      break if leg.x is 0 and leg.y is 0
+      from = aim
+      if box?
+        from = new Point (@_dragStartInsideSpan aim.x, leg.x, box[0].x, box[1].x),
+          (@_dragStartInsideSpan aim.y, leg.y, box[0].y, box[1].y)
+      @_queueTouchDown from, timeAbs
+      timeAbs = MacroToolkit.holdWindowMarginMs + @_dragTouchFromHeldPress from, (from.add leg),
+        (@_touchDragSpanFor 600), (timeAbs + MacroToolkit.holdWindowMarginMs), 1
+      remaining = remaining.subtract leg
+      swipes++
+    timeAbs
+
+  # How much of `remaining` ONE swipe can carry: all of it when no box bounds the gesture, else as
+  # much as fits between the box's own edges on each axis. A wheel notch has no reach limit and a
+  # finger does — one swipe cannot travel further than the pane it is inside — so a delta bigger
+  # than the pane is delivered the way a person delivers it, in successive swipes.
+  _swipeLegWithin: (remaining, box) ->
+    return remaining unless box?
+    reach = (span) -> Math.max 1, span - (2 * MacroToolkit.scrollSwipeMarginPx)
+    clamp = (want, span) ->
+      limit = reach span
+      if want > limit then limit else if want < -limit then -limit else want
+    new Point (clamp remaining.x, (box[1].x - box[0].x)), (clamp remaining.y, (box[1].y - box[0].y))
+
+  # Where a drag of `travel` must START on one axis for BOTH its ends to sit inside [spanStart,
+  # spanEnd], given the caller aimed at `from`: `from` itself whenever the drag already fits, else
+  # the nearest start that does. A travel longer than the span cannot fit at all — one drag then
+  # carries the pane to its edge, which is exactly where the at-edge escalation takes over — so it
+  # starts at the end the drag runs away from.
+  _dragStartInsideSpan: (from, travel, spanStart, spanEnd) ->
+    lowest = spanStart + MacroToolkit.scrollSwipeMarginPx
+    highest = spanEnd - MacroToolkit.scrollSwipeMarginPx
+    return (if travel > 0 then lowest else highest) if (highest - lowest) < Math.abs travel
+    earliest = Math.max lowest, lowest - travel
+    latest = Math.min highest, highest - travel
+    Math.max earliest, (Math.min latest, from)
 
   # Mouse-WHEEL scroll over a located widget (by widget reference or a recorded text-description
   # identifier), driven entirely through the INPUT-EVENT QUEUE like a real wheel — NOT by poking the
@@ -680,8 +919,13 @@ class MacroToolkit
   # owner; ViewportWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
+  #   A FINGER scrolls the pane by DRAGGING it, and this verb — unlike the L1 wheel it composes —
+  # holds the pane itself, so the whole drag is kept inside that pane's box (see _touchScrollBy).
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    @syntheticEventsMouseMove_InputEvents (@screenPointAtFractionOf widgetOrIdentifier, fraction), "no button", milliseconds, startTime
+    aimPoint = @screenPointAtFractionOf widgetOrIdentifier, fraction
+    if @fingerMode()
+      return @_touchScrollBy aimPoint, deltaX, deltaY, startTime, (@_widgetOfTarget widgetOrIdentifier)
+    @syntheticEventsMouseMove_InputEvents aimPoint, "no button", milliseconds, startTime
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
@@ -712,13 +956,10 @@ class MacroToolkit
   # with `yield "waitNoInputsOngoing"`. sliderOrIdentifier may be a widget reference or a recorded
   # text-description identifier.
   dragSliderButtonToFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    slider = if (typeof sliderOrIdentifier == "string") or (sliderOrIdentifier instanceof Array)
-      @findWidgetByTextDescription sliderOrIdentifier
-    else
-      sliderOrIdentifier
+    slider = @_widgetOfTarget sliderOrIdentifier
     buttonCentre = @screenPointAtFractionOf slider.button, [0.5, 0.5]
     trackPoint = @screenPointAtFractionOf slider, fraction
-    @syntheticEventsMouseMovePressDragRelease_InputEvents buttonCentre, trackPoint, milliseconds, startTime
+    @_dragChromeFromTo_InputEvents buttonCentre, trackPoint, milliseconds, startTime
 
   # Clipboard CUT / COPY / PASTE for the active editing caret, driven through the INPUT-EVENT QUEUE like
   # the browser's real clipboard events (oncut/oncopy/onpaste → ClipboardInputEvent.fromBrowserEvent →
@@ -777,6 +1018,22 @@ class MacroToolkit
     pressPoint = handle.localPointToScreen handle.center().add handle.extent().floorDivideBy 4
     [pressPoint, (destination.add pressPoint.subtract screenCentre)]
 
+  # A PRESS-DRAG-RELEASE THE CALLER KNOWS LANDS ON CHROME — a handle, a slider's button, a
+  # scrollbar's thumb — where a drag is that surface's OWN gesture and nothing competes for it. That
+  # is precisely what the hand's `ownsDragsStartingOnMe` answers when it decides whether a touch
+  # press arms at once, so a FINGER needs no hold here (ruling I2: a hold is demanded only where a
+  # plain drag would already mean scroll) and gets a plain touch drag. The verbs below reach this
+  # instead of the plain press-drag-release because they LOCATE the chrome themselves and therefore
+  # know what they press; a hold there would open that surface's own context menu for the moment
+  # before the drag dismissed it again. For a mouse this IS the plain press-drag-release, unchanged.
+  _dragChromeFromTo_InputEvents: (pressPoint, dropPoint, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), numberOfEventsPerMillisecond = 1) ->
+    # public-call-sanctioned: both are L1 event-synthesis primitives (they push queued strokes, not
+    # any settling/orchestration) — this helper only CHOOSES between the two by pointer kind, and is
+    # the same call each chrome verb below made inline before the choice was factored here.
+    if @fingerMode()
+      return @syntheticEventsTouchDrag_InputEvents pressPoint, dropPoint, (@_touchDragSpanFor milliseconds), startTime, numberOfEventsPerMillisecond
+    @syntheticEventsMouseMovePressDragRelease_InputEvents pressPoint, dropPoint, milliseconds, startTime, numberOfEventsPerMillisecond
+
   # Drag a resize/move HANDLE (one of the handles shown after a widget's "resize/move..." menu
   # item) to a destination Point (the handle's centre lands there). Handles resize/move the target
   # via NON-float dragging (HandleWdgt.nonFloatDragging → setExtent / moveTo), so this is a real
@@ -785,7 +1042,7 @@ class MacroToolkit
   dragResizeMoveHandleTo_InputEvents: (handleType, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     handle = world.topWdgtSuchThat (item) -> (item instanceof HandleWdgt) and (item.type == handleType)
     [pressPoint, dropPoint] = @_handlePressAndDropPoints handle, destination
-    @syntheticEventsMouseMovePressDragRelease_InputEvents pressPoint, dropPoint, milliseconds, startTime
+    @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
 
   # Float-DRAG a widget (by reference, or by a recorded text-description identifier) and drop it at a
   # destination — a Point, or another widget / identifier (dropped on that target's centre). Presses at
@@ -793,10 +1050,7 @@ class MacroToolkit
   # releases over the destination. Use it to drop a widget INTO a container that accepts drops — e.g. a
   # DocumentViewport with editing enabled re-parents the dropped widget as a flowing paragraph.
   dragWidgetTo_InputEvents: (widgetOrIdentifier, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    source = if (typeof widgetOrIdentifier == "string") or (widgetOrIdentifier instanceof Array)
-      @findWidgetByTextDescription widgetOrIdentifier
-    else
-      widgetOrIdentifier
+    source = @_widgetOfTarget widgetOrIdentifier
     dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
     @syntheticEventsMouseMovePressDragRelease_InputEvents (source.localPointToScreen source.center()), dropPoint, milliseconds, startTime
 
@@ -830,12 +1084,37 @@ class MacroToolkit
   dragWindowResizerTo_InputEvents: (windowWidget, destination, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     dropPoint = if destination instanceof Point then destination else @screenPointAtFractionOf destination, [0.5, 0.5]
     [pressPoint, dropPoint] = @_handlePressAndDropPoints windowWidget.resizer, dropPoint
-    @syntheticEventsMouseMovePressDragRelease_InputEvents pressPoint, dropPoint, milliseconds, startTime
+    @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
 
   getMostRecentlyOpenedMenu: ->
     # gets the last element added to the "freshlyCreatedPopUps" set
     # (Sets keep order of insertion)
-    Array.from(world.freshlyCreatedPopUps).pop()
+    freshlyCreated = Array.from(world.freshlyCreatedPopUps).pop()
+    return freshlyCreated if freshlyCreated?
+    return undefined unless @fingerMode()
+
+    # A FINGER'S MENU IS NEVER "FRESH" BY THE TIME A MACRO LOOKS AT IT, and that is a fact about
+    # WHEN the two grammars build their menu, not about the menu. A right-click builds it DURING the
+    # release (Widget.mouseClickRight, dispatched from processPointerUp AFTER the up has cleared the
+    # fresh set), so it is still in there; a press-and-hold builds it when the hold FIRES, one event
+    # EARLIER, so the release that ends the same gesture wipes the marker straight off it. The menu
+    # is standing there perfectly alive — the set simply cannot name it.
+    #   So ask the WORLD which pop-up is the most recent (world.mostRecentlyCreatedPopUp, the query
+    # the hand itself uses, pruned of orphans), and accept it ONLY if it was born after the hold was
+    # scheduled: a menu left standing by an earlier step must never be handed back as the one THIS
+    # gesture opened, or a hold that failed to open anything would drive the macro on into the wrong
+    # menu instead of failing where it went wrong.
+    return undefined unless @popUpIdWhenHoldScheduled?
+    mostRecent = world.mostRecentlyCreatedPopUp()
+    return undefined unless mostRecent?.instanceNumericID > @popUpIdWhenHoldScheduled
+    mostRecent
+
+  # The highest instance id among the pop-ups open right now — the watermark a press-and-hold takes
+  # when it is SCHEDULED, so the menu it opens can be told from one that was already there.
+  _highestOpenPopUpId: ->
+    highest = -1
+    world.openPopUps.forEach (eachPopUp) -> highest = Math.max highest, eachPopUp.instanceNumericID
+    highest
 
   # THE ROW LOCATORS' LAST STEP: hand back the row the caller named, at a place the caller can
   # actually reach it. A pop-up taller (or wider) than the world does not grow past it — its rows
@@ -1105,7 +1384,7 @@ class MacroToolkit
     handleCurrentCenter = vBarHandle.center()
     # bar-plane geometry aimed at the screen (identity unless the bar's viewport is nested
     # on a mapped plane)
-    @syntheticEventsMouseMovePressDragRelease_InputEvents (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
+    @_dragChromeFromTo_InputEvents (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
 
   bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
     inspectorNaked = @_findTopInspector()
@@ -1166,7 +1445,7 @@ class MacroToolkit
     total = textWidget.wrappedLines.length
     [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
 
-    @syntheticEventsMouseMovePressDragRelease_InputEvents vBarCenterFromHere, vBarCenterToHere
+    @_dragChromeFromTo_InputEvents vBarCenterFromHere, vBarCenterToHere
 
   # The reusable "verb" library for high-level macro tests: returns a Set of
   # macro SUBROUTINES (bringUpInspector, clickMenuItemOfWidget, takeScreenshot,

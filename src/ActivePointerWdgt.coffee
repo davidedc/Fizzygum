@@ -827,7 +827,13 @@ class ActivePointerWdgt extends Widget
     # whatever follows from it (the world has no nonFloatDragging to receive), so reading that as a
     # drag would silence exactly the hold that opens the desktop's own menu.
     return if @isThisPointerFloatDraggingSomething()
-    return if @nonFloatDraggedWdgt?.nonFloatDragging?
+    # ...but a BOOKED non-float target that has not MOVED is not being dragged either. A press books
+    # its non-float target at the down, before a single step has been taken, so a finger resting on a
+    # slider, a palette or a scrollbar would find its hold silenced by a drag that never happened —
+    # and those are exactly the widgets whose own menu the hold exists to open. The booking suppresses
+    # the hold only once the press has left the point it started from; a float-drag in progress
+    # suppresses it unconditionally, because that one IS already carrying something.
+    return if @nonFloatDraggedWdgt?.nonFloatDragging? and not @pressOriginPoint.equals @position()
 
     decisionTime = @_holdDecisionTime()
     return unless decisionTime?
@@ -1301,13 +1307,33 @@ class ActivePointerWdgt extends Widget
     # so we have to bypass this mechanism for those.
     displacementDueToGrabDragThreshold = undefined
     skipGrabDragThreshold = false
-    
-    if Automator? and Automator.state == Automator.PLAYING
+
+    # A TOUCH PRESS THAT HAS NOT MOVED IS NOT A DRAG, ahead of every carve-out below. A zero-delta
+    # move event advances the clocks a live press runs on — the drag-embed dwell, the press-and-hold
+    # recognizer — and must not float anything while doing it: a finger holding perfectly still
+    # emits exactly such an event to cross its hold window, and picking the pressed widget up there
+    # would end the gesture before it was recognised.
+    #   Keyed on the STROKE's kind, like every other branch of the grammar. A mouse's zero-delta
+    # pressed move DOES still grab, because for a mouse that move is the first sample of a gesture
+    # the pointer walked to its origin before pressing — its grab point and the displacement
+    # correction below are measured from there, and moving that decision one sample later moves
+    # every dragged widget by the sample's own offset (measured: 41 references).
+    return [true, undefined] if @pointerType is 'touch' and @mouseDownPosition? and @mouseDownPosition.equals @position()
+
+    # ...and the Automator's own bypass (a test that declares no threshold gets none) is a MOUSE
+    # carve-out too, for the same reason: a TOUCH stroke always takes the threshold, whatever the
+    # test says, because the grammar's press-and-hold is DEFINED as staying inside it.
+    if Automator? and Automator.state == Automator.PLAYING and @pointerType isnt 'touch'
       if !window["#{world.automator.player.currentlyPlayingTestName()}"].grabDragThreshold?
         skipGrabDragThreshold = true
 
     if !skipGrabDragThreshold
-      if @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
+      # The instant-grab carve-out — no threshold at all for a non-editable widget sitting directly
+      # on the desktop — is a MOUSE-FEEL rule: a mouse is steady, and a desktop widget that lifts on
+      # the first pixel of travel feels immediate. A FINGER is noisy by nature, so a touch stroke
+      # always takes the threshold: 7 px before a lift begins is imperceptible on glass, while
+      # without it a trembling finger could never hold long enough to open anything.
+      if @pointerType is 'touch' or @wdgtToGrab.parent != world or (!@wdgtToGrab.isEditable? or @wdgtToGrab.isEditable )
         if (@mouseDownPosition.distanceTo @position()) < WorldWdgt.preferencesAndSettings.grabDragThreshold
           return [true,undefined]
       displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition

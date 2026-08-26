@@ -301,6 +301,21 @@ boot = ->
   if bootQueryParams? and bootQueryParams.get("speed")?
     window.FIZZYGUM_MACRO_SPEED = bootQueryParams.get("speed")
 
+  # ?pointer=mouse|finger — the run's POINTER KIND, the lever that makes the macro
+  # toolkit replay the very same tests as a FINGER instead of a mouse: the intent
+  # verbs keep their names and translate in their bodies (a click becomes a tap, a
+  # right-click a press-and-hold, a wheel a drag), so no macro source says which
+  # device is driving it. Absent ⇒ "mouse", which is every path the suite has always
+  # taken. Sibling of ?speed above and parsed the same way — the raw string is
+  # stashed here and MacroToolkit validates it (the class isn't loaded yet),
+  # falling back to "mouse" for an unknown value.
+  #   The kind is a RUN axis, not a device fact: a finger run's screenshots differ
+  # from a mouse run's (no hover highlights, hold menus where right-click menus
+  # were), so they match references on their own directory axis.
+  window.FIZZYGUM_POINTER_KIND = "mouse"
+  if bootQueryParams? and bootQueryParams.get("pointer")?
+    window.FIZZYGUM_POINTER_KIND = bootQueryParams.get("pointer")
+
   # ?intro=0|off — suppress the per-test faded TITLE/DESCRIPTION slide the test
   # player shows BEFORE each SystemTest (AutomatorPlayer.setUpIntroSlide). That
   # slide is purely for a HUMAN watching a run; it costs a fixed ~2.5s of real
