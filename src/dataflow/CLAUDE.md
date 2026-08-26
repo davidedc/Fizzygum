@@ -163,6 +163,10 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 (the safe default for a source). Equality for the equal-value cutoff is `_valuesEqual`
 (`a.equals?(b)` when defined, else identity).
 
+`User` (`world.users`, core) is a live non-widget node on this seam beside `DataflowSource`: it
+holds no `dataflowRecompute`, only `markNonValueChange`s when `armedDrawingTool` changes, and
+every palette holds one `firesOnAnyChange` edge to it, re-deriving its highlight on announce.
+
 ## The two verbs, and the drain
 
 - **`markStale(node, forced)`** — the public, policy-aware verb sources call (demotes to the
