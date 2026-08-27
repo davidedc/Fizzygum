@@ -30,12 +30,12 @@ HighlightableMixin =
 
         @_changed()
       
-      mouseEnter: ->
+      hoverEntered: ->
         @state = @STATE_HIGHLIGHTED
         @_updateColor()
         @startCountdownForBubbleHelp? @toolTipMessage  if @toolTipMessage
-      
-      mouseLeave: ->
+
+      hoverExited: ->
         @state = @STATE_NORMAL
         @_updateColor()
         world.destroyToolTips()  if @toolTipMessage

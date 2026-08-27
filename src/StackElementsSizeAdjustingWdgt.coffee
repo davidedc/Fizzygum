@@ -161,20 +161,20 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       rightWidget._setMaxDimDeferredSettle new Point rmdd.x, rmdd.y - delta
 
 
-  mouseEnter: ->
+  hoverEntered: ->
     cursor = if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
     document.getElementById("world").style.cursor = cursor
 
   # mid-drag the pointer routinely outruns this thin strip, so keep the resize
   # cursor while THIS adjuster is the one being non-float dragged -- the
   # endOfNonFloatDrag hook below restores it at the true end of the drag
-  mouseLeave: ->
+  hoverExited: ->
     return if world.hand.nonFloatDraggedWdgt == @
     document.getElementById("world").style.cursor = "auto"
 
-  # the drag can end with the pointer outside my bounds (that mouseLeave was
+  # the drag can end with the pointer outside my bounds (that hoverExited was
   # suppressed above), so restore the cursor here unless the pointer is back
-  # over me -- then the eventual mouseLeave handles it
+  # over me -- then the eventual hoverExited handles it
   endOfNonFloatDrag: ->
     if world.hand.topWdgtUnderPointer() != @
       document.getElementById("world").style.cursor = "auto"

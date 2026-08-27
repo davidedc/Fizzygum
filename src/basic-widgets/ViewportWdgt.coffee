@@ -468,7 +468,7 @@ class ViewportWdgt extends Widget
   mouseMove: ->
     @_updatePointerInScrollBand @screenPointToMyPlane world.hand.position()
 
-  mouseLeave: ->
+  hoverExited: ->
     @_updatePointerInScrollBand undefined
 
   _updatePointerInScrollBand: (pos) ->

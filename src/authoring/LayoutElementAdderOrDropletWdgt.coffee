@@ -106,10 +106,10 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
       @addAsSiblingAfterMe widgetBeingDropped
     @_fullDestroyNoSettle()
 
-  mouseEnter: ->
+  hoverEntered: ->
     @setColor Color.create 100, 100, 100
-  
-  mouseLeave: ->
+
+  hoverExited: ->
     @setColor Color.BLACK
 
 

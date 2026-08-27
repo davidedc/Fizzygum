@@ -969,7 +969,7 @@ class MacroToolkit
   # Mouse-WHEEL scroll over a located widget (by widget reference or a recorded text-description
   # identifier), driven entirely through the INPUT-EVENT QUEUE like a real wheel — NOT by poking the
   # hand. First a no-button move positions the pointer over the widget (so the fake playback pointer
-  # shows and mouseEnter/hover fire, exactly as for a user), then a queued WheelInputEvent scrolls the
+  # shows and hoverEntered/hover fire, exactly as for a user), then a queued WheelInputEvent scrolls the
   # nearest scrollable under the pointer (ActivePointerWdgt.processWheel walks up to the nearest `wheel`
   # owner; ViewportWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with

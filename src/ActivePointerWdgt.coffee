@@ -663,15 +663,12 @@ class ActivePointerWdgt extends Widget
   #    into the widget-facing dispatches below:
   #
   #   mouseDownLeft
-  #   mouseDownRight
   #   mouseClickLeft
   #   mouseClickRight
   #   mouseDoubleClick
   #   mouseTripleClick
-  #   mouseEnter
-  #   mouseLeave
-  #   mouseEnterfloatDragging
-  #   mouseLeavefloatDragging
+  #   hoverEntered
+  #   hoverExited
   #   mouseMove
   #   wheel
   #
@@ -882,8 +879,7 @@ class ActivePointerWdgt extends Widget
   _dissolveHoverStateOfTouchStroke: ->
     return unless @pointerType is 'touch'
     @mouseOverList.forEach (old) =>
-      old.mouseLeave?()
-      old.mouseLeavefloatDragging?()  if @mouseButton
+      old.hoverExited?()
     @mouseOverList.clear()
     # ...and the glass STAYS empty until a pointer comes back. Emptying the list alone would not
     # last: the per-cycle hover re-sync re-derives the set from where the hand happens to stand, so
@@ -947,25 +943,25 @@ class ActivePointerWdgt extends Widget
       @_beginPressAndHoldRecognition e, w
       if e.button is 2 or e.ctrlKey
         @mouseButton = "right"
-        actualClick = "mouseDownRight"
         expectedClick = "mouseClickRight"
       else
         @mouseButton = "left"
-        actualClick = "mouseDownLeft"
         expectedClick = "mouseClickLeft"
 
       @mouseDownWdgt = w
       @mouseDownWdgt = @mouseDownWdgt.parent  until @mouseDownWdgt[expectedClick]
 
-      
-      while !w[actualClick]?
-        if w.parent?
-          w = w.parent
-        else
-          break
+      # only a PRIMARY press carries a down fact: what a secondary press means is the context
+      # gesture, whose receiver the climb above books and whose release dispatches it
+      if @mouseButton is "left"
+        while !w.mouseDownLeft?
+          if w.parent?
+            w = w.parent
+          else
+            break
 
-      if w[actualClick]?
-        w[actualClick] @_pointerPositionInPlaneOf(w)
+        if w.mouseDownLeft?
+          w.mouseDownLeft @_pointerPositionInPlaneOf(w)
   
   
   processPointerUp: (e) ->
@@ -1031,11 +1027,10 @@ class ActivePointerWdgt extends Widget
       if w?
         if w == @mouseDownWdgt
 
-          switch expectedClick
-            when "mouseClickLeft"
-              w.mouseUpLeft? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
-            when "mouseClickRight"
-              w.mouseUpRight? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
+          # only a PRIMARY release carries a release fact: what a secondary press means is the
+          # context gesture, which the click dispatch below certifies
+          if expectedClick is "mouseClickLeft"
+            w.mouseUpLeft? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
 
           # also send doubleclick if the
           # two clicks happen on the same widget
@@ -1489,12 +1484,12 @@ class ActivePointerWdgt extends Widget
     @determineGrabs pos, wdgtFarAway, mouseOverNew
 
     # The teleported widget is now under the (stationary) pointer. Resolve the
-    # mouseEnter/mouseLeave consequence of that geometry change NOW, while the
-    # non-float drag is active, so the widget's mouseEnter is consumed under the
-    # drag guard (e.g. SliderButtonWdgt.mouseEnter early-returns while the hand
+    # hoverEntered/hoverExited consequence of that geometry change NOW, while the
+    # non-float drag is active, so the widget's hoverEntered is consumed under the
+    # drag guard (e.g. SliderButtonWdgt.hoverEntered early-returns while the hand
     # is dragging) and the widget is recorded in @mouseOverList. Otherwise the
     # next per-cycle reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges
-    # (WorldWdgt.doOneCycle) can fire that mouseEnter AFTER mouse-up has already
+    # (WorldWdgt.doOneCycle) can fire that hoverEntered AFTER mouse-up has already
     # un-dragged the widget — spuriously HIGHLIGHTing it. Deferring this caused a
     # dpr-2-only flake in SystemTest_macroSliderTrackClickMovesButton: a heavy
     # SWCanvas cycle drains the down+up together, so no held-button frame ever
@@ -1543,8 +1538,7 @@ class ActivePointerWdgt extends Widget
 
     @mouseOverList.forEach (old) =>
       unless mouseOverNew.has old
-        old.mouseLeave?()
-        old.mouseLeavefloatDragging?()  if @mouseButton
+        old.hoverExited?()
 
     # THE GRAMMAR'S THIRD CONSUMER (ruling I2), the other half of the one in determineGrabs: while a
     # touch stroke is UN-ARMED its moves mean scroll and nothing else, so no widget is handed a
@@ -1566,8 +1560,7 @@ class ActivePointerWdgt extends Widget
         newWdgt.mouseMove?(newWdgt.screenPointToMyPlane(@position()), @mouseButton)
       
       unless @mouseOverList.has newWdgt
-        newWdgt.mouseEnter?()
-        newWdgt.mouseEnterfloatDragging?()  if @mouseButton
+        newWdgt.hoverEntered?()
 
       # autoScrolling support:
       if @isThisPointerFloatDraggingSomething()

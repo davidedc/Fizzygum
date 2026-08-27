@@ -53,7 +53,7 @@ const MAPPED_RE = /screenPointToMyPlane|localPointToScreen|mapRectToScreen|scree
 const NON_WIDGET_ROOTS = new Set(['Math', 'Rectangle', 'Point', 'window', 'JSON', 'Object']);
 
 const POS_HANDLER_NAMES = new Set([
-  'mouseDownLeft', 'mouseDownRight', 'mouseUpLeft', 'mouseUpRight',
+  'mouseDownLeft', 'mouseUpLeft',
   'mouseClickLeft', 'mouseClickRight', 'mouseDoubleClick', 'mouseTripleClick',
   'mouseMove', 'nonFloatDragging',
 ]);

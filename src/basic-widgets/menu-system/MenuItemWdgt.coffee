@@ -239,7 +239,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     @label.width() + 2 * @CONTENT_INSET + @_iconColumnWidth()
 
   # MenuItemWdgt events:
-  mouseEnter: ->
+  hoverEntered: ->
 
     if @representsAWidget
       if @argumentToAction1?
@@ -256,7 +256,7 @@ class MenuItemWdgt extends LabelButtonWdgt
     if @toolTipMessage
       @startCountdownForBubbleHelp @toolTipMessage
 
-  mouseLeave: ->
+  hoverExited: ->
     if @representsAWidget
       if @argumentToAction1?
         # this first case handles when you pick a widget

@@ -18,7 +18,7 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     # A strip is a light surface, so the mark takes the dark icon line colour rather than the
     # button family's near-white default.
     #   It is `color_normal` -- the RESTING colour of the highlight state machine -- and not a
-    # bare `@color`: HighlightableMixin repaints me at color_normal on every mouseLeave and
+    # bare `@color`: HighlightableMixin repaints me at color_normal on every hoverExited and
     # mouseUpLeft, so a colour set beside it survives only until the first pointer visit and I
     # then go near-white on a near-white strip. @color follows it so my very first paint, before
     # any pointer has reached me, is already the resting one.

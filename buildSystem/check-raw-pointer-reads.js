@@ -34,12 +34,12 @@ const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a no
 const RAW_READ = /world\.hand\.position\(\)/;
 const MAPPED = /screenPointToMyPlane/;
 const HANDLER_NAMES = new Set([
-  'mouseDownLeft', 'mouseDownRight',
-  'mouseUpLeft', 'mouseUpRight',
+  'mouseDownLeft',
+  'mouseUpLeft',
   'mouseClickLeft', 'mouseClickRight',
   'mouseDoubleClick', 'mouseTripleClick',
   'mouseMove',
-  'mouseEnter', 'mouseLeave', 'mouseEnterfloatDragging', 'mouseLeavefloatDragging',
+  'hoverEntered', 'hoverExited',
   'nonFloatDragging', 'endOfNonFloatDrag',
   'wheel',
 ]);

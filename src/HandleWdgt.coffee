@@ -222,11 +222,11 @@ class HandleWdgt extends Widget
 
   
   # HandleWdgt events:
-  mouseEnter: ->
+  hoverEntered: ->
     @state = @STATE_HIGHLIGHTED
     @_changed()
-  
-  mouseLeave: ->
+
+  hoverExited: ->
     @state = @STATE_NORMAL
     @_changed()
 

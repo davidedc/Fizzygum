@@ -7,8 +7,8 @@ class ExternalLinkButtonWdgt extends IconWdgt
     # plus reaching into @parent.outputTextArea; type-test-elimination campaign)
     @parent?.openExternalURL?()
 
-  mouseEnter: ->
+  hoverEntered: ->
     world.worldCanvas.style.cursor = 'pointer'
-  
-  mouseLeave: ->
+
+  hoverExited: ->
     world.worldCanvas.style.cursor = ''

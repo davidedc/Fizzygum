@@ -2513,10 +2513,7 @@ class WorldWdgt extends IconGridPanelWdgt
   
   mouseClickLeft: ->
     noOperation
-  
-  mouseDownRight: ->
-    noOperation
-      
+
 
   # WorldWdgt text field tabbing:
   nextTab: (editField) ->

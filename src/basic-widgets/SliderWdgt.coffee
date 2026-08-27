@@ -396,7 +396,7 @@ class SliderWdgt extends CircleBoxWdgt
     if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
       world.hand.nonFloatDragWdgtFarAwayToHere @button, pos
       # in an ideal world when a widget moves under the pointer
-      # it gets all the right events like mouseEnter etc.
+      # it gets all the right events like hoverEntered etc.
       # however that's difficult to do, just set the "pressed"
       # color from here
       @button.setPressedColor()

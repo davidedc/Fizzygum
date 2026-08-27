@@ -39,7 +39,7 @@ class ImageWdgt extends GenericPanelWdgt
     overlayCanvas.disableDrops()
     mainCanvas.add overlayCanvas
 
-    overlayCanvas.injectProperty "mouseLeave", """
+    overlayCanvas.injectProperty "hoverExited", """
         # don't leave any trace behind then the pointer
         # moves out.
         (pos) ->

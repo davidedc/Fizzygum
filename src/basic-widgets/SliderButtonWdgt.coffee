@@ -175,12 +175,12 @@ class SliderButtonWdgt extends CircleBoxWdgt
     @_setHighlightedColor()
   
   #SliderButtonWdgt events:
-  mouseEnter: ->
+  hoverEntered: ->
     if world.hand.isThisPointerDraggingSomething()
       return
     @_setHighlightedColor()
-  
-  mouseLeave: ->
+
+  hoverExited: ->
     if world.hand.isThisPointerDraggingSomething()
       return
     @_setNormalColor()

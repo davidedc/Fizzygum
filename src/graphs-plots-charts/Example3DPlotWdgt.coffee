@@ -183,7 +183,7 @@ class Example3DPlotWdgt extends Widget
   mouseUpLeft: ->
     @autoRotate = true
 
-  mouseLeave: ->
+  hoverExited: ->
     @autoRotate = true
 
   # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
