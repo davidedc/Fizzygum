@@ -504,7 +504,7 @@ class MacroToolkit
   #   A FINGER: a left click is a TAP (the grammar's "a tap is a click" row) and a right click is a
   # PRESS-AND-HOLD — the grammar's context-menu trigger, since a finger has no second button and
   # a tablet no ctrl key, so the hold is how it reaches the very menu the right button reaches
-  # (ruling I2; the hold fires openContextMenuAtPointer, the exact method mouseClickRight fires).
+  # (ruling I2; the hold dispatches contextMenuRequested, the exact verb a right-click's release does).
   syntheticEventsMouseClick_InputEvents: (whichButton = "left button", milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     isLeft = (whichButton == "left button")
     if @fingerMode()
@@ -1155,7 +1155,7 @@ class MacroToolkit
 
     # A FINGER'S MENU IS NEVER "FRESH" BY THE TIME A MACRO LOOKS AT IT, and that is a fact about
     # WHEN the two grammars build their menu, not about the menu. A right-click builds it DURING the
-    # release (Widget.mouseClickRight, dispatched from processPointerUp AFTER the up has cleared the
+    # release (Widget.contextMenuRequested, dispatched from processPointerUp AFTER the up has cleared the
     # fresh set), so it is still in there; a press-and-hold builds it when the hold FIRES, one event
     # EARLIER, so the release that ends the same gesture wipes the marker straight off it. The menu
     # is standing there perfectly alive — the set simply cannot name it.

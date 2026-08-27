@@ -665,7 +665,7 @@ class ActivePointerWdgt extends Widget
   #   pressBegan
   #   pressEnded
   #   activated
-  #   mouseClickRight
+  #   contextMenuRequested
   #   doubleActivated
   #   tripleActivated
   #   hoverEntered
@@ -842,10 +842,18 @@ class ActivePointerWdgt extends Widget
     # from the hold on, this stroke's drags mean what a mouse's would
     @_pressArmedForMouseSemantics = true
     if @mouseDownWdgt?
-      # public-call-sanctioned: the hold is an alternate TRIGGER for the right-click's own verb, not
-      # a parallel path — openContextMenuAtPointer is exactly what Widget.mouseClickRight fires, so
-      # the titled menu, the dev-mode disambiguation and the world's own menu are inherited whole.
-      @openContextMenuAtPointer @mouseDownWdgt
+      # public-call-sanctioned: the hold is an alternate TRIGGER for the context gesture's own verb,
+      # not a parallel path — it dispatches contextMenuRequested on the pressed widget, the very verb
+      # a secondary press's release dispatches, climbing to its implementor the same way. So the
+      # titled menu, the dev-mode disambiguation, the world's own menu AND any override a widget
+      # declares are inherited whole: the two triggers meet AT the widget, not one level below it.
+      w = @mouseDownWdgt
+      until w.contextMenuRequested
+        w = w.parent
+        if not w?
+          break
+      if w?
+        w.contextMenuRequested @_pointerPositionInPlaneOf(w)
 
   # Do this stroke's drags mean what a MOUSE drag means — lift what detaches, value-drag a control —
   # or is it a plain finger drag the surface under it may take for a scroll? The grammar's two
@@ -944,7 +952,7 @@ class ActivePointerWdgt extends Widget
       @_beginPressAndHoldRecognition e, w
       if e.button is 2 or e.ctrlKey
         @mouseButton = "right"
-        expectedClick = "mouseClickRight"
+        expectedClick = "contextMenuRequested"
       else
         @mouseButton = "left"
         expectedClick = "activated"
@@ -1018,7 +1026,7 @@ class ActivePointerWdgt extends Widget
       if @mouseButton is "left"
         expectedClick = "activated"
       else
-        expectedClick = "mouseClickRight"
+        expectedClick = "contextMenuRequested"
 
       # trigger the action
       until w[expectedClick]

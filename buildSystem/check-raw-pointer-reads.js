@@ -36,7 +36,7 @@ const MAPPED = /screenPointToMyPlane/;
 const HANDLER_NAMES = new Set([
   'pressBegan',
   'pressEnded',
-  'activated', 'mouseClickRight',
+  'activated', 'contextMenuRequested',
   'doubleActivated', 'tripleActivated',
   'mouseMove',
   'hoverEntered', 'hoverExited',

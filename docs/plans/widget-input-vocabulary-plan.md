@@ -141,7 +141,16 @@ plan renames on top of is the one that plan landed; its living truth is
   passed in-wave — prior fails were the load flake and the stale refs). P6 tail adds: the
   macro-level scroll-further beyond 3 nudges (the named error is the floor and never fired
   in the final run).
-- P4 R1 — `contextMenuRequested` unifies the two triggers: —
+- P4 R1 — `contextMenuRequested` unifies the two triggers: **DONE 2026-08-27** (same
+  worker, zero pixels, no recapture). `mouseClickRight → contextMenuRequested(pos)` (the
+  ruled signature; the arg was always passed and always ignored — now declared); the HOLD
+  funnel dispatches the verb on the pressed widget via the same implementor-climb shape as
+  the up-path (mirrors rather than assumes), so an override is reached by BOTH triggers —
+  the seam closed structurally, pixel-free by measurement (suite 329/329: no reference
+  anywhere shows the old name in a member list). The finger leg's hold witness now
+  exercises the hold THROUGH the verb. Gates: build 28/28; suite 329/329; menusweep OK
+  (3749 items / 464 menus through the renamed verb); P4-close gauntlet 19/19 clean, no
+  retries.
 - P5 R2 — the move split (`hoverMove` / `pressedMove`): —
 - P6 `scrolledBy` + docs weave + tests-prose sweep + arc close: —
 

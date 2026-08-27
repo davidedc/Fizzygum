@@ -395,7 +395,11 @@ class Widget extends TreeNode
       # element bound now for the pre-capture measure fallback (see the window-content twin above)
       @_contentStackSpec.element = @
 
-  mouseClickRight: ->
+  # THE CERTIFIED CONTEXT GESTURE HAPPENED — from EITHER trigger. A secondary press's release and a
+  # press-and-hold certify the same thing ("your context menu was asked for"), so the hand dispatches
+  # this one verb for both, and an override here is reached by both alike. `pos` is where the gesture
+  # landed, in my own plane; the standard menu opens at the pointer and so reads nothing from it.
+  contextMenuRequested: (pos) ->
     # you could bring up what you right-click,
     # however for example that's not how OSX works.
     # Perhaps this could be a system setting?
