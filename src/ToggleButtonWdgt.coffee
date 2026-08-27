@@ -7,7 +7,7 @@ class ToggleButtonWdgt extends SwitchButtonWdgt
     else
       super [button2, button1]
 
-  mouseClickLeft: ->
+  activated: ->
     # can't "unselect" a radio button if it's attached to a radio
     # panel that mandates that at least one of the radio
     # buttons must be switched on.

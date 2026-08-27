@@ -23,7 +23,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   _menuPopUpPoint: ->
     (@localPointToScreen @position()).round().subtract new Point 80, 0
 
-  mouseClickLeft: ->
+  activated: ->
     # if there is already a font selection menu for the editor,
     # bring that one up, otherwise create one and remember that we created it
     if @fontSelectionMenuHolder.fontSelectionMenu? and

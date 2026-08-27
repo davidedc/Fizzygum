@@ -4215,8 +4215,8 @@ class Widget extends TreeNode
     @bringToForeground()
     @escalateEvent "pressBegan", pos
 
-  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
-    @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+  activated: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+    @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
@@ -4314,7 +4314,7 @@ class Widget extends TreeNode
 
   # CONVERT (end-of-cycle-flush-drawdown): showing the resize/move handles is a DISCRETE menu/click action, so it
   # SELF-SETTLES (one flush per outermost public mutation). The handles attach via _addNoSettle (_addAndTrackHandle /
-  # addAsSibling*), which only RIDE a settle; the trigger chain (mouseClickLeft -> trigger) provided none, so the
+  # addAsSibling*), which only RIDE a settle; the trigger chain (activated -> trigger) provided none, so the
   # _addNoSettle invalidate rode the per-frame end-of-cycle flush. The recursion to @parent goes through the
   # NON-settling core so the whole show-handles tree flushes ONCE. (ViewportWdgt overrides the core, not this.)
   showResizeAndMoveHandlesAndLayoutAdjusters: ->

@@ -111,11 +111,11 @@ class StringFieldWdgt extends PanelWdgt
   pins: -> super().concat [ new PinSpec "value", "string", get: "getValue" ]
   principalPinLabel: "value"
 
-  mouseClickLeft: (pos)->
+  activated: (pos)->
     @bringToForeground()
     if @isEditable
       @text.edit()
     else
-      @escalateEvent 'mouseClickLeft', pos
+      @escalateEvent 'activated', pos
 
 

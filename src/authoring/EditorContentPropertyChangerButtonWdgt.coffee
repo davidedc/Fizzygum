@@ -6,7 +6,7 @@
 # They share: the highlightable hover/press colouring + parent-stainer mixins,
 # the grey hover/press/normal colour scheme, the thumbnail-actionability flag
 # and the editor-chrome exclusion below. A subclass supplies only its icon
-# (createAppearance), its tooltip (toolTipMessage), and its mouseClickLeft.
+# (createAppearance), its tooltip (toolTipMessage), and its activated.
 #
 # All of them are icon-shaped, hence the IconWdgt base. (Bold/Italic and the
 # Align trio used to extend Widget directly — an inconsistency, since they draw

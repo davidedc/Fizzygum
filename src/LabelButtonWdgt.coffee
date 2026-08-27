@@ -153,7 +153,7 @@ class LabelButtonWdgt extends ButtonWdgt
   # neutralise it.
   pressEnded: ->
 
-  mouseClickLeft: ->
+  activated: ->
     @bringToForeground()
     @state = @STATE_HIGHLIGHTED
     @_changed()

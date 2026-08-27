@@ -7,7 +7,7 @@ class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
-  mouseClickLeft: ->
+  activated: ->
     if world.editorFocusWdgt?.setFontName?
       widgetClickedLast = world.editorFocusWdgt
       if widgetClickedLast.fontName != widgetClickedLast.monoFontStack

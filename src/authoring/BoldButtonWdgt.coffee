@@ -7,6 +7,6 @@ class BoldButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new BoldIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
-  mouseClickLeft: ->
+  activated: ->
     if world.editorFocusWdgt?.toggleWeight?
       world.editorFocusWdgt.toggleWeight()

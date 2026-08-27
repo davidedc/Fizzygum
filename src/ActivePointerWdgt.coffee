@@ -664,10 +664,10 @@ class ActivePointerWdgt extends Widget
   #
   #   pressBegan
   #   pressEnded
-  #   mouseClickLeft
+  #   activated
   #   mouseClickRight
-  #   mouseDoubleClick
-  #   mouseTripleClick
+  #   doubleActivated
+  #   tripleActivated
   #   hoverEntered
   #   hoverExited
   #   mouseMove
@@ -856,7 +856,7 @@ class ActivePointerWdgt extends Widget
     @pointerType isnt 'touch' or @_pressArmedForMouseSemantics
 
   # Does this stroke's RELEASE owe a click? Two strokes do not:
-  #  - the HOLD consumed it: its menu already happened, and a right press fires no mouseClickLeft
+  #  - the HOLD consumed it: its menu already happened, and a right press fires no activated
   #    either;
   #  - it was a PLAIN DRAG: an un-armed touch press that left the hold radius means a scroll for the
   #    rest of its life (§2.2's plain-drag row — the same two facts the recognizer already keeps),
@@ -947,7 +947,7 @@ class ActivePointerWdgt extends Widget
         expectedClick = "mouseClickRight"
       else
         @mouseButton = "left"
-        expectedClick = "mouseClickLeft"
+        expectedClick = "activated"
 
       @mouseDownWdgt = w
       @mouseDownWdgt = @mouseDownWdgt.parent  until @mouseDownWdgt[expectedClick]
@@ -995,7 +995,7 @@ class ActivePointerWdgt extends Widget
     else if @_strokeOwesNoClick()
       # THE STROKE OWES NO CLICK — either the hold consumed it or it was a plain drag (see the
       # query). Its release dispatches no click and dismisses nothing — the same shape a right press
-      # has, which never fires mouseClickLeft either. A hold menu still standing (the finger let go
+      # has, which never fires activated either. A hold menu still standing (the finger let go
       # without moving) stays: it is an ordinary transient menu from here on, and the next tap
       # outside it takes it away.
       #   The non-float contract still holds: the hold can be followed by a value-drag, and a control
@@ -1016,7 +1016,7 @@ class ActivePointerWdgt extends Widget
       @previousNonFloatDraggingPos = undefined
 
       if @mouseButton is "left"
-        expectedClick = "mouseClickLeft"
+        expectedClick = "activated"
       else
         expectedClick = "mouseClickRight"
 
@@ -1030,7 +1030,7 @@ class ActivePointerWdgt extends Widget
 
           # only a PRIMARY release carries a release fact: what a secondary press means is the
           # context gesture, which the click dispatch below certifies
-          if expectedClick is "mouseClickLeft"
+          if expectedClick is "activated"
             w.pressEnded? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
 
           # also send doubleclick if the
@@ -1238,8 +1238,8 @@ class ActivePointerWdgt extends Widget
     if @isThisPointerFloatDraggingSomething()
       @drop()
     else
-      w = w.parent  while w and not w.mouseDoubleClick
-      w.mouseDoubleClick @_pointerPositionInPlaneOf(w) if w
+      w = w.parent  while w and not w.doubleActivated
+      w.doubleActivated @_pointerPositionInPlaneOf(w) if w
     @mouseButton = undefined
 
   processTripleClick: (w = @topWdgtUnderPointer()) ->
@@ -1247,8 +1247,8 @@ class ActivePointerWdgt extends Widget
     if @isThisPointerFloatDraggingSomething()
       @drop()
     else
-      w = w.parent  while w and not w.mouseTripleClick
-      w.mouseTripleClick @_pointerPositionInPlaneOf(w) if w
+      w = w.parent  while w and not w.tripleActivated
+      w.tripleActivated @_pointerPositionInPlaneOf(w) if w
     @mouseButton = undefined
   
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel

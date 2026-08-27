@@ -6,7 +6,7 @@ WidgetCreatorAndSmartPlacerOnClickMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      mouseClickLeft: (ignored, ignored2, ignored3, ignored4, ignored5, ignored6, ignored7, partOfDoubleClick) ->
+      activated: (ignored, ignored2, ignored3, ignored4, ignored5, ignored6, ignored7, partOfDoubleClick) ->
         if partOfDoubleClick
           return
         widgetToBePlaced = @createWidgetToBeHandled()

@@ -143,13 +143,13 @@ class ButtonWdgt extends Widget
     if @target?.graphEdgesOut? then super().concat [{kind: 'command', to: @target}] else super()
 
   
-  mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
     @trigger()
-    @escalateEvent "mouseClickLeft", arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+    @escalateEvent "activated", arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
-  mouseDoubleClick: ->
+  doubleActivated: ->
     @triggerDoubleClick()
 
   # you shouldn't be able to drag a compound

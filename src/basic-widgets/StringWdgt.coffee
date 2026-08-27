@@ -320,7 +320,7 @@ class StringWdgt extends Widget
 
   # The caret remembers the column it should land on during vertical (up/down) movement, so a
   # short line passed over on the way doesn't lose the original horizontal position. Read by
-  # TextWdgt.upFrom / downFrom; set by the caret on horizontal moves and by mouseClickLeft below.
+  # TextWdgt.upFrom / downFrom; set by the caret on horizontal moves and by activated below.
   rememberCaretColumn: (slot) ->
     @caretHorizPositionForVertMovement = slot
 
@@ -1543,10 +1543,10 @@ class StringWdgt extends Widget
       @clearSelection()
 
   # An EDITABLE string word-selects around the caret; a non-editable one escalates (the
-  # same else-escalate mouseClickLeft has always had), so a double-click on a passive label
+  # same else-escalate activated has always had), so a double-click on a passive label
   # reaches the first ancestor that wants it — e.g. a spreadsheet cell's scalar-text child
   # escalating to the CellWdgt, which starts a caret edit at the clicked slot.
-  mouseDoubleClick: (pos) ->
+  doubleActivated: (pos) ->
     if @isEditable
       previousCaretSlot = world.caret?.slot
 
@@ -1565,9 +1565,9 @@ class StringWdgt extends Widget
       @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
       world.caret?.gotoSlot (previousCaretSlot + extendRight)
     else
-      @escalateEvent "mouseDoubleClick", pos
+      @escalateEvent "doubleActivated", pos
 
-  mouseTripleClick: ->
+  tripleActivated: ->
     if @isEditable
       @selectAll()
       world.caret?.gotoSlot @text.length
@@ -1575,7 +1575,7 @@ class StringWdgt extends Widget
 
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
-  mouseClickLeft: (pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9) ->
+  activated: (pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9) ->
     @bringToForeground()
     world.caret?.bringToForeground()
     if @isEditable
@@ -1603,7 +1603,7 @@ class StringWdgt extends Widget
         @rememberCaretColumn world.caret.slot
 
     else
-      @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9
+      @escalateEvent "activated", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9
   
   enableSelecting: ->
     @isSelectable = true

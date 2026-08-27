@@ -520,7 +520,7 @@ class MacroToolkit
   # event's shiftKey flag set (the 4th parameter of Pointer{down,up}InputEvent.synthetic — button, buttons,
   # ctrlKey, shiftKey, altKey, metaKey, time, and the optional worldX/worldY a down/up omits: a synthesised
   # press states no place, so the pointer keeps the position it holds). A click carrying shiftKey makes an editable
-  # StringWdgt/TextWdgt EXTEND its selection to the click point (mouseClickLeft reads shiftKey) instead
+  # StringWdgt/TextWdgt EXTEND its selection to the click point (activated reads shiftKey) instead
   # of just repositioning the caret. Left button only (down buttons=1, up buttons=0).
   syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     # absolute (scaled) times + guard + non-scaled push, like syntheticEventsMouseClick —
@@ -1279,7 +1279,7 @@ class MacroToolkit
     @moveToAndClick_InputEvents theItem
 
   # Click a menu's title bar (its frame bar's title piece, reachable as menu.label) to PIN the menu open.
-  # The piece escalates its click to the strip, and FrameBarWdgt.mouseClickLeft -> frame.pinPopUp on a
+  # The piece escalates its click to the strip, and FrameBarWdgt.activated -> frame.pinPopUp on a
   # transient frame: pinning takes the menu's lifetime
   # to 'persistent' and removes it from world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren,
   # so a subsequent click on the empty desktop no longer dismisses it (a still-transient menu would vanish);
@@ -1450,6 +1450,45 @@ class MacroToolkit
     inspectorNaked = @_findTopInspector()
     @scrollInspectorListItemIntoView_InputEvents inspectorNaked.list, listItemString
 
+  # WHERE THE NAMED ROW SITS RELATIVE TO THE PANE'S VISIBLE WINDOW — the one place that geometry is
+  # computed, shared by the aimability check, the corrective nudge and the click itself. The pane's
+  # window is expressed in the ROW'S plane (screenPointToMyPlane — identity when the list is
+  # unscrolled) so row and window are comparable numbers.
+  _topInspectorRowVisibility: (listItemString) ->
+    list = @_findTopInspector().list
+    entry = list.topWdgtSuchThat (item) -> item.text? and item.text == listItemString
+    return undefined  unless entry?
+    paneTop = (entry.screenPointToMyPlane new Point list.left(), list.top()).y
+    paneBottom = (entry.screenPointToMyPlane new Point list.left(), list.bottom()).y
+    list: list
+    entry: entry
+    paneTop: paneTop
+    paneBottom: paneBottom
+    visibleTop: Math.max entry.top(), paneTop
+    visibleBottom: Math.min entry.bottom(), paneBottom
+
+  # Is the named row actually SHOWING, i.e. does it have a slice a click can land in?
+  listItemFromTopInspectorIsAimable_InputEvents: (listItemString) ->
+    v = @_topInspectorRowVisibility listItemString
+    v? and v.visibleBottom > v.visibleTop
+
+  # ONE SCROLLBAR PIXEL of correction toward the named row. The scroll verb aims by INDEX, and on a
+  # long member list one thumb pixel is worth many content pixels (a 5px thumb on a 135px bar over a
+  # 10,000px list moves ~75px per pixel — nearly two rows), so the rounding any drag ends on can leave
+  # the target row just outside the window. This nudges the thumb the single pixel that carries the
+  # window over the row: up when the row sits above the window, down when it sits below.
+  nudgeTopInspectorListTowardItem_InputEvents: (listItemString) ->
+    v = @_topInspectorRowVisibility listItemString
+    return  unless v?
+    direction =
+      if v.entry.bottom() <= v.paneTop then -1
+      else if v.entry.top() >= v.paneBottom then 1
+      else 0
+    return  if direction is 0
+    thumb = v.list.vBar.children[0]
+    from = thumb.center()
+    @_dragChromeFromTo_InputEvents (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
+
   clickOnListItemFromTopInspector_InputEvents: (listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     inspectorNaked = @_findTopInspector()
 
@@ -1461,18 +1500,32 @@ class MacroToolkit
       else
         false
 
-    # Clamp the click into the pane's visible box: the scroll verb's handle-drag is
-    # quantized to scrollbar pixels, so a member-list length change can leave the found
-    # row EDGE-CLIPPED at the pane top — a click 2px under a clipped top lands off-pane
-    # and selects nothing (measured 2026-08-06, kept-spec arc P1, via the inspector-alpha
-    # test's local twin of this click). Identical to the plain top-edge click whenever
-    # the row is fully visible.
-    # the clamp compares the row's PLANE geometry with the pane's visible window, so express
-    # the window's top in the ROW'S plane (screenPointToMyPlane — identity when the list is
-    # unscrolled), do the arithmetic there, and AIM at the resulting point's on-screen pixel
+    # AIM INTO THE ROW'S VISIBLE SLICE — the intersection of the row's box with the pane's
+    # visible window. The scroll verb's handle-drag is quantized to scrollbar pixels, so a
+    # member-list length change can leave the found row EDGE-CLIPPED at the pane's top or
+    # bottom, and the aim must stay inside what is actually showing: a point above the window
+    # lands on the TOGGLE STRIP that sits directly above the pane, which flips a toggle
+    # (methods/fields/inherited) instead of selecting the row — a click that changes the
+    # inspector's mode and selects nothing, while looking like an ordinary settled state.
+    # A slice too thin for the 2px insets is aimed at its middle; a row with NO visible slice
+    # is not clicked blind — the scroll left it unreachable, which is a fault to raise, naming
+    # the row, rather than a click to place somewhere arbitrary.
+    # The arithmetic is done in the ROW'S plane (screenPointToMyPlane — identity when the list
+    # is unscrolled), and the resulting point is AIMED at its on-screen pixel.
     windowTopInEntryPlane = (entry.screenPointToMyPlane new Point list.left(), list.top()).y
-    clickY = Math.max (entry.top() + 2), (windowTopInEntryPlane + 2)
-    clickY = Math.min clickY, (entry.bottom() - 2)
+    windowBottomInEntryPlane = (entry.screenPointToMyPlane new Point list.left(), list.bottom()).y
+    visibleTop = Math.max entry.top(), windowTopInEntryPlane
+    visibleBottom = Math.min entry.bottom(), windowBottomInEntryPlane
+    if visibleBottom <= visibleTop
+      throw new Error "clickOnListItemFromTopInspector_InputEvents: row '#{listItemString}' has no visible slice in the pane (row #{entry.top()}..#{entry.bottom()}, pane #{windowTopInEntryPlane}..#{windowBottomInEntryPlane}) — scroll it into view before clicking"
+    lowestAim = visibleTop + 2
+    highestAim = visibleBottom - 2
+    clickY =
+      if highestAim < lowestAim
+        (visibleTop + visibleBottom) / 2
+      else
+        Math.min (Math.max (entry.top() + 2), lowestAim), highestAim
+    clickY = Math.round clickY
     @moveToAndClick_InputEvents (entry.localPointToScreen new Point (entry.left() + 10), clickY), "left button", milliseconds, startTime
 
 
@@ -1540,8 +1593,18 @@ class MacroToolkit
 
     macroSubroutines.add Macro.fromString """
       bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro = (whichItem) ->
+        # SCROLL UNTIL THE ROW IS ACTUALLY SHOWING, which is what this verb's name promises. The
+        # index-derived scroll lands within a scrollbar pixel, and on a long member list one such
+        # pixel is worth nearly two rows, so the row can end up just outside the window -- on either
+        # pointer kind. Each corrective nudge carries the window one pixel toward it; bounded, because
+        # a row that will not come into view is a fault to raise (the click verb does) rather than a
+        # loop to spin.
         @bringListItemFromTopInspectorInView_InputEvents whichItem
         yield "waitNoInputsOngoing"
+        for attempt in [0..2]
+          break if @listItemFromTopInspectorIsAimable_InputEvents whichItem
+          @nudgeTopInspectorListTowardItem_InputEvents whichItem
+          yield "waitNoInputsOngoing"
         @clickOnListItemFromTopInspector_InputEvents whichItem
         yield "waitNoInputsOngoing"
     """

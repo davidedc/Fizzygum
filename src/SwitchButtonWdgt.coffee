@@ -140,7 +140,7 @@ class SwitchButtonWdgt extends Widget
       world.dataflow.markStale @
     whichOne
 
-  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+  activated: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     # SELF-SETTLE the toggle (end-of-cycle-flush drawdown convert 2026-06-25): a discrete click is an
     # outermost public mutation, so it flushes ONCE on return instead of riding the per-frame end-of-cycle
     # flush (this was the biggest end-of-cycle residual). escalateEvent stays OUTSIDE the settle -- the
@@ -154,7 +154,7 @@ class SwitchButtonWdgt extends Widget
       # carries the pointer position, never the sender. Capability via ?(), inside my own flush,
       # so the whole group settles once.
       @parent?.radioButtonWasSwitched? @
-    @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+    @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   _resetSwitchButton: ->
     @_setToggleStateNoSettle 0

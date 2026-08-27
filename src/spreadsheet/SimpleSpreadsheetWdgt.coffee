@@ -512,7 +512,7 @@ class SimpleSpreadsheetWdgt extends Widget
   # elsewhere COMMITS an in-progress edit first (click-away commits). PUBLIC event entry: it
   # opens the ONE layout settle for its work (the mount/teardown of the overlay editor happens
   # through NoSettle cores below — the layering discipline, like world.edit).
-  mouseClickLeft: (pos) ->
+  activated: (pos) ->
     @_settleLayoutsAfter =>
       @_commitEditNoSettle() if @_editing
       localPos = pos.subtract @position()
@@ -759,7 +759,7 @@ class SimpleSpreadsheetWdgt extends Widget
   # PUBLIC (standard-caret editing): the editing cell's accept/cancel handlers forward here
   # — the caret's escalation fires at event time OUTSIDE any settle (world.stopEditing
   # already self-settled the caret teardown inside CaretWdgt.accept/cancel), so these open
-  # the ONE settle for the commit/cancel work, exactly like processKeyDown / mouseClickLeft.
+  # the ONE settle for the commit/cancel work, exactly like processKeyDown / activated.
   # Guarded: an accept escalated by an unrelated nested editable text is a no-op.
   acceptCellEdit: ->
     # early-return-sanctioned: an ESCALATION handler — an accept raised by an unrelated nested

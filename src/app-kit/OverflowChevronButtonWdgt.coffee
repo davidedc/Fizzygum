@@ -73,10 +73,10 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # leading slots with the menu item + the menu's subject, so the cell this row stands for rides
   # slot 3.
   #   ONE DISPATCH CONTRACT, no per-family case: a row does what a TAP on its grid cell does, and
-  # a tap is a mouseClickLeft on whatever the cell puts under the pointer -- the LID over a
+  # a tap is an activated on whatever the cell puts under the pointer -- the LID over a
   # drag-out thumbnail, or the tool itself where it handles its own clicks. The cell answers
   # which; clicking the wrapped tool instead leaves every lid-covered tool inert, because such a
   # tool is there to be COPIED and carries no click at all. Capability via ?() throughout, so a
   # cell with nothing clickable in it is simply inert.
   triggerToolFromMenu: (ignored, ignored2, cell) ->
-    (cell.thumbnailClickReceiver?() ? cell).mouseClickLeft?()
+    (cell.thumbnailClickReceiver?() ? cell).activated?()

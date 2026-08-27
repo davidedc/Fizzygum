@@ -97,8 +97,8 @@ class PanelWdgt extends Widget
     true
 
   # (the click-to-caret forward for a scrolled pane holding one text lives on
-  # ScrolledPaneWdgt.mouseClickLeft, which supers into this)
-  mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
+  # ScrolledPaneWdgt.activated, which supers into this)
+  activated: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForeground()
 
 

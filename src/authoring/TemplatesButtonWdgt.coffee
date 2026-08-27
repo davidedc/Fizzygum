@@ -12,7 +12,7 @@ class TemplatesButtonWdgt extends EditorContentPropertyChangerButtonWdgt
     world.simpleEditorTemplates._applyMoveTo world.hand.position().subtract new Point 50, 50
     world.simpleEditorTemplates._moveWithin world
 
-  mouseClickLeft: ->
+  activated: ->
     if world.simpleEditorTemplates?
       if world.simpleEditorTemplates.destroyed or !world.simpleEditorTemplates.parent?
         templatesWindow = TemplatesWindowWdgt.create()

@@ -123,14 +123,14 @@ class TransformFrameWdgt extends PanelWdgt
   catchesPointerAt: (aPoint) ->
     false
 
-  # Bug-E fix (interaction transparency): PanelWdgt.mouseClickLeft raises on
+  # Bug-E fix (interaction transparency): PanelWdgt.activated raises on
   # click (bringToForeground) -- a behavior the WRAPPED content never had (FrameWdgt's
   # click is escalate-only). The invisible wrapper must not add interaction behavior of
   # its own: revert to the Widget-base escalate-only click, so a click inside the island
   # behaves exactly as it would untransformed (e.g. a save-as prompt spawned by the close
   # button is NOT buried by a post-spawn raise of the island).
-  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
-    @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+  activated: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+    @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   # Wrap an existing widget: the slot box becomes the widget's current bounds (the
   # untransformed footprint), and the widget becomes the island's single free-

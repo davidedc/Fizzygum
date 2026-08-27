@@ -712,7 +712,7 @@ class TextWdgt extends StringWdgt
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps
   # above or under). Just like normal editors.
-  mouseTripleClick: ->
+  tripleActivated: ->
     if @isEditable
       [row, column] = @slotRowAndColumn world.caret?.slot
       slotBeginOfLine = @slotAtRow row + 1, 0

@@ -2511,7 +2511,7 @@ class WorldWdgt extends IconGridPanelWdgt
   pressBegan: ->
     noOperation
   
-  mouseClickLeft: ->
+  activated: ->
     noOperation
 
 

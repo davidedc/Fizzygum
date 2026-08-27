@@ -241,7 +241,7 @@ class CellWdgt extends Widget
   # the edit STATE (which cell, commit/cancel) and receives the outcome through my
   # accept/cancel handlers below. All NoSettle cores: called from the sheet's edit
   # lifecycle, inside the ONE settle its public event entries (processKeyDown /
-  # mouseClickLeft) open. A child of THIS cell at exactly the cell's rect.
+  # activated) open. A child of THIS cell at exactly the cell's rect.
   _mountEditorNoSettle: (seedText) ->
     # the editor replaces the resting scalar-text child visually for the edit's duration
     # (damage-free __hide — adding the editor repaints the same rect); teardown reveals it
@@ -278,10 +278,10 @@ class CellWdgt extends Widget
 
   # DOUBLE-CLICK enters an edit of my cell's existing source with the caret at the clicked
   # slot (Excel-style). Reached directly (a click on my empty area) or by the escalation
-  # from my non-editable scalar-text child (StringWdgt.mouseDoubleClick's else branch); the
+  # from my non-editable scalar-text child (StringWdgt.doubleActivated's else branch); the
   # dispatcher's pos is already plane-mapped and my child/panel/sheet share the one island
   # plane, so it forwards verbatim (the 4A convention).
-  mouseDoubleClick: (pos) ->
+  doubleActivated: (pos) ->
     @_sheetWidget?.startEditAtPointer @address, pos
     return
 

@@ -47,7 +47,7 @@ class PointerWdgt extends BoxWdgt
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), DivisionStackLayoutSpec.SPREADABILITY_NONE
 
 
-  mouseClickLeft: (pos) ->
+  activated: (pos) ->
     if @target.destroyed
       @inform "The pointed widget\nis dead!"
       return

@@ -131,7 +131,7 @@ class HandleWdgt extends Widget
   # implement dummy methods in here
   # so the handle catches the clicks and
   # prevents the parent from doing anything.
-  mouseClickLeft: ->
+  activated: ->
   # Affine transforms (§6 Phase 4B): end of a rotate gesture — clear the grab-start state so the next
   # grab re-captures its own reference angle. Harmless for the other handle types (fields stay undefined).
   pressEnded: ->

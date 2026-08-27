@@ -32,7 +32,7 @@
 #
 # v1 neutralisations of PanelWdgt behaviour — each preserves today's cells-parented-to-the-
 # sheet semantics exactly (receipts in the F5 plan section):
-#   - mouseClickLeft ESCALATES: PanelWdgt's own would bringToForeground and stop, swallowing
+#   - activated ESCALATES: PanelWdgt's own would bringToForeground and stop, swallowing
 #     the click before the sheet's selection handler (the chain is cell → this panel → sheet);
 #   - wantsDropOfChild false: F4 lands drops on CELLS; the panel between them never accepts;
 #   - childrenCanLockToMe false: cells must not gain the "lock to panel" menu toggle they
@@ -53,8 +53,8 @@ class SheetCellsPanelWdgt extends PanelWdgt
     "cells panel"
 
   # clicks pass through to the sheet — the selection owner (see the header)
-  mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
-    @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+  activated: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+    @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
   # drops land on CELLS (F4), never on the panel between them (the cells tile it anyway)
   wantsDropOfChild: (aWdgt) ->

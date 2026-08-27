@@ -7,5 +7,5 @@ class EditableMarkWdgt extends UpperRightTriangleIconicButtonWdgt
     super parent
     @toolTipMessage = "edit code for the tool"
 
-  mouseClickLeft: ->
+  activated: ->
     @editObject[@editMethodAsString].call @editObject

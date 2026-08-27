@@ -189,7 +189,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
     @bringToForeground()
     @setPressedColor()
 
-  mouseClickLeft: ->
+  activated: ->
     @bringToForeground()
     @_setHighlightedColor()
   

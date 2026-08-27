@@ -35,7 +35,7 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   _refusesDuplication: ->
     true
 
-  mouseClickLeft: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
+  activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, doubleClickInvocation, arg9) ->
     if doubleClickInvocation
       return
 

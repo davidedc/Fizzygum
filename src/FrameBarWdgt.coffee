@@ -54,7 +54,7 @@ class FrameBarWdgt extends Widget
   titleStyle: undefined
 
   # THE EVENT ONE OF MY PIECES ACTED ON — the stamp my own strip gesture reads to know whose click
-  # it is looking at (see mouseClickLeft). Purely about a gesture in flight, so it never belongs in
+  # it is looking at (see activated). Purely about a gesture in flight, so it never belongs in
   # a snapshot; merged up the chain by Serializer.transientsForClass, which ADDS to Widget's list.
   @serializationTransients: ["_eventOfAPiecePress"]
   _eventOfAPiecePress: undefined
@@ -122,7 +122,7 @@ class FrameBarWdgt extends Widget
   #   Every piece press comes through here, which is what makes this the one place that can STAMP
   # it: the strip's own gesture must know a click was a piece's, and by the time that click has
   # escalated to me the press has already moved the very pieces a positional test would ask about
-  # (see mouseClickLeft).
+  # (see activated).
 
   closeButtonInBarPressed: ->
     @_notePiecePress()
@@ -584,7 +584,7 @@ class FrameBarWdgt extends Widget
   #   A tap on an EXPANDED strip keeps its own meaning: it PINS a transient frame — the pop-up
   # manifestation's one bar gesture, and the counterpart of the drag that moves it, since the
   # title is what you take hold of.
-  mouseClickLeft: (ignored_pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
+  activated: (ignored_pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     super
     return unless @frame?
     return if @_clickIsAPiecePress()

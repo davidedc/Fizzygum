@@ -42,7 +42,7 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   # A tool press is about the palette that owns me and about nothing above it, so the click ENDS
   # here rather than climbing the strip -- the shape every other toolbar tool has (a creator button
   # and an editor-property button both end their clicks the same way).
-  mouseClickLeft: ->
+  activated: ->
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
     @trigger()

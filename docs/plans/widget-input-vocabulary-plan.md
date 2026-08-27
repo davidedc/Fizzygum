@@ -114,7 +114,33 @@ plan renames on top of is the one that plan landed; its living truth is
   name-set), and every press-dependent pixel test passes. Gates: build 28/28; suite
   329/329; P2-close gauntlet **19/19 CLEAN — no warn legs, no retries** (P1's two warn legs
   passed in-wave: load flakes confirmed).
-- P3 activation gestures: —
+- P3 activation gestures: **DONE 2026-08-27** (same Opus worker; the arc's biggest family,
+  and its richest findings). `mouseClickLeft → activated` (36 defs + the three off-pattern
+  sites: the chevron's duck `?()`, ScrolledPane's direct call, the INSTANCE-ASSIGNED def),
+  `mouseDoubleClick → doubleActivated`, `mouseTripleClick → tripleActivated`; 8 escalate
+  strings, the hand's expectedClick strings + multi-click dispatch, both gate name-sets, 10
+  script calls + the `tagClass` silent-failure string. Zero-grep clean (prose → P6, incl.
+  parts.json's `"//buttons"` dangling doc-key). ⭐⭐ TWO latent defects surfaced by the
+  rename's list-geometry shift and fixed at the root, NEVER blessed: (1) the row-aim CLAMP
+  (`clickOnListItemFromTopInspector`) could aim above the pane onto the toggle strip — the
+  committed AddEdit references (BOTH axes) had frozen that blind chrome-click (methods
+  toggled OFF, nothing selected) since capture; now the aim stays inside the row∩pane slice
+  and an empty slice THROWS, and the fix is proven pixel-inert (pre/post renders
+  hash-identical); (2) the L3 locator now SCROLLS-UNTIL-AIMABLE (3 bounded nudge+yield
+  attempts) — required because the finger axis undershoots the asked thumb fraction by
+  ~1 thumb-px ≈ 77 content px, DIAGNOSED as intrinsic quantization (fraction arithmetic
+  digit-identical across kinds; delivered thumb within 1 px; a 5 px thumb drives ~75
+  content px/px, and mouse hover FATTENS the bar at click time where a finger cannot) —
+  NOT a touch-tracking product defect. The never-true AddEdit round-trip comment reworded
+  to the claim that holds (selection+value return; chrome is not byte-exact — the old refs
+  themselves differed 0.771%). Declared sets, all coordinator-eyeballed: mouse recapture =
+  the rehearsal's 4 + AddEdit (22 images, COMPLETE, kind-scoping proven: zero finger
+  deletions); finger recaptures = 8 tests (the five + THREE more whose committed finger
+  refs carried the same blind-click signature, found by the finger leg). Gates: build
+  28/28; presuite 329/329; P3-close gauntlet **19/19 clean, no warn legs** (settle+finger
+  passed in-wave — prior fails were the load flake and the stale refs). P6 tail adds: the
+  macro-level scroll-further beyond 3 nudges (the named error is the floor and never fired
+  in the final run).
 - P4 R1 — `contextMenuRequested` unifies the two triggers: —
 - P5 R2 — the move split (`hoverMove` / `pressedMove`): —
 - P6 `scrolledBy` + docs weave + tests-prose sweep + arc close: —

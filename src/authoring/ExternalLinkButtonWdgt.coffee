@@ -2,7 +2,7 @@ class ExternalLinkButtonWdgt extends IconWdgt
 
   createAppearance: -> new ExternalLinkIconAppearance @
 
-  mouseClickLeft: ->
+  activated: ->
     # ask my containing link to open its URL (instead of `@parent instanceof SimpleLinkWdgt`
     # plus reaching into @parent.outputTextArea; type-test-elimination campaign)
     @parent?.openExternalURL?()

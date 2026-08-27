@@ -7,6 +7,6 @@ class ItalicButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new ItalicIconAppearance @, WorldWdgt.preferencesAndSettings.iconDarkLineColor
 
-  mouseClickLeft: ->
+  activated: ->
     if world.editorFocusWdgt?.toggleItalic?
       world.editorFocusWdgt.toggleItalic()

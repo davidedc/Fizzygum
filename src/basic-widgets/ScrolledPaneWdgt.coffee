@@ -71,7 +71,7 @@ class ScrolledPaneWdgt extends PanelWdgt
         # The genuine content-height read-back is the measure itself, retired only when a later phase gives
         # the arrange a pure measure of its children.
 
-  mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
+  activated: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     super
 
     # when you click on an "empty" part of the pane and it holds one piece of text, pass the
@@ -87,4 +87,4 @@ class ScrolledPaneWdgt extends PanelWdgt
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
           (m instanceof SimpleTextWdgt) and m.isEditable
-        item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
+        item?.activated item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey

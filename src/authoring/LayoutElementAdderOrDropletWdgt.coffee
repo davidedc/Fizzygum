@@ -79,7 +79,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   # Both gestures below are MODE-AWARE off my OWN active spec: as a DIVISION slot my
   # insertions join the division layout (a division box rides along), as a CONTENT-stack
   # slot they are inserted SPEC-LESS so the stack's arrange adopts them at that position.
-  mouseClickLeft: ->
+  activated: ->
     @bringToForeground()
     # if the adder/droplet is on its own, free floating, then
     # put a supporting widget underneath it and put the adder/droplet
