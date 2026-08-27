@@ -36,7 +36,7 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Text & caret
 
 - **Caret placement by click** (`macroTextWdgtCaretPlacementByClick`): clicking inside an EDITABLE text places
-  `world.caret` at the nearest slot (`StringWdgt.mouseClickLeft`, `:1564`, gated on `@isEditable`). A
+  `world.caret` at the nearest slot (`StringWdgt.activated`, `:1564`, gated on `@isEditable`). A
   directly-built StringWdgt/TextWdgt has **`isEditable = false`** (`:50`) — set `txt.isEditable = true` first
   (the demo widgets do). `@moveToAndClickAtFractionOf_InputEvents txt, [fx, fy]` places the caret on the clicked
   line: `[0.02, firstLineFrac]` before the first letter; a click past the last line's end clamps after the last
@@ -91,7 +91,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `@syntheticEventsShortcutsAndSpecialKeys_InputEvents "ArrowUp"` / `@repeatSpecialKey_InputEvents "ArrowDown", n`.
 - **Shift-click extends a selection** (`macroShiftClickExtendsSelection`): a plain click drops a FIXED anchor caret;
   each `@shiftClickAtFractionOf_InputEvents txt, [fx,fy]` grows the selection from the anchor to the click point
-  (StringWdgt/TextWdgt.mouseClickLeft reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`).
+  (StringWdgt/TextWdgt.activated reads shiftKey → `startSelectionUpToSlot`/`extendSelectionUpToSlot`).
   Gotchas: TextWdgt softWrap wraps to the WIDGET width (`@width()`) so size it big with
   `setExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
@@ -119,23 +119,23 @@ assertion a recapture after a regression silently stores two different hashes an
   GOTCHA: a TextWdgt opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
   so the demo text fits → inline caret.
 - **Double-click selects the WORD under the cursor (clean StringWdgt + wrapped TextWdgt)** (`macroDoubleClickSelectsWord`): the
-  distinct sibling of the through-the-caret entry above. `StringWdgt.mouseDoubleClick` (`:1535`) reads the slot the prior click
+  distinct sibling of the through-the-caret entry above. `StringWdgt.doubleActivated` (`:1535`) reads the slot the prior click
   placed (`world.caret.slot`) and expands left/right while `String.isLetter()` (`String-extensions.coffee:43-45`, `[a-z]` only —
   spaces/punctuation/digits are boundaries) then `selectBetween()`s the contiguous letter run, so EXACTLY the word under the cursor
   selects (white-on-blue, `drawSelection :738-747`). TextWdgt inherits it verbatim (extends StringWdgt with no own
-  `mouseDoubleClick`), resolving the slot per WRAPPED visual line. `@doubleClickAtFractionOf_InputEvents widget, [fx,fy]` is
+  `doubleActivated`), resolving the slot per WRAPPED visual line. `@doubleClickAtFractionOf_InputEvents widget, [fx,fy]` is
   self-sufficient — its FIRST click focuses + places `world.caret`, the SECOND is recognised as the double-click — so no separate prior
   click is needed; double-clicking the TextWdgt also CLEARS the StringWdgt's selection (focus moves). Fixture: a WIDE single-line
-  StringWdgt + a wrapped multi-line TextWdgt, BOTH `isEditable=true` (the gate inside `mouseDoubleClick`/`mouseClickLeft`), each sized to FIT (a cropped one
+  StringWdgt + a wrapped multi-line TextWdgt, BOTH `isEditable=true` (the gate inside `doubleActivated`/`activated`), each sized to FIT (a cropped one
   opens the "edit:" prompt, not an inline caret). No speed metadata — the double-click verb is recognised at every speed.
   Tune the deep-word fraction to the LIVE wrap at capture (here `[0.25,0.87]`
   landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
   interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretWdgt` (double-clicks ON the caret of a tiny pre-typed
   TextWdgt — pass-through); this proves word-granularity from a CLEAN state on a single-line StringWdgt AND wrapped text. No new verb.
 - **Triple-click scoping: whole string · VISUAL line · LOGICAL line** (`macroTripleClickSelection`): WHAT a triple-click
-  selects, per class and wrap regime — the triple sibling of the word entry above. `StringWdgt.mouseTripleClick`
+  selects, per class and wrap regime — the triple sibling of the word entry above. `StringWdgt.tripleActivated`
   (`:1556`) is `selectAll()` + caret to the text's END: on a single-line string ANY click point selects the whole
-  string. `TextWdgt.mouseTripleClick` (`:684-690`) overrides it: it `selectBetween()`s the clicked ROW's first and end
+  string. `TextWdgt.tripleActivated` (`:684-690`) overrides it: it `selectBetween()`s the clicked ROW's first and end
   slots — "the whole line (if it's wrapped, just what sits on the very line)" — so in soft-wrapped text the unit is the
   VISUAL line: a full-measure line, a short paragraph-closing line (the highlight stops mid-measure, plus the break slot),
   or the EMPTY separator line (just its newline — a one-character sliver). With `softWrap` OFF the rows ARE the logical
@@ -432,7 +432,7 @@ assertion a recapture after a regression silently stores two different hashes an
   base-width actually bite — both were initially mistaken for "the layout menu doesn't work under synthetic input"; it DOES: (1) the
   prompt's value lives in a `StringFieldWdgt` (the single prompt entry field — was `StringFieldMorph`, now `StringWdgt`-backed)
   that DEFAULTS to the current width, so CLICK the field to focus it
-  (`StringFieldWdgt.mouseClickLeft → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
+  (`StringFieldWdgt.activated → @text.edit()`; reach it as `basePrompt.tempPromptEntryField`), `Meta+a`, type "300", then "Ok" —
   which reads the field's `getValue()` into `setDesiredWidth` (pre-U4 name: `setWidthOfElementWhenAdded`; the prompt still says
   "base width"). Typing WITHOUT focusing the field leaves the default, so Ok re-applies the current width = no visible change.
   (If instead you drive the prompt's `SliderWdgt` via `@clickOnSliderTrackAtFraction_InputEvents`, pass a `[fx,fy]` POINT, NOT a
@@ -565,9 +565,9 @@ assertion a recapture after a regression silently stores two different hashes an
   screenshot idiom proven by `macroSliderButtonStateColors`, which captures a button mid-press/mid-drag.)
 - **A pinned menu's shadow is untouched by bringToForeground** (`macroPinnedMenuKeepsCorrectShadowWhenBroughtToForeground`):
   completes the shadow trio (drag + prompt entries above). Raising a pinned menu must repaint the SAME shadow its window
-  manifestation already carries, not re-apply the pop-up one it opened with. The user raise is a click on the menu's HEADER: `Widget.mouseDownLeft` (`:2678`) calls
+  manifestation already carries, not re-apply the pop-up one it opened with. The user raise is a click on the menu's HEADER: `Widget.pressBegan` (`:2678`) calls
   `bringToForeground` (`:2664`, `rootForFocus().moveAsLastChild()` — so any click on the menu raises the WHOLE menu), and the
-  strip's own pin gesture (`FrameBarWdgt.mouseClickLeft` → `frame.pinPopUp`) fires only while the frame is TRANSIENT, so a
+  strip's own pin gesture (`FrameBarWdgt.activated` → `frame.pinPopUp`) fires only while the frame is TRANSIENT, so a
   click on an ALREADY-pinned menu raises it and leaves its lifetime — and its shadow — exactly as they are.
   Two observables: with NOTHING overlapping, the raise is a pixel-perfect NO-OP (before/after shots share a
   dataHash — aim every header click at the header's CENTRE so the pointer ends identically placed, no parking moves needed);
@@ -575,7 +575,7 @@ assertion a recapture after a regression silently stores two different hashes an
   and one more header click lifts the menu above it with the tight shadow painted over the rectangle. The on-menu drop is
   safe twice over: a menu does not accept drops (`Widget._acceptsDrops:104` false; `dropTargetFor` walks up to the world, so
   the rectangle lands as a world child ABOVE the menu), and the drop CONSUMES the mouse-down
-  (`ActivePointerWdgt.processPointerDown:372` → `drop()`, button nulled) so no `mouseDownLeft` reaches the menu to raise it
+  (`ActivePointerWdgt.processPointerDown:372` → `drop()`, button nulled) so no `pressBegan` reaches the menu to raise it
   prematurely — while the same drop still dismisses the unpinned creation menus (the pinned one survives). The recording
   drove the raise via a console eval of "@bringToForeground()" — the header click invokes the same method, minus the console
   fixture noise. No new verb.
@@ -885,12 +885,12 @@ assertion a recapture after a regression silently stores two different hashes an
   if two later shots stop changing). Row-click highlight is NOT a reliable screenshot signal; scrolling is.
 - **Slider/scrollbar TRACK click** (`macroSliderTrackClickMovesButton`): `@clickOnSliderTrackAtFraction_InputEvents doc.vBar,
   [0.5, fy]` clicks a SliderWdgt's TRACK (background, OUTSIDE the button) to JUMP the button there — for a ViewportWdgt's
-  `@vBar`/`@hBar` this scrolls the content (`SliderWdgt.mouseDownLeft` non-float-drags the button to the click when the
+  `@vBar`/`@hBar` this scrolls the content (`SliderWdgt.pressBegan` non-float-drags the button to the click when the
   slider's parent is a ViewportWdgt OR PromptWdgt; a slider parented to neither IGNORES it — the negative case). Click the
   TRACK not the button (a click ON the button just grabs it) — give enough overflow that the button is small.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
-  to the nearest `wheel` handler; `ViewportWdgt.wheel` scrolls itself UNLESS at the travel limit, then `escalateEvent 'wheel'`).
+  to the nearest `scrolledBy` handler; `ViewportWdgt.scrolledBy` scrolls itself UNLESS at the travel limit, then `escalateEvent 'scrolledBy'`).
   Hold the pointer STILL near the inner's top (one `@syntheticEventsMouseMove_InputEvents (@pointAtFractionOf inner, [0.5,0.15]),
   "no button"`) then fire repeated `@syntheticEventsWheel_InputEvents 0, bigDelta` (the L1 primitive, NOT `wheelOn` which re-moves):
   the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `DocumentViewportWdgt` (`outer.add inner`
@@ -1065,7 +1065,7 @@ assertion a recapture after a regression silently stores two different hashes an
   extends the world's scrollable extent → perturbs the SWCanvas frame; compute `dest` from `panel.bottomRight()` minus a positive
   delta). No new verb.
 - **A wheel-scroll DESTROYS the temporary resize/move handles** (`macroResizingScrollFrameThenImmediatelyScrollingTheHandlesDontStickToScrollPanelContent`):
-  the handles-vs-scroll guard — `ViewportWdgt.wheel`'s FIRST act, before any scrolling or limit escalation, is
+  the handles-vs-scroll guard — `ViewportWdgt.scrolledBy`'s FIRST act, before any scrolling or limit escalation, is
   `world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @` (`ViewportWdgt.coffee:540-542`; the src
   comment names the regression: "if we don't destroy the resizing handles, they'll follow the contents being moved!"). The
   handle life cycle: "resize/move..." runs `showResizeAndMoveHandlesAndLayoutAdjusters` (`Widget.coffee:2767-2790`) — a
@@ -1297,7 +1297,7 @@ assertion a recapture after a regression silently stores two different hashes an
   / `macroLockedScrollPanelScrollsWhenDragged` / `macroScrollPanelInWindowMovesWindowWhenDragged`): pressing+dragging a `ViewportWdgt`'s
   cream BACKGROUND resolves the grab via `Widget.findFirstLooseWidget` climbing `grabsToParentWhenDragged`. **DEFAULT desktop panel** (a plain
   `new ViewportWdgt` ships `canScrollByDraggingBackground=false` — never set true): the climb reaches the ViewportWdgt, which
-  `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ViewportWdgt.mouseDownLeft`'s drag-scroll step is
+  `detachesWhenDragged` → the whole panel **float-drags / MOVES** (it does NOT scroll — `ViewportWdgt.pressBegan`'s drag-scroll step is
   gated on `!wdgtToGrab.detachesWhenDragged()`, false here). Dragging a plain child (the panel's `TextWdgt`) **DETACHES** it; dragging a
   `nonFloatDragging` child (a `ColorPaletteWdgt`) does NEITHER — it colour-picks (the `Widget.coffee:2549` short-circuit) — so the panel
   can't be dragged via the palette (image_1==image_2) while a background drag moves it (contrast). **LOCKED** (`panel.lockToPanels()` →
@@ -1327,7 +1327,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `detachesWhenDragged` (`HandleWdgt.coffee:34`) is TRUE, so a press-drag-release
   (`@syntheticEventsMouseMovePressDragRelease_InputEvents` from a fraction of the handle to a desktop point) FLOAT-drags it
   like any plain morph: it relocates, resizes nothing, and the rest of the desktop is untouched. GOTCHA: the release leaves
-  the pointer ON the dropped handle, whose `mouseEnter` (`:233`) renders it in its bluish HIGHLIGHTED state — park the pointer
+  the pointer ON the dropped handle, whose `hoverEntered` (`:233`) renders it in its bluish HIGHLIGHTED state — park the pointer
   on the empty desktop (a no-button move) before the screenshot to show the NORMAL white grip. No new verb.
 - **A pristine inspector window resizes via its resizer** (`macroResizingPristineInspector`): the `InspectorWdgt` is always
   presented inside a `FrameWdgt`, and the WINDOW ships the bottom-right resizer. Inspect a string
@@ -1350,8 +1350,8 @@ assertion a recapture after a regression silently stores two different hashes an
   naked version, whose close/inspect footer buttons and `@work` pane are gone; closing is via the WINDOW, not a detached
   button.) No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
-  handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.mouseClickLeft` is EMPTY and its
-  `mouseDownLeft` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
+  handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.activated` is EMPTY and its
+  `pressBegan` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
   button cannot fire it. Fixture with a VISIBLE action: a standalone `new SimpleButtonWdgt box, "hide", face: "hide the box"`
   wired to a target box's `hide()` (the shape is `(target, action, opts)` — the face is an `opts` key). Give the button a resize
   handle programmatically (`button.add new HandleWdgt` — a handle corner-attaches to whatever widget ADDS it
@@ -1374,7 +1374,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `wantsDetachOfChild`, which nothing in this fixture does), so a world-parented button does NOT arm its
   trigger on press: `Widget.findFirstLooseWidget` (`:2545`) returns the button ITSELF as the grab root (`grabsToParentWhenDragged` is false
   for a world child, `:2513-2536`), so the hand FLOAT-DRAGS it (`ActivePointerWdgt.determineGrabs → grab`). The action fires only via
-  `mouseClickLeft → trigger()` (MenuItemWdgt's `mouseClickLeft`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
+  `activated → trigger()` (MenuItemWdgt's `activated`; `trigger` inherited from `ButtonWdgt.coffee:98-102`), gated on a same-morph mouse-up; a float-drag ends in a DROP
   (`ActivePointerWdgt.processPointerUp:435-436`), never a click → no trigger. Build the button DIRECTLY wired to a VISIBLE action: `new
   MenuItemWdgt (new CommandSpec "demo", world, "popUpDemoMenu"), fontSize: 24, fontStyle: "sans-serif", centered: true`
   (the ctor is `(commandSpec, opts = {})`; the same action the world menu's "demo" item uses,
@@ -1439,9 +1439,9 @@ assertion a recapture after a regression silently stores two different hashes an
   does; (b) to keep an open UNPINNED menu alive into the cancel, the press must land INSIDE the menu — a press
   anywhere outside dismisses it on the DOWN, so a menu item is the only state in which "did the cancel dismiss
   it?" is a real question; (c) after the abort the pointer still rests where it was, and the per-cycle hover
-  re-sync (`reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges`) then sends `mouseMove` to the widgets
+  re-sync (`reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges`) then sends `hoverMoved` to the widgets
   under it — so a slider knob reads HOVER, not resting, and that is itself the proof the PRESSED state was
-  cleared (`SliderButtonWdgt.mouseMove` returns early while pressed). Read the hand's state (`dragEmbedArmed`,
+  cleared (`SliderButtonWdgt.hoverMoved` returns early while pressed). Read the hand's state (`dragEmbedArmed`,
   `doubleClick.wdgt`, `mouseButton`) into a macro-local BEFORE the cancel: the abort clears it.
 
 ## Controllers (patch-programming)
@@ -1559,12 +1559,12 @@ assertion a recapture after a regression silently stores two different hashes an
   current value on binding. Use the BUTTON-drag verb (not the track-click) for a free-standing controller slider. DUPLICATING a
   controller+target composite (a panel holding a text + its sliders) deep-copies the bindings remapped to the COPY's target.
 - **Hover-to-highlight a candidate** (`macroTargetingHighlightsCandidateWidget`): hovering a "choose target:"/"choose new parent:"
-  item highlights the morph it represents (`MenuItemWdgt.mouseEnter → widgetToBeHighlighted.turnOnHighlight()`,
+  item highlights the morph it represents (`MenuItemWdgt.hoverEntered → widgetToBeHighlighted.turnOnHighlight()`,
   `MenuItemWdgt.coffee:78` → `world.widgetsToBeHighlighted` → a `HighlighterWdgt` each cycle). Overlap a ColorPaletteWdgt with a
   rect, `clickMenuItemOfWidget… "connect ➜"` then `"connect to ➜"`, grab the menu, find the candidate by prefix, then
   `@syntheticEventsMouseMove_InputEvents item.center(), "no button", …` to HOVER (no click) and screenshot the highlight tint.
 - **The highlight covers the EXACT SUBTREE, tracks the hover, clears on leave** (`macroHierarchyMenuHoverHighlightsExactSubtree`):
-  the ancestor-HIERARCHY menu's ▪-marked items are `representsAMorph` too — same mouseEnter/mouseLeave path — and on a nested
+  the ancestor-HIERARCHY menu's ▪-marked items are `representsAMorph` too — same hoverEntered/hoverExited path — and on a nested
   composite (panel > box > rect) hovering an item floods exactly that ancestor's subtree, translucently, OVER the descendants'
   own colors: deeper item → strictly smaller region; moving between items moves the flood; hover-off clears with NO trace
   (final shot ≡ the menu-open baseline, the pixel-identical no-op idiom) while the menu stays open (menus dismiss on
@@ -1580,7 +1580,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `"connect ➜"` row — and capture each popup fresh (`targetMenu = @getMostRecentlyOpenedMenu()` right
   after `"connect to ➜"`; `propertyMenu = …` right after the target click), driving later clicks via the captured refs. GOTCHA:
   clicking "a World ➜" parks the pointer on a candidate item whose hover highlight-tints the morph it represents — the
-  WHOLE WORLD — and the property menu pops OVER the item so no mouseLeave fires; hover the property menu's "color" item
+  WHOLE WORLD — and the property menu pops OVER the item so no hoverExited fires; hover the property menu's "color" item
   (`@getTextMenuItemFromMenuByPrefix propertyMenu, "color"` + a no-button move) before the shot to clear the tint (and match
   the recording's hover-highlighted row). Prefix "color" is unambiguous: "background color" does not START with it. No new verb.
 - **A two-way slider↔text patch cycle, text as SOURCE, guarded** (`macroSliderTextTwoWayPatchCycle`): wire `slider.value → text
@@ -1630,7 +1630,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `childrenNotHandlesNorCarets()` by class name (⚠ NOT `firstChildSuchThat`, which scans DIRECT children only —
   the panel is nested at `win.contents.contents`). A child's OWN corner resizer IS drivable as real input
   (`@dragWindowResizerTo_InputEvents child, (new Point child.right()+dx, child.bottom()+dy)`); the release re-records
-  the child's spec (`HandleWdgt.mouseUpLeft` → the world's post-flush re-record drain), so a later holder resize
+  the child's spec (`HandleWdgt.pressEnded` → the world's post-flush re-record drain), so a later holder resize
   scales the USER's size — the second test pins exactly that. The third test pins the spec's per-ATTACHMENT
   lifecycle with value-asserts (detach nils the active spec; re-add derives a FRESH recorded spec whose four edge
   fractions are exactly equal at unchanged geometry — the heal→fill-drain provenance path end-to-end). ⚠ These
@@ -1810,19 +1810,19 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Sliders & popovers
 
 - **Slider-button state colours + cross-slider grab** (`macroSliderButtonStateColors`): a `SliderButtonWdgt` paints `@color` =
-  `normalColor`/`highlightColor`/`pressColor` per state (`mouseEnter → setHiglightedColor`, `mouseDownLeft → setPressedColor`,
-  `mouseLeave → setNormalColor`; each early-returns while the hand is dragging). `demoMenus.makeSlidersButtonsStatesBright()`
+  `normalColor`/`highlightColor`/`pressColor` per state (`hoverEntered → setHiglightedColor`, `pressBegan → setPressedColor`,
+  `hoverExited → setNormalColor`; each early-returns while the hand is dragging). `demoMenus.makeSlidersButtonsStatesBright()`
   (`DemoMenus.coffee:87` — the "make sliders' buttons states bright" test-menu row; NOT the `menusHelper` global, which does
   not carry it) recolours every EXISTING slider button BLACK/BLUE/LIME — call it AFTER `world.add`. HOLD each state:
   hover via a no-button move onto the button (highlighted, persists), then `@moveToAndMouseDown_InputEvents slider.button`
   (pressed, held). GOTCHA: a SliderWdgt defaults to `alpha 0.1`, which mutes the colours into greys — set
   `slider.button.alpha = 1` (NOT `slider.alpha = 1`: the track's own colour is BLACK, so an opaque track swallows the black
   button). CROSS-SLIDER GRAB (two sliders): while one is GRABBED, a move with the button HELD (`…, "left button"`) over the OTHER
-  handle does NOT highlight it (its mouseEnter early-returns while dragging), and the grabbed button FOLLOWS the hand vertically
+  handle does NOT highlight it (its hoverEntered early-returns while dragging), and the grabbed button FOLLOWS the hand vertically
   clamped to its own track.
 - **Popover stays open while its slider is dragged out** (`macroPopoverStaysOpenWhenSliderDraggedOut`): a pop-up normally closes
   on a mouse-DOWN outside it, but DRAGGING its slider keeps it open even when the pointer leaves its bounds. Pressing a slider
-  button whose slider's parent is a `PromptWdgt` starts a NON-float drag (`SliderWdgt.mouseDownLeft → nonFloatDragWdgtFarAwayToHere`;
+  button whose slider's parent is a `PromptWdgt` starts a NON-float drag (`SliderWdgt.pressBegan → nonFloatDragWdgtFarAwayToHere`;
   `SliderButtonWdgt.detachesWhenDragged` is false while parented to a slider), and on the mouse-UP `cleanupMenuWdgts` is SKIPPED
   while a non-float drag is in progress. Open a RectangleWdgt's "transparency..." popover, `prompt = @getMostRecentlyOpenedMenu()`,
   `slider = (prompt.rowsPanel.children.filter (c) -> c instanceof SliderWdgt)[0]` (the ROWS, not `prompt.children` — a pop-up's
@@ -1831,7 +1831,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A slider dragged across surfaces keeps its button** (`macroSliderDraggedAcrossSurfacesKeepsButton`): grabbing a slider by
   its BACKGROUND (the track, NOT the button) and dragging it onto a plain panel, then a scroll panel, then the desktop never
   pages its button — a slider sitting on a panel/scroll-panel is NOT that panel's scrollbar. A standalone slider's track-press
-  escalates (`SliderWdgt.mouseDownLeft` gate at `:258` is false off a `ViewportWdgt`/`PromptWdgt` parent) and the float-drag
+  escalates (`SliderWdgt.pressBegan` gate at `:258` is false off a `ViewportWdgt`/`PromptWdgt` parent) and the float-drag
   grabs the WHOLE slider (`Widget.detachesWhenDragged` true; `findFirstLooseWidget` returns the slider) — so the slider moves and
   its button rides along, never calling `updateValue`. CRUX: dropping onto the scroll panel re-parents the slider into the panel's
   inner `@contents` (`ViewportWdgt.add :186-194`), NOT as the `@vBar`, so the paging gate STAYS false in every state and a later
@@ -1883,7 +1883,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Order-dependent transparency compositing** (`macroBoxTransparencyAndColorChanging`): two TRANSLUCENT, differently-coloured
   boxes overlapping a text backdrop blend differently depending on STACKING ORDER (which is in front). Set each box's colour +
   transparency via its "color..."/"transparency..." popups (see Menus), then a left-click on a box raises it
-  (`Widget.mouseDownLeft → bringToForeground`), swapping the blend (image_1 green-over-magenta, image_2 magenta-over-green) with
+  (`Widget.pressBegan → bringToForeground`), swapping the blend (image_1 green-over-magenta, image_2 magenta-over-green) with
   the text reading through both. Only TWO shots — the one variable that matters is the stacking order; a third would just repeat.
   (Transparency + colour set via a test-local helper in `extraSubroutineSources`.)
 - **Panel + transparency + CROP + shadow; alpha does NOT cascade to children** (`macroPanelInPanelTransparencyAndStroke`): a
@@ -2256,7 +2256,7 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   inherited members, so a SUBCLASS prototype's list carries no mixin-donated row at all — and the row-select helper's thumb-press
   then degenerates into a window float-drag (the naked-inspector degenerate-vBar gotcha, windowed edition). A consumer instance
   (a `SimpleButtonWdgt`, which INHERITS the injected member) on the desktop proves each edit took via its HOVER colour
-  (Highlightable's `mouseEnter` reads `color_hover`; park the pointer on the button with a no-button
+  (Highlightable's `hoverEntered` reads `color_hover`; park the pointer on the button with a no-button
   `@syntheticEventsMouseMove_InputEvents` and screenshot the held hover — a plain `SimpleButtonWdgt` has no tooltip, so no timed
   bubble). Selecting a mixin-donated row (the `selectInspectorRow` helper from the AddEditSave pilot works unchanged on a class
   inspector) shows the donor label ("from `<Name>Mixin`", `InspectorWdgt.mixinDonorLabel`) and the "override in this class" button
@@ -2266,7 +2266,7 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   `@moveToItemOfTopMenuAndClick_InputEvents "Ok"` (an `@inform` is a menu with an Ok item, popped centered at the hand). No new verb.
   The FIELD sibling **`macroMixinFieldEditDonorAndOverride`** runs the same flow on `color_hover` (a donated FIELD attributes in
   the class inspector via `_sourceForFieldMember` — the detail shows the donor's recorded SOURCE, "Color.SILVER"); its hover proof
-  goes through the UNCHANGED state machinery (`mouseEnter` → `_updateColor` → `@color_hover`), so the fixture needs no method edit.
+  goes through the UNCHANGED state machinery (`hoverEntered` → `_updateColor` → `@color_hover`), so the fixture needs no method edit.
   ⚠ BOTH tests RESTORE the donor's pristine source and lift the override in their macro TAIL (after the last shot, fixture-style
   direct calls: capture `theMixin.nonStaticPropertiesSources[name]` at macro start; at the end `delete <Class>.prototype[name +
   "_source"]` — lifting the live-override shadow guard — then `theMixin.applyMemberEdit name, orig`): a mixin/class edit mutates

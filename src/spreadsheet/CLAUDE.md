@@ -97,7 +97,7 @@ yet" and swallows the click. The dataflow engine this app is built on is NOT laz
   edited (`_mountEditorNoSettle`/`_teardownEditorNoSettle` hold an EDITABLE `StringWdgt` as
   `@_editorWdgt`, a transient child the standard caret types into; the cell's
   `accept`/`cancel` handlers receive the caret's escalations and forward to the sheet, its
-  `mouseDoubleClick` starts an edit at the clicked slot, and `nextTab`/`previousTab` swallow
+  `doubleActivated` starts an edit at the clicked slot, and `nextTab`/`previousTab` swallow
   Tab so an edit never hops to another entry field), and whichever value form the cell holds
   (spec §9.4 classify → present): a
   hosted value-widget (branch 1, a `new SliderWdgt`), a hosted presenter (branch 2, a Color →
@@ -358,8 +358,8 @@ widget fills the data background (the backdrop shows through, as it always did).
   idempotent (keyed by field / "kind:index" / address) so they only fill gaps — never a double
   grid.
 - **Selection + editing: the sheet owns the STATE, the cell renders it (F2, executed with
-  F5).** Clicks on a cell escalate to the sheet's `mouseClickLeft` (cell → cells panel, whose
-  `mouseClickLeft` deliberately escalates, → sheet), which hit-tests via `_cellAtLocal` and
+  F5).** Clicks on a cell escalate to the sheet's `activated` (cell → cells panel, whose
+  `activated` deliberately escalates, → sheet), which hit-tests via `_cellAtLocal` and
   keeps `@selectedCol/Row` + the selection-mode keys (the editing-mode keys belong to the
   standard caret since the standard-caret arc — see the editing model in the 2b section).
   RENDERING lives in the cell: the ring paints off the sheet's public `isSelectedAddress`
@@ -392,7 +392,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   (`_reconcileCellNoSettle`); a widget value committed to a cell with NO widget materialises a
   hidden one right there (widgets ride the TREE, not the model — losing the mount would lose
   the widget on save).
-- **Wheel + keyboard scroll-follow.** `wheel:` on the sheet (the `ActivePointerWdgt.processWheel`
+- **Wheel + keyboard scroll-follow.** `scrolledBy:` on the sheet (the `ActivePointerWdgt.processWheel`
   climb — cells and the panel deliberately don't implement it) follows the `ViewportWdgt`
   model (axis suppression, invertWheel* prefs, per-axis at-limit ESCALATION) but quantizes to
   whole rows/cols; positive raw deltaY scrolls the view DOWN. Arrows clamp to the LOGICAL sheet
@@ -476,7 +476,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   click-positioning / arrows / selection. Entry gestures: type-to-edit REPLACE (a printable
   key seeds a fresh editor), Enter/F2 edit the existing source (caret at end), double-click
   edits with the caret AT THE CLICKED SLOT (`startEditAtPointer`; the non-editable
-  scalar-text child escalates `mouseDoubleClick` to the cell). Exit: Enter COMMITS and
+  scalar-text child escalates `doubleActivated` to the cell). Exit: Enter COMMITS and
   Escape REVERTS via the caret's accept/cancel escalations (editor → cell → sheet's
   `acceptCellEdit`/`cancelCellEdit`); acting elsewhere COMMITS (the pointer's click-away
   funnel calls `caret.accept()`, the wheel commits before scrolling — tearing down a
@@ -487,7 +487,7 @@ widget fills the data background (the backdrop shows through, as it always did).
   is swallowed at the cell (`nextTab`/`previousTab` — commit-and-advance is a later
   variant). Multi-line editing stays the deferred `CodePromptWdgt` path (spec §9.1).
 - **Settle discipline:** the mount/teardown of the overlay editor mutates the tree, so the ONE
-  layout settle is opened at the PUBLIC event entries (`processKeyDown` / `mouseClickLeft`, like
+  layout settle is opened at the PUBLIC event entries (`processKeyDown` / `activated`, like
   `world.edit`) and every edit-lifecycle helper is a `*NoSettle` core using `_addNoSettle` /
   `_setTextNoSettle` / `_fullDestroyNoSettle` / `_apply*` (satisfies `check-layering.js`).
 - **Evaluation through the engine** (not eager in `commit`): commit compiles + `markStale`; the

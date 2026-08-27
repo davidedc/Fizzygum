@@ -90,14 +90,14 @@ how much the destination has to lose.
 | Pencil state shown by color only | `FrameWdgt.makePencilYellow/makePencilClear` `:536-548` |
 | Internal/external switch + `makeInternal`/`makeExternal` (re-skin, unlock, reparent to world) | `FrameWdgt.coffee:177-202, 525-534` |
 | Windows accept drops only while EMPTY ("Drop a widget in here" placeholder) | `FrameWdgt.coffee:398` (enable) · `:421` (disable on child landed) · `FrameContentsPlaceholderText` |
-| Drag-hover hooks exist, dispatched every move, **implemented by nobody** | `dispatchEventsFollowingMouseMove`, `ActivePointerWdgt.coffee:933-963` (`mouseEnterfloatDragging`/`mouseLeavefloatDragging`) |
+| Drag-hover hooks (a carrying-hand enter/exit pair) were dispatched every move and implemented by nobody — DELETED, since a dead extension point is re-added when a consumer exists | `dispatchEventsFollowingMouseMove` |
 | Grab origin recorded at grab (return-anchor candidate) | `ActivePointerWdgt.coffee:196` (`grabOrigin = aWdgt.situation()`) |
 | Existing dwell precedents: 500ms autoscroll (wall-clock — the documented anomaly, do NOT copy) · 300ms multi-click (event-time — the template) | `ViewportWdgt.coffee:709` · `doubleClickWindowMs`, `ActivePointerWdgt.coffee:28` |
 | Drag threshold 7px (also the linger radius we reuse) | `PreferencesAndSettings.coffee:54` (`grabDragThreshold`) |
-| Wheel routing: to first `wheel`-implementing widget on the climb from the cursor hit — **no drag gate**, so wheel-during-drag already scrolls the destination today (the carried widget rides on the hand, outside the world tree, and cannot swallow it) | `ActivePointerWdgt.processWheel` `:721-726` |
+| Wheel routing: to first `scrolledBy`-implementing widget on the climb from the cursor hit — **no drag gate**, so wheel-during-drag already scrolls the destination today (the carried widget rides on the hand, outside the world tree, and cannot swallow it) | `ActivePointerWdgt.processWheel` `:721-726` |
 | Wheel scroll-chaining: an inner panel at its limit escalates the wheel to an outer scroll panel (can move the candidate away from under a stationary cursor) | `ViewportWdgt.wheel`, `ViewportWdgt.coffee:812-823` (`escalateEvent 'wheel'`) |
 | **EPHEMERALS** (owner's term; in code: the highlighting/pinouting overlay system): declarative sets `world.widgetsToBeHighlighted`/`widgetsToBePinouted`, reconciled ONCE PER CYCLE just before paint — diff-based create / reposition-if-target-bounds-changed / destroy-when-undeclared | `WorldWdgt.addHighlightingWidgets` `:1272-1292` + `addPinoutingWidgets` `:1245-1269` (homepage-EXCLUDED, debug-only), called at `WorldWdgt.coffee:1442-1444` immediately before `updateBroken()` |
-| Ephemeral properties: hit-test-EXCLUDED via marker predicates (→ non-interactable, click-through, can never steal mouseEnter/drops); shadow-free (`skipsAddShadowManagement -> true` — "not anything material"); world children added last (always on top); lifecycle wholly reconciler-owned | `ActivePointerWdgt.coffee:105-106` (`!m.wdgtThisWdgtIsHighlighting?`/`!m.wdgtThisWdgtIsPinouting?`) · `HighlighterWdgt.coffee:21-26` |
+| Ephemeral properties: hit-test-EXCLUDED via marker predicates (→ non-interactable, click-through, can never steal hoverEntered/drops); shadow-free (`skipsAddShadowManagement -> true` — "not anything material"); world children added last (always on top); lifecycle wholly reconciler-owned | `ActivePointerWdgt.coffee:105-106` (`!m.wdgtThisWdgtIsHighlighting?`/`!m.wdgtThisWdgtIsPinouting?`) · `HighlighterWdgt.coffee:21-26` |
 | Producer API precedent: declare/undeclare only — `turnOnHighlight`/`turnOffHighlight` mutate the desired set, nothing touches the overlay directly (menu "represents a widget" hover-highlight is the existing consumer) | `Widget.coffee:1845-1855` · `MenuItemWdgt.coffee:6` |
 | Text-ephemeral precedent: the pinout readout is a `StringWdgt` overlay anchored at `target.right()+10, top()` | `WorldWdgt.coffee:1261-1267` |
 
@@ -186,9 +186,8 @@ DROP's, never any default the payload might otherwise declare for itself.
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)
 
-Runs on every pointer move while float-dragging (hook: `dispatchEventsFollowingMouseMove` — the existing,
-currently-unimplemented `mouseEnterfloatDragging`/`mouseLeavefloatDragging` dispatch site; the resolver is the
-same climb `dropTargetFor` does at release, so move-time preview and release-time outcome CANNOT disagree).
+Runs on every pointer move while float-dragging (hook: `dispatchEventsFollowingMouseMove` — the hand's own
+over-list dispatch loop; the resolver is the same climb `dropTargetFor` does at release, so move-time preview and release-time outcome CANNOT disagree).
 **For a frame payload, this entire climb is subordinate to §4.1's dock-band check**, which runs first: a host
 offering a band under the pointer wins outright and the climb below never runs for that event.
 
@@ -260,7 +259,7 @@ Deterministic and cheap; add only if real-world accidents demand it.
 
 ### §6.1 — Wheel-scrolling the destination mid-drag (owner decision 6)
 
-Wheel-during-drag **already works today**: `processWheel` routes to the first `wheel`-implementing widget on
+Wheel-during-drag **already works today**: `processWheel` routes to the first `scrolledBy`-implementing widget on
 the climb from the cursor hit with no drag gate, and the carried widget rides on the hand outside the world
 tree, so it cannot intercept (§2 receipts). This spec KEEPS it and promotes it to the first-class way of
 reaching an off-view insertion point — for window payloads it is the ONLY scroll channel, since §12 gates
@@ -410,7 +409,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   change (`hasMaybeChangedPaintBounds` → re-apply `clippedThroughBounds`), the candidate highlight tracks the
   destination through §6.1 wheel-scrolling and through any layout settle FOR FREE — no per-event visual
   bookkeeping. And since ephemerals are hit-test-excluded, no overlay can ever perturb candidate resolution,
-  `mouseEnter` dispatch, or the drop climb (no feedback loops between feedback and input).
+  `hoverEntered` dispatch, or the drop climb (no feedback loops between feedback and input).
 - **Landed (Phase 1): the `isEphemeral` capability** (the owner's term, as a capability on `Widget`).
   `Widget.isEphemeral()` — backed by the per-instance `@_ephemeralOverlay` flag — is the ONE check behind
   hit-test exclusion, `skipsAddShadowManagement`, serialization exclusion (the world serializer skips

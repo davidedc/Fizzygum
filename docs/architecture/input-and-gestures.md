@@ -64,6 +64,31 @@ machine mixes a trackpad, a pen and a finger in one session, and each stroke ans
 `'mouse'` or `'pen'` stroke takes exactly the paths it always has; only a `'touch'` stroke consults
 anything below.
 
+### The widget-facing dispatch surface, named by TIER
+
+The hand's five entry points turn each event into dispatches onto widgets, and the names say which
+of two tiers a handler is on — the boundary is legible in the name SHAPE, so a widget author can
+see at a glance whether a verb carries a certified meaning or a raw phase:
+
+- **Facts — stroke-phase narration, no interpretation.** `pressBegan(pos)`, `pressMoved(pos,
+  button)`, `pressEnded(pos, button, buttons, ctrl, shift, alt, meta)`, `hoverEntered()`,
+  `hoverMoved(pos)`, `hoverExited()`, plus the in-place drag pair `nonFloatDragging` /
+  `endOfNonFloatDrag`. A fact says what the pointer did and nothing about what it meant; a paint
+  canvas, a slider, a text selection and a hover highlight all want the raw phase.
+- **Gestures — the guarantee the hand CERTIFIES before dispatching.** `activated(pos, …)` means
+  "this stroke, examined, meant an activation": multi-click recognition ran, a drag away
+  suppressed it (`w == @mouseDownWdgt`), a hold or a drag-scroll suppressed it
+  (`_strokeOwesNoClick()`). `doubleActivated(pos)` / `tripleActivated(pos)` are the folded
+  multi-click; `contextMenuRequested(pos)` is the context gesture from either trigger;
+  `scrolledBy(deltaX, deltaY, deltaZ, altKey, button, buttons)` is "a scroll step was asked of
+  you". Buttons, toggles and menus consume gestures and never facts.
+
+A gesture is named for what it certifies, never for the presumed use — `activated`, not `chosen`
+or `buttonPressed`, because whether the consumer treats an activation as a choice is the
+consumer's business. Nothing at this boundary carries a device word: `scrolledBy` is the WIDGET
+verb, while `wheel`/`WheelInputEvent`/`processWheel` name the W3C stream on the pipeline side,
+where the device is the literal truth.
+
 ### The press-and-hold recognizer
 
 Built to the drag-embed dwell machine's exact template (`drag-embed-interaction-spec.md` §6): the
@@ -90,6 +115,21 @@ own idiom (see `viewports-and-planes.md`) — so a replayed macro stroke stays p
 event-determined and its screenshots reproduce, while a real finger holding perfectly still off
 the harness still gets its menu on time. Once elapsed time crosses `pressAndHoldMs` (500,
 `PreferencesAndSettings.pressAndHoldMs`) the hold FIRES, at most once per stroke.
+
+**That suppression is an IDIOM with three applications, and the third one is the pressed-move
+channel.** Anything a per-cycle re-entry produces is counted in CYCLES — wall clock — while
+everything a drained event produces is counted in EVENT time; where the two can disagree
+visibly, the cycle-driven half is suppressed while `Automator.animationsPacingControl` is active
+and the Automator is not idle. Beyond the momentum glide (`viewports-and-planes.md`) and the
+hold's between-events check above, `dispatchEventsFollowingMouseMove` takes an `atDrainedEvent`
+seat argument — `true` from the move pipeline and the teleport, `false` from the per-cycle hover
+re-sync — and under a paced replay it dispatches `pressMoved` only from the drained-event seat.
+The reason is reproducibility of paint-by-drag: every pressed-move consumer is idempotent at a
+standing position, so off the harness the re-sync's extra moves cost nothing and a finger holding
+perfectly still keeps receiving them; but a cycle landing between the event that ARMS a touch
+stroke and the next queued move turns one withheld move into a delivered one, and a paint tool
+lays a dab another run does not (measured: one 4×4 dab, 1 run in 5). Hover moves are unaffected —
+re-deriving who the pointer is over is exactly what the re-sync exists for.
 
 Two things silence it first: a press that has already become a float-drag (the dwell machine owns
 that territory), and a booked non-float target that has already MOVED away from the press origin
@@ -128,27 +168,32 @@ its owner:
   instead. The non-float arm (sliders, handles) is untouched — reaching it already means the
   press landed on chrome, which arms at the down.
 - **`ViewportWdgt`'s scroll-drag step** — see [`viewports-and-planes.md`](viewports-and-planes.md).
-- **The pressed-move `mouseMove` channel**, at both its dispatch sites: `determineGrabs`'
-  `topWdgt.mouseMove` and the over-list `mouseMove` in `dispatchEventsFollowingMouseMove`. While a
-  touch stroke is un-armed, neither site dispatches a pressed move — a finger sliding over text
-  must not extend the selection, and one sliding over a paint canvas must not draw, while the
-  surface beneath it scrolls instead. Hover (no-button) moves are untouched;
-  `'mouse'`/`'pen'` always mean a mouse drag, so both sites read exactly as they did before the
-  grammar existed.
+- **The `pressMoved` channel**, at its ONE dispatch site: the over-list loop in
+  `dispatchEventsFollowingMouseMove`, which dispatches `hoverMoved(pos)` when no button is down and
+  `pressMoved(pos, button)` when one is. While a touch stroke is un-armed, no pressed move is
+  dispatched at all — a finger sliding over text must not extend the selection, and one sliding
+  over a paint canvas must not draw, while the surface beneath it scrolls instead. Hover moves are
+  untouched; `'mouse'`/`'pen'` always mean a mouse drag, so the channel reads exactly as it did
+  before the grammar existed. **One pressed move per pressed event, from one site**: the
+  `button` on `pressMoved` is a plain FACT (`"left"`/`"right"`), not a discriminator between
+  meanings — a paint tool lays paint under the primary button and previews under any other.
 
-### Hold-as-right-click, and what a hold's release owes
+### The context gesture's two triggers, and what a hold's release owes
 
-The hold fires by calling `ActivePointerWdgt.openContextMenuAtPointer` on the pressed widget — the
-EXACT method `Widget.mouseClickRight` calls on a real right-click — so it is an alternate TRIGGER
-for the right-click's own verb, not a parallel path: the titled menu, the dev-mode
-disambiguation, and the world's own menu (`WorldWdgt.mouseDownRight` is a no-op; the climb reaches
-the world's `buildContextMenu` the same way a raw right-click over empty desktop does) are all
-inherited, not reimplemented. Every widget's context menu is already titled with its
-class-derived name (`Widget.buildBaseWidgetClassContextMenu`), so the hold needs no title
-mechanism of its own.
+The context gesture is ONE widget verb, `contextMenuRequested(pos)`, with TWO triggers that meet
+AT the widget rather than one level below it. A secondary press's release climbs to a
+`contextMenuRequested` implementor and calls it; the hold fires by climbing from the pressed
+widget to the same implementor and calling the same verb. `Widget.contextMenuRequested` is the
+base every widget inherits — its body is `world.hand.openContextMenuAtPointer @` — so the titled
+menu, the dev-mode disambiguation, the world's own menu (the climb reaches the world's
+`buildContextMenu` the same way a raw right-click over empty desktop does) AND any override a
+widget declares are inherited whole by BOTH triggers. Every widget's context menu is already
+titled with its class-derived name (`Widget.buildBaseWidgetClassContextMenu`), so the hold needs
+no title mechanism of its own. (A secondary press dispatches no down-fact of its own: there is no
+secondary-press channel on the widget surface, only the hand's own right-press bookkeeping.)
 
 A hold-consumed stroke's release dispatches no click — the same shape a right press has always
-had (a right press never fires `mouseClickLeft` either) — via `_strokeOwesNoClick()`, which is
+had (a right press never fires `activated` either) — via `_strokeOwesNoClick()`, which is
 also true for an un-armed touch stroke that left the hold radius (a plain drag, i.e. a scroll).
 That second case is load-bearing, not cosmetic: a scroll-drag carries the pressed row WITH the
 finger, so the release lands on the very widget the press landed on, and a plain `w ==
@@ -161,8 +206,8 @@ the next outside tap dismisses it like any other.
 
 A mouse or a pen rests where it stops; a finger does not rest anywhere between strokes — the
 finger left the glass. At a touch stroke's up or cancel, `_dissolveHoverStateOfTouchStroke`
-dispatches `mouseLeave`/`mouseLeavefloatDragging` to the whole `mouseOverList` and empties it,
-then sets `@_pointerIsAbsent = true`. That flag is what makes the dissolution STICK: the
+dispatches `hoverExited` to the whole `mouseOverList` and empties it, then sets
+`@_pointerIsAbsent = true`. That flag is what makes the dissolution STICK: the
 per-cycle hover re-sync would otherwise re-derive the over-list from wherever the hand happens to
 stand a cycle later, re-entering whatever the finger last touched — tooltip and highlight
 included. While `_pointerIsAbsent` is true, `dispatchEventsFollowingMouseMove` treats the

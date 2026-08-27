@@ -85,7 +85,7 @@ theTest_InputEvents_Macro = ->
 **2. Drive INPUT through the event queue, never poke the hand.** Every user input — moves, clicks, keys, the
 wheel, double/triple-clicks, clipboard — must be SYNTHESISED AS A REAL `*InputEvent` pushed onto
 `world.inputEventsQueue` and consumed by the normal pipeline, NOT by reaching into `world.hand`/`world.caret` and
-calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`mouseEnter`, and the
+calling `process…` directly. The queue is the whole point: it drives hit-testing, hover/`hoverEntered`, and the
 playback fake-pointer overlay. Every input-synthesising verb carries the **`_InputEvents`** suffix
 and ends by pushing events; callers `yield "waitNoInputsOngoing"` to drain. Double/triple-clicks just work at
 every speed (recognition is proximity + the hand's 300ms EVENT-TIME window — deterministic, not a wall-clock

@@ -263,7 +263,7 @@ save.
 
 ### 4.3 A mode is a field, not an installed function
 
-**[convention]** Never install own function properties on an instance to record a mode (`@mouseDownLeft
+**[convention]** Never install own function properties on an instance to record a mode (`@pressBegan
 = -> …` inside an `enable*` call). A mode a widget can be in is a serializable **field** consumed by
 prototype methods. `injectProperty` remains the sanctioned path for user-authored instance methods —
 it stores the `<name>_source` sibling that serializes.
@@ -493,14 +493,25 @@ mark after `add` + `setExtent` adds nothing.
 
 ## 9. Input
 
+- **Pick your handler by TIER — the name says which you are getting.** The FACT tier narrates a
+  stroke's phases and interprets nothing: `pressBegan(pos)`, `pressMoved(pos, button)`,
+  `pressEnded(pos, button, buttons, ctrl, shift, alt, meta)`, `hoverEntered()`, `hoverMoved(pos)`,
+  `hoverExited()`, plus the in-place drag pair `nonFloatDragging` / `endOfNonFloatDrag`. The
+  GESTURE tier hands you a meaning the hand has already certified: `activated(pos, …)` (the stroke
+  was examined and meant an activation — multi-click recognition ran, a drag away or a hold
+  suppressed it), `doubleActivated(pos)`, `tripleActivated(pos)`, `contextMenuRequested(pos)`
+  (either trigger — a secondary press or a press-and-hold), `scrolledBy(deltaX, deltaY, deltaZ,
+  altKey, button, buttons)`. A button, a toggle or a menu item wants a gesture; a paint canvas, a
+  slider, a text selection or a hover highlight wants the raw facts. Deep home:
+  [`input-and-gestures.md`](input-and-gestures.md).
 - **Consume the `pos` parameter the dispatcher hands you.** [gated —
   `check-raw-pointer-reads.js`] It is already mapped into your plane. Reading
   `world.hand.position()` inside a handler is correct off an island and wrong the moment the widget is
   tilted — a bug class that is invisible until someone rotates something.
-- **Escalate what is not yours.** `@escalateEvent "mouseDownLeft", pos` passes the event to the parent
+- **Escalate what is not yours.** `@escalateEvent "pressBegan", pos` passes the event to the parent
   rather than swallowing it. A handler that conditionally acts should escalate on the other branch.
 - **Get hover/press feedback from `HighlightableMixin`** (`color_normal` / `color_hover` /
-  `color_pressed`) instead of colouring by hand in `mouseEnter`/`mouseLeave`.
+  `color_pressed`) instead of colouring by hand in `hoverEntered`/`hoverExited`.
 - **Chrome opts out of editor focus.** A widget that is manipulation chrome rather than content —
   handles, frame-bar buttons, toolbars, creator buttons — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer
@@ -986,11 +997,11 @@ class FooWdgt extends Widget
 
   # ---- input + menu --------------------------------------------------------
 
-  mouseClickLeft: (pos) ->
+  activated: (pos) ->
     if @bar.boundsContainPoint pos
       @setLevel @level + 1
     else
-      @escalateEvent "mouseClickLeft", pos
+      @escalateEvent "activated", pos
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super

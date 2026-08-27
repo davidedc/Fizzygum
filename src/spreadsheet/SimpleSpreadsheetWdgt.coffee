@@ -32,7 +32,7 @@
 #     than the viewport (DERIVED from the sheet's extent since F6 — default 6×14, partial
 #     edge cells when the granted extent isn't cell-quantized, backdrop past the sheet edge);
 #     the sheet owns its view origin (viewOriginCol/Row — cell-quantized, never
-#     sub-cell) and scrolls by WHEEL (the `wheel` entry below, with the ViewportWdgt-style
+#     sub-cell) and scrolls by WHEEL (the `scrolledBy` entry below, with the ViewportWdgt-style
 #     at-limit escalation) and by KEYBOARD scroll-follow (arrows past the viewport edge shift
 #     the origin minimally). Deliberately NOT a ViewportWdgt: frozen headers, the origin-0
 #     byte-identity constraint (an unscrolled sheet renders pixel-for-pixel as pre-F1), and
@@ -349,7 +349,7 @@ class SimpleSpreadsheetWdgt extends Widget
   #   pass 2 — every on-screen address still missing a cell is materialised and the record's
   #     CURRENT value routed in (an off-screen record kept recomputing, so a scrolled-in cell
   #     is instantly correct, no catch-up).
-  # NoSettle core: runs inside the settle its public caller (wheel / processKeyDown / the
+  # NoSettle core: runs inside the settle its public caller (scrolledBy / processKeyDown / the
   # constructor's enclosing openFrameWith / the restore gesture) owns.
   _reconcileViewportNoSettle: ->
     # ONE bound for membership AND the materialise loops (F6): the origin-clamped visible
@@ -525,11 +525,11 @@ class SimpleSpreadsheetWdgt extends Widget
     return
 
   # F1 scroll: the sheet is a wheel surface (ActivePointerWdgt.processWheel climbs from the
-  # widget under the pointer to the FIRST `wheel` implementor — CellWdgt and the cells panel
+  # widget under the pointer to the FIRST `scrolledBy` implementor — CellWdgt and the cells panel
   # deliberately DON'T implement it, so a wheel anywhere over the grid lands here; a hosted
-  # value-widget that ever implements `wheel` swallows the scroll over its cell, same as any
+  # value-widget that ever implements `scrolledBy` swallows the scroll over its cell, same as any
   # nested scroll surface — the escalation chain is the general answer). Follows the
-  # ViewportWdgt.wheel model: dominant-axis suppression, the invertWheel* prefs, per-axis
+  # ViewportWdgt.scrolledBy model: dominant-axis suppression, the invertWheel* prefs, per-axis
   # at-limit ESCALATION (a sheet inside a future scroll surface must not swallow its wheel) —
   # but QUANTIZED to whole rows/cols (the cell-quantized deviation from its pixel model): the
   # delta maps to pixels via wheelScale*, then to at least one whole cell step. POST-inversion
@@ -538,11 +538,11 @@ class SimpleSpreadsheetWdgt extends Widget
   # so a raw POSITIVE deltaY (invertWheelY on) scrolls the view DOWN, as documented on
   # MacroToolkit.wheelOn_InputEvents. An in-progress edit COMMITS first (commit-before-scroll,
   # see the header). PUBLIC event entry: opens the ONE settle around the NoSettle cores.
-  wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
+  scrolledBy: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
     x = xArg
     y = yArg
     # if we don't destroy the resizing handles, they'll follow the contents being moved
-    # (the ViewportWdgt.wheel opening move — a hosted value-widget can have handles up)
+    # (the ViewportWdgt.scrolledBy opening move — a hosted value-widget can have handles up)
     world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @
     # squelch the minor axis + apply the invert preferences (shared with ViewportWdgt)
     [x, y] = WorldWdgt.preferencesAndSettings.normalizedWheelDeltas x, y
@@ -566,7 +566,7 @@ class SimpleSpreadsheetWdgt extends Widget
       else
         colDelta = delta
     if escalate
-      @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
+      @escalateEvent 'scrolledBy', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
     if colDelta isnt 0 or rowDelta isnt 0
       @_settleLayoutsAfter =>
         @_commitEditNoSettle() if @_editing

@@ -672,7 +672,7 @@ class ActivePointerWdgt extends Widget
   #   hoverExited
   #   hoverMoved
   #   pressMoved
-  #   wheel
+  #   scrolledBy
   #
   # Note that some handlers don't want the event but the
   # interesting parameters of the event. This is because
@@ -1263,10 +1263,10 @@ class ActivePointerWdgt extends Widget
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
   processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
     w = @topWdgtUnderPointer()
-    w = w.parent  while w and not w.wheel
+    w = w.parent  while w and not w.scrolledBy
 
     if w?
-      w.wheel deltaX, deltaY, deltaZ, altKey, button, buttons
+      w.scrolledBy deltaX, deltaY, deltaZ, altKey, button, buttons
   
   
 

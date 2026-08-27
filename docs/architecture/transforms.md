@@ -325,7 +325,7 @@ first, then falls through empty content to what is behind.
 
 **Gate.** A build-time lint (`buildSystem/check-raw-pointer-reads.js`, in the static-check
 suite — see `docs/architecture/lint-and-static-checks.md`) **bans** a pointer-event handler body
-(`mouse*` / `wheel` / `nonFloatDragging` / …, closures included) from consuming the raw
+(`press*`/`hover*` / `activated` / `scrolledBy` / `nonFloatDragging` / …, closures included) from consuming the raw
 screen-plane `world.hand.position()` unmapped. Consume the mapped `pos` parameter, or map at the
 read site with `screenPointToMyPlane` on the same line (the drag-scroll idiom). Off-island the
 mapped point *is* the raw point, so the bug class is invisible until a widget is **tilted** —

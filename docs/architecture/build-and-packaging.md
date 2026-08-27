@@ -178,7 +178,7 @@ those parts in `optionalParts`, and the icon is drawn behind `canEverProvideClas
 still has a name so that the next door has to choose deliberately.)
 
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
-cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.mouseClickLeft` and `Widget.grabbedWidgetSwitcheroo`
+cannot: `WidgetCreatorAndSmartPlacerOnClickMixin.activated` and `Widget.grabbedWidgetSwitcheroo`
 both consume `createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there is no seam to defer
 through. The resolution is partition, not cleverness — put the button in the part it creates from
 (`maps` owns `USAMapCreatorButtonWdgt`), so the button's mere EXISTENCE proves its part is loaded and

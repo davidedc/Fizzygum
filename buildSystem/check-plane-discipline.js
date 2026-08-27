@@ -32,7 +32,7 @@
 //    viewports-and-planes.md input rule, given teeth): a positional pointer handler
 //    defined on a class that provides `scrollTranslationOfChild` (transitively, via
 //    extends) must either not read its pos parameter or re-derive via
-//    `screenPointToMyPlane` in the same body. `wheel` is exempt (deltas, not positions).
+//    `screenPointToMyPlane` in the same body. `scrolledBy` is exempt (deltas, not positions).
 //    Exemption marker for a future deliberate consumer:
 //    `# escalated-pos-sanctioned: <reason>` directly above the handler header.
 

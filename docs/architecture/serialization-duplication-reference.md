@@ -323,7 +323,7 @@ copy call re-derives the persistent one.
 **Instance-assigned handler functions are BANNED as a state idiom** (2026-07-23): a mode a
 widget can be in must be a serializable FIELD consumed by prototype methods, never a pair
 of own function properties installed by an `enable*` call. The one historical case —
-`StringWdgt.enableSelecting`'s own `mouseDownLeft`/`mouseMove` closures, which crashed
+`StringWdgt.enableSelecting`'s own `pressBegan`/`pressMoved` closures, which crashed
 every snapshot containing a document, text panel, or patch-programming pane — is now the
 serializable `isSelectable` flag. (`injectProperty` remains the sanctioned path for
 USER-authored instance methods: it stores the `<name>_source` sibling that serializes as

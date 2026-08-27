@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzygum — mouse, touch, and the one pointer pipeline</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f9f9f7;  --surface: #fcfcfb;
+    --ink:       #0b0b0b;  --ink-2:   #52514e;  --muted: #898781;
+    --hairline:  #e1e0d9;  --border:  rgba(11,11,11,0.10);
+    --s1: #2a78d6; /* blue   — test/harness-side things        */
+    --s2: #eb6834; /* orange — the hand / product grammar      */
+    --s3: #1baf7a; /* aqua   — touch-only paths                */
+    --s4: #eda100; /* yellow — auxiliary                       */
+    --wash-s1: rgba(42,120,214,0.08);
+    --wash-s2: rgba(235,104,52,0.08);
+    --wash-s3: rgba(27,175,122,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --wash-s1: rgba(57,135,229,0.14);
+      --wash-s2: rgba(217,89,38,0.14);
+      --wash-s3: rgba(25,158,112,0.14);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.7em; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.25em; margin: 2.4em 0 .5em; }
+  h3 { font-size: 1.02em; margin: 1.5em 0 .4em; }
+  p, li { color: var(--ink-2); }
+  strong { color: var(--ink); }
+  .kicker { color: var(--muted); font-size: .85em; letter-spacing: .06em; text-transform: uppercase; }
+  .sub { color: var(--muted); font-size: .9em; margin-bottom: 26px; }
+  .sub a, p a { color: var(--s1); }
+  figure { margin: 20px 0 26px; background: var(--surface); border: 1px solid var(--border);
+           border-radius: 10px; padding: 16px 18px 12px; overflow-x: auto; }
+  figcaption { font-size: .82em; color: var(--muted); margin-top: 10px; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  code { background: var(--page); border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 5px; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: .85em; line-height: 1.5; color: var(--ink-2); }
+  pre .c { color: var(--muted); }
+  .callout { border-left: 3px solid var(--s1); background: var(--wash-s1);
+             padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 18px 0; font-size: .95em; }
+  .callout.warn { border-left-color: var(--s2); background: var(--wash-s2); }
+  .callout.touch { border-left-color: var(--s3); background: var(--wash-s3); }
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline);
+           color: var(--ink-2); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; }
+  td.k { white-space: nowrap; color: var(--ink); }
+  /* gesture timelines */
+  .tl-label { font-size: .8em; color: var(--muted); margin: 14px 0 2px; }
+  .trow { display: flex; gap: 3px; align-items: stretch; margin: 3px 0; flex-wrap: wrap; }
+  .trow .seg { border-radius: 4px; padding: 5px 9px; font-size: .74em; line-height: 1.35;
+               color: var(--ink); border: 1px solid var(--border); background: var(--page); }
+  .seg.down  { background: var(--wash-s1); border-color: var(--s1); }
+  .seg.hold  { background: var(--wash-s3); border-color: var(--s3); }
+  .seg.menu  { background: var(--wash-s2); border-color: var(--s2); }
+  .seg.drag  { background: var(--wash-s3); border-color: var(--s3); }
+  .seg.armk  { background: var(--wash-s2); border-color: var(--s2); }
+  .trow .out { padding: 5px 9px; font-size: .74em; line-height: 1.35; color: var(--muted);
+               align-self: center; }
+  svg text { font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--ink-2); }
+  svg text.t { fill: var(--ink); font-weight: 600; }
+  svg text.m { fill: var(--muted); font-size: 11px; }
+  svg .box { fill: var(--page); stroke: var(--border); rx: 8; }
+  svg .flow { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#arr); }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Fizzygum · explainer</p>
+  <h1>Mouse, touch, and the one pointer pipeline</h1>
+  <p class="sub">Companion to <span class="mono">docs/architecture/input-and-gestures.md</span>
+  (authoritative). Covers how mouse and touch input are modelled, how W3C Pointer Events are used,
+  what typical interactions do on each kind of pointer, and how the test system covers both.</p>
+
+  <p>Two facts shape everything below. First, <strong>there is no separate mouse pipeline and touch
+  pipeline</strong>: the browser boundary is W3C Pointer Events, so a mouse, a finger and a pen all
+  arrive as the same four event types, distinguished only by a per-event <code>pointerType</code>
+  string. Second, <strong>widgets never see pointer kinds — they see two TIERS of verb, and the
+  tier is legible in the name's shape</strong>. The <em>fact</em> tier narrates the phases of a
+  stroke and interprets nothing: <code>pressBegan</code>, <code>pressMoved</code>,
+  <code>pressEnded</code>, <code>hoverEntered</code>, <code>hoverExited</code>,
+  <code>hoverMoved</code>. The <em>gesture</em> tier states a meaning the hand has already
+  certified: <code>activated</code> (this stroke, examined, meant an activation),
+  <code>contextMenuRequested</code>, <code>scrolledBy</code>. A widget author choosing between
+  <code>pressBegan</code> and <code>activated</code> is choosing between a raw phase and a
+  guarantee — and every decision about what a gesture <em>means</em> for a given kind of pointer
+  lives in exactly one class, the hand (<code>ActivePointerWdgt</code>). A finger opening a context
+  menu and a right-click opening it reach the very same widget method,
+  <code>contextMenuRequested</code>, by two different triggers.</p>
+
+  <h2>1 · The browser boundary: Pointer Events, one listener family</h2>
+
+  <p>Yes, Pointer Events are used — they are the <em>only</em> input listeners. The world attaches
+  <code>pointerdown</code> / <code>pointermove</code> / <code>pointerup</code> /
+  <code>pointercancel</code> to the canvas (plus <code>wheel</code>, <code>contextmenu</code> with
+  <code>preventDefault</code>, and keyboard listeners). A finger is not emulated — it is a first-class pointer kind.</p>
+
+  <ul>
+    <li><strong><code>touch-action: none</code> on the canvas</strong> is what stops the browser from
+      panning/zooming instead of delivering events — with pointer events, <code>preventDefault()</code>
+      does <em>not</em> stop browser panning; the CSS property does.</li>
+    <li><strong><code>setPointerCapture</code> at the down</strong> keeps a stroke's moves and its up
+      arriving even when the pointer leaves the canvas mid-drag.</li>
+    <li>Safari's proprietary <code>gesturestart/gesturechange</code> listeners are kept as no-ops
+      beside the pointer listeners until pinch is derived from two <code>pointerId</code>s
+      (a <span class="mono">BACKLOG</span> item — today the system is single-pointer).</li>
+  </ul>
+
+  <h2>2 · The event family, and the two doors into the one queue</h2>
+
+  <p><strong>Every input — mouse, touch, pen, real or synthesized — becomes a value of the same
+  <code>PointerInputEvent</code> family</strong> (<code>src/events-input/</code>: one base + the four
+  down/move/up/cancel subclasses), carrying <code>pointerType</code>, <code>pointerId</code>,
+  <code>isPrimary</code>, <code>pressure</code>, buttons/modifiers and a world-coordinate position.
+  There are exactly two ways such a value is born — and they are only two <em>doors into the same
+  room</em>: a browser listener calls <code>@fromBrowserEvent</code>, a test macro calls
+  <code>@synthetic</code> or <code>@syntheticTouch</code>, and what comes out of either is the
+  identical value shape. Everything downstream — the queue, the hand, the widgets — consumes these
+  values and only these values, with no memory of which door they came through:</p>
+
+  <figure>
+  <svg viewBox="0 0 820 470" width="820" height="470" role="img"
+       aria-label="The funnel: browser pointer events and macro-synthesized events both construct the same PointerInputEvent values, which flow through one queue to the hand and on to widgets, where they arrive as fact-tier and gesture-tier verbs">
+    <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--muted)"/></marker></defs>
+
+    <text class="m" x="10" y="16">two ORIGINS…</text>
+    <rect class="box" x="10" y="28" width="200" height="80"/>
+    <text class="t" x="26" y="52">browser PointerEvent</text>
+    <text x="26" y="70">pointerdown / move / up /</text>
+    <text x="26" y="86">cancel listeners, on the</text>
+    <text x="26" y="102">canvas — a real device</text>
+
+    <rect class="box" x="10" y="190" width="200" height="80" style="stroke: var(--s1)"/>
+    <text class="t" x="26" y="214">macro toolkit (tests)</text>
+    <text x="26" y="232">L1 verbs synthesize the</text>
+    <text x="26" y="248">same strokes — no browser,</text>
+    <text x="26" y="264">no listeners involved</text>
+
+    <text class="m" x="290" y="16">…ONE event family (the funnel neck)…</text>
+    <rect class="box" x="290" y="88" width="230" height="122" style="stroke: var(--s2)"/>
+    <text class="t" x="306" y="114">PointerInputEvent</text>
+    <text x="306" y="132"><tspan class="mono">Pointer{down,move,up,cancel}-</tspan></text>
+    <text x="306" y="148"><tspan class="mono">InputEvent</tspan> — one value shape:</text>
+    <text x="306" y="166"><tspan class="mono">pointerType</tspan> 'mouse'|'touch'|'pen',</text>
+    <text x="306" y="182"><tspan class="mono">pointerId</tspan>, world position,</text>
+    <text x="306" y="198">buttons/modifiers, EVENT time</text>
+
+    <text class="m" x="600" y="16">…one queue</text>
+    <rect class="box" x="600" y="88" width="210" height="122"/>
+    <text class="t" x="616" y="114">world.inputEventsQueue</text>
+    <text x="616" y="132">every input waits here;</text>
+    <text x="616" y="148">drained once per world cycle,</text>
+    <text x="616" y="164">ordered by the events' own</text>
+    <text x="616" y="180">time — the determinism</text>
+    <text x="616" y="196">backbone</text>
+
+    <rect class="box" x="290" y="300" width="230" height="106" style="stroke: var(--s2)"/>
+    <text class="t" x="306" y="326">the hand — ActivePointerWdgt</text>
+    <text x="306" y="344"><tspan class="mono">processPointerDown/Move/Up/Cancel</tspan></text>
+    <text x="306" y="362">reads each value's <tspan class="mono">pointerType</tspan>:</text>
+    <text x="306" y="378">the WHOLE grammar branches here,</text>
+    <text x="306" y="394">per stroke, and nowhere else</text>
+
+    <text class="m" x="600" y="292">…widgets never see a pointer kind</text>
+    <rect class="box" x="600" y="300" width="210" height="158"/>
+    <text class="t" x="616" y="326">widgets</text>
+    <text class="m" x="616" y="346">FACTS — the stroke's phases</text>
+    <text x="616" y="362">pressBegan · pressMoved ·</text>
+    <text x="616" y="378">pressEnded · hoverEntered ·</text>
+    <text x="616" y="394">hoverExited · hoverMoved</text>
+    <text class="m" x="616" y="416">GESTURES — certified meanings</text>
+    <text x="616" y="432">activated · contextMenuRequested</text>
+    <text x="616" y="448">scrolledBy · doubleActivated …</text>
+
+    <path class="flow" d="M210,68  C 255,68 255,120 288,126"/>
+    <path class="flow" d="M210,230 C 255,230 255,178 288,172"/>
+    <text class="m" x="216" y="52">@fromBrowserEvent</text>
+    <text class="m" x="216" y="252">@synthetic ('mouse')</text>
+    <text class="m" x="216" y="266">@syntheticTouch ('touch')</text>
+
+    <path class="flow" d="M520,149 L 598,149"/>
+    <text class="m" x="532" y="141">queued</text>
+
+    <path class="flow" d="M705,210 C 705,250 480,250 440,298"/>
+    <text class="m" x="560" y="246">drained, one cycle at a time</text>
+
+    <path class="flow" d="M520,353 L 598,353"/>
+    <text class="m" x="528" y="345">kind-blind dispatch</text>
+  </svg>
+  <figcaption>The funnel. Both origins converge on the SAME classes through two static factories —
+  <code>@fromBrowserEvent</code> maps a DOM event (page → world coordinates, the real
+  <code>pointerType</code>); <code>@synthetic</code>/<code>@syntheticTouch</code> build the value
+  directly. From the family inward, an event's origin is <em>indistinguishable</em>: the queue, the
+  hand and every widget process a macro-born touch stroke through exactly the code a finger on glass
+  takes. That identity is what makes the tests exercise the product path rather than a simulation of
+  it.</figcaption>
+  </figure>
+
+  <p>The queue is the determinism backbone: events drain once per world cycle, ordered by their own
+  <strong>event time</strong>, and every timing decision downstream (multi-click recognition, the
+  drag-embed dwell, the press-and-hold below) is a function of event time — never
+  <code>Date.now()</code> or <code>setTimeout</code> — so a replayed stream produces byte-identical
+  pixels regardless of machine load.</p>
+
+  <div class="callout"><strong>A touch down states its own position.</strong> A mouse has hover, so
+  by the time it presses, the hand already knows where it is. A finger's <em>first</em> event is the
+  press — so a position-carrying down runs the move pipeline first, then the press. Between touch
+  strokes there is no pointer position at all (see the pointer-absence state below).</div>
+
+  <h2>3 · The grammar: one geometry, one grammar per pointer kind</h2>
+
+  <p>There is no "touch mode". Every decision keys on the <em>stroke's</em>
+  <code>pointerType</code> (recorded at each down), so a hybrid laptop gets every stroke right:
+  mouse strokes take the classic paths byte-identically, and <code>'pen'</code> takes the mouse
+  grammar (it hovers and has a barrel button). For a <code>'touch'</code> stroke the hand runs a
+  <strong>press-and-hold recognizer</strong>, built on the same event-time template as the
+  drag-embed dwell. The whole question the recognizer answers is: <em>do this stroke's drags mean
+  what a mouse's would?</em></p>
+
+  <figure>
+  <svg viewBox="0 0 820 330" width="820" height="330" role="img"
+       aria-label="Decision flow for a touch press: chrome and no-scroll surfaces arm at the down; over scrollable content a hold arms, travel commits a scroll">
+    <defs><marker id="arr2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--muted)"/></marker></defs>
+
+    <rect class="box" x="10" y="20" width="170" height="52" style="stroke: var(--s3)"/>
+    <text class="t" x="26" y="42">TOUCH press (down)</text>
+    <text class="m" x="26" y="60">position stated by the down</text>
+
+    <rect class="box" x="250" y="20" width="220" height="52"/>
+    <text class="t" x="266" y="42">chrome owns the press?</text>
+    <text class="m" x="266" y="60">ownsDragsStartingOnMe() up the tree</text>
+
+    <rect class="box" x="250" y="110" width="220" height="52"/>
+    <text class="t" x="266" y="132">a pane would take a plain</text>
+    <text class="t" x="266" y="148">drag for a SCROLL?</text>
+
+    <rect class="box" x="560" y="20" width="250" height="70" style="stroke: var(--s2)"/>
+    <text class="t" x="576" y="44">ARMED at the down</text>
+    <text x="576" y="62">drags mean mouse semantics:</text>
+    <text x="576" y="78">bar moves window · slider value-drags · lift</text>
+
+    <rect class="box" x="250" y="210" width="220" height="96" style="stroke: var(--s3)"/>
+    <text class="t" x="266" y="234">UN-ARMED stroke</text>
+    <text x="266" y="252">hold still 500 ms (event time)</text>
+    <text x="266" y="268">→ the widget's CONTEXT MENU</text>
+    <text x="266" y="284">fires, and the stroke arms</text>
+    <text class="m" x="266" y="300">the context gesture's other trigger</text>
+
+    <rect class="box" x="560" y="210" width="250" height="96" style="stroke: var(--s3)"/>
+    <text class="t" x="576" y="234">travel &gt; 7 px before the hold</text>
+    <text x="576" y="252">→ a PLAIN DRAG — a scroll —</text>
+    <text x="576" y="268">for the stroke's whole life;</text>
+    <text x="576" y="284">its release dispatches NO click</text>
+    <text class="m" x="576" y="300">the pressed row rides along with the finger</text>
+
+    <path class="flow" d="M180,46 L 248,46" marker-end="url(#arr2)"/>
+    <path class="flow" d="M470,46 L 558,46" marker-end="url(#arr2)"/>
+    <text class="m" x="500" y="38">yes</text>
+    <path class="flow" d="M360,72 L 360,108" marker-end="url(#arr2)"/>
+    <text class="m" x="368" y="96">no</text>
+    <path class="flow" d="M470,136 C 520,120 540,90 566,92" marker-end="url(#arr2)"/>
+    <text class="m" x="500" y="114">no — nothing competes</text>
+    <path class="flow" d="M360,162 L 360,208" marker-end="url(#arr2)"/>
+    <text class="m" x="368" y="190">yes</text>
+    <path class="flow" d="M470,258 L 558,258" marker-end="url(#arr2)"/>
+    <text class="m" x="486" y="250">moved instead</text>
+  </svg>
+  <figcaption>What a touch press means. A mouse or pen press takes the left-to-right top path
+  unconditionally — it is armed by kind, before any of this is consulted — which is what makes the
+  grammar provably inert for the mouse. The hold also fires on chrome and desktop presses that stay
+  still (a long-press on a window bar opens the window's menu); it never fires while something is
+  already being dragged.</figcaption>
+  </figure>
+
+  <p>The recognizer in detail:</p>
+
+  <ul>
+    <li>A stroke is <strong>armed for mouse semantics</strong> at the down when nothing competes for
+      a plain drag: chrome surfaces answer <code>ownsDragsStartingOnMe()</code> (window title strips,
+      handles, sliders, dividers, palettes), and where no ancestor viewport
+      <code>claimsPlainDragsForScrolling()</code> (the open desktop), a drag needs no hold either.</li>
+    <li>Over scrollable content, a touch stroke arms only by <strong>holding still</strong>
+      (<code>pressAndHoldMs</code>, 500 ms of event time within the 7 px
+      <code>grabDragThreshold</code>). The hold fires the context gesture's own verb — <code>contextMenuRequested</code>, the pressed
+      widget's <em>titled context menu</em> at the press point — and from then on the stroke's drags
+      mean what a mouse's would (hold-then-move lifts; hold-then-release keeps the menu and
+      dispatches no click, exactly as a secondary press never fires <code>activated</code>).</li>
+    <li>A pre-hold move past the threshold commits the stroke as a <strong>plain drag — a scroll —
+      for its whole life</strong>, and a scroll owes nothing at its end: the release dispatches
+      <em>no click</em> (<code>_strokeOwesNoClick</code>). This matters because a drag-scroll carries
+      the pressed row along <em>with</em> the finger, so press-widget equals release-widget by
+      construction — without the rule, every scroll would click what it pressed.</li>
+    <li>At a touch stroke's end the hover world <strong>dissolves</strong>: every widget under the
+      stroke is told the pointer left, the over-list empties, and a pointer-absence flag starves the
+      per-cycle hover re-sync — nothing is "under" a pointer that is not there. Mouse strokes keep
+      today's persistent pointer-under state.</li>
+    <li><code>pointercancel</code> (the browser confiscating a stroke) aborts cleanly: pressed state
+      and the recognizer are cleared, no click fires, an already-open hold menu stays.</li>
+    <li>The <strong>virtual keyboard</strong> is summoned per <em>edit</em>, keyed on the starting
+      tap: a touch tap into a text field brings up the hidden DOM input (the on-screen keyboard's
+      anchor); a mouse or pen click does not. There is no per-device setting.</li>
+  </ul>
+
+  <div class="callout touch"><strong>Where the branch lives.</strong> Three consumers read the
+  stroke's arming (<code>strokeMeansMouseDrag()</code>): the hand's float-drag arms (lift only when
+  the stroke means a mouse drag), the viewport's drag-to-scroll step (an un-armed touch stroke
+  scrolls even over draggable content — and inherits the wheel's at-edge escalation to an enclosing
+  pane), and the <code>pressMoved</code> channel (an un-armed touch drag neither extends
+  a text selection nor paints — it scrolls, and nothing else). Mouse strokes answer "armed" without
+  reading any state, which is what makes the whole grammar provably inert for the mouse.</div>
+
+  <h2>4 · Typical interactions, side by side</h2>
+
+  <p>The four finger gestures, as timelines (time flows left to right; every threshold is
+  <em>event</em> time):</p>
+
+  <figure>
+    <p class="tl-label">TAP — press and release within 7 px, before the hold window</p>
+    <div class="trow">
+      <span class="seg down">down</span>
+      <span class="seg down">up</span>
+      <span class="out">→ a click, exactly as a mouse click dispatches</span>
+    </div>
+
+    <p class="tl-label">HOLD — press and stay within 7 px for 500 ms</p>
+    <div class="trow">
+      <span class="seg down">down</span>
+      <span class="seg hold">still… 500 ms</span>
+      <span class="seg menu">context MENU fires at the press point</span>
+      <span class="seg down">up</span>
+      <span class="out">→ menu stays; NO click (the hold consumed the stroke)</span>
+    </div>
+
+    <p class="tl-label">HOLD, THEN DRAG — the finger's "pick it up"</p>
+    <div class="trow">
+      <span class="seg down">down</span>
+      <span class="seg hold">still… 500 ms</span>
+      <span class="seg menu">menu fires</span>
+      <span class="seg armk">move &gt; 7 px: menu goes, the widget LIFTS</span>
+      <span class="seg armk">drag (mouse semantics; dwell-to-embed as usual)</span>
+      <span class="seg down">drop</span>
+    </div>
+
+    <p class="tl-label">PLAIN DRAG — move before the hold window closes</p>
+    <div class="trow">
+      <span class="seg down">down</span>
+      <span class="seg drag">move &gt; 7 px: a SCROLL for the stroke's whole life</span>
+      <span class="seg drag">pane follows the finger; at its edge, escalation</span>
+      <span class="seg down">up</span>
+      <span class="out">→ NO click; hover state dissolves — the finger left the glass</span>
+    </div>
+    <figcaption>On chrome (a title strip, a slider, a handle) and on the bare desktop the hold row is
+    skipped entirely: the stroke is armed at the down, so the drag rows read like a mouse's from the
+    first pixel of travel.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>You want to…</th><th>Mouse / pen</th><th>Finger</th></tr>
+    <tr><td class="k">press a button</td>
+        <td>click</td>
+        <td>tap — a tap <em>is</em> a click, same dispatch</td></tr>
+    <tr><td class="k">open a widget's context menu</td>
+        <td>right-click (or ctrl-click)</td>
+        <td><strong>press and hold</strong> ~½ s — the same titled menu at the press point; it stays
+            after the release, an outside tap dismisses it</td></tr>
+    <tr><td class="k">scroll a list of draggable cards</td>
+        <td>wheel (or the scrollbar); a drag on a card <em>lifts</em> it</td>
+        <td><strong>plain drag scrolls</strong> — the cards stay parented; at the pane's edge the
+            leftover escalates to an enclosing pane</td></tr>
+    <tr><td class="k">pick a card OUT of that list</td>
+        <td>drag it</td>
+        <td>hold until the menu blinks up, then <strong>drag — the hold armed the lift</strong>
+            (the menu goes away, the card rides the finger, drop embeds per the usual dwell rules)</td></tr>
+    <tr><td class="k">move a window</td>
+        <td>drag its title strip</td>
+        <td>the same, immediately — <strong>chrome never demands a hold</strong></td></tr>
+    <tr><td class="k">drag a slider / resize by a handle</td>
+        <td>drag it</td>
+        <td>the same, immediately (chrome again)</td></tr>
+    <tr><td class="k">select text in a scrolling document</td>
+        <td>drag over it (selects; the pane may also scroll — the classic mouse behaviour)</td>
+        <td>plain drag scrolls only; <strong>hold, then drag selects</strong></td></tr>
+    <tr><td class="k">drag anything on the bare desktop</td>
+        <td>drag it</td>
+        <td>the same, immediately — nothing competes for the drag, so no hold is demanded</td></tr>
+    <tr><td class="k">edit a text field</td>
+        <td>click into it — your hardware keyboard types</td>
+        <td>tap into it — the on-screen keyboard's input is summoned for that edit</td></tr>
+  </table>
+  </div>
+
+  <h2>5 · How the test system covers both kinds</h2>
+
+  <p>Behavioural coverage is the SystemTest suite: each test drives the live world from a
+  <strong>macro</strong> that synthesizes real input events through the same queue the browser
+  feeds, then compares screenshots byte-exactly against committed references. Pointer-kind coverage
+  comes in three layers:</p>
+
+  <h3>5a · The mouse suite is the default</h3>
+  <p>All 330 tests run as mouse strokes (the macro verbs are mouse-intent: click, right-click,
+  wheel, press-drag-release), matched against the mouse reference baseline. This is the inner loop
+  (<code>fg presuite</code>, ~1 min at dpr 1) and three gauntlet legs (dpr 1, dpr 2, WebKit).</p>
+
+  <h3>5b · Dedicated touch tests — ordinary suite members</h3>
+  <p>Eight tests synthesize <em>touch</em> strokes directly, through four L1 verbs
+  (<code>syntheticEventsTouchTap/TouchHold/TouchDrag/TouchDragFromHeldPress</code>) — the same
+  event classes, the same queue, no special mode. They witness the grammar itself: the hold opens
+  the titled menu (and the world menu on bare desktop); the one-frame contrast where the same drag
+  scrolls for a finger and lifts for a mouse; hold-then-drag lifts; chrome drags need no hold; the
+  keyboard summon (assertion-only, no pixels); and three <strong>tablet-extent tests</strong> that
+  declare <code>testScreenExtent: [1024, 768]</code> — a small-screen world where the world menu,
+  a window drag and the docked toolbar's overflow chevron all work under a finger. They run in
+  every suite run, mouse or finger, because their event streams are touch either way.</p>
+
+  <h3>5c · The whole corpus replays as a finger</h3>
+  <p>The suite is <em>not</em> naively run twice. Under <code>--pointer=finger</code>
+  (<code>?pointer=finger</code> on the harness page) the macro toolkit <strong>translates every
+  mouse-intent verb into the touch gesture carrying the same intent</strong>, in the verb bodies —
+  the 300+ committed macro sources are untouched:</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>the macro says</th><th>a finger run performs</th></tr>
+    <tr><td class="k">click</td><td>a tap</td></tr>
+    <tr><td class="k">right-click / open the menu of…</td><td>a press-and-hold (its real ~½ s, never speed-compressed — a recognition window is not playback)</td></tr>
+    <tr><td class="k">press, drag, release</td><td>hold-then-drag (the intent is MOVE)</td></tr>
+    <tr><td class="k">wheel on a pane</td><td>drag-swipes on that pane — successive, clamped to the pane's span (a notch has unlimited reach, a finger has an arm's)</td></tr>
+    <tr><td class="k">hover moves</td><td>nothing — a finger has no hover (unless the hand carries a payload, which still travels)</td></tr>
+    <tr><td class="k">drag a handle / slider / resizer</td><td>a plain drag — chrome needs no hold</td></tr>
+  </table>
+  </div>
+
+  <p>319 of the 330 tests replay this way. The other 11 are declared
+  <strong>mouse-only by meaning</strong> in their metadata (<code>pointerKinds: ["mouse"]</code>
+  plus a mandatory <code>mouseOnlyReason</code>) — tests whose <em>subject</em> is hover pixels, a
+  mouse-vs-finger contrast, or wheel-notch mechanics (exact clamp landings and round-trips are
+  properties a finger's swipes do not have; the spreadsheet takes no drag-scroll at all). An
+  undeclared test that cannot replay under finger is treated as a finding, never silently skipped.</p>
+
+  <figure>
+  <svg viewBox="0 0 820 300" width="820" height="300" role="img"
+       aria-label="One macro corpus runs in two modes against two reference baselines, consumed by different gauntlet legs">
+    <defs><marker id="arr3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--muted)"/></marker></defs>
+
+    <rect class="box" x="10" y="100" width="200" height="86" style="stroke: var(--s1)"/>
+    <text class="t" x="26" y="124">ONE macro corpus</text>
+    <text x="26" y="142">330 committed tests,</text>
+    <text x="26" y="158">mouse-intent verbs</text>
+    <text class="m" x="26" y="176">(8 of them touch-native)</text>
+
+    <rect class="box" x="300" y="20" width="220" height="70"/>
+    <text class="t" x="316" y="44">mouse mode (default)</text>
+    <text x="316" y="62">verbs play as written</text>
+    <text x="316" y="78">all 330 selected</text>
+
+    <rect class="box" x="300" y="190" width="220" height="86" style="stroke: var(--s3)"/>
+    <text class="t" x="316" y="214">finger mode</text>
+    <text x="316" y="230"><tspan class="mono">--pointer=finger</tspan>: intent</text>
+    <text x="316" y="246">translation in the verb bodies</text>
+    <text x="316" y="262">319 selected (11 declared</text>
+    <text x="316" y="278">mouse-only, filtered out)</text>
+
+    <rect class="box" x="600" y="20" width="210" height="70"/>
+    <text class="t" x="616" y="44">mouse baseline</text>
+    <text x="616" y="62" class="mono">…/ceilPixRatio_N/</text>
+    <text class="m" x="616" y="78">legs: dpr1 · dpr2 · webkit</text>
+
+    <rect class="box" x="600" y="190" width="210" height="86" style="stroke: var(--s3)"/>
+    <text class="t" x="616" y="214">finger baseline</text>
+    <text x="616" y="232" class="mono">…/ceilPixRatio_N/finger/</text>
+    <text class="m" x="616" y="250">leg: finger (WebKit + dpr2,</text>
+    <text class="m" x="616" y="266">wave D) · dpr1 inner loop</text>
+
+    <path class="flow" d="M210,124 C 260,110 260,70 298,58" marker-end="url(#arr3)"/>
+    <path class="flow" d="M210,160 C 260,175 260,215 298,226" marker-end="url(#arr3)"/>
+    <path class="flow" d="M520,55  L 598,55"  marker-end="url(#arr3)"/>
+    <path class="flow" d="M520,232 L 598,232" marker-end="url(#arr3)"/>
+    <text class="m" x="536" y="46">matches</text>
+    <text class="m" x="536" y="224">matches</text>
+  </svg>
+  <figcaption>One corpus, two runs, two truths. The loader requires the <span class="mono">finger/</span>
+  segment in finger runs and excludes it in mouse runs — both ways — so a wrong-kind reference can
+  never satisfy a run. The 8 touch-native tests produce identical event streams in both modes (their
+  finger references duplicate their mouse ones, deliberately — two independently maintainable
+  baselines).</figcaption>
+  </figure>
+
+  <h3>5d · Two reference baselines, one directory axis apart</h3>
+  <p>Finger pixels legitimately differ from mouse pixels (no hover highlights, hold menus where
+  right-click menus were), so finger runs match their own references, on a directory axis below the
+  density segment — absence means mouse:</p>
+
+<pre>tests/&lt;Test&gt;/automation-assets/&lt;OS&gt;/…/SWCanvas/ceilPixRatio_&lt;N&gt;/           <span class="c">← mouse references</span>
+tests/&lt;Test&gt;/automation-assets/&lt;OS&gt;/…/SWCanvas/ceilPixRatio_&lt;N&gt;/finger/    <span class="c">← finger references</span></pre>
+
+  <p>The loader requires the segment in finger runs and excludes it in mouse runs — both ways, so a
+  wrong-kind reference can never satisfy a run. The Automator version in the filename never changed
+  for any of this: the mouse capture path is byte-identical with the finger machinery in place
+  (gated at every commit, not asserted), so no re-baseline was ever owed.</p>
+
+  <h3>5e · What runs when</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>gate</th><th>what it runs</th><th>kind</th></tr>
+    <tr><td class="k">fg presuite</td><td>the suite at dpr 1 + the paint audit (~3 min, the inner loop)</td><td>mouse</td></tr>
+    <tr><td class="k">gauntlet legs dpr1 / dpr2 / webkit</td><td>the full suite, three configurations</td><td>mouse</td></tr>
+    <tr><td class="k">gauntlet leg <strong>finger</strong> (wave D)</td><td>the full translated corpus under WebKit + dpr 2 — for this suite's purposes, an iPad (~6 min; also standalone as <code>fg finger</code>)</td><td>finger</td></tr>
+    <tr><td class="k">the finger inner loop</td><td><code>run-all-headless.js --pointer=finger</code> at dpr 1 (~2 min), for iterating on touch behaviour</td><td>finger</td></tr>
+  </table>
+  </div>
+
+  <div class="callout warn"><strong>The one thing the suite structurally cannot see</strong> is the
+  browser listener layer itself: the harness detaches the world's listeners and drives the queue
+  directly, so the suite proves the event classes and the grammar, not the DOM wiring. That gap is
+  covered separately — headless probes dispatch real <code>PointerEvent {pointerType:'touch'}</code>
+  at the canvas of the built pages (both engines) and assert the hand received the stroke, and the
+  boot smoke keeps the listener block alive. Capture is Chrome-only; WebKit runs reuse the same
+  SWCanvas references, as they do for the mouse.</div>
+
+  <h2>See also</h2>
+  <ul>
+    <li><span class="mono">docs/architecture/input-and-gestures.md</span> — the authoritative
+      reference for everything in §1–§3, with the code-level detail.</li>
+    <li><span class="mono">docs/architecture/viewports-and-planes.md</span> — drag-to-scroll and the
+      at-edge escalation, inside the scrolling-container family.</li>
+    <li><span class="mono">docs/specs/drag-embed-interaction-spec.md</span> — the dwell-to-embed
+      machine a lifted payload rides, identical for every pointer kind.</li>
+    <li><span class="mono">Fizzygum-tests/CLAUDE.md</span> — the reference grammar, the finger axis,
+      the runner flags and the per-test metadata.</li>
+    <li><span class="mono">Fizzygum-tests/DETERMINISM.md</span> — why event time is the only clock.</li>
+  </ul>
+</main>
+</body>
+</html>

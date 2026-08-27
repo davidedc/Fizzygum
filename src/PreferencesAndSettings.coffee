@@ -91,7 +91,7 @@ class PreferencesAndSettings
 
   # Normalize raw wheel deltas: squelch the minor axis when the intention is clearly
   # one-axis (prevents too much diagonal movement), then apply the invertWheelX/Y
-  # preferences. Returns the adjusted [x, y] pair; every wheel handler
+  # preferences. Returns the adjusted [x, y] pair; every `scrolledBy` implementor
   # (ViewportWdgt, SimpleSpreadsheetWdgt) routes its raw deltas through this.
   normalizedWheelDeltas: (x, y) ->
     if Math.abs(y) < Math.abs(x)

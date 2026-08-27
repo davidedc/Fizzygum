@@ -93,7 +93,7 @@ state, nothing time-driven on any path: while content overflows the bar shows TH
 the content under it — `SliderWdgt.catchesPointerAt` answers false whenever
 `indicatorIsIntangible()` (thin or hidden; an indicator is not a target); resting the pointer
 within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
-`ViewportWdgt.mouseMove`/`mouseLeave` → `_updatePointerInScrollBand`, since the viewport is
+`ViewportWdgt.hoverMoved`/`hoverExited` → `_updatePointerInScrollBand`, since the viewport is
 always in the hand's mouse-over ancestry for content under it) fattens both bars to FAT — full
 painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); leaving the band,
 or the content no longer overflowing, reverts to thin or hidden. No activity stamps, no clock,
@@ -117,7 +117,7 @@ click and no scroll band left to hover it back.
 ## Drag-to-scroll — the plane's other scroll gesture
 
 Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above.
-`ViewportWdgt.mouseDownLeft` (opt-in `isScrollingByfloatDragging`; refused whole under
+`ViewportWdgt.pressBegan` (opt-in `isScrollingByfloatDragging`; refused whole under
 `scrollPolicy 'never'`) installs a per-frame `@step` for the life of the press: while the hand's
 button is down and nothing is being float-dragged, the step samples the hand's position each
 frame (mapped into the viewport's own plane) and moves the offset by the delta through
@@ -135,7 +135,7 @@ press-and-hold recognizer arms the stroke ([`input-and-gestures.md`](input-and-g
 exactly as the mouse's. The mouse reading is untouched.
 
 AT-EDGE ESCALATION: a drag step that reaches its pane's clamp hands the leftover delta outward
-through `scrollByDragDelta` — the drag twin of the escalation `ViewportWdgt.wheel` already runs
+through `scrollByDragDelta` — the drag twin of the escalation `ViewportWdgt.scrolledBy` already runs
 at its own edge, reached by the same parent climb (`escalateEvent`) — so a stack of nested panes
 passes the leftover outward one level at a time instead of dying at the inner clamp. Both arms of
 the step escalate: the per-frame sample taken while the button is down, and the release-time
@@ -216,7 +216,7 @@ generic viewport is "viewport"; composites take their contents' name
   same two-vocabulary law the islands introduced. ⚠ One rule this imposes on INPUT handlers:
   `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
   is still plane-local to the SENDER — a pos-consuming handler on a plane's ancestor must
-  re-derive (`@screenPointToMyPlane world.hand.position()`, as `ViewportWdgt.mouseDownLeft`
+  re-derive (`@screenPointToMyPlane world.hand.position()`, as `ViewportWdgt.pressBegan`
   does), never trust the parameter. The remaining horizon — lifting the offset + paint
   interception from `ViewportWdgt` to the clipping-mixin level, making scrollability a
   property of every panel — is designed but deliberately unlifted until a second user

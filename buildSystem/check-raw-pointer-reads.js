@@ -41,7 +41,7 @@ const HANDLER_NAMES = new Set([
   'hoverMoved', 'pressMoved',
   'hoverEntered', 'hoverExited',
   'nonFloatDragging', 'endOfNonFloatDrag',
-  'wheel',
+  'scrolledBy',
 ]);
 
 function walk(dir, acc) {

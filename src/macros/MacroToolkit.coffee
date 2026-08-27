@@ -775,7 +775,7 @@ class MacroToolkit
   # Move to a widget's SCREEN point at fraction [fx,fy] (default its centre) and click — the
   # island analogue of moveToAndClickAtFractionOf_InputEvents, whose point is in the widget's
   # own plane and would miss inside a scaled/rotated island. The pointer pipeline plane-maps the
-  # dispatched position per-receiver (4A-1 click dispatch, R1 mouseMove, R4 drag consumers), so
+  # dispatched position per-receiver (4A-1 click dispatch, R1 move channels, R4 drag consumers), so
   # island-inner sub-widget geometry that reads it (a caret slot, a slider fraction) is correct;
   # this verb's job is just to AIM the pointer at the right on-screen pixel.
   moveToAndClickAtScreenFractionOf_InputEvents: (widgetOrIdentifier, fraction = [0.5, 0.5], whichButton = "left button", milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -970,8 +970,8 @@ class MacroToolkit
   # identifier), driven entirely through the INPUT-EVENT QUEUE like a real wheel — NOT by poking the
   # hand. First a no-button move positions the pointer over the widget (so the fake playback pointer
   # shows and hoverEntered/hover fire, exactly as for a user), then a queued WheelInputEvent scrolls the
-  # nearest scrollable under the pointer (ActivePointerWdgt.processWheel walks up to the nearest `wheel`
-  # owner; ViewportWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
+  # nearest scrollable under the pointer (ActivePointerWdgt.processWheel walks up to the nearest `scrolledBy`
+  # owner; ViewportWdgt.scrolledBy scrolls itself or escalates to its parent at the travel limit). A
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
   #   A FINGER scrolls the pane by DRAGGING it, so the whole drag is kept inside the box of the pane

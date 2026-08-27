@@ -10,7 +10,7 @@
 **Keep the mechanism.** Mixins are the codebase's answer to a real gap — CoffeeScript is
 single-inheritance, and a handful of behaviours must be *injected into* classes on
 unrelated branches of the hierarchy, overriding framework hooks (`setColor`, `add`,
-`mouseDownLeft`, the paint/geometry protocol) — something a delegated collaborator
+`pressBegan`, the paint/geometry protocol) — something a delegated collaborator
 structurally cannot do without a forwarding stub per hook per consumer.
 
 The policy:
@@ -212,7 +212,7 @@ patterns for the same needs, and Fizzygum already has the seam (`*Appearance` st
 objects on the paint path). Three shapes, with costs:
 
 - **A — forwarding stubs** (host HAS-A collaborator; every overridden hook becomes a
-  hand-written stub: `mouseDownLeft: -> @highlighter.onMouseDown(); super`). Always
+  hand-written stub: `pressBegan: -> @highlighter.onMouseDown(); super`). Always
   works. Genuine advantages: the stub gets REAL CoffeeScript `super` (the
   `arguments.callee` rewriter drops out), and the collaborator is a plain class — fully
   first-class everywhere. Cost is arithmetic: `HighlightableMixin` alone = 9 consumers

@@ -1363,7 +1363,7 @@ cold-executable. **R1, R2, R3, R4 COMPLETE 2026-07-10.**
 > capstone + homepage all green). AUDIT of the other position-reading `mouseMove` consumers: `StringWdgt`
 > (`slotAt` text selection) and `Example3DPlotWdgt` (drag-delta) both just BECOME correct inside an island;
 > `SliderButtonWdgt.mouseMove` reads no position; no double-mapping (only `HandleWdgt`/`ActivePointerWdgt`
-> call `screenPointToMyPlane`). Proof: `macroMouseMovePositionMappedInRotatedIsland` (a box records the pos
+> call `screenPointToMyPlane`). Proof: `macroHoverMovePositionMappedInRotatedIsland` (a box records the pos
 > its own `mouseMove` receives; rotated 40°; bare pointer moved to an OFF-CENTRE interior point because the
 > centre is the rotation's fixed point ⇒ maps trivially) value-asserts delivered-pos == plane-map,
 > non-trivial (>5px), island at 40°. The suggested extra audit (slider track-hover) came out clean.

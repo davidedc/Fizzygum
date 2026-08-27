@@ -1254,7 +1254,7 @@ class ViewportWdgt extends Widget
     @_reLayoutScrollbars()
 
   # ViewportWdgt events.
-  wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
+  scrolledBy: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
 
     x = xArg
     y = yArg
@@ -1289,7 +1289,7 @@ class ViewportWdgt extends Widget
       if @scrollPolicy is 'never' or
        (y > 0 and @scrollOffsetY <= 0) or
        (y < 0 and @scrollOffsetY >= @contents.height() - @height())
-        @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
+        @escalateEvent 'scrolledBy', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
         @scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY
@@ -1300,7 +1300,7 @@ class ViewportWdgt extends Widget
       if @scrollPolicy is 'never' or
        (x > 0 and @scrollOffsetX <= 0) or
        (x < 0 and @scrollOffsetX >= @contents.width() - @width())
-        @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
+        @escalateEvent 'scrolledBy', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
         @scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX

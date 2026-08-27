@@ -176,7 +176,36 @@ plan renames on top of is the one that plan landed; its living truth is
   paint+storage serial-only (the load-flake shape). P6 note: `input-and-gestures.md`'s
   consumers section is stale in MECHANISM now (two dispatch sites → one; the re-sync
   suppression is new doctrine to record), not just vocabulary.
-- P6 `scrolledBy` + docs weave + tests-prose sweep + arc close: —
+- P6 `scrolledBy` + docs weave + tests-prose sweep + arc close: **DONE 2026-08-27 — THE ARC
+  CLOSES.** `wheel → scrolledBy` (2 defs, the hand's climb, 3 escalate strings, the gate
+  name-set, 5 script calls; the STAY-list intact: the DOM listener strings, `WheelInputEvent`,
+  `processWheel`, the macro wheel verbs). `input-and-gestures.md` corrected in MECHANISM and
+  vocabulary (ONE pressed-move dispatch site; the re-sync suppression recorded as the
+  idiom's third application; both triggers meeting AT the widget; a new tier-contract
+  section — the doc IS the dispatch contract now). The explainer LANDED at last (held since
+  P1): the intro tells the TIER story — the wart framing is gone, the funnel ends in intent
+  names. Prose sweep: 21 Fizzygum files + 127 tests-repo entries (archives, measurements,
+  plans and MIGRATION-PLAN untouched by design; the authoring SKILL updated — the
+  instruction-as-root-cause class). `macroMouseMovePositionMappedInRotatedIsland` RENAMED
+  mechanically to `macroHoverMovePositionMappedInRotatedIsland` (dir + sources + reference
+  files with dataHashes unchanged + tags + assertion labels; standalone PASS; manifests
+  structural). Gates: build 28/28 · doc-narration 0/0 · suite 330/330 · presuite ·
+  arc-close gauntlet 19/19 `OK(warn)` — the ONE warn = `SliderTrackClickMovesButton`
+  webkit in-wave (the TRACKED flake's 5th sighting, serial-pass) · `fg homepage` OK (the
+  production no-contamination witness). Residue filed at close: the scroll-further-beyond-
+  3-nudges follow-up and the `catchesPointerAt` allowlist-note hygiene → `docs/BACKLOG.md`
+  rows; the affine plan's stale test-name citation fixed by the coordinator.
+
+**ARC CLOSED 2026-08-27.** The widget-facing input vocabulary is named by TIER — six
+stroke-phase facts, five certified gestures, two kept device-neutral drag channels, four
+dead channels deleted — with the single-dispatch pressed-move model, the unified context
+verb, and the re-sync suppression landed as semantics riders, and the suite GREW by one
+witness (paint-by-left-drag, both axes). Commits: P1 `1ef2921e`/`88c3d8cdc` · P2
+`5f3dbb80`/`973020862` · P3 `53f8d6de`/`f105fd662` · P4 `684b3219` · P5
+`83305178`/`9f65ae851` · P6+close (this commit). Six reference sets on two axes were
+corrected from frozen accidents to true pixels along the way; two probe/tool defects and
+two latent macro-aim defects were fixed at their roots; every falsified premise is amended
+dated above.
 
 ---
 

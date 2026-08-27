@@ -27,6 +27,17 @@ in the first; anything about the boot sequence, the reflective layer's arrival o
   SystemTest suite structurally cannot. Companion to
   `../architecture/build-and-packaging.md` §2 and §5 (authoritative).
 
+- [`input-and-gestures.html`](input-and-gestures.html) — how input works: mouse and
+  touch as one Pointer-Events pipeline (one event family, two construction
+  boundaries, the event-time queue), the two TIERS of widget-facing verb (stroke
+  FACTS vs certified GESTURES), the hand's per-stroke grammar (what a touch press
+  means — the decision flow, the four finger gestures as timelines, the hold as the
+  context gesture's second trigger, a scroll dispatches no click), typical
+  interactions side by side, and how the test system covers both kinds (the
+  dedicated touch witnesses, the finger-mode replay of the whole corpus, the two
+  reference baselines one directory axis apart, and which gauntlet legs run what). Companion to
+  `../architecture/input-and-gestures.md` (authoritative).
+
 - [`build-and-packaging.html`](build-and-packaging.html) — how an artifact is
   assembled and selected: the partition (`parts.json`), the profiles, what a build
   derives rather than declares, the reflective layer and the `sources` axis, lazy
