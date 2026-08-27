@@ -114,6 +114,33 @@ lands anywhere else it reverts to a plain slider (`SliderWdgt._reactToBeingAdded
 look must never survive being picked up, or the bar becomes a widget on the desktop nothing can
 click and no scroll band left to hover it back.
 
+## Drag-to-scroll — the plane's other scroll gesture
+
+Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above.
+`ViewportWdgt.mouseDownLeft` (opt-in `isScrollingByfloatDragging`; refused whole under
+`scrollPolicy 'never'`) installs a per-frame `@step` for the life of the press: while the hand's
+button is down and nothing is being float-dragged, the step samples the hand's position each
+frame (mapped into the viewport's own plane) and moves the offset by the delta through
+`scrollX`/`scrollY` — the same funnel the bars and the wheel write through. Release seeds a
+POST-RELEASE MOMENTUM glide (friction 0.8, tracked in `world.wdgtsWithOngoingScrollMomentum`),
+suppressed under the Automator's pacing control so screenshots stay event-determined.
+
+The step's DETACH GATE decides whether a press here means "scroll the pane" or "pick the pressed
+thing up". On a `'mouse'`/`'pen'` stroke it is `!wdgtToGrab?.detachesWhenDragged()` — hold steady
+if a float-draggable widget sits under the hand, since it is probably about to be lifted. An
+un-armed `'touch'` stroke widens the gate: `!wdgtToGrab?.detachesWhenDragged() or
+!world.hand.strokeMeansMouseDrag()` — an un-armed finger scrolls over ANY content, detachable or
+not, because a plain finger drag over a viewport's content always means scroll until the hand's
+press-and-hold recognizer arms the stroke ([`input-and-gestures.md`](input-and-gestures.md)); once armed, the gate reads
+exactly as the mouse's. The mouse reading is untouched.
+
+AT-EDGE ESCALATION: a drag step that reaches its pane's clamp hands the leftover delta outward
+through `scrollByDragDelta` — the drag twin of the escalation `ViewportWdgt.wheel` already runs
+at its own edge, reached by the same parent climb (`escalateEvent`) — so a stack of nested panes
+passes the leftover outward one level at a time instead of dying at the inner clamp. Both arms of
+the step escalate: the per-frame sample taken while the button is down, and the release-time
+FLUSH that carries whatever travelled in the frame the button came up.
+
 ## The scrolled-content contract
 
 The viewport's arrange reads DECLARATIONS off its plane instead of testing classes

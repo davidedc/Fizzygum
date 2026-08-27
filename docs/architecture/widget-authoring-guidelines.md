@@ -505,6 +505,14 @@ mark after `add` + `setExtent` adds nothing.
   handles, frame-bar buttons, toolbars, creator buttons — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer
   nor draws the selection overlay around the chrome.
+- **Two capability queries tell the hand's touch grammar about your widget**, both dispatched
+  `?()` (nothing stubbed on `Widget`): `ownsDragsStartingOnMe: -> true` says a press starting on
+  you is YOUR own drag gesture (a bar, a handle, a slider's thumb) — a finger needs no hold before
+  dragging it, the same way chrome already answers instantly on a mouse; `claimsPlainDragsForScrolling: -> true`
+  says a plain drag pressed anywhere on you would scroll you (only `ViewportWdgt` answers this
+  today) — a finger must hold before a drag over your content means anything OTHER than scroll.
+  Declare one only if it is genuinely true of your class; most widgets answer neither and take the
+  grammar's default. Deep home: [`input-and-gestures.md`](input-and-gestures.md).
 - **No wall-clock, no timers, no randomness** in render/layout/input code: the suite asserts byte-exact
   pixels and those diverge under parallel load. The cycle and step machinery are the sanctioned clock
   (`../../Fizzygum-tests/DETERMINISM.md`).

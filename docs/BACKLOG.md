@@ -167,9 +167,8 @@ The arc's narrative, decisions and standing lessons live in that plan's BACKLOG 
   receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead
   FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.
 
-### `plans/frames-input-touch-program.md` — PROGRAM doc (four sibling plans, authored just-in-time) + `plans/frame-lifetime-and-docking-plan.md` (Plan 1, P0–P5 DONE 2026-08-23/24, P6 docs/Liskov walk in progress)
-One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifestations derived from lifetime × parentage (menu / window / card; docked = card + edge spec); menus and prompts are framed citizens, `PopUpWdgt` is deleted; then Pointer Events, the single-geometry visual wave, and the finger gesture grammar + harness. Rulings live in the program doc's §2 ledger; deferred items in its §5 tail ledger (the program closes when that table is empty).
-- [ ] Plan 1 P6 (Liskov/name walk + this docs weave), then the plan's own tail items (T6–T17, program §5)
+### `archive/frames-input-touch-program.md` — the frames·input·touch PROGRAM (CLOSED 2026-08-27; all five plans executed and archived)
+One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifestations derived from lifetime × parentage; Pointer Events; the single-geometry visual wave; the command-panel/`User` model; the gesture grammar + finger harness (the `finger` gauntlet leg, wave D). The living truth is in the architecture corpus (`input-and-gestures.md`, `viewports-and-planes.md`, `widget-authoring-guidelines.md`, the macros CLAUDE docs, the tests-repo reference grammar); rulings and the drained tail ledger are in the archived program doc. Residue rows, each with its origin:
 - [ ] **icons on ordinary menus** (world menu, context menus): owner taste, not built; land only when a
       consumer asks. The mechanism already exists — `CommandSpec.icon` — so a consumer costs one call
       site, not a new axis. Origin: `archive/command-panel-unification-plan.md` §2.2.
@@ -183,12 +182,13 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
       (`resolveInjectionTarget()`), never the palette instance. Verify the binding and either
       re-home the declaration onto the overlay side or delete it as dead. Origin:
       command-panel-unification plan P4 execution note.
-- [ ] **T3 — resize handle: small glyph, large hit zone** (or edge-grab resizing) (program §5); revisit at Plan 3's probe page, the geometry family's own before/after review point.
-- [ ] **T4 — multi-pointer** (program §5): pinch derived from two `pointerId`s, retiring the Safari `gesturestart`/`gesturechange` listeners kept beside Pointer Events until then; after Plan 2 lands the `PointerInputEvent` family.
-- [ ] **T5 — desktop-edge docking** (program §5): the world's edges as dock slots, a taskbar strip. Plan 1 P5 ruled `EdgeDockLayoutSpec` world-CAPABLE (names no host type) but left the world with no slots to use it — a desktop dock still needs a dock loop in the world's arrange, a fill gesture, and a stated precedence against the `StretchLayoutSpec`s the world already consumes, all unruled.
-- [ ] Plan 2 Pointer Events — author when Plan 1 closes
-- [ ] Plan 3 single-geometry visual wave — author when Plan 2 closes
-- [ ] Plan 4 gesture grammar + finger harness — author when Plan 3 closes
+- [ ] **T4 — multi-pointer**: pinch derived from two `pointerId`s, retiring the Safari `gesturestart`/`gesturechange` no-op listeners kept beside the pointer listeners until then (ruling I1). Origin: program tail T4, filed at the Plan 4 close.
+- [ ] **T5 — desktop-edge docking**: the world's edges as dock slots, a taskbar strip. `EdgeDockLayoutSpec` is world-CAPABLE (names no host type) but the world grows no slots — a desktop dock needs a dock loop in the world's arrange, a fill gesture, and a stated precedence against the `StretchLayoutSpec`s the world already consumes, all unruled. Origin: program tail T5.
+- [ ] **T18 — halo crowding at touch scale, PAIRED with the owner-pending G2 halo feel-check (one conversation)**: at `handleSize 44` the five corner-internal handles fully overlap on any widget below ~2·handleSize (~92 px); the Plan 3 z-order interim (corner resizer frontmost) stands, handles are hold-exempt chrome under the grammar, and the open DESIGN question (fewer handles below a size floor? edge zones? a halo mode?) is the same conversation as how the halo should FEEL at 44 px. Origin: program tail T18, owner-ruled OD4(a) at the Plan 4 review.
+- [ ] **multi-user input attribution**: strokes carry `pointerId` and the `User` model exists (`world.users`); a User-per-pointer mapping is designed when a second input DEVICE exists. Origin: the Plan 3.5 `User` model's "Plan 4 at the earliest" marker, discharged at the Plan 4 close.
+- [ ] **finger scrolling for the spreadsheet**: the sheet takes no drag-scroll (wheel/scrollbar only), which is exactly why its three wheel tests are declared mouse-only on the finger axis; a finger-scrollable sheet is a product FEATURE (the grammar re-gates existing scroll surfaces, it adds none). Origin: Plan 4 P3 discovery classification.
+- [ ] **boot-smoke third leg for the harness page**: `smoke-boot-headless.js` boots `index.html` + `index-sw.html` but not `worldWithSystemTestHarness.html`, so a harness-page-only boot breakage is invisible to build+smoke and surfaces only on a real test run (measured at Plan 4 P2: two such breakages cost a debug loop). A cheap third leg closes it. Origin: Plan 4 P2.
+- [ ] **suppress content-press side effects while a touch stroke commits to scroll?** The down dispatches to content before the stroke's meaning is known (a tap must press), so a scroll-drag's press can still arm content state even though its release now dispatches no click (`_strokeOwesNoClick`); iOS delays touches to solve this. Only worth designing if a real device shows artifacts. Origin: Plan 4 P4, the click-suppression ruling's boundary.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4 + residuals + claimsSpace arc shipped/pushed; §7.7 appearance local-coords LANDED 2026-08-12

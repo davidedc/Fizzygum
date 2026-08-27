@@ -2051,6 +2051,98 @@ assertion a recapture after a regression silently stores two different hashes an
   `@moveToItemStartingWithOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "a Viewport"` (class-name prefix,
   Wdgt-stripped), then click the policy row on the construct's own menu. No new verb.
 
+## Touch and the finger run mode
+
+New L1 touch primitives (doc-commented in full in `MacroToolkit.coffee`) compose the four
+gestures a finger stroke can be: `syntheticEventsTouchTap_InputEvents` (a position-carrying
+down+up, no hover before it — a tap IS a click), `syntheticEventsTouchHold_InputEvents` (down,
+then a same-position move scheduled past `pressAndHoldMs` — the event that CROSSES the window is
+what fires the hold; `alsoRelease:` — default true — false keeps the finger down for a
+hold-then-drag), `syntheticEventsTouchDrag_InputEvents` (down + sampled move path + up, one
+gesture), `syntheticEventsTouchDragFromHeldPress_InputEvents` (carry-then-release ONLY — the
+second half of a hold-then-drag: the stroke never releases between the hold and the drag, which
+is the whole point of witnessing one). A composed "hold-then-drag" verb deliberately does not
+exist — the split pair is what lets a witness screenshot the held state before continuing the
+same stroke: hold with `alsoRelease: false`, drain, assert/screenshot the open menu, then
+`syntheticEventsTouchDragFromHeldPress_InputEvents` carries on
+(`macroFingerHoldThenDragLifts`). The hold's own window is scheduled in NON-scaled real time
+(`pressAndHoldMs` + a margin, `holdWindowMarginMs`) — the same idiom `clickGuardWindowMs`/
+`dragFloorMs` already use: a RECOGNITION window the speed lever must not compress, or it would be
+recognised at one speed and not another.
+
+Finger WITNESS tests are ordinary suite members with ordinary references — no run-level finger
+mode needed (a macro may synthesize touch events directly, exactly as the pointer-cancel tests
+synthesize cancels): `macroFingerHoldOpensTitledContextMenu`,
+`…FingerPlainDragScrollsWhereMouseLifts`, `…FingerHoldThenDragLifts`,
+`…FingerChromeDragNeedsNoHold`, `…FingerTapEditSummonsVirtualKeyboard` (assertion-only — DOM
+element presence/absence, no pixels), plus three TABLET-extent tests at a declared 1024×768
+(`…TabletDockedToolbarChevron`, `…TabletFingerDragsWindowByBar`,
+`…TabletFingerHoldOpensWorldMenu`) — the extent is the TEST's own declared metadata fact, honoured
+by the reset seam, never a display setting. Every gesture witness test declares
+`grabDragThreshold: true` in its metadata: the Automator's normal threshold-skip (a carve-out for
+the retired recorded tests) would grab the pressed widget before the hold's own same-position move
+ever got to fire it — a test about a RECOGNITION window wants the hand's real recognition
+machinery.
+
+Separately, the FULL suite can replay under **`?pointer=finger`** (`--pointer=finger` on the
+headless runners) — a second global axis beside speed, `MacroToolkit.currentPointerKind()` ∈
+`{mouse, finger}`, resolved LAZILY against `@defaultPointerKind` ("mouse") from
+`window.FIZZYGUM_POINTER_KIND` (set once at boot from `?pointer=`, the exact `?speed=`/`?dpr=`
+pattern) and read via `fingerMode()`. No macro source ever mentions it and no test declares it —
+the same 300+ committed macros replay under either device unedited, matched against their OWN
+reference axis (`../../../Fizzygum-tests/CLAUDE.md`).
+
+**The verb's NAME states the user's intent; the translation preserves that intent, never the raw
+events** — the one design rule every translated verb below follows. A click's intent is "activate
+this" → a tap. A right-click's intent is "show this widget's menu" → a press-and-hold (a finger
+has no second button; `docs/architecture/input-and-gestures.md` is the grammar's own deep home).
+A wheel's intent is "move this pane's content by this much" → a drag over the pane. A
+press-drag-release's intent is "move this to there" → a hold-then-drag, EXCEPT where the calling
+verb already knows it is pressing CHROME (a handle, a slider's button, a scrollbar's thumb) —
+there a hold would open, then instantly dismiss, that surface's own context menu, so those verbs
+(`dragResizeMoveHandleTo_InputEvents` and siblings) go straight to a plain touch drag instead
+(`_dragChromeFromTo_InputEvents`).
+
+Two floors keep a translated gesture inside the same frame-cadence budget its mouse twin
+observes: **a translated drag floors exactly when its mouse twin floors** — `_touchDragSpanFor`
+applies the speed lever the same way `dragSpanWithFloor` does, and `dragFloorMs` is the shared
+floor both sides converge on, so a per-frame sampler (a viewport's scroll-drag step,
+drag-enter/leave) sees the same number of real frames whichever device drove it.
+
+**A translated wheel aims at the resolved PANE — never at overflowing content — and PARKS the
+pointer at the aim afterwards.** `_scrollPaneAt` asks the product's own question
+(`ViewportWdgt.claimsPlainDragsForScrolling`, walked from the aim point first and the named
+widget second) rather than assuming the widget named IS what scrolls — a menu's rows live in a
+viewport BELOW it, and content that overflows its pane can have its centre outside that pane. The
+swipe is boxed to `_swipeBoxOf` that pane: its screen rect, inset clear of its own chrome (the
+bar band, widened while a resize/move handle is parked on it — a swipe means to press CONTENT,
+and one that lands on chrome would resize instead of scroll). **A wheel notch has no reach limit
+and a finger does, so a delta longer than one swipe is delivered as successive CLAMPED swipes** —
+`_touchScrollBy` loops (bounded by `@maxScrollSwipes`), each leg SHIFTED to fit inside the box
+rather than shortened, until the whole delta is spent or the box is exhausted (where the at-edge
+escalation — `docs/architecture/viewports-and-planes.md` — takes over). Witness:
+`macroFingerPlainDragScrollsWhereMouseLifts`; both `wheelOn_InputEvents` and
+`syntheticEventsWheel_InputEvents` translate this way.
+
+**A no-button move emits NOTHING under finger mode, unless the hand is already carrying a
+payload — the carry stream.** A finger has no hover: a mouse's no-button move is it WALKING to
+where it will act, which a finger simply skips (every touch event states its own place — there is
+no hover to have walked it there). But a widget already riding the hand (mid float-drag) must
+still travel to its destination even with no finger notionally "down" on it —
+`_queueTouchCarryMove` emits a buttonless touch-move stream for exactly that case
+(gated on `world.hand.isThisPointerFloatDraggingSomething()`), so a carried window is not dropped
+where it was picked up. A PRESSED move mid-drag is a different thing again —
+`syntheticEventsMouseMoveWhileDragging_InputEvents`'s finger branch carries an ALREADY-DOWN finger
+through one more leg of a multi-point drag (A to B to C…) with no release in between, so it emits
+the ordinary pressed touch-move stream, not the buttonless carry: a released-and-re-pressed pair
+would be a different gesture, and the arming the press earned would be gone with it.
+
+A test that cannot translate by MEANING (a wheel-mechanics test, a hover-assertion test) declares
+itself mouse-only in its metadata — `pointerKinds: ["mouse"]` + a `mouseOnlyReason` string, the
+allowlist-with-reasons idiom (`macroScrollIndicatorFattensAndDrags` is a worked example: its
+subject IS the hover-fattened indicator, and a finger never hovers) — and the finger loader
+filters it out; an UNdeclared test that fails to translate is a finding, not a skip.
+
 ## Affine transforms (islands)
 
 - **Screenshotting a thin STROKE: deselect first** (`macroRotatedStrokedRectSingleComposite`): the teal editor-selection overlay is

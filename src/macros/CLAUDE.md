@@ -148,6 +148,35 @@ keys off `WorldWdgt.timeOfEventBeingProcessed`, NOT a wall-clock `setTimeout` th
 heavy-cycle load). A non-scaled minimum gap between distinct same-spot click gestures (`MacroToolkit`,
 > the window) keeps separate gestures from folding; a gesture's own ~120ms-spaced clicks (< the window) fold.
 
+## Pointer kind (mouse vs finger — a second global axis, tests say NOTHING about it)
+
+A second global axis beside speed: **`MacroToolkit.currentPointerKind()`** ∈ `{mouse, finger}`,
+resolved LAZILY against `@defaultPointerKind` ("mouse") from `window.FIZZYGUM_POINTER_KIND` — set
+once at boot from **`?pointer=`** (`src/boot/globalFunctions.coffee`, the exact `?speed=`/`?dpr=`
+pattern) — and read via `fingerMode()`. No macro source ever mentions it and no test declares it:
+the same 300+ committed macros replay under either device unedited, because the kind changes only
+the BODY a verb's L1/L2 primitives emit, never a verb's name or a test's source. A `'mouse'` run
+is byte-identical to today; a `'finger'` run's pixels legitimately differ (no hover highlights,
+hold menus where right-click menus were), so finger runs match references on their OWN directory
+axis — see `../../../Fizzygum-tests/CLAUDE.md`.
+
+The design rule every translated verb follows: **the verb's NAME states the user's intent, and the
+translation preserves that intent, never the raw events** — a click becomes a tap, a right-click
+becomes a press-and-hold (the touch grammar's own context-menu trigger,
+[`../../docs/architecture/input-and-gestures.md`](../../docs/architecture/input-and-gestures.md)),
+a wheel becomes a drag over the resolved pane (delivered as successive clamped swipes — a wheel's
+reach is unlimited, a finger's is one pane wide), and a press-drag-release becomes a hold-then-drag
+except where the calling verb already knows it presses CHROME (a handle, a slider, a scrollbar
+thumb), which needs no hold on either device. A no-button move emits nothing under finger mode
+UNLESS the hand already carries a payload, in which case it is the buttonless CARRY stream a
+float-drag still needs to travel. Full catalogue of these rules + the touch L1 verbs
+(`syntheticEventsTouchTap_InputEvents`/`…TouchHold…`/`…TouchDrag…`/`…TouchDragFromHeldPress…`) +
+the finger witness tests: **`MACRO-PATTERNS.md`**'s "Touch and the finger run mode" section.
+
+A test that cannot translate by MEANING (a wheel-mechanics test, a hover-assertion test) declares
+itself mouse-only in its metadata (`pointerKinds: ["mouse"]` + a `mouseOnlyReason` string, read on
+the `Fizzygum-tests` side) rather than silently failing under `--pointer=finger`.
+
 ## The verb library (index)
 
 Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; usage patterns are in
@@ -157,6 +186,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseDown`, `MouseUp`, `PointerCancel`, `Wheel`,
   `ConsecutiveLeftClicks`, `StringKeys`,
   `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
+  The four **touch primitives** — `TouchTap`, `TouchHold` (`alsoRelease:`), `TouchDrag`,
+  `TouchDragFromHeldPress` — are the finger's own gestures, used directly by finger witness tests
+  and composed by finger-mode translation inside the mouse-named verbs above (see "Pointer kind" above).
   ⚠ `PointerCancel` is the odd one out: every other primitive replays something a USER does, while a cancel
   is the BROWSER confiscating the stroke (a system gesture, palm rejection, the tab going away). The hand
   aborts on it — no click, no menu dismissal, a carried payload landed on the world — so it is the verb for
