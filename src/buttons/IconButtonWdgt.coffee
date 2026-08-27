@@ -44,7 +44,7 @@ class IconButtonWdgt extends ButtonWdgt
     @color_hover = @iconHoverColor
     @color_pressed = @color_hover
     # MY RESTING COLOUR IS THE ONE I AM BUILT AT. HighlightableMixin repaints me at color_normal
-    # on every hoverExited and mouseUpLeft, so leaving that at the mixin's generic default while my
+    # on every hoverExited and pressEnded, so leaving that at the mixin's generic default while my
     # own @color says something else means I change colour the first time a pointer visits me and
     # never change back -- a glyph whose shade records whether anyone ever hovered it. Stating the
     # two as one value is what makes a pointer visit round-trip to the same pixels. (The same

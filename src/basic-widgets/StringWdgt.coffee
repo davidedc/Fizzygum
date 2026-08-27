@@ -57,7 +57,7 @@ class StringWdgt extends Widget
   isHeaderLine: undefined
   isEditable: false
   # may the user drag-select my text? (see enableSelecting). A serializable MODE
-  # consumed by the prototype mouseDownLeft/mouseMove handlers -- NOT a pair of
+  # consumed by the prototype pressBegan/mouseMove handlers -- NOT a pair of
   # instance-assigned handler functions, which selection long was: an own function
   # property has no editable source, so any selecting-enabled text in a snapshot's
   # graph (every document, text panel, patch-programming pane...) crashed
@@ -1608,7 +1608,7 @@ class StringWdgt extends Widget
   enableSelecting: ->
     @isSelectable = true
 
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     if !@isSelectable
       super pos
       return

@@ -176,11 +176,11 @@ class Example3DPlotWdgt extends Widget
           @currentAngle +=  @previousMousePoint.x - pos.x
         @previousMousePoint = pos
 
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     @autoRotate = false
     @bringToForeground()
 
-  mouseUpLeft: ->
+  pressEnded: ->
     @autoRotate = true
 
   hoverExited: ->

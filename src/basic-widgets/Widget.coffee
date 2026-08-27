@@ -4184,7 +4184,7 @@ class Widget extends TreeNode
 
   bringToForeground: ->
     # No-op guards: a focus root already atop the furniture cannot be raised further, and a
-    # PARENTLESS root (the world itself — every empty-desktop click routes here via mouseDownLeft —
+    # PARENTLESS root (the world itself — every empty-desktop click routes here via pressBegan —
     # or an orphan) has nothing to be raised within. In both cases the raise is structural
     # no-op and the invalidation below a gratuitous full repaint of the root — the
     # overwhelmingly common case, since every left-click press routes here. Suppressing
@@ -4211,9 +4211,9 @@ class Widget extends TreeNode
     if @parent?
       @parent.propagateKillPopUps()
 
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     @bringToForeground()
-    @escalateEvent "mouseDownLeft", pos
+    @escalateEvent "pressBegan", pos
 
   mouseClickLeft: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     @escalateEvent "mouseClickLeft", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9

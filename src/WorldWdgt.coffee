@@ -2508,7 +2508,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @inputDOMElementForVirtualKeyboard.removeEventListener 'keyup', @inputDOMElementForVirtualKeyboardKeyupBrowserEventListener
       @inputDOMElementForVirtualKeyboard.removeEventListener 'keypress', @inputDOMElementForVirtualKeyboardKeypressBrowserEventListener
 
-  mouseDownLeft: ->
+  pressBegan: ->
     noOperation
   
   mouseClickLeft: ->

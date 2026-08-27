@@ -12,8 +12,8 @@ class HandleWdgt extends Widget
   cornerSpec: undefined
 
   # Affine transforms (§6 Phase 4B): transient rotate-gesture reference frame — the island's rotation
-  # and the pointer's angle about the anchor, both captured at grab-start (mouseDownLeft), cleared at
-  # mouseUpLeft. undefined at rest / for every non-rotate handle, so nothing to serialize.
+  # and the pointer's angle about the anchor, both captured at grab-start (pressBegan), cleared at
+  # pressEnded. undefined at rest / for every non-rotate handle, so nothing to serialize.
   _rotateGrabStartRotationDegrees: undefined
   _rotateGrabStartPointerAngleDegrees: undefined
 
@@ -134,7 +134,7 @@ class HandleWdgt extends Widget
   mouseClickLeft: ->
   # Affine transforms (§6 Phase 4B): end of a rotate gesture — clear the grab-start state so the next
   # grab re-captures its own reference angle. Harmless for the other handle types (fields stay undefined).
-  mouseUpLeft: ->
+  pressEnded: ->
     @_rotateGrabStartRotationDegrees = undefined
     @_rotateGrabStartPointerAngleDegrees = undefined
     # RE-RECORD request (the F6 family, auto-bookkeeping arc): this gesture resized/moved my
@@ -148,7 +148,7 @@ class HandleWdgt extends Widget
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button
   # will trigger the button when resizing.
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     return undefined  unless @target
     @target.bringToForeground()
     # Affine transforms (§6 Phase 4B): capture the rotate gesture's reference frame AT PRESS — the
@@ -211,7 +211,7 @@ class HandleWdgt extends Widget
         @target._setHeightDeferredSettle newHeight
       # Affine transforms (§6 Phase 4B): rotate the island target. newRot = rotation-at-grab + (current
       # pointer angle − pointer angle at grab), all in the SCREEN plane about the island's anchor. Lazy
-      # re-capture if a drag ever arrives before mouseDownLeft ran. Deferred-settle like the resize
+      # re-capture if a drag ever arrives before pressBegan ran. Deferred-settle like the resize
       # family (a 'slot' island settles to nothing; a coupled one reflows once at end of cycle).
       when "rotateHandle"
         if !@_rotateGrabStartPointerAngleDegrees?

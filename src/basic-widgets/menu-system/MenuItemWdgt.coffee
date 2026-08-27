@@ -271,11 +271,11 @@ class MenuItemWdgt extends LabelButtonWdgt
       @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     if @isListItem()
       @parent.unselectAllItems()
-      @escalateEvent "mouseDownLeft", pos
-    # LabelButtonWdgt.mouseDownLeft sets STATE_PRESSED + bringToForeground + escalate
+      @escalateEvent "pressBegan", pos
+    # LabelButtonWdgt.pressBegan sets STATE_PRESSED + bringToForeground + escalate
     super
 
   isListItem: ->

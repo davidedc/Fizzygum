@@ -389,7 +389,7 @@ class SliderWdgt extends CircleBoxWdgt
     @updateTarget()
     @_reLayoutSelfAndButton()
   
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     # jump-drag policy is the OWNING CONTEXT's (viewport / prompt) — capability via ?(),
     # instead of `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)`
     # (type-test-elimination ε)
@@ -401,7 +401,7 @@ class SliderWdgt extends CircleBoxWdgt
       # color from here
       @button.setPressedColor()
     else
-      @escalateEvent "mouseDownLeft", pos
+      @escalateEvent "pressBegan", pos
     
 
   setSize: (size) ->

@@ -249,7 +249,7 @@ class PaintToolbarWdgt extends ToolbarWdgt
           if !@queue?
               @queue = [0..24].map -> undefined
 
-      mouseUpLeft = ->
+      pressEnded = ->
           if world.hand.isThisPointerDraggingSomething() then return
           if @queue?
               # draining the queue

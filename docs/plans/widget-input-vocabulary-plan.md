@@ -102,7 +102,18 @@ plan renames on top of is the one that plan landed; its living truth is
   intent names, dissolving the one admitted wart) and lands then, together with
   `docs/architecture/input-and-gestures.md`'s own sweep (the P1-noted drift at its
   :144/:164 plus the tier vocabulary throughout).
-- P2 press/release facts: —
+- P2 press/release facts: **DONE 2026-08-27** (same Opus worker, zero falsifications, zero
+  pixels). `mouseDownLeft → pressBegan`, `mouseUpLeft → pressEnded` in one batch: 16 class
+  defs + the 5th `pressEnded` inside `TOOTHPASTE_TOOL_SOURCE`'s source STRING, 4 escalate
+  strings, the hand's climb + release dispatch, both gate name-sets, 4 tests-repo script
+  calls; `HighlightableMixin`'s `_class_injected_in` key follows by CONSTRUCTION
+  (`Mixin.coffee` derives it from `memberName`). Declared set EMPTY — the m→p rename stays
+  in the same alphabetical tail so no pinned member-list window moves (the pixels are the
+  oracle: suite 329/329). Positive controls that the rename is LIVE: the raw-pointer gate
+  still scans 83 handler bodies (it can only enter a body whose header is in the renamed
+  name-set), and every press-dependent pixel test passes. Gates: build 28/28; suite
+  329/329; P2-close gauntlet **19/19 CLEAN — no warn legs, no retries** (P1's two warn legs
+  passed in-wave: load flakes confirmed).
 - P3 activation gestures: —
 - P4 R1 — `contextMenuRequested` unifies the two triggers: —
 - P5 R2 — the move split (`hoverMove` / `pressedMove`): —

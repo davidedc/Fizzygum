@@ -662,7 +662,8 @@ class ActivePointerWdgt extends Widget
   #    processPointerCancel and processWheel — each take ONE immutable input event and turn it
   #    into the widget-facing dispatches below:
   #
-  #   mouseDownLeft
+  #   pressBegan
+  #   pressEnded
   #   mouseClickLeft
   #   mouseClickRight
   #   mouseDoubleClick
@@ -954,14 +955,14 @@ class ActivePointerWdgt extends Widget
       # only a PRIMARY press carries a down fact: what a secondary press means is the context
       # gesture, whose receiver the climb above books and whose release dispatches it
       if @mouseButton is "left"
-        while !w.mouseDownLeft?
+        while !w.pressBegan?
           if w.parent?
             w = w.parent
           else
             break
 
-        if w.mouseDownLeft?
-          w.mouseDownLeft @_pointerPositionInPlaneOf(w)
+        if w.pressBegan?
+          w.pressBegan @_pointerPositionInPlaneOf(w)
   
   
   processPointerUp: (e) ->
@@ -1030,7 +1031,7 @@ class ActivePointerWdgt extends Widget
           # only a PRIMARY release carries a release fact: what a secondary press means is the
           # context gesture, which the click dispatch below certifies
           if expectedClick is "mouseClickLeft"
-            w.mouseUpLeft? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
+            w.pressEnded? @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey
 
           # also send doubleclick if the
           # two clicks happen on the same widget
@@ -1543,7 +1544,7 @@ class ActivePointerWdgt extends Widget
     # THE GRAMMAR'S THIRD CONSUMER (ruling I2), the other half of the one in determineGrabs: while a
     # touch stroke is UN-ARMED its moves mean scroll and nothing else, so no widget is handed a
     # PRESSED move — this is the site a selection would otherwise extend through, since the tap's own
-    # mouseDownLeft already armed the string, and the site a paint tool or a plot rotation would
+    # pressBegan already armed the string, and the site a paint tool or a plot rotation would
     # otherwise consume. HOVER moves (no button down) are not this stroke's business and pass through
     # untouched; a mouse or pen stroke always means a mouse drag, so this reads false for them and
     # every dispatch below is exactly what it was.

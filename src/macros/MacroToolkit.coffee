@@ -256,7 +256,7 @@ class MacroToolkit
   # still settling: a ViewportWdgt's post-release glide is frame-cadence
   # driven and outlives the input queue, so without this gate a screenshot
   # races it (under the pacing control the glide is suppressed at the source —
-  # ViewportWdgt.mouseDownLeft — and this set stays empty; the gate is
+  # ViewportWdgt.pressBegan — and this set stays empty; the gate is
   # defense-in-depth for any momentum that does run).
   noInputsOngoing: ->
     world.inputEventsQueue.isEmpty() and !world.anyScrollMomentumOngoing()
@@ -990,7 +990,7 @@ class MacroToolkit
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
   # length, to JUMP the slider button there. For a viewport's scrollbar — a ViewportWdgt's @vBar
-  # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.mouseDownLeft,
+  # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.pressBegan,
   # when the slider's parent is a ViewportWdgt (or PromptWdgt), non-float-drags the button to the
   # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
   # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the

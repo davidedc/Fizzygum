@@ -40,7 +40,7 @@ HighlightableMixin =
         @_updateColor()
         world.destroyToolTips()  if @toolTipMessage
       
-      mouseDownLeft: ->
+      pressBegan: ->
         @state = @STATE_PRESSED
         @_updateColor()
 
@@ -49,6 +49,6 @@ HighlightableMixin =
 
         super
 
-      mouseUpLeft: ->
+      pressEnded: ->
         @state = @STATE_NORMAL
         @_updateColor()

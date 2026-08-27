@@ -464,7 +464,7 @@ class ViewportWdgt extends Widget
   # scroll edges fattens both indicators; anywhere else, or leaving me, thins them again.
   #   ⚠ The `pos` parameter is deliberately NOT read: a move over my scrolled CONTENT can
   # escalate here with the position still in the ROW's plane, offset-pixels away from mine —
-  # the same trap mouseDownLeft documents. Re-derive it from the hand with the mapped read.
+  # the same trap pressBegan documents. Re-derive it from the hand with the mapped read.
   mouseMove: ->
     @_updatePointerInScrollBand @screenPointToMyPlane world.hand.position()
 
@@ -493,7 +493,7 @@ class ViewportWdgt extends Widget
     @height()
 
   # Pressing a slider's TRACK jump-drags the button to the press point when the slider is
-  # chrome its parent owns (my scrollbars) — SliderWdgt.mouseDownLeft asks its parent via ?().
+  # chrome its parent owns (my scrollbars) — SliderWdgt.pressBegan asks its parent via ?().
   # PromptWdgt gives its input slider the same policy. Capability, was
   # `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)` (type-test-elimination ε).
   sliderTrackPressJumpsButton: ->
@@ -1000,7 +1000,7 @@ class ViewportWdgt extends Widget
   # Float-dragging a Viewport's contents scrolls it (particularly useful on touch devices); the same
   # gesture works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
   # viewport anchored to a non-draggable background, such as a color palette).
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
 
     # a 'never' viewport takes no scroll gestures at all — fall through to the
     # normal grab/detach recognition instead of installing a dead step
@@ -1008,7 +1008,7 @@ class ViewportWdgt extends Widget
     return undefined  unless @isScrollingByfloatDragging
 
     # ⚠ Do NOT seed oldPos from the `pos` parameter: a press on my scrolled CONTENT dispatches
-    # to the row (base Widget.mouseDownLeft) which ESCALATES here with the pos still in the
+    # to the row (base Widget.pressBegan) which ESCALATES here with the pos still in the
     # ROW'S plane — offset-pixels away from mine (paint-time scroll; pre-offset-model the two
     # planes coincided, so the escalated value was right by coincidence). The step's per-frame
     # samples below are in MY plane, and one cross-plane oldPos makes the first frame's delta
@@ -1166,7 +1166,7 @@ class ViewportWdgt extends Widget
   startAutoScrolling: ->
     # The edge auto-scroll is wall-clock driven (the Date.now() settle below
     # plus per-frame increments), but unlike the momentum glide in
-    # mouseDownLeft it is NOT suppressed under the test harness's pacing
+    # pressBegan it is NOT suppressed under the test harness's pacing
     # control: it is a load-bearing interaction with its own SystemTest
     # (macroListWdgtAutoScrollsNearDraggedEdge). Its determinism contract is
     # SATURATION instead — a macro holds the drag in the edge band long

@@ -185,7 +185,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
       return
     @_setNormalColor()
   
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     @bringToForeground()
     @setPressedColor()
 

@@ -34,8 +34,8 @@ const EXEMPT = /#\s*raw-screen-pointer-sanctioned:\s*\S/;    // marker WITH a no
 const RAW_READ = /world\.hand\.position\(\)/;
 const MAPPED = /screenPointToMyPlane/;
 const HANDLER_NAMES = new Set([
-  'mouseDownLeft',
-  'mouseUpLeft',
+  'pressBegan',
+  'pressEnded',
   'mouseClickLeft', 'mouseClickRight',
   'mouseDoubleClick', 'mouseTripleClick',
   'mouseMove',

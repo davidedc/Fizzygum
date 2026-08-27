@@ -139,19 +139,19 @@ class LabelButtonWdgt extends ButtonWdgt
     @_changed()
     world.destroyToolTips()  if @toolTipMessage
 
-  mouseDownLeft: (pos) ->
+  pressBegan: (pos) ->
     @state = @STATE_PRESSED
     @_changed()
-    # replicate Widget.mouseDownLeft inline (bringToForeground + escalate) rather
-    # than calling super: ButtonWdgt's HighlightableMixin mouseDownLeft would run
+    # replicate Widget.pressBegan inline (bringToForeground + escalate) rather
+    # than calling super: ButtonWdgt's HighlightableMixin pressBegan would run
     # _updateColor, clobbering @color (our normal fill).
     @bringToForeground()
-    @escalateEvent "mouseDownLeft", pos
+    @escalateEvent "pressBegan", pos
 
   # HighlightableMixin would reset @state to NORMAL on mouse-up; a label button
   # must NOT (a selected list row keeps its STATE_PRESSED highlight). So
   # neutralise it.
-  mouseUpLeft: ->
+  pressEnded: ->
 
   mouseClickLeft: ->
     @bringToForeground()

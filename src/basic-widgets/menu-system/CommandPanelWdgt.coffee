@@ -142,7 +142,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     true
 
   # My input slider's track press jump-drags its button, like a viewport's
-  # scrollbars do — SliderWdgt.mouseDownLeft asks its parent via ?(); see
+  # scrollbars do — SliderWdgt.pressBegan asks its parent via ?(); see
   # ViewportWdgt.sliderTrackPressJumpsButton (type-test-elimination ε).
   sliderTrackPressJumpsButton: ->
     true
