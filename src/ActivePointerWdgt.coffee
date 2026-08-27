@@ -857,6 +857,23 @@ class ActivePointerWdgt extends Widget
   strokeMeansMouseDrag: ->
     @pointerType isnt 'touch' or @_pressArmedForMouseSemantics
 
+  # Does this stroke's RELEASE owe a click? Two strokes do not:
+  #  - the HOLD consumed it: its menu already happened, and a right press fires no mouseClickLeft
+  #    either;
+  #  - it was a PLAIN DRAG: an un-armed touch press that left the hold radius means a scroll for the
+  #    rest of its life (§2.2's plain-drag row — the same two facts the recognizer already keeps),
+  #    and a scroll's release means "the finger left the glass", not "click whatever travelled under
+  #    it". This one is load-bearing rather than tidy: a pane carries what the finger pressed ALONG
+  #    with the finger, so a drag-scroll's release lands on the very widget its press landed on, and
+  #    the `w == @mouseDownWdgt` test below cannot tell the two apart. Without this, every scroll
+  #    swipe ends in a click on the row, cell or paragraph it scrolled past — triggering menu
+  #    actions and taking editor focus mid-scroll.
+  # A TAP never answers true: it does not leave the radius. A mouse or pen never does either (the
+  # touch key), so their strokes keep dispatching exactly the clicks they always have.
+  _strokeOwesNoClick: ->
+    return true if @_pressHoldFired
+    @pointerType is 'touch' and @_pressLeftHoldRadius and not @_pressArmedForMouseSemantics
+
   # THE FINGER LEFT THE GLASS. A touch stroke has no between-strokes position — nothing rests under
   # a lifted finger — so at its end every widget the stroke walked over is told the pointer left,
   # and the over-list empties. Without it the last-tapped widget keeps a hover highlight, and a
@@ -978,11 +995,12 @@ class ActivePointerWdgt extends Widget
 
     if @isThisPointerFloatDraggingSomething()
       @drop()
-    else if @_pressHoldFired
-      # THE HOLD CONSUMED THIS STROKE. Its menu already happened, so the release dispatches no click
-      # and dismisses nothing — the same shape a right press has, which never fires mouseClickLeft
-      # either. A menu still standing (the finger let go without moving) stays: it is an ordinary
-      # transient menu from here on, and the next tap outside it takes it away.
+    else if @_strokeOwesNoClick()
+      # THE STROKE OWES NO CLICK — either the hold consumed it or it was a plain drag (see the
+      # query). Its release dispatches no click and dismisses nothing — the same shape a right press
+      # has, which never fires mouseClickLeft either. A hold menu still standing (the finger let go
+      # without moving) stays: it is an ordinary transient menu from here on, and the next tap
+      # outside it takes it away.
       #   The non-float contract still holds: the hold can be followed by a value-drag, and a control
       # left mid-drag must be told the drag is over (see the arm below).
       if @isThisPointerNonFloatDraggingSomething()

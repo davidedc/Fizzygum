@@ -845,7 +845,8 @@ class MacroToolkit
   # pointer is aimed at, carrying the content exactly as far as the wheel would have scrolled it.
   syntheticEventsWheel_InputEvents: (deltaX = 0, deltaY = 0, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     if @fingerMode()
-      return @_touchScrollBy @currentPointerTarget, deltaX, deltaY, startTime
+      aim = @_screenPointOfTarget @currentPointerTarget
+      return @_touchScrollBy aim, deltaX, deltaY, startTime, (@_scrollPaneAt aim)
     @queueInputEvent new WheelInputEvent deltaX, deltaY, 0, 0, 0, false, false, false, false, true, startTime
 
   # THE FINGER'S SCROLL, expressed as the wheel deltas a translated verb hands it. A drag moves the
@@ -854,22 +855,23 @@ class MacroToolkit
   # squelch, its invert preferences and its scale, so the drag vector is exactly the normalized,
   # scaled deltas the wheel would have applied. Asking PreferencesAndSettings for the normalization
   # rather than restating it keeps one statement of what a wheel notch means.
-  #   `bounds` (a widget, when the caller has one) keeps the whole gesture inside the pane it is
-  # scrolling: a drag that wandered out of the box would stop being sampled by that pane's step and
-  # the scroll would truncate. The pair is SHIFTED, never shortened, so the distance travelled — and
-  # therefore the scroll — is the one asked for; a delta longer than the box itself is all a single
-  # drag can carry and reaches the pane's edge, where the escalation rule takes over.
-  _touchScrollBy: (aimPoint, deltaX, deltaY, startTime, bounds) ->
+  #   `pane` (the scrollable the gesture means, resolved by _scrollPaneAt) keeps the whole gesture
+  # inside the box it is scrolling: a drag that wandered out of the box stops being sampled by that
+  # pane's step, and one that RELEASES outside it scrolls nothing at all — ViewportWdgt's per-frame
+  # arm and its collapse flush both gate on boundsContainPoint. The pair is SHIFTED, never
+  # shortened, so the distance travelled — and therefore the scroll — is the one asked for; a delta
+  # longer than the box itself is all a single drag can carry and reaches the pane's edge, where the
+  # escalation rule takes over.
+  #   The aim is CLAMPED into that box: a macro names the widget it means, and content that
+  # overflows its pane has a centre outside it, which would otherwise start the swipe off-pane.
+  # And the pointer is PARKED back on the aim afterwards, because a wheel does not move the pointer
+  # — the mouse path leaves it exactly where the verb aimed, and the finger's must agree.
+  _touchScrollBy: (aimPoint, deltaX, deltaY, startTime, pane) ->
     prefs = WorldWdgt.preferencesAndSettings
     [normalizedX, normalizedY] = prefs.normalizedWheelDeltas deltaX, deltaY
     remaining = new Point (Math.round normalizedX * prefs.wheelScaleX), (Math.round normalizedY * prefs.wheelScaleY)
-    aim = @_screenPointOfTarget aimPoint
-    box = undefined
-    if bounds?
-      # the box on the SCREEN, since the pane may itself sit on a scrolled or tilted plane — the
-      # same two-corner mapping the menu-row scroller uses
-      box = [(bounds.localPointToScreen new Point bounds.left(), bounds.top()),
-             (bounds.localPointToScreen new Point bounds.right(), bounds.bottom())]
+    box = @_swipeBoxOf pane
+    aim = @_aimInsideBox (@_screenPointOfTarget aimPoint), box
     timeAbs = @scaledAbs startTime
     swipes = 0
     while swipes < MacroToolkit.maxScrollSwipes
@@ -884,7 +886,60 @@ class MacroToolkit
         (@_touchDragSpanFor 600), (timeAbs + MacroToolkit.holdWindowMarginMs), 1
       remaining = remaining.subtract leg
       swipes++
+    @currentPointerTarget = aim
     timeAbs
+
+  # WHICH PANE a swipe aimed here means to scroll. It is the product's own question —
+  # ViewportWdgt.claimsPlainDragsForScrolling, the one the hand asks of a touch press's ancestry
+  # (ActivePointerWdgt._touchPressArmsAtOnce) — asked at the macro boundary so a translated wheel
+  # drags inside the very pane the wheel would have scrolled.
+  #   Asked of the aim POINT first, because a scrollable is very often a DESCENDANT of the widget a
+  # macro names (a menu's rows live in its PopUpRowsViewportWdgt, so walking UP from the menu finds
+  # nothing); of the NAMED widget second, because content that overflows its pane can have its
+  # centre outside that pane, where the point answers for whatever lies behind. No claimer either
+  # way means nothing here scrolls, and the swipe is left unbounded as it was.
+  _scrollPaneAt: (aimPoint, namedWdgt) ->
+    (@_nearestScrollClaimer @_topWdgtAtScreenPoint aimPoint) ? (@_nearestScrollClaimer namedWdgt)
+
+  _nearestScrollClaimer: (wdgt) ->
+    while wdgt?
+      return wdgt if wdgt.claimsPlainDragsForScrolling?() is true
+      wdgt = wdgt.parent
+    undefined
+
+  # The widget a press at this SCREEN point would hit: ActivePointerWdgt.topWdgtUnderPointer's
+  # question asked of an arbitrary point instead of the hand's own position, mapped into each
+  # candidate's plane the same way so a scrolled or tilted pane answers for the pixel a finger
+  # would actually touch.
+  _topWdgtAtScreenPoint: (aPoint) ->
+    world.topWdgtSuchThat (m) -> m.isPointerTargetAt (m.screenPointToMyPlane aPoint)
+
+  # The box a swipe must stay inside: the pane's own box on the SCREEN (it may sit on a scrolled or
+  # tilted plane — the same two-corner mapping the menu-row scroller uses), inset clear of the
+  # chrome parked on its edges. A press that lands on chrome delivers NO scroll: chrome declares
+  # ownsDragsStartingOnMe and answers BEFORE the pane on the way up, so the gesture becomes that
+  # surface's own — a parked resize handle resizes the frame by the swipe's whole length instead of
+  # scrolling it. The inset is the pane's bar band always (its bars are its own children, and a
+  # swipe means to press CONTENT), widened to a handle's reach while temporary resize/move handles
+  # are parked on this pane. A pane too small to take the inset keeps its middle third, so the box
+  # can never invert.
+  _swipeBoxOf: (pane) ->
+    return undefined unless pane?
+    topLeft = pane.localPointToScreen new Point pane.left(), pane.top()
+    bottomRight = pane.localPointToScreen new Point pane.right(), pane.bottom()
+    inset = pane.scrollBarsThickness ? 0
+    if pane.children.some((child) -> world.temporaryHandlesAndLayoutAdjusters.has child)
+      inset = Math.max inset, WorldWdgt.preferencesAndSettings.handleSize
+    inset = Math.min inset, (Math.floor((bottomRight.x - topLeft.x) / 3)), (Math.floor((bottomRight.y - topLeft.y) / 3))
+    inset = Math.max inset, 0
+    [(new Point topLeft.x + inset, topLeft.y + inset), (new Point bottomRight.x - inset, bottomRight.y - inset)]
+
+  # The aim a swipe actually starts from: the one the verb named while it lies inside the pane's
+  # swipe box, else the nearest point that does.
+  _aimInsideBox: (aim, box) ->
+    return aim unless box?
+    clamp = (value, low, high) -> Math.max low, (Math.min high, value)
+    new Point (clamp aim.x, box[0].x, box[1].x), (clamp aim.y, box[0].y, box[1].y)
 
   # How much of `remaining` ONE swipe can carry: all of it when no box bounds the gesture, else as
   # much as fits between the box's own edges on each axis. A wheel notch has no reach limit and a
@@ -919,12 +974,17 @@ class MacroToolkit
   # owner; ViewportWdgt.wheel scrolls itself or escalates to its parent at the travel limit). A
   # POSITIVE deltaY scrolls content DOWN; deltaX scrolls horizontally. Queues input events — follow with
   # `yield "waitNoInputsOngoing"`.
-  #   A FINGER scrolls the pane by DRAGGING it, and this verb — unlike the L1 wheel it composes —
-  # holds the pane itself, so the whole drag is kept inside that pane's box (see _touchScrollBy).
+  #   A FINGER scrolls the pane by DRAGGING it, so the whole drag is kept inside the box of the pane
+  # that would actually take the scroll (see _touchScrollBy). That pane is RESOLVED, never assumed to
+  # be the widget the verb names: a macro names what it means — a menu whose rows scroll in a
+  # viewport BELOW it, a text widget that OVERFLOWS the document scrolling it — and a swipe bounded
+  # by the named widget's own box starts outside the pane, where it presses chrome or nothing and
+  # delivers no scroll at all.
   wheelOn_InputEvents: (widgetOrIdentifier, deltaY, deltaX = 0, fraction = [0.5, 0.5], milliseconds = 600, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     aimPoint = @screenPointAtFractionOf widgetOrIdentifier, fraction
     if @fingerMode()
-      return @_touchScrollBy aimPoint, deltaX, deltaY, startTime, (@_widgetOfTarget widgetOrIdentifier)
+      return @_touchScrollBy aimPoint, deltaX, deltaY, startTime,
+        (@_scrollPaneAt aimPoint, (@_widgetOfTarget widgetOrIdentifier))
     @syntheticEventsMouseMove_InputEvents aimPoint, "no button", milliseconds, startTime
     @syntheticEventsWheel_InputEvents deltaX, deltaY, startTime + milliseconds + 100
 

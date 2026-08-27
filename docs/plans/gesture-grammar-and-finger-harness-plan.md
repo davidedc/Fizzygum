@@ -129,7 +129,49 @@ bar-press handler is its only in-tree caller (same shape as setScrollPolicy abov
   Gates: build 28/28; presuite BYTE-IDENTICAL 329/329 (×3); lint OK; ZERO reference diffs
   (the structural no-bump proof). The fg `finger` leg drafted (webkit+dpr2, own wave) —
   coordinator applies at P4.
-- P4 the finger baseline + the `finger` gauntlet leg: —
+- **OD2 RULED 2026-08-26 (owner, on P3's measured numbers): (a) — the FULL finger baseline
+  at dpr 1+2** (+~167 MB, capture ~5 h backgrounded; the leg means what the mouse suite
+  means, and the dpr1 finger inner loop exists). SCOPE CORRECTED at P4 launch (coordinator
+  ratified): the baseline is the **320 tests the finger loader SELECTS** (329 − 9 declared
+  mouse-only) — the P3 "(i)=326" counted the 9 filtered tests as translating because a
+  filtered test never fails (a classifier artifact); references for them would be
+  unloadable by construction.
+- P4 the finger baseline + the `finger` gauntlet leg: **DONE 2026-08-27** (the long phase:
+  the capture campaign + a semantics audit that found real defects behind green assertions).
+  CAMPAIGN: 317/320 captured+verified first pass (~31 s/test, resumable ledger absorbed two
+  external process kills with zero repeated work; `caffeinate`-held). SEMANTICS AUDIT
+  (coordinator eyeball → fresh worker; dataHash string-compare = the cheap identity trick):
+  four mechanisms named — M1 the raw wheel verb's translation passed NO pane bounds (one
+  giant off-canvas swipe leg: ZERO scroll + a poisoned aim for every later verb), M2
+  `wheelOn` aimed at overflowing CONTENT so the press landed on a parked resize handle
+  (chrome won: resized 205 px instead of scrolling), M3 the spurious release-click (below),
+  M4 a finger cannot land exactly ON a clamp (intrinsic; dy 4–24 px). FIXES RULED+LANDED:
+  M1 = `_scrollPaneAt` pane resolution + aim clamped in-box + the pointer PARKED after the
+  gesture; M2 = pane-not-target + `_swipeBoxOf` (scrollbar-inset, handle-widened,
+  middle-third floored). ⭐⭐ THE CLICK SUPPRESSION (a product grammar hole found by the
+  audit, ruled from §2.2's plain-drag row): a drag-scroll carries the pressed row WITH the
+  finger, so press==release BY CONSTRUCTION and every swipe ended in a spurious click —
+  `world.edit` teal focus rings in 8 tests' references, a stray created widget, a destroyed
+  menu row + macro crash. Landed as `_strokeOwesNoClick` (hold-consumed OR touch+left-radius
+  +un-armed), one branch with the hold case; census verification 357→402 triggers: spurious
+  2→0, every zero-travel tap preserved (297+105). ⭐⭐ THE DWELL "MYSTERY" WAS A FIXTURE
+  DEFECT: the macro's Phase B was a ZERO-DISPLACEMENT drag (Phase A parked the bar on the
+  destination) — the mouse's instant-grab-at-origin masked it for years; under the ruled
+  touch rules a finger correctly never lifts. Macro-local fix (+97 px of real travel; the 6
+  other L3 consumers verified unaffected); after it, all three dwell images are
+  BYTE-IDENTICAL between mouse and finger at both densities (same dataHash) — the strongest
+  possible kind-agnosticism witness. Declared recaptures: the dwell's image_3 (both axes)
+  and P2's witness image_2 mouse-axis (156 px: the spurious click's teal ring gone) — both
+  coordinator-eyeballed. 52 orphan finger files of the two late-declared tests deleted.
+  INSTRUMENT CASE LAW: a broken probe (early-return `until`) was retired against a
+  calibration case; "passes in isolation" measured with a flag-gated grep line was wrong
+  twice; the CAPTURE tool's re-verify is a stricter instrument than assertion greps.
+  VERIFY: finger dpr1 318/318 · dpr2 318/318 · `fg finger` (webkit+dpr2) OK · presuite
+  byte-identical (×2 clean, run alone after a self-inflicted overload lesson) · **gauntlet
+  19/19 with `finger:PASS(319s)` — wave D's first gate run** (OK(warn): webkit+settle
+  failed in-wave on `SliderTrackClickMovesButton` and passed alone — the TRACKED flake
+  candidate's 3rd/4th sighting, logs kept). Axis: ~1,862 finger PNGs across 574 test dirs
+  (~125 MB with loaders).
 - P5 T18 decision, docs, close, tail — and the PROGRAM close: —
 
 ---
