@@ -57,7 +57,7 @@ class StringWdgt extends Widget
   isHeaderLine: undefined
   isEditable: false
   # may the user drag-select my text? (see enableSelecting). A serializable MODE
-  # consumed by the prototype pressBegan/mouseMove handlers -- NOT a pair of
+  # consumed by the prototype pressBegan/hoverMoved/pressMoved handlers -- NOT a pair of
   # instance-assigned handler functions, which selection long was: an own function
   # property has no editable source, so any selecting-enabled text in a snapshot's
   # graph (every document, text panel, patch-programming pane...) crashed
@@ -1619,11 +1619,25 @@ class StringWdgt extends Widget
       @startMark = @slotAt pos
       @endMark = @startMark
 
-  # When not selectable this must stay equivalent to HAVING NO mouseMove handler:
-  # both dispatch sites (ActivePointerWdgt) are bare optional calls with no
+  # I TAKE BOTH MOVE CHANNELS, for the two halves of one rule, so both reach the one step below.
+  # Dragging across my glyphs with the button down EXTENDS the selection — that is the pressed half.
+  # The other half is that enableSelecting arms a gesture with an expiry: the first move that is not
+  # extending a live selection ends selecting for good, and a BARE pointer crossing me is exactly
+  # such a move.
+  #   ⚠ The hover half is load-bearing, not decoration: while selecting stands, pressBegan opens the
+  # edit itself, and for text too long to edit inline that is the pop-out editor rather than an
+  # inline caret (measured — macroFingerTapEditSummonsVirtualKeyboard).
+  hoverMoved: (pos) ->
+    @_stepSelectionAt pos
+
+  pressMoved: (pos) ->
+    @_stepSelectionAt pos
+
+  # When not selectable this must stay equivalent to HAVING NO move handler at all:
+  # each dispatch site (ActivePointerWdgt) is a bare optional call with no
   # else-branch, so the no-op return is byte-identical to the event going
   # undelivered.
-  mouseMove: (pos) ->
+  _stepSelectionAt: (pos) ->
     if !@isSelectable
       return
     if @isEditable and @currentlySelecting()

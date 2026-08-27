@@ -41,12 +41,24 @@ class PaintToolbarWdgt extends ToolbarWdgt
   # already injected -- the same statement the User makes by being born holding a pencil.
   _armed: true
 
+  # HOW A TOOL SOURCE IS SHAPED. A drawing surface is one of the few widgets with business on BOTH
+  # pointer-move channels, so every tool below injects both and routes them into one body: a HOVER
+  # move shows where the tool would land, and a PRESSED move carries the button as a fact — the
+  # primary button lays paint down, any other previews exactly as a hover does. One body means the
+  # two channels cannot drift, and it is the body a person opens when they edit the tool.
+  #
   # what an unchosen palette injects: a no-op, because view mode must not paint, and neither must
   # a strip whose chosen tool was pressed a second time (§5.D D-i #4).
-  @TOOL_OFF_SOURCE: "mouseMove = -> return"
+  @TOOL_OFF_SOURCE: "hoverMoved = -> return\npressMoved = -> return"
 
   @PENCIL_TOOL_SOURCE: """
-      mouseMove = (pos, mouseButton) ->
+      hoverMoved = (pos) ->
+          @applyToolAt pos
+
+      pressMoved = (pos, mouseButton) ->
+          @applyToolAt pos, mouseButton
+
+      applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBufferContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -83,7 +95,13 @@ class PaintToolbarWdgt extends ToolbarWdgt
       """
 
   @BRUSH_TOOL_SOURCE: """
-      mouseMove = (pos, mouseButton) ->
+      hoverMoved = (pos) ->
+          @applyToolAt pos
+
+      pressMoved = (pos, mouseButton) ->
+          @applyToolAt pos, mouseButton
+
+      applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBufferContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -266,7 +284,13 @@ class PaintToolbarWdgt extends ToolbarWdgt
                       contextMain.restore()
               delete @queue
 
-      mouseMove = (pos, mouseButton) ->
+      hoverMoved = (pos) ->
+          @applyToolAt pos
+
+      pressMoved = (pos, mouseButton) ->
+          @applyToolAt pos, mouseButton
+
+      applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBufferContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -313,7 +337,13 @@ class PaintToolbarWdgt extends ToolbarWdgt
       """
 
   @ERASER_TOOL_SOURCE: """
-      mouseMove = (pos, mouseButton) ->
+      hoverMoved = (pos) ->
+          @applyToolAt pos
+
+      pressMoved = (pos, mouseButton) ->
+          @applyToolAt pos, mouseButton
+
+      applyToolAt = (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBufferContext
           context.setTransform 1, 0, 0, 1, 0, 0

@@ -169,7 +169,9 @@ class Example3DPlotWdgt extends Widget
 
     @_changed()
 
-  mouseMove: (pos, mouseButton) ->
+  # Spinning the plot is a DRAG across it, so only the pressed move channel reaches me; the
+  # button is the fact that says which drag, and only the primary one spins.
+  pressMoved: (pos, mouseButton) ->
     if world.hand.isThisPointerDraggingSomething() then return
     if mouseButton == 'left'
         if @previousMousePoint?

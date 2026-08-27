@@ -38,7 +38,7 @@ const HANDLER_NAMES = new Set([
   'pressEnded',
   'activated', 'contextMenuRequested',
   'doubleActivated', 'tripleActivated',
-  'mouseMove',
+  'hoverMoved', 'pressMoved',
   'hoverEntered', 'hoverExited',
   'nonFloatDragging', 'endOfNonFloatDrag',
   'wheel',

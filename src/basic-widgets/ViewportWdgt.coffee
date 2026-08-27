@@ -465,7 +465,7 @@ class ViewportWdgt extends Widget
   #   ⚠ The `pos` parameter is deliberately NOT read: a move over my scrolled CONTENT can
   # escalate here with the position still in the ROW's plane, offset-pixels away from mine —
   # the same trap pressBegan documents. Re-derive it from the hand with the mapped read.
-  mouseMove: ->
+  hoverMoved: ->
     @_updatePointerInScrollBand @screenPointToMyPlane world.hand.position()
 
   hoverExited: ->

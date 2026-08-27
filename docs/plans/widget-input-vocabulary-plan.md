@@ -151,7 +151,31 @@ plan renames on top of is the one that plan landed; its living truth is
   exercises the hold THROUGH the verb. Gates: build 28/28; suite 329/329; menusweep OK
   (3749 items / 464 menus through the renamed verb); P4-close gauntlet 19/19 clean, no
   retries.
-- P5 R2 — the move split (`hoverMove` / `pressedMove`): —
+- P5 R2 — the move split (`hoverMove` / `pressedMove`): **DONE 2026-08-27** (fresh Opus
+  worker; landed as `hoverMoved`/`pressMoved` per the ruled table). The last multiplexed
+  channel split; the hand's over-list loop dispatches by button state; determineGrabs'
+  duplicate dispatch REMOVED (the P0-proven single-dispatch model — one `pressMoved` per
+  pressed move). ⚠ TWO premises falsified by measurement, both amended here dated: (1) the
+  brief's "StringWdgt = pressed only" — the hover half (`_disableSelecting`, the
+  selecting-gesture expiry) is LOAD-BEARING (dropping it turned a tap's edit into a
+  pop-out; caught by the keyboard witness) ⇒ StringWdgt takes BOTH channels into one
+  `_stepSelectionAt` body, as do the four paint-tool sources (byte-unchanged bodies); (2)
+  **the plan's "P5 = ZERO existing refs" budget — a channel ADDITION grows member lists**
+  (a pure-rename assumption; the worker measured the alternative shape produces the
+  IDENTICAL churn), so the member-list window shift re-touched 5 inspector tests (16 dpr1
+  images; the P0-rehearsal mechanism) — declared, coordinator-eyeballed (one-row shift,
+  same member selected), recaptured on BOTH axes. ⭐ THE WITNESS
+  (`macroPencilPaintsStrokeOnLeftDrag`, the P0 coverage gap): paints by left-drag, and its
+  FINGER replay paints too (hold-then-drag arms the stroke) — initially NOT byte-stable
+  (one 4×4 dab at the arming point, cycle-timing dependent: the per-cycle re-sync
+  re-delivers a pressed move across the arming boundary), FIXED by the third application
+  of the OD1(b) suppression idiom (re-sync-originated pressed moves suppressed under the
+  pacing control; `atDrainedEvent` distinguishes the callers): 6/6 identical finger runs,
+  mouse-inert measured (the pre/post failing set identical). Full both-axes references
+  captured. Gates: build 28/28; presuite **330/330**; P5-close gauntlet 19/19 `OK(warn)` —
+  paint+storage serial-only (the load-flake shape). P6 note: `input-and-gestures.md`'s
+  consumers section is stale in MECHANISM now (two dispatch sites → one; the re-sync
+  suppression is new doctrine to record), not just vocabulary.
 - P6 `scrolledBy` + docs weave + tests-prose sweep + arc close: —
 
 ---

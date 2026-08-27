@@ -55,7 +55,7 @@ const NON_WIDGET_ROOTS = new Set(['Math', 'Rectangle', 'Point', 'window', 'JSON'
 const POS_HANDLER_NAMES = new Set([
   'pressBegan', 'pressEnded',
   'activated', 'contextMenuRequested', 'doubleActivated', 'tripleActivated',
-  'mouseMove', 'nonFloatDragging',
+  'hoverMoved', 'pressMoved', 'nonFloatDragging',
 ]);
 const ESCALATED_EXEMPT = /#\s*escalated-pos-sanctioned:\s*\S/;
 

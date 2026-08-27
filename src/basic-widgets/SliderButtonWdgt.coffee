@@ -164,12 +164,13 @@ class SliderButtonWdgt extends CircleBoxWdgt
       @color = @pressColor
       @_changed()
 
-  mouseMove: ->
-    # remember that a drag can start a few pixels after the
-    # mouse button is pressed (because of de-noising), so
-    # only checking for "isThisPointerDraggingSomething" is not going to be
-    # enough since we receive a few moves without the "isThisPointerDraggingSomething"
-    # being set. So we also check for the "pressed" state.
+  # A pointer merely resting on me highlights me, so I take the HOVER move channel and no
+  # other: a move under a live press is that press's business (a drag of me arrives as
+  # nonFloatDragging), never a reason to light up.
+  #   The two guards are about a stroke whose effects OUTLIVE the moves that started it: a
+  # press state or a hand carrying something is still standing when the per-cycle hover
+  # re-sync comes round, and neither may re-highlight me.
+  hoverMoved: ->
     if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething()
       return
     @_setHighlightedColor()

@@ -670,7 +670,8 @@ class ActivePointerWdgt extends Widget
   #   tripleActivated
   #   hoverEntered
   #   hoverExited
-  #   mouseMove
+  #   hoverMoved
+  #   pressMoved
   #   wheel
   #
   # Note that some handlers don't want the event but the
@@ -1365,15 +1366,6 @@ class ActivePointerWdgt extends Widget
   determineGrabs: (pos, topWdgt, mouseOverNew) ->
     if !@isThisPointerDraggingSomething() and (@mouseButton is "left")
       w = topWdgt.findRootForGrab()
-      # R1 (§6 affine): map into the RECEIVER's plane so a mouseMove consumer inside a rotated/
-      # scaled island (e.g. a paint canvas) draws under the cursor, not at the raw screen pos.
-      # screenPointToMyPlane returns the same point off any island ⇒ byte-identical dormant.
-      #   THE GRAMMAR'S THIRD CONSUMER (ruling I2): this arm runs only under a live press, and while
-      # a touch stroke is UN-ARMED its moves mean scroll and nothing else — a finger sliding over
-      # text must not extend a selection, and one sliding over a paint canvas must not draw, while
-      # the pane beneath it is scrolling. A mouse or pen stroke always means a mouse drag, so the
-      # test short-circuits and this dispatch is exactly what it was.
-      topWdgt.mouseMove topWdgt.screenPointToMyPlane(pos)  if topWdgt.mouseMove and @strokeMeansMouseDrag()
 
       # if a widget is marked for grabbing, grab it
       if @wdgtToGrab
@@ -1534,9 +1526,12 @@ class ActivePointerWdgt extends Widget
     # allParentsTopToBottom makes more logical sense but
     # allParentsBottomToTop is cheaper and it all ends up in a set anyways
     mouseOverNew = new Set topWdgt.allParentsBottomToTop()
-    @dispatchEventsFollowingMouseMove mouseOverNew
+    @dispatchEventsFollowingMouseMove mouseOverNew, false
 
-  dispatchEventsFollowingMouseMove: (mouseOverNew) ->
+  # `atDrainedEvent` names the SEAT this dispatch runs from: true at a drained pointer event (the
+  # move pipeline and the teleport above), false at the per-cycle re-entry. Only the pressed-move
+  # channel reads it — see the note beside the withhold below.
+  dispatchEventsFollowingMouseMove: (mouseOverNew, atDrainedEvent = true) ->
 
     # NOTHING IS UNDER A POINTER THAT IS NOT THERE. While the glass is empty (a touch stroke ended
     # and none has begun), the widgets the last stroke walked over stay LEFT: no enter, no move, and
@@ -1549,25 +1544,45 @@ class ActivePointerWdgt extends Widget
       unless mouseOverNew.has old
         old.hoverExited?()
 
-    # THE GRAMMAR'S THIRD CONSUMER (ruling I2), the other half of the one in determineGrabs: while a
-    # touch stroke is UN-ARMED its moves mean scroll and nothing else, so no widget is handed a
-    # PRESSED move — this is the site a selection would otherwise extend through, since the tap's own
-    # pressBegan already armed the string, and the site a paint tool or a plot rotation would
-    # otherwise consume. HOVER moves (no button down) are not this stroke's business and pass through
-    # untouched; a mouse or pen stroke always means a mouse drag, so this reads false for them and
-    # every dispatch below is exactly what it was.
+    # THE GRAMMAR'S THIRD CONSUMER (ruling I2): while a touch stroke is UN-ARMED its moves mean
+    # scroll and nothing else, so no widget is handed a PRESSED move — this is the site a selection
+    # would otherwise extend through, since the tap's own pressBegan already armed the string, and
+    # the site a paint tool or a plot rotation would otherwise consume. HOVER moves (no button down)
+    # are not this stroke's business and pass through untouched; a mouse or pen stroke always means a
+    # mouse drag, so this reads false for them and every dispatch below is exactly what it was.
     pressedMovesAreWithheld = @mouseButton? and not @strokeMeansMouseDrag()
+
+    # A PRESSED MOVE IS AN EVENT'S FACT, NOT A CYCLE'S. The per-cycle re-entry re-dispatches one at
+    # whatever position the hand currently holds, so how many a widget receives between two drained
+    # events is a count of CYCLES — wall clock, not event time. Every consumer is idempotent at a
+    # standing position, so off the harness that costs nothing and a finger holding perfectly still
+    # keeps getting its pressed moves. Under a REPLAY it is the difference between two renderings:
+    # a cycle landing between the event that ARMS a touch stroke and the next queued move turns one
+    # withheld move into a delivered one, and a paint tool lays a dab that another run does not
+    # (measured: one 4x4 dab, 1 run in 5). So while the Automator paces a replay, pressed moves are
+    # delivered only at drained events — the same suppression, and the same reason, that
+    # _holdDecisionTime applies to the recognizer's between-events check.
+    pressedMovesAreEventOnly = (not atDrainedEvent) and Automator? and
+      Automator.animationsPacingControl and Automator.state != Automator.IDLE
 
     mouseOverNew.forEach (newWdgt) =>
 
-      # send mouseMove only if mouse actually moved,
+      # send a move only if the pointer actually moved,
       # otherwise it will fire also when the user
       # simply clicks
-      if (!@mouseDownPosition? or !@mouseDownPosition.equals @position()) and not pressedMovesAreWithheld
-        # R1 (§6 affine): map per-receiver into newWdgt's plane so a position-reading mouseMove
+      if (!@mouseDownPosition? or !@mouseDownPosition.equals @position())
+        # THE TWO MOVE CHANNELS. A move with no button down is a HOVER move and one under a live
+        # press is a PRESSED move — two different facts, so two different verbs, and a widget takes
+        # only the one it has business with. The button rides the pressed channel as a plain FACT,
+        # not as a discriminator between meanings: a paint tool lays paint down under the primary
+        # button and previews under any other.
+        #   R1 (§6 affine): map per-receiver into newWdgt's plane so a position-reading handler
         # inside a rotated/scaled island lands on the cursor (dormant-safe: identity off any island).
-        newWdgt.mouseMove?(newWdgt.screenPointToMyPlane(@position()), @mouseButton)
-      
+        if not @mouseButton?
+          newWdgt.hoverMoved?(newWdgt.screenPointToMyPlane(@position()))
+        else if not (pressedMovesAreWithheld or pressedMovesAreEventOnly)
+          newWdgt.pressMoved?(newWdgt.screenPointToMyPlane(@position()), @mouseButton)
+
       unless @mouseOverList.has newWdgt
         newWdgt.hoverEntered?()
 
