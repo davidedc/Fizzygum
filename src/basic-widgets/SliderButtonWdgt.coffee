@@ -62,40 +62,48 @@ class SliderButtonWdgt extends CircleBoxWdgt
     super()
 
     if @parent?
-
-      sliderValue = @parent.value
-      # notably, if you type "-2" as an input to the slider
-      # then as you type the "-"
-      # you get "-" as the value, which becomes NaN
-      if isNaN sliderValue
-        sliderValue = 0
-
-      orientation = @parent.autoOrientation()
       # how much of my track's cross axis the surround takes — 2 (1px each side) on an ordinary
       # slider, 0 on a thin scroll indicator, which paints no track for me to sit inside.
       # Capability via ?(), so any other parent keeps the surround.
-      surround = @parent.thumbInsetInTrack?() ? 2
-      edge = Math.round surround / 2
-      if orientation is "vertical"
-        bw = @parent.width() - surround
-        bh = Math.max bw, Math.round @parent.height() * @parent.ratio()
-        @__commitExtent new Point bw, bh
-        posX = edge
-        posY = Math.max(0,Math.min(
-          Math.round((sliderValue - @parent.start) * @parent.unitSize()),
-          @parent.height() - @height()))
-        if @parent.smallestValueIsAtBottomEnd
-          posY = @parent.height() - (posY + @height())
-      else
-        bh = @parent.height() - surround
-        bw = Math.max bh, Math.round @parent.width() * @parent.ratio()
-        @__commitExtent new Point bw, bh
-        posY = edge
-        posX = Math.max(0, Math.min(
-          Math.round((sliderValue - @parent.start) * @parent.unitSize()),
-          @parent.width() - @width()))
+      box = @boxInSliderFrame @parent.extent(), (@parent.thumbInsetInTrack?() ? 2)
+      @__commitExtent box.extent()
+      @__commitMoveTo box.origin.add @parent.position()
 
-      @__commitMoveTo new Point(posX, posY).add @parent.position()
+  # My box inside a slider frame of `frameExtent` whose track takes `surround` of the cross axis,
+  # relative to the frame's top-left. It reads my slider's value and range and NOT my slider's
+  # current frame, so it answers for a frame my slider does not have yet as well as for the one it
+  # has: my arrange commits it for the frame I am in, and a viewport asks it for the frame a
+  # pointer's arrival gives its bar (ViewportWdgt.buttonScreenBoxOnArrival).
+  boxInSliderFrame: (frameExtent, surround) ->
+    sliderValue = @parent.value
+    # notably, if you type "-2" as an input to the slider
+    # then as you type the "-"
+    # you get "-" as the value, which becomes NaN
+    if isNaN sliderValue
+      sliderValue = 0
+
+    edge = Math.round surround / 2
+    # the cross size is the frame's less the surround, and I am never shorter than I am wide. The
+    # extent is the one my commit settles on — rounded, and held at my minimum — since my position
+    # along the track is measured with it.
+    if @parent.autoOrientation() is "vertical"
+      bw = frameExtent.x - surround
+      extent = (new Point bw, Math.max bw, Math.round frameExtent.y * @parent.ratio()).round().max @minimumExtent
+      posX = edge
+      posY = Math.max(0,Math.min(
+        Math.round((sliderValue - @parent.start) * ((frameExtent.y - extent.y) / @parent.rangeSize())),
+        frameExtent.y - extent.y))
+      if @parent.smallestValueIsAtBottomEnd
+        posY = frameExtent.y - (posY + extent.y)
+    else
+      bh = frameExtent.y - surround
+      extent = (new Point (Math.max bh, Math.round frameExtent.x * @parent.ratio()), bh).round().max @minimumExtent
+      posY = edge
+      posX = Math.max(0, Math.min(
+        Math.round((sliderValue - @parent.start) * ((frameExtent.x - extent.x) / @parent.rangeSize())),
+        frameExtent.x - extent.x))
+
+    new Rectangle (new Point posX, posY), (new Point posX + extent.x, posY + extent.y)
 
   grabsToParentWhenDragged: ->
     if @parent instanceof SliderWdgt
@@ -175,9 +183,11 @@ class SliderButtonWdgt extends CircleBoxWdgt
       return
     @_setHighlightedColor()
   
-  #SliderButtonWdgt events:
+  # The same two guards, because an ENTER can come after the press too: a finger's press on a thin
+  # scroll indicator meets a thumb its arrival has only just fattened, so the thumb joins the
+  # pointer's over-list at the next hover re-sync, under a press I am already showing.
   hoverEntered: ->
-    if world.hand.isThisPointerDraggingSomething()
+    if @state == @STATE_PRESSED or world.hand.isThisPointerDraggingSomething()
       return
     @_setHighlightedColor()
 

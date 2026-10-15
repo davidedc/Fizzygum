@@ -202,7 +202,12 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `pointAtFractionOf` would aim at the un-mapped box). ⚠ AIMING vs VALUES: map only what feeds an input
   event (`localPointToScreen`/`screenPointAtFractionOf` at the aim site); `pointAtFractionOf` stays a
   plane-local VALUE by contract — macros consume it in plane arithmetic, and mapping it wholesale broke
-  a caret-slot test (the arc's falsified shape).
+  a caret-slot test (the arc's falsified shape). And `sliderButtonPressPoint slider[, preferred]` — the
+  screen point where a press TAKES a slider's button, which every thumb-pressing verb aims through: a
+  thin scroll indicator's thumb is not where a press meets it (the pointer's arrival fattens the bar
+  first), so its box is asked of `ViewportWdgt.buttonScreenBoxOnArrival`; a plain slider's centre is
+  checked with the product's hit test. The caller's own point is kept whenever a press there already
+  takes the button, so no working aim moves.
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
   `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`, `openOwnMenuOf` — the

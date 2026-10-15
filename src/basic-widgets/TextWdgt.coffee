@@ -355,6 +355,9 @@ class TextWdgt extends StringWdgt
   # climb. So invalidate the managing parent explicitly (gated out-of-pass -- inside a pass the container is
   # already re-laying out and _invalidateLayout would throw) and let the enclosing settle flush it.
   _sizeToTextAndDisableFittingNoSettle: ->
+    # remember the box-hug, as StringWdgt's core does: a later setFontSize / setText re-hugs the text
+    # instead of fitting the new size into the box sized for the old one
+    @autoSizeBoxToText = true
     @softWrap = false
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN

@@ -909,6 +909,17 @@ assertion a recapture after a regression silently stores two different hashes an
   opens the panel's own menu wherever its background is exposed. Back a pixel claim about an edit with a value assertion
   (`@assertValuesEqual …, 0.25, rect.alpha`): once references are captured over an edit that never lands, screenshots
   alone stay green.
+- **Pressing a scrollbar THUMB — and holding it** (`macroThumbHighlightOnlyUnderAPointer`): aim a press of your own at
+  `@sliderButtonPressPoint bar` (`@moveToAndMouseDown_InputEvents (@sliderButtonPressPoint viewport.vBar)`), never at the
+  thumb you can see. A thin indicator's thumb is intangible and the pointer's arrival fattens the bar before the press
+  lands — under a mouse as under a finger — so the press meets the FAT thumb, and the thin thumb's centre can sit on the
+  track beside it (a track press: the thumb teleports, and no click reaches it). The thumb-pressing verbs
+  (`dragSliderButtonToFraction`, the list and code scroll verbs) already aim through it. To hold the press across a
+  `yield` and read the mid-press state, follow it with a pressed MOVE past the grab radius before the release
+  (`@syntheticEventsMouseMove_InputEvents p, "left button", 300`): a finger resting still on a thumb is exactly what
+  press-and-hold opens a menu for, and a travelling press can never become a hold. Read thumb state as an INVARIANT that
+  holds under both pointers — `thumb.state is thumb.STATE_HIGHLIGHTED` equals `world.hand.mouseOverList.has(thumb)` — so the
+  same assertion is honest for a mouse that rests on the thumb and a finger that left the glass.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
   to the nearest `scrolledBy` handler; `ViewportWdgt.scrolledBy` scrolls itself UNLESS at the travel limit, then `escalateEvent 'scrolledBy'`).

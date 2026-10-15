@@ -511,6 +511,28 @@ class ViewportWdgt extends Widget
   isContentSizing: ->
     @isTextLineWrapping
 
+  # Where I place a bar of mine at a given cross-axis THICKNESS: the vertical one against my right
+  # edge and the horizontal one against my bottom edge, each stopping short of the corner, where
+  # the other bar and a resizer would otherwise overlap it. My arrange places my bars from this, and
+  # buttonScreenBoxOnArrival asks it for the thickness a pointer's arrival gives them.
+  _barFrameAt: (bar, thickness) ->
+    spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldWdgt.preferencesAndSettings.handleSize) + 2 * @padding
+    if bar is @vBar
+      new Rectangle (new Point @right() - thickness, @top()), (new Point @right(), @bottom() - spaceToLeaveOnOneSide)
+    else
+      new Rectangle (new Point @left(), @bottom() - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom())
+
+  # The SCREEN box in which a pointer ARRIVING at one of my bars finds that bar's button. A thin
+  # indicator is intangible, and the arrival — a finger's own down, a mouse's approach — fattens it
+  # before any press is dispatched (hoverMoved), so a press always meets THIS look and never the thin
+  # one on screen: the bar at my full thickness, its thumb laid in that frame by the very derivation
+  # its own arrange commits (SliderButtonWdgt.boxInSliderFrame). MacroToolkit.sliderButtonPressPoint
+  # aims here.
+  buttonScreenBoxOnArrival: (bar) ->
+    frame = @_barFrameAt bar, @scrollBarsThickness
+    box = (bar.button.boxInSliderFrame frame.extent(), bar.trackThumbInset).translateBy frame.origin
+    new Rectangle (bar.localPointToScreen box.origin), (bar.localPointToScreen box.corner)
+
   _reLayoutScrollbars: ->
     # §4.2 Stage 3 (structural arrange): the bars below apply their geometry via the NON-notifying
     # arrange twins (_applyExtentBase / _applyMoveToBase), not the notifying setters -- they are
@@ -518,13 +540,6 @@ class ViewportWdgt extends Widget
     # only trigger a redundant confirm pass. The @_adjustingContentsBounds save/restore this used to
     # need is gone along with the notify-by-mutation seam it guarded against.
     # See docs/archive/proper-layouts-4.2-structural-arrange-plan.md.
-
-    # one typically has both scrollbars in view, plus a resizer
-    # in bottom right corner, so adjust the width/height of the
-    # scrollbars so that there is no overlap between the three things
-    spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldWdgt.preferencesAndSettings.handleSize) + 2 * @padding
-    hWidth = @width() - spaceToLeaveOnOneSide
-    vHeight = @height() - spaceToLeaveOnOneSide
 
     # the indicator's CROSS-axis size: thin at rest, my full bar thickness while a hovering
     # pointer has fattened it back into a control (ruling G4)
@@ -554,12 +569,13 @@ class ViewportWdgt extends Widget
         # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
         # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent).
         hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
-        @hBar._applyExtentBase new Point(hWidth, hThickness)  if @hBar.width() isnt hWidth or @hBar.height() isnt hThickness
+        hFrame = @_barFrameAt @hBar, hThickness
+        @hBar._applyExtentBase hFrame.extent()  unless @hBar.extent().equals hFrame.extent()
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # Viewport, otherwise we don't move it.
         if @hBar.parent == @
-          @hBar._applyMoveToBase new Point @left(), @bottom() - @hBar.height()
+          @hBar._applyMoveToBase hFrame.origin
         # I placed and sized the bar through the NON-notifying twins, so re-laying it is MINE to do
         # -- the same rule I follow for @contents in _positionAndResizeChildren. A slider's THUMB is
         # derived from its frame (SliderButtonWdgt._reLayoutSelf reads its parent's height and
@@ -579,12 +595,13 @@ class ViewportWdgt extends Widget
         # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).
         # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
         vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
-        @vBar._applyExtentBase new Point(vThickness, vHeight)  if @vBar.height() isnt vHeight or @vBar.width() isnt vThickness
+        vFrame = @_barFrameAt @vBar, vThickness
+        @vBar._applyExtentBase vFrame.extent()  unless @vBar.extent().equals vFrame.extent()
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # Viewport, otherwise we don't move it.
         if @vBar.parent == @
-          @vBar._applyMoveToBase new Point @right() - @vBar.width(), @top()
+          @vBar._applyMoveToBase vFrame.origin
         # same as the hBar above: I changed its frame through the non-notifying twins, so its thumb
         # is mine to re-lay.
         @vBar._reLayoutSelfAndButton()

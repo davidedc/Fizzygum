@@ -355,14 +355,25 @@ and `architecture/occlusion-culling.md` §2a. Three things it deliberately did n
       § "Test & reference-image layout".
 
 ### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
-- [ ] **A finger stroke can leave a scrollbar thumb's HOVER HIGHLIGHT stuck.** A finger has no hover and the
-      stroke's end dissolves it, yet in `macroMultilineTextInputScrollsWell` (finger) one thin indicator's
-      thumb (the 5×5 one at 272,227) is in `SliderButtonWdgt` state 1 (highlighted, colour 110,110,110) at
-      both captures, before any drag — and its finger references bake it. Measured with a capture-time state
-      probe (`Fizzygum-tests/.scratch/finger-p4/capture-state.js`, PRELUDE_JS). The same arc's thumb re-lay
-      (`SliderWdgt.showAsScrollIndicator`) cured the DRAGGED bar's identical stuck highlight in that test and
-      in `macroMenuPinnedInScrollPanel` — consistent with a hover-exit computed against a thumb laid for the
-      other look; this one survives it, so the mechanism is still to be found. Fixing it moves finger references.
+- [ ] **OWNER DECISION: a thin scroll indicator's thumb is 5 px on a 4 px bar** (found 2026-10-15). The
+      bar is `scrollIndicatorThickness` (4) wide and the thumb's cross size is derived from it (surround 0),
+      but `SliderButtonWdgt` keeps `Widget`'s default `minimumExtent` of 5×5, so `__commitExtent` widens
+      the thumb to 5 — it pokes 1 px past its bar and the viewport's edge, where it is clipped (measured:
+      bar `[276@60 | 4@136]`, thumb `[276@60 | 5@27]`; the same on a horizontal bar; and a thumb whose
+      length would be under 5 is lengthened to 5). `SliderWdgt` already lowers its OWN minimum to 1×1
+      (`_setMinimumExtent new Point 1, 1`), so the fix is the same line on the thumb. Measured with it
+      (dpr1, on top of the stuck-highlight fix): 14 more finger tests and 21 more mouse tests move — every
+      visible thin thumb reshapes from a clipped 5-px stadium to a whole 4-px one. Since
+      `MacroToolkit.sliderButtonPressPoint` aims through `ViewportWdgt.buttonScreenBoxOnArrival`, no press
+      depends on this any more; it is a look-and-geometry decision only.
+- [ ] **Audit the tests that DUPLICATE and then "carry" the copy** (found 2026-10-15). `duplicateMenuAction`
+      lands the copy at +10,+10 instead of on the hand, so a macro that moves-and-clicks to "drop" the copy
+      only clicks the desktop and leaves it stacked over the original — `macroSlidersControlTextWidget` had
+      done exactly that in every committed reference, its drags pressing the copy's sliders, until
+      `sliderButtonPressPoint` refused to press a covered thumb (repaired). Sweep the other tests that
+      duplicate and then move/click (a `grep -l "rides the hand\|carry it"` over `tests/` lists ten, most of
+      them deliberate "pick up" carries) for the same unstated stack, and back their claims with value
+      assertions.
 - [ ] (optional, owner to decide) the gauntlet's `refs` leg went PASS-serial-only once from fg's own 14 s leg
       alarm around a ~10 s `check-refs:pixels` on a loaded machine — a budget question, not a reference problem.
 

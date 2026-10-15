@@ -1017,9 +1017,38 @@ class MacroToolkit
   # text-description identifier.
   dragSliderButtonToFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     slider = @_widgetOfTarget sliderOrIdentifier
-    buttonCentre = @screenPointAtFractionOf slider.button, [0.5, 0.5]
+    buttonCentre = @sliderButtonPressPoint slider
     trackPoint = @screenPointAtFractionOf slider, fraction
     @_dragChromeFromTo_InputEvents buttonCentre, trackPoint, milliseconds, startTime
+
+  # WHERE A PRESS TAKES A SLIDER'S BUTTON (a scrollbar's thumb), on the screen. `preferred` is the
+  # point a verb would aim at, the button's centre as it measures it; it is KEPT whenever a press
+  # there takes the button, so no aim that already worked moves, and otherwise a point that does is
+  # found:
+  #   - a plain slider's button is where it is drawn, so the point is asked of the product's own hit
+  #     test (_topWdgtAtScreenPoint), falling back to the button's first exposed point — the
+  #     openOwnMenuOf idiom (_exposedScreenPointOf);
+  #   - a THIN scroll indicator's button is not: at rest it is intangible, and the pointer's arrival
+  #     (a finger's own down, a mouse's approach) fattens the bar before the press is dispatched, so
+  #     the press meets the FAT thumb, wider and placed differently. Its box is the viewport's to
+  #     answer (ViewportWdgt.buttonScreenBoxOnArrival, the derivation its arrange commits). Aimed at
+  #     the thin thumb's centre, a press can land on the track beside the fat one, where it pages the
+  #     bar and drags a thumb teleported under it instead of the one the verb meant to grab.
+  # A public locator so a macro can aim a press of its own at a thumb (`@moveToAndMouseDown_InputEvents`).
+  sliderButtonPressPoint: (slider, preferred = @screenPointAtFractionOf slider.button, [0.5, 0.5]) ->
+    if slider.indicatorIsIntangible?()
+      box = slider.parent.buttonScreenBoxOnArrival slider
+      return preferred if box.containsPoint preferred
+      return new Point (box.left() + Math.round box.width() * 0.5), (box.top() + Math.round box.height() * 0.5)
+    return preferred if (@_topWdgtAtScreenPoint preferred) is slider.button
+    @_exposedScreenPointOf slider.button
+
+  # Drag a slider's button by the displacement a verb measured between two screen points of it:
+  # pressed where a press takes the button (sliderButtonPressPoint, preferring `seenFrom`), and
+  # released that same displacement further on.
+  _dragSliderButtonFromTo_InputEvents: (slider, seenFrom, seenTo) ->
+    from = @sliderButtonPressPoint slider, seenFrom
+    @_dragChromeFromTo_InputEvents from, (if from is seenFrom then seenTo else from.add seenTo.subtract seenFrom)
 
   # Clipboard CUT / COPY / PASTE for the active editing caret, driven through the INPUT-EVENT QUEUE like
   # the browser's real clipboard events (oncut/oncopy/onpaste → ClipboardInputEvent.fromBrowserEvent →
@@ -1133,7 +1162,7 @@ class MacroToolkit
       for column in [0...8]
         candidate = widget.localPointToScreen new Point (widget.left() + Math.round((column + 0.5) * widget.width() / 8)), (widget.top() + Math.round((row + 0.5) * widget.height() / 8))
         return candidate if (@_topWdgtAtScreenPoint candidate) is widget
-    throw new Error "openOwnMenuOf_InputEvents: no sampled point of #{widget} is exposed — something else covers every one"
+    throw new Error "no sampled point of #{widget} is exposed to a press — something else covers every one"
 
   # Close a FrameWdgt by clicking the close button (the X) in its window bar. Every FrameWdgt builds
   # a `.closeButton` (a CloseIconButtonWdgt at its top-left); clicking it runs the button's actOnClick
@@ -1462,7 +1491,7 @@ class MacroToolkit
     handleCurrentCenter = vBarHandle.center()
     # bar-plane geometry aimed at the screen (identity unless the bar's viewport is nested
     # on a mapped plane)
-    @_dragChromeFromTo_InputEvents (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
+    @_dragSliderButtonFromTo_InputEvents vBar, (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
 
   # The member list of the topmost inspector — the list the `…FromTopInspector…` verbs act on, named
   # by a public locator so macro source can hand it to the list verbs below.
@@ -1505,7 +1534,7 @@ class MacroToolkit
     return  if direction is 0
     thumb = v.list.vBar.children[0]
     from = thumb.center()
-    @_dragChromeFromTo_InputEvents (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
+    @_dragSliderButtonFromTo_InputEvents v.list.vBar, (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
 
   clickOnListItem_InputEvents: (list, listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     entry = list.topWdgtSuchThat (item) ->
@@ -1572,7 +1601,7 @@ class MacroToolkit
     total = textWidget.wrappedLines.length
     [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
 
-    @_dragChromeFromTo_InputEvents vBarCenterFromHere, vBarCenterToHere
+    @_dragSliderButtonFromTo_InputEvents vBar, vBarCenterFromHere, vBarCenterToHere
 
   # The reusable "verb" library for high-level macro tests: returns a Set of
   # macro SUBROUTINES (bringUpInspector, clickMenuItemOfWidget, takeScreenshot,

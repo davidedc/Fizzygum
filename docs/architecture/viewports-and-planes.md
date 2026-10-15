@@ -123,6 +123,18 @@ look; `_reactToBeingAdded` re-lays before reverting to plain). Nothing else may 
 a thumb sized for the other look: the reverse edge's re-read does it only for a bar that has one,
 and only at the next drain.
 
+A press never meets the thin look. The thin thumb is intangible, and the pointer's ARRIVAL fattens
+the bar before any press is dispatched — a mouse's approach crosses the band first, and a finger's
+own down runs its position head (the hover move) ahead of the press (`input-and-gestures.md`
+§"Touch hover dissolution") — so what a press can take is the FAT thumb, which is wider and placed
+differently. `ViewportWdgt.buttonScreenBoxOnArrival` answers where that is without fattening
+anything, from the same two derivations the arrange commits: `_barFrameAt` (where the viewport
+places a bar of a given thickness — both looks come from it) and
+`SliderButtonWdgt.boxInSliderFrame` (the thumb's box inside a frame of a given extent and track
+inset, `SliderWdgt.trackThumbInset` for every pressable look). Its client is the macro toolkit's
+`sliderButtonPressPoint`: a press aimed at the thin thumb's centre can fall on the track beside the
+fat thumb, where it pages the bar and drags a thumb teleported under the pointer instead.
+
 ## Drag-to-scroll — the plane's other scroll gesture
 
 Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above.

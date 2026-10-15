@@ -136,9 +136,11 @@ class SliderWdgt extends CircleBoxWdgt
   ownsDragsStartingOnMe: -> true
 
   # How far my thumb sits inside my track, read by the thumb's own arrange. A thin indicator
-  # paints no track for a thumb to sit inside, so there the thumb fills the bar.
+  # paints no track for a thumb to sit inside, so there the thumb fills the bar; every look a
+  # pointer can press keeps `trackThumbInset` (ViewportWdgt.buttonScreenBoxOnArrival asks for it).
+  trackThumbInset: 2
   thumbInsetInTrack: ->
-    if @indicatorIsIntangible() then 0 else 2
+    if @indicatorIsIntangible() then 0 else @trackThumbInset
 
   # As a menu entry, prefer the width I was BUILT at, frozen at the first ask
   # (a slider is a stretch control with no intrinsic content width, so its

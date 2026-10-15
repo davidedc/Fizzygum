@@ -886,6 +886,11 @@ class ActivePointerWdgt extends Widget
   # and the over-list empties. Without it the last-tapped widget keeps a hover highlight, and a
   # viewport a fattened indicator, with no pointer anywhere near them. A mouse or a pen DOES rest
   # where it stopped, so their strokes keep the over-list they built, untouched.
+  #   This is the stroke's LAST act: both callers clear the press and the drag BEFORE it, so the
+  # exits it sends are final. A hoverExited that defers to a live drag (a slider thumb keeps its
+  # pressed look while the pointer outruns it) would ignore an exit sent while the drag still
+  # stands — and a finger let go ON a thumb it dragged has just lit it, since that release is a
+  # click on the thumb.
   _dissolveHoverStateOfTouchStroke: ->
     return unless @pointerType is 'touch'
     @mouseOverList.forEach (old) =>
@@ -1148,9 +1153,9 @@ class ActivePointerWdgt extends Widget
       if !@nonFloatDraggedWdgt?
         @cleanupMenuWdgts w
 
-    @_dissolveHoverStateOfTouchStroke()
     @mouseButton = undefined
     @nonFloatDraggedWdgt = undefined
+    @_dissolveHoverStateOfTouchStroke()
 
 
   # An ABORT: the browser confiscated the stroke (a system gesture took it over, a palm was
@@ -1179,9 +1184,9 @@ class ActivePointerWdgt extends Widget
     # with it — a confiscated press states no intent, so it can neither arm nor open a menu. One
     # that ALREADY opened stays open: the cancel is not a click outside it.
     @_forgetPressBookkeeping()
-    @_dissolveHoverStateOfTouchStroke()
     @mouseButton = undefined
     @previousNonFloatDraggingPos = undefined
+    @_dissolveHoverStateOfTouchStroke()
 
 
   # Dismiss the open pop-up cascade around a click on `clickedWdgt`: everything that asked to be

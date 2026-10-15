@@ -126,3 +126,75 @@ decided and executed on its own. Kept verbatim, in their BACKLOG order.
 - [x] **~~`SliderWdgt`'s trailing two params want to be an options object — OWNER DECISION PENDING on the shape.~~** Found during `archive/nil-global-retirement.md` step 1. Its ctor is six positionals — `(@start = 1, @stop = 100, @value = 50, @size = 10, @color = Color.BLACK, @smallestValueIsAtBottomEnd = false)` — and 8 sites pass holes to reach a trailing one, in two groups with DISJOINT tails: 6 want only `smallestValueIsAtBottomEnd` (`SliderNodeCreatorButtonWdgt`, `SampleDocApp`, `DegreesConverterApp` ×2, `SampleDashboardApp`, `DemoMenus`) and 2 want only `color` (`ScrollPanelWdgt`'s `@hBar`/`@vBar`). ⛔ No REORDERING can fix it — disjoint wants mean any order leaves one group filling holes. ⚠⚠ **But full-opts is NOT obviously right, and an earlier version of this entry said it was, on `src`-only evidence.** The positional form is **user-facing product surface**: spreadsheet cells accept typed CoffeeScript and `"new SliderWdgt 0, 100, 30, 10"` is a FORMULA users enter (`FormulaCompiler`), it is the documented idiom in `src/macros/MACRO-PATTERNS.md`, and ~25 further positional constructions live in `Fizzygum-tests`. Options: **(A)** full `(opts = {})` — kills all 8 holes, breaks the formula idiom + ~25 test sites + docs; **(B, recommended)** hybrid `(@start = 1, @stop = 100, @value = 50, @size = 10, opts = {})` with `color`/`smallestValueIsAtBottomEnd` in `opts` — the four numbers are a natural ordered tuple and stay the user-facing spelling, so zero test/formula churn, and the 8 sites become `new SliderWdgt 1, 100, 50, 10, smallestValueIsAtBottomEnd: true` (cost: those sites restate the defaults, so they won't track a future change to them); **(C)** leave it. ✅ Safe either way: `Deserializer` builds shells with the **constructor NOT run**, and the bare `super` forwards to `CircleBoxWdgt.constructor: ->`, which takes no params and reads no `arguments`.
 - [x] **The `add` family's 5th positional slot meant two different things — HUNT DONE 2026-08-13, NO LIVE BUG, naming fixed.** `SimpleVerticalStackPanelWdgt` / `ScrollPanelWdgt` / `ToolPanelWdgt` named slot 5 `unused` while `FrameWdgt.add` gave that SAME slot the meaning `notContent`, so one positional call meant different things per receiver. The hunt: only two sites pass a 5th arg (`ActivePointerWdgt:484`, `ScrollPanelWdgt:234`) and **both pass `undefined`**, so on a FrameWdgt receiver it lands as a falsy `notContent` (content treatment — correct for a widget dropped into a window) and on the panels in a parameter nothing reads. Nothing was mis-set. Latent hazard removed anyway by renaming `unused` → `notContent` in all three (a parameter nothing reads, so a no-op) + the family's positional contract documented at `SimpleVerticalStackPanelWdgt.add`. ⚖ **The slot-3 divergence flagged in this entry's first draft is REAL but INTENTIONAL, not a defect:** `Widget._addNoSettle` resolves `opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)` while the stack/tool/frame cores deliberately leave it absent, because their *arrange* assigns the spec (`initialiseDefaultVerticalStackLayoutSpec` adopts spec-less children) — a container with its own layout regime does not want the generic default.
 - [x] **`Widget.add`'s redundant `layoutSpec` signature default DELETED — DONE 2026-08-13.** It duplicated what its own core already does (`_addNoSettle` applies `opts.layoutSpec ? aWdgt.defaultLayoutSpecWhenAddedTo(@)`), so the fallback was stated in two places while only the core one always runs. ⭐ This entry's first draft said "the default fires, gets passed in, and the core's `?` then sees a value" — WRONG for the common path: `Widget.defaultLayoutSpecWhenAddedTo` returns **undefined** (a plain widget is free-floating), so the core's `?` saw the undefined the signature default had just produced and resolved it a SECOND time. Two calls per ordinary `parent.add child`, across 434 call sites, same answer both times. Deleting the signature default leaves one resolver and one call; identical in every case (the `null` and `undefined` routes both end at the same value), and the base signature now matches all six overrides, none of which carry a default. Both implementations verified pure (base returns a literal; `HandleWdgt`'s compares the destination and reads `@cornerSpec`), discharging the side-effect caveat. Gauntlet 14/14.
+
+### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
+
+- [x] **A finger stroke can leave a scrollbar thumb's HOVER HIGHLIGHT stuck.** A finger has no hover and the
+      stroke's end dissolves it, yet in `macroMultilineTextInputScrollsWell` (finger) one thin indicator's
+      thumb (the 5×5 one at 272,227) is in `SliderButtonWdgt` state 1 (highlighted, colour 110,110,110) at
+      both captures, before any drag — and its finger references bake it. Measured with a capture-time state
+      probe (`Fizzygum-tests/.scratch/finger-p4/capture-state.js`, PRELUDE_JS). The same arc's thumb re-lay
+      (`SliderWdgt.showAsScrollIndicator`) cured the DRAGGED bar's identical stuck highlight in that test and
+      in `macroMenuPinnedInScrollPanel` — consistent with a hover-exit computed against a thumb laid for the
+      other look; this one survives it, so the mechanism is still to be found. Fixing it moves finger references.
+      **DONE 2026-10-15 — the dissolution ran with the stroke's drag still standing.** Traced: the thumb is the
+      inspector member list's vertical bar, which `bringInViewAndClickOnListItem` drags with the finger. At the
+      up, `endOfNonFloatDrag` set it normal, the release (a click ON the thumb the stroke pressed) fired
+      `SliderButtonWdgt.activated`, which lit it, and then `_dissolveHoverStateOfTouchStroke` sent its
+      `hoverExited` while `@nonFloatDraggedWdgt` was still set — so the thumb's "hand is dragging" guard
+      ignored the one exit that could put it out. The re-lay "cure" above was the same mechanism seen
+      from the other side, measured with the re-lay switched off in-page: the stale inset left the DRAGGED
+      bar's fattened thumb 12 px wide, so the finger's press landed ON it and the release fired `activated`
+      (image_2 state 1 with the old order, 0 with the fix); laid right, the thumb is narrower, the press
+      lands on the track beside it, and no click reaches the thumb at all. A capture-time census
+      found it was never one thumb: 20 finger tests (~51 captures per density) showed a slider or scrollbar
+      thumb lit with the finger gone — every finger drag of a thumb that ended on the thumb, plain sliders
+      included; the mouse census found no highlight without a pointer on it. Fix (`ActivePointerWdgt`): both
+      the up and the cancel clear the press and the drag BEFORE the dissolution, the stroke's last act
+      (contract in `architecture/input-and-gestures.md` §"Touch hover dissolution"); the cancel already
+      cleared the drag first. The size adjuster's cursor (`StackElementsSizeAdjustingWdgt.hoverExited`,
+      the other drag-deferring exit) rides the same fix. Pinned by `SystemTest_macroThumbHighlightOnlyUnderAPointer`
+      (assertion-only, both pointer kinds; fails under a finger with the old order restored in-page).
+      Mouse references are untouched except `macroFingerChromeDragNeedsNoHold`, which synthesizes touch.
+- [x] **A finger pressing a THIN scroll indicator's thumb shows it HIGHLIGHTED, not pressed, for the whole
+      drag** (found 2026-10-15 while tracing the stuck finger highlight). The finger's arrival move builds the
+      over-list while the bar is still thin and intangible, so the thumb enters it only at the next cycle's
+      hover re-sync — AFTER the press (`setPressedColor 0->2`, then `hoverEntered 2->1` from
+      `reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges`). `SliderButtonWdgt.hoverEntered`
+      guarded only "the hand is dragging", which is not yet true below the grab threshold, so the enter
+      overwrote PRESSED; `hoverMoved` carried the PRESSED guard its own comment states for both. A mouse
+      enters the thumb before pressing, so it never sees this.
+      **DONE 2026-10-15 (owner: fix in this arc)** — `hoverEntered` carries the PRESSED guard too. The filed
+      caveat (a thumb pressed then left below the threshold staying PRESSED on a re-entry) does not hold by
+      the code: below the threshold the hand is not dragging, so the exit resets the thumb to normal and a
+      re-entry finds it normal. Pixel-inert in both suites (the failure sets did not change). Pinned by
+      `SystemTest_macroThumbHighlightOnlyUnderAPointer`'s held press on a thin indicator (fails under a
+      finger with the guard removed in-page: found 1, expected 2).
+- [x] **`dragSliderButtonToFraction` under a finger can press the TRACK beside a scroll indicator's thumb**
+      (found 2026-10-15, same trace). It aimed at the thumb's centre in its THIN look; the pointer's arrival
+      fattens the bar, which widens and moves the thumb, and the thin centre can fall just outside the fat
+      thumb (measured: thin thumb `[276@60 | 5@27]`, press at x 279, fat thumb spans x 269–278; also the
+      finger drag of the detail pane's bar in `macroMultilineTextInputScrollsWell`). The press then landed on
+      `SliderWdgt`, which teleports the thumb under the pointer, so the drag still moved it — but as a track
+      press, not a grab of the button the verb names, and with no click on the thumb.
+      **DONE 2026-10-15 (owner: fix in this arc, as a high-level helper modelled on openOwnMenuOf).**
+      `MacroToolkit.sliderButtonPressPoint slider[, preferred]` is the one answer to "where does a press take
+      this button": it keeps the caller's point whenever a press there takes the button (a plain slider:
+      the product's hit test, with `_exposedScreenPointOf`'s fallback), and for a thin indicator asks
+      `ViewportWdgt.buttonScreenBoxOnArrival` — the fat box, from the same derivations the arrange commits
+      (`ViewportWdgt._barFrameAt`, `SliderButtonWdgt.boxInSliderFrame`), so the toolkit re-derives no
+      geometry. The four thumb-pressing verbs aim through it (`dragSliderButtonToFraction`,
+      `scrollInspectorListItemIntoView`, `nudgeListTowardItem`, `bringcodeStringFromTopInspectorInView`),
+      each keeping the drag displacement it computes. "Mouse not measured" above: it IS mouse too — with the
+      aim switched off in-page the pin's "the press took the thumb" fails under BOTH pointers, because a
+      mouse's approach fattens the bar exactly as a finger's down does. Contract in
+      `architecture/viewports-and-planes.md` §"Scroll indicators".
+- [x] **A `TextWdgt` sized to its text forgot it hugs it** (found and fixed 2026-10-15, same arc, owner: keep it).
+      `TextWdgt` overrides `_sizeToTextAndDisableFittingNoSettle` (the multi-line box-hug) and the override
+      dropped the line `StringWdgt`'s core opens with, `@autoSizeBoxToText = true`, so a later
+      `setFontSize`/`setText` fitted the new size into the box sized for the old one instead of re-hugging.
+      Measured in `macroSlidersControlTextWidget`: the font-size wire moved the value 50→93 while the rendered
+      size stayed 22. The override now remembers the hug. It moved two more tests, under both pointers, both
+      for the better: in `macroFontsMenuFollowsAnApiChange` / `macroWallpaperMenuFollowsAnApiChange` the row
+      whose tick moved away was drawn smaller than its siblings (its new label fitted into the box of the
+      ticked one) and now matches them.
