@@ -234,6 +234,14 @@ load-bearing twice over:
   scroll band fattens the bars (`ViewportWdgt.hoverMoved`), so the press lands on a fat, tangible
   bar — chrome the finger then drags or pages like a mouse does.
 
+The arrival is a hover move even when the finger lands exactly where the previous stroke went
+down. `dispatchEventsFollowingMouseMove` sends moves only "if the pointer actually moved", measured
+against the stroke's down position (`@mouseDownPosition`) so that a press held still is not
+dragging; a press beginning drops the previous stroke's down position before its position head
+runs, so that comparison can never swallow the arrival. Kept, it would make a finger re-touching
+the spot its last stroke started from arrive with no hover move: the bar under it would stay thin
+and the press fall through to the content, and an armed text selection would open an edit.
+
 The fattening and the press are therefore ALWAYS in one event for a finger, which is why a
 dataflow drain must not depend on whether they share a cycle (`Fizzygum-tests/DETERMINISM.md`
 §3j).

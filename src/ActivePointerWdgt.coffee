@@ -907,6 +907,12 @@ class ActivePointerWdgt extends Widget
     # a press begins: whatever the previous stroke recognized is spent (the press below re-establishes
     # it), and the position head right after must not advance a recognizer belonging to a dead stroke
     @_forgetPressAndHoldRecognition()
+    # ...and so is where the previous stroke went DOWN. The hover dispatch measures "has the pointer
+    # moved" against it, so a finger landing exactly where the last stroke began would arrive with no
+    # hover move at all — and the arrival is what fattens a thin scroll indicator under it (its press
+    # would fall through the bar onto the content) and what ends a stale text-selecting gesture (its
+    # press would open an edit). The press below records its own.
+    @mouseDownPosition = undefined
     # THE POINTER IS BACK — a down states where it is. The position head below then rebuilds the
     # over-list at the press point, which is the truth from here on.
     @_pointerIsAbsent = false

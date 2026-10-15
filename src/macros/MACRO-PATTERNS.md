@@ -1061,9 +1061,12 @@ assertion a recapture after a regression silently stores two different hashes an
   vertical slider's button to its own column (`newX = @left()` — the drag's x is DISCARDED) and clamps the y to the
   track; `parent.updateValue()` fires only when the button actually MOVED, and `endOfNonFloatDrag` (`:90`) resets the
   button's visual state on release. So a pure-sideways press-drag-release
-  (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf scrollbar.button, [0.5,0.5]), (new Point
-  (x-80), sameY)`) is a COMPLETE no-op — capture before/after shots and their byte-equality (same reference dataHash)
-  IS the assertion — while a diagonal drag scrolls by its vertical component only. Fixture: the inspector window's list
+  (`@syntheticEventsMouseMovePressDragRelease_InputEvents (@sliderButtonPressPoint scrollbar), (new Point (x-80), sameY)`)
+  is a COMPLETE no-op — capture before/after shots and their byte-equality (same reference dataHash) IS the assertion,
+  backed by the list's `getScrollX()`/`getScrollY()` as values — while a diagonal drag scrolls by its vertical component
+  only. ⚠ Aim the press with `sliderButtonPressPoint`, never at the thin thumb's own centre: the list's scrollbar is a
+  thin indicator the pointer's arrival fattens, and a press beside the FAT thumb lands on the track or a list row, where
+  "nothing moved" holds because nothing was grabbed (the committed references once showed exactly that). Fixture: the inspector window's list
   scrollbar (`inspector.list.vBar`, the unplug entry above). PARK the pointer at one fixed empty-desktop spot before
   EVERY shot (a no-button `@syntheticEventsMouseMove_InputEvents`) so hover state can never break the equality. No
   new verb.
@@ -1206,7 +1209,10 @@ assertion a recapture after a regression silently stores two different hashes an
   and is the sanctioned form: the "drive input through the event queue" rule (`src/macros/CLAUDE.md` rule 2) exempts behaviour
   whose UI trigger is genuinely absent. Everything AFTER the call is still real input (no-button move to carry, mouse-DOWN to
   drop). GOTCHA: `pickUp` CENTRES the copy on the hand, so park the pointer at a known point BEFORE calling — the hand position,
-  not the original's, decides where the copy appears. Find it with `world.hand.children`, not `world.children`; and assert the
+  not the original's, decides where the copy appears. The park must END IN A CLICK on bare desktop: a buttonless move emits nothing
+  under the finger pointer kind (a finger has no resting place; the hand is wherever the last touch was), so a bare move leaves a
+  finger run's copy centred on the canvas corner. Assert the hand position as a value — "the copy is centred on the hand" alone
+  holds wherever the hand is. (A mouse move's sampled path lands within a pixel of its destination, short of it.) Find it with `world.hand.children`, not `world.children`; and assert the
   transformed case by VALUE (which island rode, carrying which TransformSpec) rather than with another screenshot.
 - **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneWidget`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
@@ -1223,9 +1229,10 @@ assertion a recapture after a regression silently stores two different hashes an
   duplication trio's third case (after a plain widget and a menu item). The inspector is always windowed — inspect a string
   (`clickMenuItemOfWidget_InputEvents_Macro string, "inspect"`; a demo `StringWdgt` is a plain widget, so NO TextWdgt right-click drift) → an
   `InspectorWdgt` in a `FrameWdgt`; find the window with `@findTopWidgetByClassNameOrClass FrameWdgt`. A window does not block
-  duplication: right-click its TITLE bar → ancestor hierarchy menu → `"a Window ➜"` → `"duplicate"` (= `fullCopy().pickUp()`, a DEEP copy)
-  → carry + `@syntheticEventsMouseClick_InputEvents()` to drop (a test-local `duplicateWindowedWidget_InputEvents_Macro` DRYs this).
-  The copy is a fully INDEPENDENT live inspector window. Close each via its WINDOW'S own button — `@closeWindow_InputEvents win` (the
+  duplication: right-click its TITLE bar → ancestor hierarchy menu → `"a Frame ➜"` → `"duplicate"` (`Widget.duplicateMenuAction`, a DEEP
+  copy added to the world at the window's position + (10,10), NOT onto the hand — a move-and-click afterwards drops nothing; a
+  test-local `duplicateWindowedWidget_InputEvents_Macro` DRYs the menu walk). Place the copy with `moveTo` before any shot or press
+  meant for the original: left at +10,+10 it covers the original's top-left. The copy is a fully INDEPENDENT live inspector window. Close each via its WINDOW'S own button — `@closeWindow_InputEvents win` (the
   inspector is now a `FrameWdgt`, so this DOES apply — the old naked-`buttonClose` path is gone). Disambiguate by object identity —
   `win2 = (world.children.filter (w) -> (w instanceof FrameWdgt) and w isnt win1)[0]`. The two 560×410 windows don't fit fully side by
   side in a 960-wide canvas — cascade them (offset, overlapping) with both close buttons visible. Closing one leaves the other untouched
@@ -1259,8 +1266,8 @@ assertion a recapture after a regression silently stores two different hashes an
   image_1 inspector + box apart → image_2/3 box dropped straddling the detail/list pane edge, each landing full-size + overhanging.
 - **Disassemble an inspector — pick its PANES out onto the desktop** (`macroPickingUpPartsFromInspector`): the `InspectorWdgt` is built from
   independent part widgets (a left `@list`, a right `@detail` ViewportWdgt, plus hierarchy buttons, toggles and an add/rename/remove/save
-  footer). `Widget.pickUp` (`world.hand.grab @` on the receiver itself — what the part's hierarchy-menu "pick up" item calls; contrast "duplicate"
-  = `fullCopy().pickUp()`, which grabs a COPY) detaches the REAL part. So dropping a picked-up part on the bare desktop leaves a standalone widget
+  footer). `Widget.pickUp` (`world.hand.grab @` on the receiver itself — what the part's hierarchy-menu "pick up" item calls; contrast
+  `duplicateAndPickItUp`, which grabs a COPY, and the "duplicate" item, which stands a copy in place) detaches the REAL part. So dropping a picked-up part on the bare desktop leaves a standalone widget
   and a GAP in the gutted inspector, which re-flows its REMAINING parts (`_reLayout` guards each with `if part.parent == @`). Pull the two big
   PANES (`insp.detail`, `insp.list`, captured UP FRONT — the inspector re-lays-out as parts leave); a per-test helper calls `part.pickUp()`
   directly (the documented equivalent of the menu's "pick up" — driven directly because a synthetic right-click on the `TextWdgt`-based detail
@@ -1453,8 +1460,9 @@ assertion a recapture after a regression silently stores two different hashes an
   across generations (1 → 2 → 3 → 4). SETUP reuses the `macroMenuItemDuplicatesToStandaloneWidget` idiom: `@openMenuOf_InputEvents panel` →
   `@getTextMenuItemFromMenu @getMostRecentlyOpenedMenu(), "duplicate"` → `@openMenuOf_InputEvents dupItem` (right-click the item → its ancestor
   hierarchy menu) → `"a MenuItem ➜"` → `"pick up"` → carry into the panel (no-button move) + `@syntheticEventsMouseClick_InputEvents()` to
-  drop. Clicking the embedded button puts the copy ON THE HAND, so a plain move-then-click carries-and-drops it (NOT a held-drag — that is only
-  for a free morph not already on the hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
+  drop. Clicking the embedded button stands the copy IN PLACE at +10,+10, never on the hand: the copy reaches the hand only through its own
+  "pick up", after which a plain move-then-click carries-and-drops it (NOT a held-drag — that is only for a free morph not already on the
+  hand). Locate each generation's button by a LIVE-WORLD query — the new `PanelWdgt` not yet seen, then its
   descendant `MenuItemWdgt` with `labelString == "duplicate"` (`topWdgtSuchThat`) — never recorded coordinates. (`_reactToBeingCopied`,
   now on `MenuItemWdgt`, is only a cosmetic un-highlight, NOT the duplication mechanism.) No new verb.
 - **ABORT a gesture the way a browser does — `pointercancel`** (`macroPointerCancelAbortsDragWithoutClick`,

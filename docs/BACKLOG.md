@@ -355,27 +355,30 @@ and `architecture/occlusion-culling.md` §2a. Three things it deliberately did n
       § "Test & reference-image layout".
 
 ### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
-- [ ] **OWNER DECISION: a thin scroll indicator's thumb is 5 px on a 4 px bar** (found 2026-10-15). The
-      bar is `scrollIndicatorThickness` (4) wide and the thumb's cross size is derived from it (surround 0),
-      but `SliderButtonWdgt` keeps `Widget`'s default `minimumExtent` of 5×5, so `__commitExtent` widens
-      the thumb to 5 — it pokes 1 px past its bar and the viewport's edge, where it is clipped (measured:
-      bar `[276@60 | 4@136]`, thumb `[276@60 | 5@27]`; the same on a horizontal bar; and a thumb whose
-      length would be under 5 is lengthened to 5). `SliderWdgt` already lowers its OWN minimum to 1×1
-      (`_setMinimumExtent new Point 1, 1`), so the fix is the same line on the thumb. Measured with it
-      (dpr1, on top of the stuck-highlight fix): 14 more finger tests and 21 more mouse tests move — every
-      visible thin thumb reshapes from a clipped 5-px stadium to a whole 4-px one. Since
-      `MacroToolkit.sliderButtonPressPoint` aims through `ViewportWdgt.buttonScreenBoxOnArrival`, no press
-      depends on this any more; it is a look-and-geometry decision only.
-- [ ] **Audit the tests that DUPLICATE and then "carry" the copy** (found 2026-10-15). `duplicateMenuAction`
-      lands the copy at +10,+10 instead of on the hand, so a macro that moves-and-clicks to "drop" the copy
-      only clicks the desktop and leaves it stacked over the original — `macroSlidersControlTextWidget` had
-      done exactly that in every committed reference, its drags pressing the copy's sliders, until
-      `sliderButtonPressPoint` refused to press a covered thumb (repaired). Sweep the other tests that
-      duplicate and then move/click (a `grep -l "rides the hand\|carry it"` over `tests/` lists ten, most of
-      them deliberate "pick up" carries) for the same unstated stack, and back their claims with value
-      assertions.
-- [ ] (optional, owner to decide) the gauntlet's `refs` leg went PASS-serial-only once from fg's own 14 s leg
-      alarm around a ~10 s `check-refs:pixels` on a loaded machine — a budget question, not a reference problem.
+- [ ] **`scrollInspectorListItemIntoView` derives its drag from the THIN thumb** (found 2026-10-15, the
+      thin-thumb arc). It measures the handle's travel and centre on the bar as drawn at rest (thin), while
+      the press meets the FAT thumb the arrival makes, whose travel differs; the bounded ±1 px nudge loop
+      in `bringInViewAndClickOnListItem` then carries the row into view. So where a list lands depends on
+      the thin thumb's look: the thumb's 5→4 px change moved two shots' scroll positions
+      (`macroAddEditSaveRenameRemoveProperty` image_3, `macroInspectorResizingOKEvenWhenTakenApart` image_4)
+      with the verb's intent intact. Deriving the drag from `ViewportWdgt.buttonScreenBoxOnArrival`'s
+      geometry would land on the intended row first time — and move every reference behind a
+      `bringInView…` on a long list. Owner decision.
+- [ ] **A mouse move lands up to a pixel SHORT of its destination** (found 2026-10-15, same arc).
+      `MacroToolkit._sampleMovePath` emits samples `0…n-1` of its expoOut curve and never sample `n`, so a
+      move to (620,130) leaves the hand at 619@130; a finger tap lands on the point exactly. Harmless where
+      an aim lands inside a widget, but a macro asserting the hand's position must allow the pixel
+      (`macroDuplicateAndPickItUpRidesHand` does). Emitting the destination would move every reference
+      taken after a move. Owner decision.
+- [ ] **A thin vBar about ONE pixel long shows in single-line text areas** (found 2026-10-15, same arc).
+      Measured: `macroDegreesConverterFourWayDrive`'s formula fields carry vBar thumbs `[515@154 | 4@1]`
+      and `[3@1]`, and the docs toolbar's field one `[971@318 | 1@1]` — bars a pixel or so long, shown as
+      overflow indicators. While the thumb kept a 5×5 floor they painted a stray grey dot in the field's
+      corner; now they paint (near) nothing. Why a bar that short is visible at all is unexamined.
+- [ ] (optional, owner to decide) the gauntlet's `refs` leg hits fg's own leg alarm in-wave on a loaded machine
+      (twice on 2026-10-15; the second time wave B's legs ran ~280 s each) — a budget question, not a reference
+      problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budgets are `to 300`
+      (`check-refs.js --pixels`) and `to 120` (`check-visualisations.js --strict`), not 14 s.
 
 ### One line each — every item names the archived plan and section that owns its detail
 

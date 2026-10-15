@@ -198,3 +198,46 @@ decided and executed on its own. Kept verbatim, in their BACKLOG order.
       for the better: in `macroFontsMenuFollowsAnApiChange` / `macroWallpaperMenuFollowsAnApiChange` the row
       whose tick moved away was drawn smaller than its siblings (its new label fitted into the box of the
       ticked one) and now matches them.
+- [x] **A thin scroll indicator's thumb was 5 px on a 4 px bar** (found 2026-10-15). `SliderButtonWdgt` kept
+      `Widget`'s default `minimumExtent` of 5×5, so `__commitExtent` widened a thumb derived at 4 px to 5 — it
+      poked 1 px past its bar and the viewport's edge, and a thumb whose length derived under 5 was lengthened.
+      **DONE 2026-10-15 (owner: fix it).** The thumb lowers its own minimum to 1×1, as `SliderWdgt` does for
+      itself: its extent is its slider's to derive (`boxInSliderFrame`, which `buttonScreenBoxOnArrival` shares,
+      so the press-point derivation follows). Measured before recapturing, with a capture-time census of every
+      thumb whose box the minimum changes: it moved 21 tests at dpr1 and 67 at dpr2 (mouse), 21 and 62
+      (finger), every failing test a flagged one, and every moved pixel inside a thumb's old ∪ new rect except
+      four traced causes — (1) `scrollInspectorListItemIntoView` derives its drag from the thin thumb, so two
+      lists landed on other rows (filed); (2) `macroInspectorScrollbarUnplugged`'s bars, picked up while thin,
+      are 4 px PLAIN sliders whose thumbs derive at 2×2 (owner: accept); (3) a census blind spot, a menu riding
+      the hand (proved inside once the hand is walked); (4) `macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`
+      had NOT delivered its intent in any committed reference — its presses aimed at the thin thumb's centre,
+      which lay just outside the fat thumb, so they took the track and a list row, and image_3 showed the list
+      panned 100 px SIDEWAYS and not scrolled (read as values with the 5 px floor switched back on in-page). The
+      test now aims with `sliderButtonPressPoint` and asserts the scroll offsets. Also gone: a stray 5×5 dot
+      that ~1 px-long thin bars painted in single-line fields (the bars themselves: filed).
+- [x] **Audit the tests that DUPLICATE and then "carry" the copy** (found 2026-10-15). **DONE 2026-10-15**, by a
+      capture-time census over the whole suite under both pointers: every copy path wrapped (`duplicateMenuAction`,
+      `duplicateAndPickItUp`, any `fullCopy`), each copy's offset/stacking/hand logged at every capture, every
+      press and wheel attributed to copy, original or neither, plus an untagged pass for same-class pairs offset
+      by +10,+10. Fifteen tests make a copy; no copy stands stacked where it does harm, no press meant for an
+      original lands on its copy or the reverse, and the only stacked captures are the two deliberate birth
+      frames (`macroDuplicateSimpleWidgetPaintsCleanly`, `macroDuplicateComplexWidgetPaintsCleanly`). It found one
+      defect of another kind: under a FINGER, `macroDuplicateAndPickItUpRidesHand`'s park was a buttonless move,
+      which emits nothing, so the copy rode a hand still at (0,0) and the committed finger image_1 showed it on
+      the canvas corner; the value check passed because it compared the copy with the hand, not with the park.
+      The park now ends in a click (a tap), and the hand position is asserted. Stale "duplicate puts the copy on
+      the hand" text corrected in three tests' metadata and three places in `src/macros/MACRO-PATTERNS.md`.
+- [x] **A finger re-touching where its last stroke began arrived with no hover move** (found and fixed
+      2026-10-15, the thin-thumb arc; owner: keep it). `dispatchEventsFollowingMouseMove` sends a move only "if
+      the pointer actually moved", measured against `@mouseDownPosition` — which still held the PREVIOUS
+      stroke's down when a new down's position head ran. So a finger landing on that exact spot got no hover
+      move on arrival: a thin scroll indicator under it stayed thin and the press fell through to the content
+      (`macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`' second press, finger), and an armed text
+      selection opened an edit (a caret from a plain scroll swipe, baked into the finger references of
+      `macroDocumentScrollsMixedTextAndClocks` and `macroNestedScrollPanelsRouteWheel`). A press beginning now
+      drops the previous stroke's down position before its position head (`ActivePointerWdgt.processPointerDown`);
+      a mouse stroke's down never runs that head (a move always precedes it; a synthesised one states no
+      place), so no mouse stroke is touched. Measured in-page first: ~60 same-spot
+      arrivals across the finger suite, pixels moved in those two tests only. Pin: the MovingSliders test's
+      value assertions fail under a finger without it. Contract in `architecture/input-and-gestures.md`
+      §"Touch hover dissolution".

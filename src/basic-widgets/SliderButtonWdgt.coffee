@@ -44,6 +44,10 @@ class SliderButtonWdgt extends CircleBoxWdgt
     @isLockingToPanels = false
     @color = @normalColor
     @alpha = 0.4
+    # my extent is my slider's to derive (boxInSliderFrame), and the generic 5px floor every
+    # widget carries must not overrule it: a thin scroll indicator's bar is narrower than that,
+    # and a thumb held at the floor would poke past its bar and the viewport's edge.
+    @_setMinimumExtent new Point 1, 1
 
   # Derive the button's colour states from one base colour: resting = base,
   # highlight/press progressively bluer. (Used by the prompter slider.)
