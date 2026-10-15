@@ -205,7 +205,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   a caret-slot test (the arc's falsified shape).
 - **L2 actions**: clicks (`moveToAndClick`, `moveToAndClickAtFractionOf`, `doubleClickAtFractionOf`,
   `tripleClickAtFractionOf`, `shiftClickAtFractionOf`); drag/resize (`dragWidgetTo`, `dragResizeMoveHandleTo`,
-  `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`,
+  `wheelOn`, `clickOnSliderTrackAtFraction`, `dragSliderButtonToFraction`); menus (`openMenuOf`, `openOwnMenuOf` — the
+  widget's OWN menu even where children cover its centre: it right-clicks a point where the widget itself is what a press
+  hits, so "the panel's menu" is said by meaning rather than by a background fraction the next layout moves onto a child,
   `moveToItemOf{Menu,TopMenu}AndClick`, `moveToItem{StartingWith,Containing}OfMenuAndClick`, `clickMenuHeaderToPin`);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`,
   `dragWindowResizerTo`); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
@@ -220,6 +222,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   state. All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
+  `bringInViewAndClickOnListItem` (the same verified scroll-correct-click on a list you NAME — a test holding two
+  inspectors passes the one it means; the top-inspector verb is this one applied to `topInspectorList()`),
   `setControllerTargetToWidgetProperty`, `bindControllerTo` (its TWO-WAY sibling — `bind ⇄`, which takes no
   property argument because a bind's pins are forced to be the two widgets' principal ones),
   `disconnectControllerWire` (the inverse of both — pick a controller's per-wire

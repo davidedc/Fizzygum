@@ -1117,6 +1117,24 @@ class MacroToolkit
   openMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @moveToAndClick_InputEvents widget, "right button", milliseconds, startTime
 
+  # Open a widget's OWN context menu even where its children cover its centre (a panel full of
+  # windows): right-click a spot where the widget ITSELF is what a press would hit — its centre
+  # when that is exposed (exactly what openMenuOf aims at), else the first exposed point of an 8×8
+  # grid over it, row by row. A test then says "the panel's menu" instead of aiming at the panel's
+  # background by a fraction that the next layout change moves onto a child. A widget with no
+  # exposed point is a fault to raise, not a click to place on whatever covers it.
+  openOwnMenuOf_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @moveToAndClick_InputEvents (@_exposedScreenPointOf widget), "right button", milliseconds, startTime
+
+  _exposedScreenPointOf: (widget) ->
+    centre = widget.localPointToScreen widget.center()
+    return centre if (@_topWdgtAtScreenPoint centre) is widget
+    for row in [0...8]
+      for column in [0...8]
+        candidate = widget.localPointToScreen new Point (widget.left() + Math.round((column + 0.5) * widget.width() / 8)), (widget.top() + Math.round((row + 0.5) * widget.height() / 8))
+        return candidate if (@_topWdgtAtScreenPoint candidate) is widget
+    throw new Error "openOwnMenuOf_InputEvents: no sampled point of #{widget} is exposed — something else covers every one"
+
   # Close a FrameWdgt by clicking the close button (the X) in its window bar. Every FrameWdgt builds
   # a `.closeButton` (a CloseIconButtonWdgt at its top-left); clicking it runs the button's actOnClick
   # → the window's closeFromFrameBar()/close(). The reusable window-chrome pattern: get a window (by a
@@ -1446,16 +1464,16 @@ class MacroToolkit
     # on a mapped plane)
     @_dragChromeFromTo_InputEvents (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
 
-  bringListItemFromTopInspectorInView_InputEvents: (listItemString) ->
-    inspectorNaked = @_findTopInspector()
-    @scrollInspectorListItemIntoView_InputEvents inspectorNaked.list, listItemString
+  # The member list of the topmost inspector — the list the `…FromTopInspector…` verbs act on, named
+  # by a public locator so macro source can hand it to the list verbs below.
+  topInspectorList: ->
+    @_findTopInspector()?.list
 
   # WHERE THE NAMED ROW SITS RELATIVE TO THE PANE'S VISIBLE WINDOW — the one place that geometry is
   # computed, shared by the aimability check, the corrective nudge and the click itself. The pane's
   # window is expressed in the ROW'S plane (screenPointToMyPlane — identity when the list is
   # unscrolled) so row and window are comparable numbers.
-  _topInspectorRowVisibility: (listItemString) ->
-    list = @_findTopInspector().list
+  _listRowVisibility: (list, listItemString) ->
     entry = list.topWdgtSuchThat (item) -> item.text? and item.text == listItemString
     return undefined  unless entry?
     paneTop = (entry.screenPointToMyPlane new Point list.left(), list.top()).y
@@ -1467,9 +1485,9 @@ class MacroToolkit
     visibleTop: Math.max entry.top(), paneTop
     visibleBottom: Math.min entry.bottom(), paneBottom
 
-  # Is the named row actually SHOWING, i.e. does it have a slice a click can land in?
-  listItemFromTopInspectorIsAimable_InputEvents: (listItemString) ->
-    v = @_topInspectorRowVisibility listItemString
+  # Is the named row of `list` actually SHOWING, i.e. does it have a slice a click can land in?
+  listItemIsAimable_InputEvents: (list, listItemString) ->
+    v = @_listRowVisibility list, listItemString
     v? and v.visibleBottom > v.visibleTop
 
   # ONE SCROLLBAR PIXEL of correction toward the named row. The scroll verb aims by INDEX, and on a
@@ -1477,8 +1495,8 @@ class MacroToolkit
   # 10,000px list moves ~75px per pixel — nearly two rows), so the rounding any drag ends on can leave
   # the target row just outside the window. This nudges the thumb the single pixel that carries the
   # window over the row: up when the row sits above the window, down when it sits below.
-  nudgeTopInspectorListTowardItem_InputEvents: (listItemString) ->
-    v = @_topInspectorRowVisibility listItemString
+  nudgeListTowardItem_InputEvents: (list, listItemString) ->
+    v = @_listRowVisibility list, listItemString
     return  unless v?
     direction =
       if v.entry.bottom() <= v.paneTop then -1
@@ -1489,11 +1507,7 @@ class MacroToolkit
     from = thumb.center()
     @_dragChromeFromTo_InputEvents (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
 
-  clickOnListItemFromTopInspector_InputEvents: (listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @_findTopInspector()
-
-    list = inspectorNaked.list
-
+  clickOnListItem_InputEvents: (list, listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     entry = list.topWdgtSuchThat (item) ->
       if item.text?
         item.text == listItemString
@@ -1517,7 +1531,7 @@ class MacroToolkit
     visibleTop = Math.max entry.top(), windowTopInEntryPlane
     visibleBottom = Math.min entry.bottom(), windowBottomInEntryPlane
     if visibleBottom <= visibleTop
-      throw new Error "clickOnListItemFromTopInspector_InputEvents: row '#{listItemString}' has no visible slice in the pane (row #{entry.top()}..#{entry.bottom()}, pane #{windowTopInEntryPlane}..#{windowBottomInEntryPlane}) — scroll it into view before clicking"
+      throw new Error "clickOnListItem_InputEvents: row '#{listItemString}' has no visible slice in the pane (row #{entry.top()}..#{entry.bottom()}, pane #{windowTopInEntryPlane}..#{windowBottomInEntryPlane}) — scroll it into view before clicking"
     lowestAim = visibleTop + 2
     highestAim = visibleBottom - 2
     clickY =
@@ -1593,19 +1607,25 @@ class MacroToolkit
 
     macroSubroutines.add Macro.fromString """
       bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro = (whichItem) ->
+        bringInViewAndClickOnListItem_InputEvents_Macro @topInspectorList(), whichItem
+    """
+
+    macroSubroutines.add Macro.fromString """
+      bringInViewAndClickOnListItem_InputEvents_Macro = (list, whichItem) ->
         # SCROLL UNTIL THE ROW IS ACTUALLY SHOWING, which is what this verb's name promises. The
         # index-derived scroll lands within a scrollbar pixel, and on a long member list one such
         # pixel is worth nearly two rows, so the row can end up just outside the window -- on either
         # pointer kind. Each corrective nudge carries the window one pixel toward it; bounded, because
         # a row that will not come into view is a fault to raise (the click verb does) rather than a
-        # loop to spin.
-        @bringListItemFromTopInspectorInView_InputEvents whichItem
+        # loop to spin. It acts on the list it is GIVEN, so a test holding two inspectors names the
+        # one it means instead of arranging which one is on top.
+        @scrollInspectorListItemIntoView_InputEvents list, whichItem
         yield "waitNoInputsOngoing"
         for attempt in [0..2]
-          break if @listItemFromTopInspectorIsAimable_InputEvents whichItem
-          @nudgeTopInspectorListTowardItem_InputEvents whichItem
+          break if @listItemIsAimable_InputEvents list, whichItem
+          @nudgeListTowardItem_InputEvents list, whichItem
           yield "waitNoInputsOngoing"
-        @clickOnListItemFromTopInspector_InputEvents whichItem
+        @clickOnListItem_InputEvents list, whichItem
         yield "waitNoInputsOngoing"
     """
 

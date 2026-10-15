@@ -896,6 +896,19 @@ assertion a recapture after a regression silently stores two different hashes an
   the single move: the move verb's path sampler never emits the destination itself when the move is one event long.
   Assertion-only tests of this kind carry no references; the pair it pins is a hover that fattens a thin scroll indicator plus
   the press on its track (a dataflow ring entered in the wrong place — `../../../Fizzygum-tests/DETERMINISM.md` §3j).
+  Two COMPLETE gestures can share a timestamp too (`macroTwoEditsOnOneRingInOneCycle`: two thumb drags on bound sliders —
+  each a move onto the thumb, press, a zero-delta pressed move that fixes the grab offset, the move, release), and edits
+  that need no pointer reach one drain more simply: set both through the setter a gesture ends in (`setValue`) inside ONE
+  macro step, with no yield between them.
+- **Picking a row of a SPECIFIC list, and opening a covered widget's own menu** (`macroDuplicatedInspectorDrivesCopiedTargetOnly`):
+  `bringInViewAndClickOnListItem_InputEvents_Macro insp.list, "alpha"` scrolls the named row into view, corrects until it
+  is SHOWING and raises a fault rather than clicking a row that is not — never a hand-rolled thumb drag plus a blind click,
+  which on a long list (one thumb pixel worth whole rows, a thin indicator changing its thumb's size under the drag) lands
+  anywhere and selects nothing while the test stays green. Give that list HEIGHT: a finger's translated scroll is a bounded
+  number of swipes, each inside the pane, so a short pane cannot reach a row far down. And `@openOwnMenuOf_InputEvents panel`
+  opens the panel's own menu wherever its background is exposed. Back a pixel claim about an edit with a value assertion
+  (`@assertValuesEqual …, 0.25, rect.alpha`): once references are captured over an edit that never lands, screenshots
+  alone stay green.
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
   to the nearest `scrolledBy` handler; `ViewportWdgt.scrolledBy` scrolls itself UNLESS at the travel limit, then `escalateEvent 'scrolledBy'`).
