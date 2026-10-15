@@ -40,23 +40,33 @@ class FolderIconAppearance extends SizeAwareIconAppearance
     tabW = Math.min gw, Math.round(iS * @TAB_WIDTH)
     r = Math.max t, Math.round iS * @CORNER    # body corner radius
     rTab = Math.max 1, Math.round r / 2
+    rTabIn = Math.max 0, rTab - t
+    rIn = Math.max 0, r - t
+
+    # The tab sits flush on the body's top-left, so the two corners where they
+    # meet are not corners of the silhouette: the tab rounds only its top
+    # corners, the body every corner but its top-left, and each halo and light
+    # interior keeps the square corners of the ink it surrounds — the left wall
+    # and its halo run straight from the tab down into the body. (Per-corner
+    # radii read [topLeft, topRight, bottomRight, bottomLeft].)
 
     # ---- halos first (lesson 13: light must never be drawn over sibling ink;
     # painting every envelope before any ink makes that impossible)
     @_useLight ctx
-    ctx.fillRoundRect gx - o, bodyTop - o, gw + 2 * o, (bottom - bodyTop) + 2 * o, r + o
-    ctx.fillRoundRect gx - o, tabTop - o, tabW + 2 * o, (bodyTop - tabTop) + 2 * o, rTab + o
+    ctx.fillRoundRect gx - o, bodyTop - o, gw + 2 * o, (bottom - bodyTop) + 2 * o, [0, r + o, r + o, r + o]
+    ctx.fillRoundRect gx - o, tabTop - o, tabW + 2 * o, (bodyTop - tabTop) + 2 * o, [rTab + o, rTab + o, 0, 0]
 
-    # ---- the tab: its own bordered box; the parts reaching below bodyTop are
-    # deliberately overpainted by the body, so only its top corners round
+    # ---- the tab: a bordered box whose bottom border IS the body's top line
+    # (adjacent outlined shapes share one line), so its interior stops at
+    # bodyTop; too narrow for an interior, it is solid ink
     @_useInk ctx
-    ctx.fillRoundRect gx, tabTop, tabW, (bodyTop - tabTop) + r + t, rTab
-    @_useLight ctx
-    ctx.fillRoundRect gx + t, tabTop + t, tabW - 2 * t, (bodyTop - tabTop) + r, Math.max(0, rTab - t)
+    ctx.fillRoundRect gx, tabTop, tabW, (bodyTop - tabTop) + t, [rTab, rTab, 0, 0]
+    if tabW > 2 * t
+      @_useLight ctx
+      ctx.fillRoundRect gx + t, tabTop + t, tabW - 2 * t, (bodyTop - tabTop) - t, [rTabIn, rTabIn, 0, 0]
 
-    # ---- the body: bordered box over the tab's lower reaches; its top edge is
-    # the full-width line the tab visibly sits on (as in the original)
+    # ---- the body: its top edge is the full-width line the tab visibly sits on
     @_useInk ctx
-    ctx.fillRoundRect gx, bodyTop, gw, bottom - bodyTop, r
+    ctx.fillRoundRect gx, bodyTop, gw, bottom - bodyTop, [0, r, r, r]
     @_useLight ctx
-    ctx.fillRoundRect gx + t, bodyTop + t, gw - 2 * t, (bottom - bodyTop) - 2 * t, Math.max(0, r - t)
+    ctx.fillRoundRect gx + t, bodyTop + t, gw - 2 * t, (bottom - bodyTop) - 2 * t, [0, rIn, rIn, rIn]

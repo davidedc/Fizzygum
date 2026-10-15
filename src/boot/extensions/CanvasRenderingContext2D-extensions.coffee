@@ -56,10 +56,12 @@ CanvasRenderingContext2D::strokeRoundRect = (x, y, w, h, radii) ->
 # Stadium (capsule): the w×h box with its shorter axis fully rounded — two
 # half-circle caps of radius min(w,h)/2 joined by a rectangular body, the
 # orientation implied by the longer axis, so ONE call covers vertical and
-# horizontal sliders. On SWCanvas this name reaches the dedicated StadiumOps
-# rasterizer (single-blend at any alpha, exact-box crisp contract, tier-0
-# clip); the native polyfill is the standard roundRect at the degenerate
-# radius, whose pixel-center-sampled path output is a correct stadium.
+# horizontal sliders. Both backends draw the same shape the same way: a
+# roundRect path at the degenerate radius min(w,h)/2, which a pixel-center-
+# sampling fill turns into a correct stadium — SWCanvas fills it through its
+# generic path pipeline, the native polyfill through the standard roundRect.
+# SWCanvas pins the contract (exact-box crisp fill, single-blend at any
+# alpha, tier-0 clip, transforms) in its tests/core/053.
 # Crisp spelling: fill the widget box = fillStadium 0, 0, w, h
 CanvasRenderingContext2D::fillStadium = (x, y, w, h) ->
   @beginPath()
