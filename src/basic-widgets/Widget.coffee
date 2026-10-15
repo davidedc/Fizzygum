@@ -3655,6 +3655,15 @@ class Widget extends TreeNode
     aWdgt._fullChanged()
     @__add aWdgt, atIndex: atIndex, skipExtentCalculation: true
     aWdgt._reactToBeingAdded @, beingDropped
+    # A subtree JOINING the live world brings every controller's wire RECORDS and none of its
+    # dataflow EDGES: the index is derived, never duplicated or serialized, and each client
+    # re-declares its own (dataflow spec §2). Only the add ROOT hears _reactToBeingAdded, so the
+    # re-declaration is the add's to make, for the whole subtree — or a TRACKING control nested
+    # inside (the scrollbar of a duplicated or snapshot-loaded viewport) never re-subscribes, and
+    # stops following its content until a drag fires it. Idempotent. Forward edges need nothing
+    # here: a producer derives them itself on its first fire (ControllerMixin.updateTarget).
+    unless aWdgt.isOrphan()
+      aWdgt.forAllChildrenBottomToTop (each) -> each._ensureTrackingEdges?()
     if previousParent?._reactToChildRemoved?
       previousParent._reactToChildRemoved aWdgt
 

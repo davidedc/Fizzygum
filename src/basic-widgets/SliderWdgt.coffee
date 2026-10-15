@@ -99,14 +99,21 @@ class SliderWdgt extends CircleBoxWdgt
   # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
   # thumb alone — the track's alpha goes to zero. `undefined` is the third state and means "not an
   # indicator at all": the plain slider look, and a pointer that stops on me again.
+  #   The mode is also an input to my thumb's GEOMETRY (thumbInsetInTrack), so a flip that changes
+  # the inset re-lays the thumb here, at the one door the mode changes through: a caller that has
+  # just laid me out for the old look (my viewport's _reLayoutScrollbars, my own _reactToBeingAdded)
+  # never leaves a thumb sized for one look on a bar wearing the other. Nothing else may be trusted
+  # to repair it — a duplicated viewport's bars have no reverse edge to re-read through.
   showAsScrollIndicator: (mode) ->
     return if @indicatorMode is mode
+    insetBefore = @thumbInsetInTrack()
     @indicatorMode = mode
     @alpha = switch mode
       when 'fat'  then @indicatorTrackAlpha
       when 'thin' then 0
       else             @plainTrackAlpha
     @button?.showAsScrollIndicatorThumb? (if mode? then @indicatorThumbAlpha else @plainThumbAlpha)
+    @_reLayoutSelfAndButton() if @thumbInsetInTrack() isnt insetBefore
     @_fullChanged()
 
   # Am I an indicator the pointer must pass THROUGH? True in every state but 'fat': an indicator
@@ -155,13 +162,11 @@ class SliderWdgt extends CircleBoxWdgt
     # target: a thin, pointer-through look must not survive being picked up, or the bar becomes a
     # widget on the desktop that nothing can ever click, with no scroll band left to hover it back.
     # public-call-sanctioned: showAsScrollIndicator IS the one door onto this presentation (my
-    # viewport comes through it too) and it settles nothing — it writes two alphas and repaints.
+    # viewport comes through it too) and it settles nothing — it writes two alphas, re-lays my own
+    # thumb if the look changes its inset, and repaints.
     @showAsScrollIndicator undefined  unless whereTo.isMyScrollBar? @
-    # A DUPLICATED or re-parented control carries its wire records but NO edges — the engine's index
-    # is derived and never duplicated or serialized, and the client re-declares it (dataflow spec §2).
-    # Joining a live world is the moment a copy can do that, so a duplicated scrollbar follows its
-    # content from the start rather than only from its first drag.
-    @_ensureTrackingEdges()
+    # (My tracking edges are re-declared by the add itself, for me and for every control in a
+    # subtree that joins the world with me — see Widget._addNoSettle.)
 
   # Re-lay-out me and my thumb, then repaint -- the couplet every value/geometry change
   # ends with.

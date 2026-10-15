@@ -592,7 +592,8 @@ class ViewportWdgt extends Widget
         @vBar.hide()
 
     # the bars that show have just been sized and placed; give them the look that goes with the
-    # state they show in (thin, or fat under a hovering pointer)
+    # state they show in (thin, or fat under a hovering pointer). A look that changes the thumb's
+    # inset re-lays the thumb on its way in (SliderWdgt.showAsScrollIndicator).
     @_refreshScrollIndicators()
 
     # ── THE REVERSE EDGE (connector plan §P8) ────────────────────────────────────────────────

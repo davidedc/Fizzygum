@@ -354,6 +354,18 @@ and `architecture/occlusion-culling.md` §2a. Three things it deliberately did n
       parser — four bypassing regexes were routed through it. Doctrine: `Fizzygum-tests/CLAUDE.md`
       § "Test & reference-image layout".
 
+### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
+- [ ] **A finger stroke can leave a scrollbar thumb's HOVER HIGHLIGHT stuck.** A finger has no hover and the
+      stroke's end dissolves it, yet in `macroMultilineTextInputScrollsWell` (finger) one thin indicator's
+      thumb (the 5×5 one at 272,227) is in `SliderButtonWdgt` state 1 (highlighted, colour 110,110,110) at
+      both captures, before any drag — and its finger references bake it. Measured with a capture-time state
+      probe (`Fizzygum-tests/.scratch/finger-p4/capture-state.js`, PRELUDE_JS). The same arc's thumb re-lay
+      (`SliderWdgt.showAsScrollIndicator`) cured the DRAGGED bar's identical stuck highlight in that test and
+      in `macroMenuPinnedInScrollPanel` — consistent with a hover-exit computed against a thumb laid for the
+      other look; this one survives it, so the mechanism is still to be found. Fixing it moves finger references.
+- [ ] (optional, owner to decide) the gauntlet's `refs` leg went PASS-serial-only once from fg's own 14 s leg
+      alarm around a ~10 s `check-refs:pixels` on a loaded machine — a budget question, not a reference problem.
+
 ### One line each — every item names the archived plan and section that owns its detail
 
 - [ ] `archive/atlas-delay-fuzz-tool-plan.md` §9: `fg fuzz` has NO working regression fixture — §5 test 3 (revert flake A's `waitForScreenshotReady` and expect a catch) does not reproduce: 13/13 passes under injection AND 3/3 with none, because a fresh page makes ~1 `loadFont` call against a ~one-frame window. A fixture needs a scenario with MANY atlas loads and a pixel read near one of them. Until then the tool's own failure paths are covered only by the canned-transcript corpus (`npm run selftest`) plus the two live INVALID drills.

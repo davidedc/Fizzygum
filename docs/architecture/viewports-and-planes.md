@@ -114,6 +114,15 @@ lands anywhere else it reverts to a plain slider (`SliderWdgt._reactToBeingAdded
 look must never survive being picked up, or the bar becomes a widget on the desktop nothing can
 click and no scroll band left to hover it back.
 
+The mode is also an input to the thumb's GEOMETRY: `SliderWdgt.thumbInsetInTrack` is 0 for a thin
+indicator (the thumb fills the bar) and 2 otherwise, read by `SliderButtonWdgt._reLayoutSelf`. So
+`showAsScrollIndicator` re-lays the thumb whenever a flip changes that inset — at the one door the
+mode changes through, because both its callers lay the bar out for the OLD look first
+(`_reLayoutScrollbars` sizes and re-lays each bar before `_refreshScrollIndicators` decides the
+look; `_reactToBeingAdded` re-lays before reverting to plain). Nothing else may be trusted to repair
+a thumb sized for the other look: the reverse edge's re-read does it only for a bar that has one,
+and only at the next drain.
+
 ## Drag-to-scroll — the plane's other scroll gesture
 
 Float-dragging a viewport's contents scrolls it too — the gesture beside the bars above.
