@@ -56,7 +56,9 @@ ControllerMixin =
         # markStale's me (the initial fire), so each keeps its exact on-connect semantics -- a slider/text fires
         # its current value, PaletteWdgt's empty override fires nothing, Example3DPlot recomputes its plot.
         # Non-forced is sufficient (a fresh wire's producer value differs from the target's, so it propagates).
-        @reactToTargetConnection?()
+        # The marks it makes are that on-connect OFFER, not an edit of my value — which is what the engine's
+        # one-edit-per-ring rule needs told apart (DataflowEngine.duringWireConnection).
+        world.dataflow.duringWireConnection => @reactToTargetConnection?()
 
       # THE RECIPROCAL WIRE (connector plan §P8): I drive `action` on `theTarget` AND I follow it, so
       # the two stay welded however the property changes. Same binding as wireTo, plus the reverse

@@ -71,6 +71,16 @@
 # the recalculateLayouts that immediately follows the drain. A generous pass-count cap turns a
 # genuinely divergent side-effect loop into a loud DATAFLOW_NONCONVERGENCE rather than a
 # frozen frame. Measured peaks (recorded in Phase 7): 1 pass typical, 2 for sink-onto-source.
+#   ⚠ A RING TAKES ONE EDIT PER PASS. Two EDITS on one ring (both ends of a `bind ⇄`, two stops of
+# the °C↔°F circuit, a viewport's two bars) drained by one walk would each lap only as far as the
+# other, so the result would depend on whether load batched them into one cycle — the earlier
+# edit winning a bind, a longer ring left contradicting itself. So a pass keeps only the EARLIEST
+# edit of each ring; a later one is held for the NEXT pass of the same drain, untouched, and acts
+# as a barrier meanwhile (nothing this pass reaches or writes into it). The drain then performs
+# exactly what separate cycles would have, in event order (_editsHeldForALaterPass;
+# Fizzygum-tests/DETERMINISM.md §3j). What counts as an EDIT is a value mark that is not a new
+# wire's on-connect delivery (duringWireConnection): a circuit being built marks every stop at
+# once, and each stop is only offering its current value along the wire just made.
 #
 # ── WHAT THE ENGINE MUST NOT DO ─────────────────────────────────────────────────────────
 # Never call a public self-settling setter, never call _invalidateLayout, never fire a
@@ -119,6 +129,11 @@ class DataflowEngine
     # the subset of the stale pool seeded ONLY by markNonValueChange: these nodes wake their
     # `firesOnAnyChange` edges and nothing else, because their VALUE did not change (see the header).
     @valuelessPool = new Set
+    # the subset of the stale pool seeded ONLY by a new wire's on-connect delivery
+    # (duringWireConnection): value seeds that are not EDITS, so they never hold each other back
+    # (see the header's one-edit-per-ring rule). @_connectingDepth > 0 while such a delivery marks.
+    @connectionPool = new Set
+    @_connectingDepth = 0
     # node -> last recomputed/observed value. WEAK so a dead node's value is never pinned; the edge
     # Maps are strong, hence the explicit removeAllEdgesOf node-death API below.
     @lastValues = new WeakMap
@@ -288,6 +303,7 @@ class DataflowEngine
     @stalePool.delete node
     @forcedPool.delete node
     @valuelessPool.delete node
+    @connectionPool.delete node
     @lastValues.delete node
     return
 
@@ -377,11 +393,31 @@ class DataflowEngine
   # __markForRelayout); markNonValueChange is markStale's weaker sibling — see the header.
 
   __poolStale: (node, forced = false) ->
+    # an EDIT outranks a new wire's delivery raised for the same node in the same frame, in either
+    # order: the node's value was set, whatever else it was asked to offer
+    if @_connectingDepth > 0
+      @connectionPool.add node unless @stalePool.has(node) and not @valuelessPool.has(node) and not @connectionPool.has(node)
+    else
+      @connectionPool.delete node
     @stalePool.add node
     @forcedPool.add node if forced
     # a VALUE mark SUPERSEDES a value-less one raised earlier in the same frame: the value did change
     # after all, so every out-edge is owed the fire, not just the re-reading ones.
     @valuelessPool.delete node
+    return
+
+  # Run `deliver` — a controller offering its CURRENT value along a wire it has just made
+  # (ControllerMixin.wireTo → reactToTargetConnection) — with its value marks recorded as that
+  # offer rather than as edits. The difference matters only on a ring: building a circuit marks
+  # every stop, and a stop like a calculator node has no value of its own yet to offer, so letting
+  # the LATEST such mark win a ring (the edit rule) would lap a ring from nothing. Connection marks
+  # keep the plain event-order entry instead (_orderTopologically).
+  duringWireConnection: (deliver) ->
+    @_connectingDepth += 1
+    try
+      deliver()
+    finally
+      @_connectingDepth -= 1
     return
 
   markStale: (node, forced = false) ->
@@ -461,11 +497,21 @@ class DataflowEngine
     seeds = Array.from @stalePool
     forcedSet = new Set @forcedPool
     valuelessSet = new Set @valuelessPool
+    connectionSet = new Set @connectionPool
     @stalePool.clear()
     @forcedPool.clear()
     @valuelessPool.clear()
-    closure = @_computeDownstreamClosure seeds
-    ordered = @_orderTopologically closure, seeds, valuelessSet
+    @connectionPool.clear()
+    # one edit per ring per pass (see the header): a later edit on a ring that already has one
+    # waits, as itself, at the head of the next pass — and is a barrier in this one
+    held = @_editsHeldForALaterPass seeds, valuelessSet, connectionSet
+    if held.size > 0
+      seeds = (n for n in seeds when not held.has n)
+      held.forEach (n) =>
+        @stalePool.add n
+        @forcedPool.add n if forcedSet.has n
+    closure = @_computeDownstreamClosure seeds, held
+    ordered = @_orderTopologically closure, seeds, valuelessSet, held
     snapshotSet = new Set seeds
     # ONE settle around the whole pass (spec §4.2 item 5 / §1.14): every _<action>Connector
     # sink application JOINS this window (world._inLayoutMutation), so the pass settles ONCE;
@@ -610,18 +656,19 @@ class DataflowEngine
 
   # ── GRAPH HELPERS ────────────────────────────────────────────────────────────────────────
 
-  _computeDownstreamClosure: (seeds) ->
+  # `barriers` (optional): nodes the closure neither includes nor passes through.
+  _computeDownstreamClosure: (seeds, barriers) ->
     closure = new Set
     queue = seeds.slice()
     while queue.length > 0
       n = queue.shift()
-      continue if closure.has n
+      continue if closure.has(n) or barriers?.has(n)
       closure.add n
       outSet = @edgesFrom.get n
       outSet?.forEach (rec) -> queue.push rec.consumer
     closure
 
-  _orderTopologically: (closure, seeds, valuelessSet) ->
+  _orderTopologically: (closure, seeds, valuelessSet, barriers) ->
     # Kahn over the closure subgraph orders every DAG-reachable node correctly — a diamond's
     # bottom recomputes ONCE, after both parents. Nodes Kahn cannot place (a strongly-connected
     # component and everything downstream of one — their in-degree never reaches 0) are appended
@@ -637,7 +684,9 @@ class DataflowEngine
     # that drains in the same cycle as the hover that fattens the bar pools the viewport's
     # announcement FIRST, and entering there would have the bar re-read the old scroll offset over
     # its own new value, losing the click whenever load batches the two events into one cycle
-    # (Fizzygum-tests/DETERMINISM.md §3j).
+    # (Fizzygum-tests/DETERMINISM.md §3j). Two EDITS never meet on one ring here: _drainOnePass
+    # holds the later one for the next pass and passes it in as a `barrier`, which the walk
+    # neither visits nor passes through.
     #   Off the rings the order only minimises passes: a diamond BELOW a cycle may cost one extra
     # (cutoff-terminated) pass — accepted; full Tarjan SCC condensation (spec §4.2) is a future
     # optimisation, unnecessary while the only cyclic client (patch circuits, Phase 6) is small
@@ -672,6 +721,8 @@ class DataflowEngine
         n = bfs.shift()
         continue if seen.has n
         seen.add n
+        # an edit held for a later pass is a wall, not a waypoint (see _drainOnePass)
+        continue if barriers?.has n
         if closure.has(n) and not orderedSet.has(n)
           ordered.push n
           orderedSet.add n
@@ -683,6 +734,36 @@ class DataflowEngine
           ordered.push n
           orderedSet.add n
     ordered
+
+  # The EDIT seeds of this pass that share a ring with an EARLIER edit seed — two seeds share a ring
+  # when each reaches the other inside the pass's closure. Those wait for the next pass (see the
+  # header's one-edit-per-ring rule): the earliest edit of each ring goes first, in event order, as
+  # separate cycles would have taken them. Edits off any ring, value-less announcements and new
+  # wires' deliveries are never held. Costs nothing below two edits — the overwhelmingly common pass.
+  _editsHeldForALaterPass: (seeds, valuelessSet, connectionSet) ->
+    held = new Set
+    edits = (n for n in seeds when not valuelessSet.has(n) and not connectionSet.has(n))
+    return held if edits.length < 2
+    closure = @_computeDownstreamClosure seeds
+    reaches = (@_reachableWithin edit, closure for edit in edits)
+    goingFirst = []
+    for edit, i in edits
+      sharesARing = goingFirst.some (j) -> reaches[i].has(edits[j]) and reaches[j].has(edit)
+      if sharesARing then held.add edit else goingFirst.push i
+    held
+
+  # Every node reachable from `start` along out-edges without leaving `closure` (start itself only
+  # if a path leads back to it).
+  _reachableWithin: (start, closure) ->
+    reached = new Set
+    stack = []
+    @edgesFrom.get(start)?.forEach (rec) -> stack.push rec.consumer
+    while stack.length > 0
+      n = stack.pop()
+      continue if reached.has(n) or not closure.has(n)
+      reached.add n
+      @edgesFrom.get(n)?.forEach (rec) -> stack.push rec.consumer
+    reached
 
   _describeStalePool: ->
     names = []

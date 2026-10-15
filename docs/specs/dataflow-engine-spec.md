@@ -94,7 +94,10 @@ Node roles:
 - A **reference** is stored in the formula text of the cell (discovered by identifier scan,
   §9.2).
 - The engine keeps a **derived, disposable index** of all edges (forward + reverse
-  adjacency), rebuilt on load, on copy, on wire creation/removal, on formula commit.
+  adjacency), rebuilt on load, on copy, on wire creation/removal, on formula commit. For a
+  copied or restored subtree the rebuild happens as it JOINS the world: `Widget._addNoSettle`
+  re-declares every tracking control's reverse edges in the whole subtree (only the add root hears
+  `_reactToBeingAdded`), and a forward wire edge is derived by its producer on its first fire.
 
 **Rationale (decisive):** widget-stored references already survive both structure-copy
 mechanisms for free — duplication (the `Duplicator` engine, `src/duplication/`, remaps
@@ -268,6 +271,17 @@ client's:
   entering at the announcement would lose a press on a scrollbar's track whenever it drains in one
   cycle with the hover that fattens the bar. The diagnosis is in
   `../../../Fizzygum-tests/DETERMINISM.md` §3j.
+  **A ring takes ONE EDIT per pass.** Two edits on one ring walked by one lap would each travel
+  only as far as the other, so the result would depend on whether load drained them in one cycle
+  (a bind's earlier edit winning; the °C↔°F ring left contradicting itself). So the pass keeps the
+  EARLIEST edit of each ring (two seeds share a ring when each reaches the other inside the pass's
+  closure) and holds every later one for the next pass of the SAME drain, untouched, as a barrier
+  meanwhile: nothing in the pass reaches or writes into it. The drain then performs exactly the
+  separate-cycles sequence, in event order — measured equal to it on a bind, on the six-stop
+  converter (two and three edits) and on a viewport's two scrollbars, which write DIFFERENT pins of
+  one consumer and so defeat any rule that only picks an entry. An EDIT is a value mark that is not a
+  new wire's on-connect offer (`duringWireConnection`, §8): building a circuit marks every stop at
+  once, and a stop like a calculator node has no value of its own yet to offer.
 - **Sheets:** a formula commit whose edges would close a loop is **rejected at commit**;
   the cell gets a `#LOOP` error value. (A per-sheet capped-iteration mode can be layered on
   the same SCC machinery later.)
@@ -293,7 +307,8 @@ client's:
   mark stale) — strictly more expressive than the gate.
 - **`bang`** becomes a **force-fire** marking (stale-with-force: propagates despite the
   equal-value cutoff). `reactToTargetConnection` becomes "mark stale+forced on edge
-  creation".
+  creation", made inside `world.dataflow.duringWireConnection` so the engine records it as a new
+  wire's on-connect offer rather than an edit (§7's one-edit-per-ring rule).
 - **Tokens retire last.** Strangler order: (1) engine lands serving the spreadsheet;
   (2) patch programming ports as the second client (edge-deriver over `@target`/`@action`,
   sinks via the connector lane), with connection setters accepting-and-ignoring the token

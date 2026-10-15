@@ -18,7 +18,7 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
     @updateTarget()
 
   setInput2: (newvalue, ignored) ->
-    @input1 = newvalue
+    @input2 = newvalue
     @updateTarget()
 
   setInput1Hot: (newvalue, ignored) ->

@@ -146,7 +146,10 @@ a source only marks a node **stale**; values are **pulled** from nodes at recomp
 engine keeps only a **derived, disposable** forward+reverse index (`@edgesFrom` / `@edgesTo`);
 edges live locally on the widgets (a controller's `@wires`, one `WireSpec` each) and in formula text (a cell's
 references), so a duplicated or restored wired structure needs no engine fix-up — the client
-re-declares its edges. Nothing the engine holds is ever serialized.
+re-declares its edges. ⚠ For a copied or restored SUBTREE that happens as it joins the world:
+`Widget._addNoSettle` re-declares every tracking control's reverse edges across the whole subtree,
+because only the add ROOT hears `_reactToBeingAdded` (without that, a scrollbar nested in a duplicated
+or loaded viewport does not follow its content until a drag fires it). Nothing the engine holds is ever serialized.
 
 ## Node protocol (duck-typed)
 
@@ -205,7 +208,10 @@ every palette holds one `firesOnAnyChange` edge to it, re-deriving its highlight
   event order), computes the downstream closure, orders it (`_orderTopologically`: Kahn +
   one-lap-from-entry remainder, a ring entered at its value-change seeds before any non-value
   announcement — on a ring the entry decides the RESULT, not just the pass count: spec §7,
-  `../../../Fizzygum-tests/DETERMINISM.md` §3j), and walks it once — a node runs only if it is a seed or a
+  `../../../Fizzygum-tests/DETERMINISM.md` §3j; and a ring takes ONE EDIT per pass — a later edit on a ring
+  that already has one waits, untouched, for the next pass of the same drain and is a barrier meanwhile
+  (`_editsHeldForALaterPass`), so co-batched edits end exactly where separate cycles would; a new wire's
+  on-connect offer, made inside `duringWireConnection`, is not an edit), and walks it once — a node runs only if it is a seed or a
   producer of it changed this pass (dynamic pruning = the equal-value cutoff); `visited` covers
   sink application, so a ring walks exactly one lap. The engine opens ONE layout settle per
   pass (`world._settleLayoutsAfter`); every `_<action>Connector` sink JOINS it.
