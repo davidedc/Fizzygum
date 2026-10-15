@@ -888,6 +888,14 @@ assertion a recapture after a regression silently stores two different hashes an
   `@vBar`/`@hBar` this scrolls the content (`SliderWdgt.pressBegan` non-float-drags the button to the click when the
   slider's parent is a ViewportWdgt OR PromptWdgt; a slider parented to neither IGNORES it — the negative case). Click the
   TRACK not the button (a click ON the button just grabs it) — give enough overflow that the button is small.
+- **Forcing two events into ONE world cycle — a shared timestamp** (`macroTrackPressInTheFatteningCycleStillPages`): when the
+  subject is what happens if two inputs drain TOGETHER (load-dependent in the wild — `_playQueuedEvents` drains everything due
+  by the cycle start), queue them at one absolute time `t` and push them NON-scaled, so neither load nor the speed lever can
+  separate them: `@queueInputEvent (PointermoveInputEvent.synthetic 0, 0, false, false, false, false, t, p.x, p.y), true`, then
+  `@syntheticEventsMouseDown_InputEvents "left button", t, true` (and the release later, `t + 150`). Use a RAW move event for
+  the single move: the move verb's path sampler never emits the destination itself when the move is one event long.
+  Assertion-only tests of this kind carry no references; the pair it pins is a hover that fattens a thin scroll indicator plus
+  the press on its track (a dataflow ring entered in the wrong place — `../../../Fizzygum-tests/DETERMINISM.md` §3j).
 - **Nested scroll-panel wheel routing + limit escalation** (`macroNestedScrollPanelsRouteWheel`): the wheel scrolls the INNERMOST
   scrollable under the pointer and ESCALATES to the container once the inner is maxed (`ActivePointerWdgt.processWheel` walks up
   to the nearest `scrolledBy` handler; `ViewportWdgt.scrolledBy` scrolls itself UNLESS at the travel limit, then `escalateEvent 'scrolledBy'`).

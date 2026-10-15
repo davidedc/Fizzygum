@@ -260,7 +260,14 @@ client's:
 
 - **Circuits:** loops allowed — the visit-once-per-pass rule walks a ring exactly one lap
   from the node where the change entered and stops where it began (the °C↔°F converter is
-  the acceptance test; it must keep its current behavior).
+  the acceptance test; it must keep its current behavior). On a ring the entry decides the
+  RESULT, so a pass with several marks on one ring enters where a VALUE change entered: the value
+  seeds lead the walk (event order), the non-value announcements (§3a) follow. An announcement
+  asks re-readers to re-read; it is not a change entering the ring, and a lap started there has
+  them re-read state the value change is about to overwrite. The shape is a tracking pair:
+  entering at the announcement would lose a press on a scrollbar's track whenever it drains in one
+  cycle with the hover that fattens the bar. The diagnosis is in
+  `../../../Fizzygum-tests/DETERMINISM.md` §3j.
 - **Sheets:** a formula commit whose edges would close a loop is **rejected at commit**;
   the cell gets a `#LOOP` error value. (A per-sheet capped-iteration mode can be layered on
   the same SCC machinery later.)

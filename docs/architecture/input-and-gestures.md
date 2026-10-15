@@ -217,6 +217,19 @@ back), and so does any hover-capable move (a real mouse/pen move). A `'mouse'`/`
 never sets the flag, so their strokes keep today's persistent pointer-under state
 byte-identically.
 
+A touch stroke still makes exactly ONE hover move: its down's own position head
+(`processPointerDown` runs the move pipeline before the press, with no button recorded yet), so
+the finger ARRIVING is delivered as a pointer walking to the press point. That move is
+load-bearing twice over:
+- **Text:** `StringWdgt.hoverMoved` ends a stale selecting gesture on it.
+- **Scrollbars:** it is how a finger reaches a scroll indicator. Landing within a viewport's
+  scroll band fattens the bars (`ViewportWdgt.hoverMoved`), so the press lands on a fat, tangible
+  bar — chrome the finger then drags or pages like a mouse does.
+
+The fattening and the press are therefore ALWAYS in one event for a finger, which is why a
+dataflow drain must not depend on whether they share a cycle (`Fizzygum-tests/DETERMINISM.md`
+§3j).
+
 ### Cancel semantics
 
 `processPointerCancel` is its own method, not a flag on the up — an up means exactly what a

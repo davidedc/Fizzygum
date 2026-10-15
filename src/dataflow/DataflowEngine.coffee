@@ -465,7 +465,7 @@ class DataflowEngine
     @forcedPool.clear()
     @valuelessPool.clear()
     closure = @_computeDownstreamClosure seeds
-    ordered = @_orderTopologically closure, seeds
+    ordered = @_orderTopologically closure, seeds, valuelessSet
     snapshotSet = new Set seeds
     # ONE settle around the whole pass (spec §4.2 item 5 / §1.14): every _<action>Connector
     # sink application JOINS this window (world._inLayoutMutation), so the pass settles ONCE;
@@ -621,16 +621,27 @@ class DataflowEngine
       outSet?.forEach (rec) -> queue.push rec.consumer
     closure
 
-  _orderTopologically: (closure, seeds) ->
+  _orderTopologically: (closure, seeds, valuelessSet) ->
     # Kahn over the closure subgraph orders every DAG-reachable node correctly — a diamond's
     # bottom recomputes ONCE, after both parents. Nodes Kahn cannot place (a strongly-connected
     # component and everything downstream of one — their in-degree never reaches 0) are appended
-    # by a breadth-first walk from the seeds (event order), which walks a ring exactly one lap
-    # from the entry (spec §7). Visit-once + the equal-value cutoff make the drain CONVERGE
-    # regardless of order; this ordering only minimises passes. A diamond BELOW a cycle may cost
-    # one extra (cutoff-terminated) pass — accepted; full Tarjan SCC condensation (spec §4.2) is
-    # a future optimisation, unnecessary while the only cyclic client (patch circuits, Phase 6)
-    # is small and the acyclic client (sheets) rejects cycles at commit.
+    # by a breadth-first walk from the seeds, which walks a ring exactly one lap from the entry
+    # (spec §7).
+    #   ⚠ On a RING the entry decides the RESULT, not just the pass count: visit-once starts the
+    # lap at the first member the walk reaches, so a value change entering at a member reached
+    # LATER never travels the ring this pass. Hence the walk starts from the seeds whose VALUE
+    # changed (event order), and only then from those that announced a non-value change: such an
+    # announcement asks re-readers to re-read — it is not a change entering the ring — and a lap
+    # started there has them re-read the state a value change is about to overwrite. The shape is
+    # a tracking pair (a wire plus a re-read, §3a — a scrollbar and its viewport): a track press
+    # that drains in the same cycle as the hover that fattens the bar pools the viewport's
+    # announcement FIRST, and entering there would have the bar re-read the old scroll offset over
+    # its own new value, losing the click whenever load batches the two events into one cycle
+    # (Fizzygum-tests/DETERMINISM.md §3j).
+    #   Off the rings the order only minimises passes: a diamond BELOW a cycle may cost one extra
+    # (cutoff-terminated) pass — accepted; full Tarjan SCC condensation (spec §4.2) is a future
+    # optimisation, unnecessary while the only cyclic client (patch circuits, Phase 6) is small
+    # and the acyclic client (sheets) rejects cycles at commit.
     inDeg = new Map
     closure.forEach (n) -> inDeg.set n, 0
     closure.forEach (n) =>
@@ -653,8 +664,9 @@ class DataflowEngine
           inDeg.set rec.consumer, d
           queue.push rec.consumer if d is 0
     if ordered.length < closure.size
-      # SCC members + their downstream: append in one-lap-from-entry (BFS from seeds) order
-      bfs = seeds.slice()
+      # SCC members + their downstream: append in one-lap-from-entry (BFS from seeds) order, the
+      # value-change seeds entering first (see above)
+      bfs = (n for n in seeds when not valuelessSet.has n).concat (n for n in seeds when valuelessSet.has n)
       seen = new Set
       while bfs.length > 0
         n = bfs.shift()

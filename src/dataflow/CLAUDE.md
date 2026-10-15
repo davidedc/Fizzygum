@@ -203,7 +203,9 @@ every palette holds one `firesOnAnyChange` edge to it, re-deriving its highlight
   re-enter the value settle, and its only cost is cadence. Empty-pool early-return keeps it
   dark-cheap. Otherwise drain-until-quiet: each pass snapshots the pool (insertion order =
   event order), computes the downstream closure, orders it (`_orderTopologically`: Kahn +
-  one-lap-from-entry remainder), and walks it once — a node runs only if it is a seed or a
+  one-lap-from-entry remainder, a ring entered at its value-change seeds before any non-value
+  announcement — on a ring the entry decides the RESULT, not just the pass count: spec §7,
+  `../../../Fizzygum-tests/DETERMINISM.md` §3j), and walks it once — a node runs only if it is a seed or a
   producer of it changed this pass (dynamic pruning = the equal-value cutoff); `visited` covers
   sink application, so a ring walks exactly one lap. The engine opens ONE layout settle per
   pass (`world._settleLayoutsAfter`); every `_<action>Connector` sink JOINS it.
