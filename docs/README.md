@@ -22,7 +22,10 @@ all arcs, each linking to the plan section that owns the detail).
 ## Filing rules (keep the split honest)
 
 1. **New arc → new file in `plans/`.** Plans are self-contained: embed the
-   history and concrete facts needed to execute cold.
+   history and concrete facts needed to execute cold. A plan that executes an
+   external design input lives in its own directory beside that input
+   (`plans/redesign/`: the plan plus the draft it implements), and the whole
+   directory moves to `archive/` when the arc closes.
 2. **Arc closes → `git mv` the plan to `archive/`**, stamp a status header
    (COMPLETE/FALSIFIED/PARKED + date + one line), add its line to
    `archive/INDEX.md`, and remove its items from `BACKLOG.md` — closed entries

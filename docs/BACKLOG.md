@@ -237,6 +237,15 @@ AUTHORED 2026-07-07, NOT STARTED; owner-initiated execution only.
 - [ ] T4: preprocessor structural refactor, behavior-preserving — not started
 - [ ] T5: language/runtime extensions, owner picks which — not started
 
+### `plans/redesign/redesign-plan.md` — the visual redesign (AUTHORED + APPROVED 2026-10-16; P0 done)
+One design system (a `Theme` token layer, seam rules, drawn chrome icons, size-aware icons) reaching the draft in `plans/redesign/` surface by surface, with the suite made aim-by-meaning first. Owner decisions locked in the plan's §0.5.
+- [ ] R0: batch finger recapture + mass-recapture throughput (also closes the zopflipng item above)
+- [ ] T: tests aim by meaning; every widget aim verifies its hit (zero recapture)
+- [ ] F: `Theme` tokens at today's values, primitives F2a–F2f, spikes S1 (rounded corners, §3a) / S2 (symbol inventory, §3b) / S3 (icon ladder)
+- [ ] W1–W6 visual waves on `redesign` branches (frames · menus · controls + Inspector · desktop + icons · Docs Maker · wording)
+- [ ] G: generalisation sweeps, family by family; Z: squash-merge the tests branch, archive
+- [ ] DEFERRED (owner, 2026-10-16) — the FOCUS arc: a focused-window look (dark `chromeDark` bar and frame, 16% shadow, white glyphs) and the desktop icon "selected" accent, which needs a selection model. This arc ships every window in the draft's background look and keeps one frame-look derivation point for it (plan §0.5.2).
+
 ### `plans/occlusion-culling-plan.md`
 P0-P3 (Avenue A) LANDED 2026-07-09; P4/P5/P5b/P5c OWNER-GATED, not started.
 - [ ] P4: Avenue B maintained covered-rect list, replacing per-rect traversal — not started

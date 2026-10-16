@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desktop canvas</title>
+<style>
+  html, body { margin: 0; background: #ECECE8; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="desktop" width="1293" height="873" aria-label="Desktop: icons, Object Inspector, Docs Maker, desktop menu, clock and bin"></canvas>
+<script>
+'use strict';
+/*
+ * Slide 2 ("Proposed restyle") drawn with Canvas 2D only.
+ *
+ * Layout:
+ *   1. Tokens          colours, fonts, shadow offset
+ *   2. Setup           roundRect fallback, high-DPI canvas
+ *   3. Primitives      snap, rule, box, dropShadow, text, glyph
+ *   4. Components      labelButton, desktopIcon, windowFrame, titleBar, windowControls, resizeGrip
+ *   5. Icon geometry   SVG geometry replayed through Path2D
+ *   6. Scene           one function per window or desktop object
+ *   7. Main            wait for fonts, then paint
+ */
+
+/* ───────────────────────── 1. Tokens ───────────────────────── */
+
+const W = 1293, H = 873;
+
+const C = {
+  ink: '#1E1E1C', chromeDark: '#4A4A46', chrome: '#E2E2DE', line: '#C9C9C4',
+  frame: '#B9B9B4', desk: '#ECECE8', plate: '#F4F4F1', paper: '#FFFFFF',
+  panel: '#FAFAF8', item: '#F0F0EC', grip: '#BDBDB8',
+  muted: '#6A6A66', muted2: '#8A8A85', muted3: '#A5A5A0', text2: '#55554F', code: '#3A3A36',
+  chip: '#D2D2CD', disabledLine: '#E2E2DE', disabledText: '#B9B9B4',
+  accent: '#2F5BEA', accentTint: '#2F5BEA1F', danger: '#C4321C',
+  scrollbar: 'rgba(30, 30, 28, 0.35)'
+};
+
+const SANS = "'Helvetica Neue', Helvetica, sans-serif";
+const SERIF = 'Georgia, serif';
+const MONO = 'Menlo, Consolas, monospace';
+const SCRIPT = "'Snell Roundhand', 'Apple Chancery', 'Brush Script MT', cursive";
+
+const SHADOW = { dx: 2, dy: 2, normal: 0.12, focused: 0.16 };
+
+/** CSS-like font shorthand for ctx.font. */
+function font(size, { weight = 400, style = 'normal', family = SANS } = {}) {
+  return `${style} ${weight} ${size}px ${family}`;
+}
+
+/* ───────────────────────── 2. Setup ───────────────────────── */
+
+/** roundRect fallback for browsers without it, or without per-corner radii. */
+(function installRoundRectFallback() {
+  function normalise(r) {
+    if (!Array.isArray(r)) r = [r];
+    const [a, b = a, c = a, d = b] = r.map(v => (typeof v === 'object' ? v.x : v) || 0);
+    return r.length === 3 ? [a, b, c, b] : [a, b, c, d];
+  }
+  function roundRect(x, y, w, h, radii = 0) {
+    let [tl, tr, br, bl] = normalise(radii);
+    const k = Math.min(1, w / (tl + tr || 1), w / (bl + br || 1), h / (tl + bl || 1), h / (tr + br || 1));
+    tl *= k; tr *= k; br *= k; bl *= k;
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y);
+    tr ? this.arcTo(x + w, y, x + w, y + tr, tr) : this.lineTo(x + w, y);
+    this.lineTo(x + w, y + h - br);
+    br ? this.arcTo(x + w, y + h, x + w - br, y + h, br) : this.lineTo(x + w, y + h);
+    this.lineTo(x + bl, y + h);
+    bl ? this.arcTo(x, y + h, x, y + h - bl, bl) : this.lineTo(x, y + h);
+    this.lineTo(x, y + tl);
+    tl ? this.arcTo(x, y, x + tl, y, tl) : this.lineTo(x, y);
+    this.closePath();
+  }
+  function supportsCorners(proto, target) {
+    if (typeof proto.roundRect !== 'function') return false;
+    try { target.roundRect(0, 0, 10, 10, [1, 2, 3, 4]); return true; } catch (e) { return false; }
+  }
+  const probe = document.createElement('canvas').getContext('2d');
+  if (!supportsCorners(CanvasRenderingContext2D.prototype, probe)) CanvasRenderingContext2D.prototype.roundRect = roundRect;
+  if (window.Path2D && !supportsCorners(Path2D.prototype, new Path2D())) Path2D.prototype.roundRect = roundRect;
+})();
+
+/** Size the backing store for the screen's pixel density and draw in CSS pixels. */
+function setupCanvas(canvas) {
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.miterLimit = 4;            // SVG default, so icon corners match
+  return ctx;
+}
+
+/* ───────────────────────── 3. Primitives ───────────────────────── */
+
+let ctx;  // set in main()
+
+/** Snap a box to whole pixels the way the browser does: round each edge. */
+function snap(x, y, w, h) {
+  const X = Math.round(x), Y = Math.round(y);
+  return { x: X, y: Y, w: Math.round(x + w) - X, h: Math.round(y + h) - Y };
+}
+
+/** 1px rules as filled rectangles, so they stay sharp. */
+function hrule(x, y, w, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), 1); }
+function vrule(x, y, h, color) { ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), 1, Math.round(h)); }
+
+function insetRadii(r, by) {
+  return Array.isArray(r) ? r.map(v => Math.max(0, v - by)) : Math.max(0, r - by);
+}
+
+/** Solid offset copy of a shape: 2px down and right, black at low alpha. */
+function dropShadow(shape, alpha = SHADOW.normal) {
+  ctx.save();
+  ctx.translate(SHADOW.dx, SHADOW.dy);
+  ctx.beginPath();
+  shape(ctx);
+  ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Stroke a border inside the box edge, like a CSS border. */
+function strokeInset(b, r, color, width = 1) {
+  const i = width / 2;
+  ctx.beginPath();
+  ctx.roundRect(b.x + i, b.y + i, b.w - width, b.h - width, insetRadii(r, i));
+  ctx.lineWidth = width;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+/**
+ * A rounded box: optional shadow, fill and inset border.
+ * Pass border: false to skip it now and stroke it later with strokeInset (windows do).
+ */
+function box({ x, y, w, h, r = 0, fill, border, borderWidth = 1, shadow }) {
+  const b = snap(x, y, w, h);
+  if (shadow) dropShadow(c => c.roundRect(b.x, b.y, b.w, b.h, r), shadow);
+  if (fill) {
+    ctx.beginPath();
+    ctx.roundRect(b.x, b.y, b.w, b.h, r);
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+  if (border) strokeInset(b, r, border, borderWidth);
+  return b;
+}
+
+/* Text */
+
+const metricCache = new Map();
+/** Rounded font ascent and descent, as the browser uses them for line boxes. */
+function vmetrics(f) {
+  if (!metricCache.has(f)) {
+    ctx.font = f;
+    const m = ctx.measureText('Hg');
+    metricCache.set(f, { A: Math.round(m.fontBoundingBoxAscent), D: Math.round(m.fontBoundingBoxDescent) });
+  }
+  return metricCache.get(f);
+}
+
+function textWidth(str, f, letterSpacing = 0) {
+  ctx.font = f;
+  return ctx.measureText(str).width + letterSpacing * str.length;
+}
+
+/**
+ * Baseline of one line of text in a band, using the two rules CSS uses:
+ *  - line: the band is an explicit line-height; the half-leading above the text rounds down.
+ *  - center: a line box centred in a taller box (flex align-items, buttons); the offset rounds to nearest.
+ */
+function baselineIn(top, height, f, mode = 'center') {
+  const { A, D } = vmetrics(f);
+  return mode === 'line'
+    ? top + Math.floor((height - (A + D)) / 2) + A
+    : Math.round(top + (height - (A + D)) / 2) + A;
+}
+
+/**
+ * Draw one line of text vertically centred in a band [top, top + height].
+ * This is where CSS puts the baseline both for an explicit line-height and for a
+ * line box centred in a flex container.
+ */
+function textInBand(str, x, top, height, f, color, { align = 'left', letterSpacing = 0, mode = 'center' } = {}) {
+  ctx.font = f;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'alphabetic';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = letterSpacing + 'px';
+  ctx.fillText(str, x, baselineIn(top, height, f, mode));
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+
+/** Greedy word wrap, as the browser does for normal white-space. */
+function wrapWords(str, f, maxWidth) {
+  const lines = [];
+  let line = '';
+  for (const word of str.split(' ')) {
+    const next = line ? line + ' ' + word : word;
+    if (line && textWidth(next, f) > maxWidth) { lines.push(line); line = word; }
+    else line = next;
+  }
+  lines.push(line);
+  return lines;
+}
+
+/* Glyphs */
+
+const pathCache = new Map();
+function pathFor(item) {
+  if (!pathCache.has(item)) {
+    const p = new Path2D(item.d || undefined);
+    if (item.rect) { const [x, y, w, h, r = 0] = item.rect; p.roundRect(x, y, w, h, r); }
+    if (item.circle) { const [cx, cy, r] = item.circle; p.moveTo(cx + r, cy); p.arc(cx, cy, r, 0, Math.PI * 2); }
+    pathCache.set(item, p);
+  }
+  return pathCache.get(item);
+}
+
+/**
+ * Replay an SVG icon: icon.vb is the viewBox size, icon.root the svg's default
+ * paint, icon.items its elements (d / rect / circle, each with optional overrides).
+ * Draws it at (x, y) with the given size; opts can override root paint (for colour).
+ */
+function glyph(icon, x, y, size, opts = {}) {
+  const root = Object.assign({ fill: 'none', stroke: C.ink, width: 2, cap: 'butt', join: 'miter' }, icon.root, opts);
+  const s = size / icon.vb;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  for (const item of icon.items) {
+    const p = pathFor(item);
+    const fill = item.fill ?? root.fill;
+    const stroke = item.stroke ?? root.stroke;
+    if (fill !== 'none') { ctx.fillStyle = fill; ctx.fill(p); }
+    if (stroke !== 'none') {
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = item.width ?? root.width;
+      ctx.lineCap = item.cap ?? root.cap;
+      ctx.lineJoin = item.join ?? root.join;
+      ctx.stroke(p);
+    }
+  }
+  ctx.restore();
+}
+
+/* ───────────────────────── 4. Components ───────────────────────── */
+
+/**
+ * A text button (chips, toggles, footer buttons): 1px border, padding, centred text.
+ * Width comes from the measured text. Returns the box.
+ */
+function labelButtonWidth(text, f, padX) { return textWidth(text, f) + 2 * padX + 2; }
+
+function labelButton({ x, y, h, text, f, padX, r, color, fill, border }) {
+  const w = labelButtonWidth(text, f, padX);
+  box({ x, y, w, h, r, fill, border });
+  textInBand(text, x + 1 + padX, y, h, f, color);
+  return { x, y, w, h };
+}
+
+/** Desktop icon geometry: 64px tile, 6px gap, label plate (wraps inside the 96px cell). */
+const ICON = { cell: 96, tile: 64, pad: 6, gap: 6, labelFont: font(12), lineH: 16, plateX: 7, plateY: 1 };
+
+function iconLabelLayout(label, maxWidth = ICON.cell) {
+  const textMax = maxWidth - 2 * ICON.plateX;
+  const lines = wrapWords(label, ICON.labelFont, textMax);
+  const widest = Math.max(...lines.map(l => textWidth(l, ICON.labelFont)));
+  const plateW = lines.length > 1 ? maxWidth : Math.min(maxWidth, widest + 2 * ICON.plateX);
+  const plateH = lines.length * ICON.lineH + 2 * ICON.plateY;
+  return { lines, plateW, plateH, height: ICON.pad + ICON.tile + ICON.gap + plateH + ICON.pad };
+}
+
+/** Tile + glyph + label plate, centred in a cell of the given width starting at cellX. */
+function desktopIcon({ cellX, cellW = ICON.cell, y, icon, label, selected = false }) {
+  const L = iconLabelLayout(label, cellW);
+  const tileX = cellX + (cellW - ICON.tile) / 2, tileY = y + ICON.pad;
+
+  box({ x: tileX, y: tileY, w: ICON.tile, h: ICON.tile, r: 16, fill: C.paper, shadow: SHADOW.normal,
+        border: selected ? C.accent : C.line, borderWidth: selected ? 2 : 1 });
+  glyph(icon, tileX + 12, tileY + 12, 40);
+
+  const plateX = cellX + (cellW - L.plateW) / 2, plateY = tileY + ICON.tile + ICON.gap;
+  box({ x: plateX, y: plateY, w: L.plateW, h: L.plateH, r: 8, fill: selected ? C.accent : C.plate, shadow: SHADOW.normal });
+  L.lines.forEach((line, i) =>
+    textInBand(line, plateX + L.plateW / 2, plateY + ICON.plateY + i * ICON.lineH, ICON.lineH,
+               ICON.labelFont, selected ? C.paper : C.ink, { align: 'center', mode: 'line' }));
+  return L.height;
+}
+
+/**
+ * Window frame. CSS width/height are the content box; the 1px border sits outside.
+ * Returns the content origin and size plus a function to stroke the frame last.
+ */
+function windowFrame({ left, top, width, height, fill, border, focused = false }) {
+  const outer = { x: left, y: top, w: width + 2, h: height + 2 };
+  box({ ...outer, r: 8, fill, shadow: focused ? SHADOW.focused : SHADOW.normal });
+  return {
+    x: left + 1, y: top + 1, w: width, h: height,
+    strokeFrame: () => strokeInset(outer, 8, border, 1)
+  };
+}
+
+/** Title bar: only the top corners rounded (7px = 8px frame radius minus the 1px border). */
+function titleBar(win, { fill, height = 44, bottomRule }) {
+  ctx.beginPath();
+  ctx.roundRect(win.x, win.y, win.w, height + (bottomRule ? 1 : 0), [7, 7, 0, 0]);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (bottomRule) hrule(win.x, win.y + height, win.w, bottomRule);
+}
+
+/** Close and minimise: plain glyphs centred in 44×44 targets. */
+function windowControls(win, color) {
+  glyph(GLYPH.close, win.x + 15, win.y + 15, 14, { stroke: color });
+  glyph(GLYPH.minimise, win.x + 44 + 15, win.y + 15, 14, { stroke: color });
+}
+
+/** Resize grip: 36px, 3px in from the bottom-right corner of the content area. */
+function resizeGrip(win) {
+  glyph(GLYPH.grip, win.x + win.w - 3 - 36, win.y + win.h - 3 - 36, 36);
+}
+
+/* ───────────────────────── 5. Icon geometry ───────────────────────── */
+
+const DOT = (cx, cy, r, fill = C.ink) => ({ circle: [cx, cy, r], fill, stroke: 'none' });
+
+const ICONS = {
+  save: { vb: 44, root: { join: 'round' }, items: [
+    { d: 'M7 7h24l6 6v24H7z' }, { d: 'M13 7v9h14V7M13 37V25h18v12' } ] },
+
+  patch: { vb: 44, items: [
+    { rect: [5, 10, 34, 24, 4] }, { circle: [15, 22, 4] }, { rect: [25, 18, 8, 8, 1.5] }, { d: 'M19 22h6' } ] },
+
+  docs: { vb: 44, root: { cap: 'round', join: 'round' }, items: [
+    { d: 'M12 18V3h20v15', fill: C.paper }, { d: 'M15 7h14M15 11h8.4' },
+    { rect: [8, 16, 30, 5, 2.5], fill: C.paper },
+    { circle: [6, 18.5, 2], fill: C.paper }, { circle: [40, 18.5, 2], fill: C.paper },
+    { d: 'M8 17L3 11h4' },
+    { d: 'M7 21h30l3 15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z', fill: C.paper },
+    ...[27, 32].flatMap(y => [11, 16.5, 22, 27.5, 33].map(x => DOT(x, y, 1.3))) ] },
+
+  panel: { vb: 44, root: { join: 'round' }, items: [
+    { rect: [5, 10, 34, 24, 4] },
+    { rect: [2, 15, 8, 24, 2], fill: C.paper }, { d: 'M4.5 20h3M4.5 26h3M4.5 32h3', cap: 'round' },
+    { rect: [32, 4, 8, 18, 2], fill: C.paper }, { d: 'M34.5 9h3M34.5 15h3', cap: 'round' } ] },
+
+  draw: { vb: 44, root: { cap: 'round', join: 'round' }, items: [
+    { rect: [10, 17, 14, 23, 3] }, { rect: [13, 11, 8, 6, 1] }, { d: 'M17 11V8' },
+    DOT(28, 8, 1.2), DOT(32, 5, 1.2), DOT(32, 11, 1.2), DOT(36, 8, 1.2), DOT(36, 14, 1.2), DOT(39, 4, 1.2) ] },
+
+  superToolbar: { vb: 44, root: { cap: 'round', join: 'round' }, items: [
+    { rect: [17, 6, 10, 32, 2], fill: C.paper }, { d: 'M20 11h4M20 17h4M20 23h4M20 29h4M20 35h4' },
+    { d: 'M9.8 4.9L10.0 8.6L13.4 10.2L9.9 11.5L9.5 15.2L7.2 12.3L3.5 13.0L5.6 9.9L3.7 6.7L7.3 7.7z' },
+    { d: 'M38.3 11.8L38.5 16.3L42.6 18.2L38.3 19.8L37.8 24.3L35.0 20.8L30.5 21.7L33.0 17.9L30.8 13.9L35.2 15.1z' },
+    { d: 'M10.4 28.1L10.6 30.9L13.2 32.1L10.5 33.2L10.2 36.0L8.4 33.8L5.5 34.3L7.1 31.9L5.7 29.4L8.5 30.2z' } ] },
+
+  slides: { vb: 44, root: { cap: 'round' }, items: [
+    { rect: [5, 10, 34, 24, 4] }, { d: 'M10 17h14M10 22h14M10 27h10M28 26v3M31 23v6M34 20v9' } ] },
+
+  fizzytiles: { vb: 44, items: [
+    { rect: [14, 5, 16, 34, 3] }, { d: 'M14 16h16' }, { circle: [20, 28, 1.5] }, { circle: [25, 33, 1.5] } ] },
+
+  dashboards: { vb: 44, root: { cap: 'round', join: 'round' }, items: [
+    { rect: [3, 3, 17, 17, 3] }, { rect: [24, 3, 17, 17, 3] }, { rect: [3, 24, 17, 17, 3] }, { rect: [24, 24, 17, 17, 3] },
+    DOT(7.5, 15, 1.5), DOT(10.5, 10.5, 1.5), DOT(13, 13.5, 1.5), DOT(15.5, 7.5, 1.5),
+    { d: 'M27 16l4-5 3 3 4-6' }, { d: 'M8 37v-4M11.5 37v-8M15 37v-6', width: 2.5 },
+    { circle: [32.5, 32.5, 5] }, { d: 'M32.5 32.5V27.5A5 5 0 0 1 37.5 32.5z', fill: C.ink } ] },
+
+  examples: { vb: 44, root: { join: 'round' }, items: [
+    { d: 'M5 13a2 2 0 0 1 2-2h10l3 4h17a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z' } ] },
+
+  bin: { vb: 44, root: { cap: 'round', join: 'round' }, items: [
+    { d: 'M8 11h28M17 11V7h10v4M11 11l2 26h18l2-26M18 17v14M22 17v14M26 17v14' } ] }
+};
+
+const GLYPH = {
+  close:    { vb: 14, root: { cap: 'round' }, items: [{ d: 'M2 2l10 10M12 2L2 12' }] },
+  minimise: { vb: 14, root: { cap: 'round' }, items: [{ d: 'M2 7h10' }] },
+  pencil:   { vb: 20, root: { stroke: C.paper, width: 1.6, cap: 'round', join: 'round' }, items: [
+    { d: 'M5.5 12.5L13.5 4.5l3 3-8 8z' }, { d: 'M11.5 6.5l3 3' }, { d: 'M5.5 12.5L4 17l4.5-1.5' },
+    { d: 'M4 17l1.2-0.4-0.8-0.8z', fill: C.paper } ] },
+  more:     { vb: 16, root: { cap: 'round', join: 'round' }, items: [{ d: 'M3 3l5 5-5 5M9 3l5 5-5 5' }] },
+  grip:     { vb: 36, root: { stroke: C.grip, width: 1.5, cap: 'round' }, items: [{ d: 'M33 5L5 33M33 15L15 33M33 25l-8 8' }] },
+  clock:    { vb: 120, root: { cap: 'round', fill: 'none' }, items: [
+    { circle: [60, 60, 58], fill: C.paper, stroke: 'none' },
+    DOT(60, 16, 3, '#9A9A95'), DOT(104, 60, 3, '#9A9A95'), DOT(60, 104, 3, '#9A9A95'), DOT(16, 60, 3, '#9A9A95'),
+    { d: 'M60 60L73.1 77.7', width: 6 }, { d: 'M60 60L28.7 53.3', width: 4 },
+    { d: 'M62.7 52.5L47.7 93.8', width: 2, stroke: C.accent }, DOT(60, 60, 4, C.accent) ] }
+};
+
+/* ───────────────────────── 6. Scene ───────────────────────── */
+
+function drawBackground() {
+  ctx.fillStyle = C.desk;
+  ctx.fillRect(0, 0, W, H);
+}
+
+/** Two-column icon grid: 200px wide at (16, 14), 8px column gap, 10px row gap. */
+function drawDesktopIcons() {
+  const items = [
+    ['How to save?', ICONS.save], ['Patch programming', ICONS.patch],
+    ['Docs Maker', ICONS.docs, true], ['Generic panel', ICONS.panel],
+    ['Draw', ICONS.draw], ['Super toolbar', ICONS.superToolbar],
+    ['Slides Maker', ICONS.slides], ['Fizzytiles', ICONS.fizzytiles],
+    ['Dashboards', ICONS.dashboards], ['Examples', ICONS.examples]
+  ];
+  const left = 16, colGap = 8, rowGap = 10;
+  let y = 14;
+  for (let i = 0; i < items.length; i += 2) {
+    const row = items.slice(i, i + 2);
+    const rowH = Math.max(...row.map(([label]) => iconLabelLayout(label).height));
+    row.forEach(([label, icon, selected], c) =>
+      desktopIcon({ cellX: left + c * (ICON.cell + colGap), y, icon, label, selected }));
+    y += rowH + rowGap;
+  }
+}
+
+/** Object Inspector: background (unfocused) window. */
+function drawObjectInspector() {
+  const win = windowFrame({ left: 237, top: 23, width: 558, height: 408, fill: C.panel, border: C.frame });
+  const f12 = font(12);
+
+  // Title bar (44px + 1px rule)
+  titleBar(win, { fill: C.chrome, bottomRule: C.line });
+  windowControls(win, C.muted);
+  textInBand('Object Inspector — Docs Maker', win.x + 88 + (win.w - 176) / 2, win.y, 44,
+             font(13, { weight: 500 }), C.muted, { align: 'center' });
+
+  // Class breadcrumbs (44px incl. bottom rule)
+  let rowY = win.y + 45;
+  hrule(win.x, rowY + 43, win.w, C.chrome);
+  let x = win.x + 12;
+  textInBand('Class', x, rowY, 43, f12, C.muted2);
+  x += textWidth('Class', f12) + 4 + 4;
+  const crumbs = ['TreeNode', 'Widget', 'FrameWdgt', 'DocumentWdgt'];
+  crumbs.forEach((name, i) => {
+    const current = i === crumbs.length - 1;
+    const b = labelButton({ x, y: rowY + (43 - 32) / 2, h: 32, text: name, f: f12, padX: 10, r: 16,
+                            color: current ? C.accent : C.text2, fill: current ? C.accentTint : null,
+                            border: current ? C.accent : C.chip });
+    x += b.w + 4;
+    if (!current) { textInBand('›', x, rowY, 43, f12, C.muted3); x += textWidth('›', f12) + 4; }
+  });
+
+  // Toggles (48px incl. bottom rule)
+  rowY += 44;
+  hrule(win.x, rowY + 47, win.w, C.chrome);
+  x = win.x + 12;
+  [['Methods', true], ['Fields', true], ['Inherited', false], ['Own props only', false]].forEach(([name, on]) => {
+    const b = labelButton({ x, y: rowY + (47 - 36) / 2, h: 36, text: name, f: f12, padX: 12, r: 6,
+                            color: on ? C.accent : C.text2, fill: on ? C.accentTint : null,
+                            border: on ? C.accent : C.line });
+    x += b.w + 8;
+  });
+
+  // Body: member list | source
+  const bodyY = rowY + 48, bodyH = win.h - 45 - 44 - 48 - 52;
+  const listW = 4 + 230 + 4;
+  vrule(win.x + listW, bodyY, bodyH, C.chrome);
+  const members = ['_closeFromFrameBar…', '_makeStartingPayload', '_resetToDefault…', '_titleForContents'];
+  members.forEach((name, i) => {
+    const liX = win.x + 4, liY = bodyY + 4 + i * 42, selected = i === 0;
+    if (selected) box({ x: liX, y: liY, w: 230, h: 40, r: 6, fill: C.accentTint });
+    textInBand('fn', liX + 8, liY + 12, 16, font(10, { weight: 600 }), selected ? C.accent : C.muted2, { mode: 'line' });
+    textInBand(name, liX + 8 + 18 + 8, liY, 40, font(13, { family: MONO }), C.ink, { mode: 'line' });
+  });
+  box({ x: win.x + 222, y: bodyY + 6, w: 4, h: 72, r: 2, fill: C.scrollbar });   // overlay scrollbar
+  ['_closeFromFrameBar: ->', '  @fullDestroy()', '  world.updateBroken()'].forEach((line, i) =>
+    textInBand(line, win.x + listW + 1 + 12, bodyY + 12 + i * 18, 18, font(12, { family: MONO }), C.code, { mode: 'line' }));
+
+  // Footer (52px incl. top rule)
+  const footY = bodyY + bodyH;
+  hrule(win.x, footY, win.w, C.chrome);
+  const btnY = footY + 1 + (51 - 36) / 2;
+  x = win.x + 12;
+  for (const name of ['Add', 'Rename', 'Remove']) {
+    x += labelButton({ x, y: btnY, h: 36, text: name, f: f12, padX: 14, r: 6, color: C.ink, fill: C.paper, border: C.line }).w + 8;
+  }
+  const saveW = labelButtonWidth('Save', f12, 18);
+  labelButton({ x: win.x + win.w - 12 - 44 - saveW, y: btnY, h: 36, text: 'Save', f: f12, padX: 18, r: 6,
+                color: C.disabledText, border: C.disabledLine });          // disabled: faint outline, no fill
+
+  resizeGrip(win);
+  win.strokeFrame();
+}
+
+/** Docs Maker: focused window with an embedded toolbar (a window whose title strip is on the left). */
+function drawDocsMaker() {
+  const win = windowFrame({ left: 205, top: 465, width: 368, height: 393, fill: C.paper, border: C.chromeDark, focused: true });
+
+  // Title bar
+  titleBar(win, { fill: C.chromeDark });
+  windowControls(win, C.paper);
+  textInBand('Docs Maker', win.x + 88 + (win.w - 176) / 2, win.y, 44, font(13, { weight: 600 }), C.paper, { align: 'center' });
+  glyph(GLYPH.pencil, win.x + win.w - 44 + 12, win.y + 12, 20);
+
+  // Embedded toolbar: 8px inset, 56px content + 1px border
+  const tb = { x: win.x + 8, y: win.y + 44 + 8, w: win.w - 16, h: 58 };
+  box({ ...tb, r: 6, fill: C.paper, border: C.line });
+  const strip = { x: tb.x + 1, y: tb.y + 1, h: 56 };
+  ctx.beginPath(); ctx.roundRect(strip.x, strip.y, 45, strip.h, [5, 0, 0, 5]); ctx.fillStyle = C.chrome; ctx.fill();
+  vrule(strip.x + 44, strip.y, strip.h, C.line);
+  glyph(GLYPH.minimise, strip.x + 15, strip.y + 1 + 20, 14, { stroke: C.text2 });
+
+  // Tools: five 44px buttons spread with space-between across the remaining width (8px padding)
+  const toolsX = strip.x + 45 + 8, toolsW = (tb.x + tb.w - 1) - (strip.x + 45) - 16;
+  const step = 44 + (toolsW - 5 * 44) / 4, ty = strip.y + 6;
+  const tx = i => toolsX + i * step;
+  const fs = 30 * 34 / 44;                                            // SVG text: 30 units in a 44-unit, 34px box
+  ctx.font = font(fs, { style: 'italic', family: SCRIPT }); ctx.fillStyle = C.ink; ctx.textAlign = 'center';
+  ctx.fillText('A', tx(0) + 5 + 22 * 34 / 44, ty + 5 + 32 * 34 / 44);
+  box({ x: tx(1), y: ty, w: 44, h: 44, r: 6, fill: C.desk });         // active tool
+  textInBand('B', tx(1) + 22, ty, 44, font(20, { weight: 700, family: SERIF }), C.ink, { align: 'center' });
+  textInBand('I', tx(2) + 22, ty, 44, font(20, { style: 'italic', family: SERIF }), C.ink, { align: 'center' });
+  textInBand('</>', tx(3) + 22, ty, 44, font(15, { family: 'Menlo, monospace' }), C.ink, { align: 'center' });
+  glyph(GLYPH.more, tx(4) + 14, ty + 14, 16);
+
+  // Document: each paragraph is an item on a grey block, as wide as the toolbar
+  const f15 = font(15);
+  const para = { x: win.x + 8, y: tb.y + tb.h + 8, w: win.w - 16, h: 22 + 12 };
+  box({ ...para, r: 6, fill: C.item });
+  const text = 'Your text here.';
+  const lineTop = para.y + 6;
+  textInBand(text, para.x + 10, lineTop, 22, f15, C.ink, { mode: 'line' });
+  const baseline = baselineIn(lineTop, 22, f15, 'line');
+  box({ x: para.x + 10 + textWidth(text, f15) + 1, y: baseline + 3 - 18, w: 2, h: 18, fill: C.accent });  // cursor at the end
+
+  resizeGrip(win);
+  win.strokeFrame();
+}
+
+/** Desktop menu: header, grouped 44px rows, danger item last. */
+function drawDesktopMenu() {
+  const groups = [
+    [['Demo', true], ['Inspect', false, 'hot'], ['Test menu', true]],
+    [['Fit whole page'], ['Colour…'], ['Wallpapers', true]],
+    [['System tests', true], ['Switch to user mode']],
+    [['New folder'], ['Move all inside'], ['Save world snapshot…'], ['Open from file…']],
+    [['Delete all…', false, 'danger']]
+  ];
+  const left = 859, top = 92, contentW = 200;
+  const height = 33 + groups.reduce((h, g, i) => h + 8 + g.length * 44 + (i < groups.length - 1 ? 1 : 0), 0);
+  const outer = { x: left, y: top, w: contentW + 8 + 2, h: height + 2 };
+  box({ ...outer, r: 10, fill: C.paper, shadow: SHADOW.normal });
+
+  const x = left + 1 + 4;
+  let y = top + 1;
+  textInBand('DESKTOP', x + 10, y, 32, font(11), C.muted2, { letterSpacing: 0.66 });
+  hrule(x, y + 32, contentW, C.chrome);
+  y += 33;
+
+  const f15 = font(15), f16 = font(16);
+  groups.forEach((rows, gi) => {
+    y += 4;
+    for (const [label, sub, kind] of rows) {
+      if (kind === 'hot') box({ x, y, w: contentW, h: 44, r: 6, fill: C.desk });
+      textInBand(label, x + 10, y, 44, f15, kind === 'danger' ? C.danger : C.ink);
+      if (sub) textInBand('›', x + contentW - 10, y, 44, f16, C.muted3, { align: 'right' });
+      y += 44;
+    }
+    y += 4;
+    if (gi < groups.length - 1) { hrule(x, y, contentW, C.chrome); y += 1; }
+  });
+
+  strokeInset(snap(outer.x, outer.y, outer.w, outer.h), 10, C.frame, 1);
+}
+
+/** Clock: round, borderless face (not a tile, so not pressable), with the shared shadow. */
+function drawClock() {
+  const x = 1190, y = 14, size = 88, r = 58 * size / 120;
+  dropShadow(c => c.arc(x + size / 2, y + size / 2, r, 0, Math.PI * 2));
+  glyph(GLYPH.clock, x, y, size);
+}
+
+function drawBin() {
+  desktopIcon({ cellX: 1203, cellW: 92, y: 750, icon: ICONS.bin, label: 'Bin' });
+}
+
+/* ───────────────────────── 7. Main ───────────────────────── */
+
+const FONTS_USED = [
+  font(11), font(12), font(13, { weight: 500 }), font(13, { weight: 600 }), font(15), font(16),
+  font(10, { weight: 600 }), font(12, { family: MONO }), font(13, { family: MONO }), font(15, { family: 'Menlo, monospace' }),
+  font(20, { weight: 700, family: SERIF }), font(20, { style: 'italic', family: SERIF }),
+  font(23, { style: 'italic', family: SCRIPT })
+];
+
+async function main() {
+  ctx = setupCanvas(document.getElementById('desktop'));
+  try { await Promise.all(FONTS_USED.map(f => document.fonts.load(f))); await document.fonts.ready; } catch (e) { /* paint anyway */ }
+
+  drawBackground();
+  drawDesktopIcons();
+  drawObjectInspector();
+  drawDocsMaker();
+  drawDesktopMenu();
+  drawClock();
+  drawBin();
+  document.body.dataset.painted = 'true';
+}
+
+main();
+</script>
+</body>
+</html>
