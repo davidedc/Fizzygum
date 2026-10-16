@@ -1,6 +1,6 @@
 # Fizzygum visual redesign — the plan
 
-**AUTHORED + OWNER-APPROVED 2026-10-16; P0 done, R0 next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
+**AUTHORED + OWNER-APPROVED 2026-10-16; P0 and R0 done, T next.** It is written to be executed COLD, over many sessions, by an LLM or engineer with ZERO prior context.
 - This file is the living plan. Keep its STATUS box current at every phase close. The design input it executes sits beside it in this directory.
 - Line numbers below drift. The quoted method or field name is authoritative: grep it fresh before trusting a `file:line`.
 
@@ -15,7 +15,7 @@
 | Phase | What | State |
 |---|---|---|
 | P0 | Copy the plan into the repo; add BACKLOG pointers (branches are created at W1) | DONE 2026-10-16 |
-| R0 | Recapture tooling: batch finger recapture + throughput | not started |
+| R0 | Recapture tooling: batch finger recapture + throughput | DONE 2026-10-16 (~1 h per full wave, was ~7 h) |
 | T | Tests aim by meaning; aims verify their hit (zero recapture) | not started |
 | F | Tokens (`Theme`), primitives, spikes S1–S3 (zero recapture) | not started |
 | W1 | Global surface + all persistent frames (windows, cards, bands) | not started |
@@ -289,17 +289,17 @@ Every phase lists its units. Each unit is ONE bounded, delegable brief with acce
 2. Add a `docs/BACKLOG.md` pointer to the plan. File the deferred focus arc there (focused look + icon selection).
 3. Do NOT create the `redesign` branches until W1 starts. R0, T and F land on master.
 
-### R0 — Recapture tooling (tests repo; zero pixel change)
-Do this first: the arc recaptures 7–10 times.
-- **R0.1 Batch finger recapture.** `scripts/recapture.js` refuses `--pointer` today. Teach it `--pointer=finger`, or a `--pointers=mouse,finger` loop, with the SAME completeness gate. That means a discovery suite run at `--pointer=finger`, classifying each failure as needs-recapture / needs-a-fix / UNSTABLE. Wire `fg recapture --finger`.
-  - Acceptance: a dry run on 3 named tests recaptures, and verifies, finger references only.
-- **R0.2 Throughput.** Capture with `--no-recompress` (already accepted by `run-macro-test-headless.js`), then recompress in ONE parallel pass over the changed set (`scripts/recompress-swcanvas-references.js` with N workers).
-  - Identity-safe: matching is on the raw-pixel `dataHash`, proven at the 2026-08-25 encoder change.
-  - Optionally parallelise capture across staggered browsers too.
-  - Target: a full mouse + finger wave in ≤ 90 min.
-  - Close the BACKLOG item named in §0.
-- **R0.3 Review sample.** Create `docs/plans/redesign/review-sample.txt`: about 20 tests covering every surface (windows, cards, menus, prompts, the Inspector, lists, documents, desktop shortcut icons, the spreadsheet, patch nodes). Every wave's owner review runs `fg diffpage $(cat …)` on it before any recapture.
-- Gates: `npm run selftest`, `fg lint`. Commit on master (approval).
+### R0 — Recapture tooling (tests repo; zero pixel change) — ✅ DONE 2026-10-16
+The arc recaptures 7–10 times, so this came first. As executed (both runs below are reproducible from `Fizzygum-tests/.scratch/r0/`):
+- **R0.1 Batch finger recapture.** `scripts/recapture.js --pointer=finger` (through `fg recapture`, which passes flags straight on). A run handles ONE pointer kind end to end: the clean, every capture and verify, and the suite gate are scoped to it. A mouse-only test (`pointerKinds`) is passed over as TEST SKIPPED, never counted as a capture failure. A full wave is `fg recapture --auto --dprs=1,2`, then the same with `--pointer=finger`.
+  - Proof: 3 tests recaptured for each kind (one of them mouse-only, correctly skipped for finger), with the gate green at dpr 1 and 2. Every recaptured filename (which names its pixel hash) came back identical.
+- **R0.2 Throughput.** Captures run `--jobs` at a time (default 6; each its own browser, launches staggered 1.5 s apart against the boot-storm flake). The test manifests are generated ONCE after the clean and kept by every capture (`--keep-manifests`), and no capture kills a sibling's browser (`FIZZYGUM_KEEP_STALE_BROWSERS`). The captures skip their own recompress; the files they wrote are recompressed afterwards in ONE pass, `scripts/recompress-swcanvas-references.js <files…> --jobs <cores−2>`.
+  - **Measured** (20 of the heaviest tests, 212 references): captures 66 s, recompress 65 s, gate 77 s + 87 s. A full wave projects to ~30 min per pointer kind, ~1 h for both, against ~7 h serial before.
+  - **Found and fixed on the way: fresh captures were committed UN-optimized.** Since the 2026-08-25 switch to the native PNG encoder, a capture is ~40–100 KB. The recompress DIRECTORY scan skips anything under its 100 KB "already small" threshold, so 1462 of 3808 committed references are ~10× larger than zopflipng makes them (e.g. 38.8 KB → 3.5 KB). Every capture path now NAMES the files it wrote, which a size threshold never skips.
+  - **zopflipng rejects some valid Chrome PNGs** ("invalid ADLER32" on a stream Node's zlib verifies); such a file is now retried with optipng (137 KB → 12 KB), pixels re-verified.
+  - The existing oversized references are left as they are: the visual waves recapture nearly all of them, and a one-off `--min-size 0` pass over the tree is the owner's call.
+- **R0.3 Review sample.** `docs/plans/redesign/review-sample.txt`: 23 tests covering every surface. Every wave's owner review runs `fg diffpage $(grep -v '^#' Fizzygum/docs/plans/redesign/review-sample.txt)` before any recapture.
+- Gates: `npm run selftest` and `fg lint` green; the recompress `--check-only` gate still verifies all 3808 references.
 
 ### T — Tests aim by meaning, and every aim verifies its hit (zero recapture, both repos)
 The goal is that a geometry change can break PIXELS, never DELIVERY. The precedent is the caret test (Fizzygum-tests `3940b0f36`): measure what the old aim did, re-aim by meaning, assert a value, and get zero recapture.
@@ -560,3 +560,18 @@ Legacy icons shown on any redesigned surface are converted with the skill. Every
 
 ## Start prompt for a fresh session
 > Run the Fizzygum visual redesign plan cold: `Fizzygum/docs/plans/redesign/redesign-plan.md`. Orient with `/Users/davidedellacasa/code/Fizzygum-all/fg status`, read the plan's STATUS box and §0–§0.5, verify the state on disk, then execute the next unstarted phase in orchestration mode (§6). Owner decisions in §0.5 are locked. Never commit, push or recapture without my approval.
+
+---
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] R0: batch finger recapture + mass-recapture throughput (also closes the zopflipng item above)
+      **DONE 2026-10-16** (§4 R0): `recapture.js --pointer=finger` + parallel `--jobs` captures + one
+      batched parallel recompress of the files written; a full wave projects to ~1 h, was ~7 h.
+- [x] **Mass recapture is serialized behind single-threaded zopflipng** (coordinator-filed 2026-08-25, from Plan 3's wave): capturing 3,800 references at the 1920x880 world ran at ~0.5-0.8 tests/min (~7 h for the full wave) with ONE zopflipng process pinned at 98% CPU and machine load 2.6 -- the optimizer dominates at 4x pixel area and the capture is serialized behind it. The suite itself stays in envelope (~2 min parallel dpr1); this is recapture-only cost. Fix candidates: parallelize the zopflipng passes across cores; or capture with cheap PNG encoding and re-optimize asynchronously/in a follow-up pass; or lower optimizer effort for reference PNGs (they are hash-compared, not size-critical -- though repo size argues for keeping good compression somewhere in the loop). NOTE 2026-08-25: the IN-PAGE half of capture cost was separately fixed (SWCanvas JS PngEncoder -> native blit, see the resolved retention entry above); zopflipng remains the sole wall-time term for mass recapture.
+      **DONE 2026-10-16** by this plan's R0: captures run in parallel (`recapture.js --jobs`, default 6)
+      and the files they wrote are recompressed in ONE pass with `--jobs` zopflipng processes. Measured
+      on 20 heavy tests: captures 66 s + recompress 65 s for 212 references. Also fixed: the capture
+      paths' directory-scan recompress skipped native-encoder captures (<100 KB) as already optimized,
+      leaving 1462 of 3808 committed references ~10× oversized; the capture paths now name the files
+      they wrote.

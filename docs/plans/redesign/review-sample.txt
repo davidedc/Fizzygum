@@ -1,0 +1,37 @@
+# The redesign's owner-review sample (plan §4 R0.3): one or more tests per surface a visual wave
+# changes. Every wave runs, BEFORE any recapture:
+#   fg diffpage $(grep -v '^#' Fizzygum/docs/plans/redesign/review-sample.txt)
+# One SystemTest name per line; '#' lines are comments. Add a test when a wave touches a surface
+# this list does not show.
+# windows: plain, collapsed, tilted, window-in-window (cards), resized
+SystemTest_macroResizingPristineInspector
+SystemTest_macroCollapsedWindowBarDragMovesAndUncollapseRestoresExtent
+SystemTest_macroCollapsingTiltedWindowKeepsTitleBarStill
+SystemTest_macroInternalWindowDroppedIntoWindowFits
+SystemTest_macroResizeWindowContainingInternalWindow
+# docked bands and the Docs Maker toolbar
+SystemTest_macroDocsToolbarDockSidesAndFloat
+SystemTest_macroCollapsedDockIsAnEdgeSliver
+SystemTest_macroToolbarChevronPopsOverflow
+# menus: world menu, submenus, pinned header, ticked rows
+SystemTest_macroBasicWorldMenuAndBubble
+SystemTest_macroHoppingBetweenSubMenus
+SystemTest_macroMenuPinnedByHeaderClick
+SystemTest_macroFontsMenuTickTracksSelection
+# prompts
+SystemTest_macroSliderFloorPromptTakesTypedValue
+# lists and scrollbars
+SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
+SystemTest_macroScrollIndicatorFattensAndDrags
+# the Object Inspector
+SystemTest_macroAddEditSaveRenameRemoveProperty
+SystemTest_macroNakedInspectorRendersResizesAndEdits
+# documents
+SystemTest_macroSimpleDocumentManualBuildAndScroll
+# desktop icons, folders, the clock
+SystemTest_macroDesktopShortcutIcons
+SystemTest_macroAnalogClockInspectEdit
+# content apps: spreadsheet, patch programming, plots
+SystemTest_macroSpreadsheetOpenGrid
+SystemTest_macroTwoEditsOnOneRingInOneCycle
+SystemTest_macroSampleDashboardPlots
