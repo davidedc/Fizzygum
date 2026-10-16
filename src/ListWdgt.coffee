@@ -23,8 +23,7 @@ class ListWdgt extends ViewportWdgt
   labelGetter: undefined
   format: undefined
   listContents: undefined # a CommandPanelWdgt with the contents of the list
-  selected: undefined # actual element currently selected
-  active: undefined # menu item representing the selected element
+  selected: undefined # the selected ROW: the MenuItemWdgt `select` was dispatched with (slot 1); its labelString is the element's label
   action: undefined
   target: undefined
   doubleClickAction: undefined
@@ -120,11 +119,12 @@ class ListWdgt extends ViewportWdgt
   _reLayOutAfterContainedPanelChange: ->
     undefined
 
-  select: (item, trigger) ->
-    @selected = item
-    @active = trigger
+  # A row's click dispatches here with the row itself in slot 1 (ButtonWdgt.trigger); slot 2, the
+  # row's subject, is always this list, so it carries nothing and is not taken.
+  select: (row) ->
+    @selected = row
     if @action? and @action != ""
-      @target[@action].call @target, item.labelString
+      @target[@action].call @target, row.labelString
     return
 
   

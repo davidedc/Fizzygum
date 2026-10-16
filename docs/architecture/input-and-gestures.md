@@ -242,6 +242,16 @@ runs, so that comparison can never swallow the arrival. Kept, it would make a fi
 the spot its last stroke started from arrive with no hover move: the bar under it would stay thin
 and the press fall through to the content, and an armed text selection would open an edit.
 
+Nor is the arrival skipped when the finger lands exactly where its previous stroke ENDED. The head
+itself is skipped for a down whose stated position equals the hand's — a pointer that already
+stands there needs no second move — but an ABSENT pointer stands nowhere, even on the pixel it
+lifted from, so `processPointerDown` reads the absence before clearing it and runs the head
+whenever it was set. Skipped, a re-landing on the lift pixel would meet the over-list its lift
+emptied: the same thin bar and the same fall-through onto the row beneath. That re-landing is
+routine, not contrived — a one-pixel thumb drag lifts exactly where the next one-pixel drag of the
+moved thumb presses, so the macro toolkit's corrective list nudge would lose every second step to
+a stray row click.
+
 The fattening and the press are therefore ALWAYS in one event for a finger, which is why a
 dataflow drain must not depend on whether they share a cycle (`Fizzygum-tests/DETERMINISM.md`
 §3j).

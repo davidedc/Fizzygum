@@ -5,7 +5,8 @@
 # bang) marks itself STALE; the drain then PULLS all stored inputs via dataflowRecompute — a subclass hook
 # that runs the node's own computation (recalculateOutput) and refreshes its on-node display — and delivers
 # @output along the out-edge. This base holds everything the three nodes share verbatim: the dataflow node
-# protocol, the connect-to-target menu wiring, the input PINS, and the _reLayout scaffold. Each subclass
+# protocol, the connect-to-target menu wiring, the input PINS, the _reLayout scaffold, and the floored
+# height split their stacked text boxes take (_heightsSplitByWeights). Each subclass
 # supplies only what actually differs — its constructor / colloquialName / setInput* / recalculateOutput /
 # _buildAndConnectChildrenNoSettle (children) / _layOutOwnContents (child geometry), and, if its inputs differ
 # from the default in1..in4, _inputPins.
@@ -103,3 +104,32 @@ class PatchNodeWdgt extends Widget
   # its own _layOutOwnContents
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout
+
+  # Splits `length` among boxes stacked one above the other, in proportion to `weights`, but gives no
+  # box less than its entry in `floors` while the floors fit: a box whose share falls short takes its
+  # floor, and the remaining boxes re-split what is left by their weights. When the floors alone
+  # exceed `length` the plain weighted split stands, since something must scroll anyway. The heights
+  # are rounded at their cumulative edges, so they sum to `length` exactly and a box held at its
+  # (integer) floor keeps it exactly.
+  _heightsSplitByWeights: (length, weights, floors) ->
+    heldAtFloor = (false for w in weights)
+    sumOf = (values) -> values.reduce ((a, b) -> a + b), 0
+    floorsFit = (sumOf floors) <= length
+    loop
+      freeLength = length - sumOf (floors[i] for w, i in weights when heldAtFloor[i])
+      freeWeight = sumOf (w for w, i in weights when !heldAtFloor[i])
+      break unless floorsFit
+      anyNewlyHeld = false
+      for w, i in weights when !heldAtFloor[i] and freeLength * w / freeWeight < floors[i]
+        heldAtFloor[i] = true
+        anyNewlyHeld = true
+      break unless anyNewlyHeld
+    heights = []
+    reached = 0
+    edgeSoFar = 0
+    for w, i in weights
+      reached += if heldAtFloor[i] then floors[i] else freeLength * w / freeWeight
+      edge = Math.round reached
+      heights.push edge - edgeSoFar
+      edgeSoFar = edge
+    heights

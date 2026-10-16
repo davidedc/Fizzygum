@@ -915,15 +915,19 @@ class ActivePointerWdgt extends Widget
     @mouseDownPosition = undefined
     # THE POINTER IS BACK — a down states where it is. The position head below then rebuilds the
     # over-list at the press point, which is the truth from here on.
+    pointerWasAbsent = @_pointerIsAbsent
     @_pointerIsAbsent = false
     # A pointer down states its own position, and for a finger or a pen it is the FIRST event that
     # states one — there is no hover to have walked the pointer there. So take the position from
     # the down itself, by running the move pipeline for it before the press. Skipped when the event
     # states no place (every synthesised down: see PointerInputEvent.worldX) or the pointer already
-    # stands there, so a mouse stroke — where a move always precedes — is untouched.
+    # stands there, so a mouse stroke — where a move always precedes — is untouched. An ABSENT
+    # pointer stands nowhere, even on the pixel it lifted from: a finger landing exactly where its
+    # last stroke ended still needs the head, or its press meets the over-list its lift emptied (a
+    # thin scroll indicator stays thin, and the press falls through it onto the row beneath).
     if e.worldX?
       pointerPosition = @position()
-      if e.worldX isnt pointerPosition.x or e.worldY isnt pointerPosition.y
+      if pointerWasAbsent or e.worldX isnt pointerPosition.x or e.worldY isnt pointerPosition.y
         @processPointerMove e
 
     world.destroyToolTips()

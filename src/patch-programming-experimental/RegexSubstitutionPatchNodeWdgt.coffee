@@ -16,7 +16,7 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
   input4: undefined
 
   constructor: (@defaultContents = "") ->
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
 
   colloquialName: ->
@@ -80,12 +80,13 @@ class RegexSubstitutionPatchNodeWdgt extends PatchNodeWdgt
     child is @outputTextArea
 
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
+  # The regex and the substitution get a quarter of my height each and the output the half below them,
+  # but no box shorter than one line of its text while the three lines fit.
   _layOutOwnContents: ->
 
     availableHeight = @height() - 2 * @externalPadding - 2 * @internalPadding
-    text1Height = Math.round(availableHeight * 1/4)
-    text2Height = Math.round(availableHeight * 1/4)
-    text3Height = Math.round(availableHeight * 2/4)
+    boxes = [@regexEntryField, @substitutionTextArea, @outputTextArea]
+    [text1Height, text2Height, text3Height] = @_heightsSplitByWeights availableHeight, [1, 1, 2], (box.heightShowingOneLine() for box in boxes)
 
     if @regexEntryField.parent == @
       @regexEntryField._applyBounds (new Point @left() + @externalPadding, @top() + @externalPadding), new Point @width() - 2 * @externalPadding, text1Height

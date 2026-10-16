@@ -364,28 +364,13 @@ and `architecture/occlusion-culling.md` §2a. Three things it deliberately did n
       (`check-refs.js --pixels`) and `to 120` (`check-visualisations.js --strict`), not 14 s.
 
 ### Residue arc 2026-10-16 — follow-ups (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
-- [ ] **`FrameWdgt.floatOutOfDock` places the frame ignoring its OWN docks** (spike-found 2026-10-16). Its
-      position line subtracts only `@padding` and the title bar, so a band that carries a top dock of its
-      own (a `DocumentWdgt` band with its text toolbar) jumps 73 px down instead of popping out in place
-      (payload 66@224 → 66@297 from a left slot). Toolbar bands are placed exactly. No test drives
-      `floatOutOfDock` (only `fg menusweep` reaches it), so nothing pins either answer.
-- [ ] **The patch nodes pass a dead constructor argument and split their height without reading their text**
-      (spike-found 2026-10-16).
-      - `CalculatingPatchNodeWdgt`, `RegexSubstitutionPatchNodeWdgt` and `DiffingPatchNodeWdgt` call
-        `super new Point 200,400`, which `Widget`'s parameterless constructor ignores, so an unframed node
-        is 50×40 and both its boxes clamp to 5 px.
-      - The Regex node's ¼/¼/½ split overflows its boxes below a node height of ~112. The calc node's
-        frames were enlarged in its one app; the split itself is still content-blind.
+- Six of its follow-ups are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16 — its six
+  follow-ups".
 - [ ] **The corner-occupancy protocol does not see the temporary resize/move halo** (2026-10-16). A halo's
       bottom-right handle is not a declared occupant, so a bar runs under it while the halo is up (its side
       handles already sat on the bars). Related, pre-existing: `Widget._setLayoutSpec` updates the
       visibility of only its FIRST handle child, so a halo handle that precedes a frame's resizer would
       keep the resizer's visibility, and its corner reserve, stale.
-- [ ] **A finger's corrective list nudge carries less than a mouse's** (measured 2026-10-16, before the list
-      fix): three ±1 px nudges pulled the 235-row list ~5 rows back under the mouse and ~3 under a finger.
-      Unexplained; the list verb no longer needs its nudges, so nothing depends on them today.
-- [ ] **`ListWdgt.selected`'s comment says "actual element currently selected"; it holds the ROW** — the
-      `MenuItemWdgt` the `select` action is dispatched with (slot 1), whose `labelString` is the element.
 
 ### One line each — every item names the archived plan and section that owns its detail
 

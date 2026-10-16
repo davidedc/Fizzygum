@@ -26,7 +26,7 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   input4: undefined
 
   constructor: (@defaultFormulaBoxContents = "# function with formula here e.g.\n# (in1) -> in1 * 2\n") ->
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
 
 
@@ -82,11 +82,12 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
     child is @outputTextArea
 
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
+  # The formula box gets two thirds of the height the two labels leave and the output box the third
+  # below it, but neither box shorter than one line of its text while both lines fit.
   _layOutOwnContents: ->
 
     availableHeight = @height() - 2 * @externalPadding - 3 * @internalPadding - 2 * 15
-    text1Height = Math.round(availableHeight * 2/3)
-    text2Height = Math.round(availableHeight * 1/3)
+    [text1Height, text2Height] = @_heightsSplitByWeights availableHeight, [2, 1], [@tempPromptEntryField.heightShowingOneLine(), @outputTextArea.heightShowingOneLine()]
 
     textBottom = @top() + @externalPadding + 15 + @internalPadding + text1Height
 

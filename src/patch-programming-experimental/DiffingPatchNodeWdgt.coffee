@@ -7,7 +7,7 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
   defaultContents: undefined
 
   constructor: (@defaultContents = "") ->
-    super new Point 200,400
+    super()
     @_buildAndConnectChildren()
     @input1 = ""
     @input2 = ""

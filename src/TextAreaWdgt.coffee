@@ -62,6 +62,13 @@ class TextAreaWdgt extends ViewportWdgt
     if isEditable then @textWdgt.enableSelecting()
     return @
 
+  # The least height at which I show one whole line of my text without scrolling: one line at my
+  # text's font, plus the content inset I keep above and below it (_positionAndResizeChildren's
+  # padding). It measures the font, not the text, so a container that floors a text box at it gets
+  # the same floor whatever the box holds.
+  heightShowingOneLine: ->
+    (Math.ceil @textWdgt.fontHeight @textWdgt.originallySetFontSize) + 2 * Math.floor(@extraPadding + @padding)
+
   colloquialName: ->
     return "text"
 

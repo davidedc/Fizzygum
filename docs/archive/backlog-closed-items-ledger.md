@@ -306,3 +306,60 @@ decided and executed on its own. Kept verbatim, in their BACKLOG order.
       AFTER the 'I', in every committed reference on both pointers, and its stated carved text was already
       wrong. The click now aims at the slot before the 'I' through the text's own slot geometry, five value
       assertions pin the slot story, and the stated text matches the frames.
+
+### Residue arc 2026-10-16 — its six follow-ups (no plan doc; owner: address all six, any order)
+- [x] **Two gate ratchets had slack to bank** (seen 2026-10-16). **DONE 2026-10-16.** Both gains were found
+      before writing their reason:
+      - `check-stinks.js` `instanceof-type-test` 80 → 77: gesture grammar P3 (`232cbb23`, 2026-08-26) gave
+        the macro toolkit `_widgetOfTarget`, which replaced four inline `instanceof Array` identifier tests
+        with one.
+      - `check-call-separation.js` `BASELINE_U_QUERY` 121 → 120: the census rebuilt at the commit that set
+        121 (`97a7a647` + tests `b6912bc54`) and diffed against today. The stuck-thumb-highlight arc
+        (`4cc3ec71`, 2026-10-15) made `SliderButtonWdgt` place its thumb from its slider's `rangeSize()`,
+        so `SliderWdgt.rangeSize` gained an external caller. Two moves on 2026-08-26 cancel inside the
+        span: `ActivePointerWdgt.checkDraggingThreshold` gained a test reference while
+        `MacroToolkit.fingerMode` was born @-self-only public.
+- [x] **`ListWdgt.selected`'s comment said "actual element"; it holds the ROW** (2026-10-16). **DONE
+      2026-10-16.** Measured in-page under both pointers: slot 1 of a row's `select` dispatch is the
+      `MenuItemWdgt` (every reader, four in the inspectors and one test, reads `.labelString` off it), and
+      slot 2 is always the `ListWdgt` itself (the rows' panel targets the list). `active` stored that slot
+      and nothing in either repo read it: owner-directed, it is deleted and `select` takes the row alone.
+- [x] **The patch nodes passed a dead constructor argument and split their height without reading their
+      text** (spike-found 2026-10-16). **DONE 2026-10-16.**
+      - `super new Point 200,400` → `super()` in all three. Measured first: a frame is born 300×300 whatever
+        its payload's extent and every product path frames a node at an explicit extent (460×400, 260×265,
+        241×186), so honouring the argument would have reached only a node no one frames.
+      - `PatchNodeWdgt._heightsSplitByWeights` splits a height by weights, floors each box at
+        `TextAreaWdgt.heightShowingOneLine()` (one line at the box's font plus its content inset — a new,
+        separately named query, not a `preferredExtentForWidth` override) while the floors fit, and rounds
+        at cumulative edges so the boxes sum exactly. The Regex node's ¼/¼/½ split had also overshot its
+        node by 1 px at half of all heights (independent rounding: 84+84+167+10 = 345 at the demo's 344);
+        at node heights 88–114 its two entry boxes now keep one whole line. The calc node's 2:1 split uses
+        the same helper and is identical at every size a test uses (it differs only at node heights
+        95–106).
+- [x] **`FrameWdgt.floatOutOfDock` placed the frame ignoring its OWN docks** (spike-found 2026-10-16).
+      **DONE 2026-10-16.** The position line now subtracts the frame's own left/top dock thickness and a
+      side bar's width as well as the padding and title bar. Measured in-page over 12 cases (a Docs frame
+      with its toolbar on top, the same with its toolbar on its left, and a toolbar band; each docked at
+      every side): the payload's screen top-left is unchanged by the float, where a Docs frame had jumped
+      73 px on every side. Pin (owner-placed): `macroDockAnyFrame` floats the docked document window
+      through its own menu after its last shot and asserts it popped out in place (the old method fails
+      it: 66@224 expected, 66@297 found, both pointers).
+- [x] **A finger's corrective list nudge carried less than a mouse's** (measured 2026-10-16). **DONE
+      2026-10-16.** Root cause (a read-only Opus spike, re-verified): a touch-down that re-lands on the
+      exact pixel the previous stroke lifted from skipped `processPointerDown`'s position head (the down's
+      position equalled the hand's), so the thin scroll indicator the lift had emptied stayed thin and the
+      press fell through onto the row beneath — moving the list 1 px the wrong way and selecting that row.
+      A one-pixel nudge lifts exactly where the next one presses, so every second finger nudge was lost.
+      An ABSENT pointer now always runs the head. Blast radius measured in-page before the edit: the head
+      fired 129 times across 60 finger tests and all 321 passed; mouse paths cannot reach it (synthetic
+      mouse downs state no place). Pin: `macroAddEditSaveRenameRemoveProperty` ends with two nudges that
+      must each scroll toward the row and select nothing (the old head fails it under a finger).
+- [x] **`macroTextWdgtCaretKeepsCorrectAlignment` aimed two gestures by recorded coordinates** (2026-10-16).
+      **DONE 2026-10-16, no recapture.** Measured first: the recorded corner drag grew the box to exactly
+      721×436 and the recorded caret fraction landed on the slot after "elit. I", under both pointers. The
+      box is now grown to that EXTENT (`dragResizeMoveHandleTo`, the handle's centre moved by the wanted
+      growth) and the caret aimed at that SLOT (`slotCoordinates`), each asserted; the desktop menu opens by
+      meaning (`openOwnMenuOf world`) and the bare-desktop click that ends the resize mode is asserted by the
+      handle count. The drop spot stays as recorded (it places the box, not its lines). Every reference
+      still matches at both pointers and both dprs.

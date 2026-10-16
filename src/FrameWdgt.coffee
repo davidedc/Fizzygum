@@ -1226,7 +1226,9 @@ class FrameWdgt extends Widget
     # the desktop gives me a window's chrome where the band gave me a grip, so re-wrap my payload
     # at the extent it had
     @setExtent @_extentWrappingPayloadAt payloadExtent
-    @_applyMoveTo payloadPosition.subtract new Point @padding, @_titlebarHeight() + @padding
+    # the arrange seats my payload inside my chrome: past my padding, my bar, and a band of my OWN
+    # docked at my left or top (a Docs frame's text toolbar), so I land that far up-left of it
+    @_applyMoveTo payloadPosition.subtract new Point @_titlebarWidth() + @_leftDockThickness() + @padding, @_titlebarHeight() + @_topDockThickness() + @padding
     @_moveWithin world
 
   # LIFTED OUT OF A DOCK SLOT by my grip: the band's look goes (Widget._beforeBeingGrabbed drops my
