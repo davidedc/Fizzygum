@@ -1212,7 +1212,7 @@ assertion a recapture after a regression silently stores two different hashes an
   not the original's, decides where the copy appears. The park must END IN A CLICK on bare desktop: a buttonless move emits nothing
   under the finger pointer kind (a finger has no resting place; the hand is wherever the last touch was), so a bare move leaves a
   finger run's copy centred on the canvas corner. Assert the hand position as a value — "the copy is centred on the hand" alone
-  holds wherever the hand is. (A mouse move's sampled path lands within a pixel of its destination, short of it.) Find it with `world.hand.children`, not `world.children`; and assert the
+  holds wherever the hand is; a sampled move ends exactly on its destination, so the position assert is exact. Find it with `world.hand.children`, not `world.children`; and assert the
   transformed case by VALUE (which island rode, carrying which TransformSpec) rather than with another screenshot.
 - **Duplicate a MENU ITEM into the bare world** (`macroMenuItemDuplicatesToStandaloneWidget`): a `MenuItemWdgt` is an ordinary
   duplicable Widget. Right-click an item of an open menu (e.g. the world menu's "demo ➜") → its ANCESTOR hierarchy menu; under the
@@ -1300,9 +1300,9 @@ assertion a recapture after a regression silently stores two different hashes an
   by pressing THAT handle specifically — `@syntheticEventsMouseMovePressDragRelease_InputEvents insp.resizer.center(), dest` — NOT
   `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …` (a `save` raises the desktop's OWN resizer above the inspector's, so the
   topmost-by-type lookup grabs the wrong handle). The `*FromTopInspector*` verbs + the inspect→select→edit→save flow work naked exactly as
-  windowed (the edit mirrors `macroAnalogClockInspectEdit`). TWO naked-specific traps: (1) DON'T scroll a pane that already FITS — a degenerate
-  vBar drag (e.g. `@bringcodeStringFromTopInspectorInView` when the method source fits the tall naked detail) float-drags the free-floating
-  inspector instead of scrolling, so click the already-visible code directly; (2) SHRINK the WIDTH, not the height — dropping the height so the
+  windowed (the edit mirrors `macroAnalogClockInspectEdit`). TWO traps: (1) DON'T drag the bar of a pane that already FITS — its vBar is
+  hidden, so a drag pressed where it would be lands on the pane and float-drags the inspector, windowed or naked, instead of scrolling
+  (`@bringcodeStringFromTopInspectorInView` presses nothing on such a pane; click the already-visible code directly); (2) SHRINK the WIDTH, not the height — dropping the height so the
   detail newly overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2 (the known SWCanvas thumb flake),
   whereas a width shrink keeps the detail fitting and the resize shot deterministic. No new verb.
 - **The constraining stack CAPS oversized drops to its full width — it never stretches up**
@@ -2284,8 +2284,8 @@ filters it out; an UNdeclared test that fails to translate is a finding, not a s
   set-value+save / rename / remove a property via the inspector's DIRECT footer BUTTONS — `addPropertyButton` ("add..." → a "new
   property name:" prompt), `saveButton` ("save" → `@target.injectProperty selectedName, detailText`), `renamePropertyButton`,
   `removePropertyButton`. INSPECTOR gotchas: the inspector HIDES inherited props by default and a property like `alpha`/`blanksColor`
-  sorts below the first rows, so SCROLL the list to the row by name before clicking it (a per-test `selectInspectorRow` helper:
-  `@calculateVertBarMovement` + a vBar drag); a value/detail pane's text is a `TextWdgt` in a scroll-panel — set it with
+  sorts below the first rows, so SCROLL the list to the row by name before clicking it
+  (`bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro`); a value/detail pane's text is a `TextWdgt` in a scroll-panel — set it with
   `detailText.setText`, not a click. The original asserted a byte-identical add→remove round-trip (image_1≡image_5); the new inspector's
   list sub-row scroll rendering leaves an invisible sub-pixel difference, so the round-trip is shown VISUALLY (re-select the same base
   property) rather than via `@assertScreenshotsIdentical`. (Re-authored when the old `InspectorMorph` was removed and the inspect path

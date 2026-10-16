@@ -355,30 +355,37 @@ and `architecture/occlusion-culling.md` §2a. Three things it deliberately did n
       § "Test & reference-image layout".
 
 ### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
-- [ ] **`scrollInspectorListItemIntoView` derives its drag from the THIN thumb** (found 2026-10-15, the
-      thin-thumb arc). It measures the handle's travel and centre on the bar as drawn at rest (thin), while
-      the press meets the FAT thumb the arrival makes, whose travel differs; the bounded ±1 px nudge loop
-      in `bringInViewAndClickOnListItem` then carries the row into view. So where a list lands depends on
-      the thin thumb's look: the thumb's 5→4 px change moved two shots' scroll positions
-      (`macroAddEditSaveRenameRemoveProperty` image_3, `macroInspectorResizingOKEvenWhenTakenApart` image_4)
-      with the verb's intent intact. Deriving the drag from `ViewportWdgt.buttonScreenBoxOnArrival`'s
-      geometry would land on the intended row first time — and move every reference behind a
-      `bringInView…` on a long list. Owner decision.
-- [ ] **A mouse move lands up to a pixel SHORT of its destination** (found 2026-10-15, same arc).
-      `MacroToolkit._sampleMovePath` emits samples `0…n-1` of its expoOut curve and never sample `n`, so a
-      move to (620,130) leaves the hand at 619@130; a finger tap lands on the point exactly. Harmless where
-      an aim lands inside a widget, but a macro asserting the hand's position must allow the pixel
-      (`macroDuplicateAndPickItUpRidesHand` does). Emitting the destination would move every reference
-      taken after a move. Owner decision.
-- [ ] **A thin vBar about ONE pixel long shows in single-line text areas** (found 2026-10-15, same arc).
-      Measured: `macroDegreesConverterFourWayDrive`'s formula fields carry vBar thumbs `[515@154 | 4@1]`
-      and `[3@1]`, and the docs toolbar's field one `[971@318 | 1@1]` — bars a pixel or so long, shown as
-      overflow indicators. While the thumb kept a 5×5 floor they painted a stray grey dot in the field's
-      corner; now they paint (near) nothing. Why a bar that short is visible at all is unexamined.
+- The three measured residue items (the list verb's thin-geometry drag, the pixel-short move, the ~1 px bars
+  in short viewports) are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16".
+  Its follow-ups are filed under "Residue arc 2026-10-16 — follow-ups" below.
 - [ ] (optional, owner to decide) the gauntlet's `refs` leg hits fg's own leg alarm in-wave on a loaded machine
       (twice on 2026-10-15; the second time wave B's legs ran ~280 s each) — a budget question, not a reference
       problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budgets are `to 300`
       (`check-refs.js --pixels`) and `to 120` (`check-visualisations.js --strict`), not 14 s.
+
+### Residue arc 2026-10-16 — follow-ups (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
+- [ ] **`FrameWdgt.floatOutOfDock` places the frame ignoring its OWN docks** (spike-found 2026-10-16). Its
+      position line subtracts only `@padding` and the title bar, so a band that carries a top dock of its
+      own (a `DocumentWdgt` band with its text toolbar) jumps 73 px down instead of popping out in place
+      (payload 66@224 → 66@297 from a left slot). Toolbar bands are placed exactly. No test drives
+      `floatOutOfDock` (only `fg menusweep` reaches it), so nothing pins either answer.
+- [ ] **The patch nodes pass a dead constructor argument and split their height without reading their text**
+      (spike-found 2026-10-16).
+      - `CalculatingPatchNodeWdgt`, `RegexSubstitutionPatchNodeWdgt` and `DiffingPatchNodeWdgt` call
+        `super new Point 200,400`, which `Widget`'s parameterless constructor ignores, so an unframed node
+        is 50×40 and both its boxes clamp to 5 px.
+      - The Regex node's ¼/¼/½ split overflows its boxes below a node height of ~112. The calc node's
+        frames were enlarged in its one app; the split itself is still content-blind.
+- [ ] **The corner-occupancy protocol does not see the temporary resize/move halo** (2026-10-16). A halo's
+      bottom-right handle is not a declared occupant, so a bar runs under it while the halo is up (its side
+      handles already sat on the bars). Related, pre-existing: `Widget._setLayoutSpec` updates the
+      visibility of only its FIRST handle child, so a halo handle that precedes a frame's resizer would
+      keep the resizer's visibility, and its corner reserve, stale.
+- [ ] **A finger's corrective list nudge carries less than a mouse's** (measured 2026-10-16, before the list
+      fix): three ±1 px nudges pulled the 235-row list ~5 rows back under the mouse and ~3 under a finger.
+      Unexplained; the list verb no longer needs its nudges, so nothing depends on them today.
+- [ ] **`ListWdgt.selected`'s comment says "actual element currently selected"; it holds the ROW** — the
+      `MenuItemWdgt` the `select` action is dispatched with (slot 1), whose `labelString` is the element.
 
 ### One line each — every item names the archived plan and section that owns its detail
 

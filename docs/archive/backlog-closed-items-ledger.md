@@ -241,3 +241,68 @@ decided and executed on its own. Kept verbatim, in their BACKLOG order.
       arrivals across the finger suite, pixels moved in those two tests only. Pin: the MovingSliders test's
       value assertions fail under a finger without it. Contract in `architecture/input-and-gestures.md`
       §"Touch hover dissolution".
+
+### Residue arc 2026-10-16 — the three measured residue items (no plan doc; owner: address all three)
+- [x] **`scrollInspectorListItemIntoView` derived its drag from the THIN thumb** (filed 2026-10-15). **DONE
+      2026-10-16.** The latent fault was proved first, in-page: dragging from the top of the 235-row member
+      list, the click verb RAISED for rows ~180–220 (mouse) and ~160–220 (finger). The thin thumb is 4 px on
+      a 140 px bar, the fat thumb a press meets is 10 px, so the drag overshot by a share that grows with the
+      distance dragged, past what the three ±1 px nudges recover. Chained calls (each starting near the last
+      row) hid it, so no test raised. The verb now measures the travel in the look the press meets:
+      `ViewportWdgt.barScreenFrameOnArrival` (new, beside `buttonScreenBoxOnArrival`) via
+      `MacroToolkit._sliderFrameAndButtonAsPressed` and `_dragVerticalSliderButtonToTravelFraction_InputEvents`.
+      Every call in both pointers' suites now lands within one row of its intended top with zero nudges.
+      Two things found on the way:
+      - The old aim added an unfloored `L/2` to a floored `center()`, a half-pixel destination for odd
+        thumb lengths. A mouse drag rounded it away, but a finger, released AT the destination, carried
+        it: that alone moved five finger-only tests.
+      - `bringcodeStringFromTopInspectorInView`, the verb's sibling on the same thin-geometry math, ran
+        in its only caller (`macroAnalogClockInspectEdit`) on a detail pane that does not overflow
+        vertically. Under the mouse its drag pressed the pane itself and float-dragged the whole
+        inspector window 88 px down, and the committed reference showed that displaced window. On a pane
+        with no vertical bar the verb now presses nothing.
+      Pin: `macroAddEditSaveRenameRemoveProperty` ends with a value assertion that a row ~85% down the
+      list, brought into view from the top, is the one selected (on the old verb, the click raises).
+- [x] **A sampled move landed up to a pixel SHORT of its destination** (filed 2026-10-15). **DONE 2026-10-16.**
+      `MacroToolkit.expoOut` gains easeOutExpo's `t == d` endpoint case and `_sampleMovePath` samples 0…n
+      inclusive, so every sampled move (mouse moves and drags, finger carries and drags) ends ON its
+      destination. `macroDuplicateAndPickItUpRidesHand` now asserts the hand at exactly 620@130 (the old
+      sampler fails it at 619@130). The corner-handle press keeps its quarter-box offset in
+      `_handlePressAndDropPoints`, re-justified by the corner being the triangle's boundary alone.
+- [x] **~1 px scrollbars in short viewports** (filed 2026-10-15). **DONE 2026-10-16**, in the three steps filed:
+      - (a) **Root cause** (a read-only Opus spike, re-verified): neither overflow came from the scroll
+        machinery.
+        - `DegreesConverterApp` hard-coded its calc frames at 241×167, and `CalculatingPatchNodeWdgt`
+          splits its height 2:1 without looking at the text. After the 2026-08-25 touch-geometry change
+          (`5a45a135`: 20 px more window chrome, a 16 px line), the one-line output box got 21 px for
+          26 px of text. The frames are now 241×186 (output 27/27, formula 53/53).
+        - A toolbar band undocked by dragging its GRIP kept the band's outer size while its 50 px side
+          grip became a 50 px title bar, squeezing the payload to 14 px. The "float" menu item re-wrapped
+          the payload instead. Both now share one rule (`FrameWdgt._extentWrappingPayloadAt`). The grip
+          path reads the extent while the band still grants it (`_beforeBeingGrabbed`) and applies it on
+          the hand (`_reactToBeingGrabbed`). Resizing while still the host's child made the host re-fit
+          mid-pass, and the settle re-visit gate caught that as a re-visit.
+      - (b) **A bar whose frame has no room for its thumb is hidden**
+        (`ViewportWdgt._barFrameHasRoomForThumb`). Measured pixel-inert across both suites; zero
+        degenerate bars remain.
+      - (c) **The corner reserve is what OCCUPIES the corner** (`_cornerReserveFor`):
+        - a resizer, `max(scrollBarsThickness, handleSize)`;
+        - else the other bar where it crosses, `scrollBarsThickness`;
+        - else 0.
+        Both are asked of structure:
+        - the other bar by its axis's overflow;
+        - the resizer by climbing a corner chain: containers name the child that reaches their
+          bottom-right corner (`bottomRightCornerReachedBy` on FrameWdgt, InspectorWdgt and the three
+          patch nodes), and `HandleWdgt.wouldShow` is the resizer's showing as a query. When a resizer
+          flips, its owner tells the viewports down the chain (`noteCornerResizerChanged`, deferred
+          through the phase valve).
+        It was measured at design time by a second spike before the owner re-confirmed it at the larger
+        blast radius. A capture-time cross-check (every shown bar against every visible handle) found
+        two cases:
+        - one limit: the temporary resize/move halo is not a declared occupant (filed);
+        - one false positive: two overlapping windows.
+- [x] **`macroTextWdgtCaretKeepsCorrectAlignment` never delivered its image_2 claim** (found 2026-10-16, while
+      eyeballing item 2's movers). Its "Enter before the trailing I" click was a recorded fraction that landed
+      AFTER the 'I', in every committed reference on both pointers, and its stated carved text was already
+      wrong. The click now aims at the slot before the 'I' through the text's own slot geometry, five value
+      assertions pin the slot story, and the stated text matches the frames.

@@ -42,7 +42,7 @@ const SRC = path.resolve(__dirname, '../src');
 const { METHOD_HEADER: HEADER } = require('./lib/coffee-method-header');
 
 // ---- baseline for section B (the check-stinks idiom: exact count, move it consciously) ----
-const CROSS_PLANE_MIX_BASELINE = 35;
+const CROSS_PLANE_MIX_BASELINE = 36;
 
 const POSITIONAL = 'position|left|right|top|bottom|center|boundingBox|fullBounds|topLeft|topRight|bottomLeft|bottomRight|origin|corner';
 const CALL_RE = new RegExp('(@?[A-Za-z_$][A-Za-z0-9_$]*)((?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*?)\\.(' + POSITIONAL + ')\\s*\\(', 'g');

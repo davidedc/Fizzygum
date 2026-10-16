@@ -512,15 +512,60 @@ class ViewportWdgt extends Widget
     @isTextLineWrapping
 
   # Where I place a bar of mine at a given cross-axis THICKNESS: the vertical one against my right
-  # edge and the horizontal one against my bottom edge, each stopping short of the corner, where
-  # the other bar and a resizer would otherwise overlap it. My arrange places my bars from this, and
-  # buttonScreenBoxOnArrival asks it for the thickness a pointer's arrival gives them.
+  # edge and the horizontal one against my bottom edge, each stopping short of my bottom-right corner
+  # by as much as what OCCUPIES that corner needs (_cornerReserveFor), and running its side's full
+  # length when nothing does. My arrange places my bars from this, and buttonScreenBoxOnArrival /
+  # barScreenFrameOnArrival ask it for the thickness a pointer's arrival gives them.
   _barFrameAt: (bar, thickness) ->
-    spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldWdgt.preferencesAndSettings.handleSize) + 2 * @padding
+    spaceToLeaveOnOneSide = @_cornerReserveFor bar
     if bar is @vBar
       new Rectangle (new Point @right() - thickness, @top()), (new Point @right(), @bottom() - spaceToLeaveOnOneSide)
     else
       new Rectangle (new Point @left(), @bottom() - thickness), (new Point @right() - spaceToLeaveOnOneSide, @bottom())
+
+  # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
+  # resizer over the corner takes a touch target's room (handleSize, never less than a bar); failing
+  # that, my other bar takes its thickness where it crosses; with neither, the corner is free and the
+  # bar runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the
+  # passes that read this are still laying out: the other bar by the overflow its showing derives
+  # from, the resizer by climbing the corner chain (_aResizerSitsOverMyCorner).
+  _cornerReserveFor: (bar) ->
+    reserve =
+      if @_aResizerSitsOverMyCorner() then Math.max @scrollBarsThickness, WorldWdgt.preferencesAndSettings.handleSize
+      else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
+      else 0
+    if reserve > 0 then reserve + 2 * @padding else 0
+
+  # Does my OTHER bar cross my bottom-right corner? Whenever it is mine to place and its axis overflows
+  # under a policy that shows bars: the facts its showing derives from, read here WITHOUT its
+  # room-for-thumb check, so neither bar's length waits on whether the other one shows.
+  _otherBarCrossesMyCorner: (bar) ->
+    other = if bar is @vBar then @hBar else @vBar
+    return false  unless other? and other.parent is @ and other.isWiredTo?(@) and @scrollPolicy isnt 'never'
+    if other is @hBar
+      @contents.width() >= @width() + 1
+    else
+      @contents.height() >= @height() + 1
+
+  # Does a RESIZER sit over my bottom-right corner? Every container that runs a child out to its own
+  # bottom-right corner says which (bottomRightCornerReachedBy), so I climb for as long as I am, or
+  # am inside, such a child, and the first container on the way whose resizer would show answers yes
+  # (HandleWdgt.wouldShow: what its showing derives from, not whether it shows yet). A container that
+  # names nobody ends the climb. I name nobody myself: my contents scroll under my corner.
+  _aResizerSitsOverMyCorner: ->
+    child = @
+    container = @parent
+    while container?.bottomRightCornerReachedBy?(child)
+      return true  if container.resizer?.wouldShow?()
+      child = container
+      container = container.parent
+    false
+
+  # A resizer over a corner I reach came or went (HandleWdgt.updateVisibility tells the viewports down
+  # its corner chain), so my bars must re-lay to the reserve the corner now asks of them: my arrange
+  # is where they are laid, so I schedule it.
+  noteCornerResizerChanged: ->
+    @_scheduleRelayoutRespectingPhase()
 
   # The SCREEN box in which a pointer ARRIVING at one of my bars finds that bar's button. A thin
   # indicator is intangible, and the arrival — a finger's own down, a mouse's approach — fattens it
@@ -532,6 +577,24 @@ class ViewportWdgt extends Widget
     frame = @_barFrameAt bar, @scrollBarsThickness
     box = (bar.button.boxInSliderFrame frame.extent(), bar.trackThumbInset).translateBy frame.origin
     new Rectangle (bar.localPointToScreen box.origin), (bar.localPointToScreen box.corner)
+
+  # The SCREEN frame of one of my bars as a pointer ARRIVING at it finds it — at my full thickness,
+  # the frame buttonScreenBoxOnArrival's box lies in. The button travels this frame's length less its
+  # own, and a fat thumb can be longer than the thin one drawn at rest, so a drag that means to carry
+  # the button a fraction of its way measures that way here and not on the bar as drawn.
+  barScreenFrameOnArrival: (bar) ->
+    frame = @_barFrameAt bar, @scrollBarsThickness
+    new Rectangle (bar.localPointToScreen frame.origin), (bar.localPointToScreen frame.corner)
+
+  # Does one of my bar frames have ROOM for the bar's thumb? A thumb is never shorter than it is wide,
+  # and in the look a press meets it is my full thickness less the track's inset, so a frame shorter
+  # than that holds none — in a viewport shorter than the corner reserve _barFrameAt leaves, the
+  # frame's length is not even positive. Such a bar is not shown: it would be a sliver no pointer can
+  # work. The overflow it would stand for still scrolls, since every scroll gesture asks
+  # isScrollableNow, never a bar.
+  _barFrameHasRoomForThumb: (bar, frame) ->
+    length = if bar is @vBar then frame.height() else frame.width()
+    length >= @scrollBarsThickness - bar.trackThumbInset
 
   _reLayoutScrollbars: ->
     # §4.2 Stage 3 (structural arrange): the bars below apply their geometry via the NON-notifying
@@ -559,17 +622,17 @@ class ViewportWdgt extends Widget
     # The field comparison this replaced was total by accident (`<anything>.target == @` is just false);
     # asking a METHOD is not, and a bar that cannot answer is exactly a bar I must not touch.
     if @hBar.isWiredTo? @
+      # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
+      # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent).
+      hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
+      hFrame = @_barFrameAt @hBar, hThickness
       # a 'never' viewport shows no bars whatever the overflow — same hide arm the
-      # fitting case takes
-      if @scrollPolicy isnt 'never' and @contents.width() >= @width() + 1
+      # fitting case takes — and neither does a frame with no room for the bar's thumb
+      if @scrollPolicy isnt 'never' and @contents.width() >= @width() + 1 and @_barFrameHasRoomForThumb @hBar, hFrame
         @hBar.show()
         # chrome I own and place -- apply via the non-notifying twin as above (see the method-top
         # comment). _applyExtentBase == _applyWidth/Height minus the seam; preserves height/width by
         # passing the current other axis.
-        # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
-        # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent).
-        hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
-        hFrame = @_barFrameAt @hBar, hThickness
         @hBar._applyExtentBase hFrame.extent()  unless @hBar.extent().equals hFrame.extent()
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
@@ -589,13 +652,13 @@ class ViewportWdgt extends Widget
 
     # see comment on equivalent if line above.
     if @vBar.isWiredTo? @
-      # 'never' shows no bars — see the hBar above
-      if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1
+      # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
+      vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
+      vFrame = @_barFrameAt @vBar, vThickness
+      # 'never' shows no bars, nor does a frame with no room for the thumb — see the hBar above
+      if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1 and @_barFrameHasRoomForThumb @vBar, vFrame
         @vBar.show()
         # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).
-        # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
-        vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
-        vFrame = @_barFrameAt @vBar, vThickness
         @vBar._applyExtentBase vFrame.extent()  unless @vBar.extent().equals vFrame.extent()
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the

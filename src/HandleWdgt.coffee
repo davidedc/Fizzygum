@@ -122,10 +122,28 @@ class HandleWdgt extends Widget
   # would also look better (rather than a hole with
   # nothing)
   updateVisibility: ->
-    if @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
+    showedBefore = @isVisible
+    if @wouldShow()
       @show()
     else
       @hide()
+    @_tellCornerViewportsMyShowingChanged()  unless @isVisible is showedBefore
+
+  # The two questions above, as a query: what my showing derives from, asked without asking whether I
+  # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
+  # by this answer (ViewportWdgt._aResizerSitsOverMyCorner) -- a visibility is never a layout input.
+  wouldShow: ->
+    @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
+
+  # I came or went, so the viewports keeping my parent's bottom-right corner free for me re-lay their
+  # bars: down the corner chain (bottomRightCornerReachedBy) from my parent, each one reached.
+  _tellCornerViewportsMyShowingChanged: ->
+    visit = (container) ->
+      for child in container.children when container.bottomRightCornerReachedBy?(child)
+        child.noteCornerResizerChanged?()
+        visit child
+      return
+    visit @parent  if @parent?
 
 
   # implement dummy methods in here

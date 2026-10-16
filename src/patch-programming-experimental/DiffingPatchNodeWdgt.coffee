@@ -54,6 +54,11 @@ class DiffingPatchNodeWdgt extends PatchNodeWdgt
 
     @_invalidateLayout()
 
+  # My one text box fills me (_layOutOwnContents), so it is the child at my bottom-right corner, where my
+  # window's resizer sits (ViewportWdgt._aResizerSitsOverMyCorner).
+  bottomRightCornerReachedBy: (child) ->
+    child is @tempPromptEntryField
+
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
   _layOutOwnContents: ->
 

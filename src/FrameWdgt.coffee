@@ -105,6 +105,10 @@ class FrameWdgt extends Widget
   contentsExtentWhenCollapsed: undefined
   extentWhenCollapsed: undefined
 
+  # the extent my payload had in a dock band, carried across the grab that lifts me out of it:
+  # read in _beforeBeingGrabbed, applied (and cleared) in _reactToBeingGrabbed
+  _payloadExtentInTheBand: undefined
+
   # set at the subtree's destroy ENTRY (_fullDestroyNoSettle) so the whole recursion knows
   # the window is going away -- see the note there.
   _beingFullDestroyed: undefined
@@ -939,6 +943,17 @@ class FrameWdgt extends Widget
   offersAResizeHandle: ->
     !@contents?.collapsed
 
+  # Which of my children run out to my bottom-right corner, where my resizer sits: my payload, unless
+  # it is collapsed away or keeps clear of the resizer (its spec's resizerCanOverlapContents), and a
+  # frame docked in my bottom or right slot, whose far corner the resizer overlaps on purpose. A
+  # payload with an engaged band below or beside it does not reach the corner; it is still named,
+  # which only keeps a reserve the band has made unnecessary -- the safe way to be wrong. A viewport
+  # in that chain reserves the corner from its bars (ViewportWdgt._aResizerSitsOverMyCorner).
+  bottomRightCornerReachedBy: (child) ->
+    if child is @contents
+      return !@contents.collapsed and @contents.contentStackSpec?()?.resizerCanOverlapContents isnt false
+    child is @_dockedFrameAt('bottom') or child is @_dockedFrameAt('right')
+
   _reactToChildCollapsed: (child) ->
     if child == @contents
       # a collapsed window is JUST its titlebar, so its bands are gone with its body
@@ -1209,11 +1224,28 @@ class FrameWdgt extends Widget
     # which frees the slot and re-fits its chrome over the freed region)
     world.add @
     # the desktop gives me a window's chrome where the band gave me a grip, so re-wrap my payload
-    # at the extent it had: chrome read off the mounted content's own spec, the one home the
-    # measure and the arrange share, no literals
-    @setExtent payloadExtent.add new Point @_chromeWidth(), @_chromeHeight payload.contentStackSpec()
+    # at the extent it had
+    @setExtent @_extentWrappingPayloadAt payloadExtent
     @_applyMoveTo payloadPosition.subtract new Point @padding, @_titlebarHeight() + @padding
     @_moveWithin world
+
+  # LIFTED OUT OF A DOCK SLOT by my grip: the band's look goes (Widget._beforeBeingGrabbed drops my
+  # edge spec) and a window's comes, whose bar runs across my top where the band's ran down my side.
+  # Kept at my outer size, a top or bottom band would hand its payload the bar's height out of its
+  # own and squeeze it; so, as floatOutOfDock does, I re-wrap my payload at the extent it had in the
+  # band. That extent is read HERE, while the band still grants it, and applied once I am on the
+  # hand (_reactToBeingGrabbed): resized while still my host's child, I would make the host re-fit
+  # around a band I am leaving, in the very pass that lays it out. My top-left stays, so I do not
+  # jump under the pointer that holds me. A collapsed band is just its bar, with no extent to keep.
+  _beforeBeingGrabbed: ->
+    @_payloadExtentInTheBand = @contents.extent()  if @_myEdgeDockSpec()? and @contents? and !@contents.collapsed
+    super()
+
+  # My extent around a payload of `payloadExtent`, in the chrome I wear NOW: read off the mounted
+  # content's own spec, the one home the measure and the arrange share, no literals. Both ways out of
+  # a dock slot re-wrap with it (floatOutOfDock and a grab of my grip), so the two cannot disagree.
+  _extentWrappingPayloadAt: (payloadExtent) ->
+    payloadExtent.add new Point @_chromeWidth(), @_chromeHeight @contents.contentStackSpec()
 
   # Consulted at the child-death hook (_beforeChildDestroyed: a mid-teardown rebuild
   # strands fresh chrome on already-destroyed parts of me) and by a framed CITIZEN's
@@ -1263,6 +1295,11 @@ class FrameWdgt extends Widget
   _reactToBeingGrabbed: (whereFrom) ->
     @contents?._reactToHolderFrameGrabbed? whereFrom
     @_setLifetimeNoSettle 'persistent' if @isTransientPopUp()
+    # lifted out of a dock slot: re-wrap my payload at the extent it had in the band (see
+    # _beforeBeingGrabbed, which read it while the band still granted it)
+    if @_payloadExtentInTheBand?
+      @_setExtentNoSettle @_extentWrappingPayloadAt @_payloadExtentInTheBand
+      @_payloadExtentInTheBand = undefined
 
   # ===== the transient policy: registries, dismissal, pinning =====
 

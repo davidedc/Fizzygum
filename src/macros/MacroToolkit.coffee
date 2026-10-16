@@ -305,7 +305,10 @@ class MacroToolkit
 
   # other useful tween functions here:
   # https://github.com/ashblue/simple-tween-js/blob/master/tween.js
+  # easeOutExpo WITH its endpoint case: the formula only tends to the destination — at the end of the
+  # span it is still 2^-10 of the distance short — so the end of the span IS the destination, exactly.
   expoOut: (i, origin, distance, numberOfEvents) ->
+    return origin + distance  if i >= numberOfEvents
     distance * (-Math.pow(2, -10 * i/numberOfEvents) + 1) + origin
 
   bringUpTestMenu_InputEvents: (millisecondsBetweenKeys = 35, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -485,9 +488,13 @@ class MacroToolkit
   #   Math.round on the count so a drag's span-floored fractional events-per-ms still yields EXACTLY
   # the un-floored integer sample count (so expoOut samples the identical path). A no-op for the
   # ordinary whole-number cases.
+  #   The samples run 0…n INCLUSIVE: sample n is the end of the span, where expoOut is the
+  # destination itself, so a move ends ON the point it was aimed at — and when the rounded path is
+  # already there, the dedupe drops it. A span too short for one sample emits nothing.
   _sampleMovePath: (orig, dest, milliseconds, startTime, numberOfEventsPerMillisecond, queueOneSample) ->
     numberOfEvents = Math.round(milliseconds * numberOfEventsPerMillisecond)
-    for i in [0...numberOfEvents]
+    return  if numberOfEvents < 1
+    for i in [0..numberOfEvents]
       scheduledTimeOfEvent = startTime + i/numberOfEventsPerMillisecond
       nextX = Math.round @expoOut i, orig.x, (dest.x-orig.x), numberOfEvents
       nextY = Math.round @expoOut i, orig.y, (dest.y-orig.y), numberOfEvents
@@ -1089,11 +1096,9 @@ class MacroToolkit
   #
   # The corner resizer's shape is the striped triangle whose diagonal runs exactly through the box
   # CENTRE — so there the centre is the shape's BOUNDARY, and a press a single pixel up or left of it
-  # falls through to the frame, which float-drags instead of resizing. A synthesised approach lands
-  # exactly there: syntheticEventsMouseMove_InputEvents samples its easing at i in [0, N), so the
-  # pointer stops ~0.1% of the travel short of its destination — a whole pixel once the travel passes
-  # ~470, which a park-then-aim move across the test world easily does. So aim a quarter-box deeper
-  # into the corner: that clears the diagonal by handleSize/4 on each axis, far past any shortfall.
+  # falls through to the frame, which float-drags instead of resizing. An aim ON a boundary holds only
+  # while nothing between the aim and the press is off by a single pixel, so aim a quarter-box deeper
+  # into the corner: that clears the diagonal by handleSize/4 on each axis.
   #
   # The destination shifts by the SAME on-screen vector, so the drag vector — hence the extent the
   # gesture produces — is the centre-to-destination one the caller asks for, and the handle's CENTRE
@@ -1440,39 +1445,39 @@ class MacroToolkit
     identifier = [identifier, 0, 1] if typeof identifier == "string"
     world.getWidgetViaTextLabel identifier
 
-  calculateVertBarMovement: (vBar, index, total) ->
-    vBarHandle = vBar.children[0]
-    vBarHandleCenter = vBarHandle.center()
+  # WHERE A PRESS MEETS A SLIDER, on the screen: the frame its button travels along and the button's
+  # own box, as a press finds them. A plain slider is pressed as it is drawn. A THIN scroll indicator
+  # is not: the pointer's arrival fattens it first (see sliderButtonPressPoint), and the fat thumb can
+  # be longer than the thin one drawn at rest — a 10px thumb where 4px show — so a travel measured on
+  # the thin look carries the button further than the verb meant, by a share that grows with the
+  # distance dragged. Its viewport answers for the look the press meets.
+  _sliderFrameAndButtonAsPressed: (slider) ->
+    if slider.indicatorIsIntangible?()
+      frame: slider.parent.barScreenFrameOnArrival slider
+      button: slider.parent.buttonScreenBoxOnArrival slider
+    else
+      frame: slider.screenBounds()
+      button: slider.button.screenBounds()
 
-    highestHandlePosition = vBar.top()
-    lowestHandlePosition = vBar.bottom() - vBarHandle.height()
-
-
-    highestHandleCenterPosition = highestHandlePosition + vBarHandle.height()/2
-    lowestHandleCenterPosition = lowestHandlePosition + vBarHandle.height()/2
-
-    handleCenterRange = lowestHandleCenterPosition - highestHandleCenterPosition
-
-    # a one-line content collapses the fraction to 0/0 — the top of the (zero) travel
-    handleCenterOffset = if total > 1 then Math.round index * handleCenterRange / (total-1) else 0
-
-    # geometry above is the BAR's plane; the returned pair AIMS a drag, so map both
-    # endpoints to the screen (identity unless the bar's viewport is itself on a mapped plane)
-    [(vBarHandle.localPointToScreen vBarHandleCenter),
-     (vBarHandle.localPointToScreen vBarHandleCenter.translateBy new Point(0,handleCenterOffset))]
+  # Drag a vertical slider's button (a scrollbar's thumb) so it comes to rest `fraction` of the way
+  # along its travel — 0 at the top, 1 at the bottom — the travel being the frame's length less the
+  # button's, both as the press meets them. Pressed where a press takes the button.
+  _dragVerticalSliderButtonToTravelFraction_InputEvents: (slider, fraction) ->
+    {frame, button} = @_sliderFrameAndButtonAsPressed slider
+    displacement = frame.top() + Math.round(fraction * (frame.height() - button.height())) - button.top()
+    seenFrom = slider.button.localPointToScreen slider.button.center()
+    @_dragSliderButtonFromTo_InputEvents slider, seenFrom, seenFrom.translateBy new Point 0, displacement
 
   # Robustly scroll an inspector member/property `list` so `itemString`'s row lands a couple of rows
   # BELOW the pane's top edge -- clear of both clip edges and reliably clickable -- regardless of how
-  # long the list is. It uses the REAL row height + visible pane height (not the vBar handle-fraction
-  # heuristic in calculateVertBarMovement, which maps index/(total-1) and so lands the target at the
-  # pane's BOTTOM edge for large indices; adding a single inherited member then tips it out of view and
-  # a click on the clipped row selects the wrong property). Number of scroll positions = total -
-  # visibleRows (rows you can put at the top), so aiming (index - 2) at the top puts the target 2 rows
-  # down. Robust to member-list length: the target always lands at the same safe offset.
+  # long the list is. It uses the REAL row height + visible pane height (not the plain index/(total-1)
+  # fraction, which lands the target at the pane's BOTTOM edge for large indices; adding a single
+  # inherited member then tips it out of view and a click on the clipped row selects the wrong
+  # property). Number of scroll positions = total - visibleRows (rows you can put at the top), so
+  # aiming (index - 2) at the top puts the target 2 rows down. Robust to member-list length: the
+  # target always lands at the same safe offset, to within one thumb pixel of the bar's travel.
   scrollInspectorListItemIntoView_InputEvents: (list, itemString) ->
     index = list.elements.indexOf itemString
-    vBar = list.vBar
-    vBarHandle = vBar.children[0]
 
     # a currently-rendered row gives the true row PITCH (the list shows its top rows before any
     # scroll). Ask for the ROW — a widget carrying a labelString — and not for the label inside it:
@@ -1484,14 +1489,7 @@ class MacroToolkit
     visibleRows = Math.max 1, Math.floor(list.height() / rowHeight)
     scrollPositions = Math.max 1, list.elements.length - visibleRows
     topIndex = Math.max 0, Math.min(scrollPositions, index - 2)
-    scrollFraction = topIndex / scrollPositions
-
-    handleTravel = (vBar.bottom() - vBarHandle.height()) - vBar.top()
-    handleTargetCenterY = vBar.top() + Math.round(scrollFraction * handleTravel) + vBarHandle.height()/2
-    handleCurrentCenter = vBarHandle.center()
-    # bar-plane geometry aimed at the screen (identity unless the bar's viewport is nested
-    # on a mapped plane)
-    @_dragSliderButtonFromTo_InputEvents vBar, (vBarHandle.localPointToScreen handleCurrentCenter), (vBarHandle.localPointToScreen new Point handleCurrentCenter.x, handleTargetCenterY)
+    @_dragVerticalSliderButtonToTravelFraction_InputEvents list.vBar, topIndex / scrollPositions
 
   # The member list of the topmost inspector — the list the `…FromTopInspector…` verbs act on, named
   # by a public locator so macro source can hand it to the list verbs below.
@@ -1520,8 +1518,8 @@ class MacroToolkit
     v? and v.visibleBottom > v.visibleTop
 
   # ONE SCROLLBAR PIXEL of correction toward the named row. The scroll verb aims by INDEX, and on a
-  # long member list one thumb pixel is worth many content pixels (a 5px thumb on a 135px bar over a
-  # 10,000px list moves ~75px per pixel — nearly two rows), so the rounding any drag ends on can leave
+  # long member list one thumb pixel is worth many content pixels (a 10px thumb on a 140px bar over a
+  # 10,000px list moves ~80px per pixel — nearly two rows), so the rounding any drag ends on can leave
   # the target row just outside the window. This nudges the thumb the single pixel that carries the
   # window over the row: up when the row sits above the window, down when it sits below.
   nudgeListTowardItem_InputEvents: (list, listItemString) ->
@@ -1588,20 +1586,24 @@ class MacroToolkit
     saveButton = inspectorNaked.saveButton
     @moveToAndClick_InputEvents saveButton, "left button", milliseconds, startTime
 
+  # Scroll the top inspector's detail pane toward the Nth occurrence of `codeString`: drag its vertical
+  # bar to the share of its travel that the string's line is of the text's lines. A pane whose text
+  # fits it vertically shows no vertical bar and has nothing to bring into view, so nothing is pressed:
+  # a drag pressed where that bar would be lands on the pane itself, and a mouse drag there carries
+  # the whole inspector window away with it.
   bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
     inspectorNaked = @_findTopInspector()
 
-    slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
-
     textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "TextAreaWdgt"
-    textWidget = inspectorNaked.textWidget
-
     vBar = textScrollPane.vBar
+    return  unless vBar.visibleBasedOnIsVisibleProperty()
+
+    textWidget = inspectorNaked.textWidget
+    slotCoords = textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
     index = textWidget.slotRowAndColumn(slotCoords)[0]
     total = textWidget.wrappedLines.length
-    [vBarCenterFromHere, vBarCenterToHere] = @calculateVertBarMovement vBar, index, total
-
-    @_dragSliderButtonFromTo_InputEvents vBar, vBarCenterFromHere, vBarCenterToHere
+    # a one-line content collapses the fraction to 0/0 — the top of the (zero) travel
+    @_dragVerticalSliderButtonToTravelFraction_InputEvents vBar, (if total > 1 then index / (total-1) else 0)
 
   # The reusable "verb" library for high-level macro tests: returns a Set of
   # macro SUBROUTINES (bringUpInspector, clickMenuItemOfWidget, takeScreenshot,

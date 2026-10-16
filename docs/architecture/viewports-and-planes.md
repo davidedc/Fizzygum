@@ -96,7 +96,36 @@ within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
 `ViewportWdgt.hoverMoved`/`hoverExited` → `_updatePointerInScrollBand`, since the viewport is
 always in the hand's mouse-over ancestry for content under it) fattens both bars to FAT — full
 painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); leaving the band,
-or the content no longer overflowing, reverts to thin or hidden. No activity stamps, no clock,
+or the content no longer overflowing, reverts to thin or hidden. A bar also stays hidden, however
+much the content overflows, when its frame has no room for its thumb
+(`ViewportWdgt._barFrameHasRoomForThumb`: the frame must be at least as long as the thumb a press
+meets is wide). Under a resizer, a viewport shorter than the corner reserve has a frame whose
+length is not even positive, and the bar would be a 1px sliver no pointer can work. The pane
+still scrolls, since scrollability is asked of overflow.
+
+The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
+(`ViewportWdgt._cornerReserveFor`, read by `_barFrameAt`):
+- a resizer over the corner takes `max(scrollBarsThickness, handleSize)`;
+- failing that, the other bar, where it crosses, takes `scrollBarsThickness`;
+- with neither, the bar runs its side's full length.
+
+Each answer comes from STRUCTURE, because the passes that read it are still laying out geometry
+and visibility:
+- **The other bar** is read from the overflow its showing derives from, without its own
+  room-for-thumb check, so neither bar's length waits on whether the other one shows.
+- **The resizer** is found by climbing the corner chain. A container that runs a child out to its
+  own bottom-right corner names it (`bottomRightCornerReachedBy`): a frame names its payload
+  and its bottom/right bands, an inspector its detail pane, a patch node its bottom text box. The
+  first container on the climb whose resizer would show answers (`HandleWdgt.wouldShow`, what
+  showing derives from, never `isVisible`).
+- **A container that names nobody ends the climb**, and a viewport names nobody: its contents
+  scroll under its corner.
+- **When a resizer comes or goes**, `HandleWdgt.updateVisibility` tells the viewports down its
+  owner's corner chain (`noteCornerResizerChanged`), and each re-lays only its bars.
+
+A container that runs a viewport into its corner WITHOUT naming it leaves that viewport's bar
+running under the resizer, so a new container of that shape names its corner child.
+No activity stamps, no clock,
 no stepping registration: a capture taken a second after a scroll shows the same pixels as one
 taken at rest, so the indicator carries no determinism question.
 
@@ -133,7 +162,12 @@ places a bar of a given thickness — both looks come from it) and
 `SliderButtonWdgt.boxInSliderFrame` (the thumb's box inside a frame of a given extent and track
 inset, `SliderWdgt.trackThumbInset` for every pressable look). Its client is the macro toolkit's
 `sliderButtonPressPoint`: a press aimed at the thin thumb's centre can fall on the track beside the
-fat thumb, where it pages the bar and drags a thumb teleported under the pointer instead.
+fat thumb, where it pages the bar and drags a thumb teleported under the pointer instead. Its
+sibling `barScreenFrameOnArrival` answers the frame that box lies in. The fat thumb can be LONGER
+than the thin one, since a thumb is never shorter than it is wide (10px fat where 4px show), so a
+drag that carries the thumb a fraction of its travel measures that travel from these two, not from
+the bar as drawn. Measured from the thin look, it overshoots by a share that grows with the
+distance dragged.
 
 ## Drag-to-scroll — the plane's other scroll gesture
 

@@ -153,7 +153,14 @@ class InspectorWdgt extends Widget
         @inspectorBackgroundAppearance
       else
         undefined
-  
+
+  # My detail pane runs out to my bottom-right corner, where my own resizer sits while I am naked (and
+  # my window's while I am its payload), so its bars keep that corner free (ViewportWdgt.
+  # _aResizerSitsOverMyCorner). The resizer overlaps only the pane's lowest rows, and the pane keeps
+  # the whole reserve: the safe way to be wrong.
+  bottomRightCornerReachedBy: (child) ->
+    child is @detail
+
   # A live rebuild (property add/rename/remove or show/hide toggle) SELF-SETTLES ONCE around the
   # non-settling @_addNoSettle core below -- see docs/archive/end-of-cycle-flush-drawdown-plan.md.
   _buildAndConnectChildren: ->

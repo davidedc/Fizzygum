@@ -296,9 +296,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
   insp.resizer.center(), dest` — NOT `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …`, which grabs the
   TOPMOST handle by type (a save raises the desktop's own resizer above the inspector's). Two naked gotchas (learned in
-  `SystemTest_macroNakedInspectorRendersResizesAndEdits`): (1) a degenerate vBar drag — scrolling a pane that already FITS
-  (e.g. `@bringcodeStringFromTopInspectorInView` when the source fits the tall naked detail) — float-drags the free-floating
-  inspector instead of scrolling, so only scroll a pane that genuinely overflows; (2) shrinking the HEIGHT so a pane newly
+  `SystemTest_macroNakedInspectorRendersResizesAndEdits`): (1) a drag pressed where a FITTING pane's vBar would be lands on
+  the pane itself and float-drags the inspector — windowed or naked — instead of scrolling, so only drag a bar that SHOWS
+  (`@bringcodeStringFromTopInspectorInView` checks this itself: on a pane with no vertical overflow it presses nothing); (2) shrinking the HEIGHT so a pane newly
   overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep
   the detail fitting) for a deterministic resize shot. Find the inspector with `@findTopWidgetByClassNameOrClass
   InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
